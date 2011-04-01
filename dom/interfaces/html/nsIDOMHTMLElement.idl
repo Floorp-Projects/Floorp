@@ -51,7 +51,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(a6cf9085-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(cf054c24-22ea-49e9-a824-f9661636c2f3)]
 interface nsIDOMHTMLElement : nsIDOMElement
 {
            attribute DOMString        id;
@@ -59,4 +59,10 @@ interface nsIDOMHTMLElement : nsIDOMElement
            attribute DOMString        lang;
            attribute DOMString        dir;
            attribute DOMString        className;
+
+           attribute DOMString        accessKey;
+
+           void                       blur();
+           void                       focus();
+           void                       click();
 };

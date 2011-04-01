@@ -138,7 +138,6 @@ public:
 
 protected:
   PRUint8 mType;
-  PRPackedBool mHandlingClick;
   PRPackedBool mDisabledChanged;
   PRPackedBool mInInternalActivate;
 
@@ -158,7 +157,6 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Button)
 nsHTMLButtonElement::nsHTMLButtonElement(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericHTMLFormElement(aNodeInfo),
     mType(kButtonDefaultType->value),
-    mHandlingClick(PR_FALSE),
     mDisabledChanged(PR_FALSE),
     mInInternalActivate(PR_FALSE)
 {
@@ -204,7 +202,6 @@ nsHTMLButtonElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return nsGenericHTMLFormElement::GetForm(aForm);
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLButtonElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Autofocus, autofocus)
 NS_IMPL_BOOL_ATTR(nsHTMLButtonElement, Disabled, disabled)
 NS_IMPL_ACTION_ATTR(nsHTMLButtonElement, FormAction, formaction)
@@ -219,53 +216,6 @@ NS_IMPL_INT_ATTR(nsHTMLButtonElement, TabIndex, tabindex)
 NS_IMPL_STRING_ATTR(nsHTMLButtonElement, Value, value)
 NS_IMPL_ENUM_ATTR_DEFAULT_VALUE(nsHTMLButtonElement, Type, type,
                                 kButtonDefaultType->tag)
-
-NS_IMETHODIMP
-nsHTMLButtonElement::Blur()
-{
-  return nsGenericHTMLElement::Blur();
-}
-
-NS_IMETHODIMP
-nsHTMLButtonElement::Focus()
-{
-  return nsGenericHTMLElement::Focus();
-}
-
-NS_IMETHODIMP
-nsHTMLButtonElement::Click()
-{
-  if (mHandlingClick)
-    return NS_OK;
-
-  mHandlingClick = PR_TRUE;
-  // Hold on to the document in case one of the events makes it die or
-  // something...
-  nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
-
-  if (doc) {
-    nsIPresShell *shell = doc->GetShell();
-    if (shell) {
-      nsRefPtr<nsPresContext> context = shell->GetPresContext();
-      if (context) {
-        // Click() is never called from native code, but it may be
-        // called from chrome JS. Mark this event trusted if Click()
-        // is called from chrome code.
-        nsMouseEvent event(nsContentUtils::IsCallerChrome(),
-                           NS_MOUSE_CLICK, nsnull,
-                           nsMouseEvent::eReal);
-        event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this), context,
-                                    &event, nsnull, &status);
-      }
-    }
-  }
-
-  mHandlingClick = PR_FALSE;
-
-  return NS_OK;
-}
 
 PRBool
 nsHTMLButtonElement::IsHTMLFocusable(PRBool aWithMouse, PRBool *aIsFocusable, PRInt32 *aTabIndex)
