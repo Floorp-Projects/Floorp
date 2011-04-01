@@ -2852,7 +2852,8 @@ JS_PUBLIC_API(JSBool)
 JS_ConvertStub(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     JS_ASSERT(type != JSTYPE_OBJECT && type != JSTYPE_FUNCTION);
-    return js_TryValueOf(cx, obj, type, Valueify(vp));
+    JS_ASSERT(obj);
+    return DefaultValue(cx, obj, type, Valueify(vp));
 }
 
 JS_PUBLIC_API(void)

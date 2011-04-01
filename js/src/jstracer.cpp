@@ -10148,7 +10148,7 @@ TraceRecorder::guardNativeConversion(Value& v)
     LIns* obj_ins = get(&v);
 
     ConvertOp convert = obj->getClass()->convert;
-    if (convert != Valueify(JS_ConvertStub) && convert != js_TryValueOf)
+    if (convert != ConvertStub)
         RETURN_STOP("operand has convert hook");
 
     VMSideExit* exit = snapshot(BRANCH_EXIT);
