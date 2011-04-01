@@ -734,6 +734,8 @@ bool LowerCaseEqualsASCII(std::wstring::const_iterator a_begin,
                           const char* b) {
   return DoLowerCaseEqualsASCII(a_begin, a_end, b);
 }
+
+#ifndef ANDROID
 bool LowerCaseEqualsASCII(const char* a_begin,
                           const char* a_end,
                           const char* b) {
@@ -744,7 +746,7 @@ bool LowerCaseEqualsASCII(const wchar_t* a_begin,
                           const char* b) {
   return DoLowerCaseEqualsASCII(a_begin, a_end, b);
 }
-
+#endif
 bool StartsWithASCII(const std::string& str,
                      const std::string& search,
                      bool case_sensitive) {
