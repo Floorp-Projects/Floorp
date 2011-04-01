@@ -62,6 +62,7 @@
 #include "nsIStringEnumerator.h"
 #include "nsCRT.h"
 #include "nsSupportsArray.h"
+#include "nsInt64.h"
 #include "nsContentCID.h"
 #include "nsStreamUtils.h"
 
@@ -167,8 +168,8 @@ struct OutputData
     nsCOMPtr<nsIURI> mFile;
     nsCOMPtr<nsIURI> mOriginalLocation;
     nsCOMPtr<nsIOutputStream> mStream;
-    PRInt64 mSelfProgress;
-    PRInt64 mSelfProgressMax;
+    nsInt64 mSelfProgress;
+    nsInt64 mSelfProgressMax;
     PRPackedBool mCalcFileExt;
 
     OutputData(nsIURI *aFile, nsIURI *aOriginalLocation, PRBool aCalcFileExt) :
@@ -191,8 +192,8 @@ struct OutputData
 struct UploadData
 {
     nsCOMPtr<nsIURI> mFile;
-    PRInt64 mSelfProgress;
-    PRInt64 mSelfProgressMax;
+    nsInt64 mSelfProgress;
+    nsInt64 mSelfProgressMax;
 
     UploadData(nsIURI *aFile) :
         mFile(aFile),
@@ -243,8 +244,6 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mPersistFlags(kDefaultPersistFlags),
     mPersistResult(NS_OK),
     mWrapColumn(72),
-    mTotalCurrentProgress(0),
-    mTotalMaxProgress(0),
     mEncodingFlags(0)
 {
 }

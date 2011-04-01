@@ -45,6 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "prlog.h"
+#include "nsInt64.h"
 #include "nsIClassInfoImpl.h"
 #include "nsAtomicRefcnt.h"
 
@@ -153,7 +154,7 @@ private:
 
     // separate refcnt so that we know when to close the consumer
     nsrefcnt                       mReaderRefCnt;
-    PRInt64                        mLogicalOffset;
+    nsInt64                        mLogicalOffset;
     PRPackedBool                   mBlocking;
 
     // these variables can only be accessed while inside the pipe's monitor
@@ -207,7 +208,7 @@ private:
 
     // separate refcnt so that we know when to close the producer
     nsrefcnt                        mWriterRefCnt;
-    PRInt64                         mLogicalOffset;
+    nsInt64                         mLogicalOffset;
     PRPackedBool                    mBlocking;
 
     // these variables can only be accessed while inside the pipe's monitor

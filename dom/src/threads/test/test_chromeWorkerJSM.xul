@@ -54,28 +54,19 @@
     {
       SimpleTest.waitForExplicitFinish();
 
-      var worker;
-
-      function done()
-      {
-        worker = null;
-        SimpleTest.finish();
-      }
-
       function messageCallback(event) {
         is(event.data, "Done", "Correct message");
-        done();
+        SimpleTest.finish();
       }
 
       function errorCallback(event) {
         ok(false, "Worker had an error: " + event.message);
-        done();
+        SimpleTest.finish();
       }
 
       Components.utils.import("resource://gre/modules/WorkerTest.jsm");
 
-      worker = WorkerTest.go(window.location.href, messageCallback,
-                             errorCallback);
+      WorkerTest.go(window.location.href, messageCallback, errorCallback);
     }
 
   ]]>

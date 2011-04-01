@@ -3448,11 +3448,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
-  NPCocoaEvent cocoaEvent;
-	
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   if ([theEvent modifierFlags] & NSControlKeyMask)
@@ -3465,6 +3460,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // event type.
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON
+    EventRecord carbonEvent;
     if (mPluginEventModel == NPEventModelCarbon) {
       carbonEvent.what = mouseUp;
       carbonEvent.message = 0;
@@ -3474,6 +3470,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       geckoEvent.pluginEvent = &carbonEvent;
     }
 #endif
+    NPCocoaEvent cocoaEvent;
     if (mPluginEventModel == NPEventModelCocoa) {
       InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
@@ -3641,17 +3638,13 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   gLastDragView = self;
 
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
-  NPCocoaEvent cocoaEvent;
-
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_MOVE, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
 
   // create event for use by plugins
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON
+    EventRecord carbonEvent;
     if (mPluginEventModel == NPEventModelCarbon) {
       carbonEvent.what = NPEventType_AdjustCursorEvent;
       carbonEvent.message = 0;
@@ -3661,6 +3654,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       geckoEvent.pluginEvent = &carbonEvent;
     }
 #endif
+    NPCocoaEvent cocoaEvent;
     if (mPluginEventModel == NPEventModelCocoa) {
       InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
@@ -3749,11 +3743,6 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!mGeckoChild)
     return;
 
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
-  NPCocoaEvent cocoaEvent;
-
   nsMouseEvent geckoEvent(PR_TRUE, NS_MOUSE_BUTTON_UP, nsnull, nsMouseEvent::eReal);
   [self convertCocoaMouseEvent:theEvent toGeckoEvent:&geckoEvent];
   geckoEvent.button = nsMouseEvent::eRightButton;
@@ -3762,6 +3751,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   // create event for use by plugins
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON
+    EventRecord carbonEvent;
     if (mPluginEventModel == NPEventModelCarbon) {
       carbonEvent.what = mouseUp;
       carbonEvent.message = 0;
@@ -3771,6 +3761,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
       geckoEvent.pluginEvent = &carbonEvent;
     }
 #endif
+    NPCocoaEvent cocoaEvent;
     if (mPluginEventModel == NPEventModelCocoa) {
       InitNPCocoaEvent(&cocoaEvent);
       NSPoint point = [self convertPoint:[theEvent locationInWindow] fromView:nil];
@@ -5852,11 +5843,6 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   PRUint32 message = isKeyDown ? NS_KEY_DOWN : NS_KEY_UP;
 
-#ifndef NP_NO_CARBON
-  EventRecord carbonEvent;
-#endif // ifndef NP_NO_CARBON
-  NPCocoaEvent cocoaEvent;
-	
   // Fire a key event.
   nsKeyEvent geckoEvent(PR_TRUE, message, nsnull);
   [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoEvent];
@@ -5864,11 +5850,13 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   // create event for use by plugins
   if (mIsPluginView) {
 #ifndef NP_NO_CARBON
+    EventRecord carbonEvent;
     if (mPluginEventModel == NPEventModelCarbon) {
       ConvertCocoaKeyEventToCarbonEvent(theEvent, carbonEvent, message);
       geckoEvent.pluginEvent = &carbonEvent;
     }
 #endif
+    NPCocoaEvent cocoaEvent;
     if (mPluginEventModel == NPEventModelCocoa) {
       ConvertCocoaKeyEventToNPCocoaEvent(theEvent, cocoaEvent, message);
       geckoEvent.pluginEvent = &cocoaEvent;

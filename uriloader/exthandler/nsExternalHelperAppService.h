@@ -49,6 +49,8 @@
 #include "prlog.h"
 #include "prtime.h"
 
+#include "nsInt64.h"
+
 #include "nsIExternalHelperAppService.h"
 #include "nsIExternalProtocolService.h"
 #include "nsIWebProgressListener2.h"
@@ -339,8 +341,8 @@ protected:
   PRBool mTempFileIsExecutable;
 
   PRTime mTimeDownloadStarted;
-  PRInt64 mContentLength;
-  PRInt64 mProgress; /**< Number of bytes received (for sending progress notifications). */
+  nsInt64 mContentLength;
+  nsInt64 mProgress; /**< Number of bytes received (for sending progress notifications). */
 
   /**
    * When we are told to save the temp file to disk (in a more permament
