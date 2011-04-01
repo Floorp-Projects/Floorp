@@ -63,6 +63,8 @@
 
 
 run_for_effects := $(shell if test ! -d $(DIST); then $(NSINSTALL) -D $(DIST); fi)
+_ABS_DIST := $(shell cd $(DIST) && pwd)
+
 
 # This makefile uses variable overrides from the libs-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
@@ -128,14 +130,6 @@ unpack: $(STAGEDIST)
 # may be overridden if necessary.
 MOZDEPTH ?= $(DEPTH)
 
-ifdef MOZ_MAKE_COMPLETE_MAR
-MAKE_COMPLETE_MAR = 1
-ifeq ($(OS_ARCH), WINNT)
-ifneq ($(MOZ_PKG_FORMAT), SFX7Z)
-MAKE_COMPLETE_MAR =
-endif
-endif
-endif
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
 repackage-zip:  libs-$(AB_CD)
 # Adjust jar logs with the new locale (can't use sed -i because of bug 373784)
@@ -159,7 +153,7 @@ ifeq (WINCE,$(OS_ARCH))
 	cd $(DIST)/l10n-stage; \
 	  $(MAKE_CAB)
 endif
-ifdef MAKE_COMPLETE_MAR
+ifdef MOZ_MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
 	  PACKAGE_BASE_DIR="$(_ABS_DIST)/l10n-stage" \
