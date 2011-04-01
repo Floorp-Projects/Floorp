@@ -54,7 +54,6 @@
 #include "nsIInputStream.h"
 #include "nsISeekableStream.h"
 #include "prlog.h"
-#include "nsInt64.h"
 
 #if defined(PR_LOGGING)
 //
