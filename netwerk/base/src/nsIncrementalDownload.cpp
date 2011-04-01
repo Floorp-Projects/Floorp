@@ -614,7 +614,7 @@ nsIncrementalDownload::OnStartRequest(nsIRequest *request,
       if (NS_FAILED(rv))
         return rv;
       rv = props->GetPropertyAsInt64(NS_CHANNEL_PROP_CONTENT_LENGTH,
-                                     &mTotalSize.mValue);
+                                     &mTotalSize);
       // We need to know the total size of the thing we're trying to download.
       if (mTotalSize == nsInt64(-1)) {
         NS_WARNING("server returned no content-length header!");
