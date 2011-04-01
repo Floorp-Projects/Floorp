@@ -379,7 +379,7 @@ nsNPAPIPlugin::RunPluginOOP(const nsPluginTag *aPluginTag)
   // of "dom.ipc.plugins.enabled"
   // The "filename.dll" part can contain shell wildcard pattern
 
-  nsCAutoString prefFile(aPluginTag->mFullPath.get());
+  NS_ConvertUTF16toUTF8 prefFile(aPluginTag->mFullPath);
   PRInt32 slashPos = prefFile.RFindCharInSet("/\\");
   if (kNotFound == slashPos)
     return PR_FALSE;
@@ -472,10 +472,10 @@ GetNewPluginLibrary(nsPluginTag *aPluginTag)
 
 #ifdef MOZ_IPC
   if (nsNPAPIPlugin::RunPluginOOP(aPluginTag)) {
-    return PluginModuleParent::LoadModule(aPluginTag->mFullPath.get());
+    return PluginModuleParent::LoadModule(aPluginTag->mFullPath);
   }
 #endif
-  return new PluginPRLibrary(aPluginTag->mFullPath.get(), aPluginTag->mLibrary);
+  return new PluginPRLibrary(aPluginTag->mFullPath, aPluginTag->mLibrary);
 }
 
 // Creates an nsNPAPIPlugin object. One nsNPAPIPlugin object exists per plugin (not instance).
