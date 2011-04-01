@@ -113,6 +113,7 @@ class nsStringContainer : private nsStringContainer_base { };
 
 void XXXNeverCalled()
 {
+    GRE_GetGREPathWithProperties(nsnull, 0, nsnull, 0, nsnull, 0);
     nsTextFormatter::snprintf(nsnull,0,nsnull);
     nsTextFormatter::smprintf(nsnull, nsnull);
     nsTextFormatter::smprintf_free(nsnull);

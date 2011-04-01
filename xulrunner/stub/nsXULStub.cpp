@@ -435,9 +435,54 @@ main(int argc, char **argv)
 #endif
 
   if (!greFound) {
-    Output(PR_FALSE,
-           "Could not find the Mozilla runtime.\n");
+    char minVersion[VERSION_MAXLEN];
+
+    // If a gecko maxVersion is not specified, we assume that the app uses only
+    // frozen APIs, and is therefore compatible with any xulrunner 1.x.
+    char maxVersion[VERSION_MAXLEN] = "1.*";
+
+    GREVersionRange range = {
+      minVersion,
+      PR_TRUE,
+      maxVersion,
+      PR_TRUE
+    };
+
+    rv = parser.GetString("Gecko", "MinVersion", minVersion, sizeof(minVersion));
+    if (NS_FAILED(rv)) {
+      fprintf(stderr,
+              "The application.ini does not specify a [Gecko] MinVersion\n");
       return 1;
+    }
+
+    rv = parser.GetString("Gecko", "MaxVersion", maxVersion, sizeof(maxVersion));
+    if (NS_SUCCEEDED(rv))
+      range.upperInclusive = PR_TRUE;
+
+    static const GREProperty kProperties[] = {
+      { "xulrunner", "true" }
+    };
+
+    rv = GRE_GetGREPathWithProperties(&range, 1,
+                                      kProperties, NS_ARRAY_LENGTH(kProperties),
+                                      greDir, sizeof(greDir));
+    if (NS_FAILED(rv)) {
+      // XXXbsmedberg: Do something much smarter here: notify the
+      // user/offer to download/?
+
+      Output(PR_FALSE,
+             "Could not find compatible GRE between version %s and %s.\n",
+             range.lower, range.upper);
+      return 1;
+    }
+#ifdef XP_UNIX
+    // Using a symlinked greDir will fail during startup. Not sure why, but if
+    // we resolve the symlink, everything works as expected.
+    char resolved_greDir[MAXPATHLEN] = "";  
+    if (realpath(greDir, resolved_greDir) && *resolved_greDir) {
+      strncpy(greDir, resolved_greDir, MAXPATHLEN);
+    }
+#endif
   }
 
 #ifdef XP_OS2
