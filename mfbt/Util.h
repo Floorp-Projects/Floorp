@@ -42,6 +42,51 @@
 
 namespace mozilla {
 
+/**
+ * DebugOnly contains a value of type T, but only in debug builds.  In
+ * release builds, it does not contain a value.  This helper is
+ * intended to be used along with ASSERT()-style macros, allowing one
+ * to write
+ *
+ *   DebugOnly<bool> check = Func();
+ *   ASSERT(check);
+ *
+ * more concisely than declaring |check| conditional on #ifdef DEBUG,
+ * but also without allocating storage space for |check| in release
+ * builds.
+ *
+ * DebugOnly instances can only be coerced to T in debug builds; in
+ * release builds, they don't have a value so type coercion is not
+ * well defined.
+ */
+template <typename T>
+struct DebugOnly
+{
+#ifdef DEBUG
+    T value;
+
+    DebugOnly() {}
+    DebugOnly(const T& other) : value(other) {}
+    DebugOnly& operator=(const T& rhs) {
+        value = rhs;
+        return *this;
+    }
+
+    operator T&() { return value; }
+    operator const T&() const { return value; }
+
+#else
+    DebugOnly() {}
+    DebugOnly(const T&) {}
+    DebugOnly& operator=(const T&) {}   
+#endif
+
+    // DebugOnly must always have a destructor or else it will
+    // generate "unused variable" warnings, exactly what it's intended
+    // to avoid!
+    ~DebugOnly() {}
+};
+
 } // namespace mozilla
 
 #endif  // mozilla_Util_h_
