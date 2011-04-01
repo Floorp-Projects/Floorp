@@ -511,6 +511,11 @@ AllFramesIter::operator++()
 bool
 JSThreadData::init()
 {
+#ifdef DEBUG
+    /* The data must be already zeroed. */
+    for (size_t i = 0; i != sizeof(*this); ++i)
+        JS_ASSERT(reinterpret_cast<uint8*>(this)[i] == 0);
+#endif
     if (!stackSpace.init())
         return false;
     dtoaState = js_NewDtoaState();
@@ -543,11 +548,6 @@ void
 JSThreadData::mark(JSTracer *trc)
 {
     stackSpace.mark(trc);
-
-    for (size_t n = 0; n < idArraysHandedOutViaAPI.length(); ++n) {
-        JSIdArray *ida = idArraysHandedOutViaAPI[n];
-        gc::MarkIdRange(trc, ida->length, ida->vector, "JSThreadData::idArraysHandedOutViaAPI");
-    }
 }
 
 void
