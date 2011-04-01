@@ -341,7 +341,8 @@ private:
     LirWriter *mVerboseWriter;
     LirWriter *mValidateWriter1;
     LirWriter *mValidateWriter2;
-    multimap<string, LIns *> mFwdJumps;
+    vector< pair<string, LIns*> > mJumps;
+    map<string, LIns*> mJumpLabels;
 
     size_t mLineno;
     LOpcode mOpcode;
@@ -363,7 +364,8 @@ private:
     void bad(const string &msg);
     void nyi(const string &opname);
     void extract_any_label(string &lab, char lab_delim);
-    void resolve_forward_jumps(string &lab, LIns *ins);
+    void resolve_jumps();
+    void add_jump_label(const string& lab, LIns* ins);
     void endFragment();
 };
 
@@ -646,18 +648,9 @@ FragmentAssembler::assemble_jump(bool isCond)
         condition = NULL;
     }
     string name = pop_front(mTokens);
-    if (mLabels.find(name) != mLabels.end()) {
-        LIns *target = ref(name);
-        return mLir->insBranch(mOpcode, condition, target);
-    } else {
-        LIns *ins = mLir->insBranch(mOpcode, condition, NULL);
-#ifdef __SUNPRO_CC
-        mFwdJumps.insert(make_pair<const string, LIns *>(name, ins));
-#else
-        mFwdJumps.insert(make_pair(name, ins));
-#endif
-        return ins;
-    }
+    LIns *ins = mLir->insBranch(mOpcode, condition, NULL);
+    mJumps.push_back(make_pair<string, LIns*>(name, ins));
+    return ins;
 }
 
 LIns *
@@ -831,23 +824,17 @@ FragmentAssembler::assemble_jump_jov()
     LIns *b = ref(mTokens[1]);
     string name = mTokens[2];
 
-    if (mLabels.find(name) != mLabels.end()) {
-        LIns *target = ref(name);
-        return mLir->insBranchJov(mOpcode, a, b, target);
-    } else {
-        LIns *ins = mLir->insBranchJov(mOpcode, a, b, NULL);
-#ifdef __SUNPRO_CC
-        mFwdJumps.insert(make_pair<const string, LIns *>(name, ins));
-#else
-        mFwdJumps.insert(make_pair(name, ins));
-#endif
-        return ins;
-    }
+    LIns *ins = mLir->insBranchJov(mOpcode, a, b, NULL);
+    mJumps.push_back(make_pair<string, LIns*>(name, ins));
+    return ins;
 }
 
 void
 FragmentAssembler::endFragment()
 {
+    // Resolve all of the jumps in this fragment.
+    resolve_jumps();
+
     if (mReturnTypeBits == 0) {
         cerr << "warning: no return type in fragment '"
              << mFragName << "'" << endl;
@@ -938,19 +925,28 @@ FragmentAssembler::extract_any_label(string &lab, char lab_delim)
 }
 
 void
-FragmentAssembler::resolve_forward_jumps(string &lab, LIns *ins)
+FragmentAssembler::resolve_jumps()
 {
-    typedef multimap<string, LIns *> mulmap;
-#ifdef __SUNPRO_CC
-    typedef mulmap::iterator ci;
-#else
-    typedef mulmap::const_iterator ci;
-#endif
-    pair<ci, ci> range = mFwdJumps.equal_range(lab);
-    for (ci i = range.first; i != range.second; ++i) {
-        i->second->setTarget(ins);
+    typedef vector< pair<string, LIns*> > pairvec;
+    typedef pairvec::const_iterator pv_ci;
+
+    typedef map< string, LIns* > labelmap;
+    typedef labelmap::const_iterator lm_ci;
+
+    for ( pv_ci i = mJumps.begin(); i != mJumps.end(); ++i ) {
+        lm_ci target = mJumpLabels.find(i->first);
+        if ( target == mJumpLabels.end() )
+            bad("No label exists for jump target '" + i->first + "'");
+        i->second->setTarget( target->second );
     }
-    mFwdJumps.erase(lab);
+}
+
+void
+FragmentAssembler::add_jump_label(const string& lab, LIns* ins)
+{
+    if ( mJumpLabels.find(lab) != mJumpLabels.end() )
+        bad("Label '" + lab + "' found at multiple locations.");
+    mJumpLabels[lab] = ins;
 }
 
 void
@@ -989,10 +985,10 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
         LIns *ins = NULL;
         extract_any_label(lab, ':');
 
-        /* Save label and do any back-patching of deferred forward-jumps. */
+        /* Save label as a jump label */
         if (!lab.empty()) {
             ins = mLir->ins0(LIR_label);
-            resolve_forward_jumps(lab, ins);
+            add_jump_label(lab, ins);
             lab.clear();
         }
         extract_any_label(lab, '=');
@@ -1222,9 +1218,8 @@ FragmentAssembler::assembleFragment(LirTokenStream &in, bool implicitBegin, cons
 
           case LIR_label:
             ins = mLir->ins0(LIR_label);
-            if (!lab.empty()) {
-                resolve_forward_jumps(lab, ins);
-            }
+            add_jump_label(lab, ins);
+            lab.clear();
             break;
 
           case LIR_file:
