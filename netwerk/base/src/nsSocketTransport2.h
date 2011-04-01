@@ -46,6 +46,7 @@
 #include "nsSocketTransportService2.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsInt64.h"
 
 #include "nsISocketTransport.h"
 #include "nsIInterfaceRequestor.h"

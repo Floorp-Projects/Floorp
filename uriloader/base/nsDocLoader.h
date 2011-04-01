@@ -57,6 +57,7 @@
 #include "nsIChannelEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsISupportsPriority.h"
+#include "nsInt64.h"
 #include "nsCOMPtr.h"
 #include "pldhash.h"
 
@@ -225,14 +226,14 @@ protected:
     // feedback interfaces that travis cooked up.
     PRInt32 mProgressStateFlags;
 
-    PRInt64 mCurrentSelfProgress;
-    PRInt64 mMaxSelfProgress;
+    nsInt64 mCurrentSelfProgress;
+    nsInt64 mMaxSelfProgress;
 
-    PRInt64 mCurrentTotalProgress;
-    PRInt64 mMaxTotalProgress;
+    nsInt64 mCurrentTotalProgress;
+    nsInt64 mMaxTotalProgress;
 
     PLDHashTable mRequestInfoHash;
-    PRInt64 mCompletedTotalProgress;
+    nsInt64 mCompletedTotalProgress;
 
     /*
      * This flag indicates that the loader is loading a document.  It is set

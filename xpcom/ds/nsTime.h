@@ -39,6 +39,7 @@
 #define nsTime_h__
 
 #include "prtime.h"
+#include "nsInt64.h"
 #include "nscore.h"
 
 /**
@@ -50,13 +51,13 @@
 // class, be sure to change the class declaration to "class NS_BASE
 // nsTime".
 
-class nsTime
+class nsTime : public nsInt64
 {
 public:
     /**
      * Construct the current time.
      */
-    nsTime(void) : mValue(PR_Now()) {
+    nsTime(void) : nsInt64(PR_Now()) {
     }
 
     /**
@@ -74,10 +75,30 @@ public:
     /**
      * Construct a time from a PRTime.
      */
-    nsTime(const PRTime aTime) : mValue(aTime) {
+    nsTime(const PRTime aTime) : nsInt64(aTime) {
+    }
+
+    /**
+     * Construct a time from a 64-bit value.
+     */
+    nsTime(const nsInt64& aTime) : nsInt64(aTime) {
+    }
+
+    /**
+     * Construct a time from another time.
+     */
+    nsTime(const nsTime& aTime) : nsInt64(aTime.mValue) {
     }
 
     // ~nsTime(void) -- XXX destructor unnecessary
+
+    /**
+     * Assign one time to another.
+     */
+    const nsTime& operator =(const nsTime& aTime) {
+        mValue = aTime.mValue;
+        return *this;
+    }
 
     /**
      * Convert a nsTime object to a PRTime
@@ -85,8 +106,6 @@ public:
     operator PRTime(void) const {
         return mValue;
     }
-
-    PRInt64 mValue;
 };
 
 /**
