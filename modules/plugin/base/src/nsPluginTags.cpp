@@ -202,7 +202,7 @@ mFlags(NS_PLUGIN_FLAG_ENABLED)
 nsPluginTag::nsPluginTag(const char* aName,
                          const char* aDescription,
                          const char* aFileName,
-                         const nsAString& aFullPath,
+                         const char* aFullPath,
                          const char* aVersion,
                          const char* const* aMimeTypes,
                          const char* const* aMimeDescriptions,
@@ -320,6 +320,7 @@ nsresult nsPluginTag::EnsureMembersAreUTF8()
     NS_ENSURE_SUCCESS(rv, rv);
     
     ConvertToUTF8(decoder, mFileName);
+    ConvertToUTF8(decoder, mFullPath);
   }
   
   // The description of the plug-in and the various MIME type descriptions
@@ -363,7 +364,7 @@ nsPluginTag::GetFilename(nsACString& aFileName)
 NS_IMETHODIMP
 nsPluginTag::GetFullpath(nsACString& aFullPath)
 {
-  CopyUTF16toUTF8(mFullPath, aFullPath);
+  aFullPath = mFullPath;
   return NS_OK;
 }
 

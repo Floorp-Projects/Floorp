@@ -368,10 +368,10 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
         return rv;
     }
 
-    nsAutoString path;
-    if (NS_FAILED(rv = mPlugin->GetPath(path)))
+    nsCAutoString path;
+    if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
         return rv;
-    info.fFullPath = ToNewUnicode(path);
+    info.fFullPath = PL_strdup(path.get());
 
     nsCAutoString fileName;
     if (NS_FAILED(rv = mPlugin->GetNativeLeafName(fileName)))
@@ -427,7 +427,8 @@ nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
     PR_FREEIF(info.fMimeDescriptionArray);
     PR_FREEIF(info.fExtensionArray);
 
-    NS_Free(info.fFullPath);
+    if (info.fFullPath != nsnull)
+        PL_strfree(info.fFullPath);
 
     if (info.fFileName != nsnull)
         PL_strfree(info.fFileName);
