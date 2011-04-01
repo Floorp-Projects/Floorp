@@ -73,20 +73,6 @@ endif
 
 CPPSRCS = nsXULRunnerApp.cpp
 
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
-CPPSRCS += nsRegisterGREWin.cpp
-else
-ifeq (OS2,$(OS_ARCH))
-CPPSRCS += nsRegisterGREVoid.cpp
-else
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS += nsRegisterGREVoid.cpp
-else
-CPPSRCS += nsRegisterGREUnix.cpp
-endif
-endif
-endif
-
 LOCAL_INCLUDES += \
   -I$(topsrcdir)/toolkit/xre \
   -I$(topsrcdir)/toolkit/profile \
