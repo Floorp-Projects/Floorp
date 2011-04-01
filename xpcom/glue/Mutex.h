@@ -77,6 +77,7 @@ public:
     Mutex(const char* name) :
         BlockingResourceBase(name, eMutex)
     {
+        MOZ_COUNT_CTOR(Mutex);
         mLock = PR_NewLock();
         if (!mLock)
             NS_RUNTIMEABORT("Can't allocate mozilla::Mutex");
@@ -92,6 +93,7 @@ public:
         // NSPR does consistency checks for us
         PR_DestroyLock(mLock);
         mLock = 0;
+        MOZ_COUNT_DTOR(Mutex);
     }
 
 #ifndef DEBUG

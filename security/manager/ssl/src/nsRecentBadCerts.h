@@ -40,10 +40,10 @@
 #ifndef __RECENTBADCERTS_H__
 #define __RECENTBADCERTS_H__
 
+#include "mozilla/Monitor.h"
 #include "nsIRecentBadCertsService.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
-#include "prmon.h"
 #include "secitem.h"
 
 class RecentBadCert
@@ -105,7 +105,7 @@ public:
   nsresult Init();
 
 protected:
-    PRMonitor *monitor;
+    mozilla::Monitor monitor;
 
     enum {const_recently_seen_list_size = 5};
     RecentBadCert mCerts[const_recently_seen_list_size];
