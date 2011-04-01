@@ -175,23 +175,32 @@ int main(int argc, char *argv[])
         PR_FALSE
     };
 
-    char path[_MAX_PATH];
-    GetModuleFileName(ghInstanceApp, self, sizeof(self));
-    lastslash = ns_strrpbrk(xpcomPath, "/\\");
+    char xpcomPath[_MAX_PATH];
+    rv = GRE_GetGREPathWithProperties(&vr, 1, nsnull, 0,
+                                      xpcomPath, sizeof(xpcomPath));
+    if (NS_FAILED(rv))
+        return 1;
+
+    char *lastslash = ns_strrpbrk(xpcomPath, "/\\");
     if (!lastslash)
-        return 7;
+        return 2;
 
-    strcpy(lastslash, "\\xulrunner\\xpcom.dll");
-
-    rv = XPCOMGlueStartup(path);
+    rv = XPCOMGlueStartup(xpcomPath);
     if (NS_FAILED(rv))
         return 3;
 
-    strcpy(lastslash, "\\xulrunner\\xul.dll");
+    *lastslash = '\0';
 
-    HINSTANCE xulModule = LoadLibraryEx(path, NULL, 0);
+    char xulPath[_MAX_PATH];
+    _snprintf(xulPath, sizeof(xulPath), "%s\\xul.dll", xpcomPath);
+    xulPath[sizeof(xulPath) - 1] = '\0';
+
+    HINSTANCE xulModule = LoadLibraryEx(xulPath, NULL, 0);
     if (!xulModule)
         return 4;
+
+    char temp[_MAX_PATH];
+    GetModuleFileName(xulModule, temp, sizeof(temp));
 
     XRE_InitEmbedding2 =
         (XRE_InitEmbedding2Type) GetProcAddress(xulModule, "XRE_InitEmbedding2");
@@ -209,18 +218,22 @@ int main(int argc, char *argv[])
 
     // Scope all the XPCOM stuff
     {
-        strcpy(lastslash, "\\xulrunner");
-
         nsCOMPtr<nsILocalFile> xuldir;
-        rv = NS_NewNativeLocalFile(nsCString(path), PR_FALSE,
+        rv = NS_NewNativeLocalFile(nsCString(xpcomPath), PR_FALSE,
                                    getter_AddRefs(xuldir));
         if (NS_FAILED(rv))
             return 6;
 
+        char self[_MAX_PATH];
+        GetModuleFileName(ghInstanceApp, self, sizeof(self));
+        lastslash = ns_strrpbrk(xpcomPath, "/\\");
+        if (!lastslash)
+            return 7;
+
         *lastslash = '\0';
 
         nsCOMPtr<nsILocalFile> appdir;
-        rv = NS_NewNativeLocalFile(nsCString(path), PR_FALSE,
+        rv = NS_NewNativeLocalFile(nsCString(self), PR_FALSE,
                                    getter_AddRefs(appdir));
         if (NS_FAILED(rv))
             return 8;

@@ -43,6 +43,7 @@
 
 #include "nsXULAppAPI.h"
 #include "nsXPCOMGlue.h"
+#include "nsRegisterGRE.h"
 #include "nsAppRunner.h"
 #include "nsILocalFile.h"
 #include "nsIXULAppInstall.h"
@@ -260,6 +261,16 @@ InstallXULApp(nsIFile* aXULRunnerDir,
   return 0;
 }
 
+static const GREProperty kGREProperties[] = {
+  { "xulrunner", "true" }
+#ifdef TARGET_XPCOM_ABI
+  , { "abi", TARGET_XPCOM_ABI }
+#endif
+#ifdef MOZ_JAVAXPCOM
+  , { "javaxpcom", "1" }
+#endif
+};
+
 class AutoAppData
 {
 public:
@@ -305,6 +316,67 @@ int main(int argc, char* argv[])
     nsresult rv = GetGREVersion(argv[0], &milestone, nsnull);
     if (NS_FAILED(rv))
       return 2;
+
+    PRBool registerGlobal = IsArg(argv[1], "register-global");
+    PRBool registerUser   = IsArg(argv[1], "register-user");
+    if (registerGlobal || registerUser) {
+      if (argc != 2) {
+        Usage(argv[0]);
+        return 1;
+      }
+
+      nsCOMPtr<nsIFile> regDir;
+      rv = GetXULRunnerDir(argv[0], getter_AddRefs(regDir));
+      if (NS_FAILED(rv))
+        return 2;
+
+      return RegisterXULRunner(registerGlobal, regDir,
+                               kGREProperties,
+                               NS_ARRAY_LENGTH(kGREProperties),
+                               milestone.get()) ? 0 : 2;
+    }
+
+    registerGlobal = IsArg(argv[1], "unregister-global");
+    registerUser   = IsArg(argv[1], "unregister-user");
+    if (registerGlobal || registerUser) {
+      if (argc != 2) {
+        Usage(argv[0]);
+        return 1;
+      }
+
+      nsCOMPtr<nsIFile> regDir;
+      rv = GetXULRunnerDir(argv[0], getter_AddRefs(regDir));
+      if (NS_FAILED(rv))
+        return 2;
+
+      UnregisterXULRunner(registerGlobal, regDir, milestone.get());
+      return 0;
+    }
+
+    if (IsArg(argv[1], "find-gre")) {
+      if (argc != 3) {
+        Usage(argv[0]);
+        return 1;
+      }
+
+      char path[MAXPATHLEN];
+      static const GREVersionRange vr = {
+        argv[2], PR_TRUE,
+        argv[2], PR_TRUE
+      };
+      static const GREProperty kProperties[] = {
+        { "xulrunner", "true" }
+      };
+
+      rv = GRE_GetGREPathWithProperties(&vr, 1, kProperties,
+                                        NS_ARRAY_LENGTH(kProperties),
+                                        path, sizeof(path));
+      if (NS_FAILED(rv))
+        return 1;
+
+      printf("%s\n", path);
+      return 0;
+    }
 
     if (IsArg(argv[1], "gre-version")) {
       if (argc != 2) {
