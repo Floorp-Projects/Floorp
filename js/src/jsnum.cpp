@@ -1290,7 +1290,7 @@ ValueToNumberSlow(JSContext *cx, Value v, double *out)
             break;
 
         JS_ASSERT(v.isObject());
-        if (!DefaultValue(cx, &v.toObject(), JSTYPE_NUMBER, &v))
+        if (!ToPrimitive(cx, JSTYPE_NUMBER, &v))
             return false;
         if (v.isObject())
             break;

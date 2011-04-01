@@ -5918,15 +5918,36 @@ HasDataProperty(JSObject *obj, jsid methodid, Value *vp)
     return false;
 }
 
-bool
+/*
+ * Gets |obj[id]|.  If that value's not callable, returns true and stores a
+ * non-primitive value in *vp.  If it's callable, calls it with no arguments
+ * and |obj| as |this|, returning the result in *vp.
+ *
+ * This is a mini-abstraction for ES5 8.12.8 [[DefaultValue]], either steps 1-2
+ * or steps 3-4.
+ */
+static bool
+MaybeCallMethod(JSContext *cx, JSObject *obj, jsid id, Value *vp)
+{
+    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, vp))
+        return false;
+    if (!js_IsCallable(*vp)) {
+        *vp = ObjectValue(*obj);
+        return true;
+    }
+    return ExternalInvoke(cx, ObjectValue(*obj), *vp, 0, NULL, vp);
+}
+
+JSBool
 DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
 {
-    JS_ASSERT(hint != JSTYPE_OBJECT && hint != JSTYPE_FUNCTION);
+    JS_ASSERT(hint == JSTYPE_NUMBER || hint == JSTYPE_STRING || hint == JSTYPE_VOID);
+    JS_ASSERT(!obj->isXML());
 
-    Value v = ObjectValue(*obj);
+    Class *clasp = obj->getClass();
     if (hint == JSTYPE_STRING) {
         /* Optimize (new String(...)).toString(). */
-        if (obj->getClass() == &js_StringClass &&
+        if (clasp == &js_StringClass &&
             ClassMethodIsNative(cx, obj,
                                  &js_StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.toStringAtom),
@@ -5935,24 +5956,17 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return true;
         }
 
-        Value fval;
-        jsid id = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
-        if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
+        if (!MaybeCallMethod(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom), vp))
             return false;
-        if (js_IsCallable(fval)) {
-            if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, &v))
-                return false;
-            if (v.isPrimitive()) {
-                *vp = v;
-                return true;
-            }
-        }
+        if (vp->isPrimitive())
+            return true;
 
-        if (!obj->getClass()->convert(cx, obj, hint, &v))
+        if (!MaybeCallMethod(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom), vp))
             return false;
+        if (vp->isPrimitive())
+            return true;
     } else {
         /* Optimize (new String(...)).valueOf(). */
-        Class *clasp = obj->getClass();
         if ((clasp == &js_StringClass &&
              ClassMethodIsNative(cx, obj, &js_StringClass,
                                  ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom),
@@ -5965,44 +5979,30 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return true;
         }
 
-        if (!obj->getClass()->convert(cx, obj, hint, &v))
+        if (!MaybeCallMethod(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom), vp))
             return false;
-        if (v.isObject()) {
-            JS_ASSERT(hint != TypeOfValue(cx, v));
-            Value fval;
-            jsid id = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
-            if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
-                return false;
-            if (js_IsCallable(fval)) {
-                if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, &v))
-                    return false;
-                if (v.isPrimitive()) {
-                    *vp = v;
-                    return true;
-                }
-            }
-        }
+        if (vp->isPrimitive())
+            return true;
+
+        if (!MaybeCallMethod(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom), vp))
+            return false;
+        if (vp->isPrimitive())
+            return true;
     }
-    if (v.isObject()) {
-        /* Avoid recursive death when decompiling in js_ReportValueError. */
-        JSString *str;
-        if (hint == JSTYPE_STRING) {
-            str = JS_InternString(cx, obj->getClass()->name);
-            if (!str)
-                return false;
-        } else {
-            str = NULL;
-        }
-        vp->setObject(*obj);
-        js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO,
-                             JSDVG_SEARCH_STACK, *vp, str,
-                             (hint == JSTYPE_VOID)
-                             ? "primitive type"
-                             : JS_TYPE_STR(hint));
-        return false;
+
+    /* Avoid recursive death when decompiling in js_ReportValueError. */
+    JSString *str;
+    if (hint == JSTYPE_STRING) {
+        str = JS_InternString(cx, clasp->name);
+        if (!str)
+            return false;
+    } else {
+        str = NULL;
     }
-    *vp = v;
-    return true;
+
+    js_ReportValueError2(cx, JSMSG_CANT_CONVERT_TO, JSDVG_SEARCH_STACK, ObjectValue(*obj), str,
+                         (hint == JSTYPE_VOID) ? "primitive type" : JS_TYPE_STR(hint));
+    return false;
 }
 
 } /* namespace js */
@@ -6286,26 +6286,6 @@ js_ValueToNonNullObject(JSContext *cx, const Value &v)
     if (!obj)
         js_ReportIsNullOrUndefined(cx, JSDVG_SEARCH_STACK, v, NULL);
     return obj;
-}
-
-JSBool
-js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, Value *rval)
-{
-    Value fval;
-    jsid id = ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom);
-    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
-        return false;
-    if (js_IsCallable(fval)) {
-        Value v;
-        Value argv[] = { StringValue(cx->runtime->atomState.typeAtoms[type]) };
-        if (!ExternalInvoke(cx, ObjectValue(*obj), fval, JS_ARRAY_LENGTH(argv), argv, &v))
-            return false;
-        if (v.isPrimitive()) {
-            *rval = v;
-            return true;
-        }
-    }
-    return true;
 }
 
 #if JS_HAS_XDR
