@@ -53,7 +53,6 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsRegion.h"
-#include "nsInt64.h"
 #include "nsHashtable.h"
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"

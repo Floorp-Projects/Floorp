@@ -40,7 +40,6 @@
 #include "nscore.h"
 #include "prprf.h"
 #include "plstr.h"
-#include "nsInt64.h"
 
 #include "nsISupports.h"
 #include "nsIServiceManager.h"

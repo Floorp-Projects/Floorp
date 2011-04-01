@@ -42,7 +42,6 @@
 #include "nsJARProtocolHandler.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
-#include "nsInt64.h"
 #include "nsEscape.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
