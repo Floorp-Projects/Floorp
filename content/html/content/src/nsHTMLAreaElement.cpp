@@ -140,6 +140,7 @@ NS_HTML_CONTENT_INTERFACE_TABLE_TAIL_CLASSINFO(HTMLAreaElement)
 NS_IMPL_ELEMENT_CLONE(nsHTMLAreaElement)
 
 
+NS_IMPL_STRING_ATTR(nsHTMLAreaElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Alt, alt)
 NS_IMPL_STRING_ATTR(nsHTMLAreaElement, Coords, coords)
 NS_IMPL_URI_ATTR(nsHTMLAreaElement, Href, href)
@@ -196,9 +197,16 @@ nsHTMLAreaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 {
   Link::ResetLinkState(false);
 
-  return nsGenericHTMLElement::BindToTree(aDocument, aParent,
+  nsresult rv = nsGenericHTMLElement::BindToTree(aDocument, aParent,
                                                  aBindingParent,
                                                  aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aDocument) {
+    RegAccessKey();
+  }
+
+  return rv;
 }
 
 void
@@ -208,6 +216,10 @@ nsHTMLAreaElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   // be under a different xml:base, so forget the cached state now.
   Link::ResetLinkState(false);
 
+  if (IsInDoc()) {
+    UnregAccessKey();
+  }
+
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
@@ -216,6 +228,10 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify)
 {
+  if (aName == nsGkAtoms::accesskey && aNameSpaceID == kNameSpaceID_None) {
+    UnregAccessKey();
+  }
+
   nsresult rv =
     nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue, aNotify);
 
@@ -228,6 +244,12 @@ nsHTMLAreaElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     Link::ResetLinkState(!!aNotify);
   }
 
+  if (aName == nsGkAtoms::accesskey && aNameSpaceID == kNameSpaceID_None &&
+      !aValue.IsEmpty()) {
+    SetFlags(NODE_HAS_ACCESSKEY);
+    RegAccessKey();
+  }
+
   return rv;
 }
 
@@ -235,6 +257,13 @@ nsresult
 nsHTMLAreaElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                              PRBool aNotify)
 {
+  if (aAttribute == nsGkAtoms::accesskey &&
+      aNameSpaceID == kNameSpaceID_None) {
+    // Have to unregister before clearing flag. See UnregAccessKey
+    UnregAccessKey();
+    UnsetFlags(NODE_HAS_ACCESSKEY);
+  }
+
   nsresult rv = nsGenericHTMLElement::UnsetAttr(aNameSpaceID, aAttribute,
                                                 aNotify);
 
