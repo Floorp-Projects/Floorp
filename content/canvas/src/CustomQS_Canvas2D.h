@@ -167,6 +167,12 @@ CreateImageData(JSContext* cx,
                 jsval* vp)
 {
     using mozilla::CheckedInt;
+
+    if (w == 0)
+        w = 1;
+    if (h == 0)
+        h = 1;
+
     CheckedInt<uint32> len = CheckedInt<uint32>(w) * h * 4;
     if (!len.valid()) {
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);

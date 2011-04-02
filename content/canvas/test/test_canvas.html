@@ -7462,8 +7462,8 @@ try {
 
 var imgdata = ctx.createImageData(0.0001, 0.0001);
 ok(imgdata.data.length == imgdata.width*imgdata.height*4, "imgdata.data.length == imgdata.width*imgdata.height*4");
-todo(imgdata.width == 1, "imgdata.width == 1");
-todo(imgdata.height == 1, "imgdata.height == 1");
+ok(imgdata.width == 1, "imgdata.width == 1");
+ok(imgdata.height == 1, "imgdata.height == 1");
 var isTransparentBlack = true;
 for (var i = 0; i < imgdata.data.length; ++i)
     if (imgdata.data[i] !== 0)
@@ -8081,7 +8081,7 @@ ok(imgdata.height == 1, "imgdata.height == 1");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
