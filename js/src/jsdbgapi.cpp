@@ -402,12 +402,12 @@ JS_ClearTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
         JSCompartment *oldCompartment = cx->compartment;
-        cx->compartment = script->compartment;
+        cx->setCompartment(script->compartment);
 
         mjit::Recompiler recompiler(cx, script);
         recompiler.recompile();
 
-        cx->compartment = oldCompartment;
+        cx->setCompartment(oldCompartment);
     }
 #endif
 }

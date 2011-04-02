@@ -191,6 +191,8 @@ InlineReturn(VMFrame &f)
 void JS_FASTCALL
 stubs::SlowCall(VMFrame &f, uint32 argc)
 {
+    printf("CALL\n");
+
     Value *vp = f.regs.sp - (argc + 2);
 
     if (!Invoke(f.cx, InvokeArgsAlreadyOnTheStack(vp, argc), 0))
@@ -200,6 +202,8 @@ stubs::SlowCall(VMFrame &f, uint32 argc)
 void JS_FASTCALL
 stubs::SlowNew(VMFrame &f, uint32 argc)
 {
+    printf("NEW\n");
+
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
 

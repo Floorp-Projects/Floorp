@@ -1648,6 +1648,8 @@ struct JSContext
     /* GC heap compartment. */
     JSCompartment       *compartment;
 
+    inline void setCompartment(JSCompartment *compartment);
+
     /* Currently executing frame and regs, set by stack operations. */
     JS_REQUIRES_STACK
     JSFrameRegs         *regs;
@@ -1938,6 +1940,8 @@ struct JSContext
     bool                 methodJitEnabled;
     bool                 profilingEnabled;
 #endif
+
+    bool                 inferenceEnabled;
 
     /* Caller must be holding runtime->gcLock. */
     void updateJITEnabled();

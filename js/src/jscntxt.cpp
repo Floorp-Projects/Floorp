@@ -1958,6 +1958,7 @@ JSContext::resetCompartment()
     }
 
     compartment = scopeobj->compartment();
+    inferenceEnabled = compartment->types.inferenceEnabled;
 
     if (isExceptionPending())
         wrapPendingException();

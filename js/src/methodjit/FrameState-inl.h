@@ -204,7 +204,7 @@ FrameState::pop()
 
     forgetAllRegs(fe);
 
-    a->typeSets[fe - spBase] = NULL;
+    a->extraArray[fe - spBase].reset();
 }
 
 inline void
@@ -238,7 +238,7 @@ FrameState::rawPush()
     if (!sp->isTracked())
         addToTracker(sp);
 
-    a->typeSets[sp - spBase] = NULL;
+    a->extraArray[sp - spBase].reset();
 
     return sp++;
 }
@@ -401,16 +401,6 @@ FrameState::pushInt32(RegisterID payload)
     fe->data.unsync();
     fe->data.setRegister(payload);
     regstate(payload).associate(fe, RematInfo::DATA);
-}
-
-inline void
-FrameState::pushInitializerObject(RegisterID payload, bool array, JSObject *baseobj)
-{
-    pushTypedPayload(JSVAL_TYPE_OBJECT, payload);
-
-    FrameEntry *fe = peek(-1);
-    fe->initArray = array;
-    fe->initObject = baseobj;
 }
 
 inline void
@@ -870,20 +860,6 @@ FrameState::forgetType(FrameEntry *fe)
     fe->type.setMemory();
 }
 
-inline types::TypeSet *
-FrameState::getTypeSet(FrameEntry *fe)
-{
-    JS_ASSERT(fe >= spBase && fe < sp);
-    return a->typeSets[fe - spBase];
-}
-
-inline void
-FrameState::learnTypeSet(unsigned slot, types::TypeSet *types)
-{
-    if (slot < unsigned(sp - spBase))
-        a->typeSets[slot] = types;
-}
-
 inline void
 FrameState::learnType(FrameEntry *fe, JSValueType type, bool unsync)
 {
@@ -1058,7 +1034,8 @@ FrameState::getOrTrack(uint32 index)
 inline FrameEntry *
 FrameState::getStack(uint32 slot)
 {
-    JS_ASSERT(slot < uint32(sp - spBase));
+    if (slot >= uint32(sp - spBase))
+        return NULL;
     return getOrTrack(uint32(&spBase[slot] - entries));
 }
 

@@ -389,13 +389,13 @@ AutoCompartment::enter()
     if (origin != destination) {
         LeaveTrace(context);
 
-        context->compartment = destination;
+        context->setCompartment(destination);
         JSObject *scopeChain = target->getGlobal();
         JS_ASSERT(scopeChain->isNative());
 
         frame.construct();
         if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref())) {
-            context->compartment = origin;
+            context->setCompartment(origin);
             return false;
         }
 
