@@ -329,7 +329,8 @@ if __name__ == '__main__':
         test_list = exclude_tests(test_list, OPTIONS.exclude_file)
 
     if OPTIONS.no_extensions:
-        test_list = [_ for _ in test_list if '/extensions/' not in _.path]
+        pattern = os.sep + 'extensions' + os.sep
+        test_list = [_ for _ in test_list if pattern not in _.path]
 
     if not OPTIONS.random:
         test_list = [ _ for _ in test_list if not _.random ]
