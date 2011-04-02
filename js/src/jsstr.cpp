@@ -881,11 +881,8 @@ ValueToIntegerRange(JSContext *cx, const Value &v, int32 *out)
         *out = v.toInt32();
     } else {
         double d;
-
-        if (!ValueToNumber(cx, v, &d))
+        if (!ToInteger(cx, v, &d))
             return false;
-
-        d = js_DoubleToInteger(d);
         if (d > INT32_MAX)
             *out = INT32_MAX;
         else if (d < INT32_MIN)
@@ -1085,14 +1082,9 @@ js_str_charAt(JSContext *cx, uintN argc, Value *vp)
         if (!str)
             return false;
 
-        double d;
-        if (argc == 0) {
-            d = 0.0;
-        } else {
-            if (!ValueToNumber(cx, vp[2], &d))
-                return false;
-            d = js_DoubleToInteger(d);
-        }
+        double d = 0.0;
+        if (argc > 0 && !ToInteger(cx, vp[2], &d))
+            return false;
 
         if (d < 0 || str->length() <= d)
             goto out_of_range;
@@ -1125,14 +1117,9 @@ js_str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
         if (!str)
             return false;
 
-        double d;
-        if (argc == 0) {
-            d = 0.0;
-        } else {
-            if (!ValueToNumber(cx, vp[2], &d))
-                return false;
-            d = js_DoubleToInteger(d);
-        }
+        double d = 0.0;
+        if (argc > 0 && !ToInteger(cx, vp[2], &d))
+            return false;
 
         if (d < 0 || str->length() <= d)
             goto out_of_range;
@@ -1467,9 +1454,8 @@ str_indexOf(JSContext *cx, uintN argc, Value *vp)
             }
         } else {
             jsdouble d;
-            if (!ValueToNumber(cx, vp[3], &d))
-                return JS_FALSE;
-            d = js_DoubleToInteger(d);
+            if (!ToInteger(cx, vp[3], &d))
+                return false;
             if (d <= 0) {
                 start = 0;
             } else if (d > textlen) {
@@ -2994,9 +2980,8 @@ str_slice(JSContext *cx, uintN argc, Value *vp)
     if (argc != 0) {
         double begin, end, length;
 
-        if (!ValueToNumber(cx, vp[2], &begin))
-            return JS_FALSE;
-        begin = js_DoubleToInteger(begin);
+        if (!ToInteger(cx, vp[2], &begin))
+            return false;
         length = str->length();
         if (begin < 0) {
             begin += length;
@@ -3009,9 +2994,8 @@ str_slice(JSContext *cx, uintN argc, Value *vp)
         if (argc == 1 || vp[3].isUndefined()) {
             end = length;
         } else {
-            if (!ValueToNumber(cx, vp[3], &end))
-                return JS_FALSE;
-            end = js_DoubleToInteger(end);
+            if (!ToInteger(cx, vp[3], &end))
+                return false;
             if (end < 0) {
                 end += length;
                 if (end < 0)
