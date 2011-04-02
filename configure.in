@@ -8931,7 +8931,7 @@ if test -z "$SKIP_LIBRARY_CHECKS" -a "$NECKO_WIFI" -a "$OS_ARCH" = "Linux"
 then
   MOZ_CHECK_HEADER([iwlib.h])
   if test "$ac_cv_header_iwlib_h" != "yes"; then
-    AC_MSG_ERROR([Can't find header iwlib.h for Necko WiFi scanning (might be in package libiw-dev (Ubuntu) or wireless-tools-devel (Fedora)); use --disable-necko-wifi to disable])
+    AC_MSG_ERROR([Can't find header iwlib.h for Necko WiFi scanning (might be in package libiw-dev (Ubuntu) or wireless-tools-devel (Fedora) or libiw-devel (openSUSE)); use --disable-necko-wifi to disable])
   fi
 fi
 
@@ -9351,7 +9351,7 @@ dnl Check for headers, etc. needed by WebGL.
 if test -n "$MOZ_WEBGL_GLX"; then
     MOZ_CHECK_HEADER(GL/glx.h)
     if test "$ac_cv_header_GL_glx_h" != "yes"; then
-        AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
+        AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa-devel (openSUSE))])
     fi
 fi # MOZ_WEBGL_GLX
 fi # COMPILE_ENVIRONMENT
