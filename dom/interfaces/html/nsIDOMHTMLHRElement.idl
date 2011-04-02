@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(8303ec1f-dc33-447a-8a10-7a28b5809dec)]
+[scriptable, uuid(a6cf90a8-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMHTMLHRElement : nsIDOMHTMLElement
 {
            attribute DOMString        align;
