@@ -554,7 +554,6 @@ distclean clean::
 		$(call SUBMAKE,$@,ctypes/libffi)
 endif
 
-ifdef MOZ_SYNC_BUILD_FILES
 # Because the SpiderMonkey can be distributed and built independently
 # of the Mozilla source tree, it contains its own copies of many of
 # the files used by the top-level Mozilla build process, from the
@@ -569,31 +568,32 @@ ifdef MOZ_SYNC_BUILD_FILES
 # Some files are reasonable to diverge; for  example,
 # js/config/autoconf.mk.in doesn't need most of the stuff in
 # config/autoconf.mk.in.
-check-sync-dirs = $(PYTHON) $(srcdir)/config/check-sync-dirs.py
-check::
-	$(check-sync-dirs) $(srcdir)/config $(MOZ_SYNC_BUILD_FILES)/config
-	$(check-sync-dirs) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
+check-sync-dirs-cmd = $(PYTHON) $(srcdir)/config/check-sync-dirs.py
+check-sync-dirs:
+	$(check-sync-dirs-cmd) $(srcdir)/config $(MOZ_SYNC_BUILD_FILES)/config
+	$(check-sync-dirs-cmd) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
 
-check-valgrind::
-	$(check-sync-dirs) $(srcdir)/config $(MOZ_SYNC_BUILD_FILES)/config
-	$(check-sync-dirs) $(srcdir)/build $(MOZ_SYNC_BUILD_FILES)/build
+ifdef MOZ_SYNC_BUILD_FILES
+check:: check-sync-dirs
 endif
 
 # The "find any vanilla new/new[] calls" script is tailored to Linux, so
 # only run it there.  That should be enough to catch any such calls that
 # creep in.
-ifeq ($(OS_ARCH),Linux)
-check::
+check-vanilla-new:
 	$(srcdir)/config/find_vanilla_new_calls $(LIBRARY)
+
+ifeq ($(OS_ARCH),Linux)
+check:: check-vanilla-new
 endif
 
 # Help ensure that the number of OOM errors in SpiderMonkey doesn't increase.
 # If the number of OOM errors changes, update the number below. We intend this
 # number to go down over time, by fixing OOMs.
-ifdef DEBUG
 check-ooms:
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/config/find_OOM_errors.py --regression 125
 
+ifdef DEBUG
 check:: check-ooms
 endif
 
@@ -602,7 +602,6 @@ endif
 # don't give different results. We skip the contents of objdirs using |find|
 # (it can't be done with %-expansion, because the files we want to skip aren't
 # in the vpath).
-ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
 ALL_FILES=$(shell find $(srcdir) \( -name "*.cpp" -o -name "*.h" \) -not -path "*/dist/*")
 check-malloc-function-usage: $(filter-out %jsutil.h %jscntxt.h, $(ALL_FILES))
 
@@ -625,18 +624,22 @@ check-malloc-function-usage: $(filter-out %jsutil.h %jscntxt.h, $(ALL_FILES))
 	$(srcdir)/config/check_source_count.py UnwantedForeground:: 36 \
 		"in Makefile.in" "{cx,rt}->{free_,delete_,array_delete}" $^
 
+ifneq ($(OS_ARCH),WINNT) # FIXME: this should be made work on Windows too.
 check:: check-malloc-function-usage
 endif
 
-ifndef WINCE
 JITFLAGS = ,m,j,mj,mjp,am,amj,amjp,amd
-check::
+check-jit-test::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
 
-check-valgrind::
+check-jit-test-valgrind::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
+
+ifndef WINCE
+check:: check-jit-test
+check-valgrind:: check-jit-test-valgrind
 endif
 
 DIST_GARBAGE = config.cache config.log config.status \
