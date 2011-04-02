@@ -43,7 +43,7 @@ def check_manifest(test_list):
     else:
         print 'All test files are listed in manifests'
 
-def print_tinderbox_result(label, path, message=None, skip=False):
+def print_tinderbox_result(label, path, message=None, skip=False, time=None):
     result = label
     result += " | " + path
     result += " |" + OPTIONS.shell_args
@@ -51,6 +51,8 @@ def print_tinderbox_result(label, path, message=None, skip=False):
         result += " | " + message
     if skip:
         result += ' | (SKIP)'
+    if time > OPTIONS.timeout:
+        result += ' | (TIMEOUT)'
     print result
 
 class TestTask:
@@ -92,7 +94,7 @@ class ResultsSink:
     def push(self, output):
         if isinstance(output, NullTestOutput):
             if OPTIONS.tinderbox:
-                print_tinderbox_result('TEST-KNOWN-FAIL', output.test.path, skip=True)
+                print_tinderbox_result('TEST-KNOWN-FAIL', output.test.path, time=output.dt, skip=True)
             self.counts[2] += 1
             self.n += 1
         else:
@@ -124,10 +126,10 @@ class ResultsSink:
                         label = self.LABELS[(sub_ok, result.test.expect, result.test.random)][0]
                         if label == 'TEST-UNEXPECTED-PASS':
                             label = 'TEST-PASS (EXPECTED RANDOM)'
-                        print_tinderbox_result(label, result.test.path, message=msg)
+                        print_tinderbox_result(label, result.test.path, time=output.dt, message=msg)
                 print_tinderbox_result(self.LABELS[
                     (result.result, result.test.expect, result.test.random)][0],
-                    result.test.path)
+                    result.test.path, time=output.dt)
            
         if self.pb:
             self.pb.label = '[%4d|%4d|%4d]'%tuple(self.counts)
