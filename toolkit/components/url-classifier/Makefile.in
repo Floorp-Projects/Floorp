@@ -43,11 +43,42 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS      = public src
+MODULE = url-classifier
+LIBRARY_NAME = urlclassifier_s
+XPIDL_MODULE = url-classifier
+LIBXUL_LIBRARY = 1
+FORCE_STATIC_LIB = 1
+
+XPIDLSRCS = \
+  nsIUrlClassifierDBService.idl \
+  nsIUrlClassifierHashCompleter.idl \
+  nsIUrlClassifierStreamUpdater.idl \
+  nsIUrlClassifierUtils.idl \
+  nsIUrlListManager.idl \
+  $(NULL)
+
+CPPSRCS = \
+  nsUrlClassifierDBService.cpp \
+  nsUrlClassifierStreamUpdater.cpp \
+  nsUrlClassifierUtils.cpp \
+  nsUrlClassifierHashCompleter.cpp \
+  $(NULL)
+
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../build \
+  $(SQLITE_CFLAGS) \
+  $(NULL)
+
+EXTRA_COMPONENTS = nsURLClassifier.manifest
+
+# Same as JS components that are run through the pre-processor.
+EXTRA_PP_COMPONENTS = \
+  nsUrlClassifierLib.js \
+  nsUrlClassifierListManager.js \
+  $(NULL)
 
 ifdef ENABLE_TESTS
-TOOL_DIRS     += tests
+TOOL_DIRS += tests
 endif
 
 include $(topsrcdir)/config/rules.mk
-

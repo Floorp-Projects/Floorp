@@ -226,19 +226,14 @@ nsStyleContext::FindChildWithRules(const nsIAtom* aPseudoTag,
 const void* nsStyleContext::GetCachedStyleData(nsStyleStructID aSID)
 {
   const void* cachedData;
-  PRBool isReset = nsCachedStyleData::IsReset(aSID);
-  if (isReset) {
+  if (nsCachedStyleData::IsReset(aSID)) {
     if (mCachedResetData) {
-      char* slot = reinterpret_cast<char*>(mCachedResetData) +
-                   nsCachedStyleData::gInfo[aSID].mInheritResetOffset;
-      cachedData = *reinterpret_cast<void**>(slot);
+      cachedData = mCachedResetData->mStyleStructs[aSID];
     } else {
       cachedData = nsnull;
     }
   } else {
-    char* slot = reinterpret_cast<char*>(&mCachedInheritedData) +
-                 nsCachedStyleData::gInfo[aSID].mInheritResetOffset;
-    cachedData = *reinterpret_cast<void**>(slot);
+    cachedData = mCachedInheritedData.mStyleStructs[aSID];
   }
   return cachedData;
 }
@@ -314,22 +309,19 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, void* aStruct)
   // See the comments there (in nsRuleNode.h) for more details about
   // what this is doing and why.
 
-  char* dataSlot;
+  void** dataSlot;
   if (nsCachedStyleData::IsReset(aSID)) {
     if (!mCachedResetData) {
       mCachedResetData = new (mRuleNode->GetPresContext()) nsResetStyleData;
       // XXXbz And if that fails?
     }
-    dataSlot = reinterpret_cast<char*>(mCachedResetData) +
-               nsCachedStyleData::gInfo[aSID].mInheritResetOffset;
+    dataSlot = &mCachedResetData->mStyleStructs[aSID];
   } else {
-    dataSlot = reinterpret_cast<char*>(&mCachedInheritedData) +
-               nsCachedStyleData::gInfo[aSID].mInheritResetOffset;
+    dataSlot = &mCachedInheritedData.mStyleStructs[aSID];
   }
-  NS_ASSERTION(!*reinterpret_cast<void**>(dataSlot) ||
-               (mBits & nsCachedStyleData::GetBitForSID(aSID)),
+  NS_ASSERTION(!*dataSlot || (mBits & nsCachedStyleData::GetBitForSID(aSID)),
                "Going to leak style data");
-  *reinterpret_cast<void**>(dataSlot) = aStruct;
+  *dataSlot = aStruct;
 }
 
 void
@@ -574,6 +566,22 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
     }
 
     // NB: Calling Peek on |this|, not |thisVis| (see above).
+    if (!change && PeekStyleTextReset()) {
+      const nsStyleTextReset *thisVisTextReset = thisVis->GetStyleTextReset();
+      const nsStyleTextReset *otherVisTextReset = otherVis->GetStyleTextReset();
+      nscolor thisVisDecColor, otherVisDecColor;
+      PRBool thisVisDecColorIsFG, otherVisDecColorIsFG;
+      thisVisTextReset->GetDecorationColor(thisVisDecColor,
+                                           thisVisDecColorIsFG);
+      otherVisTextReset->GetDecorationColor(otherVisDecColor,
+                                            otherVisDecColorIsFG);
+      if (thisVisDecColorIsFG != otherVisDecColorIsFG ||
+          (!thisVisDecColorIsFG && thisVisDecColor != otherVisDecColor)) {
+        change = PR_TRUE;
+      }
+    }
+
+    // NB: Calling Peek on |this|, not |thisVis| (see above).
     if (!change && PeekStyleSVG()) {
       const nsStyleSVG *thisVisSVG = thisVis->GetStyleSVG();
       const nsStyleSVG *otherVisSVG = otherVis->GetStyleSVG();
@@ -734,6 +742,7 @@ nsStyleContext::GetVisitedDependentColor(nsCSSProperty aProperty)
                aProperty == eCSSProperty_border_left_color_value ||
                aProperty == eCSSProperty_outline_color ||
                aProperty == eCSSProperty__moz_column_rule_color ||
+               aProperty == eCSSProperty_text_decoration_color ||
                aProperty == eCSSProperty_fill ||
                aProperty == eCSSProperty_stroke,
                "we need to add to nsStyleContext::CalcStyleDifference");

@@ -47,7 +47,6 @@ EXTRA_DEPS += $(srcdir)/../objs.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue_s_nomozalloc
-SUPPRESS_FAKELIB = 1
 DIST_INSTALL	= 1
 
 

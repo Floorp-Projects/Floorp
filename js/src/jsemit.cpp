@@ -143,10 +143,10 @@ JSCodeGenerator::~JSCodeGenerator()
 
     /* NB: non-null only after OOM. */
     if (spanDeps)
-        parser->context->free(spanDeps);
+        parser->context->free_(spanDeps);
 
     if (upvarMap.vector)
-        parser->context->free(upvarMap.vector);
+        parser->context->free_(upvarMap.vector);
 }
 
 static ptrdiff_t
@@ -617,7 +617,7 @@ AddSpanDep(JSContext *cx, JSCodeGenerator *cg, jsbytecode *pc, jsbytecode *pc2,
     if ((index & (index - 1)) == 0 &&
         (!(sdbase = cg->spanDeps) || index >= SPANDEPS_MIN)) {
         size = sdbase ? SPANDEPS_SIZE(index) : SPANDEPS_SIZE_MIN / 2;
-        sdbase = (JSSpanDep *) cx->realloc(sdbase, size + size);
+        sdbase = (JSSpanDep *) cx->realloc_(sdbase, size + size);
         if (!sdbase)
             return JS_FALSE;
         cg->spanDeps = sdbase;
@@ -1233,7 +1233,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
      * can span top-level statements, because JS lacks goto.
      */
     size = SPANDEPS_SIZE(JS_BIT(JS_CeilingLog2(cg->numSpanDeps)));
-    cx->free(cg->spanDeps);
+    cx->free_(cg->spanDeps);
     cg->spanDeps = NULL;
     FreeJumpTargets(cg, cg->jumpTargets);
     cg->jumpTargets = NULL;
@@ -1956,6 +1956,15 @@ EmitEnterBlock(JSContext *cx, JSParseNode *pn, JSCodeGenerator *cg)
         blockObj->setSlot(slot, BooleanValue(isClosed));
     }
 
+    /*
+     * If clones of this block will have any extensible parents, then the clones
+     * must get unique shapes; see the comments for js::Bindings::
+     * extensibleParents.
+     */
+    if ((cg->flags & TCF_FUN_EXTENSIBLE_SCOPE) ||
+        cg->bindings.extensibleParents())
+        blockObj->setBlockOwnShape(cx);
+
     return true;
 }
 
@@ -2292,7 +2301,7 @@ BindNameToSlot(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             UpvarCookie *vector = cg->upvarMap.vector;
             uint32 length = cg->lexdeps.count;
             if (!vector || cg->upvarMap.length != length) {
-                vector = (UpvarCookie *) js_realloc(vector, length * sizeof *vector);
+                vector = (UpvarCookie *) cx->realloc_(vector, length * sizeof *vector);
                 if (!vector) {
                     JS_ReportOutOfMemory(cx);
                     return JS_FALSE;
@@ -2970,7 +2979,7 @@ EmitElemOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
             }
             right = &rtmp;
             right->pn_type = TOK_STRING;
-            right->pn_op = js_IsIdentifier(ATOM_TO_STRING(pn->pn_atom))
+            right->pn_op = js_IsIdentifier(pn->pn_atom)
                            ? JSOP_QNAMEPART
                            : JSOP_STRING;
             right->pn_arity = PN_NULLARY;
@@ -3202,7 +3211,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                 constVal.setNumber(pn4->pn_dval);
                 break;
               case TOK_STRING:
-                constVal.setString(ATOM_TO_STRING(pn4->pn_atom));
+                constVal.setString(pn4->pn_atom);
                 break;
               case TOK_NAME:
                 if (!pn4->maybeExpr()) {
@@ -3283,7 +3292,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
                     /* Just grab 8K for the worst-case bitmap. */
                     intmap_bitlen = JS_BIT(16);
                     intmap = (jsbitmap *)
-                        cx->malloc((JS_BIT(16) >> JS_BITS_PER_WORD_LOG2)
+                        cx->malloc_((JS_BIT(16) >> JS_BITS_PER_WORD_LOG2)
                                    * sizeof(jsbitmap));
                     if (!intmap) {
                         JS_ReportOutOfMemory(cx);
@@ -3301,7 +3310,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
       release:
         if (intmap && intmap != intmap_space)
-            cx->free(intmap);
+            cx->free_(intmap);
         if (!ok)
             return JS_FALSE;
 
@@ -3445,7 +3454,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
              */
             if (tableLength != 0) {
                 tableSize = (size_t)tableLength * sizeof *table;
-                table = (JSParseNode **) cx->malloc(tableSize);
+                table = (JSParseNode **) cx->malloc_(tableSize);
                 if (!table)
                     return JS_FALSE;
                 memset(table, 0, tableSize);
@@ -3610,7 +3619,7 @@ EmitSwitch(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn,
 
 out:
     if (table)
-        cx->free(table);
+        cx->free_(table);
     if (ok) {
         ok = js_PopStatementCG(cx, cg);
 
@@ -4417,7 +4426,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         vp->setNumber(pn_dval);
         return true;
       case TOK_STRING:
-        vp->setString(ATOM_TO_STRING(pn_atom));
+        vp->setString(pn_atom);
         return true;
       case TOK_PRIMARY:
         switch (pn_op) {
@@ -4572,7 +4581,7 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         }
 #endif
 
-        fun = (JSFunction *) pn->pn_funbox->object;
+        fun = pn->pn_funbox->function();
         JS_ASSERT(FUN_INTERPRETED(fun));
         if (fun->u.i.script) {
             /*

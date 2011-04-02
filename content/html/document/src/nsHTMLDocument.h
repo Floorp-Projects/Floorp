@@ -43,7 +43,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLBodyElement.h"
-#include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIScriptElement.h"
 #include "jsapi.h"
@@ -74,6 +73,8 @@ class nsHTMLDocument : public nsDocument,
                        public nsIDOMNSHTMLDocument
 {
 public:
+  using nsDocument::SetDocumentURI;
+
   nsHTMLDocument();
   virtual nsresult Init();
 
@@ -104,7 +105,7 @@ public:
 
   virtual void EndLoad();
 
-  virtual nsIDOMHTMLMapElement *GetImageMap(const nsAString& aMapName);
+  virtual mozilla::dom::Element* GetImageMap(const nsAString& aMapName);
 
   virtual void SetCompatibilityMode(nsCompatibility aMode);
 
@@ -122,13 +123,6 @@ public:
  
   // nsIDOMDocument interface
   NS_DECL_NSIDOMDOCUMENT
-
-  // nsIDOM3Document interface
-  NS_IMETHOD GetXmlEncoding(nsAString& aXmlVersion);
-  NS_IMETHOD GetXmlStandalone(PRBool *aXmlStandalone);
-  NS_IMETHOD SetXmlStandalone(PRBool aXmlStandalone);
-  NS_IMETHOD GetXmlVersion(nsAString& aXmlVersion);
-  NS_IMETHOD SetXmlVersion(const nsAString& aXmlVersion);
 
   // nsIDOMNode interface
   NS_FORWARD_NSIDOMNODE(nsDocument::)

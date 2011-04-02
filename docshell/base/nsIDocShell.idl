@@ -43,6 +43,7 @@
 %{ C++
 class nsPresContext;
 class nsIPresShell;
+struct JSContext;
 %}
 
 /**
@@ -71,7 +72,7 @@ interface nsIPrincipal;
 interface nsIWebBrowserPrint;
 interface nsIVariant;
 
-[scriptable, uuid(98cdbcc4-2d81-4191-a63f-b6c52085edbc)]
+[scriptable, uuid(f77271a1-0b22-4581-af6d-529125f1901d)]
 interface nsIDocShell : nsISupports
 {
   /**
@@ -174,6 +175,7 @@ interface nsIDocShell : nsISupports
    * Do either a history.pushState() or history.replaceState() operation,
    * depending on the value of aReplace.
    */
+  [implicit_jscontext]
   void addState(in nsIVariant aData, in DOMString aTitle,
                 in DOMString aURL, in boolean aReplace);
 
@@ -540,10 +542,7 @@ interface nsIDocShell : nsISupports
    * handling link clicks. Docshells are not app tabs unless told otherwise.
    */
   attribute boolean isAppTab;
-};
 
-[uuid(5f7a2184-31b6-4d67-9c75-0c17477766e2)]
-interface nsIDocShell_MOZILLA_2_0_BRANCH : nsISupports {
   /**
    * Create a new about:blank document and content viewer.
    * @param aPrincipal the principal to use for the new document.

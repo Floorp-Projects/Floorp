@@ -92,10 +92,10 @@ typedef PRLock JSLock;
  * Atomic increment and decrement for a reference counter, given jsrefcount *p.
  * NB: jsrefcount is int32, aka PRInt32, so that pratom.h functions work.
  */
-#define JS_ATOMIC_INCREMENT(p)      PR_AtomicIncrement((PRInt32 *)(p))
-#define JS_ATOMIC_DECREMENT(p)      PR_AtomicDecrement((PRInt32 *)(p))
-#define JS_ATOMIC_ADD(p,v)          PR_AtomicAdd((PRInt32 *)(p), (PRInt32)(v))
-#define JS_ATOMIC_SET(p,v)          PR_AtomicSet((PRInt32 *)(p), (PRInt32)(v))
+#define JS_ATOMIC_INCREMENT(p)      PR_ATOMIC_INCREMENT((PRInt32 *)(p))
+#define JS_ATOMIC_DECREMENT(p)      PR_ATOMIC_DECREMENT((PRInt32 *)(p))
+#define JS_ATOMIC_ADD(p,v)          PR_ATOMIC_ADD((PRInt32 *)(p), (PRInt32)(v))
+#define JS_ATOMIC_SET(p,v)          PR_ATOMIC_SET((PRInt32 *)(p), (PRInt32)(v))
 
 #define js_CurrentThreadId()        PR_GetCurrentThread()
 #define JS_NEW_LOCK()               PR_NewLock()
@@ -144,7 +144,7 @@ extern JSBool js_IsRuntimeLocked(JSRuntime *rt);
 #define JS_ATOMIC_ADD(p,v)          (*(p) += (v))
 #define JS_ATOMIC_SET(p,v)          (*(p) = (v))
 
-#define JS_CurrentThreadId() 0
+#define js_CurrentThreadId()        0
 #define JS_NEW_LOCK()               NULL
 #define JS_DESTROY_LOCK(l)          ((void)0)
 #define JS_ACQUIRE_LOCK(l)          ((void)0)

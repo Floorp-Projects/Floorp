@@ -77,7 +77,6 @@
 #include "nsXULPopupManager.h"
 
 #include "prmem.h"
-#include "prlock.h"
 
 #include "nsIDOMXULDocument.h"
 
@@ -116,6 +115,8 @@
 #define USE_NATIVE_MENUS
 #endif
 
+using namespace mozilla;
+
 /* Define Class IDs */
 static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
 
@@ -123,8 +124,8 @@ static NS_DEFINE_CID(kWindowCID,           NS_WINDOW_CID);
 
 nsWebShellWindow::nsWebShellWindow(PRUint32 aChromeFlags)
   : nsXULWindow(aChromeFlags)
+  , mSPTimerLock("nsWebShellWindow.mSPTimerLock")
 {
-  mSPTimerLock = PR_NewLock();
 }
 
 
@@ -136,13 +137,9 @@ nsWebShellWindow::~nsWebShellWindow()
     mWindow = nsnull; // Force release here.
   }
 
-  if (mSPTimerLock) {
-    PR_Lock(mSPTimerLock);
-    if (mSPTimer)
-      mSPTimer->Cancel();
-    PR_Unlock(mSPTimerLock);
-    PR_DestroyLock(mSPTimerLock);
-  }
+  MutexAutoLock lock(mSPTimerLock);
+  if (mSPTimer)
+    mSPTimer->Cancel();
 }
 
 NS_IMPL_ADDREF_INHERITED(nsWebShellWindow, nsXULWindow)
@@ -517,10 +514,7 @@ static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
 void
 nsWebShellWindow::SetPersistenceTimer(PRUint32 aDirtyFlags)
 {
-  if (!mSPTimerLock)
-    return;
-
-  PR_Lock(mSPTimerLock);
+  MutexAutoLock lock(mSPTimerLock);
   if (!mSPTimer) {
     nsresult rv;
     mSPTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
@@ -531,18 +525,14 @@ nsWebShellWindow::SetPersistenceTimer(PRUint32 aDirtyFlags)
   mSPTimer->InitWithFuncCallback(FirePersistenceTimer, this,
                                  SIZE_PERSISTENCE_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
   PersistentAttributesDirty(aDirtyFlags);
-  PR_Unlock(mSPTimerLock);
 }
 
 void
 nsWebShellWindow::FirePersistenceTimer(nsITimer *aTimer, void *aClosure)
 {
   nsWebShellWindow *win = static_cast<nsWebShellWindow *>(aClosure);
-  if (!win->mSPTimerLock)
-    return;
-  PR_Lock(win->mSPTimerLock);
+  MutexAutoLock lock(win->mSPTimerLock);
   win->SavePersistentAttributes();
-  PR_Unlock(win->mSPTimerLock);
 }
 
 
@@ -817,17 +807,14 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
   }
 
   nsCOMPtr<nsIXULWindow> kungFuDeathGrip(this);
-  if (mSPTimerLock) {
-  PR_Lock(mSPTimerLock);
-  if (mSPTimer) {
-    mSPTimer->Cancel();
-    SavePersistentAttributes();
-    mSPTimer = nsnull;
-    NS_RELEASE_THIS(); // the timer held a reference to us
-  }
-  PR_Unlock(mSPTimerLock);
-  PR_DestroyLock(mSPTimerLock);
-  mSPTimerLock = nsnull;
+  {
+    MutexAutoLock lock(mSPTimerLock);
+    if (mSPTimer) {
+      mSPTimer->Cancel();
+      SavePersistentAttributes();
+      mSPTimer = nsnull;
+      NS_RELEASE_THIS(); // the timer held a reference to us
+    }
   }
   return nsXULWindow::Destroy();
 }

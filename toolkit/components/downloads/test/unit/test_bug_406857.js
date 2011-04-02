@@ -54,22 +54,22 @@ function run_test()
     "VALUES (?1, ?2, ?3, ?4)");
 
   // Download from the test http server
-  stmt.bindStringParameter(0, "http://localhost:"+HTTP_SERVER_PORT+"/httpd.js");
+  stmt.bindByIndex(0, "http://localhost:"+HTTP_SERVER_PORT+"/httpd.js");
 
   // Download to a temp local file
   let file = Cc["@mozilla.org/file/directory_service;1"].
              getService(Ci.nsIProperties).get("TmpD", Ci.nsIFile);
   file.append("retry");
   file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0666);
-  stmt.bindStringParameter(1, Cc["@mozilla.org/network/io-service;1"].
+  stmt.bindByIndex(1, Cc["@mozilla.org/network/io-service;1"].
     getService(Ci.nsIIOService).newFileURI(file).spec);
 
   // Start it as canceled
-  stmt.bindInt32Parameter(2, dm.DOWNLOAD_CANCELED);
+  stmt.bindByIndex(2, dm.DOWNLOAD_CANCELED);
 
   // Add a referrer to make sure it doesn't disappear
   let referrer = "http://referrer.goes/here";
-  stmt.bindStringParameter(3, referrer);
+  stmt.bindByIndex(3, referrer);
 
   // Add it!
   stmt.execute();

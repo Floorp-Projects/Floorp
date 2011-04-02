@@ -348,18 +348,18 @@ class NativeIterCache {
  * is erroneously included in the measurement; see bug 562553.
  */
 class DtoaCache {
-    double   d;
-    jsint    base;
-    JSString *s;        // if s==NULL, d and base are not valid
+    double        d;
+    jsint         base;
+    JSFixedString *s;      // if s==NULL, d and base are not valid
   public:
     DtoaCache() : s(NULL) {}
     void purge() { s = NULL; }
 
-    JSString *lookup(jsint base, double d) {
+    JSFixedString *lookup(jsint base, double d) {
         return this->s && base == this->base && d == this->d ? this->s : NULL;
     }
 
-    void cache(jsint base, double d, JSString *s) {
+    void cache(jsint base, double d, JSFixedString *s) {
         this->base = base;
         this->d = d;
         this->s = s;
@@ -380,6 +380,8 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t                       gcBytes;
     size_t                       gcTriggerBytes;
     size_t                       gcLastBytes;
+
+    bool                         hold;
 
 #ifdef JS_GCMETER
     js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
@@ -435,6 +437,17 @@ struct JS_FRIEND_API(JSCompartment) {
 
     EmptyShapeSet                emptyShapes;
 
+    /*
+     * Initial shape given to RegExp objects, encoding the initial set of
+     * built-in instance properties and the fixed slots where they must be
+     * stored (see JSObject::JSSLOT_REGEXP_*). Later property additions may
+     * cause this shape to not be used by a regular expression (even along the
+     * entire shape parent chain, should the object go into dictionary mode).
+     * But because all the initial properties are non-configurable, they will
+     * always map to fixed slots.
+     */
+    const js::Shape              *initialRegExpShape;
+
     bool                         debugMode;  // true iff debug mode on
     JSCList                      scripts;    // scripts in this compartment
 
@@ -442,7 +455,8 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::NativeIterCache          nativeIterCache;
 
-    js::ToSourceCache            toSourceCache;
+    typedef js::LazilyConstructed<js::ToSourceCache> LazyToSourceCache;
+    LazyToSourceCache            toSourceCache;
 
     JSCompartment(JSRuntime *rt);
     ~JSCompartment();
@@ -450,10 +464,7 @@ struct JS_FRIEND_API(JSCompartment) {
     bool init();
 
     /* Mark cross-compartment wrappers. */
-    void markCrossCompartment(JSTracer *trc);
-
-    /* Mark this compartment's local roots. */
-    void mark(JSTracer *trc);
+    void markCrossCompartmentWrappers(JSTracer *trc);
 
     bool wrap(JSContext *cx, js::Value *vp);
     bool wrap(JSContext *cx, JSString **strp);
@@ -468,6 +479,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void purge(JSContext *cx);
     void finishArenaLists();
     void finalizeObjectArenaLists(JSContext *cx);
+    void finalizeShapeArenaLists(JSContext *cx);
     void finalizeStringArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
 
@@ -480,8 +492,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     js::MathCache *allocMathCache(JSContext *cx);
 
-    bool                         marked;
-    
     typedef js::HashMap<jsbytecode*,
                         size_t,
                         js::DefaultHasher<jsbytecode*>,
@@ -494,9 +504,6 @@ struct JS_FRIEND_API(JSCompartment) {
     js::MathCache *getMathCache(JSContext *cx) {
         return mathCache ? mathCache : allocMathCache(cx);
     }
-
-    bool isMarked() { return marked; }
-    void clearMark() { marked = false; }
 
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
@@ -605,13 +612,22 @@ class PreserveCompartment {
 
 class SwitchToCompartment : public PreserveCompartment {
   public:
-    SwitchToCompartment(JSContext *cx, JSCompartment *newCompartment) : PreserveCompartment(cx) {
+    SwitchToCompartment(JSContext *cx, JSCompartment *newCompartment
+                        JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : PreserveCompartment(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->compartment = newCompartment;
     }
 
-    SwitchToCompartment(JSContext *cx, JSObject *target) : PreserveCompartment(cx) {
+    SwitchToCompartment(JSContext *cx, JSObject *target JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : PreserveCompartment(cx)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
         cx->compartment = target->getCompartment();
     }
+
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 class AssertCompartmentUnchanged {

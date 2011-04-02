@@ -32,13 +32,15 @@ function testCloseButton() {
 
     // XXX: ASSERTION: ###!!! ASSERTION: XPConnect is being called on a scope without a 'Components' property!: 'Error', file /home/ddahl/code/moz/mozilla-central/mozilla-central/js/src/xpconnect/src/xpcwrappednativescope.cpp, line 795
 
-    EventUtils.synthesizeMouse(closeButton, 0, 0, {});
+    closeButton.addEventListener("command", function() {
+      closeButton.removeEventListener("command", arguments.callee, false);
 
-    executeSoon(function (){
       ok(!(hudId in HUDService.hudReferences), "the console is closed when " +
          "the close button is pressed");
       closeButton = null;
       finishTest();
-    });
+    }, false);
+
+    EventUtils.synthesizeMouse(closeButton, 2, 2, {});
   });
 }

@@ -183,11 +183,6 @@ public:
   }
 
   /**
-   * Return true if the given DOM node contains accessible children.
-   */
-  static PRBool HasAccessibleChildren(nsINode *aNode);
-
-  /**
     * Return ancestor in this document with the given role if it exists.
     *
     * @param  aDescendant  [in] descendant to start search with
@@ -372,16 +367,6 @@ public:
     return role != nsIAccessibleRole::ROLE_TEXT_LEAF &&
            role != nsIAccessibleRole::ROLE_WHITESPACE &&
            role != nsIAccessibleRole::ROLE_STATICTEXT;
-  }
-
-  /**
-   * Return true if the given accessible hasn't children.
-   */
-  static inline PRBool IsLeaf(nsIAccessible *aAcc)
-  {
-    PRInt32 numChildren = 0;
-    aAcc->GetChildCount(&numChildren);
-    return numChildren == 0;
   }
 
   /**

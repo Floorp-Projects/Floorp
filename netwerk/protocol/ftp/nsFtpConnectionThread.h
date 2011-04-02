@@ -60,7 +60,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsIPrompt.h"
 #include "nsITransport.h"

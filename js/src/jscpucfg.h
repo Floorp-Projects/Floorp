@@ -72,7 +72,7 @@
 
 #endif /* _WIN32 || XP_OS2 || WINCE*/
 
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX)
 
 #error "This file is supposed to be auto-generated on UNIX platforms, but the"
 #error "static version for Mac and Windows platforms is being used."
@@ -80,7 +80,7 @@
 
 #else
 
-#error "Must define one of XP_BEOS, XP_OS2, XP_WIN, or XP_UNIX"
+#error "Must define one of XP_OS2, XP_WIN, or XP_UNIX"
 
 #endif
 

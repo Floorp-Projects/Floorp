@@ -42,18 +42,19 @@
 #include "nsStyleAnimation.h"
 #include "nsCOMArray.h"
 #include "nsIStyleRule.h"
-#include "nsICSSStyleRule.h"
+#include "mozilla/css/StyleRule.h"
 #include "nsString.h"
 #include "nsStyleContext.h"
 #include "nsStyleSet.h"
 #include "nsComputedDOMStyle.h"
 #include "nsCSSParser.h"
 #include "mozilla/css/Declaration.h"
-#include "nsCSSStruct.h"
+#include "mozilla/dom/Element.h"
 #include "prlog.h"
 #include <math.h>
 
 namespace css = mozilla::css;
+namespace dom = mozilla::dom;
 
 // HELPER METHODS
 // --------------
@@ -1778,9 +1779,9 @@ nsStyleAnimation::AddWeighted(nsCSSProperty aProperty,
   return PR_FALSE;
 }
 
-already_AddRefed<nsICSSStyleRule>
+already_AddRefed<css::StyleRule>
 BuildStyleRule(nsCSSProperty aProperty,
-               nsIContent* aTargetElement,
+               dom::Element* aTargetElement,
                const nsAString& aSpecifiedValue,
                PRBool aUseSVGMode)
 {
@@ -1822,15 +1823,14 @@ BuildStyleRule(nsCSSProperty aProperty,
 
 inline
 already_AddRefed<nsStyleContext>
-LookupStyleContext(nsIContent* aElement)
+LookupStyleContext(dom::Element* aElement)
 {
   nsIDocument* doc = aElement->GetCurrentDoc();
   nsIPresShell* shell = doc->GetShell();
   if (!shell) {
     return nsnull;
   }
-  return nsComputedDOMStyle::GetStyleContextForElement(aElement->AsElement(),
-                                                       nsnull, shell);
+  return nsComputedDOMStyle::GetStyleContextForElement(aElement, nsnull, shell);
 }
 
 
@@ -1855,7 +1855,7 @@ LookupStyleContext(nsIContent* aElement)
  */
 already_AddRefed<nsStyleContext>
 StyleWithDeclarationAdded(nsCSSProperty aProperty,
-                          nsIContent* aTargetElement,
+                          dom::Element* aTargetElement,
                           const nsAString& aSpecifiedValue,
                           PRBool aUseSVGMode)
 {
@@ -1870,8 +1870,8 @@ StyleWithDeclarationAdded(nsCSSProperty aProperty,
     return nsnull;
   }
 
-  // Parse specified value into a temporary nsICSSStyleRule
-  nsCOMPtr<nsICSSStyleRule> styleRule =
+  // Parse specified value into a temporary StyleRule
+  nsRefPtr<css::StyleRule> styleRule =
     BuildStyleRule(aProperty, aTargetElement, aSpecifiedValue, aUseSVGMode);
   if (!styleRule) {
     return nsnull;
@@ -1888,12 +1888,11 @@ StyleWithDeclarationAdded(nsCSSProperty aProperty,
 
 PRBool
 nsStyleAnimation::ComputeValue(nsCSSProperty aProperty,
-                               nsIContent* aTargetElement,
+                               dom::Element* aTargetElement,
                                const nsAString& aSpecifiedValue,
                                PRBool aUseSVGMode,
                                Value& aComputedValue)
 {
-  // XXXbz aTargetElement should be an Element
   NS_ABORT_IF_FALSE(aTargetElement, "null target element");
   NS_ABORT_IF_FALSE(aTargetElement->GetCurrentDoc(),
                     "we should only be able to actively animate nodes that "
@@ -2248,6 +2247,27 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
             aComputedValue.SetIntValue(styleColumn->mColumnCount,
                                        eUnit_Integer);
           }
+          break;
+        }
+
+        case eCSSProperty_text_decoration_color: {
+          const nsStyleTextReset *styleTextReset =
+            static_cast<const nsStyleTextReset*>(styleStruct);
+          nscolor color;
+          PRBool isForeground;
+          styleTextReset->GetDecorationColor(color, isForeground);
+          if (isForeground) {
+            color = aStyleContext->GetStyleColor()->mColor;
+          }
+          aComputedValue.SetColorValue(color);
+          break;
+        }
+
+        case eCSSProperty_text_decoration_style: {
+          PRUint8 decorationStyle =
+            static_cast<const nsStyleTextReset*>(styleStruct)->
+              GetDecorationStyle();
+          aComputedValue.SetIntValue(decorationStyle, eUnit_Enumerated);
           break;
         }
 

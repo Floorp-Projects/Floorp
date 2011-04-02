@@ -79,7 +79,6 @@ struct THEBES_API gfxRect {
     gfxSize size;
 
     gfxRect() {}
-    gfxRect(const gfxRect& s) : pos(s.pos), size(s.size) {}
     gfxRect(const gfxPoint& _pos, const gfxSize& _size) : pos(_pos), size(_size) {}
     gfxRect(gfxFloat _x, gfxFloat _y, gfxFloat _width, gfxFloat _height) :
         pos(_x, _y), size(_width, _height) {}

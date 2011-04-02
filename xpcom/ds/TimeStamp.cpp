@@ -90,6 +90,8 @@ TimeStamp::Startup()
   if (gTimeStampLock)
     return NS_OK;
 
+  // TimeStamp has to use bare PRLock instead of mozilla::Mutex
+  // because TimeStamp can be used very early in startup.
   gTimeStampLock = PR_NewLock();
   gRolloverCount = 1;
   gLastNow = 0;

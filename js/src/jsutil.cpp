@@ -55,6 +55,12 @@
 
 using namespace js;
 
+#ifdef DEBUG
+/* For JS_OOM_POSSIBLY_FAIL in jsutil.h. */
+JS_PUBLIC_DATA(JSUint32) OOM_maxAllocations = (JSUint32)-1;
+JS_PUBLIC_DATA(JSUint32) OOM_counter = 0;
+#endif
+
 /*
  * Checks the assumption that JS_FUNC_TO_DATA_PTR and JS_DATA_TO_FUNC_PTR
  * macros uses to implement casts between function and data pointers.
@@ -315,7 +321,7 @@ CallTree(void **bp)
             return NULL;
 
         /* Create a new callsite record. */
-        site = (JSCallsite *) js_malloc(sizeof(JSCallsite));
+        site = (JSCallsite *) OffTheBooks::malloc(sizeof(JSCallsite));
         if (!site)
             return NULL;
 

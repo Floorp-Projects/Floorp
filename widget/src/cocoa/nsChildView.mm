@@ -215,8 +215,6 @@ PRUint32 nsChildView::sLastInputEventCount = 0;
 
 - (BOOL)isFirstResponder;
 
-- (BOOL)isDragInProgress;
-
 - (void)fireKeyEventForFlagsChanged:(NSEvent*)theEvent keyDown:(BOOL)isKeyDown;
 
 - (BOOL)inactiveWindowAcceptsMouseEvent:(NSEvent*)aEvent;
@@ -1254,7 +1252,7 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsIntRect& outClipRect, nsIntPoint&
 
     if (mClipRects) {
       nsIntRect clipBounds;
-      for (PRInt32 i = 0; i < mClipRectCount; ++i) {
+      for (PRUint32 i = 0; i < mClipRectCount; ++i) {
         clipBounds.UnionRect(clipBounds, mClipRects[i]);
       }
       outClipRect.IntersectRect(outClipRect, clipBounds - outOrigin);
@@ -4135,12 +4133,12 @@ static void ConvertCocoaKeyEventToNPCocoaEvent(NSEvent* cocoaEvent, NPCocoaEvent
       printf("Asked to convert key event of unknown type to Cocoa plugin event!");
   }
   pluginEvent.data.key.modifierFlags = [cocoaEvent modifierFlags];
+  pluginEvent.data.key.keyCode = [cocoaEvent keyCode];
   // don't try to access character data for flags changed events, it will raise an exception
   if (nativeType != NSFlagsChanged) {
     pluginEvent.data.key.characters = (NPNSString*)[cocoaEvent characters];
     pluginEvent.data.key.charactersIgnoringModifiers = (NPNSString*)[cocoaEvent charactersIgnoringModifiers];
     pluginEvent.data.key.isARepeat = [cocoaEvent isARepeat];
-    pluginEvent.data.key.keyCode = [cocoaEvent keyCode];
   }
 }
 
@@ -5894,6 +5892,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   if ([currentEvent type] != NSLeftMouseDown)
     return YES;
 
+  nsAutoRetainCocoaObject kungFuDeathGrip(self);
+
   NSPoint eventLoc = nsCocoaUtils::ScreenLocationForEvent(currentEvent);
   eventLoc.y = nsCocoaUtils::FlippedScreenY(eventLoc.y);
   nsIntPoint widgetLoc(NSToIntRound(eventLoc.x), NSToIntRound(eventLoc.y));
@@ -5901,7 +5901,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   nsQueryContentEvent hitTest(PR_TRUE, NS_QUERY_DOM_WIDGET_HITTEST, mGeckoChild);
   hitTest.InitForQueryDOMWidgetHittest(widgetLoc);
+  // This might destroy our widget (and null out mGeckoChild).
   mGeckoChild->DispatchWindowEvent(hitTest);
+  if (!mGeckoChild)
+    return NO;
   if (hitTest.mSucceeded && !hitTest.mReply.mWidgetIsHit)
     return NO;
 

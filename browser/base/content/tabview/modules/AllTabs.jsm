@@ -41,6 +41,13 @@ Cu.import("resource://gre/modules/Services.jsm");
 let EXPORTED_SYMBOLS = ["AllTabs"];
 
 let AllTabs = {
+  // ----------
+  // Function: toString
+  // Prints [AllTabs] for debug use
+  toString: function AllTabs_toString() {
+    return "[AllTabs]";
+  },
+
   /**
    * Get an array of all tabs from all tabbrowser windows.
    *

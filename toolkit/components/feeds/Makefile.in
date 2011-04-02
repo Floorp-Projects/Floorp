@@ -35,12 +35,39 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
 include $(DEPTH)/config/autoconf.mk
-DIRS		= public src
+
+MODULE = feeds
+LIBRARY_NAME = feed_s
+MOZILLA_INTERNAL_API = 1
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+
+XPIDLSRCS = \
+  nsIFeed.idl \
+  nsIFeedContainer.idl \
+  nsIFeedElementBase.idl \
+  nsIFeedEntry.idl \
+  nsIFeedGenerator.idl \
+  nsIFeedListener.idl \
+  nsIFeedPerson.idl \
+  nsIFeedProcessor.idl \
+  nsIFeedResult.idl \
+  nsIFeedTextConstruct.idl \
+  nsIScriptableUnescapeHTML.idl \
+  $(NULL)
+
+CPPSRCS = \
+  nsScriptableUnescapeHTML.cpp \
+  $(NULL)
+
+EXTRA_COMPONENTS = FeedProcessor.js FeedProcessor.manifest
+
 include $(topsrcdir)/config/rules.mk
 
 ABS_SRCDIR := $(shell cd $(srcdir) && pwd)
@@ -49,7 +76,7 @@ ifeq ($(OS_ARCH),WINNT)
 ABS_DEPTH := $(shell cd $(DEPTH) && pwd)
 
 check::
-	cd $(srcdir)/test; $(CYGWIN_WRAPPER) $(ABS_DEPTH)/dist/bin/xpcshell$(BIN_SUFFIX) shell.js 
+	cd $(srcdir)/test; $(ABS_DEPTH)/dist/bin/xpcshell$(BIN_SUFFIX) shell.js 
 
 else
 

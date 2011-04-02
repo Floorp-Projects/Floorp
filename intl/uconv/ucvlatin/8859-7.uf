@@ -47,7 +47,7 @@
 Begin of Item 0000
  Format 0
   srcBegin = 0000
-  srcEnd = 007F
+  srcEnd = 009F
   destBegin = 0000
 End of Item 0000 
 
@@ -128,7 +128,7 @@ End of Item 0006
 0x1000, 0x0111, 
 /*-------------------------------------------------------*/
 /*       Offset=0x0006   Start of MapCell Array */ 
-/* 0000 */    0x0000, 0x007F, 0x0000, 
+/* 0000 */    0x0000, 0x009F, 0x0000, 
 /* 0001 */    0x038E, 0x03A1, 0x00BE, 
 /* 0002 */    0x03A3, 0x03CE, 0x00D3, 
 /* 0003 */    0x00A0, 0x00BD, 0x0000, 

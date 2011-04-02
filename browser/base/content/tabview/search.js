@@ -116,6 +116,13 @@ function scorePatternMatch(pattern, matched, offset) {
 // <TabItem>s and <xul:tab>s without having to worry which
 // one is which.
 var TabUtils = {
+  // ----------
+  // Function: toString
+  // Prints [TabUtils] for debug use
+  toString: function TabUtils_toString() {
+    return "[TabUtils]";
+  },
+
   // ---------
   // Function: _nameOfTab
   // Given a <TabItem> or a <xul:tab> returns the tab's name.
@@ -166,7 +173,14 @@ function TabMatcher(term) {
   this.term = term; 
 }
 
-TabMatcher.prototype = {  
+TabMatcher.prototype = {
+  // ----------
+  // Function: toString
+  // Prints [TabMatcher (term)] for debug use
+  toString: function TabMatcher_toString() {
+    return "[TabMatcher (" + this.term + ")]";
+  },
+
   // ---------
   // Function: _filterAndSortMatches
   // Given an array of <TabItem>s and <xul:tab>s returns a new array
@@ -317,13 +331,19 @@ function SearchEventHandlerClass() {
 
 SearchEventHandlerClass.prototype = {
   // ----------
+  // Function: toString
+  // Prints [SearchEventHandler] for debug use
+  toString: function SearchEventHandlerClass_toString() {
+    return "[SearchEventHandler]";
+  },
+
+  // ----------
   // Function: init
   // Initializes the searchbox to be focused, and everything
   // else to be hidden, and to have everything have the appropriate
   // event handlers;
   init: function () {
-    var self = this;
-    iQ("#searchbox")[0].focus(); 
+    let self = this;
     iQ("#search").hide();
     iQ("#searchshade").hide().click(function(event) {
       if ( event.target.id != "searchbox")
@@ -368,6 +388,13 @@ SearchEventHandlerClass.prototype = {
     // If we are already in an input field, allow typing as normal.
     if (event.target.nodeName == "INPUT")
       return;
+
+    // / is used to activate the search feature so the key shouldn't be entered 
+    // into the search box.
+    if (event.keyCode == KeyEvent.DOM_VK_SLASH) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
 
     this.switchToInMode();
     this.initiatedBy = "keydown";
@@ -505,7 +532,7 @@ function createSearchTabMacher() {
   return new TabMatcher(iQ("#searchbox").val());
 }
 
-function hideSearch(event){
+function hideSearch(event) {
   iQ("#searchbox").val("");
   iQ("#searchshade").hide();
   iQ("#search").hide();
@@ -519,7 +546,12 @@ function hideSearch(event){
   performSearch();
   SearchEventHandler.switchToBeforeMode();
 
-  if (event){
+  if (event) {
+    // when hiding the search mode, we need to prevent the keypress handler
+    // in UI__setTabViewFrameKeyHandlers to handle the key press again. e.g. Esc
+    // which is already handled by the key down in this class.
+    if (event.type == "keydown")
+      UI.ignoreKeypressForSearch = true;
     event.preventDefault();
     event.stopPropagation();
   }

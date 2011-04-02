@@ -82,6 +82,30 @@ function addTab(aURL)
   browser = gBrowser.getBrowserForTab(tab);
 }
 
+function afterAllTabsLoaded(callback, win) {
+  win = win || window;
+
+  let stillToLoad = 0;
+
+  function onLoad() {
+    this.removeEventListener("load", onLoad, true);
+    stillToLoad--;
+    if (!stillToLoad)
+      callback();
+  }
+
+  for (let a = 0; a < win.gBrowser.tabs.length; a++) {
+    let browser = win.gBrowser.tabs[a].linkedBrowser;
+    if (browser.contentDocument.readyState != "complete") {
+      stillToLoad++;
+      browser.addEventListener("load", onLoad, true);
+    }
+  }
+
+  if (!stillToLoad)
+    callback();
+}
+
 /**
  * Check if a log entry exists in the HUD output node.
  *

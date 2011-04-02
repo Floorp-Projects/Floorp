@@ -40,6 +40,8 @@
 
 #include "nspr.h"
 #include "nscore.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
 
 class nsPSMBackgroundThread
 {
@@ -54,10 +56,10 @@ protected:
   // and to protect access to mExitRequested.
   // Derived classes may use it to protect additional
   // resources.
-  PRLock *mMutex;
+  mozilla::Mutex mMutex;
 
   // Used to signal the thread's Run loop
-  PRCondVar *mCond;
+  mozilla::CondVar mCond;
 
   // Has termination of the SSL thread been requested?
   PRBool mExitRequested;

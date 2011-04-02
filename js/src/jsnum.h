@@ -207,7 +207,7 @@ extern bool JS_FASTCALL
 NumberValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb);
 
 /* Same as js_NumberToString, different signature. */
-extern JSFlatString *
+extern JSFixedString *
 NumberToString(JSContext *cx, jsdouble d);
 
 /*
@@ -224,7 +224,7 @@ struct ToCStringBuf
      */
     static const size_t sbufSize = 34;
     char sbuf[sbufSize];
-    char *dbuf;     /* must be allocated with js_malloc() */
+    char *dbuf;
 
     ToCStringBuf();
     ~ToCStringBuf();

@@ -42,7 +42,7 @@
 #include <limits.h>
 
 // include files for ftruncate (or equivalent)
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX)
 #include <unistd.h>
 #elif defined(XP_WIN)
 #include <windows.h>
@@ -75,7 +75,6 @@
 #include "nsReadableUtils.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsAutoLock.h"
 #include "nsCRT.h"
 #include "nsCOMArray.h"
 #include "nsISimpleEnumerator.h"
@@ -316,7 +315,7 @@ nsDiskCache::Truncate(PRFileDesc *  fd, PRUint32  newEOF)
 {
     // use modified SetEOF from nsFileStreams::SetEOF()
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX)
     if (ftruncate(PR_FileDesc2NativeHandle(fd), newEOF) != 0) {
         NS_ERROR("ftruncate failed");
         return NS_ERROR_FAILURE;
@@ -398,6 +397,8 @@ nsDiskCacheDevice::Init()
 nsresult
 nsDiskCacheDevice::Shutdown()
 {
+    nsCacheService::AssertOwnsLock();
+
     nsresult rv = Shutdown_Private(PR_TRUE);
     if (NS_FAILED(rv))
         return rv;

@@ -120,6 +120,13 @@ public:
 
   virtual void UpdateText(nsIPresShell* aPresShell, nsIContent* aContent);
 
+  /**
+   * Update list bullet accessible.
+   */
+  virtual void UpdateListBullet(nsIPresShell* aPresShell,
+                                nsIContent* aHTMLListItemContent,
+                                bool aHasBullet);
+
   virtual void NotifyOfAnchorJumpTo(nsIContent *aTarget);
 
   virtual void PresShellDestroyed(nsIPresShell* aPresShell);
@@ -151,10 +158,9 @@ public:
    * @param  aIsSubtreeHidden  [out, optional] indicates whether the node's
    *                             frame and its subtree is hidden
    */
-  already_AddRefed<nsAccessible>
-    GetOrCreateAccessible(nsINode* aNode, nsIPresShell* aPresShell,
-                          nsIWeakReference* aWeakShell,
-                          bool* aIsSubtreeHidden = nsnull);
+  nsAccessible* GetOrCreateAccessible(nsINode* aNode, nsIPresShell* aPresShell,
+                                      nsIWeakReference* aWeakShell,
+                                      bool* aIsSubtreeHidden = nsnull);
 
   /**
    * Return an accessible for the given DOM node.

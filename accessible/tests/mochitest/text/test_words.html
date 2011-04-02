@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>nsIAccessibleText getText related function tests for html:input,html:div and html:textarea</title>
+  <meta charset="utf-8" />
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
   <script type="application/javascript"
@@ -65,7 +66,7 @@
       testWords("div12", ["4,261.01"], kTodo);
 
       // "カタカナ"
-      testWords("div13", ["カタカナ"], kTodo);
+      testWords("div13", ["カタカナ"], kOk);
 
       // "Peter's car"
       testWords("div14", ["Peter's", "car"], kTodo);

@@ -1,10 +1,35 @@
 # Basic commands implemented in Python
-import sys, os, shutil, time
+import errno, sys, os, shutil, time
 from getopt import getopt, GetoptError
 
 from process import PythonException
 
-__all__ = ["rm", "sleep", "touch"]
+__all__ = ["mkdir", "rm", "sleep", "touch"]
+
+def mkdir(args):
+  """
+  Emulate some of the behavior of mkdir(1).
+  Only supports the -p (--parents) argument.
+  """
+  try:
+    opts, args = getopt(args, "p", ["parents"])
+  except GetoptError, e:
+    raise PythonException, ("mkdir: %s" % e, 1)
+  parents = False
+  for o, a in opts:
+    if o in ('-p', '--parents'):
+      parents = True
+  for f in args:
+    try:
+      if parents:
+        os.makedirs(f)
+      else:
+        os.mkdir(f)
+    except OSError, e:
+      if e.errno == errno.EEXIST and parents:
+        pass
+      else:
+        raise PythonException, ("mkdir: %s" % e, 1)
 
 def rm(args):
   """

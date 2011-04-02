@@ -58,12 +58,7 @@
 #include <android/log.h>
 #endif
 
-#if defined(XP_BEOS)
-/* For DEBUGGER macros */
-#include <Debug.h>
-#endif
-
-#if defined(XP_UNIX) || defined(_WIN32) || defined(XP_OS2) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(_WIN32) || defined(XP_OS2)
 /* for abort() and getenv() */
 #include <stdlib.h>
 #endif
@@ -353,7 +348,7 @@ NS_DebugBreak(PRUint32 aSeverity, const char *aStr, const char *aExpr,
    }
 
    // Now we deal with assertions
-   PR_AtomicIncrement(&gAssertionCount);
+   PR_ATOMIC_INCREMENT(&gAssertionCount);
 
    switch (GetAssertBehavior()) {
    case NS_ASSERT_WARN:
@@ -402,7 +397,6 @@ RealBreak()
 #endif
 #elif defined(XP_OS2)
    asm("int $3");
-#elif defined(XP_BEOS)
 #elif defined(XP_MACOSX)
    raise(SIGTRAP);
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__i386) || defined(__x86_64__))
@@ -503,9 +497,6 @@ Break(const char *aMsg)
    if (( code == MBID_ENTER ) || (code == MBID_ERROR))
      return;
 
-   RealBreak();
-#elif defined(XP_BEOS)
-   DEBUGGER(aMsg);
    RealBreak();
 #elif defined(XP_MACOSX)
    /* Note that we put this Mac OS X test above the GNUC/x86 test because the

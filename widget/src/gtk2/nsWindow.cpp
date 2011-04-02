@@ -488,14 +488,46 @@ void
 nsWindow::InitKeyEvent(nsKeyEvent &aEvent, GdkEventKey *aGdkEvent)
 {
     aEvent.keyCode   = GdkKeyCodeToDOMKeyCode(aGdkEvent->keyval);
-    aEvent.isShift   = (aGdkEvent->state & GDK_SHIFT_MASK)
-        ? PR_TRUE : PR_FALSE;
-    aEvent.isControl = (aGdkEvent->state & GDK_CONTROL_MASK)
-        ? PR_TRUE : PR_FALSE;
-    aEvent.isAlt     = (aGdkEvent->state & GDK_MOD1_MASK)
-        ? PR_TRUE : PR_FALSE;
-    aEvent.isMeta    = (aGdkEvent->state & GDK_MOD4_MASK)
-        ? PR_TRUE : PR_FALSE;
+    // NOTE: The state of given key event indicates adjacent state of
+    // modifier keys.  E.g., even if the event is Shift key press event,
+    // the bit for Shift is still false.  By the same token, even if the
+    // event is Shift key release event, the bit for Shift is still true.
+    // Unfortunately, gdk_keyboard_get_modifiers() returns current modifier
+    // state.  It means if there're some pending modifier key press or
+    // key release events, the result isn't what we want.
+    // Temporarily, we should compute the state only when the key event
+    // is GDK_KEY_PRESS.
+    guint modifierState = aGdkEvent->state;
+    guint changingMask = 0;
+    switch (aEvent.keyCode) {
+        case NS_VK_SHIFT:
+            changingMask = GDK_SHIFT_MASK;
+            break;
+        case NS_VK_CONTROL:
+            changingMask = GDK_CONTROL_MASK;
+            break;
+        case NS_VK_ALT:
+            changingMask = GDK_MOD1_MASK;
+            break;
+        case NS_VK_META:
+            changingMask = GDK_MOD4_MASK;
+            break;
+    }
+    if (changingMask != 0) {
+        // This key event is caused by pressing or releasing a modifier key.
+        if (aGdkEvent->type == GDK_KEY_PRESS) {
+            // If new modifier key is pressed, add the pressed mod mask.
+            modifierState |= changingMask;
+        } else {
+            // XXX If we could know the modifier keys state at the key release
+            // event, we should cut out changingMask from modifierState.
+        }
+    }
+    aEvent.isShift   = (modifierState & GDK_SHIFT_MASK) != 0;
+    aEvent.isControl = (modifierState & GDK_CONTROL_MASK) != 0;
+    aEvent.isAlt     = (modifierState & GDK_MOD1_MASK) != 0;
+    aEvent.isMeta    = (modifierState & GDK_MOD4_MASK) != 0;
+
     // The transformations above and in gdk for the keyval are not invertible
     // so link to the GdkEvent (which will vanish soon after return from the
     // event callback) to give plugins access to hardware_keycode and state.
@@ -2171,9 +2203,9 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return TRUE;
     }
 
-    if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL)
+    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL)
     {
-        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager(nsnull));
+        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(event.region);
 
         nsEventStatus status;
@@ -3382,11 +3414,17 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
         LOG(("\tIconified\n"));
         event.mSizeMode = nsSizeMode_Minimized;
         mSizeState = nsSizeMode_Minimized;
+#ifdef ACCESSIBILITY
+        DispatchMinimizeEventAccessible();
+#endif //ACCESSIBILITY
     }
     else if (aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
         LOG(("\tMaximized\n"));
         event.mSizeMode = nsSizeMode_Maximized;
         mSizeState = nsSizeMode_Maximized;
+#ifdef ACCESSIBILITY
+        DispatchMaximizeEventAccessible();
+#endif //ACCESSIBILITY
     }
     else if (aEvent->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) {
         LOG(("\tFullscreen\n"));
@@ -3397,6 +3435,9 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
         LOG(("\tNormal\n"));
         event.mSizeMode = nsSizeMode_Normal;
         mSizeState = nsSizeMode_Normal;
+#ifdef ACCESSIBILITY
+        DispatchRestoreEventAccessible();
+#endif //ACCESSIBILITY
     }
 
     nsEventStatus status;
@@ -6356,6 +6397,24 @@ void
 nsWindow::DispatchDeactivateEventAccessible(void)
 {
     DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE);
+}
+
+void
+nsWindow::DispatchMaximizeEventAccessible(void)
+{
+    DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_MAXIMIZE);
+}
+
+void
+nsWindow::DispatchMinimizeEventAccessible(void)
+{
+    DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_MINIMIZE);
+}
+
+void
+nsWindow::DispatchRestoreEventAccessible(void)
+{
+    DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_RESTORE);
 }
 
 #endif /* #ifdef ACCESSIBILITY */

@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" /> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  
+  <title>New Rich Text Tests</title>
+
+  <link rel="stylesheet" href="static/common.css" type="text/css">
+  <link rel="stylesheet" href="static/editable.css" type="text/css">
+
+  <!-- utility scripts -->
+  <script src="static/js/variables.js"></script> 
+
+  <script src="static/js/canonicalize.js"></script> 
+  <script src="static/js/compare.js"></script> 
+  <script src="static/js/output.js"></script> 
+  <script src="static/js/pad.js"></script> 
+  <script src="static/js/range.js"></script> 
+  <script src="static/js/units.js"></script> 
+
+  <script src="static/js/run.js"></script> 
+
+  <!-- new tests -->
+  <script type="text/javascript">
+    {% autoescape off %}
+
+    var commonIDPrefix = '{{ commonIDPrefix }}';
+    {% for s in suites %}
+    var {{ s.id }}_TESTS = {{ s }};
+    {% endfor %} 
+    
+    /**
+     * Stuff to do after all tests are run:
+     *   - write a nice "DONE!" at the end of the progress meter
+     *   - beacon the results
+     *   - remove the testing <iframe>s
+     */
+    function finish() {
+      var span = document.getElementById('done');
+      if (span)
+        span.innerHTML = ' ... DONE!';
+
+      fillResults();
+      parent.sendScore(beacon, categoryTotals);
+
+      cleanUp();
+    }
+
+    /**
+     * Run every individual suite, with a a brief timeout in between
+     * to allow for screen updates.
+     */
+{% for s in suites %}
+  {% if not forloop.first %}
+      setTimeout("runSuite{{ s.id }}()", 100);
+    }
+  {% endif %}
+
+    function runSuite{{ s.id }}() {
+      runAndOutputTestSuite({{ s.id }}_TESTS);
+{% endfor %}
+      finish();
+    }
+    
+    /**
+     * Runs all tests in all suites.
+     */
+    function doRunTests() {
+      initVariables();
+      initEditorDocs();
+
+      // Start with the first test suite
+      runSuite{{ suites.0.id }}();
+    }
+
+    /**
+     * Runs after allowing for some time to have everything loaded
+     * (aka. horrible IE9 kludge)
+     */
+    function runTests() {
+      setTimeout("doRunTests()", 1500);
+    }
+
+    /**
+     * Removes the <iframe>s after all tests are finished
+     */
+    function cleanUp() {
+      var e = document.getElementById('iframe-dM');
+      e.parentNode.removeChild(e);
+      e = document.getElementById('iframe-body');
+      e.parentNode.removeChild(e);
+      e = document.getElementById('iframe-div');
+      e.parentNode.removeChild(e);
+    }
+    {% endautoescape %}
+  </script>  
+</head> 
+
+<body onload="runTests()">
+  {% include "richtext2/templates/output.html" %}
+  <hr>
+  <iframe name="iframe-dM" id="iframe-dM" src="static/editable-dM.html"></iframe>
+  <iframe name="iframe-body" id="iframe-body" src="static/editable-body.html"></iframe>
+  <iframe name="iframe-div" id="iframe-div" src="static/editable-div.html"></iframe>
+</body> 
+</html>

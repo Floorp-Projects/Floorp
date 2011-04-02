@@ -664,20 +664,19 @@ nsXULTreeGridRowAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_ROW;
 }
 
-nsresult
+nsAccessible*
 nsXULTreeGridRowAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
-                                            PRBool aDeepestChild,
-                                            nsIAccessible **aChild)
+                                            EWhichChildAtPoint aWhichChild)
 {
   nsIFrame *frame = GetFrame();
   if (!frame)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   nsPresContext *presContext = frame->PresContext();
   nsCOMPtr<nsIPresShell> presShell = presContext->PresShell();
 
   nsIFrame *rootFrame = presShell->GetRootFrame();
-  NS_ENSURE_STATE(rootFrame);
+  NS_ENSURE_TRUE(rootFrame, nsnull);
 
   nsIntRect rootRect = rootFrame->GetScreenRectExternal();
 
@@ -692,10 +691,9 @@ nsXULTreeGridRowAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
 
   // Return if we failed to find tree cell in the row for the given point.
   if (row != mRow || !column)
-    return NS_OK;
+    return nsnull;
 
-  NS_IF_ADDREF(*aChild = GetCellAccessible(column));
-  return NS_OK;
+  return GetCellAccessible(column);
 }
 
 nsAccessible*

@@ -49,7 +49,6 @@ endif
 
 MODULE          = cairo
 LIBRARY_NAME    = mozcairo
-SUPPRESS_FAKELIB = 1 # cairo isn't awesome enough for fakelibs yet
 LIBXUL_LIBRARY = 1
 
 ifdef GNU_CC

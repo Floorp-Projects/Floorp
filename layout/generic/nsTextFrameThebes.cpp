@@ -290,8 +290,7 @@ struct TextRunMappedFlow {
  */
 struct TextRunUserData {
   TextRunMappedFlow* mMappedFlows;
-  PRInt32            mMappedFlowCount;
-
+  PRUint32           mMappedFlowCount;
   PRUint32           mLastFlowIndex;
 };
 
@@ -477,7 +476,7 @@ UnhookTextRunFromFrames(gfxTextRun* aTextRun, nsTextFrame* aStartContinuation)
     TextRunUserData* userData =
       static_cast<TextRunUserData*>(aTextRun->GetUserData());
     PRInt32 destroyFromIndex = aStartContinuation ? -1 : 0;
-    for (PRInt32 i = 0; i < userData->mMappedFlowCount; ++i) {
+    for (PRUint32 i = 0; i < userData->mMappedFlowCount; ++i) {
       nsTextFrame* userDataFrame = userData->mMappedFlows[i].mStartFrame;
       PRBool found =
         ClearAllTextRunReferences(userDataFrame, aTextRun,
@@ -499,9 +498,9 @@ UnhookTextRunFromFrames(gfxTextRun* aTextRun, nsTextFrame* aStartContinuation)
       aTextRun->SetUserData(nsnull);
     }
     else {
-      userData->mMappedFlowCount = destroyFromIndex;
-      if (userData->mLastFlowIndex >= destroyFromIndex) {
-        userData->mLastFlowIndex = destroyFromIndex - 1;
+      userData->mMappedFlowCount = PRUint32(destroyFromIndex);
+      if (userData->mLastFlowIndex >= PRUint32(destroyFromIndex)) {
+        userData->mLastFlowIndex = PRUint32(destroyFromIndex) - 1;
       }
     }
   }
@@ -1302,7 +1301,7 @@ PRBool BuildTextRunsScanner::IsTextRunValidForMappedFlows(gfxTextRun* aTextRun)
       mMappedFlows[0].mEndFrame == nsnull;
 
   TextRunUserData* userData = static_cast<TextRunUserData*>(aTextRun->GetUserData());
-  if (userData->mMappedFlowCount != PRInt32(mMappedFlows.Length()))
+  if (userData->mMappedFlowCount != mMappedFlows.Length())
     return PR_FALSE;
   PRUint32 i;
   for (i = 0; i < mMappedFlows.Length(); ++i) {
@@ -2067,15 +2066,15 @@ FindFlowForContent(TextRunUserData* aUserData, nsIContent* aContent)
   PRInt32 sign = 1;
   // Search starting at the current position and examine close-by
   // positions first, moving further and further away as we go.
-  while (i >= 0 && i < aUserData->mMappedFlowCount) {
+  while (i >= 0 && PRUint32(i) < aUserData->mMappedFlowCount) {
     TextRunMappedFlow* flow = &aUserData->mMappedFlows[i];
     if (flow->mStartFrame->GetContent() == aContent) {
       return flow;
     }
 
     i += delta;
-    delta = -delta - sign;
     sign = -sign;
+    delta = -delta + sign;
   }
 
   // We ran into an array edge.  Add |delta| to |i| once more to get
@@ -2083,7 +2082,7 @@ FindFlowForContent(TextRunUserData* aUserData, nsIContent* aContent)
   // the |sign| direction.
   i += delta;
   if (sign > 0) {
-    for (; i < aUserData->mMappedFlowCount; ++i) {
+    for (; i < PRInt32(aUserData->mMappedFlowCount); ++i) {
       TextRunMappedFlow* flow = &aUserData->mMappedFlows[i];
       if (flow->mStartFrame->GetContent() == aContent) {
         return flow;
@@ -2123,7 +2122,7 @@ BuildTextRunsScanner::AssignTextRun(gfxTextRun* aTextRun)
           TextRunUserData* userData =
             static_cast<TextRunUserData*>(textRun->GetUserData());
          
-          if (PRUint32(userData->mMappedFlowCount) >= mMappedFlows.Length() ||
+          if (userData->mMappedFlowCount >= mMappedFlows.Length() ||
               userData->mMappedFlows[userData->mMappedFlowCount - 1].mStartFrame !=
               mMappedFlows[userData->mMappedFlowCount - 1].mStartFrame) {
             NS_WARNING("REASSIGNING MULTIFLOW TEXT RUN (not append)!");
@@ -2220,7 +2219,7 @@ nsTextFrame::EnsureTextRun(gfxContext* aReferenceContext, nsIFrame* aLineContain
   if (flow) {
     // Since textruns can only contain one flow for a given content element,
     // this must be our flow.
-    PRInt32 flowIndex = flow - userData->mMappedFlows;
+    PRUint32 flowIndex = flow - userData->mMappedFlows;
     userData->mLastFlowIndex = flowIndex;
     gfxSkipCharsIterator iter(mTextRun->GetSkipChars(),
                               flow->mDOMOffsetToBeforeTransformOffset, mContentOffset);
@@ -3466,15 +3465,6 @@ static StyleIDs SelectionStyleIDs[] = {
     nsILookAndFeel::eMetricFloat_SpellCheckerUnderlineRelativeSize }
 };
 
-static PRUint8 sUnderlineStyles[] = {
-  nsCSSRendering::DECORATION_STYLE_NONE,   // NS_UNDERLINE_STYLE_NONE   0
-  nsCSSRendering::DECORATION_STYLE_DOTTED, // NS_UNDERLINE_STYLE_DOTTED 1
-  nsCSSRendering::DECORATION_STYLE_DASHED, // NS_UNDERLINE_STYLE_DASHED 2
-  nsCSSRendering::DECORATION_STYLE_SOLID,  // NS_UNDERLINE_STYLE_SOLID  3
-  nsCSSRendering::DECORATION_STYLE_DOUBLE, // NS_UNDERLINE_STYLE_DOUBLE 4
-  nsCSSRendering::DECORATION_STYLE_WAVY    // NS_UNDERLINE_STYLE_WAVY   5
-};
-
 void
 nsTextPaintStyle::InitSelectionStyle(PRInt32 aIndex)
 {
@@ -3547,9 +3537,9 @@ nsTextPaintStyle::GetSelectionUnderline(nsPresContext* aPresContext,
 
   look->GetColor(styleID.mLine, color);
   look->GetMetric(styleID.mLineStyle, style);
-  if (!NS_IS_VALID_UNDERLINE_STYLE(style)) {
+  if (style > NS_STYLE_TEXT_DECORATION_STYLE_MAX) {
     NS_ERROR("Invalid underline style value is specified");
-    style = NS_UNDERLINE_STYLE_SOLID;
+    style = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
   }
   look->GetMetric(styleID.mLineRelativeSize, size);
 
@@ -3559,9 +3549,9 @@ nsTextPaintStyle::GetSelectionUnderline(nsPresContext* aPresContext,
     *aLineColor = color;
   }
   *aRelativeSize = size;
-  *aStyle = sUnderlineStyles[style];
+  *aStyle = style;
 
-  return sUnderlineStyles[style] != nsCSSRendering::DECORATION_STYLE_NONE &&
+  return style != NS_STYLE_TEXT_DECORATION_STYLE_NONE &&
          color != NS_TRANSPARENT &&
          size > 0.0f;
 }
@@ -4271,13 +4261,15 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
       // This handles the <a href="blah.html"><font color="green">La 
       // la la</font></a> case. The link underline should be green.
       useOverride = PR_TRUE;
-      overrideColor = context->GetVisitedDependentColor(eCSSProperty_color);
+      overrideColor = context->GetVisitedDependentColor(
+                                 eCSSProperty_text_decoration_color);
     }
 
     // FIXME: see above (remove this check)
     PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
     if (useDecorations) {// a decoration defined here
-      nscolor color = context->GetVisitedDependentColor(eCSSProperty_color);
+      nscolor color = context->GetVisitedDependentColor(
+                                 eCSSProperty_text_decoration_color);
 
       // FIXME: We also need to record the thickness and position
       // metrics appropriate to this element (at least in standards
@@ -4290,16 +4282,19 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
       // This way we move the decorations for relative positioning.
       if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
         decorations.mUnderColor = useOverride ? overrideColor : color;
+        decorations.mUnderStyle = styleText->GetDecorationStyle();
         decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
         decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
       }
       if (NS_STYLE_TEXT_DECORATION_OVERLINE & useDecorations) {
         decorations.mOverColor = useOverride ? overrideColor : color;
+        decorations.mOverStyle = styleText->GetDecorationStyle();
         decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
         decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
       }
       if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & useDecorations) {
         decorations.mStrikeColor = useOverride ? overrideColor : color;
+        decorations.mStrikeStyle = styleText->GetDecorationStyle();
         decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
         decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
       }
@@ -4394,8 +4389,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     size.height = fontMetrics.underlineSize;
     nsCSSRendering::PaintDecorationLine(
       aCtx, lineColor, pt, size, ascent, fontMetrics.maxAscent,
-      NS_STYLE_TEXT_DECORATION_OVERLINE,
-      nsCSSRendering::DECORATION_STYLE_SOLID);
+      NS_STYLE_TEXT_DECORATION_OVERLINE, decorations.mOverStyle);
   }
   if (decorations.HasUnderline()) {
     lineColor = aOverrideColor ? *aOverrideColor : decorations.mUnderColor;
@@ -4403,8 +4397,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     gfxFloat offset = aProvider.GetFontGroup()->GetUnderlineOffset();
     nsCSSRendering::PaintDecorationLine(
       aCtx, lineColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_UNDERLINE,
-      nsCSSRendering::DECORATION_STYLE_SOLID);
+      NS_STYLE_TEXT_DECORATION_UNDERLINE, decorations.mUnderStyle);
   }
   if (decorations.HasStrikeout()) {
     lineColor = aOverrideColor ? *aOverrideColor : decorations.mStrikeColor;
@@ -4412,8 +4405,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     gfxFloat offset = fontMetrics.strikeoutOffset;
     nsCSSRendering::PaintDecorationLine(
       aCtx, lineColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
-      nsCSSRendering::DECORATION_STYLE_SOLID);
+      NS_STYLE_TEXT_DECORATION_LINE_THROUGH, decorations.mStrikeStyle);
   }
 }
 
@@ -4440,30 +4432,6 @@ static const SelectionType SelectionTypesWithDecorations =
   nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT |
   nsISelectionController::SELECTION_IME_CONVERTEDTEXT |
   nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;
-
-static PRUint8
-GetTextDecorationStyle(const nsTextRangeStyle &aRangeStyle)
-{
-  NS_PRECONDITION(aRangeStyle.IsLineStyleDefined(),
-                  "aRangeStyle.mLineStyle have to be defined");
-  switch (aRangeStyle.mLineStyle) {
-    case nsTextRangeStyle::LINESTYLE_NONE:
-      return nsCSSRendering::DECORATION_STYLE_NONE;
-    case nsTextRangeStyle::LINESTYLE_SOLID:
-      return nsCSSRendering::DECORATION_STYLE_SOLID;
-    case nsTextRangeStyle::LINESTYLE_DOTTED:
-      return nsCSSRendering::DECORATION_STYLE_DOTTED;
-    case nsTextRangeStyle::LINESTYLE_DASHED:
-      return nsCSSRendering::DECORATION_STYLE_DASHED;
-    case nsTextRangeStyle::LINESTYLE_DOUBLE:
-      return nsCSSRendering::DECORATION_STYLE_DOUBLE;
-    case nsTextRangeStyle::LINESTYLE_WAVY:
-      return nsCSSRendering::DECORATION_STYLE_WAVY;
-    default:
-      NS_WARNING("Requested underline style is not valid");
-      return nsCSSRendering::DECORATION_STYLE_SOLID;
-  }
-}
 
 static gfxFloat
 ComputeSelectionUnderlineHeight(nsPresContext* aPresContext,
@@ -4550,7 +4518,7 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
           if (aRangeStyle.mLineStyle == nsTextRangeStyle::LINESTYLE_NONE) {
             return;
           }
-          style = GetTextDecorationStyle(aRangeStyle);
+          style = aRangeStyle.mLineStyle;
           relativeSize = aRangeStyle.mIsBoldLine ? 2.0f : 1.0f;
         } else if (!weDefineSelectionUnderline) {
           // There is no underline style definition.
@@ -5359,7 +5327,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
             rangeStyle.mLineStyle == nsTextRangeStyle::LINESTYLE_NONE) {
           continue;
         }
-        style = GetTextDecorationStyle(rangeStyle);
+        style = rangeStyle.mLineStyle;
         relativeSize = rangeStyle.mIsBoldLine ? 2.0f : 1.0f;
       } else if (!nsTextPaintStyle::GetSelectionUnderline(aPresContext, index,
                                                           nsnull, &relativeSize,
@@ -6067,8 +6035,25 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   // OK since we can't really handle tabs for intrinsic sizing anyway.
   const nsStyleText* textStyle = GetStyleText();
   const nsTextFragment* frag = mContent->GetText();
+
+  // If we're hyphenating, the PropertyProvider needs the actual length;
+  // otherwise we can just pass PR_INT32_MAX to mean "all the text"
+  PRInt32 len = PR_INT32_MAX;
+  PRBool hyphenating = frag->GetLength() > 0 &&
+    (mTextRun->GetFlags() & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0;
+  if (hyphenating) {
+    len = GetInFlowContentLength() - iter.GetOriginalOffset();
+#ifdef DEBUG
+    // check that the length we're going to pass to PropertyProvider matches
+    // the expected range of text in the run
+    gfxSkipCharsIterator tmpIter(iter);
+    tmpIter.AdvanceOriginal(len);
+    NS_ASSERTION(tmpIter.GetSkippedOffset() == flowEndInTextRun,
+                 "nsTextFragment length mismatch?");
+#endif
+  }
   PropertyProvider provider(mTextRun, textStyle, frag, this,
-                            iter, PR_INT32_MAX, nsnull, 0);
+                            iter, len, nsnull, 0);
 
   PRBool collapseWhitespace = !textStyle->WhiteSpaceIsSignificant();
   PRBool preformatNewlines = textStyle->NewlineIsSignificant();
@@ -6077,7 +6062,16 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   PRUint32 start =
     FindStartAfterSkippingWhitespace(&provider, aData, textStyle, &iter, flowEndInTextRun);
 
-  // XXX Should we consider hyphenation here?
+  nsAutoTArray<PRPackedBool,BIG_TEXT_NODE_SIZE> hyphBuffer;
+  PRPackedBool *hyphBreakBefore = nsnull;
+  if (hyphenating) {
+    hyphBreakBefore = hyphBuffer.AppendElements(flowEndInTextRun - start);
+    if (hyphBreakBefore) {
+      provider.GetHyphenationBreaks(start, flowEndInTextRun - start,
+                                    hyphBreakBefore);
+    }
+  }
+
   for (PRUint32 i = start, wordStart = start; i <= flowEndInTextRun; ++i) {
     PRBool preformattedNewline = PR_FALSE;
     PRBool preformattedTab = PR_FALSE;
@@ -6087,8 +6081,11 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
       // starts?
       preformattedNewline = preformatNewlines && mTextRun->GetChar(i) == '\n';
       preformattedTab = preformatTabs && mTextRun->GetChar(i) == '\t';
-      if (!mTextRun->CanBreakLineBefore(i) && !preformattedNewline &&
-          !preformattedTab) {
+      if (!mTextRun->CanBreakLineBefore(i) &&
+          !preformattedNewline &&
+          !preformattedTab &&
+          (!hyphBreakBefore || !hyphBreakBefore[i - start]))
+      {
         // we can't break here (and it's not the end of the flow)
         continue;
       }
@@ -6130,6 +6127,8 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
          (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
       if (preformattedNewline) {
         aData->ForceBreak(aRenderingContext);
+      } else if (hyphBreakBefore && hyphBreakBefore[i - start]) {
+        aData->OptionallyBreak(aRenderingContext, provider.GetHyphenWidth());
       } else {
         aData->OptionallyBreak(aRenderingContext);
       }

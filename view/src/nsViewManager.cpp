@@ -62,6 +62,7 @@
 #include "nsXULPopupManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
+#include "nsEventStateManager.h"
 
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
@@ -241,10 +242,10 @@ nsViewManager::CreateView(const nsRect& aBounds,
   return v;
 }
 
-NS_IMETHODIMP nsViewManager::GetRootView(nsIView *&aView)
+NS_IMETHODIMP_(nsIView*)
+nsViewManager::GetRootView()
 {
-  aView = mRootView;
-  return NS_OK;
+  return mRootView;
 }
 
 NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView)
@@ -658,7 +659,7 @@ ShouldIgnoreInvalidation(nsViewManager* aVM)
     if (vo && vo->ShouldIgnoreInvalidation()) {
       return PR_TRUE;
     }
-    nsView* view = aVM->GetRootView()->GetParent();
+    nsView* view = aVM->GetRootViewImpl()->GetParent();
     aVM = view ? view->GetViewManager() : nsnull;
   }
   return PR_FALSE;
@@ -813,6 +814,20 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         break;
       }
 
+    case NS_DONESIZEMOVE:
+      {
+        nsCOMPtr<nsIPresShell> shell = do_QueryInterface(mObserver);
+        if (shell) {
+          nsPresContext* presContext = shell->GetPresContext();
+          if (presContext) {
+            nsEventStateManager::ClearGlobalActiveContent(nsnull);
+          }
+    
+          mObserver->ClearMouseCapture(aView);
+        }
+      }
+      break;
+  
     case NS_XUL_CLOSE:
       {
         // if this is a popup, make a request to hide it. Note that a popuphidden

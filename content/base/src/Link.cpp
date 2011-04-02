@@ -102,7 +102,7 @@ Link::SetLinkState(nsLinkState aState)
                newLinkState == NS_EVENT_STATE_UNVISITED,
                "Unexpected state obtained from LinkState()!");
   mozAutoDocUpdate update(doc, UPDATE_CONTENT_STATE, PR_TRUE);
-  doc->ContentStatesChanged(content, nsnull, oldLinkState ^ newLinkState);
+  doc->ContentStateChanged(content, oldLinkState ^ newLinkState);
 }
 
 nsEventStates
@@ -493,7 +493,7 @@ Link::ResetLinkState(bool aNotify)
   if (aNotify && doc) {
     nsEventStates changedState = NS_EVENT_STATE_VISITED ^ NS_EVENT_STATE_UNVISITED;
     MOZ_AUTO_DOC_UPDATE(doc, UPDATE_STYLE, aNotify);
-    doc->ContentStatesChanged(content, nsnull, changedState);
+    doc->ContentStateChanged(content, changedState);
   }
 }
 

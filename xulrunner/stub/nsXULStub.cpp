@@ -79,11 +79,6 @@
 #include "nsWindowsWMain.cpp"
 #endif
 
-#ifdef XP_BEOS
-#include <Entry.h>
-#include <Path.h>
-#endif
-
 #define VERSION_MAXLEN 128
 
 static void Output(PRBool isError, const char *fmt, ... )
@@ -293,17 +288,6 @@ main(int argc, char **argv)
 
    DosGetInfoBlocks(&ptib, &ppib);
    DosQueryModuleName(ppib->pib_hmte, sizeof(iniPath), iniPath);
-
-#elif defined(XP_BEOS)
-   BEntry e((const char *)argv[0], true); // traverse symlink
-   BPath p;
-   status_t err;
-   err = e.GetPath(&p);
-   NS_ASSERTION(err == B_OK, "realpath failed");
-
-   if (err == B_OK)
-     // p.Path returns a pointer, so use strcpy to store path in iniPath
-     strcpy(iniPath, p.Path());
 
 #else
   // on unix, there is no official way to get the path of the current binary.

@@ -91,7 +91,6 @@ CPP_UNIT_TESTS = \
 include $(topsrcdir)/config/config.mk
 
 LIBS		= $(EXTRA_DSO_LIBS) \
-		  $(DIST)/lib/$(LIB_PREFIX)xpcomglue_s.$(LIB_SUFFIX) \
 		  $(XPCOM_LIBS) \
 		  $(NSPR_LIBS) \
 		  $(NULL)

@@ -406,7 +406,7 @@ IDBDatabase::Invalidate()
     }
   }
 
-  if (!PR_AtomicSet(&mInvalidated, 1)) {
+  if (!PR_ATOMIC_SET(&mInvalidated, 1)) {
     DatabaseInfo* info;
     if (!DatabaseInfo::Get(mDatabaseId, &info)) {
       NS_ERROR("This should never fail!");

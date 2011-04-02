@@ -2074,14 +2074,17 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   // multiplying by stopScale.
   double stopScale;
   double stopDelta = lastStop - firstStop;
-  if (stopDelta < 1e-6 || lineLength < 1e-6 ||
-      (aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR &&
-       (radiusX < 1e-6 || radiusY < 1e-6))) {
+  PRBool zeroRadius = aGradient->mShape != NS_STYLE_GRADIENT_SHAPE_LINEAR &&
+                      (radiusX < 1e-6 || radiusY < 1e-6);
+  if (stopDelta < 1e-6 || lineLength < 1e-6 || zeroRadius) {
     // Stops are all at the same place. Map all stops to 0.0.
-    // For radial gradients we need to fill with the last stop color,
-    // so just set both radii to 0.
+    // For repeating radial gradients, or for any radial gradients with
+    // a zero radius, we need to fill with the last stop color, so just set
+    // both radii to 0.
     stopScale = 0.0;
-    radiusX = radiusY = 0.0;
+    if (aGradient->mRepeating || zeroRadius) {
+      radiusX = radiusY = 0.0;
+    }
     lastStop = firstStop;
   } else {
     stopScale = 1.0/stopDelta;
@@ -2115,6 +2118,11 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     // So our radii are based on radiusX.
     double innerRadius = radiusX*firstStop;
     double outerRadius = radiusX*lastStop;
+    if (stopScale == 0.0) {
+      // Stops are all at the same place.  See above (except we now have
+      // the inside vs. outside of an ellipse).
+      outerRadius = innerRadius + 1;
+    }
     gradientPattern = new gfxPattern(lineStart.x, lineStart.y, innerRadius,
                                      lineStart.x, lineStart.y, outerRadius);
     if (gradientPattern && radiusX != radiusY) {
@@ -2135,12 +2143,11 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
 
   // Now set normalized color stops in pattern.
   if (stopScale == 0.0) {
-    // Non-repeating linear gradient with all stops in same place -> just add
+    // Non-repeating gradient with all stops in same place -> just add
     // first stop and last stop, both at position 0.
-    // Repeating or radial gradient with all stops in the same place -> just
-    // paint the last stop color.
-    if (!aGradient->mRepeating &&
-        aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
+    // Repeating gradient with all stops in the same place, or radial
+    // gradient with radius of 0 -> just paint the last stop color.
+    if (!aGradient->mRepeating && !zeroRadius) {
       gradientPattern->AddColorStop(0.0, stops[0].mColor);
     }
     gradientPattern->AddColorStop(0.0, stops[stops.Length() - 1].mColor);
@@ -3408,7 +3415,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
                                     const PRUint8 aStyle,
                                     const gfxFloat aDescentLimit)
 {
-  NS_ASSERTION(aStyle != DECORATION_STYLE_NONE, "aStyle is none");
+  NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
 
   gfxRect rect =
     GetTextDecorationRectInternal(aPt, aLineSize, aAscent, aOffset,
@@ -3431,12 +3438,12 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
   nsRefPtr<gfxPattern> oldPattern;
 
   switch (aStyle) {
-    case DECORATION_STYLE_SOLID:
-    case DECORATION_STYLE_DOUBLE:
+    case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
+    case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
       oldLineWidth = aGfxContext->CurrentLineWidth();
       oldPattern = aGfxContext->GetPattern();
       break;
-    case DECORATION_STYLE_DASHED: {
+    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED: {
       aGfxContext->Save();
       contextIsSaved = PR_TRUE;
       aGfxContext->Clip(rect);
@@ -3448,7 +3455,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       rect.size.width += dashWidth;
       break;
     }
-    case DECORATION_STYLE_DOTTED: {
+    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED: {
       aGfxContext->Save();
       contextIsSaved = PR_TRUE;
       aGfxContext->Clip(rect);
@@ -3467,7 +3474,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       rect.size.width += dashWidth;
       break;
     }
-    case DECORATION_STYLE_WAVY:
+    case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
       aGfxContext->Save();
       contextIsSaved = PR_TRUE;
       aGfxContext->Clip(rect);
@@ -3491,13 +3498,13 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
   aGfxContext->SetColor(gfxRGBA(aColor));
   aGfxContext->SetLineWidth(lineHeight);
   switch (aStyle) {
-    case DECORATION_STYLE_SOLID:
+    case NS_STYLE_TEXT_DECORATION_STYLE_SOLID:
       aGfxContext->NewPath();
       aGfxContext->MoveTo(rect.TopLeft());
       aGfxContext->LineTo(rect.TopRight());
       aGfxContext->Stroke();
       break;
-    case DECORATION_STYLE_DOUBLE:
+    case NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE:
       /**
        *  We are drawing double line as:
        *
@@ -3520,14 +3527,14 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       aGfxContext->LineTo(rect.BottomRight());
       aGfxContext->Stroke();
       break;
-    case DECORATION_STYLE_DOTTED:
-    case DECORATION_STYLE_DASHED:
+    case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED:
+    case NS_STYLE_TEXT_DECORATION_STYLE_DASHED:
       aGfxContext->NewPath();
       aGfxContext->MoveTo(rect.TopLeft());
       aGfxContext->LineTo(rect.TopRight());
       aGfxContext->Stroke();
       break;
-    case DECORATION_STYLE_WAVY: {
+    case NS_STYLE_TEXT_DECORATION_STYLE_WAVY: {
       /**
        *  We are drawing wavy line as:
        *
@@ -3609,7 +3616,7 @@ nsCSSRendering::GetTextDecorationRect(nsPresContext* aPresContext,
                                       const gfxFloat aDescentLimit)
 {
   NS_ASSERTION(aPresContext, "aPresContext is null");
-  NS_ASSERTION(aStyle != DECORATION_STYLE_NONE, "aStyle is none");
+  NS_ASSERTION(aStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE, "aStyle is none");
 
   gfxRect rect =
     GetTextDecorationRectInternal(gfxPoint(0, 0), aLineSize, aAscent, aOffset,
@@ -3632,9 +3639,10 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
                                               const PRUint8 aStyle,
                                               const gfxFloat aDescentLimit)
 {
-  NS_ASSERTION(aStyle <= DECORATION_STYLE_WAVY, "Invalid aStyle value");
+  NS_ASSERTION(aStyle <= NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
+               "Invalid aStyle value");
 
-  if (aStyle == DECORATION_STYLE_NONE)
+  if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_NONE)
     return gfxRect(0, 0, 0, 0);
 
   PRBool canLiftUnderline = aDescentLimit >= 0.0;
@@ -3651,7 +3659,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 
   gfxFloat suggestedMaxRectHeight = NS_MAX(NS_MIN(ascent, descentLimit), 1.0);
   r.size.height = lineHeight;
-  if (aStyle == DECORATION_STYLE_DOUBLE) {
+  if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE) {
     /**
      *  We will draw double line as:
      *
@@ -3677,7 +3685,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
         r.size.height = NS_MAX(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
       }
     }
-  } else if (aStyle == DECORATION_STYLE_WAVY) {
+  } else if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
     /**
      *  We will draw wavy line as:
      *

@@ -60,84 +60,15 @@
 #include "nsTArray.h"
 #include "nsIJSNativeInitializer.h"
 #include "nsIDOMLSProgressEvent.h"
-#include "nsClassHashtable.h"
-#include "nsHashKeys.h"
-#include "prclist.h"
-#include "prtime.h"
 #include "nsIDOMNSEvent.h"
 #include "nsITimer.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMProgressEvent.h"
 #include "nsDOMEventTargetWrapperCache.h"
+#include "nsContentUtils.h"
 
 class nsILoadGroup;
 class AsyncVerifyRedirectCallbackForwarder;
-
-class nsAccessControlLRUCache
-{
-public:
-  struct TokenTime
-  {
-    nsCString token;
-    PRTime expirationTime;
-  };
-
-  struct CacheEntry : public PRCList
-  {
-    CacheEntry(nsCString& aKey)
-      : mKey(aKey)
-    {
-      MOZ_COUNT_CTOR(nsAccessControlLRUCache::CacheEntry);
-    }
-    
-    ~CacheEntry()
-    {
-      MOZ_COUNT_DTOR(nsAccessControlLRUCache::CacheEntry);
-    }
-
-    void PurgeExpired(PRTime now);
-    PRBool CheckRequest(const nsCString& aMethod,
-                        const nsTArray<nsCString>& aCustomHeaders);
-
-    nsCString mKey;
-    nsTArray<TokenTime> mMethods;
-    nsTArray<TokenTime> mHeaders;
-  };
-
-  nsAccessControlLRUCache()
-  {
-    MOZ_COUNT_CTOR(nsAccessControlLRUCache);
-    PR_INIT_CLIST(&mList);
-  }
-
-  ~nsAccessControlLRUCache()
-  {
-    Clear();
-    MOZ_COUNT_DTOR(nsAccessControlLRUCache);
-  }
-
-  PRBool Initialize()
-  {
-    return mTable.Init();
-  }
-
-  CacheEntry* GetEntry(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                       PRBool aWithCredentials, PRBool aCreate);
-  void RemoveEntries(nsIURI* aURI, nsIPrincipal* aPrincipal);
-
-  void Clear();
-
-private:
-  static PLDHashOperator
-    RemoveExpiredEntries(const nsACString& aKey, nsAutoPtr<CacheEntry>& aValue,
-                         void* aUserData);
-
-  static PRBool GetCacheKey(nsIURI* aURI, nsIPrincipal* aPrincipal,
-                            PRBool aWithCredentials, nsACString& _retval);
-
-  nsClassHashtable<nsCStringHashKey, CacheEntry> mTable;
-  PRCList mList;
-};
 
 class nsXHREventTarget : public nsDOMEventTargetWrapperCache,
                          public nsIXMLHttpRequestEventTarget
@@ -157,6 +88,7 @@ protected:
   nsRefPtr<nsDOMEventListenerWrapper> mOnAbortListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnLoadStartListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnProgressListener;
+  nsRefPtr<nsDOMEventListenerWrapper> mOnLoadendListener;
 };
 
 class nsXMLHttpRequestUpload : public nsXHREventTarget,
@@ -279,31 +211,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXMLHttpRequest,
                                            nsXHREventTarget)
 
-  static PRBool EnsureACCache()
-  {
-    if (sAccessControlCache)
-      return PR_TRUE;
-
-    nsAutoPtr<nsAccessControlLRUCache> newCache(new nsAccessControlLRUCache());
-    NS_ENSURE_TRUE(newCache, PR_FALSE);
-
-    if (newCache->Initialize()) {
-      sAccessControlCache = newCache.forget();
-      return PR_TRUE;
-    }
-
-    return PR_FALSE;
-  }
-
-  static void ShutdownACCache()
-  {
-    delete sAccessControlCache;
-    sAccessControlCache = nsnull;
-  }
-
   PRBool AllowUploadProgress();
-
-  static nsAccessControlLRUCache* sAccessControlCache;
 
 protected:
   friend class nsMultipartProxyListener;
@@ -332,6 +240,10 @@ protected:
 
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
 
+  bool IsSystemXHR() {
+    return !!nsContentUtils::IsSystemPrincipal(mPrincipal);
+  }
+
   /**
    * Check if aChannel is ok for a cross-site request by making sure no
    * inappropriate headers are set, and no username/password is set.
@@ -351,8 +263,8 @@ protected:
   // mReadRequest is different from mChannel for multipart requests
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mResponseXML;
-  nsCOMPtr<nsIChannel> mACGetChannel;
-  nsTArray<nsCString> mACUnsafeHeaders;
+  nsCOMPtr<nsIChannel> mCORSPreflightChannel;
+  nsTArray<nsCString> mCORSUnsafeHeaders;
 
   nsRefPtr<nsDOMEventListenerWrapper> mOnUploadProgressListener;
   nsRefPtr<nsDOMEventListenerWrapper> mOnReadystatechangeListener;

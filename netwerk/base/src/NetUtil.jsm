@@ -130,21 +130,22 @@ const NetUtil = {
 
     /**
      * Asynchronously opens a source and fetches the response.  A source can be
-     * an nsIURI, nsIFile, string spec, or nsIChannel.  The provided callback
-     * will get an input stream containing the response, the result code, and a
-     * reference to the request.
+     * an nsIURI, nsIFile, string spec, nsIChannel, or nsIInputStream.  The
+     * provided callback will get an input stream containing the response, the
+     * result code, and a reference to the request.
      *
      * @param aSource
-     *        The nsIURI, nsIFile, string spec, or nsIChannel to open.
+     *        The nsIURI, nsIFile, string spec, nsIChannel, or nsIInputStream
+     *        to open.
      *        Note: If passing an nsIChannel whose notificationCallbacks is
      *              already set, callers are responsible for implementations
      *              of nsIBadCertListener/nsISSLErrorListener.
      * @param aCallback
      *        The callback function that will be notified upon completion.  It
      *        will get two arguments:
-     *        1) An nsIInputStream containing the data from the channel, if any.
+     *        1) An nsIInputStream containing the data from aSource, if any.
      *        2) The status code from opening the source.
-     *        3) Reference to the channel (as an nsIRequest).
+     *        3) Reference to the nsIRequest.
      */
     asyncFetch: function NetUtil_asyncOpen(aSource, aCallback)
     {
@@ -173,6 +174,15 @@ const NetUtil = {
                 aCallback(pipe.inputStream, aStatusCode, aRequest);
             }
         });
+
+        // Input streams are handled slightly differently from everything else.
+        if (aSource instanceof Ci.nsIInputStream) {
+            let pump = Cc["@mozilla.org/network/input-stream-pump;1"].
+                       createInstance(Ci.nsIInputStreamPump);
+            pump.init(aSource, -1, -1, 0, 0, true);
+            pump.asyncRead(listener, null);
+            return;
+        }
 
         let channel = aSource;
         if (!(channel instanceof Ci.nsIChannel)) {

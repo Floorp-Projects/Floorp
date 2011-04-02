@@ -53,19 +53,30 @@ ac_add_app_options x86_64 --with-macos-sdk=/Developer/SDKs/MacOSX10.6.sdk
 if test -n "$MOZ_BUILD_APP" ; then
 if test "$MOZ_BUILD_APP" = "i386" -o  "$MOZ_BUILD_APP" = "ppc" -o "$MOZ_BUILD_APP" = "x86_64"; then
   TARGET_CPU=$MOZ_BUILD_APP
-  GCC_VERSION=4.2
+
+  if test -z "$CC" ; then
+     CC=gcc-4.2
+  fi
+
+  if test -z "$CXX" ; then
+     CXX=g++-4.2
+  fi
+
+  # $HOST_CXX is presently unused.  $HOST_CC will only be used during a cross
+  # compile.
+  HOST_CC=$CC
+  HOST_CXX=$CXX
+
+  NATIVE_CPU=`$topsrcdir/build/autoconf/config.guess | cut -f1 -d-`
+  if test "$NATIVE_CPU" = "powerpc" ; then
+    NATIVE_CPU=ppc
+  fi
 
   # It's not strictly necessary to specify -arch during native builds, but it
   # makes the merged about:buildconfig easier to follow, and it reduces
   # conditionalized differences between builds.
-  CC="gcc-$GCC_VERSION -arch $TARGET_CPU"
-  CXX="g++-$GCC_VERSION -arch $TARGET_CPU"
-
-  # $HOST_CXX is presently unused.  $HOST_CC will only be used during a cross
-  # compile.  Always use the 4.2 compiler, since it will always be present and
-  # will always work.
-  HOST_CC=gcc-4.2
-  HOST_CXX=g++-4.2
+  CC="$CC -arch $TARGET_CPU"
+  CXX="$CXX -arch $TARGET_CPU"
 
   # These must be set for cross builds, and don't hurt straight builds.
   RANLIB=ranlib
@@ -73,11 +84,6 @@ if test "$MOZ_BUILD_APP" = "i386" -o  "$MOZ_BUILD_APP" = "ppc" -o "$MOZ_BUILD_AP
   AS=$CC
   LD=ld
   STRIP="strip -x -S"
-
-  NATIVE_CPU=`$topsrcdir/build/autoconf/config.guess | cut -f1 -d-`
-  if test "$NATIVE_CPU" = "powerpc" ; then
-    NATIVE_CPU=ppc
-  fi
 
   # Let configure know that we mean business.
   if test "$NATIVE_CPU" != "$TARGET_CPU" ; then

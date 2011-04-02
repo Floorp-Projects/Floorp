@@ -140,15 +140,11 @@ AsyncStatementParams::NewResolve(
     resolved = true;
   }
   else if (JSID_IS_STRING(aId)) {
-    JSString *str = JSID_TO_STRING(aId);
-    size_t nameLength;
-    const jschar *nameChars = ::JS_GetInternedStringCharsAndLength(str, &nameLength);
-
     // We are unable to tell if there's a parameter with this name and so
     // we must assume that there is.  This screws the rest of the prototype
     // chain, but people really shouldn't be depending on this anyways.
-    ok = ::JS_DefineUCProperty(aCtx, aScopeObj, nameChars, nameLength,
-                               JSVAL_VOID, nsnull, nsnull, 0);
+    ok = ::JS_DefinePropertyById(aCtx, aScopeObj, aId, JSVAL_VOID, nsnull,
+                                 nsnull, 0);
     resolved = true;
   }
 

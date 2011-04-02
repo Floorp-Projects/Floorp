@@ -55,13 +55,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-%{C++
-class nsIPresShell;
-%}
-
-[ptr] native nsIPresShellPtr(nsIPresShell);
-
-[scriptable, uuid(972e54e1-dec3-4e3f-87ec-408a7dbcfd92)]
+[scriptable, uuid(78b0bde0-ab69-428b-ab30-fcc09eead499)]
 
 interface nsIEditor  : nsISupports
 {
@@ -81,19 +75,15 @@ interface nsIEditor  : nsISupports
   /**
    * Init is to tell the implementation of nsIEditor to begin its services
    * @param aDoc          The dom document interface being observed
-   * @param aPresShell    TEMP: The presentation shell displaying the document.
-   *                      Once events can tell us from what pres shell
-   *                      they originated, this will no longer be
-   *                      necessary, and the editor will no longer be
-   *                      linked to a single pres shell.
    * @param aRoot         This is the root of the editable section of this
    *                      document. If it is null then we get root
    *                      from document body.
    * @param aSelCon       this should be used to get the selection location
+   *                      (will be null for HTML editors)
    * @param aFlags        A bitmask of flags for specifying the behavior
    *                      of the editor.
    */
-  [noscript] void init(in nsIDOMDocument doc, in nsIPresShellPtr shell,
+  [noscript] void init(in nsIDOMDocument doc,
                        in nsIContent aRoot,
                        in nsISelectionController aSelCon,
                        in unsigned long aFlags);

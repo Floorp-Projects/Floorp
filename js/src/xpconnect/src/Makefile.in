@@ -132,15 +132,10 @@ EXTRA_DSO_LDOPTS += \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
 
-ifdef MOZ_JSLOADER
 SHARED_LIBRARY_LIBS = \
-		../loader/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
-		$(NULL)
-endif
-
-SHARED_LIBRARY_LIBS += \
-		../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
-		$(NULL)
+  ../loader/$(LIB_PREFIX)jsloader_s.$(LIB_SUFFIX) \
+  ../wrappers/$(LIB_PREFIX)xpcwrappers_s.$(LIB_SUFFIX) \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

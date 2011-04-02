@@ -117,19 +117,6 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     return mContext;
 }
 
-void
-gfxAlphaBoxBlur::PremultiplyAlpha(gfxFloat alpha)
-{
-    if (!mImageSurface)
-        return;
-
-    unsigned char* data = mImageSurface->Data();
-    PRInt32 length = mImageSurface->GetDataSize();
-
-    for (PRInt32 i=0; i<length; ++i)
-        data[i] = static_cast<unsigned char>(data[i] * alpha);
-}
-
 /**
  * Box blur involves looking at one pixel, and setting its value to the average
  * of its neighbouring pixels.

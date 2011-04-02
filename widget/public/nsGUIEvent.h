@@ -59,6 +59,7 @@
 #include "nsTraceRefcnt.h"
 #include "nsITransferable.h"
 #include "nsIVariant.h"
+#include "nsStyleConsts.h"
 
 #ifdef MOZ_IPC
 namespace mozilla {
@@ -226,6 +227,9 @@ class nsHashKey;
 // Indicates that the ui state such as whether to show focus or
 // keyboard accelerator indicators has changed.
 #define NS_UISTATECHANGED               (NS_WINDOW_START + 43)
+
+// Done sizing or moving a window, so ensure that the mousedown state was cleared.
+#define NS_DONESIZEMOVE                 (NS_WINDOW_START + 44)
 
 #define NS_RESIZE_EVENT                 (NS_WINDOW_START + 60)
 #define NS_SCROLL_EVENT                 (NS_WINDOW_START + 61)
@@ -954,12 +958,12 @@ public:
 struct nsTextRangeStyle
 {
   enum {
-    LINESTYLE_NONE   = 0,
-    LINESTYLE_SOLID  = 1,
-    LINESTYLE_DOTTED = 2,
-    LINESTYLE_DASHED = 3,
-    LINESTYLE_DOUBLE = 4,
-    LINESTYLE_WAVY   = 5
+    LINESTYLE_NONE   = NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+    LINESTYLE_SOLID  = NS_STYLE_TEXT_DECORATION_STYLE_SOLID,
+    LINESTYLE_DOTTED = NS_STYLE_TEXT_DECORATION_STYLE_DOTTED,
+    LINESTYLE_DASHED = NS_STYLE_TEXT_DECORATION_STYLE_DASHED,
+    LINESTYLE_DOUBLE = NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE,
+    LINESTYLE_WAVY   = NS_STYLE_TEXT_DECORATION_STYLE_WAVY
   };
 
   enum {

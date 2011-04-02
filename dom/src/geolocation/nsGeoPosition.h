@@ -68,8 +68,8 @@ public:
                         const nsAString &aCountryCode,
                         const nsAString &aPostalCode);
 
-  private:
     ~nsGeoPositionAddress();
+  private:
     const nsString mStreetNumber;
     const nsString mStreet;
     const nsString mPremises;
@@ -126,6 +126,10 @@ public:
   nsGeoPosition(nsIDOMGeoPositionCoords *aCoords,
                 nsIDOMGeoPositionAddress *aAddress,
                 DOMTimeStamp aTimestamp);
+
+  void SetAddress(nsIDOMGeoPositionAddress *address) {
+    mAddress = address;
+  }
 
 private:
   ~nsGeoPosition();
