@@ -48,6 +48,7 @@
 #include "nsBidiUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUTF8Utils.h"
+#include "mozilla/SSE.h"
 
 #define TEXTFRAG_WHITE_AFTER_NEWLINE 50
 #define TEXTFRAG_MAX_NEWLINES 7
@@ -144,6 +145,69 @@ nsTextFragment::operator=(const nsTextFragment& aOther)
   return *this;
 }
 
+static inline PRBool
+Is8BitUnvectorized(const PRUnichar *str, const PRUnichar *end)
+{
+#if PR_BYTES_PER_WORD == 4
+  const size_t mask = 0xff00ff00;
+  const PRUint32 alignMask = 0x3;
+  const PRUint32 numUnicharsPerWord = 2;
+#elif PR_BYTES_PER_WORD == 8
+  const size_t mask = 0xff00ff00ff00ff00;
+  const PRUint32 alignMask = 0x7;
+  const PRUint32 numUnicharsPerWord = 4;
+#else
+#error Unknown platform!
+#endif
+
+  const PRInt32 len = end - str;
+  PRInt32 i = 0;
+
+  // Align ourselves to a word boundary.
+  PRInt32 alignLen =
+    PR_MIN(len, PRInt32(((-NS_PTR_TO_UINT32(str)) & alignMask) / sizeof(PRUnichar)));
+  for (; i < alignLen; i++) {
+    if (str[i] > 255)
+      return PR_FALSE;
+  }
+
+  // Check one word at a time.
+  const PRInt32 wordWalkEnd = ((len - i) / numUnicharsPerWord) * numUnicharsPerWord;
+  for (; i < wordWalkEnd; i += numUnicharsPerWord) {
+    const size_t word = *reinterpret_cast<const size_t*>(str + i);
+    if (word & mask)
+      return PR_FALSE;
+  }
+
+  // Take care of the remainder one character at a time.
+  for (; i < len; i++) {
+    if (str[i] > 255)
+      return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+#ifdef MOZILLA_MAY_SUPPORT_SSE2
+namespace mozilla {
+  namespace SSE2 {
+    PRBool Is8Bit(const PRUnichar *str, const PRUnichar *end);
+  }
+}
+#endif
+
+static inline PRBool
+Is8Bit(const PRUnichar *str, const PRUnichar *end)
+{
+#ifdef MOZILLA_MAY_SUPPORT_SSE2
+  if (mozilla::supports_sse2()) {
+    return mozilla::SSE2::Is8Bit(str, end);
+  }
+#endif
+
+  return Is8BitUnvectorized(str, end);
+}
+
 void
 nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
 {
@@ -203,14 +267,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
   }
 
   // See if we need to store the data in ucs2 or not
-  PRBool need2 = PR_FALSE;
-  while (ucp < uend) {
-    PRUnichar ch = *ucp++;
-    if (ch >= 256) {
-      need2 = PR_TRUE;
-      break;
-    }
-  }
+  PRBool need2 = !Is8Bit(ucp, uend);
 
   if (need2) {
     // Use ucs2 storage because we have to
@@ -227,9 +284,7 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
     }
 
     // Copy data
-    // Use the same copying code we use elsewhere; it's likely to be
-    // carefully tuned.
-    LossyConvertEncoding<PRUnichar, char> converter(buff);
+    LossyConvertEncoding16to8 converter(buff);
     copy_string(aBuffer, aBuffer+aLength, converter);
     m1b = buff;
   }
@@ -260,9 +315,8 @@ nsTextFragment::CopyTo(PRUnichar *aDest, PRInt32 aOffset, PRInt32 aCount)
     } else {
       const char *cp = m1b + aOffset;
       const char *end = cp + aCount;
-      while (cp < end) {
-        *aDest++ = (unsigned char)(*cp++);
-      }
+      LossyConvertEncoding8to16 converter(aDest);
+      copy_string(cp, end, converter);
     }
   }
 }
@@ -296,18 +350,7 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
 
   // Current string is a 1-byte string, check if the new data fits in one byte too.
 
-  const PRUnichar* ucp = aBuffer;
-  const PRUnichar* uend = ucp + aLength;
-  PRBool need2 = PR_FALSE;
-  while (ucp < uend) {
-    PRUnichar ch = *ucp++;
-    if (ch >= 256) {
-      need2 = PR_TRUE;
-      break;
-    }
-  }
-
-  if (need2) {
+  if (!Is8Bit(aBuffer, aBuffer + aLength)) {
     // The old data was 1-byte, but the new is not so we have to expand it
     // all to 2-byte
     PRUnichar* buff = (PRUnichar*)nsMemory::Alloc((mState.mLength + aLength) *
@@ -316,11 +359,10 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
       return;
     }
 
-    // Copy data
-    for (PRUint32 i = 0; i < mState.mLength; ++i) {
-      buff[i] = (unsigned char)m1b[i];
-    }
-    
+    // Copy data into buff
+    LossyConvertEncoding8to16 converter(buff);
+    copy_string(m1b, m1b+mState.mLength, converter);
+
     memcpy(buff + mState.mLength, aBuffer, aLength * sizeof(PRUnichar));
 
     mState.mLength += aLength;
@@ -354,10 +396,10 @@ nsTextFragment::Append(const PRUnichar* aBuffer, PRUint32 aLength)
     memcpy(buff, m1b, mState.mLength);
     mState.mInHeap = PR_TRUE;
   }
-    
-  for (PRUint32 i = 0; i < aLength; ++i) {
-    buff[mState.mLength + i] = (char)aBuffer[i];
-  }
+
+  // Copy aBuffer into buff.
+  LossyConvertEncoding16to8 converter(buff + mState.mLength);
+  copy_string(aBuffer, aBuffer + aLength, converter);
 
   m1b = buff;
   mState.mLength += aLength;

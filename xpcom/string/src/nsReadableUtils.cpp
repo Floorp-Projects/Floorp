@@ -145,9 +145,9 @@ LossyAppendUTF16toASCII( const nsAString& aSource, nsACString& aDest )
 
     dest.advance(old_dest_length);
 
-      // right now, this won't work on multi-fragment destinations
-    LossyConvertEncoding<PRUnichar, char> converter(dest.get());
-    
+    // right now, this won't work on multi-fragment destinations
+    LossyConvertEncoding16to8 converter(dest.get());
+
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
 
@@ -167,7 +167,7 @@ AppendASCIItoUTF16( const nsACString& aSource, nsAString& aDest )
     dest.advance(old_dest_length);
 
       // right now, this won't work on multi-fragment destinations
-    LossyConvertEncoding<char, PRUnichar> converter(dest.get());
+    LossyConvertEncoding8to16 converter(dest.get());
 
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter);
   }
@@ -303,7 +303,7 @@ ToNewCString( const nsAString& aSource )
       return nsnull;
 
     nsAString::const_iterator fromBegin, fromEnd;
-    LossyConvertEncoding<PRUnichar, char> converter(result);
+    LossyConvertEncoding16to8 converter(result);
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter).write_terminator();
     return result;
   }
@@ -374,7 +374,7 @@ ToNewUnicode( const nsACString& aSource )
       return nsnull;
 
     nsACString::const_iterator fromBegin, fromEnd;
-    LossyConvertEncoding<char, PRUnichar> converter(result);
+    LossyConvertEncoding8to16 converter(result);
     copy_string(aSource.BeginReading(fromBegin), aSource.EndReading(fromEnd), converter).write_terminator();
     return result;
   }
@@ -573,14 +573,16 @@ IsUTF8( const nsACString& aString )
             --state;
 
             // non-character : EF BF [BE-BF] or F[0-7] [89AB]F BF [BE-BF]
-            if ( nonchar &&  ( !state &&  c < 0xBE ||
-                  state == 1 && c != 0xBF  ||
-                  state == 2 && 0x0F != (0x0F & c) ))
-                nonchar = PR_FALSE;
+            if ( nonchar &&  
+                 ( ( !state && c < 0xBE ) ||
+                   ( state == 1 && c != 0xBF )  ||
+                   ( state == 2 && 0x0F != (0x0F & c) )))
+              nonchar = PR_FALSE;
 
-            if ( !UTF8traits::isInSeq(c) || overlong && c <= olupper || 
-                  surrogate && slower <= c || nonchar && !state )
+            if ( !UTF8traits::isInSeq(c) || ( overlong && c <= olupper ) || 
+                 ( surrogate && slower <= c ) || ( nonchar && !state ))
               return PR_FALSE; // Not UTF-8 string
+
             overlong = surrogate = PR_FALSE;
           }
         }

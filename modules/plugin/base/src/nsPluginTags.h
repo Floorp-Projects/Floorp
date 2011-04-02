@@ -100,6 +100,11 @@ public:
   PRBool IsEnabled();
   void RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
                                    nsRegisterType aType = ePluginRegister);
+
+  // Remove the MIME/description/extension entry associated with the magic Java sentinel
+  // which informs us that the Java plugin is NPAPI-enabled. If sentinelIndex is -1, no
+  // action will be performed.
+  void RemoveJavaSentinel(PRInt32 sentinelIndex);
   
   nsRefPtr<nsPluginTag> mNext;
   nsPluginHost *mPluginHost;

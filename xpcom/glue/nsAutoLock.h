@@ -49,11 +49,11 @@
 
     public:
         Foo(void) {
-            mLock = PR_NewLock();
+            mLock = nsAutoLock::NewLock("Foo::mLock");
         }
 
         ~Foo(void) {
-            PR_DestroyLock(mLock);
+            nsAutoLock::DestroyLock(mLock);
         }
 
         void ThreadSafeMethod(void) {
@@ -127,6 +127,10 @@ protected:
     nsAutoLockBase(void* addr, nsAutoLockType type);
     ~nsAutoLockBase();
 
+    static void     InitAutoLockStatics();
+    static void     OnSemaphoreRecycle(void* addr);
+    static void     OnSemaphoreCreated(const void* key, const char* name);
+
     void            Show();
     void            Hide();
 
@@ -199,8 +203,23 @@ public:
      *          A valid PRLock* if successful, which must be destroyed
      *          by nsAutoLock::DestroyLock()
      **/
-    static PRLock* NewLock(const char* name);
-    static void    DestroyLock(PRLock* lock);
+    static PRLock* NewLock(const char* name)
+    {
+        PRLock* lock = PR_NewLock();
+    #ifdef DEBUG
+        OnSemaphoreCreated(lock, name);
+    #endif
+        return lock;
+    }
+
+    static void DestroyLock(PRLock* lock)
+    {
+    #ifdef DEBUG
+        OnSemaphoreRecycle(lock);
+    #endif
+        PR_DestroyLock(lock);
+    }
+
 
     /**
      * Constructor
@@ -288,8 +307,22 @@ public:
      *          A valid PRMonitor* is successful while must be destroyed
      *          by nsAutoMonitor::DestroyMonitor()
      **/
-    static PRMonitor* NewMonitor(const char* name);
-    static void       DestroyMonitor(PRMonitor* mon);
+    static PRMonitor* NewMonitor(const char* name)
+    {
+        PRMonitor* mon = PR_NewMonitor();
+    #ifdef DEBUG
+        OnSemaphoreCreated(mon, name);
+    #endif
+        return mon;
+    }
+
+    static void DestroyMonitor(PRMonitor* mon)
+    {
+    #ifdef DEBUG
+        OnSemaphoreRecycle(mon);
+    #endif
+        PR_DestroyMonitor(mon);
+    }
 
     
     /**

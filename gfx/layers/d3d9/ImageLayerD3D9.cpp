@@ -46,8 +46,6 @@
 namespace mozilla {
 namespace layers {
 
-using mozilla::MutexAutoLock;
-
 static already_AddRefed<IDirect3DTexture9>
 SurfaceToTexture(IDirect3DDevice9 *aDevice,
                  gfxASurface *aSurface,
@@ -136,7 +134,6 @@ SurfaceToTexture(IDirect3DDevice9 *aDevice,
 ImageContainerD3D9::ImageContainerD3D9(IDirect3DDevice9 *aDevice)
   : ImageContainer(nsnull)
   , mDevice(aDevice)
-  , mActiveImageLock("mozilla.layers.ImageContainerD3D9.mActiveImageLock")
 {
 }
 
@@ -159,15 +156,16 @@ ImageContainerD3D9::CreateImage(const Image::Format *aFormats,
 void
 ImageContainerD3D9::SetCurrentImage(Image *aImage)
 {
-  MutexAutoLock lock(mActiveImageLock);
+  MonitorAutoEnter mon(mMonitor);
 
   mActiveImage = aImage;
+  CurrentImageChanged();
 }
 
 already_AddRefed<Image>
 ImageContainerD3D9::GetCurrentImage()
 {
-  MutexAutoLock lock(mActiveImageLock);
+  MonitorAutoEnter mon(mMonitor);
 
   nsRefPtr<Image> retval = mActiveImage;
   return retval.forget();
@@ -176,7 +174,7 @@ ImageContainerD3D9::GetCurrentImage()
 already_AddRefed<gfxASurface>
 ImageContainerD3D9::GetCurrentAsSurface(gfxIntSize *aSize)
 {
-  MutexAutoLock lock(mActiveImageLock);
+  MonitorAutoEnter mon(mMonitor);
   if (!mActiveImage) {
     return nsnull;
   }
@@ -199,7 +197,7 @@ ImageContainerD3D9::GetCurrentAsSurface(gfxIntSize *aSize)
 gfxIntSize
 ImageContainerD3D9::GetCurrentSize()
 {
-  MutexAutoLock lock(mActiveImageLock);
+  MonitorAutoEnter mon(mMonitor);
   if (!mActiveImage) {
     return gfxIntSize(0,0);
   }
@@ -375,6 +373,8 @@ ImageLayerD3D9::RenderLayer()
       device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     }
   }
+
+  GetContainer()->NotifyPaintedImage(image);
 }
 
 PlanarYCbCrImageD3D9::PlanarYCbCrImageD3D9()

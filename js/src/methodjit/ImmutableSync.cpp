@@ -54,7 +54,7 @@ ImmutableSync::ImmutableSync()
 
 ImmutableSync::~ImmutableSync()
 {
-    cx->free(entries);
+    cx->free_(entries);
 }
 
 bool
@@ -63,7 +63,7 @@ ImmutableSync::init(JSContext *cx, const FrameState &frame, uint32 nentries)
     this->cx = cx;
     this->frame = &frame;
 
-    entries = (SyncEntry *)cx->calloc(sizeof(SyncEntry) * nentries);
+    entries = (SyncEntry *)cx->calloc_(sizeof(SyncEntry) * nentries);
     return !!entries;
 }
 

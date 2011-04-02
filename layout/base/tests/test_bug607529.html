@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=607529
+-->
+<head>
+  <title>Test for Bug 607529</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=607529">Mozilla Bug 607529</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  /* General idea: Open a new window (needed because we don't bfcache
+     subframes) that uses mozRequestAnimationFrame, navigate it, navigate it
+     back, and verify that the animations are still running.  */
+
+  var doneOneLoad = false;
+
+  var eventsHappening = false;
+  var callbacksHappening = false;
+
+  function tryFinishTest() {
+    if (eventsHappening && callbacksHappening) {
+      w.close();
+      SimpleTest.finish();
+    }
+  }
+
+  /** Test for Bug 607529 **/
+  window.onmessage = function(e) {
+    isnot(e.data, "notcached", "Should never end up not being cached");
+  
+    if (e.data == "loaded" && !doneOneLoad) {
+      doneOneLoad = true;
+      w.location = "data:text/html,<script>window.onload = function() { opener.postMessage('goback', '*'); }</" + "script>";
+    }
+    else if (e.data == "goback") {
+      w.history.back();
+    }
+    else if (e.data == "revived") {
+      w.postMessage("report", "*");
+    }
+    else if (e.data == "eventHappened") {
+      eventsHappening = true;
+      tryFinishTest();
+    }
+    else if (e.data == "callbackHappened") {
+      callbacksHappening = true;
+      tryFinishTest();
+    } else {
+      var msg = JSON.parse(e.data);
+      if (msg.error) {
+        window.onerror(msg.msg, msg.url, msg.line);
+      }
+    }
+  };
+
+  var w = window.open("file_bug607529.html");
+</script>
+</pre>
+</body>
+</html>

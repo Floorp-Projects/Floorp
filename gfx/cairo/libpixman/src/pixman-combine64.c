@@ -137,6 +137,17 @@ combine_clear (pixman_implementation_t *imp,
 }
 
 static void
+combine_dst (pixman_implementation_t *imp,
+	     pixman_op_t	      op,
+	     uint64_t *		      dest,
+	     const uint64_t *	      src,
+	     const uint64_t *          mask,
+	     int		      width)
+{
+    return;
+}
+
+static void
 combine_src_u (pixman_implementation_t *imp,
                pixman_op_t              op,
                uint64_t *                dest,
@@ -1300,17 +1311,13 @@ combine_disjoint_over_u (pixman_implementation_t *imp,
 	uint64_t s = combine_mask (src, mask, i);
 	uint32_t a = s >> A_SHIFT;
 
-	if (a != 0x00)
+	if (s != 0x00)
 	{
-	    if (a != MASK)
-	    {
-		uint64_t d = *(dest + i);
-		a = combine_disjoint_out_part (d >> A_SHIFT, a);
-		UN16x4_MUL_UN16_ADD_UN16x4 (d, a, s);
-		s = d;
-	    }
+	    uint64_t d = *(dest + i);
+	    a = combine_disjoint_out_part (d >> A_SHIFT, a);
+	    UN16x4_MUL_UN16_ADD_UN16x4 (d, a, s);
 
-	    *(dest + i) = s;
+	    *(dest + i) = d;
 	}
     }
 }
@@ -2318,7 +2325,7 @@ _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp)
     /* Unified alpha */
     imp->combine_64[PIXMAN_OP_CLEAR] = combine_clear;
     imp->combine_64[PIXMAN_OP_SRC] = combine_src_u;
-    /* dest */
+    imp->combine_64[PIXMAN_OP_DST] = combine_dst;
     imp->combine_64[PIXMAN_OP_OVER] = combine_over_u;
     imp->combine_64[PIXMAN_OP_OVER_REVERSE] = combine_over_reverse_u;
     imp->combine_64[PIXMAN_OP_IN] = combine_in_u;
@@ -2334,7 +2341,7 @@ _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp)
     /* Disjoint, unified */
     imp->combine_64[PIXMAN_OP_DISJOINT_CLEAR] = combine_clear;
     imp->combine_64[PIXMAN_OP_DISJOINT_SRC] = combine_src_u;
-    /* dest */
+    imp->combine_64[PIXMAN_OP_DISJOINT_DST] = combine_dst;
     imp->combine_64[PIXMAN_OP_DISJOINT_OVER] = combine_disjoint_over_u;
     imp->combine_64[PIXMAN_OP_DISJOINT_OVER_REVERSE] = combine_saturate_u;
     imp->combine_64[PIXMAN_OP_DISJOINT_IN] = combine_disjoint_in_u;
@@ -2348,7 +2355,7 @@ _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp)
     /* Conjoint, unified */
     imp->combine_64[PIXMAN_OP_CONJOINT_CLEAR] = combine_clear;
     imp->combine_64[PIXMAN_OP_CONJOINT_SRC] = combine_src_u;
-    /* dest */
+    imp->combine_64[PIXMAN_OP_CONJOINT_DST] = combine_dst;
     imp->combine_64[PIXMAN_OP_CONJOINT_OVER] = combine_conjoint_over_u;
     imp->combine_64[PIXMAN_OP_CONJOINT_OVER_REVERSE] = combine_conjoint_over_reverse_u;
     imp->combine_64[PIXMAN_OP_CONJOINT_IN] = combine_conjoint_in_u;
@@ -2394,7 +2401,7 @@ _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp)
     /* Disjoint CA */
     imp->combine_64_ca[PIXMAN_OP_DISJOINT_CLEAR] = combine_clear_ca;
     imp->combine_64_ca[PIXMAN_OP_DISJOINT_SRC] = combine_src_ca;
-    /* dest */
+    imp->combine_64_ca[PIXMAN_OP_DISJOINT_DST] = combine_dst;
     imp->combine_64_ca[PIXMAN_OP_DISJOINT_OVER] = combine_disjoint_over_ca;
     imp->combine_64_ca[PIXMAN_OP_DISJOINT_OVER_REVERSE] = combine_saturate_ca;
     imp->combine_64_ca[PIXMAN_OP_DISJOINT_IN] = combine_disjoint_in_ca;
@@ -2408,7 +2415,7 @@ _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp)
     /* Conjoint CA */
     imp->combine_64_ca[PIXMAN_OP_CONJOINT_CLEAR] = combine_clear_ca;
     imp->combine_64_ca[PIXMAN_OP_CONJOINT_SRC] = combine_src_ca;
-    /* dest */
+    imp->combine_64_ca[PIXMAN_OP_CONJOINT_DST] = combine_dst;
     imp->combine_64_ca[PIXMAN_OP_CONJOINT_OVER] = combine_conjoint_over_ca;
     imp->combine_64_ca[PIXMAN_OP_CONJOINT_OVER_REVERSE] = combine_conjoint_over_reverse_ca;
     imp->combine_64_ca[PIXMAN_OP_CONJOINT_IN] = combine_conjoint_in_ca;
@@ -2431,10 +2438,10 @@ _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp)
     imp->combine_64_ca[PIXMAN_OP_DIFFERENCE] = combine_difference_ca;
     imp->combine_64_ca[PIXMAN_OP_EXCLUSION] = combine_exclusion_ca;
 
-    /* It is not clear that these make sense, so leave them out for now */
-    imp->combine_64_ca[PIXMAN_OP_HSL_HUE] = NULL;
-    imp->combine_64_ca[PIXMAN_OP_HSL_SATURATION] = NULL;
-    imp->combine_64_ca[PIXMAN_OP_HSL_COLOR] = NULL;
-    imp->combine_64_ca[PIXMAN_OP_HSL_LUMINOSITY] = NULL;
+    /* It is not clear that these make sense, so make them noops for now */
+    imp->combine_64_ca[PIXMAN_OP_HSL_HUE] = combine_dst;
+    imp->combine_64_ca[PIXMAN_OP_HSL_SATURATION] = combine_dst;
+    imp->combine_64_ca[PIXMAN_OP_HSL_COLOR] = combine_dst;
+    imp->combine_64_ca[PIXMAN_OP_HSL_LUMINOSITY] = combine_dst;
 }
 

@@ -265,12 +265,22 @@ class nsTString_CharT : public nsTSubstring_CharT
 #endif // !CharT_is_PRUnichar
 
         /**
-         * Perform string to float conversion.
+         * Perform string to double-precision float conversion.
          *
          * @param   aErrorCode will contain error if one occurs
-         * @return  float rep of string value
+         * @return  double-precision float rep of string value
          */
-      NS_COM float ToFloat( PRInt32* aErrorCode ) const;
+      NS_COM double ToDouble( PRInt32* aErrorCode ) const;
+
+        /**
+         * Perform string to single-precision float conversion.
+         *
+         * @param   aErrorCode will contain error if one occurs
+         * @return  single-precision float rep of string value
+         */
+      float ToFloat( PRInt32* aErrorCode ) const {
+        return (float)ToDouble(aErrorCode);
+      }
 
 
         /**

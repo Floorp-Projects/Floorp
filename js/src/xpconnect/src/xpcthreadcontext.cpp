@@ -419,7 +419,7 @@ XPCPerThreadData::~XPCPerThreadData()
 
     if(gLock && doDestroyLock)
     {
-        PR_DestroyLock(gLock);
+        nsAutoLock::DestroyLock(gLock);
         gLock = nsnull;
     }
 }
@@ -465,7 +465,7 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
 
     if(!gLock)
     {
-        gLock = PR_NewLock();
+        gLock = nsAutoLock::NewLock("XPCPerThreadData::gLock");
         if(!gLock)
             return nsnull;
     }

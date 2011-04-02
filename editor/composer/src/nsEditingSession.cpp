@@ -493,15 +493,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   rv = editor->AddDocumentStateListener(mStateMaintainer);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXXbz we really shouldn't need a presShell here!
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = docShell->GetPresShell(getter_AddRefs(presShell));
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
-  rv = editor->Init(domDoc, presShell, nsnull /* root content */,
-                    selCon, mEditorFlags);
+  rv = editor->Init(domDoc, nsnull /* root content */,
+                    nsnull, mEditorFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISelection> selection;

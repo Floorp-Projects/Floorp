@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xptcmd
+EXPORT_LIBRARY	= ../..
 MOZILLA_INTERNAL_API = 1
 
 CPPSRCS		= \
@@ -69,6 +70,3 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+= -DEXPORT_XPTC_API
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../..
-
-libs:: $(LIBRARY)
-	$(INSTALL) $(LIBRARY) $(FAKE_LIBRARY) ../..

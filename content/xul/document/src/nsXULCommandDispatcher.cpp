@@ -423,7 +423,7 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
     updaters.AppendObject(content);
   }
 
-  for (PRUint32 u = 0; u < updaters.Count(); u++) {
+  for (PRInt32 u = 0; u < updaters.Count(); u++) {
     nsIContent* content = updaters[u];
 
     nsCOMPtr<nsIDocument> document = content->GetDocument();

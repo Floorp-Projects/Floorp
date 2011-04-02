@@ -179,7 +179,7 @@ mjit::Compiler::compile()
 CompileStatus
 mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
 {
-    ActiveFrame *newa = js_new<ActiveFrame>(cx);
+    ActiveFrame *newa = cx->new_<ActiveFrame>(cx);
     if (!newa)
         return Compile_Error;
 
@@ -235,7 +235,7 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
         return Compile_Error;
     }
 
-    newa->jumpMap = (Label *)cx->malloc(sizeof(Label) * script->length);
+    newa->jumpMap = (Label *)cx->malloc_(sizeof(Label) * script->length);
     if (!newa->jumpMap) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
@@ -371,19 +371,19 @@ mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
 
 mjit::Compiler::ActiveFrame::~ActiveFrame()
 {
-    js_free(jumpMap);
-    js_array_delete(argumentTypes);
-    js_array_delete(localTypes);
+    js::Foreground::free_(jumpMap);
+    js::Foreground::array_delete(argumentTypes);
+    js::Foreground::array_delete(localTypes);
 }
 
 mjit::Compiler::~Compiler()
 {
     if (outer)
-        js_delete<ActiveFrame>(outer);
+        cx->delete_(outer);
     for (unsigned i = 0; i < inlineFrames.length(); i++)
-        js_delete<ActiveFrame>(inlineFrames[i]);
+        cx->delete_(inlineFrames[i]);
 
-    cx->free(savedTraps);
+    cx->free_(savedTraps);
 }
 
 CompileStatus
@@ -403,7 +403,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
 
     uint32 nargs = script->fun ? script->fun->nargs : 0;
     if (nargs) {
-        a->argumentTypes = js_array_new<JSValueType>(nargs);
+        a->argumentTypes = cx->array_new<JSValueType>(nargs);
         if (!a->argumentTypes)
             return Compile_Error;
         for (unsigned i = 0; i < nargs; i++) {
@@ -415,7 +415,7 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
     }
 
     if (script->nfixed) {
-        a->localTypes = js_array_new<JSValueType>(script->nfixed);
+        a->localTypes = cx->array_new<JSValueType>(script->nfixed);
         if (!a->localTypes)
             return Compile_Error;
         for (unsigned i = 0; i < script->nfixed; i++) {
@@ -464,7 +464,7 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
 bool
 mjit::Compiler::loadOldTraps(const Vector<CallSite> &sites)
 {
-    savedTraps = (bool *)cx->calloc(sizeof(bool) * outerScript->length);
+    savedTraps = (bool *)cx->calloc_(sizeof(bool) * outerScript->length);
     if (!savedTraps)
         return false;
     
@@ -574,7 +574,7 @@ mjit::Compiler::generatePrologue()
         /* Create the call object. */
         if (script->fun->isHeavyweight()) {
             prepareStubCall(Uses(0));
-            INLINE_STUBCALL(stubs::GetCallObject);
+            INLINE_STUBCALL(stubs::CreateFunCallObject);
         }
 
         j.linkTo(masm.label(), &masm);
@@ -583,7 +583,7 @@ mjit::Compiler::generatePrologue()
             /*
              * Load the scope chain into the frame if necessary.  The scope chain
              * is always set for global and eval frames, and will have been set by
-             * GetCallObject for heavyweight function frames.
+             * CreateFunCallObject for heavyweight function frames.
              */
             RegisterID t0 = Registers::ReturnReg;
             Jump hasScope = masm.branchTest32(Assembler::NonZero,
@@ -599,7 +599,7 @@ mjit::Compiler::generatePrologue()
         constructThis();
 
     if (debugMode() || Probes::callTrackingActive(cx))
-        INLINE_STUBCALL(stubs::EnterScript);
+        INLINE_STUBCALL(stubs::ScriptDebugPrologue);
 
     /*
      * Set initial types of locals with known type. These will stay synced
@@ -728,7 +728,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
                         sizeof(UnsyncedEntry) * nUnsyncedEntries;
 
-    uint8 *cursor = (uint8 *)cx->calloc(totalBytes);
+    uint8 *cursor = (uint8 *)cx->calloc_(totalBytes);
     if (!cursor) {
         execPool->release();
         js_ReportOutOfMemory(cx);
@@ -1211,8 +1211,13 @@ public:
     JS_BEGIN_MACRO                                                            \
         if (IsJaegerSpewChannelActive(JSpew_JSOps)) {                         \
             JaegerSpew(JSpew_JSOps, "    %2d ", frame.stackDepth());          \
+            void *mark = JS_ARENA_MARK(&cx->tempPool);                        \
+            Sprinter sprinter;                                                \
+            INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);                   \
             js_Disassemble1(cx, script, PC, PC - script->code,                \
-                            JS_TRUE, stdout);                                 \
+                            JS_TRUE, &sprinter);                              \
+            fprintf(stdout, "%s", sprinter.base);                             \
+            JS_ARENA_RELEASE(&cx->tempPool, mark);                            \
         }                                                                     \
     JS_END_MACRO;
 #else
@@ -2899,7 +2904,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
 
     if (debugMode() || Probes::callTrackingActive(cx)) {
         prepareStubCall(Uses(0));
-        INLINE_STUBCALL(stubs::LeaveScript);
+        INLINE_STUBCALL(stubs::ScriptDebugEpilogue);
     }
 
     if (a != outer) {
@@ -2947,13 +2952,14 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
     }
 
     /*
-     * If there's a function object, deal with the fact that it can escape.
-     * Note that after we've placed the call object, all tracked state can
-     * be thrown away. This will happen anyway because the next live opcode
-     * (if any) must have an incoming edge.
-     *
-     * However, it's an optimization to throw it away early - the tracker
-     * won't be spilled on further exits or join points.
+     * Outside the mjit, activation objects are put by StackSpace::pop*
+     * members. For JSOP_RETURN, the interpreter only calls popInlineFrame if
+     * fp != entryFrame since the VM protocol is that Invoke/Execute are
+     * responsible for pushing/popping the initial frame. The mjit does not
+     * perform this branch (by instead using a trampoline at the return address
+     * to handle exiting mjit code) and thus always puts activation objects,
+     * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
+     * out the entry frame's activation objects.
      */
     if (script->fun) {
         if (script->fun->isHeavyweight()) {
@@ -2961,7 +2967,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             prepareStubCall(Uses(fe ? 1 : 0));
             INLINE_STUBCALL(stubs::PutActivationObjects);
         } else {
-            /* if (hasCallObj() || hasArgsObj()) stubs::PutActivationObjects() */
+            /* if (hasCallObj() || hasArgsObj()) */
             Jump putObjs = masm.branchTest32(Assembler::NonZero,
                                              Address(JSFrameReg, JSStackFrame::offsetOfFlags()),
                                              Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
@@ -2977,12 +2983,19 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
         if (isEval && script->strictModeCode) {
             /* There will always be a call object. */
             prepareStubCall(Uses(fe ? 1 : 0));
-            INLINE_STUBCALL(stubs::PutStrictEvalCallObject);
+            INLINE_STUBCALL(stubs::PutActivationObjects);
         }
     }
 
     emitReturnValue(&masm, fe);
     emitFinalReturn(masm);
+
+    /*
+     * After we've placed the call object, all tracked state can be
+     * thrown away. This will happen anyway because the next live opcode (if
+     * any) must have an incoming edge. It's an optimization to throw it away
+     * early - the tracker won't be spilled on further exits or join points.
+     */
     frame.discardFrame();
 }
 

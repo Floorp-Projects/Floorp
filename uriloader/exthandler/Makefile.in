@@ -57,14 +57,10 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
 OSDIR		= mac
 else
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-OSDIR		= beos
-else
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 OSDIR		= android
 else
 OSDIR		= unix
-endif
 endif
 endif
 endif
@@ -115,10 +111,6 @@ endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 OSHELPER += nsGNOMERegistry.cpp
 OSHELPER += nsMIMEInfoUnix.cpp
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-OSHELPER  += nsMIMEInfoBeOS.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

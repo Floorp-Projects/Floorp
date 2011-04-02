@@ -41,7 +41,18 @@ VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= fastfind
-DIRS		= public src
+MODULE = fastfind
+LIBRARY_NAME = fastfind_s
+GRE_MODULE = 1
+FORCE_STATIC_LIB = 1
+LIBXUL_LIBRARY = 1
+
+XPIDLSRCS = \
+  nsITypeAheadFind.idl \
+  $(NULL)
+
+CPPSRCS = \
+  nsTypeAheadFind.cpp \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

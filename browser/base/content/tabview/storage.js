@@ -51,6 +51,13 @@ let Storage = {
   CACHE_PREFIX: "moz-panorama:",
 
   // ----------
+  // Function: toString
+  // Prints [Storage] for debug use
+  toString: function Storage_toString() {
+    return "[Storage]";
+  },
+
+  // ----------
   // Function: init
   // Sets up the object.
   init: function Storage_init() {
@@ -413,6 +420,13 @@ function CacheListener(callback) {
 };
 
 CacheListener.prototype = {
+  // ----------
+  // Function: toString
+  // Prints [CacheListener] for debug use
+  toString: function CacheListener_toString() {
+    return "[CacheListener]";
+  },
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsICacheListener]),
   onCacheEntryAvailable: function (entry, access, status) {
     this.callback(entry, access, status);

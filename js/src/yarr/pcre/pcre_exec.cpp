@@ -394,7 +394,7 @@ struct MatchStack {
         if (canUseStackBufferForNextFrame())
             return currentFrame + 1;
         // FIXME: bug 574459 -- no NULL check
-        MatchFrame *frame = js_new<MatchFrame>();
+        MatchFrame *frame = js::OffTheBooks::new_<MatchFrame>();
         frame->init(regExpPool);
         return frame;
     }
@@ -417,7 +417,7 @@ struct MatchStack {
         MatchFrame* oldFrame = currentFrame;
         currentFrame = currentFrame->previousFrame;
         if (size > numFramesOnStack)
-            js_delete(oldFrame);
+            js::Foreground::delete_(oldFrame);
         size--;
     }
 

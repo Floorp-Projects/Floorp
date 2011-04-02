@@ -990,7 +990,7 @@ nsThebesRenderingContext::GetTextDimensions(const PRUnichar* aString,
     return NS_OK;
 }
 
-#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
 NS_IMETHODIMP
 nsThebesRenderingContext::GetTextDimensions(const char*       aString,
                                             PRInt32           aLength,
@@ -1311,7 +1311,7 @@ nsThebesRenderingContext::GetTextDimensionsInternal(const PRUnichar* aString,
     return GetWidth(aString, aLength, aDimensions.width, aFontID);
 }
 
-#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_BEOS) || defined(XP_MACOSX) || defined (MOZ_DFB)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_MACOSX) || defined (MOZ_DFB)
 nsresult
 nsThebesRenderingContext::GetTextDimensionsInternal(const char*       aString,
                                                     PRInt32           aLength,

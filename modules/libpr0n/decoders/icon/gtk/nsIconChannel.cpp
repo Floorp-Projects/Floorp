@@ -373,7 +373,9 @@ nsIconChannel::InitWithGnome(nsIMozIconURI *aIconURI)
     if (ms) {
       nsCAutoString fileExt;
       aIconURI->GetFileExtension(fileExt);
-      ms->GetTypeFromExtension(fileExt, type);
+      if (!fileExt.IsEmpty()) {
+        ms->GetTypeFromExtension(fileExt, type);
+      }
     }
   }
   // Get the icon theme

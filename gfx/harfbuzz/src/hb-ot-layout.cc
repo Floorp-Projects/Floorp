@@ -33,6 +33,7 @@
 #include "hb-ot-layout-gdef-private.hh"
 #include "hb-ot-layout-gsub-private.hh"
 #include "hb-ot-layout-gpos-private.hh"
+#include "hb-ot-shape-private.hh"
 
 
 #include <stdlib.h>
@@ -476,8 +477,46 @@ hb_ot_layout_position_lookup   (hb_font_t    *font,
 }
 
 void
-hb_ot_layout_position_finish (hb_buffer_t  *buffer)
+hb_ot_layout_position_finish (hb_face_t *face, hb_buffer_t *buffer)
 {
+  /* force diacritics to have zero width */
+  unsigned int count = buffer->len;
+  if (hb_ot_layout_has_glyph_classes (face)) {
+    const GDEF& gdef = _get_gdef (face);
+    if (buffer->props.direction == HB_DIRECTION_RTL) {
+      for (unsigned int i = 1; i < count; i++) {
+        if (gdef.get_glyph_class (buffer->info[i].codepoint) == GDEF::MarkGlyph) {
+          buffer->pos[i].x_advance = 0;
+        }
+      }
+    } else {
+      for (unsigned int i = 1; i < count; i++) {
+        if (gdef.get_glyph_class (buffer->info[i].codepoint) == GDEF::MarkGlyph) {
+          hb_glyph_position_t& pos = buffer->pos[i];
+          pos.x_offset -= pos.x_advance;
+          pos.x_advance = 0;
+        }
+      }
+    }
+  } else {
+    /* no GDEF classes available, so use General Category as a fallback */
+    if (buffer->props.direction == HB_DIRECTION_RTL) {
+      for (unsigned int i = 1; i < count; i++) {
+        if (buffer->info[i].general_category() == HB_CATEGORY_NON_SPACING_MARK) {
+          buffer->pos[i].x_advance = 0;
+        }
+      }
+    } else {
+      for (unsigned int i = 1; i < count; i++) {
+        if (buffer->info[i].general_category() == HB_CATEGORY_NON_SPACING_MARK) {
+          hb_glyph_position_t& pos = buffer->pos[i];
+          pos.x_offset -= pos.x_advance;
+          pos.x_advance = 0;
+        }
+      }
+    }
+  }
+
   GPOS::position_finish (buffer);
 }
 

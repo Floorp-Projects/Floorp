@@ -100,8 +100,6 @@ CPPSRCS		= \
 		nsTCVN5712ToUnicode.cpp \
 		nsVISCIIToUnicode.cpp \
 		nsVPSToUnicode.cpp \
-		nsVIQRToUnicode.cpp \
-		nsVNIToUnicode.cpp \
 		nsUTF7ToUnicode.cpp \
 		nsMUTF7ToUnicode.cpp \
 		nsUCS2BEToUnicode.cpp \
@@ -159,8 +157,6 @@ CPPSRCS		= \
 		nsUnicodeToTCVN5712.cpp \
 		nsUnicodeToVISCII.cpp \
 		nsUnicodeToVPS.cpp \
-		nsUnicodeToVIQR.cpp \
-		nsUnicodeToVNI.cpp \
 		nsUnicodeToUTF7.cpp \
 		nsUnicodeToMUTF7.cpp \
 		nsUnicodeToUCS2BE.cpp \

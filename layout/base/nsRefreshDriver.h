@@ -79,6 +79,8 @@ public:
   nsRefreshDriver(nsPresContext *aPresContext);
   ~nsRefreshDriver();
 
+  static void InitializeStatics();
+
   // nsISupports implementation
   NS_DECL_ISUPPORTS
 
@@ -218,6 +220,13 @@ private:
   // Trigger a refresh immediately, if haven't been disconnected or frozen.
   void DoRefresh();
 
+  PRInt32 GetRefreshTimerInterval() const;
+  PRInt32 GetRefreshTimerType() const;
+
+  bool HaveAnimationFrameListeners() const {
+    return mAnimationFrameListenerDocs.Length() != 0;
+  }
+
   nsCOMPtr<nsITimer> mTimer;
   mozilla::TimeStamp mMostRecentRefresh; // only valid when mTimer non-null
   PRInt64 mMostRecentRefreshEpochTime;   // same thing as mMostRecentRefresh,
@@ -228,15 +237,23 @@ private:
 
   bool mFrozen;
   bool mThrottled;
+  /* If mTimer is non-null, this boolean indicates whether the timer is
+     a precise timer.  If mTimer is null, this boolean's value can be
+     anything.  */
+  bool mTimerIsPrecise;
 
   // separate arrays for each flush type we support
   ObserverArray mObservers[3];
   nsAutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
   nsAutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
   // nsTArray on purpose, because we want to be able to swap.
-  nsTArray<nsIDocument*> mBeforePaintTargets;
+  nsTArray< nsCOMPtr<nsIDocument> > mBeforePaintTargets;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<nsIDocument*> mAnimationFrameListenerDocs;
+
+  // This is the last interval we used for our timer.  May be 0 if we
+  // haven't computed a timer interval yet.
+  mutable PRInt32 mLastTimerInterval;
 };
 
 #endif /* !defined(nsRefreshDriver_h_) */

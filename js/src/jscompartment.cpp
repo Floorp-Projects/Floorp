@@ -79,6 +79,7 @@ JSCompartment::JSCompartment(JSRuntime *rt)
     emptyDeclEnvShape(NULL),
     emptyEnumeratorShape(NULL),
     emptyWithShape(NULL),
+    initialRegExpShape(NULL),
     debugMode(rt->debugMode),
 #if ENABLE_YARR_JIT
     regExpAllocator(NULL),
@@ -97,10 +98,8 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 
 JSCompartment::~JSCompartment()
 {
-    propertyTree.finish();
-
 #if ENABLE_YARR_JIT
-    js_delete(regExpAllocator);
+    Foreground::delete_(regExpAllocator);
 #endif
 
 #if defined JS_TRACER
@@ -108,10 +107,10 @@ JSCompartment::~JSCompartment()
 #endif
 
 #ifdef JS_METHODJIT
-    js_delete(jaegerCompartment);
+    Foreground::delete_(jaegerCompartment);
 #endif
 
-    js_delete(mathCache);
+    Foreground::delete_(mathCache);
 
 #ifdef DEBUG
     for (size_t i = 0; i != JS_ARRAY_LENGTH(scriptsToGC); ++i)
@@ -135,9 +134,6 @@ JSCompartment::init(JSContext *cx)
     if (!crossCompartmentWrappers.init())
         return false;
 
-    if (!propertyTree.init())
-        return false;
-
 #ifdef DEBUG
     if (rt->meterEmptyShapes()) {
         if (!emptyShapes.init())
@@ -146,12 +142,12 @@ JSCompartment::init(JSContext *cx)
 #endif
 
 #ifdef JS_TRACER
-    if (!InitJIT(&traceMonitor))
+    if (!InitJIT(&traceMonitor, rt))
         return false;
 #endif
 
 #if ENABLE_YARR_JIT
-    regExpAllocator = js_new<JSC::ExecutableAllocator>();
+    regExpAllocator = rt->new_<JSC::ExecutableAllocator>();
     if (!regExpAllocator)
         return false;
 #endif
@@ -160,7 +156,7 @@ JSCompartment::init(JSContext *cx)
         return false;
 
 #ifdef JS_METHODJIT
-    if (!(jaegerCompartment = js_new<mjit::JaegerCompartment>()))
+    if (!(jaegerCompartment = rt->new_<mjit::JaegerCompartment>()))
         return false;
     return jaegerCompartment->Initialize();
 #else
@@ -529,16 +525,19 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     }
 
     /* Remove dead empty shapes. */
-    if (emptyArgumentsShape && !emptyArgumentsShape->marked())
+    if (emptyArgumentsShape && IsAboutToBeFinalized(cx, emptyArgumentsShape))
         emptyArgumentsShape = NULL;
-    if (emptyBlockShape && !emptyBlockShape->marked())
+    if (emptyBlockShape && IsAboutToBeFinalized(cx, emptyBlockShape))
         emptyBlockShape = NULL;
-    if (emptyDeclEnvShape && !emptyDeclEnvShape->marked())
+    if (emptyDeclEnvShape && IsAboutToBeFinalized(cx, emptyDeclEnvShape))
         emptyDeclEnvShape = NULL;
-    if (emptyEnumeratorShape && !emptyEnumeratorShape->marked())
+    if (emptyEnumeratorShape && IsAboutToBeFinalized(cx, emptyEnumeratorShape))
         emptyEnumeratorShape = NULL;
-    if (emptyWithShape && !emptyWithShape->marked())
+    if (emptyWithShape && IsAboutToBeFinalized(cx, emptyWithShape))
         emptyWithShape = NULL;
+
+    if (initialRegExpShape && IsAboutToBeFinalized(cx, initialRegExpShape))
+        initialRegExpShape = NULL;
 
 #ifdef JS_TRACER
     traceMonitor.sweep(cx);
@@ -652,7 +651,7 @@ MathCache *
 JSCompartment::allocMathCache(JSContext *cx)
 {
     JS_ASSERT(!mathCache);
-    mathCache = js_new<MathCache>();
+    mathCache = cx->new_<MathCache>();
     if (!mathCache)
         js_ReportOutOfMemory(cx);
     return mathCache;
@@ -670,12 +669,8 @@ JSCompartment::backEdgeCount(jsbytecode *pc) const
 size_t
 JSCompartment::incBackEdgeCount(jsbytecode *pc)
 {
-    if (BackEdgeMap::AddPtr p = backEdgeTable.lookupForAdd(pc)) {
-        p->value++;
-        return p->value;
-    } else {
-        backEdgeTable.add(p, pc, 1);
-        return 1;
-    }
+    if (BackEdgeMap::Ptr p = backEdgeTable.lookupWithDefault(pc, 0))
+        return ++p->value;
+    return 1;  /* oom not reported by backEdgeTable, so ignore. */
 }
 

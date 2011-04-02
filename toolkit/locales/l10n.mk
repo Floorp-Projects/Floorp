@@ -63,8 +63,6 @@
 
 
 run_for_effects := $(shell if test ! -d $(DIST); then $(NSINSTALL) -D $(DIST); fi)
-_ABS_DIST := $(shell cd $(DIST) && pwd)
-
 
 # This makefile uses variable overrides from the libs-% target to
 # build non-default locales to non-default dist/ locations. Be aware!
@@ -102,14 +100,14 @@ include $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.mk
 
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/MacOS
+STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/MacOS
 else
 STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
 endif
 
 $(STAGEDIST): AB_CD:=en-US
-$(STAGEDIST): UNPACKAGE=$(ZIP_IN)
-$(STAGEDIST): $(ZIP_IN)
+$(STAGEDIST): UNPACKAGE=$(call ESCAPE_SPACE,$(ZIP_IN))
+$(STAGEDIST): $(call ESCAPE_SPACE,$(ZIP_IN))
 # only mac needs to remove the parent of STAGEDIST...
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(RM) -r -v $(DIST)/l10n-stage
@@ -130,8 +128,16 @@ unpack: $(STAGEDIST)
 # may be overridden if necessary.
 MOZDEPTH ?= $(DEPTH)
 
+ifdef MOZ_MAKE_COMPLETE_MAR
+MAKE_COMPLETE_MAR = 1
+ifeq ($(OS_ARCH), WINNT)
+ifneq ($(MOZ_PKG_FORMAT), SFX7Z)
+MAKE_COMPLETE_MAR =
+endif
+endif
+endif
 repackage-zip: UNPACKAGE="$(ZIP_IN)"
-repackage-zip:
+repackage-zip:  libs-$(AB_CD)
 # Adjust jar logs with the new locale (can't use sed -i because of bug 373784)
 	-$(PERL) -pi -e "s/en-US/$(AB_CD)/g" $(_ABS_DIST)/jarlog/*.jar.log
 # call a hook for apps to put their uninstall helper.exe into the package
@@ -143,7 +149,7 @@ repackage-zip:
 	mv $(STAGEDIST)/chrome/$(AB_CD).manifest $(STAGEDIST)/chrome/localized.manifest
 ifneq (en,$(AB))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj
+	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/en.lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/$(AB).lproj
 endif
 endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
@@ -153,7 +159,7 @@ ifeq (WINCE,$(OS_ARCH))
 	cd $(DIST)/l10n-stage; \
 	  $(MAKE_CAB)
 endif
-ifdef MOZ_MAKE_COMPLETE_MAR
+ifdef MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
 	  PACKAGE_BASE_DIR="$(_ABS_DIST)/l10n-stage" \
@@ -162,7 +168,7 @@ endif
 # packaging done, undo l10n stuff
 ifneq (en,$(AB))
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_APPNAME)/$(_APPNAME)/Contents/Resources/en.lproj
+	mv $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/$(AB).lproj $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources/en.lproj
 endif
 endif
 ifdef MOZ_OMNIJAR
@@ -175,8 +181,8 @@ ifeq (WINCE,$(OS_ARCH))
 	mv -f "$(DIST)/l10n-stage/$(PKG_BASENAME).cab" "$(DIST)/$(PKG_PATH)$(PKG_BASENAME).cab"
 endif
 
-repackage-zip-%: $(ZIP_IN) $(STAGEDIST) libs-%
-	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN=$(ZIP_IN)
+repackage-zip-%: $(STAGEDIST)
+	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN="$(ZIP_IN)"
 
 APP_DEFINES = $(firstword $(wildcard $(LOCALE_SRCDIR)/defines.inc) \
                           $(srcdir)/en-US/defines.inc)
@@ -207,8 +213,9 @@ wget-en-US:
 ifndef WGET
 	$(error Wget not installed)
 endif
-	(cd $(_ABS_DIST) && $(WGET) -nv -N  $(EN_US_BINARY_URL)/$(PACKAGE))
-	@echo "Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(_ABS_DIST)/$(PACKAGE)"
+	$(NSINSTALL) -D $(_ABS_DIST)/$(PKG_PATH)
+	(cd $(_ABS_DIST)/$(PKG_PATH) && $(WGET) -nv -N  "$(EN_US_BINARY_URL)/$(PACKAGE)")
+	@echo "Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(_ABS_DIST)/$(PKG_PATH)/$(PACKAGE)"
 ifdef RETRIEVE_WINDOWS_INSTALLER
 ifeq ($(OS_ARCH), WINNT)
 	$(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH)

@@ -102,6 +102,16 @@ public:
     return mIsActive;
   }
 
+  void SetIsBackground(PRBool aIsBackground)
+  {
+    mIsBackground = aIsBackground;
+  }
+
+  PRBool IsBackground()
+  {
+    return mIsBackground;
+  }
+
   nsPIDOMEventTarget* GetChromeEventHandler() const
   {
     return mChromeEventHandler;
@@ -608,7 +618,13 @@ protected:
   PRPackedBool           mIsModalContentWindow;
 
   // Tracks activation state that's used for :-moz-window-inactive.
+  // Only used on outer windows.
   PRPackedBool           mIsActive;
+
+  // Tracks whether our docshell is active.  If it is, mIsBackground
+  // is false.  Too bad we have so many different concepts of
+  // "active".  Only used on outer windows.
+  PRPackedBool           mIsBackground;
 
   // And these are the references between inner and outer windows.
   nsPIDOMWindow         *mInnerWindow;

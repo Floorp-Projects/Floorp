@@ -45,105 +45,85 @@ const Cu = Components.utils;
 
 function setenv(name, val) {
   try {
-        var environment = Components.classes["@mozilla.org/process/environment;1"].
-          getService(Components.interfaces.nsIEnvironment);
-        environment.set(name, val);
-  }
-  catch(e) {
+    var environment = Components.classes["@mozilla.org/process/environment;1"].
+      getService(Components.interfaces.nsIEnvironment);
+    environment.set(name, val);
+  } catch(e) {
     displayError("setenv", e);
   }
 }
 
 function load(url) {
-  print(url)
+  print(url);
   try {
-    Cu.import(url, null)
+    Cu.import(url, null);
   } catch(e) {
-    dump("Failed to import "+url + ":"+e+"\n");
+    dump("Failed to import " + url + ":" + e + "\n");
   }
 }
 
 function load_entries(entries, prefix) {
-  while(entries.hasMore()) {
+  while (entries.hasMore()) {
     var c = entries.getNext();
+    // Required to ensure sync js is only loaded in load_custom_entries.
+    // That function loads the sync js with the right URIs.
+    if (c.indexOf("services-sync") >= 0)
+      continue;
+    if (c.indexOf("services-crypto") >= 0)
+      continue;
     load(prefix + c);
   }
 }
 
+function load_custom_entries(entries, subst) {
+  while (entries.hasMore()) {
+    var c = entries.getNext();
+    load("resource://" + subst + "/" + c.replace("modules/" + subst + "/", ""));
+  }
+}
+
 function getGreDir() {
-  return Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties).get("GreD", Ci.nsIFile);
+  return Cc["@mozilla.org/file/directory_service;1"].
+    getService(Ci.nsIProperties).get("GreD", Ci.nsIFile);
 }
 
 function openJar(file) {
-  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+  var zipreader = Cc["@mozilla.org/libjar/zip-reader;1"].
+    createInstance(Ci.nsIZipReader);
   zipreader.open(file);
   return zipreader;
 }
 
-// Check that files can be read from after closing zipreader
-function populate_omnijar() {
+function populate_startupcache(omnijarName, startupcacheName) {
   var file = getGreDir();
-  file.append("omni.jar");
-  setenv("MOZ_STARTUP_CACHE", file.path);
+  file.append(omnijarName);
   zipreader = openJar(file);
 
-  load_entries(zipreader.findEntries("components/*js"), "resource://gre/");
-  load_entries(zipreader.findEntries("modules/*jsm"), "resource://gre/");
+  var scFile = getGreDir();
+  scFile.append(startupcacheName);
+  setenv("MOZ_STARTUP_CACHE", scFile.path);
 
   // the sync part below doesn't work as smoothly
-  let ioService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  let ioService = Cc["@mozilla.org/network/io-service;1"].
+    getService(Ci.nsIIOService);
   let uri = ioService.newURI("resource:///modules/services-sync/",
                              null, null);
   let resProt = ioService.getProtocolHandler("resource")
     .QueryInterface(Ci.nsIResProtocolHandler);
   resProt.setSubstitution("services-sync", uri);
 
-  var entries = zipreader.findEntries("modules/services-sync/*js");
-  while(entries.hasMore()) {
-    var c = entries.getNext();
-    load("resource://services-sync/" + c.replace("modules/services-sync/", ""));
-  }
+  uri = ioService.newURI("resource:///modules/services-crypto/",
+                         null, null);
+  resProt.setSubstitution("services-crypto", uri);
+
+  load_entries(zipreader.findEntries("components/*js"), "resource://gre/");
+
+  load_custom_entries(zipreader.findEntries("modules/services-sync/*js"),
+                      "services-sync");
+  load_custom_entries(zipreader.findEntries("modules/services-crypto/*js"),
+                      "services-crypto");
+
+  load_entries(zipreader.findEntries("modules/*js"), "resource://gre/");
+  load_entries(zipreader.findEntries("modules/*jsm"), "resource://gre/");
   zipreader.close();
-}
-
-function extract_files(jar, pattern, dest) {
-  var entries = jar.findEntries(pattern);
-  while(entries.hasMore()) {
-    var c = entries.getNext();
-    var file = dest.clone();
-    for each(name in c.split("/"))
-      file.append(name);
-
-    if (!file.parent.exists()) { 
-      file.parent.create(1 /* Ci.nsIFile.DIRECTORY doesn't work*/, 0700);
-      print("Created " + file.parent.path)
-    }
-
-    if (jar.getEntry(c).isDirectory)
-      continue;
-    
-    try {
-      jar.extract(c, file);
-      print("extracted "+file.path+":"+file.fileSize);
-    }catch(e) {
-      // This shouldn't happen, but if it does it means the cache entry will be generated at runtime
-      // instead of at package-time.
-      print("Failed to extract " + file.path);
-      print(e)
-    }
-  }
-
-}
-
-function extract_jsloader_to_dist_bin() {
-  var dist_bin = getGreDir().parent;
-  dist_bin.append("bin");
-
-  var file = getGreDir();
-  file.append("omni.jar");
-
-  var zipReader = openJar(file);
-  // this should really be zipReader.extract(...), but that method is too broken
-  extract_files(zipReader, "jsloader/*", dist_bin);
-  zipReader.close();
 }

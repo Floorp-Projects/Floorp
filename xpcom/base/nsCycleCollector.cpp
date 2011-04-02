@@ -150,6 +150,7 @@
 #include "nsICycleCollectorListener.h"
 #include "nsIXPConnect.h"
 #include "nsIJSRuntimeService.h"
+#include "xpcpublic.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -1670,6 +1671,13 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
         NS_WARNING("Not collecting cycles involving objects for scripting "
                    "languages that don't participate in cycle collection.");
         return;
+    }
+
+    // skip over non-grey JS children
+    if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
+        JSObject *obj = static_cast<JSObject*>(child);
+        if (!xpc_IsGrayGCThing(obj) && !WantAllTraces())
+            return;
     }
 
     nsCycleCollectionParticipant *cp = mRuntimes[langID]->ToParticipant(child);

@@ -272,8 +272,9 @@ NS_METHOD nsDOMEvent::GetType(nsAString& aType)
     mCachedType = aType;
     return NS_OK;
   }
-  
-  return NS_ERROR_FAILURE;
+
+  aType.Truncate();
+  return NS_OK;
 }
 
 static nsresult

@@ -518,12 +518,9 @@ TabParent::RecvGetIMEEnabled(PRUint32* aValue)
   if (!widget)
     return true;
 
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
   IMEContext context;
-  if (widget2) {
-    widget2->GetInputMode(context);
-    *aValue = context.mStatus;
-  }
+  widget->GetInputMode(context);
+  *aValue = context.mStatus;
   return true;
 }
 
@@ -534,13 +531,11 @@ TabParent::RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const
   if (!widget || !AllowContentIME())
     return true;
 
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
-
   IMEContext context;
   context.mStatus = aValue;
   context.mHTMLInputType.Assign(aType);
   context.mActionHint.Assign(aAction);
-  widget2->SetInputMode(context);
+  widget->SetInputMode(context);
 
   nsCOMPtr<nsIObserverService> observerService = mozilla::services::GetObserverService();
   if (!observerService)
@@ -589,14 +584,20 @@ TabParent::ReceiveMessage(const nsString& aMessage,
   nsRefPtr<nsFrameLoader> frameLoader = GetFrameLoader();
   if (frameLoader && frameLoader->GetFrameMessageManager()) {
     nsFrameMessageManager* manager = frameLoader->GetFrameMessageManager();
-    JSContext* ctx = manager->GetJSContext();
-    JSAutoRequest ar(ctx);
-    PRUint32 len = 0; //TODO: obtain a real value in bug 572685
-    // Because we want JS messages to have always the same properties,
-    // create array even if len == 0.
-    JSObject* objectsArray = JS_NewArrayObject(ctx, len, NULL);
-    if (!objectsArray) {
-      return false;
+
+    // Context may be gone after calling ReceiveMessage, so scope the
+    // context pointer to prevent dangling.
+    JSObject* objectsArray;
+    {
+      JSContext* ctx = manager->GetJSContext();
+      JSAutoRequest ar(ctx);
+      PRUint32 len = 0; //TODO: obtain a real value in bug 572685
+      // Because we want JS messages to have always the same properties,
+      // create array even if len == 0.
+      objectsArray = JS_NewArrayObject(ctx, len, NULL);
+      if (!objectsArray) {
+        return false;
+      }
     }
 
     manager->ReceiveMessage(mFrameElement,

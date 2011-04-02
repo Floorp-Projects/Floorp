@@ -318,7 +318,7 @@ GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain)
          * Don't force a call object for a lightweight function call, but do
          * insist that there is a call object for a heavyweight function call.
          */
-        JS_ASSERT_IF(fp->isFunctionFrame() && fp->fun()->isHeavyweight(),
+        JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(),
                      fp->hasCallObj());
         return &fp->scopeChain();
     }
@@ -334,10 +334,9 @@ GetScopeChainFull(JSContext *cx, JSStackFrame *fp, JSObject *blockChain)
      * Also, identify the innermost compiler-allocated block we needn't clone.
      */
     JSObject *limitBlock, *limitClone;
-    if (fp->isFunctionFrame() && !fp->hasCallObj()) {
-        JS_ASSERT_IF(fp->scopeChain().isClonedBlock(),
-                     fp->scopeChain().getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
-        if (!js_GetCallObject(cx, fp))
+    if (fp->isNonEvalFunctionFrame() && !fp->hasCallObj()) {
+        JS_ASSERT_IF(fp->scopeChain().isClonedBlock(), fp->scopeChain().getPrivate() != fp);
+        if (!CreateFunCallObject(cx, fp))
             return NULL;
 
         /* We know we must clone everything on blockChain. */
@@ -660,15 +659,12 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
     JMCheckLogging();
 #endif
 
-    AutoInterpPreparer prepareInterp(cx, script);
-    bool ok;
-
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
         int32 flags = fp->scopeChain().getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
         if (flags & JSGLOBAL_FLAGS_CLEARED) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
-            goto error;
+            return false;
         }
     }
 
@@ -676,24 +672,13 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
     mjit::CompileStatus status;
     status = mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
     if (status == mjit::Compile_Error)
-        goto error;
+        return false;
 
-    if (status == mjit::Compile_Okay) {
-        ok = mjit::JaegerShot(cx);
-        JS_ASSERT_IF(!fp->isYielding() && !(fp->isEvalFrame() && !fp->script()->strictModeCode),
-                     !fp->hasCallObj() && !fp->hasArgsObj());
-        return ok;
-    }
+    if (status == mjit::Compile_Okay)
+        return mjit::JaegerShot(cx);
 #endif
 
-    ok = Interpret(cx, fp);
-    JS_ASSERT_IF(!fp->isYielding() && !(fp->isEvalFrame() && !fp->script()->strictModeCode),
-                 !fp->hasCallObj() && !fp->hasArgsObj());
-    return ok;
-
-  error:
-    PutOwnedActivationObjects(cx, fp);
-    return false;
+    return Interpret(cx, fp);
 }
 
 /*
@@ -773,7 +758,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, uint32 flags)
     cx->stack().pushInvokeFrame(cx, args, &frame);
 
     /* Now that the new frame is rooted, maybe create a call object. */
-    if (fun->isHeavyweight() && !js_GetCallObject(cx, fp))
+    if (fun->isHeavyweight() && !CreateFunCallObject(cx, fp))
         return false;
 
     /* Run function until JSOP_STOP, JSOP_RETURN or error. */
@@ -963,6 +948,34 @@ ExternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, const Value &fval,
     return ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
 }
 
+#if JS_HAS_SHARP_VARS
+JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
+
+static JS_NEVER_INLINE bool
+InitSharpSlots(JSContext *cx, JSStackFrame *fp)
+{
+    JSStackFrame *prev = fp->prev();
+    JSScript *script = fp->script();
+    JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
+
+    Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
+    if (prev && prev->script()->hasSharps) {
+        JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
+        int base = (prev->isFunctionFrame() && !prev->isEvalOrDebuggerFrame())
+                   ? prev->fun()->script()->bindings.sharpSlotBase(cx)
+                   : prev->numFixed() - SHARP_NSLOTS;
+        if (base < 0)
+            return false;
+        sharps[0] = prev->slots()[base];
+        sharps[1] = prev->slots()[base + 1];
+    } else {
+        sharps[0].setUndefined();
+        sharps[1].setUndefined();
+    }
+    return true;
+}
+#endif
+
 bool
 Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JSStackFrame *prev, uintN flags, Value *result)
@@ -977,10 +990,12 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
     }
 
     LeaveTrace(cx);
+    AutoScriptRooter root(cx, script);
 
     /*
      * Get a pointer to new frame/slots. This memory is not "claimed", so the
-     * code before pushExecuteFrame must not reenter the interpreter.
+     * code before pushExecuteFrame must not reenter the interpreter or assume
+     * the frame is rooted.
      */
     ExecuteFrameGuard frame;
     if (!cx->stack().getExecuteFrame(cx, script, &frame))
@@ -995,13 +1010,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         JS_ASSERT(chain == &prev->scopeChain());
         frame.fp()->initEvalFrame(cx, script, prev, flags);
 
-        /*
-         * We want to call |prev->varobj()|, but this requires knowing the
-         * CallStackSegment of |prev|. If |prev == cx->fp()|, the callstack is
-         * simply the context's active callstack, so we can use
-         * |prev->varobj(cx)|.  When |prev != cx->fp()|, we need to do a slow
-         * linear search. Luckily, this only happens with EvaluateInFrame.
-         */
+        /* NB: prev may not be in cx->currentSegment. */
         initialVarObj = (prev == cx->maybefp())
                         ? &prev->varobj(cx)
                         : &prev->varobj(cx->stack().containingSegment(prev));
@@ -1019,67 +1028,35 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
             return false;
         }
 
-        /* Initialize frame. */
         frame.fp()->initGlobalFrame(script, *innerizedChain, flags);
 
-        /* Compute 'this'. */
+        /* If scope chain is an inner window, outerize for 'this'. */
         JSObject *thisp = chain->thisObject(cx);
         if (!thisp)
             return false;
         frame.fp()->globalThis().setObject(*thisp);
 
-        initialVarObj = cx->hasRunOption(JSOPTION_VAROBJFIX) ? chain->getGlobal() : chain;
-    }
-
-    /*
-     * Strict mode eval code receives its own, fresh lexical environment; thus
-     * strict mode eval can't mutate its calling frame's binding set.
-     */
-    if ((flags & JSFRAME_EVAL) && script->strictModeCode) {
-        AutoScriptRooter root(cx, script);
-        initialVarObj = NewCallObject(cx, &script->bindings, *initialVarObj, NULL);
-        if (!initialVarObj)
-            return false;
-        initialVarObj->setPrivate(frame.fp());
-
-        /* Clear the Call object propagated from the previous frame, if any. */
-        if (frame.fp()->hasCallObj())
-            frame.fp()->clearCallObj();
-        frame.fp()->setScopeChainAndCallObj(*initialVarObj);
+        initialVarObj = cx->hasRunOption(JSOPTION_VAROBJFIX)
+                        ? chain->getGlobal()
+                        : chain;
     }
     JS_ASSERT(!initialVarObj->getOps()->defineProperty);
 
-#if JS_HAS_SHARP_VARS
-    JS_STATIC_ASSERT(SHARP_NSLOTS == 2);
-    if (script->hasSharps) {
-        JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
-        Value *sharps = &frame.fp()->slots()[script->nfixed - SHARP_NSLOTS];
-        if (prev && prev->script()->hasSharps) {
-            JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
-            int base = (prev->isFunctionFrame() && !prev->isEvalOrDebuggerFrame())
-                       ? prev->fun()->script()->bindings.sharpSlotBase(cx)
-                       : prev->numFixed() - SHARP_NSLOTS;
-            if (base < 0)
-                return false;
-            sharps[0] = prev->slots()[base];
-            sharps[1] = prev->slots()[base + 1];
-        } else {
-            sharps[0].setUndefined();
-            sharps[1].setUndefined();
-        }
+    if (frame.fp()->isStrictEvalFrame()) {
+        /* Give strict mode eval its own fresh lexical environment. */
+        initialVarObj = CreateEvalCallObject(cx, frame.fp());
+        if (!initialVarObj)
+            return false;
+        JS_ASSERT(initialVarObj == &frame.fp()->scopeChain());
     }
-#endif
 
-    /* Officially push |fp|. |frame|'s destructor pops. */
+    /* Officially push the frame. ~FrameGuard pops. */
     cx->stack().pushExecuteFrame(cx, initialVarObj, &frame);
 
-    /* Now that the frame has been pushed, we can call the thisObject hook. */
-    if (!prev) {
-        JSObject *thisp = chain->thisObject(cx);
-        if (!thisp)
-            return false;
-        frame.fp()->globalThis().setObject(*thisp);
-    }
+#if JS_HAS_SHARP_VARS
+    if (script->hasSharps && !InitSharpSlots(cx, frame.fp()))
+        return false;
+#endif
 
     Probes::startExecution(cx, script);
 
@@ -1180,6 +1157,80 @@ HasInstance(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
     js_ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS,
                         JSDVG_SEARCH_STACK, ObjectValue(*obj), NULL);
     return JS_FALSE;
+}
+
+bool
+LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result)
+{
+#if JS_HAS_XML_SUPPORT
+    if (JS_UNLIKELY(lval.isObject() && lval.toObject().isXML()) ||
+                    (rval.isObject() && rval.toObject().isXML())) {
+        return js_TestXMLEquality(cx, lval, rval, result);
+    }
+#endif
+
+    if (SameType(lval, rval)) {
+        if (lval.isString()) {
+            JSString *l = lval.toString();
+            JSString *r = rval.toString();
+            return EqualStrings(cx, l, r, result);
+        }
+        
+        if (lval.isDouble()) {
+            double l = lval.toDouble(), r = rval.toDouble();
+            *result = JSDOUBLE_COMPARE(l, ==, r, false);
+            return true;
+        }
+        
+        if (lval.isObject()) {
+            JSObject *l = &lval.toObject();
+            JSObject *r = &rval.toObject();
+            l->assertSpecialEqualitySynced();
+
+            if (EqualityOp eq = l->getClass()->ext.equality) {
+                return eq(cx, l, &rval, result);
+            }
+
+            *result = l == r;
+            return true;
+        }
+
+        *result = lval.payloadAsRawUint32() == rval.payloadAsRawUint32();
+        return true;
+    }
+
+    if (lval.isNullOrUndefined()) {
+        *result = rval.isNullOrUndefined();
+        return true;
+    }
+    
+    if (rval.isNullOrUndefined()) {
+        *result = false;
+        return true;
+    }
+
+    Value lvalue = lval;
+    Value rvalue = rval;
+
+    if (lvalue.isObject() && !DefaultValue(cx, &lvalue.toObject(), JSTYPE_VOID, &lvalue))
+        return false;
+
+    if (rvalue.isObject() && !DefaultValue(cx, &rvalue.toObject(), JSTYPE_VOID, &rvalue))
+        return false;
+
+    if (lvalue.isString() && rvalue.isString()) {
+        JSString *l = lvalue.toString();
+        JSString *r = rvalue.toString();
+        return EqualStrings(cx, l, r, result);
+    }
+
+    double l, r;
+    if (!ValueToNumber(cx, lvalue, &l) ||
+        !ValueToNumber(cx, rvalue, &r)) {
+        return false;
+    }
+    *result = JSDOUBLE_COMPARE(l, ==, r, false);
+    return true;
 }
 
 bool
@@ -1608,7 +1659,7 @@ js_LogOpcode(JSContext *cx)
                     fprintf(logfp, "%s %s",
                             (n == -ndefs) ? "  output:" : ",",
                             bytes);
-                    cx->free(bytes);
+                    cx->free_(bytes);
                 } else {
                     JS_ClearPendingException(cx);
                 }
@@ -1641,9 +1692,16 @@ js_LogOpcode(JSContext *cx)
     fprintf(logfp, "%4u: ",
             js_PCToLineNumber(cx, fp->script(),
                               fp->hasImacropc() ? fp->imacropc() : regs->pc));
+
+    Sprinter sprinter;
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
     js_Disassemble1(cx, fp->script(), regs->pc,
                     regs->pc - fp->script()->code,
-                    JS_FALSE, logfp);
+                    JS_FALSE, &sprinter);
+    fprintf(logfp, "%s", sprinter.base);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
+
     op = (JSOp) *regs->pc;
     nuses = js_GetStackUses(&js_CodeSpec[op], op, regs->pc);
     if (nuses != 0) {
@@ -1653,7 +1711,7 @@ js_LogOpcode(JSContext *cx)
                 fprintf(logfp, "%s %s",
                         (n == -nuses) ? "  inputs:" : ",",
                         bytes);
-                cx->free(bytes);
+                cx->free_(bytes);
             } else {
                 JS_ClearPendingException(cx);
             }
@@ -1742,7 +1800,7 @@ js_DumpOpMeters()
 
 # define SIGNIFICANT(count,total) (200. * (count) >= (total))
 
-    graph = (Edge *) js_calloc(nedges * sizeof graph[0]);
+    graph = (Edge *) OffTheBooks::calloc_(nedges * sizeof graph[0]);
     if (!graph)
         return;
     for (i = nedges = 0; i < JSOP_LIMIT; i++) {
@@ -1773,7 +1831,7 @@ js_DumpOpMeters()
                 graph[i].from, graph[i].to,
                 (unsigned long)graph[i].count, style);
     }
-    js_free(graph);
+    cx->free_(graph);
     fputs("}\n", fp);
     fclose(fp);
 
@@ -1946,11 +2004,8 @@ namespace reprmeter {
             opinput.uses[i] = GetRepr(v);
         }
 
-        OpInputHistogram::AddPtr p = opinputs.lookupForAdd(opinput);
-        if (p)
-            ++p->value;
-        else
-            opinputs.add(p, opinput, 1);
+        if (OpInputHistogram::Ptr p = opinputs.lookupWithDefault(opinput, 0))
+            p->value++;
     }
 
     void
@@ -2104,6 +2159,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
                             PropertyCacheEntry *entry)
 {
     uint32 sample = cx->runtime->gcNumber;
+    PropertyCacheEntry savedEntry = *entry;
 
     JSAtom *atom;
     if (pcoff >= 0)
@@ -2124,7 +2180,7 @@ AssertValidPropertyCacheHit(JSContext *cx, JSScript *script, JSFrameRegs& regs,
     if (!ok)
         return false;
     if (cx->runtime->gcNumber != sample)
-        return true;
+        JS_PROPERTY_CACHE(cx).restore(&savedEntry);
     JS_ASSERT(prop);
     JS_ASSERT(pobj == found);
 
@@ -2243,27 +2299,6 @@ IteratorNext(JSContext *cx, JSObject *iterobj, Value *rval)
     return js_IteratorNext(cx, iterobj, rval);
 }
 
-static inline bool
-ScriptPrologue(JSContext *cx, JSStackFrame *fp, bool newType)
-{
-    if (fp->isConstructing()) {
-        JSObject *obj = js_CreateThisForFunction(cx, &fp->callee(), newType);
-        if (!obj)
-            return false;
-        fp->functionThis().setObject(*obj);
-    }
-    if (fp->isExecuteFrame()) {
-        if (JSInterpreterHook hook = cx->debugHooks->executeHook)
-            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->executeHookData));
-    } else {
-        if (JSInterpreterHook hook = cx->debugHooks->callHook)
-            fp->setHookData(hook(cx, fp, JS_TRUE, 0, cx->debugHooks->callHookData));
-        Probes::enterJSFun(cx, fp->maybeFun(), fp->maybeScript());
-    }
-
-    return true;
-}
-
 /*
  * For bytecodes which push values and then fall through, make sure the
  * types of the pushed values are consistent with type inference information.
@@ -2281,15 +2316,6 @@ TypeCheckNextBytecode(JSContext *cx, JSScript *script, unsigned n, const JSFrame
 }
 
 namespace js {
-
-#ifdef __APPLE__
-static JS_NEVER_INLINE bool
-NEVER_INLINE_ComputeImplicitThis(JSContext *cx, JSObject *obj, const Value &funval, Value *vp)
-{
-    return ComputeImplicitThis(cx, obj, funval, vp);
-}
-#define ComputeImplicitThis(cx, obj, funval, vp) NEVER_INLINE_ComputeImplicitThis(cx, obj, funval, vp)
-#endif
 
 JS_REQUIRES_STACK JS_NEVER_INLINE bool
 Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInterpMode interpMode)
@@ -2603,10 +2629,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         InterpExitGuard(JSContext *cx, JSFrameRegs &regs)
           : cx(cx), regs(regs), prevContextRegs(cx->regs) {
             cx->setCurrentRegs(&regs);
-            ++cx->interpLevel;
         }
         ~InterpExitGuard() {
-            --cx->interpLevel;
             JS_ASSERT(cx->regs == &regs);
             *prevContextRegs = regs;
             cx->setCurrentRegs(prevContextRegs);
@@ -2678,7 +2702,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
         JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), regs.pc == script->code);
         bool newType = regs.fp->isConstructing() && cx->typeInferenceEnabled() &&
             regs.fp->prev() && UseNewType(cx, regs.fp->prev()->script(), regs.fp->prev()->pc(cx));
-        if (!ScriptPrologue(cx, regs.fp, newType))
+        if (!ScriptPrologueOrGeneratorResume(cx, regs.fp, newType))
             goto error;
     }
 
@@ -3530,94 +3554,28 @@ END_CASE(JSOP_BITAND)
 
 #undef BITWISE_OP
 
-/*
- * NB: These macros can't use JS_BEGIN_MACRO/JS_END_MACRO around their bodies
- * because they begin if/else chains, so callers must not put semicolons after
- * the call expressions!
- */
-#if JS_HAS_XML_SUPPORT
-#define XML_EQUALITY_OP(OP)                                                   \
-    if ((lval.isObject() && lval.toObject().isXML()) ||                       \
-        (rval.isObject() && rval.toObject().isXML())) {                       \
-        if (!js_TestXMLEquality(cx, lval, rval, &cond))                       \
-            goto error;                                                       \
-        cond = cond OP JS_TRUE;                                               \
-    } else
-#else
-#define XML_EQUALITY_OP(OP)             /* nothing */
-#endif
-
-#define EQUALITY_OP(OP, IFNAN)                                                \
+#define EQUALITY_OP(OP)                                                       \
     JS_BEGIN_MACRO                                                            \
-        JSBool cond;                                                          \
         Value rval = regs.sp[-1];                                             \
         Value lval = regs.sp[-2];                                             \
-        XML_EQUALITY_OP(OP)                                                   \
-        if (SameType(lval, rval)) {                                           \
-            if (lval.isString()) {                                            \
-                JSString *l = lval.toString(), *r = rval.toString();          \
-                JSBool equal;                                                 \
-                if (!EqualStrings(cx, l, r, &equal))                          \
-                    goto error;                                               \
-                cond = equal OP JS_TRUE;                                      \
-            } else if (lval.isDouble()) {                                     \
-                double l = lval.toDouble(), r = rval.toDouble();              \
-                cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                     \
-            } else if (lval.isObject()) {                                     \
-                JSObject *l = &lval.toObject(), *r = &rval.toObject();        \
-                l->assertSpecialEqualitySynced();                             \
-                if (EqualityOp eq = l->getClass()->ext.equality) {            \
-                    if (!eq(cx, l, &rval, &cond))                             \
-                        goto error;                                           \
-                    cond = cond OP JS_TRUE;                                   \
-                } else {                                                      \
-                    cond = l OP r;                                            \
-                }                                                             \
-            } else {                                                          \
-                cond = lval.payloadAsRawUint32() OP rval.payloadAsRawUint32();\
-            }                                                                 \
-        } else {                                                              \
-            if (lval.isNullOrUndefined()) {                                   \
-                cond = rval.isNullOrUndefined() OP true;                      \
-            } else if (rval.isNullOrUndefined()) {                            \
-                cond = true OP false;                                         \
-            } else {                                                          \
-                if (lval.isObject())                                          \
-                    DEFAULT_VALUE(cx, -2, JSTYPE_VOID, lval);                 \
-                if (rval.isObject())                                          \
-                    DEFAULT_VALUE(cx, -1, JSTYPE_VOID, rval);                 \
-                if (lval.isString() && rval.isString()) {                     \
-                    JSString *l = lval.toString(), *r = rval.toString();      \
-                    JSBool equal;                                             \
-                    if (!EqualStrings(cx, l, r, &equal))                      \
-                        goto error;                                           \
-                    cond = equal OP JS_TRUE;                                  \
-                } else {                                                      \
-                    double l, r;                                              \
-                    if (!ValueToNumber(cx, lval, &l) ||                       \
-                        !ValueToNumber(cx, rval, &r)) {                       \
-                        goto error;                                           \
-                    }                                                         \
-                    cond = JSDOUBLE_COMPARE(l, OP, r, IFNAN);                 \
-                }                                                             \
-            }                                                                 \
-        }                                                                     \
+        JSBool cond;                                                          \
+        if (!LooselyEqual(cx, lval, rval, &cond))                             \
+            goto error;                                                       \
+        cond = cond OP JS_TRUE;                                               \
         TRY_BRANCH_AFTER_COND(cond, 2);                                       \
         regs.sp--;                                                            \
         regs.sp[-1].setBoolean(cond);                                         \
     JS_END_MACRO
 
 BEGIN_CASE(JSOP_EQ)
-    EQUALITY_OP(==, false);
+    EQUALITY_OP(==);
 END_CASE(JSOP_EQ)
 
 BEGIN_CASE(JSOP_NE)
-    EQUALITY_OP(!=, true);
+    EQUALITY_OP(!=);
 END_CASE(JSOP_NE)
 
 #undef EQUALITY_OP
-#undef XML_EQUALITY_OP
-#undef EXTENDED_EQUALITY_OP
 
 #define STRICT_EQUALITY_OP(OP, COND)                                          \
     JS_BEGIN_MACRO                                                            \
@@ -4930,7 +4888,7 @@ BEGIN_CASE(JSOP_FUNCALL)
             atoms = script->atomMap.vector;
 
             /* Now that the new frame is rooted, maybe create a call object. */
-            if (newfun->isHeavyweight() && !js_GetCallObject(cx, regs.fp))
+            if (newfun->isHeavyweight() && !CreateFunCallObject(cx, regs.fp))
                 goto error;
 
             RESET_USE_METHODJIT();
@@ -5491,7 +5449,7 @@ END_CASE(JSOP_GETUPVAR_DBG)
 BEGIN_CASE(JSOP_GETFCSLOT)
 BEGIN_CASE(JSOP_CALLFCSLOT)
 {
-    JS_ASSERT(regs.fp->isFunctionFrame() && !regs.fp->isEvalFrame());
+    JS_ASSERT(regs.fp->isNonEvalFunctionFrame());
     uintN index = GET_UINT16(regs.pc);
     JSObject *obj = &argv[-2].toObject();
 
@@ -5883,15 +5841,9 @@ BEGIN_CASE(JSOP_LAMBDA)
                 // No locking, this is mainly for js shell testing.
                 ++rt->functionMeter.unjoined;
 
-                typedef JSRuntime::FunctionCountMap HM;
-                HM &h = rt->unjoinedFunctionCountMap;
-                HM::AddPtr p = h.lookupForAdd(fun);
-                if (!p) {
-                    h.add(p, fun, 1);
-                } else {
-                    JS_ASSERT(p->key == fun);
+                typedef JSRuntime::FunctionCountMap::Ptr Ptr;
+                if (Ptr p = rt->unjoinedFunctionCountMap.lookupWithDefault(fun, 0))
                     ++p->value;
-                }
             }
 #endif
         } else {
@@ -5937,7 +5889,7 @@ BEGIN_CASE(JSOP_LAMBDA_DBGFC)
 END_CASE(JSOP_LAMBDA_DBGFC)
 
 BEGIN_CASE(JSOP_CALLEE)
-    JS_ASSERT(regs.fp->isFunctionFrame() && !regs.fp->isEvalFrame());
+    JS_ASSERT(regs.fp->isNonEvalFunctionFrame());
     PUSH_COPY(argv[-2]);
 END_CASE(JSOP_CALLEE)
 
@@ -6881,7 +6833,7 @@ BEGIN_CASE(JSOP_GENERATOR)
 
 BEGIN_CASE(JSOP_YIELD)
     JS_ASSERT(!cx->isExceptionPending());
-    JS_ASSERT(regs.fp->isFunctionFrame() && !regs.fp->isEvalFrame());
+    JS_ASSERT(regs.fp->isNonEvalFunctionFrame());
     if (cx->generatorFor(regs.fp)->state == JSGEN_CLOSING) {
         js_ReportValueError(cx, JSMSG_BAD_GENERATOR_YIELD,
                             JSDVG_SEARCH_STACK, argv[-2], NULL);
@@ -7163,7 +7115,7 @@ END_CASE(JSOP_ARRAYPUSH)
         goto inline_return;
 
   exit:
-    interpReturnOK = ScriptEpilogue(cx, regs.fp, interpReturnOK);
+    interpReturnOK = ScriptEpilogueOrGeneratorYield(cx, regs.fp, interpReturnOK);
     regs.fp->setFinishedInInterpreter();
 
     /*

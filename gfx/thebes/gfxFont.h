@@ -111,7 +111,6 @@ struct THEBES_API gfxFontStyle {
     gfxFontStyle(PRUint8 aStyle, PRUint16 aWeight, PRInt16 aStretch,
                  gfxFloat aSize, nsIAtom *aLanguage,
                  float aSizeAdjust, PRPackedBool aSystemFont,
-                 PRPackedBool aFamilyNameQuirks,
                  PRPackedBool aPrinterFont,
                  const nsString& aFeatureSettings,
                  const nsString& aLanguageOverride);
@@ -127,10 +126,6 @@ struct THEBES_API gfxFontStyle {
 
     // Say that this font is used for print or print preview.
     PRPackedBool printerFont : 1;
-
-    // True if the character set quirks (for treatment of "Symbol",
-    // "Wingdings", etc.) should be applied.
-    PRPackedBool familyNameQuirks : 1;
 
     // The weight of the font: 100, 200, ... 900.
     PRUint16 weight;
@@ -177,8 +172,8 @@ struct THEBES_API gfxFontStyle {
     }
 
     PLDHashNumber Hash() const {
-        return ((style + (systemFont << 7) + (familyNameQuirks << 8) +
-            (weight << 9)) + PRUint32(size*1000) + PRUint32(sizeAdjust*1000)) ^
+        return ((style + (systemFont << 7) +
+            (weight << 8)) + PRUint32(size*1000) + PRUint32(sizeAdjust*1000)) ^
             nsISupportsHashKey::HashKey(language);
     }
 
@@ -189,7 +184,6 @@ struct THEBES_API gfxFontStyle {
             (style == other.style) &&
             (systemFont == other.systemFont) &&
             (printerFont == other.printerFont) &&
-            (familyNameQuirks == other.familyNameQuirks) &&
             (weight == other.weight) &&
             (stretch == other.stretch) &&
             (language == other.language) &&
@@ -228,6 +222,8 @@ public:
 
     // unique name for the face, *not* the family
     const nsString& Name() const { return mName; }
+
+    gfxFontFamily* Family() const { return mFamily; }
 
     PRUint16 Weight() const { return mWeight; }
     PRInt16 Stretch() const { return mStretch; }
@@ -1463,6 +1459,27 @@ public:
          */
         virtual void GetSpacing(PRUint32 aStart, PRUint32 aLength,
                                 Spacing *aSpacing) = 0;
+    };
+
+    class ClusterIterator {
+    public:
+        ClusterIterator(gfxTextRun *aTextRun);
+
+        void Reset();
+
+        PRBool NextCluster();
+
+        PRUint32 Position() const {
+            return mCurrentChar;
+        }
+
+        PRUint32 ClusterLength() const;
+
+        gfxFloat ClusterAdvance(PropertyProvider *aProvider) const;
+
+    private:
+        gfxTextRun *mTextRun;
+        PRUint32    mCurrentChar;
     };
 
     /**

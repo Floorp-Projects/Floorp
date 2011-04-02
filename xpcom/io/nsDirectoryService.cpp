@@ -67,15 +67,6 @@
 #endif
 #elif defined(XP_OS2)
 #define MAX_PATH _MAX_PATH
-#elif defined(XP_BEOS)
-#include <FindDirectory.h>
-#include <Path.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/param.h>
-#include <OS.h>
-#include <image.h>
-#include "prenv.h"
 #endif
 
 #include "SpecialSystemDirectory.h"
@@ -93,8 +84,6 @@
 #define HOME_DIR NS_UNIX_HOME_DIR
 #elif defined (XP_OS2)
 #define HOME_DIR NS_OS2_HOME_DIR
-#elif defined (XP_BEOS)
-#define HOME_DIR NS_BEOS_HOME_DIR
 #endif
 
 //----------------------------------------------------------------------------------------
@@ -247,25 +236,6 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
     *aFile = localFile;
     return NS_OK;
 
-#elif defined(XP_BEOS)
-    char buf[MAXPATHLEN];
-    int32 cookie = 0;
-    image_info info;
-    char *p;
-    *buf = 0;
-    if(get_next_image_info(0, &cookie, &info) == B_OK)
-    {
-        strcpy(buf, info.name);
-        if((p = strrchr(buf, '/')) != 0)
-        {
-            if( (p-2 >= buf) && *(p-2)=='/' && *(p-1)=='.')
-                p -=2; 
-            *p = 0;
-            localFile->InitWithNativePath(nsDependentCString(buf));
-            *aFile = localFile;
-            return NS_OK;
-        }
-    }
 #endif
     
     NS_RELEASE(localFile);
@@ -974,23 +944,6 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     else if (inAtom == nsDirectoryService::sOS_DesktopDirectory)
     {
         rv = GetSpecialSystemDirectory(OS2_DesktopDirectory, getter_AddRefs(localFile)); 
-    }
-#elif defined (XP_BEOS)
-    else if (inAtom == nsDirectoryService::sSettingsDirectory)
-    {
-        rv = GetSpecialSystemDirectory(BeOS_SettingsDirectory, getter_AddRefs(localFile)); 
-    }
-    else if (inAtom == nsDirectoryService::sOS_HomeDirectory)
-    {
-        rv = GetSpecialSystemDirectory(BeOS_HomeDirectory, getter_AddRefs(localFile));
-    }
-    else if (inAtom == nsDirectoryService::sOS_DesktopDirectory)
-    {
-        rv = GetSpecialSystemDirectory(BeOS_DesktopDirectory, getter_AddRefs(localFile)); 
-    }
-    else if (inAtom == nsDirectoryService::sSystemDirectory)
-    {
-        rv = GetSpecialSystemDirectory(BeOS_SystemDirectory, getter_AddRefs(localFile)); 
     }
 #endif
 

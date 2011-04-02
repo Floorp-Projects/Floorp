@@ -96,7 +96,7 @@ nsAudioAvailableEventManager::~nsAudioAvailableEventManager()
 void nsAudioAvailableEventManager::Init(PRUint32 aChannels, PRUint32 aRate)
 {
   NS_ASSERTION(aChannels != 0 && aRate != 0, "Audio metadata not known.");
-  mSamplesPerSecond = aChannels * aRate;
+  mSamplesPerSecond = static_cast<float>(aChannels * aRate);
 }
 
 void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)

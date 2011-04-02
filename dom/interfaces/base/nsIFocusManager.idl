@@ -39,7 +39,7 @@
 interface nsIDocument;
 interface nsIContent;
 
-[scriptable, uuid(5cb91200-53f6-4d35-989d-1d28ad80a0d4)]
+[scriptable, uuid(51db277b-7ee7-4bce-9b84-fd2efcd2c8bd)]
 /**
  * The focus manager deals with all focus related behaviour. Only one element
  * in the entire application may have the focus at a time; this element
@@ -261,14 +261,7 @@ interface nsIFocusManager : nsISupports
    * Fire any events that have been delayed due to synchronized actions.
    */
   [noscript] void fireDelayedEvents(in nsIDocument aDocument);
-};
 
-/**
- * This interface extends nsIFocusManager for the 2.0 branch
- */
-[scriptable, uuid(94a49833-0f6d-4d9b-b859-990546ad9b8d)]
-interface nsIFocusManager_MOZILLA_2_0_BRANCH : nsISupports
-{
   /**
    * Indicate that a plugin wishes to take the focus. This is similar to a
    * normal focus except that the widget focus is not changed. Updating the

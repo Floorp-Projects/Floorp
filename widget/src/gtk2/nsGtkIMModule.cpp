@@ -376,10 +376,11 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
         ("GtkIMModule(%p): OnKeyEvent, aCaller=%p, aKeyDownEventWasSent=%s",
          this, aCaller, aKeyDownEventWasSent ? "TRUE" : "FALSE"));
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("    aEvent: type=%s, keyval=0x%X, unicode=0x%X",
+        ("    aEvent: type=%s, keyval=%s, unicode=0x%X",
          aEvent->type == GDK_KEY_PRESS ? "GDK_KEY_PRESS" :
          aEvent->type == GDK_KEY_RELEASE ? "GDK_KEY_RELEASE" : "Unknown",
-         aEvent->keyval, gdk_keyval_to_unicode(aEvent->keyval)));
+         gdk_keyval_name(aEvent->keyval),
+         gdk_keyval_to_unicode(aEvent->keyval)));
 
     if (aCaller != mLastFocusedWindow) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
@@ -406,9 +407,32 @@ nsGtkIMModule::OnKeyEvent(nsWindow* aCaller, GdkEventKey* aEvent,
     // committed _and_ changed.  This way we still let key press
     // events go through as simple key press events instead of
     // composed characters.
-    // Note that we should eat all key events during composition.
-    PRBool filterThisEvent =
-        mIsComposing ? PR_TRUE : isFiltered && mFilterKeyEvent;
+    PRBool filterThisEvent = isFiltered && mFilterKeyEvent;
+
+    if (mIsComposing && !isFiltered) {
+        if (aEvent->type == GDK_KEY_PRESS) {
+            if (!mCompositionString.IsEmpty()) {
+                // If there is composition string, we shouldn't dispatch
+                // any keydown events during composition.
+                filterThisEvent = PR_TRUE;
+            } else {
+                // A Hangul input engine for SCIM doesn't emit preedit_end
+                // signal even when composition string becomes empty.  On the
+                // other hand, we should allow to make composition with empty
+                // string for other languages because there *might* be such
+                // IM.  For compromising this issue, we should dispatch
+                // compositionend event, however, we don't need to reset IM
+                // actually.
+                CommitCompositionBy(EmptyString());
+                filterThisEvent = PR_FALSE;
+            }
+        } else {
+            // Key release event may not be consumed by IM, however, we
+            // shouldn't dispatch any keyup event during composition.
+            filterThisEvent = PR_TRUE;
+        }
+    }
+
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
         ("    filterThisEvent=%s (isFiltered=%s, mFilterKeyEvent=%s)",
          filterThisEvent ? "TRUE" : "FALSE", isFiltered ? "YES" : "NO",
@@ -930,15 +954,27 @@ void
 nsGtkIMModule::OnCommitCompositionNative(GtkIMContext *aContext,
                                          const gchar *aUTF8Char)
 {
+    const gchar emptyStr = 0;
+    const gchar *commitString = aUTF8Char ? aUTF8Char : &emptyStr;
+
     PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
-        ("GtkIMModule(%p): OnCommitCompositionNative, aContext=%p, current context=%p",
-         this, aContext, GetContext()));
+        ("GtkIMModule(%p): OnCommitCompositionNative, aContext=%p, current context=%p, commitString=\"%s\"",
+         this, aContext, GetContext(), commitString));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
     if (GetContext() != aContext) {
         PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
             ("    FAILED, given context doesn't match, GetContext()=%p",
              GetContext()));
+        return;
+    }
+
+    // If we are not in composition and committing with empty string,
+    // we need to do nothing because if we continued to handle this
+    // signal, we would dispatch compositionstart, text, compositionend
+    // events with empty string.  Of course, they are unnecessary events
+    // for Web applications and our editor.
+    if (!mIsComposing && !commitString[0]) {
         return;
     }
 
@@ -958,7 +994,7 @@ nsGtkIMModule::OnCommitCompositionNative(GtkIMContext *aContext,
         keyval_utf8_len = g_unichar_to_utf8(keyval_unicode, keyval_utf8);
         keyval_utf8[keyval_utf8_len] = '\0';
 
-        if (!strcmp(aUTF8Char, keyval_utf8)) {
+        if (!strcmp(commitString, keyval_utf8)) {
             PR_LOG(gGtkIMLog, PR_LOG_ALWAYS,
                 ("GtkIMModule(%p): OnCommitCompositionNative, we'll send normal key event",
                  this));
@@ -967,7 +1003,7 @@ nsGtkIMModule::OnCommitCompositionNative(GtkIMContext *aContext,
         }
     }
 
-    NS_ConvertUTF8toUTF16 str(aUTF8Char);
+    NS_ConvertUTF8toUTF16 str(commitString);
     CommitCompositionBy(str); // Be aware, widget can be gone
 }
 

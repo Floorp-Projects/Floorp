@@ -291,7 +291,7 @@ nsXBLContentSink::HandleStartElement(const PRUnichar *aName,
     return rv;
 
   if (mState == eXBL_InBinding && !mBinding) {
-    rv = ConstructBinding();
+    rv = ConstructBinding(aLineNumber);
     if (NS_FAILED(rv))
       return rv;
     
@@ -555,7 +555,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
 #undef ENSURE_XBL_STATE
 
 nsresult
-nsXBLContentSink::ConstructBinding()
+nsXBLContentSink::ConstructBinding(PRUint32 aLineNumber)
 {
   nsCOMPtr<nsIContent> binding = GetCurrentContent();
   nsAutoString id;
@@ -581,6 +581,14 @@ nsXBLContentSink::ConstructBinding()
       delete mBinding;
       mBinding = nsnull;
     }
+  } else {
+    nsContentUtils::ReportToConsole(nsContentUtils::eXBL_PROPERTIES,
+                                    "MissingIdAttr", nsnull, 0,
+                                    mDocumentURI,
+                                    EmptyString(),
+                                    aLineNumber, 0,
+                                    nsIScriptError::errorFlag,
+                                    "XBL Content Sink");
   }
 
   return rv;

@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=635636
+-->
+<head>
+  <title>Test for Bug 635636</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=635636">Mozilla Bug 635636</a>
+<p id="display"></p>
+<div id="content">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 635636 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var w, d;
+
+  function b1()
+  {
+    w = window.open('data:application/xhtml+xml,<html xmlns="http://www.w3.org/1999/xhtml"><div>1</div></html>');
+    SimpleTest.waitForFocus(b2, w);
+  }
+
+  function b2()
+  {
+    w.document.designMode = 'on';
+    w.location = "data:text/plain,2";
+    d = w.document.getElementsByTagName("div")[0];
+    const Ci = Components.interfaces;
+    var mainWindow = w.QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIWebNavigation)
+                      .QueryInterface(Ci.nsIDocShellTreeItem)
+                      .rootTreeItem
+                      .QueryInterface(Ci.nsIInterfaceRequestor)
+                      .getInterface(Ci.nsIDOMWindow);
+    var browser = mainWindow.gBrowser.selectedBrowser;
+    browser.addEventListener("pageshow", function() {
+      setTimeout(b3, 0);
+    }, false);
+  }
+
+  function b3()
+  {
+    d.parentNode.removeChild(d);
+    ok(true, "Should not crash");
+    // Not needed for the crash
+    w.close();
+    SimpleTest.finish();
+  }
+
+  b1();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -105,12 +105,12 @@ protected:
   nsresult DragExit(nsIDOMDragEvent* aDragEvent);
   nsresult Drop(nsIDOMDragEvent* aDragEvent);
   nsresult DragGesture(nsIDOMDragEvent* aDragEvent);
+  void CleanupDragDropCaret();
   already_AddRefed<nsIPresShell> GetPresShell();
 
 protected:
   nsEditor* mEditor; // weak
   nsRefPtr<nsCaret> mCaret;
-  PRPackedBool mCaretDrawn;
   PRPackedBool mCommitText;
   PRPackedBool mInTransaction;
 };

@@ -918,7 +918,7 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
 
     U **newValues = pool
         ? ArenaArray<U*>(cx->compartment->types.pool, newCapacity)
-        : (U **) ::js_malloc(newCapacity * sizeof(U*));
+        : (U **) js::OffTheBooks::malloc_(newCapacity * sizeof(U*));
     if (!newValues) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
@@ -965,7 +965,7 @@ HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
 
         values = pool
             ? ArenaArray<U*>(cx->compartment->types.pool, SET_ARRAY_SIZE)
-            : (U **) ::js_malloc(SET_ARRAY_SIZE * sizeof(U*));
+            : (U **) js::OffTheBooks::malloc_(SET_ARRAY_SIZE * sizeof(U*));
         if (!values) {
             values = (U **) oldData;
             cx->compartment->types.setPendingNukeTypes(cx);
@@ -1064,7 +1064,7 @@ TypeSet::markUnknown(JSContext *cx)
 {
     typeFlags = TYPE_FLAG_UNKNOWN | (typeFlags & TYPE_FLAG_INTERMEDIATE_SET);
     if (objectCount >= 2 && !(typeFlags & TYPE_FLAG_INTERMEDIATE_SET))
-        cx->free(objectSet);
+        cx->free_(objectSet);
     objectCount = 0;
     objectSet = NULL;
 }

@@ -47,8 +47,6 @@
 
 #include "nsISupports.h"
 
-class nsIStyleSheet;
-class nsIContent;
 struct nsRuleData;
 
 // IID for the nsIStyleRule interface {f75f3f70-435d-43a6-a01b-65970489ca26}

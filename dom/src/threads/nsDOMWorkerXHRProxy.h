@@ -92,11 +92,11 @@ public:
 
   nsIXMLHttpRequest* GetXMLHttpRequest();
 
-  nsresult OpenRequest(const nsACString& aMethod,
-                       const nsACString& aUrl,
-                       PRBool aAsync,
-                       const nsAString& aUser,
-                       const nsAString& aPassword);
+  nsresult Open(const nsACString& aMethod,
+                const nsACString& aUrl,
+                PRBool aAsync,
+                const nsAString& aUser,
+                const nsAString& aPassword);
 
   nsresult Abort();
 
