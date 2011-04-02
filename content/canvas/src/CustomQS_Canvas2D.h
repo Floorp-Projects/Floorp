@@ -39,6 +39,7 @@
 
 #include "nsDOMError.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
+#include "CheckedInt.h"
 
 typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleSetterType)(const nsAString &, nsISupports *);
 typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleGetterType)(nsAString &, nsISupports **, PRInt32 *);
@@ -153,6 +154,63 @@ nsIDOMCanvasRenderingContext2D_GetFillStyle(JSContext *cx, JSObject *obj, jsid i
     return Canvas2D_GetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::GetFillStyle_multi);
 }
 
+static bool
+CreateImageData(JSContext* cx,
+                uint32 w,
+                uint32 h,
+                nsIDOMCanvasRenderingContext2D* self,
+                int32 x,
+                int32 y,
+                jsval* vp)
+{
+    using mozilla::CheckedInt;
+    CheckedInt<uint32> len = CheckedInt<uint32>(w) * h * 4;
+    if (!len.valid()) {
+        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
+    }
+
+    // Create the fast typed array; it's initialized to 0 by default.
+    JSObject* darray =
+      js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len.value());
+    js::AutoObjectRooter rd(cx, darray);
+    if (!darray) {
+        return false;
+    }
+
+    if (self) {
+        js::TypedArray* tdest = js::TypedArray::fromJSObject(darray);
+
+        // make the call
+        nsresult rv =
+            self->GetImageData_explicit(x, y, w, h,
+                                        static_cast<PRUint8*>(tdest->data),
+                                        tdest->byteLength);
+        if (NS_FAILED(rv)) {
+            return xpc_qsThrowMethodFailed(cx, rv, vp);
+        }
+    }
+
+    // Do JS_NewObject after CreateTypedArray, so that gc will get
+    // triggered here if necessary
+    JSObject* result = JS_NewObject(cx, NULL, NULL, NULL);
+    js::AutoObjectRooter rr(cx, result);
+    if (!result) {
+        return false;
+    }
+
+    if (!JS_DefineProperty(cx, result, "width", INT_TO_JSVAL(w), NULL, NULL,
+                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
+        !JS_DefineProperty(cx, result, "height", INT_TO_JSVAL(h), NULL, NULL,
+                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
+        !JS_DefineProperty(cx, result, "data", OBJECT_TO_JSVAL(darray), NULL, NULL,
+                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
+        return false;
+    }
+
+    *vp = OBJECT_TO_JSVAL(result);
+    return true;
+}
+
 static JSBool
 nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -176,35 +234,7 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
     uint32 w = (uint32) wi;
     uint32 h = (uint32) hi;
 
-    /* Sanity check w * h here */
-    uint32 len0 = w * h;
-    if (len0 / w != (uint32) h)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    uint32 len = len0 * 4;
-    if (len / 4 != len0)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    // create the fast typed array; it's initialized to 0 by default
-    JSObject *darray = js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len);
-    js::AutoObjectRooter rd(cx, darray);
-    if (!darray)
-        return JS_FALSE;
-
-    // Do JS_NewObject after CreateTypedArray, so that gc will get
-    // triggered here if necessary
-    JSObject *result = JS_NewObject(cx, NULL, NULL, NULL);
-    js::AutoObjectRooter rr(cx, result);
-    if (!result)
-        return JS_FALSE;
-
-    if (!JS_DefineProperty(cx, result, "width", INT_TO_JSVAL(w), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "height", INT_TO_JSVAL(h), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "data", OBJECT_TO_JSVAL(darray), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-        return JS_FALSE;
-
-    *vp = OBJECT_TO_JSVAL(result);
-    return JS_TRUE;
+    return CreateImageData(cx, w, h, NULL, 0, 0, vp);
 }
 
 static JSBool
@@ -215,8 +245,6 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-
-    nsresult rv;
 
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
@@ -243,42 +271,7 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
     uint32 w = (uint32) wi;
     uint32 h = (uint32) hi;
 
-    // Sanity check w * h here
-    uint32 len0 = w * h;
-    if (len0 / w != (uint32) h)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    uint32 len = len0 * 4;
-    if (len / 4 != len0)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    // create the fast typed array
-    JSObject *darray = js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len);
-    js::AutoObjectRooter rd(cx, darray);
-    if (!darray)
-        return JS_FALSE;
-
-    js::TypedArray *tdest = js::TypedArray::fromJSObject(darray);
-
-    // make the call
-    rv = self->GetImageData_explicit(x, y, w, h, (PRUint8*) tdest->data, tdest->byteLength);
-    if (NS_FAILED(rv))
-        return xpc_qsThrowMethodFailed(cx, rv, vp);
-
-    // Do JS_NewObject after CreateTypedArray, so that gc will get
-    // triggered here if necessary
-    JSObject *result = JS_NewObject(cx, NULL, NULL, NULL);
-    js::AutoObjectRooter rr(cx, result);
-    if (!result)
-        return JS_FALSE;
-
-    if (!JS_DefineProperty(cx, result, "width", INT_TO_JSVAL(w), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "height", INT_TO_JSVAL(h), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "data", OBJECT_TO_JSVAL(darray), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-        return JS_FALSE;
-
-    *vp = OBJECT_TO_JSVAL(result);
-    return JS_TRUE;
+    return CreateImageData(cx, w, h, self, x, y, vp);
 }
 
 static JSBool
