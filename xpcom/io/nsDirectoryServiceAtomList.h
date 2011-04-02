@@ -120,7 +120,4 @@ DIR_ATOM(sXDGVideos, NS_UNIX_XDG_VIDEOS_DIR)
 #elif defined (XP_OS2)
 DIR_ATOM(sSystemDirectory, NS_OS_SYSTEM_DIR)
 DIR_ATOM(sOS2Directory, NS_OS2_DIR)
-#elif defined (XP_BEOS)
-DIR_ATOM(sSystemDirectory, NS_OS_SYSTEM_DIR)
-DIR_ATOM(sSettingsDirectory, NS_BEOS_SETTINGS_DIR)
 #endif

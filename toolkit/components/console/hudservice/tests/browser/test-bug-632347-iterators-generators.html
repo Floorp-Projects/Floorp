@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Web Console test for bug 632347 - iterators and generators</title>
+    <!-- Any copyright is dedicated to the Public Domain.
+         http://creativecommons.org/publicdomain/zero/1.0/ -->
+<script type="application/javascript;version=1.8">
+(function(){
+function genFunc() {
+  var a = 5;
+  while (a < 10) {
+    yield a++;
+  }
+}
+
+window.gen1 = genFunc();
+gen1.next();
+
+var obj = { foo: "bar", baz: "baaz", hay: "stack" };
+window.iter1 = Iterator(obj);
+
+function Range(low, high) {
+  this.low = low;
+  this.high = high;
+}
+
+function RangeIterator(range) {
+  this.range = range;
+  this.current = this.range.low;
+}
+
+RangeIterator.prototype.next = function() {
+  if (this.current > this.range.high) {
+    throw StopIteration;
+  } else {
+    return this.current++;
+  }
+}
+
+Range.prototype.__iterator__ = function() {
+  return new RangeIterator(this);
+}
+
+window.iter2 = new Range(3, 15);
+
+window.gen2 = (i * 2 for (i in iter2));
+})();
+</script>
+  </head>
+  <body>
+    <p>Web Console test for bug 632347 - iterators and generators.</p>
+  </body>
+</html>

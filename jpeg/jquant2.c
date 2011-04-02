@@ -2,6 +2,7 @@
  * jquant2.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
+ * Copyright (C) 2009, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -74,29 +75,10 @@
 #define G_SCALE 3		/* scale G distances by this much */
 #define B_SCALE 1		/* and B by this much */
 
-/* Relabel R/G/B as components 0/1/2, respecting the RGB ordering defined
- * in jmorecfg.h.  As the code stands, it will do the right thing for R,G,B
- * and B,G,R orders.  If you define some other weird order in jmorecfg.h,
- * you'll get compile errors until you extend this logic.  In that case
- * you'll probably want to tweak the histogram sizes too.
- */
-
-#if RGB_RED == 0
-#define C0_SCALE R_SCALE
-#endif
-#if RGB_BLUE == 0
-#define C0_SCALE B_SCALE
-#endif
-#if RGB_GREEN == 1
-#define C1_SCALE G_SCALE
-#endif
-#if RGB_RED == 2
-#define C2_SCALE R_SCALE
-#endif
-#if RGB_BLUE == 2
-#define C2_SCALE B_SCALE
-#endif
-
+static const int c_scales[3]={R_SCALE, G_SCALE, B_SCALE};
+#define C0_SCALE c_scales[rgb_red[cinfo->out_color_space]]
+#define C1_SCALE c_scales[rgb_green[cinfo->out_color_space]]
+#define C2_SCALE c_scales[rgb_blue[cinfo->out_color_space]]
 
 /*
  * First we have the histogram data structure and routines for creating it.
@@ -454,15 +436,16 @@ median_cut (j_decompress_ptr cinfo, boxptr boxlist, int numboxes,
     /* We want to break any ties in favor of green, then red, blue last.
      * This code does the right thing for R,G,B or B,G,R color orders only.
      */
-#if RGB_RED == 0
-    cmax = c1; n = 1;
-    if (c0 > cmax) { cmax = c0; n = 0; }
-    if (c2 > cmax) { n = 2; }
-#else
-    cmax = c1; n = 1;
-    if (c2 > cmax) { cmax = c2; n = 2; }
-    if (c0 > cmax) { n = 0; }
-#endif
+    if (rgb_red[cinfo->out_color_space] == 0) {
+      cmax = c1; n = 1;
+      if (c0 > cmax) { cmax = c0; n = 0; }
+      if (c2 > cmax) { n = 2; }
+    }
+    else {
+      cmax = c1; n = 1;
+      if (c2 > cmax) { cmax = c2; n = 2; }
+      if (c0 > cmax) { n = 0; }
+    }
     /* Choose split point along selected axis, and update box bounds.
      * Current algorithm: split at halfway point.
      * (Since the box has been shrunk to minimum volume,

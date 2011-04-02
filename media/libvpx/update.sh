@@ -317,3 +317,9 @@ done
 
 # Patch to compile with Sun Studio on Solaris
 patch -p3 < solaris.patch
+
+# Patch to fix link with xcode4
+patch -p1 < xcode4.patch
+
+# Patch to fix data race on global function pointers
+patch -p1 < bug640935.patch

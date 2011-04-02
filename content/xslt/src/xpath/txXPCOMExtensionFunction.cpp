@@ -316,6 +316,7 @@ txXPCOMExtensionFunctionCall::GetParamType(const nsXPTParamInfo &aParam,
                 return eOBJECT;
             }
         }
+        // FALLTHROUGH
         default:
         {
             // XXX Error!

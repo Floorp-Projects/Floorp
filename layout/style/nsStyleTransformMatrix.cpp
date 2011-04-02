@@ -47,7 +47,6 @@
 #include "nsCSSKeywords.h"
 #include "nsMathUtils.h"
 #include "CSSCalc.h"
-#include "nsCSSStruct.h"
 
 namespace css = mozilla::css;
 

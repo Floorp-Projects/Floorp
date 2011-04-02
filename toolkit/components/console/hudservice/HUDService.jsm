@@ -1183,7 +1183,8 @@ NetworkPanel.prototype =
  * present.
  *
  * @param nsIDOMNode aConsoleNode
- *        The DOM node that holds the output of the console.
+ *        The DOM node (richlistbox aka outputNode) that holds the output of the
+ *        console.
  * @return number
  *         The current user-selected log limit.
  */
@@ -1209,7 +1210,10 @@ function pruneConsoleOutputIfNecessary(aConsoleNode)
   for (let i = 0; i < removeNodes; i++) {
     if (messageNodes[i].classList.contains("webconsole-msg-cssparser")) {
       let desc = messageNodes[i].childNodes[2].textContent;
-      let location = messageNodes[i].childNodes[4].getAttribute("title");
+      let location = "";
+      if (messageNodes[i].childNodes[4]) {
+        location = messageNodes[i].childNodes[4].getAttribute("title");
+      }
       delete hudRef.cssNodes[desc + location];
     }
     messageNodes[i].parentNode.removeChild(messageNodes[i]);
@@ -1764,6 +1768,12 @@ HUD_SERVICE.prototype =
 
     this.unregisterActiveContext(id);
 
+    let popupset = outputNode.ownerDocument.getElementById("mainPopupSet");
+    let panels = popupset.querySelectorAll("panel[hudId=" + id + "]");
+    for (let i = 0; i < panels.length; i++) {
+      panels[i].hidePopup();
+    }
+
     let id = ConsoleUtils.supString(id);
     Services.obs.notifyObservers(id, "web-console-destroyed", null);
 
@@ -1851,23 +1861,22 @@ HUD_SERVICE.prototype =
   /**
    * Returns the hudReference for a given output node.
    *
-   * @param nsIDOMNode aNode
-   *        an output node (as returned by getOutputNodeById()).
+   * @param nsIDOMNode aNode (currently either a xul:vbox as returned by
+   *        getOutputNodeById() or a richlistbox).
    * @returns a HUD | null
    */
   getHudReferenceForOutputNode: function HS_getHudReferenceForOutputNode(aNode)
   {
     let node = aNode;
-    while (!node.classList.contains("hudbox-animated")) {
-      if (node.parent) {
-        node = node.parent;
-      }
-      else {
+    // starting from richlistbox, need to find hudbox
+    while (!node.id && !node.classList.contains("hud-box")) {
+      if (node.parentNode) {
+        node = node.parentNode;
+      } else {
         return null;
       }
     }
-    let id = node.id;
-    return id in this.hudReferences ? this.hudReferences[id] : null;
+    return this.getHudReferenceById(node.id);
   },
 
   /**
@@ -1983,7 +1992,7 @@ HUD_SERVICE.prototype =
    * Get OutputNode by Id
    *
    * @param string aId
-   * @returns nsIDOMNode
+   * @returns nsIDOMNode (richlistbox)
    */
   getConsoleOutputNode: function HS_getConsoleOutputNode(aId)
   {
@@ -2131,6 +2140,7 @@ HUD_SERVICE.prototype =
     let panel = netPanel.panel;
     panel.openPopup(aNode, "after_pointer", 0, 0, false, false);
     panel.sizeTo(450, 500);
+    panel.setAttribute("hudId", aHttpActivity.hudId);
     aHttpActivity.panels.push(Cu.getWeakReference(netPanel));
     return netPanel;
   },
@@ -3753,6 +3763,11 @@ function JSPropertyProvider(aScope, aInputValue)
     return null;
   }
 
+  // Skip Iterators and Generators.
+  if (isIteratorOrGenerator(obj)) {
+    return null;
+  }
+
   let matches = [];
   for (var prop in obj) {
     matches.push(prop);
@@ -3766,6 +3781,24 @@ function JSPropertyProvider(aScope, aInputValue)
     matchProp: matchProp,
     matches: matches
   };
+}
+
+function isIteratorOrGenerator(aObject)
+{
+  if (typeof aObject == "object") {
+    if (typeof aObject.__iterator__ == "function" ||
+        aObject.constructor && aObject.constructor.name == "Iterator") {
+      return true;
+    }
+
+    let str = aObject.toString();
+    if (typeof aObject.next == "function" &&
+        str.indexOf("[object Generator") == 0) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -3917,7 +3950,8 @@ function JSTermHelper(aJSTerm)
   aJSTerm.sandbox.inspect = function JSTH_inspect(aObject)
   {
     aJSTerm.helperEvaluated = true;
-    aJSTerm.openPropertyPanel(null, unwrap(aObject));
+    let propPanel = aJSTerm.openPropertyPanel(null, unwrap(aObject));
+    propPanel.panel.setAttribute("hudId", aJSTerm.hudId);
   };
 
   /**
@@ -4242,7 +4276,8 @@ JSTerm.prototype = {
       }
 
       if (!this._panelOpen) {
-        self.openPropertyPanel(aEvalString, aOutputObject, this);
+        let propPanel = self.openPropertyPanel(aEvalString, aOutputObject, this);
+        propPanel.panel.setAttribute("hudId", self.hudId);
         this._panelOpen = true;
       }
     }, false);
@@ -4355,6 +4390,11 @@ JSTerm.prototype = {
   isResultInspectable: function JST_isResultInspectable(aResult)
   {
     let isEnumerable = false;
+
+    // Skip Iterators and Generators.
+    if (isIteratorOrGenerator(aResult)) {
+      return false;
+    }
 
     for (let p in aResult) {
       isEnumerable = true;
@@ -4495,10 +4535,9 @@ JSTerm.prototype = {
 
           case Ci.nsIDOMKeyEvent.DOM_VK_UP:
             // history previous
-            if (self.caretAtStartOfInput()) {
+            if (self.canCaretGoPrevious()) {
               let updated = self.historyPeruse(HISTORY_BACK);
               if (updated && aEvent.cancelable) {
-                self.inputNode.setSelectionRange(0, 0);
                 aEvent.preventDefault();
               }
             }
@@ -4506,11 +4545,9 @@ JSTerm.prototype = {
 
           case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
             // history next
-            if (self.caretAtEndOfInput()) {
+            if (self.canCaretGoNext()) {
               let updated = self.historyPeruse(HISTORY_FORWARD);
               if (updated && aEvent.cancelable) {
-                let inputEnd = self.inputNode.value.length;
-                self.inputNode.setSelectionRange(inputEnd, inputEnd);
                 aEvent.preventDefault();
               }
             }
@@ -4615,27 +4652,45 @@ JSTerm.prototype = {
   },
 
   /**
-   * Check if the caret is at the start of the input.
+   * Check if the caret is at a location that allows selecting the previous item
+   * in history when the user presses the Up arrow key.
    *
-   * @returns boolean
-   *          True if the caret is at the start of the input.
+   * @return boolean
+   *         True if the caret is at a location that allows selecting the
+   *         previous item in history when the user presses the Up arrow key,
+   *         otherwise false.
    */
-  caretAtStartOfInput: function JST_caretAtStartOfInput()
+  canCaretGoPrevious: function JST_canCaretGoPrevious()
   {
-    return this.inputNode.selectionStart == this.inputNode.selectionEnd &&
-        this.inputNode.selectionStart == 0;
+    let node = this.inputNode;
+    if (node.selectionStart != node.selectionEnd) {
+      return false;
+    }
+
+    let multiline = /[\r\n]/.test(node.value);
+    return node.selectionStart == 0 ? true :
+           node.selectionStart == node.value.length && !multiline;
   },
 
   /**
-   * Check if the caret is at the end of the input.
+   * Check if the caret is at a location that allows selecting the next item in
+   * history when the user presses the Down arrow key.
    *
-   * @returns boolean
-   *          True if the caret is at the end of the input, or false otherwise.
+   * @return boolean
+   *         True if the caret is at a location that allows selecting the next
+   *         item in history when the user presses the Down arrow key, otherwise
+   *         false.
    */
-  caretAtEndOfInput: function JST_caretAtEndOfInput()
+  canCaretGoNext: function JST_canCaretGoNext()
   {
-    return this.inputNode.selectionStart == this.inputNode.selectionEnd &&
-        this.inputNode.selectionStart == this.inputNode.value.length;
+    let node = this.inputNode;
+    if (node.selectionStart != node.selectionEnd) {
+      return false;
+    }
+
+    let multiline = /[\r\n]/.test(node.value);
+    return node.selectionStart == node.value.length ? true :
+           node.selectionStart == 0 && !multiline;
   },
 
   history: [],
@@ -5249,7 +5304,8 @@ ConsoleUtils = {
     return false;
   },
 
-  /**   * Filters a node appropriately, then sends it to the output, regrouping and
+  /**
+   * Filters a node appropriately, then sends it to the output, regrouping and
    * pruning output as necessary.
    *
    * @param nsIDOMNode aNode
@@ -5259,7 +5315,6 @@ ConsoleUtils = {
    */
   outputMessageNode: function ConsoleUtils_outputMessageNode(aNode, aHUDId) {
     ConsoleUtils.filterMessageNode(aNode, aHUDId);
-
     let outputNode = HUDService.hudReferences[aHUDId].outputNode;
 
     let scrolledToBottom = ConsoleUtils.isOutputScrolledToBottom(outputNode);

@@ -85,6 +85,7 @@
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/Element.h"
+#include "mozAutoDocUpdate.h"
 
 #ifdef MOZ_XUL
 #include "nsIDOMXULTextboxElement.h"
@@ -869,6 +870,18 @@ nsFocusManager::WindowShown(nsIDOMWindow* aWindow, PRBool aNeedsFocus)
   return NS_OK;
 }
 
+static void
+NotifyFocusStateChange(nsIContent* aContent, nsPIDOMWindow* aWindow)
+{
+  nsIDocument *doc = aContent->GetCurrentDoc();
+  MOZ_AUTO_DOC_UPDATE(doc, UPDATE_CONTENT_STATE, PR_TRUE);
+  nsEventStates eventState = NS_EVENT_STATE_FOCUS;
+  if (aWindow->ShouldShowFocusRing()) {
+    eventState |= NS_EVENT_STATE_FOCUSRING;
+  }
+  doc->ContentStateChanged(aContent, eventState);
+}
+
 NS_IMETHODIMP
 nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
 {
@@ -915,15 +928,16 @@ nsFocusManager::WindowHidden(nsIDOMWindow* aWindow)
   // window, or an ancestor of the focused window. Either way, the focus is no
   // longer valid, so it needs to be updated.
 
+  nsIContent* oldFocusedContent = mFocusedContent;
+  mFocusedContent = nsnull;
+
+  if (oldFocusedContent && oldFocusedContent->IsInDoc()) {
+    NotifyFocusStateChange(oldFocusedContent, mFocusedWindow);
+  }
+
   nsCOMPtr<nsIDocShell> focusedDocShell = mFocusedWindow->GetDocShell();
   nsCOMPtr<nsIPresShell> presShell;
   focusedDocShell->GetPresShell(getter_AddRefs(presShell));
-  if (presShell) {
-    presShell->GetPresContext()->EventStateManager()->
-      SetContentState(mFocusedContent, NS_EVENT_STATE_FOCUS);
-  }
-
-  mFocusedContent = nsnull;
 
   nsIMEStateManager::OnTextStateBlur(nsnull, nsnull);
   if (presShell) {
@@ -1485,10 +1499,7 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
     content && content->IsInDoc() && !IsNonFocusableRoot(content);
   if (content) {
     if (sendBlurEvent) {
-      // unusual to pass a content node to SetContentState on a blur,
-      // but we are just calling it to get the ContentStatesChanged notifications
-      presShell->GetPresContext()->EventStateManager()->
-        SetContentState(content, NS_EVENT_STATE_FOCUS);
+      NotifyFocusStateChange(content, window);
     }
 
     // if an object/plug-in is being blurred, move the system focus to the
@@ -1698,16 +1709,13 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
 
     PRBool sendFocusEvent =
       aContent && aContent->IsInDoc() && !IsNonFocusableRoot(aContent);
+    nsPresContext* presContext = presShell->GetPresContext();
     if (sendFocusEvent) {
       // if the focused element changed, scroll it into view
       if (aFocusChanged)
         ScrollIntoView(presShell, aContent, aFlags);
 
-      // inform the EventStateManager so that content state change notifications
-      // are made.
-      nsPresContext* presContext = presShell->GetPresContext();
-      presContext->EventStateManager()->
-        SetContentState(aContent, NS_EVENT_STATE_FOCUS);
+      NotifyFocusStateChange(aContent, aWindow);
 
       // if this is an object/plug-in, focus the plugin's widget.  Note that we might
       // no longer be in the same document, due to the events we fired above when
@@ -1732,7 +1740,6 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
 
       nsIMEStateManager::OnTextStateFocus(presContext, aContent);
     } else {
-      nsPresContext* presContext = presShell->GetPresContext();
       nsIMEStateManager::OnTextStateBlur(presContext, nsnull);
       nsIMEStateManager::OnChangeFocus(presContext, nsnull);
       if (!aWindowRaised) {

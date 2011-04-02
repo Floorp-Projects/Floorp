@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var frame = document.getElementById("f");
+  var frameDoc = frame.contentDocument;
+  frameDoc.getElementById("g").style.background = "yellow";
+  frame.style.cssFloat = "right";
+  document.documentElement.offsetHeight;
+  frameDoc.documentElement.style.color = "green";
+}
+
+</script>
+</head>
+
+<body onload="boom();"><iframe id="f" src="data:text/html,<!DOCTYPE html><frameset><frame id=g></frameset>"></iframe></body>
+</html>

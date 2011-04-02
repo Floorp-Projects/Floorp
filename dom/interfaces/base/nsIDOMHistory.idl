@@ -39,9 +39,13 @@
 
 #include "domstubs.idl"
 
+%{ C++
+struct JSContext;
+%}
+
 interface nsIVariant;
 
-[scriptable, uuid(208f2af7-9f2e-497c-8a53-9e7803280898)]
+[scriptable, uuid(d5a3006b-dd6b-4ba3-81be-6559f8889e60)]
 interface nsIDOMHistory : nsISupports
 {
   readonly attribute long             length;
@@ -54,16 +58,14 @@ interface nsIDOMHistory : nsISupports
 
   void                       go([optional] in long aDelta);
   DOMString                  item(in unsigned long index);
+  [implicit_jscontext]
   void                       pushState(in nsIVariant aData,
                                        in DOMString aTitle,
                                        [optional] in DOMString aURL);
+  [implicit_jscontext]
   void                       replaceState(in nsIVariant aData,
                                           in DOMString aTitle,
                                           [optional] in DOMString aURL);
-};
 
-[scriptable, uuid(949fcdc1-664b-4a4b-939a-7144c94b48ac)]
-interface nsIDOMHistory_MOZILLA_2_0_BRANCH : nsISupports
-{
   readonly attribute nsIVariant state;
 };

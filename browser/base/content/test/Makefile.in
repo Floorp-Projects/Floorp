@@ -205,6 +205,7 @@ _BROWSER_FILES = \
                  browser_clearplugindata.js \
                  browser_clearplugindata.html \
                  browser_clearplugindata_noage.html \
+                 browser_popupUI.js \
                  browser_sanitizeDialog.js \
                  browser_scope.js \
                  browser_selectTabAtIndex.js \
@@ -248,9 +249,6 @@ _BROWSER_FILES = \
                  browser_addon_bar_aomlistener.js \
                  test_bug628179.html \
                  $(NULL)
-
-# compartment-disabled
-#                 browser_popupUI.js \
 
 ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 _BROWSER_FILES += \

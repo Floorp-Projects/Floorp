@@ -188,12 +188,12 @@ OP_UN(42)
 OP___(x,        43, Op2,  V,    0)  // exit always
 OP___(xt,       44, Op2,  V,    1)  // exit if true
 OP___(xf,       45, Op2,  V,    1)  // exit if false
-OP___(xtbl,     46, Op2,  V,    0)  // exit via indirect jump
 // A LIR_xbarrier cause no code to be generated, but it acts like a never-taken
 // guard in that it inhibits certain optimisations, such as dead stack store
 // elimination.
-OP___(xbarrier, 47, Op2,  V,    0)
+OP___(xbarrier, 46, Op2,  V,    0)
 
+OP_UN(47)
 OP_UN(48)
 
 //---------------------------------------------------------------------------

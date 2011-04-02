@@ -48,7 +48,6 @@
 #include "jsdbgapi.h"
 #endif
 #include "nsAtomicRefcnt.h"
-#include "nsAutoLock.h"
 #include "nsAXPCNativeCallContext.h"
 #include "nsContentUtils.h"
 #include "nsDOMClassInfo.h"
@@ -69,6 +68,8 @@
 #include "nsDOMWorkerScriptLoader.h"
 #include "nsDOMWorkerTimeout.h"
 #include "nsDOMWorkerXHR.h"
+
+using namespace mozilla;
 
 class TestComponentThreadsafetyRunnable : public nsIRunnable
 {
@@ -1351,7 +1352,7 @@ nsDOMWorker::nsDOMWorker(nsDOMWorker* aParent,
 : mParent(aParent),
   mParentWN(aParentWN),
   mPrivilegeModel(aPrivilegeModel),
-  mLock(nsnull),
+  mLock("nsDOMWorker.mLock"),
   mInnerScope(nsnull),
   mGlobal(NULL),
   mNextTimeoutId(0),
@@ -1373,10 +1374,6 @@ nsDOMWorker::~nsDOMWorker()
 {
   if (mPool) {
     mPool->NoteDyingWorker(this);
-  }
-
-  if (mLock) {
-    nsAutoLock::DestroyLock(mLock);
   }
 
   NS_ASSERTION(!mFeatures.Length(), "Live features!");
@@ -1500,7 +1497,7 @@ nsDOMWorker::PostCreate(nsIXPConnectWrappedNative* aWrapper,
                         JSContext* /* aCx */,
                         JSObject* /* aObj */)
 {
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
   mWrappedNative = aWrapper;
   return NS_OK;
 }
@@ -1514,7 +1511,7 @@ nsDOMWorker::Trace(nsIXPConnectWrappedNative* /* aWrapper */,
 
   PRBool canceled = PR_FALSE;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     canceled = mStatus == eKilled;
   }
 
@@ -1537,7 +1534,7 @@ nsDOMWorker::Finalize(nsIXPConnectWrappedNative* /* aWrapper */,
 
   // Clear our wrapped native now that it has died.
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     mWrappedNative = nsnull;
   }
 
@@ -1672,9 +1669,6 @@ nsDOMWorker::InitializeInternal(nsIScriptGlobalObject* aOwner,
     NS_ASSERTION(mPrincipal, "Should have set the principal!");
   }
 
-  mLock = nsAutoLock::NewLock("nsDOMWorker::mLock");
-  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
-
   NS_ASSERTION(!mGlobal, "Already got a global?!");
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> thisWrapped;
@@ -1733,7 +1727,7 @@ nsDOMWorker::Cancel()
 
   PRBool enforceTimeout = PR_FALSE;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     NS_ASSERTION(mStatus != eCanceled, "Canceled more than once?!");
 
@@ -1795,7 +1789,7 @@ nsDOMWorker::Kill()
   PRUint32 count, index;
   nsAutoTArray<nsRefPtr<nsDOMWorkerFeature>, 20> features;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     if (mStatus == eKilled) {
       NS_ASSERTION(mFeatures.Length() == 0, "Features added after killed!");
@@ -1844,7 +1838,7 @@ nsDOMWorker::Suspend()
 
   PRBool shouldSuspendFeatures;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     NS_ASSERTION(!mSuspended, "Suspended more than once!");
     shouldSuspendFeatures = !mSuspended;
     mSuspended = PR_TRUE;
@@ -1862,7 +1856,7 @@ nsDOMWorker::Resume()
 
   PRBool shouldResumeFeatures;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 #ifdef DEBUG
     // Should only have a mismatch if GC or Cancel happened while suspended.
     if (!mSuspended) {
@@ -1890,7 +1884,7 @@ nsDOMWorker::Resume()
 PRBool
 nsDOMWorker::IsCanceled()
 {
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
   return IsCanceledNoLock();
 }
 
@@ -1924,14 +1918,14 @@ nsDOMWorker::IsCanceledNoLock()
 PRBool
 nsDOMWorker::IsClosing()
 {
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
   return mStatus != eRunning;
 }
 
 PRBool
 nsDOMWorker::IsSuspended()
 {
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
   return mSuspended;
 }
 
@@ -2203,7 +2197,7 @@ nsDOMWorker::GetWrappedNative()
 {
   nsCOMPtr<nsIXPConnectWrappedNative> wrappedNative;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     wrappedNative = mWrappedNative;
   }
   return wrappedNative.forget();
@@ -2220,7 +2214,7 @@ nsDOMWorker::AddFeature(nsDOMWorkerFeature* aFeature,
     // aCx may be null.
     JSAutoSuspendRequest asr(aCx);
 
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     if (mStatus == eKilled) {
       // No features may be added after we've been canceled. Sorry.
@@ -2253,7 +2247,7 @@ nsDOMWorker::RemoveFeature(nsDOMWorkerFeature* aFeature,
     // aCx may be null.
     JSAutoSuspendRequest asr(aCx);
 
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
 #ifdef DEBUG
     PRBool removed =
@@ -2270,7 +2264,7 @@ nsDOMWorker::CancelTimeoutWithId(PRUint32 aId)
 {
   nsRefPtr<nsDOMWorkerFeature> foundFeature;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     PRUint32 count = mFeatures.Length();
     for (PRUint32 index = 0; index < count; index++) {
       nsDOMWorkerFeature*& feature = mFeatures[index];
@@ -2293,7 +2287,7 @@ nsDOMWorker::SuspendFeatures()
 {
   nsAutoTArray<nsRefPtr<nsDOMWorkerFeature>, 20> features;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     // We don't really have to worry about overflow here because the only way
     // to do this is through recursive script loading, which uses the stack. We
@@ -2322,7 +2316,7 @@ nsDOMWorker::ResumeFeatures()
 {
   nsAutoTArray<nsRefPtr<nsDOMWorkerFeature>, 20> features;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     NS_ASSERTION(mFeatureSuspendDepth > 0, "Shouldn't happen!");
     if (--mFeatureSuspendDepth != 0) {
@@ -2383,7 +2377,7 @@ nsDOMWorker::FireCloseRunnable(PRIntervalTime aTimeoutInterval,
   // to do is unblock the waiting thread.
   PRBool wakeUp;
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     NS_ASSERTION(mExpirationTime == 0,
                  "Close runnable should not be scheduled already!");
 
@@ -2396,7 +2390,7 @@ nsDOMWorker::FireCloseRunnable(PRIntervalTime aTimeoutInterval,
   }
 
   if (wakeUp) {
-    nsAutoMonitor mon(mPool->Monitor());
+    MonitorAutoEnter mon(mPool->GetMonitor());
     mon.NotifyAll();
   }
 
@@ -2430,7 +2424,7 @@ nsresult
 nsDOMWorker::Close()
 {
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     NS_ASSERTION(mStatus != eKilled, "This should be impossible!");
     if (mStatus != eRunning) {
       return NS_OK;
@@ -2448,7 +2442,7 @@ nsresult
 nsDOMWorker::TerminateInternal(PRBool aFromFinalize)
 {
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 #ifdef DEBUG
     if (!aFromFinalize) {
       NS_ASSERTION(mStatus != eCanceled, "Shouldn't be able to get here!");
@@ -2495,7 +2489,7 @@ void
 nsDOMWorker::SetExpirationTime(PRIntervalTime aExpirationTime)
 {
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     NS_ASSERTION(mStatus != eRunning && mStatus != eKilled, "Bad status!");
     NS_ASSERTION(!mExpirationTime || mExpirationTime == PR_INTERVAL_NO_TIMEOUT,
@@ -2509,7 +2503,7 @@ nsDOMWorker::SetExpirationTime(PRIntervalTime aExpirationTime)
 PRIntervalTime
 nsDOMWorker::GetExpirationTime()
 {
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
   return mExpirationTime;
 }
 #endif
@@ -2594,7 +2588,7 @@ nsDOMWorker::DispatchEvent(nsIDOMEvent* aEvent,
                            PRBool* _retval)
 {
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     if (IsCanceledNoLock()) {
       return NS_OK;
     }
@@ -2635,7 +2629,7 @@ NS_IMETHODIMP
 nsDOMWorker::PostMessage(/* JSObject aMessage */)
 {
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     // There's no reason to dispatch this message after the close handler has
     // been triggered since it will never be allowed to run.
     if (mStatus != eRunning) {

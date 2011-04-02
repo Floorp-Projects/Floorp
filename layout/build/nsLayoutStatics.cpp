@@ -79,7 +79,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsTextFragment.h"
 #include "nsCSSRuleProcessor.h"
-#include "nsXMLHttpRequest.h"
+#include "nsCrossSiteListenerProxy.h"
 #include "nsWebSocket.h"
 #include "nsDOMThreadService.h"
 #include "nsHTMLDNSPrefetch.h"
@@ -108,10 +108,8 @@
 #include "nsMathMLOperators.h"
 #endif
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
-#endif
 
 #ifdef MOZ_MEDIA
 #include "nsMediaDecoder.h"
@@ -128,8 +126,12 @@
 #include "nsJSEnvironment.h"
 #include "nsContentSink.h"
 #include "nsFrameMessageManager.h"
+#include "nsRefreshDriver.h"
+#include "CanvasImageCache.h"
 
 extern void NS_ShutdownChainItemPool();
+
+using namespace mozilla;
 
 nsrefcnt nsLayoutStatics::sLayoutStaticRefcnt = 0;
 
@@ -218,10 +220,8 @@ nsLayoutStatics::Initialize()
   nsMathMLOperators::AddRefTable();
 #endif
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsEditProperty::RegisterAtoms();
   nsTextServicesDocument::RegisterAtoms();
-#endif
 
 #ifdef DEBUG
   nsFrame::DisplayReflowStartup();
@@ -273,8 +273,9 @@ nsLayoutStatics::Initialize()
   nsContentSink::InitializeStatics();
   nsHtml5Module::InitializeStatics();
   nsIPresShell::InitializeStatics();
+  nsRefreshDriver::InitializeStatics();
 
-  nsCrossSiteListenerProxy::Startup();
+  nsCORSListenerProxy::Startup();
 
   rv = nsFrameList::Init();
   if (NS_FAILED(rv)) {
@@ -290,6 +291,7 @@ nsLayoutStatics::Initialize()
 void
 nsLayoutStatics::Shutdown()
 {
+  CanvasImageCache::Shutdown();
   nsFrameScriptExecutor::Shutdown();
   nsFocusManager::Shutdown();
 #ifdef MOZ_XUL
@@ -354,10 +356,8 @@ nsLayoutStatics::Shutdown()
   nsXBLWindowKeyHandler::ShutDown();
   nsAutoCopyListener::Shutdown();
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   nsHTMLEditor::Shutdown();
   nsTextServicesDocument::Shutdown();
-#endif
 
   nsDOMThreadService::Shutdown();
 
@@ -365,7 +365,7 @@ nsLayoutStatics::Shutdown()
   nsAudioStream::ShutdownLibrary();
 #endif
 
-  nsXMLHttpRequest::ShutdownACCache();
+  nsCORSListenerProxy::Shutdown();
   
   nsWebSocket::ReleaseGlobals();
   

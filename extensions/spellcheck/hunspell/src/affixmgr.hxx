@@ -105,6 +105,7 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr
   int                 simplifiedtriple;
   FLAG                forbiddenword;
   FLAG                nosuggest;
+  FLAG                nongramsuggest;
   FLAG                needaffix;
   int                 cpdmin;
   int                 numrep;
@@ -122,6 +123,9 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr
   flagentry *         defcpdtable;
   phonetable *        phone;
   int                 maxngramsugs;
+  int                 maxcpdsugs;
+  int                 maxdiff;
+  int                 onlymaxdiff;
   int                 nosplitsugs;
   int                 sugswithdots;
   int                 cpdwordmax;
@@ -150,6 +154,9 @@ class LIBHUNSPELL_DLL_EXPORTED AffixMgr
   FLAG                circumfix;
   FLAG                onlyincompound;
   FLAG                keepcase;
+  FLAG                forceucase;
+  FLAG                warn;
+  int                 forbidwarn;
   FLAG                substandard;
   int                 checksharps;
   int                 fullstrip;
@@ -200,7 +207,8 @@ public:
 
   short       get_syllable (const char * word, int wlen);
   int         cpdrep_check(const char * word, int len);
-  int         cpdpat_check(const char * word, int len, hentry * r1, hentry * r2);
+  int         cpdpat_check(const char * word, int len, hentry * r1, hentry * r2,
+                    const char affixed);
   int         defcpd_check(hentry *** words, short wnum, hentry * rv,
                     hentry ** rwords, char all);
   int         cpdcase_check(const char * word, int len);
@@ -208,7 +216,7 @@ public:
   void        setcminmax(int * cmin, int * cmax, const char * word, int len);
   struct hentry * compound_check(const char * word, int len, short wordnum,
             short numsyllable, short maxwordnum, short wnum, hentry ** words,
-            char hu_mov_rule, char is_sug);
+            char hu_mov_rule, char is_sug, int * info);
 
   int compound_check_morph(const char * word, int len, short wordnum,
             short numsyllable, short maxwordnum, short wnum, hentry ** words,
@@ -237,6 +245,7 @@ public:
   FLAG                get_compoundbegin() const;
   FLAG                get_forbiddenword() const;
   FLAG                get_nosuggest() const;
+  FLAG                get_nongramsuggest() const;
   FLAG                get_needaffix() const;
   FLAG                get_onlyincompound() const;
   FLAG                get_compoundroot() const;
@@ -251,9 +260,15 @@ public:
   int                 get_complexprefixes() const;
   char *              get_suffixed(char ) const;
   int                 get_maxngramsugs() const;
+  int                 get_maxcpdsugs() const;
+  int                 get_maxdiff() const;
+  int                 get_onlymaxdiff() const;
   int                 get_nosplitsugs() const;
   int                 get_sugswithdots(void) const;
   FLAG                get_keepcase(void) const;
+  FLAG                get_forceucase(void) const;
+  FLAG                get_warn(void) const;
+  int                 get_forbidwarn(void) const;
   int                 get_checksharps(void) const;
   char *              encode_flag(unsigned short aflag) const;
   int                 get_fullstrip() const;

@@ -34,7 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "prlock.h"
 #include "nsRegion.h"
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
@@ -109,14 +108,7 @@ class RgnRectMemoryAllocator
   nsRegion::RgnRect*  mFreeListHead;
   PRUint32  mFreeEntries;
   void*     mChunkListHead;
-#if 0
-  PRLock*   mLock;
-
-  void InitLock ()    { mLock = PR_NewLock (); }
-  void DestroyLock () { PR_DestroyLock (mLock); }
-  void Lock ()        { PR_Lock   (mLock); }
-  void Unlock ()      { PR_Unlock (mLock); }
-#elif defined (DEBUG)
+#if defined (DEBUG)
   NS_DECL_OWNINGTHREAD
 
   void InitLock ()    { NS_ASSERT_OWNINGTHREAD (RgnRectMemoryAllocator); }

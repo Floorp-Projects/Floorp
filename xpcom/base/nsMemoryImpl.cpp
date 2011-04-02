@@ -49,7 +49,6 @@
 #include "pratom.h"
 
 #include "nsAlgorithm.h"
-#include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "mozilla/Services.h"
@@ -112,7 +111,7 @@ nsMemoryImpl::FlushMemory(const PRUnichar* aReason, PRBool aImmediate)
         }
     }
 
-    PRInt32 lastVal = PR_AtomicSet(&sIsFlushing, 1);
+    PRInt32 lastVal = PR_ATOMIC_SET(&sIsFlushing, 1);
     if (lastVal)
         return NS_OK;
 

@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=633058
+-->
+<head>
+  <title>Test for Bug 633058</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633058">Mozilla Bug 633058</a>
+<p id="display"></p>
+<div id="content">
+  <input>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 633058 **/
+
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  var nbExpectedKeyPress = 8;
+  var inputGotKeyPress = 0;
+  var divGotKeyPress = 0;
+
+  var input = document.getElementsByTagName('input')[0];
+  var content = document.getElementById('content');
+
+  content.addEventListener('keypress', function() {
+    divGotKeyPress++;
+
+    if (divGotKeyPress == nbExpectedKeyPress) {
+      is(inputGotKeyPress, nbExpectedKeyPress, "input got all keypress events");
+      is(divGotKeyPress, nbExpectedKeyPress, "div got all keypress events");
+      SimpleTest.finish();
+    }
+  }, false);
+
+  input.addEventListener('keypress', function() {
+    inputGotKeyPress++;
+  }, false);
+
+  input.addEventListener('focus', function() {
+    input.removeEventListener('focus', arguments.callee, false);
+
+    synthesizeKey('VK_UP', {});
+    synthesizeKey('VK_LEFT', {});
+    synthesizeKey('VK_RIGHT', {});
+    synthesizeKey('VK_DOWN', {});
+    synthesizeKey('VK_BACK_SPACE', {});
+    synthesizeKey('VK_DELETE', {});
+    synthesizeKey('VK_ESCAPE', {});
+    synthesizeKey('VK_RETURN', {});
+  }, false);
+  input.focus();
+});
+
+</script>
+</pre>
+</body>
+</html>

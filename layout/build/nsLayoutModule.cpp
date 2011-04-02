@@ -107,7 +107,6 @@
 #include "nsXPathEvaluator.h"
 #include "txMozillaXSLTProcessor.h"
 #include "txNodeSetAdaptor.h"
-#include "nsXPath1Scheme.h"
 
 #include "nsDOMParser.h"
 #include "nsDOMSerializer.h"
@@ -147,11 +146,9 @@ using mozilla::dom::indexedDB::IndexedDatabaseManager;
 #include "nsIControllerContext.h"
 #include "nsIControllerCommandTable.h"
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #include "nsHTMLEditor.h"
 #include "nsTextServicesDocument.h"
 #include "nsTextServicesCID.h"
-#endif
 
 #include "nsScriptSecurityManager.h"
 #include "nsPrincipal.h"
@@ -220,14 +217,12 @@ nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
 }
 
 
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditorLog)
 #else
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLEditor)
-#endif
 #endif
 
 #include "nsHTMLCanvasFrame.h"
@@ -303,18 +298,12 @@ static void Shutdown();
 #include "nsCSPService.h"
 
 // Transformiix
-/* {0C351177-0159-4500-86B0-A219DFDE4258} */
-#define TRANSFORMIIX_XPATH1_SCHEME_CID \
-{ 0xc351177, 0x159, 0x4500, { 0x86, 0xb0, 0xa2, 0x19, 0xdf, 0xde, 0x42, 0x58 } }
-
 /* 5d5d92cd-6bf8-11d9-bf4a-000a95dc234c */
 #define TRANSFORMIIX_NODESET_CID \
 { 0x5d5d92cd, 0x6bf8, 0x11d9, { 0xbf, 0x4a, 0x0, 0x0a, 0x95, 0xdc, 0x23, 0x4c } }
 
 #define TRANSFORMIIX_NODESET_CONTRACTID \
 "@mozilla.org/transformiix-nodeset;1"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPath1SchemeProcessor)
 
 // Factory Constructor
 NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
@@ -857,7 +846,6 @@ NS_DEFINE_NAMED_CID(NS_VIDEODOCUMENT_CID);
 NS_DEFINE_NAMED_CID(NS_STYLESHEETSERVICE_CID);
 NS_DEFINE_NAMED_CID(TRANSFORMIIX_XSLT_PROCESSOR_CID);
 NS_DEFINE_NAMED_CID(TRANSFORMIIX_XPATH_EVALUATOR_CID);
-NS_DEFINE_NAMED_CID(TRANSFORMIIX_XPATH1_SCHEME_CID);
 NS_DEFINE_NAMED_CID(TRANSFORMIIX_NODESET_CID);
 NS_DEFINE_NAMED_CID(NS_XMLSERIALIZER_CID);
 NS_DEFINE_NAMED_CID(NS_FILEREADER_CID);
@@ -874,18 +862,14 @@ NS_DEFINE_NAMED_CID(NS_DOMSTORAGEMANAGER_CID);
 NS_DEFINE_NAMED_CID(NS_DOMJSON_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTEDITOR_CID);
 NS_DEFINE_NAMED_CID(INDEXEDDB_MANAGER_CID );
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #else
 NS_DEFINE_NAMED_CID(NS_HTMLEDITOR_CID);
 #endif
-#endif
 NS_DEFINE_NAMED_CID(NS_EDITORCONTROLLER_CID);
 NS_DEFINE_NAMED_CID(NS_EDITORCOMMANDTABLE_CID);
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 NS_DEFINE_NAMED_CID(NS_TEXTSERVICESDOCUMENT_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_GEOLOCATION_CID);
 NS_DEFINE_NAMED_CID(NS_FOCUSMANAGER_CID);
@@ -1016,7 +1000,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_STYLESHEETSERVICE_CID, false, NULL, nsStyleSheetServiceConstructor },
   { &kTRANSFORMIIX_XSLT_PROCESSOR_CID, false, NULL, txMozillaXSLTProcessorConstructor },
   { &kTRANSFORMIIX_XPATH_EVALUATOR_CID, false, NULL, nsXPathEvaluatorConstructor },
-  { &kTRANSFORMIIX_XPATH1_SCHEME_CID, false, NULL, nsXPath1SchemeProcessorConstructor },
   { &kTRANSFORMIIX_NODESET_CID, false, NULL, txNodeSetAdaptorConstructor },
   { &kNS_XMLSERIALIZER_CID, false, NULL, nsDOMSerializerConstructor },
   { &kNS_FILEREADER_CID, false, NULL, nsDOMFileReaderConstructor },
@@ -1033,18 +1016,14 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_DOMJSON_CID, false, NULL, NS_NewJSON },
   { &kNS_TEXTEDITOR_CID, false, NULL, nsPlaintextEditorConstructor },
   { &kINDEXEDDB_MANAGER_CID, false, NULL, IndexedDatabaseManagerConstructor },
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorLogConstructor },
 #else
   { &kNS_HTMLEDITOR_CID, false, NULL, nsHTMLEditorConstructor },
 #endif
-#endif
   { &kNS_EDITORCONTROLLER_CID, false, NULL, nsEditorControllerConstructor },
   { &kNS_EDITORCOMMANDTABLE_CID, false, NULL, nsEditorCommandTableConstructor },
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   { &kNS_TEXTSERVICESDOCUMENT_CID, false, NULL, nsTextServicesDocumentConstructor },
-#endif
   { &kNS_GEOLOCATION_SERVICE_CID, false, NULL, nsGeolocationServiceConstructor },
   { &kNS_GEOLOCATION_CID, false, NULL, nsGeolocationConstructor },
   { &kNS_FOCUSMANAGER_CID, false, NULL, CreateFocusManager },
@@ -1169,7 +1148,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { NS_STYLESHEETSERVICE_CONTRACTID, &kNS_STYLESHEETSERVICE_CID },
   { TRANSFORMIIX_XSLT_PROCESSOR_CONTRACTID, &kTRANSFORMIIX_XSLT_PROCESSOR_CID },
   { NS_XPATH_EVALUATOR_CONTRACTID, &kTRANSFORMIIX_XPATH_EVALUATOR_CID },
-  { NS_XPOINTER_SCHEME_PROCESSOR_BASE "xpath1", &kTRANSFORMIIX_XPATH1_SCHEME_CID },
   { TRANSFORMIIX_NODESET_CONTRACTID, &kTRANSFORMIIX_NODESET_CID },
   { NS_XMLSERIALIZER_CONTRACTID, &kNS_XMLSERIALIZER_CID },
   { NS_FILEREADER_CONTRACTID, &kNS_FILEREADER_CID },
@@ -1186,18 +1164,14 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/dom/json;1", &kNS_DOMJSON_CID },
   { "@mozilla.org/editor/texteditor;1", &kNS_TEXTEDITOR_CID },
   { INDEXEDDB_MANAGER_CONTRACTID, &kINDEXEDDB_MANAGER_CID },
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
 #ifdef ENABLE_EDITOR_API_LOG
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
 #else
   { "@mozilla.org/editor/htmleditor;1", &kNS_HTMLEDITOR_CID },
 #endif
-#endif
   { "@mozilla.org/editor/editorcontroller;1", &kNS_EDITORCONTROLLER_CID },
   { "", &kNS_EDITORCOMMANDTABLE_CID },
-#ifndef MOZILLA_PLAINTEXT_EDITOR_ONLY
   { "@mozilla.org/textservices/textservicesdocument;1", &kNS_TEXTSERVICESDOCUMENT_CID },
-#endif
   { "@mozilla.org/geolocation/service;1", &kNS_GEOLOCATION_SERVICE_CID },
   { "@mozilla.org/geolocation;1", &kNS_GEOLOCATION_CID },
   { "@mozilla.org/focus-manager;1", &kNS_FOCUSMANAGER_CID },

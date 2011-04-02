@@ -66,7 +66,6 @@ public:
 
   // CanvasLayer implementation
   virtual void Initialize(const Data& aData);
-  virtual void Updated(const nsIntRect& aRect);
 
   // LayerOGL implementation
   virtual void Destroy();
@@ -75,14 +74,14 @@ public:
                            const nsIntPoint& aOffset);
 
 protected:
+  void UpdateSurface();
+
   nsRefPtr<gfxASurface> mCanvasSurface;
   nsRefPtr<GLContext> mCanvasGLContext;
   gl::ShaderProgramType mLayerProgram;
 
   void MakeTexture();
   GLuint mTexture;
-
-  nsIntRect mUpdatedRect;
 
   PRPackedBool mDelayedUpdates;
   PRPackedBool mGLBufferIsPremultiplied;

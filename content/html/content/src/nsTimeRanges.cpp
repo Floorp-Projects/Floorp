@@ -51,6 +51,14 @@ NS_INTERFACE_MAP_BEGIN(nsTimeRanges)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TimeRanges)
 NS_INTERFACE_MAP_END
 
+nsTimeRanges::nsTimeRanges() {
+  MOZ_COUNT_CTOR(nsTimeRanges);
+}
+
+nsTimeRanges::~nsTimeRanges() {
+  MOZ_COUNT_DTOR(nsTimeRanges);
+}
+
 NS_IMETHODIMP
 nsTimeRanges::GetLength(PRUint32* aLength) {
   *aLength = mRanges.Length();

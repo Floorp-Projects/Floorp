@@ -103,6 +103,13 @@ DOMSVGNumberList::InternalListLengthWillChange(PRUint32 aNewLength)
     aNewLength = DOMSVGNumber::MaxListIndex();
   }
 
+  nsRefPtr<DOMSVGNumberList> kungFuDeathGrip;
+  if (oldLength && !aNewLength) {
+    // RemovingFromList() might clear last reference to |this|.
+    // Retain a temporary reference to keep from dying before returning.
+    kungFuDeathGrip = this;
+  }
+
   // If our length will decrease, notify the items that will be removed:
   for (PRUint32 i = aNewLength; i < oldLength; ++i) {
     if (mItems[i]) {
@@ -393,7 +400,9 @@ DOMSVGNumberList::MaybeRemoveItemFromAnimValListAt(PRUint32 aIndex)
 {
   NS_ABORT_IF_FALSE(!IsAnimValList(), "call from baseVal to animVal");
 
-  DOMSVGNumberList* animVal = mAList->mAnimVal;
+  // This needs to be a strong reference; otherwise, the RemovingFromList call
+  // below might drop the last reference to animVal before we're done with it.
+  nsRefPtr<DOMSVGNumberList> animVal = mAList->mAnimVal;
 
   if (!animVal || mAList->IsAnimating()) {
     // No animVal list wrapper, or animVal not a clone of baseVal

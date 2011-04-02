@@ -72,7 +72,7 @@
 
 #ifdef XP_WIN
 #include "nsLocalFileWin.h"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX)
 #include "nsLocalFileUnix.h"
 #elif defined(XP_OS2)
 #include "nsLocalFileOS2.h"

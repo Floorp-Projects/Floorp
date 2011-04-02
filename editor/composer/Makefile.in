@@ -42,11 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public
-
-ifndef MOZ_PLAINTEXT_EDITOR_ONLY
-DIRS		+= src
-endif
+DIRS		= public src
 
 ifdef ENABLE_TESTS
 DIRS		+= test

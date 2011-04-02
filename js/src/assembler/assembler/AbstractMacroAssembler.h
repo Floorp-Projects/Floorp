@@ -471,9 +471,10 @@ public:
         return m_assembler.oom();
     }
 
-    void* executableCopy(void* buffer)
+    void executableCopy(void* buffer)
     {
-        return m_assembler.executableCopy(buffer);
+        ASSERT(!oom());
+        m_assembler.executableCopy(buffer);
     }
 
     Label label()

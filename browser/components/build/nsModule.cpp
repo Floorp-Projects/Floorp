@@ -52,9 +52,7 @@
 #ifndef WINCE
 
 #include "nsProfileMigrator.h"
-#if !defined(XP_BEOS)
 #include "nsDogbertProfileMigrator.h"
-#endif
 #if !defined(XP_OS2)
 #include "nsOperaProfileMigrator.h"
 #endif
@@ -95,9 +93,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGNOMEShellService, Init)
 
 #ifndef WINCE
 
-#if !defined(XP_BEOS)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
-#endif
 #if !defined(XP_OS2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
 #endif
@@ -143,9 +139,7 @@ NS_DEFINE_NAMED_CID(NS_ICABPROFILEMIGRATOR_CID);
 #if !defined(XP_OS2)
 NS_DEFINE_NAMED_CID(NS_OPERAPROFILEMIGRATOR_CID);
 #endif
-#if !defined(XP_BEOS)
 NS_DEFINE_NAMED_CID(NS_DOGBERTPROFILEMIGRATOR_CID);
-#endif
 NS_DEFINE_NAMED_CID(NS_PHOENIXPROFILEMIGRATOR_CID);
 NS_DEFINE_NAMED_CID(NS_SEAMONKEYPROFILEMIGRATOR_CID);
 #endif /* WINCE */
@@ -175,9 +169,7 @@ static const mozilla::Module::CIDEntry kBrowserCIDs[] = {
 #if !defined(XP_OS2)
     { &kNS_OPERAPROFILEMIGRATOR_CID, false, NULL, nsOperaProfileMigratorConstructor },
 #endif
-#if !defined(XP_BEOS)
     { &kNS_DOGBERTPROFILEMIGRATOR_CID, false, NULL, nsDogbertProfileMigratorConstructor },
-#endif
     { &kNS_PHOENIXPROFILEMIGRATOR_CID, false, NULL, nsPhoenixProfileMigratorConstructor },
     { &kNS_SEAMONKEYPROFILEMIGRATOR_CID, false, NULL, nsSeamonkeyProfileMigratorConstructor },
 #endif /* WINCE */
@@ -221,9 +213,7 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 #if !defined(XP_OS2)
     { NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "opera", &kNS_OPERAPROFILEMIGRATOR_CID },
 #endif
-#if !defined(XP_BEOS)
     { NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "dogbert", &kNS_DOGBERTPROFILEMIGRATOR_CID },
-#endif
     { NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix", &kNS_PHOENIXPROFILEMIGRATOR_CID },
     { NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey", &kNS_SEAMONKEYPROFILEMIGRATOR_CID },
 #endif /* WINCE */

@@ -7,18 +7,10 @@ let newWin;
 function test() {
   waitForExplicitFinish();
 
-  newWin = 
-    window.openDialog(getBrowserURL(), "_blank", "all,dialog=no", "about:blank");
-
-  let onLoad = function() {
-    newWin.removeEventListener("load", onLoad, false);
-
+  newWindowWithTabView(onTabViewWindowLoaded, function(win) {
+    newWin = win;
     tabOne = newWin.gBrowser.addTab();
-
-    newWin.addEventListener("tabviewshown", onTabViewWindowLoaded, false);
-    newWin.TabView.toggle();
-  }
-  newWin.addEventListener("load", onLoad, false);
+  });
 }
 
 function onTabViewWindowLoaded() {
@@ -44,7 +36,7 @@ function onTabViewWindowLoaded() {
     
     let checkAndFinish = function() {
       // 4) check existence of stored group data for tab before finishing
-      let tabData = contentWindow.Storage.getTabData(tabItem.tab);
+      let tabData = contentWindow.Storage.getTabData(tabItem.tab, function () {});
       ok(tabData && contentWindow.TabItems.storageSanity(tabData) && tabData.groupID, 
          "Tab two has stored group data");
 

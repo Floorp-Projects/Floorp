@@ -44,6 +44,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xptcmd
+EXPORT_LIBRARY	= ../..
 MOZILLA_INTERNAL_API = 1
 
 #
@@ -77,13 +78,6 @@ FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(CPU),ALPHA)
-CPPSRCS 	:= xptcinvoke_alpha.cpp xptcstubs_alpha.cpp
-ASFILES		:= xptcinvoke_asm_alpha.s xptcstubs_asm_alpha.s
-AS		:= asaxp
-ASFLAGS		+= /I../../..public
-endif
-
 ifeq ($(TARGET_CPU),x86_64)
 ifndef GNU_CXX
 CPPSRCS 	:= xptcinvoke_x86_64.cpp xptcstubs_x86_64.cpp
@@ -111,8 +105,3 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+= -DEXPORT_XPTC_API -D_IMPL_NS_COM
 
 LOCAL_INCLUDES	+= -I$(srcdir)/../..
-
-GARBAGE += ../../$(LIBRARY) ../../$(FAKE_LIBRARY)
-
-libs:: $(LIBRARY)
-	$(INSTALL) $(LIBRARY) $(FAKE_LIBRARY) ../..

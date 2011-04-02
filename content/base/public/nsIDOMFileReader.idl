@@ -41,7 +41,7 @@ interface nsIDOMEventListener;
 interface nsIDOMBlob;
 interface nsIDOMFileError;
 
-[scriptable, uuid(71c32f16-ea5d-415e-9303-0db981c17bed)]
+[scriptable, uuid(f186170f-f07c-4f0b-9e3c-08f7dd496e74)]
 interface nsIDOMFileReader : nsISupports 
 {
   void readAsBinaryString(in nsIDOMBlob filedata);
@@ -57,9 +57,6 @@ interface nsIDOMFileReader : nsISupports
 
   readonly attribute DOMString result;
   readonly attribute nsIDOMFileError error;
-
-  // event handler attributes
-  attribute nsIDOMEventListener onloadend;
 };
 
 %{ C++

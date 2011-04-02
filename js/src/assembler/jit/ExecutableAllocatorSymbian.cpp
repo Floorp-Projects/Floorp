@@ -32,18 +32,18 @@ const size_t MOVING_MEM_PAGE_SIZE = 256 * 1024;
 
 namespace JSC {
 
-void ExecutableAllocator::intializePageSize()
+size_t ExecutableAllocator::determinePageSize()
 {
 #if WTF_CPU_ARMV5_OR_LOWER
     // The moving memory model (as used in ARMv5 and earlier platforms)
     // on Symbian OS limits the number of chunks for each process to 16. 
     // To mitigate this limitation increase the pagesize to 
     // allocate less of larger chunks.
-    ExecutableAllocator::pageSize = MOVING_MEM_PAGE_SIZE;
+    return MOVING_MEM_PAGE_SIZE;
 #else
     TInt page_size;
     UserHal::PageSizeInBytes(page_size);
-    ExecutableAllocator::pageSize = page_size;
+    return page_size;
 #endif
 }
 

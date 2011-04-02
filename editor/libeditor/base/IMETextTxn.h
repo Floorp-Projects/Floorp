@@ -51,6 +51,7 @@
 {0x9e, 0xa3, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}
 
 
+class nsIEditor;
 
 
 /**
@@ -73,7 +74,7 @@ public:
                   PRUint32 aReplaceLength,
                   nsIPrivateTextRangeList* aTextRangeList,
                   const nsAString& aString,
-                  nsWeakPtr aSelCon);
+                  nsIEditor* aEditor);
 
   IMETextTxn();
 
@@ -111,8 +112,8 @@ protected:
   /** the range list **/
   nsCOMPtr<nsIPrivateTextRangeList>	mRangeList;
 
-  /** the selection controller, which we'll need to get the selection */
-  nsWeakPtr mSelConWeak;  // use a weak reference
+  /** the editor, which is used to get the selection controller */
+  nsIEditor *mEditor;
 
   PRBool	mFixed;
 };

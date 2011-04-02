@@ -960,10 +960,6 @@ load_segments(int fd, size_t offset, void *header, soinfo *si)
                 goto fail;
             }
 
-            report_mapping(si->name, pbase,
-                           (len + PAGE_MASK) & (~PAGE_MASK),
-                           phdr->p_offset & (~PAGE_MASK));
-
             /* If 'len' didn't end on page boundary, and it's a writable
              * segment, zero-fill the rest. */
             if ((len & PAGE_MASK) && (phdr->p_flags & PF_W))
@@ -1076,6 +1072,9 @@ load_segments(int fd, size_t offset, void *header, soinfo *si)
     TRACE("[ %5d - Finish loading segments for '%s' @ 0x%08x. "
           "Total memory footprint: 0x%08x bytes ]\n", pid, si->name,
           (unsigned)si->base, si->size);
+
+    report_mapping(si->name, si->base, (si->size + PAGE_MASK) & (~PAGE_MASK), 0);
+
     return 0;
 
 fail:

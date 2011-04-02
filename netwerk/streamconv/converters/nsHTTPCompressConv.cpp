@@ -163,6 +163,8 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
             if (streamLen == 0)
                 return NS_OK;
 
+            // FALLTHROUGH
+
         case HTTP_COMPRESS_DEFLATE:
 
             if (mInpBuffer != NULL && streamLen > mInpBufferLen)

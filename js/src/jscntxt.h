@@ -45,13 +45,6 @@
  */
 #include <string.h>
 
-/* Gross special case for Gecko, which defines malloc/calloc/free. */
-#ifdef mozilla_mozalloc_macro_wrappers_h
-#  define JS_CNTXT_UNDEFD_MOZALLOC_WRAPPERS
-/* The "anti-header" */
-#  include "mozilla/mozalloc_undef_macro_wrappers.h"
-#endif
-
 #include "jsprvtd.h"
 #include "jsarena.h"
 #include "jsclist.h"
@@ -169,9 +162,9 @@ class ContextAllocPolicy
     JSContext *context() const { return cx; }
 
     /* Inline definitions below. */
-    void *malloc(size_t bytes);
-    void free(void *p);
-    void *realloc(void *p, size_t bytes);
+    void *malloc_(size_t bytes);
+    void free_(void *p);
+    void *realloc_(void *p, size_t bytes);
     void reportAllocOverflow() const;
 };
 
@@ -419,6 +412,8 @@ class StackSegment
 #ifdef DEBUG
     JS_REQUIRES_STACK bool contains(const JSStackFrame *fp) const;
 #endif
+
+    JSStackFrame *computeNextFrame(JSStackFrame *fp) const;
 };
 
 static const size_t VALUES_PER_STACK_SEGMENT = sizeof(StackSegment) / sizeof(Value);
@@ -461,7 +456,6 @@ class InvokeFrameGuard
     InvokeFrameGuard() : cx_(NULL) {}
     ~InvokeFrameGuard() { if (pushed()) pop(); }
     bool pushed() const { return cx_ != NULL; }
-    JSContext *pushedFrameContext() const { JS_ASSERT(pushed()); return cx_; }
     void pop();
     JSStackFrame *fp() const { return regs_.fp; }
 };
@@ -986,7 +980,7 @@ typedef void
 
 namespace js {
 
-typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> WrapperVector;
+typedef js::Vector<JSCompartment *, 0, js::SystemAllocPolicy> CompartmentVector;
 
 }
 
@@ -998,7 +992,7 @@ struct JSRuntime {
 #endif
 
     /* List of compartments (protected by the GC lock). */
-    js::WrapperVector compartments;
+    js::CompartmentVector compartments;
 
     /* Runtime state, synchronized by the stateChange/gcLock condvar/lock. */
     JSRuntimeState      state;
@@ -1248,11 +1242,6 @@ struct JSRuntime {
 # define ENUM_CACHE_METER(name)     ((void) 0)
 #endif
 
-#ifdef JS_DUMP_LOOP_STATS
-    /* Loop statistics, to trigger trace recording and compiling. */
-    JSBasicStats        loopStats;
-#endif
-
 #ifdef DEBUG
     /* Function invocation metering. */
     jsrefcount          inlineCalls;
@@ -1353,7 +1342,7 @@ struct JSRuntime {
      * Call the system malloc while checking for GC memory pressure and
      * reporting OOM error when cx is not null.
      */
-    void* malloc(size_t bytes, JSContext *cx = NULL) {
+    void* malloc_(size_t bytes, JSContext *cx = NULL) {
         updateMallocCounter(bytes);
         void *p = ::js_malloc(bytes);
         return JS_LIKELY(!!p) ? p : onOutOfMemory(NULL, bytes, cx);
@@ -1363,20 +1352,20 @@ struct JSRuntime {
      * Call the system calloc while checking for GC memory pressure and
      * reporting OOM error when cx is not null.
      */
-    void* calloc(size_t bytes, JSContext *cx = NULL) {
+    void* calloc_(size_t bytes, JSContext *cx = NULL) {
         updateMallocCounter(bytes);
         void *p = ::js_calloc(bytes);
         return JS_LIKELY(!!p) ? p : onOutOfMemory(reinterpret_cast<void *>(1), bytes, cx);
     }
 
-    void* realloc(void* p, size_t oldBytes, size_t newBytes, JSContext *cx = NULL) {
+    void* realloc_(void* p, size_t oldBytes, size_t newBytes, JSContext *cx = NULL) {
         JS_ASSERT(oldBytes < newBytes);
         updateMallocCounter(newBytes - oldBytes);
         void *p2 = ::js_realloc(p, newBytes);
         return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, newBytes, cx);
     }
 
-    void* realloc(void* p, size_t bytes, JSContext *cx = NULL) {
+    void* realloc_(void* p, size_t bytes, JSContext *cx = NULL) {
         /*
          * For compatibility we do not account for realloc that increases
          * previously allocated memory.
@@ -1387,7 +1376,13 @@ struct JSRuntime {
         return JS_LIKELY(!!p2) ? p2 : onOutOfMemory(p, bytes, cx);
     }
 
-    void free(void* p) { ::js_free(p); }
+    inline void free_(void* p) {
+        /* FIXME: Making this free in the background is buggy. Can it work? */
+        js::Foreground::free_(p);
+    }
+
+    JS_DECLARE_NEW_METHODS(malloc_, JS_ALWAYS_INLINE)
+    JS_DECLARE_DELETE_METHODS(free_, JS_ALWAYS_INLINE)
 
     bool isGCMallocLimitReached() const { return gcMallocBytes <= 0; }
 
@@ -1464,32 +1459,12 @@ struct JSArgumentFormatMap {
 };
 #endif
 
-/*
- * Key and entry types for the JSContext.resolvingTable hash table, typedef'd
- * here because all consumers need to see these declarations (and not just the
- * typedef names, as would be the case for an opaque pointer-to-typedef'd-type
- * declaration), along with cx->resolvingTable.
- */
-typedef struct JSResolvingKey {
-    JSObject            *obj;
-    jsid                id;
-} JSResolvingKey;
-
-typedef struct JSResolvingEntry {
-    JSDHashEntryHdr     hdr;
-    JSResolvingKey      key;
-    uint32              flags;
-} JSResolvingEntry;
-
-#define JSRESFLAG_LOOKUP        0x1     /* resolving id from lookup */
-#define JSRESFLAG_WATCH         0x2     /* resolving id from watch */
-#define JSRESOLVE_INFER         0xffff  /* infer bits from current bytecode */
-
 extern const JSDebugHooks js_NullDebugHooks;  /* defined in jsdbgapi.cpp */
 
 namespace js {
 
 class AutoGCRooter;
+struct AutoResolving;
 
 static inline bool
 OptionsHasXML(uint32 options)
@@ -1639,13 +1614,7 @@ struct JSContext
     /* Locale specific callbacks for string conversion. */
     JSLocaleCallbacks   *localeCallbacks;
 
-    /*
-     * cx->resolvingTable is non-null and non-empty if we are initializing
-     * standard classes lazily, or if we are otherwise recursing indirectly
-     * from js_LookupProperty through a Class.resolve hook.  It is used to
-     * limit runaway recursion (see jsapi.c and jsobj.c).
-     */
-    JSDHashTable        *resolvingTable;
+    js::AutoResolving   *resolvingList;
 
     /*
      * True if generating an error, to prevent runaway recursion.
@@ -1728,9 +1697,6 @@ struct JSContext
     /* Branch callback. */
     JSOperationCallback operationCallback;
 
-    /* Interpreter activation count. */
-    uintN               interpLevel;
-
     /* Client opaque pointers. */
     void                *data;
     void                *data2;
@@ -1772,20 +1738,19 @@ struct JSContext
 
     inline js::RegExpStatics *regExpStatics();
 
+  private:
     /* Add the given segment to the list as the new active segment. */
     void pushSegmentAndFrame(js::StackSegment *newseg, JSFrameRegs &regs);
 
     /* Remove the active segment and make the next segment active. */
     void popSegmentAndFrame();
 
+  public:
     /* Mark the top segment as suspended, without pushing a new one. */
     void saveActiveSegment();
 
     /* Undoes calls to suspendActiveSegment. */
     void restoreSegment();
-
-    /* Get the frame whose prev() is fp, which may be in any segment. */
-    inline JSStackFrame *computeNextFrame(JSStackFrame *fp);
 
     /*
      * Perform a linear search of all frames in all segments in the given context
@@ -2017,81 +1982,46 @@ struct JSContext
 
 #ifdef JS_THREADSAFE
     /*
-     * When non-null JSContext::free delegates the job to the background
+     * When non-null JSContext::free_ delegates the job to the background
      * thread.
      */
     js::GCHelperThread *gcBackgroundFree;
 #endif
 
-    inline void* malloc(size_t bytes) {
-        return runtime->malloc(bytes, this);
+    inline void* malloc_(size_t bytes) {
+        return runtime->malloc_(bytes, this);
     }
 
     inline void* mallocNoReport(size_t bytes) {
         JS_ASSERT(bytes != 0);
-        return runtime->malloc(bytes, NULL);
+        return runtime->malloc_(bytes, NULL);
     }
 
-    inline void* calloc(size_t bytes) {
+    inline void* calloc_(size_t bytes) {
         JS_ASSERT(bytes != 0);
-        return runtime->calloc(bytes, this);
+        return runtime->calloc_(bytes, this);
     }
 
-    inline void* realloc(void* p, size_t bytes) {
-        return runtime->realloc(p, bytes, this);
+    inline void* realloc_(void* p, size_t bytes) {
+        return runtime->realloc_(p, bytes, this);
     }
 
-    inline void* realloc(void* p, size_t oldBytes, size_t newBytes) {
-        return runtime->realloc(p, oldBytes, newBytes, this);
+    inline void* realloc_(void* p, size_t oldBytes, size_t newBytes) {
+        return runtime->realloc_(p, oldBytes, newBytes, this);
     }
 
-    inline void free(void* p) {
+    inline void free_(void* p) {
 #ifdef JS_THREADSAFE
         if (gcBackgroundFree) {
             gcBackgroundFree->freeLater(p);
             return;
         }
 #endif
-        runtime->free(p);
+        runtime->free_(p);
     }
 
-    /*
-     * In the common case that we'd like to allocate the memory for an object
-     * with cx->malloc/free, we cannot use overloaded C++ operators (no
-     * placement delete).  Factor the common workaround into one place.
-     */
-#define CREATE_BODY(parms)                                                    \
-    void *memory = this->malloc(sizeof(T));                                   \
-    if (!memory)                                                              \
-        return NULL;                                                          \
-    return new(memory) T parms;
-
-    template <class T>
-    JS_ALWAYS_INLINE T *create() {
-        CREATE_BODY(())
-    }
-
-    template <class T, class P1>
-    JS_ALWAYS_INLINE T *create(const P1 &p1) {
-        CREATE_BODY((p1))
-    }
-
-    template <class T, class P1, class P2>
-    JS_ALWAYS_INLINE T *create(const P1 &p1, const P2 &p2) {
-        CREATE_BODY((p1, p2))
-    }
-
-    template <class T, class P1, class P2, class P3>
-    JS_ALWAYS_INLINE T *create(const P1 &p1, const P2 &p2, const P3 &p3) {
-        CREATE_BODY((p1, p2, p3))
-    }
-#undef CREATE_BODY
-
-    template <class T>
-    JS_ALWAYS_INLINE void destroy(T *p) {
-        p->~T();
-        this->free(p);
-    }
+    JS_DECLARE_NEW_METHODS(malloc_, inline)
+    JS_DECLARE_DELETE_METHODS(free_, inline)
 
     void purge();
 
@@ -2181,6 +2111,42 @@ FrameAtomBase(JSContext *cx, JSStackFrame *fp)
 }
 
 namespace js {
+
+struct AutoResolving {
+  public:
+    enum Kind {
+        LOOKUP,
+        WATCH
+    };
+
+    AutoResolving(JSContext *cx, JSObject *obj, jsid id, Kind kind = LOOKUP
+                  JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : context(cx), object(obj), id(id), kind(kind), link(cx->resolvingList)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+        JS_ASSERT(obj);
+        cx->resolvingList = this;
+    }
+
+    ~AutoResolving() {
+        JS_ASSERT(context->resolvingList == this);
+        context->resolvingList = link;
+    }
+
+    bool alreadyStarted() const {
+        return link && alreadyStartedSlow();
+    }
+
+  private:
+    bool alreadyStartedSlow() const;
+
+    JSContext           *const context;
+    JSObject            *const object;
+    jsid                const id;
+    Kind                const kind;
+    AutoResolving       *const link;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 class AutoGCRooter {
   public:
@@ -2721,7 +2687,7 @@ class AutoReleasePtr {
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
     }
-    ~AutoReleasePtr() { cx->free(ptr); }
+    ~AutoReleasePtr() { cx->free_(ptr); }
 };
 
 /*
@@ -2743,10 +2709,10 @@ class AutoReleaseNullablePtr {
     }
     void reset(void *ptr2) {
         if (ptr)
-            cx->free(ptr);
+            cx->free_(ptr);
         ptr = ptr2;
     }
-    ~AutoReleaseNullablePtr() { if (ptr) cx->free(ptr); }
+    ~AutoReleaseNullablePtr() { if (ptr) cx->free_(ptr); }
 };
 
 class AutoLocalNameArray {
@@ -2979,17 +2945,6 @@ extern JS_FRIEND_API(JSContext *)
 js_NextActiveContext(JSRuntime *, JSContext *);
 
 /*
- * Class.resolve and watchpoint recursion damping machinery.
- */
-extern JSBool
-js_StartResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
-                  JSResolvingEntry **entryp);
-
-extern void
-js_StopResolving(JSContext *cx, JSResolvingKey *key, uint32 flag,
-                 JSResolvingEntry *entry, uint32 generation);
-
-/*
  * Report an exception, which is currently realized as a printf-style format
  * string and its arguments.
  */
@@ -3204,21 +3159,21 @@ js_RegenerateShapeForGC(JSRuntime *rt)
 namespace js {
 
 inline void *
-ContextAllocPolicy::malloc(size_t bytes)
+ContextAllocPolicy::malloc_(size_t bytes)
 {
-    return cx->malloc(bytes);
+    return cx->malloc_(bytes);
 }
 
 inline void
-ContextAllocPolicy::free(void *p)
+ContextAllocPolicy::free_(void *p)
 {
-    cx->free(p);
+    cx->free_(p);
 }
 
 inline void *
-ContextAllocPolicy::realloc(void *p, size_t bytes)
+ContextAllocPolicy::realloc_(void *p, size_t bytes)
 {
-    return cx->realloc(p, bytes);
+    return cx->realloc_(p, bytes);
 }
 
 inline void
@@ -3241,6 +3196,9 @@ class AutoVectorRooter : protected AutoGCRooter
     size_t length() const { return vector.length(); }
 
     bool append(const T &v) { return vector.append(v); }
+
+    /* For use when space has already been reserved. */
+    void infallibleAppend(const T &v) { vector.infallibleAppend(v); }
 
     void popBack() { vector.popBack(); }
 
@@ -3339,10 +3297,6 @@ NewIdArray(JSContext *cx, jsint length);
 #ifdef _MSC_VER
 #pragma warning(pop)
 #pragma warning(pop)
-#endif
-
-#ifdef JS_CNTXT_UNDEFD_MOZALLOC_WRAPPERS
-#  include "mozilla/mozalloc_macro_wrappers.h"
 #endif
 
 #endif /* jscntxt_h___ */

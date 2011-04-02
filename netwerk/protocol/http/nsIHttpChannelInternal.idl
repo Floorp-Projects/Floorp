@@ -37,6 +37,12 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include "nsTArray.h"
+class nsCString;
+%}
+[ptr] native StringArray(nsTArray<nsCString>);
+
 interface nsIURI;
 interface nsIProxyInfo;
 
@@ -45,7 +51,7 @@ interface nsIProxyInfo;
  * using any feature exposed by this interface, be aware that this interface 
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(9fb2a161-d075-4bf2-b07a-26bac650cc81)]
+[scriptable, uuid(44e35ead-6656-4f9e-b51d-ebaf1bee6e2e)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -93,4 +99,9 @@ interface nsIHttpChannelInternal : nsISupports
      * Lets externalhandler tell the channel it is open on behalf of a download
      */
     attribute boolean channelIsForDownload;
+
+    /**
+     * Transfer chain of redirected cache-keys 
+     */
+    [noscript] void setCacheKeysRedirectChain(in StringArray cacheKeys);
 };

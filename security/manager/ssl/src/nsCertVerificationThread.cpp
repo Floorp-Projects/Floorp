@@ -36,9 +36,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMemory.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsCertVerificationThread.h"
+
+using namespace mozilla;
 
 nsCertVerificationThread *nsCertVerificationThread::verification_thread_singleton;
 
@@ -115,10 +116,10 @@ nsresult nsCertVerificationThread::addJob(nsBaseVerificationJob *aJob)
   if (!verification_thread_singleton->mThreadHandle)
     return NS_ERROR_OUT_OF_MEMORY;
 
-  nsAutoLock threadLock(verification_thread_singleton->mMutex);
+  MutexAutoLock threadLock(verification_thread_singleton->mMutex);
 
   verification_thread_singleton->mJobQ.Push(aJob);
-  PR_NotifyAllCondVar(verification_thread_singleton->mCond);
+  verification_thread_singleton->mCond.NotifyAll();
   
   return NS_OK;
 }
@@ -130,12 +131,12 @@ void nsCertVerificationThread::Run(void)
     nsBaseVerificationJob *job = nsnull;
 
     {
-      nsAutoLock threadLock(verification_thread_singleton->mMutex);
+      MutexAutoLock threadLock(verification_thread_singleton->mMutex);
       
       while (!mExitRequested && (0 == verification_thread_singleton->mJobQ.GetSize())) {
         // no work to do ? let's wait a moment
 
-        PR_WaitCondVar(mCond, PR_INTERVAL_NO_TIMEOUT);
+        mCond.Wait();
       }
       
       if (mExitRequested)
@@ -152,7 +153,7 @@ void nsCertVerificationThread::Run(void)
   }
   
   {
-    nsAutoLock threadLock(verification_thread_singleton->mMutex);
+    MutexAutoLock threadLock(verification_thread_singleton->mMutex);
 
     while (verification_thread_singleton->mJobQ.GetSize()) {
       nsCertVerificationJob *job = 

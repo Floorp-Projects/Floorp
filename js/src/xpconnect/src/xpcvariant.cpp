@@ -63,6 +63,11 @@ XPCVariant::XPCVariant(XPCCallContext& ccx, jsval aJSVal)
     nsVariant::Initialize(&mData);
     if(!JSVAL_IS_PRIMITIVE(mJSVal))
     {
+        JSObject *obj = JSVAL_TO_OBJECT(mJSVal);
+        OBJ_TO_INNER_OBJECT(ccx, obj);
+
+        mJSVal = OBJECT_TO_JSVAL(obj);
+
         // If the incoming object is an XPCWrappedNative, then it could be a
         // double-wrapped object, and we should return the double-wrapped
         // object back out to script.

@@ -284,7 +284,7 @@ namespace nanojit
             void* vtuneHandle;
             #endif
 
-            Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, AvmCore* core, LogControl* logc, const Config& config);
+            Assembler(CodeAlloc& codeAlloc, Allocator& dataAlloc, Allocator& alloc, LogControl* logc, const Config& config);
 
             void        compile(Fragment *frag, Allocator& alloc, bool optimize
                                 verbose_only(, LInsPrinter*));
@@ -298,9 +298,6 @@ namespace nanojit
             void        releaseRegisters();
             void        patch(GuardRecord *lr);
             void        patch(SideExit *exit);
-#ifdef NANOJIT_IA32
-            void        patch(SideExit *exit, SwitchInfo* si);
-#endif
             AssmError   error()               { return _err; }
             void        setError(AssmError e) { _err = e; }
             void        cleanupAfterError();
@@ -486,24 +483,22 @@ namespace nanojit
             Register    asm_binop_rhs_reg(LIns* ins);
             NIns*       asm_branch(bool branchOnFalse, LIns* cond, NIns* targ);
             NIns*       asm_branch_ov(LOpcode op, NIns* targ);
-            void        asm_switch(LIns* ins, NIns* target);
             void        asm_jtbl(LIns* ins, NIns** table);
             void        asm_insert_random_nop();
-            void        emitJumpTable(SwitchInfo* si, NIns* target);
             void        assignSavedRegs();
             void        reserveSavedRegs();
             void        assignParamRegs();
             void        handleLoopCarriedExprs(InsList& pending_lives);
 
             // platform specific implementation (see NativeXXX.cpp file)
-            void        nInit(AvmCore *);
+            void        nInit();
             void        nBeginAssembly();
             Register    nRegisterAllocFromSet(RegisterMask set);
             void        nRegisterResetAll(RegAlloc& a);
             void        nPatchBranch(NIns* branch, NIns* location);
             void        nFragExit(LIns* guard);
 
-            static RegisterMask nHints[LIR_sentinel+1];
+            RegisterMask nHints[LIR_sentinel+1];
             RegisterMask nHint(LIns* ins);
 
             // A special entry for hints[];  if an opcode has this value, we call

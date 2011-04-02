@@ -12,3 +12,13 @@ host_pathsub.o
 # This is a copy of nspr's config/make-system-wrappers.pl.
 make-system-wrappers.pl
 system_wrappers_js
+
+# Ignore detritus left lying around by editing tools.
+*~
+.#*
+#*#
+*.orig
+*.rej
+
+# Ignore "compiled" python files
+*.pyc

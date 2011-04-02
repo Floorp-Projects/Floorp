@@ -42,9 +42,9 @@
 #include <stdlib.h>
 
 #include "prtypes.h"
+#include "prinrval.h"
 #include "prlock.h"
 #include "nscore.h"
-#include "nsAutoLock.h"
 
 #include "nsDebugHelpWin32.h"
 #include "nsTraceMallocCallbacks.h"

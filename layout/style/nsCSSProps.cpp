@@ -60,8 +60,8 @@ extern const char* const kCSSRawProperties[];
 
 // define an array of all CSS properties
 const char* const kCSSRawProperties[] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
-                 kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
+#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
+                 stylestruct_, stylestructoffset_, animtype_)                \
   #name_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
@@ -734,6 +734,8 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_eventreerow, nsILookAndFeel::eColor__moz_eventreerow,
   eCSSKeyword__moz_field, nsILookAndFeel::eColor__moz_field,
   eCSSKeyword__moz_fieldtext, nsILookAndFeel::eColor__moz_fieldtext,
+  eCSSKeyword__moz_default_background_color, NS_COLOR_MOZ_DEFAULT_BACKGROUND_COLOR,
+  eCSSKeyword__moz_default_color, NS_COLOR_MOZ_DEFAULT_COLOR,
   eCSSKeyword__moz_dialog, nsILookAndFeel::eColor__moz_dialog,
   eCSSKeyword__moz_dialogtext, nsILookAndFeel::eColor__moz_dialogtext,
   eCSSKeyword__moz_dragtargetzone, nsILookAndFeel::eColor__moz_dragtargetzone,
@@ -830,9 +832,6 @@ const PRInt32 nsCSSProps::kDisplayKTable[] = {
   eCSSKeyword_block,              NS_STYLE_DISPLAY_BLOCK,
   eCSSKeyword_inline_block,       NS_STYLE_DISPLAY_INLINE_BLOCK,
   eCSSKeyword_list_item,          NS_STYLE_DISPLAY_LIST_ITEM,
-  eCSSKeyword__moz_run_in,        NS_STYLE_DISPLAY_RUN_IN,
-  eCSSKeyword__moz_compact,       NS_STYLE_DISPLAY_COMPACT,
-  eCSSKeyword__moz_marker,        NS_STYLE_DISPLAY_MARKER,
   eCSSKeyword_table,              NS_STYLE_DISPLAY_TABLE,
   eCSSKeyword_inline_table,       NS_STYLE_DISPLAY_INLINE_TABLE,
   eCSSKeyword_table_row_group,    NS_STYLE_DISPLAY_TABLE_ROW_GROUP,
@@ -1239,6 +1238,16 @@ const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const PRInt32 nsCSSProps::kTextDecorationStyleKTable[] = {
+  eCSSKeyword__moz_none, NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+  eCSSKeyword_solid, NS_STYLE_TEXT_DECORATION_STYLE_SOLID,
+  eCSSKeyword_double, NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE,
+  eCSSKeyword_dotted, NS_STYLE_TEXT_DECORATION_STYLE_DOTTED,
+  eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED,
+  eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kTextTransformKTable[] = {
   eCSSKeyword_none, NS_STYLE_TEXT_TRANSFORM_NONE,
   eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE,
@@ -1518,8 +1527,8 @@ nsCSSProps::ValueToKeyword(PRInt32 aValue, const PRInt32 aTable[])
 
 /* static */ const PRInt32* const
 nsCSSProps::kKeywordTableTable[eCSSProperty_COUNT_no_shorthands] = {
-  #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,          \
-                   kwtable_, stylestruct_, stylestructoffset_, animtype_)      \
+  #define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,     \
+                   stylestruct_, stylestructoffset_, animtype_)              \
     kwtable_,
   #include "nsCSSPropList.h"
   #undef CSS_PROP
@@ -1563,8 +1572,8 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
     // Note that this uses the special BackendOnly style struct ID
     // (which does need to be valid for storing in the
     // nsCSSCompressedDataBlock::mStyleBits bitfield).
-    #define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,        \
-                     kwtable_, stylestruct_, stylestructoffset_, animtype_)    \
+    #define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,   \
+                     stylestruct_, stylestructoffset_, animtype_)            \
         eStyleStruct_##stylestruct_,
 
     #include "nsCSSPropList.h"
@@ -1574,8 +1583,8 @@ const nsStyleStructID nsCSSProps::kSIDTable[eCSSProperty_COUNT_no_shorthands] = 
 
 const nsStyleAnimType
 nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
-                 kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
+#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
+                 stylestruct_, stylestructoffset_, animtype_)                \
   animtype_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
@@ -1583,16 +1592,16 @@ nsCSSProps::kAnimTypeTable[eCSSProperty_COUNT_no_shorthands] = {
 
 const ptrdiff_t
 nsCSSProps::kStyleStructOffsetTable[eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
-                 kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
+#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
+                 stylestruct_, stylestructoffset_, animtype_)                \
   stylestructoffset_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
 };
 
 const PRUint32 nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
-#define CSS_PROP(name_, id_, method_, flags_, datastruct_, member_,            \
-                 kwtable_, stylestruct_, stylestructoffset_, animtype_)        \
+#define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,       \
+                 stylestruct_, stylestructoffset_, animtype_)                \
   flags_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP
@@ -1611,7 +1620,7 @@ static const nsCSSProperty gBorderRadiusSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozOutlineRadiusSubpropTable[] = {
+static const nsCSSProperty gOutlineRadiusSubpropTable[] = {
   // Code relies on these being in topleft-topright-bottomright-bottomleft
   // order.
   eCSSProperty__moz_outline_radius_topLeft,
@@ -1694,7 +1703,7 @@ static const nsCSSProperty gBorderColorSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderEndColorSubpropTable[] = {
+static const nsCSSProperty gBorderEndColorSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_end_color_value,
   eCSSProperty_border_right_color_ltr_source,
@@ -1718,7 +1727,7 @@ static const nsCSSProperty gBorderRightColorSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderStartColorSubpropTable[] = {
+static const nsCSSProperty gBorderStartColorSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_start_color_value,
   eCSSProperty_border_left_color_ltr_source,
@@ -1726,7 +1735,7 @@ static const nsCSSProperty gMozBorderStartColorSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderEndSubpropTable[] = {
+static const nsCSSProperty gBorderEndSubpropTable[] = {
   // nsCSSDeclaration.cpp output the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_end_width_value,
@@ -1774,7 +1783,7 @@ static const nsCSSProperty gBorderRightSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderStartSubpropTable[] = {
+static const nsCSSProperty gBorderStartSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty_border_start_width_value,
@@ -1820,7 +1829,7 @@ static const nsCSSProperty gBorderRightStyleSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderStartStyleSubpropTable[] = {
+static const nsCSSProperty gBorderStartStyleSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_start_style_value,
   eCSSProperty_border_left_style_ltr_source,
@@ -1828,7 +1837,7 @@ static const nsCSSProperty gMozBorderStartStyleSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderEndStyleSubpropTable[] = {
+static const nsCSSProperty gBorderEndStyleSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_end_style_value,
   eCSSProperty_border_right_style_ltr_source,
@@ -1875,7 +1884,7 @@ static const nsCSSProperty gBorderRightWidthSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderStartWidthSubpropTable[] = {
+static const nsCSSProperty gBorderStartWidthSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_start_width_value,
   eCSSProperty_border_left_width_ltr_source,
@@ -1883,7 +1892,7 @@ static const nsCSSProperty gMozBorderStartWidthSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozBorderEndWidthSubpropTable[] = {
+static const nsCSSProperty gBorderEndWidthSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_border_end_width_value,
   eCSSProperty_border_right_width_ltr_source,
@@ -1949,7 +1958,7 @@ static const nsCSSProperty gMarginRightSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozMarginStartSubpropTable[] = {
+static const nsCSSProperty gMarginStartSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_margin_start_value,
   eCSSProperty_margin_left_ltr_source,
@@ -1957,7 +1966,7 @@ static const nsCSSProperty gMozMarginStartSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozMarginEndSubpropTable[] = {
+static const nsCSSProperty gMarginEndSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_margin_end_value,
   eCSSProperty_margin_right_ltr_source,
@@ -1975,7 +1984,7 @@ static const nsCSSProperty gOutlineSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozColumnRuleSubpropTable[] = {
+static const nsCSSProperty gColumnRuleSubpropTable[] = {
   // nsCSSDeclaration.cpp outputs the subproperties in this order.
   // It also depends on the color being third.
   eCSSProperty__moz_column_rule_width,
@@ -2020,7 +2029,7 @@ static const nsCSSProperty gPaddingRightSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozPaddingStartSubpropTable[] = {
+static const nsCSSProperty gPaddingStartSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_padding_start_value,
   eCSSProperty_padding_left_ltr_source,
@@ -2028,7 +2037,7 @@ static const nsCSSProperty gMozPaddingStartSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozPaddingEndSubpropTable[] = {
+static const nsCSSProperty gPaddingEndSubpropTable[] = {
   // nsCSSParser::ParseDirectionalBoxProperty depends on this order
   eCSSProperty_padding_end_value,
   eCSSProperty_padding_right_ltr_source,
@@ -2042,7 +2051,7 @@ static const nsCSSProperty gPauseSubpropTable[] = {
   eCSSProperty_UNKNOWN
 };
 
-static const nsCSSProperty gMozTransitionSubpropTable[] = {
+static const nsCSSProperty gTransitionSubpropTable[] = {
   eCSSProperty_transition_property,
   eCSSProperty_transition_duration,
   eCSSProperty_transition_timing_function,
@@ -2059,7 +2068,206 @@ static const nsCSSProperty gMarkerSubpropTable[] = {
 
 const nsCSSProperty *const
 nsCSSProps::kSubpropertyTable[eCSSProperty_COUNT - eCSSProperty_COUNT_no_shorthands] = {
-#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) g##method_##SubpropTable,
+#define CSS_PROP_DOMPROP_PREFIXED(prop_) prop_
+// Need an extra level of macro nesting to force expansion of method_
+// params before they get pasted.
+#define NSCSSPROPS_INNER_MACRO(method_) g##method_##SubpropTable,
+#define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) NSCSSPROPS_INNER_MACRO(method_)
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
+#undef NSCSSPROPS_INNER_MACRO
+#undef CSS_PROP_DOMPROP_PREFIXED
+};
+
+
+#define ENUM_DATA_FOR_PROPERTY(name_, id_, method_, flags_, parsevariant_,   \
+                               kwtable_, stylestructoffset_, animtype_)      \
+  ePropertyIndex_for_##id_,
+
+// The order of these enums must match the g*Flags arrays in nsRuleNode.cpp.
+
+enum FontCheckCounter {
+  #define CSS_PROP_FONT ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_FONT
+  ePropertyCount_for_Font
+};
+
+enum DisplayCheckCounter {
+  #define CSS_PROP_DISPLAY ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_DISPLAY
+  ePropertyCount_for_Display
+};
+
+enum VisibilityCheckCounter {
+  #define CSS_PROP_VISIBILITY ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_VISIBILITY
+  ePropertyCount_for_Visibility
+};
+
+enum MarginCheckCounter {
+  #define CSS_PROP_MARGIN ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_MARGIN
+  ePropertyCount_for_Margin
+};
+
+enum BorderCheckCounter {
+  #define CSS_PROP_BORDER ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_BORDER
+  ePropertyCount_for_Border
+};
+
+enum PaddingCheckCounter {
+  #define CSS_PROP_PADDING ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_PADDING
+  ePropertyCount_for_Padding
+};
+
+enum OutlineCheckCounter {
+  #define CSS_PROP_OUTLINE ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_OUTLINE
+  ePropertyCount_for_Outline
+};
+
+enum ListCheckCounter {
+  #define CSS_PROP_LIST ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_LIST
+  ePropertyCount_for_List
+};
+
+enum ColorCheckCounter {
+  #define CSS_PROP_COLOR ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_COLOR
+  ePropertyCount_for_Color
+};
+
+enum BackgroundCheckCounter {
+  #define CSS_PROP_BACKGROUND ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_BACKGROUND
+  ePropertyCount_for_Background
+};
+
+enum PositionCheckCounter {
+  #define CSS_PROP_POSITION ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_POSITION
+  ePropertyCount_for_Position
+};
+
+enum TableCheckCounter {
+  #define CSS_PROP_TABLE ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_TABLE
+  ePropertyCount_for_Table
+};
+
+enum TableBorderCheckCounter {
+  #define CSS_PROP_TABLEBORDER ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_TABLEBORDER
+  ePropertyCount_for_TableBorder
+};
+
+enum ContentCheckCounter {
+  #define CSS_PROP_CONTENT ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_CONTENT
+  ePropertyCount_for_Content
+};
+
+enum QuotesCheckCounter {
+  #define CSS_PROP_QUOTES ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_QUOTES
+  ePropertyCount_for_Quotes
+};
+
+enum TextCheckCounter {
+  #define CSS_PROP_TEXT ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_TEXT
+  ePropertyCount_for_Text
+};
+
+enum TextResetCheckCounter {
+  #define CSS_PROP_TEXTRESET ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_TEXTRESET
+  ePropertyCount_for_TextReset
+};
+
+enum UserInterfaceCheckCounter {
+  #define CSS_PROP_USERINTERFACE ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_USERINTERFACE
+  ePropertyCount_for_UserInterface
+};
+
+enum UIResetCheckCounter {
+  #define CSS_PROP_UIRESET ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_UIRESET
+  ePropertyCount_for_UIReset
+};
+
+enum XULCheckCounter {
+  #define CSS_PROP_XUL ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_XUL
+  ePropertyCount_for_XUL
+};
+
+enum SVGCheckCounter {
+  #define CSS_PROP_SVG ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_SVG
+  ePropertyCount_for_SVG
+};
+
+enum SVGResetCheckCounter {
+  #define CSS_PROP_SVGRESET ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_SVGRESET
+  ePropertyCount_for_SVGReset
+};
+
+enum ColumnCheckCounter {
+  #define CSS_PROP_COLUMN ENUM_DATA_FOR_PROPERTY
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP_COLUMN
+  ePropertyCount_for_Column
+};
+
+#undef ENUM_DATA_FOR_PROPERTY
+
+/* static */ const size_t
+nsCSSProps::gPropertyCountInStruct[nsStyleStructID_Length] = {
+  #define STYLE_STRUCT(name, checkdata_cb, ctor_args) \
+    ePropertyCount_for_##name,
+  #include "nsStyleStructList.h"
+  #undef STYLE_STRUCT
+};
+
+/* static */ const size_t
+nsCSSProps::gPropertyIndexInStruct[eCSSProperty_COUNT_no_shorthands] = {
+
+  #define CSS_PROP_BACKENDONLY(name_, id_, method_, flags_, parsevariant_,    \
+                               kwtable_)                                      \
+      size_t(-1),
+  #define CSS_PROP(name_, id_, method_, flags_, parsevariant_, kwtable_,      \
+                   stylestruct_, stylestructoffset_, animtype_)               \
+    ePropertyIndex_for_##id_,
+  #include "nsCSSPropList.h"
+  #undef CSS_PROP
+  #undef CSS_PROP_BACKENDONLY
+
 };

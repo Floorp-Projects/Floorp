@@ -2,6 +2,7 @@
  * jdapistd.c
  *
  * Copyright (C) 1994-1996, Thomas G. Lane.
+ * Copyright (C) 2010, D. R. Commander.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -17,6 +18,7 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
+#include "jpegcomp.h"
 
 
 /* Forward declarations */
@@ -202,7 +204,7 @@ jpeg_read_raw_data (j_decompress_ptr cinfo, JSAMPIMAGE data,
   }
 
   /* Verify that at least one iMCU row can be returned. */
-  lines_per_iMCU_row = cinfo->max_v_samp_factor * cinfo->min_DCT_scaled_size;
+  lines_per_iMCU_row = cinfo->max_v_samp_factor * cinfo->_min_DCT_scaled_size;
   if (max_lines < lines_per_iMCU_row)
     ERREXIT(cinfo, JERR_BUFFER_SIZE);
 

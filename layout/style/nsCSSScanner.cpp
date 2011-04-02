@@ -195,13 +195,25 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_Ident:
     case eCSSToken_WhiteSpace:
     case eCSSToken_Function:
-    case eCSSToken_URL:
-    case eCSSToken_InvalidURL:
     case eCSSToken_HTMLComment:
     case eCSSToken_URange:
       aBuffer.Append(mIdent);
       if (mType == eCSSToken_Function)
         aBuffer.Append(PRUnichar('('));
+      break;
+    case eCSSToken_URL:
+    case eCSSToken_Bad_URL:
+      aBuffer.AppendLiteral("url(");
+      if (mSymbol != PRUnichar(0)) {
+        aBuffer.Append(mSymbol);
+      }
+      aBuffer.Append(mIdent);
+      if (mSymbol != PRUnichar(0)) {
+        aBuffer.Append(mSymbol);
+      }
+      if (mType == eCSSToken_URL) {
+        aBuffer.Append(PRUnichar(')'));
+      }
       break;
     case eCSSToken_Number:
       if (mIntegerValid) {
@@ -251,7 +263,7 @@ nsCSSToken::AppendToString(nsString& aBuffer)
     case eCSSToken_Containsmatch:
       aBuffer.AppendLiteral("*=");
       break;
-    case eCSSToken_Error:
+    case eCSSToken_Bad_String:
       aBuffer.Append(mSymbol);
       aBuffer.Append(mIdent);
       break;
@@ -732,6 +744,20 @@ nsCSSScanner::LookAhead(PRUnichar aChar)
   return PR_FALSE;
 }
 
+PRBool
+nsCSSScanner::LookAheadOrEOF(PRUnichar aChar)
+{
+  PRInt32 ch = Read();
+  if (ch < 0) {
+    return PR_TRUE;
+  }
+  if (ch == aChar) {
+    return PR_TRUE;
+  }
+  Pushback(ch);
+  return PR_FALSE;
+}
+
 void
 nsCSSScanner::EatWhiteSpace()
 {
@@ -888,6 +914,8 @@ nsCSSScanner::Next(nsCSSToken& aToken)
 PRBool
 nsCSSScanner::NextURL(nsCSSToken& aToken)
 {
+  EatWhiteSpace();
+
   PRInt32 ch = Read();
   if (ch < 0) {
     return PR_FALSE;
@@ -895,14 +923,26 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
 
   // STRING
   if ((ch == '"') || (ch == '\'')) {
-    return ParseString(ch, aToken);
-  }
+#ifdef DEBUG
+    PRBool ok =
+#endif
+      ParseString(ch, aToken);
+    NS_ABORT_IF_FALSE(ok, "ParseString should never fail, "
+                          "since there's always something read");
 
-  // WS
-  if (IsWhitespace(ch)) {
-    aToken.mType = eCSSToken_WhiteSpace;
-    aToken.mIdent.Assign(PRUnichar(ch));
-    EatWhiteSpace();
+    NS_ABORT_IF_FALSE(aToken.mType == eCSSToken_String ||
+                      aToken.mType == eCSSToken_Bad_String,
+                      "unexpected token type");
+    if (NS_LIKELY(aToken.mType == eCSSToken_String)) {
+      EatWhiteSpace();
+      if (LookAheadOrEOF(')')) {
+        aToken.mType = eCSSToken_URL;
+      } else {
+        aToken.mType = eCSSToken_Bad_URL;
+      }
+    } else {
+      aToken.mType = eCSSToken_Bad_URL;
+    }
     return PR_TRUE;
   }
 
@@ -911,12 +951,13 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
   // Because of this the normal rules for tokenizing the input don't
   // apply very well. To simplify the parser and relax some of the
   // requirements on the scanner we parse url's here. If we find a
-  // malformed URL then we emit a token of type "InvalidURL" so that
+  // malformed URL then we emit a token of type "Bad_URL" so that
   // the CSS1 parser can ignore the invalid input.  The parser must
-  // treat an InvalidURL token like a Function token, and process
+  // treat a Bad_URL token like a Function token, and process
   // tokens until a matching parenthesis.
 
-  aToken.mType = eCSSToken_InvalidURL;
+  aToken.mType = eCSSToken_Bad_URL;
+  aToken.mSymbol = PRUnichar(0);
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
 
@@ -929,26 +970,19 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     if (ch < 0) break;
     if (ch == CSS_ESCAPE) {
       ParseAndAppendEscape(ident);
-    } else if ((ch == '"') || (ch == '\'') || (ch == '(')) {
+    } else if (IsWhitespace(ch)) {
+      // Whitespace is allowed at the end of the URL
+      EatWhiteSpace();
+      // Consume the close paren if we have it; if not we're an invalid URL.
+      ok = LookAheadOrEOF(')');
+      break;
+    } else if (ch == '"' || ch == '\'' || ch == '(' || ch < PRUnichar(' ')) {
       // This is an invalid URL spec
       ok = PR_FALSE;
       Pushback(ch); // push it back so the parser can match tokens and
                     // then closing parenthesis
       break;
-    } else if (IsWhitespace(ch)) {
-      // Whitespace is allowed at the end of the URL
-        EatWhiteSpace();
-        if (LookAhead(')')) {
-        Pushback(')');  // leave the closing symbol
-        // done!
-        break;
-      }
-      // Whitespace is followed by something other than a
-      // ")". This is an invalid url spec.
-      ok = PR_FALSE;
-      break;
     } else if (ch == ')') {
-      Pushback(ch);
       // All done
       break;
     } else {
@@ -1115,6 +1149,11 @@ nsCSSScanner::ParseIdent(PRInt32 aChar, nsCSSToken& aToken)
   if (Peek() == PRUnichar('(')) {
     Read();
     tokenType = eCSSToken_Function;
+
+    if (ident.LowerCaseEqualsLiteral("url")) {
+      NextURL(aToken); // ignore return value, since *we* read something
+      return PR_TRUE;
+    }
   }
 
   aToken.mType = tokenType;
@@ -1319,7 +1358,7 @@ nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)
       break;
     }
     if (ch == '\n') {
-      aToken.mType = eCSSToken_Error;
+      aToken.mType = eCSSToken_Bad_String;
 #ifdef CSS_REPORT_PARSE_ERRORS
       ReportUnexpectedToken(aToken, "SEUnterminatedString");
 #endif
