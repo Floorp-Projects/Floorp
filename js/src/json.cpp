@@ -275,9 +275,8 @@ public:
             if (gap.length() > 10)
                 gap.resize(10);
         } else if (gapValue.value().isNumber()) {
-            jsdouble d = gapValue.value().isInt32()
-                         ? gapValue.value().toInt32()
-                         : js_DoubleToInteger(gapValue.value().toDouble());
+            jsdouble d;
+            JS_ALWAYS_TRUE(ToInteger(cx, gapValue.value(), &d));
             d = JS_MIN(10, d);
             if (d >= 1 && !gap.appendN(' ', uint32(d)))
                 return false;
