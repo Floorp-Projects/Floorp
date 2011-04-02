@@ -1409,7 +1409,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
     // assign the new socket to the http connection
     nsRefPtr<nsHttpConnection> conn = new nsHttpConnection();
     LOG(("nsHalfOpenSocket::OnOutputStreamReady "
-         "Created new nshttpconnection %p\n", conn));
+         "Created new nshttpconnection %p\n", conn.get()));
 
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     nsCOMPtr<nsIEventTarget>        callbackTarget;
@@ -1440,7 +1440,7 @@ nsHalfOpenSocket::OnOutputStreamReady(nsIAsyncOutputStream *out)
 
     if (NS_FAILED(rv)) {
         LOG(("nsHalfOpenSocket::OnOutputStreamReady "
-             "conn->init (%p) failed %x\n", conn, rv));
+             "conn->init (%p) failed %x\n", conn.get(), rv));
         return rv;
     }
 
