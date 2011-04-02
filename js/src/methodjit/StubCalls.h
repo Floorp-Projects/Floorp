@@ -232,6 +232,9 @@ void JS_FASTCALL ConvertToTypedFloat(JSContext *cx, Value *vp);
 
 void JS_FASTCALL Exception(VMFrame &f);
 
+JSObject * JS_FASTCALL
+NewDenseUnallocatedArray(VMFrame &f, uint32 length);
+
 } /* namespace stubs */
 
 /* 

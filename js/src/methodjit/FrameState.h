@@ -327,12 +327,6 @@ class FrameState
     inline void pushInt32(RegisterID payload);
 
     /*
-     * Pushes an initializer with specified payload, storing whether it is an array
-     * or object whose contents can be initialized in fast paths.
-     */
-    inline void pushInitializerObject(RegisterID payload, bool array, JSObject *baseobj);
-
-    /*
      * Pops a value off the operation stack, freeing any of its resources.
      */
     inline void pop();
@@ -673,11 +667,18 @@ class FrameState
      */
     void discardFe(FrameEntry *fe);
 
-    /* Get a set with the possible types of a stack fe, or NULL. */
-    inline types::TypeSet *getTypeSet(FrameEntry *fe);
-
-    /* Mark a stack index as holding a particular type set. */
-    inline void learnTypeSet(unsigned slot, types::TypeSet *types);
+    /* Compiler-owned metadata about stack entries, reset on push/pop/copy. */
+    struct StackEntryExtra {
+        bool initArray;
+        JSObject *initObject;
+        types::TypeSet *types;
+        JSAtom *name;
+        void reset() { PodZero(this); }
+    };
+    StackEntryExtra& extra(FrameEntry *fe) {
+        JS_ASSERT(fe >= spBase && fe < sp);
+        return a->extraArray[fe - spBase];
+    }
 
     /*
      * Helper function. Tests if a slot's type is null. Condition must
@@ -1031,8 +1032,8 @@ class FrameState
         /* Vector of tracked slot indexes. */
         Tracker tracker;
 
-        /* Type sets for the stack contents. */
-        types::TypeSet **typeSets;
+        /* Compiler-owned metadata for the stack contents. */
+        StackEntryExtra *extraArray;
 
         /*
          * Register ownership state. This can't be used alone; to find whether an

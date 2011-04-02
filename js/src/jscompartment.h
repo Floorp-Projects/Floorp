@@ -572,6 +572,13 @@ GetMathCache(JSContext *cx)
 }
 }
 
+inline void
+JSContext::setCompartment(JSCompartment *compartment)
+{
+    this->compartment = compartment;
+    this->inferenceEnabled = compartment ? compartment->types.inferenceEnabled : false;
+}
+
 #ifdef DEBUG
 # define EVAL_CACHE_METER(x)    (cx->compartment->evalCacheMeter.x++)
 #else
@@ -597,7 +604,7 @@ class PreserveCompartment {
     }
 
     ~PreserveCompartment() {
-        cx->compartment = oldCompartment;
+        cx->setCompartment(oldCompartment);
     }
 };
 
@@ -608,14 +615,14 @@ class SwitchToCompartment : public PreserveCompartment {
         : PreserveCompartment(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
-        cx->compartment = newCompartment;
+        cx->setCompartment(newCompartment);
     }
 
     SwitchToCompartment(JSContext *cx, JSObject *target JS_GUARD_OBJECT_NOTIFIER_PARAM)
         : PreserveCompartment(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;
-        cx->compartment = target->getCompartment();
+        cx->setCompartment(target->getCompartment());
     }
 
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER

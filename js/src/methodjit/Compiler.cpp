@@ -1916,11 +1916,15 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_SETELEM);
 
           BEGIN_CASE(JSOP_CALLNAME)
+          {
+            uint32 index = fullAtomIndex(PC);
             prepareStubCall(Uses(0));
-            masm.move(Imm32(fullAtomIndex(PC)), Registers::ArgReg1);
+            masm.move(Imm32(index), Registers::ArgReg1);
             INLINE_STUBCALL(stubs::CallName);
             pushSyncedEntry(0);
             pushSyncedEntry(1);
+            frame.extra(frame.peek(-2)).name = script->getAtom(index);
+          }
           END_CASE(JSOP_CALLNAME)
 
           BEGIN_CASE(JSOP_EVAL)
@@ -1959,7 +1963,11 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_CALL)
 
           BEGIN_CASE(JSOP_NAME)
-            jsop_name(script->getAtom(fullAtomIndex(PC)), knownPushedType(0));
+          {
+            JSAtom *atom = script->getAtom(fullAtomIndex(PC));
+            jsop_name(atom, knownPushedType(0));
+            frame.extra(frame.peek(-1)).name = atom;
+          }
           END_CASE(JSOP_NAME)
 
           BEGIN_CASE(JSOP_DOUBLE)
@@ -2480,9 +2488,13 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_GETGNAME)
           BEGIN_CASE(JSOP_CALLGNAME)
-            jsop_getgname(fullAtomIndex(PC), knownPushedType(0));
+          {
+            uint32 index = fullAtomIndex(PC);
+            jsop_getgname(index, knownPushedType(0));
+            frame.extra(frame.peek(-1)).name = script->getAtom(index);
             if (op == JSOP_CALLGNAME)
                 jsop_callgname_epilogue();
+          }
           END_CASE(JSOP_GETGNAME)
 
           BEGIN_CASE(JSOP_SETGNAME)
@@ -2629,8 +2641,11 @@ mjit::Compiler::generateMethod()
             unsigned nuses = analyze::GetUseCount(script, oldPC - script->code);
             unsigned ndefs = analyze::GetDefCount(script, oldPC - script->code);
             for (unsigned i = 0; i < ndefs; i++) {
-                frame.learnTypeSet(opinfo->stackDepth - nuses + i,
-                                   script->types->pushed(oldPC - script->code, i));
+                FrameEntry *fe = frame.getStack(opinfo->stackDepth - nuses + i);
+                if (fe) {
+                    /* fe may be NULL for conditionally pushed entries, e.g. JSOP_AND */
+                    frame.extra(fe).types = script->types->pushed(oldPC - script->code, i);
+                }
             }
         }
 
@@ -3246,6 +3261,12 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     if (callingNew)
         frame.discardFe(origThis);
 
+    if (!cx->typeInferenceEnabled()) {
+        CompileStatus status = callArrayBuiltin(callImmArgc, callingNew);
+        if (status != Compile_InlineAbort)
+            return status;
+    }
+
     /*
      * From the presence of JSOP_FUN{CALL,APPLY}, we speculate that we are
      * going to call js_fun_{call,apply}. Normally, this call would go through
@@ -3378,10 +3399,10 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
             js_ReportOutOfMemory(cx);
             return false;
         }
-        types::TypeSet *types = frame.getTypeSet(frame.peek(-(argc + 1)));
+        types::TypeSet *types = frame.extra(frame.peek(-(argc + 1))).types;
         types::TypeSet::Clone(cx, types, &callIC.argTypes[0]);
         for (unsigned i = 0; i < argc; i++) {
-            types::TypeSet *types = frame.getTypeSet(frame.peek(-(argc - i)));
+            types::TypeSet *types = frame.extra(frame.peek(-(argc - i))).types;
             types::TypeSet::Clone(cx, types, &callIC.argTypes[i + 1]);
         }
     }
@@ -3587,6 +3608,91 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 #endif
 }
 
+CompileStatus
+mjit::Compiler::callArrayBuiltin(uint32 argc, bool callingNew)
+{
+    if (applyTricks == LazyArgsObj)
+        return Compile_InlineAbort;
+
+    FrameEntry *origCallee = frame.peek(-(argc + 2));
+    if (origCallee->isNotType(JSVAL_TYPE_OBJECT))
+        return Compile_InlineAbort;
+
+    if (frame.extra(origCallee).name != cx->runtime->atomState.classAtoms[JSProto_Array])
+        return Compile_InlineAbort;
+
+    JSObject *arrayObj;
+    if (!js_GetClassObject(cx, globalObj, JSProto_Array, &arrayObj))
+        return Compile_Error;
+
+    JSObject *arrayProto;
+    if (!js_GetClassPrototype(cx, globalObj, JSProto_Array, &arrayProto))
+        return Compile_Error;
+
+    if (argc > 1)
+        return Compile_InlineAbort;
+    FrameEntry *origArg = (argc == 1) ? frame.peek(-1) : NULL;
+    if (origArg) {
+        if (origArg->isNotType(JSVAL_TYPE_INT32))
+            return Compile_InlineAbort;
+        if (origArg->isConstant() && origArg->getValue().toInt32() < 0)
+            return Compile_InlineAbort;
+    }
+
+    if (!origCallee->isTypeKnown()) {
+        Jump notObject = frame.testObject(Assembler::NotEqual, origCallee);
+        stubcc.linkExit(notObject, Uses(argc + 2));
+    }
+
+    RegisterID reg = frame.tempRegForData(origCallee);
+    Jump notArray = masm.branchPtr(Assembler::NotEqual, reg, ImmPtr(arrayObj));
+    stubcc.linkExit(notArray, Uses(argc + 2));
+
+    int32 knownSize = 0;
+    MaybeRegisterID sizeReg;
+    if (origArg) {
+        if (origArg->isConstant()) {
+            knownSize = origArg->getValue().toInt32();
+        } else {
+            if (!origArg->isTypeKnown()) {
+                Jump notInt = frame.testInt32(Assembler::NotEqual, origArg);
+                stubcc.linkExit(notInt, Uses(argc + 2));
+            }
+            sizeReg = frame.tempRegForData(origArg);
+            Jump belowZero = masm.branch32(Assembler::LessThan, sizeReg.reg(), Imm32(0));
+            stubcc.linkExit(belowZero, Uses(argc + 2));
+        }
+    } else {
+        knownSize = 0;
+    }
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(argc), Registers::ArgReg1);
+    OOL_STUBCALL(callingNew ? stubs::SlowNew : stubs::SlowCall);
+
+    {
+        PinRegAcrossSyncAndKill p1(frame, sizeReg);
+        frame.popn(argc + 2);
+        frame.syncAndKill(Uses(0));
+    }
+
+    prepareStubCall(Uses(0));
+    masm.storePtr(ImmPtr(arrayProto), FrameAddress(offsetof(VMFrame, scratch)));
+    if (sizeReg.isSet())
+        masm.move(sizeReg.reg(), Registers::ArgReg1);
+    else
+        masm.move(Imm32(knownSize), Registers::ArgReg1);
+    INLINE_STUBCALL(stubs::NewDenseUnallocatedArray);
+
+    frame.takeReg(Registers::ReturnReg);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
+    frame.forgetType(frame.peek(-1));
+
+    stubcc.rejoin(Changes(1));
+
+    return Compile_Okay;
+}
+
 /* Maximum number of calls we will inline at the same site. */
 static const uint32 INLINE_SITE_LIMIT = 5;
 
@@ -3608,7 +3714,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     FrameEntry *origCallee = frame.peek(-(argc + 2));
     FrameEntry *origThis = frame.peek(-(argc + 1));
 
-    types::TypeSet *types = frame.getTypeSet(origCallee);
+    types::TypeSet *types = frame.extra(origCallee).types;
     if (!types || types->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT)
         return Compile_InlineAbort;
 
@@ -4497,7 +4603,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
 {
     *testObject = false;
 
-    types::TypeSet *types = frame.getTypeSet(top);
+    types::TypeSet *types = frame.extra(top).types;
     if (!types)
         return false;
 
@@ -4619,7 +4725,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     pic.atom = atom;
 
     if (monitored(PC)) {
-        types::TypeSet *types = frame.getTypeSet(rhs);
+        types::TypeSet *types = frame.extra(rhs).types;
         pic.typeMonitored = true;
         pic.rhsTypes = (types::ClonedTypeSet *) ::js_calloc(sizeof(types::ClonedTypeSet));
         if (!pic.rhsTypes) {
@@ -6048,7 +6154,10 @@ mjit::Compiler::jsop_newinit()
         INLINE_STUBCALL(stubs::NewInitObject);
     }
     frame.takeReg(Registers::ReturnReg);
-    frame.pushInitializerObject(Registers::ReturnReg, *PC == JSOP_NEWARRAY, baseobj);
+    frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
+
+    frame.extra(frame.peek(-1)).initArray = (*PC == JSOP_NEWARRAY);
+    frame.extra(frame.peek(-1)).initObject = baseobj;
 
     return true;
 }
@@ -6211,6 +6320,10 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
 
 # if JS_MONOIC
     ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
+
+    Jump nonzero = stubcc.masm.branchSub32(Assembler::NonZero, Imm32(1),
+                                           Address(Registers::ArgReg1,
+                                                   offsetof(TraceICInfo, loopCounter)));
 # endif
 
     /* Save and restore compiler-tracked PC, so cx->regs is right in InvokeTracer. */
@@ -6225,13 +6338,14 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
 
     Jump no = stubcc.masm.branchTestPtr(Assembler::Zero, Registers::ReturnReg,
                                         Registers::ReturnReg);
+    if (!cx->typeInferenceEnabled())
+        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
     stubcc.masm.jump(Registers::ReturnReg);
     no.linkTo(stubcc.masm.label(), &stubcc.masm);
 
-    if (!cx->typeInferenceEnabled())
-        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
-
 #ifdef JS_MONOIC
+    nonzero.linkTo(stubcc.masm.label(), &stubcc.masm);
+
     ic.jumpTarget = target;
     ic.fastTrampoline = !consistent;
     ic.trampolineStart = stubcc.masm.label();
