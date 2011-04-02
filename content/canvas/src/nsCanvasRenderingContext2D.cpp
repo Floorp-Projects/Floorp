@@ -44,18 +44,11 @@
 
 #include "nsIDOMXULElement.h"
 
-#ifdef _MSC_VER
-#define _USE_MATH_DEFINES
-#endif
-#include <math.h>
-#if defined(XP_WIN) || defined(XP_OS2)
-#include <float.h>
-#endif
-
 #include "prmem.h"
 #include "prenv.h"
 
 #include "nsIServiceManager.h"
+#include "nsMathUtils.h"
 
 #include "nsContentUtils.h"
 
@@ -64,6 +57,7 @@
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsHTMLCanvasElement.h"
+#include "nsSVGEffects.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIVariant.h"
@@ -133,38 +127,12 @@
 using namespace mozilla::ipc;
 #endif
 
-#ifdef MOZ_SVG
-#include "nsSVGEffects.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
-#ifndef M_PI
-#define M_PI		3.14159265358979323846
-#define M_PI_2		1.57079632679489661923
-#endif
-
 /* Float validation stuff */
-
-static inline bool
-DoubleIsFinite(double d)
-{
-#ifdef WIN32
-    // NOTE: '!!' casts an int to bool without spamming MSVC warning C4800.
-    return !!_finite(d);
-#else
-    return finite(d);
-#endif
-}
-
-#define VALIDATE(_f)  if (!DoubleIsFinite(_f)) return PR_FALSE
-
-/* These must take doubles as args, because JSDOUBLE_IS_FINITE expects
- * to take the address of its argument; we can't cast/convert in the
- * macro.
- */
+#define VALIDATE(_f)  if (!NS_finite(_f)) return PR_FALSE
 
 static PRBool FloatValidate (double f1) {
     VALIDATE(f1);
