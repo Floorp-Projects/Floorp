@@ -149,8 +149,13 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, Value *vp)
         JSObject *argsobj = fp->maybeArgsObj();
         if (arg < fp->numActualArgs()) {
             if (argsobj) {
-                if (argsobj->getArgsElement(arg).isMagic(JS_ARGS_HOLE))
+                const Value &v = argsobj->getArgsElement(arg);
+                if (v.isMagic(JS_ARGS_HOLE))
                     return argsobj->getProperty(cx, id, vp);
+                if (fp->functionScript()->strictModeCode) {
+                    *vp = v;
+                    return true;
+                }
             }
             *vp = fp->canonicalActualArg(arg);
         } else {
@@ -200,7 +205,7 @@ NewArguments(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
     AutoShapeRooter shapeRoot(cx, emptyArgumentsShape);
 
     ArgumentsData *data = (ArgumentsData *)
-        cx->malloc(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
+        cx->malloc_(offsetof(ArgumentsData, slots) + argc * sizeof(Value));
     if (!data)
         return NULL;
     SetValueRangeToUndefined(data->slots, argc);
@@ -282,7 +287,6 @@ js_PutArgsObject(JSContext *cx, JSStackFrame *fp)
     } else {
         JS_ASSERT(!argsobj.getPrivate());
     }
-    fp->clearArgsObj();
 }
 
 #ifdef JS_TRACER
@@ -793,7 +797,7 @@ strictargs_enumerate(JSContext *cx, JSObject *obj)
 static void
 args_finalize(JSContext *cx, JSObject *obj)
 {
-    cx->free((void *) obj->getArgsData());
+    cx->free_((void *) obj->getArgsData());
 }
 
 /*
@@ -957,16 +961,17 @@ CalleeGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     return CheckForEscapingClosure(cx, obj, vp);
 }
 
-namespace js {
-
 /*
- * Construct a call object for the given bindings.  The callee is the function
- * on behalf of which the call object is being created.
+ * Construct a call object for the given bindings.  If this is a call object
+ * for a function invocation, callee should be the function being called.
+ * Otherwise it must be a call object for eval of strict mode code, and callee
+ * must be null.
  */
-JSObject *
-NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject *callee)
+static JSObject *
+NewCallObject(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *callee)
 {
-    size_t argsVars = bindings->countArgsAndVars();
+    Bindings &bindings = script->bindings;
+    size_t argsVars = bindings.countArgsAndVars();
     size_t slots = JSObject::CALL_RESERVED_SLOTS + argsVars;
     gc::FinalizeKind kind = gc::GetGCObjectKind(slots);
 
@@ -995,8 +1000,6 @@ NewCallObject(JSContext *cx, Bindings *bindings, JSObject &scopeChain, JSObject 
     return callobj;
 }
 
-} // namespace js
-
 static inline JSObject *
 NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
 {
@@ -1013,39 +1016,28 @@ NewDeclEnvObject(JSContext *cx, JSStackFrame *fp)
     return envobj;
 }
 
-JSObject *
-js_GetCallObject(JSContext *cx, JSStackFrame *fp)
-{
-    /* Create a call object for fp only if it lacks one. */
-    JS_ASSERT(fp->isFunctionFrame());
-    if (fp->hasCallObj())
-        return &fp->callObj();
+namespace js {
 
-#ifdef DEBUG
-    /* A call object should be a frame's outermost scope chain element.  */
-    Class *clasp = fp->scopeChain().getClass();
-    if (clasp == &js_WithClass || clasp == &js_BlockClass)
-        JS_ASSERT(fp->scopeChain().getPrivate() != js_FloatingFrameIfGenerator(cx, fp));
-    else if (clasp == &js_CallClass)
-        JS_ASSERT(fp->scopeChain().getPrivate() != fp);
-#endif
+JSObject *
+CreateFunCallObject(JSContext *cx, JSStackFrame *fp)
+{
+    JS_ASSERT(fp->isNonEvalFunctionFrame());
+    JS_ASSERT(!fp->hasCallObj());
+
+    JSObject *scopeChain = &fp->scopeChain();
+    JS_ASSERT_IF(scopeChain->isWith() || scopeChain->isBlock() || scopeChain->isCall(),
+                 scopeChain->getPrivate() != fp);
 
     /*
-     * Create the call object, using the frame's enclosing scope as its
-     * parent, and link the call to its stack frame. For a named function
-     * expression Call's parent points to an environment object holding
-     * function's name.
+     * For a named function expression Call's parent points to an environment
+     * object holding function's name.
      */
-    JSAtom *lambdaName =
-        (fp->fun()->flags & JSFUN_LAMBDA) ? fp->fun()->atom : NULL;
-    if (lambdaName) {
-        JSObject *envobj = NewDeclEnvObject(cx, fp);
-        if (!envobj)
+    if (JSAtom *lambdaName = (fp->fun()->flags & JSFUN_LAMBDA) ? fp->fun()->atom : NULL) {
+        scopeChain = NewDeclEnvObject(cx, fp);
+        if (!scopeChain)
             return NULL;
 
-        /* Root envobj before js_DefineNativeProperty (-> JSClass.addProperty). */
-        fp->setScopeChainNoCallObj(*envobj);
-        if (!js_DefineNativeProperty(cx, &fp->scopeChain(), ATOM_TO_JSID(lambdaName),
+        if (!js_DefineNativeProperty(cx, scopeChain, ATOM_TO_JSID(lambdaName),
                                      ObjectValue(fp->callee()),
                                      CalleeGetter, NULL,
                                      JSPROP_PERMANENT | JSPROP_READONLY,
@@ -1054,21 +1046,28 @@ js_GetCallObject(JSContext *cx, JSStackFrame *fp)
         }
     }
 
-    JSObject *callobj =
-        NewCallObject(cx, &fp->fun()->script()->bindings, fp->scopeChain(), &fp->callee());
+    JSObject *callobj = NewCallObject(cx, fp->script(), *scopeChain, &fp->callee());
     if (!callobj)
         return NULL;
 
     callobj->setPrivate(fp);
-    JS_ASSERT(fp->fun() == fp->callee().getFunctionPrivate());
-
-    /*
-     * Push callobj on the top of the scope chain, and make it the
-     * variables object.
-     */
-    fp->setScopeChainAndCallObj(*callobj);
+    fp->setScopeChainWithOwnCallObj(*callobj);
     return callobj;
 }
+
+JSObject *
+CreateEvalCallObject(JSContext *cx, JSStackFrame *fp)
+{
+    JSObject *callobj = NewCallObject(cx, fp->script(), fp->scopeChain(), NULL);
+    if (!callobj)
+        return false;
+
+    callobj->setPrivate(fp);
+    fp->setScopeChainWithOwnCallObj(*callobj);
+    return callobj;
+}
+
+} // namespace js
 
 JSObject * JS_FASTCALL
 js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain)
@@ -1076,7 +1075,7 @@ js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSO
     JS_ASSERT(!js_IsNamedLambda(fun));
     JS_ASSERT(scopeChain);
     JS_ASSERT(callee);
-    return NewCallObject(cx, &fun->script()->bindings, *scopeChain, callee);
+    return NewCallObject(cx, fun->script(), *scopeChain, callee);
 }
 
 JS_DEFINE_CALLINFO_4(extern, OBJECT, js_CreateCallObjectOnTrace, CONTEXT, FUNCTION, OBJECT, OBJECT,
@@ -1095,11 +1094,8 @@ void
 js_PutCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject &callobj = fp->callObj();
-
-    /*
-     * Strict mode eval frames have Call objects to put.  Normal eval frames
-     * never put a Call object.
-     */
+    JS_ASSERT(callobj.getPrivate() == fp);
+    JS_ASSERT_IF(fp->isEvalFrame(), fp->isStrictEvalFrame());
     JS_ASSERT(fp->isEvalFrame() == callobj.callIsForEval());
 
     /* Get the arguments object to snapshot fp's actual argument values. */
@@ -1169,7 +1165,6 @@ js_PutCallObject(JSContext *cx, JSStackFrame *fp)
     }
 
     callobj.setPrivate(NULL);
-    fp->clearCallObj();
 }
 
 JSBool JS_FASTCALL
@@ -1963,7 +1958,7 @@ js_XDRFunctionObject(JSXDRState *xdr, JSObject **objp)
         fun->u.i.wrapper = JSPackedBool((firstword >> 1) & 1);
     }
 
-    if (!js_XDRScriptAndSubscripts(xdr, &fun->u.i.script))
+    if (!js_XDRScript(xdr, &fun->u.i.script))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
@@ -2056,7 +2051,7 @@ fun_finalize(JSContext *cx, JSObject *obj)
     /* Cloned function objects may be flat closures with upvars to free. */
     if (fun != obj) {
         if (fun->isFlatClosure() && fun->script()->bindings.hasUpvars())
-            cx->free((void *) obj->getFlatClosureUpvars());
+            cx->free_((void *) obj->getFlatClosureUpvars());
         return;
     }
 
@@ -2489,16 +2484,29 @@ static JSFunctionSpec function_methods[] = {
     JS_FS_END
 };
 
+/*
+ * Report "malformed formal parameter" iff no illegal char or similar scanner
+ * error was already reported.
+ */
+static bool
+OnBadFormal(JSContext *cx, TokenKind tt)
+{
+    if (tt != TOK_ERROR)
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_FORMAL);
+    else
+        JS_ASSERT(cx->isExceptionPending());
+    return false;
+}
+
 static JSBool
 Function(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = NewFunction(cx, NULL);
-    if (!obj)
-        return JS_FALSE;
+    JS::Anchor<JSObject *> obj(NewFunction(cx, NULL));
+    if (!obj.get())
+        return false;
 
-    /* N.B. overwriting callee with return value */
-    JSObject *parent = vp[0].toObject().getParent();
-    vp[0].setObject(*obj);
+    JSObject &callee = JS_CALLEE(cx, vp).toObject();
+    JSObject &calleeParent = *callee.getParent();
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
@@ -2510,10 +2518,10 @@ Function(JSContext *cx, uintN argc, Value *vp)
      * its running context's globalObject, which might be different from the
      * top-level reachable from scopeChain (in HTML frames, e.g.).
      */
-    JSFunction *fun = js_NewFunction(cx, obj, NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                     parent, cx->runtime->atomState.anonymousAtom, NULL, NULL);
+    JSFunction *fun = js_NewFunction(cx, obj.get(), NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
+                                     &calleeParent, cx->runtime->atomState.anonymousAtom, NULL, NULL);
     if (!fun)
-        return JS_FALSE;
+        return false;
 
     /*
      * Function is static and not called directly by other functions in this
@@ -2527,8 +2535,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
     const char *filename;
     JSPrincipals *principals;
     if (caller) {
-        JSObject *callee = &JS_CALLEE(cx, vp).toObject();
-        principals = js_EvalFramePrincipals(cx, callee, caller);
+        principals = js_EvalFramePrincipals(cx, &callee, caller);
         filename = js_ComputeFilename(cx, caller, principals, &lineno);
     } else {
         filename = NULL;
@@ -2537,9 +2544,9 @@ Function(JSContext *cx, uintN argc, Value *vp)
     }
 
     /* Belt-and-braces: check that the caller has access to parent. */
-    if (!js_CheckPrincipalsAccess(cx, parent, principals,
+    if (!js_CheckPrincipalsAccess(cx, &calleeParent, principals,
                                   CLASS_ATOM(cx, Function))) {
-        return JS_FALSE;
+        return false;
     }
 
     /*
@@ -2547,19 +2554,17 @@ Function(JSContext *cx, uintN argc, Value *vp)
      * Report errors via CSP is done in the script security manager.
      * js_CheckContentSecurityPolicy is defined in jsobj.cpp
      */
-    if (!js_CheckContentSecurityPolicy(cx, parent)) {
+    if (!js_CheckContentSecurityPolicy(cx, &calleeParent)) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
-        return JS_FALSE;
+        return false;
     }
 
     Bindings bindings(cx);
     AutoBindingsRooter root(cx, bindings);
 
-    Value *argv = vp + 2;
+    Value *argv = JS_ARGV(cx, vp);
     uintN n = argc ? argc - 1 : 0;
     if (n > 0) {
-        enum { OK, BAD, BAD_FORMAL } state;
-
         /*
          * Collect the function-argument arguments into one string, separated
          * by commas, then make a tokenstream from that string, and scan it to
@@ -2570,13 +2575,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
          * compiler, but doing it this way is less of a delta from the old
          * code.  See ECMA 15.3.2.1.
          */
-        state = BAD_FORMAL;
         size_t args_length = 0;
         for (uintN i = 0; i < n; i++) {
             /* Collect the lengths for all the function-argument arguments. */
             JSString *arg = js_ValueToString(cx, argv[i]);
             if (!arg)
-                return JS_FALSE;
+                return false;
             argv[i].setString(arg);
 
             /*
@@ -2587,7 +2591,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
             args_length = old_args_length + arg->length();
             if (args_length < old_args_length) {
                 js_ReportAllocationOverflow(cx);
-                return JS_FALSE;
+                return false;
             }
         }
 
@@ -2597,7 +2601,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
         if (args_length < old_args_length ||
             args_length >= ~(size_t)0 / sizeof(jschar)) {
             js_ReportAllocationOverflow(cx);
-            return JS_FALSE;
+            return false;
         }
 
         /*
@@ -2605,13 +2609,11 @@ Function(JSContext *cx, uintN argc, Value *vp)
          * for a terminating 0.  Mark cx->tempPool for later release, to free
          * collected_args and its tokenstream in one swoop.
          */
-        void *mark = JS_ARENA_MARK(&cx->tempPool);
-        jschar *cp;
-        JS_ARENA_ALLOCATE_CAST(cp, jschar *, &cx->tempPool,
-                               (args_length+1) * sizeof(jschar));
+        AutoArenaAllocator aaa(&cx->tempPool);
+        jschar *cp = aaa.alloc<jschar>(args_length + 1);
         if (!cp) {
             js_ReportOutOfScriptQuota(cx);
-            return JS_FALSE;
+            return false;
         }
         jschar *collected_args = cp;
 
@@ -2622,10 +2624,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
             JSString *arg = argv[i].toString();
             size_t arg_length = arg->length();
             const jschar *arg_chars = arg->getChars(cx);
-            if (!arg_chars) {
-                JS_ARENA_RELEASE(&cx->tempPool, mark);
-                return JS_FALSE;
-            }
+            if (!arg_chars)
+                return false;
             (void) js_strncpy(cp, arg_chars, arg_length);
             cp += arg_length;
 
@@ -2635,10 +2635,8 @@ Function(JSContext *cx, uintN argc, Value *vp)
 
         /* Initialize a tokenstream that reads from the given string. */
         TokenStream ts(cx);
-        if (!ts.init(collected_args, args_length, filename, lineno, cx->findVersion())) {
-            JS_ARENA_RELEASE(&cx->tempPool, mark);
-            return JS_FALSE;
-        }
+        if (!ts.init(collected_args, args_length, filename, lineno, cx->findVersion()))
+            return false;
 
         /* The argument string may be empty or contain no tokens. */
         TokenKind tt = ts.getToken();
@@ -2649,7 +2647,7 @@ Function(JSContext *cx, uintN argc, Value *vp)
                  * TOK_ERROR, which was already reported.
                  */
                 if (tt != TOK_NAME)
-                    goto after_args;
+                    return OnBadFormal(cx, tt);
 
                 /*
                  * Get the atom corresponding to the name from the token
@@ -2661,23 +2659,18 @@ Function(JSContext *cx, uintN argc, Value *vp)
                 /* Check for a duplicate parameter name. */
                 if (bindings.hasBinding(cx, atom)) {
                     JSAutoByteString name;
-                    if (!js_AtomToPrintableString(cx, atom, &name)) {
-                        state = BAD;
-                        goto after_args;
-                    }
+                    if (!js_AtomToPrintableString(cx, atom, &name))
+                        return false;
                     if (!ReportCompileErrorNumber(cx, &ts, NULL,
                                                   JSREPORT_WARNING | JSREPORT_STRICT,
                                                   JSMSG_DUPLICATE_FORMAL, name.ptr())) {
-                        state = BAD;
-                        goto after_args;
+                        return false;
                     }
                 }
 
                 uint16 dummy;
-                if (!bindings.addArgument(cx, atom, &dummy)) {
-                    state = BAD;
-                    goto after_args;
-                }
+                if (!bindings.addArgument(cx, atom, &dummy))
+                    return false;
 
                 /*
                  * Get the next token.  Stop on end of stream.  Otherwise
@@ -2687,44 +2680,32 @@ Function(JSContext *cx, uintN argc, Value *vp)
                 if (tt == TOK_EOF)
                     break;
                 if (tt != TOK_COMMA)
-                    goto after_args;
+                    return OnBadFormal(cx, tt);
                 tt = ts.getToken();
             }
         }
-
-        state = OK;
-      after_args:
-        if (state == BAD_FORMAL && !ts.isError()) {
-            /*
-             * Report "malformed formal parameter" iff no illegal char or
-             * similar scanner error was already reported.
-             */
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_BAD_FORMAL);
-        }
-        ts.close();
-        JS_ARENA_RELEASE(&cx->tempPool, mark);
-        if (state != OK)
-            return JS_FALSE;
     }
 
-    JSString *str;
+    JS::Anchor<JSString *> strAnchor(NULL);
+    const jschar *chars;
+    size_t length;
+
     if (argc) {
-        str = js_ValueToString(cx, argv[argc - 1]);
+        JSString *str = js_ValueToString(cx, argv[argc - 1]);
         if (!str)
-            return JS_FALSE;
-        argv[argc - 1].setString(str);
+            return false;
+        strAnchor.set(str);
+        chars = str->getChars(cx);
+        length = str->length();
     } else {
-        str = cx->runtime->emptyString;
+        chars = cx->runtime->emptyString->chars();
+        length = 0;
     }
 
-    size_t length = str->length();
-    const jschar *chars = str->getChars(cx);
-    if (!chars)
-        return JS_FALSE;
-
+    JS_SET_RVAL(cx, vp, ObjectValue(*obj.get()));
     return Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                         chars, length, filename, lineno, cx->findVersion());
+                                         chars, length, filename, lineno,
+                                         cx->findVersion());
 }
 
 namespace js {
@@ -2988,7 +2969,7 @@ js_AllocFlatClosure(JSContext *cx, JSFunction *fun, JSObject *scopeChain)
     if (nslots == 0)
         return closure;
 
-    Value *upvars = (Value *) cx->malloc(nslots * sizeof(Value));
+    Value *upvars = (Value *) cx->malloc_(nslots * sizeof(Value));
     if (!upvars)
         return NULL;
 

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+BrowserScope richtext2 category tests
+
+This test is originally based on the unit test example available as part of the
+RichText2 suite:
+http://code.google.com/p/browserscope/source/browse/trunk/categories/richtext2/unittestexample.html
+-->
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <title>BrowserScope Richtext2 Tests</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>  
+
+  <!-- utility scripts -->
+  <script type="text/javascript" src="lib/richtext2/richtext2/static/js/variables.js"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/static/js/canonicalize.js"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/static/js/compare.js"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/static/js/pad.js"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/static/js/range.js"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/static/js/units.js"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/static/js/run.js"></script>
+  <!-- you do not need static/js/output.js -->
+
+  <!--
+    Tests - note that those have the extensions .py,
+    but can be used as JS files directly.
+  -->
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/selection.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/apply.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/applyCSS.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/change.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/changeCSS.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/unapply.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/unapplyCSS.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/delete.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/forwarddelete.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/insert.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/querySupported.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/queryEnabled.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/queryIndeterm.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/queryState.py"></script>
+  <script type="text/javascript" src="lib/richtext2/richtext2/tests/queryValue.py"></script>
+
+  <script type="text/javascript" src="lib/richtext2/currentStatus.js"></script>
+
+  <!-- Do something -->
+  <script type="text/javascript">
+    // Set this constant to true in order to get the current status of the test suite.
+    // This is useful for updating the currentStatus.js file when an editor bug is fixed.
+    const UPDATE_TEST_RESULTS = false;
+
+    function runTest() {
+      initVariables();
+      initEditorDocs();
+
+      const tests = [
+        SELECTION_TESTS,
+        APPLY_TESTS,
+        APPLY_TESTS_CSS,
+        CHANGE_TESTS,
+        CHANGE_TESTS_CSS,
+        UNAPPLY_TESTS,
+        UNAPPLY_TESTS_CSS,
+        DELETE_TESTS,
+        FORWARDDELETE_TESTS,
+        INSERT_TESTS,
+        QUERYSUPPORTED_TESTS,
+        QUERYENABLED_TESTS,
+        QUERYINDETERM_TESTS,
+        QUERYSTATE_TESTS,
+        QUERYVALUE_TESTS,
+      ];
+
+      for (var i = 0; i < tests.length; ++i) {
+        runTestSuite(tests[i]);
+      }
+
+      // Below alert is just a simple demonstration on how to access the test results.
+      // Note that we only ran UNAPPLY tests above, so we have only results from that test set.
+      //
+      // The 'results' structure is as follows:
+      //
+      // results                   structure containing all results
+      //     [<suite ID>]              structure containing the results for the given suite *)
+      //         .count                    number of tests in the given suite
+      //         .valscore                 sum of all test value results (HTML or query value)
+      //         .selscore                 sum of all selection results (HTML tests only)
+      //         [<class ID>]              structure containing the results for the given class **)
+      //             .count                    number of tests in the given suite
+      //             .valscore                 sum of all test value results (HTML or query value)
+      //             .selscore                 sum of all selection results (HTML tests only)
+      //             [<test ID>]               structure containing the reults for a given test ***)
+      //                 .valscore                 value score (0 or 1), minimum over all containers
+      //                 .selscore                 selection score (0 or 1), minimum over all containers (HTML tests only)
+      //                 .valresult                worst test value result (integer, see variables.js)
+      //                 .selresult                worst selection result (integer, see variables.js)
+      //                 [<cont. ID>]              structure containing the results of the test for a given container ****)
+      //                     .valscore                 value score (0 or 1)
+      //                     .selscore                 selection score (0 or 1)
+      //                     .valresult                value result (integer, see variables.js)
+      //                     .selresult                selection result (integer, see variables.js)
+      //                     .output                   output string (mainly for use by the online version)
+      //                     .innerHTML                inner HTML of the testing container (<div> or <body>) after the test
+      //                     .outerHTML                outer HTML of the testing container (<div> or <body>) after the test
+      //                     .bodyInnerHTML            inner HTML of the <body> after the test
+      //                     .bodyOuterHTML            outer HTML of the <body> after the test
+      //
+      // *)    <suite ID>:      a 1-3 character ID, e.g. UNAPPLY_TESTS.id, or 'U' (both referring the same suite)
+      // **)   <class ID>:      one of 'Proposed', 'RFC' or 'Finalized'
+      // ***)  <test ID>:       the ID of the test, without the leading 'RTE2-<suite ID>_' part
+      // ****) <container ID>:  one of 'div'  (test within a <div contenteditable="true">)
+      //                               'dM'   (test with designMode = 'on')
+      //                               'body' (test within a <body contenteditable="true">)
+
+      if (UPDATE_TEST_RESULTS) {
+        var testResults = {};
+        for (var i = 0; i < tests.length; ++i) {
+          var category = tests[i];
+          testResults[category.id] = {};
+          for (var group in results[category.id]) {
+            switch (group) {
+            // Skip the known properties
+            case "count":
+            case "valscore":
+            case "selscore":
+            case "time":
+              break;
+            default:
+              testResults[category.id][group] = {};
+              for (var test_id in results[category.id][group]) {
+                switch (test_id) {
+                // Skip the known properties
+                case "count":
+                case "valscore":
+                case "selscore":
+                  break;
+                default:
+                  testResults[category.id][group][test_id] = {};
+                  for (var structure in results[category.id][group][test_id]) {
+                    switch (structure) {
+                    // Only look at each test structure
+                    case "dM":
+                    case "body":
+                    case "div":
+                      var row = results[category.id][group][test_id][structure];
+                      testResults[category.id][group][test_id][structure] = row;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        var resultContainer = document.getElementById("results");
+        resultContainer.style.display = "";
+        resultContainer.textContent = JSON.stringify(testResults);
+      } else {
+        for (var i = 0; i < tests.length; ++i) {
+          var category = tests[i];
+          for (var group in results[category.id]) {
+            switch (group) {
+            // Skip the known properties
+            case "count":
+            case "valscore":
+            case "selscore":
+            case "time":
+              break;
+            default:
+              for (var test_id in results[category.id][group]) {
+                switch (test_id) {
+                // Skip the known properties
+                case "count":
+                case "valscore":
+                case "selscore":
+                  break;
+                default:
+                  for (var structure in results[category.id][group][test_id]) {
+                    switch (structure) {
+                    // Only look at each test structure
+                    case "dM":
+                    case "body":
+                    case "div":
+                      var row = results[category.id][group][test_id][structure];
+                      var expected = TEST_RESULTS[category.id][group][test_id][structure];
+                      var testName = "[" + [category.id, group, test_id, structure].join(", ") + "]";
+                      // There are three possible cases here:
+                      // a) If row.valscore == 1 and expected.valscore == 1, then the test has passed successfully.
+                      // b) If row.valscore == 1 and expected.valscore == 0, a previously failing test has started to pass.
+                      //    In this case, the respective currentStatus.js entry should be modified.
+                      // c) If row.valscore == 0 && expected.valscore == 0, then the test is known to fail.
+                      // d) If row.valscore == 0 && expected.valscore == 1, then we've found a regression, which should be fixed.
+                      // The same logic goes for selscore too.
+                      if (row.valscore == 1 && expected.valscore == 1) {
+                        // successful
+                        is(row.valscore, expected.valscore, testName + " passed successfully");
+                      } else if (row.valscore == 1 && expected.valscore == 0) {
+                        // unexpected pass
+                        todo_is(row.valscore, 1, testName + " used to fail, but it just started passing");
+                        // debugging information
+                        is(row.output, expected.output, "HTML test result comparison");
+                      } else if (row.valscore == 0 && expected.valscore == 0) {
+                        // known failure
+                        todo_is(row.valscore, 1, testName + " is known to fail");
+                      } else if (row.valscore == 0 && expected.valscore == 1) {
+                        // regression
+                        is(row.valscore, expected.valscore, testName + " has regressed");
+                        // debugging information
+                        is(row.output, expected.output, "HTML test result comparison");
+                      } else {
+                        // sanity check: this shouldn't happen!
+                        ok(false, "Unexpected result: row = " + row.toSource() + ", expected: " + expected.toSource());
+                      }
+                      if (row.selscore == 1 && expected.selscore == 1) {
+                        // successful
+                        is(row.selscore, expected.selscore, testName + " passed successfully");
+                      } else if (row.selscore == 1 && expected.selscore == 0) {
+                        // unexpected pass
+                        todo_is(row.selscore, 1, testName + " used to fail, but it just started passing");
+                        // debugging information
+                        is(row.output, expected.output, "HTML test result comparison");
+                      } else if (row.selscore == 0 && expected.selscore == 0) {
+                        // known failure
+                        todo_is(row.selscore, 1, testName + " is known to fail");
+                      } else if (row.selscore == 0 && expected.selscore == 1) {
+                        // regression
+                        is(row.selscore, expected.selscore, testName + " has regressed");
+                        // debugging information
+                        is(row.output, expected.output, "HTML test result comparison");
+                      } else {
+                        // sanity check: this shouldn't happen!
+                        ok(false, "Unexpected result: row = " + row.toSource() + ", expected: " + expected.toSource());
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    // Running all of the tests can take a long time, try to account for it
+    SimpleTest.requestLongerTimeout(5);
+  </script>
+</head>
+
+<body onload="runTest()">
+  <iframe name="iframe-dM" id="iframe-dM" src="lib/richtext2/richtext2/static/editable-dM.html"></iframe>
+  <iframe name="iframe-body" id="iframe-body" src="lib/richtext2/richtext2/static/editable-body.html"></iframe>
+  <iframe name="iframe-div" id="iframe-div" src="lib/richtext2/richtext2/static/editable-div.html"></iframe>
+  <pre id="results" style="display: none"></pre>
+</body>
+</html>

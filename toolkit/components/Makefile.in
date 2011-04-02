@@ -70,6 +70,7 @@ PARALLEL_DIRS += \
   typeaheadfind \
   urlformatter \
   viewconfig \
+  viewsource \
   webapps \
   $(NULL)
 
@@ -95,10 +96,6 @@ endif
 
 ifdef NS_PRINTING
 PARALLEL_DIRS += printing
-endif
-
-ifdef MOZ_VIEW_SOURCE
-PARALLEL_DIRS += viewsource
 endif
 
 ifdef MOZ_XUL

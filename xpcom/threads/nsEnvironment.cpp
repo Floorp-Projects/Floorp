@@ -65,7 +65,7 @@ nsEnvironment::Create(nsISupports *aOuter, REFNSIID aIID,
         return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    obj->mLock = PR_NewLock();
+    obj->mLock = nsAutoLock::NewLock("nsEnvironment::mLock");
     if (!obj->mLock) {
         delete obj;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -81,7 +81,7 @@ nsEnvironment::Create(nsISupports *aOuter, REFNSIID aIID,
 nsEnvironment::~nsEnvironment()
 {
     if (mLock)
-        PR_DestroyLock(mLock);
+        nsAutoLock::DestroyLock(mLock);
 }
 
 NS_IMETHODIMP

@@ -69,7 +69,7 @@ FrameState::~FrameState()
 #if defined JS_NUNBOX32
         a->reifier.~ImmutableSync();
 #endif
-        cx->free(a);
+        cx->free_(a);
         a = parent;
     }
 }
@@ -129,7 +129,7 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc,
                         sizeof(FrameEntry *) * nentries +            // tracker.entries
                         sizeof(StackEntryExtra) * script->nslots;    // extraArray
 
-    uint8 *cursor = (uint8 *)cx->calloc(totalBytes);
+    uint8 *cursor = (uint8 *)cx->calloc_(totalBytes);
     if (!cursor)
         return false;
 
@@ -138,7 +138,7 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc,
 
 #if defined JS_NUNBOX32
     if (!newa->reifier.init(cx, *this, nentries)) {
-        cx->free(newa);
+        cx->free_(newa);
         return false;
     }
 #endif
@@ -263,7 +263,7 @@ FrameState::popActiveFrame()
 #if defined JS_NUNBOX32
     a->reifier.~ImmutableSync();
 #endif
-    cx->free(a);
+    cx->free_(a);
 
     a = parent;
     updateActiveFrame();
@@ -709,7 +709,7 @@ FrameState::pushLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
         flushLoopJoins();
     }
 
-    LoopState *loop = (LoopState *) cx->calloc(sizeof(*activeLoop));
+    LoopState *loop = (LoopState *) cx->calloc_(sizeof(*activeLoop));
     if (!loop)
         return false;
 
@@ -755,7 +755,7 @@ FrameState::popLoop(jsbytecode *head, Jump *pjump, jsbytecode **ppc)
 
     LoopState *loop = activeLoop->outer;
 
-    cx->free(activeLoop);
+    cx->free_(activeLoop);
     activeLoop = loop;
 
     loopRegs = 0;

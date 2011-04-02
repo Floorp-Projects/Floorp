@@ -375,16 +375,6 @@ public:
   }
 
   /**
-   * Return true if the given accessible hasn't children.
-   */
-  static inline PRBool IsLeaf(nsIAccessible *aAcc)
-  {
-    PRInt32 numChildren = 0;
-    aAcc->GetChildCount(&numChildren);
-    return numChildren == 0;
-  }
-
-  /**
    * Return true if the given accessible can't have children. Used when exposing
    * to platform accessibility APIs, should the children be pruned off?
    */

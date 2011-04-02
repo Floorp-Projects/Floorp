@@ -307,20 +307,29 @@
           return;
         }
 
-        let anchorRect = anchor.getBoundingClientRect();
-        let anchorLeft = Math.round(anchor.ownerDocument.defaultView.mozInnerScreenX + anchorRect.left);
-        let anchorTop = Math.round(anchor.ownerDocument.defaultView.mozInnerScreenY + anchorRect.top);
-        let anchorRight = anchorLeft + Math.floor(anchorRect.width);
-        let anchorBottom = anchorTop + Math.floor(anchorRect.height);
+        // Returns whether the first float is smaller than the second float or
+        // equals to it in a range of epsilon.
+        function smallerTo(aFloat1, aFloat2, aEpsilon)
+        {
+          return aFloat1 <= (aFloat2 + aEpsilon);
+        }
 
         let popupRect = this.getBoundingClientRect();
-        let popupLeft = Math.round(window.mozInnerScreenX + popupRect.left);
-        let popupTop = Math.round(window.mozInnerScreenY + popupRect.top);
-        let popupRight = popupLeft + Math.floor(popupRect.width);
-        let popupBottom = popupTop + Math.floor(popupRect.height);
+        let popupLeft = window.mozInnerScreenX + popupRect.left;
+        let popupTop = window.mozInnerScreenY + popupRect.top;
+        let popupRight = popupLeft + popupRect.width;
+        let popupBottom = popupTop + popupRect.height;
 
-        var horizPos = popupRight <= anchorLeft ? -1 : popupLeft >= anchorRight ? 1 : 0;
-        var vertPos = popupBottom <= anchorTop ? -1 : popupTop >= anchorBottom ? 1 : 0;
+        let anchorRect = anchor.getBoundingClientRect();
+        let anchorLeft = anchor.ownerDocument.defaultView.mozInnerScreenX + anchorRect.left;
+        let anchorTop = anchor.ownerDocument.defaultView.mozInnerScreenY + anchorRect.top;
+        let anchorRight = anchorLeft + anchorRect.width;
+        let anchorBottom = anchorTop + anchorRect.height;
+
+        const epsilon = 0.1;
+
+        var horizPos = smallerTo(popupRight, anchorLeft, epsilon) ? -1 : smallerTo(anchorRight, popupLeft, epsilon) ? 1 : 0;
+        var vertPos = smallerTo(popupBottom, anchorTop, epsilon) ? -1 : smallerTo(anchorBottom, popupTop, epsilon) ? 1 : 0;
 
         var anchorClass = "";
         var hideAnchor = false;
@@ -337,10 +346,10 @@
             // have access to the parameters passed to |openPopup|.
 
             // If the popup is on the left of the anchor.
-            if (popupLeft < anchorLeft && popupRight < anchorRight) {
+            if (smallerTo(popupLeft, anchorLeft, epsilon) && smallerTo(popupRight, anchorRight, epsilon)) {
               pack = (popupLeft + popupRect.width / 2 < anchorLeft) ? "end" : "start";
             // If the popup is on the right of the anchor.
-            } else if (popupLeft > anchorLeft && popupRight > anchorRight) {
+            } else if (smallerTo(anchorLeft, popupLeft, epsilon) && smallerTo(anchorRight, popupRight, epsilon)) {
               pack = (popupLeft + popupRect.width / 2 > anchorRight) ? "start" : "end";
             // If the popup is not on the right nor on the left.
             // Basically, that means one is above the other and one is bigger

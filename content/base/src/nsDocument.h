@@ -52,7 +52,6 @@
 #include "nsTArray.h"
 #include "nsHashSets.h"
 #include "nsIDOMXMLDocument.h"
-#include "nsIDOM3Document.h"
 #include "nsIDOMDocumentView.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNSDocument.h"
@@ -509,7 +508,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentRange,
                    public nsIDOMDocumentTraversal,
                    public nsIDOMDocumentXBL,
-                   public nsIDOM3Document,
                    public nsSupportsWeakReference,
                    public nsIDOMEventTarget,
                    public nsIDOM3EventTarget,
@@ -517,8 +515,7 @@ class nsDocument : public nsIDocument,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
                    public nsIApplicationCacheContainer,
-                   public nsStubMutationObserver,
-                   public nsIDOMNSDocument_MOZILLA_2_0_BRANCH
+                   public nsStubMutationObserver
 {
 public:
   typedef mozilla::dom::Element Element;
@@ -709,9 +706,8 @@ public:
   virtual void SetReadyStateInternal(ReadyState rs);
   virtual ReadyState GetReadyStateEnum();
 
-  virtual void ContentStatesChanged(nsIContent* aContent1,
-                                    nsIContent* aContent2,
-                                    nsEventStates aStateMask);
+  virtual void ContentStateChanged(nsIContent* aContent,
+                                   nsEventStates aStateMask);
   virtual void DocumentStatesChanged(nsEventStates aStateMask);
 
   virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
@@ -806,15 +802,11 @@ public:
   // nsIDOMDocument
   NS_DECL_NSIDOMDOCUMENT
 
-  // nsIDOM3Document
-  NS_DECL_NSIDOM3DOCUMENT
-
   // nsIDOMXMLDocument
   NS_DECL_NSIDOMXMLDOCUMENT
 
   // nsIDOMNSDocument
   NS_DECL_NSIDOMNSDOCUMENT
-  NS_DECL_NSIDOMNSDOCUMENT_MOZILLA_2_0_BRANCH
 
   // nsIDOMDocumentEvent
   NS_DECL_NSIDOMDOCUMENTEVENT
@@ -978,7 +970,9 @@ public:
   virtual void SetChangeScrollPosWhenScrollingToRef(PRBool aValue);
 
   already_AddRefed<nsContentList>
-    GetElementsByTagName(const nsAString& aTagName);
+  GetElementsByTagName(const nsAString& aTagName) {
+    return NS_GetContentList(this, kNameSpaceID_Unknown, aTagName);
+  }
   already_AddRefed<nsContentList>
     GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                            const nsAString& aLocalName);
@@ -990,6 +984,8 @@ public:
   virtual NS_HIDDEN_(nsresult) AddImage(imgIRequest* aImage);
   virtual NS_HIDDEN_(nsresult) RemoveImage(imgIRequest* aImage);
   virtual NS_HIDDEN_(nsresult) SetImageLockingState(PRBool aLocked);
+
+  virtual nsresult GetMozCurrentStateObject(nsIVariant** aResult);
 
 protected:
   friend class nsNodeUtils;
@@ -1056,7 +1052,7 @@ protected:
                               const nsAString& aType,
                               PRBool aPersisted);
 
-  virtual nsPIDOMWindow *GetWindowInternal();
+  virtual nsPIDOMWindow *GetWindowInternal() const;
   virtual nsPIDOMWindow *GetInnerWindowInternal();
   virtual nsIScriptGlobalObject* GetScriptHandlingObjectInternal() const;
   virtual PRBool InternalAllowXULXBL();
@@ -1205,6 +1201,11 @@ private:
   void EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
                                        PRBool aUpdateCSSLoader);
 
+  // Revoke any pending notifications due to mozRequestAnimationFrame calls
+  void RevokeAnimationFrameNotifications();
+  // Reschedule any notifications we need to handle mozRequestAnimationFrame
+  void RescheduleAnimationFrameNotifications();
+
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
@@ -1272,7 +1273,6 @@ protected:
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMDocumentTraversal,         \
                                      nsDocument)                              \
   NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMEventTarget, nsDocument)   \
-  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNode, nsDocument)          \
-  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOM3Document, nsDocument)
+  NS_INTERFACE_TABLE_ENTRY_AMBIGUOUS(_class, nsIDOMNode, nsDocument)
 
 #endif /* nsDocument_h___ */

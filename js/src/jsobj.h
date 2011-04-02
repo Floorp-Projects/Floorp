@@ -41,13 +41,6 @@
 #ifndef jsobj_h___
 #define jsobj_h___
 
-/* Gross special case for Gecko, which defines malloc/calloc/free. */
-#ifdef mozilla_mozalloc_macro_wrappers_h
-#  define JS_OBJ_UNDEFD_MOZALLOC_WRAPPERS
-/* The "anti-header" */
-#  include "mozilla/mozalloc_undef_macro_wrappers.h"
-#endif
-
 /*
  * JS object definitions.
  *
@@ -209,11 +202,11 @@ MeterEntryCount(uintN count);
 
 } /* namespace js */
 
-struct JSObjectMap {
-    uint32 shape;       /* shape identifier */
-    uint32 slotSpan;    /* one more than maximum live slot number */
+struct JSObjectMap : public js::gc::Cell {
+    mutable uint32 shape;  /* shape identifier */
+    uint32 slotSpan;       /* one more than maximum live slot number */
 
-    static JS_FRIEND_DATA(const JSObjectMap) sharedNonNative;
+    static JS_FRIEND_DATA(JSObjectMap) sharedNonNative;
 
     explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
     JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}
@@ -280,6 +273,7 @@ js_TypeOf(JSContext *cx, JSObject *obj);
 namespace js {
 
 struct NativeIterator;
+class RegExp;
 
 }
 
@@ -512,7 +506,7 @@ struct JSObject : js::gc::Cell {
     }
 
     /* Functions for setting up scope chain object maps and shapes. */
-    void initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent);
+    void initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
     void initClonedBlock(JSContext *cx, js::types::TypeObject *type, JSStackFrame *priv);
     void setBlockOwnShape(JSContext *cx);
 
@@ -1051,14 +1045,34 @@ struct JSObject : js::gc::Cell {
 
   private:
     static const uint32 JSSLOT_REGEXP_LAST_INDEX = 0;
+    static const uint32 JSSLOT_REGEXP_SOURCE = 1;
+    static const uint32 JSSLOT_REGEXP_GLOBAL = 2;
+    static const uint32 JSSLOT_REGEXP_IGNORE_CASE = 3;
+    static const uint32 JSSLOT_REGEXP_MULTILINE = 4;
+    static const uint32 JSSLOT_REGEXP_STICKY = 5;
+
+    /*
+     * Compute the initial shape to associate with fresh regular expression
+     * objects, encoding their initial properties. Return the shape after
+     * changing this regular expression object's last property to it.
+     */
+    const js::Shape *assignInitialRegExpShape(JSContext *cx);
 
   public:
-    static const uint32 REGEXP_CLASS_RESERVED_SLOTS = 1;
+    static const uint32 REGEXP_CLASS_RESERVED_SLOTS = 6;
 
     inline const js::Value &getRegExpLastIndex() const;
     inline void setRegExpLastIndex(const js::Value &v);
     inline void setRegExpLastIndex(jsdouble d);
     inline void zeroRegExpLastIndex();
+
+    inline void setRegExpSource(JSString *source);
+    inline void setRegExpGlobal(bool global);
+    inline void setRegExpIgnoreCase(bool ignoreCase);
+    inline void setRegExpMultiline(bool multiline);
+    inline void setRegExpSticky(bool sticky);
+
+    inline bool initRegExp(JSContext *cx, js::RegExp *re);
 
     /*
      * Iterator-specific getters and setters.
@@ -1963,9 +1977,5 @@ extern bool
 IsAnyBuiltinEval(JSFunction *fun);
 
 }
-
-#ifdef JS_OBJ_UNDEFD_MOZALLOC_WRAPPERS
-#  include "mozilla/mozalloc_macro_wrappers.h"
-#endif
 
 #endif /* jsobj_h___ */

@@ -57,7 +57,7 @@
 #endif
 
 inline bool
-JSAtom::isUnitString(void *ptr)
+JSAtom::isUnitString(const void *ptr)
 {
     jsuword delta = reinterpret_cast<jsuword>(ptr) -
                     reinterpret_cast<jsuword>(unitStaticTable);
@@ -70,7 +70,7 @@ JSAtom::isUnitString(void *ptr)
 }
 
 inline bool
-JSAtom::isLength2String(void *ptr)
+JSAtom::isLength2String(const void *ptr)
 {
     jsuword delta = reinterpret_cast<jsuword>(ptr) -
                     reinterpret_cast<jsuword>(length2StaticTable);
@@ -83,7 +83,7 @@ JSAtom::isLength2String(void *ptr)
 }
 
 inline bool
-JSAtom::isHundredString(void *ptr)
+JSAtom::isHundredString(const void *ptr)
 {
     jsuword delta = reinterpret_cast<jsuword>(ptr) -
                     reinterpret_cast<jsuword>(hundredStaticTable);
@@ -96,21 +96,24 @@ JSAtom::isHundredString(void *ptr)
 }
 
 inline bool
-JSAtom::isStatic(void *ptr)
+JSAtom::isStatic(const void *ptr)
 {
     return isUnitString(ptr) || isLength2String(ptr) || isHundredString(ptr);
 }
 
 namespace js {
+
+struct Shape;
+
 namespace gc {
 
 inline uint32
-GetGCThingTraceKind(void *thing)
+GetGCThingTraceKind(const void *thing)
 {
     JS_ASSERT(thing);
     if (JSAtom::isStatic(thing))
         return JSTRACE_STRING;
-    Cell *cell = reinterpret_cast<Cell *>(thing);
+    const Cell *cell = reinterpret_cast<const Cell *>(thing);
     return GetFinalizableTraceKind(cell->arena()->header()->thingKind);
 }
 
@@ -193,8 +196,11 @@ js_NewGCObject(JSContext *cx, js::gc::FinalizeKind kind)
 {
     JS_ASSERT(kind >= js::gc::FINALIZE_OBJECT0 && kind <= js::gc::FINALIZE_OBJECT_LAST);
     JSObject *obj = NewFinalizableGCThing<JSObject>(cx, kind);
-    if (obj)
+    if (obj) {
         obj->capacity = js::gc::GetGCKindSlots(kind);
+        obj->type = NULL;  /* :FIXME: remove (see MarkChildren) */
+        obj->map = NULL; /* Stops obj from being scanned until initializated. */
+    }
     return obj;
 }
 
@@ -222,9 +228,17 @@ inline JSFunction*
 js_NewGCFunction(JSContext *cx)
 {
     JSFunction *fun = NewFinalizableGCThing<JSFunction>(cx, js::gc::FINALIZE_FUNCTION);
-    if (fun)
+    if (fun) {
         fun->capacity = JSObject::FUN_CLASS_RESERVED_SLOTS;
+        fun->map = NULL; /* Stops fun from being scanned until initializated. */
+    }
     return fun;
+}
+
+inline js::Shape *
+js_NewGCShape(JSContext *cx)
+{
+    return NewFinalizableGCThing<js::Shape>(cx, js::gc::FINALIZE_SHAPE);
 }
 
 #if JS_HAS_XML_SUPPORT
@@ -248,6 +262,9 @@ static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSFunction *thing);
 
 static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, const Shape *thing);
+
+static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSShortString *thing);
 
 extern void
@@ -265,13 +282,14 @@ Mark(JSTracer *trc, T *thing)
     JS_ASSERT_IF(trc->context->runtime->gcCurrentCompartment, IS_GC_MARKING_TRACER(trc));
 
     JSRuntime *rt = trc->context->runtime;
+
     /* Don't mark things outside a compartment if we are in a per-compartment GC */
     if (rt->gcCurrentCompartment && thing->compartment() != rt->gcCurrentCompartment)
         goto out;
 
     if (!IS_GC_MARKING_TRACER(trc)) {
         uint32 kind = js::gc::GetGCThingTraceKind(thing);
-        trc->callback(trc, thing, kind);
+        trc->callback(trc, (void *)thing, kind);
         goto out;
     }
 
@@ -319,6 +337,47 @@ MarkObject(JSTracer *trc, JSObject &obj, const char *name)
     Mark(trc, &obj);
 }
 
+static inline void
+MarkShape(JSTracer *trc, const Shape *shape, const char *name)
+{
+    JS_ASSERT(trc);
+    JS_ASSERT(shape);
+    JS_SET_TRACING_NAME(trc, name);
+    JS_ASSERT(GetArena<Shape>((Cell *)shape)->assureThingIsAligned((void *)shape));
+    Mark(trc, shape);
+}
+
+} // namespace gc
+} // namespace js
+
+inline void
+JSObject::trace(JSTracer *trc)
+{
+    if (!isNative())
+        return;
+
+    JSContext *cx = trc->context;
+    js::Shape *shape = lastProp;
+
+    MarkShape(trc, shape, "shape");
+
+    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
+        /*
+         * MarkShape will regenerate the shape if need be. However, we need to
+         * regenerate our shape if hasOwnShape() is true.
+         */
+        uint32 newShape = shape->shape;
+        if (hasOwnShape()) {
+            newShape = js_RegenerateShapeForGC(cx->runtime);
+            JS_ASSERT(newShape != shape->shape);
+        }
+        objShape = newShape;
+    }
+}
+
+namespace js {
+namespace gc {
+
 void
 MarkObjectSlots(JSTracer *trc, JSObject *obj);
 
@@ -328,6 +387,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
     /*
      * If obj either has no map or no type, it must be a newborn. The type is
      * set first, and must be marked in case constructing the map triggered GC.
+     * :FIXME: need autorooters for type objects, remove this hack.
      */
     if (obj->type && !obj->type->marked)
         obj->type->trace(trc);
@@ -370,6 +430,12 @@ MarkChildren(JSTracer *trc, JSString *str)
     }
 }
 
+static inline void
+MarkChildren(JSTracer *trc, const Shape *shape)
+{
+    shape->markChildren(trc);
+}
+
 #ifdef JS_HAS_XML_SUPPORT
 static inline void
 MarkChildren(JSTracer *trc, JSXML *xml)
@@ -391,14 +457,13 @@ RecursionTooDeep(GCMarker *gcmarker) {
 static JS_ALWAYS_INLINE void
 TypedMarker(JSTracer *trc, JSXML *thing)
 {
-    if (!reinterpret_cast<Cell *>(thing)->markIfUnmarked(reinterpret_cast<GCMarker *>(trc)->getMarkColor()))
+    if (!thing->markIfUnmarked(reinterpret_cast<GCMarker *>(trc)->getMarkColor()))
         return;
     GCMarker *gcmarker = static_cast<GCMarker *>(trc);
-    if (RecursionTooDeep(gcmarker)) {
+    if (RecursionTooDeep(gcmarker))
         gcmarker->delayMarkingChildren(thing);
-    } else {
+    else
         MarkChildren(trc, thing);
-    }
 }
 
 static JS_ALWAYS_INLINE void
@@ -411,11 +476,10 @@ TypedMarker(JSTracer *trc, JSObject *thing)
     if (!thing->markIfUnmarked(gcmarker->getMarkColor()))
         return;
     
-    if (RecursionTooDeep(gcmarker)) {
+    if (RecursionTooDeep(gcmarker))
         gcmarker->delayMarkingChildren(thing);
-    } else {
+    else
         MarkChildren(trc, thing);
-    }
 }
 
 static JS_ALWAYS_INLINE void
@@ -428,11 +492,10 @@ TypedMarker(JSTracer *trc, JSFunction *thing)
     if (!thing->markIfUnmarked(gcmarker->getMarkColor()))
         return;
 
-    if (RecursionTooDeep(gcmarker)) {
+    if (RecursionTooDeep(gcmarker))
         gcmarker->delayMarkingChildren(thing);
-    } else {
+    else
         MarkChildren(trc, static_cast<JSObject *>(thing));
-    }
 }
 
 static JS_ALWAYS_INLINE void
@@ -444,6 +507,30 @@ TypedMarker(JSTracer *trc, JSShortString *thing)
      * markIfUnmarked result.
      */
     (void) thing->markIfUnmarked();
+}
+
+static JS_ALWAYS_INLINE void
+TypedMarker(JSTracer *trc, const Shape *thing)
+{
+    JS_ASSERT(thing);
+    JS_ASSERT(JSTRACE_SHAPE == GetFinalizableTraceKind(thing->arena()->header()->thingKind));
+
+    GCMarker *gcmarker = static_cast<GCMarker *>(trc);
+    if (!thing->markIfUnmarked(gcmarker->getMarkColor()))
+        return;
+
+    /*
+     * We regenerate the shape number early. If we did it inside MarkChildren,
+     * then it might be called multiple times during delayed marking, which
+     * would be incorrect. However, this does mean that Shape::regenerate
+     * shouldn't use too much stack.
+     */
+    thing->regenerate(trc);
+
+    if (RecursionTooDeep(gcmarker))
+        gcmarker->delayMarkingChildren(thing);
+    else
+        MarkChildren(trc, thing);
 }
 
 static inline void
@@ -476,9 +563,9 @@ MarkId(JSTracer *trc, jsid id)
         JSString *str = JSID_TO_STRING(id);
         if (!str->isStaticAtom())
             Mark(trc, str);
-    }
-    else if (JS_UNLIKELY(JSID_IS_OBJECT(id)))
+    } else if (JS_UNLIKELY(JSID_IS_OBJECT(id))) {
         Mark(trc, JSID_TO_OBJECT(id));
+    }
 }
 
 static inline void
@@ -514,6 +601,9 @@ MarkKind(JSTracer *trc, void *thing, uint32 kind)
             break;
         case JSTRACE_STRING:
             MarkString(trc, reinterpret_cast<JSString *>(thing));
+            break;
+        case JSTRACE_SHAPE:
+            Mark(trc, reinterpret_cast<Shape *>(thing));
             break;
 #if JS_HAS_XML_SUPPORT
         case JSTRACE_XML:
@@ -562,7 +652,7 @@ MarkShapeRange(JSTracer *trc, const Shape **beg, const Shape **end, const char *
 {
     for (const Shape **sp = beg; sp < end; ++sp) {
         JS_SET_TRACING_INDEX(trc, name, sp - beg);
-        Shape::trace(trc, *sp);
+        MarkShape(trc, *sp, name);
     }
 }
 

@@ -2256,6 +2256,10 @@ PRInt32 _MD_open(const char *name, PRIntn flags, PRIntn mode)
             PR_Lock(_pr_rename_lock);
     }
 
+#if defined(ANDROID)
+    osflags |= O_LARGEFILE;
+#endif
+
     rv = _md_iovector._open64(name, osflags, mode);
 
     if (rv < 0) {
@@ -2742,6 +2746,23 @@ static void* _MD_Unix_mmap64(
 }  /* _MD_Unix_mmap64 */
 #endif /* defined(_PR_NO_LARGE_FILES) || defined(SOLARIS2_5) */
 
+/* Android doesn't have mmap64. */
+#if defined(ANDROID)
+extern void *__mmap2(void *, size_t, int, int, int, size_t);
+
+#define ANDROID_PAGE_SIZE 4096
+
+static void *
+mmap64(void *addr, size_t len, int prot, int flags, int fd, loff_t offset)
+{
+    if (offset & (ANDROID_PAGE_SIZE - 1)) {
+        errno = EINVAL;
+        return MAP_FAILED;
+    }
+    return __mmap2(addr, len, prot, flags, fd, offset / ANDROID_PAGE_SIZE);
+}
+#endif
+
 #if defined(OSF1) && defined(__GNUC__)
 
 /*
@@ -2796,7 +2817,11 @@ static void _PR_InitIOV(void)
     _md_iovector._stat64 = stat;
     _md_iovector._lseek64 = _MD_Unix_lseek64;
 #elif defined(_PR_HAVE_OFF64_T)
-#if defined(IRIX5_3)
+#if defined(IRIX5_3) || defined(ANDROID)
+    /*
+     * Android doesn't have open64.  We pass the O_LARGEFILE flag to open
+     * in _MD_open.
+     */
     _md_iovector._open64 = open;
 #else
     _md_iovector._open64 = open64;

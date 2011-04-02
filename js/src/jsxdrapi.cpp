@@ -95,7 +95,7 @@ typedef struct JSXDRMemState {
             if (MEM_LIMIT(xdr) &&                                             \
                 MEM_COUNT(xdr) + bytes > MEM_LIMIT(xdr)) {                    \
                 uint32 limit_ = JS_ROUNDUP(MEM_COUNT(xdr) + bytes, MEM_BLOCK);\
-                void *data_ = (xdr)->cx->realloc(MEM_BASE(xdr), limit_);      \
+                void *data_ = (xdr)->cx->realloc_(MEM_BASE(xdr), limit_);      \
                 if (!data_)                                                   \
                     return 0;                                                 \
                 MEM_BASE(xdr) = (char *) data_;                               \
@@ -221,7 +221,7 @@ mem_tell(JSXDRState *xdr)
 static void
 mem_finalize(JSXDRState *xdr)
 {
-    xdr->cx->free(MEM_BASE(xdr));
+    xdr->cx->free_(MEM_BASE(xdr));
 }
 
 static JSXDROps xdrmem_ops = {
@@ -239,21 +239,19 @@ JS_XDRInitBase(JSXDRState *xdr, JSXDRMode mode, JSContext *cx)
     xdr->reghash = NULL;
     xdr->userdata = NULL;
     xdr->script = NULL;
-    xdr->filename = NULL;
-    xdr->atoms = NULL;
-    xdr->atomsMap = NULL;
+    xdr->state = NULL;
 }
 
 JS_PUBLIC_API(JSXDRState *)
 JS_XDRNewMem(JSContext *cx, JSXDRMode mode)
 {
-    JSXDRState *xdr = (JSXDRState *) cx->malloc(sizeof(JSXDRMemState));
+    JSXDRState *xdr = (JSXDRState *) cx->malloc_(sizeof(JSXDRMemState));
     if (!xdr)
         return NULL;
     JS_XDRInitBase(xdr, mode, cx);
     if (mode == JSXDR_ENCODE) {
-        if (!(MEM_BASE(xdr) = (char *) cx->malloc(MEM_BLOCK))) {
-            cx->free(xdr);
+        if (!(MEM_BASE(xdr) = (char *) cx->malloc_(MEM_BLOCK))) {
+            cx->free_(xdr);
             return NULL;
         }
     } else {
@@ -307,11 +305,11 @@ JS_XDRDestroy(JSXDRState *xdr)
     JSContext *cx = xdr->cx;
     xdr->ops->finalize(xdr);
     if (xdr->registry) {
-        cx->free(xdr->registry);
+        cx->free_(xdr->registry);
         if (xdr->reghash)
             JS_DHashTableDestroy((JSDHashTable *) xdr->reghash);
     }
-    cx->free(xdr);
+    cx->free_(xdr);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -389,12 +387,12 @@ JS_XDRCString(JSXDRState *xdr, char **sp)
         len = strlen(*sp);
     JS_XDRUint32(xdr, &len);
     if (xdr->mode == JSXDR_DECODE) {
-        if (!(*sp = (char *) xdr->cx->malloc(len + 1)))
+        if (!(*sp = (char *) xdr->cx->malloc_(len + 1)))
             return JS_FALSE;
     }
     if (!JS_XDRBytes(xdr, *sp, len)) {
         if (xdr->mode == JSXDR_DECODE)
-            xdr->cx->free(*sp);
+            xdr->cx->free_(*sp);
         return JS_FALSE;
     }
     if (xdr->mode == JSXDR_DECODE) {
@@ -459,7 +457,7 @@ JS_XDRString(JSXDRState *xdr, JSString **strp)
 
         *strp = js_NewString(xdr->cx, chars, len);
         if (!*strp) {
-            xdr->cx->free(chars);
+            xdr->cx->free_(chars);
             return false;
         }
     }
@@ -610,7 +608,7 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 static uint32
 XDRGetAtomIndex(JSXDRState *xdr, JSAtom *atom)
 {
-    if (XDRAtomsHashMap::Ptr p = xdr->atomsMap->lookup(atom))
+    if (XDRAtomsHashMap::Ptr p = xdr->state->atomsMap.lookup(atom))
         return p->value;
     return uint32(-1);
 }
@@ -618,12 +616,13 @@ XDRGetAtomIndex(JSXDRState *xdr, JSAtom *atom)
 static bool
 XDRPutAtomIndex(JSXDRState *xdr, JSAtom *atom)
 {
-    if (xdr->atoms->length() >= size_t(uint32(-1)))
+    XDRScriptState *state = xdr->state;
+    if (state->atoms.length() >= size_t(uint32(-1)))
         return true;
 
     if ((xdr->mode == JSXDR_DECODE ||
-         xdr->atomsMap->put(atom, uint32(xdr->atoms->length()))) &&
-        xdr->atoms->append(atom))
+         state->atomsMap.put(atom, uint32(state->atoms.length()))) &&
+        state->atoms.append(atom))
         return true;
 
     js_ReportOutOfMemory(xdr->cx);
@@ -646,8 +645,8 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
 
     if (xdr->mode == JSXDR_DECODE) {
         if (idx != uint32(-1)) {
-            JS_ASSERT(size_t(idx) < xdr->atoms->length());
-            *atomp = (*xdr->atoms)[idx];
+            JS_ASSERT(size_t(idx) < xdr->state->atoms.length());
+            *atomp = xdr->state->atoms[idx];
         } else {
             uint32 len;
             if (!JS_XDRUint32(xdr, &len))
@@ -678,10 +677,32 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
     return true;
 }
 
+XDRScriptState::XDRScriptState(JSXDRState *x)
+    : xdr(x)
+    , filename(NULL)
+    , filenameSaved(false)
+{
+    JS_ASSERT(!xdr->state);
+
+    if (xdr->mode == JSXDR_ENCODE && !atomsMap.init()) {
+        js_ReportOutOfMemory(xdr->cx);
+        return;
+    }
+
+    xdr->state = this;
+}
+
+XDRScriptState::~XDRScriptState()
+{
+    xdr->state = NULL;
+    if (xdr->mode == JSXDR_DECODE && filename && !filenameSaved)
+        xdr->cx->free_((void *)filename);
+}
+
 JS_PUBLIC_API(JSBool)
 JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
 {
-    JS_ASSERT(!xdr->filename);
+    JS_ASSERT(!xdr->state);
 
     JSScript *script;
     uint32 magic;
@@ -702,22 +723,16 @@ JS_XDRScriptObject(JSXDRState *xdr, JSObject **scriptObjp)
         return false;
     }
 
-    if (xdr->mode == JSXDR_ENCODE)
-        xdr->filename = script->filename;
-    if (!JS_XDRCStringOrNull(xdr, (char **) &xdr->filename))
+    XDRScriptState state(xdr);
+    if (!xdr->state)
         return false;
-    if (xdr->mode == JSXDR_DECODE && xdr->filename) {
-        const char *filename = xdr->filename;
-        filename = js_SaveScriptFilename(xdr->cx, filename);
-        xdr->cx->free((void *) xdr->filename);
-        xdr->filename = filename;
-        if (!filename)
-            return false;
-    }
 
-    bool ok = js_XDRScript(xdr, &script);
-    xdr->filename = NULL;
-    if (!ok)
+    if (xdr->mode == JSXDR_ENCODE)
+        state.filename = script->filename;
+    if (!JS_XDRCStringOrNull(xdr, (char **) &state.filename))
+        return false;
+
+    if (!js_XDRScript(xdr, &script))
         return false;
 
     if (xdr->mode == JSXDR_DECODE) {
@@ -753,7 +768,7 @@ JS_XDRRegisterClass(JSXDRState *xdr, JSClass *clasp, uint32 *idp)
     if (numclasses == maxclasses) {
         maxclasses = (maxclasses == 0) ? CLASS_REGISTRY_MIN : maxclasses << 1;
         registry = (JSClass **)
-            xdr->cx->realloc(xdr->registry, maxclasses * sizeof(JSClass *));
+            xdr->cx->realloc_(xdr->registry, maxclasses * sizeof(JSClass *));
         if (!registry)
             return JS_FALSE;
         xdr->registry = registry;

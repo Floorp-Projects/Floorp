@@ -686,26 +686,26 @@ protected:
   NS_HIDDEN_(nsresult) SetUnsignedIntAttr(nsIAtom* aAttr, PRUint32 aValue);
 
   /**
-   * Helper method for NS_IMPL_FLOAT_ATTR macro.
-   * Gets the float-value of an attribute, returns specified default value
-   * if the attribute isn't set or isn't set to a float. Only works for
+   * Helper method for NS_IMPL_DOUBLE_ATTR macro.
+   * Gets the double-value of an attribute, returns specified default value
+   * if the attribute isn't set or isn't set to a double. Only works for
    * attributes in null namespace.
    *
    * @param aAttr    name of attribute.
    * @param aDefault default-value to return if attribute isn't set.
    * @param aResult  result value [out]
    */
-  NS_HIDDEN_(nsresult) GetFloatAttr(nsIAtom* aAttr, float aDefault, float* aValue);
+  NS_HIDDEN_(nsresult) GetDoubleAttr(nsIAtom* aAttr, double aDefault, double* aValue);
 
   /**
-   * Helper method for NS_IMPL_FLOAT_ATTR macro.
-   * Sets value of attribute to specified float. Only works for attributes
+   * Helper method for NS_IMPL_DOUBLE_ATTR macro.
+   * Sets value of attribute to specified double. Only works for attributes
    * in null namespace.
    *
    * @param aAttr    name of attribute.
-   * @param aValue   Float value of attribute.
+   * @param aValue   Double value of attribute.
    */
-  NS_HIDDEN_(nsresult) SetFloatAttr(nsIAtom* aAttr, float aValue);
+  NS_HIDDEN_(nsresult) SetDoubleAttr(nsIAtom* aAttr, double aValue);
 
   /**
    * Helper for GetURIAttr and GetHrefURIForAnchors which returns an
@@ -860,16 +860,6 @@ public:
   {
     return PR_TRUE;
   }
-  
-  virtual PRBool IsSubmitControl() const;
-
-          PRBool IsTextControl(PRBool aExcludePassword) const;
-
-          PRBool IsSingleLineTextControl(PRBool aExcludePassword) const;
-
-          PRBool IsLabelableControl() const;
-
-          PRBool IsSubmittableControl() const;
 
   // nsIContent
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
@@ -934,17 +924,7 @@ protected:
   virtual nsresult AfterSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                                 const nsAString* aValue, PRBool aNotify);
 
-  /**
-   * Returns if the element should react on autofocus attribute.
-   */
-  virtual PRBool AcceptAutofocus() const
-  {
-    return PR_FALSE;
-  }
-
   void UpdateEditableFormControlState();
-
-  PRBool IsSingleLineTextControlInternal(PRBool aExcludePassword, PRInt32 mType) const;
 
   /**
    * This method will update the form owner, using @form or looking to a parent.
@@ -1209,23 +1189,23 @@ protected:
   }
 
 /**
- * A macro to implement the getter and setter for a given float
- * valued content property. The method uses the generic GetAttr and
- * SetAttr methods.
+ * A macro to implement the getter and setter for a given double-precision
+ * floating point valued content property. The method uses GetDoubleAttr and
+ * SetDoubleAttr methods.
  */
-#define NS_IMPL_FLOAT_ATTR(_class, _method, _atom)                    \
-  NS_IMPL_FLOAT_ATTR_DEFAULT_VALUE(_class, _method, _atom, 0.0)
+#define NS_IMPL_DOUBLE_ATTR(_class, _method, _atom)                    \
+  NS_IMPL_DOUBLE_ATTR_DEFAULT_VALUE(_class, _method, _atom, 0.0)
 
-#define NS_IMPL_FLOAT_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default)  \
+#define NS_IMPL_DOUBLE_ATTR_DEFAULT_VALUE(_class, _method, _atom, _default) \
   NS_IMETHODIMP                                                             \
-  _class::Get##_method(float* aValue)                                   \
+  _class::Get##_method(double* aValue)                                      \
   {                                                                         \
-    return GetFloatAttr(nsGkAtoms::_atom, _default, aValue);                \
+    return GetDoubleAttr(nsGkAtoms::_atom, _default, aValue);               \
   }                                                                         \
   NS_IMETHODIMP                                                             \
-  _class::Set##_method(float aValue)                                    \
+  _class::Set##_method(double aValue)                                       \
   {                                                                         \
-    return SetFloatAttr(nsGkAtoms::_atom, aValue);                          \
+    return SetDoubleAttr(nsGkAtoms::_atom, aValue);                         \
   }
 
 /**

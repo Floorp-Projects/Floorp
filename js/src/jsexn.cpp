@@ -183,7 +183,7 @@ CopyErrorReport(JSContext *cx, JSErrorReport *report)
      */
     mallocSize = sizeof(JSErrorReport) + argsArraySize + argsCopySize +
                  ucmessageSize + uclinebufSize + linebufSize + filenameSize;
-    cursor = (uint8 *)cx->malloc(mallocSize);
+    cursor = (uint8 *)cx->malloc_(mallocSize);
     if (!cursor)
         return NULL;
 
@@ -297,7 +297,9 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     stackDepth = 0;
     valueCount = 0;
     for (fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE); fp; fp = fp->prev()) {
-        if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
+        if (fp->scopeChain().compartment() != cx->compartment)
+            break;
+        if (fp->isNonEvalFunctionFrame()) {
             Value v = NullValue();
             if (checkAccess &&
                 !checkAccess(cx, &fp->callee(), callerid, JSACC_READ, &v)) {
@@ -320,7 +322,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
         js_ReportAllocationOverflow(cx);
         return JS_FALSE;
     }
-    priv = (JSExnPrivate *)cx->malloc(size);
+    priv = (JSExnPrivate *)cx->malloc_(size);
     if (!priv)
         return JS_FALSE;
 
@@ -338,6 +340,8 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     values = GetStackTraceValueBuffer(priv);
     elem = priv->stackElems;
     for (fp = js_GetTopStackFrame(cx, FRAME_EXPAND_NONE); fp != fpstop; fp = fp->prev()) {
+        if (fp->scopeChain().compartment() != cx->compartment)
+            break;
         if (!fp->isFunctionFrame() || fp->isEvalFrame()) {
             elem->funName = NULL;
             elem->argc = 0;
@@ -425,8 +429,8 @@ exn_finalize(JSContext *cx, JSObject *obj)
     priv = GetExnPrivate(cx, obj);
     if (priv) {
         if (priv->errorReport)
-            cx->free(priv->errorReport);
-        cx->free(priv);
+            cx->free_(priv->errorReport);
+        cx->free_(priv);
     }
 }
 
@@ -611,7 +615,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
             if (stackmax >= STACK_LENGTH_LIMIT)                               \
                 goto done;                                                    \
             stackmax = stackmax ? 2 * stackmax : 64;                          \
-            ptr_ = cx->realloc(stackbuf, (stackmax+1) * sizeof(jschar));      \
+            ptr_ = cx->realloc_(stackbuf, (stackmax+1) * sizeof(jschar));      \
             if (!ptr_)                                                        \
                 goto bad;                                                     \
             stackbuf = (jschar *) ptr_;                                       \
@@ -634,7 +638,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
                 goto done;                                                    \
             }                                                                 \
             stackmax = JS_BIT(JS_CeilingLog2(stacklen + length_));            \
-            ptr_ = cx->realloc(stackbuf, (stackmax+1) * sizeof(jschar));      \
+            ptr_ = cx->realloc_(stackbuf, (stackmax+1) * sizeof(jschar));      \
             if (!ptr_)                                                        \
                 goto bad;                                                     \
             stackbuf = (jschar *) ptr_;                                       \
@@ -685,7 +689,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
          * don't use JS_realloc here; simply let the oversized allocation
          * be owned by the string in that rare case.
          */
-        void *shrunk = cx->realloc(stackbuf, (stacklen+1) * sizeof(jschar));
+        void *shrunk = cx->realloc_(stackbuf, (stacklen+1) * sizeof(jschar));
         if (shrunk)
             stackbuf = (jschar *) shrunk;
     }
@@ -697,7 +701,7 @@ StackTraceToString(JSContext *cx, JSExnPrivate *priv)
 
   bad:
     if (stackbuf)
-        cx->free(stackbuf);
+        cx->free_(stackbuf);
     return NULL;
 }
 
@@ -829,7 +833,7 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
         name_length = name->length();
         message_length = message->length();
         length = (name_length ? name_length + 2 : 0) + message_length;
-        cp = chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
+        cp = chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
         if (!chars)
             return JS_FALSE;
 
@@ -850,7 +854,7 @@ exn_toString(JSContext *cx, uintN argc, Value *vp)
 
         result = js_NewString(cx, chars, length);
         if (!result) {
-            cx->free(chars);
+            cx->free_(chars);
             return JS_FALSE;
         }
     } else {
@@ -940,7 +944,7 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
             }
         }
 
-        cp = chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
+        cp = chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
         if (!chars)
             return false;
 
@@ -990,7 +994,7 @@ exn_toSource(JSContext *cx, uintN argc, Value *vp)
 
         result = js_NewString(cx, chars, length);
         if (!result) {
-            cx->free(chars);
+            cx->free_(chars);
             return false;
         }
         vp->setString(result);

@@ -575,6 +575,8 @@ pref("dom.send_after_paint_to_content", false);
 
 // Timeout clamp in ms for timeouts we clamp
 pref("dom.min_timeout_value", 10);
+// And for background windows
+pref("dom.min_background_timeout_value", 1000);
 
 // Parsing perf prefs. For now just mimic what the old code did.
 #ifndef XP_WIN
@@ -1358,6 +1360,7 @@ pref("dom.ipc.plugins.java.enabled", false);
 // Linux plugins using Xt instead of Xembed don't work out-of-process yet.
 pref("dom.ipc.plugins.enabled.libvlcplugin.so", false);
 pref("dom.ipc.plugins.enabled.nppdf.so", false);
+pref("dom.ipc.plugins.enabled.602plugin.so", false);
 #endif
 #endif
 #endif
@@ -2456,102 +2459,6 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 # OS2
 #endif
 
-#ifdef XP_BEOS
-
-pref("intl.font_charset", "");
-pref("intl.font_spec_list", "");
-pref("mail.signature_date", 0);
-
-pref("font.alias-list", "sans,sans-serif,serif,monospace");
-
-pref("font.default.ar", "sans-serif");
-pref("font.size.variable.ar", 16);
-pref("font.size.fixed.ar", 13);
-
-pref("font.default.el", "serif");
-pref("font.size.variable.el", 16);
-pref("font.size.fixed.el", 13);
-
-pref("font.default.he", "sans-serif");
-pref("font.size.variable.he", 16);
-pref("font.size.fixed.he", 13);
-
-pref("font.default.ja", "sans-serif");
-pref("font.size.variable.ja", 16);
-pref("font.size.fixed.ja", 16);
-
-pref("font.default.ko", "sans-serif");
-pref("font.size.variable.ko", 16);
-pref("font.size.fixed.ko", 16);
-
-pref("font.default.th", "serif");
-pref("font.size.variable.th", 16);
-pref("font.size.fixed.th", 13);
-
-pref("font.default.tr", "serif");
-pref("font.size.variable.tr", 16);
-pref("font.size.fixed.tr", 13);
-
-pref("font.default.x-baltic", "serif");
-pref("font.size.variable.x-baltic", 16);
-pref("font.size.fixed.x-baltic", 13);
-
-pref("font.default.x-central-euro", "serif");
-pref("font.size.variable.x-central-euro", 16);
-pref("font.size.fixed.x-central-euro", 13);
-
-pref("font.default.x-cyrillic", "serif");
-pref("font.size.variable.x-cyrillic", 16);
-pref("font.size.fixed.x-cyrillic", 13);
-
-pref("font.default.x-unicode", "serif");
-pref("font.size.variable.x-unicode", 16);
-pref("font.size.fixed.x-unicode", 13);
-
-pref("font.default.x-western", "serif");
-pref("font.size.variable.x-western", 16);
-pref("font.size.fixed.x-western", 13);
-
-pref("font.default.zh-CN", "sans-serif");
-pref("font.size.variable.zh-CN", 16);
-pref("font.size.fixed.zh-CN", 16);
-
-pref("font.default.zh-TW", "sans-serif");
-pref("font.size.variable.zh-TW", 16);
-pref("font.size.fixed.zh-TW", 16);
-
-pref("font.default.zh-HK", "sans-serif");
-pref("font.size.variable.zh-HK", 16);
-pref("font.size.fixed.zh-HK", 16);
-
-/**
- * Set default accelKey to "Alt", which is the default under BeOS.
- * The generalAccessKey is used for shortcuts on web pages, set to
- * Ctrl+Shift. The menuAccessKey is now the "windows" key.
- */
-pref("ui.key.accelKey", 18);
-pref("ui.key.menuAccessKey", 17);
-pref("ui.key.generalAccessKey", -1);
-
-// If generalAccessKey is -1, use the following two prefs instead.
-// Use 0 for disabled, 1 for Shift, 2 for Ctrl, 4 for Alt, 8 for Meta
-// (values can be combined, e.g. 3 for Ctrl+Shift)
-pref("ui.key.chromeAccess", 2);
-pref("ui.key.contentAccess", 3);
-
-// xxx toolkit?
-pref("browser.download.dir", "/boot/home/Downloads");
-
-// IMEs of BeOS might use non-topmost windows for topmost <panel> element,
-// see bug 451015. If there are other problems by this value, we may need to
-// change this value.
-pref("ui.panel.default_level_parent", false);
-
-pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
-
-# BeOS
-#endif
-
 #ifdef ANDROID
 // Handled differently under Mac/Windows
 pref("network.protocol-handler.warn-external.file", false);
@@ -3094,32 +3001,6 @@ pref("mousewheel.system_scroll_override_on_root_content.enabled", false);
 # XP_UNIX
 #endif
 #endif
-#endif
-
-#if OS_ARCH==OpenVMS
-
-pref("mail.use_builtin_movemail", false);
-
-pref("helpers.global_mime_types_file", "/sys$manager/netscape/mime.types");
-pref("helpers.global_mailcap_file", "/sys$manager/netscape/mailcap");
-pref("helpers.private_mime_types_file", "/sys$login/.mime.types");
-pref("helpers.private_mailcaptypes_file", "/sys$login/.mailcap");
-
-pref("applications.telnet", "create /term /detach \"telnet %h %p\"");
-pref("applications.tn3270", "create /term /detach \"telnet /term=IBM-3278-5 %h %p\"");
-pref("applications.rlogin", "create /term /detach \"rlogin %h\"");
-pref("applications.rlogin_with_user", "create /term /detach \"rlogin %h -l %u\"");
-
-/* PostScript module specific (see unix.js for additional configuration details) */
-pref("print.postscript.print_command", "print /delete");
-/* Print module independent */
-pref("print.print_command", "print /delete");
-pref("print.print_color", false);
-
-pref("browser.cache.disk.capacity", 4096);
-pref("plugin.soname.list", "");
-
-# OpenVMS
 #endif
 
 #if OS_ARCH==AIX

@@ -47,7 +47,6 @@ EXTRA_DEPS += $(srcdir)/../objs.mk
 
 MODULE		= xpcom
 LIBRARY_NAME	= xpcomglue
-SUPPRESS_FAKELIB = 1
 DIST_INSTALL	= 1
 
 LOCAL_INCLUDES	= \
@@ -65,9 +64,6 @@ LINKSRC = nsGlueLinkingDlopen.cpp
 endif
 ifeq (OS2,$(OS_ARCH))
 LINKSRC = nsGlueLinkingOS2.cpp
-endif
-ifeq (BeOS,$(OS_ARCH))
-LINKSRC = nsGlueLinkingBeOS.cpp
 endif
 
 ifndef LINKSRC

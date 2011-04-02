@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<svg xmlns="http://www.w3.org/2000/svg">
+  <polygon id="p" transform="?" />
+  <script>
+    document.getElementById("p").transform.baseVal.removeItem(0);
+  </script>
+</svg>

@@ -74,7 +74,7 @@ class RefTest(object):
     # Set preferences for communication between our command line arguments
     # and the reftest harness.  Preferences that are required for reftest
     # to work should instead be set in reftest-cmdline.js .
-    prefsFile = open(os.path.join(profileDir, "user.js"), "w")
+    prefsFile = open(os.path.join(profileDir, "user.js"), "a")
     prefsFile.write('user_pref("reftest.timeout", %d);\n' % (options.timeout * 1000))
 
     if options.totalChunks != None:
@@ -137,8 +137,9 @@ class RefTest(object):
     profileDir = None
     try:
       profileDir = mkdtemp()
-      self.createReftestProfile(options, profileDir)
       self.copyExtraFilesToProfile(options, profileDir)
+      self.createReftestProfile(options, profileDir)
+      self.installExtensionsToProfile(options, profileDir)
 
       # browser environment
       browserEnv = self.buildBrowserEnv(options, profileDir)
@@ -172,6 +173,13 @@ class RefTest(object):
         shutil.copytree(abspath, dest)
       else:
         shutil.copy(abspath, dest)
+
+  def installExtensionsToProfile(self, options, profileDir):
+    "Install the specified extensions on the command line to the testing profile."
+    for f in options.extensionsToInstall:
+      abspath = self.getFullPath(f)
+      extensionID = f[:f.rfind(".")]
+      self.automation.installExtension(abspath, profileDir, extensionID)
 
 
 class ReftestOptions(OptionParser):
@@ -232,6 +240,13 @@ class ReftestOptions(OptionParser):
                     dest = "skipSlowTests", action = "store_true",
                     help = "skip tests marked as slow when running")
     defaults["skipSlowTests"] = False
+
+    self.add_option("--install-extension",
+                    action = "append", dest = "extensionsToInstall",
+                    help = "install the specified extension in the testing profile."
+                           "The extension file's name should be <id>.xpi where <id> is"
+                           "the extension's id as indicated in its install.rdf.")
+    defaults["extensionsToInstall"] = []
 
     self.set_defaults(**defaults)
 

@@ -333,7 +333,7 @@ struct AnalyzeState {
     {
         unsigned length = (script->nslots * sizeof(AnalyzeStateStack))
                         + (script->length * sizeof(TypeSet**));
-        unsigned char *cursor = (unsigned char *) cx->calloc(length);
+        unsigned char *cursor = (unsigned char *) cx->calloc_(length);
         if (!cursor)
             return false;
 
@@ -346,7 +346,7 @@ struct AnalyzeState {
 
     ~AnalyzeState()
     {
-        cx->free(stack);
+        cx->free_(stack);
     }
 
     AnalyzeStateStack &popped(unsigned i) {
@@ -529,11 +529,7 @@ public:
 void
 TypeSet::addBaseSubset(JSContext *cx, TypeObject *obj, TypeSet *target)
 {
-    TypeConstraintBaseSubset *constraint =
-        (TypeConstraintBaseSubset *) ::js_calloc(sizeof(TypeConstraintBaseSubset));
-    if (constraint)
-        new(constraint) TypeConstraintBaseSubset(obj, target);
-    add(cx, constraint);
+    add(cx, cx->new_<TypeConstraintBaseSubset>(obj, target));
 }
 
 /* Condensed constraint marking a script dependent on this type set. */
@@ -553,19 +549,14 @@ public:
 void
 TypeSet::addCondensed(JSContext *cx, JSScript *script)
 {
-    TypeConstraintCondensed *constraint =
-        (TypeConstraintCondensed *) ::js_calloc(sizeof(TypeConstraintCondensed));
+    /* Condensed constraints are added during GC, so we need off-the-books allocation. */
+    TypeConstraintCondensed *constraint = js::OffTheBooks::new_<TypeConstraintCondensed>(script);
 
     if (!constraint) {
-        /*
-         * These constraints are created during GC, where cx->compartment may
-         * not match script->compartment.
-         */
         script->compartment->types.setPendingNukeTypes(cx);
         return;
     }
 
-    new(constraint) TypeConstraintCondensed(script);
     add(cx, constraint, false);
 }
 
@@ -1293,7 +1284,7 @@ TypeSet::Clone(JSContext *cx, TypeSet *source, ClonedTypeSet *target)
     target->typeFlags = source->typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
     target->objectCount = source->objectCount;
     if (source->objectCount >= 2) {
-        target->objectSet = (TypeObject **) ::js_malloc(sizeof(TypeObject*) * source->objectCount);
+        target->objectSet = (TypeObject **) cx->calloc_(sizeof(TypeObject*) * source->objectCount);
         if (!target->objectSet) {
             cx->compartment->types.setPendingNukeTypes(cx);
             target->objectCount = 0;
@@ -1638,18 +1629,11 @@ TypeCompartment::newTypeObject(JSContext *cx, JSScript *script, const char *name
     jsid id = JSID_VOID;
 #endif
 
-    TypeObject *object;
-    if (isFunction) {
-        object = (TypeFunction *) cx->calloc(sizeof(TypeFunction));
-        if (!object)
-            return NULL;
-        new(object) TypeFunction(id, proto);
-    } else {
-        object = (TypeObject *) cx->calloc(sizeof(TypeObject));
-        if (!object)
-            return NULL;
-        new(object) TypeObject(id, proto);
-    }
+    TypeObject *object = isFunction
+        ? cx->new_<TypeFunction>(id, proto)
+        : cx->new_<TypeObject>(id, proto);
+    if (!object)
+        return NULL;
 
     TypeObject *&objects = script ? script->typeObjects : this->objects;
     object->next = objects;
@@ -1758,14 +1742,14 @@ void
 TypeCompartment::growPendingArray(JSContext *cx)
 {
     unsigned newCapacity = js::Max(unsigned(100), pendingCapacity * 2);
-    PendingWork *newArray = (PendingWork *) js_calloc(newCapacity * sizeof(PendingWork));
+    PendingWork *newArray = (PendingWork *) js::OffTheBooks::calloc_(newCapacity * sizeof(PendingWork));
     if (!newArray) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
 
     memcpy(newArray, pendingArray, pendingCount * sizeof(PendingWork));
-    js_free(pendingArray);
+    cx->free_(pendingArray);
 
     pendingArray = newArray;
     pendingCapacity = newCapacity;
@@ -1841,7 +1825,7 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
     InferSpew(ISpewOps, "externalType: monitorResult #%u:%05u: %s",
                script->id(), offset, TypeString(type));
 
-    TypeResult *result = (TypeResult *) cx->calloc(sizeof(TypeResult));
+    TypeResult *result = (TypeResult *) cx->calloc_(sizeof(TypeResult));
     if (!result) {
         setPendingNukeTypes(cx);
         return checkPendingRecompiles(cx);
@@ -1944,14 +1928,14 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
         mjit::Recompiler recompiler(cx, script);
         if (script->hasJITCode() && !recompiler.recompile()) {
             pendingNukeTypes = true;
-            js_delete< Vector<JSScript*> >(pending);
+            cx->delete_(pending);
             return nukeTypes(cx);
         }
     }
 
 #endif /* JS_METHODJIT */
 
-    js_delete< Vector<JSScript*> >(pending);
+    cx->delete_(pending);
     return true;
 }
 
@@ -1980,7 +1964,7 @@ TypeCompartment::nukeTypes(JSContext *cx)
      */
     JS_ASSERT(pendingNukeTypes);
     if (pendingRecompiles) {
-        cx->free(pendingRecompiles);
+        cx->free_(pendingRecompiles);
         pendingRecompiles = NULL;
     }
 
@@ -1999,7 +1983,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
     }
 
     if (!pendingRecompiles) {
-        pendingRecompiles = js_new< Vector<JSScript*> >(cx);
+        pendingRecompiles = cx->new_< Vector<JSScript*> >(cx);
         if (!pendingRecompiles) {
             cx->compartment->types.setPendingNukeTypes(cx);
             return;
@@ -2205,7 +2189,7 @@ bool
 TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
 {
     if (!arrayTypeTable) {
-        arrayTypeTable = js_new<ArrayTypeTable>();
+        arrayTypeTable = cx->new_<ArrayTypeTable>();
         if (!arrayTypeTable || !arrayTypeTable->init()) {
             arrayTypeTable = NULL;
             js_ReportOutOfMemory(cx);
@@ -2310,7 +2294,7 @@ bool
 TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 {
     if (!objectTypeTable) {
-        objectTypeTable = js_new<ObjectTypeTable>();
+        objectTypeTable = cx->new_<ObjectTypeTable>();
         if (!objectTypeTable || !objectTypeTable->init()) {
             objectTypeTable = NULL;
             js_ReportOutOfMemory(cx);
@@ -2379,11 +2363,11 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         }
         xobj->setType(objType);
 
-        jsid *ids = (jsid *) cx->calloc(obj->slotSpan() * sizeof(jsid));
+        jsid *ids = (jsid *) cx->calloc_(obj->slotSpan() * sizeof(jsid));
         if (!ids)
             return false;
 
-        jstype *types = (jstype *) cx->calloc(obj->slotSpan() * sizeof(jstype));
+        jstype *types = (jstype *) cx->calloc_(obj->slotSpan() * sizeof(jstype));
         if (!types)
             return false;
 
@@ -2506,12 +2490,11 @@ bool
 TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 {
     JS_ASSERT(!*pprop);
-    Property *base = (Property *) cx->calloc(sizeof(Property));
+    Property *base = cx->new_<Property>(id);
     if (!base) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return false;
     }
-    new(base) Property(id);
 
     *pprop = base;
 
@@ -3665,7 +3648,7 @@ AnalyzeScriptTypes(JSContext *cx, JSScript *script)
 
     unsigned length = sizeof(TypeScript)
         + (script->length * sizeof(TypeScript*));
-    unsigned char *cursor = (unsigned char *) cx->calloc(length);
+    unsigned char *cursor = (unsigned char *) cx->calloc_(length);
 
     if (analysis.failed() || !script->ensureVarTypes(cx) || !state.init(script) || !cursor) {
         cx->compartment->types.setPendingNukeTypes(cx);
@@ -4070,7 +4053,7 @@ JSScript::makeVarTypes(JSContext *cx)
 
     unsigned nargs = fun ? fun->nargs : 0;
     unsigned count = 2 + nargs + nfixed + bindings.countUpvars();
-    varTypes = (js::types::TypeSet *) cx->calloc(sizeof(js::types::TypeSet) * count);
+    varTypes = (js::types::TypeSet *) cx->calloc_(sizeof(js::types::TypeSet) * count);
     if (!varTypes)
         return false;
 
@@ -4231,7 +4214,7 @@ types::TypeObject::trace(JSTracer *trc)
         int count = gc::FINALIZE_OBJECT_LAST - gc::FINALIZE_OBJECT0 + 1;
         for (int i = 0; i < count; i++) {
             if (emptyShapes[i])
-                Shape::trace(trc, emptyShapes[i]);
+                MarkShape(trc, emptyShapes[i], "empty_shape");
         }
     }
 
@@ -4255,8 +4238,8 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
      * This function is called from GC, and cannot malloc any data that could
      * trigger a reentrant GC. The only allocation that can happen here is
      * the construction of condensed constraints and tables for hash sets.
-     * Both of these use js_malloc rather than cx->malloc, and thus do not
-     * contribute towards the runtime's overall malloc bytes.
+     * Both of these use off-the-books malloc rather than cx->malloc, and thus
+     * do not contribute towards the runtime's overall malloc bytes.
      */
     JS_ASSERT(!(types->typeFlags & TYPE_FLAG_INTERMEDIATE_SET));
 
@@ -4295,7 +4278,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
                         *pentry = object;
                 }
             }
-            ::js_free(oldArray);
+            cx->free_(oldArray);
         }
     } else if (types->objectCount == 1) {
         TypeObject *object = (TypeObject*) types->objectSet;
@@ -4333,7 +4316,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
                 constraint->next = types->constraintList;
                 types->constraintList = constraint;
             } else {
-                ::js_free(constraint);
+                cx->delete_(constraint);
             }
             constraint = next;
             continue;
@@ -4348,7 +4331,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
             (script->u.object && IsAboutToBeFinalized(cx, script->u.object)) ||
             (script->fun && IsAboutToBeFinalized(cx, script->fun))) {
             if (constraint->condensed())
-                ::js_free(constraint);
+                cx->delete_(constraint);
             constraint = next;
             continue;
         }
@@ -4364,7 +4347,7 @@ CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
         }
 
         if (constraint->condensed())
-            ::js_free(constraint);
+            cx->free_(constraint);
         constraint = next;
     }
 
@@ -4440,7 +4423,7 @@ DestroyProperty(JSContext *cx, Property *prop)
 {
     prop->types.destroy(cx);
     prop->ownTypes.destroy(cx);
-    cx->free(prop);
+    cx->delete_(prop);
 }
 
 static void
@@ -4454,7 +4437,7 @@ SweepTypeObjectList(JSContext *cx, TypeObject *&objects)
             pobject = &object->next;
         } else {
             if (object->emptyShapes)
-                cx->free(object->emptyShapes);
+                cx->free_(object->emptyShapes);
             *pobject = object->next;
 
             if (object->propertyCount >= 2) {
@@ -4464,13 +4447,13 @@ SweepTypeObjectList(JSContext *cx, TypeObject *&objects)
                     if (prop)
                         DestroyProperty(cx, prop);
                 }
-                ::js_free(object->propertySet);
+                cx->free_(object->propertySet);
             } else if (object->propertyCount == 1) {
                 Property *prop = (Property *) object->propertySet;
                 DestroyProperty(cx, prop);
             }
 
-            cx->free(object);
+            cx->delete_(object);
         }
     }
 }
@@ -4481,7 +4464,7 @@ TypeCompartment::sweep(JSContext *cx)
     if (typeEmpty.marked) {
         typeEmpty.marked = false;
     } else if (typeEmpty.emptyShapes) {
-        cx->free(typeEmpty.emptyShapes);
+        cx->free_(typeEmpty.emptyShapes);
         typeEmpty.emptyShapes = NULL;
     }
 
@@ -4514,7 +4497,7 @@ TypeCompartment::sweep(JSContext *cx)
             JS_ASSERT(entry.object->proto == key.proto);
 
             bool remove = false;
-            if (!entry.object->marked || !entry.newShape->marked())
+            if (!entry.object->marked || !entry.newShape->isMarked())
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nslots; i++) {
                 if (JSID_IS_STRING(key.ids[i])) {
@@ -4527,8 +4510,8 @@ TypeCompartment::sweep(JSContext *cx)
             }
 
             if (remove) {
-                cx->free(key.ids);
-                cx->free(entry.types);
+                cx->free_(key.ids);
+                cx->free_(entry.types);
                 e.removeFront();
             }
         }
@@ -4540,13 +4523,13 @@ TypeCompartment::sweep(JSContext *cx)
 TypeCompartment::~TypeCompartment()
 {
     if (pendingArray)
-        js_free(pendingArray);
+        Foreground::free_(pendingArray);
 
     if (arrayTypeTable)
-        js_delete<ArrayTypeTable>(arrayTypeTable);
+        Foreground::delete_(arrayTypeTable);
 
     if (objectTypeTable)
-        js_delete<ObjectTypeTable>(objectTypeTable);
+        Foreground::delete_(objectTypeTable);
 }
 
 } } /* namespace js::types */
@@ -4570,7 +4553,7 @@ JSScript::condenseTypes(JSContext *cx)
             (fun && IsAboutToBeFinalized(cx, fun))) {
             for (unsigned i = 0; i < num; i++)
                 varTypes[i].destroy(cx);
-            cx->free(varTypes);
+            cx->free_(varTypes);
             varTypes = NULL;
         } else {
             for (unsigned i = 0; i < num; i++)
@@ -4586,7 +4569,7 @@ JSScript::condenseTypes(JSContext *cx)
             if (!object->marked) {
                 if (!object->unknownProperties) {
                     *presult = result->next;
-                    cx->free(result);
+                    cx->free_(result);
                     continue;
                 } else {
                     result->type = (js::types::jstype) &compartment->types.typeEmpty;
@@ -4603,7 +4586,7 @@ JSScript::sweepTypes(JSContext *cx)
     SweepTypeObjectList(cx, typeObjects);
 
     if (types && !compartment->types.inferenceDepth) {
-        cx->free(types);
+        cx->free_(types);
         types = NULL;
     }
 }

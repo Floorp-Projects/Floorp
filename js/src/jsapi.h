@@ -664,6 +664,12 @@ JS_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp);
 extern JS_PUBLIC_API(JSBool)
 JS_DoubleIsInt32(jsdouble d, jsint *ip);
 
+extern JS_PUBLIC_API(int32)
+JS_DoubleToInt32(jsdouble d);
+
+extern JS_PUBLIC_API(uint32)
+JS_DoubleToUint32(jsdouble d);
+
 /*
  * Convert a value to a number, then to an int32, according to the ECMA rules
  * for ToInt32.
@@ -703,6 +709,9 @@ JS_GetTypeName(JSContext *cx, JSType type);
 
 extern JS_PUBLIC_API(JSBool)
 JS_StrictlyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal);
+
+extern JS_PUBLIC_API(JSBool)
+JS_LooselyEqual(JSContext *cx, jsval v1, jsval v2, JSBool *equal);
 
 extern JS_PUBLIC_API(JSBool)
 JS_SameValue(JSContext *cx, jsval v1, jsval v2, JSBool *same);
@@ -1578,6 +1587,7 @@ JS_SetExtraGCRoots(JSRuntime *rt, JSTraceDataOp traceOp, void *data);
 /* Trace kinds to pass to JS_Tracing. */
 #define JSTRACE_OBJECT  0
 #define JSTRACE_STRING  1
+#define JSTRACE_SHAPE   2
 
 /*
  * Use the following macros to check if a particular jsval is a traceable
@@ -3336,7 +3346,7 @@ class JSAutoByteString {
     }
 
     ~JSAutoByteString() {
-        js_free(mBytes);
+        js::UnwantedForeground::free_(mBytes);
     }
 
     /* Take ownership of the given byte array. */
@@ -3353,7 +3363,7 @@ class JSAutoByteString {
     }
 
     void clear() {
-        js_free(mBytes);
+        js::UnwantedForeground::free_(mBytes);
         mBytes = NULL;
     }
 
@@ -3426,7 +3436,7 @@ JS_ReadStructuredClone(JSContext *cx, const uint64 *data, size_t nbytes,
                        const JSStructuredCloneCallbacks *optionalCallbacks,
                        void *closure);
 
-/* Note: On success, the caller is responsible for calling js_free(*datap). */
+/* Note: On success, the caller is responsible for calling js::Foreground::free(*datap). */
 JS_PUBLIC_API(JSBool)
 JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **datap, size_t *nbytesp,
                         const JSStructuredCloneCallbacks *optionalCallbacks,

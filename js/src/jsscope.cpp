@@ -157,10 +157,10 @@ PropertyTable::init(JSRuntime *rt, Shape *lastProp)
         sizeLog2 = MIN_SIZE_LOG2;
 
     /*
-     * Use rt->calloc for memory accounting and overpressure handling
+     * Use rt->calloc_ for memory accounting and overpressure handling
      * without OOM reporting. See PropertyTable::change.
      */
-    entries = (Shape **) rt->calloc(JS_BIT(sizeLog2) * sizeof(Shape *));
+    entries = (Shape **) rt->calloc_(JS_BIT(sizeLog2) * sizeof(Shape *));
     if (!entries) {
         METER(tableAllocFails);
         return false;
@@ -187,10 +187,10 @@ bool
 Shape::hashify(JSRuntime *rt)
 {
     JS_ASSERT(!hasTable());
-    void* mem = rt->malloc(sizeof(PropertyTable));
-    if (!mem)
+    PropertyTable *table = rt->new_<PropertyTable>(entryCount());
+    if (!table)
         return false;
-    setTable(new(mem) PropertyTable(entryCount()));
+    setTable(table);
     return getTable()->init(rt, this);
 }
 
@@ -323,17 +323,14 @@ PropertyTable::change(int log2Delta, JSContext *cx)
     JS_ASSERT(entries);
 
     /*
-     * Grow, shrink, or compress by changing this->entries. Here, we prefer
-     * cx->runtime->calloc to js_calloc, which on OOM waits for a background
-     * thread to finish sweeping and retry, if appropriate. Avoid cx->calloc
-     * so our caller can be in charge of whether to JS_ReportOutOfMemory.
+     * Grow, shrink, or compress by changing this->entries.
      */
     oldlog2 = JS_DHASH_BITS - hashShift;
     newlog2 = oldlog2 + log2Delta;
     oldsize = JS_BIT(oldlog2);
     newsize = JS_BIT(newlog2);
     nbytes = PROPERTY_TABLE_NBYTES(newsize);
-    newTable = (Shape **) cx->runtime->calloc(nbytes);
+    newTable = (Shape **) cx->calloc_(nbytes);
     if (!newTable) {
         METER(tableAllocFails);
         return false;
@@ -358,12 +355,8 @@ PropertyTable::change(int log2Delta, JSContext *cx)
         oldsize--;
     }
 
-    /*
-     * Finally, free the old entries storage. Note that cx->runtime->free just
-     * calls js_free. Use js_free here to match PropertyTable::~PropertyTable,
-     * which cannot have a cx or rt parameter.
-     */
-    js_free(oldTable);
+    /* Finally, free the old entries storage. */
+    cx->free_(oldTable);
     return true;
 }
 
@@ -536,8 +529,13 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
     Shape *shape = *listp;
     Shape *list = shape;
 
-    Shape **childp = listp;
-    *childp = NULL;
+    /*
+     * We temporarily create the dictionary shapes using a root located on the
+     * stack. This way, the GC doesn't see any intermediate state until we
+     * switch listp at the end.
+     */
+    Shape *root = NULL;
+    Shape **childp = &root;
 
     while (shape) {
         JS_ASSERT_IF(!shape->frozen(), !shape->inDictionary());
@@ -554,16 +552,21 @@ Shape::newDictionaryList(JSContext *cx, Shape **listp)
         shape = shape->parent;
     }
 
-    list = *listp;
-    JS_ASSERT(list->inDictionary());
-    list->hashify(cx->runtime);
-    return list;
+    *listp = root;
+    root->listp = listp;
+
+    JS_ASSERT(root->inDictionary());
+    root->hashify(cx->runtime);
+    return root;
 }
 
 bool
 JSObject::toDictionaryMode(JSContext *cx)
 {
     JS_ASSERT(!inDictionaryMode());
+
+    /* We allocate the shapes from cx->compartment, so make sure it's right. */
+    JS_ASSERT(compartment() == cx->compartment);
     if (!Shape::newDictionaryList(cx, &lastProp))
         return false;
 
@@ -1422,29 +1425,60 @@ PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
 }
 #endif
 
+/*
+ * A few notes on shape marking:
+ *
+ * We want to make sure that we regenerate the shape number exactly once per
+ * shape-regenerating GC. Since delayed marking calls MarkChildren many times,
+ * we handle regeneration in the PreMark stage.
+ *
+ * We also want to make sure to mark iteratively up the parent chain, not
+ * recursively. So marking is split into markChildren and markChildrenNotParent.
+ */
+
 void
-Shape::trace(JSTracer *trc, const Shape *shape)
+Shape::regenerate(JSTracer *trc) const
 {
-    do {
-        if (IS_GC_MARKING_TRACER(trc))
-            shape->mark();
+    JSRuntime *rt = trc->context->runtime;
+    if (IS_GC_MARKING_TRACER(trc) && rt->gcRegenShapes)
+        shape = js_RegenerateShapeForGC(rt);
+}
 
-        MarkId(trc, shape->id, "id");
+void
+Shape::markChildrenNotParent(JSTracer *trc) const
+{
+    MarkId(trc, id, "id");
 
-        if (shape->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-            if ((shape->attrs & JSPROP_GETTER) && shape->rawGetter) {
-                JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, shape, 0);
-                Mark(trc, shape->getterObject());
-            }
-            if ((shape->attrs & JSPROP_SETTER) && shape->rawSetter) {
-                JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, shape, 1);
-                Mark(trc, shape->setterObject());
-            }
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
+        if ((attrs & JSPROP_GETTER) && rawGetter) {
+            JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
+            Mark(trc, getterObject());
+        }
+        if ((attrs & JSPROP_SETTER) && rawSetter) {
+            JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
+            Mark(trc, setterObject());
+        }
+    }
+
+    if (isMethod()) {
+        JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
+        Mark(trc, &methodObject());
+    }
+}
+
+void
+Shape::markChildren(JSTracer *trc) const
+{
+    markChildrenNotParent(trc);
+
+    for (Shape *shape = parent; shape; shape = shape->parent) {
+        if (IS_GC_MARKING_TRACER(trc)) {
+            GCMarker *gcmarker = static_cast<GCMarker *>(trc);
+            if (!shape->markIfUnmarked(gcmarker->getMarkColor()))
+                break;
         }
 
-        if (shape->isMethod()) {
-            JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, shape, 0);
-            Mark(trc, &shape->methodObject());
-        }
-    } while ((shape = shape->parent) != NULL && !shape->marked());
+        shape->regenerate(trc);
+        shape->markChildrenNotParent(trc);
+    }
 }

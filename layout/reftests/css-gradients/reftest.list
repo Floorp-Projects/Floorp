@@ -62,9 +62,9 @@ fails-if(d2d) == repeating-linear-1b.html repeating-linear-1-ref.html
 == repeating-radial-2a.html repeating-radial-2-ref.html
 == twostops-1a.html twostops-1-ref.html
 == twostops-1b.html twostops-1-ref.html
-fails-if(!d2d) == twostops-1c.html twostops-1-ref.html # bug 524173
+fails-if(cocoaWidget) == twostops-1c.html twostops-1-ref.html # bug 524173
 == twostops-1d.html twostops-1-ref.html
-fails-if(!cocoaWidget&&!d2d) == twostops-1e.html twostops-1-ref.html # bug 524173
+== twostops-1e.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
 fails-if(Android) == aja-linear-1a.html aja-linear-1-ref.html
@@ -88,3 +88,9 @@ fails == aja-linear-6b.html aja-linear-6-ref.html # bug 522607
 == height-dependence-1.html height-dependence-1-ref.html
 fails-if(cocoaWidget) == height-dependence-2.html height-dependence-2-ref.html # bug 535007
 == height-dependence-3.html height-dependence-3-ref.html
+
+fails-if(d2d) == linear-onestopposition-1.html linear-onestopposition-1-ref.html # bug 638664
+== linear-onestopposition-1.html linear-onestopposition-1-ref2.html
+fails-if(d2d) fails-if(cocoaWidget) == radial-onestopposition-1.html radial-onestopposition-1-ref.html # bug 638664
+== repeating-linear-onestopposition-1.html orange-square.html
+== repeating-radial-onestopposition-1.html orange-square.html

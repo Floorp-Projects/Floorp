@@ -146,7 +146,7 @@ NS_COM_GLUE PRBool NS_IsAscii(const char* aString, PRUint32 aLength);
 #elif defined(XP_WIN) || defined(XP_OS2)
   #define FILE_PATH_SEPARATOR        "\\"
   #define OS_FILE_ILLEGAL_CHARACTERS "/:*?\"<>|"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX)
   #define FILE_PATH_SEPARATOR        "/"
   #define OS_FILE_ILLEGAL_CHARACTERS ""
 #else

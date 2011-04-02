@@ -244,15 +244,17 @@ class JaegerCompartment {
         activeFrame_ = activeFrame_->previous;
     }
 
-    Trampolines::TrampolinePtr forceReturnTrampoline() const {
-        return trampolines.forceReturn;
+    void *forceReturnFromExternC() const {
+        return JS_FUNC_TO_DATA_PTR(void *, trampolines.forceReturn);
     }
 
+    void *forceReturnFromFastCall() const {
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
-    Trampolines::TrampolinePtr forceReturnFastTrampoline() const {
-        return trampolines.forceReturnFast;
-    }
+        return JS_FUNC_TO_DATA_PTR(void *, trampolines.forceReturnFast);
+#else
+        return JS_FUNC_TO_DATA_PTR(void *, trampolines.forceReturn);
 #endif
+    }
 };
 
 /*
@@ -277,9 +279,9 @@ class CompilerAllocPolicy : public ContextAllocPolicy
     : ContextAllocPolicy(cx), oomFlag(oomFlag) {}
     CompilerAllocPolicy(JSContext *cx, Compiler &compiler);
 
-    void *malloc(size_t bytes) { return checkAlloc(ContextAllocPolicy::malloc(bytes)); }
-    void *realloc(void *p, size_t bytes) {
-        return checkAlloc(ContextAllocPolicy::realloc(p, bytes));
+    void *malloc_(size_t bytes) { return checkAlloc(ContextAllocPolicy::malloc_(bytes)); }
+    void *realloc_(void *p, size_t bytes) {
+        return checkAlloc(ContextAllocPolicy::realloc_(p, bytes));
     }
 };
 
@@ -623,7 +625,6 @@ extern "C" void *JaegerThrowpoline(js::VMFrame *vmFrame);
 #else
 extern "C" void JaegerThrowpoline();
 #endif
-extern "C" void InjectJaegerReturn();
 
 #endif /* jsjaeger_h__ */
 

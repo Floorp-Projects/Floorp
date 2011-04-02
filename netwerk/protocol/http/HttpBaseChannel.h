@@ -154,6 +154,14 @@ public:
   NS_IMETHOD GetCanceled(PRBool *aCanceled);
   NS_IMETHOD GetChannelIsForDownload(PRBool *aChannelIsForDownload);
   NS_IMETHOD SetChannelIsForDownload(PRBool aChannelIsForDownload);
+  NS_IMETHOD SetCacheKeysRedirectChain(nsTArray<nsCString> *cacheKeys);
+  inline void CleanRedirectCacheChainIfNecessary()
+  {
+      if (mRedirectedCachekeys) {
+          delete mRedirectedCachekeys;
+          mRedirectedCachekeys = nsnull;
+      }
+  }
 
   // nsISupportsPriority
   NS_IMETHOD GetPriority(PRInt32 *value);
@@ -250,6 +258,8 @@ protected:
   PRUint32                          mChooseApplicationCache     : 1;
   PRUint32                          mLoadedFromApplicationCache : 1;
   PRUint32                          mChannelIsForDownload       : 1;
+
+  nsTArray<nsCString>              *mRedirectedCachekeys;
 };
 
 

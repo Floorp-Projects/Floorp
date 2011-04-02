@@ -111,9 +111,6 @@ ifneq (Android,$(OS_TARGET))
 OS_LIBS += -lrt
 endif
 endif
-ifeq (WINNT,$(OS_ARCH))
-OS_LIBS += dbghelp.lib
-endif
 endif
 
 STATIC_LIBS += \
@@ -154,6 +151,7 @@ COMPONENT_LIBS += \
 	pipboot \
 	pipnss \
 	appcomps \
+	composer \
 	$(NULL)
 
 ifdef MOZ_IPC
@@ -232,12 +230,6 @@ COMPONENT_LIBS += universalchardet
 DEFINES += -DMOZ_UNIVERSALCHARDET
 endif
 
-ifndef MOZ_PLAINTEXT_EDITOR_ONLY
-COMPONENT_LIBS += composer
-else
-DEFINES += -DMOZ_PLAINTEXT_EDITOR_ONLY
-endif
-
 ifdef MOZ_RDF
 COMPONENT_LIBS += \
 	rdf \
@@ -245,7 +237,7 @@ COMPONENT_LIBS += \
 	$(NULL)
 endif
 
-ifeq (,$(filter android qt beos os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
+ifeq (,$(filter android qt os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 ifdef MOZ_XUL
 COMPONENT_LIBS += fileview
 DEFINES += -DMOZ_FILEVIEW
@@ -295,7 +287,7 @@ endif
 endif
 
 # Platform-specific icon channel stuff - supported mostly-everywhere
-ifneq (,$(filter beos windows os2 mac cocoa gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter windows os2 mac cocoa gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 DEFINES += -DICON_DECODER
 COMPONENT_LIBS += imgicon
 endif
@@ -312,9 +304,6 @@ COMPONENT_LIBS += gkgfxthebes
 
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += gkwidget
-endif
-ifeq (beos,$(MOZ_WIDGET_TOOLKIT))
-COMPONENT_LIBS += widget_beos
 endif
 ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
 COMPONENT_LIBS += wdgtos2

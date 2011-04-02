@@ -238,7 +238,7 @@ protected:
   void UpdateMenuSpecialState(nsPresContext* aPresContext);
 
   // Examines the key node and builds the accelerator.
-  void BuildAcceleratorText();
+  void BuildAcceleratorText(PRBool aNotify);
 
   // Called to execute our command handler. This method can destroy the frame.
   void Execute(nsGUIEvent *aEvent);
@@ -265,6 +265,7 @@ protected:
 
   PRPackedBool mIsMenu; // Whether or not we can even have children or not.
   PRPackedBool mChecked;              // are we checked?
+  PRPackedBool mIgnoreAccelTextChange; // temporarily set while determining the accelerator key
   nsMenuType mType;
 
   nsMenuParent* mMenuParent; // Our parent menu.

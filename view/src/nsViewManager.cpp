@@ -62,6 +62,7 @@
 #include "nsXULPopupManager.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
+#include "nsEventStateManager.h"
 
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
 
@@ -813,6 +814,20 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent,
         break;
       }
 
+    case NS_DONESIZEMOVE:
+      {
+        nsCOMPtr<nsIPresShell> shell = do_QueryInterface(mObserver);
+        if (shell) {
+          nsPresContext* presContext = shell->GetPresContext();
+          if (presContext) {
+            nsEventStateManager::ClearGlobalActiveContent(nsnull);
+          }
+    
+          mObserver->ClearMouseCapture(aView);
+        }
+      }
+      break;
+  
     case NS_XUL_CLOSE:
       {
         // if this is a popup, make a request to hide it. Note that a popuphidden

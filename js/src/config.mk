@@ -62,7 +62,7 @@ OS_ARCH         := IRIX
 endif
 
 # Handle output from win32 unames other than Netscape's version
-ifeq (,$(filter-out Windows_95 Windows_98 CYGWIN_95-4.0 CYGWIN_98-4.10, $(OS_ARCH)))
+ifeq (,$(filter-out Windows_95 Windows_98, $(OS_ARCH)))
 	OS_ARCH   := WIN95
 endif
 ifeq ($(OS_ARCH),WIN95)
@@ -76,13 +76,6 @@ ifeq ($(OS_ARCH), Windows_NT)
 		OS_MINOR_RELEASE = 0
 	endif
 	OS_RELEASE := $(OS_RELEASE).$(OS_MINOR_RELEASE)
-endif
-ifeq (CYGWIN_NT,$(findstring CYGWIN_NT,$(OS_ARCH)))
-	OS_RELEASE := $(patsubst CYGWIN_NT-%,%,$(OS_ARCH))
-	OS_ARCH    := WINNT
-endif
-ifeq ($(OS_ARCH), CYGWIN32_NT)
-	OS_ARCH    := WINNT
 endif
 ifeq (MINGW32_NT,$(findstring MINGW32_NT,$(OS_ARCH)))
 	OS_RELEASE := $(patsubst MINGW32_NT-%,%,$(OS_ARCH))

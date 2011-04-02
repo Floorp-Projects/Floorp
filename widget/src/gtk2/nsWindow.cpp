@@ -2171,9 +2171,9 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         return TRUE;
     }
 
-    if (GetLayerManager(nsnull)->GetBackendType() == LayerManager::LAYERS_OPENGL)
+    if (GetLayerManager()->GetBackendType() == LayerManager::LAYERS_OPENGL)
     {
-        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager(nsnull));
+        LayerManagerOGL *manager = static_cast<LayerManagerOGL*>(GetLayerManager());
         manager->SetClippingRegion(event.region);
 
         nsEventStatus status;
@@ -3382,11 +3382,17 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
         LOG(("\tIconified\n"));
         event.mSizeMode = nsSizeMode_Minimized;
         mSizeState = nsSizeMode_Minimized;
+#ifdef ACCESSIBILITY
+        DispatchMinimizeEventAccessible();
+#endif //ACCESSIBILITY
     }
     else if (aEvent->new_window_state & GDK_WINDOW_STATE_MAXIMIZED) {
         LOG(("\tMaximized\n"));
         event.mSizeMode = nsSizeMode_Maximized;
         mSizeState = nsSizeMode_Maximized;
+#ifdef ACCESSIBILITY
+        DispatchMaximizeEventAccessible();
+#endif //ACCESSIBILITY
     }
     else if (aEvent->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) {
         LOG(("\tFullscreen\n"));
@@ -3397,6 +3403,9 @@ nsWindow::OnWindowStateEvent(GtkWidget *aWidget, GdkEventWindowState *aEvent)
         LOG(("\tNormal\n"));
         event.mSizeMode = nsSizeMode_Normal;
         mSizeState = nsSizeMode_Normal;
+#ifdef ACCESSIBILITY
+        DispatchRestoreEventAccessible();
+#endif //ACCESSIBILITY
     }
 
     nsEventStatus status;
@@ -6356,6 +6365,24 @@ void
 nsWindow::DispatchDeactivateEventAccessible(void)
 {
     DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_DEACTIVATE);
+}
+
+void
+nsWindow::DispatchMaximizeEventAccessible(void)
+{
+    DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_MAXIMIZE);
+}
+
+void
+nsWindow::DispatchMinimizeEventAccessible(void)
+{
+    DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_MINIMIZE);
+}
+
+void
+nsWindow::DispatchRestoreEventAccessible(void)
+{
+    DispatchEventToRootAccessible(nsIAccessibleEvent::EVENT_WINDOW_RESTORE);
 }
 
 #endif /* #ifdef ACCESSIBILITY */

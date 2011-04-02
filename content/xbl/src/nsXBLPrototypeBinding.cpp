@@ -896,6 +896,10 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
       binding = binding->GetBaseBinding();
     }
 
+    NS_ABORT_IF_FALSE(binding, "Bug 620181 this is unexpected");
+    if (!binding)
+      return nsnull;
+
     nsInsertionPointList* points = nsnull;
     if (anonContent == copyParent)
       binding->GetInsertionPointsFor(aBoundElement, &points);

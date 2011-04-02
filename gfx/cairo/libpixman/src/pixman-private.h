@@ -20,7 +20,6 @@
  * Images
  */
 typedef struct image_common image_common_t;
-typedef struct source_image source_image_t;
 typedef struct solid_fill solid_fill_t;
 typedef struct gradient gradient_t;
 typedef struct linear_gradient linear_gradient_t;
@@ -61,18 +60,6 @@ typedef enum
     SOLID
 } image_type_t;
 
-typedef enum
-{
-    SOURCE_IMAGE_CLASS_UNKNOWN,
-    SOURCE_IMAGE_CLASS_HORIZONTAL,
-    SOURCE_IMAGE_CLASS_VERTICAL,
-} source_image_class_t;
-
-typedef source_image_class_t (*classify_func_t) (pixman_image_t *image,
-						int             x,
-						int             y,
-						int             width,
-						int             height);
 typedef void (*property_changed_func_t) (pixman_image_t *image);
 
 struct image_common
@@ -97,10 +84,7 @@ struct image_common
     int                         alpha_origin_x;
     int                         alpha_origin_y;
     pixman_bool_t               component_alpha;
-    classify_func_t             classify;
     property_changed_func_t     property_changed;
-    fetch_scanline_t            get_scanline_32;
-    fetch_scanline_t            get_scanline_64;
 
     pixman_image_destroy_func_t destroy_func;
     void *                      destroy_data;
@@ -109,15 +93,9 @@ struct image_common
     pixman_format_code_t	extended_format_code;
 };
 
-struct source_image
-{
-    image_common_t common;
-    source_image_class_t class;
-};
-
 struct solid_fill
 {
-    source_image_t common;
+    image_common_t common;
     pixman_color_t color;
     
     uint32_t	   color_32;
@@ -126,10 +104,9 @@ struct solid_fill
 
 struct gradient
 {
-    source_image_t          common;
+    image_common_t	    common;
     int                     n_stops;
     pixman_gradient_stop_t *stops;
-    int                     stop_range;
 };
 
 struct linear_gradient
@@ -177,6 +154,9 @@ struct bits_image
     uint32_t *                 free_me;
     int                        rowstride;  /* in number of uint32_t's */
 
+    fetch_scanline_t           get_scanline_32;
+    fetch_scanline_t           get_scanline_64;
+
     fetch_scanline_t           fetch_scanline_32;
     fetch_pixel_32_t	       fetch_pixel_32;
     store_scanline_t           store_scanline_32;
@@ -195,7 +175,6 @@ union pixman_image
     image_type_t       type;
     image_common_t     common;
     bits_image_t       bits;
-    source_image_t     source;
     gradient_t         gradient;
     linear_gradient_t  linear;
     conical_gradient_t conical;
@@ -203,59 +182,73 @@ union pixman_image
     solid_fill_t       solid;
 };
 
+typedef struct pixman_iter_t pixman_iter_t;
+typedef uint32_t *(* pixman_iter_get_scanline_t) (pixman_iter_t *iter, const uint32_t *mask);
+typedef void      (* pixman_iter_write_back_t)   (pixman_iter_t *iter);
+
+typedef enum
+{
+    ITER_NARROW =		(1 << 0),
+
+    /* "Localized alpha" is when the alpha channel is used only to compute
+     * the alpha value of the destination. This means that the computation
+     * of the RGB values of the result is independent of the alpha value.
+     *
+     * For example, the OVER operator has localized alpha for the
+     * destination, because the RGB values of the result can be computed
+     * without knowing the destination alpha. Similarly, ADD has localized
+     * alpha for both source and destination because the RGB values of the
+     * result can be computed without knowing the alpha value of source or
+     * destination.
+     *
+     * When he destination is xRGB, this is useful knowledge, because then
+     * we can treat it as if it were ARGB, which means in some cases we can
+     * avoid copying it to a temporary buffer.
+     */
+    ITER_LOCALIZED_ALPHA =	(1 << 1),
+    ITER_IGNORE_ALPHA =		(1 << 2),
+    ITER_IGNORE_RGB =		(1 << 3)
+} iter_flags_t;
+
+struct pixman_iter_t
+{
+    /* These are initialized by _pixman_implementation_{src,dest}_init */
+    pixman_image_t *		image;
+    uint32_t *			buffer;
+    int				x, y;
+    int				width;
+    int				height;
+    iter_flags_t		flags;
+
+    /* These function pointers are initialized by the implementation */
+    pixman_iter_get_scanline_t	get_scanline;
+    pixman_iter_write_back_t	write_back;
+
+    /* These fields are scratch data that implementations can use */
+    uint8_t *			bits;
+    int				stride;
+};
+
 void
 _pixman_bits_image_setup_accessors (bits_image_t *image);
 
 void
-_pixman_image_get_scanline_generic_64  (pixman_image_t *image,
-                                        int             x,
-                                        int             y,
-                                        int             width,
-                                        uint32_t *      buffer,
-                                        const uint32_t *mask);
-
-source_image_class_t
-_pixman_image_classify (pixman_image_t *image,
-                        int             x,
-                        int             y,
-                        int             width,
-                        int             height);
+_pixman_bits_image_src_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 
 void
-_pixman_image_get_scanline_32 (pixman_image_t *image,
-                               int             x,
-                               int             y,
-                               int             width,
-                               uint32_t *      buffer,
-                               const uint32_t *mask);
-
-/* Even thought the type of buffer is uint32_t *, the function actually expects
- * a uint64_t *buffer.
- */
-void
-_pixman_image_get_scanline_64 (pixman_image_t *image,
-                               int             x,
-                               int             y,
-                               int             width,
-                               uint32_t *      buffer,
-                               const uint32_t *unused);
+_pixman_bits_image_dest_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 
 void
-_pixman_image_store_scanline_32 (bits_image_t *  image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 const uint32_t *buffer);
+_pixman_solid_fill_iter_init (pixman_image_t *image, pixman_iter_t  *iter);
 
-/* Even though the type of buffer is uint32_t *, the function
- * actually expects a uint64_t *buffer.
- */
 void
-_pixman_image_store_scanline_64 (bits_image_t *  image,
-                                 int             x,
-                                 int             y,
-                                 int             width,
-                                 const uint32_t *buffer);
+_pixman_linear_gradient_iter_init (pixman_image_t *image, pixman_iter_t  *iter);
+
+void
+_pixman_radial_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter);
+
+void
+_pixman_conical_gradient_iter_init (pixman_image_t *image, pixman_iter_t *iter);
 
 pixman_image_t *
 _pixman_image_allocate (void);
@@ -269,10 +262,6 @@ _pixman_image_reset_clip_region (pixman_image_t *image);
 
 void
 _pixman_image_validate (pixman_image_t *image);
-
-uint32_t
-_pixman_image_get_solid (pixman_image_t *     image,
-                         pixman_format_code_t format);
 
 #define PIXMAN_IMAGE_GET_LINE(image, x, y, type, out_stride, line, mul)	\
     do									\
@@ -406,6 +395,8 @@ typedef pixman_bool_t (*pixman_fill_func_t) (pixman_implementation_t *imp,
 					     int                      width,
 					     int                      height,
 					     uint32_t                 xor);
+typedef void (*pixman_iter_init_func_t) (pixman_implementation_t *imp,
+                                         pixman_iter_t           *iter);
 
 void _pixman_setup_combiner_functions_32 (pixman_implementation_t *imp);
 void _pixman_setup_combiner_functions_64 (pixman_implementation_t *imp);
@@ -427,15 +418,22 @@ struct pixman_implementation_t
     pixman_implementation_t *	toplevel;
     pixman_implementation_t *	delegate;
     const pixman_fast_path_t *	fast_paths;
-    
+
     pixman_blt_func_t		blt;
     pixman_fill_func_t		fill;
+    pixman_iter_init_func_t     src_iter_init;
+    pixman_iter_init_func_t     dest_iter_init;
 
     pixman_combine_32_func_t	combine_32[PIXMAN_N_OPERATORS];
     pixman_combine_32_func_t	combine_32_ca[PIXMAN_N_OPERATORS];
     pixman_combine_64_func_t	combine_64[PIXMAN_N_OPERATORS];
     pixman_combine_64_func_t	combine_64_ca[PIXMAN_N_OPERATORS];
 };
+
+uint32_t
+_pixman_image_get_solid (pixman_implementation_t *imp,
+			 pixman_image_t *         image,
+                         pixman_format_code_t     format);
 
 pixman_implementation_t *
 _pixman_implementation_create (pixman_implementation_t *delegate,
@@ -496,36 +494,58 @@ _pixman_implementation_fill (pixman_implementation_t *imp,
                              int                      height,
                              uint32_t                 xor);
 
+void
+_pixman_implementation_src_iter_init (pixman_implementation_t       *imp,
+				      pixman_iter_t                 *iter,
+				      pixman_image_t                *image,
+				      int                            x,
+				      int                            y,
+				      int                            width,
+				      int                            height,
+				      uint8_t                       *buffer,
+				      iter_flags_t                   flags);
+
+void
+_pixman_implementation_dest_iter_init (pixman_implementation_t       *imp,
+				       pixman_iter_t                 *iter,
+				       pixman_image_t                *image,
+				       int                            x,
+				       int                            y,
+				       int                            width,
+				       int                            height,
+				       uint8_t                       *buffer,
+				       iter_flags_t                   flags);
+
 /* Specific implementations */
 pixman_implementation_t *
 _pixman_implementation_create_general (void);
 
 pixman_implementation_t *
-_pixman_implementation_create_fast_path (void);
+_pixman_implementation_create_fast_path (pixman_implementation_t *fallback);
 
 #ifdef USE_MMX
 pixman_implementation_t *
-_pixman_implementation_create_mmx (void);
+_pixman_implementation_create_mmx (pixman_implementation_t *fallback);
 #endif
 
 #ifdef USE_SSE2
 pixman_implementation_t *
-_pixman_implementation_create_sse2 (void);
+_pixman_implementation_create_sse2 (pixman_implementation_t *fallback);
 #endif
 
 #ifdef USE_ARM_SIMD
 pixman_implementation_t *
-_pixman_implementation_create_arm_simd (void);
+_pixman_implementation_create_arm_simd (pixman_implementation_t *fallback);
 #endif
 
 #ifdef USE_ARM_NEON
 pixman_implementation_t *
-_pixman_implementation_create_arm_neon (void);
+_pixman_implementation_create_arm_neon (pixman_implementation_t *fallback);
 #endif
 
 #ifdef USE_VMX
 pixman_implementation_t *
-_pixman_implementation_create_vmx (void);
+_pixman_implementation_create_vmx (pixman_implementation_t *fallback);
 #endif
 
 pixman_implementation_t *
@@ -536,6 +556,8 @@ _pixman_choose_implementation (void);
 /*
  * Utilities
  */
+uint32_t *
+_pixman_iter_get_scanline_noop (pixman_iter_t *iter, const uint32_t *mask);
 
 /* These "formats" all have depth 0, so they
  * will never clash with any real ones
@@ -563,14 +585,17 @@ _pixman_choose_implementation (void);
 #define FAST_PATH_NEAREST_FILTER		(1 << 11)
 #define FAST_PATH_HAS_TRANSFORM			(1 << 12)
 #define FAST_PATH_IS_OPAQUE			(1 << 13)
-#define FAST_PATH_NEEDS_WORKAROUND		(1 << 14)
+#define FAST_PATH_NO_NORMAL_REPEAT		(1 << 14)
 #define FAST_PATH_NO_NONE_REPEAT		(1 << 15)
 #define FAST_PATH_SAMPLES_COVER_CLIP		(1 << 16)
 #define FAST_PATH_X_UNIT_POSITIVE		(1 << 17)
 #define FAST_PATH_AFFINE_TRANSFORM		(1 << 18)
 #define FAST_PATH_Y_UNIT_ZERO			(1 << 19)
 #define FAST_PATH_BILINEAR_FILTER		(1 << 20)
-#define FAST_PATH_NO_NORMAL_REPEAT		(1 << 21)
+#define FAST_PATH_ROTATE_90_TRANSFORM		(1 << 21)
+#define FAST_PATH_ROTATE_180_TRANSFORM		(1 << 22)
+#define FAST_PATH_ROTATE_270_TRANSFORM		(1 << 23)
+#define FAST_PATH_SIMPLE_REPEAT			(1 << 24)
 
 #define FAST_PATH_PAD_REPEAT						\
     (FAST_PATH_NO_NONE_REPEAT		|				\

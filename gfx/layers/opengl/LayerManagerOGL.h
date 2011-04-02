@@ -382,15 +382,7 @@ public:
    * to a window of the given dimensions.
    */
   void SetupPipeline(int aWidth, int aHeight, WorldTransforPolicy aTransformPolicy);
-
-  /**
-   * Returns true if the viewport has a Y axip flip transform applied, and all 
-   * drawing will be done upside-down.
-   */
-  bool IsDrawingFlipped() {
-    return mGLContext->IsDoubleBuffered() && !mTarget; 
-  }
-
+  
   /**
    * Setup World transform matrix.
    * Transform will be ignored if it is not PreservesAxisAlignedRectangles

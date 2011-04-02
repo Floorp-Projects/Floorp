@@ -48,7 +48,7 @@
 #include "nsString.h"
 #include "nsCycleCollectionParticipant.h"
 
-#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_WIN) || defined(XP_BEOS)
+#if defined(XP_UNIX) || defined(XP_OS2) || defined(XP_WIN)
 #define USE_NC_EXTENSION
 #endif
 
@@ -108,11 +108,6 @@ private:
     nsCOMPtr<nsIRDFResource>       mNC_IEFavoriteObject;
     nsCOMPtr<nsIRDFResource>       mNC_IEFavoriteFolder;
     nsCString                      ieFavoritesDir;
-#endif
-
-#ifdef  XP_BEOS
-    nsresult getNetPositiveURL(nsIRDFResource *source, nsString aFileURL, nsIRDFLiteral **urlLiteral);
-    nsCString netPositiveDir;
 #endif
 };
 

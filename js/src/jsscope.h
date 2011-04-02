@@ -242,7 +242,7 @@ struct PropertyTable {
     }
 
     ~PropertyTable() {
-        js_free(entries);
+        js::UnwantedForeground::free_(entries);
     }
 
     /* By definition, hashShift = JS_DHASH_BITS - log2(capacity). */
@@ -263,7 +263,7 @@ struct PropertyTable {
 
     /*
      * NB: init and change are fallible but do not report OOM, so callers can
-     * cope or ignore. They do however use JSRuntime's calloc method in order
+     * cope or ignore. They do however use JSRuntime's calloc_ method in order
      * to update the malloc counter on success.
      */
     bool            init(JSRuntime *rt, js::Shape *lastProp);
@@ -315,10 +315,6 @@ struct Shape : public JSObjectMap
     inline void freeTable(JSContext *cx);
 
     jsid                id;
-
-#ifdef DEBUG
-    JSCompartment       *compartment;
-#endif
 
   protected:
     union {
@@ -432,25 +428,6 @@ struct Shape : public JSObjectMap
         parent = p;
     }
 
-    void insertFree(js::Shape **freep) {
-#ifdef DEBUG
-        memset(this, JS_FREE_PATTERN, sizeof *this);
-#endif
-        id = JSID_VOID;
-        parent = *freep;
-        if (parent)
-            parent->listp = &parent;
-        listp = freep;
-        *freep = this;
-    }
-
-    void removeFree() {
-        JS_ASSERT(JSID_IS_VOID(id));
-        *listp = parent;
-        if (parent)
-            parent->listp = listp;
-    }
-
   public:
     const js::Shape *previous() const {
         return parent;
@@ -493,22 +470,13 @@ struct Shape : public JSObjectMap
      * with these bits.
      */
     enum {
-        /* GC mark flag. */
-        MARK            = 0x01,
-
-        SHARED_EMPTY    = 0x02,
-
-        /*
-         * Set during a shape-regenerating GC if the shape has already been
-         * regenerated.
-         */
-        SHAPE_REGEN     = 0x04,
+        SHARED_EMPTY    = 0x01,
 
         /* Property stored in per-object dictionary, not shared property tree. */
-        IN_DICTIONARY   = 0x08,
+        IN_DICTIONARY   = 0x02,
 
         /* Prevent unwanted mutation of shared Bindings::lastBinding nodes. */
-        FROZEN          = 0x10
+        FROZEN          = 0x04
     };
 
     Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot, uintN attrs,
@@ -516,17 +484,6 @@ struct Shape : public JSObjectMap
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
     Shape(JSCompartment *comp, Class *aclasp);
-
-  public:
-    bool marked() const         { return (flags & MARK) != 0; }
-
-  protected:
-    void mark() const           { flags |= MARK; }
-    void clearMark()            { flags &= ~MARK; }
-
-    bool hasRegenFlag() const   { return (flags & SHAPE_REGEN) != 0; }
-    void setRegenFlag()         { flags |= SHAPE_REGEN; }
-    void clearRegenFlag()       { flags &= ~SHAPE_REGEN; }
 
     bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
     bool frozen() const         { return (flags & FROZEN) != 0; }
@@ -591,7 +548,9 @@ struct Shape : public JSObjectMap
 
     inline bool isSharedPermanent() const;
 
-    static void trace(JSTracer *trc, const Shape *shape);
+    void regenerate(JSTracer *trc) const;
+    void markChildrenNotParent(JSTracer *trc) const;
+    void markChildren(JSTracer *trc) const;
 
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
 
@@ -642,6 +601,9 @@ struct Shape : public JSObjectMap
     void dump(JSContext *cx, FILE *fp) const;
     void dumpSubtree(JSContext *cx, int level, FILE *fp) const;
 #endif
+
+    void finalize(JSContext *cx);
+    void removeChild(js::Shape *child);
 };
 
 struct EmptyShape : public js::Shape
@@ -775,7 +737,7 @@ JSObject::setLastProperty(const js::Shape *shape)
     JS_ASSERT(!inDictionaryMode());
     JS_ASSERT(!JSID_IS_VOID(shape->id));
     JS_ASSERT_IF(lastProp, !JSID_IS_VOID(lastProp->id));
-    JS_ASSERT(shape->compartment == compartment());
+    JS_ASSERT(shape->compartment() == compartment());
 
     lastProp = const_cast<js::Shape *>(shape);
 }
@@ -826,6 +788,7 @@ Shape::insertIntoDictionary(js::Shape **dictp)
     JS_ASSERT_IF(*dictp, (*dictp)->inDictionary());
     JS_ASSERT_IF(*dictp, (*dictp)->listp == dictp);
     JS_ASSERT_IF(*dictp, !JSID_IS_VOID((*dictp)->id));
+    JS_ASSERT_IF(*dictp, compartment() == (*dictp)->compartment());
 
     setParent(*dictp);
     if (parent)

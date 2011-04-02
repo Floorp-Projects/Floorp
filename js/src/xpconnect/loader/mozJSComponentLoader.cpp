@@ -102,7 +102,7 @@ static const char kXPConnectServiceContractID[] = "@mozilla.org/js/xpc/XPConnect
 static const char kObserverServiceContractID[] = "@mozilla.org/observer-service;1";
 
 /* Some platforms don't have an implementation of PR_MemMap(). */
-#if !defined(XP_BEOS) && !defined(XP_OS2)
+#ifndef XP_OS2
 #define HAVE_PR_MEMMAP
 #endif
 
@@ -1060,11 +1060,9 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
         // If |exception| is non-null, then our caller wants us to propagate
         // any exceptions out to our caller. Ensure that the engine doesn't
         // eagerly report the exception.
-        uint32 oldopts = 0;
-        if (exception) {
-            oldopts = JS_GetOptions(cx);
-            JS_SetOptions(cx, oldopts | JSOPTION_DONT_REPORT_UNCAUGHT);
-        }
+        uint32 oldopts = JS_GetOptions(cx);
+        JS_SetOptions(cx, oldopts | JSOPTION_NO_SCRIPT_RVAL |
+                          (exception ? JSOPTION_DONT_REPORT_UNCAUGHT : 0));
 
         if (realFile) {
 #ifdef HAVE_PR_MEMMAP
@@ -1176,12 +1174,10 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
         }
         // Propagate the exception, if one exists. Also, don't leave the stale
         // exception on this context.
-        if (exception) {
-            JS_SetOptions(cx, oldopts);
-            if (!scriptObj) {
-                JS_GetPendingException(cx, exception);
-                JS_ClearPendingException(cx);
-            }
+        JS_SetOptions(cx, oldopts);
+        if (!scriptObj && exception) {
+            JS_GetPendingException(cx, exception);
+            JS_ClearPendingException(cx);
         }
     }
 
@@ -1225,8 +1221,7 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     // See bug 384168.
     *aGlobal = global;
 
-    jsval retval;
-    if (!JS_ExecuteScriptVersion(cx, global, scriptObj, &retval, JSVERSION_LATEST)) {
+    if (!JS_ExecuteScriptVersion(cx, global, scriptObj, NULL, JSVERSION_LATEST)) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: failed to execute %s\n", nativePath.get());
 #endif

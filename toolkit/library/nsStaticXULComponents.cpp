@@ -71,8 +71,6 @@
 #  define WIDGET_MODULES MODULE(nsWidgetModule)
 #elif defined(XP_MACOSX)
 #  define WIDGET_MODULES MODULE(nsWidgetMacModule)
-#elif defined(XP_BEOS)
-#  define WIDGET_MODULES MODULE(nsWidgetBeOSModule)
 #elif defined(XP_OS2)
 #  define WIDGET_MODULES MODULE(nsWidgetOS2Module)
 #elif defined(MOZ_WIDGET_GTK2)
@@ -97,12 +95,6 @@
     MODULE(nsWindowDataSourceModule)
 #else
 #define RDF_MODULES
-#endif
-
-#ifdef MOZ_PLAINTEXT_EDITOR_ONLY
-#define COMPOSER_MODULE
-#else
-#define COMPOSER_MODULE MODULE(nsComposerModule)
 #endif
 
 #ifdef ACCESSIBILITY
@@ -268,7 +260,7 @@
     ACCESS_MODULES                           \
     MODULE(appshell)                         \
     MODULE(nsTransactionManagerModule)       \
-    COMPOSER_MODULE                          \
+    MODULE(nsComposerModule)                 \
     MODULE(application)                      \
     MODULE(Apprunner)                        \
     MODULE(CommandLineModule)                \

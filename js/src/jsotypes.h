@@ -51,21 +51,6 @@
 #ifndef PROTYPES_H
 #define PROTYPES_H
 
-#ifdef XP_BEOS
-/* BeOS defines most int types in SupportDefs.h (int8, uint8, int16,
- * uint16, int32, uint32, int64, uint64), so in the interest of
- * not conflicting with other definitions elsewhere we have to skip the
- * #ifdef jungle below, duplicate some definitions, and do our stuff.
- */
-#include <SupportDefs.h>
-
-typedef JSUintn uintn;
-#ifndef _XP_Core_
-typedef JSIntn intn;
-#endif
-
-#else
-
 /* SVR4 typedef of uint is commonly found on UNIX machines. */
 #ifdef XP_UNIX
 #include <sys/types.h>
@@ -107,8 +92,6 @@ typedef JSInt32 int32;
 typedef JSInt16 int16;
 typedef JSInt8 int8;
 #endif /* AIX && HAVE_SYS_INTTYPES_H */
-
-#endif  /* XP_BEOS */
 
 typedef JSFloat64 float64;
 

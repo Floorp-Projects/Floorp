@@ -369,8 +369,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "1" ],
-		other_values: [ "0", "100" ],
-		invalid_values: [ "1.0", "-1", "-1000" ]
+		other_values: [ "2", "100" ],
+		invalid_values: [ "1.0", "-1", "-1000", "0" ]
 	},
 	"-moz-box-orient": {
 		domProp: "MozBoxOrient",
@@ -605,7 +605,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "green" },
-		initial_values: [ "currentColor" ],
+		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "red", "blue", "#ffff00" ],
 		invalid_values: [ ]
 	},
@@ -1361,7 +1361,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "black" },
-		initial_values: [ "currentColor" ],
+		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
 	},
@@ -1423,7 +1423,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		prerequisites: { "color": "black" },
-		initial_values: [ "currentColor" ],
+		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
 	},
@@ -1468,7 +1468,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
 		prerequisites: { "color": "black" },
-		initial_values: [ "currentColor" ],
+		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
 	},
@@ -1531,7 +1531,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "black" },
-		initial_values: [ "currentColor" ],
+		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
 	},
@@ -2161,7 +2161,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		prerequisites: { "color": "black" },
-		initial_values: [ "currentColor" ], // XXX should be invert
+		initial_values: [ "currentColor", "-moz-use-text-color" ], // XXX should be invert
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
 	},

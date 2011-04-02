@@ -171,10 +171,6 @@
     #define NS_OS2_DIR                          "OS2Dir"
     #define NS_OS2_HOME_DIR                     NS_OS_HOME_DIR
     #define NS_OS2_DESKTOP_DIR                  NS_OS_DESKTOP_DIR
-#elif defined (XP_BEOS)
-    #define NS_BEOS_SETTINGS_DIR                "Setngs"
-    #define NS_BEOS_HOME_DIR                    NS_OS_HOME_DIR
-    #define NS_BEOS_DESKTOP_DIR                 NS_OS_DESKTOP_DIR
 #endif
 
 /* Deprecated */

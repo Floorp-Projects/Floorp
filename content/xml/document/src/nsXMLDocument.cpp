@@ -70,8 +70,6 @@
 #include "nsLayoutCID.h"
 #include "nsDOMAttribute.h"
 #include "nsGUIEvent.h"
-#include "nsIFIXptr.h"
-#include "nsIXPointer.h"
 #include "nsCExternalHandlerService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
@@ -282,29 +280,6 @@ nsXMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
 }
 
 NS_IMETHODIMP
-nsXMLDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange)
-{
-  nsresult rv;
-  nsCOMPtr<nsIFIXptrEvaluator> e =
-    do_CreateInstance("@mozilla.org/xmlextras/fixptrevaluator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  return e->Evaluate(this, aExpression, aRange);
-}
-
-NS_IMETHODIMP
-nsXMLDocument::EvaluateXPointer(const nsAString& aExpression,
-                                nsIXPointerResult **aResult)
-{
-  nsresult rv;
-  nsCOMPtr<nsIXPointerEvaluator> e =
-    do_CreateInstance("@mozilla.org/xmlextras/xpointerevaluator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  return e->Evaluate(this, aExpression, aResult);
-}
-
-NS_IMETHODIMP
 nsXMLDocument::GetAsync(PRBool *aAsync)
 {
   NS_ENSURE_ARG_POINTER(aAsync);
@@ -334,6 +309,11 @@ ReportUseOfDeprecatedMethod(nsIDocument *aDoc, const char* aWarning)
 NS_IMETHODIMP
 nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
+  PRBool hasHadScriptObject = PR_TRUE;
+  nsIScriptGlobalObject* scriptObject =
+    GetScriptHandlingObject(hasHadScriptObject);
+  NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
+
   ReportUseOfDeprecatedMethod(this, "UseOfDOM3LoadMethodWarning");
 
   NS_ENSURE_ARG_POINTER(aReturn);
