@@ -102,6 +102,9 @@ using namespace mozilla::ipc::windows;
  * these in-calls are blocked.
  */
 
+// pulled from widget's nsAppShell
+extern const PRUnichar* kAppShellEventId;
+
 namespace {
 
 const wchar_t kOldWndProcProp[] = L"MozillaIPCOldWndProc";
@@ -122,6 +125,7 @@ HHOOK gDeferredCallWndProcHook = NULL;
 
 DWORD gUIThreadId = 0;
 int gEventLoopDepth = 0;
+static UINT sAppShellGeckoMsgId;
 
 LRESULT CALLBACK
 DeferredMessageHook(int nCode,
@@ -299,26 +303,31 @@ ProcessOrDeferMessage(HWND hwnd,
     case WM_SYNCPAINT:
       return 0;
 
-    // Unknown messages only.
     default: {
+      if (uMsg && uMsg == sAppShellGeckoMsgId) {
+        // Widget's registered native event callback
+        deferred = new DeferredSendMessage(hwnd, uMsg, wParam, lParam);
+      } else {
+        // Unknown messages only
 #ifdef DEBUG
-      nsCAutoString log("Received \"nonqueued\" message ");
-      log.AppendInt(uMsg);
-      log.AppendLiteral(" during a synchronous IPC message for window ");
-      log.AppendInt((PRInt64)hwnd);
+        nsCAutoString log("Received \"nonqueued\" message ");
+        log.AppendInt(uMsg);
+        log.AppendLiteral(" during a synchronous IPC message for window ");
+        log.AppendInt((PRInt64)hwnd);
 
-      wchar_t className[256] = { 0 };
-      if (GetClassNameW(hwnd, className, sizeof(className) - 1) > 0) {
-        log.AppendLiteral(" (\"");
-        log.Append(NS_ConvertUTF16toUTF8((PRUnichar*)className));
-        log.AppendLiteral("\")");
-      }
+        wchar_t className[256] = { 0 };
+        if (GetClassNameW(hwnd, className, sizeof(className) - 1) > 0) {
+          log.AppendLiteral(" (\"");
+          log.Append(NS_ConvertUTF16toUTF8((PRUnichar*)className));
+          log.AppendLiteral("\")");
+        }
 
-      log.AppendLiteral(", sending it to DefWindowProc instead of the normal "
-                        "window procedure.");
-      NS_ERROR(log.get());
+        log.AppendLiteral(", sending it to DefWindowProc instead of the normal "
+                          "window procedure.");
+        NS_ERROR(log.get());
 #endif
-      return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+      }
     }
   }
 
@@ -531,6 +540,7 @@ Init()
   NS_ASSERTION(gUIThreadId, "ThreadId should not be 0!");
   NS_ASSERTION(gUIThreadId == GetCurrentThreadId(),
                "Running on different threads!");
+  sAppShellGeckoMsgId = RegisterWindowMessageW(kAppShellEventId);
 }
 
 // This timeout stuff assumes a sane value of mTimeoutMs (less than the overflow

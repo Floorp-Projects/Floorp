@@ -221,10 +221,8 @@ namespace nanojit
         // but from the following instruction.  Eg. 'jmp $0' will jump to the
         // next instruction.
         int64_t offset = target ? target - _nIns : 0;
-        if (!isS32(offset)) {
+        if (!isS32(offset))
             setError(BranchTooFar);
-            NanoAssert(0);  // assert because we'd like to know if this ever happens
-        }
         emit(op | uint64_t(uint32_t(offset))<<32);
     }
 
@@ -2014,7 +2012,7 @@ namespace nanojit
         // that the old value is poison.
         if (!isS32(target - next)) {
             setError(BranchTooFar);
-            NanoAssert(0);  // assert because we'd like to know if this ever happens
+            return;         // don't patch
         }
         ((int32_t*)next)[-1] = int32_t(target - next);
         if (next[0] == 0x0F && next[1] == 0x8A) {
@@ -2022,7 +2020,10 @@ namespace nanojit
             // we just patched the jne, now patch the jp.
             next += 6;
             NanoAssert(((int32_t*)next)[-1] == 0);
-            NanoAssert(isS32(target - next));
+            if (!isS32(target - next)) {
+                setError(BranchTooFar);
+                return;     // don't patch
+            }
             ((int32_t*)next)[-1] = int32_t(target - next);
         }
     }
@@ -2053,21 +2054,16 @@ namespace nanojit
         GuardRecord *lr = 0;
         bool destKnown = (frag && frag->fragEntry);
         // Generate jump to epilog and initialize lr.
-        // If the guard is LIR_xtbl, use a jump table with epilog in every entry
-        if (guard->isop(LIR_xtbl)) {
-            NanoAssert(!guard->isop(LIR_xtbl));
-        } else {
-            // If the guard already exists, use a simple jump.
-            if (destKnown) {
-                JMP(frag->fragEntry);
-                lr = 0;
-            } else {  // target doesn't exist. Use 0 jump offset and patch later
-                if (!_epilogue)
-                    _epilogue = genEpilogue();
-                lr = guard->record();
-                JMPl(_epilogue);
-                lr->jmp = _nIns;
-            }
+        // If the guard already exists, use a simple jump.
+        if (destKnown) {
+            JMP(frag->fragEntry);
+            lr = 0;
+        } else {  // target doesn't exist. Use 0 jump offset and patch later
+            if (!_epilogue)
+                _epilogue = genEpilogue();
+            lr = guard->record();
+            JMPl(_epilogue);
+            lr->jmp = _nIns;
         }
 
         // profiling for the exit
@@ -2083,7 +2079,7 @@ namespace nanojit
         asm_immq(RAX, uintptr_t(lr), /*canClobberCCs*/true);
     }
 
-    void Assembler::nInit(AvmCore*) {
+    void Assembler::nInit() {
         nHints[LIR_calli]  = rmask(retRegs[0]);
         nHints[LIR_calld]  = rmask(XMM0);
         nHints[LIR_paramp] = PREFER_SPECIAL;

@@ -200,11 +200,35 @@ gfxDWriteFont::GetMetrics()
     return *mMetrics;
 }
 
+PRBool
+gfxDWriteFont::GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics)
+{
+    gfxFontStyle style(mStyle);
+    style.weight = 700;
+    PRBool needsBold;
+    gfxFontEntry *fe = mFontEntry->Family()->FindFontForStyle(style, needsBold);
+    if (!fe || fe == mFontEntry) {
+        return PR_FALSE;
+    }
+
+    nsRefPtr<gfxFont> font = fe->FindOrMakeFont(&style, needsBold);
+    gfxDWriteFont *dwFont = static_cast<gfxDWriteFont*>(font.get());
+    dwFont->mFontFace->GetMetrics(aFontMetrics);
+
+    return PR_TRUE;
+}
+
 void
 gfxDWriteFont::ComputeMetrics()
 {
     DWRITE_FONT_METRICS fontMetrics;
-    mFontFace->GetMetrics(&fontMetrics);
+    if (!(mFontEntry->Weight() == 900 &&
+          !mFontEntry->IsUserFont() &&
+          mFontEntry->FamilyName().EqualsLiteral("Arial") &&
+          GetFakeMetricsForArialBlack(&fontMetrics)))
+    {
+        mFontFace->GetMetrics(&fontMetrics);
+    }
 
     if (mStyle.sizeAdjust != 0.0) {
         gfxFloat aspect = (gfxFloat)fontMetrics.xHeight /

@@ -195,11 +195,8 @@ nsHyperTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
     *aState |= nsIAccessibleStates::STATE_READONLY;
   }
 
-  PRInt32 childCount;
-  GetChildCount(&childCount);
-  if (childCount > 0) {
+  if (GetChildCount() > 0)
     *aExtraState |= nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT;
-  }
 
   return NS_OK;
 }

@@ -351,7 +351,10 @@ private:
     }
 
     void RemoveIconObserver(nsImageFrame *frame) {
-        PRBool rv = mIconObservers.RemoveElement(frame);
+#ifdef DEBUG
+        PRBool rv =
+#endif
+            mIconObservers.RemoveElement(frame);
         NS_ABORT_IF_FALSE(rv, "Observer not in array");
     }
 

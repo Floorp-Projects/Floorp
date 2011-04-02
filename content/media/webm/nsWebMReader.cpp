@@ -209,7 +209,7 @@ void nsWebMReader::Cleanup()
   }
 }
 
-nsresult nsWebMReader::ReadMetadata()
+nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
   MonitorAutoEnter mon(mMonitor);
@@ -395,6 +395,8 @@ nsresult nsWebMReader::ReadMetadata()
       mChannels = mInfo.mAudioChannels;
     }
   }
+
+  *aInfo = mInfo;
 
   return NS_OK;
 }
@@ -614,6 +616,11 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
                "Should be on state machine or decode thread.");
 
+  // Record number of frames decoded and parsed. Automatically update the
+  // stats counters using the AutoNotifyDecoded stack-based class.
+  PRUint32 parsed = 0, decoded = 0;
+  nsMediaDecoder::AutoNotifyDecoded autoNotify(mDecoder, parsed, decoded);
+
   nsAutoRef<NesteggPacketHolder> holder(NextPacket(VIDEO));
   if (!holder) {
     mVideoQueue.Finish();
@@ -678,16 +685,17 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
     memset(&si, 0, sizeof(si));
     si.sz = sizeof(si);
     vpx_codec_peek_stream_info(&vpx_codec_vp8_dx_algo, data, length, &si);
-    if ((aKeyframeSkip && !si.is_kf) || (aKeyframeSkip && si.is_kf && tstamp_ms < aTimeThreshold)) {
-      aKeyframeSkip = PR_TRUE;
-      break;
+    if (aKeyframeSkip && (!si.is_kf || tstamp_ms < aTimeThreshold)) {
+      // Skipping to next keyframe...
+      parsed++; // Assume 1 frame per chunk.
+      continue;
     }
 
     if (aKeyframeSkip && si.is_kf) {
       aKeyframeSkip = PR_FALSE;
     }
 
-    if(vpx_codec_decode(&mVP8, data, length, NULL, 0)) {
+    if (vpx_codec_decode(&mVP8, data, length, NULL, 0)) {
       return PR_FALSE;
     }
 
@@ -695,13 +703,14 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
     // the time threshold required then it is not added
     // to the video queue and won't be displayed.
     if (tstamp_ms < aTimeThreshold) {
+      parsed++; // Assume 1 frame per chunk.
       continue;
     }
 
     vpx_codec_iter_t  iter = NULL;
     vpx_image_t      *img;
 
-    while((img = vpx_codec_get_frame(&mVP8, &iter))) {
+    while ((img = vpx_codec_get_frame(&mVP8, &iter))) {
       NS_ASSERTION(img->fmt == IMG_FMT_I420, "WebM image format is not I420");
 
       // Chroma shifts are rounded down as per the decoding examples in the VP8 SDK
@@ -732,6 +741,10 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
       if (!v) {
         return PR_FALSE;
       }
+      parsed++;
+      decoded++;
+      NS_ASSERTION(decoded <= parsed,
+        "Expect only 1 frame per chunk per packet in WebM...");
       mVideoQueue.Push(v);
     }
   }
@@ -771,7 +784,6 @@ nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
 
 nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   nsMediaStream* stream = mDecoder->GetCurrentStream();
 
   PRUint64 timecodeScale;
@@ -786,22 +798,18 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
       aBuffered->Add(0, duration / NS_PER_S);
     }
   } else {
-    PRInt64 startOffset = stream->GetNextCachedData(0);
-    PRInt64 startTimeOffsetNS = aStartTime * NS_PER_MS;
-    while (startOffset >= 0) {
-      PRInt64 endOffset = stream->GetCachedDataEnd(startOffset);
-      NS_ASSERTION(startOffset < endOffset, "Cached range invalid");
+    nsMediaStream* stream = mDecoder->GetCurrentStream();
+    nsTArray<nsByteRange> ranges;
+    nsresult res = stream->GetCachedRanges(ranges);
+    NS_ENSURE_SUCCESS(res, res);
 
+    PRInt64 startTimeOffsetNS = aStartTime * NS_PER_MS;
+    for (PRUint32 index = 0; index < ranges.Length(); index++) {
       mBufferedState->CalculateBufferedForRange(aBuffered,
-                                                startOffset,
-                                                endOffset,
+                                                ranges[index].mStart,
+                                                ranges[index].mEnd,
                                                 timecodeScale,
                                                 startTimeOffsetNS);
-
-      // Advance to the next cached data range.
-      startOffset = stream->GetNextCachedData(endOffset);
-      NS_ASSERTION(startOffset == -1 || startOffset > endOffset,
-                   "Next cached range invalid");
     }
   }
 

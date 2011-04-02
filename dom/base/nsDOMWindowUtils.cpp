@@ -82,6 +82,9 @@
 
 #include "Layers.h"
 
+#include "mozilla/dom/Element.h"
+
+using namespace mozilla::dom;
 using namespace mozilla::layers;
 
 static PRBool IsUniversalXPConnectCapable()
@@ -98,7 +101,6 @@ DOMCI_DATA(WindowUtils, nsDOMWindowUtils)
 NS_INTERFACE_MAP_BEGIN(nsDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMWindowUtils)
   NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMWindowUtils_MOZILLA_2_0_BRANCH)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(WindowUtils)
 NS_INTERFACE_MAP_END
@@ -267,14 +269,6 @@ static void DestroyNsRect(void* aObject, nsIAtom* aPropertyName,
 }
 
 NS_IMETHODIMP
-nsDOMWindowUtils::SetDisplayPort(float aXPx, float aYPx,
-                                 float aWidthPx, float aHeightPx)
-{
-  NS_ABORT_IF_FALSE(false, "This interface is deprecated.");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
                                            float aWidthPx, float aHeightPx,
                                            nsIDOMElement* aElement)
@@ -337,8 +331,14 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
   if (presShell) {
     nsIFrame* rootFrame = presShell->FrameManager()->GetRootFrame();
     if (rootFrame) {
-      rootFrame->InvalidateWithFlags(rootFrame->GetVisualOverflowRectRelativeToSelf(),
-                                     nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
+      nsIContent* rootContent =
+        rootScrollFrame ? rootScrollFrame->GetContent() : nsnull;
+      nsRect rootDisplayport;
+      bool usingDisplayport = rootContent &&
+        nsLayoutUtils::GetDisplayPort(rootContent, &rootDisplayport);
+      rootFrame->InvalidateWithFlags(
+        usingDisplayport ? rootDisplayport : rootFrame->GetVisualOverflowRect(),
+        nsIFrame::INVALIDATE_NO_THEBES_LAYERS);
     }
   }
 
@@ -448,7 +448,6 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
                           appPerDev);
   event.ignoreRootScrollFrame = aIgnoreRootScrollFrame;
 
-  nsresult rv;
   nsEventStatus status;
   if (aToWindow) {
     nsIPresShell* presShell = presContext->PresShell();
@@ -460,17 +459,14 @@ nsDOMWindowUtils::SendMouseEventCommon(const nsAString& aType,
     nsIViewManager* viewManager = presShell->GetViewManager();
     if (!viewManager)
       return NS_ERROR_FAILURE;
-    nsIView* view = nsnull;
-    rv = viewManager->GetRootView(view);
-    if (NS_FAILED(rv) || !view)
+    nsIView* view = viewManager->GetRootView();
+    if (!view)
       return NS_ERROR_FAILURE;
 
     status = nsEventStatus_eIgnore;
-    rv = vo->HandleEvent(view, &event, PR_FALSE, &status);
-  } else {
-    rv = widget->DispatchEvent(&event, status);
+    return vo->HandleEvent(view, &event, PR_FALSE, &status);
   }
-  return rv;
+  return widget->DispatchEvent(&event, status);
 }
 
 NS_IMETHODIMP
@@ -1009,9 +1005,8 @@ nsDOMWindowUtils::GetIMEIsOpen(PRBool *aState)
     return NS_ERROR_FAILURE;
 
   // Open state should not be available when IME is not enabled.
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
   IMEContext context;
-  nsresult rv = widget2->GetInputMode(context);
+  nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
   if (context.mStatus != nsIWidget::IME_STATUS_ENABLED)
     return NS_ERROR_NOT_AVAILABLE;
@@ -1028,9 +1023,8 @@ nsDOMWindowUtils::GetIMEStatus(PRUint32 *aState)
   if (!widget)
     return NS_ERROR_FAILURE;
 
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
   IMEContext context;
-  nsresult rv = widget2->GetInputMode(context);
+  nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aState = context.mStatus;
@@ -1047,9 +1041,8 @@ nsDOMWindowUtils::GetFocusedInputType(char** aType)
     return NS_ERROR_FAILURE;
   }
 
-  nsIWidget_MOZILLA_2_0_BRANCH* widget2 = static_cast<nsIWidget_MOZILLA_2_0_BRANCH*>(widget.get());
   IMEContext context;
-  nsresult rv = widget2->GetInputMode(context);
+  nsresult rv = widget->GetInputMode(context);
   NS_ENSURE_SUCCESS(rv, rv);
 
   *aType = ToNewCString(context.mHTMLInputType);
@@ -1629,12 +1622,13 @@ nsDOMWindowUtils::GetLayerManagerType(nsAString& aType)
 }
 
 static PRBool
-ComputeAnimationValue(nsCSSProperty aProperty, nsIContent* aContent,
+ComputeAnimationValue(nsCSSProperty aProperty,
+                      Element* aElement,
                       const nsAString& aInput,
                       nsStyleAnimation::Value& aOutput)
 {
 
-  if (!nsStyleAnimation::ComputeValue(aProperty, aContent, aInput,
+  if (!nsStyleAnimation::ComputeValue(aProperty, aElement, aInput,
                                       PR_FALSE, aOutput)) {
     return PR_FALSE;
   }
@@ -1684,8 +1678,8 @@ nsDOMWindowUtils::ComputeAnimationDistance(nsIDOMElement* aElement,
 
   nsStyleAnimation::Value v1, v2;
   if (property == eCSSProperty_UNKNOWN ||
-      !ComputeAnimationValue(property, content, aValue1, v1) ||
-      !ComputeAnimationValue(property, content, aValue2, v2)) {
+      !ComputeAnimationValue(property, content->AsElement(), aValue1, v1) ||
+      !ComputeAnimationValue(property, content->AsElement(), aValue2, v2)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 

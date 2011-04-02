@@ -183,7 +183,7 @@ public:
 
     void Init()
     {
-        if (!mMap.ops)
+        if (!mMap.ops || !mCache)
             return;
         nsCAutoString prefName("font.cache");
         PRUint32 size;
@@ -293,7 +293,7 @@ public:
         PL_DHashTableEnumerate(&mMap, WriteOutMap, &buf);
         PL_DHashTableFinish(&mMap);
         nsCAutoString prefName("font.cache");
-        mCache->PutBuffer(prefName.get(), buf.get(), buf.Length());
+        mCache->PutBuffer(prefName.get(), buf.get(), buf.Length() + 1);
     }
 private:
     mozilla::scache::StartupCache* mCache;

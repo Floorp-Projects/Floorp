@@ -206,7 +206,7 @@ nsFileStream::DoOpen()
     PRFileDesc* fd;
     nsresult rv = mOpenParams.localFile->OpenNSPRFileDesc(mOpenParams.ioFlags, mOpenParams.perm, &fd);
     CleanUpOpen();
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv)) return rv;
     mFD = fd;
 
     return NS_OK;

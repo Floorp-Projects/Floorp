@@ -90,6 +90,8 @@ protected:
 
     virtual void CreatePlatformShaper();
 
+    PRBool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
+
     void ComputeMetrics();
 
     PRBool HasBitmapStrikeForSize(PRUint32 aSize);

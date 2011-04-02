@@ -85,7 +85,6 @@ CPPSRCS += nsXPathEvaluator.cpp \
            nsXPathExpression.cpp \
            nsXPathNSResolver.cpp \
            nsXPathResult.cpp \
-           nsXPath1Scheme.cpp \
            txMozillaXPathTreeWalker.cpp \
            txNodeSetAdaptor.cpp \
            txXPCOMExtensionFunction.cpp

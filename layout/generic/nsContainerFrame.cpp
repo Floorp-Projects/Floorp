@@ -475,8 +475,7 @@ nsContainerFrame::SyncWindowProperties(nsPresContext*       aPresContext,
     return;
 
   nsIViewManager* vm = aView->GetViewManager();
-  nsIView* rootView;
-  vm->GetRootView(rootView);
+  nsIView* rootView = vm->GetRootView();
 
   if (aView != rootView)
     return;

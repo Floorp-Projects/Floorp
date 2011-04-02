@@ -99,16 +99,6 @@ ifdef XPI_NAME
 DEFINES += -DXPI_NAME=$(XPI_NAME)
 endif
 
-# MAKE_JARS_TARGET is a staging area for make-jars.pl.  When packaging in
-# the jar format, make-jars leaves behind a directory structure that's not
-# needed in $(FINAL_TARGET).  For both, flat, and symlink, the directory
-# structure contains the chrome, so leave it in $(FINAL_TARGET).
-ifeq (jar,$(MOZ_CHROME_FILE_FORMAT))
-MAKE_JARS_TARGET = $(if $(XPI_NAME),$(FINAL_TARGET).stage,$(DIST)/chrome-stage)
-else
-MAKE_JARS_TARGET = $(FINAL_TARGET)
-endif
-
 # The VERSION_NUMBER is suffixed onto the end of the DLLs we ship.
 VERSION_NUMBER		= 50
 
@@ -129,9 +119,6 @@ LD		:= qcc -Vgcc_ntox86 -nostdlib
 else
 LD		:= $(CC)
 endif
-endif
-ifeq ($(OS_ARCH),BeOS)
-BEOS_ADDON_WORKAROUND	= 1
 endif
 
 #
@@ -265,12 +252,6 @@ ifneq (,$(FORCE_SHARED_LIB)$(FORCE_USE_PIC))
 _ENABLE_PIC=1
 endif
 
-# In Firefox, all components are linked into either libxul or the static
-# meta-component, and should be compiled with PIC.
-ifdef MOZ_META_COMPONENT
-_ENABLE_PIC=1
-endif
-
 # If module is going to be merged into the nsStaticModule, 
 # make sure that the entry points are translated and 
 # the module is built static.
@@ -340,10 +321,6 @@ ifndef STATIC_LIBRARY_NAME
 ifdef LIBRARY_NAME
 STATIC_LIBRARY_NAME=$(LIBRARY_NAME)
 endif
-endif
-
-ifeq (WINNT,$(OS_ARCH))
-MOZ_FAKELIBS = 1
 endif
 
 # This comes from configure
@@ -423,8 +400,7 @@ DEFINES += \
 endif
 endif
 
-# Flags passed to make-jars.pl
-
+# Flags passed to JarMaker.py
 MAKE_JARS_FLAGS = \
 	-t $(topsrcdir) \
 	-f $(MOZ_CHROME_FILE_FORMAT) \
@@ -457,16 +433,16 @@ MY_RULES	:= $(DEPTH)/config/myrules.mk
 #
 # Default command macros; can be overridden in <arch>.mk.
 #
-CCC		= $(CXX)
-NFSPWD		= $(CONFIG_TOOLS)/nfspwd
-PURIFY		= purify $(PURIFYOPTIONS)
-QUANTIFY	= quantify $(QUANTIFYOPTIONS)
+CCC = $(CXX)
+NFSPWD = $(CONFIG_TOOLS)/nfspwd
+PURIFY = purify $(PURIFYOPTIONS)
+QUANTIFY = quantify $(QUANTIFYOPTIONS)
 ifdef CROSS_COMPILE
-XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(LIBXUL_DIST)/host/bin/host_xpidl$(HOST_BIN_SUFFIX)
-XPIDL_LINK	= $(CYGWIN_WRAPPER) $(LIBXUL_DIST)/host/bin/host_xpt_link$(HOST_BIN_SUFFIX)
+XPIDL_COMPILE = $(LIBXUL_DIST)/host/bin/host_xpidl$(HOST_BIN_SUFFIX)
+XPIDL_LINK = $(LIBXUL_DIST)/host/bin/host_xpt_link$(HOST_BIN_SUFFIX)
 else
-XPIDL_COMPILE 	= $(CYGWIN_WRAPPER) $(LIBXUL_DIST)/bin/xpidl$(BIN_SUFFIX)
-XPIDL_LINK	= $(CYGWIN_WRAPPER) $(LIBXUL_DIST)/bin/xpt_link$(BIN_SUFFIX)
+XPIDL_COMPILE = $(LIBXUL_DIST)/bin/xpidl$(BIN_SUFFIX)
+XPIDL_LINK = $(LIBXUL_DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
 
 # Java macros
@@ -683,11 +659,11 @@ endif # OS_ARCH=Darwin
 
 
 ifdef MOZ_NATIVE_MAKEDEPEND
-MKDEPEND_DIR	=
-MKDEPEND	= $(CYGWIN_WRAPPER) $(MOZ_NATIVE_MAKEDEPEND)
+MKDEPEND_DIR =
+MKDEPEND = $(MOZ_NATIVE_MAKEDEPEND)
 else
-MKDEPEND_DIR	= $(CONFIG_TOOLS)/mkdepend
-MKDEPEND	= $(CYGWIN_WRAPPER) $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
+MKDEPEND_DIR = $(CONFIG_TOOLS)/mkdepend
+MKDEPEND = $(MKDEPEND_DIR)/mkdepend$(BIN_SUFFIX)
 endif
 
 # Set link flags according to whether we want a console.
@@ -741,7 +717,7 @@ DEFINES		+= -DOSARCH=$(OS_ARCH)
 
 ######################################################################
 
-GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB $(FAKE_LIBRARY)
+GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
 ifeq ($(OS_ARCH),Darwin)
 ifndef NSDISTMODE
@@ -751,12 +727,12 @@ PWD := $(CURDIR)
 endif
 
 ifdef NSINSTALL_BIN
-NSINSTALL	= $(CYGWIN_WRAPPER) $(NSINSTALL_BIN)
+NSINSTALL = $(NSINSTALL_BIN)
 else
 ifeq (OS2,$(CROSS_COMPILE)$(OS_ARCH))
-NSINSTALL	= $(MOZ_TOOLS_DIR)/nsinstall
+NSINSTALL = $(MOZ_TOOLS_DIR)/nsinstall
 else
-NSINSTALL	= $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)
+NSINSTALL = $(CONFIG_TOOLS)/nsinstall$(HOST_BIN_SUFFIX)
 endif # OS2
 endif # NSINSTALL_BIN
 
@@ -784,12 +760,6 @@ endif # WINNT/OS2
 
 # Use nsinstall in copy mode to install files on the system
 SYSINSTALL	= $(NSINSTALL) -t
-
-ifeq ($(OS_ARCH),WINNT)
-ifneq (,$(CYGDRIVE_MOUNT))
-export CYGDRIVE_MOUNT
-endif
-endif
 
 #
 # Localization build automation
@@ -822,6 +792,16 @@ MAKE_JARS_FLAGS += -c $(topsrcdir)/$(relativesrcdir)/en-US
 endif
 endif
 
+ifdef LOCALE_MERGEDIR
+MERGE_FILE = $(firstword \
+  $(wildcard $(LOCALE_MERGEDIR)/$(subst /locales,,$(relativesrcdir))/$(1)) \
+  $(wildcard $(LOCALE_SRCDIR)/$(1)) \
+  $(srcdir)/en-US/$(1) )
+else
+MERGE_FILE = $(LOCALE_SRCDIR)/$(1)
+endif
+MERGE_FILES = $(foreach f,$(1),$(call MERGE_FILE,$(f)))
+
 ifdef WINCE
 RUN_TEST_PROGRAM = $(PYTHON) $(topsrcdir)/build/mobile/devicemanager-run-test.py
 else
@@ -851,3 +831,12 @@ STATIC_DIRS += $(foreach tier,$(TIERS),$(tier_$(tier)_staticdirs))
 endif
 
 OPTIMIZE_JARS_CMD = $(PYTHON) $(call core_abspath,$(topsrcdir)/config/optimizejars.py)
+
+EXPAND_LIBS = $(PYTHON) -I$(DEPTH)/config $(topsrcdir)/config/expandlibs.py
+EXPAND_LIBS_EXEC = $(PYTHON) $(topsrcdir)/config/pythonpath.py -I$(DEPTH)/config $(topsrcdir)/config/expandlibs_exec.py
+EXPAND_LIBS_GEN = $(PYTHON) $(topsrcdir)/config/pythonpath.py -I$(DEPTH)/config $(topsrcdir)/config/expandlibs_gen.py
+EXPAND_AR = $(EXPAND_LIBS_EXEC) --extract -- $(AR)
+EXPAND_CC = $(EXPAND_LIBS_EXEC) --uselist -- $(CC)
+EXPAND_CCC = $(EXPAND_LIBS_EXEC) --uselist -- $(CCC)
+EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist -- $(LD)
+EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) --uselist -- $(MKSHLIB)

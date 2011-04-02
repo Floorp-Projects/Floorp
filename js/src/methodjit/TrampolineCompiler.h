@@ -52,8 +52,8 @@ class TrampolineCompiler
     typedef bool (*TrampolineGenerator)(Assembler &masm);
 
 public:
-    TrampolineCompiler(JSC::ExecutableAllocator *pool, Trampolines *tramps)
-      : execPool(pool), trampolines(tramps)
+    TrampolineCompiler(JSC::ExecutableAllocator *alloc, Trampolines *tramps)
+      : execAlloc(alloc), trampolines(tramps)
     { }
 
     bool compile();
@@ -70,7 +70,7 @@ private:
     static bool generateForceReturnFast(Assembler &masm);
 #endif
 
-    JSC::ExecutableAllocator *execPool;
+    JSC::ExecutableAllocator *execAlloc;
     Trampolines *trampolines;
 };
 

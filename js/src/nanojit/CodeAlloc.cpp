@@ -214,13 +214,13 @@ namespace nanojit
                 }
                 else {
                     CodeList* free_block = availblocks;
-                    while ( free_block && free_block->next != coalescedBlock) {
+                    while (free_block->next != coalescedBlock) {
                         NanoAssert(free_block->size() >= minAllocSize);
                         NanoAssert(free_block->isFree);
                         NanoAssert(free_block->next);
                         free_block = free_block->next;
                     }
-                    NanoAssert(free_block && free_block->next == coalescedBlock);
+                    NanoAssert(free_block->next == coalescedBlock);
                     free_block->next = coalescedBlock->next;
                 }
             }

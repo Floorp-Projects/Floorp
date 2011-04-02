@@ -50,6 +50,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug586553.js \
                  browser_tabview_bug587043.js \
                  browser_tabview_bug587231.js \
+                 browser_tabview_bug587276.js \
                  browser_tabview_bug587351.js \
                  browser_tabview_bug587503.js \
                  browser_tabview_bug587990.js \
@@ -85,6 +86,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug608184.js \
                  browser_tabview_bug608158.js \
                  browser_tabview_bug608405.js \
+                 browser_tabview_bug610208.js \
                  browser_tabview_bug610242.js \
                  browser_tabview_bug612470.js \
                  browser_tabview_bug613541.js \
@@ -115,6 +117,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug630102.js \
                  browser_tabview_bug630157.js \
                  browser_tabview_bug631662.js \
+                 browser_tabview_bug631752.js \
                  browser_tabview_bug633788.js \
                  browser_tabview_bug634077.js \
                  browser_tabview_bug634085.js \
@@ -123,6 +126,7 @@ _BROWSER_FILES = \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
                  browser_tabview_expander.js \
+                 browser_tabview_firstrun_pref.js \
                  browser_tabview_group.js \
                  browser_tabview_launch.js \
                  browser_tabview_multiwindow_search.js \

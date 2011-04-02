@@ -18,13 +18,6 @@
  * These routines are used by both the compression and decompression code.
  */
 
-/*
- * This file has been modified for the Mozilla/Netscape environment.
- * Modifications are distributed under the mozilla.org tri-license and are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved. See http://www.mozilla.org/MPL/
- */
-
 /* this is not a core library module, so it doesn't define JPEG_INTERNALS */
 #include "jinclude.h"
 #include "jpeglib.h"
@@ -82,15 +75,7 @@ error_exit (j_common_ptr cinfo)
   /* Let the memory manager delete any temp files before we die */
   jpeg_destroy(cinfo);
 
-/* Mozilla mod: in some Windows environments, the exit() function doesn't
- * even exist, so don't compile a reference to it.  Heaven help you if
- * you fail to provide a replacement error_exit function, because the
- * IJG library will NOT handle control returning from error_exit!
- */
-
-#ifndef XP_WIN
   exit(EXIT_FAILURE);
-#endif
 }
 
 
@@ -116,6 +101,15 @@ output_message (j_common_ptr cinfo)
 
   /* Create the message */
   (*cinfo->err->format_message) (cinfo, buffer);
+
+#ifdef USE_WINDOWS_MESSAGEBOX
+  /* Display it in a message dialog box */
+  MessageBox(GetActiveWindow(), buffer, "JPEG Library Error",
+	     MB_OK | MB_ICONERROR);
+#else
+  /* Send it to stderr, adding a newline */
+  fprintf(stderr, "%s\n", buffer);
+#endif
 }
 
 

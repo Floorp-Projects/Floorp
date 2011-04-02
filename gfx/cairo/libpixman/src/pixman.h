@@ -652,11 +652,13 @@ struct pixman_indexed
 #define PIXMAN_TYPE_YUY2	6
 #define PIXMAN_TYPE_YV12	7
 #define PIXMAN_TYPE_BGRA	8
+#define PIXMAN_TYPE_RGBA	9
 
 #define PIXMAN_FORMAT_COLOR(f)				\
 	(PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_ARGB ||	\
 	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_ABGR ||	\
-	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_BGRA)
+	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_BGRA ||	\
+	 PIXMAN_FORMAT_TYPE(f) == PIXMAN_TYPE_RGBA)
 
 /* 32bpp formats */
 typedef enum {
@@ -666,6 +668,8 @@ typedef enum {
     PIXMAN_x8b8g8r8 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_ABGR,0,8,8,8),
     PIXMAN_b8g8r8a8 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_BGRA,8,8,8,8),
     PIXMAN_b8g8r8x8 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_BGRA,0,8,8,8),
+    PIXMAN_r8g8b8a8 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_RGBA,8,8,8,8),
+    PIXMAN_r8g8b8x8 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_RGBA,0,8,8,8),
     PIXMAN_x14r6g6b6 =	 PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,0,6,6,6),
     PIXMAN_x2r10g10b10 = PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,0,10,10,10),
     PIXMAN_a2r10g10b10 = PIXMAN_FORMAT(32,PIXMAN_TYPE_ARGB,2,10,10,10),
@@ -843,19 +847,25 @@ void          pixman_image_composite32        (pixman_op_t        op,
 					       int32_t            width,
 					       int32_t            height);
 
-/* Old X servers rely on out-of-bounds accesses when they are asked
- * to composite with a window as the source. They create a pixman image
- * pointing to some bogus position in memory, but then they set a clip
- * region to the position where the actual bits are.
+/* Executive Summary: This function is a no-op that only exists
+ * for historical reasons.
+ *
+ * There used to be a bug in the X server where it would rely on
+ * out-of-bounds accesses when it was asked to composite with a
+ * window as the source. It would create a pixman image pointing
+ * to some bogus position in memory, but then set a clip region
+ * to the position where the actual bits were.
  *
  * Due to a bug in old versions of pixman, where it would not clip
  * against the image bounds when a clip region was set, this would
- * actually work. So by default we allow certain out-of-bound access
- * to happen unless explicitly disabled.
+ * actually work. So when the pixman bug was fixed, a workaround was
+ * added to allow certain out-of-bound accesses. This function disabled
+ * those workarounds.
  *
- * Fixed X servers should call this function to disable the workaround.
+ * Since 0.21.2, pixman doesn't do these workarounds anymore, so now this
+ * function is a no-op.
  */
-void          pixman_disable_out_of_bounds_workaround (void);
+void pixman_disable_out_of_bounds_workaround (void);
 
 /*
  * Trapezoids
@@ -864,6 +874,7 @@ typedef struct pixman_edge pixman_edge_t;
 typedef struct pixman_trapezoid pixman_trapezoid_t;
 typedef struct pixman_trap pixman_trap_t;
 typedef struct pixman_span_fix pixman_span_fix_t;
+typedef struct pixman_triangle pixman_triangle_t;
 
 /*
  * An edge structure.  This represents a single polygon edge
@@ -891,6 +902,10 @@ struct pixman_trapezoid
     pixman_line_fixed_t	left, right;
 };
 
+struct pixman_triangle
+{
+    pixman_point_fixed_t p1, p2, p3;
+};
 
 /* whether 't' is a well defined not obviously empty trapezoid */
 #define pixman_trapezoid_valid(t)				   \
@@ -946,6 +961,31 @@ void           pixman_rasterize_trapezoid  (pixman_image_t            *image,
 					    const pixman_trapezoid_t  *trap,
 					    int                        x_off,
 					    int                        y_off);
+void          pixman_composite_trapezoids (pixman_op_t		       op,
+					   pixman_image_t *	       src,
+					   pixman_image_t *	       dst,
+					   pixman_format_code_t	       mask_format,
+					   int			       x_src,
+					   int			       y_src,
+					   int			       x_dst,
+					   int			       y_dst,
+					   int			       n_traps,
+					   const pixman_trapezoid_t *  traps);
+void          pixman_composite_triangles (pixman_op_t		       op,
+					  pixman_image_t *	       src,
+					  pixman_image_t *	       dst,
+					  pixman_format_code_t	       mask_format,
+					  int			       x_src,
+					  int			       y_src,
+					  int			       x_dst,
+					  int			       y_dst,
+					  int			       n_tris,
+					  const pixman_triangle_t *    tris);
+void	      pixman_add_triangles       (pixman_image_t              *image,
+					  int32_t	               x_off,
+					  int32_t	               y_off,
+					  int	                       n_tris,
+					  const pixman_triangle_t     *tris);
 
 PIXMAN_END_DECLS
 

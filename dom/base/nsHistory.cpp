@@ -85,7 +85,6 @@ DOMCI_DATA(History, nsHistory)
 NS_INTERFACE_MAP_BEGIN(nsHistory)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMHistory)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHistory)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHistory_MOZILLA_2_0_BRANCH)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(History)
 NS_INTERFACE_MAP_END
 
@@ -285,7 +284,7 @@ nsHistory::Go(PRInt32 aDelta)
 
 NS_IMETHODIMP
 nsHistory::PushState(nsIVariant *aData, const nsAString& aTitle,
-                     const nsAString& aURL)
+                     const nsAString& aURL, JSContext* aCx)
 {
   // Check that PushState hasn't been pref'ed off.
   if (!nsContentUtils::GetBoolPref(sAllowPushStatePrefStr, PR_FALSE))
@@ -306,7 +305,7 @@ nsHistory::PushState(nsIVariant *aData, const nsAString& aTitle,
 
   // PR_FALSE tells the docshell to add a new history entry instead of
   // modifying the current one.
-  nsresult rv = docShell->AddState(aData, aTitle, aURL, PR_FALSE);
+  nsresult rv = docShell->AddState(aData, aTitle, aURL, PR_FALSE, aCx);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
@@ -314,7 +313,7 @@ nsHistory::PushState(nsIVariant *aData, const nsAString& aTitle,
 
 NS_IMETHODIMP
 nsHistory::ReplaceState(nsIVariant *aData, const nsAString& aTitle,
-                        const nsAString& aURL)
+                        const nsAString& aURL, JSContext* aCx)
 {
   // Check that ReplaceState hasn't been pref'ed off
   if (!nsContentUtils::GetBoolPref(sAllowReplaceStatePrefStr, PR_FALSE))
@@ -335,7 +334,7 @@ nsHistory::ReplaceState(nsIVariant *aData, const nsAString& aTitle,
 
   // PR_TRUE tells the docshell to modify the current SHEntry, rather than
   // create a new one.
-  return docShell->AddState(aData, aTitle, aURL, PR_TRUE);
+  return docShell->AddState(aData, aTitle, aURL, PR_TRUE, aCx);
 }
 
 NS_IMETHODIMP
@@ -350,7 +349,7 @@ nsHistory::GetState(nsIVariant **aState)
   if (!nsContentUtils::CanCallerAccess(win->GetOuterWindow()))
     return NS_ERROR_DOM_SECURITY_ERR;
 
-  nsCOMPtr<nsIDOMNSDocument_MOZILLA_2_0_BRANCH> doc =
+  nsCOMPtr<nsIDocument> doc =
     do_QueryInterface(win->GetExtantDocument());
   if (!doc)
     return NS_ERROR_NOT_AVAILABLE;

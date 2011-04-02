@@ -249,6 +249,8 @@ _TEST_FILES1 = 	test_bug5141.html \
 		test_bug454325.html \
 		file_bug391728_2.html \
 		test_bug456262.html \
+		test_bug482935.html \
+		     bug482935.sjs \
 		test_bug590870.html \
 		file_bug590870.html \
 		test_bug590812.html \
@@ -278,6 +280,7 @@ _TEST_FILES1 = 	test_bug5141.html \
 		file_XHRDocURI.xml^headers^ \
 		file_XHRDocURI.text \
 		file_XHRDocURI.text^headers^ \
+		test_DOMException.html \
 		$(NULL)
 
 _TEST_FILES2 = \
@@ -429,6 +432,7 @@ _TEST_FILES2 = \
 		test_bug567350.html \
 		test_bug574596.html \
 		test_bug578096.html \
+		test_bug585978.html \
 		test_bug592366.html \
 		test_bug597345.html \
 		script-1_bug597345.sjs \
@@ -469,6 +473,7 @@ _TEST_FILES2 = \
 		file_bug558431.html \
 		file_bug558431.html^headers^ \
 		test_bug628938.html \
+		test_bug626262.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason

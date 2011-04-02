@@ -50,8 +50,6 @@
 #include "gfxPlatformGtk.h"
 #elif defined(MOZ_WIDGET_QT)
 #include "gfxQtPlatform.h"
-#elif defined(XP_BEOS)
-#include "gfxBeOSPlatform.h"
 #elif defined(XP_OS2)
 #include "gfxOS2Platform.h"
 #elif defined(ANDROID)
@@ -270,8 +268,6 @@ gfxPlatform::Init()
     gPlatform = new gfxPlatformGtk;
 #elif defined(MOZ_WIDGET_QT)
     gPlatform = new gfxQtPlatform;
-#elif defined(XP_BEOS)
-    gPlatform = new gfxBeOSPlatform;
 #elif defined(XP_OS2)
     gPlatform = new gfxOS2Platform;
 #elif defined(ANDROID)
@@ -688,6 +684,11 @@ gfxPlatform::GetFontPrefLangFor(PRUint8 aUnicodeRange)
         case kRangeGurmukhi:   return eFontPrefLang_Gurmukhi;
         case kRangeKhmer:      return eFontPrefLang_Khmer;
         case kRangeMalayalam:  return eFontPrefLang_Malayalam;
+        case kRangeOriya:      return eFontPrefLang_Oriya;
+        case kRangeTelugu:     return eFontPrefLang_Telugu;
+        case kRangeKannada:    return eFontPrefLang_Kannada;
+        case kRangeSinhala:    return eFontPrefLang_Sinhala;
+        case kRangeTibetan:    return eFontPrefLang_Tibetan;
         case kRangeSetCJK:     return eFontPrefLang_CJKSet;
         default:               return eFontPrefLang_Others;
     }

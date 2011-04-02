@@ -797,6 +797,20 @@ public:
    * have already had ComputeEffectiveTransforms called.
    */
   virtual void ComputeEffectiveTransforms(const gfx3DMatrix& aTransformToSurface) = 0;
+  
+  /**
+   * Calculate the scissor rect required when rendering this layer.
+   *
+   * @param aIntermediate true if the layer is being rendered to an
+   * intermediate surface, false otherwise.
+   * @param aVisibleRect The bounds of the parent's visible region.
+   * @param aParentScissor The existing scissor rect set for the parent.
+   * @param aTransform The current 2d transform of the parent.
+   */
+  nsIntRect CalculateScissorRect(bool aIntermediate,
+                                 const nsIntRect& aVisibleRect,
+                                 const nsIntRect& aParentScissor,
+                                 const gfxMatrix& aTransform);
 
   virtual const char* Name() const =0;
   virtual LayerType GetType() const =0;
@@ -1162,13 +1176,20 @@ public:
   virtual void Initialize(const Data& aData) = 0;
 
   /**
-   * CONSTRUCTION PHASE ONLY
-   * Notify this CanvasLayer that the rectangle given by aRect
-   * has been updated, and any work that needs to be done
-   * to bring the contents from the Surface/GLContext to the
-   * Layer in preparation for compositing should be performed.
+   * Notify this CanvasLayer that the canvas surface contents have
+   * changed (or will change) before the next transaction.
    */
-  virtual void Updated(const nsIntRect& aRect) = 0;
+  void Updated() { mDirty = PR_TRUE; }
+
+  /**
+   * Register a callback to be called at the end of each transaction.
+   */
+  typedef void (* DidTransactionCallback)(void* aClosureData);
+  void SetDidTransactionCallback(DidTransactionCallback aCallback, void* aClosureData)
+  {
+    mCallback = aCallback;
+    mCallbackData = aClosureData;
+  }
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1193,15 +1214,30 @@ public:
 
 protected:
   CanvasLayer(LayerManager* aManager, void* aImplData)
-    : Layer(aManager, aImplData), mFilter(gfxPattern::FILTER_GOOD) {}
+    : Layer(aManager, aImplData),
+      mCallback(nsnull), mCallbackData(nsnull), mFilter(gfxPattern::FILTER_GOOD),
+      mDirty(PR_FALSE) {}
 
   virtual nsACString& PrintInfo(nsACString& aTo, const char* aPrefix);
+
+  void FireDidTransactionCallback()
+  {
+    if (mCallback) {
+      mCallback(mCallbackData);
+    }
+  }
 
   /**
    * 0, 0, canvaswidth, canvasheight
    */
   nsIntRect mBounds;
+  DidTransactionCallback mCallback;
+  void* mCallbackData;
   gfxPattern::GraphicsFilter mFilter;
+  /**
+   * Set to true in Updated(), cleared during a transaction.
+   */
+  PRPackedBool mDirty;
 };
 
 }

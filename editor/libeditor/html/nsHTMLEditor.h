@@ -45,7 +45,6 @@
 #include "nsPlaintextEditor.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
-#include "nsIHTMLEditor_MOZILLA_2_0_BRANCH.h"
 #include "nsITableEditor.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
@@ -91,7 +90,6 @@ struct PropItem;
  */
 class nsHTMLEditor : public nsPlaintextEditor,
                      public nsIHTMLEditor,
-                     public nsIHTMLEditor_MOZILLA_2_0_BRANCH,
                      public nsIHTMLObjectResizer,
                      public nsIHTMLAbsPosEditor,
                      public nsITableEditor,
@@ -168,10 +166,6 @@ public:
   /* ------------ nsIHTMLEditor methods -------------- */
 
   NS_DECL_NSIHTMLEDITOR
-
-  /* ------------ nsIHTMLEditor_MOZILLA_2_0_BRANCH methods -------------- */
-
-  NS_DECL_NSIHTMLEDITOR_MOZILLA_2_0_BRANCH
 
   /* ------------ nsIHTMLObjectResizer methods -------------- */
   /* -------- Implemented in nsHTMLObjectResizer.cpp -------- */
@@ -329,7 +323,7 @@ public:
   nsresult EndUpdateViewBatch();
 
   /** prepare the editor for use */
-  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell,  nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIContent *aRoot, nsISelectionController *aSelCon, PRUint32 aFlags);
   NS_IMETHOD PreDestroy(PRBool aDestroyingFrames);
 
   /** Internal, static version */

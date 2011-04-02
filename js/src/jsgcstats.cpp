@@ -119,6 +119,7 @@ static const char *const GC_ARENA_NAMES[] = {
     "object_12",
     "object_16",
     "function",
+    "shape",
 #if JS_HAS_XML_SUPPORT
     "xml",
 #endif
@@ -360,11 +361,15 @@ GCMarker::dumpConservativeRoots()
             fprintf(fp, "object %s", obj->getClass()->name);
             break;
           }
+          case JSTRACE_SHAPE: {
+            fprintf(fp, "shape");
+            break;
+          }
           case JSTRACE_STRING: {
             JSString *str = (JSString *) i->thing;
             if (str->isLinear()) {
                 char buf[50];
-                PutEscapedString(buf, sizeof buf, str->assertIsLinear(), '"');
+                PutEscapedString(buf, sizeof buf, &str->asLinear(), '"');
                 fprintf(fp, "string %s", buf);
             } else {
                 fprintf(fp, "rope: length %d", (int)str->length());
@@ -396,25 +401,27 @@ jsrefcount destroyChunkCount = 0;
 GCTimer::GCTimer() {
     getFirstEnter();
     memset(this, 0, sizeof(GCTimer));
-    enter = rdtsc();
+    enter = PRMJ_Now();
 }
 
 uint64
 GCTimer::getFirstEnter() {
-    static uint64 firstEnter = rdtsc();
+    static uint64 firstEnter = PRMJ_Now();
     return firstEnter;
 }
 
+#define TIMEDIFF(start, end) ((double)(end - start) / PRMJ_USEC_PER_MSEC)
+
 void
 GCTimer::finish(bool lastGC) {
-    end = rdtsc();
+    end = PRMJ_Now();
 
     if (startMark > 0) {
         if (JS_WANT_GC_SUITE_PRINT) {
             fprintf(stderr, "%f %f %f\n",
-                    (double)(end - enter) / 1e6,
-                    (double)(startSweep - startMark) / 1e6,
-                    (double)(sweepDestroyEnd - startSweep) / 1e6);
+                    TIMEDIFF(enter, end),
+                    TIMEDIFF(startMark, startSweep),
+                    TIMEDIFF(startSweep, sweepDestroyEnd));
         } else {
             static FILE *gcFile;
 
@@ -425,17 +432,17 @@ GCTimer::finish(bool lastGC) {
                 fprintf(gcFile, " FinStr, SwShapes, Destroy, +Chunks, -Chunks\n");
             }
             JS_ASSERT(gcFile);
-            fprintf(gcFile, "%12.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, ",
-                    (double)(enter - getFirstEnter()) / 1e6,
-                    (double)(end - enter) / 1e6,
-                    (double)(startSweep - startMark) / 1e6,
-                    (double)(sweepDestroyEnd - startSweep) / 1e6,
-                    (double)(sweepObjectEnd - startSweep) / 1e6,
-                    (double)(sweepStringEnd - sweepObjectEnd) / 1e6,
-                    (double)(sweepShapeEnd - sweepStringEnd) / 1e6,
-                    (double)(sweepDestroyEnd - sweepShapeEnd) / 1e6);
-            fprintf(gcFile, "%7d, %7d \n", newChunkCount,
-                    destroyChunkCount);
+            /*               App   , Tot  , Mar  , Swe  , FiO  , FiS  , SwS  , Des */
+            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, ",
+                    TIMEDIFF(getFirstEnter(), enter),
+                    TIMEDIFF(enter, end),
+                    TIMEDIFF(startMark, startSweep),
+                    TIMEDIFF(startSweep, sweepDestroyEnd),
+                    TIMEDIFF(startSweep, sweepObjectEnd),
+                    TIMEDIFF(sweepObjectEnd, sweepStringEnd),
+                    TIMEDIFF(sweepStringEnd, sweepShapeEnd),
+                    TIMEDIFF(sweepShapeEnd, sweepDestroyEnd));
+            fprintf(gcFile, "%7d, %7d \n", newChunkCount, destroyChunkCount);
             fflush(gcFile);
 
             if (lastGC) {
@@ -447,6 +454,8 @@ GCTimer::finish(bool lastGC) {
     newChunkCount = 0;
     destroyChunkCount = 0;
 }
+
+#undef TIMEDIFF
 
 #endif
 

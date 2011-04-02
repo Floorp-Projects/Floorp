@@ -48,7 +48,6 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
-#include "prlock.h"
 
 // DOMWorker includes
 #include "nsDOMWorker.h"
@@ -62,6 +61,7 @@
 #define LISTENER_TYPE_LOADSTART 3
 #define LISTENER_TYPE_PROGRESS 4
 #define LISTENER_TYPE_READYSTATECHANGE 5
+#define LISTENER_TYPE_LOADEND 6
 
 class nsIXPConnectWrappedNative;
 
@@ -91,6 +91,8 @@ class nsDOMWorkerXHR : public nsDOMWorkerFeature,
                        public nsIXMLHttpRequest,
                        public nsIXPCScriptable
 {
+  typedef mozilla::Mutex Mutex;
+
   friend class nsDOMWorkerXHREvent;
   friend class nsDOMWorkerXHRLastProgressOrLoadEvent;
   friend class nsDOMWorkerXHRProxy;
@@ -115,8 +117,8 @@ public:
 private:
   virtual ~nsDOMWorkerXHR();
 
-  PRLock* Lock() {
-    return mWorker->Lock();
+  Mutex& GetLock() {
+    return mWorker->GetLock();
   }
 
   already_AddRefed<nsIXPConnectWrappedNative> GetWrappedNative() {

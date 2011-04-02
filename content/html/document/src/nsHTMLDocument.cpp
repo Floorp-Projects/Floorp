@@ -1158,56 +1158,26 @@ nsHTMLDocument::SetTitle(const nsAString& aTitle)
   return nsDocument::SetTitle(aTitle);
 }
 
-nsIDOMHTMLMapElement *
+Element*
 nsHTMLDocument::GetImageMap(const nsAString& aMapName)
 {
   if (!mImageMaps) {
     mImageMaps = new nsContentList(this, kNameSpaceID_XHTML, nsGkAtoms::map, nsGkAtoms::map);
   }
 
-  nsIDOMHTMLMapElement* firstMatch = nsnull;
   nsAutoString name;
   PRUint32 i, n = mImageMaps->Length(PR_TRUE);
   for (i = 0; i < n; ++i) {
-    nsCOMPtr<nsIDOMHTMLMapElement> map(
-      do_QueryInterface(mImageMaps->GetNodeAt(i)));
-
-    PRBool match;
-    nsresult rv;
-
-    rv = map->GetId(name);
-    NS_ENSURE_SUCCESS(rv, nsnull);
-
-    match = name.Equals(aMapName);
-    if (!match) {
-      rv = map->GetName(name);
-      NS_ENSURE_SUCCESS(rv, nsnull);
-
-      match = name.Equals(aMapName, nsCaseInsensitiveStringComparator());
-    }
-
-    if (match) {
-      // Quirk: if the first matching map is empty, remember it, but keep
-      // searching for a non-empty one, only use it if none was found (bug 264624).
-      if (mCompatMode == eCompatibility_NavQuirks) {
-        nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
-        rv = map->GetAreas(getter_AddRefs(mapAreas));
-        if (NS_SUCCEEDED(rv) && mapAreas) {
-          PRUint32 length = 0;
-          mapAreas->GetLength(&length);
-          if (length == 0) {
-            if (!firstMatch) {
-              firstMatch = map;
-            }
-            continue;
-          }
-        }
-      }
-      return map;
+    nsIContent* map = mImageMaps->GetNodeAt(i);
+    if (map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id, aMapName,
+                         eCaseMatters) ||
+        map->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, aMapName,
+                         eIgnoreCase)) {
+      return map->AsElement();
     }
   }
 
-  return firstMatch;
+  return NULL;
 }
 
 void
@@ -1337,7 +1307,12 @@ nsHTMLDocument::GetElementsByTagName(const nsAString& aTagname,
   return nsDocument::GetElementsByTagName(aTagname, aReturn);
 }
 
-// nsIDOM3Document interface implementation
+NS_IMETHODIMP
+nsHTMLDocument::GetInputEncoding(nsAString& aInputEncoding)
+{
+  return nsDocument::GetInputEncoding(aInputEncoding);
+}
+
 NS_IMETHODIMP
 nsHTMLDocument::GetXmlEncoding(nsAString& aXmlEncoding)
 {
@@ -1351,7 +1326,7 @@ nsHTMLDocument::GetXmlEncoding(nsAString& aXmlEncoding)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetXmlStandalone(PRBool *aXmlStandalone)
+nsHTMLDocument::GetXmlStandalone(PRBool* aXmlStandalone)
 {
   if (!IsHTML()) {
     return nsDocument::GetXmlStandalone(aXmlStandalone);
@@ -1371,7 +1346,6 @@ nsHTMLDocument::SetXmlStandalone(PRBool aXmlStandalone)
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
-
 
 NS_IMETHODIMP
 nsHTMLDocument::GetXmlVersion(nsAString& aXmlVersion)
@@ -1393,6 +1367,57 @@ nsHTMLDocument::SetXmlVersion(const nsAString& aXmlVersion)
   }
 
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetStrictErrorChecking(PRBool* aStrictErrorChecking)
+{
+  return nsDocument::GetStrictErrorChecking(aStrictErrorChecking);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetStrictErrorChecking(PRBool aStrictErrorChecking)
+{
+  return nsDocument::SetStrictErrorChecking(aStrictErrorChecking);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetDocumentURI(nsAString& aDocumentURI)
+{
+  return nsDocument::GetDocumentURI(aDocumentURI);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::SetDocumentURI(const nsAString& aDocumentURI)
+{
+  return nsDocument::SetDocumentURI(aDocumentURI);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::AdoptNode(nsIDOMNode* aSource, nsIDOMNode** aRetval)
+{
+  return nsDocument::AdoptNode(aSource, aRetval);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::GetDomConfig(nsIDOMDOMConfiguration** aDomConfig)
+{
+  return nsDocument::GetDomConfig(aDomConfig);
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::NormalizeDocument()
+{
+  return nsDocument::NormalizeDocument();
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::RenameNode(nsIDOMNode* aNode,
+                           const nsAString& aNamespaceURI,
+                           const nsAString& aQualifiedName,
+                           nsIDOMNode** aRetval)
+{
+  return nsDocument::RenameNode(aNode, aNamespaceURI, aQualifiedName, aRetval);
 }
 
 //
@@ -1537,7 +1562,7 @@ nsHTMLDocument::GetBody(nsresult *aResult)
   // The document is most likely a frameset document so look for the
   // outer most frameset element
   nsRefPtr<nsContentList> nodeList =
-    NS_GetContentList(this, kNameSpaceID_XHTML, nsGkAtoms::frameset);
+    NS_GetContentList(this, kNameSpaceID_XHTML, NS_LITERAL_STRING("frameset"));
 
   return nodeList->GetNodeAt(0);
 }
@@ -1873,15 +1898,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
       }
     }
 
-    // Flag us as not being able to start layout until we hit <body>
-    // or scripts that require layout, so that we won't run into FOUC
-    // issues.  We need to do that before making the Stop() call,
-    // since if we have no frame yet the flush Stop() triggers might
-    // try to create one for us, and we don't want our presshell
-    // starting layout if that happens.  But we don't want to do this
-    // before the PermitUnload call above.
-    mMayStartLayout = PR_FALSE;
-
     nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(shell));
     webnav->Stop(nsIWebNavigation::STOP_NETWORK);
 
@@ -1890,10 +1906,6 @@ nsHTMLDocument::OpenCommon(const nsACString& aContentType, PRBool aReplace)
     // document again otherwise the document could have a non-zero onload block
     // count without the onload blocker request being in the loadgroup.
     EnsureOnloadBlocker();
-  } else {
-    // See comment before the mMayStartLayout set in the other branch
-    // of this if.
-    mMayStartLayout = PR_FALSE;
   }
 
   // The open occurred after the document finished loading.
@@ -3133,9 +3145,9 @@ NotifyEditableStateChange(nsINode *aNode, nsIDocument *aDocument,
   for (i = 0; i < n; ++i) {
     nsIContent *child = aNode->GetChildAt(i);
     if (child->HasFlag(NODE_IS_EDITABLE) != aEditable) {
-      aDocument->ContentStatesChanged(child, nsnull,
-                                      NS_EVENT_STATE_MOZ_READONLY |
-                                      NS_EVENT_STATE_MOZ_READWRITE);
+      aDocument->ContentStateChanged(child,
+                                     NS_EVENT_STATE_MOZ_READONLY |
+                                     NS_EVENT_STATE_MOZ_READWRITE);
     }
     NotifyEditableStateChange(child, aDocument, aEditable);
   }

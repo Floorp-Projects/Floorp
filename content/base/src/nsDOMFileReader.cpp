@@ -94,7 +94,6 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMFileReader)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsDOMFileReader,
                                                   nsXHREventTarget)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOnLoadEndListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mFile)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mPrincipal)
@@ -103,7 +102,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsDOMFileReader,
                                                 nsXHREventTarget)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOnLoadEndListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mFile)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mProgressNotifier)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mPrincipal)
@@ -125,19 +123,6 @@ NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMFileReader, nsXHREventTarget)
 NS_IMPL_RELEASE_INHERITED(nsDOMFileReader, nsXHREventTarget)
-
-NS_IMETHODIMP
-nsDOMFileReader::GetOnloadend(nsIDOMEventListener** aOnloadend)
-{
-  return GetInnerEventListener(mOnLoadEndListener, aOnloadend);
-}
-
-NS_IMETHODIMP
-nsDOMFileReader::SetOnloadend(nsIDOMEventListener* aOnloadend)
-{
-  return RemoveAddEventListener(NS_LITERAL_STRING(LOADEND_STR),
-                                mOnLoadEndListener, aOnloadend);
-}
 
 //nsICharsetDetectionObserver
 
@@ -728,23 +713,11 @@ nsDOMFileReader::GuessCharset(const char *aFileData,
     aCharset = mCharset;
   } else {
     // no charset detector available, check the BOM
-    unsigned char sniffBuf[4];
+    unsigned char sniffBuf[3];
     PRUint32 numRead = (aDataLen >= sizeof(sniffBuf) ? sizeof(sniffBuf) : aDataLen);
     memcpy(sniffBuf, aFileData, numRead);
 
-    if (numRead >= 4 &&
-        sniffBuf[0] == 0x00 &&
-        sniffBuf[1] == 0x00 &&
-        sniffBuf[2] == 0xfe &&
-        sniffBuf[3] == 0xff) {
-      aCharset = "UTF-32BE";
-    } else if (numRead >= 4 &&
-               sniffBuf[0] == 0xff &&
-               sniffBuf[1] == 0xfe &&
-               sniffBuf[2] == 0x00 &&
-               sniffBuf[3] == 0x00) {
-      aCharset = "UTF-32LE";
-    } else if (numRead >= 2 &&
+    if (numRead >= 2 &&
                sniffBuf[0] == 0xfe &&
                sniffBuf[1] == 0xff) {
       aCharset = "UTF-16BE";

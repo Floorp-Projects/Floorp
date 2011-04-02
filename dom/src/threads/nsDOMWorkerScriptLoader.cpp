@@ -49,7 +49,6 @@
 #include "nsIStreamLoader.h"
 
 // Other includes
-#include "nsAutoLock.h"
 #include "nsContentErrors.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -69,6 +68,8 @@
 #include "nsDOMWorkerSecurityManager.h"
 #include "nsDOMThreadService.h"
 #include "nsDOMWorkerTimeout.h"
+
+using namespace mozilla;
 
 #define LOG(_args) PR_LOG(gDOMThreadsLog, PR_LOG_DEBUG, _args)
 
@@ -255,9 +256,8 @@ nsDOMWorkerScriptLoader::ExecuteScripts(JSContext* aCx)
 
     JSAutoRequest ar(aCx);
 
-    JSScript* script =
-      static_cast<JSScript*>(JS_GetPrivate(aCx, loadInfo.scriptObj.ToJSObject()));
-    NS_ASSERTION(script, "This shouldn't ever be null!");
+    JSObject* scriptObj = loadInfo.scriptObj.ToJSObject();
+    NS_ASSERTION(scriptObj, "This shouldn't ever be null!");
 
     JSObject* global = mWorker->mGlobal ?
                        mWorker->mGlobal :
@@ -269,8 +269,7 @@ nsDOMWorkerScriptLoader::ExecuteScripts(JSContext* aCx)
     uint32 oldOpts =
       JS_SetOptions(aCx, JS_GetOptions(aCx) | JSOPTION_DONT_REPORT_UNCAUGHT);
 
-    jsval val;
-    PRBool success = JS_ExecuteScript(aCx, global, script, &val);
+    PRBool success = JS_ExecuteScript(aCx, global, scriptObj, NULL);
 
     JS_SetOptions(aCx, oldOpts);
 
@@ -305,7 +304,7 @@ nsDOMWorkerScriptLoader::Cancel()
 
   nsAutoTArray<ScriptLoaderRunnable*, 10> runnables;
   {
-    nsAutoLock lock(mWorker->Lock());
+    MutexAutoLock lock(mWorker->GetLock());
     runnables.AppendElements(mPendingRunnables);
     mPendingRunnables.Clear();
   }
@@ -755,7 +754,7 @@ ScriptLoaderRunnable::ScriptLoaderRunnable(nsDOMWorkerScriptLoader* aLoader)
 : mRevoked(PR_FALSE),
   mLoader(aLoader)
 {
-  nsAutoLock lock(aLoader->Lock());
+  MutexAutoLock lock(aLoader->GetLock());
 #ifdef DEBUG
   nsDOMWorkerScriptLoader::ScriptLoaderRunnable** added =
 #endif
@@ -767,7 +766,7 @@ nsDOMWorkerScriptLoader::
 ScriptLoaderRunnable::~ScriptLoaderRunnable()
 {
   if (!mRevoked) {
-    nsAutoLock lock(mLoader->Lock());
+    MutexAutoLock lock(mLoader->GetLock());
 #ifdef DEBUG
     PRBool removed =
 #endif
@@ -823,11 +822,12 @@ nsDOMWorkerScriptLoader::ScriptCompiler::Run()
   // Because we may have nested calls to this function we don't want the
   // execution to automatically report errors. We let them propagate instead.
   uint32 oldOpts =
-    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT);
+    JS_SetOptions(cx, JS_GetOptions(cx) | JSOPTION_DONT_REPORT_UNCAUGHT |
+                      JSOPTION_NO_SCRIPT_RVAL);
 
   JSPrincipals* principal = nsDOMWorkerSecurityManager::WorkerPrincipal();
 
-  JSScript* script =
+  JSObject* scriptObj =
     JS_CompileUCScriptForPrincipals(cx, global, principal,
                                     reinterpret_cast<const jschar*>
                                                (mScriptText.BeginReading()),
@@ -835,12 +835,11 @@ nsDOMWorkerScriptLoader::ScriptCompiler::Run()
 
   JS_SetOptions(cx, oldOpts);
 
-  if (!script) {
+  if (!scriptObj) {
     return NS_ERROR_FAILURE;
   }
 
-  mScriptObj = JS_NewScriptObject(cx, script);
-  NS_ENSURE_STATE(mScriptObj.ToJSObject());
+  mScriptObj = scriptObj;
 
   return NS_OK;
 }

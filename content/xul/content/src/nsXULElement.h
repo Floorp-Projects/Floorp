@@ -80,13 +80,18 @@
 class nsIDocument;
 class nsString;
 class nsIDocShell;
-class nsICSSStyleRule;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 class nsIScriptGlobalObjectOwner;
 class nsXULPrototypeNode;
 typedef nsTArray<nsRefPtr<nsXULPrototypeNode> > nsPrototypeArray;
+
+namespace mozilla {
+namespace css {
+class StyleRule;
+}
+}
 
 static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 
@@ -354,7 +359,9 @@ public:
     {
         NS_ASSERTION(!mScriptObject.mObject, "Leaking script object.");
         if (!aObject) {
-          return;
+            mScriptObject.mObject = nsnull;
+
+            return;
         }
 
         nsresult rv = nsContentUtils::HoldScriptObject(mScriptObject.mLangID,
@@ -540,7 +547,7 @@ public:
     virtual const nsAttrValue* DoGetClasses() const;
 
     NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker);
-    virtual nsICSSStyleRule* GetInlineStyleRule();
+    virtual mozilla::css::StyleRule* GetInlineStyleRule();
     virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                                 PRInt32 aModType) const;
     NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;

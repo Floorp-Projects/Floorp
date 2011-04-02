@@ -18,7 +18,6 @@ function run_test() {
 
 	// exclude known non-ASCII compatible charsets
 	if (charset.substr(0, "UTF-16".length) == "UTF-16" ||
-	    charset.substr(0, "UTF-32".length) == "UTF-32" ||
 	    charset == "x-imap4-modified-utf7") {
 	    dump("skipping " + counter + " " + charset + "\n");
 	    continue;

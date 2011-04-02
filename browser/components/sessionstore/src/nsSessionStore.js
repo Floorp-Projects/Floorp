@@ -152,6 +152,25 @@ function debug(aMsg) {
 /* :::::::: The Service ::::::::::::::: */
 
 function SessionStoreService() {
+  XPCOMUtils.defineLazyGetter(this, "_prefBranch", function () {
+    return Cc["@mozilla.org/preferences-service;1"].
+           getService(Ci.nsIPrefService).getBranch("browser.").
+           QueryInterface(Ci.nsIPrefBranch2);
+  });
+
+  // minimal interval between two save operations (in milliseconds)
+  XPCOMUtils.defineLazyGetter(this, "_interval", function () {
+    // used often, so caching/observing instead of fetching on-demand
+    this._prefBranch.addObserver("sessionstore.interval", this, true);
+    return this._prefBranch.getIntPref("sessionstore.interval");
+  });
+
+  // when crash recovery is disabled, session data is not written to disk
+  XPCOMUtils.defineLazyGetter(this, "_resume_from_crash", function () {
+    // get crash recovery state from prefs and allow for proper reaction to state changes
+    this._prefBranch.addObserver("sessionstore.resume_from_crash", this, true);
+    return this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
+  });
 }
 
 SessionStoreService.prototype = {
@@ -167,12 +186,6 @@ SessionStoreService.prototype = {
 
   // set default load state
   _loadState: STATE_STOPPED,
-
-  // minimal interval between two save operations (in milliseconds)
-  _interval: 15000,
-
-  // when crash recovery is disabled, session data is not written to disk
-  _resume_from_crash: true,
 
   // During the initial restore and setBrowserState calls tracks the number of
   // windows yet to be restored
@@ -248,9 +261,6 @@ SessionStoreService.prototype = {
    * Initialize the component
    */
   initService: function() {
-    this._prefBranch = Services.prefs.getBranch("browser.");
-    this._prefBranch.QueryInterface(Ci.nsIPrefBranch2);
-
     OBSERVING.forEach(function(aTopic) {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
@@ -258,14 +268,6 @@ SessionStoreService.prototype = {
     var pbs = Cc["@mozilla.org/privatebrowsing;1"].
               getService(Ci.nsIPrivateBrowsingService);
     this._inPrivateBrowsing = pbs.privateBrowsingEnabled;
-
-    // get interval from prefs - used often, so caching/observing instead of fetching on-demand
-    this._interval = this._prefBranch.getIntPref("sessionstore.interval");
-    this._prefBranch.addObserver("sessionstore.interval", this, true);
-    
-    // get crash recovery state from prefs and allow for proper reaction to state changes
-    this._resume_from_crash = this._prefBranch.getBoolPref("sessionstore.resume_from_crash");
-    this._prefBranch.addObserver("sessionstore.resume_from_crash", this, true);
     
     // observe prefs changes so we can modify stored data to match
     this._prefBranch.addObserver("sessionstore.max_tabs_undo", this, true);

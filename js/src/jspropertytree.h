@@ -40,7 +40,6 @@
 #ifndef jspropertytree_h___
 #define jspropertytree_h___
 
-#include "jsarena.h"
 #include "jshashtable.h"
 #include "jsprvtd.h"
 
@@ -102,11 +101,8 @@ class PropertyTree
     friend struct ::JSFunction;
 
     JSCompartment *compartment;
-    JSArenaPool   arenaPool;
-    js::Shape     *freeList;
 
     bool insertChild(JSContext *cx, js::Shape *parent, js::Shape *child);
-    void removeChild(js::Shape *child);
 
     PropertyTree();
     
@@ -114,22 +110,14 @@ class PropertyTree
     enum { MAX_HEIGHT = 128 };
 
     PropertyTree(JSCompartment *comp)
-        : compartment(comp), freeList(NULL)
+        : compartment(comp)
     {
-        PodZero(&arenaPool);
     }
     
-    bool init();
-    void finish();
-
-    js::Shape *newShapeUnchecked();
     js::Shape *newShape(JSContext *cx);
     js::Shape *getChild(JSContext *cx, js::Shape *parent, const js::Shape &child);
 
-    void orphanChildren(js::Shape *shape);
-    void sweepShapes(JSContext *cx);
-    void unmarkShapes(JSContext *cx);
-
+    void dumpShapeStats();
     static void dumpShapes(JSContext *cx);
 #ifdef DEBUG
     static void meter(JSBasicStats *bs, js::Shape *node);

@@ -52,6 +52,7 @@ EXPORTS = \
 	$(NULL)
 
 CPPSRCS	= \
+	CanvasImageCache.cpp \
 	CanvasUtils.cpp \
 	nsCanvasRenderingContext2D.cpp \
 	$(NULL)

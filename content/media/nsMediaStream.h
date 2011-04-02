@@ -38,6 +38,7 @@
 #if !defined(nsMediaStream_h_)
 #define nsMediaStream_h_
 
+#include "mozilla/Mutex.h"
 #include "mozilla/XPCOM.h"
 #include "nsIChannel.h"
 #include "nsIPrincipal.h"
@@ -45,7 +46,6 @@
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
-#include "prlock.h"
 #include "nsMediaCache.h"
 
 // For HTTP seeking, if number of bytes needing to be
@@ -125,6 +125,25 @@ private:
   TimeDuration mAccumulatedTime;
   TimeStamp    mLastStartTime;
   PRPackedBool mIsStarted;
+};
+
+// Represents a section of contiguous media, with a start and end offset.
+// Used to denote ranges of data which are cached.
+class nsByteRange {
+public:
+  nsByteRange() : mStart(0), mEnd(0) {}
+
+  nsByteRange(PRInt64 aStart, PRInt64 aEnd)
+    : mStart(aStart), mEnd(aEnd)
+  {
+    NS_ASSERTION(mStart < mEnd, "Range should end after start!");
+  }
+
+  PRBool IsNull() const {
+    return mStart == 0 && mEnd == 0;
+  }
+
+  PRInt64 mStart, mEnd;
 };
 
 /*
@@ -275,6 +294,13 @@ public:
    */
   virtual nsresult Open(nsIStreamListener** aStreamListener) = 0;
 
+  /**
+   * Fills aRanges with ByteRanges representing the data which is cached
+   * in the media cache. Stream should be pinned during call and while
+   * aRanges is being used.
+   */
+  virtual nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges) = 0;
+
 protected:
   nsMediaStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     mDecoder(aDecoder),
@@ -318,6 +344,8 @@ protected:
  */
 class nsMediaChannelStream : public nsMediaStream
 {
+  typedef mozilla::Mutex Mutex;
+
 public:
   nsMediaChannelStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI);
   ~nsMediaChannelStream();
@@ -395,6 +423,8 @@ public:
   };
   friend class Listener;
 
+  nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges);
+
 protected:
   // These are called on the main thread by Listener.
   nsresult OnStartRequest(nsIRequest* aRequest);
@@ -440,7 +470,7 @@ protected:
   nsMediaCacheStream mCacheStream;
 
   // This lock protects mChannelStatistics and mCacheSuspendCount
-  PRLock* mLock;
+  Mutex               mLock;
   nsChannelStatistics mChannelStatistics;
   PRUint32            mCacheSuspendCount;
 };

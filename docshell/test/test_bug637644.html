@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=637644
+-->
+<head>
+  <title>Test for Bug 637644</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/WindowSnapshot.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=637644">Mozilla Bug 637644</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 637644 **/
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+var win1 = window.open("", "", "height=500,width=500");
+win1.document.body.textContent = "Should show";
+
+var windowsLoaded = 0;
+
+window.onmessage = function (ev) {
+  is(ev.data, "loaded", "Message should be 'loaded'");
+  if (++windowsLoaded == 2) {
+    var one = snapshotWindow(win1);
+    var two = snapshotWindow(win2);
+    var three = snapshotWindow(win3);
+    win1.close();
+    win2.close();
+    win3.close();
+    ok(compareSnapshots(one, two, true)[0], "Popups should look identical");
+    ok(compareSnapshots(one, three, false)[0], "Popups should not look identical");
+
+    SimpleTest.finish();
+  }
+}
+
+var win2 = window.open("data:text/html,<script>window.onload = function() { opener.postMessage('loaded', '*'); }</" + "script><body>Should show</body>", "", "height=500,width=500");
+
+var win3 = window.open("data:text/html,<script>window.onload = function() { opener.postMessage('loaded', '*'); }</" + "script><body></body>", "", "height=500,width=500");
+});
+</script>
+</pre>
+</body>
+</html>
