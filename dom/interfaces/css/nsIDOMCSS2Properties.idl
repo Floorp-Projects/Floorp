@@ -50,7 +50,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(abedfd52-9821-4311-b50c-7ef229b43abf)]
+[scriptable, uuid(6b8fda8f-94f6-4d5c-aa77-17c5270f36c7)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        azimuth;
@@ -732,6 +732,12 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        backgroundSize;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozTextDecorationColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozTextDecorationStyle;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozTransitionProperty;

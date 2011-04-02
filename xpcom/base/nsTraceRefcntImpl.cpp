@@ -104,6 +104,8 @@ NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 
 #include "prlock.h"
 
+// TraceRefcnt has to use bare PRLock instead of mozilla::Mutex
+// because TraceRefcnt can be used very early in startup.
 static PRLock* gTraceLock;
 
 #define LOCK_TRACELOG()   PR_Lock(gTraceLock)

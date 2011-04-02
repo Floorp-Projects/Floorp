@@ -369,6 +369,7 @@ protected:
                                        const nsPoint& aPt,
                                        nsLineBox* aLine,
                                        nscolor aColor,
+                                       PRUint8 aStyle,
                                        gfxFloat aOffset,
                                        gfxFloat aAscent,
                                        gfxFloat aSize,

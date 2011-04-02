@@ -53,6 +53,8 @@
 #include "nsConsoleMessage.h"
 #include "nsIClassInfoImpl.h"
 
+using namespace mozilla;
+
 NS_IMPL_THREADSAFE_ADDREF(nsConsoleService)
 NS_IMPL_THREADSAFE_RELEASE(nsConsoleService)
 NS_IMPL_CLASSINFO(nsConsoleService, NULL, nsIClassInfo::THREADSAFE | nsIClassInfo::SINGLETON, NS_CONSOLESERVICE_CID)
@@ -60,7 +62,7 @@ NS_IMPL_QUERY_INTERFACE1_CI(nsConsoleService, nsIConsoleService)
 NS_IMPL_CI_INTERFACE_GETTER1(nsConsoleService, nsIConsoleService)
 
 nsConsoleService::nsConsoleService()
-    : mMessages(nsnull), mCurrent(0), mFull(PR_FALSE), mListening(PR_FALSE), mLock(nsnull)
+    : mMessages(nsnull), mCurrent(0), mFull(PR_FALSE), mListening(PR_FALSE), mLock("nsConsoleService.mLock")
 {
     // XXX grab this from a pref!
     // hm, but worry about circularity, bc we want to be able to report
@@ -88,8 +90,6 @@ nsConsoleService::~nsConsoleService()
 
     if (mMessages)
         nsMemory::Free(mMessages);
-    if (mLock)
-        nsAutoLock::DestroyLock(mLock);
 }
 
 nsresult
@@ -102,10 +102,6 @@ nsConsoleService::Init()
 
     // Array elements should be 0 initially for circular buffer algorithm.
     memset(mMessages, 0, mBufferSize * sizeof(nsIConsoleMessage *));
-
-    mLock = nsAutoLock::NewLock("nsConsoleService::mLock");
-    if (!mLock)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }
@@ -137,7 +133,7 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
      * listeners array.
      */
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
 
         /*
          * If there's already a message in the slot we're about to replace,
@@ -172,7 +168,7 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
     PRInt32 snapshotCount = listenersSnapshot.Count();
 
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         if (mListening)
             return NS_OK;
         mListening = PR_TRUE;
@@ -183,7 +179,7 @@ nsConsoleService::LogMessage(nsIConsoleMessage *message)
     }
     
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         mListening = PR_FALSE;
     }
 
@@ -206,7 +202,7 @@ nsConsoleService::GetMessageArray(nsIConsoleMessage ***messages, PRUint32 *count
      * Lock the whole method, as we don't want anyone mucking with mCurrent or
      * mFull while we're copying out the buffer.
      */
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     if (mCurrent == 0 && !mFull) {
         /*
@@ -272,7 +268,7 @@ nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
         return rv;
 
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         nsISupportsKey key(listener);
 
         /*
@@ -291,7 +287,7 @@ nsConsoleService::RegisterListener(nsIConsoleListener *listener) {
 
 NS_IMETHODIMP
 nsConsoleService::UnregisterListener(nsIConsoleListener *listener) {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     nsISupportsKey key(listener);
     mListeners.Remove(&key);
@@ -318,7 +314,7 @@ nsConsoleService::Reset()
     /*
      * Make sure nobody trips into the buffer while it's being reset
      */
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     mCurrent = 0;
     mFull = PR_FALSE;

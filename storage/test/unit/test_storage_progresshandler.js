@@ -44,8 +44,8 @@ function setup()
 
   var stmt = createStatement("INSERT INTO handler_tests (id, num) VALUES(?1, ?2)");
   for(var i = 0; i < 100; ++i) {
-    stmt.bindInt32Parameter(0, i);
-    stmt.bindInt32Parameter(1, Math.floor(Math.random()*1000));
+    stmt.bindByIndex(0, i);
+    stmt.bindByIndex(1, Math.floor(Math.random()*1000));
     stmt.execute();
   }
   stmt.reset();

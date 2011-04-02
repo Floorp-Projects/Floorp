@@ -165,7 +165,7 @@ function checkDB(data){
               "JOIN moz_places p ON p.id = v.place_id " +
               "WHERE p.url = ?1)";
   var stmt = mDBConn.createStatement(sql);
-  stmt.bindUTF8StringParameter(0, typedURI.spec);
+  stmt.bindByIndex(0, typedURI.spec);
 
   var empty = true;
   while (stmt.executeStep()) {

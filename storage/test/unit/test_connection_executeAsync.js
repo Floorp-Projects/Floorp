@@ -61,18 +61,18 @@ function test_create_and_add()
   stmts[0] = getOpenedDatabase().createStatement(
     "INSERT INTO test (id, string, number, nuller, blober) VALUES (?, ?, ?, ?, ?)"
   );
-  stmts[0].bindInt32Parameter(0, INTEGER);
-  stmts[0].bindStringParameter(1, TEXT);
-  stmts[0].bindDoubleParameter(2, REAL);
-  stmts[0].bindNullParameter(3);
-  stmts[0].bindBlobParameter(4, BLOB, BLOB.length);
+  stmts[0].bindByIndex(0, INTEGER);
+  stmts[0].bindByIndex(1, TEXT);
+  stmts[0].bindByIndex(2, REAL);
+  stmts[0].bindByIndex(3, null);
+  stmts[0].bindBlobByIndex(4, BLOB, BLOB.length);
   stmts[1] = getOpenedDatabase().createAsyncStatement(
     "INSERT INTO test (string, number, nuller, blober) VALUES (?, ?, ?, ?)"
   );
-  stmts[1].bindStringParameter(0, TEXT);
-  stmts[1].bindDoubleParameter(1, REAL);
-  stmts[1].bindNullParameter(2);
-  stmts[1].bindBlobParameter(3, BLOB, BLOB.length);
+  stmts[1].bindByIndex(0, TEXT);
+  stmts[1].bindByIndex(1, REAL);
+  stmts[1].bindByIndex(2, null);
+  stmts[1].bindBlobByIndex(3, BLOB, BLOB.length);
 
   getOpenedDatabase().executeAsync(stmts, stmts.length, {
     handleResult: function(aResultSet)
@@ -94,7 +94,7 @@ function test_create_and_add()
       let stmt = getOpenedDatabase().createStatement(
         "SELECT string, number, nuller, blober FROM test WHERE id = ?"
       );
-      stmt.bindInt32Parameter(0, INTEGER);
+      stmt.bindByIndex(0, INTEGER);
       try {
         do_check_true(stmt.executeStep());
         do_check_eq(TEXT, stmt.getString(0));

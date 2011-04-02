@@ -38,13 +38,13 @@
 #ifndef nsStringBundle_h__
 #define nsStringBundle_h__
 
+#include "mozilla/Monitor.h"
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
 #include "nsIPersistentProperties2.h"
 #include "nsString.h"
 #include "nsCOMArray.h"
 #include "nsIStringBundleOverride.h"
-#include "nsAutoLock.h"
 
 class nsStringBundle : public nsIStringBundle
 {
@@ -71,7 +71,7 @@ protected:
 private:
     nsCString              mPropertiesURL;
     nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
-    PRMonitor*                   mMonitor;
+    mozilla::Monitor             mMonitor;
     PRPackedBool                 mAttemptedLoad;
     PRPackedBool                 mLoaded;
     

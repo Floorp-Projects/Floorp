@@ -56,7 +56,6 @@
 #include "plstr.h"
 #include "nsILocalFileMac.h"
 #include "nsIFileURL.h"
-#include "nsInt64.h"
 #include "nsTArray.h"
 #include "nsObjCExceptions.h"
 
@@ -220,7 +219,7 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Init our stream pump
-  rv = mPump->Init(inStream, nsInt64(-1), nsInt64(-1), 0, 0, PR_FALSE);
+  rv = mPump->Init(inStream, PRInt64(-1), PRInt64(-1), 0, 0, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
   
   rv = mPump->AsyncRead(this, ctxt);

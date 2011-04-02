@@ -41,6 +41,8 @@
 #include "nscore.h"
 #include "nspr.h"
 #include "pldhash.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
 
 class nsNSSShutDownObject;
 class nsOnPK11LogoutCancelObject;
@@ -89,12 +91,12 @@ public:
 
 private:
   // The lock protecting all our member variables.
-  PRLock *mNSSActivityStateLock;
+  mozilla::Mutex mNSSActivityStateLock;
 
   // The activity variable, bound to our lock,
   // used either to signal the activity counter reaches zero,
   // or a thread restriction has been released.
-  PRCondVar *mNSSActivityChanged;
+  mozilla::CondVar mNSSActivityChanged;
 
   // The number of active scopes holding resources.
   int mNSSActivityCounter;
@@ -186,7 +188,7 @@ private:
   doPK11LogoutHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                                     PRUint32 number, void *arg);
 protected:
-  PRLock* mListLock;
+  mozilla::Mutex mListLock;
   static nsNSSShutDownList *singleton;
   PLDHashTable mObjects;
   PRUint32 mActiveSSLSockets;

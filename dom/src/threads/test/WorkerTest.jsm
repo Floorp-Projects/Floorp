@@ -52,5 +52,6 @@ const WorkerTest = {
     worker.onmessage = messageCallback;
     worker.onerror = errorCallback;
     worker.postMessage(message);
+    return worker;
   }
 };

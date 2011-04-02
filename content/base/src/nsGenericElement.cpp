@@ -2619,7 +2619,6 @@ nsGenericElement::RemoveAttributeNS(const nsAString& aNamespaceURI,
     return NS_OK;
   }
 
-  nsAutoString tmp;
   UnsetAttr(nsid, name, PR_TRUE);
 
   return NS_OK;
@@ -3546,6 +3545,32 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
   return doInsertChildAt(aKid, aIndex, aNotify, mAttrsAndChildren);
 }
 
+static nsresult
+AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
+{
+  nsIDocument *doc = aParent->GetOwnerDoc();
+
+  nsresult rv;
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aNode, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIDOMNode> adoptedNode;
+  rv = domDoc->AdoptNode(node, getter_AddRefs(adoptedNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (doc != aParent->GetOwnerDoc()) {
+    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+  }
+
+  NS_ASSERTION(adoptedNode == node, "Uh, adopt node changed nodes?");
+  NS_ASSERTION(aParent->HasSameOwnerDoc(aNode),
+               "ownerDocument changed again after adopting!");
+
+  return NS_OK;
+}
 
 nsresult
 nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
@@ -3561,19 +3586,13 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
     rv = kid->GetNodeType(&nodeType);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(GetOwnerDoc());
-
     // DocumentType nodes are the only nodes that can have a null
     // ownerDocument according to the DOM spec, and we need to allow
     // inserting them w/o calling AdoptNode().
 
-    if (domDoc && (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE ||
-                   aKid->GetOwnerDoc())) {
-      nsCOMPtr<nsIDOMNode> adoptedKid;
-      rv = domDoc->AdoptNode(kid, getter_AddRefs(adoptedKid));
+    if (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE || aKid->GetOwnerDoc()) {
+      rv = AdoptNodeIntoOwnerDoc(this, aKid);
       NS_ENSURE_SUCCESS(rv, rv);
-
-      NS_ASSERTION(adoptedKid == kid, "Uh, adopt node changed nodes?");
     }
   }
 
@@ -4064,29 +4083,14 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
-  nsIDocument *doc = GetOwnerDoc();
-
   // DocumentType nodes are the only nodes that can have a null
   // ownerDocument according to the DOM spec, and we need to allow
   // inserting them w/o calling AdoptNode().
   if (!HasSameOwnerDoc(newContent) &&
       (nodeType != nsIDOMNode::DOCUMENT_TYPE_NODE ||
        newContent->GetOwnerDoc())) {
-    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
-
-    if (domDoc) {
-      nsresult rv;
-      nsCOMPtr<nsIDOMNode> newChild = do_QueryInterface(aNewChild, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIDOMNode> adoptedKid;
-      rv = domDoc->AdoptNode(newChild, getter_AddRefs(adoptedKid));
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      NS_ASSERTION(adoptedKid == newChild, "Uh, adopt node changed nodes?");
-      NS_ASSERTION(HasSameOwnerDoc(newContent) && doc == GetOwnerDoc(),
-                   "ownerDocument changed again after adopting!");
-    }
+    res = AdoptNodeIntoOwnerDoc(this, aNewChild);
+    NS_ENSURE_SUCCESS(res, res);
   }
 
   // If we're replacing
@@ -4111,6 +4115,8 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
       }
     }
   }
+
+  nsIDocument *doc = GetOwnerDoc();
 
   /*
    * Check if we're inserting a document fragment. If we are, we need

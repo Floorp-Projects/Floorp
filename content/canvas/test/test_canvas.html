@@ -245,7 +245,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -1146,19 +1146,12 @@ var ctx = canvas.getContext('2d');
 
 ctx.globalAlpha = 0.5;
 var a = ctx.globalAlpha; // might not be exactly 0.5, if it is rounded/quantised, so remember for future comparisons
-var _thrown = undefined; try {
-  ctx.globalAlpha = Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-ok(ctx.globalAlpha == a, "ctx.globalAlpha == a");
-var _thrown = undefined; try {
-  ctx.globalAlpha = -Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-ok(ctx.globalAlpha == a, "ctx.globalAlpha == a");
-var _thrown = undefined; try {
-  ctx.globalAlpha = NaN;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-ok(ctx.globalAlpha == a, "ctx.globalAlpha == a");
-
+ctx.globalAlpha = Infinity;
+ok(ctx.globalAlpha === a, "ctx.globalAlpha === a");
+ctx.globalAlpha = -Infinity;
+ok(ctx.globalAlpha === a, "ctx.globalAlpha === a");
+ctx.globalAlpha = NaN;
+ok(ctx.globalAlpha === a, "ctx.globalAlpha === a");
 
 }
 </script>
@@ -3038,6 +3031,38 @@ var _thrown = undefined; try {
 }
 </script>
 
+<!-- [[[ test_2d.drawImage.negativedir.html ]]] -->
+
+<p>Canvas test: 2d.drawImage.negativedir</p>
+<canvas id="c117a" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+
+function test_2d_drawImage_negativedir() {
+
+var canvas = document.getElementById('c117a');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 100, 50);
+ctx.drawImage(document.getElementById('ggrr-256x256_0.png'), 0, 178, 50, -100, 0, 0, 50, 100);
+ctx.drawImage(document.getElementById('ggrr-256x256_0.png'), 0, 78, 50, 100, 50, 100, 50, -100);
+isPixel(ctx, 1,1, 0,255,0,255, 2);
+isPixel(ctx, 1,48, 0,255,0,255, 2);
+isPixel(ctx, 98,1, 0,255,0,255, 2);
+isPixel(ctx, 98,48, 0,255,0,255, 2);
+isPixel(ctx, 48,1, 0,255,0,255, 2);
+isPixel(ctx, 48,48, 0,255,0,255, 2);
+isPixel(ctx, 51,1, 0,255,0,255, 2);
+isPixel(ctx, 51,48, 0,255,0,255, 2);
+isPixel(ctx, 25,25, 0,255,0,255, 2);
+isPixel(ctx, 75,25, 0,255,0,255, 2);
+
+
+}
+</script>
+<img src="image_ggrr-256x256.png" id="ggrr-256x256_0.png" class="resource">
+
 <!-- [[[ test_2d.drawImage.negativedest.html ]]] -->
 
 <p>Canvas test: 2d.drawImage.negativedest</p>
@@ -3049,9 +3074,6 @@ function test_2d_drawImage_negativedest() {
 
 var canvas = document.getElementById('c117');
 var ctx = canvas.getContext('2d');
-
-var _thrown_outer = false;
-try {
 
 ctx.fillStyle = '#f00';
 ctx.fillRect(0, 0, 100, 50);
@@ -3067,11 +3089,6 @@ isPixel(ctx, 51,1, 0,255,0,255, 2);
 isPixel(ctx, 51,48, 0,255,0,255, 2);
 isPixel(ctx, 25,25, 0,255,0,255, 2);
 isPixel(ctx, 75,25, 0,255,0,255, 2);
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -3090,9 +3107,6 @@ function test_2d_drawImage_negativesource() {
 var canvas = document.getElementById('c118');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
 ctx.fillStyle = '#f00';
 ctx.fillRect(0, 0, 100, 50);
 ctx.drawImage(document.getElementById('ggrr-256x256_2.png'), 100, 78, -100, 50, 0, 0, 50, 50);
@@ -3107,11 +3121,6 @@ isPixel(ctx, 51,1, 0,255,0,255, 2);
 isPixel(ctx, 51,48, 0,255,0,255, 2);
 isPixel(ctx, 25,25, 0,255,0,255, 2);
 isPixel(ctx, 75,25, 0,255,0,255, 2);
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -3488,7 +3497,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.drawImage(null, 0, 0);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
 
 
 }
@@ -3507,12 +3516,10 @@ function test_2d_drawImage_outsidesource() {
 var canvas = document.getElementById('c122');
 var ctx = canvas.getContext('2d');
 
-var _thrown_outer = false;
-try {
-
 ctx.drawImage(document.getElementById('green_7.png'), 10.5, 10.5, 89.5, 39.5, 0, 0, 100, 50);
 ctx.drawImage(document.getElementById('green_7.png'), 5.5, 5.5, -5.5, -5.5, 0, 0, 100, 50);
 ctx.drawImage(document.getElementById('green_7.png'), 100, 50, -5, -5, 0, 0, 100, 50);
+
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_11.png'), -0.001, 0, 100, 50, 0, 0, 100, 50);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
@@ -3527,7 +3534,7 @@ var _thrown = undefined; try {
 } catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_11.png'), 50, 0, 50.001, 50, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_11.png'), 0, 0, -5, 5, 0, 0, 100, 50);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
@@ -3537,12 +3544,7 @@ var _thrown = undefined; try {
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_11.png'), 110, 60, -20, -20, 0, 0, 100, 50);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
-todo_isPixel(ctx, 50,25, 0,255,0,255, 2);
-
-} catch (e) {
-    _thrown_outer = true;
-}
-todo(!_thrown_outer, 'should not throw exception');
+isPixel(ctx, 50,25, 0,255,0,255, 2);
 
 
 }
@@ -3667,7 +3669,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.drawImage(undefined, 0, 0);
-} catch (e) { _thrown = e }; ok(_thrown && _thrown.result == Components.results.NS_ERROR_INVALID_ARG, "should throw NS_ERROR_INVALID_ARG");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
 var _thrown = undefined; try {
   ctx.drawImage(0, 0, 0);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown.result == Components.results.NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL, "should throw NS_ERROR_XPC_BAD_CONVERT_JS_ZERO_ISNOT_NULL");
@@ -3699,13 +3701,13 @@ ctx.fillStyle = '#0f0';
 ctx.fillRect(0, 0, 100, 50);
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_14.png'), 10, 10, 0, 1, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_14.png'), 10, 10, 1, 0, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 var _thrown = undefined; try {
   ctx.drawImage(document.getElementById('red_14.png'), 10, 10, 0, 0, 0, 0, 100, 50);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 isPixel(ctx, 50,25, 0,255,0,255, 2);
 
 
@@ -6645,13 +6647,13 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createRadialGradient(0, 0, -0.1, 0, 0, 1);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 var _thrown = undefined; try {
   ctx.createRadialGradient(0, 0, 1, 0, 0, -0.1);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 var _thrown = undefined; try {
   ctx.createRadialGradient(0, 0, -0.1, 0, 0, -0.1);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
 
 
 }
@@ -13218,7 +13220,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -13333,7 +13335,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -13439,7 +13441,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -13703,7 +13705,7 @@ isPixel(ctx, 90,45, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -14766,7 +14768,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(null, 'repeat');
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
 
 
 }
@@ -14804,7 +14806,7 @@ var ctx = canvas.getContext('2d');
 
 var _thrown = undefined; try {
   ctx.createPattern(undefined, 'repeat');
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.TYPE_MISMATCH_ERR, "should throw TYPE_MISMATCH_ERR");
 
 
 }
@@ -15876,16 +15878,21 @@ function test_2d_shadow_attributes_shadowBlur_2() {
 var canvas = document.getElementById('c505');
 var ctx = canvas.getContext('2d');
 
-var _thrown = undefined; try {
-  ctx.shadowBlur = Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowBlur = -Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowBlur = NaN;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+ctx.shadowBlur = 1;
+ctx.shadowBlur = -2;
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
 
+ctx.shadowBlur = 1;
+ctx.shadowBlur = Infinity;
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
+
+ctx.shadowBlur = 1;
+ctx.shadowBlur = -Infinity;
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
+
+ctx.shadowBlur = 1;
+ctx.shadowBlur = NaN;
+ok(ctx.shadowBlur === 1, "ctx.shadowBlur === 1");
 
 }
 </script>
@@ -15976,25 +15983,26 @@ function test_2d_shadow_attributes_shadowOffset_2() {
 var canvas = document.getElementById('c509');
 var ctx = canvas.getContext('2d');
 
-var _thrown = undefined; try {
-  ctx.shadowOffsetX = Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetX = -Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetX = NaN;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetY = Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetY = -Infinity;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
-var _thrown = undefined; try {
-  ctx.shadowOffsetY = NaN;
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+ctx.shadowOffsetX = 1;
+ctx.shadowOffsetY = 2;
+ctx.shadowOffsetX = Infinity;
+ctx.shadowOffsetY = Infinity;
+ok(ctx.shadowOffsetX === 1, "ctx.shadowOffsetX === 1");
+ok(ctx.shadowOffsetY === 2, "ctx.shadowOffsetY === 2");
 
+ctx.shadowOffsetX = 1;
+ctx.shadowOffsetY = 2;
+ctx.shadowOffsetX = -Infinity;
+ctx.shadowOffsetY = -Infinity;
+ok(ctx.shadowOffsetX === 1, "ctx.shadowOffsetX === 1");
+ok(ctx.shadowOffsetY === 2, "ctx.shadowOffsetY === 2");
+
+ctx.shadowOffsetX = 1;
+ctx.shadowOffsetY = 2;
+ctx.shadowOffsetX = NaN;
+ctx.shadowOffsetY = NaN;
+ok(ctx.shadowOffsetX === 1, "ctx.shadowOffsetX === 1");
+ok(ctx.shadowOffsetY === 2, "ctx.shadowOffsetY === 2");
 
 }
 </script>
@@ -18272,7 +18280,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -18908,7 +18916,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -19022,7 +19030,7 @@ isPixel(ctx, 50,25, 0,255,0,255, 0);
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -19168,8 +19176,8 @@ ok(ctx.clip() === undefined, "ctx.clip() === undefined");
 if (ctx.putImageData) {
     ok(ctx.putImageData(ctx.getImageData(0, 0, 1, 1), 0, 0) === undefined, "ctx.putImageData(ctx.getImageData(0, 0, 1, 1), 0, 0) === undefined");
 }
-ok(ctx.drawImage(document.getElementById('yellow_11.png'), 0, 0, 0, 0, 0, 0, 0, 0) === undefined, "ctx.drawImage(document.getElementById('yellow_11.png'), 0, 0, 0, 0, 0, 0, 0, 0) === undefined");
-ok(ctx.drawImage(canvas, 0, 0, 0, 0, 0, 0, 0, 0) === undefined, "ctx.drawImage(canvas, 0, 0, 0, 0, 0, 0, 0, 0) === undefined");
+ok(ctx.drawImage(document.getElementById('yellow_11.png'), 0, 0, 1, 1, 0, 0, 0, 0) === undefined, "ctx.drawImage(document.getElementById('yellow_11.png'), 0, 0, 1, 1, 0, 0, 0, 0) === undefined");
+ok(ctx.drawImage(canvas, 0, 0, 1, 1, 0, 0, 0, 0) === undefined, "ctx.drawImage(canvas, 0, 0, 1, 1, 0, 0, 0, 0) === undefined");
 ok(ctx.createLinearGradient(0, 0, 0, 0).addColorStop(0, 'white') === undefined, "ctx.createLinearGradient(0, 0, 0, 0).addColorStop(0, 'white') === undefined");
 
 
@@ -21508,6 +21516,11 @@ function runTests() {
   test_2d_drawImage_incomplete();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_drawImage_incomplete");
+ }
+ try {
+  test_2d_drawImage_negativedir();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_drawImage_negativedir");
  }
  try {
   test_2d_drawImage_negativedest();

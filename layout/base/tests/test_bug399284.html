@@ -34,10 +34,6 @@ while (decoderList.hasMore()) {
         data = encodeUTF16BE(testContent);
     else if (decoder == "UTF-16LE")
         data = encodeUTF16LE(testContent);
-    else if (decoder == "UTF-32" || decoder == "UTF-32BE")
-        data = encodeUTF32BE(testContent);
-    else if (decoder == "UTF-32LE")
-        data = encodeUTF32LE(testContent);
     else
         data = encodeURI(testContent);
     var dataURI = "data:text/html;charset=" + decoder + "," + data;
@@ -68,30 +64,6 @@ function encodeUTF16LE(string)
     var encodedString = "";
     for (i = 0; i < string.length; ++i) {
         encodedString += encodeURI(string.charAt(i));
-        encodedString += "%00";
-    }
-    return encodedString;
-}
-
-function encodeUTF32BE(string)
-{
-    var encodedString = "";
-    for (i = 0; i < string.length; ++i) {
-        encodedString += "%00";
-        encodedString += "%00";
-        encodedString += "%00";
-        encodedString += encodeURI(string.charAt(i));
-    }
-    return encodedString;
-}
-
-function encodeUTF32LE(string)
-{
-    var encodedString = "";
-    for (i = 0; i < string.length; ++i) {
-        encodedString += encodeURI(string.charAt(i));
-        encodedString += "%00";
-        encodedString += "%00";
         encodedString += "%00";
     }
     return encodedString;

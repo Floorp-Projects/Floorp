@@ -43,10 +43,14 @@ VPATH       = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE         = gfx
+MODULE_NAME    = nsGfxModule
 LIBRARY_NAME   = gkgfx
 EXPORT_LIBRARY = 1
 GRE_MODULE     = 1
 LIBXUL_LIBRARY = 1
+IS_COMPONENT   = 1
+# This library is used by other shared libs in a static build
+FORCE_USE_PIC  = 1
 
 XPIDLSRCS = \
 	nsIFontEnumerator.idl \
@@ -76,6 +80,7 @@ EXPORTS	= \
 	nsITheme.h \
 	nsThemeConstants.h \
 	gfxCrashReporterUtils.h \
+	nsIThebesFontMetrics.h \
 	$(NULL)
 
 ifdef MOZ_X11
@@ -91,38 +96,58 @@ CPPSRCS = \
         nsTransform2D.cpp \
         nsScriptableRegion.cpp \
         gfxCrashReporterUtils.cpp \
+        nsThebesDeviceContext.cpp \
+        nsThebesRegion.cpp \
+        nsThebesGfxFactory.cpp \
+        nsThebesRenderingContext.cpp \
+        nsThebesFontMetrics.cpp \
+        nsThebesFontEnumerator.cpp \
        $(NULL)
 
-EXTRA_DSO_LDOPTS = \
-        $(MOZ_UNICHARUTIL_LIBS) \
-        $(MOZ_COMPONENT_LIBS) \
-        $(MOZ_JS_LIBS) \
-        $(NULL)
-
 ifdef MOZ_X11
-CPPSRCS += \
-        X11Util.cpp \
-        $(NULL)
-EXTRA_DSO_LDOPTS += $(XLDFLAGS) $(XLIBS)
+CPPSRCS += X11Util.cpp
 endif
 
-ifneq (,$(filter cocoa,$(MOZ_WIDGET_TOOLKIT)))
-EXTRA_DSO_LDOPTS += \
-        $(TK_LIBS) \
-        $(NULL)
+ifeq ($(MOZ_WIDGET_TOOLKIT),android)
+CPPSRCS += nsSystemFontsAndroid.cpp
 endif
 
-# This library is used by other shared libs in a static build
-FORCE_USE_PIC = 1
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+CMMSRCS = nsSystemFontsMac.mm
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+CPPSRCS += nsSystemFontsGTK2.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CPPSRCS += nsSystemFontsOS2.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
+CPPSRCS += nsSystemFontsQt.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+CPPSRCS += nsSystemFontsWin.cpp
+OS_LIBS += $(call EXPAND_LIBNAME,usp10)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
+CXXFLAGS += $(TK_CFLAGS) $(MOZ_CAIRO_CFLAGS)
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-CXXFLAGS += $(MOZ_GTK2_CFLAGS)
+DEFINES += -DMOZ_ENABLE_GTK2
+CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_PANGO_CFLAGS)
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+CXXFLAGS += $(CAIRO_FT_CFLAGS)
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),qt)
 CXXFLAGS += $(MOZ_QT_CFLAGS)
 endif
 
-DEFINES     += -D_IMPL_NS_GFX
+DEFINES += -D_IMPL_NS_GFX

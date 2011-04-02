@@ -48,7 +48,6 @@
 #include "nsPromiseFlatString.h"
 #include "nsProxiedService.h"
 #include "nsStringBuffer.h"
-#include "nsAutoLock.h"
 #include "nspr.h"
 #include "pk11pub.h"
 #include "certdb.h"
@@ -56,6 +55,9 @@
 #include "ssl.h" // For SSL_ClearSessionCache
 
 #include "nsNSSCleaner.h"
+
+using namespace mozilla;
+
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsClientAuthRememberService, 
@@ -63,15 +65,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsClientAuthRememberService,
                               nsISupportsWeakReference)
 
 nsClientAuthRememberService::nsClientAuthRememberService()
+  : monitor("nsClientAuthRememberService.monitor")
 {
-  monitor = nsAutoMonitor::NewMonitor("security.clientAuthRememberServiceMonitor");
 }
 
 nsClientAuthRememberService::~nsClientAuthRememberService()
 {
   RemoveAllFromMemory();
-  if (monitor)
-    nsAutoMonitor::DestroyMonitor(monitor);
 }
 
 nsresult
@@ -110,7 +110,7 @@ nsClientAuthRememberService::Observe(nsISupports     *aSubject,
     // The profile is about to change,
     // or is going away because the application is shutting down.
 
-    nsAutoMonitor lock(monitor);
+    MonitorAutoEnter lock(monitor);
     RemoveAllFromMemory();
   }
 
@@ -119,7 +119,7 @@ nsClientAuthRememberService::Observe(nsISupports     *aSubject,
 
 void nsClientAuthRememberService::ClearRememberedDecisions()
 {
-  nsAutoMonitor lock(monitor);
+  MonitorAutoEnter lock(monitor);
   RemoveAllFromMemory();
 }
 
@@ -165,7 +165,7 @@ nsClientAuthRememberService::RememberDecision(const nsACString & aHostName,
     return rv;
 
   {
-    nsAutoMonitor lock(monitor);
+    MonitorAutoEnter lock(monitor);
     if (aClientCert) {
       nsNSSCertificate pipCert(aClientCert);
       char *dbkey = NULL;
@@ -211,7 +211,7 @@ nsClientAuthRememberService::HasRememberedDecision(const nsACString & aHostName,
   nsClientAuthRemember settings;
 
   {
-    nsAutoMonitor lock(monitor);
+    MonitorAutoEnter lock(monitor);
     nsClientAuthRememberEntry *entry = mSettingsTable.GetEntry(hostCert.get());
     if (!entry)
       return NS_OK;
@@ -233,7 +233,7 @@ nsClientAuthRememberService::AddEntryToList(const nsACString &aHostName,
   GetHostWithCert(aHostName, fingerprint, hostCert);
 
   {
-    nsAutoMonitor lock(monitor);
+    MonitorAutoEnter lock(monitor);
     nsClientAuthRememberEntry *entry = mSettingsTable.PutEntry(hostCert.get());
 
     if (!entry) {

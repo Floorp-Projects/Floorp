@@ -43,7 +43,6 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXPCOMCID.h"
-#include "nsAutoLock.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWifiMonitor.h"
@@ -52,6 +51,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/Services.h"
+
+using namespace mozilla;
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gWifiMonitorLog;
@@ -64,12 +65,11 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsWifiMonitor,
 
 nsWifiMonitor::nsWifiMonitor()
 : mKeepGoing(PR_TRUE)
+, mMonitor("nsWifiMonitor.mMonitor")
 {
 #if defined(PR_LOGGING)
   gWifiMonitorLog = PR_NewLogModule("WifiMonitor");
 #endif
-
-  mMonitor = nsAutoMonitor::NewMonitor("nsWifiMonitor");
 
   nsCOMPtr<nsIObserverService> obsSvc = mozilla::services::GetObserverService();
   if (obsSvc)
@@ -80,8 +80,6 @@ nsWifiMonitor::nsWifiMonitor()
 
 nsWifiMonitor::~nsWifiMonitor()
 {
-  if (mMonitor)
-    nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
 NS_IMETHODIMP
@@ -92,7 +90,7 @@ nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
     LOG(("Shutting down\n"));
     mKeepGoing = PR_FALSE;
 
-    nsAutoMonitor mon(mMonitor);
+    MonitorAutoEnter mon(mMonitor);
     mon.Notify();
   }
   return NS_OK;
@@ -111,7 +109,7 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener)
       return rv;
   }
 
-  nsAutoMonitor mon(mMonitor);
+  MonitorAutoEnter mon(mMonitor);
 
   mKeepGoing = PR_TRUE;
 
@@ -129,7 +127,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
 
   LOG(("removing listener\n"));
 
-  nsAutoMonitor mon(mMonitor);
+  MonitorAutoEnter mon(mMonitor);
 
   for (PRUint32 i = 0; i < mListeners.Length(); i++) {
 

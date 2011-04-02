@@ -263,7 +263,7 @@ test_TrueAsyncStatement()
     NS_LITERAL_CSTRING("INSERT INTO test (id) VALUES (?)"),
     getter_AddRefs(stmt)
   );
-  stmt->BindInt32Parameter(0, 1);
+  stmt->BindInt32ByIndex(0, 1);
   blocking_async_execute(stmt);
   stmt->Finalize();
   do_check_false(mutex_used_on_watched_thread);

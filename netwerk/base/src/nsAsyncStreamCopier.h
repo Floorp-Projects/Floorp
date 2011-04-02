@@ -42,9 +42,9 @@
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIRequestObserver.h"
+#include "mozilla/Mutex.h"
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
-#include "prlock.h"
 
 //-----------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ private:
 
     nsCOMPtr<nsISupports>          mCopierCtx;
 
-    PRLock                        *mLock;
+    mozilla::Mutex                 mLock;
 
     nsAsyncCopyMode                mMode;
     PRUint32                       mChunkSize;

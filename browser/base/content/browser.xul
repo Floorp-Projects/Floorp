@@ -793,6 +793,7 @@
 
 
     <toolbar id="TabsToolbar"
+             class="toolbar-primary"
              fullscreentoolbar="true"
              customizable="true"
              mode="icons" lockmode="true"

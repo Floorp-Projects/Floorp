@@ -181,9 +181,7 @@ NotificationController::ScheduleProcessing()
 bool
 NotificationController::IsUpdatePending()
 {
-  nsCOMPtr<nsIPresShell_MOZILLA_2_0_BRANCH2> presShell =
-    do_QueryInterface(mPresShell);
-  return presShell->IsLayoutFlushObserver() ||
+  return mPresShell->IsLayoutFlushObserver() ||
     mObservingState == eRefreshProcessingForUpdate ||
     mContentInsertions.Length() != 0 || mNotifications.Length() != 0 ||
     mTextHash.Count() != 0;

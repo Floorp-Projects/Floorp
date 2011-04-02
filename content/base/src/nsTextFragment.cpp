@@ -231,7 +231,8 @@ nsTextFragment::SetTo(const PRUnichar* aBuffer, PRInt32 aLength)
   const PRUnichar *uend = aBuffer + aLength;
 
   // Check if we can use a shared string
-  if (firstChar == ' ' || firstChar == '\n' || firstChar == '\t') {
+  if (aLength <= 1 + TEXTFRAG_WHITE_AFTER_NEWLINE + TEXTFRAG_MAX_NEWLINES &&
+     (firstChar == ' ' || firstChar == '\n' || firstChar == '\t')) {
     if (firstChar == ' ') {
       ++ucp;
     }

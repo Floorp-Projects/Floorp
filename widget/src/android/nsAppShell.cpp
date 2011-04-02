@@ -82,9 +82,9 @@ nsAppShell *nsAppShell::gAppShell = nsnull;
 NS_IMPL_ISUPPORTS_INHERITED1(nsAppShell, nsBaseAppShell, nsIObserver)
 
 nsAppShell::nsAppShell()
-    : mQueueLock(nsnull),
-      mCondLock(nsnull),
-      mQueueCond(nsnull),
+    : mQueueLock("nsAppShell.mQueueLock"),
+      mCondLock("nsAppShell.mCondLock"),
+      mQueueCond(mCondLock, "nsAppShell.mQueueCond"),
       mNumDraws(0)
 {
     gAppShell = this;
@@ -98,9 +98,8 @@ nsAppShell::~nsAppShell()
 void
 nsAppShell::NotifyNativeEvent()
 {
-    PR_Lock(mCondLock);
-    PR_NotifyCondVar(mQueueCond);
-    PR_Unlock(mCondLock);
+    MutexAutoLock lock(mCondLock);
+    mQueueCond.Notify();
 }
 
 nsresult
@@ -110,10 +109,6 @@ nsAppShell::Init()
     if (!gWidgetLog)
         gWidgetLog = PR_NewLogModule("Widget");
 #endif
-
-    mQueueLock = PR_NewLock();
-    mCondLock = PR_NewLock();
-    mQueueCond = PR_NewCondVar(mCondLock);
 
     mObserversHash.Init();
 
@@ -235,30 +230,29 @@ nsAppShell::ProcessNextNativeEvent(PRBool mayWait)
 {
     EVLOG("nsAppShell::ProcessNextNativeEvent %d", mayWait);
 
-    PR_Lock(mCondLock);
-
     nsAutoPtr<AndroidGeckoEvent> curEvent;
     AndroidGeckoEvent *nextEvent;
-
-    curEvent = GetNextEvent();
-    if (!curEvent && mayWait) {
-        // hmm, should we really hardcode this 10s?
-#if defined(ANDROID_DEBUG_EVENTS)
-        PRTime t0, t1;
-        EVLOG("nsAppShell: waiting on mQueueCond");
-        t0 = PR_Now();
-
-        PR_WaitCondVar(mQueueCond, PR_MillisecondsToInterval(10000));
-        t1 = PR_Now();
-        EVLOG("nsAppShell: wait done, waited %d ms", (int)(t1-t0)/1000);
-#else
-        PR_WaitCondVar(mQueueCond, PR_INTERVAL_NO_TIMEOUT);
-#endif
+    {
+        MutexAutoLock lock(mCondLock);
 
         curEvent = GetNextEvent();
-    }
+        if (!curEvent && mayWait) {
+            // hmm, should we really hardcode this 10s?
+#if defined(ANDROID_DEBUG_EVENTS)
+            PRTime t0, t1;
+            EVLOG("nsAppShell: waiting on mQueueCond");
+            t0 = PR_Now();
 
-    PR_Unlock(mCondLock);
+            mQueueCond.Wait(PR_MillisecondsToInterval(10000));
+            t1 = PR_Now();
+            EVLOG("nsAppShell: wait done, waited %d ms", (int)(t1-t0)/1000);
+#else
+            mQueueCond.Wait();
+#endif
+
+            curEvent = GetNextEvent();
+        }
+    }
 
     if (!curEvent)
         return false;
@@ -410,7 +404,7 @@ AndroidGeckoEvent*
 nsAppShell::GetNextEvent()
 {
     AndroidGeckoEvent *ae = nsnull;
-    PR_Lock(mQueueLock);
+    MutexAutoLock lock(mQueueLock);
     if (mEventQueue.Length()) {
         ae = mEventQueue[0];
         mEventQueue.RemoveElementAt(0);
@@ -418,7 +412,6 @@ nsAppShell::GetNextEvent()
             mNumDraws--;
         }
     }
-    PR_Unlock(mQueueLock);
 
     return ae;
 }
@@ -427,11 +420,10 @@ AndroidGeckoEvent*
 nsAppShell::PeekNextEvent()
 {
     AndroidGeckoEvent *ae = nsnull;
-    PR_Lock(mQueueLock);
+    MutexAutoLock lock(mQueueLock);
     if (mEventQueue.Length()) {
         ae = mEventQueue[0];
     }
-    PR_Unlock(mQueueLock);
 
     return ae;
 }
@@ -439,12 +431,13 @@ nsAppShell::PeekNextEvent()
 void
 nsAppShell::PostEvent(AndroidGeckoEvent *ae)
 {
-    PR_Lock(mQueueLock);
-    mEventQueue.AppendElement(ae);
-    if (ae->Type() == AndroidGeckoEvent::DRAW) {
-        mNumDraws++;
+    {
+        MutexAutoLock lock(mQueueLock);
+        mEventQueue.AppendElement(ae);
+        if (ae->Type() == AndroidGeckoEvent::DRAW) {
+            mNumDraws++;
+        }
     }
-    PR_Unlock(mQueueLock);
     NotifyNativeEvent();
 }
 
@@ -452,7 +445,7 @@ void
 nsAppShell::RemoveNextEvent()
 {
     AndroidGeckoEvent *ae = nsnull;
-    PR_Lock(mQueueLock);
+    MutexAutoLock lock(mQueueLock);
     if (mEventQueue.Length()) {
         ae = mEventQueue[0];
         mEventQueue.RemoveElementAt(0);
@@ -460,7 +453,6 @@ nsAppShell::RemoveNextEvent()
             mNumDraws--;
         }
     }
-    PR_Unlock(mQueueLock);
 }
 
 void

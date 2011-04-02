@@ -64,7 +64,6 @@
 #include "nsIUploadChannel.h"
 #include "nsSSLThread.h"
 #include "nsThreadUtils.h"
-#include "nsAutoLock.h"
 #include "nsIThread.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
@@ -76,6 +75,8 @@
 #include "ocsp.h"
 #include "nssb64.h"
 #include "secerr.h"
+
+using namespace mozilla;
 
 static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
@@ -372,11 +373,8 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
   if (!mListener)
     return SECFailure;
 
-  if (NS_FAILED(mListener->InitLocks()))
-    return SECFailure;
-
-  PRLock *waitLock = mListener->mLock;
-  PRCondVar *waitCondition = mListener->mCondition;
+  Mutex& waitLock = mListener->mLock;
+  CondVar& waitCondition = mListener->mCondition;
   volatile PRBool &waitFlag = mListener->mWaitFlag;
   waitFlag = PR_TRUE;
 
@@ -398,7 +396,7 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
   PRBool request_canceled = PR_FALSE;
 
   {
-    nsAutoLock locker(waitLock);
+    MutexAutoLock locker(waitLock);
 
     const PRIntervalTime start_time = PR_IntervalNow();
     PRIntervalTime wait_interval;
@@ -426,12 +424,11 @@ nsNSSHttpRequestSession::internal_send_receive_attempt(PRBool &retryable_error,
         // thread manager. Thanks a lot to Christian Biesinger who
         // made me aware of this possibility. (kaie)
 
-        locker.unlock();
+        MutexAutoUnlock unlock(waitLock);
         NS_ProcessNextEvent(nsnull);
-        locker.lock();
       }
 
-      PR_WaitCondVar(waitCondition, wait_interval);
+      waitCondition.Wait(wait_interval);
       
       if (!waitFlag)
         break;
@@ -557,8 +554,8 @@ void nsNSSHttpInterface::unregisterHttpClient()
 nsHTTPListener::nsHTTPListener()
 : mResultData(nsnull),
   mResultLen(0),
-  mLock(nsnull),
-  mCondition(nsnull),
+  mLock("nsHTTPListener.mLock"),
+  mCondition(mLock, "nsHTTPListener.mCondition"),
   mWaitFlag(PR_TRUE),
   mResponsibleForDoneSignal(PR_FALSE),
   mLoadGroup(nsnull),
@@ -566,33 +563,10 @@ nsHTTPListener::nsHTTPListener()
 {
 }
 
-nsresult nsHTTPListener::InitLocks()
-{
-  mLock = nsAutoLock::NewLock("nsHttpListener::mLock");
-  if (!mLock)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
-  mCondition = PR_NewCondVar(mLock);
-  if (!mCondition)
-  {
-    nsAutoLock::DestroyLock(mLock);
-    mLock = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  return NS_OK;
-}
-
 nsHTTPListener::~nsHTTPListener()
 {
   if (mResponsibleForDoneSignal)
     send_done_signal();
-
-  if (mCondition)
-    PR_DestroyCondVar(mCondition);
-  
-  if (mLock)
-    nsAutoLock::DestroyLock(mLock);
 
   if (mLoader) {
     nsCOMPtr<nsIThread> mainThread(do_GetMainThread());
@@ -607,18 +581,16 @@ nsHTTPListener::FreeLoadGroup(PRBool aCancelLoad)
 {
   nsILoadGroup *lg = nsnull;
 
-  if (mLock) {
-    nsAutoLock locker(mLock);
+  MutexAutoLock locker(mLock);
 
-    if (mLoadGroup) {
-      if (mLoadGroupOwnerThread != PR_GetCurrentThread()) {
-        NS_ASSERTION(PR_FALSE,
-          "attempt to access nsHTTPDownloadEvent::mLoadGroup on multiple threads, leaking it!");
-      }
-      else {
-        lg = mLoadGroup;
-        mLoadGroup = nsnull;
-      }
+  if (mLoadGroup) {
+    if (mLoadGroupOwnerThread != PR_GetCurrentThread()) {
+      NS_ASSERTION(PR_FALSE,
+                   "attempt to access nsHTTPDownloadEvent::mLoadGroup on multiple threads, leaking it!");
+    }
+    else {
+      lg = mLoadGroup;
+      mLoadGroup = nsnull;
     }
   }
 
@@ -688,9 +660,9 @@ void nsHTTPListener::send_done_signal()
   mResponsibleForDoneSignal = PR_FALSE;
 
   {
-    nsAutoLock locker(mLock);
+    MutexAutoLock locker(mLock);
     mWaitFlag = PR_FALSE;
-    PR_NotifyAllCondVar(mCondition);
+    mCondition.NotifyAll();
   }
 }
 

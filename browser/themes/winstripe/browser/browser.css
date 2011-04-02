@@ -56,7 +56,7 @@
 %define toolbarShadowOnTab -moz-linear-gradient(bottom, rgba(10%,10%,10%,.4) 1px, transparent 1px)
 %define bgTabTexture -moz-linear-gradient(transparent, hsla(0,0%,45%,.1) 1px, hsla(0,0%,32%,.2) 80%, hsla(0,0%,0%,.2))
 %define bgTabTextureHover -moz-linear-gradient(hsla(0,0%,100%,.3) 1px, hsla(0,0%,75%,.2) 80%, hsla(0,0%,60%,.2))
-%define navbarTextboxCustomBorder border-color: rgba(0,0,0,.25) rgba(0,0,0,.32) rgba(0,0,0,.37);
+%define navbarTextboxCustomBorder border-color: rgba(0,0,0,.32);
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
@@ -605,12 +605,11 @@ menuitem.bookmark-item {
               -moz-linear-gradient(rgba(251,252,253,.95), rgba(246,247,248,.47) 49%, 
                                    rgba(231,232,233,.45) 51%, rgba(225,226,229,.3));
   background-clip: padding-box;
-  border-radius: 4.5px;
+  border-radius: 3.5px;
   border: 1px solid;
   border-color: rgba(0,0,0,.12) rgba(0,0,0,.19) rgba(0,0,0,.38);
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
-              0 0 0 2px rgba(255,255,255,.1) inset,
-              0 1px 0 rgba(0,0,0,.15);
+              0 0 0 2px rgba(255,255,255,.1) inset;
   color: black;
   text-shadow: 0 0 2px white;
 }
@@ -671,7 +670,6 @@ menuitem.bookmark-item {
   border-color: hsla(190,50%,65%,.8) hsla(190,50%,50%,.8) hsla(190,50%,40%,.8);
   box-shadow: 0 0 0 1px rgba(255,255,255,.3) inset,
               0 0 0 1.5px rgba(255,255,255,.1) inset,
-              0 1px 0 rgba(0,0,0,.1),
               0 0 3.5px hsl(190,90%,80%);
   -moz-transition: background-color .4s ease-in,
                    border-color .3s ease-in,
@@ -801,8 +799,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
               0 0 0 2px rgba(255,255,255,.1) inset,
               0 0 0 1px rgba(0,0,0,.15),
               0 1px 0 rgba(0,0,0,.4),
-              0 1px 1px rgba(0,0,0,.3),
-              1px 2px 1px rgba(0,0,0,.2);
+              0 1px 1px rgba(0,0,0,.3);
 }
 
 #navigator-toolbox[iconsize="large"][mode="icons"] > #nav-bar #back-button:not([disabled="true"]):not([open="true"]):not(:active):hover {
@@ -811,7 +808,6 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
               0 0 0 1px hsla(190,50%,40%,.3),
               0 1px 0 rgba(0,0,0,.4),
               0 1px 1px rgba(0,0,0,.3),
-              1px 2px 1px rgba(0,0,0,.2),
               0 0 5px 1px hsl(190,90%,80%);
 }
 
@@ -1102,9 +1098,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   padding: 2px;
   background-clip: padding-box;
   border: 1px solid ThreeDDarkShadow;
-  border-radius: 4px;
-  box-shadow: 0 1px 0 rgba(0,0,0,.1) inset,
-              0 1px 0 rgba(255,255,255,.4);
+  border-radius: 3.5px;
 }
 
 @media all and (-moz-windows-default-theme) {

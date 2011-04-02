@@ -40,7 +40,15 @@ must be one of the following:
 
 1. Inclusion of another manifest
 
-   include <relative_path>
+   <failure-type>* include <relative_path>
+
+   <failure-type> is the same as listed below for a test item.  As for 
+   test items, multiple failure types listed on the same line are 
+   combined by using the last matching failure type listed.  However, 
+   the failure type on a manifest is combined with the failure type on 
+   the test (or on a nested manifest) with the rule that the last in the
+   following list wins:  fails, random, skip.  (In other words, skip 
+   always wins, and random beats fails.)
 
 2. A test item
 

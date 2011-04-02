@@ -48,31 +48,24 @@
 
 #include "nsMemory.h"
 
-#include "nsAutoLock.h"
-
 #include "nsUUIDGenerator.h"
+
+using namespace mozilla;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsUUIDGenerator, nsIUUIDGenerator)
 
 nsUUIDGenerator::nsUUIDGenerator()
-    : mLock(nsnull)
+    : mLock("nsUUIDGenerator.mLock")
 {
 }
 
 nsUUIDGenerator::~nsUUIDGenerator()
 {
-    if (mLock) {
-        nsAutoLock::DestroyLock(mLock);
-    }
 }
 
 nsresult
 nsUUIDGenerator::Init()
 {
-    mLock = nsAutoLock::NewLock("nsUUIDGenerator::mLock");
-
-    NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
-
     // We're a service, so we're guaranteed that Init() is not going
     // to be reentered while we're inside Init().
     
@@ -136,7 +129,7 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
 {
     // The various code in this method is probably not threadsafe, so lock
     // across the whole method.
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
 #if defined(WINCE)
     // WINCE only has CoCreateGuid if DCOM support is compiled into the BSP;

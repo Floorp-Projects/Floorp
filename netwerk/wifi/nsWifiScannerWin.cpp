@@ -46,7 +46,6 @@
 #include "winioctl.h"
 #include "stdlib.h"
 
-#include "nsAutoPtr.h"
 #include "nsWifiMonitor.h"
 #include "nsWifiAccessPoint.h"
 
@@ -54,6 +53,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIMutableArray.h"
+
+using namespace mozilla;
 
 nsresult
 nsWifiMonitor::DoScan()
@@ -153,7 +154,7 @@ nsWifiMonitor::DoScan()
       nsCOMArray<nsIWifiListener> currentListeners;
 
       {
-        nsAutoMonitor mon(mMonitor);
+        MonitorAutoEnter mon(mMonitor);
 
         for (PRUint32 i = 0; i < mListeners.Length(); i++) {
           if (!mListeners[i].mHasSentData || accessPointsChanged) {
@@ -201,7 +202,7 @@ nsWifiMonitor::DoScan()
       // wait for some reasonable amount of time.  pref?
       LOG(("waiting on monitor\n"));
 
-      nsAutoMonitor mon(mMonitor);
+      MonitorAutoEnter mon(mMonitor);
       mon.Wait(PR_SecondsToInterval(60));
     }
     while (mKeepGoing);

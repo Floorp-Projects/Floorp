@@ -47,7 +47,6 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsNetUtil.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsCRT.h"
 #include "prmon.h"

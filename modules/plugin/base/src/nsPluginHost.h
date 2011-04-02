@@ -236,18 +236,14 @@ private:
   FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged);
 
   nsresult
-  ScanPluginsDirectory(nsIFile * pluginsDir, 
-                       nsIComponentManager * compManager, 
+  ScanPluginsDirectory(nsIFile *pluginsDir,
                        PRBool aCreatePluginList,
-                       PRBool * aPluginsChanged,
-                       PRBool checkForUnwantedPlugins = PR_FALSE);
-                       
+                       PRBool *aPluginsChanged);
+
   nsresult
-  ScanPluginsDirectoryList(nsISimpleEnumerator * dirEnum,
-                           nsIComponentManager * compManager, 
+  ScanPluginsDirectoryList(nsISimpleEnumerator *dirEnum,
                            PRBool aCreatePluginList,
-                           PRBool * aPluginsChanged,
-                           PRBool checkForUnwantedPlugins = PR_FALSE);
+                           PRBool *aPluginsChanged);
 
   nsresult EnsurePluginLoaded(nsPluginTag* plugin);
 

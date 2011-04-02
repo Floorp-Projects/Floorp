@@ -73,6 +73,7 @@ abstract public class GeckoApp
     public static boolean mStartedEarly = false;
     public static File sGREDir = null;
     static Thread mLibLoadThread = null;
+    public Handler mMainHandler;
 
     enum LaunchState {PreLaunch, Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -176,6 +177,7 @@ abstract public class GeckoApp
     public void onCreate(Bundle savedInstanceState)
     {
         mAppContext = this;
+        mMainHandler = new Handler();
 
         SharedPreferences settings = getPreferences(Activity.MODE_PRIVATE);
         String localeCode = settings.getString(getPackageName() + ".locale", "");

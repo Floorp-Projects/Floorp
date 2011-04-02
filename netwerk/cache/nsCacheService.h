@@ -50,13 +50,13 @@
 #include "nsCacheDevice.h"
 #include "nsCacheEntry.h"
 
-#include "prlock.h"
 #include "prthread.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "nsProxiedService.h"
 #include "nsTArray.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
 
 class nsCacheRequest;
 class nsCacheProfilePrefObserver;
@@ -172,6 +172,10 @@ public:
 
     nsresult         Init();
     void             Shutdown();
+
+    static void      AssertOwnsLock()
+    { gService->mLock.AssertCurrentThreadOwns(); }
+
 private:
     friend class nsCacheServiceAutoLock;
     friend class nsOfflineCacheDevice;
@@ -254,13 +258,8 @@ private:
     
     nsCacheProfilePrefObserver *    mObserver;
     
-    PRLock *                        mLock;
-
-    mozilla::Monitor                mMonitor;
-
-#if defined(DEBUG)
-    PRThread *                      mLockedThread;  // The thread holding mLock
-#endif
+    mozilla::Mutex                  mLock;
+    mozilla::CondVar                mCondVar;
 
     nsCOMPtr<nsIThread>             mCacheIOThread;
 

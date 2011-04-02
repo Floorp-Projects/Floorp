@@ -75,8 +75,11 @@ private:
   /* Shader resource view for our render-on-white texture */
   nsRefPtr<ID3D10ShaderResourceView> mSRViewOnWhite;
 
-  /* Visible region used when we drew the contents of the textures */
-  nsIntRegion mTextureRegion;
+  /* Area of layer currently stored in texture(s) */
+  nsIntRect mTextureRect;
+
+  /* Last surface mode set in Validate() */
+  SurfaceMode mCurrentSurfaceMode;
 
   /* Checks if our D2D surface has the right content type */
   void VerifyContentType(SurfaceMode aMode);

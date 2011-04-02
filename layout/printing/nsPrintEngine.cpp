@@ -3537,9 +3537,8 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
     if (shell) {
       nsIViewManager* vm = shell->GetViewManager();
       if (vm) {
-        nsIView* root;
-        vm->GetRootView(root);
-        if (nsnull != root) {
+        nsIView* root = vm->GetRootView();
+        if (root) {
           root->List(out);
         }
       }

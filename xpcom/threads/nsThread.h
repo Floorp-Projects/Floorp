@@ -39,13 +39,12 @@
 #ifndef nsThread_h__
 #define nsThread_h__
 
+#include "mozilla/Mutex.h"
 #include "nsIThreadInternal.h"
 #include "nsISupportsPriority.h"
 #include "nsEventQueue.h"
 #include "nsThreadUtils.h"
 #include "nsString.h"
-#include "nsAutoLock.h"
-#include "nsAutoPtr.h"
 #include "nsTObserverArray.h"
 
 // A native thread
@@ -106,10 +105,6 @@ private:
       : mNext(nsnull), mFilter(filter) {
     }
 
-    PRBool IsInitialized() {
-      return mQueue.IsInitialized();
-    }
-
     PRBool GetEvent(PRBool mayWait, nsIRunnable **event) {
       return mQueue.GetEvent(mayWait, event);
     }
@@ -131,7 +126,7 @@ private:
   // another thread).  This means that we can avoid holding the lock while
   // using mObserver and mEvents on the thread itself.  When calling PutEvent
   // on mEvents, we have to hold the lock to synchronize with PopEventQueue.
-  PRLock *mLock;
+  mozilla::Mutex mLock;
 
   nsCOMPtr<nsIThreadObserver> mObserver;
 

@@ -144,6 +144,18 @@ protected:
    *                         in aDecoration is set. It is undefined otherwise.
    *  @param aStrikeColor  The color of strike-through if the appropriate bit 
    *                         in aDecoration is set. It is undefined otherwise.
+   *  @param aUnderStyle   The style of underline if the appropriate bit
+   *                         in aDecoration is set. It is undefined otherwise.
+   *                         The style is one of
+   *                         NS_STYLE_TEXT_DECORATION_STYLE_* consts.
+   *  @param aOverStyle    The style of overline if the appropriate bit
+   *                         in aDecoration is set. It is undefined otherwise.
+   *                         The style is one of
+   *                         NS_STYLE_TEXT_DECORATION_STYLE_* consts.
+   *  @param aStrikeStyle  The style of strike-through if the appropriate bit
+   *                         in aDecoration is set. It is undefined otherwise.
+   *                         The style is one of
+   *                         NS_STYLE_TEXT_DECORATION_STYLE_* consts.
    *  NOTE: This function assigns NS_STYLE_TEXT_DECORATION_NONE to
    *        aDecorations for text-less frames.  See bug 20163 for
    *        details.
@@ -153,7 +165,10 @@ protected:
                           PRUint8& aDecorations, 
                           nscolor& aUnderColor, 
                           nscolor& aOverColor, 
-                          nscolor& aStrikeColor);
+                          nscolor& aStrikeColor,
+                          PRUint8& aUnderStyle,
+                          PRUint8& aOverStyle,
+                          PRUint8& aStrikeStyle);
 
   /** 
    * Function that does the actual drawing of the textdecoration. 
@@ -161,6 +176,8 @@ protected:
    *    @param aCtx               the Thebes graphics context to draw on
    *    @param aLine              the line, or nsnull if this is an inline frame
    *    @param aColor             the color of the text-decoration
+   *    @param aStyle             the style of the text-decoration, i.e., one of
+   *                                NS_STYLE_TEXT_DECORATION_STYLE_* consts.
    *    @param aAscent            ascent of the font from which the
    *                                text-decoration was derived. 
    *    @param aOffset            distance *above* baseline where the
@@ -177,6 +194,7 @@ protected:
                                        const nsPoint& aPt,
                                        nsLineBox* aLine,
                                        nscolor aColor,
+                                       PRUint8 aStyle,
                                        gfxFloat aOffset,
                                        gfxFloat aAscent,
                                        gfxFloat aSize,
