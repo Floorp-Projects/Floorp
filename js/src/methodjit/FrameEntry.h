@@ -138,14 +138,6 @@ class FrameEntry
     bool isCopy() const { return !!copy; }
     bool isCopied() const { return copied; }
 
-    inline bool initializerArray() {
-        return initArray;
-    }
-
-    inline JSObject *initializerObject() {
-        return initObject;
-    }
-
   private:
     void setType(JSValueType type_) {
         type.setConstant();

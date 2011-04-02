@@ -3070,9 +3070,9 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
     AutoHoldCompartment hold(compartment);
 
     JSCompartment *saved = cx->compartment;
-    cx->compartment = compartment;
+    cx->setCompartment(compartment);
     JSObject *obj = JS_NewGlobalObject(cx, clasp);
-    cx->compartment = saved;
+    cx->setCompartment(saved);
 
     return obj;
 }

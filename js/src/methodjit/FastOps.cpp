@@ -483,8 +483,8 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
          * special equality operator on either object, if that passes then
          * this is a pointer comparison.
          */
-        types::TypeSet *lhsTypes = frame.getTypeSet(lhs);
-        types::TypeSet *rhsTypes = frame.getTypeSet(rhs);
+        types::TypeSet *lhsTypes = frame.extra(lhs).types;
+        types::TypeSet *rhsTypes = frame.extra(rhs).types;
         types::ObjectKind lhsKind =
             lhsTypes ? lhsTypes->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
         types::ObjectKind rhsKind =
@@ -1189,7 +1189,7 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     frame.forgetConstantData(obj);
 
     if (cx->typeInferenceEnabled()) {
-        types::TypeSet *types = frame.getTypeSet(obj);
+        types::TypeSet *types = frame.extra(obj).types;
         types::ObjectKind kind = types
             ? types->getKnownObjectKind(cx)
             : types::OBJECT_UNKNOWN;
@@ -1509,7 +1509,7 @@ mjit::Compiler::jsop_getelem(bool isCall)
     frame.forgetConstantData(obj);
 
     if (cx->typeInferenceEnabled()) {
-        types::TypeSet *types = frame.getTypeSet(obj);
+        types::TypeSet *types = frame.extra(obj).types;
         types::ObjectKind kind = types
             ? types->getKnownObjectKind(cx)
             : types::OBJECT_UNKNOWN;
@@ -1950,7 +1950,7 @@ mjit::Compiler::jsop_initmethod()
     JSAtom *atom = script->getAtom(fullAtomIndex(PC));
 
     /* Initializers with INITMETHOD are not fast yet. */
-    JS_ASSERT(!obj->initializerObject());
+    JS_ASSERT(!frame.extra(obj).initObject);
 
     prepareStubCall(Uses(2));
     masm.move(ImmPtr(atom), Registers::ArgReg1);
@@ -1964,7 +1964,7 @@ mjit::Compiler::jsop_initprop()
     FrameEntry *fe = frame.peek(-1);
     JSAtom *atom = script->getAtom(fullAtomIndex(PC));
 
-    JSObject *baseobj = obj->initializerObject();
+    JSObject *baseobj = frame.extra(obj).initObject;
 
     if (!baseobj || monitored(PC)) {
         prepareStubCall(Uses(2));
@@ -2005,7 +2005,7 @@ mjit::Compiler::jsop_initelem()
      * cases, as well as those where INITELEM is used on an object initializer
      * or a non-fast array initializer.
      */
-    if (!id->isConstant() || !obj->initializerArray()) {
+    if (!id->isConstant() || !frame.extra(obj).initArray) {
         JSOp next = JSOp(PC[JSOP_INITELEM_LENGTH]);
 
         prepareStubCall(Uses(3));

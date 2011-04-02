@@ -226,7 +226,7 @@ UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
 inline bool
 JSContext::typeInferenceEnabled()
 {
-    return compartment->types.inferenceEnabled;
+    return inferenceEnabled;
 }
 
 inline js::types::TypeObject *

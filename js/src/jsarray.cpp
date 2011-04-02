@@ -107,6 +107,8 @@
 #include "jstracer.h"
 #include "jsvector.h"
 #include "jswrapper.h"
+#include "methodjit/StubCalls.h"
+#include "methodjit/StubCalls-inl.h"
 
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
@@ -667,8 +669,11 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
         if (oldcap > newlen)
             obj->shrinkDenseArrayElements(cx, newlen);
         jsuint oldinit = obj->getDenseArrayInitializedLength();
-        if (oldinit > newlen)
+        if (oldinit > newlen) {
             obj->setDenseArrayInitializedLength(newlen);
+            if (!cx->typeInferenceEnabled())
+                obj->backfillDenseArrayHoles();
+        }
     } else if (oldlen - newlen < (1 << 24)) {
         do {
             --oldlen;
@@ -3499,9 +3504,10 @@ NewArray(JSContext *cx, jsuint length, JSObject *proto)
     if (allocateCapacity) {
         if (!obj->ensureSlots(cx, length))
             return NULL;
-        if (!cx->typeInferenceEnabled())
-            obj->backfillDenseArrayHoles();
     }
+
+    if (!cx->typeInferenceEnabled())
+        obj->backfillDenseArrayHoles();
 
     return obj;
 }
@@ -3521,14 +3527,7 @@ NewDenseAllocatedArray(JSContext *cx, uint32 length, JSObject *proto)
 JSObject * JS_FASTCALL
 NewDenseAllocatedEmptyArray(JSContext *cx, uint length, JSObject *proto)
 {
-    JSObject *obj = NewArray<true>(cx, length, proto);
-    if (!obj)
-        return NULL;
-    obj->setDenseArrayInitializedLength(length);
-    if (!obj->setDenseArrayNotPacked(cx))
-        return NULL;
-    ClearValueRange(obj->getSlots(), length, true);
-    return obj;
+    return NewArray<true>(cx, length, proto);
 }
 
 JSObject * JS_FASTCALL
@@ -3536,6 +3535,20 @@ NewDenseUnallocatedArray(JSContext *cx, uint32 length, JSObject *proto)
 {
     return NewArray<false>(cx, length, proto);
 }
+
+#ifdef JS_METHODJIT
+JSObject * JS_FASTCALL
+mjit::stubs::NewDenseUnallocatedArray(VMFrame &f, uint32 length)
+{
+    JSObject *proto = (JSObject *) f.scratch;
+    JSObject *obj = NewArray<false>(f.cx, length, proto);
+    if (!obj) {
+        js_ReportOutOfMemory(f.cx);
+        THROWV(NULL);
+    }
+    return obj;
+}
+#endif
 
 JSObject *
 NewDenseCopiedArray(JSContext *cx, uintN length, Value *vp, JSObject *proto)
@@ -3546,11 +3559,15 @@ NewDenseCopiedArray(JSContext *cx, uintN length, Value *vp, JSObject *proto)
 
     JS_ASSERT(obj->getDenseArrayCapacity() >= length);
 
-    if (vp) {
+    if (cx->typeInferenceEnabled()) {
+        if (vp) {
+            memcpy(obj->getDenseArrayElements(), vp, length * sizeof(Value));
+            obj->setDenseArrayInitializedLength(length);
+        } else {
+            obj->setDenseArrayInitializedLength(0);
+        }
+    } else if (vp) {
         memcpy(obj->getDenseArrayElements(), vp, length * sizeof(Value));
-        obj->setDenseArrayInitializedLength(length);
-    } else {
-        obj->setDenseArrayInitializedLength(0);
     }
 
     return obj;

@@ -680,6 +680,7 @@ class Compiler : public BaseCompiler
 
     /* Fast builtins. */
     JSObject *pushedSingleton(unsigned pushed);
+    CompileStatus callArrayBuiltin(uint32 argc, bool callingNew);
     CompileStatus inlineNativeFunction(uint32 argc, bool callingNew);
     CompileStatus inlineScriptedFunction(uint32 argc, bool callingNew);
     CompileStatus compileMathAbsInt(FrameEntry *arg);

@@ -127,7 +127,7 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc,
     size_t totalBytes = sizeof(ActiveFrame) +
                         sizeof(FrameEntry) * nentries +              // entries[]
                         sizeof(FrameEntry *) * nentries +            // tracker.entries
-                        sizeof(types::TypeSet *) * script->nslots;   // typeSets
+                        sizeof(StackEntryExtra) * script->nslots;    // extraArray
 
     uint8 *cursor = (uint8 *)cx->calloc(totalBytes);
     if (!cursor)
@@ -164,8 +164,8 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc,
     newa->tracker.entries = (FrameEntry **)cursor;
     cursor += sizeof(FrameEntry *) * nentries;
 
-    newa->typeSets = (types::TypeSet **)cursor;
-    cursor += sizeof(types::TypeSet *) * script->nslots;
+    newa->extraArray = (StackEntryExtra *)cursor;
+    cursor += sizeof(StackEntryExtra) * script->nslots;
 
     JS_ASSERT(reinterpret_cast<uint8 *>(newa) + totalBytes == cursor);
 
@@ -1108,7 +1108,8 @@ FrameState::discardForJoin(jsbytecode *target, uint32 stackDepth)
 
     sp = spBase + stackDepth;
 
-    PodZero(a->typeSets, stackDepth);
+    for (unsigned i = 0; i < stackDepth; i++)
+        a->extraArray[i].reset();
 
     return true;
 }
@@ -2443,7 +2444,7 @@ FrameState::forgetEntry(FrameEntry *fe)
     }
 
     if (fe >= sp)
-        a->typeSets[fe - spBase] = NULL;
+        a->extraArray[fe - spBase].reset();
 }
 
 void
