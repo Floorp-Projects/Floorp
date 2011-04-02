@@ -3534,24 +3534,6 @@ nsContentUtils::CheckForBOM(const unsigned char* aBuffer, PRUint32 aLength,
       aBuffer[2] == 0xBF) {
     aCharset = "UTF-8";
   }
-  else if (aLength >= 4 &&
-           aBuffer[0] == 0x00 &&
-           aBuffer[1] == 0x00 &&
-           aBuffer[2] == 0xFE &&
-           aBuffer[3] == 0xFF) {
-    aCharset = "UTF-32";
-    if (bigEndian)
-      *bigEndian = PR_TRUE;
-  }
-  else if (aLength >= 4 &&
-           aBuffer[0] == 0xFF &&
-           aBuffer[1] == 0xFE &&
-           aBuffer[2] == 0x00 &&
-           aBuffer[3] == 0x00) {
-    aCharset = "UTF-32";
-    if (bigEndian)
-      *bigEndian = PR_FALSE;
-  }
   else if (aLength >= 2 &&
            aBuffer[0] == 0xFE && aBuffer[1] == 0xFF) {
     aCharset = "UTF-16";
@@ -6386,8 +6368,8 @@ LayerManagerForDocumentInternal(nsIDocument *aDoc, bool aRequirePersistent,
   if (shell) {
     nsIViewManager* VM = shell->GetViewManager();
     if (VM) {
-      nsIView* rootView = nsnull;
-      if (NS_SUCCEEDED(VM->GetRootView(rootView)) && rootView) {
+      nsIView* rootView = VM->GetRootView();
+      if (rootView) {
         nsIView* displayRoot = GetDisplayRootFor(rootView);
         if (displayRoot) {
           nsIWidget* widget = displayRoot->GetNearestWidget(nsnull);

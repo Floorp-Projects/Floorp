@@ -41,8 +41,7 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE       = extensions
-XPIDL_MODULE = extensions
+MODULE = extensions
 
 XPIDLSRCS = \
   amIInstallTrigger.idl \
@@ -59,17 +58,13 @@ EXTRA_PP_COMPONENTS = \
   $(NULL)
 
 EXTRA_PP_JS_MODULES = \
+  AddonLogging.jsm \
   AddonManager.jsm \
   AddonRepository.jsm \
-  XPIProvider.jsm \
   AddonUpdateChecker.jsm \
-  AddonLogging.jsm \
+  PluginProvider.jsm \
+  XPIProvider.jsm \
   $(NULL)
-
-ifdef MOZ_PLUGINS
-  EXTRA_PP_JS_MODULES += PluginProvider.jsm
-  DEFINES += -DMOZ_PLUGINS
-endif
 
 EXTRA_JS_MODULES = \
   LightweightThemeManager.jsm \
@@ -80,9 +75,9 @@ DIRS += test
 endif
 
 EXTRA_DSO_LDOPTS = \
-		$(MOZ_JS_LIBS) \
-		$(MOZ_UNICHARUTIL_LIBS) \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
+  $(MOZ_JS_LIBS) \
+  $(MOZ_UNICHARUTIL_LIBS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -115,13 +115,6 @@ r.onload = getLoadHandler(testTextData,
                           "utf16 reading");
 expectedTestCount++;
 
-r = new FileReader();
-r.onload = getLoadHandler(testTextData,
-                          convertToUTF32(testTextData).length,
-                          "utf32 reading");
-r.readAsText(createFileWithData(convertToUTF32(testTextData)), "UTF-32");
-expectedTestCount++;
-
 
 // Test loading an empty file works (and doesn't crash!)
 var emptyFile = createFileWithData("");
@@ -347,15 +340,6 @@ function convertToUTF16(s) {
   for (var i = 0; i < s.length; ++i) {
     c = s.charCodeAt(i);
     res += String.fromCharCode(c >>> 8, c & 255);
-  }
-  return res;
-}
-
-function convertToUTF32(s) {
-  res = "";
-  for (var i = 0; i < s.length; ++i) {
-    c = s.charCodeAt(i);
-    res += "\0\0" + String.fromCharCode(c >>> 8, c & 255);
   }
   return res;
 }

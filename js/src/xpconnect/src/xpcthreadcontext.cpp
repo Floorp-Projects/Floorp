@@ -43,9 +43,12 @@
 
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
+#include "mozilla/Mutex.h"
 #include "nsDOMJSUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsNullPrincipal.h"
+
+using namespace mozilla;
 
 /***************************************************************************/
 
@@ -341,7 +344,7 @@ XPCJSContextStack::SetSafeJSContext(JSContext * aSafeJSContext)
 /***************************************************************************/
 
 PRUintn           XPCPerThreadData::gTLSIndex       = BAD_TLS_INDEX;
-PRLock*           XPCPerThreadData::gLock           = nsnull;
+Mutex*            XPCPerThreadData::gLock           = nsnull;
 XPCPerThreadData* XPCPerThreadData::gThreads        = nsnull;
 XPCPerThreadData *XPCPerThreadData::sMainThreadData = nsnull;
 void *            XPCPerThreadData::sMainJSThread   = nsnull;
@@ -363,7 +366,7 @@ XPCPerThreadData::XPCPerThreadData()
     MOZ_COUNT_CTOR(xpcPerThreadData);
     if(gLock)
     {
-        nsAutoLock lock(gLock);
+        MutexAutoLock lock(*gLock);
         mNextThread = gThreads;
         gThreads = this;
     }
@@ -397,7 +400,7 @@ XPCPerThreadData::~XPCPerThreadData()
     // Unlink 'this' from the list of threads.
     if(gLock)
     {
-        nsAutoLock lock(gLock);
+        MutexAutoLock lock(*gLock);
         if(gThreads == this)
             gThreads = mNextThread;
         else
@@ -419,7 +422,7 @@ XPCPerThreadData::~XPCPerThreadData()
 
     if(gLock && doDestroyLock)
     {
-        nsAutoLock::DestroyLock(gLock);
+        delete gLock;
         gLock = nsnull;
     }
 }
@@ -465,14 +468,12 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
 
     if(!gLock)
     {
-        gLock = nsAutoLock::NewLock("XPCPerThreadData::gLock");
-        if(!gLock)
-            return nsnull;
+        gLock = new Mutex("XPCPerThreadData.gLock");
     }
 
     if(gTLSIndex == BAD_TLS_INDEX)
     {
-        nsAutoLock lock(gLock);
+        MutexAutoLock lock(*gLock);
         // check again now that we have the lock...
         if(gTLSIndex == BAD_TLS_INDEX)
         {
@@ -533,7 +534,7 @@ XPCPerThreadData::CleanupAllThreads()
 
     if(gLock)
     {
-        nsAutoLock lock(gLock);
+        MutexAutoLock lock(*gLock);
 
         for(XPCPerThreadData* cur = gThreads; cur; cur = cur->mNextThread)
             count++;

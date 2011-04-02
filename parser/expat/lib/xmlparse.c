@@ -1539,11 +1539,23 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         break;
       case XML_INITIALIZED:
       case XML_PARSING:
+/* BEGIN MOZILLA CHANGE (always initialize result) */
+#if 0
         result = XML_STATUS_OK;
         if (isFinal) {
           ps_parsing = XML_FINISHED;
           return result;
         }
+#else
+        if (isFinal) {
+          ps_parsing = XML_FINISHED;
+          return XML_STATUS_OK;
+        }
+      /* fall through */
+      default:
+        result = XML_STATUS_OK;
+#endif
+/* END MOZILLA CHANGE */
       }
     }
 

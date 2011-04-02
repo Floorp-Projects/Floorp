@@ -54,7 +54,6 @@
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
 #include "nsTArray.h"
-#include "prlock.h"
 
 #include "nsDOMWorker.h"
 
@@ -91,6 +90,8 @@ class nsDOMWorkerScriptLoader : public nsDOMWorkerFeature,
                                 public nsIRunnable,
                                 public nsIStreamLoaderObserver
 {
+  typedef mozilla::Mutex Mutex;
+
   friend class AutoSuspendWorkerEvents;
   friend class ScriptLoaderRunnable;
 
@@ -132,8 +133,8 @@ private:
   void SuspendWorkerEvents();
   void ResumeWorkerEvents();
 
-  PRLock* Lock() {
-    return mWorker->Lock();
+  Mutex& GetLock() {
+    return mWorker->GetLock();
   }
 
   class ScriptLoaderRunnable : public nsIRunnable

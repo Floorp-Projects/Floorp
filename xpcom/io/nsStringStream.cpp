@@ -61,7 +61,6 @@
 #include "nsReadableUtils.h"
 #include "nsISeekableStream.h"
 #include "nsISupportsPrimitives.h"
-#include "nsInt64.h"
 #include "nsCRT.h"
 #include "prerror.h"
 #include "plstr.h"

@@ -57,7 +57,7 @@ function add_visit(aURI, aVisitDate, aVisitType) {
   if (visitId > 0) {
     let sql = "SELECT place_id FROM moz_historyvisits WHERE id = ?1";
     let stmt = DBConn().createStatement(sql);
-    stmt.bindInt64Parameter(0, visitId);
+    stmt.bindByIndex(0, visitId);
     do_check_true(stmt.executeStep());
     let placeId = stmt.getInt64(0);
     stmt.finalize();

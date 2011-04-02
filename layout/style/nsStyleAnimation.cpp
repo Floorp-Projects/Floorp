@@ -2250,6 +2250,27 @@ nsStyleAnimation::ExtractComputedValue(nsCSSProperty aProperty,
           break;
         }
 
+        case eCSSProperty_text_decoration_color: {
+          const nsStyleTextReset *styleTextReset =
+            static_cast<const nsStyleTextReset*>(styleStruct);
+          nscolor color;
+          PRBool isForeground;
+          styleTextReset->GetDecorationColor(color, isForeground);
+          if (isForeground) {
+            color = aStyleContext->GetStyleColor()->mColor;
+          }
+          aComputedValue.SetColorValue(color);
+          break;
+        }
+
+        case eCSSProperty_text_decoration_style: {
+          PRUint8 decorationStyle =
+            static_cast<const nsStyleTextReset*>(styleStruct)->
+              GetDecorationStyle();
+          aComputedValue.SetIntValue(decorationStyle, eUnit_Enumerated);
+          break;
+        }
+
         case eCSSProperty_border_spacing: {
           const nsStyleTableBorder *styleTableBorder =
             static_cast<const nsStyleTableBorder*>(styleStruct);

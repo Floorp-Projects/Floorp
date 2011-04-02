@@ -87,8 +87,6 @@
 #include "prlog.h"
 #include "prtime.h"
 
-#include "nsInt64.h"
-
 namespace TestProtocols {
 
 #if defined(PR_LOGGING)
@@ -195,7 +193,7 @@ public:
   NS_DECL_ISUPPORTS
 
   const char* Name() { return mURLString.get(); }
-  nsInt64   mBytesRead;
+  PRInt64   mBytesRead;
   PRTime    mTotalTime;
   PRTime    mConnectTime;
   nsCString mURLString;
@@ -541,9 +539,9 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
     LOG(("\tTime to connect: %.3f seconds\n", connectTime));
     LOG(("\tTime to read: %.3f seconds.\n", readTime));
     LOG(("\tRead: %lld bytes.\n", info->mBytesRead.mValue));
-    if (info->mBytesRead == nsInt64(0)) {
+    if (info->mBytesRead == PRInt64(0)) {
     } else if (readTime > 0.0) {
-      LOG(("\tThroughput: %.0f bps.\n", (PRFloat64)(info->mBytesRead*nsInt64(8))/readTime));
+      LOG(("\tThroughput: %.0f bps.\n", (PRFloat64)(info->mBytesRead*PRInt64(8))/readTime));
     } else {
       LOG(("\tThroughput: REAL FAST!!\n"));
     }

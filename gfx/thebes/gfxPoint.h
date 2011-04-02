@@ -122,7 +122,6 @@ struct THEBES_API gfxPoint {
     gfxFloat x, y;
 
     gfxPoint() { }
-    gfxPoint(const gfxPoint& p) : x(p.x), y(p.y) {}
     gfxPoint(gfxFloat _x, gfxFloat _y) : x(_x), y(_y) {}
 
     void MoveTo(gfxFloat aX, gfxFloat aY) { x = aX; y = aY; }

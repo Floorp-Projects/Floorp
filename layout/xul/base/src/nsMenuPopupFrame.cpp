@@ -1413,10 +1413,14 @@ PRBool nsMenuPopupFrame::ConsumeOutsideClicks()
 #if defined(XP_WIN) || defined(XP_OS2)
     // Don't consume outside clicks for menus in Windows
     if (ni->Equals(nsGkAtoms::menu, kNameSpaceID_XUL) ||
+        ni->Equals(nsGkAtoms::splitmenu, kNameSpaceID_XUL) ||
         ni->Equals(nsGkAtoms::popupset, kNameSpaceID_XUL) ||
-        (ni->Equals(nsGkAtoms::button, kNameSpaceID_XUL) &&
-         parentContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                    nsGkAtoms::menu, eCaseMatters))) {
+        ((ni->Equals(nsGkAtoms::button, kNameSpaceID_XUL) ||
+          ni->Equals(nsGkAtoms::toolbarbutton, kNameSpaceID_XUL)) &&
+         (parentContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                     nsGkAtoms::menu, eCaseMatters) ||
+          parentContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                     nsGkAtoms::menuButton, eCaseMatters)))) {
       return PR_FALSE;
     }
 #endif

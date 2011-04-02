@@ -8,7 +8,12 @@
 !define AppVendor             "Mozilla"
 !define AppName               "Firefox"
 !define AppVersion            "@APP_VERSION@"
+#ifdef HAVE_64BIT_OS
+; differentiate 64-bit builds, we do the same in widget.
+!define AppUserModelID        "${AppVendor}.${AppName}.${AppVersion}.Win64"
+#else
 !define AppUserModelID        "${AppVendor}.${AppName}.${AppVersion}"
+#endif
 !define GREVersion            @MOZILLA_VERSION@
 !define AB_CD                 "@AB_CD@"
 

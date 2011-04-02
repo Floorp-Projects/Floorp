@@ -509,7 +509,7 @@ function frecencyForUrl(aURI)
   let stmt = DBConn().createStatement(
     "SELECT frecency FROM moz_places WHERE url = ?1"
   );
-  stmt.bindUTF8StringParameter(0, url);
+  stmt.bindByIndex(0, url);
   if (!stmt.executeStep())
     throw new Error("No result for frecency.");
   let frecency = stmt.getInt32(0);
@@ -531,7 +531,7 @@ function isUrlHidden(aURI)
   let stmt = DBConn().createStatement(
     "SELECT hidden FROM moz_places WHERE url = ?1"
   );
-  stmt.bindUTF8StringParameter(0, url);
+  stmt.bindByIndex(0, url);
   if (!stmt.executeStep())
     throw new Error("No result for hidden.");
   let hidden = stmt.getInt32(0);

@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #addons-page {
   -moz-appearance: none;
   padding: 18px;
@@ -103,7 +105,6 @@
 
 .nav-button {
   list-style-image: url(chrome://mozapps/skin/extensions/navigation.png);
-  min-width: 0;
 }
 
 #forward-btn {
@@ -368,30 +369,33 @@
 }
 
 #header-search {
-  -moz-appearance: none;
-  color: black;
-  border: 1px solid;
-  border-color: rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.32) rgba(0, 0, 0, 0.37);
-  border-radius: 4px;
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1) inset,
-              0 1px 0 rgba(255, 255, 255, 0.4);
-  padding: 3px;
-  background-color: rgba(255, 255, 255, 0.8);
   margin: 0;
 }
 
-#header-search .textbox-input:-moz-placeholder {
-  color: grey;
-}
+@media all and (-moz-windows-default-theme) {
+  #header-search {
+    -moz-appearance: none;
+    border: 1px solid;
+    border-color: rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.32) rgba(0, 0, 0, 0.37);
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1) inset,
+                0 1px 0 rgba(255, 255, 255, 0.4);
+    padding-bottom: 2px;
+    background-color: rgba(255, 255, 255, 0.4);
+  }
 
-#header-search[focused="true"] {
-  background-color: white;
+  #header-search:hover {
+    background-color: rgba(255, 255, 255, .75);
+  }
+
+  #header-search[focused] {
+    background-color: white;
+  }
 }
 
 #header-utils-btn {
-  min-width: 4.5em;
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.png");
-  -moz-margin-end: 18px;
+  -moz-margin-end: 16px;
 }
 
 .view-header {
@@ -565,7 +569,6 @@
 }
 
 .description-container {
-  margin-top: 8px;
   -moz-margin-start: 6px;
   -moz-box-align: center;
 }
@@ -591,11 +594,11 @@
   -moz-box-align: stretch;
 }
 
+.advancedinfo-container,
 .update-info-container {
   -moz-box-align: center;
 }
 
-.advancedinfo-container,
 .update-available {
   -moz-box-align: end;
 }
@@ -1122,38 +1125,23 @@
   -moz-appearance: none;
   color: black;
   padding: 0 5px;
-  background-color: rgba(151,152,153,.05);
-  background-image: -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0.47) 49%, 
-                                         rgba(231, 232, 233, 0.45) 51%, rgba(225, 226, 229, 0.3));
+  background: -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0) 49%, 
+                                   rgba(211, 212, 213, 0.45) 51%, rgba(225, 226, 229, 0.3));
   background-clip: padding-box;
   border-radius: 3px;
-  border: 1px solid;
-  border-color: rgba(0, 0, 0, 0.12) rgba(0, 0, 0, 0.19) rgba(0, 0, 0, 0.38);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
-              0 0 0 2px rgba(255, 255, 255, 0.1) inset;
-}
-
-.addon-control:not(:active):hover {
-  background-color: hsla(190, 60%, 70%, 0.5);
-  border-color: hsla(190, 50%, 65%, 0.8) hsla(190, 50%, 50%, 0.8) hsla(190, 50%, 40%, 0.8);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
-              0 0 0 1.5px rgba(255, 255, 255, 0.1) inset,
-              0 1px 0 rgba(0, 0, 0, 0.1),
-              0 0 3.5px hsl(190, 90%, 80%);
-  -moz-transition: background-color .4s ease-in,
-                   border-color .3s ease-in,
-                   box-shadow .3s ease-in
+  border: 1px solid rgba(31, 64, 100, 0.4);
+  border-top-color: rgba(31, 64, 100, 0.3);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset,
+              0 0 2px 1px rgba(255, 255, 255, 0.25) inset;
 }
 
 .addon-control:active:hover {
-  background-color: transparent;
-  border-color: rgba(0, 0, 0, 0.65) rgba(0, 0, 0, 0.55) rgba(0, 0, 0, 0.5);
-  box-shadow: 0 0 6.5px rgba(0, 0, 0, 0.4) inset,
-              0 0 2px rgba(0, 0, 0, 0.4) inset,
-              0 1px 0 rgba(255, 255, 255, 0.4);
+  background-color: rgba(61, 76, 92, 0.2);
+  border-color: rgba(39, 53, 68, 0.5);
+  box-shadow: 0 0 3px 1px rgba(39, 53, 68, 0.2) inset;
 }
 
-.addon-control .button-box {
+.addon-control > .button-box {
   padding: 1px;
 }
 
@@ -1183,50 +1171,34 @@
 
 .header-button {
   -moz-appearance: none;
-  margin: 0;
-  background: rgba(151,152,153,.05)
-              -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0.47) 49%, 
-                                   rgba(231, 232, 233, 0.45) 51%, rgba(225, 226, 229, 0.3));
+  padding: 1px 3px;
+  color: #444;
+  text-shadow: 0 0 3px white;
+  background: -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0) 49%, 
+                                   rgba(211, 212, 213, 0.45) 51%, rgba(225, 226, 229, 0.3));
   background-clip: padding-box;
   border-radius: 4.5px;
-  border: 1px solid;
-  border-color: rgba(0, 0, 0, 0.12) rgba(0, 0, 0, 0.19) rgba(0, 0, 0, 0.38);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
-              0 0 0 2px rgba(255, 255, 255, 0.1) inset;
+  border: 1px solid rgba(31, 64, 100, 0.4);
+  border-top-color: rgba(31, 64, 100, 0.3);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset,
+              0 0 2px 1px rgba(255, 255, 255, 0.25) inset;
 }
 
 .header-button[disabled="true"] {
-  -moz-border-top-colors: rgba(0, 0, 0, 0.12) !important;
-  -moz-border-left-colors: rgba(0, 0, 0, 0.19) !important;
-  -moz-border-right-colors: rgba(0, 0, 0, 0.19) !important;
-  -moz-border-bottom-colors: rgba(0, 0, 0, 0.38) !important;
   opacity: 0.8;
 }
 
-.nav-button[disabled="true"] .toolbarbutton-icon {
+.header-button[disabled="true"] > .toolbarbutton-icon {
   opacity: 0.4;
-}
-
-.header-button:not([open="true"]):not([disabled="true"]):not(:active):hover {
-  background-color: hsla(190, 60%, 70%, 0.5);
-  border-color: hsla(190, 50%, 65%, 0.8) hsla(190, 50%, 50%, 0.8) hsla(190, 50%, 40%, 0.8);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3) inset,
-              0 0 0 1.5px rgba(255, 255, 255, 0.1) inset,
-              0 1px 0 rgba(0, 0, 0, 0.1),
-              0 0 3.5px hsl(190, 90%, 80%);
-  -moz-transition: background-color .4s ease-in,
-                   border-color .3s ease-in,
-                   box-shadow .3s ease-in
 }
 
 .header-button:not([disabled="true"]):active:hover,
 .header-button[open="true"] {
-  background-color: transparent;
-  border-color: rgba(0, 0, 0, 0.65) rgba(0, 0, 0, 0.55) rgba(0, 0, 0, 0.5);
-  box-shadow: 0 0 6.5px rgba(0, 0, 0, 0.4) inset,
-              0 0 2px rgba(0, 0, 0, 0.4) inset;
+  background-color: rgba(61, 76, 92, 0.2);
+  border-color: rgba(39, 53, 68, 0.5);
+  box-shadow: 0 0 3px 1px rgba(39, 53, 68, 0.2) inset;
 }
 
-.header-button .toolbarbutton-text {
+.header-button > .toolbarbutton-text {
   display: none;
 }

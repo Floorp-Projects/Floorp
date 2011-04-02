@@ -237,11 +237,11 @@ function test_add_data()
     "INSERT INTO test (id, string, number, nuller, blober) " +
     "VALUES (?, ?, ?, ?, ?)"
   );
-  stmt.bindBlobParameter(4, BLOB, BLOB.length);
-  stmt.bindNullParameter(3);
-  stmt.bindDoubleParameter(2, REAL);
-  stmt.bindStringParameter(1, TEXT);
-  stmt.bindInt32Parameter(0, INTEGER);
+  stmt.bindBlobByIndex(4, BLOB, BLOB.length);
+  stmt.bindByIndex(3, null);
+  stmt.bindByIndex(2, REAL);
+  stmt.bindByIndex(1, TEXT);
+  stmt.bindByIndex(0, INTEGER);
 
   execAsync(stmt);
   stmt.finalize();
@@ -258,7 +258,7 @@ function test_get_data()
   var stmt = makeTestStatement(
     "SELECT string, number, nuller, blober, id FROM test WHERE id = ?"
   );
-  stmt.bindInt32Parameter(0, INTEGER);
+  stmt.bindByIndex(0, INTEGER);
   execAsync(stmt, {}, [
     function(tuple)
     {
@@ -360,7 +360,7 @@ function test_no_listener_works_on_success()
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
-  stmt.bindInt32Parameter(0, 0);
+  stmt.bindByIndex(0, 0);
   stmt.executeAsync();
   stmt.finalize();
 
@@ -373,7 +373,7 @@ function test_no_listener_works_on_results()
   var stmt = makeTestStatement(
     "SELECT ?"
   );
-  stmt.bindInt32Parameter(0, 1);
+  stmt.bindByIndex(0, 1);
   stmt.executeAsync();
   stmt.finalize();
 
@@ -399,7 +399,7 @@ function test_partial_listener_works()
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
-  stmt.bindInt32Parameter(0, 0);
+  stmt.bindByIndex(0, 0);
   stmt.executeAsync({
     handleResult: function(aResultSet)
     {
@@ -432,7 +432,7 @@ function test_immediate_cancellation()
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
-  stmt.bindInt32Parameter(0, 0);
+  stmt.bindByIndex(0, 0);
   execAsync(stmt, {cancel: true});
   stmt.finalize();
   run_next_test();
@@ -446,7 +446,7 @@ function test_double_cancellation()
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
-  stmt.bindInt32Parameter(0, 0);
+  stmt.bindByIndex(0, 0);
   let pendingStatement = execAsync(stmt, {cancel: true});
   // And cancel again - expect an exception
   expectError(Cr.NS_ERROR_UNEXPECTED,
@@ -465,7 +465,7 @@ function test_cancellation_after_execution()
   var stmt = makeTestStatement(
     "DELETE FROM test WHERE id = ?"
   );
-  stmt.bindInt32Parameter(0, 0);
+  stmt.bindByIndex(0, 0);
   let pendingStatement = execAsync(stmt, {returnPending: true});
   // (the statement has fully executed at this point)
   // canceling after the statement has run to completion should not throw!

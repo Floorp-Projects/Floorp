@@ -40,12 +40,13 @@
 #include "nsSocketTransport2.h"
 #include "nsServerSocket.h"
 #include "nsProxyRelease.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsNetError.h"
 #include "nsNetCID.h"
 #include "prnetdb.h"
 #include "prio.h"
+
+using namespace mozilla;
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -71,7 +72,7 @@ PostEvent(nsServerSocket *s, nsServerSocketFunc func)
 //-----------------------------------------------------------------------------
 
 nsServerSocket::nsServerSocket()
-  : mLock(nsnull)
+  : mLock("nsServerSocket.mLock")
   , mFD(nsnull)
   , mAttached(PR_FALSE)
 {
@@ -90,9 +91,6 @@ nsServerSocket::nsServerSocket()
 nsServerSocket::~nsServerSocket()
 {
   Close(); // just in case :)
-
-  if (mLock)
-    nsAutoLock::DestroyLock(mLock);
 
   // release our reference to the STS
   nsSocketTransportService *serv = gSocketTransportService;
@@ -246,7 +244,7 @@ nsServerSocket::OnSocketDetached(PRFileDesc *fd)
     // need to atomically clear mListener.  see our Close() method.
     nsIServerSocketListener *listener = nsnull;
     {
-      nsAutoLock lock(mLock);
+      MutexAutoLock lock(mLock);
       mListener.swap(listener);
     }
     // XXX we need to proxy the release to the listener's target thread to work
@@ -289,13 +287,6 @@ NS_IMETHODIMP
 nsServerSocket::InitWithAddress(const PRNetAddr *aAddr, PRInt32 aBackLog)
 {
   NS_ENSURE_TRUE(mFD == nsnull, NS_ERROR_ALREADY_INITIALIZED);
-
-  if (!mLock)
-  {
-    mLock = nsAutoLock::NewLock("nsServerSocket::mLock");
-    if (!mLock)
-      return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   //
   // configure listening socket...
@@ -353,9 +344,8 @@ fail:
 NS_IMETHODIMP
 nsServerSocket::Close()
 {
-  NS_ENSURE_TRUE(mLock, NS_ERROR_NOT_INITIALIZED);
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     // we want to proxy the close operation to the socket thread if a listener
     // has been set.  otherwise, we should just close the socket here...
     if (!mListener)
@@ -378,7 +368,7 @@ nsServerSocket::AsyncListen(nsIServerSocketListener *aListener)
   NS_ENSURE_TRUE(mFD, NS_ERROR_NOT_INITIALIZED);
   NS_ENSURE_TRUE(mListener == nsnull, NS_ERROR_IN_PROGRESS);
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     nsresult rv = NS_GetProxyForObject(NS_PROXY_TO_CURRENT_THREAD,
                                        NS_GET_IID(nsIServerSocketListener),
                                        aListener,

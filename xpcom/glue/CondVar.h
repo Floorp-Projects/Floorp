@@ -70,6 +70,7 @@ public:
         BlockingResourceBase(aName, eCondVar),
         mLock(&aLock)
     {
+        MOZ_COUNT_CTOR(CondVar);
         // |lock| must necessarily already be known to the deadlock detector
         mCvar = PR_NewCondVar(mLock->mLock);
         if (!mCvar)
@@ -87,6 +88,7 @@ public:
         PR_DestroyCondVar(mCvar);
         mCvar = 0;
         mLock = 0;
+        MOZ_COUNT_DTOR(CondVar);
     }
 
 #ifndef DEBUG

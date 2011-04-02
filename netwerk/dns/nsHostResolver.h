@@ -40,10 +40,11 @@
 
 #include "nscore.h"
 #include "nsAtomicRefcnt.h"
-#include "prcvar.h"
 #include "prclist.h"
 #include "prnetdb.h"
 #include "pldhash.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
 #include "nsISupportsImpl.h"
 
 class nsHostResolver;
@@ -85,6 +86,8 @@ struct nsHostKey
  */
 class nsHostRecord : public PRCList, public nsHostKey
 {
+    typedef mozilla::Mutex Mutex;
+
 public:
     NS_DECL_REFCOUNTED_THREADSAFE(nsHostRecord)
 
@@ -108,7 +111,7 @@ public:
      * the other threads just read it.  therefore the resolver worker
      * thread doesn't need to lock when reading |addr_info|.
      */
-    PRLock      *addr_info_lock;
+    Mutex       *addr_info_lock;
     int          addr_info_gencnt; /* generation count of |addr_info| */
     PRAddrInfo  *addr_info;
     PRNetAddr   *addr;
@@ -171,6 +174,9 @@ public:
  */
 class nsHostResolver
 {
+    typedef mozilla::CondVar CondVar;
+    typedef mozilla::Mutex Mutex;
+
 public:
     /**
      * host resolver instances are reference counted.
@@ -247,8 +253,8 @@ private:
 
     PRUint32      mMaxCacheEntries;
     PRUint32      mMaxCacheLifetime;
-    PRLock       *mLock;
-    PRCondVar    *mIdleThreadCV; // non-null if idle thread
+    Mutex         mLock;
+    CondVar       mIdleThreadCV;
     PRUint32      mNumIdleThreads;
     PRUint32      mThreadCount;
     PRUint32      mActiveAnyThreadCount;

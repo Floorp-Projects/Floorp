@@ -85,7 +85,8 @@
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsCRT.h"
-#include "nsAutoLock.h"
+
+using namespace mozilla;
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://pipnss/locale/security.properties"
 
@@ -159,7 +160,8 @@ class nsAutoAtomic {
 #endif
 
 nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
-  : mNotifiedSecurityState(lis_no_security)
+  : mMonitor("nsSecureBrowserUIImpl.mMonitor")
+  , mNotifiedSecurityState(lis_no_security)
   , mNotifiedToplevelIsEV(PR_FALSE)
   , mNewToplevelSecurityState(STATE_IS_INSECURE)
   , mNewToplevelIsEV(PR_FALSE)
@@ -173,7 +175,6 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
   , mOnStateLocationChangeReentranceDetection(0)
 #endif
 {
-  mMonitor = nsAutoMonitor::NewMonitor("security.secureBrowserUIImplMonitor");
   mTransferringRequests.ops = nsnull;
   ResetStateTracking();
   
@@ -189,8 +190,6 @@ nsSecureBrowserUIImpl::~nsSecureBrowserUIImpl()
     PL_DHashTableFinish(&mTransferringRequests);
     mTransferringRequests.ops = nsnull;
   }
-  if (mMonitor)
-    nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS6(nsSecureBrowserUIImpl,
@@ -278,7 +277,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetState(PRUint32* aState)
 {
-  nsAutoMonitor lock(mMonitor);
+  MonitorAutoEnter lock(mMonitor);
   return MapInternalToExternalState(aState, mNotifiedSecurityState, mNotifiedToplevelIsEV);
 }
 
@@ -342,7 +341,7 @@ nsSecureBrowserUIImpl::GetTooltipText(nsAString& aText)
   nsXPIDLString tooltip;
 
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     state = mNotifiedSecurityState;
     tooltip = mInfoTooltip;
   }
@@ -461,7 +460,7 @@ nsSecureBrowserUIImpl::Notify(nsIDOMHTMLFormElement* aDOMForm,
 
   nsCOMPtr<nsIDOMWindow> window;
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
   }
@@ -497,7 +496,7 @@ nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress* aWebProgress,
 
 void nsSecureBrowserUIImpl::ResetStateTracking()
 {
-  nsAutoMonitor lock(mMonitor);
+  MonitorAutoEnter lock(mMonitor);
 
   mInfoTooltip.Truncate();
   mDocumentRequestsInProgress = 0;
@@ -559,7 +558,7 @@ nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest, nsIS
   // see code that is directly above
 
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     mNewToplevelSecurityStateKnown = PR_TRUE;
     mNewToplevelSecurityState = temp_NewToplevelSecurityState;
     mNewToplevelIsEV = temp_NewToplevelIsEV;
@@ -592,7 +591,7 @@ nsSecureBrowserUIImpl::UpdateSubrequestMembers(nsISupports *securityInfo)
   PRUint32 reqState = GetSecurityStateFromSecurityInfo(securityInfo);
 
   // the code above this line should run without a lock
-  nsAutoMonitor lock(mMonitor);
+  MonitorAutoEnter lock(mMonitor);
 
   if (reqState & STATE_IS_SECURE) {
     if (reqState & STATE_SECURE_LOW || reqState & STATE_SECURE_MED) {
@@ -725,7 +724,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   nsCOMPtr<nsINetUtil> ioService;
 
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
     isViewSource = mIsViewSource;
@@ -737,7 +736,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
     if (ioService)
     {
-      nsAutoMonitor lock(mMonitor);
+      MonitorAutoEnter lock(mMonitor);
       mIOService = ioService;
     }
   }
@@ -1014,7 +1013,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     // The listing of a request in mTransferringRequests
     // means, there has already been data transfered.
 
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_ADD);
     
     return NS_OK;
@@ -1026,8 +1025,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       aProgressStateFlags & STATE_IS_REQUEST)
   {
-    { /* scope for the nsAutoMonitor */
-      nsAutoMonitor lock(mMonitor);
+    { /* scope for the MonitorAutoEnter */
+      MonitorAutoEnter lock(mMonitor);
       PLDHashEntryHdr *entry = PL_DHashTableOperate(&mTransferringRequests, aRequest, PL_DHASH_LOOKUP);
       if (PL_DHASH_ENTRY_IS_BUSY(entry))
       {
@@ -1085,7 +1084,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     PRInt32 newSubNo = 0;
 
     {
-      nsAutoMonitor lock(mMonitor);
+      MonitorAutoEnter lock(mMonitor);
       inProgress = (mDocumentRequestsInProgress!=0);
 
       if (allowSecurityStateChange && !inProgress)
@@ -1155,7 +1154,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     }
 
     {
-      nsAutoMonitor lock(mMonitor);
+      MonitorAutoEnter lock(mMonitor);
 
       if (allowSecurityStateChange && !inProgress)
       {
@@ -1191,7 +1190,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     nsCOMPtr<nsISecurityEventSink> temp_ToplevelEventSink;
 
     {
-      nsAutoMonitor lock(mMonitor);
+      MonitorAutoEnter lock(mMonitor);
       temp_DocumentRequestsInProgress = mDocumentRequestsInProgress;
       if (allowSecurityStateChange)
       {
@@ -1219,7 +1218,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     }
 
     {
-      nsAutoMonitor lock(mMonitor);
+      MonitorAutoEnter lock(mMonitor);
       if (allowSecurityStateChange)
       {
         mToplevelEventSink = temp_ToplevelEventSink;
@@ -1264,7 +1263,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
       PRBool temp_NewToplevelSecurityStateKnown;
       {
-        nsAutoMonitor lock(mMonitor);
+        MonitorAutoEnter lock(mMonitor);
         temp_NewToplevelSecurityStateKnown = mNewToplevelSecurityStateKnown;
       }
 
@@ -1310,7 +1309,7 @@ nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
 // returns true if our overall state has changed and we must send out notifications
 PRBool nsSecureBrowserUIImpl::UpdateMyFlags(PRBool &showWarning, lockIconState &warnSecurityState)
 {
-  nsAutoMonitor lock(mMonitor);
+  MonitorAutoEnter lock(mMonitor);
   PRBool mustTellTheWorld = PR_FALSE;
 
   lockIconState newSecurityState;
@@ -1460,7 +1459,7 @@ nsresult nsSecureBrowserUIImpl::TellTheWorld(PRBool showWarning,
   PRBool temp_NotifiedToplevelIsEV;
 
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     temp_ToplevelEventSink = mToplevelEventSink;
     temp_NotifiedSecurityState = mNotifiedSecurityState;
     temp_NotifiedToplevelIsEV = mNotifiedToplevelIsEV;
@@ -1547,7 +1546,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   }
 
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     if (updateIsViewSource) {
       mIsViewSource = temp_IsViewSource;
     }
@@ -1595,7 +1594,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 
   PRBool temp_NewToplevelSecurityStateKnown;
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     temp_NewToplevelSecurityStateKnown = mNewToplevelSecurityStateKnown;
   }
 
@@ -1646,7 +1645,7 @@ nsSecureBrowserUIImpl::GetSSLStatus(nsISupports** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);
 
-  nsAutoMonitor lock(mMonitor);
+  MonitorAutoEnter lock(mMonitor);
 
   switch (mNotifiedSecurityState)
   {
@@ -1698,7 +1697,7 @@ nsSecureBrowserUIImpl::GetBundleString(const PRUnichar* name,
   nsCOMPtr<nsIStringBundle> temp_StringBundle;
 
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     temp_StringBundle = mStringBundle;
   }
 
@@ -1842,7 +1841,7 @@ ConfirmEnteringSecure()
 
   nsCOMPtr<nsIDOMWindow> window;
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
   }
@@ -1865,7 +1864,7 @@ ConfirmEnteringWeak()
 
   nsCOMPtr<nsIDOMWindow> window;
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
   }
@@ -1888,7 +1887,7 @@ ConfirmLeavingSecure()
 
   nsCOMPtr<nsIDOMWindow> window;
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
   }
@@ -1911,7 +1910,7 @@ ConfirmMixedMode()
 
   nsCOMPtr<nsIDOMWindow> window;
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
   }
@@ -1941,7 +1940,7 @@ ConfirmPostToInsecure()
 
   nsCOMPtr<nsIDOMWindow> window;
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
   }
@@ -1973,7 +1972,7 @@ ConfirmPostToInsecureFromSecure()
 
   nsCOMPtr<nsIDOMWindow> window;
   {
-    nsAutoMonitor lock(mMonitor);
+    MonitorAutoEnter lock(mMonitor);
     window = do_QueryReferent(mWindow);
     NS_ASSERTION(window, "Window has gone away?!");
   }

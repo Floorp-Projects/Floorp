@@ -111,6 +111,12 @@ struct nsSize;
 struct nsMargin;
 struct CharacterDataChangeInfo;
 
+namespace mozilla {
+namespace layers {
+class Layer;
+}
+}
+
 typedef class nsIFrame nsIBox;
 
 /**
@@ -518,6 +524,7 @@ class nsIFrame : public nsQueryFrame
 public:
   typedef mozilla::FramePropertyDescriptor FramePropertyDescriptor;
   typedef mozilla::FrameProperties FrameProperties;
+  typedef mozilla::layers::Layer Layer;
 
   NS_DECL_QUERYFRAME_TARGET(nsIFrame)
 
@@ -1465,7 +1472,11 @@ public:
     // optional breaks to prevent min-width from ending up bigger than
     // pref-width.
     void ForceBreak(nsIRenderingContext *aRenderingContext);
-    void OptionallyBreak(nsIRenderingContext *aRenderingContext);
+
+    // If the break here is actually taken, aHyphenWidth must be added to the
+    // width of the current line.
+    void OptionallyBreak(nsIRenderingContext *aRenderingContext,
+                         nscoord aHyphenWidth = 0);
 
     // The last text frame processed so far in the current line, when
     // the last characters in that text frame are relevant for line
@@ -2015,10 +2026,12 @@ public:
    * As Invalidate above, except that this should be called when the
    * rendering that has changed is performed using layers so we can avoid
    * updating the contents of ThebesLayers.
+   * If the frame has a dedicated layer rendering this display item, we
+   * return that layer.
    * @param aDisplayItemKey must not be zero; indicates the kind of display
    * item that is being invalidated.
    */
-  void InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey);
+  Layer* InvalidateLayer(const nsRect& aDamageRect, PRUint32 aDisplayItemKey);
 
   /**
    * Invalidate the area of the parent that's covered by the transformed

@@ -41,8 +41,9 @@
 #include "nsStreamUtils.h"
 #include "nsNetSegmentUtils.h"
 #include "nsNetUtil.h"
-#include "nsAutoLock.h"
 #include "prlog.h"
+
+using namespace mozilla;
 
 #if defined(PR_LOGGING)
 //
@@ -55,7 +56,7 @@ static PRLogModuleInfo *gStreamCopierLog = nsnull;
 //-----------------------------------------------------------------------------
 
 nsAsyncStreamCopier::nsAsyncStreamCopier()
-    : mLock(nsnull)
+    : mLock("nsAsyncStreamCopier.mLock")
     , mMode(NS_ASYNCCOPY_VIA_READSEGMENTS)
     , mChunkSize(nsIOService::gDefaultSegmentSize)
     , mStatus(NS_OK)
@@ -71,14 +72,12 @@ nsAsyncStreamCopier::nsAsyncStreamCopier()
 nsAsyncStreamCopier::~nsAsyncStreamCopier()
 {
     LOG(("Destroying nsAsyncStreamCopier @%x\n", this));
-    if (mLock)
-        nsAutoLock::DestroyLock(mLock);
 }
 
 PRBool
 nsAsyncStreamCopier::IsComplete(nsresult *status)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     if (status)
         *status = mStatus;
     return !mIsPending;
@@ -92,7 +91,7 @@ nsAsyncStreamCopier::Complete(nsresult status)
     nsCOMPtr<nsIRequestObserver> observer;
     nsCOMPtr<nsISupports> ctx;
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         mCopierCtx = nsnull;
 
         if (mIsPending) {
@@ -157,7 +156,7 @@ nsAsyncStreamCopier::Cancel(nsresult status)
 {
     nsCOMPtr<nsISupports> copierCtx;
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         if (!mIsPending)
             return NS_OK;
         copierCtx.swap(mCopierCtx);
@@ -228,11 +227,6 @@ nsAsyncStreamCopier::Init(nsIInputStream *source,
                           PRBool closeSink)
 {
     NS_ASSERTION(sourceBuffered || sinkBuffered, "at least one stream must be buffered");
-
-    NS_ASSERTION(!mLock, "already initialized");
-    mLock = nsAutoLock::NewLock("nsAsyncStreamCopier::mLock");
-    if (!mLock)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     if (chunkSize == 0)
         chunkSize = nsIOService::gDefaultSegmentSize;

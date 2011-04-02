@@ -240,6 +240,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
 
     JS_RestoreExceptionState(cx, exceptionState);
     JS_LeaveCrossCompartmentCall(call);
+    call = NULL;
 
     if(string) {
         stringval = STRING_TO_JSVAL(string);

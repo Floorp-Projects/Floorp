@@ -2557,8 +2557,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIFrame** aNewFrame)
   viewportFrame->Init(nsnull, nsnull, nsnull);
 
   // Bind the viewport frame to the root view
-  nsIView*        rootView;
-  mPresShell->GetViewManager()->GetRootView(rootView);
+  nsIView* rootView = mPresShell->GetViewManager()->GetRootView();
   viewportFrame->SetView(rootView);
 
   nsContainerFrame::SyncFrameViewProperties(mPresShell->GetPresContext(), viewportFrame,
@@ -11627,6 +11626,8 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
     return;
   }
 
+  nsPresContext *presContext = mPresShell->GetPresContext();
+  presContext->SetProcessingRestyles(PR_TRUE);
   // Recalculate all of the style contexts for the document
   // Note that we can ignore the return value of ComputeStyleChangeFor
   // because we never need to reframe the root frame
@@ -11642,6 +11643,14 @@ nsCSSFrameConstructor::RebuildAllStyleData(nsChangeHint aExtraHint)
                                                     mPendingRestyles, PR_TRUE);
   // Process the required changes
   ProcessRestyledFrames(changeList);
+  presContext->SetProcessingRestyles(PR_FALSE);
+
+  // Make sure that we process any pending animation restyles from the
+  // above style change.  Note that we can *almost* implement the above
+  // by just posting a style change -- except we really need to restyle
+  // the root frame rather than the root element's primary frame.
+  ProcessPendingRestyles();
+
   // Tell the style set it's safe to destroy the old rule tree.  We
   // must do this after the ProcessRestyledFrames call in case the
   // change list has frame reconstructs in it (since frames to be

@@ -36,14 +36,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Mutex.h"
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIPipe.h"
 #include "nsIEventTarget.h"
 #include "nsIRunnable.h"
 #include "nsISafeOutputStream.h"
-#include "nsAutoLock.h"
 #include "nsString.h"
+
+using namespace mozilla;
 
 //-----------------------------------------------------------------------------
 
@@ -245,7 +247,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsAStreamCopier()
-        : mLock(nsnull)
+        : mLock("nsAStreamCopier.mLock")
         , mCallback(nsnull)
         , mClosure(nsnull)
         , mChunkSize(0)
@@ -261,8 +263,6 @@ public:
     // virtual since subclasses call superclass Release()
     virtual ~nsAStreamCopier()
     {
-        if (mLock)
-            nsAutoLock::DestroyLock(mLock);
     }
 
     // kick off the async copy...
@@ -284,10 +284,6 @@ public:
         mCloseSource = closeSource;
         mCloseSink = closeSink;
 
-        mLock = nsAutoLock::NewLock("nsAStreamCopier::mLock");
-        if (!mLock)
-            return NS_ERROR_OUT_OF_MEMORY;
-
         mAsyncSource = do_QueryInterface(mSource);
         mAsyncSink = do_QueryInterface(mSink);
 
@@ -307,7 +303,7 @@ public:
         nsresult cancelStatus;
         PRBool canceled;
         {
-            nsAutoLock lock(mLock);
+            MutexAutoLock lock(mLock);
             canceled = mCanceled;
             cancelStatus = mCancelStatus;
         }
@@ -324,7 +320,7 @@ public:
                 copyFailed = NS_FAILED(sourceCondition) ||
                              NS_FAILED(sinkCondition) || n == 0;
 
-                nsAutoLock lock(mLock);
+                MutexAutoLock lock(mLock);
                 canceled = mCanceled;
                 cancelStatus = mCancelStatus;
             }
@@ -407,7 +403,7 @@ public:
 
     nsresult Cancel(nsresult aReason)
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         if (mCanceled)
             return NS_ERROR_FAILURE;
 
@@ -439,7 +435,7 @@ public:
         Process();
 
         // clear "in process" flag and post any pending continuation event
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         mEventInProcess = PR_FALSE;
         if (mEventIsPending) {
             mEventIsPending = PR_FALSE;
@@ -458,7 +454,7 @@ public:
         // just let that existing event take care of posting the real
         // continuation event.
 
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         return PostContinuationEvent_Locked();
     }
 
@@ -483,7 +479,7 @@ protected:
     nsCOMPtr<nsIAsyncInputStream>  mAsyncSource;
     nsCOMPtr<nsIAsyncOutputStream> mAsyncSink;
     nsCOMPtr<nsIEventTarget>       mTarget;
-    PRLock                        *mLock;
+    Mutex                          mLock;
     nsAsyncCopyCallbackFun         mCallback;
     void                          *mClosure;
     PRUint32                       mChunkSize;

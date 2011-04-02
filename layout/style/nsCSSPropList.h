@@ -2165,6 +2165,27 @@ CSS_PROP_TEXTRESET(
     kTextDecorationKTable,
     offsetof(nsStyleTextReset, mTextDecoration),
     eStyleAnimType_EnumU8)
+CSS_PROP_TEXTRESET(
+    -moz-text-decoration-color,
+    text_decoration_color,
+    CSS_PROP_DOMPROP_PREFIXED(TextDecorationColor),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
+        CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+    VARIANT_HCK,
+    kBorderColorKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Custom)
+CSS_PROP_TEXTRESET(
+    -moz-text-decoration-style,
+    text_decoration_style,
+    CSS_PROP_DOMPROP_PREFIXED(TextDecorationStyle),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    VARIANT_HK,
+    kTextDecorationStyleKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_Custom)
 CSS_PROP_TEXT(
     text-indent,
     text_indent,

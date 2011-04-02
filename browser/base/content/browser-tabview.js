@@ -263,12 +263,6 @@ let TabView = {
   },
 
   // ----------
-  enableSearch: function TabView_enableSearch(event) {
-    if (this._window)
-      this._window.UI.enableSearch(event);
-  },
-
-  // ----------
   // Adds new key commands to the browser, for invoking the Tab Candy UI
   // and for switching between groups of tabs when outside of the Tab Candy UI.
   _setBrowserKeyHandlers: function TabView__setBrowserKeyHandlers() {

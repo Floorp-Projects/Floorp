@@ -48,7 +48,7 @@ function setup()
 
   stmt = createStatement("INSERT INTO t1 (x) VALUES (?1)");
   // insert LATIN_ae, but search on LATIN_AE
-  stmt.bindStringParameter(0, "foo%20" + LATIN1_ae + "/_bar");
+  stmt.bindByIndex(0, "foo%20" + LATIN1_ae + "/_bar");
   stmt.execute();
   stmt.finalize();
 }
@@ -60,7 +60,7 @@ function test_escape_for_like_ascii()
   // verify that we escaped / _ and %
   do_check_eq(paramForLike, "oo//bar/_baz/%20chees");
   // prepend and append with % for "contains"
-  stmt.bindStringParameter(0, "%" + paramForLike + "%"); 
+  stmt.bindByIndex(0, "%" + paramForLike + "%"); 
   stmt.executeStep();
   do_check_eq("foo/bar_baz%20cheese", stmt.getString(0));
   stmt.finalize();
@@ -73,7 +73,7 @@ function test_escape_for_like_non_ascii()
   // verify that we escaped / _ and %
   do_check_eq(paramForLike, "oo/%20" + LATIN1_AE + "///_ba");
   // prepend and append with % for "contains"
-  stmt.bindStringParameter(0, "%" + paramForLike + "%");
+  stmt.bindByIndex(0, "%" + paramForLike + "%");
   stmt.executeStep();
   do_check_eq("foo%20" + LATIN1_ae + "/_bar", stmt.getString(0));
   stmt.finalize();

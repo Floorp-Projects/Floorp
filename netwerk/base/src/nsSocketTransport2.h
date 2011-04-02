@@ -42,10 +42,10 @@
 #define ENABLE_SOCKET_TRACING
 #endif
 
+#include "mozilla/Mutex.h"
 #include "nsSocketTransportService2.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
-#include "nsInt64.h"
 
 #include "nsISocketTransport.h"
 #include "nsIInterfaceRequestor.h"
@@ -134,6 +134,8 @@ class nsSocketTransport : public nsASocketHandler
                         , public nsIDNSListener
                         , public nsIClassInfo
 {
+    typedef mozilla::Mutex Mutex;
+
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSITRANSPORT
@@ -254,7 +256,7 @@ private:
     // socket input/output objects.  these may be accessed on any thread with
     // the exception of some specific methods (XXX).
 
-    PRLock     *mLock;  // protects members in this section
+    Mutex       mLock;  // protects members in this section
     PRFileDesc *mFD;
     nsrefcnt    mFDref;       // mFD is closed when mFDref goes to zero.
     PRBool      mFDconnected; // mFD is available to consumer when TRUE.

@@ -4623,10 +4623,17 @@ simple_stress_test()
 
   SimpleTransactionFactory factory;
 
+  PRInt32 iterations =
+#ifdef DEBUG
+  10
+#else
   //
   // 1500 iterations sends 1,125,750 transactions through the system!!
   //
-  return stress_test(&factory, 1500);
+  1500
+#endif
+  ;
+  return stress_test(&factory, iterations);
 }
 
 nsresult
@@ -4652,10 +4659,17 @@ aggregation_stress_test()
 
   AggregateTransactionFactory factory(3, 4);
 
+  PRInt32 iterations =
+#ifdef DEBUG
+  10
+#else
   //
   // 500 iterations sends 2,630,250 transactions through the system!!
   //
-  return stress_test(&factory, 500);
+  500
+#endif
+  ;
+  return stress_test(&factory, iterations);
 }
 
 nsresult
@@ -4681,10 +4695,17 @@ aggregation_batch_stress_test()
 
   AggregateTransactionFactory factory(3, 4, BATCH_FLAG);
 
+  PRInt32 iterations =
+#ifdef DEBUG
+  10
+#else
   //
   // 500 iterations sends 2,630,250 transactions through the system!!
   //
-  return stress_test(&factory, 500);
+  iterations = 500
+#endif
+  ;
+  return stress_test(&factory, iterations);
 }
 
 int

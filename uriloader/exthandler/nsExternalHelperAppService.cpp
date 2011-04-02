@@ -1579,7 +1579,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   mIsFileChannel = fileChan != nsnull;
 
   // Get content length
-  mContentLength.mValue = GetContentLengthAsInt64(request);
+  mContentLength = GetContentLengthAsInt64(request);
 
   nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(request, &rv));
   // Determine whether a new window was opened specifically for this request

@@ -39,6 +39,7 @@
 #include <stdlib.h>
 #include "prlog.h"
 
+#include "mozilla/Mutex.h"
 #include "nsIInputStreamTee.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -46,8 +47,8 @@
 #include "nsAutoPtr.h"
 #include "nsIEventTarget.h"
 #include "nsThreadUtils.h"
-#include <prlock.h>
-#include "nsAutoLock.h"
+
+using namespace mozilla;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gInputStreamTeeLog = PR_NewLogModule("nsInputStreamTee");
@@ -68,7 +69,7 @@ public:
     void InvalidateSink();
 
 private:
-    ~nsInputStreamTee() { if (mLock) nsAutoLock::DestroyLock(mLock); }
+    ~nsInputStreamTee() {}
 
     nsresult TeeSegment(const char *buf, PRUint32 count);
     
@@ -81,7 +82,7 @@ private:
     nsCOMPtr<nsIEventTarget>  mEventTarget;
     nsWriteSegmentFun         mWriter;  // for implementing ReadSegments
     void                      *mClosure; // for implementing ReadSegments
-    PRLock                    *mLock; // synchronize access to mSinkIsValid
+    nsAutoPtr<Mutex>          mLock; // synchronize access to mSinkIsValid
     bool                      mSinkIsValid; // False if TeeWriteEvent fails 
 };
 
@@ -163,14 +164,14 @@ nsInputStreamTee::nsInputStreamTee(): mLock(nsnull)
 bool
 nsInputStreamTee::SinkIsValid()
 {
-    nsAutoLock lock(mLock); 
+    MutexAutoLock lock(*mLock); 
     return mSinkIsValid; 
 }
 
 void
 nsInputStreamTee::InvalidateSink()
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(*mLock);
     mSinkIsValid = false;
 }
 
@@ -324,11 +325,7 @@ nsInputStreamTee::SetEventTarget(nsIEventTarget *anEventTarget)
     mEventTarget = anEventTarget;
     if (mEventTarget) {
         // Only need synchronization if this is an async tee
-        mLock = nsAutoLock::NewLock("nsInputStreamTee::mLock");
-        if (!mLock) {
-            NS_ERROR("Failed to allocate lock for nsInputStreamTee");
-            return NS_ERROR_OUT_OF_MEMORY;
-        }
+        mLock = new Mutex("nsInputStreamTee.mLock");
     }
     return NS_OK;
 }

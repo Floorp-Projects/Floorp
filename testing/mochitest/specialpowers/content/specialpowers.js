@@ -148,6 +148,15 @@ SpecialPowers.prototype = {
                  .getInterface(Ci.nsIDOMWindow)
                  .QueryInterface(Ci.nsIDOMChromeWindow);
   },
+  _getDocShell: function(window) {
+    return window.QueryInterface(Ci.nsIInterfaceRequestor)
+                 .getInterface(Ci.nsIWebNavigation)
+                 .QueryInterface(Ci.nsIDocShell);
+  },
+  _getMUDV: function(window) {
+    return this._getDocShell(window).contentViewer
+               .QueryInterface(Ci.nsIMarkupDocumentViewer);
+  },
   _getAutoCompletePopup: function(window) {
     return this._getTopChromeWindow(window).document
                                            .getElementById("PopupAutoComplete");
@@ -173,6 +182,19 @@ SpecialPowers.prototype = {
   },
   removeChromeEventListener: function(type, listener, capture) {
     removeEventListener(type, listener, capture);
+  },
+
+  getFullZoom: function(window) {
+    return this._getMUDV(window).fullZoom;
+  },
+  setFullZoom: function(window, zoom) {
+    this._getMUDV(window).fullZoom = zoom;
+  },
+  getTextZoom: function(window) {
+    return this._getMUDV(window).textZoom;
+  },
+  setTextZoom: function(window, zoom) {
+    this._getMUDV(window).textZoom = zoom;
   },
 
   createSystemXHR: function() {

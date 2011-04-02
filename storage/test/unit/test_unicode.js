@@ -45,17 +45,17 @@ function setup()
   getOpenedDatabase().createTable("test", "id INTEGER PRIMARY KEY, name TEXT");
 
   var stmt = createStatement("INSERT INTO test (name, id) VALUES (?1, ?2)");
-  stmt.bindStringParameter(0, LATIN1_AE);
-  stmt.bindInt32Parameter(1, 1);
+  stmt.bindByIndex(0, LATIN1_AE);
+  stmt.bindByIndex(1, 1);
   stmt.execute();
-  stmt.bindStringParameter(0, "A");
-  stmt.bindInt32Parameter(1, 2);
+  stmt.bindByIndex(0, "A");
+  stmt.bindByIndex(1, 2);
   stmt.execute();
-  stmt.bindStringParameter(0, "b");
-  stmt.bindInt32Parameter(1, 3);
+  stmt.bindByIndex(0, "b");
+  stmt.bindByIndex(1, 3);
   stmt.execute();
-  stmt.bindStringParameter(0, LATIN1_ae);
-  stmt.bindInt32Parameter(1, 4);
+  stmt.bindByIndex(0, LATIN1_ae);
+  stmt.bindByIndex(1, 4);
   stmt.execute();
   stmt.finalize();
 }
@@ -73,7 +73,7 @@ function test_upper_ascii()
 function test_upper_non_ascii()
 {
   var stmt = createStatement("SELECT name, id FROM test WHERE name = upper(?1)");
-  stmt.bindStringParameter(0, LATIN1_ae);
+  stmt.bindByIndex(0, LATIN1_ae);
   do_check_true(stmt.executeStep());
   do_check_eq(LATIN1_AE, stmt.getString(0));
   do_check_eq(1, stmt.getInt32(1));
@@ -94,7 +94,7 @@ function test_lower_ascii()
 function test_lower_non_ascii()
 {
   var stmt = createStatement("SELECT name, id FROM test WHERE name = lower(?1)");
-  stmt.bindStringParameter(0, LATIN1_AE);
+  stmt.bindByIndex(0, LATIN1_AE);
   do_check_true(stmt.executeStep());
   do_check_eq(LATIN1_ae, stmt.getString(0));
   do_check_eq(4, stmt.getInt32(1));
@@ -105,7 +105,7 @@ function test_lower_non_ascii()
 function test_like_search_different()
 {
   var stmt = createStatement("SELECT COUNT(*) FROM test WHERE name LIKE ?1");
-  stmt.bindStringParameter(0, LATIN1_AE);
+  stmt.bindByIndex(0, LATIN1_AE);
   do_check_true(stmt.executeStep());
   do_check_eq(2, stmt.getInt32(0));
   stmt.finalize();
@@ -114,7 +114,7 @@ function test_like_search_different()
 function test_like_search_same()
 {
   var stmt = createStatement("SELECT COUNT(*) FROM test WHERE name LIKE ?1");
-  stmt.bindStringParameter(0, LATIN1_ae);
+  stmt.bindByIndex(0, LATIN1_ae);
   do_check_true(stmt.executeStep());
   do_check_eq(2, stmt.getInt32(0));
   stmt.finalize();

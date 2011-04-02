@@ -43,7 +43,6 @@
 #endif
 
 #include "nsResProtocolHandler.h"
-#include "nsAutoLock.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"

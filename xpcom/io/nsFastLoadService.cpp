@@ -42,7 +42,6 @@
 #include "pldhash.h"
 
 #include "nsAppDirectoryServiceDefs.h"
-#include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsFastLoadFile.h"
 #include "nsFastLoadService.h"
@@ -57,10 +56,12 @@
 #include "nsISeekableStream.h"
 #include "nsISupports.h"
 
+using namespace mozilla;
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsFastLoadService, nsIFastLoadService)
 
 nsFastLoadService::nsFastLoadService()
-  : mLock(nsnull),
+  : mLock("nsFastLoadService.mLock"),
     mFastLoadPtrMap(nsnull),
     mDirection(0)
 {
@@ -75,8 +76,6 @@ nsFastLoadService::~nsFastLoadService()
 
     if (mFastLoadPtrMap)
         PL_DHashTableDestroy(mFastLoadPtrMap);
-    if (mLock)
-        nsAutoLock::DestroyLock(mLock);
 }
 
 nsresult
@@ -89,12 +88,6 @@ nsFastLoadService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     nsFastLoadService* fastLoadService = new nsFastLoadService();
     if (!fastLoadService)
         return NS_ERROR_OUT_OF_MEMORY;
-
-    fastLoadService->mLock = nsAutoLock::NewLock("nsFastLoadService::mLock");
-    if (!fastLoadService->mLock) {
-        delete fastLoadService;
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
 
     NS_ADDREF(fastLoadService);
     nsresult rv = fastLoadService->QueryInterface(aIID, aResult);
@@ -165,7 +158,7 @@ nsFastLoadService::NewFastLoadFile(const char* aBaseName, nsIFile* *aResult)
 NS_IMETHODIMP
 nsFastLoadService::NewInputStream(nsIFile *aFile, nsIObjectInputStream* *aResult)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     nsCOMPtr<nsIObjectInputStream> stream;
     nsresult rv = NS_NewFastLoadFileReader(getter_AddRefs(stream), aFile);
@@ -182,7 +175,7 @@ NS_IMETHODIMP
 nsFastLoadService::NewOutputStream(nsIOutputStream* aDestStream,
                                    nsIObjectOutputStream* *aResult)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     return NS_NewFastLoadFileWriter(aResult, aDestStream, mFileIO);
 }
@@ -197,7 +190,7 @@ nsFastLoadService::GetInputStream(nsIObjectInputStream* *aResult)
 NS_IMETHODIMP
 nsFastLoadService::SetInputStream(nsIObjectInputStream* aStream)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     mInputStream = aStream;
     return NS_OK;
 }
@@ -212,7 +205,7 @@ nsFastLoadService::GetOutputStream(nsIObjectOutputStream* *aResult)
 NS_IMETHODIMP
 nsFastLoadService::SetOutputStream(nsIObjectOutputStream* aStream)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     mOutputStream = aStream;
     return NS_OK;
 }
@@ -227,7 +220,7 @@ nsFastLoadService::GetFileIO(nsIFastLoadFileIO* *aResult)
 NS_IMETHODIMP
 nsFastLoadService::SetFileIO(nsIFastLoadFileIO* aFileIO)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     mFileIO = aFileIO;
     return NS_OK;
 }
@@ -246,7 +239,7 @@ nsFastLoadService::HasMuxedDocument(const char* aURISpec, PRBool *aResult)
     nsCOMPtr<nsIFastLoadFileControl> control;
 
     *aResult = PR_FALSE;
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     if (mInputStream) {
         control = do_QueryInterface(mInputStream);
@@ -269,7 +262,7 @@ nsFastLoadService::StartMuxedDocument(nsISupports* aURI, const char* aURISpec,
 {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     nsCOMPtr<nsIFastLoadFileControl> control;
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     // Try for an input stream first, in case aURISpec's data is multiplexed
     // in the current FastLoad file.
@@ -313,7 +306,7 @@ nsFastLoadService::SelectMuxedDocument(nsISupports* aURI, nsISupports** aResult)
 {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     nsCOMPtr<nsIFastLoadFileControl> control;
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     // Try to select the reader, if any; then only if the URI was not in the
     // file already, select the writer/updater.
@@ -343,7 +336,7 @@ nsFastLoadService::EndMuxedDocument(nsISupports* aURI)
 {
     nsresult rv = NS_ERROR_NOT_AVAILABLE;
     nsCOMPtr<nsIFastLoadFileControl> control;
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     // Try to end the document identified by aURI in the reader, if any; then
     // only if the URI was not in the file already, end the writer/updater.
@@ -366,7 +359,7 @@ nsFastLoadService::EndMuxedDocument(nsISupports* aURI)
 NS_IMETHODIMP
 nsFastLoadService::AddDependency(nsIFile* aFile)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     nsCOMPtr<nsIFastLoadWriteControl> control(do_QueryInterface(mOutputStream));
     if (!control)
@@ -434,7 +427,7 @@ nsFastLoadService::GetFastLoadReferent(nsISupports* *aPtrAddr)
     NS_ASSERTION(*aPtrAddr == nsnull,
                  "aPtrAddr doesn't point to null nsFastLoadPtr<T>::mRawAddr?");
 
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     if (!mFastLoadPtrMap || !mInputStream)
         return NS_OK;
 
@@ -477,7 +470,7 @@ nsFastLoadService::ReadFastLoadPtr(nsIObjectInputStream* aInputStream,
 
     nsresult rv;
     PRUint32 nextOffset;
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     rv = aInputStream->Read32(&nextOffset);
     if (NS_FAILED(rv))
@@ -525,7 +518,7 @@ nsFastLoadService::WriteFastLoadPtr(nsIObjectOutputStream* aOutputStream,
         return NS_ERROR_UNEXPECTED;
 
     nsresult rv;
-    nsAutoLock lock(mLock);     // serialize writes to aOutputStream
+    MutexAutoLock lock(mLock);     // serialize writes to aOutputStream
 
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(aOutputStream));
     if (!seekable)

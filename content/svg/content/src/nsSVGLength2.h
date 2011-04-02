@@ -134,9 +134,11 @@ private:
   float GetUnitScaleFactor(nsSVGElement *aSVGElement, PRUint8 aUnitType) const;
   float GetUnitScaleFactor(nsSVGSVGElement *aCtx, PRUint8 aUnitType) const;
 
+  // SetBaseValue and SetAnimValue set the value in user units
   void SetBaseValue(float aValue, nsSVGElement *aSVGElement);
   void SetBaseValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
   void SetAnimValue(float aValue, nsSVGElement *aSVGElement);
+  void SetAnimValueInSpecifiedUnits(float aValue, nsSVGElement *aSVGElement);
   nsresult NewValueSpecifiedUnits(PRUint16 aUnitType, float aValue,
                                   nsSVGElement *aSVGElement);
   nsresult ConvertToSpecifiedUnits(PRUint16 aUnitType, nsSVGElement *aSVGElement);

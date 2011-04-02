@@ -23,6 +23,9 @@
 #define prototype_recon_macroblock(sym) \
     void sym(const struct vp8_recon_rtcd_vtable *rtcd, MACROBLOCKD *x)
 
+#define prototype_build_intra_predictors(sym) \
+    void sym(MACROBLOCKD *x)
+
 struct vp8_recon_rtcd_vtable;
 
 #if ARCH_X86 || ARCH_X86_64
@@ -73,9 +76,23 @@ extern prototype_recon_macroblock(vp8_recon_recon_mb);
 #endif
 extern prototype_recon_macroblock(vp8_recon_recon_mby);
 
+#ifndef vp8_recon_build_intra_predictors_mby
+#define vp8_recon_build_intra_predictors_mby vp8_build_intra_predictors_mby
+#endif
+extern prototype_build_intra_predictors\
+    (vp8_recon_build_intra_predictors_mby);
+
+#ifndef vp8_recon_build_intra_predictors_mby_s
+#define vp8_recon_build_intra_predictors_mby_s vp8_build_intra_predictors_mby_s
+#endif
+extern prototype_build_intra_predictors\
+    (vp8_recon_build_intra_predictors_mby_s);
+
+
 typedef prototype_copy_block((*vp8_copy_block_fn_t));
 typedef prototype_recon_block((*vp8_recon_fn_t));
 typedef prototype_recon_macroblock((*vp8_recon_mb_fn_t));
+typedef prototype_build_intra_predictors((*vp8_build_intra_pred_fn_t));
 typedef struct vp8_recon_rtcd_vtable
 {
     vp8_copy_block_fn_t  copy16x16;
@@ -86,6 +103,8 @@ typedef struct vp8_recon_rtcd_vtable
     vp8_recon_fn_t       recon4;
     vp8_recon_mb_fn_t    recon_mb;
     vp8_recon_mb_fn_t    recon_mby;
+    vp8_build_intra_pred_fn_t  build_intra_predictors_mby_s;
+    vp8_build_intra_pred_fn_t  build_intra_predictors_mby;
 } vp8_recon_rtcd_vtable_t;
 
 #if CONFIG_RUNTIME_CPU_DETECT
