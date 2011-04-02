@@ -16,12 +16,13 @@
  * The Original Code is Gecko code.
  *
  * The Initial Developer of the Original Code is
- *   Mozilla Corporation
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -40,6 +41,7 @@
 #include "nsDOMError.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "CheckedInt.h"
+#include "nsMathUtils.h"
 
 typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleSetterType)(const nsAString &, nsISupports *);
 typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleGetterType)(nsAString &, nsISupports **, PRInt32 *);
@@ -223,17 +225,22 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 wi, hi;
-    if (!JS_ValueToECMAInt32(cx, argv[0], &wi) ||
-        !JS_ValueToECMAInt32(cx, argv[1], &hi))
-        return JS_FALSE;
+    jsdouble width, height;
+    if (!JS_ValueToNumber(cx, argv[0], &width) ||
+        !JS_ValueToNumber(cx, argv[1], &height))
+        return false;
 
-    if (wi <= 0 || hi <= 0)
+    if (!NS_finite(width) || !NS_finite(height))
+        return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+    if (!width || !height)
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
 
-    uint32 w = (uint32) wi;
-    uint32 h = (uint32) hi;
+    int32 wi = JS_DoubleToInt32(width);
+    int32 hi = JS_DoubleToInt32(height);
 
+    uint32 w = PR_ABS(wi);
+    uint32 h = PR_ABS(hi);
     return CreateImageData(cx, w, h, NULL, 0, 0, vp);
 }
 
@@ -257,20 +264,40 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 x, y;
-    int32 wi, hi;
-    if (!JS_ValueToECMAInt32(cx, argv[0], &x) ||
-        !JS_ValueToECMAInt32(cx, argv[1], &y) ||
-        !JS_ValueToECMAInt32(cx, argv[2], &wi) ||
-        !JS_ValueToECMAInt32(cx, argv[3], &hi))
-        return JS_FALSE;
+    jsdouble xd, yd, width, height;
+    if (!JS_ValueToNumber(cx, argv[0], &xd) ||
+        !JS_ValueToNumber(cx, argv[1], &yd) ||
+        !JS_ValueToNumber(cx, argv[2], &width) ||
+        !JS_ValueToNumber(cx, argv[3], &height))
+        return false;
 
-    if (wi <= 0 || hi <= 0)
+    if (!NS_finite(xd) || !NS_finite(yd) ||
+        !NS_finite(width) || !NS_finite(height))
+        return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+    if (!width || !height)
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
 
-    uint32 w = (uint32) wi;
-    uint32 h = (uint32) hi;
+    int32 x = JS_DoubleToInt32(xd);
+    int32 y = JS_DoubleToInt32(yd);
+    int32 wi = JS_DoubleToInt32(width);
+    int32 hi = JS_DoubleToInt32(height);
 
+    // Handle negative width and height by flipping the rectangle over in the
+    // relevant direction.
+    uint32 w, h;
+    if (width < 0) {
+        w = -wi;
+        x -= w;
+    } else {
+        w = wi;
+    }
+    if (height < 0) {
+        h = -hi;
+        y -= h;
+    } else {
+        h = hi;
+    }
     return CreateImageData(cx, w, h, self, x, y, vp);
 }
 
