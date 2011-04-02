@@ -7230,6 +7230,24 @@ ok(ctx.createImageData(1, 1) !== null, "ctx.createImageData(1, 1) !== null");
 }
 </script>
 
+<!-- [[[ test_2d.imageData.create1.basic.html ]]] -->
+
+<p>Canvas test: 2d.imageData.create1.basic - bug 630040</p>
+<!-- Testing: createImageData(imgdata) exists and returns something -->
+<canvas id="c254a" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_imageData_create1_basic() {
+
+var canvas = document.getElementById('c254a');
+var ctx = canvas.getContext('2d');
+
+ok(ctx.createImageData(ctx.createImageData(1, 1)) != null, "ctx.createImageData(ctx.createImageData(1, 1)) != null");
+
+
+}
+</script>
+
 <!-- [[[ test_2d.imageData.create.initial.html ]]] -->
 
 <p>Canvas test: 2d.imageData.create.initial - bug 433004</p>
@@ -7249,6 +7267,35 @@ ok(imgdata.width > 0, "imgdata.width > 0");
 var isTransparentBlack = true;
 for (var i = 0; i < imgdata.data.length; ++i)
     if (imgdata.data[i] !== 0)
+        isTransparentBlack = false;
+ok(isTransparentBlack, "isTransparentBlack");
+
+
+}
+</script>
+
+<!-- [[[ test_2d.imageData.create1.initial.html ]]] -->
+
+<p>Canvas test: 2d.imageData.create1.initial - bug 630040</p>
+<!-- Testing: createImageData(imgdata) returns transparent black data of the right size -->
+<canvas id="c255a" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_imageData_create1_initial() {
+
+var canvas = document.getElementById('c255a');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 100, 50);
+var imgdata1 = ctx.getImageData(0, 0, 10, 20);
+var imgdata2 = ctx.createImageData(imgdata1);
+ok(imgdata2.data.length == imgdata1.data.length, "imgdata2.data.length == imgdata1.data.length");
+ok(imgdata2.width == imgdata1.width, "imgdata2.width == imgdata1.width");
+ok(imgdata2.height == imgdata1.height, "imgdata2.height == imgdata1.height");
+var isTransparentBlack = true;
+for (var i = 0; i < imgdata2.data.length; ++i)
+    if (imgdata2.data[i] !== 0)
         isTransparentBlack = false;
 ok(isTransparentBlack, "isTransparentBlack");
 
@@ -7464,6 +7511,38 @@ todo(!_thrown_outer, 'should not throw exception');
 }
 </script>
 
+<!-- [[[ test_2d.imageData.create1.type.html ]]] -->
+
+<p>Canvas test: 2d.imageData.create1.type - bug 630040</p>
+<!-- Testing: createImageData(imgdata) returns an ImageData object containing a CanvasPixelArray object -->
+<canvas id="c261a" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_imageData_create1_type() {
+
+var canvas = document.getElementById('c261a');
+var ctx = canvas.getContext('2d');
+
+var _thrown_outer = false;
+try {
+
+todo(window.ImageData !== undefined, "window.ImageData !== undefined");
+todo(window.CanvasPixelArray !== undefined, "window.CanvasPixelArray !== undefined");
+window.ImageData.prototype.thisImplementsImageData = true;
+window.CanvasPixelArray.prototype.thisImplementsCanvasPixelArray = true;
+var imgdata = ctx.createImageData(ctx.createImageData(1, 1));
+todo(imgdata.thisImplementsImageData, "imgdata.thisImplementsImageData");
+todo(imgdata.data.thisImplementsCanvasPixelArray, "imgdata.data.thisImplementsCanvasPixelArray");
+
+} catch (e) {
+    _thrown_outer = true;
+}
+todo(!_thrown_outer, 'should not throw exception');
+
+
+}
+</script>
+
 <!-- [[[ test_2d.imageData.create.zero.html ]]] -->
 
 <p>Canvas test: 2d.imageData.create.zero - bug 433004</p>
@@ -7485,6 +7564,26 @@ var _thrown = undefined; try {
 var _thrown = undefined; try {
   ctx.createImageData(0, 0);
 } catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.INDEX_SIZE_ERR, "should throw INDEX_SIZE_ERR");
+
+
+}
+</script>
+
+<!-- [[[ test_2d.imageData.create1.zero.html ]]] -->
+
+<p>Canvas test: 2d.imageData.create1.zero - bug 630040</p>
+<!-- Testing: createImageData(null) throws NOT_SUPPORTED_ERR -->
+<canvas id="c262a" width="100" height="50"><p class="fallback">FAIL (fallback content)</p></canvas>
+<script>
+
+function test_2d_imageData_create1_zero() {
+
+var canvas = document.getElementById('c262a');
+var ctx = canvas.getContext('2d');
+
+var _thrown = undefined; try {
+  ctx.createImageData(null);
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
 
 
 }
@@ -10552,7 +10651,7 @@ if (ctx.createImageData) {
 } catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
     var _thrown = undefined; try {
   ctx.createImageData(1);
-} catch (e) { _thrown = e }; todo(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
+} catch (e) { _thrown = e }; ok(_thrown && _thrown.code == DOMException.NOT_SUPPORTED_ERR, "should throw NOT_SUPPORTED_ERR");
 }
 if (ctx.getImageData) {
     var _thrown = undefined; try {
@@ -22237,9 +22336,19 @@ function runTests() {
   ok(false, "unexpected exception thrown in: test_2d_imageData_create_basic");
  }
  try {
+  test_2d_imageData_create1_basic();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_imageData_create1_basic");
+ }
+ try {
   test_2d_imageData_create_initial();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_imageData_create_initial");
+ }
+ try {
+  test_2d_imageData_create1_initial();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_imageData_create1_initial");
  }
  try {
   test_2d_imageData_create_large();
@@ -22272,9 +22381,19 @@ function runTests() {
   ok(false, "unexpected exception thrown in: test_2d_imageData_create_type");
  }
  try {
+  test_2d_imageData_create1_type();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_imageData_create1_type");
+ }
+ try {
   test_2d_imageData_create_zero();
  } catch (e) {
   ok(false, "unexpected exception thrown in: test_2d_imageData_create_zero");
+ }
+ try {
+  test_2d_imageData_create1_zero();
+ } catch (e) {
+  ok(false, "unexpected exception thrown in: test_2d_imageData_create1_zero");
  }
  try {
   test_2d_imageData_get_basic();
