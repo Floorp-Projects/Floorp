@@ -23,6 +23,7 @@
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
  *   Ms2ger <ms2ger@gmail.com>
+ *   Yury <async.processingjs@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -213,6 +214,32 @@ CreateImageData(JSContext* cx,
     return true;
 }
 
+static bool
+GetImageDataDimensions(JSContext *cx, JSObject *dataObject, uint32 *width, uint32 *height)
+{
+    jsval temp;
+    int32 wi, hi;
+    
+    // Need to check that dataObject is ImageData object. That's hard for the moment 
+    // because they're just vanilla objects in our implementation.
+    // Let's guess, if the object has valid width and height then it's suitable
+    // for this operation.
+    if (!JS_GetProperty(cx, dataObject, "width", &temp) ||
+        !JS_ValueToECMAInt32(cx, temp, &wi))
+        return false;
+
+    if (!JS_GetProperty(cx, dataObject, "height", &temp) ||
+        !JS_ValueToECMAInt32(cx, temp, &hi))
+        return false;
+
+    if (wi <= 0 || hi <= 0)
+        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
+
+    *width = (uint32)wi;
+    *height = (uint32)hi;
+    return true;
+}
+
 static JSBool
 nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -220,10 +247,25 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
 
     /* Note: this doesn't need JS_THIS_OBJECT */
 
-    if (argc < 2)
+    if (argc < 1)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
     jsval *argv = JS_ARGV(cx, vp);
+
+    if (argc == 1) {
+        // The specification asks to throw NOT_SUPPORTED if first argument is NULL,
+        // An object is expected, so throw an exception for all primitives.
+        if (JSVAL_IS_PRIMITIVE(argv[0]))
+            return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+        JSObject *dataObject = JSVAL_TO_OBJECT(argv[0]);
+
+        uint32 data_width, data_height;
+        if (!GetImageDataDimensions(cx, dataObject, &data_width, &data_height))
+            return false;
+
+        return CreateImageData(cx, data_width, data_height, NULL, 0, 0, vp);
+    }
 
     jsdouble width, height;
     if (!JS_ValueToNumber(cx, argv[0], &width) ||
@@ -332,25 +374,14 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
         !JS_ValueToECMAInt32(cx, argv[2], &y))
         return JS_FALSE;
 
-    int32 wi, hi;
+    uint32 w, h;
     JSObject *darray;
 
     // grab width, height, and the dense array from the dataObject
     js::AutoValueRooter tv(cx);
 
-    if (!JS_GetProperty(cx, dataObject, "width", tv.jsval_addr()) ||
-        !JS_ValueToECMAInt32(cx, tv.jsval_value(), &wi))
+    if (!GetImageDataDimensions(cx, dataObject, &w, &h))
         return JS_FALSE;
-
-    if (!JS_GetProperty(cx, dataObject, "height", tv.jsval_addr()) ||
-        !JS_ValueToECMAInt32(cx, tv.jsval_value(), &hi))
-        return JS_FALSE;
-
-    if (wi <= 0 || hi <= 0)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    uint32 w = (uint32) wi;
-    uint32 h = (uint32) hi;
 
     // the optional dirty rect
     PRBool hasDirtyRect = PR_FALSE;
