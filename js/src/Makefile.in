@@ -637,8 +637,29 @@ check-jit-test-valgrind::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
 
+
+# jstests doesn't have a --jitflags option, so we need to loop, updating the
+# exit code (RC) after each invocation.
+# FIXME: MethodJIT doesn't work for 1 test case (bug 644393), so
+# --no-extensions is set to skip that test. Remove as soon as possible.
+check-jstests:
+	RC=0; \
+	for f in `echo "$(JITFLAGS)" | tr ',' '\n'`; \
+		do \
+			$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/tests/jstests.py \
+				--tinderbox --no-progress \
+				--no-extensions \
+				--timeout 300 \
+				--args="`echo $$f | sed 's/\(.\)/ -\1/g'`" \
+				$(DIST)/bin/js$(BIN_SUFFIX); \
+			RC=$$(( $$RC || $$?)); \
+		done; \
+	exit $$RC
+
+
+
 ifndef WINCE
-check:: check-jit-test
+check:: check-jit-test check-jstests
 check-valgrind:: check-jit-test-valgrind
 endif
 
