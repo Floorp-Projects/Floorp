@@ -43,6 +43,16 @@ def check_manifest(test_list):
     else:
         print 'All test files are listed in manifests'
 
+def print_tinderbox_result(label, path, message=None, skip=False):
+    result = label
+    result += " | " + path
+    result += " |" + OPTIONS.shell_args
+    if message:
+        result += " | " + message
+    if skip:
+        result += ' | (SKIP)'
+    print result
+
 class TestTask:
     js_cmd_prefix = None
 
@@ -82,7 +92,7 @@ class ResultsSink:
     def push(self, output):
         if isinstance(output, NullTestOutput):
             if OPTIONS.tinderbox:
-                print '%s | %s (SKIP)' % ('TEST-KNOWN-FAIL', output.test.path)
+                print_tinderbox_result('TEST-KNOWN-FAIL', output.test.path, skip=True)
             self.counts[2] += 1
             self.n += 1
         else:
@@ -114,10 +124,10 @@ class ResultsSink:
                         label = self.LABELS[(sub_ok, result.test.expect, result.test.random)][0]
                         if label == 'TEST-UNEXPECTED-PASS':
                             label = 'TEST-PASS (EXPECTED RANDOM)'
-                        print '%s | %s | %s' % (label, result.test.path, msg)
-                print '%s | %s' % (self.LABELS[(result.result, 
-                                              result.test.expect, result.test.random)][0],
-                                 result.test.path)
+                        print_tinderbox_result(label, result.test.path, message=msg)
+                print_tinderbox_result(self.LABELS[
+                    (result.result, result.test.expect, result.test.random)][0],
+                    result.test.path)
            
         if self.pb:
             self.pb.label = '[%4d|%4d|%4d]'%tuple(self.counts)
