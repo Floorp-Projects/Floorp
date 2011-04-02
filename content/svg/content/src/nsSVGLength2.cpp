@@ -447,25 +447,26 @@ nsSVGLength2::GetAnimValueString(nsAString & aValueAsString)
 void
 nsSVGLength2::SetBaseValue(float aValue, nsSVGElement *aSVGElement)
 {
-  mBaseVal = aValue * GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
-  mIsBaseSet = PR_TRUE;
-  if (!mIsAnimated) {
-    mAnimVal = mBaseVal;
-  }
-#ifdef MOZ_SMIL
-  else {
-    aSVGElement->AnimationNeedsResample();
-  }
-#endif
-  aSVGElement->DidChangeLength(mAttrEnum, PR_TRUE);
+  SetBaseValueInSpecifiedUnits(aValue * GetUnitScaleFactor(aSVGElement,
+                                                           mSpecifiedUnitType),
+                               aSVGElement);
+}
+
+void
+nsSVGLength2::SetAnimValueInSpecifiedUnits(float aValue,
+                                           nsSVGElement* aSVGElement)
+{
+  mAnimVal = aValue;
+  mIsAnimated = PR_TRUE;
+  aSVGElement->DidAnimateLength(mAttrEnum);
 }
 
 void
 nsSVGLength2::SetAnimValue(float aValue, nsSVGElement *aSVGElement)
 {
-  mAnimVal = aValue * GetUnitScaleFactor(aSVGElement, mSpecifiedUnitType);
-  mIsAnimated = PR_TRUE;
-  aSVGElement->DidAnimateLength(mAttrEnum);
+  SetAnimValueInSpecifiedUnits(aValue * GetUnitScaleFactor(aSVGElement,
+                                                           mSpecifiedUnitType),
+                               aSVGElement);
 }
 
 nsresult
@@ -533,7 +534,7 @@ void
 nsSVGLength2::SMILLength::ClearAnimValue()
 {
   if (mVal->mIsAnimated) {
-    mVal->SetAnimValue(mVal->mBaseVal, mSVGElement);
+    mVal->SetAnimValueInSpecifiedUnits(mVal->mBaseVal, mSVGElement);
     mVal->mIsAnimated = PR_FALSE;
   }  
 }

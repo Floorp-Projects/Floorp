@@ -43,16 +43,16 @@
 #include "nsIComponentRegistrar.h"
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
-#include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 
 #include "nscore.h"
 #include "nspr.h"
-#include "prmon.h"
 
 #include "nsITestProxy.h"
 #include "nsISupportsPrimitives.h"
 
+#include "mozilla/Monitor.h"
+#include "mozilla/Mutex.h"
 #include "nsIRunnable.h"
 #include "nsIProxyObjectManager.h"
 #include "nsXPCOMCIDInternal.h"
@@ -60,6 +60,8 @@
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsISupportsUtils.h"
+
+using namespace mozilla;
 
 /*
 
@@ -97,7 +99,9 @@ class ProxyTest : public nsIRunnable,
 {
 public:
     ProxyTest()
-        : mCounter(0)
+        : mCounterLock("ProxyTest.mCounterLock")
+        , mEvilMonitor("ProxyTest.mEvilMonitor")
+        , mCounter(0)
     {}
 
     NS_IMETHOD Run()
@@ -124,11 +128,6 @@ public:
 
         if (!NS_IsMainThread())
             return NS_ERROR_UNEXPECTED;
-
-        mCounterLock = nsAutoLock::NewLock(__FILE__ " counter lock");
-        NS_ENSURE_TRUE(mCounterLock, NS_ERROR_OUT_OF_MEMORY);
-        mEvilMonitor = nsAutoMonitor::NewMonitor(__FILE__ " evil monitor");
-        NS_ENSURE_TRUE(mEvilMonitor, NS_ERROR_OUT_OF_MEMORY);
 
         /* note that we don't have an event queue... */
 
@@ -175,14 +174,14 @@ public:
             foundInterface = NS_ISUPPORTS_CAST(nsIRunnable*, this);
         } else if ( aIID.Equals(NS_GET_IID(nsISupportsPrimitive)) ) {
             {
-                nsAutoLock counterLock(mCounterLock);
+                MutexAutoLock counterLock(mCounterLock);
                 switch(mCounter) {
                     case 0:
                         ++mCounter;
                     {
                         /* be evil here and hang */
-                        nsAutoUnlock counterUnlock(mCounterLock);
-                        nsAutoMonitor evilMonitor(mEvilMonitor);
+                        MutexAutoUnlock counterUnlock(mCounterLock);
+                        MonitorAutoEnter evilMonitor(mEvilMonitor);
                         nsresult rv = evilMonitor.Wait();
                         NS_ENSURE_SUCCESS(rv, rv);
                         break;
@@ -191,8 +190,8 @@ public:
                         ++mCounter;
                     {
                         /* okay, we had our fun, un-hang */
-                        nsAutoUnlock counterUnlock(mCounterLock);
-                        nsAutoMonitor evilMonitor(mEvilMonitor);
+                        MutexAutoUnlock counterUnlock(mCounterLock);
+                        MonitorAutoEnter evilMonitor(mEvilMonitor);
                         nsresult rv = evilMonitor.Notify();
                         NS_ENSURE_SUCCESS(rv, rv);
                         break;
@@ -228,8 +227,8 @@ protected:
     NS_DECL_OWNINGTHREAD
 
 private:
-    PRLock* mCounterLock;
-    PRMonitor* mEvilMonitor;
+    Mutex mCounterLock;
+    Monitor mEvilMonitor;
     PRInt32 mCounter;
     nsCOMPtr<nsIThread> mThreadOne;
     nsCOMPtr<nsIThread> mThreadTwo;

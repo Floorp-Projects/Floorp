@@ -3323,7 +3323,8 @@ nsDocShell::GetChildSHEntry(PRInt32 aChildOffset, nsISHEntry ** aResult)
 
 NS_IMETHODIMP
 nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
-                            PRInt32 aChildOffset, PRUint32 loadType)
+                            PRInt32 aChildOffset, PRUint32 loadType,
+                            PRBool aCloneChildren)
 {
     nsresult rv;
 
@@ -3367,8 +3368,7 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
             nsCOMPtr<nsISHEntry> nextEntry;
             aCloneRef->GetID(&cloneID);
             rv = CloneAndReplace(currentEntry, this, cloneID, aNewEntry,
-                                 loadType == LOAD_PUSHSTATE,
-                                 getter_AddRefs(nextEntry));
+                                 aCloneChildren, getter_AddRefs(nextEntry));
 
             if (NS_SUCCEEDED(rv)) {
                 nsCOMPtr<nsISHistoryInternal>
@@ -3384,14 +3384,15 @@ nsDocShell::AddChildSHEntry(nsISHEntry * aCloneRef, nsISHEntry * aNewEntry,
             do_QueryInterface(GetAsSupports(mParent), &rv);
         if (parent) {
             rv = parent->AddChildSHEntry(aCloneRef, aNewEntry, aChildOffset,
-                                         loadType);
+                                         loadType, aCloneChildren);
         }          
     }
     return rv;
 }
 
 nsresult
-nsDocShell::DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset)
+nsDocShell::DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset,
+                              PRBool aCloneChildren)
 {
     /* You will get here when you are in a subframe and
      * a new url has been loaded on you. 
@@ -3412,7 +3413,8 @@ nsDocShell::DoAddChildSHEntry(nsISHEntry* aNewEntry, PRInt32 aChildOffset)
     nsCOMPtr<nsIDocShellHistory> parent =
         do_QueryInterface(GetAsSupports(mParent), &rv);
     if (parent) {
-        rv = parent->AddChildSHEntry(mOSHE, aNewEntry, aChildOffset, mLoadType);
+        rv = parent->AddChildSHEntry(mOSHE, aNewEntry, aChildOffset, mLoadType,
+                                     aCloneChildren);
     }
 
 
@@ -4758,8 +4760,7 @@ nsDocShell::GetVisibility(PRBool * aVisibility)
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
 
     // get the root view
-    nsIView *view = nsnull; // views are not ref counted
-    NS_ENSURE_SUCCESS(vm->GetRootView(view), NS_ERROR_FAILURE);
+    nsIView *view = vm->GetRootView(); // views are not ref counted
     NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
 
     // if our root view is hidden, we are not visible
@@ -5886,7 +5887,9 @@ nsDocShell::OnStateChange(nsIWebProgress * aProgress, nsIRequest * aRequest,
 
                 // This is a document.write(). Get the made-up url
                 // from the channel and store it in session history.
-                rv = AddToSessionHistory(uri, wcwgChannel, nsnull,
+                // Pass false for aCloneChildren, since we're creating
+                // a new DOM here.
+                rv = AddToSessionHistory(uri, wcwgChannel, nsnull, PR_FALSE,
                                          getter_AddRefs(mLSHE));
                 SetCurrentURI(uri, aRequest, PR_TRUE);
                 // Save history state of the previous page
@@ -7047,8 +7050,7 @@ nsDocShell::RestoreFromHistory()
     if (oldPresShell) {
         nsIViewManager *vm = oldPresShell->GetViewManager();
         if (vm) {
-            nsIView *oldRootView = nsnull;
-            vm->GetRootView(oldRootView);
+            nsIView *oldRootView = vm->GetRootView();
 
             if (oldRootView) {
                 rootViewSibling = oldRootView->GetNextSibling();
@@ -7255,9 +7257,7 @@ nsDocShell::RestoreFromHistory()
     nsDocShell::GetPresShell(getter_AddRefs(shell));
 
     nsIViewManager *newVM = shell ? shell->GetViewManager() : nsnull;
-    nsIView *newRootView = nsnull;
-    if (newVM)
-        newVM->GetRootView(newRootView);
+    nsIView *newRootView = newVM ? newVM->GetRootView() : nsnull;
 
     // Insert the new root view at the correct location in the view tree.
     if (rootViewParent) {
@@ -7350,7 +7350,7 @@ nsDocShell::RestoreFromHistory()
             // When we insert the root view above the resulting invalidate is
             // dropped because painting is suppressed in the presshell until we
             // call Thaw. So we issue the invalidate here.
-            newVM->GetRootView(newRootView);
+            newRootView = newVM->GetRootView();
             if (newRootView) {
                 newVM->UpdateView(newRootView, NS_VMREFRESH_NO_SYNC);
             }
@@ -7436,7 +7436,8 @@ nsDocShell::CreateContentViewer(const char *aContentType,
             OnLoadingSite(failedChannel, PR_TRUE, PR_FALSE);
         } else if (failedURI) {
             mURIResultedInDocument = PR_TRUE;
-            OnNewURI(failedURI, nsnull, nsnull, mLoadType, PR_TRUE, PR_FALSE);
+            OnNewURI(failedURI, nsnull, nsnull, mLoadType, PR_TRUE, PR_FALSE,
+                     PR_FALSE);
         }
 
         // Be sure to have a correct mLSHE, it may have been cleared by
@@ -8329,7 +8330,10 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             if (mOSHE) {
                 mOSHE->GetOwner(getter_AddRefs(owner));
             }
-            OnNewURI(aURI, nsnull, owner, mLoadType, PR_TRUE, PR_TRUE);
+            // Pass true for aCloneSHChildren, since we're not
+            // changing documents here, so all of our subframes are
+            // still relevant to the new session history entry.
+            OnNewURI(aURI, nsnull, owner, mLoadType, PR_TRUE, PR_TRUE, PR_TRUE);
 
             nsCOMPtr<nsIInputStream> postData;
             PRUint32 pageIdent = PR_UINT32_MAX;
@@ -9299,7 +9303,7 @@ nsDocShell::SetupReferrerFromChannel(nsIChannel * aChannel)
 PRBool
 nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
                      PRUint32 aLoadType, PRBool aFireOnLocationChange,
-                     PRBool aAddToGlobalHistory)
+                     PRBool aAddToGlobalHistory, PRBool aCloneSHChildren)
 {
     NS_PRECONDITION(aURI, "uri is null");
     NS_PRECONDITION(!aChannel || !aOwner, "Shouldn't have both set");
@@ -9470,7 +9474,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel, nsISupports* aOwner,
              *.Create a Entry for it and add it to SH, if this is the
              * rootDocShell
              */
-            (void) AddToSessionHistory(aURI, aChannel, aOwner,
+            (void) AddToSessionHistory(aURI, aChannel, aOwner, aCloneSHChildren,
                                        getter_AddRefs(mLSHE));
         }
 
@@ -9526,8 +9530,9 @@ nsDocShell::OnLoadingSite(nsIChannel * aChannel, PRBool aFireOnLocationChange,
     NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
     NS_ENSURE_TRUE(uri, PR_FALSE);
 
+    // Pass false for aCloneSHChildren, since we're loading a new page here.
     return OnNewURI(uri, aChannel, nsnull, mLoadType, aFireOnLocationChange,
-                    aAddToGlobalHistory);
+                    aAddToGlobalHistory, PR_FALSE);
 
 }
 
@@ -9542,7 +9547,8 @@ nsDocShell::SetReferrerURI(nsIURI * aURI)
 //*****************************************************************************
 
 nsresult
-nsDocShell::StringifyJSValVariant(nsIVariant *aData, nsAString &aResult)
+nsDocShell::StringifyJSValVariant(JSContext *aCx, nsIVariant *aData,
+                                  nsAString &aResult)
 {
     nsresult rv;
     aResult.Truncate();
@@ -9553,28 +9559,32 @@ nsDocShell::StringifyJSValVariant(nsIVariant *aData, nsAString &aResult)
     rv = aData->GetAsJSVal(&jsData);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
-    // Now get the JSContext associated with the current document.
-    // First get the current document.
-    nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
-    NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
+    nsCOMPtr<nsIJSContextStack> contextStack;
+    JSContext *cx = aCx;
+    if (!cx) {
+        // Now get the JSContext associated with the current document.
+        // First get the current document.
+        nsCOMPtr<nsIDocument> document = do_GetInterface(GetAsSupports(this));
+        NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-    // Get the JSContext from the document, like we do in
-    // nsContentUtils::GetContextFromDocument().
-    nsIScriptGlobalObject *sgo = document->GetScopeObject();
-    NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
+        // Get the JSContext from the document, like we do in
+        // nsContentUtils::GetContextFromDocument().
+        nsIScriptGlobalObject *sgo = document->GetScopeObject();
+        NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
 
-    nsIScriptContext *scx = sgo->GetContext();
-    NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
+        nsIScriptContext *scx = sgo->GetContext();
+        NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
 
-    JSContext *cx = (JSContext *)scx->GetNativeContext();
+        cx = (JSContext *)scx->GetNativeContext();
 
-    // If our json call triggers a JS-to-C++ call, we want that call to use cx
-    // as the context.  So we push cx onto the context stack.
-    nsCOMPtr<nsIJSContextStack> contextStack =
-        do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+        // If our json call triggers a JS-to-C++ call, we want that call to use
+        // aCx as the context.  So we push aCx onto the context stack.
+        contextStack =
+            do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
 
-    contextStack->Push(cx);
+        contextStack->Push(cx);
+    }
 
     nsCOMPtr<nsIJSON> json = do_GetService("@mozilla.org/dom/json;1");
     if(json) {
@@ -9585,15 +9595,20 @@ nsDocShell::StringifyJSValVariant(nsIVariant *aData, nsAString &aResult)
         rv = NS_ERROR_FAILURE;
     }
 
-    // Always pop the stack!
-    contextStack->Pop(&cx);
+    if (contextStack) {
+        if (NS_FAILED(rv)) {
+            JS_ClearPendingException(cx);
+        }
+
+        contextStack->Pop(&cx);
+    }
 
     return rv;
 }
 
 NS_IMETHODIMP
 nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
-                     const nsAString& aURL, PRBool aReplace)
+                     const nsAString& aURL, PRBool aReplace, JSContext* aCx)
 {
     // Implements History.pushState and History.replaceState
 
@@ -9646,7 +9661,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
             return NS_ERROR_DOM_SECURITY_ERR;
         nsCOMPtr<nsIPrincipal> origPrincipal = origDocument->NodePrincipal();
 
-        rv = StringifyJSValVariant(aData, dataStr);
+        rv = StringifyJSValVariant(aCx, aData, dataStr);
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsCOMPtr<nsIDocument> newDocument =
@@ -9785,7 +9800,9 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         GetCurScrollPos(ScrollOrientation_Y, &cy);
         mOSHE->SetScrollPosition(cx, cy);
 
-        rv = AddToSessionHistory(newURI, nsnull, nsnull,
+        // Since we're not changing which page we have loaded, pass
+        // true for aCloneChildren.
+        rv = AddToSessionHistory(newURI, nsnull, nsnull, PR_TRUE,
                                  getter_AddRefs(newSHEntry));
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -9880,7 +9897,8 @@ nsDocShell::ShouldAddToSessionHistory(nsIURI * aURI)
 
 nsresult
 nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
-                                nsISupports* aOwner, nsISHEntry ** aNewEntry)
+                                nsISupports* aOwner, PRBool aCloneChildren,
+                                nsISHEntry ** aNewEntry)
 {
     NS_PRECONDITION(aURI, "uri is null");
     NS_PRECONDITION(!aChannel || !aOwner, "Shouldn't have both set");
@@ -10008,9 +10026,9 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
 
 
     if (root == static_cast<nsIDocShellTreeItem *>(this) && mSessionHistory) {
-        // Bug 629559: Detect if this is an anchor navigation and clone the
-        // session history in that case too
-        if (mLoadType == LOAD_PUSHSTATE && mOSHE) {
+        // If we need to clone our children onto the new session
+        // history entry, do so now.
+        if (aCloneChildren && mOSHE) {
             PRUint32 cloneID;
             mOSHE->GetID(&cloneID);
             nsCOMPtr<nsISHEntry> newEntry;
@@ -10046,7 +10064,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI, nsIChannel * aChannel,
         // This is a subframe.
         if (!mOSHE || !LOAD_TYPE_HAS_FLAGS(mLoadType,
                                            LOAD_FLAGS_REPLACE_HISTORY))
-            rv = DoAddChildSHEntry(entry, mChildOffset);
+            rv = DoAddChildSHEntry(entry, mChildOffset, aCloneChildren);
     }
 
     // Return the new SH entry...

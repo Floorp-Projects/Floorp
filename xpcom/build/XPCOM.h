@@ -163,7 +163,6 @@
 
 #include "nsArrayEnumerator.h"
 #include "nsArrayUtils.h"
-#include "nsAutoLock.h"
 #include "nsCRTGlue.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDeque.h"

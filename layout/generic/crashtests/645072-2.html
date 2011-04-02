@@ -1,0 +1,17 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+<script> 
+ 
+function boom()
+{
+  document.documentElement.offsetHeight;
+  document.getElementById("f").appendChild(document.createTextNode("\u00AD"));
+  document.documentElement.offsetHeight;
+}
+ 
+</script> 
+</head> 
+<body onload="boom();"><fieldset id="f"> </fieldset></body> 
+</html>
+

@@ -49,7 +49,7 @@ function test_noScanningDownloads()
     "SELECT * " +
     "FROM moz_downloads " +
     "WHERE state = ?1");
-  stmt.bindInt32Parameter(0, nsIDownloadManager.DOWNLOAD_SCANNING);
+  stmt.bindByIndex(0, nsIDownloadManager.DOWNLOAD_SCANNING);
 
   do_check_false(stmt.executeStep());
   stmt.reset();

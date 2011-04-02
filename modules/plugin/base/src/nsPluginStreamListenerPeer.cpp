@@ -969,7 +969,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIRequest *request,
       brr->GetStartRange(&absoluteOffset64);
       
       // XXX handle 64-bit for real
-      PRInt32 absoluteOffset = (PRInt32)nsInt64(absoluteOffset64);
+      PRInt32 absoluteOffset = (PRInt32)PRInt64(absoluteOffset64);
       
       // we need to track how much data we have forwarded to the
       // plugin.
@@ -1049,7 +1049,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
     PRInt64 absoluteOffset64 = LL_ZERO;
     brr->GetStartRange(&absoluteOffset64);
     // XXX support 64-bit offsets
-    PRInt32 absoluteOffset = (PRInt32)nsInt64(absoluteOffset64);
+    PRInt32 absoluteOffset = (PRInt32)PRInt64(absoluteOffset64);
     
     nsPRUintKey key(absoluteOffset);
     

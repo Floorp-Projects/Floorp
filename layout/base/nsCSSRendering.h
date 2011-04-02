@@ -286,15 +286,6 @@ struct nsCSSRendering {
                                      PRUint8              aEndBevelSide = 0,
                                      nscoord              aEndBevelOffset = 0);
 
-  enum {
-    DECORATION_STYLE_NONE   = 0,
-    DECORATION_STYLE_SOLID  = 1,
-    DECORATION_STYLE_DOTTED = 2,
-    DECORATION_STYLE_DASHED = 3,
-    DECORATION_STYLE_DOUBLE = 4,
-    DECORATION_STYLE_WAVY   = 5
-  };
-
   /**
    * Function for painting the decoration lines for the text.
    * NOTE: aPt, aLineSize, aAscent and aOffset are non-rounded device pixels,
@@ -313,8 +304,8 @@ struct nsCSSRendering {
    *                              NS_STYLE_TEXT_DECORATION_UNDERLINE or
    *                              NS_STYLE_TEXT_DECORATION_OVERLINE or
    *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
-   *     @param aStyle            the style of the decoration line (See above
-   *                              enum names).
+   *     @param aStyle            the style of the decoration line such as
+   *                              NS_STYLE_TEXT_DECORATION_STYLE_*.
    *     @param aDescentLimit     If aDescentLimit is zero or larger and the
    *                              underline overflows from the descent space,
    *                              the underline should be lifted up as far as
@@ -353,8 +344,8 @@ struct nsCSSRendering {
    *                              NS_STYLE_TEXT_DECORATION_UNDERLINE or
    *                              NS_STYLE_TEXT_DECORATION_OVERLINE or
    *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
-   *     @param aStyle            the style of the decoration line (See above
-   *                              enum names).
+   *     @param aStyle            the style of the decoration line such as
+   *                              NS_STYLE_TEXT_DECORATION_STYLE_*.
    *     @param aDescentLimit     If aDescentLimit is zero or larger and the
    *                              underline overflows from the descent space,
    *                              the underline should be lifted up as far as

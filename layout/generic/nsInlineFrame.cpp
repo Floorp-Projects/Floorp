@@ -922,6 +922,22 @@ nsInlineFrame::GetBaseline() const
   return ascent + GetUsedBorderAndPadding().top;
 }
 
+nscoord
+nsInlineFrame::GetCaretBaseline() const
+{
+  nscoord baseline;
+  if (mRect.height == 0) {
+    // Empty inline frames will be pushed down in the line, so we need to
+    // account for that here.
+    baseline = 0;
+  } else {
+    baseline = GetBaseline();
+    NS_ASSERTION(baseline <= mRect.height,
+                 "We should never hit a case where our height is non-zero but smaller than the caret baseline...");
+  }
+  return baseline;
+}
+
 #ifdef ACCESSIBILITY
 already_AddRefed<nsAccessible>
 nsInlineFrame::CreateAccessible()

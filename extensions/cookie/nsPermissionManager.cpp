@@ -935,10 +935,10 @@ nsPermissionManager::Read()
           getter_AddRefs(stmtDeleteExpired));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmtDeleteExpired->BindInt32Parameter(0, nsIPermissionManager::EXPIRE_TIME);
+    rv = stmtDeleteExpired->BindInt32ByIndex(0, nsIPermissionManager::EXPIRE_TIME);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = stmtDeleteExpired->BindInt64Parameter(1, PR_Now() / 1000);
+    rv = stmtDeleteExpired->BindInt64ByIndex(1, PR_Now() / 1000);
     NS_ENSURE_SUCCESS(rv, rv);
 
     PRBool hasResult;
@@ -1111,43 +1111,43 @@ nsPermissionManager::UpdateDB(OperationType         aOp,
   switch (aOp) {
   case eOperationAdding:
     {
-      rv = aStmt->BindInt64Parameter(0, aID);
+      rv = aStmt->BindInt64ByIndex(0, aID);
       if (NS_FAILED(rv)) break;
 
-      rv = aStmt->BindUTF8StringParameter(1, aHost);
+      rv = aStmt->BindUTF8StringByIndex(1, aHost);
       if (NS_FAILED(rv)) break;
       
-      rv = aStmt->BindUTF8StringParameter(2, aType);
+      rv = aStmt->BindUTF8StringByIndex(2, aType);
       if (NS_FAILED(rv)) break;
 
-      rv = aStmt->BindInt32Parameter(3, aPermission);
+      rv = aStmt->BindInt32ByIndex(3, aPermission);
       if (NS_FAILED(rv)) break;
 
-      rv = aStmt->BindInt32Parameter(4, aExpireType);
+      rv = aStmt->BindInt32ByIndex(4, aExpireType);
       if (NS_FAILED(rv)) break;
 
-      rv = aStmt->BindInt64Parameter(5, aExpireTime);
+      rv = aStmt->BindInt64ByIndex(5, aExpireTime);
       break;
     }
 
   case eOperationRemoving:
     {
-      rv = aStmt->BindInt64Parameter(0, aID);
+      rv = aStmt->BindInt64ByIndex(0, aID);
       break;
     }
 
   case eOperationChanging:
     {
-      rv = aStmt->BindInt64Parameter(0, aID);
+      rv = aStmt->BindInt64ByIndex(0, aID);
       if (NS_FAILED(rv)) break;
 
-      rv = aStmt->BindInt32Parameter(1, aPermission);
+      rv = aStmt->BindInt32ByIndex(1, aPermission);
       if (NS_FAILED(rv)) break;
 
-      rv = aStmt->BindInt32Parameter(2, aExpireType);
+      rv = aStmt->BindInt32ByIndex(2, aExpireType);
       if (NS_FAILED(rv)) break;
 
-      rv = aStmt->BindInt64Parameter(3, aExpireTime);
+      rv = aStmt->BindInt64ByIndex(3, aExpireTime);
       break;
     }
 

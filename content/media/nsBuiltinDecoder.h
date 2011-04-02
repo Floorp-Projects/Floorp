@@ -436,7 +436,10 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Constructs the time ranges representing what segments of the media
   // are buffered and playable.
   virtual nsresult GetBuffered(nsTimeRanges* aBuffered) {
-    return mDecoderStateMachine->GetBuffered(aBuffered);
+    if (mDecoderStateMachine) {
+      return mDecoderStateMachine->GetBuffered(aBuffered);
+    }
+    return NS_ERROR_FAILURE;
   }
 
   virtual void NotifyDataArrived(const char* aBuffer, PRUint32 aLength, PRUint32 aOffset) {

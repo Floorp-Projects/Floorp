@@ -16,7 +16,7 @@
  * The Original Code is Necko Test Code.
  *
  * The Initial Developer of the Original Code is
- * Mozilla Corporation.
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -352,6 +352,27 @@ function test_asyncFetch_with_nsIFile()
   });
 }
 
+function test_asyncFetch_with_nsIInputString()
+{
+  const TEST_DATA = "this is a test string";
+  let istream = Cc["@mozilla.org/io/string-input-stream;1"].
+                createInstance(Ci.nsIStringInputStream);
+  istream.setData(TEST_DATA, TEST_DATA.length);
+
+  // Read the input stream asynchronously.
+  NetUtil.asyncFetch(istream, function(aInputStream, aResult) {
+    // Check that we had success.
+    do_check_true(Components.isSuccessCode(aResult));
+
+    // Check that we got the right data.
+    do_check_eq(aInputStream.available(), TEST_DATA.length);
+    do_check_eq(NetUtil.readInputStreamToString(aInputStream, TEST_DATA.length),
+                TEST_DATA);
+
+    run_next_test();
+  });
+}
+
 function test_asyncFetch_does_not_block()
 {
   // Create our channel that has no data.
@@ -533,6 +554,7 @@ let tests = [
   test_asyncFetch_with_nsIURI,
   test_asyncFetch_with_string,
   test_asyncFetch_with_nsIFile,
+  test_asyncFetch_with_nsIInputString,
   test_asyncFetch_does_not_block,
   test_newChannel_no_specifier,
   test_newChannel_with_string,

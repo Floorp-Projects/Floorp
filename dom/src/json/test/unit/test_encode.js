@@ -130,14 +130,10 @@ function testOutputStreams() {
       var utf8File = writeToFile(pair[1], "UTF-8", false);
       var utf16LEFile = writeToFile(pair[1], "UTF-16LE", false);
       var utf16BEFile = writeToFile(pair[1], "UTF-16BE", false);
-      var utf32LEFile = writeToFile(pair[1], "UTF-32LE", false);
-      var utf32BEFile = writeToFile(pair[1], "UTF-32BE", false);
 
       // all ascii with no BOMs, so this will work
       do_check_eq(utf16LEFile.fileSize / 2, utf8File.fileSize);
-      do_check_eq(utf32LEFile.fileSize / 4, utf8File.fileSize);
       do_check_eq(utf16LEFile.fileSize, utf16BEFile.fileSize);
-      do_check_eq(utf32LEFile.fileSize, utf32BEFile.fileSize);
     }
   }
 
@@ -148,10 +144,6 @@ function testOutputStreams() {
   do_check_eq(f.fileSize, 6);
   var f = writeToFile({},"UTF-16BE", true);
   do_check_eq(f.fileSize, 6);
-  var f = writeToFile({},"UTF-32LE", true);
-  do_check_eq(f.fileSize, 12);
-  var f = writeToFile({},"UTF-32BE", true);
-  do_check_eq(f.fileSize, 12);
   
   outputDir.remove(true);
 }

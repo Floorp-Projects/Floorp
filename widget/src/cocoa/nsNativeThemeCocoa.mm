@@ -439,7 +439,7 @@ struct CellRenderSettings {
   // If a control has no minimum dimensions in either/both axes, set to 0.0f.
   NSSize minimumSizes[3];
 
-  // A multidimensional array of [2][3][4],
+  // A three-dimensional array,
   // with the first dimension being the OS version (only Leopard for the moment),
   // the second being the control size (mini, small, regular), and the third
   // being the 4 margin values (left, top, right, bottom).

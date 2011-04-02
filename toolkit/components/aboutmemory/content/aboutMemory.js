@@ -15,7 +15,7 @@
  * The Original Code is about:memory
  *
  * The Initial Developer of the Original Code is
- *   Mozilla Corporation
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,6 +35,9 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
 var gMemReporters = { };
 
@@ -115,6 +118,9 @@ function formatNumber(n) {
     return s;
 }
 
+/**
+ * Updates the content of the document with the most current memory information.
+ */
 function updateMemoryStatus()
 {
     // if we have the standard reporters for mapped/allocated, put
@@ -125,11 +131,11 @@ function updateMemoryStatus()
         // committed is the total amount of memory that we've touched, that is that we have
         // some kind of backing store for
         setTextContent($("memMappedValue"),
-                       formatNumber(gMemReporters["malloc/mapped"].memoryUsed));
+                       formatNumber(gMemReporters["malloc/mapped"][0].memoryUsed));
 
         // allocated is the amount of committed memory that we're actively using (i.e., that isn't free)
         setTextContent($("memInUseValue"),
-                       formatNumber(gMemReporters["malloc/allocated"].memoryUsed));
+                       formatNumber(gMemReporters["malloc/allocated"][0].memoryUsed));
     } else {
         $("memOverview").style.display = "none";
     }
@@ -140,9 +146,16 @@ function updateMemoryStatus()
 
     var otherCount = 0;
 
-    for each (var rep in gMemReporters) {
-        var row = makeTableRow([rep.path, rep.description],
-                               makeTableCell(formatNumber(rep.memoryUsed), "memValue"));
+    for each (var reporters in gMemReporters) {
+        // There may be more than one reporter for each path.  We take the sum
+        // of them all for each description.
+        var total = 0;
+        reporters.forEach(function(reporter) {
+          total += reporter.memoryUsed;
+        });
+
+        var row = makeTableRow([reporters[0].path, reporters[0].description],
+                               makeTableCell(formatNumber(total), "memValue"));
 
         mo.appendChild(row);
 
@@ -155,18 +168,23 @@ function updateMemoryStatus()
     }
 }
 
+/**
+ * Updates gMemReporters to contain all the known memory reporters.
+ */
 function updateMemoryReporters()
 {
     gMemReporters = [];
 
-    var mgr = Components
-        .classes["@mozilla.org/memory-reporter-manager;1"]
-        .getService(Components.interfaces.nsIMemoryReporterManager);
+    var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+              getService(Ci.nsIMemoryReporterManager);
 
     var e = mgr.enumerateReporters();
     while (e.hasMoreElements()) {
-        var mr = e.getNext().QueryInterface(Components.interfaces.nsIMemoryReporter);
-        gMemReporters[mr.path] = mr;
+        var reporter = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+        if (!gMemReporters[reporter.path]) {
+          gMemReporters[reporter.path] = [];
+        }
+        gMemReporters[reporter.path].push(reporter);
     }
 }
 

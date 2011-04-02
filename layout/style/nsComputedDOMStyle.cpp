@@ -2285,6 +2285,35 @@ nsComputedDOMStyle::DoGetTextDecoration()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozTextDecorationColor()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  nscolor color;
+  PRBool isForeground;
+  GetStyleTextReset()->GetDecorationColor(color, isForeground);
+  if (isForeground) {
+    color = GetStyleColor()->mColor;
+  }
+
+  SetToRGBAColor(val, color);
+
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozTextDecorationStyle()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleTextReset()->GetDecorationStyle(),
+                                   nsCSSProps::kTextDecorationStyleKTable));
+
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetTextIndent()
 {
   nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
@@ -4114,7 +4143,9 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(stroke_opacity,                StrokeOpacity),
     COMPUTED_STYLE_MAP_ENTRY(stroke_width,                  StrokeWidth),
     COMPUTED_STYLE_MAP_ENTRY(text_anchor,                   TextAnchor),
-    COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering)
+    COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering),
+    COMPUTED_STYLE_MAP_ENTRY(text_decoration_color,         MozTextDecorationColor),
+    COMPUTED_STYLE_MAP_ENTRY(text_decoration_style,         MozTextDecorationStyle)
 
   };
 

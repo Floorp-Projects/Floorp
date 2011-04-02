@@ -41,7 +41,7 @@ function onTabViewWindowLoaded() {
     // the appropriate group would get selected when the key
     // combination is pressed
     executeSoon(function() { 
-      EventUtils.synthesizeKey("e", {accelKey : true, shiftKey: true}, contentWindow);
+      EventUtils.synthesizeKey("E", {accelKey : true, shiftKey: true}, contentWindow);
     });
   });
 

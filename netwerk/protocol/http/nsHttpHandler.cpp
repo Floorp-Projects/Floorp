@@ -69,7 +69,6 @@
 #include "nsPrintfCString.h"
 #include "nsCOMPtr.h"
 #include "nsNetCID.h"
-#include "nsAutoLock.h"
 #include "prprf.h"
 #include "nsReadableUtils.h"
 #include "nsQuickSort.h"
@@ -179,6 +178,7 @@ nsHttpHandler::nsHttpHandler()
     , mIdleTimeout(10)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
+    , mIdleSynTimeout(250)
     , mMaxConnections(24)
     , mMaxConnectionsPerServer(8)
     , mMaxPersistentConnectionsPerServer(2)
@@ -924,6 +924,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("redirection-limit"), &val);
         if (NS_SUCCEEDED(rv))
             mRedirectionLimit = (PRUint8) NS_CLAMP(val, 0, 0xff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("connection-retry-timeout"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("connection-retry-timeout"), &val);
+        if (NS_SUCCEEDED(rv))
+            mIdleSynTimeout = (PRUint16) NS_CLAMP(val, 0, 3000);
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {

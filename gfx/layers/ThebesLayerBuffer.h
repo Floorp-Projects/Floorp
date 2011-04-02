@@ -143,11 +143,16 @@ public:
                         float aXResolution, float aYResolution,
                         PRUint32 aFlags);
 
+  enum {
+    ALLOW_REPEAT = 0x01
+  };
   /**
    * Return a new surface of |aSize| and |aType|.
+   * @param aFlags if ALLOW_REPEAT is set, then the buffer should be configured
+   * to allow repeat-mode, otherwise it should be in pad (clamp) mode
    */
   virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType aType, const nsIntSize& aSize) = 0;
+  CreateBuffer(ContentType aType, const nsIntSize& aSize, PRUint32 aFlags) = 0;
 
   /**
    * Get the underlying buffer, if any. This is useful because we can pass

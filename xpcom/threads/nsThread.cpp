@@ -36,11 +36,11 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Monitor.h"
 #include "nsThread.h"
 #include "nsThreadManager.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIProgrammingLanguage.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
@@ -68,6 +68,8 @@
 #ifdef NS_FUNCTION_TIMER
 #include "nsCRT.h"
 #endif
+
+using namespace mozilla;
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo *sLog = PR_NewLogModule("nsThread");
@@ -174,12 +176,7 @@ class nsThreadStartupEvent : public nsRunnable {
 public:
   // Create a new thread startup object.
   static nsThreadStartupEvent *Create() {
-    nsThreadStartupEvent *startup = new nsThreadStartupEvent();
-    if (startup && startup->mMon)
-      return startup;
-    // Allocation failure
-    delete startup;
-    return nsnull;
+    return new nsThreadStartupEvent();
   }
 
   // This method does not return until the thread startup object is in the
@@ -187,7 +184,7 @@ public:
   void Wait() {
     if (mInitialized)  // Maybe avoid locking...
       return;
-    nsAutoMonitor mon(mMon);
+    MonitorAutoEnter mon(mMon);
     while (!mInitialized)
       mon.Wait();
   }
@@ -195,24 +192,22 @@ public:
   // This method needs to be public to support older compilers (xlC_r on AIX).
   // It should be called directly as this class type is reference counted.
   virtual ~nsThreadStartupEvent() {
-    if (mMon)
-      nsAutoMonitor::DestroyMonitor(mMon);
   }
 
 private:
   NS_IMETHOD Run() {
-    nsAutoMonitor mon(mMon);
+    MonitorAutoEnter mon(mMon);
     mInitialized = PR_TRUE;
     mon.Notify();
     return NS_OK;
   }
 
   nsThreadStartupEvent()
-    : mMon(nsAutoMonitor::NewMonitor("xpcom.threadstartup"))
+    : mMon("nsThreadStartupEvent.mMon")
     , mInitialized(PR_FALSE) {
   }
 
-  PRMonitor *mMon;
+  Monitor    mMon;
   PRBool     mInitialized;
 };
 
@@ -284,7 +279,7 @@ nsThread::ThreadFunc(void *arg)
   // NS_ProcessPendingEvents.
   while (PR_TRUE) {
     {
-      nsAutoLock lock(self->mLock);
+      MutexAutoLock lock(self->mLock);
       if (!self->mEvents->HasPendingEvent()) {
         // No events in the queue, so we will stop now. Don't let any more
         // events be added, since they won't be processed. It is critical
@@ -313,7 +308,7 @@ nsThread::ThreadFunc(void *arg)
 //-----------------------------------------------------------------------------
 
 nsThread::nsThread()
-  : mLock(nsAutoLock::NewLock("nsThread::mLock"))
+  : mLock("nsThread.mLock")
   , mEvents(&mEventsRoot)
   , mPriority(PRIORITY_NORMAL)
   , mThread(nsnull)
@@ -326,15 +321,11 @@ nsThread::nsThread()
 
 nsThread::~nsThread()
 {
-  if (mLock)
-    nsAutoLock::DestroyLock(mLock);
 }
 
 nsresult
 nsThread::Init()
 {
-  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
-
   // spawn thread and wait until it is fully setup
   nsRefPtr<nsThreadStartupEvent> startup = nsThreadStartupEvent::Create();
   NS_ENSURE_TRUE(startup, NS_ERROR_OUT_OF_MEMORY);
@@ -356,7 +347,7 @@ nsThread::Init()
   // mThread.  By delaying insertion of this event into the queue, we ensure
   // that mThread is set properly.
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     mEvents->PutEvent(startup);
   }
 
@@ -369,8 +360,6 @@ nsThread::Init()
 nsresult
 nsThread::InitCurrentThread()
 {
-  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
-
   mThread = PR_GetCurrentThread();
 
   nsThreadManager::get()->RegisterCurrentThread(this);
@@ -381,7 +370,7 @@ nsresult
 nsThread::PutEvent(nsIRunnable *event)
 {
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     if (mEventsAreDoomed) {
       NS_WARNING("An event was posted to a thread that will never run it (rejected)");
       return NS_ERROR_UNEXPECTED;
@@ -465,7 +454,7 @@ nsThread::Shutdown()
 
   // Prevent multiple calls to this method
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     if (!mShutdownRequired)
       return NS_ERROR_UNEXPECTED;
     mShutdownRequired = PR_FALSE;
@@ -498,7 +487,7 @@ nsThread::Shutdown()
 
 #ifdef DEBUG
   {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     NS_ASSERTION(!mObserver, "Should have been cleared at shutdown!");
   }
 #endif
@@ -702,7 +691,7 @@ nsThread::AdjustPriority(PRInt32 delta)
 NS_IMETHODIMP
 nsThread::GetObserver(nsIThreadObserver **obs)
 {
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
   NS_IF_ADDREF(*obs = mObserver);
   return NS_OK;
 }
@@ -712,7 +701,7 @@ nsThread::SetObserver(nsIThreadObserver *obs)
 {
   NS_ENSURE_STATE(PR_GetCurrentThread() == mThread);
 
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
   mObserver = obs;
   return NS_OK;
 }
@@ -721,12 +710,8 @@ NS_IMETHODIMP
 nsThread::PushEventQueue(nsIThreadEventFilter *filter)
 {
   nsChainedEventQueue *queue = new nsChainedEventQueue(filter);
-  if (!queue || !queue->IsInitialized()) {
-    delete queue;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
   queue->mNext = mEvents;
   mEvents = queue;
   return NS_OK;
@@ -735,7 +720,7 @@ nsThread::PushEventQueue(nsIThreadEventFilter *filter)
 NS_IMETHODIMP
 nsThread::PopEventQueue()
 {
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
 
   // Make sure we do not pop too many!
   NS_ENSURE_STATE(mEvents != &mEventsRoot);

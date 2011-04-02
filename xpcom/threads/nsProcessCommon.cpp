@@ -53,7 +53,6 @@
 #include "prio.h"
 #include "prenv.h"
 #include "nsCRT.h"
-#include "nsAutoLock.h"
 #include "nsThreadUtils.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
@@ -84,6 +83,8 @@
 #define ShellExecuteExW ShellExecuteEx
 #endif
 
+using namespace mozilla;
+
 #ifdef XP_MACOSX
 cpu_type_t pref_cpu_types[2] = {
 #if defined(__i386__)
@@ -105,7 +106,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsProcess, nsIProcess,
 //Constructor
 nsProcess::nsProcess()
     : mThread(nsnull)
-    , mLock(nsAutoLock::NewLock("nsProcess::mLock"))
+    , mLock("nsProcess.mLock")
     , mShutdown(PR_FALSE)
     , mPid(-1)
     , mObserver(nsnull)
@@ -120,7 +121,6 @@ nsProcess::nsProcess()
 //Destructor
 nsProcess::~nsProcess()
 {
-    nsAutoLock::DestroyLock(mLock);
 }
 
 NS_IMETHODIMP
@@ -276,7 +276,7 @@ void PR_CALLBACK nsProcess::Monitor(void *arg)
 
     // Lock in case Kill or GetExitCode are called during this
     {
-        nsAutoLock lock(process->mLock);
+        MutexAutoLock lock(process->mLock);
         CloseHandle(process->mProcess);
         process->mProcess = NULL;
         process->mExitValue = exitCode;
@@ -303,7 +303,7 @@ void PR_CALLBACK nsProcess::Monitor(void *arg)
 
     // Lock in case Kill or GetExitCode are called during this
     {
-        nsAutoLock lock(process->mLock);
+        MutexAutoLock lock(process->mLock);
 #if !defined(XP_MACOSX)
         process->mProcess = nsnull;
 #endif
@@ -606,7 +606,7 @@ nsProcess::Kill()
         return NS_ERROR_FAILURE;
 
     {
-        nsAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
 #if defined(PROCESSMODEL_WINAPI)
         if (TerminateProcess(mProcess, NULL) == 0)
             return NS_ERROR_FAILURE;
@@ -633,7 +633,7 @@ nsProcess::Kill()
 NS_IMETHODIMP
 nsProcess::GetExitValue(PRInt32 *aExitValue)
 {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
 
     *aExitValue = mExitValue;
     
@@ -655,7 +655,7 @@ nsProcess::Observe(nsISupports* subject, const char* topic, const PRUnichar* dat
     mObserver = nsnull;
     mWeakObserver = nsnull;
 
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     mShutdown = PR_TRUE;
 
     return NS_OK;

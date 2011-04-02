@@ -77,7 +77,7 @@ function run_test() {
   // check that keyword has been removed
   var sql = "SELECT id FROM moz_keywords WHERE keyword = ?1";
   var stmt = mDBConn.createStatement(sql);
-  stmt.bindUTF8StringParameter(0, keyword);
+  stmt.bindByIndex(0, keyword);
   do_check_false(stmt.executeStep());
   stmt.finalize();
 
@@ -104,7 +104,7 @@ function run_test() {
   // check that keyword is still there
   var sql = "SELECT id FROM moz_keywords WHERE keyword = ?1";
   var stmt = mDBConn.createStatement(sql);
-  stmt.bindUTF8StringParameter(0, keyword);
+  stmt.bindByIndex(0, keyword);
   do_check_true(stmt.executeStep());
   stmt.finalize();
 }

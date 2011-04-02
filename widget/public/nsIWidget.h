@@ -635,7 +635,9 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE) = 0;
 
     /**
-     * Get this widget's outside dimensions relative to its parent widget
+     * Get this widget's outside dimensions relative to its parent widget. For
+     * popup widgets the returned rect is in screen coordinates and not
+     * relative to its parent widget.
      *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.

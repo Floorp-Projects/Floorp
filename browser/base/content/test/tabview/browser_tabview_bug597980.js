@@ -78,8 +78,8 @@ function part2(win) {
        finish();
     }, false);
     // show tabview
-    EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true }, win);
+    EventUtils.synthesizeKey("E", { accelKey: true, shiftKey: true }, win);
     // hide tabview
-    EventUtils.synthesizeKey("e", { accelKey: true, shiftKey: true }, win);
+    EventUtils.synthesizeKey("E", { accelKey: true, shiftKey: true }, win);
   })
 }

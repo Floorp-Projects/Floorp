@@ -1191,11 +1191,11 @@ function buildDownloadList(aForceBuild)
   }
 
   try {
-    gStmt.bindInt32Parameter(0, nsIDM.DOWNLOAD_NOTSTARTED);
-    gStmt.bindInt32Parameter(1, nsIDM.DOWNLOAD_DOWNLOADING);
-    gStmt.bindInt32Parameter(2, nsIDM.DOWNLOAD_PAUSED);
-    gStmt.bindInt32Parameter(3, nsIDM.DOWNLOAD_QUEUED);
-    gStmt.bindInt32Parameter(4, nsIDM.DOWNLOAD_SCANNING);
+    gStmt.bindByIndex(0, nsIDM.DOWNLOAD_NOTSTARTED);
+    gStmt.bindByIndex(1, nsIDM.DOWNLOAD_DOWNLOADING);
+    gStmt.bindByIndex(2, nsIDM.DOWNLOAD_PAUSED);
+    gStmt.bindByIndex(3, nsIDM.DOWNLOAD_QUEUED);
+    gStmt.bindByIndex(4, nsIDM.DOWNLOAD_SCANNING);
   } catch (e) {
     // Something must have gone wrong when binding, so clear and quit
     gStmt.reset();

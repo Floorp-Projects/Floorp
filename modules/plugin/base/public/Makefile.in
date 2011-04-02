@@ -35,49 +35,43 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= plugin
-GRE_MODULE	= 1
+MODULE = plugin
+GRE_MODULE = 1
 
-EXPORTS		= \
-		nsPluginLogging.h \
-		nsPluginError.h \
-		nsPluginNativeWindow.h \
-		nsPluginsCID.h \
-		$(NULL)
+EXPORTS = \
+  nsPluginLogging.h \
+  nsPluginError.h \
+  nsPluginNativeWindow.h \
+  nsPluginsCID.h \
+  $(NULL)
 
-SDK_HEADERS	 = \
-		npapi.h \
-		npfunctions.h \
-		nptypes.h \
-		npruntime.h \
-		$(NULL)
+SDK_HEADERS = \
+  npapi.h \
+  npfunctions.h \
+  nptypes.h \
+  npruntime.h \
+  $(NULL)
 
-XPIDLSRCS 	= \
-		nspluginroot.idl \
-		nsIPluginStreamInfo.idl \
-		nsIPluginInstanceOwner.idl \
-		nsIPlugin.idl \
-		nsIHTTPHeaderListener.idl \
-		nsIPluginTag.idl \
-		nsIPluginTagInfo.idl \
-		nsIPluginInputStream.idl \
-		nsIPluginStreamListener.idl \
-		nsIPluginInstance.idl \
-		nsIPluginHost.idl \
-		nsIPluginDocument.idl \
-		$(NULL)
-
-# Just build headers if we don't want plugins support
-ifndef MOZ_PLUGINS
-NO_GEN_XPT=1
-endif
+XPIDLSRCS = \
+  nsIHTTPHeaderListener.idl \
+  nsIPlugin.idl \
+  nsIPluginDocument.idl \
+  nsIPluginHost.idl \
+  nsIPluginInputStream.idl \
+  nsIPluginInstance.idl \
+  nsIPluginInstanceOwner.idl \
+  nsIPluginStreamInfo.idl \
+  nsIPluginStreamListener.idl \
+  nsIPluginTag.idl \
+  nsIPluginTagInfo.idl \
+  nspluginroot.idl \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
-

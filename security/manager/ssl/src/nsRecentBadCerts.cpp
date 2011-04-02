@@ -46,7 +46,6 @@
 #include "nsCRT.h"
 #include "nsPromiseFlatString.h"
 #include "nsStringBuffer.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nspr.h"
 #include "pk11pub.h"
@@ -54,21 +53,22 @@
 #include "sechash.h"
 
 #include "nsNSSCleaner.h"
+
+using namespace mozilla;
+
 NSSCleanupAutoPtrClass(CERTCertificate, CERT_DestroyCertificate)
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsRecentBadCertsService, 
                               nsIRecentBadCertsService)
 
 nsRecentBadCertsService::nsRecentBadCertsService()
-:mNextStorePosition(0)
+:monitor("nsRecentBadCertsService.monitor")
+,mNextStorePosition(0)
 {
-  monitor = nsAutoMonitor::NewMonitor("security.recentBadCertsMonitor");
 }
 
 nsRecentBadCertsService::~nsRecentBadCertsService()
 {
-  if (monitor)
-    nsAutoMonitor::DestroyMonitor(monitor);
 }
 
 nsresult
@@ -99,7 +99,7 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
   PRBool isUntrusted = PR_FALSE;
 
   {
-    nsAutoMonitor lock(monitor);
+    MonitorAutoEnter lock(monitor);
     for (size_t i=0; i<const_recently_seen_list_size; ++i) {
       if (mCerts[i].mHostWithPort.Equals(aHostNameWithPort)) {
         SECStatus srv = SECITEM_CopyItem(nsnull, &foundDER, &mCerts[i].mDERCert);
@@ -172,7 +172,7 @@ nsRecentBadCertsService::AddBadCert(const nsAString &hostWithPort,
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
-    nsAutoMonitor lock(monitor);
+    MonitorAutoEnter lock(monitor);
     RecentBadCert &updatedEntry = mCerts[mNextStorePosition];
 
     ++mNextStorePosition;

@@ -1165,16 +1165,57 @@ struct nsStyleTextReset {
     aContext->FreeToShell(sizeof(nsStyleTextReset), this);
   }
 
+  PRUint8 GetDecorationStyle() const
+  {
+    return (mTextDecorationStyle & BORDER_STYLE_MASK);
+  }
+
+  void SetDecorationStyle(PRUint8 aStyle)
+  {
+    NS_ABORT_IF_FALSE((aStyle & BORDER_STYLE_MASK) == aStyle,
+                      "style doesn't fit");
+    mTextDecorationStyle &= ~BORDER_STYLE_MASK;
+    mTextDecorationStyle |= (aStyle & BORDER_STYLE_MASK);
+  }
+
+  void GetDecorationColor(nscolor& aColor, PRBool& aForeground) const
+  {
+    aForeground = PR_FALSE;
+    if ((mTextDecorationStyle & BORDER_COLOR_SPECIAL) == 0) {
+      aColor = mTextDecorationColor;
+    } else if (mTextDecorationStyle & BORDER_COLOR_FOREGROUND) {
+      aForeground = PR_TRUE;
+    } else {
+      NS_NOTREACHED("OUTLINE_COLOR_INITIAL should not be set here");
+    }
+  }
+
+  void SetDecorationColor(nscolor aColor)
+  {
+    mTextDecorationColor = aColor;
+    mTextDecorationStyle &= ~BORDER_COLOR_SPECIAL;
+  }
+
+  void SetDecorationColorToForeground()
+  {
+    mTextDecorationStyle &= ~BORDER_COLOR_SPECIAL;
+    mTextDecorationStyle |= BORDER_COLOR_FOREGROUND;
+  }
+
   nsChangeHint CalcDifference(const nsStyleTextReset& aOther) const;
 #ifdef DEBUG
   static nsChangeHint MaxDifference();
 #endif
   static PRBool ForceCompare() { return PR_FALSE; }
 
+  nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
+
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
   PRUint8 mUnicodeBidi;                 // [reset] see nsStyleConsts.h
+protected:
+  PRUint8 mTextDecorationStyle;         // [reset] see nsStyleConsts.h
 
-  nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
+  nscolor mTextDecorationColor;         // [reset] the colors to use for a decoration lines, not used at currentColor
 };
 
 struct nsStyleText {

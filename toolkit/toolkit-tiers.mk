@@ -189,7 +189,6 @@ tier_platform_dirs	+= \
 		editor \
 		layout \
 		docshell \
-		webshell \
 		embedding \
 		xpfe/appshell \
 		$(NULL)

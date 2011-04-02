@@ -44,6 +44,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include "nsWindow.h"
+#include "nsStyleConsts.h"
 
 #ifndef WINCE
 #include "nsUXThemeData.h"
@@ -511,14 +512,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         break;
     case eMetric_IMERawInputUnderlineStyle:
     case eMetric_IMEConvertedTextUnderlineStyle:
-        aMetric = NS_UNDERLINE_STYLE_DASHED;
+        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_DASHED;
         break;
     case eMetric_IMESelectedRawTextUnderlineStyle:
     case eMetric_IMESelectedConvertedTextUnderline:
-        aMetric = NS_UNDERLINE_STYLE_NONE;
+        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_NONE;
         break;
     case eMetric_SpellCheckerUnderlineStyle:
-        aMetric = NS_UNDERLINE_STYLE_WAVY;
+        aMetric = NS_STYLE_TEXT_DECORATION_STYLE_WAVY;
         break;
     default:
         aMetric = 0;

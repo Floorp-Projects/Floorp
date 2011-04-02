@@ -70,7 +70,7 @@ test_ASCIIString()
   {
     mozStorageStatementScoper scoper(insert);
     PRBool hasResult;
-    do_check_true(NS_SUCCEEDED(insert->BindUTF8StringParameter(0, inserted)));
+    do_check_true(NS_SUCCEEDED(insert->BindUTF8StringByIndex(0, inserted)));
     do_check_true(NS_SUCCEEDED(insert->ExecuteStep(&hasResult)));
     do_check_false(hasResult);
   }
@@ -116,7 +116,7 @@ test_CString()
   {
     mozStorageStatementScoper scoper(insert);
     PRBool hasResult;
-    do_check_true(NS_SUCCEEDED(insert->BindUTF8StringParameter(0, inserted)));
+    do_check_true(NS_SUCCEEDED(insert->BindUTF8StringByIndex(0, inserted)));
     do_check_true(NS_SUCCEEDED(insert->ExecuteStep(&hasResult)));
     do_check_false(hasResult);
   }
@@ -165,7 +165,7 @@ test_UTFStrings()
   {
     mozStorageStatementScoper scoper(insert);
     PRBool hasResult;
-    do_check_true(NS_SUCCEEDED(insert->BindUTF8StringParameter(0, insertedUTF8)));
+    do_check_true(NS_SUCCEEDED(insert->BindUTF8StringByIndex(0, insertedUTF8)));
     do_check_true(NS_SUCCEEDED(insert->ExecuteStep(&hasResult)));
     do_check_false(hasResult);
   }
@@ -201,7 +201,7 @@ test_UTFStrings()
   {
     mozStorageStatementScoper scoper(insert);
     PRBool hasResult;
-    do_check_true(NS_SUCCEEDED(insert->BindStringParameter(0, insertedUTF16)));
+    do_check_true(NS_SUCCEEDED(insert->BindStringByIndex(0, insertedUTF16)));
     do_check_true(NS_SUCCEEDED(insert->ExecuteStep(&hasResult)));
     do_check_false(hasResult);
   }

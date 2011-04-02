@@ -1972,6 +1972,14 @@ NS_METHOD nsWindow::GetBounds(nsIntRect &aRect)
     aRect.width  = r.right - r.left;
     aRect.height = r.bottom - r.top;
 
+    // popup window bounds' are in screen coordinates, not relative to parent
+    // window
+    if (mWindowType == eWindowType_popup) {
+      aRect.x = r.left;
+      aRect.y = r.top;
+      return NS_OK;
+    }
+
     // chrome on parent:
     //  ___      5,5   (chrome start)
     // |  ____   10,10 (client start)

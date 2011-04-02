@@ -61,6 +61,7 @@ struct PRLock;
 class nsIFile;
 class nsIEventTarget;
 class nsIThread;
+class nsIMemoryReporter;
 
 namespace mozilla {
 namespace storage {
@@ -112,6 +113,7 @@ public:
 
   // fetch the native handle
   sqlite3 *GetNativeConnection() { return mDBConn; }
+  operator sqlite3 *() const { return mDBConn; }
 
   /**
    * Lazily creates and returns a background execution thread.  In the future,
@@ -200,6 +202,8 @@ private:
 
   sqlite3 *mDBConn;
   nsCOMPtr<nsIFile> mDatabaseFile;
+
+  nsTArray<nsCOMPtr<nsIMemoryReporter> > mMemoryReporters;
 
   /**
    * Lazily created thread for asynchronous statement execution.  Consumers
