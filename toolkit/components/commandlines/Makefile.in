@@ -42,10 +42,34 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
-	public \
-	src \
-	$(NULL)
+MODULE = toolkitcomps
+XPIDL_MODULE = commandlines
+LIBRARY_NAME = commandlines
+SHORT_LIBNAME = cmdlines
+EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+MODULE_NAME = CommandLineModule
+LIBXUL_LIBRARY = 1
+
+XPIDLSRCS = \
+  nsICommandLine.idl \
+  nsICommandLineHandler.idl \
+  nsICommandLineRunner.idl \
+  nsICommandLineValidator.idl \
+  $(NULL)
+
+CPPSRCS = \
+  nsCommandLine.cpp \
+  $(NULL)
+
+EXTRA_DSO_LDOPTS += \
+  $(MOZ_UNICHARUTIL_LIBS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(NULL)
+
+ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+EXTRA_DSO_LDOPTS += $(TK_LIBS)
+endif
 
 ifdef ENABLE_TESTS
 DIRS += test

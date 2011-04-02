@@ -24,6 +24,7 @@
   <script type="application/javascript"
           src="../role.js" />
 
+  <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/javascript">
   <![CDATA[
     ////////////////////////////////////////////////////////////////////////////
@@ -60,8 +61,7 @@
           }
         }
       };
-      tabBrowser.addProgressListener(progressListener,
-                                     Ci.nsIWebProgress.NOTIFY_STATE_WINDOW);
+      tabBrowser.addProgressListener(progressListener);
 
       // Test XUL and HTML documents.
       tabBrowser.loadTabs(["about:", "about:mozilla"], false, true);
@@ -206,7 +206,7 @@
 
       testAccessibleTree(tabBrowser.mTabBox.tabpanels, tabboxAccTree);
 
-      SimpleTest.finish()
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();

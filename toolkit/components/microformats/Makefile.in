@@ -41,11 +41,12 @@ VPATH     = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = src
+MODULE = microformats
+
+EXTRA_JS_MODULES = Microformats.js
 
 ifdef ENABLE_TESTS
 DIRS += tests
 endif
 
 include $(topsrcdir)/config/rules.mk
-

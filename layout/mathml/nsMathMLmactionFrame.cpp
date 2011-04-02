@@ -162,6 +162,27 @@ nsMathMLmactionFrame::Init(nsIContent*      aContent,
   return nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
 }
 
+NS_IMETHODIMP
+nsMathMLmactionFrame::TransmitAutomaticData() {
+  // The REC defines the following element to be space-like:
+  // * an maction element whose selected sub-expression exists and is
+  //   space-like;
+  nsIMathMLFrame* mathMLFrame = do_QueryFrame(mSelectedFrame);
+  if (mathMLFrame && mathMLFrame->IsSpaceLike()) {
+    mPresentationData.flags |= NS_MATHML_SPACE_LIKE;
+  } else {
+    mPresentationData.flags &= ~NS_MATHML_SPACE_LIKE;
+  }
+
+  // The REC defines the following element to be an embellished operator:
+  // * an maction element whose selected sub-expression exists and is an
+  //   embellished operator;
+  mPresentationData.baseFrame = mSelectedFrame;
+  GetEmbellishDataFrom(mSelectedFrame, mEmbellishData);
+
+  return NS_OK;
+}
+
 nsresult
 nsMathMLmactionFrame::ChildListChanged(PRInt32 aModType)
 {
@@ -216,11 +237,6 @@ nsMathMLmactionFrame::GetSelectedFrame()
 
   mChildCount = count;
   mSelection = selection;
-
-  // if the selected child is an embellished operator,
-  // we become embellished as well
-  mPresentationData.baseFrame = mSelectedFrame;
-  GetEmbellishDataFrom(mSelectedFrame, mEmbellishData);
 
   return mSelectedFrame;
 }

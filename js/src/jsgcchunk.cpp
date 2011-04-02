@@ -56,7 +56,7 @@
 # include <mach/vm_map.h>
 # include <malloc/malloc.h>
 
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX)
 
 # include <unistd.h>
 # include <sys/mman.h>
@@ -288,7 +288,7 @@ UnmapPages(void *addr, size_t size)
                    == KERN_SUCCESS);
 }
 
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX)
 
 /* Required on Solaris 10. Might improve performance elsewhere. */
 # if defined(SOLARIS) && defined(MAP_ALIGN)

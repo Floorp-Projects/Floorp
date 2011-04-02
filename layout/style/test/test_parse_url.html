@@ -153,6 +153,16 @@ div.style.listStyleImage = 'url(cc\\f  b)';
 is(div.style.listStyleImage, 'url("bad")',
    "unquoted URL with spaces not allowed");
 
+var chars = [ 1, 2, 3, 4, 5, 6, 7, 8, 11, 14, 15, 16, 17, 18, 19, 20,
+              21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31 ];
+
+for (var i in chars) {
+  var charcode = chars[i];
+  div.style.listStyleImage = 'url(' + String.fromCharCode(charcode) + ')';
+  is(div.style.listStyleImage, 'url("bad")',
+     "unquoted URL with control character " + charcode + " not allowed");
+}
+
 div.style.listStyleImage = 'url(\\f good)';
 is(div.style.listStyleImage, 'url("\\F good")', "URL allowed");
 div.style.listStyleImage = 'url( \\f good)';
@@ -165,6 +175,10 @@ div.style.listStyleImage = 'url(goo\\d)';
 is(div.style.listStyleImage, 'url("goo\\D ")', "URL allowed");
 div.style.listStyleImage = 'url(go\\o)';
 is(div.style.listStyleImage, 'url("goo")', "URL allowed");
+
+div.setAttribute("style", "color: url(/*); color: green");
+is(div.style.color, 'green',
+   "URL tokenized correctly outside properties taking URLs");
 
 </script>
 </pre>

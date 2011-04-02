@@ -136,7 +136,7 @@ NS_IMPL_ISUPPORTS1(BodyRule, nsIStyleRule)
 /* virtual */ void
 BodyRule::MapRuleInfoInto(nsRuleData* aData)
 {
-  if (!aData || !(aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) || !aData->mMarginData || !mPart)
+  if (!(aData->mSIDs & NS_STYLE_INHERIT_BIT(Margin)) || !mPart)
     return; // We only care about margins.
 
   PRInt32 bodyMarginWidth  = -1;
@@ -158,22 +158,24 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyMarginWidth = value->GetIntegerValue();
       if (bodyMarginWidth < 0) bodyMarginWidth = 0;
-      nsCSSRect& margin = aData->mMarginData->mMargin;
-      if (margin.mLeft.GetUnit() == eCSSUnit_Null)
-        margin.mLeft.SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
-      if (margin.mRight.GetUnit() == eCSSUnit_Null)
-        margin.mRight.SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
+      nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+      if (marginLeft->GetUnit() == eCSSUnit_Null)
+        marginLeft->SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
+      nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+      if (marginRight->GetUnit() == eCSSUnit_Null)
+        marginRight->SetFloatValue((float)bodyMarginWidth, eCSSUnit_Pixel);
     }
 
     value = mPart->GetParsedAttr(nsGkAtoms::marginheight);
     if (value && value->Type() == nsAttrValue::eInteger) {
       bodyMarginHeight = value->GetIntegerValue();
       if (bodyMarginHeight < 0) bodyMarginHeight = 0;
-      nsCSSRect& margin = aData->mMarginData->mMargin;
-      if (margin.mTop.GetUnit() == eCSSUnit_Null)
-        margin.mTop.SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
-      if (margin.mBottom.GetUnit() == eCSSUnit_Null)
-        margin.mBottom.SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
+      nsCSSValue* marginTop = aData->ValueForMarginTop();
+      if (marginTop->GetUnit() == eCSSUnit_Null)
+        marginTop->SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
+      nsCSSValue* marginBottom = aData->ValueForMarginBottom();
+      if (marginBottom->GetUnit() == eCSSUnit_Null)
+        marginBottom->SetFloatValue((float)bodyMarginHeight, eCSSUnit_Pixel);
     }
 
     if (eCompatibility_NavQuirks == mode){
@@ -182,9 +184,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       if (value && value->Type() == nsAttrValue::eInteger) {
         bodyTopMargin = value->GetIntegerValue();
         if (bodyTopMargin < 0) bodyTopMargin = 0;
-        nsCSSRect& margin = aData->mMarginData->mMargin;
-        if (margin.mTop.GetUnit() == eCSSUnit_Null)
-          margin.mTop.SetFloatValue((float)bodyTopMargin, eCSSUnit_Pixel);
+        nsCSSValue* marginTop = aData->ValueForMarginTop();
+        if (marginTop->GetUnit() == eCSSUnit_Null)
+          marginTop->SetFloatValue((float)bodyTopMargin, eCSSUnit_Pixel);
       }
 
       // bottommargin (IE-attribute)
@@ -192,9 +194,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       if (value && value->Type() == nsAttrValue::eInteger) {
         bodyBottomMargin = value->GetIntegerValue();
         if (bodyBottomMargin < 0) bodyBottomMargin = 0;
-        nsCSSRect& margin = aData->mMarginData->mMargin;
-        if (margin.mBottom.GetUnit() == eCSSUnit_Null)
-          margin.mBottom.SetFloatValue((float)bodyBottomMargin, eCSSUnit_Pixel);
+        nsCSSValue* marginBottom = aData->ValueForMarginBottom();
+        if (marginBottom->GetUnit() == eCSSUnit_Null)
+          marginBottom->SetFloatValue((float)bodyBottomMargin, eCSSUnit_Pixel);
       }
 
       // leftmargin (IE-attribute)
@@ -202,9 +204,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       if (value && value->Type() == nsAttrValue::eInteger) {
         bodyLeftMargin = value->GetIntegerValue();
         if (bodyLeftMargin < 0) bodyLeftMargin = 0;
-        nsCSSRect& margin = aData->mMarginData->mMargin;
-        if (margin.mLeft.GetUnit() == eCSSUnit_Null)
-          margin.mLeft.SetFloatValue((float)bodyLeftMargin, eCSSUnit_Pixel);
+        nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+        if (marginLeft->GetUnit() == eCSSUnit_Null)
+          marginLeft->SetFloatValue((float)bodyLeftMargin, eCSSUnit_Pixel);
       }
 
       // rightmargin (IE-attribute)
@@ -212,9 +214,9 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
       if (value && value->Type() == nsAttrValue::eInteger) {
         bodyRightMargin = value->GetIntegerValue();
         if (bodyRightMargin < 0) bodyRightMargin = 0;
-        nsCSSRect& margin = aData->mMarginData->mMargin;
-        if (margin.mRight.GetUnit() == eCSSUnit_Null)
-          margin.mRight.SetFloatValue((float)bodyRightMargin, eCSSUnit_Pixel);
+        nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+        if (marginRight->GetUnit() == eCSSUnit_Null)
+          marginRight->SetFloatValue((float)bodyRightMargin, eCSSUnit_Pixel);
       }
     }
 
@@ -245,19 +247,21 @@ BodyRule::MapRuleInfoInto(nsRuleData* aData)
         }
 
         if ((bodyMarginWidth == -1) && (frameMarginWidth >= 0)) {
-          nsCSSRect& margin = aData->mMarginData->mMargin;
-          if (margin.mLeft.GetUnit() == eCSSUnit_Null)
-            margin.mLeft.SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
-          if (margin.mRight.GetUnit() == eCSSUnit_Null)
-            margin.mRight.SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
+          nsCSSValue* marginLeft = aData->ValueForMarginLeftValue();
+          if (marginLeft->GetUnit() == eCSSUnit_Null)
+            marginLeft->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
+          nsCSSValue* marginRight = aData->ValueForMarginRightValue();
+          if (marginRight->GetUnit() == eCSSUnit_Null)
+            marginRight->SetFloatValue((float)frameMarginWidth, eCSSUnit_Pixel);
         }
 
         if ((bodyMarginHeight == -1) && (frameMarginHeight >= 0)) {
-          nsCSSRect& margin = aData->mMarginData->mMargin;
-          if (margin.mTop.GetUnit() == eCSSUnit_Null)
-            margin.mTop.SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
-          if (margin.mBottom.GetUnit() == eCSSUnit_Null)
-            margin.mBottom.SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
+          nsCSSValue* marginTop = aData->ValueForMarginTop();
+          if (marginTop->GetUnit() == eCSSUnit_Null)
+            marginTop->SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
+          nsCSSValue* marginBottom = aData->ValueForMarginBottom();
+          if (marginBottom->GetUnit() == eCSSUnit_Null)
+            marginBottom->SetFloatValue((float)frameMarginHeight, eCSSUnit_Pixel);
         }
       }
     }
@@ -389,13 +393,14 @@ void MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aD
   }
 
   if (aData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
-    if (aData->mColorData->mColor.GetUnit() == eCSSUnit_Null &&
+    nsCSSValue *colorValue = aData->ValueForColor();
+    if (colorValue->GetUnit() == eCSSUnit_Null &&
         aData->mPresContext->UseDocumentColors()) {
       // color: color
       nscolor color;
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::text);
       if (value && value->GetColorValue(color))
-        aData->mColorData->mColor.SetColorValue(color);
+        colorValue->SetColorValue(color);
     }
   }
 

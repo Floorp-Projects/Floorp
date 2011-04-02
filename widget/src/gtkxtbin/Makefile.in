@@ -67,10 +67,6 @@ endif
 
 DEFINES		+= -D_IMPL_GTKXTBIN_API
 
-ifeq ($(OS_ARCH), OpenVMS)
-DEFINES		+= -DGENERIC_MOTIF_REDEFINES
-endif
-
 INCLUDES	+= \
 		-I$(srcdir) \
 		$(NULL)

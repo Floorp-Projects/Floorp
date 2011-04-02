@@ -37,11 +37,51 @@
 /* This code is loaded in every child process that is started by mochitest in
  * order to be used as a replacement for UniversalXPConnect
  */
-function SpecialPowers() {}
 
-var SpecialPowers = {
+var Ci = Components.interfaces;
+var Cc = Components.classes;
+
+function SpecialPowers(window) {
+  this.window = window;
+  bindDOMWindowUtils(this, window);
+}
+
+function bindDOMWindowUtils(sp, window) {
+  var util = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils);
+  // This bit of magic brought to you by the letters
+  // B Z, and E, S and the number 5.
+  //
+  // Take all of the properties on the nsIDOMWindowUtils-implementing
+  // object, and rebind them onto a new object with a stub that uses
+  // apply to call them from this privileged scope. This way we don't
+  // have to explicitly stub out new methods that appear on
+  // nsIDOMWindowUtils.
+  var proto = Object.getPrototypeOf(util);
+  var target = {};
+  function rebind(desc, prop) {
+    if (prop in desc && typeof(desc[prop]) == "function") {
+      var oldval = desc[prop];
+      desc[prop] = function() { return oldval.apply(util, arguments); };
+    }
+  }
+  for (var i in proto) {
+    var desc = Object.getOwnPropertyDescriptor(proto, i);
+    rebind(desc, "get");
+    rebind(desc, "set");
+    rebind(desc, "value");
+    Object.defineProperty(target, i, desc);
+  }
+  sp.DOMWindowUtils = target;
+}
+
+SpecialPowers.prototype = {
+  toString: function() { return "[SpecialPowers]"; },
   sanityCheck: function() { return "foo"; },
-  
+
+  // This gets filled in in the constructor.
+  DOMWindowUtils: undefined,
+
   // Mimic the get*Pref API
   getBoolPref: function(aPrefName) {
     return (this._getPref(aPrefName, 'BOOL'));
@@ -70,6 +110,12 @@ var SpecialPowers = {
     return (this._setPref(aPrefName, 'COMPLEX', aValue, aIid));
   },
 
+  // Mimic the clearUserPref API
+  clearUserPref: function(aPrefName) {
+    var msg = {'op':'clear', 'prefName': aPrefName, 'prefType': ""};
+    sendSyncMessage('SPPrefService', msg);
+  },
+
   // Private pref functions to communicate to chrome
   _getPref: function(aPrefName, aPrefType, aIid) {
     var msg = {};
@@ -91,8 +137,9 @@ var SpecialPowers = {
     return(sendSyncMessage('SPPrefService', msg)[0]);
   },
 
+  //XXX: these APIs really ought to be removed, they're not e10s-safe.
+  // (also they're pretty Firefox-specific)
   _getTopChromeWindow: function(window) {
-    var Ci = Components.interfaces;
     return window.QueryInterface(Ci.nsIInterfaceRequestor)
                  .getInterface(Ci.nsIWebNavigation)
                  .QueryInterface(Ci.nsIDocShellTreeItem)
@@ -118,63 +165,67 @@ var SpecialPowers = {
   isBackButtonEnabled: function(window) {
     return !this._getTopChromeWindow(window).document
                                       .getElementById("Browser:Back")
-                                      .hasAttribute("disabled")
+                                      .hasAttribute("disabled");
   },
+
+  addChromeEventListener: function(type, listener, capture, allowUntrusted) {
+    addEventListener(type, listener, capture, allowUntrusted);
+  },
+  removeChromeEventListener: function(type, listener, capture) {
+    removeEventListener(type, listener, capture);
+  },
+
+  createSystemXHR: function() {
+    return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+             .createInstance(Ci.nsIXMLHttpRequest);
+  }
+};
+
+// Expose everything but internal APIs (starting with underscores) to
+// web content.
+SpecialPowers.prototype.__exposedProps__ = {};
+for each (i in Object.keys(SpecialPowers.prototype).filter(function(v) {return v.charAt(0) != "_";})) {
+  SpecialPowers.prototype.__exposedProps__[i] = "r";
 }
 
-SpecialPowers.__exposedProps__ = {};
-for each (i in Object.keys(SpecialPowers).filter(function(v) {return v.charAt(0) != "_"})) {
-  SpecialPowers.__exposedProps__[i] = "r";
-}
-
-
-// Attach our API to the window
-function attachSpecialPwrToWindow(aSubject) {
+// Attach our API to the window.
+function attachSpecialPowersToWindow(aWindow) {
   try {
-    if ((aSubject !== null) && 
-        (aSubject !== undefined) &&
-        (aSubject.wrappedJSObject) &&
-        !(aSubject.wrappedJSObject.SpecialPowers)) {
-      aSubject.wrappedJSObject.SpecialPowers = SpecialPowers;
+    if ((aWindow !== null) &&
+        (aWindow !== undefined) &&
+        (aWindow.wrappedJSObject) &&
+        !(aWindow.wrappedJSObject.SpecialPowers)) {
+      aWindow.wrappedJSObject.SpecialPowers = new SpecialPowers(aWindow);
     }
   } catch(ex) {
     dump("TEST-INFO | specialpowers.js |  Failed to attach specialpowers to window exception: " + ex + "\n");
   }
 }
 
-// In true IPC, this loads in the child process so we need our own observer here
-// to ensure we actually get attached, otherwise we'll miss content-document-global-created
-// notifications
-// NOTE: The observers are GC'd when the window dies, so while this looks like it should
-// leak, it actually doesn't. And if you add in an observer for dom-window-destroyed or 
-// xpcom-shutdown and upon capturing either of those notifications you unregister the 
-// content-document-global-created observer, then in the child process you will never
-// be able to capture another content-document-global-created on the next page load.  Essentially,
-// this is registered inside the child process once by our SpecialPowersObserver, and after that,
-// we will no longer trip that chrome code again.
-function frameScriptObserver() {
-  // Then we need to register the observers
-  this.register();
+// This is a frame script, so it may be running in a content process.
+// In any event, it is targeted at a specific "tab", so we listen for
+// the DOMWindowCreated event to be notified about content windows
+// being created in this context.
+
+function SpecialPowersManager() {
+  addEventListener("DOMWindowCreated", this, false);
 }
 
-frameScriptObserver.prototype = {
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "content-document-global-created") {
-      attachSpecialPwrToWindow(aSubject);
-    } 
-  },
-  register: function() {
-    var obsSvc = Components.classes["@mozilla.org/observer-service;1"]
-                 .getService(Components.interfaces.nsIObserverService);
-    obsSvc.addObserver(this, "content-document-global-created", false);
-  },
-  unregister: function() {
-    var obsSvc = Components.classes["@mozilla.org/observer-service;1"]
-                 .getService(Components.interfaces.nsIObserverService);
-    obsSvc.removeObserver(this, "content-document-global-created");
+SpecialPowersManager.prototype = {
+  handleEvent: function handleEvent(aEvent) {
+    var window = aEvent.target.defaultView;
+
+    // Need to make sure we are called on what we care about -
+    // content windows. DOMWindowCreated is called on *all* HTMLDocuments,
+    // some of which belong to chrome windows or other special content.
+    //
+    var uri = window.document.documentURIObject;
+    if (uri.scheme === "chrome" || uri.spec.split(":")[0] == "about") {
+      return;
+    }
+
+    attachSpecialPowersToWindow(window);
   }
 };
 
-// VERY IMPORTANT: Only add observers if they are needed
-if (content && !content.wrappedJSObject.SpecialPowers)
-  var frameScriptObsv = new frameScriptObserver();
+var specialpowersmanager = new SpecialPowersManager();

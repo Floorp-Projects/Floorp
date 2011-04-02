@@ -57,7 +57,7 @@ using namespace js;
 
 #ifdef DEBUG
 /* For JS_OOM_POSSIBLY_FAIL in jsutil.h. */
-JS_PUBLIC_DATA(JSUint32) OOM_maxAllocations = UINT32_MAX;
+JS_PUBLIC_DATA(JSUint32) OOM_maxAllocations = (JSUint32)-1;
 JS_PUBLIC_DATA(JSUint32) OOM_counter = 0;
 #endif
 
@@ -321,7 +321,7 @@ CallTree(void **bp)
             return NULL;
 
         /* Create a new callsite record. */
-        site = (JSCallsite *) js_malloc(sizeof(JSCallsite));
+        site = (JSCallsite *) OffTheBooks::malloc(sizeof(JSCallsite));
         if (!site)
             return NULL;
 

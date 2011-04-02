@@ -80,18 +80,6 @@
 #include <sys/param.h>
 #include "prenv.h"
 
-#elif defined(XP_BEOS)
-
-#include <FindDirectory.h>
-#include <fs_info.h>
-#include <Path.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <sys/param.h>
-#include <OS.h>
-#include <image.h>
-#include "prenv.h"
-
 #endif
 
 #if defined(VMS)
@@ -249,31 +237,6 @@ static nsresult GetRegWindowsAppDataFolder(PRBool aLocal, nsILocalFile** aFile)
 #endif
 
 #endif // XP_WIN
-
-#if defined (XP_BEOS)
-static nsresult
-GetBeOSFolder( directory_which which, dev_t volume, nsILocalFile** aFile)
-{
-    char path[MAXPATHLEN];
-    if (volume < 0)
-        return NS_ERROR_FAILURE;
-
-    status_t result = find_directory(which, volume, false, path, MAXPATHLEN - 2);
-    if (result != B_OK)
-        return NS_ERROR_FAILURE;
-
-    int len = strlen(path);
-    if (len == 0)
-        return NS_ERROR_FAILURE;
-
-    if (path[len-1] != '/')
-    {
-        path[len]   = '/';
-        path[len+1] = '\0';
-    }
-    return NS_NewNativeLocalFile(nsDependentCString(path), PR_TRUE, aFile);
-}
-#endif // XP_BEOS
 
 #if defined(XP_UNIX)
 static nsresult
@@ -637,7 +600,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return GetOSXFolderType(kUserDomain, kTemporaryFolderType, aFile);
         }
 
-#elif defined(XP_UNIX) || defined(XP_BEOS)
+#elif defined(XP_UNIX)
         {
             static const char *tPath = nsnull;
             if (!tPath) {
@@ -910,31 +873,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return GetUnixXDGUserDirectory(aSystemSystemDirectory, aFile);
 #endif
 
-#ifdef XP_BEOS
-        case BeOS_SettingsDirectory:
-        {
-            return GetBeOSFolder(B_USER_SETTINGS_DIRECTORY,0, aFile);
-        }
-
-        case BeOS_HomeDirectory:
-        {
-            return GetBeOSFolder(B_USER_DIRECTORY,0, aFile);
-        }
-
-        case BeOS_DesktopDirectory:
-        {
-            /* Get the user's desktop folder, which in the future may differ from the boot desktop */
-            char path[MAXPATHLEN];
-            if (find_directory(B_USER_DIRECTORY, 0, false, path, MAXPATHLEN) != B_OK )
-                break;
-            return GetBeOSFolder(B_DESKTOP_DIRECTORY, dev_for_path(path), aFile);
-        }
-
-        case BeOS_SystemDirectory:
-        {
-            return GetBeOSFolder(B_BEOS_DIRECTORY,0, aFile);
-        }
-#endif
 #ifdef XP_OS2
         case OS2_SystemDirectory:
         {

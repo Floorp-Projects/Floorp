@@ -146,18 +146,6 @@ var XPCOMUtils = {
     }
   },
 
-  get _appID() {
-    try {
-      let appInfo = Cc["@mozilla.org/xre/app-info;1"].
-                    getService(Ci.nsIXULAppInfo);
-      delete this._appID;
-      return this._appID = appInfo.ID;
-    }
-    catch(ex) {
-      return undefined;
-    }
-  },
-
   /**
    * Defines a getter on a specified object that will be created upon first use.
    *

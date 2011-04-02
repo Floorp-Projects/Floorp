@@ -21,6 +21,7 @@
  * Aza Raskin <aza@mozilla.com>
  * Ian Gilman <ian@iangilman.com>
  * Michael Yoshitaka Erlewine <mitcho@mitcho.com>
+ * Tim Taubert <tim.taubert@gmx.de>
  *
  * This file incorporates work from:
  * jQuery JavaScript Library v1.4.2: http://code.jquery.com/jquery-1.4.2.js
@@ -75,6 +76,13 @@ function Point(a, y) {
 
 Point.prototype = {
   // ----------
+  // Function: toString
+  // Prints [Point (x,y)] for debug use
+  toString: function Point_toString() {
+    return "[Point (" + this.x + "," + this.y + ")]";
+  },
+
+  // ----------
   // Function: distance
   // Returns the distance from this point to the given <Point>.
   distance: function Point_distance(point) {
@@ -109,6 +117,13 @@ function Rect(a, top, width, height) {
 };
 
 Rect.prototype = {
+  // ----------
+  // Function: toString
+  // Prints [Rect (left,top,width,height)] for debug use
+  toString: function Rect_toString() {
+    return "[Rect (" + this.left + "," + this.top + "," +
+            this.width + "," + this.height + ")]";
+  },
 
   get right() this.left + this.width,
   set right(value) {
@@ -156,16 +171,22 @@ Rect.prototype = {
 
   // ----------
   // Function: contains
-  // Returns a boolean denoting if the given <Rect> is contained within
+  // Returns a boolean denoting if the <Rect> or <Point> is contained inside
   // this rectangle.
   //
-  // Paramaters
-  //  - A <Rect>
-  contains: function Rect_contains(rect) {
-    return (rect.left >= this.left &&
-            rect.right <= this.right &&
-            rect.top >= this.top &&
-            rect.bottom <= this.bottom);
+  // Parameters
+  //  - A <Rect> or a <Point>
+  contains: function Rect_contains(a) {
+    if (Utils.isPoint(a))
+      return (a.x > this.left &&
+              a.x < this.right &&
+              a.y > this.top &&
+              a.y < this.bottom);
+
+    return (a.left >= this.left &&
+            a.right <= this.right &&
+            a.top >= this.top &&
+            a.bottom <= this.bottom);
   },
 
   // ----------
@@ -282,6 +303,13 @@ function Range(min, max) {
 };
 
 Range.prototype = {
+  // ----------
+  // Function: toString
+  // Prints [Range (min,max)] for debug use
+  toString: function Range_toString() {
+    return "[Range (" + this.min + "," + this.max + ")]";
+  },
+
   // Variable: extent
   // Equivalent to max-min
   get extent() {
@@ -463,6 +491,13 @@ Subscribable.prototype = {
 // Singelton with common utility functions.
 let Utils = {
   defaultFaviconURL: "chrome://mozapps/skin/places/defaultFavicon.png",
+
+  // ----------
+  // Function: toString
+  // Prints [Utils] for debug use
+  toString: function Utils_toString() {
+    return "[Utils]";
+  },
 
   // ___ Logging
   useConsole: true, // as opposed to dump

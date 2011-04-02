@@ -1028,7 +1028,9 @@ nsresult SetupExtraData(nsILocalFile* aAppDataDirectory,
   return NS_OK;
 }
 
+#ifdef MOZ_IPC
 static void OOPDeinit();
+#endif
 
 nsresult UnsetExceptionHandler()
 {

@@ -108,7 +108,7 @@ using namespace js;
 using namespace js::gc;
 using namespace js::types;
 
-JS_FRIEND_DATA(const JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAPELESS);
+JS_FRIEND_DATA(JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAPELESS);
 
 Class js_ObjectClass = {
     js_Object_str,
@@ -387,7 +387,7 @@ out:
             ida = JS_Enumerate(cx, obj);
             if (!ida) {
                 if (*sp) {
-                    cx->free(*sp);
+                    cx->free_(*sp);
                     *sp = NULL;
                 }
                 goto bad;
@@ -527,7 +527,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 
     if (!chars) {
         /* If outermost, allocate 4 + 1 for "({})" and the terminator. */
-        chars = (jschar *) cx->runtime->malloc(((outermost ? 4 : 2) + 1) * sizeof(jschar));
+        chars = (jschar *) cx->malloc_(((outermost ? 4 : 2) + 1) * sizeof(jschar));
         nchars = 0;
         if (!chars)
             goto error;
@@ -538,9 +538,9 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
         MAKE_SHARP(he);
         nchars = js_strlen(chars);
         chars = (jschar *)
-            js_realloc((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
+            cx->realloc_((ochars = chars), (nchars + 2 + 1) * sizeof(jschar));
         if (!chars) {
-            js_free(ochars);
+            Foreground::free_(ochars);
             goto error;
         }
         if (outermost) {
@@ -741,7 +741,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
                 goto overflow;
 
             /* Allocate 1 + 1 at end for closing brace and terminating 0. */
-            chars = (jschar *) js_realloc((ochars = chars), curlen * sizeof(jschar));
+            chars = (jschar *) cx->realloc_((ochars = chars), curlen * sizeof(jschar));
             if (!chars) {
                 chars = ochars;
                 goto overflow;
@@ -775,7 +775,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
             nchars += vlength;
 
             if (vsharp)
-                cx->free(vsharp);
+                cx->free_(vsharp);
         }
     }
 
@@ -789,7 +789,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 
     if (!ok) {
         if (chars)
-            js_free(chars);
+            Foreground::free_(chars);
         goto out;
     }
 
@@ -801,7 +801,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
   make_string:
     str = js_NewString(cx, chars, nchars);
     if (!str) {
-        js_free(chars);
+        cx->free_(chars);
         ok = JS_FALSE;
         goto out;
     }
@@ -811,8 +811,8 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
     return ok;
 
   overflow:
-    cx->free(vsharp);
-    js_free(chars);
+    cx->free_(vsharp);
+    cx->free_(chars);
     chars = NULL;
     goto error;
 }
@@ -828,7 +828,7 @@ obj_toStringHelper(JSContext *cx, JSObject *obj)
 
     const char *clazz = obj->getClass()->name;
     size_t nchars = 9 + strlen(clazz); /* 9 for "[object ]" */
-    jschar *chars = (jschar *) cx->malloc((nchars + 1) * sizeof(jschar));
+    jschar *chars = (jschar *) cx->malloc_((nchars + 1) * sizeof(jschar));
     if (!chars)
         return NULL;
 
@@ -843,7 +843,7 @@ obj_toStringHelper(JSContext *cx, JSObject *obj)
 
     JSString *str = js_NewString(cx, chars, nchars);
     if (!str)
-        cx->free(chars);
+        cx->free_(chars);
     return str;
 }
 
@@ -1203,7 +1203,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
 
 #ifdef DEBUG
         jsbytecode *callerPC = caller->pc(cx);
-        JS_ASSERT_IF(caller->isFunctionFrame(), caller->hasCallObj());
+        JS_ASSERT_IF(caller->isFunctionFrame(), caller->fun()->isHeavyweight());
         JS_ASSERT(callerPC && js_GetOpcode(cx, caller->script(), callerPC) == JSOP_EVAL);
 #endif
     } else {
@@ -1251,7 +1251,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
 
     JSScript *script = NULL;
     JSScript **bucket = EvalCacheHash(cx, linearStr);
-    if (evalType == DIRECT_EVAL && caller->isFunctionFrame() && !caller->isEvalFrame()) {
+    if (evalType == DIRECT_EVAL && caller->isNonEvalFunctionFrame()) {
         script = EvalCacheLookup(cx, linearStr, caller, staticLevel, principals, scopeobj, bucket);
 
         /*
@@ -4170,7 +4170,7 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
         return false;
     }
 
-    Value *tmpslots = (Value*) cx->malloc(newcap * sizeof(Value));
+    Value *tmpslots = (Value*) cx->malloc_(newcap * sizeof(Value));
     if (!tmpslots)
         return false;  /* Leave slots at inline buffer. */
     slots = tmpslots;
@@ -4218,7 +4218,7 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     if (!hasSlotsArray())
         return allocSlots(cx, actualCapacity);
 
-    Value *tmpslots = (Value*) cx->realloc(slots, oldcap * sizeof(Value), actualCapacity * sizeof(Value));
+    Value *tmpslots = (Value*) cx->realloc_(slots, oldcap * sizeof(Value), actualCapacity * sizeof(Value));
     if (!tmpslots)
         return false;    /* Leave dslots as its old size. */
     slots = tmpslots;
@@ -4249,7 +4249,7 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     if (newcap < numFixedSlots())
         newcap = numFixedSlots();
 
-    Value *tmpslots = (Value*) cx->realloc(slots, newcap * sizeof(Value));
+    Value *tmpslots = (Value*) cx->realloc_(slots, newcap * sizeof(Value));
     if (!tmpslots)
         return;  /* Leave slots at its old size. */
     slots = tmpslots;
@@ -7060,11 +7060,15 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
                 fputc('\n', stderr);
             }
         }
-        if (fp->isFunctionFrame() && !fp->isEvalFrame()) {
+        if (fp->hasArgs()) {
             fprintf(stderr, "  actuals: %p (%u) ", (void *) fp->actualArgs(), (unsigned) fp->numActualArgs());
             fprintf(stderr, "  formals: %p (%u)\n", (void *) fp->formalArgs(), (unsigned) fp->numFormalArgs());
         }
-        MaybeDumpObject("callobj", fp->maybeCallObj());
+        if (fp->hasCallObj()) {
+            fprintf(stderr, "  has call obj: ");
+            dumpValue(ObjectValue(fp->callObj()));
+            fprintf(stderr, "\n");
+        }
         MaybeDumpObject("argsobj", fp->maybeArgsObj());
         if (!fp->isDummyFrame()) {
             MaybeDumpValue("this", fp->thisValue());

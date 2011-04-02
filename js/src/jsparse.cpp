@@ -222,7 +222,6 @@ Parser::~Parser()
 
     if (principals)
         JSPRINCIPALS_DROP(cx, principals);
-    tokenStream.close();
     JS_ARENA_RELEASE(&cx->tempPool, tempPoolMark);
 }
 
@@ -6540,6 +6539,186 @@ Parser::expr()
     return pn;
 }
 
+/*
+ * For a number of the expression parsers we define an always-inlined version
+ * and a never-inlined version (which just calls the always-inlined version).
+ * Using the always-inlined version in the hot call-sites givs a ~5% parsing
+ * speedup.  These macros help avoid some boilerplate code.
+ */
+#define BEGIN_EXPR_PARSER(name)                                               \
+    JS_ALWAYS_INLINE JSParseNode *                                            \
+    Parser::name##i()
+
+#define END_EXPR_PARSER(name)                                                 \
+    JS_NEVER_INLINE JSParseNode *                                             \
+    Parser::name##n() {                                                       \
+        return name##i();                                                     \
+    }
+
+BEGIN_EXPR_PARSER(mulExpr1)
+{
+    TokenKind tt;
+    JSParseNode *pn = unaryExpr();
+
+    /*
+     * Note: unlike addExpr1() et al, we use getToken() here instead of
+     * isCurrentTokenType() because unaryExpr() doesn't leave the TokenStream
+     * state one past the end of the unary expression.
+     */
+    while (pn && ((tt = tokenStream.getToken()) == TOK_STAR || tt == TOK_DIVOP)) {
+        tt = tokenStream.currentToken().type;
+        JSOp op = tokenStream.currentToken().t_op;
+        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, unaryExpr(), tc);
+    }
+    return pn;
+}
+END_EXPR_PARSER(mulExpr1)
+
+BEGIN_EXPR_PARSER(addExpr1)
+{
+    JSParseNode *pn = mulExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_PLUS, TOK_MINUS)) {
+        TokenKind tt = tokenStream.currentToken().type;
+        JSOp op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
+        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, mulExpr1n(), tc);
+    }
+    return pn;
+}
+END_EXPR_PARSER(addExpr1)
+
+BEGIN_EXPR_PARSER(shiftExpr1)
+{
+    JSParseNode *pn = addExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_SHOP)) {
+        JSOp op = tokenStream.currentToken().t_op;
+        pn = JSParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr1n(), tc);
+    }
+    return pn;
+}
+END_EXPR_PARSER(shiftExpr1)
+
+BEGIN_EXPR_PARSER(relExpr1)
+{
+    uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
+
+    /*
+     * Uses of the in operator in shiftExprs are always unambiguous,
+     * so unset the flag that prohibits recognizing it.
+     */
+    tc->flags &= ~TCF_IN_FOR_INIT;
+
+    JSParseNode *pn = shiftExpr1i();
+    while (pn &&
+           (tokenStream.isCurrentTokenType(TOK_RELOP) ||
+            /*
+             * Recognize the 'in' token as an operator only if we're not
+             * currently in the init expr of a for loop.
+             */
+            (inForInitFlag == 0 && tokenStream.isCurrentTokenType(TOK_IN)) ||
+            tokenStream.isCurrentTokenType(TOK_INSTANCEOF))) {
+        TokenKind tt = tokenStream.currentToken().type;
+        JSOp op = tokenStream.currentToken().t_op;
+        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, shiftExpr1n(), tc);
+    }
+    /* Restore previous state of inForInit flag. */
+    tc->flags |= inForInitFlag;
+
+    return pn;
+}
+END_EXPR_PARSER(relExpr1)
+
+BEGIN_EXPR_PARSER(eqExpr1)
+{
+    JSParseNode *pn = relExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_EQOP)) {
+        JSOp op = tokenStream.currentToken().t_op;
+        pn = JSParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr1n(), tc);
+    }
+    return pn;
+}
+END_EXPR_PARSER(eqExpr1)
+
+BEGIN_EXPR_PARSER(bitAndExpr1)
+{
+    JSParseNode *pn = eqExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITAND))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITAND, JSOP_BITAND, pn, eqExpr1n(), tc);
+    return pn;
+}
+END_EXPR_PARSER(bitAndExpr1)
+
+BEGIN_EXPR_PARSER(bitXorExpr1)
+{
+    JSParseNode *pn = bitAndExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITXOR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITXOR, JSOP_BITXOR, pn, bitAndExpr1n(), tc);
+    return pn;
+}
+END_EXPR_PARSER(bitXorExpr1)
+
+BEGIN_EXPR_PARSER(bitOrExpr1)
+{
+    JSParseNode *pn = bitXorExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_BITOR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_BITOR, JSOP_BITOR, pn, bitXorExpr1n(), tc);
+    return pn;
+}
+END_EXPR_PARSER(bitOrExpr1)
+
+BEGIN_EXPR_PARSER(andExpr1)
+{
+    JSParseNode *pn = bitOrExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_AND))
+        pn = JSParseNode::newBinaryOrAppend(TOK_AND, JSOP_AND, pn, bitOrExpr1n(), tc);
+    return pn;
+}
+END_EXPR_PARSER(andExpr1)
+
+JS_ALWAYS_INLINE JSParseNode *
+Parser::orExpr1()
+{
+    JSParseNode *pn = andExpr1i();
+    while (pn && tokenStream.isCurrentTokenType(TOK_OR))
+        pn = JSParseNode::newBinaryOrAppend(TOK_OR, JSOP_OR, pn, andExpr1n(), tc);
+    return pn;
+}
+
+JS_ALWAYS_INLINE JSParseNode *
+Parser::condExpr1()
+{
+    JSParseNode *pn = orExpr1();
+    if (pn && tokenStream.isCurrentTokenType(TOK_HOOK)) {
+        JSParseNode *pn1 = pn;
+        pn = TernaryNode::create(tc);
+        if (!pn)
+            return NULL;
+
+        /*
+         * Always accept the 'in' operator in the middle clause of a ternary,
+         * where it's unambiguous, even if we might be parsing the init of a
+         * for statement.
+         */
+        uintN oldflags = tc->flags;
+        tc->flags &= ~TCF_IN_FOR_INIT;
+        JSParseNode *pn2 = assignExpr();
+        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
+
+        if (!pn2)
+            return NULL;
+        MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
+        JSParseNode *pn3 = assignExpr();
+        if (!pn3)
+            return NULL;
+        pn->pn_pos.begin = pn1->pn_pos.begin;
+        pn->pn_pos.end = pn3->pn_pos.end;
+        pn->pn_kid1 = pn1;
+        pn->pn_kid2 = pn2;
+        pn->pn_kid3 = pn3;
+        tokenStream.getToken();     /* need to read one token past the end */
+    }
+    return pn;
+}
+
 JSParseNode *
 Parser::assignExpr()
 {
@@ -6550,12 +6729,11 @@ Parser::assignExpr()
         return returnOrYield(true);
 #endif
 
-    JSParseNode *pn = condExpr();
+    JSParseNode *pn = condExpr1();
     if (!pn)
         return NULL;
 
-    TokenKind tt = tokenStream.getToken();
-    if (tt != TOK_ASSIGN) {
+    if (!tokenStream.isCurrentTokenType(TOK_ASSIGN)) {
         tokenStream.ungetToken();
         return pn;
     }
@@ -6623,164 +6801,6 @@ Parser::assignExpr()
     }
 
     return JSParseNode::newBinaryOrAppend(TOK_ASSIGN, op, pn, rhs, tc);
-}
-
-JSParseNode *
-Parser::condExpr()
-{
-    JSParseNode *pn = orExpr();
-    if (pn && tokenStream.matchToken(TOK_HOOK)) {
-        JSParseNode *pn1 = pn;
-        pn = TernaryNode::create(tc);
-        if (!pn)
-            return NULL;
-
-        /*
-         * Always accept the 'in' operator in the middle clause of a ternary,
-         * where it's unambiguous, even if we might be parsing the init of a
-         * for statement.
-         */
-        uintN oldflags = tc->flags;
-        tc->flags &= ~TCF_IN_FOR_INIT;
-        JSParseNode *pn2 = assignExpr();
-        tc->flags = oldflags | (tc->flags & TCF_FUN_FLAGS);
-
-        if (!pn2)
-            return NULL;
-        MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
-        JSParseNode *pn3 = assignExpr();
-        if (!pn3)
-            return NULL;
-        pn->pn_pos.begin = pn1->pn_pos.begin;
-        pn->pn_pos.end = pn3->pn_pos.end;
-        pn->pn_kid1 = pn1;
-        pn->pn_kid2 = pn2;
-        pn->pn_kid3 = pn3;
-    }
-    return pn;
-}
-
-JSParseNode *
-Parser::orExpr()
-{
-    JSParseNode *pn = andExpr();
-    while (pn && tokenStream.matchToken(TOK_OR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_OR, JSOP_OR, pn, andExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::andExpr()
-{
-    JSParseNode *pn = bitOrExpr();
-    while (pn && tokenStream.matchToken(TOK_AND))
-        pn = JSParseNode::newBinaryOrAppend(TOK_AND, JSOP_AND, pn, bitOrExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::bitOrExpr()
-{
-    JSParseNode *pn = bitXorExpr();
-    while (pn && tokenStream.matchToken(TOK_BITOR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITOR, JSOP_BITOR, pn, bitXorExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::bitXorExpr()
-{
-    JSParseNode *pn = bitAndExpr();
-    while (pn && tokenStream.matchToken(TOK_BITXOR))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITXOR, JSOP_BITXOR, pn, bitAndExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::bitAndExpr()
-{
-    JSParseNode *pn = eqExpr();
-    while (pn && tokenStream.matchToken(TOK_BITAND))
-        pn = JSParseNode::newBinaryOrAppend(TOK_BITAND, JSOP_BITAND, pn, eqExpr(), tc);
-    return pn;
-}
-
-JSParseNode *
-Parser::eqExpr()
-{
-    JSParseNode *pn = relExpr();
-    while (pn && tokenStream.matchToken(TOK_EQOP)) {
-        JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(TOK_EQOP, op, pn, relExpr(), tc);
-    }
-    return pn;
-}
-
-JSParseNode *
-Parser::relExpr()
-{
-    uintN inForInitFlag = tc->flags & TCF_IN_FOR_INIT;
-
-    /*
-     * Uses of the in operator in shiftExprs are always unambiguous,
-     * so unset the flag that prohibits recognizing it.
-     */
-    tc->flags &= ~TCF_IN_FOR_INIT;
-
-    JSParseNode *pn = shiftExpr();
-    while (pn &&
-           (tokenStream.matchToken(TOK_RELOP) ||
-            /*
-             * Recognize the 'in' token as an operator only if we're not
-             * currently in the init expr of a for loop.
-             */
-            (inForInitFlag == 0 && tokenStream.matchToken(TOK_IN)) ||
-            tokenStream.matchToken(TOK_INSTANCEOF))) {
-        TokenKind tt = tokenStream.currentToken().type;
-        JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, shiftExpr(), tc);
-    }
-    /* Restore previous state of inForInit flag. */
-    tc->flags |= inForInitFlag;
-
-    return pn;
-}
-
-JSParseNode *
-Parser::shiftExpr()
-{
-    JSParseNode *pn = addExpr();
-    while (pn && tokenStream.matchToken(TOK_SHOP)) {
-        JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(TOK_SHOP, op, pn, addExpr(), tc);
-    }
-    return pn;
-}
-
-JSParseNode *
-Parser::addExpr()
-{
-    JSParseNode *pn = mulExpr();
-    while (pn &&
-           (tokenStream.matchToken(TOK_PLUS) ||
-            tokenStream.matchToken(TOK_MINUS))) {
-        TokenKind tt = tokenStream.currentToken().type;
-        JSOp op = (tt == TOK_PLUS) ? JSOP_ADD : JSOP_SUB;
-        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, mulExpr(), tc);
-    }
-    return pn;
-}
-
-JSParseNode *
-Parser::mulExpr()
-{
-    JSParseNode *pn = unaryExpr();
-    while (pn && (tokenStream.matchToken(TOK_STAR) || tokenStream.matchToken(TOK_DIVOP))) {
-        TokenKind tt = tokenStream.currentToken().type;
-        JSOp op = tokenStream.currentToken().t_op;
-        pn = JSParseNode::newBinaryOrAppend(tt, op, pn, unaryExpr(), tc);
-    }
-    return pn;
 }
 
 static JSParseNode *
@@ -9729,13 +9749,13 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn, JSTreeContext *tc, bool inCond)
             }
 
             /* Allocate a new buffer and string descriptor for the result. */
-            jschar *chars = (jschar *) cx->malloc((length + 1) * sizeof(jschar));
+            jschar *chars = (jschar *) cx->malloc_((length + 1) * sizeof(jschar));
             if (!chars)
                 return JS_FALSE;
             chars[length] = 0;
             JSString *str = js_NewString(cx, chars, length);
             if (!str) {
-                cx->free(chars);
+                cx->free_(chars);
                 return JS_FALSE;
             }
 

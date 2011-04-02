@@ -820,19 +820,18 @@ nsTreeContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
 }
 
 void
-nsTreeContentView::ContentStatesChanged(nsIDocument* aDocument,
-                                        nsIContent* aContent1,
-                                        nsIContent* aContent2,
-                                        nsEventStates aStateMask)
+nsTreeContentView::ContentStateChanged(nsIDocument* aDocument,
+                                       nsIContent* aContent,
+                                       nsEventStates aStateMask)
 {
-  if (!aContent1 || !mSelection ||
-      !aContent1->IsHTML() ||
+  if (!mSelection ||
+      !aContent->IsHTML() ||
       !aStateMask.HasState(NS_EVENT_STATE_CHECKED))
     return;
 
-  if (aContent1->Tag() == nsGkAtoms::option) {
+  if (aContent->Tag() == nsGkAtoms::option) {
     // update the selected state for this node
-    PRInt32 index = FindContent(aContent1);
+    PRInt32 index = FindContent(aContent);
     if (index >= 0)
       mSelection->ToggleSelect(index);
   }

@@ -47,4 +47,6 @@ script throw-after-close.js
 script throw-forever.js
 script unreachable-yield.js
 script yield-undefined.js
+script yield-new.js
+script gen-with-call-obj.js
 script close-returns-undefined.js

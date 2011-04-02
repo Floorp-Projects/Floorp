@@ -77,6 +77,16 @@ DEFINES += \
 
 include $(topsrcdir)/config/config.mk
 
+ifdef LOCALE_MERGEDIR
+PPL_LOCALE_ARGS = \
+  --l10n-dir=$(LOCALE_MERGEDIR)/browser/installer \
+  --l10n-dir=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer \
+  --l10n-dir=$(topsrcdir)/browser/locales/en-US/installer \
+  $(NULL)
+else
+PPL_LOCALE_ARGS=$(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer
+endif
+
 installer::
 	$(MAKE) -C .. installer-stage
 	$(MAKE) $(CONFIG_DIR)/setup.exe
@@ -91,7 +101,7 @@ uninstaller::
 	  $(srcdir)/nsis/defines.nsi.in > $(CONFIG_DIR)/defines.nsi
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
 	  --preprocess-locale $(topsrcdir) \
-	  $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) $(CONFIG_DIR)
+	  $(PPL_LOCALE_ARGS) $(AB_CD) $(CONFIG_DIR)
 
 $(CONFIG_DIR)/setup.exe::
 	$(RM) -rf $(CONFIG_DIR) && mkdir $(CONFIG_DIR)
@@ -101,7 +111,7 @@ $(CONFIG_DIR)/setup.exe::
 	  $(srcdir)/nsis/defines.nsi.in > $(CONFIG_DIR)/defines.nsi
 	$(PYTHON) $(topsrcdir)/toolkit/mozapps/installer/windows/nsis/preprocess-locale.py \
 	  --preprocess-locale $(topsrcdir) \
-	  $(call EXPAND_LOCALE_SRCDIR,browser/locales)/installer $(AB_CD) $(CONFIG_DIR)
+	  $(PPL_LOCALE_ARGS) $(AB_CD) $(CONFIG_DIR)
 
 GARBARGE_DIRS += instgen
 

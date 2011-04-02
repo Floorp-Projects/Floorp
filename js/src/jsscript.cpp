@@ -293,8 +293,8 @@ Bindings::makeImmutable()
 void
 Bindings::trace(JSTracer *trc)
 {
-    for (const Shape *shape = lastBinding; shape; shape = shape->previous())
-        Shape::trace(trc, shape);
+    if (lastBinding)
+        MarkShape(trc, lastBinding, "shape");
 }
 
 } /* namespace js */
@@ -313,27 +313,6 @@ enum ScriptBits {
 JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 {
-    JS_ASSERT(!xdr->atoms);
-    JS_ASSERT(!xdr->atomsMap);
-
-    XDRAtoms atoms;
-    XDRAtomsHashMap atomsMap;
-    if (xdr->mode == JSXDR_ENCODE && !atomsMap.init()) {
-        js_ReportOutOfMemory(xdr->cx);
-        return false;
-    }
-
-    xdr->atoms = &atoms;
-    xdr->atomsMap = &atomsMap;
-    JSBool ok = js_XDRScriptAndSubscripts(xdr, scriptp);
-    xdr->atoms = NULL;
-    xdr->atomsMap = NULL;
-    return ok;
-}
-
-JSBool
-js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
-{
     JSScript *oldscript;
     JSBool ok;
     jsbytecode *code;
@@ -351,6 +330,9 @@ js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
     JSScript *script = *scriptp;
     nsrcnotes = ntrynotes = natoms = nobjects = nregexps = nconsts = 0;
     jssrcnote *notes = NULL;
+    XDRScriptState *state = xdr->state;
+
+    JS_ASSERT(state);
 
     /* Should not XDR scripts optimized for a single global object. */
     JS_ASSERT_IF(script, !JSScript::isValidOffset(script->globalsOffset));
@@ -608,7 +590,7 @@ js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
     ok = JS_XDRBytes(xdr, (char *) code, length * sizeof(jsbytecode));
 
     if (code != script->code)
-        cx->free(code);
+        cx->free_(code);
 
     if (!ok)
         goto error;
@@ -619,10 +601,20 @@ js_XDRScriptAndSubscripts(JSXDRState *xdr, JSScript **scriptp)
         goto error;
     }
 
-    JS_ASSERT_IF(xdr->mode == JSXDR_ENCODE, xdr->filename == script->filename);
+    if (xdr->mode == JSXDR_DECODE && state->filename) {
+        if (!state->filenameSaved) {
+            const char *filename = state->filename;
+            filename = js_SaveScriptFilename(xdr->cx, filename);
+            xdr->cx->free_((void *) state->filename);
+            state->filename = filename;
+            state->filenameSaved = true;
+            if (!filename)
+                goto error;
+        }
+        script->filename = state->filename;
+    }
 
-    if (xdr->mode == JSXDR_DECODE)
-        script->filename = xdr->filename;
+    JS_ASSERT_IF(xdr->mode == JSXDR_ENCODE, state->filename == script->filename);
 
     callbacks = JS_GetSecurityCallbacks(cx);
     if (xdr->mode == JSXDR_ENCODE) {
@@ -812,13 +804,13 @@ typedef struct ScriptFilenameEntry {
 static void *
 js_alloc_table_space(void *priv, size_t size)
 {
-    return js_malloc(size);
+    return OffTheBooks::malloc_(size);
 }
 
 static void
 js_free_table_space(void *priv, void *item, size_t size)
 {
-    js_free(item);
+    UnwantedForeground::free_(item);
 }
 
 static JSHashEntry *
@@ -827,7 +819,7 @@ js_alloc_sftbl_entry(void *priv, const void *key)
     size_t nbytes = offsetof(ScriptFilenameEntry, filename) +
                     strlen((const char *) key) + 1;
 
-    return (JSHashEntry *) js_malloc(JS_MAX(nbytes, sizeof(JSHashEntry)));
+    return (JSHashEntry *) OffTheBooks::malloc_(JS_MAX(nbytes, sizeof(JSHashEntry)));
 }
 
 static void
@@ -835,7 +827,7 @@ js_free_sftbl_entry(void *priv, JSHashEntry *he, uintN flag)
 {
     if (flag != HT_FREE_ENTRY)
         return;
-    js_free(he);
+    UnwantedForeground::free_(he);
 }
 
 static JSHashAllocOps sftbl_alloc_ops = {
@@ -896,7 +888,7 @@ js_FreeRuntimeScriptState(JSRuntime *rt)
         ScriptFilenamePrefix *sfp = (ScriptFilenamePrefix *)
                                     rt->scriptFilenamePrefixes.next;
         JS_REMOVE_LINK(&sfp->links);
-        js_free(sfp);
+        UnwantedForeground::free_(sfp);
     }
     FinishRuntimeScriptState(rt);
 }
@@ -959,7 +951,7 @@ SaveScriptFilename(JSRuntime *rt, const char *filename, uint32 flags)
 
         if (!sfp) {
             /* No such prefix: add one now. */
-            sfp = (ScriptFilenamePrefix *) js_malloc(sizeof(ScriptFilenamePrefix));
+            sfp = (ScriptFilenamePrefix *) rt->malloc_(sizeof(ScriptFilenamePrefix));
             if (!sfp)
                 return NULL;
             JS_INSERT_AFTER(&sfp->links, link);
@@ -1233,7 +1225,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     size += length * sizeof(jsbytecode) +
             nsrcnotes * sizeof(jssrcnote);
 
-    script = (JSScript *) cx->malloc(size);
+    script = (JSScript *) cx->malloc_(size);
     if (!script)
         return NULL;
 
@@ -1472,7 +1464,7 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         memcpy(script->upvars()->vector, cg->upvarMap.vector,
                cg->upvarList.count * sizeof(uint32));
         cg->upvarList.clear();
-        cx->free(cg->upvarMap.vector);
+        cx->free_(cg->upvarMap.vector);
         cg->upvarMap.vector = NULL;
     }
 
@@ -1664,11 +1656,11 @@ DestroyScript(JSContext *cx, JSScript *script)
     types::TypeResult *result = script->typeResults;
     while (result) {
         types::TypeResult *next = result->next;
-        cx->free(result);
+        cx->free_(result);
         result = next;
     }
 
-    cx->free(script->varTypes);
+    cx->free_(script->varTypes);
 
 #if defined(JS_METHODJIT)
     mjit::ReleaseScriptCode(cx, script, true);
@@ -1677,7 +1669,7 @@ DestroyScript(JSContext *cx, JSScript *script)
 
     JS_REMOVE_LINK(&script->links);
 
-    cx->free(script);
+    cx->free_(script);
 }
 
 void
@@ -2031,6 +2023,29 @@ class DisablePrincipalsTranscoding {
     }
 };
 
+class AutoJSXDRState {
+public:
+    AutoJSXDRState(JSXDRState *x
+                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
+        : xdr(x)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+    ~AutoJSXDRState()
+    {
+        JS_XDRDestroy(xdr);
+    }
+
+    operator JSXDRState*() const
+    {
+        return xdr;
+    }
+
+private:
+    JSXDRState *const xdr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
 JSScript *
 js_CloneScript(JSContext *cx, JSScript *script)
 {
@@ -2038,47 +2053,41 @@ js_CloneScript(JSContext *cx, JSScript *script)
     JS_ASSERT(script->compartment);
 
     // serialize script
-    JSXDRState *w = JS_XDRNewMem(cx, JSXDR_ENCODE);
+    AutoJSXDRState w(JS_XDRNewMem(cx, JSXDR_ENCODE));
     if (!w)
         return NULL;
 
     // we don't want gecko to transcribe our principals for us
     DisablePrincipalsTranscoding disable(cx);
 
+    XDRScriptState wstate(w);
 #ifdef DEBUG
-    w->filename = script->filename;
+    wstate.filename = script->filename;
 #endif
-    if (!js_XDRScript(w, &script)) {
-        JS_XDRDestroy(w);
+    if (!js_XDRScript(w, &script))
         return NULL;
-    }
 
     uint32 nbytes;
     void *p = JS_XDRMemGetData(w, &nbytes);
-    if (!p) {
-        JS_XDRDestroy(w);
+    if (!p)
         return NULL;
-    }
 
     // de-serialize script
-    JSXDRState *r = JS_XDRNewMem(cx, JSXDR_DECODE);
-    if (!r) {
-        JS_XDRDestroy(w);
+    AutoJSXDRState r(JS_XDRNewMem(cx, JSXDR_DECODE));
+    if (!r)
         return NULL;
-    }
 
     // Hand p off from w to r.  Don't want them to share the data
     // mem, lest they both try to free it in JS_XDRDestroy
     JS_XDRMemSetData(r, p, nbytes);
     JS_XDRMemSetData(w, NULL, 0);
 
-    r->filename = script->filename;
+    XDRScriptState rstate(r);
+    rstate.filename = script->filename;
+    rstate.filenameSaved = true;
 
     if (!js_XDRScript(r, &script))
         return NULL;
-
-    JS_XDRDestroy(r);
-    JS_XDRDestroy(w);
 
     // set the proper principals for the script
     script->principals = script->compartment->principals;

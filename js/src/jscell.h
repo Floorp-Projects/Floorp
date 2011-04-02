@@ -78,6 +78,10 @@ struct Cell {
     JS_ALWAYS_INLINE js::gc::FreeCell *asFreeCell() {
         return reinterpret_cast<FreeCell *>(this);
     }
+
+    JS_ALWAYS_INLINE const js::gc::FreeCell *asFreeCell() const {
+        return reinterpret_cast<const FreeCell *>(this);
+    }
 };
 
 /* FreeCell has always size 8 */

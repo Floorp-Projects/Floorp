@@ -50,7 +50,6 @@ class nsIDOMEvent;
 class nsIContent;
 class nsIEventListenerManager;
 class nsIURI;
-class nsICSSStyleRule;
 class nsRuleWalker;
 class nsAttrValue;
 class nsAttrName;
@@ -62,6 +61,12 @@ class nsISMILAttr;
 class nsIDOMCSSStyleDeclaration;
 #endif // MOZ_SMIL
 
+namespace mozilla {
+namespace css {
+class StyleRule;
+}
+}
+
 enum nsLinkState {
   eLinkState_Unknown    = 0,
   eLinkState_Unvisited  = 1,
@@ -71,8 +76,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x71afb9e6, 0xe8a7, 0x475d, \
-  { 0x89, 0xc4, 0xe4, 0x62, 0x21, 0xeb, 0xe1, 0xa4 } }
+{ 0x5788c9eb, 0x646a, 0x4285, \
+  { 0xa2, 0x8c, 0xde, 0x0d, 0x43, 0x6b, 0x47, 0x72 } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -823,13 +828,13 @@ public:
   /**
    * Get the inline style rule, if any, for this content node
    */
-  virtual nsICSSStyleRule* GetInlineStyleRule() = 0;
+  virtual mozilla::css::StyleRule* GetInlineStyleRule() = 0;
 
   /**
    * Set the inline style rule for this node.  This will send an
    * appropriate AttributeChanged notification if aNotify is true.
    */
-  NS_IMETHOD SetInlineStyleRule(nsICSSStyleRule* aStyleRule, PRBool aNotify) = 0;
+  NS_IMETHOD SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule, PRBool aNotify) = 0;
 
   /**
    * Is the attribute named stored in the mapped attributes?
@@ -901,29 +906,29 @@ public:
    */
   virtual nsISMILAttr* GetAnimatedAttr(PRInt32 aNamespaceID, nsIAtom* aName) = 0;
 
-   /**
-    * Get the SMIL override style for this content node.  This is a style
-    * declaration that is applied *after* the inline style, and it can be used
-    * e.g. to store animated style values.
-    *
-    * Note: This method is analogous to the 'GetStyle' method in
-    * nsGenericHTMLElement and nsStyledElement.
-    */
-  virtual nsresult GetSMILOverrideStyle(nsIDOMCSSStyleDeclaration** aStyle) = 0;
+  /**
+   * Get the SMIL override style for this content node.  This is a style
+   * declaration that is applied *after* the inline style, and it can be used
+   * e.g. to store animated style values.
+   *
+   * Note: This method is analogous to the 'GetStyle' method in
+   * nsGenericHTMLElement and nsStyledElement.
+   */
+  virtual nsIDOMCSSStyleDeclaration* GetSMILOverrideStyle() = 0;
 
   /**
    * Get the SMIL override style rule for this content node.  If the rule
    * hasn't been created (or if this nsIContent object doesn't support SMIL
    * override style), this method simply returns null.
    */
-  virtual nsICSSStyleRule* GetSMILOverrideStyleRule() = 0;
+  virtual mozilla::css::StyleRule* GetSMILOverrideStyleRule() = 0;
 
   /**
    * Set the SMIL override style rule for this node.  If aNotify is true, this
    * method will notify the document's pres context, so that the style changes
    * will be noticed.
    */
-  virtual nsresult SetSMILOverrideStyleRule(nsICSSStyleRule* aStyleRule,
+  virtual nsresult SetSMILOverrideStyleRule(mozilla::css::StyleRule* aStyleRule,
                                             PRBool aNotify) = 0;
 #endif // MOZ_SMIL
 

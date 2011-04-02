@@ -161,8 +161,8 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (element->ShouldCheckAllowOrigin()) {
-    // If the request was cancelled by nsCrossSiteListenerProxy due to failing
-    // the Access Control check, send an error through to the media element.
+    // If the request was cancelled by nsCORSListenerProxy due to failing
+    // the CORS security check, send an error through to the media element.
     if (status == NS_ERROR_DOM_BAD_URI) {
       mDecoder->NetworkError();
       return NS_ERROR_DOM_BAD_URI;
@@ -222,7 +222,7 @@ nsMediaChannelStream::OnStartRequest(nsIRequest* aRequest)
       }
 
       if (NS_SUCCEEDED(rv)) {
-        double duration = durationText.ToFloat(&ec);
+        double duration = durationText.ToDouble(&ec);
         if (ec == NS_OK && duration >= 0) {
           mDecoder->SetDuration(PRInt64(NS_round(duration*1000)));
         }
@@ -457,12 +457,12 @@ nsresult nsMediaChannelStream::OpenChannel(nsIStreamListener** aStreamListener)
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
     if (element->ShouldCheckAllowOrigin()) {
       nsresult rv;
-      nsCrossSiteListenerProxy* crossSiteListener =
-        new nsCrossSiteListenerProxy(mListener,
-                                     element->NodePrincipal(),
-                                     mChannel,
-                                     PR_FALSE,
-                                     &rv);
+      nsCORSListenerProxy* crossSiteListener =
+        new nsCORSListenerProxy(mListener,
+                                element->NodePrincipal(),
+                                mChannel,
+                                PR_FALSE,
+                                &rv);
       listener = crossSiteListener;
       NS_ENSURE_TRUE(crossSiteListener, NS_ERROR_OUT_OF_MEMORY);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -588,15 +588,6 @@ nsresult nsMediaChannelStream::Read(char* aBuffer,
 {
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
-  PRInt64 pos = Tell();
-  PRInt64 endOfRead = pos + aCount;
-  if (endOfRead > mCacheStream.GetCachedDataEnd(pos) &&
-      !IsDataCachedToEndOfStream(pos)) {
-    // Our read will almost certainly block waiting for more data to download.
-    // Notify the decoder, so it can move to buffering state if need be.
-    mDecoder->NotifyDataExhausted();
-  }
-
   return mCacheStream.Read(aBuffer, aCount, aBytes);
 }
 
@@ -612,6 +603,11 @@ PRInt64 nsMediaChannelStream::Tell()
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   return mCacheStream.Tell();
+}
+
+nsresult nsMediaChannelStream::GetCachedRanges(nsTArray<nsByteRange>& aRanges)
+{
+  return mCacheStream.GetCachedRanges(aRanges);
 }
 
 void nsMediaChannelStream::Suspend(PRBool aCloseImmediately)
@@ -928,6 +924,8 @@ public:
   virtual PRBool  IsSuspendedByCache() { return PR_FALSE; }
   virtual PRBool  IsSuspended() { return PR_FALSE; }
 
+  nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges);
+
 private:
   // The file size, or -1 if not known. Immutable after Open().
   PRInt64 mSize;
@@ -969,6 +967,15 @@ public:
 private:
   nsRefPtr<nsMediaDecoder> mDecoder;
 };
+
+nsresult nsMediaFileStream::GetCachedRanges(nsTArray<nsByteRange>& aRanges)
+{
+  if (mSize == -1) {
+    return NS_ERROR_FAILURE;
+  }
+  aRanges.AppendElement(nsByteRange(0, mSize));
+  return NS_OK;
+}
 
 nsresult nsMediaFileStream::Open(nsIStreamListener** aStreamListener)
 {

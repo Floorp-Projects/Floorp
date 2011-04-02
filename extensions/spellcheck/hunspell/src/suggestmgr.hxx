@@ -65,6 +65,7 @@
 #define MAX_GUESS 200
 #define MAXNGRAMSUGS 4
 #define MAXPHONSUGS 2
+#define MAXCOMPOUNDSUGS 3
 
 // timelimit: max ~1/4 sec (process time on Linux) for a time consuming function
 #define TIMELIMIT (CLOCKS_PER_SEC >> 2)
@@ -74,6 +75,7 @@
 #define NGRAM_LONGER_WORSE  (1 << 0)
 #define NGRAM_ANY_MISMATCH  (1 << 1)
 #define NGRAM_LOWERING      (1 << 2)
+#define NGRAM_WEIGHTED      (1 << 3)
 
 #include "hunvisapi.h"
 
@@ -102,6 +104,7 @@ class LIBHUNSPELL_DLL_EXPORTED SuggestMgr
   int             langnum;
   int             nosplitsugs;
   int             maxngramsugs;
+  int             maxcpdsugs;
   int             complexprefixes;
 
 

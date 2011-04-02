@@ -127,6 +127,25 @@ private:
   PRPackedBool mIsStarted;
 };
 
+// Represents a section of contiguous media, with a start and end offset.
+// Used to denote ranges of data which are cached.
+class nsByteRange {
+public:
+  nsByteRange() : mStart(0), mEnd(0) {}
+
+  nsByteRange(PRInt64 aStart, PRInt64 aEnd)
+    : mStart(aStart), mEnd(aEnd)
+  {
+    NS_ASSERTION(mStart < mEnd, "Range should end after start!");
+  }
+
+  PRBool IsNull() const {
+    return mStart == 0 && mEnd == 0;
+  }
+
+  PRInt64 mStart, mEnd;
+};
+
 /*
    Provides the ability to open, read and seek into a media stream
    (audio, video). Handles the underlying machinery to do range
@@ -275,6 +294,13 @@ public:
    */
   virtual nsresult Open(nsIStreamListener** aStreamListener) = 0;
 
+  /**
+   * Fills aRanges with ByteRanges representing the data which is cached
+   * in the media cache. Stream should be pinned during call and while
+   * aRanges is being used.
+   */
+  virtual nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges) = 0;
+
 protected:
   nsMediaStream(nsMediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI) :
     mDecoder(aDecoder),
@@ -394,6 +420,8 @@ public:
     nsMediaChannelStream* mStream;
   };
   friend class Listener;
+
+  nsresult GetCachedRanges(nsTArray<nsByteRange>& aRanges);
 
 protected:
   // These are called on the main thread by Listener.

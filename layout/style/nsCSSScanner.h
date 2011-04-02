@@ -90,8 +90,8 @@ enum nsCSSTokenType {
 
   eCSSToken_Function,       // mIdent
 
-  eCSSToken_URL,            // mIdent
-  eCSSToken_InvalidURL,     // doesn't matter
+  eCSSToken_URL,            // mIdent + mSymbol
+  eCSSToken_Bad_URL,        // mIdent + mSymbol
 
   eCSSToken_HTMLComment,    // "<!--" or "-->"
 
@@ -106,9 +106,8 @@ enum nsCSSTokenType {
                             // valid range; mIdent preserves the textual
                             // form of the token for error reporting
 
-  // A special token indicating that there was an error in tokenization.
-  // It's always an unterminated string.
-  eCSSToken_Error           // mSymbol + mIdent
+  // An unterminated string, which is always an error.
+  eCSSToken_Bad_String      // mSymbol + mIdent
 };
 
 struct nsCSSToken {
@@ -192,7 +191,7 @@ class nsCSSScanner {
   // is filled in with the data for the token.
   PRBool Next(nsCSSToken& aTokenResult);
 
-  // Get the next token that may be a string or unquoted URL or whitespace
+  // Get the next token that may be a string or unquoted URL
   PRBool NextURL(nsCSSToken& aTokenResult);
 
   // It's really ugly that we have to expose this, but it's the easiest
@@ -213,6 +212,7 @@ protected:
   PRInt32 Read();
   PRInt32 Peek();
   PRBool LookAhead(PRUnichar aChar);
+  PRBool LookAheadOrEOF(PRUnichar aChar); // expect either aChar or EOF
   void EatWhiteSpace();
   
   void ParseAndAppendEscape(nsString& aOutput);

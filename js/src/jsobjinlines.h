@@ -139,37 +139,6 @@ JSObject::syncSpecialEquality()
 }
 
 inline void
-JSObject::trace(JSTracer *trc)
-{
-    if (!isNative())
-        return;
-
-    JSContext *cx = trc->context;
-    js::Shape *shape = lastProp;
-
-    if (IS_GC_MARKING_TRACER(trc) && cx->runtime->gcRegenShapes) {
-        /*
-         * Either this object has its own shape, which must be regenerated, or
-         * it must have the same shape as lastProp.
-         */
-        if (!shape->hasRegenFlag()) {
-            shape->shape = js_RegenerateShapeForGC(cx->runtime);
-            shape->setRegenFlag();
-        }
-
-        uint32 newShape = shape->shape;
-        if (hasOwnShape()) {
-            newShape = js_RegenerateShapeForGC(cx->runtime);
-            JS_ASSERT(newShape != shape->shape);
-        }
-        objShape = newShape;
-    }
-
-    /* Trace our property tree or dictionary ancestor line. */
-    js::Shape::trace(trc, shape);
-}
-
-inline void
 JSObject::finalize(JSContext *cx)
 {
     /* Cope with stillborn objects that have no map. */
@@ -191,16 +160,16 @@ JSObject::finalize(JSContext *cx)
  * parent, map, and shape, and allocate slots.
  */
 inline void
-JSObject::initCall(JSContext *cx, const js::Bindings *bindings, JSObject *parent)
+JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
     init(cx, &js_CallClass, cx->getTypeEmpty(), parent, NULL, false);
-    map = bindings->lastShape();
+    map = bindings.lastShape();
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
      * its Call should have its own shape; see js::Bindings::extensibleParents.
      */
-    if (bindings->extensibleParents())
+    if (bindings.extensibleParents())
         setOwnShape(js_GenerateShape(cx));
     else
         objShape = map->shape;
@@ -284,15 +253,9 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     if (cx->runtime->functionMeterFilename) {
         JS_FUNCTION_METER(cx, mreadbarrier);
 
-        typedef JSRuntime::FunctionCountMap HM;
-        HM &h = cx->runtime->methodReadBarrierCountMap;
-        HM::AddPtr p = h.lookupForAdd(fun);
-        if (!p) {
-            h.add(p, fun, 1);
-        } else {
-            JS_ASSERT(p->key == fun);
+        typedef JSRuntime::FunctionCountMap::Ptr Ptr;
+        if (Ptr p = cx->runtime->methodReadBarrierCountMap.lookupWithDefault(fun, 0))
             ++p->value;
-        }
     }
 #endif
     return newshape;
@@ -913,10 +876,8 @@ JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
     /*
      * NB: objShape must not be set here; rather, the caller must call setMap
      * or setSharedNonNativeMap after calling init. To defend this requirement
-     * we set map to null in DEBUG builds, and set objShape to a value we then
-     * assert obj->shape() never returns.
+     * we set objShape to a value that obj->shape() is asserted never to return.
      */
-    map = NULL;
     objShape = JSObjectMap::INVALID_SHAPE;
 #endif
 
@@ -977,7 +938,7 @@ inline void
 JSObject::freeSlotsArray(JSContext *cx)
 {
     JS_ASSERT(hasSlotsArray());
-    cx->free(slots);
+    cx->free_(slots);
 }
 
 inline void
@@ -1433,6 +1394,27 @@ ClassMethodIsNative(JSContext *cx, JSObject *obj, Class *clasp, jsid methodid,
     JSObject *pobj = obj->getProto();
     return pobj && pobj->getClass() == clasp &&
            HasNativeMethod(pobj, methodid, native);
+}
+
+inline bool
+DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
+                              JSProtoKey key, JSFunction *ctor, JSObject *proto)
+{
+    JS_ASSERT(global->isGlobal());
+    JS_ASSERT(!global->nativeEmpty()); /* reserved slots already allocated */
+    JS_ASSERT(ctor);
+    JS_ASSERT(proto);
+
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
+    JS_ASSERT(!global->nativeLookup(id));
+
+    if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0))
+        return false;
+
+    global->setSlot(key, ObjectValue(*ctor));
+    global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
+    global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
+    return true;
 }
 
 } /* namespace js */

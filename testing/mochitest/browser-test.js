@@ -90,11 +90,21 @@ Tester.prototype = {
     }
 
     this.dumper.dump("TEST-INFO | checking window state\n");
-    let windowsEnum = this._wm.getEnumerator("navigator:browser");
+    let windowsEnum = this._wm.getEnumerator(null);
     while (windowsEnum.hasMoreElements()) {
       let win = windowsEnum.getNext();
-      if (win != window && !win.closed) {
-        let msg = baseMsg.replace("{elt}", "browser window");
+      if (win != window && !win.closed &&
+          win.document.documentElement.getAttribute("id") != "browserTestHarness") {
+        let type = win.document.documentElement.getAttribute("windowtype");
+        switch (type) {
+        case "navigator:browser":
+          type = "browser window";
+          break;
+        case null:
+          type = "unknown window";
+          break;
+        }
+        let msg = baseMsg.replace("{elt}", type);
         if (this.currentTest)
           this.currentTest.addResult(new testResult(false, msg, "", false));
         else

@@ -147,7 +147,7 @@ static inline unsigned __int64 rdtsc(void)
     return __rdtsc();
 }
 
-#elif defined(__powerpc__)
+#elif defined(__GNUC__) && defined(__powerpc__)
 
 # define AVMPLUS_HAS_RDTSC 1
 

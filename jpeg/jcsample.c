@@ -2,6 +2,7 @@
  * jcsample.c
  *
  * Copyright (C) 1991-1996, Thomas G. Lane.
+ * Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -48,6 +49,7 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
+#include "jsimd.h"
 
 
 /* Pointer to routine to downsample a single component */
@@ -494,7 +496,10 @@ jinit_downsampler (j_compress_ptr cinfo)
     } else if (compptr->h_samp_factor * 2 == cinfo->max_h_samp_factor &&
 	       compptr->v_samp_factor == cinfo->max_v_samp_factor) {
       smoothok = FALSE;
-      downsample->methods[ci] = h2v1_downsample;
+      if (jsimd_can_h2v1_downsample())
+        downsample->methods[ci] = jsimd_h2v1_downsample;
+      else
+        downsample->methods[ci] = h2v1_downsample;
     } else if (compptr->h_samp_factor * 2 == cinfo->max_h_samp_factor &&
 	       compptr->v_samp_factor * 2 == cinfo->max_v_samp_factor) {
 #ifdef INPUT_SMOOTHING_SUPPORTED
@@ -503,7 +508,10 @@ jinit_downsampler (j_compress_ptr cinfo)
 	downsample->pub.need_context_rows = TRUE;
       } else
 #endif
-	downsample->methods[ci] = h2v2_downsample;
+	if (jsimd_can_h2v2_downsample())
+	  downsample->methods[ci] = jsimd_h2v2_downsample;
+	else
+	  downsample->methods[ci] = h2v2_downsample;
     } else if ((cinfo->max_h_samp_factor % compptr->h_samp_factor) == 0 &&
 	       (cinfo->max_v_samp_factor % compptr->v_samp_factor) == 0) {
       smoothok = FALSE;

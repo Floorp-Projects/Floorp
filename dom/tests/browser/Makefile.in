@@ -51,6 +51,8 @@ _BROWSER_FILES = \
 		browser_ConsoleAPITests.js \
 		test-console-api.html \
 		browser_autofocus_preference.js \
+		browser_643083.js \
+	      	test_643083.xul \
 		$(NULL)
 
 libs::	$(_BROWSER_FILES)

@@ -57,7 +57,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     /**
      * Check that the script currently running in context "cx" can load "uri".
      *
-     * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
+     * Will return error code NS_ERROR_DOM_BAD_URI if the load request
      * should be denied.
      *
      * @param cx the JSContext of the script causing the load
@@ -105,7 +105,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     /**
      * Check that content with principal aPrincipal can load "uri".
      *
-     * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
+     * Will return error code NS_ERROR_DOM_BAD_URI if the load request
      * should be denied.
      *
      * @param aPrincipal the principal identifying the actor causing the load
@@ -113,13 +113,13 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * @param flags the permission set, see above
      */
     void checkLoadURIWithPrincipal(in nsIPrincipal aPrincipal,
-                                   in nsIURI uri, 
+                                   in nsIURI uri,
                                    in unsigned long flags);
 
     /**
      * Check that content from "from" can load "uri".
      *
-     * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
+     * Will return error code NS_ERROR_DOM_BAD_URI if the load request
      * should be denied.
      *
      * @param from the URI causing the load
@@ -128,8 +128,8 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      *
      * @deprecated Use checkLoadURIWithPrincipal instead of this function.
      */
-    void checkLoadURI(in nsIURI from, in nsIURI uri, 
-                      in unsigned long flags);
+    [deprecated] void checkLoadURI(in nsIURI from, in nsIURI uri,
+                                   in unsigned long flags);
 
     /**
      * Similar to checkLoadURIWithPrincipal but there are two differences:
@@ -141,17 +141,17 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      * function will return error code NS_ERROR_DOM_BAD_URI.
      */
     void checkLoadURIStrWithPrincipal(in nsIPrincipal aPrincipal,
-                                      in AUTF8String uri, 
-                                      in unsigned long flags);     
-    
+                                      in AUTF8String uri,
+                                      in unsigned long flags);
+
     /**
      * Same as CheckLoadURI but takes string arguments for ease of use
      * by scripts
      *
      * @deprecated Use checkLoadURIStrWithPrincipal instead of this function.
      */
-    void checkLoadURIStr(in AUTF8String from, in AUTF8String uri, 
-                         in unsigned long flags);
+    [deprecated] void checkLoadURIStr(in AUTF8String from, in AUTF8String uri,
+                                      in unsigned long flags);
 
     /**
      * Check that the function 'funObj' is allowed to run on 'targetObj'
@@ -173,10 +173,10 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     [noscript] boolean canExecuteScripts(in JSContextPtr cx,
                                          in nsIPrincipal principal);
 
-    ///////////////// Principals /////////////////////// 
+    ///////////////// Principals ///////////////////////
     /**
-     * Return the principal of the innermost frame of the currently 
-     * executing script. Will return null if there is no script 
+     * Return the principal of the innermost frame of the currently
+     * executing script. Will return null if there is no script
      * currently executing.
      */
     [noscript] nsIPrincipal getSubjectPrincipal();
@@ -215,12 +215,12 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
      */
     [noscript] short requestCapability(in nsIPrincipal principal,
                                        in string capability);
-    
+
     /**
      * Return true if the currently executing script has 'capability' enabled.
      */
     boolean isCapabilityEnabled(in string capability);
-    
+
     /**
      * Enable 'capability' in the innermost frame of the currently executing
      * script.
@@ -249,7 +249,7 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
     // XXXbz ideally we'd pass a subjectName here too, and the nsISupports
     // cert we're enabling for...
     void setCanEnableCapability(in AUTF8String certificateFingerprint,
-                                in string capability, 
+                                in string capability,
                                 in short canEnable);
 
     ///////////////////////

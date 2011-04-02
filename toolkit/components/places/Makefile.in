@@ -36,21 +36,114 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public
+MODULE = places
+
+XPIDLSRCS = \
+  nsINavHistoryService.idl \
+  $(NULL)
 
 ifdef MOZ_PLACES
-DIRS += src
+LIBRARY_NAME  = places
+LIBXUL_LIBRARY = 1
+EXPORT_LIBRARY = 1
+MODULE_NAME = nsPlacesModule
+IS_COMPONENT = 1
+
+XPIDLSRCS += \
+  mozIAsyncHistory.idl \
+  mozIPlacesAutoComplete.idl \
+  nsIAnnotationService.idl \
+  nsIBrowserHistory.idl \
+  nsIDynamicContainer.idl \
+  nsIFaviconService.idl \
+  nsILivemarkService.idl \
+  nsIMicrosummaryService.idl \
+  nsINavBookmarksService.idl \
+  nsIPlacesImportExportService.idl \
+  nsITaggingService.idl  \
+  nsPIPlacesDatabase.idl \
+  nsPIPlacesHistoryListenersNotifier.idl \
+  $(NULL)
+
+EXPORTS_NAMESPACES = mozilla/places
+
+EXPORTS_mozilla/places = \
+  History.h \
+  $(NULL)
+
+CPPSRCS = \
+  nsAnnoProtocolHandler.cpp \
+  nsAnnotationService.cpp \
+  nsFaviconService.cpp \
+  nsNavHistory.cpp \
+  nsNavHistoryQuery.cpp \
+  nsNavHistoryResult.cpp \
+  nsNavBookmarks.cpp \
+  nsMaybeWeakPtr.cpp \
+  nsMorkHistoryImporter.cpp \
+  nsPlacesModule.cpp \
+  SQLFunctions.cpp \
+  Helpers.cpp \
+  History.cpp \
+  nsPlacesImportExportService.cpp \
+  AsyncFaviconHelpers.cpp \
+  PlaceInfo.cpp \
+  VisitInfo.cpp \
+  $(NULL)
+
+EXTRA_DSO_LDOPTS += \
+  $(DEPTH)/db/morkreader/$(LIB_PREFIX)morkreader_s.$(LIB_SUFFIX) \
+  $(MOZ_UNICHARUTIL_LIBS) \
+  $(MOZ_COMPONENT_LIBS) \
+  $(NULL)
+
+ifndef MOZ_ENABLE_LIBXUL
+EXTRA_DSO_LDOPTS += \
+  $(MOZ_JS_LIBS) \
+  $(NULL)
+endif
+
+LOCAL_INCLUDES += -I$(srcdir)/../build
+
+# This is the default value.  Must be in sync with the one defined in SQLite.
+DEFINES += -DSQLITE_DEFAULT_PAGE_SIZE=32768
+
+EXTRA_COMPONENTS = \
+  toolkitplaces.manifest \
+  nsLivemarkService.js \
+  nsTaggingService.js \
+  nsPlacesExpiration.js \
+  nsMicrosummaryService.js \
+  PlacesCategoriesStarter.js \
+  $(NULL)
+
+ifdef MOZ_XUL
+EXTRA_COMPONENTS += nsPlacesAutoComplete.js nsPlacesAutoComplete.manifest
+endif
+
+EXTRA_JS_MODULES = \
+  PlacesDBUtils.jsm \
+  utils.js \
+  $(NULL)
+
+EXTRA_PP_JS_MODULES = \
+  PlacesUtils.jsm \
+  $(NULL)
 
 ifdef ENABLE_TESTS
-	DIRS += tests
+DIRS += tests
 endif
+
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
+
 endif
 
 include $(topsrcdir)/config/rules.mk

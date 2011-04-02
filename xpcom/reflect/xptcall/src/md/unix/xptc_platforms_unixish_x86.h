@@ -53,15 +53,14 @@
 *
 *  For example we might end up with something like:
 *
-* #elif defined(NTO) 
+* #elif defined(NTO)
 * #  if defined(TYPE1)
 * #    define CFRONT_STYLE_THIS_ADJUST
-* #  elif defined(TYPE1) 
+* #  elif defined(TYPE2)
 * #    define THUNK_BASED_THIS_ADJUST
 * #  else
 * #    error "need TYPE1 or TYPE2 for NTO"
 * #  endif
-* #elif defined(__BEOS__) 
 *
 *  and so on....
 *
@@ -136,9 +135,6 @@
 /* egcs and later */
 #define THUNK_BASED_THIS_ADJUST
 #endif
-
-#elif defined(__BEOS__) 
-#define CFRONT_STYLE_THIS_ADJUST
 
 #elif defined(__sun__) || defined(__sun)
 #if defined(__GXX_ABI_VERSION) && __GXX_ABI_VERSION >= 100 /* G++ V3 ABI */

@@ -1602,7 +1602,6 @@ nsSVGGlyphFrame::EnsureTextRun(float *aDrawScale, float *aMetricsScale,
     gfxFontStyle fontStyle(font.style, font.weight, font.stretch, textRunSize,
                            mStyleContext->GetStyleVisibility()->mLanguage,
                            font.sizeAdjust, font.systemFont,
-                           font.familyNameQuirks,
                            printerFont,
                            font.featureSettings,
                            font.languageOverride);

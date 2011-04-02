@@ -70,6 +70,7 @@
 #include "nsRuleData.h"
 #include "nsContentErrors.h"
 #include "nsRuleProcessorData.h"
+#include "nsCSSRuleProcessor.h"
 #include "mozilla/dom/Element.h"
 #include "nsCSSFrameConstructor.h"
 
@@ -81,9 +82,10 @@ NS_IMPL_ISUPPORTS1(nsHTMLStyleSheet::HTMLColorRule, nsIStyleRule)
 nsHTMLStyleSheet::HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Color)) {
-    if (aRuleData->mColorData->mColor.GetUnit() == eCSSUnit_Null &&
+    nsCSSValue* color = aRuleData->ValueForColor();
+    if (color->GetUnit() == eCSSUnit_Null &&
         aRuleData->mPresContext->UseDocumentColors())
-      aRuleData->mColorData->mColor.SetColorValue(mColor);
+      color->SetColorValue(mColor);
   }
 }
 
@@ -114,10 +116,10 @@ nsHTMLStyleSheet::GenericTableRule::List(FILE* out, PRInt32 aIndent) const
 nsHTMLStyleSheet::TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
   if (aRuleData->mSIDs & NS_STYLE_INHERIT_BIT(Text)) {
-    if (aRuleData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
-      aRuleData->mTextData->mTextAlign.
-        SetIntValue(NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT,
-                    eCSSUnit_Enumerated);
+    nsCSSValue* textAlign = aRuleData->ValueForTextAlign();
+    if (textAlign->GetUnit() == eCSSUnit_Null) {
+      textAlign->SetIntValue(NS_STYLE_TEXT_ALIGN_MOZ_CENTER_OR_INHERIT,
+                             eCSSUnit_Enumerated);
     }
   }
 }
@@ -214,28 +216,29 @@ static nsresult GetBodyColor(nsPresContext* aPresContext, nscolor* aColor)
 nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 {
   nsRuleWalker *ruleWalker = aData->mRuleWalker;
-  if (aData->mIsHTMLContent) {
-    nsIAtom* tag = aData->mContentTag;
+  if (aData->mElement->IsHTML()) {
+    nsIAtom* tag = aData->mElement->Tag();
 
     // if we have anchor colors, check if this is an anchor with an href
     if (tag == nsGkAtoms::a) {
       if (mLinkRule || mVisitedRule || mActiveRule) {
-        nsEventStates state = aData->GetContentStateForVisitedHandling(
-                                  ruleWalker->VisitedHandling(),
+        nsEventStates state = nsCSSRuleProcessor::GetContentStateForVisitedHandling(
+                                  aData->mElement,
+                                  aData->mTreeMatchContext.VisitedHandling(),
                                   // If the node being matched is a link,
                                   // it's the relevant link.
-                                  aData->IsLink());
+                                  nsCSSRuleProcessor::IsLink(aData->mElement));
         if (mLinkRule && state.HasState(NS_EVENT_STATE_UNVISITED)) {
           ruleWalker->Forward(mLinkRule);
-          ruleWalker->SetHaveRelevantLink();
+          aData->mTreeMatchContext.SetHaveRelevantLink();
         }
         else if (mVisitedRule && state.HasState(NS_EVENT_STATE_VISITED)) {
           ruleWalker->Forward(mVisitedRule);
-          ruleWalker->SetHaveRelevantLink();
+          aData->mTreeMatchContext.SetHaveRelevantLink();
         }
 
         // No need to add to the active rule if it's not a link
-        if (mActiveRule && aData->IsLink() &&
+        if (mActiveRule && nsCSSRuleProcessor::IsLink(aData->mElement) &&
             state.HasState(NS_EVENT_STATE_ACTIVE)) {
           ruleWalker->Forward(mActiveRule);
         }
@@ -246,7 +249,7 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
       ruleWalker->Forward(mTableTHRule);
     }
     else if (tag == nsGkAtoms::table) {
-      if (aData->mCompatMode == eCompatibility_NavQuirks) {
+      if (aData->mTreeMatchContext.mCompatMode == eCompatibility_NavQuirks) {
         nscolor bodyColor;
         nsresult rv =
           GetBodyColor(ruleWalker->CurrentNode()->GetPresContext(),
@@ -272,9 +275,8 @@ nsHTMLStyleSheet::RulesMatching(ElementRuleProcessorData* aData)
 /* virtual */ nsRestyleHint
 nsHTMLStyleSheet::HasStateDependentStyle(StateRuleProcessorData* aData)
 {
-  if (aData->mIsHTMLContent &&
-      aData->mContentTag == nsGkAtoms::a &&
-      aData->IsLink() &&
+  if (aData->mElement->IsHTML(nsGkAtoms::a) &&
+      nsCSSRuleProcessor::IsLink(aData->mElement) &&
       ((mActiveRule && aData->mStateMask.HasState(NS_EVENT_STATE_ACTIVE)) ||
        (mLinkRule && aData->mStateMask.HasState(NS_EVENT_STATE_VISITED)) ||
        (mVisitedRule && aData->mStateMask.HasState(NS_EVENT_STATE_VISITED)))) {
@@ -306,8 +308,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
   Element *element = aData->mElement;
   if (aData->mAttribute == nsGkAtoms::href &&
       (mLinkRule || mVisitedRule || mActiveRule) &&
-      element->IsHTML() &&
-      aData->mContentTag == nsGkAtoms::a) {
+      element->IsHTML(nsGkAtoms::a)) {
     return eRestyle_Self;
   }
 
@@ -319,8 +320,7 @@ nsHTMLStyleSheet::HasAttributeDependentStyle(AttributeRuleProcessorData* aData)
     // cellpadding on tables is special and requires reresolving all
     // the cells in the table
     if (aData->mAttribute == nsGkAtoms::cellpadding &&
-        element->IsHTML() &&
-        aData->mContentTag == nsGkAtoms::table) {
+        element->IsHTML(nsGkAtoms::table)) {
       return eRestyle_Subtree;
     }
     return eRestyle_Self;

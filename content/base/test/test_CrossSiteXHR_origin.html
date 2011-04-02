@@ -133,7 +133,7 @@ function runTest() {
       is(res.responseText, "<res>hello pass</res>\n",
          "wrong responseText in test for " + allowOrigin);
       is(res.events.join(","),
-         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load",
+         "opening,rs1,sending,rs1,loadstart,rs2,rs3,rs4,load,loadend",
          "wrong responseText in test for " + allowOrigin);
     }
 
@@ -151,7 +151,7 @@ function runTest() {
       is(res.statusText, "", "wrong status text for " + allowOrigin);
       is(res.responseXML, null, "should have no XML for " + allowOrigin);
       is(res.events.join(","),
-         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error",
+         "opening,rs1,sending,rs1,loadstart,rs2,rs4,error,loadend",
          "wrong events in test for " + allowOrigin);
       is(res.progressEvents, 0,
          "wrong events in test for " + allowOrigin);

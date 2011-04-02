@@ -54,7 +54,7 @@
 #include "nsProxyRelease.h"
 #include "nsIOService.h"
 #include "nsAutoLock.h"
-#include "pratom.h"
+#include "nsAtomicRefcnt.h"
 
 #include "nsISeekableStream.h"
 #include "nsISocketTransport.h"
@@ -686,7 +686,7 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
     NS_ASSERTION(!aAllowPartialMatch || mLineBuf.IsEmpty(), "ouch");
 
     static const char HTTPHeader[] = "HTTP/1.";
-    static const PRInt32 HTTPHeaderLen = sizeof(HTTPHeader) - 1;
+    static const PRUint32 HTTPHeaderLen = sizeof(HTTPHeader) - 1;
     static const char HTTP2Header[] = "HTTP/2.0";
     static const PRUint32 HTTP2HeaderLen = sizeof(HTTP2Header) - 1;
     
@@ -705,10 +705,8 @@ nsHttpTransaction::LocateHttpStart(char *buf, PRUint32 len,
                 // end of matched sequence since it is stored in mLineBuf.
                 return (buf + checkChars);
             }
-            else {
-                // Response matches pattern but is still incomplete.
-                return 0;
-            }
+            // Response matches pattern but is still incomplete.
+            return 0;
         }
         // Previous partial match together with new data doesn't match the
         // pattern. Start the search again.
@@ -1200,7 +1198,7 @@ nsHttpTransaction::Release()
 {
     nsrefcnt count;
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-    count = PR_AtomicDecrement((PRInt32 *) &mRefCnt);
+    count = NS_AtomicDecrementRefcnt(mRefCnt);
     NS_LOG_RELEASE(this, count, "nsHttpTransaction");
     if (0 == count) {
         mRefCnt = 1; /* stablize */
