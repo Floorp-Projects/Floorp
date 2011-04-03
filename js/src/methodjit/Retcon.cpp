@@ -511,26 +511,29 @@ Recompiler::recompile()
     ReleaseScriptCode(cx, script, true);
     ReleaseScriptCode(cx, script, false);
 
-    if (normalFrames.length() &&
-        !recompile(normalFrames, normalPatches, normalSites, normalNatives)) {
+    /*
+     * Regenerate the code if there are JIT frames on the stack, if this script
+     * has inline parents and thus always needs JIT code, or if it is a newly
+     * pushed frame by e.g. the interpreter. :XXX: it would be nice if we could
+     * ensure that compiling a script does not then trigger its recompilation.
+     */
+    JSStackFrame *top = (cx->fp() && cx->fp()->isScriptFrame()) ? cx->fp() : NULL;
+    bool keepNormal = !normalFrames.empty() || script->inlineParents ||
+        (top && top->script() == script && !top->isConstructing());
+    bool keepCtor = !ctorFrames.empty() ||
+        (top && top->script() == script && top->isConstructing());
+
+    if (keepNormal && !recompile(script, false,
+                                 normalFrames, normalPatches, normalSites, normalNatives)) {
+        return false;
+    }
+    if (keepCtor && !recompile(script, true,
+                               ctorFrames, ctorPatches, ctorSites, ctorNatives)) {
         return false;
     }
 
-    if (ctorFrames.length() &&
-        !recompile(ctorFrames, ctorPatches, ctorSites, ctorNatives)) {
-        return false;
-    }
-
-    /* Make sure that scripts with inline parents still have JIT code. */
-    if (script->inlineParents && !script->jitNormal) {
-        CompileStatus status = Compile_Retry;
-        while (status == Compile_Retry) {
-            mjit::Compiler cc(cx, script, false, false, script->global, NULL, true);
-            status = cc.compile();
-        }
-        if (status != Compile_Okay)
-            return false;
-    }
+    JS_ASSERT_IF(keepNormal, script->jitNormal);
+    JS_ASSERT_IF(keepCtor, script->jitCtor);
 
     cx->compartment->types.recompilations++;
 
@@ -568,18 +571,17 @@ Recompiler::cleanup(JITScript *jit, Vector<CallSite> *sites)
 }
 
 bool
-Recompiler::recompile(Vector<PatchableFrame> &frames, Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
+Recompiler::recompile(JSScript *script, bool isConstructing,
+                      Vector<PatchableFrame> &frames,
+                      Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
                       Vector<PatchableNative> &natives)
 {
-    JSStackFrame *fp = frames[0].fp;
-
-    JaegerSpew(JSpew_Recompile, "On stack recompilation, %u patches, %u natives\n",
-               patches.length(), natives.length());
+    JaegerSpew(JSpew_Recompile, "On stack recompilation, %u frames, %u patches, %u natives\n",
+               frames.length(), patches.length(), natives.length());
 
     CompileStatus status = Compile_Retry;
     while (status == Compile_Retry) {
-        Compiler cc(cx, fp->script(), fp->isConstructing(), fp->isEvalFrame(),
-                    fp->scopeChain().getGlobal(), &frames, true);
+        Compiler cc(cx, script, isConstructing, &frames, true);
         if (!cc.loadOldTraps(sites))
             return false;
         status = cc.compile();
@@ -587,7 +589,7 @@ Recompiler::recompile(Vector<PatchableFrame> &frames, Vector<PatchableAddress> &
     if (status != Compile_Okay)
         return false;
 
-    JITScript *jit = script->getJIT(fp->isConstructing());
+    JITScript *jit = script->getJIT(isConstructing);
 
     /* Perform the earlier scanned patches */
     for (uint32 i = 0; i < patches.length(); i++)
