@@ -285,8 +285,12 @@ Recompiler::expandInlineFrames(JSContext *cx, JSStackFrame *fp, mjit::CallSite *
      */
     cx->compartment->types.frameExpansions++;
 
+    /* Patch the VMFrame's return address if it is returning at the given inline site. */
     void **frameAddr = f->returnAddressLocation();
-    bool patchFrameReturn = (f->scratch != NATIVE_CALL_SCRATCH_VALUE && fp->jit()->isValidCode(*frameAddr));
+    uint8* codeStart = (uint8 *)fp->jit()->code.m_code.executableAddress();
+    bool patchFrameReturn =
+        (f->scratch != NATIVE_CALL_SCRATCH_VALUE) &&
+        (*frameAddr == codeStart + inlined->codeOffset);
 
     InlineFrame *inner = &fp->jit()->inlineFrames()[inlined->inlineIndex];
     jsbytecode *innerpc = inner->fun->script()->code + inlined->pcOffset;
