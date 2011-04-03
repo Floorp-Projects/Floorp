@@ -499,20 +499,11 @@ js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
     Class *origObjClasp = obj->clasp; 
 #endif
     jsuint u = jsuint(i);
-    if (obj->ensureDenseArrayElements(cx, u, 1) != JSObject::ED_OK)
-        return false;
-
-    /*
-     * Write undefined to the element so the tracer doesn't see an uninitialized value
-     * when testing for a hole.
-     */
-    obj->setDenseArrayElement(i, UndefinedValue());
-    if (u >= obj->getArrayLength())
-        obj->setDenseArrayLength(u + 1);
+    JSBool ret = (obj->ensureDenseArrayElements(cx, u, 1) == JSObject::ED_OK);
 
     /* Partially check the CallInfo's storeAccSet is correct. */
     JS_ASSERT(obj->clasp == origObjClasp);
-    return true;
+    return ret;
 }
 /* This function and its callees do not touch any object's .clasp field. */
 JS_DEFINE_CALLINFO_3(extern, BOOL, js_EnsureDenseArrayCapacity, CONTEXT, OBJECT, INT32,
