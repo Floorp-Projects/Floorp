@@ -94,12 +94,12 @@ check::
 endif
 
 default alldep all:: $(topsrcdir)/configure config.status
-	$(RM) -rf $(DIST)/sdk
-	$(RM) -rf $(DIST)/include
-	$(RM) -rf $(DIST)/private
-	$(RM) -rf $(DIST)/public
-	$(RM) -rf $(DIST)/bin/components
-	$(RM) -rf _tests
+	$(RM) -r $(DIST)/sdk
+	$(RM) -r $(DIST)/include
+	$(RM) -r $(DIST)/private
+	$(RM) -r $(DIST)/public
+	$(RM) -r $(DIST)/bin/components
+	$(RM) -r _tests
 
 $(topsrcdir)/configure: $(topsrcdir)/configure.in
 	@echo "STOP!  configure.in has changed, and your configure is out of date."
@@ -117,7 +117,7 @@ config.status: $(topsrcdir)/configure
 
 # Build pseudo-external modules first when export is explicitly called
 export::
-	$(RM) -rf $(DIST)/sdk
+	$(RM) -r $(DIST)/sdk
 	$(MAKE) -C config export
 	$(MAKE) tier_nspr
 
@@ -130,7 +130,7 @@ include $(topsrcdir)/config/rules.mk
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
-	rm -f unallmakefiles $(DIST_GARBAGE)
+	$(RM) unallmakefiles $(DIST_GARBAGE)
 
 ifeq ($(OS_ARCH),WINNT)
 # we want to copy PDB files on Windows
@@ -176,8 +176,8 @@ ifdef USE_ELF_HACK
 	$(MAKE) -C $(MOZ_BUILD_APP)/installer elfhack
 endif
 	echo building symbol store
-	$(RM) -rf $(DIST)/crashreporter-symbols
-	$(RM) -f "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
+	$(RM) -r $(DIST)/crashreporter-symbols
+	$(RM) "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
 	$(NSINSTALL) -D $(DIST)/crashreporter-symbols
 	$(PYTHON) $(topsrcdir)/toolkit/crashreporter/tools/symbolstore.py \
 	  $(MAKE_SYM_STORE_ARGS)                                          \
@@ -199,8 +199,8 @@ else
 ifdef WINCE
 ifdef SYMBOLSTORE_PATH
 	echo building symbol store with symstore.exe
-	$(RM) -rf $(DIST)/symbols
-	$(RM) -f "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
+	$(RM) -r $(DIST)/symbols
+	$(RM) "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
 	$(NSINSTALL) -D $(DIST)/symbols
 	$(SYMBOLSTORE_PATH) add -r -f "$(subst /,\,$(shell pwd -W))\*.PDB" \
 	  -s $(DIST)/symbols/ -t "$(MOZ_PKG_APPNAME)" -v "$(MOZ_PKG_VERSION)"
