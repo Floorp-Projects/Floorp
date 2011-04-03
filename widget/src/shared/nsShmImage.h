@@ -41,9 +41,7 @@
 #ifndef __mozilla_widget_nsShmImage_h__
 #define __mozilla_widget_nsShmImage_h__
 
-#ifdef MOZ_IPC
-#  include "mozilla/ipc/SharedMemorySysV.h"
-#endif
+#include "mozilla/ipc/SharedMemorySysV.h"
 
 #if defined(MOZ_X11) && defined(MOZ_HAVE_SHAREDMEMORYSYSV)
 #  define MOZ_HAVE_SHMIMAGE

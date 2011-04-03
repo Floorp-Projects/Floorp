@@ -55,12 +55,10 @@ CPPSRCS =                  \
 ifdef MOZ_STORAGE
 CPPSRCS += nsDOMStorageDBWrapper.cpp nsDOMStoragePersistentDB.cpp nsDOMStorageMemoryDB.cpp
 
-ifdef MOZ_IPC
 CPPSRCS += StorageChild.cpp StorageParent.cpp
 
 EXPORTS_NAMESPACES = mozilla/dom
 EXPORTS_mozilla/dom = StorageChild.h StorageParent.h
-endif
 endif
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

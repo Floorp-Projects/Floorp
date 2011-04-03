@@ -75,16 +75,12 @@ class nsChromeRegistryChrome : public nsChromeRegistry
                                           nsISimpleEnumerator **_retval);
 #endif
   
-#ifdef MOZ_IPC
   void SendRegisteredChrome(mozilla::dom::PContentParent* aChild);
-#endif
 
  private:
-#ifdef MOZ_IPC
   static PLDHashOperator CollectPackages(PLDHashTable *table,
                                          PLDHashEntryHdr *entry,
                                          PRUint32 number, void *arg);
-#endif
 
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
   NS_OVERRIDE void UpdateSelectedLocale();

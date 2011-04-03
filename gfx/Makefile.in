@@ -59,14 +59,10 @@ endif
 DIRS		+= angle
 
 
-DIRS		+= src qcms layers harfbuzz/src ots/src thebes
+DIRS		+= src qcms layers harfbuzz/src ots/src thebes ipc
 
 ifdef BUILD_STATIC_LIBS
 DIRS		+= ycbcr
-endif
-
-ifdef MOZ_IPC
-DIRS		+= ipc
 endif
 
 ifdef ENABLE_TESTS

@@ -78,17 +78,11 @@ EXPORTS		= \
 		nsLayoutStatics.h \
 		$(NULL)
 
-ifdef MOZ_IPC
-GKIPCLIB=../ipc/$(LIB_PREFIX)gkipc_s.$(LIB_SUFFIX)
-else
-GKIPCLIB=$(NULL)
-endif
-
 SHARED_LIBRARY_LIBS = \
 	../base/$(LIB_PREFIX)gkbase_s.$(LIB_SUFFIX) \
 	../forms/$(LIB_PREFIX)gkforms_s.$(LIB_SUFFIX) \
 	../generic/$(LIB_PREFIX)gkgeneric_s.$(LIB_SUFFIX) \
-	$(GKIPCLIB) \
+	../ipc/$(LIB_PREFIX)gkipc_s.$(LIB_SUFFIX) \
 	../style/$(LIB_PREFIX)gkstyle_s.$(LIB_SUFFIX) \
 	../tables/$(LIB_PREFIX)gktable_s.$(LIB_SUFFIX) \
 	../xul/base/src/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
@@ -300,10 +294,8 @@ ifdef MOZ_NATIVE_LIBVPX
 EXTRA_DSO_LDOPTS += $(MOZ_LIBVPX_LIBS)
 endif
 
-ifdef MOZ_IPC
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-endif
 
 include $(topsrcdir)/config/rules.mk
 

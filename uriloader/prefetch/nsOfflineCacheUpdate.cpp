@@ -72,9 +72,7 @@
 #include "prlog.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 
-#ifdef MOZ_IPC
 #include "nsXULAppAPI.h"
-#endif
 
 static const PRUint32 kRescheduleLimit = 3;
 
@@ -1958,10 +1956,8 @@ nsOfflineCacheUpdate::AddURI(nsIURI *aURI, PRUint32 aType)
 NS_IMETHODIMP
 nsOfflineCacheUpdate::AddDynamicURI(nsIURI *aURI)
 {
-#if defined(MOZ_IPC)
     if (GeckoProcessType_Default != XRE_GetProcessType()) 
         return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 
     // If this is a partial update and the resource is already in the
     // cache, we should only mark the entry, not fetch it again.

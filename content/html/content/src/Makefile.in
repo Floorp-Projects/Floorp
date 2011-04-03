@@ -50,13 +50,8 @@ LIBXUL_LIBRARY	= 1
 EXPORTS		= \
 		nsImageMapUtils.h \
 		nsClientRect.h \
+		nsHTMLDNSPrefetch.h \
 		$(NULL)
-
-ifdef MOZ_IPC
-EXPORTS        += \
-                nsHTMLDNSPrefetch.h \
-                $(NULL)
-endif
 
 CPPSRCS		= \
 		nsClientRect.cpp \

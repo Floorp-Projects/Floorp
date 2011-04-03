@@ -37,10 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "base/basictypes.h"
 #include "IPC/IPCMessageUtils.h"
-#endif
 #include "nsCOMPtr.h"
 #include "nsDOMUIEvent.h"
 #include "nsIPresShell.h"
@@ -394,7 +392,6 @@ nsDOMUIEvent::DuplicatePrivateData()
   return rv;
 }
 
-#ifdef MOZ_IPC
 void
 nsDOMUIEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
 {
@@ -416,7 +413,6 @@ nsDOMUIEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &mDetail), PR_FALSE);
   return PR_TRUE;
 }
-#endif
 
 nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsPresContext* aPresContext,

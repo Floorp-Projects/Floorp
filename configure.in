@@ -4950,7 +4950,6 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
-MOZ_IPC=1
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_MATHML=1
@@ -5824,21 +5823,6 @@ MOZ_ARG_DISABLE_BOOL(jsd,
     MOZ_JSDEBUGGER=,
     MOZ_JSDEBUGGER=1)
 
-
-dnl ========================================================
-dnl = Disable IPC support for tabs and plugins
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(ipc,
-[  --disable-ipc           Disable IPC for tabs and plugins (not supported)],
-    MOZ_IPC=,
-    MOZ_IPC=1)
-
-if test -z "$MOZ_IPC"; then
-  AC_MSG_ERROR([--disable-ipc is no longer supported.])
-fi
-
-AC_DEFINE(MOZ_IPC)
-AC_SUBST(MOZ_IPC)
 
 dnl ========================================================
 dnl = Enable IPDL's "expensive" unit tests

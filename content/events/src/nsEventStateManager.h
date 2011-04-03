@@ -349,11 +349,9 @@ protected:
   nsresult DoContentCommandEvent(nsContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(nsContentCommandEvent* aEvent);
 
-#ifdef MOZ_IPC
   PRBool RemoteQueryContentEvent(nsEvent *aEvent);
   mozilla::dom::TabParent *GetCrossProcessTarget();
   PRBool IsTargetCrossProcess(nsGUIEvent *aEvent);
-#endif
 
   PRInt32     mLockCursor;
 
