@@ -2381,6 +2381,17 @@ FrameState::hasOnlyCopy(FrameEntry *backing, FrameEntry *fe)
 }
 
 void
+FrameState::separateBinaryEntries(FrameEntry *lhs, FrameEntry *rhs)
+{
+    JS_ASSERT(lhs == sp - 2 && rhs == sp - 1);
+    if (rhs->isCopy() && rhs->copyOf() == lhs) {
+        syncAndForgetFe(rhs);
+        syncAndForgetFe(lhs);
+        uncopy(lhs);
+    }
+}
+
+void
 FrameState::storeLocal(uint32 n, JSValueType type, bool popGuaranteed, bool fixedType)
 {
     FrameEntry *local = getLocal(n);

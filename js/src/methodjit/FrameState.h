@@ -342,6 +342,9 @@ class FrameState
      */
     inline bool haveSameBacking(FrameEntry *lhs, FrameEntry *rhs);
 
+    /* If the rhs to a binary operation directly copies the lhs, uncopy the lhs. */
+    void separateBinaryEntries(FrameEntry *lhs, FrameEntry *rhs);
+
     /*
      * Temporarily increase and decrease local variable depth.
      */
