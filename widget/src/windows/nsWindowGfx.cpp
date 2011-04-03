@@ -53,10 +53,8 @@
  **************************************************************
  **************************************************************/
 
-#ifdef MOZ_IPC
 #include "mozilla/plugins/PluginInstanceParent.h"
 using mozilla::plugins::PluginInstanceParent;
-#endif
 
 #include "nsWindowGfx.h"
 #include <windows.h>
@@ -251,7 +249,6 @@ EnsureSharedSurfaceSize(gfxIntSize size)
 
 PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 {
-#ifdef MOZ_IPC
   // We never have reentrant paint events, except when we're running our RPC
   // windows event spin loop. If we don't trap for this, we'll try to paint,
   // but view manager will refuse to paint the surface, resulting is black
@@ -285,16 +282,13 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
       return PR_TRUE;
     }
   }
-#endif
 
-#ifdef MOZ_IPC
   // We never have reentrant paint events, except when we're running our RPC
   // windows event spin loop. If we don't trap for this, we'll try to paint,
   // but view manager will refuse to paint the surface, resulting is black
   // flashes on the plugin rendering surface.
   if (mozilla::ipc::RPCChannel::IsSpinLoopActive() && mPainting)
     return PR_FALSE;
-#endif
 
   nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
   willPaintEvent.willSendDidPaint = PR_TRUE;

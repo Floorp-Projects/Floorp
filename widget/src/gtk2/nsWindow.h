@@ -40,9 +40,7 @@
 #ifndef __nsWindow_h__
 #define __nsWindow_h__
 
-#ifdef MOZ_IPC
-#  include "mozilla/ipc/SharedMemorySysV.h"
-#endif
+#include "mozilla/ipc/SharedMemorySysV.h"
 
 #include "nsAutoPtr.h"
 

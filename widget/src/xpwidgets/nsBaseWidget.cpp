@@ -901,11 +901,7 @@ LayerManager* nsBaseWidget::GetLayerManager(LayerManagerPersistence,
 
 BasicLayerManager* nsBaseWidget::CreateBasicLayerManager()
 {
-#if !defined(MOZ_IPC)
-      return new BasicLayerManager(this);
-#else
       return new BasicShadowLayerManager(this);
-#endif
 }
 
 //-------------------------------------------------------------------------

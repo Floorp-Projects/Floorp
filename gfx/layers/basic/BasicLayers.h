@@ -45,9 +45,7 @@
 #include "nsAutoRef.h"
 #include "nsThreadUtils.h"
 
-#ifdef MOZ_IPC
 #include "mozilla/layers/ShadowLayers.h"
-#endif
 
 class nsIWidget;
 
@@ -71,11 +69,7 @@ class ReadbackProcessor;
  * between layers).
  */
 class THEBES_API BasicLayerManager :
-#ifdef MOZ_IPC
     public ShadowLayerManager
-#else
-    public LayerManager
-#endif
 {
 public:
   /**
@@ -235,7 +229,6 @@ protected:
 };
  
 
-#ifdef MOZ_IPC
 class BasicShadowLayerManager : public BasicLayerManager,
                                 public ShadowLayerForwarder
 {
@@ -284,7 +277,6 @@ private:
 
   LayerRefArray mKeepAlive;
 };
-#endif  // MOZ_IPC
 
 }
 }

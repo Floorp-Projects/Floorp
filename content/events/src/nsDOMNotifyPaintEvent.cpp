@@ -36,10 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "base/basictypes.h"
 #include "IPC/IPCMessageUtils.h"
-#endif
 #include "nsDOMNotifyPaintEvent.h"
 #include "nsContentUtils.h"
 #include "nsClientRect.h"
@@ -148,7 +146,6 @@ nsDOMNotifyPaintEvent::GetPaintRequests(nsIDOMPaintRequestList** aResult)
   return NS_OK;
 }
 
-#ifdef MOZ_IPC
 void
 nsDOMNotifyPaintEvent::Serialize(IPC::Message* aMsg,
                                  PRBool aSerializeInterfaceType)
@@ -190,7 +187,6 @@ nsDOMNotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 
   return PR_TRUE;
 }
-#endif
 
 nsresult NS_NewDOMNotifyPaintEvent(nsIDOMEvent** aInstancePtrResult,
                                    nsPresContext* aPresContext,

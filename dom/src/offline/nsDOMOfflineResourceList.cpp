@@ -57,14 +57,9 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIWebNavigation.h"
 
-#ifdef MOZ_IPC
 #include "nsXULAppAPI.h"
 #define IS_CHILD_PROCESS() \
     (GeckoProcessType_Default != XRE_GetProcessType())
-#else
-#define IS_CHILD_PROCESS() \
-    (false)
-#endif
 
 // Event names
 

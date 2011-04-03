@@ -71,7 +71,7 @@ public:
      *       UnregisterVisitedCallback.
      *
      * @pre aURI must not be null.
-     * @pre aLink may be null only in the MOZ_IPC parent process.
+     * @pre aLink may be null only in the parent (chrome) process.
      *
      * @param aURI
      *        The URI to check.

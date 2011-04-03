@@ -80,14 +80,9 @@
 #include "nsNSSIOLayer.h"
 #include "NSSErrorsService.h"
 
-#ifdef MOZ_IPC
 #include "nsXULAppAPI.h"
 #define NS_IS_PROCESS_DEFAULT                                                 \
     (GeckoProcessType_Default == XRE_GetProcessType())
-#else
-#define NS_IS_PROCESS_DEFAULT                                                 \
-    (true)
-#endif
 
 #define NS_NSS_INSTANTIATE(ensureOperator, _InstanceClass)                    \
     PR_BEGIN_MACRO                                                            \
@@ -228,13 +223,9 @@ NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsSecretDecoderRing)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsPK11TokenDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsPKCS11ModuleDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nssEnsure, PSMContentListener, init)
-#ifdef MOZ_IPC
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR_BYPROCESS(nssEnsureOnChromeOnly,
                                              nsNSSCertificate,
                                              nsNSSCertificateFakeTransport)
-#else
-NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsNSSCertificate)
-#endif
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsNSSCertificateDB)
 NS_NSS_GENERIC_FACTORY_CONSTRUCTOR(nssEnsure, nsNSSCertCache)
 #ifdef MOZ_XUL

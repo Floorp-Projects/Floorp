@@ -72,7 +72,6 @@ CPPSRCS = \
 
 XPCSHELL_TESTS += test/unit
 
-ifdef MOZ_IPC
 EXPORTS_NAMESPACES = mozilla/net
 
 EXPORTS_mozilla/net = \
@@ -88,7 +87,6 @@ CPPSRCS += \
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
 ifneq ($(OS_ARCH),Darwin)
 XPCSHELL_TESTS += test/unit_ipc
-endif
 endif
 endif
 

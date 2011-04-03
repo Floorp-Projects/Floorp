@@ -55,14 +55,9 @@ CPPSRCS	= \
 	CanvasImageCache.cpp \
 	CanvasUtils.cpp \
 	nsCanvasRenderingContext2D.cpp \
-	$(NULL)
-
-ifdef MOZ_IPC
-CPPSRCS += \
 	DocumentRendererParent.cpp \
 	DocumentRendererChild.cpp \
 	$(NULL)
-endif
 
 # Canvas 3D Pieces
 

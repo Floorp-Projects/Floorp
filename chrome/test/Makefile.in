@@ -47,11 +47,9 @@ MODULE = test_chrome
 
 XPCSHELL_TESTS = unit \
                  $(NULL)
-ifdef MOZ_IPC
 # FIXME/bug 575918: out-of-process xpcshell is broken on OS X
 ifneq ($(OS_ARCH),Darwin)
 XPCSHELL_TESTS += unit_ipc
-endif
 endif
 
 include $(topsrcdir)/config/rules.mk

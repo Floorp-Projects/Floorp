@@ -80,14 +80,12 @@ ColorLayerOGL::RenderLayer(int,
   return RenderColorLayer(this, mOGLManager, aOffset);
 }
 
-#ifdef MOZ_IPC
 void
 ShadowColorLayerOGL::RenderLayer(int,
                                  const nsIntPoint& aOffset)
 {
   return RenderColorLayer(this, mOGLManager, aOffset);
 }
-#endif  // MOZ_IPC
 
 
 } /* layers */
