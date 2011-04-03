@@ -116,7 +116,8 @@ private:
     static void applyPatch(JITScript *jit, PatchableAddress& toPatch);
     PatchableNative stealNative(JITScript *jit, jsbytecode *pc);
     void patchNative(JITScript *jit, PatchableNative &native);
-    bool recompile(Vector<PatchableFrame> &frames,
+    bool recompile(JSScript *script, bool isConstructing,
+                   Vector<PatchableFrame> &frames,
                    Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
                    Vector<PatchableNative> &natives);
 

@@ -89,14 +89,12 @@ static const char *OpcodeNames[] = {
  */
 static const size_t CALLS_BACKEDGES_BEFORE_INLINING = 10000;
 
-mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript,
-                         bool isConstructing, bool isEval, JSObject *globalObj,
+mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructing,
                          const Vector<PatchableFrame> *patchFrames, bool recompiling)
   : BaseCompiler(cx),
     outerScript(outerScript),
     isConstructing(isConstructing),
-    isEval(isEval),
-    globalObj(globalObj),
+    globalObj(outerScript->global),
     patchFrames(patchFrames),
     savedTraps(NULL),
     frame(cx, *this, masm, stubcc),
@@ -345,7 +343,7 @@ mjit::Compiler::performCompilation(JITScript **jitp)
         if (!script->jitNormal) {
             CompileStatus status = Compile_Retry;
             while (status == Compile_Retry) {
-                mjit::Compiler cc(cx, script, isConstructing, false, globalObj, NULL, true);
+                mjit::Compiler cc(cx, script, isConstructing, NULL, true);
                 status = cc.compile();
             }
             if (status != Compile_Okay) {
@@ -450,8 +448,7 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
     // before giving up.
     CompileStatus status = Compile_Retry;
     for (unsigned i = 0; status == Compile_Retry && i < 5; i++) {
-        Compiler cc(cx, fp->script(), fp->isConstructing(), fp->isEvalFrame(),
-                    fp->scopeChain().getGlobal(), NULL, fp->script()->inlineParents);
+        Compiler cc(cx, fp->script(), fp->isConstructing(), NULL, fp->script()->inlineParents);
         status = cc.compile();
     }
 
@@ -2961,30 +2958,22 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
      * even on the entry frame. To avoid double-putting, EnterMethodJIT clears
      * out the entry frame's activation objects.
      */
-    if (script->fun) {
-        if (script->fun->isHeavyweight()) {
-            /* There will always be a call object. */
-            prepareStubCall(Uses(fe ? 1 : 0));
-            INLINE_STUBCALL(stubs::PutActivationObjects);
-        } else {
-            /* if (hasCallObj() || hasArgsObj()) */
-            Jump putObjs = masm.branchTest32(Assembler::NonZero,
-                                             Address(JSFrameReg, JSStackFrame::offsetOfFlags()),
-                                             Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
-            stubcc.linkExit(putObjs, Uses(frame.frameSlots()));
-
-            stubcc.leave();
-            OOL_STUBCALL(stubs::PutActivationObjects);
-
-            emitReturnValue(&stubcc.masm, fe);
-            emitFinalReturn(stubcc.masm);
-        }
+    if (script->fun && script->fun->isHeavyweight()) {
+        /* There will always be a call object. */
+        prepareStubCall(Uses(fe ? 1 : 0));
+        INLINE_STUBCALL(stubs::PutActivationObjects);
     } else {
-        if (isEval && script->strictModeCode) {
-            /* There will always be a call object. */
-            prepareStubCall(Uses(fe ? 1 : 0));
-            INLINE_STUBCALL(stubs::PutActivationObjects);
-        }
+        /* if (hasCallObj() || hasArgsObj()) */
+        Jump putObjs = masm.branchTest32(Assembler::NonZero,
+                                         Address(JSFrameReg, JSStackFrame::offsetOfFlags()),
+                                         Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
+        stubcc.linkExit(putObjs, Uses(frame.frameSlots()));
+
+        stubcc.leave();
+        OOL_STUBCALL(stubs::PutActivationObjects);
+
+        emitReturnValue(&stubcc.masm, fe);
+        emitFinalReturn(stubcc.masm);
     }
 
     emitReturnValue(&masm, fe);

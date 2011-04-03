@@ -354,7 +354,6 @@ class Compiler : public BaseCompiler
 
     JSScript *outerScript;
     bool isConstructing;
-    bool isEval;
 
     JSObject *globalObj;
 
@@ -453,8 +452,7 @@ class Compiler : public BaseCompiler
     // follows interpreter usage in JSOP_LENGTH.
     enum { LengthAtomIndex = uint32(-2) };
 
-    Compiler(JSContext *cx, JSScript *outerScript, bool isConstructing, bool isEval,
-             JSObject *globalObj,
+    Compiler(JSContext *cx, JSScript *outerScript, bool isConstructing,
              const Vector<PatchableFrame> *patchFrames, bool recompiling);
     ~Compiler();
 
