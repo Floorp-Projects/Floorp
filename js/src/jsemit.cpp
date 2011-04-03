@@ -4447,18 +4447,16 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         JS_ASSERT((pn_op == JSOP_NEWINIT) && !(pn_xflags & PNX_NONCONST));
  
         JSObject *obj = NewDenseAllocatedArray(cx, pn_count);
-        if (!obj || !obj->ensureSlots(cx, pn_count))
+        if (!obj)
             return false;
-
-        /* Constant initializers do not have holes. */
-        obj->setDenseArrayInitializedLength(pn_count);
 
         unsigned idx = 0;
         for (JSParseNode *pn = pn_head; pn; idx++, pn = pn->pn_next) {
             Value value;
             if (!pn->getConstantValue(cx, strictChecks, &value))
                 return false;
-            obj->setDenseArrayElement(idx, value);
+            if (!obj->defineProperty(cx, INT_TO_JSID(idx), value, NULL, NULL, JSPROP_ENUMERATE))
+                return false;
         }
         JS_ASSERT(idx == pn_count);
 
