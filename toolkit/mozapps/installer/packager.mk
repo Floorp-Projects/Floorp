@@ -281,9 +281,7 @@ UPLOAD_EXTRA_FILES += gecko-unsigned-unaligned.apk
 
 include $(topsrcdir)/ipc/app/defs.mk
 
-ifdef MOZ_IPC
 DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
-endif
 
 ifdef MOZ_THUMB2
 ABI_DIR = armeabi-v7a

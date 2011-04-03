@@ -50,8 +50,6 @@ EXPORTS_mozilla = \
   PluginLibrary.h \
   $(NULL)
 
-ifdef MOZ_IPC
-
 EXPORTS_NAMESPACES = mozilla mozilla/plugins
 
 EXPORTS_mozilla/plugins = \
@@ -151,7 +149,6 @@ LOCAL_INCLUDES = \
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-endif
 
 include $(topsrcdir)/config/rules.mk
 

@@ -83,6 +83,7 @@ EXPORTS = \
   nsPIWindowRoot.h \
   nsFocusManager.h \
   nsWrapperCache.h \
+  nsContentPermissionHelper.h \
   $(NULL)
 
 CPPSRCS =			\
@@ -106,16 +107,8 @@ CPPSRCS =			\
 	nsScriptNameSpaceManager.cpp \
 	nsDOMScriptObjectFactory.cpp \
 	nsQueryContentEventResult.cpp \
+	nsContentPermissionHelper.cpp \
 	$(NULL)
-
-ifdef MOZ_IPC
-EXPORTS += \
-  nsContentPermissionHelper.h \
-  $(NULL)
-CPPSRCS += \
-  nsContentPermissionHelper.cpp \
-  $(NULL)
-endif
 
 include $(topsrcdir)/dom/dom-config.mk
 
@@ -123,10 +116,8 @@ ifdef MOZ_JSDEBUGGER
 DEFINES += -DMOZ_JSDEBUGGER
 endif
 
-ifdef MOZ_IPC
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-endif
 
 include $(topsrcdir)/config/rules.mk
 

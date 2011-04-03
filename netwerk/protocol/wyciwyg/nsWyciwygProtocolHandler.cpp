@@ -47,14 +47,10 @@
 #include "plstr.h"
 #include "nsNetUtil.h"
 
-#ifdef MOZ_IPC
 #include "mozilla/net/NeckoChild.h"
-#endif
 
-#ifdef MOZ_IPC
 using namespace mozilla::net;
 #include "mozilla/net/WyciwygChannelChild.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -123,16 +119,13 @@ nsWyciwygProtocolHandler::NewURI(const nsACString &aSpec,
 NS_IMETHODIMP
 nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
 {
-#ifdef MOZ_IPC
   if (mozilla::net::IsNeckoChild())
     mozilla::net::NeckoChild::InitNeckoChild();
-#endif // MOZ_IPC
 
   NS_ENSURE_ARG_POINTER(url);
   nsresult rv;
 
   nsCOMPtr<nsIWyciwygChannel> channel;
-#ifdef MOZ_IPC
   if (IsNeckoChild()) {
     NS_ENSURE_TRUE(gNeckoChild != nsnull, NS_ERROR_FAILURE);
 
@@ -146,7 +139,6 @@ nsWyciwygProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     if (NS_FAILED(rv))
       PWyciwygChannelChild::Send__delete__(wcc);
   } else
-#endif
   {
     // If original channel used https, make sure PSM is initialized
     // (this may be first channel to load during a session restore)

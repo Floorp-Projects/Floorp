@@ -46,27 +46,21 @@ MODULE		= prefetch
 LIBRARY_NAME	= prefetch_s
 LIBXUL_LIBRARY	= 1
 
-ifdef MOZ_IPC
 EXPORTS_NAMESPACES = mozilla/docshell
 
 EXPORTS_mozilla/docshell += \
   OfflineCacheUpdateParent.h \
   OfflineCacheUpdateChild.h  \
   $(NULL)
-endif
 
 CPPSRCS = \
 		nsPrefetchService.cpp \
 		nsOfflineCacheUpdate.cpp \
 		nsOfflineCacheUpdateService.cpp  \
 		OfflineCacheUpdateGlue.cpp \
-		$(NULL)
-
-ifdef MOZ_IPC
-CPPSRCS += \
 		OfflineCacheUpdateChild.cpp \
-		OfflineCacheUpdateParent.cpp
-endif
+		OfflineCacheUpdateParent.cpp \
+		$(NULL)
 
 XPIDLSRCS =	\
 		nsIPrefetchService.idl \

@@ -44,13 +44,10 @@ VPATH       = \
   $(srcdir)/opengl \
   $(srcdir)/d3d9 \
   $(srcdir)/d3d10 \
+  $(srcdir)/ipc \
   $(NULL)
 
 include $(DEPTH)/config/autoconf.mk
-
-ifdef MOZ_IPC
-VPATH       += $(srcdir)/ipc
-endif
 
 MODULE         = thebes
 LIBRARY_NAME   = layers
@@ -127,7 +124,6 @@ CPPSRCS += \
 endif
 endif
 
-ifdef MOZ_IPC #{
 EXPORTS_NAMESPACES = IPC mozilla/layers
 EXPORTS_IPC = ShadowLayerUtils.h
 EXPORTS_mozilla/layers =\
@@ -149,8 +145,6 @@ EXPORTS_mozilla/layers += ShadowLayerUtilsX11.h
 CPPSRCS += ShadowLayerUtilsX11.cpp
 endif #}
 
-endif #}
-
 # Enable GLES2.0 under maemo
 ifdef MOZ_X11
 ifdef MOZ_PLATFORM_MAEMO
@@ -160,9 +154,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef MOZ_IPC
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-endif
 
 CXXFLAGS += $(MOZ_CAIRO_CFLAGS) $(TK_CFLAGS)
 

@@ -37,10 +37,8 @@
 
 #include "necko-config.h"
 
-#ifdef MOZ_IPC
 #define ALLOW_LATE_NSHTTP_H_INCLUDE 1
 #include "base/basictypes.h"
-#endif 
 
 #include "nsCOMPtr.h"
 #include "nsIClassInfoImpl.h"
@@ -127,11 +125,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsEffectiveTLDService, Init)
 #include "nsSerializationHelper.h"
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSerializationHelper)
 
-#ifdef MOZ_IPC
 #include "RedirectChannelRegistrar.h"
 typedef mozilla::net::RedirectChannelRegistrar RedirectChannelRegistrar;
 NS_GENERIC_FACTORY_CONSTRUCTOR(RedirectChannelRegistrar)
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -756,9 +752,7 @@ NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORK_LINK_SERVICE_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_SERIALIZATION_HELPER_CID);
-#ifdef MOZ_IPC
 NS_DEFINE_NAMED_CID(NS_REDIRECTCHANNELREGISTRAR_CID);
-#endif
 
 static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_IOSERVICE_CID, false, NULL, nsIOServiceConstructor },
@@ -887,9 +881,7 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_NETWORK_LINK_SERVICE_CID, false, NULL, nsAndroidNetworkLinkServiceConstructor },
 #endif
     { &kNS_SERIALIZATION_HELPER_CID, false, NULL, nsSerializationHelperConstructor },
-#ifdef MOZ_IPC
     { &kNS_REDIRECTCHANNELREGISTRAR_CID, false, NULL, RedirectChannelRegistrarConstructor },
-#endif
     { NULL }
 };
 
@@ -1025,9 +1017,7 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NETWORK_LINK_SERVICE_CONTRACTID, &kNS_NETWORK_LINK_SERVICE_CID },
 #endif
     { NS_SERIALIZATION_HELPER_CONTRACTID, &kNS_SERIALIZATION_HELPER_CID },
-#ifdef MOZ_IPC
     { NS_REDIRECTCHANNELREGISTRAR_CONTRACTID, &kNS_REDIRECTCHANNELREGISTRAR_CID },
-#endif
     { NULL }
 };
 

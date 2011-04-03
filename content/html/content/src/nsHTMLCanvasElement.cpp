@@ -553,7 +553,6 @@ NS_IMETHODIMP
 nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
                                       nsISupports **aContext)
 {
-#ifdef MOZ_IPC
   if(!nsContentUtils::IsCallerTrustedForRead()) {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
     return NS_ERROR_DOM_SECURITY_ERR;
@@ -588,9 +587,6 @@ nsHTMLCanvasElement::MozGetIPCContext(const nsAString& aContextId,
 
   NS_ADDREF (*aContext = mCurrentContext);
   return NS_OK;
-#else
-  return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 nsresult

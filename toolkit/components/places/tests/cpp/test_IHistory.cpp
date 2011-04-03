@@ -593,7 +593,6 @@ test_new_visit_adds_place_guid()
 ////////////////////////////////////////////////////////////////////////////////
 //// IPC-only Tests
 
-#ifdef MOZ_IPC
 void
 test_two_null_links_same_uri()
 {
@@ -616,7 +615,6 @@ test_two_null_links_same_uri()
 
   run_next_test();
 }
-#endif // MOZ_IPC
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Harness
@@ -643,9 +641,7 @@ Test gTests[] = {
   TEST(test_new_visit_adds_place_guid),
 
   // The rest of these tests are tests that are only run in IPC builds.
-#ifdef MOZ_IPC
   TEST(test_two_null_links_same_uri),
-#endif // MOZ_IPC
 };
 
 const char* file = __FILE__;

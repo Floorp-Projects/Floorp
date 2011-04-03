@@ -118,9 +118,7 @@
 #include "secerr.h"
 #include "sslerr.h"
 
-#ifdef MOZ_IPC
 #include "nsXULAppAPI.h"
-#endif
 
 #ifdef XP_WIN
 #include "nsILocalFileWin.h"
@@ -292,7 +290,6 @@ PRBool EnsureNSSInitialized(EnsureNSSOperator op)
   if (nsPSMInitPanic::GetPanic())
     return PR_FALSE;
 
-#ifdef MOZ_IPC
   if (GeckoProcessType_Default != XRE_GetProcessType())
   {
     if (op == nssEnsureOnChromeOnly)
@@ -307,7 +304,6 @@ PRBool EnsureNSSInitialized(EnsureNSSOperator op)
     NS_ERROR("Trying to initialize PSM/NSS in a non-chrome process!");
     return PR_FALSE;
   }
-#endif
 
   static PRBool loading = PR_FALSE;
   static PRInt32 haveLoaded = 0;

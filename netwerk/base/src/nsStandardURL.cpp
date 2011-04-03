@@ -38,9 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "IPCMessageUtils.h"
-#endif
 
 #include "nsStandardURL.h"
 #include "nsDependentSubstring.h"
@@ -863,7 +861,6 @@ nsStandardURL::WriteSegment(nsIBinaryOutputStream *stream, const URLSegment &seg
     return NS_OK;
 }
 
-#ifdef MOZ_IPC
 bool
 nsStandardURL::ReadSegment(const IPC::Message *aMsg, void **aIter, URLSegment &seg)
 {
@@ -877,7 +874,6 @@ nsStandardURL::WriteSegment(IPC::Message *aMsg, const URLSegment &seg)
     IPC::WriteParam(aMsg, seg.mPos);
     IPC::WriteParam(aMsg, seg.mLen);
 }
-#endif
 
 /* static */ void
 nsStandardURL::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
@@ -2815,7 +2811,6 @@ nsStandardURL::Write(nsIObjectOutputStream *stream)
 PRBool
 nsStandardURL::Read(const IPC::Message *aMsg, void **aIter)
 {
-#ifdef MOZ_IPC
     using IPC::ReadParam;
     
     NS_PRECONDITION(!mHostA, "Shouldn't have cached ASCII host");
@@ -2878,15 +2873,11 @@ nsStandardURL::Read(const IPC::Message *aMsg, void **aIter)
     // mSpecEncoding and mHostA are just caches that can be recovered as needed.
 
     return PR_TRUE;
-#else
-    return PR_FALSE;
-#endif
 }
 
 void
 nsStandardURL::Write(IPC::Message *aMsg)
 {
-#ifdef MOZ_IPC
     using IPC::WriteParam;
     
     WriteParam(aMsg, mURLType);
@@ -2911,7 +2902,6 @@ nsStandardURL::Write(IPC::Message *aMsg)
     WriteParam(aMsg, bool(mSupportsFileURL));
     WriteParam(aMsg, mHostEncoding);
     // mSpecEncoding and mHostA are just caches that can be recovered as needed.
-#endif
 }
 
 //----------------------------------------------------------------------------

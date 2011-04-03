@@ -182,13 +182,11 @@ void SetStrongPtr(T *&ptr, T* newvalue)
   NS_IF_ADDREF(ptr);
 }
 
-#ifdef MOZ_IPC
 namespace mozilla {
 namespace startup {
 extern GeckoProcessType sChildProcessType;
 }
 }
-#endif
 
 /**
  * Set up platform specific error handling such as suppressing DLL load dialog
