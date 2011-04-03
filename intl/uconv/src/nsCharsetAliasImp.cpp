@@ -109,7 +109,7 @@ nsCharsetAlias2::Equals(const nsACString& aCharset1,
    if(NS_SUCCEEDED(res)) {
       res = this->GetPreferred(aCharset2, name2);
       if(NS_SUCCEEDED(res)) {
-        *oResult = name1.Equals(name2, nsCaseInsensitiveCStringComparator());
+        *oResult = name1.Equals(name2);
       }
    }
    
