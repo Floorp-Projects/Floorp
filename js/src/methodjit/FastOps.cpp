@@ -145,7 +145,7 @@ mjit::Compiler::jsop_bitnot()
         stubNeeded = true;
     }
 
-    if (stubNeeded) {
+    if (stubNeeded || recompiling) {
         stubcc.leave();
         OOL_STUBCALL(stubs::BitNot);
     }
@@ -164,6 +164,9 @@ mjit::Compiler::jsop_bitop(JSOp op)
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
+
+    /* The operands we ensure are integers cannot be copied by each other. */
+    frame.separateBinaryEntries(lhs, rhs);
 
     VoidStub stub;
     switch (op) {
