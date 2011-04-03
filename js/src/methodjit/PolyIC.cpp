@@ -710,8 +710,11 @@ struct GetPropertyHelper {
 
   public:
     LookupStatus bind() {
+        RecompilationMonitor monitor(cx);
         if (!js_FindProperty(cx, ATOM_TO_JSID(atom), &obj, &holder, &prop))
             return ic.error(cx);
+        if (monitor.recompiled())
+            return Lookup_Uncacheable;
         if (!prop)
             return ic.disable(cx, "lookup failed");
         if (!obj->isNative())
