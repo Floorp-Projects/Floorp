@@ -6020,12 +6020,9 @@ mjit::Compiler::jsop_instanceof()
 
     // The fast path applies only when both operands are objects.
     if (rhs->isNotType(JSVAL_TYPE_OBJECT) || lhs->isNotType(JSVAL_TYPE_OBJECT)) {
-        prepareStubCall(Uses(2));
-        INLINE_STUBCALL(stubs::InstanceOf);
-        frame.popn(2);
-        frame.takeReg(Registers::ReturnReg);
-        frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
-        return true;
+        stubcc.linkExit(masm.jump(), Uses(2));
+        frame.discardFe(lhs);
+        frame.discardFe(rhs);
     }
 
     MaybeJump firstSlow;
