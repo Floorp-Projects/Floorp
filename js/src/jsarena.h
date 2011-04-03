@@ -289,6 +289,8 @@ JS_DumpArenaStats(FILE *fp);
 
 JS_END_EXTERN_C
 
+#ifdef __cplusplus
+
 namespace js {
 
 template <typename T>
@@ -355,5 +357,7 @@ ArenaNew(JSArenaPool &pool, const A &a, const B &b, const C &c, const D &d, cons
 }
 
 } /* namespace js */
+
+#endif /* __cplusplus */
 
 #endif /* jsarena_h___ */
