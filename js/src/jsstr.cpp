@@ -3589,10 +3589,6 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
 {
     JSObject *proto;
 
-    /* Define the escape, unescape functions in the global object. */
-    if (!JS_DefineFunctionsWithPrefix(cx, obj, string_functions, js_String_str))
-        return NULL;
-
     proto = js_InitClass(cx, obj, NULL, &js_StringClass, js_String, 1,
                          type_NewString,
                          NULL, string_methods,
@@ -3607,6 +3603,10 @@ js_InitStringClass(JSContext *cx, JSObject *obj)
                                  NULL)) {
         return JS_FALSE;
     }
+
+    /* Define the escape, unescape functions in the global object. */
+    if (!JS_DefineFunctionsWithPrefix(cx, obj, string_functions, js_String_str))
+        return NULL;
 
     if (!cx->addTypePropertyId(proto->getType(), lengthId, TYPE_INT32))
         return NULL;

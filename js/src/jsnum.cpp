@@ -1083,14 +1083,15 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    if (!JS_DefineFunctionsWithPrefix(cx, obj, number_functions, js_Number_str))
-        return NULL;
-
     proto = js_InitClass(cx, obj, NULL, &js_NumberClass, Number, 1, type_NewNumber,
                          NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
         return NULL;
     proto->setPrimitiveThis(Int32Value(0));
+
+    if (!JS_DefineFunctionsWithPrefix(cx, obj, number_functions, js_Number_str))
+        return NULL;
+
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 
