@@ -45,22 +45,18 @@
 #include "nsEncoderDecoderUtils.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsICharsetAlias.h"
 #include "nsIServiceManager.h"
 
 
 #include "nsUConvCID.h"
 #include "nsCharsetConverterManager.h"
-#include "nsCharsetAlias.h"
 #include "nsTextToSubURI.h"
 #include "nsUTF8ConverterService.h"
 #include "nsConverterInputStream.h"
 #include "nsConverterOutputStream.h"
-#include "nsPlatformCharset.h"
 #include "nsScriptableUConv.h"
 
 #ifndef MOZ_USE_NATIVE_UCONV
-#include "nsIPlatformCharset.h"
 #include "nsITextToSubURI.h"
 
 #include "nsUConvDll.h"
@@ -578,16 +574,12 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(NativeUConvService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ConverterService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterOutputStream)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
 
 NS_DEFINE_NAMED_CID(NS_ICHARSETCONVERTERMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_CHARSETALIAS_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTTOSUBURI_CID);
-NS_DEFINE_NAMED_CID(NS_PLATFORMCHARSET_CID);
 NS_DEFINE_NAMED_CID(NS_CONVERTERINPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_CONVERTEROUTPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_ISCRIPTABLEUNICODECONVERTER_CID);
@@ -784,9 +776,7 @@ NS_DEFINE_NAMED_CID(NS_ISO2022CNTOUNICODE_CID);
 
 static const mozilla::Module::CIDEntry kUConvCIDs[] = {
   { &kNS_ICHARSETCONVERTERMANAGER_CID, false, NULL, nsCharsetConverterManagerConstructor },
-  { &kNS_CHARSETALIAS_CID, false, NULL, nsCharsetAlias2Constructor },
   { &kNS_TEXTTOSUBURI_CID, false, NULL, nsTextToSubURIConstructor },
-  { &kNS_PLATFORMCHARSET_CID, false, NULL, nsPlatformCharsetConstructor },
   { &kNS_CONVERTERINPUTSTREAM_CID, false, NULL, nsConverterInputStreamConstructor },
   { &kNS_CONVERTEROUTPUTSTREAM_CID, false, NULL, nsConverterOutputStreamConstructor },
   { &kNS_ISCRIPTABLEUNICODECONVERTER_CID, false, NULL, nsScriptableUnicodeConverterConstructor },
@@ -985,9 +975,7 @@ static const mozilla::Module::CIDEntry kUConvCIDs[] = {
 
 static const mozilla::Module::ContractIDEntry kUConvContracts[] = {
   { NS_CHARSETCONVERTERMANAGER_CONTRACTID, &kNS_ICHARSETCONVERTERMANAGER_CID },
-  { NS_CHARSETALIAS_CONTRACTID, &kNS_CHARSETALIAS_CID },
   { NS_ITEXTTOSUBURI_CONTRACTID, &kNS_TEXTTOSUBURI_CID },
-  { NS_PLATFORMCHARSET_CONTRACTID, &kNS_PLATFORMCHARSET_CID },
   { NS_CONVERTERINPUTSTREAM_CONTRACTID, &kNS_CONVERTERINPUTSTREAM_CID },
   { "@mozilla.org/intl/converter-output-stream;1", &kNS_CONVERTEROUTPUTSTREAM_CID },
   { NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, &kNS_ISCRIPTABLEUNICODECONVERTER_CID },

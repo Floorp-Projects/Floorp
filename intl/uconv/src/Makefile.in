@@ -54,7 +54,6 @@ SHORT_LIBNAME  = mozuconv
 
 CPPSRCS		= \
 		nsUConvModule.cpp \
-		nsCharsetAliasImp.cpp \
 		nsConverterInputStream.cpp \
 		nsConverterOutputStream.cpp \
 		nsTextToSubURI.cpp \
@@ -63,7 +62,6 @@ CPPSRCS		= \
 		nsUTF8ToUnicode.cpp \
 		nsUnicodeToUTF8.cpp \
 		nsScriptableUConv.cpp \
-		nsUConvPropertySearch.cpp \
 		$(NULL)
 
 ifndef MOZ_USE_NATIVE_UCONV
@@ -90,20 +88,6 @@ endif
 
 ifdef SOLARIS_SUNPRO_CXX
 nsUTF8ToUnicodeSSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
-endif
-endif
-
-ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-CPPSRCS			+= nsOS2Charset.cpp
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-CPPSRCS			+= nsWinCharset.cpp
-else
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-CPPSRCS			+= nsMacCharset.cpp
-else
-CPPSRCS			+= nsUNIXCharset.cpp
-endif
 endif
 endif
 
@@ -148,43 +132,3 @@ SHARED_LIBRARY_LIBS += \
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-# CODESET is not automatically defined on some older versions of Redhat.
-# Define _XOPEN_SOURCE so CODESET will get defined and thus allow 
-# nl_langinfo(CODESET) to compile on these systems.
-ifeq ($(OS_ARCH), Linux)
-DEFINES         += -D_XOPEN_SOURCE=500
-endif
-
-nsCharsetAliasImp.$(OBJ_SUFFIX): charsetalias.properties.h
-
-nsMacCharset.$(OBJ_SUFFIX): maccharset.properties.h
-
-nsOS2Charset.$(OBJ_SUFFIX): os2charset.properties.h
-
-nsWinCharset.$(OBJ_SUFFIX): wincharset.properties.h
-
-nsUNIXCharset.$(OBJ_SUFFIX): unixcharset.properties.h
-
-charsetalias.properties.h: props2arrays.py charsetalias.properties
-	$(PYTHON) $^ $@
-
-maccharset.properties.h: props2arrays.py maccharset.properties
-	$(PYTHON) $^ $@
-
-os2charset.properties.h: props2arrays.py os2charset.properties
-	$(PYTHON) $^ $@
-
-wincharset.properties.h: props2arrays.py wincharset.properties
-	$(PYTHON) $^ $@
-
-unixcharset.properties.h: props2arrays.py unixcharset.properties
-	$(PYTHON) $^ $@
-
-GARBAGE += \
-	charsetalias.properties.h \
-	maccharset.properties.h \
-	os2charset.properties.h \
-	unixcharset.properties.h \
-	wincharset.properties.h \
-	$(NULL)
