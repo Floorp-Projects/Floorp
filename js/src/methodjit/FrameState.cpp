@@ -2094,6 +2094,7 @@ FrameState::discardFe(FrameEntry *fe)
     forgetEntry(fe);
     fe->type.setMemory();
     fe->data.setMemory();
+    fe->clear();
 }
 
 void
