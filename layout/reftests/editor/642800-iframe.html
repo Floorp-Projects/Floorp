@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @media only screen and (max-width: 480px) {
+            .overflow-hidden 
+            {
+                overflow: hidden;
+            }
+            
+            .float-left
+            {
+                float: left;
+                background: #f0f;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Iframe content</h1>
+    <div class="float-left">
+        <textarea>This text should be visible when window is resized </textarea>
+
+    </div>
+    <div class="overflow-hidden">
+        <textarea>This text should be visible when window is resized </textarea>
+    </div>
+</body>
+</html>
