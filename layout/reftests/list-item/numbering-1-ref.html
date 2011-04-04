@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase #1 for bug 614969</title>
+</head>
+<body>
+
+<ol style="list-style: decimal inside">
+    <li>List item 1</li>
+    <li>List item 2</li>
+    <li>List item 3</li>
+    <li>List item 4</li>
+    <li>List item 5</li>
+    <li>List item 6</li>
+    <div><li>List item 7</li></div>
+</ol>
+
+<ol style="list-style: decimal inside;">
+    <div style="-moz-column-width:1em; column-width:1em;"><li></li><div>item1</div></div>
+    <div style="-moz-column-width:1em; column-width:1em;"><li></li><div>item2</div></div>
+    <div style="-moz-column-width:1em; column-width:1em;"><li></li><div>item3</div></div>
+</ol>
+
+</body>
+</html>
