@@ -630,7 +630,8 @@ SweepWaiverWrappers(JSDHashTable *table, JSDHashEntryHdr *hdr,
     JSContext *cx = (JSContext *)arg;
     JSObject *key = ((JSObject2JSObjectMap::Entry *)hdr)->key;
     JSObject *value = ((JSObject2JSObjectMap::Entry *)hdr)->value;
-    if(IsAboutToBeFinalized(cx, key) || IsAboutToBeFinalized(cx, value))
+
+    if(JS_IsAboutToBeFinalized(cx, key) || JS_IsAboutToBeFinalized(cx, value))
         return JS_DHASH_REMOVE;
     return JS_DHASH_NEXT;
 }
@@ -639,7 +640,7 @@ static PLDHashOperator
 SweepExpandos(XPCWrappedNative *wn, JSObject *&expando, void *arg)
 {
     JSContext *cx = (JSContext *)arg;
-    return IsAboutToBeFinalized(cx, wn->GetFlatJSObjectPreserveColor())
+    return JS_IsAboutToBeFinalized(cx, wn->GetFlatJSObjectPreserveColor())
            ? PL_DHASH_REMOVE
            : PL_DHASH_NEXT;
 }

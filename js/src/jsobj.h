@@ -1417,6 +1417,26 @@ class ValueArray {
     ValueArray(js::Value *v, size_t c) : array(v), length(c) {}
 };
 
+extern js::Class js_ArrayClass, js_SlowArrayClass;
+
+inline bool
+JSObject::isDenseArray() const
+{
+    return getClass() == &js_ArrayClass;
+}
+
+inline bool
+JSObject::isSlowArray() const
+{
+    return getClass() == &js_SlowArrayClass;
+}
+
+inline bool
+JSObject::isArray() const
+{
+    return isDenseArray() || isSlowArray();
+}
+
 extern js::Class js_ObjectClass;
 extern js::Class js_WithClass;
 extern js::Class js_BlockClass;
