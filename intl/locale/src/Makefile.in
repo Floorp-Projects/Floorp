@@ -67,6 +67,8 @@ CPPSRCS		= \
 		nsLanguageAtomService.cpp \
 		nsLocale.cpp \
 		nsLocaleService.cpp \
+		nsCharsetAliasImp.cpp \
+		nsUConvPropertySearch.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -86,6 +88,15 @@ EXTRA_JS_MODULES = \
 FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
+
+nsCharsetAliasImp.$(OBJ_SUFFIX): charsetalias.properties.h
+
+charsetalias.properties.h: props2arrays.py charsetalias.properties
+	$(PYTHON) $^ $@
+
+GARBAGE += \
+	charsetalias.properties.h \
+	$(NULL)
 
 libs::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
