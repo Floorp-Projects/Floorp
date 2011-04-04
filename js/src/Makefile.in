@@ -606,7 +606,7 @@ endif
 check-ooms:
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/config/find_OOM_errors.py --regression 125
 
-ifdef DEBUG
+ifeq ($(MOZ_DEBUG),1)
 check:: check-ooms
 endif
 
