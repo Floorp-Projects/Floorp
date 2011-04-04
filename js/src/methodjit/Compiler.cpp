@@ -3259,7 +3259,11 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
     FrameEntry *origCallee = frame.peek(-(speculatedArgc + 2));
     FrameEntry *origThis = frame.peek(-(speculatedArgc + 1));
 
-    /* 'this' does not need to be synced for constructing. */
+    /*
+     * 'this' does not need to be synced for constructing. :FIXME: is it
+     * possible that one of the arguments is directly copying the 'this'
+     * entry (something like 'new x.f(x)')?
+     */
     if (callingNew)
         frame.discardFe(origThis);
 
