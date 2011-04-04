@@ -297,7 +297,7 @@ nsJSONWriter::nsJSONWriter() : mStream(nsnull),
 {
 }
 
-nsJSONWriter::nsJSONWriter(nsIOutputStream *aStream) : mStream(nsnull),
+nsJSONWriter::nsJSONWriter(nsIOutputStream *aStream) : mStream(aStream),
                                                        mBuffer(nsnull),
                                                        mBufferCount(0),
                                                        mDidWrite(PR_FALSE),
