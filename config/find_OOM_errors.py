@@ -229,6 +229,8 @@ for f in files:
 
     if OPTIONS.regression == None:
       print "Testing allocation %d/%d in %s" % (i,max,f)
+    else:
+      sys.stdout.write('.') # something short for tinderbox, no space or \n
 
     command = (command_template + ' -A %d') % (f, i)
     out, err, exit = run(command)
@@ -317,6 +319,7 @@ for f in files:
   if not OPTIONS.regression == None:
     count_lines()
 
+print '\n',
 
 # Do the actual regression check
 if OPTIONS.regression:
