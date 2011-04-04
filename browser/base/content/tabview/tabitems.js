@@ -643,11 +643,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let $canvas = this.$canvas;
 
     UI.setActiveTab(this);
-    if (this.parent) {
-      GroupItems.setActiveGroupItem(this.parent);
-    } else {
-      GroupItems.setActiveOrphanTab(this);
-    }
+    GroupItems.setActiveGroupItem(this.parent);
 
     TabItems._update(this.tab, {force: true});
 
@@ -712,8 +708,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let onZoomDone = function onZoomDone() {
       $tab.removeClass("front");
       $canvas.css("-moz-transform", null);
-
-      GroupItems.setActiveOrphanTab(null);
 
       if (typeof complete == "function")
         complete();
@@ -1093,8 +1087,8 @@ let TabItems = {
       Utils.assertThrow(tab._tabViewTabItem, "should already be linked");
       // note that it's ok to unlink an app tab; see .handleTabUnpin
 
-      if (tab._tabViewTabItem == GroupItems.getActiveOrphanTab())
-        GroupItems.setActiveOrphanTab(null);
+      if (tab._tabViewTabItem == UI.getActiveOrphanTab())
+        UI.setActiveTab(null);
 
       this.unregister(tab._tabViewTabItem);
       tab._tabViewTabItem._sendToSubscribers("close");

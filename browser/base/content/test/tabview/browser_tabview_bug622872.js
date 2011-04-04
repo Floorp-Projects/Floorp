@@ -62,7 +62,7 @@ function part1(win) {
     let groupItems = contentWindow.GroupItems.groupItems;
     is(groupItems.length, 1, "Only one group");
 
-    ok(!contentWindow.GroupItems.getActiveOrphanTab(), "There is no active orphan tab.");
+    ok(!contentWindow.UI.getActiveOrphanTab(), "There is no active orphan tab.");
     ok(win.TabView.isVisible(), "Tab View is visible.");
 
     win.gBrowser.tabContainer.addEventListener("TabSelect", function() {
