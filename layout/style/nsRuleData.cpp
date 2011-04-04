@@ -63,15 +63,18 @@ nsRuleData::nsRuleData(PRUint32 aSIDs, nsCSSValue* aValueStorage,
     mPostResolveCallback(nsnull),
     mValueStorage(aValueStorage)
 {
+#ifndef MOZ_VALGRIND
   size_t framePoisonOffset = GetPoisonOffset();
   for (size_t i = 0; i < nsStyleStructID_Length; ++i) {
     mValueOffsets[i] = framePoisonOffset;
   }
+#endif
 }
 
 #ifdef DEBUG
 nsRuleData::~nsRuleData()
 {
+#ifndef MOZ_VALGRIND
   // assert nothing in mSIDs has poison value
   size_t framePoisonOffset = GetPoisonOffset();
   for (size_t i = 0; i < nsStyleStructID_Length; ++i) {
@@ -79,5 +82,6 @@ nsRuleData::~nsRuleData()
                       mValueOffsets[i] != framePoisonOffset,
                       "value in SIDs was left with poison offset");
   }
+#endif
 }
 #endif
