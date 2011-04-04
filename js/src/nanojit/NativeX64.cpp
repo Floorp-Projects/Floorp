@@ -1246,13 +1246,13 @@ namespace nanojit
         asm_cmpi(cond);
     }
 
-    NIns* Assembler::asm_branch(bool onFalse, LIns* cond, NIns* target) {
-        NIns* patch = asm_branch_helper(onFalse, cond, target);
+    Branches Assembler::asm_branch(bool onFalse, LIns* cond, NIns* target) {
+        Branches branches = asm_branch_helper(onFalse, cond, target);
         asm_cmp(cond);
-        return patch;
+        return branches;
     }
 
-    NIns* Assembler::asm_branch_helper(bool onFalse, LIns *cond, NIns *target) {
+    Branches Assembler::asm_branch_helper(bool onFalse, LIns *cond, NIns *target) {
         if (target && !isTargetWithinS32(target)) {
             // A conditional jump beyond 32-bit range, so invert the
             // branch/compare and emit an unconditional jump to the target:
@@ -1269,7 +1269,7 @@ namespace nanojit
              : asm_branchi_helper(onFalse, cond, target);
     }
 
-    NIns* Assembler::asm_branchi_helper(bool onFalse, LIns *cond, NIns *target) {
+    Branches Assembler::asm_branchi_helper(bool onFalse, LIns *cond, NIns *target) {
         // We must ensure there's room for the instruction before calculating
         // the offset.  And the offset determines the opcode (8bit or 32bit).
         LOpcode condop = cond->opcode();
@@ -1330,7 +1330,7 @@ namespace nanojit
                 }
             }
         }
-        return _nIns;   // address of instruction to patch
+        return Branches(_nIns); // address of instruction to patch
     }
 
     NIns* Assembler::asm_branch_ov(LOpcode, NIns* target) {
@@ -1412,15 +1412,17 @@ namespace nanojit
     //  LIR_jt  jae ja  swap+jae swap+ja  jp over je
     //  LIR_jf  jb  jbe swap+jb  swap+jbe jne+jp
 
-    NIns* Assembler::asm_branchd_helper(bool onFalse, LIns *cond, NIns *target) {
+    Branches Assembler::asm_branchd_helper(bool onFalse, LIns *cond, NIns *target) {
         LOpcode condop = cond->opcode();
-        NIns *patch;
+        NIns *patch1 = NULL;
+        NIns *patch2 = NULL;
         if (condop == LIR_eqd) {
             if (onFalse) {
                 // branch if unordered or !=
                 JP(16, target);     // underrun of 12 needed, round up for overhang --> 16
+                patch1 = _nIns;
                 JNE(0, target);     // no underrun needed, previous was enough
-                patch = _nIns;
+                patch2 = _nIns;
             } else {
                 // jp skip (2byte)
                 // jeq target
@@ -1428,7 +1430,7 @@ namespace nanojit
                 underrunProtect(16); // underrun of 7 needed but we write 2 instr --> 16
                 NIns *skip = _nIns;
                 JE(0, target);      // no underrun needed, previous was enough
-                patch = _nIns;
+                patch1 = _nIns;
                 JP8(0, skip);       // ditto
             }
         }
@@ -1443,9 +1445,9 @@ namespace nanojit
             case LIR_ged: if (onFalse) JB(8, target);  else JAE(8, target); break;
             default:      NanoAssert(0);                                    break;
             }
-            patch = _nIns;
+            patch1 = _nIns;
         }
-        return patch;
+        return Branches(patch1, patch2);
     }
 
     void Assembler::asm_condd(LIns *ins) {
@@ -2033,17 +2035,6 @@ namespace nanojit
             return;         // don't patch
         }
         ((int32_t*)next)[-1] = int32_t(target - next);
-        if (next[0] == 0x0F && next[1] == 0x8A) {
-            // code is jne<target>,jp<target>, for LIR_jf(feq)
-            // we just patched the jne, now patch the jp.
-            next += 6;
-            NanoAssert(((int32_t*)next)[-1] == 0);
-            if (!isS32(target - next)) {
-                setError(BranchTooFar);
-                return;     // don't patch
-            }
-            ((int32_t*)next)[-1] = int32_t(target - next);
-        }
     }
 
     Register Assembler::nRegisterAllocFromSet(RegisterMask set) {

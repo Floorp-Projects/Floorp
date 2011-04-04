@@ -1486,14 +1486,14 @@ namespace nanojit
         }
     }
 
-    NIns* Assembler::asm_branch_helper(bool branchOnFalse, LIns* cond, NIns* targ)
+    Branches Assembler::asm_branch_helper(bool branchOnFalse, LIns* cond, NIns* targ)
     {
         return isCmpDOpcode(cond->opcode())
              ? asm_branchd_helper(branchOnFalse, cond, targ)
              : asm_branchi_helper(branchOnFalse, cond, targ);
     }
 
-    NIns* Assembler::asm_branchi_helper(bool branchOnFalse, LIns* cond, NIns* targ)
+    Branches Assembler::asm_branchi_helper(bool branchOnFalse, LIns* cond, NIns* targ)
     {
         if (branchOnFalse) {
             // op == LIR_xf/LIR_jf
@@ -1524,14 +1524,14 @@ namespace nanojit
             default:        NanoAssert(0);  break;
             }
         }
-        return _nIns;
+        return Branches(_nIns);
     }
 
-    NIns* Assembler::asm_branch(bool branchOnFalse, LIns* cond, NIns* targ)
+    Branches Assembler::asm_branch(bool branchOnFalse, LIns* cond, NIns* targ)
     {
-        NIns* at = asm_branch_helper(branchOnFalse, cond, targ);
+        Branches branches = asm_branch_helper(branchOnFalse, cond, targ);
         asm_cmp(cond);
-        return at;
+        return branches;
     }
 
     NIns* Assembler::asm_branch_ov(LOpcode, NIns* target)
@@ -2595,9 +2595,10 @@ namespace nanojit
         }
     }
 
-    NIns* Assembler::asm_branchd_helper(bool branchOnFalse, LIns* cond, NIns *targ)
+    Branches Assembler::asm_branchd_helper(bool branchOnFalse, LIns* cond, NIns *targ)
     {
-        NIns* at = 0;
+        NIns* patch1 = NULL;
+        NIns* patch2 = NULL;
         LOpcode opcode = cond->opcode();
 
         if (_config.i386_sse2) {
@@ -2611,8 +2612,10 @@ namespace nanojit
                     if (cond->oprnd1() == cond->oprnd2()) {
                         JP(targ);
                     } else {
-                        JP(targ);
+                        JP(targ); // unordered
+                        patch1 = _nIns;
                         JNE(targ);
+                        patch2 = _nIns;
                     }
                     break;
                 case LIR_ltd:
@@ -2634,8 +2637,8 @@ namespace nanojit
                         underrunProtect(16); // underrun of 7 needed but we write 2 instr --> 16
                         NIns *skip = _nIns;
                         JE(targ);
-                        at = _nIns;
-                        JP(skip);
+                        patch1 = _nIns;
+                        JP(skip); // unordered
                     }
                     break;
                 case LIR_ltd:
@@ -2652,10 +2655,10 @@ namespace nanojit
                 JNP(targ);
         }
 
-        if (!at)
-            at = _nIns;
+        if (!patch1)
+            patch1 = _nIns;
 
-        return at;
+        return Branches(patch1, patch2);
     }
 
     // WARNING: This function cannot generate any code that will affect the
