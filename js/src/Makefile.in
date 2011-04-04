@@ -607,7 +607,7 @@ check-ooms:
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/config/find_OOM_errors.py --regression 125
 
 ifeq ($(MOZ_DEBUG),1)
-check:: check-ooms
+#check:: check-ooms
 endif
 
 ## Prevent regressing in our deprecation of non-preferred memory management functions.
