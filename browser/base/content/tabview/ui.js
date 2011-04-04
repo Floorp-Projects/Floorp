@@ -206,7 +206,7 @@ let UI = {
                        TabItems.tabWidth, TabItems.tabHeight);
             newTab._tabViewTabItem.setBounds(box, true);
             newTab._tabViewTabItem.pushAway(true);
-            GroupItems.setActiveOrphanTab(newTab._tabViewTabItem);
+            UI.setActiveTab(newTab._tabViewTabItem);
 
             TabItems.creatingNewOrphanTab = false;
             newTab._tabViewTabItem.zoomIn(true);
@@ -356,9 +356,9 @@ let UI = {
     GroupItems.setActiveGroupItem(groupItem);
   },
 
+  // ----------
   // Function: blurAll
   // Blurs any currently focused element
-  //
   blurAll: function UI_blurAll() {
     iQ(":focus").each(function(element) {
       element.blur();
@@ -380,7 +380,6 @@ let UI = {
   // ----------
   // Function: getActiveTab
   // Returns the currently active tab as a <TabItem>
-  //
   getActiveTab: function UI_getActiveTab() {
     return this._activeTab;
   },
@@ -413,6 +412,13 @@ let UI = {
 
       this._activeTab.makeActive();
     }
+  },
+
+  // ----------
+  // Function: getActiveOrphanTab
+  // Returns the currently active orphan tab as a <TabItem>
+  getActiveOrphanTab: function UI_getActiveOrphanTab() {
+    return (this._activeTab && !this._activeTab.parent) ? this._activeTab : null;
   },
 
   // ----------
@@ -476,7 +482,7 @@ let UI = {
     // closed all other tabs. (If the user is looking at an orphan tab, then
     // there is no active group for the purposes of this check.)
     let activeGroupItem = null;
-    if (!GroupItems.getActiveOrphanTab()) {
+    if (!UI.getActiveOrphanTab()) {
       activeGroupItem = GroupItems.getActiveGroupItem();
       if (activeGroupItem && activeGroupItem.closeIfEmpty())
         activeGroupItem = null;
@@ -863,22 +869,18 @@ let UI = {
       // No tabItem; must be an app tab. Base the tab bar on the current group.
       // If no current group or orphan tab, figure it out based on what's
       // already in the tab bar.
-      if (!GroupItems.getActiveGroupItem() && !GroupItems.getActiveOrphanTab()) {
+      if (!GroupItems.getActiveGroupItem() && !UI.getActiveOrphanTab()) {
         for (let a = 0; a < gBrowser.tabs.length; a++) {
           let theTab = gBrowser.tabs[a]; 
           if (!theTab.pinned) {
             let tabItem = theTab._tabViewTabItem; 
-            if (tabItem.parent) 
-              GroupItems.setActiveGroupItem(tabItem.parent);
-            else 
-              GroupItems.setActiveOrphanTab(tabItem); 
-              
+            GroupItems.setActiveGroupItem(tabItem.parent);
             break;
           }
         }
       }
 
-      if (GroupItems.getActiveGroupItem() || GroupItems.getActiveOrphanTab())
+      if (GroupItems.getActiveGroupItem() || UI.getActiveOrphanTab())
         GroupItems._updateTabBar();
     }
   },
