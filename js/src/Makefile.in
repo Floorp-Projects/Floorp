@@ -672,7 +672,8 @@ check-jstests:
 
 
 ifndef WINCE
-check:: check-jit-test check-jstests
+check:: check-jit-test
+#check:: check-jstests
 check-valgrind:: check-jit-test-valgrind
 endif
 
