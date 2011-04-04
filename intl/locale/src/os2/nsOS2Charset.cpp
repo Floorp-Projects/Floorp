@@ -43,7 +43,6 @@
 #include "pratom.h"
 #define INCL_WIN
 #include <os2.h>
-#include "nsUConvDll.h"
 #include "nsIOS2Locale.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"

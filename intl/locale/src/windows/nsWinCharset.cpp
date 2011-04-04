@@ -39,7 +39,6 @@
 #include "nsUConvPropertySearch.h"
 #include "pratom.h"
 #include <windows.h>
-#include "nsUConvDll.h"
 #include "nsIWin32Locale.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"

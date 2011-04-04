@@ -42,7 +42,6 @@
 // for NS_IMPL_IDS only
 #include "nsIPlatformCharset.h"
 
-#include "nsUConvDll.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsUConvPropertySearch.h"

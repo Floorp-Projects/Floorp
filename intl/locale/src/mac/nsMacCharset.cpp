@@ -39,7 +39,6 @@
 #include "nsIPlatformCharset.h"
 #include "pratom.h"
 #include "nsUConvPropertySearch.h"
-#include "nsUConvDll.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIMacLocale.h"
