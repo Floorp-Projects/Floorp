@@ -183,26 +183,6 @@ js_IdIsIndex(jsid id, jsuint *indexp)
     return js_StringIsIndex(JSID_TO_ATOM(id), indexp);
 }
 
-extern js::Class js_ArrayClass, js_SlowArrayClass;
-
-inline bool
-JSObject::isDenseArray() const
-{
-    return getClass() == &js_ArrayClass;
-}
-
-inline bool
-JSObject::isSlowArray() const
-{
-    return getClass() == &js_SlowArrayClass;
-}
-
-inline bool
-JSObject::isArray() const
-{
-    return isDenseArray() || isSlowArray();
-}
-
 /*
  * Dense arrays are not native -- aobj->isNative() for a dense array aobj
  * results in false, meaning aobj->map does not point to a js::Shape.

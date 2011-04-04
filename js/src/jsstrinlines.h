@@ -44,7 +44,7 @@
 #include "jsstr.h"
 
 #include "jscntxtinlines.h"
-#include "jsobjinlines.h"
+#include "jsgcinlines.h"
 
 namespace js {
 
