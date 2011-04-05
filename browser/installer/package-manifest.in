@@ -241,9 +241,6 @@
 #endif
 @BINPATH@/components/txtsvc.xpt
 @BINPATH@/components/txmgr.xpt
-#ifdef MOZ_USE_NATIVE_UCONV
-@BINPATH@/components/ucnative.xpt
-#endif
 @BINPATH@/components/uconv.xpt
 @BINPATH@/components/unicharutil.xpt
 @BINPATH@/components/update.xpt

@@ -5000,7 +5000,6 @@ MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
-MOZ_USE_NATIVE_UCONV=
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
@@ -5901,20 +5900,6 @@ if test "$NS_PRINTING"; then
     AC_DEFINE(NS_PRINTING)
     AC_DEFINE(NS_PRINT_PREVIEW)
 fi
-dnl ========================================================
-dnl use native unicode converters
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(native-uconv,
-[  --enable-native-uconv   Enable iconv support],
-    MOZ_USE_NATIVE_UCONV=1,
-    MOZ_USE_NATIVE_UCONV= )
-if test "$MOZ_USE_NATIVE_UCONV"; then
-    AC_DEFINE(MOZ_USE_NATIVE_UCONV)
-fi
-if test "$OS_ARCH" != "WINCE" -a "$OS_ARCH" != "WINNT" -a "$MOZ_USE_NATIVE_UCONV" -a "$ac_cv_func_iconv" != "yes"; then
-    AC_MSG_ERROR([iconv() not found.  Cannot enable native uconv support.])
-fi
-
 
 dnl ========================================================
 dnl = Disable Fast Load
@@ -9056,7 +9041,6 @@ AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_PROFILING)
-AC_SUBST(MOZ_USE_NATIVE_UCONV)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)

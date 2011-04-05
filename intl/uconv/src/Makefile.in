@@ -62,10 +62,6 @@ CPPSRCS		= \
 		nsUTF8ToUnicode.cpp \
 		nsUnicodeToUTF8.cpp \
 		nsScriptableUConv.cpp \
-		$(NULL)
-
-ifndef MOZ_USE_NATIVE_UCONV
-CPPSRCS         += \
 		nsISO88591ToUnicode.cpp \
 		nsCP1252ToUnicode.cpp \
 		nsMacRomanToUnicode.cpp \
@@ -73,7 +69,6 @@ CPPSRCS         += \
 		nsUnicodeToCP1252.cpp \
 		nsUnicodeToMacRoman.cpp \
 		$(NULL)
-endif
 
 # Are we targeting x86-32 or x86-64?  If so, we want to include the SSE2
 # version of nsUTF8ToUnicodeSSE2.cpp.
@@ -112,10 +107,8 @@ LOCAL_INCLUDES	= -I$(srcdir)/../util \
 		  -I$(srcdir)/../ucvtw \
 		  -I$(srcdir)/../ucvko \
 		  -I$(srcdir)/../ucvcn \
-		  -I$(srcdir)/../native \
 		  $(NULL)
 
-ifndef MOZ_USE_NATIVE_UCONV
 SHARED_LIBRARY_LIBS += \
 	../ucvlatin/$(LIB_PREFIX)ucvlatin_s.$(LIB_SUFFIX) \
 	../ucvibm/$(LIB_PREFIX)ucvibm_s.$(LIB_SUFFIX) \
@@ -125,10 +118,5 @@ SHARED_LIBRARY_LIBS += \
 	../ucvko/$(LIB_PREFIX)ucvko_s.$(LIB_SUFFIX) \
 	../ucvcn/$(LIB_PREFIX)ucvcn_s.$(LIB_SUFFIX) \
 	$(NULL)
-else
-SHARED_LIBRARY_LIBS += \
-	../native/$(LIB_PREFIX)ucnative_s.$(LIB_SUFFIX) \
-	$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk
