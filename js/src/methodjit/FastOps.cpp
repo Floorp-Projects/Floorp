@@ -617,8 +617,11 @@ mjit::Compiler::jsop_not()
 
           case JSVAL_TYPE_OBJECT:
           {
+            RegisterID reg = frame.allocReg();
+            masm.move(Imm32(0), reg);
+
             frame.pop();
-            frame.push(BooleanValue(false));
+            frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, reg);
             break;
           }
 
