@@ -978,7 +978,7 @@ struct ConservativeGCThreadData {
     unsigned requestThreshold;
 
     ConservativeGCThreadData()
-      : nativeStackTop(NULL), requestThreshold(NULL)
+      : nativeStackTop(NULL), requestThreshold(0)
     {
     }
 

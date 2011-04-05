@@ -766,8 +766,12 @@ struct PointerHasher
     static HashNumber hash(const Lookup &l) {
         size_t word = reinterpret_cast<size_t>(l) >> zeroBits;
         JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
-        JS_STATIC_ASSERT(sizeof word == 4 || sizeof word == 8);
-        return HashNumber(sizeof word == 4 ? word : (word >> 32) ^ word);
+#if JS_BYTES_PER_WORD == 4
+        return HashNumber(word);
+#else
+        JS_STATIC_ASSERT(sizeof word == 8);
+        return HashNumber((word >> 32) ^ word);
+#endif
     }
     static bool match(const Key &k, const Lookup &l) {
         return k == l;
