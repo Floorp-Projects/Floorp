@@ -5993,9 +5993,6 @@ if test "$JS_HAS_CTYPES"; then
   fi
   if test "$CROSS_COMPILE"; then
     case "$target" in
-    *-mingw*)
-      ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\" CC=\"$CC\""
-      ;;
     *-android*)
       CFLAGS="$ANDROID_CFLAGS"
       CPPFLAGS="$ANDROID_CPPFLAGS"
