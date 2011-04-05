@@ -249,9 +249,6 @@ function GroupItem(listOfEls, options) {
   // ___ Superclass initialization
   this._init($container[0]);
 
-  if (this.$debug)
-    this.$debug.css({zIndex: -1000});
-
   // ___ Children
   Array.prototype.forEach.call(listOfEls, function(el) {
     self.add(el, options);
@@ -600,7 +597,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     UI.clearShouldResizeItems();
 
-    this._updateDebugBounds();
     this.setTrenches(rect);
 
     this.save();
@@ -613,9 +609,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.zIndex = value;
 
     iQ(this.container).css({zIndex: value});
-
-    if (this.$debug)
-      this.$debug.css({zIndex: value + 1});
 
     var count = this._children.length;
     if (count) {
