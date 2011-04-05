@@ -5645,6 +5645,11 @@ then
     dnl ========================================================
     dnl = GConf support module
     dnl ========================================================
+    MOZ_ARG_DISABLE_BOOL(gconf,
+    [  --disable-gconf      Disable Gconf support ],
+        MOZ_ENABLE_GCONF=,
+        MOZ_ENABLE_GCONF=force)
+
     if test "$MOZ_ENABLE_GCONF"
     then
         PKG_CHECK_MODULES(MOZ_GCONF, gconf-2.0 >= $GCONF_VERSION gobject-2.0 ,[
