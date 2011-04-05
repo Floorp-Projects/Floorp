@@ -202,7 +202,6 @@ function TabItem(tab, options) {
 
   this.setResizable(true, options.immediately);
   this.droppable(true);
-  this._updateDebugBounds();
 
   TabItems.register(this);
 
@@ -524,7 +523,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     UI.clearShouldResizeItems();
 
-    this._updateDebugBounds();
     rect = this.getBounds(); // ensure that it's a <Rect>
 
     if (!Utils.isRect(this.bounds))
