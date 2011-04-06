@@ -2931,7 +2931,7 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             TypeFunction *type = cx->newTypeFunction("ClonedFunction", clone->getProto());
             if (!type || !clone->setTypeAndUniqueShape(cx, type))
                 return NULL;
-            if (fun->getType()->unknownProperties) {
+            if (fun->getType()->unknownProperties()) {
                 if (!cx->markTypeObjectUnknownProperties(type))
                     return NULL;
             } else {

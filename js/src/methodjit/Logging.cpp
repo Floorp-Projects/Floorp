@@ -85,6 +85,7 @@ js::JMCheckLogging()
             "  vmframe       VMFrame contents\n"
             "  pics          PIC patching activity\n"
             "  slowcalls     Calls to slow path functions\n"
+            "  analysis      LICM and other analysis behavior\n"
             "  regalloc      Register allocation behavior\n"
             "  inlin         Call inlining behavior\n"
             "  recompile     Dynamic recompilations\n"
@@ -113,6 +114,8 @@ js::JMCheckLogging()
         LoggingBits |= (1 << uint32(JSpew_PICs));
     if (strstr(env, "slowcalls"))
         LoggingBits |= (1 << uint32(JSpew_SlowCalls));
+    if (strstr(env, "analysis"))
+        LoggingBits |= (1 << uint32(JSpew_Analysis));
     if (strstr(env, "regalloc"))
         LoggingBits |= (1 << uint32(JSpew_Regalloc));
     if (strstr(env, "recompile"))

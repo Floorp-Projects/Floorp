@@ -175,8 +175,7 @@ public:
 
     /*
      * For constraints attached to the index type set of an object (JSID_VOID),
-     * mark a change in one of the object's dynamic properties (isDenseArray,
-     * isPackedArray, or unknownProperties).
+     * mark a change in one of the object's dynamic property flags.
      */
     virtual void newObjectState(JSContext *cx) {}
 
@@ -199,26 +198,25 @@ public:
 /*
  * Coarse kinds of a set of objects.  These form the following lattice:
  *
- *                    NONE
- *       ___________ /  | \______________
- *      /               |                \
- * PACKED_ARRAY  INLINEABLE_FUNCTION  NATIVE_FUNCTION
- *      |               |                 |
- * DENSE_ARRAY    SCRIPTED_FUNCTION       |
- *      \____________   |   _____________/
- *                   \  |  /
- *             NO_SPECIAL_EQUALITY
- *                      |
- *                   UNKNOWN
+ *            NONE
+ *       ____/    \_____
+ *      /               \
+ * PACKED_ARRAY  INLINEABLE_FUNCTION
+ *     |                 |
+ * DENSE_ARRAY    SCRIPTED_FUNCTION
+ *      \____      _____/
+ *           \    /
+ *     NO_SPECIAL_EQUALITY
+ *              |
+ *           UNKNOWN
  */
 enum ObjectKind {
     OBJECT_NONE,
     OBJECT_UNKNOWN,
     OBJECT_PACKED_ARRAY,
-    OBJECT_DENSE_ARRAY,
+    OBJECT_DENSE_ARRAY,         /* Excludes arrays whose length has shrunk. */
     OBJECT_INLINEABLE_FUNCTION,
     OBJECT_SCRIPTED_FUNCTION,
-    OBJECT_NATIVE_FUNCTION,
     OBJECT_NO_SPECIAL_EQUALITY
 };
 
@@ -241,7 +239,7 @@ enum {
 typedef uint32 TypeFlags;
 
 /* Information about the set of types associated with an lvalue. */
-struct TypeSet
+class TypeSet
 {
     /* Flags for the possible coarse types in this set. */
     TypeFlags typeFlags;
@@ -249,6 +247,8 @@ struct TypeSet
     /* Possible objects this type set can represent. */
     TypeObject **objectSet;
     unsigned objectCount;
+
+  public:
 
     /* Chain of constraints which propagate changes out from this type set. */
     TypeConstraint *constraintList;
@@ -266,6 +266,7 @@ struct TypeSet
     /* Whether this set contains a specific type. */
     inline bool hasType(jstype type);
 
+    bool hasAnyFlag(TypeFlags flags) { return typeFlags & flags; }
     bool unknown() { return typeFlags & TYPE_FLAG_UNKNOWN; }
 
     /*
@@ -276,6 +277,14 @@ struct TypeSet
 
     /* Add all types in a cloned set to this set. */
     void addTypeSet(JSContext *cx, ClonedTypeSet *types);
+
+    /*
+     * Iterate through the objects in this set. getObjectCount overapproximates
+     * in the hash case (see SET_ARRAY_SIZE in jsinferinlines.h), and getObject
+     * may return NULL.
+     */
+    inline unsigned getObjectCount();
+    inline TypeObject *getObject(unsigned i);
 
     /* Add specific kinds of constraints to this set. */
     inline void add(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
@@ -318,6 +327,9 @@ struct TypeSet
     /* Get information about the kinds of objects in this type set. */
     ObjectKind getKnownObjectKind(JSContext *cx);
 
+    /* Get the fixed kind of a particular object. */
+    static ObjectKind GetObjectKind(JSContext *cx, TypeObject *object);
+
     /* Whether any objects in this type set have unknown properties. */
     bool hasUnknownProperties(JSContext *cx);
 
@@ -335,6 +347,10 @@ struct TypeSet
      * source in the future, the script will be recompiled.
      */
     static void Clone(JSContext *cx, TypeSet *source, ClonedTypeSet *target);
+
+    static void
+    CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
+                         HashSet<JSScript*> *pcondensed, TypeSet *types);
 
   private:
     inline void markUnknown(JSContext *cx);
@@ -368,6 +384,37 @@ struct Property
     static jsid getKey(Property *p) { return p->id; }
 };
 
+/* Bitmask for possible dynamic properties of the JSObjects with some type. */
+enum {
+    /*
+     * Whether all the properties of this object are unknown. When this object
+     * appears in a type set, nothing can be assumed about its contents,
+     * including whether the .proto field is correct. This is needed to handle
+     * mutable __proto__, which requires us to unify all type objects with
+     * unknown properties in type sets (see SetProto).
+     */
+    OBJECT_FLAG_UNKNOWN_MASK = uint32(-1),
+
+    /* Whether any objects this represents are not dense arrays. */
+    OBJECT_FLAG_NON_DENSE_ARRAY = 1 << 0,
+
+    /* Whether any objects this represents are not packed arrays. */
+    OBJECT_FLAG_NON_PACKED_ARRAY = 1 << 1,
+
+    /*
+     * Whether any objects this represents are arrays whose length has shrunk
+     * due to explicit assignments to .length.
+     */
+    OBJECT_FLAG_ARRAY_SHRANK = 1 << 2,
+
+    /* Whether any objects this represents have had their .arguments accessed. */
+    OBJECT_FLAG_UNINLINEABLE = 1 << 3,
+
+    /* Whether any objects this represents have an equality hook. */
+    OBJECT_FLAG_SPECIAL_EQUALITY = 1 << 4
+};
+typedef uint32 TypeObjectFlags;
+
 /* Type information about an object accessed by a script. */
 struct TypeObject
 {
@@ -381,6 +428,9 @@ struct TypeObject
 
     /* Lazily filled array of empty shapes for each size of objects with this type. */
     js::EmptyShape **emptyShapes;
+
+    /* Vector of TypeObjectFlags for the objects this type represents. */
+    TypeObjectFlags flags;
 
     /* Whether this is a function object, and may be cast into TypeFunction. */
     bool isFunction;
@@ -427,27 +477,6 @@ struct TypeObject
     /* Link in the list of objects associated with a script or global object. */
     TypeObject *next;
 
-    /*
-     * Whether all the properties of this object are unknown. When this object
-     * appears in a type set, nothing can be assumed about its contents, including
-     * whether the .proto field is correct. This is needed to handle mutable
-     * __proto__, which requires us to unify all type objects with unknown
-     * properties in type sets (see SetProto).
-     */
-    bool unknownProperties;
-
-    /* Whether all objects this represents are dense arrays. */
-    bool isDenseArray;
-
-    /* Whether all objects this represents are packed arrays (implies isDenseArray). */
-    bool isPackedArray;
-
-    /* Whether any objects this represents have had their .arguments accessed. */
-    bool isUninlineable;
-
-    /* Whether any objects this represents have an equality hook. */
-    bool hasSpecialEquality;
-
     /* If at most one JSObject can have this as its type, that object. */
     JSObject *singleton;
 
@@ -462,6 +491,9 @@ struct TypeObject
         JS_ASSERT(isFunction);
         return (TypeFunction *) this;
     }
+
+    bool unknownProperties() { return flags == OBJECT_FLAG_UNKNOWN_MASK; }
+    bool hasFlags(TypeObjectFlags flags) { return (this->flags & flags) == flags; }
 
     /*
      * Return an immutable, shareable, empty shape with the same clasp as this
@@ -487,13 +519,15 @@ struct TypeObject
     /* Mark proto as the prototype of this object and all instances. */
     void splicePrototype(JSContext *cx, JSObject *proto);
 
+    inline unsigned getPropertyCount();
+    inline Property *getProperty(unsigned i);
+
     /* Helpers */
 
     bool addProperty(JSContext *cx, jsid id, Property **pprop);
     void addPrototype(JSContext *cx, TypeObject *proto);
-    void markNotPacked(JSContext *cx, bool notDense);
+    void setFlags(JSContext *cx, TypeObjectFlags flags);
     void markUnknown(JSContext *cx);
-    void markUninlineable(JSContext *cx);
     void storeToInstances(JSContext *cx, Property *base);
     void getFromPrototypes(JSContext *cx, Property *base);
 
@@ -742,7 +776,7 @@ struct TypeCompartment
 
     /* Make a function or non-function object associated with an optional script. */
     TypeObject *newTypeObject(JSContext *cx, JSScript *script,
-                              const char *name, bool isFunction, JSObject *proto);
+                              const char *name, bool isFunction, bool isArray, JSObject *proto);
 
     /* Make an initializer object. */
     TypeObject *newInitializerTypeObject(JSContext *cx, JSScript *script,

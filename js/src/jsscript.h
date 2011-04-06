@@ -464,6 +464,7 @@ struct JSScript {
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */
     bool            inlineParents:1;  /* script may be inlined in other frames */
+    bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
 #endif
 
     jsbytecode      *main;      /* main entry point, after predef'ing prolog */

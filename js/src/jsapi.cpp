@@ -3056,8 +3056,8 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
     TypeObject *type = cx->newTypeObject("Global", NULL);
     if (!type || !obj->setTypeAndUniqueShape(cx, type))
         return NULL;
-    if (Valueify(clasp)->ext.equality)
-        type->hasSpecialEquality = true;
+    if (Valueify(clasp)->ext.equality && !cx->markTypeObjectHasSpecialEquality(type))
+        return NULL;
 
     obj->syncSpecialEquality();
 

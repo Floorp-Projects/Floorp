@@ -40,6 +40,8 @@
 #if !defined jsjaeger_framestate_inl_h__ && defined JS_METHODJIT
 #define jsjaeger_framestate_inl_h__
 
+#include "methodjit/LoopState.h"
+
 namespace js {
 namespace mjit {
 
@@ -87,7 +89,6 @@ FrameState::allocReg(uint32 mask)
 {
     if (a->freeRegs.hasRegInMask(mask)) {
         AnyRegisterID reg = a->freeRegs.takeAnyReg(mask);
-        clearLoopReg(reg);
         modifyReg(reg);
         return reg;
     }
@@ -123,17 +124,20 @@ FrameState::allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type)
      * the entry has also not been written to or already had a loop register
      * assigned.
      */
-    if (a->freeRegs.hasRegInMask(loopRegs.freeMask & mask) && type == RematInfo::DATA &&
-        (fe == this_ || isArg(fe) || isLocal(fe)) && fe->lastLoop < activeLoop->head &&
+    if (loop && a->freeRegs.hasRegInMask(loop->getLoopRegs() & mask) &&
+        type == RematInfo::DATA &&
+        (fe == this_ || isArg(fe) || isLocal(fe)) &&
+        fe->lastLoop < loop->headOffset() &&
         !a->parent) {
-        reg = a->freeRegs.takeAnyReg(loopRegs.freeMask & mask);
-        setLoopReg(reg, fe);
+        reg = a->freeRegs.takeAnyReg(loop->getLoopRegs() & mask);
+        regstate(reg).associate(fe, RematInfo::DATA);
+        fe->lastLoop = loop->headOffset();
+        loop->setLoopReg(reg, fe);
         return reg;
     }
 
     if (!a->freeRegs.empty(mask)) {
         reg = a->freeRegs.takeAnyReg(mask);
-        clearLoopReg(reg);
     } else {
         reg = evictSomeReg(mask);
         regstate(reg).forget();
@@ -158,17 +162,8 @@ FrameState::modifyReg(AnyRegisterID reg)
         a->parentRegs.takeReg(reg);
         syncParentRegister(masm, reg);
     }
-}
-
-inline void
-FrameState::clearLoopReg(AnyRegisterID reg)
-{
-    JS_ASSERT(loopRegs.hasReg(reg) == (activeLoop && activeLoop->alloc->loop(reg)));
-    if (loopRegs.hasReg(reg)) {
-        loopRegs.takeReg(reg);
-        activeLoop->alloc->setUnassigned(reg);
-        JaegerSpew(JSpew_Regalloc, "clearing loop register %s\n", reg.name());
-    }
+    if (loop)
+        loop->clearLoopReg(reg);
 }
 
 inline void

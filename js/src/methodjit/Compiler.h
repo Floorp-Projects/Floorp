@@ -407,6 +407,8 @@ class Compiler : public BaseCompiler
     JSScript *script;
     jsbytecode *PC;
 
+    LoopState *loop;
+
     /* State spanning all stack frames. */
 
     js::Vector<ActiveFrame*, 4, CompilerAllocPolicy> inlineFrames;
@@ -479,6 +481,9 @@ class Compiler : public BaseCompiler
     jsbytecode *inlinePC() { return PC; }
     uint32 inlineIndex() { return a->inlineIndex; }
 
+    types::TypeSet *getTypeSet(uint32 slot);
+    types::TypeSet *getTypeSet(const FrameEntry *fe) { return getTypeSet(frame.indexOfFe(fe)); }
+
   private:
     CompileStatus performCompilation(JITScript **jitp);
     CompileStatus generatePrologue();
@@ -539,6 +544,7 @@ class Compiler : public BaseCompiler
 
     /* Opcode handlers. */
     bool jumpAndTrace(Jump j, jsbytecode *target, Jump *slow = NULL, bool *trampoline = NULL);
+    bool startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
     bool finishLoop(jsbytecode *head);
     void jsop_bindname(JSAtom *atom, bool usePropCache);
     void jsop_setglobal(uint32 index);
