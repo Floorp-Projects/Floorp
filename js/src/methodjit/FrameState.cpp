@@ -51,14 +51,11 @@ JS_STATIC_ASSERT(sizeof(FrameEntry) % 8 == 0);
 FrameState::FrameState(JSContext *cx, mjit::Compiler &cc,
                        Assembler &masm, StubCompiler &stubcc)
   : cx(cx),
-    masm(masm), stubcc(stubcc),
+    masm(masm), cc(cc), stubcc(stubcc),
     a(NULL), script(NULL), entries(NULL),
     callee_(NULL), this_(NULL), args(NULL), locals(NULL),
     spBase(NULL), sp(NULL), PC(NULL),
-    activeLoop(NULL), loopRegs(0),
-    loopJoins(CompilerAllocPolicy(cx, cc)),
-    loopPatches(CompilerAllocPolicy(cx, cc)),
-    inTryBlock(false)
+    loop(NULL), inTryBlock(false)
 {
 }
 
@@ -405,7 +402,6 @@ FrameState::takeReg(AnyRegisterID reg)
     modifyReg(reg);
     if (a->freeRegs.hasReg(reg)) {
         a->freeRegs.takeReg(reg);
-        clearLoopReg(reg);
         JS_ASSERT(!regstate(reg).usedBy());
     } else {
         JS_ASSERT(regstate(reg).fe());
@@ -416,20 +412,24 @@ FrameState::takeReg(AnyRegisterID reg)
 
 #ifdef DEBUG
 const char *
-FrameState::entryName(FrameEntry *fe) const
+FrameState::entryName(const FrameEntry *fe) const
 {
     if (fe == this_)
         return "'this'";
     if (fe == callee_)
         return "callee";
 
-    static char buf[50];
+    static char bufs[4][50];
+    static unsigned which = 0;
+    which = (which + 1) & 3;
+    char *buf = bufs[which];
+
     if (isArg(fe))
-        JS_snprintf(buf, sizeof(buf), "arg %d", fe - args);
+        JS_snprintf(buf, 50, "arg%d", fe - args);
     else if (isLocal(fe))
-        JS_snprintf(buf, sizeof(buf), "local %d", fe - locals);
+        JS_snprintf(buf, 50, "local%d", fe - locals);
     else
-        JS_snprintf(buf, sizeof(buf), "slot %d", fe - spBase);
+        JS_snprintf(buf, 50, "slot%d", fe - spBase);
     return buf;
 }
 #endif
@@ -457,22 +457,10 @@ inline Lifetime *
 FrameState::variableLive(FrameEntry *fe, jsbytecode *pc) const
 {
     JS_ASSERT(cx->typeInferenceEnabled());
+    JS_ASSERT(fe < spBase && fe != callee_);
 
     uint32 offset = pc - script->code;
-    if (fe == this_)
-        return a->liveness->thisLive(offset);
-    if (isArg(fe)) {
-        JS_ASSERT(!a->analysis->argEscapes(fe - args));
-        return a->liveness->argLive(fe - args, offset);
-    }
-    if (isLocal(fe)) {
-        JS_ASSERT(!a->analysis->localEscapes(fe - locals));
-        return a->liveness->localLive(fe - locals, offset);
-    }
-
-    /* Liveness not computed for stack and callee entries. */
-    JS_NOT_REACHED("Stack/callee entry");
-    return NULL;
+    return a->liveness->live(indexOfFe(fe), offset);
 }
 
 bool
@@ -579,8 +567,8 @@ FrameState::bestEvictReg(uint32 mask, bool includePinned) const
          * Evict variables which are only live in future loop iterations, and are
          * not carried around the loop in a register.
          */
-        JS_ASSERT_IF(lifetime->loopTail, activeLoop);
-        if (lifetime->loopTail && !activeLoop->alloc->hasAnyReg(indexOfFe(fe))) {
+        JS_ASSERT_IF(lifetime->loopTail, loop);
+        if (lifetime->loopTail && !loop->carriesLoopReg(fe)) {
             JaegerSpew(JSpew_Regalloc, "result: %s (%s) only live in later iterations\n",
                        entryName(fe), reg.name());
             return reg;
@@ -680,127 +668,6 @@ FrameState::forgetEverything()
         JS_ASSERT(!regstate(reg).usedBy());
     }
 #endif
-}
-
-void
-FrameState::flushLoopJoins()
-{
-    JS_ASSERT(cx->typeInferenceEnabled());
-    for (unsigned i = 0; i < loopPatches.length(); i++) {
-        const StubJoinPatch &p = loopPatches[i];
-        stubcc.patchJoin(p.join.index, p.join.script, p.address, p.reg);
-    }
-    loopJoins.clear();
-    loopPatches.clear();
-}
-
-bool
-FrameState::pushLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
-{
-    JS_ASSERT(cx->typeInferenceEnabled());
-    if (activeLoop) {
-        /*
-         * Convert all loop registers in the outer loop into unassigned registers.
-         * We don't keep track of which registers the inner loop uses, so the only
-         * registers that can be carried in the outer loop must be mentioned before
-         * the inner loop starts.
-         */
-        activeLoop->alloc->clearLoops();
-        flushLoopJoins();
-    }
-
-    LoopState *loop = (LoopState *) cx->calloc_(sizeof(*activeLoop));
-    if (!loop)
-        return false;
-
-    loop->outer = activeLoop;
-    loop->head = head;
-    loop->entry = entry;
-    loop->entryTarget = entryTarget;
-    activeLoop = loop;
-
-    RegisterAllocation *&alloc = a->liveness->getCode(head).allocation;
-    JS_ASSERT(!alloc);
-
-    alloc = ArenaNew<RegisterAllocation>(a->liveness->pool, true);
-    if (!alloc)
-        return false;
-
-    loop->alloc = alloc;
-    loopRegs = Registers::AvailAnyRegs;
-    return true;
-}
-
-void
-FrameState::popLoop(jsbytecode *head, Jump *pjump, jsbytecode **ppc)
-{
-    JS_ASSERT(cx->typeInferenceEnabled());
-    JS_ASSERT(activeLoop && activeLoop->head == head && activeLoop->alloc);
-    activeLoop->alloc->clearLoops();
-
-#ifdef DEBUG
-    if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
-        JaegerSpew(JSpew_Regalloc, "loop allocation at %u:", head - script->code);
-        dumpAllocation(activeLoop->alloc);
-    }
-#endif
-
-    flushLoopJoins();
-
-    activeLoop->entry.linkTo(masm.label(), &masm);
-    prepareForJump(activeLoop->entryTarget, masm, true);
-
-    *pjump = masm.jump();
-    *ppc = activeLoop->entryTarget;
-
-    LoopState *loop = activeLoop->outer;
-
-    cx->free_(activeLoop);
-    activeLoop = loop;
-
-    loopRegs = 0;
-}
-
-void
-FrameState::setLoopReg(AnyRegisterID reg, FrameEntry *fe)
-{
-    JS_ASSERT(cx->typeInferenceEnabled());
-    JS_ASSERT(activeLoop && activeLoop->alloc->loop(reg));
-    loopRegs.takeReg(reg);
-
-    fe->lastLoop = activeLoop->head;
-
-    uint32 slot = indexOfFe(fe);
-    regstate(reg).associate(fe, RematInfo::DATA);
-
-    JaegerSpew(JSpew_Regalloc, "allocating loop register %s for %s\n", reg.name(), entryName(fe));
-
-    activeLoop->alloc->set(reg, slot, true);
-
-    /*
-     * Mark pending rejoins to patch up with the load. We don't do this now as that would
-     * cause us to emit into the slow path, which may be in progress.
-     */
-    for (unsigned i = 0; i < loopJoins.length(); i++) {
-        StubJoinPatch p;
-        p.join = loopJoins[i];
-        p.address = addressOf(fe);
-        p.reg = reg;
-        loopPatches.append(p);
-    }
-
-    if (activeLoop->entryTarget &&
-        activeLoop->entryTarget != activeLoop->head &&
-        PC >= activeLoop->entryTarget) {
-        /*
-         * We've advanced past the entry point of the loop (we're analyzing the condition),
-         * so need to update the register state at that entry point so that the right
-         * things get loaded when we enter the loop.
-         */
-        RegisterAllocation *entry = a->liveness->getCode(activeLoop->entryTarget).allocation;
-        JS_ASSERT(entry && !entry->assigned(reg));
-        entry->set(reg, slot, true);
-    }
 }
 
 #ifdef DEBUG
@@ -1659,13 +1526,12 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
     syncParentRegistersInMask(masm, a->parentRegs.freeMask, true);
     JS_ASSERT(a->parentRegs.empty());
 
-    if (activeLoop) {
+    if (loop) {
         /*
          * Drop any remaining loop registers so we don't do any more after-the-fact
          * allocation of the initial register state.
          */
-        activeLoop->alloc->clearLoops();
-        loopRegs = 0;
+        loop->flushRegisters(stubcc);
     }
 
     FrameEntry *spStop = sp - ignore.nuses;
@@ -2405,8 +2271,8 @@ FrameState::storeLocal(uint32 n, JSValueType type, bool popGuaranteed, bool fixe
 
     storeTop(local, type, popGuaranteed);
 
-    if (activeLoop)
-        local->lastLoop = activeLoop->head;
+    if (loop)
+        local->lastLoop = loop->headOffset();
 
     if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE &&
         fixedType && !a->parent && !local->type.synced()) {
@@ -2433,8 +2299,8 @@ FrameState::storeArg(uint32 n, JSValueType type, bool popGuaranteed)
 
     storeTop(arg, type, popGuaranteed);
 
-    if (activeLoop)
-        arg->lastLoop = activeLoop->head;
+    if (loop)
+        arg->lastLoop = loop->headOffset();
 
     if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE && !arg->type.synced()) {
         /* Known types are always in sync for args. (Frames which update args are not inlined). */

@@ -288,6 +288,24 @@ GetDefCount(JSScript *script, unsigned offset)
     }
 }
 
+static inline JSOp
+ReverseCompareOp(JSOp op)
+{
+    switch (op) {
+      case JSOP_GT:
+        return JSOP_LT;
+      case JSOP_GE:
+        return JSOP_LE;
+      case JSOP_LT:
+        return JSOP_GT;
+      case JSOP_LE:
+        return JSOP_GE;
+      default:
+        JS_NOT_REACHED("unrecognized op");
+        return op;
+    }
+}
+
 /* Untrap a single PC, and retrap it at scope exit. */
 struct UntrapOpcode
 {
@@ -320,41 +338,112 @@ struct UntrapOpcode
  */
 
 /*
- * Information about the lifetime of a local or argument. These form a linked list
- * describing successive intervals in the program where the variable's value
- * may be live. At points in the script not in one of these segments (points in
- * a 'lifetime hole'), the variable is dead and registers containing its type/payload
- * can be discarded without needing to be synced.
+ * Information about the lifetime of a local or argument. These form a linked
+ * list describing successive intervals in the program where the variable's
+ * value may be live. At points in the script not in one of these segments
+ * (points in a 'lifetime hole'), the variable is dead and registers containing
+ * its type/payload can be discarded without needing to be synced.
  */
 struct Lifetime
 {
     /*
-     * Start and end offsets of this lifetime. The variable is live at the beginning
-     * of every bytecode in this (inclusive) range.
+     * Start and end offsets of this lifetime. The variable is live at the
+     * beginning of every bytecode in this (inclusive) range.
      */
     uint32 start;
     uint32 end;
 
     /*
-     * This is an artificial segment extending the lifetime of a variable to the
-     * end of a loop, when it is live at the head of the loop. It will not be used
-     * anymore in the loop body until the next iteration.
+     * This is an artificial segment extending the lifetime of a variable to
+     * the end of a loop, when it is live at the head of the loop. It will not
+     * be used anymore in the loop body until the next iteration.
      */
     bool loopTail;
+
+    /*
+     * The start of this lifetime is a bytecode writing the variable. Each
+     * write to a variable is associated with a lifetime.
+     */
+    bool write;
 
     /* Next lifetime. The variable is dead from this->end to next->start. */
     Lifetime *next;
 
     Lifetime(uint32 offset, Lifetime *next)
-        : start(offset), end(offset), loopTail(false), next(next)
+        : start(offset), end(offset), loopTail(false), write(false), next(next)
     {}
+};
+
+/* Lifetime and modset information for a loop. */
+struct LifetimeLoop
+{
+    /* Offset of the head of the loop. */
+    uint32 head;
+
+    /*
+     * Offset of the unique jump going to the head of the loop. The code
+     * between the head and the backedge forms the loop body.
+     */
+    uint32 backedge;
+
+    /* Target offset of the initial jump or fallthrough into the loop. */
+    uint32 entry;
+
+    /*
+     * Start of the last basic block in the loop, excluding the initial jump to
+     * entry. All code between lastBlock and the backedge runs in every
+     * iteration, and if entry >= lastBlock all code between entry and the
+     * backedge runs when the loop is initially entered.
+     */
+    uint32 lastBlock;
+
+    /*
+     * Any inequality known to hold at the head of the loop. This has the
+     * form 'lhs <= rhs + constant' or 'lhs >= rhs + constant', depending on
+     * lessEqual. The lhs may be modified within the loop body (the test is
+     * invalid afterwards), and the rhs is invariant. This information is only
+     * valid if the LHS/RHS are known integers.
+     */
+    enum { UNASSIGNED = uint32(-1) };
+    uint32 testLHS;
+    uint32 testRHS;
+    int32 testConstant;
+    bool testLessEqual;
+
+    /*
+     * A variable which will be incremented or decremented exactly once in each
+     * iteration of the loop. The offset of the operation is indicated, which
+     * may or may not run after the initial entry into the loop.
+     */
+    struct Increment {
+        uint32 slot;
+        uint32 offset;
+    };
+    Increment *increments;
+    uint32 nIncrements;
+
+    /* It is unknown which arrays grow or which objects are modified in this loop. */
+    bool unknownModset;
+
+    /*
+     * This loop contains safe points in its body (which the interpreter might
+     * join at directly.
+     */
+    bool hasSafePoints;
+
+    /*
+     * Arrays which might grow during this loop. This is a guess, and may
+     * underapproximate the actual set of such arrays.
+     */
+    types::TypeObject **growArrays;
+    uint32 nGrowArrays;
 };
 
 /* Lifetime and register information for a bytecode. */
 struct LifetimeBytecode
 {
-    /* If this is a loop head, offset of the loop back edge. */
-    uint32 loopBackedge;
+    /* If this is a loop head, information about the loop. */
+    LifetimeLoop *loop;
 
     /* Any allocation computed downstream for this bytecode. */
     mjit::RegisterAllocation *allocation;
@@ -372,6 +461,7 @@ struct LifetimeVariable
     /* Jump preceding the basic block which killed this variable. */
     uint32 savedEnd;
 
+    /* Whether this variable is live at offset. */
     Lifetime * live(uint32 offset) {
         if (lifetime && lifetime->end >= offset)
             return lifetime;
@@ -382,6 +472,38 @@ struct LifetimeVariable
             segment = segment->next;
         }
         return NULL;
+    }
+
+    /*
+     * Get the offset of the first write to the variable in the body of a loop,
+     * -1 if the loop never writes the variable.
+     */
+    uint32 firstWrite(LifetimeLoop *loop) {
+        Lifetime *segment = lifetime ? lifetime : saved;
+        while (segment && segment->start <= loop->backedge) {
+            if (segment->start >= loop->head && segment->write)
+                return segment->start;
+            segment = segment->next;
+        }
+        return uint32(-1);
+    }
+
+    /*
+     * If the variable is only written once in the body of a loop, offset of
+     * that write. -1 otherwise.
+     */
+    uint32 onlyWrite(LifetimeLoop *loop) {
+        uint32 offset = uint32(-1);
+        Lifetime *segment = lifetime ? lifetime : saved;
+        while (segment && segment->start <= loop->backedge) {
+            if (segment->start >= loop->head && segment->write) {
+                if (offset != uint32(-1))
+                    return uint32(-1);
+                offset = segment->start;
+            }
+            segment = segment->next;
+        }
+        return offset;
     }
 };
 
@@ -396,9 +518,8 @@ class LifetimeScript
     JSScript *script;
 
     LifetimeBytecode *codeArray;
-    LifetimeVariable *locals;
-    LifetimeVariable *args;
-    LifetimeVariable thisVar;
+    LifetimeVariable *lifetimes;
+    uint32 nLifetimes;
 
     LifetimeVariable **saved;
     unsigned savedCount;
@@ -419,25 +540,43 @@ class LifetimeScript
 
 #ifdef DEBUG
     void dumpVariable(LifetimeVariable &var);
-    void dumpLocal(unsigned i) { dumpVariable(locals[i]); }
-    void dumpArg(unsigned i) { dumpVariable(args[i]); }
+    void dumpSlot(unsigned slot) {
+        JS_ASSERT(slot < nLifetimes);
+        dumpVariable(lifetimes[slot]);
+    }
 #endif
 
-    Lifetime * argLive(uint32 arg, uint32 offset) {
-        JS_ASSERT(script->fun && arg < script->fun->nargs);
-        return args[arg].live(offset);
+    Lifetime * live(uint32 slot, uint32 offset) {
+        JS_ASSERT(slot < nLifetimes);
+        return lifetimes[slot].live(offset);
     }
-    Lifetime * localLive(uint32 local, uint32 offset) {
-        JS_ASSERT(local < analysis->localCount());
-        return locals[local].live(offset);
+
+    uint32 firstWrite(uint32 slot, LifetimeLoop *loop) {
+        JS_ASSERT(slot < nLifetimes);
+        return lifetimes[slot].firstWrite(loop);
     }
-    Lifetime * thisLive(uint32 offset) { return thisVar.live(offset); }
+
+    uint32 onlyWrite(uint32 slot, LifetimeLoop *loop) {
+        JS_ASSERT(slot < nLifetimes);
+        return lifetimes[slot].onlyWrite(loop);
+    }
+
+    /*
+     * Note: loop analysis depends on the function not having had indirect
+     * modification of its arguments. Clients must watch for this.
+     */
+    void analyzeLoopTest(LifetimeLoop *loop);
+    bool analyzeLoopIncrements(JSContext *cx, LifetimeLoop *loop);
+    bool analyzeLoopModset(JSContext *cx, LifetimeLoop *loop);
 
   private:
 
     inline bool addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset);
-    inline void killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset);
+    inline bool killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset);
     inline bool extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end);
+
+    bool loopVariableAccess(LifetimeLoop *loop, jsbytecode *pc);
+    bool getLoopTestAccess(jsbytecode *pc, uint32 *slotp, int32 *constantp);
 };
 
 } /* namespace analyze */

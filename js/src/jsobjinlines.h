@@ -134,7 +134,7 @@ JSObject::syncSpecialEquality()
 {
     if (clasp->ext.equality) {
         flags |= JSObject::HAS_EQUALITY;
-        JS_ASSERT(getType()->hasSpecialEquality);
+        JS_ASSERT(getType()->hasFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     }
 }
 
@@ -825,7 +825,7 @@ JSObject::setType(js::types::TypeObject *newType)
     for (JSObject *obj = newType->proto; obj; obj = obj->getProto())
         JS_ASSERT(obj != this);
 #endif
-    JS_ASSERT_IF(hasSpecialEquality(), newType->hasSpecialEquality);
+    JS_ASSERT_IF(hasSpecialEquality(), newType->hasFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     type = newType;
 }
 

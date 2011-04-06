@@ -313,7 +313,7 @@ JSContext::markTypeCallerOverflow()
 inline bool
 JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type)
 {
-    if (typeInferenceEnabled() && !obj->unknownProperties) {
+    if (typeInferenceEnabled() && !obj->unknownProperties()) {
         jsid id = JSID_VOID;
         if (name) {
             JSAtom *atom = js_Atomize(this, name, strlen(name), 0);
@@ -329,7 +329,7 @@ JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, js::typ
 inline bool
 JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value)
 {
-    if (typeInferenceEnabled() && !obj->unknownProperties)
+    if (typeInferenceEnabled() && !obj->unknownProperties())
         return addTypeProperty(obj, name, js::types::GetValueType(this, value));
     return true;
 }
@@ -337,7 +337,7 @@ JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, const j
 inline bool
 JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type)
 {
-    if (!typeInferenceEnabled() || obj->unknownProperties)
+    if (!typeInferenceEnabled() || obj->unknownProperties())
         return true;
 
     /* Convert string index properties into the common index property. */
@@ -360,7 +360,7 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jst
 inline bool
 JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value)
 {
-    if (typeInferenceEnabled() && !obj->unknownProperties)
+    if (typeInferenceEnabled() && !obj->unknownProperties())
         return addTypePropertyId(obj, id, js::types::GetValueType(this, value));
     return true;
 }
@@ -368,7 +368,7 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Valu
 inline bool
 JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::ClonedTypeSet *set)
 {
-    if (obj->unknownProperties)
+    if (obj->unknownProperties())
         return true;
     id = js::types::MakeTypeId(this, id);
 
@@ -394,7 +394,7 @@ JSContext::getTypeEmpty()
 inline bool
 JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second)
 {
-    if (!typeInferenceEnabled() || obj->unknownProperties)
+    if (!typeInferenceEnabled() || obj->unknownProperties())
         return true;
 
     js::types::AutoEnterTypeInference enter(this);
@@ -414,33 +414,52 @@ JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid seco
 }
 
 inline bool
+JSContext::addTypeFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags)
+{
+    if (!typeInferenceEnabled() || obj->hasFlags(flags))
+        return true;
+
+    js::types::AutoEnterTypeInference enter(this);
+    obj->setFlags(this, flags);
+    return compartment->types.checkPendingRecompiles(this);
+}
+
+inline bool
 JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
 {
-    if (!typeInferenceEnabled() || (notDense ? !obj->isDenseArray : !obj->isPackedArray))
-        return true;
-    js::types::AutoEnterTypeInference enter(this);
+    return addTypeFlags(obj, js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
+                        (notDense ? js::types::OBJECT_FLAG_NON_DENSE_ARRAY : 0));
+}
 
-    obj->markNotPacked(this, notDense);
-
-    return compartment->types.checkPendingRecompiles(this);
+inline bool
+JSContext::markTypeArrayShrank(js::types::TypeObject *obj)
+{
+    /*
+     * For simplicity in determining whether to hoist array bounds checks,
+     * we mark types with arrays that have shrunk (a rare operation) as
+     * possibly non-dense.
+     */
+    return addTypeFlags(obj, js::types::OBJECT_FLAG_ARRAY_SHRANK |
+                        js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
+                        js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
 }
 
 inline bool
 JSContext::markTypeFunctionUninlineable(js::types::TypeObject *obj)
 {
-    if (!typeInferenceEnabled() || obj->isUninlineable)
-        return true;
-    js::types::AutoEnterTypeInference enter(this);
+    return addTypeFlags(obj, js::types::OBJECT_FLAG_UNINLINEABLE);
+}
 
-    obj->markUninlineable(this);
-
-    return compartment->types.checkPendingRecompiles(this);
+inline bool
+JSContext::markTypeObjectHasSpecialEquality(js::types::TypeObject *obj)
+{
+    return addTypeFlags(obj, js::types::OBJECT_FLAG_SPECIAL_EQUALITY);
 }
 
 inline bool
 JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
 {
-    if (!typeInferenceEnabled() || obj->unknownProperties)
+    if (!typeInferenceEnabled() || obj->unknownProperties())
         return true;
 
     js::types::AutoEnterTypeInference enter(this);
@@ -1121,6 +1140,24 @@ TypeSet::addType(JSContext *cx, jstype type)
     cx->compartment->types.resolvePending(cx);
 }
 
+inline unsigned
+TypeSet::getObjectCount()
+{
+    if (objectCount > SET_ARRAY_SIZE)
+        return HashSetCapacity(objectCount);
+    return objectCount;
+}
+
+inline TypeObject *
+TypeSet::getObject(unsigned i)
+{
+    if (objectCount == 1) {
+        JS_ASSERT(i == 0);
+        return (TypeObject *) objectSet;
+    }
+    return objectSet[i];
+}
+
 inline TypeSet *
 TypeSet::make(JSContext *cx, const char *name)
 {
@@ -1188,7 +1225,7 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     JS_ASSERT(cx->compartment->types.inferenceDepth);
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(JSID_IS_STRING(id), JSID_TO_STRING(id) != NULL);
-    JS_ASSERT(!unknownProperties);
+    JS_ASSERT(!unknownProperties());
 
     Property **pprop = HashSetInsert<jsid,Property,Property>
                            (cx, propertySet, propertyCount, id, false);
@@ -1196,6 +1233,24 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
         return NULL;
 
     return assign ? &(*pprop)->ownTypes : &(*pprop)->types;
+}
+
+inline unsigned
+TypeObject::getPropertyCount()
+{
+    if (propertyCount > SET_ARRAY_SIZE)
+        return HashSetCapacity(propertyCount);
+    return propertyCount;
+}
+
+inline Property *
+TypeObject::getProperty(unsigned i)
+{
+    if (propertyCount == 1) {
+        JS_ASSERT(i == 0);
+        return (Property *) propertySet;
+    }
+    return propertySet[i];
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1250,12 +1305,11 @@ TypeObject::name()
 }
 
 inline TypeObject::TypeObject(jsid name, JSObject *proto)
-    : proto(proto), emptyShapes(NULL), isFunction(false), marked(false),
+    : proto(proto), emptyShapes(NULL),
+      flags(0), isFunction(false), marked(false),
       initializerObject(false), initializerArray(false), initializerOffset(0),
       contribution(0), propertySet(NULL), propertyCount(0),
-      instanceList(NULL), instanceNext(NULL), next(NULL), unknownProperties(false),
-      isDenseArray(false), isPackedArray(false),
-      isUninlineable(false), hasSpecialEquality(false),
+      instanceList(NULL), instanceNext(NULL), next(NULL),
       singleton(NULL)
 {
 #ifdef DEBUG
@@ -1263,17 +1317,6 @@ inline TypeObject::TypeObject(jsid name, JSObject *proto)
 #endif
 
     InferSpew(ISpewOps, "newObject: %s", this->name());
-
-    if (proto) {
-        TypeObject *prototype = proto->getType();
-        if (prototype->unknownProperties) {
-            isUninlineable = true;
-            hasSpecialEquality = true;
-            unknownProperties = true;
-        }
-        instanceNext = prototype->instanceList;
-        prototype->instanceList = this;
-    }
 }
 
 inline TypeFunction::TypeFunction(jsid name, JSObject *proto)

@@ -1459,24 +1459,6 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
     return true;
 }
 
-static inline JSOp
-ReverseCompareOp(JSOp op)
-{
-    switch (op) {
-      case JSOP_GT:
-        return JSOP_LT;
-      case JSOP_GE:
-        return JSOP_LE;
-      case JSOP_LT:
-        return JSOP_GT;
-      case JSOP_LE:
-        return JSOP_GE;
-      default:
-        JS_NOT_REACHED("unrecognized op");
-        return op;
-    }
-}
-
 bool
 mjit::Compiler::jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused)
 {
@@ -1489,7 +1471,7 @@ mjit::Compiler::jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused)
         FrameEntry *tmp = lhs;
         lhs = rhs;
         rhs = tmp;
-        op = ReverseCompareOp(op);
+        op = analyze::ReverseCompareOp(op);
     }
 
     JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
@@ -1587,7 +1569,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
     } else {
         cmpReg = regs.rhsData.reg();
         value = lhs->getValue().toInt32();
-        cmpOp = ReverseCompareOp(op);
+        cmpOp = analyze::ReverseCompareOp(op);
     }
 
     /*

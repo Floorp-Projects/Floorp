@@ -226,6 +226,9 @@ void JS_FASTCALL CheckArgumentTypes(VMFrame &f);
 void JS_FASTCALL AssertArgumentTypes(VMFrame &f);
 #endif
 
+void JS_FASTCALL MissedBoundsCheckEntry(VMFrame &f);
+void JS_FASTCALL MissedBoundsCheckHead(VMFrame &f);
+
 template <bool strict> int32 JS_FASTCALL ConvertToTypedInt(JSContext *cx, Value *vp);
 void JS_FASTCALL ConvertToTypedFloat(JSContext *cx, Value *vp);
 

@@ -138,6 +138,10 @@ class FrameEntry
     bool isCopy() const { return !!copy; }
     bool isCopied() const { return copied; }
 
+    const FrameEntry *backing() const {
+        return isCopy() ? copyOf() : this;
+    }
+
   private:
     void setType(JSValueType type_) {
         type.setConstant();
@@ -215,10 +219,6 @@ class FrameEntry
         return copy;
     }
 
-    const FrameEntry *backing() const {
-        return isCopy() ? copyOf() : this;
-    }
-
     void setNotCopied() {
         copied = false;
     }
@@ -256,9 +256,16 @@ class FrameEntry
     bool       copied;
     bool       tracked;
     bool       inlined;
-    bool       initArray;
-    JSObject   *initObject;
-    jsbytecode *lastLoop;
+
+    /*
+     * Offset of the last loop in which this entry was written or had a loop
+     * register assigned.
+     */
+    uint32     lastLoop;
+
+#if JS_BITS_PER_WORD == 32
+    void       *padding;
+#endif
 };
 
 } /* namespace mjit */

@@ -66,6 +66,7 @@ struct Changes {
 };
 
 class StubCompiler;
+class LoopState;
 
 /*
  * The FrameState keeps track of values on the frame during compilation.
@@ -678,10 +679,11 @@ class FrameState
         JSAtom *name;
         void reset() { PodZero(this); }
     };
-    StackEntryExtra& extra(FrameEntry *fe) {
+    StackEntryExtra& extra(const FrameEntry *fe) {
         JS_ASSERT(fe >= spBase && fe < sp);
         return a->extraArray[fe - spBase];
     }
+    StackEntryExtra& extra(uint32 slot) { return extra(entries + slot); }
 
     /*
      * Helper function. Tests if a slot's type is null. Condition must
@@ -805,6 +807,7 @@ class FrameState
     // address, not its backing store. There is no guarantee that the memory
     // is coherent.
     Address addressOf(const FrameEntry *fe) const { return addressOf(fe, a); }
+    Address addressOf(uint32 slot) const { return addressOf(entries + slot); }
 
     // Returns an address, relative to the JSStackFrame, that represents where
     // this FrameEntry is backed in memory. This is not necessarily its
@@ -844,24 +847,8 @@ class FrameState
 
     inline uint32 regsInUse() const { return Registers::AvailRegs & ~a->freeRegs.freeMask; }
 
-    bool pushLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
-    void popLoop(jsbytecode *head, Jump *pentry, jsbytecode **pentryTarget);
-
     void setPC(jsbytecode *PC) { this->PC = PC; }
-
-    struct StubJoin {
-        unsigned index;
-        bool script;
-    };
-
-    void addJoin(unsigned index, bool script) {
-        if (activeLoop) {
-            StubJoin r;
-            r.index = index;
-            r.script = script;
-            loopJoins.append(r);
-        }
-    }
+    void setLoop(LoopState *loop) { this->loop = loop; }
 
     void getUnsyncedEntries(uint32 *pdepth, Vector<UnsyncedEntry> *unsyncedEntries);
 
@@ -877,6 +864,19 @@ class FrameState
 
     void tryCopyRegister(FrameEntry *fe, FrameEntry *callStart);
     Registers getTemporaryCallRegisters(FrameEntry *callStart) const;
+
+    uint32 indexOfFe(const FrameEntry *fe) const {
+        JS_ASSERT(uint32(fe - entries) < feLimit(script));
+        return uint32(fe - entries);
+    }
+
+#ifdef DEBUG
+    const char * entryName(const FrameEntry *fe) const;
+    void dumpAllocation(RegisterAllocation *alloc);
+#else
+    const char * entryName(const FrameEntry *fe) const { return NULL; }
+#endif
+    const char * entryName(uint32 slot) { return entryName(entries + slot); }
 
   private:
     inline AnyRegisterID allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type);
@@ -943,10 +943,6 @@ class FrameState
         JS_ASSERT(uint32((sp + depth) - entries) < feLimit(script));
         return uint32((sp + depth) - entries);
     }
-    uint32 indexOfFe(FrameEntry *fe) const {
-        JS_ASSERT(uint32(fe - entries) < feLimit(script));
-        return uint32(fe - entries);
-    }
 
     static uint32 feLimit(JSScript *script) {
         return script->nslots + 2 + (script->fun ? script->fun->nargs : 0);
@@ -969,11 +965,11 @@ class FrameState
     RegisterAllocation * computeAllocation(jsbytecode *target);
     void relocateReg(AnyRegisterID reg, RegisterAllocation *alloc, Uses uses);
 
-    bool isArg(FrameEntry *fe) const {
+    bool isArg(const FrameEntry *fe) const {
         return script->fun && fe >= args && fe - args < script->fun->nargs;
     }
 
-    bool isLocal(FrameEntry *fe) const {
+    bool isLocal(const FrameEntry *fe) const {
         return fe >= locals && fe - locals < script->nfixed;
     }
 
@@ -985,16 +981,8 @@ class FrameState
     void associateReg(FrameEntry *fe, RematInfo::RematType type, AnyRegisterID reg);
 
     inline void modifyReg(AnyRegisterID reg);
-    inline void clearLoopReg(AnyRegisterID reg);
-    void setLoopReg(AnyRegisterID reg, FrameEntry *fe);
-    void flushLoopJoins();
 
-#ifdef DEBUG
-    const char * entryName(FrameEntry *fe) const;
-    void dumpAllocation(RegisterAllocation *alloc);
-#else
-    const char * entryName(FrameEntry *fe) const { return NULL; }
-#endif
+    MaybeJump guardArrayLengthBase(FrameEntry *obj, Int32Key key);
 
     void syncParentRegister(Assembler &masm, AnyRegisterID reg) const;
     void restoreParentRegister(Assembler &masm, AnyRegisterID reg) const;
@@ -1002,6 +990,7 @@ class FrameState
   private:
     JSContext *cx;
     Assembler &masm;
+    Compiler &cc;
     StubCompiler &stubcc;
 
     /* State for the active stack frame. */
@@ -1081,43 +1070,8 @@ class FrameState
     /* Current PC, for managing register allocation. */
     jsbytecode *PC;
 
-    /*
-     * State for managing registers within loops. Calls to functions which
-     * contain loops are not inlined.
-     */
-
-    struct LoopState
-    {
-        LoopState *outer;
-        jsbytecode *head;
-        RegisterAllocation *alloc;
-
-        /*
-         * Jump which initially enters the loop, and bytecode target of the jump.
-         * The state is synced when this jump occurs, and needs a trampoline
-         * generated to load the right registers before going to entryTarget.
-         */
-        Jump entry;
-        jsbytecode *entryTarget;
-    };
-
     /* Stack of active loops. */
-    LoopState *activeLoop;
-
-    /* Registers available for loop variables. */
-    Registers loopRegs;
-
-    /* Prior stub rejoins to patch when new loop registers are allocated. */
-    Vector<StubJoin,16,CompilerAllocPolicy> loopJoins;
-
-    struct StubJoinPatch {
-        StubJoin join;
-        Address address;
-        AnyRegisterID reg;
-    };
-
-    /* Pending loads to patch for stub rejoins. */
-    Vector<StubJoinPatch,16,CompilerAllocPolicy> loopPatches;
+    LoopState *loop;
 
     bool inTryBlock;
 };

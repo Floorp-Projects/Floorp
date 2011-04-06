@@ -326,6 +326,7 @@ CPPSRCS += 	MethodJIT.cpp \
 		FastArithmetic.cpp \
 		FastBuiltins.cpp \
 		FastOps.cpp \
+		LoopState.cpp \
 		StubCompiler.cpp \
 		MonoIC.cpp \
 		PolyIC.cpp \

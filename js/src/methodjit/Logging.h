@@ -57,6 +57,7 @@ namespace js {
     _(VMFrame)              \
     _(PICs)                 \
     _(SlowCalls)            \
+    _(Analysis)             \
     _(Regalloc)             \
     _(Inlining)             \
     _(Recompile)

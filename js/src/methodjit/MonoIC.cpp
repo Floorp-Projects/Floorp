@@ -1270,7 +1270,8 @@ GenerateTypeCheck(JSContext *cx, Assembler &masm, Address address,
             return false;
     }
 
-    if (types->objectCount != 0) {
+    unsigned count = types->getObjectCount();
+    if (count != 0) {
         if (!mismatches->append(masm.testObject(Assembler::NotEqual, address)))
             return false;
         Registers tempRegs(Registers::AvailRegs);
@@ -1279,19 +1280,12 @@ GenerateTypeCheck(JSContext *cx, Assembler &masm, Address address,
         masm.loadPayload(address, reg);
         masm.loadPtr(Address(reg, offsetof(JSObject, type)), reg);
 
-        if (types->objectCount >= 2) {
-            unsigned objectCapacity = types::HashSetCapacity(types->objectCount);
-            for (unsigned i = 0; i < objectCapacity; i++) {
-                types::TypeObject *object = types->objectSet[i];
-                if (object) {
-                    if (!matches.append(masm.branchPtr(Assembler::Equal, reg, ImmPtr(object))))
-                        return false;
-                }
+        for (unsigned i = 0; i < count; i++) {
+            types::TypeObject *object = types->getObject(i);
+            if (object) {
+                if (!matches.append(masm.branchPtr(Assembler::Equal, reg, ImmPtr(object))))
+                    return false;
             }
-        } else {
-            types::TypeObject *object = (types::TypeObject *) types->objectSet;
-            if (!matches.append(masm.branchPtr(Assembler::Equal, reg, ImmPtr(object))))
-                return false;
         }
     }
 
