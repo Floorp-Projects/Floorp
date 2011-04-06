@@ -1,0 +1,254 @@
+<?xml version="1.0"?>
+
+<bindings
+    xmlns="http://www.mozilla.org/xbl"
+    xmlns:xbl="http://www.mozilla.org/xbl"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="documenttab">
+    <content>
+      <xul:stack anonid="page" class="documenttab-container" flex="1">
+        <html:canvas anonid="thumbnail" class="documenttab-thumbnail" left="0" width="104" height="65" moz-opaque="true" empty="true"
+          onclick="document.getBindingParent(this)._onClick()"/>
+        <xul:hbox class="documenttab-reload" left="0" top="0" width="104" height="65" onclick="document.getBindingParent(this)._onUndo();"/>
+        <xul:hbox class="documenttab-close-container" start="-16" top="0" height="65" width="55" align="center" onclick="document.getBindingParent(this)._onClose()">
+          <xul:image anonid="close" class="documenttab-close" mousethrough="always"/>
+        </xul:hbox>
+      </xul:stack>
+    </content>
+
+    <implementation>
+      <field name="ignoreUndo">false</field>
+      <field name="thumbnail">document.getAnonymousElementByAttribute(this, "anonid", "thumbnail");</field>
+      <field name="_container">this.parentNode.parentNode;</field>
+      <method name="_onClick">
+        <body>
+          <![CDATA[
+            this._container.selectedTab = this;
+
+            let selectFn = new Function("event", this._container.parentNode.getAttribute("onselect"));
+            selectFn.call(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onClose">
+        <body>
+          <![CDATA[
+            let callbackFunc = this._container.parentNode.getAttribute(this.hasAttribute("reload") ? "onclosereloadtab" : "onclosetab");
+            let closeFn = new Function("event", callbackFunc);
+            closeFn.call(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="_onUndo">
+        <body>
+          <![CDATA[
+            let closeFn = new Function("event", this._container.getAttribute("onreloadtab"));
+            closeFn.call(this);
+
+            this._container.removeTab(this);
+          ]]>
+        </body>
+      </method>
+
+      <method name="updateThumbnail">
+        <parameter name="browser"/>
+        <parameter name="width"/>
+        <parameter name="height"/>
+        <body>
+          <![CDATA[
+            const tabWidth = 104;
+            const tabHeight = 65;
+
+            let ratio = tabHeight / tabWidth;
+            if (browser.contentDocumentWidth > 0)
+              width = Math.min(width, browser.contentDocumentWidth);
+
+            if (browser.contentDocumentHeight > 0)
+              height = Math.min(height, browser.contentDocumentHeight);
+
+            let newHeight = width * ratio;
+            if (height >= newHeight) {
+              height = newHeight;
+            } else {
+              // the browser aspect ratio does not match the tabs aspect ratio
+              width = height / ratio;
+            }
+
+            let thumbnail = this.thumbnail;
+            thumbnail.removeAttribute("empty");
+
+            // Recreate the canvas as it may be tainted and not useable for remote pages
+            if (thumbnail.hasAttribute("restored")) {
+              thumbnail.removeAttribute("restored");
+              thumbnail = this.thumbnail.cloneNode(false);
+              this.thumbnail.parentNode.replaceChild(thumbnail, this.thumbnail);
+              this.thumbnail = thumbnail;
+            }
+
+            let self = this;
+            let renderer = rendererFactory(browser, thumbnail);
+            renderer.drawContent(function(ctx, callback) {
+              ctx.save();
+              ctx.clearRect(0, 0, tabWidth, tabHeight);
+              ctx.scale(tabWidth / width, tabHeight / height);
+              callback(browser, 0, 0, width, height, "white");
+              ctx.restore();
+
+              // We don't have an event for the async drawContent anymore, so hack it
+              setTimeout(function() {
+                // Save the thumbnail to the session in case we need to use it in a restore
+                let data = thumbnail.toDataURL("image/png");
+                let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+                ss.setTabValue(self, "thumbnail", data);
+              }, 800);
+            });
+          ]]>
+        </body>
+      </method>
+    </implementation>
+  </binding>
+
+  <binding id="tablist">
+    <content>
+      <xul:scrollbox anonid="tabs-scrollbox" flex="1">
+        <xul:vbox class="tabs-list" anonid="tabs-children" />
+      </xul:scrollbox>
+      <xul:box class="tabs-list" anonid="tabs-undo"/>
+    </content>
+    <implementation>
+      <field name="children">document.getAnonymousElementByAttribute(this, "anonid", "tabs-children");</field>
+      <field name="_scrollbox">document.getAnonymousElementByAttribute(this, "anonid", "tabs-scrollbox");</field>
+      <field name="_tabsUndo">document.getAnonymousElementByAttribute(this, "anonid", "tabs-undo");</field>
+      <field name="_selectedTab">null</field>
+
+      <!-- Used by the chrome input handler -->
+      <property name="boxObject"
+                readonly="true"
+                onget="return this._scrollbox.boxObject;"/>
+
+      <field name="scrollBoxObject">
+        this.boxObject.QueryInterface(Ci.nsIScrollBoxObject);
+      </field>
+
+      <field name="_closedTab">null</field>
+      <property name="hasClosedTab" readonly="true" onget="return !!this._closedTab;"/>
+
+      <property name="selectedTab" onget="return this._selectedTab;">
+        <setter>
+          <![CDATA[
+            if (this._selectedTab)
+              this._selectedTab.removeAttribute("selected");
+
+            if (val)
+              val.setAttribute("selected", "true");
+
+            this._selectedTab = val;
+          ]]>
+        </setter>
+      </property>
+
+      <method name="addTab">
+        <body>
+          <![CDATA[
+            let tab = document.createElement("documenttab");
+            this.children.appendChild(tab);
+            this._updateWidth();
+            return tab;
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeTab">
+        <parameter name="aTab"/>
+        <body>
+          <![CDATA[
+            let closedTab = this._closedTab;
+            if (closedTab) {
+              this._tabsUndo.removeChild(closedTab);
+              this._closedTab = null;
+            }
+
+            if (aTab.ignoreUndo) {
+              this.children.removeChild(aTab);
+            } else if (!closedTab || closedTab != aTab) {
+              if (aTab.thumbnail && !aTab.thumbnail.hasAttribute("empty")) {
+                // duplicate the old thumbnail to the new one because moving the
+                // tab in the dom clear the canvas
+                let oldThumbnail = aTab.thumbnail.toDataURL("image/png");
+                this._tabsUndo.appendChild(aTab);
+                let thumbnailImg = new Image();
+                thumbnailImg.onload = function() {
+                  if (aTab.thumbnail)
+                    aTab.thumbnail.getContext("2d").drawImage(thumbnailImg, 0, 0);
+                };
+                thumbnailImg.src = oldThumbnail;
+              }
+              else
+                this._tabsUndo.appendChild(aTab);
+
+              aTab.setAttribute("reload", "true");
+              this._closedTab = aTab;
+            }
+
+            this.resize();
+          ]]>
+        </body>
+      </method>
+
+      <method name="removeClosedTab">
+        <body><![CDATA[
+          if (!this._closedTab)
+            return;
+
+          this.removeTab(this._closedTab);
+        ]]></body>
+      </method>
+
+      <method name="resize">
+        <body>
+          <![CDATA[
+            let container = this.parentNode.getBoundingClientRect();
+            let element = this._scrollbox.getBoundingClientRect();
+            let undo = this._tabsUndo.getBoundingClientRect();
+            let lastChild = this.parentNode.lastChild.getBoundingClientRect();
+
+            let height = window.innerHeight - element.top - (lastChild.top - element.bottom) - lastChild.height;
+            this.children.style.height = height + "px";
+            this._scrollbox.style.height = height + "px";
+
+            this._updateWidth();
+          ]]>
+        </body>
+      </method>
+
+      <field name="_columnsCount">0</field>
+      <method name="_updateWidth">
+        <body>
+          <![CDATA[
+            // XXX we can do better than using a constant
+            const COLUMN_MARGIN = 20;
+            let firstBox = this.children.firstChild.getBoundingClientRect();
+            let lastBox = this.children.lastChild.getBoundingClientRect();
+
+            // We can't rely on getBoundingClientRect() for this.children height
+            // it is not synced (sometimes, especially during resize) with the 
+            // style.height rule
+            let columnsCount = Math.ceil(this.children.childNodes.length / Math.floor(parseInt(this.children.style.height) / (firstBox.height + 4)));
+            if (this._columnsCount != columnsCount && window.innerWidth > 1) { // > 1 to ignore column resizing while the main window is loading
+              let width = columnsCount * (COLUMN_MARGIN + firstBox.width);
+              this.children.style.width = width + "px";
+              this._scrollbox.style.width = width + "px";
+              this._columnsCount = columnsCount;
+            }
+          ]]>
+        </body>
+      </method>
+
+    </implementation>
+  </binding>
+
+</bindings>
