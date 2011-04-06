@@ -71,7 +71,7 @@ function BrokenBasicAuthenticator(identity) {
 }
 BrokenBasicAuthenticator.prototype = {
   onRequest: function BasicAuth_onRequest(headers) {
-    headers['Authorization'] = 'Basic ' +
+    headers['authorization'] = 'Basic ' +
       btoa(this._id.username + ':' + this._id.password);
     return headers;
   }
@@ -82,7 +82,7 @@ function BasicAuthenticator(identity) {
 }
 BasicAuthenticator.prototype = {
   onRequest: function onRequest(headers) {
-    headers['Authorization'] = 'Basic ' +
+    headers['authorization'] = 'Basic ' +
       btoa(this._id.username + ':' + this._id.passwordUTF8);
     return headers;
   }
@@ -227,7 +227,7 @@ AsyncResource.prototype = {
     // Avoid calling the authorizer more than once.
     let headers = this.headers;
     for (let key in headers) {
-      if (key == 'Authorization')
+      if (key == 'authorization')
         this._log.trace("HTTP Header " + key + ": ***** (suppressed)");
       else
         this._log.trace("HTTP Header " + key + ": " + headers[key]);
