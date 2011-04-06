@@ -4726,6 +4726,7 @@ BEGIN_CASE(JSOP_CALLELEM)
 END_CASE(JSOP_CALLELEM)
 
 BEGIN_CASE(JSOP_SETELEM)
+BEGIN_CASE(JSOP_SETHOLE)
 {
     JSObject *obj;
     FETCH_OBJECT(cx, -3, obj);
@@ -4744,9 +4745,12 @@ BEGIN_CASE(JSOP_SETELEM)
                         break;
                     if ((jsuint)i >= obj->getArrayLength() && !obj->setArrayLength(cx, i + 1))
                         goto error;
+                    *regs.pc = JSOP_SETHOLE;
                 }
                 obj->setDenseArrayElement(i, regs.sp[-1]);
                 goto end_setelem;
+            } else {
+                *regs.pc = JSOP_SETHOLE;
             }
         }
     } while (0);

@@ -98,7 +98,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     patchFrames(patchFrames),
     savedTraps(NULL),
     frame(cx, *this, masm, stubcc),
-    a(NULL), outer(NULL), script(NULL), PC(NULL),
+    a(NULL), outer(NULL), script(NULL), PC(NULL), loop(NULL),
     inlineFrames(CompilerAllocPolicy(cx, *thisFromCtor())),
     branchPatches(CompilerAllocPolicy(cx, *thisFromCtor())),
 #if defined JS_MONOIC
@@ -210,16 +210,17 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
 
 #ifdef JS_METHODJIT_SPEW
     if (cx->typeInferenceEnabled() && IsJaegerSpewChannelActive(JSpew_Regalloc)) {
+        unsigned nargs = script->fun ? script->fun->nargs : 0;
+        for (unsigned i = 0; i < nargs; i++) {
+            if (!newa->analysis.argEscapes(i)) {
+                JaegerSpew(JSpew_Regalloc, "Argument %u:", i);
+                newa->liveness.dumpSlot(2 + i);
+            }
+        }
         for (unsigned i = 0; i < script->nfixed; i++) {
             if (!newa->analysis.localEscapes(i)) {
                 JaegerSpew(JSpew_Regalloc, "Local %u:", i);
-                newa->liveness.dumpLocal(i);
-            }
-        }
-        for (unsigned i = 0; script->fun && i < script->fun->nargs; i++) {
-            if (!newa->analysis.argEscapes(i)) {
-                JaegerSpew(JSpew_Regalloc, "Argument %u:", i);
-                newa->liveness.dumpArg(i);
+                newa->liveness.dumpSlot(2 + nargs + i);
             }
         }
     }
@@ -697,7 +698,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         analyze::Bytecode *opinfo = a->analysis.maybeCode(i);
         if (opinfo && opinfo->safePoint) {
             /* loopEntries cover any safe points which are at loop heads. */
-            if (!cx->typeInferenceEnabled() || !a->liveness.getCode(i).loopBackedge)
+            if (!cx->typeInferenceEnabled() || !a->liveness.getCode(i).loop)
                 nNmapLive++;
         }
     }
@@ -1268,6 +1269,9 @@ mjit::Compiler::generateMethod()
             continue;
         }
 
+        if (loop)
+            loop->PC = PC;
+
         frame.setPC(PC);
         frame.setInTryBlock(opinfo->inTryBlock);
         if (opinfo->jumpTarget || trap) {
@@ -1280,10 +1284,10 @@ mjit::Compiler::generateMethod()
                  * of the loop so sync, branch, and fix it up after the loop
                  * has been processed.
                  */
-                if (cx->typeInferenceEnabled() && a->liveness.getCode(PC).loopBackedge) {
+                if (cx->typeInferenceEnabled() && a->liveness.getCode(PC).loop) {
                     frame.syncAndForgetEverything();
                     Jump j = masm.jump();
-                    if (!frame.pushLoop(PC, j, PC))
+                    if (!startLoop(PC, j, PC))
                         return Compile_Error;
                 } else {
                     if (!frame.syncForBranch(PC, Uses(0)))
@@ -1431,10 +1435,11 @@ mjit::Compiler::generateMethod()
             fixDoubleTypes(Uses(0));
 
             /*
-             * Watch out for backward jumps emitted to link 'continue' statements
-             * together. These are jumping to another GOTO at the head of the loop,
-             * which should be short circuited so we don't mistake this for an
-             * actual loop back edge. :XXX: what if there is a trap at the target?
+             * Watch out for backward jumps linking 'continue' statements
+             * together. These are jumping to another GOTO at the head of the
+             * loop, which should be short circuited so we don't mistake this
+             * for an actual loop back edge. :XXX: could there be a trap at
+             * the target?
              */
             if (target < PC) {
                 if (JSOp(*target) == JSOP_GOTO) {
@@ -1446,15 +1451,16 @@ mjit::Compiler::generateMethod()
             }
 
             /*
-             * Watch for gotos which are entering a 'for' or 'while' loop. These jump
-             * to the loop condition test and are immediately followed by the head of the loop.
+             * Watch for gotos which are entering a 'for' or 'while' loop.
+             * These jump to the loop condition test and are immediately
+             * followed by the head of the loop.
              */
             jsbytecode *next = PC + JSOP_GOTO_LENGTH;
             if (cx->typeInferenceEnabled() && a->analysis.maybeCode(next) &&
-                a->liveness.getCode(next).loopBackedge) {
+                a->liveness.getCode(next).loop) {
                 frame.syncAndForgetEverything();
                 Jump j = masm.jump();
-                if (!frame.pushLoop(next, j, target))
+                if (!startLoop(next, j, target))
                     return Compile_Error;
             } else {
                 if (!frame.syncForBranch(target, Uses(0)))
@@ -1909,6 +1915,7 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_GETELEM)
 
           BEGIN_CASE(JSOP_SETELEM)
+          BEGIN_CASE(JSOP_SETHOLE)
           {
             jsbytecode *next = &PC[JSOP_SETELEM_LENGTH];
             bool pop = (JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next));
@@ -3732,7 +3739,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     if (kind != types::OBJECT_INLINEABLE_FUNCTION)
         return Compile_InlineAbort;
 
-    if (types->objectCount >= INLINE_SITE_LIMIT)
+    if (types->getObjectCount() >= INLINE_SITE_LIMIT)
         return Compile_InlineAbort;
 
     /*
@@ -3758,13 +3765,10 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
      * Scan each of the possible callees for other conditions precluding
      * inlining. We only inline at a call site if all callees are inlineable.
      */
-    for (unsigned i = 0; i < types->objectCount; i++) {
-        types::TypeObject *object;
-        if (types->objectCount == 1)
-            object = (types::TypeObject *) types->objectSet;
-        else
-            object = types->objectSet[i];  // FIXME hash case not possible here, but still gross.
-        JS_ASSERT(object);
+    unsigned count = types->getObjectCount();
+    for (unsigned i = 0; i < count; i++) {
+        types::TypeObject *object = types->getObject(i);
+        JS_ASSERT(object);  /* Hash case for types->objectSet not possible here. */
 
         if (!object->singleton || !object->singleton->isFunction())
             return Compile_InlineAbort;
@@ -3832,7 +3836,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
      * stubs for all callees have been generated.
      */
     MaybeRegisterID calleeReg;
-    if (types->objectCount > 1) {
+    if (count > 1) {
         frame.forgetConstantData(origCallee);
         calleeReg = frame.tempRegForData(origCallee);
     }
@@ -3856,12 +3860,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
 
     Vector<Jump, 4, CompilerAllocPolicy> returnJumps(CompilerAllocPolicy(cx, *this));
 
-    for (unsigned i = 0; i < types->objectCount; i++) {
-        types::TypeObject *object;
-        if (types->objectCount == 1)
-            object = (types::TypeObject *) types->objectSet;
-        else
-            object = types->objectSet[i];  // FIXME hash case not possible here, but still gross.
+    for (unsigned i = 0; i < count; i++) {
+        types::TypeObject *object = types->getObject(i);
         JS_ASSERT(object);
 
         JSFunction *fun = object->singleton->getFunctionPrivate();
@@ -3880,7 +3880,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
             calleePrevious = MaybeJump();
         }
 
-        if (i + 1 != types->objectCount) {
+        if (i + 1 != count) {
             /* Guard on the callee, except when this object must be the callee. */
             JS_ASSERT(calleeReg.isSet());
             calleePrevious = masm.branchPtr(Assembler::NotEqual, calleeReg.reg(), ImmPtr(fun));
@@ -3918,7 +3918,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
 
         popActiveFrame();
 
-        if (i + 1 != types->objectCount)
+        if (i + 1 != count)
             returnJumps.append(masm.jump());
     }
 
@@ -4636,9 +4636,9 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
 
       case JSVAL_TYPE_OBJECT:
       case JSVAL_TYPE_UNKNOWN:
-        if (types->objectCount == 1 && !top->isNotType(JSVAL_TYPE_OBJECT)) {
+        if (types->getObjectCount() == 1 && !top->isNotType(JSVAL_TYPE_OBJECT)) {
             JS_ASSERT_IF(top->isTypeKnown(), top->isType(JSVAL_TYPE_OBJECT));
-            types::TypeObject *object = (types::TypeObject *) types->objectSet;
+            types::TypeObject *object = types->getObject(0);
             if (object->proto) {
                 if (!testSingletonProperty(object->proto, id))
                     return false;
@@ -6164,6 +6164,32 @@ mjit::Compiler::jsop_newinit()
 }
 
 bool
+mjit::Compiler::startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
+{
+    JS_ASSERT(cx->typeInferenceEnabled() && script == outerScript);
+
+    if (loop) {
+        /*
+         * Convert all loop registers in the outer loop into unassigned registers.
+         * We don't keep track of which registers the inner loop uses, so the only
+         * registers that can be carried in the outer loop must be mentioned before
+         * the inner loop starts.
+         */
+        loop->flushRegisters(stubcc);
+    }
+
+    LoopState *nloop = cx->new_<LoopState>(cx, script, this, &frame, &a->analysis, &a->liveness);
+    if (!nloop || !nloop->init(head, entry, entryTarget))
+        return false;
+
+    nloop->outer = loop;
+    loop = nloop;
+    frame.setLoop(loop);
+
+    return true;
+}
+
+bool
 mjit::Compiler::finishLoop(jsbytecode *head)
 {
     if (!cx->typeInferenceEnabled())
@@ -6174,6 +6200,10 @@ mjit::Compiler::finishLoop(jsbytecode *head)
      * at the end ('continue' statements are forward jumps to the loop test),
      * and after jumpAndTrace'ing on that edge we can pop it from the frame.
      */
+    JS_ASSERT(loop && loop->headOffset() == uint32(head - script->code));
+    loop->flushRegisters(stubcc);
+
+    jsbytecode *entryTarget = script->code + loop->entryOffset();
 
     /*
      * Fix up the jump entering the loop. We are doing this after all code has
@@ -6182,14 +6212,30 @@ mjit::Compiler::finishLoop(jsbytecode *head)
      */
     Jump fallthrough = masm.jump();
 
-    Jump entry;
-    jsbytecode *entryTarget;
-    frame.popLoop(head, &entry, &entryTarget);
+#ifdef DEBUG
+    if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
+        RegisterAllocation *alloc = a->liveness.getCode(head).allocation;
+        JaegerSpew(JSpew_Regalloc, "loop allocation at %u:", head - script->code);
+        frame.dumpAllocation(alloc);
+    }
+#endif
 
-    if (!jumpInScript(entry, entryTarget))
+    Vector<Jump> hoistJumps(cx);
+
+    loop->entryJump().linkTo(masm.label(), &masm);
+
+    if (!loop->checkHoistedBounds(entryTarget, masm, &hoistJumps))
         return false;
+    for (unsigned i = 0; i < hoistJumps.length(); i++)
+        stubcc.linkExitDirect(hoistJumps[i], stubcc.masm.label());
+    OOL_STUBCALL(stubs::MissedBoundsCheckEntry);
+    stubcc.crossJump(stubcc.masm.jump(), masm.label());
+    hoistJumps.clear();
 
-    fallthrough.linkTo(masm.label(), &masm);
+    frame.prepareForJump(entryTarget, masm, true);
+
+    if (!jumpInScript(masm.jump(), entryTarget))
+        return false;
 
     if (!a->analysis.getCode(head).safePoint) {
         /*
@@ -6201,10 +6247,26 @@ mjit::Compiler::finishLoop(jsbytecode *head)
         entry.label = stubcc.masm.label();
         loopEntries.append(entry);
 
+        if (!loop->checkHoistedBounds(head, stubcc.masm, &hoistJumps))
+            return false;
+        Jump skipCall = stubcc.masm.jump();
+        for (unsigned i = 0; i < hoistJumps.length(); i++)
+            hoistJumps[i].linkTo(stubcc.masm.label(), &stubcc.masm);
+        OOL_STUBCALL(stubs::MissedBoundsCheckHead);
+        skipCall.linkTo(stubcc.masm.label(), &stubcc.masm);
+        hoistJumps.clear();
+
         frame.prepareForJump(head, stubcc.masm, true);
         if (!stubcc.jumpInScript(stubcc.masm.jump(), head))
             return false;
     }
+
+    LoopState *nloop = loop->outer;
+    cx->delete_(loop);
+    loop = nloop;
+    frame.setLoop(loop);
+
+    fallthrough.linkTo(masm.label(), &masm);
 
     return true;
 }
@@ -6759,6 +6821,30 @@ mjit::Compiler::pushedTypeSet(uint32 pushed)
     if (!cx->typeInferenceEnabled())
         return NULL;
     return script->types->pushed(PC - script->code, pushed);
+}
+
+types::TypeSet *
+mjit::Compiler::getTypeSet(uint32 slot)
+{
+    if (!cx->typeInferenceEnabled())
+        return NULL;
+
+    if (slot == 0) /* callee */
+        return NULL;
+    if (slot == 1) /* this */
+        return script->thisTypes();
+    slot -= 2;
+
+    unsigned nargs = script->fun ? script->fun->nargs : 0;
+
+    if (slot < nargs)
+        return script->argTypes(slot);
+    slot -= nargs;
+
+    if (slot < script->nfixed)
+        return script->localTypes(slot);
+
+    return frame.extra(2 + nargs + slot).types;
 }
 
 bool

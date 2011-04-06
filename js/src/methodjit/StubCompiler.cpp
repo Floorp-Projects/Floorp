@@ -151,8 +151,9 @@ StubCompiler::rejoin(Changes changes)
 
     frame.merge(masm, changes);
 
-    Jump j = masm.jump();
-    frame.addJoin(crossJump(j, cc.getLabel()), false);
+    unsigned index = crossJump(masm.jump(), cc.getLabel());
+    if (cc.loop)
+        cc.loop->addJoin(index, false);
 
     JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
 }
@@ -223,11 +224,14 @@ bool
 StubCompiler::jumpInScript(Jump j, jsbytecode *target)
 {
     if (cc.knownJump(target)) {
-        frame.addJoin(crossJump(j, cc.labelOf(target, cc.inlineIndex())), false);
+        unsigned index = crossJump(j, cc.labelOf(target, cc.inlineIndex()));
+        if (cc.loop)
+            cc.loop->addJoin(index, false);
     } else {
         if (!scriptJoins.append(CrossJumpInScript(j, target, cc.inlineIndex())))
             return false;
-        frame.addJoin(scriptJoins.length() - 1, true);
+        if (cc.loop)
+            cc.loop->addJoin(scriptJoins.length() - 1, true);
     }
     return true;
 }

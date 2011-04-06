@@ -1113,19 +1113,25 @@ mjit::Compiler::jsop_setelem_dense()
         objReg = frame.copyDataIntoReg(obj);
     }
 
+    // Guard on the array's initialized length.
+    bool hoisted = loop && !a->parent && loop->hoistArrayLengthCheck(obj, id);
+    MaybeJump initlenGuard;
+    if (!hoisted) {
+        initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
+                                             objReg, key, Assembler::BelowOrEqual);
+    }
+
     frame.unpinEntry(vr);
     if (!key.isConstant() && !frame.haveSameBacking(id, value))
         frame.unpinReg(key.reg());
 
     Label syncTarget = stubcc.syncExitAndJump(Uses(3));
 
-    // Check against initialized length.  This always need to be done.
-    Jump initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
-                                              objReg, key, Assembler::BelowOrEqual);
-
-    // Make an OOL path for setting exactly the initialized length.
-    {
-        stubcc.linkExitDirect(initlenGuard, stubcc.masm.label());
+    // Make an OOL path for setting exactly the initialized length. Skip if we
+    // hoisted the initialized length check entirely, in this case we will
+    // recompile if the index could ever be out of range.
+    if (!hoisted) {
+        stubcc.linkExitDirect(initlenGuard.get(), stubcc.masm.label());
 
         // Recheck for an exact initialized length.
         // :TODO: would be nice to reuse the condition bits from the previous test.
@@ -1418,6 +1424,11 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
 
     // Allocate registers.
 
+    // If we know the result of the GETELEM may be undefined, then misses on the
+    // initialized length or hole checks can just produce an undefined value.
+    // We checked in the caller that prototypes do not have indexed properties.
+    bool allowUndefined = mayPushUndefined(0);
+
     RegisterID objReg = frame.tempRegForData(obj);
     frame.pinReg(objReg);
 
@@ -1433,20 +1444,20 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     if (!isPacked || type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
         typeReg = frame.allocReg();
 
+    // Guard on the array's initialized length.
+    bool hoisted = loop && !a->parent && loop->hoistArrayLengthCheck(obj, id);
+    MaybeJump initlenGuard;
+    if (!hoisted) {
+        initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
+                                             objReg, key, Assembler::BelowOrEqual);
+    }
+
     frame.unpinReg(objReg);
     if (!key.isConstant() && !frame.haveSameBacking(id, obj))
         frame.unpinReg(key.reg());
 
-    // If we know the result of the GETELEM may be undefined, then misses on the
-    // initialized length or hole checks can just produce an undefined value.
-    // We checked in the caller that prototypes do not have indexed properties.
-    bool allowUndefined = mayPushUndefined(0);
-
-    // Guard on the array's initialized length.
-    Jump initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
-                                              objReg, key, Assembler::BelowOrEqual);
-    if (!allowUndefined)
-        stubcc.linkExit(initlenGuard, Uses(2));
+    if (!hoisted && !allowUndefined)
+        stubcc.linkExit(initlenGuard.get(), Uses(2));
 
     masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), dataReg);
 
@@ -1481,7 +1492,8 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     stubcc.rejoin(Changes(2));
 
     if (allowUndefined) {
-        stubcc.linkExitDirect(initlenGuard, stubcc.masm.label());
+        if (!hoisted)
+            stubcc.linkExitDirect(initlenGuard.get(), stubcc.masm.label());
         if (!isPacked)
             stubcc.linkExitDirect(holeCheck, stubcc.masm.label());
         JS_ASSERT(type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_UNDEFINED);

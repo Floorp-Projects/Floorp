@@ -595,9 +595,12 @@ stubs::SetElem(VMFrame &f)
                         break;
                     if ((jsuint)i >= obj->getArrayLength() && !obj->setArrayLength(cx, i + 1))
                         THROW();
+                    *f.pc() = JSOP_SETHOLE;
                 }
                 obj->setDenseArrayElement(i, rval);
                 goto end_setelem;
+            } else {
+                *f.pc() = JSOP_SETHOLE;
             }
         }
     } while (0);
@@ -2844,6 +2847,29 @@ stubs::AssertArgumentTypes(VMFrame &f)
         JS_ASSERT(script->argTypes(i)->hasType(types::GetValueType(f.cx, fp->formalArg(i))));
 }
 #endif
+
+void JS_FASTCALL
+stubs::MissedBoundsCheckEntry(VMFrame &f)
+{
+    /* Recompile the script, and don't hoist any bounds checks. */
+    JS_ASSERT(!f.script()->failedBoundsCheck);
+    f.script()->failedBoundsCheck = true;
+
+    Recompiler recompiler(f.cx, f.script());
+    if (!recompiler.recompile())
+        THROW();
+}
+
+void JS_FASTCALL
+stubs::MissedBoundsCheckHead(VMFrame &f)
+{
+    /*
+     * This stub is needed as we can emit bounds checks in two places when
+     * finishing a loop (for entry from JIT code, and entry from the
+     * interpreter), and need to rejoin at the right one.
+     */
+    stubs::MissedBoundsCheckEntry(f);
+}
 
 void JS_FASTCALL
 stubs::Exception(VMFrame &f)

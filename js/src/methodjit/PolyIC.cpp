@@ -1558,7 +1558,7 @@ class ScopeNameCompiler : public PICStubCompiler
                 types = newscript->localTypes(slot);
         } else {
             JS_ASSERT(!getprop.obj->getParent());
-            if (getprop.obj->getType()->unknownProperties) {
+            if (getprop.obj->getType()->unknownProperties()) {
                 f.script()->typeMonitorResult(cx, f.pc(), types::TYPE_UNKNOWN);
                 return cx->compartment->types.checkPendingRecompiles(cx);
             }

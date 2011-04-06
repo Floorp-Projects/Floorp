@@ -63,13 +63,14 @@
  * case may occur when the user writes "new Array(100), in which case the
  * length is 100 while the capacity remains 0 (indices below length and above
  * capacity must be treated as holes). See array_length_setter for another
- * explanation of how the first case may occur. The initialized length is always
- * less than or equal to both the length and capacity.
+ * explanation of how the first case may occur. When type inference is enabled,
+ * the initialized length is always less than or equal to both the length and
+ * capacity. Otherwise, the initialized length always equals the capacity.
  *
  * Arrays are converted to use js_SlowArrayClass when any of these conditions
  * are met:
- *  - there are more than MIN_SPARSE_INDEX slots total
- *  - the load factor (COUNT / capacity) is less than 0.25
+ *  - there are more than MIN_SPARSE_INDEX slots total and the load factor
+ *    (COUNT / capacity) is less than 0.25
  *  - a property is set that is not indexed (and not "length")
  *  - a property is defined that has non-default property attributes.
  *
@@ -648,6 +649,9 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
     vp->setNumber(newlen);
     if (oldlen < newlen)
         return obj->setArrayLength(cx, newlen);
+
+    if (!cx->markTypeArrayShrank(obj->getType()))
+        return false;
 
     if (obj->isDenseArray()) {
         /*
@@ -1400,7 +1404,7 @@ array_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 static inline bool
 InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned count)
 {
-    if (cx->typeInferenceEnabled() && !type->unknownProperties) {
+    if (cx->typeInferenceEnabled() && !type->unknownProperties()) {
         AutoEnterTypeInference enter(cx);
 
         TypeSet *types = type->getProperty(cx, JSID_VOID, true);
@@ -3435,7 +3439,7 @@ array_TypeNew(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
     if (site->returnTypes)
         site->returnTypes->addType(cx, (jstype) object);
 
-    if (object->unknownProperties)
+    if (object->unknownProperties())
         return;
 
     TypeSet *indexTypes = object->getProperty(cx, JSID_VOID, true);
