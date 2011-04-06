@@ -6475,7 +6475,7 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
     LIBJPEG_TURBO_X86_ASM=1
   ;;
   WINNT:x86_64)
-    LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64"
+    LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64 -DMSVC"
     LIBJPEG_TURBO_X64_ASM=1
   ;;
   esac
