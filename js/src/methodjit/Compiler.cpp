@@ -3624,6 +3624,9 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew)
 CompileStatus
 mjit::Compiler::callArrayBuiltin(uint32 argc, bool callingNew)
 {
+    if (!script->compileAndGo)
+        return Compile_InlineAbort;
+
     if (applyTricks == LazyArgsObj)
         return Compile_InlineAbort;
 
