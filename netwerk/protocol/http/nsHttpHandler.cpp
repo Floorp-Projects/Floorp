@@ -283,7 +283,6 @@ nsHttpHandler::Init()
     LOG(("> legacy-app-version = %s\n", mLegacyAppVersion.get()));
     LOG(("> platform = %s\n", mPlatform.get()));
     LOG(("> oscpu = %s\n", mOscpu.get()));
-    LOG(("> language = %s\n", mLanguage.get()));
     LOG(("> misc = %s\n", mMisc.get()));
     LOG(("> product = %s\n", mProduct.get()));
     LOG(("> product-sub = %s\n", mProductSub.get()));
@@ -806,28 +805,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         } else {
             mCompatFirefox.Truncate();
         }
-        mUserAgentIsDirty = PR_TRUE;
-    }
-
-    // Gather locale.
-    if (PREF_CHANGED(UA_PREF("locale"))) {
-        nsCOMPtr<nsIPrefLocalizedString> pls;
-        prefs->GetComplexValue(UA_PREF("locale"),
-                               NS_GET_IID(nsIPrefLocalizedString),
-                               getter_AddRefs(pls));
-        if (pls) {
-            nsXPIDLString uval;
-            pls->ToString(getter_Copies(uval));
-            if (uval)
-                CopyUTF16toUTF8(uval, mLanguage);
-        }
-        else {
-            nsXPIDLCString cval;
-            rv = prefs->GetCharPref(UA_PREF("locale"), getter_Copies(cval));
-            if (cval)
-                mLanguage.Assign(cval);
-        }
-
         mUserAgentIsDirty = PR_TRUE;
     }
 
@@ -1565,13 +1542,6 @@ NS_IMETHODIMP
 nsHttpHandler::GetOscpu(nsACString &value)
 {
     value = mOscpu;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetLanguage(nsACString &value)
-{
-    value = mLanguage;
     return NS_OK;
 }
 
