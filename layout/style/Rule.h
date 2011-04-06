@@ -35,52 +35,65 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*
- * internal interface representing CSS style rules that contain other
- * rules, such as @media rules
- */
+/* base class for all rule types in a CSS style sheet */
 
-#ifndef nsICSSGroupRule_h
-#define nsICSSGroupRule_h
+#ifndef mozilla_css_Rule_h___
+#define mozilla_css_Rule_h___
 
 #include "nsICSSRule.h"
-#include "nsCOMArray.h"
 
-class nsPresContext;
-class nsMediaQueryResultCacheKey;
+class nsIStyleSheet;
+class nsCSSStyleSheet;
+struct nsRuleData;
+template<class T> struct already_AddRefed;
 
-#define NS_ICSS_GROUP_RULE_IID \
-{ 0xf1e3d96b, 0xe381, 0x4533, \
-  { 0xa6, 0x5e, 0xa5, 0x31, 0xba, 0xca, 0x93, 0x62 } }
+namespace mozilla {
+namespace css {
+class GroupRule;
 
+#define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
+virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 
-class nsICSSGroupRule : public nsICSSRule {
+#define DECL_STYLE_RULE_INHERIT  \
+DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
+virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
+
+class Rule : public nsICSSRule {
+protected:
+  Rule()
+    : mSheet(nsnull),
+      mParentRule(nsnull)
+  {
+  }
+
+  Rule(const Rule& aCopy)
+    : mSheet(aCopy.mSheet),
+      mParentRule(aCopy.mParentRule)
+  {
+  }
+
+  virtual ~Rule() {}
+
 public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSS_GROUP_RULE_IID)
+  // for implementing nsISupports
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+public:
 
-  NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule) = 0;
+  virtual nsIStyleSheet* GetStyleSheet() const;
+  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
 
-  NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const = 0;
-  NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const = 0;
+  virtual void SetParentRule(GroupRule* aRule);
 
-  typedef nsCOMArray<nsICSSRule>::nsCOMArrayEnumFunc RuleEnumFunc;
-  NS_IMETHOD_(PRBool) EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const = 0;
-
-  /*
-   * The next three methods should never be called unless you have first
-   * called WillDirty() on the parent stylesheet.  After they are
-   * called, DidDirty() needs to be called on the sheet.
-   */
-  NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex) = 0;
-  NS_IMETHOD  InsertStyleRulesAt(PRUint32 aIndex,
-                                 nsCOMArray<nsICSSRule>& aRules) = 0;
-  NS_IMETHOD  ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew) = 0;
-
-  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
-                                         nsMediaQueryResultCacheKey& aKey) = 0;
-   
+protected:
+  nsCSSStyleSheet*  mSheet;
+  GroupRule*        mParentRule;
 };
 
-NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSGroupRule, NS_ICSS_GROUP_RULE_IID)
+} // namespace css
+} // namespace mozilla
 
-#endif /* nsICSSGroupRule_h */
+#endif /* mozilla_css_Rule_h___ */

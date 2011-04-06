@@ -1,0 +1,15 @@
+<!ENTITY aboutHome.header                       "<span>&brandShortName; </span><span id='header-suffix'>Start</span>">
+<!ENTITY aboutHome.recentTabs                   "Your tabs from last time">
+<!ENTITY aboutHome.remoteTabs                   "Tabs from your other computers">
+<!ENTITY aboutHome.recommendedAddons2           "Add-ons for your &brandShortName;">
+<!ENTITY aboutHome.giveFeedback                 "Give Feedback">
+<!ENTITY aboutHome.getHelp                      "Get Help">
+<!ENTITY aboutHome.footerWidth                  "10em">
+<!ENTITY aboutHome.openAllTabs                  "Open all in tabs">
+<!ENTITY aboutHome.noTabs                       "No tabs from last time">
+<!ENTITY aboutHome.noAddons                     "No recommended add-ons">
+
+<!-- LOCALIZATION NOTE: 'Firefox Spark' is the official name of the promotion/constest and should not be translated -->
+<!ENTITY aboutHome.promoLabel                   "Firefox Spark">
+<!-- LOCALIZATION NOTE: 'Play' should be translated in the context of 'playing a game' and not 'playing a video' -->
+<!ENTITY aboutHome.promoButton                  "Play">
