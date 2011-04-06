@@ -138,8 +138,7 @@ LoopState::addJoin(unsigned index, bool script)
 void
 LoopState::flushRegisters(StubCompiler &stubcc)
 {
-    alloc->clearLoops();
-    loopRegs = 0;
+    clearRegisters();
 
     for (unsigned i = 0; i < loopPatches.length(); i++) {
         const StubJoinPatch &p = loopPatches[i];
@@ -147,6 +146,13 @@ LoopState::flushRegisters(StubCompiler &stubcc)
     }
     loopJoins.clear();
     loopPatches.clear();
+}
+
+void
+LoopState::clearRegisters()
+{
+    alloc->clearLoops();
+    loopRegs = 0;
 }
 
 bool

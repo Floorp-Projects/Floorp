@@ -177,6 +177,7 @@ class LoopState : public MacroAssemblerTypedefs
 
     void addJoin(unsigned index, bool script);
     void flushRegisters(StubCompiler &stubcc);
+    void clearRegisters();
 
     bool hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *id);
     bool checkHoistedBounds(jsbytecode *PC, Assembler &masm, Vector<Jump> *jumps);
