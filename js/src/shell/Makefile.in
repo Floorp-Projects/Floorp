@@ -56,8 +56,6 @@ LIBS      = $(NSPR_LIBS) $(EDITLINE_LIBS) $(DEPTH)/$(LIB_PREFIX)js_static.$(LIB_
 
 LOCAL_INCLUDES += -I$(topsrcdir) -I..
 
-#FAIL_ON_WARNINGS = 1
-
 ifdef _MSC_VER
 ifdef WINCE
 WIN32_EXE_LDFLAGS += -ENTRY:mainACRTStartup
