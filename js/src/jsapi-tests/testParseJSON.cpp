@@ -2,6 +2,9 @@
  * vim: set ts=8 sw=4 et tw=99:
  */
 
+#include <limits>
+#include <math.h>
+
 #include "tests.h"
 #include "jsstr.h"
 
@@ -45,7 +48,7 @@ BEGIN_TEST(testParseJSON_success)
     CHECK(TryParse(cx, "1", DOUBLE_TO_JSVAL(1)));
     CHECK(TryParse(cx, "1.75", DOUBLE_TO_JSVAL(1.75)));
     CHECK(TryParse(cx, "9e9", DOUBLE_TO_JSVAL(9e9)));
-    CHECK(TryParse(cx, "9e99999", DOUBLE_TO_JSVAL(1.0 / 0.0)));
+    CHECK(TryParse(cx, "9e99999", DOUBLE_TO_JSVAL(std::numeric_limits<jsdouble>::infinity())));
 
     JSFlatString *str;
 
