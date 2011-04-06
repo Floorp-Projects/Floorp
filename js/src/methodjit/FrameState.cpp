@@ -1533,7 +1533,7 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
          * Drop any remaining loop registers so we don't do any more after-the-fact
          * allocation of the initial register state.
          */
-        loop->flushRegisters(stubcc);
+        loop->clearRegisters();
     }
 
     FrameEntry *spStop = sp - ignore.nuses;
