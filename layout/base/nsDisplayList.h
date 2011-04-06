@@ -647,7 +647,7 @@ public:
    * to the nearest viewport *and* they cover the viewport's scrollport.
    * Only return true if the contents actually vary when scrolling in the viewport.
    */
-  virtual PRBool IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder)
+  virtual PRBool ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
   { return PR_FALSE; }
 
   /**
@@ -1501,7 +1501,7 @@ public:
   virtual PRBool IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuilder,
                                                 nsIFrame* aFrame);
   virtual PRBool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor);
-  virtual PRBool IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder);
+  virtual PRBool ShouldFixToViewport(nsDisplayListBuilder* aBuilder);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
