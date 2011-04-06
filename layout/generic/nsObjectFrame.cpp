@@ -534,6 +534,7 @@ private:
   PRInt32                                   mInCGPaintLevel;
   nsIOSurface                              *mIOSurface;
   nsCARenderer                              mCARenderer;
+  CGColorSpaceRef                           mColorProfile;
   static nsCOMPtr<nsITimer>                *sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
   PRBool                                    mSentInitialTopLevelWindowEvent;
@@ -3175,6 +3176,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mInCGPaintLevel = 0;
   mSentInitialTopLevelWindowEvent = PR_FALSE;
   mIOSurface = nsnull;
+  mColorProfile = nsnull;
   mPluginPortChanged = PR_FALSE;
 #endif
   mContentFocused = PR_FALSE;
@@ -4376,8 +4378,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     return;
 
   if (!mIOSurface || 
-     (mIOSurface->GetWidth() != (size_t)aWidth || 
-      mIOSurface->GetHeight() != (size_t)aHeight)) {
+      (mIOSurface->GetWidth() != (size_t)aWidth || 
+       mIOSurface->GetHeight() != (size_t)aHeight)) {
     if (mIOSurface) {
       delete mIOSurface;
     }
@@ -4398,6 +4400,10 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     }
   }
 
+  if (!mColorProfile) {
+    mColorProfile = CreateSystemColorSpace();
+  }
+
   if (mCARenderer.isInit() == false) {
     void *caLayer = NULL;
     nsresult rv = mInstance->GetValueFromPlugin(NPPVpluginCoreAnimationLayer, &caLayer);
@@ -4415,8 +4421,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
 
   CGImageRef caImage = NULL;
   nsresult rt = mCARenderer.Render(aWidth, aHeight, &caImage);
-  if (rt == NS_OK && mIOSurface) {
-    nsCARenderer::DrawSurfaceToCGContext(aCGContext, mIOSurface, CreateSystemColorSpace(),
+  if (rt == NS_OK && mIOSurface && mColorProfile) {
+    nsCARenderer::DrawSurfaceToCGContext(aCGContext, mIOSurface, mColorProfile,
                                          0, 0, aWidth, aHeight);
   } else if (rt == NS_OK && caImage != NULL) {
     // Significant speed up by resetting the scaling
@@ -5748,6 +5754,8 @@ nsPluginInstanceOwner::Destroy()
   RemoveFromCARefreshTimer(this);
   if (mIOSurface)
     delete mIOSurface;
+  if (mColorProfile)
+    ::CGColorSpaceRelease(mColorProfile);  
 #endif
 
   // unregister context menu listener
