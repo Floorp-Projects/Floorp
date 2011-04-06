@@ -788,6 +788,7 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
              * For each such variable, look for the last lifetime segment in the body
              * and extend it to the end of the loop.
              */
+            JS_ASSERT(loop == codeArray[offset].loop);
             unsigned backedge = codeArray[offset].loop->backedge;
             for (unsigned i = 0; i < nfixed; i++) {
                 if (locals[i].lifetime && !extendVariable(cx, locals[i], offset, backedge))
@@ -798,8 +799,8 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
                     return false;
             }
 
-            JS_ASSERT_IF(loop, loop == codeArray[offset].loop);
-            loop = NULL;
+            loop = loop->parent;
+            JS_ASSERT_IF(loop, loop->head < offset);
         }
 
         /* Find the last jump target in the loop, other than the initial entry point. */
@@ -931,10 +932,13 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
                     if (loop && loop->entry > loop->lastBlock)
                         loop->lastBlock = loop->entry;
 
-                    loop = ArenaNew<LifetimeLoop>(pool);
-                    if (!loop)
+                    LifetimeLoop *nloop = ArenaNew<LifetimeLoop>(pool);
+                    if (!nloop)
                         return false;
-                    PodZero(loop);
+                    PodZero(nloop);
+
+                    nloop->parent = loop;
+                    loop = nloop;
 
                     codeArray[targetOffset].loop = loop;
                     loop->head = targetOffset;
