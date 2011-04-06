@@ -208,6 +208,26 @@ function run_test() {
 
   }, function (next) {
 
+    _("Test that the BasicAuthenticator doesn't screw up header case.");
+    let res1 = new AsyncResource("http://localhost:8080/foo");
+    res1.setHeader("Authorization", "Basic foobar");
+    res1.authenticator = new NoOpAuthenticator();
+    do_check_eq(res1._headers["authorization"], "Basic foobar");
+    do_check_eq(res1.headers["authorization"], "Basic foobar");
+    let id = new Identity("secret", "guest", "guest");
+    res1.authenticator = new BasicAuthenticator(id);
+
+    // In other words... it correctly overwrites our downcased version
+    // when accessed through .headers.
+    do_check_eq(res1._headers["authorization"], "Basic foobar");
+    do_check_eq(res1.headers["authorization"], "Basic Z3Vlc3Q6Z3Vlc3Q=");
+    do_check_eq(res1._headers["authorization"], "Basic Z3Vlc3Q6Z3Vlc3Q=");
+    do_check_true(!res1._headers["Authorization"]);
+    do_check_true(!res1.headers["Authorization"]);
+    next();
+
+  }, function (next) {
+
     _("GET a password protected resource (test that it'll fail w/o pass, no throw)");
     let res2 = new AsyncResource("http://localhost:8080/protected");
     do_test_pending();
