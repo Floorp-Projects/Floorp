@@ -79,6 +79,8 @@ FrameState::getUnsyncedEntries(uint32 *pdepth, Vector<UnsyncedEntry> *unsyncedEn
     /* Mark all unsynced entries in the frame. */
     for (uint32 i = 0; i < a->tracker.nentries; i++) {
         FrameEntry *fe = a->tracker[i];
+        if (fe >= sp)
+            continue;
         if (fe->type.synced() && fe->data.synced())
             continue;
         if (fe->inlined)
