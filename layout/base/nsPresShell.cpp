@@ -7467,6 +7467,14 @@ PresShell::Freeze()
     presContext->RefreshDriver()->Freeze();
   }
 
+  if (presContext) {
+    nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
+    if (rootPresContext) {
+      rootPresContext->
+        RootForgetUpdatePluginGeometryFrameForPresContext(mPresContext);
+    }
+  }
+
   mFrozen = PR_TRUE;
   if (mDocument) {
     UpdateImageLockingState();
