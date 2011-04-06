@@ -3933,31 +3933,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI *aURI,
         case NS_ERROR_REMOTE_XUL:
         {
             error.AssignLiteral("remoteXUL");
-
-            /**
-             * We want to set an hardcoded messageStr which uses the
-             * brandShortName.
-             */
-            nsCOMPtr<nsIStringBundleService> stringBundleService =
-                mozilla::services::GetStringBundleService();
-            if (!stringBundleService) {
-                return NS_ERROR_FAILURE;
-            }
-
-            nsCOMPtr<nsIStringBundle> brandBundle;
-            rv = stringBundleService->CreateBundle(kBrandBundleURL,
-                                                   getter_AddRefs(brandBundle));
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            nsXPIDLString brandName;
-            rv = brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
-                                                getter_Copies(brandName));
-
-            // We could use something like nsTextFormatter::smprintf.
-            messageStr.AssignLiteral("This page uses an unsupported technology "
-                                     "that is no longer available by default in ");
-            messageStr.Append(brandName);
-            messageStr.AppendLiteral(".");
             break;
         }
         case NS_ERROR_UNSAFE_CONTENT_TYPE:

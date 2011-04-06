@@ -1,5 +1,6 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* ***** BEGIN LICENSE BLOCK *****
+/*
+ * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -12,18 +13,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mobile Browser.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * the Mozilla Foundation <http://www.mozilla.org/>.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Mark Finkle <mfinkle@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -35,59 +37,5 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* base class for all rule types in a CSS style sheet */
-
-#ifndef nsCSSRule_h___
-#define nsCSSRule_h___
-
-#include "nsISupports.h"
-#include "nsCOMPtr.h"
-#include "nsCSSStyleSheet.h"
-
-class nsICSSGroupRule;
-
-class nsCSSRule {
-public:
-  nsCSSRule(void)
-    : mSheet(nsnull),
-      mParentRule(nsnull)
-  {
-  }
-
-  nsCSSRule(const nsCSSRule& aCopy)
-    : mSheet(aCopy.mSheet),
-      mParentRule(aCopy.mParentRule)
-  {
-  }
-
-  already_AddRefed<nsIStyleSheet>
-  GetStyleSheet() const
-  {
-    NS_IF_ADDREF(mSheet);
-    return mSheet;
-  }
-
-  void
-  SetStyleSheet(nsCSSStyleSheet* aSheet)
-  {
-    // We don't reference count this up reference. The style sheet
-    // will tell us when it's going away or when we're detached from
-    // it.
-    mSheet = aSheet;
-  }
-
-  void
-  SetParentRule(nsICSSGroupRule* aRule)
-  {
-    // We don't reference count this up reference. The group rule
-    // will tell us when it's going away or when we're detached from
-    // it.
-    mParentRule = aRule;
-  }
-
-protected:
-  nsCSSStyleSheet*    mSheet;
-  nsICSSGroupRule*    mParentRule;
-};
-
-#endif /* nsCSSRule_h___ */
+// Needed for building our components as part of libxul
+#define APP_COMPONENT_MODULES MODULE(nsBrowserCompsModule)
