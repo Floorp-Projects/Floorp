@@ -4759,23 +4759,24 @@ nsEditor::CreateTxnForDeleteCharacter(nsIDOMCharacterData  *aData,
                "invalid direction");
   nsAutoString data;
   aData->GetData(data);
-  PRUint32 segOffset, segLength = 1;
+  PRUint32 segOffset = aOffset, segLength = 1;
   if (aDirection == eNext) {
-    segOffset = aOffset;
     if (segOffset + 1 < data.Length() &&
         NS_IS_HIGH_SURROGATE(data[segOffset]) &&
         NS_IS_LOW_SURROGATE(data[segOffset+1])) {
       // delete both halves of the surrogate pair
       ++segLength;
     }
-  } else {
-    segOffset = aOffset - 1;
+  } else if (aOffset > 0) {
+    --segOffset;
     if (segOffset > 0 &&
-        NS_IS_LOW_SURROGATE(data[segOffset]) &&
-        NS_IS_HIGH_SURROGATE(data[segOffset-1])) {
+      NS_IS_LOW_SURROGATE(data[segOffset]) &&
+      NS_IS_HIGH_SURROGATE(data[segOffset-1])) {
       ++segLength;
       --segOffset;
     }
+  } else {
+    return NS_ERROR_FAILURE;
   }
   return CreateTxnForDeleteText(aData, segOffset, segLength, aTxn);
 }
@@ -4789,7 +4790,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange          *aRange,
                                            PRInt32              *aOffset,
                                            PRInt32              *aLength)
 {
-  NS_ASSERTION(aAction == eNext || aAction == ePrevious, "invalid action");
+  NS_ASSERTION(aAction != eNone, "invalid action");
 
   // get the node and offset of the insertion point
   nsCOMPtr<nsIDOMNode> node;
