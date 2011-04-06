@@ -1881,6 +1881,9 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     Value lval;
     lval = regs.sp[-1];
 
+    // Do this first in case js_GetClassPrototype triggers a recompilation.
+    jsid id = ATOM_TO_JSID(pic->atom);
+
     Value objv;
     if (lval.isObject()) {
         objv = lval;
@@ -1902,8 +1905,6 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
             THROW();
         objv.setObject(*pobj);
     }
-
-    jsid id = ATOM_TO_JSID(pic->atom);
 
     JSObject *aobj = js_GetProtoIfDenseArray(&objv.toObject());
     Value rval;
