@@ -910,12 +910,16 @@ OnShutdown()
 
 AsyncCallbackAutoLock::AsyncCallbackAutoLock()
 {
-  sPluginThreadAsyncCallLock->Lock();
+  if (sPluginThreadAsyncCallLock) {
+    sPluginThreadAsyncCallLock->Lock();
+  }
 }
 
 AsyncCallbackAutoLock::~AsyncCallbackAutoLock()
 {
-  sPluginThreadAsyncCallLock->Unlock();
+  if (sPluginThreadAsyncCallLock) {
+    sPluginThreadAsyncCallLock->Unlock();
+  }
 }
 
 
