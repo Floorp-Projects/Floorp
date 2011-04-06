@@ -1,2 +1,3 @@
 asserts-if(browserIsRemote,1) load 327524-1.html # bug 582297
+load 345094.html
 asserts-if(browserIsRemote,1) load 398665-1.html # bug 582297
