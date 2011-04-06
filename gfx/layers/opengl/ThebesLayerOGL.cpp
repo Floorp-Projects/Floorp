@@ -575,6 +575,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
         // self-copy but we're not going to do that in GL yet.
         // We can't do a real self-copy because the buffer is rotated.
         // So allocate a new buffer for the destination.
+        destBufferRect = neededRegion.GetBounds();
         destBuffer = CreateClampOrRepeatTextureImage(gl(), destBufferDims, contentType, bufferFlags);
         if (!destBuffer)
           return result;
