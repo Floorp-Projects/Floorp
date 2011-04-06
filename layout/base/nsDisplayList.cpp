@@ -1130,7 +1130,7 @@ nsDisplayBackground::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* aBuild
 }
 
 PRBool
-nsDisplayBackground::IsFixedAndCoveringViewport(nsDisplayListBuilder* aBuilder)
+nsDisplayBackground::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
 {
   if (mIsThemed)
     return PR_FALSE;
