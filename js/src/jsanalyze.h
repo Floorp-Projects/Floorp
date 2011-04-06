@@ -377,6 +377,9 @@ struct Lifetime
 /* Lifetime and modset information for a loop. */
 struct LifetimeLoop
 {
+    /* Any loop this one is nested in. */
+    LifetimeLoop *parent;
+
     /* Offset of the head of the loop. */
     uint32 head;
 
