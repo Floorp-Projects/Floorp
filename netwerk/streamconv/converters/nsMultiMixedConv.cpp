@@ -37,7 +37,6 @@
 
 #include "nsMultiMixedConv.h"
 #include "nsMemory.h"
-#include "nsInt64.h"
 #include "plstr.h"
 #include "nsIHttpChannel.h"
 #include "nsIServiceManager.h"
@@ -980,7 +979,7 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
 
                 mIsByteRangeRequest = PR_TRUE;
                 if (mContentLength == LL_MAXUINT)
-                    mContentLength = PRUint64(PRInt64(mByteRangeEnd - mByteRangeStart + nsInt64(1)));
+                    mContentLength = PRUint64(PRInt64(mByteRangeEnd - mByteRangeStart + PRInt64(1)));
             }
         }
         *newLine = tmpChar;

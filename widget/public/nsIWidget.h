@@ -74,11 +74,9 @@ namespace mozilla {
 namespace layers {
 class LayerManager;
 }
-#ifdef MOZ_IPC
 namespace dom {
 class PBrowserChild;
 }
-#endif
 }
 
 /**
@@ -248,10 +246,8 @@ struct IMEContext {
  * all basic and necessary functionality.
  */
 class nsIWidget : public nsISupports {
-#ifdef MOZ_IPC
   protected:
     typedef mozilla::dom::PBrowserChild PBrowserChild;
-#endif
 
   public:
     typedef mozilla::layers::LayerManager LayerManager;
@@ -635,7 +631,9 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetFocus(PRBool aRaise = PR_FALSE) = 0;
 
     /**
-     * Get this widget's outside dimensions relative to its parent widget
+     * Get this widget's outside dimensions relative to its parent widget. For
+     * popup widgets the returned rect is in screen coordinates and not
+     * relative to its parent widget.
      *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
@@ -1385,14 +1383,9 @@ class nsIWidget : public nsISupports {
     static bool
     UsePuppetWidgets()
     {
-#ifdef MOZ_IPC
       return XRE_GetProcessType() == GeckoProcessType_Content;
-#else
-      return PR_FALSE;
-#endif
     }
 
-#ifdef MOZ_IPC
     /**
      * Allocate and return a "puppet widget" that doesn't directly
      * correlate to a platform widget; platform events and data must
@@ -1405,7 +1398,6 @@ class nsIWidget : public nsISupports {
      */
     static already_AddRefed<nsIWidget>
     CreatePuppetWidget(PBrowserChild *aTabChild);
-#endif
 
     /**
      * Reparent this widget's native widget.

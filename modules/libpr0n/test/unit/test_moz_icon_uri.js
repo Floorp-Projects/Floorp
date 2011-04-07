@@ -69,6 +69,16 @@ function run_test() {
   iconURI = uri.QueryInterface(Ci.nsIMozIconURI);
   do_check_eq(iconURI.stockIcon, "foo");
 
+  // Make sure an invalid stock icon URI, missing icon identifier, throws.
+  currentSpec = "moz-icon://stock/?size=3";
+  try {
+    uri = ioService.newURI(currentSpec, null, null);
+  } catch (e) {
+    exception = true;
+  }
+  do_check_true(exception);
+  exception = false; // reset exception value
+
   // Make sure a valid file URL icon URI can be created and that we can obtain
   // the URL and QI it to an nsIFileURL.
   currentSpec = "moz-icon:file://foo.txt";

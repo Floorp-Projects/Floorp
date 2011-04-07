@@ -52,16 +52,13 @@
  * Based on original code from nsIStringStream.cpp
  */
 
-#ifdef MOZ_IPC
 #include "IPC/IPCMessageUtils.h"
-#endif
 
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
 #include "nsReadableUtils.h"
 #include "nsISeekableStream.h"
 #include "nsISupportsPrimitives.h"
-#include "nsInt64.h"
 #include "nsCRT.h"
 #include "prerror.h"
 #include "plstr.h"
@@ -365,7 +362,6 @@ nsStringInputStream::SetEOF()
 PRBool
 nsStringInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
-#ifdef MOZ_IPC
     using IPC::ReadParam;
 
     nsCAutoString value;
@@ -378,22 +374,17 @@ nsStringInputStream::Read(const IPC::Message *aMsg, void **aIter)
         return PR_FALSE;
 
     return PR_TRUE;
-#else
-    return PR_FALSE;
-#endif
 }
 
 void
 nsStringInputStream::Write(IPC::Message *aMsg)
 {
-#ifdef MOZ_IPC
     using IPC::WriteParam;
 
     nsCAutoString value;
     GetData(value);
 
     WriteParam(aMsg, value);
-#endif
 }
 
 NS_COM nsresult

@@ -84,6 +84,7 @@ _TEST_FILES =	parser_datreader.js \
 		file_bug594730-9.html \
 		test_bug599584.html \
 		iframe_bug599584.html \
+		test_bug645115.html \
 		$(NULL)
 
 # Disabled test due to orange on Linux

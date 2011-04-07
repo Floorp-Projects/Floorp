@@ -76,9 +76,7 @@
 
 #include "mozilla/FunctionTimer.h"
 
-#ifdef MOZ_IPC
 #include "mozilla/net/NeckoCommon.h"
-#endif
 
 using namespace mozilla;
 
@@ -1023,11 +1021,9 @@ nsCacheService::Init()
     if (mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
 
-#ifdef MOZ_IPC
     if (mozilla::net::IsNeckoChild()) {
         return NS_ERROR_UNEXPECTED;
     }
-#endif
 
     CACHE_LOG_INIT();
 

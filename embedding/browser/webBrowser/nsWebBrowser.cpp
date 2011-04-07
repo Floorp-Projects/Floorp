@@ -1229,10 +1229,7 @@ NS_IMETHODIMP nsWebBrowser::Create()
     }
    mDocShellAsNav->SetSessionHistory(mInitInfo->sessionHistory);
 
-#ifdef MOZ_IPC
-   if (XRE_GetProcessType() == GeckoProcessType_Default)
-#endif
-   {
+   if (XRE_GetProcessType() == GeckoProcessType_Default) {
        // Hook up global history. Do not fail if we can't - just warn.
        rv = EnableGlobalHistory(mShouldEnableHistory);
        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "EnableGlobalHistory() failed");

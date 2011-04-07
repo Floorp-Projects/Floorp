@@ -477,7 +477,7 @@
             aNewTab.focus();
           }
           else if (this.getAttribute("setfocus") != "false") {
-            document.commandDispatcher.advanceFocusIntoSubtree(aNewTab);
+            document.commandDispatcher.advanceFocusIntoSubtree(this.tabbox.selectedPanel);
             
             // Make sure that the focus doesn't move outside the tabbox
             if (this.tabbox) {

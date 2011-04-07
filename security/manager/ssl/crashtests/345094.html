@@ -1,0 +1,13 @@
+<html><head><script>
+function FUZZ(s) {
+  try { eval(s); } catch (e) {}
+}
+
+function boom() {
+  FUZZ("window.crypto.generateCRMFRequest(1048574, 1048578, 256, '', 2)")
+}
+</script>
+</head>
+<body onload="boom()">
+</body>
+</html>

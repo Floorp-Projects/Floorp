@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "mozilla/dom/AudioParent.h"
+#include "mozilla/unused.h"
 #include "nsThreadUtils.h"
 
 // C++ file contents
@@ -159,7 +160,7 @@ AudioParent::Notify(nsITimer* timer)
 
   NS_ASSERTION(mStream, "AudioStream not initialized.");
   PRInt64 offset = mStream->GetSampleOffset();
-  SendSampleOffsetUpdate(offset, PR_IntervalNow());
+  unused << SendSampleOffsetUpdate(offset, PR_IntervalNow());
   return NS_OK;
 }
 
@@ -222,7 +223,7 @@ bool
 AudioParent::RecvShutdown()
 {
   Shutdown();
-  PAudioParent::Send__delete__(this);
+  unused << PAudioParent::Send__delete__(this);
   return true;
 }
 

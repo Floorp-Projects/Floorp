@@ -45,9 +45,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "base/basictypes.h"
-#endif 
 
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
@@ -64,7 +62,6 @@
 #include "prprf.h"
 #include "prnetdb.h"
 #include "nsEscape.h"
-#include "nsInt64.h"
 #include "nsStreamUtils.h"
 #include "nsIOService.h"
 #include "nsICacheService.h"
@@ -2501,20 +2498,20 @@ nsHttpChannel::CheckCache()
         // size of the cached content, then the cached response is partial...
         // either we need to issue a byte range request or we need to refetch
         // the entire document.
-        nsInt64 contentLength = mCachedResponseHead->ContentLength();
-        if (contentLength != nsInt64(-1)) {
+        PRInt64 contentLength = mCachedResponseHead->ContentLength();
+        if (contentLength != PRInt64(-1)) {
             PRUint32 size;
             rv = mCacheEntry->GetDataSize(&size);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            if (nsInt64(size) != contentLength) {
+            if (PRInt64(size) != contentLength) {
                 LOG(("Cached data size does not match the Content-Length header "
                      "[content-length=%lld size=%u]\n", PRInt64(contentLength), size));
 
                 PRBool hasContentEncoding =
                     mCachedResponseHead->PeekHeader(nsHttp::Content_Encoding)
                     != nsnull;
-                if ((nsInt64(size) < contentLength) &&
+                if ((PRInt64(size) < contentLength) &&
                      size > 0 &&
                      !hasContentEncoding &&
                      mCachedResponseHead->IsResumable() &&
@@ -2834,7 +2831,7 @@ nsHttpChannel::ReadFromCache()
     if (NS_FAILED(rv)) return rv;
 
     rv = nsInputStreamPump::Create(getter_AddRefs(mCachePump),
-                                   stream, nsInt64(-1), nsInt64(-1), 0, 0,
+                                   stream, PRInt64(-1), PRInt64(-1), 0, 0,
                                    PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 

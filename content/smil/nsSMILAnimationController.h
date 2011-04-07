@@ -162,6 +162,9 @@ protected:
   void StartSampling(nsRefreshDriver* aRefreshDriver);
   void StopSampling(nsRefreshDriver* aRefreshDriver);
 
+  // Wrapper for StartSampling that defers if no animations are registered.
+  void MaybeStartSampling(nsRefreshDriver* aRefreshDriver);
+
   // Sample-related callbacks and implementation helpers
   virtual void DoSample();
   void DoSample(PRBool aSkipUnchangedContainers);

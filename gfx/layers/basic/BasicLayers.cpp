@@ -36,14 +36,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#  include "gfxSharedImageSurface.h"
+#include "gfxSharedImageSurface.h"
 
-#  include "mozilla/layers/PLayerChild.h"
-#  include "mozilla/layers/PLayersChild.h"
-#  include "mozilla/layers/PLayersParent.h"
-#  include "ipc/ShadowLayerChild.h"
-#endif
+#include "mozilla/layers/PLayerChild.h"
+#include "mozilla/layers/PLayersChild.h"
+#include "mozilla/layers/PLayersParent.h"
+#include "ipc/ShadowLayerChild.h"
 
 #include "BasicLayers.h"
 #include "ImageLayers.h"
@@ -1604,8 +1602,6 @@ BasicLayerManager::CreateReadbackLayer()
   return layer.forget();
 }
 
-#ifdef MOZ_IPC
-
 class BasicShadowableThebesLayer;
 class BasicShadowableLayer : public ShadowableLayer
 {
@@ -2886,7 +2882,6 @@ BasicShadowLayerManager::IsCompositingCheap()
   return mShadowManager &&
          LayerManager::IsCompositingCheap(GetParentBackendType());
 }
-#endif  // MOZ_IPC
 
 }
 }

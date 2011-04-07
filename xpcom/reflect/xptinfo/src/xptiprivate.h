@@ -69,7 +69,6 @@
 #include "nsMemory.h"
 
 #include "nsCOMArray.h"
-#include "nsInt64.h"
 #include "nsQuickSort.h"
 
 #include "nsXPIDLString.h"

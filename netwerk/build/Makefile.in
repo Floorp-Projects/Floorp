@@ -64,11 +64,8 @@ SHARED_LIBRARY_LIBS = \
   ../protocol/about/$(LIB_PREFIX)nkabout_s.$(LIB_SUFFIX) \
   $(foreach d,$(filter-out about,$(NECKO_PROTOCOLS)), \
     ../protocol/$(d)/$(LIB_PREFIX)nk$(d)_s.$(LIB_SUFFIX)) \
+  ../ipc/$(LIB_PREFIX)neckoipc_s.$(LIB_SUFFIX) \
   $(NULL)
-
-ifdef MOZ_IPC
-SHARED_LIBRARY_LIBS += ../ipc/$(LIB_PREFIX)neckoipc_s.$(LIB_SUFFIX)
-endif
 
 ifeq ($(OS_ARCH),WINNT)
     SHARED_LIBRARY_LIBS += \

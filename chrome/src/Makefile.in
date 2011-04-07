@@ -58,11 +58,8 @@ CPPSRCS		= \
 		nsChromeRegistry.cpp \
 		nsChromeRegistryChrome.cpp \
 		nsChromeProtocolHandler.cpp \
+		nsChromeRegistryContent.cpp \
 		$(NULL)
-
-ifdef MOZ_IPC
-CPPSRCS += nsChromeRegistryContent.cpp
-endif
 
 EXTRA_DSO_LDOPTS = \
                 $(MOZ_UNICHARUTIL_LIBS) \
