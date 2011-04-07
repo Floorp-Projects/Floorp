@@ -508,11 +508,9 @@ var BrowserUI = {
       DownloadsView.init();
       ConsoleView.init();
 
-#ifdef MOZ_IPC
       // Pre-start the content process
       Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime)
           .ensureContentProcess();
-#endif
 
 #ifdef MOZ_SERVICES_SYNC
       // Init the sync system

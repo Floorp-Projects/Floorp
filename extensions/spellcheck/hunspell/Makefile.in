@@ -37,11 +37,20 @@ DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir = extensions/spellcheck/hunspell
 
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= hunspell
-DIRS		= src
+DIRS = src
+
+XPCSHELL_TESTS = tests/unit
+
+libs::
+	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/tests/unit/data
+	cd $(srcdir)/tests; $(PYTHON) $(topsrcdir)/config/nsinstall.py \
+	  ./ \
+	  $(call core_abspath,$(DEPTH)/_tests/xpcshell/$(relativesrcdir)/tests/unit/data/)
 
 include $(topsrcdir)/config/rules.mk
 
