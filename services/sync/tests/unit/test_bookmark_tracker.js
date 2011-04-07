@@ -248,6 +248,41 @@ function test_tracking() {
   }
 }
 
+function test_onItemChanged() {
+  // Anno that's in ANNOS_TO_TRACK.
+  const GENERATOR_ANNO = "microsummary/generatorURI";
+
+  _("Verify we've got an empty tracker to work with.");
+  let tracker = engine._tracker;
+  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+
+  try {
+    Svc.Obs.notify("weave:engine:stop-tracking");
+    let folder = Svc.Bookmark.createFolder(Svc.Bookmark.bookmarksMenuFolder,
+                                           "Parent",
+                                           Svc.Bookmark.DEFAULT_INDEX);
+    _("Track changes to annos.");
+    let b = Svc.Bookmark.insertBookmark(folder,
+                                        Utils.makeURI("http://getfirefox.com"),
+                                        Svc.Bookmark.DEFAULT_INDEX,
+                                        "Get Firefox!");
+    let bGUID = engine._store.GUIDForId(b);
+    _("New item is " + b);
+    _("GUID: " + bGUID);
+
+    Svc.Obs.notify("weave:engine:start-tracking");
+    Svc.Annos.setItemAnnotation(b, GENERATOR_ANNO, "http://foo.bar/", 0,
+                                Svc.Annos.EXPIRE_NEVER);
+    do_check_true(tracker.changedIDs[bGUID] > 0);
+
+  } finally {
+    _("Clean up.");
+    store.wipe();
+    tracker.clearChangedIDs();
+    Svc.Obs.notify("weave:engine:stop-tracking");
+  }
+}
+
 function run_test() {
   initTestLogging("Trace");
 
@@ -255,6 +290,7 @@ function run_test() {
   Log4Moz.repository.getLogger("Store.Bookmarks").level = Log4Moz.Level.Trace;
   Log4Moz.repository.getLogger("Tracker.Bookmarks").level = Log4Moz.Level.Trace;
 
+  test_onItemChanged();
   test_copying_places();
   test_tracking();
 }
