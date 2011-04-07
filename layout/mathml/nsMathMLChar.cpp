@@ -65,9 +65,6 @@
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
 
-#if ALERT_MISSING_FONTS
-#include "nsIStringBundle.h"
-#endif
 #include "nsDisplayList.h"
 
 #include "nsMathMLOperators.h"
@@ -131,47 +128,6 @@ typedef enum {eExtension_base, eExtension_variants, eExtension_parts}
 #define NS_TABLE_STATE_ERROR       -1
 #define NS_TABLE_STATE_EMPTY        0
 #define NS_TABLE_STATE_READY        1
-
-// helper to check if a font is installed
-static PRBool
-CheckFontExistence(nsPresContext* aPresContext, const nsString& aFontName)
-{
-  PRBool aliased;
-  nsAutoString localName;
-  nsIDeviceContext *deviceContext = aPresContext->DeviceContext();
-  deviceContext->GetLocalFontName(aFontName, localName, aliased);
-  // XXXkt CheckFontExistence always returns NS_OK.
-  PRBool rv = (aliased || (NS_OK == deviceContext->CheckFontExistence(localName)));
-  // (see bug 35824 for comments about the aliased localName)
-  return rv;
-}
-
-#if ALERT_MISSING_FONTS
-// alert the user if some of the needed MathML fonts are not installed.
-// it is non-modal (i.e., it doesn't wait for input from the user)
-static void
-AlertMissingFonts(nsString& aMissingFonts)
-{
-  nsCOMPtr<nsIStringBundleService> sbs =
-    mozilla::services::GetStringBundleService();
-  if (!sbs)
-    return;
-
-  nsCOMPtr<nsIStringBundle> sb;
-  sbs->CreateBundle("resource://gre/res/fonts/mathfont.properties", getter_AddRefs(sb));
-  if (!sb)
-    return;
-
-  nsXPIDLString title, message;
-  const PRUnichar* strings[] = { aMissingFonts.get() };
-  sb->GetStringFromName(NS_LITERAL_STRING("mathfont_missing_dialog_title").get(), getter_Copies(title));
-  sb->FormatStringFromName(NS_LITERAL_STRING("mathfont_missing_dialog_message").get(),
-                           strings, 1, getter_Copies(message));
-
-  // XXX Bug 309090 - could show a notification bar here. Bug 563114 removed
-  // the nsINonBlockingAlertService interface that was previously used here.
-}
-#endif
 
 // helper to trim off comments from data in a MathFont Property File
 static void
@@ -403,7 +359,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
           return kNullGlyph;
         }
         // The char cannot be handled if this font is not installed
-        if (!mFontName[font].Length() || !CheckFontExistence(aPresContext, mFontName[font])) {
+        if (!mFontName[font].Length()) {
           return kNullGlyph;
         }
       }
@@ -716,36 +672,10 @@ GetFontExtensionPref(nsIPrefBranch* aPrefBranch, PRUnichar aChar,
     GetPrefValue(aPrefBranch, alternateKey.get(), aValue);
 }
 
-#if ALERT_MISSING_FONTS
-struct MathFontEnumContext {
-  nsPresContext* mPresContext;
-  nsString*       mMissingFamilyList;
-};
-#endif
 
 static PRBool
 MathFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
-#if ALERT_MISSING_FONTS
-  // check if the font is missing
-  MathFontEnumContext* context = (MathFontEnumContext*)aData;
-  nsPresContext* presContext = context->mPresContext;
-  nsString* missingFamilyList = context->mMissingFamilyList;
-  if (!CheckFontExistence(presContext, aFamily)) {
-//#ifndef _WIN32
-   // XXX In principle, the mathfont-family list in the mathfont.properties file
-   // is customizable depending on the platform. For now, this is here since there
-   // is no need to alert Linux users about TrueType fonts specific to Windows.
-   if (aFamily.LowerCaseEqualsLiteral("mt extra"))
-     return PR_TRUE; // continue to try other fonts
-//#endif
-    if (!missingFamilyList->IsEmpty()) {
-      missingFamilyList->AppendLiteral(", ");
-    }
-    missingFamilyList->Append(aFamily);
-  }
-#endif
-
   if (!gGlyphTableList->AddGlyphTable(aFamily))
     return PR_FALSE; // stop in low-memory situations
   return PR_TRUE; // don't stop
@@ -800,21 +730,7 @@ InitGlobals(nsPresContext* aPresContext)
   // Parse the font list and append an entry for each family to gGlyphTableList
   nsAutoString missingFamilyList;
 
-#if ALERT_MISSING_FONTS
-  // We don't really need all these fonts, so alerting on some missing is not
-  // right.  The best place to alert would be Stretch when we notice that we
-  // can't get the char we want.  In this way the user would not be alerted
-  // unnecessarily when the document contains only simple math.  The alert
-  // also needs a "don't tell me again box".
-  MathFontEnumContext context = {aPresContext, &missingFamilyList};
-  font.EnumerateFamilies(MathFontEnumCallback, &context);
-  // alert the user if some of the expected fonts are missing
-  if (!missingFamilyList.IsEmpty()) {
-    AlertMissingFonts(missingFamilyList);
-  }
-#else
   font.EnumerateFamilies(MathFontEnumCallback, nsnull);
-#endif
   return rv;
 }
 
