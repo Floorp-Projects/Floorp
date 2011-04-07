@@ -648,20 +648,13 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
   nsCOMPtr<nsIInputStream> input;
   channel->Open(getter_AddRefs(input));
   nsString dataString;
-  if (input) {
-    const PRUint32 bufferSize = 8192;
-    char buffer[bufferSize];
-    nsCString data;
-    PRUint32 avail = 0;
-    input->Available(&avail);
-    PRUint32 read = 0;
-    if (avail) {
-      while (NS_SUCCEEDED(input->Read(buffer, bufferSize, &read)) && read) {
-        data.Append(buffer, read);
-        read = 0;
-      }
+  PRUint32 avail = 0;
+  if (input && NS_SUCCEEDED(input->Available(&avail)) && avail) {
+    nsCString buffer;
+    if (NS_FAILED(NS_ReadInputStreamToString(input, buffer, avail))) {
+      return;
     }
-    nsScriptLoader::ConvertToUTF16(channel, (PRUint8*)data.get(), data.Length(),
+    nsScriptLoader::ConvertToUTF16(channel, (PRUint8*)buffer.get(), avail,
                                    EmptyString(), nsnull, dataString);
   }
 
