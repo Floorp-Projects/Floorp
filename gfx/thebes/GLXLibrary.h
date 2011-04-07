@@ -144,6 +144,8 @@ public:
     void BindTexImage(GLXPixmap aPixmap);
     void ReleaseTexImage(GLXPixmap aPixmap);
 
+    PRBool HasTextureFromPixmap() { return mHasTextureFromPixmap; }
+
 private:
     PRBool mInitialized;
     PRBool mTriedInitializing;
