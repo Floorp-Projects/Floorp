@@ -2739,6 +2739,9 @@ DrawBorderImage(nsPresContext*       aPresContext,
                 const nsStyleBorder& aStyleBorder,
                 const nsRect&        aDirtyRect)
 {
+  NS_PRECONDITION(aStyleBorder.IsBorderImageLoaded(),
+                  "drawing border image that isn't successfully loaded");
+
   if (aDirtyRect.IsEmpty())
     return;
 
@@ -2752,23 +2755,13 @@ DrawBorderImage(nsPresContext*       aPresContext,
 
   imgIRequest *req = aStyleBorder.GetBorderImage();
 
-#ifdef DEBUG
-  {
-    PRUint32 status = imgIRequest::STATUS_ERROR;
-    if (req)
-      req->GetImageStatus(&status);
-
-    NS_ASSERTION(req && (status & imgIRequest::STATUS_LOAD_COMPLETE),
-                 "no image to draw");
-  }
-#endif
-
   // Get the actual image, and determine where the split points are.
   // Note that mBorderImageSplit is in image pixels, not necessarily
   // CSS pixels.
 
   nsCOMPtr<imgIContainer> imgContainer;
   req->GetImage(getter_AddRefs(imgContainer));
+  NS_ASSERTION(imgContainer, "no image to draw");
 
   nsIntSize imageSize;
   if (NS_FAILED(imgContainer->GetWidth(&imageSize.width))) {

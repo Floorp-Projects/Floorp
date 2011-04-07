@@ -42,9 +42,7 @@
 
 #include "Layers.h"
 
-#ifdef MOZ_IPC
 #include "mozilla/layers/ShadowLayers.h"
-#endif
 
 #ifdef XP_WIN
 #include <windows.h>
@@ -84,11 +82,7 @@ class ShadowColorLayer;
  * the main thread.
  */
 class THEBES_API LayerManagerOGL :
-#ifdef MOZ_IPC
     public ShadowLayerManager
-#else
-    public LayerManager
-#endif
 {
   typedef mozilla::gl::GLContext GLContext;
   typedef mozilla::gl::ShaderProgramType ProgramType;

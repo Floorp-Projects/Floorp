@@ -59,3 +59,4 @@ fails-if(Android) != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-m
 == unneeded_scroll.html unneeded_scroll-ref.html
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
 == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html
+== 642800.html 642800-ref.html

@@ -45,8 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= uconv
 
 EXPORTS		= \
-		nsICharsetAlias.h \
-		nsIPlatformCharset.h \
 		nsIUnicodeDecoder.h \
 		nsIUnicodeEncoder.h \
 		uconvutil.h \

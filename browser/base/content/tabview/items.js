@@ -72,15 +72,6 @@ function Item() {
   // The z-index for this item.
   this.zIndex = 0;
 
-  // Variable: debug
-  // When set to true, displays a rectangle on the screen that corresponds with bounds.
-  // May be used for additional debugging features in the future.
-  this.debug = false;
-
-  // Variable: $debug
-  // If <debug> is true, this will be the iQ object for the visible rectangle.
-  this.$debug = null;
-
   // Variable: container
   // The outermost DOM element that describes this item on screen.
   this.container = null;
@@ -153,16 +144,6 @@ Item.prototype = {
 
     this.container = container;
     this.$container = iQ(container);
-
-    if (this.debug) {
-      this.$debug = iQ('<div>')
-        .css({
-          border: '2px solid green',
-          zIndex: -10,
-          position: 'absolute'
-        })
-        .appendTo('body');
-    }
 
     iQ(this.container).data('item', this);
 
@@ -508,16 +489,6 @@ Item.prototype = {
         item.setBounds(bounds, immediately);
       }
     });
-  },
-
-  // ----------
-  // Function: _updateDebugBounds
-  // Called by a subclass when its bounds change, to update the debugging rectangles on screen.
-  // This functionality is enabled only by the debug property.
-  _updateDebugBounds: function Item__updateDebugBounds() {
-    if (this.$debug) {
-      this.$debug.css(this.bounds);
-    }
   },
 
   // ----------

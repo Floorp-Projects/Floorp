@@ -50,6 +50,7 @@
 #include "nsStringStream.h"
 #include "netCore.h"
 #include "nsNetCID.h"
+#include "nsProxyRelease.h"
 #include "prmem.h"
 
 #ifdef DEBUG
@@ -65,9 +66,10 @@ static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 nsHttpConnection::nsHttpConnection()
     : mTransaction(nsnull)
-    , mConnInfo(nsnull)
     , mLastReadTime(0)
     , mIdleTimeout(0)
+    , mConsiderReusedAfterInterval(0)
+    , mConsiderReusedAfterEpoch(0)
     , mKeepAlive(PR_TRUE) // assume to keep-alive by default
     , mKeepAliveMask(PR_TRUE)
     , mSupportsPipelining(PR_FALSE) // assume low-grade server
@@ -85,9 +87,12 @@ nsHttpConnection::nsHttpConnection()
 nsHttpConnection::~nsHttpConnection()
 {
     LOG(("Destroying nsHttpConnection @%x\n", this));
- 
-    NS_IF_RELEASE(mConnInfo);
-    NS_IF_RELEASE(mTransaction);
+
+    if (mCallbacks) {
+        nsIInterfaceRequestor *cbs = nsnull;
+        mCallbacks.swap(cbs);
+        NS_ProxyRelease(mCallbackTarget, cbs);
+    }
 
     // release our reference to the handler
     nsHttpHandler *handler = gHttpHandler;
@@ -95,18 +100,38 @@ nsHttpConnection::~nsHttpConnection()
 }
 
 nsresult
-nsHttpConnection::Init(nsHttpConnectionInfo *info, PRUint16 maxHangTime)
+nsHttpConnection::Init(nsHttpConnectionInfo *info,
+                       PRUint16 maxHangTime,
+                       nsISocketTransport *transport,
+                       nsIAsyncInputStream *instream,
+                       nsIAsyncOutputStream *outstream,
+                       nsIInterfaceRequestor *callbacks,
+                       nsIEventTarget *callbackTarget)
 {
-    LOG(("nsHttpConnection::Init [this=%x]\n", this));
+    NS_ABORT_IF_FALSE(transport && instream && outstream,
+                      "invalid socket information");
+    LOG(("nsHttpConnection::Init [this=%p "
+         "transport=%p instream=%p outstream=%p]\n",
+         this, transport, instream, outstream));
 
     NS_ENSURE_ARG_POINTER(info);
     NS_ENSURE_TRUE(!mConnInfo, NS_ERROR_ALREADY_INITIALIZED);
 
     mConnInfo = info;
-    NS_ADDREF(mConnInfo);
-
     mMaxHangTime = maxHangTime;
     mLastReadTime = NowInSeconds();
+
+    mSocketTransport = transport;
+    mSocketIn = instream;
+    mSocketOut = outstream;
+    nsresult rv = mSocketTransport->SetEventSink(this, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    mCallbacks = callbacks;
+    mCallbackTarget = callbackTarget;
+    rv = mSocketTransport->SetSecurityCallbacks(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     return NS_OK;
 }
 
@@ -116,6 +141,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
 {
     nsresult rv;
 
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     LOG(("nsHttpConnection::Activate [this=%x trans=%x caps=%x]\n",
          this, trans, caps));
 
@@ -124,32 +150,24 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
 
     // take ownership of the transaction
     mTransaction = trans;
-    NS_ADDREF(mTransaction);
 
     // set mKeepAlive according to what will be requested
     mKeepAliveMask = mKeepAlive = (caps & NS_HTTP_ALLOW_KEEPALIVE);
-
-    // if we don't have a socket transport then create a new one
-    if (!mSocketTransport) {
-        rv = CreateTransport(caps);
-        if (NS_FAILED(rv))
-            goto loser;
-    }
 
     // need to handle SSL proxy CONNECT if this is the first time.
     if (mConnInfo->UsingSSL() && mConnInfo->UsingHttpProxy() && !mCompletedSSLConnect) {
         rv = SetupSSLProxyConnect();
         if (NS_FAILED(rv))
-            goto loser;
+            goto failed_activation;
     }
 
-    // wait for the output stream to be readable
-    rv = mSocketOut->AsyncWait(this, 0, 0, nsnull);
-    if (NS_SUCCEEDED(rv))
-        return rv;
+    rv = OnOutputStreamReady(mSocketOut);
+    
+failed_activation:
+    if (NS_FAILED(rv)) {
+        mTransaction = nsnull;
+    }
 
-loser:
-    NS_RELEASE(mTransaction);
     return rv;
 }
 
@@ -158,7 +176,7 @@ nsHttpConnection::Close(nsresult reason)
 {
     LOG(("nsHttpConnection::Close [this=%x reason=%x]\n", this, reason));
 
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     if (NS_FAILED(reason)) {
         if (mSocketTransport) {
@@ -192,8 +210,25 @@ nsHttpConnection::ProxyStartSSL()
 PRBool
 nsHttpConnection::CanReuse()
 {
-    return IsKeepAlive() && (NowInSeconds() - mLastReadTime < mIdleTimeout)
-                         && IsAlive();
+    PRBool canReuse = IsKeepAlive() &&
+        (NowInSeconds() - mLastReadTime < mIdleTimeout) &&
+        IsAlive();
+    
+    // An idle persistent connection should not have data waiting to be read
+    // before a request is sent. Data here is likely a 408 timeout response
+    // which we would deal with later on through the restart logic, but that
+    // path is more expensive than just closing the socket now. SSL check can
+    // be removed with fixing of 631801
+
+    PRUint32 dataSize;
+    if (canReuse && mSocketIn && !mConnInfo->UsingSSL() &&
+        NS_SUCCEEDED(mSocketIn->Available(&dataSize)) && dataSize) {
+        LOG(("nsHttpConnection::CanReuse %p %s"
+             "Socket not reusable because read data pending (%d) on it.\n",
+             this, mConnInfo->Host(), dataSize));
+        canReuse = PR_FALSE;
+    }
+    return canReuse;
 }
 
 PRUint32 nsHttpConnection::TimeToLive()
@@ -386,12 +421,33 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             // processing a transaction pipeline until after the first HTTP/1.1
             // response.
             nsHttpTransaction *trans =
-                    static_cast<nsHttpTransaction *>(mTransaction);
+                    static_cast<nsHttpTransaction *>(mTransaction.get());
             trans->SetSSLConnectFailed();
         }
     }
 
     return NS_OK;
+}
+
+PRBool
+nsHttpConnection::IsReused()
+{
+    if (mIsReused)
+        return PR_TRUE;
+    if (!mConsiderReusedAfterInterval)
+        return PR_FALSE;
+    
+    // ReusedAfter allows a socket to be consider reused only after a certain
+    // interval of time has passed
+    return (PR_IntervalNow() - mConsiderReusedAfterEpoch) >=
+        mConsiderReusedAfterInterval;
+}
+
+void
+nsHttpConnection::SetIsReusedAfter(PRUint32 afterMilliseconds)
+{
+    mConsiderReusedAfterEpoch = PR_IntervalNow();
+    mConsiderReusedAfterInterval = PR_MillisecondsToInterval(afterMilliseconds);
 }
 
 void
@@ -437,69 +493,6 @@ nsHttpConnection::ResumeRecv()
 // nsHttpConnection <private>
 //-----------------------------------------------------------------------------
 
-nsresult
-nsHttpConnection::CreateTransport(PRUint8 caps)
-{
-    nsresult rv;
-
-    NS_PRECONDITION(!mSocketTransport, "unexpected");
-
-    nsCOMPtr<nsISocketTransportService> sts =
-            do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // configure the socket type based on the connection type requested.
-    const char* types[1];
-
-    if (mConnInfo->UsingSSL())
-        types[0] = "ssl";
-    else
-        types[0] = gHttpHandler->DefaultSocketType();
-
-    nsCOMPtr<nsISocketTransport> strans;
-    PRUint32 typeCount = (types[0] != nsnull);
-
-    rv = sts->CreateTransport(types, typeCount,
-                              nsDependentCString(mConnInfo->Host()),
-                              mConnInfo->Port(),
-                              mConnInfo->ProxyInfo(),
-                              getter_AddRefs(strans));
-    if (NS_FAILED(rv)) return rv;
-
-    PRUint32 tmpFlags = 0;
-    if (caps & NS_HTTP_REFRESH_DNS)
-        tmpFlags = nsISocketTransport::BYPASS_CACHE;
-    
-    if (caps & NS_HTTP_LOAD_ANONYMOUS)
-        tmpFlags |= nsISocketTransport::ANONYMOUS_CONNECT;
-    
-    strans->SetConnectionFlags(tmpFlags); 
-
-    strans->SetQoSBits(gHttpHandler->GetQoSBits());
-
-    // NOTE: these create cyclical references, which we break inside
-    //       nsHttpConnection::Close
-    rv = strans->SetEventSink(this, nsnull);
-    if (NS_FAILED(rv)) return rv;
-    rv = strans->SetSecurityCallbacks(this);
-    if (NS_FAILED(rv)) return rv;
-
-    // next open the socket streams
-    nsCOMPtr<nsIOutputStream> sout;
-    rv = strans->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
-                                  getter_AddRefs(sout));
-    if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIInputStream> sin;
-    rv = strans->OpenInputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
-                                 getter_AddRefs(sin));
-    if (NS_FAILED(rv)) return rv;
-
-    mSocketTransport = strans;
-    mSocketIn = do_QueryInterface(sin);
-    mSocketOut = do_QueryInterface(sout);
-    return NS_OK;
-}
-
 void
 nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
 {
@@ -514,9 +507,7 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
         reason = NS_OK;
 
     mTransaction->Close(reason);
-
-    NS_RELEASE(mTransaction);
-    mTransaction = 0;
+    mTransaction = nsnull;
 
     if (NS_FAILED(reason))
         Close(reason);
@@ -727,7 +718,8 @@ nsHttpConnection::SetupSSLProxyConnect()
 
     // NOTE: this cast is valid since this connection cannot be processing a
     // transaction pipeline until after the first HTTP/1.1 response.
-    nsHttpTransaction *trans = static_cast<nsHttpTransaction *>(mTransaction);
+    nsHttpTransaction *trans =
+        static_cast<nsHttpTransaction *>(mTransaction.get());
     
     val = trans->RequestHead()->PeekHeader(nsHttp::Host);
     if (val) {
@@ -791,8 +783,8 @@ nsHttpConnection::OnInputStreamReady(nsIAsyncInputStream *in)
 NS_IMETHODIMP
 nsHttpConnection::OnOutputStreamReady(nsIAsyncOutputStream *out)
 {
-    NS_ASSERTION(out == mSocketOut, "unexpected stream");
-    NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    NS_ABORT_IF_FALSE(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    NS_ABORT_IF_FALSE(out == mSocketOut, "unexpected socket");
 
     // if the transaction was dropped...
     if (!mTransaction) {
@@ -834,14 +826,14 @@ nsHttpConnection::GetInterface(const nsIID &iid, void **result)
     //       the socket transport thread.  If that weren't the case, then we'd
     //       have to worry about the possibility of mTransaction going away
     //       part-way through this function call.  See CloseTransaction.
-    NS_ASSERTION(PR_GetCurrentThread() != gSocketThread, "wrong thread");
- 
-    if (mTransaction) {
-        nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        mTransaction->GetSecurityCallbacks(getter_AddRefs(callbacks));
-        if (callbacks)
-            return callbacks->GetInterface(iid, result);
-    }
 
+    // NOTE - there is a bug here, the call to getinterface is proxied off the
+    // nss thread, not the ui thread as the above comment says. So there is
+    // indeed a chance of mTransaction going away. bug 615342
+
+    NS_ASSERTION(PR_GetCurrentThread() != gSocketThread, "wrong thread");
+
+    if (mCallbacks)
+        return mCallbacks->GetInterface(iid, result);
     return NS_ERROR_NO_INTERFACE;
 }

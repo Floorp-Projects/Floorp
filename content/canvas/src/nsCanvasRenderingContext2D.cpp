@@ -38,24 +38,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-#  include "base/basictypes.h"
-#endif
+#include "base/basictypes.h"
 
 #include "nsIDOMXULElement.h"
-
-#ifdef _MSC_VER
-#define _USE_MATH_DEFINES
-#endif
-#include <math.h>
-#if defined(XP_WIN) || defined(XP_OS2)
-#include <float.h>
-#endif
 
 #include "prmem.h"
 #include "prenv.h"
 
 #include "nsIServiceManager.h"
+#include "nsMathUtils.h"
 
 #include "nsContentUtils.h"
 
@@ -64,6 +55,7 @@
 #include "nsIDOMCanvasRenderingContext2D.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsHTMLCanvasElement.h"
+#include "nsSVGEffects.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIVariant.h"
@@ -120,51 +112,23 @@
 #include "nsStyleUtil.h"
 #include "CanvasImageCache.h"
 
-#ifdef MOZ_IPC
-#  include <algorithm>
-#  include "mozilla/dom/ContentParent.h"
-#  include "mozilla/ipc/PDocumentRendererParent.h"
-#  include "mozilla/dom/PBrowserParent.h"
-#  include "mozilla/ipc/DocumentRendererParent.h"
+#include <algorithm>
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/ipc/PDocumentRendererParent.h"
+#include "mozilla/dom/PBrowserParent.h"
+#include "mozilla/ipc/DocumentRendererParent.h"
 
 // windows.h (included by chromium code) defines this, in its infinite wisdom
-#  undef DrawText
+#undef DrawText
 
 using namespace mozilla::ipc;
-#endif
-
-#ifdef MOZ_SVG
-#include "nsSVGEffects.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
-#ifndef M_PI
-#define M_PI		3.14159265358979323846
-#define M_PI_2		1.57079632679489661923
-#endif
-
 /* Float validation stuff */
-
-static inline bool
-DoubleIsFinite(double d)
-{
-#ifdef WIN32
-    // NOTE: '!!' casts an int to bool without spamming MSVC warning C4800.
-    return !!_finite(d);
-#else
-    return finite(d);
-#endif
-}
-
-#define VALIDATE(_f)  if (!DoubleIsFinite(_f)) return PR_FALSE
-
-/* These must take doubles as args, because JSDOUBLE_IS_FINITE expects
- * to take the address of its argument; we can't cast/convert in the
- * macro.
- */
+#define VALIDATE(_f)  if (!NS_finite(_f)) return PR_FALSE
 
 static PRBool FloatValidate (double f1) {
     VALIDATE(f1);
@@ -1237,7 +1201,6 @@ nsCanvasRenderingContext2D::SetIsOpaque(PRBool isOpaque)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetIsIPC(PRBool isIPC)
 {
-#ifdef MOZ_IPC
     if (isIPC == mIPC)
         return NS_OK;
 
@@ -1251,9 +1214,6 @@ nsCanvasRenderingContext2D::SetIsIPC(PRBool isIPC)
     }
 
     return NS_OK;
-#else
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif
 }
 
 NS_IMETHODIMP
@@ -1430,7 +1390,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Translate(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mThebes->Translate(gfxPoint(x, y));
     return NS_OK;
@@ -1440,7 +1400,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Transform(float m11, float m12, float m21, float m22, float dx, float dy)
 {
     if (!FloatValidate(m11,m12,m21,m22,dx,dy))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     gfxMatrix matrix(m11, m12, m21, m22, dx, dy);
     mThebes->Multiply(matrix);
@@ -1657,6 +1617,9 @@ nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, f
     if (!FloatValidate(x0,y0,r0,x1,y1,r1))
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
+    if (r0 < 0.0 || r1 < 0.0)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
     nsRefPtr<gfxPattern> gradpat = new gfxPattern(x0, y0, r0, x1, y1, r1);
     if (!gradpat)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1674,6 +1637,9 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
                                           const nsAString& repeat,
                                           nsIDOMCanvasPattern **_retval)
 {
+    if (!image) {
+        return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    }
     gfxPattern::GraphicsExtend extend;
 
     if (repeat.IsEmpty() || repeat.EqualsLiteral("repeat")) {
@@ -2072,7 +2038,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::MoveTo(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->MoveTo(gfxPoint(x, y));
@@ -2083,7 +2049,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::LineTo(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->LineTo(gfxPoint(x, y));
@@ -2094,7 +2060,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x, float y)
 {
     if (!FloatValidate(cpx,cpy,x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     // we will always have a current point, since beginPath forces
     // a moveto(0,0)
@@ -2206,7 +2172,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 {
     if (!FloatValidate(x,y,w,h))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->Rectangle(gfxRect(x, y, w, h));
@@ -3365,7 +3331,9 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
                                       float a6, float a7, float a8,
                                       PRUint8 optional_argc)
 {
-    NS_ENSURE_ARG(imgElt);
+    if (!imgElt) {
+        return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    }
 
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
@@ -3767,7 +3735,6 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
     if (!frameloader)
         return NS_ERROR_FAILURE;
 
-#ifdef MOZ_IPC
     PBrowserParent *child = frameloader->GetRemoteBrowser();
     if (!child) {
         nsCOMPtr<nsIDOMWindow> window =
@@ -3815,14 +3782,6 @@ nsCanvasRenderingContext2D::AsyncDrawXULElement(nsIDOMXULElement* aElem, float a
     }
 
     return NS_OK;
-#else
-    nsCOMPtr<nsIDOMWindow> window =
-        do_GetInterface(frameloader->GetExistingDocShell());
-    if (!window)
-        return NS_ERROR_FAILURE;
-
-    return DrawWindow(window, aX, aY, aW, aH, aBGColor, flags);
-#endif
 }
 
 //

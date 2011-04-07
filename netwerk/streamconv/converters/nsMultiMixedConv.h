@@ -43,7 +43,6 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "nsCOMPtr.h"
-#include "nsInt64.h"
 #include "nsIByteRangeRequest.h"
 #include "nsIMultiPartChannel.h"
 #include "nsAutoPtr.h"
@@ -102,8 +101,8 @@ protected:
   PRUint64                mContentLength;
 
   PRBool                  mIsByteRangeRequest;
-  nsInt64                 mByteRangeStart;
-  nsInt64                 mByteRangeEnd;
+  PRInt64                 mByteRangeStart;
+  PRInt64                 mByteRangeEnd;
 
   PRUint32                mPartID; // unique ID that can be used to identify
                                    // this part of the multipart document
@@ -190,8 +189,8 @@ protected:
     // The following members are for tracking the byte ranges in
     // multipart/mixed content which specified the 'Content-Range:'
     // header...
-    nsInt64             mByteRangeStart;
-    nsInt64             mByteRangeEnd;
+    PRInt64             mByteRangeStart;
+    PRInt64             mByteRangeEnd;
     PRBool              mIsByteRangeRequest;
 
     PRUint32            mCurrentPartID;

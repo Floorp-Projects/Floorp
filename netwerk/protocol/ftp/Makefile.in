@@ -56,28 +56,21 @@ XPIDLSRCS = \
   nsIFTPChannel.idl \
   $(NULL)
 
-ifdef MOZ_IPC
 EXPORTS_NAMESPACES = mozilla/net
 
 EXPORTS_mozilla/net += \
   FTPChannelParent.h \
   FTPChannelChild.h  \
   $(NULL)
-endif
 
 CPPSRCS = \
   nsFtpProtocolHandler.cpp \
   nsFTPChannel.cpp \
   nsFtpConnectionThread.cpp \
   nsFtpControlConnection.cpp \
-  $(NULL)
-
-ifdef MOZ_IPC
-CPPSRCS += \
   FTPChannelParent.cpp \
   FTPChannelChild.cpp \
   $(NULL)
-endif
 
 # Use -g for Irix mipspro builds as workaround for bug 92099
 ifneq (,$(filter IRIX IRIX64,$(OS_ARCH)))

@@ -107,6 +107,7 @@ public:
     nsIIDNService *IDNConverter()            { return mIDNConverter; }
     PRUint32       PhishyUserPassLength()    { return mPhishyUserPassLength; }
     PRUint8        GetQoSBits()              { return mQoSBits; }
+    PRUint16       GetIdleSynTimeout()       { return mIdleSynTimeout; }
     
     PRBool         IsPersistentHttpsCachingEnabled() { return mEnablePersistentHttpsCaching; }
 
@@ -263,6 +264,7 @@ private:
     PRUint16 mIdleTimeout;
     PRUint16 mMaxRequestAttempts;
     PRUint16 mMaxRequestDelay;
+    PRUint16 mIdleSynTimeout;
 
     PRUint16 mMaxConnections;
     PRUint8  mMaxConnectionsPerServer;
@@ -305,7 +307,6 @@ private:
     nsCString      mLegacyAppVersion;
     nsCString      mPlatform;
     nsCString      mOscpu;
-    nsCString      mLanguage;
     nsCString      mMisc;
     nsCString      mProduct;
     nsXPIDLCString mProductSub;
