@@ -1468,15 +1468,20 @@ nsDocAccessible::NotifyOfCachingEnd(nsAccessible* aAccessible)
     // invalidation list.
     for (PRUint32 idx = 0; idx < mInvalidationList.Length(); idx++) {
       nsIContent* content = mInvalidationList[idx];
-      if (!HasAccessible(content)) {
-        // Make sure we keep children updated. While we're inside of caching
-        // loop then we must exist it with cached children.
+      nsAccessible* accessible = GetAccessible(content);
+      if (!accessible) {
         nsAccessible* container = GetContainerAccessible(content);
         NS_ASSERTION(container,
                      "Got a referenced element that is not in document!");
-        if (container)
+        if (container) {
           container->UpdateChildren();
+          accessible = GetAccessible(content);
+        }
       }
+
+      // Make sure the subtree is created.
+      if (accessible)
+        CacheChildrenInSubtree(accessible);
     }
     mInvalidationList.Clear();
 
