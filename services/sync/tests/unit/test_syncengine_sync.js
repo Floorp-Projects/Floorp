@@ -824,8 +824,20 @@ function test_processIncoming_failed_records() {
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
   meta_global.payload.engines = {steam: {version: engine.version,
                                          syncID: engine.syncID}};
+
+  // Keep track of requests made of a collection.
+  let count = 0;
+  let uris  = [];
+  function recording_handler(collection) {
+    let h = collection.handler();
+    return function(req, res) {
+      ++count;
+      uris.push(req.path + "?" + req.queryString);
+      return h(req, res);
+    };
+  }
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.0/foo/storage/steam": recording_handler(collection)
   });
   do_test_pending();
 
@@ -863,6 +875,33 @@ function test_processIncoming_failed_records() {
     // Ensure the observer was notified
     do_check_eq(observerData, engine.name);
     do_check_eq(observerSubject.failed, BOGUS_RECORDS.length);
+
+    // Testing batching of failed item fetches.
+    // Try to sync again. Ensure that we split the request into chunks to avoid
+    // URI length limitations.
+    function batchDownload(batchSize) {
+      count = 0;
+      uris  = [];
+      engine.guidFetchBatchSize = batchSize;
+      engine._processIncoming();
+      _("Tried again. Requests: " + count + "; URIs: " + JSON.stringify(uris));
+      return count;
+    }
+    
+    // There are 8 bad records, so this needs 3 fetches.
+    _("Test batching with ID batch size 3, normal mobile batch size.");
+    do_check_eq(batchDownload(3), 3);
+
+    // Now see with a more realistic limit.
+    _("Test batching with sufficient ID batch size.");
+    do_check_eq(batchDownload(BOGUS_RECORDS.length), 1);
+
+    // If we're on mobile, that limit is used by default.
+    _("Test batching with tiny mobile batch size.");
+    Svc.Prefs.set("client.type", "mobile");
+    engine.mobileGUIDFetchBatchSize = 2;
+    do_check_eq(batchDownload(BOGUS_RECORDS.length), 4);
+
   } finally {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
