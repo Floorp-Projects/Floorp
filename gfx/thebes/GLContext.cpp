@@ -695,7 +695,7 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
                             LOCAL_GL_UNSIGNED_BYTE,
                             NULL);
 
-    mTextureState = Initialized;
+    mTextureState = Allocated;
     mSize = aSize;
 }
 
