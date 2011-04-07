@@ -142,6 +142,9 @@ function AsyncResource(uri) {
 AsyncResource.prototype = {
   _logName: "Net.Resource",
 
+  // The string to use as the base User-Agent in Sync requests.
+  _userAgent: "FxSync/" + WEAVE_VERSION + "." + Svc.AppInfo.appBuildID + ".",
+
   // Wait 5 minutes before killing a request.
   ABORT_TIMEOUT: 300000,
 
@@ -224,6 +227,12 @@ AsyncResource.prototype = {
     // Setup a callback to handle bad HTTPS certificates.
     channel.notificationCallbacks = new BadCertListener();
 
+    // Compose a UA string fragment from the various available identifiers.
+    if (Svc.Prefs.get("sendVersionInfo", true)) {
+      let ua = this._userAgent + Svc.Prefs.get("client.type", "desktop");
+      channel.setRequestHeader("user-agent", ua, false);
+    }
+    
     // Avoid calling the authorizer more than once.
     let headers = this.headers;
     for (let key in headers) {

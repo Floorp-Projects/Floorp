@@ -9,6 +9,7 @@ pref("services.sync.syncKeyHelpURL", "https://services.mozilla.com/help/synckey"
 
 pref("services.sync.lastversion", "firstrun");
 pref("services.sync.autoconnect", true);
+pref("services.sync.sendVersionInfo", true);
 
 pref("services.sync.engine.bookmarks", true);
 pref("services.sync.engine.history", true);
