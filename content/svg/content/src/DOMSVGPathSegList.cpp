@@ -96,6 +96,21 @@ DOMSVGPathSegList::~DOMSVGPathSegList()
   sSVGPathSegListTearoffTable.RemoveTearoff(key);
 }
 
+nsIDOMSVGPathSeg*
+DOMSVGPathSegList::GetItemWithoutAddRef(PRUint32 aIndex)
+{
+#ifdef MOZ_SMIL
+  if (IsAnimValList()) {
+    Element()->FlushAnimations();
+  }
+#endif
+  if (aIndex < Length()) {
+    EnsureItemAt(aIndex);
+    return ItemAt(aIndex);
+  }
+  return nsnull;
+}
+
 void
 DOMSVGPathSegList::InternalListWillChangeTo(const SVGPathData& aNewValue)
 {
@@ -305,18 +320,12 @@ NS_IMETHODIMP
 DOMSVGPathSegList::GetItem(PRUint32 aIndex,
                            nsIDOMSVGPathSeg **_retval)
 {
-#ifdef MOZ_SMIL
-  if (IsAnimValList()) {
-    Element()->FlushAnimations();
+  *_retval = GetItemWithoutAddRef(aIndex);
+  if (!*_retval) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
-#endif
-  if (aIndex < Length()) {
-    EnsureItemAt(aIndex);
-    NS_ADDREF(*_retval = ItemAt(aIndex));
-    return NS_OK;
-  }
-  *_retval = nsnull;
-  return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -496,6 +505,12 @@ DOMSVGPathSegList::AppendItem(nsIDOMSVGPathSeg *aNewItem,
                               nsIDOMSVGPathSeg **_retval)
 {
   return InsertItemBefore(aNewItem, Length(), _retval);
+}
+
+NS_IMETHODIMP
+DOMSVGPathSegList::GetLength(PRUint32 *aNumberOfItems)
+{
+  return GetNumberOfItems(aNumberOfItems);
 }
 
 void

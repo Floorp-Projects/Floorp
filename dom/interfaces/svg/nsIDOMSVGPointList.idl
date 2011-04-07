@@ -40,10 +40,11 @@
 
 interface nsIDOMSVGPoint;
 
-[scriptable, uuid(4c12af24-0fc2-4fe7-b71d-5d6b41d463c1)]
+[scriptable, uuid(7bb28750-7238-4083-b5f4-4def4646a637)]
 interface nsIDOMSVGPointList : nsISupports
 {
   readonly attribute unsigned long numberOfItems;
+  readonly attribute unsigned long length;  // synonym for numberOfItems
 
   void clear();
       // raises( DOMException );
