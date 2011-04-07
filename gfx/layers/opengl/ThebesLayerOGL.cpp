@@ -210,14 +210,8 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
   }
 
   // Bind textures.
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
-
-  if (mTexImageOnWhite) {
-    gl()->fActiveTexture(LOCAL_GL_TEXTURE1);
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImageOnWhite->Texture());
-    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  }
+  TextureImage::ScopedBindTexture(mTexImage, LOCAL_GL_TEXTURE0);
+  TextureImage::ScopedBindTexture(mTexImageOnWhite, LOCAL_GL_TEXTURE1);
 
   float xres = mLayer->GetXResolution();
   float yres = mLayer->GetYResolution();
@@ -295,7 +289,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     // Restore defaults
     gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                              LOCAL_GL_ONE, LOCAL_GL_ONE);
-   }
+  }
 }
 
 
