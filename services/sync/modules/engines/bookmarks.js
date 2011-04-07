@@ -58,10 +58,9 @@ const MOBILEROOT_ANNO      = "mobile/bookmarksRoot";
 const MOBILE_ANNO          = "MobileBookmarks";
 const EXCLUDEBACKUP_ANNO   = "places/excludeFromBackup";
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
-const GUID_ANNO            = "sync/guid";
 const PARENT_ANNO          = "sync/parent";
 const ANNOS_TO_TRACK = [DESCRIPTION_ANNO, SIDEBAR_ANNO, STATICTITLE_ANNO,
-                       FEEDURI_ANNO, SITEURI_ANNO, GENERATORURI_ANNO];
+                        FEEDURI_ANNO, SITEURI_ANNO, GENERATORURI_ANNO];
 
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
@@ -1414,34 +1413,44 @@ BookmarksTracker.prototype = {
    *        Folder of the item being changed
    */
   _ignore: function BMT__ignore(itemId, folder) {
-    // Ignore unconditionally if the engine tells us to
+    // Ignore unconditionally if the engine tells us to.
     if (this.ignoreAll)
       return true;
 
-    // Ensure that the mobile bookmarks query is correct in the UI
-    this._ensureMobileQuery();
+    // Get the folder id if we weren't given one.
+    if (folder == null) {
+      try {
+        folder = this._bms.getFolderIdForItem(itemId);
+      } catch (ex) {
+        this._log.debug("getFolderIdForItem(" + itemId +
+                        ") threw; calling _ensureMobileQuery.");
+        // I'm guessing that gFIFI can throw, and perhaps that's why
+        // _ensureMobileQuery is here at all. Try not to call it.
+        this._ensureMobileQuery();
+        folder = this._bms.getFolderIdForItem(itemId);
+      }
+    }
 
-    // Make sure to remove items that have the exclude annotation
+    // Ignore livemark children.
+    if (this._ls.isLivemark(folder))
+      return true;
+
+    // Ignore changes to tags (folders under the tags folder).
+    let tags = kSpecialIds.tags;
+    if (folder == tags)
+      return true;
+
+    // Ignore tag items (the actual instance of a tag for a bookmark).
+    if (this._bms.getFolderIdForItem(folder) == tags)
+      return true;
+
+    // Make sure to remove items that have the exclude annotation.
     if (Svc.Annos.itemHasAnnotation(itemId, EXCLUDEBACKUP_ANNO)) {
       this.removeChangedID(this._GUIDForId(itemId));
       return true;
     }
 
-    // Get the folder id if we weren't given one
-    if (folder == null)
-      folder = this._bms.getFolderIdForItem(itemId);
-
-    let tags = kSpecialIds.tags;
-    // Ignore changes to tags (folders under the tags folder)
-    if (folder == tags)
-      return true;
-
-    // Ignore tag items (the actual instance of a tag for a bookmark)
-    if (this._bms.getFolderIdForItem(folder) == tags)
-      return true;
-
-    // Ignore livemark children
-    return this._ls.isLivemark(folder);
+    return false;
   },
 
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
@@ -1480,7 +1489,7 @@ BookmarksTracker.prototype = {
     let queryURI = Utils.makeURI("place:folder=" + kSpecialIds.mobile);
     let title = Str.sync.get("mobile.label");
 
-    // Don't add OR do remove the mobile bookmarks if there's nothing
+    // Don't add OR remove the mobile bookmarks if there's nothing.
     if (Svc.Bookmark.getIdForItemAt(kSpecialIds.mobile, 0) == -1) {
       if (mobile.length != 0)
         Svc.Bookmark.removeItem(mobile[0]);
@@ -1500,26 +1509,21 @@ BookmarksTracker.prototype = {
     this.ignoreAll = false;
   },
 
+  // This method is oddly structured, but the idea is to return as quickly as
+  // possible -- this handler gets called *every time* a bookmark changes, for
+  // *each change*. That's particularly bad when a bunch of livemarks are
+  // updated.
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
+    // Quicker checks first.
+    // Ignore favicon changes to avoid unnecessary churn.
+    if (this.ignoreAll || property == "favicon")
+      return;
+
+    if (isAnno && (ANNOS_TO_TRACK.indexOf(anno) == -1))
+      // Ignore annotations except for the ones that we sync.
+      return;
+
     if (this._ignore(itemId))
-      return;
-
-    // Allocate a new GUID if necessary.
-    // We only want to do it if there's a dupe, so use idForGUID to achieve that.
-    if (isAnno && (property == GUID_ANNO)) {
-      this._log.trace("onItemChanged for " + GUID_ANNO +
-                      ": probably needs a new one.");
-      this._idForGUID(this._GUIDForId(itemId));
-      this._addId(itemId);
-      return;
-    }
-
-    // ignore annotations except for the ones that we sync
-    if (isAnno && ANNOS_TO_TRACK.indexOf(property) == -1)
-      return;
-
-    // Ignore favicon changes to avoid unnecessary churn
-    if (property == "favicon")
       return;
 
     this._log.trace("onItemChanged: " + itemId +
