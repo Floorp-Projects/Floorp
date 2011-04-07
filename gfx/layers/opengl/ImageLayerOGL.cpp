@@ -43,6 +43,10 @@
 #include "yuv_convert.h"
 #include "GLContextProvider.h"
 #include "MacIOSurfaceImageOGL.h"
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+# include "GLXLibrary.h"
+# include "mozilla/X11Util.h"
+#endif
 
 using namespace mozilla::gl;
 
@@ -440,6 +444,15 @@ ImageLayerOGL::RenderLayer(int,
     gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
     gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, cairoImage->mTexture.GetTextureID());
 
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+    GLXPixmap pixmap;
+
+    if (cairoImage->mSurface) {
+        pixmap = sGLXLibrary.CreatePixmap(cairoImage->mSurface);
+        sGLXLibrary.BindTexImage(pixmap);
+    }
+#endif
+    
     ColorTextureLayerProgram *program = 
       mOGLManager->GetColorTextureLayerProgram(cairoImage->mLayerProgram);
 
@@ -455,6 +468,13 @@ ImageLayerOGL::RenderLayer(int,
     program->SetTextureUnit(0);
 
     mOGLManager->BindAndDrawQuad(program);
+
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+    if (cairoImage->mSurface) {
+        sGLXLibrary.ReleaseTexImage(pixmap);
+        sGLXLibrary.DestroyPixmap(pixmap);
+    }
+#endif
 #ifdef XP_MACOSX
   } else if (image->GetFormat() == Image::MAC_IO_SURFACE) {
      MacIOSurfaceImageOGL *ioImage =
@@ -725,6 +745,10 @@ CairoImageOGL::CairoImageOGL(LayerManagerOGL *aManager)
 void
 CairoImageOGL::SetData(const CairoImage::Data &aData)
 {
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+  mSurface = nsnull;
+#endif
+
   if (!mTexture.IsAllocated())
     return;
 
@@ -732,10 +756,22 @@ CairoImageOGL::SetData(const CairoImage::Data &aData)
   gl->MakeCurrent();
 
   GLuint tex = mTexture.GetTextureID();
-
   gl->fActiveTexture(LOCAL_GL_TEXTURE0);
-  InitTexture(gl, tex, LOCAL_GL_RGBA, aData.mSize);
   mSize = aData.mSize;
+
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+  if (sGLXLibrary.HasTextureFromPixmap()) {
+    mSurface = aData.mSurface;
+    if (mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+      mLayerProgram = gl::RGBALayerProgramType;
+    } else {
+      mLayerProgram = gl::RGBXLayerProgramType;
+    }
+    return;
+  }
+#endif
+
+  InitTexture(gl, tex, LOCAL_GL_RGBA, mSize);
 
   mLayerProgram =
     gl->UploadSurfaceToTexture(aData.mSurface,
