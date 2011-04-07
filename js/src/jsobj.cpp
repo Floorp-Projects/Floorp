@@ -983,20 +983,6 @@ const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop)
 {
-    uint32 flags;
-#ifdef DEBUG
-    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
-#endif
-
-    JS_ASSERT(principals || !(callbacks  && callbacks->findObjectPrincipals));
-    flags = JS_GetScriptFilenameFlags(caller->script());
-    if ((flags & JSFILENAME_PROTECTED) &&
-        principals &&
-        strcmp(principals->codebase, "[System Principal]")) {
-        *linenop = 0;
-        return principals->codebase;
-    }
-
     jsbytecode *pc = caller->pc(cx);
     if (pc && js_GetOpcode(cx, caller->script(), pc) == JSOP_EVAL) {
         JS_ASSERT(js_GetOpcode(cx, caller->script(), pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
