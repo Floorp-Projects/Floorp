@@ -105,6 +105,7 @@ class SVGPathData
   // are responsible for that!
 
 public:
+  typedef const float* const_iterator;
 
   SVGPathData(){}
   ~SVGPathData(){}
@@ -178,6 +179,9 @@ public:
 
   void ConstructPath(gfxContext *aCtx) const;
 
+  const_iterator begin() const { return mData.Elements(); }
+  const_iterator end() const { return mData.Elements() + mData.Length(); }
+
   // Access to methods that can modify objects of this type is deliberately
   // limited. This is to reduce the chances of someone modifying objects of
   // this type without taking the necessary steps to keep DOM wrappers in sync.
@@ -186,6 +190,7 @@ public:
   // can take care of keeping DOM wrappers in sync.
 
 protected:
+  typedef float* iterator;
 
   /**
    * This may fail on OOM if the internal capacity needs to be increased, in
@@ -221,6 +226,9 @@ protected:
 
   nsresult AppendSeg(PRUint32 aType, ...); // variable number of float args
 
+  iterator begin() { return mData.Elements(); }
+  iterator end() { return mData.Elements() + mData.Length(); }
+
   nsTArray<float> mData;
 };
 
@@ -236,7 +244,6 @@ protected:
 class SVGPathDataAndOwner : public SVGPathData
 {
 public:
-
   SVGPathDataAndOwner(nsSVGElement *aElement = nsnull)
     : mElement(aElement)
   {}
@@ -260,8 +267,13 @@ public:
    * SetElement() when using this method!
    */
   using SVGPathData::CopyFrom;
+
+  // Exposed since SVGPathData objects can be modified.
+  using SVGPathData::iterator;
   using SVGPathData::operator[];
   using SVGPathData::SetLength;
+  using SVGPathData::begin;
+  using SVGPathData::end;
 
 private:
   // We must keep a strong reference to our element because we may belong to a
