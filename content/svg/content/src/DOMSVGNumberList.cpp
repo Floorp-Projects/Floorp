@@ -92,6 +92,21 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DOMSVGNumberList)
 NS_INTERFACE_MAP_END
 
 
+nsIDOMSVGNumber*
+DOMSVGNumberList::GetItemWithoutAddRef(PRUint32 aIndex)
+{
+#ifdef MOZ_SMIL
+  if (IsAnimValList()) {
+    Element()->FlushAnimations();
+  }
+#endif
+  if (aIndex < Length()) {
+    EnsureItemAt(aIndex);
+    return mItems[aIndex];
+  }
+  return nsnull;
+}
+
 void
 DOMSVGNumberList::InternalListLengthWillChange(PRUint32 aNewLength)
 {
@@ -210,18 +225,12 @@ NS_IMETHODIMP
 DOMSVGNumberList::GetItem(PRUint32 index,
                           nsIDOMSVGNumber **_retval)
 {
-#ifdef MOZ_SMIL
-  if (IsAnimValList()) {
-    Element()->FlushAnimations();
+  *_retval = GetItemWithoutAddRef(index);
+  if (!*_retval) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
-#endif
-  if (index < Length()) {
-    EnsureItemAt(index);
-    NS_ADDREF(*_retval = mItems[index]);
-    return NS_OK;
-  }
-  *_retval = nsnull;
-  return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -365,6 +374,12 @@ DOMSVGNumberList::AppendItem(nsIDOMSVGNumber *newItem,
                              nsIDOMSVGNumber **_retval)
 {
   return InsertItemBefore(newItem, Length(), _retval);
+}
+
+NS_IMETHODIMP
+DOMSVGNumberList::GetLength(PRUint32 *aNumberOfItems)
+{
+  return GetNumberOfItems(aNumberOfItems);
 }
 
 void
