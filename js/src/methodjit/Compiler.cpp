@@ -169,6 +169,8 @@ mjit::Compiler::compile()
                      : (*jit)->invokeEntry;
     } else {
         *checkAddr = JS_UNJITTABLE_SCRIPT;
+        if (outerScript->fun && !cx->markTypeFunctionUninlineable(outerScript->fun->getType()))
+            return Compile_Error;
     }
 
     return status;
