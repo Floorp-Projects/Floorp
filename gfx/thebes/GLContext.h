@@ -324,7 +324,7 @@ public:
     enum TextureState
     {
       Created, // Texture created, but has not had glTexImage called to initialize it.
-      Initialized,  // Texture memory exists, but contents are invalid.
+      Allocated,  // Texture memory exists, but contents are invalid.
       Valid  // Texture fully ready to use.
     };
     
