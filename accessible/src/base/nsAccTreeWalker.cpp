@@ -66,8 +66,8 @@ struct WalkState
 
 nsAccTreeWalker::
   nsAccTreeWalker(nsIWeakReference* aShell, nsIContent* aContent,
-                  PRBool aWalkAnonContent) :
-  mWeakShell(aShell), mState(nsnull)
+                  PRBool aWalkAnonContent, bool aWalkCache) :
+  mWeakShell(aShell), mState(nsnull), mWalkCache(aWalkCache)
 {
   NS_ASSERTION(aContent, "No node for the accessible tree walker!");
 
@@ -114,7 +114,8 @@ nsAccTreeWalker::NextChildInternal(bool aNoWalkUp)
     mState->childIdx++;
 
     bool isSubtreeHidden = false;
-    nsAccessible* accessible =
+    nsAccessible* accessible = mWalkCache ?
+      GetAccService()->GetAccessibleInWeakShell(childNode, mWeakShell) :
       GetAccService()->GetOrCreateAccessible(childNode, presShell, mWeakShell,
                                              &isSubtreeHidden);
 
