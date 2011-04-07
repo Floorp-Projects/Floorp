@@ -56,7 +56,12 @@ class FrameEntry
     friend class ImmutableSync;
 
   public:
+
+    /* Accessors for entries which are known constants. */
+
     bool isConstant() const {
+        if (isCopy() || isInvariant())
+            return false;
         return data.isConstant();
     }
 
@@ -70,8 +75,36 @@ class FrameEntry
         return Valueify(JSVAL_FROM_LAYOUT(v_));
     }
 
+#if defined JS_NUNBOX32
+    uint32 getPayload() const {
+        //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
+        JS_ASSERT(isConstant());
+        return v_.s.payload.u32;
+    }
+#elif defined JS_PUNBOX64
+    uint64 getPayload() const {
+        JS_ASSERT(isConstant());
+        return v_.asBits & JSVAL_PAYLOAD_MASK;
+    }
+#endif
+
+    /* For a constant double FrameEntry, truncate to an int32. */
+    void convertConstantDoubleToInt32(JSContext *cx) {
+        JS_ASSERT(isType(JSVAL_TYPE_DOUBLE) && isConstant());
+        int32 value;
+        ValueToECMAInt32(cx, getValue(), &value);
+
+        Value newValue = Int32Value(value);
+        setConstant(Jsvalify(newValue));
+    }
+
+    /*
+     * Accessors for entries whose type is known. Any entry can have a known
+     * type, and constant entries must have one.
+     */
+
     bool isTypeKnown() const {
-        return type.isConstant();
+        return backing()->type.isConstant();
     }
 
     /*
@@ -80,17 +113,17 @@ class FrameEntry
      */
     JSValueType getKnownType() const {
         JS_ASSERT(isTypeKnown());
-        return knownType;
+        return backing()->knownType;
     }
 
 #if defined JS_NUNBOX32
     JSValueTag getKnownTag() const {
         JS_ASSERT(v_.s.tag != JSVAL_TAG_CLEAR);
-        return v_.s.tag;
+        return backing()->v_.s.tag;
     }
 #elif defined JS_PUNBOX64
     JSValueShiftedTag getKnownTag() const {
-        return JSValueShiftedTag(v_.asBits & JSVAL_TAG_MASK);
+        return JSValueShiftedTag(backing()->v_.asBits & JSVAL_TAG_MASK);
     }
 #endif
 
@@ -110,30 +143,7 @@ class FrameEntry
         return !isNotType(type_);
     }
 
-#if defined JS_NUNBOX32
-    uint32 getPayload() const {
-        //JS_ASSERT(!Valueify(v_.asBits).isDouble() || type.synced());
-        return v_.s.payload.u32;
-    }
-#elif defined JS_PUNBOX64
-    uint64 getPayload() const {
-        return v_.asBits & JSVAL_PAYLOAD_MASK;
-    }
-#endif
-
-    bool hasSameBacking(const FrameEntry *other) const {
-        return backing() == other->backing();
-    }
-
-    /* For a constant double FrameEntry, truncate to an int32. */
-    void convertConstantDoubleToInt32(JSContext *cx) {
-        JS_ASSERT(isType(JSVAL_TYPE_DOUBLE) && isConstant());
-        int32 value;
-        ValueToECMAInt32(cx, getValue(), &value);
-
-        Value newValue = Int32Value(value);
-        setConstant(Jsvalify(newValue));
-    }
+    /* Accessors for entries which are copies of other mutable entries. */
 
     bool isCopy() const { return !!copy; }
     bool isCopied() const { return copied; }
@@ -142,8 +152,26 @@ class FrameEntry
         return isCopy() ? copyOf() : this;
     }
 
+    bool hasSameBacking(const FrameEntry *other) const {
+        return backing() == other->backing();
+    }
+
+    /*
+     * Accessors for entries which are copies of analysis temporaries. All
+     * temporaries are invariant, so these behave more like constants than like
+     * copies of mutable entries.
+     */
+
+    bool isInvariant() const { return !!invariant_; }
+
+    FrameEntry *invariant() {
+        JS_ASSERT(isInvariant());
+        return invariant_;
+    }
+
   private:
     void setType(JSValueType type_) {
+        JS_ASSERT(!isCopy() && !isInvariant());
         type.setConstant();
 #if defined JS_NUNBOX32
         v_.s.tag = JSVAL_TYPE_TO_TAG(type_);
@@ -163,6 +191,7 @@ class FrameEntry
     void clear() {
         copied = false;
         copy = NULL;
+        invariant_ = NULL;
     }
 
     uint32 trackerIndex() {
@@ -176,10 +205,8 @@ class FrameEntry
         clear();
         type.unsync();
         data.unsync();
-#ifdef DEBUG
         type.invalidate();
         data.invalidate();
-#endif
     }
 
     /*
@@ -227,9 +254,21 @@ class FrameEntry
      * Set copy index.
      */
     void setCopyOf(FrameEntry *fe) {
-        JS_ASSERT_IF(fe, !fe->isConstant());
         JS_ASSERT(!isCopied());
         copy = fe;
+        invariant_ = NULL;
+        if (fe) {
+            type.invalidate();
+            data.invalidate();
+        }
+    }
+
+    void setInvariant(FrameEntry *fe) {
+        JS_ASSERT(!isCopied());
+        copy = NULL;
+        invariant_ = fe;
+        type.invalidate();
+        data.invalidate();
     }
 
     inline bool isTracked() const {
@@ -241,9 +280,10 @@ class FrameEntry
     }
 
     inline bool dataInRegister(AnyRegisterID reg) const {
-        JS_ASSERT(!copy);
-        return (data.inRegister() && reg.isReg() && data.reg() == reg.reg())
-            || (data.inFPRegister() && !reg.isReg() && data.fpreg() == reg.fpreg());
+        JS_ASSERT(!copy && !invariant_);
+        return reg.isReg()
+            ? (data.inRegister() && data.reg() == reg.reg())
+            : (data.inFPRegister() && data.fpreg() == reg.fpreg());
     }
 
   private:
@@ -252,6 +292,7 @@ class FrameEntry
     RematInfo  type;
     RematInfo  data;
     uint32     index_;
+    FrameEntry *invariant_;
     FrameEntry *copy;
     bool       copied;
     bool       tracked;
@@ -262,10 +303,6 @@ class FrameEntry
      * register assigned.
      */
     uint32     lastLoop;
-
-#if JS_BITS_PER_WORD == 32
-    void       *padding;
-#endif
 };
 
 } /* namespace mjit */

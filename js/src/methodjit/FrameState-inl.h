@@ -84,6 +84,17 @@ FrameState::haveSameBacking(FrameEntry *lhs, FrameEntry *rhs)
     return lhs == rhs;
 }
 
+inline FrameEntry *
+FrameState::getTemporary(uint32 which)
+{
+    JS_ASSERT(which < TEMPORARY_LIMIT);
+
+    FrameEntry *fe = temporaries + which;
+    JS_ASSERT(fe < temporariesTop);
+
+    return getOrTrack(indexOfFe(fe));
+}
+
 inline AnyRegisterID
 FrameState::allocReg(uint32 mask)
 {
@@ -126,7 +137,7 @@ FrameState::allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type)
      */
     if (loop && a->freeRegs.hasRegInMask(loop->getLoopRegs() & mask) &&
         type == RematInfo::DATA &&
-        (fe == this_ || isArg(fe) || isLocal(fe)) &&
+        (fe == this_ || isArg(fe) || isLocal(fe) || isTemporary(fe)) &&
         fe->lastLoop < loop->headOffset() &&
         !a->parent) {
         reg = a->freeRegs.takeAnyReg(loop->getLoopRegs() & mask);
@@ -198,6 +209,9 @@ FrameState::pop()
         return;
 
     forgetAllRegs(fe);
+    fe->type.invalidate();
+    fe->data.invalidate();
+    fe->clear();
 
     a->extraArray[fe - spBase].reset();
 }
@@ -228,10 +242,13 @@ FrameState::forgetReg(AnyRegisterID reg)
 inline FrameEntry *
 FrameState::rawPush()
 {
-    JS_ASSERT(unsigned(sp - entries) < feLimit(script));
+    JS_ASSERT(sp < temporaries);
 
     if (!sp->isTracked())
         addToTracker(sp);
+    sp->type.invalidate();
+    sp->data.invalidate();
+    sp->clear();
 
     a->extraArray[sp - spBase].reset();
 
@@ -481,7 +498,7 @@ FrameState::tempRegForType(FrameEntry *fe)
 inline JSC::MacroAssembler::RegisterID
 FrameState::tempRegForData(FrameEntry *fe)
 {
-    JS_ASSERT(!fe->data.isConstant());
+    JS_ASSERT(!fe->isConstant());
     JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
 
     if (fe->isCopy())
@@ -498,7 +515,7 @@ FrameState::tempRegForData(FrameEntry *fe)
 inline void
 FrameState::forgetConstantData(FrameEntry *fe)
 {
-    if (!fe->data.isConstant())
+    if (!fe->isConstant())
         return;
     JS_ASSERT(fe->isType(JSVAL_TYPE_OBJECT));
 
@@ -512,7 +529,7 @@ FrameState::forgetConstantData(FrameEntry *fe)
 inline JSC::MacroAssembler::FPRegisterID
 FrameState::tempFPRegForData(FrameEntry *fe)
 {
-    JS_ASSERT(!fe->data.isConstant());
+    JS_ASSERT(!fe->isConstant());
     JS_ASSERT(fe->isType(JSVAL_TYPE_DOUBLE));
 
     if (fe->isCopy())
@@ -529,7 +546,7 @@ FrameState::tempFPRegForData(FrameEntry *fe)
 inline AnyRegisterID
 FrameState::tempRegInMaskForData(FrameEntry *fe, uint32 mask)
 {
-    JS_ASSERT(!fe->data.isConstant());
+    JS_ASSERT(!fe->isConstant());
     JS_ASSERT_IF(fe->isType(JSVAL_TYPE_DOUBLE), !(mask & ~Registers::AvailFPRegs));
     JS_ASSERT_IF(!fe->isType(JSVAL_TYPE_DOUBLE), !(mask & ~Registers::AvailRegs));
 
@@ -589,13 +606,13 @@ FrameState::tempRegForData(FrameEntry *fe, RegisterID reg, Assembler &masm) cons
 inline bool
 FrameState::shouldAvoidTypeRemat(FrameEntry *fe)
 {
-    return fe->type.inMemory();
+    return !fe->isCopy() && !fe->isInvariant() && fe->type.inMemory();
 }
 
 inline bool
 FrameState::shouldAvoidDataRemat(FrameEntry *fe)
 {
-    return fe->data.inMemory();
+    return !fe->isCopy() && !fe->isInvariant() && fe->data.inMemory();
 }
 
 inline void
@@ -873,7 +890,7 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, RegisterID data)
     JS_ASSERT_IF(fe->isCopied(), !isEntryCopied(fe));
 
     forgetAllRegs(fe);
-    fe->copy = NULL;
+    fe->clear();
 
     fe->type.setConstant();
     fe->knownType = type;
@@ -888,6 +905,15 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, RegisterID data)
 inline int32
 FrameState::frameOffset(const FrameEntry *fe, ActiveFrame *a) const
 {
+    /*
+     * The stored frame offsets for analysis temporaries are immediately above
+     * the script's normal slots (and will thus be clobbered should a C++ or
+     * scripted call push another frame). There must be enough room in the
+     * reserved stack space.
+     */
+    JS_STATIC_ASSERT(StackSpace::STACK_EXTRA >= TEMPORARY_LIMIT);
+    JS_ASSERT(uint32(fe - a->entries) < feLimit(a->script));
+
     if (fe >= a->locals)
         return JSStackFrame::offsetOfFixed(uint32(fe - a->locals));
     if (fe >= a->args)
@@ -1077,6 +1103,8 @@ FrameState::unpinKilledReg(RegisterID reg)
 inline void
 FrameState::forgetAllRegs(FrameEntry *fe)
 {
+    if (fe->isCopy() || fe->isInvariant())
+        return;
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
     if (fe->data.inRegister())
@@ -1266,7 +1294,8 @@ inline bool
 FrameState::tryFastDoubleLoad(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const
 {
 #ifdef JS_CPU_X86
-    if (fe->type.inRegister() && fe->data.inRegister()) {
+    if (!fe->isCopy() && !fe->isInvariant() &&
+        fe->type.inRegister() && fe->data.inRegister()) {
         masm.fastLoadDouble(fe->data.reg(), fe->type.reg(), fpReg);
         return true;
     }

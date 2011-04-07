@@ -860,8 +860,8 @@ TypeConstraintProp::newType(JSContext *cx, TypeSet *source, jstype type)
     if (type == TYPE_UNKNOWN ||
         (!TypeIsObject(type) && !script->compileAndGo)) {
         /*
-         * Access on an unknown object.  Reads produce an unknown result, writes
-         * need to be monitored.  Note: this isn't a problem for handling overflows
+         * Access on an unknown object. Reads produce an unknown result, writes
+         * need to be monitored. Note: this isn't a problem for handling overflows
          * on inc/dec below, as these go through a slow path which must call
          * addTypeProperty.
          */
@@ -2150,8 +2150,6 @@ TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
     }
 #endif
 
-    double millis = analysisTime / 1000.0;
-
     printf("Counts: ");
     for (unsigned count = 0; count < TYPE_COUNT_LIMIT; count++) {
         if (count)
@@ -2161,7 +2159,6 @@ TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
     printf(" (%u over)\n", typeCountOver);
 
     printf("Recompilations: %u\n", recompilations);
-    printf("Time: %.2f ms\n", millis);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -2175,9 +2172,9 @@ TypeCompartment::print(JSContext *cx, JSCompartment *compartment)
  * the types of different ones by looking at the types of their properties.
  *
  * All singleton/JSON arrays which have the same prototype, are homogenous and
- * of the same type will share a type object. All singleton/JSON objects which
- * have the same shape and property types will also share a type object. We
- * don't try to collate arrays or objects that have type mismatches.
+ * of the same element type will share a type object. All singleton/JSON
+ * objects which have the same shape and property types will also share a type
+ * object. We don't try to collate arrays or objects that have type mismatches.
  */
 
 static inline bool
@@ -2559,7 +2556,7 @@ TypeObject::markUnknown(JSContext *cx)
 
     /*
      * Existing constraints may have already been added to this object, which we need
-     * to do the right thing for.  We can't ensure that we will mark all unknown
+     * to do the right thing for. We can't ensure that we will mark all unknown
      * objects before they have been accessed, as the __proto__ of a known object
      * could be dynamically set to an unknown object, and we can decide to ignore
      * properties of an object during analysis (i.e. hashmaps). Adding unknown for
