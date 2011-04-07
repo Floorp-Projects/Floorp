@@ -104,9 +104,7 @@
  **************************************************************
  **************************************************************/
 
-#ifdef MOZ_IPC
 #include "mozilla/ipc/RPCChannel.h"
-#endif
 
 #include "nsWindow.h"
 
@@ -312,12 +310,10 @@ LPFNLRESULTFROMOBJECT
                 nsWindow::sLresultFromObject      = 0;
 #endif // ACCESSIBILITY
 
-#ifdef MOZ_IPC
 // Used in OOPP plugin focus processing.
 const PRUnichar* kOOPPPluginFocusEventId   = L"OOPP Plugin Focus Widget Event";
 PRUint32        nsWindow::sOOPPPluginFocusEvent   =
                   RegisterWindowMessageW(kOOPPPluginFocusEventId);
-#endif
 
 MSG             nsWindow::sRedirectedKeyDown;
 
@@ -4403,8 +4399,6 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
  *
  **************************************************************/
 
-#ifdef MOZ_IPC
-
 // static
 bool
 nsWindow::IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult)
@@ -4514,8 +4508,6 @@ nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
   }
 }
 
-#endif // MOZ_IPC
-
 /**************************************************************
  **************************************************************
  **
@@ -4606,10 +4598,8 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
   // Get the window which caused the event and ask it to process the message
   nsWindow *someWindow = GetNSWindowPtr(hWnd);
 
-#ifdef MOZ_IPC
   if (someWindow)
     someWindow->IPCWindowProcHandler(msg, wParam, lParam);
-#endif
 
   // create this here so that we store the last rolled up popup until after
   // the event has been processed.
@@ -5794,7 +5784,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
       if (msg == nsAppShell::GetTaskbarButtonCreatedMessage())
         SetHasTaskbarIconBeenCreated();
 #endif
-#ifdef MOZ_IPC
       if (msg == sOOPPPluginFocusEvent) {
         if (wParam == 1) {
           // With OOPP, the plugin window exists in another process and is a child of
@@ -5809,7 +5798,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
           }
         }
       }
-#endif
     }
     break;
   }
@@ -6775,11 +6763,9 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
     return PR_FALSE; // break
   }
 
-#ifdef MOZ_IPC
   // The event may go to a plug-in which already dispatched this message.
   // Then, the event can cause deadlock.  We should unlock the sender here.
   ::ReplyMessage(isVertical ? 0 : TRUE);
-#endif
 
   // Assume the Control key is down if the Elantech touchpad has sent the
   // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
@@ -7941,13 +7927,11 @@ PRBool nsWindow::HandleScrollingPlugins(UINT aMsg, WPARAM aWParam,
         // others will call DefWndProc, which itself still forwards back to us.
         // So if we have sent it once, we need to handle it ourself.
 
-#ifdef MOZ_IPC
         // XXX The message shouldn't come from the plugin window at here.
         // But the message might come from it due to some bugs.  If it happens,
         // SendMessage causes deadlock.  For safety, we should unlock the
         // sender here.
         ::ReplyMessage(aMsg == WM_MOUSEHWHEEL ? TRUE : 0);
-#endif
 
         // First time we have seen this message.
         // Call the child - either it will consume it, or
@@ -8025,11 +8009,9 @@ PRBool nsWindow::OnScroll(UINT aMsg, WPARAM aWParam, LPARAM aLParam)
       default:
         return PR_FALSE;
     }
-#ifdef MOZ_IPC
     // The event may go to a plug-in which already dispatched this message.
     // Then, the event can cause deadlock.  We should unlock the sender here.
     ::ReplyMessage(0);
-#endif
     scrollevent.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
     scrollevent.isControl = IS_VK_DOWN(NS_VK_CONTROL);
     scrollevent.isMeta    = PR_FALSE;

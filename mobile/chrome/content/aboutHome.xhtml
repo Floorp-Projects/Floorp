@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+%globalDTD;
+<!ENTITY % preferenceDTD SYSTEM "chrome://browser/locale/preferences.dtd" >
+%preferenceDTD;
+<!ENTITY % aboutDTD SYSTEM "chrome://browser/locale/aboutHome.dtd" >
+%aboutDTD;
+]>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Communicator client code, released
+   - March 31, 1998.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1998-1999
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Mark Finkle <mfinkle@mozilla.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>&homepage.default;</title>
+  <meta name="viewport" content="width=480; initial-scale=.6667; user-scalable=0" />
+  <link rel="icon" type="image/png" href="chrome://branding/content/favicon32.png" />
+  <link rel="stylesheet" href="chrome://browser/skin/aboutHome.css" type="text/css"/>
+</head>
+
+<body dir="&locale.dir;" onload="init();" onunload="uninit();">
+  <div id="wrapper">
+    <div id="header"><div id="logo"><img src="chrome://branding/content/logo.png"/></div>&aboutHome.header;</div>
+
+    <div id="recentTabs" class="section-box">
+      <h1>&aboutHome.recentTabs;</h1>
+      <div id="loadingTabs" class="loading">
+        <img src="chrome://browser/skin/images/throbber.png"/>
+      </div>
+    </div>
+
+    <div id="remoteTabs" class="section-row" onclick="openRemoteTabs();" role="button">
+      <div>
+        <img class="favicon" src="chrome://browser/skin/images/remotetabs-32.png"/>
+        <div>&aboutHome.remoteTabs;</div>
+      </div>
+    </div>
+
+    <div id="newAddons" class="section-box">
+      <h1>&aboutHome.recommendedAddons2;</h1>
+      <div id="loadingAddons" class="loading">
+        <img src="chrome://browser/skin/images/throbber.png"/>
+      </div>
+    </div>
+
+    <div id="footer-wrapper">
+      <span id="feedback" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.feedbackURL" onclick="openLink(this);" role="button">&aboutHome.giveFeedback;</span><span id="support" style="width: &aboutHome.footerWidth;" class="section-row" pref="app.support.baseURL" onclick="openLink(this);" role="button">&aboutHome.getHelp;</span>
+    </div>
+
+    <div id="promo" pref="app.promo.spark.baseURL" onclick="openLink(this);" role="button"><img src="chrome://branding/content/spark.png"/><span id="promo-label">&aboutHome.promoLabel;</span><span id="promo-button" class="section-row">&aboutHome.promoButton;</span></div>
+  </div>
+
+  <!-- l10n hack -->
+  <div style="display: none">
+    <span id="text-openalltabs">&aboutHome.openAllTabs;</span>
+    <span id="text-notabs">&aboutHome.noTabs;</span>
+    <span id="text-noaddons">&aboutHome.noAddons;</span>
+  </div>
+
+  <script type="application/javascript;version=1.8"><![CDATA[
+    let Ci = Components.interfaces, Cc = Components.classes, Cu = Components.utils;
+    let gChromeWin = null;
+
+    function openLink(aElement) {
+      try {
+        let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+        let url = formatter.formatURLPref(aElement.getAttribute("pref"));
+        openTabs([url]);
+      } catch (ex) {}
+    }
+
+    function getChromeWin() {
+      if (!gChromeWin) {
+        gChromeWin = window
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIWebNavigation)
+                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                    .rootTreeItem
+                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                    .getInterface(Ci.nsIDOMWindow)
+                    .QueryInterface(Ci.nsIDOMChromeWindow);
+      }
+      return gChromeWin;
+    }
+
+    function init() {
+      initTabs();
+      initAddons();
+      initPromo();
+    }
+
+    function uninit() {
+      uninitAddons();
+    }
+
+    function _readFile(aFile) {
+      try {
+        let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+        stream.init(aFile, 0x01, 0, 0);
+        let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+
+        let fileSize = stream.available();
+        cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+        let data = {};
+        cvstream.readString(fileSize, data);
+        let content = data.value;
+        cvstream.close();
+        return content.replace(/\r\n?/g, "\n");
+      }
+      catch (ex) { Cu.reportError(ex); }
+
+      return null;
+    }
+
+    function openTabs(aURLs) {
+      let BrowserUI = getChromeWin().BrowserUI;
+      let owner = getChromeWin().Browser.selectedTab;
+      for (let i=0; i < aURLs.length; i++) {
+        BrowserUI.newTab(aURLs[i], owner);
+      }
+    }
+
+    function initTabs() {
+      function noRecentTabs() {
+        let placeHolder = document.getElementById("loadingTabs");
+        placeHolder.innerHTML = "<div class='no-items'>" + document.getElementById("text-notabs").textContent + "</div>";
+      }
+
+      let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+      let session = dirService.get("ProfD", Ci.nsILocalFile);
+      session.append("sessionstore.bak");
+      if (!session.exists()) {
+        noRecentTabs();
+        return;
+      }
+
+      let data = JSON.parse(_readFile(session));
+      if (!data || data.windows.length == 0) {
+        noRecentTabs();
+        return;
+      }
+
+      let chromeWin = getChromeWin();
+      let allPageURLs = [];
+
+      let list = document.getElementById("recentTabs");
+
+      let tabs = data.windows[0].tabs;
+      for (let i=0; i<tabs.length; i++) {
+        let tabData = tabs[i];
+        if ("entries" in tabData)
+          tabData = tabData.entries[0];
+
+        let url = tabData.url;
+        if (url.indexOf("about:") == 0)
+          continue;
+
+        let title = tabData.title;
+        if (!title)
+          continue;
+
+        let uri = chromeWin.Util.makeURI(url);
+        let favicon = chromeWin.gFaviconService.getFaviconImageForPage(uri).spec;
+
+        let outer = document.createElement("div");
+        outer.setAttribute("role", "button");
+
+        let pageURL = url;
+        outer.addEventListener("click", function() {
+          openTabs([pageURL]);
+        }, false);
+
+        allPageURLs.push(pageURL);
+
+        let img = document.createElement("img");
+        img.className = "favicon";
+        img.setAttribute("src", favicon);
+        outer.appendChild(img);
+
+        let inner = document.createElement("div");
+        inner.className = "inner";
+
+        let titlePart = document.createElement("div");
+        titlePart.textContent = title;
+        titlePart.className = "title";
+        inner.appendChild(titlePart);
+
+        outer.appendChild(inner);
+        list.appendChild(outer);
+      }
+
+      if (allPageURLs.length > 0) {
+        let loading = document.getElementById("loadingTabs");
+        loading.parentNode.removeChild(loading);
+
+        if (allPageURLs.length > 1) {
+          let outer = document.createElement("div");
+          outer.className = "openall";
+          outer.textContent = document.getElementById("text-openalltabs").textContent;
+          outer.setAttribute("role", "button");
+
+          outer.addEventListener("click", function() {
+            openTabs(allPageURLs);
+          }, false);
+
+          list.appendChild(outer);
+        }
+      } else {
+        noRecentTabs();
+      }
+    }
+
+    function openRemoteTabs() {
+      getChromeWin().CommandUpdater.doCommand("cmd_remoteTabs");
+    }
+
+    function goToAddons(aSearchString) {
+      let chromeWin = getChromeWin();
+      let BrowserUI = chromeWin.BrowserUI;
+      BrowserUI.showPanel("addons-container");
+      if (aSearchString) {
+        // ExtensionsView initialization is delayed, so need to delay triggering
+        // the search as well
+        setTimeout(function () {
+          // do the search
+          chromeWin.ExtensionsView.doSearch(aSearchString);
+        }, 0);
+      }
+    }
+
+    var RecommendedAddons = {
+      _getFile: function() {
+        let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+        let file = dirService.get("ProfD", Ci.nsILocalFile);
+        file.append("recommended-addons.json");
+        return file;
+      },
+
+      _readFile: function(aFile) {
+        try {
+          let stream = Cc["@mozilla.org/network/file-input-stream;1"].createInstance(Ci.nsIFileInputStream);
+          stream.init(aFile, 0x01, 0, 0);
+          let cvstream = Cc["@mozilla.org/intl/converter-input-stream;1"].createInstance(Ci.nsIConverterInputStream);
+          
+          let fileSize = stream.available();
+          cvstream.init(stream, "UTF-8", fileSize, Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
+          let data = {};
+          cvstream.readString(fileSize, data);
+          let content = data.value;
+          cvstream.close();
+          return content.replace(/\r\n?/g, "\n");
+        }
+        catch (ex) {
+          Cu.reportError(ex);
+        }
+        return null;
+      },
+
+      _loadAddons: function(aAddons, aAddonCount, aTotalResults) {
+        let list = document.getElementById("newAddons");
+        let loading = document.getElementById("loadingAddons");
+
+        if (aAddons.length == 0 && loading) {
+          loading.innerHTML = "<div class='no-items'>" + document.getElementById("text-noaddons").textContent + "</div>";
+          return;
+        }
+
+        // Clear all content but the header before filling the addons
+        let header = list.firstElementChild;
+        while (header.nextSibling)
+          list.removeChild(header.nextSibling);
+
+        for (let i=0; i<aAddons.length; i++) {
+          let outer = document.createElement("div");
+          outer.setAttribute("role", "button");
+          outer.setAttribute("addonID", aAddons[i].id);
+
+          let addonName = aAddons[i].name;
+          outer.addEventListener("click", function() {
+            goToAddons(addonName);
+          }, false)
+
+          let img = document.createElement("img");
+          img.className = "favicon";
+          img.setAttribute("src", aAddons[i].iconURL);
+          outer.appendChild(img);
+
+          let inner = document.createElement("div");
+          inner.className = "inner";
+
+          let titlePart = document.createElement("span");
+          titlePart.textContent = aAddons[i].name;
+          titlePart.className = "title";
+          inner.appendChild(titlePart);
+
+          let versionPart = document.createElement("span");
+          versionPart.textContent = aAddons[i].version;
+          versionPart.className = "version";
+          inner.appendChild(versionPart);
+
+          outer.appendChild(inner);
+          list.appendChild(outer);
+        }
+      },
+
+      loadFromCacheOrScheduleUpdate: function(aDelay) {
+        let file = this._getFile();
+        if (file.exists()) {
+          let json = JSON.parse(this._readFile(file));
+          this._loadAddons(json.addons, json.addonCount, json.totalResults);
+        } else {
+          setTimeout(function() {
+            let aus = Cc["@mozilla.org/browser/addon-update-service;1"].getService(Ci.nsITimerCallback);
+            aus.notify(null);
+          }, aDelay);
+        }
+      }
+    }
+
+    function updateAddons() {
+      // If a cache does not exist, start an update after 6 seconds
+      RecommendedAddons.loadFromCacheOrScheduleUpdate(6000);
+    }
+
+    function initAddons() {
+      getChromeWin().Services.obs.addObserver(updateAddons, "recommended-addons-cache-updated", false);
+      updateAddons();
+    }
+
+    function uninitAddons() {
+      getChromeWin().Services.obs.removeObserver(updateAddons, "recommended-addons-cache-updated");
+    }
+
+    function initPromo() {
+      let endDate = new Date(getChromeWin().Services.prefs.getCharPref("app.promo.spark.endDate"));
+      if (endDate > Date.now())
+        document.getElementById("promo").style.display = "block";
+    }
+  ]]></script>
+</body>
+</html>

@@ -73,7 +73,6 @@ EXPORTS_mozilla/net = \
   HttpBaseChannel.h \
   $(NULL)
 
-ifdef MOZ_IPC
 EXPORTS_mozilla/net += \
   HttpChannelParent.h \
   HttpChannelChild.h  \
@@ -86,7 +85,6 @@ EXPORTS = \
   nsHttp.h \
   nsHttpAtomList.h \
   $(NULL)
-endif
 
 CPPSRCS = \
   nsHttp.cpp \
@@ -109,15 +107,10 @@ CPPSRCS = \
   nsHttpPipeline.cpp \
   nsHttpActivityDistributor.cpp \
   nsHttpChannelAuthProvider.cpp \
-  $(NULL)
-
-ifdef MOZ_IPC
-CPPSRCS += \
   HttpChannelParent.cpp \
   HttpChannelChild.cpp \
   HttpChannelParentListener.cpp \
   $(NULL)
-endif
 
 LOCAL_INCLUDES = \
   -I$(srcdir)/../../base/src \

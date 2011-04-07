@@ -67,10 +67,8 @@
 #include "nsPrintOptionsQt.h"
 #include "nsPrintDialogQt.h"
 #endif
-#ifdef MOZ_IPC
 #include "nsFilePickerProxy.h"
 #include "nsXULAppAPI.h"
-#endif
 
 // from nsWindow.cpp
 extern PRBool gDisableNativeTheme;
@@ -100,11 +98,9 @@ nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
   }
   nsCOMPtr<nsIFilePicker> picker;
   
-#ifdef MOZ_IPC
     if (XRE_GetProcessType() == GeckoProcessType_Content)
         picker = new nsFilePickerProxy();
     else 
-#endif
         picker = new nsFilePicker;
 
   return picker->QueryInterface(aIID, aResult);

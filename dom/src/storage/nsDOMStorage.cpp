@@ -40,12 +40,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "StorageChild.h"
 #include "StorageParent.h"
 #include "nsXULAppAPI.h"
 using mozilla::dom::StorageChild;
-#endif
 
 #include "prnetdb.h"
 #include "nsCOMPtr.h"
@@ -271,11 +269,9 @@ nsDOMStorageManager::Initialize()
 
   NS_ADDREF(gStorageManager);
 
-#ifdef MOZ_IPC
   // No observers needed in non-chrome
   if (XRE_GetProcessType() != GeckoProcessType_Default)
     return NS_OK;
-#endif
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os)
@@ -1355,12 +1351,10 @@ nsDOMStorage::nsDOMStorage()
 {
   mSecurityChecker = this;
 
-#ifdef MOZ_IPC
   if (XRE_GetProcessType() != GeckoProcessType_Default)
     mStorageImpl = new StorageChild(this);
   else
-#endif
-  mStorageImpl = new DOMStorageImpl(this);
+    mStorageImpl = new DOMStorageImpl(this);
 }
 
 nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
@@ -1369,13 +1363,10 @@ nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
 {
   mSecurityChecker = this;
 
-#ifdef MOZ_IPC
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
     StorageChild* other = static_cast<StorageChild*>(aThat.mStorageImpl.get());
     mStorageImpl = new StorageChild(this, *other);
-  } else
-#endif
-  {
+  } else {
     DOMStorageImpl* other = static_cast<DOMStorageImpl*>(aThat.mStorageImpl.get());
     mStorageImpl = new DOMStorageImpl(this, *other);
   }
