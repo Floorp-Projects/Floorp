@@ -321,13 +321,13 @@ private:
   class ContentInsertion
   {
   public:
-    ContentInsertion(nsDocAccessible* aDocument, nsAccessible* aContainer,
-                     nsIContent* aStartChildNode, nsIContent* aEndChildNode);
+    ContentInsertion(nsDocAccessible* aDocument, nsAccessible* aContainer);
     virtual ~ContentInsertion() { mDocument = nsnull; }
 
     NS_INLINE_DECL_REFCOUNTING(ContentInsertion)
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(ContentInsertion)
 
+    bool InitChildList(nsIContent* aStartChildNode, nsIContent* aEndChildNode);
     void Process();
 
   private:
