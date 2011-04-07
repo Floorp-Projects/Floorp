@@ -88,9 +88,15 @@ HMAC_EVENT_INTERVAL:                   600000,
 // How long to wait between sync attempts if the Master Password is locked.
 MASTER_PASSWORD_LOCKED_RETRY_INTERVAL: 15 * 60 * 1000,   // 15 minutes
 
-// 50 is hardcoded here because of URL length restrictions.
-// (GUIDs can be up to 64 chars long)
+// Separate from the ID fetch batch size to allow tuning for mobile.
 MOBILE_BATCH_SIZE:                     50,
+
+// 50 is hardcoded here because of URL length restrictions.
+// (GUIDs can be up to 64 chars long.)
+// Individual engines can set different values for their limit if their
+// identifiers are shorter.
+DEFAULT_GUID_FETCH_BATCH_SIZE:         50,
+DEFAULT_MOBILE_GUID_FETCH_BATCH_SIZE:  50,
 
 // Default batch size for applying incoming records.
 DEFAULT_STORE_BATCH_SIZE:              1,
