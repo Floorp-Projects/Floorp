@@ -242,8 +242,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
       // Note BGR: Cairo's image surfaces are always in what
       // OpenGL and our shaders consider BGR format.
       ColorTextureLayerProgram *basicProgram =
-        aManager->GetBasicLayerProgram(mTexImage->GetContentType() == gfxASurface::CONTENT_COLOR,
-                                       mTexImage->IsRGB());
+        aManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
 
       basicProgram->Activate();
       basicProgram->SetTextureUnit(0);
