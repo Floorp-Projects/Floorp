@@ -993,31 +993,12 @@ BookmarksStore.prototype = {
     }
   },
 
-  __childGUIDsStm: null,
   get _childGUIDsStm() {
-    if (this.__childGUIDsStm) {
-      return this.__childGUIDsStm;
-    }
-
-    let stmt;
-    if (this._haveGUIDColumn) {
-      stmt = this._getStmt(
-        "SELECT id AS item_id, guid " +
-        "FROM moz_bookmarks " +
-        "WHERE parent = :parent " +
-        "ORDER BY position");
-    } else {
-      stmt = this._getStmt(
-        "SELECT b.id AS item_id, " +
-          "(SELECT id FROM moz_anno_attributes WHERE name = '" + GUID_ANNO + "') AS name_id," +
-          "a.content AS guid " +
-        "FROM moz_bookmarks b " +
-        "LEFT JOIN moz_items_annos a ON a.item_id = b.id " +
-                                   "AND a.anno_attribute_id = name_id " +
-        "WHERE b.parent = :parent " +
-        "ORDER BY b.position");
-    }
-    return this.__childGUIDsStm = stmt;
+    return this._getStmt(
+      "SELECT id AS item_id, guid " +
+      "FROM moz_bookmarks " +
+      "WHERE parent = :parent " +
+      "ORDER BY position");
   },
   _childGUIDsCols: ["item_id", "guid"],
 
@@ -1145,24 +1126,8 @@ BookmarksStore.prototype = {
       return this._stmts[query];
 
     this._log.trace("Creating SQL statement: " + query);
-    return this._stmts[query] = Utils.createStatement(this._hsvc.DBConnection,
-                                                      query);
-  },
-
-  __haveGUIDColumn: null,
-  get _haveGUIDColumn() {
-    if (this.__haveGUIDColumn !== null) {
-      return this.__haveGUIDColumn;
-    }
-    let stmt;
-    try {
-      stmt = this._hsvc.DBConnection.createStatement(
-        "SELECT guid FROM moz_places");
-      stmt.finalize();
-      return this.__haveGUIDColumn = true;
-    } catch(ex) {
-      return this.__haveGUIDColumn = false;
-    }
+    return this._stmts[query] = this._hsvc.DBConnection
+                                    .createAsyncStatement(query);
   },
 
   get _frecencyStm() {
@@ -1174,54 +1139,11 @@ BookmarksStore.prototype = {
   },
   _frecencyCols: ["frecency"],
 
-  get _addGUIDAnnotationNameStm() {
-    let stmt = this._getStmt(
-      "INSERT OR IGNORE INTO moz_anno_attributes (name) VALUES (:anno_name)");
-    stmt.params.anno_name = GUID_ANNO;
-    return stmt;
-  },
-
-  get _checkGUIDItemAnnotationStm() {
-    // Gecko <2.0 only
-    let stmt = this._getStmt(
-      "SELECT b.id AS item_id, " +
-        "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS name_id, " +
-        "a.id AS anno_id, a.dateAdded AS anno_date " +
-      "FROM moz_bookmarks b " +
-      "LEFT JOIN moz_items_annos a ON a.item_id = b.id " +
-                                 "AND a.anno_attribute_id = name_id " +
-      "WHERE b.id = :item_id");
-    stmt.params.anno_name = GUID_ANNO;
-    return stmt;
-  },
-  _checkGUIDItemAnnotationCols: ["item_id", "name_id", "anno_id", "anno_date"],
-
-  get _addItemAnnotationStm() {
-    return this._getStmt(
-    "INSERT OR REPLACE INTO moz_items_annos " +
-      "(id, item_id, anno_attribute_id, mime_type, content, flags, " +
-       "expiration, type, dateAdded, lastModified) " +
-    "VALUES (:id, :item_id, :name_id, :mime_type, :content, :flags, " +
-            ":expiration, :type, :date_added, :last_modified)");
-  },
-
-  __setGUIDStm: null,
   get _setGUIDStm() {
-    if (this.__setGUIDStm !== null) {
-      return this.__setGUIDStm;
-    }
-
-    // Obtains a statement to set the guid iff the guid column exists.
-    let stmt;
-    if (this._haveGUIDColumn) {
-      stmt = this._getStmt(
-        "UPDATE moz_bookmarks " +
-        "SET guid = :guid " +
-        "WHERE id = :item_id");
-    } else {
-      stmt = false;
-    }
-    return this.__setGUIDStm = stmt;
+    return this._getStmt(
+      "UPDATE moz_bookmarks " +
+      "SET guid = :guid " +
+      "WHERE id = :item_id");
   },
 
   // Some helper functions to handle GUIDs
@@ -1229,73 +1151,18 @@ BookmarksStore.prototype = {
     if (!guid)
       guid = Utils.makeGUID();
 
-    // If we can, set the GUID on moz_bookmarks and do not do any other work.
-    let (stmt = this._setGUIDStm) {
-      if (stmt) {
-        stmt.params.guid = guid;
-        stmt.params.item_id = id;
-        Utils.queryAsync(stmt);
-        return guid;
-      }
-    }
-
-    // Ensure annotation name exists
-    Utils.queryAsync(this._addGUIDAnnotationNameStm);
-
-    let stmt = this._checkGUIDItemAnnotationStm;
+    let stmt = this._setGUIDStm;
+    stmt.params.guid = guid;
     stmt.params.item_id = id;
-    let result = Utils.queryAsync(stmt, this._checkGUIDItemAnnotationCols)[0];
-    if (!result) {
-      this._log.warn("Couldn't annotate bookmark id " + id);
-      return guid;
-    }
-
-    stmt = this._addItemAnnotationStm;
-    if (result.anno_id) {
-      stmt.params.id = result.anno_id;
-      stmt.params.date_added = result.anno_date;
-    } else {
-      stmt.params.id = null;
-      stmt.params.date_added = Date.now() * 1000;
-    }
-    stmt.params.item_id = result.item_id;
-    stmt.params.name_id = result.name_id;
-    stmt.params.content = guid;
-    stmt.params.flags = 0;
-    stmt.params.expiration = Ci.nsIAnnotationService.EXPIRE_NEVER;
-    stmt.params.type = Ci.nsIAnnotationService.TYPE_STRING;
-    stmt.params.last_modified = Date.now() * 1000;
     Utils.queryAsync(stmt);
-
     return guid;
   },
 
-  __guidForIdStm: null,
   get _guidForIdStm() {
-    if (this.__guidForIdStm) {
-      return this.__guidForIdStm;
-    }
-
-    // Try to first read from moz_bookmarks.  Creating the statement will
-    // fail, however, if the guid column does not exist.  We fallback to just
-    // reading the annotation table in this case.
-    let stmt;
-    if (this._haveGUIDColumn) {
-      stmt = this._getStmt(
-        "SELECT guid " +
-        "FROM moz_bookmarks " +
-        "WHERE id = :item_id");
-    } else {
-      stmt = this._getStmt(
-        "SELECT a.content AS guid " +
-        "FROM moz_items_annos a " +
-        "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
-        "JOIN moz_bookmarks b ON b.id = a.item_id " +
-        "WHERE n.name = '" + GUID_ANNO + "' " +
-        "AND b.id = :item_id");
-    }
-
-    return this.__guidForIdStm = stmt;
+    return this._getStmt(
+      "SELECT guid " +
+      "FROM moz_bookmarks " +
+      "WHERE id = :item_id");
   },
   _guidForIdCols: ["guid"],
 
@@ -1316,37 +1183,11 @@ BookmarksStore.prototype = {
     return this._setGUID(id);
   },
 
-  __idForGUIDStm: null,
   get _idForGUIDStm() {
-    if (this.__idForGUIDStm) {
-      return this.__idForGUIDStm;
-    }
-
-
-    // Try to first read from moz_bookmarks.  Creating the statement will
-    // fail, however, if the guid column does not exist.  We fallback to just
-    // reading the annotation table in this case.
-    let stmt;
-    if (this._haveGUIDColumn) {
-      stmt = this._getStmt(
-        "SELECT id AS item_id " +
-        "FROM moz_bookmarks " +
-        "WHERE guid = :guid");
-    } else {
-      // Order results by lastModified so we can preserve the ID of the oldest bookmark.
-      // Copying a record preserves its dateAdded, and only modifying the
-      // bookmark alters its lastModified, so we also order by its item_id --
-      // lowest wins ties. Of course, Places can still screw us by reassigning IDs...
-      stmt = this._getStmt(
-        "SELECT a.item_id AS item_id " +
-        "FROM moz_items_annos a " +
-        "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
-        "WHERE n.name = '" + GUID_ANNO + "' " +
-        "AND a.content = :guid " +
-        "ORDER BY a.lastModified, a.item_id");
-    }
-
-    return this.__idForGUIDStm = stmt;
+    return this._getStmt(
+      "SELECT id AS item_id " +
+      "FROM moz_bookmarks " +
+      "WHERE guid = :guid");
   },
   _idForGUIDCols: ["item_id"],
 
@@ -1369,22 +1210,6 @@ BookmarksStore.prototype = {
     
     if (!result)
       return -1;
-    
-    if (!this._haveGUIDColumn) {
-      try {
-        // Assign new GUIDs to any that came later.
-        for (let i = 1; i < results.length; ++i) {
-          let surplus = results[i];
-          this._log.debug("Assigning new GUID to copied row " + surplus.item_id);
-          this._setGUID(surplus.item_id);
-        }
-      } catch (ex) {
-        // Just skip it and carry on. This shouldn't happen, but if it does we
-        // don't want to fail hard.
-        this._log.debug("Got exception assigning new GUIDs: " +
-                        Utils.exceptionStr(ex));
-      }
-    }
     
     return result.item_id;
   },
