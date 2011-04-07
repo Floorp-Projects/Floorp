@@ -101,6 +101,10 @@ ImmutableSync::allocReg()
             if (!fe)
                 return reg;
 
+            /* Take any register used for a loop temporary. */
+            if (frame->isTemporary(fe))
+                return reg;
+
             evictFromFrame = i;
 
             /*

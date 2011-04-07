@@ -937,6 +937,9 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
                         return false;
                     PodZero(nloop);
 
+                    if (loop)
+                        loop->hasCallsLoops = true;
+
                     nloop->parent = loop;
                     loop = nloop;
 
@@ -1010,6 +1013,15 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
                 saved[i--] = saved[--savedCount];
             }
             savedCount = 0;
+            break;
+
+          case JSOP_NEW:
+          case JSOP_CALL:
+          case JSOP_EVAL:
+          case JSOP_FUNAPPLY:
+          case JSOP_FUNCALL:
+            if (loop)
+                loop->hasCallsLoops = true;
             break;
 
           default:;

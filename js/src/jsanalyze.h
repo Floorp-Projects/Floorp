@@ -429,10 +429,13 @@ struct LifetimeLoop
     bool unknownModset;
 
     /*
-     * This loop contains safe points in its body (which the interpreter might
+     * This loop contains safe points in its body which the interpreter might
      * join at directly.
      */
     bool hasSafePoints;
+
+    /* This loop has calls or inner loops. */
+    bool hasCallsLoops;
 
     /*
      * Arrays which might grow during this loop. This is a guess, and may

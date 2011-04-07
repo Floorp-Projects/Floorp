@@ -38,6 +38,7 @@
 
 #include "methodjit/Compiler.h"
 #include "methodjit/LoopState.h"
+#include "methodjit/FrameState-inl.h"
 
 using namespace js;
 using namespace js::mjit;
@@ -50,7 +51,9 @@ LoopState::LoopState(JSContext *cx, JSScript *script,
       lifetime(NULL), alloc(NULL), loopRegs(0), skipAnalysis(false),
       loopJoins(CompilerAllocPolicy(cx, *cc)),
       loopPatches(CompilerAllocPolicy(cx, *cc)),
+      restoreInvariantCalls(CompilerAllocPolicy(cx, *cc)),
       hoistedBoundsChecks(CompilerAllocPolicy(cx, *cc)),
+      invariantArraySlots(CompilerAllocPolicy(cx, *cc)),
       outer(NULL), PC(NULL)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
@@ -123,6 +126,13 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
     if (lifetime->hasSafePoints)
         this->skipAnalysis = true;
 
+    /*
+     * Don't do hoisting in loops with inner loops or calls. This is way too
+     * pessimistic and needs to get fixed.
+     */
+    if (lifetime->hasCallsLoops)
+        this->skipAnalysis = true;
+
     return true;
 }
 
@@ -136,20 +146,57 @@ LoopState::addJoin(unsigned index, bool script)
 }
 
 void
-LoopState::flushRegisters(StubCompiler &stubcc)
+LoopState::addInvariantCall(Jump jump, Label label, bool ool)
 {
-    clearRegisters();
+    RestoreInvariantCall call;
+    call.jump = jump;
+    call.label = label;
+    call.ool = ool;
+    restoreInvariantCalls.append(call);
+}
 
+void
+LoopState::flushLoop(StubCompiler &stubcc)
+{
+    clearLoopRegisters();
+
+    /*
+     * Patch stub compiler rejoins with loads of loop carried registers
+     * discovered after the fact.
+     */
     for (unsigned i = 0; i < loopPatches.length(); i++) {
         const StubJoinPatch &p = loopPatches[i];
         stubcc.patchJoin(p.join.index, p.join.script, p.address, p.reg);
     }
     loopJoins.clear();
     loopPatches.clear();
+
+    if (hasInvariants()) {
+        for (unsigned i = 0; i < restoreInvariantCalls.length(); i++) {
+            RestoreInvariantCall &call = restoreInvariantCalls[i];
+            Assembler &masm = cc.getAssembler(true);
+            if (call.ool) {
+                call.jump.linkTo(masm.label(), &masm);
+                restoreInvariants(masm);
+                masm.jump().linkTo(call.label, &masm);
+            } else {
+                stubcc.linkExitDirect(call.jump, masm.label());
+                restoreInvariants(masm);
+                stubcc.crossJump(masm.jump(), call.label);
+            }
+        }
+    } else {
+        for (unsigned i = 0; i < restoreInvariantCalls.length(); i++) {
+            RestoreInvariantCall &call = restoreInvariantCalls[i];
+            Assembler &masm = cc.getAssembler(call.ool);
+            call.jump.linkTo(call.label, &masm);
+        }
+    }
+    restoreInvariantCalls.clear();
 }
 
 void
-LoopState::clearRegisters()
+LoopState::clearLoopRegisters()
 {
     alloc->clearLoops();
     loopRegs = 0;
@@ -181,20 +228,46 @@ LoopState::loopInvariantEntry(const FrameEntry *fe)
     return !analysis->localEscapes(slot);
 }
 
-void
+bool
 LoopState::addHoistedCheck(uint32 arraySlot, uint32 valueSlot, int32 constant)
 {
     /*
-     * Check to see if this bounds check either implies or is implied by
-     * an existing hoisted check.
+     * Check to see if this bounds check either implies or is implied by an
+     * existing hoisted check.
      */
     for (unsigned i = 0; i < hoistedBoundsChecks.length(); i++) {
         HoistedBoundsCheck &check = hoistedBoundsChecks[i];
         if (check.arraySlot == arraySlot && check.valueSlot == valueSlot) {
             if (check.constant < constant)
                 check.constant = constant;
-            return;
+            return true;
         }
+    }
+
+    /*
+     * Maintain an invariant that for any array with a hoisted bounds check,
+     * we also have a loop invariant slot to hold the array's slots pointer.
+     * The compiler gets invariant array slots only for accesses with a hoisted
+     * bounds check, so this makes invariantSlots infallible.
+     */
+    bool hasInvariantSlots = false;
+    for (unsigned i = 0; !hasInvariantSlots && i < invariantArraySlots.length(); i++) {
+        if (invariantArraySlots[i].arraySlot == arraySlot)
+            hasInvariantSlots = true;
+    }
+    if (!hasInvariantSlots) {
+        uint32 which = frame.allocTemporary();
+        if (which == uint32(-1))
+            return false;
+        FrameEntry *fe = frame.getTemporary(which);
+
+        JaegerSpew(JSpew_Analysis, "Using %s for loop invariant slots of %s\n",
+                   frame.entryName(fe), frame.entryName(arraySlot));
+
+        InvariantArraySlots slots;
+        slots.arraySlot = arraySlot;
+        slots.temporary = which;
+        invariantArraySlots.append(slots);
     }
 
     HoistedBoundsCheck check;
@@ -202,6 +275,8 @@ LoopState::addHoistedCheck(uint32 arraySlot, uint32 valueSlot, int32 constant)
     check.valueSlot = valueSlot;
     check.constant = constant;
     hoistedBoundsChecks.append(check);
+
+    return true;
 }
 
 void
@@ -249,6 +324,7 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *index)
     /*
      * Note: this should only be used when the object is known to be a dense
      * array (if it is an object at all) whose length has never shrunk.
+     * (determined by checking types->getKnownObjectKind for the object).
      */
 
     obj = obj->backing();
@@ -262,6 +338,15 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *index)
         return false;
     }
 
+    types::TypeSet *objTypes = cc.getTypeSet(obj);
+    JS_ASSERT(objTypes && !objTypes->unknown());
+
+    /* Currently, we only do hoisting/LICM on values which are definitely objects. */
+    if (objTypes->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT) {
+        JaegerSpew(JSpew_Analysis, "Object might be a primitive\n");
+        return false;
+    }
+
     /*
      * Check for an overlap with the arrays we think might grow in this loop.
      * This information is only a guess; if we don't think the array can grow
@@ -270,11 +355,9 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *index)
      */
     if (lifetime->nGrowArrays) {
         types::TypeObject **growArrays = lifetime->growArrays;
-        types::TypeSet *types = cc.getTypeSet(obj);
-        JS_ASSERT(types && !types->unknown());
-        unsigned count = types->getObjectCount();
+        unsigned count = objTypes->getObjectCount();
         for (unsigned i = 0; i < count; i++) {
-            types::TypeObject *object = types->getObject(i);
+            types::TypeObject *object = objTypes->getObject(i);
             if (object) {
                 for (unsigned j = 0; j < lifetime->nGrowArrays; j++) {
                     if (object == growArrays[j]) {
@@ -291,16 +374,14 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *index)
         int32 value = index->getValue().toInt32();
         JaegerSpew(JSpew_Analysis, "Hoisted as initlen > %d\n", value);
 
-        addHoistedCheck(frame.indexOfFe(obj), uint32(-1), value);
-        return true;
+        return addHoistedCheck(frame.indexOfFe(obj), uint32(-1), value);
     }
 
     if (loopInvariantEntry(index)) {
         /* Hoist checks on x[y] accesses when y is loop invariant. */
         JaegerSpew(JSpew_Analysis, "Hoisted as initlen > %s\n", frame.entryName(index));
 
-        addHoistedCheck(frame.indexOfFe(obj), frame.indexOfFe(index), 0);
-        return true;
+        return addHoistedCheck(frame.indexOfFe(obj), frame.indexOfFe(index), 0);
     }
 
     if (frame.indexOfFe(index) == lifetime->testLHS && lifetime->testLessEqual) {
@@ -336,18 +417,18 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *index)
                    (rhs == LifetimeLoop::UNASSIGNED) ? "" : frame.entryName(rhs),
                    constant);
 
-        addHoistedCheck(frame.indexOfFe(obj), rhs, constant);
-        return true;
+        return addHoistedCheck(frame.indexOfFe(obj), rhs, constant);
     }
 
     JaegerSpew(JSpew_Analysis, "No match found\n");
-
     return false;
 }
 
 bool
 LoopState::checkHoistedBounds(jsbytecode *PC, Assembler &masm, Vector<Jump> *jumps)
 {
+    restoreInvariants(masm);
+
     /*
      * Emit code to validate all hoisted bounds checks, filling jumps with all
      * failure paths. This is done from a fully synced state, and all registers
@@ -367,7 +448,8 @@ LoopState::checkHoistedBounds(jsbytecode *PC, Assembler &masm, Vector<Jump> *jum
             RegisterID value = Registers::ArgReg1;
             masm.loadPayload(frame.addressOf(check.valueSlot), value);
             if (check.constant != 0) {
-                Jump overflow = masm.branchAdd32(Assembler::Overflow, Imm32(check.constant), value);
+                Jump overflow = masm.branchAdd32(Assembler::Overflow,
+                                                 Imm32(check.constant), value);
                 if (!jumps->append(overflow))
                     return false;
             }
@@ -382,4 +464,47 @@ LoopState::checkHoistedBounds(jsbytecode *PC, Assembler &masm, Vector<Jump> *jum
     }
 
     return true;
+}
+
+FrameEntry *
+LoopState::invariantSlots(const FrameEntry *obj)
+{
+    obj = obj->backing();
+    uint32 slot = frame.indexOfFe(obj);
+
+    for (unsigned i = 0; i < invariantArraySlots.length(); i++) {
+        if (invariantArraySlots[i].arraySlot == slot)
+            return frame.getTemporary(invariantArraySlots[i].temporary);
+    }
+
+    /* addHoistedCheck should have ensured there is an entry for the slots. */
+    JS_NOT_REACHED("Missing invariant slots");
+    return NULL;
+}
+
+void
+LoopState::restoreInvariants(Assembler &masm)
+{
+    /*
+     * Restore all invariants in memory when entering the loop or after any
+     * scripted or C++ call. Care should be taken not to clobber the return
+     * register, which may still be live after some calls.
+     */
+
+    Registers regs(Registers::AvailRegs);
+    regs.takeReg(Registers::ReturnReg);
+
+    for (unsigned i = 0; i < invariantArraySlots.length(); i++) {
+        const InvariantArraySlots &entry = invariantArraySlots[i];
+        FrameEntry *fe = frame.getTemporary(entry.temporary);
+
+        Address array = frame.addressOf(entry.arraySlot);
+        Address address = frame.addressOf(fe);
+
+        RegisterID reg = regs.takeAnyReg().reg();
+        masm.loadPayload(array, reg);
+        masm.loadPtr(Address(reg, offsetof(JSObject, slots)), reg);
+        masm.storePtr(reg, address);
+        regs.putReg(reg);
+    }
 }

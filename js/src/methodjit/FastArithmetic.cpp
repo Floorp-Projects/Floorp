@@ -1114,10 +1114,6 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
 
         RegisterID tempReg = frame.allocReg();
 
-        frame.pop();
-        frame.pop();
-        frame.discardFrame();
-
         JaegerSpew(JSpew_Insns, " ---- BEGIN STUB CALL CODE ---- \n");
 
         RESERVE_OOL_SPACE(stubcc.masm);
@@ -1128,6 +1124,12 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         /* The lhs/rhs need to be synced in the stub call path. */
         frame.ensureValueSynced(stubcc.masm, lhs, lvr);
         frame.ensureValueSynced(stubcc.masm, rhs, rvr);
+
+        bool needIntPath = (!lhs->isTypeKnown() || lhsInt) && (!rhs->isTypeKnown() || rhsInt);
+
+        frame.pop();
+        frame.pop();
+        frame.discardFrame();
 
         bool needStub = true;
         
@@ -1173,7 +1175,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *tar
         Jump fast;
         MaybeJump firstStubJump;
 
-        if ((!lhs->isTypeKnown() || lhsInt) && (!rhs->isTypeKnown() || rhsInt)) {
+        if (needIntPath) {
             if (!lhsInt) {
                 Jump lhsFail = masm.testInt32(Assembler::NotEqual, lvr.typeReg());
                 stubcc.linkExitDirect(lhsFail, stubEntry);
