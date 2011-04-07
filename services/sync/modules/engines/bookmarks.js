@@ -65,12 +65,7 @@ const ANNOS_TO_TRACK = [DESCRIPTION_ANNO, SIDEBAR_ANNO, STATICTITLE_ANNO,
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
 
-try {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-}
-catch(ex) {
-  Cu.import("resource://gre/modules/utils.js");
-}
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
