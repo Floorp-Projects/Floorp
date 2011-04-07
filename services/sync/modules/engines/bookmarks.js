@@ -1515,12 +1515,15 @@ BookmarksTracker.prototype = {
   // updated.
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
     // Quicker checks first.
-    // Ignore favicon changes to avoid unnecessary churn.
-    if (this.ignoreAll || property == "favicon")
+    if (this.ignoreAll)
       return;
 
-    if (isAnno && (ANNOS_TO_TRACK.indexOf(anno) == -1))
+    if (isAnno && (ANNOS_TO_TRACK.indexOf(property) == -1))
       // Ignore annotations except for the ones that we sync.
+      return;
+
+    // Ignore favicon changes to avoid unnecessary churn.
+    if (property == "favicon")
       return;
 
     if (this._ignore(itemId))
