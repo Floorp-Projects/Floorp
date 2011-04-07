@@ -260,16 +260,36 @@ struct RematInfo {
         sync_ = SYNCED;
     }
 
+#ifdef DEBUG
     void invalidate() {
         location_ = PhysLoc_Invalid;
     }
+#else
+    void invalidate() {}
+#endif
 
     void setConstant() { location_ = PhysLoc_Constant; }
 
-    bool isConstant() const { return location_ == PhysLoc_Constant; }
-    bool inRegister() const { return location_ == PhysLoc_Register; }
-    bool inFPRegister() const { return location_ == PhysLoc_FPRegister; }
-    bool inMemory() const { return location_ == PhysLoc_Memory; }
+    bool isConstant() const {
+        JS_ASSERT(location_ != PhysLoc_Invalid);
+        return location_ == PhysLoc_Constant;
+    }
+
+    bool inRegister() const {
+        JS_ASSERT(location_ != PhysLoc_Invalid);
+        return location_ == PhysLoc_Register;
+    }
+
+    bool inFPRegister() const {
+        JS_ASSERT(location_ != PhysLoc_Invalid);
+        return location_ == PhysLoc_FPRegister;
+    }
+
+    bool inMemory() const {
+        JS_ASSERT(location_ != PhysLoc_Invalid);
+        return location_ == PhysLoc_Memory;
+    }
+
     bool synced() const { return sync_ == SYNCED; }
     void sync() {
         JS_ASSERT(!synced());

@@ -484,6 +484,8 @@ class Compiler : public BaseCompiler
     types::TypeSet *getTypeSet(uint32 slot);
     types::TypeSet *getTypeSet(const FrameEntry *fe) { return getTypeSet(frame.indexOfFe(fe)); }
 
+    Assembler &getAssembler(bool ool) { return ool ? stubcc.masm : masm; }
+
   private:
     CompileStatus performCompilation(JITScript **jitp);
     CompileStatus generatePrologue();

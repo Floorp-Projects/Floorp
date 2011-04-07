@@ -70,7 +70,7 @@ struct TypeCompartment;
 struct ClonedTypeSet;
 
 /*
- * Information about a single concrete type.  This is a non-zero value whose
+ * Information about a single concrete type. This is a non-zero value whose
  * lower 3 bits indicate a particular primitive type below, and if those bits
  * are zero then a pointer to a type object.
  */
@@ -85,13 +85,13 @@ const jstype TYPE_DOUBLE    = 5;
 const jstype TYPE_STRING    = 6;
 
 /*
- * Aggregate unknown type, could be anything.  Typically used when a type set
+ * Aggregate unknown type, could be anything. Typically used when a type set
  * becomes polymorphic, or when accessing an object with unknown properties.
  */
 const jstype TYPE_UNKNOWN = 7;
 
 /*
- * Test whether a type is an primitive or an object.  Object types can be
+ * Test whether a type is an primitive or an object. Object types can be
  * cast into a TypeObject*.
  */
 
@@ -196,7 +196,7 @@ public:
 };
 
 /*
- * Coarse kinds of a set of objects.  These form the following lattice:
+ * Coarse kinds of a set of objects. These form the following lattice:
  *
  *            NONE
  *       ____/    \_____
@@ -665,7 +665,6 @@ struct TypeCompartment
 
     /* Whether type inference is active, see AutoEnterTypeInference. */
     unsigned inferenceDepth;
-    uint64_t inferenceStartTime;
 
     /* Pool for all intermediate type information in this compartment. Cleared on every GC. */
     JSArenaPool pool;
@@ -717,18 +716,16 @@ struct TypeCompartment
 
     /* Constraint solving worklist structures. */
 
-    /* A type that needs to be registered with a constraint. */
+    /*
+     * Worklist of types which need to be propagated to constraints. We use a
+     * worklist to avoid blowing the native stack.
+     */
     struct PendingWork
     {
         TypeConstraint *constraint;
         TypeSet *source;
         jstype type;
     };
-
-    /*
-     * Worklist of types which need to be propagated to constraints.  We use a
-     * worklist to avoid blowing the native stack.
-     */
     PendingWork *pendingArray;
     unsigned pendingCount;
     unsigned pendingCapacity;
@@ -737,12 +734,6 @@ struct TypeCompartment
     bool resolving;
 
     /* Logging fields */
-
-    /*
-     * The total time (in microseconds) spent generating inference structures
-     * and performing analysis.
-     */
-    uint64_t analysisTime;
 
     /* Counts of stack type sets with some number of possible operand types. */
     static const unsigned TYPE_COUNT_LIMIT = 4;

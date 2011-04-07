@@ -154,8 +154,7 @@ struct AutoEnterTypeInference
         depth = cx->compartment->types.inferenceDepth;
 #endif
         JS_ASSERT_IF(!compiling, cx->compartment->types.inferenceEnabled);
-        if (cx->compartment->types.inferenceDepth++ == 0)
-            cx->compartment->types.inferenceStartTime = cx->compartment->types.currentTime();
+        cx->compartment->types.inferenceDepth++;
     }
 
     ~AutoEnterTypeInference()
@@ -181,9 +180,6 @@ TypeCompartment::checkPendingRecompiles(JSContext *cx)
          */
         return true;
     }
-    if (inferenceStartTime)
-        analysisTime += currentTime() - inferenceStartTime;
-    inferenceStartTime = 0;
     if (pendingNukeTypes)
         return nukeTypes(cx);
     else if (pendingRecompiles && !processPendingRecompiles(cx))

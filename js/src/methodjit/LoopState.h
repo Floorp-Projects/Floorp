@@ -75,7 +75,18 @@ namespace mjit {
  * does not happen) or if the involved arrays shrink dynamically through
  * assignments to the length property.
  *
- * Loop invariant code motion. TODO!
+ * Loop invariant code motion. If we can determine a computation (arithmetic,
+ * array slot pointer or property access) is loop invariant, we give it a slot
+ * on the stack and preserve its value throughout the loop. We can allocate
+ * and carry registers for loop invariant slots as for normal slots. These
+ * slots sit above the frame's normal slots, and are transient --- they are
+ * clobbered whenever a new frame is pushed. We thus regenerate the loop
+ * invariant slots after every C++ and scripted call, and avoid doing LICM on
+ * loops which have such calls. This has a nice property that the slots only
+ * need to be loop invariant wrt the side effects that happen directly in the
+ * loop; if C++ calls a getter which scribbles on the object properties
+ * involved in an 'invariant' then we will reload the invariant's new value
+ * after the call finishes.
  */
 
 class LoopState : public MacroAssemblerTypedefs
@@ -122,8 +133,19 @@ class LoopState : public MacroAssemblerTypedefs
     Vector<StubJoinPatch,16,CompilerAllocPolicy> loopPatches;
 
     /*
+     * Pair of a jump/label immediately after each call in the loop, to patch
+     * with restores of the loop invariant stack values.
+     */
+    struct RestoreInvariantCall {
+        Jump jump;
+        Label label;
+        bool ool;
+    };
+    Vector<RestoreInvariantCall> restoreInvariantCalls;
+
+    /*
      * Array bounds check hoisted out of the loop. This is a check that needs
-     * to be performed, in terms of the state at the loop head.
+     * to be performed, expressed in terms of the state at the loop head.
      */
     struct HoistedBoundsCheck
     {
@@ -135,7 +157,21 @@ class LoopState : public MacroAssemblerTypedefs
     Vector<HoistedBoundsCheck, 4, CompilerAllocPolicy> hoistedBoundsChecks;
 
     bool loopInvariantEntry(const FrameEntry *fe);
-    void addHoistedCheck(uint32 arraySlot, uint32 valueSlot, int32 constant);
+    bool addHoistedCheck(uint32 arraySlot, uint32 valueSlot, int32 constant);
+
+    /*
+     * Track analysis temporaries in the frame state which hold slots pointers
+     * for arrays throughout the loop.
+     */
+    struct InvariantArraySlots
+    {
+        uint32 arraySlot;
+        uint32 temporary;
+    };
+    Vector<InvariantArraySlots, 4, CompilerAllocPolicy> invariantArraySlots;
+
+    bool hasInvariants() { return !invariantArraySlots.empty(); }
+    void restoreInvariants(Assembler &masm);
 
   public:
 
@@ -150,11 +186,17 @@ class LoopState : public MacroAssemblerTypedefs
               analyze::Script *analysis, analyze::LifetimeScript *liveness);
     bool init(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
 
+    bool generatingInvariants() { return !skipAnalysis; }
+
+    /* Add a call with trailing jump/label, after which invariants need to be restored. */
+    void addInvariantCall(Jump jump, Label label, bool ool);
+
     uint32 headOffset() { return lifetime->head; }
     uint32 getLoopRegs() { return loopRegs.freeMask; }
 
     Jump entryJump() { return entry; }
     uint32 entryOffset() { return lifetime->entry; }
+    uint32 backedgeOffset() { return lifetime->backedge; }
 
     /* Whether the payload of slot is carried around the loop in a register. */
     bool carriesLoopReg(FrameEntry *fe) { return alloc->hasAnyReg(frame.indexOfFe(fe)); }
@@ -176,10 +218,13 @@ class LoopState : public MacroAssemblerTypedefs
     }
 
     void addJoin(unsigned index, bool script);
-    void flushRegisters(StubCompiler &stubcc);
-    void clearRegisters();
+    void clearLoopRegisters();
+
+    void flushLoop(StubCompiler &stubcc);
 
     bool hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *id);
+    FrameEntry *invariantSlots(const FrameEntry *obj);
+
     bool checkHoistedBounds(jsbytecode *PC, Assembler &masm, Vector<Jump> *jumps);
 };
 
