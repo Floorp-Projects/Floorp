@@ -4950,7 +4950,6 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
-MOZ_IPC=1
 MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_MATHML=1
@@ -5000,7 +4999,6 @@ MOZ_TOOLKIT_SEARCH=1
 MOZ_UI_LOCALE=en-US
 MOZ_UNIVERSALCHARDET=1
 MOZ_URL_CLASSIFIER=
-MOZ_USE_NATIVE_UCONV=
 MOZ_XSLT_STANDALONE=
 MOZ_XTF=1
 MOZ_XUL=1
@@ -5646,6 +5644,11 @@ then
     dnl ========================================================
     dnl = GConf support module
     dnl ========================================================
+    MOZ_ARG_DISABLE_BOOL(gconf,
+    [  --disable-gconf      Disable Gconf support ],
+        MOZ_ENABLE_GCONF=,
+        MOZ_ENABLE_GCONF=force)
+
     if test "$MOZ_ENABLE_GCONF"
     then
         PKG_CHECK_MODULES(MOZ_GCONF, gconf-2.0 >= $GCONF_VERSION gobject-2.0 ,[
@@ -5822,21 +5825,6 @@ MOZ_ARG_DISABLE_BOOL(jsd,
 
 
 dnl ========================================================
-dnl = Disable IPC support for tabs and plugins
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(ipc,
-[  --disable-ipc           Disable IPC for tabs and plugins (not supported)],
-    MOZ_IPC=,
-    MOZ_IPC=1)
-
-if test -z "$MOZ_IPC"; then
-  AC_MSG_ERROR([--disable-ipc is no longer supported.])
-fi
-
-AC_DEFINE(MOZ_IPC)
-AC_SUBST(MOZ_IPC)
-
-dnl ========================================================
 dnl = Enable IPDL's "expensive" unit tests
 dnl ========================================================
 MOZ_IPDL_TESTS=
@@ -5901,20 +5889,6 @@ if test "$NS_PRINTING"; then
     AC_DEFINE(NS_PRINTING)
     AC_DEFINE(NS_PRINT_PREVIEW)
 fi
-dnl ========================================================
-dnl use native unicode converters
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(native-uconv,
-[  --enable-native-uconv   Enable iconv support],
-    MOZ_USE_NATIVE_UCONV=1,
-    MOZ_USE_NATIVE_UCONV= )
-if test "$MOZ_USE_NATIVE_UCONV"; then
-    AC_DEFINE(MOZ_USE_NATIVE_UCONV)
-fi
-if test "$OS_ARCH" != "WINCE" -a "$OS_ARCH" != "WINNT" -a "$MOZ_USE_NATIVE_UCONV" -a "$ac_cv_func_iconv" != "yes"; then
-    AC_MSG_ERROR([iconv() not found.  Cannot enable native uconv support.])
-fi
-
 
 dnl ========================================================
 dnl = Disable Fast Load
@@ -6485,7 +6459,7 @@ if test -n "$MOZ_LIBJPEG_TURBO"; then
     LIBJPEG_TURBO_X86_ASM=1
   ;;
   WINNT:x86_64)
-    LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64"
+    LIBJPEG_TURBO_ASFLAGS="-f win64 -rnasm -pnasm -D__x86_64__ -DPIC -DWIN64 -DMSVC"
     LIBJPEG_TURBO_X64_ASM=1
   ;;
   esac
@@ -8931,7 +8905,7 @@ if test -z "$SKIP_LIBRARY_CHECKS" -a "$NECKO_WIFI" -a "$OS_ARCH" = "Linux"
 then
   MOZ_CHECK_HEADER([iwlib.h])
   if test "$ac_cv_header_iwlib_h" != "yes"; then
-    AC_MSG_ERROR([Can't find header iwlib.h for Necko WiFi scanning (might be in package libiw-dev (Ubuntu) or wireless-tools-devel (Fedora)); use --disable-necko-wifi to disable])
+    AC_MSG_ERROR([Can't find header iwlib.h for Necko WiFi scanning (might be in package libiw-dev (Ubuntu) or wireless-tools-devel (Fedora) or libiw-devel (openSUSE)); use --disable-necko-wifi to disable])
   fi
 fi
 
@@ -9056,7 +9030,6 @@ AC_SUBST(MOZ_SHARK)
 AC_SUBST(MOZ_CALLGRIND)
 AC_SUBST(MOZ_VTUNE)
 AC_SUBST(MOZ_PROFILING)
-AC_SUBST(MOZ_USE_NATIVE_UCONV)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
@@ -9351,7 +9324,7 @@ dnl Check for headers, etc. needed by WebGL.
 if test -n "$MOZ_WEBGL_GLX"; then
     MOZ_CHECK_HEADER(GL/glx.h)
     if test "$ac_cv_header_GL_glx_h" != "yes"; then
-        AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa (SuSE))])
+        AC_MSG_ERROR([Can't find header GL/glx.h for WebGL (install mesa-common-dev (Ubuntu), mesa-libGL-devel (Fedora), or Mesa-devel (openSUSE))])
     fi
 fi # MOZ_WEBGL_GLX
 fi # COMPILE_ENVIRONMENT

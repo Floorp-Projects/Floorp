@@ -44,15 +44,20 @@
 #include "nsIDOMCSSRule.h"
 
 class nsCSSStyleSheet;
-class nsICSSGroupRule;
 class nsAString;
 template<class T> struct already_AddRefed;
 class nsIStyleSheet;
 
+namespace mozilla {
+namespace css {
+class GroupRule;
+}
+}
+
 // IID for the nsICSSRule interface
-#define NS_ICSS_RULE_IID \
-{ 0x1f560b20, 0xa829, 0x4b99, \
-  { 0x87, 0xbd, 0x8c, 0x87, 0x95, 0x2b, 0x3b, 0xb6 } }
+#define NS_ICSS_RULE_IID     \
+{ 0x471d733e, 0xc138, 0x4a50, \
+ { 0x9e, 0x1a, 0xd1, 0x3c, 0xbb, 0x65, 0xb5, 0x26 } }
 
 
 // inheriting from nsIStyleRule is only for style rules, not other rule types
@@ -78,9 +83,9 @@ public:
 
   virtual PRInt32 GetType() const = 0;
 
-  virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const = 0;
+  virtual nsIStyleSheet* GetStyleSheet() const = 0;
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet) = 0;
-  virtual void SetParentRule(nsICSSGroupRule* aRule) = 0;
+  virtual void SetParentRule(mozilla::css::GroupRule* aRule) = 0;
 
   /**
    * Clones |this|. Never returns NULL.
@@ -99,11 +104,5 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSRule, NS_ICSS_RULE_IID)
-
-/* Define global NS_New* functions for rules that don't need their own
-   interfaces here */
-nsresult
-NS_NewCSSCharsetRule(nsICSSRule** aInstancePtrResult,
-                     const nsAString& aEncoding);
 
 #endif /* nsICSSRule_h */

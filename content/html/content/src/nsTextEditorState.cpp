@@ -92,6 +92,9 @@ public:
 
   NS_IMETHOD Run() {
     if (mWeakFrame.IsAlive()) {
+      // SetSelectionRange leads to Selection::AddRange which flushes Layout -
+      // need to block script to avoid nested PrepareEditor calls (bug 642800).
+      nsAutoScriptBlocker scriptBlocker;
       mFrame->SetSelectionRange(mStart, mEnd);
     }
     return NS_OK;

@@ -38,10 +38,8 @@
 #ifndef GFX_THEBESLAYEROGL_H
 #define GFX_THEBESLAYEROGL_H
 
-#ifdef MOZ_IPC
-# include "mozilla/layers/PLayers.h"
-# include "mozilla/layers/ShadowLayers.h"
-#endif
+#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #include "Layers.h"
 #include "LayerManagerOGL.h"
@@ -86,7 +84,6 @@ private:
   nsRefPtr<Buffer> mBuffer;
 };
 
-#ifdef MOZ_IPC
 class ShadowThebesLayerOGL : public ShadowThebesLayer,
                              public LayerOGL
 {
@@ -117,7 +114,6 @@ public:
 private:
   nsRefPtr<ShadowBufferOGL> mBuffer;
 };
-#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */

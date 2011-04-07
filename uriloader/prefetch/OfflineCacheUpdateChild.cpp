@@ -380,9 +380,7 @@ OfflineCacheUpdateChild::Schedule()
 {
     LOG(("OfflineCacheUpdateChild::Schedule [%p]", this));
 
-#ifdef MOZ_IPC
     NS_ASSERTION(mWindow, "Window must be provided to the offline cache update child");
-#endif
 
     nsCOMPtr<nsPIDOMWindow> piWindow = 
         do_QueryInterface(mWindow);
