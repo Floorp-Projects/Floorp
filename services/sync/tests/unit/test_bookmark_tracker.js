@@ -248,63 +248,6 @@ function test_tracking() {
   }
 }
 
-function test_guid_stripping() {
-  // Gecko <2.0
-  if (store._haveGUIDColumn) {
-    _("We have a GUID column; not testing anno GUID fixing.");
-    return;
-  }
-
-  _("Verify we've got an empty tracker to work with.");
-  let tracker = engine._tracker;
-  let folder = Svc.Bookmark.createFolder(Svc.Bookmark.bookmarksMenuFolder,
-                                         "Test Folder",
-                                         Svc.Bookmark.DEFAULT_INDEX);
-  function createBmk() {
-    return Svc.Bookmark.insertBookmark(folder,
-                                       Utils.makeURI("http://getfirefox.com"),
-                                       Svc.Bookmark.DEFAULT_INDEX,
-                                       "Get Firefox!");
-  }
-
-  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
-
-  try {
-    _("Directly testing GUID stripping.");
-
-    Svc.Obs.notify("weave:engine:start-tracking");
-    tracker.ignoreAll = false;
-    let suspect = createBmk();
-    let victim = createBmk();
-
-    _("Suspect: " + suspect + ", victim: " + victim);
-
-    let suspectGUID = store.GUIDForId(suspect);
-    let victimGUID  = store.GUIDForId(victim);
-    _("Set the GUID on one entry to be the same as another.");
-    do_check_neq(suspectGUID, victimGUID);
-    Svc.Annos.setItemAnnotation(suspect, SYNC_GUID_ANNO, store.GUIDForId(victim),
-                                0, Svc.Annos.EXPIRE_NEVER);
-
-    _("Tracker changed it to something else.");
-    let newGUID = store.GUIDForId(suspect);
-    do_check_neq(newGUID, victimGUID);
-    do_check_neq(newGUID, suspectGUID);
-
-    _("Victim GUID remains unchanged.");
-    do_check_eq(victimGUID, store.GUIDForId(victim));
-
-    _("New GUID is in the tracker.");
-    _(JSON.stringify(tracker.changedIDs));
-    do_check_neq(tracker.changedIDs[newGUID], null);
-  } finally {
-    _("Clean up.");
-    store.wipe();
-    tracker.clearChangedIDs();
-    Svc.Obs.notify("weave:engine:stop-tracking");
-  }
-}
-
 function run_test() {
   initTestLogging("Trace");
 
@@ -314,6 +257,5 @@ function run_test() {
 
   test_copying_places();
   test_tracking();
-  test_guid_stripping();
 }
 
