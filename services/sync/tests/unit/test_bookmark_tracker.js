@@ -1,15 +1,7 @@
+Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
-try {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-}
-catch(ex) {
-  Cu.import("resource://gre/modules/utils.js");
-}
-
-// Grab a backstage pass so we can fetch the anno constant. Evil but useful.
-let bsp = Cu.import("resource://services-sync/engines/bookmarks.js");
-const SYNC_GUID_ANNO = bsp.GUID_ANNO;      // Not the same as Places' GUID_ANNO!
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 Engines.register(BookmarksEngine);
 let engine = Engines.get("bookmarks");

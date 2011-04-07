@@ -5,12 +5,7 @@ Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
 Cu.import("resource://services-sync/service.js");
-try {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-}
-catch(ex) {
-  Cu.import("resource://gre/modules/utils.js");
-}
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 var IOService = Cc["@mozilla.org/network/io-service;1"]
