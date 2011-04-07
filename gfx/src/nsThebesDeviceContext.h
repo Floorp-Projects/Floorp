@@ -50,9 +50,6 @@
 #include "nsWeakReference.h"
 #include "gfxContext.h"
 
-#include "nsRefPtrHashtable.h"
-#include "nsHashKeys.h"
-
 #include "prlog.h"
 
 #ifdef PR_LOGGING
@@ -65,7 +62,6 @@ extern PRLogModuleInfo* gThebesGFXLog;
 #include "gfxOS2Surface.h"
 #endif
 
-class nsHashtable;
 class nsFontCache;
 
 class nsThebesDeviceContext : public nsIDeviceContext,
@@ -143,10 +139,6 @@ public:
 #endif
 
 protected:
-    virtual nsresult CreateFontAliasTable();
-    nsresult AliasFont(const nsString& aFont, 
-                       const nsString& aAlias, const nsString& aAltAlias,
-                       PRBool aForceAlias);
     void GetLocaleLanguage(void);
     nsresult SetDPI();
     void ComputeClientRectUsingScreen(nsRect *outRect);
@@ -158,7 +150,6 @@ protected:
     PRUint32          mDepth;
     nsFontCache*      mFontCache;
     nsCOMPtr<nsIAtom> mLocaleLanguage; // XXX temp fix for performance bug
-    nsHashtable*      mFontAliasTable;
     nsCOMPtr<nsIWidget> mWidget;
 
 private:

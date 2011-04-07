@@ -40,7 +40,6 @@
 #include "nsFont.h"
 #include "nsGfxCIID.h"
 #include "nsIThebesFontMetrics.h"
-#include "nsHashtable.h"
 #include "nsILanguageAtomService.h"
 #include "nsUnicharUtils.h"
 
@@ -285,7 +284,6 @@ nsThebesDeviceContext::nsThebesDeviceContext()
 
     mFontCache = nsnull;
     mWidget = nsnull;
-    mFontAliasTable = nsnull;
 
     mDepth = 0;
     mWidth = 0;
@@ -298,12 +296,6 @@ nsThebesDeviceContext::nsThebesDeviceContext()
 #endif
 }
 
-static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
-{
-    delete ((nsString*)aValue);
-    return PR_TRUE;
-}
-
 nsThebesDeviceContext::~nsThebesDeviceContext()
 {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -313,11 +305,6 @@ nsThebesDeviceContext::~nsThebesDeviceContext()
     if (nsnull != mFontCache) {
         delete mFontCache;
         mFontCache = nsnull;
-    }
-
-    if (nsnull != mFontAliasTable) {
-        mFontAliasTable->Enumerate(DeleteValue);
-        delete mFontAliasTable;
     }
 }
 
@@ -402,171 +389,37 @@ NS_IMETHODIMP nsThebesDeviceContext::GetMetricsFor(const nsFont& aFont,
 }
 
 struct FontEnumData {
-    FontEnumData(nsIDeviceContext* aDC, nsString& aFaceName)
-        : mDC(aDC), mFaceName(aFaceName)
-    {}
-    nsIDeviceContext* mDC;
-    nsString&         mFaceName;
+    FontEnumData(nsString& aFaceName) : mFaceName(aFaceName) {}
+    nsString& mFaceName;
 };
 
-static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+static PRBool
+FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
     FontEnumData* data = (FontEnumData*)aData;
-    // XXX for now, all generic fonts are presumed to exist
-    //     we may want to actually check if there's an installed conversion
-    if (aGeneric) {
-        data->mFaceName = aFamily;
-        return PR_FALSE; // found one, stop.
-    }
-    else {
-        nsAutoString local;
-        PRBool       aliased;
-        data->mDC->GetLocalFontName(aFamily, local, aliased);
-        if (aliased || (NS_SUCCEEDED(data->mDC->CheckFontExistence(local)))) {
-            data->mFaceName = local;
-            return PR_FALSE; // found one, stop.
-        }
-    }
-    return PR_TRUE; // didn't exist, continue looking
+    data->mFaceName = aFamily;
+    return PR_FALSE; // stop
 }
 
-NS_IMETHODIMP nsThebesDeviceContext::FirstExistingFont(const nsFont& aFont, nsString& aFaceName)
+NS_IMETHODIMP
+nsThebesDeviceContext::FirstExistingFont(const nsFont& aFont,
+                                         nsString& aFaceName)
 {
-    FontEnumData data(this, aFaceName);
+    FontEnumData data(aFaceName);
     if (aFont.EnumerateFamilies(FontEnumCallback, &data)) {
-        return NS_ERROR_FAILURE; // ran out
+        return NS_ERROR_FAILURE; // can only happen for an empty font
     }
     return NS_OK;
 }
 
-class FontAliasKey: public nsHashKey
+NS_IMETHODIMP
+nsThebesDeviceContext::GetLocalFontName(const nsString& aFaceName,
+                                        nsString& aLocalName,
+                                        PRBool& aAliased)
 {
-public:
-    FontAliasKey(const nsString& aString)
-    { mString.Assign(aString); }
-
-    virtual PRUint32 HashCode(void) const;
-    virtual PRBool Equals(const nsHashKey *aKey) const;
-    virtual nsHashKey *Clone(void) const;
-
-    nsString mString;
-};
-
-PRUint32 FontAliasKey::HashCode(void) const
-{
-    PRUint32 hash = 0;
-    const PRUnichar* string = mString.get();
-    PRUnichar ch;
-    while ((ch = *string++) != 0) {
-        // FYI: hash = hash*37 + ch
-        ch = ToUpperCase(ch);
-        hash = ((hash << 5) + (hash << 2) + hash) + ch;
-    }
-    return hash;
-}
-
-PRBool FontAliasKey::Equals(const nsHashKey *aKey) const
-{
-    return mString.Equals(((FontAliasKey*)aKey)->mString, nsCaseInsensitiveStringComparator());
-}
-
-nsHashKey* FontAliasKey::Clone(void) const
-{
-    return new FontAliasKey(mString);
-}
-
-nsresult nsThebesDeviceContext::CreateFontAliasTable()
-{
-    nsresult result = NS_OK;
-
-    if (nsnull == mFontAliasTable) {
-        mFontAliasTable = new nsHashtable();
-        if (nsnull != mFontAliasTable) {
-
-            nsAutoString times;         times.AssignLiteral("Times");
-            nsAutoString timesNewRoman; timesNewRoman.AssignLiteral("Times New Roman");
-            nsAutoString timesRoman;    timesRoman.AssignLiteral("Times Roman");
-            nsAutoString arial;         arial.AssignLiteral("Arial");
-            nsAutoString helvetica;     helvetica.AssignLiteral("Helvetica");
-            nsAutoString courier;       courier.AssignLiteral("Courier");
-            nsAutoString courierNew;    courierNew.AssignLiteral("Courier New");
-            nsAutoString nullStr;
-
-            AliasFont(times, timesNewRoman, timesRoman, PR_FALSE);
-            AliasFont(timesRoman, timesNewRoman, times, PR_FALSE);
-            AliasFont(timesNewRoman, timesRoman, times, PR_FALSE);
-            AliasFont(arial, helvetica, nullStr, PR_FALSE);
-            AliasFont(helvetica, arial, nullStr, PR_FALSE);
-            AliasFont(courier, courierNew, nullStr, PR_TRUE);
-            AliasFont(courierNew, courier, nullStr, PR_FALSE);
-        }
-        else {
-            result = NS_ERROR_OUT_OF_MEMORY;
-        }
-    }
-    return result;
-}
-
-nsresult nsThebesDeviceContext::AliasFont(const nsString& aFont,
-                                          const nsString& aAlias,
-                                          const nsString& aAltAlias,
-                                          PRBool aForceAlias)
-{
-    nsresult result = NS_OK;
-
-    if (nsnull != mFontAliasTable) {
-        if (aForceAlias || NS_FAILED(CheckFontExistence(aFont))) {
-            if (NS_SUCCEEDED(CheckFontExistence(aAlias))) {
-                nsString* entry = new nsString(aAlias);
-                if (nsnull != entry) {
-                    FontAliasKey key(aFont);
-                    mFontAliasTable->Put(&key, entry);
-                }
-                else {
-                    result = NS_ERROR_OUT_OF_MEMORY;
-                }
-            }
-            else if (!aAltAlias.IsEmpty() && NS_SUCCEEDED(CheckFontExistence(aAltAlias))) {
-                nsString* entry = new nsString(aAltAlias);
-                if (nsnull != entry) {
-                    FontAliasKey key(aFont);
-                    mFontAliasTable->Put(&key, entry);
-                }
-                else {
-                    result = NS_ERROR_OUT_OF_MEMORY;
-                }
-            }
-        }
-    }
-    else {
-        result = NS_ERROR_FAILURE;
-    }
-    return result;
-}
-
-NS_IMETHODIMP nsThebesDeviceContext::GetLocalFontName(const nsString& aFaceName,
-                                                      nsString& aLocalName,
-                                                      PRBool& aAliased)
-{
-    nsresult result = NS_OK;
-
-    if (nsnull == mFontAliasTable) {
-        result = CreateFontAliasTable();
-    }
-
-    if (nsnull != mFontAliasTable) {
-        FontAliasKey key(aFaceName);
-        const nsString* alias = (const nsString*)mFontAliasTable->Get(&key);
-        if (nsnull != alias) {
-            aLocalName = *alias;
-            aAliased = PR_TRUE;
-        }
-        else {
-            aLocalName = aFaceName;
-            aAliased = PR_FALSE;
-        }
-    }
-    return result;
+    aLocalName = aFaceName;
+    aAliased = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsThebesDeviceContext::FlushFontCache(void)
