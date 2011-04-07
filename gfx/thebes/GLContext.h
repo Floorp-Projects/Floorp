@@ -205,6 +205,31 @@ public:
 
     virtual bool DirectUpdate(gfxASurface *aSurf, const nsIntRegion& aRegion) =0;
 
+    virtual void BindTexture(GLenum aTextureUnit) = 0;
+    virtual void ReleaseTexture() {};
+
+    class ScopedBindTexture
+    {
+    public:
+        ScopedBindTexture(TextureImage *aTexture, GLenum aTextureUnit) :
+          mTexture(aTexture)
+        {
+            if (mTexture) {
+                mTexture->BindTexture(aTextureUnit);
+            }
+        }
+
+        ~ScopedBindTexture()
+        {
+            if (mTexture) {
+                mTexture->ReleaseTexture();
+            }       
+        }
+
+    private:
+        TextureImage *mTexture;
+    };
+
     /**
      * Return this TextureImage's texture ID for use with GL APIs.
      * Callers are responsible for properly binding the texture etc.
@@ -302,6 +327,8 @@ public:
       Initialized,  // Texture memory exists, but contents are invalid.
       Valid  // Texture fully ready to use.
     };
+    
+    virtual void BindTexture(GLenum aTextureUnit);
 
     virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion);
     virtual void EndUpdate();
