@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+  <title>Accessible mutation events testing</title>
+
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <bindings xmlns="http://www.mozilla.org/xbl" >
+    <binding id="button">
+      <content>
+        <button xmlns="http://www.w3.org/1999/xhtml">a button</button>
+      </content>
+    </binding>
+  </bindings>
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../events.js"></script>
+
+  <script type="application/javascript">
+
+    /**
+     * Insert a not accessible bound element containing an accessible element
+     * in anonymous content.
+     */
+    function insertBinding(aContainerID)
+    {
+      this.containerNode = getNode(aContainerID);
+
+      function getButtonFromBinding(aNode)
+      {
+        try { return document.getAnonymousNodes(aNode.firstChild)[0]; }
+        catch (e) { return null; }
+      }
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_SHOW, getButtonFromBinding, this.containerNode),
+        new invokerChecker(EVENT_REORDER, this.containerNode)
+      ];
+
+      this.invoke = function insertBinding_invoke()
+      {
+        var span = document.createElement("span");
+        span.setAttribute("style", "-moz-binding:url(#button)");
+        this.containerNode.appendChild(span);
+      }
+
+      this.getID = function insertBinding_getID()
+      {
+        return "insert button binding";
+      }
+    }
+
+    /**
+     * Do tests.
+     */
+    var gQueue = null;
+    //gA11yEventDumpID = "eventdump"; // debug stuff
+    //gA11yEventDumpToConsole = true;
+
+    function doTests()
+    {
+      gQueue = new eventQueue();
+
+      gQueue.push(new insertBinding("testContainer"));
+
+      gQueue.invoke(); // Will call SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTests);
+  </script>
+</head>
+
+<body>
+
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=646369"
+     title="UpdateTree should rely on accessible tree walker rather than DOM tree traversal">
+    Mozilla Bug 646369</a>
+
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+  <div id="eventdump"></div>
+
+  <div id="testContainer"></div>
+</body>
+</html>

@@ -69,6 +69,7 @@ _TEST_FILES =\
 		test_focusdoc.html \
 		test_menu.xul \
 		test_mutation.html \
+		test_mutation.xhtml \
 		test_scroll.xul \
 		test_selection.html \
 		test_statechange.html \
