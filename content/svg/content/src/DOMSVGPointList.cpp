@@ -116,6 +116,21 @@ DOMSVGPointList::~DOMSVGPointList()
   sSVGPointListTearoffTable.RemoveTearoff(key);
 }
 
+nsIDOMSVGPoint*
+DOMSVGPointList::GetItemWithoutAddRef(PRUint32 aIndex)
+{
+#ifdef MOZ_SMIL
+  if (IsAnimValList()) {
+    Element()->FlushAnimations();
+  }
+#endif
+  if (aIndex < Length()) {
+    EnsureItemAt(aIndex);
+    return mItems[aIndex];
+  }
+  return nsnull;
+}
+
 void
 DOMSVGPointList::InternalListWillChangeTo(const SVGPointList& aNewValue)
 {
@@ -261,18 +276,12 @@ NS_IMETHODIMP
 DOMSVGPointList::GetItem(PRUint32 aIndex,
                          nsIDOMSVGPoint **_retval)
 {
-#ifdef MOZ_SMIL
-  if (IsAnimValList()) {
-    Element()->FlushAnimations();
+  *_retval = GetItemWithoutAddRef(aIndex);
+  if (!*_retval) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
-#endif
-  if (aIndex < Length()) {
-    EnsureItemAt(aIndex);
-    NS_ADDREF(*_retval = mItems[aIndex]);
-    return NS_OK;
-  }
-  *_retval = nsnull;
-  return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  NS_ADDREF(*_retval);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -416,6 +425,12 @@ DOMSVGPointList::AppendItem(nsIDOMSVGPoint *aNewItem,
                             nsIDOMSVGPoint **_retval)
 {
   return InsertItemBefore(aNewItem, Length(), _retval);
+}
+
+NS_IMETHODIMP
+DOMSVGPointList::GetLength(PRUint32 *aNumberOfItems)
+{
+  return GetNumberOfItems(aNumberOfItems);
 }
 
 void

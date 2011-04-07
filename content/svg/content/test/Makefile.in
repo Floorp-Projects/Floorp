@@ -84,6 +84,7 @@ _TEST_FILES = \
 		test_SVGPathSegList.xhtml \
 		test_SVGStyleElement.xhtml \
 		test_SVGxxxList.xhtml \
+		test_SVGxxxListIndexing.xhtml \
 		test_switch.xhtml \
 		switch-helper.svg \
 		test_text.html \
