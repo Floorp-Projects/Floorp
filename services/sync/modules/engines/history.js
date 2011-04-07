@@ -44,7 +44,6 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
-const GUID_ANNO = "sync/guid";
 const HISTORY_TTL = 5184000; // 60 days
 const TOPIC_UPDATEPLACES_COMPLETE = "places-updatePlaces-complete";
 
