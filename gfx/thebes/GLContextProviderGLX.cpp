@@ -118,6 +118,7 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xSwapBuffers, { "glXSwapBuffers", NULL } },
         { (PRFuncPtr*) &xQueryVersion, { "glXQueryVersion", NULL } },
         { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
+        { (PRFuncPtr*) &xWaitGL, { "glXWaitGL", NULL } },
         /* functions introduced in GLX 1.1 */
         { (PRFuncPtr*) &xQueryExtensionsString, { "glXQueryExtensionsString", NULL } },
         { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
@@ -163,6 +164,12 @@ GLXLibrary::EnsureInitialized()
         /* extension equivalents for functions introduced in GLX 1.4 */
         // GLX_ARB_get_proc_address extension
         { (PRFuncPtr*) &xGetProcAddress, { "glXGetProcAddressARB", NULL } },
+        { NULL, { NULL } }
+    };
+
+    LibrarySymbolLoader::SymLoadStruct symbols_texturefrompixmap[] = {
+        { (PRFuncPtr*) &xBindTexImage, { "glXBindTexImageEXT", NULL } },
+        { (PRFuncPtr*) &xReleaseTexImage, { "glXReleaseTexImageEXT", NULL } },
         { NULL, { NULL } }
     };
 
@@ -261,6 +268,12 @@ GLXLibrary::EnsureInitialized()
         return PR_FALSE;
     }
 
+    if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
+        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap))
+    {
+        mHasTextureFromPixmap = PR_TRUE;
+    }
+
     gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
     gIsChromium = (serverVendor &&
                    DoesVendorStringMatch(serverVendor, "Chromium")) ||
@@ -269,6 +282,85 @@ GLXLibrary::EnsureInitialized()
 
     mInitialized = PR_TRUE;
     return PR_TRUE;
+}
+
+GLXPixmap 
+GLXLibrary::CreatePixmap(gfxASurface* aSurface)
+{
+    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
+        return 0;
+    }
+
+    if (!EnsureInitialized()) {
+        return 0;
+    }
+
+    int attribs[] = { GLX_DOUBLEBUFFER, False,
+                      GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
+                      GLX_BIND_TO_TEXTURE_RGBA_EXT, True,
+                      None };
+
+    int numFormats;
+    Display *display = DefaultXDisplay();
+    int xscreen = DefaultScreen(display);
+
+    ScopedXFree<GLXFBConfig> cfg(xChooseFBConfig(display,
+                                                 xscreen,
+                                                 attribs,
+                                                 &numFormats));
+    if (!cfg) {
+        return 0;
+    }
+    NS_ABORT_IF_FALSE(numFormats > 0,
+                 "glXChooseFBConfig() failed to match our requested format and violated its spec (!)");
+
+    gfxXlibSurface *xs = static_cast<gfxXlibSurface*>(aSurface);
+
+    int pixmapAttribs[] = { GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
+                            GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGBA_EXT,
+                            None};
+
+    GLXPixmap glxpixmap = xCreatePixmap(display,
+                                        cfg[0],
+                                        xs->XDrawable(),
+                                        pixmapAttribs);
+
+    return glxpixmap;
+}
+
+void
+GLXLibrary::DestroyPixmap(GLXPixmap aPixmap)
+{
+    if (!mHasTextureFromPixmap) {
+        return;
+    }
+
+    Display *display = DefaultXDisplay();
+    xDestroyPixmap(display, aPixmap);
+}
+
+void
+GLXLibrary::BindTexImage(GLXPixmap aPixmap)
+{    
+    if (!mHasTextureFromPixmap) {
+        return;
+    }
+
+    Display *display = DefaultXDisplay();
+    // Make sure all X drawing to the surface has finished before binding to a texture.
+    XSync(DefaultXDisplay(), False);
+    xBindTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT, NULL);
+}
+
+void
+GLXLibrary::ReleaseTexImage(GLXPixmap aPixmap)
+{
+    if (!mHasTextureFromPixmap) {
+        return;
+    }
+
+    Display *display = DefaultXDisplay();
+    xReleaseTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT);
 }
 
 GLXLibrary sGLXLibrary;
@@ -416,6 +508,7 @@ TRY_AGAIN_NO_SHARING:
         if (!mDoubleBuffered)
             return PR_FALSE;
         sGLXLibrary.xSwapBuffers(mDisplay, mDrawable);
+        sGLXLibrary.xWaitGL();
         return PR_TRUE;
     }
 
