@@ -44,9 +44,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "mozilla/dom/TabParent.h"
-#endif
 
 #include "nsCOMPtr.h"
 #include "nsEventStateManager.h"
@@ -164,9 +162,7 @@
 #import <ApplicationServices/ApplicationServices.h>
 #endif
 
-#ifdef MOZ_IPC
 using namespace mozilla::dom;
-#endif
 
 //#define DEBUG_DOCSHELL_FOCUS
 
@@ -1338,20 +1334,16 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_QUERY_SELECTED_TEXT:
     {
-#ifdef MOZ_IPC
       if (RemoteQueryContentEvent(aEvent))
         break;
-#endif
       nsContentEventHandler handler(mPresContext);
       handler.OnQuerySelectedText((nsQueryContentEvent*)aEvent);
     }
     break;
   case NS_QUERY_TEXT_CONTENT:
     {
-#ifdef MOZ_IPC
       if (RemoteQueryContentEvent(aEvent))
         break;
-#endif
       nsContentEventHandler handler(mPresContext);
       handler.OnQueryTextContent((nsQueryContentEvent*)aEvent);
     }
@@ -1407,7 +1399,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     break;
   case NS_SELECTION_SET:
     {
-#ifdef MOZ_IPC
       nsSelectionEvent *selectionEvent =
           static_cast<nsSelectionEvent*>(aEvent);
       if (IsTargetCrossProcess(selectionEvent)) {
@@ -1416,7 +1407,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
           selectionEvent->mSucceeded = PR_TRUE;
         break;
       }
-#endif
       nsContentEventHandler handler(mPresContext);
       handler.OnSelectionEvent((nsSelectionEvent*)aEvent);
     }
@@ -1437,7 +1427,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       DoContentCommandScrollEvent(static_cast<nsContentCommandEvent*>(aEvent));
     }
     break;
-#ifdef MOZ_IPC
   case NS_TEXT_TEXT:
     {
       nsTextEvent *textEvent = static_cast<nsTextEvent*>(aEvent);
@@ -1464,7 +1453,6 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       }
     }
     break;
-#endif // MOZ_IPC
   }
   return NS_OK;
 }
@@ -3337,7 +3325,6 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
   return ret;
 }
 
-#ifdef MOZ_IPC
 PRBool
 nsEventStateManager::RemoteQueryContentEvent(nsEvent *aEvent)
 {
@@ -3367,7 +3354,6 @@ nsEventStateManager::IsTargetCrossProcess(nsGUIEvent *aEvent)
     return PR_FALSE;
   return TabParent::GetIMETabParent() != nsnull;
 }
-#endif
 
 NS_IMETHODIMP
 nsEventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext)

@@ -1,0 +1,297 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Mobile Browser.
+ *
+ * The Initial Developer of the Original Code is
+ * Mozilla Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2008
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Mark Finkle <mfinkle@mozilla.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+html {
+  background: white;
+  font-family: "Nokia Sans", Tahoma, sans-serif !important;
+  font-size: 24px;
+  margin: 0px 20px;
+}
+
+#wrapper {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+#logo {
+  float: right;
+  margin-top: -24px;
+  margin-right: -34px;
+}
+
+#header {
+  font-weight: bold;
+  color: white;
+  background: transparent -moz-linear-gradient(top, rgba(57,89,117,1) 0%, rgba(30,66,98,1) 50%, rgba(24,54,82,1) 90%);
+  border-radius: 6px;
+  padding: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 12px;
+  margin-top: 20px;
+  box-shadow: inset rgba(0, 0, 0, 0.2) 0 -3px 0px, rgba(0, 0, 0, 0.1) 0px 2px 0px;
+}
+
+#header-suffix {
+  color: rgb(112,136,156);
+}
+
+.section-box {
+  background-color: white;
+  padding: 0;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.3);
+  box-shadow: 
+    inset rgba(255, 255, 255, 0.5) 0 1px 0px,
+    inset rgba(0, 0, 0, 0.1) 0 -3px 0px,
+    rgba(0, 0, 0, 0.1) 0px 2px 0px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.section-box > h1 {
+  font-size: 18px;
+  font-weight: normal;
+  color: black;
+  background: transparent -moz-linear-gradient(top, rgba(235,235,235,0.2) 0%, rgba(235,235,235,1) 90%);
+  margin: 0;
+  padding: 4px 12px 8px 12px;
+  border-radius: 8px 8px 0 0;
+}
+
+.section-box > div {
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding: 8px;
+  padding-bottom: 12px;
+  position: relative;
+}
+
+.section-box > div:last-child {
+  border-bottom: 0;
+}
+
+/* Make room for the image */
+.section-box > div > div,
+.section-row > div > div {
+  -moz-margin-start: 48px;
+}
+
+.section-box .title {
+  color: black;
+}
+
+.section-box .openall {
+  font-size: 18px;
+  padding: 12px 8px;
+  color: black;
+}
+
+body[dir="ltr"] .section-box .openall {
+  text-align: right;
+}
+
+.section-box .version {
+  -moz-margin-start: 12px;
+  font-size: 18px;
+  color: gray;
+}
+
+.section-box .inner {
+  pointer-events: none;
+}
+
+.section-box .favicon {
+  border: none;
+  top: 8px;
+  width: 32px;
+  height: 32px;
+  position: absolute;
+  pointer-events: none;
+}
+
+body[dir="ltr"] .section-box .favicon {
+  left: 12px;
+}
+
+body[dir="ltr"] .section-box .favicon {
+  right: 12px;
+}
+
+body[dir="ltr"] #newAddons > div:not(.loading) {
+  background: url("images/arrowright-16.png") 99% center no-repeat;
+}
+
+body[dir="rtl"] #newAddons > div:not(.loading) {
+  background: url("images/arrowleft-16.png") 1% center no-repeat;
+}
+
+#remoteTabs[disabled=true] {
+  pointer-events: none;
+  color: #aaa;
+}
+
+#remoteTabs[disabled=true] > div > .favicon {
+  opacity: 0.5;
+}
+
+.section-row {
+  color: black;
+  background: transparent -moz-linear-gradient(top, rgba(235,235,235,0.2) 0%, rgba(235,235,235,1) 90%);
+  padding: 8px;
+  padding-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.3);
+  box-shadow: 
+    inset rgba(255, 255, 255, 0.5) 0 1px 0px,
+    inset rgba(0, 0, 0, 0.1) 0 -3px 0px,
+    rgba(0, 0, 0, 0.1) 0px 2px 0px;
+  margin: 24px auto;
+}
+
+.section-row > div {
+  position: relative;
+  pointer-events: none;
+}
+
+.section-row .favicon {
+  border: none;
+  top: 0;
+  width: 32px;
+  height: 32px;
+  position: absolute;
+}
+
+body[dir="ltr"] {
+  left: 4px;
+}
+
+body[dir="rtl"] {
+  right: 4px;
+}
+
+.loading > img {
+  display: block;
+  margin: 0 auto;
+}
+
+.no-items {
+  text-align: center;
+  -moz-margin-start: 0 !important;
+}
+
+#footer-wrapper {
+  font-size: 18px;
+  margin-top: 24px;
+  text-align: center;
+}
+
+#feedback {
+  display: inline-block;
+  margin: 0;
+}
+
+#support {
+  display: inline-block;
+  margin: 0;
+}
+
+@media (max-width: 399px) {
+  #support {
+    margin-top: 8px;
+  }
+}
+
+@media (min-width: 400px) {
+  body[dir="ltr"]  #feedback {
+    border-radius: 8px 0 0 8px;
+  }
+
+  body[dir="rtl"]  #feedback {
+    border-radius: 0 8px 8px 0;
+  }
+
+  #support {
+    -moz-border-start: none;
+  }
+
+  body[dir="ltr"]  #support {
+    border-radius: 0 8px 8px 0;
+  }
+
+  body[dir="rtl"]  #support {
+    border-radius: 8px 0 0 8px;
+  }
+}
+
+#promo {
+  font-weight: bold;
+  color: rgb(254,210,13);
+  background-color: black;
+  border-radius: 6px;
+  padding: 10px;
+  margin-top: 24px;
+  box-shadow: inset rgba(0, 0, 0, 0.2) 0 -3px 0px, rgba(0, 0, 0, 0.1) 0px 2px 0px;
+  display: none;
+}
+
+#promo-label {
+  padding-left: 16px;
+}
+
+#promo-button {
+  padding: 8px;
+  margin: 0;
+  color: black;
+  font-size: 18px;
+  -moz-padding-end: 20px;
+}
+
+body[dir="ltr"] #promo-button {
+  float: right;
+  background: rgb(254,210,13) url("images/arrowright-16.png") 99% center no-repeat;
+}
+
+body[dir="rtl"] #promo-button {
+  float: left;
+  background: rgb(254,210,13) url("images/arrowleft-16.png") 1% center no-repeat;
+}
+
+@media (max-width: 399px) {
+  #promo-button {
+    display: none;
+  }
+}

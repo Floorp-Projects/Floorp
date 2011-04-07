@@ -36,10 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-# include "mozilla/layers/PLayers.h"
-# include "mozilla/layers/ShadowLayers.h"
-#endif
+#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #include "ThebesLayerBuffer.h"
 #include "ThebesLayerOGL.h"
@@ -577,6 +575,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
         // self-copy but we're not going to do that in GL yet.
         // We can't do a real self-copy because the buffer is rotated.
         // So allocate a new buffer for the destination.
+        destBufferRect = neededRegion.GetBounds();
         destBuffer = CreateClampOrRepeatTextureImage(gl(), destBufferDims, contentType, bufferFlags);
         if (!destBuffer)
           return result;
@@ -865,8 +864,6 @@ ThebesLayerOGL::IsEmpty()
 }
 
 
-#ifdef MOZ_IPC
-
 class ShadowBufferOGL : public ThebesLayerBufferOGL
 {
 public:
@@ -1033,9 +1030,6 @@ ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
   mBuffer->RenderTo(aOffset, mOGLManager, 0);
 }
-
-#endif  // MOZ_IPC
-
 
 } /* layers */
 } /* mozilla */

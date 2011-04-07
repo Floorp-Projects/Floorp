@@ -323,8 +323,8 @@ protected:
   PRBool SkipAtRule(PRBool aInsideBlock);
   PRBool SkipDeclaration(PRBool aCheckForBraces);
 
-  PRBool PushGroup(nsICSSGroupRule* aRule);
-  void PopGroup(void);
+  PRBool PushGroup(css::GroupRule* aRule);
+  void PopGroup();
 
   PRBool ParseRuleSet(RuleAppendFunc aAppendFunc, void* aProcessData,
                       PRBool aInsideBraces = PR_FALSE);
@@ -341,7 +341,7 @@ protected:
                      nsMediaList* aMedia,
                      RuleAppendFunc aAppendFunc,
                      void* aProcessData);
-  PRBool ParseGroupRule(nsICSSGroupRule* aRule, RuleAppendFunc aAppendFunc,
+  PRBool ParseGroupRule(css::GroupRule* aRule, RuleAppendFunc aAppendFunc,
                         void* aProcessData);
   PRBool ParseMediaRule(RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aProcessData);
@@ -656,7 +656,7 @@ protected:
 #endif
 
   // Stack of rule groups; used for @media and such.
-  nsCOMArray<nsICSSGroupRule> mGroupStack;
+  nsTArray<nsRefPtr<css::GroupRule> > mGroupStack;
 
   // During the parsing of a property (which may be a shorthand), the data
   // are stored in |mTempData|.  (It is needed to ensure that parser
@@ -987,7 +987,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   css::Declaration* declaration = ParseDeclarationBlock(haveBraces);
   if (declaration) {
     // Create a style rule for the declaration
-    *aResult = NS_NewCSSStyleRule(nsnull, declaration).get();
+    NS_ADDREF(*aResult = new css::StyleRule(nsnull, declaration));
   } else {
     *aResult = nsnull;
   }
@@ -1557,12 +1557,8 @@ CSSParserImpl::ParseCharsetRule(RuleAppendFunc aAppendFunc,
     return PR_FALSE;
   }
 
-  nsCOMPtr<nsICSSRule> rule;
-  NS_NewCSSCharsetRule(getter_AddRefs(rule), charset);
-
-  if (rule) {
-    (*aAppendFunc)(rule, aData);
-  }
+  nsCOMPtr<nsICSSRule> rule = new css::CharsetRule(charset);
+  (*aAppendFunc)(rule, aData);
 
   return PR_TRUE;
 }
@@ -1926,18 +1922,13 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
                              RuleAppendFunc aAppendFunc,
                              void* aData)
 {
-  nsRefPtr<css::ImportRule> rule;
-  nsresult rv = NS_NewCSSImportRule(getter_AddRefs(rule), aURLSpec, aMedia);
-  if (NS_FAILED(rv)) { // out of memory
-    mScanner.SetLowLevelError(rv);
-    return;
-  }
+  nsRefPtr<css::ImportRule> rule = new css::ImportRule(aMedia, aURLSpec);
   (*aAppendFunc)(rule, aData);
 
   // Diagnose bad URIs even if we don't have a child loader.
   nsCOMPtr<nsIURI> url;
   // Charset will be deduced from mBaseURI, which is more or less correct.
-  rv = NS_NewURI(getter_AddRefs(url), aURLSpec, nsnull, mBaseURI);
+  nsresult rv = NS_NewURI(getter_AddRefs(url), aURLSpec, nsnull, mBaseURI);
 
   if (NS_FAILED(rv)) {
     if (rv == NS_ERROR_MALFORMED_URI) {
@@ -1958,7 +1949,7 @@ CSSParserImpl::ProcessImport(const nsString& aURLSpec,
 
 // Parse the {} part of an @media or @-moz-document rule.
 PRBool
-CSSParserImpl::ParseGroupRule(nsICSSGroupRule* aRule,
+CSSParserImpl::ParseGroupRule(css::GroupRule* aRule,
                               RuleAppendFunc aAppendFunc,
                               void* aData)
 {
@@ -2007,17 +1998,13 @@ PRBool
 CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
 {
   nsRefPtr<nsMediaList> media = new nsMediaList();
-  if (!media) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    return PR_FALSE;
-  }
 
   if (GatherMedia(media, PR_TRUE)) {
     // XXXbz this could use better error reporting throughout the method
-    nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
+    nsRefPtr<css::MediaRule> rule = new css::MediaRule();
     // Append first, so when we do SetMedia() the rule
     // knows what its stylesheet is.
-    if (rule && ParseGroupRule(rule, aAppendFunc, aData)) {
+    if (ParseGroupRule(rule, aAppendFunc, aData)) {
       rule->SetMedia(media);
       return PR_TRUE;
     }
@@ -2032,8 +2019,8 @@ CSSParserImpl::ParseMediaRule(RuleAppendFunc aAppendFunc, void* aData)
 PRBool
 CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
 {
-  nsCSSDocumentRule::URL *urls = nsnull;
-  nsCSSDocumentRule::URL **next = &urls;
+  css::DocumentRule::URL *urls = nsnull;
+  css::DocumentRule::URL **next = &urls;
   do {
     if (!GetToken(PR_TRUE) ||
         !(eCSSToken_URL == mToken.mType ||
@@ -2044,21 +2031,16 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
       delete urls;
       return PR_FALSE;
     }
-    nsCSSDocumentRule::URL *cur = *next = new nsCSSDocumentRule::URL;
-    if (!cur) {
-      mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-      delete urls;
-      return PR_FALSE;
-    }
+    css::DocumentRule::URL *cur = *next = new css::DocumentRule::URL;
     next = &cur->next;
     if (mToken.mType == eCSSToken_URL) {
-      cur->func = nsCSSDocumentRule::eURL;
+      cur->func = css::DocumentRule::eURL;
       CopyUTF16toUTF8(mToken.mIdent, cur->url);
     } else {
       if (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix")) {
-        cur->func = nsCSSDocumentRule::eURLPrefix;
+        cur->func = css::DocumentRule::eURLPrefix;
       } else if (mToken.mIdent.LowerCaseEqualsLiteral("domain")) {
-        cur->func = nsCSSDocumentRule::eDomain;
+        cur->func = css::DocumentRule::eDomain;
       }
 
       nsAutoString url;
@@ -2075,12 +2057,7 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
     }
   } while (ExpectSymbol(',', PR_TRUE));
 
-  nsRefPtr<nsCSSDocumentRule> rule(new nsCSSDocumentRule());
-  if (!rule) {
-    mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
-    delete urls;
-    return PR_FALSE;
-  }
+  nsRefPtr<css::DocumentRule> rule = new css::DocumentRule();
   rule->SetURLs(urls);
 
   return ParseGroupRule(rule, aAppendFunc, aData);
@@ -2124,22 +2101,19 @@ CSSParserImpl::ProcessNameSpace(const nsString& aPrefix,
                                 RuleAppendFunc aAppendFunc,
                                 void* aData)
 {
-  nsRefPtr<css::NameSpaceRule> rule;
   nsCOMPtr<nsIAtom> prefix;
 
   if (!aPrefix.IsEmpty()) {
     prefix = do_GetAtom(aPrefix);
   }
 
-  NS_NewCSSNameSpaceRule(getter_AddRefs(rule), prefix, aURLSpec);
-  if (rule) {
-    (*aAppendFunc)(rule, aData);
+  nsRefPtr<css::NameSpaceRule> rule = new css::NameSpaceRule(prefix, aURLSpec);
+  (*aAppendFunc)(rule, aData);
 
-    // If this was the first namespace rule encountered, it will trigger
-    // creation of a namespace map.
-    if (!mNameSpaceMap) {
-      mNameSpaceMap = mSheet->GetNameSpaceMap();
-    }
+  // If this was the first namespace rule encountered, it will trigger
+  // creation of a namespace map.
+  if (!mNameSpaceMap) {
+    mNameSpaceMap = mSheet->GetNameSpaceMap();
   }
 }
 
@@ -2386,27 +2360,27 @@ CSSParserImpl::SkipRuleSet(PRBool aInsideBraces)
 }
 
 PRBool
-CSSParserImpl::PushGroup(nsICSSGroupRule* aRule)
+CSSParserImpl::PushGroup(css::GroupRule* aRule)
 {
-  if (mGroupStack.AppendObject(aRule))
+  if (mGroupStack.AppendElement(aRule))
     return PR_TRUE;
 
   return PR_FALSE;
 }
 
 void
-CSSParserImpl::PopGroup(void)
+CSSParserImpl::PopGroup()
 {
-  PRInt32 count = mGroupStack.Count();
+  PRUint32 count = mGroupStack.Length();
   if (0 < count) {
-    mGroupStack.RemoveObjectAt(count - 1);
+    mGroupStack.RemoveElementAt(count - 1);
   }
 }
 
 void
 CSSParserImpl::AppendRule(nsICSSRule* aRule)
 {
-  PRInt32 count = mGroupStack.Count();
+  PRUint32 count = mGroupStack.Length();
   if (0 < count) {
     mGroupStack[count - 1]->AppendStyleRule(aRule);
   }
@@ -2448,7 +2422,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
 
   // Translate the selector list and declaration block into style data
 
-  nsRefPtr<css::StyleRule> rule = NS_NewCSSStyleRule(slist, declaration);
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(slist, declaration);
   rule->SetLineNumber(linenum);
   (*aAppendFunc)(rule, aData);
 

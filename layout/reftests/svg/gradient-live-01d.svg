@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" 
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     class="reftest-wait">
+     class="reftest-wait" font-size="80">
      
 <!-- Tests that gradients are live to stop addition. -->
 
@@ -26,5 +26,7 @@ function addBlueStop()
 
 <linearGradient id="grad2" xlink:href="#grad1"/>
 <rect x="20" y="150" width="440" height="80" fill="url(#grad2)" />
+<text x="20" y="300" width="440" height="80" fill="url(#grad1)">gradiation</text>
+<text x="20" y="400" width="440" height="80" fill="url(#grad2)">gradiation</text>
 
 </svg>

@@ -41,17 +41,14 @@
  * stream.
  */
 
-#ifdef MOZ_IPC
 #include "IPC/IPCMessageUtils.h"
 #include "mozilla/net/NeckoMessageUtils.h"
-#endif
 
 #include "nsMultiplexInputStream.h"
 #include "nsIMultiplexInputStream.h"
 #include "nsISeekableStream.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
-#include "nsInt64.h"
 #include "nsIIPCSerializable.h"
 #include "nsIClassInfoImpl.h"
 
@@ -384,7 +381,7 @@ nsMultiplexInputStream::Tell(PRInt64 *_retval)
         return mStatus;
 
     nsresult rv;
-    nsInt64 ret64 = 0;
+    PRInt64 ret64 = 0;
     PRUint32 i, last;
     last = mStartedReadingCurrent ? mCurrentStream+1 : mCurrentStream;
     for (i = 0; i < last; ++i) {
@@ -432,7 +429,6 @@ nsMultiplexInputStreamConstructor(nsISupports *outer,
 PRBool
 nsMultiplexInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
-#ifdef MOZ_IPC
     using IPC::ReadParam;
 
     PRUint32 count;
@@ -456,15 +452,11 @@ nsMultiplexInputStream::Read(const IPC::Message *aMsg, void **aIter)
         return PR_FALSE;
 
     return PR_TRUE;
-#else
-    return PR_FALSE;
-#endif
 }
 
 void
 nsMultiplexInputStream::Write(IPC::Message *aMsg)
 {
-#ifdef MOZ_IPC
     using IPC::WriteParam;
 
     PRUint32 count = mStreams.Count();
@@ -478,5 +470,4 @@ nsMultiplexInputStream::Write(IPC::Message *aMsg)
     WriteParam(aMsg, mCurrentStream);
     WriteParam(aMsg, mStartedReadingCurrent);
     WriteParam(aMsg, mStatus);
-#endif
 }

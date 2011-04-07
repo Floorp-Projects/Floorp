@@ -79,9 +79,7 @@
 
 #include "nsIXULAppInfo.h"
 
-#ifdef MOZ_IPC
 #include "mozilla/net/NeckoChild.h"
-#endif 
 
 #if defined(XP_UNIX)
 #include <sys/utsname.h>
@@ -102,9 +100,7 @@
 
 //-----------------------------------------------------------------------------
 using namespace mozilla::net;
-#ifdef MOZ_IPC
 #include "mozilla/net/HttpChannelChild.h"
-#endif 
 
 #include "mozilla/FunctionTimer.h"
 
@@ -178,6 +174,7 @@ nsHttpHandler::nsHttpHandler()
     , mIdleTimeout(10)
     , mMaxRequestAttempts(10)
     , mMaxRequestDelay(10)
+    , mIdleSynTimeout(250)
     , mMaxConnections(24)
     , mMaxConnectionsPerServer(8)
     , mMaxPersistentConnectionsPerServer(2)
@@ -247,10 +244,8 @@ nsHttpHandler::Init()
         return rv;
     }
 
-#ifdef MOZ_IPC
     if (IsNeckoChild())
         NeckoChild::InitNeckoChild();
-#endif // MOZ_IPC
 
     InitUserAgentComponents();
 
@@ -288,7 +283,6 @@ nsHttpHandler::Init()
     LOG(("> legacy-app-version = %s\n", mLegacyAppVersion.get()));
     LOG(("> platform = %s\n", mPlatform.get()));
     LOG(("> oscpu = %s\n", mOscpu.get()));
-    LOG(("> language = %s\n", mLanguage.get()));
     LOG(("> misc = %s\n", mMisc.get()));
     LOG(("> product = %s\n", mProduct.get()));
     LOG(("> product-sub = %s\n", mProductSub.get()));
@@ -393,15 +387,14 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
     //
     // However, we need to send something so that we can use keepalive
     // with HTTP/1.0 servers/proxies. We use "Proxy-Connection:" when 
-    // we're talking to an http proxy, and "Connection:" otherwise
+    // we're talking to an http proxy, and "Connection:" otherwise.
+    // We no longer send the Keep-Alive request header.
     
     NS_NAMED_LITERAL_CSTRING(close, "close");
     NS_NAMED_LITERAL_CSTRING(keepAlive, "keep-alive");
 
     const nsACString *connectionType = &close;
     if (caps & NS_HTTP_ALLOW_KEEPALIVE) {
-        rv = request->SetHeader(nsHttp::Keep_Alive, nsPrintfCString("%u", mIdleTimeout));
-        if (NS_FAILED(rv)) return rv;
         connectionType = &keepAlive;
     } else if (useProxy) {
         // Bug 92006
@@ -815,28 +808,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         mUserAgentIsDirty = PR_TRUE;
     }
 
-    // Gather locale.
-    if (PREF_CHANGED(UA_PREF("locale"))) {
-        nsCOMPtr<nsIPrefLocalizedString> pls;
-        prefs->GetComplexValue(UA_PREF("locale"),
-                               NS_GET_IID(nsIPrefLocalizedString),
-                               getter_AddRefs(pls));
-        if (pls) {
-            nsXPIDLString uval;
-            pls->ToString(getter_Copies(uval));
-            if (uval)
-                CopyUTF16toUTF8(uval, mLanguage);
-        }
-        else {
-            nsXPIDLCString cval;
-            rv = prefs->GetCharPref(UA_PREF("locale"), getter_Copies(cval));
-            if (cval)
-                mLanguage.Assign(cval);
-        }
-
-        mUserAgentIsDirty = PR_TRUE;
-    }
-
     // general.useragent.override
     if (PREF_CHANGED(UA_PREF("override"))) {
         prefs->GetCharPref(UA_PREF("override"),
@@ -923,6 +894,12 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         rv = prefs->GetIntPref(HTTP_PREF("redirection-limit"), &val);
         if (NS_SUCCEEDED(rv))
             mRedirectionLimit = (PRUint8) NS_CLAMP(val, 0, 0xff);
+    }
+
+    if (PREF_CHANGED(HTTP_PREF("connection-retry-timeout"))) {
+        rv = prefs->GetIntPref(HTTP_PREF("connection-retry-timeout"), &val);
+        if (NS_SUCCEEDED(rv))
+            mIdleSynTimeout = (PRUint16) NS_CLAMP(val, 0, 3000);
     }
 
     if (PREF_CHANGED(HTTP_PREF("version"))) {
@@ -1482,12 +1459,9 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
     if (NS_FAILED(rv))
         return rv;
 
-#ifdef MOZ_IPC
     if (IsNeckoChild()) {
         httpChannel = new HttpChannelChild();
-    } else
-#endif
-    {
+    } else {
         httpChannel = new nsHttpChannel();
     }
 
@@ -1504,10 +1478,7 @@ nsHttpHandler::NewProxiedChannel(nsIURI *uri,
         if (mPipeliningOverSSL)
             caps |= NS_HTTP_ALLOW_PIPELINING;
 
-#ifdef MOZ_IPC
-        if (!IsNeckoChild()) 
-#endif
-        {
+        if (!IsNeckoChild()) {
             // HACK: make sure PSM gets initialized on the main thread.
             net_EnsurePSMInit();
         }
@@ -1571,13 +1542,6 @@ NS_IMETHODIMP
 nsHttpHandler::GetOscpu(nsACString &value)
 {
     value = mOscpu;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpHandler::GetLanguage(nsACString &value)
-{
-    value = mLanguage;
     return NS_OK;
 }
 

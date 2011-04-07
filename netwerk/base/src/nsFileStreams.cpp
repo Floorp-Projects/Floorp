@@ -35,9 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "IPC/IPCMessageUtils.h"
-#endif
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
 #include <unistd.h>
@@ -57,7 +55,6 @@
 #include "nsXPIDLString.h"
 #include "prerror.h"
 #include "nsCRT.h"
-#include "nsInt64.h"
 #include "nsIFile.h"
 #include "nsDirectoryIndexStream.h"
 #include "nsMimeTypes.h"
@@ -107,8 +104,8 @@ nsFileStream::Seek(PRInt32 whence, PRInt64 offset)
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
-    nsInt64 cnt = PR_Seek64(mFD, offset, (PRSeekWhence)whence);
-    if (cnt == nsInt64(-1)) {
+    PRInt64 cnt = PR_Seek64(mFD, offset, (PRSeekWhence)whence);
+    if (cnt == PRInt64(-1)) {
         return NS_ErrorAccordingToNSPR();
     }
     return NS_OK;
@@ -123,8 +120,8 @@ nsFileStream::Tell(PRInt64 *result)
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
-    nsInt64 cnt = PR_Seek64(mFD, 0, PR_SEEK_CUR);
-    if (cnt == nsInt64(-1)) {
+    PRInt64 cnt = PR_Seek64(mFD, 0, PR_SEEK_CUR);
+    if (cnt == PRInt64(-1)) {
         return NS_ErrorAccordingToNSPR();
     }
     *result = cnt;
@@ -441,7 +438,6 @@ nsFileInputStream::Seek(PRInt32 aWhence, PRInt64 aOffset)
 PRBool
 nsFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
-#ifdef MOZ_IPC
     using IPC::ReadParam;
 
     nsCString path;
@@ -464,15 +460,11 @@ nsFileInputStream::Read(const IPC::Message *aMsg, void **aIter)
         return PR_FALSE;
 
     return PR_TRUE;
-#else
-    return PR_FALSE;
-#endif
 }
 
 void
 nsFileInputStream::Write(IPC::Message *aMsg)
 {
-#ifdef MOZ_IPC
     using IPC::WriteParam;
 
     nsCString path;
@@ -483,7 +475,6 @@ nsFileInputStream::Write(IPC::Message *aMsg)
     localFile->GetFollowLinks(&followLinks);
     WriteParam(aMsg, followLinks);
     WriteParam(aMsg, mBehaviorFlags);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
