@@ -57,14 +57,15 @@ static const PRUint32 MAX_RECURSION = 10;
 SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
 {
   // Adding new seg type? Is the formatting below acceptable for the new types?
+  PR_STATIC_ASSERT(NS_SVG_PATH_SEG_LAST_VALID_TYPE ==
+                     nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL);
   PR_STATIC_ASSERT(NS_SVG_PATH_SEG_MAX_ARGS == 7);
 
   PRUint32 type = DecodeType(aSeg[0]);
   PRUnichar typeAsChar = GetPathSegTypeAsLetter(type);
 
   // Special case arcs:
-  if (type == nsIDOMSVGPathSeg::PATHSEG_ARC_ABS ||
-      type == nsIDOMSVGPathSeg::PATHSEG_ARC_REL) {
+  if (IsArcType(type)) {
     PRBool largeArcFlag = aSeg[4] != 0.0f;
     PRBool sweepFlag = aSeg[5] != 0.0f;
     nsTextFormatter::ssprintf(aValue,
@@ -201,261 +202,284 @@ CalcLengthOfQuadraticBezier(const gfxPoint& aPos, const gfxPoint& aCP,
 }
 
 
-static float GetLengthOfClosePath(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseClosePath(const float* aArgs, SVGPathTraversalState& aState)
 {
-  float dist = CalcDistanceBetweenPoints(aState.pos, aState.start);
-  aState.pos = aState.cp1 = aState.cp2 = aState.start;
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    aState.length += CalcDistanceBetweenPoints(aState.pos, aState.start);
+    aState.cp1 = aState.cp2 = aState.start;
+  }
+  aState.pos = aState.start;
 }
 
-static float GetLengthOfMovetoAbs(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseMovetoAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
-  aState.start = aState.pos = aState.cp1 = aState.cp2 = gfxPoint(aArgs[0], aArgs[1]);
-  return 0.0;
+  aState.start = aState.pos = gfxPoint(aArgs[0], aArgs[1]);
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    // aState.length is unchanged, since move commands don't affect path length.
+    aState.cp1 = aState.cp2 = aState.start;
+  }
 }
 
-static float GetLengthOfMovetoRel(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseMovetoRel(const float* aArgs, SVGPathTraversalState& aState)
 {
-  // aState.pos must be second from right due to +=
-  aState.start = aState.cp1 = aState.cp2 = aState.pos += gfxPoint(aArgs[0], aArgs[1]);
-  return 0.0;
+  aState.start = aState.pos += gfxPoint(aArgs[0], aArgs[1]);
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    // aState.length is unchanged, since move commands don't affect path length.
+    aState.cp1 = aState.cp2 = aState.start;
+  }
 }
 
-static float GetLengthOfLinetoAbs(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseLinetoAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
   gfxPoint to(aArgs[0], aArgs[1]);
-  float dist = CalcDistanceBetweenPoints(aState.pos, to);
-  aState.pos = aState.cp1 = aState.cp2 = to;
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    aState.length += CalcDistanceBetweenPoints(aState.pos, to);
+    aState.cp1 = aState.cp2 = to;
+  }
+  aState.pos = to;
 }
 
-static float GetLengthOfLinetoRel(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseLinetoRel(const float* aArgs, SVGPathTraversalState& aState)
 {
   gfxPoint to = aState.pos + gfxPoint(aArgs[0], aArgs[1]);
-  float dist = CalcDistanceBetweenPoints(aState.pos, to);
-  aState.pos = aState.cp1 = aState.cp2 = to;
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    aState.length += CalcDistanceBetweenPoints(aState.pos, to);
+    aState.cp1 = aState.cp2 = to;
+  }
+  aState.pos = to;
 }
 
-static float
-GetLengthOfLinetoHorizontalAbs(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseLinetoHorizontalAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
   gfxPoint to(aArgs[0], aState.pos.y);
-  float dist = fabs(to.x - aState.pos.x);
-  aState.pos = aState.cp1 = aState.cp2 = to;
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    aState.length += fabs(to.x - aState.pos.x);
+    aState.cp1 = aState.cp2 = to;
+  }
+  aState.pos = to;
 }
 
-static float
-GetLengthOfLinetoHorizontalRel(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseLinetoHorizontalRel(const float* aArgs, SVGPathTraversalState& aState)
 {
-  aState.cp1 = aState.cp2 = aState.pos += gfxPoint(aArgs[0], 0.0);
-  return fabs(aArgs[0]);
+  aState.pos.x += aArgs[0];
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    aState.length += fabs(aArgs[0]);
+    aState.cp1 = aState.cp2 = aState.pos;
+  }
 }
 
-static float
-GetLengthOfLinetoVerticalAbs(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseLinetoVerticalAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
   gfxPoint to(aState.pos.x, aArgs[0]);
-  float dist = fabs(to.y - aState.pos.y);
-  aState.pos = aState.cp1 = aState.cp2 = to;
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    aState.length += fabs(to.y - aState.pos.y);
+    aState.cp1 = aState.cp2 = to;
+  }
+  aState.pos = to;
 }
 
-static float
-GetLengthOfLinetoVerticalRel(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseLinetoVerticalRel(const float* aArgs, SVGPathTraversalState& aState)
 {
-  aState.cp1 = aState.cp2 = aState.pos += gfxPoint(0.0, aArgs[0]);
-  return fabs(aArgs[0]);
+  aState.pos.y += aArgs[0];
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    aState.length += fabs(aArgs[0]);
+    aState.cp1 = aState.cp2 = aState.pos;
+  }
 }
 
-static float GetLengthOfCurvetoCubicAbs(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseCurvetoCubicAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint cp1(aArgs[0], aArgs[1]);
-  gfxPoint cp2(aArgs[2], aArgs[3]);
   gfxPoint to(aArgs[4], aArgs[5]);
-
-  float dist = (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
-
-  aState.cp2 = cp2;
-  aState.pos = aState.cp1 = to;
-
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    gfxPoint cp1(aArgs[0], aArgs[1]);
+    gfxPoint cp2(aArgs[2], aArgs[3]);
+    aState.length += (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
+    aState.cp2 = cp2;
+    aState.cp1 = to;
+  }
+  aState.pos = to;
 }
 
-static float
-GetLengthOfCurvetoCubicSmoothAbs(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseCurvetoCubicSmoothAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint cp1 = aState.pos - (aState.cp2 - aState.pos);
-  gfxPoint cp2(aArgs[0], aArgs[1]);
   gfxPoint to(aArgs[2], aArgs[3]);
-
-  float dist = (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
-
-  aState.cp2 = cp2;
-  aState.pos = aState.cp1 = to;
-
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    gfxPoint cp1 = aState.pos - (aState.cp2 - aState.pos);
+    gfxPoint cp2(aArgs[0], aArgs[1]);
+    aState.length += (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
+    aState.cp2 = cp2;
+    aState.cp1 = to;
+  }
+  aState.pos = to;
 }
 
-static float
-GetLengthOfCurvetoCubicRel(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseCurvetoCubicRel(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint cp1 = aState.pos + gfxPoint(aArgs[0], aArgs[1]);
-  gfxPoint cp2 = aState.pos + gfxPoint(aArgs[2], aArgs[3]);
-  gfxPoint to  = aState.pos + gfxPoint(aArgs[4], aArgs[5]);
-
-  float dist = (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
-
-  aState.cp2 = cp2;
-  aState.pos = aState.cp1 = to;
-
-  return dist;
+  gfxPoint to = aState.pos + gfxPoint(aArgs[4], aArgs[5]);
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    gfxPoint cp1 = aState.pos + gfxPoint(aArgs[0], aArgs[1]);
+    gfxPoint cp2 = aState.pos + gfxPoint(aArgs[2], aArgs[3]);
+    aState.length += (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
+    aState.cp2 = cp2;
+    aState.cp1 = to;
+  }
+  aState.pos = to;
 }
 
-static float
-GetLengthOfCurvetoCubicSmoothRel(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseCurvetoCubicSmoothRel(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint cp1 = aState.pos - (aState.cp2 - aState.pos);
-  gfxPoint cp2 = aState.pos + gfxPoint(aArgs[0], aArgs[1]);
-  gfxPoint to  = aState.pos + gfxPoint(aArgs[2], aArgs[3]);
-
-  float dist = (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
-
-  aState.cp2 = cp2;
-  aState.pos = aState.cp1 = to;
-
-  return dist;
-}
-
-static float
-GetLengthOfCurvetoQuadraticAbs(const float *aArgs, SVGPathTraversalState &aState)
-{
-  gfxPoint cp(aArgs[0], aArgs[1]);
-  gfxPoint to(aArgs[2], aArgs[3]);
-
-  float dist = (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
-
-  aState.cp1 = cp;
-  aState.pos = aState.cp2 = to;
-
-  return dist;
-}
-
-static float
-GetLengthOfCurvetoQuadraticSmoothAbs(const float *aArgs, SVGPathTraversalState &aState)
-{
-  gfxPoint cp = aState.pos - (aState.cp1 - aState.pos);
-  gfxPoint to(aArgs[0], aArgs[1]);
-
-  float dist = (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
-
-  aState.cp1 = cp;
-  aState.pos = aState.cp2 = to;
-
-  return dist;
-}
-
-static float
-GetLengthOfCurvetoQuadraticRel(const float *aArgs, SVGPathTraversalState &aState)
-{
-  gfxPoint cp = aState.pos + gfxPoint(aArgs[0], aArgs[1]);
   gfxPoint to = aState.pos + gfxPoint(aArgs[2], aArgs[3]);
-
-  float dist = (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
-
-  aState.cp1 = cp;
-  aState.pos = aState.cp2 = to;
-
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    gfxPoint cp1 = aState.pos - (aState.cp2 - aState.pos);
+    gfxPoint cp2 = aState.pos + gfxPoint(aArgs[0], aArgs[1]);
+    aState.length += (float)CalcLengthOfCubicBezier(aState.pos, cp1, cp2, to);
+    aState.cp2 = cp2;
+    aState.cp1 = to;
+  }
+  aState.pos = to;
 }
 
-static float
-GetLengthOfCurvetoQuadraticSmoothRel(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseCurvetoQuadraticAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint cp = aState.pos - (aState.cp1 - aState.pos);
+  gfxPoint to(aArgs[2], aArgs[3]);
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    gfxPoint cp(aArgs[0], aArgs[1]);
+    aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
+    aState.cp1 = cp;
+    aState.cp2 = to;
+  }
+  aState.pos = to;
+}
+
+static void
+TraverseCurvetoQuadraticSmoothAbs(const float* aArgs,
+                                  SVGPathTraversalState& aState)
+{
+  gfxPoint to(aArgs[0], aArgs[1]);
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    gfxPoint cp = aState.pos - (aState.cp1 - aState.pos);
+    aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
+    aState.cp1 = cp;
+    aState.cp2 = to;
+  }
+  aState.pos = to;
+}
+
+static void
+TraverseCurvetoQuadraticRel(const float* aArgs, SVGPathTraversalState& aState)
+{
+  gfxPoint to = aState.pos + gfxPoint(aArgs[2], aArgs[3]);
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    gfxPoint cp = aState.pos + gfxPoint(aArgs[0], aArgs[1]);
+    aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
+    aState.cp1 = cp;
+    aState.cp2 = to;
+  }
+  aState.pos = to;
+}
+
+static void
+TraverseCurvetoQuadraticSmoothRel(const float* aArgs,
+                                  SVGPathTraversalState& aState)
+{
   gfxPoint to = aState.pos + gfxPoint(aArgs[0], aArgs[1]);
-
-  float dist = (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
-
-  aState.cp1 = cp;
-  aState.pos = aState.cp2 = to;
-
-  return dist;
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    gfxPoint cp = aState.pos - (aState.cp1 - aState.pos);
+    aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
+    aState.cp1 = cp;
+    aState.cp2 = to;
+  }
+  aState.pos = to;
 }
 
-static float
-GetLengthOfArcAbs(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseArcAbs(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint radii(aArgs[0], aArgs[1]);
   gfxPoint to(aArgs[5], aArgs[6]);
-  gfxPoint bez[4] = { aState.pos, gfxPoint(0,0), gfxPoint(0,0), gfxPoint(0,0) };
-  nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
-                              aArgs[3] != 0, aArgs[4] != 0);
-  float dist = 0;
-  while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3]))
-  {
-    dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
-    bez[0] = bez[3];
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    float dist = 0;
+    gfxPoint radii(aArgs[0], aArgs[1]);
+    gfxPoint bez[4] = { aState.pos, gfxPoint(0, 0),
+                        gfxPoint(0, 0), gfxPoint(0, 0) };
+    nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
+                                aArgs[3] != 0, aArgs[4] != 0);
+    while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
+      dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
+      bez[0] = bez[3];
+    }
+    aState.length += dist;
+    aState.cp1 = aState.cp2 = to;
   }
-  aState.pos = aState.cp1 = aState.cp2 = to;
-  return dist;
+  aState.pos = to;
 }
 
-static float
-GetLengthOfArcRel(const float *aArgs, SVGPathTraversalState &aState)
+static void
+TraverseArcRel(const float* aArgs, SVGPathTraversalState& aState)
 {
-  gfxPoint radii(aArgs[0], aArgs[1]);
   gfxPoint to = aState.pos + gfxPoint(aArgs[5], aArgs[6]);
-  gfxPoint bez[4] = { aState.pos, gfxPoint(0,0), gfxPoint(0,0), gfxPoint(0,0) };
-  nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
-                              aArgs[3] != 0, aArgs[4] != 0);
-  float dist = 0;
-  while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3]))
-  {
-    dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
-    bez[0] = bez[3];
+  if (aState.ShouldUpdateLengthAndControlPoints()) {
+    float dist = 0;
+    gfxPoint radii(aArgs[0], aArgs[1]);
+    gfxPoint bez[4] = { aState.pos, gfxPoint(0, 0),
+                        gfxPoint(0, 0), gfxPoint(0, 0) };
+    nsSVGArcConverter converter(aState.pos, to, radii, aArgs[2],
+                                aArgs[3] != 0, aArgs[4] != 0);
+    while (converter.GetNextSegment(&bez[1], &bez[2], &bez[3])) {
+      dist += CalcBezLengthHelper(bez, 4, 0, SplitCubicBezier);
+      bez[0] = bez[3];
+    }
+    aState.length += dist;
+    aState.cp1 = aState.cp2 = to;
   }
-  aState.pos = aState.cp1 = aState.cp2 = to;
-  return dist;
+  aState.pos = to;
 }
 
 
-typedef float (*getLengthFunc)(const float*, SVGPathTraversalState&);
+typedef void (*TraverseFunc)(const float*, SVGPathTraversalState&);
 
-/* static */ float
-SVGPathSegUtils::GetLength(const float *seg, SVGPathTraversalState &aState)
+static TraverseFunc gTraverseFuncTable[NS_SVG_PATH_SEG_TYPE_COUNT] = {
+  nsnull, //  0 == PATHSEG_UNKNOWN
+  TraverseClosePath,
+  TraverseMovetoAbs,
+  TraverseMovetoRel,
+  TraverseLinetoAbs,
+  TraverseLinetoRel,
+  TraverseCurvetoCubicAbs,
+  TraverseCurvetoCubicRel,
+  TraverseCurvetoQuadraticAbs,
+  TraverseCurvetoQuadraticRel,
+  TraverseArcAbs,
+  TraverseArcRel,
+  TraverseLinetoHorizontalAbs,
+  TraverseLinetoHorizontalRel,
+  TraverseLinetoVerticalAbs,
+  TraverseLinetoVerticalRel,
+  TraverseCurvetoCubicSmoothAbs,
+  TraverseCurvetoCubicSmoothRel,
+  TraverseCurvetoQuadraticSmoothAbs,
+  TraverseCurvetoQuadraticSmoothRel
+};
+
+/* static */ void
+SVGPathSegUtils::TraversePathSegment(const float* aData,
+                                     SVGPathTraversalState& aState)
 {
-  PRUint32 type = DecodeType(seg[0]);
-
-  static getLengthFunc lengthFuncTable[20] = {
-    nsnull, //  0 == PATHSEG_UNKNOWN
-    GetLengthOfClosePath,
-    GetLengthOfMovetoAbs,
-    GetLengthOfMovetoRel,
-    GetLengthOfLinetoAbs,
-    GetLengthOfLinetoRel,
-    GetLengthOfCurvetoCubicAbs,
-    GetLengthOfCurvetoCubicRel,
-    GetLengthOfCurvetoQuadraticAbs,
-    GetLengthOfCurvetoQuadraticRel,
-    GetLengthOfArcAbs,
-    GetLengthOfArcRel,
-    GetLengthOfLinetoHorizontalAbs,
-    GetLengthOfLinetoHorizontalRel,
-    GetLengthOfLinetoVerticalAbs,
-    GetLengthOfLinetoVerticalRel,
-    GetLengthOfCurvetoCubicSmoothAbs,
-    GetLengthOfCurvetoCubicSmoothRel,
-    GetLengthOfCurvetoQuadraticSmoothAbs,
-    GetLengthOfCurvetoQuadraticSmoothRel
-  };
-
-  NS_ABORT_IF_FALSE(IsValidType(type), "Seg type not recognized");
-
-  NS_ABORT_IF_FALSE(type > 0 && type < NS_ARRAY_LENGTH(lengthFuncTable),
-                    "Seg type not recognized");
-
-  return lengthFuncTable[type](seg + 1, aState);
+  PR_STATIC_ASSERT(NS_ARRAY_LENGTH(gTraverseFuncTable) ==
+                     NS_SVG_PATH_SEG_TYPE_COUNT);
+  PRUint32 type = DecodeType(aData[0]);
+  gTraverseFuncTable[type](aData + 1, aState);
 }
-

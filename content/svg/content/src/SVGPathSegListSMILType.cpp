@@ -89,6 +89,240 @@ SVGPathSegListSMILType::IsEqual(const nsSMILValue& aLeft,
          *static_cast<const SVGPathDataAndOwner*>(aRight.mU.mPtr);
 }
 
+static PRBool
+ArcFlagsDiffer(SVGPathDataAndOwner::const_iterator aPathData1,
+               SVGPathDataAndOwner::const_iterator aPathData2)
+{
+  NS_ABORT_IF_FALSE
+    (SVGPathSegUtils::IsArcType(SVGPathSegUtils::DecodeType(aPathData1[0])),
+                                "ArcFlagsDiffer called with non-arc segment");
+  NS_ABORT_IF_FALSE
+    (SVGPathSegUtils::IsArcType(SVGPathSegUtils::DecodeType(aPathData2[0])),
+                                "ArcFlagsDiffer called with non-arc segment");
+
+  return aPathData1[4] != aPathData2[4] ||  // large arc flag
+         aPathData1[5] != aPathData2[5];    // sweep flag
+}
+
+enum PathInterpolationResult {
+  eCannotInterpolate,
+  eRequiresConversion,
+  eCanInterpolate
+};
+
+static PathInterpolationResult
+CanInterpolate(const SVGPathDataAndOwner& aStart,
+               const SVGPathDataAndOwner& aEnd)
+{
+  if (aStart.IsEmpty()) {
+    return eCanInterpolate;
+  }
+
+  if (aStart.Length() != aEnd.Length()) {
+    return eCannotInterpolate;
+  }
+
+  PathInterpolationResult result = eCanInterpolate;
+
+  SVGPathDataAndOwner::const_iterator pStart = aStart.begin();
+  SVGPathDataAndOwner::const_iterator pEnd = aEnd.begin();
+  SVGPathDataAndOwner::const_iterator pStartDataEnd = aStart.end();
+  SVGPathDataAndOwner::const_iterator pEndDataEnd = aEnd.end();
+
+  while (pStart < pStartDataEnd && pEnd < pEndDataEnd) {
+    PRUint32 startType = SVGPathSegUtils::DecodeType(*pStart);
+    PRUint32 endType = SVGPathSegUtils::DecodeType(*pEnd);
+
+    if (SVGPathSegUtils::IsArcType(startType) &&
+        SVGPathSegUtils::IsArcType(endType) &&
+        ArcFlagsDiffer(pStart, pEnd)) {
+      return eCannotInterpolate;
+    }
+
+    if (startType != endType) {
+      if (!SVGPathSegUtils::SameTypeModuloRelativeness(startType, endType)) {
+        return eCannotInterpolate;
+      }
+
+      result = eRequiresConversion;
+    }
+
+    pStart += 1 + SVGPathSegUtils::ArgCountForType(startType);
+    pEnd += 1 + SVGPathSegUtils::ArgCountForType(endType);
+  }
+
+  NS_ABORT_IF_FALSE(pStart <= pStartDataEnd && pEnd <= pEndDataEnd,
+                    "Iterated past end of buffer! (Corrupt path data?)");
+
+  if (pStart != pStartDataEnd || pEnd != pEndDataEnd) {
+    return eCannotInterpolate;
+  }
+
+  return result;
+}
+
+static void
+InterpolatePathSegmentData(SVGPathDataAndOwner::const_iterator& aStart,
+                           SVGPathDataAndOwner::const_iterator& aEnd,
+                           SVGPathDataAndOwner::iterator& aResult,
+                           float aUnitDistance)
+{
+  PRUint32 startType = SVGPathSegUtils::DecodeType(*aStart);
+  PRUint32 endType = SVGPathSegUtils::DecodeType(*aEnd);
+
+  NS_ABORT_IF_FALSE
+    (startType == endType,
+     "InterpolatePathSegmentData expects segment types to be the same!");
+
+  NS_ABORT_IF_FALSE
+    (!(SVGPathSegUtils::IsArcType(startType) && ArcFlagsDiffer(aStart, aEnd)),
+     "InterpolatePathSegmentData cannot interpolate arc segments with different flag values!");
+
+  PRUint32 argCount = SVGPathSegUtils::ArgCountForType(startType);
+
+  // Copy over segment type.
+  *aResult++ = *aStart++;
+  ++aEnd;
+
+  // Interpolate the arguments.
+  SVGPathDataAndOwner::const_iterator startSegEnd = aStart + argCount;
+  while (aStart != startSegEnd) {
+    *aResult = *aStart + (*aEnd - *aStart) * aUnitDistance;
+    ++aStart;
+    ++aEnd;
+    ++aResult;
+  }
+}
+
+enum RelativenessAdjustmentType {
+  eAbsoluteToRelative,
+  eRelativeToAbsolute
+};
+
+static inline void
+AdjustSegmentForRelativeness(RelativenessAdjustmentType aAdjustmentType,
+                             const SVGPathDataAndOwner::iterator& aSegmentToAdjust,
+                             const SVGPathTraversalState& aState)
+{
+  if (aAdjustmentType == eAbsoluteToRelative) {
+    aSegmentToAdjust[0] -= aState.pos.x;
+    aSegmentToAdjust[1] -= aState.pos.y;
+  } else {
+    aSegmentToAdjust[0] += aState.pos.x;
+    aSegmentToAdjust[1] += aState.pos.y;
+  }
+}
+
+static void
+ConvertPathSegmentData(SVGPathDataAndOwner::const_iterator& aStart,
+                       SVGPathDataAndOwner::const_iterator& aEnd,
+                       SVGPathDataAndOwner::iterator& aResult,
+                       SVGPathTraversalState& aState)
+{
+  PRUint32 startType = SVGPathSegUtils::DecodeType(*aStart);
+  PRUint32 endType = SVGPathSegUtils::DecodeType(*aEnd);
+
+  PRUint32 segmentLengthIncludingType =
+      1 + SVGPathSegUtils::ArgCountForType(startType);
+
+  SVGPathDataAndOwner::const_iterator pResultSegmentBegin = aResult;
+
+  if (startType == endType) {
+    // No conversion need, just directly copy aStart.
+    aEnd += segmentLengthIncludingType;
+    while (segmentLengthIncludingType) {
+      *aResult++ = *aStart++;
+      --segmentLengthIncludingType;
+    }
+    SVGPathSegUtils::TraversePathSegment(pResultSegmentBegin, aState);
+    return;
+  }
+
+  NS_ABORT_IF_FALSE
+      (SVGPathSegUtils::SameTypeModuloRelativeness(startType, endType),
+       "Incompatible path segment types passed to ConvertPathSegmentData!");
+
+  RelativenessAdjustmentType adjustmentType =
+    SVGPathSegUtils::IsRelativeType(startType) ? eRelativeToAbsolute
+                                               : eAbsoluteToRelative;
+
+  NS_ABORT_IF_FALSE
+    (segmentLengthIncludingType ==
+       1 + SVGPathSegUtils::ArgCountForType(endType),
+     "Compatible path segment types for interpolation had different lengths!");
+
+  aResult[0] = aEnd[0];
+
+  switch (endType) {
+    case nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL:
+      aResult[1] = aStart[1] +
+        (adjustmentType == eRelativeToAbsolute ? 1 : -1) * aState.pos.x;
+      break;
+    case nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_REL:
+      aResult[1] = aStart[1] +
+        (adjustmentType == eRelativeToAbsolute  ? 1 : -1) * aState.pos.y;
+      break;
+    case nsIDOMSVGPathSeg::PATHSEG_ARC_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_ARC_REL:
+      aResult[1] = aStart[1];
+      aResult[2] = aStart[2];
+      aResult[3] = aStart[3];
+      aResult[4] = aStart[4];
+      aResult[5] = aStart[5];
+      aResult[6] = aStart[6];
+      aResult[7] = aStart[7];
+      AdjustSegmentForRelativeness(adjustmentType, aResult + 6, aState);
+      break;
+    case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL:
+      aResult[5] = aStart[5];
+      aResult[6] = aStart[6];
+      AdjustSegmentForRelativeness(adjustmentType, aResult + 5, aState);
+      // fall through
+    case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL:
+    case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
+      aResult[3] = aStart[3];
+      aResult[4] = aStart[4];
+      AdjustSegmentForRelativeness(adjustmentType, aResult + 3, aState);
+      // fall through
+    case nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL:
+    case nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_LINETO_REL:
+    case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
+    case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
+      aResult[1] = aStart[1];
+      aResult[2] = aStart[2];
+      AdjustSegmentForRelativeness(adjustmentType, aResult + 1, aState);
+      break;
+  }
+
+  SVGPathSegUtils::TraversePathSegment(pResultSegmentBegin, aState);
+  aStart += segmentLengthIncludingType;
+  aEnd += segmentLengthIncludingType;
+  aResult += segmentLengthIncludingType;
+}
+
+static void
+ConvertAllPathSegmentData(SVGPathDataAndOwner::const_iterator aStart,
+                          SVGPathDataAndOwner::const_iterator aStartDataEnd,
+                          SVGPathDataAndOwner::const_iterator aEnd,
+                          SVGPathDataAndOwner::const_iterator aEndDataEnd,
+                          SVGPathDataAndOwner::iterator aResult)
+{
+  SVGPathTraversalState state;
+  state.mode = SVGPathTraversalState::eUpdateOnlyStartAndCurrentPos;
+  while (aStart < aStartDataEnd && aEnd < aEndDataEnd) {
+    ConvertPathSegmentData(aStart, aEnd, aResult, state);
+  }
+  NS_ABORT_IF_FALSE(aStart == aStartDataEnd && aEnd == aEndDataEnd,
+                    "Failed to convert all path segment data! (Corrupt?)");
+}
+
 nsresult
 SVGPathSegListSMILType::Add(nsSMILValue& aDest,
                             const nsSMILValue& aValueToAdd,
@@ -102,36 +336,33 @@ SVGPathSegListSMILType::Add(nsSMILValue& aDest,
   const SVGPathDataAndOwner& valueToAdd =
     *static_cast<const SVGPathDataAndOwner*>(aValueToAdd.mU.mPtr);
 
-  if (dest.Length() != valueToAdd.Length()) {
-    // Allow addition to empty dest:
-    if (dest.Length() == 0) {
-      return dest.CopyFrom(valueToAdd);
-    }
-    // For now we only support animation to a list with the same number of
-    // items (and with the same segment types).
-    // nsSVGUtils::ReportToConsole
+  // Allow addition to empty dest.
+  if (dest.IsEmpty()) {
+    return dest.CopyFrom(valueToAdd);
+  }
+
+  PathInterpolationResult check = CanInterpolate(dest, valueToAdd);
+
+  if (check == eCannotInterpolate) {
+    // nsSVGUtils::ReportToConsole - can't add path segment lists with different
+    // numbers of segments, with arcs with different flag values, or with
+    // incompatible segment types.
     return NS_ERROR_FAILURE;
+  }
+
+  if (check == eRequiresConversion) {
+    ConvertAllPathSegmentData(dest.begin(), dest.end(),
+                              valueToAdd.begin(), valueToAdd.end(),
+                              dest.begin());
   }
 
   PRUint32 i = 0;
   while (i < dest.Length()) {
     PRUint32 type = SVGPathSegUtils::DecodeType(dest[i]);
-    if (type != SVGPathSegUtils::DecodeType(valueToAdd[i])) {
-      // nsSVGUtils::ReportToConsole - can't yet animate between different
-      // types, although it would make sense to allow animation between
-      // some.
-      return NS_ERROR_FAILURE;
-    }
     i++;
-    if ((type == nsIDOMSVGPathSeg::PATHSEG_ARC_ABS ||
-         type == nsIDOMSVGPathSeg::PATHSEG_ARC_REL) &&
-        (dest[i+3] != valueToAdd[i+3] || dest[i+4] != valueToAdd[i+4])) {
-      // boolean args largeArcFlag and sweepFlag must be the same
-      return NS_ERROR_FAILURE;
-    }
     PRUint32 segEnd = i + SVGPathSegUtils::ArgCountForType(type);
     for (; i < segEnd; ++i) {
-      dest[i] += valueToAdd[i];
+      dest[i] += valueToAdd[i] * aCount;
     }
   }
 
@@ -175,10 +406,12 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
   SVGPathDataAndOwner& result =
     *static_cast<SVGPathDataAndOwner*>(aResult.mU.mPtr);
 
-  if (start.Length() != end.Length() && start.Length() != 0) {
-    // For now we only support animation to a list with the same number of
-    // items (and with the same segment types).
-    // nsSVGUtils::ReportToConsole
+  PathInterpolationResult check = CanInterpolate(start, end); 
+
+  if (check == eCannotInterpolate) {
+    // nsSVGUtils::ReportToConsole - can't interpolate path segment lists with
+    // different numbers of segments, with arcs with different flag values, or
+    // with incompatible segment types.
     return NS_ERROR_FAILURE;
   }
 
@@ -186,16 +419,14 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  PRUint32 i = 0;
-
-  if (start.Length() == 0) { // identity path
+  if (start.IsEmpty()) { // identity path
+    PRUint32 i = 0;
     while (i < end.Length()) {
       PRUint32 type = SVGPathSegUtils::DecodeType(end[i]);
       result[i] = end[i];
       i++;
       PRUint32 segEnd = i + SVGPathSegUtils::ArgCountForType(type);
-      if ((type == nsIDOMSVGPathSeg::PATHSEG_ARC_ABS ||
-           type == nsIDOMSVGPathSeg::PATHSEG_ARC_REL)) {
+      if (SVGPathSegUtils::IsArcType(type)) {
         result[i] = end[i] * aUnitDistance;
         result[i+1] = end[i+1] * aUnitDistance;
         result[i+2] = end[i+2] * aUnitDistance;
@@ -211,32 +442,30 @@ SVGPathSegListSMILType::Interpolate(const nsSMILValue& aStartVal,
         }
       }
     }
+    NS_ABORT_IF_FALSE(i == end.Length() && i == result.Length(),
+                      "Very, very bad - path data corrupt");
   } else {
-    while (i < end.Length()) {
-      PRUint32 type = SVGPathSegUtils::DecodeType(end[i]);
-      if (type != SVGPathSegUtils::DecodeType(start[i])) {
-        // nsSVGUtils::ReportToConsole - can't yet interpolate between different
-        // types, although it would make sense to allow interpolation between
-        // some.
-        return NS_ERROR_FAILURE;
-      }
-      result[i] = end[i];
-      i++;
-      if ((type == nsIDOMSVGPathSeg::PATHSEG_ARC_ABS ||
-           type == nsIDOMSVGPathSeg::PATHSEG_ARC_REL) &&
-          (start[i+3] != end[i+3] || start[i+4] != end[i+4])) {
-        // boolean args largeArcFlag and sweepFlag must be the same
-        return NS_ERROR_FAILURE;
-      }
-      PRUint32 segEnd = i + SVGPathSegUtils::ArgCountForType(type);
-      for (; i < segEnd; ++i) {
-        result[i] = start[i] + (end[i] - start[i]) * aUnitDistance;
-      }
-    }
-  }
+    SVGPathDataAndOwner::const_iterator pStart = start.begin();
+    SVGPathDataAndOwner::const_iterator pStartDataEnd = start.end();
+    SVGPathDataAndOwner::const_iterator pEnd = end.begin();
+    SVGPathDataAndOwner::const_iterator pEndDataEnd = end.end();
+    SVGPathDataAndOwner::iterator pResult = result.begin();
 
-  NS_ABORT_IF_FALSE(i == end.Length(), "Very, very bad - path data corrupt");
+    if (check == eRequiresConversion) {
+      ConvertAllPathSegmentData(pStart, pStartDataEnd, pEnd, pEndDataEnd,
+                                pResult);
+      pStart = pResult;
+      pStartDataEnd = result.end();
+    }
+
+    while (pStart != pStartDataEnd && pEnd != pEndDataEnd) {
+      InterpolatePathSegmentData(pStart, pEnd, pResult, aUnitDistance);
+    }
+
+    NS_ABORT_IF_FALSE(pStart == pStartDataEnd && pEnd == pEndDataEnd &&
+                      pResult == result.end(),
+                      "Very, very bad - path data corrupt");
+  }
 
   return NS_OK;
 }
-
