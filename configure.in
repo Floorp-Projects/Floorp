@@ -6546,52 +6546,10 @@ if test -z "$MOZ_JSDEBUGGER" -a `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
 fi
 
-dnl This might be temporary: build tridentprofile only on Windows
-if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0 && test "$OS_ARCH" != "WINNT"; then
-    AC_MSG_WARN([tridentprofile extension works only on Windows at this time. Removing tridentprofile from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|tridentprofile||'`
-fi
-
-dnl cookie must be built before tridentprofile. put it at list's end.
-if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
-  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|tridentprofile||'`
-  MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
-fi
-
 dnl xforms requires xtf
 if test -z "$MOZ_XTF" -a `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
     AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c auth` -ne 0; then
-    AC_MSG_WARN([auth is no longer an extension, use --disable-negotiateauth to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|auth||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c 'cookie\|permissions'` -ne 0; then
-    AC_MSG_WARN([cookie and permissions are no longer extensions, use --disable-permissions to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|cookie||g; s|permissions||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c pref` -ne 0; then
-    AC_MSG_WARN([pref is no longer an extension, use --disable-pref-extensions to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|pref||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c universalchardet` -ne 0; then
-    AC_MSG_WARN([universalchardet is no longer an extension, use --disable-universalchardet to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|universalchardet||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
-    AC_MSG_WARN([java is no longer an extension, use --enable-javaxpcom to enable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|java||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c spellcheck` -ne 0; then
-    AC_MSG_WARN([spellcheck is no longer an extension.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|spellcheck||g'`
 fi
 
 dnl Remove dupes
