@@ -54,7 +54,7 @@ static const PRUint32 MAX_RECURSION = 10;
 
 
 /* static */ void
-SVGPathSegUtils::GetValueAsString(const float *aSeg, nsAString& aValue)
+SVGPathSegUtils::GetValueAsString(const float* aSeg, nsAString& aValue)
 {
   // Adding new seg type? Is the formatting below acceptable for the new types?
   PR_STATIC_ASSERT(NS_SVG_PATH_SEG_MAX_ARGS == 7);
@@ -119,84 +119,84 @@ SVGPathSegUtils::GetValueAsString(const float *aSeg, nsAString& aValue)
 
 
 static float
-CalcDistanceBetweenPoints(const gfxPoint &p1, const gfxPoint &p2)
+CalcDistanceBetweenPoints(const gfxPoint& aP1, const gfxPoint& aP2)
 {
-  return NS_hypot(p2.x - p1.x, p2.y - p1.y);
+  return NS_hypot(aP2.x - aP1.x, aP2.y - aP1.y);
 }
 
 
-static void SplitQuadraticBezier(const gfxPoint *curve,
-                                 gfxPoint *left,
-                                 gfxPoint *right)
+static void
+SplitQuadraticBezier(const gfxPoint* aCurve, gfxPoint* aLeft, gfxPoint* aRight)
 {
-  left[0].x = curve[0].x;
-  left[0].y = curve[0].y;
-  right[2].x = curve[2].x;
-  right[2].y = curve[2].y;
-  left[1].x = (curve[0].x + curve[1].x) / 2;
-  left[1].y = (curve[0].y + curve[1].y) / 2;
-  right[1].x = (curve[1].x + curve[2].x) / 2;
-  right[1].y = (curve[1].y + curve[2].y) / 2;
-  left[2].x = right[0].x = (left[1].x + right[1].x) / 2;
-  left[2].y = right[0].y = (left[1].y + right[1].y) / 2;
+  aLeft[0].x = aCurve[0].x;
+  aLeft[0].y = aCurve[0].y;
+  aRight[2].x = aCurve[2].x;
+  aRight[2].y = aCurve[2].y;
+  aLeft[1].x = (aCurve[0].x + aCurve[1].x) / 2;
+  aLeft[1].y = (aCurve[0].y + aCurve[1].y) / 2;
+  aRight[1].x = (aCurve[1].x + aCurve[2].x) / 2;
+  aRight[1].y = (aCurve[1].y + aCurve[2].y) / 2;
+  aLeft[2].x = aRight[0].x = (aLeft[1].x + aRight[1].x) / 2;
+  aLeft[2].y = aRight[0].y = (aLeft[1].y + aRight[1].y) / 2;
 }
 
-static void SplitCubicBezier(const gfxPoint *curve,
-                             gfxPoint *left,
-                             gfxPoint *right)
+static void
+SplitCubicBezier(const gfxPoint* aCurve, gfxPoint* aLeft, gfxPoint* aRight)
 {
   gfxPoint tmp;
-  tmp.x = (curve[1].x + curve[2].x) / 4;
-  tmp.y = (curve[1].y + curve[2].y) / 4;
-  left[0].x = curve[0].x;
-  left[0].y = curve[0].y;
-  right[3].x = curve[3].x;
-  right[3].y = curve[3].y;
-  left[1].x = (curve[0].x + curve[1].x) / 2;
-  left[1].y = (curve[0].y + curve[1].y) / 2;
-  right[2].x = (curve[2].x + curve[3].x) / 2;
-  right[2].y = (curve[2].y + curve[3].y) / 2;
-  left[2].x = left[1].x / 2 + tmp.x;
-  left[2].y = left[1].y / 2 + tmp.y;
-  right[1].x = right[2].x / 2 + tmp.x;
-  right[1].y = right[2].y / 2 + tmp.y;
-  left[3].x = right[0].x = (left[2].x + right[1].x) / 2;
-  left[3].y = right[0].y = (left[2].y + right[1].y) / 2;
+  tmp.x = (aCurve[1].x + aCurve[2].x) / 4;
+  tmp.y = (aCurve[1].y + aCurve[2].y) / 4;
+  aLeft[0].x = aCurve[0].x;
+  aLeft[0].y = aCurve[0].y;
+  aRight[3].x = aCurve[3].x;
+  aRight[3].y = aCurve[3].y;
+  aLeft[1].x = (aCurve[0].x + aCurve[1].x) / 2;
+  aLeft[1].y = (aCurve[0].y + aCurve[1].y) / 2;
+  aRight[2].x = (aCurve[2].x + aCurve[3].x) / 2;
+  aRight[2].y = (aCurve[2].y + aCurve[3].y) / 2;
+  aLeft[2].x = aLeft[1].x / 2 + tmp.x;
+  aLeft[2].y = aLeft[1].y / 2 + tmp.y;
+  aRight[1].x = aRight[2].x / 2 + tmp.x;
+  aRight[1].y = aRight[2].y / 2 + tmp.y;
+  aLeft[3].x = aRight[0].x = (aLeft[2].x + aRight[1].x) / 2;
+  aLeft[3].y = aRight[0].y = (aLeft[2].y + aRight[1].y) / 2;
 }
 
-static gfxFloat CalcBezLengthHelper(gfxPoint *curve, PRUint32 numPts,
-                                    PRUint32 recursion_count,
-                                    void (*split)(const gfxPoint*, gfxPoint*, gfxPoint*))
+static gfxFloat
+CalcBezLengthHelper(gfxPoint* aCurve, PRUint32 aNumPts,
+                    PRUint32 aRecursionCount,
+                    void (*aSplit)(const gfxPoint*, gfxPoint*, gfxPoint*))
 {
   gfxPoint left[4];
   gfxPoint right[4];
   gfxFloat length = 0, dist;
-  for (PRUint32 i = 0; i < numPts - 1; i++) {
-    length += CalcDistanceBetweenPoints(curve[i], curve[i+1]);
+  for (PRUint32 i = 0; i < aNumPts - 1; i++) {
+    length += CalcDistanceBetweenPoints(aCurve[i], aCurve[i+1]);
   }
-  dist = CalcDistanceBetweenPoints(curve[0], curve[numPts - 1]);
-  if (length - dist > PATH_SEG_LENGTH_TOLERANCE && recursion_count < MAX_RECURSION) {
-    split(curve, left, right);
-    ++recursion_count;
-    return CalcBezLengthHelper(left, numPts, recursion_count, split) +
-           CalcBezLengthHelper(right, numPts, recursion_count, split);
+  dist = CalcDistanceBetweenPoints(aCurve[0], aCurve[aNumPts - 1]);
+  if (length - dist > PATH_SEG_LENGTH_TOLERANCE &&
+      aRecursionCount < MAX_RECURSION) {
+    aSplit(aCurve, left, right);
+    ++aRecursionCount;
+    return CalcBezLengthHelper(left, aNumPts, aRecursionCount, aSplit) +
+           CalcBezLengthHelper(right, aNumPts, aRecursionCount, aSplit);
   }
   return length;
 }
 
 static inline gfxFloat
-CalcLengthOfCubicBezier(const gfxPoint &pos, const gfxPoint &cp1,
-                        const gfxPoint &cp2, const gfxPoint &to)
+CalcLengthOfCubicBezier(const gfxPoint& aPos, const gfxPoint &aCP1,
+                        const gfxPoint& aCP2, const gfxPoint &aTo)
 {
-  gfxPoint curve[4] = { pos, cp1, cp2, to };
+  gfxPoint curve[4] = { aPos, aCP1, aCP2, aTo };
   return CalcBezLengthHelper(curve, 4, 0, SplitCubicBezier);
 }
 
 static inline gfxFloat
-CalcLengthOfQuadraticBezier(const gfxPoint &pos, const gfxPoint &cp,
-                            const gfxPoint &to)
+CalcLengthOfQuadraticBezier(const gfxPoint& aPos, const gfxPoint& aCP,
+                            const gfxPoint& aTo)
 {
-  gfxPoint curve[3] = { pos, cp, to };
+  gfxPoint curve[3] = { aPos, aCP, aTo };
   return CalcBezLengthHelper(curve, 3, 0, SplitQuadraticBezier);
 }
 
