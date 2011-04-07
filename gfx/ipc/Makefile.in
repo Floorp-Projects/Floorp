@@ -42,8 +42,6 @@ VPATH       = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifdef MOZ_IPC
-
 MODULE             = gfxipc
 LIBRARY_NAME       = gfxipc_s
 FORCE_STATIC_LIB   = 1
@@ -72,8 +70,6 @@ endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-
-endif
 
 include $(topsrcdir)/config/rules.mk
 

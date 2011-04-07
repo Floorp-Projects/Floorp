@@ -37,9 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-# include "mozilla/layers/PLayers.h"
-#endif  // MOZ_IPC
+#include "mozilla/layers/PLayers.h"
 
 #include "LayerManagerOGL.h"
 #include "ThebesLayerOGL.h"
@@ -970,8 +968,6 @@ void LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
   }
 }
 
-#ifdef MOZ_IPC
-
 already_AddRefed<ShadowThebesLayer>
 LayerManagerOGL::CreateShadowThebesLayer()
 {
@@ -1022,20 +1018,6 @@ LayerManagerOGL::CreateShadowCanvasLayer()
   return nsRefPtr<ShadowCanvasLayerOGL>(new ShadowCanvasLayerOGL(this)).forget();
 }
 
-#else
-
-already_AddRefed<ShadowThebesLayer>
-LayerManagerOGL::CreateShadowThebesLayer() { return nsnull; }
-already_AddRefed<ShadowContainerLayer>
-LayerManagerOGL::CreateShadowContainerLayer() { return nsnull; }
-already_AddRefed<ShadowImageLayer>
-LayerManagerOGL::CreateShadowImageLayer() { return nsnull; }
-already_AddRefed<ShadowColorLayer>
-LayerManagerOGL::CreateShadowColorLayer() { return nsnull; }
-already_AddRefed<ShadowCanvasLayer>
-LayerManagerOGL::CreateShadowCanvasLayer() { return nsnull; }
-
-#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */

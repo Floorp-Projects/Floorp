@@ -45,7 +45,7 @@
  */
 
 #include "mozilla/css/StyleRule.h"
-#include "nsICSSGroupRule.h"
+#include "mozilla/css/GroupRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSStyleSheet.h"
 #include "mozilla/css/Loader.h"
@@ -1074,9 +1074,8 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   *aSheetPrincipal = nsnull;
   *aCSSLoader = nsnull;
 
-  nsCOMPtr<nsIStyleSheet> sheet;
   if (mRule) {
-    sheet = mRule->GetStyleSheet();
+    nsIStyleSheet* sheet = mRule->GetStyleSheet();
     if (sheet) {
       NS_IF_ADDREF(*aSheetURI = sheet->GetSheetURI());
       NS_IF_ADDREF(*aBaseURI = sheet->GetBaseURI());
@@ -1225,7 +1224,7 @@ DOMCSSStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
     *aParentRule = nsnull;
     return NS_OK;
   }
-  nsICSSGroupRule* rule = Rule()->GetParentRule();
+  GroupRule* rule = Rule()->GetParentRule();
   if (!rule) {
     *aParentRule = nsnull;
     return NS_OK;
@@ -1279,7 +1278,7 @@ namespace css {
 
 StyleRule::StyleRule(nsCSSSelectorList* aSelector,
                      Declaration* aDeclaration)
-  : nsCSSRule(),
+  : Rule(),
     mSelector(aSelector),
     mDeclaration(aDeclaration),
     mImportantRule(nsnull),
@@ -1287,11 +1286,12 @@ StyleRule::StyleRule(nsCSSSelectorList* aSelector,
     mLineNumber(0),
     mWasMatched(PR_FALSE)
 {
+  NS_PRECONDITION(aDeclaration, "must have a declaration");
 }
 
 // for |Clone|
 StyleRule::StyleRule(const StyleRule& aCopy)
-  : nsCSSRule(aCopy),
+  : Rule(aCopy),
     mSelector(aCopy.mSelector ? aCopy.mSelector->Clone() : nsnull),
     mDeclaration(new Declaration(*aCopy.mDeclaration)),
     mImportantRule(nsnull),
@@ -1305,7 +1305,7 @@ StyleRule::StyleRule(const StyleRule& aCopy)
 // for |SetCSSDeclaration|
 StyleRule::StyleRule(StyleRule& aCopy,
                      Declaration* aDeclaration)
-  : nsCSSRule(aCopy),
+  : Rule(aCopy),
     mSelector(aCopy.mSelector),
     mDeclaration(aDeclaration),
     mImportantRule(nsnull),
@@ -1354,8 +1354,8 @@ NS_INTERFACE_MAP_BEGIN(StyleRule)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(StyleRule)
-NS_IMPL_RELEASE(StyleRule)
+NS_IMPL_ADDREF_INHERITED(StyleRule, Rule)
+NS_IMPL_RELEASE_INHERITED(StyleRule, Rule)
 
 nsIStyleRule* StyleRule::GetImportantRule()
 {
@@ -1374,25 +1374,6 @@ StyleRule::RuleMatched()
       NS_ADDREF(mImportantRule = new ImportantRule(mDeclaration));
     }
   }
-}
-
-/* virtual */ already_AddRefed<nsIStyleSheet>
-StyleRule::GetStyleSheet() const
-{
-// XXX What about inner, etc.
-  return nsCSSRule::GetStyleSheet();
-}
-
-/* virtual */ void
-StyleRule::SetStyleSheet(nsCSSStyleSheet* aSheet)
-{
-  nsCSSRule::SetStyleSheet(aSheet);
-}
-
-/* virtual */ void
-StyleRule::SetParentRule(nsICSSGroupRule* aRule)
-{
-  nsCSSRule::SetParentRule(aRule);
 }
 
 /* virtual */ PRInt32
@@ -1526,13 +1507,3 @@ StyleRule::SetSelectorText(const nsAString& aSelectorText)
 
 } // namespace css
 } // namespace mozilla
-
-already_AddRefed<css::StyleRule>
-NS_NewCSSStyleRule(nsCSSSelectorList* aSelector,
-                   css::Declaration* aDeclaration)
-{
-  NS_PRECONDITION(aDeclaration, "must have a declaration");
-  css::StyleRule *it = new css::StyleRule(aSelector, aDeclaration);
-  NS_ADDREF(it);
-  return it;
-}

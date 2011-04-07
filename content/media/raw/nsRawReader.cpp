@@ -187,7 +187,7 @@ PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   PRInt64 currentFrameTime = 1000 * mCurrentFrame / mFrameRate;
   PRUint32 length = mFrameSize - sizeof(nsRawPacketHeader);
 
-  nsAutoPtr<PRUint8> buffer(new PRUint8[length]);
+  nsAutoArrayPtr<PRUint8> buffer(new PRUint8[length]);
   nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ASSERTION(stream, "Decoder has no media stream");
 

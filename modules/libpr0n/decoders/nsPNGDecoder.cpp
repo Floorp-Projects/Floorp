@@ -386,13 +386,24 @@ PNGGetColorProfile(png_structp png_ptr, png_infop info_ptr,
   // First try to see if iCCP chunk is present
   if (png_get_valid(png_ptr, info_ptr, PNG_INFO_iCCP)) {
     png_uint_32 profileLen;
+#if (PNG_LIBPNG_VER < 10500)
     char *profileData, *profileName;
+#else
+    png_bytep profileData;
+    png_charp profileName;
+#endif
     int compression;
 
     png_get_iCCP(png_ptr, info_ptr, &profileName, &compression,
                  &profileData, &profileLen);
 
-    profile = qcms_profile_from_memory(profileData, profileLen);
+    profile = qcms_profile_from_memory(
+#if (PNG_LIBPNG_VER < 10500)
+                                       profileData,
+#else
+                                       (char *)profileData,
+#endif
+                                       profileLen);
     if (profile) {
       PRUint32 profileSpace = qcms_profile_get_color_space(profile);
 

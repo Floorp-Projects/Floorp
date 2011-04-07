@@ -55,9 +55,7 @@
 #undef slots
 #endif
 
-#ifdef MOZ_IPC
 #include "mozilla/plugins/PluginMessageUtils.h"
-#endif
 
 #ifdef MOZ_X11
 #include <cairo-xlib.h>
@@ -240,9 +238,7 @@ static PRLogModuleInfo *nsObjectFrameLM = PR_NewLogModule("nsObjectFrame");
 #endif
 
 using namespace mozilla;
-#ifdef MOZ_IPC
 using namespace mozilla::plugins;
-#endif
 using namespace mozilla::layers;
 
 // special class for handeling DOM context menu events because for
@@ -538,6 +534,7 @@ private:
   PRInt32                                   mInCGPaintLevel;
   nsIOSurface                              *mIOSurface;
   nsCARenderer                              mCARenderer;
+  CGColorSpaceRef                           mColorProfile;
   static nsCOMPtr<nsITimer>                *sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
   PRBool                                    mSentInitialTopLevelWindowEvent;
@@ -2355,7 +2352,6 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       nsPoint origin;
 
       gfxWindowsNativeDrawing nativeDraw(ctx, frameGfxRect);
-#ifdef MOZ_IPC
       if (nativeDraw.IsDoublePass()) {
         // OOP plugin specific: let the shim know before we paint if we are doing a
         // double pass render. If this plugin isn't oop, the register window message
@@ -2367,7 +2363,6 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         if (pluginEvent.event)
           inst->HandleEvent(&pluginEvent, nsnull);
       }
-#endif
       do {
         HDC hdc = nativeDraw.BeginNativeDrawing();
         if (!hdc)
@@ -3181,6 +3176,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
   mInCGPaintLevel = 0;
   mSentInitialTopLevelWindowEvent = PR_FALSE;
   mIOSurface = nsnull;
+  mColorProfile = nsnull;
   mPluginPortChanged = PR_FALSE;
 #endif
   mContentFocused = PR_FALSE;
@@ -4382,8 +4378,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     return;
 
   if (!mIOSurface || 
-     (mIOSurface->GetWidth() != (size_t)aWidth || 
-      mIOSurface->GetHeight() != (size_t)aHeight)) {
+      (mIOSurface->GetWidth() != (size_t)aWidth || 
+       mIOSurface->GetHeight() != (size_t)aHeight)) {
     if (mIOSurface) {
       delete mIOSurface;
     }
@@ -4404,6 +4400,10 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
     }
   }
 
+  if (!mColorProfile) {
+    mColorProfile = CreateSystemColorSpace();
+  }
+
   if (mCARenderer.isInit() == false) {
     void *caLayer = NULL;
     nsresult rv = mInstance->GetValueFromPlugin(NPPVpluginCoreAnimationLayer, &caLayer);
@@ -4421,8 +4421,8 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
 
   CGImageRef caImage = NULL;
   nsresult rt = mCARenderer.Render(aWidth, aHeight, &caImage);
-  if (rt == NS_OK && mIOSurface) {
-    nsCARenderer::DrawSurfaceToCGContext(aCGContext, mIOSurface, CreateSystemColorSpace(),
+  if (rt == NS_OK && mIOSurface && mColorProfile) {
+    nsCARenderer::DrawSurfaceToCGContext(aCGContext, mIOSurface, mColorProfile,
                                          0, 0, aWidth, aHeight);
   } else if (rt == NS_OK && caImage != NULL) {
     // Significant speed up by resetting the scaling
@@ -5754,6 +5754,8 @@ nsPluginInstanceOwner::Destroy()
   RemoveFromCARefreshTimer(this);
   if (mIOSurface)
     delete mIOSurface;
+  if (mColorProfile)
+    ::CGColorSpaceRelease(mColorProfile);  
 #endif
 
   // unregister context menu listener

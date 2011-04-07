@@ -345,6 +345,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
         } else {
           // We can't do a real self-copy because the buffer is rotated.
           // So allocate a new buffer for the destination.
+          destBufferRect = neededRegion.GetBounds();
           bufferDimsChanged = PR_TRUE;
           destBuffer = CreateBuffer(contentType, destBufferDims, bufferFlags);
           if (!destBuffer)

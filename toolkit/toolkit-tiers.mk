@@ -103,9 +103,7 @@ endif
 # "gecko" - core components
 #
 
-ifdef MOZ_IPC
 tier_platform_dirs += ipc js/ipc js/jetpack
-endif
 
 tier_platform_dirs += \
 		js/src/xpconnect \

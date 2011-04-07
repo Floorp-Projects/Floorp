@@ -94,7 +94,6 @@ DEFINES += -DMOZ_D3DX9_DLL=$(MOZ_D3DX9_DLL)
 DEFINES += -DMOZ_D3DCOMPILER_DLL=$(MOZ_D3DCOMPILER_DLL)
 endif
 
-# Don't ifdef MOZ_IPC this because mac ppc needs it too.
 include $(topsrcdir)/ipc/app/defs.mk
 DEFINES += -DMOZ_CHILD_PROCESS_NAME=$(MOZ_CHILD_PROCESS_NAME)
 

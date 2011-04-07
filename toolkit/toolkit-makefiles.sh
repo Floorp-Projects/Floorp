@@ -160,7 +160,6 @@ MAKEFILES_intl="
   intl/uconv/ucvtw2/Makefile
   intl/uconv/ucvko/Makefile
   intl/uconv/ucvibm/Makefile
-  intl/uconv/native/Makefile
   intl/locale/Makefile
   intl/locale/public/Makefile
   intl/locale/idl/Makefile

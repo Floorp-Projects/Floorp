@@ -38,10 +38,8 @@
 #ifndef GFX_CANVASLAYEROGL_H
 #define GFX_CANVASLAYEROGL_H
 
-#ifdef MOZ_IPC
-# include "mozilla/layers/PLayers.h"
-# include "mozilla/layers/ShadowLayers.h"
-#endif  // MOZ_IPC
+#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #include "LayerManagerOGL.h"
 #include "gfxASurface.h"
@@ -88,7 +86,6 @@ protected:
   PRPackedBool mNeedsYFlip;
 };
 
-#ifdef MOZ_IPC
 // NB: eventually we'll have separate shadow canvas2d and shadow
 // canvas3d layers, but currently they look the same from the
 // perspective of the compositor process
@@ -129,7 +126,6 @@ private:
 
 
 };
-#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */

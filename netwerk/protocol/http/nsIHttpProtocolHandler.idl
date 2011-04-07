@@ -39,7 +39,7 @@
 
 #include "nsIProxiedProtocolHandler.idl"
 
-[scriptable, uuid(7516a8d3-0a6f-4476-88f5-fb9973450c5f)]
+[scriptable, uuid(9814fdf0-5ac3-11e0-80e3-0800200c9a66)]
 interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
 {
     /**
@@ -85,13 +85,6 @@ interface nsIHttpProtocolHandler : nsIProxiedProtocolHandler
      * @return The oscpu this application is running on
      */
     readonly attribute ACString oscpu;
-
-    /**
-     * Get the translation of the application. The value for language
-     * is usually a 2-letter code such as "en" and occasionally a 
-     * five-character code to indicate a language subtype, such as "zh_CN". 
-     */
-    readonly attribute ACString language;
 
     /**
      * Get the application comment misc portion.
