@@ -373,6 +373,19 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
               (!GroupItems.getActiveGroupItem() && !self.tab.hidden))
             GroupItems.setActiveGroupItem(self.parent);
         }
+      } else {
+        // When duplicating a non-blank orphaned tab, create a group including both of them.
+        // This prevents overlaid tabs in Tab View (only one tab appears to be there).
+        // In addition, as only one active orphaned tab is shown when Tab View is hidden
+        // and there are two tabs shown after the duplication, it also prevents
+        // the inactive tab to suddenly disappear when toggling Tab View twice.
+        //
+        // Fixes:
+        //   Bug 645653 - Middle-click on reload button to duplicate orphan tabs does not create a group
+        //   Bug 643119 - Ctrl+Drag to duplicate does not work for orphaned tabs
+        //   ... (and any other way of duplicating a non-blank orphaned tab).
+        if (GroupItems.getActiveGroupItem() == null)
+          GroupItems.newTab(self, {immediately: true});
       }
     } else {
       // create tab by double click is handled in UI_init().
