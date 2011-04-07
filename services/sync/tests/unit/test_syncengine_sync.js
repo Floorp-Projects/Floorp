@@ -777,10 +777,6 @@ function test_processIncoming_failed_records() {
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
-  // Pretend to be a mobile client so we can test failed record handling
-  // while batching GETs.
-  Svc.Prefs.set("client.type", "mobile");
-
   // Let's create three and a bit batches worth of server side records.
   let collection = new ServerCollection();
   const NUMBER_OF_RECORDS = MOBILE_BATCH_SIZE * 3 + 5;
