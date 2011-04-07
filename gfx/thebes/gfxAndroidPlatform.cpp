@@ -437,12 +437,10 @@ gfxAndroidPlatform::FindFontsInDirectory(const nsCString& aFontsDir,
 void
 gfxAndroidPlatform::GetFontList(InfallibleTArray<FontListEntry>* retValue)
 {
-#ifdef MOZ_IPC
     if (XRE_GetProcessType() != GeckoProcessType_Default) {
         mozilla::dom::ContentChild::GetSingleton()->SendReadFontList(retValue);
         return;
     }
-#endif
 
     if (mFontList.Length() > 0) {
         *retValue = mFontList;
