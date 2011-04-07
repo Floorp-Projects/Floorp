@@ -670,7 +670,6 @@ nsFrameScriptExecutor::LoadFrameScriptInternal(const nsAString& aURL)
       if (global) {
         JSPrincipals* jsprin = nsnull;
         mPrincipal->GetJSPrincipals(mCx, &jsprin);
-        nsContentUtils::XPConnect()->FlagSystemFilenamePrefix(url.get(), PR_TRUE);
 
         uint32 oldopts = JS_GetOptions(mCx);
         JS_SetOptions(mCx, oldopts | JSOPTION_NO_SCRIPT_RVAL);

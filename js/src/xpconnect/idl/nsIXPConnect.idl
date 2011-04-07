@@ -400,7 +400,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[uuid(fb780ace-dced-432b-bb82-8df7d4f919c8)]
+[uuid(f99ffb06-4e7b-4bab-83d4-7d573235a08a)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -673,21 +673,6 @@ interface nsIXPConnect : nsISupports
 
     jsval variantToJS(in JSContextPtr ctx, in JSObjectPtr scope, in nsIVariant value);
     nsIVariant JSToVariant(in JSContextPtr ctx, in jsval value);
-
-    /**
-     * Preconfigure XPCNativeWrapper automation so that when a scripted
-     * caller whose filename starts with filenamePrefix accesses a wrapped
-     * native that is not flagged as "system", the wrapped native will be
-     * automatically wrapped with an XPCNativeWrapper.
-     *
-     * @param aFilenamePrefix the UTF-8 filename prefix to match, which
-     *                        should end with a slash (/) character
-     * @param aWantNativeWrappers whether XPConnect should produce native
-     *                            wrappers for scripts whose paths begin
-     *                            with this prefix
-     */
-    void flagSystemFilenamePrefix(in string aFilenamePrefix,
-                                  in PRBool aWantNativeWrappers);
 
     /**
      * Restore an old prototype for wrapped natives of type
