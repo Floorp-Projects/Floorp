@@ -527,14 +527,14 @@ protected:
    * Add/remove this element to the documents name cache
    */
   void AddToNameTable(nsIAtom* aName) {
-    NS_ASSERTION(HasFlag(NODE_HAS_NAME), "Node lacking NODE_HAS_NAME flag");
+    NS_ASSERTION(HasName(), "Node doesn't have name?");
     nsIDocument* doc = GetCurrentDoc();
     if (doc && !IsInAnonymousSubtree()) {
       doc->AddToNameTable(this, aName);
     }
   }
   void RemoveFromNameTable() {
-    if (HasFlag(NODE_HAS_NAME)) {
+    if (HasName()) {
       nsIDocument* doc = GetCurrentDoc();
       if (doc) {
         doc->RemoveFromNameTable(this, GetParsedAttr(nsGkAtoms::name)->
