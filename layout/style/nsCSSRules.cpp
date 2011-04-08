@@ -86,12 +86,6 @@ namespace css {
 NS_IMPL_ADDREF(Rule)
 NS_IMPL_RELEASE(Rule)
 
-/* virtual */ nsIStyleSheet*
-Rule::GetStyleSheet() const
-{
-  return mSheet;
-}
-
 /* virtual */ void
 Rule::SetStyleSheet(nsCSSStyleSheet* aSheet)
 {
@@ -101,25 +95,10 @@ Rule::SetStyleSheet(nsCSSStyleSheet* aSheet)
   mSheet = aSheet;
 }
 
-/* virtual */ void
-Rule::SetParentRule(css::GroupRule* aRule)
-{
-  // We don't reference count this up reference. The group rule
-  // will tell us when it's going away or when we're detached from
-  // it.
-  mParentRule = aRule;
-}
-
-} // namespace css
-} // namespace mozilla
-
 
 // -------------------------------
 // Style Rule List for group rules
 //
-
-namespace mozilla {
-namespace css {
 
 class NS_FINAL_CLASS GroupRuleRuleList : public nsICSSRuleList
 {
