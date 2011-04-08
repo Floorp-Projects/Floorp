@@ -108,7 +108,7 @@ static PRInt32 FindSafeLength(nsRenderingContext* aContext,
 }
 
 //////////////////////////////////////////////////////////////////////
-//// nsIRenderingContext
+//// nsRenderingContext
 
 nsresult
 nsRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesSurface)

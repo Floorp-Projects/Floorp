@@ -52,7 +52,7 @@
 #include "nsImageLoader.h"
 #include "nsIContent.h"
 #include "nsIFrame.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIURL.h"
 #include "nsIDocument.h"
 #include "nsStyleContext.h"

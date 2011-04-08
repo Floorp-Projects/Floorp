@@ -44,7 +44,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 
 #include "nsMathMLmmultiscriptsFrame.h"
@@ -143,7 +143,7 @@ nsMathMLmmultiscriptsFrame::ProcessAttributes()
 }
 
 /* virtual */ nsresult
-nsMathMLmmultiscriptsFrame::Place(nsIRenderingContext& aRenderingContext,
+nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
                                   PRBool               aPlaceOrigin,
                                   nsHTMLReflowMetrics& aDesiredSize)
 {

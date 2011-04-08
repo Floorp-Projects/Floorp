@@ -158,7 +158,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
     nsPoint offset;
     nsIWidget* widget = frame->GetNearestWidget(offset);
     if (widget) {
-      nsCOMPtr<nsIRenderingContext> rcontext;
+      nsRefPtr<nsRenderingContext> rcontext;
       frame->PresContext()->DeviceContext()->
         CreateRenderingContext(widget, *getter_AddRefs(rcontext));
       if (rcontext) {
@@ -207,7 +207,7 @@ inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
 
 void
 inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       nsIRenderingContext* aRenderContext,
+                       nsRenderingContext* aRenderContext,
                        PRBool aDrawBegin, PRBool aDrawEnd)
 {
   aRenderContext->SetColor(mColor);
@@ -225,7 +225,7 @@ inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
 void
 inFlasher::DrawLine(nscoord aX, nscoord aY, nscoord aLength,
                     PRBool aDir, PRBool aBounds,
-                    nsIRenderingContext* aRenderContext)
+                    nsRenderingContext* aRenderContext)
 {
   nscoord thickTwips = nsPresContext::CSSPixelsToAppUnits(mThickness);
   if (aDir) { // horizontal

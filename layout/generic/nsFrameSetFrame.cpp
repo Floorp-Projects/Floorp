@@ -62,7 +62,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 #include "nsGUIEvent.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsINameSpaceManager.h"
@@ -143,7 +143,7 @@ public:
   void SetVisibility(PRBool aVisibility);
   void SetColor(nscolor aColor);
 
-  void PaintBorder(nsIRenderingContext& aRenderingContext, nsPoint aPt);
+  void PaintBorder(nsRenderingContext& aRenderingContext, nsPoint aPt);
 
 protected:
   nsHTMLFramesetBorderFrame(nsStyleContext* aContext, PRInt32 aWidth, PRBool aVertical, PRBool aVisible);
@@ -1660,12 +1660,12 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("FramesetBorder", TYPE_FRAMESET_BORDER)
 };
 
 void nsDisplayFramesetBorder::Paint(nsDisplayListBuilder* aBuilder,
-                                    nsIRenderingContext* aCtx)
+                                    nsRenderingContext* aCtx)
 {
   static_cast<nsHTMLFramesetBorderFrame*>(mFrame)->
     PaintBorder(*aCtx, ToReferenceFrame());
@@ -1680,7 +1680,7 @@ nsHTMLFramesetBorderFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       new (aBuilder) nsDisplayFramesetBorder(aBuilder, this));
 }
 
-void nsHTMLFramesetBorderFrame::PaintBorder(nsIRenderingContext& aRenderingContext,
+void nsHTMLFramesetBorderFrame::PaintBorder(nsRenderingContext& aRenderingContext,
                                             nsPoint aPt)
 {
   nscolor WHITE    = NS_RGB(255, 255, 255);
@@ -1689,7 +1689,7 @@ void nsHTMLFramesetBorderFrame::PaintBorder(nsIRenderingContext& aRenderingConte
   nscolor hltColor = NS_RGB(255,255,255);
   nscolor sdwColor = NS_RGB(128,128,128);
 
-  nsIRenderingContext::AutoPushTranslation
+  nsRenderingContext::AutoPushTranslation
     translate(&aRenderingContext, aPt);
 
   {
@@ -1857,12 +1857,12 @@ public:
   }
 #endif
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx);
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("FramesetBlank", TYPE_FRAMESET_BLANK)
 };
 
 void nsDisplayFramesetBlank::Paint(nsDisplayListBuilder* aBuilder,
-                                   nsIRenderingContext* aCtx)
+                                   nsRenderingContext* aCtx)
 {
   nscolor white = NS_RGB(255,255,255);
   aCtx->SetColor(white);

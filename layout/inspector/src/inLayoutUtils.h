@@ -42,7 +42,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIFrame.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIEventStateManager.h"
 #include "nsIDOMDocument.h"
 #include "nsBindingManager.h"

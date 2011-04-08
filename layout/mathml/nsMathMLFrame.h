@@ -41,7 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsStyleContext.h"
 #include "nsMathMLAtoms.h"
@@ -85,7 +85,7 @@ public:
   virtual eMathMLFrameType GetMathMLFrameType();
 
   NS_IMETHOD
-  Stretch(nsIRenderingContext& aRenderingContext,
+  Stretch(nsRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize)
@@ -385,12 +385,12 @@ public:
   // Here are some slower variants to obtain the desired metrics
   // by actually measuring some characters
   static void
-  GetRuleThickness(nsIRenderingContext& aRenderingContext, 
+  GetRuleThickness(nsRenderingContext& aRenderingContext, 
                    nsIFontMetrics*      aFontMetrics,
                    nscoord&             aRuleThickness);
 
   static void
-  GetAxisHeight(nsIRenderingContext& aRenderingContext, 
+  GetAxisHeight(nsRenderingContext& aRenderingContext, 
                 nsIFontMetrics*      aFontMetrics,
                 nscoord&             aAxisHeight);
 

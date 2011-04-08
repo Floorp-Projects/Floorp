@@ -1446,7 +1446,7 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
 
 // ----------------------------------------------------------------------
 
-nsSVGRenderState::nsSVGRenderState(nsIRenderingContext *aContext) :
+nsSVGRenderState::nsSVGRenderState(nsRenderingContext *aContext) :
   mRenderMode(NORMAL), mRenderingContext(aContext), mPaintingToWindow(PR_FALSE)
 {
   mGfxContext = aContext->ThebesContext();
@@ -1463,7 +1463,7 @@ nsSVGRenderState::nsSVGRenderState(gfxASurface *aSurface) :
   mGfxContext = new gfxContext(aSurface);
 }
 
-nsIRenderingContext*
+nsRenderingContext*
 nsSVGRenderState::GetRenderingContext(nsIFrame *aFrame)
 {
   if (!mRenderingContext) {

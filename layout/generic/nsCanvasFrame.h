@@ -43,7 +43,7 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsStyleContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsGUIEvent.h"
 #include "nsGkAtoms.h"
 #include "nsIScrollPositionListener.h"
@@ -89,8 +89,8 @@ public:
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -111,7 +111,7 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  void PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt);
+  void PaintFocus(nsRenderingContext& aRenderingContext, nsPoint aPt);
 
   // nsIScrollPositionListener
   virtual void ScrollPositionWillChange(nscoord aX, nscoord aY);
@@ -224,7 +224,7 @@ public:
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
 
   void SetExtraBackgroundColor(nscolor aColor)
   {

@@ -220,7 +220,7 @@ public:
    * @param aContext out parameter for new rendering context
    * @return error status
    */
-  NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) = 0;
+  NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsRenderingContext *&aContext) = 0;
 
   /**
    * Create a rendering context and initialize it from an nsIWidget
@@ -228,21 +228,21 @@ public:
    * @param aContext out parameter for new rendering context
    * @return error status
    */
-  NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext) = 0;
+  NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsRenderingContext *&aContext) = 0;
 
   /**
    * Create a rendering context and initialize it.
    * @param aContext out parameter for new rendering context
    * @return error status
    */
-  NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext) = 0;
+  NS_IMETHOD  CreateRenderingContext(nsRenderingContext *&aContext) = 0;
 
   /**
    * Create an uninitalised rendering context.
    * @param aContext out parameter for new rendering context
    * @return error status
    */
-  NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext) = 0;
+  NS_IMETHOD  CreateRenderingContextInstance(nsRenderingContext *&aContext) = 0;
 
   /**
    * We are in the process of creating the native widget for aWidget.

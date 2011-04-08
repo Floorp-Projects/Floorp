@@ -36,19 +36,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// NOTE: alphabetically ordered
 #include "nsTextAccessibleWrap.h"
 #include "ISimpleDOMText_i.c"
 
 #include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
-
-#include "nsIThebesFontMetrics.h"
 #include "nsIFrame.h"
+#include "nsIThebesFontMetrics.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
-#include "nsIRenderingContext.h"
-#include "nsIComponentManager.h"
 
 #include "gfxFont.h"
 

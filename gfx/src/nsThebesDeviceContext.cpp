@@ -50,7 +50,7 @@
 #include "mozilla/Services.h"
 
 #include "nsThebesDeviceContext.h"
-#include "nsThebesRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
 
@@ -711,7 +711,7 @@ nsThebesDeviceContext::Init(nsIWidget *aWidget)
 
 NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIView *aView,
-                                              nsIRenderingContext *&aContext)
+                                              nsRenderingContext *&aContext)
 {
     // This is currently only called by the caret code
     NS_ENSURE_ARG_POINTER(aView);
@@ -725,12 +725,12 @@ nsThebesDeviceContext::CreateRenderingContext(nsIView *aView,
 
 NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
-                                              nsIRenderingContext *&aContext)
+                                              nsRenderingContext *&aContext)
 {
     nsresult rv;
 
     aContext = nsnull;
-    nsCOMPtr<nsIRenderingContext> pContext;
+    nsRefPtr<nsRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
         nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
@@ -749,12 +749,12 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
+nsThebesDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
 {
     nsresult rv = NS_OK;
 
     aContext = nsnull;
-    nsCOMPtr<nsIRenderingContext> pContext;
+    nsRefPtr<nsRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
         if (mPrintingSurface)
@@ -773,9 +773,9 @@ nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::CreateRenderingContextInstance(nsIRenderingContext *&aContext)
+nsThebesDeviceContext::CreateRenderingContextInstance(nsRenderingContext *&aContext)
 {
-    nsCOMPtr<nsIRenderingContext> renderingContext = new nsThebesRenderingContext();
+    nsRefPtr<nsRenderingContext> renderingContext = new nsRenderingContext();
     if (!renderingContext)
         return NS_ERROR_OUT_OF_MEMORY;
 

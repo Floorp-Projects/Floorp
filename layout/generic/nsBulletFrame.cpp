@@ -47,7 +47,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsILoadGroup.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -234,7 +234,7 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Bullet", TYPE_BULLET)
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
@@ -244,7 +244,7 @@ public:
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
-                            nsIRenderingContext* aCtx)
+                            nsRenderingContext* aCtx)
 {
   static_cast<nsBulletFrame*>(mFrame)->
     PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect);
@@ -265,7 +265,7 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
+nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                            const nsRect& aDirtyRect)
 {
   const nsStyleList* myList = GetStyleList();
@@ -1311,7 +1311,7 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
 
 void
 nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
-                              nsIRenderingContext *aRenderingContext,
+                              nsRenderingContext *aRenderingContext,
                               nsHTMLReflowMetrics& aMetrics)
 {
   // Reset our padding.  If we need it, we'll set it below.
@@ -1463,7 +1463,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
 }
 
 /* virtual */ nscoord
-nsBulletFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsBulletFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nsHTMLReflowMetrics metrics;
   DISPLAY_MIN_WIDTH(this, metrics.width);
@@ -1472,7 +1472,7 @@ nsBulletFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBulletFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsBulletFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nsHTMLReflowMetrics metrics;
   DISPLAY_PREF_WIDTH(this, metrics.width);

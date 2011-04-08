@@ -296,7 +296,7 @@ public:
 
 nsresult 
 nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
-                              nsThebesRenderingContext *aContext)
+                              nsRenderingContext *aContext)
 {
     if (aLength == 0) {
         aWidth = 0;
@@ -320,7 +320,7 @@ nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aW
 nsresult
 nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
                               nscoord& aWidth, PRInt32 *aFontID,
-                              nsThebesRenderingContext *aContext)
+                              nsRenderingContext *aContext)
 {
     if (aLength == 0) {
         aWidth = 0;
@@ -383,7 +383,7 @@ nsresult
 nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 const nscoord* aSpacing,
-                                nsThebesRenderingContext *aContext)
+                                nsRenderingContext *aContext)
 {
     if (aLength == 0)
         return NS_OK;
@@ -405,8 +405,8 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
 nsresult
 nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
-                                nsIRenderingContext *aContext,
-                                nsIRenderingContext *aTextRunConstructionContext)
+                                nsRenderingContext *aContext,
+                                nsRenderingContext *aTextRunConstructionContext)
 {
     if (aLength == 0)
         return NS_OK;
@@ -428,7 +428,7 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 
 static void
 GetTextRunBoundingMetrics(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aLength,
-                          nsThebesRenderingContext *aContext,
+                          nsRenderingContext *aContext,
                           nsBoundingMetrics &aBoundingMetrics)
 {
     StubPropertyProvider provider;
@@ -447,7 +447,7 @@ GetTextRunBoundingMetrics(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aLengt
 
 nsresult
 nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
-                                        nsThebesRenderingContext *aContext,
+                                        nsRenderingContext *aContext,
                                         nsBoundingMetrics &aBoundingMetrics)
 {
     if (aLength == 0) {
@@ -465,7 +465,7 @@ nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
 
 nsresult
 nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
-                                        nsThebesRenderingContext *aContext,
+                                        nsRenderingContext *aContext,
                                         nsBoundingMetrics &aBoundingMetrics)
 {
     if (aLength == 0) {
