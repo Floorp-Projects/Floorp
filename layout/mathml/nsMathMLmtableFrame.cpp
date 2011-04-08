@@ -639,9 +639,10 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
       // XXX should instead use style data from the row of reference here ?
       aReflowState.rendContext->SetFont(GetStyleFont()->mFont,
                                         aPresContext->GetUserFontSet());
-      nsCOMPtr<nsIFontMetrics> fm = aReflowState.rendContext->GetFontMetrics();
       nscoord axisHeight;
-      GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
+      GetAxisHeight(*aReflowState.rendContext,
+                    aReflowState.rendContext->FontMetrics(),
+                    axisHeight);
       if (rowFrame) {
         // anchor the table on the axis of the row of reference
         // XXX fallback to baseline because it is a hard problem

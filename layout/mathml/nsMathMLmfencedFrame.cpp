@@ -245,7 +245,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   const nsStyleFont* font = GetStyleFont();
   aReflowState.rendContext->SetFont(font->mFont,
                                     aPresContext->GetUserFontSet());
-  nsCOMPtr<nsIFontMetrics> fm = aReflowState.rendContext->GetFontMetrics();
+  nsIFontMetrics* fm = aReflowState.rendContext->FontMetrics();
   nscoord axisHeight, em;
   GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
   GetEmHeight(fm, em);

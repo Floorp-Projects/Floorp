@@ -975,7 +975,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   nsLayoutUtils::SetFontFromStyle(&aRenderingContext, mStyleContext);
 
   // Format the text to display within the formatting rect
-  nsCOMPtr<nsIFontMetrics> fm = aRenderingContext.GetFontMetrics();
+  nsIFontMetrics* fm = aRenderingContext.FontMetrics();
 
   nscoord maxAscent, maxDescent, height;
   fm->GetMaxAscent(maxAscent);

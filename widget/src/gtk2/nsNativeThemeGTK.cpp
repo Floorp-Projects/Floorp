@@ -1135,11 +1135,9 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
   case NS_THEME_TREEVIEW_HEADER_CELL:
     {
       // Just include our border, and let the box code augment the size.
-
-      nsCOMPtr<nsIDeviceContext> dc = aContext->GetDeviceContext();
-
       nsIntMargin border;
-      nsNativeThemeGTK::GetWidgetBorder(dc, aFrame, aWidgetType, &border);
+      nsNativeThemeGTK::GetWidgetBorder(aContext->DeviceContext(),
+                                        aFrame, aWidgetType, &border);
       aResult->width = border.left + border.right;
       aResult->height = border.top + border.bottom;
     }
