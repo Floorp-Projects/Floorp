@@ -279,23 +279,8 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 return nsnull;
             }
         }
-
-        JSObject *inner = obj;
-        OBJ_TO_INNER_OBJECT(cx, inner);
-        XPCWrappedNative *wn;
-        if (IS_WN_WRAPPER(inner) &&
-            (wn = static_cast<XPCWrappedNative *>(inner->getPrivate()))->HasProto() &&
-            wn->GetProto()->ClassIsDOMObject()) {
-            typedef XrayWrapper<JSCrossCompartmentWrapper> Xray;
-            wrapper = &FilteringWrapper<Xray,
-                                        CrossOriginAccessiblePropertiesOnly>::singleton;
-            xrayHolder = Xray::createHolder(cx, obj, parent);
-            if (!xrayHolder)
-                return nsnull;
-        } else {
-            wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
-                                        ExposedPropertiesOnly>::singleton;
-        }
+        wrapper = &FilteringWrapper<JSCrossCompartmentWrapper,
+                                    ExposedPropertiesOnly>::singleton;
     } else if (AccessCheck::isSameOrigin(origin, target)) {
         // Same origin we use a transparent wrapper, unless the compartment asks
         // for an Xray or the wrapper needs a SOW.
@@ -332,7 +317,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
                 wrapper = &FilteringWrapper<Xray,
                     SameOriginOrCrossOriginAccessiblePropertiesOnly>::singleton;
             } else {
-                wrapper = &FilteringWrapper<Xray,
+                wrapper= &FilteringWrapper<Xray,
                     CrossOriginAccessiblePropertiesOnly>::singleton;
             }
 
