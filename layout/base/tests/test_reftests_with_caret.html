@@ -122,13 +122,26 @@ var tests = [
     [ 'bug632215-1.html' , 'bug632215-ref.html'   ] ,
     [ 'bug632215-2.html' , 'bug632215-ref.html'   ] ,
     [ 'bug633044-1.html' , 'bug633044-1-ref.html' ] ,
-    [ 'bug644428-1.html' , 'bug644428-1-ref.html' ]
+    [ 'bug644428-1.html' , 'bug644428-1-ref.html' ] ,
+    function() {
+      SpecialPowers.setBoolPref("bidi.browser.ui", true);
+    },
+    [ 'bug646382-1.html' , 'bug646382-1-ref.html' ] ,
+    [ 'bug646382-2.html' , 'bug646382-2-ref.html' ] ,
+    function() {
+      SpecialPowers.clearUserPref("bidi.browser.ui");
+    },
 ];
 var testIndex = 0;
 
 function nextTest() {
   if (testIndex < tests.length) {
-    refTest(tests[testIndex][0],tests[testIndex][1]);
+    if (typeof(tests[testIndex]) == 'function') {
+      tests[testIndex]();
+      SimpleTest.executeSoon(nextTest);
+    } else {
+      refTest(tests[testIndex][0],tests[testIndex][1]);
+    }
     ++testIndex;
   } else {
     endTest();
