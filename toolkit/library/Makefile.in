@@ -85,32 +85,6 @@ SHARED_LIBRARY_LIBS += \
 	$(foreach lib,$(STATIC_LIBS),$(DEPTH)/staticlib/$(LIB_PREFIX)$(lib).$(LIB_SUFFIX)) \
 	$(NULL)
 
-ifdef MOZ_JAVAXPCOM
-LOCAL_INCLUDES += \
-		-I$(topsrcdir)/extensions/java/xpcom/src \
-		-I$(JAVA_INCLUDE_PATH) \
-		$(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-CPPSRCS += dlldeps-javaxpcom.cpp
-LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/win32
-else
-ifeq ($(OS_ARCH),OS2)
-CPPSRCS += dlldeps-javaxpcom.cpp
-LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/os2
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
-EXTRA_DSO_LDOPTS += -framework JavaVM
-else
-LOCAL_INCLUDES += -I$(JAVA_INCLUDE_PATH)/linux
-endif
-endif
-endif
-
-SHARED_LIBRARY_LIBS += \
-  $(DEPTH)/extensions/java/xpcom/src/$(LIB_PREFIX)javaxpcom.$(LIB_SUFFIX)
-endif #MOZ_JAVAXPCOM
-
 ifdef MOZ_ENABLE_LIBXUL
 include $(srcdir)/libxul-config.mk
 
