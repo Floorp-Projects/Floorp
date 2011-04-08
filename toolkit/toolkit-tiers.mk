@@ -239,12 +239,6 @@ ifdef MOZ_JAVAXPCOM
 tier_platform_dirs += extensions/java/xpcom/src
 endif
 
-ifndef BUILD_STATIC_LIBS
-ifneq (,$(MOZ_ENABLE_GTK2))
-tier_platform_dirs += embedding/browser/gtk
-endif
-endif
-
 ifdef MOZ_ENABLE_LIBXUL
 tier_platform_dirs += startupcache
 endif
