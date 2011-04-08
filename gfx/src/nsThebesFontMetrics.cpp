@@ -451,7 +451,7 @@ nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
                                         nsBoundingMetrics &aBoundingMetrics)
 {
     if (aLength == 0) {
-        aBoundingMetrics.Clear();
+        aBoundingMetrics = nsBoundingMetrics();
         return NS_OK;
     }
 
@@ -469,7 +469,7 @@ nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLeng
                                         nsBoundingMetrics &aBoundingMetrics)
 {
     if (aLength == 0) {
-        aBoundingMetrics.Clear();
+        aBoundingMetrics = nsBoundingMetrics();
         return NS_OK;
     }
 

@@ -1131,12 +1131,12 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                          inner.XMost() - size : inner.x;
       nscoord twoPX = nsPresContext::CSSPixelsToAppUnits(2);
       aRenderingContext.DrawRect(iconXPos, inner.y,size,size);
-      aRenderingContext.GetColor(oldColor);
+      aRenderingContext.PushState();
       aRenderingContext.SetColor(NS_RGB(0xFF,0,0));
       aRenderingContext.FillEllipse(size/2 + iconXPos, size/2 + inner.y,
                                     size/2 - twoPX, size/2 - twoPX);
-      aRenderingContext.SetColor(oldColor);
-    }  
+      aRenderingContext.PopState();
+    }
 
     // Reduce the inner rect by the width of the icon, and leave an
     // additional ICON_PADDING pixels for padding

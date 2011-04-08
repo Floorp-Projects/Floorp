@@ -297,7 +297,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
@@ -322,7 +322,7 @@ nsMathMLmactionFrame::Place(nsRenderingContext& aRenderingContext,
 {
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);

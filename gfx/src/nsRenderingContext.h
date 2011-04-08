@@ -40,17 +40,13 @@
 #define NSRENDERINGCONTEXT__H__
 
 #include "nsCOMPtr.h"
-#include "nsTArray.h"
 #include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
-#include "nsIWidget.h"
+#include "nsIThebesFontMetrics.h"
+#include "nsIRegion.h"
 #include "nsPoint.h"
 #include "nsSize.h"
 #include "nsColor.h"
 #include "nsRect.h"
-#include "nsIRegion.h"
-#include "nsTransform2D.h"
-#include "nsIThebesFontMetrics.h"
 #include "gfxContext.h"
 
 typedef enum {
@@ -66,41 +62,6 @@ typedef enum {
     nsLineStyle_kDashed = 2,
     nsLineStyle_kDotted = 3
 } nsLineStyle;
-
-/* Struct used to represent the overall extent of a string
- * whose rendering may involve switching between different
- * fonts that have different metrics.
- */
-struct nsTextDimensions {
-    // max ascent amongst all the fonts needed to represent the string
-    nscoord ascent;
-
-    // max descent amongst all the fonts needed to represent the string
-    nscoord descent;
-
-    // width of the string
-    nscoord width;
-
-
-    nsTextDimensions()
-    {
-        Clear();
-    }
-
-    /* Set all member data to zero */
-    void
-    Clear() {
-        ascent = descent = width = 0;
-    }
-
-    /* Sum with another dimension */
-    void
-    Combine(const nsTextDimensions& aOther) {
-        if (ascent < aOther.ascent) ascent = aOther.ascent;
-        if (descent < aOther.descent) descent = aOther.descent;
-        width += aOther.width;
-    }
-};
 
 #ifdef MOZ_MATHML
 /* Struct used for accurate measurements of a string in order
@@ -147,30 +108,16 @@ struct nsBoundingMetrics {
        The _exact_ height of the string is therefore:
        ascent + descent */
 
-    //////////
-    // Metrics for placing other surrounding text:
-
     nscoord width;
     /* The horizontal distance from the origin of the drawing
        operation to the correct origin for drawing another string
        to follow the current one. Depending on the font, this
        could be greater than or less than the right bearing. */
 
-    nsBoundingMetrics() {
-        Clear();
-    }
+    nsBoundingMetrics() : leftBearing(0), rightBearing(0),
+                          ascent(0), descent(0), width(0)
+    {}
 
-    //////////
-    // Utility methods and operators:
-
-    /* Set all member data to zero */
-    void
-    Clear() {
-        leftBearing = rightBearing = 0;
-        ascent = descent = width = 0;
-    }
-
-    /* Append another bounding metrics */
     void
     operator += (const nsBoundingMetrics& bm) {
         if (ascent + descent == 0 && rightBearing - leftBearing == 0) {
@@ -194,73 +141,93 @@ struct nsBoundingMetrics {
 class nsRenderingContext
 {
 public:
-    nsRenderingContext()
-        : mP2A(0.), mLineStyle(nsLineStyle_kNone), mColor(NS_RGB(0,0,0))
-    {}
+    nsRenderingContext() : mP2A(0.) {}
     // ~nsRenderingContext() {}
 
     NS_INLINE_DECL_REFCOUNTING(nsRenderingContext)
 
-    /**
-     * Return the maximum length of a string that can be handled by
-     * the platform using the current font metrics.
-     */
-    PRInt32 GetMaxStringLength();
+    nsresult Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface);
+    nsresult Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
 
-    // Safe string method variants: by default, these defer to the more
-    // elaborate methods below
+    already_AddRefed<nsIDeviceContext> GetDeviceContext();
+    gfxContext *ThebesContext() { return mThebes; }
+
+    // Graphics state
+
+    nsresult PushState(void);
+    nsresult PopState(void);
+    nsresult SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
+    nsresult SetClipRegion(const nsIntRegion& aRegion, nsClipCombine aCombine);
+    nsresult SetLineStyle(nsLineStyle aLineStyle);
+    nsresult SetColor(nscolor aColor);
+    nsresult Translate(const nsPoint& aPt);
+    nsresult Scale(float aSx, float aSy);
+
+    class AutoPushTranslation {
+        nsRenderingContext* mCtx;
+    public:
+        AutoPushTranslation(nsRenderingContext* aCtx, const nsPoint& aPt)
+            : mCtx(aCtx) {
+            mCtx->PushState();
+            mCtx->Translate(aPt);
+        }
+        ~AutoPushTranslation() {
+            mCtx->PopState();
+        }
+    };
+
+    // Shapes
+
+    nsresult DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt);
+    nsresult DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+    nsresult DrawRect(const nsRect& aRect);
+    nsresult DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+    nsresult DrawEllipse(nscoord aX, nscoord aY,
+                         nscoord aWidth, nscoord aHeight);
+    nsresult DrawEllipse(const nsRect& aRect);
+
+    nsresult FillRect(const nsRect& aRect);
+    nsresult FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+    nsresult FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+
+    nsresult FillEllipse(const nsRect& aRect);
+    nsresult FillEllipse(nscoord aX, nscoord aY,
+                         nscoord aWidth, nscoord aHeight);
+
+    nsresult InvertRect(const nsRect& aRect);
+    nsresult InvertRect(nscoord aX, nscoord aY,
+                        nscoord aWidth, nscoord aHeight);
+
+    // Text
+
+    nsresult SetFont(const nsFont& aFont, nsIAtom* aLanguage,
+                     gfxUserFontSet *aUserFontSet);
+    nsresult SetFont(const nsFont& aFont, gfxUserFontSet *aUserFontSet);
+    nsresult SetFont(nsIFontMetrics *aFontMetrics);
+    already_AddRefed<nsIFontMetrics> GetFontMetrics();
+    nsresult SetRightToLeftText(PRBool aIsRTL);
+    void SetTextRunRTL(PRBool aIsRTL);
+
     nsresult GetWidth(const nsString& aString, nscoord &aWidth,
                       PRInt32 *aFontID = nsnull);
     nsresult GetWidth(const char* aString, nscoord& aWidth);
-    nsresult DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                        PRInt32 aFontID = -1,
-                        const nscoord* aSpacing = nsnull);
-
-    // Safe string methods
     nsresult GetWidth(const char* aString, PRUint32 aLength,
                       nscoord& aWidth);
     nsresult GetWidth(const PRUnichar *aString, PRUint32 aLength,
                       nscoord &aWidth, PRInt32 *aFontID = nsnull);
     nsresult GetWidth(char aC, nscoord &aWidth);
-    nsresult GetWidth(PRUnichar aC, nscoord &aWidth,
-                      PRInt32 *aFontID);
+    nsresult GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFontID = nsnull);
 
-    nsresult GetTextDimensions(const char* aString, PRUint32 aLength,
-                               nsTextDimensions& aDimensions);
-    nsresult GetTextDimensions(const PRUnichar* aString, PRUint32 aLength,
-                               nsTextDimensions& aDimensions,
-                               PRInt32* aFontID = nsnull);
-
-#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
-    nsresult GetTextDimensions(const char*       aString,
-                               PRInt32           aLength,
-                               PRInt32           aAvailWidth,
-                               PRInt32*          aBreaks,
-                               PRInt32           aNumBreaks,
-                               nsTextDimensions& aDimensions,
-                               PRInt32&          aNumCharsFit,
-                               nsTextDimensions& aLastWordDimensions,
-                               PRInt32*          aFontID = nsnull);
-
-    nsresult GetTextDimensions(const PRUnichar*  aString,
-                               PRInt32           aLength,
-                               PRInt32           aAvailWidth,
-                               PRInt32*          aBreaks,
-                               PRInt32           aNumBreaks,
-                               nsTextDimensions& aDimensions,
-                               PRInt32&          aNumCharsFit,
-                               nsTextDimensions& aLastWordDimensions,
-                               PRInt32*          aFontID = nsnull);
-#endif
 #ifdef MOZ_MATHML
-    nsresult GetBoundingMetrics(const char*        aString,
-                                PRUint32           aLength,
-                                nsBoundingMetrics& aBoundingMetrics);
     nsresult GetBoundingMetrics(const PRUnichar*   aString,
                                 PRUint32           aLength,
                                 nsBoundingMetrics& aBoundingMetrics,
                                 PRInt32*           aFontID = nsnull);
 #endif
+
+    nsresult DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                        PRInt32 aFontID = -1,
+                        const nscoord* aSpacing = nsnull);
     nsresult DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         const nscoord* aSpacing = nsnull);
@@ -269,113 +236,9 @@ public:
                         PRInt32 aFontID = -1,
                         const nscoord* aSpacing = nsnull);
 
-    nsresult Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface);
-    nsresult Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
-    nsresult Init(nsIDeviceContext* aContext, nsIWidget *aWidget);
-    nsresult CommonInit(void);
-    already_AddRefed<nsIDeviceContext> GetDeviceContext();
-    nsresult PushState(void);
-    nsresult PopState(void);
-    nsresult SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
-    nsresult SetLineStyle(nsLineStyle aLineStyle);
-    nsresult SetClipRegion(const nsIntRegion& aRegion, nsClipCombine aCombine);
-    nsresult SetColor(nscolor aColor);
-    nsresult GetColor(nscolor &aColor) const;
-    nsresult SetFont(const nsFont& aFont, nsIAtom* aLanguage,
-                     gfxUserFontSet *aUserFontSet);
-    nsresult SetFont(const nsFont& aFont,
-                     gfxUserFontSet *aUserFontSet);
-    nsresult SetFont(nsIFontMetrics *aFontMetrics);
-    already_AddRefed<nsIFontMetrics> GetFontMetrics();
-    nsresult Translate(const nsPoint& aPt);
-    nsresult Scale(float aSx, float aSy);
-    nsTransform2D* GetCurrentTransform();
-
-    nsresult DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt);
-    nsresult DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-    nsresult DrawRect(const nsRect& aRect);
-    nsresult DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    nsresult FillRect(const nsRect& aRect);
-    nsresult FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    nsresult InvertRect(const nsRect& aRect);
-    nsresult InvertRect(nscoord aX, nscoord aY,
-                        nscoord aWidth, nscoord aHeight);
-    nsresult FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
-    nsresult DrawEllipse(const nsRect& aRect);
-    nsresult DrawEllipse(nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight);
-    nsresult FillEllipse(const nsRect& aRect);
-    nsresult FillEllipse(nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight);
-
-    nsresult PushFilter(const nsRect& aRect,
-                        PRBool aAreaIsOpaque, float aOpacity);
-    nsresult PopFilter();
-
-    enum GraphicDataType {
-        NATIVE_CAIRO_CONTEXT = 1,
-        NATIVE_GDK_DRAWABLE = 2,
-        NATIVE_WINDOWS_DC = 3,
-        NATIVE_MAC_THING = 4,
-        NATIVE_THEBES_CONTEXT = 5,
-        NATIVE_OS2_PS = 6
-    };
-    void* GetNativeGraphicData(GraphicDataType aType);
-
-    struct PushedTranslation {
-        float mSavedX, mSavedY;
-    };
-    class AutoPushTranslation {
-        nsRenderingContext* mCtx;
-        PushedTranslation mPushed;
-    public:
-        AutoPushTranslation(nsRenderingContext* aCtx, const nsPoint& aPt)
-            : mCtx(aCtx) {
-            mCtx->PushTranslation(&mPushed);
-            mCtx->Translate(aPt);
-        }
-        ~AutoPushTranslation() {
-            mCtx->PopTranslation(&mPushed);
-        }
-    };
-
-    nsresult PushTranslation(PushedTranslation* aState);
-    nsresult PopTranslation(PushedTranslation* aState);
-    nsresult SetTranslation(const nsPoint& aPoint);
-
-    /**
-     * Let the device context know whether we want text reordered with
-     * right-to-left base direction
-     */
-    nsresult SetRightToLeftText(PRBool aIsRTL);
-    nsresult GetRightToLeftText(PRBool* aIsRTL);
-    void SetTextRunRTL(PRBool aIsRTL);
-
-    PRInt32 GetPosition(const PRUnichar *aText,
-                        PRUint32 aLength,
-                        nsPoint aPt);
-    nsresult GetRangeWidth(const PRUnichar *aText,
-                           PRUint32 aLength,
-                           PRUint32 aStart,
-                           PRUint32 aEnd,
-                           PRUint32 &aWidth);
-    nsresult GetRangeWidth(const char *aText,
-                           PRUint32 aLength,
-                           PRUint32 aStart,
-                           PRUint32 aEnd,
-                           PRUint32 &aWidth);
-
-    nsresult RenderEPS(const nsRect& aRect, FILE *aDataFile);
-
-    // Thebes specific stuff
-
-    gfxContext *ThebesContext() { return mThebes; }
-
-    nsTransform2D& CurrentTransform();
-
-    void TransformCoord (nscoord *aX, nscoord *aY);
-
 protected:
+    PRInt32 GetMaxChunkLength();
+
     nsresult GetWidthInternal(const char *aString, PRUint32 aLength,
                               nscoord &aWidth);
     nsresult GetWidthInternal(const PRUnichar *aString, PRUint32 aLength,
@@ -389,42 +252,7 @@ protected:
                                 PRInt32 aFontID = -1,
                                 const nscoord* aSpacing = nsnull);
 
-    nsresult GetTextDimensionsInternal(const char*       aString,
-                                       PRUint32          aLength,
-                                       nsTextDimensions& aDimensions);
-    nsresult GetTextDimensionsInternal(const PRUnichar*  aString,
-                                       PRUint32          aLength,
-                                       nsTextDimensions& aDimensions,
-                                       PRInt32*          aFontID = nsnull);
-    nsresult GetTextDimensionsInternal(const char*       aString,
-                                       PRInt32           aLength,
-                                       PRInt32           aAvailWidth,
-                                       PRInt32*          aBreaks,
-                                       PRInt32           aNumBreaks,
-                                       nsTextDimensions& aDimensions,
-                                       PRInt32&          aNumCharsFit,
-                                       nsTextDimensions& aLastWordDimensions,
-                                       PRInt32*          aFontID = nsnull);
-    nsresult GetTextDimensionsInternal(const PRUnichar*  aString,
-                                       PRInt32           aLength,
-                                       PRInt32           aAvailWidth,
-                                       PRInt32*          aBreaks,
-                                       PRInt32           aNumBreaks,
-                                       nsTextDimensions& aDimensions,
-                                       PRInt32&          aNumCharsFit,
-                                       nsTextDimensions& aLastWordDimensions,
-                                       PRInt32*          aFontID = nsnull);
-
-    void UpdateTempTransformMatrix();
-
 #ifdef MOZ_MATHML
-    /**
-     * Returns metrics (in app units) of an 8-bit character string
-     */
-    nsresult GetBoundingMetricsInternal(const char*        aString,
-                                        PRUint32           aLength,
-                                        nsBoundingMetrics& aBoundingMetrics);
-
     /**
      * Returns metrics (in app units) of a Unicode character string
      */
@@ -432,23 +260,13 @@ protected:
                                         PRUint32           aLength,
                                         nsBoundingMetrics& aBoundingMetrics,
                                         PRInt32*           aFontID = nsnull);
-
 #endif /* MOZ_MATHML */
 
     nsRefPtr<gfxContext> mThebes;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
-    nsCOMPtr<nsIWidget> mWidget;
     nsCOMPtr<nsIThebesFontMetrics> mFontMetrics;
 
     double mP2A; // cached app units per device pixel value
-    nsLineStyle mLineStyle;
-    nscolor mColor;
-
-    // for handing out to people
-    nsTransform2D mTempTransform;
-
-    // keeping track of pushgroup/popgroup opacities
-    nsTArray<float> mOpacityArray;
 };
 
 #endif  // NSRENDERINGCONTEXT__H__

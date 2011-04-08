@@ -129,7 +129,7 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
 {
   ProcessAttributes(aPresContext);
 
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   mBoundingMetrics.width = mWidth;
   mBoundingMetrics.ascent = mHeight;
   mBoundingMetrics.descent = mDepth;
