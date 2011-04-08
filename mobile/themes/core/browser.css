@@ -1327,7 +1327,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
   border-width: @border_width_large@ @border_width_large@ 0 @border_width_large@;
 }
 
-.appmenu-button {
+#appmenu > .appmenu-button {
   -moz-box-flex: 1;
   -moz-box-orient: vertical;
   border-style: solid;
@@ -1335,9 +1335,14 @@ pageaction:not([image]) > hbox >.pageaction-image {
   border-width: 0 @border_width_tiny@ @border_width_tiny@ 0;
   height: @appmenu_button_height@;
   width: 0;
+  display: none;
 }
 
-.appmenu-button:hover:active {
+#appmenu > .appmenu-button[show] {
+  display: inline-block;
+}
+
+#appmenu > .appmenu-button:hover:active {
   background-image: url("chrome://browser/skin/images/appmenu-active-hdpi.png");
   background-size: 100% 100%;
 }
@@ -1352,6 +1357,31 @@ pageaction:not([image]) > hbox >.pageaction-image {
   margin-bottom: @margin_small@ !important;
 }
 
+richlistitem.appmenu-site-button > image,
+.appmenu-site-button {
+  list-style-image: url("chrome://browser/skin/images/appmenu-site-hdpi.png");
+}
+
+richlistitem.appmenu-addons-button > image,
+.appmenu-addons-button {
+  list-style-image: url("chrome://browser/skin/images/appmenu-addons-hdpi.png");
+}
+
+richlistitem.appmenu-preferences-button > image,
+.appmenu-preferences-button {
+  list-style-image: url("chrome://browser/skin/images/appmenu-preferences-hdpi.png");
+}
+
+richlistitem.appmenu-downloads-button > image,
+.appmenu-downloads-button {
+  list-style-image: url("chrome://browser/skin/images/appmenu-downloads-hdpi.png");
+}
+
+#appmenu-more-button {
+  list-style-image: url("chrome://browser/skin/images/appmenu-site-hdpi.png");
+  display: none;
+}
+
 @media (@orientation@: portrait) {
   #appmenu:not([hidden])[count="4"],
   #appmenu:not([hidden])[count="5"],
@@ -1364,10 +1394,10 @@ pageaction:not([image]) > hbox >.pageaction-image {
   #appmenu[count="5"] > .appmenu-button {
     width: 50%;
   }
-
-  #appmenu[count="5"] > .appmenu-button:nth-child(3),
-  #appmenu[count="5"] > .appmenu-button:nth-child(4),
-  #appmenu[count="5"] > .appmenu-button:nth-child(5),
+ 
+  #appmenu[count="5"] > .appmenu-button[show="2"],
+  #appmenu[count="5"] > .appmenu-button[show="3"],
+  #appmenu[count="5"] > .appmenu-button[show="4"],
   #appmenu[count="6"] > .appmenu-button {
     width: 33.33%;
   }
