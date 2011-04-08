@@ -1662,6 +1662,19 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return NS_OK;
 }
 
+#ifdef XP_OS2
+static void *
+GetPSFromRC(nsRenderingContext& aRC)
+{
+  nsRefPtr<gfxASurface>
+    surf = aRenderingContext.ThebesContext()->CurrentSurface();
+  if (!surf || surf->CairoStatus())
+    return nsnull;
+  return (void *)(static_cast<gfxOS2Surface*>
+                  (static_cast<gfxASurface*>(surf.get()))->GetPS());
+}
+#endif
+
 void
 nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
@@ -1804,7 +1817,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
    */
 
 #elif defined(XP_OS2)
-  void *hps = aRenderingContext.GetNativeGraphicData(nsRenderingContext::NATIVE_OS2_PS);
+  void *hps = GetPSFromRC(aRenderingContext);
   if (!hps)
     return;
 
@@ -2470,7 +2483,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       }
 
       // check if we need to update the PS
-      HPS hps = (HPS)aRenderingContext.GetNativeGraphicData(nsRenderingContext::NATIVE_OS2_PS);
+      HPS hps = (HPS)GetPSFromRC(aRenderingContext);
       if (reinterpret_cast<HPS>(window->window) != hps) {
         window->window = reinterpret_cast<void*>(hps);
         doupdatewindow = PR_TRUE;

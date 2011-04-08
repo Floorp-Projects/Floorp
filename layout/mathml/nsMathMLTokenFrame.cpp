@@ -159,7 +159,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
   // initializations needed for empty markup like <mtag></mtag>
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
-  aDesiredSize.mBoundingMetrics.Clear();
+  aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
 
   nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
   nsIFrame* childFrame = GetFirstChild(nsnull);
@@ -201,7 +201,7 @@ nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   for (nsIFrame* childFrame = GetFirstChild(nsnull); childFrame;
        childFrame = childFrame->GetNextSibling()) {
     nsHTMLReflowMetrics childSize;

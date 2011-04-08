@@ -239,7 +239,7 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   nsresult rv;
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
-  aDesiredSize.mBoundingMetrics.Clear();
+  aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
 
   PRInt32 i;
   const nsStyleFont* font = GetStyleFont();
@@ -502,11 +502,11 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
       if (NS_FAILED(res)) {
         nsAutoString data;
         aMathMLChar->GetData(data);
-        nsTextDimensions dimensions;
-        aRenderingContext.GetTextDimensions(data.get(), data.Length(), dimensions);
-        charSize.ascent = dimensions.ascent;
-        charSize.descent = dimensions.descent;
-        charSize.width = dimensions.width;
+        nsBoundingMetrics metrics;
+        aRenderingContext.GetBoundingMetrics(data.get(), data.Length(), metrics);
+        charSize.ascent = metrics.ascent;
+        charSize.descent = metrics.descent;
+        charSize.width = metrics.width;
         // Set this as the bounding metrics of the MathMLChar to leave
         // the necessary room to paint the char.
         aMathMLChar->SetBoundingMetrics(charSize);

@@ -864,7 +864,7 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
   // some assumptions until proven otherwise
   // note that mGlyph is not initialized
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   mGlyphTable = nsnull;
   // check if stretching is applicable ...
   if (gGlyphTableList && (1 == mData.Length())) {
