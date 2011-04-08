@@ -1068,7 +1068,8 @@ DOMCSSDeclarationImpl::GetParentRule(nsIDOMCSSRule **aParent)
     return NS_OK;
   }
 
-  return mRule->GetDOMRule(aParent);
+  NS_IF_ADDREF(*aParent = mRule->GetDOMRule());
+  return NS_OK;
 }
 
 nsresult
@@ -1338,10 +1339,9 @@ StyleRule::Clone() const
   return clone.forget();
 }
 
-nsIDOMCSSRule*
-StyleRule::GetDOMRuleWeak(nsresult *aResult)
+/* virtual */ nsIDOMCSSRule*
+StyleRule::GetDOMRule()
 {
-  *aResult = NS_OK;
   if (!mSheet) {
     // inline style rules aren't supposed to have a DOM rule object, only
     // a declaration.
@@ -1349,10 +1349,6 @@ StyleRule::GetDOMRuleWeak(nsresult *aResult)
   }
   if (!mDOMRule) {
     mDOMRule = new DOMCSSStyleRule(this);
-    if (!mDOMRule) {
-      *aResult = NS_ERROR_OUT_OF_MEMORY;
-      return nsnull;
-    }
     NS_ADDREF(mDOMRule);
   }
   return mDOMRule;

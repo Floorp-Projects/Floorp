@@ -348,7 +348,7 @@ public:
 
   virtual already_AddRefed<Rule> Clone() const;
 
-  nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
+  virtual nsIDOMCSSRule* GetDOMRule();
 
   // The new mapping function.
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);
