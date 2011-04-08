@@ -661,7 +661,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   mReference.y = aDesiredSize.ascent;
 
   // just make-up a bounding metrics
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   mBoundingMetrics.ascent = aDesiredSize.ascent;
   mBoundingMetrics.descent = aDesiredSize.height - aDesiredSize.ascent;
   mBoundingMetrics.width = aDesiredSize.width;

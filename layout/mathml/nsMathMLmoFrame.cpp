@@ -968,7 +968,7 @@ nsMathMLmoFrame::Reflow(nsPresContext*          aPresContext,
     aDesiredSize.width = 0;
     aDesiredSize.height = 0;
     aDesiredSize.ascent = 0;
-    aDesiredSize.mBoundingMetrics.Clear();
+    aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
     aStatus = NS_FRAME_COMPLETE;
 
     NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);

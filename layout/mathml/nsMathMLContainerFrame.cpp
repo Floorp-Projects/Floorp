@@ -949,7 +949,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
 {
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
-  aDesiredSize.mBoundingMetrics.Clear();
+  aDesiredSize.mBoundingMetrics = nsBoundingMetrics();
 
   /////////////
   // Reflow children
@@ -1286,7 +1286,7 @@ nsMathMLContainerFrame::Place(nsRenderingContext& aRenderingContext,
                               nsHTMLReflowMetrics& aDesiredSize)
 {
   // This is needed in case this frame is empty (i.e., no child frames)
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
 
   RowChildFrameIterator child(this);
   nscoord ascent = 0, descent = 0;
