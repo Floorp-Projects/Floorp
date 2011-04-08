@@ -107,8 +107,7 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
 {
   nsCOMPtr<nsIFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
-  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
-  gfxFontGroup* fontGroup = tfm->GetThebesFontGroup();
+  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   if (!firstFont)
     return; // OOM
@@ -188,8 +187,7 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
 {
   nsCOMPtr<nsIFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
-  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
-  gfxFontGroup* fontGroup = tfm->GetThebesFontGroup();
+  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   if (!firstFont)
     return; // OOM
@@ -345,8 +343,7 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
   nsCOMPtr<nsIFontMetrics> fm;
   nsresult rv = nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
-  if (tfm->GetThebesFontGroup()->ShouldSkipDrawing())
+  if (fm->GetThebesFontGroup()->ShouldSkipDrawing())
     return NS_OK;
 
   // Do standards mode painting of 'text-decoration's: under+overline
