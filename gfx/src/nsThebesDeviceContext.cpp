@@ -105,15 +105,14 @@ public:
     nsresult Init(nsIDeviceContext* aContext);
     nsresult GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                            gfxUserFontSet* aUserFontSet,
-                           nsIFontMetrics*& aMetrics);
+                           nsFontMetrics*& aMetrics);
 
-    nsresult FontMetricsDeleted(const nsIFontMetrics* aFontMetrics);
+    nsresult FontMetricsDeleted(const nsFontMetrics* aFontMetrics);
     nsresult Compact();
     nsresult Flush();
-    nsresult CreateFontMetricsInstance(nsIFontMetrics** fm);
 
 protected:
-    nsTArray<nsIFontMetrics*> mFontMetrics;
+    nsTArray<nsFontMetrics*>  mFontMetrics;
     nsIDeviceContext         *mContext; // we do not addref this since
                                         // ownership is implied. MMP.
 };
@@ -142,12 +141,12 @@ nsFontCache::Init(nsIDeviceContext* aContext)
 
 nsresult
 nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
-  gfxUserFontSet* aUserFontSet, nsIFontMetrics*& aMetrics)
+  gfxUserFontSet* aUserFontSet, nsFontMetrics*& aMetrics)
 {
     // First check our cache
     // start from the end, which is where we put the most-recent-used element
 
-    nsIFontMetrics* fm;
+    nsFontMetrics* fm;
     PRInt32 n = mFontMetrics.Length() - 1;
     for (PRInt32 i = n; i >= 0; --i) {
         fm = mFontMetrics[i];
@@ -169,10 +168,9 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
 
     // It's not in the cache. Get font metrics and then cache them.
 
-    aMetrics = nsnull;
-    nsresult rv = CreateFontMetricsInstance(&fm);
-    if (NS_FAILED(rv)) return rv;
-    rv = fm->Init(aFont, aLanguage, mContext, aUserFontSet);
+    fm = new nsFontMetrics();
+    NS_ADDREF(fm);
+    nsresult rv = fm->Init(aFont, aLanguage, mContext, aUserFontSet);
     if (NS_SUCCEEDED(rv)) {
         // the mFontMetrics list has the "head" at the end, because append
         // is cheaper than insert
@@ -189,13 +187,12 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
     // objects are available. Compact the cache and try again.
 
     Compact();
-    rv = CreateFontMetricsInstance(&fm);
-    if (NS_FAILED(rv)) return rv;
+    fm = new nsFontMetrics();
+    NS_ADDREF(fm);
     rv = fm->Init(aFont, aLanguage, mContext, aUserFontSet);
     if (NS_SUCCEEDED(rv)) {
         mFontMetrics.AppendElement(fm);
         aMetrics = fm;
-        NS_ADDREF(aMetrics);
         return NS_OK;
     }
     fm->Destroy();
@@ -215,14 +212,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
     return rv;
 }
 
-nsresult
-nsFontCache::CreateFontMetricsInstance(nsIFontMetrics** fm)
-{
-    static NS_DEFINE_CID(kFontMetricsCID, NS_FONT_METRICS_CID);
-    return CallCreateInstance(kFontMetricsCID, fm);
-}
-
-nsresult nsFontCache::FontMetricsDeleted(const nsIFontMetrics* aFontMetrics)
+nsresult nsFontCache::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
 {
     mFontMetrics.RemoveElement(aFontMetrics);
     return NS_OK;
@@ -233,8 +223,8 @@ nsresult nsFontCache::Compact()
     // Need to loop backward because the running element can be removed on
     // the way
     for (PRInt32 i = mFontMetrics.Length()-1; i >= 0; --i) {
-        nsIFontMetrics* fm = mFontMetrics[i];
-        nsIFontMetrics* oldfm = fm;
+        nsFontMetrics* fm = mFontMetrics[i];
+        nsFontMetrics* oldfm = fm;
         // Destroy() isn't here because we want our device context to be
         // notified
         NS_RELEASE(fm); // this will reset fm to nsnull
@@ -251,7 +241,7 @@ nsresult nsFontCache::Compact()
 nsresult nsFontCache::Flush()
 {
     for (PRInt32 i = mFontMetrics.Length()-1; i >= 0; --i) {
-        nsIFontMetrics* fm = mFontMetrics[i];
+        nsFontMetrics* fm = mFontMetrics[i];
         // Destroy() will unhook our device context from the fm so that we
         // won't waste time in triggering the notification of
         // FontMetricsDeleted() in the subsequent release
@@ -324,7 +314,7 @@ NS_IMETHODIMP nsThebesDeviceContext::CreateFontCache()
     return mFontCache->Init(this);
 }
 
-NS_IMETHODIMP nsThebesDeviceContext::FontMetricsDeleted(const nsIFontMetrics* aFontMetrics)
+NS_IMETHODIMP nsThebesDeviceContext::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
 {
     if (mFontCache) {
         mFontCache->FontMetricsDeleted(aFontMetrics);
@@ -348,7 +338,7 @@ nsThebesDeviceContext::GetLocaleLanguage(void)
 }
 
 NS_IMETHODIMP nsThebesDeviceContext::GetMetricsFor(const nsFont& aFont,
-  nsIAtom* aLanguage, gfxUserFontSet* aUserFontSet, nsIFontMetrics*& aMetrics)
+  nsIAtom* aLanguage, gfxUserFontSet* aUserFontSet, nsFontMetrics*& aMetrics)
 {
     if (nsnull == mFontCache) {
         nsresult rv = CreateFontCache();
@@ -371,7 +361,7 @@ NS_IMETHODIMP nsThebesDeviceContext::GetMetricsFor(const nsFont& aFont,
 
 NS_IMETHODIMP nsThebesDeviceContext::GetMetricsFor(const nsFont& aFont,
                                                    gfxUserFontSet* aUserFontSet,
-                                                   nsIFontMetrics*& aMetrics)
+                                                   nsFontMetrics*& aMetrics)
 {
     if (nsnull == mFontCache) {
         nsresult rv = CreateFontCache();

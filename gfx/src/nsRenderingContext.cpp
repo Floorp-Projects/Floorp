@@ -477,7 +477,7 @@ nsRenderingContext::SetFont(const nsFont& aFont,
 }
 
 void
-nsRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
+nsRenderingContext::SetFont(nsFontMetrics *aFontMetrics)
 {
     mFontMetrics = aFontMetrics;
 }
