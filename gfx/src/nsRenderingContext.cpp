@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsThebesRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsThebesDeviceContext.h"
 
 #include "nsString.h"
@@ -60,30 +60,22 @@
 #include "cairo-win32.h"
 #endif
 
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-
-//////////////////////////////////////////////////////////////////////
-
 // XXXTodo: rename FORM_TWIPS to FROM_APPUNITS
 #define FROM_TWIPS(_x)  ((gfxFloat)((_x)/(mP2A)))
 #define FROM_TWIPS_INT(_x)  (NSToIntRound((gfxFloat)((_x)/(mP2A))))
 #define TO_TWIPS(_x)    ((nscoord)((_x)*(mP2A)))
 #define GFX_RECT_FROM_TWIPS_RECT(_r)   (gfxRect(FROM_TWIPS((_r).x), FROM_TWIPS((_r).y), FROM_TWIPS((_r).width), FROM_TWIPS((_r).height)))
 
-//////////////////////////////////////////////////////////////////////
-
-NS_IMPL_ISUPPORTS1(nsThebesRenderingContext, nsIRenderingContext)
-
 // Hard limit substring lengths to 8000 characters ... this lets us statically
 // size the cluster buffer array in FindSafeLength
 #define MAX_GFX_TEXT_BUF_SIZE 8000
-static PRInt32 GetMaxChunkLength(nsThebesRenderingContext* aContext)
+static PRInt32 GetMaxChunkLength(nsRenderingContext* aContext)
 {
     PRInt32 len = aContext->GetMaxStringLength();
     return PR_MIN(len, MAX_GFX_TEXT_BUF_SIZE);
 }
 
-static PRInt32 FindSafeLength(nsThebesRenderingContext* aContext,
+static PRInt32 FindSafeLength(nsRenderingContext* aContext,
                               const PRUnichar *aString, PRUint32 aLength,
                               PRUint32 aMaxChunkLength)
 {
@@ -107,7 +99,7 @@ static PRInt32 FindSafeLength(nsThebesRenderingContext* aContext,
     return len;
 }
 
-static PRInt32 FindSafeLength(nsThebesRenderingContext* aContext,
+static PRInt32 FindSafeLength(nsRenderingContext* aContext,
                               const char *aString, PRUint32 aLength,
                               PRUint32 aMaxChunkLength)
 {
@@ -115,21 +107,11 @@ static PRInt32 FindSafeLength(nsThebesRenderingContext* aContext,
     return PR_MIN(aLength, aMaxChunkLength);
 }
 
-nsThebesRenderingContext::nsThebesRenderingContext()
-  : mLineStyle(nsLineStyle_kNone)
-  , mColor(NS_RGB(0,0,0))
-{
-}
-
-nsThebesRenderingContext::~nsThebesRenderingContext()
-{
-}
-
 //////////////////////////////////////////////////////////////////////
 //// nsIRenderingContext
 
-NS_IMETHODIMP
-nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesSurface)
+nsresult
+nsRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesSurface)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p thebesSurface %p\n", this, aContext, aThebesSurface));
 
@@ -141,8 +123,8 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxASurface *aThebesS
     return (CommonInit());
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxContext *aThebesContext)
+nsresult
+nsRenderingContext::Init(nsIDeviceContext* aContext, gfxContext *aThebesContext)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p thebesContext %p\n", this, aContext, aThebesContext));
 
@@ -154,8 +136,8 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, gfxContext *aThebesCo
     return (CommonInit());
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
+nsresult
+nsRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Init ctx %p widget %p\n", this, aContext, aWidget));
 
@@ -173,8 +155,8 @@ nsThebesRenderingContext::Init(nsIDeviceContext* aContext, nsIWidget *aWidget)
     return (CommonInit());
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::CommonInit(void)
+nsresult
+nsRenderingContext::CommonInit(void)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::CommonInit\n", this));
 
@@ -186,14 +168,14 @@ nsThebesRenderingContext::CommonInit(void)
 }
 
 already_AddRefed<nsIDeviceContext>
-nsThebesRenderingContext::GetDeviceContext()
+nsRenderingContext::GetDeviceContext()
 {
     NS_IF_ADDREF(mDeviceContext);
     return mDeviceContext.get();
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::PushTranslation(PushedTranslation* aState)
+nsresult
+nsRenderingContext::PushTranslation(PushedTranslation* aState)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PushTranslation\n", this));
 
@@ -202,8 +184,8 @@ nsThebesRenderingContext::PushTranslation(PushedTranslation* aState)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::PopTranslation(PushedTranslation* aState)
+nsresult
+nsRenderingContext::PopTranslation(PushedTranslation* aState)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PopTranslation\n", this));
 
@@ -212,8 +194,8 @@ nsThebesRenderingContext::PopTranslation(PushedTranslation* aState)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::SetTranslation(const nsPoint& aPt)
+nsresult
+nsRenderingContext::SetTranslation(const nsPoint& aPt)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetTranslation %d %d\n", this, aPt.x, aPt.y));
 
@@ -224,8 +206,8 @@ nsThebesRenderingContext::SetTranslation(const nsPoint& aPt)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::PushState()
+nsresult
+nsRenderingContext::PushState()
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PushState\n", this));
 
@@ -233,8 +215,8 @@ nsThebesRenderingContext::PushState()
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::PopState()
+nsresult
+nsRenderingContext::PopState()
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PopState\n", this));
 
@@ -246,9 +228,8 @@ nsThebesRenderingContext::PopState()
 // clipping
 //
 
-NS_IMETHODIMP
-nsThebesRenderingContext::SetClipRect(const nsRect& aRect,
-                                      nsClipCombine aCombine)
+nsresult
+nsRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
     //return NS_OK;
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetClipRect [%d,%d,%d,%d] %d\n", this, aRect.x, aRect.y, aRect.width, aRect.height, aCombine));
@@ -275,9 +256,9 @@ nsThebesRenderingContext::SetClipRect(const nsRect& aRect,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::SetClipRegion(const nsIntRegion& aRegion,
-                                        nsClipCombine aCombine)
+nsresult
+nsRenderingContext::SetClipRegion(const nsIntRegion& aRegion,
+                                  nsClipCombine aCombine)
 {
     // Region is in device coords, no transformation.
     // This should only be called when there is no transform in place, when we
@@ -290,7 +271,7 @@ nsThebesRenderingContext::SetClipRegion(const nsIntRegion& aRegion,
     mThebes->IdentityMatrix();
 
     mThebes->ResetClip();
-    
+
     mThebes->NewPath();
     nsIntRegionRectIterator iter(aRegion);
     const nsIntRect* rect;
@@ -309,8 +290,8 @@ nsThebesRenderingContext::SetClipRegion(const nsIntRegion& aRegion,
 // other junk
 //
 
-NS_IMETHODIMP
-nsThebesRenderingContext::SetLineStyle(nsLineStyle aLineStyle)
+nsresult
+nsRenderingContext::SetLineStyle(nsLineStyle aLineStyle)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetLineStyle %d\n", this, aLineStyle));
     switch (aLineStyle) {
@@ -335,8 +316,8 @@ nsThebesRenderingContext::SetLineStyle(nsLineStyle aLineStyle)
 }
 
 
-NS_IMETHODIMP
-nsThebesRenderingContext::SetColor(nscolor aColor)
+nsresult
+nsRenderingContext::SetColor(nscolor aColor)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetColor 0x%08x\n", this, aColor));
     /* This sets the color assuming the sRGB color space, since that's what all
@@ -348,23 +329,23 @@ nsThebesRenderingContext::SetColor(nscolor aColor)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetColor(nscolor &aColor) const
+nsresult
+nsRenderingContext::GetColor(nscolor &aColor) const
 {
     aColor = mColor;
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::Translate(const nsPoint& aPt)
+nsresult
+nsRenderingContext::Translate(const nsPoint& aPt)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Translate %d %d\n", this, aPt.x, aPt.y));
     mThebes->Translate (gfxPoint(FROM_TWIPS(aPt.x), FROM_TWIPS(aPt.y)));
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::Scale(float aSx, float aSy)
+nsresult
+nsRenderingContext::Scale(float aSx, float aSy)
 {
     // as far as I can tell, noone actually calls this
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Scale %f %f\n", this, aSx, aSy));
@@ -373,7 +354,7 @@ nsThebesRenderingContext::Scale(float aSx, float aSy)
 }
 
 void
-nsThebesRenderingContext::UpdateTempTransformMatrix()
+nsRenderingContext::UpdateTempTransformMatrix()
 {
     //PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::UpdateTempTransformMatrix\n", this));
 
@@ -391,7 +372,7 @@ nsThebesRenderingContext::UpdateTempTransformMatrix()
 }
 
 nsTransform2D&
-nsThebesRenderingContext::CurrentTransform()
+nsRenderingContext::CurrentTransform()
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::CurrentTransform\n", this));
     UpdateTempTransformMatrix();
@@ -410,7 +391,7 @@ nsThebesRenderingContext::CurrentTransform()
  ****/
 
 nsTransform2D*
-nsThebesRenderingContext::GetCurrentTransform()
+nsRenderingContext::GetCurrentTransform()
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG,
            ("## %p nsTRC::GetCurrentTransform\n", this));
@@ -419,7 +400,7 @@ nsThebesRenderingContext::GetCurrentTransform()
 }
 
 void
-nsThebesRenderingContext::TransformCoord (nscoord *aX, nscoord *aY)
+nsRenderingContext::TransformCoord (nscoord *aX, nscoord *aY)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::TransformCoord\n", this));
 
@@ -431,16 +412,15 @@ nsThebesRenderingContext::TransformCoord (nscoord *aX, nscoord *aY)
     *aY = TO_TWIPS(pt.y);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawLine(const nsPoint& aStartPt,
-                                   const nsPoint& aEndPt)
+nsresult
+nsRenderingContext::DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt)
 {
     return DrawLine(aStartPt.x, aStartPt.y, aEndPt.x, aEndPt.y);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
-                                   nscoord aX1, nscoord aY1)
+nsresult
+nsRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
+                             nscoord aX1, nscoord aY1)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG,
            ("## %p nsTRC::DrawLine %d %d %d %d\n", this, aX0, aY0, aX1, aY1));
@@ -485,8 +465,8 @@ nsThebesRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawRect(const nsRect& aRect)
+nsresult
+nsRenderingContext::DrawRect(const nsRect& aRect)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawRect [%d,%d,%d,%d]\n", this, aRect.x, aRect.y, aRect.width, aRect.height));
 
@@ -497,8 +477,9 @@ nsThebesRenderingContext::DrawRect(const nsRect& aRect)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+nsresult
+nsRenderingContext::DrawRect(nscoord aX, nscoord aY,
+                             nscoord aWidth, nscoord aHeight)
 {
     DrawRect(nsRect(aX, aY, aWidth, aHeight));
     return NS_OK;
@@ -566,8 +547,8 @@ ConditionRect(gfxRect& r) {
     return PR_TRUE;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::FillRect(const nsRect& aRect)
+nsresult
+nsRenderingContext::FillRect(const nsRect& aRect)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::FillRect [%d,%d,%d,%d]\n", this, aRect.x, aRect.y, aRect.width, aRect.height));
 
@@ -610,15 +591,16 @@ nsThebesRenderingContext::FillRect(const nsRect& aRect)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+nsresult
+nsRenderingContext::FillRect(nscoord aX, nscoord aY,
+                             nscoord aWidth, nscoord aHeight)
 {
     FillRect(nsRect(aX, aY, aWidth, aHeight));
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::InvertRect(const nsRect& aRect)
+nsresult
+nsRenderingContext::InvertRect(const nsRect& aRect)
 {
     gfxContext::GraphicsOperator lastOp = mThebes->CurrentOperator();
 
@@ -629,20 +611,22 @@ nsThebesRenderingContext::InvertRect(const nsRect& aRect)
     return rv;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+nsresult
+nsRenderingContext::InvertRect(nscoord aX, nscoord aY,
+                               nscoord aWidth, nscoord aHeight)
 {
     return InvertRect(nsRect(aX, aY, aWidth, aHeight));
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawEllipse(const nsRect& aRect)
+nsresult
+nsRenderingContext::DrawEllipse(const nsRect& aRect)
 {
     return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+nsresult
+nsRenderingContext::DrawEllipse(nscoord aX, nscoord aY,
+                                nscoord aWidth, nscoord aHeight)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawEllipse [%d,%d,%d,%d]\n", this, aX, aY, aWidth, aHeight));
 
@@ -656,14 +640,15 @@ nsThebesRenderingContext::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, ns
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::FillEllipse(const nsRect& aRect)
+nsresult
+nsRenderingContext::FillEllipse(const nsRect& aRect)
 {
     return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+nsresult
+nsRenderingContext::FillEllipse(nscoord aX, nscoord aY,
+                                nscoord aWidth, nscoord aHeight)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::FillEllipse [%d,%d,%d,%d]\n", this, aX, aY, aWidth, aHeight));
 
@@ -677,8 +662,8 @@ nsThebesRenderingContext::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, ns
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoints)
+nsresult
+nsRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoints)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::FillPolygon %d\n", this, aNumPoints));
 
@@ -703,7 +688,7 @@ nsThebesRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoin
 }
 
 void*
-nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
+nsRenderingContext::GetNativeGraphicData(GraphicDataType aType)
 {
     if (aType == NATIVE_GDK_DRAWABLE)
     {
@@ -734,8 +719,9 @@ nsThebesRenderingContext::GetNativeGraphicData(GraphicDataType aType)
     return nsnull;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::PushFilter(const nsRect& twRect, PRBool aAreaIsOpaque, float aOpacity)
+nsresult
+nsRenderingContext::PushFilter(const nsRect& twRect, PRBool aAreaIsOpaque,
+                               float aOpacity)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG,
            ("## %p nsTRC::PushFilter [%d,%d,%d,%d] isOpaque: %d opacity: %f\n",
@@ -751,8 +737,8 @@ nsThebesRenderingContext::PushFilter(const nsRect& twRect, PRBool aAreaIsOpaque,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::PopFilter()
+nsresult
+nsRenderingContext::PopFilter()
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::PopFilter\n"));
 
@@ -780,28 +766,28 @@ nsThebesRenderingContext::PopFilter()
 //
 // text junk
 //
-NS_IMETHODIMP
-nsThebesRenderingContext::SetRightToLeftText(PRBool aIsRTL)
+nsresult
+nsRenderingContext::SetRightToLeftText(PRBool aIsRTL)
 {
     return mFontMetrics->SetRightToLeftText(aIsRTL);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetRightToLeftText(PRBool* aIsRTL)
+nsresult
+nsRenderingContext::GetRightToLeftText(PRBool* aIsRTL)
 {
     *aIsRTL = mFontMetrics->GetRightToLeftText();
     return NS_OK;
 }
 
 void
-nsThebesRenderingContext::SetTextRunRTL(PRBool aIsRTL)
+nsRenderingContext::SetTextRunRTL(PRBool aIsRTL)
 {
     mFontMetrics->SetTextRunRTL(aIsRTL);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLanguage,
-                                  gfxUserFontSet *aUserFontSet)
+nsresult
+nsRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLanguage,
+                            gfxUserFontSet *aUserFontSet)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetFont %p\n", this, &aFont));
 
@@ -812,9 +798,9 @@ nsThebesRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLanguage,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::SetFont(const nsFont& aFont,
-                                  gfxUserFontSet *aUserFontSet)
+nsresult
+nsRenderingContext::SetFont(const nsFont& aFont,
+                            gfxUserFontSet *aUserFontSet)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetFont %p\n", this, &aFont));
 
@@ -825,8 +811,8 @@ nsThebesRenderingContext::SetFont(const nsFont& aFont,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
+nsresult
+nsRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
 {
     PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetFont[Metrics] %p\n", this, aFontMetrics));
 
@@ -835,22 +821,22 @@ nsThebesRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
 }
 
 already_AddRefed<nsIFontMetrics>
-nsThebesRenderingContext::GetFontMetrics()
+nsRenderingContext::GetFontMetrics()
 {
     NS_IF_ADDREF(mFontMetrics);
     return mFontMetrics.get();
 }
 
 PRInt32
-nsThebesRenderingContext::GetMaxStringLength()
+nsRenderingContext::GetMaxStringLength()
 {
     if (!mFontMetrics)
         return 1;
     return mFontMetrics->GetMaxStringLength();
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(char aC, nscoord &aWidth)
+nsresult
+nsRenderingContext::GetWidth(char aC, nscoord &aWidth)
 {
     if (aC == ' ' && mFontMetrics)
         return mFontMetrics->GetSpaceWidth(aWidth);
@@ -858,36 +844,37 @@ nsThebesRenderingContext::GetWidth(char aC, nscoord &aWidth)
     return GetWidth(&aC, 1, aWidth);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFontID)
+nsresult
+nsRenderingContext::GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFontID)
 {
     return GetWidth(&aC, 1, aWidth, aFontID);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(const nsString& aString, nscoord &aWidth,
+nsresult
+nsRenderingContext::GetWidth(const nsString& aString, nscoord &aWidth,
                                    PRInt32 *aFontID)
 {
     return GetWidth(aString.get(), aString.Length(), aWidth, aFontID);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(const char* aString, nscoord& aWidth)
+nsresult
+nsRenderingContext::GetWidth(const char* aString, nscoord& aWidth)
 {
     return GetWidth(aString, strlen(aString), aWidth);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                                     PRInt32 aFontID, const nscoord* aSpacing)
+nsresult
+nsRenderingContext::DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                               PRInt32 aFontID, const nscoord* aSpacing)
 {
-    return DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
+    return DrawString(aString.get(), aString.Length(), aX, aY,
+                      aFontID, aSpacing);
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(const char* aString,
-                                   PRUint32 aLength,
-                                   nscoord& aWidth)
+nsresult
+nsRenderingContext::GetWidth(const char* aString,
+                             PRUint32 aLength,
+                             nscoord& aWidth)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     aWidth = 0;
@@ -904,11 +891,11 @@ nsThebesRenderingContext::GetWidth(const char* aString,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetWidth(const PRUnichar *aString,
-                                   PRUint32 aLength,
-                                   nscoord &aWidth,
-                                   PRInt32 *aFontID)
+nsresult
+nsRenderingContext::GetWidth(const PRUnichar *aString,
+                             PRUint32 aLength,
+                             nscoord &aWidth,
+                             PRInt32 *aFontID)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     aWidth = 0;
@@ -930,10 +917,10 @@ nsThebesRenderingContext::GetWidth(const PRUnichar *aString,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetTextDimensions(const char* aString,
-                                            PRUint32 aLength,
-                                            nsTextDimensions& aDimensions)
+nsresult
+nsRenderingContext::GetTextDimensions(const char* aString,
+                                      PRUint32 aLength,
+                                      nsTextDimensions& aDimensions)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     if (aLength <= maxChunkLength)
@@ -961,11 +948,11 @@ nsThebesRenderingContext::GetTextDimensions(const char* aString,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetTextDimensions(const PRUnichar* aString,
-                                            PRUint32 aLength,
-                                            nsTextDimensions& aDimensions,
-                                            PRInt32* aFontID)
+nsresult
+nsRenderingContext::GetTextDimensions(const PRUnichar* aString,
+                                      PRUint32 aLength,
+                                      nsTextDimensions& aDimensions,
+                                      PRInt32* aFontID)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     if (aLength <= maxChunkLength)
@@ -998,16 +985,16 @@ nsThebesRenderingContext::GetTextDimensions(const PRUnichar* aString,
 }
 
 #if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
-NS_IMETHODIMP
-nsThebesRenderingContext::GetTextDimensions(const char*       aString,
-                                            PRInt32           aLength,
-                                            PRInt32           aAvailWidth,
-                                            PRInt32*          aBreaks,
-                                            PRInt32           aNumBreaks,
-                                            nsTextDimensions& aDimensions,
-                                            PRInt32&          aNumCharsFit,
-                                            nsTextDimensions& aLastWordDimensions,
-                                            PRInt32*          aFontID)
+nsresult
+nsRenderingContext::GetTextDimensions(const char*       aString,
+                                      PRInt32           aLength,
+                                      PRInt32           aAvailWidth,
+                                      PRInt32*          aBreaks,
+                                      PRInt32           aNumBreaks,
+                                      nsTextDimensions& aDimensions,
+                                      PRInt32&          aNumCharsFit,
+                                      nsTextDimensions& aLastWordDimensions,
+                                      PRInt32*          aFontID)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     if (aLength <= PRInt32(maxChunkLength))
@@ -1054,16 +1041,16 @@ nsThebesRenderingContext::GetTextDimensions(const char*       aString,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetTextDimensions(const PRUnichar*  aString,
-                                            PRInt32           aLength,
-                                            PRInt32           aAvailWidth,
-                                            PRInt32*          aBreaks,
-                                            PRInt32           aNumBreaks,
-                                            nsTextDimensions& aDimensions,
-                                            PRInt32&          aNumCharsFit,
-                                            nsTextDimensions& aLastWordDimensions,
-                                            PRInt32*          aFontID)
+nsresult
+nsRenderingContext::GetTextDimensions(const PRUnichar*  aString,
+                                      PRInt32           aLength,
+                                      PRInt32           aAvailWidth,
+                                      PRInt32*          aBreaks,
+                                      PRInt32           aNumBreaks,
+                                      nsTextDimensions& aDimensions,
+                                      PRInt32&          aNumCharsFit,
+                                      nsTextDimensions& aLastWordDimensions,
+                                      PRInt32*          aFontID)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     if (aLength <= PRInt32(maxChunkLength))
@@ -1111,10 +1098,10 @@ nsThebesRenderingContext::GetTextDimensions(const PRUnichar*  aString,
 #endif
 
 #ifdef MOZ_MATHML
-NS_IMETHODIMP
-nsThebesRenderingContext::GetBoundingMetrics(const char*        aString,
-                                             PRUint32           aLength,
-                                             nsBoundingMetrics& aBoundingMetrics)
+nsresult
+nsRenderingContext::GetBoundingMetrics(const char*        aString,
+                                       PRUint32           aLength,
+                                       nsBoundingMetrics& aBoundingMetrics)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     if (aLength <= maxChunkLength)
@@ -1143,11 +1130,11 @@ nsThebesRenderingContext::GetBoundingMetrics(const char*        aString,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetBoundingMetrics(const PRUnichar*   aString,
-                                             PRUint32           aLength,
-                                             nsBoundingMetrics& aBoundingMetrics,
-                                             PRInt32*           aFontID)
+nsresult
+nsRenderingContext::GetBoundingMetrics(const PRUnichar*   aString,
+                                       PRUint32           aLength,
+                                       nsBoundingMetrics& aBoundingMetrics,
+                                       PRInt32*           aFontID)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     if (aLength <= maxChunkLength)
@@ -1181,10 +1168,10 @@ nsThebesRenderingContext::GetBoundingMetrics(const PRUnichar*   aString,
 }
 #endif
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawString(const char *aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   const nscoord* aSpacing)
+nsresult
+nsRenderingContext::DrawString(const char *aString, PRUint32 aLength,
+                               nscoord aX, nscoord aY,
+                               const nscoord* aSpacing)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     while (aLength > 0) {
@@ -1206,11 +1193,11 @@ nsThebesRenderingContext::DrawString(const char *aString, PRUint32 aLength,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   PRInt32 aFontID,
-                                   const nscoord* aSpacing)
+nsresult
+nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
+                               nscoord aX, nscoord aY,
+                               PRInt32 aFontID,
+                               const nscoord* aSpacing)
 {
     PRUint32 maxChunkLength = GetMaxChunkLength(this);
     if (aLength <= maxChunkLength) {
@@ -1266,7 +1253,8 @@ nsThebesRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
 }
 
 nsresult
-nsThebesRenderingContext::GetWidthInternal(const char* aString, PRUint32 aLength, nscoord& aWidth)
+nsRenderingContext::GetWidthInternal(const char* aString, PRUint32 aLength,
+                                     nscoord& aWidth)
 {
 #ifdef DISABLE_TEXT
     aWidth = (8 * aLength);
@@ -1282,8 +1270,8 @@ nsThebesRenderingContext::GetWidthInternal(const char* aString, PRUint32 aLength
 }
 
 nsresult
-nsThebesRenderingContext::GetWidthInternal(const PRUnichar *aString, PRUint32 aLength,
-                                           nscoord &aWidth, PRInt32 *aFontID)
+nsRenderingContext::GetWidthInternal(const PRUnichar *aString, PRUint32 aLength,
+                                     nscoord &aWidth, PRInt32 *aFontID)
 {
 #ifdef DISABLE_TEXT
     aWidth = (8 * aLength);
@@ -1299,8 +1287,9 @@ nsThebesRenderingContext::GetWidthInternal(const PRUnichar *aString, PRUint32 aL
 }
 
 nsresult
-nsThebesRenderingContext::GetTextDimensionsInternal(const char* aString, PRUint32 aLength,
-                                                    nsTextDimensions& aDimensions)
+nsRenderingContext::GetTextDimensionsInternal(const char* aString,
+                                              PRUint32 aLength,
+                                              nsTextDimensions& aDimensions)
 {
     mFontMetrics->GetMaxAscent(aDimensions.ascent);
     mFontMetrics->GetMaxDescent(aDimensions.descent);
@@ -1308,10 +1297,10 @@ nsThebesRenderingContext::GetTextDimensionsInternal(const char* aString, PRUint3
 }
 
 nsresult
-nsThebesRenderingContext::GetTextDimensionsInternal(const PRUnichar* aString,
-                                                    PRUint32 aLength,
-                                                    nsTextDimensions& aDimensions,
-                                                    PRInt32* aFontID)
+nsRenderingContext::GetTextDimensionsInternal(const PRUnichar* aString,
+                                              PRUint32 aLength,
+                                              nsTextDimensions& aDimensions,
+                                              PRInt32* aFontID)
 {
     mFontMetrics->GetMaxAscent(aDimensions.ascent);
     mFontMetrics->GetMaxDescent(aDimensions.descent);
@@ -1320,57 +1309,59 @@ nsThebesRenderingContext::GetTextDimensionsInternal(const PRUnichar* aString,
 
 #if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) || defined(XP_MACOSX) || defined (MOZ_DFB)
 nsresult
-nsThebesRenderingContext::GetTextDimensionsInternal(const char*       aString,
-                                                    PRInt32           aLength,
-                                                    PRInt32           aAvailWidth,
-                                                    PRInt32*          aBreaks,
-                                                    PRInt32           aNumBreaks,
-                                                    nsTextDimensions& aDimensions,
-                                                    PRInt32&          aNumCharsFit,
-                                                    nsTextDimensions& aLastWordDimensions,
-                                                    PRInt32*          aFontID)
+nsRenderingContext::GetTextDimensionsInternal(const char*       aString,
+                                              PRInt32           aLength,
+                                              PRInt32           aAvailWidth,
+                                              PRInt32*          aBreaks,
+                                              PRInt32           aNumBreaks,
+                                              nsTextDimensions& aDimensions,
+                                              PRInt32&          aNumCharsFit,
+                                              nsTextDimensions& aLastWordDimensions,
+                                              PRInt32*          aFontID)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
-nsThebesRenderingContext::GetTextDimensionsInternal(const PRUnichar*  aString,
-                                                    PRInt32           aLength,
-                                                    PRInt32           aAvailWidth,
-                                                    PRInt32*          aBreaks,
-                                                    PRInt32           aNumBreaks,
-                                                    nsTextDimensions& aDimensions,
-                                                    PRInt32&          aNumCharsFit,
-                                                    nsTextDimensions& aLastWordDimensions,
-                                                    PRInt32*          aFontID)
+nsRenderingContext::GetTextDimensionsInternal(const PRUnichar*  aString,
+                                              PRInt32           aLength,
+                                              PRInt32           aAvailWidth,
+                                              PRInt32*          aBreaks,
+                                              PRInt32           aNumBreaks,
+                                              nsTextDimensions& aDimensions,
+                                              PRInt32&          aNumCharsFit,
+                                              nsTextDimensions& aLastWordDimensions,
+                                              PRInt32*          aFontID)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
 
 #ifdef MOZ_MATHML
-nsresult 
-nsThebesRenderingContext::GetBoundingMetricsInternal(const char*        aString,
-                                                     PRUint32           aLength,
-                                                     nsBoundingMetrics& aBoundingMetrics)
+nsresult
+nsRenderingContext::GetBoundingMetricsInternal(const char*        aString,
+                                               PRUint32           aLength,
+                                               nsBoundingMetrics& aBoundingMetrics)
 {
-    return mFontMetrics->GetBoundingMetrics(aString, aLength, this, aBoundingMetrics);
+    return mFontMetrics->GetBoundingMetrics(aString, aLength, this,
+                                            aBoundingMetrics);
 }
 
 nsresult
-nsThebesRenderingContext::GetBoundingMetricsInternal(const PRUnichar*   aString,
-                                                     PRUint32           aLength,
-                                                     nsBoundingMetrics& aBoundingMetrics,
-                                                     PRInt32*           aFontID)
+nsRenderingContext::GetBoundingMetricsInternal(const PRUnichar*   aString,
+                                               PRUint32           aLength,
+                                               nsBoundingMetrics& aBoundingMetrics,
+                                               PRInt32*           aFontID)
 {
-    return mFontMetrics->GetBoundingMetrics(aString, aLength, this, aBoundingMetrics);
+    return mFontMetrics->GetBoundingMetrics(aString, aLength, this,
+                                            aBoundingMetrics);
 }
 #endif // MOZ_MATHML
 
 nsresult
-nsThebesRenderingContext::DrawStringInternal(const char *aString, PRUint32 aLength,
-                                             nscoord aX, nscoord aY,
-                                             const nscoord* aSpacing)
+nsRenderingContext::DrawStringInternal(const char *aString, PRUint32 aLength,
+                                       nscoord aX, nscoord aY,
+                                       const nscoord* aSpacing)
 {
 #ifdef DISABLE_TEXT
     return NS_OK;
@@ -1381,10 +1372,11 @@ nsThebesRenderingContext::DrawStringInternal(const char *aString, PRUint32 aLeng
 }
 
 nsresult
-nsThebesRenderingContext::DrawStringInternal(const PRUnichar *aString, PRUint32 aLength,
-                                             nscoord aX, nscoord aY,
-                                             PRInt32 aFontID,
-                                             const nscoord* aSpacing)
+nsRenderingContext::DrawStringInternal(const PRUnichar *aString,
+                                       PRUint32 aLength,
+                                       nscoord aX, nscoord aY,
+                                       PRInt32 aFontID,
+                                       const nscoord* aSpacing)
 {
 #ifdef DISABLE_TEXT
     return NS_OK;
@@ -1395,35 +1387,35 @@ nsThebesRenderingContext::DrawStringInternal(const PRUnichar *aString, PRUint32 
 }
 
 PRInt32
-nsThebesRenderingContext::GetPosition(const PRUnichar *aText,
-                                      PRUint32 aLength,
-                                      nsPoint aPt)
+nsRenderingContext::GetPosition(const PRUnichar *aText,
+                                PRUint32 aLength,
+                                nsPoint aPt)
 {
-  return -1;
+    return -1;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetRangeWidth(const PRUnichar *aText,
-                                        PRUint32 aLength,
-                                        PRUint32 aStart,
-                                        PRUint32 aEnd,
-                                        PRUint32 &aWidth)
+nsresult
+nsRenderingContext::GetRangeWidth(const PRUnichar *aText,
+                                  PRUint32 aLength,
+                                  PRUint32 aStart,
+                                  PRUint32 aEnd,
+                                  PRUint32 &aWidth)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetRangeWidth(const char *aText,
-                                        PRUint32 aLength,
-                                        PRUint32 aStart,
-                                        PRUint32 aEnd,
-                                        PRUint32 &aWidth)
+nsresult
+nsRenderingContext::GetRangeWidth(const char *aText,
+                                  PRUint32 aLength,
+                                  PRUint32 aStart,
+                                  PRUint32 aEnd,
+                                  PRUint32 &aWidth)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::RenderEPS(const nsRect& aRect, FILE *aDataFile)
+nsresult
+nsRenderingContext::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }

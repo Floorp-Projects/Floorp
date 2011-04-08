@@ -42,9 +42,8 @@
 #include "nsISupports.h"
 #include "nsCoord.h"
 #include "nsRect.h"
-#include "nsIRenderingContext.h"
-// XXX we need only gfxTypes.h, but we cannot include it directly.
-#include "gfxPoint.h"
+#include "gfxTypes.h"
+#include "nsStringFwd.h"
 
 class nsIView;
 class nsIFontMetrics;
@@ -52,6 +51,7 @@ class nsIWidget;
 class nsIDeviceContextSpec;
 class nsIAtom;
 class gfxUserFontSet;
+class nsRenderingContext;
 
 struct nsFont;
 

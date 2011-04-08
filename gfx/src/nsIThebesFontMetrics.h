@@ -39,11 +39,11 @@
 #define __nsIThebesFontMetrics_h
 
 #include "nsIFontMetrics.h"
-#include "nsIRenderingContext.h"
 
-class nsThebesRenderingContext;
-
+struct nsTextDimensions;
+struct nsBoundingMetrics;
 class gfxFontGroup;
+class nsRenderingContext;
 
 class nsIThebesFontMetrics : public nsIFontMetrics {
 public:
