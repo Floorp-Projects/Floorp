@@ -43,14 +43,10 @@
 #include "nsCoord.h"
 #include "nsFont.h"
 #include "gfxFont.h"
-#include "gfxTextRunCache.h"
 
-class gfxFontGroup;
-class gfxUserFontSet;
 class nsIAtom;
 class nsIDeviceContext;
 class nsRenderingContext;
-class nsString;
 class nsThebesDeviceContext;
 struct nsBoundingMetrics;
 
@@ -94,93 +90,103 @@ public:
      * Destroy this font metrics. This breaks the association between
      * the font metrics and the device context.
      */
-    nsresult Destroy();
+    void Destroy();
 
     /**
      * Return the font's x-height.
      */
-    nsresult GetXHeight(nscoord& aResult);
+    nscoord XHeight();
 
     /**
      * Return the font's superscript offset (the distance from the
      * baseline to where a superscript's baseline should be placed).
      * The value returned will be positive.
      */
-    nsresult GetSuperscriptOffset(nscoord& aResult);
+    nscoord SuperscriptOffset();
 
     /**
      * Return the font's subscript offset (the distance from the
      * baseline to where a subscript's baseline should be placed).
      * The value returned will be positive.
      */
-    nsresult GetSubscriptOffset(nscoord& aResult);
+    nscoord SubscriptOffset();
 
     /**
      * Return the font's strikeout offset (the distance from the
      * baseline to where a strikeout should be placed) and size.
      * Positive values are above the baseline, negative below.
      */
-    nsresult GetStrikeout(nscoord& aOffset, nscoord& aSize);
+    void GetStrikeout(nscoord& aOffset, nscoord& aSize);
 
     /**
      * Return the font's underline offset (the distance from the
      * baseline to where a underline should be placed) and size.
      * Positive values are above the baseline, negative below.
      */
-    nsresult GetUnderline(nscoord& aOffset, nscoord& aSize);
+    void GetUnderline(nscoord& aOffset, nscoord& aSize);
 
     /**
      * Returns the amount of internal leading for the font.
      * This is normally the difference between the max ascent
      * and the em ascent.
      */
-    nsresult GetInternalLeading(nscoord &aLeading);
+    nscoord InternalLeading();
 
     /**
      * Returns the amount of external leading for the font.
      * em ascent(?) plus external leading is the font designer's
      * recommended line-height for this font.
      */
-    nsresult GetExternalLeading(nscoord &aLeading);
+    nscoord ExternalLeading();
 
     /**
      * Returns the height of the em square.
      * This is em ascent plus em descent.
      */
-    nsresult GetEmHeight(nscoord &aHeight);
+    nscoord EmHeight();
 
     /**
      * Returns the ascent part of the em square.
      */
-    nsresult GetEmAscent(nscoord &aAscent);
+    nscoord EmAscent();
 
     /**
      * Returns the descent part of the em square.
      */
-    nsresult GetEmDescent(nscoord &aDescent);
+    nscoord EmDescent();
 
     /**
      * Returns the height of the bounding box.
      * This is max ascent plus max descent.
      */
-    nsresult GetMaxHeight(nscoord &aHeight);
+    nscoord MaxHeight();
 
     /**
      * Returns the maximum distance characters in this font extend
      * above the base line.
      */
-    nsresult GetMaxAscent(nscoord &aAscent);
+    nscoord MaxAscent();
 
     /**
      * Returns the maximum distance characters in this font extend
      * below the base line.
      */
-    nsresult GetMaxDescent(nscoord &aDescent);
+    nscoord MaxDescent();
 
     /**
      * Returns the maximum character advance for the font.
      */
-    nsresult GetMaxAdvance(nscoord &aAdvance);
+    nscoord MaxAdvance();
+
+    /**
+     * Returns the average character width
+     */
+    nscoord AveCharWidth();
+
+    /**
+     * Returns the often needed width of the space character
+     */
+    nscoord SpaceWidth();
 
     /**
      * Returns the font associated with these metrics. The return value
@@ -191,44 +197,31 @@ public:
     /**
      * Returns the language associated with these metrics
      */
-    nsresult GetLanguage(nsIAtom** aLanguage);
-
-    /**
-     * Returns the average character width
-     */
-    nsresult GetAveCharWidth(nscoord& aAveCharWidth);
-
-    /**
-     * Returns the often needed width of the space character
-     */
-    nsresult GetSpaceWidth(nscoord& aSpaceCharWidth);
+    already_AddRefed<nsIAtom> GetLanguage();
 
     PRInt32 GetMaxStringLength();
 
     // Get the width for this string.  aWidth will be updated with the
     // width in points, not twips.  Callers must convert it if they
     // want it in another format.
-    nsresult GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
-                      nsRenderingContext *aContext);
-    nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                      nscoord& aWidth, PRInt32 *aFontID,
-                      nsRenderingContext *aContext);
+    nscoord GetWidth(const char* aString, PRUint32 aLength,
+                     nsRenderingContext *aContext);
+    nscoord GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                     nsRenderingContext *aContext);
 
     // Draw a string using this font handle on the surface passed in.
-    nsresult DrawString(const char *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        const nscoord* aSpacing,
-                        nsRenderingContext *aContext);
-    nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        nsRenderingContext *aContext,
-                        nsRenderingContext *aTextRunConstructionContext);
+    void DrawString(const char *aString, PRUint32 aLength,
+                    nscoord aX, nscoord aY,
+                    nsRenderingContext *aContext);
+    void DrawString(const PRUnichar* aString, PRUint32 aLength,
+                    nscoord aX, nscoord aY,
+                    nsRenderingContext *aContext,
+                    nsRenderingContext *aTextRunConstructionContext);
 
 #ifdef MOZ_MATHML
-    nsresult GetBoundingMetrics(const PRUnichar *aString,
-                                PRUint32 aLength,
-                                nsRenderingContext *aContext,
-                                nsBoundingMetrics &aBoundingMetrics);
+    nsBoundingMetrics GetBoundingMetrics(const PRUnichar *aString,
+                                         PRUint32 aLength,
+                                         nsRenderingContext *aContext);
 #endif /* MOZ_MATHML */
 
     // Set the direction of the text rendering

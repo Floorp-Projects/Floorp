@@ -40,31 +40,31 @@
 #include "nsBoundingMetrics.h"
 #include "nsRenderingContext.h"
 #include "nsThebesDeviceContext.h"
+#include "gfxTextRunCache.h"
 
-class AutoTextRun {
+namespace {
+
+class AutoTextRun : public gfxTextRunCache::AutoTextRun {
 public:
     AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
-                const char* aString, PRInt32 aLength) {
-        mTextRun = gfxTextRunCache::MakeTextRun(
+                const char* aString, PRInt32 aLength)
+        : gfxTextRunCache::AutoTextRun(gfxTextRunCache::MakeTextRun(
             reinterpret_cast<const PRUint8*>(aString), aLength,
             aMetrics->GetThebesFontGroup(), aRC->ThebesContext(),
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics));
-    }
+            ComputeFlags(aMetrics)))
+    {}
+
     AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
-                const PRUnichar* aString, PRInt32 aLength) {
-        mTextRun = gfxTextRunCache::MakeTextRun(
+                const PRUnichar* aString, PRInt32 aLength)
+        : gfxTextRunCache::AutoTextRun(gfxTextRunCache::MakeTextRun(
             aString, aLength, aMetrics->GetThebesFontGroup(),
             aRC->ThebesContext(),
             aMetrics->AppUnitsPerDevPixel(),
-            ComputeFlags(aMetrics));
-    }
-    gfxTextRun* operator->() { return mTextRun.get(); }
-    gfxTextRun* get() { return mTextRun.get(); }
+            ComputeFlags(aMetrics)))
+    {}
 
 private:
-    gfxTextRunCache::AutoTextRun mTextRun;
-
     static PRUint32 ComputeFlags(nsFontMetrics* aMetrics) {
         PRUint32 flags = 0;
         if (aMetrics->GetRightToLeftTextRunMode()) {
@@ -73,6 +73,24 @@ private:
         return flags;
     }
 };
+
+class StubPropertyProvider : public gfxTextRun::PropertyProvider {
+public:
+    virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
+                                      PRPackedBool* aBreakBefore) {
+        NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
+    }
+    virtual gfxFloat GetHyphenWidth() {
+        NS_ERROR("This shouldn't be called because we never enable hyphens");
+        return 0;
+    }
+    virtual void GetSpacing(PRUint32 aStart, PRUint32 aLength,
+                            Spacing* aSpacing) {
+        NS_ERROR("This shouldn't be called because we never enable spacing");
+    }
+};
+
+} // anon namespace
 
 nsFontMetrics::nsFontMetrics()
 {
@@ -118,11 +136,10 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
     return NS_OK;
 }
 
-nsresult
+void
 nsFontMetrics::Destroy()
 {
     mDeviceContext = nsnull;
-    return NS_OK;
 }
 
 // XXXTODO get rid of this macro
@@ -134,42 +151,36 @@ const gfxFont::Metrics& nsFontMetrics::GetMetrics() const
     return mFontGroup->GetFontAt(0)->GetMetrics();
 }
 
-nsresult
-nsFontMetrics::GetXHeight(nscoord& aResult)
+nscoord
+nsFontMetrics::XHeight()
 {
-    aResult = ROUND_TO_TWIPS(GetMetrics().xHeight);
-    return NS_OK;
+    return ROUND_TO_TWIPS(GetMetrics().xHeight);
 }
 
-nsresult
-nsFontMetrics::GetSuperscriptOffset(nscoord& aResult)
+nscoord
+nsFontMetrics::SuperscriptOffset()
 {
-    aResult = ROUND_TO_TWIPS(GetMetrics().superscriptOffset);
-    return NS_OK;
+    return ROUND_TO_TWIPS(GetMetrics().superscriptOffset);
 }
 
-nsresult
-nsFontMetrics::GetSubscriptOffset(nscoord& aResult)
+nscoord
+nsFontMetrics::SubscriptOffset()
 {
-    aResult = ROUND_TO_TWIPS(GetMetrics().subscriptOffset);
-    return NS_OK;
+    return ROUND_TO_TWIPS(GetMetrics().subscriptOffset);
 }
 
-nsresult
+void
 nsFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
     aOffset = ROUND_TO_TWIPS(GetMetrics().strikeoutOffset);
     aSize = ROUND_TO_TWIPS(GetMetrics().strikeoutSize);
-    return NS_OK;
 }
 
-nsresult
+void
 nsFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
     aOffset = ROUND_TO_TWIPS(mFontGroup->GetUnderlineOffset());
     aSize = ROUND_TO_TWIPS(GetMetrics().underlineSize);
-
-    return NS_OK;
 }
 
 // GetMaxAscent/GetMaxDescent/GetMaxHeight must contain the
@@ -191,91 +202,80 @@ static gfxFloat ComputeMaxAscent(const gfxFont::Metrics& aMetrics)
     return NS_floor(aMetrics.maxAscent + 0.5);
 }
 
-nsresult
-nsFontMetrics::GetInternalLeading(nscoord &aLeading)
+nscoord
+nsFontMetrics::InternalLeading()
 {
-    aLeading = ROUND_TO_TWIPS(GetMetrics().internalLeading);
-    return NS_OK;
+    return ROUND_TO_TWIPS(GetMetrics().internalLeading);
 }
 
-nsresult
-nsFontMetrics::GetExternalLeading(nscoord &aLeading)
+nscoord
+nsFontMetrics::ExternalLeading()
 {
-    aLeading = ROUND_TO_TWIPS(GetMetrics().externalLeading);
-    return NS_OK;
+    return ROUND_TO_TWIPS(GetMetrics().externalLeading);
 }
 
-nsresult
-nsFontMetrics::GetEmHeight(nscoord &aHeight)
+nscoord
+nsFontMetrics::EmHeight()
 {
-    aHeight = ROUND_TO_TWIPS(GetMetrics().emHeight);
-    return NS_OK;
+    return ROUND_TO_TWIPS(GetMetrics().emHeight);
 }
 
-nsresult
-nsFontMetrics::GetEmAscent(nscoord &aAscent)
+nscoord
+nsFontMetrics::EmAscent()
 {
-    aAscent = ROUND_TO_TWIPS(GetMetrics().emAscent);
-    return NS_OK;
+    return ROUND_TO_TWIPS(GetMetrics().emAscent);
 }
 
-nsresult
-nsFontMetrics::GetEmDescent(nscoord &aDescent)
+nscoord
+nsFontMetrics::EmDescent()
 {
-    aDescent = ROUND_TO_TWIPS(GetMetrics().emDescent);
-    return NS_OK;
+    return ROUND_TO_TWIPS(GetMetrics().emDescent);
 }
 
-nsresult
-nsFontMetrics::GetMaxHeight(nscoord &aHeight)
+nscoord
+nsFontMetrics::MaxHeight()
 {
-    aHeight = CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics())) +
+    return CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics())) +
         CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
-    return NS_OK;
 }
 
-nsresult
-nsFontMetrics::GetMaxAscent(nscoord &aAscent)
+nscoord
+nsFontMetrics::MaxAscent()
 {
-    aAscent = CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics()));
-    return NS_OK;
+    return CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics()));
 }
 
-nsresult
-nsFontMetrics::GetMaxDescent(nscoord &aDescent)
+nscoord
+nsFontMetrics::MaxDescent()
 {
-    aDescent = CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
-    return NS_OK;
+    return CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
 }
 
-nsresult
-nsFontMetrics::GetMaxAdvance(nscoord &aAdvance)
+nscoord
+nsFontMetrics::MaxAdvance()
 {
-    aAdvance = CEIL_TO_TWIPS(GetMetrics().maxAdvance);
-    return NS_OK;
+    return CEIL_TO_TWIPS(GetMetrics().maxAdvance);
 }
 
-nsresult
-nsFontMetrics::GetLanguage(nsIAtom** aLanguage)
-{
-    *aLanguage = mLanguage;
-    NS_IF_ADDREF(*aLanguage);
-    return NS_OK;
-}
-
-nsresult
-nsFontMetrics::GetAveCharWidth(nscoord& aAveCharWidth)
+nscoord
+nsFontMetrics::AveCharWidth()
 {
     // Use CEIL instead of ROUND for consistency with GetMaxAdvance
-    aAveCharWidth = CEIL_TO_TWIPS(GetMetrics().aveCharWidth);
-    return NS_OK;
+    return CEIL_TO_TWIPS(GetMetrics().aveCharWidth);
 }
 
-nsresult
-nsFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
+nscoord
+nsFontMetrics::SpaceWidth()
 {
-    aSpaceCharWidth = CEIL_TO_TWIPS(GetMetrics().spaceWidth);
-    return NS_OK;
+    return CEIL_TO_TWIPS(GetMetrics().spaceWidth);
+}
+
+already_AddRefed<nsIAtom>
+nsFontMetrics::GetLanguage()
+{
+    nsIAtom* result = mLanguage.get();
+    NS_IF_ADDREF(result);
+    return result;
 }
 
 PRInt32
@@ -287,145 +287,93 @@ nsFontMetrics::GetMaxStringLength()
     return PR_MAX(1, len);
 }
 
-class StubPropertyProvider : public gfxTextRun::PropertyProvider {
-public:
-    virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
-                                      PRPackedBool* aBreakBefore) {
-        NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
-    }
-    virtual gfxFloat GetHyphenWidth() {
-        NS_ERROR("This shouldn't be called because we never enable hyphens");
-        return 0;
-    }
-    virtual void GetSpacing(PRUint32 aStart, PRUint32 aLength,
-                            Spacing* aSpacing) {
-        NS_ERROR("This shouldn't be called because we never enable spacing");
-    }
-};
-
-nsresult
-nsFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
+nscoord
+nsFontMetrics::GetWidth(const char* aString, PRUint32 aLength,
                         nsRenderingContext *aContext)
 {
-    if (aLength == 0) {
-        aWidth = 0;
-        return NS_OK;
-    }
+    if (aLength == 0)
+        return 0;
 
-    // callers that hit this should not be so stupid
-    if ((aLength == 1) && (aString[0] == ' '))
-        return GetSpaceWidth(aWidth);
+    if (aLength == 1 && aString[0] == ' ')
+        return SpaceWidth();
 
     StubPropertyProvider provider;
     AutoTextRun textRun(this, aContext, aString, aLength);
-    if (!textRun.get())
-        return NS_ERROR_FAILURE;
-
-    aWidth = NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider));
-
-    return NS_OK;
+    return NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider));
 }
 
-nsresult
+nscoord
 nsFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                        nscoord& aWidth, PRInt32 *aFontID,
                         nsRenderingContext *aContext)
 {
-    if (aLength == 0) {
-        aWidth = 0;
-        return NS_OK;
-    }
+    if (aLength == 0)
+        return 0;
 
-    // callers that hit this should not be so stupid
-    if ((aLength == 1) && (aString[0] == ' '))
-        return GetSpaceWidth(aWidth);
+    if (aLength == 1 && aString[0] == ' ')
+        return SpaceWidth();
 
     StubPropertyProvider provider;
     AutoTextRun textRun(this, aContext, aString, aLength);
-    if (!textRun.get())
-        return NS_ERROR_FAILURE;
-
-    aWidth = NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider));
-
-    return NS_OK;
+    return NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider));
 }
 
 // Draw a string using this font handle on the surface passed in.
-nsresult
+void
 nsFontMetrics::DrawString(const char *aString, PRUint32 aLength,
                           nscoord aX, nscoord aY,
-                          const nscoord* aSpacing,
                           nsRenderingContext *aContext)
 {
     if (aLength == 0)
-        return NS_OK;
+        return;
 
-    NS_ASSERTION(!aSpacing, "Spacing not supported here");
     StubPropertyProvider provider;
     AutoTextRun textRun(this, aContext, aString, aLength);
-    if (!textRun.get())
-        return NS_ERROR_FAILURE;
     gfxPoint pt(aX, aY);
     if (mTextRunRTL) {
         pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
     }
-    textRun->Draw(aContext->ThebesContext(), pt, 0, aLength,
-                  &provider, nsnull);
-    return NS_OK;
+    textRun->Draw(aContext->ThebesContext(), pt, 0, aLength, &provider, nsnull);
 }
 
-nsresult
+void
 nsFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
                           nscoord aX, nscoord aY,
                           nsRenderingContext *aContext,
                           nsRenderingContext *aTextRunConstructionContext)
 {
     if (aLength == 0)
-        return NS_OK;
+        return;
 
     StubPropertyProvider provider;
     AutoTextRun textRun(this, aTextRunConstructionContext, aString, aLength);
-    if (!textRun.get())
-        return NS_ERROR_FAILURE;
     gfxPoint pt(aX, aY);
     if (mTextRunRTL) {
         pt.x += textRun->GetAdvanceWidth(0, aLength, &provider);
     }
-    textRun->Draw(aContext->ThebesContext(), pt, 0, aLength,
-                  &provider, nsnull);
-    return NS_OK;
+    textRun->Draw(aContext->ThebesContext(), pt, 0, aLength, &provider, nsnull);
 }
 
 #ifdef MOZ_MATHML
-nsresult
+nsBoundingMetrics
 nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
-                                  nsRenderingContext *aContext,
-                                  nsBoundingMetrics &aBoundingMetrics)
+                                  nsRenderingContext *aContext)
 {
-    if (aLength == 0) {
-        aBoundingMetrics = nsBoundingMetrics();
-        return NS_OK;
-    }
+    if (aLength == 0)
+        return nsBoundingMetrics();
 
-    AutoTextRun textRun(this, aContext, aString, aLength);
-    if (!textRun.get())
-        return NS_ERROR_FAILURE;
-
-    // note that TIGHT_HINTED_OUTLINE_EXTENTS can be expensive (on Windows)
-    // but this is only used for MathML positioning so it's not critical
     StubPropertyProvider provider;
+    AutoTextRun textRun(this, aContext, aString, aLength);
     gfxTextRun::Metrics theMetrics =
         textRun->MeasureText(0, aLength,
                              gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
                              aContext->ThebesContext(), &provider);
 
-    aBoundingMetrics.leftBearing = NSToCoordFloor(theMetrics.mBoundingBox.X());
-    aBoundingMetrics.rightBearing
-        = NSToCoordCeil(theMetrics.mBoundingBox.XMost());
-    aBoundingMetrics.width = NSToCoordRound(theMetrics.mAdvanceWidth);
-    aBoundingMetrics.ascent = NSToCoordCeil(- theMetrics.mBoundingBox.Y());
-    aBoundingMetrics.descent = NSToCoordCeil(theMetrics.mBoundingBox.YMost());
-
-    return NS_OK;
+    nsBoundingMetrics m;
+    m.leftBearing  = NSToCoordFloor( theMetrics.mBoundingBox.X());
+    m.rightBearing = NSToCoordCeil(  theMetrics.mBoundingBox.XMost());
+    m.ascent       = NSToCoordCeil( -theMetrics.mBoundingBox.Y());
+    m.descent      = NSToCoordCeil(  theMetrics.mBoundingBox.YMost());
+    m.width        = NSToCoordRound( theMetrics.mAdvanceWidth);
+    return m;
 }
 #endif /* MOZ_MATHML */

@@ -151,8 +151,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
     for (PRInt32 i = n; i >= 0; --i) {
         fm = mFontMetrics[i];
         if (fm->Font().Equals(aFont) && fm->GetUserFontSet() == aUserFontSet) {
-            nsCOMPtr<nsIAtom> language;
-            fm->GetLanguage(getter_AddRefs(language));
+            nsCOMPtr<nsIAtom> language = fm->GetLanguage();
             if (aLanguage == language.get()) {
                 if (i != n) {
                     // promote it to the end of the cache

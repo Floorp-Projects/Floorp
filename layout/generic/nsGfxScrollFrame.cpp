@@ -2206,7 +2206,7 @@ nsGfxScrollFrameInner::GetLineScrollAmount() const
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
   nscoord fontHeight = 1;
   if (fm) {
-    fm->GetMaxHeight(fontHeight);
+    fontHeight = fm->MaxHeight();
   }
 
   return nsSize(fontHeight, fontHeight);

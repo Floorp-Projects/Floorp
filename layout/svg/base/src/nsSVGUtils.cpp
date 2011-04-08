@@ -297,8 +297,7 @@ nsSVGUtils::GetFontXHeight(nsStyleContext *aStyleContext)
     return 1.0f;
   }
 
-  nscoord xHeight;
-  fontMetrics->GetXHeight(xHeight);
+  nscoord xHeight = fontMetrics->XHeight();
   return nsPresContext::AppUnitsToFloatCSSPixels(xHeight) /
          presContext->TextZoom();
 }

@@ -164,8 +164,7 @@ nsMathMLmmultiscriptsFrame::Place(nsRenderingContext& aRenderingContext,
                             PresContext()->GetUserFontSet());
   nsFontMetrics* fm = aRenderingContext.FontMetrics();
 
-  nscoord xHeight;
-  fm->GetXHeight (xHeight);
+  nscoord xHeight = fm->XHeight();
 
   nscoord ruleSize;
   GetRuleThickness (aRenderingContext, fm, ruleSize);

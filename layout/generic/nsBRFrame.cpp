@@ -239,8 +239,7 @@ BRFrame::GetBaseline() const
     if (GetStateBits() & BR_USING_CENTERED_FONT_BASELINE) {
       ascent = nsLayoutUtils::GetCenteredFontBaseline(fm, logicalHeight);
     } else {
-      fm->GetMaxAscent(ascent);
-      ascent += GetUsedBorderAndPadding().top;
+      ascent = fm->MaxAscent() + GetUsedBorderAndPadding().top;
     }
   }
   return NS_MIN(mRect.height, ascent);

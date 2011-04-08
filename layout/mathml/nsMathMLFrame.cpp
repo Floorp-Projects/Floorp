@@ -286,8 +286,7 @@ nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
                Equals(aFontMetrics->Font()),
                "unexpected state");
 
-  nscoord xHeight;
-  aFontMetrics->GetXHeight(xHeight);
+  nscoord xHeight = aFontMetrics->XHeight();
   PRUnichar overBar = 0x00AF;
   nsBoundingMetrics bm = aRenderingContext.GetBoundingMetrics(&overBar, 1);
   aRuleThickness = bm.ascent + bm.descent;
@@ -308,8 +307,7 @@ nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
                Equals(aFontMetrics->Font()),
                "unexpected state");
 
-  nscoord xHeight;
-  aFontMetrics->GetXHeight(xHeight);
+  nscoord xHeight = aFontMetrics->XHeight();
   PRUnichar minus = 0x2212; // not '-', but official Unicode minus sign
   nsBoundingMetrics bm = aRenderingContext.GetBoundingMetrics(&minus, 1);
   aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
@@ -340,10 +338,9 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
   }
   else if (eCSSUnit_XHeight == unit) {
-    nscoord xHeight;
     const nsStyleFont* font = aStyleContext->GetStyleFont();
     nsRefPtr<nsFontMetrics> fm = aPresContext->GetMetricsFor(font->mFont);
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
 

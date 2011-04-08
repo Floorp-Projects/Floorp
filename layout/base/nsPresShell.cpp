@@ -8809,12 +8809,10 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       aRenderingContext->SetFont(fm);
       char buf[16];
       sprintf(buf, "%d", counter->mCount);
-      nscoord x = 0, y;
-      nscoord width, height;
+      nscoord x = 0, y = fm->MaxAscent();
+      nscoord width, height = fm->MaxHeight();
       aRenderingContext->SetTextRunRTL(PR_FALSE);
       aRenderingContext->GetWidth((char*)buf, width);
-      fm->GetMaxHeight(height);
-      fm->GetMaxAscent(y);
 
       PRUint32 color;
       PRUint32 color2;

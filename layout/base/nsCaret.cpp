@@ -360,8 +360,8 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
   NS_ASSERTION(fm, "We should be able to get the font metrics");
   if (fm) {
-    fm->GetMaxAscent(ascent);
-    fm->GetMaxDescent(descent);
+    ascent = fm->MaxAscent();
+    descent = fm->MaxDescent();
   }
   nscoord height = ascent + descent;
   framePos.y = baseline - ascent;

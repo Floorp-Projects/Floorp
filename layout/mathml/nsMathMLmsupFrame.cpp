@@ -157,7 +157,7 @@ nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
   nsRefPtr<nsFontMetrics> fm =
     aPresContext->GetMetricsFor(baseFrame->GetStyleFont()->mFont);
 
-  fm->GetXHeight (xHeight);
+  xHeight = fm->XHeight();
   nscoord minShiftFromXHeight = (nscoord) 
     (bmSupScript.descent + (1.0f/4.0f) * xHeight);
   nscoord italicCorrection;

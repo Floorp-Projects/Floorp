@@ -4338,10 +4338,9 @@ nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
   if (IsFloatingFirstLetterChild()) {
     // The underline/overline drawable area must be contained in the overflow
     // rect when this is in floating first letter frame at *both* modes.
-    nscoord fontAscent, fontHeight;
     nsFontMetrics* fm = aProvider.GetFontMetrics();
-    fm->GetMaxAscent(fontAscent);
-    fm->GetMaxHeight(fontHeight);
+    nscoord fontAscent = fm->MaxAscent();
+    nscoord fontHeight = fm->MaxHeight();
     nsRect fontRect(0, mAscent - fontAscent, GetSize().width, fontHeight);
     aVisualOverflowRect->UnionRect(*aVisualOverflowRect, fontRect);
   }
@@ -6786,11 +6785,8 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     // the height manually.
     nsFontMetrics* fm = provider.GetFontMetrics();
     if (fm) {
-      nscoord ascent, descent;
-      fm->GetMaxAscent(ascent);
-      fm->GetMaxDescent(descent);
-      textMetrics.mAscent = gfxFloat(ascent);
-      textMetrics.mDescent = gfxFloat(descent);
+      textMetrics.mAscent = gfxFloat(fm->MaxAscent());
+      textMetrics.mDescent = gfxFloat(fm->MaxDescent());
     }
   }
   // The "end" iterator points to the first character after the string mapped
@@ -6895,10 +6891,9 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     // Otherwise, ascent should contain the overline drawable area.
     // And also descent should contain the underline drawable area.
     // nsFontMetrics::GetMaxAscent/GetMaxDescent contains them.
-    nscoord fontAscent, fontDescent;
     nsFontMetrics* fm = provider.GetFontMetrics();
-    fm->GetMaxAscent(fontAscent);
-    fm->GetMaxDescent(fontDescent);
+    nscoord fontAscent = fm->MaxAscent();
+    nscoord fontDescent = fm->MaxDescent();
     aMetrics.ascent = NS_MAX(NSToCoordCeil(textMetrics.mAscent), fontAscent);
     nscoord descent = NS_MAX(NSToCoordCeil(textMetrics.mDescent), fontDescent);
     aMetrics.height = aMetrics.ascent + descent;
