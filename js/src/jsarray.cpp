@@ -1413,7 +1413,7 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
     if (!cx->stack().pushInvokeArgs(cx, 0, &args))
         return false;
 
-    args.callee() = join;
+    args.calleev() = join;
     args.thisv().setObject(*obj);
 
     /* Do the call. */

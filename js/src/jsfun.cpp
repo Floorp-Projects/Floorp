@@ -1454,7 +1454,7 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
     if (thisv.isObject()) {
         JS_ASSERT(funobj.getFunctionPrivate() == fun);
 
-        if (&fun->compiledFunObj() == &funobj && fun->methodAtom()) {
+        if (fun->compiledFunObj() == funobj && fun->methodAtom()) {
             JSObject *thisp = &thisv.toObject();
             JSObject *first_barriered_thisp = NULL;
 
@@ -1480,10 +1480,10 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                          * In either case we must allow for the method property
                          * to have been replaced, or its value overwritten.
                          */
-                        if (shape->isMethod() && &shape->methodObject() == &funobj) {
+                        if (shape->isMethod() && shape->methodObject() == funobj) {
                             if (!thisp->methodReadBarrier(cx, *shape, vp))
                                 return false;
-                            calleeValue().setObject(vp->toObject());
+                            calleev().setObject(vp->toObject());
                             return true;
                         }
 
@@ -1496,7 +1496,7 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                                 clone->hasMethodObj(*thisp)) {
                                 JS_ASSERT(clone != &funobj);
                                 *vp = v;
-                                calleeValue().setObject(*clone);
+                                calleev().setObject(*clone);
                                 return true;
                             }
                         }
@@ -1525,7 +1525,7 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
             if (!newfunobj)
                 return false;
             newfunobj->setMethodObj(*first_barriered_thisp);
-            calleeValue().setObject(*newfunobj);
+            calleev().setObject(*newfunobj);
             vp->setObject(*newfunobj);
             return true;
         }
@@ -2140,7 +2140,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     /* Push fval, thisv, and the args. */
-    args.callee() = fval;
+    args.calleev() = fval;
     args.thisv() = thisv;
     memcpy(args.argv(), argv, argc * sizeof *argv);
 
@@ -2191,7 +2191,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* Push fval, obj, and aobj's elements as args. */
-    args.callee() = fval;
+    args.calleev() = fval;
     args.thisv() = vp[2];
 
     /* Steps 7-8. */
@@ -2308,7 +2308,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
     memcpy(args.argv() + argslen, vp + 2, argc * sizeof(Value));
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
-    args.callee().setObject(*target);
+    args.calleev().setObject(*target);
 
     if (!constructing)
         args.thisv() = boundThis;

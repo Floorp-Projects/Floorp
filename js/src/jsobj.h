@@ -1369,6 +1369,17 @@ struct JSObject : js::gc::Cell {
 /* Check alignment for any fixed slots allocated after the object. */
 JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0);
 
+/*
+ * The only sensible way to compare JSObject with == is by identity. We use
+ * const& instead of * as a syntactic way to assert non-null. This leads to an
+ * abundance of address-of operators to identity. Hence this overload.
+ */
+static JS_ALWAYS_INLINE bool
+operator==(const JSObject &lhs, const JSObject &rhs)
+{
+    return &lhs == &rhs;
+}
+
 inline js::Value*
 JSObject::fixedSlots() const {
     return (js::Value*) (jsuword(this) + sizeof(JSObject));
@@ -1984,7 +1995,7 @@ enum EvalType { INDIRECT_EVAL, DIRECT_EVAL };
  */
 extern bool
 EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
-           JSObject *scopeobj);
+           JSObject &scopeobj);
 
 /*
  * True iff |v| is the built-in eval function for the global object that

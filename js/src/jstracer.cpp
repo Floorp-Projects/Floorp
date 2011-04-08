@@ -1793,7 +1793,7 @@ VisitFrameSlots(Visitor &visitor, JSContext *cx, unsigned depth, JSStackFrame *f
 
         if (JS_UNLIKELY(fp->isEvalFrame())) {
             visitor.setStackSlotKind("eval");
-            if (!visitor.visitStackSlots(&fp->calleeValue(), 2, fp))
+            if (!visitor.visitStackSlots(&fp->calleev(), 2, fp))
                 return false;
         } else {
             /*
@@ -4289,7 +4289,7 @@ TraceRecorder::snapshot(ExitType exitType)
     exit->numGlobalSlots = ngslots;
     exit->numStackSlots = stackSlots;
     exit->numStackSlotsBelowCurrentFrame = cx->fp()->isFunctionFrame() ?
-                                           nativeStackOffset(&cx->fp()->calleeValue()) / sizeof(double) :
+                                           nativeStackOffset(&cx->fp()->calleev()) / sizeof(double) :
                                            0;
     exit->exitType = exitType;
     exit->pc = pc;
@@ -5178,7 +5178,7 @@ TraceRecorder::prepareTreeCall(TreeFragment* inner)
          * compensate for any outer frames that the inner tree doesn't expect
          * but the outer tree has.
          */
-        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp()->calleeValue());
+        ptrdiff_t sp_adj = nativeStackOffset(&cx->fp()->calleev());
 
         /* Calculate the amount we have to lift the call stack by. */
         ptrdiff_t rp_adj = callDepth * sizeof(FrameInfo*);
@@ -8057,7 +8057,7 @@ TraceRecorder::scopeChainProp(JSObject* chainHead, Value*& vp, LIns*& ins, NameR
             // Call name the compiler resolves statically and we do not need
             // to match shapes of the Call objects.
             chainHead = cx->fp()->callee().getParent();
-            head_ins = w.ldpObjParent(get(&cx->fp()->calleeValue()));
+            head_ins = w.ldpObjParent(get(&cx->fp()->calleev()));
         } else {
             head_ins = scopeChain();
         }
@@ -8146,7 +8146,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
 
     LIns* obj_ins;
     JSObject* parent = cx->fp()->callee().getParent();
-    LIns* parent_ins = w.ldpObjParent(get(&cx->fp()->calleeValue()));
+    LIns* parent_ins = w.ldpObjParent(get(&cx->fp()->calleev()));
     CHECK_STATUS(traverseScopeChain(parent, parent_ins, obj, obj_ins));
 
     if (!cfp) {
@@ -10329,7 +10329,7 @@ TraceRecorder::record_EnterFrame()
     for (; vp < vpstop; ++vp)
         nativeFrameTracker.set(vp, NULL);
 
-    LIns* callee_ins = get(&cx->fp()->calleeValue());
+    LIns* callee_ins = get(&cx->fp()->calleev());
     LIns* scopeChain_ins = w.ldpObjParent(callee_ins);
 
     // set scopeChain for real
@@ -10526,7 +10526,7 @@ TraceRecorder::record_JSOP_ARGUMENTS()
 
     LIns* a_ins = getFrameObjPtr(fp->addressOfArgs());
     LIns* args_ins;
-    LIns* callee_ins = get(&fp->calleeValue());
+    LIns* callee_ins = get(&fp->calleev());
     if (a_ins->isImmP()) {
         // |arguments| is set to 0 by EnterFrame on this trace, so call to create it.
         args_ins = newArguments(callee_ins);
@@ -12262,7 +12262,7 @@ TraceRecorder::setProperty(JSObject* obj, LIns* obj_ins, const Value &v, LIns* v
     // Handle setting an existing own property.
     if (pobj == obj) {
         if (*cx->regs->pc == JSOP_SETMETHOD) {
-            if (shape->isMethod() && &shape->methodObject() == &v.toObject())
+            if (shape->isMethod() && shape->methodObject() == v.toObject())
                 return RECORD_CONTINUE;
             RETURN_STOP("setmethod: property exists");
         }
@@ -13496,7 +13496,7 @@ JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_GETFCSLOT()
 {
     JSObject& callee = cx->fp()->callee();
-    LIns* callee_ins = get(&cx->fp()->calleeValue());
+    LIns* callee_ins = get(&cx->fp()->calleev());
 
     LIns* upvars_ins = w.getObjPrivatizedSlot(callee_ins, JSObject::JSSLOT_FLAT_CLOSURE_UPVARS);
 
@@ -15124,7 +15124,7 @@ TraceRecorder::record_JSOP_BINDNAME()
     // We don't have the scope chain on trace, so instead we get a start object
     // that is on the scope chain and doesn't skip the target object (the one
     // that contains the property).
-    Value *callee = &cx->fp()->calleeValue();
+    Value *callee = &cx->fp()->calleev();
     obj = callee->toObject().getParent();
     if (obj == globalObj) {
         stack(0, w.immpObjGC(obj));
@@ -15560,7 +15560,7 @@ TraceRecorder::record_JSOP_LAMBDA_FC()
 JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_CALLEE()
 {
-    stack(0, get(&cx->fp()->calleeValue()));
+    stack(0, get(&cx->fp()->calleev()));
     return ARECORD_CONTINUE;
 }
 

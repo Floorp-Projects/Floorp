@@ -468,7 +468,7 @@ struct JSStackFrame
      * same caller as its containing function frame.
      */
 
-    js::Value &calleeValue() const {
+    js::Value &calleev() const {
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((js::Value *)this)[-2];
@@ -477,7 +477,7 @@ struct JSStackFrame
 
     JSObject &callee() const {
         JS_ASSERT(isFunctionFrame());
-        return calleeValue().toObject();
+        return calleev().toObject();
     }
 
     JSObject *maybeCallee() const {
@@ -488,7 +488,7 @@ struct JSStackFrame
      * getValidCalleeObject is a fallible getter to compute the correct callee
      * function object, which may require deferred cloning due to the JSObject
      * methodReadBarrier. For a non-function frame, return true with *vp set
-     * from calleeValue, which may not be an object (it could be undefined).
+     * from calleev, which may not be an object (it could be undefined).
      */
     bool getValidCalleeObject(JSContext *cx, js::Value *vp);
 
@@ -931,27 +931,6 @@ extern bool
 BoxThisForVp(JSContext *cx, js::Value *vp);
 
 /*
- * Abstracts the layout of the stack passed to natives from the engine and from
- * natives to js::Invoke.
- */
-struct CallArgs
-{
-    Value *argv_;
-    uintN argc_;
-  protected:
-    CallArgs() {}
-    CallArgs(Value *argv, uintN argc) : argv_(argv), argc_(argc) {}
-  public:
-    Value *base() const { return argv_ - 2; }
-    Value &callee() const { return argv_[-2]; }
-    Value &thisv() const { return argv_[-1]; }
-    Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
-    Value *argv() const { return argv_; }
-    uintN argc() const { return argc_; }
-    Value &rval() const { return argv_[-2]; }
-};
-
-/*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
  * immediately-enclosing successful call to js::StackSpace::pushInvokeArgs,
  * i.e., there must have been no un-popped pushes to cx->stack(). Furthermore,
@@ -1063,7 +1042,7 @@ DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp);
  * frame.
  */
 extern JS_FORCES_STACK bool
-Execute(JSContext *cx, JSObject *chain, JSScript *script,
+Execute(JSContext *cx, JSObject &chain, JSScript *script,
         JSStackFrame *prev, uintN flags, Value *result);
 
 /*
