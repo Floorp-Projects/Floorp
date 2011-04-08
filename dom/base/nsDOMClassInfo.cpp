@@ -520,6 +520,7 @@ static const char kDOMStringBundleURL[] =
   nsIXPCScriptable::WANT_ADDPROPERTY |                                        \
   nsIXPCScriptable::WANT_FINALIZE |                                           \
   nsIXPCScriptable::WANT_EQUALITY |                                           \
+  nsIXPCScriptable::WANT_ENUMERATE |                                          \
   nsIXPCScriptable::DONT_ENUM_QUERY_INTERFACE |                               \
   nsIXPCScriptable::WANT_OUTER_OBJECT)
 
@@ -5440,6 +5441,17 @@ nsWindowSH::SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
   }
 
   return nsEventReceiverSH::SetProperty(wrapper, cx, obj, id, vp, _retval);
+}
+
+NS_IMETHODIMP
+nsWindowSH::Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                      JSObject *obj, PRBool *_retval)
+{
+  if (!ObjectIsNativeWrapper(cx, obj)) {
+    *_retval = JS_EnumerateStandardClasses(cx, obj);
+  }
+
+  return NS_OK;
 }
 
 static const char*
