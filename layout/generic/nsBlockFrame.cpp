@@ -569,7 +569,7 @@ nsBlockFrame::GetCaretBaseline() const
       return bp.top + firstLine->mFirstChild->GetCaretBaseline();
     }
   }
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   return nsLayoutUtils::GetCenteredFontBaseline(fm, nsHTMLReflowState::
       CalcLineHeight(GetStyleContext(), contentRect.height)) +

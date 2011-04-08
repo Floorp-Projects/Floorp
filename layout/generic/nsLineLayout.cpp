@@ -1561,7 +1561,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   nsStyleContext* styleContext = spanFrame->GetStyleContext();
   nsRenderingContext* rc = mBlockReflowState->rendContext;
   nsLayoutUtils::SetFontFromStyle(mBlockReflowState->rendContext, styleContext);
-  nsIFontMetrics* fm = rc->FontMetrics();
+  nsFontMetrics* fm = rc->FontMetrics();
 
   PRBool preMode = mStyleText->WhiteSpaceIsSignificant();
 

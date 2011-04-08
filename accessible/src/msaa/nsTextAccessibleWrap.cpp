@@ -42,7 +42,7 @@
 #include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
 #include "nsIFrame.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsPresContext.h"
 
 #include "gfxFont.h"
@@ -255,7 +255,7 @@ __try {
     return E_FAIL;
   }
 
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   frame->PresContext()->DeviceContext()->
     GetMetricsFor(frame->GetStyleFont()->mFont,
                   frame->GetStyleVisibility()->mLanguage,

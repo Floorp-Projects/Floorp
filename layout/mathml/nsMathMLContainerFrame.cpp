@@ -101,7 +101,7 @@ nsMathMLContainerFrame::ReflowError(nsRenderingContext& aRenderingContext,
     aRenderingContext.GetBoundingMetrics(errorMsg.get(), errorMsg.Length());
 
   // reflow metrics
-  nsIFontMetrics* fm = aRenderingContext.FontMetrics();
+  nsFontMetrics* fm = aRenderingContext.FontMetrics();
   fm->GetMaxAscent(aDesiredSize.ascent);
   nscoord descent;
   fm->GetMaxDescent(descent);

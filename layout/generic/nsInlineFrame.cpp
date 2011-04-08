@@ -643,7 +643,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   }
 
   nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
-  nsIFontMetrics* fm = aReflowState.rendContext->FontMetrics();
+  nsFontMetrics* fm = aReflowState.rendContext->FontMetrics();
 
   if (fm) {
     // Compute final height of the frame.
@@ -913,7 +913,7 @@ nscoord
 nsInlineFrame::GetBaseline() const
 {
   nscoord ascent = 0;
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   if (NS_SUCCEEDED(nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm)))) {
     fm->GetMaxAscent(ascent);
   }

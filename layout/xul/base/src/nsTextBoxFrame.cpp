@@ -476,7 +476,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
       }
     } while (context && hasDecorations && (0 != decorMask));
 
-    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
 
     nscoord offset;
@@ -655,7 +655,7 @@ nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext)
                                                     mAccesskeyIndex]);
 
          nscoord offset, baseline;
-         nsIFontMetrics* metrics = aRenderingContext.FontMetrics();
+         nsFontMetrics* metrics = aRenderingContext.FontMetrics();
          metrics->GetUnderline(offset, mAccessKeyInfo->mAccessUnderlineSize);
          metrics->GetMaxAscent(baseline);
          mAccessKeyInfo->mAccessOffset = baseline - offset;
@@ -999,7 +999,7 @@ void
 nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext,
                                 const nsString& aString, nsSize& aSize, nscoord& aAscent)
 {
-    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
     fontMet->GetHeight(aSize.height);
     aRenderingContext.SetFont(fontMet);

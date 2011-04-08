@@ -510,7 +510,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   aRenderingContext.SetColor(NS_RGB(0,0,0));
 
   // Get the FontMetrics to determine width.height of strings
-  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsRefPtr<nsFontMetrics> fontMet;
   pc->DeviceContext()->GetMetricsFor(*mPD->mHeadFootFont,
                                      pc->GetUserFontSet(),
                                      *getter_AddRefs(fontMet));
