@@ -2336,6 +2336,30 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 
 }
 
+#if JS_HAS_GENERATORS
+static JSBool
+fun_isGenerator(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *funobj;
+    if (!IsFunctionObject(vp[1], &funobj)) {
+        JS_SET_RVAL(cx, vp, BooleanValue(false));
+        return true;
+    }
+
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+
+    bool result = false;
+    if (fun->isInterpreted()) {
+        JSScript *script = fun->u.i.script;
+        JS_ASSERT(script->length != 0);
+        result = script->code[0] == JSOP_GENERATOR;
+    }
+
+    JS_SET_RVAL(cx, vp, BooleanValue(result));
+    return true;
+}
+#endif
+
 /* ES5 15.3.4.5. */
 static JSBool
 fun_bind(JSContext *cx, uintN argc, Value *vp)
@@ -2405,6 +2429,7 @@ static JSFunctionSpec function_methods[] = {
     JS_FN(js_apply_str,      js_fun_apply,   2,0),
     JS_FN(js_call_str,       js_fun_call,    1,0),
     JS_FN("bind",            fun_bind,       1,0),
+    JS_FN("isGenerator",     fun_isGenerator,0,0),
     JS_FS_END
 };
 
