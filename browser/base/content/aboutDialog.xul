@@ -77,44 +77,81 @@
 #expand <label id="version" value="__MOZ_APP_VERSION__"/>
         <label id="distribution" class="text-blurb"/>
         <label id="distributionId" class="text-blurb"/>
-        <vbox id="updateBox">
+
+        <!-- Make sure the selectedIndex attribute is always set so that the CSS
+             selectors for transitions work -->        
+        <deck id="contentDeck" selectedIndex="0">
+          <vbox id="detailsBox">
+            <vbox id="updateBox">
 #ifdef MOZ_UPDATER
-          <deck id="updateDeck" orient="vertical">
-            <hbox id="updateButtonBox" align="center">
-              <button id="updateButton" align="start"
-                      oncommand="gAppUpdater.buttonOnCommand();"/>
-              <spacer flex="1"/>
-            </hbox>
-            <hbox id="checkingForUpdates" align="center">
-              <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
-            </hbox>
-            <hbox id="checkingAddonCompat" align="center">
-              <image class="update-throbber"/><label>&update.checkingAddonCompat;</label>
-            </hbox>
-            <hbox id="downloading" align="center">
-              <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
-            </hbox>
-            <hbox id="downloadFailed" align="center">
-              <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
-            </hbox>
-            <hbox id="adminDisabled" align="center">
-              <label>&update.adminDisabled;</label>
-            </hbox>
-            <hbox id="noUpdatesFound" align="center">
-              <label>&update.noUpdatesFound;</label>
-            </hbox>
-            <hbox id="manualUpdate" align="center">
-              <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
-            </hbox>
-          </deck>
+              <deck id="updateDeck" orient="vertical">
+                <hbox id="updateButtonBox" align="center">
+                  <button id="updateButton" align="start"
+                          oncommand="gAppUpdater.buttonOnCommand();"/>
+                  <spacer flex="1"/>
+                </hbox>
+                <hbox id="checkingForUpdates" align="center">
+                  <image class="update-throbber"/><label>&update.checkingForUpdates;</label>
+                </hbox>
+                <hbox id="checkingAddonCompat" align="center">
+                  <image class="update-throbber"/><label>&update.checkingAddonCompat;</label>
+                </hbox>
+                <hbox id="downloading" align="center">
+                  <image class="update-throbber"/><label>&update.downloading.start;</label><label id="downloadStatus"/><label>&update.downloading.end;</label>
+                </hbox>
+                <hbox id="downloadFailed" align="center">
+                  <label>&update.failed.start;</label><label id="failedLink" class="text-link">&update.failed.linkText;</label><label>&update.failed.end;</label>
+                </hbox>
+                <hbox id="adminDisabled" align="center">
+                  <label>&update.adminDisabled;</label>
+                </hbox>
+                <hbox id="noUpdatesFound" align="center">
+                  <label>&update.noUpdatesFound;</label>
+                </hbox>
+                <hbox id="manualUpdate" align="center">
+                  <label>&update.manual.start;</label><label id="manualLink" class="text-link"/><label>&update.manual.end;</label>
+                </hbox>
+              </deck>
 #endif
-        </vbox>
-        <description class="text-blurb">
-          &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" href="about:credits">&community.creditsLink;</label>&community.end2;
-        </description>
-        <description class="text-blurb">
-          &contribute.start;<label class="text-link" href="http://www.mozilla.org/contribute/">&contribute.getInvolvedLink;</label>&contribute.end;
-        </description>
+            </vbox>
+
+            <description class="text-blurb" id="currentChannelText" hidden="true">
+              &channel.description.start;<label id="currentChannel"/>&channel.description.end;<label id="channelChangeLink" class="text-link" onclick="gChannelSelector.show();">&channel.change;</label>
+            </description>
+            <description class="text-blurb">
+              &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" href="about:credits">&community.creditsLink;</label>&community.end2;
+            </description>
+            <description class="text-blurb">
+              &contribute.start;<label class="text-link" href="http://www.mozilla.org/contribute/">&contribute.getInvolvedLink;</label>&contribute.end;
+            </description>
+          </vbox>
+
+          <vbox id="channelSelector">
+            <hbox pack="center" align="center">
+              <label>&channel.selector.start;</label>
+              <menulist id="channelMenulist" onselect="gChannelSelector.selectChannel(this.selectedItem);">
+                <menupopup>
+                  <menuitem id="releaseMenuitem" label="Release" value="release"/>
+                  <menuitem id="betaMenuitem" label="Beta" value="beta"/>
+                  <menuseparator/>
+                  <menuitem id="auroraMenuitem" label="Aurora" value="aurora"/>
+                </menupopup>
+              </menulist>
+              <label>&channel.selector.end;</label>
+            </hbox>
+
+            <deck id="channelDescriptionDeck" selectedIndex="0">
+              <description id="releaseDescription" class="channel-description">&channel.release.description;</description>
+              <description id="betaDescription" class="channel-description">&channel.beta.description;</description>
+              <description id="auroraDescription" class="channel-description">&channel.aurora.description;</description>
+            </deck>
+
+            <hbox id="channelSelectorButtons" pack="center">
+              <button oncommand="gChannelSelector.apply();" label="&channel.selector.applyButton;"/>
+              <button oncommand="gChannelSelector.cancel();" label="&channel.selector.cancelButton;"/>
+            </hbox>
+          </vbox>
+        </deck>
       </vbox>
     </hbox>
     <vbox id="bottomBox">
