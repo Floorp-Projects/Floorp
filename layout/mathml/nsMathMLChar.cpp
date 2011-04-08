@@ -2144,7 +2144,6 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
                               nsGlyphTable*        aGlyphTable,
                               nsRect&              aRect)
 {
-  nsresult rv = NS_OK;
   // Get the device pixel size in the vertical direction.
   // (This makes no effort to optimize for non-translation transformations.)
   nscoord oneDevPixel = aPresContext->AppUnitsPerDevPixel();
@@ -2373,7 +2372,6 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
                                 nsGlyphTable*        aGlyphTable,
                                 nsRect&              aRect)
 {
-  nsresult rv = NS_OK;
   // Get the device pixel size in the horizontal direction.
   // (This makes no effort to optimize for non-translation transformations.)
   nscoord oneDevPixel = aPresContext->AppUnitsPerDevPixel();

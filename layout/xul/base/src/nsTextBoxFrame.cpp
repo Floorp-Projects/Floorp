@@ -1001,7 +1001,7 @@ nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsRenderingContext& aRe
 {
     nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
-    fontMet->GetHeight(aSize.height);
+    fontMet->GetMaxHeight(aSize.height);
     aRenderingContext.SetFont(fontMet);
     aSize.width =
       nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aString.get(), aString.Length());

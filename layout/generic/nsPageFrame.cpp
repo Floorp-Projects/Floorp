@@ -520,7 +520,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   nscoord ascent = 0;
   nscoord visibleHeight = 0;
   if (fontMet) {
-    fontMet->GetHeight(visibleHeight);
+    fontMet->GetMaxHeight(visibleHeight);
     fontMet->GetMaxAscent(ascent);
   }
 
