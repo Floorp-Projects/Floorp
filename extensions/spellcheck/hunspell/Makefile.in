@@ -46,9 +46,11 @@ DIRS = src
 
 XPCSHELL_TESTS = tests/unit
 
+ABS_topsrcdir = $(call core_abspath,$(topsrcdir))
+
 libs::
 	$(NSINSTALL) -D $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/tests/unit/data
-	cd $(srcdir)/tests; $(PYTHON) $(topsrcdir)/config/nsinstall.py \
+	cd $(srcdir)/tests; $(PYTHON) $(ABS_topsrcdir)/config/nsinstall.py \
 	  ./ \
 	  $(call core_abspath,$(DEPTH)/_tests/xpcshell/$(relativesrcdir)/tests/unit/data/)
 

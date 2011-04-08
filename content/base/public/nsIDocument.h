@@ -166,7 +166,7 @@ public:
       mIsBeingUsedAsImage(PR_FALSE),
       mPartID(0)
   {
-    mParentPtrBits |= PARENT_BIT_INDOCUMENT;
+    SetInDocument();
   }
 #endif
   

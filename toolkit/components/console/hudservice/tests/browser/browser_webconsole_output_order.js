@@ -69,7 +69,7 @@ function testOutputOrder() {
     /console\.log\('foo', 'bar'\);/.test(nodes[0].textContent);
 
   let outputSecond =
-    /"foo" "bar"/.test(nodes[1].textContent);
+    /foo bar/.test(nodes[1].textContent);
 
   ok(executedStringFirst && outputSecond, "executed string comes first");
 

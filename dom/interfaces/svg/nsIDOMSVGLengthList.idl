@@ -40,10 +40,11 @@
 
 interface nsIDOMSVGLength;
 
-[scriptable, uuid(a8760fcd-3de5-446a-a009-5cf877e7a4df)]
+[scriptable, uuid(f8c89734-d6b4-4a56-bdf5-1ce1104dc1ab)]
 interface nsIDOMSVGLengthList : nsISupports
 { 
   readonly attribute unsigned long numberOfItems;
+  readonly attribute unsigned long length;  // synonym for numberOfItems
 
   void clear();
           // raises(nsIDOMDOMException);
@@ -60,4 +61,3 @@ interface nsIDOMSVGLengthList : nsISupports
   nsIDOMSVGLength appendItem(in nsIDOMSVGLength newItem);
                     // raises(nsIDOMDOMException, nsIDOMSVGException);
 };
-
