@@ -92,6 +92,9 @@ public:
 
   NPError SetWantsAllNetworkStreams(PRBool aWantsAllNetworkStreams);
 
+  NPError SetUsesDOMForCursor(PRBool aUsesDOMForCursor);
+  PRBool UsesDOMForCursor();
+
 #ifdef XP_MACOSX
   void SetDrawingModel(NPDrawingModel aModel);
   void SetEventModel(NPEventModel aModel);
@@ -183,6 +186,7 @@ protected:
   PRPackedBool mTransparent;
   PRPackedBool mCached;
   PRPackedBool mWantsAllNetworkStreams;
+  PRPackedBool mUsesDOMForCursor;
 
 public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.
