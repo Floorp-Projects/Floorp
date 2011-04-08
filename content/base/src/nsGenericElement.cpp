@@ -273,7 +273,7 @@ nsGenericElement::GetSystemEventGroup(nsIDOMEventGroup** aGroup)
 nsINode::nsSlots*
 nsINode::CreateSlots()
 {
-  return new nsSlots(mFlagsOrSlots);
+  return new nsSlots();
 }
 
 PRBool
@@ -2138,8 +2138,8 @@ nsNodeSelectorTearoff::QuerySelectorAll(const nsAString& aSelector,
 }
 
 //----------------------------------------------------------------------
-nsGenericElement::nsDOMSlots::nsDOMSlots(PtrBits aFlags)
-  : nsINode::nsSlots(aFlags),
+nsGenericElement::nsDOMSlots::nsDOMSlots()
+  : nsINode::nsSlots(),
     mBindingParent(nsnull)
 {
 }
@@ -5287,7 +5287,7 @@ nsGenericElement::IndexOf(nsINode* aPossibleChild) const
 nsINode::nsSlots*
 nsGenericElement::CreateSlots()
 {
-  return new nsDOMSlots(mFlagsOrSlots);
+  return new nsDOMSlots();
 }
 
 PRBool
