@@ -873,7 +873,7 @@ public:
     return (aCoord.GetUnit() == eStyleUnit_Coord &&
             aCoord.GetCoordValue() == 0) ||
            (aCoord.GetUnit() == eStyleUnit_Percent &&
-            aCoord.GetPercentValue() == 0.0) ||
+            aCoord.GetPercentValue() == 0.0f) ||
            (aCoord.IsCalcUnit() &&
             // clamp negative calc() to 0
             nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) <= 0 &&
@@ -885,7 +885,7 @@ public:
     return (aCoord.GetUnit() == eStyleUnit_Coord &&
             aCoord.GetCoordValue() == 0) ||
            (aCoord.GetUnit() == eStyleUnit_Percent &&
-            aCoord.GetPercentValue() == 0.0) ||
+            aCoord.GetPercentValue() == 0.0f) ||
            (aCoord.IsCalcUnit() &&
             nsRuleNode::ComputeCoordPercentCalc(aCoord, nscoord_MAX) == 0 &&
             nsRuleNode::ComputeCoordPercentCalc(aCoord, 0) == 0);

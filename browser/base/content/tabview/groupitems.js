@@ -691,6 +691,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
 
       this.droppable(false);
+      this.removeTrenches();
       this._createUndoButton();
     } else
       this.close();
@@ -740,6 +741,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$undoContainer.remove();
     this.$undoContainer = null;
     this.droppable(true);
+    this.setTrenches(this.bounds);
 
     GroupItems.setActiveGroupItem(this);
     if (this._activeTab)
@@ -1237,8 +1239,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       count: count || this._children.length,
       hideTitle: false
     };
-    let arrObj = Items.arrange(null, bb, options);
- 
+    let arrObj = Items.arrange(this._children, bb, options);
+
     let shouldStack = arrObj.childWidth < TabItems.minTabWidth * 1.35;
     this._columns = shouldStack ? null : arrObj.columns;
 

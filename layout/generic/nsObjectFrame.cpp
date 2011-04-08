@@ -3505,7 +3505,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   // InvalidateRect is called. We notify reftests that painting is up to
   // date and update our ImageContainer with the new surface.
   nsRefPtr<ImageContainer> container = mObjectFrame->GetImageContainer();
-  gfxIntSize oldSize;
+  gfxIntSize oldSize(0, 0);
   if (container) {
     oldSize = container->GetCurrentSize();
     SetCurrentImage(container);
