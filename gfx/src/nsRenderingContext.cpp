@@ -124,14 +124,8 @@ nsRenderingContext::PopState()
 //
 
 void
-nsRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
+nsRenderingContext::IntersectClip(const nsRect& aRect)
 {
-    if (aCombine == nsClipCombine_kReplace) {
-        mThebes->ResetClip();
-    } else if (aCombine != nsClipCombine_kIntersect) {
-        NS_WARNING("Unexpected usage of SetClipRect");
-    }
-
     mThebes->NewPath();
     gfxRect clipRect(GFX_RECT_FROM_TWIPS_RECT(aRect));
     if (mThebes->UserToDevicePixelSnapped(clipRect, PR_TRUE)) {
@@ -147,15 +141,13 @@ nsRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 }
 
 void
-nsRenderingContext::SetClipRegion(const nsIntRegion& aRegion,
-                                  nsClipCombine aCombine)
+nsRenderingContext::SetClip(const nsIntRegion& aRegion)
 {
-    // Region is in device coords, no transformation.
-    // This should only be called when there is no transform in place, when we
-    // we just start painting a widget. The region is set by the platform paint
-    // routine.
-    NS_ASSERTION(aCombine == nsClipCombine_kReplace,
-                 "Unexpected usage of SetClipRegion");
+    // Region is in device coords, no transformation.  This should
+    // only be called when there is no transform in place, when we we
+    // just start painting a widget. The region is set by the platform
+    // paint routine.  Therefore, there is no option to intersect with
+    // an existing clip.
 
     gfxMatrix mat = mThebes->CurrentMatrix();
     mThebes->IdentityMatrix();

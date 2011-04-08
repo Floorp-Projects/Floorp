@@ -1087,7 +1087,7 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
 
   // Clip so we don't render outside the inner rect
   aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(inner, nsClipCombine_kIntersect);
+  aRenderingContext.IntersectClip(inner);
 
   // Check if we should display image placeholders
   if (gIconLoad->mPrefShowPlaceholders) {

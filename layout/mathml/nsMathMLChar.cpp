@@ -2200,7 +2200,7 @@ public:
   AutoPushClipRect(nsRenderingContext& aCtx, const nsRect& aRect)
     : mCtx(aCtx) {
     mCtx.PushState();
-    mCtx.SetClipRect(aRect, nsClipCombine_kIntersect);
+    mCtx.IntersectClip(aRect);
   }
   ~AutoPushClipRect() {
     mCtx.PopState();
