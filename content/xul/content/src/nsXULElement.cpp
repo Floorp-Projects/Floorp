@@ -279,7 +279,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
 
         element->mPrototype = aPrototype;
         if (aPrototype->mHasIdAttribute) {
-            element->SetFlags(NODE_HAS_ID);
+            element->SetHasID();
         }
         if (aPrototype->mHasClassAttribute) {
             element->SetFlags(NODE_MAY_HAVE_CLASS);
@@ -1408,7 +1408,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     // XXX Know how to remove POPUP event listeners when an attribute is unset?
 
     if (isId) {
-        UnsetFlags(NODE_HAS_ID);
+        ClearHasID();
     }
 
     if (aNameSpaceID == kNameSpaceID_None) {
@@ -1778,15 +1778,15 @@ nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 nsIAtom*
 nsXULElement::DoGetID() const
 {
-    NS_ASSERTION(HasFlag(NODE_HAS_ID), "Unexpected call");
+    NS_ASSERTION(HasID(), "Unexpected call");
     const nsAttrValue* attr =
         FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::id);
 
-    // We need the nullcheck here because during unlink the prototype looses
+    // We need the nullcheck here because during unlink the prototype loses
     // all of its attributes. We might want to change that.
     // The nullcheck would also be needed if we make UnsetAttr use
     // nsGenericElement::UnsetAttr as that calls out to various code between
-    // removing the attribute and clearing the NODE_HAS_ID flag.
+    // removing the attribute and calling ClearHasID().
 
     return attr ? attr->GetAtomValue() : nsnull;
 }
