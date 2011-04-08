@@ -171,7 +171,7 @@ enum {
   NODE_DESCENDANTS_NEED_FRAMES = 0x00100000U,
 
   // Set if the node is an element.
-  NODE_IS_ELEMENT              = 0x00200000U,
+  NODE_HANDLING_CLICK          = 0x00200000U,
   
   // Set if the node has the accesskey attribute set.
   NODE_HAS_ACCESSKEY           = 0x00400000U,
@@ -321,7 +321,8 @@ public:
     mNextSibling(nsnull),
     mPreviousSibling(nsnull),
     mFirstChild(nsnull),
-    mNodeHasRenderingObservers(false)
+    mNodeHasRenderingObservers(false),
+    mIsElement(false)
   {
   }
 
@@ -374,7 +375,7 @@ public:
    * Return whether the node is an Element node
    */
   PRBool IsElement() const {
-    return HasFlag(NODE_IS_ELEMENT);
+    return mIsElement;
   }
 
   /**
@@ -1287,6 +1288,7 @@ protected:
 
   // More flags
   bool mNodeHasRenderingObservers : 1;
+  bool mIsElement : 1;
 };
 
 
