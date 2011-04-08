@@ -65,7 +65,6 @@ extern PRLogModuleInfo *gSocketTransportLog;
 
 //-----------------------------------------------------------------------------
 
-#define NS_SOCKET_MAX_COUNT    50
 #define NS_SOCKET_POLL_TIMEOUT PR_INTERVAL_NO_TIMEOUT
 
 //-----------------------------------------------------------------------------
@@ -97,8 +96,10 @@ public:
     // call CanAttachSocket and check the result before creating a socket.
     //
     PRBool CanAttachSocket() {
-        return mActiveCount + mIdleCount < NS_SOCKET_MAX_COUNT;
+        return mActiveCount + mIdleCount < mMaxCount;
     }
+
+    PRUint32 MaxCount() { return mMaxCount; }
 
 protected:
 
@@ -153,20 +154,27 @@ private:
         PRUint16          mElapsedTime;  // time elapsed w/o activity
     };
 
-    SocketContext mActiveList [ NS_SOCKET_MAX_COUNT ];
-    SocketContext mIdleList   [ NS_SOCKET_MAX_COUNT ];
+    SocketContext *mActiveList;                   /* mListSize entries */
+    SocketContext *mIdleList;                     /* mListSize entries */
 
+    PRUint32 mActiveListSize;
+    PRUint32 mIdleListSize;
     PRUint32 mActiveCount;
     PRUint32 mIdleCount;
+    PRUint32 mMaxCount;
 
-    nsresult DetachSocket(SocketContext *);
+    nsresult DetachSocket(SocketContext *, SocketContext *);
     nsresult AddToIdleList(SocketContext *);
     nsresult AddToPollList(SocketContext *);
     void RemoveFromIdleList(SocketContext *);
     void RemoveFromPollList(SocketContext *);
     void MoveToIdleList(SocketContext *sock);
     void MoveToPollList(SocketContext *sock);
-    
+
+    PRBool GrowActiveList();
+    PRBool GrowIdleList();
+    void   DetermineMaxCount();
+
     //-------------------------------------------------------------------------
     // poll list (socket thread only)
     //
@@ -174,7 +182,7 @@ private:
     // event cannot be created).
     //-------------------------------------------------------------------------
 
-    PRPollDesc mPollList[ NS_SOCKET_MAX_COUNT + 1 ];
+    PRPollDesc *mPollList;                        /* mListSize + 1 entries */
 
     PRIntervalTime PollTimeout();            // computes ideal poll timeout
     nsresult       DoPollIteration(PRBool wait);
