@@ -19,8 +19,8 @@ function test_resource_user_agent() {
 
   do_test_pending();
   let server = httpd_setup({
-    "/1.0/johndoe/info/collections": uaHandler(collectionsHelper.handler),
-    "/1.0/johndoe/storage/meta/global": uaHandler(meta_global.handler()),
+    "/1.1/johndoe/info/collections": uaHandler(collectionsHelper.handler),
+    "/1.1/johndoe/storage/meta/global": uaHandler(meta_global.handler()),
   });
 
   Weave.Service.serverURL  = "http://localhost:8080/";
@@ -42,7 +42,7 @@ function test_resource_user_agent() {
 
   function test_desktop_post(next) {
     _("Testing direct Resource POST.");
-    let r = new AsyncResource("http://localhost:8080/1.0/johndoe/storage/meta/global");
+    let r = new AsyncResource("http://localhost:8080/1.1/johndoe/storage/meta/global");
     r.post("foo=bar", function (error, content) {
       _("User-Agent: " + ua);
       do_check_eq(ua, expectedUA + ".desktop");
@@ -54,7 +54,7 @@ function test_resource_user_agent() {
   function test_desktop_get(next) {
     _("Testing async.");
     Svc.Prefs.set("client.type", "desktop");
-    let r = new AsyncResource("http://localhost:8080/1.0/johndoe/storage/meta/global");
+    let r = new AsyncResource("http://localhost:8080/1.1/johndoe/storage/meta/global");
     r.get(function(error, content) {
       _("User-Agent: " + ua);
       do_check_eq(ua, expectedUA + ".desktop");
@@ -66,7 +66,7 @@ function test_resource_user_agent() {
   function test_mobile_get(next) {
     _("Testing mobile.");
     Svc.Prefs.set("client.type", "mobile");
-    let r = new AsyncResource("http://localhost:8080/1.0/johndoe/storage/meta/global");
+    let r = new AsyncResource("http://localhost:8080/1.1/johndoe/storage/meta/global");
     r.get(function (error, content) {
       _("User-Agent: " + ua);
       do_check_eq(ua, expectedUA + ".mobile");

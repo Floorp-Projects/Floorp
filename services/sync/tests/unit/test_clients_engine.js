@@ -34,10 +34,10 @@ function test_bad_hmac() {
   }
 
   let handlers = {
-    "/1.0/foo/info/collections": collectionsHelper.handler,
-    "/1.0/foo/storage/meta/global": upd("meta", global.handler()),
-    "/1.0/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),
-    "/1.0/foo/storage/clients": trackDeletedHandler("crypto", clientsColl.handler())
+    "/1.1/foo/info/collections": collectionsHelper.handler,
+    "/1.1/foo/storage/meta/global": upd("meta", global.handler()),
+    "/1.1/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.1/foo/storage/clients": trackDeletedHandler("crypto", clientsColl.handler())
   };
 
   let server = httpd_setup(handlers);
@@ -166,11 +166,11 @@ function test_sync() {
   let coll = new ServerCollection();
   let clientwbo = coll.wbos[Clients.localID] = new ServerWBO(Clients.localID);
   let server = httpd_setup({
-      "/1.0/foo/storage/meta/global": global.handler(),
-      "/1.0/foo/storage/clients": coll.handler()
+      "/1.1/foo/storage/meta/global": global.handler(),
+      "/1.1/foo/storage/clients": coll.handler()
   });
   server.registerPathHandler(
-    "/1.0/foo/storage/clients/" + Clients.localID, clientwbo.handler());
+    "/1.1/foo/storage/clients/" + Clients.localID, clientwbo.handler());
 
   do_test_pending();
 

@@ -110,8 +110,8 @@ function test_annotation_uploaded() {
                              {engines: {bookmarks: {version: engine.version,
                                                     syncID: engine.syncID}}});
   let server = httpd_setup({
-    "/1.0/foo/storage/meta/global": global.handler(),
-    "/1.0/foo/storage/bookmarks": collection.handler()
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
   });
 
   try {
@@ -199,8 +199,8 @@ function test_smart_bookmarks_duped() {
                              {engines: {bookmarks: {version: engine.version,
                                                     syncID: engine.syncID}}});
   let server = httpd_setup({
-    "/1.0/foo/storage/meta/global": global.handler(),
-    "/1.0/foo/storage/bookmarks": collection.handler()
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
   });
   
   try {
