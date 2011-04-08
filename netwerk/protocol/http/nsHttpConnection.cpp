@@ -70,6 +70,8 @@ nsHttpConnection::nsHttpConnection()
     , mIdleTimeout(0)
     , mConsiderReusedAfterInterval(0)
     , mConsiderReusedAfterEpoch(0)
+    , mCurrentBytesRead(0)
+    , mMaxBytesRead(0)
     , mKeepAlive(PR_TRUE) // assume to keep-alive by default
     , mKeepAliveMask(PR_TRUE)
     , mSupportsPipelining(PR_FALSE) // assume low-grade server
@@ -160,6 +162,9 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
         if (NS_FAILED(rv))
             goto failed_activation;
     }
+
+    // Clear the per activation counter
+    mCurrentBytesRead = 0;
 
     rv = OnOutputStreamReady(mSocketOut);
     
@@ -502,6 +507,9 @@ nsHttpConnection::CloseTransaction(nsAHttpTransaction *trans, nsresult reason)
     NS_ASSERTION(trans == mTransaction, "wrong transaction");
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
+    if (mCurrentBytesRead > mMaxBytesRead)
+        mMaxBytesRead = mCurrentBytesRead;
+
     // mask this error code because its not a real error.
     if (reason == NS_BASE_STREAM_CLOSED)
         reason = NS_OK;
@@ -677,13 +685,16 @@ nsHttpConnection::OnSocketReadable()
                 rv = NS_OK;
             again = PR_FALSE;
         }
-        else if (NS_FAILED(mSocketInCondition)) {
-            // continue waiting for the socket if necessary...
-            if (mSocketInCondition == NS_BASE_STREAM_WOULD_BLOCK)
-                rv = mSocketIn->AsyncWait(this, 0, 0, nsnull);
-            else
-                rv = mSocketInCondition;
-            again = PR_FALSE;
+        else {
+            mCurrentBytesRead += n;
+            if (NS_FAILED(mSocketInCondition)) {
+                // continue waiting for the socket if necessary...
+                if (mSocketInCondition == NS_BASE_STREAM_WOULD_BLOCK)
+                    rv = mSocketIn->AsyncWait(this, 0, 0, nsnull);
+                else
+                    rv = mSocketInCondition;
+                again = PR_FALSE;
+            }
         }
         // read more from the socket until error...
     } while (again);
