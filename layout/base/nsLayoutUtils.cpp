@@ -1644,7 +1644,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     nsIWidget *widget = aFrame->GetNearestWidget();
     if (widget) {
       PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
-      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(presContext->AppUnitsPerDevPixel()));
+      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
       widget->UpdateTransparentRegion(visibleWindowRegion);
     }
   }
@@ -2845,9 +2845,8 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 nsLayoutUtils::GetCenteredFontBaseline(nsFontMetrics* aFontMetrics,
                                        nscoord         aLineHeight)
 {
-  nscoord fontAscent, fontHeight;
-  aFontMetrics->GetMaxAscent(fontAscent);
-  aFontMetrics->GetMaxHeight(fontHeight);
+  nscoord fontAscent = aFontMetrics->MaxAscent();
+  nscoord fontHeight = aFontMetrics->MaxHeight();
 
   nscoord leading = aLineHeight - fontHeight;
   return fontAscent + leading/2;

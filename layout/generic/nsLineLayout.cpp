@@ -1810,8 +1810,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           // of the parent's box. This is identical to the baseline
           // alignment except for the addition of the subscript
           // offset to the baseline Y.
-          nscoord parentSubscript;
-          fm->GetSubscriptOffset(parentSubscript);
+          nscoord parentSubscript = fm->SubscriptOffset();
           nscoord revisedBaselineY = baselineY + parentSubscript;
           pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
           pfd->mVerticalAlign = VALIGN_OTHER;
@@ -1824,8 +1823,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
           // of the parent's box. This is identical to the baseline
           // alignment except for the subtraction of the superscript
           // offset to the baseline Y.
-          nscoord parentSuperscript;
-          fm->GetSuperscriptOffset(parentSuperscript);
+          nscoord parentSuperscript = fm->SuperscriptOffset();
           nscoord revisedBaselineY = baselineY - parentSuperscript;
           pfd->mBounds.y = revisedBaselineY - pfd->mAscent;
           pfd->mVerticalAlign = VALIGN_OTHER;
@@ -1866,8 +1864,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         {
           // Align the midpoint of the frame with 1/2 the parents
           // x-height above the baseline.
-          nscoord parentXHeight;
-          fm->GetXHeight(parentXHeight);
+          nscoord parentXHeight = fm->XHeight();
           if (frameSpan) {
             pfd->mBounds.y = baselineY -
               (parentXHeight + pfd->mBounds.height)/2;
@@ -1884,8 +1881,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         {
           // The top of the logical box is aligned with the top of
           // the parent element's text.
-          nscoord parentAscent;
-          fm->GetMaxAscent(parentAscent);
+          nscoord parentAscent = fm->MaxAscent();
           if (frameSpan) {
             pfd->mBounds.y = baselineY - parentAscent -
               pfd->mBorderPadding.top + frameSpan->mTopLeading;
@@ -1901,8 +1897,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
         {
           // The bottom of the logical box is aligned with the
           // bottom of the parent elements text.
-          nscoord parentDescent;
-          fm->GetMaxDescent(parentDescent);
+          nscoord parentDescent = fm->MaxDescent();
           if (frameSpan) {
             pfd->mBounds.y = baselineY + parentDescent -
               pfd->mBounds.height + pfd->mBorderPadding.bottom -

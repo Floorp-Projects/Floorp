@@ -2492,10 +2492,9 @@ GetScrollableLineHeight(nsIFrame* aTargetFrame)
   const nsFont& f = font->mFont;
   nsRefPtr<nsFontMetrics> fm = aTargetFrame->PresContext()->GetMetricsFor(f);
   NS_ASSERTION(fm, "FontMetrics is null!");
-  nscoord lineHeight = 0;
   if (fm)
-    fm->GetMaxHeight(lineHeight);
-  return lineHeight;
+    return fm->MaxHeight();
+  return 0;
 }
 
 void

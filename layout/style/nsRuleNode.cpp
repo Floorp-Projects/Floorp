@@ -310,9 +310,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       font.size = aFontSize;
       nsRefPtr<nsFontMetrics> fm =
         aPresContext->GetMetricsFor(font, aUseUserFontSet);
-      nscoord xHeight;
-      fm->GetXHeight(xHeight);
-      return ScaleCoord(aValue, float(xHeight));
+      return ScaleCoord(aValue, float(fm->XHeight()));
     }
     case eCSSUnit_Char: {
       nsFont font = styleFont->mFont;

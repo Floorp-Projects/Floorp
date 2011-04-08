@@ -520,8 +520,8 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
   nscoord ascent = 0;
   nscoord visibleHeight = 0;
   if (fontMet) {
-    fontMet->GetMaxHeight(visibleHeight);
-    fontMet->GetMaxAscent(ascent);
+    visibleHeight = fontMet->MaxHeight();
+    ascent = fontMet->MaxAscent();
   }
 
   // print document headers and footers

@@ -976,10 +976,9 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   // Format the text to display within the formatting rect
   nsFontMetrics* fm = aRenderingContext.FontMetrics();
 
-  nscoord maxAscent, maxDescent, height;
-  fm->GetMaxAscent(maxAscent);
-  fm->GetMaxDescent(maxDescent);
-  fm->GetMaxHeight(height);
+  nscoord maxAscent = fm->MaxAscent();
+  nscoord maxDescent = fm->MaxDescent();
+  nscoord height = fm->MaxHeight();
 
   // XXX It would be nice if there was a way to have the font metrics tell
   // use where to break the text given a maximum width. At a minimum we need

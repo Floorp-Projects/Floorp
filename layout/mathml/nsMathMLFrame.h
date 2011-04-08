@@ -270,8 +270,7 @@ public:
                      nscoord&        aSubScriptShift1, 
                      nscoord&        aSubScriptShift2)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     aSubScriptShift1 = NSToCoordRound(150.000f/430.556f * xHeight);
     aSubScriptShift2 = NSToCoordRound(247.217f/430.556f * xHeight);
   }
@@ -283,8 +282,7 @@ public:
                      nscoord&        aSupScriptShift2, 
                      nscoord&        aSupScriptShift3)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     aSupScriptShift1 = NSToCoordRound(412.892f/430.556f * xHeight);
     aSupScriptShift2 = NSToCoordRound(362.892f/430.556f * xHeight);
     aSupScriptShift3 = NSToCoordRound(288.889f/430.556f * xHeight);
@@ -296,8 +294,7 @@ public:
   GetSubDrop(nsFontMetrics* fm,
              nscoord&        aSubDrop)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     aSubDrop = NSToCoordRound(50.000f/430.556f * xHeight);
   }
 
@@ -305,8 +302,7 @@ public:
   GetSupDrop(nsFontMetrics* fm,
              nscoord&        aSupDrop)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     aSupDrop = NSToCoordRound(386.108f/430.556f * xHeight);
   }
 
@@ -316,8 +312,7 @@ public:
                      nscoord&        numShift2, 
                      nscoord&        numShift3)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     numShift1 = NSToCoordRound(676.508f/430.556f * xHeight);
     numShift2 = NSToCoordRound(393.732f/430.556f * xHeight);
     numShift3 = NSToCoordRound(443.731f/430.556f * xHeight);
@@ -328,8 +323,7 @@ public:
                        nscoord&        denShift1, 
                        nscoord&        denShift2)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     denShift1 = NSToCoordRound(685.951f/430.556f * xHeight);
     denShift2 = NSToCoordRound(344.841f/430.556f * xHeight);
   }
@@ -338,9 +332,9 @@ public:
   GetEmHeight(nsFontMetrics* fm,
               nscoord&        emHeight)
   {
-#if 0 
+#if 0
     // should switch to this API in order to scale with changes of TextZoom
-    fm->GetEmHeight(emHeight);
+    emHeight = fm->EmHeight();
 #else
     emHeight = NSToCoordRound(float(fm->Font().size));
 #endif
@@ -350,8 +344,7 @@ public:
   GetAxisHeight (nsFontMetrics* fm,
                  nscoord&        axisHeight)
   {
-    fm->GetXHeight (axisHeight);
-    axisHeight = NSToCoordRound(250.000f/430.556f * axisHeight);
+    axisHeight = NSToCoordRound(250.000f/430.556f * fm->XHeight());
   }
 
   static void
@@ -362,8 +355,7 @@ public:
                    nscoord&        bigOpSpacing4,
                    nscoord&        bigOpSpacing5)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     bigOpSpacing1 = NSToCoordRound(111.111f/430.556f * xHeight);
     bigOpSpacing2 = NSToCoordRound(166.667f/430.556f * xHeight);
     bigOpSpacing3 = NSToCoordRound(200.000f/430.556f * xHeight);
@@ -375,8 +367,7 @@ public:
   GetRuleThickness(nsFontMetrics* fm,
                    nscoord&        ruleThickness)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     ruleThickness = NSToCoordRound(40.000f/430.556f * xHeight);
   }
 
