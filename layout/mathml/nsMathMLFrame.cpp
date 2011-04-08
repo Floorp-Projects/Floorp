@@ -281,11 +281,10 @@ nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
 {
   // get the bounding metrics of the overbar char, the rendering context
   // is assumed to have been set with the font of the current style context
-#ifdef NS_DEBUG
-  nsCOMPtr<nsIFontMetrics> currFontMetrics = aRenderingContext.GetFontMetrics();
-  NS_ASSERTION(currFontMetrics->Font().Equals(aFontMetrics->Font()),
-      "unexpected state");
-#endif
+  NS_ASSERTION(aRenderingContext.FontMetrics()->Font().
+               Equals(aFontMetrics->Font()),
+               "unexpected state");
+
   nscoord xHeight;
   aFontMetrics->GetXHeight(xHeight);
   PRUnichar overBar = 0x00AF;
@@ -304,11 +303,10 @@ nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
 {
   // get the bounding metrics of the minus sign, the rendering context
   // is assumed to have been set with the font of the current style context
-#ifdef NS_DEBUG
-  nsCOMPtr<nsIFontMetrics> currFontMetrics = aRenderingContext.GetFontMetrics();
-  NS_ASSERTION(currFontMetrics->Font().Equals(aFontMetrics->Font()),
-	"unexpected state");
-#endif
+  NS_ASSERTION(aRenderingContext.FontMetrics()->Font().
+               Equals(aFontMetrics->Font()),
+               "unexpected state");
+
   nscoord xHeight;
   aFontMetrics->GetXHeight(xHeight);
   PRUnichar minus = 0x2212; // not '-', but official Unicode minus sign

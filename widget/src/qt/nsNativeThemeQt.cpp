@@ -200,7 +200,7 @@ nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
     QMatrix qctm(ctm.xx, ctm.yx, ctm.xy, ctm.yy, ctm.x0, ctm.y0);
     qPainter->setWorldMatrix(qctm, true);
 
-    PRInt32 p2a = GetAppUnitsPerDevPixel(aContext);
+    PRInt32 p2a = aContext->AppUnitsPerDevPixel();
 
     QRect r = qRectInPixels(aRect, p2a);
     QRect cr = qRectInPixels(aClipRect, p2a);
@@ -395,7 +395,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aF
 
     QStyle *s = qApp->style();
 
-    PRInt32 p2a = GetAppUnitsPerDevPixel(aContext);
+    PRInt32 p2a = aContext->AppUnitsPerDevPixel();
 
     switch (aWidgetType) {
     case NS_THEME_RADIO:

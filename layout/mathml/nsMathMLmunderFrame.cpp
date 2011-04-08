@@ -281,7 +281,7 @@ nsMathMLmunderFrame::Place(nsRenderingContext& aRenderingContext,
 
   aRenderingContext.SetFont(GetStyleFont()->mFont,
                             PresContext()->GetUserFontSet());
-  nsCOMPtr<nsIFontMetrics> fm = aRenderingContext.GetFontMetrics();
+  nsIFontMetrics* fm = aRenderingContext.FontMetrics();
 
   nscoord xHeight = 0;
   fm->GetXHeight (xHeight);
