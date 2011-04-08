@@ -135,7 +135,6 @@ extern nsISupportsArray *gDraggedTransferables;
 
 ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
 
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 #ifdef INVALIDATE_DEBUGGING
 static void blinkRect(Rect* r);
 static void blinkRgn(RgnHandle rgn);
