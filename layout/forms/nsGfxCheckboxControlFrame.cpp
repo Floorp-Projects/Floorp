@@ -50,7 +50,7 @@
 
 static void
 PaintCheckMark(nsIFrame* aFrame,
-               nsIRenderingContext* aCtx,
+               nsRenderingContext* aCtx,
                const nsRect& aDirtyRect,
                nsPoint aPt)
 {
@@ -83,7 +83,7 @@ PaintCheckMark(nsIFrame* aFrame,
 
 static void
 PaintIndeterminateMark(nsIFrame* aFrame,
-                       nsIRenderingContext* aCtx,
+                       nsRenderingContext* aCtx,
                        const nsRect& aDirtyRect,
                        nsPoint aPt)
 {

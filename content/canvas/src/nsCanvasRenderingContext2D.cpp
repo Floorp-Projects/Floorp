@@ -76,7 +76,7 @@
 #include "nsReadableUtils.h"
 
 #include "nsColor.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 #include "nsIScriptSecurityManager.h"

@@ -58,7 +58,7 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsStyleContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsITimer.h"
@@ -729,7 +729,7 @@ nsListBoxBodyFrame::ComputeIntrinsicWidth(nsBoxLayoutState& aBoxLayoutState)
       nsIContent *child = (*iter);
 
       if (child->Tag() == nsGkAtoms::listitem) {
-        nsIRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
+        nsRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
         if (rendContext) {
           nsAutoString value;
           PRUint32 textCount = child->GetChildCount();

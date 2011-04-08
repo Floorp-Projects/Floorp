@@ -42,7 +42,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 
 #include "nsCSSRendering.h"
@@ -316,7 +316,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
 
 // Only place the selected child ...
 /* virtual */ nsresult
-nsMathMLmactionFrame::Place(nsIRenderingContext& aRenderingContext,
+nsMathMLmactionFrame::Place(nsRenderingContext& aRenderingContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
 {

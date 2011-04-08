@@ -49,7 +49,7 @@
 #include "nsIFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
@@ -157,7 +157,7 @@ nsLeafBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 /* virtual */ nscoord
-nsLeafBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsLeafBoxFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -177,7 +177,7 @@ nsLeafBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsLeafBoxFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsLeafBoxFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -204,7 +204,7 @@ nsLeafBoxFrame::GetIntrinsicWidth()
 }
 
 nsSize
-nsLeafBoxFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+nsLeafBoxFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder,
                                 nsSize aPadding, PRBool aShrinkWrap)

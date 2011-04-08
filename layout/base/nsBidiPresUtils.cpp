@@ -44,7 +44,7 @@
 #include "nsTextFragment.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIServiceManager.h"
 #include "nsFrameManager.h"
 #include "nsBidiUtils.h"
@@ -1758,8 +1758,8 @@ nsresult nsBidiPresUtils::ProcessText(const PRUnichar*       aText,
 
 class NS_STACK_CLASS nsIRenderingContextBidiProcessor : public nsBidiPresUtils::BidiProcessor {
 public:
-  nsIRenderingContextBidiProcessor(nsIRenderingContext* aCtx,
-                                   nsIRenderingContext* aTextRunConstructionContext,
+  nsIRenderingContextBidiProcessor(nsRenderingContext* aCtx,
+                                   nsRenderingContext* aTextRunConstructionContext,
                                    const nsPoint&       aPt)
     : mCtx(aCtx), mTextRunConstructionContext(aTextRunConstructionContext), mPt(aPt) { }
 
@@ -1794,8 +1794,8 @@ public:
   }
 
 private:
-  nsIRenderingContext* mCtx;
-  nsIRenderingContext* mTextRunConstructionContext;
+  nsRenderingContext* mCtx;
+  nsRenderingContext* mTextRunConstructionContext;
   nsPoint mPt;
   const PRUnichar* mText;
   PRInt32 mLength;
@@ -1806,8 +1806,8 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const PRUnichar*       
                                                          PRInt32                aLength,
                                                          nsBidiDirection        aBaseDirection,
                                                          nsPresContext*         aPresContext,
-                                                         nsIRenderingContext&   aRenderingContext,
-                                                         nsIRenderingContext&   aTextRunConstructionContext,
+                                                         nsRenderingContext&   aRenderingContext,
+                                                         nsRenderingContext&   aTextRunConstructionContext,
                                                          Mode                   aMode,
                                                          nscoord                aX,
                                                          nscoord                aY,

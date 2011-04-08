@@ -270,7 +270,7 @@ nsTreeBodyFrame::CalcMaxRowWidth()
   nscoord rowWidth;
   nsTreeColumn* col;
 
-  nsCOMPtr<nsIRenderingContext> rc =
+  nsRefPtr<nsRenderingContext> rc =
     PresContext()->PresShell()->GetReferenceRenderingContext();
   if (!rc)
     return 0;
@@ -1175,7 +1175,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     // interfere with our computations.
     AdjustForBorderPadding(cellContext, cellRect);
 
-    nsCOMPtr<nsIRenderingContext> rc =
+    nsRefPtr<nsRenderingContext> rc =
       presContext->PresShell()->GetReferenceRenderingContext();
     if (!rc)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1334,7 +1334,7 @@ nsTreeBodyFrame::CheckTextForBidi(nsAutoString& aText)
 void
 nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
                                    PRInt32 aRowIndex,  nsTreeColumn* aColumn,
-                                   nsIRenderingContext& aRenderingContext,
+                                   nsRenderingContext& aRenderingContext,
                                    nsRect& aTextRect)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
@@ -1526,7 +1526,7 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   PRBool isRTL = GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
 
   nsPresContext* presContext = PresContext();
-  nsCOMPtr<nsIRenderingContext> rc =
+  nsRefPtr<nsRenderingContext> rc =
     presContext->PresShell()->GetReferenceRenderingContext();
   if (!rc)
     return nsCSSAnonBoxes::moztreecell;
@@ -1684,7 +1684,7 @@ nsTreeBodyFrame::GetCellAt(nscoord aX, nscoord aY, PRInt32* aRow,
 
 nsresult
 nsTreeBodyFrame::GetCellWidth(PRInt32 aRow, nsTreeColumn* aCol,
-                              nsIRenderingContext* aRenderingContext,
+                              nsRenderingContext* aRenderingContext,
                               nscoord& aDesiredSize, nscoord& aCurrentSize)
 {
   NS_PRECONDITION(aCol, "aCol must not be null");
@@ -1777,7 +1777,7 @@ nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, nsITreeColumn* aCol, PRBool *_retva
   if (!col)
     return NS_ERROR_INVALID_ARG;
 
-  nsCOMPtr<nsIRenderingContext> rc =
+  nsRefPtr<nsRenderingContext> rc =
     PresContext()->PresShell()->GetReferenceRenderingContext();
   NS_ENSURE_TRUE(rc, NS_ERROR_FAILURE);
 
@@ -2072,7 +2072,7 @@ nsTreeBodyFrame::GetTwistyRect(PRInt32 aRowIndex,
                                nsRect& aImageRect,
                                nsRect& aTwistyRect,
                                nsPresContext* aPresContext,
-                               nsIRenderingContext& aRenderingContext,
+                               nsRenderingContext& aRenderingContext,
                                nsStyleContext* aTwistyContext)
 {
   // The twisty rect extends all the way to the end of the cell.  This is incorrect.  We need to
@@ -2787,7 +2787,7 @@ nsLineStyle nsTreeBodyFrame::ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle)
 }
 
 static void
-PaintTreeBody(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+PaintTreeBody(nsIFrame* aFrame, nsRenderingContext* aCtx,
               const nsRect& aDirtyRect, nsPoint aPt)
 {
   static_cast<nsTreeBodyFrame*>(aFrame)->PaintTreeBody(*aCtx, aDirtyRect, aPt);
@@ -2818,7 +2818,7 @@ nsTreeBodyFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsTreeBodyFrame::PaintTreeBody(nsIRenderingContext& aRenderingContext,
+nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
                                const nsRect& aDirtyRect, nsPoint aPt)
 {
   // Update our available height and our page count.
@@ -2891,7 +2891,7 @@ void
 nsTreeBodyFrame::PaintColumn(nsTreeColumn*        aColumn,
                              const nsRect&        aColumnRect,
                              nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
+                             nsRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
@@ -2918,7 +2918,7 @@ void
 nsTreeBodyFrame::PaintRow(PRInt32              aRowIndex,
                           const nsRect&        aRowRect,
                           nsPresContext*       aPresContext,
-                          nsIRenderingContext& aRenderingContext,
+                          nsRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsPoint              aPt)
 {
@@ -3072,7 +3072,7 @@ void
 nsTreeBodyFrame::PaintSeparator(PRInt32              aRowIndex,
                                 const nsRect&        aSeparatorRect,
                                 nsPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
+                                nsRenderingContext& aRenderingContext,
                                 const nsRect&        aDirtyRect)
 {
   // Resolve style for the separator.
@@ -3124,7 +3124,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
                            nsTreeColumn*        aColumn,
                            const nsRect&        aCellRect,
                            nsPresContext*       aPresContext,
-                           nsIRenderingContext& aRenderingContext,
+                           nsRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            nscoord&             aCurrX,
                            nsPoint              aPt)
@@ -3303,7 +3303,7 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
                              nsTreeColumn*        aColumn,
                              const nsRect&        aTwistyRect,
                              nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
+                             nsRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nscoord&             aRemainingWidth,
                              nscoord&             aCurrX)
@@ -3396,7 +3396,7 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
                             nsTreeColumn*        aColumn,
                             const nsRect&        aImageRect,
                             nsPresContext*       aPresContext,
-                            nsIRenderingContext& aRenderingContext,
+                            nsRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nscoord&             aRemainingWidth,
                             nscoord&             aCurrX)
@@ -3532,7 +3532,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
                            nsTreeColumn*        aColumn,
                            const nsRect&        aTextRect,
                            nsPresContext*      aPresContext,
-                           nsIRenderingContext& aRenderingContext,
+                           nsRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            nscoord&             aCurrX,
                            PRBool               aTextRTL)
@@ -3640,7 +3640,7 @@ nsTreeBodyFrame::PaintCheckbox(PRInt32              aRowIndex,
                                nsTreeColumn*        aColumn,
                                const nsRect&        aCheckboxRect,
                                nsPresContext*      aPresContext,
-                               nsIRenderingContext& aRenderingContext,
+                               nsRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
@@ -3703,7 +3703,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
                                     nsTreeColumn*        aColumn,
                                     const nsRect&        aProgressMeterRect,
                                     nsPresContext*      aPresContext,
-                                    nsIRenderingContext& aRenderingContext,
+                                    nsRenderingContext& aRenderingContext,
                                     const nsRect&        aDirtyRect)
 {
   NS_PRECONDITION(aColumn && aColumn->GetFrame(), "invalid column passed");
@@ -3790,7 +3790,7 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
 void
 nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
                                    nsPresContext*      aPresContext,
-                                   nsIRenderingContext& aRenderingContext,
+                                   nsRenderingContext& aRenderingContext,
                                    const nsRect&        aDirtyRect,
                                    nsPoint              aPt)
 {
@@ -3893,7 +3893,7 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
 void
 nsTreeBodyFrame::PaintBackgroundLayer(nsStyleContext*      aStyleContext,
                                       nsPresContext*      aPresContext,
-                                      nsIRenderingContext& aRenderingContext,
+                                      nsRenderingContext& aRenderingContext,
                                       const nsRect&        aRect,
                                       const nsRect&        aDirtyRect)
 {

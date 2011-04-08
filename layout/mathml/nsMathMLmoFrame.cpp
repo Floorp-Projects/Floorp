@@ -45,7 +45,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsContentUtils.h"
 
@@ -624,7 +624,7 @@ GetStretchHint(nsOperatorFlags aFlags, nsPresentationData aPresentationData,
 //       On input  - it contains our current size
 //       On output - the same size or the new size that we want
 NS_IMETHODIMP
-nsMathMLmoFrame::Stretch(nsIRenderingContext& aRenderingContext,
+nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
                          nsStretchDirection   aStretchDirection,
                          nsBoundingMetrics&   aContainerSize,
                          nsHTMLReflowMetrics& aDesiredStretchSize)
@@ -1005,7 +1005,7 @@ nsMathMLmoFrame::MarkIntrinsicWidthsDirty()
 }
 
 /* virtual */ nscoord
-nsMathMLmoFrame::GetIntrinsicWidth(nsIRenderingContext *aRenderingContext)
+nsMathMLmoFrame::GetIntrinsicWidth(nsRenderingContext *aRenderingContext)
 {
   ProcessOperatorData();
   nscoord width;

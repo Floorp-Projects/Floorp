@@ -46,7 +46,7 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "gfxPlatform.h"
 #include "nsIFontMetrics.h"
 
@@ -1133,7 +1133,7 @@ insert:
 // Update the font and rendering context if there is a family change
 static void
 SetFontFamily(nsPresContext*       aPresContext,
-              nsIRenderingContext& aRenderingContext,
+              nsRenderingContext& aRenderingContext,
               nsFont&              aFont,
               const nsGlyphTable*  aGlyphTable,
               const nsGlyphCode&   aGlyphCode,
@@ -1151,7 +1151,7 @@ class nsMathMLChar::StretchEnumContext {
 public:
   StretchEnumContext(nsMathMLChar*        aChar,
                      nsPresContext*       aPresContext,
-                     nsIRenderingContext& aRenderingContext,
+                     nsRenderingContext& aRenderingContext,
                      nsStretchDirection   aStretchDirection,
                      nscoord              aTargetSize,
                      PRUint32             aStretchHint,
@@ -1182,7 +1182,7 @@ private:
 
   nsMathMLChar* mChar;
   nsPresContext* mPresContext;
-  nsIRenderingContext& mRenderingContext;
+  nsRenderingContext& mRenderingContext;
   const nsStretchDirection mDirection;
   const nscoord mTargetSize;
   const PRUint32 mStretchHint;
@@ -1525,7 +1525,7 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
 
 nsresult
 nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
-                              nsIRenderingContext&     aRenderingContext,
+                              nsRenderingContext&     aRenderingContext,
                               nsStretchDirection&      aStretchDirection,
                               const nsBoundingMetrics& aContainerSize,
                               nsBoundingMetrics&       aDesiredStretchSize,
@@ -1798,7 +1798,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
 
 nsresult
 nsMathMLChar::Stretch(nsPresContext*           aPresContext,
-                      nsIRenderingContext&     aRenderingContext,
+                      nsRenderingContext&     aRenderingContext,
                       nsStretchDirection       aStretchDirection,
                       const nsBoundingMetrics& aContainerSize,
                       nsBoundingMetrics&       aDesiredStretchSize,
@@ -1836,7 +1836,7 @@ nsMathMLChar::Stretch(nsPresContext*           aPresContext,
 // considered.
 nscoord
 nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext,
-                          nsIRenderingContext& aRenderingContext,
+                          nsRenderingContext& aRenderingContext,
                           PRUint32 aStretchHint,
                           float aMaxSize, PRBool aMaxSizeIsAbsolute)
 {
@@ -1852,7 +1852,7 @@ nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext,
 
 nsresult
 nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
+                              nsRenderingContext& aRenderingContext,
                               nsGlyphTable*        aGlyphTable,
                               nscoord              aTargetSize,
                               nsBoundingMetrics&   aCompositeSize,
@@ -1946,14 +1946,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLSelectionRect", TYPE_MATHML_SELECTION_RECT)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
-                                         nsIRenderingContext* aCtx)
+                                         nsRenderingContext* aCtx)
 {
   // get color to use for selection from the look&feel object
   nscolor bgColor = NS_RGB(0, 0, 0);
@@ -1978,7 +1978,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLCharBackground", TYPE_MATHML_CHAR_BACKGROUND)
 private:
   nsStyleContext* mStyleContext;
@@ -1986,7 +1986,7 @@ private:
 };
 
 void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                          nsIRenderingContext* aCtx)
+                                          nsRenderingContext* aCtx)
 {
   const nsStyleBorder* border = mStyleContext->GetStyleBorder();
   nsRect rect(mRect + ToReferenceFrame());
@@ -2021,7 +2021,7 @@ public:
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx)
+                     nsRenderingContext* aCtx)
   {
     mChar->PaintForeground(mFrame->PresContext(), *aCtx,
                            ToReferenceFrame(), mIsSelected);
@@ -2054,7 +2054,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLCharDebug", TYPE_MATHML_CHAR_DEBUG)
 
 private:
@@ -2062,7 +2062,7 @@ private:
 };
 
 void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
-                                     nsIRenderingContext* aCtx)
+                                     nsRenderingContext* aCtx)
 {
   // for visual debug
   PRIntn skipSides = 0;
@@ -2129,7 +2129,7 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsMathMLChar::ApplyTransforms(nsIRenderingContext& aRenderingContext, nsRect &r)
+nsMathMLChar::ApplyTransforms(nsRenderingContext& aRenderingContext, nsRect &r)
 {
   // apply the transforms
   aRenderingContext.Translate(r.TopLeft());
@@ -2143,7 +2143,7 @@ nsMathMLChar::ApplyTransforms(nsIRenderingContext& aRenderingContext, nsRect &r)
 
 void
 nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
-                              nsIRenderingContext& aRenderingContext,
+                              nsRenderingContext& aRenderingContext,
                               nsPoint aPt,
                               PRBool aIsSelected)
 {
@@ -2210,9 +2210,9 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
  */
 
 class AutoPushClipRect {
-  nsIRenderingContext& mCtx;
+  nsRenderingContext& mCtx;
 public:
-  AutoPushClipRect(nsIRenderingContext& aCtx, const nsRect& aRect)
+  AutoPushClipRect(nsRenderingContext& aCtx, const nsRect& aRect)
     : mCtx(aCtx) {
     mCtx.PushState();
     mCtx.SetClipRect(aRect, nsClipCombine_kIntersect);
@@ -2238,7 +2238,7 @@ SnapToDevPixels(const gfxContext* aThebesContext, PRInt32 aAppUnitsPerGfxUnit,
 // paint a stretchy char by assembling glyphs vertically
 nsresult
 nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
+                              nsRenderingContext& aRenderingContext,
                               nsFont&              aFont,
                               nsStyleContext*      aStyleContext,
                               nsGlyphTable*        aGlyphTable,
@@ -2471,7 +2471,7 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
 // paint a stretchy char by assembling glyphs horizontally
 nsresult
 nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
+                                nsRenderingContext& aRenderingContext,
                                 nsFont&              aFont,
                                 nsStyleContext*      aStyleContext,
                                 nsGlyphTable*        aGlyphTable,

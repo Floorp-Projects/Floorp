@@ -42,7 +42,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
@@ -197,7 +197,7 @@ nsMathMLTokenFrame::Reflow(nsPresContext*          aPresContext,
 // pass, it is not computed here because our children may be text frames
 // that do not implement the GetBoundingMetrics() interface.
 /* virtual */ nsresult
-nsMathMLTokenFrame::Place(nsIRenderingContext& aRenderingContext,
+nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {

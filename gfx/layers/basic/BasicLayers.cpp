@@ -48,7 +48,7 @@
 
 #include "nsTArray.h"
 #include "nsGUIEvent.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "gfxPattern.h"

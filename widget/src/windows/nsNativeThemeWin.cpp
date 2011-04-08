@@ -41,7 +41,7 @@
 
 #include <windows.h>
 #include "nsNativeThemeWin.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
@@ -1197,7 +1197,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
+nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        const nsRect& aRect,
@@ -1847,7 +1847,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        nsIntSize* aResult, PRBool* aIsOverridable)
 {
@@ -2427,7 +2427,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
 }
 
 nsresult
-nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        nsIntSize* aResult, PRBool* aIsOverridable)
 {
@@ -3101,7 +3101,7 @@ void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PR
   }
 }
 
-nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aContext,
+nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,

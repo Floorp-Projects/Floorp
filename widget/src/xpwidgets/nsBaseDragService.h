@@ -44,7 +44,7 @@
 #include "nsISupportsArray.h"
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDOMDataTransfer.h"
 
 #include "gfxImageSurface.h"

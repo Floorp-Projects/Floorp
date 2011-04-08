@@ -218,8 +218,8 @@ public:
   virtual void Paint(nsSVGRenderState *aContext, nsIFrame *aTarget,
                      const nsIntRect* aDirtyRect)
   {
-    nsIRenderingContext* ctx = aContext->GetRenderingContext(aTarget);
-    nsIRenderingContext::AutoPushTranslation push(ctx, -mOffset);
+    nsRenderingContext* ctx = aContext->GetRenderingContext(aTarget);
+    nsRenderingContext::AutoPushTranslation push(ctx, -mOffset);
     mInnerList->PaintForFrame(mBuilder, ctx, mFrame, nsDisplayList::PAINT_DEFAULT);
   }
 
@@ -231,7 +231,7 @@ private:
 };
 
 void
-nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
+nsSVGIntegrationUtils::PaintFramesWithEffects(nsRenderingContext* aCtx,
                                               nsIFrame* aEffectsFrame,
                                               const nsRect& aDirtyRect,
                                               nsDisplayListBuilder* aBuilder,
@@ -538,7 +538,7 @@ DrawableFromPaintServer(nsIFrame*         aFrame,
 }
 
 /* static */ void
-nsSVGIntegrationUtils::DrawPaintServer(nsIRenderingContext* aRenderingContext,
+nsSVGIntegrationUtils::DrawPaintServer(nsRenderingContext* aRenderingContext,
                                        nsIFrame*            aTarget,
                                        nsIFrame*            aPaintServer,
                                        gfxPattern::GraphicsFilter aFilter,

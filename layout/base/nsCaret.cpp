@@ -57,7 +57,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsPresContext.h"
 #include "nsILookAndFeel.h"
@@ -526,7 +526,7 @@ void nsCaret::UpdateCaretPosition()
 }
 
 void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
-                         nsIRenderingContext *aCtx,
+                         nsRenderingContext *aCtx,
                          nsIFrame* aForFrame,
                          const nsPoint &aOffset)
 {
