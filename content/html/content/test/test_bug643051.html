@@ -22,6 +22,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=643051
 document.cookie = "foo=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
 document.cookie = "foo2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
 document.cookie = "foo3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+// clear cookie set by another test
+document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
 
 // single cookie, should work
 document.cookie = "foo=bar";
@@ -33,6 +35,10 @@ is(document.cookie, "foo=bar; foo2=bar", "Wrong cookie value");
 document.cookie = "foo2=baz; foo3=bar";
 is(document.cookie, "foo=bar; foo2=baz", "Wrong cookie value");
 
+// clear cookies again to avoid affecting other tests
+document.cookie = "foo=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+document.cookie = "foo2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+document.cookie = "foo3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
 </script>
 </pre>
 </body>
