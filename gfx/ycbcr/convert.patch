@@ -1,7 +1,7 @@
 diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
 --- a/gfx/ycbcr/yuv_convert.cpp
 +++ b/gfx/ycbcr/yuv_convert.cpp
-@@ -6,145 +6,133 @@
+@@ -6,145 +6,102 @@
  // http://www.fourcc.org/yuv.php
  // The actual conversion is best described here
  // http://en.wikipedia.org/wiki/YUV
@@ -38,10 +38,6 @@ diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
 +#include "yuv_row.h"
 +#include "mozilla/SSE.h"
 +
-+#ifdef HAVE_YCBCR_TO_RGB565
-+void __attribute((noinline)) yv12_to_rgb565_neon(uint16 *dst, const uint8 *y, const uint8 *u, const uint8 *v, int n, int oddflag);
-+#endif
-+
 +namespace mozilla {
 +
 +namespace gfx {
@@ -51,33 +47,6 @@ diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
  const int kFractionMax = 1 << kFractionBits;
  const int kFractionMask = ((1 << kFractionBits) - 1);
  
-+
-+// Convert a frame of YUV to 16 bit RGB565.
-+NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* y_buf,
-+                                  const uint8* u_buf,
-+                                  const uint8* v_buf,
-+                                  uint8* rgb_buf,
-+                                  int pic_x,
-+                                  int pic_y,
-+                                  int pic_width,
-+                                  int pic_height,
-+                                  int y_pitch,
-+                                  int uv_pitch,
-+                                  int rgb_pitch,
-+                                  YUVType yuv_type)
-+{
-+#ifdef HAVE_YCBCR_TO_RGB565
-+  for (int i = 0; i < pic_height; i++) {
-+    yv12_to_rgb565_neon((uint16*)(rgb_buf + rgb_pitch * i),
-+                         y_buf + y_pitch * i,
-+                         u_buf + uv_pitch * (i / 2),
-+                         v_buf + uv_pitch * (i / 2),
-+                         pic_width,
-+                         0);
-+  }
-+#endif
-+}
-+
  // Convert a frame of YUV to 32 bit ARGB.
 -void ConvertYUVToRGB32(const uint8* y_buf,
 -                       const uint8* u_buf,
@@ -455,7 +424,7 @@ diff --git a/gfx/ycbcr/yuv_convert.cpp b/gfx/ycbcr/yuv_convert.cpp
 diff --git a/gfx/ycbcr/yuv_convert.h b/gfx/ycbcr/yuv_convert.h
 --- a/gfx/ycbcr/yuv_convert.h
 +++ b/gfx/ycbcr/yuv_convert.h
-@@ -1,72 +1,98 @@
+@@ -1,72 +1,79 @@
  // Copyright (c) 2010 The Chromium Authors. All rights reserved.
  // Use of this source code is governed by a BSD-style license that can be
  // found in the LICENSE file.
@@ -470,10 +439,6 @@ diff --git a/gfx/ycbcr/yuv_convert.h b/gfx/ycbcr/yuv_convert.h
 +#include "chromium_types.h"
 +#include "gfxCore.h"
 +
-+#ifdef __arm__
-+#define HAVE_YCBCR_TO_RGB565 1
-+#endif
-+ 
 +namespace mozilla {
 +
 +namespace gfx {
@@ -511,21 +476,6 @@ diff --git a/gfx/ycbcr/yuv_convert.h b/gfx/ycbcr/yuv_convert.h
 +  FILTER_BILINEAR = 3     // Bilinear filter.
  };
  
-+// Convert a frame of YUV to 16 bit RGB565.
-+// Pass in YV12 formats
-+NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* yplane,
-+                                  const uint8* uplane,
-+                                  const uint8* vplane,
-+                                  uint8* rgbframe,
-+                                  int pic_x,
-+                                  int pic_y,
-+                                  int pic_width,
-+                                  int pic_height,
-+                                  int ystride,
-+                                  int uvstride,
-+                                  int rgbstride,
-+                                  YUVType yuv_type);
-+
  // Convert a frame of YUV to 32 bit ARGB.
  // Pass in YV16/YV12 depending on source format
 -void ConvertYUVToRGB32(const uint8* yplane,
