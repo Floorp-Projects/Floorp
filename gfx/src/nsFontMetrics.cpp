@@ -67,7 +67,7 @@ public:
 private:
     static PRUint32 ComputeFlags(nsFontMetrics* aMetrics) {
         PRUint32 flags = 0;
-        if (aMetrics->GetRightToLeftTextRunMode()) {
+        if (aMetrics->GetTextRunRTL()) {
             flags |= gfxTextRunFactory::TEXT_IS_RTL;
         }
         return flags;
@@ -93,16 +93,14 @@ public:
 } // anon namespace
 
 nsFontMetrics::nsFontMetrics()
+    : mDeviceContext(nsnull), mP2A(-1), mTextRunRTL(PR_FALSE)
 {
-    mFontStyle = nsnull;
-    mFontGroup = nsnull;
 }
 
 nsFontMetrics::~nsFontMetrics()
 {
     if (mDeviceContext)
         mDeviceContext->FontMetricsDeleted(this);
-    delete mFontStyle;
 }
 
 nsresult
@@ -110,26 +108,26 @@ nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                     nsIDeviceContext *aContext,
                     gfxUserFontSet *aUserFontSet)
 {
+    NS_ABORT_IF_FALSE(mP2A == -1, "already initialized");
+
     mFont = aFont;
     mLanguage = aLanguage;
     mDeviceContext = (nsThebesDeviceContext*)aContext;
     mP2A = mDeviceContext->AppUnitsPerDevPixel();
-    mIsRightToLeft = PR_FALSE;
-    mTextRunRTL = PR_FALSE;
 
-    gfxFloat size = gfxFloat(aFont.size) / mP2A;
+    gfxFontStyle style(aFont.style,
+                       aFont.weight,
+                       aFont.stretch,
+                       gfxFloat(aFont.size) / mP2A,
+                       aLanguage,
+                       aFont.sizeAdjust,
+                       aFont.systemFont,
+                       mDeviceContext->IsPrinterSurface(),
+                       aFont.featureSettings,
+                       aFont.languageOverride);
 
-    PRBool printerFont = mDeviceContext->IsPrinterSurface();
-    mFontStyle = new gfxFontStyle(aFont.style, aFont.weight, aFont.stretch,
-                                  size, aLanguage,
-                                  aFont.sizeAdjust, aFont.systemFont,
-                                  printerFont,
-                                  aFont.featureSettings,
-                                  aFont.languageOverride);
-
-    mFontGroup =
-        gfxPlatform::GetPlatform()->CreateFontGroup(aFont.name, mFontStyle,
-                                                    aUserFontSet);
+    mFontGroup = gfxPlatform::GetPlatform()->
+        CreateFontGroup(aFont.name, &style, aUserFontSet);
     if (mFontGroup->FontListLength() < 1)
         return NS_ERROR_UNEXPECTED;
 
