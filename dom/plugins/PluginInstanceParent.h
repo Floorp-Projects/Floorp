@@ -136,6 +136,9 @@ public:
     AnswerNPN_SetValue_NPPVpluginTransparent(const bool& transparent,
                                              NPError* result);
     virtual bool
+    AnswerNPN_SetValue_NPPVpluginUsesDOMForCursor(const bool& useDOMForCursor,
+                                                  NPError* result);
+    virtual bool
     AnswerNPN_SetValue_NPPVpluginDrawingModel(const int& drawingModel,
                                              NPError* result);
     virtual bool
