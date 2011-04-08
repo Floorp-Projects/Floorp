@@ -101,7 +101,7 @@ nsStyledElement::ParseAttribute(PRInt32 aNamespaceID, nsIAtom* aAttribute,
 {
   if (aNamespaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::style) {
-      SetFlags(NODE_MAY_HAVE_STYLE);
+      SetMayHaveStyle();
       ParseStyleAttribute(aValue, aResult, PR_FALSE);
       return PR_TRUE;
     }
@@ -161,7 +161,7 @@ nsStyledElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsStyledElement::SetInlineStyleRule(css::StyleRule* aStyleRule, PRBool aNotify)
 {
-  SetFlags(NODE_MAY_HAVE_STYLE);
+  SetMayHaveStyle();
   PRBool modification = PR_FALSE;
   nsAutoString oldValueStr;
 
@@ -200,7 +200,7 @@ nsStyledElement::SetInlineStyleRule(css::StyleRule* aStyleRule, PRBool aNotify)
 css::StyleRule*
 nsStyledElement::GetInlineStyleRule()
 {
-  if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
+  if (!MayHaveStyle()) {
     return nsnull;
   }
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
@@ -270,7 +270,7 @@ nsStyledElement::GetStyle(nsresult* retval)
                                                      , PR_FALSE
 #endif // MOZ_SMIL
                                                      );
-    SetFlags(NODE_MAY_HAVE_STYLE);
+    SetMayHaveStyle();
   }
 
   *retval = NS_OK;
@@ -280,7 +280,7 @@ nsStyledElement::GetStyle(nsresult* retval)
 nsresult
 nsStyledElement::ReparseStyleAttribute(PRBool aForceInDataDoc)
 {
-  if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
+  if (!MayHaveStyle()) {
     return NS_OK;
   }
   const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
