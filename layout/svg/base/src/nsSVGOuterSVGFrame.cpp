@@ -552,7 +552,7 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
 
   nsRect clipRect;
   clipRect.IntersectRect(aDirtyRect, viewportRect);
-  aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+  aRenderingContext.IntersectClip(clipRect);
   aRenderingContext.Translate(viewportRect.TopLeft());
   nsRect dirtyRect = clipRect - viewportOffset;
 

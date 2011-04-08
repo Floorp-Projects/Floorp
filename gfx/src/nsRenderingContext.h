@@ -50,13 +50,6 @@
 #include "gfxContext.h"
 
 typedef enum {
-    nsClipCombine_kIntersect = 0,
-    nsClipCombine_kUnion = 1,
-    nsClipCombine_kSubtract = 2,
-    nsClipCombine_kReplace = 3
-} nsClipCombine;
-
-typedef enum {
     nsLineStyle_kNone   = 0,
     nsLineStyle_kSolid  = 1,
     nsLineStyle_kDashed = 2,
@@ -156,8 +149,8 @@ public:
 
     void PushState(void);
     void PopState(void);
-    void SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
-    void SetClipRegion(const nsIntRegion& aRegion, nsClipCombine aCombine);
+    void IntersectClip(const nsRect& aRect);
+    void SetClip(const nsIntRegion& aRegion);
     void SetLineStyle(nsLineStyle aLineStyle);
     void SetColor(nscolor aColor);
     void Translate(const nsPoint& aPt);
