@@ -1221,17 +1221,17 @@ JITScript::purgeMICs()
     for (uint32 i = 0; i < nGetGlobalNames; i++) {
         ic::GetGlobalNameIC &ic = getGlobalNames_[i];
         JSC::CodeLocationDataLabel32 label = ic.fastPathStart.dataLabel32AtOffset(ic.shapeOffset);
-        repatch.repatch(label, int(JSObjectMap::INVALID_SHAPE));
+        repatch.repatch(label, int(INVALID_SHAPE));
     }
 
     ic::SetGlobalNameIC *setGlobalNames_ = setGlobalNames();
     for (uint32 i = 0; i < nSetGlobalNames; i++) {
         ic::SetGlobalNameIC &ic = setGlobalNames_[i];
-        ic.patchInlineShapeGuard(repatch, int32(JSObjectMap::INVALID_SHAPE));
+        ic.patchInlineShapeGuard(repatch, int32(INVALID_SHAPE));
 
         if (ic.hasExtraStub) {
             Repatcher repatcher(ic.extraStub);
-            ic.patchExtraShapeGuard(repatcher, int32(JSObjectMap::INVALID_SHAPE));
+            ic.patchExtraShapeGuard(repatcher, int32(INVALID_SHAPE));
         }
     }
 }

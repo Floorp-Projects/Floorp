@@ -2229,7 +2229,7 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
             return false;
 
         empty->slotSpan += argslen;
-        map = empty;
+        setMap(empty);
 
         if (!ensureInstanceReservedSlots(cx, argslen))
             return false;
