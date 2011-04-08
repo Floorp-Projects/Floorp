@@ -1779,9 +1779,7 @@ public:
 
   virtual nscoord GetWidth()
   {
-    nscoord width;
-    mTextRunConstructionContext->GetWidth(mText, mLength, width, nsnull);
-    return width;
+    return mTextRunConstructionContext->GetWidth(mText, mLength);
   }
 
   virtual void DrawText(nscoord aXOffset,

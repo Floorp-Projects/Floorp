@@ -206,59 +206,28 @@ public:
     void SetRightToLeftText(PRBool aIsRTL);
     void SetTextRunRTL(PRBool aIsRTL);
 
-    nsresult GetWidth(const nsString& aString, nscoord &aWidth,
-                      PRInt32 *aFontID = nsnull);
-    nsresult GetWidth(const char* aString, nscoord& aWidth);
-    nsresult GetWidth(const char* aString, PRUint32 aLength,
-                      nscoord& aWidth);
-    nsresult GetWidth(const PRUnichar *aString, PRUint32 aLength,
-                      nscoord &aWidth, PRInt32 *aFontID = nsnull);
-    nsresult GetWidth(char aC, nscoord &aWidth);
-    nsresult GetWidth(PRUnichar aC, nscoord &aWidth, PRInt32 *aFontID = nsnull);
+    nscoord GetWidth(char aC);
+    nscoord GetWidth(PRUnichar aC);
+    nscoord GetWidth(const nsString& aString);
+    nscoord GetWidth(const char* aString);
+    nscoord GetWidth(const char* aString, PRUint32 aLength);
+    nscoord GetWidth(const PRUnichar *aString, PRUint32 aLength);
 
 #ifdef MOZ_MATHML
-    nsresult GetBoundingMetrics(const PRUnichar*   aString,
-                                PRUint32           aLength,
-                                nsBoundingMetrics& aBoundingMetrics,
-                                PRInt32*           aFontID = nsnull);
+    nsBoundingMetrics GetBoundingMetrics(const PRUnichar *aString,
+                                         PRUint32 aLength);
 #endif
 
-    void DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                    PRInt32 aFontID = -1,
-                    const nscoord* aSpacing = nsnull);
+    void DrawString(const nsString& aString, nscoord aX, nscoord aY);
     void DrawString(const char *aString, PRUint32 aLength,
-                    nscoord aX, nscoord aY,
-                    const nscoord* aSpacing = nsnull);
+                    nscoord aX, nscoord aY);
     void DrawString(const PRUnichar *aString, PRUint32 aLength,
-                    nscoord aX, nscoord aY,
-                    PRInt32 aFontID = -1,
-                    const nscoord* aSpacing = nsnull);
+                    nscoord aX, nscoord aY);
 
 protected:
     PRInt32 GetMaxChunkLength();
-
-    nsresult GetWidthInternal(const char *aString, PRUint32 aLength,
-                              nscoord &aWidth);
-    nsresult GetWidthInternal(const PRUnichar *aString, PRUint32 aLength,
-                              nscoord &aWidth, PRInt32 *aFontID = nsnull);
-
-    void DrawStringInternal(const char *aString, PRUint32 aLength,
-                            nscoord aX, nscoord aY,
-                            const nscoord* aSpacing = nsnull);
-    void DrawStringInternal(const PRUnichar *aString, PRUint32 aLength,
-                            nscoord aX, nscoord aY,
-                            PRInt32 aFontID = -1,
-                            const nscoord* aSpacing = nsnull);
-
-#ifdef MOZ_MATHML
-    /**
-     * Returns metrics (in app units) of a Unicode character string
-     */
-    nsresult GetBoundingMetricsInternal(const PRUnichar*   aString,
-                                        PRUint32           aLength,
-                                        nsBoundingMetrics& aBoundingMetrics,
-                                        PRInt32*           aFontID = nsnull);
-#endif /* MOZ_MATHML */
+    nscoord GetWidthInternal(const char *aString, PRUint32 aLength);
+    nscoord GetWidthInternal(const PRUnichar *aString, PRUint32 aLength);
 
     nsRefPtr<gfxContext> mThebes;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;

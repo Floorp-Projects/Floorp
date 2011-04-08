@@ -1705,7 +1705,7 @@ nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
   PRInt32 range = aEndInx - aStartInx;
   if ((range == 1) || (range == 2 && NS_IS_HIGH_SURROGATE(aText[aStartInx]))) {
     aIndex   = aStartInx + aBaseInx;
-    aRendContext->GetWidth(aText, aIndex, aTextWidth);
+    aTextWidth = aRendContext->GetWidth(aText, aIndex);
     return PR_TRUE;
   }
 
@@ -1715,8 +1715,7 @@ nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
   if (NS_IS_HIGH_SURROGATE(aText[inx-1]))
     inx++;
 
-  PRInt32 textWidth = 0;
-  aRendContext->GetWidth(aText, inx, textWidth);
+  PRInt32 textWidth = aRendContext->GetWidth(aText, inx);
 
   PRInt32 fullWidth = aBaseWidth + textWidth;
   if (fullWidth == aCursorPos) {
@@ -2840,9 +2839,7 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
   }
 #endif // IBMBIDI
   aContext->SetTextRunRTL(PR_FALSE);
-  nscoord width;
-  aContext->GetWidth(aString, aLength, width);
-  return width;
+  return aContext->GetWidth(aString, aLength);
 }
 
 /* static */ nscoord
