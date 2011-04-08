@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
-#include "nsRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"

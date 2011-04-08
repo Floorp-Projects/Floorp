@@ -58,7 +58,6 @@
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsStyleContext.h"
-#include "nsRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
 #include "nsITimer.h"

@@ -44,8 +44,7 @@
 #include "nsISupports.h"
 #include "nsMargin.h"
 #include "nsRect.h"
-// for MOZ_MATHML
-#include "nsRenderingContext.h" //to get struct nsBoundingMetrics
+#include "nsBoundingMetrics.h" // for MOZ_MATHML
 
 //----------------------------------------------------------------------
 

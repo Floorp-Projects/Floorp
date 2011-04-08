@@ -38,6 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsRenderingContext.h"
+#include "nsBoundingMetrics.h"
+#include "nsRegion.h"
 
 // XXXTodo: rename FORM_TWIPS to FROM_APPUNITS
 #define FROM_TWIPS(_x)  ((gfxFloat)((_x)/(mP2A)))

@@ -43,6 +43,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsReadableUtils.h"
+#include "nsRenderingContext.h"
 
 #include "prprf.h"
 

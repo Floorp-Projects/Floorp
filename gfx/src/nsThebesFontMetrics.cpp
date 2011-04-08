@@ -36,7 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsThebesFontMetrics.h"    
+#include "nsThebesFontMetrics.h"
+#include "nsBoundingMetrics.h"
+#include "nsThebesDeviceContext.h"
 #include "nsFont.h"
 
 #include "nsString.h"

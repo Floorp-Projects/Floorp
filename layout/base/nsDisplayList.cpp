@@ -45,6 +45,7 @@
 #include "nsDisplayList.h"
 
 #include "nsCSSRendering.h"
+#include "nsRenderingContext.h"
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
 #include "nsRegion.h"

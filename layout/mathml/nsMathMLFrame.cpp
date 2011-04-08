@@ -57,6 +57,7 @@
 #include "nsStyleUtil.h"
 #include "nsDisplayList.h"
 #include "nsAttrName.h"
+#include "nsRenderingContext.h"
 
 eMathMLFrameType
 nsMathMLFrame::GetMathMLFrameType()

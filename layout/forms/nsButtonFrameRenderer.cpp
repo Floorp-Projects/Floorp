@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsButtonFrameRenderer.h"
-#include "nsRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"

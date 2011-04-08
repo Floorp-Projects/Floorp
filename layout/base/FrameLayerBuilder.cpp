@@ -47,6 +47,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "gfxUtils.h"
 #include "nsImageFrame.h"
+#include "nsRenderingContext.h"
 
 #ifdef DEBUG
 #include <stdio.h>

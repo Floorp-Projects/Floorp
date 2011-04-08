@@ -39,7 +39,6 @@
 #include "nsCSSRendering.h"
 #include "nsIDocument.h"
 #include "nsPageFrame.h"
-#include "nsRenderingContext.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMEvent.h"
 #include "nsStyleConsts.h"

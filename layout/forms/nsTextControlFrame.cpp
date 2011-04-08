@@ -68,6 +68,7 @@
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIComponentManager.h"
