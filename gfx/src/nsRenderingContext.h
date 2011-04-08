@@ -146,22 +146,22 @@ public:
 
     NS_INLINE_DECL_REFCOUNTING(nsRenderingContext)
 
-    nsresult Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface);
-    nsresult Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
+    void Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface);
+    void Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
 
     already_AddRefed<nsIDeviceContext> GetDeviceContext();
     gfxContext *ThebesContext() { return mThebes; }
 
     // Graphics state
 
-    nsresult PushState(void);
-    nsresult PopState(void);
-    nsresult SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
-    nsresult SetClipRegion(const nsIntRegion& aRegion, nsClipCombine aCombine);
-    nsresult SetLineStyle(nsLineStyle aLineStyle);
-    nsresult SetColor(nscolor aColor);
-    nsresult Translate(const nsPoint& aPt);
-    nsresult Scale(float aSx, float aSy);
+    void PushState(void);
+    void PopState(void);
+    void SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
+    void SetClipRegion(const nsIntRegion& aRegion, nsClipCombine aCombine);
+    void SetLineStyle(nsLineStyle aLineStyle);
+    void SetColor(nscolor aColor);
+    void Translate(const nsPoint& aPt);
+    void Scale(float aSx, float aSy);
 
     class AutoPushTranslation {
         nsRenderingContext* mCtx;
@@ -178,34 +178,32 @@ public:
 
     // Shapes
 
-    nsresult DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt);
-    nsresult DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
-    nsresult DrawRect(const nsRect& aRect);
-    nsresult DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    nsresult DrawEllipse(nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight);
-    nsresult DrawEllipse(const nsRect& aRect);
+    void DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt);
+    void DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
+    void DrawRect(const nsRect& aRect);
+    void DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+    void DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+    void DrawEllipse(const nsRect& aRect);
 
-    nsresult FillRect(const nsRect& aRect);
-    nsresult FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
-    nsresult FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+    void FillRect(const nsRect& aRect);
+    void FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+    void FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
 
-    nsresult FillEllipse(const nsRect& aRect);
-    nsresult FillEllipse(nscoord aX, nscoord aY,
-                         nscoord aWidth, nscoord aHeight);
+    void FillEllipse(const nsRect& aRect);
+    void FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
-    nsresult InvertRect(const nsRect& aRect);
-    nsresult InvertRect(nscoord aX, nscoord aY,
-                        nscoord aWidth, nscoord aHeight);
+    void InvertRect(const nsRect& aRect);
+    void InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
     // Text
 
-    nsresult SetFont(const nsFont& aFont, nsIAtom* aLanguage,
-                     gfxUserFontSet *aUserFontSet);
-    nsresult SetFont(const nsFont& aFont, gfxUserFontSet *aUserFontSet);
-    nsresult SetFont(nsIFontMetrics *aFontMetrics);
+    void SetFont(const nsFont& aFont, nsIAtom* aLanguage,
+                 gfxUserFontSet *aUserFontSet);
+    void SetFont(const nsFont& aFont, gfxUserFontSet *aUserFontSet);
+    void SetFont(nsIFontMetrics *aFontMetrics);
     already_AddRefed<nsIFontMetrics> GetFontMetrics();
-    nsresult SetRightToLeftText(PRBool aIsRTL);
+
+    void SetRightToLeftText(PRBool aIsRTL);
     void SetTextRunRTL(PRBool aIsRTL);
 
     nsresult GetWidth(const nsString& aString, nscoord &aWidth,
@@ -225,16 +223,16 @@ public:
                                 PRInt32*           aFontID = nsnull);
 #endif
 
-    nsresult DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                        PRInt32 aFontID = -1,
-                        const nscoord* aSpacing = nsnull);
-    nsresult DrawString(const char *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        const nscoord* aSpacing = nsnull);
-    nsresult DrawString(const PRUnichar *aString, PRUint32 aLength,
-                        nscoord aX, nscoord aY,
-                        PRInt32 aFontID = -1,
-                        const nscoord* aSpacing = nsnull);
+    void DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                    PRInt32 aFontID = -1,
+                    const nscoord* aSpacing = nsnull);
+    void DrawString(const char *aString, PRUint32 aLength,
+                    nscoord aX, nscoord aY,
+                    const nscoord* aSpacing = nsnull);
+    void DrawString(const PRUnichar *aString, PRUint32 aLength,
+                    nscoord aX, nscoord aY,
+                    PRInt32 aFontID = -1,
+                    const nscoord* aSpacing = nsnull);
 
 protected:
     PRInt32 GetMaxChunkLength();
@@ -244,13 +242,13 @@ protected:
     nsresult GetWidthInternal(const PRUnichar *aString, PRUint32 aLength,
                               nscoord &aWidth, PRInt32 *aFontID = nsnull);
 
-    nsresult DrawStringInternal(const char *aString, PRUint32 aLength,
-                                nscoord aX, nscoord aY,
-                                const nscoord* aSpacing = nsnull);
-    nsresult DrawStringInternal(const PRUnichar *aString, PRUint32 aLength,
-                                nscoord aX, nscoord aY,
-                                PRInt32 aFontID = -1,
-                                const nscoord* aSpacing = nsnull);
+    void DrawStringInternal(const char *aString, PRUint32 aLength,
+                            nscoord aX, nscoord aY,
+                            const nscoord* aSpacing = nsnull);
+    void DrawStringInternal(const PRUnichar *aString, PRUint32 aLength,
+                            nscoord aX, nscoord aY,
+                            PRInt32 aFontID = -1,
+                            const nscoord* aSpacing = nsnull);
 
 #ifdef MOZ_MATHML
     /**

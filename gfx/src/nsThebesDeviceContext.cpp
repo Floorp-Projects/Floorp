@@ -734,14 +734,12 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
         nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
-        if (surface)
-            rv = pContext->Init(this, surface);
-        else
-            rv = NS_ERROR_FAILURE;
-
-        if (NS_SUCCEEDED(rv)) {
+        if (surface) {
+            pContext->Init(this, surface);
             aContext = pContext;
             NS_ADDREF(aContext);
+        } else {
+            rv = NS_ERROR_FAILURE;
         }
     }
 
@@ -757,15 +755,13 @@ nsThebesDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
     nsRefPtr<nsRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
-        if (mPrintingSurface)
-            rv = pContext->Init(this, mPrintingSurface);
-        else
-            rv = NS_ERROR_FAILURE;
-
-        if (NS_SUCCEEDED(rv)) {
+        if (mPrintingSurface) {
+            pContext->Init(this, mPrintingSurface);
             pContext->Scale(mPrintingScale, mPrintingScale);
             aContext = pContext;
             NS_ADDREF(aContext);
+        } else {
+            rv = NS_ERROR_FAILURE;
         }
     }
 
