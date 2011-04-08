@@ -912,6 +912,8 @@ Execute(JSContext *cx, JSObject &chain, JSScript *script,
         JSStackFrame *prev, uintN flags, Value *result)
 {
     JS_ASSERT_IF(prev, !prev->isDummyFrame());
+    JS_ASSERT_IF(prev, prev->compartment() == cx->compartment);
+    JS_ASSERT(script->compartment == cx->compartment);
 
     if (script->isEmpty()) {
         if (result)
@@ -1335,26 +1337,6 @@ InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fv
 
     *rval = args.rval();
     return ok;
-}
-
-bool
-DirectEval(JSContext *cx, uint32 argc, Value *vp)
-{
-    JS_ASSERT(vp == cx->regs->sp - argc - 2);
-    JS_ASSERT(vp[0].isObject());
-    JS_ASSERT(vp[0].toObject().isFunction());
-
-    JSStackFrame *caller = cx->fp();
-    JS_ASSERT(caller->isScriptFrame());
-    JS_ASSERT(IsBuiltinEvalForScope(&caller->scopeChain(), vp[0]));
-    AutoFunctionCallProbe callProbe(cx, vp[0].toObject().getFunctionPrivate(), caller->script());
-
-    JSObject *scopeChain =
-        GetScopeChainFast(cx, caller, JSOP_EVAL, JSOP_EVAL_LENGTH + JSOP_LINENO_LENGTH);
-    if (!scopeChain || !EvalKernel(cx, argc, vp, DIRECT_EVAL, caller, *scopeChain))
-        return false;
-    cx->regs->sp = vp + 1;
-    return true;
 }
 
 bool
@@ -4632,8 +4614,10 @@ BEGIN_CASE(JSOP_EVAL)
     if (!IsBuiltinEvalForScope(&regs.fp->scopeChain(), *vp))
         goto call_using_invoke;
 
-    if (!DirectEval(cx, argc, vp))
+    if (!DirectEval(cx, CallArgsFromVp(argc, vp)))
         goto error;
+
+    regs.sp = vp + 1;
 }
 END_CASE(JSOP_EVAL)
 

@@ -1404,6 +1404,7 @@ class Anchor: AnchorPermitted<T> {
     explicit Anchor(T t) { hold = t; }
     inline ~Anchor();
     T &get() { return hold; }
+    const T &get() const { return hold; }
     void set(const T &t) { hold = t; }
     void clear() { hold = 0; }
   private:

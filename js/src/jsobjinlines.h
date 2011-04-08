@@ -860,6 +860,35 @@ JSObject::isCallable()
     return isFunction() || getClass()->call;
 }
 
+inline JSPrincipals *
+JSObject::principals(JSContext *cx)
+{
+    JSPrincipals *compPrincipals = compartment()->principals;
+#ifdef DEBUG
+    if (!compPrincipals)
+        return NULL;
+
+    /*
+     * Assert that the compartment's principals are either the same or
+     * equivalent to those we would find through security hooks.
+     */
+    JSSecurityCallbacks *cb = JS_GetSecurityCallbacks(cx);
+    if (JSObjectPrincipalsFinder finder = cb ? cb->findObjectPrincipals : NULL) {
+        JSPrincipals *hookPrincipals = finder(cx, this);
+        JS_ASSERT(hookPrincipals == compPrincipals ||
+                  (hookPrincipals->subsume(hookPrincipals, compPrincipals) &&
+                   compPrincipals->subsume(compPrincipals, hookPrincipals)));
+    }
+#endif
+    return compPrincipals;
+}
+
+inline JSPrincipals *
+JSStackFrame::principals(JSContext *cx) const
+{
+    return scopeChain().principals(cx);
+}
+
 static inline bool
 js_IsCallable(const js::Value &v)
 {
