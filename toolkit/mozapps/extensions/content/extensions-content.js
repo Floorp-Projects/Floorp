@@ -51,6 +51,7 @@ var gIoService = Components.classes["@mozilla.org/network/io-service;1"]
 function createInstallTrigger(window) {
   let chromeObject = {
     window: window,
+    url: window.document.documentURIObject,
 
     __exposedProps__: {
       SKIN: "r",
@@ -76,7 +77,7 @@ function createInstallTrigger(window) {
      */
     enabled: function() {
       return sendSyncMessage(MSG_INSTALL_ENABLED, {
-        mimetype: "application/x-xpinstall", referer: this.window.location.href
+        mimetype: "application/x-xpinstall", referer: this.url.spec
       })[0];
     },
 
@@ -97,7 +98,7 @@ function createInstallTrigger(window) {
       var params = {
         installerId: this.installerId,
         mimetype: "application/x-xpinstall",
-        referer: this.window.location.href,
+        referer: this.url.spec,
         uris: [],
         hashes: [],
         names: [],
@@ -163,8 +164,7 @@ function createInstallTrigger(window) {
      * @return A resolved, absolute nsURI object.
      */
     resolveURL: function(aUrl) {
-      return gIoService.newURI(aUrl, null,
-                               this.window.document.documentURIObject);
+      return gIoService.newURI(aUrl, null, this.url);
     },
 
     /**
@@ -175,7 +175,7 @@ function createInstallTrigger(window) {
     checkLoadURIFromScript: function(aUri) {
       var secman = Cc["@mozilla.org/scriptsecuritymanager;1"].
                    getService(Ci.nsIScriptSecurityManager);
-      var principal = this.window.content.document.nodePrincipal;
+      var principal = this.window.document.nodePrincipal;
       try {
         secman.checkLoadURIWithPrincipal(principal, aUri,
           Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
@@ -242,7 +242,7 @@ InstallTriggerManager.prototype = {
       // alive for as long as the tab is alive).
 
       delete window.wrappedJSObject.InstallTrigger;
-      var installTrigger = createInstallTrigger(window.wrappedJSObject);
+      var installTrigger = createInstallTrigger(window);
       window.wrappedJSObject.InstallTrigger = installTrigger;
       return installTrigger;
     });
