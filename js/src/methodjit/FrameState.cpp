@@ -2247,8 +2247,12 @@ FrameState::uncopy(FrameEntry *original)
         if (fe->data.inFPRegister())
             regstate(fe->data.fpreg()).reassociate(fe);
     } else {
+        if (fe->type.inRegister())
+            pinReg(fe->type.reg());
         if (original->data.inMemory() && !fe->data.synced())
             tempRegForData(original);
+        if (fe->type.inRegister())
+            unpinReg(fe->type.reg());
         fe->data.inherit(original->data);
         if (fe->data.inRegister())
             regstate(fe->data.reg()).reassociate(fe);
