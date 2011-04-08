@@ -42,7 +42,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "gfxContext.h"
@@ -120,8 +120,8 @@ public:
     void SetFont(const nsFont& aFont, nsIAtom* aLanguage,
                  gfxUserFontSet *aUserFontSet);
     void SetFont(const nsFont& aFont, gfxUserFontSet *aUserFontSet);
-    void SetFont(nsIFontMetrics *aFontMetrics);
-    nsIFontMetrics *FontMetrics() { return mFontMetrics; } // may be null
+    void SetFont(nsFontMetrics *aFontMetrics);
+    nsFontMetrics *FontMetrics() { return mFontMetrics; } // may be null
 
     void SetRightToLeftText(PRBool aIsRTL);
     void SetTextRunRTL(PRBool aIsRTL);
@@ -151,7 +151,7 @@ protected:
 
     nsRefPtr<gfxContext> mThebes;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
-    nsCOMPtr<nsIFontMetrics> mFontMetrics;
+    nsRefPtr<nsFontMetrics> mFontMetrics;
 
     double mP2A; // cached app units per device pixel value
 };
