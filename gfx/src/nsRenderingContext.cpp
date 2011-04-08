@@ -82,14 +82,14 @@ static PRInt32 FindSafeLength(const char *aString, PRUint32 aLength,
 //////////////////////////////////////////////////////////////////////
 //// nsRenderingContext
 
-nsresult
+void
 nsRenderingContext::Init(nsIDeviceContext* aContext,
                          gfxASurface *aThebesSurface)
 {
-    return Init(aContext, new gfxContext(aThebesSurface));
+    Init(aContext, new gfxContext(aThebesSurface));
 }
 
-nsresult
+void
 nsRenderingContext::Init(nsIDeviceContext* aContext,
                          gfxContext *aThebesContext)
 {
@@ -98,8 +98,6 @@ nsRenderingContext::Init(nsIDeviceContext* aContext,
 
     mThebes->SetLineWidth(1.0);
     mP2A = mDeviceContext->AppUnitsPerDevPixel();
-
-    return NS_OK;
 }
 
 already_AddRefed<nsIDeviceContext>
@@ -109,25 +107,23 @@ nsRenderingContext::GetDeviceContext()
     return mDeviceContext.get();
 }
 
-nsresult
+void
 nsRenderingContext::PushState()
 {
     mThebes->Save();
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::PopState()
 {
     mThebes->Restore();
-    return NS_OK;
 }
 
 //
 // clipping
 //
 
-nsresult
+void
 nsRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
     if (aCombine == nsClipCombine_kReplace) {
@@ -148,11 +144,9 @@ nsRenderingContext::SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
     }
 
     mThebes->Clip();
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::SetClipRegion(const nsIntRegion& aRegion,
                                   nsClipCombine aCombine)
 {
@@ -176,17 +170,10 @@ nsRenderingContext::SetClipRegion(const nsIntRegion& aRegion,
                            PR_TRUE);
     }
     mThebes->Clip();
-
     mThebes->SetMatrix(mat);
-
-    return NS_OK;
 }
 
-//
-// other junk
-//
-
-nsresult
+void
 nsRenderingContext::SetLineStyle(nsLineStyle aLineStyle)
 {
     switch (aLineStyle) {
@@ -205,41 +192,37 @@ nsRenderingContext::SetLineStyle(nsLineStyle aLineStyle)
             NS_ERROR("SetLineStyle: Invalid line style");
             break;
     }
-    return NS_OK;
 }
 
 
-nsresult
+void
 nsRenderingContext::SetColor(nscolor aColor)
 {
     /* This sets the color assuming the sRGB color space, since that's
      * what all CSS colors are defined to be in by the spec.
      */
     mThebes->SetColor(gfxRGBA(aColor));
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::Translate(const nsPoint& aPt)
 {
-    mThebes->Translate (gfxPoint(FROM_TWIPS(aPt.x), FROM_TWIPS(aPt.y)));
-    return NS_OK;
+    mThebes->Translate(gfxPoint(FROM_TWIPS(aPt.x), FROM_TWIPS(aPt.y)));
 }
 
-nsresult
+void
 nsRenderingContext::Scale(float aSx, float aSy)
 {
-    mThebes->Scale (aSx, aSy);
-    return NS_OK;
+    mThebes->Scale(aSx, aSy);
 }
 
-nsresult
+void
 nsRenderingContext::DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt)
 {
-    return DrawLine(aStartPt.x, aStartPt.y, aEndPt.x, aEndPt.y);
+    DrawLine(aStartPt.x, aStartPt.y, aEndPt.x, aEndPt.y);
 }
 
-nsresult
+void
 nsRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
                              nscoord aX1, nscoord aY1)
 {
@@ -279,26 +262,21 @@ nsRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
         mThebes->Line(p0, p1);
         mThebes->Stroke();
     }
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::DrawRect(const nsRect& aRect)
 {
     mThebes->NewPath();
     mThebes->Rectangle(GFX_RECT_FROM_TWIPS_RECT(aRect), PR_TRUE);
     mThebes->Stroke();
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::DrawRect(nscoord aX, nscoord aY,
                              nscoord aWidth, nscoord aHeight)
 {
     DrawRect(nsRect(aX, aY, aWidth, aHeight));
-    return NS_OK;
 }
 
 
@@ -363,7 +341,7 @@ ConditionRect(gfxRect& r) {
     return PR_TRUE;
 }
 
-nsresult
+void
 nsRenderingContext::FillRect(const nsRect& aRect)
 {
     gfxRect r(GFX_RECT_FROM_TWIPS_RECT(aRect));
@@ -382,7 +360,7 @@ nsRenderingContext::FillRect(const nsRect& aRect)
         r = mat.Transform(r);
 
         if (!ConditionRect(r))
-            return NS_OK;
+            return;
 
         mThebes->IdentityMatrix();
         mThebes->NewPath();
@@ -390,51 +368,44 @@ nsRenderingContext::FillRect(const nsRect& aRect)
         mThebes->Rectangle(r, PR_TRUE);
         mThebes->Fill();
         mThebes->SetMatrix(mat);
-
-        return NS_OK;
     }
 
     mThebes->NewPath();
     mThebes->Rectangle(r, PR_TRUE);
     mThebes->Fill();
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::FillRect(nscoord aX, nscoord aY,
                              nscoord aWidth, nscoord aHeight)
 {
     FillRect(nsRect(aX, aY, aWidth, aHeight));
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::InvertRect(const nsRect& aRect)
 {
     gfxContext::GraphicsOperator lastOp = mThebes->CurrentOperator();
 
     mThebes->SetOperator(gfxContext::OPERATOR_XOR);
-    nsresult rv = FillRect(aRect);
+    FillRect(aRect);
     mThebes->SetOperator(lastOp);
-
-    return rv;
 }
 
-nsresult
+void
 nsRenderingContext::InvertRect(nscoord aX, nscoord aY,
                                nscoord aWidth, nscoord aHeight)
 {
-    return InvertRect(nsRect(aX, aY, aWidth, aHeight));
+    InvertRect(nsRect(aX, aY, aWidth, aHeight));
 }
 
-nsresult
+void
 nsRenderingContext::DrawEllipse(const nsRect& aRect)
 {
-    return DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
+    DrawEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-nsresult
+void
 nsRenderingContext::DrawEllipse(nscoord aX, nscoord aY,
                                 nscoord aWidth, nscoord aHeight)
 {
@@ -444,17 +415,15 @@ nsRenderingContext::DrawEllipse(nscoord aX, nscoord aY,
                      gfxSize(FROM_TWIPS(aWidth),
                              FROM_TWIPS(aHeight)));
     mThebes->Stroke();
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::FillEllipse(const nsRect& aRect)
 {
-    return FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
+    FillEllipse(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-nsresult
+void
 nsRenderingContext::FillEllipse(nscoord aX, nscoord aY,
                                 nscoord aWidth, nscoord aHeight)
 {
@@ -464,18 +433,13 @@ nsRenderingContext::FillEllipse(nscoord aX, nscoord aY,
                      gfxSize(FROM_TWIPS(aWidth),
                              FROM_TWIPS(aHeight)));
     mThebes->Fill();
-
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoints)
 {
     if (aNumPoints == 0)
-        return NS_OK;
-
-    if (aNumPoints == 4) {
-    }
+        return;
 
     nsAutoArrayPtr<gfxPoint> pxPoints(new gfxPoint[aNumPoints]);
 
@@ -487,16 +451,14 @@ nsRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoints)
     mThebes->NewPath();
     mThebes->Polygon(pxPoints, aNumPoints);
     mThebes->Fill();
-
-    return NS_OK;
 }
 
 // text
 
-nsresult
+void
 nsRenderingContext::SetRightToLeftText(PRBool aIsRTL)
 {
-    return mFontMetrics->SetRightToLeftText(aIsRTL);
+    mFontMetrics->SetRightToLeftText(aIsRTL);
 }
 
 void
@@ -505,7 +467,7 @@ nsRenderingContext::SetTextRunRTL(PRBool aIsRTL)
     mFontMetrics->SetTextRunRTL(aIsRTL);
 }
 
-nsresult
+void
 nsRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLanguage,
                             gfxUserFontSet *aUserFontSet)
 {
@@ -513,10 +475,9 @@ nsRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLanguage,
     mDeviceContext->GetMetricsFor(aFont, aLanguage, aUserFontSet,
                                   *getter_AddRefs(newMetrics));
     mFontMetrics = reinterpret_cast<nsIThebesFontMetrics*>(newMetrics.get());
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::SetFont(const nsFont& aFont,
                             gfxUserFontSet *aUserFontSet)
 {
@@ -524,14 +485,12 @@ nsRenderingContext::SetFont(const nsFont& aFont,
     mDeviceContext->GetMetricsFor(aFont, nsnull, aUserFontSet,
                                   *getter_AddRefs(newMetrics));
     mFontMetrics = reinterpret_cast<nsIThebesFontMetrics*>(newMetrics.get());
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
 {
     mFontMetrics = static_cast<nsIThebesFontMetrics*>(aFontMetrics);
-    return NS_OK;
 }
 
 already_AddRefed<nsIFontMetrics>
@@ -575,14 +534,6 @@ nsresult
 nsRenderingContext::GetWidth(const char* aString, nscoord& aWidth)
 {
     return GetWidth(aString, strlen(aString), aWidth);
-}
-
-nsresult
-nsRenderingContext::DrawString(const nsString& aString, nscoord aX, nscoord aY,
-                               PRInt32 aFontID, const nscoord* aSpacing)
-{
-    return DrawString(aString.get(), aString.Length(), aX, aY,
-                      aFontID, aSpacing);
 }
 
 nsresult
@@ -671,7 +622,14 @@ nsRenderingContext::GetBoundingMetrics(const PRUnichar*   aString,
 }
 #endif
 
-nsresult
+void
+nsRenderingContext::DrawString(const nsString& aString, nscoord aX, nscoord aY,
+                               PRInt32 aFontID, const nscoord* aSpacing)
+{
+    DrawString(aString.get(), aString.Length(), aX, aY, aFontID, aSpacing);
+}
+
+void
 nsRenderingContext::DrawString(const char *aString, PRUint32 aLength,
                                nscoord aX, nscoord aY,
                                const nscoord* aSpacing)
@@ -679,24 +637,21 @@ nsRenderingContext::DrawString(const char *aString, PRUint32 aLength,
     PRUint32 maxChunkLength = GetMaxChunkLength();
     while (aLength > 0) {
         PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
-        nsresult rv = DrawStringInternal(aString, len, aX, aY);
-        if (NS_FAILED(rv))
-            return rv;
+        DrawStringInternal(aString, len, aX, aY);
         aLength -= len;
 
         if (aLength > 0) {
             nscoord width;
-            rv = GetWidthInternal(aString, len, width);
+            nsresult rv = GetWidthInternal(aString, len, width);
             if (NS_FAILED(rv))
-                return rv;
+                return;
             aX += width;
             aString += len;
         }
     }
-    return NS_OK;
 }
 
-nsresult
+void
 nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
                                nscoord aX, nscoord aY,
                                PRInt32 aFontID,
@@ -704,7 +659,8 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
 {
     PRUint32 maxChunkLength = GetMaxChunkLength();
     if (aLength <= maxChunkLength) {
-        return DrawStringInternal(aString, aLength, aX, aY, aFontID, aSpacing);
+        DrawStringInternal(aString, aLength, aX, aY, aFontID, aSpacing);
+        return;
     }
 
     PRBool isRTL = mFontMetrics->GetRightToLeftText();
@@ -718,7 +674,7 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
         } else {
             nsresult rv = GetWidth(aString, aLength, totalWidth);
             if (NS_FAILED(rv))
-                return rv;
+                return;
         }
         aX += totalWidth;
     }
@@ -733,15 +689,13 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
         } else {
             nsresult rv = GetWidthInternal(aString, len, width);
             if (NS_FAILED(rv))
-                return rv;
+                return;
         }
 
         if (isRTL) {
             aX -= width;
         }
-        nsresult rv = DrawStringInternal(aString, len, aX, aY, aFontID, aSpacing);
-        if (NS_FAILED(rv))
-            return rv;
+        DrawStringInternal(aString, len, aX, aY, aFontID, aSpacing);
         aLength -= len;
         if (!isRTL) {
             aX += width;
@@ -751,7 +705,6 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
             aSpacing += len;
         }
     }
-    return NS_OK;
 }
 
 nsresult
@@ -790,21 +743,20 @@ nsRenderingContext::GetBoundingMetricsInternal(const PRUnichar*   aString,
 }
 #endif // MOZ_MATHML
 
-nsresult
+void
 nsRenderingContext::DrawStringInternal(const char *aString, PRUint32 aLength,
                                        nscoord aX, nscoord aY,
                                        const nscoord* aSpacing)
 {
-    return mFontMetrics->DrawString(aString, aLength, aX, aY, aSpacing, this);
+    mFontMetrics->DrawString(aString, aLength, aX, aY, aSpacing, this);
 }
 
-nsresult
+void
 nsRenderingContext::DrawStringInternal(const PRUnichar *aString,
                                        PRUint32 aLength,
                                        nscoord aX, nscoord aY,
                                        PRInt32 aFontID,
                                        const nscoord* aSpacing)
 {
-    return mFontMetrics->DrawString(aString, aLength, aX, aY, aFontID,
-                                    aSpacing, this);
+    mFontMetrics->DrawString(aString, aLength, aX, aY, aFontID, aSpacing, this);
 }
