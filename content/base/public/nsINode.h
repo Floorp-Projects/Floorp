@@ -277,8 +277,8 @@ private:
 
 // IID for the nsINode interface
 #define NS_INODE_IID \
-{ 0x2a8dc794, 0x9178, 0x400e, \
-  { 0x81, 0xff, 0x55, 0x30, 0x30, 0xb6, 0x74, 0x3b } }
+{ 0x4776aa9a, 0xa886, 0x40c9, \
+ { 0xae, 0x4c, 0x4d, 0x92, 0xe2, 0xf0, 0xd9, 0x61 } }
 
 /**
  * An internal interface that abstracts some DOMNode-related parts that both
@@ -688,7 +688,6 @@ public:
   /**
    * Get the parent nsIContent for this node.
    * @return the parent, or null if no parent or the parent is not an nsIContent
-   * Implemented in nsIContent.h
    */
   nsIContent* GetParent() const {
     return NS_LIKELY(GetBoolFlag(ParentIsContent)) ?
