@@ -179,7 +179,6 @@
 #include "nsIDOMStyleSheetList.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSRule.h"
-#include "nsICSSRule.h"
 #include "nsICSSRuleList.h"
 #include "nsIDOMRect.h"
 #include "nsIDOMRGBColor.h"

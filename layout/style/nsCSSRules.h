@@ -43,7 +43,6 @@
 #ifndef nsCSSRules_h_
 #define nsCSSRules_h_
 
-#include "Rule.h"
 #include "mozilla/css/GroupRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
@@ -90,10 +89,10 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // nsICSSRule methods
+  // Rule methods
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); //override GroupRule
   virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual already_AddRefed<Rule> Clone() const;
   virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
   {
     *aResult = NS_OK;
@@ -134,9 +133,9 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // nsICSSRule methods
+  // Rule methods
   virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual already_AddRefed<Rule> Clone() const;
   virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
   {
     *aResult = NS_OK;
@@ -234,11 +233,11 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // nsICSSRule methods
+  // Rule methods
   DECL_STYLE_RULE_INHERIT
 
   virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -298,9 +297,9 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // nsICSSRule methods
+  // Rule methods
   virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual already_AddRefed<Rule> Clone() const;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -361,10 +360,10 @@ public:
   {
     mKeys.SwapElements(aKeys);
   }
-
+private:
   nsCSSKeyframeRule(const nsCSSKeyframeRule& aCopy);
   ~nsCSSKeyframeRule();
-
+public:
   NS_DECL_ISUPPORTS
 
   // nsIStyleRule methods
@@ -372,10 +371,10 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // nsICSSRule methods
+  // Rule methods
   DECL_STYLE_RULE_INHERIT
   virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -403,9 +402,10 @@ public:
     : mName(aName)
   {
   }
+private:
   nsCSSKeyframesRule(const nsCSSKeyframesRule& aCopy);
   ~nsCSSKeyframesRule();
-
+public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIStyleRule methods
@@ -413,9 +413,9 @@ public:
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 #endif
 
-  // nsICSSRule methods
+  // Rule methods
   virtual PRInt32 GetType() const;
-  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual already_AddRefed<mozilla::css::Rule> Clone() const;
   virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
   {
     *aResult = NS_OK;
