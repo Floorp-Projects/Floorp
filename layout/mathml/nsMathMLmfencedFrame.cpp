@@ -45,7 +45,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 
 #include "nsMathMLmfencedFrame.h"
@@ -467,7 +467,7 @@ GetCharSpacing(nsMathMLChar*        aMathMLChar,
 // helper functions to perform the common task of formatting our chars
 /*static*/ nsresult
 nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
+                                 nsRenderingContext& aRenderingContext,
                                  nsMathMLChar*        aMathMLChar,
                                  nsOperatorFlags      aForm,
                                  PRInt32              aScriptLevel,
@@ -564,7 +564,7 @@ nsMathMLmfencedFrame::PlaceChar(nsMathMLChar*      aMathMLChar,
 
 static nscoord
 GetMaxCharWidth(nsPresContext*       aPresContext,
-                nsIRenderingContext* aRenderingContext,
+                nsRenderingContext* aRenderingContext,
                 nsMathMLChar*        aMathMLChar,
                 nsOperatorFlags      aForm,
                 PRInt32              aScriptLevel,
@@ -584,7 +584,7 @@ GetMaxCharWidth(nsPresContext*       aPresContext,
 }
 
 /* virtual */ nscoord
-nsMathMLmfencedFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext)
+nsMathMLmfencedFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext)
 {
   nscoord width = 0;
 

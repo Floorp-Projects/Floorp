@@ -109,7 +109,7 @@ class nsRefreshDriver;
 class imgIContainer;
 
 #ifdef MOZ_REFLOW_PERF
-class nsIRenderingContext;
+class nsRenderingContext;
 #endif
 
 enum nsWidgetType {

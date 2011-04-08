@@ -40,7 +40,7 @@
 #define NSTHEBESFONTMETRICS__H__
 
 #include "nsIThebesFontMetrics.h"
-#include "nsThebesRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsCOMPtr.h"
 #include "nsThebesDeviceContext.h"
 #include "nsIAtom.h"
@@ -83,10 +83,10 @@ public:
 
 
     virtual nsresult GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
-                              nsThebesRenderingContext *aContext);
+                              nsRenderingContext *aContext);
     virtual nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
                               nscoord& aWidth, PRInt32 *aFontID,
-                              nsThebesRenderingContext *aContext);
+                              nsRenderingContext *aContext);
 
     // Get the text dimensions for this string
     virtual nsresult GetTextDimensions(const PRUnichar* aString,
@@ -116,30 +116,30 @@ public:
     virtual nsresult DrawString(const char *aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 const nscoord* aSpacing,
-                                nsThebesRenderingContext *aContext);
+                                nsRenderingContext *aContext);
     virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
                                 PRInt32 aFontID,
                                 const nscoord* aSpacing,
-                                nsThebesRenderingContext *aContext)
+                                nsRenderingContext *aContext)
     {
       NS_ASSERTION(!aSpacing, "Spacing not supported here");
       return DrawString(aString, aLength, aX, aY, aContext, aContext);
     }
     virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
                                 nscoord aX, nscoord aY,
-                                nsIRenderingContext *aContext,
-                                nsIRenderingContext *aTextRunConstructionContext);
+                                nsRenderingContext *aContext,
+                                nsRenderingContext *aTextRunConstructionContext);
 
 #ifdef MOZ_MATHML
     // These two functions get the bounding metrics for this handle,
     // updating the aBoundingMetrics in app units.
     virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
-                                        nsThebesRenderingContext *aContext,
+                                        nsRenderingContext *aContext,
                                         nsBoundingMetrics &aBoundingMetrics);
     virtual nsresult GetBoundingMetrics(const PRUnichar *aString,
                                         PRUint32 aLength,
-                                        nsThebesRenderingContext *aContext,
+                                        nsRenderingContext *aContext,
                                         nsBoundingMetrics &aBoundingMetrics);
 #endif /* MOZ_MATHML */
 
@@ -162,7 +162,7 @@ protected:
 
     class AutoTextRun {
     public:
-        AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
+        AutoTextRun(nsThebesFontMetrics* aMetrics, nsRenderingContext* aRC,
                     const char* aString, PRInt32 aLength) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 reinterpret_cast<const PRUint8*>(aString), aLength,
@@ -170,7 +170,7 @@ protected:
                 aMetrics->mP2A,
                 ComputeFlags(aMetrics));
         }
-        AutoTextRun(nsThebesFontMetrics* aMetrics, nsIRenderingContext* aRC,
+        AutoTextRun(nsThebesFontMetrics* aMetrics, nsRenderingContext* aRC,
                     const PRUnichar* aString, PRInt32 aLength) {
             mTextRun = gfxTextRunCache::MakeTextRun(
                 aString, aLength, aMetrics->mFontGroup,

@@ -48,7 +48,7 @@
 #include "nsDOMError.h"
 #include "nsNodeInfoManager.h"
 
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsICanvasElementExternal.h"

@@ -45,7 +45,7 @@
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsIDocument.h"
@@ -737,7 +737,7 @@ nsImageFrame::EnsureIntrinsicSizeAndRatio(nsPresContext* aPresContext)
 }
 
 /* virtual */ nsSize
-nsImageFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+nsImageFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                           nsSize aCBSize, nscoord aAvailableWidth,
                           nsSize aMargin, nsSize aBorder, nsSize aPadding,
                           PRBool aShrinkWrap)
@@ -770,7 +770,7 @@ nsImageFrame::GetContinuationOffset() const
 }
 
 /* virtual */ nscoord
-nsImageFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsImageFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -783,7 +783,7 @@ nsImageFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsImageFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsImageFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -907,7 +907,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
                             PRInt32              aLength,
                             nscoord              aMaxWidth,
                             PRUint32&            aMaxFit,
-                            nsIRenderingContext& aContext)
+                            nsRenderingContext& aContext)
 {
   nscoord totalWidth = 0;
   nscoord spaceWidth;
@@ -967,7 +967,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
 // between words if a word would extend past the edge of the rectangle
 void
 nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
-                             nsIRenderingContext& aRenderingContext,
+                             nsRenderingContext& aRenderingContext,
                              const nsString&      aAltText,
                              const nsRect&        aRect)
 {
@@ -1046,7 +1046,7 @@ struct nsRecessedBorder : public nsStyleBorder {
 };
 
 void
-nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
+nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
                                  const nsRect&        aDirtyRect,
                                  imgIRequest*         aRequest,
                                  nsPoint              aPt)
@@ -1160,7 +1160,7 @@ nsImageFrame::DisplayAltFeedback(nsIRenderingContext& aRenderingContext,
   aRenderingContext.PopState();
 }
 
-static void PaintAltFeedback(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+static void PaintAltFeedback(nsIFrame* aFrame, nsRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt)
 {
   nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
@@ -1173,7 +1173,7 @@ static void PaintAltFeedback(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 }
 
 #ifdef NS_DEBUG
-static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+static void PaintDebugImageMap(nsIFrame* aFrame, nsRenderingContext* aCtx,
      const nsRect& aDirtyRect, nsPoint aPt) {
   nsImageFrame* f = static_cast<nsImageFrame*>(aFrame);
   nsRect inner = f->GetInnerArea() + aPt;
@@ -1189,7 +1189,7 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 
 void
 nsDisplayImage::Paint(nsDisplayListBuilder* aBuilder,
-                      nsIRenderingContext* aCtx) {
+                      nsRenderingContext* aCtx) {
   static_cast<nsImageFrame*>(mFrame)->
     PaintImage(*aCtx, ToReferenceFrame(), mVisibleRect, mImage,
                aBuilder->ShouldSyncDecodeImages()
@@ -1271,7 +1271,7 @@ nsImageFrame::GetContainer(LayerManager* aManager, imgIContainer* aImage)
 }
 
 void
-nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
+nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
                          const nsRect& aDirtyRect, imgIContainer* aImage,
                          PRUint32 aFlags)
 {
@@ -2092,7 +2092,7 @@ IsInAutoWidthTableCellForQuirk(nsIFrame *aFrame)
 }
 
 /* virtual */ void
-nsImageFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+nsImageFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                 nsIFrame::InlineMinWidthData *aData)
 {
 

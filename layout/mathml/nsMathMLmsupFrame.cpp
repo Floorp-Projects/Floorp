@@ -43,7 +43,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 
 #include "nsMathMLmsupFrame.h"
@@ -84,7 +84,7 @@ nsMathMLmsupFrame::TransmitAutomaticData()
 }
 
 /* virtual */ nsresult
-nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
+nsMathMLmsupFrame::Place(nsRenderingContext& aRenderingContext,
                          PRBool               aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -116,7 +116,7 @@ nsMathMLmsupFrame::Place(nsIRenderingContext& aRenderingContext,
 // mover uses this when movablelimits is set.
 nsresult
 nsMathMLmsupFrame::PlaceSuperScript(nsPresContext*      aPresContext,
-                                    nsIRenderingContext& aRenderingContext,
+                                    nsRenderingContext& aRenderingContext,
                                     PRBool               aPlaceOrigin,
                                     nsHTMLReflowMetrics& aDesiredSize,
                                     nsMathMLContainerFrame* aFrame,

@@ -41,7 +41,7 @@
 #include "inIFlasher.h"
 
 #include "nsIDOMElement.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 
 #include "nsCOMPtr.h"
 
@@ -62,11 +62,11 @@ public:
 
 protected:
   void DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                   nsIRenderingContext* aRenderContext,
+                   nsRenderingContext* aRenderContext,
                    PRBool aDrawBegin, PRBool aDrawEnd);
   void DrawLine(nscoord aX, nscoord aY, nscoord aLength,
                 PRBool aDir, PRBool aBounds,
-                nsIRenderingContext* aRenderContext);
+                nsRenderingContext* aRenderContext);
 
   nscolor mColor;
 

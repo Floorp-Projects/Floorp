@@ -701,7 +701,7 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
 }
 
 /* virtual */ nscoord
-nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nsIFrame* firstInFlow = GetFirstContinuation();
   if (firstInFlow != this)
@@ -778,7 +778,7 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nsIFrame* firstInFlow = GetFirstContinuation();
   if (firstInFlow != this)
@@ -2368,7 +2368,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         metrics.ascent = metrics.height;
       }
 
-      nsIRenderingContext *rc = aState.mReflowState.rendContext;
+      nsRenderingContext *rc = aState.mReflowState.rendContext;
       nsLayoutUtils::SetFontFromStyle(rc, GetStyleContext());
       nsCOMPtr<nsIFontMetrics> fm = rc->GetFontMetrics();
 

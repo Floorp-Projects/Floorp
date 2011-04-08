@@ -44,7 +44,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 
 #include "nsMathMLmsubFrame.h"
@@ -84,7 +84,7 @@ nsMathMLmsubFrame::TransmitAutomaticData()
 }
 
 /* virtual */ nsresult
-nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
+nsMathMLmsubFrame::Place (nsRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -116,7 +116,7 @@ nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
 // munder uses this when movablelimits is set.
 nsresult
 nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
-                                   nsIRenderingContext& aRenderingContext,
+                                   nsRenderingContext& aRenderingContext,
                                    PRBool               aPlaceOrigin,
                                    nsHTMLReflowMetrics& aDesiredSize,
                                    nsMathMLContainerFrame* aFrame,

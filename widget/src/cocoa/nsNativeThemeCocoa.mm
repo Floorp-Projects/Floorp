@@ -42,7 +42,7 @@
 
 #include "nsNativeThemeCocoa.h"
 #include "nsObjCExceptions.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsThemeConstants.h"
@@ -1494,7 +1494,7 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
 }
 
 NS_IMETHODIMP
-nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
+nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext, nsIFrame* aFrame,
                                          PRUint8 aWidgetType, const nsRect& aRect,
                                          const nsRect& aDirtyRect)
 {
@@ -2114,7 +2114,7 @@ static const PRInt32 kRegularScrollbarThumbMinSize = 22;
 static const PRInt32 kSmallScrollbarThumbMinSize = 19;
 
 NS_IMETHODIMP
-nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
+nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
                                          nsIFrame* aFrame,
                                          PRUint8 aWidgetType,
                                          nsIntSize* aResult,

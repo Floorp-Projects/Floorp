@@ -275,7 +275,7 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
 }
 
 /* static */ void
-nsMathMLFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
+nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
                                 nsIFontMetrics*      aFontMetrics,
                                 nscoord&             aRuleThickness)
 {
@@ -313,7 +313,7 @@ nsMathMLFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
 }
 
 /* static */ void
-nsMathMLFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
+nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
                              nsIFontMetrics*      aFontMetrics,
                              nscoord&             aAxisHeight)
 {
@@ -464,14 +464,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLBoundingMetrics", TYPE_MATHML_BOUNDING_METRICS)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLBoundingMetrics::Paint(nsDisplayListBuilder* aBuilder,
-                                           nsIRenderingContext* aCtx)
+                                           nsRenderingContext* aCtx)
 {
   aCtx->SetColor(NS_RGB(0,0,255));
   aCtx->DrawRect(mRect + ToReferenceFrame());
@@ -509,14 +509,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLBar", TYPE_MATHML_BAR)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
-                               nsIRenderingContext* aCtx)
+                               nsRenderingContext* aCtx)
 {
   // paint the bar with the current text color
   aCtx->SetColor(mFrame->GetStyleColor()->mColor);

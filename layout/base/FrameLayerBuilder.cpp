@@ -1891,7 +1891,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     }
   }
 
-  nsRefPtr<nsIRenderingContext> rc;
+  nsRefPtr<nsRenderingContext> rc;
   nsresult rv =
     presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
   if (NS_FAILED(rv))

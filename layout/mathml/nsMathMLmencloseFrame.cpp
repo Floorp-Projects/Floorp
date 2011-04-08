@@ -47,7 +47,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsWhitespaceTokenizer.h"
 
@@ -332,14 +332,14 @@ nsMathMLmencloseFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 /* virtual */ nsresult
-nsMathMLmencloseFrame::MeasureForWidth(nsIRenderingContext& aRenderingContext,
+nsMathMLmencloseFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
                                        nsHTMLReflowMetrics& aDesiredSize)
 {
   return PlaceInternal(aRenderingContext, PR_FALSE, aDesiredSize, PR_TRUE);
 }
 
 /* virtual */ nsresult
-nsMathMLmencloseFrame::Place(nsIRenderingContext& aRenderingContext,
+nsMathMLmencloseFrame::Place(nsRenderingContext& aRenderingContext,
                              PRBool               aPlaceOrigin,
                              nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -347,7 +347,7 @@ nsMathMLmencloseFrame::Place(nsIRenderingContext& aRenderingContext,
 }
 
 /* virtual */ nsresult
-nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
+nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
                                      PRBool               aPlaceOrigin,
                                      nsHTMLReflowMetrics& aDesiredSize,
                                      PRBool               aWidthOnly)
@@ -753,7 +753,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLMencloseNotation", TYPE_MATHML_MENCLOSE_NOTATION)
 
 private:
@@ -763,7 +763,7 @@ private:
 };
 
 void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
-                              nsIRenderingContext* aCtx)
+                              nsRenderingContext* aCtx)
 {
   // get the gfxRect
   nsPresContext* presContext = mFrame->PresContext();

@@ -39,7 +39,7 @@
 #include "nsSimplePageSequence.h"
 #include "nsPresContext.h"
 #include "gfxContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
@@ -604,7 +604,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
 
       PR_PL(("SeqFr::PrintNextPage -> %p PageNo: %d", pf, mPageNum));
 
-      nsCOMPtr<nsIRenderingContext> renderingContext;
+      nsRefPtr<nsRenderingContext> renderingContext;
       dc->CreateRenderingContext(*getter_AddRefs(renderingContext));
       NS_ENSURE_TRUE(renderingContext, NS_ERROR_OUT_OF_MEMORY);
 
@@ -665,7 +665,7 @@ nsSimplePageSequenceFrame::DoPageEnd()
   return rv;
 }
 
-static void PaintPageSequence(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+static void PaintPageSequence(nsIFrame* aFrame, nsRenderingContext* aCtx,
                              const nsRect& aDirtyRect, nsPoint aPt)
 {
   static_cast<nsSimplePageSequenceFrame*>(aFrame)->PaintPageSequence(*aCtx, aDirtyRect, aPt);
@@ -673,7 +673,7 @@ static void PaintPageSequence(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 
 //------------------------------------------------------------------------------
 void
-nsSimplePageSequenceFrame::PaintPageSequence(nsIRenderingContext& aRenderingContext,
+nsSimplePageSequenceFrame::PaintPageSequence(nsRenderingContext& aRenderingContext,
                                              const nsRect&        aDirtyRect,
                                              nsPoint              aPt) {
   nsRect rect = aDirtyRect;

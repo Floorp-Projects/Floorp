@@ -83,10 +83,10 @@ public:
 
     NS_IMETHOD Init(nsIWidget *aWidget);
     NS_IMETHOD InitForPrinting(nsIDeviceContextSpec *aDevSpec);
-    NS_IMETHOD CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext);
-    NS_IMETHOD CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext);
-    NS_IMETHOD CreateRenderingContext(nsIRenderingContext *&aContext);
-    NS_IMETHOD CreateRenderingContextInstance(nsIRenderingContext *&aContext);
+    NS_IMETHOD CreateRenderingContext(nsIView *aView, nsRenderingContext *&aContext);
+    NS_IMETHOD CreateRenderingContext(nsIWidget *aWidget, nsRenderingContext *&aContext);
+    NS_IMETHOD CreateRenderingContext(nsRenderingContext *&aContext);
+    NS_IMETHOD CreateRenderingContextInstance(nsRenderingContext *&aContext);
 
     NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                              gfxUserFontSet* aUserFontSet,

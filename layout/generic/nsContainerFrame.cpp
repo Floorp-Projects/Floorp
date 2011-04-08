@@ -44,7 +44,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsRect.h"
 #include "nsPoint.h"
@@ -595,7 +595,7 @@ static nscoord GetCoord(const nsStyleCoord& aCoord, nscoord aIfNotCoord)
 }
 
 void
-nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
+nsContainerFrame::DoInlineIntrinsicWidth(nsRenderingContext *aRenderingContext,
                                          InlineIntrinsicWidthData *aData,
                                          nsLayoutUtils::IntrinsicWidthType aType)
 {
@@ -677,7 +677,7 @@ nsContainerFrame::DoInlineIntrinsicWidth(nsIRenderingContext *aRenderingContext,
 }
 
 /* virtual */ nsSize
-nsContainerFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+nsContainerFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                   nsSize aCBSize, nscoord aAvailableWidth,
                                   nsSize aMargin, nsSize aBorder,
                                   nsSize aPadding, PRBool aShrinkWrap)

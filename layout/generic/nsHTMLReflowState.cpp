@@ -47,7 +47,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
@@ -87,7 +87,7 @@ static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 // use for measuring things.
 nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
                                      nsIFrame*            aFrame,
-                                     nsIRenderingContext* aRenderingContext,
+                                     nsRenderingContext* aRenderingContext,
                                      const nsSize&        aAvailableSpace)
   : nsCSSOffsetState(aFrame, aRenderingContext)
   , mBlockDelta(0)

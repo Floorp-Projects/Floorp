@@ -40,7 +40,7 @@
 #ifndef nsIMathMLFrame_h___
 #define nsIMathMLFrame_h___
 
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFrame.h"
 
 struct nsPresentationData;
@@ -113,7 +113,7 @@ public:
   *        of the frame, on output the size after stretching.
   */
   NS_IMETHOD 
-  Stretch(nsIRenderingContext& aRenderingContext,
+  Stretch(nsRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize) = 0;

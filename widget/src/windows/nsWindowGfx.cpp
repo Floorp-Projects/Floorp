@@ -64,7 +64,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "gfxWindowsPlatform.h"
 #include "nsGfxCIID.h"
 #include "gfxContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "prmem.h"
 

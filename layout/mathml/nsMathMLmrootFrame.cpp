@@ -45,7 +45,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 
 #include "nsMathMLmrootFrame.h"
@@ -206,7 +206,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.ascent = 0;
 
   nsBoundingMetrics bmSqr, bmBase, bmIndex;
-  nsIRenderingContext& renderingContext = *aReflowState.rendContext;
+  nsRenderingContext& renderingContext = *aReflowState.rendContext;
 
   //////////////////
   // Reflow Children
@@ -393,7 +393,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 /* virtual */ nscoord
-nsMathMLmrootFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext)
+nsMathMLmrootFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext)
 {
   nsIFrame* baseFrame = mFrames.FirstChild();
   nsIFrame* indexFrame = nsnull;

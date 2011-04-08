@@ -63,7 +63,7 @@ public:
 
   virtual PRBool HonorPrintBackgroundSettings() { return PR_FALSE; }
 
-  void PaintBorderBackground(nsIRenderingContext& aRenderingContext,
+  void PaintBorderBackground(nsRenderingContext& aRenderingContext,
       nsPoint aPt, const nsRect& aDirtyRect);
 
   // make sure we our kids get our orient and align instead of us.
@@ -123,13 +123,13 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("XULGroupBackground", TYPE_XUL_GROUP_BACKGROUND)
 };
 
 void
 nsDisplayXULGroupBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                   nsIRenderingContext* aCtx)
+                                   nsRenderingContext* aCtx)
 {
   static_cast<nsGroupBoxFrame*>(mFrame)->
     PaintBorderBackground(*aCtx, ToReferenceFrame(), mVisibleRect);
@@ -155,7 +155,7 @@ nsGroupBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsGroupBoxFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
+nsGroupBoxFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect) {
   PRIntn skipSides = 0;
   const nsStyleBorder* borderStyleData = GetStyleBorder();

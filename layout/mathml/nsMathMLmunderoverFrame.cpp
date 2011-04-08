@@ -46,7 +46,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 
 #include "nsMathMLmunderoverFrame.h"
@@ -279,7 +279,7 @@ i.e.,:
 */
 
 /* virtual */ nsresult
-nsMathMLmunderoverFrame::Place(nsIRenderingContext& aRenderingContext,
+nsMathMLmunderoverFrame::Place(nsRenderingContext& aRenderingContext,
                                PRBool               aPlaceOrigin,
                                nsHTMLReflowMetrics& aDesiredSize)
 {

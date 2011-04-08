@@ -117,7 +117,7 @@ enum { XKeyPress = KeyPress };
 #include "nsIDOMRange.h"
 #include "nsIPluginWidget.h"
 #include "nsGUIEvent.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "npapi.h"
 #include "nsTransform2D.h"
 #include "nsIImageLoadingContent.h"
@@ -935,7 +935,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
 #define EMBED_DEF_HEIGHT 200
 
 /* virtual */ nscoord
-nsObjectFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsObjectFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
 
@@ -951,7 +951,7 @@ nsObjectFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsObjectFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsObjectFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   return nsObjectFrame::GetMinWidth(aRenderingContext);
 }
@@ -1319,11 +1319,11 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
 }
 
 /* static */ void
-nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsRenderingContext* aCtx,
                                 const nsRect& aDirtyRect, nsPoint aPt)
 {
   nsPoint pt = aPt + aFrame->GetUsedBorderAndPadding().TopLeft();
-  nsIRenderingContext::AutoPushTranslation translate(aCtx, pt);
+  nsRenderingContext::AutoPushTranslation translate(aCtx, pt);
   // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
   static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
@@ -1404,7 +1404,7 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 
 void
 nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
-                       nsIRenderingContext* aCtx)
+                       nsRenderingContext* aCtx)
 {
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   f->PaintPlugin(aBuilder, *aCtx, mVisibleRect, GetBounds(aBuilder));
@@ -1663,7 +1663,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
+nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
   nsCOMPtr<nsIObjectLoadingContent> obj(do_QueryInterface(mContent));
@@ -1804,7 +1804,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
    */
 
 #elif defined(XP_OS2)
-  void *hps = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_OS2_PS);
+  void *hps = aRenderingContext.GetNativeGraphicData(nsRenderingContext::NATIVE_OS2_PS);
   if (!hps)
     return;
 
@@ -2181,7 +2181,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
-                           nsIRenderingContext& aRenderingContext,
+                           nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
   // Screen painting code
@@ -2283,7 +2283,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       nativeDrawing.EndNativeDrawing();
     } else {
       // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-      nsIRenderingContext::AutoPushTranslation
+      nsRenderingContext::AutoPushTranslation
         translate(&aRenderingContext, aPluginRect.TopLeft());
 
       // this rect is used only in the CoreGraphics drawing model
@@ -2423,7 +2423,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
 
     if (window->type == NPWindowTypeDrawable) {
       // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-      nsIRenderingContext::AutoPushTranslation
+      nsRenderingContext::AutoPushTranslation
         translate(&aRenderingContext, aPluginRect.TopLeft());
 
       // check if we need to call SetWindow with updated parameters
@@ -2470,7 +2470,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       }
 
       // check if we need to update the PS
-      HPS hps = (HPS)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_OS2_PS);
+      HPS hps = (HPS)aRenderingContext.GetNativeGraphicData(nsRenderingContext::NATIVE_OS2_PS);
       if (reinterpret_cast<HPS>(window->window) != hps) {
         window->window = reinterpret_cast<void*>(hps);
         doupdatewindow = PR_TRUE;

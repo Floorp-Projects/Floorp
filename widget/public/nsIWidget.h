@@ -59,7 +59,7 @@
 class   nsIAppShell;
 class   nsIToolkit;
 class   nsIFontMetrics;
-class   nsIRenderingContext;
+class   nsRenderingContext;
 class   nsIDeviceContext;
 struct  nsFont;
 class   nsIRollupListener;
