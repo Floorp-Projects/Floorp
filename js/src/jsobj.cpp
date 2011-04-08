@@ -3124,7 +3124,7 @@ js_InferFlags(JSContext *cx, uintN defaultFlags)
     format = cs->format;
     if (JOF_MODE(format) != JOF_NAME)
         flags |= JSRESOLVE_QUALIFIED;
-    if ((format & (JOF_SET | JOF_FOR)) || fp->isAssigning()) {
+    if (format & (JOF_SET | JOF_FOR)) {
         flags |= JSRESOLVE_ASSIGNING;
     } else if (cs->length >= 0) {
         pc += cs->length;
@@ -6939,8 +6939,6 @@ js_DumpStackFrame(JSContext *cx, JSStackFrame *start)
             fprintf(stderr, " constructing");
         if (fp->hasOverriddenArgs())
             fprintf(stderr, " overridden_args");
-        if (fp->isAssigning())
-            fprintf(stderr, " assigning");
         if (fp->isDebuggerFrame())
             fprintf(stderr, " debugger");
         if (fp->isEvalFrame())

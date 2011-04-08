@@ -113,7 +113,7 @@ JSStackFrame::resetInvokeCallFrame()
                            JSFRAME_HAS_HOOK_DATA |
                            JSFRAME_HAS_CALL_OBJ |
                            JSFRAME_HAS_ARGS_OBJ |
-                           JSFRAME_FINISHED_IN_INTERPRETER)));
+                           JSFRAME_FINISHED_IN_INTERP)));
 
     /*
      * Since the stack frame is usually popped after PutActivationObjects,
