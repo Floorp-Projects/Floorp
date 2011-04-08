@@ -538,6 +538,20 @@ struct JSStackFrame
     inline void markActivationObjectsAsPut();
 
     /*
+     * Frame compartment
+     *
+     * A stack frame's compartment is the frame's containing context's
+     * compartment when the frame was pushed.
+     */
+
+    JSCompartment *compartment() const {
+        JS_ASSERT_IF(isScriptFrame(), scopeChain().compartment() == script()->compartment);
+        return scopeChain().compartment();
+    }
+
+    inline JSPrincipals *principals(JSContext *cx) const;
+
+    /*
      * Imacropc
      *
      * A frame's IMacro pc is the bytecode address when an imacro started
@@ -1018,24 +1032,6 @@ InvokeConstructorWithGivenThis(JSContext *cx, JSObject *thisobj, const Value &fv
 extern bool
 ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *argv,
                           Value *rval);
-
-/*
- * Performs a direct eval for the given arguments, which must correspond to the
- * currently-executing stack frame, which must be a script frame. On completion
- * the result is returned in *vp and the JS stack pointer is adjusted.
- */
-extern JS_REQUIRES_STACK bool
-DirectEval(JSContext *cx, uint32 argc, Value *vp);
-
-/*
- * Performs a direct eval for the given arguments, which must correspond to the
- * currently-executing stack frame, which must be a script frame.  evalfun must
- * be the built-in eval function and must correspond to the callee in vp[0].
- * When this function succeeds it returns the result in *vp, adjusts the JS
- * stack pointer, and returns true.
- */
-extern JS_REQUIRES_STACK bool
-DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp);
 
 /*
  * Executes a script with the given scope chain in the context of the given

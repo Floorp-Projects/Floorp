@@ -2431,12 +2431,13 @@ OnBadFormal(JSContext *cx, TokenKind tt)
 static JSBool
 Function(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs call = CallArgsFromVp(argc, vp);
+
     JS::Anchor<JSObject *> obj(NewFunction(cx, NULL));
     if (!obj.get())
         return false;
 
-    JSObject &callee = JS_CALLEE(cx, vp).toObject();
-    JSObject &calleeParent = *callee.getParent();
+    JSObject &calleeParent = *call.callee().getParent();
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
@@ -2452,32 +2453,6 @@ Function(JSContext *cx, uintN argc, Value *vp)
                                      &calleeParent, cx->runtime->atomState.anonymousAtom);
     if (!fun)
         return false;
-
-    /*
-     * Function is static and not called directly by other functions in this
-     * file, therefore it is callable only as a native function by js_Invoke.
-     * Find the scripted caller, possibly skipping other native frames such as
-     * are built for Function.prototype.call or .apply activations that invoke
-     * Function indirectly from a script.
-     */
-    JSStackFrame *caller = js_GetScriptedCaller(cx, NULL);
-    uintN lineno;
-    const char *filename;
-    JSPrincipals *principals;
-    if (caller) {
-        principals = js_EvalFramePrincipals(cx, &callee, caller);
-        filename = js_ComputeFilename(cx, caller, principals, &lineno);
-    } else {
-        filename = NULL;
-        lineno = 0;
-        principals = NULL;
-    }
-
-    /* Belt-and-braces: check that the caller has access to parent. */
-    if (!js_CheckPrincipalsAccess(cx, &calleeParent, principals,
-                                  CLASS_ATOM(cx, Function))) {
-        return false;
-    }
 
     /*
      * CSP check: whether new Function() is allowed at all.
@@ -2497,7 +2472,10 @@ Function(JSContext *cx, uintN argc, Value *vp)
     Bindings bindings(cx, emptyCallShape);
     AutoBindingsRooter root(cx, bindings);
 
-    Value *argv = JS_ARGV(cx, vp);
+    uintN lineno;
+    const char *filename = CurrentScriptFileAndLine(cx, &lineno);
+
+    Value *argv = call.argv();
     uintN n = argc ? argc - 1 : 0;
     if (n > 0) {
         /*
@@ -2637,10 +2615,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
         length = 0;
     }
 
-    JS_SET_RVAL(cx, vp, ObjectValue(*obj.get()));
-    return Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                         chars, length, filename, lineno,
-                                         cx->findVersion());
+    JSPrincipals *principals = PrincipalsForCompiledCode(call, cx);
+    bool ok = Compiler::compileFunctionBody(cx, fun, principals, &bindings,
+                                            chars, length, filename, lineno,
+                                            cx->findVersion());
+    call.rval().setObject(obj);
+    return ok;
 }
 
 namespace js {
