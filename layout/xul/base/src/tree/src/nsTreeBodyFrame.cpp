@@ -2823,7 +2823,7 @@ nsTreeBodyFrame::PaintTreeBody(nsRenderingContext& aRenderingContext,
   // Update our available height and our page count.
   CalcInnerBox();
   aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(mInnerBox + aPt, nsClipCombine_kIntersect);
+  aRenderingContext.IntersectClip(mInnerBox + aPt);
   PRInt32 oldPageCount = mPageLength;
   if (!mHasFixedRowCount)
     mPageLength = mInnerBox.height/mRowHeight;

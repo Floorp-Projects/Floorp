@@ -307,7 +307,7 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.height = topBorder;
 
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
@@ -321,7 +321,7 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.height = topBorder;
 
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
@@ -334,7 +334,7 @@ nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     clipRect.height = mRect.height - (yoff + topBorder);
     
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
