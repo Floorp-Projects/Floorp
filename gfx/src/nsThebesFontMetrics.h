@@ -40,13 +40,14 @@
 #define NSTHEBESFONTMETRICS__H__
 
 #include "nsIThebesFontMetrics.h"
-#include "nsRenderingContext.h"
 #include "nsCOMPtr.h"
-#include "nsThebesDeviceContext.h"
-#include "nsIAtom.h"
-
+#include "nsRenderingContext.h"
 #include "gfxFont.h"
 #include "gfxTextRunCache.h"
+
+class nsIAtom;
+class nsIDeviceContext;
+class nsThebesDeviceContext;
 
 class nsThebesFontMetrics : public nsIThebesFontMetrics
 {
@@ -57,7 +58,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD  Init(const nsFont& aFont, nsIAtom* aLanguage,
-                     nsIDeviceContext *aContext, 
+                     nsIDeviceContext *aContext,
                      gfxUserFontSet *aUserFontSet = nsnull);
     NS_IMETHOD  Destroy();
     NS_IMETHOD  GetXHeight(nscoord& aResult);

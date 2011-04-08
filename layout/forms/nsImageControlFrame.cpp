@@ -39,7 +39,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIFormControl.h"
 #include "nsHTMLParts.h"
-#include "nsRenderingContext.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"

@@ -40,7 +40,6 @@
 #ifndef nsCSSRendering_h___
 #define nsCSSRendering_h___
 
-#include "nsRenderingContext.h"
 #include "nsStyleConsts.h"
 #include "gfxBlur.h"
 #include "gfxContext.h"
@@ -49,6 +48,7 @@
 struct nsPoint;
 class nsStyleContext;
 class nsPresContext;
+class nsRenderingContext;
 
 struct nsCSSRendering {
   /**

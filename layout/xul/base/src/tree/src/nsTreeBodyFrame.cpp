@@ -106,6 +106,7 @@
 #include "nsEventDispatcher.h"
 #include "nsDisplayList.h"
 #include "nsTreeBoxObject.h"
+#include "nsRenderingContext.h"
 
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
@@ -2772,8 +2773,8 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-
-nsLineStyle nsTreeBodyFrame::ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle)
+static nsLineStyle
+ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle)
 {
   switch (aBorderStyle) {
     case NS_STYLE_BORDER_STYLE_DOTTED:

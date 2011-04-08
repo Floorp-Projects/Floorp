@@ -139,9 +139,9 @@
 #include "nsDisplayList.h"
 #include "nsIRegion.h"
 #include "nsRegion.h"
+#include "nsRenderingContext.h"
 
 #ifdef MOZ_REFLOW_PERF
-#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 #endif
 
@@ -407,7 +407,9 @@ public:
   void Add(const char * aName, nsIFrame * aFrame);
   ReflowCounter * LookUp(const char * aName);
 
-  void PaintCount(const char * aName, nsRenderingContext* aRenderingContext, nsPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
+  void PaintCount(const char *aName, nsRenderingContext* aRenderingContext,
+                  nsPresContext *aPresContext, nsIFrame *aFrame,
+                  const nsPoint &aOffset, PRUint32 aColor);
 
   FILE * GetOutFile() { return mFD; }
 
@@ -933,6 +935,7 @@ public:
                                       nsRenderingContext* aRenderingContext,
                                       nsPresContext* aPresContext,
                                       nsIFrame * aFrame,
+                                      const nsPoint& aOffset,
                                       PRUint32 aColor);
   virtual NS_HIDDEN_(void) SetPaintFrameCount(PRBool aOn);
   virtual PRBool IsPaintingFrameCounts();
@@ -8593,10 +8596,12 @@ PresShell::PaintCount(const char * aName,
                       nsRenderingContext* aRenderingContext,
                       nsPresContext* aPresContext,
                       nsIFrame * aFrame,
+                      const nsPoint& aOffset,
                       PRUint32 aColor)
 {
   if (mReflowCountMgr) {
-    mReflowCountMgr->PaintCount(aName, aRenderingContext, aPresContext, aFrame, aColor);
+    mReflowCountMgr->PaintCount(aName, aRenderingContext, aPresContext,
+                                aFrame, aOffset, aColor);
   }
 }
 
@@ -8779,20 +8784,23 @@ void ReflowCountMgr::Add(const char * aName, nsIFrame * aFrame)
 }
 
 //------------------------------------------------------------------
-void ReflowCountMgr::PaintCount(const char *    aName, 
-                                nsRenderingContext* aRenderingContext, 
-                                nsPresContext* aPresContext, 
-                                nsIFrame*       aFrame, 
+void ReflowCountMgr::PaintCount(const char*     aName,
+                                nsRenderingContext* aRenderingContext,
+                                nsPresContext*  aPresContext,
+                                nsIFrame*       aFrame,
+                                const nsPoint&  aOffset,
                                 PRUint32        aColor)
 {
-  if (mPaintFrameByFrameCounts && 
-      nsnull != mIndiFrameCounts && 
+  if (mPaintFrameByFrameCounts &&
+      nsnull != mIndiFrameCounts &&
       aFrame != nsnull) {
     char * key = new char[16];
     sprintf(key, "%p", (void*)aFrame);
-    IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
+    IndiReflowCounter * counter =
+      (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter != nsnull && counter->mName.EqualsASCII(aName)) {
       aRenderingContext->PushState();
+      aRenderingContext->Translate(aOffset);
       nsFont font("Times", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
                   NS_FONT_WEIGHT_NORMAL, NS_FONT_STRETCH_NORMAL, 0,
                   nsPresContext::CSSPixelsToAppUnits(11));

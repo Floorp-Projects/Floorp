@@ -47,7 +47,6 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
-#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"

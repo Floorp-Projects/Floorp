@@ -47,7 +47,6 @@
 #include "nsHTMLVideoElement.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsDisplayList.h"
-#include "nsRenderingContext.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsPresContext.h"

@@ -40,12 +40,12 @@
 #ifndef nsIMathMLFrame_h___
 #define nsIMathMLFrame_h___
 
-#include "nsRenderingContext.h"
 #include "nsIFrame.h"
 
 struct nsPresentationData;
 struct nsEmbellishData;
 struct nsHTMLReflowMetrics;
+class nsRenderingContext;
 
 // For MathML, this 'type' will be used to determine the spacing between frames
 // Subclasses can return a 'type' that will give them a particular spacing

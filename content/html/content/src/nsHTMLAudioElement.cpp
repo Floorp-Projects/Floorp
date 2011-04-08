@@ -61,7 +61,6 @@
 #include "jstypedarray.h"
 #include "nsJSUtils.h"
 
-#include "nsRenderingContext.h"
 #include "nsITimer.h"
 
 #include "nsEventDispatcher.h"

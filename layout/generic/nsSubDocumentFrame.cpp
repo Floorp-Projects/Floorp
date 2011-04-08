@@ -82,7 +82,6 @@ using mozilla::layout::RenderFrameParent;
 #include "nsWeakReference.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsRenderingContext.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsDisplayList.h"
 #include "nsUnicharUtils.h"

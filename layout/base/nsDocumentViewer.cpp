@@ -128,6 +128,7 @@
 #include "nsGfxCIID.h"
 #include "nsStyleSheetService.h"
 #include "nsURILoader.h"
+#include "nsRenderingContext.h"
 
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants

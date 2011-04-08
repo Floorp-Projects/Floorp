@@ -1325,13 +1325,12 @@ public:
     MOZ_COUNT_DTOR(nsDisplayReflowCount);
   }
 #endif
-  
+
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) {
-    nsPoint pt = ToReferenceFrame();
-    nsRenderingContext::AutoPushTranslation translate(aCtx, pt);
     mFrame->PresContext()->PresShell()->PaintCount(mFrameName, aCtx,
-                                                      mFrame->PresContext(),
-                                                      mFrame, mColor);
+                                                   mFrame->PresContext(),
+                                                   mFrame, ToReferenceFrame(),
+                                                   mColor);
   }
   NS_DISPLAY_DECL_NAME("nsDisplayReflowCount", TYPE_REFLOW_COUNT)
 protected:

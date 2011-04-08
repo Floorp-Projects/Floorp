@@ -41,7 +41,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsIFontMetrics.h"
 #include "nsStyleContext.h"
 #include "nsMathMLAtoms.h"

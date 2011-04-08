@@ -806,6 +806,7 @@ public:
                                       nsRenderingContext* aRenderingContext,
                                       nsPresContext * aPresContext,
                                       nsIFrame * aFrame,
+                                      const nsPoint& aOffset,
                                       PRUint32 aColor) = 0;
   virtual NS_HIDDEN_(void) SetPaintFrameCount(PRBool aOn) = 0;
   virtual PRBool IsPaintingFrameCounts() = 0;

@@ -47,7 +47,6 @@
 #include "nsIDOMHTMLMediaElement.h"
 #include "nsNetUtil.h"
 #include "nsHTMLMediaElement.h"
-#include "nsRenderingContext.h"
 #include "gfxContext.h"
 #include "nsPresContext.h"
 #include "nsDOMError.h"
