@@ -1423,6 +1423,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
     });
 
+    self._isStacked = true;
+
     let angleAccum = 0;
     children.forEach(function GroupItem__stackArrange_apply(child, index) {
       child.setZ(zIndex);
@@ -1435,8 +1437,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       child.setHidden(false);
       angleAccum += angleDelta;
     });
-
-    self._isStacked = true;
   },
   
   // ----------
