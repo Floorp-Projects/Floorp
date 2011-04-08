@@ -368,15 +368,24 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         isDouble.linkTo(masm.label(), &masm);
     }
 
-    if (type == JSVAL_TYPE_INT32) {
+    /*
+     * Inference needs to know about any operation on integers that produces a
+     * double result. Unless the pushed type set already contains the double
+     * type, we need to call a stub rather than push. Note that looking at
+     * the pushed type tag is not sufficient, as it will be UNKNOWN if
+     * we do not yet know the possible types of the division's operands.
+     */
+    types::TypeSet *resultTypes = pushedTypeSet(0);
+    if (resultTypes && !resultTypes->hasType(types::TYPE_DOUBLE)) {
         /*
-         * Integer conversion failed, but the result is expected to be an integer.
-         * Call a stub and try harder to convert to int32, or failing that trigger
+         * Call a stub and try harder to convert to int32, failing that trigger
          * recompilation of this script.
          */
         stubcc.linkExit(masm.jump(), Uses(2));
-    } else if (type != JSVAL_TYPE_DOUBLE) {
-        masm.storeDouble(fpLeft, frame.addressOf(lhs));
+    } else {
+        JS_ASSERT(type != JSVAL_TYPE_INT32);
+        if (type != JSVAL_TYPE_DOUBLE)
+            masm.storeDouble(fpLeft, frame.addressOf(lhs));
     }
 
     if (done.isSet())
