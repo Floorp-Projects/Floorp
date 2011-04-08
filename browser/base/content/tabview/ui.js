@@ -714,9 +714,9 @@ let UI = {
         // if not closing the last tab
         if (gBrowser.tabs.length > 1) {
           // Don't return to TabView if there are any app tabs
-          for (let a = 0; a < gBrowser.tabs.length; a++) {
+          for (let a = 0; a < gBrowser._numPinnedTabs; a++) {
             let theTab = gBrowser.tabs[a]; 
-            if (theTab.pinned && gBrowser._removingTabs.indexOf(theTab) == -1) 
+            if (gBrowser._removingTabs.indexOf(theTab) == -1) 
               return;
           }
 
