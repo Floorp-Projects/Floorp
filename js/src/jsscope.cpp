@@ -1308,7 +1308,7 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
     if (shape.isMethod()) {
 #ifdef DEBUG
         const Value &prev = nativeGetSlot(shape.slot);
-        JS_ASSERT(&shape.methodObject() == &prev.toObject());
+        JS_ASSERT(shape.methodObject() == prev.toObject());
         JS_ASSERT(canHaveMethodBarrier());
         JS_ASSERT(hasMethodBarrier());
         JS_ASSERT(!shape.rawSetter || shape.rawSetter == js_watch_set);

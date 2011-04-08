@@ -2454,7 +2454,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
         return false;
 
     CallArgs &args = rdata.singleShot;
-    args.callee().setObject(*rdata.lambda);
+    args.calleev().setObject(*rdata.lambda);
     args.thisv().setUndefined();
 
     Value *sp = args.argv();

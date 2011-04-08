@@ -206,7 +206,7 @@ JSObject::methodReadBarrier(JSContext *cx, const js::Shape &shape, js::Value *vp
     JS_ASSERT(hasMethodBarrier());
     JS_ASSERT(nativeContains(shape));
     JS_ASSERT(shape.isMethod());
-    JS_ASSERT(&shape.methodObject() == &vp->toObject());
+    JS_ASSERT(shape.methodObject() == vp->toObject());
     JS_ASSERT(shape.writable());
     JS_ASSERT(shape.slot != SHAPE_INVALID_SLOT);
     JS_ASSERT(shape.hasDefaultSetter() || shape.setterOp() == js_watch_set);
@@ -638,7 +638,7 @@ JSObject::hasMethodObj(const JSObject& obj) const
 {
     return JSSLOT_FUN_METHOD_OBJ < numSlots() &&
            getSlot(JSSLOT_FUN_METHOD_OBJ).isObject() &&
-           &getSlot(JSSLOT_FUN_METHOD_OBJ).toObject() == &obj;
+           getSlot(JSSLOT_FUN_METHOD_OBJ).toObject() == obj;
 }
 
 inline void

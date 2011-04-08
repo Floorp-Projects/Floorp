@@ -652,6 +652,14 @@ class RangeCheckedPointer
     T *operator&();
 };
 
+template <class T, class U>
+JS_ALWAYS_INLINE T &
+ImplicitCast(U &u)
+{
+    T &t = u;
+    return t;
+}
+
 } /* namespace js */
 
 #endif /* jstl_h_ */

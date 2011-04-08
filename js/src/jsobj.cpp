@@ -1017,7 +1017,7 @@ EvalCacheHash(JSContext *cx, JSLinearString *str)
 
 static JS_ALWAYS_INLINE JSScript *
 EvalCacheLookup(JSContext *cx, JSLinearString *str, JSStackFrame *caller, uintN staticLevel,
-                JSPrincipals *principals, JSObject *scopeobj, JSScript **bucket)
+                JSPrincipals *principals, JSObject &scopeobj, JSScript **bucket)
 {
     /*
      * Cache local eval scripts indexed by source qualified by scope.
@@ -1083,7 +1083,7 @@ EvalCacheLookup(JSContext *cx, JSLinearString *str, JSStackFrame *caller, uintN 
                         }
                     }
                     if (i < 0 ||
-                        objarray->vector[i]->getParent() == scopeobj) {
+                        objarray->vector[i]->getParent() == &scopeobj) {
                         JS_ASSERT(staticLevel == script->staticLevel);
                         EVAL_CACHE_METER(hit);
                         *scriptp = script->u.nextToGC;
@@ -1121,21 +1121,20 @@ eval(JSContext *cx, uintN argc, Value *vp)
         return false;
     }
 
-    return EvalKernel(cx, argc, vp, INDIRECT_EVAL, caller, vp[0].toObject().getGlobal());
+    return EvalKernel(cx, argc, vp, INDIRECT_EVAL, caller, *vp[0].toObject().getGlobal());
 }
 
 namespace js {
 
 bool
 EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame *caller,
-           JSObject *scopeobj)
+           JSObject &scopeobj)
 {
     /*
      * FIXME Bug 602994: Calls with no scripted caller should be permitted and
      *       should be implemented as indirect calls.
      */
     JS_ASSERT(caller);
-    JS_ASSERT(scopeobj);
 
     /*
      * We once supported a second argument to eval to use as the scope chain
@@ -1156,7 +1155,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
      * CSP check: Is eval() allowed at all?
      * Report errors via CSP is done in the script security mgr.
      */
-    if (!js_CheckContentSecurityPolicy(cx, scopeobj)) {
+    if (!js_CheckContentSecurityPolicy(cx, &scopeobj)) {
         JS_ReportError(cx, "call to eval() blocked by CSP");
         return false;
     }
@@ -1195,12 +1194,12 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
         /* Pretend that we're top level. */
         staticLevel = 0;
 
-        JS_ASSERT(scopeobj == scopeobj->getGlobal());
-        JS_ASSERT(scopeobj->isGlobal());
+        JS_ASSERT(&scopeobj == scopeobj.getGlobal());
+        JS_ASSERT(scopeobj.isGlobal());
     }
 
     /* Ensure we compile this eval with the right object in the scope chain. */
-    if (!CheckScopeChainValidity(cx, scopeobj))
+    if (!CheckScopeChainValidity(cx, &scopeobj))
         return false;
 
     JSLinearString *linearStr = str->ensureLinear(cx);
@@ -1272,7 +1271,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
         const char *filename = js_ComputeFilename(cx, caller, principals, &lineno);
 
         uint32 tcflags = TCF_COMPILE_N_GO | TCF_NEED_MUTABLE_SCRIPT | TCF_COMPILE_FOR_EVAL;
-        script = Compiler::compileScript(cx, scopeobj, callerFrame,
+        script = Compiler::compileScript(cx, &scopeobj, callerFrame,
                                          principals, tcflags, chars, length,
                                          filename, lineno, cx->findVersion(),
                                          linearStr, staticLevel);
@@ -1280,13 +1279,13 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
             return false;
     }
 
-    assertSameCompartment(cx, scopeobj, script);
+    assertSameCompartment(cx, &scopeobj, script);
 
     /*
      * Belt-and-braces: check that the lesser of eval's principals and the
      * caller's principals has access to scopeobj.
      */
-    JSBool ok = js_CheckPrincipalsAccess(cx, scopeobj, principals,
+    JSBool ok = js_CheckPrincipalsAccess(cx, &scopeobj, principals,
                                          cx->runtime->atomState.evalAtom) &&
                 Execute(cx, scopeobj, script, callerFrame, JSFRAME_EVAL, vp);
 
@@ -5164,7 +5163,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
         return true;
 
     if (JS_UNLIKELY(shape->isMethod()) && (getHow & JSGET_NO_METHOD_BARRIER)) {
-        JS_ASSERT(&shape->methodObject() == &vp->toObject());
+        JS_ASSERT(shape->methodObject() == vp->toObject());
         return true;
     }
 
@@ -5630,7 +5629,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
 
         JS_ASSERT_IF(shape && shape->isMethod(), pobj->hasMethodBarrier());
         JS_ASSERT_IF(shape && shape->isMethod(),
-                     &pobj->getSlot(shape->slot).toObject() == &shape->methodObject());
+                     pobj->getSlot(shape->slot).toObject() == shape->methodObject());
         if (shape && (defineHow & JSDNP_SET_METHOD)) {
             /*
              * JSOP_SETMETHOD is assigning to an existing own property. If it
@@ -5639,7 +5638,7 @@ js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
              * cache, as the interpreter has no fast path for these unusual
              * cases.
              */
-            bool identical = shape->isMethod() && &shape->methodObject() == &vp->toObject();
+            bool identical = shape->isMethod() && shape->methodObject() == vp->toObject();
             if (!identical) {
                 shape = obj->methodShapeChange(cx, *shape);
                 if (!shape)
@@ -5849,13 +5848,13 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool str
                 if (fun != funobj) {
                     for (JSStackFrame *fp = cx->maybefp(); fp; fp = fp->prev()) {
                         if (fp->isFunctionFrame() &&
-                            &fp->callee() == &fun->compiledFunObj() &&
+                            fp->callee() == fun->compiledFunObj() &&
                             fp->thisValue().isObject())
                         {
                             JSObject *tmp = &fp->thisValue().toObject();
                             do {
                                 if (tmp == obj) {
-                                    fp->calleeValue().setObject(*funobj);
+                                    fp->calleev().setObject(*funobj);
                                     break;
                                 }
                             } while ((tmp = tmp->getProto()) != NULL);
@@ -6507,6 +6506,7 @@ JSObject::getGlobal() const
     JSObject *obj = const_cast<JSObject *>(this);
     while (JSObject *parent = obj->getParent())
         obj = parent;
+    JS_ASSERT(obj->isGlobal());
     return obj;
 }
 

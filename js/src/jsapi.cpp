@@ -5003,7 +5003,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, scriptObj);
 
-    JSBool ok = Execute(cx, obj, scriptObj->getScript(), NULL, 0, Valueify(rval));
+    JSBool ok = Execute(cx, *obj, scriptObj->getScript(), NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5036,7 +5036,7 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
         return false;
     }
     JS_ASSERT(script->getVersion() == compileVersion);
-    bool ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
+    bool ok = Execute(cx, *obj, script, NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     js_DestroyScript(cx, script);
     return ok;
@@ -5185,7 +5185,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     if (!cx->stack().pushInvokeArgs(cx, argc, &args))
         return NULL;
 
-    args.callee().setObject(*ctor);
+    args.calleev().setObject(*ctor);
     args.thisv().setNull();
     memcpy(args.argv(), argv, argc * sizeof(jsval));
 

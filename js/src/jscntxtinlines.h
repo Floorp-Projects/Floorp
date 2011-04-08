@@ -246,8 +246,7 @@ StackSpace::pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *ag)
 #endif
 
     ag->cx = cx;
-    ag->argv_ = vp + 2;
-    ag->argc_ = argc;
+    ImplicitCast<CallArgs>(*ag) = CallArgsFromVp(argc, vp);
     return true;
 }
 
