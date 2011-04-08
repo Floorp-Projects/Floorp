@@ -293,6 +293,20 @@ public:
   void SetInTransform(PRBool aInTransform) { mInTransform = aInTransform; }
 
   /**
+   * Call this if using display port for scrolling.
+   */
+  void SetHasDisplayPort() { mHasDisplayPort = PR_TRUE; }
+  PRBool GetHasDisplayPort() { return mHasDisplayPort; }
+
+  /**
+   * Call this if ReferenceFrame() is a viewport frame with fixed-position
+   * children, or when we construct an item which will return true from
+   * ShouldFixToViewport()
+   */
+  void SetHasFixedItems() { mHasFixedItems = PR_TRUE; }
+  PRBool GetHasFixedItems() { return mHasFixedItems; }
+
+  /**
    * Returns true if snapping is enabled for the final drawing context.
    * The default is true.
    */
@@ -456,6 +470,9 @@ public:
   }
 
 private:
+  void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
+                                    const nsRect& aDirtyRect);
+
   struct PresShellState {
     nsIPresShell* mPresShell;
     nsIFrame*     mCaretFrame;
@@ -492,6 +509,8 @@ private:
   PRPackedBool                   mSyncDecodeImages;
   PRPackedBool                   mIsPaintingToWindow;
   PRPackedBool                   mSnappingEnabled;
+  PRPackedBool                   mHasDisplayPort;
+  PRPackedBool                   mHasFixedItems;
 };
 
 class nsDisplayItem;
