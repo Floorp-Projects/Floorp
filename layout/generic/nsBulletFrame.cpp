@@ -388,8 +388,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
     GetListItemText(*myList, text);
     aRenderingContext.SetFont(fm);
-    nscoord ascent;
-    fm->GetMaxAscent(ascent);
+    nscoord ascent = fm->MaxAscent();
     aRenderingContext.SetTextRunRTL(mTextIsRTL);
     aRenderingContext.DrawString(text, mPadding.left + aPt.x,
                                  mPadding.top + aPt.y + ascent);
@@ -1361,7 +1360,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
-      fm->GetMaxAscent(ascent);
+      ascent = fm->MaxAscent();
       bulletSize = NS_MAX(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                           NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
       mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
@@ -1422,11 +1421,13 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
       GetListItemText(*myList, text);
-      fm->GetMaxHeight(aMetrics.height);
+      aMetrics.height = fm->MaxHeight();
       aRenderingContext->SetFont(fm);
-      aMetrics.width = nsLayoutUtils::GetStringWidth(this, aRenderingContext, text.get(), text.Length());
+      aMetrics.width =
+        nsLayoutUtils::GetStringWidth(this, aRenderingContext,
+                                      text.get(), text.Length());
       aMetrics.width += mPadding.right;
-      fm->GetMaxAscent(aMetrics.ascent);
+      aMetrics.ascent = fm->MaxAscent();
       break;
   }
 }
@@ -1601,7 +1602,7 @@ nsBulletFrame::GetBaseline() const
       case NS_STYLE_LIST_STYLE_DISC:
       case NS_STYLE_LIST_STYLE_CIRCLE:
       case NS_STYLE_LIST_STYLE_SQUARE:
-        fm->GetMaxAscent(ascent);
+        ascent = fm->MaxAscent();
         bottomPadding = NSToCoordRound(float(ascent) / 8.0f);
         ascent = NS_MAX(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                         NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
@@ -1609,7 +1610,7 @@ nsBulletFrame::GetBaseline() const
         break;
 
       default:
-        fm->GetMaxAscent(ascent);
+        ascent = fm->MaxAscent();
         break;
     }
   }

@@ -854,9 +854,8 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
     firstChild->SetPosition(firstChild->GetPosition() - nsPoint(0, dy));
   }
   else if (useMathMLChar) {
-    nscoord ascent, descent;
-    fm->GetMaxAscent(ascent);
-    fm->GetMaxDescent(descent);
+    nscoord ascent = fm->MaxAscent();
+    nscoord descent = fm->MaxDescent();
     aDesiredStretchSize.ascent = NS_MAX(mBoundingMetrics.ascent + leading, ascent);
     aDesiredStretchSize.height = aDesiredStretchSize.ascent +
                                  NS_MAX(mBoundingMetrics.descent + leading, descent);

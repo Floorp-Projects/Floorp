@@ -156,7 +156,7 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   nsRefPtr<nsFontMetrics> fm =
     aPresContext->GetMetricsFor(baseFrame->GetStyleFont()->mFont);
 
-  fm->GetXHeight (xHeight);
+  xHeight = fm->XHeight();
   nscoord minShiftFromXHeight = (nscoord) 
     (bmSubScript.ascent - (4.0f/5.0f) * xHeight);
 

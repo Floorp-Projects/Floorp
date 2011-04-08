@@ -269,10 +269,11 @@ nsMathMLmfencedFrame::Reflow(nsPresContext*          aPresContext,
   nsIFrame* childFrame = firstChild;
   nscoord ascent = 0, descent = 0;
   if (firstChild || mOpenChar || mCloseChar || mSeparatorsCount > 0) {
-    // We use the ASCII metrics to get our minimum height. This way, if we have
-    // borders or a background, they will fit better with other elements on the line
-    fm->GetMaxAscent(ascent);
-    fm->GetMaxDescent(descent);
+    // We use the ASCII metrics to get our minimum height. This way,
+    // if we have borders or a background, they will fit better with
+    // other elements on the line.
+    ascent = fm->MaxAscent();
+    descent = fm->MaxDescent();
   }
   while (childFrame) {
     nsHTMLReflowMetrics childDesiredSize(aDesiredSize.mFlags

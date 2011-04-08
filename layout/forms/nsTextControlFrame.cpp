@@ -237,8 +237,8 @@ nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
 
   lineHeight =
     nsHTMLReflowState::CalcLineHeight(GetStyleContext(), NS_AUTOHEIGHT);
-  fontMet->GetAveCharWidth(charWidth);
-  fontMet->GetMaxAdvance(charMaxAdvance);
+  charWidth = fontMet->AveCharWidth();
+  charMaxAdvance = fontMet->MaxAdvance();
 
   // Set the width equal to the width in characters
   PRInt32 cols = GetCols();

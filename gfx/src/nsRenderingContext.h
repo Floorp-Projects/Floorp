@@ -146,8 +146,6 @@ public:
 
 protected:
     PRInt32 GetMaxChunkLength();
-    nscoord GetWidthInternal(const char *aString, PRUint32 aLength);
-    nscoord GetWidthInternal(const PRUnichar *aString, PRUint32 aLength);
 
     nsRefPtr<gfxContext> mThebes;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;

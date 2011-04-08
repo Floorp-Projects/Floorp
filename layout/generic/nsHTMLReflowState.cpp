@@ -2112,10 +2112,9 @@ GetNormalLineHeight(nsFontMetrics* aFontMetrics)
 
   nscoord normalLineHeight;
 
-  nscoord externalLeading, internalLeading, emHeight;
-  aFontMetrics->GetExternalLeading(externalLeading);
-  aFontMetrics->GetInternalLeading(internalLeading);
-  aFontMetrics->GetEmHeight(emHeight);
+  nscoord externalLeading = aFontMetrics->ExternalLeading();
+  nscoord internalLeading = aFontMetrics->InternalLeading();
+  nscoord emHeight = aFontMetrics->EmHeight();
   switch (GetNormalLineHeightCalcControl()) {
   case eIncludeExternalLeading:
     normalLineHeight = emHeight+ internalLeading + externalLeading;

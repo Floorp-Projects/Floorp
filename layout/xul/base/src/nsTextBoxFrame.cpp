@@ -481,8 +481,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 
     nscoord offset;
     nscoord size;
-    nscoord ascent;
-    fontMet->GetMaxAscent(ascent);
+    nscoord ascent = fontMet->MaxAscent();
 
     nscoord baseline =
       presContext->RoundAppUnitsToNearestDevPixels(aTextRect.y + ascent);
@@ -657,7 +656,7 @@ nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext)
          nscoord offset, baseline;
          nsFontMetrics* metrics = aRenderingContext.FontMetrics();
          metrics->GetUnderline(offset, mAccessKeyInfo->mAccessUnderlineSize);
-         metrics->GetMaxAscent(baseline);
+         baseline = metrics->MaxAscent();
          mAccessKeyInfo->mAccessOffset = baseline - offset;
     }
 }
@@ -996,16 +995,19 @@ nsTextBoxFrame::MarkIntrinsicWidthsDirty()
 }
 
 void
-nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext,
-                                const nsString& aString, nsSize& aSize, nscoord& aAscent)
+nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext,
+                            nsRenderingContext& aRenderingContext,
+                            const nsString& aString,
+                            nsSize& aSize, nscoord& aAscent)
 {
     nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
-    fontMet->GetMaxHeight(aSize.height);
+    aSize.height = fontMet->MaxHeight();
     aRenderingContext.SetFont(fontMet);
     aSize.width =
-      nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aString.get(), aString.Length());
-    fontMet->GetMaxAscent(aAscent);
+      nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
+                                    aString.get(), aString.Length());
+    aAscent = fontMet->MaxAscent();
 }
 
 void
