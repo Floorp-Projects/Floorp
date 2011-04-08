@@ -747,7 +747,7 @@ FrameState::computeAllocation(jsbytecode *target)
             continue;
         if (fe >= spBase && !isTemporary(fe))
             continue;
-        if (isTemporary(fe) && target - script->code > loop->backedgeOffset())
+        if (isTemporary(fe) && uint32(target - script->code) > loop->backedgeOffset())
             continue;
         alloc->set(reg, indexOfFe(fe), fe->data.synced());
     }

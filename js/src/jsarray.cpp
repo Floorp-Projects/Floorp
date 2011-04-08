@@ -1509,7 +1509,12 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
     /* Avoid ensureDenseArrayElements to skip sparse array checks there. */
     if (!obj->ensureSlots(cx, length))
         return false;
-    obj->setDenseArrayInitializedLength(length);
+
+    if (cx->typeInferenceEnabled())
+        obj->setDenseArrayInitializedLength(length);
+    else
+        obj->backfillDenseArrayHoles();
+
     bool hole = false;
     for (jsuint i = 0; i < length; i++) {
         obj->setDenseArrayElement(i, vector[i]);
@@ -1517,6 +1522,7 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
     }
     if (hole && !obj->setDenseArrayNotPacked(cx))
         return false;
+
     return true;
 }
 
@@ -1583,6 +1589,7 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
         /* Fill out the array's initialized length to its proper length. */
         jsuint initlen = obj->getDenseArrayInitializedLength();
         if (len > initlen) {
+            JS_ASSERT(cx->typeInferenceEnabled());
             if (!obj->setDenseArrayNotPacked(cx))
                 return false;
             ClearValueRange(obj->getDenseArrayElements() + initlen, len - initlen, true);
@@ -2169,9 +2176,13 @@ ArrayCompPushImpl(JSContext *cx, JSObject *obj, const Value &v)
          */
         if (!obj->ensureSlots(cx, length + 1))
             return false;
+        if (!cx->typeInferenceEnabled())
+            obj->backfillDenseArrayHoles();
     }
+
+    if (cx->typeInferenceEnabled())
+        obj->setDenseArrayInitializedLength(length + 1);
     obj->setDenseArrayLength(length + 1);
-    obj->setDenseArrayInitializedLength(length + 1);
     obj->setDenseArrayElement(length, v);
     return true;
 }
@@ -2259,9 +2270,16 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
         return JS_FALSE;
     if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
         return JS_FALSE;
+
     obj->setDenseArrayLength(index);
-    if (index == obj->getDenseArrayInitializedLength() - 1)
-        obj->setDenseArrayInitializedLength(index);
+    if (cx->typeInferenceEnabled()) {
+        JS_ASSERT(!obj->isPackedDenseArray());
+        if (index == obj->getDenseArrayInitializedLength() - 1)
+            obj->setDenseArrayInitializedLength(index);
+        if (!cx->markTypeArrayShrank(obj->getType()))
+            return JS_FALSE;
+    }
+
     return JS_TRUE;
 }
 
@@ -2294,22 +2312,23 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
     } else {
         length--;
 
-        if (obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj)) {
-            Value *elems = obj->getDenseArrayElements();
-            jsuint initlen = obj->getDenseArrayInitializedLength();
-            if (initlen > 0) {
-                *vp = obj->getDenseArrayElement(0);
-                if (vp->isMagic(JS_ARRAY_HOLE)) {
-                    vp->setUndefined();
-                    if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
-                        return JS_FALSE;
-                }
-                memmove(elems, elems + 1, (initlen - 1) * sizeof(jsval));
-                obj->setDenseArrayInitializedLength(initlen - 1);
-            } else {
+        if (obj->isDenseArray() && !js_PrototypeHasIndexedProperties(cx, obj) &&
+            length < obj->getDenseArrayCapacity() &&
+            0 < obj->getDenseArrayInitializedLength()) {
+            *vp = obj->getDenseArrayElement(0);
+            if (vp->isMagic(JS_ARRAY_HOLE)) {
                 vp->setUndefined();
                 if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
                     return JS_FALSE;
+            }
+            Value *elems = obj->getDenseArrayElements();
+            memmove(elems, elems + 1, length * sizeof(jsval));
+            if (cx->typeInferenceEnabled()) {
+                obj->setDenseArrayInitializedLength(obj->getDenseArrayInitializedLength() - 1);
+                if (!cx->markTypeArrayShrank(obj->getType()))
+                    return JS_FALSE;
+            } else {
+                obj->setDenseArrayElement(length, MagicValue(JS_ARRAY_HOLE));
             }
             JS_ALWAYS_TRUE(obj->setArrayLength(cx, length));
             if (!js_SuppressDeletedIndexProperties(cx, obj, length, length + 1))
