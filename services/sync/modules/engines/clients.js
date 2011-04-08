@@ -45,6 +45,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/record.js");
+Cu.import("resource://services-sync/resource.js");
 Cu.import("resource://services-sync/util.js");
 
 const CLIENTS_TTL = 1814400; // 21 days
@@ -193,7 +194,12 @@ ClientEngine.prototype = {
     SyncEngine.prototype._resetClient.call(this);
     this._store.wipe();
   },
-  
+
+  removeClientData: function removeClientData() {
+    let res = new Resource(this.engineURL + "/" + this.localID);
+    res.delete();
+  },
+
   // Override the default behavior to delete bad records from the server.
   handleHMACMismatch: function handleHMACMismatch(item, mayRetry) {
     this._log.debug("Handling HMAC mismatch for " + item.id);

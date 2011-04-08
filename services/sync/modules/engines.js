@@ -1057,6 +1057,11 @@ SyncEngine.prototype = {
     this._resetClient();
   },
 
+  removeClientData: function removeClientData() {
+    // Implement this method in engines that store client specific data
+    // on the server.
+  },
+
   /*
    * Decide on (and partially effect) an error-handling strategy.
    *
