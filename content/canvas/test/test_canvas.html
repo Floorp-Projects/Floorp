@@ -7957,19 +7957,15 @@ ctx.fillRect(0, 0, 100, 50);
 ctx.fillStyle = '#fff';
 ctx.fillRect(20, 10, 60, 10);
 
-try {
-  var imgdata1 = ctx.getImageData(85, 25, -10, -10);
-  ok(imgdata1.data[0] === 255, "imgdata1.data[\""+(0)+"\"] === 255");
-  ok(imgdata1.data[1] === 255, "imgdata1.data[\""+(1)+"\"] === 255");
-  ok(imgdata1.data[2] === 255, "imgdata1.data[\""+(2)+"\"] === 255");
-  ok(imgdata1.data[3] === 255, "imgdata1.data[\""+(3)+"\"] === 255");
-  ok(imgdata1.data[imgdata1.data.length-4+0] === 0, "imgdata1.data[imgdata1.data.length-4+0] === 0");
-  ok(imgdata1.data[imgdata1.data.length-4+1] === 0, "imgdata1.data[imgdata1.data.length-4+1] === 0");
-  ok(imgdata1.data[imgdata1.data.length-4+2] === 0, "imgdata1.data[imgdata1.data.length-4+2] === 0");
-  ok(imgdata1.data[imgdata1.data.length-4+3] === 255, "imgdata1.data[imgdata1.data.length-4+3] === 255");
-} catch (e) {
-  ok(false, "Unexpected exception in first part of test_2d_imageData_get_source_negative()", e);
-}
+var imgdata1 = ctx.getImageData(85, 25, -10, -10);
+ok(imgdata1.data[0] === 255, "imgdata1.data[\""+(0)+"\"] === 255");
+ok(imgdata1.data[1] === 255, "imgdata1.data[\""+(1)+"\"] === 255");
+ok(imgdata1.data[2] === 255, "imgdata1.data[\""+(2)+"\"] === 255");
+ok(imgdata1.data[3] === 255, "imgdata1.data[\""+(3)+"\"] === 255");
+ok(imgdata1.data[imgdata1.data.length-4+0] === 0, "imgdata1.data[imgdata1.data.length-4+0] === 0");
+ok(imgdata1.data[imgdata1.data.length-4+1] === 0, "imgdata1.data[imgdata1.data.length-4+1] === 0");
+ok(imgdata1.data[imgdata1.data.length-4+2] === 0, "imgdata1.data[imgdata1.data.length-4+2] === 0");
+ok(imgdata1.data[imgdata1.data.length-4+3] === 255, "imgdata1.data[imgdata1.data.length-4+3] === 255");
 
 var imgdata2 = ctx.getImageData(0, 0, -1, -1);
 ok(imgdata2.data[0] === 0, "imgdata2.data[\""+(0)+"\"] === 0");
@@ -7980,7 +7976,7 @@ ok(imgdata2.data[3] === 0, "imgdata2.data[\""+(3)+"\"] === 0");
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }
@@ -8028,10 +8024,44 @@ ok(imgdata4.data[1] === 0, "imgdata4.data[\""+(1)+"\"] === 0");
 ok(imgdata4.data[2] === 0, "imgdata4.data[\""+(2)+"\"] === 0");
 ok(imgdata4.data[3] === 0, "imgdata4.data[\""+(3)+"\"] === 0");
 
+var imgdata5 = ctx.getImageData(100, 10, 1, 1);
+ok(imgdata5.data[0] === 0, "imgdata5.data[\""+(0)+"\"] === 0");
+ok(imgdata5.data[1] === 0, "imgdata5.data[\""+(1)+"\"] === 0");
+ok(imgdata5.data[2] === 0, "imgdata5.data[\""+(2)+"\"] === 0");
+ok(imgdata5.data[3] === 0, "imgdata5.data[\""+(3)+"\"] === 0");
+
+var imgdata6 = ctx.getImageData(0, 10, 1, 1);
+ok(imgdata6.data[0] === 0, "imgdata6.data[\""+(0)+"\"] === 0");
+ok(imgdata6.data[1] === 136, "imgdata6.data[\""+(1)+"\"] === 136");
+ok(imgdata6.data[2] === 255, "imgdata6.data[\""+(2)+"\"] === 255");
+ok(imgdata6.data[3] === 255, "imgdata6.data[\""+(3)+"\"] === 255");
+
+var imgdata7 = ctx.getImageData(-10, 10, 20, 20);
+ok(imgdata7.data[ 0*4+0] === 0, "imgdata7.data[ 0*4+0] === 0");
+ok(imgdata7.data[ 0*4+1] === 0, "imgdata7.data[ 0*4+1] === 0");
+ok(imgdata7.data[ 0*4+2] === 0, "imgdata7.data[ 0*4+2] === 0");
+ok(imgdata7.data[ 0*4+3] === 0, "imgdata7.data[ 0*4+3] === 0");
+ok(imgdata7.data[ 9*4+0] === 0, "imgdata7.data[ 9*4+0] === 0");
+ok(imgdata7.data[ 9*4+1] === 0, "imgdata7.data[ 9*4+1] === 0");
+ok(imgdata7.data[ 9*4+2] === 0, "imgdata7.data[ 9*4+2] === 0");
+ok(imgdata7.data[ 9*4+3] === 0, "imgdata7.data[ 9*4+3] === 0");
+ok(imgdata7.data[10*4+0] === 0, "imgdata7.data[10*4+0] === 0");
+ok(imgdata7.data[10*4+1] === 136, "imgdata7.data[10*4+1] === 136");
+ok(imgdata7.data[10*4+2] === 255, "imgdata7.data[10*4+2] === 255");
+ok(imgdata7.data[10*4+3] === 255, "imgdata7.data[10*4+3] === 255");
+ok(imgdata7.data[19*4+0] === 0, "imgdata7.data[19*4+0] === 0");
+ok(imgdata7.data[19*4+1] === 136, "imgdata7.data[19*4+1] === 136");
+ok(imgdata7.data[19*4+2] === 255, "imgdata7.data[19*4+2] === 255");
+ok(imgdata7.data[19*4+3] === 255, "imgdata7.data[19*4+3] === 255");
+ok(imgdata7.data[20*4+0] === 0, "imgdata7.data[20*4+0] === 0");
+ok(imgdata7.data[20*4+1] === 0, "imgdata7.data[20*4+1] === 0");
+ok(imgdata7.data[20*4+2] === 0, "imgdata7.data[20*4+2] === 0");
+ok(imgdata7.data[20*4+3] === 0, "imgdata7.data[20*4+3] === 0");
+
 } catch (e) {
     _thrown_outer = true;
 }
-todo(!_thrown_outer, 'should not throw exception');
+ok(!_thrown_outer, 'should not throw exception');
 
 
 }

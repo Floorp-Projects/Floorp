@@ -35,103 +35,140 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-//order is important - mozilla redefine qt macros
-#include <QNetworkConfigurationManager>
-#include <QNetworkConfiguration>
-#include <QNetworkSession>
-
 #include "nsQtNetworkManager.h"
 
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
-
 #include "nsINetworkLinkService.h"
-
 #include "nsIOService.h"
 #include "nsIObserverService.h"
 #include "nsIOService.h"
 
-#include "nsINetworkLinkService.h"
+#include <QHostInfo>
+#include <QHostAddress>
+#include <QTime>
 
-static QNetworkConfigurationManager* sNetworkConfig = 0;
+nsQtNetworkManager::nsQtNetworkManager(QObject* parent)
+  : QObject(parent), networkSession(0)
+{
+    mOnline = networkConfigurationManager.isOnline();
+    NS_ASSERTION(NS_IsMainThread(), "nsQtNetworkManager can only initiated in Main Thread");
+}
+
+nsQtNetworkManager::~nsQtNetworkManager()
+{
+    closeSession();
+    networkSession->deleteLater();
+}
 
 PRBool
-nsQtNetworkManager::OpenConnectionSync()
+nsQtNetworkManager::isOnline()
 {
-    if (!sNetworkConfig)
-        return PR_FALSE;
+    static PRBool sForceOnlineUSB = getenv("MOZ_MEEGO_NET_ONLINE") != 0;
+    return sForceOnlineUSB || mOnline;
+}
 
-    //do not request when we are online...
-    if (sNetworkConfig->isOnline())
-        return PR_FALSE;
+void
+nsQtNetworkManager::onlineStateChanged(bool online)
+{
+    mOnline = online;
+}
 
-    if (!(sNetworkConfig->capabilities() & QNetworkConfigurationManager::CanStartAndStopInterfaces))
-        return PR_FALSE;
+/*
+  This function is called from different threads, we need to make sure that
+  the attempt to create a network connection is done in the mainthread
 
-    // Is there default access point, use it
-    QNetworkConfiguration default_cfg = sNetworkConfig->defaultConfiguration();
+  In case this function is called by another thread than the mainthread
+  we emit a signal which is connected through "BlockingQueue"-Connection Type.
 
-    if (!default_cfg.isValid())
-    {
-        NS_WARNING("default configuration is not valid. Looking for any other:");
-        foreach (QNetworkConfiguration cfg, sNetworkConfig->allConfigurations())
-        {
-            if (cfg.isValid())
-                default_cfg = cfg;
-        }
+  This cause that the current thread is blocked and waiting for the result.
 
-        if (!default_cfg.isValid())
-        {
-            NS_WARNING("No valid configuration found. Giving up.");
-            return PR_FALSE;
-        }
+  Of course, in case this gets called from the mainthread we must not emit the signal,
+  but call the slot directly.
+*/
+
+PRBool
+nsQtNetworkManager::openConnection(const QString& host)
+{
+    // we are already online -> return true.
+    if (isOnline()) {
+        return true;
     }
 
-    //do use pointer here, it will be deleted after connected!
-    //Creation on stack cause appearing issues and segfaults of the connectivity dialog
-    QNetworkSession* session = new QNetworkSession(default_cfg);
-    QObject::connect(session, SIGNAL(opened()),
-                     session, SLOT(deleteLater()));
-    QObject::connect(session, SIGNAL(error(QNetworkSession::SessionError)),
-                     session, SLOT(deleteLater()));
-    session->open();
-    return session->waitForOpened(-1);
+    if (NS_IsMainThread()) {
+        openSession();
+    } else {
+        // jump to mainthread and do the work there
+        emit openConnectionSignal();
+    }
+
+    // if its claiming its online -> send one resolve request ahead.
+    // this is important because on mobile the first request can take up to 10 seconds
+    // sending here one will help to avoid trouble and timeouts later
+    if (isOnline()) {
+        QHostInfo::fromName(host);
+    }
+
+    return isOnline();
 }
 
 void
-nsQtNetworkManager::CloseConnection()
+nsQtNetworkManager::openSession()
 {
-    NS_WARNING("nsQtNetworkManager::CloseConnection() Not implemented by QtNetwork.");
-}
+    if (mBlockTimer.isActive()) {
+        // if openSession is called within 200 ms again, we forget this attempt since
+        // its mostlike an automatic connection attempt which was not successful or canceled 200ms ago.
+        // we reset the timer and start it again.
 
-PRBool
-nsQtNetworkManager::IsConnected()
-{
-    NS_ASSERTION(sNetworkConfig, "Network not initialized");
-    return sNetworkConfig->isOnline();
-}
+        // As example: Go in firefox mobile into AwesomeView, see that the icons are not always cached and
+        // get loaded on the fly. Not having the 200 ms rule here would mean that instantly
+        // after the user dismissed the one connection dialog once another
+        // would get opened. The user will never be able to close / leave the view until each such attempt is gone through.
 
-PRBool
-nsQtNetworkManager::GetLinkStatusKnown()
-{
-    return IsConnected();
-}
+        // Basically 200 ms are working fine, its huge enough for automatic attempts to get covered and small enough to
+        // still be able to react on direct user request.
 
-PRBool
-nsQtNetworkManager::Startup()
-{
-    //Dont do it if already there
-    if (sNetworkConfig)
-        return PR_FALSE;
+        mBlockTimer.stop();
+        mBlockTimer.setSingleShot(true);
+        mBlockTimer.start(200);
+        return;
+    }
 
-    sNetworkConfig = new QNetworkConfigurationManager();
+    if (isOnline()) {
+        return;
+    }
 
-    return PR_TRUE;
+    // this only means we did not shutdown before...
+    // renew Session every time
+    // fix/workaround for prestart bug
+    if (!networkSession) {
+        networkSession->close();
+        networkSession->deleteLater();
+    }
+
+    // renew always to react on changed Configurations
+    networkConfigurationManager.updateConfigurations();
+    // go always with default configuration
+    networkConfiguration = networkConfigurationManager.defaultConfiguration();
+    networkSession = new QNetworkSession(networkConfiguration);
+
+    networkSession->open();
+    QTime current;
+    current.start();
+    networkSession->waitForOpened(-1);
+
+    if (current.elapsed() < 1000) {
+        NS_WARNING("Connection Creation was to fast, something is not right.");
+    }
+
+    mBlockTimer.setSingleShot(true);
+    mBlockTimer.start(200);
 }
 
 void
-nsQtNetworkManager::Shutdown()
+nsQtNetworkManager::closeSession()
 {
-    delete sNetworkConfig;
-    sNetworkConfig = nsnull;
+    if (!networkSession) {
+        networkSession->close();
+    }
 }

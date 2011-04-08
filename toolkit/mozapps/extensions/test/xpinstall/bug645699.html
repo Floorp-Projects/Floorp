@@ -1,0 +1,24 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html>
+
+<head>
+<title>InstallTrigger tests</title>
+<script type="text/javascript">
+function startInstall() {
+  var whiteUrl = "https://example.org/";
+
+  Object.defineProperty(window, "location", { value : { href : whiteUrl }	});
+  Object.defineProperty(document, "documentURIObject", { spec : { href : whiteUrl }	});
+
+  InstallTrigger.install({
+    "Unsigned XPI": "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/unsigned.xpi"
+  });
+}
+</script>
+</head>
+<body onload="startInstall()">
+<p>InstallTrigger tests</p>
+</body>
+</html>

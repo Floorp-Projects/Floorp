@@ -474,6 +474,9 @@ nsAccessible::GetFirstChild(nsIAccessible **aFirstChild)
   NS_ENSURE_ARG_POINTER(aFirstChild);
   *aFirstChild = nsnull;
 
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   PRInt32 childCount = GetChildCount();
   NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
 
@@ -490,6 +493,9 @@ nsAccessible::GetLastChild(nsIAccessible **aLastChild)
   NS_ENSURE_ARG_POINTER(aLastChild);
   *aLastChild = nsnull;
 
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
+
   PRInt32 childCount = GetChildCount();
   NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
 
@@ -502,6 +508,9 @@ nsAccessible::GetChildAt(PRInt32 aChildIndex, nsIAccessible **aChild)
 {
   NS_ENSURE_ARG_POINTER(aChild);
   *aChild = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   PRInt32 childCount = GetChildCount();
   NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
@@ -525,6 +534,9 @@ nsAccessible::GetChildren(nsIArray **aOutChildren)
 {
   NS_ENSURE_ARG_POINTER(aOutChildren);
   *aOutChildren = nsnull;
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   PRInt32 childCount = GetChildCount();
   NS_ENSURE_TRUE(childCount != -1, NS_ERROR_FAILURE);
@@ -554,6 +566,9 @@ NS_IMETHODIMP
 nsAccessible::GetChildCount(PRInt32 *aChildCount) 
 {
   NS_ENSURE_ARG_POINTER(aChildCount);
+
+  if (IsDefunct())
+    return NS_ERROR_FAILURE;
 
   *aChildCount = GetChildCount();
   return *aChildCount != -1 ? NS_OK : NS_ERROR_FAILURE;  
@@ -2812,9 +2827,6 @@ nsAccessible::RemoveChild(nsAccessible* aChild)
 nsAccessible*
 nsAccessible::GetChildAt(PRUint32 aIndex)
 {
-  if (EnsureChildren())
-    return nsnull;
-
   nsAccessible *child = mChildren.SafeElementAt(aIndex, nsnull);
   if (!child)
     return nsnull;
@@ -2831,14 +2843,13 @@ nsAccessible::GetChildAt(PRUint32 aIndex)
 PRInt32
 nsAccessible::GetChildCount()
 {
-  return EnsureChildren() ? -1 : mChildren.Length();
+  return mChildren.Length();
 }
 
 PRInt32
 nsAccessible::GetIndexOf(nsAccessible* aChild)
 {
-  return EnsureChildren() || (aChild->mParent != this) ?
-    -1 : aChild->GetIndexInParent();
+  return (aChild->mParent != this) ? -1 : aChild->GetIndexInParent();
 }
 
 PRInt32
@@ -2850,9 +2861,6 @@ nsAccessible::GetIndexInParent() const
 PRInt32
 nsAccessible::GetEmbeddedChildCount()
 {
-  if (EnsureChildren())
-    return -1;
-
   if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
@@ -2865,9 +2873,6 @@ nsAccessible::GetEmbeddedChildCount()
 nsAccessible*
 nsAccessible::GetEmbeddedChildAt(PRUint32 aIndex)
 {
-  if (EnsureChildren())
-    return nsnull;
-
   if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);
@@ -2881,9 +2886,6 @@ nsAccessible::GetEmbeddedChildAt(PRUint32 aIndex)
 PRInt32
 nsAccessible::GetIndexOfEmbeddedChild(nsAccessible* aChild)
 {
-  if (EnsureChildren())
-    return -1;
-
   if (IsChildrenFlag(eMixedChildren)) {
     if (!mEmbeddedObjCollector)
       mEmbeddedObjCollector = new EmbeddedObjCollector(this);

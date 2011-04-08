@@ -20,6 +20,7 @@ chrome.jar:
   skin/images/appmenu-addons-hdpi.png       (images/appmenu-addons-hdpi.png)
   skin/images/appmenu-active-hdpi.png       (images/appmenu-active-hdpi.png)
   skin/images/appmenu-downloads-hdpi.png    (images/appmenu-downloads-hdpi.png)
+  skin/images/appmenu-more-hdpi.png         (images/appmenu-more-hdpi.png)
   skin/images/appmenu-preferences-hdpi.png  (images/appmenu-preferences-hdpi.png)
   skin/images/appmenu-site-hdpi.png         (images/appmenu-site-hdpi.png)
   skin/images/aboutBackground.jpg           (images/aboutBackground.jpg)

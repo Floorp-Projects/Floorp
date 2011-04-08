@@ -1,0 +1,8 @@
+# Forbid compound word with triple letters
+CHECKCOMPOUNDTRIPLE
+# Allow simplified forms
+SIMPLIFIEDTRIPLE
+
+COMPOUNDMIN 2
+
+COMPOUNDFLAG A

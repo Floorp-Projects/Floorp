@@ -93,7 +93,6 @@ public:
   nsresult Init();
 
   void LoadDictionaryList();
-  void LoadDictionariesFromDir(nsIFile* aDir);
 
   // helper method for converting a word to the charset of the dictionary
   nsresult ConvertCharset(const PRUnichar* aStr, char ** aDst);
