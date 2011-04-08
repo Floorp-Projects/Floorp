@@ -43,6 +43,11 @@ WEAVE_CHANNEL:                         "@weave_channel@",
 WEAVE_VERSION:                         "@weave_version@",
 WEAVE_ID:                              "@weave_id@",
 
+// Sync Server API version that the client supports.
+SYNC_API_VERSION:                      "1.1",
+USER_API_VERSION:                      "1.0",
+MISC_API_VERSION:                      "1.0",
+
 // Version of the data format this client supports. The data format describes
 // how records are packaged; this is separate from the Server API version and
 // the per-engine cleartext formats.
