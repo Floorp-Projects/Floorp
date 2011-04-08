@@ -3216,7 +3216,6 @@ class AutoVectorRooter : protected AutoGCRooter
     void infallibleAppend(const T &v) { vector.infallibleAppend(v); }
 
     void popBack() { vector.popBack(); }
-    T popCopy() { return vector.popCopy(); }
 
     bool growBy(size_t inc) {
         size_t oldLength = vector.length();
