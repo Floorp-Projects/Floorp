@@ -2990,7 +2990,7 @@ JS_GetPrototype(JSContext *cx, JSObject *obj)
     proto = obj->getProto();
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
-    return proto && proto->map ? proto : NULL;
+    return proto && !proto->isNewborn() ? proto : NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3008,7 +3008,7 @@ JS_GetParent(JSContext *cx, JSObject *obj)
     JSObject *parent = obj->getParent();
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
-    return parent && parent->map ? parent : NULL;
+    return parent && !parent->isNewborn() ? parent : NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3164,6 +3164,12 @@ JS_PUBLIC_API(JSBool)
 JS_IsExtensible(JSObject *obj)
 {
     return obj->isExtensible();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsNative(JSObject *obj)
+{
+    return obj->isNative();
 }
 
 JS_PUBLIC_API(JSBool)

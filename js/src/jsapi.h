@@ -2181,6 +2181,9 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 extern JS_PUBLIC_API(JSBool)
 JS_IsExtensible(JSObject *obj);
 
+extern JS_PUBLIC_API(JSBool)
+JS_IsNative(JSObject *obj);
+
 /*
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default
  * proto if proto's actual parameter value is null.
