@@ -122,6 +122,7 @@ endif
 ifdef MOZ_ENABLE_QTNETWORK
 	CPPSRCS += nsAutodialQt.cpp
 	LOCAL_INCLUDES += -I$(srcdir)/../../system/qt
+	OS_INCLUDES += $(MOZ_QT_CFLAGS)
 endif
 endif
 
