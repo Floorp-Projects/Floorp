@@ -121,7 +121,7 @@ enum {
   // For all Element nodes, NODE_MAY_HAVE_CLASS is guaranteed to be set if the
   // node in fact has a class, but may be set even if it doesn't.
   NODE_MAY_HAVE_CLASS =          0x00000400U,
-  NODE_MAY_HAVE_STYLE =          0x00000800U,
+  UNUSED4 =                      0x00000800U,
 
   NODE_IS_INSERTION_PARENT =     0x00001000U,
 
@@ -1148,6 +1148,8 @@ private:
     // cases lie for nsXMLElement, such as when the node has been moved between
     // documents with different id mappings.
     ElementHasID,
+    // Set if the element might have inline style.
+    ElementMayHaveStyle,
     // Guard value
     BooleanFlagCount
   };
@@ -1178,6 +1180,7 @@ public:
   void SetHasRenderingObservers(bool aValue)
     { SetBoolFlag(NodeHasRenderingObservers, aValue); }
   bool HasID() const { return GetBoolFlag(ElementHasID); }
+  bool MayHaveStyle() const { return GetBoolFlag(ElementMayHaveStyle); }
 
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
@@ -1187,6 +1190,7 @@ protected:
   void ClearIsElement() { ClearBoolFlag(NodeIsElement); }
   void SetHasID() { SetBoolFlag(ElementHasID); }
   void ClearHasID() { ClearBoolFlag(ElementHasID); }
+  void SetMayHaveStyle() { SetBoolFlag(ElementMayHaveStyle); }
 
 public:
   // Optimized way to get classinfo.
