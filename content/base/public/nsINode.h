@@ -117,10 +117,7 @@ enum {
 
   NODE_IS_EDITABLE =             0x00000100U,
 
-  // Set to true if the element has a non-empty id attribute. This can in rare
-  // cases lie for nsXMLElement, such as when the node has been moved between
-  // documents with different id mappings.
-  NODE_HAS_ID =                  0x00000200U,
+  UNUSED3 =                      0x00000200U,
   // For all Element nodes, NODE_MAY_HAVE_CLASS is guaranteed to be set if the
   // node in fact has a class, but may be set even if it doesn't.
   NODE_MAY_HAVE_CLASS =          0x00000400U,
@@ -1147,6 +1144,11 @@ private:
     ParentIsContent,
     // Set if this node is an Element
     NodeIsElement,
+    // Set if the element has a non-empty id attribute. This can in rare
+    // cases lie for nsXMLElement, such as when the node has been moved between
+    // documents with different id mappings.
+    ElementHasID,
+    // Guard value
     BooleanFlagCount
   };
 
@@ -1175,6 +1177,7 @@ public:
     { return GetBoolFlag(NodeHasRenderingObservers); }
   void SetHasRenderingObservers(bool aValue)
     { SetBoolFlag(NodeHasRenderingObservers, aValue); }
+  bool HasID() const { return GetBoolFlag(ElementHasID); }
 
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
@@ -1182,9 +1185,10 @@ protected:
   void ClearInDocument() { ClearBoolFlag(IsInDocument); }
   void SetIsElement() { SetBoolFlag(NodeIsElement); }
   void ClearIsElement() { ClearBoolFlag(NodeIsElement); }
+  void SetHasID() { SetBoolFlag(ElementHasID); }
+  void ClearHasID() { ClearBoolFlag(ElementHasID); }
 
 public:
-
   // Optimized way to get classinfo.
   virtual nsXPCClassInfo* GetClassInfo() = 0;
 protected:

@@ -1024,14 +1024,14 @@ protected:
    * Add/remove this element to the documents id cache
    */
   void AddToIdTable(nsIAtom* aId) {
-    NS_ASSERTION(HasFlag(NODE_HAS_ID), "Node lacking NODE_HAS_ID flag");
+    NS_ASSERTION(HasID(), "Node doesn't have an ID?");
     nsIDocument* doc = GetCurrentDoc();
     if (doc && (!IsInAnonymousSubtree() || doc->IsXUL())) {
       doc->AddToIdTable(this, aId);
     }
   }
   void RemoveFromIdTable() {
-    if (HasFlag(NODE_HAS_ID)) {
+    if (HasID()) {
       nsIDocument* doc = GetCurrentDoc();
       if (doc) {
         nsIAtom* id = DoGetID();
