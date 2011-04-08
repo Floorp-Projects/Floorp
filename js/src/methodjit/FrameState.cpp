@@ -2045,7 +2045,8 @@ FrameState::ensureDouble(FrameEntry *fe)
         masm.moveInt32OrDouble(addressOf(backing), fpreg);
     }
 
-    forgetAllRegs(fe);
+    if (fe == backing)
+        forgetAllRegs(fe);
     fe->resetUnsynced();
     fe->setType(JSVAL_TYPE_DOUBLE);
     fe->data.setFPRegister(fpreg);
