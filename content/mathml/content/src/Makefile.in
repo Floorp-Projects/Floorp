@@ -64,12 +64,6 @@ EXPORTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/mathml.dtd \
-		$(NULL)
-libs::
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/res/dtd
-
 INCLUDES += 	\
 		-I$(srcdir)/../../../shared/public \
 		-I$(srcdir)/../../../base/src \

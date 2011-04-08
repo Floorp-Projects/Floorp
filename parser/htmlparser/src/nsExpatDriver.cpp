@@ -285,15 +285,15 @@ struct nsCatalogData {
 
 // The order of this table is guestimated to be in the optimum order
 static const nsCatalogData kCatalogTable[] = {
-  { "-//W3C//DTD XHTML 1.0 Transitional//EN",    "xhtml11.dtd", nsnull },
-  { "-//W3C//DTD XHTML 1.1//EN",                 "xhtml11.dtd", nsnull },
-  { "-//W3C//DTD XHTML 1.0 Strict//EN",          "xhtml11.dtd", nsnull },
-  { "-//W3C//DTD XHTML 1.0 Frameset//EN",        "xhtml11.dtd", nsnull },
-  { "-//W3C//DTD XHTML Basic 1.0//EN",           "xhtml11.dtd", nsnull },
-  { "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "mathml.dtd",  "resource://gre-resources/mathml.css" },
-  { "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN", "mathml.dtd", "resource://gre-resources/mathml.css" },
-  { "-//W3C//DTD MathML 2.0//EN",                "mathml.dtd",  "resource://gre-resources/mathml.css" },
-  { "-//WAPFORUM//DTD XHTML Mobile 1.0//EN",     "xhtml11.dtd", nsnull },
+  { "-//W3C//DTD XHTML 1.0 Transitional//EN",    "htmlmathml-f.ent", nsnull },
+  { "-//W3C//DTD XHTML 1.1//EN",                 "htmlmathml-f.ent", nsnull },
+  { "-//W3C//DTD XHTML 1.0 Strict//EN",          "htmlmathml-f.ent", nsnull },
+  { "-//W3C//DTD XHTML 1.0 Frameset//EN",        "htmlmathml-f.ent", nsnull },
+  { "-//W3C//DTD XHTML Basic 1.0//EN",           "htmlmathml-f.ent", nsnull },
+  { "-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN", "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
+  { "-//W3C//DTD XHTML 1.1 plus MathML 2.0 plus SVG 1.1//EN", "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
+  { "-//W3C//DTD MathML 2.0//EN",                "htmlmathml-f.ent", "resource://gre-resources/mathml.css" },
+  { "-//WAPFORUM//DTD XHTML Mobile 1.0//EN",     "htmlmathml-f.ent", nsnull },
   { nsnull, nsnull, nsnull }
 };
 
