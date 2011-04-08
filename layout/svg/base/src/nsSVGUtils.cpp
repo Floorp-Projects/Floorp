@@ -78,7 +78,6 @@
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "nsSVGForeignObjectFrame.h"
-#include "nsIFontMetrics.h"
 #include "nsIDOMSVGUnitTypes.h"
 #include "nsSVGEffects.h"
 #include "nsMathUtils.h"

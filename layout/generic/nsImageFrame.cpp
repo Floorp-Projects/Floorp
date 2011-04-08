@@ -67,7 +67,6 @@
 #include "nsNetUtil.h"
 #include "nsHTMLContainerFrame.h"
 #include "prprf.h"
-#include "nsIFontMetrics.h"
 #include "nsCSSRendering.h"
 #include "nsILink.h"
 #include "nsIDOMHTMLAnchorElement.h"

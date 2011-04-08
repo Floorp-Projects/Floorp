@@ -39,7 +39,6 @@
 
 #include "nsFont.h"
 #include "nsGfxCIID.h"
-#include "nsIThebesFontMetrics.h"
 #include "nsILanguageAtomService.h"
 #include "nsUnicharUtils.h"
 

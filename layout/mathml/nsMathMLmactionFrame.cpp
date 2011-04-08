@@ -42,7 +42,6 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
-#include "nsIFontMetrics.h"
 
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()

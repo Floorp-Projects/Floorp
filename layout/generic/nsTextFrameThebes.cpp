@@ -63,7 +63,6 @@
 #include "nsStyleConsts.h"
 #include "nsStyleContext.h"
 #include "nsCoord.h"
-#include "nsIFontMetrics.h"
 #include "nsRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsITimer.h"
@@ -110,7 +109,6 @@
 
 #include "nsBidiUtils.h"
 
-#include "nsIThebesFontMetrics.h"
 #include "gfxFont.h"
 #include "gfxContext.h"
 #include "gfxTextRunWordCache.h"

@@ -118,7 +118,6 @@
 #include "nsIJSContextStack.h"
 #include "nsFocusManager.h"
 #include "nsTextEditRules.h"
-#include "nsIFontMetrics.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsPresState.h"
 

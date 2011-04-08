@@ -55,7 +55,6 @@
 #include "nsContainerFrame.h"
 #include "nsFirstLetterFrame.h"
 #include "gfxUnicodeProperties.h"
-#include "nsIThebesFontMetrics.h"
 #include "nsTextFrame.h"
 
 #undef NOISY_BIDI
