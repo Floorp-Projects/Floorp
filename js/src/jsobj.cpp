@@ -4224,8 +4224,10 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     slots = tmpslots;
     capacity = actualCapacity;
 
-    /* Initialize the additional slots we added. */
-    ClearValueRange(slots + oldcap, actualCapacity - oldcap, isDenseArray());
+    if (!isDenseArray()) {
+        /* Initialize the additional slots we added. This is not required for dense arrays. */
+        ClearValueRange(slots + oldcap, actualCapacity - oldcap, false);
+    }
     return true;
 }
 
