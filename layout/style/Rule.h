@@ -57,7 +57,7 @@ virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 
 #define DECL_STYLE_RULE_INHERIT  \
 DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
-virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
+virtual nsIDOMCSSRule* GetDOMRule();
 
 class Rule : public nsIStyleRule {
 protected:
@@ -125,13 +125,7 @@ public:
 
   // Note that this returns null for inline style rules since they aren't
   // supposed to have a DOM rule representation (and our code wouldn't work).
-  nsresult GetDOMRule(nsIDOMCSSRule** aDOMRule)
-  {
-    nsresult rv;
-    NS_IF_ADDREF(*aDOMRule = GetDOMRuleWeak(&rv));
-    return rv;
-  }
-  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult) = 0;
+  virtual nsIDOMCSSRule* GetDOMRule() = 0;
 
   // to implement methods on nsIDOMCSSRule
   nsresult GetParentRule(nsIDOMCSSRule** aParentRule);

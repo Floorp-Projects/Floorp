@@ -152,7 +152,8 @@ CSSRuleListImpl::GetItemAt(PRUint32 aIndex, nsresult* aResult)
 
       result = mStyleSheet->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
       if (rule) {
-        return rule->GetDOMRuleWeak(aResult);
+        *aResult = NS_OK;
+        return rule->GetDOMRule();
       }
       if (result == NS_ERROR_ILLEGAL_VALUE) {
         result = NS_OK; // per spec: "Return Value ... null if ... not a valid index."
@@ -1699,11 +1700,11 @@ NS_IMETHODIMP
 nsCSSStyleSheet::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
 {
   if (mOwnerRule) {
-    return mOwnerRule->GetDOMRule(aOwnerRule);
+    NS_IF_ADDREF(*aOwnerRule = mOwnerRule->GetDOMRule());
+  } else {
+    *aOwnerRule = nsnull;
   }
-
-  *aOwnerRule = nsnull;
-  return NS_OK;    
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
