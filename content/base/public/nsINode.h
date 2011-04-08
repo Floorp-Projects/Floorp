@@ -171,8 +171,7 @@ enum {
   // Set if the node has the accesskey attribute set.
   NODE_HAS_ACCESSKEY           = 0x00400000U,
 
-  // Set if the node has the accesskey attribute set.
-  NODE_HAS_NAME                = 0x00800000U,
+  UNUSED5                      = 0x00800000U,
 
   // Two bits for the script-type ID.  Not enough to represent all
   // nsIProgrammingLanguage values, but we don't care.  In practice,
@@ -1150,6 +1149,8 @@ private:
     ElementHasID,
     // Set if the element might have inline style.
     ElementMayHaveStyle,
+    // Set if the element has a name attribute set.
+    ElementHasName,
     // Guard value
     BooleanFlagCount
   };
@@ -1181,6 +1182,7 @@ public:
     { SetBoolFlag(NodeHasRenderingObservers, aValue); }
   bool HasID() const { return GetBoolFlag(ElementHasID); }
   bool MayHaveStyle() const { return GetBoolFlag(ElementMayHaveStyle); }
+  bool HasName() const { return GetBoolFlag(ElementHasName); }
 
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
@@ -1191,6 +1193,8 @@ protected:
   void SetHasID() { SetBoolFlag(ElementHasID); }
   void ClearHasID() { ClearBoolFlag(ElementHasID); }
   void SetMayHaveStyle() { SetBoolFlag(ElementMayHaveStyle); }
+  void SetHasName() { SetBoolFlag(ElementHasName); }
+  void ClearHasName() { ClearBoolFlag(ElementHasName); }
 
 public:
   // Optimized way to get classinfo.
