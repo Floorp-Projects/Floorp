@@ -1265,7 +1265,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     nsLayoutUtils::GetFontMetricsForStyleContext(textContext,
                                                  getter_AddRefs(fm));
     nscoord height;
-    fm->GetHeight(height);
+    fm->GetMaxHeight(height);
 
     nsMargin textMargin;
     textContext->GetStyleMargin()->GetMargin(textMargin);
@@ -3573,7 +3573,7 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
                                                getter_AddRefs(fontMet));
 
   nscoord height, baseline;
-  fontMet->GetHeight(height);
+  fontMet->GetMaxHeight(height);
   fontMet->GetMaxAscent(baseline);
 
   // Center the text. XXX Obey vertical-align style prop?

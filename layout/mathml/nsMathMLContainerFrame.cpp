@@ -85,8 +85,6 @@ nsresult
 nsMathMLContainerFrame::ReflowError(nsRenderingContext& aRenderingContext,
                                     nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsresult rv;
-
   // clear all other flags and record that there is an error with this frame
   mEmbellishData.flags = 0;
   mPresentationData.flags = NS_MATHML_ERROR;
