@@ -80,7 +80,6 @@ EXPORTS	= \
 	nsITheme.h \
 	nsThemeConstants.h \
 	gfxCrashReporterUtils.h \
-	nsIThebesFontMetrics.h \
 	nsBoundingMetrics.h \
 	$(NULL)
 

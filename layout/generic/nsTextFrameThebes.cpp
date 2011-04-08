@@ -1591,17 +1591,15 @@ GetFontGroupForFrame(nsIFrame* aFrame,
   if (!metrics)
     return nsnull;
 
-  nsIFontMetrics* metricsRaw = metrics;
   if (aOutFontMetrics) {
-    *aOutFontMetrics = metricsRaw;
+    *aOutFontMetrics = metrics;
     NS_ADDREF(*aOutFontMetrics);
   }
-  nsIThebesFontMetrics* fm = static_cast<nsIThebesFontMetrics*>(metricsRaw);
-  // XXX this is a bit bogus, we're releasing 'metrics' so the returned font-group
-  // might actually be torn down, although because of the way the device context
-  // caches font metrics, this seems to not actually happen. But we should fix
-  // this.
-  return fm->GetThebesFontGroup();
+  // XXX this is a bit bogus, we're releasing 'metrics' so the
+  // returned font-group might actually be torn down, although because
+  // of the way the device context caches font metrics, this seems to
+  // not actually happen. But we should fix this.
+  return metrics->GetThebesFontGroup();
 }
 
 static already_AddRefed<gfxContext>
@@ -5296,8 +5294,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
 
   nsCOMPtr<nsIFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
-  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
-  gfxFontGroup* fontGroup = tfm->GetThebesFontGroup();
+  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   if (!firstFont)
     return PR_FALSE; // OOM
