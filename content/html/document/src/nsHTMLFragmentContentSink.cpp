@@ -1180,7 +1180,7 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
             // Loop through all the rules found in the CSS text
             PRInt32 ruleCount = sheet->StyleRuleCount();
             for (PRInt32 i = 0; i < ruleCount; ++i) {
-              nsRefPtr<nsICSSRule> rule;
+              nsRefPtr<css::Rule> rule;
               rv = sheet->GetStyleRuleAt(i, *getter_AddRefs(rule));
               if (NS_FAILED(rv))
                 continue;
@@ -1190,8 +1190,8 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
                   didSanitize = PR_TRUE;
                   // Ignore these rule types.
                   break;
-                case nsICSSRule::NAMESPACE_RULE:
-                case nsICSSRule::FONT_FACE_RULE: {
+                case css::Rule::NAMESPACE_RULE:
+                case css::Rule::FONT_FACE_RULE: {
                   // Append @namespace and @font-face rules verbatim.
                   nsAutoString cssText;
                   nsCOMPtr<nsIDOMCSSRule> styleRule = do_QueryInterface(rule);
@@ -1203,7 +1203,7 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
                   }
                   break;
                 }
-                case nsICSSRule::STYLE_RULE: {
+                case css::Rule::STYLE_RULE: {
                   // For style rules, we will just look for and remove the
                   // -moz-binding properties.
                   nsRefPtr<css::StyleRule> styleRule = do_QueryObject(rule);

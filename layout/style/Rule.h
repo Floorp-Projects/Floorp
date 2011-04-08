@@ -40,7 +40,8 @@
 #ifndef mozilla_css_Rule_h___
 #define mozilla_css_Rule_h___
 
-#include "nsICSSRule.h"
+#include "nsIStyleRule.h"
+#include "nsIDOMCSSRule.h"
 
 class nsIStyleSheet;
 class nsCSSStyleSheet;
@@ -58,7 +59,7 @@ virtual void MapRuleInfoInto(nsRuleData* aRuleData);
 DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
 virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
-class Rule : public nsICSSRule {
+class Rule : public nsIStyleRule {
 protected:
   Rule()
     : mSheet(nsnull),
@@ -83,10 +84,47 @@ protected:
   NS_DECL_OWNINGTHREAD
 public:
 
+  // The constants in this list must maintain the following invariants:
+  //   If a rule of type N must appear before a rule of type M in stylesheets
+  //   then N < M
+  // Note that nsCSSStyleSheet::RebuildChildList assumes that no other kinds of
+  // rules can come between two rules of type IMPORT_RULE.
+  enum {
+    UNKNOWN_RULE = 0,
+    CHARSET_RULE,
+    IMPORT_RULE,
+    NAMESPACE_RULE,
+    STYLE_RULE,
+    MEDIA_RULE,
+    FONT_FACE_RULE,
+    PAGE_RULE,
+#ifdef MOZ_CSS_ANIMATIONS
+    KEYFRAME_RULE,
+    KEYFRAMES_RULE,
+#endif
+    DOCUMENT_RULE
+  };
+
+  virtual PRInt32 GetType() const = 0;
+
   virtual nsIStyleSheet* GetStyleSheet() const;
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
-
   virtual void SetParentRule(GroupRule* aRule);
+
+  /**
+   * Clones |this|. Never returns NULL.
+   */
+  virtual already_AddRefed<Rule> Clone() const = 0;
+
+  // Note that this returns null for inline style rules since they aren't
+  // supposed to have a DOM rule representation (and our code wouldn't work).
+  nsresult GetDOMRule(nsIDOMCSSRule** aDOMRule)
+  {
+    nsresult rv;
+    NS_IF_ADDREF(*aDOMRule = GetDOMRuleWeak(&rv));
+    return rv;
+  }
+  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult) = 0;
 
 protected:
   nsCSSStyleSheet*  mSheet;

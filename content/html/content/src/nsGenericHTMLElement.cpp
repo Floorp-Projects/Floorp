@@ -315,8 +315,8 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
         value->Type() == nsAttrValue::eCSSStyleRule) {
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
-      // inserted into the document.  Clone the nsICSSRule instead.
-      nsCOMPtr<nsICSSRule> ruleClone = value->GetCSSStyleRuleValue()->Clone();
+      // inserted into the document.  Clone the Rule instead.
+      nsRefPtr<mozilla::css::Rule> ruleClone = value->GetCSSStyleRuleValue()->Clone();
       nsRefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(ruleClone);
       NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
 

@@ -1306,9 +1306,8 @@ NS_INTERFACE_MAP_BEGIN(StyleRule)
     return NS_OK;
   }
   else
-  NS_INTERFACE_MAP_ENTRY(nsICSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_ADDREF_INHERITED(StyleRule, Rule)
@@ -1336,13 +1335,13 @@ StyleRule::RuleMatched()
 /* virtual */ PRInt32
 StyleRule::GetType() const
 {
-  return nsICSSRule::STYLE_RULE;
+  return Rule::STYLE_RULE;
 }
 
-/* virtual */ already_AddRefed<nsICSSRule>
+/* virtual */ already_AddRefed<Rule>
 StyleRule::Clone() const
 {
-  nsCOMPtr<nsICSSRule> clone = new StyleRule(*this);
+  nsRefPtr<Rule> clone = new StyleRule(*this);
   return clone.forget();
 }
 
