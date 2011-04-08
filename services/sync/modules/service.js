@@ -1014,6 +1014,16 @@ WeaveSvc.prototype = {
     }))(),
 
   startOver: function() {
+    // Clear client-specific data from the server, including disabled engines.
+    for each (let engine in [Clients].concat(Engines.getAll())) {
+      try {
+        engine.removeClientData();
+      } catch(ex) {
+        this._log.warn("Deleting client data for " + engine.name + " failed:"
+                       + Utils.exceptionStr(ex));
+      }
+    }
+
     // Set a username error so the status message shows "set up..."
     Status.login = LOGIN_FAILED_NO_USERNAME;
     this.logout();
