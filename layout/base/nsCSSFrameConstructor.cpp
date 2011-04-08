@@ -6191,16 +6191,16 @@ nsCSSFrameConstructor::ReframeTextIfNeeded(nsIContent* aParentContent,
 // to construct frames for those lazily.
 // The logic for this check is based on
 // nsGenericHTMLFormElement::UpdateEditableFormControlState and so must be kept
-// in sync with that. The presence of the NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR
-// flag only indicates a contenteditable attribute, it doesn't indicate if it
-// is true or false, so we force eager construction in some cases when the node
-// is not editable, but that should be rare.
+// in sync with that.  MayHaveContentEditableAttr() being true only indicates
+// a contenteditable attribute, it doesn't indicate whether it is true or false,
+// so we force eager construction in some cases when the node is not editable,
+// but that should be rare.
 static inline PRBool
 IsActuallyEditable(nsIContent* aContainer, nsIContent* aChild)
 {
   return (aChild->IsEditable() &&
           (aContainer->IsEditable() ||
-           aChild->HasFlag(NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR)));
+           aChild->MayHaveContentEditableAttr()));
 }
 
 // For inserts aChild should be valid, for appends it should be null.
