@@ -154,7 +154,7 @@ WeaveSvc.prototype = {
     let misc = Svc.Prefs.get("miscURL");
     if (misc.indexOf(":") == -1)
       misc = this.serverURL + misc;
-    return misc + "1.0/";
+    return misc + MISC_API_VERSION + "/";
   },
 
   get userAPI() {
@@ -162,7 +162,7 @@ WeaveSvc.prototype = {
     let user = Svc.Prefs.get("userURL");
     if (user.indexOf(":") == -1)
       user = this.serverURL + user;
-    return user + "1.0/";
+    return user + USER_API_VERSION + "/";
   },
 
   get pwResetURL() {
@@ -237,7 +237,7 @@ WeaveSvc.prototype = {
     if (this.clusterURL == "" || this.username == "")
       return;
 
-    let storageAPI = this.clusterURL + Svc.Prefs.get("storageAPI") + "/";
+    let storageAPI = this.clusterURL + SYNC_API_VERSION + "/";
     this.userBaseURL = storageAPI + this.username + "/";
     this._log.debug("Caching URLs under storage user base: " + this.userBaseURL);
 
