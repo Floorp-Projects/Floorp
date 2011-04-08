@@ -640,12 +640,12 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
   // get the axis height;
   aRenderingContext.SetFont(GetStyleFont()->mFont,
                             PresContext()->GetUserFontSet());
-  nsCOMPtr<nsIFontMetrics> fm = aRenderingContext.GetFontMetrics();
+  nsIFontMetrics* fm = aRenderingContext.FontMetrics();
   nscoord axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 
   // get the leading to be left at the top and the bottom of the stretched char
-  // this seems more reliable than using fm->GetLeading() on suspicious fonts               
+  // this seems more reliable than using fm->GetLeading() on suspicious fonts
   nscoord em;
   GetEmHeight(fm, em);
   nscoord leading = NSToCoordRound(0.2f * em);

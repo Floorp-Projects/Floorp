@@ -111,11 +111,6 @@ private:
                                        const nsRect& aRect,
                                        const nsRect& aClipRect);
 
-  inline PRInt32 GetAppUnitsPerDevPixel(nsRenderingContext* aContext){
-    nsCOMPtr<nsIDeviceContext> dctx = aContext->GetDeviceContext();
-    return dctx->AppUnitsPerDevPixel();
-  }
-
   void InitButtonStyle(PRUint8 widgetType,
                        nsIFrame* aFrame,
                        QRect rect,
