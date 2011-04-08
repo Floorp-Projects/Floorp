@@ -38,6 +38,7 @@
 #include "gfxASurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "mozilla/arm.h"
 #ifdef MOZ_X11
 #include "cairo.h"
 #include "gfxXlibSurface.h"
@@ -173,7 +174,9 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
                                         surfaceType, currentTarget, filter);
     }
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    pattern->SetFilter(gfxPattern::FILTER_FAST); 
+    if (!mozilla::supports_neon()) {
+        pattern->SetFilter(gfxPattern::FILTER_FAST);
+    }
 #endif
     pattern->SetMatrix(gfxMatrix(aTransform).Multiply(mTransform));
     aContext->NewPath();
