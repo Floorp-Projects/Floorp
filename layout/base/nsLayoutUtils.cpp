@@ -1451,6 +1451,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
 		                       !(aFlags & PAINT_HIDE_CARET));
+  if (usingDisplayPort) {
+    builder.SetHasDisplayPort();
+  }
+
   nsDisplayList list;
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(PR_TRUE);
