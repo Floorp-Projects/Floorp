@@ -157,7 +157,6 @@ function test_sync() {
   _("Ensure that Clients engine uploads a new client record once a week.");
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  new SyncTestingInfrastructure();
 
   CollectionKeys.generateNewKeys();
 
@@ -170,6 +169,9 @@ function test_sync() {
       "/1.0/foo/storage/meta/global": global.handler(),
       "/1.0/foo/storage/clients": coll.handler()
   });
+  server.registerPathHandler(
+    "/1.0/foo/storage/clients/" + Clients.localID, clientwbo.handler());
+
   do_test_pending();
 
   try {
@@ -189,10 +191,13 @@ function test_sync() {
     do_check_true(!!clientwbo.payload);
     do_check_true(Clients.lastRecordUpload > lastweek);
 
+    _("Remove client record.");
+    Clients.removeClientData();
+    do_check_eq(clientwbo.payload, undefined);
+
     _("Time travel one day back, no record uploaded.");
     Clients.lastRecordUpload -= LESS_THAN_CLIENTS_TTL_REFRESH;
     let yesterday = Clients.lastRecordUpload;
-    clientwbo.payload = undefined;
     Clients.sync();
     do_check_eq(clientwbo.payload, undefined);
     do_check_eq(Clients.lastRecordUpload, yesterday);
@@ -208,7 +213,7 @@ function test_sync() {
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Engine.Clients").level = Log4Moz.Level.Trace;
-  test_bad_hmac();      // Needs to run first: doesn't use fake service!
+  test_bad_hmac();
   test_properties();
   test_sync();
 }
