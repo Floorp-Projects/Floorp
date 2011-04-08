@@ -45,6 +45,7 @@ class nsAHttpSegmentReader;
 class nsAHttpSegmentWriter;
 class nsIInterfaceRequestor;
 class nsIEventTarget;
+class nsHttpRequestHead;
 
 //----------------------------------------------------------------------------
 // Abstract base class for a HTTP transaction:
@@ -86,6 +87,12 @@ public:
 
     // called to close the transaction
     virtual void Close(nsresult reason) = 0;
+
+    // called to indicate a failure at the SSL setup level
+    virtual void SetSSLConnectFailed() = 0;
+    
+    // called to retrieve the request headers of the transaction
+    virtual nsHttpRequestHead *RequestHead() = 0;
 };
 
 #define NS_DECL_NSAHTTPTRANSACTION \
@@ -98,7 +105,9 @@ public:
     PRUint32 Available(); \
     nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *); \
     nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *); \
-    void     Close(nsresult reason);
+    void     Close(nsresult reason);                                    \
+    void     SetSSLConnectFailed();                                     \
+    nsHttpRequestHead *RequestHead();
 
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentReader
