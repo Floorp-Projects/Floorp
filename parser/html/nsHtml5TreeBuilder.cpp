@@ -190,7 +190,7 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
     case NS_HTML5TREE_BUILDER_IN_BODY:
     case NS_HTML5TREE_BUILDER_IN_CELL:
     case NS_HTML5TREE_BUILDER_IN_CAPTION: {
-      if (!isInForeign()) {
+      if (!isInForeignButNotHtmlIntegrationPoint()) {
         reconstructTheActiveFormattingElements();
       }
     }
@@ -236,7 +236,7 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
                   accumulateCharacters(buf, start, i - start);
                   start = i;
                 }
-                if (!isInForeign()) {
+                if (!isInForeignButNotHtmlIntegrationPoint()) {
                   flushCharacters();
                   reconstructTheActiveFormattingElements();
                 }
@@ -338,7 +338,7 @@ nsHtml5TreeBuilder::characters(const PRUnichar* buf, PRInt32 start, PRInt32 leng
                   accumulateCharacters(buf, start, i - start);
                   start = i;
                 }
-                if (!isInForeign()) {
+                if (!isInForeignButNotHtmlIntegrationPoint()) {
                   flushCharacters();
                   reconstructTheActiveFormattingElements();
                 }
@@ -433,9 +433,6 @@ nsHtml5TreeBuilder::zeroOriginatingReplacementCharacter()
       return;
     }
     if (stackNode->isHtmlIntegrationPoint()) {
-      return;
-    }
-    if (stackNode->ns == kNameSpaceID_MathML && stackNode->getGroup() == NS_HTML5TREE_BUILDER_MI_MO_MN_MS_MTEXT) {
       return;
     }
     accumulateCharacters(REPLACEMENT_CHARACTER, 0, 1);
@@ -3712,6 +3709,12 @@ PRBool
 nsHtml5TreeBuilder::isInForeign()
 {
   return currentPtr >= 0 && stack[currentPtr]->ns != kNameSpaceID_XHTML;
+}
+
+PRBool 
+nsHtml5TreeBuilder::isInForeignButNotHtmlIntegrationPoint()
+{
+  return currentPtr >= 0 && stack[currentPtr]->ns != kNameSpaceID_XHTML && !stack[currentPtr]->isHtmlIntegrationPoint();
 }
 
 void 
