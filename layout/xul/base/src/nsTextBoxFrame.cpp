@@ -567,8 +567,9 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
            // underline position by getting the text metric.
            // XXX are attribute values always two byte?
            if (mAccessKeyInfo->mAccesskeyIndex > 0)
-               refContext->GetWidth(mCroppedTitle.get(), mAccessKeyInfo->mAccesskeyIndex,
-                                    mAccessKeyInfo->mBeforeWidth);
+               mAccessKeyInfo->mBeforeWidth =
+                   refContext->GetWidth(mCroppedTitle.get(),
+                                        mAccessKeyInfo->mAccesskeyIndex);
            else
                mAccessKeyInfo->mBeforeWidth = 0;
        }
@@ -651,8 +652,9 @@ nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext)
          // are the same for both BiDi and non-BiDi frames.
          const PRUnichar *titleString = mCroppedTitle.get();
          aRenderingContext.SetTextRunRTL(PR_FALSE);
-         aRenderingContext.GetWidth(titleString[mAccessKeyInfo->mAccesskeyIndex],
-                                    mAccessKeyInfo->mAccessWidth);
+         mAccessKeyInfo->mAccessWidth =
+             aRenderingContext.GetWidth(titleString[mAccessKeyInfo->
+                                                    mAccesskeyIndex]);
 
          nscoord offset, baseline;
          nsCOMPtr<nsIFontMetrics> metrics
@@ -694,7 +696,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     // see if the width is even smaller than the ellipsis
     // if so, clear the text (XXX set as many '.' as we can?).
     aRenderingContext.SetTextRunRTL(PR_FALSE);
-    aRenderingContext.GetWidth(kEllipsis, titleWidth);
+    titleWidth = aRenderingContext.GetWidth(kEllipsis);
 
     if (titleWidth > aWidth) {
         mCroppedTitle.SetLength(0);
@@ -722,7 +724,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             for (i = 0; i < length; ++i) {
                 PRUnichar ch = mTitle.CharAt(i);
                 // still in LTR mode
-                aRenderingContext.GetWidth(ch,cwidth);
+                cwidth = aRenderingContext.GetWidth(ch);
                 if (twidth + cwidth > aWidth)
                     break;
 
@@ -752,7 +754,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             int i;
             for (i=length-1; i >= 0; --i) {
                 PRUnichar ch = mTitle.CharAt(i);
-                aRenderingContext.GetWidth(ch,cwidth);
+                cwidth = aRenderingContext.GetWidth(ch);
                 if (twidth + cwidth > aWidth)
                     break;
 
@@ -796,7 +798,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             for (leftPos = 0; leftPos <= rightPos;) {
                 // look at the next character on the left end
                 ch = mTitle.CharAt(leftPos);
-                aRenderingContext.GetWidth(ch, charWidth);
+                charWidth = aRenderingContext.GetWidth(ch);
                 totalWidth += charWidth;
                 if (totalWidth > aWidth)
                     // greater than the allowable width
@@ -812,7 +814,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                 if (rightPos > leftPos) {
                     // haven't looked at this character yet
                     ch = mTitle.CharAt(rightPos);
-                    aRenderingContext.GetWidth(ch, charWidth);
+                    charWidth = aRenderingContext.GetWidth(ch);
                     totalWidth += charWidth;
                     if (totalWidth > aWidth)
                         // greater than the allowable width

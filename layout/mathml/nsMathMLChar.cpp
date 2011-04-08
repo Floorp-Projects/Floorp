@@ -1244,47 +1244,44 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
                  !font.name.Equals(mChar->mFamily),
                  "glyph table incorrectly set -- duplicate found");
 
-    nsBoundingMetrics bm;
-    nsresult rv = mRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
-    if (NS_SUCCEEDED(rv)) {
-      nscoord charSize =
-        isVertical ? bm.ascent + bm.descent
-                   : bm.rightBearing - bm.leftBearing;
+    nsBoundingMetrics bm = mRenderingContext.GetBoundingMetrics(&ch.code, 1);
+    nscoord charSize =
+      isVertical ? bm.ascent + bm.descent
+      : bm.rightBearing - bm.leftBearing;
 
-      if (largeopOnly ||
-          IsSizeBetter(charSize, bestSize, mTargetSize, mStretchHint)) {
-        mGlyphFound = PR_TRUE;
-        if (maxWidth) {
-          // IsSizeBetter() checked that charSize < maxsize;
-          // Leave ascent, descent, and bestsize as these contain maxsize.
-          if (mBoundingMetrics.width < bm.width)
-            mBoundingMetrics.width = bm.width;
-          if (mBoundingMetrics.leftBearing > bm.leftBearing)
-            mBoundingMetrics.leftBearing = bm.leftBearing;
-          if (mBoundingMetrics.rightBearing < bm.rightBearing)
-            mBoundingMetrics.rightBearing = bm.rightBearing;
-          // Continue to check other sizes unless largeopOnly
-          haveBetter = largeopOnly;
-        }
-        else {
-          mBoundingMetrics = bm;
-          haveBetter = PR_TRUE;
-          bestSize = charSize;
-          mChar->mGlyphTable = aGlyphTable;
-          mChar->mGlyph = ch;
-          mChar->mFamily = font.name;
-        }
-#ifdef NOISY_SEARCH
-        printf("    size:%d Current best\n", size);
-#endif
+    if (largeopOnly ||
+        IsSizeBetter(charSize, bestSize, mTargetSize, mStretchHint)) {
+      mGlyphFound = PR_TRUE;
+      if (maxWidth) {
+        // IsSizeBetter() checked that charSize < maxsize;
+        // Leave ascent, descent, and bestsize as these contain maxsize.
+        if (mBoundingMetrics.width < bm.width)
+          mBoundingMetrics.width = bm.width;
+        if (mBoundingMetrics.leftBearing > bm.leftBearing)
+          mBoundingMetrics.leftBearing = bm.leftBearing;
+        if (mBoundingMetrics.rightBearing < bm.rightBearing)
+          mBoundingMetrics.rightBearing = bm.rightBearing;
+        // Continue to check other sizes unless largeopOnly
+        haveBetter = largeopOnly;
       }
       else {
-#ifdef NOISY_SEARCH
-        printf("    size:%d Rejected!\n", size);
-#endif
-        if (haveBetter)
-          break; // Not making an futher progress, stop searching
+        mBoundingMetrics = bm;
+        haveBetter = PR_TRUE;
+        bestSize = charSize;
+        mChar->mGlyphTable = aGlyphTable;
+        mChar->mGlyph = ch;
+        mChar->mFamily = font.name;
       }
+#ifdef NOISY_SEARCH
+      printf("    size:%d Current best\n", size);
+#endif
+    }
+    else {
+#ifdef NOISY_SEARCH
+      printf("    size:%d Rejected!\n", size);
+#endif
+      if (haveBetter)
+        break; // Not making an futher progress, stop searching
     }
 
     // if largeopOnly is set, break now
@@ -1356,7 +1353,6 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
     }
     // empty slots are filled with the glue if it is not null
     if (!ch.Exists()) ch = glue;
-    nsBoundingMetrics bm;
     chdata[i] = ch;
     if (!ch.Exists()) {
       // Null glue indicates that a rule will be drawn, which can stretch to
@@ -1366,12 +1362,7 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
     else {
       SetFontFamily(mChar->mStyleContext->PresContext(), mRenderingContext,
                     font, aGlyphTable, ch, aFamily);
-      nsresult rv = mRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
-      if (NS_FAILED(rv)) {
-        // stop if we failed to compute the bounding metrics of a part.
-        NS_WARNING("GetBoundingMetrics failed");
-        return PR_FALSE; // to next table
-      }
+      nsBoundingMetrics bm = mRenderingContext.GetBoundingMetrics(&ch.code, 1);
 
       // TODO: For the generic Unicode table, ideally we should check that the
       // glyphs are actually found and that they each come from the same
@@ -1561,14 +1552,8 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   }
 
   aRenderingContext.SetFont(font, aPresContext->GetUserFontSet());
-  nsresult rv =
-    aRenderingContext.GetBoundingMetrics(mData.get(), PRUint32(mData.Length()),
-                                         aDesiredStretchSize);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("GetBoundingMetrics failed");
-    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    return rv;
-  }
+  aDesiredStretchSize =
+    aRenderingContext.GetBoundingMetrics(mData.get(), PRUint32(mData.Length()));
 
   if (!maxWidth) {
     mUnscaledAscent = aDesiredStretchSize.ascent;
@@ -2280,11 +2265,7 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
     if (ch.Exists()) {
       SetFontFamily(aPresContext, aRenderingContext,
                     aFont, aGlyphTable, ch, mFamily);
-      rv = aRenderingContext.GetBoundingMetrics(&ch.code, 1, bmdata[i]);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("GetBoundingMetrics failed");
-        return rv;
-      }
+      bmdata[i] = aRenderingContext.GetBoundingMetrics(&ch.code, 1);
     }
     chdata[i] = ch;
     ++i;
@@ -2513,11 +2494,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     if (ch.Exists()) {
       SetFontFamily(aPresContext, aRenderingContext,
                     aFont, aGlyphTable, ch, mFamily);
-      rv = aRenderingContext.GetBoundingMetrics(&ch.code, 1, bmdata[i]);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("GetBoundingMetrics failed");
-        return rv;
-      }
+      bmdata[i] = aRenderingContext.GetBoundingMetrics(&ch.code, 1);
     }
     chdata[i] = ch;
     ++i;

@@ -382,8 +382,8 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   GetRuleThickness(aRenderingContext, fm, mRuleThickness);
   GetEmHeight(fm, mEmHeight);
 
-  nsBoundingMetrics bmOne;
-  aRenderingContext.GetBoundingMetrics(NS_LITERAL_STRING("1").get(), 1, bmOne);
+  PRUnichar one = '1';
+  nsBoundingMetrics bmOne = aRenderingContext.GetBoundingMetrics(&one, 1);
 
   ///////////////
   // General rules: the menclose element takes the size of the enclosed content.

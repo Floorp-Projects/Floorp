@@ -1384,9 +1384,8 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
     // See if the width is even smaller than the ellipsis
     // If so, clear the text completely.
     const nsDependentString& kEllipsis = nsContentUtils::GetLocalizedEllipsis();
-    nscoord ellipsisWidth;
     aRenderingContext.SetTextRunRTL(PR_FALSE);
-    aRenderingContext.GetWidth(kEllipsis, ellipsisWidth);
+    nscoord ellipsisWidth = aRenderingContext.GetWidth(kEllipsis);
 
     width = maxWidth;
     if (ellipsisWidth > width)
@@ -1411,7 +1410,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           for (i = 0; i < length; ++i) {
             PRUnichar ch = aText[i];
             // XXX this is horrible and doesn't handle clusters
-            aRenderingContext.GetWidth(ch,cwidth);
+            cwidth = aRenderingContext.GetWidth(ch);
             if (twidth + cwidth > width)
               break;
             twidth += cwidth;
@@ -1429,7 +1428,7 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int i;
           for (i=length-1; i >= 0; --i) {
             PRUnichar ch = aText[i];
-            aRenderingContext.GetWidth(ch,cwidth);
+            cwidth = aRenderingContext.GetWidth(ch);
             if (twidth + cwidth > width)
               break;
             twidth += cwidth;
@@ -1451,14 +1450,14 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
           int rightPos = length - 1;
           for (int leftPos = 0; leftPos < rightPos; ++leftPos) {
             PRUnichar ch = aText[leftPos];
-            aRenderingContext.GetWidth(ch, cwidth);
+            cwidth = aRenderingContext.GetWidth(ch);
             twidth += cwidth;
             if (twidth > width)
               break;
             leftStr.Append(ch);
 
             ch = aText[rightPos];
-            aRenderingContext.GetWidth(ch, cwidth);
+            cwidth = aRenderingContext.GetWidth(ch);
             twidth += cwidth;
             if (twidth > width)
               break;
