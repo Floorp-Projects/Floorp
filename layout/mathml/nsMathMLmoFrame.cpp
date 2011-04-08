@@ -393,7 +393,7 @@ nsMathMLmoFrame::ProcessOperatorData()
       // cache the default values of lspace & rspace that we get from the dictionary.
       // since these values are relative to the 'em' unit, convert to twips now
       nscoord em;
-      nsCOMPtr<nsIFontMetrics> fm =
+      nsRefPtr<nsFontMetrics> fm =
 	presContext->GetMetricsFor(GetStyleFont()->mFont);
       GetEmHeight(fm, em);
 
@@ -639,7 +639,7 @@ nsMathMLmoFrame::Stretch(nsRenderingContext& aRenderingContext,
   // get the axis height;
   aRenderingContext.SetFont(GetStyleFont()->mFont,
                             PresContext()->GetUserFontSet());
-  nsIFontMetrics* fm = aRenderingContext.FontMetrics();
+  nsFontMetrics* fm = aRenderingContext.FontMetrics();
   nscoord axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
 

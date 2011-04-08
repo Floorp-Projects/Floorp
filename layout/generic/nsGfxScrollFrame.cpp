@@ -51,7 +51,7 @@
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocument.h"
 #include "nsBoxLayoutState.h"
@@ -2202,7 +2202,7 @@ nsGfxScrollFrameInner::GetLineScrollAmount() const
 {
   const nsStyleFont* font = mOuter->GetStyleFont();
   const nsFont& f = font->mFont;
-  nsCOMPtr<nsIFontMetrics> fm = mOuter->PresContext()->GetMetricsFor(f);
+  nsRefPtr<nsFontMetrics> fm = mOuter->PresContext()->GetMetricsFor(f);
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
   nscoord fontHeight = 1;
   if (fm) {

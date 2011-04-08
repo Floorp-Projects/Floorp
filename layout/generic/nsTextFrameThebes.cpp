@@ -1580,12 +1580,12 @@ GetSpacingFlags(nscoord spacing)
 
 static gfxFontGroup*
 GetFontGroupForFrame(nsIFrame* aFrame,
-                     nsIFontMetrics** aOutFontMetrics = nsnull)
+                     nsFontMetrics** aOutFontMetrics = nsnull)
 {
   if (aOutFontMetrics)
     *aOutFontMetrics = nsnull;
 
-  nsCOMPtr<nsIFontMetrics> metrics;
+  nsRefPtr<nsFontMetrics> metrics;
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(metrics));
 
   if (!metrics)
@@ -2489,7 +2489,7 @@ public:
     return mFontGroup;
   }
 
-  nsIFontMetrics* GetFontMetrics() {
+  nsFontMetrics* GetFontMetrics() {
     if (!mFontMetrics)
       InitFontGroupAndFontMetrics();
     return mFontMetrics;
@@ -2508,7 +2508,7 @@ protected:
 
   gfxTextRun*           mTextRun;
   gfxFontGroup*         mFontGroup;
-  nsCOMPtr<nsIFontMetrics> mFontMetrics;
+  nsRefPtr<nsFontMetrics> mFontMetrics;
   const nsStyleText*    mTextStyle;
   const nsTextFragment* mFrag;
   nsIFrame*             mLineContainer;
@@ -4339,7 +4339,7 @@ nsTextFrame::UnionTextDecorationOverflow(nsPresContext* aPresContext,
     // The underline/overline drawable area must be contained in the overflow
     // rect when this is in floating first letter frame at *both* modes.
     nscoord fontAscent, fontHeight;
-    nsIFontMetrics* fm = aProvider.GetFontMetrics();
+    nsFontMetrics* fm = aProvider.GetFontMetrics();
     fm->GetMaxAscent(fontAscent);
     fm->GetMaxHeight(fontHeight);
     nsRect fontRect(0, mAscent - fontAscent, GetSize().width, fontHeight);
@@ -5292,7 +5292,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
 
   nsRect givenRect = aRect;
 
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
@@ -6784,7 +6784,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   if (!length && !textMetrics.mAscent && !textMetrics.mDescent) {
     // If we're measuring a zero-length piece of text, update
     // the height manually.
-    nsIFontMetrics* fm = provider.GetFontMetrics();
+    nsFontMetrics* fm = provider.GetFontMetrics();
     if (fm) {
       nscoord ascent, descent;
       fm->GetMaxAscent(ascent);
@@ -6894,9 +6894,9 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   } else {
     // Otherwise, ascent should contain the overline drawable area.
     // And also descent should contain the underline drawable area.
-    // nsIFontMetrics::GetMaxAscent/GetMaxDescent contains them.
+    // nsFontMetrics::GetMaxAscent/GetMaxDescent contains them.
     nscoord fontAscent, fontDescent;
-    nsIFontMetrics* fm = provider.GetFontMetrics();
+    nsFontMetrics* fm = provider.GetFontMetrics();
     fm->GetMaxAscent(fontAscent);
     fm->GetMaxDescent(fontDescent);
     aMetrics.ascent = NS_MAX(NSToCoordCeil(textMetrics.mAscent), fontAscent);

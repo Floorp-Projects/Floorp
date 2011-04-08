@@ -44,7 +44,7 @@
 
 #include "gfxFont.h"
 #include "gfxUserFontSet.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Constants and structures
@@ -532,7 +532,7 @@ nsFontWeightTextAttr::GetFontWeight(nsIFrame *aFrame)
 
   gfxUserFontSet *fs = aFrame->PresContext()->GetUserFontSet();
 
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   aFrame->PresContext()->DeviceContext()->
     GetMetricsFor(styleFont->mFont, aFrame->GetStyleVisibility()->mLanguage,
                   fs, *getter_AddRefs(fm));

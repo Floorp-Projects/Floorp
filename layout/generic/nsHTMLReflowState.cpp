@@ -47,7 +47,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
 #include "nsImageFrame.h"
@@ -2106,7 +2106,7 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
 // For risk management, we use preference to control the behavior, and 
 // eNoExternalLeading is the old behavior.
 static nscoord
-GetNormalLineHeight(nsIFontMetrics* aFontMetrics)
+GetNormalLineHeight(nsFontMetrics* aFontMetrics)
 {
   NS_PRECONDITION(nsnull != aFontMetrics, "no font metrics");
 
@@ -2160,7 +2160,7 @@ ComputeLineHeight(nsStyleContext* aStyleContext,
       return aBlockHeight;
   }
 
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForStyleContext(aStyleContext,
                                                getter_AddRefs(fm));
   return GetNormalLineHeight(fm);

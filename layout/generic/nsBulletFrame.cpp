@@ -289,7 +289,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
     }
   }
 
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   aRenderingContext.SetColor(GetVisitedDependentColor(eCSSProperty_color));
 
   mTextIsRTL = PR_FALSE;
@@ -1347,7 +1347,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   // match the image size).
   mIntrinsicSize.SizeTo(0, 0);
 
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   nscoord bulletSize;
 
@@ -1591,7 +1591,7 @@ nsBulletFrame::GetBaseline() const
   if (GetStateBits() & BULLET_FRAME_IMAGE_LOADING) {
     ascent = GetRect().height;
   } else {
-    nsCOMPtr<nsIFontMetrics> fm;
+    nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
     const nsStyleList* myList = GetStyleList();
     switch (myList->mListStyleType) {

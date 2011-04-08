@@ -277,7 +277,7 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
 
 /* static */ void
 nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
-                                nsIFontMetrics*      aFontMetrics,
+                                nsFontMetrics*      aFontMetrics,
                                 nscoord&             aRuleThickness)
 {
   // get the bounding metrics of the overbar char, the rendering context
@@ -299,7 +299,7 @@ nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
 
 /* static */ void
 nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
-                             nsIFontMetrics*      aFontMetrics,
+                             nsFontMetrics*      aFontMetrics,
                              nscoord&             aAxisHeight)
 {
   // get the bounding metrics of the minus sign, the rendering context
@@ -342,7 +342,7 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
   else if (eCSSUnit_XHeight == unit) {
     nscoord xHeight;
     const nsStyleFont* font = aStyleContext->GetStyleFont();
-    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font->mFont);
+    nsRefPtr<nsFontMetrics> fm = aPresContext->GetMetricsFor(font->mFont);
     fm->GetXHeight(xHeight);
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
