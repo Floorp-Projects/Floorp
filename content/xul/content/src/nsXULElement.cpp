@@ -248,8 +248,8 @@ nsXULElement::nsXULElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
 }
 
-nsXULElement::nsXULSlots::nsXULSlots(PtrBits aFlags)
-    : nsXULElement::nsDOMSlots(aFlags)
+nsXULElement::nsXULSlots::nsXULSlots()
+    : nsXULElement::nsDOMSlots()
 {
 }
 
@@ -264,7 +264,7 @@ nsXULElement::nsXULSlots::~nsXULSlots()
 nsINode::nsSlots*
 nsXULElement::CreateSlots()
 {
-    return new nsXULSlots(mFlagsOrSlots);
+    return new nsXULSlots();
 }
 
 /* static */

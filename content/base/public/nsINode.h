@@ -78,8 +78,7 @@ class Element;
 } // namespace mozilla
 
 enum {
-  // This bit will be set if the node doesn't have nsSlots
-  NODE_DOESNT_HAVE_SLOTS =       0x00000001U,
+  UNUSED1 =       0x00000001U,
 
   // This bit will be set if the node has a listener manager in the listener
   // manager hash
@@ -317,11 +316,12 @@ public:
   nsINode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : mNodeInfo(aNodeInfo),
     mParentPtrBits(0),
-    mFlagsOrSlots(NODE_DOESNT_HAVE_SLOTS),
+    mFlags(0),
     mNextSibling(nsnull),
     mPreviousSibling(nsnull),
     mFirstChild(nsnull),
-    mNodeHasRenderingObservers(false)
+    mNodeHasRenderingObservers(false),
+    mSlots(nsnull)
   {
   }
 
@@ -800,9 +800,8 @@ public:
   class nsSlots
   {
   public:
-    nsSlots(PtrBits aFlags)
-      : mFlags(aFlags),
-        mChildNodes(nsnull),
+    nsSlots()
+      : mChildNodes(nsnull),
         mWeakReference(nsnull)
     {
     }
@@ -810,13 +809,6 @@ public:
     // If needed we could remove the vtable pointer this dtor causes by
     // putting a DestroySlots function on nsINode
     virtual ~nsSlots();
-
-    /**
-     * Storage for flags for this node. These are the same flags as the
-     * mFlagsOrSlots member, but these are used when the slots class
-     * is allocated.
-     */
-    PtrBits mFlags;
 
     /**
      * A list of mutation observers
@@ -853,12 +845,12 @@ public:
     return !!(GetFlags() & aFlag);
   }
 
-  PtrBits GetFlags() const
+  PRUint32 GetFlags() const
   {
-    return NS_UNLIKELY(HasSlots()) ? FlagsAsSlots()->mFlags : mFlagsOrSlots;
+    return mFlags;
   }
 
-  void SetFlags(PtrBits aFlagsToSet)
+  void SetFlags(PRUint32 aFlagsToSet)
   {
     NS_ASSERTION(!(aFlagsToSet & (NODE_IS_ANONYMOUS |
                                   NODE_IS_NATIVE_ANONYMOUS_ROOT |
@@ -868,21 +860,17 @@ public:
                                   NODE_NEEDS_FRAME)) ||
                  IsNodeOfType(eCONTENT),
                  "Flag only permitted on nsIContent nodes");
-    PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
-                                  &mFlagsOrSlots;
-    *flags |= aFlagsToSet;
+    mFlags |= aFlagsToSet;
   }
 
-  void UnsetFlags(PtrBits aFlagsToUnset)
+  void UnsetFlags(PRUint32 aFlagsToUnset)
   {
     NS_ASSERTION(!(aFlagsToUnset &
                    (NODE_IS_ANONYMOUS |
                     NODE_IS_IN_ANONYMOUS_SUBTREE |
                     NODE_IS_NATIVE_ANONYMOUS_ROOT)),
                  "Trying to unset write-only flags");
-    PtrBits* flags = HasSlots() ? &FlagsAsSlots()->mFlags :
-                                  &mFlagsOrSlots;
-    *flags &= ~aFlagsToUnset;
+    mFlags &= ~aFlagsToUnset;
   }
 
   void SetEditableFlag(PRBool aEditable)
@@ -1161,37 +1149,25 @@ protected:
 
   PRBool HasSlots() const
   {
-    return !(mFlagsOrSlots & NODE_DOESNT_HAVE_SLOTS);
-  }
-
-  nsSlots* FlagsAsSlots() const
-  {
-    NS_ASSERTION(HasSlots(), "check HasSlots first");
-    return reinterpret_cast<nsSlots*>(mFlagsOrSlots);
+    return mSlots != nsnull;
   }
 
   nsSlots* GetExistingSlots() const
   {
-    return HasSlots() ? FlagsAsSlots() : nsnull;
+    return mSlots;
   }
 
   nsSlots* GetSlots()
   {
-    if (HasSlots()) {
-      return FlagsAsSlots();
+    if (!HasSlots()) {
+      mSlots = CreateSlots();
     }
-
-    nsSlots* newSlots = CreateSlots();
-    if (newSlots) {
-      mFlagsOrSlots = reinterpret_cast<PtrBits>(newSlots);
-    }
-
-    return newSlots;
+    return GetExistingSlots();
   }
 
   nsTObserverArray<nsIMutationObserver*> *GetMutationObservers()
   {
-    return HasSlots() ? &FlagsAsSlots()->mMutationObservers : nsnull;
+    return HasSlots() ? &GetExistingSlots()->mMutationObservers : nsnull;
   }
 
   PRBool IsEditableInternal() const;
@@ -1273,13 +1249,7 @@ protected:
 
   PtrBits mParentPtrBits;
 
-  /**
-   * Used for either storing flags for this node or a pointer to
-   * this contents nsContentSlots. See the definition of the
-   * NODE_* macros for the layout of the bits in this
-   * member.
-   */
-  PtrBits mFlagsOrSlots;
+  PRUint32 mFlags;
 
   nsIContent* mNextSibling;
   nsIContent* mPreviousSibling;
@@ -1287,6 +1257,9 @@ protected:
 
   // More flags
   bool mNodeHasRenderingObservers : 1;
+
+  // Storage for more members that are usually not needed; allocated lazily.
+  nsSlots* mSlots;
 };
 
 
