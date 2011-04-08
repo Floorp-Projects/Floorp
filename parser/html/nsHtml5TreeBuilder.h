@@ -217,6 +217,7 @@ class nsHtml5TreeBuilder : public nsAHtml5TreeBuilderState
 
   private:
     PRBool isInForeign();
+    PRBool isInForeignButNotHtmlIntegrationPoint();
   public:
     void setFragmentContext(nsIAtom* context, PRInt32 ns, nsIContent** node, PRBool quirks);
   protected:

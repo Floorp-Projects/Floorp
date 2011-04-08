@@ -950,7 +950,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
             case IN_BODY:
             case IN_CELL:
             case IN_CAPTION:
-                if (!isInForeign()) {
+                if (!isInForeignButNotHtmlIntegrationPoint()) {
                     reconstructTheActiveFormattingElements();
                 }
                 // fall through
@@ -1009,7 +1009,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Reconstruct the active formatting
                                      * elements, if any.
                                      */
-                                    if (!isInForeign()) {
+                                    if (!isInForeignButNotHtmlIntegrationPoint()) {
                                         flushCharacters();
                                         reconstructTheActiveFormattingElements();
                                     }
@@ -1205,7 +1205,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                      * Reconstruct the active formatting
                                      * elements, if any.
                                      */
-                                    if (!isInForeign()) {
+                                    if (!isInForeignButNotHtmlIntegrationPoint()) {
                                         flushCharacters();
                                         reconstructTheActiveFormattingElements();
                                     }
@@ -1328,10 +1328,6 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                 return;
             }
             if (stackNode.isHtmlIntegrationPoint()) {
-                return;
-            }
-            if (stackNode.ns == "http://www.w3.org/1998/Math/MathML"
-                    && stackNode.getGroup() == MI_MO_MN_MS_MTEXT) {
                 return;
             }
             accumulateCharacters(REPLACEMENT_CHARACTER, 0, 1);
@@ -5323,6 +5319,12 @@ public abstract class TreeBuilder<T> implements TokenHandler,
     private boolean isInForeign() {
         return currentPtr >= 0
                 && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml";
+    }
+
+    private boolean isInForeignButNotHtmlIntegrationPoint() {
+        return currentPtr >= 0
+                && stack[currentPtr].ns != "http://www.w3.org/1999/xhtml"
+                && !stack[currentPtr].isHtmlIntegrationPoint();
     }
 
     /**
