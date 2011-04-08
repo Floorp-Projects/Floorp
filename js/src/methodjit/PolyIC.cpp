@@ -203,7 +203,7 @@ class SetPropCompiler : public PICStubCompiler
         SetPropLabels &labels = pic.setPropLabels();
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin, pic.u.vr));
         repatcher.repatch(labels.getInlineShapeData(pic.fastPathStart, pic.shapeGuard),
-                          int32(JSObjectMap::INVALID_SHAPE));
+                          int32(INVALID_SHAPE));
         repatcher.relink(labels.getInlineShapeJump(pic.fastPathStart.labelAtOffset(pic.shapeGuard)),
                          pic.slowPathStart);
 
@@ -738,7 +738,7 @@ class GetPropCompiler : public PICStubCompiler
         GetPropLabels &labels = pic.getPropLabels();
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin));
         repatcher.repatch(labels.getInlineShapeData(pic.getFastShapeGuard()),
-                          int32(JSObjectMap::INVALID_SHAPE));
+                          int32(INVALID_SHAPE));
         repatcher.relink(labels.getInlineShapeJump(pic.getFastShapeGuard()), pic.slowPathStart);
 
         if (pic.hasTypeCheck()) {

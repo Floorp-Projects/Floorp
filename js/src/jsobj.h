@@ -203,23 +203,9 @@ MeterEntryCount(uintN count);
 
 } /* namespace js */
 
-struct JSObjectMap : public js::gc::Cell {
-    mutable uint32 shape;  /* shape identifier */
-    uint32 slotSpan;       /* one more than maximum live slot number */
-
-    static JS_FRIEND_DATA(JSObjectMap) sharedNonNative;
-
-    explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
-    JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}
-
-    enum { INVALID_SHAPE = 0x8fffffff, SHAPELESS = 0xffffffff };
-
-    bool isNative() const { return this != &sharedNonNative; }
-
-  private:
-    /* No copy or assignment semantics. */
-    JSObjectMap(JSObjectMap &);
-    void operator=(JSObjectMap &);
+enum {
+    INVALID_SHAPE = 0x8fffffff,
+    SHAPELESS = 0xffffffff
 };
 
 /*
@@ -333,23 +319,9 @@ struct JSObject : js::gc::Cell {
 
     /*
      * Private pointer to the last added property and methods to manipulate the
-     * list it links among properties in this scope. The {remove,insert} pair
-     * for DictionaryProperties assert that the scope is in dictionary mode and
-     * any reachable properties are flagged as dictionary properties.
-     *
-     * For native objects, this field is always a Shape. For non-native objects,
-     * it points to the singleton sharedNonNative JSObjectMap, whose shape field
-     * is SHAPELESS.
-     *
-     * NB: these private methods do *not* update this scope's shape to track
-     * lastProp->shape after they finish updating the linked list in the case
-     * where lastProp is updated. It is up to calling code in jsscope.cpp to
-     * call updateShape(cx) after updating lastProp.
+     * list it links among properties in this scope.
      */
-    union {
-        js::Shape       *lastProp;
-        JSObjectMap     *map;
-    };
+    js::Shape           *lastProp;
 
     js::Class           *clasp;
 
@@ -419,7 +391,8 @@ struct JSObject : js::gc::Cell {
     inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp,
                                          /* gc::FinalizeKind */ unsigned kind);
 
-    bool isNative() const       { return map->isNative(); }
+    inline bool isNative() const;
+    inline bool isNewborn() const;
 
     js::Class *getClass() const { return clasp; }
     JSClass *getJSClass() const { return Jsvalify(clasp); }
@@ -433,7 +406,7 @@ struct JSObject : js::gc::Cell {
     }
 
     uint32 shape() const {
-        JS_ASSERT(objShape != JSObjectMap::INVALID_SHAPE);
+        JS_ASSERT(objShape != INVALID_SHAPE);
         return objShape;
     }
 
@@ -489,23 +462,17 @@ struct JSObject : js::gc::Cell {
   private:
     void generateOwnShape(JSContext *cx);
 
-    void setOwnShape(uint32 s)  { flags |= OWN_SHAPE; objShape = s; }
-    void clearOwnShape()        { flags &= ~OWN_SHAPE; objShape = map->shape; }
+    inline void setOwnShape(uint32 s);
+    inline void clearOwnShape();
 
   public:
     inline bool nativeEmpty() const;
 
     bool hasOwnShape() const    { return !!(flags & OWN_SHAPE); }
 
-    void setMap(JSObjectMap *amap) {
-        JS_ASSERT(!hasOwnShape());
-        map = amap;
-        objShape = map->shape;
-    }
+    inline void setMap(js::Shape *amap);
 
-    void setSharedNonNativeMap() {
-        setMap(const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative));
-    }
+    inline void setSharedNonNativeMap();
 
     /* Functions for setting up scope chain object maps and shapes. */
     void initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
@@ -668,42 +635,30 @@ struct JSObject : js::gc::Cell {
 
     inline bool ensureClassReservedSlots(JSContext *cx);
 
-    uint32 slotSpan() const { return map->slotSpan; }
+    inline uint32 slotSpan() const;
 
-    bool containsSlot(uint32 slot) const { return slot < slotSpan(); }
+    inline bool containsSlot(uint32 slot) const;
 
     js::Value& getSlotRef(uintN slot) {
         JS_ASSERT(slot < capacity);
         return slots[slot];
     }
 
-    js::Value &nativeGetSlotRef(uintN slot) {
-        JS_ASSERT(isNative());
-        JS_ASSERT(containsSlot(slot));
-        return getSlotRef(slot);
-    }
+    inline js::Value &nativeGetSlotRef(uintN slot);
 
     const js::Value &getSlot(uintN slot) const {
         JS_ASSERT(slot < capacity);
         return slots[slot];
     }
 
-    const js::Value &nativeGetSlot(uintN slot) const {
-        JS_ASSERT(isNative());
-        JS_ASSERT(containsSlot(slot));
-        return getSlot(slot);
-    }
+    inline const js::Value &nativeGetSlot(uintN slot) const;
 
     void setSlot(uintN slot, const js::Value &value) {
         JS_ASSERT(slot < capacity);
         slots[slot] = value;
     }
 
-    void nativeSetSlot(uintN slot, const js::Value &value) {
-        JS_ASSERT(isNative());
-        JS_ASSERT(containsSlot(slot));
-        return setSlot(slot, value);
-    }
+    inline void nativeSetSlot(uintN slot, const js::Value &value);
 
     inline js::Value getReservedSlot(uintN index) const;
 

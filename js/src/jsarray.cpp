@@ -1058,7 +1058,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
      * Save old map now, before calling InitScopeForObject. We'll have to undo
      * on error. This is gross, but a better way is not obvious.
      */
-    JSObjectMap *oldMap = map;
+    js::Shape *oldMap = lastProp;
 
     /* Create a native scope. */
     JSObject *arrayProto = getProto();
