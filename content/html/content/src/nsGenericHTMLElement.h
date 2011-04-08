@@ -530,14 +530,14 @@ protected:
    * Add/remove this element to the documents name cache
    */
   void AddToNameTable(nsIAtom* aName) {
-    NS_ASSERTION(HasFlag(NODE_HAS_NAME), "Node lacking NODE_HAS_NAME flag");
+    NS_ASSERTION(HasName(), "Node doesn't have name?");
     nsIDocument* doc = GetCurrentDoc();
     if (doc && !IsInAnonymousSubtree()) {
       doc->AddToNameTable(this, aName);
     }
   }
   void RemoveFromNameTable() {
-    if (HasFlag(NODE_HAS_NAME)) {
+    if (HasName()) {
       nsIDocument* doc = GetCurrentDoc();
       if (doc) {
         doc->RemoveFromNameTable(this, GetParsedAttr(nsGkAtoms::name)->
@@ -794,7 +794,7 @@ protected:
     static const nsIContent::AttrValuesArray values[] =
       { &nsGkAtoms::_false, &nsGkAtoms::_true, &nsGkAtoms::_empty, nsnull };
 
-    if (!HasFlag(NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR))
+    if (!MayHaveContentEditableAttr())
       return eInherit;
 
     PRInt32 value = FindAttrValueIn(kNameSpaceID_None,
