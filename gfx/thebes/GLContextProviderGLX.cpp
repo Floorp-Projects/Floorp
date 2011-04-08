@@ -196,9 +196,9 @@ GLXLibrary::EnsureInitialized()
     }
 
     int screen = DefaultScreen(display);
-    const char *serverVendor;
-    const char *serverVersionStr;
-    const char *extensionsStr;
+    const char *serverVendor = NULL;
+    const char *serverVersionStr = NULL;
+    const char *extensionsStr = NULL;
 
     // This scope is covered by a ScopedXErrorHandler to catch X errors in GLX
     // calls.  See bug 632867 comment 3: Mesa versions up to 7.10 cause a
