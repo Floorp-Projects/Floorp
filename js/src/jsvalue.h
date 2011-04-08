@@ -376,8 +376,18 @@ class Value
     }
 
     JS_ALWAYS_INLINE
+    void setString(const JS::Anchor<JSString *> &str) {
+        setString(str.get());
+    }
+
+    JS_ALWAYS_INLINE
     void setObject(JSObject &obj) {
         data = OBJECT_TO_JSVAL_IMPL(&obj);
+    }
+
+    JS_ALWAYS_INLINE
+    void setObject(const JS::Anchor<JSObject *> &obj) {
+        setObject(*obj.get());
     }
 
     JS_ALWAYS_INLINE
