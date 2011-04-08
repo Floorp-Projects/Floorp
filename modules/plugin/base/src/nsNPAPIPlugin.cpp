@@ -2364,6 +2364,11 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
       return inst->SetWantsAllNetworkStreams(bWantsAllNetworkStreams);
     }
 
+    case NPPVpluginUsesDOMForCursorBool: {
+      PRBool useDOMForCursor = (result != nsnull);
+      return inst->SetUsesDOMForCursor(useDOMForCursor);
+    }
+
 #ifdef XP_MACOSX
     case NPPVpluginDrawingModel: {
       if (inst) {

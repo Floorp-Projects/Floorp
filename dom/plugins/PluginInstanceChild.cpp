@@ -474,6 +474,14 @@ PluginInstanceChild::NPN_SetValue(NPPVariable aVar, void* aValue)
         return rv;
     }
 
+    case NPPVpluginUsesDOMForCursorBool: {
+        NPError rv = NPERR_GENERIC_ERROR;
+        if (!CallNPN_SetValue_NPPVpluginUsesDOMForCursor((NPBool)(intptr_t)aValue, &rv)) {
+            return NPERR_GENERIC_ERROR;
+        }
+        return rv;
+    }
+
 #ifdef XP_MACOSX
     case NPPVpluginDrawingModel: {
         NPError rv;
