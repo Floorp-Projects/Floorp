@@ -1188,7 +1188,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   PRInt32 change;
   if (contentEditable) {
     change = GetContentEditableValue() == eTrue ? -1 : 0;
-    SetFlags(NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR);
+    SetMayHaveContentEditableAttr();
   }
 
   nsresult rv = nsStyledElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,

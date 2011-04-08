@@ -151,8 +151,7 @@ enum {
                                  NODE_HAS_EDGE_CHILD_SELECTOR |
                                  NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS,
 
-  NODE_MAY_HAVE_CONTENT_EDITABLE_ATTR
-                               = 0x00020000U,
+  UNUSED6                      = 0x00020000U,
 
   NODE_ATTACH_BINDING_ON_POSTCREATE
                                = 0x00040000U,
@@ -1151,6 +1150,8 @@ private:
     ElementMayHaveStyle,
     // Set if the element has a name attribute set.
     ElementHasName,
+    // Set if the element might have a contenteditable attribute set.
+    ElementMayHaveContentEditableAttr,
     // Guard value
     BooleanFlagCount
   };
@@ -1183,6 +1184,8 @@ public:
   bool HasID() const { return GetBoolFlag(ElementHasID); }
   bool MayHaveStyle() const { return GetBoolFlag(ElementMayHaveStyle); }
   bool HasName() const { return GetBoolFlag(ElementHasName); }
+  bool MayHaveContentEditableAttr() const
+    { return GetBoolFlag(ElementMayHaveContentEditableAttr); }
 
 protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
@@ -1195,6 +1198,8 @@ protected:
   void SetMayHaveStyle() { SetBoolFlag(ElementMayHaveStyle); }
   void SetHasName() { SetBoolFlag(ElementHasName); }
   void ClearHasName() { ClearBoolFlag(ElementHasName); }
+  void SetMayHaveContentEditableAttr()
+    { SetBoolFlag(ElementMayHaveContentEditableAttr); }
 
 public:
   // Optimized way to get classinfo.
