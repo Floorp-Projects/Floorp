@@ -1925,10 +1925,16 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
   // Convert to variant before calling ScriptEvaluated, as it may GC, meaning
   // we would need to root rval.
   if (NS_SUCCEEDED(rv)) {
-    if (rval == JSVAL_NULL)
+    if (rval == JSVAL_NULL) {
       *arv = nsnull;
-    else
-      rv = nsContentUtils::XPConnect()->JSToVariant(mContext, rval, arv);
+    } else {
+      if (!JS_WrapValue(mContext, &rval)) {
+        ReportPendingException();
+        rv = NS_ERROR_FAILURE;
+      } else {
+        rv = nsContentUtils::XPConnect()->JSToVariant(mContext, rval, arv);
+      }
+    }
   }
 
   // ScriptEvaluated needs to come after we pop the stack
