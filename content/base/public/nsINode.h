@@ -315,12 +315,12 @@ public:
 #ifdef MOZILLA_INTERNAL_API
   nsINode(already_AddRefed<nsINodeInfo> aNodeInfo)
   : mNodeInfo(aNodeInfo),
-    mParentPtrBits(0),
+    mParent(nsnull),
     mFlags(0),
+    mBoolFlags(0),
     mNextSibling(nsnull),
     mPreviousSibling(nsnull),
     mFirstChild(nsnull),
-    mNodeHasRenderingObservers(false),
     mSlots(nsnull)
   {
   }
@@ -433,9 +433,9 @@ public:
    *
    * @return whether this content is in a document tree
    */
-  PRBool IsInDoc() const
+  bool IsInDoc() const
   {
-    return mParentPtrBits & PARENT_BIT_INDOCUMENT;
+    return GetBoolFlag(IsInDocument);
   }
 
   /**
@@ -704,13 +704,11 @@ public:
   /**
    * Get the parent nsIContent for this node.
    * @return the parent, or null if no parent or the parent is not an nsIContent
+   * Implemented in nsIContent.h
    */
-  nsIContent* GetParent() const
-  {
-    return NS_LIKELY(mParentPtrBits & PARENT_BIT_PARENT_IS_CONTENT) ?
-           reinterpret_cast<nsIContent*>
-                           (mParentPtrBits & ~kParentBitMask) :
-           nsnull;
+  nsIContent* GetParent() const {
+    return NS_LIKELY(GetBoolFlag(ParentIsContent)) ?
+      reinterpret_cast<nsIContent*>(mParent) : nsnull;
   }
 
   /**
@@ -720,7 +718,7 @@ public:
    */
   nsINode* GetNodeParent() const
   {
-    return reinterpret_cast<nsINode*>(mParentPtrBits & ~kParentBitMask);
+    return mParent;
   }
 
   /**
@@ -1136,9 +1134,53 @@ public:
     NS_NOTREACHED("How did we get here?");
   }
 
-  bool HasRenderingObservers() { return mNodeHasRenderingObservers; }
+  /**
+   * Boolean flags
+   */
+private:
+  enum BooleanFlag {
+    // Set if we're being used from -moz-element
+    NodeHasRenderingObservers,
+    // Set if our parent chain (including this node itself) terminates
+    // in a document
+    IsInDocument,
+    // Set if mParent is an nsIContent
+    ParentIsContent,
+    BooleanFlagCount
+  };
+
+  void SetBoolFlag(BooleanFlag name, bool value) {
+    PR_STATIC_ASSERT(BooleanFlagCount <= 8*sizeof(mBoolFlags));
+    mBoolFlags = (mBoolFlags & ~(1 << name)) | (value << name);
+  }
+
+  void SetBoolFlag(BooleanFlag name) {
+    PR_STATIC_ASSERT(BooleanFlagCount <= 8*sizeof(mBoolFlags));
+    mBoolFlags |= (1 << name);
+  }
+
+  void ClearBoolFlag(BooleanFlag name) {
+    PR_STATIC_ASSERT(BooleanFlagCount <= 8*sizeof(mBoolFlags));
+    mBoolFlags &= ~(1 << name);
+  }
+
+  bool GetBoolFlag(BooleanFlag name) const {
+    PR_STATIC_ASSERT(BooleanFlagCount <= 8*sizeof(mBoolFlags));
+    return mBoolFlags & (1 << name);
+  }
+
+public:
+  bool HasRenderingObservers() const
+    { return GetBoolFlag(NodeHasRenderingObservers); }
   void SetHasRenderingObservers(bool aValue)
-    { mNodeHasRenderingObservers = aValue; }
+    { SetBoolFlag(NodeHasRenderingObservers, aValue); }
+
+protected:
+  void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
+  void SetInDocument() { SetBoolFlag(IsInDocument); }
+  void ClearInDocument() { ClearBoolFlag(IsInDocument); }
+
+public:
 
   // Optimized way to get classinfo.
   virtual nsXPCClassInfo* GetClassInfo() = 0;
@@ -1244,19 +1286,18 @@ protected:
 
   nsCOMPtr<nsINodeInfo> mNodeInfo;
 
-  enum { PARENT_BIT_INDOCUMENT = 1 << 0, PARENT_BIT_PARENT_IS_CONTENT = 1 << 1 };
-  enum { kParentBitMask = 0x3 };
-
-  PtrBits mParentPtrBits;
+  nsINode* mParent;
 
   PRUint32 mFlags;
 
+private:
+  // Boolean flags.
+  PRUint32 mBoolFlags;
+
+protected:
   nsIContent* mNextSibling;
   nsIContent* mPreviousSibling;
   nsIContent* mFirstChild;
-
-  // More flags
-  bool mNodeHasRenderingObservers : 1;
 
   // Storage for more members that are usually not needed; allocated lazily.
   nsSlots* mSlots;

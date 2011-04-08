@@ -2943,15 +2943,16 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Now set the parent and set the "Force attach xbl" flag if needed.
   if (aParent) {
-    mParentPtrBits = reinterpret_cast<PtrBits>(aParent) | PARENT_BIT_PARENT_IS_CONTENT;
+    mParent = aParent;
 
     if (aParent->HasFlag(NODE_FORCE_XBL_BINDINGS)) {
       SetFlags(NODE_FORCE_XBL_BINDINGS);
     }
   }
   else {
-    mParentPtrBits = reinterpret_cast<PtrBits>(aDocument);
+    mParent = aDocument;
   }
+  SetParentIsContent(aParent);
 
   // XXXbz sXBL/XBL2 issue!
 
@@ -2967,7 +2968,7 @@ nsGenericElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     //                                                   aDocument);
 
     // Being added to a document.
-    mParentPtrBits |= PARENT_BIT_INDOCUMENT;
+    SetInDocument();
 
     // Unset this flag since we now really are in a document.
     UnsetFlags(NODE_FORCE_XBL_BINDINGS |
@@ -3049,7 +3050,11 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
   nsIDocument *document =
     HasFlag(NODE_FORCE_XBL_BINDINGS) ? GetOwnerDoc() : GetCurrentDoc();
 
-  mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
+  if (aNullParent) {
+    mParent = nsnull;
+    SetParentIsContent(false);
+  }
+  ClearInDocument();
 
   if (document) {
     // Notify XBL- & nsIAnonymousContentCreator-generated

@@ -215,7 +215,9 @@ nsTextNode::BindToAttribute(nsIAttribute* aAttr)
   NS_ASSERTION(!GetNodeParent(), "Unbind before binding!");
   NS_ASSERTION(HasSameOwnerDoc(aAttr), "Wrong owner document!");
 
-  mParentPtrBits = reinterpret_cast<PtrBits>(aAttr);
+  mParent = aAttr;
+  SetParentIsContent(false);
+  ClearInDocument();
   return NS_OK;
 }
 
@@ -226,7 +228,7 @@ nsTextNode::UnbindFromAttribute()
   NS_ASSERTION(GetNodeParent() &&
                GetNodeParent()->IsNodeOfType(nsINode::eATTRIBUTE),
                "Use this method only to unbind from an attribute!");
-  mParentPtrBits = 0;
+  mParent = nsnull;
   return NS_OK;
 }
 
