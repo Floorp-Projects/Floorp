@@ -374,11 +374,11 @@ nsMathMLmencloseFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
   ///////////////
   // Thickness of bars and font metrics
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
-  nsCOMPtr<nsIFontMetrics> fm;
+
   nscoord mEmHeight;
   aRenderingContext.SetFont(GetStyleFont()->mFont,
                             PresContext()->GetUserFontSet());
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+  nsCOMPtr<nsIFontMetrics> fm = aRenderingContext.GetFontMetrics();
   GetRuleThickness(aRenderingContext, fm, mRuleThickness);
   GetEmHeight(fm, mEmHeight);
 

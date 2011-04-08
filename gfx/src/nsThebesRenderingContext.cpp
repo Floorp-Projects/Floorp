@@ -185,12 +185,11 @@ nsThebesRenderingContext::CommonInit(void)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetDeviceContext(nsIDeviceContext *& aDeviceContext)
+already_AddRefed<nsIDeviceContext>
+nsThebesRenderingContext::GetDeviceContext()
 {
-    aDeviceContext = mDeviceContext;
-    NS_IF_ADDREF(aDeviceContext);
-    return NS_OK;
+    NS_IF_ADDREF(mDeviceContext);
+    return mDeviceContext.get();
 }
 
 NS_IMETHODIMP
@@ -214,13 +213,13 @@ nsThebesRenderingContext::PopTranslation(PushedTranslation* aState)
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::SetTranslation(nscoord aX, nscoord aY)
+nsThebesRenderingContext::SetTranslation(const nsPoint& aPt)
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetTranslation %d %d\n", this, aX, aY));
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::SetTranslation %d %d\n", this, aPt.x, aPt.y));
 
     gfxMatrix newMat(mThebes->CurrentMatrix());
-    newMat.x0 = aX;
-    newMat.y0 = aY;
+    newMat.x0 = aPt.x;
+    newMat.y0 = aPt.y;
     mThebes->SetMatrix(newMat);
     return NS_OK;
 }
@@ -357,10 +356,10 @@ nsThebesRenderingContext::GetColor(nscolor &aColor) const
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::Translate(nscoord aX, nscoord aY)
+nsThebesRenderingContext::Translate(const nsPoint& aPt)
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Translate %d %d\n", this, aX, aY));
-    mThebes->Translate (gfxPoint(FROM_TWIPS(aX), FROM_TWIPS(aY)));
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::Translate %d %d\n", this, aPt.x, aPt.y));
+    mThebes->Translate (gfxPoint(FROM_TWIPS(aPt.x), FROM_TWIPS(aPt.y)));
     return NS_OK;
 }
 
@@ -410,13 +409,13 @@ nsThebesRenderingContext::CurrentTransform()
  **** fixed to not use this!
  ****/
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetCurrentTransform(nsTransform2D *&aTransform)
+nsTransform2D*
+nsThebesRenderingContext::GetCurrentTransform()
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::GetCurrentTransform\n", this));
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG,
+           ("## %p nsTRC::GetCurrentTransform\n", this));
     UpdateTempTransformMatrix();
-    aTransform = &mTempTransform;
-    return NS_OK;
+    return &mTempTransform;
 }
 
 void
@@ -433,15 +432,24 @@ nsThebesRenderingContext::TransformCoord (nscoord *aX, nscoord *aY)
 }
 
 NS_IMETHODIMP
-nsThebesRenderingContext::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+nsThebesRenderingContext::DrawLine(const nsPoint& aStartPt,
+                                   const nsPoint& aEndPt)
 {
-    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG, ("## %p nsTRC::DrawLine %d %d %d %d\n", this, aX0, aY0, aX1, aY1));
+    return DrawLine(aStartPt.x, aStartPt.y, aEndPt.x, aEndPt.y);
+}
+
+NS_IMETHODIMP
+nsThebesRenderingContext::DrawLine(nscoord aX0, nscoord aY0,
+                                   nscoord aX1, nscoord aY1)
+{
+    PR_LOG(gThebesGFXLog, PR_LOG_DEBUG,
+           ("## %p nsTRC::DrawLine %d %d %d %d\n", this, aX0, aY0, aX1, aY1));
 
     gfxPoint p0 = gfxPoint(FROM_TWIPS(aX0), FROM_TWIPS(aY0));
     gfxPoint p1 = gfxPoint(FROM_TWIPS(aX1), FROM_TWIPS(aY1));
 
-    // we can't draw thick lines with gfx, so we always assume we want pixel-aligned
-    // lines if the rendering context is at 1.0 scale
+    // we can't draw thick lines with gfx, so we always assume we want
+    // pixel-aligned lines if the rendering context is at 1.0 scale
     gfxMatrix savedMatrix = mThebes->CurrentMatrix();
     if (!savedMatrix.HasNonTranslation()) {
         p0 = mThebes->UserToDevice(p0);
@@ -826,12 +834,11 @@ nsThebesRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesRenderingContext::GetFontMetrics(nsIFontMetrics *&aFontMetrics)
+already_AddRefed<nsIFontMetrics>
+nsThebesRenderingContext::GetFontMetrics()
 {
-    aFontMetrics = mFontMetrics;
-    NS_IF_ADDREF(aFontMetrics);
-    return NS_OK;
+    NS_IF_ADDREF(mFontMetrics);
+    return mFontMetrics.get();
 }
 
 PRInt32

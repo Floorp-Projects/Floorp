@@ -1246,8 +1246,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDeviceContext> dc;
-  aContext->GetDeviceContext(*getter_AddRefs(dc));
+  nsCOMPtr<nsIDeviceContext> dc = aContext->GetDeviceContext();
   gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
   RECT widgetRect;
   RECT clipRect;
@@ -3115,8 +3114,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDeviceContext> dc;
-  aContext->GetDeviceContext(*getter_AddRefs(dc));
+  nsCOMPtr<nsIDeviceContext> dc = aContext->GetDeviceContext();
   gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
   RECT widgetRect;
   gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),

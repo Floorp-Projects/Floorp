@@ -270,8 +270,7 @@ nsMathMLmfracFrame::PlaceInternal(nsIRenderingContext& aRenderingContext,
 
   aRenderingContext.SetFont(GetStyleFont()->mFont,
                             presContext->GetUserFontSet());
-  nsCOMPtr<nsIFontMetrics> fm;
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+  nsCOMPtr<nsIFontMetrics> fm = aRenderingContext.GetFontMetrics();
 
   nscoord defaultRuleThickness, axisHeight;
   GetRuleThickness(aRenderingContext, fm, defaultRuleThickness);

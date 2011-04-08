@@ -2370,8 +2370,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
 
       nsIRenderingContext *rc = aState.mReflowState.rendContext;
       nsLayoutUtils::SetFontFromStyle(rc, GetStyleContext());
-      nsCOMPtr<nsIFontMetrics> fm;
-      rc->GetFontMetrics(*getter_AddRefs(fm));
+      nsCOMPtr<nsIFontMetrics> fm = rc->GetFontMetrics();
 
       nscoord minAscent =
         nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);

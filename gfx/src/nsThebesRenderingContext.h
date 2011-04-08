@@ -132,10 +132,9 @@ public:
 
     NS_IMETHOD Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface);
     NS_IMETHOD Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
-
     NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWidget);
     NS_IMETHOD CommonInit(void);
-    NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext);
+    virtual already_AddRefed<nsIDeviceContext> GetDeviceContext();
     NS_IMETHOD PushState(void);
     NS_IMETHOD PopState(void);
     NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine);
@@ -148,11 +147,12 @@ public:
     NS_IMETHOD SetFont(const nsFont& aFont,
                        gfxUserFontSet *aUserFontSet);
     NS_IMETHOD SetFont(nsIFontMetrics *aFontMetrics);
-    NS_IMETHOD GetFontMetrics(nsIFontMetrics *&aFontMetrics);
-    NS_IMETHOD Translate(nscoord aX, nscoord aY);
+    virtual already_AddRefed<nsIFontMetrics> GetFontMetrics();
+    NS_IMETHOD Translate(const nsPoint& aPt);
     NS_IMETHOD Scale(float aSx, float aSy);
-    NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform);
+    virtual nsTransform2D* GetCurrentTransform();
 
+    NS_IMETHOD DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt);
     NS_IMETHOD DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
     NS_IMETHOD DrawRect(const nsRect& aRect);
     NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -173,7 +173,7 @@ public:
 
     NS_IMETHOD PushTranslation(PushedTranslation* aState);
     NS_IMETHOD PopTranslation(PushedTranslation* aState);
-    NS_IMETHOD SetTranslation(nscoord aX, nscoord aY);
+    NS_IMETHOD SetTranslation(const nsPoint& aPoint);
 
     /**
      * Let the device context know whether we want text reordered with

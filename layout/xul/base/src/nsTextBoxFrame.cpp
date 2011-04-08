@@ -655,11 +655,10 @@ nsTextBoxFrame::CalculateUnderline(nsIRenderingContext& aRenderingContext)
                                     mAccessKeyInfo->mAccessWidth);
 
          nscoord offset, baseline;
-         nsIFontMetrics *metrics;
-         aRenderingContext.GetFontMetrics(metrics);
+         nsCOMPtr<nsIFontMetrics> metrics
+             = aRenderingContext.GetFontMetrics();
          metrics->GetUnderline(offset, mAccessKeyInfo->mAccessUnderlineSize);
          metrics->GetMaxAscent(baseline);
-         NS_RELEASE(metrics);
          mAccessKeyInfo->mAccessOffset = baseline - offset;
     }
 }

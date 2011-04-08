@@ -644,8 +644,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   }
 
   nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
-  nsCOMPtr<nsIFontMetrics> fm;
-  aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
+  nsCOMPtr<nsIFontMetrics> fm = aReflowState.rendContext->GetFontMetrics();
 
   if (fm) {
     // Compute final height of the frame.

@@ -42,6 +42,7 @@
 #define nsIRenderingContext_h___
 
 #include "nscore.h"
+#include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -139,11 +140,10 @@ public:
 
   /**
    * Get the DeviceContext that this RenderingContext was initialized
-   * with.  This function addrefs the device context.  Though it might
-   * be better if it just returned it directly, without addrefing.   
+   * with.
    * @result the device context
    */
-  NS_IMETHOD GetDeviceContext(nsIDeviceContext *& aDeviceContext) = 0;
+  virtual already_AddRefed<nsIDeviceContext> GetDeviceContext() = 0;
 
   /**
    * Save a graphical state onto a stack.
@@ -223,21 +223,20 @@ public:
    * Get the current fontmetrics for the RenderingContext
    * @return The current font of the RenderingContext
    */
-  NS_IMETHOD GetFontMetrics(nsIFontMetrics *&aFontMetrics) = 0;
+  virtual already_AddRefed<nsIFontMetrics> GetFontMetrics() = 0;
 
   /**
-   *  Add in a translate to the RenderingContext's transformation matrix
-   * @param aX The horizontal translation
-   * @param aY The vertical translation
+   * Add in a translate to the RenderingContext's transformation matrix
+   * @param aPt The point to translate to
    */
-  NS_IMETHOD Translate(nscoord aX, nscoord aY) = 0;
-  
+  NS_IMETHOD Translate(const nsPoint& aPt) = 0;
+
   /**
    * Set the translation compoennt of the current transformation matrix.
    * Useful to set it to a known pixel value without incurring roundoff
    * errors.
    */
-  NS_IMETHOD SetTranslation(nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD SetTranslation(const nsPoint& aPt) = 0;
 
   /**
    *  Add in a scale to the RenderingContext's transformation matrix
@@ -254,10 +253,10 @@ public:
     nsIRenderingContext* mCtx;
     PushedTranslation mPushed;
   public:
-    AutoPushTranslation(nsIRenderingContext* aCtx, nscoord aX, nscoord aY)
+    AutoPushTranslation(nsIRenderingContext* aCtx, const nsPoint& aPt)
       : mCtx(aCtx) {
       mCtx->PushTranslation(&mPushed);
-      mCtx->Translate(aX, aY);
+      mCtx->Translate(aPt);
     }
     ~AutoPushTranslation() {
       mCtx->PopTranslation(&mPushed);
@@ -268,15 +267,22 @@ public:
 
   NS_IMETHOD PopTranslation(PushedTranslation* aState) = 0;
 
-  /** 
+  /**
    * Get the current transformation matrix for the RenderingContext
    * @return The transformation matrix for the RenderingContext
    */
-  NS_IMETHOD GetCurrentTransform(nsTransform2D *&aTransform) = 0;
+  virtual nsTransform2D* GetCurrentTransform() = 0;
 
   /**
    * Draw a line
-   * @param aXO starting horiztonal coord in twips
+   * @param aStartPt starting point
+   * @param aEndPt ending point
+   */
+  NS_IMETHOD DrawLine(const nsPoint& aStartPt, const nsPoint& aEndPt) = 0;
+
+  /**
+   * Draw a line
+   * @param aX0 starting horizontal coord in twips
    * @param aY0 starting vertical coord in twips
    * @param aX1 end horiztonal coord in twips
    * @param aY1 end vertical coord in twips

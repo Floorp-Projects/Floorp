@@ -109,8 +109,7 @@ nsMathMLContainerFrame::ReflowError(nsIRenderingContext& aRenderingContext,
   }
 
   // reflow metrics
-  nsCOMPtr<nsIFontMetrics> fm;
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+  nsCOMPtr<nsIFontMetrics> fm = aRenderingContext.GetFontMetrics();
   fm->GetMaxAscent(aDesiredSize.ascent);
   nscoord descent;
   fm->GetMaxDescent(descent);
@@ -152,8 +151,7 @@ void nsDisplayMathMLError::Paint(nsDisplayListBuilder* aBuilder,
   aCtx->SetColor(NS_RGB(255,255,255));
 
   nscoord ascent;
-  nsCOMPtr<nsIFontMetrics> fm;
-  aCtx->GetFontMetrics(*getter_AddRefs(fm));
+  nsCOMPtr<nsIFontMetrics> fm = aCtx->GetFontMetrics();
   fm->GetMaxAscent(ascent);
 
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");

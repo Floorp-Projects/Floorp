@@ -680,7 +680,7 @@ nsSimplePageSequenceFrame::PaintPageSequence(nsIRenderingContext& aRenderingCont
   float scale = PresContext()->GetPrintPreviewScale();
   aRenderingContext.PushState();
   nsPoint framePos = aPt;
-  aRenderingContext.Translate(framePos.x, framePos.y);
+  aRenderingContext.Translate(framePos);
   rect -= framePos;
   aRenderingContext.Scale(scale, scale);
   rect.ScaleRoundOut(1.0f / scale);
@@ -692,7 +692,7 @@ nsSimplePageSequenceFrame::PaintPageSequence(nsIRenderingContext& aRenderingCont
     nsPoint pt = child->GetPosition();
     // The rendering context has to be translated before each call to PaintFrame
     aRenderingContext.PushState();
-    aRenderingContext.Translate(pt.x, pt.y);
+    aRenderingContext.Translate(pt);
     nsLayoutUtils::PaintFrame(&aRenderingContext, child,
                               nsRegion(rect - pt), NS_RGBA(0,0,0,0),
                               nsLayoutUtils::PAINT_SYNC_DECODE_IMAGES);

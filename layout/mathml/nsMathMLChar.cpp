@@ -2132,7 +2132,7 @@ void
 nsMathMLChar::ApplyTransforms(nsIRenderingContext& aRenderingContext, nsRect &r)
 {
   // apply the transforms
-  aRenderingContext.Translate(r.x, r.y);
+  aRenderingContext.Translate(r.TopLeft());
   aRenderingContext.Scale(mScaleX, mScaleY);
 
   // update the bounding rectangle.

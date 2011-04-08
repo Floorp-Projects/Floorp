@@ -1328,7 +1328,7 @@ public:
   
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsIRenderingContext* aCtx) {
     nsPoint pt = ToReferenceFrame();
-    nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
+    nsIRenderingContext::AutoPushTranslation translate(aCtx, pt);
     mFrame->PresContext()->PresShell()->PaintCount(mFrameName, aCtx,
                                                       mFrame->PresContext(),
                                                       mFrame, mColor);
