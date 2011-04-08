@@ -1202,7 +1202,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       nsCOMPtr<nsIRenderingContext> wrapperCtx;
       devCtx->CreateRenderingContextInstance(*getter_AddRefs(wrapperCtx));
       wrapperCtx->Init(devCtx, shadowContext);
-      wrapperCtx->Translate(shadowItem->mXOffset, shadowItem->mYOffset);
+      wrapperCtx->Translate(nsPoint(shadowItem->mXOffset, shadowItem->mYOffset));
 
       nsRect nativeRect;
       nativeRect.IntersectRect(frameRect, aDirtyRect);
@@ -3090,13 +3090,13 @@ DrawSolidBorderSegment(nsIRenderingContext& aContext,
     // simple line or rectangle
     if ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide)) {
       if (1 == aRect.height)
-        aContext.DrawLine(aRect.x, aRect.y, aRect.x, aRect.y + aRect.height);
+        aContext.DrawLine(aRect.TopLeft(), aRect.BottomLeft());
       else
         aContext.FillRect(aRect);
     }
     else {
       if (1 == aRect.width)
-        aContext.DrawLine(aRect.x, aRect.y, aRect.x + aRect.width, aRect.y);
+        aContext.DrawLine(aRect.TopLeft(), aRect.TopRight());
       else
         aContext.FillRect(aRect);
     }

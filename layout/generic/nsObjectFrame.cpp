@@ -1323,7 +1323,7 @@ nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
                                 const nsRect& aDirtyRect, nsPoint aPt)
 {
   nsPoint pt = aPt + aFrame->GetUsedBorderAndPadding().TopLeft();
-  nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
+  nsIRenderingContext::AutoPushTranslation translate(aCtx, pt);
   // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
   static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
@@ -2284,7 +2284,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
     } else {
       // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
       nsIRenderingContext::AutoPushTranslation
-        translate(&aRenderingContext, aPluginRect.x, aPluginRect.y);
+        translate(&aRenderingContext, aPluginRect.TopLeft());
 
       // this rect is used only in the CoreGraphics drawing model
       gfxRect tmpRect(0, 0, 0, 0);
@@ -2424,7 +2424,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
     if (window->type == NPWindowTypeDrawable) {
       // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
       nsIRenderingContext::AutoPushTranslation
-        translate(&aRenderingContext, aPluginRect.x, aPluginRect.y);
+        translate(&aRenderingContext, aPluginRect.TopLeft());
 
       // check if we need to call SetWindow with updated parameters
       PRBool doupdatewindow = PR_FALSE;

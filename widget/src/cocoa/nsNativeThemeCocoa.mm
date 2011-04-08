@@ -1501,8 +1501,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // setup to draw into the correct port
-  nsCOMPtr<nsIDeviceContext> dctx;
-  aContext->GetDeviceContext(*getter_AddRefs(dctx));
+  nsCOMPtr<nsIDeviceContext> dctx = aContext->GetDeviceContext();
   PRInt32 p2a = dctx->AppUnitsPerDevPixel();
 
   gfxRect nativeDirtyRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);

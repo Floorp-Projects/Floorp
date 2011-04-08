@@ -1690,7 +1690,7 @@ void nsHTMLFramesetBorderFrame::PaintBorder(nsIRenderingContext& aRenderingConte
   nscolor sdwColor = NS_RGB(128,128,128);
 
   nsIRenderingContext::AutoPushTranslation
-    translate(&aRenderingContext, aPt.x, aPt.y);
+    translate(&aRenderingContext, aPt);
 
   {
     nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
@@ -1708,10 +1708,8 @@ void nsHTMLFramesetBorderFrame::PaintBorder(nsIRenderingContext& aRenderingConte
   if (widthInPixels <= 0)
     return;
 
-  nscoord x0 = 0;
-  nscoord y0 = 0;
-  nscoord x1 = (mVertical) ? 0 : mRect.width;
-  nscoord y1 = (mVertical) ? mRect.height : 0;
+  nsPoint start(0,0);
+  nsPoint end((mVertical) ? 0 : mRect.width, (mVertical) ? mRect.height : 0);
 
   nscolor color = WHITE;
   if (mVisibility || mVisibilityOverride) {
@@ -1720,13 +1718,13 @@ void nsHTMLFramesetBorderFrame::PaintBorder(nsIRenderingContext& aRenderingConte
   aRenderingContext.SetColor(color);
   // draw grey or white first
   for (int i = 0; i < widthInPixels; i++) {
-    aRenderingContext.DrawLine (x0, y0, x1, y1);
+    aRenderingContext.DrawLine (start, end);
     if (mVertical) {
-      x0 += pixelWidth;
-      x1 =  x0;
+      start.x += pixelWidth;
+      end.x =  start.x;
     } else {
-      y0 += pixelWidth;
-      y1 =  y0;
+      start.y += pixelWidth;
+      end.y =  start.y;
     }
   }
 
@@ -1735,29 +1733,29 @@ void nsHTMLFramesetBorderFrame::PaintBorder(nsIRenderingContext& aRenderingConte
 
   if (widthInPixels >= 5) {
     aRenderingContext.SetColor(hltColor);
-    x0 = (mVertical) ? pixelWidth : 0;
-    y0 = (mVertical) ? 0 : pixelWidth;
-    x1 = (mVertical) ? x0 : mRect.width;
-    y1 = (mVertical) ? mRect.height : y0;
-    aRenderingContext.DrawLine(x0, y0, x1, y1);
+    start.x = (mVertical) ? pixelWidth : 0;
+    start.y = (mVertical) ? 0 : pixelWidth;
+    end.x   = (mVertical) ? start.x : mRect.width;
+    end.y   = (mVertical) ? mRect.height : start.y;
+    aRenderingContext.DrawLine(start, end);
   }
 
   if (widthInPixels >= 2) {
     aRenderingContext.SetColor(sdwColor);
-    x0 = (mVertical) ? mRect.width - (2 * pixelWidth) : 0;
-    y0 = (mVertical) ? 0 : mRect.height - (2 * pixelWidth);
-    x1 = (mVertical) ? x0 : mRect.width;
-    y1 = (mVertical) ? mRect.height : y0;
-    aRenderingContext.DrawLine(x0, y0, x1, y1);
+    start.x = (mVertical) ? mRect.width - (2 * pixelWidth) : 0;
+    start.y = (mVertical) ? 0 : mRect.height - (2 * pixelWidth);
+    end.x   = (mVertical) ? start.x : mRect.width;
+    end.y   = (mVertical) ? mRect.height : start.y;
+    aRenderingContext.DrawLine(start, end);
   }
 
   if (widthInPixels >= 1) {
     aRenderingContext.SetColor(fgColor);
-    x0 = (mVertical) ? mRect.width - pixelWidth : 0;
-    y0 = (mVertical) ? 0 : mRect.height - pixelWidth;
-    x1 = (mVertical) ? x0 : mRect.width;
-    y1 = (mVertical) ? mRect.height : y0;
-    aRenderingContext.DrawLine(x0, y0, x1, y1);
+    start.x = (mVertical) ? mRect.width - pixelWidth : 0;
+    start.y = (mVertical) ? 0 : mRect.height - pixelWidth;
+    end.x   = (mVertical) ? start.x : mRect.width;
+    end.y   = (mVertical) ? mRect.height : start.y;
+    aRenderingContext.DrawLine(start, end);
   }
 }
 
