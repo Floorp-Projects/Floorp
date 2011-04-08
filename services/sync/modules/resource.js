@@ -143,7 +143,18 @@ AsyncResource.prototype = {
   _logName: "Net.Resource",
 
   // The string to use as the base User-Agent in Sync requests.
-  _userAgent: "FxSync/" + WEAVE_VERSION + "." + Svc.AppInfo.appBuildID + ".",
+  // These strings will look something like
+  // 
+  //   Firefox/4.0 FxSync/1.8.0.20100101.mobile
+  //   
+  // or
+  // 
+  //   Firefox Aurora/5.0a1 FxSync/1.9.0.20110409.desktop
+  //
+  _userAgent:
+    Svc.AppInfo.name + "/" + Svc.AppInfo.version +     // Product.
+    " FxSync/" + WEAVE_VERSION + "." +                 // Sync.
+    Svc.AppInfo.appBuildID + ".",                      // Build.
 
   // Wait 5 minutes before killing a request.
   ABORT_TIMEOUT: 300000,
