@@ -876,22 +876,18 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         mCT.Put(&key, ent);
     }
 
-    nsHttpConnection *conn;
+    // Check if the transaction already has a sticky reference to a connection.
+    // If so, then we can just use it directly by transferring its reference
+    // to the new connection var instead of calling GetConnection() to search
+    // for an available one.
 
-    // check if the transaction already has a sticky reference to a connection.
-    // if so, then we can just use it directly.  XXX check if alive??
-    // XXX add a TakeConnection method or something to make this clearer!
-    nsConnectionHandle *handle = (nsConnectionHandle *) trans->Connection();
-    if (handle) {
+    nsAHttpConnection *wrappedConnection = trans->Connection();
+    nsHttpConnection  *conn;
+    conn = wrappedConnection ? wrappedConnection->TakeHttpConnection() : nsnull;
+
+    if (conn) {
         NS_ASSERTION(caps & NS_HTTP_STICKY_CONNECTION, "unexpected caps");
-        NS_ASSERTION(handle->mConn, "no connection");
 
-        // steal reference from connection handle.
-        // XXX prevent SetConnection(nsnull) from calling ReclaimConnection
-        conn = handle->mConn;
-        handle->mConn = nsnull;
-
-        // destroy connection handle.
         trans->SetConnection(nsnull);
     }
     else
@@ -1511,6 +1507,19 @@ nsHttpConnectionMgr::nsHalfOpenSocket::GetInterface(const nsIID &iid,
             return callbacks->GetInterface(iid, result);
     }
     return NS_ERROR_NO_INTERFACE;
+}
+
+
+nsHttpConnection *
+nsHttpConnectionMgr::nsConnectionHandle::TakeHttpConnection()
+{
+    // return our connection object to the caller and clear it internally
+    // do not drop our reference - the caller now owns it.
+
+    NS_ASSERTION(mConn, "no connection");
+    nsHttpConnection *conn = mConn;
+    mConn = nsnull;
+    return conn;
 }
 
 PRBool

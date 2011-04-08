@@ -303,6 +303,33 @@ nsHttpPipeline::SetLastTransactionExpectedNoContent(PRBool val)
      mConnection->SetLastTransactionExpectedNoContent(val);
 }
 
+nsHttpConnection *
+nsHttpPipeline::TakeHttpConnection()
+{
+    if (mConnection)
+        return mConnection->TakeHttpConnection();
+    return nsnull;
+}
+
+void
+nsHttpPipeline::SetSSLConnectFailed()
+{
+    nsAHttpTransaction *trans = Request(0);
+
+    if (trans)
+        trans->SetSSLConnectFailed();
+}
+
+nsHttpRequestHead *
+nsHttpPipeline::RequestHead()
+{
+    nsAHttpTransaction *trans = Request(0);
+
+    if (trans)
+        return trans->RequestHead();
+    return nsnull;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpPipeline::nsAHttpConnection
 //-----------------------------------------------------------------------------
