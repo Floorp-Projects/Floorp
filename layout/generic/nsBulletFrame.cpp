@@ -1422,7 +1422,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
       GetListItemText(*myList, text);
-      fm->GetHeight(aMetrics.height);
+      fm->GetMaxHeight(aMetrics.height);
       aRenderingContext->SetFont(fm);
       aMetrics.width = nsLayoutUtils::GetStringWidth(this, aRenderingContext, text.get(), text.Length());
       aMetrics.width += mPadding.right;

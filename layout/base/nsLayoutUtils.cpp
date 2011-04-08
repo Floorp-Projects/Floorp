@@ -2847,7 +2847,7 @@ nsLayoutUtils::GetCenteredFontBaseline(nsFontMetrics* aFontMetrics,
 {
   nscoord fontAscent, fontHeight;
   aFontMetrics->GetMaxAscent(fontAscent);
-  aFontMetrics->GetHeight(fontHeight);
+  aFontMetrics->GetMaxHeight(fontHeight);
 
   nscoord leading = aLineHeight - fontHeight;
   return fontAscent + leading/2;

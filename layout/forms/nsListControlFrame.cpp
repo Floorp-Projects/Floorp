@@ -1882,7 +1882,7 @@ nsListControlFrame::CalcFallbackRowHeight()
   nsRefPtr<nsFontMetrics> fontMet;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
   if (fontMet) {
-    fontMet->GetHeight(rowHeight);
+    fontMet->GetMaxHeight(rowHeight);
   }
 
   return rowHeight;

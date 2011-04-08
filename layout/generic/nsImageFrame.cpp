@@ -979,7 +979,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   nscoord maxAscent, maxDescent, height;
   fm->GetMaxAscent(maxAscent);
   fm->GetMaxDescent(maxDescent);
-  fm->GetHeight(height);
+  fm->GetMaxHeight(height);
 
   // XXX It would be nice if there was a way to have the font metrics tell
   // use where to break the text given a maximum width. At a minimum we need
@@ -1124,7 +1124,6 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
     // if we could not draw the icon, flag that we're waiting for it and
     // just draw some graffiti in the mean time
     if (!iconUsed) {
-      nscolor oldColor;
       nscoord iconXPos = (vis->mDirection ==   NS_STYLE_DIRECTION_RTL) ?
                          inner.XMost() - size : inner.x;
       nscoord twoPX = nsPresContext::CSSPixelsToAppUnits(2);
