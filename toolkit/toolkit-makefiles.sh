@@ -552,9 +552,6 @@ MAKEFILES_embedding="
   embedding/browser/activex/src/plugin/Makefile
   embedding/browser/build/Makefile
   embedding/browser/webBrowser/Makefile
-  embedding/browser/gtk/Makefile
-  embedding/browser/gtk/src/Makefile
-  embedding/browser/gtk/tests/Makefile
   embedding/components/Makefile
   embedding/components/appstartup/Makefile
   embedding/components/appstartup/src/Makefile
