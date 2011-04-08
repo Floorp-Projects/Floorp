@@ -10155,8 +10155,9 @@ class BoxArg
         : tr(tr), addr(addr) {}
     TraceRecorder *tr;
     Address addr;
-    void operator()(uintN argi, Value *src) {
+    bool operator()(uintN argi, Value *src) {
         tr->box_value_into(*src, tr->get(src), OffsetAddress(addr, argi * sizeof(Value)));
+        return true;
     }
 };
 
