@@ -301,8 +301,7 @@ StackSpace::pushSegmentForInvoke(JSContext *cx, uintN argc, InvokeArgsGuard *ag)
 
     ag->cx = cx;
     ag->seg = seg;
-    ag->argv_ = seg->valueRangeBegin() + 2;
-    ag->argc_ = argc;
+    ImplicitCast<CallArgs>(*ag) = CallArgsFromVp(argc, seg->valueRangeBegin());
 
     /* Use invokeArgEnd to root [vp, vpend) until the frame is pushed. */
 #ifdef DEBUG

@@ -1231,5 +1231,41 @@ Debug_SetValueRangeToCrashOnTouch(Value *vec, size_t len)
 #endif
 }
 
+/*
+ * Abstracts the layout of the stack passed to natives from the engine and from
+ * natives to js::Invoke.
+ */
+class CallArgs
+{
+    uintN argc_;
+    Value *argv_;
+  protected:
+    CallArgs() {}
+    CallArgs(uintN argc, Value *argv) : argc_(argc), argv_(argv) {}
+    friend CallArgs CallArgsFromVp(uintN, Value *);
+    friend CallArgs CallArgsFromArgv(uintN, Value *);
+  public:
+    Value *base() const { return argv_ - 2; }
+    JSObject &callee() const { return argv_[-2].toObject(); }
+    Value &calleev() const { return argv_[-2]; }
+    Value &thisv() const { return argv_[-1]; }
+    Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
+    Value *argv() const { return argv_; }
+    uintN argc() const { return argc_; }
+    Value &rval() const { return argv_[-2]; }
+};
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromVp(uintN argc, Value *vp)
+{
+    return CallArgs(argc, vp + 2);
+}
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromArgv(uintN argc, Value *argv)
+{
+    return CallArgs(argc, argv);
+}
+
 }      /* namespace js */
 #endif /* jsvalue_h__ */

@@ -411,7 +411,7 @@ class InvokeArgsGuard : public CallArgs
  */
 struct InvokeArgsAlreadyOnTheStack : CallArgs
 {
-    InvokeArgsAlreadyOnTheStack(Value *vp, uintN argc) : CallArgs(vp + 2, argc) {}
+    InvokeArgsAlreadyOnTheStack(Value *vp, uintN argc) : CallArgs(argc, vp + 2) {}
 };
 
 /* See StackSpace::pushInvokeFrame. */
