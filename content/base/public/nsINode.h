@@ -78,21 +78,19 @@ class Element;
 } // namespace mozilla
 
 enum {
-  UNUSED1 =       0x00000001U,
-
   // This bit will be set if the node has a listener manager in the listener
   // manager hash
-  NODE_HAS_LISTENERMANAGER =     0x00000002U,
+  NODE_HAS_LISTENERMANAGER =     0x00000001U,
 
   // Whether this node has had any properties set on it
-  NODE_HAS_PROPERTIES =          0x00000004U,
+  NODE_HAS_PROPERTIES =          0x00000002U,
 
   // Whether this node is the root of an anonymous subtree.  Note that this
   // need not be a native anonymous subtree.  Any anonymous subtree, including
   // XBL-generated ones, will do.  This flag is set-once: once a node has it,
   // it must not be removed.
   // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_ANONYMOUS =            0x00000008U,
+  NODE_IS_ANONYMOUS =            0x00000004U,
 
   // Whether the node has some ancestor, possibly itself, that is native
   // anonymous.  This includes ancestors crossing XBL scopes, in cases when an
@@ -100,41 +98,39 @@ enum {
   // ancestor.  This flag is set-once: once a node has it, it must not be
   // removed.
   // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_IN_ANONYMOUS_SUBTREE = 0x00000010U,
+  NODE_IS_IN_ANONYMOUS_SUBTREE = 0x00000008U,
 
   // Whether this node is the root of a native anonymous (from the perspective
   // of its parent) subtree.  This flag is set-once: once a node has it, it
   // must not be removed.
   // NOTE: Should only be used on nsIContent nodes
-  NODE_IS_NATIVE_ANONYMOUS_ROOT = 0x00000020U,
+  NODE_IS_NATIVE_ANONYMOUS_ROOT = 0x00000010U,
 
   // Forces the XBL code to treat this node as if it were
   // in the document and therefore should get bindings attached.
-  NODE_FORCE_XBL_BINDINGS =      0x00000040U,
+  NODE_FORCE_XBL_BINDINGS =      0x00000020U,
 
   // Whether a binding manager may have a pointer to this
-  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000080U,
+  NODE_MAY_BE_IN_BINDING_MNGR =  0x00000040U,
 
-  NODE_IS_EDITABLE =             0x00000100U,
+  NODE_IS_EDITABLE =             0x00000080U,
 
-  UNUSED3 =                      0x00000200U,
   // For all Element nodes, NODE_MAY_HAVE_CLASS is guaranteed to be set if the
   // node in fact has a class, but may be set even if it doesn't.
-  NODE_MAY_HAVE_CLASS =          0x00000400U,
-  UNUSED4 =                      0x00000800U,
+  NODE_MAY_HAVE_CLASS =          0x00000100U,
 
-  NODE_IS_INSERTION_PARENT =     0x00001000U,
+  NODE_IS_INSERTION_PARENT =     0x00000200U,
 
   // Node has an :empty or :-moz-only-whitespace selector
-  NODE_HAS_EMPTY_SELECTOR =      0x00002000U,
+  NODE_HAS_EMPTY_SELECTOR =      0x00000400U,
 
   // A child of the node has a selector such that any insertion,
   // removal, or appending of children requires restyling the parent.
-  NODE_HAS_SLOW_SELECTOR =       0x00004000U,
+  NODE_HAS_SLOW_SELECTOR =       0x00000800U,
 
   // A child of the node has a :first-child, :-moz-first-node,
   // :only-child, :last-child or :-moz-last-node selector.
-  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00008000U,
+  NODE_HAS_EDGE_CHILD_SELECTOR = 0x00001000U,
 
   // A child of the node has a selector such that any insertion or
   // removal of children requires restyling later siblings of that
@@ -144,39 +140,33 @@ enum {
   // matching :empty due to a grandchild insertion or removal), the
   // child's later siblings must also be restyled.
   NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS
-                               = 0x00010000U,
+                               = 0x00002000U,
 
   NODE_ALL_SELECTOR_FLAGS =      NODE_HAS_EMPTY_SELECTOR |
                                  NODE_HAS_SLOW_SELECTOR |
                                  NODE_HAS_EDGE_CHILD_SELECTOR |
                                  NODE_HAS_SLOW_SELECTOR_LATER_SIBLINGS,
 
-  UNUSED6                      = 0x00020000U,
-
   NODE_ATTACH_BINDING_ON_POSTCREATE
-                               = 0x00040000U,
+                               = 0x00004000U,
 
   // This node needs to go through frame construction to get a frame (or
   // undisplayed entry).
-  NODE_NEEDS_FRAME =             0x00080000U,
+  NODE_NEEDS_FRAME =             0x00008000U,
 
   // At least one descendant in the flattened tree has NODE_NEEDS_FRAME set.
   // This should be set on every node on the flattened tree path between the
   // node(s) with NODE_NEEDS_FRAME and the root content.
-  NODE_DESCENDANTS_NEED_FRAMES = 0x00100000U,
+  NODE_DESCENDANTS_NEED_FRAMES = 0x00010000U,
 
-  UNUSED2                     = 0x00200000U,
-  
   // Set if the node has the accesskey attribute set.
-  NODE_HAS_ACCESSKEY           = 0x00400000U,
-
-  UNUSED5                      = 0x00800000U,
+  NODE_HAS_ACCESSKEY           = 0x00020000U,
 
   // Two bits for the script-type ID.  Not enough to represent all
   // nsIProgrammingLanguage values, but we don't care.  In practice,
   // we can represent the ones we want, and we can fail the others at
   // runtime.
-  NODE_SCRIPT_TYPE_OFFSET =               24,
+  NODE_SCRIPT_TYPE_OFFSET =               18,
 
   NODE_SCRIPT_TYPE_SIZE =                  2,
 
