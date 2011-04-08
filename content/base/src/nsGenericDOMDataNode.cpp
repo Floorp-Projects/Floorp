@@ -783,7 +783,7 @@ nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 nsINode::nsSlots*
 nsGenericDOMDataNode::CreateSlots()
 {
-  return new nsDataSlots(mFlagsOrSlots);
+  return new nsDataSlots();
 }
 
 //----------------------------------------------------------------------

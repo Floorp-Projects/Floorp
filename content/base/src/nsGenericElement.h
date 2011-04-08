@@ -943,7 +943,7 @@ public:
   class nsDOMSlots : public nsINode::nsSlots
   {
   public:
-    nsDOMSlots(PtrBits aFlags);
+    nsDOMSlots();
     virtual ~nsDOMSlots();
 
     /**
