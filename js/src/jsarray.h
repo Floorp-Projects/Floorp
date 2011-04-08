@@ -105,6 +105,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
         if (index < initLength)
             return ED_OK;
         if (index < currentCapacity) {
+            JS_ASSERT(cx->typeInferenceEnabled());
             if (index > initLength) {
                 if (!setDenseArrayNotPacked(cx))
                     return ED_FAILED;
@@ -127,6 +128,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
         if (requiredCapacity <= initLength)
             return ED_OK;
         if (requiredCapacity <= currentCapacity) {
+            JS_ASSERT(cx->typeInferenceEnabled());
             if (index > initLength) {
                 ClearValueRange(getSlots() + initLength, index - initLength, true);
                 if (!setDenseArrayNotPacked(cx))
