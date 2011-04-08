@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2010 Mozilla Foundation
+ * Copyright (c) 2008-2011 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -78,6 +78,11 @@ public final class ElementName
      * The element is an HTML integration point.
      */
     public static final int HTML_INTEGRATION_POINT = (1 << 24);
+
+    /**
+     * The element has an optional end tag.
+     */
+    public static final int OPTIONAL_END_TAG = (1 << 23);
 
     public static final ElementName NULL_ELEMENT_NAME = new ElementName(null);
 
@@ -195,6 +200,9 @@ public final class ElementName
 //        }
 //        if ((flags & SCOPING_AS_SVG) != 0) {
 //            buf.append(" | SCOPING_AS_SVG");
+//        }
+//        if ((flags & OPTIONAL_END_TAG) != 0) {
+//            buf.append(" | OPTIONAL_END_TAG");
 //        }
 //        return buf.toString();
 //    }
@@ -405,16 +413,16 @@ public final class ElementName
     public static final ElementName B = new ElementName("b", "b", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
     public static final ElementName G = new ElementName("g", "g", TreeBuilder.OTHER);
     public static final ElementName I = new ElementName("i", "i", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName P = new ElementName("p", "p", TreeBuilder.P | SPECIAL);
+    public static final ElementName P = new ElementName("p", "p", TreeBuilder.P | SPECIAL | OPTIONAL_END_TAG);
     public static final ElementName Q = new ElementName("q", "q", TreeBuilder.OTHER);
     public static final ElementName S = new ElementName("s", "s", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
     public static final ElementName U = new ElementName("u", "u", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
     public static final ElementName BR = new ElementName("br", "br", TreeBuilder.BR | SPECIAL);
     public static final ElementName CI = new ElementName("ci", "ci", TreeBuilder.OTHER);
     public static final ElementName CN = new ElementName("cn", "cn", TreeBuilder.OTHER);
-    public static final ElementName DD = new ElementName("dd", "dd", TreeBuilder.DD_OR_DT | SPECIAL);
+    public static final ElementName DD = new ElementName("dd", "dd", TreeBuilder.DD_OR_DT | SPECIAL | OPTIONAL_END_TAG);
     public static final ElementName DL = new ElementName("dl", "dl", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
-    public static final ElementName DT = new ElementName("dt", "dt", TreeBuilder.DD_OR_DT | SPECIAL);
+    public static final ElementName DT = new ElementName("dt", "dt", TreeBuilder.DD_OR_DT | SPECIAL | OPTIONAL_END_TAG);
     public static final ElementName EM = new ElementName("em", "em", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
     public static final ElementName EQ = new ElementName("eq", "eq", TreeBuilder.OTHER);
     public static final ElementName FN = new ElementName("fn", "fn", TreeBuilder.OTHER);
@@ -427,7 +435,7 @@ public final class ElementName
     public static final ElementName GT = new ElementName("gt", "gt", TreeBuilder.OTHER);
     public static final ElementName HR = new ElementName("hr", "hr", TreeBuilder.HR | SPECIAL);
     public static final ElementName IN = new ElementName("in", "in", TreeBuilder.OTHER);
-    public static final ElementName LI = new ElementName("li", "li", TreeBuilder.LI | SPECIAL);
+    public static final ElementName LI = new ElementName("li", "li", TreeBuilder.LI | SPECIAL | OPTIONAL_END_TAG);
     public static final ElementName LN = new ElementName("ln", "ln", TreeBuilder.OTHER);
     public static final ElementName LT = new ElementName("lt", "lt", TreeBuilder.OTHER);
     public static final ElementName MI = new ElementName("mi", "mi", TreeBuilder.MI_MO_MN_MS_MTEXT | SCOPING_AS_MATHML);
@@ -437,11 +445,11 @@ public final class ElementName
     public static final ElementName OL = new ElementName("ol", "ol", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
     public static final ElementName OR = new ElementName("or", "or", TreeBuilder.OTHER);
     public static final ElementName PI = new ElementName("pi", "pi", TreeBuilder.OTHER);
-    public static final ElementName RP = new ElementName("rp", "rp", TreeBuilder.RT_OR_RP);
-    public static final ElementName RT = new ElementName("rt", "rt", TreeBuilder.RT_OR_RP);
-    public static final ElementName TD = new ElementName("td", "td", TreeBuilder.TD_OR_TH | SPECIAL | SCOPING);
-    public static final ElementName TH = new ElementName("th", "th", TreeBuilder.TD_OR_TH | SPECIAL | SCOPING);
-    public static final ElementName TR = new ElementName("tr", "tr", TreeBuilder.TR | SPECIAL | FOSTER_PARENTING);
+    public static final ElementName RP = new ElementName("rp", "rp", TreeBuilder.RT_OR_RP | OPTIONAL_END_TAG);
+    public static final ElementName RT = new ElementName("rt", "rt", TreeBuilder.RT_OR_RP | OPTIONAL_END_TAG);
+    public static final ElementName TD = new ElementName("td", "td", TreeBuilder.TD_OR_TH | SPECIAL | SCOPING | OPTIONAL_END_TAG);
+    public static final ElementName TH = new ElementName("th", "th", TreeBuilder.TD_OR_TH | SPECIAL | SCOPING | OPTIONAL_END_TAG);
+    public static final ElementName TR = new ElementName("tr", "tr", TreeBuilder.TR | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
     public static final ElementName TT = new ElementName("tt", "tt", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
     public static final ElementName UL = new ElementName("ul", "ul", TreeBuilder.UL_OR_OL_OR_DL | SPECIAL);
     public static final ElementName AND = new ElementName("and", "and", TreeBuilder.OTHER);
@@ -495,7 +503,7 @@ public final class ElementName
     public static final ElementName ABBR = new ElementName("abbr", "abbr", TreeBuilder.OTHER);
     public static final ElementName BASE = new ElementName("base", "base", TreeBuilder.BASE | SPECIAL);
     public static final ElementName BVAR = new ElementName("bvar", "bvar", TreeBuilder.OTHER);
-    public static final ElementName BODY = new ElementName("body", "body", TreeBuilder.BODY | SPECIAL);
+    public static final ElementName BODY = new ElementName("body", "body", TreeBuilder.BODY | SPECIAL | OPTIONAL_END_TAG);
     public static final ElementName CARD = new ElementName("card", "card", TreeBuilder.OTHER);
     public static final ElementName CODE = new ElementName("code", "code", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
     public static final ElementName CITE = new ElementName("cite", "cite", TreeBuilder.OTHER);
@@ -509,8 +517,8 @@ public final class ElementName
     public static final ElementName FORM = new ElementName("form", "form", TreeBuilder.FORM | SPECIAL);
     public static final ElementName FONT = new ElementName("font", "font", TreeBuilder.FONT);
     public static final ElementName GRAD = new ElementName("grad", "grad", TreeBuilder.OTHER);
-    public static final ElementName HEAD = new ElementName("head", "head", TreeBuilder.HEAD | SPECIAL);
-    public static final ElementName HTML = new ElementName("html", "html", TreeBuilder.HTML | SPECIAL | SCOPING);
+    public static final ElementName HEAD = new ElementName("head", "head", TreeBuilder.HEAD | SPECIAL | OPTIONAL_END_TAG);
+    public static final ElementName HTML = new ElementName("html", "html", TreeBuilder.HTML | SPECIAL | SCOPING | OPTIONAL_END_TAG);
     public static final ElementName LINE = new ElementName("line", "line", TreeBuilder.OTHER);
     public static final ElementName LINK = new ElementName("link", "link", TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
     public static final ElementName LIST = new ElementName("list", "list", TreeBuilder.OTHER);
@@ -576,14 +584,14 @@ public final class ElementName
     public static final ElementName REALS = new ElementName("reals", "reals", TreeBuilder.OTHER);
     public static final ElementName STYLE = new ElementName("style", "style", TreeBuilder.STYLE | SPECIAL);
     public static final ElementName SMALL = new ElementName("small", "small", TreeBuilder.B_OR_BIG_OR_CODE_OR_EM_OR_I_OR_S_OR_SMALL_OR_STRIKE_OR_STRONG_OR_TT_OR_U);
-    public static final ElementName THEAD = new ElementName("thead", "thead", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING);
+    public static final ElementName THEAD = new ElementName("thead", "thead", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
     public static final ElementName TABLE = new ElementName("table", "table", TreeBuilder.TABLE | SPECIAL | FOSTER_PARENTING | SCOPING);
     public static final ElementName TITLE = new ElementName("title", "title", TreeBuilder.TITLE | SPECIAL | SCOPING_AS_SVG);
     public static final ElementName TRACK = new ElementName("track", "track", TreeBuilder.PARAM_OR_SOURCE_OR_TRACK);
     public static final ElementName TSPAN = new ElementName("tspan", "tspan", TreeBuilder.OTHER);
     public static final ElementName TIMES = new ElementName("times", "times", TreeBuilder.OTHER);
-    public static final ElementName TFOOT = new ElementName("tfoot", "tfoot", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING);
-    public static final ElementName TBODY = new ElementName("tbody", "tbody", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING);
+    public static final ElementName TFOOT = new ElementName("tfoot", "tfoot", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
+    public static final ElementName TBODY = new ElementName("tbody", "tbody", TreeBuilder.TBODY_OR_THEAD_OR_TFOOT | SPECIAL | FOSTER_PARENTING | OPTIONAL_END_TAG);
     public static final ElementName UNION = new ElementName("union", "union", TreeBuilder.OTHER);
     public static final ElementName VKERN = new ElementName("vkern", "vkern", TreeBuilder.OTHER);
     public static final ElementName VIDEO = new ElementName("video", "video", TreeBuilder.OTHER);
@@ -625,7 +633,7 @@ public final class ElementName
     public static final ElementName MERROR = new ElementName("merror", "merror", TreeBuilder.OTHER);
     public static final ElementName MOMENT = new ElementName("moment", "moment", TreeBuilder.OTHER);
     public static final ElementName MATRIX = new ElementName("matrix", "matrix", TreeBuilder.OTHER);
-    public static final ElementName OPTION = new ElementName("option", "option", TreeBuilder.OPTION);
+    public static final ElementName OPTION = new ElementName("option", "option", TreeBuilder.OPTION | OPTIONAL_END_TAG);
     public static final ElementName OBJECT = new ElementName("object", "object", TreeBuilder.OBJECT | SPECIAL | SCOPING);
     public static final ElementName OUTPUT = new ElementName("output", "output", TreeBuilder.OUTPUT_OR_LABEL);
     public static final ElementName PRIMES = new ElementName("primes", "primes", TreeBuilder.OTHER);
@@ -691,7 +699,7 @@ public final class ElementName
     public static final ElementName BASEFONT = new ElementName("basefont", "basefont", TreeBuilder.LINK_OR_BASEFONT_OR_BGSOUND | SPECIAL);
     public static final ElementName CLIPPATH = new ElementName("clippath", "clipPath", TreeBuilder.OTHER);
     public static final ElementName CODOMAIN = new ElementName("codomain", "codomain", TreeBuilder.OTHER);
-    public static final ElementName COLGROUP = new ElementName("colgroup", "colgroup", TreeBuilder.COLGROUP | SPECIAL);
+    public static final ElementName COLGROUP = new ElementName("colgroup", "colgroup", TreeBuilder.COLGROUP | SPECIAL | OPTIONAL_END_TAG);
     public static final ElementName EMPTYSET = new ElementName("emptyset", "emptyset", TreeBuilder.OTHER);
     public static final ElementName FACTOROF = new ElementName("factorof", "factorof", TreeBuilder.OTHER);
     public static final ElementName FIELDSET = new ElementName("fieldset", "fieldset", TreeBuilder.FIELDSET | SPECIAL);
@@ -708,7 +716,7 @@ public final class ElementName
     public static final ElementName MPHANTOM = new ElementName("mphantom", "mphantom", TreeBuilder.OTHER);
     public static final ElementName NOFRAMES = new ElementName("noframes", "noframes", TreeBuilder.NOFRAMES | SPECIAL);
     public static final ElementName NOSCRIPT = new ElementName("noscript", "noscript", TreeBuilder.NOSCRIPT | SPECIAL);
-    public static final ElementName OPTGROUP = new ElementName("optgroup", "optgroup", TreeBuilder.OPTGROUP | SPECIAL);
+    public static final ElementName OPTGROUP = new ElementName("optgroup", "optgroup", TreeBuilder.OPTGROUP | SPECIAL | OPTIONAL_END_TAG);
     public static final ElementName POLYLINE = new ElementName("polyline", "polyline", TreeBuilder.OTHER);
     public static final ElementName PREFETCH = new ElementName("prefetch", "prefetch", TreeBuilder.OTHER);
     public static final ElementName PROGRESS = new ElementName("progress", "progress", TreeBuilder.OTHER);

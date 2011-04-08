@@ -2613,7 +2613,7 @@ FindNamedItems(nsIAtom* aName, nsIContent *aContent,
   NS_ASSERTION(!aEntry->IsInvalidName(),
                "Entry that should never have a list passed to FindNamedItems()!");
 
-  if (aContent->HasFlag(NODE_HAS_NAME)) {
+  if (aContent->HasName()) {
     NS_ASSERTION(nsGenericHTMLElement::FromContent(aContent),
                  "Only HTML Elements should have a name");
   

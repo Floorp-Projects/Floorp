@@ -49,14 +49,31 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
 
-class nsIDOMWindow;
-class nsIDOMNSHTMLOptionCollection;
-class nsIPluginInstance;
-class nsIForm;
-class nsIDOMNodeList;
-class nsIDOMDocument;
-class nsIHTMLDocument;
+namespace mozilla {
+class DOMSVGLengthList;
+class DOMSVGNumberList;
+class DOMSVGPathSegList;
+class DOMSVGPointList;
+}
 class nsGlobalWindow;
+class nsIDOMDocument;
+class nsIDOMNSHTMLOptionCollection;
+class nsIDOMNodeList;
+class nsIDOMSVGLength;
+class nsIDOMSVGLengthList;
+class nsIDOMSVGNumber;
+class nsIDOMSVGNumberList;
+class nsIDOMSVGPathSeg;
+class nsIDOMSVGPathSegList;
+class nsIDOMSVGPoint;
+class nsIDOMSVGPointList;
+class nsIDOMSVGTransform;
+class nsIDOMSVGTransformList;
+class nsIDOMWindow;
+class nsIForm;
+class nsIHTMLDocument;
+class nsIPluginInstance;
+class nsSVGTransformList;
 
 struct nsDOMClassInfoData;
 
@@ -1838,5 +1855,31 @@ public:
     return new nsWebGLViewportHandlerSH(aData);
   }
 };
+
+
+// Template for SVGXXXList helpers
+ 
+template<class ListInterfaceType, class ListType>
+class nsSVGListSH : public nsArraySH
+{
+protected:
+  nsSVGListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
+  {
+  }
+
+public:
+  virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                                 nsWrapperCache **aCache, nsresult *aResult);
+ 
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsSVGListSH(aData);
+  }
+};
+
+typedef nsSVGListSH<nsIDOMSVGLengthList, mozilla::DOMSVGLengthList> nsSVGLengthListSH;
+typedef nsSVGListSH<nsIDOMSVGNumberList, mozilla::DOMSVGNumberList> nsSVGNumberListSH;
+typedef nsSVGListSH<nsIDOMSVGPathSegList, mozilla::DOMSVGPathSegList> nsSVGPathSegListSH;
+typedef nsSVGListSH<nsIDOMSVGPointList, mozilla::DOMSVGPointList> nsSVGPointListSH;
 
 #endif /* nsDOMClassInfo_h___ */

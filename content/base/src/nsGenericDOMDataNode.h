@@ -301,8 +301,8 @@ protected:
   class nsDataSlots : public nsINode::nsSlots
   {
   public:
-    nsDataSlots(PtrBits aFlags)
-      : nsINode::nsSlots(aFlags),
+    nsDataSlots()
+      : nsINode::nsSlots(),
         mBindingParent(nsnull)
     {
     }

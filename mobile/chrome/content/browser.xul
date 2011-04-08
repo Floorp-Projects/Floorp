@@ -674,21 +674,17 @@
     </hbox>
 
     <hbox id="appmenu" bottom="0" hidden="true" align="stretch" oncommand="AppMenu.hide();">
-      <toolbarbutton class="appmenu-button"
+      <toolbarbutton class="appmenu-site-button appmenu-button"
         label="&appMenu.siteOptions;"
-        image="chrome://browser/skin/images/appmenu-site-hdpi.png"
         oncommand="getIdentityHandler().show(); event.stopPropagation();"/>
-      <toolbarbutton class="appmenu-button"
+      <toolbarbutton class="appmenu-preferences-button appmenu-button"
         label="&prefsHeader.label;"
-        image="chrome://browser/skin/images/appmenu-preferences-hdpi.png"
         oncommand="BrowserUI.showPanel('prefs-container');"/>
-      <toolbarbutton class="appmenu-button"
+      <toolbarbutton class="appmenu-addons-button appmenu-button"
         label="&addonsHeader.label;"
-        image="chrome://browser/skin/images/appmenu-addons-hdpi.png"
         oncommand="BrowserUI.showPanel('addons-container');"/>
-      <toolbarbutton class="appmenu-button"
+      <toolbarbutton class="appmenu-downloads-button appmenu-button"
         label="&downloadsHeader.label;"
-        image="chrome://browser/skin/images/appmenu-downloads-hdpi.png"
         oncommand="BrowserUI.showPanel('downloads-container');"/>
     </hbox>
   </stack>
