@@ -1764,7 +1764,7 @@ public:
 
   ~nsIRenderingContextBidiProcessor()
   {
-    mCtx->SetRightToLeftText(PR_FALSE);
+    mCtx->SetTextRunRTL(PR_FALSE);
   }
 
   virtual void SetText(const PRUnichar* aText,
