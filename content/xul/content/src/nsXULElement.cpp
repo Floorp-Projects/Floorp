@@ -285,7 +285,7 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
             element->SetFlags(NODE_MAY_HAVE_CLASS);
         }
         if (aPrototype->mHasStyleAttribute) {
-            element->SetFlags(NODE_MAY_HAVE_STYLE);
+            element->SetMayHaveStyle();
         }
 
         NS_ASSERTION(aPrototype->mScriptTypeID != nsIProgrammingLanguage::UNKNOWN,
@@ -1807,7 +1807,7 @@ nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 css::StyleRule*
 nsXULElement::GetInlineStyleRule()
 {
-    if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
+    if (!MayHaveStyle()) {
         return nsnull;
     }
     // Fetch the cached style rule from the attributes.
