@@ -800,7 +800,7 @@ public:
    * GetIDAttributeName().  This may be null if there is no ID.
    */
   nsIAtom* GetID() const {
-    if (HasFlag(NODE_HAS_ID)) {
+    if (HasID()) {
       return DoGetID();
     }
     return nsnull;
@@ -960,7 +960,7 @@ public:
 protected:
   /**
    * Hook for implementing GetID.  This is guaranteed to only be
-   * called if the NODE_HAS_ID flag is set.
+   * called if HasID() is true.
    */
   virtual nsIAtom* DoGetID() const = 0;
 
