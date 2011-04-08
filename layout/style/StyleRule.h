@@ -46,7 +46,7 @@
 #define mozilla_css_StyleRule_h__
 
 //#include <stdio.h>
-#include "Rule.h"
+#include "mozilla/css/Rule.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
@@ -348,7 +348,7 @@ public:
 
   virtual PRInt32 GetType() const;
 
-  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual already_AddRefed<Rule> Clone() const;
 
   nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
 
