@@ -93,9 +93,8 @@ public:
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); //override GroupRule
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<Rule> Clone() const;
-  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  virtual nsIDOMCSSRule* GetDOMRule()
   {
-    *aResult = NS_OK;
     return this;
   }
 
@@ -136,9 +135,8 @@ public:
   // Rule methods
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<Rule> Clone() const;
-  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  virtual nsIDOMCSSRule* GetDOMRule()
   {
-    *aResult = NS_OK;
     return this;
   }
 
@@ -416,9 +414,8 @@ public:
   // Rule methods
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<mozilla::css::Rule> Clone() const;
-  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  virtual nsIDOMCSSRule* GetDOMRule()
   {
-    *aResult = NS_OK;
     return this;
   }
 

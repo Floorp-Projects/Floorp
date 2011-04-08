@@ -178,11 +178,10 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   if (!rules) return NS_ERROR_OUT_OF_MEMORY;
 
   nsRefPtr<mozilla::css::StyleRule> cssRule;
-  nsCOMPtr<nsIDOMCSSRule> domRule;
   for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
     cssRule = do_QueryObject(ruleNode->GetRule());
     if (cssRule) {
-      cssRule->GetDOMRule(getter_AddRefs(domRule));
+      nsCOMPtr<nsIDOMCSSRule> domRule = cssRule->GetDOMRule();
       if (domRule)
         rules->InsertElementAt(domRule, 0);
     }

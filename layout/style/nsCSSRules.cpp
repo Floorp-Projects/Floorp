@@ -68,8 +68,8 @@
 namespace css = mozilla::css;
 
 #define IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
-nsIDOMCSSRule* class_::GetDOMRuleWeak(nsresult *aResult) \
-  { *aResult = NS_OK; return this; }
+/* virtual */ nsIDOMCSSRule* class_::GetDOMRule() \
+  { return this; }
 #define IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_) \
 /* virtual */ void class_::MapRuleInfoInto(nsRuleData* aRuleData) \
   { NS_ABORT_IF_FALSE(PR_FALSE, "should not be called"); }
@@ -99,9 +99,10 @@ nsresult
 Rule::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
   if (mParentRule) {
-    return mParentRule->GetDOMRule(aParentRule);
+    NS_IF_ADDREF(*aParentRule = mParentRule->GetDOMRule());
+  } else {
+    *aParentRule = nsnull;
   }
-  *aParentRule = nsnull;
   return NS_OK;
 }
 
@@ -182,7 +183,7 @@ GroupRuleRuleList::GetItemAt(PRUint32 aIndex, nsresult* aResult)
   if (mGroupRule) {
     nsRefPtr<Rule> rule = mGroupRule->GetStyleRuleAt(aIndex);
     if (rule) {
-      return rule->GetDOMRuleWeak(aResult);
+      return rule->GetDOMRule();
     }
   }
 
@@ -637,8 +638,7 @@ GroupRule::AppendRulesToCssText(nsAString& aCssText)
   // get all the rules
   for (PRInt32 index = 0, count = mRules.Count(); index < count; ++index) {
     Rule* rule = mRules.ObjectAt(index);
-    nsCOMPtr<nsIDOMCSSRule> domRule;
-    rule->GetDOMRule(getter_AddRefs(domRule));
+    nsIDOMCSSRule* domRule = rule->GetDOMRule();
     if (domRule) {
       nsAutoString cssText;
       domRule->GetCssText(cssText);
@@ -1527,7 +1527,8 @@ nsCSSFontFaceStyleDecl::Item(PRUint32 index, nsAString & aResult NS_OUTPARAM)
 NS_IMETHODIMP
 nsCSSFontFaceStyleDecl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  return ContainingRule()->GetDOMRule(aParentRule);
+  NS_IF_ADDREF(*aParentRule = ContainingRule()->GetDOMRule());
+  return NS_OK;
 }
 
 
