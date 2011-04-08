@@ -86,10 +86,10 @@ public:
 
     NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                              gfxUserFontSet* aUserFontSet,
-                             nsIFontMetrics*& aMetrics);
+                             nsFontMetrics*& aMetrics);
     NS_IMETHOD GetMetricsFor(const nsFont& aFont,
                              gfxUserFontSet* aUserFontSet,
-                             nsIFontMetrics*& aMetrics);
+                             nsFontMetrics*& aMetrics);
 
     NS_IMETHOD FirstExistingFont(const nsFont& aFont, nsString& aFaceName);
 
@@ -97,7 +97,7 @@ public:
                                 PRBool& aAliased);
 
     NS_IMETHOD CreateFontCache();
-    NS_IMETHOD FontMetricsDeleted(const nsIFontMetrics* aFontMetrics);
+    NS_IMETHOD FontMetricsDeleted(const nsFontMetrics* aFontMetrics);
     NS_IMETHOD FlushFontCache(void);
 
     NS_IMETHOD PrepareNativeWidget(nsIWidget *aWidget, void **aOut);

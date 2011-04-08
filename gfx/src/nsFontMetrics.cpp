@@ -36,29 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsThebesFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsBoundingMetrics.h"
+#include "nsRenderingContext.h"
 #include "nsThebesDeviceContext.h"
-#include "nsFont.h"
 
-#include "nsString.h"
-#include <stdio.h>
+class AutoTextRun {
+public:
+    AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
+                const char* aString, PRInt32 aLength) {
+        mTextRun = gfxTextRunCache::MakeTextRun(
+            reinterpret_cast<const PRUint8*>(aString), aLength,
+            aMetrics->GetThebesFontGroup(), aRC->ThebesContext(),
+            aMetrics->AppUnitsPerDevPixel(),
+            ComputeFlags(aMetrics));
+    }
+    AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
+                const PRUnichar* aString, PRInt32 aLength) {
+        mTextRun = gfxTextRunCache::MakeTextRun(
+            aString, aLength, aMetrics->GetThebesFontGroup(),
+            aRC->ThebesContext(),
+            aMetrics->AppUnitsPerDevPixel(),
+            ComputeFlags(aMetrics));
+    }
+    gfxTextRun* operator->() { return mTextRun.get(); }
+    gfxTextRun* get() { return mTextRun.get(); }
 
-#include "gfxTextRunCache.h"
-#include "gfxPlatform.h"
-#include "gfxUserFontSet.h"
+private:
+    gfxTextRunCache::AutoTextRun mTextRun;
 
-NS_IMPL_ISUPPORTS1(nsThebesFontMetrics, nsIFontMetrics)
+    static PRUint32 ComputeFlags(nsFontMetrics* aMetrics) {
+        PRUint32 flags = 0;
+        if (aMetrics->GetRightToLeftTextRunMode()) {
+            flags |= gfxTextRunFactory::TEXT_IS_RTL;
+        }
+        return flags;
+    }
+};
 
-#include <stdlib.h>
-
-nsThebesFontMetrics::nsThebesFontMetrics()
+nsFontMetrics::nsFontMetrics()
 {
     mFontStyle = nsnull;
     mFontGroup = nsnull;
 }
 
-nsThebesFontMetrics::~nsThebesFontMetrics()
+nsFontMetrics::~nsFontMetrics()
 {
     if (mDeviceContext)
         mDeviceContext->FontMetricsDeleted(this);
@@ -66,10 +88,10 @@ nsThebesFontMetrics::~nsThebesFontMetrics()
     //delete mFontGroup;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
-                          nsIDeviceContext *aContext, 
-                          gfxUserFontSet *aUserFontSet)
+nsresult
+nsFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
+                    nsIDeviceContext *aContext,
+                    gfxUserFontSet *aUserFontSet)
 {
     mFont = aFont;
     mLanguage = aLanguage;
@@ -89,16 +111,16 @@ nsThebesFontMetrics::Init(const nsFont& aFont, nsIAtom* aLanguage,
                                   aFont.languageOverride);
 
     mFontGroup =
-        gfxPlatform::GetPlatform()->CreateFontGroup(aFont.name, mFontStyle, 
+        gfxPlatform::GetPlatform()->CreateFontGroup(aFont.name, mFontStyle,
                                                     aUserFontSet);
-    if (mFontGroup->FontListLength() < 1) 
+    if (mFontGroup->FontListLength() < 1)
         return NS_ERROR_UNEXPECTED;
 
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::Destroy()
+nsresult
+nsFontMetrics::Destroy()
 {
     mDeviceContext = nsnull;
     return NS_OK;
@@ -108,42 +130,42 @@ nsThebesFontMetrics::Destroy()
 #define ROUND_TO_TWIPS(x) (nscoord)floor(((x) * mP2A) + 0.5)
 #define CEIL_TO_TWIPS(x) (nscoord)NS_ceil((x) * mP2A)
 
-const gfxFont::Metrics& nsThebesFontMetrics::GetMetrics() const
+const gfxFont::Metrics& nsFontMetrics::GetMetrics() const
 {
     return mFontGroup->GetFontAt(0)->GetMetrics();
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetXHeight(nscoord& aResult)
+nsresult
+nsFontMetrics::GetXHeight(nscoord& aResult)
 {
     aResult = ROUND_TO_TWIPS(GetMetrics().xHeight);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetSuperscriptOffset(nscoord& aResult)
+nsresult
+nsFontMetrics::GetSuperscriptOffset(nscoord& aResult)
 {
     aResult = ROUND_TO_TWIPS(GetMetrics().superscriptOffset);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetSubscriptOffset(nscoord& aResult)
+nsresult
+nsFontMetrics::GetSubscriptOffset(nscoord& aResult)
 {
     aResult = ROUND_TO_TWIPS(GetMetrics().subscriptOffset);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize)
+nsresult
+nsFontMetrics::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
     aOffset = ROUND_TO_TWIPS(GetMetrics().strikeoutOffset);
     aSize = ROUND_TO_TWIPS(GetMetrics().strikeoutSize);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
+nsresult
+nsFontMetrics::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
     aOffset = ROUND_TO_TWIPS(mFontGroup->GetUnderlineOffset());
     aSize = ROUND_TO_TWIPS(GetMetrics().underlineSize);
@@ -170,109 +192,109 @@ static gfxFloat ComputeMaxAscent(const gfxFont::Metrics& aMetrics)
     return NS_floor(aMetrics.maxAscent + 0.5);
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetHeight(nscoord &aHeight)
+nsresult
+nsFontMetrics::GetHeight(nscoord &aHeight)
 {
     aHeight = CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics())) +
         CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetInternalLeading(nscoord &aLeading)
+nsresult
+nsFontMetrics::GetInternalLeading(nscoord &aLeading)
 {
     aLeading = ROUND_TO_TWIPS(GetMetrics().internalLeading);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetExternalLeading(nscoord &aLeading)
+nsresult
+nsFontMetrics::GetExternalLeading(nscoord &aLeading)
 {
     aLeading = ROUND_TO_TWIPS(GetMetrics().externalLeading);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetEmHeight(nscoord &aHeight)
+nsresult
+nsFontMetrics::GetEmHeight(nscoord &aHeight)
 {
     aHeight = ROUND_TO_TWIPS(GetMetrics().emHeight);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetEmAscent(nscoord &aAscent)
+nsresult
+nsFontMetrics::GetEmAscent(nscoord &aAscent)
 {
     aAscent = ROUND_TO_TWIPS(GetMetrics().emAscent);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetEmDescent(nscoord &aDescent)
+nsresult
+nsFontMetrics::GetEmDescent(nscoord &aDescent)
 {
     aDescent = ROUND_TO_TWIPS(GetMetrics().emDescent);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetMaxHeight(nscoord &aHeight)
+nsresult
+nsFontMetrics::GetMaxHeight(nscoord &aHeight)
 {
     aHeight = CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics())) +
         CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetMaxAscent(nscoord &aAscent)
+nsresult
+nsFontMetrics::GetMaxAscent(nscoord &aAscent)
 {
     aAscent = CEIL_TO_TWIPS(ComputeMaxAscent(GetMetrics()));
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetMaxDescent(nscoord &aDescent)
+nsresult
+nsFontMetrics::GetMaxDescent(nscoord &aDescent)
 {
     aDescent = CEIL_TO_TWIPS(ComputeMaxDescent(GetMetrics(), mFontGroup));
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetMaxAdvance(nscoord &aAdvance)
+nsresult
+nsFontMetrics::GetMaxAdvance(nscoord &aAdvance)
 {
     aAdvance = CEIL_TO_TWIPS(GetMetrics().maxAdvance);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetLanguage(nsIAtom** aLanguage)
+nsresult
+nsFontMetrics::GetLanguage(nsIAtom** aLanguage)
 {
     *aLanguage = mLanguage;
     NS_IF_ADDREF(*aLanguage);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetFontHandle(nsFontHandle &aHandle)
+nsresult
+nsFontMetrics::GetFontHandle(nsFontHandle &aHandle)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetAveCharWidth(nscoord& aAveCharWidth)
+nsresult
+nsFontMetrics::GetAveCharWidth(nscoord& aAveCharWidth)
 {
     // Use CEIL instead of ROUND for consistency with GetMaxAdvance
     aAveCharWidth = CEIL_TO_TWIPS(GetMetrics().aveCharWidth);
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsThebesFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
+nsresult
+nsFontMetrics::GetSpaceWidth(nscoord& aSpaceCharWidth)
 {
     aSpaceCharWidth = CEIL_TO_TWIPS(GetMetrics().spaceWidth);
     return NS_OK;
 }
 
 PRInt32
-nsThebesFontMetrics::GetMaxStringLength()
+nsFontMetrics::GetMaxStringLength()
 {
     const gfxFont::Metrics& m = GetMetrics();
     const double x = 32767.0 / m.maxAdvance;
@@ -296,9 +318,9 @@ public:
     }
 };
 
-nsresult 
-nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
-                              nsRenderingContext *aContext)
+nsresult
+nsFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth,
+                        nsRenderingContext *aContext)
 {
     if (aLength == 0) {
         aWidth = 0;
@@ -320,9 +342,9 @@ nsThebesFontMetrics::GetWidth(const char* aString, PRUint32 aLength, nscoord& aW
 }
 
 nsresult
-nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
-                              nscoord& aWidth, PRInt32 *aFontID,
-                              nsRenderingContext *aContext)
+nsFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                        nscoord& aWidth, PRInt32 *aFontID,
+                        nsRenderingContext *aContext)
 {
     if (aLength == 0) {
         aWidth = 0;
@@ -345,47 +367,47 @@ nsThebesFontMetrics::GetWidth(const PRUnichar* aString, PRUint32 aLength,
 
 // Get the text dimensions for this string
 nsresult
-nsThebesFontMetrics::GetTextDimensions(const PRUnichar* aString,
-                                    PRUint32 aLength,
-                                    nsTextDimensions& aDimensions, 
-                                    PRInt32* aFontID)
+nsFontMetrics::GetTextDimensions(const PRUnichar* aString,
+                                 PRUint32 aLength,
+                                 nsTextDimensions& aDimensions,
+                                 PRInt32* aFontID)
 {
     return NS_OK;
 }
 
 nsresult
-nsThebesFontMetrics::GetTextDimensions(const char*         aString,
-                                   PRInt32             aLength,
-                                   PRInt32             aAvailWidth,
-                                   PRInt32*            aBreaks,
-                                   PRInt32             aNumBreaks,
-                                   nsTextDimensions&   aDimensions,
-                                   PRInt32&            aNumCharsFit,
-                                   nsTextDimensions&   aLastWordDimensions,
-                                   PRInt32*            aFontID)
+nsFontMetrics::GetTextDimensions(const char*         aString,
+                                 PRInt32             aLength,
+                                 PRInt32             aAvailWidth,
+                                 PRInt32*            aBreaks,
+                                 PRInt32             aNumBreaks,
+                                 nsTextDimensions&   aDimensions,
+                                 PRInt32&            aNumCharsFit,
+                                 nsTextDimensions&   aLastWordDimensions,
+                                 PRInt32*            aFontID)
 {
     return NS_OK;
 }
 nsresult
-nsThebesFontMetrics::GetTextDimensions(const PRUnichar*    aString,
-                                   PRInt32             aLength,
-                                   PRInt32             aAvailWidth,
-                                   PRInt32*            aBreaks,
-                                   PRInt32             aNumBreaks,
-                                   nsTextDimensions&   aDimensions,
-                                   PRInt32&            aNumCharsFit,
-                                   nsTextDimensions&   aLastWordDimensions,
-                                   PRInt32*            aFontID)
+nsFontMetrics::GetTextDimensions(const PRUnichar*    aString,
+                                 PRInt32             aLength,
+                                 PRInt32             aAvailWidth,
+                                 PRInt32*            aBreaks,
+                                 PRInt32             aNumBreaks,
+                                 nsTextDimensions&   aDimensions,
+                                 PRInt32&            aNumCharsFit,
+                                 nsTextDimensions&   aLastWordDimensions,
+                                 PRInt32*            aFontID)
 {
     return NS_OK;
 }
 
-// Draw a string using this font handle on the surface passed in.  
+// Draw a string using this font handle on the surface passed in.
 nsresult
-nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
-                                nscoord aX, nscoord aY,
-                                const nscoord* aSpacing,
-                                nsRenderingContext *aContext)
+nsFontMetrics::DrawString(const char *aString, PRUint32 aLength,
+                          nscoord aX, nscoord aY,
+                          const nscoord* aSpacing,
+                          nsRenderingContext *aContext)
 {
     if (aLength == 0)
         return NS_OK;
@@ -405,10 +427,10 @@ nsThebesFontMetrics::DrawString(const char *aString, PRUint32 aLength,
 }
 
 nsresult
-nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
-                                nscoord aX, nscoord aY,
-                                nsRenderingContext *aContext,
-                                nsRenderingContext *aTextRunConstructionContext)
+nsFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
+                          nscoord aX, nscoord aY,
+                          nsRenderingContext *aContext,
+                          nsRenderingContext *aTextRunConstructionContext)
 {
     if (aLength == 0)
         return NS_OK;
@@ -429,16 +451,18 @@ nsThebesFontMetrics::DrawString(const PRUnichar* aString, PRUint32 aLength,
 #ifdef MOZ_MATHML
 
 static void
-GetTextRunBoundingMetrics(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aLength,
+GetTextRunBoundingMetrics(gfxTextRun *aTextRun,
+                          PRUint32 aStart, PRUint32 aLength,
                           nsRenderingContext *aContext,
                           nsBoundingMetrics &aBoundingMetrics)
 {
     StubPropertyProvider provider;
     gfxTextRun::Metrics theMetrics =
-        aTextRun->MeasureText(aStart, aLength, gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
+        aTextRun->MeasureText(aStart, aLength,
+                              gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS,
                               aContext->ThebesContext(), &provider);
-        // note that TIGHT_HINTED_OUTLINE_EXTENTS can be expensive (on Windows)
-        // but this is only used for MathML positioning so it's not critical
+    // note that TIGHT_HINTED_OUTLINE_EXTENTS can be expensive (on Windows)
+    // but this is only used for MathML positioning so it's not critical
 
     aBoundingMetrics.leftBearing = NSToCoordFloor(theMetrics.mBoundingBox.X());
     aBoundingMetrics.rightBearing = NSToCoordCeil(theMetrics.mBoundingBox.XMost());
@@ -448,9 +472,9 @@ GetTextRunBoundingMetrics(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aLengt
 }
 
 nsresult
-nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
-                                        nsRenderingContext *aContext,
-                                        nsBoundingMetrics &aBoundingMetrics)
+nsFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                  nsRenderingContext *aContext,
+                                  nsBoundingMetrics &aBoundingMetrics)
 {
     if (aLength == 0) {
         aBoundingMetrics = nsBoundingMetrics();
@@ -461,14 +485,15 @@ nsThebesFontMetrics::GetBoundingMetrics(const char *aString, PRUint32 aLength,
     if (!textRun.get())
         return NS_ERROR_FAILURE;
 
-    GetTextRunBoundingMetrics(textRun.get(), 0, aLength, aContext, aBoundingMetrics);
+    GetTextRunBoundingMetrics(textRun.get(), 0, aLength, aContext,
+                              aBoundingMetrics);
     return NS_OK;
 }
 
 nsresult
-nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
-                                        nsRenderingContext *aContext,
-                                        nsBoundingMetrics &aBoundingMetrics)
+nsFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLength,
+                                  nsRenderingContext *aContext,
+                                  nsBoundingMetrics &aBoundingMetrics)
 {
     if (aLength == 0) {
         aBoundingMetrics = nsBoundingMetrics();
@@ -479,7 +504,8 @@ nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLeng
     if (!textRun.get())
         return NS_ERROR_FAILURE;
 
-    GetTextRunBoundingMetrics(textRun.get(), 0, aLength, aContext, aBoundingMetrics);
+    GetTextRunBoundingMetrics(textRun.get(), 0, aLength, aContext,
+                              aBoundingMetrics);
     return NS_OK;
 }
 
@@ -487,7 +513,7 @@ nsThebesFontMetrics::GetBoundingMetrics(const PRUnichar *aString, PRUint32 aLeng
 
 // Set the direction of the text rendering
 nsresult
-nsThebesFontMetrics::SetRightToLeftText(PRBool aIsRTL)
+nsFontMetrics::SetRightToLeftText(PRBool aIsRTL)
 {
     mIsRightToLeft = aIsRTL;
     return NS_OK;
@@ -495,13 +521,13 @@ nsThebesFontMetrics::SetRightToLeftText(PRBool aIsRTL)
 
 // Set the direction of the text rendering
 PRBool
-nsThebesFontMetrics::GetRightToLeftText()
+nsFontMetrics::GetRightToLeftText()
 {
     return mIsRightToLeft;
 }
 
-/* virtual */ gfxUserFontSet*
-nsThebesFontMetrics::GetUserFontSet()
+gfxUserFontSet*
+nsFontMetrics::GetUserFontSet()
 {
     return mFontGroup->GetUserFontSet();
 }
