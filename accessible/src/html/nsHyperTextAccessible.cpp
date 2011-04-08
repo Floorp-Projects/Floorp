@@ -2212,7 +2212,6 @@ nsHyperTextAccessible::GetChildOffset(PRUint32 aChildIndex,
   PRUint32 lastOffset = mOffsets.IsEmpty() ?
     0 : mOffsets[mOffsets.Length() - 1];
 
-  EnsureChildren();
   while (mOffsets.Length() < aChildIndex) {
     nsAccessible* child = mChildren[mOffsets.Length()];
     lastOffset += nsAccUtils::TextLength(child);

@@ -629,6 +629,14 @@ BasicTextureImage::EndUpdate()
     mTextureState = Valid;
 }
 
+void
+BasicTextureImage::BindTexture(GLenum aTextureUnit)
+{
+    mGLContext->fActiveTexture(aTextureUnit);
+    mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, Texture());
+    mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
+}
+
 already_AddRefed<gfxASurface>
 BasicTextureImage::GetSurfaceForUpdate(const gfxIntSize& aSize, ImageFormat aFmt)
 {
@@ -687,7 +695,7 @@ BasicTextureImage::Resize(const nsIntSize& aSize)
                             LOCAL_GL_UNSIGNED_BYTE,
                             NULL);
 
-    mTextureState = Initialized;
+    mTextureState = Allocated;
     mSize = aSize;
 }
 

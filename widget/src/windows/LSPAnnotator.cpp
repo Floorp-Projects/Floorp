@@ -95,7 +95,7 @@ LSPAnnotationGatherer::Run()
     return NS_ERROR_FAILURE;
   }
 
-  nsAutoPtr<char> byteArray = new char[size];
+  nsAutoArrayPtr<char> byteArray(new char[size]);
   WSAPROTOCOL_INFOW* providers =
     reinterpret_cast<WSAPROTOCOL_INFOW*>(byteArray.get());
 

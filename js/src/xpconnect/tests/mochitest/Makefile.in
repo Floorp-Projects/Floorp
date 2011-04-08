@@ -80,6 +80,7 @@ _TEST_FILES =	bug500931_helper.html \
 		test_bug605167.html \
 		test_bug623437.html \
 		test_bug601299.html \
+		test_bug628794.html \
 		test_bug629227.html \
 		file1_bug629227.html \
 		file2_bug629227.html \
