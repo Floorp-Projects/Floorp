@@ -132,6 +132,7 @@ EXPORTS_mozilla = \
   Monitor.h \
   Mutex.h \
   SSE.h \
+  arm.h \
   unused.h \
   $(NULL)
 
