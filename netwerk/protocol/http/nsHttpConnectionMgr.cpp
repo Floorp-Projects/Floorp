@@ -1057,12 +1057,24 @@ nsHttpConnectionMgr::OnMsgReclaimConnection(PRInt32, void *param)
 
         if (conn->CanReuse()) {
             LOG(("  adding connection to idle list\n"));
-            // hold onto this connection in the idle list.  we push it to
-            // the end of the list so as to ensure that we'll visit older
-            // connections first before getting to this one.
+            // Keep The idle connection list sorted with the connections that
+            // have moved the largest data pipelines at the front because these
+            // connections have the largest cwnds on the server.
+
+            // The linear search is ok here because the number of idleconns
+            // in a single entry is generally limited to a small number (i.e. 6)
+
+            PRInt32 idx;
+            for (idx = 0; idx < ent->mIdleConns.Length(); idx++) {
+                nsHttpConnection *idleConn = ent->mIdleConns[idx];
+                if (idleConn->MaxBytesRead() < conn->MaxBytesRead())
+                    break;
+            }
+
             NS_ADDREF(conn);
-            ent->mIdleConns.AppendElement(conn);
+            ent->mIdleConns.InsertElementAt(idx, conn);
             mNumIdleConns++;
+
             // If the added connection was first idle connection or has shortest
             // time to live among the idle connections, pruning dead
             // connections needs to be done when it can't be reused anymore.
