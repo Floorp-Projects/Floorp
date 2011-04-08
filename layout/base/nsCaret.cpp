@@ -51,7 +51,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
-#include "nsIFontMetrics.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMCharacterData.h"

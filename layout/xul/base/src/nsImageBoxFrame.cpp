@@ -44,7 +44,6 @@
 
 #include "nsImageBoxFrame.h"
 #include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -65,7 +64,6 @@
 #include "nsILoadGroup.h"
 #include "nsHTMLContainerFrame.h"
 #include "prprf.h"
-#include "nsIFontMetrics.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDeviceContext.h"

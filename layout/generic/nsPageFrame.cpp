@@ -53,7 +53,6 @@
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #endif
-#include "nsIFontMetrics.h"
 #include "nsIPrintSettings.h"
 #include "nsRegion.h"
 

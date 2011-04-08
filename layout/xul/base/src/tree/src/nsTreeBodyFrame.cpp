@@ -76,7 +76,6 @@
 #include "nsIContent.h"
 #include "mozilla/css/StyleRule.h"
 #include "nsCSSRendering.h"
-#include "nsIFontMetrics.h"
 #include "nsIDeviceContext.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsXPIDLString.h"
