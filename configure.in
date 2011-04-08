@@ -4923,11 +4923,6 @@ AC_SUBST(SYSTEM_HUNSPELL)
 dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
-JAVA_INCLUDE_PATH=
-MOZ_ARG_WITH_STRING(java-include-path,
-[  --with-java-include-path=dir
-                          Location of Java SDK headers],
-    JAVA_INCLUDE_PATH=$withval)
 
 JAVA_BIN_PATH=
 MOZ_ARG_WITH_STRING(java-bin-path,
@@ -4950,7 +4945,6 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
-MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_MATHML=1
 MOZ_MORK=
@@ -6216,37 +6210,6 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
   MOZ_UNIVERSALCHARDET=,
   MOZ_UNIVERSALCHARDET=1 )
 
-dnl ========================================================
-dnl JavaXPCOM
-dnl ========================================================
-case "${target}" in
-*-wince*)
-    MOZ_JAVAXPCOM=
-    ;;
-esac
-
-MOZ_ARG_ENABLE_BOOL(javaxpcom,
-[  --enable-javaxpcom
-                          Enable Java-XPCOM bridge],
-    MOZ_JAVAXPCOM=1,
-    MOZ_JAVAXPCOM=)
-
-case "$host_os" in
-  *mingw*)
-    if test -n "$JAVA_HOME"; then
-      JAVA_HOME=`cd "$JAVA_HOME" && pwd`
-    fi
-    ;;
-esac
-
-if test -n "${JAVA_BIN_PATH}"; then
-  dnl Look for javac and jar in the specified path.
-  JAVA_PATH="$JAVA_BIN_PATH"
-else
-  dnl No path specified, so look for javac and jar in $JAVA_HOME & $PATH.
-  JAVA_PATH="$JAVA_HOME/bin:$PATH"
-fi
-
 MOZ_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
 MOZ_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
 MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
@@ -6254,29 +6217,6 @@ MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
 if test -n "${JAVA_BIN_PATH}" -o "$OS_TARGET" = Android; then
   if test -z "$JAVA" -o "$JAVA" = ":" -o -z "$JAVAC" -o "$JAVAC" = ":" -o -z "$JAR" -o "$JAR" = ":"; then
     AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-fi
-
-if test -n "${MOZ_JAVAXPCOM}"; then
-  if test -n "${JAVA_INCLUDE_PATH}"; then
-    dnl Make sure jni.h exists in the given include path.
-    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([jni.h was not found in given include path $JAVA_INCLUDE_PATH.])
-    fi
-  else
-    case "$target_os" in
-      darwin*)
-        dnl Default to java system location
-        JAVA_INCLUDE_PATH=/System/Library/Frameworks/JavaVM.framework/Headers
-        ;;
-      *)
-        dnl Try $JAVA_HOME
-        JAVA_INCLUDE_PATH="$JAVA_HOME/include"
-        ;;
-    esac
-    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
-    fi
   fi
 fi
 
@@ -6582,11 +6522,6 @@ fi
 if test `echo "$MOZ_EXTENSIONS" | grep -c universalchardet` -ne 0; then
     AC_MSG_WARN([universalchardet is no longer an extension, use --disable-universalchardet to disable.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|universalchardet||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
-    AC_MSG_WARN([java is no longer an extension, use --enable-javaxpcom to enable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|java||g'`
 fi
 
 if test `echo "$MOZ_EXTENSIONS" | grep -c spellcheck` -ne 0; then
@@ -9041,8 +8976,6 @@ AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_WEBGL)
 AC_SUBST(MOZ_HELP_VIEWER)
 
-AC_SUBST(MOZ_JAVAXPCOM)
-AC_SUBST(JAVA_INCLUDE_PATH)
 AC_SUBST(JAVA)
 AC_SUBST(JAVAC)
 AC_SUBST(JAR)

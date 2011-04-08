@@ -1139,16 +1139,6 @@ if [ "$MOZ_XTF" ]; then
   "
 fi
 
-if [ "$MOZ_JAVAXPCOM" ]; then
-  add_makefiles "
-    extensions/java/Makefile
-    extensions/java/xpcom/Makefile
-    extensions/java/xpcom/interfaces/Makefile
-    extensions/java/xpcom/src/Makefile
-    extensions/java/xpcom/glue/Makefile
-  "
-fi
-
 if [ "$MOZ_STATIC_COMPONENTS" ]; then
   add_makefiles "
     modules/staticmod/Makefile

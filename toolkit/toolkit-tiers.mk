@@ -234,11 +234,6 @@ endif
 
 tier_platform_dirs += services/crypto/component
 
-# JavaXPCOM JNI code is compiled into libXUL
-ifdef MOZ_JAVAXPCOM
-tier_platform_dirs += extensions/java/xpcom/src
-endif
-
 ifdef MOZ_ENABLE_LIBXUL
 tier_platform_dirs += startupcache
 endif
