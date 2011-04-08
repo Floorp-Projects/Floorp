@@ -46,13 +46,15 @@ class nsString;
 class nsIDeviceContext;
 class nsIAtom;
 class gfxUserFontSet;
+struct nsTextDimensions;
+struct nsBoundingMetrics;
+class gfxFontGroup;
+class nsRenderingContext;
 
 // IID for the nsIFontMetrics interface
 #define NS_IFONT_METRICS_IID   \
 { 0x360C5575, 0xF7AC, 0x4079, \
 { 0xB8, 0xA6, 0x56, 0x91, 0x4B, 0xEA, 0x2A, 0xEA } }
-
-//----------------------------------------------------------------------
 
 /**
  * A native font handle
@@ -103,8 +105,8 @@ public:
 
   /**
    * Return the font's superscript offset (the distance from the
-   * baseline to where a superscript's baseline should be placed). The
-   * value returned will be a positive value.
+   * baseline to where a superscript's baseline should be placed).
+   * The value returned will be positive.
    */
   NS_IMETHOD  GetSuperscriptOffset(nscoord& aResult) = 0;
 
@@ -116,14 +118,14 @@ public:
   NS_IMETHOD  GetSubscriptOffset(nscoord& aResult) = 0;
 
   /**
-   * Return the font's strikeout offset (the distance from the 
-   * baseline to where a strikeout should be placed) and size
+   * Return the font's strikeout offset (the distance from the
+   * baseline to where a strikeout should be placed) and size.
    * Positive values are above the baseline, negative below.
    */
   NS_IMETHOD  GetStrikeout(nscoord& aOffset, nscoord& aSize) = 0;
 
   /**
-   * Return the font's underline offset (the distance from the 
+   * Return the font's underline offset (the distance from the
    * baseline to where a underline should be placed) and size.
    * Positive values are above the baseline, negative below.
    */
@@ -145,9 +147,9 @@ public:
   NS_IMETHOD  GetInternalLeading(nscoord &aLeading) = 0;
 
   /**
-   * Returns the amount of external leading (in app units) as suggested by font
-   * vendor. This value is suggested by font vendor to add to normal line-height 
-   * beside font height.
+   * Returns the amount of external leading (in app units) as
+   * suggested by font vendor. This value is suggested by font vendor
+   * to add to normal line-height beside font height.
    */
   NS_IMETHOD  GetExternalLeading(nscoord &aLeading) = 0;
 
@@ -215,6 +217,84 @@ public:
    * Returns the often needed width of the space character
    */
   NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth) = 0;
+
+  // methods formerly in nsIThebesFontMetrics
+
+  // Get the width for this string.  aWidth will be updated with the
+  // width in points, not twips.  Callers must convert it if they
+  // want it in another format.
+  virtual nsresult GetWidth(const char* aString, PRUint32 aLength,
+                            nscoord& aWidth, nsRenderingContext *aContext) = 0;
+  virtual nsresult GetWidth(const PRUnichar* aString, PRUint32 aLength,
+                            nscoord& aWidth, PRInt32 *aFontID,
+                            nsRenderingContext *aContext) = 0;
+
+  // Get the text dimensions for this string
+  virtual nsresult GetTextDimensions(const PRUnichar* aString,
+                                     PRUint32 aLength,
+                                     nsTextDimensions& aDimensions,
+                                     PRInt32* aFontID) = 0;
+  virtual nsresult GetTextDimensions(const char*         aString,
+                                     PRInt32             aLength,
+                                     PRInt32             aAvailWidth,
+                                     PRInt32*            aBreaks,
+                                     PRInt32             aNumBreaks,
+                                     nsTextDimensions&   aDimensions,
+                                     PRInt32&            aNumCharsFit,
+                                     nsTextDimensions&   aLastWordDimensions,
+                                     PRInt32*            aFontID) = 0;
+  virtual nsresult GetTextDimensions(const PRUnichar*    aString,
+                                     PRInt32             aLength,
+                                     PRInt32             aAvailWidth,
+                                     PRInt32*            aBreaks,
+                                     PRInt32             aNumBreaks,
+                                     nsTextDimensions&   aDimensions,
+                                     PRInt32&            aNumCharsFit,
+                                     nsTextDimensions&   aLastWordDimensions,
+                                     PRInt32*            aFontID) = 0;
+
+  // Draw a string using this font handle on the surface passed in.
+  virtual nsresult DrawString(const char *aString, PRUint32 aLength,
+                              nscoord aX, nscoord aY,
+                              const nscoord* aSpacing,
+                              nsRenderingContext *aContext) = 0;
+  virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
+                              nscoord aX, nscoord aY,
+                              PRInt32 aFontID,
+                              const nscoord* aSpacing,
+                              nsRenderingContext *aContext) = 0;
+  virtual nsresult DrawString(const PRUnichar* aString, PRUint32 aLength,
+                              nscoord aX, nscoord aY,
+                              nsRenderingContext *aContext,
+                              nsRenderingContext *aTextRunConstructionContext) = 0;
+
+#ifdef MOZ_MATHML
+  // These two functions get the bounding metrics for this handle,
+  // updating the aBoundingMetrics in Points.  This means that the
+  // caller will have to update them to twips before passing it
+  // back.
+  virtual nsresult GetBoundingMetrics(const char *aString, PRUint32 aLength,
+                                      nsRenderingContext *aContext,
+                                      nsBoundingMetrics &aBoundingMetrics) = 0;
+  // aCachedOffset will be updated with a new offset.
+  virtual nsresult GetBoundingMetrics(const PRUnichar *aString,
+                                      PRUint32 aLength,
+                                      nsRenderingContext *aContext,
+                                      nsBoundingMetrics &aBoundingMetrics) = 0;
+#endif /* MOZ_MATHML */
+
+  // Set the direction of the text rendering
+  virtual nsresult SetRightToLeftText(PRBool aIsRTL) = 0;
+  virtual PRBool GetRightToLeftText() = 0;
+  virtual void SetTextRunRTL(PRBool aIsRTL) = 0;
+
+  virtual PRInt32 GetMaxStringLength() = 0;
+
+  virtual gfxFontGroup* GetThebesFontGroup() = 0;
+
+  // Needs to be virtual and at this level so that its caller in gkgfx can
+  // avoid linking against thebes.
+  virtual gfxUserFontSet* GetUserFontSet() = 0;
 
 protected:
 

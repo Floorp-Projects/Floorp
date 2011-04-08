@@ -56,7 +56,7 @@
 #include "nsIWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
-#include "nsIThebesFontMetrics.h"
+#include "nsIFontMetrics.h"
 #include "gfxFont.h"
 #include "nsStyleUtil.h"
 #include "nsCSSPseudoElements.h"
@@ -319,8 +319,7 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
       font.size = aFontSize;
       nsCOMPtr<nsIFontMetrics> fm =
         aPresContext->GetMetricsFor(font, aUseUserFontSet);
-      nsCOMPtr<nsIThebesFontMetrics> tfm(do_QueryInterface(fm));
-      gfxFloat zeroWidth = (tfm->GetThebesFontGroup()->GetFontAt(0)
+      gfxFloat zeroWidth = (fm->GetThebesFontGroup()->GetFontAt(0)
                             ->GetMetrics().zeroOrAveCharWidth);
 
       return ScaleCoord(aValue, NS_ceil(aPresContext->AppUnitsPerDevPixel() *

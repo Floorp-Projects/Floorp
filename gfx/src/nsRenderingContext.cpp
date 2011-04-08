@@ -464,26 +464,22 @@ void
 nsRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLanguage,
                             gfxUserFontSet *aUserFontSet)
 {
-    nsCOMPtr<nsIFontMetrics> newMetrics;
     mDeviceContext->GetMetricsFor(aFont, aLanguage, aUserFontSet,
-                                  *getter_AddRefs(newMetrics));
-    mFontMetrics = reinterpret_cast<nsIThebesFontMetrics*>(newMetrics.get());
+                                  *getter_AddRefs(mFontMetrics));
 }
 
 void
 nsRenderingContext::SetFont(const nsFont& aFont,
                             gfxUserFontSet *aUserFontSet)
 {
-    nsCOMPtr<nsIFontMetrics> newMetrics;
     mDeviceContext->GetMetricsFor(aFont, nsnull, aUserFontSet,
-                                  *getter_AddRefs(newMetrics));
-    mFontMetrics = reinterpret_cast<nsIThebesFontMetrics*>(newMetrics.get());
+                                  *getter_AddRefs(mFontMetrics));
 }
 
 void
 nsRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
 {
-    mFontMetrics = static_cast<nsIThebesFontMetrics*>(aFontMetrics);
+    mFontMetrics = aFontMetrics;
 }
 
 PRInt32

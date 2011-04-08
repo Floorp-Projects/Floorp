@@ -39,7 +39,7 @@
 #ifndef NSTHEBESFONTMETRICS__H__
 #define NSTHEBESFONTMETRICS__H__
 
-#include "nsIThebesFontMetrics.h"
+#include "nsIFontMetrics.h"
 #include "nsCOMPtr.h"
 #include "nsRenderingContext.h"
 #include "gfxFont.h"
@@ -49,7 +49,7 @@ class nsIAtom;
 class nsIDeviceContext;
 class nsThebesDeviceContext;
 
-class nsThebesFontMetrics : public nsIThebesFontMetrics
+class nsThebesFontMetrics : public nsIFontMetrics
 {
 public:
     nsThebesFontMetrics();

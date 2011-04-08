@@ -151,8 +151,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
     PRInt32 n = mFontMetrics.Length() - 1;
     for (PRInt32 i = n; i >= 0; --i) {
         fm = mFontMetrics[i];
-        nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm);
-        if (fm->Font().Equals(aFont) && tfm->GetUserFontSet() == aUserFontSet) {
+        if (fm->Font().Equals(aFont) && fm->GetUserFontSet() == aUserFontSet) {
             nsCOMPtr<nsIAtom> language;
             fm->GetLanguage(getter_AddRefs(language));
             if (aLanguage == language.get()) {
@@ -161,7 +160,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                     mFontMetrics.RemoveElementAt(i);
                     mFontMetrics.AppendElement(fm);
                 }
-                tfm->GetThebesFontGroup()->UpdateFontList();
+                fm->GetThebesFontGroup()->UpdateFontList();
                 NS_ADDREF(aMetrics = fm);
                 return NS_OK;
             }

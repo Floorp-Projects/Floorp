@@ -572,9 +572,9 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
-       nsIThebesFontMetrics* fm = static_cast<nsIThebesFontMetrics*>(fontMet.get());
-       fm->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
-                      aTextRect.x, baseline, &aRenderingContext, refContext.get());
+       fontMet->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
+                           aTextRect.x, baseline, &aRenderingContext,
+                           refContext.get());
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
