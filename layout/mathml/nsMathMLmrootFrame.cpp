@@ -155,7 +155,7 @@ nsMathMLmrootFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 static void
 GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
-                   nsIFontMetrics* aFontMetrics,
+                   nsFontMetrics* aFontMetrics,
                    nscoord* aIndexOffset, nscoord* aSqrOffset)
 {
   // The index is tucked in closer to the radical while making sure
@@ -260,7 +260,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   renderingContext.SetFont(GetStyleFont()->mFont,
                            aPresContext->GetUserFontSet());
-  nsIFontMetrics* fm = renderingContext.FontMetrics();
+  nsFontMetrics* fm = renderingContext.FontMetrics();
 
   // For radical glyphs from TeX fonts and some of the radical glyphs from
   // Mathematica fonts, the thickness of the overline can be obtained from the

@@ -58,7 +58,7 @@
 // forward declarations
 class   nsIAppShell;
 class   nsIToolkit;
-class   nsIFontMetrics;
+class   nsFontMetrics;
 class   nsRenderingContext;
 class   nsIDeviceContext;
 struct  nsFont;

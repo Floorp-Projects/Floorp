@@ -209,7 +209,7 @@ nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
     mBoundingMetrics += childSize.mBoundingMetrics;
   }
 
-  nsCOMPtr<nsIFontMetrics> fm =
+  nsRefPtr<nsFontMetrics> fm =
     PresContext()->GetMetricsFor(GetStyleFont()->mFont);
   nscoord ascent, descent;
   fm->GetMaxAscent(ascent);
