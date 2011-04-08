@@ -107,9 +107,16 @@ public:
 
   virtual PRInt32 GetType() const = 0;
 
-  virtual nsIStyleSheet* GetStyleSheet() const;
+  nsCSSStyleSheet* GetStyleSheet() const { return mSheet; }
+
   virtual void SetStyleSheet(nsCSSStyleSheet* aSheet);
-  virtual void SetParentRule(GroupRule* aRule);
+
+  void SetParentRule(GroupRule* aRule) {
+    // We don't reference count this up reference. The group rule
+    // will tell us when it's going away or when we're detached from
+    // it.
+    mParentRule = aRule;
+  }
 
   /**
    * Clones |this|. Never returns NULL.
