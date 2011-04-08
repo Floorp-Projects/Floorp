@@ -1787,8 +1787,7 @@ public:
   virtual void DrawText(nscoord aXOffset,
                         nscoord)
   {
-    nsCOMPtr<nsIFontMetrics> metrics;
-    mCtx->GetFontMetrics(*getter_AddRefs(metrics));
+    nsCOMPtr<nsIFontMetrics> metrics = mCtx->GetFontMetrics();
     nsIThebesFontMetrics* fm = static_cast<nsIThebesFontMetrics*>(metrics.get());
     fm->DrawString(mText, mLength, mPt.x + aXOffset, mPt.y,
                    mCtx, mTextRunConstructionContext);

@@ -282,8 +282,7 @@ nsMathMLFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
   // get the bounding metrics of the overbar char, the rendering context
   // is assumed to have been set with the font of the current style context
 #ifdef NS_DEBUG
-  nsCOMPtr<nsIFontMetrics> currFontMetrics;
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(currFontMetrics));
+  nsCOMPtr<nsIFontMetrics> currFontMetrics = aRenderingContext.GetFontMetrics();
   NS_ASSERTION(currFontMetrics->Font().Equals(aFontMetrics->Font()),
       "unexpected state");
 #endif
@@ -321,8 +320,7 @@ nsMathMLFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
   // get the bounding metrics of the minus sign, the rendering context
   // is assumed to have been set with the font of the current style context
 #ifdef NS_DEBUG
-  nsCOMPtr<nsIFontMetrics> currFontMetrics;
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(currFontMetrics));
+  nsCOMPtr<nsIFontMetrics> currFontMetrics = aRenderingContext.GetFontMetrics();
   NS_ASSERTION(currFontMetrics->Font().Equals(aFontMetrics->Font()),
 	"unexpected state");
 #endif

@@ -219,7 +219,7 @@ public:
                      const nsIntRect* aDirtyRect)
   {
     nsIRenderingContext* ctx = aContext->GetRenderingContext(aTarget);
-    nsIRenderingContext::AutoPushTranslation push(ctx, -mOffset.x, -mOffset.y);
+    nsIRenderingContext::AutoPushTranslation push(ctx, -mOffset);
     mInnerList->PaintForFrame(mBuilder, ctx, mFrame, nsDisplayList::PAINT_DEFAULT);
   }
 
@@ -286,7 +286,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
   nsRect userSpaceRect = GetNonSVGUserSpace(firstFrame) + aBuilder->ToReferenceFrame(firstFrame);
   PRInt32 appUnitsPerDevPixel = aEffectsFrame->PresContext()->AppUnitsPerDevPixel();
   userSpaceRect = userSpaceRect.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
-  aCtx->Translate(userSpaceRect.x, userSpaceRect.y);
+  aCtx->Translate(userSpaceRect.TopLeft());
 
   gfxMatrix matrix = GetInitialMatrix(aEffectsFrame);
 
@@ -319,7 +319,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(nsIRenderingContext* aCtx,
     gfx->SetMatrix(savedCTM);
     aInnerList->PaintForFrame(aBuilder, aCtx, aEffectsFrame,
                               nsDisplayList::PAINT_DEFAULT);
-    aCtx->Translate(userSpaceRect.x, userSpaceRect.y);
+    aCtx->Translate(userSpaceRect.TopLeft());
   }
 
   if (clipPathFrame && isTrivialClip) {

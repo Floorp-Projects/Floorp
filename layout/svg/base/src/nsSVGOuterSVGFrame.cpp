@@ -553,7 +553,7 @@ nsSVGOuterSVGFrame::Paint(const nsDisplayListBuilder* aBuilder,
   nsRect clipRect;
   clipRect.IntersectRect(aDirtyRect, viewportRect);
   aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
-  aRenderingContext.Translate(viewportRect.x, viewportRect.y);
+  aRenderingContext.Translate(viewportRect.TopLeft());
   nsRect dirtyRect = clipRect - viewportOffset;
 
 #if defined(DEBUG) && defined(SVG_DEBUG_PAINT_TIMING)

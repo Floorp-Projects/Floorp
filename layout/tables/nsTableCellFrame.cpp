@@ -339,7 +339,7 @@ nsTableCellFrame::DecorateForSelection(nsIRenderingContext& aRenderingContext,
         bordercolor = EnsureDifferentColors(bordercolor,
                                             GetStyleBackground()->mBackgroundColor);
         nsIRenderingContext::AutoPushTranslation
-            translate(&aRenderingContext, aPt.x, aPt.y);
+            translate(&aRenderingContext, aPt);
         nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
 
         aRenderingContext.SetColor(bordercolor);

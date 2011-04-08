@@ -1496,7 +1496,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
         nsPoint pos = rootScrollableFrame->GetScrollPosition();
         visibleRegion.MoveBy(-pos);
         if (aRenderingContext) {
-          aRenderingContext->Translate(pos.x, pos.y);
+          aRenderingContext->Translate(pos);
         }
       }
       builder.SetIgnoreScrollFrame(rootScrollFrame);
@@ -3267,8 +3267,7 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
                   const nsIntSize&     aImageSize,
                   PRUint32             aImageFlags)
 {
-  nsCOMPtr<nsIDeviceContext> dc;
-  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
+  nsCOMPtr<nsIDeviceContext> dc = aRenderingContext->GetDeviceContext();
   PRInt32 appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
   gfxContext* ctx = aRenderingContext->ThebesContext();
 
@@ -3299,8 +3298,7 @@ nsLayoutUtils::DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
                                 const nsPoint&       aAnchor,
                                 const nsRect&        aDirty)
 {
-  nsCOMPtr<nsIDeviceContext> dc;
-  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
+  nsCOMPtr<nsIDeviceContext> dc = aRenderingContext->GetDeviceContext();
   PRInt32 appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
   gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxIntSize drawableSize = aDrawable->Size();

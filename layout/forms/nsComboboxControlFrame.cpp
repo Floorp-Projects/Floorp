@@ -1428,16 +1428,10 @@ void nsComboboxControlFrame::PaintFocus(nsIRenderingContext& aRenderingContext,
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   clipRect.width -= onePixel;
   clipRect.height -= onePixel;
-  aRenderingContext.DrawLine(clipRect.x, clipRect.y, 
-                             clipRect.x+clipRect.width, clipRect.y);
-  aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y, 
-                             clipRect.x+clipRect.width, clipRect.y+clipRect.height);
-  aRenderingContext.DrawLine(clipRect.x+clipRect.width, clipRect.y+clipRect.height, 
-                             clipRect.x, clipRect.y+clipRect.height);
-  aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                             clipRect.x, clipRect.y);
-  aRenderingContext.DrawLine(clipRect.x, clipRect.y+clipRect.height, 
-                             clipRect.x, clipRect.y);
+  aRenderingContext.DrawLine(clipRect.TopLeft(), clipRect.TopRight());
+  aRenderingContext.DrawLine(clipRect.TopRight(), clipRect.BottomRight());
+  aRenderingContext.DrawLine(clipRect.BottomRight(), clipRect.BottomLeft());
+  aRenderingContext.DrawLine(clipRect.BottomLeft(), clipRect.TopLeft());
 
   aRenderingContext.PopState();
 }

@@ -976,8 +976,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   nsLayoutUtils::SetFontFromStyle(&aRenderingContext, mStyleContext);
 
   // Format the text to display within the formatting rect
-  nsIFontMetrics* fm;
-  aRenderingContext.GetFontMetrics(fm);
+  nsCOMPtr<nsIFontMetrics> fm = aRenderingContext.GetFontMetrics();
 
   nscoord maxAscent, maxDescent, height;
   fm->GetMaxAscent(maxAscent);
@@ -1028,8 +1027,6 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
     y += height;
     firstLine = PR_FALSE;
   }
-
-  NS_RELEASE(fm);
 }
 
 struct nsRecessedBorder : public nsStyleBorder {
@@ -1184,7 +1181,7 @@ static void PaintDebugImageMap(nsIFrame* aFrame, nsIRenderingContext* aCtx,
 
   aCtx->SetColor(NS_RGB(0, 0, 0));
   aCtx->PushState();
-  aCtx->Translate(inner.x, inner.y);
+  aCtx->Translate(inner.TopLeft());
   f->GetImageMap(pc)->Draw(aFrame, *aCtx);
   aCtx->PopState();
 }
@@ -1295,7 +1292,7 @@ nsImageFrame::PaintImage(nsIRenderingContext& aRenderingContext, nsPoint aPt,
     aRenderingContext.PushState();
     aRenderingContext.SetColor(NS_RGB(0, 0, 0));
     aRenderingContext.SetLineStyle(nsLineStyle_kDotted);
-    aRenderingContext.Translate(inner.x, inner.y);
+    aRenderingContext.Translate(inner.TopLeft());
     map->Draw(this, aRenderingContext);
     aRenderingContext.PopState();
   }

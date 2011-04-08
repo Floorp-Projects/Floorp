@@ -112,8 +112,7 @@ private:
                                        const nsRect& aClipRect);
 
   inline PRInt32 GetAppUnitsPerDevPixel(nsIRenderingContext* aContext){
-    nsCOMPtr<nsIDeviceContext> dctx = nsnull;
-    aContext->GetDeviceContext(*getter_AddRefs(dctx));
+    nsCOMPtr<nsIDeviceContext> dctx = aContext->GetDeviceContext();
     return dctx->AppUnitsPerDevPixel();
   }
 
