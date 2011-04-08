@@ -71,26 +71,25 @@ enum JSInterpMode
 enum JSFrameFlags
 {
     /* Primary frame type */
-    JSFRAME_GLOBAL             =     0x1, /* frame pushed for a global script */
-    JSFRAME_FUNCTION           =     0x2, /* frame pushed for a scripted call */
-    JSFRAME_DUMMY              =     0x4, /* frame pushed for bookkeeping */
+    JSFRAME_GLOBAL             =      0x1, /* frame pushed for a global script */
+    JSFRAME_FUNCTION           =      0x2, /* frame pushed for a scripted call */
+    JSFRAME_DUMMY              =      0x4, /* frame pushed for bookkeeping */
 
     /* Frame subtypes */
-    JSFRAME_EVAL               =     0x8, /* frame pushed for eval() or debugger eval */
-    JSFRAME_DEBUGGER           =    0x10, /* frame pushed for debugger eval */
-    JSFRAME_GENERATOR          =    0x20, /* frame is associated with a generator */
-    JSFRAME_FLOATING_GENERATOR =    0x40, /* frame is is in generator obj, not on stack */
-    JSFRAME_CONSTRUCTING       =    0x80, /* frame is for a constructor invocation */
+    JSFRAME_EVAL               =      0x8, /* frame pushed for eval() or debugger eval */
+    JSFRAME_DEBUGGER           =     0x10, /* frame pushed for debugger eval */
+    JSFRAME_GENERATOR          =     0x20, /* frame is associated with a generator */
+    JSFRAME_FLOATING_GENERATOR =     0x40, /* frame is is in generator obj, not on stack */
+    JSFRAME_CONSTRUCTING       =     0x80, /* frame is for a constructor invocation */
 
     /* Temporary frame states */
-    JSFRAME_ASSIGNING          =   0x100, /* not-JOF_ASSIGNING op is assigning */
-    JSFRAME_YIELDING           =   0x200, /* js::Interpret dispatched JSOP_YIELD */
-    JSFRAME_FINISHED_IN_INTERPRETER = 0x400, /* set if frame finished in Interpret() */
+    JSFRAME_YIELDING           =    0x200, /* js::Interpret dispatched JSOP_YIELD */
+    JSFRAME_FINISHED_IN_INTERP =    0x400, /* set if frame finished in Interpret() */
 
     /* Concerning function arguments */
-    JSFRAME_OVERRIDE_ARGS      =  0x1000, /* overridden arguments local variable */
-    JSFRAME_OVERFLOW_ARGS      =  0x2000, /* numActualArgs > numFormalArgs */
-    JSFRAME_UNDERFLOW_ARGS     =  0x4000, /* numActualArgs < numFormalArgs */
+    JSFRAME_OVERRIDE_ARGS      =   0x1000, /* overridden arguments local variable */
+    JSFRAME_OVERFLOW_ARGS      =   0x2000, /* numActualArgs > numFormalArgs */
+    JSFRAME_UNDERFLOW_ARGS     =   0x4000, /* numActualArgs < numFormalArgs */
 
     /* Lazy frame initialization */
     JSFRAME_HAS_IMACRO_PC      =   0x8000, /* frame has imacpc value available */
@@ -725,18 +724,6 @@ struct JSStackFrame
         flags_ |= JSFRAME_OVERRIDE_ARGS;
     }
 
-    bool isAssigning() const {
-        return !!(flags_ & JSFRAME_ASSIGNING);
-    }
-
-    void setAssigning() {
-        flags_ |= JSFRAME_ASSIGNING;
-    }
-
-    void clearAssigning() {
-        flags_ &= ~JSFRAME_ASSIGNING;
-    }
-
     bool isYielding() {
         return !!(flags_ & JSFRAME_YIELDING);
     }
@@ -750,11 +737,11 @@ struct JSStackFrame
     }
 
     void setFinishedInInterpreter() {
-        flags_ |= JSFRAME_FINISHED_IN_INTERPRETER;
+        flags_ |= JSFRAME_FINISHED_IN_INTERP;
     }
 
     bool finishedInInterpreter() const {
-        return !!(flags_ & JSFRAME_FINISHED_IN_INTERPRETER);
+        return !!(flags_ & JSFRAME_FINISHED_IN_INTERP);
     }
 
     /*

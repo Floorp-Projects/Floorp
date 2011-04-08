@@ -3925,19 +3925,26 @@ do_incop:
     const JSCodeSpec *cs = &js_CodeSpec[op];
     JS_ASSERT(cs->ndefs == 1);
     JS_ASSERT((cs->format & JOF_TMPSLOT_MASK) >= JOF_TMPSLOT2);
+
+    uint32 format = cs->format;
+    uint32 setPropFlags = (JOF_MODE(format) == JOF_NAME)
+                          ? JSRESOLVE_ASSIGNING
+                          : JSRESOLVE_ASSIGNING | JSRESOLVE_QUALIFIED;
+
     Value &ref = regs.sp[-1];
     int32_t tmp;
     if (JS_LIKELY(ref.isInt32() && CanIncDecWithoutOverflow(tmp = ref.toInt32()))) {
-        int incr = (cs->format & JOF_INC) ? 1 : -1;
-        if (cs->format & JOF_POST)
+        int incr = (format & JOF_INC) ? 1 : -1;
+        if (format & JOF_POST)
             ref.getInt32Ref() = tmp + incr;
         else
             ref.getInt32Ref() = tmp += incr;
-        regs.fp->setAssigning();
-        JSBool ok = obj->setProperty(cx, id, &ref, script->strictModeCode);
-        regs.fp->clearAssigning();
-        if (!ok)
-            goto error;
+
+        {
+            JSAutoResolveFlags rf(cx, setPropFlags);
+            if (!obj->setProperty(cx, id, &ref, script->strictModeCode))
+                goto error;
+        }
 
         /*
          * We must set regs.sp[-1] to tmp for both post and pre increments
@@ -3949,11 +3956,13 @@ do_incop:
         PUSH_NULL();
         if (!js_DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
             goto error;
-        regs.fp->setAssigning();
-        JSBool ok = obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode);
-        regs.fp->clearAssigning();
-        if (!ok)
-            goto error;
+
+        {
+            JSAutoResolveFlags rf(cx, setPropFlags);
+            if (!obj->setProperty(cx, id, &regs.sp[-1], script->strictModeCode))
+                goto error;
+        }
+
         regs.sp--;
     }
 
