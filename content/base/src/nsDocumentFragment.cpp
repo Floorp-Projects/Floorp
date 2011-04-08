@@ -187,7 +187,7 @@ NS_NewDocumentFragment(nsIDOMDocumentFragment** aInstancePtrResult,
 nsDocumentFragment::nsDocumentFragment(already_AddRefed<nsINodeInfo> aNodeInfo)
   : nsGenericElement(aNodeInfo)
 {
-  UnsetFlags(NODE_IS_ELEMENT);
+  ClearIsElement();
 }
 
 nsDocumentFragment::~nsDocumentFragment()

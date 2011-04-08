@@ -169,8 +169,7 @@ enum {
   // node(s) with NODE_NEEDS_FRAME and the root content.
   NODE_DESCENDANTS_NEED_FRAMES = 0x00100000U,
 
-  // Set if the node is an element.
-  NODE_IS_ELEMENT              = 0x00200000U,
+  UNUSED2                     = 0x00200000U,
   
   // Set if the node has the accesskey attribute set.
   NODE_HAS_ACCESSKEY           = 0x00400000U,
@@ -373,8 +372,8 @@ public:
   /**
    * Return whether the node is an Element node
    */
-  PRBool IsElement() const {
-    return HasFlag(NODE_IS_ELEMENT);
+  bool IsElement() const {
+    return GetBoolFlag(NodeIsElement);
   }
 
   /**
@@ -1146,6 +1145,8 @@ private:
     IsInDocument,
     // Set if mParent is an nsIContent
     ParentIsContent,
+    // Set if this node is an Element
+    NodeIsElement,
     BooleanFlagCount
   };
 
@@ -1179,6 +1180,8 @@ protected:
   void SetParentIsContent(bool aValue) { SetBoolFlag(ParentIsContent, aValue); }
   void SetInDocument() { SetBoolFlag(IsInDocument); }
   void ClearInDocument() { ClearBoolFlag(IsInDocument); }
+  void SetIsElement() { SetBoolFlag(NodeIsElement); }
+  void ClearIsElement() { ClearBoolFlag(NodeIsElement); }
 
 public:
 
