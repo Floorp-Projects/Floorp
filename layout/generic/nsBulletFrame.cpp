@@ -42,7 +42,6 @@
 #include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIFontMetrics.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"

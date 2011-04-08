@@ -44,7 +44,6 @@
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsRenderingContext.h"
-#include "nsIFontMetrics.h"
 
 #include "nsTArray.h"
 #include "nsCSSFrameConstructor.h"

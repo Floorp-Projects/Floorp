@@ -48,7 +48,6 @@
 #include "nsUnicharUtils.h"
 #include "nsRenderingContext.h"
 #include "gfxPlatform.h"
-#include "nsIFontMetrics.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"

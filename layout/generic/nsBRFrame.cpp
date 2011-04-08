@@ -44,7 +44,6 @@
 #include "nsLineLayout.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
-#include "nsIFontMetrics.h"
 #include "nsRenderingContext.h"
 #include "nsLayoutUtils.h"
 

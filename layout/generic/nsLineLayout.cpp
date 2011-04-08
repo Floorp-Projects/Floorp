@@ -55,8 +55,6 @@
 #include "nsFloatManager.h"
 #include "nsStyleContext.h"
 #include "nsPresContext.h"
-#include "nsIFontMetrics.h"
-#include "nsIThebesFontMetrics.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsPlaceholderFrame.h"

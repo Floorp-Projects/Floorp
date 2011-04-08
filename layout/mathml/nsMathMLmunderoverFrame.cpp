@@ -47,7 +47,6 @@
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
 #include "nsRenderingContext.h"
-#include "nsIFontMetrics.h"
 
 #include "nsMathMLmunderoverFrame.h"
 #include "nsMathMLmsubsupFrame.h"
