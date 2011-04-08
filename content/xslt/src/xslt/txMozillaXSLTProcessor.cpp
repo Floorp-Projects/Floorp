@@ -154,6 +154,8 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
             return rv;
         }
     }
+
+    return NS_OK;
 }
 
 nsresult
@@ -200,6 +202,8 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
             return rv;
         }
     }
+
+    return NS_OK;
 }
 
 nsresult
