@@ -130,6 +130,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDeviceContextSpec.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
+#include "nsRenderingContext.h"
 
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
@@ -2334,7 +2335,7 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
 
         poPresContext->SetIsRenderingOnlySelection(PR_TRUE);
         // temporarily creating rendering context
-        // which is needed to dinf the selection frames
+        // which is needed to find the selection frames
         nsRefPtr<nsRenderingContext> rc;
         mPrt->mPrintDC->CreateRenderingContext(*getter_AddRefs(rc));
 

@@ -43,7 +43,6 @@
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
 
-#include "nsRenderingContext.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"

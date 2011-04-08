@@ -91,6 +91,7 @@
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
 #include "nsPLDOMEvent.h"
+#include "nsRenderingContext.h"
 
 namespace dom = mozilla::dom;
 

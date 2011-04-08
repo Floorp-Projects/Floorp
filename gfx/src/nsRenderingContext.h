@@ -39,15 +39,15 @@
 #ifndef NSRENDERINGCONTEXT__H__
 #define NSRENDERINGCONTEXT__H__
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
 #include "nsIThebesFontMetrics.h"
-#include "nsIRegion.h"
-#include "nsPoint.h"
-#include "nsSize.h"
 #include "nsColor.h"
-#include "nsRect.h"
+#include "nsCoord.h"
 #include "gfxContext.h"
+
+class nsIntRegion;
 
 typedef enum {
     nsLineStyle_kNone   = 0,
@@ -55,81 +55,6 @@ typedef enum {
     nsLineStyle_kDashed = 2,
     nsLineStyle_kDotted = 3
 } nsLineStyle;
-
-#ifdef MOZ_MATHML
-/* Struct used for accurate measurements of a string in order
- * to allow precise positioning when processing MathML.
- */
-struct nsBoundingMetrics {
-
-    ///////////
-    // Metrics that _exactly_ enclose the text:
-
-    // The character coordinate system is the one used on X Windows:
-    // 1. The origin is located at the intersection of the baseline
-    //    with the left of the character's cell.
-    // 2. All horizontal bearings are oriented from left to right.
-    // 2. All horizontal bearings are oriented from left to right.
-    // 3. The ascent is oriented from bottom to top (being 0 at the orgin).
-    // 4. The descent is oriented from top to bottom (being 0 at the origin).
-
-    // Note that Win32/Mac/PostScript use a different convention for
-    // the descent (all vertical measurements are oriented from bottom
-    // to top on these palatforms). Make sure to flip the sign of the
-    // descent on these platforms for cross-platform compatibility.
-
-    // Any of the following member variables listed here can have
-    // positive or negative value.
-
-    nscoord leftBearing;
-    /* The horizontal distance from the origin of the drawing
-       operation to the left-most part of the drawn string. */
-
-    nscoord rightBearing;
-    /* The horizontal distance from the origin of the drawing
-       operation to the right-most part of the drawn string.
-       The _exact_ width of the string is therefore:
-       rightBearing - leftBearing */
-
-    nscoord ascent;
-    /* The vertical distance from the origin of the drawing
-       operation to the top-most part of the drawn string. */
-
-    nscoord descent;
-    /* The vertical distance from the origin of the drawing
-       operation to the bottom-most part of the drawn string.
-       The _exact_ height of the string is therefore:
-       ascent + descent */
-
-    nscoord width;
-    /* The horizontal distance from the origin of the drawing
-       operation to the correct origin for drawing another string
-       to follow the current one. Depending on the font, this
-       could be greater than or less than the right bearing. */
-
-    nsBoundingMetrics() : leftBearing(0), rightBearing(0),
-                          ascent(0), descent(0), width(0)
-    {}
-
-    void
-    operator += (const nsBoundingMetrics& bm) {
-        if (ascent + descent == 0 && rightBearing - leftBearing == 0) {
-            ascent = bm.ascent;
-            descent = bm.descent;
-            leftBearing = width + bm.leftBearing;
-            rightBearing = width + bm.rightBearing;
-        }
-        else {
-            if (ascent < bm.ascent) ascent = bm.ascent;
-            if (descent < bm.descent) descent = bm.descent;
-            leftBearing = PR_MIN(leftBearing, width + bm.leftBearing);
-            rightBearing = PR_MAX(rightBearing, width + bm.rightBearing);
-        }
-        width += bm.width;
-    }
-};
-#endif // MOZ_MATHML
-
 
 class nsRenderingContext
 {

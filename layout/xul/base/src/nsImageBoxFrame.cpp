@@ -55,7 +55,6 @@
 #include "nsHTMLParts.h"
 #include "nsString.h"
 #include "nsLeafFrame.h"
-#include "nsRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"

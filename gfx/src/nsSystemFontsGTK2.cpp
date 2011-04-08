@@ -40,7 +40,6 @@
 #include <stdlib.h>
 
 #include "nsSystemFontsGTK2.h"
-#include "nsRenderingContext.h"
 #include "prlink.h"
 
 #include <gtk/gtk.h>

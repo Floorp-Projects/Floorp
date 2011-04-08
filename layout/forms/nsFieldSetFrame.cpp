@@ -61,6 +61,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsDisplayList.h"
+#include "nsRenderingContext.h"
 
 class nsLegendFrame;
 

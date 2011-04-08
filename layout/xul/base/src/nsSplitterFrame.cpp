@@ -49,6 +49,7 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDOMDocument.h"
 #include "nsPresContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"

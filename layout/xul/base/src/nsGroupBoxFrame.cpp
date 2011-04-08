@@ -39,6 +39,7 @@
 
 #include "nsBoxFrame.h"
 #include "nsCSSRendering.h"
+#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsDisplayList.h"
 

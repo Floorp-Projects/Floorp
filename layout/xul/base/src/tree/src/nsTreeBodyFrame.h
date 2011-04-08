@@ -382,12 +382,9 @@ protected:
   nsresult ScrollToColumnInternal(const ScrollParts& aParts, nsITreeColumn* aCol);
   nsresult ScrollHorzInternal(const ScrollParts& aParts, PRInt32 aPosition);
   nsresult EnsureRowIsVisibleInternal(const ScrollParts& aParts, PRInt32 aRow);
-  
+
   // Convert client pixels into appunits in our coordinate space.
   nsPoint AdjustClientCoordsToBoxCoordSpace(PRInt32 aX, PRInt32 aY);
-
-  // Convert a border style into line style.
-  nsLineStyle ConvertBorderStyleToLineStyle(PRUint8 aBorderStyle);
 
   // Cache the box object
   void EnsureBoxObject();

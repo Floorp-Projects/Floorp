@@ -39,6 +39,7 @@
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsCSSRendering.h"
+#include "nsRenderingContext.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif

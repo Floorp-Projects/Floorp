@@ -42,7 +42,6 @@
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
-#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIDeviceContext.h"

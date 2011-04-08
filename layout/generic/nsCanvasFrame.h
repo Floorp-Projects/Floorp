@@ -40,17 +40,15 @@
 #ifndef nsCanvasFrame_h___
 #define nsCanvasFrame_h___
 
-
 #include "nsHTMLContainerFrame.h"
-#include "nsStyleContext.h"
-#include "nsRenderingContext.h"
-#include "nsGUIEvent.h"
-#include "nsGkAtoms.h"
 #include "nsIScrollPositionListener.h"
-#include "nsDisplayList.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "nsDisplayList.h"
+#include "nsGkAtoms.h"
 
 class nsPresContext;
+class nsRenderingContext;
+class nsEvent;
 
 /**
  * Root frame class.
@@ -59,7 +57,7 @@ class nsPresContext;
  * It only supports having a single child frame which must be an area
  * frame
  */
-class nsCanvasFrame : public nsHTMLContainerFrame, 
+class nsCanvasFrame : public nsHTMLContainerFrame,
                       public nsIScrollPositionListener
 {
 public:
