@@ -910,9 +910,8 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
                             nsRenderingContext& aContext)
 {
   nscoord totalWidth = 0;
-  nscoord spaceWidth;
   aContext.SetTextRunRTL(PR_FALSE);
-  aContext.GetWidth(' ', spaceWidth);
+  nscoord spaceWidth = aContext.GetWidth(' ');
 
   aMaxFit = 0;
   while (aLength > 0) {

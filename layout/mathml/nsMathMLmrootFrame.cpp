@@ -270,8 +270,8 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   nscoord ruleThickness, leading, em;
   GetRuleThickness(renderingContext, fm, ruleThickness);
 
-  nsBoundingMetrics bmOne;
-  renderingContext.GetBoundingMetrics(NS_LITERAL_STRING("1").get(), 1, bmOne);
+  PRUnichar one = '1';
+  nsBoundingMetrics bmOne = renderingContext.GetBoundingMetrics(&one, 1);
 
   // get the leading to be left at the top of the resulting frame
   // this seems more reliable than using fm->GetLeading() on suspicious fonts

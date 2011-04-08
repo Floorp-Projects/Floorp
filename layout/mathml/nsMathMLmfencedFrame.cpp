@@ -502,8 +502,8 @@ nsMathMLmfencedFrame::ReflowChar(nsPresContext*      aPresContext,
       if (NS_FAILED(res)) {
         nsAutoString data;
         aMathMLChar->GetData(data);
-        nsBoundingMetrics metrics;
-        aRenderingContext.GetBoundingMetrics(data.get(), data.Length(), metrics);
+        nsBoundingMetrics metrics =
+          aRenderingContext.GetBoundingMetrics(data.get(), data.Length());
         charSize.ascent = metrics.ascent;
         charSize.descent = metrics.descent;
         charSize.width = metrics.width;

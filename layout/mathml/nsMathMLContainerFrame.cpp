@@ -98,15 +98,8 @@ nsMathMLContainerFrame::ReflowError(nsRenderingContext& aRenderingContext,
 
   // bounding metrics
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
-  rv = aRenderingContext.GetBoundingMetrics(errorMsg.get(),
-                                            PRUint32(errorMsg.Length()),
-                                            mBoundingMetrics);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("GetBoundingMetrics failed");
-    aDesiredSize.width = aDesiredSize.height = 0;
-    aDesiredSize.ascent = 0;
-    return NS_OK;
-  }
+  mBoundingMetrics =
+    aRenderingContext.GetBoundingMetrics(errorMsg.get(), errorMsg.Length());
 
   // reflow metrics
   nsCOMPtr<nsIFontMetrics> fm = aRenderingContext.GetFontMetrics();
