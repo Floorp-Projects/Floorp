@@ -127,6 +127,7 @@ _BROWSER_FILES = \
                  browser_tabview_bug634672.js \
                  browser_tabview_bug635696.js \
                  browser_tabview_bug641802.js \
+                 browser_tabview_bug644097.js \
                  browser_tabview_bug645653.js \
                  browser_tabview_dragdrop.js \
                  browser_tabview_exit_button.js \
@@ -148,6 +149,7 @@ _BROWSER_FILES = \
                  search2.html \
                  test_bug599626.html \
                  test_bug600645.html \
+                 test_bug644097.html \
                  $(NULL)
 
 libs::	$(_BROWSER_FILES)
