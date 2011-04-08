@@ -449,12 +449,6 @@ nsRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoints)
 //
 
 void
-nsRenderingContext::SetRightToLeftText(PRBool aIsRTL)
-{
-    mFontMetrics->SetRightToLeftText(aIsRTL);
-}
-
-void
 nsRenderingContext::SetTextRunRTL(PRBool aIsRTL)
 {
     mFontMetrics->SetTextRunRTL(aIsRTL);
@@ -607,7 +601,7 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
         return;
     }
 
-    PRBool isRTL = mFontMetrics->GetRightToLeftText();
+    PRBool isRTL = mFontMetrics->GetTextRunRTL();
 
     // If we're drawing right to left, we must start at the end.
     if (isRTL) {

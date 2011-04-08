@@ -224,12 +224,8 @@ public:
                                          nsRenderingContext *aContext);
 #endif /* MOZ_MATHML */
 
-    // Set the direction of the text rendering
-    void SetRightToLeftText(PRBool aIsRTL) { mIsRightToLeft = aIsRTL; }
-    PRBool GetRightToLeftText() { return mIsRightToLeft; }
-
     void SetTextRunRTL(PRBool aIsRTL) { mTextRunRTL = aIsRTL; }
-    PRBool GetRightToLeftTextRunMode() { return mTextRunRTL; }
+    PRBool GetTextRunRTL() { return mTextRunRTL; }
 
     gfxFontGroup* GetThebesFontGroup() { return mFontGroup; }
     gfxUserFontSet* GetUserFontSet() { return mFontGroup->GetUserFontSet(); }
@@ -239,13 +235,11 @@ public:
 protected:
     const gfxFont::Metrics& GetMetrics() const;
 
-    nsFont mFont;		// The font for this metrics object.
+    nsFont mFont;
     nsRefPtr<gfxFontGroup> mFontGroup;
-    gfxFontStyle *mFontStyle;
-    nsThebesDeviceContext *mDeviceContext;
     nsCOMPtr<nsIAtom> mLanguage;
+    nsThebesDeviceContext *mDeviceContext;
     PRInt32 mP2A;
-    PRPackedBool mIsRightToLeft;
     PRPackedBool mTextRunRTL;
 };
 
