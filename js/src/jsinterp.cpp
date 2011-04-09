@@ -2619,23 +2619,9 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
             ENABLE_INTERRUPTS();                                              \
     JS_END_MACRO
 
-    JSFrameRegs regs = *cx->regs;
-
     /* Repoint cx->regs to a local variable for faster access. */
-    struct InterpExitGuard {
-        JSContext *cx;
-        const JSFrameRegs &regs;
-        JSFrameRegs *prevContextRegs;
-        InterpExitGuard(JSContext *cx, JSFrameRegs &regs)
-          : cx(cx), regs(regs), prevContextRegs(cx->regs) {
-            cx->setCurrentRegs(&regs);
-        }
-        ~InterpExitGuard() {
-            JS_ASSERT(cx->regs == &regs);
-            *prevContextRegs = regs;
-            cx->setCurrentRegs(prevContextRegs);
-        }
-    } interpGuard(cx, regs);
+    JSFrameRegs regs = *cx->regs;
+    PreserveRegsGuard interpGuard(cx, regs);
 
     /* Copy in hot values that change infrequently. */
     JSRuntime *const rt = cx->runtime;
