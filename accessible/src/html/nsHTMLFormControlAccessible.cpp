@@ -495,13 +495,14 @@ nsHTMLTextFieldAccessible::GetStateInternal(PRUint32 *aState,
   nsCOMPtr<nsIContent> bindingContent = mContent->GetBindingParent();
   if (bindingContent &&
       bindingContent->NodeInfo()->Equals(nsAccessibilityAtoms::textbox,
-                                         kNameSpaceID_XUL) &&
-      bindingContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                                  nsAccessibilityAtoms::autocomplete,
-                                  eIgnoreCase)) {
-    // If parent is XUL textbox and value of @type attribute is "autocomplete",
-    // then this accessible supports autocompletion.
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+                                         kNameSpaceID_XUL)) {
+     if (bindingContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
+                                     nsAccessibilityAtoms::autocomplete,
+                                     eIgnoreCase)) {
+       // If parent is XUL textbox and value of @type attribute is "autocomplete",
+       // then this accessible supports autocompletion.
+       *aExtraState |= nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION;
+     }
   } else if (gIsFormFillEnabled && htmlInput &&
              !(*aState & nsIAccessibleStates::STATE_PROTECTED)) {
     // Check to see if autocompletion is allowed on this input. We don't expose
