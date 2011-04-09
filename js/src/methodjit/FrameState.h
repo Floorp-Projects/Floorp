@@ -808,6 +808,9 @@ class FrameState
     // is coherent.
     Address addressOf(const FrameEntry *fe) const { return addressOf(fe, a); }
     Address addressOf(uint32 slot) const { return addressOf(entries + slot); }
+    int32 frameOffset(const FrameEntry *fe) const {
+        return frameOffset(fe, a) + (a->depth * sizeof(Value));
+    }
 
     // Returns an address, relative to the JSStackFrame, that represents where
     // this FrameEntry is backed in memory. This is not necessarily its

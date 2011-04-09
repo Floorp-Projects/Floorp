@@ -652,6 +652,32 @@ mjit::Compiler::generatePrologue()
     return Compile_Okay;
 }
 
+void
+mjit::Compiler::generateInlinePrologue()
+{
+    /*
+     * The types of locals in inlined frames are left unsynced even if known.
+     * (Note that we mark as uninlineable all scripts containing locals with
+     * uses before defs). We will treat these locals as synced while compiling
+     * the script, and need to actually do the syncing if we ever expand the
+     * inline frame (which happens on recompilation, and recompilation is the
+     * only way we will ever need to observe the known type of the local).
+     */
+    for (uint32 i = 0; i < script->nfixed; i++) {
+        JS_ASSERT(!a->analysis.localHasUseBeforeDef(i));
+        JSValueType type = knownLocalType(i);
+        if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE) {
+            FrameEntry *fe = frame.getLocal(i);
+            UnsyncedEntry entry;
+            PodZero(&entry);
+            entry.offset = frame.frameOffset(fe);
+            entry.knownType = true;
+            entry.u.type = type;
+            a->unsyncedEntries.append(entry);
+        }
+    }
+}
+
 CompileStatus
 mjit::Compiler::generateEpilogue()
 {
@@ -3907,6 +3933,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         }
         a->temporaryParentRegs = temporaryParentRegs;
 
+        generateInlinePrologue();
         status = generateMethod();
         if (status != Compile_Okay) {
             popActiveFrame();
