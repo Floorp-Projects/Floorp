@@ -19,24 +19,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=643051
 <script type="application/javascript">
 
 /** Test for Bug 643051 **/
-document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
-document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
-document.cookie = "a3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+document.cookie = "foo=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+document.cookie = "foo2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+document.cookie = "foo3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";  // clear cookie
+// clear cookie set by another test
+document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
 
 // single cookie, should work
-document.cookie = "a=bar";
-is(document.cookie, "a=bar", "Can't read stored cookie!");
+document.cookie = "foo=bar";
+is(document.cookie, "foo=bar", "Can't read stored cookie!");
 
-document.cookie = "a2=bar\na3=bar";
-is(document.cookie, "a=bar; a2=bar", "Wrong cookie value");
+document.cookie = "foo2=bar\nfoo3=bar";
+is(document.cookie, "foo=bar; foo2=bar", "Wrong cookie value");
 
-document.cookie = "a2=baz; a3=bar";
-is(document.cookie, "a=bar; a2=baz", "Wrong cookie value");
+document.cookie = "foo2=baz; foo3=bar";
+is(document.cookie, "foo=bar; foo2=baz", "Wrong cookie value");
 
 // clear cookies again to avoid affecting other tests
-document.cookie = "a=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
-document.cookie = "a2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
-document.cookie = "a3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+document.cookie = "foo=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+document.cookie = "foo2=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+document.cookie = "foo3=; expires=Thu, 01-Jan-1970 00:00:01 GMT";
 </script>
 </pre>
 </body>
