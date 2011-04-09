@@ -40,11 +40,13 @@
 #define nsMediaCache_h_
 
 #include "nsTArray.h"
-#include "nsAutoLock.h"
 #include "nsIPrincipal.h"
 #include "nsCOMPtr.h"
 
 class nsByteRange;
+namespace mozilla {
+class MonitorAutoEnter;
+}
 
 /**
  * Media applications want fast, "on demand" random access to media data,
@@ -209,6 +211,8 @@ class nsMediaChannelStream;
  * This class can be directly embedded as a value.
  */
 class nsMediaCacheStream {
+  typedef mozilla::MonitorAutoEnter MonitorAutoEnter;
+
 public:
   enum {
     // This needs to be a power of two
@@ -429,7 +433,7 @@ private:
   // aMonitor is the nsAutoMonitor wrapper holding the cache monitor.
   // This is used to NotifyAll to wake up threads that might be
   // blocked on reading from this stream.
-  void CloseInternal(nsAutoMonitor* aMonitor);
+  void CloseInternal(MonitorAutoEnter& aMonitor);
   // Update mPrincipal given that data has been received from aPrincipal
   void UpdatePrincipal(nsIPrincipal* aPrincipal);
 

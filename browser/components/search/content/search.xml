@@ -474,8 +474,12 @@
 
           // Save the current value in the form history
           if (textValue) {
-            textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"),
-                                          textValue);
+            try {
+              textBox._formHistSvc.addEntry(textBox.getAttribute("autocompletesearchparam"),
+                                            textValue);
+            } catch (ex) {
+              Components.utils.reportError("Saving search to form history failed: " + ex);
+            }
           }
 
           this.doSearch(textValue, where);

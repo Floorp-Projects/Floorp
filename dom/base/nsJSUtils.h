@@ -58,7 +58,7 @@ class nsJSUtils
 {
 public:
   static JSBool GetCallingLocation(JSContext* aContext, const char* *aFilename,
-                                   PRUint32* aLineno, nsIPrincipal* aPrincipal);
+                                   PRUint32* aLineno);
 
   static nsIScriptGlobalObject *GetStaticScriptGlobal(JSContext* aContext,
                                                       JSObject* aObj);

@@ -15,7 +15,7 @@
 # The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Mozilla Corporation.
+# the Mozilla Foundation.
 # Portions created by the Initial Developer are Copyright (C) 2007
 # the Initial Developer. All Rights Reserved.
 #
@@ -79,6 +79,7 @@ _TEST_FILES_0 = \
 	test_2d.composite.uncovered.image.destination-in.html \
 	test_2d.composite.uncovered.image.source-in.html \
 	test_2d.composite.uncovered.image.source-out.html \
+	test_toDataURL_lowercase_ascii.html \
 	test_mozGetAsFile.html \
 	test_canvas_strokeStyle_getter.html \
 	test_bug613794.html \

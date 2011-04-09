@@ -734,6 +734,8 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword__moz_eventreerow, nsILookAndFeel::eColor__moz_eventreerow,
   eCSSKeyword__moz_field, nsILookAndFeel::eColor__moz_field,
   eCSSKeyword__moz_fieldtext, nsILookAndFeel::eColor__moz_fieldtext,
+  eCSSKeyword__moz_default_background_color, NS_COLOR_MOZ_DEFAULT_BACKGROUND_COLOR,
+  eCSSKeyword__moz_default_color, NS_COLOR_MOZ_DEFAULT_COLOR,
   eCSSKeyword__moz_dialog, nsILookAndFeel::eColor__moz_dialog,
   eCSSKeyword__moz_dialogtext, nsILookAndFeel::eColor__moz_dialogtext,
   eCSSKeyword__moz_dragtargetzone, nsILookAndFeel::eColor__moz_dragtargetzone,
@@ -1233,6 +1235,16 @@ const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
   eCSSKeyword_line_through, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
   eCSSKeyword_blink, NS_STYLE_TEXT_DECORATION_BLINK,
   eCSSKeyword__moz_anchor_decoration, NS_STYLE_TEXT_DECORATION_PREF_ANCHORS,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kTextDecorationStyleKTable[] = {
+  eCSSKeyword__moz_none, NS_STYLE_TEXT_DECORATION_STYLE_NONE,
+  eCSSKeyword_solid, NS_STYLE_TEXT_DECORATION_STYLE_SOLID,
+  eCSSKeyword_double, NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE,
+  eCSSKeyword_dotted, NS_STYLE_TEXT_DECORATION_STYLE_DOTTED,
+  eCSSKeyword_dashed, NS_STYLE_TEXT_DECORATION_STYLE_DASHED,
+  eCSSKeyword_wavy, NS_STYLE_TEXT_DECORATION_STYLE_WAVY,
   eCSSKeyword_UNKNOWN,-1
 };
 

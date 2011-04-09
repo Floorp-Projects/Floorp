@@ -183,7 +183,7 @@ public:
 
     void Init()
     {
-        if (!mMap.ops)
+        if (!mMap.ops || !mCache)
             return;
         nsCAutoString prefName("font.cache");
         PRUint32 size;

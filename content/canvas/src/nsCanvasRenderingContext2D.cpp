@@ -96,6 +96,7 @@
 #include "nsIDocShellTreeNode.h"
 #include "nsIXPConnect.h"
 #include "jsapi.h"
+#include "nsDisplayList.h"
 
 #include "nsTArray.h"
 
@@ -407,7 +408,8 @@ public:
     NS_IMETHOD GetThebesSurface(gfxASurface **surface);
     NS_IMETHOD SetIsOpaque(PRBool isOpaque);
     NS_IMETHOD Reset();
-    already_AddRefed<CanvasLayer> GetCanvasLayer(CanvasLayer *aOldLayer,
+    already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                                                 CanvasLayer *aOldLayer,
                                                  LayerManager *aManager);
     void MarkContextClean();
     NS_IMETHOD SetIsIPC(PRBool isIPC);
@@ -455,7 +457,6 @@ public:
     friend class PathAutoSaveRestore;
 
 protected:
-
     /**
      * The number of living nsCanvasRenderingContexts.  When this goes down to
      * 0, we free the premultiply and unpremultiply tables, if they exist.
@@ -878,6 +879,10 @@ nsCanvasRenderingContext2D::~nsCanvasRenderingContext2D()
 nsresult
 nsCanvasRenderingContext2D::Reset()
 {
+    if (mCanvasElement) {
+        HTMLCanvasElement()->InvalidateCanvas();
+    }
+
     // only do this for non-docshell created contexts,
     // since those are the ones that we created a surface for
     if (mValid && !mDocShell)
@@ -1064,7 +1069,7 @@ nsCanvasRenderingContext2D::Redraw()
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 #endif
 
-    HTMLCanvasElement()->InvalidateFrame();
+    HTMLCanvasElement()->InvalidateCanvasContent(nsnull);
 
     return NS_OK;
 }
@@ -1091,7 +1096,7 @@ nsCanvasRenderingContext2D::Redraw(const gfxRect& r)
     nsSVGEffects::InvalidateDirectRenderingObservers(HTMLCanvasElement());
 #endif
 
-    HTMLCanvasElement()->InvalidateFrame(&r);
+    HTMLCanvasElement()->InvalidateCanvasContent(&r);
 
     return NS_OK;
 }
@@ -1110,8 +1115,6 @@ nsCanvasRenderingContext2D::RedrawUser(const gfxRect& r)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
 {
-    Reset();
-
     nsRefPtr<gfxASurface> surface;
 
     // Check that the dimensions are sane
@@ -1417,7 +1420,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Rotate(float angle)
 {
     if (!FloatValidate(angle))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mThebes->Rotate(angle);
     return NS_OK;
@@ -1427,7 +1430,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Translate(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mThebes->Translate(gfxPoint(x, y));
     return NS_OK;
@@ -1437,7 +1440,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Transform(float m11, float m12, float m21, float m22, float dx, float dy)
 {
     if (!FloatValidate(m11,m12,m21,m22,dx,dy))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     gfxMatrix matrix(m11, m12, m21, m22, dx, dy);
     mThebes->Multiply(matrix);
@@ -1464,11 +1467,7 @@ nsCanvasRenderingContext2D::SetTransform(float m11, float m12, float m21, float 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetGlobalAlpha(float aGlobalAlpha)
 {
-    if (!FloatValidate(aGlobalAlpha))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-
-    // ignore invalid values, as per spec
-    if (aGlobalAlpha < 0.0 || aGlobalAlpha > 1.0)
+    if (!FloatValidate(aGlobalAlpha) || aGlobalAlpha < 0.0 || aGlobalAlpha > 1.0)
         return NS_OK;
 
     CurrentState().globalAlpha = aGlobalAlpha;
@@ -1658,6 +1657,9 @@ nsCanvasRenderingContext2D::CreateRadialGradient(float x0, float y0, float r0, f
     if (!FloatValidate(x0,y0,r0,x1,y1,r1))
         return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
+    if (r0 < 0.0 || r1 < 0.0)
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+
     nsRefPtr<gfxPattern> gradpat = new gfxPattern(x0, y0, r0, x1, y1, r1);
     if (!gradpat)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1675,6 +1677,9 @@ nsCanvasRenderingContext2D::CreatePattern(nsIDOMHTMLElement *image,
                                           const nsAString& repeat,
                                           nsIDOMCanvasPattern **_retval)
 {
+    if (!image) {
+        return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    }
     gfxPattern::GraphicsExtend extend;
 
     if (repeat.IsEmpty() || repeat.EqualsLiteral("repeat")) {
@@ -1720,7 +1725,8 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowOffsetX(float x)
 {
     if (!FloatValidate(x))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
+
     CurrentState().shadowOffset.x = x;
     return NS_OK;
 }
@@ -1736,7 +1742,8 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowOffsetY(float y)
 {
     if (!FloatValidate(y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
+
     CurrentState().shadowOffset.y = y;
     return NS_OK;
 }
@@ -1751,10 +1758,9 @@ nsCanvasRenderingContext2D::GetShadowOffsetY(float *y)
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::SetShadowBlur(float blur)
 {
-    if (!FloatValidate(blur))
-        return NS_ERROR_DOM_SYNTAX_ERR;
-    if (blur < 0.0)
+    if (!FloatValidate(blur) || blur < 0.0)
         return NS_OK;
+
     CurrentState().shadowBlur = blur;
     return NS_OK;
 }
@@ -1978,7 +1984,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 {
     if (!FloatValidate(x,y,w,h))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     PathAutoSaveRestore pathSR(this);
     gfxContextAutoSaveRestore autoSR(mThebes);
@@ -2072,7 +2078,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::MoveTo(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->MoveTo(gfxPoint(x, y));
@@ -2083,7 +2089,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::LineTo(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->LineTo(gfxPoint(x, y));
@@ -2094,7 +2100,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::QuadraticCurveTo(float cpx, float cpy, float x, float y)
 {
     if (!FloatValidate(cpx,cpy,x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     // we will always have a current point, since beginPath forces
     // a moveto(0,0)
@@ -2206,7 +2212,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Rect(float x, float y, float w, float h)
 {
     if (!FloatValidate(x,y,w,h))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mHasPath = PR_TRUE;
     mThebes->Rectangle(gfxRect(x, y, w, h));
@@ -3365,7 +3371,9 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
                                       float a6, float a7, float a8,
                                       PRUint8 optional_argc)
 {
-    NS_ENSURE_ARG(imgElt);
+    if (!imgElt) {
+        return NS_ERROR_DOM_TYPE_MISMATCH_ERR;
+    }
 
     double sx,sy,sw,sh;
     double dx,dy,dw,dh;
@@ -3440,24 +3448,47 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
         return NS_ERROR_INVALID_ARG;
     }
 
+    if (sw == 0.0 || sh == 0.0) {
+        // zero-sized source -- failure !?
+        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    }
+
     if (dw == 0.0 || dh == 0.0) {
         // not really failure, but nothing to do --
         // and noone likes a divide-by-zero
         return NS_OK;
     }
 
-    if (!FloatValidate(sx, sy, sw, sh) || !FloatValidate(dx, dy, dw, dh)) {
+    // The following check might do the validation of the float arguments:
+    //   (!FloatValidate(sx, sy, sw, sh) || !FloatValidate(dx, dy, dw, dh))
+    // but we would also need to validate some sums for overflow (e.g. sx + sw).
+    if (!FloatValidate(sx + sw, sy + sh, dx + dw, dy + dh)) {
         return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
-    // check args
-    if (sx < 0.0 || sy < 0.0 ||
-        sw < 0.0 || sw > (double) imgSize.width ||
-        sh < 0.0 || sh > (double) imgSize.height ||
-        dw < 0.0 || dh < 0.0)
-    {
-        // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-        return NS_ERROR_DOM_INDEX_SIZE_ERR;
+    // Handle negative sw, sh, dw and dh by flipping the rectangle over in the
+    // relevant direction.
+    if (sw < 0.0) {
+      sx += sw;
+      sw = -sw;
+    }
+    if (sh < 0.0) {
+      sy += sh;
+      sh = -sh;
+    }
+    if (dw < 0.0) {
+      dx += dw;
+      dw = -dw;
+    }
+    if (dh < 0.0) {
+      dy += dh;
+      dh = -dh;
+    }
+
+    // Checking source image boundaries.
+    if (sx < 0 || sx + sw > (double) imgSize.width || 
+        sy < 0 || sy + sh > (double) imgSize.height) {
+      return NS_ERROR_DOM_INDEX_SIZE_ERR;
     }
 
     matrix.Translate(gfxPoint(sx, sy));
@@ -4099,8 +4130,22 @@ nsCanvasRenderingContext2D::SetMozImageSmoothingEnabled(PRBool val)
 
 static PRUint8 g2DContextLayerUserData;
 
+class CanvasRenderingContext2DUserData : public LayerUserData {
+public:
+  CanvasRenderingContext2DUserData(nsHTMLCanvasElement *aContent)
+    : mContent(aContent) {}
+  static void DidTransactionCallback(void* aData)
+  {
+    static_cast<CanvasRenderingContext2DUserData*>(aData)->mContent->MarkContextClean();
+  }
+
+private:
+  nsRefPtr<nsHTMLCanvasElement> mContent;
+};
+
 already_AddRefed<CanvasLayer>
-nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
+nsCanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                                           CanvasLayer *aOldLayer,
                                            LayerManager *aManager)
 {
     if (!mValid)
@@ -4109,14 +4154,6 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
     if (!mResetLayer && aOldLayer &&
         aOldLayer->HasUserData(&g2DContextLayerUserData)) {
         NS_ADDREF(aOldLayer);
-        if (mIsEntireFrameInvalid || mInvalidateCount > 0) {
-            // XXX Need to just update the changed area here; we should keep track
-            // of the rectangle based on Redraw args.
-            aOldLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
-            MarkContextClean();
-            HTMLCanvasElement()->GetPrimaryCanvasFrame()->MarkLayersActive();
-        }
-
         return aOldLayer;
     }
 
@@ -4125,7 +4162,25 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
         NS_WARNING("CreateCanvasLayer returned null!");
         return nsnull;
     }
-    canvasLayer->SetUserData(&g2DContextLayerUserData, nsnull);
+    CanvasRenderingContext2DUserData *userData = nsnull;
+    if (aBuilder->IsPaintingToWindow()) {
+      // Make the layer tell us whenever a transaction finishes (including
+      // the current transaction), so we can clear our invalidation state and
+      // start invalidating again. We need to do this for the layer that is
+      // being painted to a window (there shouldn't be more than one at a time,
+      // and if there is, flushing the invalidation state more often than
+      // necessary is harmless).
+
+      // The layer will be destroyed when we tear down the presentation
+      // (at the latest), at which time this userData will be destroyed,
+      // releasing the reference to the element.
+      // The userData will receive DidTransactionCallbacks, which flush the
+      // the invalidation state to indicate that the canvas is up to date.
+      userData = new CanvasRenderingContext2DUserData(HTMLCanvasElement());
+      canvasLayer->SetDidTransactionCallback(
+              CanvasRenderingContext2DUserData::DidTransactionCallback, userData);
+    }
+    canvasLayer->SetUserData(&g2DContextLayerUserData, userData);
 
     CanvasLayer::Data data;
 
@@ -4135,13 +4190,11 @@ nsCanvasRenderingContext2D::GetCanvasLayer(CanvasLayer *aOldLayer,
     canvasLayer->Initialize(data);
     PRUint32 flags = mOpaque ? Layer::CONTENT_OPAQUE : 0;
     canvasLayer->SetContentFlags(flags);
-    canvasLayer->Updated(nsIntRect(0, 0, mWidth, mHeight));
+    canvasLayer->Updated();
 
     mResetLayer = PR_FALSE;
 
-    MarkContextClean();
-
-    return canvasLayer.forget().get();
+    return canvasLayer.forget();
 }
 
 void

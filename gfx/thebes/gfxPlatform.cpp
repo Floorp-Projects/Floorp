@@ -684,6 +684,11 @@ gfxPlatform::GetFontPrefLangFor(PRUint8 aUnicodeRange)
         case kRangeGurmukhi:   return eFontPrefLang_Gurmukhi;
         case kRangeKhmer:      return eFontPrefLang_Khmer;
         case kRangeMalayalam:  return eFontPrefLang_Malayalam;
+        case kRangeOriya:      return eFontPrefLang_Oriya;
+        case kRangeTelugu:     return eFontPrefLang_Telugu;
+        case kRangeKannada:    return eFontPrefLang_Kannada;
+        case kRangeSinhala:    return eFontPrefLang_Sinhala;
+        case kRangeTibetan:    return eFontPrefLang_Tibetan;
         case kRangeSetCJK:     return eFontPrefLang_CJKSet;
         default:               return eFontPrefLang_Others;
     }

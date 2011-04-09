@@ -58,7 +58,6 @@
 #define PL_ARENA_CONST_ALIGN_MASK 7
 #define NS_CM_BLOCK_SIZE (1024 * 8)
 
-#include "nsAutoLock.h"
 #include "nsCategoryManager.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManager.h"
@@ -91,7 +90,6 @@
 #include "mozilla/FunctionTimer.h"
 #include "ManifestParser.h"
 
-#include "nsInt64.h"
 #include "nsManifestLineReader.h"
 #include "mozilla/GenericFactory.h"
 #include "nsSupportsPrimitives.h"
@@ -105,6 +103,8 @@
 static NS_DEFINE_CID(kZipReaderCID, NS_ZIPREADER_CID);
 
 #include "prlog.h"
+
+using namespace mozilla;
 
 NS_COM PRLogModuleInfo* nsComponentManagerLog = nsnull;
 
@@ -292,7 +292,7 @@ nsComponentManagerImpl::Create(nsISupports* aOuter, REFNSIID aIID, void** aResul
 }
 
 nsComponentManagerImpl::nsComponentManagerImpl()
-    : mMon(NULL)
+    : mMon("nsComponentManagerImpl.mMon")
     , mStatus(NOT_INITIALIZED)
 {
 }
@@ -347,10 +347,6 @@ nsresult nsComponentManagerImpl::Init()
     mLoaderMap.Init();
     mKnownFileModules.Init();
     mKnownJARModules.Init();
-
-    mMon = nsAutoMonitor::NewMonitor("nsComponentManagerImpl");
-    if (mMon == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsILocalFile> greDir =
         GetLocationFromDirectoryService(NS_GRE_DIR);
@@ -431,7 +427,7 @@ void
 nsComponentManagerImpl::RegisterModule(const mozilla::Module* aModule,
                                        nsILocalFile* aFile)
 {
-    nsAutoMonitor mon(mMon);
+    MonitorAutoEnter mon(mMon);
 
     KnownModule* m = new KnownModule(aModule, aFile);
     if (aFile) {
@@ -471,7 +467,7 @@ void
 nsComponentManagerImpl::RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry,
                                          KnownModule* aModule)
 {
-    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMon);
+    mMon.AssertCurrentThreadIn();
 
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (f) {
@@ -500,7 +496,7 @@ nsComponentManagerImpl::RegisterCIDEntry(const mozilla::Module::CIDEntry* aEntry
 void
 nsComponentManagerImpl::RegisterContractID(const mozilla::Module::ContractIDEntry* aEntry)
 {
-    PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMon);
+    mMon.AssertCurrentThreadIn();
 
     nsFactoryEntry* f = mFactories.Get(*aEntry->cid);
     if (!f) {
@@ -798,7 +794,7 @@ nsComponentManagerImpl::ManifestComponent(ManifestProcessingContext& cx, int lin
         return;
     }
 
-    nsAutoMonitor mon(mMon);
+    MonitorAutoEnter mon(mMon);
     nsFactoryEntry* f = mFactories.Get(cid);
     if (f) {
         char idstr[NSID_LENGTH];
@@ -883,7 +879,7 @@ nsComponentManagerImpl::ManifestContract(ManifestProcessingContext& cx, int line
         return;
     }
 
-    nsAutoMonitor mon(mMon);
+    MonitorAutoEnter mon(mMon);
     nsFactoryEntry* f = mFactories.Get(cid);
     if (!f) {
         LogMessageWithContext(cx.mFile, cx.mPath, lineno,
@@ -1036,9 +1032,6 @@ nsComponentManagerImpl::~nsComponentManagerImpl()
     if (SHUTDOWN_COMPLETE != mStatus)
         Shutdown();
 
-    if (mMon) {
-        nsAutoMonitor::DestroyMonitor(mMon);
-    }
     PR_LOG(nsComponentManagerLog, PR_LOG_DEBUG, ("nsComponentManager: Destroyed."));
 }
 
@@ -1063,7 +1056,7 @@ nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const char *aContractID,
                                         PRUint32 aContractIDLen)
 {
-    nsAutoMonitor mon(mMon);
+    MonitorAutoEnter mon(mMon);
     return mContractIDs.Get(nsDependentCString(aContractID, aContractIDLen));
 }
 
@@ -1071,7 +1064,7 @@ nsComponentManagerImpl::GetFactoryEntry(const char *aContractID,
 nsFactoryEntry *
 nsComponentManagerImpl::GetFactoryEntry(const nsCID &aClass)
 {
-    nsAutoMonitor mon(mMon);
+    MonitorAutoEnter mon(mMon);
     return mFactories.Get(aClass);
 }
 
@@ -1387,6 +1380,47 @@ nsComponentManagerImpl::GetPendingServiceThread(const nsCID& aServiceCID) const
   return nsnull;
 }
 
+// GetService() wants to manually Exit()/Enter() a monitor which is
+// wrapped in MonitorAutoEnter, which nsAutoMonitor used to allow.
+// One use is block-scoped Exit()/Enter(), which could be supported
+// with something like a MonitoAutoExit, but that's not a well-defined
+// operation in general so that helper doesn't exist.  The other use
+// is early-Exit() for perf reasons.  This code is probably hot enough
+// to warrant special considerations.
+//
+// We could use bare mozilla::Monitor, but that's error prone.
+// Instead, we just add a hacky wrapper here that acts like the old
+// nsAutoMonitor.
+struct NS_STACK_CLASS AutoMonitor
+{
+    AutoMonitor(Monitor& aMonitor) : mMonitor(&aMonitor), mEnterCount(0)
+    {
+        Enter();
+    }
+
+    ~AutoMonitor()
+    {
+        if (mEnterCount) {
+            Exit();
+        }
+    }
+
+    void Enter()
+    {
+        mMonitor->Enter();
+        ++mEnterCount;
+    }
+
+    void Exit()
+    {
+        --mEnterCount;
+        mMonitor->Exit();
+    }
+
+    Monitor* mMonitor;
+    PRInt32 mEnterCount;
+};
+
 NS_IMETHODIMP
 nsComponentManagerImpl::GetService(const nsCID& aClass,
                                    const nsIID& aIID,
@@ -1407,7 +1441,7 @@ nsComponentManagerImpl::GetService(const nsCID& aClass,
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsAutoMonitor mon(mMon);
+    AutoMonitor mon(mMon);
 
     nsFactoryEntry* entry = mFactories.Get(aClass);
     if (!entry)
@@ -1526,7 +1560,7 @@ nsComponentManagerImpl::IsServiceInstantiated(const nsCID & aClass,
     nsFactoryEntry* entry;
 
     {
-        nsAutoMonitor mon(mMon);
+        MonitorAutoEnter mon(mMon);
         entry = mFactories.Get(aClass);
     }
 
@@ -1565,7 +1599,7 @@ NS_IMETHODIMP nsComponentManagerImpl::IsServiceInstantiatedByContractID(const ch
     nsresult rv = NS_ERROR_SERVICE_NOT_AVAILABLE;
     nsFactoryEntry *entry;
     {
-        nsAutoMonitor mon(mMon);
+        MonitorAutoEnter mon(mMon);
         entry = mContractIDs.Get(nsDependentCString(aContractID));
     }
 
@@ -1597,7 +1631,7 @@ nsComponentManagerImpl::GetServiceByContractID(const char* aContractID,
         return NS_ERROR_UNEXPECTED;
     }
 
-    nsAutoMonitor mon(mMon);
+    AutoMonitor mon(mMon);
 
     nsFactoryEntry *entry = mContractIDs.Get(nsDependentCString(aContractID));
     if (!entry)
@@ -1717,7 +1751,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
         if (!aContractID)
             return NS_ERROR_INVALID_ARG;
 
-        nsAutoMonitor mon(mMon);
+        MonitorAutoEnter mon(mMon);
         nsFactoryEntry* oldf = mFactories.Get(aClass);
         if (!oldf)
             return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1728,7 +1762,7 @@ nsComponentManagerImpl::RegisterFactory(const nsCID& aClass,
 
     nsAutoPtr<nsFactoryEntry> f(new nsFactoryEntry(aClass, aFactory));
 
-    nsAutoMonitor mon(mMon);
+    MonitorAutoEnter mon(mMon);
     nsFactoryEntry* oldf = mFactories.Get(aClass);
     if (oldf)
         return NS_ERROR_FACTORY_EXISTS;
@@ -1751,7 +1785,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
     nsCOMPtr<nsISupports> dyingServiceObject;
 
     {
-        nsAutoMonitor mon(mMon);
+        MonitorAutoEnter mon(mMon);
         nsFactoryEntry* f = mFactories.Get(aClass);
         if (!f || f->mFactory != aFactory)
             return NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -1886,7 +1920,7 @@ nsComponentManagerImpl::ContractIDToCID(const char *aContractID,
                                         nsCID * *_retval)
 {
     {
-        nsAutoMonitor mon(mMon);
+        MonitorAutoEnter mon(mMon);
         nsFactoryEntry* entry = mContractIDs.Get(nsDependentCString(aContractID));
         if (entry) {
             *_retval = (nsCID*) NS_Alloc(sizeof(nsCID));

@@ -44,7 +44,7 @@ function setup()
 
   var stmt = createStatement("INSERT INTO function_tests (id) VALUES(?1)");
   for(var i = 0; i < testNums.length; ++i) {
-    stmt.bindInt32Parameter(0, testNums[i]);
+    stmt.bindByIndex(0, testNums[i]);
     stmt.execute();
   }
   stmt.reset();
