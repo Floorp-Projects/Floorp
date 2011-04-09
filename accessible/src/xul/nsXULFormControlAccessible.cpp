@@ -919,12 +919,12 @@ nsXULTextFieldAccessible::GetStateInternal(PRUint32 *aState,
   // Create a temporary accessible from the HTML text field
   // to get the accessible state from. Doesn't add to cache
   // because Init() is not called.
-  nsHTMLTextFieldAccessible* tempAccessible =
+  nsRefPtr<nsHTMLTextFieldAccessible> tempAccessible =
     new nsHTMLTextFieldAccessible(inputField, mWeakShell);
   if (!tempAccessible)
     return NS_ERROR_OUT_OF_MEMORY;
-  nsCOMPtr<nsIAccessible> kungFuDeathGrip = tempAccessible;
-  rv = tempAccessible->GetStateInternal(aState, nsnull);
+
+  rv = tempAccessible->GetStateInternal(aState, aExtraState);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (gLastFocusedNode == mContent)
@@ -938,30 +938,6 @@ nsXULTextFieldAccessible::GetStateInternal(PRUint32 *aState,
                                nsAccessibilityAtoms::_true, eIgnoreCase)) {
       *aState |= nsIAccessibleStates::STATE_READONLY;
     }
-  }
-  else {
-    // <xul:textbox>
-    if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::type,
-                              nsAccessibilityAtoms::password, eIgnoreCase)) {
-      *aState |= nsIAccessibleStates::STATE_PROTECTED;
-    }
-    if (mContent->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::readonly,
-                              nsAccessibilityAtoms::_true, eIgnoreCase)) {
-      *aState |= nsIAccessibleStates::STATE_READONLY;
-    }
-  }
-
-  if (!aExtraState)
-    return NS_OK;
-
-  PRBool isMultiLine = mContent->HasAttr(kNameSpaceID_None,
-                                         nsAccessibilityAtoms::multiline);
-
-  if (isMultiLine) {
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_MULTI_LINE;
-  }
-  else {
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_SINGLE_LINE;
   }
 
   return NS_OK;
