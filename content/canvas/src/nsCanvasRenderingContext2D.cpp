@@ -772,8 +772,8 @@ protected:
     friend struct nsCanvasBidiProcessor;
 };
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCanvasRenderingContext2D)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCanvasRenderingContext2D)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCanvasRenderingContext2D)

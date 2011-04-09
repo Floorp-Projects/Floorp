@@ -6042,7 +6042,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsIRenderingContext *aRenderingContext,
   PRBool hyphenating = frag->GetLength() > 0 &&
     (mTextRun->GetFlags() & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0;
   if (hyphenating) {
-    len = GetInFlowContentLength() - iter.GetOriginalOffset();
+    len = GetContentOffset() + GetInFlowContentLength() - iter.GetOriginalOffset();
 #ifdef DEBUG
     // check that the length we're going to pass to PropertyProvider matches
     // the expected range of text in the run

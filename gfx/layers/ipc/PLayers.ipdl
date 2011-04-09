@@ -124,6 +124,7 @@ struct CommonLayerAttributes {
   nsIntRect clipRect;
   bool useTileSourceRect;
   nsIntRect tileSourceRect;
+  bool isFixedPosition;
 };
 
 struct ThebesLayerAttributes {

@@ -49,6 +49,7 @@ class nsIScrollableFrame;
 class nsIDOMEvent;
 class nsRegion;
 class nsDisplayListBuilder;
+class nsDisplayItem;
 class nsIFontMetrics;
 class nsClientRectList;
 
@@ -327,6 +328,12 @@ public:
    */
   static nsIFrame* GetActiveScrolledRootFor(nsIFrame* aFrame,
                                             nsIFrame* aStopAtAncestor);
+
+  static nsIFrame* GetActiveScrolledRootFor(nsDisplayItem* aItem,
+                                            nsDisplayListBuilder* aBuilder);
+
+  static PRBool ScrolledByViewportScrolling(nsIFrame* aActiveScrolledRoot,
+                                            nsDisplayListBuilder* aBuilder);
 
   /**
     * GetFrameFor returns the root frame for a view
