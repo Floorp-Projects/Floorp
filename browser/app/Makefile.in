@@ -318,7 +318,7 @@ AB_CD = $(MOZ_UI_LOCALE)
 AB := $(firstword $(subst -, ,$(AB_CD)))
 
 clean clobber repackage::
-	rm -rf $(DIST)/$(APP_NAME).app
+	$(RM) -r $(DIST)/$(APP_NAME).app
 
 ifdef LIBXUL_SDK
 APPFILES = Resources
@@ -327,9 +327,9 @@ APPFILES = MacOS
 endif
 
 libs repackage:: $(PROGRAM) application.ini
-	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
+	$(MKDIR) -p $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
-	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
+	$(MKDIR) -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%LOWER_APP_NAME%/$(LOWER_APP_NAME)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	sed -e "s/%APP_NAME%/$(APP_NAME)/" $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj/InfoPlist.strings
@@ -338,7 +338,7 @@ libs repackage:: $(PROGRAM) application.ini
 ifdef LIBXUL_SDK
 	cp $(LIBXUL_DIST)/bin/$(XR_STUB_NAME) $(DIST)/$(APP_NAME).app/Contents/MacOS/firefox-bin
 else
-	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
+	$(RM) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 endif
 	-cp -L $(DIST)/bin/mangle $(DIST)/bin/shlibsign $(DIST)/$(APP_NAME).app/Contents/$(APPFILES)
