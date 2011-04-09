@@ -40,6 +40,7 @@
 
 #include "nsXULComboboxAccessible.h"
 
+#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsCoreUtils.h"
 
@@ -75,9 +76,8 @@ nsXULComboboxAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_COMBOBOX;
 }
 
-nsresult
-nsXULComboboxAccessible::GetStateInternal(PRUint32 *aState,
-                                          PRUint32 *aExtraState)
+PRUint64
+nsXULComboboxAccessible::NativeState()
 {
   // As a nsComboboxAccessible we can have the following states:
   //     STATE_FOCUSED
@@ -87,25 +87,23 @@ nsXULComboboxAccessible::GetStateInternal(PRUint32 *aState,
   //     STATE_COLLAPSED
 
   // Get focus status from base class
-  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 states = nsAccessible::NativeState();
 
   nsCOMPtr<nsIDOMXULMenuListElement> menuList(do_QueryInterface(mContent));
   if (menuList) {
     PRBool isOpen;
     menuList->GetOpen(&isOpen);
     if (isOpen) {
-      *aState |= nsIAccessibleStates::STATE_EXPANDED;
+      states |= states::EXPANDED;
     }
     else {
-      *aState |= nsIAccessibleStates::STATE_COLLAPSED;
+      states |= states::COLLAPSED;
     }
   }
 
-  *aState |= nsIAccessibleStates::STATE_HASPOPUP |
-             nsIAccessibleStates::STATE_FOCUSABLE;
+  states |= states::HASPOPUP | states::FOCUSABLE;
 
-  return NS_OK;
+  return states;
 }
 
 NS_IMETHODIMP
