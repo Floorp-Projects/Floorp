@@ -919,23 +919,7 @@ nsInlineFrame::GetBaseline() const
   if (NS_SUCCEEDED(nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm)))) {
     fm->GetMaxAscent(ascent);
   }
-  return ascent + GetUsedBorderAndPadding().top;
-}
-
-nscoord
-nsInlineFrame::GetCaretBaseline() const
-{
-  nscoord baseline;
-  if (mRect.height == 0) {
-    // Empty inline frames will be pushed down in the line, so we need to
-    // account for that here.
-    baseline = 0;
-  } else {
-    baseline = GetBaseline();
-    NS_ASSERTION(baseline <= mRect.height,
-                 "We should never hit a case where our height is non-zero but smaller than the caret baseline...");
-  }
-  return baseline;
+  return NS_MIN(mRect.height, ascent + GetUsedBorderAndPadding().top);
 }
 
 #ifdef ACCESSIBILITY
