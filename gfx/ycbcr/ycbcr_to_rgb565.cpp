@@ -21,6 +21,8 @@
  *
  * Contributor(s):
  *  Tom Brinkman <reportbase@gmail.com>
+ *  Siarhei Siamashka <siarhei.siamashka@gmail.com>
+ *  Timothy B. Terriberry <tterriberry@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,83 +40,120 @@
 
 #include "ycbcr_to_rgb565.h"
 
-//The logic for have_ycbcr_to_rgb565 is taken from pixman-cpu.c
+#ifdef HAVE_YCBCR_TO_RGB565
 
-#if !defined (HAVE_ARM_NEON)
+namespace mozilla {
 
-int have_ycbcr_to_rgb565 ()
-{
-    return 0;
+namespace gfx {
+
+# if defined(MOZILLA_MAY_SUPPORT_NEON)
+
+void __attribute((noinline)) yuv42x_to_rgb565_row_neon(uint16 *dst,
+                                                       const uint8 *y,
+                                                       const uint8 *u,
+                                                       const uint8 *v,
+                                                       int n,
+                                                       int oddflag);
+
+#endif
+
+/*Convert a single pixel from Y'CbCr to RGB565.*/
+static PRUint16 yu2rgb565(int y, int u, int v) {
+  int r;
+  int g;
+  int b;
+  r = NS_CLAMP((74*y+102*v-14240+256)>>9, 0, 31);
+  g = NS_CLAMP((74*y-25*u-52*v+8704+128)>>8, 0, 63);
+  b = NS_CLAMP((74*y+129*u-17696+256)>>9, 0, 31);
+  return (PRUint16)(r<<11 | g<<5 | b);
 }
 
-#else
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <elf.h>
 
-#ifdef ANDROID
-
-int have_ycbcr_to_rgb565 ()
+void yuv_to_rgb565_row_c(uint16 *dst,
+                         const uint8 *y,
+                         const uint8 *u,
+                         const uint8 *v,
+                         int x_shift,
+                         int pic_x,
+                         int pic_width)
 {
-    static int have_ycbcr_to_rgb565_initialized = 0;
-    static int arm_has_neon = 0;
-    if (!have_ycbcr_to_rgb565_initialized)
-    {
-        have_ycbcr_to_rgb565_initialized = 1;
+  int x;
+  for (x = 0; x < pic_width; x++)
+  {
+    dst[x] = yu2rgb565(y[pic_x+x],
+                       u[(pic_x+x)>>x_shift],
+                       v[(pic_x+x)>>x_shift]);
+  }
+}
 
-        char buf[1024];
-        const char* ver_token = "CPU architecture: ";
-        FILE* f = fopen("/proc/cpuinfo", "r");
-        if (!f) {
-	        return 0;
-        }
-
-        fread(buf, sizeof(char), 1024, f);
-        arm_has_neon = strstr(buf, "neon") != NULL;
-        fclose(f);
+NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* y_buf,
+                                   const uint8* u_buf,
+                                   const uint8* v_buf,
+                                   uint8* rgb_buf,
+                                   int pic_x,
+                                   int pic_y,
+                                   int pic_width,
+                                   int pic_height,
+                                   int y_pitch,
+                                   int uv_pitch,
+                                   int rgb_pitch,
+                                   YUVType yuv_type)
+{
+  int x_shift;
+  int y_shift;
+  x_shift = yuv_type != YV24;
+  y_shift = yuv_type == YV12;
+#  ifdef MOZILLA_MAY_SUPPORT_NEON
+  if (yuv_type != YV24 && supports_neon())
+  {
+    for (int i = 0; i < pic_height; i++) {
+      int yoffs;
+      int uvoffs;
+      yoffs = y_pitch * (pic_y+i) + pic_x;
+      uvoffs = uv_pitch * ((pic_y+i)>>y_shift) + (pic_x>>x_shift);
+      yuv42x_to_rgb565_row_neon((uint16*)(rgb_buf + rgb_pitch * i),
+                                y_buf + yoffs,
+                                u_buf + uvoffs,
+                                v_buf + uvoffs,
+                                pic_width,
+                                pic_x&x_shift);
     }
-    return arm_has_neon;
-}
-
-#else
-
-int have_ycbcr_to_rgb565 ()
-{
-    static int have_ycbcr_to_rgb565_initialized = 0;
-    static int arm_has_neon = 0;
-    if (!have_ycbcr_to_rgb565_initialized)
-    {
-        have_ycbcr_to_rgb565_initialized = 1;
-        int fd;
-        Elf32_auxv_t aux;
-
-        fd = open ("/proc/self/auxv", O_RDONLY);
-        if (fd >= 0)
-        {
-            while (read (fd, &aux, sizeof(Elf32_auxv_t)) == sizeof(Elf32_auxv_t))
-            {
-                if (aux.a_type == AT_HWCAP)
-                {
-                    uint32_t hwcap = aux.a_un.a_val;
-                    arm_has_neon = (hwcap & 4096) != 0;
-                    break;
-                }
-            }
-            close (fd);
-         }
+  }
+  else
+#  endif
+  {
+    for (int i = 0; i < pic_height; i++) {
+      int yoffs;
+      int uvoffs;
+      yoffs = y_pitch * (pic_y+i);
+      uvoffs = uv_pitch * ((pic_y+i)>>y_shift);
+      yuv_to_rgb565_row_c((uint16*)(rgb_buf + rgb_pitch * i),
+                          y_buf + yoffs,
+                          u_buf + uvoffs,
+                          v_buf + uvoffs,
+                          x_shift,
+                          pic_x,
+                          pic_width);
     }
-
-    return arm_has_neon;
+  }
 }
 
-#endif //ANDROID
+NS_GFX_(bool) IsConvertYCbCrToRGB565Fast(int pic_x,
+                                         int pic_y,
+                                         int pic_width,
+                                         int pic_height,
+                                         YUVType yuv_type)
+{
+#  if defined(MOZILLA_MAY_SUPPORT_NEON)
+  return (yuv_type != YV24 && supports_neon());
+#  else
+  return false;
+#  endif
+}
 
-#endif //_MSC_VER
+} // namespace gfx
 
+} // namespace mozilla
+
+#endif // HAVE_YCBCR_TO_RGB565

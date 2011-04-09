@@ -88,6 +88,7 @@ enum { XKeyPress = KeyPress };
 #include "nsNetUtil.h"
 #include "nsIPluginInstanceOwner.h"
 #include "nsIPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIPluginTagInfo.h"
 #include "plstr.h"
 #include "nsILinkHandler.h"
@@ -2991,6 +2992,27 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 
   // Break relationship between frame and plugin instance owner
   owner->SetOwner(nsnull);
+}
+
+NS_IMETHODIMP
+nsObjectFrame::GetCursor(const nsPoint& aPoint, nsIFrame::Cursor& aCursor)
+{
+  if (!mInstanceOwner) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPluginInstance> inst;
+  mInstanceOwner->GetInstance(*getter_AddRefs(inst));
+  if (!inst) {
+    return NS_ERROR_FAILURE;
+  }
+
+  PRBool useDOMCursor = static_cast<nsNPAPIPluginInstance*>(inst.get())->UsesDOMForCursor();
+  if (!useDOMCursor) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return nsObjectFrameSuper::GetCursor(aPoint, aCursor);
 }
 
 void
