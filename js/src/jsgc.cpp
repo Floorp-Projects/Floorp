@@ -2642,20 +2642,29 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
     GCTIMER_END(gckind == GC_LAST_CONTEXT);
 }
 
-namespace js {
-namespace gc {
-
 void
-MarkObjectSlots(JSTracer *trc, JSObject *obj)
+JSObject::markSlots(JSTracer *trc)
 {
-    JS_ASSERT(obj->slotSpan() <= obj->numSlots());
-    uint32 nslots = obj->slotSpan();
-    for (uint32 i = 0; i != nslots; ++i) {
-        const Value &v = obj->getSlot(i);
-        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, obj, i);
+    JS_ASSERT(isNative());
+    JS_ASSERT(slotSpan() <= numSlots());
+    uint32 nfixed = numFixedSlots();
+    uint32 nslots = slotSpan();
+    uint32 i;
+    for (i = 0; i < nslots && i < nfixed; i++) {
+        const Value &v = fixedSlots()[i];
+        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, this, i);
+        MarkValueRaw(trc, v);
+    }
+    for (; i < nslots; i++) {
+        const Value &v = slots[i - nfixed];
+        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, this, i);
         MarkValueRaw(trc, v);
     }
 }
+
+
+namespace js {
+namespace gc {
 
 bool
 SetTypeCheckingForCycles(JSContext *cx, JSObject *obj, types::TypeObject *type)

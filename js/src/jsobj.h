@@ -311,12 +311,22 @@ class ValidateWriter;
  * Both these flag bits are initially zero; they may be set or queried using
  * the (is|set)(Delegate|System) inline methods.
  *
- * The slots member is a pointer to the slot vector for the object.
- * This can be either a fixed array allocated immediately after the object,
- * or a dynamically allocated array.  A dynamic array can be tested for with
- * hasSlotsArray().  In all cases, capacity gives the number of usable slots.
- * Two objects with the same shape have the same number of fixed slots,
- * and either both have or neither have dynamically allocated slot arrays.
+ * Objects can have slots allocated either in a fixed array immediately
+ * following the object, in dynamically allocated slots, or both. In all cases,
+ * 'capacity' gives the number of usable slots. How the slots are organized
+ * is different for dense arrays vs. other objects.
+ *
+ * For dense arrays (arrays with only normal integer properties), the 'slots'
+ * member points either to the fixed array or to a dynamic array, and in
+ * all cases is indexed by the associated property (e.g. obj->slots[5] stores
+ * the value for property '5'). If a dynamic array is in use, slots in the
+ * fixed array are not used.
+ *
+ * For objects other than dense arrays, if the object has N fixed slots then
+ * those are always the first N slots of the object. The dynamic slots pointer
+ * is used if those fixed slots overflow, and stores all remaining slots.
+ * Unlike dense arrays, the fixed slots can always be accessed. Two objects
+ * with the same shape have the same number of fixed slots.
  *
  * If you change this struct, you'll probably need to change the AccSet values
  * in jsbuiltins.h.
@@ -330,7 +340,6 @@ struct JSObject : js::gc::Cell {
      */
     friend class js::TraceRecorder;
     friend class nanojit::ValidateWriter;
-    friend class GetPropCompiler;
 
     /*
      * Private pointer to the last added property and methods to manipulate the
@@ -385,7 +394,15 @@ struct JSObject : js::gc::Cell {
         PACKED_ARRAY              = 0x400,
         METHOD_THRASH_COUNT_MASK  = 0xc00,
         METHOD_THRASH_COUNT_SHIFT =    11,
-        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT
+        METHOD_THRASH_COUNT_MAX   = METHOD_THRASH_COUNT_MASK >> METHOD_THRASH_COUNT_SHIFT,
+
+        /* The top 5 bits of an object's flags are its number of fixed slots. */
+        FIXED_SLOTS_SHIFT         =    27,
+        FIXED_SLOTS_BIT0          = 0x01 << FIXED_SLOTS_SHIFT,
+        FIXED_SLOTS_BIT1          = 0x02 << FIXED_SLOTS_SHIFT,
+        FIXED_SLOTS_BIT2          = 0x04 << FIXED_SLOTS_SHIFT,
+        FIXED_SLOTS_BIT3          = 0x08 << FIXED_SLOTS_SHIFT,
+        FIXED_SLOTS_BIT4          = 0x10 << FIXED_SLOTS_SHIFT
     };
 
     /*
@@ -411,9 +428,14 @@ struct JSObject : js::gc::Cell {
     js::types::TypeObject *type;            /* object's type and prototype */
     JSObject    *parent;                    /* object's parent */
     void        *privateData;               /* private data */
-    jsuword     capacity;                   /* capacity of slots */
+    jsuword     capacity;                   /* total number of available slots */
+
+  private:
     js::Value   *slots;                     /* dynamically allocated slots,
-                                               or pointer to fixedSlots() */
+                                               or pointer to fixedSlots() for
+                                               dense arrays. */
+
+  public:
 
     bool isNative() const       { return map->isNative(); }
 
@@ -429,6 +451,7 @@ struct JSObject : js::gc::Cell {
     }
 
     inline void trace(JSTracer *trc);
+    void markSlots(JSTracer *trc);
 
     uint32 shape() const {
         JS_ASSERT(objShape != JSObjectMap::INVALID_SHAPE);
@@ -609,13 +632,32 @@ struct JSObject : js::gc::Cell {
 
     uint32 numSlots() const { return capacity; }
 
-    size_t slotsAndStructSize(uint32 nslots) const;
-    size_t slotsAndStructSize() const { return slotsAndStructSize(numSlots()); }
+    inline size_t structSize() const;
+    inline size_t slotsAndStructSize() const;
 
-    inline js::Value* fixedSlots() const;
-    inline size_t numFixedSlots() const;
+    /* Slot accessors for JITs. */
 
     static inline size_t getFixedSlotOffset(size_t slot);
+    static inline size_t offsetOfCapacity() { return offsetof(JSObject, capacity); }
+    static inline size_t offsetOfSlots() { return offsetof(JSObject, slots); }
+
+    /*
+     * Get a raw pointer to the object's slots, or a slot of the object given
+     * a previous value for its since-reallocated dynamic slots.
+     */
+    inline js::Value *getRawSlots();
+    inline js::Value *getRawSlot(size_t slot, js::Value *slots);
+
+    /* Whether a slot is at a fixed offset from this object. */
+    inline bool isFixedSlot(size_t slot);
+
+    /* Index into the dynamic slots array to use for a dynamic slot. */
+    inline size_t dynamicSlotIndex(size_t slot);
+
+  private:
+    inline js::Value* fixedSlots() const;
+    inline size_t numFixedSlots() const;
+    inline bool hasSlotsArray() const;
 
   public:
     /* Minimum size for dynamically allocated slots. */
@@ -630,6 +672,18 @@ struct JSObject : js::gc::Cell {
             return growSlots(cx, nslots);
         return true;
     }
+
+    /*
+     * Fill a range of slots with holes or undefined, depending on whether this
+     * is a dense array.
+     */
+    void clearSlotRange(size_t start, size_t length);
+
+    /*
+     * Copy a flat array of slots to this object at a start slot. Caller must
+     * ensure there are enough slots in this object.
+     */
+    void copySlotRange(size_t start, const js::Value *vector, size_t length);
 
     /*
      * Ensure that the object has at least JSCLASS_RESERVED_SLOTS(clasp) +
@@ -650,14 +704,6 @@ struct JSObject : js::gc::Cell {
     bool ensureInstanceReservedSlots(JSContext *cx, size_t nreserved);
 
     /*
-     * Get a direct pointer to the object's slots.
-     * This can be reallocated if the object is modified, watch out!
-     */
-    js::Value *getSlots() const {
-        return slots;
-    }
-
-    /*
      * NB: ensureClassReservedSlotsForEmptyObject asserts that nativeEmpty()
      * Use ensureClassReservedSlots for any object, either empty or already
      * extended with properties.
@@ -672,7 +718,10 @@ struct JSObject : js::gc::Cell {
 
     js::Value& getSlotRef(uintN slot) {
         JS_ASSERT(slot < capacity);
-        return slots[slot];
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots()[slot];
+        return slots[slot - fixed];
     }
 
     js::Value &nativeGetSlotRef(uintN slot) {
@@ -683,7 +732,10 @@ struct JSObject : js::gc::Cell {
 
     const js::Value &getSlot(uintN slot) const {
         JS_ASSERT(slot < capacity);
-        return slots[slot];
+        size_t fixed = numFixedSlots();
+        if (slot < fixed)
+            return fixedSlots()[slot];
+        return slots[slot - fixed];
     }
 
     const js::Value &nativeGetSlot(uintN slot) const {
@@ -694,16 +746,33 @@ struct JSObject : js::gc::Cell {
 
     void setSlot(uintN slot, const js::Value &value) {
         JS_ASSERT(slot < capacity);
-        slots[slot] = value;
+        getSlotRef(slot) = value;
     }
 
     void nativeSetSlot(uintN slot, const js::Value &value) {
         JS_ASSERT(isNative());
         JS_ASSERT(containsSlot(slot));
-        return setSlot(slot, value);
+        setSlot(slot, value);
     }
 
     inline js::Value getReservedSlot(uintN index) const;
+
+    /* For slots which are known to always be fixed, due to the way they are allocated. */
+
+    js::Value &getFixedSlotRef(uintN slot) {
+        JS_ASSERT(isNative() && slot < numFixedSlots());
+        return fixedSlots()[slot];
+    }
+
+    const js::Value &getFixedSlot(uintN slot) const {
+        JS_ASSERT(isNative() && slot < numFixedSlots());
+        return fixedSlots()[slot];
+    }
+
+    void setFixedSlot(uintN slot, const js::Value &value) {
+        JS_ASSERT(isNative() && slot < numFixedSlots());
+        fixedSlots()[slot] = value;
+    }
 
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
     inline void updateShape(JSContext *cx);
@@ -795,6 +864,11 @@ struct JSObject : js::gc::Cell {
     inline const js::Value &getPrimitiveThis() const;
     inline void setPrimitiveThis(const js::Value &pthis);
 
+    static size_t getPrimitiveThisOffset() {
+        /* All primitive objects have their value in a fixed slot. */
+        return getFixedSlotOffset(JSSLOT_PRIMITIVE_THIS);
+    }
+
     /*
      * Array-specific getters and setters (for both dense and slow arrays).
      */
@@ -811,6 +885,7 @@ struct JSObject : js::gc::Cell {
     inline js::Value* addressOfDenseArrayElement(uintN idx);
     inline void setDenseArrayElement(uintN idx, const js::Value &val);
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
+    inline bool denseArrayHasInlineSlots() const;
     inline void backfillDenseArrayHoles();
 
     /* Packed information for this array. May be incorrect if !cx->typeInferenceEnabled(). */
@@ -897,6 +972,11 @@ struct JSObject : js::gc::Cell {
     /* Lower-order bit stolen from the length slot. */
     static const uint32 ARGS_LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32 ARGS_PACKED_BITS_COUNT = 1;
+
+    static size_t getArgumentsLengthOffset() {
+        /* All arguments objects have their length in a fixed slot. */
+        return getFixedSlotOffset(JSSLOT_ARGS_LENGTH);
+    }
 
     /*
      * Set the initial length of the arguments, and mark it as not overridden.
@@ -1022,6 +1102,10 @@ struct JSObject : js::gc::Cell {
   public:
     static const uint32 FUN_CLASS_RESERVED_SLOTS = 2;
 
+    static size_t getFlatClosureUpvarsOffset() {
+        return getFixedSlotOffset(JSSLOT_FLAT_CLOSURE_UPVARS);
+    }
+
     inline JSFunction *getFunctionPrivate() const;
 
     inline js::Value *getFlatClosureUpvars() const;
@@ -1037,7 +1121,8 @@ struct JSObject : js::gc::Cell {
 
     inline JSObject *getBoundFunctionTarget() const;
     inline const js::Value &getBoundFunctionThis() const;
-    inline const js::Value *getBoundFunctionArguments(uintN &argslen) const;
+    inline const js::Value &getBoundFunctionArgument(uintN which) const;
+    inline size_t getBoundFunctionArgumentCount() const;
 
     /*
      * RegExp-specific getters and setters.
@@ -1165,14 +1250,6 @@ struct JSObject : js::gc::Cell {
                                       void *priv,
                                       /* gc::FinalizeKind */ unsigned kind);
 
-    inline bool hasSlotsArray() const;
-
-    /* This method can only be called when hasSlotsArray() returns true. */
-    inline void freeSlotsArray(JSContext *cx);
-
-    /* Free the slots array and copy slots that fit into the fixed array. */
-    inline void revertToFixedSlots(JSContext *cx);
-
     inline bool hasProperty(JSContext *cx, jsid id, bool *foundp, uintN flags = 0);
 
     /*
@@ -1217,6 +1294,8 @@ struct JSObject : js::gc::Cell {
                                          js::Shape **spp);
 
     bool toDictionaryMode(JSContext *cx);
+
+    static bool TradeGuts(JSContext *cx, JSObject *a, JSObject *b);
 
   public:
     /* Add a property whose id is not yet in this scope. */
@@ -1364,8 +1443,11 @@ JSObject::fixedSlots() const {
     return (js::Value*) (jsuword(this) + sizeof(JSObject));
 }
 
-inline bool
-JSObject::hasSlotsArray() const { return this->slots != fixedSlots(); }
+inline size_t
+JSObject::numFixedSlots() const
+{
+    return flags >> FIXED_SLOTS_SHIFT;
+}
 
 /* static */ inline size_t
 JSObject::getFixedSlotOffset(size_t slot) {
@@ -1476,9 +1558,9 @@ static const uint32 JSSLOT_WITH_THIS = 1;
 #define OBJ_BLOCK_COUNT(cx,obj)                                               \
     (obj)->propertyCount()
 #define OBJ_BLOCK_DEPTH(cx,obj)                                               \
-    (obj)->getSlot(JSSLOT_BLOCK_DEPTH).toInt32()
+    (obj)->getFixedSlot(JSSLOT_BLOCK_DEPTH).toInt32()
 #define OBJ_SET_BLOCK_DEPTH(cx,obj,depth)                                     \
-    (obj)->setSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
+    (obj)->setFixedSlot(JSSLOT_BLOCK_DEPTH, Value(Int32Value(depth)))
 
 /*
  * To make sure this slot is well-defined, always call js_NewWithObject to

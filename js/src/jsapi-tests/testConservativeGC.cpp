@@ -47,13 +47,14 @@ BEGIN_TEST(testConservativeGC)
 
 bool checkObjectFields(JSObject *savedCopy, JSObject *obj)
 {
-    /*
-     * The GC can change the shape and shrink dslots so we update them before
-     * doing memcmp.
-     */
-    savedCopy->objShape = obj->objShape;
-    savedCopy->slots = obj->slots;
-    CHECK(!memcmp(savedCopy, obj, sizeof(*obj)));
+    /* Ignore fields which are unstable across GCs. */
+    CHECK(savedCopy->map == obj->map);
+    CHECK(savedCopy->clasp == obj->clasp);
+    CHECK(savedCopy->flags == obj->flags);
+    CHECK(savedCopy->newType == obj->newType);
+    CHECK(savedCopy->type == obj->type);
+    CHECK(savedCopy->parent == obj->parent);
+    CHECK(savedCopy->privateData == obj->privateData);
     return true;
 }
 

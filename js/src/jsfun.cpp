@@ -973,7 +973,7 @@ NewCallObject(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *c
     Bindings &bindings = script->bindings;
     size_t argsVars = bindings.countArgsAndVars();
     size_t slots = JSObject::CALL_RESERVED_SLOTS + argsVars;
-    gc::FinalizeKind kind = gc::GetGCObjectKind(slots);
+    gc::FinalizeKind kind = gc::GetGCObjectKind(slots, gc::FINALIZE_OBJECT2);
 
     JSObject *callobj = js_NewGCObject(cx, kind);
     if (!callobj)
@@ -1085,9 +1085,8 @@ inline static void
 CopyValuesToCallObject(JSObject &callobj, uintN nargs, Value *argv, uintN nvars, Value *slots)
 {
     JS_ASSERT(callobj.numSlots() >= JSObject::CALL_RESERVED_SLOTS + nargs + nvars);
-    Value *base = callobj.getSlots() + JSObject::CALL_RESERVED_SLOTS;
-    memcpy(base, argv, nargs * sizeof(Value));
-    memcpy(base + nargs, slots, nvars * sizeof(Value));
+    callobj.copySlotRange(JSObject::CALL_RESERVED_SLOTS, argv, nargs);
+    callobj.copySlotRange(JSObject::CALL_RESERVED_SLOTS + nargs, slots, nvars);
 }
 
 void
@@ -1407,7 +1406,7 @@ call_trace(JSTracer *trc, JSObject *obj)
         uintN count = fp->script()->bindings.countArgsAndVars();
 
         JS_ASSERT(obj->numSlots() >= first + count);
-        SetValueRangeToUndefined(obj->getSlots() + first, count);
+        obj->clearSlotRange(first, count);
     }
 
     MaybeMarkGenerator(trc, obj);
@@ -2310,7 +2309,7 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
             return false;
 
         JS_ASSERT(numSlots() >= argslen + FUN_CLASS_RESERVED_SLOTS);
-        memcpy(getSlots() + FUN_CLASS_RESERVED_SLOTS, args, argslen * sizeof(Value));
+        copySlotRange(FUN_CLASS_RESERVED_SLOTS, args, argslen);
     }
     return true;
 }
@@ -2334,16 +2333,23 @@ JSObject::getBoundFunctionThis() const
     return getSlot(JSSLOT_BOUND_FUNCTION_THIS);
 }
 
-inline const js::Value *
-JSObject::getBoundFunctionArguments(uintN &argslen) const
+inline const js::Value &
+JSObject::getBoundFunctionArgument(uintN which) const
+{
+    JS_ASSERT(isFunction());
+    JS_ASSERT(isBoundFunction());
+    JS_ASSERT(which < getBoundFunctionArgumentCount());
+
+    return getSlot(FUN_CLASS_RESERVED_SLOTS + which);
+}
+
+inline size_t
+JSObject::getBoundFunctionArgumentCount() const
 {
     JS_ASSERT(isFunction());
     JS_ASSERT(isBoundFunction());
 
-    argslen = getSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT).toPrivateUint32();
-    JS_ASSERT_IF(argslen > 0, numSlots() >= argslen);
-
-    return getSlots() + FUN_CLASS_RESERVED_SLOTS;
+    return getSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT).toPrivateUint32();
 }
 
 namespace js {
@@ -2361,8 +2367,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
     bool constructing = IsConstructing(vp);
 
     /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
-    uintN argslen;
-    const Value *boundArgs = obj->getBoundFunctionArguments(argslen);
+    uintN argslen = obj->getBoundFunctionArgumentCount();
 
     if (argc + argslen > JS_ARGS_LENGTH_MAX) {
         js_ReportAllocationOverflow(cx);
@@ -2380,7 +2385,8 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
-    memcpy(args.argv(), boundArgs, argslen * sizeof(Value));
+    for (uintN i = 0; i < argslen; i++)
+        args[i] = obj->getBoundFunctionArgument(i);
     memcpy(args.argv() + argslen, vp + 2, argc * sizeof(Value));
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
