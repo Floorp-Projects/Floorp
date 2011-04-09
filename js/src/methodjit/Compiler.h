@@ -494,6 +494,7 @@ class Compiler : public BaseCompiler
     CompileStatus finishThisUp(JITScript **jitp);
     CompileStatus pushActiveFrame(JSScript *script, uint32 argc);
     void popActiveFrame();
+    void generateInlinePrologue();
 
     /* Analysis helpers. */
     CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);

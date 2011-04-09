@@ -89,12 +89,12 @@ FrameState::getUnsyncedEntries(uint32 *pdepth, Vector<UnsyncedEntry> *unsyncedEn
         UnsyncedEntry entry;
         PodZero(&entry);
 
-        entry.offset = frameOffset(fe, a) + (a->depth * sizeof(Value));
+        entry.offset = frameOffset(fe);
 
         if (fe->isCopy()) {
             FrameEntry *nfe = fe->copyOf();
             entry.copy = true;
-            entry.u.copiedOffset = frameOffset(nfe, a) + (a->depth * sizeof(Value));
+            entry.u.copiedOffset = frameOffset(nfe);
         } else if (fe->isConstant()) {
             entry.constant = true;
             entry.u.value = fe->getValue();
@@ -2304,8 +2304,12 @@ FrameState::storeLocal(uint32 n, JSValueType type, bool popGuaranteed, bool fixe
         local->lastLoop = loop->headOffset();
 
     if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE &&
-        fixedType && !a->parent && !local->type.synced()) {
-        /* Except when inlining, known types are always in sync for locals. */
+        fixedType && !local->type.synced()) {
+        /*
+         * Except when inlining, known types are always in sync for locals.
+         * If we are inlining, the known type is filled in when the frame is
+         * expanded (which happens upon any recompilation activity).
+         */
         local->type.sync();
     }
 

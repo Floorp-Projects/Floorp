@@ -311,7 +311,7 @@ Script::analyze(JSContext *cx, JSScript *script)
         usesRval = true;
 
     isInlineable = true;
-    if (script->nClosedArgs || script->nClosedVars ||
+    if (script->nClosedArgs || script->nClosedVars || script->nfixed >= LOCAL_LIMIT ||
         (script->fun && script->fun->isHeavyweight()) ||
         script->usesEval || script->usesArguments || cx->compartment->debugMode) {
         isInlineable = false;
