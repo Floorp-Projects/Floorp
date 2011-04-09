@@ -121,27 +121,40 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
         case eXMLOutput:
         {
             *aHandler = new txUnknownHandler(mEs);
-            break;
+            return NS_OK;
         }
 
         case eHTMLOutput:
         {
-            *aHandler = new txMozillaXMLOutput(EmptyString(),
-                                               kNameSpaceID_None,
-                                               aFormat, mSourceDocument,
-                                               mResultDocument, mObserver);
-            break;
+            nsAutoPtr<txMozillaXMLOutput> handler(
+                new txMozillaXMLOutput(aFormat, mObserver));
+
+            nsresult rv = handler->createResultDocument(EmptyString(),
+                                                        kNameSpaceID_None,
+                                                        mSourceDocument,
+                                                        mResultDocument);
+            if (NS_SUCCEEDED(rv)) {
+                *aHandler = handler.forget();
+            }
+
+            return rv;
         }
 
         case eTextOutput:
         {
-            *aHandler = new txMozillaTextOutput(mSourceDocument,
-                                                mResultDocument,
-                                                mObserver);
-            break;
+            nsAutoPtr<txMozillaTextOutput> handler(
+                new txMozillaTextOutput(mObserver));
+
+            nsresult rv = handler->createResultDocument(mSourceDocument,
+                                                        mResultDocument);
+            if (NS_SUCCEEDED(rv)) {
+                *aHandler = handler.forget();
+            }
+
+            return rv;
         }
     }
-    NS_ENSURE_TRUE(*aHandler, NS_ERROR_OUT_OF_MEMORY);
+
     return NS_OK;
 }
 
@@ -162,22 +175,34 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
         case eXMLOutput:
         case eHTMLOutput:
         {
-            *aHandler = new txMozillaXMLOutput(aName, aNsID, aFormat,
-                                               mSourceDocument,
-                                               mResultDocument,
-                                               mObserver);
-            break;
+            nsAutoPtr<txMozillaXMLOutput> handler(
+                new txMozillaXMLOutput(aFormat, mObserver));
+
+            nsresult rv = handler->createResultDocument(aName, aNsID,
+                                                        mSourceDocument,
+                                                        mResultDocument);
+            if (NS_SUCCEEDED(rv)) {
+                *aHandler = handler.forget();
+            }
+
+            return rv;
         }
 
         case eTextOutput:
         {
-            *aHandler = new txMozillaTextOutput(mSourceDocument,
-                                                mResultDocument,
-                                                mObserver);
-            break;
+            nsAutoPtr<txMozillaTextOutput> handler(
+                new txMozillaTextOutput(mObserver));
+
+            nsresult rv = handler->createResultDocument(mSourceDocument,
+                                                        mResultDocument);
+            if (NS_SUCCEEDED(rv)) {
+                *aHandler = handler.forget();
+            }
+
+            return rv;
         }
     }
-    NS_ENSURE_TRUE(*aHandler, NS_ERROR_OUT_OF_MEMORY);
+
     return NS_OK;
 }
 
