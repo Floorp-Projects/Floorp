@@ -109,7 +109,8 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
             if (index > initLength) {
                 if (!setDenseArrayNotPacked(cx))
                     return ED_FAILED;
-                ClearValueRange(getSlots() + initLength, index - initLength, true);
+                ClearValueRange(getDenseArrayElements() + initLength,
+                                index - initLength, true);
             }
             setDenseArrayInitializedLength(index + 1);
             return ED_OK;
@@ -130,7 +131,8 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
         if (requiredCapacity <= currentCapacity) {
             JS_ASSERT(cx->typeInferenceEnabled());
             if (index > initLength) {
-                ClearValueRange(getSlots() + initLength, index - initLength, true);
+                ClearValueRange(getDenseArrayElements() + initLength,
+                                index - initLength, true);
                 if (!setDenseArrayNotPacked(cx))
                     return ED_FAILED;
             }
@@ -154,7 +156,8 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
         if (index > initLength) {
             if (!setDenseArrayNotPacked(cx))
                 return ED_FAILED;
-            ClearValueRange(getSlots() + initLength, index - initLength, true);
+            ClearValueRange(getDenseArrayElements() + initLength,
+                            index - initLength, true);
         }
         setDenseArrayInitializedLength(requiredCapacity);
     } else {

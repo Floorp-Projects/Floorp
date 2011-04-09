@@ -503,7 +503,7 @@ LoopState::restoreInvariants(Assembler &masm)
 
         RegisterID reg = regs.takeAnyReg().reg();
         masm.loadPayload(array, reg);
-        masm.loadPtr(Address(reg, offsetof(JSObject, slots)), reg);
+        masm.loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
         masm.storePtr(reg, address);
         regs.putReg(reg);
     }

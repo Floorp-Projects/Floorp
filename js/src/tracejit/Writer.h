@@ -524,7 +524,7 @@ class Writer
     }
 
     nj::LIns *ldpObjSlots(nj::LIns *obj) const {
-        return name(lir->insLoad(nj::LIR_ldp, obj, offsetof(JSObject, slots), ACCSET_OBJ_SLOTS),
+        return name(lir->insLoad(nj::LIR_ldp, obj, JSObject::offsetOfSlots(), ACCSET_OBJ_SLOTS),
                     "slots");
     }
 
@@ -1179,18 +1179,15 @@ class Writer
     /*
      * Nb: this "Privatized" refers to the Private API in jsvalue.h.  It
      * doesn't refer to the JSObj::privateData slot!  Confusing.
+     * This should only be used for slots which are known to always be fixed.
      */
     nj::LIns *getObjPrivatizedSlot(nj::LIns *obj, uint32 slot) const {
+        uint32 offset = JSObject::getFixedSlotOffset(slot) + sPayloadOffset;
 #if JS_BITS_PER_WORD == 32
-        nj::LIns *vaddr_ins = ldpObjSlots(obj);
-        return lir->insLoad(nj::LIR_ldi, vaddr_ins,
-                            slot * sizeof(Value) + sPayloadOffset, ACCSET_SLOTS, nj::LOAD_CONST);
-
+        return lir->insLoad(nj::LIR_ldi, obj, offset, ACCSET_SLOTS, nj::LOAD_CONST);
 #elif JS_BITS_PER_WORD == 64
         /* N.B. On 64-bit, privatized value are encoded differently from other pointers. */
-        nj::LIns *vaddr_ins = ldpObjSlots(obj);
-        nj::LIns *v_ins = lir->insLoad(nj::LIR_ldq, vaddr_ins,
-                                       slot * sizeof(Value) + sPayloadOffset,
+        nj::LIns *v_ins = lir->insLoad(nj::LIR_ldq, obj, offset,
                                        ACCSET_SLOTS, nj::LOAD_CONST);
         return lshqN(v_ins, 1);
 #endif
@@ -1216,10 +1213,8 @@ class Writer
     }
 
     nj::LIns *getArgsLength(nj::LIns *args) const {
-        uint32 slot = JSObject::JSSLOT_ARGS_LENGTH;
-        nj::LIns *vaddr_ins = ldpObjSlots(args);
-        return name(lir->insLoad(nj::LIR_ldi, vaddr_ins, slot * sizeof(Value) + sPayloadOffset,
-                                 ACCSET_SLOTS),
+        uint32 offset = JSObject::getArgumentsLengthOffset() + sPayloadOffset;
+        return name(lir->insLoad(nj::LIR_ldi, args, offset, ACCSET_SLOTS),
                     "argsLength");
     }
 };

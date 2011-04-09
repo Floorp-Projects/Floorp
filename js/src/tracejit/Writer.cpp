@@ -266,15 +266,21 @@ couldBeObjectOrString(LIns *ins)
 static bool
 isConstPrivatePtr(LIns *ins, unsigned slot)
 {
+    // match both inline and indirect slot accesses.
+    uint32 inlineOffset = JSObject::getFixedSlotOffset(slot) + sPayloadOffset;
+    uint32 oolOffset = (slot * sizeof(Value)) + sPayloadOffset;
+
 #if JS_BITS_PER_WORD == 32
     // ins = ldp.slots/c ...[<offset of slot>]
-    return match(ins, LIR_ldp, ACCSET_SLOTS, LOAD_CONST, slot * sizeof(Value) + sPayloadOffset);
+    return match(ins, LIR_ldp, ACCSET_SLOTS, LOAD_CONST, inlineOffset)
+        || match(ins, LIR_ldp, ACCSET_SLOTS, LOAD_CONST, oolOffset);
 #elif JS_BITS_PER_WORD == 64
     // ins_oprnd1 = ldp.slots/c ...[<offset of slot>]
     // ins_oprnd2 = immi 1
     // ins = lshq ins_oprnd1, ins_oprnd2
     return ins->isop(LIR_lshq) &&
-           match(ins->oprnd1(), LIR_ldp, ACCSET_SLOTS, LOAD_CONST, slot * sizeof(Value)) &&
+           (match(ins->oprnd1(), LIR_ldp, ACCSET_SLOTS, LOAD_CONST, inlineOffset)
+         || match(ins->oprnd1(), LIR_ldp, ACCSET_SLOTS, LOAD_CONST, oolOffset)) &&
            ins->oprnd2()->isImmI(1);
 #endif
 }

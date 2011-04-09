@@ -2597,7 +2597,7 @@ ptrdiff_t
 TraceRecorder::nativeGlobalSlot(const Value* p) const
 {
     JS_ASSERT(isGlobal(p));
-    return ptrdiff_t(p - globalObj->slots);
+    return ptrdiff_t(p - globalObj->slots + globalObj->numFixedSlots());
 }
 
 /* Determine the offset in the native global frame for a jsval we track. */
@@ -2611,7 +2611,7 @@ TraceRecorder::nativeGlobalOffset(const Value* p) const
 bool
 TraceRecorder::isGlobal(const Value* p) const
 {
-    return (size_t(p - globalObj->slots) < globalObj->numSlots());
+    return (size_t(p - globalObj->slots) < globalObj->numSlots() - globalObj->numFixedSlots());
 }
 
 bool
@@ -3954,16 +3954,19 @@ TraceRecorder::checkForGlobalObjectReallocationHelper()
 {
     debug_only_print0(LC_TMTracer, "globalObj->slots relocated, updating tracker\n");
     Value* src = global_slots;
-    Value* dst = globalObj->getSlots();
+    Value* dst = globalObj->getRawSlots();
     jsuint length = globalObj->capacity;
     LIns** map = (LIns**)alloca(sizeof(LIns*) * length);
     for (jsuint n = 0; n < length; ++n) {
-        map[n] = tracker.get(src);
-        tracker.set(src++, NULL);
+        Value *slot = globalObj->getRawSlot(n, src);
+        map[n] = tracker.get(slot);
+        tracker.set(slot, NULL);
     }
-    for (jsuint n = 0; n < length; ++n)
-        tracker.set(dst++, map[n]);
-    global_slots = globalObj->getSlots();
+    for (jsuint n = 0; n < length; ++n) {
+        Value *slot = globalObj->getRawSlot(n, dst);
+        tracker.set(slot, map[n]);
+    }
+    global_slots = globalObj->getRawSlots();
 }
 
 /* Determine whether the current branch is a loop edge (taken or not taken). */
@@ -9685,11 +9688,11 @@ TraceRecorder::stobj_set_slot(JSObject *obj, LIns* obj_ins, unsigned slot, LIns*
      * A shape guard must have already been generated for obj, which will
      * ensure that future objects have the same number of fixed slots.
      */
-    if (!obj->hasSlotsArray()) {
+    if (obj->isFixedSlot(slot)) {
         JS_ASSERT(slot < obj->numSlots());
         stobj_set_fslot(obj_ins, slot, v, v_ins);
     } else {
-        stobj_set_dslot(obj_ins, slot, slots_ins, v, v_ins);
+        stobj_set_dslot(obj_ins, obj->dynamicSlotIndex(slot), slots_ins, v, v_ins);
     }
 }
 
@@ -9697,9 +9700,9 @@ LIns*
 TraceRecorder::unbox_slot(JSObject *obj, LIns *obj_ins, uint32 slot, VMSideExit *exit)
 {
     /* Same guarantee about fixed slots as stobj_set_slot. */
-    Address addr = (!obj->hasSlotsArray())
+    Address addr = obj->isFixedSlot(slot)
                  ? (Address)FSlotsAddress(obj_ins, slot)
-                 : (Address)DSlotsAddress(w.ldpObjSlots(obj_ins), slot);
+                 : (Address)DSlotsAddress(w.ldpObjSlots(obj_ins), obj->dynamicSlotIndex(slot));
 
     return unbox_value(obj->getSlot(slot), addr, exit);
 }
@@ -12254,7 +12257,7 @@ TraceRecorder::setCallProp(JSObject *callobj, LIns *callobj_ins, const Shape *sh
         JS_ASSERT(shape->hasShortID());
 
         LIns* slots_ins = NULL;
-        stobj_set_dslot(callobj_ins, slot, slots_ins, v, v_ins);
+        stobj_set_slot(callobj, callobj_ins, slot, slots_ins, v, v_ins);
         return RECORD_CONTINUE;
     }
 
