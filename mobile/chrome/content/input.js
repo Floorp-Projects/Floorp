@@ -836,8 +836,6 @@ function KineticController(aPanBy, aEndCallback) {
   this._updateInterval = Services.prefs.getIntPref("browser.ui.kinetic.updateInterval");
   // "Friction" of the scroll pane. The lower, the less friction and the further distance traveled.
   this._decelerationRate = Services.prefs.getIntPref("browser.ui.kinetic.decelerationRate") / 10000;
-  // A multiplier for the initial velocity of the movement.
-  this._speedSensitivity = Services.prefs.getIntPref("browser.ui.kinetic.speedSensitivity") / 100;
   // Number of milliseconds that can contain a swipe. Movements earlier than this are disregarded.
   this._swipeLength = Services.prefs.getIntPref("browser.ui.kinetic.swipeLength");
 
@@ -983,8 +981,9 @@ KineticController.prototype = {
     if (currentVelocityY * this._velocity.y <= 0)
       currentVelocityY = 0;
 
-    this._velocity.x = clampFromZero((distanceX / swipeLength) + currentVelocityX, Math.abs(currentVelocityX), kMaxVelocity);
-    this._velocity.y = clampFromZero((distanceY / swipeLength) + currentVelocityY, Math.abs(currentVelocityY), kMaxVelocity);
+    let swipeTime = Math.min(swipeLength, lastTime - mb[0].t);
+    this._velocity.x = clampFromZero((distanceX / swipeTime) + currentVelocityX, Math.abs(currentVelocityX), 6);
+    this._velocity.y = clampFromZero((distanceY / swipeTime) + currentVelocityY, Math.abs(currentVelocityY), 6);
 
     // Set acceleration vector to opposite signs of velocity
     this._acceleration.set(this._velocity.clone().map(sign).scale(-this._decelerationRate));
