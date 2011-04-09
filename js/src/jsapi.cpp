@@ -6171,7 +6171,7 @@ JS_SetGCZeal(JSContext *cx, uint8 zeal)
 
 /************************************************************************/
 
-#if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && defined(XP_WIN) && !defined (WINCE)
+#if !defined(STATIC_EXPORTABLE_JS_API) && !defined(STATIC_JS_API) && defined(XP_WIN)
 
 #include "jswin.h"
 

@@ -59,9 +59,8 @@ ifndef JS_DISABLE_SHELL
 DIRS += shell
 endif
 
-# FIXME: bug 515383 covers getting these working on wince
-# bug 530688 covers Android
-ifneq (,$(filter-out WINCE ANDROID,$(OS_ARCH)))
+# FIXME: bug 530688 covers getting these working on Android
+ifneq (,$(filter-out ANDROID,$(OS_ARCH)))
 ifdef ENABLE_TESTS
 DIRS += jsapi-tests
 endif
@@ -316,13 +315,6 @@ CPPSRCS += \
 		Writer.cpp     \
 		$(NULL)
 
-ifdef WINCE
-# don't need -c
-AS_DASH_C_FLAG =
-ASFLAGS += -arch 6
-ASFILES += jswince.asm
-endif
-
 endif # ENABLE_TRACEJIT
 ifdef ENABLE_METHODJIT
 
@@ -503,7 +495,7 @@ else
 CPPSRCS += pm_stub.cpp
 endif
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifeq (,$(filter-out WINNT,$(OS_ARCH)))
 INSTALLED_HEADERS += jscpucfg.h
 endif
 
@@ -511,7 +503,7 @@ EXPORTS = $(INSTALLED_HEADERS)
 
 DASH_R		= -r
 
-ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
@@ -545,7 +537,7 @@ endif
 default::
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
-ifneq (,$(filter-out SYMBIAN WINCE,$(OS_ARCH)))
+ifneq (,$(filter-out SYMBIAN,$(OS_ARCH)))
 # nsinstall doesn't get built until we enter config/ in the exports phase,
 # so we'll have to manually ensure it gets built here if we want to use
 # $(EXPORTS)
@@ -672,12 +664,9 @@ check-jstests:
 	exit $$RC
 
 
-
-ifndef WINCE
 check:: check-jit-test
 #check:: check-jstests
 check-valgrind:: check-jit-test-valgrind
-endif
 
 DIST_GARBAGE = config.cache config.log config.status \
    config/autoconf.mk \
@@ -737,7 +726,7 @@ LIBS +=  C:/Program\ Files/Intel/VTune/Analyzer/Lib/VtuneApi.lib
 endif
 
 # HP-UX does not require the extra linking of "-lm"
-ifeq (,$(filter HP-UX WINNT WINCE OS2,$(OS_ARCH)))
+ifeq (,$(filter HP-UX WINNT OS2,$(OS_ARCH)))
 EXTRA_LIBS	+= -lm
 endif
 
@@ -846,15 +835,10 @@ ifeq (,$(CROSS_COMPILE)$(GNU_CC)$(filter-out WINNT,$(OS_ARCH)))
 jsautocfg.h:
 	touch $@
 else
-ifeq ($(OS_ARCH),WINCE)
-jsautocfg.h:
-	touch $@
-else
 jsautocfg.h: jscpucfg$(HOST_BIN_SUFFIX)
 	@rm -f $@ jsautocfg.tmp
 	./jscpucfg > jsautocfg.tmp
 	mv jsautocfg.tmp $@
-endif
 endif
 
 # jscpucfg is a strange target
@@ -880,13 +864,8 @@ jscpucfg: jscpucfg.o
 	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) -o $@ $<
 endif
 else
-ifeq ($(OS_ARCH),WINCE)
-jscpucfg$(HOST_BIN_SUFFIX):
-	echo no need to build jscpucfg $<
-else
 jscpucfg$(HOST_BIN_SUFFIX): jscpucfg.cpp Makefile.in
 	$(HOST_CXX) $(HOST_CXXFLAGS) $(JSCPUCFG_DEFINES) $(DEFINES) $(NSPR_CFLAGS) $(HOST_OUTOPTION)$@ $<
-endif
 endif
 
 # Compute the linker flags that programs linking against SpiderMonkey should
