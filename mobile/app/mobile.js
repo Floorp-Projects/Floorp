@@ -397,7 +397,6 @@ pref("devtools.errorconsole.enabled", false);
 // kinetic tweakables
 pref("browser.ui.kinetic.updateInterval", 30);
 pref("browser.ui.kinetic.decelerationRate", 20);
-pref("browser.ui.kinetic.speedSensitivity", 80);
 pref("browser.ui.kinetic.swipeLength", 160);
 
 // zooming
