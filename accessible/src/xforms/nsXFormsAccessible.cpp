@@ -130,7 +130,7 @@ nsXFormsAccessible::CacheSelectChildren(nsIDOMNode *aContainerNode)
       continue;
 
     nsCOMPtr<nsIContent> child(do_QueryInterface(DOMChild));
-    nsRefPtr<nsAccessible> accessible =
+    nsAccessible* accessible =
       GetAccService()->GetOrCreateAccessible(child, presShell, mWeakShell);
     if (!accessible)
       continue;

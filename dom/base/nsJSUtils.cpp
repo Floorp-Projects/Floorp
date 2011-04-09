@@ -62,7 +62,7 @@
 
 JSBool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
-                              PRUint32* aLineno, nsIPrincipal* aPrincipal)
+                              PRUint32* aLineno)
 {
   // Get the current filename and line number
   JSStackFrame* frame = nsnull;
@@ -76,29 +76,6 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
   } while (frame && !script);
 
   if (script) {
-    // If aPrincipals is non-null then our caller is asking us to ensure
-    // that the filename we return does not have elevated privileges.
-    if (aPrincipal) {
-      uint32 flags = JS_GetScriptFilenameFlags(script);
-
-      // Use the principal for the filename if it shouldn't be receiving
-      // implicit XPCNativeWrappers.
-      PRBool system;
-      if (flags & JSFILENAME_PROTECTED) {
-        nsIScriptSecurityManager *ssm = nsContentUtils::GetSecurityManager();
-
-        if (NS_FAILED(ssm->IsSystemPrincipal(aPrincipal, &system)) || !system) {
-          JSPrincipals* jsprins;
-          aPrincipal->GetJSPrincipals(aContext, &jsprins);
-
-          *aFilename = jsprins->codebase;
-          *aLineno = 0;
-          JSPRINCIPALS_DROP(aContext, jsprins);
-          return JS_TRUE;
-        }
-      }
-    }
-
     const char* filename = ::JS_GetScriptFilename(aContext, script);
 
     if (filename) {

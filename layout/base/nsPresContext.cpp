@@ -2436,9 +2436,8 @@ nsPresContext::IsRootContentDocument()
     return PR_FALSE;
   }
   // We may not have a root frame, so use views.
-  nsIViewManager* vm = PresShell()->GetViewManager();
-  nsIView* view = nsnull;
-  if (NS_FAILED(vm->GetRootView(view)) || !view) {
+  nsIView* view = PresShell()->GetViewManager()->GetRootView();
+  if (!view) {
     return PR_FALSE;
   }
   view = view->GetParent(); // anonymous inner view
@@ -2528,7 +2527,7 @@ PluginHideEnumerator(nsPtrHashKey<nsObjectFrame>* aEntry, void* userArg)
 
 static void
 RecoverPluginGeometry(nsDisplayListBuilder* aBuilder,
-    nsDisplayList* aList, PluginGeometryClosure* aClosure)
+    nsDisplayList* aList, PRBool aInTransform, PluginGeometryClosure* aClosure)
 {
   for (nsDisplayItem* i = aList->GetBottom(); i; i = i->GetAbove()) {
     switch (i->GetType()) {
@@ -2542,7 +2541,9 @@ RecoverPluginGeometry(nsDisplayListBuilder* aBuilder,
       // would be incorrect
       nsPtrHashKey<nsObjectFrame>* entry =
         aClosure->mAffectedPlugins.GetEntry(f);
-      if (entry) {
+      // Windowed plugins in transforms are always ignored, we don't
+      // create configurations for them
+      if (entry && (!aInTransform || !f->GetWidget())) {
         displayPlugin->GetWidgetConfiguration(aBuilder,
                                               aClosure->mOutputConfigurations);
         // we've dealt with this plugin now
@@ -2550,10 +2551,16 @@ RecoverPluginGeometry(nsDisplayListBuilder* aBuilder,
       }
       break;
     }
+    case nsDisplayItem::TYPE_TRANSFORM: {
+      nsDisplayList* sublist =
+          static_cast<nsDisplayTransform*>(i)->GetStoredList()->GetList();
+      RecoverPluginGeometry(aBuilder, sublist, PR_TRUE, aClosure);
+      break;
+    }
     default: {
       nsDisplayList* sublist = i->GetList();
       if (sublist) {
-        RecoverPluginGeometry(aBuilder, sublist, aClosure);
+        RecoverPluginGeometry(aBuilder, sublist, aInTransform, aClosure);
       }
       break;
     }
@@ -2619,7 +2626,7 @@ nsRootPresContext::GetPluginGeometryUpdates(nsIFrame* aChangedSubtree,
     }
 #endif
 
-    RecoverPluginGeometry(&builder, &list, &closure);
+    RecoverPluginGeometry(&builder, &list, PR_FALSE, &closure);
     list.DeleteAll();
   }
 

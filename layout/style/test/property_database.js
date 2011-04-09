@@ -2522,6 +2522,23 @@ var gCSSProperties = {
 		other_values: [ "underline", "overline", "line-through", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
 		invalid_values: [ "underline none", "none underline", "line-through blink line-through" ]
 	},
+	"-moz-text-decoration-color": {
+		domProp: "MozTextDecorationColor",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		prerequisites: { "color": "black" },
+		initial_values: [ "currentColor", "-moz-use-text-color" ],
+		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
+		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+	},
+	"-moz-text-decoration-style": {
+		domProp: "MozTextDecorationStyle",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "solid" ],
+		other_values: [ "double", "dotted", "dashed", "wavy", "-moz-none" ],
+		invalid_values: [ "none", "groove", "ridge", "inset", "outset", "solid dashed", "wave" ]
+	},
 	"text-indent": {
 		domProp: "textIndent",
 		inherited: true,

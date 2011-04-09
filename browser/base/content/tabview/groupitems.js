@@ -1105,6 +1105,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       item.removeClass("stack-trayed");
       item.setRotation(0);
 
+      // Force tabItem resize if it's dragged out of a stacked groupItem.
+      // The tabItems's title will be visible and that's why we need to
+      // recalculate its height.
+      if (item.isDragging && this.isStacked())
+        item.setBounds(item.getBounds(), true, {force: true});
+
       item.droppable(true);
       item.removeSubscriber(this, "close");
 

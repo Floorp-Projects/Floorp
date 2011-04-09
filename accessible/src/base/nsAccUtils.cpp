@@ -44,7 +44,6 @@
 
 #include "nsAccessibilityService.h"
 #include "nsAccessibilityAtoms.h"
-#include "nsAccTreeWalker.h"
 #include "nsARIAMap.h"
 #include "nsDocAccessible.h"
 #include "nsHyperTextAccessible.h"
@@ -332,23 +331,6 @@ nsAccUtils::HasDefinedARIAToken(nsIContent *aContent, nsIAtom *aAtom)
         return PR_FALSE;
   }
   return PR_TRUE;
-}
-
-PRBool
-nsAccUtils::HasAccessibleChildren(nsINode *aNode)
-{
-  if (!aNode)
-    return PR_FALSE;
-
-  nsIPresShell *presShell = nsCoreUtils::GetPresShellFor(aNode);
-  if (!presShell)
-    return PR_FALSE;
-
-  nsIContent *content = nsCoreUtils::GetRoleContent(aNode);
-  nsCOMPtr<nsIWeakReference> weakShell(do_GetWeakReference(presShell));
-  nsAccTreeWalker walker(weakShell, content, PR_FALSE);
-  nsRefPtr<nsAccessible> accessible = walker.GetNextChild();
-  return accessible ? PR_TRUE : PR_FALSE;
 }
 
 nsAccessible *

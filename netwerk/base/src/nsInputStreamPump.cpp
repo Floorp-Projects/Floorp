@@ -287,7 +287,7 @@ nsInputStreamPump::Init(nsIInputStream *stream,
     NS_ENSURE_TRUE(mState == STATE_IDLE, NS_ERROR_IN_PROGRESS);
 
     mStreamOffset = PRUint64(streamPos);
-    if (nsInt64(streamLen) >= nsInt64(0))
+    if (PRInt64(streamLen) >= PRInt64(0))
         mStreamLength = PRUint64(streamLen);
     mStream = stream;
     mSegSize = segsize;

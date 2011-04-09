@@ -130,7 +130,7 @@ GCONF_VERSION=1.2.1
 GIO_VERSION=2.0
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.7.4
+SQLITE_VERSION=3.7.5
 LIBNOTIFY_VERSION=0.4
 
 MSMANIFEST_TOOL=
@@ -1010,6 +1010,9 @@ MOZ_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" -o "$XARGS" = ":"; then
     AC_MSG_ERROR([xargs not found in \$PATH .])
 fi
+
+MOZ_PATH_PROG(RPMBUILD, rpmbuild, :)
+AC_SUBST(RPMBUILD)
 
 if test "$COMPILE_ENVIRONMENT"; then
 
@@ -2765,7 +2768,6 @@ alpha*-*-osf*)
                        ,
                        [LDFLAGS=$_SAVE_LDFLAGS])
        fi
-       WARNINGS_AS_ERRORS='-Werror'
        MOZ_OPTIMIZE_FLAGS="-xO4"
        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
        MKCSHLIB='$(CC) $(CFLAGS) $(DSO_PIC_FLAGS) $(DSO_LDOPTS) -h $@ -o $@'
@@ -2815,6 +2817,7 @@ alpha*-*-osf*)
        MKSHLIB_UNFORCE_ALL='-Wl,-z -Wl,defaultextract'
        ASFLAGS="$ASFLAGS -fPIC"
        DSO_LDOPTS='-shared'
+       WARNINGS_AS_ERRORS='-Werror'
        _WARNINGS_CFLAGS=''
        _WARNINGS_CXXFLAGS=''
        if test "$OS_RELEASE" = "5.3"; then
@@ -4971,6 +4974,7 @@ VPX_AS_CONVERSION=
 VPX_ASM_SUFFIX=
 VPX_X86_ASM=
 VPX_ARM_ASM=
+MOZ_LIBJPEG_TURBO=1
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
 LIBJPEG_TURBO_X86_ASM=
@@ -4978,7 +4982,6 @@ LIBJPEG_TURBO_X64_ASM=
 MOZ_PANGO=1
 MOZ_PERMISSIONS=1
 MOZ_PLACES=1
-MOZ_PLUGINS=1
 MOZ_PREF_EXTENSIONS=1
 MOZ_PROFILELOCKING=1
 MOZ_PSM=1
@@ -5850,14 +5853,6 @@ fi
 AC_SUBST(MOZ_IPDL_TESTS)
 
 dnl ========================================================
-dnl = Disable plugin support
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(plugins,
-[  --disable-plugins       Disable plugins support],
-    MOZ_PLUGINS=,
-    MOZ_PLUGINS=1)
-
-dnl ========================================================
 dnl = Disable building dbm
 dnl ========================================================
 MOZ_ARG_DISABLE_BOOL(dbm,
@@ -6449,18 +6444,17 @@ dnl ========================================================
 dnl = libjpeg-turbo configuration
 dnl ========================================================
 
+MOZ_ARG_DISABLE_BOOL(libjpeg_turbo,
+[ --disable-libjpeg-turbo  Disable optimized jpeg decoding routines],
+    MOZ_LIBJPEG_TURBO=,
+    MOZ_LIBJPEG_TURBO=1)
+
 dnl Detect if we can use yasm to compile libjpeg-turbo's optimized assembly
 dnl files.
-AC_MSG_CHECKING([for YASM assembler])
-AC_CHECK_PROGS(LIBJPEG_TURBO_AS, yasm, "")
 
-dnl XXX jlebar -- need a yasm version check here.
+if test -n "$MOZ_LIBJPEG_TURBO"; then
 
-if test -n "LIBJPEG_TURBO_AS"; then
-
-  LIBJPEG_TURBO_AS="yasm"
-
-  dnl We have YASM; see if we support it on this platform.
+  dnl Do we support libjpeg-turbo on this platform?
   case "$OS_ARCH:$OS_TEST" in
   Linux:x86|Linux:i?86)
     LIBJPEG_TURBO_ASFLAGS="-f elf32 -rnasm -pnasm -DPIC -DELF"
@@ -6496,14 +6490,33 @@ if test -n "LIBJPEG_TURBO_AS"; then
   ;;
   esac
 
-fi # end have YASM
+fi
+
+dnl If we're on a system which supports libjpeg-turbo's asm routines and
+dnl --disable-libjpeg-turbo wasn't passed, check for yasm, and error out if it
+dnl doesn't exist or we have too old of a version.
+if test -n "$LIBJPEG_TURBO_X86_ASM" -o -n "$LIBJPEG_TURBO_X64_ASM" ; then
+    AC_MSG_CHECKING([for YASM assembler])
+    AC_CHECK_PROGS(LIBJPEG_TURBO_AS, yasm, "")
+
+    if test -z "$LIBJPEG_TURBO_AS" ; then
+        AC_MSG_ERROR([yasm is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you do not appear to have yasm installed.  Either install it or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+    fi
+
+    dnl Check for yasm 1.1 or greater.
+    if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
+        AC_MSG_ERROR([yasm 1.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+    fi
+fi
 
 if test -n "$LIBJPEG_TURBO_X86_ASM"; then
-  AC_DEFINE(LIBJPEG_TURBO_X86_ASM)
+    AC_DEFINE(LIBJPEG_TURBO_X86_ASM)
 elif test -n "$LIBJPEG_TURBO_X64_ASM"; then
-  AC_DEFINE(LIBJPEG_TURBO_X64_ASM)
-else
-  AC_MSG_WARN([No assembler or assembly support for libjpeg-turbo.  Using unoptimized C routines.])
+    AC_DEFINE(LIBJPEG_TURBO_X64_ASM)
+elif test -n "$MOZ_LIBJPEG_TURBO"; then
+    dnl Warn if we're not building the optimized routines, even though the user
+    dnl didn't specify --disable-libjpeg-turbo.
+    AC_MSG_WARN([No assembler or assembly support for libjpeg-turbo.  Using unoptimized C routines.])
 fi
 
 dnl ========================================================
@@ -7011,6 +7024,9 @@ else
     fi
 fi
 
+if test -n "$MOZ_NATIVE_SQLITE"; then
+    AC_DEFINE(MOZ_NATIVE_SQLITE)
+fi
 AC_SUBST(MOZ_NATIVE_SQLITE)
 
 dnl ========================================================
@@ -9033,7 +9049,6 @@ AC_SUBST(MOZ_DEBUG_LDFLAGS)
 AC_SUBST(WARNINGS_AS_ERRORS)
 AC_SUBST(MOZ_EXTENSIONS)
 AC_SUBST(MOZ_JSDEBUGGER)
-AC_SUBST(MOZ_PLUGINS)
 AC_SUBST(MOZ_LOG_REFCNT)
 AC_SUBST(MOZ_LEAKY)
 AC_SUBST(MOZ_JPROF)

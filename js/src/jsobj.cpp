@@ -66,6 +66,7 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "jsonparser.h"
 #include "jsopcode.h"
 #include "jsparse.h"
 #include "jsproxy.h"
@@ -985,20 +986,6 @@ const char *
 js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
                    JSPrincipals *principals, uintN *linenop)
 {
-    uint32 flags;
-#ifdef DEBUG
-    JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
-#endif
-
-    JS_ASSERT(principals || !(callbacks  && callbacks->findObjectPrincipals));
-    flags = JS_GetScriptFilenameFlags(caller->script());
-    if ((flags & JSFILENAME_PROTECTED) &&
-        principals &&
-        strcmp(principals->codebase, "[System Principal]")) {
-        *linenop = 0;
-        return principals->codebase;
-    }
-
     jsbytecode *pc = caller->pc(cx);
     if (pc && js_GetOpcode(cx, caller->script(), pc) == JSOP_EVAL) {
         JS_ASSERT(js_GetOpcode(cx, caller->script(), pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
@@ -1231,6 +1218,7 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
      * will be lost.
      */
     if (length > 2 && chars[0] == '(' && chars[length - 1] == ')') {
+#if USE_OLD_AND_BUSTED_JSON_PARSER
         JSONParser *jp = js_BeginJSONParse(cx, vp, /* suppressErrors = */true);
         if (jp != NULL) {
             /* Run JSON-parser on string inside ( and ). */
@@ -1239,6 +1227,14 @@ EvalKernel(JSContext *cx, uintN argc, Value *vp, EvalType evalType, JSStackFrame
             if (ok)
                 return true;
         }
+#else
+        JSONSourceParser parser(cx, chars + 1, length - 2, JSONSourceParser::StrictJSON,
+                                JSONSourceParser::NoError);
+        if (!parser.parse(vp))
+            return false;
+        if (!vp->isUndefined())
+            return true;
+#endif
     }
 
     /*
@@ -5668,6 +5664,14 @@ JSObject::reportNotExtensible(JSContext *cx, uintN report)
                                     NULL, NULL, NULL);
 }
 
+bool
+JSObject::callMethod(JSContext *cx, jsid id, uintN argc, Value *argv, Value *vp)
+{
+    Value fval;
+    return js_GetMethod(cx, this, id, JSGET_NO_METHOD_BARRIER, &fval) &&
+           ExternalInvoke(cx, ObjectValue(*this), fval, argc, argv, vp);
+}
+
 JSBool
 js_SetPropertyHelper(JSContext *cx, JSObject *obj, jsid id, uintN defineHow,
                      Value *vp, JSBool strict)
@@ -6087,12 +6091,21 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return true;
         }
 
-        if (!js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0, NULL, &v))
+        Value fval;
+        jsid id = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
+        if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
             return false;
-        if (!v.isPrimitive()) {
-            if (!obj->getClass()->convert(cx, obj, hint, &v))
+        if (js_IsCallable(fval)) {
+            if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, &v))
                 return false;
+            if (v.isPrimitive()) {
+                *vp = v;
+                return true;
+            }
         }
+
+        if (!obj->getClass()->convert(cx, obj, hint, &v))
+            return false;
     } else {
         /* Optimize (new String(...)).valueOf(). */
         Class *clasp = obj->getClass();
@@ -6112,8 +6125,18 @@ DefaultValue(JSContext *cx, JSObject *obj, JSType hint, Value *vp)
             return false;
         if (v.isObject()) {
             JS_ASSERT(hint != TypeOfValue(cx, v));
-            if (!js_TryMethod(cx, obj, cx->runtime->atomState.toStringAtom, 0, NULL, &v))
+            Value fval;
+            jsid id = ATOM_TO_JSID(cx->runtime->atomState.toStringAtom);
+            if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
                 return false;
+            if (js_IsCallable(fval)) {
+                if (!ExternalInvoke(cx, ObjectValue(*obj), fval, 0, NULL, &v))
+                    return false;
+                if (v.isPrimitive()) {
+                    *vp = v;
+                    return true;
+                }
+            }
         }
     }
     if (v.isObject()) {
@@ -6436,35 +6459,21 @@ js_ValueToNonNullObject(JSContext *cx, const Value &v)
 JSBool
 js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, Value *rval)
 {
-    Value argv[1];
-
-    argv[0].setString(cx->runtime->atomState.typeAtoms[type]);
-    return js_TryMethod(cx, obj, cx->runtime->atomState.valueOfAtom,
-                        1, argv, rval);
-}
-
-JSBool
-js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
-             uintN argc, Value *argv, Value *rval)
-{
-    JS_CHECK_RECURSION(cx, return JS_FALSE);
-
-    /*
-     * Report failure only if an appropriate method was found, and calling it
-     * returned failure.  We propagate failure in this case to make exceptions
-     * behave properly.
-     */
-    JSErrorReporter older = JS_SetErrorReporter(cx, NULL);
-    jsid id = ATOM_TO_JSID(atom);
     Value fval;
-    JSBool ok = js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval);
-    JS_SetErrorReporter(cx, older);
-    if (!ok)
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.valueOfAtom);
+    if (!js_GetMethod(cx, obj, id, JSGET_NO_METHOD_BARRIER, &fval))
         return false;
-
-    if (fval.isPrimitive())
-        return JS_TRUE;
-    return ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval);
+    if (js_IsCallable(fval)) {
+        Value v;
+        Value argv[] = { StringValue(cx->runtime->atomState.typeAtoms[type]) };
+        if (!ExternalInvoke(cx, ObjectValue(*obj), fval, JS_ARRAY_LENGTH(argv), argv, &v))
+            return false;
+        if (v.isPrimitive()) {
+            *rval = v;
+            return true;
+        }
+    }
+    return true;
 }
 
 #if JS_HAS_XDR

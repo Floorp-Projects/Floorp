@@ -59,10 +59,14 @@ public:
 
   /**
    * Return the next child accessible.
+   *
+   * @note Returned accessible is bound to the document, if the accessible is
+   *       rejected during tree creation then the caller should be unbind it
+   *       from the document.
    */
-  already_AddRefed<nsAccessible> GetNextChild()
+  inline nsAccessible* NextChild()
   {
-    return GetNextChildInternal(PR_FALSE);
+    return NextChildInternal(false);
   }
 
 private:
@@ -74,8 +78,7 @@ private:
    *                     shouldn't go up through the tree if we failed find
    *                     accessible children.
    */
-  already_AddRefed<nsAccessible>
-    GetNextChildInternal(PRBool aNoWalkUp = PR_FALSE);
+  nsAccessible* NextChildInternal(bool aNoWalkUp);
 
   /**
    * Create new state for the given node and push it on top of stack.

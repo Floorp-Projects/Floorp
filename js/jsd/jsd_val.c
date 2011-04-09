@@ -240,6 +240,7 @@ jsd_GetValueString(JSDContext* jsdc, JSDValue* jsdval)
 
     JS_RestoreExceptionState(cx, exceptionState);
     JS_LeaveCrossCompartmentCall(call);
+    call = NULL;
 
     if(string) {
         stringval = STRING_TO_JSVAL(string);
@@ -679,7 +680,7 @@ jsd_GetValueFunction(JSDContext* jsdc, JSDValue* jsdval)
         return NULL;
     if(!(obj = JSVAL_TO_OBJECT(jsdval->val)))
         return NULL;
-    obj = JS_UnwrapObject(jsdc->dumbContext, obj);
+    obj = JS_UnwrapObject(obj);
 
     call = JS_EnterCrossCompartmentCall(jsdc->dumbContext, obj);
     if (!call)

@@ -35,19 +35,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "mozilla/Monitor.h"
 #include "nsIPipe.h"
 #include "nsIEventTarget.h"
 #include "nsISeekableStream.h"
 #include "nsIProgrammingLanguage.h"
 #include "nsSegmentedBuffer.h"
 #include "nsStreamUtils.h"
-#include "nsAutoLock.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "prlog.h"
-#include "nsInt64.h"
 #include "nsIClassInfoImpl.h"
 #include "nsAtomicRefcnt.h"
+
+using namespace mozilla;
 
 #if defined(PR_LOGGING)
 //
@@ -152,7 +153,7 @@ private:
 
     // separate refcnt so that we know when to close the consumer
     nsrefcnt                       mReaderRefCnt;
-    nsInt64                        mLogicalOffset;
+    PRInt64                        mLogicalOffset;
     PRPackedBool                   mBlocking;
 
     // these variables can only be accessed while inside the pipe's monitor
@@ -206,7 +207,7 @@ private:
 
     // separate refcnt so that we know when to close the producer
     nsrefcnt                        mWriterRefCnt;
-    nsInt64                         mLogicalOffset;
+    PRInt64                         mLogicalOffset;
     PRPackedBool                    mBlocking;
 
     // these variables can only be accessed while inside the pipe's monitor
@@ -259,7 +260,7 @@ protected:
     nsPipeInputStream   mInput;
     nsPipeOutputStream  mOutput;
 
-    PRMonitor*          mMonitor;
+    Monitor             mMonitor;
     nsSegmentedBuffer   mBuffer;
 
     char*               mReadCursor;
@@ -270,6 +271,7 @@ protected:
     char*               mWriteLimit;
 
     nsresult            mStatus;
+    PRPackedBool        mInited;
 };
 
 //
@@ -318,20 +320,19 @@ protected:
 nsPipe::nsPipe()
     : mInput(this)
     , mOutput(this)
-    , mMonitor(nsnull)
+    , mMonitor("nsPipe.mMonitor")
     , mReadCursor(nsnull)
     , mReadLimit(nsnull)
     , mWriteSegment(-1)
     , mWriteCursor(nsnull)
     , mWriteLimit(nsnull)
     , mStatus(NS_OK)
+    , mInited(PR_FALSE)
 {
 }
 
 nsPipe::~nsPipe()
 {
-    if (mMonitor)
-        nsAutoMonitor::DestroyMonitor(mMonitor);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsPipe, nsIPipe)
@@ -343,9 +344,7 @@ nsPipe::Init(PRBool nonBlockingIn,
              PRUint32 segmentCount,
              nsIMemory *segmentAlloc)
 {
-    mMonitor = nsAutoMonitor::NewMonitor("pipeMonitor");
-    if (!mMonitor)
-        return NS_ERROR_OUT_OF_MEMORY;
+    mInited = PR_TRUE;
 
     if (segmentSize == 0)
         segmentSize = DEFAULT_SEGMENT_SIZE;
@@ -369,7 +368,6 @@ nsPipe::Init(PRBool nonBlockingIn,
 NS_IMETHODIMP
 nsPipe::GetInputStream(nsIAsyncInputStream **aInputStream)
 {
-    NS_ENSURE_TRUE(mMonitor, NS_ERROR_NOT_INITIALIZED);
     NS_ADDREF(*aInputStream = &mInput);
     return NS_OK;
 }
@@ -377,7 +375,7 @@ nsPipe::GetInputStream(nsIAsyncInputStream **aInputStream)
 NS_IMETHODIMP
 nsPipe::GetOutputStream(nsIAsyncOutputStream **aOutputStream)
 {
-    NS_ENSURE_TRUE(mMonitor, NS_ERROR_NOT_INITIALIZED);
+    NS_ENSURE_TRUE(mInited, NS_ERROR_NOT_INITIALIZED);
     NS_ADDREF(*aOutputStream = &mOutput);
     return NS_OK;
 }
@@ -407,7 +405,7 @@ nsPipe::PeekSegment(PRUint32 index, char *&cursor, char *&limit)
 nsresult
 nsPipe::GetReadSegment(const char *&segment, PRUint32 &segmentLen)
 {
-    nsAutoMonitor mon(mMonitor);
+    MonitorAutoEnter mon(mMonitor);
 
     if (mReadCursor == mReadLimit)
         return NS_FAILED(mStatus) ? mStatus : NS_BASE_STREAM_WOULD_BLOCK;
@@ -424,7 +422,7 @@ nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
 
     nsPipeEvents events;
     {
-        nsAutoMonitor mon(mMonitor);
+        MonitorAutoEnter mon(mMonitor);
 
         LOG(("III advancing read cursor by %u\n", bytesRead));
         NS_ASSERTION(bytesRead <= mBuffer.GetSegmentSize(), "read too much");
@@ -479,7 +477,7 @@ nsPipe::AdvanceReadCursor(PRUint32 bytesRead)
 nsresult
 nsPipe::GetWriteSegment(char *&segment, PRUint32 &segmentLen)
 {
-    nsAutoMonitor mon(mMonitor);
+    MonitorAutoEnter mon(mMonitor);
 
     if (NS_FAILED(mStatus))
         return mStatus;
@@ -522,7 +520,7 @@ nsPipe::AdvanceWriteCursor(PRUint32 bytesWritten)
 
     nsPipeEvents events;
     {
-        nsAutoMonitor mon(mMonitor);
+        MonitorAutoEnter mon(mMonitor);
 
         LOG(("OOO advancing write cursor by %u\n", bytesWritten));
 
@@ -579,7 +577,7 @@ nsPipe::OnPipeException(nsresult reason, PRBool outputOnly)
 
     nsPipeEvents events;
     {
-        nsAutoMonitor mon(mMonitor);
+        MonitorAutoEnter mon(mMonitor);
 
         // if we've already hit an exception, then ignore this one.
         if (NS_FAILED(mStatus))
@@ -645,7 +643,7 @@ nsPipeInputStream::Wait()
 {
     NS_ASSERTION(mBlocking, "wait on non-blocking pipe input stream");
 
-    nsAutoMonitor mon(mPipe->mMonitor);
+    MonitorAutoEnter mon(mPipe->mMonitor);
 
     while (NS_SUCCEEDED(mPipe->mStatus) && (mAvailable == 0)) {
         LOG(("III pipe input: waiting for data\n"));
@@ -739,7 +737,7 @@ nsPipeInputStream::Close()
 NS_IMETHODIMP
 nsPipeInputStream::Available(PRUint32 *result)
 {
-    nsAutoMonitor mon(mPipe->mMonitor);
+    MonitorAutoEnter mon(mPipe->mMonitor);
 
     // return error if pipe closed
     if (!mAvailable && NS_FAILED(mPipe->mStatus))
@@ -845,7 +843,7 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback *callback,
 
     nsPipeEvents pipeEvents;
     {
-        nsAutoMonitor mon(mPipe->mMonitor);
+        MonitorAutoEnter mon(mPipe->mMonitor);
 
         // replace a pending callback
         mCallback = 0;
@@ -886,7 +884,7 @@ nsPipeInputStream::Seek(PRInt32 whence, PRInt64 offset)
 NS_IMETHODIMP
 nsPipeInputStream::Tell(PRInt64 *offset)
 {
-    nsAutoMonitor mon(mPipe->mMonitor);
+    MonitorAutoEnter mon(mPipe->mMonitor);
 
     // return error if pipe closed
     if (!mAvailable && NS_FAILED(mPipe->mStatus))
@@ -916,7 +914,7 @@ nsPipeInputStream::Search(const char *forString,
 {
     LOG(("III Search [for=%s ic=%u]\n", forString, ignoreCase));
 
-    nsAutoMonitor mon(mPipe->mMonitor);
+    MonitorAutoEnter mon(mPipe->mMonitor);
 
     char *cursor1, *limit1;
     PRUint32 index = 0, offset = 0;
@@ -1004,7 +1002,7 @@ nsPipeOutputStream::Wait()
 {
     NS_ASSERTION(mBlocking, "wait on non-blocking pipe output stream");
 
-    nsAutoMonitor mon(mPipe->mMonitor);
+    MonitorAutoEnter mon(mPipe->mMonitor);
 
     if (NS_SUCCEEDED(mPipe->mStatus) && !mWritable) {
         LOG(("OOO pipe output: waiting for space\n"));
@@ -1226,7 +1224,7 @@ nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
 
     nsPipeEvents pipeEvents;
     {
-        nsAutoMonitor mon(mPipe->mMonitor);
+        MonitorAutoEnter mon(mPipe->mMonitor);
 
         // replace a pending callback
         mCallback = 0;

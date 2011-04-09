@@ -113,17 +113,13 @@ nsJSON::Encode(nsAString &aJSON)
 static const char UTF8BOM[] = "\xEF\xBB\xBF";
 static const char UTF16LEBOM[] = "\xFF\xFE";
 static const char UTF16BEBOM[] = "\xFE\xFF";
-static const char UTF32LEBOM[] = "\xFF\xFE\0\0";
-static const char UTF32BEBOM[] = "\0\0\xFE\xFF";
 
 static nsresult CheckCharset(const char* aCharset)
 {
   // Check that the charset is permissible
   if (!(strcmp(aCharset, "UTF-8") == 0 ||
         strcmp(aCharset, "UTF-16LE") == 0 ||
-        strcmp(aCharset, "UTF-16BE") == 0 ||
-        strcmp(aCharset, "UTF-32LE") == 0 ||
-        strcmp(aCharset, "UTF-32BE") == 0)) {
+        strcmp(aCharset, "UTF-16BE") == 0)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -166,10 +162,6 @@ nsJSON::EncodeToStream(nsIOutputStream *aStream,
       rv = aStream->Write(UTF16LEBOM, 2, &ignored);
     else if (strcmp(aCharset, "UTF-16BE") == 0)
       rv = aStream->Write(UTF16BEBOM, 2, &ignored);
-    else if (strcmp(aCharset, "UTF-32LE") == 0)
-      rv = aStream->Write(UTF32LEBOM, 4, &ignored);
-    else if (strcmp(aCharset, "UTF-32BE") == 0)
-      rv = aStream->Write(UTF32BEBOM, 4, &ignored);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -432,19 +424,8 @@ nsJSON::DecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 {
   JSAutoRequest ar(cx);
 
-  JSONParser *parser = JS_BeginJSONParse(cx, result);
-  NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
-
-  JSBool ok = JS_ConsumeJSONText(cx, parser,
-                                 (jschar*)PromiseFlatString(str).get(),
-                                 (uint32)str.Length());
-
-  // Since we've called JS_BeginJSONParse, we have to call JS_FinishJSONParse,
-  // even if JS_ConsumeJSONText fails.  But if either fails, we'll report an
-  // error.
-  ok &= JS_FinishJSONParse(cx, parser, JSVAL_NULL);
-
-  if (!ok) {
+  if (!JS_ParseJSON(cx, (jschar*)PromiseFlatString(str).get(),
+                    (uint32)str.Length(), result)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -566,20 +547,9 @@ nsJSON::LegacyDecodeToJSVal(const nsAString &str, JSContext *cx, jsval *result)
 {
   JSAutoRequest ar(cx);
 
-  JSONParser *parser = JS_BeginJSONParse(cx, result);
-  NS_ENSURE_TRUE(parser, NS_ERROR_UNEXPECTED);
-
-  JSBool ok = js_ConsumeJSONText(cx, parser,
-                                 (jschar*)PromiseFlatString(str).get(),
-                                 (uint32)str.Length(),
-                                 LEGACY);
-
-  // Since we've called JS_BeginJSONParse, we have to call JS_FinishJSONParse,
-  // even if js_ConsumeJSONText fails.  But if either fails, we'll report an
-  // error.
-  ok &= JS_FinishJSONParse(cx, parser, JSVAL_NULL);
-
-  if (!ok) {
+  if (!js::ParseJSONWithReviver(cx, (jschar*)PromiseFlatString(str).get(),
+                                (uint32)str.Length(), js::NullValue(),
+                                js::Valueify(result), LEGACY)) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -603,7 +573,6 @@ nsJSONListener::nsJSONListener(JSContext *cx, jsval *rootVal,
                                PRBool needsConverter,
                                DecodingMode mode /* = STRICT */)
   : mNeedsConverter(needsConverter), 
-    mJSONParser(nsnull),
     mCx(cx),
     mRootVal(rootVal),
     mDecodingMode(mode)
@@ -612,7 +581,6 @@ nsJSONListener::nsJSONListener(JSContext *cx, jsval *rootVal,
 
 nsJSONListener::~nsJSONListener()
 {
-  Cleanup();
 }
 
 NS_INTERFACE_MAP_BEGIN(nsJSONListener)
@@ -629,9 +597,6 @@ nsJSONListener::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
   mSniffBuffer.Truncate();
   mDecoder = nsnull;
-  mJSONParser = JS_BeginJSONParse(mCx, mRootVal);
-  if (!mJSONParser)
-    return NS_ERROR_FAILURE;
 
   return NS_OK;
 }
@@ -648,13 +613,13 @@ nsJSONListener::OnStopRequest(nsIRequest *aRequest, nsISupports *aContext,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  JSBool ok = JS_FinishJSONParse(mCx, mJSONParser, JSVAL_NULL);
-  mJSONParser = nsnull;
-
-  if (!ok)
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
+  const jschar* chars = reinterpret_cast<const jschar*>(mBufferedChars.Elements());
+  JSBool ok = js::ParseJSONWithReviver(mCx, chars,
+                                       (uint32) mBufferedChars.Length(),
+                                       js::NullValue(), js::Valueify(mRootVal),
+                                       mDecodingMode);
+  mBufferedChars.TruncateLength(0);
+  return ok ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -704,15 +669,9 @@ nsJSONListener::ProcessBytes(const char* aBuffer, PRUint32 aByteLength)
       // See section 3 of RFC4627 for details on why this works.
       const char *buffer = mSniffBuffer.get();
       if (mSniffBuffer.Length() >= 4) {
-        if (buffer[0] == 0x00 && buffer[1] == 0x00 &&
+        if (buffer[0] == 0x00 && buffer[1] != 0x00 &&
             buffer[2] == 0x00 && buffer[3] != 0x00) {
-          charset = "UTF-32BE";
-        } else if (buffer[0] == 0x00 && buffer[1] != 0x00 &&
-                   buffer[2] == 0x00 && buffer[3] != 0x00) {
           charset = "UTF-16BE";
-        } else if (buffer[0] != 0x00 && buffer[1] == 0x00 &&
-                   buffer[2] == 0x00 && buffer[3] == 0x00) {
-          charset = "UTF-32LE";
         } else if (buffer[0] != 0x00 && buffer[1] == 0x00 &&
                    buffer[2] != 0x00 && buffer[3] == 0x00) {
           charset = "UTF-16LE";
@@ -757,34 +716,23 @@ nsJSONListener::ConsumeConverted(const char* aBuffer, PRUint32 aByteLength)
 
   rv = mDecoder->GetMaxLength(aBuffer, srcLen, &unicharLength);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsAutoArrayPtr<PRUnichar> ustr(new PRUnichar[unicharLength]);
-  NS_ENSURE_TRUE(ustr, NS_ERROR_OUT_OF_MEMORY);
-  rv = mDecoder->Convert(aBuffer, &srcLen, ustr, &unicharLength);
-  NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = Consume(ustr.get(), unicharLength);
-
-  return rv;
-}
-
-void nsJSONListener::Cleanup()
-{
-  if (mJSONParser)
-    JS_FinishJSONParse(mCx, mJSONParser, JSVAL_NULL);
-  mJSONParser = nsnull;
+  PRUnichar* endelems = mBufferedChars.AppendElements(unicharLength);
+  PRInt32 preLength = unicharLength;
+  rv = mDecoder->Convert(aBuffer, &srcLen, endelems, &unicharLength);
+  if (NS_FAILED(rv))
+    return rv;
+  NS_ABORT_IF_FALSE(preLength >= unicharLength, "GetMaxLength lied");
+  if (preLength > unicharLength)
+    mBufferedChars.TruncateLength(mBufferedChars.Length() - (preLength - unicharLength));
+  return NS_OK;
 }
 
 nsresult
 nsJSONListener::Consume(const PRUnichar* aBuffer, PRUint32 aByteLength)
 {
-  if (!mJSONParser)
+  if (!mBufferedChars.AppendElements(aBuffer, aByteLength))
     return NS_ERROR_FAILURE;
-
-  if (!js_ConsumeJSONText(mCx, mJSONParser, (jschar*) aBuffer, aByteLength,
-                          mDecodingMode)) {
-    Cleanup();
-    return NS_ERROR_FAILURE;
-  }
 
   return NS_OK;
 }

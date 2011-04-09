@@ -54,7 +54,6 @@
 #include "prenv.h"
 #include "prlock.h"
 #include "prcvar.h"
-#include "nsAutoLock.h"
 #include "nsParserCIID.h"
 #include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
@@ -73,6 +72,10 @@
 #include "nsXPCOMCIDInternal.h"
 #include "nsMimeTypes.h"
 #include "nsViewSourceHTML.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
+
+using namespace mozilla;
 
 #define NS_PARSER_FLAG_PARSER_ENABLED         0x00000002
 #define NS_PARSER_FLAG_OBSERVERS_ENABLED      0x00000004
@@ -198,8 +201,8 @@ private:
 class nsSpeculativeScriptThread : public nsIRunnable {
 public:
   nsSpeculativeScriptThread()
-    : mLock(nsAutoLock::DestroyLock),
-      mCVar(PR_DestroyCondVar),
+    : mLock("nsSpeculativeScriptThread.mLock"),
+      mCVar(mLock, "nsSpeculativeScriptThread.mCVar"),
       mKeepParsing(PR_FALSE),
       mCurrentlyParsing(PR_FALSE),
       mNumConsumed(0),
@@ -268,8 +271,8 @@ private:
 
   // The following members are shared across the main thread and the
   // speculatively parsing thread.
-  Holder<PRLock> mLock;
-  Holder<PRCondVar> mCVar;
+  Mutex mLock;
+  CondVar mCVar;
 
   volatile PRBool mKeepParsing;
   volatile PRBool mCurrentlyParsing;
@@ -412,10 +415,10 @@ nsSpeculativeScriptThread::Run()
   }
 
   {
-    nsAutoLock al(mLock.get());
+    MutexAutoLock al(mLock);
 
     mCurrentlyParsing = PR_FALSE;
-    PR_NotifyCondVar(mCVar.get());
+    mCVar.Notify();
   }
   return NS_OK;
 }
@@ -442,17 +445,7 @@ nsSpeculativeScriptThread::StartParsing(nsParser *aParser)
 
   nsAutoString toScan;
   CParserContext *context = aParser->PeekContext();
-  if (!mLock.get()) {
-    mLock = nsAutoLock::NewLock("nsSpeculativeScriptThread::mLock");
-    if (!mLock.get()) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    mCVar = PR_NewCondVar(mLock.get());
-    if (!mCVar.get()) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
+  if (!mTokenizer) {
     if (!mPreloadedURIs.Init(15)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -519,17 +512,12 @@ nsSpeculativeScriptThread::StopParsing(PRBool /*aFromDocWrite*/)
 {
   NS_ASSERTION(NS_IsMainThread(), "Can't stop parsing from another thread");
 
-  if (!mLock.get()) {
-    // If we bailed early out of StartParsing, don't do anything.
-    return;
-  }
-
   {
-    nsAutoLock al(mLock.get());
+    MutexAutoLock al(mLock);
 
     mKeepParsing = PR_FALSE;
     if (mCurrentlyParsing) {
-      PR_WaitCondVar(mCVar.get(), PR_INTERVAL_NO_TIMEOUT);
+      mCVar.Wait();
       NS_ASSERTION(!mCurrentlyParsing, "Didn't actually stop parsing?");
     }
   }
@@ -2476,11 +2464,6 @@ nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
 #define UTF16_BOM "UTF-16"
 #define UTF16_BE "UTF-16BE"
 #define UTF16_LE "UTF-16LE"
-#define UCS4_BOM "UTF-32"
-#define UCS4_BE "UTF-32BE"
-#define UCS4_LE "UTF-32LE"
-#define UCS4_2143 "X-ISO-10646-UCS-4-2143"
-#define UCS4_3412 "X-ISO-10646-UCS-4-3412"
 #define UTF8 "UTF-8"
 
 static inline PRBool IsSecondMarker(unsigned char aChar)
@@ -2510,32 +2493,13 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
  switch(aBytes[0])
 	 {
    case 0x00:
-     if(0x00==aBytes[1]) {
-        // 00 00
-        if((0xFE==aBytes[2]) && (0xFF==aBytes[3])) {
-           // 00 00 FE FF UCS-4, big-endian machine (1234 order)
-           oCharset.Assign(UCS4_BOM);
-        } else if((0x00==aBytes[2]) && (0x3C==aBytes[3])) {
-           // 00 00 00 3C UCS-4, big-endian machine (1234 order)
-           oCharset.Assign(UCS4_BE);
-        } else if((0xFF==aBytes[2]) && (0xFE==aBytes[3])) {
-           // 00 00 FF FE UCS-4, unusual octet order (2143)
-           oCharset.Assign(UCS4_2143);
-        } else if((0x3C==aBytes[2]) && (0x00==aBytes[3])) {
-           // 00 00 3C 00 UCS-4, unusual octet order (2143)
-           oCharset.Assign(UCS4_2143);
-        } 
-        oCharsetSource = kCharsetFromByteOrderMark;
-     } else if((0x3C==aBytes[1]) && (0x00==aBytes[2])) {
+     if((0x3C==aBytes[1]) && (0x00==aBytes[2])) {
         // 00 3C 00
         if(IsSecondMarker(aBytes[3])) {
            // 00 3C 00 SM UTF-16,  big-endian, no Byte Order Mark 
            oCharset.Assign(UTF16_BE); 
-        } else if((0x00==aBytes[3])) {
-           // 00 3C 00 00 UCS-4, unusual octet order (3412)
-           oCharset.Assign(UCS4_3412);
+           oCharsetSource = kCharsetFromByteOrderMark;
         } 
-        oCharsetSource = kCharsetFromByteOrderMark;
      }
    break;
    case 0x3C:
@@ -2544,11 +2508,8 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
         if(IsSecondMarker(aBytes[2])) {
            // 3C 00 SM 00 UTF-16,  little-endian, no Byte Order Mark 
            oCharset.Assign(UTF16_LE); 
-        } else if((0x00==aBytes[2])) {
-           // 3C 00 00 00 UCS-4, little-endian machine (4321 order)
-           oCharset.Assign(UCS4_LE); 
+           oCharsetSource = kCharsetFromByteOrderMark;
         } 
-        oCharsetSource = kCharsetFromByteOrderMark;
      // For html, meta tag detector is invoked before this so that we have 
      // to deal only with XML here.
      } else if(                     (0x3F==aBytes[1]) &&
@@ -2640,26 +2601,17 @@ DetectByteOrderMark(const unsigned char* aBytes, PRInt32 aLen,
    break;
    case 0xFE:
      if(0xFF==aBytes[1]) {
-        if(0x00==aBytes[2] && 0x00==aBytes[3]) {
-          // FE FF 00 00  UCS-4, unusual octet order (3412)
-          oCharset.Assign(UCS4_3412);
-        } else {
-          // FE FF UTF-16, big-endian 
-          oCharset.Assign(UTF16_BOM); 
-        }
+        // FE FF UTF-16, big-endian 
+        oCharset.Assign(UTF16_BOM); 
         oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
    case 0xFF:
      if(0xFE==aBytes[1]) {
-        if(0x00==aBytes[2] && 0x00==aBytes[3]) 
-         // FF FE 00 00  UTF-32, little-endian
-           oCharset.Assign(UCS4_BOM); 
-        else
-        // FF FE
-        // UTF-16, little-endian 
-           oCharset.Assign(UTF16_BOM); 
-        oCharsetSource= kCharsetFromByteOrderMark;
+       // FF FE
+       // UTF-16, little-endian 
+       oCharset.Assign(UTF16_BOM); 
+       oCharsetSource= kCharsetFromByteOrderMark;
      }
    break;
    // case 0x4C: if((0x6F==aBytes[1]) && ((0xA7==aBytes[2] && (0x94==aBytes[3])) {
@@ -2852,10 +2804,7 @@ ParserWriteFunc(nsIInputStream* in,
           ((kCharsetFromByteOrderMark == guessSource) ||
            (!preferred.EqualsLiteral("UTF-16") &&
             !preferred.EqualsLiteral("UTF-16BE") &&
-            !preferred.EqualsLiteral("UTF-16LE") &&
-            !preferred.EqualsLiteral("UTF-32") &&
-            !preferred.EqualsLiteral("UTF-32BE") &&
-            !preferred.EqualsLiteral("UTF-32LE")))) {
+            !preferred.EqualsLiteral("UTF-16LE")))) {
         guess = preferred;
         pws->mParser->SetDocumentCharset(guess, guessSource);
         pws->mParser->SetSinkCharset(preferred);

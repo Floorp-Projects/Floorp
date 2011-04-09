@@ -55,6 +55,8 @@
   #include <io.h>
 #endif
 
+using namespace mozilla;
+
 //----------------------------------------------
 // nsJARManifestItem declaration
 //----------------------------------------------
@@ -123,8 +125,9 @@ nsJAR::nsJAR(): mZip(new nsZipArchive()),
                 mGlobalStatus(JAR_MANIFEST_NOT_PARSED),
                 mReleaseTime(PR_INTERVAL_NO_TIMEOUT), 
                 mCache(nsnull), 
-                mLock(nsnull),
-                mTotalItemsInManifest(0)
+                mLock("nsJAR::mLock"),
+                mTotalItemsInManifest(0),
+                mOpened(PR_FALSE)
 {
 }
 
@@ -168,12 +171,11 @@ NS_IMETHODIMP
 nsJAR::Open(nsIFile* zipFile)
 {
   NS_ENSURE_ARG_POINTER(zipFile);
-  if (mLock) return NS_ERROR_FAILURE; // Already open!
+  if (mOpened) return NS_ERROR_FAILURE; // Already open!
 
   mZipFile = zipFile;
-
-  mLock = nsAutoLock::NewLock("nsJAR::mLock");
-  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
+  mOuterZipEntry.Truncate();
+  mOpened = PR_TRUE;
   
 #ifdef MOZ_OMNIJAR
   // The omnijar is special, it is opened early on and closed late
@@ -193,7 +195,7 @@ nsJAR::OpenInner(nsIZipReader *aZipReader, const char *aZipEntry)
 {
   NS_ENSURE_ARG_POINTER(aZipReader);
   NS_ENSURE_ARG_POINTER(aZipEntry);
-  if (mLock) return NS_ERROR_FAILURE; // Already open!
+  if (mOpened) return NS_ERROR_FAILURE; // Already open!
 
   PRBool exist;
   nsresult rv = aZipReader->HasEntry(nsDependentCString(aZipEntry), &exist);
@@ -203,8 +205,7 @@ nsJAR::OpenInner(nsIZipReader *aZipReader, const char *aZipEntry)
   rv = aZipReader->GetFile(getter_AddRefs(mZipFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mLock = nsAutoLock::NewLock("nsJAR::mLock");
-  NS_ENSURE_TRUE(mLock, NS_ERROR_OUT_OF_MEMORY);
+  mOpened = PR_TRUE;
 
   mOuterZipEntry.Assign(aZipEntry);
 
@@ -228,16 +229,11 @@ nsJAR::GetFile(nsIFile* *result)
 NS_IMETHODIMP
 nsJAR::Close()
 {
-  if (mLock) {
-    nsAutoLock::DestroyLock(mLock);
-    mLock = nsnull;
-  }
-
+  mOpened = PR_FALSE;
   mParsedManifest = PR_FALSE;
   mManifestData.Reset();
   mGlobalStatus = JAR_MANIFEST_NOT_PARSED;
   mTotalItemsInManifest = 0;
-  mOuterZipEntry.Truncate(0);
 
 #ifdef MOZ_OMNIJAR
   if (mZip == mozilla::OmnijarReader()) {
@@ -260,7 +256,7 @@ nsJAR::Extract(const char *zipEntry, nsIFile* outFile)
 {
   // nsZipArchive and zlib are not thread safe
   // we need to use a lock to prevent bug #51267
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
 
   nsresult rv;
   nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(outFile, &rv);
@@ -1060,7 +1056,7 @@ nsJARItem::GetLastModifiedTime(PRTime* aLastModTime)
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsWeakReference)
 
 nsZipReaderCache::nsZipReaderCache()
-  : mLock(nsnull)
+  : mLock("nsZipReaderCache.mLock")
   , mZips(16)
 #ifdef ZIP_CACHE_HIT_RATE
     ,
@@ -1088,8 +1084,7 @@ nsZipReaderCache::Init(PRUint32 cacheSize)
   }
 // ignore failure of the observer registration.
 
-  mLock = nsAutoLock::NewLock("nsZipReaderCache::mLock");
-  return mLock ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  return NS_OK;
 }
 
 static PRBool
@@ -1102,8 +1097,6 @@ DropZipReaderCache(nsHashKey *aKey, void *aData, void* closure)
 
 nsZipReaderCache::~nsZipReaderCache()
 {
-  if (mLock)
-    nsAutoLock::DestroyLock(mLock);
   mZips.Enumerate(DropZipReaderCache, nsnull);
 
 #ifdef ZIP_CACHE_HIT_RATE
@@ -1120,7 +1113,7 @@ nsZipReaderCache::GetZip(nsIFile* zipFile, nsIZipReader* *result)
   NS_ENSURE_ARG_POINTER(zipFile);
   nsresult rv;
   nsCOMPtr<nsIZipReader> antiLockZipGrip;
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
 
 #ifdef ZIP_CACHE_HIT_RATE
   mZipCacheLookups++;
@@ -1247,7 +1240,7 @@ nsresult
 nsZipReaderCache::ReleaseZip(nsJAR* zip)
 {
   nsresult rv;
-  nsAutoLock lock(mLock);
+  MutexAutoLock lock(mLock);
 
   // It is possible that two thread compete for this zip. The dangerous 
   // case is where one thread Releases the zip and discovers that the ref
@@ -1290,31 +1283,28 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
     mZipCacheFlushes++;
 #endif
 
-  // Clear the cache pointer in case we gave out this oldest guy while
-  // his Release call was being made. Otherwise we could nest on ReleaseZip
-  // when the second owner calls Release and we are still here in this lock.
-  oldest->SetZipReaderCache(nsnull);
-
   // remove from hashtable
   nsCAutoString uri;
   rv = oldest->GetJarPath(uri);
   if (NS_FAILED(rv))
     return rv;
 
-  if (zip->mOuterZipEntry.IsEmpty()) {
+  if (oldest->mOuterZipEntry.IsEmpty()) {
     uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
   } else {
     uri.Insert(NS_LITERAL_CSTRING("jar:"), 0);
     uri.AppendLiteral("!/");
-    uri.Append(zip->mOuterZipEntry);
+    uri.Append(oldest->mOuterZipEntry);
   }
 
   nsCStringKey key(uri);
-#ifdef DEBUG
-  PRBool removed =
-#endif
-    mZips.Remove(&key);   // Releases
+  nsRefPtr<nsJAR> removed;
+  mZips.Remove(&key, (nsISupports **)removed.StartAssignment());
   NS_ASSERTION(removed, "botched");
+  NS_ASSERTION(oldest == removed, "removed wrong entry");
+
+  if (removed)
+    removed->SetZipReaderCache(nsnull);
 
   return NS_OK;
 }
@@ -1339,7 +1329,7 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
                           const PRUnichar *aSomeData)
 {
   if (strcmp(aTopic, "memory-pressure") == 0) {
-    nsAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     while (PR_TRUE) {
       nsHashKey* flushable = nsnull;
       mZips.Enumerate(FindFlushableZip, &flushable); 
@@ -1372,7 +1362,7 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
     uri.Insert(NS_LITERAL_CSTRING("file:"), 0);
     nsCStringKey key(uri);
 
-    nsAutoLock lock(mLock);    
+    MutexAutoLock lock(mLock);    
     nsJAR* zip = static_cast<nsJAR*>(static_cast<nsIZipReader*>(mZips.Get(&key)));
     if (!zip)
       return NS_OK;
