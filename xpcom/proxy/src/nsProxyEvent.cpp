@@ -59,13 +59,14 @@
 #include "prmem.h"
 #include "xptcall.h"
 
-#include "nsAutoLock.h"
 #include "nsXPCOMCID.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIComponentManager.h"
 #include "nsThreadUtils.h"
 #include "nsEventQueue.h"
 #include "nsMemory.h"
+
+using namespace mozilla;
 
 /**
  * Map the nsAUTF8String, nsUTF8String classes to the nsACString and
@@ -363,14 +364,14 @@ nsProxyObject::~nsProxyObject()
 NS_IMETHODIMP_(nsrefcnt)
 nsProxyObject::AddRef()
 {
-    nsAutoLock lock(nsProxyObjectManager::GetInstance()->GetLock());
+    MutexAutoLock lock(nsProxyObjectManager::GetInstance()->GetLock());
     return LockedAddRef();
 }
 
 NS_IMETHODIMP_(nsrefcnt)
 nsProxyObject::Release()
 {
-    nsAutoLock lock(nsProxyObjectManager::GetInstance()->GetLock());
+    MutexAutoLock lock(nsProxyObjectManager::GetInstance()->GetLock());
     return LockedRelease();
 }
 
@@ -394,7 +395,7 @@ nsProxyObject::LockedRelease()
     nsProxyObjectManager *pom = nsProxyObjectManager::GetInstance();
     pom->LockedRemove(this);
 
-    nsAutoUnlock unlock(pom->GetLock());
+    MutexAutoUnlock unlock(pom->GetLock());
     delete this;
 
     return 0;
@@ -418,7 +419,7 @@ nsProxyObject::QueryInterface(REFNSIID aIID, void **aResult)
     nsProxyObjectManager *pom = nsProxyObjectManager::GetInstance();
     NS_ASSERTION(pom, "Deleting a proxy without a global proxy-object-manager.");
 
-    nsAutoLock lock(pom->GetLock());
+    MutexAutoLock lock(pom->GetLock());
     return LockedFind(aIID, aResult);
 }
 
@@ -443,7 +444,7 @@ nsProxyObject::LockedFind(REFNSIID aIID, void **aResult)
     // Both GetClass and QueryInterface call out to XPCOM, so we unlock for them
     {
         nsProxyObjectManager* pom = nsProxyObjectManager::GetInstance();
-        nsAutoUnlock unlock(pom->GetLock());
+        MutexAutoUnlock unlock(pom->GetLock());
 
         nsProxyEventClass *pec;
         nsresult rv = pom->GetClass(aIID, &pec);

@@ -76,19 +76,3 @@ function onTabViewWindowLoaded(win, tab) {
   testClickOnSearchBox();
   testClickOnOtherSearchResult();
 }
-
-// ---------
-function newWindowWithTabView(callback) {
-  let win = window.openDialog(getBrowserURL(), "_blank", 
-                              "chrome,all,dialog=no,height=800,width=800");
-  let onLoad = function() {
-    win.removeEventListener("load", onLoad, false);
-    let onShown = function() {
-      win.removeEventListener("tabviewshown", onShown, false);
-      callback(win);
-    };
-    win.addEventListener("tabviewshown", onShown, false);
-    win.TabView.toggle();
-  }
-  win.addEventListener("load", onLoad, false);
-}

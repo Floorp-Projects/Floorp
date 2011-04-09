@@ -2743,9 +2743,9 @@
 
       <method name="updateVisibility">
         <body><![CDATA[
-          if (this.childNodes.length - this.tabbrowser._removingTabs.length == 1 &&
-              window.toolbar.visible)
-            this.visible = !Services.prefs.getBoolPref("browser.tabs.autoHide");
+          if (this.childNodes.length - this.tabbrowser._removingTabs.length == 1)
+            this.visible = window.toolbar.visible &&
+                           !Services.prefs.getBoolPref("browser.tabs.autoHide");
           else
             this.visible = true;
         ]]></body>

@@ -43,7 +43,6 @@
 #include "nsFTPChannel.h"
 #include "nsBaseContentStream.h"
 
-#include "nsInt64.h"
 #include "nsIThread.h"
 #include "nsIRunnable.h"
 #include "nsISocketTransportService.h"
@@ -60,7 +59,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIOutputStream.h"
-#include "nsAutoLock.h"
 #include "nsAutoPtr.h"
 #include "nsIPrompt.h"
 #include "nsITransport.h"

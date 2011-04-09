@@ -325,7 +325,7 @@ public:
   void DrawTo(ThebesLayer* aLayer, gfxContext* aTarget, float aOpacity);
 
   virtual already_AddRefed<gfxASurface>
-  CreateBuffer(ContentType aType, const nsIntSize& aSize);
+  CreateBuffer(ContentType aType, const nsIntSize& aSize, PRUint32 aFlags);
 
   /**
    * Swap out the old backing buffer for |aBuffer| and attributes.
@@ -671,7 +671,7 @@ BasicThebesLayerBuffer::DrawTo(ThebesLayer* aLayer,
 
 already_AddRefed<gfxASurface>
 BasicThebesLayerBuffer::CreateBuffer(ContentType aType, 
-                                     const nsIntSize& aSize)
+                                     const nsIntSize& aSize, PRUint32 aFlags)
 {
   return mLayer->CreateBuffer(aType, aSize);
 }
@@ -893,7 +893,6 @@ public:
   }
 
   virtual void Initialize(const Data& aData);
-  virtual void Updated(const nsIntRect& aRect);
   virtual void Paint(gfxContext* aContext);
 
   virtual void PaintWithOpacity(gfxContext* aContext,
@@ -904,12 +903,11 @@ protected:
   {
     return static_cast<BasicLayerManager*>(mManager);
   }
+  void UpdateSurface();
 
   nsRefPtr<gfxASurface> mSurface;
   nsRefPtr<mozilla::gl::GLContext> mGLContext;
   PRUint32 mCanvasFramebuffer;
-
-  nsIntRect mUpdatedRect;
 
   PRPackedBool mGLBufferIsPremultiplied;
   PRPackedBool mNeedsYFlip;
@@ -919,8 +917,6 @@ void
 BasicCanvasLayer::Initialize(const Data& aData)
 {
   NS_ASSERTION(mSurface == nsnull, "BasicCanvasLayer::Initialize called twice!");
-
-  mUpdatedRect.Empty();
 
   if (aData.mSurface) {
     mSurface = aData.mSurface;
@@ -941,12 +937,11 @@ BasicCanvasLayer::Initialize(const Data& aData)
 }
 
 void
-BasicCanvasLayer::Updated(const nsIntRect& aRect)
+BasicCanvasLayer::UpdateSurface()
 {
-  NS_ASSERTION(mUpdatedRect.IsEmpty(),
-               "CanvasLayer::Updated called more than once in a transaction!");
-
-  mUpdatedRect.UnionRect(mUpdatedRect, aRect);
+  if (!mDirty)
+    return;
+  mDirty = PR_FALSE;
 
   if (mGLContext) {
     nsRefPtr<gfxImageSurface> isurf =
@@ -976,9 +971,6 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
     if (currentFramebuffer != mCanvasFramebuffer)
       mGLContext->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, mCanvasFramebuffer);
 
-    // For simplicity, we read the entire framebuffer for now -- in
-    // the future we should use mUpdatedRect, though with WebGL we don't
-    // have an easy way to generate one.
     mGLContext->ReadPixelsIntoImageSurface(0, 0,
                                            mBounds.width, mBounds.height,
                                            isurf);
@@ -997,15 +989,13 @@ BasicCanvasLayer::Updated(const nsIntRect& aRect)
     // stick our surface into mSurface, so that the Paint() path is the same
     mSurface = isurf;
   }
-
-  // sanity
-  NS_ASSERTION(mUpdatedRect.IsEmpty() || mBounds.Contains(mUpdatedRect),
-               "CanvasLayer: Updated rect bigger than bounds!");
 }
 
 void
 BasicCanvasLayer::Paint(gfxContext* aContext)
 {
+  UpdateSurface();
+  FireDidTransactionCallback();
   PaintWithOpacity(aContext, GetEffectiveOpacity());
 }
 
@@ -1037,8 +1027,6 @@ BasicCanvasLayer::PaintWithOpacity(gfxContext* aContext,
   if (mNeedsYFlip) {
     aContext->SetMatrix(m);
   }
-
-  mUpdatedRect.Empty();
 }
 
 class BasicReadbackLayer : public ReadbackLayer,
@@ -1259,6 +1247,7 @@ TransformIntRect(nsIntRect& aRect, const gfxMatrix& aMatrix,
 // This implementation assumes that GetEffectiveTransform transforms
 // all layers to the same coordinate system. It can't be used as is
 // by accelerated layers because of intermediate surfaces.
+// aClipRect and aRegion are in that global coordinate system.
 static void
 MarkLeafLayersCoveredByOpaque(Layer* aLayer, const nsIntRect& aClipRect,
                               nsIntRegion& aRegion)
@@ -1267,7 +1256,6 @@ MarkLeafLayersCoveredByOpaque(Layer* aLayer, const nsIntRect& aClipRect,
   BasicImplData* data = ToData(aLayer);
   data->SetCoveredByOpaque(PR_FALSE);
 
-  const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
   nsIntRect newClipRect(aClipRect);
 
   // Allow aLayer or aLayer's descendants to cover underlying layers
@@ -1277,14 +1265,21 @@ MarkLeafLayersCoveredByOpaque(Layer* aLayer, const nsIntRect& aClipRect,
     newClipRect.SetRect(0, 0, 0, 0);
   }
 
-  if (clipRect) {
-    nsIntRect cr = *clipRect;
-    gfxMatrix tr;
-    if (aLayer->GetEffectiveTransform().Is2D(&tr)) {
-      TransformIntRect(cr, tr, ToInsideIntRect);
+  {
+    const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
+    if (clipRect) {
+      nsIntRect cr = *clipRect;
+      // clipRect is in the container's coordinate system. Get it into the
+      // global coordinate system.
+      if (aLayer->GetParent()) {
+        gfxMatrix tr;
+        if (aLayer->GetParent()->GetEffectiveTransform().Is2D(&tr)) {
+          TransformIntRect(cr, tr, ToInsideIntRect);
+        } else {
+          cr.SetRect(0, 0, 0, 0);
+        }
+      }
       newClipRect.IntersectRect(newClipRect, cr);
-    } else {
-      newClipRect.SetRect(0, 0, 0, 0);
     }
   }
 
@@ -2556,9 +2551,6 @@ public:
   }
 
   virtual void Initialize(const Data& aData);
-
-  virtual void Updated(const nsIntRect& aRect)
-  {}
 
   virtual already_AddRefed<gfxSharedImageSurface>
   Swap(gfxSharedImageSurface* newFront);

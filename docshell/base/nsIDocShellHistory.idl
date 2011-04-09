@@ -39,7 +39,7 @@
 #include "nsISupports.idl"
 interface nsISHEntry;
 
-[scriptable, uuid(95e425aa-afc6-40a0-9db4-7f210a58310a)]
+[scriptable, uuid(077af5fd-7450-48db-8f03-16617d441141)]
 interface nsIDocShellHistory : nsISupports
 {
   /**
@@ -49,11 +49,14 @@ interface nsIDocShellHistory : nsISupports
 
   /**
    * Add a Child SHEntry for a frameset page, given the child's loadtype.
+   * If aCloneChildren is true, then aCloneReference's children will be
+   * cloned onto aHistoryEntry.
    */
   void addChildSHEntry(in nsISHEntry aCloneReference,
                        in nsISHEntry aHistoryEntry,
                        in long aChildOffset,
-                       in unsigned long aLoadType);
+                       in unsigned long aLoadType,
+                       in boolean aCloneChilden);
 
   /**
    * Whether this docshell should save entries in global history.

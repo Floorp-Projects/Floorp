@@ -70,6 +70,7 @@
 #include "jslock.h"
 #include "jsnum.h"
 #include "jsobj.h"
+#include "json.h"
 #include "jsparse.h"
 #include "jsreflect.h"
 #include "jsscope.h"
@@ -271,9 +272,9 @@ class ToString {
     JSAutoByteString mBytes;
 };
 
-class IdToString : public ToString {
+class IdStringifier : public ToString {
 public:
-    IdToString(JSContext *cx, jsid id, JSBool aThrow = JS_FALSE)
+    IdStringifier(JSContext *cx, jsid id, JSBool aThrow = JS_FALSE)
     : ToString(cx, IdToJsval(id), aThrow)
     { }
 };
@@ -4608,6 +4609,23 @@ NewGlobal(JSContext *cx, uintN argc, jsval *vp)
     return true;
 }
 
+static JSBool
+ParseLegacyJSON(JSContext *cx, uintN argc, jsval *vp)
+{
+    if (argc != 1 || !JSVAL_IS_STRING(JS_ARGV(cx, vp)[0])) {
+        JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_INVALID_ARGS, "parseLegacyJSON");
+        return false;
+    }
+
+    JSString *str = JSVAL_TO_STRING(JS_ARGV(cx, vp)[0]);
+
+    size_t length;
+    const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
+    if (!chars)
+        return false;
+    return js::ParseJSONWithReviver(cx, chars, length, js::NullValue(), js::Valueify(vp), LEGACY);
+}
+
 static JSFunctionSpec shell_functions[] = {
     JS_FN_TYPE("version",        Version,        0,0, JS_TypeHandlerInt),
     JS_FN_TYPE("revertVersion",  RevertVersion,  0,0, JS_TypeHandlerVoid),
@@ -4707,6 +4725,7 @@ static JSFunctionSpec shell_functions[] = {
 #endif
     JS_FN_TYPE("stringstats",    StringStats,    0,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("newGlobal",      NewGlobal,      1,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE("parseLegacyJSON",ParseLegacyJSON,1,0, JS_TypeHandlerDynamic),
     JS_FS_END
 };
 
@@ -4842,6 +4861,8 @@ static const char *const shell_help_messages[] = {
 "newGlobal(kind)          Return a new global object, in the current\n"
 "                         compartment if kind === 'same-compartment' or in a\n"
 "                         new compartment if kind === 'new-compartment'",
+"parseLegacyJSON(str)     Parse str as legacy JSON, returning the result if the\n"
+"                         parse succeeded and throwing a SyntaxError if not.",
 
 /* Keep these last: see the static assertion below. */
 #ifdef MOZ_PROFILING
@@ -5131,7 +5152,7 @@ its_addProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    IdToString idString(cx, id);
+    IdStringifier idString(cx, id);
     fprintf(gOutFile, "adding its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -5144,7 +5165,7 @@ its_delProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    IdToString idString(cx, id);
+    IdStringifier idString(cx, id);
     fprintf(gOutFile, "deleting its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -5157,7 +5178,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!its_noisy)
         return JS_TRUE;
 
-    IdToString idString(cx, id);
+    IdStringifier idString(cx, id);
     fprintf(gOutFile, "getting its property %s,", idString.getBytes());
     ToString valueString(cx, *vp);
     fprintf(gOutFile, " initial value %s\n", valueString.getBytes());
@@ -5167,7 +5188,7 @@ its_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 static JSBool
 its_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 {
-    IdToString idString(cx, id);
+    IdStringifier idString(cx, id);
     if (its_noisy) {
         fprintf(gOutFile, "setting its property %s,", idString.getBytes());
         ToString valueString(cx, *vp);
@@ -5238,7 +5259,7 @@ its_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
     if (its_noisy) {
-        IdToString idString(cx, id);
+        IdStringifier idString(cx, id);
         fprintf(gOutFile, "resolving its property %s, flags {%s,%s,%s}\n",
                idString.getBytes(),
                (flags & JSRESOLVE_QUALIFIED) ? "qualified" : "",
@@ -5534,7 +5555,7 @@ env_setProperty(JSContext *cx, JSObject *obj, jsid id, JSBool strict, jsval *vp)
 #if !defined XP_OS2 && !defined SOLARIS
     int rv;
 
-    IdToString idstr(cx, id, JS_TRUE);
+    IdStringifier idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
     ToString valstr(cx, *vp, JS_TRUE);
@@ -5613,7 +5634,7 @@ env_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     if (flags & JSRESOLVE_ASSIGNING)
         return JS_TRUE;
 
-    IdToString idstr(cx, id, JS_TRUE);
+    IdStringifier idstr(cx, id, JS_TRUE);
     if (idstr.threw())
         return JS_FALSE;
 

@@ -235,10 +235,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #endif
 
 // See nsStyleColor
-#define NS_COLOR_MOZ_HYPERLINKTEXT              -1
-#define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -2
-#define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -3
-#define NS_COLOR_CURRENTCOLOR                   -4
+#define NS_COLOR_CURRENTCOLOR                   -1
+#define NS_COLOR_MOZ_DEFAULT_COLOR              -2
+#define NS_COLOR_MOZ_DEFAULT_BACKGROUND_COLOR   -3
+#define NS_COLOR_MOZ_HYPERLINKTEXT              -4
+#define NS_COLOR_MOZ_VISITEDHYPERLINKTEXT       -5
+#define NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT        -6
 
 // See nsStyleBackground
 #define NS_STYLE_BG_ATTACHMENT_SCROLL     0
@@ -623,6 +625,15 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 // attribute mapping (and thus appears in computed data)
 #define NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL   0x20
 #define NS_STYLE_TEXT_DECORATION_LINES_MASK     (NS_STYLE_TEXT_DECORATION_UNDERLINE | NS_STYLE_TEXT_DECORATION_OVERLINE | NS_STYLE_TEXT_DECORATION_LINE_THROUGH)
+
+// See nsStyleText
+#define NS_STYLE_TEXT_DECORATION_STYLE_NONE     0 // not in CSS spec, mapped to -moz-none
+#define NS_STYLE_TEXT_DECORATION_STYLE_DOTTED   1
+#define NS_STYLE_TEXT_DECORATION_STYLE_DASHED   2
+#define NS_STYLE_TEXT_DECORATION_STYLE_SOLID    3
+#define NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE   4
+#define NS_STYLE_TEXT_DECORATION_STYLE_WAVY     5
+#define NS_STYLE_TEXT_DECORATION_STYLE_MAX      NS_STYLE_TEXT_DECORATION_STYLE_WAVY
 
 // See nsStyleText
 #define NS_STYLE_TEXT_TRANSFORM_NONE            0

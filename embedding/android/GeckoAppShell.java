@@ -119,6 +119,11 @@ public class GeckoAppShell
         }
     }
 
+    // Get a Handler for the main java thread
+    public static Handler getMainHandler() {
+        return GeckoApp.mAppContext.mMainHandler;
+    }
+
     private static Handler sHandler = null;
 
     // Get a Handler for a looper thread, or create one if it doesn't exist yet
@@ -558,24 +563,32 @@ public class GeckoAppShell
         }
     }
 
-    public static void enableLocation(boolean enable) {
-        LocationManager lm = (LocationManager)
-            GeckoApp.surfaceView.getContext().getSystemService(Context.LOCATION_SERVICE);
+    public static void enableLocation(final boolean enable) {
+     
+        getMainHandler().post(new Runnable() { 
+                public void run() {
+                    GeckoSurfaceView view = GeckoApp.surfaceView;
+                    LocationManager lm = (LocationManager)
+                        view.getContext().getSystemService(Context.LOCATION_SERVICE);
 
-        if (enable) {
-            Criteria crit = new Criteria();
-            crit.setAccuracy(Criteria.ACCURACY_FINE);
-            String provider = lm.getBestProvider(crit, true);
-            if (provider == null)
-                return;
+                    if (enable) {
+                        Criteria crit = new Criteria();
+                        crit.setAccuracy(Criteria.ACCURACY_FINE);
+                        String provider = lm.getBestProvider(crit, true);
+                        if (provider == null)
+                            return;
 
-            Location loc = lm.getLastKnownLocation(provider);
-            if (loc != null)
-                sendEventToGecko(new GeckoEvent(loc, null));
-            lm.requestLocationUpdates(provider, 100, (float).5, GeckoApp.surfaceView, Looper.getMainLooper());
-        } else {
-            lm.removeUpdates(GeckoApp.surfaceView);
-        }
+                        Looper l = Looper.getMainLooper();
+                        Location loc = lm.getLastKnownLocation(provider);
+                        if (loc != null) {
+                            view.onLocationChanged(loc);
+                        }
+                        lm.requestLocationUpdates(provider, 100, (float).5, view, l);
+                    } else {
+                        lm.removeUpdates(view);
+                    }
+                }
+            });
     }
 
     public static void moveTaskToBack() {

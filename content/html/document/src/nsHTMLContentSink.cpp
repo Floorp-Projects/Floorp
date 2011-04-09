@@ -60,7 +60,6 @@
 #include "nsCRT.h"
 #include "prtime.h"
 #include "prlog.h"
-#include "nsInt64.h"
 #include "nsNodeUtils.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"

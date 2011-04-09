@@ -36,18 +36,18 @@
 
 #include "nsNSSCertCache.h"
 #include "nsNSSCertificate.h"
-#include "nsAutoLock.h"
 #include "cert.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsNSSHelper.h"
 
+using namespace mozilla;
+
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsNSSCertCache, nsINSSCertCache)
 
 nsNSSCertCache::nsNSSCertCache()
-:mCertList(nsnull)
+:mutex("nsNSSCertCache.mutex"), mCertList(nsnull)
 {
-  mutex = nsAutoLock::NewLock("nsNSSCertCache::mutex");
 }
 
 nsNSSCertCache::~nsNSSCertCache()
@@ -69,11 +69,6 @@ void nsNSSCertCache::destructorSafeDestroyNSSReference()
 {
   if (isAlreadyShutDown())
     return;
-
-  if (mutex) {
-    nsAutoLock::DestroyLock(mutex);
-    mutex = nsnull;
-  }
 }
 
 NS_IMETHODIMP
@@ -88,7 +83,7 @@ nsNSSCertCache::CacheAllCerts()
   CERTCertList *newList = PK11_ListCerts(PK11CertListUnique, cxt);
 
   if (newList) {
-    nsAutoLock lock(mutex);
+    MutexAutoLock lock(mutex);
     mCertList = new nsNSSCertList(newList, PR_TRUE); // adopt
   }
   
@@ -103,7 +98,7 @@ nsNSSCertCache::CacheCertList(nsIX509CertList *list)
     return NS_ERROR_NOT_AVAILABLE;
 
   {
-    nsAutoLock lock(mutex);
+    MutexAutoLock lock(mutex);
     mCertList = list;
     //NS_ADDREF(mCertList);
   }
@@ -119,7 +114,7 @@ nsNSSCertCache::GetX509CachedCerts(nsIX509CertList **list)
     return NS_ERROR_NOT_AVAILABLE;
 
   {
-    nsAutoLock lock(mutex);
+    MutexAutoLock lock(mutex);
     if (!mCertList) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -137,6 +132,6 @@ void* nsNSSCertCache::GetCachedCerts()
   if (isAlreadyShutDown())
     return nsnull;
 
-  nsAutoLock lock(mutex);
+  MutexAutoLock lock(mutex);
   return mCertList->GetRawCertList();
 }

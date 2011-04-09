@@ -218,7 +218,7 @@ Arena<T>::mark(T *thing, JSTracer *trc)
     if (alignedThing > &t.things[ThingsPerArena-1] || alignedThing < &t.things[0])
         return CGCT_NOTARENA;
 
-    if (!aheader.compartment || inFreeList(alignedThing))
+    if (inFreeList(alignedThing))
         return CGCT_NOTLIVE;
 
     JS_ASSERT(sizeof(T) == aheader.thingSize);
@@ -644,6 +644,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &thingKind)
 
     ArenaHeader *aheader = cell->arena()->header();
 
+    if (!aheader->compartment)
+        return CGCT_NOTLIVE;
+
     ConservativeGCTest test;
     thingKind = aheader->thingKind;
 
@@ -753,7 +756,7 @@ MarkRangeConservatively(JSTracer *trc, const jsuword *begin, const jsuword *end)
 }
 
 static void
-MarkThreadDataConservatively(JSTracer *trc, JSThreadData *td)
+MarkThreadDataConservatively(JSTracer *trc, ThreadData *td)
 {
     ConservativeGCThreadData *ctd = &td->conservativeGC;
     JS_ASSERT(ctd->hasStackToScan());

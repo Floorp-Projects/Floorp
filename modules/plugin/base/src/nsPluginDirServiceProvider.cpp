@@ -244,44 +244,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
     do_CreateInstance("@mozilla.org/windows-registry-key;1");
   NS_ENSURE_TRUE(regKey, NS_ERROR_FAILURE);
 
-  if (nsCRT::strcmp(charProp, NS_WIN_4DOTX_SCAN_KEY) == 0) {
-    // Check our prefs to see if scanning the 4.x folder has been
-    // explictly overriden failure to get the pref is okay, we'll do
-    // what we've been doing -- a filtered scan
-    PRBool bScan4x;
-    if (NS_SUCCEEDED(prefs->GetBoolPref(NS_WIN_4DOTX_SCAN_KEY, &bScan4x)) &&
-        !bScan4x) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Look for the plugin folder that the user has in their
-    // Communicator 4x install
-    rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-                      NS_LITERAL_STRING("Software\\Netscape\\Netscape Navigator"),
-                      nsIWindowsRegKey::ACCESS_READ);
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString currentVersion;
-      rv = regKey->ReadStringValue(NS_LITERAL_STRING("CurrentVersion"),
-                                   currentVersion);
-      if (NS_SUCCEEDED(rv)) {
-        nsAutoString childName = currentVersion;
-        childName.Append(NS_LITERAL_STRING("\\Main"));
-        nsCOMPtr<nsIWindowsRegKey> childKey;
-
-        rv = regKey->OpenChild(childName, nsIWindowsRegKey::ACCESS_READ,
-                               getter_AddRefs(childKey));
-        if (NS_SUCCEEDED(rv) && childKey) {
-          nsAutoString pluginsDirectory;
-          rv = childKey->ReadStringValue(NS_LITERAL_STRING("Plugins Directory"),
-                                         pluginsDirectory);
-          if (NS_SUCCEEDED(rv)) {
-            rv = NS_NewLocalFile(pluginsDirectory, PR_TRUE,
-                                 getter_AddRefs(localFile));
-          }
-        }
-      }
-    }
-  } else if (nsCRT::strcmp(charProp, NS_WIN_JRE_SCAN_KEY) == 0) {
+  if (nsCRT::strcmp(charProp, NS_WIN_JRE_SCAN_KEY) == 0) {
     nsXPIDLCString strVer;
     if (NS_FAILED(prefs->GetCharPref(charProp, getter_Copies(strVer))))
       return NS_ERROR_FAILURE;
