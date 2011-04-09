@@ -206,9 +206,13 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
      * Finds and returns the address of a known object and slot.
      */
     Address objSlotRef(JSObject *obj, RegisterID reg, uint32 slot) {
-        move(ImmPtr(&obj->slots), reg);
-        loadPtr(reg, reg);
-        return Address(reg, slot * sizeof(Value));
+        move(ImmPtr(obj), reg);
+        if (obj->isFixedSlot(slot)) {
+            return Address(reg, JSObject::getFixedSlotOffset(slot));
+        } else {
+            loadPtr(Address(reg, JSObject::offsetOfSlots()), reg);
+            return Address(reg, obj->dynamicSlotIndex(slot) * sizeof(Value));
+        }
     }
 
 #ifdef JS_CPU_X86
@@ -725,7 +729,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
                                             objReg, key, BelowOrEqual);
 
         RegisterID dslotsReg = objReg;
-        loadPtr(Address(objReg, offsetof(JSObject, slots)), dslotsReg);
+        loadPtr(Address(objReg, JSObject::offsetOfSlots()), dslotsReg);
 
         // Load the slot out of the array.
         if (key.isConstant()) {
@@ -800,10 +804,10 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
             move(remat.reg(), reg);
     }
 
-    void loadDynamicSlot(RegisterID objReg, uint32 slot,
+    void loadDynamicSlot(RegisterID objReg, uint32 index,
                          RegisterID typeReg, RegisterID dataReg) {
-        loadPtr(Address(objReg, offsetof(JSObject, slots)), dataReg);
-        loadValueAsComponents(Address(dataReg, slot * sizeof(Value)), typeReg, dataReg);
+        loadPtr(Address(objReg, JSObject::offsetOfSlots()), dataReg);
+        loadValueAsComponents(Address(dataReg, index * sizeof(Value)), typeReg, dataReg);
     }
 
     void loadObjProp(JSObject *obj, RegisterID objReg,
@@ -812,10 +816,18 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     {
         if (shape->isMethod())
             loadValueAsComponents(ObjectValue(shape->methodObject()), typeReg, dataReg);
-        else if (obj->hasSlotsArray())
-            loadDynamicSlot(objReg, shape->slot, typeReg, dataReg);
-        else
+        else if (obj->isFixedSlot(shape->slot))
             loadInlineSlot(objReg, shape->slot, typeReg, dataReg);
+        else
+            loadDynamicSlot(objReg, obj->dynamicSlotIndex(shape->slot), typeReg, dataReg);
+    }
+
+    Address objPropAddress(JSObject *obj, RegisterID objReg, uint32 slot)
+    {
+        if (obj->isFixedSlot(slot))
+            return Address(objReg, JSObject::getFixedSlotOffset(slot));
+        loadPtr(Address(objReg, JSObject::offsetOfSlots()), objReg);
+        return Address(objReg, obj->dynamicSlotIndex(slot) * sizeof(Value));
     }
 
     static uint32 maskAddress(Address address) {

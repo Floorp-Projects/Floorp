@@ -1241,7 +1241,7 @@ class TraceRecorder
      * entries of the tracker accordingly.
      */
     JS_REQUIRES_STACK void checkForGlobalObjectReallocation() {
-        if (global_slots != globalObj->getSlots())
+        if (global_slots != globalObj->getRawSlots())
             checkForGlobalObjectReallocationHelper();
     }
     JS_REQUIRES_STACK void checkForGlobalObjectReallocationHelper();
@@ -1639,7 +1639,7 @@ class TraceRecorder
              * Do slot arithmetic manually to avoid getSlotRef assertions which
              * do not need to be satisfied for this purpose.
              */
-            Value *vp = globalObj->getSlots() + slot;
+            Value *vp = globalObj->getRawSlot(slot, globalObj->getRawSlots());
 
             /* If this global is definitely being tracked, then the write is unexpected. */
             if (tracker.has(vp))

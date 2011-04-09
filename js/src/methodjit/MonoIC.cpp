@@ -104,8 +104,9 @@ ic::GetGlobalName(VMFrame &f, ic::GetGlobalNameIC *ic)
     repatcher.repatch(ic->fastPathStart.dataLabel32AtOffset(ic->shapeOffset), obj->shape());
 
     /* Patch loads. */
+    uint32 index = obj->dynamicSlotIndex(slot);
     JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
-    repatcher.patchAddressOffsetForValueLoad(label, slot * sizeof(Value));
+    repatcher.patchAddressOffsetForValueLoad(label, index * sizeof(Value));
 
     /* Do load anyway... this time. */
     stubs::GetGlobalName(f);
@@ -170,9 +171,10 @@ UpdateSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, cons
 
     ic->patchExtraShapeGuard(repatcher, obj->shape());
 
+    uint32 index = obj->dynamicSlotIndex(shape->slot);
     JSC::CodeLocationLabel label(JSC::MacroAssemblerCodePtr(ic->extraStub.start()));
     label = label.labelAtOffset(ic->extraStoreOffset);
-    repatcher.patchAddressOffsetForValueStore(label, shape->slot * sizeof(Value),
+    repatcher.patchAddressOffsetForValueStore(label, index * sizeof(Value),
                                               ic->vr.isTypeKnown());
 
     return Lookup_Cacheable;
@@ -199,10 +201,11 @@ AttachSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, cons
      * Load obj->slots. If ic->objConst, then this clobbers objReg, because
      * ic->objReg == ic->shapeReg.
      */
-    masm.loadPtr(Address(ic->objReg, offsetof(JSObject, slots)), ic->shapeReg);
+    JS_ASSERT(!obj->isFixedSlot(shape->slot));
+    masm.loadPtr(Address(ic->objReg, JSObject::offsetOfSlots()), ic->shapeReg);
 
     /* Test if overwriting a function-tagged slot. */
-    Address slot(ic->shapeReg, sizeof(Value) * shape->slot);
+    Address slot(ic->shapeReg, sizeof(Value) * obj->dynamicSlotIndex(shape->slot));
     Jump isNotObject = masm.testObject(Assembler::NotEqual, slot);
 
     /* Now, test if the object is a function object. */
@@ -212,7 +215,7 @@ AttachSetGlobalNameStub(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, cons
     /* Restore shapeReg to obj->slots, since we clobbered it. */
     if (ic->objConst)
         masm.move(ImmPtr(obj), ic->objReg);
-    masm.loadPtr(Address(ic->objReg, offsetof(JSObject, slots)), ic->shapeReg);
+    masm.loadPtr(Address(ic->objReg, JSObject::offsetOfSlots()), ic->shapeReg);
 
     /* If the object test fails, shapeReg is still obj->slots. */
     isNotObject.linkTo(masm.label(), &masm);
@@ -304,8 +307,9 @@ UpdateSetGlobalName(VMFrame &f, ic::SetGlobalNameIC *ic, JSObject *obj, const Sh
     Repatcher repatcher(f.jit());
     ic->patchInlineShapeGuard(repatcher, obj->shape());
 
+    uint32 index = obj->dynamicSlotIndex(shape->slot);
     JSC::CodeLocationLabel label = ic->fastPathStart.labelAtOffset(ic->loadStoreOffset);
-    repatcher.patchAddressOffsetForValueStore(label, shape->slot * sizeof(Value),
+    repatcher.patchAddressOffsetForValueStore(label, index * sizeof(Value),
                                               ic->vr.isTypeKnown());
 
     return Lookup_Cacheable;

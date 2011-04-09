@@ -2014,11 +2014,11 @@ mjit::Compiler::jsop_initprop()
     JS_ASSERT(res >= 0 && prop && holder == baseobj);
 
     RegisterID objReg = frame.copyDataIntoReg(obj);
-    masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), objReg);
 
     /* Perform the store. */
     Shape *shape = (Shape *) prop;
-    frame.storeTo(fe, Address(objReg, shape->slot * sizeof(Value)));
+    Address address = masm.objPropAddress(baseobj, objReg, shape->slot);
+    frame.storeTo(fe, address);
     frame.freeReg(objReg);
 }
 

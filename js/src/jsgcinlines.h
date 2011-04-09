@@ -120,14 +120,18 @@ GetGCThingTraceKind(const void *thing)
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
-/* Get the best kind to use when making an object with the given slot count. */
+/*
+ * Get the best kind to use when making an object with the given slot count.
+ * fallback is the kind to use if the number of slots exceeds the maximum
+ * number of fixed slots for an object.
+ */
 static inline FinalizeKind
-GetGCObjectKind(size_t numSlots)
+GetGCObjectKind(size_t numSlots, FinalizeKind fallback = FINALIZE_OBJECT0)
 {
     extern FinalizeKind slotsToThingKind[];
 
     if (numSlots >= SLOTS_TO_THING_KIND_LIMIT)
-        return FINALIZE_OBJECT0;
+        return FINALIZE_OBJECT16;
     return slotsToThingKind[numSlots];
 }
 
@@ -378,9 +382,6 @@ JSObject::trace(JSTracer *trc)
 namespace js {
 namespace gc {
 
-void
-MarkObjectSlots(JSTracer *trc, JSObject *obj);
-
 static inline void
 MarkChildren(JSTracer *trc, JSObject *obj)
 {
@@ -414,7 +415,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         obj->trace(trc);
 
         if (obj->slotSpan() > 0)
-            MarkObjectSlots(trc, obj);
+            obj->markSlots(trc);
     }
 }
 

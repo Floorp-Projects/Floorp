@@ -3321,7 +3321,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp)
     JS_ASSERT(proto->isStaticBlock());
 
     size_t count = OBJ_BLOCK_COUNT(cx, proto);
-    gc::FinalizeKind kind = gc::GetGCObjectKind(count + 1);
+    gc::FinalizeKind kind = gc::GetGCObjectKind(count + 1, gc::FINALIZE_OBJECT2);
 
     js::types::TypeObject *type = proto->getNewType(cx);
     if (!type)
@@ -3368,7 +3368,7 @@ js_PutBlockObject(JSContext *cx, JSBool normalUnwind)
     if (normalUnwind) {
         uintN slot = JSSLOT_BLOCK_FIRST_FREE_SLOT;
         depth += fp->numFixed();
-        memcpy(obj->getSlots() + slot, fp->slots() + depth, count * sizeof(Value));
+        obj->copySlotRange(slot, fp->slots() + depth, count);
     }
 
     /* We must clear the private slot even with errors. */
@@ -3444,14 +3444,6 @@ JSObject::defineBlockVariable(JSContext *cx, jsid id, intN index)
     return shape;
 }
 
-static size_t
-GetObjectSize(JSObject *obj)
-{
-    return (obj->isFunction() && !obj->getPrivate())
-           ? sizeof(JSFunction)
-           : sizeof(JSObject) + sizeof(js::Value) * obj->numFixedSlots();
-}
-
 bool
 JSObject::copyPropertiesFrom(JSContext *cx, JSObject *obj)
 {
@@ -3496,16 +3488,16 @@ CopySlots(JSContext *cx, JSObject *from, JSObject *to)
     size_t n = 0;
     if (to->isWrapper() &&
         (JSWrapper::wrapperHandler(to)->flags() & JSWrapper::CROSS_COMPARTMENT)) {
-        to->slots[0] = from->slots[0];
-        to->slots[1] = from->slots[1];
+        to->setSlot(0, from->getSlot(0));
+        to->setSlot(1, from->getSlot(1));
         n = 2;
     }
 
     for (; n < nslots; ++n) {
-        Value v = from->slots[n];
+        Value v = from->getSlot(n);
         if (!cx->compartment->wrap(cx, &v))
             return false;
-        to->slots[n] = v;
+        to->setSlot(n, v);
     }
     return true;
 }
@@ -3553,8 +3545,8 @@ JSObject::clone(JSContext *cx, JSObject *proto, JSObject *parent)
     return clone;
 }
 
-static void
-TradeGuts(JSObject *a, JSObject *b)
+bool
+JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b)
 {
     JS_ASSERT(a->compartment() == b->compartment());
     JS_ASSERT(a->isFunction() == b->isFunction());
@@ -3566,12 +3558,15 @@ TradeGuts(JSObject *a, JSObject *b)
      */
     JS_ASSERT(!a->isRegExp() && !b->isRegExp());
 
-    bool aInline = !a->hasSlotsArray();
-    bool bInline = !b->hasSlotsArray();
+    /*
+     * Callers should not try to swap dense arrays, these use a different slot
+     * representation from other objects.
+     */
+    JS_ASSERT(!a->isDenseArray() && !b->isDenseArray());
 
     /* Trade the guts of the objects. */
-    const size_t size = GetObjectSize(a);
-    if (size == GetObjectSize(b)) {
+    const size_t size = a->structSize();
+    if (size == b->structSize()) {
         /*
          * If the objects are the same size, then we make no assumptions about
          * whether they have dynamically allocated slots and instead just copy
@@ -3583,18 +3578,28 @@ TradeGuts(JSObject *a, JSObject *b)
         memcpy(tmp, a, size);
         memcpy(a, b, size);
         memcpy(b, tmp, size);
-
-        /* Fixup pointers for inline slots on the objects. */
-        if (aInline)
-            b->slots = b->fixedSlots();
-        if (bInline)
-            a->slots = a->fixedSlots();
     } else {
         /*
-         * If the objects are of differing sizes, then we only copy over the
-         * JSObject portion (things like class, etc.) and leave it to
-         * JSObject::clone to copy over the dynamic slots for us.
+         * If the objects are of differing sizes, then we need to get arrays of
+         * all the slots and copy them over manually; whether a given slot is
+         * inline or not will vary between the objects. This situation must
+         * only happen when we are swapping proxies, which are non-native and
+         * thus do not have shapes depending on the number of inline slots.
          */
+        JS_ASSERT(a->isProxy() && b->isProxy());
+
+        AutoValueVector avals(cx);
+        if (!avals.reserve(a->numSlots()))
+            return false;
+        for (size_t i = 0; i < a->numSlots(); i++)
+            avals.infallibleAppend(a->getSlot(i));
+
+        AutoValueVector bvals(cx);
+        if (!bvals.reserve(b->numSlots()))
+            return false;
+        for (size_t i = 0; i < b->numSlots(); i++)
+            bvals.infallibleAppend(b->getSlot(i));
+
         if (a->isFunction()) {
             JSFunction tmp;
             memcpy(&tmp, a, sizeof tmp);
@@ -3607,9 +3612,11 @@ TradeGuts(JSObject *a, JSObject *b)
             memcpy(b, &tmp, sizeof tmp);
         }
 
-        JS_ASSERT(!aInline);
-        JS_ASSERT(!bInline);
+        a->copySlotRange(0, bvals.begin(), a->numSlots());
+        b->copySlotRange(0, avals.begin(), b->numSlots());
     }
+
+    return true;
 }
 
 /*
@@ -3621,25 +3628,8 @@ TradeGuts(JSObject *a, JSObject *b)
 bool
 JSObject::swap(JSContext *cx, JSObject *other)
 {
-    /*
-     * If we are swapping objects with a different number of builtin slots, force
-     * both to not use their inline slots.
-     */
-    if (GetObjectSize(this) != GetObjectSize(other)) {
-        if (!hasSlotsArray()) {
-            if (!allocSlots(cx, numSlots()))
-                return false;
-        }
-        if (!other->hasSlotsArray()) {
-            if (!other->allocSlots(cx, other->numSlots()))
-                return false;
-        }
-    }
-
-    if (this->compartment() == other->compartment()) {
-        TradeGuts(this, other);
-        return true;
-    }
+    if (this->compartment() == other->compartment())
+        return TradeGuts(cx, this, other);
 
     JSObject *thisClone;
     JSObject *otherClone;
@@ -3659,8 +3649,10 @@ JSObject::swap(JSContext *cx, JSObject *other)
         if (!otherClone || !otherClone->copyPropertiesFrom(cx, other))
             return false;
     }
-    TradeGuts(this, otherClone);
-    TradeGuts(other, thisClone);
+    if (!TradeGuts(cx, this, otherClone))
+        return false;
+    if (!TradeGuts(cx, other, thisClone))
+        return false;
 
     return true;
 }
@@ -4153,6 +4145,50 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
                                          ctorHandler, ps, fs, static_ps, static_fs);
 }
 
+void
+JSObject::clearSlotRange(size_t start, size_t length)
+{
+    JS_ASSERT(start + length <= capacity);
+    if (isDenseArray()) {
+        ClearValueRange(slots + start, length, true);
+    } else {
+        size_t fixed = numFixedSlots();
+        if (start < fixed) {
+            if (start + length < fixed) {
+                ClearValueRange(fixedSlots() + start, length, false);
+            } else {
+                size_t localClear = fixed - start;
+                ClearValueRange(fixedSlots() + start, localClear, false);
+                ClearValueRange(slots, length - localClear, false);
+            }
+        } else {
+            ClearValueRange(slots + start - fixed, length, false);
+        }
+    }
+}
+
+void
+JSObject::copySlotRange(size_t start, const Value *vector, size_t length)
+{
+    JS_ASSERT(start + length <= capacity);
+    if (isDenseArray()) {
+        memcpy(slots + start, vector, length * sizeof(Value));
+    } else {
+        size_t fixed = numFixedSlots();
+        if (start < fixed) {
+            if (start + length < fixed) {
+                memcpy(fixedSlots() + start, vector, length * sizeof(Value));
+            } else {
+                size_t localCopy = fixed - start;
+                memcpy(fixedSlots() + start, vector, localCopy * sizeof(Value));
+                memcpy(slots, vector + localCopy, (length - localCopy) * sizeof(Value));
+            }
+        } else {
+            memcpy(slots + start - fixed, vector, length * sizeof(Value));
+        }
+    }
+}
+
 bool
 JSObject::allocSlots(JSContext *cx, size_t newcap)
 {
@@ -4166,15 +4202,23 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
         return false;
     }
 
-    Value *tmpslots = (Value*) cx->malloc_(newcap * sizeof(Value));
+    uint32 allocCount = isDenseArray() ? newcap : newcap - numFixedSlots();
+
+    Value *tmpslots = (Value*) cx->malloc_(allocCount * sizeof(Value));
     if (!tmpslots)
         return false;  /* Leave slots at inline buffer. */
     slots = tmpslots;
     capacity = newcap;
 
-    /* Copy over anything from the inline buffer. */
-    memcpy(slots, fixedSlots(), oldcap * sizeof(Value));
-    ClearValueRange(slots + oldcap, newcap - oldcap, isDenseArray());
+    if (isDenseArray()) {
+        /* Copy over anything from the inline buffer. */
+        memcpy(slots, fixedSlots(), oldcap * sizeof(Value));
+        ClearValueRange(slots + oldcap, newcap - oldcap, true);
+    } else {
+        /* Clear out the new slots without copying. */
+        ClearValueRange(slots, allocCount, false);
+    }
+
     return true;
 }
 
@@ -4214,7 +4258,11 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
     if (!hasSlotsArray())
         return allocSlots(cx, actualCapacity);
 
-    Value *tmpslots = (Value*) cx->realloc_(slots, oldcap * sizeof(Value), actualCapacity * sizeof(Value));
+    uint32 oldAllocCount = isDenseArray() ? oldcap : oldcap - numFixedSlots();
+    uint32 allocCount = isDenseArray() ? actualCapacity : actualCapacity - numFixedSlots();
+
+    Value *tmpslots = (Value*) cx->realloc_(slots, oldAllocCount * sizeof(Value),
+                                            allocCount * sizeof(Value));
     if (!tmpslots)
         return false;    /* Leave dslots as its old size. */
     slots = tmpslots;
@@ -4222,7 +4270,7 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
 
     if (!isDenseArray()) {
         /* Initialize the additional slots we added. This is not required for dense arrays. */
-        ClearValueRange(slots + oldcap, actualCapacity - oldcap, false);
+        ClearValueRange(slots + oldAllocCount, allocCount - oldAllocCount, false);
     }
     return true;
 }
@@ -4234,18 +4282,24 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     JS_ASSERT(newcap <= oldcap);
     JS_ASSERT(newcap >= slotSpan());
 
+    size_t fixed = numFixedSlots();
+
     if (oldcap <= SLOT_CAPACITY_MIN || !hasSlotsArray()) {
-        /* We won't shrink the slots any more.  Clear excess holes. */
+        /*
+         * We won't shrink the slots any more. Clear excess entries. When
+         * shrinking dense arrays, make sure to update the initialized length
+         * afterwards.
+         */
         if (!isDenseArray())
-            ClearValueRange(slots + newcap, oldcap - newcap, false);
+            clearSlotRange(newcap, oldcap - newcap);
         return;
     }
 
     uint32 fill = newcap;
     if (newcap < SLOT_CAPACITY_MIN)
         newcap = SLOT_CAPACITY_MIN;
-    if (newcap < numFixedSlots())
-        newcap = numFixedSlots();
+    if (newcap < fixed)
+        newcap = fixed;
 
     Value *tmpslots = (Value*) cx->realloc_(slots, newcap * sizeof(Value));
     if (!tmpslots)
@@ -4256,7 +4310,7 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     if (fill < newcap) {
         /* Clear any excess holes if we tried to shrink below SLOT_CAPACITY_MIN. */
         if (!isDenseArray())
-            ClearValueRange(slots + fill, newcap - fill, false);
+            clearSlotRange(fill, newcap - fill);
     }
 }
 
