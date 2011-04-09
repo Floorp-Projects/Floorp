@@ -42,6 +42,7 @@
  
 #include "nsApplicationAccessible.h"
 
+#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
 
@@ -140,12 +141,10 @@ nsApplicationAccessible::GetKeyboardShortcut(nsAString &aKeyboardShortcut)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsApplicationAccessible::GetState(PRUint32 *aState, PRUint32 *aExtraState)
+PRUint64
+nsApplicationAccessible::State()
 {
-  NS_ENSURE_ARG_POINTER(aState);
-  GetStateInternal(aState, aExtraState);
-  return NS_OK;
+  return NativeState();
 }
 
 NS_IMETHODIMP
@@ -362,10 +361,9 @@ nsApplicationAccessible::IsPrimaryForNode() const
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible public methods
 
-nsresult
-nsApplicationAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
+void
+nsApplicationAccessible::ApplyARIAState(PRUint64* aState)
 {
-  return NS_OK;
 }
 
 PRUint32
@@ -374,23 +372,10 @@ nsApplicationAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_APP_ROOT;
 }
 
-nsresult
-nsApplicationAccessible::GetStateInternal(PRUint32 *aState,
-                                          PRUint32 *aExtraState)
+PRUint64
+nsApplicationAccessible::NativeState()
 {
-  *aState = 0;
-
-  if (IsDefunct()) {
-    if (aExtraState)
-      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-
-    return NS_OK_DEFUNCT_OBJECT;
-  }
-
-  if (aExtraState)
-    *aExtraState = 0;
-
-  return NS_OK;
+  return IsDefunct() ? states::DEFUNCT : 0;
 }
 
 void
