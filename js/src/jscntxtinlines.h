@@ -102,6 +102,22 @@ JSContext::regExpStatics()
 
 namespace js {
 
+struct PreserveRegsGuard
+{
+    JSContext *cx;
+    const JSFrameRegs &regs;
+    JSFrameRegs *prevContextRegs;
+    PreserveRegsGuard(JSContext *cx, JSFrameRegs &regs)
+        : cx(cx), regs(regs), prevContextRegs(cx->regs) {
+        cx->setCurrentRegs(&regs);
+    }
+    ~PreserveRegsGuard() {
+        JS_ASSERT(cx->regs == &regs);
+        *prevContextRegs = regs;
+        cx->setCurrentRegs(prevContextRegs);
+    }
+};
+
 JS_REQUIRES_STACK JS_ALWAYS_INLINE JSFrameRegs *
 StackSegment::getCurrentRegs() const
 {

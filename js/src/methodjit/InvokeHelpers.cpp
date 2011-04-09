@@ -1019,9 +1019,23 @@ RunTracer(VMFrame &f)
     loopCounter = NULL;
     hits = 1;
 #endif
-    tpa = MonitorTracePoint(f.cx, inlineCallCount, &blacklist, traceData, traceEpoch,
-                            loopCounter, hits);
-    JS_ASSERT(!TRACE_RECORDER(cx));
+
+    {
+        /*
+         * While the tracer is running, redirect the regs to a local variable here.
+         * If the tracer exits during an inlined frame, it will synthesize those
+         * frames, point f.regs.fp at them and then enter the interpreter. If the
+         * interpreter pops the frames it will not be reflected here as a local
+         * set of regs is used by the interpreter, and f->regs end up pointing at
+         * garbage, confusing the recompiler.
+         */
+        JSFrameRegs regs = f.regs;
+        PreserveRegsGuard regsGuard(cx, regs);
+
+        tpa = MonitorTracePoint(f.cx, inlineCallCount, &blacklist, traceData, traceEpoch,
+                                loopCounter, hits);
+        JS_ASSERT(!TRACE_RECORDER(cx));
+    }
 
 #if JS_MONOIC
     ic.loopCounterStart = *loopCounter;
