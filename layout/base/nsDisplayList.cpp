@@ -1836,6 +1836,25 @@ nsDisplayScrollLayer::~nsDisplayScrollLayer()
 }
 #endif
 
+nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
+  nsDisplayListBuilder* aBuilder,
+  nsDisplayList* aList,
+  nsIFrame* aForFrame,
+  nsIFrame* aViewportFrame)
+  : nsDisplayScrollLayer(aBuilder, aList, aForFrame, aViewportFrame)
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  MOZ_COUNT_CTOR(nsDisplayScrollInfoLayer);
+#endif
+}
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayScrollInfoLayer::~nsDisplayScrollInfoLayer()
+{
+  MOZ_COUNT_DTOR(nsDisplayScrollInfoLayer);
+}
+#endif
+
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayItem* aItem,
                              const nsRect& aRect)
