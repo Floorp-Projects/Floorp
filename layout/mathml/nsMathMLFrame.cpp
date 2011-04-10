@@ -230,6 +230,7 @@ nsMathMLFrame::GetPresentationDataFrom(nsIFrame*           aFrame,
       if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
         aPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
       }
+      aPresentationData.mstyle = frame;
       break;
     }
     frame = frame->GetParent();
