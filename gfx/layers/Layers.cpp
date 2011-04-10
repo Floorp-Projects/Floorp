@@ -540,6 +540,9 @@ Layer::PrintInfo(nsACString& aTo, const char* aPrefix)
   if (GetContentFlags() & CONTENT_COMPONENT_ALPHA) {
     aTo += " [componentAlpha]";
   }
+  if (GetIsFixedPosition()) {
+    aTo += " [isFixedPosition]";
+  }
 
   return aTo;
 }

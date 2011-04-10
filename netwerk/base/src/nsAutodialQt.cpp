@@ -35,13 +35,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsQtNetworkManager.h"
 #include "nsAutodialQt.h"
 #include "nsNetCID.h"
 #include "nsCOMPtr.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
 #include "nsIServiceManager.h"
-#include "nsQtNetworkManager.h"
 
 
 nsAutodial::nsAutodial()
@@ -61,8 +61,9 @@ nsAutodial::Init()
 nsresult
 nsAutodial::DialDefault(const PRUnichar* hostName)
 {
-  if (nsQtNetworkManager::OpenConnectionSync())
+  if (gQtNetworkManager->openConnection(QString::fromUtf16(hostName))) {
     return NS_OK;
+  }
 
   return NS_ERROR_FAILURE;
 }
@@ -70,8 +71,9 @@ nsAutodial::DialDefault(const PRUnichar* hostName)
 PRBool
 nsAutodial::ShouldDialOnNetworkError()
 {
-  if (nsQtNetworkManager::IsConnected())
+  if (gQtNetworkManager->isOnline()) {
     return PR_FALSE;
+  }
 
   return PR_TRUE;
 }

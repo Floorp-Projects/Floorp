@@ -230,6 +230,9 @@ public:
   GLTexture mTexture;
   gfxIntSize mSize;
   gl::ShaderProgramType mLayerProgram;
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+  nsRefPtr<gfxASurface> mSurface;
+#endif
 };
 
 class ShadowImageLayerOGL : public ShadowImageLayer,

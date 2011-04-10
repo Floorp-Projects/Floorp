@@ -693,8 +693,11 @@ pref("network.http.proxy.keep-alive", true);
 // the packet is lost or delayed on the route.
 pref("network.http.keep-alive.timeout", 115);
 
-// limit the absolute number of http connections.
-pref("network.http.max-connections", 30);
+// Limit the absolute number of http connections.
+// Note: the socket transport service will clamp the number below 256 if the OS
+// cannot allocate that many FDs, and it also always tries to reserve up to 250
+// file descriptors for things other than sockets.   
+pref("network.http.max-connections", 256);
 
 // limit the absolute number of http connections that can be established per
 // host.  if a http proxy server is enabled, then the "server" is the proxy

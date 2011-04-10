@@ -220,8 +220,8 @@ private:
   nsWeakPtr mPresShellWeak;
 };
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsTextInputSelectionImpl, nsISelectionController)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsTextInputSelectionImpl, nsISelectionController)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTextInputSelectionImpl)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTextInputSelectionImpl)
 NS_INTERFACE_TABLE_HEAD(nsTextInputSelectionImpl)
   NS_INTERFACE_TABLE3(nsTextInputSelectionImpl,
                       nsISelectionController,

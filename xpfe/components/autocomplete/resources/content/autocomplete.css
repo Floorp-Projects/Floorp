@@ -17,6 +17,14 @@
   -moz-user-focus: ignore;
 }
 
+.autocomplete-history-dropmarker {
+  display: none;
+}
+
+.autocomplete-history-dropmarker[enablehistory="true"] {
+  display: -moz-box;
+}
+
 /* The following rule is here to fix bug 96899 (and now 117952).  
    Somehow trees create a situation
    in which a popupset flows itself as if its popup child is directly within it
