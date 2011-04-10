@@ -59,9 +59,7 @@ enum LayerState {
   LAYER_ACTIVE,
   // Force an active layer even if it causes incorrect rendering, e.g.
   // when the layer has rounded rect clips.
-  LAYER_ACTIVE_FORCE,
-  // Special layer that is metadata only.
-  LAYER_ACTIVE_EMPTY
+  LAYER_ACTIVE_FORCE
 };
 
 /**

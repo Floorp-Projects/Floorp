@@ -139,8 +139,13 @@ FindViewForId(const ViewMap& aMap, ViewID aId)
 static const FrameMetrics*
 GetFrameMetrics(Layer* aLayer)
 {
-  ContainerLayer* container = aLayer->AsContainerLayer();
-  return container ? &container->GetFrameMetrics() : NULL;
+  // Children are not container layers, so they don't have frame metrics. Give
+  // them a blank metric.
+  if (!aLayer->GetFirstChild())
+    return NULL;
+
+  ContainerLayer* container = static_cast<ContainerLayer*>(aLayer);
+  return &container->GetFrameMetrics();
 }
 
 static nsIntPoint
@@ -341,9 +346,10 @@ BuildViewMap(ViewMap& oldContentViews, ViewMap& newContentViews,
              nsFrameLoader* aFrameLoader, Layer* aLayer,
              float aXScale = 1, float aYScale = 1)
 {
-  ContainerLayer* container = aLayer->AsContainerLayer();
-  if (!container)
+  if (!aLayer->GetFirstChild())
     return;
+
+  ContainerLayer* container = static_cast<ContainerLayer*>(aLayer);
   const FrameMetrics metrics = container->GetFrameMetrics();
   const ViewID scrollId = metrics.mScrollId;
 

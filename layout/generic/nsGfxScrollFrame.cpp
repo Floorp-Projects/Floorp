@@ -1961,8 +1961,7 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   dirtyRect.IntersectRect(aDirtyRect, mScrollPort);
 
   // Override the dirty rectangle if the displayport has been set.
-  PRBool usingDisplayport =
-    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &dirtyRect);
+  nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &dirtyRect);
 
   nsDisplayListCollection set;
 
@@ -1977,42 +1976,30 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // range of 20 pixels to eliminate many gfx scroll frames from becoming a
   // layer.
   //
+  PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsRect scrollRange = GetScrollRange();
   ScrollbarStyles styles = GetScrollbarStylesFromFrame();
   mShouldBuildLayer =
      (XRE_GetProcessType() == GeckoProcessType_Content &&
      (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
       styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
-     (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
+     (scrollRange.width >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel) ||
+      scrollRange.height >= NSIntPixelsToAppUnits(20, appUnitsPerDevPixel))) &&
+     (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument());
 
   if (ShouldBuildLayer()) {
+    // Note that using StackingContext breaks z order, so the resulting
+    // rendering can be incorrect for weird edge cases!
+
     nsDisplayList list;
-    if (usingDisplayport) {
-      // Once a displayport is set, assume that scrolling needs to be fast
-      // so create a layer with all the content inside. The compositor
-      // process will be able to scroll the content asynchronously.
-      //
-      // Note that using StackingContext breaks z order, so the resulting
-      // rendering can be incorrect for weird edge cases!
+    rv = mScrolledFrame->BuildDisplayListForStackingContext(
+      aBuilder, dirtyRect + mOuter->GetOffsetTo(mScrolledFrame), &list);
 
-      rv = mScrolledFrame->BuildDisplayListForStackingContext(
-        aBuilder, dirtyRect + mOuter->GetOffsetTo(mScrolledFrame), &list);
-
-      nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollLayer(
-        aBuilder, &list, mScrolledFrame, mOuter);
-      set.Content()->AppendNewToTop(layerItem);
-    } else {
-      // If there is no displayport set, there is no reason here to force a
-      // layer that needs a memory-expensive allocation, but the compositor
-      // process would still like to know that it exists.
-
-      nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
-        aBuilder, &list, mScrolledFrame, mOuter);
-      set.Content()->AppendNewToTop(layerItem);
-
-      rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
-    }
-  } else {
+    nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollLayer(
+      aBuilder, &list, mScrolledFrame, mOuter);
+    set.Content()->AppendNewToTop(layerItem);
+  } else
+  {
     rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
   }
 
