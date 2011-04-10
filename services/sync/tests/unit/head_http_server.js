@@ -267,7 +267,7 @@ ServerCollection.prototype = {
  * Test setup helpers.
  */
 function sync_httpd_setup(handlers) {
-  handlers["/1.0/foo/storage/meta/global"]
+  handlers["/1.1/foo/storage/meta/global"]
       = (new ServerWBO('global', {})).handler();
   return httpd_setup(handlers);
 }
