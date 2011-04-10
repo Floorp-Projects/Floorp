@@ -78,11 +78,6 @@ TEST_HARNESS_COMPONENTS := \
   httpd.manifest \
   $(NULL)
 
-ifdef MOZ_CRASHREPORTER
-#XXX: should find a better way to do this
-TEST_HARNESS_COMPONENTS +=  crashreporter_test.xpt
-endif
-
 ifdef MOZ_ENABLE_LIBXUL
 TEST_HARNESS_COMPONENTS += xpcom_typelib_test.jar
 endif
