@@ -8,7 +8,7 @@ function run_test() {
   _("Set up test fixtures.");
   ID.set('WeaveID', new Identity('Some Identity', 'foo'));
   Svc.Prefs.set("clusterURL", "http://fakebase/");
-  let baseUri = "http://fakebase/1.0/foo/storage/";
+  let baseUri = "http://fakebase/1.1/foo/storage/";
   let pubUri = baseUri + "keys/pubkey";
   let privUri = baseUri + "keys/privkey";
 

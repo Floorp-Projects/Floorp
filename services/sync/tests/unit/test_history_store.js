@@ -160,11 +160,10 @@ function run_test() {
   }, function (next) {
 
     _("Make sure we handle invalid URLs in places databases gracefully.");
-    let table = store._haveTempTables ? "moz_places_temp" : "moz_places";
-    let query = "INSERT INTO " + table + " "
+    let query = "INSERT INTO moz_places "
       + "(url, title, rev_host, visit_count, last_visit_date) "
       + "VALUES ('invalid-uri', 'Invalid URI', '.', 1, " + TIMESTAMP3 + ")";
-    let stmt = Utils.createStatement(Svc.History.DBConnection, query);
+    let stmt = Svc.History.DBConnection.createAsyncStatement(query);
     let result = Utils.queryAsync(stmt);    
     do_check_eq([id for (id in store.getAllIDs())].length, 4);
 
