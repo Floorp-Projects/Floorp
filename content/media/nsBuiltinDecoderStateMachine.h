@@ -247,6 +247,10 @@ public:
     return mEndTime;
   }
 
+  // Sets the current frame buffer length for the MozAudioAvailable event.
+  // Accessed on the main and state machine threads.
+  virtual void SetFrameBufferLength(PRUint32 aLength);
+
 protected:
 
   // Returns PR_TRUE if we'v got less than aAudioMs ms of decoded and playable
