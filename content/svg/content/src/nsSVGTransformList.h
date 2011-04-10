@@ -78,6 +78,7 @@ public:
 
   
   // other methods:
+  nsIDOMSVGTransform* GetItemWithoutAddRef(PRInt32 index);
   nsIDOMSVGTransform* ElementAt(PRInt32 index);
   PRBool AppendElement(nsIDOMSVGTransform* aElement);
   static already_AddRefed<nsIDOMSVGMatrix>

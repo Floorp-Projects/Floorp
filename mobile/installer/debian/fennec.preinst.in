@@ -2,7 +2,7 @@
 
 set -e
 
-RUNNING=`ps -ax | grep "fennec.*/fennec" | grep -v grep | wc -l`
+RUNNING=`ps ax | grep "fennec.*/fennec" | grep -v grep | wc -l`
 
 if [ $RUNNING -gt 0 ];
 then
@@ -11,7 +11,7 @@ then
   while [ $x -lt 10 ]
   do
     sleep 1
-    RUNNING=`ps -ax | grep "fennec.*/fennec" | grep -v grep | wc -l`
+    RUNNING=`ps ax | grep "fennec.*/fennec" | grep -v grep | wc -l`
 
     if [ $RUNNING -eq 0 ];
     then

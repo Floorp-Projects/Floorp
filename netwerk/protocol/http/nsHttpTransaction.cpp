@@ -318,6 +318,18 @@ nsHttpTransaction::TakeResponseHead()
     return head;
 }
 
+void
+nsHttpTransaction::SetSSLConnectFailed()
+{
+    mSSLConnectFailed = PR_TRUE;
+}
+
+nsHttpRequestHead *
+nsHttpTransaction::RequestHead()
+{
+    return mRequestHead;
+}
+
 //----------------------------------------------------------------------------
 // nsHttpTransaction::nsAHttpTransaction
 //----------------------------------------------------------------------------

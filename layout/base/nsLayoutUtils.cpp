@@ -785,6 +785,37 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
   return f;
 }
 
+nsIFrame*
+nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
+                                        nsDisplayListBuilder* aBuilder)
+{
+  nsIFrame* f = aItem->GetUnderlyingFrame();
+  if (!f) {
+    return nsnull;
+  }
+  if (aItem->ShouldFixToViewport(aBuilder)) {
+    // Make its active scrolled root be the active scrolled root of
+    // the enclosing viewport, since it shouldn't be scrolled by scrolled
+    // frames in its document. InvalidateFixedBackgroundFramesFromList in
+    // nsGfxScrollFrame will not repaint this item when scrolling occurs.
+    nsIFrame* viewportFrame =
+      nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
+    NS_ASSERTION(viewportFrame, "no viewport???");
+    return nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, aBuilder->ReferenceFrame());
+  } else {
+    return nsLayoutUtils::GetActiveScrolledRootFor(f, aBuilder->ReferenceFrame());
+  }
+}
+
+PRBool
+nsLayoutUtils::ScrolledByViewportScrolling(nsIFrame* aActiveScrolledRoot,
+                                           nsDisplayListBuilder* aBuilder)
+{
+  nsIFrame* rootScrollFrame =
+    aBuilder->ReferenceFrame()->PresContext()->GetPresShell()->GetRootScrollFrame();
+  return nsLayoutUtils::IsAncestorFrameCrossDoc(rootScrollFrame, aActiveScrolledRoot);
+}
+
 // static
 nsIScrollableFrame*
 nsLayoutUtils::GetNearestScrollableFrameForDirection(nsIFrame* aFrame,
@@ -1420,6 +1451,10 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
 
   nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
 		                       !(aFlags & PAINT_HIDE_CARET));
+  if (usingDisplayPort) {
+    builder.SetHasDisplayPort();
+  }
+
   nsDisplayList list;
   if (aFlags & PAINT_IN_TRANSFORM) {
     builder.SetInTransform(PR_TRUE);
@@ -3030,11 +3065,7 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
-#ifdef MOZ_GFX_OPTIMIZE_MOBILE
-  GraphicsFilter defaultFilter = gfxPattern::FILTER_NEAREST;
-#else
   GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
-#endif
 #ifdef MOZ_SVG
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
     nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;

@@ -98,6 +98,17 @@
 |     "A"
 
 #data
+<!DOCTYPE html><body><frame>A
+#errors
+26: Stray start tag “frame”.
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     "A"
+
+#data
 <!DOCTYPE html><body><hr>A
 #errors
 #document

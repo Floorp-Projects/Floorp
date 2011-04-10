@@ -3,24 +3,11 @@
 
 function test() {
   let cw;
-
-  let createGroupItem = function () {
-    let bounds = new cw.Rect(20, 20, 400, 200);
-    let groupItem = new cw.GroupItem([], {bounds: bounds, immediately: true});
-
-    let groupItemId = groupItem.id;
-    registerCleanupFunction(function() {
-      let groupItem = cw.GroupItems.groupItem(groupItemId);
-      if (groupItem)
-        groupItem.close();
-    });
-
-    return groupItem;
-  }
+  let win;
 
   let testFocusTitle = function () {
     let title = 'title';
-    let groupItem = createGroupItem();
+    let groupItem = cw.GroupItems.groupItems[0];
     groupItem.setTitle(title);
 
     let target = groupItem.$titleShield[0];
@@ -34,14 +21,21 @@ function test() {
     is(input.selectionStart, title.length, 'caret is at the rightmost position and no text is selected');
     is(input.selectionEnd, title.length, 'caret is at the rightmost position and no text is selected');
 
-    groupItem.close();
-    hideTabView(finish);
+    win.close();
+    finish();
   }
 
   waitForExplicitFinish();
 
-  showTabView(function () {
-    cw = TabView.getContentWindow();
-    testFocusTitle();
+  newWindowWithTabView(function (tvwin) {
+    win = tvwin;
+
+    registerCleanupFunction(function () {
+      if (!win.closed)
+        win.close();
+    });
+
+    cw = win.TabView.getContentWindow();
+    SimpleTest.waitForFocus(testFocusTitle, cw);
   });
 }

@@ -22,10 +22,6 @@
 #include "yuv_row.h"
 #include "mozilla/SSE.h"
 
-#ifdef HAVE_YCBCR_TO_RGB565
-void __attribute((noinline)) yv12_to_rgb565_neon(uint16 *dst, const uint8 *y, const uint8 *u, const uint8 *v, int n, int oddflag);
-#endif
-
 namespace mozilla {
 
 namespace gfx {
@@ -34,33 +30,6 @@ namespace gfx {
 const int kFractionBits = 16;
 const int kFractionMax = 1 << kFractionBits;
 const int kFractionMask = ((1 << kFractionBits) - 1);
-
-
-// Convert a frame of YUV to 16 bit RGB565.
-NS_GFX_(void) ConvertYCbCrToRGB565(const uint8* y_buf,
-                                  const uint8* u_buf,
-                                  const uint8* v_buf,
-                                  uint8* rgb_buf,
-                                  int pic_x,
-                                  int pic_y,
-                                  int pic_width,
-                                  int pic_height,
-                                  int y_pitch,
-                                  int uv_pitch,
-                                  int rgb_pitch,
-                                  YUVType yuv_type)
-{
-#ifdef HAVE_YCBCR_TO_RGB565
-  for (int i = 0; i < pic_height; i++) {
-    yv12_to_rgb565_neon((uint16*)(rgb_buf + rgb_pitch * i),
-                         y_buf + y_pitch * i,
-                         u_buf + uv_pitch * (i / 2),
-                         v_buf + uv_pitch * (i / 2),
-                         pic_width,
-                         0);
-  }
-#endif
-}
 
 // Convert a frame of YUV to 32 bit ARGB.
 NS_GFX_(void) ConvertYCbCrToRGB32(const uint8* y_buf,

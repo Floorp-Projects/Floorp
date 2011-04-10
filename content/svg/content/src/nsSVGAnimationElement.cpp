@@ -147,7 +147,8 @@ nsSVGAnimationElement::GetTargetElementContent()
                     "if we don't have an xlink:href attribute");
 
   // No "xlink:href" attribute --> I should target my parent.
-  return nsSVGUtils::GetParentElement(this);
+  nsIContent* parent = GetFlattenedTreeParent();
+  return parent && parent->IsElement() ? parent->AsElement() : nsnull;
 }
 
 PRBool

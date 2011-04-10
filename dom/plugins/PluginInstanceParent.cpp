@@ -366,6 +366,15 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginTransparent(
 }
 
 bool
+PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginUsesDOMForCursor(
+    const bool& useDOMForCursor, NPError* result)
+{
+    *result = mNPNIface->setvalue(mNPP, NPPVpluginUsesDOMForCursorBool,
+                                  (void*)(NPBool)useDOMForCursor);
+    return true;
+}
+
+bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
     const int& drawingModel, NPError* result)
 {

@@ -82,6 +82,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mTransparent(PR_FALSE),
     mCached(PR_FALSE),
     mWantsAllNetworkStreams(PR_FALSE),
+    mUsesDOMForCursor(PR_FALSE),
     mInPluginInitCall(PR_FALSE),
     mPlugin(plugin),
     mMIMEType(nsnull),
@@ -691,6 +692,18 @@ NPError nsNPAPIPluginInstance::SetWantsAllNetworkStreams(PRBool aWantsAllNetwork
 {
   mWantsAllNetworkStreams = aWantsAllNetworkStreams;
   return NPERR_NO_ERROR;
+}
+
+NPError nsNPAPIPluginInstance::SetUsesDOMForCursor(PRBool aUsesDOMForCursor)
+{
+  mUsesDOMForCursor = aUsesDOMForCursor;
+  return NPERR_NO_ERROR;
+}
+
+PRBool
+nsNPAPIPluginInstance::UsesDOMForCursor()
+{
+  return mUsesDOMForCursor;
 }
 
 #ifdef XP_MACOSX

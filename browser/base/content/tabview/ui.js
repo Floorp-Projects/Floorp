@@ -755,9 +755,16 @@ let UI = {
       if (tab.ownerDocument.defaultView != gWindow)
         return;
 
-      let activeGroupItem = GroupItems.getActiveGroupItem();
-      if (activeGroupItem)
-        self.setReorderTabItemsOnShow(activeGroupItem);
+      if (GroupItems.groupItems.length > 0) {
+        if (tab.pinned) {
+          if (gBrowser._numPinnedTabs > 1)
+            GroupItems.arrangeAppTab(tab);
+        } else {
+          let activeGroupItem = GroupItems.getActiveGroupItem();
+          if (activeGroupItem)
+            self.setReorderTabItemsOnShow(activeGroupItem);
+        }
+      }
     };
 
     // TabSelect
