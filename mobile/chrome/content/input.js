@@ -60,13 +60,6 @@ const kAxisLockRevertThreshold = 0.8;
 // Same as NS_EVENT_STATE_ACTIVE from nsIEventStateManager.h
 const kStateActive = 0x00000001;
 
-// After a drag begins, kinetic panning is stopped if the drag doesn't become
-// a pan in 300 milliseconds.
-const kStopKineticPanOnDragTimeout = 300;
-
-// Max velocity of a pan. This is in pixels/millisecond.
-const kMaxVelocity = 6;
-
 /**
  * MouseModule
  *
@@ -212,21 +205,19 @@ MouseModule.prototype = {
     this._targetScrollInterface = targetScrollInterface;
 
     // Do tap
-    if (!this._kinetic.isActive()) {
-      let event = document.createEvent("Events");
-      event.initEvent("TapDown", true, true);
-      event.clientX = aEvent.clientX;
-      event.clientY = aEvent.clientY;
-      let success = aEvent.target.dispatchEvent(event);
-      if (success) {
-        this._recordEvent(aEvent);
-        this._target = aEvent.target;
-        this._mouseOverTimeout.once(kOverTapWait);
-        this._longClickTimeout.once(kLongTapWait);
-      } else {
-        // cancel all pending content clicks
-        this._cleanClickBuffer();
-      }
+    let event = document.createEvent("Events");
+    event.initEvent("TapDown", true, true);
+    event.clientX = aEvent.clientX;
+    event.clientY = aEvent.clientY;
+    let success = aEvent.target.dispatchEvent(event);
+    if (success) {
+      this._recordEvent(aEvent);
+      this._target = aEvent.target;
+      this._mouseOverTimeout.once(kOverTapWait);
+      this._longClickTimeout.once(kLongTapWait);
+    } else {
+      // cancel all pending content clicks
+      this._cleanClickBuffer();
     }
 
     // Do pan
@@ -367,7 +358,6 @@ MouseModule.prototype = {
     let dragData = this._dragData;
     dragData.setDragStart(aEvent.screenX, aEvent.screenY, aDraggable);
     this._kinetic.addData(0, 0);
-    this._dragStartTime = Date.now();
     if (!this._kinetic.isActive())
       this._dragger.dragStart(aEvent.clientX, aEvent.clientY, aEvent.target, this._targetScrollInterface);
   },
@@ -384,15 +374,13 @@ MouseModule.prototype = {
     // mousedown/mouseup event previous to this one. In this case, we
     // want the kinetic panner to tell our drag interface to stop.
 
-    if (dragData.isPan()) {
-      if (Date.now() - this._dragStartTime > kStopKineticPanOnDragTimeout)
-        this._kinetic._velocity.set(0, 0);
-      // Start kinetic pan.
-      this._kinetic.start();
-    } else {
-      this._kinetic.end();
+    if (!dragData.isPan() && !this._kinetic.isActive()) {
+      // There was no pan and no kinetic scrolling, so just stop dragger.
       this._dragger.dragStop(0, 0, this._targetScrollInterface);
       this._dragger = null;
+    } else if (dragData.isPan()) {
+      // Start kinetic pan.
+      this._kinetic.start();
     }
   },
 
@@ -404,7 +392,6 @@ MouseModule.prototype = {
    */
   _dragBy: function _dragBy(dX, dY, aIsKinetic) {
     let dragged = true;
-    let dragData = this._dragData;
     if (!this._waitingForPaint || aIsKinetic) {
       let dragData = this._dragData;
       dragged = this._dragger.dragMove(dX, dY, this._targetScrollInterface, aIsKinetic);
@@ -415,9 +402,6 @@ MouseModule.prototype = {
       this.dX = 0;
       this.dY = 0;
     }
-    if (!dragData.isPan())
-      this._kinetic.pause();
-
     return dragged;
   },
 
@@ -847,7 +831,6 @@ function KineticController(aPanBy, aEndCallback) {
 KineticController.prototype = {
   _reset: function _reset() {
     this._active = false;
-    this._paused = false;
     this.momentumBuffer = [];
     this._velocity.set(0, 0);
   },
@@ -889,9 +872,7 @@ KineticController.prototype = {
 
     let callback = {
       onBeforePaint: function kineticHandleEvent(timeStamp) {
-        // Someone called end() on us between timer intervals
-        // or we are paused.
-        if (!self.isActive() || self._paused)
+        if (!self.isActive())  // someone called end() on us between timer intervals
           return;
 
         // To make animation end fast enough but to keep smoothness, average the ideal
@@ -942,7 +923,6 @@ KineticController.prototype = {
     };
 
     this._active = true;
-    this._paused = false;
     mozRequestAnimationFrame(callback);
   },
 
@@ -969,22 +949,9 @@ KineticController.prototype = {
       }
     }
 
-    let currentVelocityX = 0;
-    let currentVelocityY = 0;
-
-    if (this.isActive()) {
-      let currentTime = Date.now() - this._initialTime;
-      currentVelocityX = Util.clamp(this._velocity.x + this._acceleration.x * currentTime, -kMaxVelocity, kMaxVelocity);
-      currentVelocityY = Util.clamp(this._velocity.y + this._acceleration.y * currentTime, -kMaxVelocity, kMaxVelocity);
-    }
-
-    if (currentVelocityX * this._velocity.x <= 0)
-      currentVelocityX = 0;
-    if (currentVelocityY * this._velocity.y <= 0)
-      currentVelocityY = 0;
-
-    this._velocity.x = clampFromZero((distanceX / swipeLength) + currentVelocityX, Math.abs(currentVelocityX), kMaxVelocity);
-    this._velocity.y = clampFromZero((distanceY / swipeLength) + currentVelocityY, Math.abs(currentVelocityY), kMaxVelocity);
+    // Only allow kinetic scrolling to speed up if kinetic scrolling is active.
+    this._velocity.x = (distanceX < 0 ? Math.min : Math.max)((distanceX / swipeLength) * this._speedSensitivity, this._velocity.x);
+    this._velocity.y = (distanceY < 0 ? Math.min : Math.max)((distanceY / swipeLength) * this._speedSensitivity, this._velocity.y);
 
     // Set acceleration vector to opposite signs of velocity
     this._acceleration.set(this._velocity.clone().map(sign).scale(-this._decelerationRate));
@@ -994,14 +961,10 @@ KineticController.prototype = {
     this._time = 0;
     this.momentumBuffer = [];
 
-    if (!this.isActive() || this._paused)
+    if (!this.isActive())
       this._startTimer();
 
     return true;
-  },
-
-  pause: function pause() {
-    this._paused = true;
   },
 
   end: function end() {
