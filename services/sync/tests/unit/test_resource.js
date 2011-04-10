@@ -221,6 +221,23 @@ function run_test() {
   let did401 = false;
   Observers.add("weave:resource:status:401", function() did401 = true);
 
+  _("Test that the BasicAuthenticator doesn't screw up header case.");
+  let res1 = new Resource("http://localhost:8080/foo");
+  res1.setHeader("Authorization", "Basic foobar");
+  res1.authenticator = new NoOpAuthenticator();
+  do_check_eq(res1._headers["authorization"], "Basic foobar");
+  do_check_eq(res1.headers["authorization"], "Basic foobar");
+  let id = new Identity("secret", "guest", "guest");
+  res1.authenticator = new BasicAuthenticator(id);
+
+  // In other words... it correctly overwrites our downcased version
+  // when accessed through .headers.
+  do_check_eq(res1._headers["authorization"], "Basic foobar");
+  do_check_eq(res1.headers["authorization"], "Basic Z3Vlc3Q6Z3Vlc3Q=");
+  do_check_eq(res1._headers["authorization"], "Basic Z3Vlc3Q6Z3Vlc3Q=");
+  do_check_true(!res1._headers["Authorization"]);
+  do_check_true(!res1.headers["Authorization"]);
+
   _("GET a password protected resource (test that it'll fail w/o pass, no throw)");
   let res2 = new Resource("http://localhost:8080/protected");
   content = res2.get();
@@ -346,8 +363,8 @@ function run_test() {
   do_check_eq(content, JSON.stringify({"x-what-is-weave": "awesome"}));
 
   _("setHeader(): setting multiple headers, overwriting existing header");
-  res9.setHeader('X-WHAT-is-Weave', 'more awesomer',
-                 'X-Another-Header', 'hello world');
+  res9.setHeader('X-WHAT-is-Weave', 'more awesomer');
+  res9.setHeader('X-Another-Header', 'hello world');
   do_check_eq(res9.headers['x-what-is-weave'], 'more awesomer');
   do_check_eq(res9.headers['x-another-header'], 'hello world');
   content = res9.get();

@@ -2,6 +2,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/engines/clients.js");
 Cu.import("resource://services-sync/service.js");
 
@@ -33,10 +34,10 @@ function test_bad_hmac() {
   }
 
   let handlers = {
-    "/1.0/foo/info/collections": collectionsHelper.handler,
-    "/1.0/foo/storage/meta/global": upd("meta", global.handler()),
-    "/1.0/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),
-    "/1.0/foo/storage/clients": trackDeletedHandler("crypto", clientsColl.handler())
+    "/1.1/foo/info/collections": collectionsHelper.handler,
+    "/1.1/foo/storage/meta/global": upd("meta", global.handler()),
+    "/1.1/foo/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.1/foo/storage/clients": trackDeletedHandler("crypto", clientsColl.handler())
   };
 
   let server = httpd_setup(handlers);
@@ -76,6 +77,61 @@ function test_bad_hmac() {
     do_check_eq(1, clientsColl.count());
     _("Records now: " + clientsColl.get({}));
 
+    _("Now change our keys but don't upload them. " +
+      "That means we get an HMAC error but redownload keys.");
+    Service.lastHMACEvent = 0;
+    Clients.localID = Utils.makeGUID();
+    Clients.resetClient();
+    CollectionKeys.generateNewKeys();
+    deleted = false;
+    do_check_eq(1, clientsColl.count());
+    Clients.sync();
+
+    _("Old record was not deleted, new one uploaded.");
+    do_check_false(deleted);
+    do_check_eq(2, clientsColl.count());
+    _("Records now: " + clientsColl.get({}));
+
+    _("Now try the scenario where our keys are wrong *and* there's a bad record.");
+    // Clean up and start fresh.
+    clientsColl.wbos = {};
+    Service.lastHMACEvent = 0;
+    Clients.localID = Utils.makeGUID();
+    Clients.resetClient();
+    deleted = false;
+    do_check_eq(0, clientsColl.count());
+
+    // Create and upload keys.
+    CollectionKeys.generateNewKeys();
+    serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
+
+    // Sync once to upload a record.
+    Clients.sync();
+    do_check_eq(1, clientsColl.count());
+
+    // Generate and upload new keys, so the old client record is wrong.
+    CollectionKeys.generateNewKeys();
+    serverKeys = CollectionKeys.asWBO("crypto", "keys");
+    serverKeys.encrypt(Weave.Service.syncKeyBundle);
+    do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
+
+    // Create a new client record and new keys. Now our keys are wrong, as well
+    // as the object on the server. We'll download the new keys and also delete
+    // the bad client record.
+    Clients.localID = Utils.makeGUID();
+    Clients.resetClient();
+    CollectionKeys.generateNewKeys();
+    let oldKey = CollectionKeys.keyForCollection();
+
+    do_check_false(deleted);
+    Clients.sync();
+    do_check_true(deleted);
+    do_check_eq(1, clientsColl.count());
+    let newKey = CollectionKeys.keyForCollection();
+    do_check_false(oldKey.equals(newKey));
+
   } finally {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
@@ -101,7 +157,6 @@ function test_sync() {
   _("Ensure that Clients engine uploads a new client record once a week.");
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-  new SyncTestingInfrastructure();
 
   CollectionKeys.generateNewKeys();
 
@@ -111,9 +166,12 @@ function test_sync() {
   let coll = new ServerCollection();
   let clientwbo = coll.wbos[Clients.localID] = new ServerWBO(Clients.localID);
   let server = httpd_setup({
-      "/1.0/foo/storage/meta/global": global.handler(),
-      "/1.0/foo/storage/clients": coll.handler()
+      "/1.1/foo/storage/meta/global": global.handler(),
+      "/1.1/foo/storage/clients": coll.handler()
   });
+  server.registerPathHandler(
+    "/1.1/foo/storage/clients/" + Clients.localID, clientwbo.handler());
+
   do_test_pending();
 
   try {
@@ -133,10 +191,13 @@ function test_sync() {
     do_check_true(!!clientwbo.payload);
     do_check_true(Clients.lastRecordUpload > lastweek);
 
+    _("Remove client record.");
+    Clients.removeClientData();
+    do_check_eq(clientwbo.payload, undefined);
+
     _("Time travel one day back, no record uploaded.");
     Clients.lastRecordUpload -= LESS_THAN_CLIENTS_TTL_REFRESH;
     let yesterday = Clients.lastRecordUpload;
-    clientwbo.payload = undefined;
     Clients.sync();
     do_check_eq(clientwbo.payload, undefined);
     do_check_eq(Clients.lastRecordUpload, yesterday);
@@ -152,7 +213,7 @@ function test_sync() {
 function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Engine.Clients").level = Log4Moz.Level.Trace;
-  test_bad_hmac();      // Needs to run first: doesn't use fake service!
+  test_bad_hmac();
   test_properties();
   test_sync();
 }

@@ -129,7 +129,7 @@ function test_syncStartup_emptyOrOutdatedGlobalsResetsSync() {
                                   denomination: "Flying Scotsman"}));
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -176,7 +176,7 @@ function test_syncStartup_serverHasNewerVersion() {
   Svc.Prefs.set("username", "foo");
   let global = new ServerWBO('global', {engines: {steam: {version: 23456}}});
   let server = httpd_setup({
-      "/1.0/foo/storage/meta/global": global.handler()
+      "/1.1/foo/storage/meta/global": global.handler()
   });
   do_test_pending();
 
@@ -215,7 +215,7 @@ function test_syncStartup_syncIDMismatchResetsClient() {
   let global = new ServerWBO('global',
                              {engines: {steam: {version: engine.version,
                                                 syncID: 'foobar'}}});
-  server.registerPathHandler("/1.0/foo/storage/meta/global", global.handler());
+  server.registerPathHandler("/1.1/foo/storage/meta/global", global.handler());
 
   try {
 
@@ -250,7 +250,7 @@ function test_processIncoming_emptyServer() {
   let collection = new ServerCollection();
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -293,9 +293,9 @@ function test_processIncoming_createFromServer() {
                                          denomination: "Pathological Case"}));
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler(),
-      "/1.0/foo/storage/steam/flying": collection.wbos.flying.handler(),
-      "/1.0/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
+      "/1.1/foo/storage/steam": collection.handler(),
+      "/1.1/foo/storage/steam/flying": collection.wbos.flying.handler(),
+      "/1.1/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
   });
   do_test_pending();
 
@@ -387,7 +387,7 @@ function test_processIncoming_reconcile() {
                                 deleted: true}));
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -483,7 +483,7 @@ function test_processIncoming_mobile_batchSize() {
   }
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -563,7 +563,7 @@ function test_processIncoming_store_toFetch() {
   meta_global.payload.engines = {steam: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -631,7 +631,7 @@ function test_processIncoming_resume_toFetch() {
   meta_global.payload.engines = {steam: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -688,7 +688,7 @@ function test_processIncoming_applyIncomingBatchSize_smaller() {
   meta_global.payload.engines = {steam: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -746,7 +746,7 @@ function test_processIncoming_applyIncomingBatchSize_multiple() {
   meta_global.payload.engines = {steam: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -776,10 +776,6 @@ function test_processIncoming_failed_records() {
   _("Ensure that failed records from _reconcile and applyIncomingBatch are refetched.");
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
-
-  // Pretend to be a mobile client so we can test failed record handling
-  // while batching GETs.
-  Svc.Prefs.set("client.type", "mobile");
 
   // Let's create three and a bit batches worth of server side records.
   let collection = new ServerCollection();
@@ -824,8 +820,20 @@ function test_processIncoming_failed_records() {
   let meta_global = Records.set(engine.metaURL, new WBORecord(engine.metaURL));
   meta_global.payload.engines = {steam: {version: engine.version,
                                          syncID: engine.syncID}};
+
+  // Keep track of requests made of a collection.
+  let count = 0;
+  let uris  = [];
+  function recording_handler(collection) {
+    let h = collection.handler();
+    return function(req, res) {
+      ++count;
+      uris.push(req.path + "?" + req.queryString);
+      return h(req, res);
+    };
+  }
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": recording_handler(collection)
   });
   do_test_pending();
 
@@ -863,6 +871,33 @@ function test_processIncoming_failed_records() {
     // Ensure the observer was notified
     do_check_eq(observerData, engine.name);
     do_check_eq(observerSubject.failed, BOGUS_RECORDS.length);
+
+    // Testing batching of failed item fetches.
+    // Try to sync again. Ensure that we split the request into chunks to avoid
+    // URI length limitations.
+    function batchDownload(batchSize) {
+      count = 0;
+      uris  = [];
+      engine.guidFetchBatchSize = batchSize;
+      engine._processIncoming();
+      _("Tried again. Requests: " + count + "; URIs: " + JSON.stringify(uris));
+      return count;
+    }
+    
+    // There are 8 bad records, so this needs 3 fetches.
+    _("Test batching with ID batch size 3, normal mobile batch size.");
+    do_check_eq(batchDownload(3), 3);
+
+    // Now see with a more realistic limit.
+    _("Test batching with sufficient ID batch size.");
+    do_check_eq(batchDownload(BOGUS_RECORDS.length), 1);
+
+    // If we're on mobile, that limit is used by default.
+    _("Test batching with tiny mobile batch size.");
+    Svc.Prefs.set("client.type", "mobile");
+    engine.mobileGUIDFetchBatchSize = 2;
+    do_check_eq(batchDownload(BOGUS_RECORDS.length), 4);
+
   } finally {
     server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
@@ -910,7 +945,7 @@ function test_processIncoming_decrypt_failed() {
   meta_global.payload.engines = {steam: {version: engine.version,
                                          syncID: engine.syncID}};
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -961,9 +996,9 @@ function test_uploadOutgoing_toEmptyServer() {
   collection.wbos.scotsman = new ServerWBO('scotsman');
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler(),
-      "/1.0/foo/storage/steam/flying": collection.wbos.flying.handler(),
-      "/1.0/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
+      "/1.1/foo/storage/steam": collection.handler(),
+      "/1.1/foo/storage/steam/flying": collection.wbos.flying.handler(),
+      "/1.1/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
   });
   do_test_pending();
   CollectionKeys.generateNewKeys();
@@ -1023,7 +1058,7 @@ function test_uploadOutgoing_failed() {
   collection.wbos.flying = new ServerWBO('flying');
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -1107,7 +1142,7 @@ function test_uploadOutgoing_MAX_UPLOAD_RECORDS() {
                                          syncID: engine.syncID}};
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -1165,7 +1200,7 @@ function test_syncFinish_deleteByIds() {
                                 denomination: "Rekonstruktionslokomotive"}));
 
   let server = httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -1219,7 +1254,7 @@ function test_syncFinish_deleteLotsInBatches() {
   }
 
   let server = httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -1274,7 +1309,7 @@ function test_sync_partialUpload() {
 
   let collection = new ServerCollection();
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
   CollectionKeys.generateNewKeys();
@@ -1356,7 +1391,7 @@ function test_canDecrypt_noCryptoKeys() {
                                 denomination: "LNER Class A3 4472"}));
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
@@ -1387,7 +1422,7 @@ function test_canDecrypt_true() {
                                 denomination: "LNER Class A3 4472"}));
 
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/steam": collection.handler()
+      "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
 
