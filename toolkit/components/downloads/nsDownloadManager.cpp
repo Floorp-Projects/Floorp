@@ -80,6 +80,10 @@
 #include <CoreFoundation/CoreFoundation.h>
 #endif
 
+#ifdef ANDROID
+#include "AndroidBridge.h"
+#endif
+
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://mozapps/locale/downloads/downloads.properties"
 #define DOWNLOAD_MANAGER_ALERT_ICON "chrome://mozapps/skin/downloads/downloadIcon.png"
 #define PREF_BDM_SHOWALERTONCOMPLETE "browser.download.manager.showAlertOnComplete"
@@ -2239,7 +2243,7 @@ nsDownload::SetState(DownloadState aState)
         }
       }
 
-#if (defined(XP_WIN) && !defined(WINCE)) || defined(XP_MACOSX)
+#if (defined(XP_WIN) && !defined(WINCE)) || defined(XP_MACOSX) || defined(ANDROID)
       nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
       nsCOMPtr<nsIFile> file;
       nsAutoString path;
@@ -2272,6 +2276,16 @@ nsDownload::SetState(DownloadState aState)
         ::CFNotificationCenterPostNotification(center, CFSTR("com.apple.DownloadFileFinished"),
                                                observedObject, NULL, TRUE);
         ::CFRelease(observedObject);
+#endif
+#ifdef ANDROID
+        nsCOMPtr<nsIMIMEInfo> mimeInfo;
+        nsCAutoString contentType;
+        GetMIMEInfo(getter_AddRefs(mimeInfo));
+
+        if (mimeInfo)
+          mimeInfo->GetMIMEType(contentType);
+
+        mozilla::AndroidBridge::Bridge()->ScanMedia(path, contentType);
 #endif
       }
 

@@ -46,6 +46,7 @@ include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES =	adoption01.dat \
 		webkit01.dat \
+		ark.dat \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

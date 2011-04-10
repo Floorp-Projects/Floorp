@@ -148,10 +148,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateQueryProcessorRDF)
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mQueries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULTemplateQueryProcessorRDF,
-                                          nsIXULTemplateQueryProcessor)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULTemplateQueryProcessorRDF,
-                                           nsIXULTemplateQueryProcessor)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULTemplateQueryProcessorRDF)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULTemplateQueryProcessorRDF)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULTemplateQueryProcessorRDF)
     NS_INTERFACE_MAP_ENTRY(nsIXULTemplateQueryProcessor)
     NS_INTERFACE_MAP_ENTRY(nsIRDFObserver)

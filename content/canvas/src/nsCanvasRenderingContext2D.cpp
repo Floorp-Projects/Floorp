@@ -220,14 +220,10 @@ public:
     NS_IMETHOD AddColorStop (float offset,
                              const nsAString& colorstr)
     {
-        nscolor color;
-
-        if (!FloatValidate(offset))
-            return NS_ERROR_DOM_SYNTAX_ERR;
-
-        if (offset < 0.0 || offset > 1.0)
+        if (!FloatValidate(offset) || offset < 0.0 || offset > 1.0)
             return NS_ERROR_DOM_INDEX_SIZE_ERR;
 
+        nscolor color;
         nsCSSParser parser;
         nsresult rv = parser.ParseColorString(nsString(colorstr),
                                               nsnull, 0, &color);
@@ -776,8 +772,8 @@ protected:
     friend struct nsCanvasBidiProcessor;
 };
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsCanvasRenderingContext2D, nsIDOMCanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCanvasRenderingContext2D)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsCanvasRenderingContext2D)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCanvasRenderingContext2D)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCanvasRenderingContext2D)
@@ -1119,6 +1115,7 @@ nsCanvasRenderingContext2D::SetDimensions(PRInt32 width, PRInt32 height)
         }
 
         gCanvasMemoryUsed += width * height * 4;
+        JS_updateMallocCounter(nsContentUtils::GetCurrentJSContext(), width * height * 4);
     }
 
     return InitializeWithSurface(NULL, surface, width, height);
@@ -3844,32 +3841,51 @@ nsCanvasRenderingContext2D::GetImageData_explicit(PRInt32 x, PRInt32 y, PRUint32
         return NS_ERROR_DOM_SECURITY_ERR;
     }
 
-    if (w == 0 || h == 0)
+    if (w == 0 || h == 0 || aDataLen != w * h * 4)
         return NS_ERROR_DOM_SYNTAX_ERR;
 
-    if (!CanvasUtils::CheckSaneSubrectSize (x, y, w, h, mWidth, mHeight))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+    CheckedInt32 rightMost = CheckedInt32(x) + w;
+    CheckedInt32 bottomMost = CheckedInt32(y) + h;
 
-    PRUint32 len = w * h * 4;
-    if (aDataLen != len)
+    if (!rightMost.valid() || !bottomMost.valid())
         return NS_ERROR_DOM_SYNTAX_ERR;
 
     /* Copy the surface contents to the buffer */
-    nsRefPtr<gfxImageSurface> tmpsurf = new gfxImageSurface(aData,
-                                                            gfxIntSize(w, h),
-                                                            w * 4,
-                                                            gfxASurface::ImageFormatARGB32);
-    if (!tmpsurf || tmpsurf->CairoStatus())
+    nsRefPtr<gfxImageSurface> tmpsurf =
+        new gfxImageSurface(aData,
+                            gfxIntSize(w, h),
+                            w * 4,
+                            gfxASurface::ImageFormatARGB32);
+
+    if (tmpsurf->CairoStatus())
         return NS_ERROR_FAILURE;
 
     nsRefPtr<gfxContext> tmpctx = new gfxContext(tmpsurf);
 
-    if (!tmpctx || tmpctx->HasError())
+    if (tmpctx->HasError())
         return NS_ERROR_FAILURE;
 
-    tmpctx->SetOperator(gfxContext::OPERATOR_SOURCE);
-    tmpctx->SetSource(mSurface, gfxPoint(-(int)x, -(int)y));
-    tmpctx->Paint();
+    gfxRect srcRect(0, 0, mWidth, mHeight);
+    gfxRect destRect(x, y, w, h);
+
+    bool finishedPainting = false;
+    // In the common case, we want to avoid the Rectangle call.
+    if (!srcRect.Contains(destRect)) {
+        // If the requested area is entirely outside the canvas, we're done.
+        gfxRect tmp = srcRect.Intersect(destRect);
+        finishedPainting = tmp.IsEmpty();
+
+        // Set clipping region if necessary.
+        if (!finishedPainting) {
+            tmpctx->Rectangle(tmp);
+        }
+    }
+
+    if (!finishedPainting) {
+        tmpctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        tmpctx->SetSource(mSurface, gfxPoint(-x, -y));
+        tmpctx->Paint();
+    }
 
     // make sure sUnpremultiplyTable has been created
     EnsureUnpremultiplyTable();

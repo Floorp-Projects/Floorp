@@ -29,7 +29,7 @@
       </xul:hbox>
 
       <xul:dropmarker class="autocomplete-history-dropmarker" allowevents="true"
-                      xbl:inherits="open,hidden=disablehistory" anonid="historydropmarker"/>
+                      xbl:inherits="open,enablehistory" anonid="historydropmarker"/>
 
       <xul:popupset>
         <xul:panel type="autocomplete" anonid="popup"
@@ -53,7 +53,6 @@
         this.ifSetAttribute("timeout", 50);
         this.ifSetAttribute("maxrows", 5);
         this.ifSetAttribute("showpopup", true);
-        this.ifSetAttribute("disablehistory", true);
         this.ifSetAttribute("disableKeyNavigation", true);
         
         // initialize the search sessions
@@ -1006,7 +1005,7 @@
             // Alt+Down falls through to history popup toggling code
               
             case KeyEvent.DOM_VK_F4:
-              if (!aEvent.ctrlKey && !aEvent.shiftKey && this.getAttribute("disablehistory") != "true") {
+              if (!aEvent.ctrlKey && !aEvent.shiftKey && this.getAttribute("enablehistory") == "true") {
                 var historyPopup = document.getAnonymousElementByAttribute(this, "anonid", "historydropmarker");
                 if (historyPopup)
                   historyPopup.showPopup();

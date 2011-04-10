@@ -2007,6 +2007,8 @@ fi
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
 AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
 
+MOZ_DOING_LTO(lto_is_enabled)
+
 dnl ========================================================
 dnl System overrides of the defaults for target
 dnl ========================================================
@@ -2108,9 +2110,11 @@ case "$target" in
     # builds.
     MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling"
 
+    if test "x$lto_is_enabled" = "xyes"; then
+        echo "Skipping -dead_strip because lto is enabled."
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
     dnl ===================================================================
-    if test "x$enable_dtrace" = "xyes"; then
+    elif test "x$enable_dtrace" = "xyes"; then
         echo "Skipping -dead_strip because DTrace is enabled. See bug 403132."
     else
         dnl check for the presence of the -dead_strip linker flag
@@ -4923,11 +4927,6 @@ AC_SUBST(SYSTEM_HUNSPELL)
 dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
-JAVA_INCLUDE_PATH=
-MOZ_ARG_WITH_STRING(java-include-path,
-[  --with-java-include-path=dir
-                          Location of Java SDK headers],
-    JAVA_INCLUDE_PATH=$withval)
 
 JAVA_BIN_PATH=
 MOZ_ARG_WITH_STRING(java-bin-path,
@@ -4950,7 +4949,6 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
-MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_MATHML=1
 MOZ_MORK=
@@ -6216,29 +6214,6 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
   MOZ_UNIVERSALCHARDET=,
   MOZ_UNIVERSALCHARDET=1 )
 
-dnl ========================================================
-dnl JavaXPCOM
-dnl ========================================================
-case "${target}" in
-*-wince*)
-    MOZ_JAVAXPCOM=
-    ;;
-esac
-
-MOZ_ARG_ENABLE_BOOL(javaxpcom,
-[  --enable-javaxpcom
-                          Enable Java-XPCOM bridge],
-    MOZ_JAVAXPCOM=1,
-    MOZ_JAVAXPCOM=)
-
-case "$host_os" in
-  *mingw*)
-    if test -n "$JAVA_HOME"; then
-      JAVA_HOME=`cd "$JAVA_HOME" && pwd`
-    fi
-    ;;
-esac
-
 if test -n "${JAVA_BIN_PATH}"; then
   dnl Look for javac and jar in the specified path.
   JAVA_PATH="$JAVA_BIN_PATH"
@@ -6254,29 +6229,6 @@ MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
 if test -n "${JAVA_BIN_PATH}" -o "$OS_TARGET" = Android; then
   if test -z "$JAVA" -o "$JAVA" = ":" -o -z "$JAVAC" -o "$JAVAC" = ":" -o -z "$JAR" -o "$JAR" = ":"; then
     AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-fi
-
-if test -n "${MOZ_JAVAXPCOM}"; then
-  if test -n "${JAVA_INCLUDE_PATH}"; then
-    dnl Make sure jni.h exists in the given include path.
-    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([jni.h was not found in given include path $JAVA_INCLUDE_PATH.])
-    fi
-  else
-    case "$target_os" in
-      darwin*)
-        dnl Default to java system location
-        JAVA_INCLUDE_PATH=/System/Library/Frameworks/JavaVM.framework/Headers
-        ;;
-      *)
-        dnl Try $JAVA_HOME
-        JAVA_INCLUDE_PATH="$JAVA_HOME/include"
-        ;;
-    esac
-    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
-    fi
   fi
 fi
 
@@ -6546,52 +6498,10 @@ if test -z "$MOZ_JSDEBUGGER" -a `echo "$MOZ_EXTENSIONS" | grep -c venkman` -ne 0
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|venkman||'`
 fi
 
-dnl This might be temporary: build tridentprofile only on Windows
-if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0 && test "$OS_ARCH" != "WINNT"; then
-    AC_MSG_WARN([tridentprofile extension works only on Windows at this time. Removing tridentprofile from MOZ_EXTENSIONS.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|tridentprofile||'`
-fi
-
-dnl cookie must be built before tridentprofile. put it at list's end.
-if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
-  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|tridentprofile||'`
-  MOZ_EXTENSIONS="$MOZ_EXTENSIONS tridentprofile"
-fi
-
 dnl xforms requires xtf
 if test -z "$MOZ_XTF" -a `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
     AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c auth` -ne 0; then
-    AC_MSG_WARN([auth is no longer an extension, use --disable-negotiateauth to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|auth||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c 'cookie\|permissions'` -ne 0; then
-    AC_MSG_WARN([cookie and permissions are no longer extensions, use --disable-permissions to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|cookie||g; s|permissions||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c pref` -ne 0; then
-    AC_MSG_WARN([pref is no longer an extension, use --disable-pref-extensions to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|pref||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c universalchardet` -ne 0; then
-    AC_MSG_WARN([universalchardet is no longer an extension, use --disable-universalchardet to disable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|universalchardet||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c java` -ne 0; then
-    AC_MSG_WARN([java is no longer an extension, use --enable-javaxpcom to enable.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|java||g'`
-fi
-
-if test `echo "$MOZ_EXTENSIONS" | grep -c spellcheck` -ne 0; then
-    AC_MSG_WARN([spellcheck is no longer an extension.])
-    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|spellcheck||g'`
 fi
 
 dnl Remove dupes
@@ -9041,8 +8951,6 @@ AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_WEBGL)
 AC_SUBST(MOZ_HELP_VIEWER)
 
-AC_SUBST(MOZ_JAVAXPCOM)
-AC_SUBST(JAVA_INCLUDE_PATH)
 AC_SUBST(JAVA)
 AC_SUBST(JAVAC)
 AC_SUBST(JAR)

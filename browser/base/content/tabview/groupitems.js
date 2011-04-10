@@ -691,6 +691,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       });
 
       this.droppable(false);
+      this.removeTrenches();
       this._createUndoButton();
     } else
       this.close();
@@ -740,6 +741,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$undoContainer.remove();
     this.$undoContainer = null;
     this.droppable(true);
+    this.setTrenches(this.bounds);
 
     GroupItems.setActiveGroupItem(this);
     if (this._activeTab)
@@ -1203,6 +1205,31 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
+  // Arranges the given xul:tab as an app tab in the group's apptab tray
+  arrangeAppTab: function GroupItem_arrangeAppTab(xulTab) {
+    let self = this;
+
+    let elements = iQ(".appTabIcon", this.$appTabTray);
+    let length = elements.length;
+
+    elements.each(function(icon) {
+      let $icon = iQ(icon);
+      if ($icon.data("xulTab") != xulTab)
+        return;
+
+      let targetIndex = xulTab._tPos;
+
+      $icon.remove();
+      if (targetIndex < (length - 1))
+        self.$appTabTray[0].insertBefore(
+          icon,
+        iQ(".appTabIcon:nth-child(" + (targetIndex + 1) + ")", self.$appTabTray)[0]);
+      else
+        $icon.appendTo(self.$appTabTray);
+    });
+  },
+
+  // ----------
   // Function: hideExpandControl
   // Hide the control which expands a stacked groupItem into a quick-look view.
   hideExpandControl: function GroupItem_hideExpandControl() {
@@ -1237,8 +1264,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       count: count || this._children.length,
       hideTitle: false
     };
-    let arrObj = Items.arrange(null, bb, options);
- 
+    let arrObj = Items.arrange(this._children, bb, options);
+
     let shouldStack = arrObj.childWidth < TabItems.minTabWidth * 1.35;
     this._columns = shouldStack ? null : arrObj.columns;
 
@@ -1421,6 +1448,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       }
     });
 
+    self._isStacked = true;
+
     let angleAccum = 0;
     children.forEach(function GroupItem__stackArrange_apply(child, index) {
       child.setZ(zIndex);
@@ -1433,8 +1462,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       child.setHidden(false);
       angleAccum += angleDelta;
     });
-
-    self._isStacked = true;
   },
   
   // ----------
@@ -2032,6 +2059,15 @@ let GroupItems = {
       groupItem.removeAppTab(xulTab);
     });
     this.updateGroupCloseButtons();
+  },
+
+  // ----------
+  // Function: arrangeAppTab
+  // Arranges the given xul:tab as an app tab from app tab tray in all groups
+  arrangeAppTab: function GroupItems_arrangeAppTab(xulTab) {
+    this.groupItems.forEach(function(groupItem) {
+      groupItem.arrangeAppTab(xulTab);
+    });
   },
 
   // ----------

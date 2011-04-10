@@ -934,24 +934,24 @@ checkout:
 	$(MAKE) -C $(topsrcdir) -f client.mk checkout
 
 clean clobber realclean clobber_all:: $(SUBMAKEFILES)
-	-rm -f $(ALL_TRASH)
-	-rm -rf $(ALL_TRASH_DIRS)
+	-$(RM) $(ALL_TRASH)
+	-$(RM) -r $(ALL_TRASH_DIRS)
 	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(STATIC_DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
 
 distclean:: $(SUBMAKEFILES)
 	$(foreach dir,$(PARALLEL_DIRS) $(DIRS) $(STATIC_DIRS) $(TOOL_DIRS),-$(call SUBMAKE,$@,$(dir)))
-	-rm -rf $(ALL_TRASH_DIRS) 
-	-rm -f $(ALL_TRASH)  \
+	-$(RM) -r $(ALL_TRASH_DIRS) 
+	-$(RM) $(ALL_TRASH)  \
 	Makefile .HSancillary \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) $(wildcard host_*.o*) \
 	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX)) \
 	$(wildcard *.$(IMPORT_LIB_SUFFIX))
 ifeq ($(OS_ARCH),OS2)
-	-rm -f $(PROGRAM:.exe=.map)
+	-$(RM) $(PROGRAM:.exe=.map)
 endif
 
 alltags:
-	rm -f TAGS
+	$(RM) TAGS
 	find $(topsrcdir) -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' -o -name '*.idl' \) -print | $(TAG_PROGRAM)
 
 #
@@ -959,7 +959,7 @@ alltags:
 # creates OBJS, links with LIBS to create Foo
 #
 $(PROGRAM): $(PROGOBJS) $(LIBS_DEPS) $(EXTRA_DEPS) $(EXE_DEF_FILE) $(RESFILE) $(GLOBAL_DEPS)
-	@rm -f $@.manifest
+	@$(RM) $@.manifest
 ifeq (WINCE,$(OS_ARCH))
 	$(EXPAND_LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 else
@@ -1110,7 +1110,7 @@ EXTRA_DEPS += $(DTRACE_PROBE_OBJ)
 endif
 
 $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS_DEPS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
-	rm -f $(LIBRARY)
+	$(RM) $(LIBRARY)
 	$(EXPAND_AR) $(AR_FLAGS) $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS)
 	$(RANLIB) $@
 
@@ -1123,7 +1123,7 @@ endif
 
 ifeq ($(OS_ARCH),OS2)
 $(DEF_FILE): $(OBJS) $(SHARED_LIBRARY_LIBS)
-	rm -f $@
+	$(RM) $@
 	echo LIBRARY $(SHARED_LIBRARY_NAME) INITINSTANCE TERMINSTANCE > $@
 	echo PROTMODE >> $@
 	echo CODE    LOADONCALL MOVEABLE DISCARDABLE >> $@
@@ -1133,13 +1133,13 @@ $(DEF_FILE): $(OBJS) $(SHARED_LIBRARY_LIBS)
 	$(ADD_TO_DEF_FILE)
 
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
-	rm -f $@
+	$(RM) $@
 	$(IMPLIB) $@ $^
 	$(RANLIB) $@
 endif # OS/2
 
 $(HOST_LIBRARY): $(HOST_OBJS) Makefile
-	rm -f $@
+	$(RM) $@
 	$(HOST_AR) $(HOST_AR_FLAGS) $(HOST_OBJS)
 	$(HOST_RANLIB) $@
 
@@ -1161,14 +1161,14 @@ endif
 
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(RESFILE) $(SHARED_LIBRARY_LIBS_DEPS) $(LIBRARY) $(EXTRA_DEPS) $(DSO_LDOPTS_DEPS) $(GLOBAL_DEPS)
 ifndef INCREMENTAL_LINKER
-	rm -f $@
+	$(RM) $@
 endif
 ifdef DTRACE_LIB_DEPENDENT
 ifndef XP_MACOSX
 	dtrace -G -C -s $(MOZILLA_DTRACE_SRC) -o  $(DTRACE_PROBE_OBJ) $(shell $(EXPAND_LIBS) $(MOZILLA_PROBE_LIBS))
 endif
 	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(DTRACE_PROBE_OBJ) $(MOZILLA_PROBE_LIBS) $(RESFILE) $(LDFLAGS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
-	@rm -f $(DTRACE_PROBE_OBJ)
+	@$(RM) $(DTRACE_PROBE_OBJ)
 else # ! DTRACE_LIB_DEPENDENT
 	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(DTRACE_PROBE_OBJ) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
 endif # DTRACE_LIB_DEPENDENT
@@ -1186,7 +1186,7 @@ ifdef MOZ_PROFILE_GENERATE
 	touch -t `date +%Y%m%d%H%M.%S -d "now+5seconds"` pgo.relink
 endif
 endif	# WINNT && !GCC
-	@rm -f foodummyfilefoo $(DELETE_AFTER_LINK)
+	@$(RM) foodummyfilefoo $(DELETE_AFTER_LINK)
 	chmod +x $@
 ifdef ENABLE_STRIP
 	$(STRIP) $@
@@ -1302,7 +1302,7 @@ endif
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > t_$*.cc
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) t_$*.cc
-	rm -f t_$*.cc
+	$(RM) t_$*.cc
 else
 	$(ELOG) $(CCC) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 endif #STRICT_CPLUSPLUS_SUFFIX
@@ -1352,12 +1352,14 @@ endif
 
 # need 3 separate lines for OS/2
 %:: %.pl
-	rm -f $@
+	$(RM) $@
 	cp $< $@
 	chmod +x $@
 
 %:: %.sh
-	rm -f $@; cp $< $@; chmod +x $@
+	$(RM) $@
+	cp $< $@
+	chmod +x $@
 
 # Cancel these implicit rules
 #
@@ -1450,13 +1452,6 @@ endif
 
 ################################################################################
 # Copy each element of EXPORTS to $(DIST)/include
-
-ifdef MOZ_JAVAXPCOM
-ifneq ($(XPIDLSRCS),)
-$(JAVA_DIST_DIR)::
-	$(NSINSTALL) -D $@
-endif
-endif
 
 ifneq ($(XPI_NAME),)
 $(FINAL_TARGET):
@@ -1554,8 +1549,8 @@ $(IDL_DIR)::
 # generate .h files from into $(XPIDL_GEN_DIR), then export to $(DIST)/include;
 # warn against overriding existing .h file. 
 $(XPIDL_GEN_DIR)/.done:
-	@if test ! -d $(XPIDL_GEN_DIR); then echo Creating $(XPIDL_GEN_DIR)/.done; rm -rf $(XPIDL_GEN_DIR); mkdir $(XPIDL_GEN_DIR); fi
-	@touch $@
+	$(MKDIR) -p $(XPIDL_GEN_DIR)
+	@$(TOUCH) $@
 
 # don't depend on $(XPIDL_GEN_DIR), because the modification date changes
 # with any addition to the directory, regenerating all .h files -> everything.
@@ -1629,46 +1624,6 @@ endif
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
-
-ifdef MOZ_JAVAXPCOM
-ifneq ($(XPIDLSRCS),)
-
-JAVA_XPIDLSRCS = $(XPIDLSRCS)
-
-# A single IDL file can contain multiple interfaces, which result in multiple
-# Java interface files.  So use hidden dependency files.
-JAVADEPFILES = $(addprefix $(JAVA_GEN_DIR)/.,$(JAVA_XPIDLSRCS:.idl=.java.pp))
-
-$(JAVA_GEN_DIR):
-	$(NSINSTALL) -D $@
-GARBAGE_DIRS += $(JAVA_GEN_DIR)
-
-# generate .java files into _javagen/[package name dirs]
-_JAVA_GEN_DIR = $(JAVA_GEN_DIR)/$(JAVA_IFACES_PKG_NAME)
-$(_JAVA_GEN_DIR):
-	$(NSINSTALL) -D $@
-
-$(JAVA_GEN_DIR)/.%.java.pp: %.idl $(XPIDL_COMPILE) $(_JAVA_GEN_DIR)
-	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m java -w $(XPIDL_FLAGS) -I$(srcdir) -I$(IDL_DIR) -o $(_JAVA_GEN_DIR)/$* $(_VPATH_SRCS)
-	@touch $@
-
-# "Install" generated Java interfaces.  We segregate them based on the XPI_NAME.
-# If XPI_NAME is not set, install into the "default" directory.
-ifneq ($(XPI_NAME),)
-JAVA_INSTALL_DIR = $(JAVA_DIST_DIR)/$(XPI_NAME)
-else
-JAVA_INSTALL_DIR = $(JAVA_DIST_DIR)/default
-endif
-
-$(JAVA_INSTALL_DIR):
-	$(NSINSTALL) -D $@
-
-export:: $(JAVA_DIST_DIR) $(JAVADEPFILES) $(JAVA_INSTALL_DIR)
-	(cd $(JAVA_GEN_DIR) && tar $(TAR_CREATE_FLAGS) - .) | (cd $(JAVA_INSTALL_DIR) && tar -xf -)
-
-endif # XPIDLSRCS
-endif # MOZ_JAVAXPCOM
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components
@@ -1849,7 +1804,7 @@ $(error XPI_NAME must be set for INSTALL_EXTENSION_ID)
 endif
 
 libs::
-	$(RM) -rf "$(DIST)/bin/extensions/$(INSTALL_EXTENSION_ID)"
+	$(RM) -r "$(DIST)/bin/extensions/$(INSTALL_EXTENSION_ID)"
 	$(NSINSTALL) -D "$(DIST)/bin/extensions/$(INSTALL_EXTENSION_ID)"
 	cd $(FINAL_TARGET) && tar $(TAR_CREATE_FLAGS) - . | (cd "../../bin/extensions/$(INSTALL_EXTENSION_ID)" && tar -xf -)
 
@@ -1921,7 +1876,7 @@ endif
 	$(LOOP_OVER_TOOL_DIRS)
 
 dependclean:: $(SUBMAKEFILES)
-	rm -f $(MDDEPFILES)
+	$(RM) $(MDDEPFILES)
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
@@ -1944,7 +1899,7 @@ endif # COMPILER_DEPEND
 #   it.
 
 $(CURDIR)/$(MDDEPDIR):
-	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
+	$(MKDIR) -p $@
 
 ifneq (,$(filter-out all chrome default export realchrome tools clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
 ifneq (,$(OBJS)$(XPIDLSRCS)$(SIMPLE_PROGRAMS))

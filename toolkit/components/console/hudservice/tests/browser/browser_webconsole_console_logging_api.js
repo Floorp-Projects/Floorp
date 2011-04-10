@@ -103,7 +103,7 @@ function testConsoleLoggingAPI(aMethod) {
   console[aMethod]("foo", "bar");
 
   let node = outputNode.querySelector(".hud-msg-node");
-  ok(/"foo" "bar"/.test(node.textContent),
+  ok(/foo bar/.test(node.textContent),
     "Emitted both console arguments");
 }
 
