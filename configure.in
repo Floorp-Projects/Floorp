@@ -6214,6 +6214,14 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
   MOZ_UNIVERSALCHARDET=,
   MOZ_UNIVERSALCHARDET=1 )
 
+if test -n "${JAVA_BIN_PATH}"; then
+  dnl Look for javac and jar in the specified path.
+  JAVA_PATH="$JAVA_BIN_PATH"
+else
+  dnl No path specified, so look for javac and jar in $JAVA_HOME & $PATH.
+  JAVA_PATH="$JAVA_HOME/bin:$PATH"
+fi
+
 MOZ_PATH_PROG(JAVA, java, :, [$JAVA_PATH])
 MOZ_PATH_PROG(JAVAC, javac, :, [$JAVA_PATH])
 MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])

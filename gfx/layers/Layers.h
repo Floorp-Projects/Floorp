@@ -763,12 +763,6 @@ public:
   virtual ThebesLayer* AsThebesLayer() { return nsnull; }
 
   /**
-   * Dynamic cast to a ContainerLayer. Returns null if this is not
-   * a ContainerLayer.
-   */
-  virtual ContainerLayer* AsContainerLayer() { return nsnull; }
-
-  /**
    * Dynamic cast to a ShadowLayer.  Return null if this is not a
    * ShadowLayer.  Can be used anytime.
    */
@@ -1034,8 +1028,6 @@ public:
   }
 
   // These getters can be used anytime.
-
-  virtual ContainerLayer* AsContainerLayer() { return this; }
 
   virtual Layer* GetFirstChild() { return mFirstChild; }
   virtual Layer* GetLastChild() { return mLastChild; }
