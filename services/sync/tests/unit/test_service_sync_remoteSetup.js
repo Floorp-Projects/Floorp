@@ -33,12 +33,12 @@ function run_test() {
   let metaColl = new ServerCollection({global: meta_global});
   do_test_pending();
   let server = httpd_setup({
-    "/1.0/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
-    "/1.0/johndoe/storage/crypto": upd("crypto", cryptoColl.handler()),
-    "/1.0/johndoe/storage/clients": upd("clients", clients.handler()),
-    "/1.0/johndoe/storage/meta/global": upd("meta", wasCalledHandler(meta_global)),
-    "/1.0/johndoe/storage/meta": upd("meta", wasCalledHandler(metaColl)),
-    "/1.0/johndoe/info/collections": collectionsHelper.handler
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.1/johndoe/storage/crypto": upd("crypto", cryptoColl.handler()),
+    "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta", wasCalledHandler(meta_global)),
+    "/1.1/johndoe/storage/meta": upd("meta", wasCalledHandler(metaColl)),
+    "/1.1/johndoe/info/collections": collectionsHelper.handler
   });
 
   try {

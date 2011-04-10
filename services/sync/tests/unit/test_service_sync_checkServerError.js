@@ -38,10 +38,10 @@ function sync_httpd_setup() {
                                              engines: engines});
 
   let handlers = {
-    "/1.0/johndoe/info/collections":    collectionsHelper.handler,
-    "/1.0/johndoe/storage/meta/global": upd("meta",    globalWBO.handler()),
-    "/1.0/johndoe/storage/clients":     upd("clients", clientsColl.handler()),
-    "/1.0/johndoe/storage/crypto/keys": upd("crypto",  keysWBO.handler())
+    "/1.1/johndoe/info/collections":    collectionsHelper.handler,
+    "/1.1/johndoe/storage/meta/global": upd("meta",    globalWBO.handler()),
+    "/1.1/johndoe/storage/clients":     upd("clients", clientsColl.handler()),
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto",  keysWBO.handler())
   }
   return httpd_setup(handlers);
 }
@@ -58,7 +58,7 @@ function generateAndUploadKeys() {
   CollectionKeys.generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Weave.Service.syncKeyBundle);
-  return serverKeys.upload("http://localhost:8080/1.0/johndoe/storage/crypto/keys").success;
+  return serverKeys.upload("http://localhost:8080/1.1/johndoe/storage/crypto/keys").success;
 }
 
 function test_backoff500(next) {
