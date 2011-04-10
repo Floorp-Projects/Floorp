@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++ tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * vim: set ts=4 sw=4 et tw=99:
  *
  * ***** BEGIN LICENSE BLOCK *****
@@ -595,12 +595,18 @@ stubs::SetElem(VMFrame &f)
                         break;
                     if ((jsuint)i >= obj->getArrayLength() && !obj->setArrayLength(cx, i + 1))
                         THROW();
-                    *f.pc() = JSOP_SETHOLE;
+                    /*
+                     * Note: this stub is used for ENUMELEM, so watch out
+                     * before overwriting the op.
+                     */
+                    if (JSOp(*f.pc()) == JSOP_SETELEM)
+                        *f.pc() = JSOP_SETHOLE;
                 }
                 obj->setDenseArrayElement(i, rval);
                 goto end_setelem;
             } else {
-                *f.pc() = JSOP_SETHOLE;
+                if (JSOp(*f.pc()) == JSOP_SETELEM)
+                    *f.pc() = JSOP_SETHOLE;
             }
         }
     } while (0);
@@ -1301,6 +1307,7 @@ stubs::Interrupt(VMFrame &f, jsbytecode *pc)
 void JS_FASTCALL
 stubs::RecompileForInline(VMFrame &f)
 {
+    ExpandInlineFrames(f.cx, true);
     Recompiler recompiler(f.cx, f.script());
     if (!recompiler.recompile())
         THROW();
@@ -2798,6 +2805,25 @@ stubs::NegZeroHelper(VMFrame &f)
     if (!f.script()->typeMonitorOverflow(f.cx, f.pc()))
         THROW();
     f.regs.sp[-1].setDouble(-0.0);
+}
+
+void JS_FASTCALL
+stubs::CallPropSwap(VMFrame &f)
+{
+    /*
+     * CALLPROP operations on strings are implemented in terms of GETPROP.
+     * If we rejoin from such a GETPROP, we come here at the end of the
+     * CALLPROP to fix up the stack. Right now the stack looks like:
+     *
+     * STRING PROP
+     *
+     * We need it to be:
+     *
+     * PROP STRING
+     */
+    Value v = f.regs.sp[-1];
+    f.regs.sp[-1] = f.regs.sp[-2];
+    f.regs.sp[-2] = v;
 }
 
 void JS_FASTCALL
