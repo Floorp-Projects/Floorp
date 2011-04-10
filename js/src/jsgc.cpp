@@ -243,7 +243,7 @@ checkArenaListsForThing(JSCompartment *comp, void *thing)
         comp->arenas[FINALIZE_OBJECT12].arenasContainThing<JSObject_Slots12>(thing) ||
         comp->arenas[FINALIZE_OBJECT16].arenasContainThing<JSObject_Slots16>(thing) ||
         comp->arenas[FINALIZE_FUNCTION].arenasContainThing<JSFunction>(thing) ||
-        comp->arenas[FINALIZE_FUNCTION].arenasContainThing<Shape>(thing) ||
+        comp->arenas[FINALIZE_SHAPE].arenasContainThing<Shape>(thing) ||
 #if JS_HAS_XML_SUPPORT
         comp->arenas[FINALIZE_XML].arenasContainThing<JSXML>(thing) ||
 #endif
