@@ -170,13 +170,13 @@ typedef JSC::MacroAssembler::Imm32 Imm32;
 typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr)
+StubCompiler::emitStubCall(void *ptr, bool needsRejoin)
 {
-    return emitStubCall(ptr, frame.totalDepth());
+    return emitStubCall(ptr, needsRejoin, frame.totalDepth());
 }
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr, int32 slots)
+StubCompiler::emitStubCall(void *ptr, bool needsRejoin, int32 slots)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
     DataLabelPtr inlinePatch;
@@ -194,7 +194,7 @@ StubCompiler::emitStubCall(void *ptr, int32 slots)
     /* Add the call site for debugging and recompilation. */
     Compiler::InternalCallSite site(masm.callReturnOffset(cl),
                                     cc.inlineIndex(), cc.inlinePC(),
-                                    (size_t)ptr, true, true);
+                                    (size_t)ptr, true, needsRejoin);
     site.inlinePatch = inlinePatch;
     cc.addCallSite(site);
     return cl;

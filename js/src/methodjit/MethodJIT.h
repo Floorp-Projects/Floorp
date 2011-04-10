@@ -338,6 +338,7 @@ namespace mjit {
 
 struct InlineFrame;
 struct CallSite;
+struct RejoinSite;
 
 struct NativeMapEntry {
     size_t          bcOff;  /* bytecode offset in script */
@@ -365,9 +366,11 @@ struct JITScript {
     uint32          nNmapPairs:30;      /* The NativeMapEntrys are sorted by .bcOff.
                                            .ncode values may not be NULL. */
     bool            singleStepMode:1;   /* compiled in "single step mode" */
-    bool            rejoinPoints:1;     /* compiled with recompilation rejoin points */
+    bool            rejoinPoints:1;     /* compiled with all rejoin points for
+                                           inline frame expansions */
     uint32          nInlineFrames;
     uint32          nCallSites;
+    uint32          nRejoinSites;
 #ifdef JS_MONOIC
     uint32          nGetGlobalNames;
     uint32          nSetGlobalNames;
@@ -402,6 +405,7 @@ struct JITScript {
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;
     js::mjit::CallSite *callSites() const;
+    js::mjit::RejoinSite *rejoinSites() const;
 #ifdef JS_MONOIC
     ic::GetGlobalNameIC *getGlobalNames() const;
     ic::SetGlobalNameIC *setGlobalNames() const;
@@ -438,7 +442,7 @@ struct JITScript {
 
   private:
     /* Helpers used to navigate the variable-length sections. */
-    char *nmapSectionLimit() const;
+    char *commonSectionLimit() const;
     char *monoICSectionsLimit() const;
     char *polyICSectionsLimit() const;
 };
@@ -544,6 +548,32 @@ struct CallSite
 
     bool isTrap() const {
         return id == MAGIC_TRAP_ID;
+    }
+};
+
+struct RejoinSite
+{
+    // When doing on stack recompilation, we take a frame that made a call at
+    // some CallSite in the original JIT and redirect it to a corresponding
+    // RejoinSite in the new JIT. The rejoin sites are similar to call sites,
+    // with the exception that they do additional checking and coercions from
+    // int to double to ensure the stack types are consistent with what the new
+    // JIT expects.
+
+    // Note: we don't rejoin at sites within inline calls, such inline frames
+    // are expanded first.
+    uint32 codeOffset;
+    uint32 pcOffset;
+    size_t id;
+
+    // Identifier which can match any callsite ID in the original script for
+    // this PC. This should appear after all other rejoin sites at the PC.
+    static const size_t VARIADIC_ID = 2;
+
+    void initialize(uint32 codeOffset, uint32 pcOffset, size_t id) {
+        this->codeOffset = codeOffset;
+        this->pcOffset = pcOffset;
+        this->id = id;
     }
 };
 

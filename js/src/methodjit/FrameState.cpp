@@ -1719,7 +1719,7 @@ FrameState::merge(Assembler &masm, Changes changes) const
      */
     for (unsigned i = 0; i < changes.nchanges; i++) {
         FrameEntry *fe = sp - 1 - i;
-        if (fe->isType(JSVAL_TYPE_DOUBLE))
+        if (fe->isTracked() && fe->isType(JSVAL_TYPE_DOUBLE))
             masm.ensureInMemoryDouble(addressOf(fe));
     }
 
@@ -2054,6 +2054,19 @@ FrameState::ensureDouble(FrameEntry *fe)
 
     fe->data.unsync();
     fe->type.unsync();
+}
+
+void
+FrameState::ensureInMemoryDoubles(Assembler &masm)
+{
+    JS_ASSERT(!a->parent);
+    for (uint32 i = 0; i < a->tracker.nentries; i++) {
+        FrameEntry *fe = a->tracker[i];
+        if (!deadEntry(fe) && fe->isType(JSVAL_TYPE_DOUBLE) &&
+            !fe->isCopy() && !fe->isInvariant() && !fe->isConstant()) {
+            masm.ensureInMemoryDouble(addressOf(fe));
+        }
+    }
 }
 
 void

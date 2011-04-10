@@ -220,6 +220,7 @@ void JS_FASTCALL Unbrand(VMFrame &f);
 void JS_FASTCALL UndefinedHelper(VMFrame &f);
 void JS_FASTCALL NegZeroHelper(VMFrame &f);
 
+void JS_FASTCALL CallPropSwap(VMFrame &f);
 void JS_FASTCALL CheckArgumentTypes(VMFrame &f);
 
 #ifdef DEBUG
