@@ -1006,6 +1006,36 @@ HttpChannelChild::SetupFallbackChannel(const char *aFallbackKey)
   DROP_DEAD();
 }
 
+// The next four _should_ be implemented, but we need to figure out how
+// to transfer the data from the chrome process first.
+
+NS_IMETHODIMP
+HttpChannelChild::GetRemoteAddress(nsACString & _result)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetRemotePort(PRInt32 * _result)
+{
+  NS_ENSURE_ARG_POINTER(_result);
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetLocalAddress(nsACString & _result)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::GetLocalPort(PRInt32 * _result)
+{
+  NS_ENSURE_ARG_POINTER(_result);
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsICacheInfoChannel
 //-----------------------------------------------------------------------------
