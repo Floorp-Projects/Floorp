@@ -127,6 +127,10 @@ using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::dom;
 
+static float kDefaultFontSize = 10.0;
+static NS_NAMED_LITERAL_STRING(kDefaultFontName, "sans-serif");
+static NS_NAMED_LITERAL_STRING(kDefaultFontStyle, "10px sans-serif");
+
 /* Float validation stuff */
 #define VALIDATE(_f)  if (!NS_finite(_f)) return PR_FALSE
 
@@ -645,7 +649,11 @@ protected:
         TEXT_BASELINE_BOTTOM
     };
 
-    gfxFontGroup *GetCurrentFontStyle();
+    gfxFontGroup* GetCurrentFontStyle();
+    gfxTextRun* MakeTextRun(const PRUnichar* aText,
+                            PRUint32         aLength,
+                            PRUint32         aAppUnitsPerDevUnit,
+                            PRUint32         aFlags);
 
     enum TextDrawOperation {
         TEXT_DRAW_OPERATION_FILL,
@@ -2292,9 +2300,9 @@ nsCanvasRenderingContext2D::SetFont(const nsAString& font)
                 nsnull,
                 presShell);
     } else {
-        // otherwise inherit from default (10px sans-serif)
+        // otherwise inherit from default
         nsRefPtr<css::StyleRule> parentRule;
-        rv = CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
+        rv = CreateFontStyleRule(kDefaultFontStyle,
                                  document,
                                  getter_AddRefs(parentRule));
         if (NS_FAILED(rv))
@@ -2887,19 +2895,46 @@ nsCanvasRenderingContext2D::GetMozTextStyle(nsAString& textStyle)
     return GetFont(textStyle);
 }
 
-gfxFontGroup *nsCanvasRenderingContext2D::GetCurrentFontStyle()
+gfxFontGroup*
+nsCanvasRenderingContext2D::GetCurrentFontStyle()
 {
     // use lazy initilization for the font group since it's rather expensive
     if(!CurrentState().fontGroup) {
-#ifdef DEBUG
-        nsresult res =
-#endif
-            SetMozTextStyle(NS_LITERAL_STRING("10px sans-serif"));
-        NS_ASSERTION(res == NS_OK, "Default canvas font is invalid");
+        nsresult rv = SetMozTextStyle(kDefaultFontStyle);
+        if (NS_FAILED(rv)) {
+            gfxFontStyle style;
+            style.size = kDefaultFontSize;
+            CurrentState().fontGroup =
+                gfxPlatform::GetPlatform()->CreateFontGroup(kDefaultFontName,
+                                                            &style,
+                                                            nsnull);
+            if (CurrentState().fontGroup) {
+                CurrentState().font = kDefaultFontStyle;
+                rv = NS_OK;
+            } else {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+            
+        NS_ASSERTION(NS_SUCCEEDED(rv), "Default canvas font is invalid");
     }
 
     return CurrentState().fontGroup;
 }
+
+gfxTextRun*
+nsCanvasRenderingContext2D::MakeTextRun(const PRUnichar* aText,
+                                        PRUint32         aLength,
+                                        PRUint32         aAppUnitsPerDevUnit,
+                                        PRUint32         aFlags)
+{
+    gfxFontGroup* currentFontStyle = GetCurrentFontStyle();
+    if (!currentFontStyle)
+        return nsnull;
+    return gfxTextRunCache::MakeTextRun(aText, aLength, currentFontStyle,
+                                        mThebes, aAppUnitsPerDevUnit, aFlags);
+}
+
 
 NS_IMETHODIMP
 nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
@@ -2912,13 +2947,8 @@ nsCanvasRenderingContext2D::MozDrawText(const nsAString& textToDraw)
     PRUint32 aupdp;
     GetAppUnitsValues(&aupdp, NULL);
 
-    gfxTextRunCache::AutoTextRun textRun;
-    textRun = gfxTextRunCache::MakeTextRun(textdata,
-                                           textToDraw.Length(),
-                                           GetCurrentFontStyle(),
-                                           mThebes,
-                                           aupdp,
-                                           textrunflags);
+    gfxTextRunCache::AutoTextRun textRun =
+        MakeTextRun(textdata, textToDraw.Length(), aupdp, textrunflags);
 
     if(!textRun.get())
         return NS_ERROR_FAILURE;
@@ -2960,13 +2990,8 @@ nsCanvasRenderingContext2D::MozPathText(const nsAString& textToPath)
     PRUint32 aupdp;
     GetAppUnitsValues(&aupdp, NULL);
 
-    gfxTextRunCache::AutoTextRun textRun;
-    textRun = gfxTextRunCache::MakeTextRun(textdata,
-                                           textToPath.Length(),
-                                           GetCurrentFontStyle(),
-                                           mThebes,
-                                           aupdp,
-                                           textrunflags);
+    gfxTextRunCache::AutoTextRun textRun =
+        MakeTextRun(textdata, textToPath.Length(), aupdp, textrunflags);
 
     if(!textRun.get())
         return NS_ERROR_FAILURE;
@@ -2996,13 +3021,8 @@ nsCanvasRenderingContext2D::MozTextAlongPath(const nsAString& textToDraw, PRBool
     PRUint32 aupdp;
     GetAppUnitsValues(&aupdp, NULL);
 
-    gfxTextRunCache::AutoTextRun textRun;
-    textRun = gfxTextRunCache::MakeTextRun(textdata,
-                                           textToDraw.Length(),
-                                           GetCurrentFontStyle(),
-                                           mThebes,
-                                           aupdp,
-                                           textrunflags);
+    gfxTextRunCache::AutoTextRun textRun =
+        MakeTextRun(textdata, textToDraw.Length(), aupdp, textrunflags);
 
     if(!textRun.get())
         return NS_ERROR_FAILURE;
