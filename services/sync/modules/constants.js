@@ -43,6 +43,11 @@ WEAVE_CHANNEL:                         "@weave_channel@",
 WEAVE_VERSION:                         "@weave_version@",
 WEAVE_ID:                              "@weave_id@",
 
+// Sync Server API version that the client supports.
+SYNC_API_VERSION:                      "1.1",
+USER_API_VERSION:                      "1.0",
+MISC_API_VERSION:                      "1.0",
+
 // Version of the data format this client supports. The data format describes
 // how records are packaged; this is separate from the Server API version and
 // the per-engine cleartext formats.
@@ -88,9 +93,15 @@ HMAC_EVENT_INTERVAL:                   600000,
 // How long to wait between sync attempts if the Master Password is locked.
 MASTER_PASSWORD_LOCKED_RETRY_INTERVAL: 15 * 60 * 1000,   // 15 minutes
 
-// 50 is hardcoded here because of URL length restrictions.
-// (GUIDs can be up to 64 chars long)
+// Separate from the ID fetch batch size to allow tuning for mobile.
 MOBILE_BATCH_SIZE:                     50,
+
+// 50 is hardcoded here because of URL length restrictions.
+// (GUIDs can be up to 64 chars long.)
+// Individual engines can set different values for their limit if their
+// identifiers are shorter.
+DEFAULT_GUID_FETCH_BATCH_SIZE:         50,
+DEFAULT_MOBILE_GUID_FETCH_BATCH_SIZE:  50,
 
 // Default batch size for applying incoming records.
 DEFAULT_STORE_BATCH_SIZE:              1,
