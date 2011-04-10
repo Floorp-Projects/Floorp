@@ -774,16 +774,10 @@ JITScript::nmap() const
     return (NativeMapEntry *)((char*)this + sizeof(JITScript));
 }
 
-char *
-JITScript::nmapSectionLimit() const
-{
-    return (char *)nmap() + sizeof(NativeMapEntry) * nNmapPairs;
-}
-
 js::mjit::InlineFrame *
 JITScript::inlineFrames() const
 {
-    return (js::mjit::InlineFrame *)nmapSectionLimit();
+    return (js::mjit::InlineFrame *)((char *)nmap() + sizeof(NativeMapEntry) * nNmapPairs);
 }
 
 js::mjit::CallSite *
@@ -792,11 +786,23 @@ JITScript::callSites() const
     return (js::mjit::CallSite *)((char *)inlineFrames() + sizeof(js::mjit::InlineFrame) * nInlineFrames);
 }
 
+js::mjit::RejoinSite *
+JITScript::rejoinSites() const
+{
+    return (js::mjit::RejoinSite *)((char *)callSites() + sizeof(js::mjit::CallSite) * nCallSites);
+}
+
+char *
+JITScript::commonSectionLimit() const
+{
+    return (char *)rejoinSites() + sizeof(js::mjit::RejoinSite) * nRejoinSites;
+}
+
 #ifdef JS_MONOIC
 ic::GetGlobalNameIC *
 JITScript::getGlobalNames() const
 {
-    return (ic::GetGlobalNameIC *)((char *)callSites() + sizeof(js::mjit::CallSite) * nCallSites);
+    return (ic::GetGlobalNameIC *) commonSectionLimit();
 }
 
 ic::SetGlobalNameIC *
@@ -834,7 +840,7 @@ JITScript::monoICSectionsLimit() const
 char *
 JITScript::monoICSectionsLimit() const
 {
-    return nmapSectionsLimit();
+    return commonSectionsLimit();
 }
 #endif  // JS_MONOIC
 

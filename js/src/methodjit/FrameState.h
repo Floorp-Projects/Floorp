@@ -285,6 +285,12 @@ class FrameState
     /* Ensure that fe is definitely a double.  It must already be either int or double. */
     void ensureDouble(FrameEntry *fe);
 
+    /*
+     * Emit code to masm ensuring that all in memory slots thought to be
+     * doubles are in fact doubles.
+     */
+    void ensureInMemoryDoubles(Assembler &masm);
+
     /* Forget that fe is definitely a double. */
     void forgetKnownDouble(FrameEntry *fe);
 

@@ -77,14 +77,27 @@ AutoScriptRetrapper::untrap(jsbytecode *pc)
 
 Recompiler::PatchableAddress
 Recompiler::findPatch(JITScript *jit, void **location)
-{ 
+{
     uint8* codeStart = (uint8 *)jit->code.m_code.executableAddress();
+
     CallSite *callSites_ = jit->callSites();
     for (uint32 i = 0; i < jit->nCallSites; i++) {
         if (callSites_[i].codeOffset + codeStart == *location) {
+            JS_ASSERT(callSites_[i].inlineIndex == uint32(-1));
             PatchableAddress result;
             result.location = location;
             result.callSite = callSites_[i];
+            return result;
+        }
+    }
+
+    RejoinSite *rejoinSites_ = jit->rejoinSites();
+    for (uint32 i = 0; i < jit->nRejoinSites; i++) {
+        const RejoinSite &rs = rejoinSites_[i];
+        if (rs.codeOffset + codeStart == *location) {
+            PatchableAddress result;
+            result.location = location;
+            result.callSite.initialize(rs.codeOffset, uint32(-1), rs.pcOffset, rs.id);
             return result;
         }
     }
@@ -94,17 +107,23 @@ Recompiler::findPatch(JITScript *jit, void **location)
 }
 
 void *
-Recompiler::findCallSite(JITScript *jit, const CallSite &callSite)
+Recompiler::findRejoin(JITScript *jit, const CallSite &callSite)
 {
     JS_ASSERT(callSite.inlineIndex == uint32(-1));
 
-    CallSite *callSites_ = jit->callSites();
-    for (uint32 i = 0; i < jit->nCallSites; i++) {
-        CallSite &cs = callSites_[i];
-        if (cs.inlineIndex == uint32(-1) &&
-            cs.pcOffset == callSite.pcOffset && cs.id == callSite.id) {
+    RejoinSite *rejoinSites_ = jit->rejoinSites();
+    for (uint32 i = 0; i < jit->nRejoinSites; i++) {
+        RejoinSite &rs = rejoinSites_[i];
+        if (rs.pcOffset == callSite.pcOffset &&
+            (rs.id == callSite.id || rs.id == RejoinSite::VARIADIC_ID)) {
+            /*
+             * We should not catch rejoin sites for scripted calls with a
+             * variadic id, the rejoin code for these is different.
+             */
+            JS_ASSERT_IF(rs.id == RejoinSite::VARIADIC_ID,
+                         callSite.id != CallSite::NCODE_RETURN_ID);
             uint8* codeStart = (uint8 *)jit->code.m_code.executableAddress();
-            return codeStart + cs.codeOffset;
+            return codeStart + rs.codeOffset;
         }
     }
 
@@ -116,7 +135,7 @@ Recompiler::findCallSite(JITScript *jit, const CallSite &callSite)
 void
 Recompiler::applyPatch(JITScript *jit, PatchableAddress& toPatch)
 {
-    void *result = findCallSite(jit, toPatch.callSite);
+    void *result = findRejoin(jit, toPatch.callSite);
     JS_ASSERT(result);
     *toPatch.location = result;
 }
@@ -585,7 +604,7 @@ Recompiler::recompile(JSScript *script, bool isConstructing,
 
     CompileStatus status = Compile_Retry;
     while (status == Compile_Retry) {
-        Compiler cc(cx, script, isConstructing, &frames, true);
+        Compiler cc(cx, script, isConstructing, &frames);
         if (!cc.loadOldTraps(sites))
             return false;
         status = cc.compile();

@@ -125,6 +125,8 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
 void
 mjit::Compiler::jsop_bitnot()
 {
+    REJOIN_SITE_ANY();
+
     FrameEntry *top = frame.peek(-1);
 
     /* We only want to handle integers here. */
@@ -152,6 +154,8 @@ mjit::Compiler::jsop_bitnot()
 void
 mjit::Compiler::jsop_bitop(JSOp op)
 {
+    REJOIN_SITE_ANY();
+
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
@@ -399,7 +403,7 @@ CheckNullOrUndefined(FrameEntry *fe)
 }
 
 bool
-mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
+mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, AutoRejoinSite &autoRejoin, jsbytecode *target, JSOp fused)
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
@@ -413,7 +417,7 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
         FrameEntry *test = lhsTest ? rhs : lhs;
 
         if (test->isTypeKnown())
-            return emitStubCmpOp(stub, target, fused);
+            return emitStubCmpOp(stub, autoRejoin, target, fused);
 
         /* The other side must be null or undefined. */
         RegisterID reg = frame.ownRegForType(test);
@@ -426,7 +430,13 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
          */
 
         if (target) {
-            frame.syncAndForgetEverything();
+            fixDoubleTypes();
+            frame.syncAndKillEverything();
+            frame.freeReg(reg);
+
+            autoRejoin.oolRejoin(stubcc.masm.label());
+            Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
+                                               Registers::ReturnReg, Registers::ReturnReg);
 
             if ((op == JSOP_EQ && fused == JSOP_IFNE) ||
                 (op == JSOP_NE && fused == JSOP_IFEQ)) {
@@ -443,13 +453,13 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
                 b1.linkTo(masm.label(), &masm);
                 b2.linkTo(masm.label(), &masm);
                 Jump j2 = masm.jump();
-                if (!jumpAndTrace(j2, target))
+                if (!jumpAndTrace(j2, target, &sj))
                     return false;
                 j1.linkTo(masm.label(), &masm);
             } else {
                 Jump j = masm.branchPtr(Assembler::Equal, reg, ImmType(JSVAL_TYPE_UNDEFINED));
                 Jump j2 = masm.branchPtr(Assembler::NotEqual, reg, ImmType(JSVAL_TYPE_NULL));
-                if (!jumpAndTrace(j2, target))
+                if (!jumpAndTrace(j2, target, &sj))
                     return false;
                 j.linkTo(masm.label(), &masm);
             }
@@ -488,7 +498,10 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
             frame.forgetConstantData(rhs);
             Assembler::Condition cond = GetCompareCondition(op, fused);
             if (target) {
-                fixDoubleTypes(Uses(2));
+                fixDoubleTypes();
+                autoRejoin.oolRejoin(stubcc.masm.label());
+                Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
+                                                   Registers::ReturnReg, Registers::ReturnReg);
                 if (!frame.syncForBranch(target, Uses(2)))
                     return false;
                 RegisterID lreg = frame.tempRegForData(lhs);
@@ -497,7 +510,7 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
                 frame.unpinReg(lreg);
                 Jump fast = masm.branchPtr(cond, lreg, rreg);
                 frame.popn(2);
-                return jumpAndTrace(fast, target);
+                return jumpAndTrace(fast, target, &sj);
             } else {
                 RegisterID result = frame.allocReg();
                 RegisterID lreg = frame.tempRegForData(lhs);
@@ -513,11 +526,12 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
         }
     }
 
-    return emitStubCmpOp(stub, target, fused);
+    return emitStubCmpOp(stub, autoRejoin, target, fused);
 }
 
 bool
-mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
+mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, AutoRejoinSite &autoRejoin,
+                                jsbytecode *target, JSOp fused)
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
@@ -531,40 +545,42 @@ mjit::Compiler::jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp
         (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_DOUBLE) &&
          rhs->isNotType(JSVAL_TYPE_STRING))) {
         if (op == JSOP_EQ || op == JSOP_NE)
-            return jsop_equality(op, stub, target, fused);
-        return emitStubCmpOp(stub, target, fused);
+            return jsop_equality(op, stub, autoRejoin, target, fused);
+        return emitStubCmpOp(stub, autoRejoin, target, fused);
     }
 
     if (op == JSOP_EQ || op == JSOP_NE) {
         if ((lhs->isNotType(JSVAL_TYPE_INT32) && lhs->isNotType(JSVAL_TYPE_STRING)) ||
             (rhs->isNotType(JSVAL_TYPE_INT32) && rhs->isNotType(JSVAL_TYPE_STRING))) {
-            return emitStubCmpOp(stub, target, fused);
+            return emitStubCmpOp(stub, autoRejoin, target, fused);
         } else if (!target && (lhs->isType(JSVAL_TYPE_STRING) || rhs->isType(JSVAL_TYPE_STRING))) {
-            return emitStubCmpOp(stub, target, fused);
+            return emitStubCmpOp(stub, autoRejoin, target, fused);
         } else if (frame.haveSameBacking(lhs, rhs)) {
-            return emitStubCmpOp(stub, target, fused);
+            return emitStubCmpOp(stub, autoRejoin, target, fused);
         } else {
-            return jsop_equality_int_string(op, stub, target, fused);
+            return jsop_equality_int_string(op, stub, autoRejoin, target, fused);
         }
     }
 
     if (frame.haveSameBacking(lhs, rhs)) {
-        return jsop_relational_self(op, stub, target, fused);
+        return emitStubCmpOp(stub, autoRejoin, target, fused);
     } else if (lhs->isType(JSVAL_TYPE_STRING) || rhs->isType(JSVAL_TYPE_STRING)) {
-        return emitStubCmpOp(stub, target, fused);
+        return emitStubCmpOp(stub, autoRejoin, target, fused);
     } else if (lhs->isType(JSVAL_TYPE_DOUBLE) || rhs->isType(JSVAL_TYPE_DOUBLE)) {
-        return jsop_relational_double(op, stub, target, fused);
+        return jsop_relational_double(op, stub, autoRejoin, target, fused);
     } else if (cx->typeInferenceEnabled() &&
                lhs->isType(JSVAL_TYPE_INT32) && rhs->isType(JSVAL_TYPE_INT32)) {
-        return jsop_relational_int(op, target, fused);
+        return jsop_relational_int(op, autoRejoin, target, fused);
     } else {
-        return jsop_relational_full(op, stub, target, fused);
+        return jsop_relational_full(op, stub, autoRejoin, target, fused);
     }
 }
 
 void
 mjit::Compiler::jsop_not()
 {
+    REJOIN_SITE_ANY();
+
     FrameEntry *top = frame.peek(-1);
 
     if (top->isConstant()) {
@@ -768,7 +784,7 @@ mjit::Compiler::jsop_typeof()
     }
 
     prepareStubCall(Uses(1));
-    INLINE_STUBCALL(stubs::TypeOf);
+    INLINE_STUBCALL_NO_REJOIN(stubs::TypeOf);
     frame.pop();
     frame.takeReg(Registers::ReturnReg);
     frame.pushTypedPayload(JSVAL_TYPE_STRING, Registers::ReturnReg);
@@ -869,7 +885,6 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
         if (op == JSOP_IFEQ)
             b = !b;
         if (b) {
-            fixDoubleTypes(Uses(0));
             if (!frame.syncForBranch(target, Uses(0)))
                 return false;
             if (!jumpAndTrace(masm.jump(), target))
@@ -895,7 +910,7 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
         /* Short-circuit. */
         if ((op == JSOP_OR && b == JS_TRUE) ||
             (op == JSOP_AND && b == JS_FALSE)) {
-            fixDoubleTypes(Uses(0));
+            fixDoubleTypes();
             if (!frame.syncForBranch(target, Uses(0)))
                 return false;
             if (!jumpAndTrace(masm.jump(), target))
@@ -1178,16 +1193,13 @@ mjit::Compiler::jsop_setelem_dense()
         frame.freeReg(slotsReg);
     frame.shimmy(2);
     stubcc.rejoin(Changes(2));
-
-    if (recompiling) {
-        OOL_STUBCALL(STRICT_VARIANT(ic::SetElement));
-        stubcc.rejoin(Changes(2));
-    }
 }
 
 bool
 mjit::Compiler::jsop_setelem(bool popGuaranteed)
 {
+    REJOIN_SITE_2(STRICT_VARIANT(ic::SetElement), STRICT_VARIANT(stubs::SetElem));
+
     FrameEntry *obj = frame.peek(-3);
     FrameEntry *id = frame.peek(-2);
     FrameEntry *value = frame.peek(-1);
@@ -1364,11 +1376,6 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
 #if defined JS_POLYIC
     if (!setElemICs.append(ic))
         return false;
-
-    if (recompiling) {
-        OOL_STUBCALL(STRICT_VARIANT(stubs::SetElem));
-        stubcc.rejoin(Changes(2));
-    }
 #endif
 
     return true;
@@ -1517,16 +1524,14 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
             stubcc.masm.loadValueAsComponents(UndefinedValue(), typeReg.reg(), dataReg);
         stubcc.linkRejoin(stubcc.masm.jump());
     }
-
-    if (recompiling) {
-        OOL_STUBCALL(ic::GetElement);
-        stubcc.rejoin(Changes(1));
-    }
 }
 
 bool
 mjit::Compiler::jsop_getelem(bool isCall)
 {
+    REJOIN_SITE_2(isCall ? ic::CallElement : ic::GetElement,
+                  isCall ? stubs::CallElem : stubs::GetElem);
+
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *id = frame.peek(-1);
 
@@ -1679,11 +1684,6 @@ mjit::Compiler::jsop_getelem(bool isCall)
 #ifdef JS_POLYIC
     if (!getElemICs.append(ic))
         return false;
-
-    if (recompiling) {
-        OOL_STUBCALL(isCall ? stubs::CallElem : stubs::GetElem);
-        stubcc.rejoin(Changes(isCall ? 2 : 1));
-    }
 #endif
 
     return true;
@@ -1863,9 +1863,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         prepareStubCall(Uses(2));
 
         if (op == JSOP_STRICTEQ)
-            INLINE_STUBCALL(stubs::StrictEq);
+            INLINE_STUBCALL_NO_REJOIN(stubs::StrictEq);
         else
-            INLINE_STUBCALL(stubs::StrictNe);
+            INLINE_STUBCALL_NO_REJOIN(stubs::StrictNe);
 
         frame.popn(2);
         frame.pushSynced(JSVAL_TYPE_BOOLEAN);
@@ -1917,9 +1917,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     if (needStub) {
         stubcc.leave();
         if (op == JSOP_STRICTEQ)
-            OOL_STUBCALL(stubs::StrictEq);
+            OOL_STUBCALL_NO_REJOIN(stubs::StrictEq);
         else
-            OOL_STUBCALL(stubs::StrictNe);
+            OOL_STUBCALL_NO_REJOIN(stubs::StrictNe);
     }
 
     frame.popn(2);
@@ -1932,9 +1932,9 @@ mjit::Compiler::jsop_stricteq(JSOp op)
     prepareStubCall(Uses(2));
 
     if (op == JSOP_STRICTEQ)
-        INLINE_STUBCALL(stubs::StrictEq);
+        INLINE_STUBCALL_NO_REJOIN(stubs::StrictEq);
     else
-        INLINE_STUBCALL(stubs::StrictNe);
+        INLINE_STUBCALL_NO_REJOIN(stubs::StrictNe);
 
     frame.popn(2);
     frame.pushSyncedType(JSVAL_TYPE_BOOLEAN);
@@ -1945,6 +1945,8 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 void
 mjit::Compiler::jsop_pos()
 {
+    REJOIN_SITE(stubs::Pos);
+
     FrameEntry *top = frame.peek(-1);
 
     if (top->isTypeKnown()) {
@@ -1975,6 +1977,8 @@ mjit::Compiler::jsop_pos()
 void
 mjit::Compiler::jsop_initmethod()
 {
+    REJOIN_SITE_ANY();
+
 #ifdef DEBUG
     FrameEntry *obj = frame.peek(-2);
 #endif
@@ -1991,6 +1995,8 @@ mjit::Compiler::jsop_initmethod()
 void
 mjit::Compiler::jsop_initprop()
 {
+    REJOIN_SITE_ANY();
+
     FrameEntry *obj = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);
     JSAtom *atom = script->getAtom(fullAtomIndex(PC));
@@ -2025,6 +2031,8 @@ mjit::Compiler::jsop_initprop()
 void
 mjit::Compiler::jsop_initelem()
 {
+    REJOIN_SITE_ANY();
+
     FrameEntry *obj = frame.peek(-3);
     FrameEntry *id = frame.peek(-2);
     FrameEntry *fe = frame.peek(-1);

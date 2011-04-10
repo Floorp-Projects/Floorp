@@ -111,7 +111,7 @@ private:
     JSScript *script;
 
     static PatchableAddress findPatch(JITScript *jit, void **location);
-    static void * findCallSite(JITScript *jit, const CallSite &callSite);
+    static void * findRejoin(JITScript *jit, const CallSite &callSite);
 
     static void applyPatch(JITScript *jit, PatchableAddress& toPatch);
     PatchableNative stealNative(JITScript *jit, jsbytecode *pc);
