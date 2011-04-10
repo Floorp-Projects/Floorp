@@ -78,10 +78,6 @@ TEST_HARNESS_COMPONENTS := \
   httpd.manifest \
   $(NULL)
 
-ifdef MOZ_ENABLE_LIBXUL
-TEST_HARNESS_COMPONENTS += xpcom_typelib_test.jar
-endif
-
 # Rules for staging the necessary harness bits for a test package
 PKG_STAGE = $(DIST)/test-package-stage
 
