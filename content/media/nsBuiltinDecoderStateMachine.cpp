@@ -154,21 +154,23 @@ private:
   nsCOMPtr<nsBuiltinDecoder> mDecoder;
 public:
   nsAudioMetadataEventRunner(nsBuiltinDecoder* aDecoder, PRUint32 aChannels,
-                             PRUint32 aRate) :
+                             PRUint32 aRate, PRUint32 aFrameBufferLength) :
     mDecoder(aDecoder),
     mChannels(aChannels),
-    mRate(aRate)
+    mRate(aRate),
+    mFrameBufferLength(aFrameBufferLength)
   {
   }
 
   NS_IMETHOD Run()
   {
-    mDecoder->MetadataLoaded(mChannels, mRate);
+    mDecoder->MetadataLoaded(mChannels, mRate, mFrameBufferLength);
     return NS_OK;
   }
 
   const PRUint32 mChannels;
   const PRUint32 mRate;
+  const PRUint32 mFrameBufferLength;
 };
 
 nsBuiltinDecoderStateMachine::nsBuiltinDecoderStateMachine(nsBuiltinDecoder* aDecoder,
@@ -1029,14 +1031,6 @@ PRInt64 nsBuiltinDecoderStateMachine::GetUndecodedData() const
   return 0;
 }
 
-void nsBuiltinDecoderStateMachine::SetFrameBufferLength(PRUint32 aLength)
-{
-  NS_ASSERTION(aLength < 512 || aLength > 16384,
-               "The length must be 512 and 16384");
-  mDecoder->GetMonitor().AssertCurrentThreadIn();
-  mEventManager.SetSignalBufferLength(aLength);
-}
-
 nsresult nsBuiltinDecoderStateMachine::Run()
 {
   NS_ASSERTION(IsCurrentThread(mDecoder->mStateMachineThread),
@@ -1094,17 +1088,15 @@ nsresult nsBuiltinDecoderStateMachine::Run()
         // setting the default framebuffer size for audioavailable events.  Also,
         // if there is audio, let the MozAudioAvailable event manager know about
         // the metadata.
+        PRUint32 frameBufferLength = mInfo.mAudioChannels * FRAMEBUFFER_LENGTH_PER_CHANNEL;
+        nsCOMPtr<nsIRunnable> metadataLoadedEvent =
+          new nsAudioMetadataEventRunner(mDecoder, mInfo.mAudioChannels,
+                                         mInfo.mAudioRate, frameBufferLength);
+        NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
         if (HasAudio()) {
           mEventManager.Init(mInfo.mAudioChannels, mInfo.mAudioRate);
-          // Set the buffer length at the decoder level to be able, to be able
-          // to retrive the value via media element method. The RequestFrameBufferLength
-          // will call the nsBuiltinDecoderStateMachine::SetFrameBufferLength().
-          PRUint32 frameBufferLength = mInfo.mAudioChannels * FRAMEBUFFER_LENGTH_PER_CHANNEL;
           mDecoder->RequestFrameBufferLength(frameBufferLength);
         }
-        nsCOMPtr<nsIRunnable> metadataLoadedEvent =
-          new nsAudioMetadataEventRunner(mDecoder, mInfo.mAudioChannels, mInfo.mAudioRate);
-        NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
 
         if (mState == DECODER_STATE_DECODING_METADATA) {
           LOG(PR_LOG_DEBUG, ("%p Changed state from DECODING_METADATA to DECODING", mDecoder));

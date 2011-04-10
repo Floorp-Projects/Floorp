@@ -82,7 +82,6 @@ nsAudioAvailableEventManager::nsAudioAvailableEventManager(nsBuiltinDecoder* aDe
   mDecoder(aDecoder),
   mSignalBuffer(new float[mDecoder->GetFrameBufferLength()]),
   mSignalBufferLength(mDecoder->GetFrameBufferLength()),
-  mNewSignalBufferLength(mSignalBufferLength),
   mSignalBufferPosition(0),
   mMonitor("media.audioavailableeventmanager")
 {
@@ -120,9 +119,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
                                                          PRUint32 aAudioDataLength,
                                                          PRUint64 aEndTimeSampleOffset)
 {
-  MonitorAutoEnter mon(mMonitor);
-
-  PRUint32 currentBufferSize = mNewSignalBufferLength;
+  PRUint32 currentBufferSize = mDecoder->GetFrameBufferLength();
   if (currentBufferSize == 0) {
     NS_WARNING("Decoder framebuffer length not set.");
     return;
@@ -157,6 +154,8 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
     }
     audioData += signalBufferTail;
     audioDataLength -= signalBufferTail;
+
+    MonitorAutoEnter mon(mMonitor);
 
     if (mPendingEvents.Length() > 0) {
       // Check last event timecode to make sure that all queued events
@@ -237,11 +236,3 @@ void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
 
   mSignalBufferPosition = 0;
 }
-
-void nsAudioAvailableEventManager::SetSignalBufferLength(PRUint32 aLength)
-{
-  MonitorAutoEnter mon(mMonitor);
-
-  mNewSignalBufferLength = aLength;
-}
-
