@@ -1438,8 +1438,7 @@ HUD_SERVICE.prototype =
    */
   deactivateHUDForContext: function HS_deactivateHUDForContext(aContext, aAnimated)
   {
-    let browser = aContext.linkedBrowser;
-    let window = browser.contentWindow;
+    let window = aContext.linkedBrowser.contentWindow;
     let nBox = aContext.ownerDocument.defaultView.
       getNotificationBox(window);
     let hudId = "hud_" + nBox.id;
@@ -1450,12 +1449,7 @@ HUD_SERVICE.prototype =
         this.storeHeight(hudId);
       }
 
-      let hud = this.hudReferences[hudId];
-      browser.webProgress.removeProgressListener(hud.progressListener);
-      delete hud.progressListener;
-
       this.unregisterDisplay(displayNode);
-
       window.focus();
     }
   },
@@ -2647,6 +2641,27 @@ HUD_SERVICE.prototype =
   },
 
   /**
+   * Closes the Console, if any, that resides on the given tab.
+   *
+   * @param nsIDOMNode aTab
+   *        The tab on which to close the console.
+   * @returns void
+   */
+  closeConsoleOnTab: function HS_closeConsoleOnTab(aTab)
+  {
+    let xulDocument = aTab.ownerDocument;
+    let xulWindow = xulDocument.defaultView;
+    let gBrowser = xulWindow.gBrowser;
+    let linkedBrowser = aTab.linkedBrowser;
+    let notificationBox = gBrowser.getNotificationBox(linkedBrowser);
+    let hudId = "hud_" + notificationBox.getAttribute("id");
+    let outputNode = xulDocument.getElementById(hudId);
+    if (outputNode != null) {
+      this.unregisterDisplay(outputNode);
+    }
+  },
+
+  /**
    * onTabClose event handler function
    *
    * @param aEvent
@@ -2654,7 +2669,7 @@ HUD_SERVICE.prototype =
    */
   onTabClose: function HS_onTabClose(aEvent)
   {
-    this.deactivateHUDForContext(aEvent.target, false);
+    this.closeConsoleOnTab(aEvent.target);
   },
 
   /**
@@ -2672,7 +2687,7 @@ HUD_SERVICE.prototype =
 
     let tab = tabContainer.firstChild;
     while (tab != null) {
-      this.deactivateHUDForContext(tab, false);
+      this.closeConsoleOnTab(tab);
       tab = tab.nextSibling;
     }
   },
@@ -2744,11 +2759,6 @@ HUD_SERVICE.prototype =
       HUDService.registerHUDReference(hud);
       let windowId = this.getWindowId(aContentWindow.top);
       this.windowIds[windowId] = hudId;
-
-      hud.progressListener = new ConsoleProgressListener(hudId);
-
-      _browser.webProgress.addProgressListener(hud.progressListener,
-        Ci.nsIWebProgress.NOTIFY_STATE_ALL);
     }
     else {
       hud = this.hudReferences[hudId];
@@ -5995,87 +6005,6 @@ HUDConsoleObserver = {
         return;
     }
   }
-};
-
-/**
- * A WebProgressListener that listens for location changes, to update HUDService
- * state information on page navigation.
- *
- * @constructor
- * @param string aHudId
- *        The HeadsUpDisplay ID.
- */
-function ConsoleProgressListener(aHudId)
-{
-  this.hudId = aHudId;
-}
-
-ConsoleProgressListener.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
-                                         Ci.nsISupportsWeakReference]),
-
-  onStateChange: function CPL_onStateChange(aProgress, aRequest, aState,
-                                            aStatus)
-  {
-    if (!(aState & Ci.nsIWebProgressListener.STATE_START)) {
-      return;
-    }
-
-    let uri = null;
-    if (aRequest instanceof Ci.imgIRequest) {
-      let imgIRequest = aRequest.QueryInterface(Ci.imgIRequest);
-      uri = imgIRequest.URI;
-    }
-    else if (aRequest instanceof Ci.nsIChannel) {
-      let nsIChannel = aRequest.QueryInterface(Ci.nsIChannel);
-      uri = nsIChannel.URI;
-    }
-
-    if (!uri || !uri.schemeIs("file") && !uri.schemeIs("ftp")) {
-      return;
-    }
-
-    let outputNode = HUDService.hudReferences[this.hudId].outputNode;
-
-    let chromeDocument = outputNode.ownerDocument;
-    let msgNode = chromeDocument.createElementNS(HTML_NS, "html:span");
-
-    // Create the clickable URL part of the message.
-    let linkNode = chromeDocument.createElementNS(HTML_NS, "html:span");
-    linkNode.appendChild(chromeDocument.createTextNode(uri.spec));
-    linkNode.classList.add("hud-clickable");
-    linkNode.classList.add("webconsole-msg-url");
-
-    linkNode.addEventListener("mousedown", function(aEvent) {
-      this._startX = aEvent.clientX;
-      this._startY = aEvent.clientY;
-    }, false);
-
-    linkNode.addEventListener("click", function(aEvent) {
-      if (aEvent.detail == 1 && aEvent.button == 0 &&
-          this._startX == aEvent.clientX && this._startY == aEvent.clientY) {
-        let viewSourceUtils = chromeDocument.defaultView.gViewSourceUtils;
-        viewSourceUtils.viewSource(uri.spec, null, chromeDocument);
-      }
-    }, false);
-
-    msgNode.appendChild(linkNode);
-
-    let messageNode = ConsoleUtils.createMessageNode(chromeDocument,
-                                                     CATEGORY_NETWORK,
-                                                     SEVERITY_LOG,
-                                                     msgNode,
-                                                     null,
-                                                     null,
-                                                     uri.spec);
-
-    ConsoleUtils.outputMessageNode(messageNode, this.hudId);
-  },
-
-  onLocationChange: function() {},
-  onStatusChange: function() {},
-  onProgressChange: function() {},
-  onSecurityChange: function() {},
 };
 
 ///////////////////////////////////////////////////////////////////////////
