@@ -579,4 +579,6 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 ; [OS/2]
 #ifdef XP_OS2
 @BINPATH@/MozSounds.cmd
+@BINPATH@/*.xqs
+@BINPATH@/components/*.xqs
 #endif

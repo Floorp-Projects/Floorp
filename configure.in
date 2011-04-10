@@ -2669,6 +2669,7 @@ ia64*-hpux*)
     RC=rc.exe
     RCFLAGS='-n'
     MOZ_USER_DIR="Mozilla"
+    ZIP="$ZIP -X"
 
     if test "$MOZTOOLS"; then
         MOZ_TOOLS_DIR=`echo $MOZTOOLS | sed -e 's|\\\\|/|g'`
