@@ -163,6 +163,7 @@ CSPPolicyURIListener.prototype = {
     else {
       // problem fetching policy so fail closed
       this._csp.refinePolicy("allow 'none'", this._docURI, this._docRequest);
+      this._csp.refinePolicy("default-src 'none'", this._docURI, this._docRequest);
     }
     // resume the parent document request
     this._docRequest.resume();
@@ -187,7 +188,7 @@ function CSPRep() {
 }
 
 CSPRep.SRC_DIRECTIVES = {
-  ALLOW:            "allow",
+  DEFAULT_SRC:      "default-src",
   SCRIPT_SRC:       "script-src",
   STYLE_SRC:        "style-src",
   MEDIA_SRC:        "media-src",
@@ -205,6 +206,7 @@ CSPRep.URI_DIRECTIVES = {
 };
 
 CSPRep.OPTIONS_DIRECTIVE = "options";
+CSPRep.ALLOW_DIRECTIVE   = "allow";
 
 /**
   * Factory to create a new CSPRep, parsed from a string.
@@ -256,6 +258,17 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
           CSPWarning("don't understand option '" + opt + "'.  Ignoring it.");
       }
       continue directive;
+    }
+
+    // ALLOW DIRECTIVE //////////////////////////////////////////////////
+    // parse "allow" as equivalent to "default-src", at least until the spec
+    // stabilizes, at which time we can stop parsing "allow"
+    if (dirname === CSPRep.ALLOW_DIRECTIVE) {
+      var dv = CSPSourceList.fromString(dirvalue, self, true);
+      if (dv) {
+        aCSPR._directives[SD.DEFAULT_SRC] = dv;
+        continue directive;
+      }
     }
 
     // SOURCE DIRECTIVES ////////////////////////////////////////////////
@@ -338,13 +351,13 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
       // POLICY_URI can only be alone
       if (aCSPR._directives.length > 0 || dirs.length > 1) {
         CSPError("policy-uri directive can only appear alone");
-        return CSPRep.fromString("allow 'none'");
+        return CSPRep.fromString("default-src 'none'");
       }
       // if we were called without a reference to the parent document request
       // we won't be able to suspend it while we fetch the policy -> fail closed
       if (!docRequest || !csp) {
         CSPError("The policy-uri cannot be fetched without a parent request and a CSP.");
-        return CSPRep.fromString("allow 'none'");
+        return CSPRep.fromString("default-src 'none'");
       }
 
       var uri = '';
@@ -352,22 +365,22 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
         uri = gIoService.newURI(dirvalue, null, selfUri);
       } catch(e) {
         CSPError("could not parse URI in policy URI: " + dirvalue);
-        return CSPRep.fromString("allow 'none'");
+        return CSPRep.fromString("default-src 'none'");
       }
 
       // Verify that policy URI comes from the same origin
       if (selfUri) {
         if (selfUri.host !== uri.host){
           CSPError("can't fetch policy uri from non-matching hostname: " + uri.host);
-          return CSPRep.fromString("allow 'none'");
+          return CSPRep.fromString("default-src 'none'");
         }
         if (selfUri.port !== uri.port){
           CSPError("can't fetch policy uri from non-matching port: " + uri.port);
-          return CSPRep.fromString("allow 'none'");
+          return CSPRep.fromString("default-src 'none'");
         }
         if (selfUri.scheme !== uri.scheme){
           CSPError("can't fetch policy uri from non-matching scheme: " + uri.scheme);
-          return CSPRep.fromString("allow 'none'");
+          return CSPRep.fromString("default-src 'none'");
         }
       }
 
@@ -384,12 +397,12 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
         // resume the document request and apply most restrictive policy
         docRequest.resume();
         CSPError("Error fetching policy-uri: " + e);
-        return CSPRep.fromString("allow 'none'");
+        return CSPRep.fromString("default-src 'none'");
       }
 
       // return a fully-open policy to be intersected with the contents of the
       // policy-uri when it returns
-      return CSPRep.fromString("allow *");
+      return CSPRep.fromString("default-src *");
     }
 
     // UNIDENTIFIED DIRECTIVE /////////////////////////////////////////////
@@ -397,11 +410,11 @@ CSPRep.fromString = function(aStr, self, docRequest, csp) {
 
   } // end directive: loop
 
-  // if makeExplicit fails for any reason, default to allow 'none'.  This
-  // includes the case where "allow" is not present.
+  // if makeExplicit fails for any reason, default to default-src 'none'.  This
+  // includes the case where "default-src" is not present.
   if (aCSPR.makeExplicit())
     return aCSPR;
-  return CSPRep.fromString("allow 'none'", self);
+  return CSPRep.fromString("default-src 'none'", self);
 };
 
 CSPRep.prototype = {
@@ -534,22 +547,22 @@ CSPRep.prototype = {
   makeExplicit:
   function cspsd_makeExplicit() {
     var SD = CSPRep.SRC_DIRECTIVES;
-    var allowDir = this._directives[SD.ALLOW];
-    if (!allowDir) {
-      CSPWarning("'allow' directive required but not present.  Reverting to \"allow 'none'\"");
+    var defaultSrcDir = this._directives[SD.DEFAULT_SRC];
+    if (!defaultSrcDir) {
+      CSPWarning("'allow' or 'default-src' directive required but not present.  Reverting to \"default-src 'none'\"");
       return false;
     }
 
     for (var dir in SD) {
       var dirv = SD[dir];
-      if (dirv === SD.ALLOW) continue;
+      if (dirv === SD.DEFAULT_SRC) continue;
       if (!this._directives[dirv]) {
         // implicit directive, make explicit.
         // All but frame-ancestors directive inherit from 'allow' (bug 555068)
         if (dirv === SD.FRAME_ANCESTORS)
           this._directives[dirv] = CSPSourceList.fromString("*");
         else
-          this._directives[dirv] = allowDir.clone();
+          this._directives[dirv] = defaultSrcDir.clone();
         this._directives[dirv]._isImplicit = true;
       }
     }

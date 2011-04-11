@@ -9,7 +9,7 @@
   <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=519368 -->
 
   <defs>
-    <pattern id="test" patternUnits="userSpaceOnUse" x="10" y="10" width="20%" height="20%" viewBox="10 10 10 10">
+    <pattern id="test" patternUnits="userSpaceOnUse" x="10" y="10" width="20" height="20" viewBox="10 10 10 10">
       <rect x="10" y="10" width="10" height="10" fill="lime" />
     </pattern>
   </defs>

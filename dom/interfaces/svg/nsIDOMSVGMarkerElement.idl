@@ -51,7 +51,7 @@ interface nsIDOMSVGMatrix;
  *
  */
 
-[scriptable, uuid(6a3b7b40-e65a-4e9c-9ee7-ca03ed0a18c7)]
+[scriptable, uuid(12e79be1-eac1-49b8-b644-d617445ae2b1)]
 interface nsIDOMSVGMarkerElement
   : nsIDOMSVGElement
 /*

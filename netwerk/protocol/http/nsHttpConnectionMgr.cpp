@@ -1491,7 +1491,7 @@ nsHttpConnectionMgr::nsHalfOpenSocket::OnTransportStatus(nsITransport *trans,
                                                          PRUint64 progressMax)
 {
     if (mTransaction)
-        mTransaction->OnTransportStatus(status, progress);
+      mTransaction->OnTransportStatus(trans, status, progress);
     return NS_OK;
 }
 

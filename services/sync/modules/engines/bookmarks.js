@@ -58,20 +58,14 @@ const MOBILEROOT_ANNO      = "mobile/bookmarksRoot";
 const MOBILE_ANNO          = "MobileBookmarks";
 const EXCLUDEBACKUP_ANNO   = "places/excludeFromBackup";
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
-const GUID_ANNO            = "sync/guid";
 const PARENT_ANNO          = "sync/parent";
 const ANNOS_TO_TRACK = [DESCRIPTION_ANNO, SIDEBAR_ANNO, STATICTITLE_ANNO,
-                       FEEDURI_ANNO, SITEURI_ANNO, GENERATORURI_ANNO];
+                        FEEDURI_ANNO, SITEURI_ANNO, GENERATORURI_ANNO];
 
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
 
-try {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-}
-catch(ex) {
-  Cu.import("resource://gre/modules/utils.js");
-}
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
@@ -993,31 +987,12 @@ BookmarksStore.prototype = {
     }
   },
 
-  __childGUIDsStm: null,
   get _childGUIDsStm() {
-    if (this.__childGUIDsStm) {
-      return this.__childGUIDsStm;
-    }
-
-    let stmt;
-    if (this._haveGUIDColumn) {
-      stmt = this._getStmt(
-        "SELECT id AS item_id, guid " +
-        "FROM moz_bookmarks " +
-        "WHERE parent = :parent " +
-        "ORDER BY position");
-    } else {
-      stmt = this._getStmt(
-        "SELECT b.id AS item_id, " +
-          "(SELECT id FROM moz_anno_attributes WHERE name = '" + GUID_ANNO + "') AS name_id," +
-          "a.content AS guid " +
-        "FROM moz_bookmarks b " +
-        "LEFT JOIN moz_items_annos a ON a.item_id = b.id " +
-                                   "AND a.anno_attribute_id = name_id " +
-        "WHERE b.parent = :parent " +
-        "ORDER BY b.position");
-    }
-    return this.__childGUIDsStm = stmt;
+    return this._getStmt(
+      "SELECT id AS item_id, guid " +
+      "FROM moz_bookmarks " +
+      "WHERE parent = :parent " +
+      "ORDER BY position");
   },
   _childGUIDsCols: ["item_id", "guid"],
 
@@ -1145,24 +1120,8 @@ BookmarksStore.prototype = {
       return this._stmts[query];
 
     this._log.trace("Creating SQL statement: " + query);
-    return this._stmts[query] = Utils.createStatement(this._hsvc.DBConnection,
-                                                      query);
-  },
-
-  __haveGUIDColumn: null,
-  get _haveGUIDColumn() {
-    if (this.__haveGUIDColumn !== null) {
-      return this.__haveGUIDColumn;
-    }
-    let stmt;
-    try {
-      stmt = this._hsvc.DBConnection.createStatement(
-        "SELECT guid FROM moz_places");
-      stmt.finalize();
-      return this.__haveGUIDColumn = true;
-    } catch(ex) {
-      return this.__haveGUIDColumn = false;
-    }
+    return this._stmts[query] = this._hsvc.DBConnection
+                                    .createAsyncStatement(query);
   },
 
   get _frecencyStm() {
@@ -1174,54 +1133,11 @@ BookmarksStore.prototype = {
   },
   _frecencyCols: ["frecency"],
 
-  get _addGUIDAnnotationNameStm() {
-    let stmt = this._getStmt(
-      "INSERT OR IGNORE INTO moz_anno_attributes (name) VALUES (:anno_name)");
-    stmt.params.anno_name = GUID_ANNO;
-    return stmt;
-  },
-
-  get _checkGUIDItemAnnotationStm() {
-    // Gecko <2.0 only
-    let stmt = this._getStmt(
-      "SELECT b.id AS item_id, " +
-        "(SELECT id FROM moz_anno_attributes WHERE name = :anno_name) AS name_id, " +
-        "a.id AS anno_id, a.dateAdded AS anno_date " +
-      "FROM moz_bookmarks b " +
-      "LEFT JOIN moz_items_annos a ON a.item_id = b.id " +
-                                 "AND a.anno_attribute_id = name_id " +
-      "WHERE b.id = :item_id");
-    stmt.params.anno_name = GUID_ANNO;
-    return stmt;
-  },
-  _checkGUIDItemAnnotationCols: ["item_id", "name_id", "anno_id", "anno_date"],
-
-  get _addItemAnnotationStm() {
-    return this._getStmt(
-    "INSERT OR REPLACE INTO moz_items_annos " +
-      "(id, item_id, anno_attribute_id, mime_type, content, flags, " +
-       "expiration, type, dateAdded, lastModified) " +
-    "VALUES (:id, :item_id, :name_id, :mime_type, :content, :flags, " +
-            ":expiration, :type, :date_added, :last_modified)");
-  },
-
-  __setGUIDStm: null,
   get _setGUIDStm() {
-    if (this.__setGUIDStm !== null) {
-      return this.__setGUIDStm;
-    }
-
-    // Obtains a statement to set the guid iff the guid column exists.
-    let stmt;
-    if (this._haveGUIDColumn) {
-      stmt = this._getStmt(
-        "UPDATE moz_bookmarks " +
-        "SET guid = :guid " +
-        "WHERE id = :item_id");
-    } else {
-      stmt = false;
-    }
-    return this.__setGUIDStm = stmt;
+    return this._getStmt(
+      "UPDATE moz_bookmarks " +
+      "SET guid = :guid " +
+      "WHERE id = :item_id");
   },
 
   // Some helper functions to handle GUIDs
@@ -1229,73 +1145,18 @@ BookmarksStore.prototype = {
     if (!guid)
       guid = Utils.makeGUID();
 
-    // If we can, set the GUID on moz_bookmarks and do not do any other work.
-    let (stmt = this._setGUIDStm) {
-      if (stmt) {
-        stmt.params.guid = guid;
-        stmt.params.item_id = id;
-        Utils.queryAsync(stmt);
-        return guid;
-      }
-    }
-
-    // Ensure annotation name exists
-    Utils.queryAsync(this._addGUIDAnnotationNameStm);
-
-    let stmt = this._checkGUIDItemAnnotationStm;
+    let stmt = this._setGUIDStm;
+    stmt.params.guid = guid;
     stmt.params.item_id = id;
-    let result = Utils.queryAsync(stmt, this._checkGUIDItemAnnotationCols)[0];
-    if (!result) {
-      this._log.warn("Couldn't annotate bookmark id " + id);
-      return guid;
-    }
-
-    stmt = this._addItemAnnotationStm;
-    if (result.anno_id) {
-      stmt.params.id = result.anno_id;
-      stmt.params.date_added = result.anno_date;
-    } else {
-      stmt.params.id = null;
-      stmt.params.date_added = Date.now() * 1000;
-    }
-    stmt.params.item_id = result.item_id;
-    stmt.params.name_id = result.name_id;
-    stmt.params.content = guid;
-    stmt.params.flags = 0;
-    stmt.params.expiration = Ci.nsIAnnotationService.EXPIRE_NEVER;
-    stmt.params.type = Ci.nsIAnnotationService.TYPE_STRING;
-    stmt.params.last_modified = Date.now() * 1000;
     Utils.queryAsync(stmt);
-
     return guid;
   },
 
-  __guidForIdStm: null,
   get _guidForIdStm() {
-    if (this.__guidForIdStm) {
-      return this.__guidForIdStm;
-    }
-
-    // Try to first read from moz_bookmarks.  Creating the statement will
-    // fail, however, if the guid column does not exist.  We fallback to just
-    // reading the annotation table in this case.
-    let stmt;
-    if (this._haveGUIDColumn) {
-      stmt = this._getStmt(
-        "SELECT guid " +
-        "FROM moz_bookmarks " +
-        "WHERE id = :item_id");
-    } else {
-      stmt = this._getStmt(
-        "SELECT a.content AS guid " +
-        "FROM moz_items_annos a " +
-        "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
-        "JOIN moz_bookmarks b ON b.id = a.item_id " +
-        "WHERE n.name = '" + GUID_ANNO + "' " +
-        "AND b.id = :item_id");
-    }
-
-    return this.__guidForIdStm = stmt;
+    return this._getStmt(
+      "SELECT guid " +
+      "FROM moz_bookmarks " +
+      "WHERE id = :item_id");
   },
   _guidForIdCols: ["guid"],
 
@@ -1316,37 +1177,11 @@ BookmarksStore.prototype = {
     return this._setGUID(id);
   },
 
-  __idForGUIDStm: null,
   get _idForGUIDStm() {
-    if (this.__idForGUIDStm) {
-      return this.__idForGUIDStm;
-    }
-
-
-    // Try to first read from moz_bookmarks.  Creating the statement will
-    // fail, however, if the guid column does not exist.  We fallback to just
-    // reading the annotation table in this case.
-    let stmt;
-    if (this._haveGUIDColumn) {
-      stmt = this._getStmt(
-        "SELECT id AS item_id " +
-        "FROM moz_bookmarks " +
-        "WHERE guid = :guid");
-    } else {
-      // Order results by lastModified so we can preserve the ID of the oldest bookmark.
-      // Copying a record preserves its dateAdded, and only modifying the
-      // bookmark alters its lastModified, so we also order by its item_id --
-      // lowest wins ties. Of course, Places can still screw us by reassigning IDs...
-      stmt = this._getStmt(
-        "SELECT a.item_id AS item_id " +
-        "FROM moz_items_annos a " +
-        "JOIN moz_anno_attributes n ON n.id = a.anno_attribute_id " +
-        "WHERE n.name = '" + GUID_ANNO + "' " +
-        "AND a.content = :guid " +
-        "ORDER BY a.lastModified, a.item_id");
-    }
-
-    return this.__idForGUIDStm = stmt;
+    return this._getStmt(
+      "SELECT id AS item_id " +
+      "FROM moz_bookmarks " +
+      "WHERE guid = :guid");
   },
   _idForGUIDCols: ["item_id"],
 
@@ -1369,22 +1204,6 @@ BookmarksStore.prototype = {
     
     if (!result)
       return -1;
-    
-    if (!this._haveGUIDColumn) {
-      try {
-        // Assign new GUIDs to any that came later.
-        for (let i = 1; i < results.length; ++i) {
-          let surplus = results[i];
-          this._log.debug("Assigning new GUID to copied row " + surplus.item_id);
-          this._setGUID(surplus.item_id);
-        }
-      } catch (ex) {
-        // Just skip it and carry on. This shouldn't happen, but if it does we
-        // don't want to fail hard.
-        this._log.debug("Got exception assigning new GUIDs: " +
-                        Utils.exceptionStr(ex));
-      }
-    }
     
     return result.item_id;
   },
@@ -1589,34 +1408,44 @@ BookmarksTracker.prototype = {
    *        Folder of the item being changed
    */
   _ignore: function BMT__ignore(itemId, folder) {
-    // Ignore unconditionally if the engine tells us to
+    // Ignore unconditionally if the engine tells us to.
     if (this.ignoreAll)
       return true;
 
-    // Ensure that the mobile bookmarks query is correct in the UI
-    this._ensureMobileQuery();
+    // Get the folder id if we weren't given one.
+    if (folder == null) {
+      try {
+        folder = this._bms.getFolderIdForItem(itemId);
+      } catch (ex) {
+        this._log.debug("getFolderIdForItem(" + itemId +
+                        ") threw; calling _ensureMobileQuery.");
+        // I'm guessing that gFIFI can throw, and perhaps that's why
+        // _ensureMobileQuery is here at all. Try not to call it.
+        this._ensureMobileQuery();
+        folder = this._bms.getFolderIdForItem(itemId);
+      }
+    }
 
-    // Make sure to remove items that have the exclude annotation
+    // Ignore livemark children.
+    if (this._ls.isLivemark(folder))
+      return true;
+
+    // Ignore changes to tags (folders under the tags folder).
+    let tags = kSpecialIds.tags;
+    if (folder == tags)
+      return true;
+
+    // Ignore tag items (the actual instance of a tag for a bookmark).
+    if (this._bms.getFolderIdForItem(folder) == tags)
+      return true;
+
+    // Make sure to remove items that have the exclude annotation.
     if (Svc.Annos.itemHasAnnotation(itemId, EXCLUDEBACKUP_ANNO)) {
       this.removeChangedID(this._GUIDForId(itemId));
       return true;
     }
 
-    // Get the folder id if we weren't given one
-    if (folder == null)
-      folder = this._bms.getFolderIdForItem(itemId);
-
-    let tags = kSpecialIds.tags;
-    // Ignore changes to tags (folders under the tags folder)
-    if (folder == tags)
-      return true;
-
-    // Ignore tag items (the actual instance of a tag for a bookmark)
-    if (this._bms.getFolderIdForItem(folder) == tags)
-      return true;
-
-    // Ignore livemark children
-    return this._ls.isLivemark(folder);
+    return false;
   },
 
   onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
@@ -1655,7 +1484,7 @@ BookmarksTracker.prototype = {
     let queryURI = Utils.makeURI("place:folder=" + kSpecialIds.mobile);
     let title = Str.sync.get("mobile.label");
 
-    // Don't add OR do remove the mobile bookmarks if there's nothing
+    // Don't add OR remove the mobile bookmarks if there's nothing.
     if (Svc.Bookmark.getIdForItemAt(kSpecialIds.mobile, 0) == -1) {
       if (mobile.length != 0)
         Svc.Bookmark.removeItem(mobile[0]);
@@ -1675,26 +1504,24 @@ BookmarksTracker.prototype = {
     this.ignoreAll = false;
   },
 
+  // This method is oddly structured, but the idea is to return as quickly as
+  // possible -- this handler gets called *every time* a bookmark changes, for
+  // *each change*. That's particularly bad when a bunch of livemarks are
+  // updated.
   onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
-    if (this._ignore(itemId))
+    // Quicker checks first.
+    if (this.ignoreAll)
       return;
 
-    // Allocate a new GUID if necessary.
-    // We only want to do it if there's a dupe, so use idForGUID to achieve that.
-    if (isAnno && (property == GUID_ANNO)) {
-      this._log.trace("onItemChanged for " + GUID_ANNO +
-                      ": probably needs a new one.");
-      this._idForGUID(this._GUIDForId(itemId));
-      this._addId(itemId);
-      return;
-    }
-
-    // ignore annotations except for the ones that we sync
-    if (isAnno && ANNOS_TO_TRACK.indexOf(property) == -1)
+    if (isAnno && (ANNOS_TO_TRACK.indexOf(property) == -1))
+      // Ignore annotations except for the ones that we sync.
       return;
 
-    // Ignore favicon changes to avoid unnecessary churn
+    // Ignore favicon changes to avoid unnecessary churn.
     if (property == "favicon")
+      return;
+
+    if (this._ignore(itemId))
       return;
 
     this._log.trace("onItemChanged: " + itemId +

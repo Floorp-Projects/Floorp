@@ -154,7 +154,7 @@ WeaveSvc.prototype = {
     let misc = Svc.Prefs.get("miscURL");
     if (misc.indexOf(":") == -1)
       misc = this.serverURL + misc;
-    return misc + "1.0/";
+    return misc + MISC_API_VERSION + "/";
   },
 
   get userAPI() {
@@ -162,7 +162,7 @@ WeaveSvc.prototype = {
     let user = Svc.Prefs.get("userURL");
     if (user.indexOf(":") == -1)
       user = this.serverURL + user;
-    return user + "1.0/";
+    return user + USER_API_VERSION + "/";
   },
 
   get pwResetURL() {
@@ -237,7 +237,7 @@ WeaveSvc.prototype = {
     if (this.clusterURL == "" || this.username == "")
       return;
 
-    let storageAPI = this.clusterURL + Svc.Prefs.get("storageAPI") + "/";
+    let storageAPI = this.clusterURL + SYNC_API_VERSION + "/";
     this.userBaseURL = storageAPI + this.username + "/";
     this._log.debug("Caching URLs under storage user base: " + this.userBaseURL);
 
@@ -1014,6 +1014,16 @@ WeaveSvc.prototype = {
     }))(),
 
   startOver: function() {
+    // Clear client-specific data from the server, including disabled engines.
+    for each (let engine in [Clients].concat(Engines.getAll())) {
+      try {
+        engine.removeClientData();
+      } catch(ex) {
+        this._log.warn("Deleting client data for " + engine.name + " failed:"
+                       + Utils.exceptionStr(ex));
+      }
+    }
+
     // Set a username error so the status message shows "set up..."
     Status.login = LOGIN_FAILED_NO_USERNAME;
     this.logout();
@@ -1184,12 +1194,6 @@ WeaveSvc.prototype = {
 
   checkAccount: function checkAccount(account) {
     let username = this._usernameFromAccount(account);
-    return this.checkUsername(username);
-  },
-
-  // Backwards compat with the Firefox UI. Fold into checkAccount() once
-  // bug 595066 has landed.
-  checkUsername: function checkUsername(username) {
     let url = this.userAPI + username;
     let res = new Resource(url);
     res.authenticator = new NoOpAuthenticator();
@@ -1211,18 +1215,9 @@ WeaveSvc.prototype = {
     return this._errorStr(data);
   },
 
-  createAccount: function createAccount() {
-    // Backwards compat with the Firefox UI. Change to signature to
-    // (email, password, captchaChallenge, captchaResponse) once
-    // bug 595066 has landed.
-    let username, email, password, captchaChallenge, captchaResponse;
-    if (arguments.length == 4) {
-      [email, password, captchaChallenge, captchaResponse] = arguments;
-      username = this._usernameFromAccount(email);
-    } else {
-      [username, password, email, captchaChallenge, captchaResponse] = arguments;
-    }
-
+  createAccount: function createAccount(email, password,
+                                        captchaChallenge, captchaResponse) {
+    let username = this._usernameFromAccount(email);
     let payload = JSON.stringify({
       "password": Utils.encodeUTF8(password),
       "email": email,

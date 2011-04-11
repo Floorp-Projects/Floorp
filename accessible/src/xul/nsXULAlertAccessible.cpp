@@ -37,6 +37,7 @@
 
 #include "nsXULAlertAccessible.h"
 
+#include "States.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULAlertAccessible
@@ -56,15 +57,10 @@ nsXULAlertAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_ALERT;
 }
 
-nsresult
-nsXULAlertAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
+PRUint64
+nsXULAlertAccessible::NativeState()
 {
-  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
-
-  // XUL has no markup for low, medium or high
-  *aState |= nsIAccessibleStates::STATE_ALERT_MEDIUM;
-  return NS_OK;
+  return nsAccessible::NativeState() | states::ALERT;
 }
 
 NS_IMETHODIMP

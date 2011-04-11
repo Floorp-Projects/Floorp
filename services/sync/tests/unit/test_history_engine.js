@@ -51,7 +51,7 @@ function test_processIncoming_mobile_history_batched() {
   }
   
   let server = sync_httpd_setup({
-      "/1.0/foo/storage/history": collection.handler()
+      "/1.1/foo/storage/history": collection.handler()
   });
   do_test_pending();
 
