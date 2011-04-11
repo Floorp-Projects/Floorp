@@ -76,6 +76,10 @@ public:
   // Called from the state machine thread.
   void Drain(PRUint64 aTime);
 
+  // Sets the size of the signal buffer.
+  // Called from the main and the state machine thread.
+  void SetSignalBufferLength(PRUint32 aLength);
+
 private:
   // The decoder associated with the event manager.  The event manager shares
   // the same lifetime as the decoder (the decoder holds a reference to the
@@ -91,6 +95,9 @@ private:
   // The current size of the signal buffer, may change due to DOM calls.
   PRUint32 mSignalBufferLength;
 
+  // The size of the new signal buffer, may change due to DOM calls.
+  PRUint32 mNewSignalBufferLength;
+
   // The position of the first available item in mSignalBuffer
   PRUint32 mSignalBufferPosition;
 
@@ -98,7 +105,7 @@ private:
   // between the state machine and audio threads.
   nsTArray< nsCOMPtr<nsIRunnable> > mPendingEvents;
 
-  // Monitor for shared access to mPendingEvents queue.
+  // Monitor for shared access to mPendingEvents queue or buffer length.
   Monitor mMonitor;
 };
 
