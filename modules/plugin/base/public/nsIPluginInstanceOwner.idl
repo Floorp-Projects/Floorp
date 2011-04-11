@@ -148,14 +148,7 @@ interface nsIPluginInstanceOwner : nsISupports
 %{C++
   virtual void SendIdleEvent() = 0;
 %}
-};
 
-/**
- * This interface extends nsIPluginInstanceOwner for the 2.0 branch
- */
-[uuid(20504739-4519-45f3-a8f7-fc8afba7ea87)]
-interface nsIPluginInstanceOwner_MOZILLA_2_0_BRANCH : nsISupports
-{
   /**
    * Call NPP_SetWindow on the plugin.
    */
