@@ -395,10 +395,6 @@ SetContextOptions(JSContext *cx)
     JS_SetOperationCallback(cx, ShellOperationCallback);
 }
 
-#ifdef WINCE
-int errno;
-#endif
-
 static void
 Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool last)
 {
@@ -427,10 +423,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY, JSBool la
 
     SetContextOptions(cx);
 
-#ifndef WINCE
-    /* windows mobile (and possibly other os's) does not have a TTY */
     if (!forceTTY && !isatty(fileno(file)))
-#endif
     {
         /*
          * It's not interactive - just execute it.

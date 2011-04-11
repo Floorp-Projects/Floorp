@@ -159,7 +159,7 @@ nsAutoString *gWorkingDirectory = nsnull;
 static JSBool
 GetLocationProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
-#if (!defined(XP_WIN) && !defined(XP_UNIX)) || defined(WINCE)
+#if !defined(XP_WIN) && !defined(XP_UNIX)
     //XXX: your platform should really implement this
     return JS_FALSE;
 #else
@@ -1744,7 +1744,7 @@ ContextCallback(JSContext *cx, uintN contextOp)
 static bool
 GetCurrentWorkingDirectory(nsAString& workingDirectory)
 {
-#if (!defined(XP_WIN) && !defined(XP_UNIX)) || defined(WINCE)
+#if !defined(XP_WIN) && !defined(XP_UNIX)
     //XXX: your platform should really implement this
     return false;
 #elif XP_WIN
@@ -1779,19 +1779,9 @@ GetCurrentWorkingDirectory(nsAString& workingDirectory)
     return true;
 }
 
-#ifdef WINCE
-#include "nsWindowsWMain.cpp"
-#endif
-
 int
-#ifndef WINCE
 main(int argc, char **argv, char **envp)
 {
-#else
-main(int argc, char **argv)
-{
-	char **envp = 0;
-#endif
 #ifdef XP_MACOSX
     InitAutoreleasePool();
 #endif
