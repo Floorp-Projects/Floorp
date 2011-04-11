@@ -803,8 +803,6 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame* aBlockFrame,
               mBuffer.Append(Substring(text, start, endLine - start));
 
               if (PRUint32(endLine) < text.Length()) {
-                nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-                textFrame->SetLength(endLine - start, nsnull);
                 next = frame->GetNextInFlow();
                 if (!next) {
                   // If the frame already has a bidi continuation, make it fluid
@@ -817,6 +815,8 @@ nsBidiPresUtils::TraverseFrames(nsBlockFrame* aBlockFrame,
                     CreateContinuation(frame, &next, PR_TRUE);
                   }
                 }
+                nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
+                textFrame->SetLength(endLine - start, nsnull);
               }
               ResolveParagraphWithinBlock(aBlockFrame);
 
