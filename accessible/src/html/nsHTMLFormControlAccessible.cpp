@@ -526,7 +526,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetActionName(PRUint8 aIndex, nsAString
 NS_IMETHODIMP nsHTMLTextFieldAccessible::DoAction(PRUint8 index)
 {
   if (index == 0) {
-    nsCOMPtr<nsIDOMNSHTMLElement> element(do_QueryInterface(mContent));
+    nsCOMPtr<nsIDOMHTMLElement> element(do_QueryInterface(mContent));
     if ( element ) {
       return element->Focus();
     }
