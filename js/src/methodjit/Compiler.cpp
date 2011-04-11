@@ -4808,9 +4808,13 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
     JSObject *singleton = pushedSingleton(0);
     if (singleton && singleton->isFunction() &&
         testSingletonPropertyTypes(top, ATOM_TO_JSID(atom), &testObject)) {
-        MaybeJump notObject;
-        if (testObject)
-            notObject = frame.testObject(Assembler::NotEqual, top);
+        if (testObject) {
+            Jump notObject = frame.testObject(Assembler::NotEqual, top);
+            stubcc.linkExit(notObject, Uses(1));
+            stubcc.leave();
+            stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
+            OOL_STUBCALL(stubs::CallProp);
+        }
 
         // THIS
 
@@ -4823,13 +4827,8 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
         frame.shift(-2);
         // FUN THIS
 
-        if (notObject.isSet()) {
-            stubcc.linkExit(notObject.get(), Uses(1));
-            stubcc.leave();
-            stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
-            OOL_STUBCALL(stubs::CallProp);
+        if (testObject)
             stubcc.rejoin(Changes(2));
-        }
 
         return true;
     }
