@@ -280,7 +280,6 @@ public:
 #endif // definied(OS_MACOSX)
 
     nsresult AsyncSetWindow(NPWindow* window);
-    nsresult GetSurface(gfxASurface** aSurface);
     nsresult GetImage(mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
     nsresult GetImageSize(nsIntSize* aSize);
 #ifdef XP_MACOSX
