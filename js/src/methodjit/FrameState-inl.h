@@ -515,8 +515,10 @@ FrameState::tempRegForData(FrameEntry *fe)
 inline void
 FrameState::forgetMismatchedObject(FrameEntry *fe)
 {
-    if (fe->isNotType(JSVAL_TYPE_OBJECT))
+    if (fe->isNotType(JSVAL_TYPE_OBJECT)) {
         syncAndForgetFe(fe);
+        fe->clear();
+    }
 
     if (fe->isConstant()) {
         RegisterID reg = allocReg();
