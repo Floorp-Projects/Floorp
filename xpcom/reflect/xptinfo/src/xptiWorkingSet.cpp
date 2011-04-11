@@ -48,7 +48,6 @@ using namespace mozilla;
 #define XPTI_HASHTABLE_SIZE             2048
 
 xptiWorkingSet::xptiWorkingSet()
-    : mTableLock("xptiWorkingSet::mTableLock")
 {
     MOZ_COUNT_CTOR(xptiWorkingSet);
 
@@ -69,7 +68,7 @@ xpti_Invalidator(const char* keyname, xptiInterfaceEntry* entry, void* arg)
 void 
 xptiWorkingSet::InvalidateInterfaceInfos()
 {
-    MutexAutoLock lock(mTableLock);
+    MonitorAutoEnter lock(xptiInterfaceInfoManager::GetInfoMonitor());
     mNameTable.EnumerateRead(xpti_Invalidator, NULL);
 }        
 
