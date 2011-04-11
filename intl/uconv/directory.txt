@@ -2,7 +2,6 @@ Directory Structure :
 ================================
 
 idl        - public .idl files
-native     - support for native platform charset conversion
 public     - public header file
 src        - source directory of charset converter manager and utilities, and
              charset converters for ISO-8859-1, CP1252, MacRoman and UTF-8

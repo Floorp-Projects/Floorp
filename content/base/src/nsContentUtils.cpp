@@ -2138,11 +2138,17 @@ nsContentUtils::GenerateStateKey(nsIContent* aContent,
 
   if (!generatedUniqueKey) {
     // Either we didn't have a form control or we aren't in an HTML document so
-    // we can't figure out form info.  First append a character that is not "d"
-    // or "f" to disambiguate from the case when we were a form control in an
-    // HTML document.
-    KeyAppendString(NS_LITERAL_CSTRING("o"), aKey);
-    
+    // we can't figure out form info.  Append the tag name if it's an element
+    // to avoid restoring state for one type of element on another type.
+    if (aContent->IsElement()) {
+      KeyAppendString(nsDependentAtomString(aContent->Tag()), aKey);
+    }
+    else {
+      // Append a character that is not "d" or "f" to disambiguate from
+      // the case when we were a form control in an HTML document.
+      KeyAppendString(NS_LITERAL_CSTRING("o"), aKey);
+    }
+
     // Now start at aContent and append the indices of it and all its ancestors
     // in their containers.  That should at least pin down its position in the
     // DOM...
@@ -6508,21 +6514,3 @@ nsIContentUtils2::CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChann
 {
   return nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
 }
-
-#ifndef MOZ_ENABLE_LIBXUL
-
-NS_IMPL_ISUPPORTS1(nsIContentUtils_MOZILLA_2_0_BRANCH, nsIContentUtils_MOZILLA_2_0_BRANCH)
-
-nsresult
-nsIContentUtils_MOZILLA_2_0_BRANCH::DispatchTrustedEvent(nsIDocument* aDoc,
-                                                         nsISupports* aTarget,
-                                                         const nsAString& aEventName,
-                                                         PRBool aCanBubble,
-                                                         PRBool aCancelable,
-                                                         PRBool *aDefaultAction)
-{
-  return nsContentUtils::DispatchTrustedEvent(aDoc, aTarget, aEventName,
-                                              aCanBubble, aCancelable, aDefaultAction);
-}
-
-#endif

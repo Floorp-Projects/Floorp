@@ -54,7 +54,7 @@ nsScriptObjectTracer::TraverseScriptObjects(void *p,
 }
 
 nsresult
-nsXPCOMCycleCollectionParticipant::RootAndUnlinkJSObjects(void *p)
+nsXPCOMCycleCollectionParticipant::Root(void *p)
 {
     nsISupports *s = static_cast<nsISupports*>(p);
     NS_ADDREF(s);

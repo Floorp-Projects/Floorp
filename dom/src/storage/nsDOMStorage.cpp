@@ -40,12 +40,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "StorageChild.h"
 #include "StorageParent.h"
 #include "nsXULAppAPI.h"
 using mozilla::dom::StorageChild;
-#endif
 
 #include "prnetdb.h"
 #include "nsCOMPtr.h"
@@ -271,11 +269,9 @@ nsDOMStorageManager::Initialize()
 
   NS_ADDREF(gStorageManager);
 
-#ifdef MOZ_IPC
   // No observers needed in non-chrome
   if (XRE_GetProcessType() != GeckoProcessType_Default)
     return NS_OK;
-#endif
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (!os)
@@ -589,8 +585,8 @@ NS_IMPL_CYCLE_COLLECTION_1(nsDOMStorage, mStorageImpl)
 
 DOMCI_DATA(StorageObsolete, nsDOMStorage)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage, nsIDOMStorageObsolete)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMStorage)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMStorage)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorageObsolete)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageObsolete)
@@ -1355,12 +1351,10 @@ nsDOMStorage::nsDOMStorage()
 {
   mSecurityChecker = this;
 
-#ifdef MOZ_IPC
   if (XRE_GetProcessType() != GeckoProcessType_Default)
     mStorageImpl = new StorageChild(this);
   else
-#endif
-  mStorageImpl = new DOMStorageImpl(this);
+    mStorageImpl = new DOMStorageImpl(this);
 }
 
 nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
@@ -1369,13 +1363,10 @@ nsDOMStorage::nsDOMStorage(nsDOMStorage& aThat)
 {
   mSecurityChecker = this;
 
-#ifdef MOZ_IPC
   if (XRE_GetProcessType() != GeckoProcessType_Default) {
     StorageChild* other = static_cast<StorageChild*>(aThat.mStorageImpl.get());
     mStorageImpl = new StorageChild(this, *other);
-  } else
-#endif
-  {
+  } else {
     DOMStorageImpl* other = static_cast<DOMStorageImpl*>(aThat.mStorageImpl.get());
     mStorageImpl = new DOMStorageImpl(this, *other);
   }
@@ -1794,8 +1785,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 DOMCI_DATA(Storage, nsDOMStorage2)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorage2, nsIDOMStorage)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMStorage2)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMStorage2)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMStorage2)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStorage)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorage)
@@ -2209,8 +2200,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMStorageItem)
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMStorageItem, nsIDOMStorageItem)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMStorageItem)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMStorageItem)
 
 DOMCI_DATA(StorageItem, nsDOMStorageItem)
 

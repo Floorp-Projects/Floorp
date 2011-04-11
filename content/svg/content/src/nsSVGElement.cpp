@@ -239,7 +239,7 @@ nsSVGElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                              aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
+  if (!MayHaveStyle()) {
     return NS_OK;
   }
   const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
@@ -288,7 +288,7 @@ nsSVGElement::AfterSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
        aName == nsGkAtoms::requiredExtensions ||
        aName == nsGkAtoms::systemLanguage)) {
 
-    nsIContent* parent = nsSVGUtils::GetParentElement(this);
+    nsIContent* parent = GetFlattenedTreeParent();
   
     if (parent &&
         parent->NodeInfo()->Equals(nsGkAtoms::svgSwitch, kNameSpaceID_SVG)) {
@@ -1214,7 +1214,7 @@ MappedAttrParser::CreateStyleRule()
     return nsnull; // No mapped attributes were parsed
   }
 
-  nsRefPtr<css::StyleRule> rule = NS_NewCSSStyleRule(nsnull, mDecl);
+  nsRefPtr<css::StyleRule> rule = new css::StyleRule(nsnull, mDecl);
   mDecl = nsnull; // We no longer own the declaration -- drop our pointer to it
   return rule.forget();
 }
@@ -1411,7 +1411,7 @@ nsIAtom* nsSVGElement::GetEventNameForAttr(nsIAtom* aAttr)
 nsSVGSVGElement *
 nsSVGElement::GetCtx()
 {
-  dom::Element* ancestor = nsSVGUtils::GetParentElement(this);
+  nsIContent* ancestor = GetFlattenedTreeParent();
 
   while (ancestor && ancestor->GetNameSpaceID() == kNameSpaceID_SVG) {
     nsIAtom* tag = ancestor->Tag();
@@ -1421,7 +1421,7 @@ nsSVGElement::GetCtx()
     if (tag == nsGkAtoms::svg) {
       return static_cast<nsSVGSVGElement*>(ancestor);
     }
-    ancestor = nsSVGUtils::GetParentElement(ancestor);
+    ancestor = ancestor->GetFlattenedTreeParent();
   }
 
   // we don't have an ancestor <svg> element...

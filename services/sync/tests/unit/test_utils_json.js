@@ -1,5 +1,6 @@
 _("Make sure json saves and loads from disk");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/constants.js");
 
 function run_test() {
   do_test_pending();
@@ -68,9 +69,15 @@ function run_test() {
     // Write a file with some invalid JSON
     let file = Utils.getProfileFile({ autoCreate: true,
                                       path: "weave/log.json" });
-    let [fos] = Utils.open(file, ">");
-    fos.writeString("invalid json!");
-    fos.close();
+    let fos = Cc["@mozilla.org/network/file-output-stream;1"]
+                .createInstance(Ci.nsIFileOutputStream);
+    fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE,
+             fos.DEFER_OPEN);
+    let stream = Cc["@mozilla.org/intl/converter-output-stream;1"]
+                   .createInstance(Ci.nsIConverterOutputStream);
+    stream.init(fos, "UTF-8", 4096, 0x0000);
+    stream.writeString("invalid json!");
+    stream.close();
 
     let trace, debug;
     Utils.jsonLoad("log",

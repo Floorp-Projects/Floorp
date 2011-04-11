@@ -35,7 +35,7 @@
  */
 #define INITGUID
 
-#include "cairo.h"
+#include "cairoint.h"
 #include "cairo-d2d-private.h"
 #include "cairo-dwrite-private.h"
 

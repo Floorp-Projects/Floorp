@@ -35,10 +35,8 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifdef MOZ_IPC
 #include "mozilla/dom/ContentChild.h"
 #include "nsXULAppAPI.h"
-#endif
 
 #include <android/log.h>
 
@@ -173,10 +171,8 @@ public:
             mMap.ops = nsnull;
             LOG("initializing the map failed");
         }
-#ifdef MOZ_IPC
         NS_ABORT_IF_FALSE(XRE_GetProcessType() == GeckoProcessType_Default,
                           "StartupCacheFontNameCache should only be used in chrome procsess");
-#endif
         mCache = mozilla::scache::StartupCache::GetSingleton();
         Init();
     }
@@ -441,12 +437,10 @@ gfxAndroidPlatform::FindFontsInDirectory(const nsCString& aFontsDir,
 void
 gfxAndroidPlatform::GetFontList(InfallibleTArray<FontListEntry>* retValue)
 {
-#ifdef MOZ_IPC
     if (XRE_GetProcessType() != GeckoProcessType_Default) {
         mozilla::dom::ContentChild::GetSingleton()->SendReadFontList(retValue);
         return;
     }
-#endif
 
     if (mFontList.Length() > 0) {
         *retValue = mFontList;
@@ -569,7 +563,8 @@ gfxAndroidPlatform::IsFontFormatSupported(nsIURI *aFontURI, PRUint32 aFormatFlag
                  "strange font format hint set");
 
     // accept supported formats
-    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_OPENTYPE | 
+    if (aFormatFlags & (gfxUserFontSet::FLAG_FORMAT_OPENTYPE |
+                        gfxUserFontSet::FLAG_FORMAT_WOFF |
                         gfxUserFontSet::FLAG_FORMAT_TRUETYPE)) {
         return PR_TRUE;
     }

@@ -45,6 +45,10 @@ endif
 endif
 endif
 
+# -pedantic causes warnings that we don't care about
+# so turn it off
+CFLAGS := $(filter-out -pedantic,$(CFLAGS))
+
 FORCE_STATIC_LIB = 1
 # This library is used by other shared libs
 FORCE_USE_PIC = 1

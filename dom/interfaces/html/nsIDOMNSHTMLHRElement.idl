@@ -42,7 +42,7 @@
  * interface for [X]HTML hr elements, for compatibility with IE.
  */
 
-[scriptable, uuid(19b5879f-c125-447c-aaaf-719de3ef221a)]
+[scriptable, uuid(63c0ae1b-8aa7-4e72-82a1-aff486bfdaf5)]
 interface nsIDOMNSHTMLHRElement : nsISupports
 {
            attribute DOMString        color;

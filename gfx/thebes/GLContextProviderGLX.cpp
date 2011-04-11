@@ -59,6 +59,7 @@
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "GLContext.h"
+#include "gfxUtils.h"
 
 #include "gfxCrashReporterUtils.h"
 
@@ -118,6 +119,7 @@ GLXLibrary::EnsureInitialized()
         { (PRFuncPtr*) &xSwapBuffers, { "glXSwapBuffers", NULL } },
         { (PRFuncPtr*) &xQueryVersion, { "glXQueryVersion", NULL } },
         { (PRFuncPtr*) &xGetCurrentContext, { "glXGetCurrentContext", NULL } },
+        { (PRFuncPtr*) &xWaitGL, { "glXWaitGL", NULL } },
         /* functions introduced in GLX 1.1 */
         { (PRFuncPtr*) &xQueryExtensionsString, { "glXQueryExtensionsString", NULL } },
         { (PRFuncPtr*) &xGetClientString, { "glXGetClientString", NULL } },
@@ -166,6 +168,12 @@ GLXLibrary::EnsureInitialized()
         { NULL, { NULL } }
     };
 
+    LibrarySymbolLoader::SymLoadStruct symbols_texturefrompixmap[] = {
+        { (PRFuncPtr*) &xBindTexImage, { "glXBindTexImageEXT", NULL } },
+        { (PRFuncPtr*) &xReleaseTexImage, { "glXReleaseTexImageEXT", NULL } },
+        { NULL, { NULL } }
+    };
+
     if (!LibrarySymbolLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return PR_FALSE;
@@ -188,9 +196,9 @@ GLXLibrary::EnsureInitialized()
     }
 
     int screen = DefaultScreen(display);
-    const char *serverVendor;
-    const char *serverVersionStr;
-    const char *extensionsStr;
+    const char *serverVendor = NULL;
+    const char *serverVersionStr = NULL;
+    const char *extensionsStr = NULL;
 
     // This scope is covered by a ScopedXErrorHandler to catch X errors in GLX
     // calls.  See bug 632867 comment 3: Mesa versions up to 7.10 cause a
@@ -261,6 +269,12 @@ GLXLibrary::EnsureInitialized()
         return PR_FALSE;
     }
 
+    if (HasExtension(extensionsStr, "GLX_EXT_texture_from_pixmap") &&
+        LibrarySymbolLoader::LoadSymbols(mOGLLibrary, symbols_texturefrompixmap))
+    {
+        mHasTextureFromPixmap = PR_TRUE;
+    }
+
     gIsATI = serverVendor && DoesVendorStringMatch(serverVendor, "ATI");
     gIsChromium = (serverVendor &&
                    DoesVendorStringMatch(serverVendor, "Chromium")) ||
@@ -269,6 +283,85 @@ GLXLibrary::EnsureInitialized()
 
     mInitialized = PR_TRUE;
     return PR_TRUE;
+}
+
+GLXPixmap 
+GLXLibrary::CreatePixmap(gfxASurface* aSurface)
+{
+    if (aSurface->GetType() != gfxASurface::SurfaceTypeXlib || !mHasTextureFromPixmap) {
+        return 0;
+    }
+
+    if (!EnsureInitialized()) {
+        return 0;
+    }
+
+    int attribs[] = { GLX_DOUBLEBUFFER, False,
+                      GLX_DRAWABLE_TYPE, GLX_PIXMAP_BIT,
+                      GLX_BIND_TO_TEXTURE_RGBA_EXT, True,
+                      None };
+
+    int numFormats;
+    Display *display = DefaultXDisplay();
+    int xscreen = DefaultScreen(display);
+
+    ScopedXFree<GLXFBConfig> cfg(xChooseFBConfig(display,
+                                                 xscreen,
+                                                 attribs,
+                                                 &numFormats));
+    if (!cfg) {
+        return 0;
+    }
+    NS_ABORT_IF_FALSE(numFormats > 0,
+                 "glXChooseFBConfig() failed to match our requested format and violated its spec (!)");
+
+    gfxXlibSurface *xs = static_cast<gfxXlibSurface*>(aSurface);
+
+    int pixmapAttribs[] = { GLX_TEXTURE_TARGET_EXT, GLX_TEXTURE_2D_EXT,
+                            GLX_TEXTURE_FORMAT_EXT, GLX_TEXTURE_FORMAT_RGBA_EXT,
+                            None};
+
+    GLXPixmap glxpixmap = xCreatePixmap(display,
+                                        cfg[0],
+                                        xs->XDrawable(),
+                                        pixmapAttribs);
+
+    return glxpixmap;
+}
+
+void
+GLXLibrary::DestroyPixmap(GLXPixmap aPixmap)
+{
+    if (!mHasTextureFromPixmap) {
+        return;
+    }
+
+    Display *display = DefaultXDisplay();
+    xDestroyPixmap(display, aPixmap);
+}
+
+void
+GLXLibrary::BindTexImage(GLXPixmap aPixmap)
+{    
+    if (!mHasTextureFromPixmap) {
+        return;
+    }
+
+    Display *display = DefaultXDisplay();
+    // Make sure all X drawing to the surface has finished before binding to a texture.
+    XSync(DefaultXDisplay(), False);
+    xBindTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT, NULL);
+}
+
+void
+GLXLibrary::ReleaseTexImage(GLXPixmap aPixmap)
+{
+    if (!mHasTextureFromPixmap) {
+        return;
+    }
+
+    Display *display = DefaultXDisplay();
+    xReleaseTexImage(display, aPixmap, GLX_FRONT_LEFT_EXT);
 }
 
 GLXLibrary sGLXLibrary;
@@ -416,8 +509,20 @@ TRY_AGAIN_NO_SHARING:
         if (!mDoubleBuffered)
             return PR_FALSE;
         sGLXLibrary.xSwapBuffers(mDisplay, mDrawable);
+        sGLXLibrary.xWaitGL();
         return PR_TRUE;
     }
+
+    PRBool TextureImageSupportsGetBackingSurface()
+    {
+        return sGLXLibrary.HasTextureFromPixmap();
+    }
+
+    virtual already_AddRefed<TextureImage>
+    CreateTextureImage(const nsIntSize& aSize,
+                       TextureImage::ContentType aContentType,
+                       GLenum aWrapMode,
+                       PRBool aUseNearestFilter = PR_FALSE);
 
 private:
     friend class GLContextProviderGLX;
@@ -447,6 +552,147 @@ private:
 
     nsRefPtr<gfxXlibSurface> mPixmap;
 };
+
+class TextureImageGLX : public TextureImage
+{
+    friend already_AddRefed<TextureImage>
+    GLContextGLX::CreateTextureImage(const nsIntSize&,
+                                     ContentType,
+                                     GLenum,
+                                     PRBool);
+
+public:
+    virtual ~TextureImageGLX()
+    {
+        mGLContext->MakeCurrent();
+        mGLContext->fDeleteTextures(1, &mTexture);
+        sGLXLibrary.DestroyPixmap(mPixmap);
+    }
+
+    virtual gfxASurface* BeginUpdate(nsIntRegion& aRegion)
+    {
+        mInUpdate = PR_TRUE;
+        return mUpdateSurface;
+    }
+
+    virtual void EndUpdate()
+    {
+        mInUpdate = PR_FALSE;
+    }
+
+    virtual bool DirectUpdate(gfxASurface* aSurface, const nsIntRegion& aRegion)
+    {
+        nsRefPtr<gfxContext> ctx = new gfxContext(mUpdateSurface);
+        gfxUtils::ClipToRegion(ctx, aRegion);
+        ctx->SetSource(aSurface);
+        ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+        ctx->Paint();
+        return true;
+    }
+
+    virtual void BindTexture(GLenum aTextureUnit)
+    {
+        mGLContext->fActiveTexture(aTextureUnit);
+        mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, Texture());
+        sGLXLibrary.BindTexImage(mPixmap);
+        mGLContext->fActiveTexture(LOCAL_GL_TEXTURE);
+    }
+
+    virtual void ReleaseTexture()
+    {
+        sGLXLibrary.ReleaseTexImage(mPixmap);
+    }
+
+    virtual already_AddRefed<gfxASurface> GetBackingSurface()
+    {
+        NS_ADDREF(mUpdateSurface);
+        return mUpdateSurface.get();
+    }
+
+    virtual PRBool InUpdate() const { return !mInUpdate; }
+
+private:
+   TextureImageGLX(GLuint aTexture,
+                   const nsIntSize& aSize,
+                   GLenum aWrapMode,
+                   ContentType aContentType,
+                   GLContext* aContext,
+                   gfxASurface* aSurface,
+                   GLXPixmap aPixmap)
+        : TextureImage(aTexture, aSize, aWrapMode, aContentType)
+        , mGLContext(aContext)
+        , mUpdateSurface(aSurface)
+        , mPixmap(aPixmap)
+        , mInUpdate(PR_FALSE)
+    {
+        if (aSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+            mShaderType = gl::RGBALayerProgramType;
+        } else {
+            mShaderType = gl::RGBXLayerProgramType;
+        }
+    }
+
+    GLContext* mGLContext;
+    nsRefPtr<gfxASurface> mUpdateSurface;
+    GLXPixmap mPixmap;
+    PRPackedBool mInUpdate;
+};
+
+already_AddRefed<TextureImage>
+GLContextGLX::CreateTextureImage(const nsIntSize& aSize,
+                                 TextureImage::ContentType aContentType,
+                                 GLenum aWrapMode,
+                                 PRBool aUseNearestFilter)
+{
+    if (!TextureImageSupportsGetBackingSurface()) {
+        return GLContext::CreateTextureImage(aSize, 
+                                             aContentType, 
+                                             aWrapMode, 
+                                             aUseNearestFilter);
+    }
+
+    Display *display = DefaultXDisplay();
+    int xscreen = DefaultScreen(display);
+    gfxASurface::gfxImageFormat imageFormat = gfxASurface::FormatFromContent(aContentType);
+
+    XRenderPictFormat* xrenderFormat =
+        gfxXlibSurface::FindRenderFormat(display, imageFormat);
+    NS_ASSERTION(xrenderFormat, "Could not find a render format for our display!");
+
+
+    nsRefPtr<gfxXlibSurface> surface =
+        gfxXlibSurface::Create(ScreenOfDisplay(display, xscreen),
+                               xrenderFormat,
+                               gfxIntSize(aSize.width, aSize.height));
+    NS_ASSERTION(surface, "Failed to create xlib surface!");
+
+    if (aContentType == gfxASurface::CONTENT_COLOR_ALPHA) {
+        nsRefPtr<gfxContext> ctx = new gfxContext(surface);
+        ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
+        ctx->Paint();
+    }
+
+    MakeCurrent();
+    GLXPixmap pixmap = sGLXLibrary.CreatePixmap(surface);
+    NS_ASSERTION(pixmap, "Failed to create pixmap!");
+
+    GLuint texture;
+    fGenTextures(1, &texture);
+
+    fActiveTexture(LOCAL_GL_TEXTURE0);
+    fBindTexture(LOCAL_GL_TEXTURE_2D, texture);
+
+    nsRefPtr<TextureImageGLX> teximage =
+        new TextureImageGLX(texture, aSize, aWrapMode, aContentType, this, surface, pixmap);
+
+    GLint texfilter = aUseNearestFilter ? LOCAL_GL_NEAREST : LOCAL_GL_LINEAR;
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, texfilter);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER, texfilter);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S, aWrapMode);
+    fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T, aWrapMode);
+
+    return teximage.forget();
+}
 
 static GLContextGLX *
 GetGlobalContextGLX()

@@ -272,8 +272,10 @@ HTML_ENTITY(lceil, 8968)
 HTML_ENTITY(rceil, 8969)
 HTML_ENTITY(lfloor, 8970)
 HTML_ENTITY(rfloor, 8971)
-HTML_ENTITY(lang, 9001)
-HTML_ENTITY(rang, 9002)
+// Bug 603716: expansions of &lang; and &rang; have been modified in HTML5.
+// See http://www.w3.org/2003/entities/2007/htmlmathml-f.ent
+HTML_ENTITY(lang, 0x27E8)
+HTML_ENTITY(rang, 0x27E9)
 HTML_ENTITY(loz, 9674)
 HTML_ENTITY(spades, 9824)
 HTML_ENTITY(clubs, 9827)

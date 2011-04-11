@@ -66,7 +66,7 @@ let FormWrapper = {
     
   getAllEntries: function getAllEntries() {
     // Sort by (lastUsed - minLast) / (maxLast - minLast) * timesUsed / maxTimes
-    let query = this.createStatement(
+    let query = Svc.Form.DBConnection.createAsyncStatement(
       "SELECT fieldname name, value FROM moz_formhistory " +
       "ORDER BY 1.0 * (lastUsed - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) / " +
         "((SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed DESC LIMIT 1) - (SELECT lastUsed FROM moz_formhistory ORDER BY lastUsed ASC LIMIT 1)) * " +
@@ -76,7 +76,7 @@ let FormWrapper = {
   },
 
   getEntry: function getEntry(guid) {
-    let query = this.createStatement(
+    let query = Svc.Form.DBConnection.createAsyncStatement(
       "SELECT fieldname name, value FROM moz_formhistory WHERE guid = :guid");
     query.params.guid = guid;
     return Utils.queryAsync(query, ["name", "value"])[0];
@@ -84,7 +84,7 @@ let FormWrapper = {
 
   getGUID: function getGUID(name, value) {
     // Query for the provided entry
-    let getQuery = this.createStatement(
+    let getQuery = Svc.Form.DBConnection.createAsyncStatement(
       "SELECT guid FROM moz_formhistory " +
       "WHERE fieldname = :name AND value = :value");
     getQuery.params.name = name;
@@ -106,7 +106,7 @@ let FormWrapper = {
       return item.guid;
 
     // We need to create a guid for this entry
-    let setQuery = this.createStatement(
+    let setQuery = Svc.Form.DBConnection.createAsyncStatement(
       "UPDATE moz_formhistory SET guid = :guid " +
       "WHERE fieldname = :name AND value = :value");
     let guid = Utils.makeGUID();
@@ -119,37 +119,20 @@ let FormWrapper = {
   },
 
   hasGUID: function hasGUID(guid) {
-    let query = this.createStatement(
+    let query = Svc.Form.DBConnection.createAsyncStatement(
       "SELECT guid FROM moz_formhistory WHERE guid = :guid LIMIT 1");
     query.params.guid = guid;
     return Utils.queryAsync(query, ["guid"]).length == 1;
   },
 
   replaceGUID: function replaceGUID(oldGUID, newGUID) {
-    let query = this.createStatement(
+    let query = Svc.Form.DBConnection.createAsyncStatement(
       "UPDATE moz_formhistory SET guid = :newGUID WHERE guid = :oldGUID");
     query.params.oldGUID = oldGUID;
     query.params.newGUID = newGUID;
     Utils.queryAsync(query);
-  },
-
-  createStatement: function createStatement(query) {
-    try {
-      // Just return the statement right away if it's okay
-      return Utils.createStatement(Svc.Form.DBConnection, query);
-    }
-    catch(ex) {
-      // Assume guid column must not exist yet, so add it with an index
-      Svc.Form.DBConnection.executeSimpleSQL(
-        "ALTER TABLE moz_formhistory ADD COLUMN guid TEXT");
-      Svc.Form.DBConnection.executeSimpleSQL(
-        "CREATE INDEX IF NOT EXISTS moz_formhistory_guid_index " +
-        "ON moz_formhistory (guid)");
-
-      // Try creating the query now that the column exists
-      return Utils.createStatement(Svc.Form.DBConnection, query);
-    }
   }
+
 };
 
 function FormEngine() {
@@ -231,7 +214,7 @@ FormStore.prototype = {
   },
 
   update: function FormStore_update(record) {
-    this._log.warn("Ignoring form record update request!");
+    this._log.trace("Ignoring form record update request!");
   },
 
   wipe: function FormStore_wipe() {
@@ -283,7 +266,6 @@ FormTracker.prototype = {
           this._enabled = false;
         }
         break;
-      // Firefox 4.0
       case "satchel-storage-changed":
         if (data == "addEntry" || data == "before-removeEntry") {
           subject = subject.QueryInterface(Ci.nsIArray);
@@ -294,30 +276,7 @@ FormTracker.prototype = {
           this.trackEntry(name, value);
         }
         break;
-      // Firefox 3.5/3.6
-      case "form-notifier":
-        this.onFormNotifier(data);
-        break;
     }
-  },
-
-  // Firefox 3.5/3.6
-  onFormNotifier: function onFormNotifier(data) {
-    let name, value;
-
-    // Figure out if it's a function that we care about tracking
-    let formCall = JSON.parse(data);
-    let func = formCall.func;
-    if ((func == "addEntry" && formCall.type == "after") ||
-        (func == "removeEntry" && formCall.type == "before"))
-      [name, value] = formCall.args;
-
-    // Skip if there's nothing of interest
-    if (name == null || value == null)
-      return;
-
-    this._log.trace("Logging form action: " + [func, name, value]);
-    this.trackEntry(name, value);
   },
 
   notify: function FormTracker_notify(formElement, aWindow, actionURI) {
