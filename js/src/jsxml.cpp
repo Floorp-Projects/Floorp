@@ -7528,6 +7528,7 @@ GetPrivate(JSContext *cx, JSObject *obj, const char *method)
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_INCOMPATIBLE_METHOD,
                              js_XML_str, method, obj->getClass()->name);
+        return NULL;
     }
     return (JSXML *)obj->getPrivate();
 }
