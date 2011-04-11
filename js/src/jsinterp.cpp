@@ -1027,7 +1027,7 @@ CheckRedeclaration(JSContext *cx, JSObject *obj, jsid id, uintN attrs)
         /* Allow redeclaration of variables and functions. */
         if (!(attrs & (JSPROP_GETTER | JSPROP_SETTER)))
             return true;
-        
+
         /*
          * Allow adding a getter only if a property already has a setter
          * but no getter and similarly for adding a setter. That is, we
@@ -1100,13 +1100,13 @@ LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result
             JSString *r = rval.toString();
             return EqualStrings(cx, l, r, result);
         }
-        
+
         if (lval.isDouble()) {
             double l = lval.toDouble(), r = rval.toDouble();
             *result = JSDOUBLE_COMPARE(l, ==, r, false);
             return true;
         }
-        
+
         if (lval.isObject()) {
             JSObject *l = &lval.toObject();
             JSObject *r = &rval.toObject();
@@ -1128,7 +1128,7 @@ LooselyEqual(JSContext *cx, const Value &lval, const Value &rval, JSBool *result
         *result = rval.isNullOrUndefined();
         return true;
     }
-    
+
     if (rval.isNullOrUndefined()) {
         *result = false;
         return true;
@@ -1244,24 +1244,6 @@ TypeOfValue(JSContext *cx, const Value &vref)
         return v.toObject().typeOf(cx);
     JS_ASSERT(v.isBoolean());
     return JSTYPE_BOOLEAN;
-}
-
-bool
-InstanceOfSlow(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
-{
-    JS_ASSERT(!obj || obj->getClass() != clasp);
-    if (argv) {
-        JSFunction *fun = js_ValueToFunction(cx, &argv[-2], 0);
-        if (fun) {
-            JSAutoByteString funNameBytes;
-            if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                                     clasp->name, funName,
-                                     obj ? obj->getClass()->name : js_null_str);
-            }
-        }
-    }
-    return false;
 }
 
 JS_REQUIRES_STACK bool
@@ -2370,7 +2352,7 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     (dbl = script->getConst(GET_FULL_INDEX(PCOFF)).toDouble())
 
     bool useMethodJIT = false;
-    
+
 #ifdef JS_METHODJIT
 
 #define RESET_USE_METHODJIT()                                                 \

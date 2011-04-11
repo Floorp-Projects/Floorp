@@ -513,7 +513,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     LeaveTrace(cx);
 
-    if (!InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
+    if (!obj->isNormalArguments())
         return true;
 
     if (JSID_IS_INT(id)) {
@@ -566,7 +566,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     LeaveTrace(cx);
 #endif
 
-    if (!InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
+
+    if (!obj->isNormalArguments())
         return true;
 
     if (JSID_IS_INT(id)) {
@@ -662,7 +663,7 @@ StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     LeaveTrace(cx);
 
-    if (!InstanceOf(cx, obj, &StrictArgumentsClass, NULL))
+    if (!obj->isStrictArguments())
         return true;
 
     if (JSID_IS_INT(id)) {
@@ -688,7 +689,7 @@ static JSBool
 
 StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
-    if (!InstanceOf(cx, obj, &StrictArgumentsClass, NULL))
+    if (!obj->isStrictArguments())
         return true;
 
     if (JSID_IS_INT(id)) {
@@ -1570,15 +1571,15 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * the non-standard properties when the directly addressed object (obj)
      * is a function object (i.e., when this loop does not iterate).
      */
-    JSFunction *fun;
-    while (!(fun = (JSFunction *)
-                   GetInstancePrivate(cx, obj, &js_FunctionClass, NULL))) {
+
+    while (!obj->isFunction()) {
         if (slot != FUN_LENGTH)
             return true;
         obj = obj->getProto();
         if (!obj)
             return true;
     }
+    JSFunction *fun = obj->getFunctionPrivate();
 
     /* Find fun's top-most activation record. */
     JSStackFrame *fp;
@@ -2117,15 +2118,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     Value fval = vp[1];
 
     if (!js_IsCallable(fval)) {
-        if (JSString *str = js_ValueToString(cx, fval)) {
-            JSAutoByteString bytes(cx, str);
-            if (!!bytes) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, js_call_str,
-                                     bytes.ptr());
-            }
-        }
+        ReportIncompatibleMethod(cx, vp, &js_FunctionClass);
         return false;
     }
 
@@ -2162,15 +2155,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     /* Step 1. */
     Value fval = vp[1];
     if (!js_IsCallable(fval)) {
-        if (JSString *str = js_ValueToString(cx, fval)) {
-            JSAutoByteString bytes(cx, str);
-            if (!!bytes) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, js_apply_str,
-                                     bytes.ptr());
-            }
-        }
+        ReportIncompatibleMethod(cx, vp, &js_FunctionClass);
         return false;
     }
 
@@ -2369,14 +2354,7 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
 
     /* Step 2. */
     if (!js_IsCallable(thisv)) {
-        if (JSString *str = js_ValueToString(cx, thisv)) {
-            JSAutoByteString bytes(cx, str);
-            if (!!bytes) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, "bind", bytes.ptr());
-            }
-        }
+        ReportIncompatibleMethod(cx, vp, &js_FunctionClass);
         return false;
     }
 
