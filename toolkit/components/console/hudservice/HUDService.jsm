@@ -145,6 +145,7 @@ const LEVELS = {
   warn: SEVERITY_WARNING,
   info: SEVERITY_INFO,
   log: SEVERITY_LOG,
+  trace: SEVERITY_LOG,
 };
 
 // The lowest HTTP response code (inclusive) that is considered an error.
@@ -1981,12 +1982,89 @@ HUD_SERVICE.prototype =
     function formatResult(x) {
       return (typeof(x) == "string") ? x : hud.jsterm.formatResult(x);
     }
-    let mappedArguments = Array.map(aArguments, formatResult);
-    let joinedArguments = Array.join(mappedArguments, " ");
+
+    let body = null;
+    let clipboardText = null;
+    let sourceURL = null;
+    let sourceLine = 0;
+
+    switch (aLevel) {
+      case "log":
+      case "info":
+      case "warn":
+      case "error":
+      case "debug":
+        let mappedArguments = Array.map(aArguments, formatResult);
+        body = Array.join(mappedArguments, " ");
+        break;
+
+      case "trace":
+        let filename = ConsoleUtils.abbreviateSourceURL(aArguments[0].filename);
+        let functionName = aArguments[0].functionName ||
+                           this.getStr("stacktrace.anonymousFunction");
+        let lineNumber = aArguments[0].lineNumber;
+
+        body = this.getFormatStr("stacktrace.outputMessage",
+                                 [filename, functionName, lineNumber]);
+
+        sourceURL = aArguments[0].filename;
+        sourceLine = aArguments[0].lineNumber;
+
+        clipboardText = "";
+
+        aArguments.forEach(function(aFrame) {
+          clipboardText += aFrame.filename + " :: " +
+                           aFrame.functionName + " :: " +
+                           aFrame.lineNumber + "\n";
+        });
+
+        clipboardText = clipboardText.trimRight();
+        break;
+
+      default:
+        Cu.reportError("Unknown Console API log level: " + aLevel);
+        return;
+    }
+
     let node = ConsoleUtils.createMessageNode(hud.outputNode.ownerDocument,
                                               CATEGORY_WEBDEV,
                                               LEVELS[aLevel],
-                                              joinedArguments);
+                                              body,
+                                              sourceURL,
+                                              sourceLine,
+                                              clipboardText);
+
+    // Make the node bring up the property panel, to allow the user to inspect
+    // the stack trace.
+    if (aLevel == "trace") {
+      node._stacktrace = aArguments;
+
+      let linkNode = node.querySelector(".webconsole-msg-body");
+      linkNode.classList.add("hud-clickable");
+      linkNode.setAttribute("aria-haspopup", "true");
+
+      node.addEventListener("mousedown", function(aEvent) {
+        this._startX = aEvent.clientX;
+        this._startY = aEvent.clientY;
+      }, false);
+
+      node.addEventListener("click", function(aEvent) {
+        if (aEvent.detail != 1 || aEvent.button != 0 ||
+            (this._startX != aEvent.clientX &&
+             this._startY != aEvent.clientY)) {
+          return;
+        }
+
+        if (!this._panelOpen) {
+          let propPanel = hud.jsterm.openPropertyPanel(null,
+                                                       node._stacktrace,
+                                                       this);
+          propPanel.panel.setAttribute("hudId", aHUDId);
+          this._panelOpen = true;
+        }
+      }, false);
+    }
+
     ConsoleUtils.outputMessageNode(node, aHUDId);
   },
 
