@@ -2055,8 +2055,6 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
 {
   nsresult rv = NS_OK;
 
-  PRBool stopIterating = PR_FALSE;
-
   if (aName.IsEmpty()) {
     //
     // XXX If the name is empty, it's not stored in the control list.  There
@@ -2071,8 +2069,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
         if (controlContent) {
           if (controlContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                           EmptyString(), eCaseMatters)) {
-            aVisitor->Visit(control, &stopIterating);
-            if (stopIterating) {
+            if (!aVisitor->Visit(control)) {
               break;
             }
           }
@@ -2094,7 +2091,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
       nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(item));
       if (formControl) {
         if (formControl->GetType() == NS_FORM_INPUT_RADIO) {
-          aVisitor->Visit(formControl, &stopIterating);
+          aVisitor->Visit(formControl);
         }
       } else {
         nsCOMPtr<nsIDOMNodeList> nodeList(do_QueryInterface(item));
@@ -2107,8 +2104,7 @@ nsHTMLFormElement::WalkRadioGroup(const nsAString& aName,
             nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(node));
             if (formControl) {
               if (formControl->GetType() == NS_FORM_INPUT_RADIO) {
-                aVisitor->Visit(formControl, &stopIterating);
-                if (stopIterating) {
+                if (!aVisitor->Visit(formControl)) {
                   break;
                 }
               }

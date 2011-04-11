@@ -3417,7 +3417,7 @@ nsHTMLInputElement::AddedToRadioGroup()
   // For integrity purposes, we have to ensure that "checkedChanged" is
   // the same for this new element as for all the others in the group
   //
-  PRBool checkedChanged = GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
+  bool checkedChanged = GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
   nsCOMPtr<nsIRadioVisitor> visitor;
   nsresult rv = NS_GetRadioGetCheckedChangedVisitor(&checkedChanged, this,
                                            getter_AddRefs(visitor));
@@ -3581,12 +3581,10 @@ nsHTMLInputElement::VisitGroup(nsIRadioVisitor* aVisitor, PRBool aFlushContent)
     if (GetNameIfExists(name)) {
       rv = container->WalkRadioGroup(name, aVisitor, aFlushContent);
     } else {
-      PRBool stop;
-      aVisitor->Visit(this, &stop);
+      aVisitor->Visit(this);
     }
   } else {
-    PRBool stop;
-    aVisitor->Visit(this, &stop);
+    aVisitor->Visit(this);
   }
   return rv;
 }
@@ -4173,7 +4171,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop) = 0;
+  virtual PRBool Visit(nsIFormControl* aRadio) = 0;
 };
 
 NS_IMPL_ISUPPORTS1(nsRadioVisitor, nsIRadioVisitor)
@@ -4184,23 +4182,23 @@ NS_IMPL_ISUPPORTS1(nsRadioVisitor, nsIRadioVisitor)
 //
 class nsRadioSetCheckedChangedVisitor : public nsRadioVisitor {
 public:
-  nsRadioSetCheckedChangedVisitor(PRBool aCheckedChanged) :
+  nsRadioSetCheckedChangedVisitor(bool aCheckedChanged) :
     nsRadioVisitor(), mCheckedChanged(aCheckedChanged)
     { }
 
   virtual ~nsRadioSetCheckedChangedVisitor() { }
 
-  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop)
+  virtual PRBool Visit(nsIFormControl* aRadio)
   {
     nsRefPtr<nsHTMLInputElement> radio =
       static_cast<nsHTMLInputElement*>(aRadio);
     NS_ASSERTION(radio, "Visit() passed a null button!");
     radio->SetCheckedChangedInternal(mCheckedChanged);
-    return NS_OK;
+    return PR_TRUE;
   }
 
 protected:
-  PRPackedBool mCheckedChanged;
+  bool mCheckedChanged;
 };
 
 //
@@ -4208,7 +4206,7 @@ protected:
 //
 class nsRadioGetCheckedChangedVisitor : public nsRadioVisitor {
 public:
-  nsRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
+  nsRadioGetCheckedChangedVisitor(bool* aCheckedChanged,
                                   nsIFormControl* aExcludeElement) :
     nsRadioVisitor(),
     mCheckedChanged(aCheckedChanged),
@@ -4217,21 +4215,20 @@ public:
 
   virtual ~nsRadioGetCheckedChangedVisitor() { }
 
-  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop)
+  virtual PRBool Visit(nsIFormControl* aRadio)
   {
     if (aRadio == mExcludeElement) {
-      return NS_OK;
+      return PR_TRUE;
     }
     nsRefPtr<nsHTMLInputElement> radio =
       static_cast<nsHTMLInputElement*>(aRadio);
     NS_ASSERTION(radio, "Visit() passed a null button!");
     *mCheckedChanged = radio->GetCheckedChanged();
-    *aStop = PR_TRUE;
-    return NS_OK;
+    return PR_FALSE;
   }
 
 protected:
-  PRBool* mCheckedChanged;
+  bool* mCheckedChanged;
   nsIFormControl* mExcludeElement;
 };
 
@@ -4246,10 +4243,10 @@ public:
     , mNotify(aNotify)
     { }
 
-  NS_IMETHOD Visit(nsIFormControl* aRadio, PRBool* aStop)
+  virtual PRBool Visit(nsIFormControl* aRadio)
   {
     if (aRadio == mExcludeElement) {
-      return NS_OK;
+      return PR_TRUE;
     }
 
     nsHTMLInputElement* input = static_cast<nsHTMLInputElement*>(aRadio);
@@ -4265,7 +4262,7 @@ public:
                                      NS_EVENT_STATE_MOZ_UI_INVALID);
     }
 
-    return NS_OK;
+    return PR_TRUE;
   }
 
 protected:
@@ -4276,7 +4273,7 @@ protected:
 };
 
 nsresult
-NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
+NS_GetRadioSetCheckedChangedVisitor(bool aCheckedChanged,
                                     nsIRadioVisitor** aVisitor)
 {
   //
@@ -4292,7 +4289,7 @@ NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
   //
   if (aCheckedChanged) {
     if (!sVisitorTrue) {
-      sVisitorTrue = new nsRadioSetCheckedChangedVisitor(PR_TRUE);
+      sVisitorTrue = new nsRadioSetCheckedChangedVisitor(true);
       if (!sVisitorTrue) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -4311,7 +4308,7 @@ NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
   //
   else {
     if (!sVisitorFalse) {
-      sVisitorFalse = new nsRadioSetCheckedChangedVisitor(PR_FALSE);
+      sVisitorFalse = new nsRadioSetCheckedChangedVisitor(false);
       if (!sVisitorFalse) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -4331,7 +4328,7 @@ NS_GetRadioSetCheckedChangedVisitor(PRBool aCheckedChanged,
 }
 
 nsresult
-NS_GetRadioGetCheckedChangedVisitor(PRBool* aCheckedChanged,
+NS_GetRadioGetCheckedChangedVisitor(bool* aCheckedChanged,
                                     nsIFormControl* aExcludeElement,
                                     nsIRadioVisitor** aVisitor)
 {
