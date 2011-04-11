@@ -52,7 +52,7 @@ protected:
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
-  nsDirectionalFrame(nsStyleContext* aContext, PRUnichar aChar);
+  nsDirectionalFrame(nsStyleContext* aContext);
 
   /**
    * Get the "type" of the frame
@@ -61,14 +61,9 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  PRUnichar GetChar() const { return mChar; }
-
 #ifdef NS_DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
-
-private:
-  PRUnichar mChar;
 };
 
 
