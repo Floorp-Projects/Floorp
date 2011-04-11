@@ -35,6 +35,7 @@ load 243159-2.xhtml
 asserts(1) load 243519-1.html # bug 536692
 load 244490-1.html
 load 254367-1.html
+load 263359-1.html
 load 265027-1.html
 load 265736-1.html
 load 265736-2.html
