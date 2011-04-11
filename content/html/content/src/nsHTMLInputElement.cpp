@@ -97,7 +97,6 @@
 #include "nsIRadioGroupContainer.h"
 
 // input type=file
-#include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsNetUtil.h"
 #include "nsDOMFile.h"
@@ -118,6 +117,7 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
+#include "nsRadioVisitor.h"
 
 #include "nsTextEditRules.h"
 
@@ -1509,9 +1509,8 @@ nsHTMLInputElement::DoSetCheckedChanged(PRBool aCheckedChanged,
 {
   if (mType == NS_FORM_INPUT_RADIO) {
     if (GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED) != aCheckedChanged) {
-      nsCOMPtr<nsIRadioVisitor> visitor;
-      NS_GetRadioSetCheckedChangedVisitor(aCheckedChanged,
-                                          getter_AddRefs(visitor));
+      nsCOMPtr<nsIRadioVisitor> visitor =
+        new nsRadioSetCheckedChangedVisitor(aCheckedChanged);
       VisitGroup(visitor, aNotify);
     }
   } else {
@@ -3418,14 +3417,13 @@ nsHTMLInputElement::AddedToRadioGroup()
   // the same for this new element as for all the others in the group
   //
   bool checkedChanged = GET_BOOLBIT(mBitField, BF_CHECKED_CHANGED);
-  nsCOMPtr<nsIRadioVisitor> visitor;
-  nsresult rv = NS_GetRadioGetCheckedChangedVisitor(&checkedChanged, this,
-                                           getter_AddRefs(visitor));
-  if (NS_FAILED(rv)) { return; }
-  
+
+  nsCOMPtr<nsIRadioVisitor> visitor =
+    new nsRadioGetCheckedChangedVisitor(&checkedChanged, this);
   VisitGroup(visitor, notify);
+
   SetCheckedChangedInternal(checkedChanged);
-  
+
   //
   // Add the radio to the radio group container.
   //
@@ -3888,8 +3886,7 @@ nsHTMLInputElement::UpdateValueMissingValidityStateForRadio(bool aIgnoreSelf)
       SetValidityState(VALIDITY_STATE_VALUE_MISSING, valueMissing);
 
       nsCOMPtr<nsIRadioVisitor> visitor =
-        NS_SetRadioValueMissingState(this, GetCurrentDoc(), valueMissing,
-                                     notify);
+        new nsRadioSetValueMissingState(this, valueMissing, notify);
       VisitGroup(visitor, notify);
     }
   } else {
@@ -4154,211 +4151,6 @@ nsHTMLInputElement::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
                                   aValue.Length(), &idx, JS_TRUE, &rval);
 
   return res == JS_FALSE || rval != JSVAL_NULL;
-}
-
-//
-// Visitor classes
-//
-//
-// CLASS nsRadioVisitor
-//
-// (this is the superclass of the others)
-//
-class nsRadioVisitor : public nsIRadioVisitor {
-public:
-  nsRadioVisitor() { }
-  virtual ~nsRadioVisitor() { }
-
-  NS_DECL_ISUPPORTS
-
-  virtual PRBool Visit(nsIFormControl* aRadio) = 0;
-};
-
-NS_IMPL_ISUPPORTS1(nsRadioVisitor, nsIRadioVisitor)
-
-
-//
-// CLASS nsRadioSetCheckedChangedVisitor
-//
-class nsRadioSetCheckedChangedVisitor : public nsRadioVisitor {
-public:
-  nsRadioSetCheckedChangedVisitor(bool aCheckedChanged) :
-    nsRadioVisitor(), mCheckedChanged(aCheckedChanged)
-    { }
-
-  virtual ~nsRadioSetCheckedChangedVisitor() { }
-
-  virtual PRBool Visit(nsIFormControl* aRadio)
-  {
-    nsRefPtr<nsHTMLInputElement> radio =
-      static_cast<nsHTMLInputElement*>(aRadio);
-    NS_ASSERTION(radio, "Visit() passed a null button!");
-    radio->SetCheckedChangedInternal(mCheckedChanged);
-    return PR_TRUE;
-  }
-
-protected:
-  bool mCheckedChanged;
-};
-
-//
-// CLASS nsRadioGetCheckedChangedVisitor
-//
-class nsRadioGetCheckedChangedVisitor : public nsRadioVisitor {
-public:
-  nsRadioGetCheckedChangedVisitor(bool* aCheckedChanged,
-                                  nsIFormControl* aExcludeElement) :
-    nsRadioVisitor(),
-    mCheckedChanged(aCheckedChanged),
-    mExcludeElement(aExcludeElement)
-    { }
-
-  virtual ~nsRadioGetCheckedChangedVisitor() { }
-
-  virtual PRBool Visit(nsIFormControl* aRadio)
-  {
-    if (aRadio == mExcludeElement) {
-      return PR_TRUE;
-    }
-    nsRefPtr<nsHTMLInputElement> radio =
-      static_cast<nsHTMLInputElement*>(aRadio);
-    NS_ASSERTION(radio, "Visit() passed a null button!");
-    *mCheckedChanged = radio->GetCheckedChanged();
-    return PR_FALSE;
-  }
-
-protected:
-  bool* mCheckedChanged;
-  nsIFormControl* mExcludeElement;
-};
-
-class nsRadioSetValueMissingState : public nsRadioVisitor {
-public:
-  nsRadioSetValueMissingState(nsIFormControl* aExcludeElement,
-                              nsIDocument* aDocument, bool aValidity,
-                              bool aNotify)
-    : mExcludeElement(aExcludeElement)
-    , mDocument(aDocument)
-    , mValidity(aValidity)
-    , mNotify(aNotify)
-    { }
-
-  virtual PRBool Visit(nsIFormControl* aRadio)
-  {
-    if (aRadio == mExcludeElement) {
-      return PR_TRUE;
-    }
-
-    nsHTMLInputElement* input = static_cast<nsHTMLInputElement*>(aRadio);
-
-    input->SetValidityState(nsIConstraintValidation::VALIDITY_STATE_VALUE_MISSING,
-                            mValidity);
-
-    if (mNotify && mDocument) {
-      mDocument->ContentStateChanged(input,
-                                     NS_EVENT_STATE_VALID |
-                                     NS_EVENT_STATE_INVALID |
-                                     NS_EVENT_STATE_MOZ_UI_VALID |
-                                     NS_EVENT_STATE_MOZ_UI_INVALID);
-    }
-
-    return PR_TRUE;
-  }
-
-protected:
-  nsIFormControl* mExcludeElement;
-  nsIDocument* mDocument;
-  bool mValidity;
-  bool mNotify;
-};
-
-nsresult
-NS_GetRadioSetCheckedChangedVisitor(bool aCheckedChanged,
-                                    nsIRadioVisitor** aVisitor)
-{
-  //
-  // These are static so that we don't have to keep creating new visitors for
-  // such an ordinary process all the time.  There are only two possibilities
-  // for this visitor: set to true, and set to false.
-  //
-  static nsIRadioVisitor* sVisitorTrue = nsnull;
-  static nsIRadioVisitor* sVisitorFalse = nsnull;
-
-  //
-  // Get the visitor that sets them to true
-  //
-  if (aCheckedChanged) {
-    if (!sVisitorTrue) {
-      sVisitorTrue = new nsRadioSetCheckedChangedVisitor(true);
-      if (!sVisitorTrue) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      NS_ADDREF(sVisitorTrue);
-      nsresult rv =
-        nsContentUtils::ReleasePtrOnShutdown((nsISupports**)&sVisitorTrue);
-      if (NS_FAILED(rv)) {
-        NS_RELEASE(sVisitorTrue);
-        return rv;
-      }
-    }
-    *aVisitor = sVisitorTrue;
-  }
-  //
-  // Get the visitor that sets them to false
-  //
-  else {
-    if (!sVisitorFalse) {
-      sVisitorFalse = new nsRadioSetCheckedChangedVisitor(false);
-      if (!sVisitorFalse) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      NS_ADDREF(sVisitorFalse);
-      nsresult rv =
-        nsContentUtils::ReleasePtrOnShutdown((nsISupports**)&sVisitorFalse);
-      if (NS_FAILED(rv)) {
-        NS_RELEASE(sVisitorFalse);
-        return rv;
-      }
-    }
-    *aVisitor = sVisitorFalse;
-  }
-
-  NS_ADDREF(*aVisitor);
-  return NS_OK;
-}
-
-nsresult
-NS_GetRadioGetCheckedChangedVisitor(bool* aCheckedChanged,
-                                    nsIFormControl* aExcludeElement,
-                                    nsIRadioVisitor** aVisitor)
-{
-  *aVisitor = new nsRadioGetCheckedChangedVisitor(aCheckedChanged,
-                                                  aExcludeElement);
-  if (!*aVisitor) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(*aVisitor);
-
-  return NS_OK;
-}
-
-/*
- * These methods are factores: they let callers to create an instance of
- * a radio group visitor without the class declaration and definition.
- *
- * TODO:
- * Do we really need factories for radio visitors? Or at least, we should move
- * that somewhere else because it feels like it's here only because the radio
- * visitor classes are defined after most of nsHTMLInputElement code.
- * See bug 586298
- */
-nsIRadioVisitor*
-NS_SetRadioValueMissingState(nsIFormControl* aExcludeElement,
-                             nsIDocument* aDocument,
-                             bool aValidity, bool aNotify)
-{
-  return new nsRadioSetValueMissingState(aExcludeElement, aDocument, aValidity,
-                                         aNotify);
 }
 
 NS_IMETHODIMP_(PRBool)
