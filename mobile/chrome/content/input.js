@@ -834,8 +834,9 @@ function KineticController(aPanBy, aEndCallback) {
   // How often do we change the position of the scroll pane?  Too often and panning may jerk near
   // the end. Too little and panning will be choppy. In milliseconds.
   this._updateInterval = Services.prefs.getIntPref("browser.ui.kinetic.updateInterval");
-  // "Friction" of the scroll pane. The lower, the less friction and the further distance traveled.
-  this._decelerationRate = Services.prefs.getIntPref("browser.ui.kinetic.decelerationRate") / 10000;
+  // Constants that affect the "friction" of the scroll pane.
+  this._exponentialC = Services.prefs.getIntPref("browser.ui.kinetic.exponentialC");
+  this._polynomialC = Services.prefs.getIntPref("browser.ui.kinetic.polynomialC") / 1000000;
   // Number of milliseconds that can contain a swipe. Movements earlier than this are disregarded.
   this._swipeLength = Services.prefs.getIntPref("browser.ui.kinetic.swipeLength");
 
@@ -855,35 +856,29 @@ KineticController.prototype = {
   },
 
   _startTimer: function _startTimer() {
-    // Use closed form of a parabola to calculate each position for panning.
-    // x(t) = v0*t + .5*t^2*a
-    // where: v0 is initial velocity
-    //        a is acceleration
-    //        t is time elapsed
-    //
-    // x(t)
-    //  ^
-    //  |                |
-    //  |
-    //  |                |
-    //  |           ....^^^^....
-    //  |      ...^^     |      ^^...
-    //  |  ...^                      ^...
-    //  |..              |               ..
-    //   -----------------------------------> t
-    //  t0             tf=-v0/a
-    //
-    // Using this formula, distance moved is independent of the time between each frame, unlike time
-    // step approaches. Once the time is up, set the position to x(tf) and stop the timer.
+    let self = this;
 
-    let lastx = this._position;  // track last position vector because pan takes differences
+    let lastp = this._position;  // track last position vector because pan takes deltas
     let v0 = this._velocity;  // initial velocity
     let a = this._acceleration;  // acceleration
+    let c = this._exponentialC;
+    let p = new Point(0, 0);
+    let dx, dy, t, realt;
 
-    // Temporary "bins" so that we don't create new objects during pan.
-    let aBin = new Point(0, 0);
-    let v0Bin = new Point(0, 0);
-    let self = this;
+    function calcP(v0, a, t) {
+      // Important traits for this function:
+      //   p(t=0) is 0
+      //   p'(t=0) is v0
+      //
+      // We use exponential to get a smoother stop, but by itself exponential
+      // is too smooth at the end. Adding a polynomial with the appropriate
+      // weight helps to balance
+      return v0 * Math.exp(-t / c) * -c + a * t * t + v0 * c;
+    }
+
+    this._calcV = function(v0, a, t) {
+      return v0 * Math.exp(-t / c) + 2 * a * t;
+    }
 
     let callback = {
       onBeforePaint: function kineticHandleEvent(timeStamp) {
@@ -895,29 +890,27 @@ KineticController.prototype = {
         // To make animation end fast enough but to keep smoothness, average the ideal
         // time frame (smooth animation) with the actual time lapse (end fast enough).
         // Animation will never take longer than 2 times the ideal length of time.
-        let realt = timeStamp - self._initialTime;
+        realt = timeStamp - self._initialTime;
         self._time += self._updateInterval;
-        let t = (self._time + realt) / 2;
+        t = (self._time + realt) / 2;
 
-        // Calculate new position using x(t) formula.
-        let x = v0Bin.set(v0).scale(t).add(aBin.set(a).scale(0.5 * t * t));
-        let dx = Math.round(x.x - lastx.x);
-        let dy = Math.round(x.y - lastx.y);
+        // Calculate new position.
+        p.x = calcP(v0.x, a.x, t);
+        p.y = calcP(v0.y, a.y, t);
+        dx = Math.round(p.x - lastp.x);
+        dy = Math.round(p.y - lastp.y);
 
-        // Test to see if movement is finished for each component. As seen in graph, we want the
-        // final position to be at tf.
-        if (t >= -v0.x / a.x) {
-          // Plug in t=-v0/a into x(t) to get final position.
-          dx = Math.round(-v0.x * v0.x / 2 / a.x - lastx.x);
-          // Reset components. Next frame: a's component will be 0 and t >= NaN will be false.
-          lastx.x = 0;
+        // Test to see if movement is finished for each component.
+        if (dx * a.x > 0) {
+          dx = 0;
+          lastp.x = 0;
           v0.x = 0;
           a.x = 0;
         }
         // Symmetric to above case.
-        if (t >= -v0.y / a.y) {
-          dy = Math.round(-v0.y * v0.y / 2 / a.y - lastx.y);
-          lastx.y = 0;
+        if (dy * a.y > 0) {
+          dy = 0;
+          lastp.y = 0;
           v0.y = 0;
           a.y = 0;
         }
@@ -928,7 +921,7 @@ KineticController.prototype = {
           let panStop = false;
           if (dx != 0 || dy != 0) {
             try { panStop = !self._panBy(-dx, -dy, true); } catch (e) {}
-            lastx.add(dx, dy);
+            lastp.add(dx, dy);
           }
 
           if (panStop)
@@ -947,6 +940,12 @@ KineticController.prototype = {
   start: function start() {
     function sign(x) {
       return x ? ((x > 0) ? 1 : -1) : 0;
+    }
+
+    function clampFromZero(x, closerToZero, furtherFromZero) {
+      if (x >= 0)
+        return Math.max(closerToZero, Math.min(furtherFromZero, x));
+      return Math.min(-closerToZero, Math.max(-furtherFromZero, x));
     }
 
     let mb = this.momentumBuffer;
@@ -971,9 +970,10 @@ KineticController.prototype = {
     let currentVelocityY = 0;
 
     if (this.isActive()) {
+      // If active, then we expect this._calcV to be defined.
       let currentTime = Date.now() - this._initialTime;
-      currentVelocityX = Util.clamp(this._velocity.x + this._acceleration.x * currentTime, -kMaxVelocity, kMaxVelocity);
-      currentVelocityY = Util.clamp(this._velocity.y + this._acceleration.y * currentTime, -kMaxVelocity, kMaxVelocity);
+      currentVelocityX = Util.clamp(this._calcV(this._velocity.x, this._acceleration.x, currentTime), -kMaxVelocity, kMaxVelocity);
+      currentVelocityY = Util.clamp(this._calcV(this._velocity.y, this._acceleration.y, currentTime), -kMaxVelocity, kMaxVelocity);
     }
 
     if (currentVelocityX * this._velocity.x <= 0)
@@ -986,7 +986,7 @@ KineticController.prototype = {
     this._velocity.y = clampFromZero((distanceY / swipeTime) + currentVelocityY, Math.abs(currentVelocityY), 6);
 
     // Set acceleration vector to opposite signs of velocity
-    this._acceleration.set(this._velocity.clone().map(sign).scale(-this._decelerationRate));
+    this._acceleration.set(this._velocity.clone().map(sign).scale(-this._polynomialC));
 
     this._position.set(0, 0);
     this._initialTime = mozAnimationStartTime;
