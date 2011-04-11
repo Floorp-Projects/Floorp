@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Vidur Apparao <vidur@netscape.com> (original author)
  *   Johnny Stenback <jst@netscape.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -45,10 +46,10 @@
  * It represents a single node in the document tree.
  *
  * For more information on this interface please see 
- * http://www.w3.org/TR/DOM-Level-2-Core/
+ * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(a6cf907c-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(817dc774-2ad2-4111-9042-1787df86c015)]
 interface nsIDOMNode : nsISupports
 {
   const unsigned short      ELEMENT_NODE       = 1;
@@ -97,9 +98,8 @@ interface nsIDOMNode : nsISupports
                                         in DOMString version);
   // Introduced in DOM Level 2:
   readonly attribute DOMString        namespaceURI;
-  // Introduced in DOM Level 2:
-           attribute DOMString        prefix;
-                                         // raises(DOMException) on setting
+  // Modified in DOM Core
+  readonly attribute DOMString        prefix;
 
   // Introduced in DOM Level 2:
   readonly attribute DOMString        localName;

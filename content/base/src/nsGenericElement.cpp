@@ -2218,40 +2218,6 @@ nsGenericElement::GetPrefix(nsAString& aPrefix)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsGenericElement::SetPrefix(const nsAString& aPrefix)
-{
-  // XXX: Validate the prefix string!
-
-  nsCOMPtr<nsIAtom> prefix;
-
-  if (!aPrefix.IsEmpty()) {
-    prefix = do_GetAtom(aPrefix);
-    NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  if (!nsContentUtils::IsValidNodeName(mNodeInfo->NameAtom(), prefix,
-                                       mNodeInfo->NamespaceID())) {
-    return NS_ERROR_DOM_NAMESPACE_ERR;
-  }
-
-  nsAutoScriptBlocker scriptBlocker;
-
-  nsCOMPtr<nsINodeInfo> newNodeInfo;
-  nsresult rv = nsContentUtils::PrefixChanged(mNodeInfo, prefix,
-                                              getter_AddRefs(newNodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mNodeInfo.swap(newNodeInfo);
-  NodeInfoChanged(newNodeInfo);
-
-  // The id-handling code need to react to unexpected changes to an elements
-  // nodeinfo as that can change the elements id-attribute.
-  nsMutationGuard::DidMutate();
-
-  return NS_OK;
-}
-
 static already_AddRefed<nsIDOMNSFeatureFactory>
 GetDOMFeatureFactory(const nsAString& aFeature, const nsAString& aVersion)
 {

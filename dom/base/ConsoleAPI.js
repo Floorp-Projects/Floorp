@@ -76,11 +76,15 @@ ConsoleAPI.prototype = {
       error: function CA_error() {
         self.notifyObservers(id, "error", arguments);
       },
+      debug: function CA_debug() {
+        self.notifyObservers(id, "log", arguments);
+      },
       __exposedProps__: {
         log: "r",
         info: "r",
         warn: "r",
-        error: "r"
+        error: "r",
+        debug: "r",
       }
     };
 
@@ -95,6 +99,7 @@ ConsoleAPI.prototype = {
             info: bind.call(x.info, x),\
             warn: bind.call(x.warn, x),\
             error: bind.call(x.error, x),\
+            debug: bind.call(x.debug, x),\
             __noSuchMethod__: function() {}\
           };\
           Object.defineProperty(obj, '__mozillaConsole__', { value: true });\

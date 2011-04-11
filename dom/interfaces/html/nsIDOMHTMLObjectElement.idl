@@ -52,7 +52,7 @@
 
 interface nsIDOMValidityState;
 
-[scriptable, uuid(9b93aab4-7fe8-4f79-9ad2-0623178a0c46)]
+[scriptable, uuid(b11e44f3-c15c-494a-a89f-879fe9814cda)]
 interface nsIDOMHTMLObjectElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLFormElement form;
