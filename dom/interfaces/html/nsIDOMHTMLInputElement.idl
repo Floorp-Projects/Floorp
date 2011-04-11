@@ -54,7 +54,7 @@ interface nsIDOMValidityState;
   * http://www.whatwg.org/specs/web-apps/current-work/
   */
 
-[scriptable, uuid(0805059d-f18f-4095-ae6b-0bf6df80b7b8)]
+[scriptable, uuid(bcf00efc-5217-4350-9fbc-e3059190830a)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;

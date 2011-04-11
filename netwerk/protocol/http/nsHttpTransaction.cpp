@@ -351,14 +351,15 @@ nsHttpTransaction::GetSecurityCallbacks(nsIInterfaceRequestor **cb,
 }
 
 void
-nsHttpTransaction::OnTransportStatus(nsresult status, PRUint64 progress)
+nsHttpTransaction::OnTransportStatus(nsITransport* transport,
+                                     nsresult status, PRUint64 progress)
 {
     LOG(("nsHttpTransaction::OnSocketStatus [this=%x status=%x progress=%llu]\n",
         this, status, progress));
 
     if (!mTransportSink)
         return;
-    
+
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     // Need to do this before the STATUS_RECEIVING_FROM check below, to make
@@ -410,7 +411,7 @@ nsHttpTransaction::OnTransportStatus(nsresult status, PRUint64 progress)
         progressMax = 0;
     }
 
-    mTransportSink->OnTransportStatus(nsnull, status, progress, progressMax);
+    mTransportSink->OnTransportStatus(transport, status, progress, progressMax);
 }
 
 PRBool

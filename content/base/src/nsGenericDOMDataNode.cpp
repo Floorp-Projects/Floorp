@@ -173,12 +173,6 @@ nsGenericDOMDataNode::GetPrefix(nsAString& aPrefix)
 }
 
 nsresult
-nsGenericDOMDataNode::SetPrefix(const nsAString& aPrefix)
-{
-  return NS_ERROR_DOM_NAMESPACE_ERR;
-}
-
-nsresult
 nsGenericDOMDataNode::GetLocalName(nsAString& aLocalName)
 {
   SetDOMStringToNull(aLocalName);
