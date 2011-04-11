@@ -230,7 +230,7 @@ Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js:
      */
     if (obj->getClass() == &js_WithClass)
         obj = js_UnwrapWithObject(cx, obj);
-    return js::CallJSPropertyOp(cx, getterOp(), obj, SHAPE_USERID(this), vp);
+    return js::CallJSPropertyOp(cx, getterOp(), receiver, SHAPE_USERID(this), vp);
 }
 
 inline bool
