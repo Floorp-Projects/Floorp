@@ -5772,12 +5772,6 @@ nsDocument::GetPrefix(nsAString& aPrefix)
 }
 
 NS_IMETHODIMP
-nsDocument::SetPrefix(const nsAString& aPrefix)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
 nsDocument::GetLocalName(nsAString& aLocalName)
 {
   SetDOMStringToNull(aLocalName);

@@ -47,8 +47,8 @@ class nsIRenderingContext;
 class nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID  \
-  { 0xc8ba5804, 0x2459, 0x4b62, \
-    { 0xa4, 0x15, 0x02, 0x84, 0x1a, 0xd7, 0x93, 0xa7 } }
+  { 0xdc283a18, 0x61cb, 0x468c, \
+    { 0x8d, 0xb8, 0x9b, 0x81, 0xf7, 0xc9, 0x33, 0x25 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -76,8 +76,7 @@ public:
    * which is to paint some default background color over the dirty region.
    * @return error status
    */
-  NS_IMETHOD Paint(nsIView*           aDisplayRoot,
-                   nsIView*           aViewToPaint,
+  NS_IMETHOD Paint(nsIView*           aViewToPaint,
                    nsIWidget*         aWidgetToPaint,
                    const nsRegion&    aDirtyRegion,
                    const nsIntRegion& aIntDirtyRegion,
