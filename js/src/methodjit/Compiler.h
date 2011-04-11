@@ -537,7 +537,7 @@ class Compiler : public BaseCompiler
     bool knownJump(jsbytecode *pc);
     Label labelOf(jsbytecode *target, uint32 inlineIndex);
     void addCallSite(const InternalCallSite &callSite);
-    void addReturnSite();
+    void addReturnSite(bool ool);
     void inlineStubCall(void *stub, bool needsRejoin);
     bool loadOldTraps(const Vector<CallSite> &site);
 
