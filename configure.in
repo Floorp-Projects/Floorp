@@ -1932,7 +1932,7 @@ case "$host" in
         HOST_CFLAGS="$HOST_CFLAGS -TC -nologo -Fd\$(HOST_PDBFILE)"
         HOST_RANLIB='echo ranlib'
     else
-        HOST_CFLAGS="$HOST_CFLAGS -mno-cygwin"
+        HOST_CFLAGS="$HOST_CFLAGS -mwindows"
     fi
     HOST_CFLAGS="$HOST_CFLAGS -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11 -D_CRT_SECURE_NO_WARNINGS"
     HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
@@ -2392,9 +2392,9 @@ ia64*-hpux*)
     # #include <string> vs -I./dist/include/string issue so don't use it
     SYSTEM_MAKEDEPEND=
     if test -n "$GNU_CC"; then
-        CC="$CC -mno-cygwin"
-        CXX="$CXX -mno-cygwin"
-        CPP="$CPP -mno-cygwin"
+        CC="$CC -mwindows"
+        CXX="$CXX -mwindows"
+        CPP="$CPP -mwindows"
         CFLAGS="$CFLAGS -mms-bitfields"
         CXXFLAGS="$CXXFLAGS -mms-bitfields"
         DSO_LDOPTS='-shared'
