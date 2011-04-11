@@ -1837,6 +1837,30 @@ private:
 };
 
 /**
+ * Like nsDisplayScrollLayer, but only has metadata on the scroll frame. This
+ * creates a layer that has no Thebes child layer, but still allows the
+ * compositor process to know of the scroll frame's existence.
+ */
+class nsDisplayScrollInfoLayer : public nsDisplayScrollLayer
+{
+public:
+  nsDisplayScrollInfoLayer(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
+                           nsIFrame* aForFrame, nsIFrame* aViewportFrame);
+  NS_DISPLAY_DECL_NAME("ScrollInfoLayer", TYPE_SCROLL_INFO_LAYER)
+
+#ifdef NS_BUILD_REFCNT_LOGGING
+  virtual ~nsDisplayScrollInfoLayer();
+#endif
+
+  virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
+                                   LayerManager* aManager)
+  {
+    return mozilla::LAYER_ACTIVE_EMPTY;
+  }
+
+};
+
+/**
  * nsDisplayClip can clip a list of items, but we take a single item
  * initially and then later merge other items into it when we merge
  * adjacent matching nsDisplayClips
