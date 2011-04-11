@@ -321,7 +321,7 @@ function testPrompt(aTitle, aMessage, aButtons, aCallback) {
       is(aTitle, title.value, "Correct title shown");
       is(aMessage, message.textContent, "Correct message shown");
 
-     let buttons = document.getElementsByClassName("prompt-button");
+     let buttons = document.getElementsByClassName("action-button");
       let clickButton = null;
       ok(buttons.length == aButtons.length, "Prompt has correct number of buttons");
       if (buttons.length == aButtons.length) {

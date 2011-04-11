@@ -19,7 +19,8 @@
   </commandset>
 
   <vbox class="prompt-header" flex="1">
-    <label id="prompt-select-title" class="prompt-title" crop="center" flex="1"/>
+    <description id="prompt-select-title" class="prompt-title" crop="center" flex="1"/>
+    <separator class="prompt-line"/>
 
     <scrollbox orient="vertical" class="prompt-message" flex="1">
       <description id="prompt-select-message"/>

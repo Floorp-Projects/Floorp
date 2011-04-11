@@ -43,7 +43,7 @@ var SelectHelperUI = {
       let choice = choices[i];
       let item = document.createElement("listitem");
 
-      item.setAttribute("class", "option-command listitem-iconic prompt-button");
+      item.setAttribute("class", "option-command listitem-iconic action-button");
       item.setAttribute("image", "");
       item.setAttribute("flex", "1");
       item.setAttribute("crop", "center");

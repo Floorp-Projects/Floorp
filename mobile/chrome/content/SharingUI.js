@@ -23,7 +23,7 @@ var SharingUI = {
     let bbox = document.getElementById("share-buttons-box");
     this._handlers.forEach(function(handler) {
       let button = document.createElement("button");
-      button.className = "prompt-button";
+      button.className = "action-button";
       button.setAttribute("label", handler.name);
       button.addEventListener("command", function() {
         SharingUI.hide();
