@@ -842,6 +842,11 @@ function runTest() {
     }
   }
 
+  // Make sure to clear cookies to avoid affecting other tests
+  document.cookie = "a=; path=/; expires=Thu, 01-Jan-1970 00:00:01 GMT"
+  is(document.cookie, "", "No cookies should be left over");
+
+
   // Test redirects
   is(loader.src, "http://example.org/tests/content/base/test/file_CrossSiteXHR_inner.html");
   is(origin, "http://example.org");
