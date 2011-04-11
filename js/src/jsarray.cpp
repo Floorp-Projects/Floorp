@@ -1066,7 +1066,8 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 
     /*
      * Save old map now, before calling InitScopeForObject. We'll have to undo
-     * on error. This is gross, but a better way is not obvious.
+     * on error. This is gross, but a better way is not obvious. Note: the
+     * exact contents of the array are not preserved on error.
      */
     JSObjectMap *oldMap = map;
 
@@ -1078,6 +1079,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     backfillDenseArrayHoles();
 
     uint32 arrayCapacity = getDenseArrayCapacity();
+    uint32 arrayInitialized = getDenseArrayInitializedLength();
 
     /*
      * Adjust the slots to account for the different layout between dense
@@ -1094,6 +1096,10 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     capacity = numFixedSlots() + arrayCapacity;
     clasp = &js_SlowArrayClass;
 
+    /* The initialized length is used iff this is a dense array. */
+    initializedLength = 0;
+    JS_ASSERT(newType == NULL);
+
     /*
      * Begin with the length property to share more of the property tree.
      * The getter/setter here will directly access the object's private value.
@@ -1101,6 +1107,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     if (!AddLengthProperty(cx, this)) {
         setMap(oldMap);
         capacity = arrayCapacity;
+        initializedLength = arrayInitialized;
         clasp = &js_ArrayClass;
         return false;
     }
@@ -1123,6 +1130,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
         if (!addDataProperty(cx, id, next, JSPROP_ENUMERATE)) {
             setMap(oldMap);
             capacity = arrayCapacity;
+            initializedLength = arrayInitialized;
             clasp = &js_ArrayClass;
             return false;
         }
@@ -1131,10 +1139,6 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     }
 
     clearSlotRange(next, capacity - next);
-
-    /* initialized length is not used anymore. */
-    initializedLength = 0;
-    JS_ASSERT(newType == NULL);
 
     /*
      * Finally, update class. If |this| is Array.prototype, then js_InitClass
