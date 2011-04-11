@@ -468,49 +468,6 @@ nsDOMAttribute::GetPrefix(nsAString& aPrefix)
 }
 
 NS_IMETHODIMP
-nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
-{
-  // XXX: Validate the prefix string!
-
-  nsCOMPtr<nsINodeInfo> newNodeInfo;
-  nsCOMPtr<nsIAtom> prefix;
-
-  if (!aPrefix.IsEmpty()) {
-    prefix = do_GetAtom(aPrefix);
-    if (!prefix) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (!nsContentUtils::IsValidNodeName(mNodeInfo->NameAtom(), prefix,
-                                       mNodeInfo->NamespaceID())) {
-    return NS_ERROR_DOM_NAMESPACE_ERR;
-  }
-
-  nsresult rv = nsContentUtils::PrefixChanged(mNodeInfo, prefix,
-                                              getter_AddRefs(newNodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIContent* content = GetContentInternal();
-  if (content) {
-    nsCOMPtr<nsIAtom> name = GetNameAtom(content);
-    PRInt32 nameSpaceID = mNodeInfo->NamespaceID();
-
-    nsAutoString tmpValue;
-    if (content->GetAttr(nameSpaceID, name, tmpValue)) {
-      content->UnsetAttr(nameSpaceID, name, PR_TRUE);
-
-      content->SetAttr(newNodeInfo->NamespaceID(), name,
-                       newNodeInfo->GetPrefixAtom(), tmpValue, PR_TRUE);
-    }
-  }
-
-  newNodeInfo.swap(mNodeInfo);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMAttribute::GetLocalName(nsAString& aLocalName)
 {
   mNodeInfo->GetLocalName(aLocalName);

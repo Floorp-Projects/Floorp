@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(a6cf9082-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(48642156-d686-46b7-8e96-35edd5b2afa8)]
 interface nsIDOMText : nsIDOMCharacterData
 {
   nsIDOMText                      splitText(in unsigned long offset)
