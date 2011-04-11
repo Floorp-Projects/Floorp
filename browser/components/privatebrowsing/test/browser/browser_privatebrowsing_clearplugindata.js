@@ -6,7 +6,7 @@
 // Test clearing plugin data by domain using nsPrivateBrowsingService.
 const testURL = "http://mochi.test:8888/browser/browser/components/privatebrowsing/test/browser/browser_privatebrowsing_clearplugindata.html";
 
-const pluginHostIface = Ci.nsIPluginHost_MOZILLA_2_0_BRANCH;
+const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 pluginHost.QueryInterface(pluginHostIface);
 
