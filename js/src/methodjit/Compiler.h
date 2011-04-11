@@ -171,12 +171,13 @@ class Compiler : public BaseCompiler
      * absolute address of the join point is known.
      */
     struct CallPatchInfo {
-        CallPatchInfo() : hasFastNcode(false), hasSlowNcode(false) {}
+        CallPatchInfo() : hasFastNcode(false), hasSlowNcode(false), joinSlow(false) {}
         Label joinPoint;
         DataLabelPtr fastNcodePatch;
         DataLabelPtr slowNcodePatch;
         bool hasFastNcode;
         bool hasSlowNcode;
+        bool joinSlow;
     };
 
     struct BaseICInfo {
@@ -351,6 +352,7 @@ class Compiler : public BaseCompiler
         Compiler *cc;
         jsbytecode *pc;
 
+        bool force;
         bool ool;
         Label oolLabel;
 
@@ -363,11 +365,16 @@ class Compiler : public BaseCompiler
         void *stub3;
 
         AutoRejoinSite(Compiler *cc, void *stub1, void *stub2 = NULL, void *stub3 = NULL)
-            : cc(cc), pc(cc->PC), ool(false),
+            : cc(cc), pc(cc->PC), force(false), ool(false),
               startSites(cc->callSites.length()),
               rejoinSites(cc->rejoinSites.length()),
               stub1(stub1), stub2(stub2), stub3(stub3)
         {}
+
+        void forceGeneration()
+        {
+            force = true;
+        }
 
         /*
          * Rejoin a particular slow path label in a synced state, rather than
@@ -391,7 +398,7 @@ class Compiler : public BaseCompiler
             if (stub3)
                 cc->checkRejoinSite(startSites, rejoinSites, stub3);
 #endif
-            if (cc->needRejoins(pc)) {
+            if (force || cc->needRejoins(pc)) {
                 cc->addRejoinSite(stub1, ool, oolLabel);
                 if (stub2)
                     cc->addRejoinSite(stub2, ool, oolLabel);
@@ -662,7 +669,7 @@ class Compiler : public BaseCompiler
                                    MaybeRegisterID origCalleeType, RegisterID origCalleeData,
                                    MaybeRegisterID origThisType, RegisterID origThisData,
                                    Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
-    bool inlineCallHelper(uint32 argc, bool callingNew);
+    bool inlineCallHelper(uint32 argc, bool callingNew, FrameSize &callFrameSize);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     bool jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
     CompileStatus jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
