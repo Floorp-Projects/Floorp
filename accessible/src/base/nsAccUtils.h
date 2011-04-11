@@ -199,8 +199,8 @@ public:
    * @param  aAccessible  [in] the item accessible
    * @param  aState       [in] the state of the item accessible
    */
-  static nsAccessible *GetSelectableContainer(nsAccessible *aAccessible,
-                                              PRUint32 aState);
+  static nsAccessible* GetSelectableContainer(nsAccessible* aAccessible,
+                                              PRUint64 aState);
 
   /**
    * Return multi selectable container for the given item.
@@ -291,31 +291,6 @@ public:
   }
 
   /**
-   * Return the state for the given accessible.
-   */
-  static PRUint32 State(nsIAccessible *aAcc)
-  {
-    PRUint32 state = 0;
-    if (aAcc)
-      aAcc->GetState(&state, nsnull);
-
-    return state;
-  }
-
-  /**
-   * Return the extended state for the given accessible.
-   */
-  static PRUint32 ExtendedState(nsIAccessible *aAcc)
-  {
-    PRUint32 state = 0;
-    PRUint32 extstate = 0;
-    if (aAcc)
-      aAcc->GetState(&state, &extstate);
-
-    return extstate;
-  }
-
-  /**
    * Get the ARIA attribute characteristics for a given ARIA attribute.
    * 
    * @param aAtom  ARIA attribute
@@ -367,6 +342,26 @@ public:
     return role != nsIAccessibleRole::ROLE_TEXT_LEAF &&
            role != nsIAccessibleRole::ROLE_WHITESPACE &&
            role != nsIAccessibleRole::ROLE_STATICTEXT;
+  }
+
+  /**
+   * Transform nsIAccessibleStates constants to internal state constant.
+   */
+  static inline PRUint64 To64State(PRUint32 aState1, PRUint32 aState2)
+  {
+    return static_cast<PRUint64>(aState1) +
+        (static_cast<PRUint64>(aState2) << 31);
+  }
+
+  /**
+   * Transform internal state constant to nsIAccessibleStates constants.
+   */
+  static inline void To32States(PRUint64 aState64,
+                                PRUint32* aState1, PRUint32* aState2)
+  {
+    *aState1 = aState64 & 0x7fffffff;
+    if (aState2)
+      *aState2 = static_cast<PRUint32>(aState64 >> 31);
   }
 
   /**

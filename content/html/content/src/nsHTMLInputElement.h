@@ -55,19 +55,18 @@
 // Accessors for mBitField
 //
 #define BF_DISABLED_CHANGED 0
-#define BF_HANDLING_CLICK 1
-#define BF_VALUE_CHANGED 2
-#define BF_CHECKED_CHANGED 3
-#define BF_CHECKED 4
-#define BF_HANDLING_SELECT_EVENT 5
-#define BF_SHOULD_INIT_CHECKED 6
-#define BF_PARSER_CREATING 7
-#define BF_IN_INTERNAL_ACTIVATE 8
-#define BF_CHECKED_IS_TOGGLED 9
-#define BF_INDETERMINATE 10
-#define BF_INHIBIT_RESTORATION 11
-#define BF_CAN_SHOW_INVALID_UI 12
-#define BF_CAN_SHOW_VALID_UI 13
+#define BF_VALUE_CHANGED 1
+#define BF_CHECKED_CHANGED 2
+#define BF_CHECKED 3
+#define BF_HANDLING_SELECT_EVENT 4
+#define BF_SHOULD_INIT_CHECKED 5
+#define BF_PARSER_CREATING 6
+#define BF_IN_INTERNAL_ACTIVATE 7
+#define BF_CHECKED_IS_TOGGLED 8
+#define BF_INDETERMINATE 9
+#define BF_INHIBIT_RESTORATION 10
+#define BF_CAN_SHOW_INVALID_UI 11
+#define BF_CAN_SHOW_VALID_UI 12
 
 #define GET_BOOLBIT(bitfield, field) (((bitfield) & (0x01 << (field))) \
                                         ? PR_TRUE : PR_FALSE)
@@ -136,9 +135,6 @@ public:
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
-
   // nsIDOMHTMLInputElement
   NS_DECL_NSIDOMHTMLINPUTELEMENT
 
@@ -150,6 +146,12 @@ public:
   {
     return nsGenericHTMLElement::GetEditor(aEditor);
   }
+
+  // Forward nsIDOMHTMLElement
+  NS_FORWARD_NSIDOMHTMLELEMENT_NOFOCUSCLICK(nsGenericHTMLFormElement::)
+  NS_IMETHOD Focus();
+  NS_IMETHOD Click();
+
   NS_IMETHOD SetUserInput(const nsAString& aInput);
 
   // Overriden nsIFormControl methods

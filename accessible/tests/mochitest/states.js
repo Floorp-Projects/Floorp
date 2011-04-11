@@ -25,6 +25,7 @@ const STATE_MIXED = nsIAccessibleStates.STATE_MIXED;
 const STATE_MULTISELECTABLE = nsIAccessibleStates.STATE_MULTISELECTABLE;
 const STATE_OFFSCREEN = nsIAccessibleStates.STATE_OFFSCREEN;
 const STATE_PRESSED = nsIAccessibleStates.STATE_PRESSED;
+const STATE_PROTECTED = nsIAccessibleStates.STATE_PROTECTED;
 const STATE_READONLY = nsIAccessibleStates.STATE_READONLY;
 const STATE_REQUIRED = nsIAccessibleStates.STATE_REQUIRED;
 const STATE_SELECTABLE = nsIAccessibleStates.STATE_SELECTABLE;

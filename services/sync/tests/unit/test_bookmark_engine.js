@@ -5,12 +5,7 @@ Cu.import("resource://services-sync/log4moz.js");
 Cu.import("resource://services-sync/util.js");
 
 Cu.import("resource://services-sync/service.js");
-try {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-}
-catch(ex) {
-  Cu.import("resource://gre/modules/utils.js");
-}
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 Engines.register(BookmarksEngine);
 
@@ -71,8 +66,8 @@ function test_processIncoming_error_orderChildren() {
                              {engines: {bookmarks: {version: engine.version,
                                                     syncID: engine.syncID}}});
   let server = httpd_setup({
-    "/1.0/foo/storage/meta/global": global.handler(),
-    "/1.0/foo/storage/bookmarks": collection.handler()
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
   });
 
   try {
@@ -153,8 +148,8 @@ function test_restorePromptsReupload() {
                              {engines: {bookmarks: {version: engine.version,
                                                     syncID: engine.syncID}}});
   let server = httpd_setup({
-    "/1.0/foo/storage/meta/global": global.handler(),
-    "/1.0/foo/storage/bookmarks": collection.handler()
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
   });
 
   Svc.Obs.notify("weave:engine:start-tracking");   // We skip usual startup...
@@ -328,8 +323,8 @@ function test_mismatched_types() {
                                                     syncID: engine.syncID}}});
   _("GUID: " + store.GUIDForId(6, true));
   let server = httpd_setup({
-    "/1.0/foo/storage/meta/global": global.handler(),
-    "/1.0/foo/storage/bookmarks": collection.handler()
+    "/1.1/foo/storage/meta/global": global.handler(),
+    "/1.1/foo/storage/bookmarks": collection.handler()
   });
 
   try {

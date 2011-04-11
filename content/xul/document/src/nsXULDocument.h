@@ -202,7 +202,8 @@ public:
                    nsIAtom* aAttrName,
                    void* aData);
 
-    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsXULDocument, nsXMLDocument)
+    NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_NO_UNLINK(nsXULDocument,
+                                                       nsXMLDocument)
 
     virtual nsXPCClassInfo* GetClassInfo();
 protected:
@@ -322,19 +323,6 @@ protected:
     BuilderTable* mTemplateBuilderTable;
 
     PRUint32 mPendingSheets;
-
-    /*
-     * XXX dr
-     * ------
-     * We used to have two pointers into the content model: mPopupNode and
-     * mTooltipNode, which were used to retrieve the objects triggering a
-     * popup or tooltip. You need that access because your reference has
-     * disappeared by the time you click on a popup item or do whatever
-     * with a tooltip. These were owning references (no cycles, as pinkerton
-     * pointed out, since we're still parent-child).
-     */
-
-    nsCOMPtr<nsIDOMNode>    mTooltipNode;          // [OWNER] element triggering the tooltip
 
     /**
      * document lightweight theme for use with :-moz-lwtheme, :-moz-lwtheme-brighttext

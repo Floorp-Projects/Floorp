@@ -66,16 +66,8 @@ endif
 endif
 endif # MOZ_PKG_FORMAT
 
-ifeq ($(OS_ARCH),OS2)
-INSTALLER_DIR   = os2
-else
 ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 INSTALLER_DIR   = windows
-else
-ifneq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-INSTALLER_DIR   = unix
-endif
-endif
 endif
 
 PACKAGE       = $(PKG_PATH)$(PKG_BASENAME)$(PKG_SUFFIX)
@@ -148,7 +140,7 @@ INNER_MAKE_PACKAGE	= rm -f app.7z && \
   mv core $(MOZ_PKG_DIR) && \
   cat $(SFX_HEADER) app.7z > $(PACKAGE) && \
   chmod 0755 $(PACKAGE)
-INNER_UNMAKE_PACKAGE	= $(CYGWIN_WRAPPER) 7z x $(UNPACKAGE) && \
+INNER_UNMAKE_PACKAGE	= $(CYGWIN_WRAPPER) 7z x $(UNPACKAGE) core && \
   mv core $(MOZ_PKG_DIR)
 endif
 
@@ -281,9 +273,7 @@ UPLOAD_EXTRA_FILES += gecko-unsigned-unaligned.apk
 
 include $(topsrcdir)/ipc/app/defs.mk
 
-ifdef MOZ_IPC
 DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
-endif
 
 ifdef MOZ_THUMB2
 ABI_DIR = armeabi-v7a
@@ -541,8 +531,6 @@ STRIP_FLAGS	= -f
 endif
 ifeq ($(OS_ARCH),OS2)
 STRIP		= $(MOZILLA_DIR)/toolkit/mozapps/installer/os2/strip.cmd
-STRIP_FLAGS	=
-PLATFORM_EXCLUDE_LIST = ! -name "*.ico" ! -name "$(MOZ_PKG_APPNAME).exe"
 endif
 
 ifneq (,$(filter WINNT WINCE OS2,$(OS_ARCH)))
@@ -643,31 +631,37 @@ endif # MOZ_PKG_MANIFEST
 endif # UNIVERSAL_BINARY
 	$(OPTIMIZE_JARS_CMD) --optimize $(DIST)/jarlog/ $(DIST)/bin/chrome $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR)/chrome
 ifndef PKG_SKIP_STRIP
-	@echo "Stripping package directory..."
-	@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . ! -type d \
-			! -name "*.js" \
-			! -name "*.xpt" \
-			! -name "*.gif" \
-			! -name "*.jpg" \
-			! -name "*.png" \
-			! -name "*.xpm" \
-			! -name "*.txt" \
-			! -name "*.rdf" \
-			! -name "*.sh" \
-			! -name "*.properties" \
-			! -name "*.dtd" \
-			! -name "*.html" \
-			! -name "*.xul" \
-			! -name "*.css" \
-			! -name "*.xml" \
-			! -name "*.jar" \
-			! -name "*.dat" \
-			! -name "*.tbl" \
-			! -name "*.src" \
-			! -name "*.reg" \
-			$(PLATFORM_EXCLUDE_LIST) \
-			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
-	$(SIGN_NSS)
+  ifeq ($(OS_ARCH),OS2)
+		@echo "Stripping package directory..."
+		@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR) && $(STRIP)
+		$(SIGN_NSS)
+  else
+		@echo "Stripping package directory..."
+		@cd $(DIST)/$(STAGEPATH)$(MOZ_PKG_DIR); find . ! -type d \
+				! -name "*.js" \
+				! -name "*.xpt" \
+				! -name "*.gif" \
+				! -name "*.jpg" \
+				! -name "*.png" \
+				! -name "*.xpm" \
+				! -name "*.txt" \
+				! -name "*.rdf" \
+				! -name "*.sh" \
+				! -name "*.properties" \
+				! -name "*.dtd" \
+				! -name "*.html" \
+				! -name "*.xul" \
+				! -name "*.css" \
+				! -name "*.xml" \
+				! -name "*.jar" \
+				! -name "*.dat" \
+				! -name "*.tbl" \
+				! -name "*.src" \
+				! -name "*.reg" \
+				$(PLATFORM_EXCLUDE_LIST) \
+				-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
+		$(SIGN_NSS)
+  endif
 else
 ifdef UNIVERSAL_BINARY
 # universal binaries will have had their .chk files removed prior to the unify

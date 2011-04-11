@@ -65,7 +65,16 @@ public:
 
     static HSType GetHangulSyllableType(PRUint32 aCh);
 
-    static PRInt32 ScriptShapingLevel(PRInt32 aScriptCode);
+    enum ShapingType {
+        SHAPING_DEFAULT   = 0x0001,
+        SHAPING_ARABIC    = 0x0002,
+        SHAPING_HEBREW    = 0x0004,
+        SHAPING_HANGUL    = 0x0008,
+        SHAPING_MONGOLIAN = 0x0010,
+        SHAPING_INDIC     = 0x0020
+    };
+
+    static PRInt32 ScriptShapingType(PRInt32 aScriptCode);
 };
 
 #endif /* GFX_UNICODEPROPERTIES_H */

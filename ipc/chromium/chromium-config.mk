@@ -46,8 +46,6 @@ CHROMIUM_CONFIG_INCLUDED = 1
 
 EXTRA_DEPS += $(topsrcdir)/ipc/chromium/chromium-config.mk
 
-ifdef MOZ_IPC # {
-
 DEFINES += \
   -DEXCLUDE_SKIA_DEPENDENCIES \
   -DCHROMIUM_MOZILLA_BUILD \
@@ -108,4 +106,3 @@ OS_CXXFLAGS := $(filter-out -pedantic,$(OS_CXXFLAGS))
 endif # }
 endif # }
 
-endif # }

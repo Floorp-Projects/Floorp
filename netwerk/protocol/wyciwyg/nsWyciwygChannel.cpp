@@ -369,14 +369,6 @@ nsWyciwygChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctx)
 {
   LOG(("nsWyciwygChannel::AsyncOpen [this=%x]\n", this));
 
-#ifndef MOZ_IPC
-  // The only places creating wyciwyg: channels should be
-  // HTMLDocument::OpenCommon and session history.  Both should be setting an
-  // owner.
-  NS_PRECONDITION(mOwner, "Must have a principal");
-  NS_ENSURE_STATE(mOwner);
-#endif
-
   NS_ENSURE_TRUE(!mIsPending, NS_ERROR_IN_PROGRESS);
   NS_ENSURE_ARG_POINTER(listener);
 

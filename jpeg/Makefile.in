@@ -113,7 +113,7 @@ CSRCS		+= \
 
 AS=$(LIBJPEG_TURBO_AS)
 ASM_SUFFIX=asm
-ASFLAGS=$(LIBJPEG_TURBO_ASFLAGS) -I$(topsrcdir)/modules/libjpeg-turbo/simd/
+ASFLAGS=$(LIBJPEG_TURBO_ASFLAGS) -I$(topsrcdir)/jpeg/simd/
 
 ifeq ($(AS),yasm)
   # yasm doesn't like -c
@@ -182,7 +182,6 @@ ifeq (1,$(LIBJPEG_TURBO_X86_ASM))
 	$(NULL)
 endif
 
-# jwinfig.h, jos2fig.h  ? XXX
 EXPORTS		= \
 		jconfig.h \
 		jerror.h \

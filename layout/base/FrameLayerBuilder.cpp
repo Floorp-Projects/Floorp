@@ -958,6 +958,7 @@ ContainerState::PopThebesLayerData()
       layer = imageLayer;
     } else {
       nsRefPtr<ColorLayer> colorLayer = CreateOrRecycleColorLayer();
+      colorLayer->SetIsFixedPosition(data->mLayer->GetIsFixedPosition());
       colorLayer->SetColor(data->mSolidColor);
 
       // Copy transform
@@ -1308,6 +1309,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
     nsDisplayItem::LayerState layerState =
       item->GetLayerState(mBuilder, mManager);
 
+    nsIFrame* activeScrolledRoot =
+      nsLayoutUtils::GetActiveScrolledRootFor(item, mBuilder);
+
     // Assign the item to a layer
     if (layerState == LAYER_ACTIVE_FORCE ||
         layerState == LAYER_ACTIVE && (aClip.mRoundedClipRects.IsEmpty() ||
@@ -1331,6 +1335,9 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
         InvalidateForLayerChange(item, ownLayer);
         continue;
       }
+
+      ownLayer->SetIsFixedPosition(!nsLayoutUtils::ScrolledByViewportScrolling(
+                                      activeScrolledRoot, mBuilder));
 
       // Update that layer's clip and visible rects.
       NS_ASSERTION(ownLayer->Manager() == mManager, "Wrong manager");
@@ -1363,24 +1370,12 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
       mNewChildLayers.AppendElement(ownLayer);
       mBuilder->LayerBuilder()->AddLayerDisplayItem(ownLayer, item);
     } else {
-      nsIFrame* f = item->GetUnderlyingFrame();
-      nsIFrame* activeScrolledRoot =
-        nsLayoutUtils::GetActiveScrolledRootFor(f, mBuilder->ReferenceFrame());
-      if (item->IsFixedAndCoveringViewport(mBuilder)) {
-        // Make its active scrolled root be the active scrolled root of
-        // the enclosing viewport, since it shouldn't be scrolled by scrolled
-        // frames in its document. InvalidateFixedBackgroundFramesFromList in
-        // nsGfxScrollFrame will not repaint this item when scrolling occurs.
-        nsIFrame* viewportFrame =
-          nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
-        NS_ASSERTION(viewportFrame, "no viewport???");
-        activeScrolledRoot =
-          nsLayoutUtils::GetActiveScrolledRootFor(viewportFrame, mBuilder->ReferenceFrame());
-      }
-
       nsRefPtr<ThebesLayer> thebesLayer =
         FindThebesLayerFor(item, itemVisibleRect, itemDrawRect, aClip,
                            activeScrolledRoot);
+
+      thebesLayer->SetIsFixedPosition(!nsLayoutUtils::ScrolledByViewportScrolling(
+                                         activeScrolledRoot, mBuilder));
 
       InvalidateForLayerChange(item, thebesLayer);
 
@@ -1438,7 +1433,7 @@ PRBool
 FrameLayerBuilder::NeedToInvalidateFixedDisplayItem(nsDisplayListBuilder* aBuilder,
                                                     nsDisplayItem* aItem)
 {
-  return !aItem->IsFixedAndCoveringViewport(aBuilder) ||
+  return !aItem->ShouldFixToViewport(aBuilder) ||
       !HasRetainedLayerFor(aItem->GetUnderlyingFrame(), aItem->GetPerFrameKey());
 }
 

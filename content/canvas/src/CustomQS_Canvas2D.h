@@ -16,12 +16,14 @@
  * The Original Code is Gecko code.
  *
  * The Initial Developer of the Original Code is
- *   Mozilla Corporation
+ * the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com> (original author)
+ *   Ms2ger <ms2ger@gmail.com>
+ *   Yury <async.processingjs@yahoo.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,6 +41,8 @@
 
 #include "nsDOMError.h"
 #include "nsIDOMCanvasRenderingContext2D.h"
+#include "CheckedInt.h"
+#include "nsMathUtils.h"
 
 typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleSetterType)(const nsAString &, nsISupports *);
 typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleGetterType)(nsAString &, nsISupports **, PRInt32 *);
@@ -153,6 +157,95 @@ nsIDOMCanvasRenderingContext2D_GetFillStyle(JSContext *cx, JSObject *obj, jsid i
     return Canvas2D_GetStyleHelper(cx, obj, id, vp, &nsIDOMCanvasRenderingContext2D::GetFillStyle_multi);
 }
 
+static bool
+CreateImageData(JSContext* cx,
+                uint32 w,
+                uint32 h,
+                nsIDOMCanvasRenderingContext2D* self,
+                int32 x,
+                int32 y,
+                jsval* vp)
+{
+    using mozilla::CheckedInt;
+
+    if (w == 0)
+        w = 1;
+    if (h == 0)
+        h = 1;
+
+    CheckedInt<uint32> len = CheckedInt<uint32>(w) * h * 4;
+    if (!len.valid()) {
+        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
+    }
+
+    // Create the fast typed array; it's initialized to 0 by default.
+    JSObject* darray =
+      js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len.value());
+    js::AutoObjectRooter rd(cx, darray);
+    if (!darray) {
+        return false;
+    }
+
+    if (self) {
+        js::TypedArray* tdest = js::TypedArray::fromJSObject(darray);
+
+        // make the call
+        nsresult rv =
+            self->GetImageData_explicit(x, y, w, h,
+                                        static_cast<PRUint8*>(tdest->data),
+                                        tdest->byteLength);
+        if (NS_FAILED(rv)) {
+            return xpc_qsThrowMethodFailed(cx, rv, vp);
+        }
+    }
+
+    // Do JS_NewObject after CreateTypedArray, so that gc will get
+    // triggered here if necessary
+    JSObject* result = JS_NewObject(cx, NULL, NULL, NULL);
+    js::AutoObjectRooter rr(cx, result);
+    if (!result) {
+        return false;
+    }
+
+    if (!JS_DefineProperty(cx, result, "width", INT_TO_JSVAL(w), NULL, NULL,
+                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
+        !JS_DefineProperty(cx, result, "height", INT_TO_JSVAL(h), NULL, NULL,
+                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
+        !JS_DefineProperty(cx, result, "data", OBJECT_TO_JSVAL(darray), NULL, NULL,
+                           JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT)) {
+        return false;
+    }
+
+    *vp = OBJECT_TO_JSVAL(result);
+    return true;
+}
+
+static bool
+GetImageDataDimensions(JSContext *cx, JSObject *dataObject, uint32 *width, uint32 *height)
+{
+    jsval temp;
+    int32 wi, hi;
+    
+    // Need to check that dataObject is ImageData object. That's hard for the moment 
+    // because they're just vanilla objects in our implementation.
+    // Let's guess, if the object has valid width and height then it's suitable
+    // for this operation.
+    if (!JS_GetProperty(cx, dataObject, "width", &temp) ||
+        !JS_ValueToECMAInt32(cx, temp, &wi))
+        return false;
+
+    if (!JS_GetProperty(cx, dataObject, "height", &temp) ||
+        !JS_ValueToECMAInt32(cx, temp, &hi))
+        return false;
+
+    if (wi <= 0 || hi <= 0)
+        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
+
+    *width = (uint32)wi;
+    *height = (uint32)hi;
+    return true;
+}
+
 static JSBool
 nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -160,51 +253,43 @@ nsIDOMCanvasRenderingContext2D_CreateImageData(JSContext *cx, uintN argc, jsval 
 
     /* Note: this doesn't need JS_THIS_OBJECT */
 
-    if (argc < 2)
+    if (argc < 1)
         return xpc_qsThrow(cx, NS_ERROR_XPC_NOT_ENOUGH_ARGS);
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 wi, hi;
-    if (!JS_ValueToECMAInt32(cx, argv[0], &wi) ||
-        !JS_ValueToECMAInt32(cx, argv[1], &hi))
-        return JS_FALSE;
+    if (argc == 1) {
+        // The specification asks to throw NOT_SUPPORTED if first argument is NULL,
+        // An object is expected, so throw an exception for all primitives.
+        if (JSVAL_IS_PRIMITIVE(argv[0]))
+            return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
 
-    if (wi <= 0 || hi <= 0)
+        JSObject *dataObject = JSVAL_TO_OBJECT(argv[0]);
+
+        uint32 data_width, data_height;
+        if (!GetImageDataDimensions(cx, dataObject, &data_width, &data_height))
+            return false;
+
+        return CreateImageData(cx, data_width, data_height, NULL, 0, 0, vp);
+    }
+
+    jsdouble width, height;
+    if (!JS_ValueToNumber(cx, argv[0], &width) ||
+        !JS_ValueToNumber(cx, argv[1], &height))
+        return false;
+
+    if (!NS_finite(width) || !NS_finite(height))
+        return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+    if (!width || !height)
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
 
-    uint32 w = (uint32) wi;
-    uint32 h = (uint32) hi;
+    int32 wi = JS_DoubleToInt32(width);
+    int32 hi = JS_DoubleToInt32(height);
 
-    /* Sanity check w * h here */
-    uint32 len0 = w * h;
-    if (len0 / w != (uint32) h)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    uint32 len = len0 * 4;
-    if (len / 4 != len0)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    // create the fast typed array; it's initialized to 0 by default
-    JSObject *darray = js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len);
-    js::AutoObjectRooter rd(cx, darray);
-    if (!darray)
-        return JS_FALSE;
-
-    // Do JS_NewObject after CreateTypedArray, so that gc will get
-    // triggered here if necessary
-    JSObject *result = JS_NewObject(cx, NULL, NULL, NULL);
-    js::AutoObjectRooter rr(cx, result);
-    if (!result)
-        return JS_FALSE;
-
-    if (!JS_DefineProperty(cx, result, "width", INT_TO_JSVAL(w), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "height", INT_TO_JSVAL(h), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "data", OBJECT_TO_JSVAL(darray), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-        return JS_FALSE;
-
-    *vp = OBJECT_TO_JSVAL(result);
-    return JS_TRUE;
+    uint32 w = PR_ABS(wi);
+    uint32 h = PR_ABS(hi);
+    return CreateImageData(cx, w, h, NULL, 0, 0, vp);
 }
 
 static JSBool
@@ -215,8 +300,6 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
     JSObject *obj = JS_THIS_OBJECT(cx, vp);
     if (!obj)
         return JS_FALSE;
-
-    nsresult rv;
 
     nsIDOMCanvasRenderingContext2D *self;
     xpc_qsSelfRef selfref;
@@ -229,56 +312,41 @@ nsIDOMCanvasRenderingContext2D_GetImageData(JSContext *cx, uintN argc, jsval *vp
 
     jsval *argv = JS_ARGV(cx, vp);
 
-    int32 x, y;
-    int32 wi, hi;
-    if (!JS_ValueToECMAInt32(cx, argv[0], &x) ||
-        !JS_ValueToECMAInt32(cx, argv[1], &y) ||
-        !JS_ValueToECMAInt32(cx, argv[2], &wi) ||
-        !JS_ValueToECMAInt32(cx, argv[3], &hi))
-        return JS_FALSE;
+    jsdouble xd, yd, width, height;
+    if (!JS_ValueToNumber(cx, argv[0], &xd) ||
+        !JS_ValueToNumber(cx, argv[1], &yd) ||
+        !JS_ValueToNumber(cx, argv[2], &width) ||
+        !JS_ValueToNumber(cx, argv[3], &height))
+        return false;
 
-    if (wi <= 0 || hi <= 0)
+    if (!NS_finite(xd) || !NS_finite(yd) ||
+        !NS_finite(width) || !NS_finite(height))
+        return xpc_qsThrow(cx, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+
+    if (!width || !height)
         return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
 
-    uint32 w = (uint32) wi;
-    uint32 h = (uint32) hi;
+    int32 x = JS_DoubleToInt32(xd);
+    int32 y = JS_DoubleToInt32(yd);
+    int32 wi = JS_DoubleToInt32(width);
+    int32 hi = JS_DoubleToInt32(height);
 
-    // Sanity check w * h here
-    uint32 len0 = w * h;
-    if (len0 / w != (uint32) h)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    uint32 len = len0 * 4;
-    if (len / 4 != len0)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    // create the fast typed array
-    JSObject *darray = js_CreateTypedArray(cx, js::TypedArray::TYPE_UINT8_CLAMPED, len);
-    js::AutoObjectRooter rd(cx, darray);
-    if (!darray)
-        return JS_FALSE;
-
-    js::TypedArray *tdest = js::TypedArray::fromJSObject(darray);
-
-    // make the call
-    rv = self->GetImageData_explicit(x, y, w, h, (PRUint8*) tdest->data, tdest->byteLength);
-    if (NS_FAILED(rv))
-        return xpc_qsThrowMethodFailed(cx, rv, vp);
-
-    // Do JS_NewObject after CreateTypedArray, so that gc will get
-    // triggered here if necessary
-    JSObject *result = JS_NewObject(cx, NULL, NULL, NULL);
-    js::AutoObjectRooter rr(cx, result);
-    if (!result)
-        return JS_FALSE;
-
-    if (!JS_DefineProperty(cx, result, "width", INT_TO_JSVAL(w), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "height", INT_TO_JSVAL(h), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT) ||
-        !JS_DefineProperty(cx, result, "data", OBJECT_TO_JSVAL(darray), NULL, NULL, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT))
-        return JS_FALSE;
-
-    *vp = OBJECT_TO_JSVAL(result);
-    return JS_TRUE;
+    // Handle negative width and height by flipping the rectangle over in the
+    // relevant direction.
+    uint32 w, h;
+    if (width < 0) {
+        w = -wi;
+        x -= w;
+    } else {
+        w = wi;
+    }
+    if (height < 0) {
+        h = -hi;
+        y -= h;
+    } else {
+        h = hi;
+    }
+    return CreateImageData(cx, w, h, self, x, y, vp);
 }
 
 static JSBool
@@ -312,25 +380,14 @@ nsIDOMCanvasRenderingContext2D_PutImageData(JSContext *cx, uintN argc, jsval *vp
         !JS_ValueToECMAInt32(cx, argv[2], &y))
         return JS_FALSE;
 
-    int32 wi, hi;
+    uint32 w, h;
     JSObject *darray;
 
     // grab width, height, and the dense array from the dataObject
     js::AutoValueRooter tv(cx);
 
-    if (!JS_GetProperty(cx, dataObject, "width", tv.jsval_addr()) ||
-        !JS_ValueToECMAInt32(cx, tv.jsval_value(), &wi))
+    if (!GetImageDataDimensions(cx, dataObject, &w, &h))
         return JS_FALSE;
-
-    if (!JS_GetProperty(cx, dataObject, "height", tv.jsval_addr()) ||
-        !JS_ValueToECMAInt32(cx, tv.jsval_value(), &hi))
-        return JS_FALSE;
-
-    if (wi <= 0 || hi <= 0)
-        return xpc_qsThrow(cx, NS_ERROR_DOM_INDEX_SIZE_ERR);
-
-    uint32 w = (uint32) wi;
-    uint32 h = (uint32) hi;
 
     // the optional dirty rect
     PRBool hasDirtyRect = PR_FALSE;

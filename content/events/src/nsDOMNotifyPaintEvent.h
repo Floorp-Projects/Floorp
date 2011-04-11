@@ -61,10 +61,8 @@ public:
   // Forward to base class
   NS_FORWARD_TO_NSDOMEVENT
 
-#ifdef MOZ_IPC
   virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
   virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
-#endif
 private:
   nsRegion GetRegion();
 

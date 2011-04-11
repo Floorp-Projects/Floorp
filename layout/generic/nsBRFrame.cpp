@@ -245,7 +245,7 @@ BRFrame::GetBaseline() const
       ascent += GetUsedBorderAndPadding().top;
     }
   }
-  return ascent;
+  return NS_MIN(mRect.height, ascent);
 }
 
 nsIFrame::ContentOffsets BRFrame::CalcContentOffsetsFromFramePoint(nsPoint aPoint)

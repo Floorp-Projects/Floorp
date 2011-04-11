@@ -140,7 +140,6 @@ public:
     virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& result);
 
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
-    virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
     virtual nsresult GetImage(NPP instance, ImageContainer* aContainer, Image** aImage);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
     NS_OVERRIDE virtual bool UseAsyncPainting() { return false; }

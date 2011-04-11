@@ -1759,14 +1759,9 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDocument, nsIDocument)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDocument, 
-                                                        nsIDocument,
-                                                        nsNodeUtils::LastRelease(this))
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsDocument)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDocument)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsDocument, 
+                                              nsNodeUtils::LastRelease(this))
 
 static PLDHashOperator
 SubDocTraverser(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
@@ -1967,6 +1962,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mCachedEncoder)
 
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
   tmp->mParentDocument = nsnull;
@@ -5776,12 +5772,6 @@ nsDocument::GetPrefix(nsAString& aPrefix)
 }
 
 NS_IMETHODIMP
-nsDocument::SetPrefix(const nsAString& aPrefix)
-{
-  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
-}
-
-NS_IMETHODIMP
 nsDocument::GetLocalName(nsAString& aLocalName)
 {
   SetDOMStringToNull(aLocalName);
@@ -8350,12 +8340,10 @@ PLDHashOperator UnlockEnumerator(imgIRequest* aKey,
 nsresult
 nsDocument::SetImageLockingState(PRBool aLocked)
 {
-#ifdef MOZ_IPC
   if (XRE_GetProcessType() == GeckoProcessType_Content &&
       !nsContentUtils::GetBoolPref("content.image.allow_locking", PR_TRUE)) {
     return NS_OK;
   }
-#endif // MOZ_IPC
 
   // If there's no change, there's nothing to do.
   if (mLockingImages == aLocked)

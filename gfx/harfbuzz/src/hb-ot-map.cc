@@ -37,6 +37,7 @@ void
 hb_ot_map_t::add_lookups (hb_face_t    *face,
 			  unsigned int  table_index,
 			  unsigned int  feature_index,
+			  unsigned short priority,
 			  hb_mask_t     mask)
 {
   unsigned int i = MAX_LOOKUPS - lookup_count[table_index];
@@ -55,6 +56,7 @@ hb_ot_map_t::add_lookups (hb_face_t    *face,
   while (i--) {
     lookups[i].mask = mask;
     lookups[i].index = lookup_indices[i];
+    lookups[i].priority = priority;
   }
 }
 
@@ -153,7 +155,7 @@ hb_ot_map_t::compile (hb_face_t *face,
 	global_mask |= (info->default_value << map->shift) & map->mask;
     }
     map->_1_mask = (1 << map->shift) & map->mask;
-
+    map->priority = info->priority;
   }
   feature_count = j;
 
@@ -169,10 +171,10 @@ hb_ot_map_t::compile (hb_face_t *face,
 							  script_index[table_index],
 							  language_index[table_index],
 							  &required_feature_index))
-      add_lookups (face, table_index, required_feature_index, 1);
+      add_lookups (face, table_index, required_feature_index, DEFAULT_PRIORITY, 1);
 
     for (unsigned i = 0; i < feature_count; i++)
-      add_lookups (face, table_index, feature_maps[i].index[table_index], feature_maps[i].mask);
+      add_lookups (face, table_index, feature_maps[i].index[table_index], feature_maps[i].priority, feature_maps[i].mask);
 
     /* Sort lookups and merge duplicates */
     qsort (lookup_maps[table_index], lookup_count[table_index], sizeof (lookup_maps[table_index][0]), (hb_compare_func_t) lookup_map_t::cmp);

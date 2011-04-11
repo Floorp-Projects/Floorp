@@ -141,10 +141,8 @@ ifdef WINCE
 EXTRA_DSO_LDOPTS += ddraw.lib
 endif
 
-ifdef MOZ_IPC
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
-endif
 
 ifdef ENABLE_TESTS
 TOOL_DIRS  += tests

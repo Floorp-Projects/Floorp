@@ -40,6 +40,7 @@
 
 #include "AccIterator.h"
 #include "nsAccUtils.h"
+#include "States.h"
 
 #include "nsIMutableArray.h"
 #include "nsComponentManagerUtils.h"
@@ -1109,33 +1110,27 @@ nsARIAGridCellAccessible::IsSelected(PRBool *aIsSelected)
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible
 
-nsresult
-nsARIAGridCellAccessible::GetARIAState(PRUint32 *aState, PRUint32 *aExtraState)
+void
+nsARIAGridCellAccessible::ApplyARIAState(PRUint64* aState)
 {
-  nsresult rv = nsHyperTextAccessibleWrap::GetARIAState(aState, aExtraState);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsHyperTextAccessibleWrap::ApplyARIAState(aState);
 
   // Return if the gridcell has aria-selected="true".
-  if (*aState & nsIAccessibleStates::STATE_SELECTED)
-    return NS_OK;
+  if (*aState & states::SELECTED)
+    return;
 
   // Check aria-selected="true" on the row.
   nsAccessible* row = GetParent();
   if (!row || row->Role() != nsIAccessibleRole::ROLE_ROW)
-    return NS_OK;
+    return;
 
   nsIContent *rowContent = row->GetContent();
   if (nsAccUtils::HasDefinedARIAToken(rowContent,
                                       nsAccessibilityAtoms::aria_selected) &&
       !rowContent->AttrValueIs(kNameSpaceID_None,
                                nsAccessibilityAtoms::aria_selected,
-                               nsAccessibilityAtoms::_false, eCaseMatters)) {
-
-    *aState |= nsIAccessibleStates::STATE_SELECTABLE |
-      nsIAccessibleStates::STATE_SELECTED;
-  }
-
-  return NS_OK;
+                               nsAccessibilityAtoms::_false, eCaseMatters))
+    *aState |= states::SELECTABLE | states::SELECTED;
 }
 
 nsresult

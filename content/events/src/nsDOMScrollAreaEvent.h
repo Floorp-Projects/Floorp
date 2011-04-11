@@ -58,10 +58,8 @@ public:
 
   NS_FORWARD_TO_NSDOMUIEVENT
 
-#ifdef MOZ_IPC
     virtual void Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType);
     virtual PRBool Deserialize(const IPC::Message* aMsg, void** aIter);
-#endif
 
 protected:
   nsClientRect mClientArea;
