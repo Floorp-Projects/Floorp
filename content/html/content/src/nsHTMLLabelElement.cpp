@@ -68,18 +68,20 @@ public:
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLFormElement::)
 
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLFormElement::)
-
   // nsIDOMHTMLLabelElement
   NS_DECL_NSIDOMHTMLLABELELEMENT
+
+  // Forward nsIDOMHTMLElement -- We don't override Click()
+  NS_FORWARD_NSIDOMHTMLELEMENT_NOFOCUSCLICK(nsGenericHTMLFormElement::)
+  NS_IMETHOD Click() { 
+    return nsGenericHTMLFormElement::Click(); 
+  }
+  NS_IMETHOD Focus();
 
   // nsIFormControl
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_LABEL; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
-
-  NS_IMETHOD Focus();
 
   virtual bool IsDisabled() const { return PR_FALSE; }
 
@@ -174,7 +176,6 @@ nsHTMLLabelElement::GetControl(nsIDOMHTMLElement** aElement)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLLabelElement, AccessKey, accesskey)
 NS_IMPL_STRING_ATTR(nsHTMLLabelElement, HtmlFor, _for)
 
 NS_IMETHODIMP
@@ -198,25 +199,14 @@ nsHTMLLabelElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                nsIContent* aBindingParent,
                                PRBool aCompileEventHandlers)
 {
-  nsresult rv = nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
-                                                     aBindingParent,
-                                                     aCompileEventHandlers);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aDocument) {
-    RegAccessKey();
-  }
-
-  return rv;
+  return nsGenericHTMLFormElement::BindToTree(aDocument, aParent,
+                                              aBindingParent,
+                                              aCompileEventHandlers);
 }
 
 void
 nsHTMLLabelElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
-  if (IsInDoc()) {
-    UnregAccessKey();
-  }
-
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
 
@@ -356,34 +346,14 @@ nsresult
 nsHTMLLabelElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
                             const nsAString& aValue, PRBool aNotify)
 {
-  if (aName == nsGkAtoms::accesskey && kNameSpaceID_None == aNameSpaceID) {
-    UnregAccessKey();
-  }
-
-  nsresult rv =
-      nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
-                                        aNotify);
-
-  if (aName == nsGkAtoms::accesskey && kNameSpaceID_None == aNameSpaceID &&
-      !aValue.IsEmpty()) {
-    SetFlags(NODE_HAS_ACCESSKEY);
-    RegAccessKey();
-  }
-
-  return rv;
+  return nsGenericHTMLFormElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
+                                           aNotify);
 }
 
 nsresult
 nsHTMLLabelElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                               PRBool aNotify)
 {
-  if (aAttribute == nsGkAtoms::accesskey &&
-      kNameSpaceID_None == aNameSpaceID) {
-    // Have to unregister before clearing flag. See UnregAccessKey
-    UnregAccessKey();
-    UnsetFlags(NODE_HAS_ACCESSKEY);
-  }
-
   return nsGenericHTMLFormElement::UnsetAttr(aNameSpaceID, aAttribute, aNotify);
 }
 

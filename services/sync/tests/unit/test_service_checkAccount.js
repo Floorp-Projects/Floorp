@@ -15,7 +15,7 @@ function run_test() {
     Service.serverURL = "http://localhost:8080/";
 
     _("A 404 will be recorded as 'generic-server-error'");
-    do_check_eq(Service.checkUsername("jimdoe"), "generic-server-error");
+    do_check_eq(Service.checkAccount("jimdoe"), "generic-server-error");
 
     _("Account that's available.");
     do_check_eq(Service.checkAccount("john@doe.com"), "available");
@@ -23,13 +23,11 @@ function run_test() {
     _("Account that's not available.");
     do_check_eq(Service.checkAccount("jane@doe.com"), "notAvailable");
 
-    // Backwards compat with the Firefox UI. Remove once bug 595066 has landed.
+    _("Username fallback: Account that's not available.");
+    do_check_eq(Service.checkAccount("johndoe"), "notAvailable");
 
-    _("Account that's not available.");
-    do_check_eq(Service.checkUsername("johndoe"), "notAvailable");
-
-    _("Account that's available.");
-    do_check_eq(Service.checkUsername("janedoe"), "available");
+    _("Username fallback: Account that's available.");
+    do_check_eq(Service.checkAccount("janedoe"), "available");
 
   } finally {
     Svc.Prefs.resetBranch("");

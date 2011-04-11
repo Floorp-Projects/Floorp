@@ -59,6 +59,8 @@ import android.widget.*;
 import android.hardware.*;
 import android.location.*;
 import android.webkit.MimeTypeMap;
+import android.media.MediaScannerConnection;
+import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 
 import android.util.*;
 import android.net.Uri;
@@ -116,6 +118,31 @@ public class GeckoAppShell
                 mHandlerQueue.put(new Handler());
             } catch (InterruptedException ie) {}
             Looper.loop();
+        }
+    }
+
+    private static class GeckoMediaScannerClient implements MediaScannerConnectionClient {
+        private String mFile = "";
+        private String mMimeType = "";
+        private MediaScannerConnection mScanner = null;
+
+        public GeckoMediaScannerClient(Context aContext, String aFile, String aMimeType) {
+            mFile = aFile;
+            mMimeType = aMimeType;
+            mScanner = new MediaScannerConnection(aContext, this);
+            if (mScanner != null)
+                mScanner.connect();
+        }
+
+        public void onMediaScannerConnected() {
+            mScanner.scanFile(mFile, mMimeType);
+        }
+
+        public void onScanCompleted(String path, Uri uri) {
+            if(path.equals(mFile)) {
+                mScanner.disconnect();
+                mScanner = null;
+            }
         }
     }
 
@@ -495,7 +522,8 @@ public class GeckoAppShell
     }
 
     public static void notifyIMEEnabled(int state, String typeHint,
-                                        String actionHint) {
+                                        String actionHint, boolean landscapeFS)
+    {
         if (GeckoApp.surfaceView == null)
             return;
 
@@ -504,6 +532,7 @@ public class GeckoAppShell
         GeckoApp.surfaceView.mIMEState = state;
         GeckoApp.surfaceView.mIMETypeHint = typeHint;
         GeckoApp.surfaceView.mIMEActionHint = actionHint;
+        GeckoApp.surfaceView.mIMELandscapeFS = landscapeFS;
         IMEStateUpdater.enableIME();
     }
 
@@ -1064,5 +1093,10 @@ public class GeckoAppShell
                 Thread.currentThread().sleep(100);
             } catch (InterruptedException ie) {}
         }
+    }
+
+    public static void scanMedia(String aFile, String aMimeType) {
+        Context context = GeckoApp.surfaceView.getContext();
+        GeckoMediaScannerClient client = new GeckoMediaScannerClient(context, aFile, aMimeType);
     }
 }

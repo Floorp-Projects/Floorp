@@ -1369,3 +1369,67 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
 
     return CAIRO_INT_STATUS_SUCCESS;
 }
+
+// Helper for _cairo_win32_printing_surface_show_glyphs to create a win32 equivalent
+// of a dwrite scaled_font so that we can print using ExtTextOut instead of drawing
+// paths or blitting glyph bitmaps.
+cairo_int_status_t
+_cairo_dwrite_scaled_font_create_win32_scaled_font (cairo_scaled_font_t *scaled_font,
+                                                    cairo_scaled_font_t **new_font)
+{
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_DWRITE) {
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    cairo_font_face_t *face = cairo_scaled_font_get_font_face (scaled_font);
+    cairo_dwrite_font_face_t *dwface = reinterpret_cast<cairo_dwrite_font_face_t*>(face);
+
+    RefPtr<IDWriteGdiInterop> gdiInterop;
+    DWriteFactory::Instance()->GetGdiInterop(&gdiInterop);
+    if (!gdiInterop) {
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    LOGFONTW logfont;
+    if (FAILED(gdiInterop->ConvertFontFaceToLOGFONT (dwface->dwriteface, &logfont))) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    // DW must have been using an outline font, so we want GDI to use the same,
+    // even if there's also a bitmap face available
+    logfont.lfOutPrecision = OUT_OUTLINE_PRECIS;
+
+    cairo_font_face_t *win32_face = cairo_win32_font_face_create_for_logfontw (&logfont);
+    if (!win32_face) {
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    cairo_matrix_t font_matrix;
+    cairo_scaled_font_get_font_matrix (scaled_font, &font_matrix);
+
+    cairo_matrix_t ctm;
+    cairo_scaled_font_get_ctm (scaled_font, &ctm);
+
+    cairo_font_options_t options;
+    cairo_scaled_font_get_font_options (scaled_font, &options);
+
+    cairo_scaled_font_t *font = cairo_scaled_font_create (win32_face,
+			                                  &font_matrix,
+			                                  &ctm,
+			                                  &options);
+    cairo_font_face_destroy (win32_face);
+
+    if (!font) {
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (_cairo_win32_scaled_font_is_type1 (font) || _cairo_win32_scaled_font_is_bitmap (font)) {
+        // If we somehow got a Type1 or bitmap font, it can't be the same physical font
+        // as directwrite was using, so glyph IDs will not match; best we can do is to
+        // throw it away and fall back on rendering paths or blitting bitmaps instead.
+        cairo_scaled_font_destroy (font);
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    *new_font = font;
+    return CAIRO_INT_STATUS_SUCCESS;
+}

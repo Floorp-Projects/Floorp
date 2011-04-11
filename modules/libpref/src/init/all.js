@@ -200,7 +200,14 @@ pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", false);
 pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", true);
 #endif
 
-pref("gfx.font_rendering.harfbuzz.level", 2);
+// see gfx/thebes/gfxUnicodeProperties.h for definitions of script bits
+#ifdef XP_MACOSX
+// use harfbuzz for default (0x01) + arabic (0x02) + hebrew (0x04)
+pref("gfx.font_rendering.harfbuzz.scripts", 7);
+#else
+// use harfbuzz for default (0x01) + arabic (0x02)
+pref("gfx.font_rendering.harfbuzz.scripts", 3);
+#endif
 
 #ifdef XP_WIN
 #ifndef WINCE

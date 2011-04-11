@@ -452,6 +452,14 @@ protected:
                                       PRUint32 aCount,
                                       PRUint32 *aWriteCount);
 
+  // Suspend the channel only if the channels is currently downloading data.
+  // If it isn't we set a flag, mIgnoreResume, so that PossiblyResume knows
+  // whether to acutually resume or not.
+  void PossiblySuspend();
+
+  // Resume from a suspend if we actually suspended (See PossiblySuspend).
+  void PossiblyResume();
+
   // Main thread access only
   PRInt64            mOffset;
   nsRefPtr<Listener> mListener;
@@ -473,6 +481,11 @@ protected:
   Mutex               mLock;
   nsChannelStatistics mChannelStatistics;
   PRUint32            mCacheSuspendCount;
+
+  // PR_TRUE if we couldn't suspend the stream and we therefore don't want
+  // to resume later. This is usually due to the channel not being in the
+  // isPending state at the time of the suspend request.
+  PRPackedBool mIgnoreResume;
 };
 
 #endif

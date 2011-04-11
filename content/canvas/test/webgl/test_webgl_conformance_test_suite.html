@@ -76,7 +76,7 @@ function start() {
   };
 
   Page.prototype.isExpectedToFullyPass = function() {
-    return testsExpectedToFail.indexOf(this.url) == -1;
+    return testsExpectedToFail.indexOf(this.url) == -1 && testsToIgnore.indexOf(this.url) == -1;
   }
 
   Page.prototype.errormsg = function(msg) {
@@ -198,6 +198,8 @@ function start() {
     expectedtofailTextNode.textContent = testsExpectedToFail.length +
                                          ' test pages are expected to fail out of ' +
                                          this.totalPages;
+    ignoredtestsTextNode.textContent = testsToIgnore.length +
+                                         ' test pages have their results ignored';
     return page.startPage();
   };
 
@@ -341,6 +343,10 @@ function start() {
   var expectedtofailTextNode = document.createTextNode('');
   expectedtofailElem.appendChild(expectedtofailTextNode);
 
+  var ignoredtestsElem = document.getElementById("ignoredtests");
+  var ignoredtestsTextNode = document.createTextNode('');
+  ignoredtestsElem.appendChild(ignoredtestsTextNode);
+
   // Windows uses the ANGLE library for rendering. Until everything is perfect, this means a different set of
   // failing tests. It's easier to do a platform check for Windows than for ANGLE itself.
   // Moreover, we currently also have different tests failing on Mac and on Linux,
@@ -357,9 +363,11 @@ function start() {
                             .replace(/\r/g, '') // convert to unix line breaks
                             .split('\n');
 
+  var testsToIgnore = [];
+
   // canvas-test.html is currently failing on Windows XP test slaves
   if (kIsWindows && !kIsWindowsVistaOrHigher)
-      testsExpectedToFail.push('conformance/canvas-test.html');
+      testsToIgnore.push('conformance/canvas-test.html');
 
   var testsSuccessful = [];
 
@@ -385,6 +393,8 @@ function start() {
     <div><span id="results-default"></span></div>
     <br />
     <div><span id="expectedtofail"></span></div>
+    <br />
+    <div><span id="ignoredtests"></span></div>
   </div>
 </td></tr>
 </table>

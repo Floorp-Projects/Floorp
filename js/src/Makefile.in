@@ -674,11 +674,11 @@ DIST_GARBAGE = config.cache config.log config.status \
 
 distclean::
 	cat unallmakefiles | $(XARGS) rm -f
-	rm -f $(DIST_GARBAGE)
+	$(RM) $(DIST_GARBAGE)
 
 # our build system doesn't handle subdir srcs very gracefully today
 export::
-	mkdir -p nanojit
+	$(MKDIR) -p nanojit
 
 DEFINES		+= -DEXPORT_JS_API
 
@@ -833,10 +833,10 @@ export:: jsautocfg.h
 
 ifeq (,$(CROSS_COMPILE)$(GNU_CC)$(filter-out WINNT,$(OS_ARCH)))
 jsautocfg.h:
-	touch $@
+	$(TOUCH) $@
 else
 jsautocfg.h: jscpucfg$(HOST_BIN_SUFFIX)
-	@rm -f $@ jsautocfg.tmp
+	@$(RM) $@ jsautocfg.tmp
 	./jscpucfg > jsautocfg.tmp
 	mv jsautocfg.tmp $@
 endif
@@ -890,7 +890,7 @@ JS_CONFIG_LIBS=$(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS)
 # this rule.
 at=@
 js-config: js-config.in Makefile $(DEPTH)/config/autoconf.mk $(topsrcdir)/config/config.mk $(topsrcdir)/config/rules.mk
-	rm -f js-config.tmp
+	$(RM) js-config.tmp
 	sed < $< > js-config.tmp \
 	-e 's|$(at)prefix$(at)|$(prefix)|' \
 	-e 's|$(at)exec_prefix$(at)|$(exec_prefix)|' \
@@ -966,7 +966,7 @@ NANOJIT_CENTRAL_LOCAL=$(CURDIR)/nanojit-central
 CUR_REPO=$(srcdir)/../..
 
 update-nanojit:
-	rm -Rf $(NANOJIT_CENTRAL_LOCAL) import-splicemap import-revmap
+	$(RM) -r $(NANOJIT_CENTRAL_LOCAL) import-splicemap import-revmap
 	hg clone $(NANOJIT_CENTRAL_REPO) $(NANOJIT_CENTRAL_LOCAL)
 	python $(srcdir)/find-child.py \
 	                   --src=$(NANOJIT_CENTRAL_LOCAL) \

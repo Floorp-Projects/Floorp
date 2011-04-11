@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>Bidirectional Text Test 2 - Formatting Characters</title>
+  <style>
+   p { font-family: monospace; text-align: left; }
+  </style>
+ </head>
+<!-- Testcases based on http://dbaron.org/css/test/bidi2_charcode by L. David Baron. -->
+ <body>
+  <p>The following lines should all read "ABCDEFGHI":</p>
+  <p>ABCDEFGHI</p>
+  <p dir="rtl">&#x202b;ABCDEFGHI&#x202c;</p>
+  <p dir="rtl">&#x202b;ABC<span>DEF</span>GHI&#x202c;</p>
+  <p dir="rtl">&#x202e;IHGFEDCBA&#x202c;</p>
+  <p dir="rtl">&#x202e;IHG<span>FED</span>CBA&#x202c;</p>
+  <p dir="rtl">&#x202e;IHG&#x202b;DEF&#x202c;CBA&#x202c;</p>
+  <p dir="rtl">&#x202e;IHG&#x202e;FED&#x202c;CBA&#x202c;</p>
+  <p dir="rtl">&#x202e;IHG&#x202e;FED&#x202c;CBA&#x202c;</p>
+  <p dir="rtl">&#x202e;IHG&#x202d;DEF&#x202c;CBA&#x202c;</p>
+ </body>
+</html>

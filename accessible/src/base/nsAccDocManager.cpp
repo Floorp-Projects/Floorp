@@ -43,6 +43,7 @@
 #include "nsApplicationAccessible.h"
 #include "nsOuterDocAccessible.h"
 #include "nsRootAccessibleWrap.h"
+#include "States.h"
 
 #include "nsCURILoader.h"
 #include "nsDocShellLoadTypes.h"
@@ -221,8 +222,7 @@ nsAccDocManager::OnStateChange(nsIWebProgress *aWebProgress,
   // Fire state busy change event. Use delayed event since we don't care
   // actually if event isn't delivered when the document goes away like a shot.
   nsRefPtr<AccEvent> stateEvent =
-    new AccStateChangeEvent(document, nsIAccessibleStates::STATE_BUSY,
-                            PR_FALSE, PR_TRUE);
+    new AccStateChangeEvent(document, states::BUSY, PR_TRUE);
   docAcc->FireDelayedAccessibleEvent(stateEvent);
 
   return NS_OK;
@@ -356,8 +356,7 @@ nsAccDocManager::HandleDOMDocumentLoad(nsIDocument *aDocument,
 
   // Fire busy state change event.
   nsRefPtr<AccEvent> stateEvent =
-    new AccStateChangeEvent(aDocument, nsIAccessibleStates::STATE_BUSY,
-                            PR_FALSE, PR_FALSE);
+    new AccStateChangeEvent(aDocument, states::BUSY, PR_FALSE);
   docAcc->FireDelayedAccessibleEvent(stateEvent);
 }
 

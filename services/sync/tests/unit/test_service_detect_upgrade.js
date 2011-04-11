@@ -24,20 +24,20 @@ function v4_upgrade(next) {
   let keysWBO = new ServerWBO("keys");
   let server = httpd_setup({
     // Special.
-    "/1.0/johndoe/info/collections": collectionsHelper.handler,
-    "/1.0/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
-    "/1.0/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
+    "/1.1/johndoe/info/collections": collectionsHelper.handler,
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
       
     // Track modified times.
-    "/1.0/johndoe/storage/clients": upd("clients", clients.handler()),
-    "/1.0/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
+    "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
+    "/1.1/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
     
     // Just so we don't get 404s in the logs.
-    "/1.0/johndoe/storage/bookmarks": new ServerCollection().handler(),
-    "/1.0/johndoe/storage/forms": new ServerCollection().handler(),
-    "/1.0/johndoe/storage/history": new ServerCollection().handler(),
-    "/1.0/johndoe/storage/passwords": new ServerCollection().handler(),
-    "/1.0/johndoe/storage/prefs": new ServerCollection().handler()
+    "/1.1/johndoe/storage/bookmarks": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/forms": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/history": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/passwords": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/prefs": new ServerCollection().handler()
   });
 
   try {
@@ -203,14 +203,14 @@ function v5_upgrade(next) {
   
   let server = httpd_setup({
     // Special.
-    "/1.0/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
-    "/1.0/johndoe/info/collections": collectionsHelper.handler,
-    "/1.0/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
-    "/1.0/johndoe/storage/crypto/bulk": upd("crypto", bulkWBO.handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
+    "/1.1/johndoe/info/collections": collectionsHelper.handler,
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.1/johndoe/storage/crypto/bulk": upd("crypto", bulkWBO.handler()),
       
     // Track modified times.
-    "/1.0/johndoe/storage/clients": upd("clients", clients.handler()),
-    "/1.0/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
+    "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
+    "/1.1/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
   });
 
   try {

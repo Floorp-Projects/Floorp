@@ -176,6 +176,9 @@ include layers/reftest.list
 # line-breaking/
 include line-breaking/reftest.list
 
+# list-item/
+include list-item/reftest.list
+
 # mathml/
 include mathml/reftest.list
 

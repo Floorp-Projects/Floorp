@@ -89,3 +89,6 @@ needs-focus == data:text/plain, about:blank
 # Sanity check of viewport+displayport overrides
 fails-if(!browserIsRemote) == test-displayport.html test-displayport-ref.html # bug 593168
 skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
+
+# IPC Position-fixed frames/layers test
+== test-pos-fixed.html test-pos-fixed-ref.html

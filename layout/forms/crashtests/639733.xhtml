@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+<![CDATA[
+
+function remove(n)
+{
+  n.parentNode.removeChild(n);
+}
+
+function boom()
+{
+  
+  document.documentElement.offsetHeight;
+  remove(document.getElementById("s"));
+  remove(document.getElementById("e"));
+  document.documentElement.offsetHeight;
+}
+
+]]>
+</script>
+</head>
+<body onload="boom();">
+<embed id="e" src="data:text/html,A"></embed><span id="s"><div></div></span><isindex/>
+</body>
+</html>

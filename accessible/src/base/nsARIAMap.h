@@ -199,43 +199,38 @@ public:
   /**
    * Used for ARIA attributes having boolean or mixed values.
    */
-  nsStateMapEntry(nsIAtom **aAttrName, eStateValueType aType,
-                  PRUint32 aPermanentState,
-                  PRUint32 aTrueState, PRUint32 aTrueExtraState,
-                  PRUint32 aFalseState = 0, PRUint32 aFalseExtraState = 0,
+  nsStateMapEntry(nsIAtom** aAttrName, eStateValueType aType,
+                  PRUint64 aPermanentState,
+                  PRUint64 aTrueState,
+                  PRUint64 aFalseState = 0,
                   PRBool aDefinedIfAbsent = PR_FALSE);
 
   /**
    * Used for ARIA attributes having enumerated values.
    */
-  nsStateMapEntry(nsIAtom **aAttrName,
-                  const char *aValue1, PRUint32 aState1, PRUint32 aExtraState1,
-                  const char *aValue2, PRUint32 aState2, PRUint32 aExtraState2,
-                  const char *aValue3 = 0, PRUint32 aState3 = 0,
-                  PRUint32 aExtraState3 = 0);
+  nsStateMapEntry(nsIAtom** aAttrName,
+                  const char* aValue1, PRUint64 aState1,
+                  const char* aValue2, PRUint64 aState2,
+                  const char* aValue3 = 0, PRUint64 aState3 = 0);
 
   /**
    * Used for ARIA attributes having enumerated values, and where a default
    * attribute state should be assumed when not supplied by the author.
    */
-  nsStateMapEntry(nsIAtom **aAttrName,
-                  EDefaultStateRule aDefaultStateRule,
-                  const char *aValue1, PRUint32 aState1, PRUint32 aExtraState1,
-                  const char *aValue2, PRUint32 aState2, PRUint32 aExtraState2,
-                  const char *aValue3 = 0, PRUint32 aState3 = 0,
-                  PRUint32 aExtraState3 = 0);
+  nsStateMapEntry(nsIAtom** aAttrName, EDefaultStateRule aDefaultStateRule,
+                  const char* aValue1, PRUint64 aState1,
+                  const char* aValue2, PRUint64 aState2,
+                  const char* aValue3 = 0, PRUint64 aState3 = 0);
 
   /**
    * Maps ARIA state map pointed by state map entry ID to accessible states.
    *
    * @param  aContent         [in] node of the accessible
    * @param  aState           [in/out] accessible states
-   * @param  aExtraState      [in/out] accessible extra states
    * @param  aStateMapEntryID [in] state map entry ID
    * @return                   true if state map entry ID is valid
    */
-  static PRBool MapToStates(nsIContent *aContent,
-                            PRUint32 *aState, PRUint32 *aExtraState,
+  static PRBool MapToStates(nsIContent* aContent, PRUint64* aState,
                             eStateMapEntryID aStateMapEntryID);
 
 private:
@@ -246,24 +241,20 @@ private:
   PRBool mIsToken;
 
   // State applied always if attribute is defined
-  PRUint32 mPermanentState;
+  PRUint64 mPermanentState;
 
   // States applied if attribute value is matched to the stored value
   const char* mValue1;
-  PRUint32 mState1;
-  PRUint32 mExtraState1;
+  PRUint64 mState1;
 
   const char* mValue2;
-  PRUint32 mState2;
-  PRUint32 mExtraState2;
+  PRUint64 mState2;
 
   const char* mValue3;
-  PRUint32 mState3;
-  PRUint32 mExtraState3;
+  PRUint64 mState3;
 
   // States applied if no stored values above are matched
-  PRUint32 mDefaultState;
-  PRUint32 mDefaultExtraState;
+  PRUint64 mDefaultState;
 
   // Permanent and false states are applied if attribute is absent
   PRBool mDefinedIfAbsent;
@@ -298,7 +289,7 @@ struct nsRoleMapEntry
   ELiveAttrRule liveAttRule;
 
   // Automatic state mapping rule: always include in nsIAccessibleStates
-  PRUint32 state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
+  PRUint64 state;   // or kNoReqStates if no nsIAccessibleStates are automatic for this role.
   
   // ARIA properties supported for this role
   // (in other words, the aria-foo attribute to nsIAccessibleStates mapping rules)

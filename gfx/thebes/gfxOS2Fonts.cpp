@@ -162,7 +162,13 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
     // together with internal/external leading (see below)
     mMetrics->emHeight = NS_floor(GetStyle()->size + 0.5);
 
-    FT_Face face = cairo_ft_scaled_font_lock_face(CairoScaledFont());
+    cairo_scaled_font_t* scaledFont = CairoScaledFont();
+    if (!scaledFont) {
+        FillMetricsDefaults(mMetrics);
+        return *mMetrics;
+    }
+
+    FT_Face face = cairo_ft_scaled_font_lock_face(scaledFont);
     if (!face) {
         // Abort here already, otherwise we crash in the following
         // this can happen if the font-size requested is zero.
@@ -173,7 +179,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
         // Also abort, if the charmap isn't loaded; then the char
         // lookups won't work. This happens for fonts without Unicode
         // charmap.
-        cairo_ft_scaled_font_unlock_face(CairoScaledFont());
+        cairo_ft_scaled_font_unlock_face(scaledFont);
         FillMetricsDefaults(mMetrics);
         return *mMetrics;
     }
@@ -305,7 +311,7 @@ const gfxFont::Metrics& gfxOS2Font::GetMetrics()
            mMetrics->maxAscent, mMetrics->maxDescent, mMetrics->maxAdvance
           );
 #endif
-    cairo_ft_scaled_font_unlock_face(CairoScaledFont());
+    cairo_ft_scaled_font_unlock_face(scaledFont);
     return *mMetrics;
 }
 
@@ -391,6 +397,25 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
         // finally find a matching font
         FcResult fcRes;
         FcPattern *fcMatch = FcFontMatch(NULL, fcPattern, &fcRes);
+
+        // Most code that depends on FcFontMatch() assumes it won't fail,
+        // then crashes when it does.  For now, at least, substitute the
+        // default serif font when it fails to avoid those crashes.
+        if (!fcMatch) {
+//#ifdef DEBUG
+            printf("Could not match font for:\n"
+                   "  family=%s, weight=%d, slant=%d, size=%f\n",
+                   NS_LossyConvertUTF16toASCII(GetName()).get(),
+                   GetStyle()->weight, GetStyle()->style, GetStyle()->size);
+//#endif
+            // FcPatternAddString() will free the existing FC_FAMILY string
+            FcPatternAddString(fcPattern, FC_FAMILY, (FcChar8*)"SERIF");
+            fcMatch = FcFontMatch(NULL, fcPattern, &fcRes);
+//#ifdef DEBUG
+            printf("Attempt to substitute default SERIF font %s\n",
+                   fcMatch ? "succeeded" : "failed");
+//#endif
+        }
         FcPatternDestroy(fcPattern);
 
         if (fcMatch) {
@@ -408,13 +433,6 @@ cairo_font_face_t *gfxOS2Font::CairoFontFace()
             mFontFace = cairo_ft_font_face_create_for_pattern(fcMatch);
 
             FcPatternDestroy(fcMatch);
-        } else {
-#ifdef DEBUG
-            printf("Could not match font for:\n"
-                   "  family=%s, weight=%d, slant=%d, size=%f\n",
-                   NS_LossyConvertUTF16toASCII(GetName()).get(),
-                   GetStyle()->weight, GetStyle()->style, GetStyle()->size);
-#endif
         }
     }
 
@@ -448,8 +466,13 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
     } else {
         cairo_matrix_init_scale(&fontMatrix, size, size);
     }
+
+    cairo_font_face_t * face = CairoFontFace();
+    if (!face)
+        return nsnull;
+
     cairo_font_options_t *fontOptions = cairo_font_options_create();
-    mScaledFont = cairo_scaled_font_create(CairoFontFace(), &fontMatrix,
+    mScaledFont = cairo_scaled_font_create(face, &fontMatrix,
                                            &identityMatrix, fontOptions);
     cairo_font_options_destroy(fontOptions);
 
@@ -479,7 +502,7 @@ PRBool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
 
     // this implicitely ensures that mScaledFont is created if NULL
     cairo_scaled_font_t *scaledFont = CairoScaledFont();
-    if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
+    if (!scaledFont || cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
         // the cairo_t, precluding any further drawing.
         return PR_FALSE;

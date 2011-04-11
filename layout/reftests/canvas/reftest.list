@@ -41,3 +41,7 @@ asserts-if(cocoaWidget,0-2) == size-change-1.html size-change-1-ref.html
 fails-if(Android) != text-font-lang.html text-font-lang-notref.html
 
 == strokeText-path.html strokeText-path-ref.html
+
+# gradient off-by-one, fails on windows and linux
+== linear-gradient-1a.html linear-gradient-1-ref.html
+fails-if(cocoaWidget) == linear-gradient-1b.html linear-gradient-1-ref.html

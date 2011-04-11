@@ -124,6 +124,12 @@ private:
 
   nsCOMPtr<nsIChannel> mRedirectChannel;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
+
+  // state for combining OnStatus/OnProgress with OnDataAvailable
+  // into one IPDL call to child.
+  nsresult mStoredStatus;
+  PRUint64 mStoredProgress;
+  PRUint64 mStoredProgressMax;
 };
 
 } // namespace net

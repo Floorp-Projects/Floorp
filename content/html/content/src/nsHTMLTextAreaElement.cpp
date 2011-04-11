@@ -367,18 +367,6 @@ nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
 // nsIContent
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::Blur()
-{
-  return nsGenericHTMLElement::Blur();
-}
-
-NS_IMETHODIMP
-nsHTMLTextAreaElement::Focus()
-{
-  return nsGenericHTMLElement::Focus();
-}
-
-NS_IMETHODIMP
 nsHTMLTextAreaElement::Select()
 {
   // XXX Bug?  We have to give the input focus before contents can be
@@ -449,7 +437,6 @@ nsHTMLTextAreaElement::IsHTMLFocusable(PRBool aWithMouse,
   return PR_FALSE;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Autofocus, autofocus)
 NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(nsHTMLTextAreaElement, Cols, cols, DEFAULT_COLS)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)

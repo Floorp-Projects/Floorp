@@ -47,6 +47,7 @@ Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
+Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
 
 const PREFS_GUID = Utils.encodeBase64url(Svc.AppInfo.ID);
 
@@ -138,20 +139,9 @@ PrefStore.prototype = {
   },
 
   _setAllPrefs: function PrefStore__setAllPrefs(values) {
-    // cache 
-    let ltmExists = true;
-    let ltm = {};
-    let enabledBefore = false;
     let enabledPref = "lightweightThemes.isThemeSelected";
-    let prevTheme = "";
-    try {
-      Cu.import("resource://gre/modules/LightweightThemeManager.jsm", ltm);
-      ltm = ltm.LightweightThemeManager;
-      enabledBefore = this._prefs.get(enabledPref, false);
-      prevTheme = ltm.currentTheme;
-    } catch(ex) {
-      ltmExists = false;
-    } // LightweightThemeManager only exists in Firefox 3.6+
+    let enabledBefore = this._prefs.get(enabledPref, false);
+    let prevTheme = LightweightThemeManager.currentTheme;
 
     for (let [pref, value] in Iterator(values)) {
       if (!this._isSynced(pref))
@@ -171,14 +161,12 @@ PrefStore.prototype = {
     }
 
     // Notify the lightweight theme manager of all the new values
-    if (ltmExists) {
-      let enabledNow = this._prefs.get(enabledPref, false);
-      if (enabledBefore && !enabledNow)
-        ltm.currentTheme = null;
-      else if (enabledNow && ltm.usedThemes[0] != prevTheme) {
-        ltm.currentTheme = null;
-        ltm.currentTheme = ltm.usedThemes[0];
-      }
+    let enabledNow = this._prefs.get(enabledPref, false);
+    if (enabledBefore && !enabledNow) {
+      LightweightThemeManager.currentTheme = null;
+    } else if (enabledNow && LightweightThemeManager.usedThemes[0] != prevTheme) {
+      LightweightThemeManager.currentTheme = null;
+      LightweightThemeManager.currentTheme = ltm.usedThemes[0];
     }
   },
 

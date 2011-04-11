@@ -689,9 +689,7 @@ gfxFT2Font::InitTextRun(gfxContext *aContext,
 {
     PRBool ok = PR_FALSE;
 
-    if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
-        gfxUnicodeProperties::ScriptShapingLevel(aRunScript))
-    {
+    if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aRunScript)) {
         if (!mHarfBuzzShaper) {
             gfxFT2LockedFace face(this);
             mFUnitsConvFactor = face.XScale();

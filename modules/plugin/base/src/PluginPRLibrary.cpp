@@ -247,12 +247,6 @@ PluginPRLibrary::AsyncSetWindow(NPP instance, NPWindow* window)
 }
 
 nsresult
-PluginPRLibrary::GetSurface(NPP instance, gfxASurface** aSurface)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult
 PluginPRLibrary::GetImage(NPP instance, ImageContainer* aContainer, Image** aImage)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
