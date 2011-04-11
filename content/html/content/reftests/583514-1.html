@@ -1,0 +1,24 @@
+<head>
+<script>
+function test()
+{
+  document.getElementById("a").click();
+  document.getElementById("b").click();
+  document.getElementById("a").focus();
+  document.getElementById("b").focus();
+  
+  // unfocus input to avoid failing due to caret
+  document.getElementById("b").blur();
+}
+
+function log(text)
+{
+  document.getElementById("c").innerHTML+=text;
+}
+</script>
+</head>
+
+<body id="body" onload='javascript:test()' onclick='log("body clicked");'>
+<div id=a onclick='log(" div clicked ");' onfocus='log(" div focused ");'>
+<input id=b onclick='log(" input clicked ");' onfocus='log(" input focused ");'></div>
+<div id="c">Results:

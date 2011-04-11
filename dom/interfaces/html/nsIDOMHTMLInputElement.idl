@@ -54,7 +54,7 @@ interface nsIDOMValidityState;
   * http://www.whatwg.org/specs/web-apps/current-work/
   */
 
-[scriptable, uuid(bcf00efc-5217-4350-9fbc-e3059190830a)]
+[scriptable, uuid(a59ba6b8-6f8b-4003-a8a4-184a51a05050)]
 interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
 {
            attribute DOMString             accept;
@@ -87,7 +87,6 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
            attribute boolean               readOnly;
            attribute boolean               required;
 
-           attribute DOMString             accessKey;
            attribute DOMString             align;
 
            attribute unsigned long         size;
@@ -126,8 +125,4 @@ interface nsIDOMHTMLInputElement : nsIDOMHTMLElement
    * element is a text field.
    */
   boolean mozIsTextField(in boolean aExcludePassword);
-
-  void blur();
-  void focus();
-  void click();
 };
