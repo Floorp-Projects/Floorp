@@ -43,6 +43,7 @@
 #include "nsCoreUtils.h"
 #include "nsRelUtils.h"
 #include "nsWinUtils.h"
+#include "States.h"
 
 #include "nsIAccessibleDocument.h"
 #include "nsIAccessibleEvent.h"
@@ -435,11 +436,17 @@ __try {
   if (!xpAccessible)
     return E_FAIL;
 
-  PRUint32 state = 0;
-  if (NS_FAILED(xpAccessible->GetState(&state, nsnull)))
-    return E_FAIL;
+  // MSAA only has 31 states and the lowest 31 bits of our state bit mask
+  // are the same states as MSAA.
+  // Note: we map the following Gecko states to different MSAA states:
+  //   REQUIRED -> ALERT_LOW
+  //   ALERT -> ALERT_MEDIUM
+  //   INVALID -> ALERT_HIGH
+  //   CHECKABLE -> MARQUEED
 
-  pvarState->lVal = state;
+  PRUint32 msaaState = 0;
+  nsAccUtils::To32States(xpAccessible->State(), &msaaState, nsnull);
+  pvarState->lVal = msaaState;
 } __except(FilterA11yExceptions(::GetExceptionCode(), GetExceptionInformation())) { }
   return S_OK;
 }
@@ -1243,14 +1250,11 @@ __try {
 
   // XXX: bug 344674 should come with better approach that we have here.
 
-  PRUint32 states = 0, extraStates = 0;
-  nsresult rv = GetState(&states, &extraStates);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
+  PRUint64 state = State();
 
-  if (states & nsIAccessibleStates::STATE_INVALID)
+  if (state & states::INVALID)
     *aStates |= IA2_STATE_INVALID_ENTRY;
-  if (states & nsIAccessibleStates::STATE_REQUIRED)
+  if (state & states::REQUIRED)
     *aStates |= IA2_STATE_REQUIRED;
 
   // The following IA2 states are not supported by Gecko
@@ -1259,31 +1263,31 @@ __try {
   // IA2_STATE_ICONIFIED
   // IA2_STATE_INVALID // This is not a state, it is the absence of a state
 
-  if (extraStates & nsIAccessibleStates::EXT_STATE_ACTIVE)
+  if (state & states::ACTIVE)
     *aStates |= IA2_STATE_ACTIVE;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_DEFUNCT)
+  if (state & states::DEFUNCT)
     *aStates |= IA2_STATE_DEFUNCT;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_EDITABLE)
+  if (state & states::EDITABLE)
     *aStates |= IA2_STATE_EDITABLE;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_HORIZONTAL)
+  if (state & states::HORIZONTAL)
     *aStates |= IA2_STATE_HORIZONTAL;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_MODAL)
+  if (state & states::MODAL)
     *aStates |= IA2_STATE_MODAL;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_MULTI_LINE)
+  if (state & states::MULTI_LINE)
     *aStates |= IA2_STATE_MULTI_LINE;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_OPAQUE)
+  if (state & states::OPAQUE1)
     *aStates |= IA2_STATE_OPAQUE;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT)
+  if (state & states::SELECTABLE_TEXT)
     *aStates |= IA2_STATE_SELECTABLE_TEXT;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_SINGLE_LINE)
+  if (state & states::SINGLE_LINE)
     *aStates |= IA2_STATE_SINGLE_LINE;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_STALE)
+  if (state & states::STALE)
     *aStates |= IA2_STATE_STALE;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION)
+  if (state & states::SUPPORTS_AUTOCOMPLETION)
     *aStates |= IA2_STATE_SUPPORTS_AUTOCOMPLETION;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_TRANSIENT)
+  if (state & states::TRANSIENT)
     *aStates |= IA2_STATE_TRANSIENT;
-  if (extraStates & nsIAccessibleStates::EXT_STATE_VERTICAL)
+  if (state & states::VERTICAL)
     *aStates |= IA2_STATE_VERTICAL;
 
   return S_OK;
