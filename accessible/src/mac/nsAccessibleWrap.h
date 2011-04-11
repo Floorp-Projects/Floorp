@@ -45,6 +45,7 @@
 
 #include "nsAccessible.h"
 #include "nsAccUtils.h"
+#include "States.h"
 
 #include "nsCOMPtr.h"
 #include "nsRect.h"
