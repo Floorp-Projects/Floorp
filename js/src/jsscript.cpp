@@ -452,12 +452,12 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
                     return false;
             }
         }
+    }
 
-        if (xdr->mode == JSXDR_DECODE) {
-            if (!bindings.ensureShape(cx))
-                return false;
-            bindings.makeImmutable();
-        }
+    if (xdr->mode == JSXDR_DECODE) {
+        if (!bindings.ensureShape(cx))
+            return false;
+        bindings.makeImmutable();
     }
 
     if (xdr->mode == JSXDR_ENCODE)
