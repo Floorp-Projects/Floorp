@@ -41,7 +41,6 @@
 
 #include "nsISupports.h"
 class nsIFormControl;
-class nsIDocument;
 
 // IID for the nsIRadioControl interface
 #define NS_IRADIOVISITOR_IID \
@@ -72,43 +71,5 @@ public:
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIRadioVisitor, NS_IRADIOVISITOR_IID)
-
-/**
- * This visitor sets CheckedChanged on all elements it finds.
- *
- * @param aVisitor the visitor (out param)
- * @param aCheckedChanged the value of CheckedChanged to set on all elements
- */
-nsresult
-NS_GetRadioSetCheckedChangedVisitor(bool aCheckedChanged,
-                                    nsIRadioVisitor** aVisitor);
-
-/**
- * This visitor will take the boolean you're pointing at and put
- * aCheckedChanged into it.  If the visitor is never called, aCheckedChanged
- * will of course not change.
- *
- * @param aVisitor the visitor (out param)
- * @param aCheckedChanged the boolean to put CheckedChanged into
- * @param aExcludeElement the element 
- */
-nsresult
-NS_GetRadioGetCheckedChangedVisitor(bool* aCheckedChanged,
-                                    nsIFormControl* aExcludeElement,
-                                    nsIRadioVisitor** aVisitor);
-
-/**
- * This visitor will update the validity states of all radio in the group and
- * call ContentStatesChanged if needed.
- *
- * @param aExcludeElement an element to exclude (for optimization purpose), can be null
- * @param aDocument       the document owning the group
- * @param aNotify         whether we should call ContentStatesChanged
- * @return the visitor
- */
-nsIRadioVisitor*
-NS_SetRadioValueMissingState(nsIFormControl* aExcludeElement,
-                             nsIDocument* aDocument,
-                             bool aValidity, bool aNotify);
 
 #endif // nsIRadioVisitor_h___
