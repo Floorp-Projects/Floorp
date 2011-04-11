@@ -148,7 +148,7 @@ _hb_ot_shape_complex_collect_features_arabic	(hb_ot_shape_plan_t *plan, const hb
 {
   unsigned int num_features = props->script == HB_SCRIPT_SYRIAC ? SYRIAC_NUM_FEATURES : COMMON_NUM_FEATURES;
   for (unsigned int i = 0; i < num_features; i++)
-    plan->map.add_bool_feature (arabic_syriac_features[i], false);
+    plan->map.add_bool_feature (arabic_syriac_features[i], EARLY_PRIORITY, false);
 }
 
 void
