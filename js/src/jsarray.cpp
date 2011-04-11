@@ -172,7 +172,7 @@ js_StringIsIndex(JSLinearString *str, jsuint *indexp)
     return false;
 }
 
-static bool 
+static bool
 ValueToLength(JSContext *cx, Value* vp, jsuint* plength)
 {
     if (vp->isInt32()) {
@@ -303,7 +303,7 @@ JSObject::willBeSparseDenseArray(uintN requiredCapacity, uintN newElementsHint)
 
     if (requiredCapacity >= JSObject::NSLOTS_LIMIT)
         return true;
-    
+
     uintN minimalDenseCount = requiredCapacity / 4;
     if (newElementsHint >= minimalDenseCount)
         return false;
@@ -311,7 +311,7 @@ JSObject::willBeSparseDenseArray(uintN requiredCapacity, uintN newElementsHint)
 
     if (minimalDenseCount > cap)
         return true;
-    
+
     Value *elems = getDenseArrayElements();
     for (uintN i = 0; i < cap; i++) {
         if (!elems[i].isMagic(JS_ARRAY_HOLE) && !--minimalDenseCount)
@@ -485,7 +485,7 @@ JSBool JS_FASTCALL
 js_EnsureDenseArrayCapacity(JSContext *cx, JSObject *obj, jsint i)
 {
 #ifdef DEBUG
-    Class *origObjClasp = obj->clasp; 
+    Class *origObjClasp = obj->clasp;
 #endif
     jsuint u = jsuint(i);
     JSBool ret = (obj->ensureDenseArrayElements(cx, u, 1) == JSObject::ED_OK);
@@ -1120,8 +1120,10 @@ array_toSource(JSContext *cx, uintN argc, Value *vp)
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
-    if (!obj->isSlowArray() && !InstanceOf(cx, obj, &js_ArrayClass, vp + 2))
+    if (!obj->isArray()) {
+        ReportIncompatibleMethod(cx, vp, &js_ArrayClass);
         return false;
+    }
 
     /* Find joins or cycles in the reachable object graph. */
     jschar *sharpchars;
@@ -1483,7 +1485,7 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
             break;
         if (js_PrototypeHasIndexedProperties(cx, obj))
             break;
-        
+
         /* An empty array or an array with no elements is already reversed. */
         if (len == 0 || obj->getDenseArrayCapacity() == 0)
             return true;
