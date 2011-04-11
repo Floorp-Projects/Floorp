@@ -97,6 +97,7 @@
 #include "nsTransitionManager.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrameMessageManager.h"
+#include "FrameLayerBuilder.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -116,8 +117,7 @@
 //needed for resetting of image service color
 #include "nsLayoutCID.h"
 
-using mozilla::TimeDuration;
-using mozilla::TimeStamp;
+using namespace mozilla;
 using namespace mozilla::dom;
 
 static nscolor
@@ -772,6 +772,26 @@ nsPresContext::GetUserPreferences()
 }
 
 void
+nsPresContext::AppUnitsPerDevPixelChanged()
+{
+  nsIFrame* rootFrame = mShell->FrameManager()->GetRootFrame();
+  if (rootFrame) {
+    // FrameLayerBuilder caches invalidation-related values that depend on the
+    // appunits-per-dev-pixel ratio, so ensure that all ThebesLayer drawing
+    // is completely flushed.
+    FrameLayerBuilder::InvalidateThebesLayersInSubtree(rootFrame);
+  }
+
+  mDeviceContext->FlushFontCache();
+
+  // All cached style data must be recomputed.
+  if (HasCachedStyleData()) {
+    MediaFeatureValuesChanged(PR_TRUE);
+    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+  }
+}
+
+void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
   nsDependentCString prefName(aPrefName);
@@ -779,8 +799,6 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       prefName.EqualsLiteral("layout.css.devPixelsPerPx")) {
     PRInt32 oldAppUnitsPerDevPixel = AppUnitsPerDevPixel();
     if (mDeviceContext->CheckDPIChange() && mShell) {
-      mDeviceContext->FlushFontCache();
-
       // Re-fetch the view manager's window dimensions in case there's a deferred
       // resize which hasn't affected our mVisibleArea yet
       nscoord oldWidthAppUnits, oldHeightAppUnits;
@@ -793,8 +811,7 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
       nscoord height = NSToCoordRound(oldHeightDevPixels*AppUnitsPerDevPixel());
       vm->SetWindowDimensions(width, height);
 
-      MediaFeatureValuesChanged(PR_TRUE);
-      RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
+      AppUnitsPerDevPixelChanged();
     }
     return;
   }
@@ -1314,15 +1331,14 @@ nsPresContext::SetFullZoom(float aZoom)
   if (!mShell || mFullZoom == aZoom) {
     return;
   }
+
   // Re-fetch the view manager's window dimensions in case there's a deferred
   // resize which hasn't affected our mVisibleArea yet
   nscoord oldWidthAppUnits, oldHeightAppUnits;
   mShell->GetViewManager()->GetWindowDimensions(&oldWidthAppUnits, &oldHeightAppUnits);
   float oldWidthDevPixels = oldWidthAppUnits / float(mCurAppUnitsPerDevPixel);
   float oldHeightDevPixels = oldHeightAppUnits / float(mCurAppUnitsPerDevPixel);
-  if (mDeviceContext->SetPixelScale(aZoom)) {
-    mDeviceContext->FlushFontCache();
-  }
+  mDeviceContext->SetPixelScale(aZoom);
 
   NS_ASSERTION(!mSupressResizeReflow, "two zooms happening at the same time? impossible!");
   mSupressResizeReflow = PR_TRUE;
@@ -1331,10 +1347,8 @@ nsPresContext::SetFullZoom(float aZoom)
   mShell->GetViewManager()->
     SetWindowDimensions(NSToCoordRound(oldWidthDevPixels * AppUnitsPerDevPixel()),
                         NSToCoordRound(oldHeightDevPixels * AppUnitsPerDevPixel()));
-  if (HasCachedStyleData()) {
-    MediaFeatureValuesChanged(PR_TRUE);
-    RebuildAllStyleData(NS_STYLE_HINT_REFLOW);
-  }
+
+  AppUnitsPerDevPixelChanged();
 
   mSupressResizeReflow = PR_FALSE;
 
