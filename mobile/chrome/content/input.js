@@ -328,11 +328,8 @@ MouseModule.prototype = {
       if (dragData.isPan()) {
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
         this._kinetic.addData(sX - dragData.prevPanX, sY - dragData.prevPanY);
-        if (!this._waitingForPaint) {
-          this._dragBy(this.dX, this.dY);
-          this.dX = 0;
-          this.dY = 0;
-        }
+        this._dragBy(this.dX, this.dY);
+        // dragBy will reset dX and dY values to 0.
 
         // Let everyone know when mousemove begins a pan
         if (!oldIsPan && dragData.isPan()) {
@@ -394,11 +391,16 @@ MouseModule.prototype = {
    * the dragger of dragMove()s.
    */
   _dragBy: function _dragBy(dX, dY, aIsKinetic) {
-    let dragData = this._dragData;
-    let dragged = this._dragger.dragMove(dX, dY, this._targetScrollInterface, aIsKinetic);
-    if (dragged && !this._waitingForPaint) {
-      this._waitingForPaint = true;
-      mozRequestAnimationFrame(this);
+    let dragged = true;
+    if (!this._waitingForPaint || aIsKinetic) {
+      let dragData = this._dragData;
+      dragged = this._dragger.dragMove(dX, dY, this._targetScrollInterface, aIsKinetic);
+      if (dragged && !this._waitingForPaint) {
+        this._waitingForPaint = true;
+        mozRequestAnimationFrame(this);
+      }
+      this.dX = 0;
+      this.dY = 0;
     }
     return dragged;
   },
