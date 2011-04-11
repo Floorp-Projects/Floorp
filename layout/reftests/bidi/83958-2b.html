@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>Bidirectional Text Test 2 - CSS</title>
+  <style>
+p { font-family: monospace; text-align: left; }
+.embed { unicode-bidi: embed; }
+.override { unicode-bidi: bidi-override; }
+.rtl { direction: rtl; }
+.ltr { direction: ltr; }
+  </style>
+ </head>
+<!-- Testcases based on http://dbaron.org/css/test/bidi2 by L. David Baron. -->
+ <body>
+  <p>&#x05D0;&#x05D1;&#x05D2;</p>
+  <p class="embed">&#x05D0;&#x05D1;&#x05D2;</p>
+  <p class="override">&#x05D0;&#x05D1;&#x05D2;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; ABC &#x05D3;&#x05D4;&#x05D5;</p>
+  <p class="rtl">&#x05D0;&#x05D1;&#x05D2; ABC &#x05D3;&#x05D4;&#x05D5;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; ABC &#x05D3;&#x05D4;&#x05D5; DEF &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; <span>ABC &#x05D3;&#x05D4;&#x05D5;</span> DEF &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; <span class="ltr embed">ABC &#x05D3;&#x05D4;&#x05D5; DEF</span> &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; <span class="rtl embed">ABC &#x05D3;&#x05D4;&#x05D5; DEF</span> &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; <span class="rtl embed">ABC &#x05D3;&#x05D4;&#x05D5;</span> DEF &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; <span class="rtl override">ABC &#x05D3;&#x05D4;&#x05D5;</span> DEF &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; <span class="ltr override">ABC &#x05D3;&#x05D4;&#x05D5;</span> DEF &#x05D6;&#x05D7;&#x05D8;</p>
+  <p class="rtl">&#x05D0;&#x05D1;&#x05D2; <span class="ltr override">ABC &#x05D3;&#x05D4;&#x05D5;</span> DEF &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; ABC &#x05D3;&#x05D4;&#x05D5; DEF GHI &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; <span class="rtl override">ABC &#x05D3;&#x05D4;&#x05D5; DEF</span> GHI &#x05D6;&#x05D7;&#x05D8;</p>
+  <p>&#x05D0;&#x05D1;&#x05D2; ABC <span class="rtl override">&#x05D3;&#x05D4;&#x05D5; DEF</span> GHI &#x05D6;&#x05D7;&#x05D8;</p>
+ </body>
+</html>
