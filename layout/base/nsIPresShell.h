@@ -139,8 +139,8 @@ typedef struct CapturingContentInfo {
 } CapturingContentInfo;
 
 #define NS_IPRESSHELL_IID     \
- { 0x3a8030b5, 0x8d2c, 0x4cb3, \
-    { 0xb5, 0xae, 0xb2, 0x43, 0xa9, 0x28, 0x02, 0x82 } }
+  { 0xfd4ba6e3, 0x921c, 0x4058, \
+    { 0xa6, 0x1b, 0xc7, 0x14, 0x5e, 0x80, 0x50, 0x1f } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -573,7 +573,8 @@ public:
   enum {
     SCROLL_FIRST_ANCESTOR_ONLY = 0x01,
     SCROLL_OVERFLOW_HIDDEN = 0x02,
-    SCROLL_NO_PARENT_FRAMES = 0x04
+    SCROLL_NO_PARENT_FRAMES = 0x04,
+    SCROLL_ALLOW_SMOOTH = 0x08
   };
   /**
    * Scrolls the view of the document so that the given area of a frame
