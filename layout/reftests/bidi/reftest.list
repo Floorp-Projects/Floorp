@@ -33,6 +33,12 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == with-first-letter-1b.html with-first-letter-1-ref.html
 == with-first-letter-2a.html with-first-letter-2-ref.html
 == with-first-letter-2b.html with-first-letter-2-ref.html
+== 83958-1a.html 83958-1-ref.html
+== 83958-1b.html 83958-1-ref.html
+== 83958-1c.html 83958-1-ref.html
+== 83958-2a.html 83958-2-ref.html
+== 83958-2b.html 83958-2-ref.html
+== 83958-2c.html 83958-2-ref.html
 == 115921-1.html 115921-1-ref.html
 == 115921-2.html 115921-2-ref.html
 == 258928-1.html 258928-1-ref.html
