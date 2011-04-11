@@ -317,6 +317,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   mContentToFrameIndex.Clear();
   mLinePerFrame.Clear();
   mBuffer.SetLength(0);
+  mEmbeddingStack.Clear();
   
   nsPresContext *presContext = aBlockFrame->PresContext();
 
@@ -352,7 +353,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
   }
 
   // handle bidi-override being set on the block itself before calling
-  // InitLogicalArray.
+  // TraverseFrames.
   const nsStyleTextReset* text = aBlockFrame->GetStyleTextReset();
   PRUnichar ch = 0;
   if (text->mUnicodeBidi == NS_STYLE_UNICODE_BIDI_OVERRIDE) {
@@ -366,6 +367,7 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
       mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
       mLinePerFrame.AppendElement((nsLineBox*)nsnull);
       mBuffer.Append(ch);
+      mEmbeddingStack.AppendElement(ch);
     }
   }
   mPrevContent = nsnull;
@@ -374,17 +376,16 @@ nsBidiPresUtils::Resolve(nsBlockFrame* aBlockFrame)
     block->RemoveStateBits(NS_BLOCK_NEEDS_BIDI_RESOLUTION);
     nsBlockInFlowLineIterator lineIter(block, block->begin_lines(), PR_FALSE);
     mPrevFrame = nsnull;
-    InitLogicalArray(&lineIter, block->GetFirstChild(nsnull));
+    TraverseFrames(aBlockFrame, &lineIter, block->GetFirstChild(nsnull));
   }
 
   if (ch != 0) {
     mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
     mLinePerFrame.AppendElement((nsLineBox*)nsnull);
     mBuffer.Append(kPDF);
+    mEmbeddingStack.TruncateLength(mEmbeddingStack.Length() - 1);
   }
 
-  // XXX: TODO: Handle preformatted text ('\n')
-  mBuffer.ReplaceChar("\t\r\n", kSpace);
   ResolveParagraph(aBlockFrame);
   return mSuccess;
 }
@@ -399,6 +400,9 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame)
     mSuccess = NS_OK;
     return;
   }
+  // XXX: TODO: Handle preformatted text ('\n')
+  mBuffer.ReplaceChar("\t\r\n", kSpace);
+
   PRInt32 runCount;
   PRUint8 embeddingLevel = mParaLevel;
 
@@ -575,13 +579,13 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame)
     fragmentLength -= temp;
 
     if (frame && fragmentLength <= 0) {
-      // If the frame is at the end of a run, split all ancestor inlines that
-      // need splitting.
+      // If the frame is at the end of a run, and this is not the end of our
+      // paragrah, split all ancestor inlines that need splitting.
       // To determine whether we're at the end of the run, we check that we've
       // finished processing the current run, and that the current frame
       // doesn't have a fluid continuation (it could have a fluid continuation
       // of zero length, so testing runLength alone is not sufficient).
-      if (runLength <= 0 && !frame->GetNextInFlow()) {
+      if (numRun + 1 < runCount && runLength <= 0 && !frame->GetNextInFlow()) {
         nsIFrame* child = frame;
         nsIFrame* parent = frame->GetParent();
         // As long as we're on the last sibling, the parent doesn't have to be split.
@@ -630,14 +634,25 @@ PRBool IsBidiLeaf(nsIFrame* aFrame) {
 }
 
 void
-nsBidiPresUtils::InitLogicalArray(nsBlockInFlowLineIterator* aLineIter,
-                                  nsIFrame*    aCurrentFrame)
+nsBidiPresUtils::TraverseFrames(nsBlockFrame*              aBlockFrame,
+                                nsBlockInFlowLineIterator* aLineIter,
+                                nsIFrame*                  aCurrentFrame)
 {
   if (!aCurrentFrame)
     return;
 
-  for (nsIFrame* childFrame = aCurrentFrame; childFrame;
-       childFrame = childFrame->GetNextSibling()) {
+  nsIFrame* childFrame = aCurrentFrame;
+  do {
+    /*
+     * It's important to get the next sibling and next continuation *before*
+     * handling the frame: If we encounter a forced paragraph break and call
+     * ResolveParagraph within this loop, doing GetNextSibling and
+     * GetNextContinuation after that could return a bidi continuation that had
+     * just been split from the original childFrame and we would process it
+     * twice.
+     */
+    nsIFrame* nextSibling = childFrame->GetNextSibling();
+    PRBool isLastFrame = !childFrame->GetNextContinuation();
 
     // If the real frame for a placeholder is a first letter frame, we need to
     // drill down into it and include its contents in Bidi resolution.
@@ -682,6 +697,7 @@ nsBidiPresUtils::InitLogicalArray(nsBlockInFlowLineIterator* aLineIter,
         mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
         mLinePerFrame.AppendElement((nsLineBox*)nsnull);
         mBuffer.Append(ch);
+        mEmbeddingStack.AppendElement(ch);
       }
     }
 
@@ -710,27 +726,71 @@ nsBidiPresUtils::InitLogicalArray(nsBlockInFlowLineIterator* aLineIter,
       } else if (nsGkAtoms::brFrame == frameType) {
         // break frame -- append line separator
         mBuffer.Append(kLineSeparator);
+        ResolveParagraphWithinBlock(aBlockFrame);
       } else { 
         // other frame type -- see the Unicode Bidi Algorithm:
         // "...inline objects (such as graphics) are treated as if they are ...
         // U+FFFC"
         mBuffer.Append(kObjectSubstitute);
+        if (!frame->GetStyleContext()->GetStyleDisplay()->IsInlineOutside()) {
+          // if it is not inline, end the paragraph
+          ResolveParagraphWithinBlock(aBlockFrame);
+        }
       }
     }
     else {
+      // For a non-leaf frame, recurse into TraverseFrames
       nsIFrame* kid = frame->GetFirstChild(nsnull);
-      InitLogicalArray(aLineIter, kid);
+      TraverseFrames(aBlockFrame, aLineIter, kid);
     }
 
     // If the element is attributed by dir, indicate direction pop (add PDF frame)
-    if (ch != 0 && !frame->GetNextContinuation()) {
+    if (ch != 0 && isLastFrame) {
       // Add a dummy frame pointer representing a bidi control code after the
       // last frame of an element specifying embedding or override
       mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
       mLinePerFrame.AppendElement((nsLineBox*)nsnull);
       mBuffer.Append(kPDF);
+      mEmbeddingStack.TruncateLength(mEmbeddingStack.Length() - 1);
     }
-  } // for
+    childFrame = nextSibling;
+  } while (childFrame);
+}
+
+void
+nsBidiPresUtils::ResolveParagraphWithinBlock(nsBlockFrame* aBlockFrame)
+{
+  nsIPresShell* shell;
+  nsStyleContext* styleContext;
+
+  if (mEmbeddingStack.Length() > 0) {
+    shell = aBlockFrame->PresContext()->PresShell();
+    styleContext = aBlockFrame->GetStyleContext();
+
+    // pop all embeddings and overrides
+    for (PRUint32 i = 0; i < mEmbeddingStack.Length(); ++i) {
+      mBuffer.Append(kPDF);
+      mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+      mLinePerFrame.AppendElement((nsLineBox*)nsnull);
+    }
+  }
+
+  ResolveParagraph(aBlockFrame);
+
+  // Clear the frame array and paragraph buffer, and restore the stored 
+  // embeddings and overrides
+  mLogicalFrames.Clear();
+  mContentToFrameIndex.Clear();
+  mLinePerFrame.Clear();
+  mBuffer.SetLength(0);
+  mPrevContent = nsnull;
+  if (mEmbeddingStack.Length() > 0) {
+    for (PRUint32 i = 0; i < mEmbeddingStack.Length(); ++i) {
+      mBuffer.Append(mEmbeddingStack[i]);
+      mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+      mLinePerFrame.AppendElement((nsLineBox*)nsnull);
+    }
+  } 
 }
 
 void
