@@ -593,9 +593,9 @@ GetIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
             if (last) {
                 NativeIterator *lastni = last->getNativeIterator();
                 if (!(lastni->flags & (JSITER_ACTIVE|JSITER_UNREUSABLE)) &&
-                    obj->isNative() && 
+                    obj->isNative() &&
                     obj->shape() == lastni->shapes_array[0] &&
-                    proto && proto->isNative() && 
+                    proto && proto->isNative() &&
                     proto->shape() == lastni->shapes_array[1] &&
                     !proto->getProto()) {
                     vp->setObject(*last);
@@ -713,8 +713,12 @@ static JSBool
 iterator_next(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj || !InstanceOf(cx, obj, &js_IteratorClass, vp + 2))
+    if (!obj)
         return false;
+    if (obj->getClass() != &js_IteratorClass) {
+        ReportIncompatibleMethod(cx, vp, &js_IteratorClass);
+        return false;
+    }
 
     if (!js_IteratorMore(cx, obj, vp))
         return false;
@@ -814,7 +818,7 @@ js_CloseIterator(JSContext *cx, JSObject *obj)
 
 /*
  * Suppress enumeration of deleted properties. This function must be called
- * when a property is deleted and there might be active enumerators. 
+ * when a property is deleted and there might be active enumerators.
  *
  * We maintain a list of active non-escaping for-in enumerators. To suppress
  * a property, we check whether each active enumerator contains the (obj, id)
@@ -919,7 +923,7 @@ class IndexRangePredicate {
 public:
     IndexRangePredicate(jsint begin, jsint end) : begin(begin), end(end) {}
 
-    bool operator()(jsid id) { 
+    bool operator()(jsid id) {
         return JSID_IS_INT(id) && begin <= JSID_TO_INT(id) && JSID_TO_INT(id) < end;
     }
     bool matchesAtMostOne() { return false; }
@@ -1356,8 +1360,12 @@ generator_op(JSContext *cx, JSGeneratorOp op, Value *vp, uintN argc)
     LeaveTrace(cx);
 
     JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj || !InstanceOf(cx, obj, &js_GeneratorClass, vp + 2))
+    if (!obj)
         return JS_FALSE;
+    if (obj->getClass() != &js_GeneratorClass) {
+        ReportIncompatibleMethod(cx, vp, &js_GeneratorClass);
+        return JS_FALSE;
+    }
 
     JSGenerator *gen = (JSGenerator *) obj->getPrivate();
     if (!gen) {

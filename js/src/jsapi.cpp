@@ -136,10 +136,10 @@ class AutoVersionAPI
         oldHasVersionOverride(cx->isVersionOverridden()),
         oldVersionOverride(oldHasVersionOverride ? cx->findVersion() : JSVERSION_UNKNOWN)
 #ifdef DEBUG
-        , oldCompileOptions(cx->getCompileOptions()) 
+        , oldCompileOptions(cx->getCompileOptions())
 #endif
     {
-        /* 
+        /*
          * Note: ANONFUNFIX in newVersion is ignored for backwards
          * compatibility, must be set via JS_SetOptions. (Because of this, we
          * inherit the current ANONFUNFIX setting from the options.
@@ -1233,7 +1233,7 @@ JS_EnterCrossCompartmentCallScript(JSContext *cx, JSScript *target)
         SwitchToCompartment sc(cx, target->compartment);
         scriptObject = JS_NewGlobalObject(cx, &dummy_class);
         if (!scriptObject)
-            return NULL;        
+            return NULL;
     }
     return JS_EnterCrossCompartmentCall(cx, scriptObject);
 }
@@ -1276,7 +1276,7 @@ AutoEnterScriptCompartment::enter(JSContext *cx, JSScript *target)
         return true;
     }
     call = JS_EnterCrossCompartmentCallScript(cx, target);
-    return call != NULL;    
+    return call != NULL;
 }
 
 } /* namespace JS */
@@ -2933,7 +2933,12 @@ JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 {
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    return InstanceOf(cx, obj, Valueify(clasp), Valueify(argv));
+    if (obj->getJSClass() != clasp) {
+        if (argv)
+            ReportIncompatibleMethod(cx, Valueify(argv - 2), Valueify(clasp));
+        return false;
+    }
+    return true;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -2959,7 +2964,7 @@ JS_SetPrivate(JSContext *cx, JSObject *obj, void *data)
 JS_PUBLIC_API(void *)
 JS_GetInstancePrivate(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 {
-    if (!InstanceOf(cx, obj, Valueify(clasp), Valueify(argv)))
+    if (JS_InstanceOf(cx, obj, clasp, argv))
         return NULL;
     return obj->getPrivate();
 }
@@ -4712,7 +4717,7 @@ CompileFileHelper(JSContext *cx, JSObject *obj, JSPrincipals *principals,
     JSObject *scriptObj = js_NewScriptObject(cx, script);
     if (!scriptObj)
         js_DestroyScript(cx, script);
-    
+
     return scriptObj;
 }
 
@@ -4741,7 +4746,7 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
         if (fp != stdin)
             fclose(fp);
     } while (false);
-    
+
     LAST_FRAME_CHECKS(cx, scriptObj);
     return scriptObj;
 }
