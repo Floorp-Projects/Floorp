@@ -1526,8 +1526,7 @@ gfxFont::InitTextRun(gfxContext *aContext,
     PRBool ok = PR_FALSE;
 
     if (mHarfBuzzShaper && !aPreferPlatformShaping) {
-        if (gfxPlatform::GetPlatform()->UseHarfBuzzLevel() >=
-            gfxUnicodeProperties::ScriptShapingLevel(aRunScript)) {
+        if (gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aRunScript)) {
             ok = mHarfBuzzShaper->InitTextRun(aContext, aTextRun, aString,
                                               aRunStart, aRunLength,
                                               aRunScript);
