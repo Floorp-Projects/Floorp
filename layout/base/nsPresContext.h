@@ -1029,6 +1029,8 @@ protected:
 
   NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
 
+  void AppUnitsPerDevPixelChanged();
+
   PRBool MayHavePaintEventListener();
 
   void HandleRebuildUserFontSet() {
