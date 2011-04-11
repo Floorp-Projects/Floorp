@@ -41,6 +41,9 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == 83958-2c.html 83958-2-ref.html
 == 115921-1.html 115921-1-ref.html
 == 115921-2.html 115921-2-ref.html
+== 229367-1.html 229367-1-ref.html
+== 229367-2.html 229367-2-ref.html
+== 229367-3.html 229367-3-ref.html
 == 258928-1.html 258928-1-ref.html
 random-if(winWidget) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
 == 267459-2.html 267459-2-ref.html
@@ -69,3 +72,5 @@ fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 413928-2.html 413928-2-re
 == 588739-2.html 588739-ref.html
 == 588739-3.html 588739-ref.html
 == 612843-1.html 612843-1-ref.html
+== 613157-1.html 613157-1-ref.html
+== 613157-2.html 613157-2-ref.html
