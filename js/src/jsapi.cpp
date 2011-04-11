@@ -2932,8 +2932,13 @@ JS_PUBLIC_API(JSBool)
 JS_InstanceOf(JSContext *cx, JSObject *obj, JSClass *clasp, jsval *argv)
 {
     CHECK_REQUEST(cx);
-    assertSameCompartment(cx, obj);
-    if (obj->getJSClass() != clasp) {
+#ifdef DEBUG
+    if (argv) {
+        assertSameCompartment(cx, obj);
+        assertSameCompartment(cx, JSValueArray(argv - 2, 2));
+    }
+#endif
+    if (!obj || obj->getJSClass() != clasp) {
         if (argv)
             ReportIncompatibleMethod(cx, Valueify(argv - 2), Valueify(clasp));
         return false;
