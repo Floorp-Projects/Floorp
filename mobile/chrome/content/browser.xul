@@ -359,18 +359,18 @@
       </vbox>
     </arrowbox>
 
-    <vbox id="bookmark-container" hidden="true" class="panel-dark window-width window-height">
-      <vbox id="bookmark-dialog" class="panel-dark">
-        <hbox id="bookmark-form-title">
+    <box id="bookmark-container" class="perm-modal-block window-width window-height" hidden="true">
+      <dialog id="bookmark-dialog" flex="1">
+        <hbox id="bookmark-form-title" class="prompt-title">
           <description>&editBookmarkDialog.title;</description>
         </hbox>
-        <separator id="bookmark-form-line"/>
-        <scrollbox id="bookmark-form" align="start"/>
-        <hbox id="bookmark-form-buttons" pack="center">
-          <button label="&editBookmarkDone.label;" oncommand="BookmarkHelper.save();"/>
+        <separator id="bookmark-form-line" class="prompt-line"/>
+        <scrollbox id="bookmark-form" align="start" class="prompt-message" flex="1"/>
+        <hbox id="bookmark-form-buttons" pack="center" class="prompt-buttons">
+          <button label="&editBookmarkDone.label;" class="prompt-button" oncommand="BookmarkHelper.save();"/>
         </hbox>
-      </vbox>
-    </vbox>
+      </dialog>
+    </box>
 
     <vbox id="panel-container" class="panel-dark window-width window-height" style="-moz-stack-sizing: ignore" left="10000" hidden="true">
       <hbox id="panel-controls" class="panel-row-header" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
@@ -522,14 +522,14 @@
     </vbox>
 
 #ifdef MOZ_SERVICES_SYNC
-    <vbox id="syncsetup-container" class="window-width window-height" hidden="true">
-      <vbox id="syncsetup-dialog" class="panel-dark" flex="1">
-        <hbox class="syncsetup-title">
+    <box id="syncsetup-container" class="perm-modal-block window-width window-height" hidden="true">
+      <dialog id="syncsetup-dialog" flex="1">
+        <hbox class="prompt-title">
           <description>&sync.setup.title;</description>
         </hbox>
-        <separator class="syncsetup-line"/>
+        <separator class="prompt-line"/>
         <vbox id="syncsetup-simple" class="syncsetup-page" flex="1">
-          <scrollbox class="syncsetup-scrollbox" orient="vertical" flex="1">
+          <scrollbox class="prompt-message" orient="vertical" flex="1">
             <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.jpake;</description>
             <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openTutorial();">&sync.setup.tutorial;</description>
             <separator/>
@@ -542,37 +542,37 @@
             <description class="syncsetup-center syncsetup-link" flex="1" onclick="WeaveGlue.openManual();">&sync.fallback;</description>
             <separator flex="1"/>
           </scrollbox>
-          <hbox class="syncsetup-buttons" pack="center">
+          <hbox class="prompt-buttons" pack="center">
             <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
           </hbox>
         </vbox>
         <vbox id="syncsetup-fallback" class="syncsetup-page" flex="1" hidden="true">
-          <scrollbox class="syncsetup-scrollbox" orient="vertical" flex="1">
+          <scrollbox class="prompt-message" orient="vertical" flex="1">
             <description class="syncsetup-desc syncsetup-center" flex="1">&sync.setup.manual;</description>
             <separator/>
-            <textbox id="syncsetup-account" class="syncsetup-edit" placeholder="&sync.account;" oninput="WeaveGlue.canConnect();"/>
-            <textbox id="syncsetup-password" class="syncsetup-edit" placeholder="&sync.password;" type="password" oninput="WeaveGlue.canConnect();"/>
-            <textbox id="syncsetup-synckey" class="syncsetup-edit" placeholder="&sync.syncKey;" oninput="WeaveGlue.canConnect();"/>
+            <textbox id="syncsetup-account" class="prompt-edit" placeholder="&sync.account;" oninput="WeaveGlue.canConnect();"/>
+            <textbox id="syncsetup-password" class="prompt-edit" placeholder="&sync.password;" type="password" oninput="WeaveGlue.canConnect();"/>
+            <textbox id="syncsetup-synckey" class="prompt-edit" placeholder="&sync.syncKey;" oninput="WeaveGlue.canConnect();"/>
             <separator class="thin"/>
             <button id="syncsetup-usecustomserver" type="checkbox" class="button-checkbox" pack="start" oncommand="WeaveGlue.toggleCustomServer();">
               <image class="button-image-icon"/>
-              <description class="syncsetup-label" flex="1">&sync.customServer;</description>
+              <description class="syncsetup-label prompt-checkbox-label" flex="1">&sync.customServer;</description>
             </button>
-            <textbox id="syncsetup-customserver" placeholder="&sync.serverURL;"/>
+            <textbox id="syncsetup-customserver" class="prompt-edit" placeholder="&sync.serverURL;"/>
             <separator flex="1"/>
           </scrollbox>
-          <hbox class="syncsetup-buttons" pack="center">
+          <hbox class="prompt-buttons" pack="center">
             <button oncommand="WeaveGlue.close();">&sync.setup.cancel;</button>
             <separator/>
             <button id="syncsetup-button-connect" oncommand="WeaveGlue.close(); WeaveGlue.connect();">&sync.setup.connect;</button>
           </hbox>
         </vbox>
-      </vbox>
-    </vbox>
+      </dialog>
+    </box>
 #endif
 
     <arrowbox id="search-engines-popup" hidden="true" offset="18" flex="1">
-      <hbox id="search-engines-list" class="prompt-buttons" flex="1"/>
+      <hbox id="search-engines-list" class="action-buttons" flex="1"/>
     </arrowbox>
 
     <arrowbox id="newtab-popup" class="arrowbox-dark" hidden="true" onclick="NewTabPopup.selectTab()" align="center" start="0">
@@ -661,7 +661,7 @@
     <hbox id="menulist-container" class="window-width window-height context-block" top="0" left="0" hidden="true" flex="1">
       <vbox id="menulist-popup" class="dialog-dark">
         <label id="menulist-title" class="options-title" crop="center" flex="1"/>
-        <richlistbox id="menulist-commands" class="prompt-buttons" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>
+        <richlistbox id="menulist-commands" class="action-buttons" onclick="if (event.target != this) MenuListHelperUI.selectByIndex(this.selectedIndex);" flex="1"/>
       </vbox>
     </hbox>
 
