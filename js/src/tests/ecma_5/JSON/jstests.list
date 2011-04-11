@@ -14,8 +14,13 @@ script stringify-call-toJSON-once.js
 script stringify-dropping-elements.js
 script stringify-gap.js
 script stringify-ignore-noncallable-toJSON.js
+script stringify-missing-arguments.js
 script stringify-primitives.js
 script stringify-replacer.js
+script stringify-replacer-array-duplicated-element.js
+script stringify-replacer-array-edgecase-jsid-elements.js
+script stringify-replacer-array-hijinks.js
+script stringify-replacer-array-skipped-element.js
 script stringify-replacer-with-array-indexes.js
 script stringify-special-escapes.js
 script stringify-toJSON-arguments.js
