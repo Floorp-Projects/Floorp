@@ -12,7 +12,7 @@
     netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
     SimpleTest.waitForExplicitFinish();
 
-    const pluginHostIface = Components.interfaces.nsIPluginHost_MOZILLA_2_0_BRANCH;
+    const pluginHostIface = Components.interfaces.nsIPluginHost;
     var pluginHost = Components.classes["@mozilla.org/plugin/host;1"].
                      getService(pluginHostIface);
     const FLAG_CLEAR_ALL = pluginHostIface.FLAG_CLEAR_ALL;
