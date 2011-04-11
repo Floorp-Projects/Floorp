@@ -2543,11 +2543,13 @@ mjit::Compiler::generateMethod()
             masm.move(ImmPtr(fun), Registers::ArgReg1);
 
             if (stub == stubs::Lambda) {
-                INLINE_STUBCALL_NO_REJOIN(stub);
+                REJOIN_SITE(stub);
+                INLINE_STUBCALL(stub);
             } else {
+                REJOIN_SITE(stub);
                 jsbytecode *savedPC = PC;
                 PC = pc2;
-                INLINE_STUBCALL_NO_REJOIN(stub);
+                INLINE_STUBCALL(stub);
                 PC = savedPC;
             }
 
@@ -2730,7 +2732,10 @@ mjit::Compiler::generateMethod()
             JSFunction *fun = script->getFunction(fullAtomIndex(PC));
             prepareStubCall(Uses(frame.frameSlots()));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL_NO_REJOIN(stubs::FlatLambda);
+            {
+                REJOIN_SITE(stubs::FlatLambda);
+                INLINE_STUBCALL(stubs::FlatLambda);
+            }
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
           }
@@ -5280,17 +5285,25 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
     bool pop = (JSOp(*next) == JSOP_POP) && !a->analysis.jumpTarget(next);
     int amt = (op == JSOP_GNAMEINC || op == JSOP_INCGNAME) ? -1 : 1;
 
+    JSValueType globalType = JSVAL_TYPE_UNKNOWN;
+    if (cx->typeInferenceEnabled() && !globalObj->getType()->unknownProperties()) {
+        types::TypeSet *types = globalObj->getType()->getProperty(cx, ATOM_TO_JSID(atom), false);
+        if (!types)
+            return false;
+        globalType = types->getKnownTypeTag(cx);
+    }
+
     if (pop || (op == JSOP_INCGNAME || op == JSOP_DECGNAME)) {
         /* These cases are easy, the original value is not observed. */
 
-        jsop_getgname(index, JSVAL_TYPE_UNKNOWN);
+        jsop_getgname(index, globalType);
         // V
 
         frame.push(Int32Value(amt));
         // V 1
 
         /* Use sub since it calls ValueToNumber instead of string concat. */
-        if (!jsop_binary(JSOP_SUB, stubs::Sub, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+        if (!jsop_binary(JSOP_SUB, stubs::Sub, knownPushedType(0), pushedTypeSet(0)))
             return false;
         // N+1
 
@@ -5314,7 +5327,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
     } else {
         /* The pre-value is observed, making this more tricky. */
 
-        jsop_getgname(index, JSVAL_TYPE_UNKNOWN);
+        jsop_getgname(index, globalType);
         // V
 
         jsop_pos();
@@ -5326,7 +5339,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.push(Int32Value(-amt));
         // N N 1
 
-        if (!jsop_binary(JSOP_ADD, stubs::Add, JSVAL_TYPE_UNKNOWN, pushedTypeSet(0)))
+        if (!jsop_binary(JSOP_ADD, stubs::Add, knownPushedType(0), pushedTypeSet(0)))
             return false;
         // N N+1
 
