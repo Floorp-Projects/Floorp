@@ -80,6 +80,8 @@
 
 %define autocompleteresult_padding 0.53mozmm
 
+%define dialog_width 76.2mozmm
+
 %define appmenu_portrait_height 21.17mozmm
 %define appmenu_button_height  10.48mozmm
 %else
@@ -161,6 +163,8 @@
 %define autocomplete_item_tags_margin 32px
 
 %define autocompleteresult_padding 5px
+
+%define dialog_width 500px
 
 %define appmenu_portrait_height 200px
 %define appmenu_button_height 99px

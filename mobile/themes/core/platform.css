@@ -105,14 +105,17 @@ textbox[disabled="true"] {
 
 /* prompt dialogs ---------------------------------------------------------- */
 .context-block,
-.modal-block {
+.modal-block,
+.perm-modal-block {
   -moz-box-align: center;
   -moz-box-pack: center;
   background-color: rgba(0,0,0,.6);
+}
+
+.context-block {
   padding: @touch_normal@;
 }
 
-dialog,
 .dialog-dark,
 .panel-arrowcontent {
   background: url("chrome://browser/skin/images/popup-bg-hdpi.png") left bottom repeat-x;
@@ -122,29 +125,13 @@ dialog,
   padding: @padding_normal@ 0; /* core spacing on top/bottom */
 }
 
-dialog > .prompt-header {
-  padding: @padding_normal@;
-  font-size: @font_small@ !important;
-}
-
-dialog > .prompt-header > .prompt-title {
-  font-size: @font_normal@ !important;
-}
-
 @media (max-width: 499px) {
-  .context-block,
-  .modal-block {
+  .context-block {
     padding: @padding_xlarge@;
-  }
-
-  dialog > .prompt-header,
-  dialog > .prompt-header > .prompt-title {
-    font-size: @font_small@ !important;
   }
 }
 
 dialog > .prompt-header > .prompt-message {
-  margin-top: @margin_normal@;
   white-space: pre-wrap;
 }
 
@@ -287,6 +274,14 @@ toolbarbutton[open="true"] {
   background: none !important;
   border: none !important;
   -moz-border-image: none !important;
+  color: white;
+  -moz-box-align: center;
+  font-size: @font_small@;
+  -moz-box-align: center;
+}
+
+.prompt-checkbox-label {
+  text-align: left;
 }
 
 .button-checkbox > .button-image-icon {
@@ -560,16 +555,63 @@ arrowbox {
   border: none;
 }
 
+dialog,
 .arrowbox-dark .panel-arrowcontent,
 .panel-dark {
   color: white;
   background: rgb(94,97,102);
 }
- 
+
+dialog,
 .arrowbox-dark .panel-arrowcontent {
   border: @border_width_large@ solid white;
   border-radius: @border_radius_normal@;
   box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
+}
+
+dialog {
+  margin: @margin_xxxnormal@ !important;
+  max-width: @dialog_width@;
+}
+
+.prompt-message {
+  text-align: center;
+  -moz-box-pack: center;
+  font-size: @font_snormal@;
+  margin: @padding_normal@;
+}
+
+.prompt-title {
+  text-align: center;
+  font-size: @font_xnormal@;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  padding-top: @padding_xnormal@;
+}
+
+/* Authentication dialogs do not have a title */
+.prompt-title:empty,
+.prompt-title:empty + .prompt-line {
+  display: none;
+}
+
+.prompt-line {
+  border-bottom: @border_width_small@ solid white;
+  margin: @margin_small@ 3em 0 3em;
+  height: @padding_normal@ !important;
+}
+
+.prompt-buttons {
+  font-size: @font_snormal@;
+  background-color: lightgray;
+  display: inline-block;
+  text-align: center;
+}
+
+.prompt-edit {
+  margin: @margin_xnormal@;
+  font-size: @font_normal@;
+  text-align: start;
 }
 
 .panel-arrow[side="top"] {
