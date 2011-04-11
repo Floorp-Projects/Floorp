@@ -466,6 +466,8 @@ nsGenericHTMLElement::SetClassName(const nsAString& aClassName)
   return NS_OK;
 }
 
+NS_IMPL_STRING_ATTR(nsGenericHTMLElement, AccessKey, accesskey)
+
 static PRBool
 IsBody(nsIContent *aContent)
 {
@@ -946,6 +948,7 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aDocument) {
+    RegAccessKey();
     if (HasName()) {
       aDocument->
         AddToNameTable(this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
@@ -964,6 +967,10 @@ nsGenericHTMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 void
 nsGenericHTMLElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 {
+  if (IsInDoc()) {
+    UnregAccessKey();
+  }
+
   RemoveFromNameTable();
 
   if (GetContentEditableValue() == eTrue) {
@@ -1183,10 +1190,17 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
 {
   PRBool contentEditable = aNameSpaceID == kNameSpaceID_None &&
                            aName == nsGkAtoms::contenteditable;
+  PRBool accessKey = aName == nsGkAtoms::accesskey && 
+                     aNameSpaceID == kNameSpaceID_None;
+
   PRInt32 change;
   if (contentEditable) {
     change = GetContentEditableValue() == eTrue ? -1 : 0;
     SetMayHaveContentEditableAttr();
+  }
+
+  if (accessKey) {
+    UnregAccessKey();
   }
 
   nsresult rv = nsStyledElement::SetAttr(aNameSpaceID, aName, aPrefix, aValue,
@@ -1199,6 +1213,11 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     ChangeEditableState(change);
+  }
+
+  if (accessKey && !aValue.IsEmpty()) {
+    SetFlags(NODE_HAS_ACCESSKEY);
+    RegAccessKey();
   }
 
   return NS_OK;
@@ -1221,6 +1240,11 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     else if (aAttribute == nsGkAtoms::contenteditable) {
       contentEditable = PR_TRUE;
       contentEditableChange = GetContentEditableValue() == eTrue ? -1 : 0;
+    }
+    else if (aAttribute == nsGkAtoms::accesskey) {
+      // Have to unregister before clearing flag. See UnregAccessKey
+      UnregAccessKey();
+      UnsetFlags(NODE_HAS_ACCESSKEY);
     }
     else if (nsContentUtils::IsEventAttributeName(aAttribute,
                                                   EventNameType_HTML)) {
@@ -3227,6 +3251,38 @@ nsGenericHTMLElement::Focus()
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(this);
   return fm ? fm->SetFocus(elem, 0) : NS_OK;
+}
+
+nsresult nsGenericHTMLElement::Click()
+{
+  if (HasFlag(NODE_HANDLING_CLICK))
+    return NS_OK;
+
+  // Strong in case the event kills it
+  nsCOMPtr<nsIDocument> doc = GetCurrentDoc();
+
+  nsCOMPtr<nsIPresShell> shell = nsnull;
+  nsRefPtr<nsPresContext> context = nsnull;
+  if (doc) {
+    shell = doc->GetShell();
+    if (shell) {
+      context = shell->GetPresContext();
+    }
+  }
+
+  SetFlags(NODE_HANDLING_CLICK);
+
+  // Click() is never called from native code, but it may be
+  // called from chrome JS. Mark this event trusted if Click()
+  // is called from chrome code.
+  nsMouseEvent event(nsContentUtils::IsCallerChrome(),
+                     NS_MOUSE_CLICK, nsnull, nsMouseEvent::eReal);
+  event.inputSource = nsIDOMNSMouseEvent::MOZ_SOURCE_UNKNOWN;
+
+  nsEventDispatcher::Dispatch(this, context, &event);
+
+  UnsetFlags(NODE_HANDLING_CLICK);
+  return NS_OK;
 }
 
 PRBool
