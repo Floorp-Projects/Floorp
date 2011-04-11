@@ -2253,7 +2253,9 @@ nsresult
 nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal)
 {
   NS_ENSURE_ARG(aNewInner);
+#ifdef DEBUG
   JSObject *newInnerJSObject = (JSObject *)aNewInner->GetScriptGlobal(JAVASCRIPT);
+#endif
   JSObject *outerGlobal = (JSObject *)aOuterGlobal;
 
   // Now that we're connecting the outer global to the inner one,
