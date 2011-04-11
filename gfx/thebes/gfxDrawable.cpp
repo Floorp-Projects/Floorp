@@ -172,6 +172,9 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
         PreparePatternForUntiledDrawing(pattern, deviceSpaceToImageSpace,
                                         surfaceType, currentTarget, filter);
     }
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+    pattern->SetFilter(gfxPattern::FILTER_FAST); 
+#endif
     pattern->SetMatrix(gfxMatrix(aTransform).Multiply(mTransform));
     aContext->NewPath();
     aContext->SetPattern(pattern);
