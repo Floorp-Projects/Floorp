@@ -21,6 +21,7 @@
  * Contributor(s):
  *  David Dahl <ddahl@mozilla.com>
  *  Rob Campbell <rcampbell@mozilla.com>
+ *  Mihai Sucan <mihai.sucan@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -73,15 +74,39 @@ function testConsoleData(aMessageObject) {
   is(aMessageObject.level, gLevel, "expected level received");
   ok(aMessageObject.arguments, "we have arguments");
   is(aMessageObject.arguments.length, gArgs.length, "arguments.length matches");
-  gArgs.forEach(function (a, i) {
-    is(aMessageObject.arguments[i], a, "correct arg " + i);
-  });
 
-  if (aMessageObject.level == "error") {
+  if (gLevel == "trace") {
+    is(aMessageObject.arguments.toSource(), gArgs.toSource(),
+       "stack trace is correct");
+
     // Test finished
     ConsoleObserver.destroy();
     finish();
   }
+  else {
+    gArgs.forEach(function (a, i) {
+      is(aMessageObject.arguments[i], a, "correct arg " + i);
+    });
+  }
+
+  if (aMessageObject.level == "error") {
+    // Now test console.trace()
+    startTraceTest();
+  }
+}
+
+function startTraceTest() {
+  gLevel = "trace";
+  gArgs = [
+    {filename: TEST_URI, lineNumber: 6, functionName: null, language: 2},
+    {filename: TEST_URI, lineNumber: 11, functionName: "foobar585956b", language: 2},
+    {filename: TEST_URI, lineNumber: 15, functionName: "foobar585956a", language: 2},
+    {filename: TEST_URI, lineNumber: 1, functionName: "onclick", language: 2}
+  ];
+
+  let button = gWindow.document.getElementById("test-trace");
+  ok(button, "found #test-trace button");
+  EventUtils.synthesizeMouse(button, 2, 2, {}, gWindow);
 }
 
 var gLevel, gArgs;
@@ -114,6 +139,7 @@ function consoleAPISanityTest() {
   ok(win.console.info, "console.info is here");
   ok(win.console.warn, "console.warn is here");
   ok(win.console.error, "console.error is here");
+  ok(win.console.trace, "console.trace is here");
 }
 
 var ConsoleObserver = {

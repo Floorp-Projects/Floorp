@@ -131,6 +131,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_632347_iterators_generators.js \
 	browser_webconsole_bug_642108_refForOutputNode.js \
 	browser_webconsole_bug_642108_pruneTest.js \
+	browser_webconsole_bug_585956_console_trace.js \
 	head.js \
 	$(NULL)
 
@@ -199,6 +200,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-630733-response-redirect-headers.sjs \
 	test-bug-621644-jsterm-dollar.html \
 	test-bug-632347-iterators-generators.html \
+	test-bug-585956-console-trace.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
