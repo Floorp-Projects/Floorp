@@ -224,10 +224,7 @@
 #define NS_TIME_FUNCTION_WITH_DOCURL do{} while(0)
 #endif
 
-static const PRUint32 ANCHOR_SCROLL_FLAGS =
-    nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
-    nsIPresShell::SCROLL_NO_PARENT_FRAMES |
-    nsIPresShell::SCROLL_ALLOW_SMOOTH;
+#define ANCHOR_SCROLL_FLAGS (SCROLL_OVERFLOW_HIDDEN | SCROLL_NO_PARENT_FRAMES)
 
 #include "nsContentCID.h"
 static NS_DEFINE_IID(kRangeCID,     NS_RANGE_CID);
@@ -1196,9 +1193,8 @@ protected:
   // Information needed to properly handle scrolling content into view if the
   // pre-scroll reflow flush can be interrupted.  mContentToScrollTo is
   // non-null between the initial scroll attempt and the first time we finish
-  // processing all our dirty roots.  mContentScrollVPosition,
-  // mContentScrollHPosition and mContentToScrollToFlags are only used when
-  // it's non-null.
+  // processing all our dirty roots.  mContentScrollVPosition and
+  // mContentScrollHPosition are only used when it's non-null.
   nsCOMPtr<nsIContent> mContentToScrollTo;
   PRIntn mContentScrollVPosition;
   PRIntn mContentScrollHPosition;
@@ -4152,9 +4148,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aScrollFrame,
     }
   }
 
-  aScrollFrame->ScrollTo(scrollPt,
-      (aFlags & nsIPresShell::SCROLL_ALLOW_SMOOTH) ? nsIScrollableFrame::SMOOTH :
-                                                     nsIScrollableFrame::INSTANT);
+  aScrollFrame->ScrollTo(scrollPt, nsIScrollableFrame::INSTANT);
 }
 
 nsresult
