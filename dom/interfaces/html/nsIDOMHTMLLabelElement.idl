@@ -50,12 +50,10 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(1a36591e-2538-4685-bb23-cb80300539db)]
+[scriptable, uuid(0b4f3766-e6e8-4578-9d4e-f1fb4861c956)]
 interface nsIDOMHTMLLabelElement : nsIDOMHTMLElement
 {
   readonly attribute nsIDOMHTMLFormElement form;
            attribute DOMString             htmlFor;
   readonly attribute nsIDOMHTMLElement     control;
-
-           attribute DOMString             accessKey;
 };

@@ -50,7 +50,7 @@
  * http://www.whatwg.org/specs/web-apps/current-work/
  */
 
-[scriptable, uuid(a47a2815-3115-46fb-915a-1ce3eea13a1a)]
+[scriptable, uuid(98694f29-5a2a-4da3-8a0f-3351bafe1fea)]
 interface nsIDOMHTMLOptGroupElement : nsIDOMHTMLElement
 {
            attribute boolean          disabled;
