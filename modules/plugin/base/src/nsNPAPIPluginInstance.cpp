@@ -50,7 +50,6 @@
 #include "nsPluginLogging.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsContentUtils.h"
-#include "nsIContentUtils.h"
 
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
@@ -1362,17 +1361,8 @@ NS_IMETHODIMP
 CarbonEventModelFailureEvent::Run()
 {
   nsString type = NS_LITERAL_STRING("npapi-carbon-event-model-failure");
-#ifdef MOZ_ENABLE_LIBXUL
   nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
                                        type, PR_TRUE, PR_TRUE);
-#else
-  nsCOMPtr<nsIContentUtils_MOZILLA_2_0_BRANCH> cu =
-    do_GetService("@mozilla.org/content/contentutils-moz2.0;1");
-  if (cu) {
-    cu->DispatchTrustedEvent(mContent->GetDocument(), mContent,
-                             type, PR_TRUE, PR_TRUE);
-  }
-#endif
   return NS_OK;
 }
 
