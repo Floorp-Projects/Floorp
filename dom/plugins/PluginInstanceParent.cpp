@@ -597,16 +597,6 @@ PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
 }
 
 nsresult
-PluginInstanceParent::GetSurface(gfxASurface** aSurface)
-{
-    if (mFrontSurface) {
-      NS_ADDREF(*aSurface = mFrontSurface);
-      return NS_OK;
-    }
-    return NS_ERROR_NOT_AVAILABLE;
-}
-
-nsresult
 PluginInstanceParent::GetImage(ImageContainer* aContainer, Image** aImage)
 {
 #ifdef XP_MACOSX
