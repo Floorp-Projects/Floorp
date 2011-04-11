@@ -884,15 +884,14 @@ KineticController.prototype = {
 
         // Calculate new position using x(t) formula.
         let x = v0Bin.set(v0).scale(t).add(aBin.set(a).scale(0.5 * t * t));
-        let dx = x.x - lastx.x;
-        let dy = x.y - lastx.y;
-        lastx.set(x);
+        let dx = Math.round(x.x - lastx.x);
+        let dy = Math.round(x.y - lastx.y);
 
         // Test to see if movement is finished for each component. As seen in graph, we want the
         // final position to be at tf.
         if (t >= -v0.x / a.x) {
           // Plug in t=-v0/a into x(t) to get final position.
-          dx = -v0.x * v0.x / 2 / a.x - lastx.x;
+          dx = Math.round(-v0.x * v0.x / 2 / a.x - lastx.x);
           // Reset components. Next frame: a's component will be 0 and t >= NaN will be false.
           lastx.x = 0;
           v0.x = 0;
@@ -900,18 +899,26 @@ KineticController.prototype = {
         }
         // Symmetric to above case.
         if (t >= -v0.y / a.y) {
-          dy = -v0.y * v0.y / 2 / a.y - lastx.y;
+          dy = Math.round(-v0.y * v0.y / 2 / a.y - lastx.y);
           lastx.y = 0;
           v0.y = 0;
           a.y = 0;
         }
 
-        let panned = false;
-        try { panned = self._panBy(Math.round(-dx), Math.round(-dy), true); } catch (e) {}
-        if (!panned)
+        if (v0.x == 0 && v0.y == 0) {
           self.end();
-        else
-          mozRequestAnimationFrame(this);
+        } else {
+          let panStop = false;
+          if (dx != 0 || dy != 0) {
+            try { panStop = !self._panBy(-dx, -dy, true); } catch (e) {}
+            lastx.add(dx, dy);
+          }
+
+          if (panStop)
+            self.end();
+          else
+            mozRequestAnimationFrame(this);
+        }
       }
     };
 
