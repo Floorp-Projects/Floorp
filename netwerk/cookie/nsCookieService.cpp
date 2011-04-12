@@ -1550,7 +1550,11 @@ nsCookieService::SetCookieStringInternal(nsIURI          *aHostURI,
   // process each cookie in the header
   nsDependentCString cookieHeader(aCookieHeader);
   while (SetCookieInternal(aHostURI, baseDomain, requireHostMatch,
-                           cookieStatus, cookieHeader, serverTime, aFromHttp));
+                           cookieStatus, cookieHeader, serverTime, aFromHttp)) {
+    // document.cookie can only set one cookie at a time
+    if (!aFromHttp)
+      break;
+  }
 }
 
 // notify observers that a cookie was rejected due to the users' prefs.

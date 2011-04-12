@@ -517,6 +517,12 @@ nsDummyJavaPluginOwner::GetWindow(NPWindow *&aWindow)
 }
 
 NS_IMETHODIMP
+nsDummyJavaPluginOwner::SetWindow()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsDummyJavaPluginOwner::GetMode(PRInt32 *aMode)
 {
   // This is wrong, but there's no better alternative.

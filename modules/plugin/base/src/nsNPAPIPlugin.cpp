@@ -619,13 +619,14 @@ MakeNewNPAPIStreamInternal(NPP npp, const char *relativeURL, const char *target,
   switch (type) {
   case eNPPStreamTypeInternal_Get:
     {
-      if (NS_FAILED(pluginHost->GetURL(inst, relativeURL, target, listener)))
+      if (NS_FAILED(pluginHost->GetURL(inst, relativeURL, target, listener,
+                                       NULL, NULL, false)))
         return NPERR_GENERIC_ERROR;
       break;
     }
   case eNPPStreamTypeInternal_Post:
     {
-      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf, file, target, listener)))
+      if (NS_FAILED(pluginHost->PostURL(inst, relativeURL, len, buf, file, target, listener, NULL, NULL, false, 0, NULL)))
         return NPERR_GENERIC_ERROR;
       break;
     }

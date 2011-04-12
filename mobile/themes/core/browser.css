@@ -982,43 +982,8 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 }
 
 /* bookmark editor   ------------------------------------------------------- */
-#bookmark-container {
-  -moz-box-align: center;
-  -moz-box-pack: center;
-  background-color: rgba(0,0,0,.6);
-  padding: 0;
-}
-
-#bookmark-dialog {
-  margin: @margin_xxxnormal@ !important;
-  border: @border_width_small@ solid white;
-  border-radius: @border_radius_normal@;
-  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
-}
-
-#bookmark-form {
-  padding: @padding_xxxnormal@;
-}
-
-#bookmark-form-title {
-  font-size: @font_xnormal@;
-  padding-top: @padding_large@;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-}
-
-#bookmark-form-line {
-  border-bottom: @border_width_small@ solid white;
-  margin: @margin_small@ 3em 0 3em;
-  height: @padding_normal@ !important;
-}
-
 #bookmark-form .bookmark-controls {
   display: none;
-}
-
-#bookmark-form-buttons {
-  background-color: lightgray;
 }
 
 /* Identity popup   -------------------------------------------------------- */
@@ -1082,7 +1047,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
 }
 
 /* Page Actions, Prompt, and Context Menu popups --------------------------- */
-.prompt-buttons,
+.action-buttons,
 #context-commands,
 #pageactions-container {
   background: transparent;
@@ -1092,7 +1057,7 @@ documenttab[reload="true"] > stack > .documenttab-reload {
   display: inline-block;
 }
 
-.prompt-button,
+.action-button,
 .context-command,
 pageaction {
   -moz-border-top-colors: white;
@@ -1112,24 +1077,24 @@ pageaction {
   width: 100%;
 }
 
-.prompt-button,
+.action-button,
 .context-command {
   -moz-box-align: center;
 }
 
-.prompt-button[disabled="true"],
+.action-button[disabled="true"],
 .context-command[disabled="true"] {
   pointer-events: none;
   color: #aaa !important;
 }
 
-.prompt-button[selected="true"],
+.action-button[selected="true"],
 .context-command[selected="true"] {
   background: transparent;
 }
 
 /* Override button styles */
-.prompt-button {
+.action-button {
   margin: 0;
   -moz-border-image: none !important;
   border-radius: 0;
@@ -1137,27 +1102,27 @@ pageaction {
   background: transparent;
 }
 
-.prompt-button > .button-box {
+.action-button > .button-box {
   padding: 0 @padding_small@ @padding_tiny@ @padding_xsmall@ !important;
 }
 
-.prompt-button > .button-box > .button-icon {
+.action-button > .button-box > .button-icon {
   -moz-margin-end: @margin_normal@;
 }
 
 @media (min-width: 500px) {
-  .prompt-button,
+  .action-button,
   pageaction {
     width: 50%;
   }
 
-  .prompt-button:last-child:nth-child(odd),
+  .action-button:last-child:nth-child(odd),
   pageaction.odd-last-child {
     width: 100%;
   }
 }
 
-.prompt-button:not([disabled]):hover:active,
+.action-button:not([disabled]):hover:active,
 .context-command:not([disabled]):hover:active,
 pageaction:not([disabled]):hover:active {
   background: url("chrome://browser/skin/images/popup-selected-item-hdpi.png") repeat-x !important;
@@ -1177,7 +1142,7 @@ pageaction:not([image]) > hbox >.pageaction-image {
   width: 0;
 }
 
-.prompt-button,
+.action-button,
 .context-command,
 .pageaction-title {
   font-size: @font_normal@ !important;
@@ -1203,12 +1168,12 @@ pageaction:not([image]) > hbox >.pageaction-image {
   visibility: collapse;
 }
 
-#search-engines-list > .prompt-button > .button-box > .button-text {
+#search-engines-list > .action-button > .button-box > .button-text {
   text-align: start;
   -moz-box-flex: 1; /* Needed for the crop attribute to have an effect */
 }
 
-#search-engines-list > .prompt-button > .button-box > .button-icon {
+#search-engines-list > .action-button > .button-box > .button-icon {
   width: 32px;
   height: 32px;
 }
@@ -1404,45 +1369,8 @@ richlistitem.appmenu-downloads-button > image,
 }
 
 /* Sync setup ------------------------------------------------------------- */
-#syncsetup-container {
-  background-color: rgba(0,0,0,.6);
-  padding: 0;
-}
-
-#syncsetup-dialog {
-  margin: @margin_xxxnormal@ !important;
-  border: @border_width_large@ solid white;
-  border-radius: @border_radius_normal@;
-  box-shadow: black 0 @shadow_width_small@ @shadow_width_small@;
-}
-
-.syncsetup-scrollbox {
-  padding: @padding_xxxnormal@;
-}
-
 .syncsetup-center {
   text-align: center;
-}
-
-.syncsetup-title {
-  font-size: @font_xnormal@;
-  padding-top: @padding_large@;
-  -moz-box-align: center;
-  -moz-box-pack: center;
-}
-
-.syncsetup-line {
-  border-bottom: @border_width_small@ solid white;
-  margin: @margin_small@ 3em 0 3em;
-  height: @padding_normal@ !important;
-}
-
-.syncsetup-desc  {
-  font-size: @font_snormal@;
-}
-
-.syncsetup-buttons {
-  background-color: lightgray;
 }
 
 .syncsetup-code {
@@ -1463,10 +1391,6 @@ richlistitem.appmenu-downloads-button > image,
 
 .syncsetup-label {
   color: #fff;
-}
-
-.syncsetup-edit {
-  margin-bottom: @margin_xnormal@;
 }
 
 #syncsetup-customserver {
