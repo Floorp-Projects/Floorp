@@ -220,9 +220,9 @@ FINISH REMOVEDIR a/b/9/94/
 directory no longer exists; skipping
 FINISH REMOVEDIR a/b/9/93/
 FINISH REMOVEDIR a/b/9/92/
-non-fatal error removing directory: a/b/9/92/, rv: 0
+a/b/9/92/, rv: 0
 FINISH REMOVEDIR a/b/9/91/
-non-fatal error removing directory: a/b/9/91/, rv: 0
+a/b/9/91/, rv: 0
 FINISH REMOVEDIR a/b/9/90/
 FINISH REMOVEDIR a/b/9/90/
 directory no longer exists; skipping
@@ -248,9 +248,9 @@ FINISH REMOVEDIR a/b/8/84/
 directory no longer exists; skipping
 FINISH REMOVEDIR a/b/8/83/
 FINISH REMOVEDIR a/b/8/82/
-non-fatal error removing directory: a/b/8/82/, rv: 0
+a/b/8/82/, rv: 0
 FINISH REMOVEDIR a/b/8/81/
-non-fatal error removing directory: a/b/8/81/, rv: 0
+a/b/8/81/, rv: 0
 FINISH REMOVEDIR a/b/8/80/
 FINISH REMOVEDIR a/b/8/80/
 directory no longer exists; skipping
