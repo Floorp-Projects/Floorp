@@ -41,7 +41,7 @@ function test() {
   waitForExplicitFinish();
   
   let uniqueName = "bug 465215";
-  let uniqueValue1 = "as good as unique: " + Math.floor(Date.now());
+  let uniqueValue1 = "as good as unique: " + Date.now();
   let uniqueValue2 = "as good as unique: " + Math.random();
   
   // set a unique value on a new, blank tab

@@ -42,7 +42,7 @@ function test() {
   waitForExplicitFinish();
 
   let uniqueName = "bug 448741";
-  let uniqueValue = "as good as unique: " + Math.floor(Date.now());
+  let uniqueValue = "as good as unique: " + Date.now();
 
   // set a unique value on a new, blank tab
   var tab = gBrowser.addTab();
