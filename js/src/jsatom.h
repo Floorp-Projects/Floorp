@@ -422,8 +422,6 @@ struct JSAtomState
     JSAtom              *keysAtom;
     JSAtom              *iterateAtom;
 
-    JSAtom              *WeakMapAtom;
-
     /* Less frequently used atoms, pinned lazily by JS_ResolveStandardClass. */
     struct {
         JSAtom          *XMLListAtom;
