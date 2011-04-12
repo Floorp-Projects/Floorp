@@ -32,3 +32,31 @@ function bezier(x1, y1, x2, y2) {
         return y_for_t(t_for_x(x));
     }
 }
+
+function step_end(nsteps) {
+    return function step_end_closure(x) {
+        return Math.floor(x * nsteps) / nsteps;
+    }
+}
+
+function step_start(nsteps) {
+    var stepend = step_end(nsteps);
+    return function step_start_closure(x) {
+        return 1.0 - stepend(1.0 - x);
+    }
+}
+
+var gTF = {
+  "ease": bezier(0.25, 0.1, 0.25, 1),
+  "linear": function(x) { return x; },
+  "ease_in": bezier(0.42, 0, 1, 1),
+  "ease_out": bezier(0, 0, 0.58, 1),
+  "ease_in_out": bezier(0.42, 0, 0.58, 1),
+  "step_start": step_start(1),
+  "step_end": step_end(1),
+};
+
+function is_approx(float1, float2, error, desc) {
+  ok(Math.abs(float1 - float2) < error,
+     desc + ": " + float1 + " and " + float2 + " should be within " + error);
+}
