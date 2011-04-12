@@ -247,7 +247,7 @@ function run_test() {
   setupUpdaterTest(MAR_COMPLETE_FILE);
 
   // Launch the callback helper application so it is in use during the update
-  let callbackApp = getApplyDirFile("a/b/" + CALLBACK_BIN_FILE);
+  let callbackApp = getApplyDirFile("a/b/" + gCallbackBinFile);
   callbackApp.permissions = PERMS_DIRECTORY;
   let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "20"];
   let callbackAppProcess = AUS_Cc["@mozilla.org/process/util;1"].
