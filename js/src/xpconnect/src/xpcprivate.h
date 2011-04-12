@@ -139,16 +139,6 @@
 #ifdef XPC_IDISPATCH_SUPPORT
 // This goop was added because of EXCEPINFO in ThrowCOMError
 // This include is here, because it needs to occur before the undefines below
-#ifdef WINCE
-/* atlbase.h on WINCE has a bug, in that it tries to use
- * GetProcAddress with a wide string, when that is explicitly not
- * supported.  So we use C++ to overload that here, and implement
- * something that works.
- */
-#include <windows.h>
-static FARPROC GetProcAddressA(HMODULE hMod, wchar_t *procName);
-#endif /* WINCE */
-
 #include <atlbase.h>
 #include "oaidl.h"
 #endif
@@ -4567,27 +4557,6 @@ ParticipatesInCycleCollection(JSContext *cx, js::gc::Cell *cell)
 }
 
 #ifdef XPC_IDISPATCH_SUPPORT
-
-#ifdef WINCE
-/* defined static near the top here */
-FARPROC GetProcAddressA(HMODULE hMod, wchar_t *procName) {
-  FARPROC ret = NULL;
-  int len = wcslen(procName);
-  char *s = new char[len + 1];
-
-  for (int i = 0; i < len; i++) {
-    s[i] = (char) procName[i];
-  }
-  s[len-1] = 0;
-
-  ret = ::GetProcAddress(hMod, s);
-  delete [] s;
-
-  return ret;
-}
-#endif /* WINCE */
-
-
 // IDispatch specific classes
 #include "XPCDispPrivate.h"
 #endif

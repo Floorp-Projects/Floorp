@@ -120,6 +120,13 @@ class HashTable : private AllocPolicy
         Ptr(Entry &entry) : entry(&entry) {}
 
       public:
+        /* Leaves Ptr uninitialized. */
+        Ptr() {
+#ifdef DEBUG
+            entry = (Entry *)0xbad;
+#endif
+        }
+
         bool found() const                    { return entry->isLive(); }
         operator ConvertibleToBool() const    { return found() ? &Ptr::nonNull : 0; }
         bool operator==(const Ptr &rhs) const { JS_ASSERT(found() && rhs.found()); return entry == rhs.entry; }
@@ -142,6 +149,9 @@ class HashTable : private AllocPolicy
 #else
         AddPtr(Entry &entry, HashNumber hn) : Ptr(entry), keyHash(hn) {}
 #endif
+      public:
+        /* Leaves AddPtr uninitialized. */
+        AddPtr() {}
     };
 
     /*
@@ -571,6 +581,23 @@ class HashTable : private AllocPolicy
 #endif
     }
 
+    void finish()
+    {
+        JS_ASSERT(!entered);
+
+        if (!table)
+            return;
+        
+        destroyTable(*this, table, tableCapacity);
+        table = NULL;
+        gen++;
+        entryCount = 0;
+        removedCount = 0;
+#ifdef DEBUG
+        mutationCount++;
+#endif
+    }
+
     Range all() const {
         return Range(table, table + tableCapacity);
     }
@@ -738,23 +765,35 @@ struct DefaultHasher
     }
 };
 
-/* Specialized hashing policy for pointer types. */
-template <class T>
-struct DefaultHasher<T *>
+/*
+ * Pointer hashing policy that strips the lowest zeroBits when calculating the
+ * hash to improve key distribution.
+ */
+template <typename Key, size_t zeroBits>
+struct PointerHasher
 {
-    typedef T *Lookup;
-    static HashNumber hash(T *l) {
-        /*
-         * Strip often-0 lower bits for better distribution after multiplying
-         * by the sGoldenRatio.
-         */
-        return HashNumber(reinterpret_cast<size_t>(l) >>
-                          tl::FloorLog2<sizeof(void *)>::result);
+    typedef Key Lookup;
+    static HashNumber hash(const Lookup &l) {
+        size_t word = reinterpret_cast<size_t>(l) >> zeroBits;
+        JS_STATIC_ASSERT(sizeof(HashNumber) == 4);
+#if JS_BYTES_PER_WORD == 4
+        return HashNumber(word);
+#else
+        JS_STATIC_ASSERT(sizeof word == 8);
+        return HashNumber((word >> 32) ^ word);
+#endif
     }
-    static bool match(T *k, T *l) {
+    static bool match(const Key &k, const Lookup &l) {
         return k == l;
     }
 };
+
+/*
+ * Specialized hashing policy for pointer types. It assumes that the type is
+ * at least word-aligned. For types with smaller size use PointerHasher.
+ */
+template <class T>
+struct DefaultHasher<T *>: PointerHasher<T *, tl::FloorLog2<sizeof(void *)>::result> { };
 
 /*
  * JS-friendly, STL-like container providing a hash-based map from keys to
@@ -929,10 +968,19 @@ class HashMap
      */
     typedef typename Impl::Enum Enum;
 
-    /* Remove all entries. */
+    /*
+     * Remove all entries. This does not shrink the table. For that consider
+     * using the finish() method.
+     */
     void clear()                                      { impl.clear(); }
 
-    /* Does the table contain any entries? */
+    /*
+     * Remove all the entries and release all internal buffers. The map must
+     * be initialized again before any use.
+     */
+    void finish()                                     { impl.finish(); }
+
+   /* Does the table contain any entries? */
     bool empty() const                                { return impl.empty(); }
 
     /*
@@ -1118,8 +1166,17 @@ class HashSet
      */
     typedef typename Impl::Enum Enum;
 
-    /* Remove all entries. */
+    /*
+     * Remove all entries. This does not shrink the table. For that consider
+     * using the finish() method.
+     */
     void clear()                                      { impl.clear(); }
+
+    /*
+     * Remove all the entries and release all internal buffers. The set must
+     * be initialized again before any use.
+     */
+    void finish()                                     { impl.finish(); }
 
     /* Does the table contain any entries? */
     bool empty() const                                { return impl.empty(); }

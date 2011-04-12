@@ -3309,6 +3309,12 @@ JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 JS_PUBLIC_API(JSBool)
 JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
 
+JS_PUBLIC_API(JSBool)
+JS_ParseJSON(JSContext *cx, const jschar *chars, uint32 len, jsval *vp);
+
+JS_PUBLIC_API(JSBool)
+JS_ParseJSONWithReviver(JSContext *cx, const jschar *chars, uint32 len, jsval reviver, jsval *vp);
+
 /************************************************************************/
 
 /* API for the HTML5 internal structured cloning algorithm. */
