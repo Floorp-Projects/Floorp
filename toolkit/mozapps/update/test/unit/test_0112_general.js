@@ -98,7 +98,7 @@ const TEST_FILES = [
   originalFile     : "data/complete.png",
   compareFile      : "data/complete.png",
   originalPerms    : 0666,
-  comparePerms     : null
+  comparePerms     : 0666
 }, {
   description      : "Not added for failed update (add-if)",
   fileName         : "extensions1text0",
@@ -137,7 +137,7 @@ const TEST_FILES = [
   compareContents  : "ShouldNotBeReplaced\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : null,
+  originalPerms    : 0644,
   comparePerms     : 0644
 }, {
   description      : "Not patched for failed update (patch-if)",
@@ -147,7 +147,7 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/complete.png",
   compareFile      : "data/complete.png",
-  originalPerms    : null,
+  originalPerms    : 0644,
   comparePerms     : 0644
 }, {
   description      : "Not patched for failed update (patch-if)",
@@ -157,7 +157,7 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/complete.png",
   compareFile      : "data/complete.png",
-  originalPerms    : null,
+  originalPerms    : 0644,
   comparePerms     : 0644
 }, {
   description      : "Not patched for failed update (patch)",
@@ -168,7 +168,7 @@ const TEST_FILES = [
   originalFile     : "data/complete.png",
   compareFile      : "data/complete.png",
   originalPerms    : 0755,
-  comparePerms     : null
+  comparePerms     : 0755
 }, {
   description      : "Not patched for failed update (patch) and causes " +
                      "LoadSourceFile failed",
@@ -179,7 +179,7 @@ const TEST_FILES = [
   originalFile     : "data/partial.png",
   compareFile      : "data/partial.png",
   originalPerms    : 0755,
-  comparePerms     : null
+  comparePerms     : 0755
 }, {
   description      : "Not added for failed update (add)",
   fileName         : "00text0",
