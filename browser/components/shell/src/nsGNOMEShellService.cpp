@@ -120,6 +120,9 @@ nsGNOMEShellService::Init()
   // the locale encoding.  If it's not set, they use UTF-8.
   mUseLocaleFilenames = PR_GetEnv("G_BROKEN_FILENAMES") != nsnull;
 
+  if (GetAppPathFromLauncher())
+    return NS_OK;
+
   nsCOMPtr<nsIProperties> dirSvc
     (do_GetService("@mozilla.org/file/directory_service;1"));
   NS_ENSURE_TRUE(dirSvc, NS_ERROR_NOT_AVAILABLE);
@@ -136,6 +139,34 @@ nsGNOMEShellService::Init()
 }
 
 NS_IMPL_ISUPPORTS1(nsGNOMEShellService, nsIShellService)
+
+PRBool
+nsGNOMEShellService::GetAppPathFromLauncher()
+{
+  gchar *tmp;
+
+  const char *launcher = PR_GetEnv("MOZ_APP_LAUNCHER");
+  if (!launcher)
+    return PR_FALSE;
+
+  if (g_path_is_absolute(launcher)) {
+    mAppPath = launcher;
+    tmp = g_path_get_basename(launcher);
+    gchar *fullpath = g_find_program_in_path(tmp);
+    if (fullpath && mAppPath.Equals(fullpath))
+      mAppIsInPath = PR_TRUE;
+    g_free(fullpath);
+  } else {
+    tmp = g_find_program_in_path(launcher);
+    if (!tmp)
+      return PR_FALSE;
+    mAppPath = tmp;
+    mAppIsInPath = PR_TRUE;
+  }
+
+  g_free(tmp);
+  return PR_TRUE;
+}
 
 PRBool
 nsGNOMEShellService::KeyMatchesAppName(const char *aKeyValue) const
@@ -215,8 +246,18 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
   if (gconf) {
-    nsCAutoString appKeyValue(mAppPath);
-    appKeyValue.Append(" \"%s\"");
+    nsCAutoString appKeyValue;
+    if(mAppIsInPath) {
+      // mAppPath is in the users path, so use only the basename as the launcher
+      gchar *tmp = g_path_get_basename(mAppPath.get());
+      appKeyValue = tmp;
+      g_free(tmp);
+    } else {
+      appKeyValue = mAppPath;
+    }
+
+    appKeyValue.AppendLiteral(" %s");
+
     for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appProtocols); ++i) {
       if (appProtocols[i].essential || aClaimAllTypes) {
         gconf->SetAppForProtocol(nsDependentCString(appProtocols[i].name),
