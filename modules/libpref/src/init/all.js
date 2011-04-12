@@ -1868,16 +1868,16 @@ pref("font.name-list.monospace.el", "Lucida Grande");
 pref("font.name-list.cursive.el", "Lucida Grande");
 pref("font.name-list.fantasy.el", "Lucida Grande");
 
-pref("font.name.serif.he", "Raanana");
-pref("font.name.sans-serif.he", "Arial Hebrew");
-pref("font.name.monospace.he", "Arial Hebrew");
-pref("font.name.cursive.he", "Corsiva Hebrew");
-pref("font.name.fantasy.he", "Corsiva Hebrew");
-pref("font.name-list.serif.he", "Raanana");
-pref("font.name-list.sans-serif.he", "Arial Hebrew");
-pref("font.name-list.monospace.he", "Arial Hebrew");
-pref("font.name-list.cursive.he", "Corsiva Hebrew");
-pref("font.name-list.fantasy.he", "Corsiva Hebrew");
+pref("font.name.serif.he", "Times New Roman");
+pref("font.name.sans-serif.he", "Arial");
+pref("font.name.monospace.he", "Courier New");
+pref("font.name.cursive.he", "Times New Roman");
+pref("font.name.fantasy.he", "Times New Roman");
+pref("font.name-list.serif.he", "Times New Roman");
+pref("font.name-list.sans-serif.he", "Arial");
+pref("font.name-list.monospace.he", "Courier New");
+pref("font.name-list.cursive.he", "Times New Roman");
+pref("font.name-list.fantasy.he", "Times New Roman");
 
 pref("font.name.serif.ja", "Hiragino Mincho Pro"); 
 pref("font.name.sans-serif.ja", "Hiragino Kaku Gothic Pro"); 
