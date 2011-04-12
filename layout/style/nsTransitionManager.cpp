@@ -188,9 +188,6 @@ ElementTransitions::EnsureStyleRuleFor(TimeStamp aRefreshTime)
       }
 
       nsStyleAnimation::Value *val = mStyleRule->AddEmptyValue(pt.mProperty);
-      if (!val) {
-        continue;
-      }
 
       double valuePortion = pt.ValuePortionFor(aRefreshTime);
 #ifdef DEBUG
