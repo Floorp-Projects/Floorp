@@ -82,13 +82,11 @@ struct SelectionState {
 
 class RestoreSelectionState : public nsRunnable {
 public:
-  RestoreSelectionState(nsTextEditorState *aState, nsTextControlFrame *aFrame,
-                        PRInt32 aStart, PRInt32 aEnd)
+  RestoreSelectionState(nsTextControlFrame *aFrame, PRInt32 aStart, PRInt32 aEnd)
     : mFrame(aFrame),
       mWeakFrame(aFrame),
       mStart(aStart),
-      mEnd(aEnd),
-      mTextEditorState(aState)
+      mEnd(aEnd)
   {
   }
 
@@ -98,7 +96,6 @@ public:
       // need to block script to avoid nested PrepareEditor calls (bug 642800).
       nsAutoScriptBlocker scriptBlocker;
       mFrame->SetSelectionRange(mStart, mEnd);
-      mTextEditorState->HideSelectionIfBlurred();
     }
     return NS_OK;
   }
@@ -108,7 +105,6 @@ private:
   nsWeakFrame mWeakFrame;
   PRInt32 mStart;
   PRInt32 mEnd;
-  nsTextEditorState* mTextEditorState;
 };
 
 /*static*/
@@ -1389,7 +1385,7 @@ nsTextEditorState::PrepareEditor(const nsAString *aValue)
 
   // Restore our selection after being bound to a new frame
   if (mSelState) {
-    nsContentUtils::AddScriptRunner(new RestoreSelectionState(this, mBoundFrame, mSelState->mStart, mSelState->mEnd));
+    nsContentUtils::AddScriptRunner(new RestoreSelectionState(mBoundFrame, mSelState->mStart, mSelState->mEnd));
     mSelState = nsnull;
   }
 
@@ -2013,16 +2009,6 @@ nsTextEditorState::SetPlaceholderClass(PRBool aVisible,
 
   placeholderDiv->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
                           classValue, aNotify);
-}
-
-void
-nsTextEditorState::HideSelectionIfBlurred()
-{
-  NS_ABORT_IF_FALSE(mSelCon, "Should have a selection controller if we have a frame!");
-  nsCOMPtr<nsIContent> content = do_QueryInterface(mTextCtrlElement);
-  if (!nsContentUtils::IsFocusedContent(content)) {
-    mSelCon->SetDisplaySelection(nsISelectionController::SELECTION_OFF);
-  }
 }
 
 NS_IMPL_ISUPPORTS1(nsAnonDivObserver, nsIMutationObserver)
