@@ -349,6 +349,8 @@ NameOp(VMFrame &f, JSObject *obj, bool markresult, bool callname)
     const Shape *shape;
     Value rval;
 
+    jsid id;
+
     PropertyCacheEntry *entry;
     JSObject *obj2;
     JSAtom *atom;
@@ -367,7 +369,6 @@ NameOp(VMFrame &f, JSObject *obj, bool markresult, bool callname)
 
         JS_ASSERT(obj->isGlobal() || IsCacheableNonGlobalScope(obj));
     } else {
-        jsid id;
         id = ATOM_TO_JSID(atom);
         JSProperty *prop;
         if (!js_FindPropertyHelper(cx, id, true, &obj, &obj2, &prop))
@@ -397,13 +398,25 @@ NameOp(VMFrame &f, JSObject *obj, bool markresult, bool callname)
                 normalized = js_UnwrapWithObject(cx, normalized);
             NATIVE_GET(cx, normalized, obj2, shape, JSGET_METHOD_BARRIER, &rval, return NULL);
         }
+
+        if (rval.isUndefined() && !markresult) {
+            /*
+             * This stub gets used in both normal name ops and increment ops.
+             * In the latter case update the property's types themselves,
+             * to capture the type effect on the intermediate value.
+             */
+            if (JSOp(*f.pc()) == JSOP_GETGNAME || JSOp(*f.pc()) == JSOP_CALLGNAME) {
+                if (!f.script()->typeMonitorUndefined(cx, f.pc()))
+                    return NULL;
+            } else {
+                if (!cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNDEFINED))
+                    return NULL;
+            }
+        }
     }
 
     if (markresult) {
         if (!f.script()->typeMonitorResult(cx, f.pc(), rval))
-            return NULL;
-    } else if (rval.isUndefined()) {
-        if (!f.script()->typeMonitorUndefined(cx, f.pc()))
             return NULL;
     }
 

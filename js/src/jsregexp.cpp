@@ -882,7 +882,8 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
      */
     if (!JS_DefineFunctionsWithPrefix(cx, proto, regexp_methods, "RegExp"))
         return NULL;
-    proto->brand(cx);
+    if (!cx->typeInferenceEnabled())
+        proto->brand(cx);
 
     /* Create the RegExp constructor. */
     JSAtom *regExpAtom = CLASS_ATOM(cx, RegExp);

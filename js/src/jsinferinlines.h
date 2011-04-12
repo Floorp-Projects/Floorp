@@ -453,6 +453,48 @@ JSContext::markTypeObjectHasSpecialEquality(js::types::TypeObject *obj)
 }
 
 inline bool
+JSContext::markTypePropertyConfigured(js::types::TypeObject *obj, jsid id)
+{
+    if (!typeInferenceEnabled())
+        return true;
+
+    if (obj->unknownProperties())
+        return true;
+    id = js::types::MakeTypeId(this, id);
+
+    js::types::AutoEnterTypeInference enter(this);
+    js::types::TypeSet *types = obj->getProperty(this, id, true);
+    if (types)
+        types->setOwnProperty(this, true);
+
+    return compartment->types.checkPendingRecompiles(this);
+}
+
+inline bool
+JSContext::markGlobalReallocation(JSObject *obj)
+{
+    JS_ASSERT(obj->isGlobal());
+
+    if (!typeInferenceEnabled())
+        return true;
+
+    if (obj->getType()->unknownProperties())
+        return true;
+
+    js::types::AutoEnterTypeInference enter(this);
+    js::types::TypeSet *types = obj->getType()->getProperty(this, JSID_VOID, false);
+    if (types) {
+        js::types::TypeConstraint *constraint = types->constraintList;
+        while (constraint) {
+            constraint->slotsReallocation(this);
+            constraint = constraint->next;
+        }
+    }
+
+    return compartment->types.checkPendingRecompiles(this);
+}
+
+inline bool
 JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
 {
     if (!typeInferenceEnabled() || obj->unknownProperties())
@@ -1077,7 +1119,7 @@ TypeSet::hasType(jstype type)
 inline void
 TypeSet::markUnknown(JSContext *cx)
 {
-    typeFlags = TYPE_FLAG_UNKNOWN | (typeFlags & TYPE_FLAG_INTERMEDIATE_SET);
+    typeFlags = TYPE_FLAG_UNKNOWN | (typeFlags & ~baseFlags());
     if (objectCount >= 2 && !(typeFlags & TYPE_FLAG_INTERMEDIATE_SET))
         cx->free_(objectSet);
     objectCount = 0;
@@ -1134,6 +1176,26 @@ TypeSet::addType(JSContext *cx, jstype type)
     }
 
     cx->compartment->types.resolvePending(cx);
+}
+
+inline void
+TypeSet::setOwnProperty(JSContext *cx, bool configured)
+{
+    TypeFlags nflags = TYPE_FLAG_OWN_PROPERTY | (configured ? TYPE_FLAG_CONFIGURED_PROPERTY : 0);
+
+    if ((typeFlags & nflags) == nflags)
+        return;
+
+    typeFlags |= nflags;
+
+    /* Propagate the change to all constraints. */
+    TypeConstraint *constraint = constraintList;
+    while (constraint) {
+        JS_ASSERT_IF(!constraint->baseSubset(),
+                     constraint->script->compartment == cx->compartment);
+        constraint->newPropertyState(cx, this);
+        constraint = constraint->next;
+    }
 }
 
 inline unsigned
@@ -1228,7 +1290,10 @@ TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
     if (!pprop || (!*pprop && !addProperty(cx, id, pprop)))
         return NULL;
 
-    return assign ? &(*pprop)->ownTypes : &(*pprop)->types;
+    if (assign)
+        (*pprop)->types.setOwnProperty(cx, false);
+
+    return &(*pprop)->types;
 }
 
 inline unsigned

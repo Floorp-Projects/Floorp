@@ -289,36 +289,39 @@ FrameState::pushSynced(JSValueType type, RegisterID reg)
 }
 
 inline void
-FrameState::push(Address address, JSValueType knownType)
+FrameState::push(Address address, JSValueType knownType, bool reuseBase)
 {
     if (knownType == JSVAL_TYPE_DOUBLE) {
         FPRegisterID fpreg = allocFPReg();
         masm.moveInt32OrDouble(address, fpreg);
         pushDouble(fpreg);
+        if (reuseBase)
+            freeReg(address.base);
         return;
     }
 
 #ifdef JS_PUNBOX64
+
     // It's okay if either of these clobbers address.base, since we guarantee
     // eviction will not physically clobber. It's also safe, on x64, for
     // loadValueAsComponents() to take either type or data regs as address.base.
     RegisterID typeReg = allocReg();
-    RegisterID dataReg = allocReg();
+    RegisterID dataReg = reuseBase ? address.base : allocReg();
     masm.loadValueAsComponents(address, typeReg, dataReg);
+
 #elif JS_NUNBOX32
-    // Prevent us from clobbering this reg.
-    bool free = a->freeRegs.hasReg(address.base);
-    if (free)
-        a->freeRegs.takeReg(address.base);
 
     if (knownType != JSVAL_TYPE_UNKNOWN) {
-        RegisterID dataReg = allocReg();
-        if (free)
-            a->freeRegs.putReg(address.base);
+        RegisterID dataReg = reuseBase ? address.base : allocReg();
         masm.loadPayload(address, dataReg);
         pushTypedPayload(knownType, dataReg);
         return;
     }
+
+    // Prevent us from clobbering this reg.
+    bool free = a->freeRegs.hasReg(address.base);
+    if (free)
+        a->freeRegs.takeReg(address.base);
 
     RegisterID typeReg = allocReg();
 
@@ -330,8 +333,9 @@ FrameState::push(Address address, JSValueType knownType)
     if (free)
         a->freeRegs.putReg(address.base);
 
-    RegisterID dataReg = allocReg();
+    RegisterID dataReg = reuseBase ? address.base : allocReg();
     masm.loadPayload(address, dataReg);
+
 #endif
 
     pushRegs(typeReg, dataReg, knownType);
