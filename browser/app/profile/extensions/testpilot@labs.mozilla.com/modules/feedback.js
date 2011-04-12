@@ -108,7 +108,7 @@ var FeedbackManager = {
       let uri = ioService.newURI(url, null, null);
       let path = uri.path;
       if (uri.host == "input.mozilla.com") {
-        if (path.indexOf("feedback" > -1) || path.indexOf("happy" > -1) || path.indexOf("sad" > -1)) {
+        if (path.indexOf("feedback") > -1 || path.indexOf("happy") > -1 || path.indexOf("sad") > -1) {
           return true;
         }
       }
