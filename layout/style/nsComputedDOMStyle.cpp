@@ -492,22 +492,24 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
   NS_ENSURE_TRUE(mPresShell && mPresShell->GetPresContext(),
                  NS_ERROR_NOT_AVAILABLE);
 
-  mOuterFrame = mContent->GetPrimaryFrame();
-  mInnerFrame = mOuterFrame;
-  if (mOuterFrame && !mPseudo) {
-    nsIAtom* type = mOuterFrame->GetType();
-    if (type == nsGkAtoms::tableOuterFrame) {
-      // If the frame is an outer table frame then we should get the style
-      // from the inner table frame.
-      mInnerFrame = mOuterFrame->GetFirstChild(nsnull);
-      NS_ASSERTION(mInnerFrame, "Outer table must have an inner");
-      NS_ASSERTION(!mInnerFrame->GetNextSibling(),
-                   "Outer table frames should have just one child, the inner "
-                   "table");
-    }
+  if (!mPseudo) {
+    mOuterFrame = mContent->GetPrimaryFrame();
+    mInnerFrame = mOuterFrame;
+    if (mOuterFrame) {
+      nsIAtom* type = mOuterFrame->GetType();
+      if (type == nsGkAtoms::tableOuterFrame) {
+        // If the frame is an outer table frame then we should get the style
+        // from the inner table frame.
+        mInnerFrame = mOuterFrame->GetFirstChild(nsnull);
+        NS_ASSERTION(mInnerFrame, "Outer table must have an inner");
+        NS_ASSERTION(!mInnerFrame->GetNextSibling(),
+                     "Outer table frames should have just one child, "
+                     "the inner table");
+      }
 
-    mStyleContextHolder = mInnerFrame->GetStyleContext();
-    NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
+      mStyleContextHolder = mInnerFrame->GetStyleContext();
+      NS_ASSERTION(mStyleContextHolder, "Frame without style context?");
+    }
   }
 
   if (!mStyleContextHolder || mStyleContextHolder->HasPseudoElementData()) {
