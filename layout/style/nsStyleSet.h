@@ -60,6 +60,7 @@
 
 class nsIURI;
 class nsCSSFontFaceRule;
+class nsCSSKeyframesRule;
 class nsRuleWalker;
 struct RuleProcessorData;
 struct TreeMatchContext;
@@ -170,6 +171,11 @@ class nsStyleSet
   // true for success and false for failure.
   PRBool AppendFontFaceRules(nsPresContext* aPresContext,
                              nsTArray<nsFontFaceRuleContainer>& aArray);
+
+  // Append all the currently-active keyframes rules to aArray.  Return
+  // true for success and false for failure.
+  PRBool AppendKeyframesRules(nsPresContext* aPresContext,
+                              nsTArray<nsCSSKeyframesRule*>& aArray);
 
   // Begin ignoring style context destruction, to avoid lots of unnecessary
   // work on document teardown.

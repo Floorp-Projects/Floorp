@@ -56,6 +56,7 @@ struct RuleCascadeData;
 struct nsCSSSelectorList;
 struct CascadeEnumData;
 struct TreeMatchContext;
+class nsCSSKeyframesRule;
 
 /**
  * The CSS style rule processor provides a mechanism for sibling style
@@ -139,6 +140,9 @@ public:
   // true for success and false for failure.
   PRBool AppendFontFaceRules(nsPresContext* aPresContext,
                              nsTArray<nsFontFaceRuleContainer>& aArray);
+
+  PRBool AppendKeyframesRules(nsPresContext* aPresContext,
+                              nsTArray<nsCSSKeyframesRule*>& aArray);
 
 #ifdef DEBUG
   void AssertQuirksChangeOK() {
