@@ -535,3 +535,60 @@ console.log("FOO<span>BAR</span>BAZ");
 |         "B"
 |         <div>
 |           "C"
+
+#data
+<svg><em><desc></em>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <svg svg>
+|     <em>
+|       <desc>
+
+#data
+<svg><tfoot></mi><td>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <svg svg>
+|       <svg tfoot>
+|         <svg td>
+
+#data
+<math><mrow><mrow><mn>1</mn></mrow><mi>a</mi></mrow></math>
+#errors
+#document
+| <html>
+|   <head>
+|   <body>
+|     <math math>
+|       <math mrow>
+|         <math mrow>
+|           <math mn>
+|             "1"
+|         <math mi>
+|           "a"
+
+#data
+<!doctype html><input type="hidden"><frameset>
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <frameset>
+
+#data
+<!doctype html><input type="button"><frameset>
+#errors
+#document
+| <!DOCTYPE html>
+| <html>
+|   <head>
+|   <body>
+|     <input>
+|       type="button"

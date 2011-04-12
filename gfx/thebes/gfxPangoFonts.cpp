@@ -211,8 +211,7 @@ cairo_user_data_key_t gfxFcFontEntry::sFontEntryKey;
 PRBool
 gfxFcFontEntry::ShouldUseHarfBuzz(PRInt32 aRunScript) {
     if (mSkipHarfBuzz ||
-        gfxPlatform::GetPlatform()->UseHarfBuzzLevel() <
-        gfxUnicodeProperties::ScriptShapingLevel(aRunScript))
+        !gfxPlatform::GetPlatform()->UseHarfBuzzForScript(aRunScript))
     {
         return PR_FALSE;
     }

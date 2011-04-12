@@ -108,11 +108,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsGenericDOMDataNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_USERDATA
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsGenericDOMDataNode)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericDOMDataNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -141,9 +138,9 @@ NS_INTERFACE_MAP_BEGIN(nsGenericDOMDataNode)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericDOMDataNode, nsIContent)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsGenericDOMDataNode, nsIContent,
-                                      nsNodeUtils::LastRelease(this))
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGenericDOMDataNode)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsGenericDOMDataNode,
+                                              nsNodeUtils::LastRelease(this))
 
 
 nsresult
@@ -173,12 +170,6 @@ nsGenericDOMDataNode::GetPrefix(nsAString& aPrefix)
   SetDOMStringToNull(aPrefix);
 
   return NS_OK;
-}
-
-nsresult
-nsGenericDOMDataNode::SetPrefix(const nsAString& aPrefix)
-{
-  return NS_ERROR_DOM_NAMESPACE_ERR;
 }
 
 nsresult
@@ -523,19 +514,19 @@ nsGenericDOMDataNode::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // Set parent
   if (aParent) {
-    mParentPtrBits =
-      reinterpret_cast<PtrBits>(aParent) | PARENT_BIT_PARENT_IS_CONTENT;
+    mParent = aParent;
   }
   else {
-    mParentPtrBits = reinterpret_cast<PtrBits>(aDocument);
+    mParent = aDocument;
   }
+  SetParentIsContent(aParent);
 
   // XXXbz sXBL/XBL2 issue!
 
   // Set document
   if (aDocument) {
     // XXX See the comment in nsGenericElement::BindToTree
-    mParentPtrBits |= PARENT_BIT_INDOCUMENT;
+    SetInDocument();
     if (mText.IsBidi()) {
       aDocument->SetBidiEnabled();
     }
@@ -570,7 +561,11 @@ nsGenericDOMDataNode::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     document->BindingManager()->RemovedFromDocument(this, document);
   }
 
-  mParentPtrBits = aNullParent ? 0 : mParentPtrBits & ~PARENT_BIT_INDOCUMENT;
+  if (aNullParent) {
+    mParent = nsnull;
+    SetParentIsContent(false);
+  }
+  ClearInDocument();
 
   nsDataSlots *slots = GetExistingDataSlots();
   if (slots) {
@@ -783,7 +778,7 @@ nsGenericDOMDataNode::IsLink(nsIURI** aURI) const
 nsINode::nsSlots*
 nsGenericDOMDataNode::CreateSlots()
 {
-  return new nsDataSlots(mFlagsOrSlots);
+  return new nsDataSlots();
 }
 
 //----------------------------------------------------------------------

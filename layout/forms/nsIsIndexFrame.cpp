@@ -527,11 +527,12 @@ nsIsIndexFrame::SaveState(SpecialStateID aStateID, nsPresState** aState)
 {
   NS_ENSURE_ARG_POINTER(aState);
 
+  *aState = nsnull;
+
   // Get the value string
   nsAutoString stateString;
   GetInputValue(stateString);
 
-  nsresult res = NS_OK;
   if (! stateString.IsEmpty()) {
 
     // Construct a pres state and store value in it.
@@ -549,7 +550,7 @@ nsIsIndexFrame::SaveState(SpecialStateID aStateID, nsPresState** aState)
     (*aState)->SetStateProperty(state);
   }
 
-  return res;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -560,7 +561,12 @@ nsIsIndexFrame::RestoreState(nsPresState* aState)
   // Set the value to the stored state.
   nsCOMPtr<nsISupportsString> stateString
     (do_QueryInterface(aState->GetStateProperty()));
-  
+
+  if (!stateString) {
+    NS_ERROR("Not a <isindex> state!");
+    return NS_ERROR_FAILURE;
+  }
+
   nsAutoString data;
   stateString->GetData(data);
   SetInputValue(data);

@@ -38,7 +38,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(f0ffe1d2-9615-492b-aae1-05428ebc2a70)]
+[scriptable, uuid(4738f75d-9c6f-40f8-81d0-84b2e4726a8f)]
 interface nsIDOMNSHTMLElement : nsISupports
 {
   readonly attribute long             offsetTop;
@@ -62,9 +62,6 @@ interface nsIDOMNSHTMLElement : nsISupports
 
            // for WHAT-WG drag and drop
            attribute boolean          draggable;
-
-  void blur();
-  void focus();
 
   [optional_argc] void scrollIntoView([optional] in boolean top);
 

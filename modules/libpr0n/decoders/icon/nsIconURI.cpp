@@ -248,6 +248,9 @@ nsMozIconURI::SetSpec(const nsACString &aSpec)
   if (!strncmp("//stock/", iconPath.get(), 8))
   {
     mStockIcon.Assign(Substring(iconPath, 8));
+    // An icon identifier must always be specified.
+    if (mStockIcon.IsEmpty())
+      return NS_ERROR_MALFORMED_URI;
     return NS_OK;
   }
 

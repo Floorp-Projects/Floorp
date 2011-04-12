@@ -44,6 +44,7 @@
 #include "nsEventShell.h"
 #include "nsIAccessibleEvent.h"
 #include "nsTextEquivUtils.h"
+#include "States.h"
 
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"
@@ -69,31 +70,27 @@ nsHTMLSelectListAccessible::
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLSelectListAccessible: nsAccessible public
 
-nsresult
-nsHTMLSelectListAccessible::GetStateInternal(PRUint32 *aState,
-                                             PRUint32 *aExtraState)
+PRUint64
+nsHTMLSelectListAccessible::NativeState()
 {
-  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 state = nsAccessibleWrap::NativeState();
 
   // As a nsHTMLSelectListAccessible we can have the following states:
-  //   nsIAccessibleStates::STATE_MULTISELECTABLE
-  //   nsIAccessibleStates::STATE_EXTSELECTABLE
+  //   states::MULTISELECTABLE, states::EXTSELECTABLE
 
-  if (*aState & nsIAccessibleStates::STATE_FOCUSED) {
+  if (state & states::FOCUSED) {
     // Treat first focusable option node as actual focus, in order
     // to avoid confusing JAWS, which needs focus on the option
     nsCOMPtr<nsIContent> focusedOption =
       nsHTMLSelectOptionAccessible::GetFocusedOption(mContent);
     if (focusedOption) { // Clear focused state since it is on option
-      *aState &= ~nsIAccessibleStates::STATE_FOCUSED;
+      state &= ~states::FOCUSED;
     }
   }
   if (mContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::multiple))
-    *aState |= nsIAccessibleStates::STATE_MULTISELECTABLE |
-               nsIAccessibleStates::STATE_EXTSELECTABLE;
+    state |= states::MULTISELECTABLE | states::EXTSELECTABLE;
 
-  return NS_OK;
+  return state;
 }
 
 PRUint32
@@ -229,9 +226,9 @@ nsHTMLSelectOptionAccessible::GetNameInternal(nsAString& aName)
 // nsAccessible protected
 nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
 {
-  PRUint32 state = 0;
-  nsCOMPtr<nsIContent> content = GetSelectState(&state);
-  if (state & nsIAccessibleStates::STATE_COLLAPSED) {
+  PRUint64 state = 0;
+  nsIContent* content = GetSelectState(&state);
+  if (state & states::COLLAPSED) {
     if (content) {
       return content->GetPrimaryFrame();
     }
@@ -242,46 +239,35 @@ nsIFrame* nsHTMLSelectOptionAccessible::GetBoundsFrame()
   return nsAccessible::GetBoundsFrame();
 }
 
-/**
-  * As a nsHTMLSelectOptionAccessible we can have the following states:
-  *     STATE_SELECTABLE
-  *     STATE_SELECTED
-  *     STATE_FOCUSED
-  *     STATE_FOCUSABLE
-  *     STATE_OFFSCREEN
-  */
-nsresult
-nsHTMLSelectOptionAccessible::GetStateInternal(PRUint32 *aState,
-                                               PRUint32 *aExtraState)
+PRUint64
+nsHTMLSelectOptionAccessible::NativeState()
 {
+  // As a nsHTMLSelectOptionAccessible we can have the following states:
+  // SELECTABLE, SELECTED, FOCUSED, FOCUSABLE, OFFSCREEN
   // Upcall to nsAccessible, but skip nsHyperTextAccessible impl
-  // because we don't want EXT_STATE_EDITABLE or EXT_STATE_SELECTABLE_TEXT
-  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  // because we don't want EDITABLE or SELECTABLE_TEXT
+  PRUint64 state = nsAccessible::NativeState();
 
-  PRUint32 selectState = 0, selectExtState = 0;
-  nsCOMPtr<nsIContent> selectContent = GetSelectState(&selectState,
-                                                      &selectExtState);
-  if (selectState & nsIAccessibleStates::STATE_INVISIBLE) {
-    return NS_OK;
-  }
+  PRUint64 selectState = 0;
+  nsIContent* selectContent = GetSelectState(&selectState);
+  if (selectState & states::INVISIBLE)
+    return state;
 
   NS_ENSURE_TRUE(selectContent, NS_ERROR_FAILURE);
 
   // Is disabled?
-  if (0 == (*aState & nsIAccessibleStates::STATE_UNAVAILABLE)) {
-    *aState |= (nsIAccessibleStates::STATE_FOCUSABLE |
-                nsIAccessibleStates::STATE_SELECTABLE);
+  if (0 == (state & states::UNAVAILABLE)) {
+    state |= (states::FOCUSABLE | states::SELECTABLE);
     // When the list is focused but no option is actually focused,
     // Firefox draws a focus ring around the first non-disabled option.
-    // We need to indicated STATE_FOCUSED in that case, because it
+    // We need to indicate states::FOCUSED in that case, because it
     // prevents JAWS from ignoring the list
     // GetFocusedOption() ensures that an option node is
     // returned in this case, as long as some focusable option exists
     // in the listbox
     nsCOMPtr<nsIContent> focusedOption = GetFocusedOption(selectContent);
     if (focusedOption == mContent)
-      *aState |= nsIAccessibleStates::STATE_FOCUSED;
+      state |= states::FOCUSED;
   }
 
   // Are we selected?
@@ -289,33 +275,31 @@ nsHTMLSelectOptionAccessible::GetStateInternal(PRUint32 *aState,
   nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(mContent));
   if (option) {
     option->GetSelected(&isSelected);
-    if ( isSelected ) 
-      *aState |= nsIAccessibleStates::STATE_SELECTED;
+    if (isSelected)
+      state |= states::SELECTED;
+
   }
 
-  if (selectState & nsIAccessibleStates::STATE_OFFSCREEN) {
-    *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+  if (selectState & states::OFFSCREEN) {
+    state |= states::OFFSCREEN;
   }
-  else if (selectState & nsIAccessibleStates::STATE_COLLAPSED) {
-    // <select> is COLLAPSED: add STATE_OFFSCREEN, if not the currently
+  else if (selectState & states::COLLAPSED) {
+    // <select> is COLLAPSED: add OFFSCREEN, if not the currently
     // visible option
     if (!isSelected) {
-      *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+      state |= states::OFFSCREEN;
     }
     else {
       // Clear offscreen and invisible for currently showing option
-      *aState &= ~nsIAccessibleStates::STATE_OFFSCREEN;
-      *aState &= ~nsIAccessibleStates::STATE_INVISIBLE;
-       if (aExtraState) {
-         *aExtraState |= selectExtState & nsIAccessibleStates::EXT_STATE_OPAQUE;
-       }
+      state &= ~(states::OFFSCREEN | states::INVISIBLE);
+      state |= selectState & states::OPAQUE1;
     }
   }
   else {
     // XXX list frames are weird, don't rely on nsAccessible's general
     // visibility implementation unless they get reimplemented in layout
-    *aState &= ~nsIAccessibleStates::STATE_OFFSCREEN;
-    // <select> is not collapsed: compare bounds to calculate STATE_OFFSCREEN
+    state &= ~states::OFFSCREEN;
+    // <select> is not collapsed: compare bounds to calculate OFFSCREEN
     nsAccessible* listAcc = GetParent();
     if (listAcc) {
       PRInt32 optionX, optionY, optionWidth, optionHeight;
@@ -323,12 +307,12 @@ nsHTMLSelectOptionAccessible::GetStateInternal(PRUint32 *aState,
       GetBounds(&optionX, &optionY, &optionWidth, &optionHeight);
       listAcc->GetBounds(&listX, &listY, &listWidth, &listHeight);
       if (optionY < listY || optionY + optionHeight > listY + listHeight) {
-        *aState |= nsIAccessibleStates::STATE_OFFSCREEN;
+        state |= states::OFFSCREEN;
       }
     }
   }
  
-  return NS_OK;
+  return state;
 }
 
 PRInt32
@@ -553,9 +537,9 @@ nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOpti
 
   option->GetDocAccessible()->FireDelayedAccessibleEvent(selWithinEvent);
 
-  PRUint32 state = nsAccUtils::State(option);
+  PRUint64 state = option->State();
   PRUint32 eventType;
-  if (state & nsIAccessibleStates::STATE_SELECTED) {
+  if (state & states::SELECTED) {
     eventType = nsIAccessibleEvent::EVENT_SELECTION_ADD;
   }
   else {
@@ -571,13 +555,10 @@ nsHTMLSelectOptionAccessible::SelectionChangedIfOption(nsIContent *aPossibleOpti
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLSelectOptionAccessible: private methods
 
-nsIContent* nsHTMLSelectOptionAccessible::GetSelectState(PRUint32* aState,
-                                                         PRUint32* aExtraState)
+nsIContent*
+nsHTMLSelectOptionAccessible::GetSelectState(PRUint64* aState)
 {
   *aState = 0;
-
-  if (aExtraState)
-    *aExtraState = 0;
 
   nsIContent *content = mContent;
   while (content && content->Tag() != nsAccessibilityAtoms::select) {
@@ -587,7 +568,7 @@ nsIContent* nsHTMLSelectOptionAccessible::GetSelectState(PRUint32* aState,
   if (content) {
     nsAccessible* selAcc = GetAccService()->GetAccessible(content);
     if (selAcc) {
-      selAcc->GetState(aState, aExtraState);
+      *aState = selAcc->State();
       return content;
     }
   }
@@ -612,18 +593,14 @@ nsHTMLSelectOptGroupAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_HEADING;
 }
 
-nsresult
-nsHTMLSelectOptGroupAccessible::GetStateInternal(PRUint32 *aState,
-                                                 PRUint32 *aExtraState)
+PRUint64
+nsHTMLSelectOptGroupAccessible::NativeState()
 {
-  nsresult rv = nsHTMLSelectOptionAccessible::GetStateInternal(aState,
-                                                               aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 state = nsHTMLSelectOptionAccessible::NativeState();
 
-  *aState &= ~(nsIAccessibleStates::STATE_FOCUSABLE |
-               nsIAccessibleStates::STATE_SELECTABLE);
+  state &= ~(states::FOCUSABLE | states::SELECTABLE);
 
-  return NS_OK;
+  return state;
 }
 
 NS_IMETHODIMP nsHTMLSelectOptGroupAccessible::DoAction(PRUint8 index)
@@ -726,35 +703,28 @@ nsHTMLComboboxAccessible::Shutdown()
 }
 
 /**
-  * As a nsHTMLComboboxAccessible we can have the following states:
-  *     STATE_FOCUSED
-  *     STATE_FOCUSABLE
-  *     STATE_HASPOPUP
-  *     STATE_EXPANDED
-  *     STATE_COLLAPSED
   */
-nsresult
-nsHTMLComboboxAccessible::GetStateInternal(PRUint32 *aState,
-                                           PRUint32 *aExtraState)
+PRUint64
+nsHTMLComboboxAccessible::NativeState()
 {
+  // As a nsHTMLComboboxAccessible we can have the following states:
+  // FOCUSED, FOCUSABLE, HASPOPUP, EXPANDED, COLLAPSED
   // Get focus status from base class
-  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 state = nsAccessible::NativeState();
 
   nsIFrame *frame = GetBoundsFrame();
   nsIComboboxControlFrame *comboFrame = do_QueryFrame(frame);
   if (comboFrame && comboFrame->IsDroppedDown()) {
-    *aState |= nsIAccessibleStates::STATE_EXPANDED;
+    state |= states::EXPANDED;
   }
   else {
-    *aState &= ~nsIAccessibleStates::STATE_FOCUSED; // Focus is on an option
-    *aState |= nsIAccessibleStates::STATE_COLLAPSED;
+    state &= ~states::FOCUSED; // Focus is on an option
+    state |= states::COLLAPSED;
   }
 
-  *aState |= nsIAccessibleStates::STATE_HASPOPUP |
-             nsIAccessibleStates::STATE_FOCUSABLE;
+  state |= states::HASPOPUP | states::FOCUSABLE;
 
-  return NS_OK;
+  return state;
 }
 
 NS_IMETHODIMP nsHTMLComboboxAccessible::GetDescription(nsAString& aDescription)
@@ -894,29 +864,22 @@ nsHTMLComboboxListAccessible::IsPrimaryForNode() const
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLComboboxAccessible: nsAccessible
 
-/**
-  * As a nsHTMLComboboxListAccessible we can have the following states:
-  *     STATE_FOCUSED
-  *     STATE_FOCUSABLE
-  *     STATE_INVISIBLE
-  *     STATE_FLOATING
-  */
-nsresult
-nsHTMLComboboxListAccessible::GetStateInternal(PRUint32 *aState,
-                                               PRUint32 *aExtraState)
+PRUint64
+nsHTMLComboboxListAccessible::NativeState()
 {
+  // As a nsHTMLComboboxListAccessible we can have the following states:
+  // FOCUSED, FOCUSABLE, FLOATING, INVISIBLE
   // Get focus status from base class
-  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 state = nsAccessible::NativeState();
 
   nsIFrame *boundsFrame = GetBoundsFrame();
   nsIComboboxControlFrame* comboFrame = do_QueryFrame(boundsFrame);
   if (comboFrame && comboFrame->IsDroppedDown())
-    *aState |= nsIAccessibleStates::STATE_FLOATING;
+    state |= states::FLOATING;
   else
-    *aState |= nsIAccessibleStates::STATE_INVISIBLE;
+    state |= states::INVISIBLE;
 
-  return NS_OK;
+  return state;
 }
 
 /**
@@ -931,7 +894,7 @@ void nsHTMLComboboxListAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aBo
   if (!comboAcc)
     return;
 
-  if (0 == (nsAccUtils::State(comboAcc) & nsIAccessibleStates::STATE_COLLAPSED)) {
+  if (0 == (comboAcc->State() & states::COLLAPSED)) {
     nsHTMLSelectListAccessible::GetBoundsRect(aBounds, aBoundingFrame);
     return;
   }

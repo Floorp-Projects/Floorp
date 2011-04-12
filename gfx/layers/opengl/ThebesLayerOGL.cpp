@@ -36,10 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-# include "mozilla/layers/PLayers.h"
-# include "mozilla/layers/ShadowLayers.h"
-#endif
+#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #include "ThebesLayerBuffer.h"
 #include "ThebesLayerOGL.h"
@@ -212,14 +210,8 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
   }
 
   // Bind textures.
-  gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImage->Texture());
-
-  if (mTexImageOnWhite) {
-    gl()->fActiveTexture(LOCAL_GL_TEXTURE1);
-    gl()->fBindTexture(LOCAL_GL_TEXTURE_2D, mTexImageOnWhite->Texture());
-    gl()->fActiveTexture(LOCAL_GL_TEXTURE0);
-  }
+  TextureImage::ScopedBindTexture(mTexImage, LOCAL_GL_TEXTURE0);
+  TextureImage::ScopedBindTexture(mTexImageOnWhite, LOCAL_GL_TEXTURE1);
 
   float xres = mLayer->GetXResolution();
   float yres = mLayer->GetYResolution();
@@ -250,8 +242,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
       // Note BGR: Cairo's image surfaces are always in what
       // OpenGL and our shaders consider BGR format.
       ColorTextureLayerProgram *basicProgram =
-        aManager->GetBasicLayerProgram(mTexImage->GetContentType() == gfxASurface::CONTENT_COLOR,
-                                       mTexImage->IsRGB());
+        aManager->GetColorTextureLayerProgram(mTexImage->GetShaderProgramType());
 
       basicProgram->Activate();
       basicProgram->SetTextureUnit(0);
@@ -297,7 +288,7 @@ ThebesLayerBufferOGL::RenderTo(const nsIntPoint& aOffset,
     // Restore defaults
     gl()->fBlendFuncSeparate(LOCAL_GL_ONE, LOCAL_GL_ONE_MINUS_SRC_ALPHA,
                              LOCAL_GL_ONE, LOCAL_GL_ONE);
-   }
+  }
 }
 
 
@@ -577,6 +568,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
         // self-copy but we're not going to do that in GL yet.
         // We can't do a real self-copy because the buffer is rotated.
         // So allocate a new buffer for the destination.
+        destBufferRect = neededRegion.GetBounds();
         destBuffer = CreateClampOrRepeatTextureImage(gl(), destBufferDims, contentType, bufferFlags);
         if (!destBuffer)
           return result;
@@ -865,8 +857,6 @@ ThebesLayerOGL::IsEmpty()
 }
 
 
-#ifdef MOZ_IPC
-
 class ShadowBufferOGL : public ThebesLayerBufferOGL
 {
 public:
@@ -1033,9 +1023,6 @@ ShadowThebesLayerOGL::RenderLayer(int aPreviousFrameBuffer,
   gl()->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, aPreviousFrameBuffer);
   mBuffer->RenderTo(aOffset, mOGLManager, 0);
 }
-
-#endif  // MOZ_IPC
-
 
 } /* layers */
 } /* mozilla */

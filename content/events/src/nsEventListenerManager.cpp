@@ -342,8 +342,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventListenerManager)
    NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsEventListenerManager, nsIEventListenerManager)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsEventListenerManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsEventListenerManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsEventListenerManager)
   PRUint32 count = tmp->mListeners.Length();

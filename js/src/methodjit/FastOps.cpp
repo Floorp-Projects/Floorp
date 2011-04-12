@@ -891,7 +891,7 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
                 return false;
         } else {
             if (target < PC && !finishLoop(target))
-                return Compile_Error;
+                return false;
         }
         return true;
     }

@@ -45,6 +45,7 @@
 
 #include "nsAccessible.h"
 #include "nsAccUtils.h"
+#include "States.h"
 
 #include "nsCOMPtr.h"
 #include "nsRect.h"
@@ -84,9 +85,7 @@ class nsAccessibleWrap : public nsAccessible
     PRInt32 GetUnignoredChildCount(PRBool aDeepCount);
     
     PRBool HasPopup () {
-      PRUint32 state = 0;
-      GetStateInternal(&state, nsnull);
-      return (state & nsIAccessibleStates::STATE_HASPOPUP);
+      return (NativeState() & states::HASPOPUP);
     }
     
     // return this accessible's all children, adhering to "flat" accessibles by not returning their children.

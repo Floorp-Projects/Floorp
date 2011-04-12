@@ -205,10 +205,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULPrototypeDocument)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObjectOwner)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULPrototypeDocument,
-                                          nsIScriptGlobalObjectOwner)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULPrototypeDocument,
-                                           nsIScriptGlobalObjectOwner)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULPrototypeDocument)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULPrototypeDocument)
 
 NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult)
@@ -657,10 +655,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsXULPDGlobalObject)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptGlobalObject)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULPDGlobalObject,
-                                          nsIScriptGlobalObject)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULPDGlobalObject,
-                                           nsIScriptGlobalObject)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULPDGlobalObject)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULPDGlobalObject)
 
 //----------------------------------------------------------------------
 //

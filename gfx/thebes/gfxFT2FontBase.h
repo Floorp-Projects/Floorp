@@ -58,7 +58,6 @@ public:
     void GetGlyphExtents(PRUint32 aGlyph,
                          cairo_text_extents_t* aExtents);
     virtual const gfxFont::Metrics& GetMetrics();
-    virtual nsString GetUniqueName();
     virtual PRUint32 GetSpaceGlyph();
     virtual hb_blob_t *GetFontTable(PRUint32 aTag);
     virtual PRBool ProvidesGetGlyph() const { return PR_TRUE; }

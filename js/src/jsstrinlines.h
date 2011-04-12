@@ -189,6 +189,8 @@ inline bool
 StringBuffer::append(JSString *str)
 {
     JSLinearString *linear = str->ensureLinear(context());
+    if (!linear)
+        return false;
     size_t strLen = linear->length();
     if (!checkLength(cb.length() + strLen))
         return false;
@@ -239,6 +241,18 @@ inline bool
 StringBuffer::checkLength(size_t length)
 {
     return CheckStringLength(context(), length);
+}
+
+extern bool
+ValueToStringBufferSlow(JSContext *cx, const Value &v, StringBuffer &sb);
+
+inline bool
+ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb)
+{
+    if (v.isString())
+        return sb.append(v.toString());
+
+    return ValueToStringBufferSlow(cx, v, sb);
 }
 
 } /* namespace js */

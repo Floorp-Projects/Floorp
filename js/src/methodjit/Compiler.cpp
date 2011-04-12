@@ -97,7 +97,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     globalObj(outerScript->global),
     patchFrames(patchFrames),
     savedTraps(NULL),
-    frame(cx, *this, masm, stubcc),
+    frame(cx, *thisFromCtor(), masm, stubcc),
     a(NULL), outer(NULL), script(NULL), PC(NULL), loop(NULL),
     inlineFrames(CompilerAllocPolicy(cx, *thisFromCtor())),
     branchPatches(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -3553,10 +3553,10 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
             js_ReportOutOfMemory(cx);
             return false;
         }
-        types::TypeSet *types = frame.extra(frame.peek(-(argc + 1))).types;
+        types::TypeSet *types = frame.extra(frame.peek(-((int)argc + 1))).types;
         types::TypeSet::Clone(cx, types, &callIC.argTypes[0]);
         for (unsigned i = 0; i < argc; i++) {
-            types::TypeSet *types = frame.extra(frame.peek(-(argc - i))).types;
+            types::TypeSet *types = frame.extra(frame.peek(-((int)argc - i))).types;
             types::TypeSet::Clone(cx, types, &callIC.argTypes[i + 1]);
         }
     }
@@ -3768,7 +3768,7 @@ mjit::Compiler::callArrayBuiltin(uint32 argc, bool callingNew)
     if (applyTricks == LazyArgsObj)
         return Compile_InlineAbort;
 
-    FrameEntry *origCallee = frame.peek(-(argc + 2));
+    FrameEntry *origCallee = frame.peek(-((int)argc + 2));
     if (origCallee->isNotType(JSVAL_TYPE_OBJECT))
         return Compile_InlineAbort;
 
@@ -3865,8 +3865,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     if (applyTricks == LazyArgsObj)
         return Compile_InlineAbort;
 
-    FrameEntry *origCallee = frame.peek(-(argc + 2));
-    FrameEntry *origThis = frame.peek(-(argc + 1));
+    FrameEntry *origCallee = frame.peek(-((int)argc + 2));
+    FrameEntry *origThis = frame.peek(-((int)argc + 1));
 
     types::TypeSet *types = frame.extra(origCallee).types;
     if (!types || types->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT)
@@ -3956,7 +3956,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
      * call can't be loop carried).
      */
     frame.tryCopyRegister(origThis, origCallee);
-    for (unsigned i = 0; i < argc; i++)
+    for (int i = 0; i < argc; i++)
         frame.tryCopyRegister(frame.peek(-(i + 1)), origCallee);
 
     /*

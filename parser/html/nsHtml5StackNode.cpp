@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2007-2009 Mozilla Foundation
+ * Copyright (c) 2007-2011 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -172,7 +172,7 @@ nsHtml5StackNode::nsHtml5StackNode(nsHtml5ElementName* elementName, nsIContent**
 PRInt32 
 nsHtml5StackNode::prepareSvgFlags(PRInt32 flags)
 {
-  flags &= ~(NS_HTML5ELEMENT_NAME_FOSTER_PARENTING | NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL);
+  flags &= ~(NS_HTML5ELEMENT_NAME_FOSTER_PARENTING | NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
   if ((flags & NS_HTML5ELEMENT_NAME_SCOPING_AS_SVG)) {
     flags |= (NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_HTML_INTEGRATION_POINT);
   }
@@ -182,7 +182,7 @@ nsHtml5StackNode::prepareSvgFlags(PRInt32 flags)
 PRInt32 
 nsHtml5StackNode::prepareMathFlags(PRInt32 flags, PRBool markAsIntegrationPoint)
 {
-  flags &= ~(NS_HTML5ELEMENT_NAME_FOSTER_PARENTING | NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL);
+  flags &= ~(NS_HTML5ELEMENT_NAME_FOSTER_PARENTING | NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL | NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG);
   if ((flags & NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML)) {
     flags |= (NS_HTML5ELEMENT_NAME_SCOPING | NS_HTML5ELEMENT_NAME_SPECIAL);
   }

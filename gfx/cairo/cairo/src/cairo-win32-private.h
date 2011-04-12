@@ -246,6 +246,9 @@ _cairo_dwrite_show_glyphs_on_surface(void			*surface,
 				     cairo_scaled_font_t	*scaled_font,
 				     cairo_clip_t               *clip);
 
+cairo_int_status_t
+_cairo_dwrite_scaled_font_create_win32_scaled_font(cairo_scaled_font_t *scaled_font,
+                                                   cairo_scaled_font_t **new_font);
 
 CAIRO_END_DECLS
 #endif /* CAIRO_HAS_DWRITE_FONT */

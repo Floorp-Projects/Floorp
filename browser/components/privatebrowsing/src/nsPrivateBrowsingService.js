@@ -618,7 +618,7 @@ PrivateBrowsingService.prototype = {
 
     // Plugin data
     let (ph = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost)) {
-      const phInterface = Ci.nsIPluginHost_MOZILLA_2_0_BRANCH;
+      const phInterface = Ci.nsIPluginHost;
       const FLAG_CLEAR_ALL = phInterface.FLAG_CLEAR_ALL;
       ph.QueryInterface(phInterface);
 

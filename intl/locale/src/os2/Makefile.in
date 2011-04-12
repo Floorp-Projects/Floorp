@@ -53,6 +53,7 @@ CPPSRCS		= \
 		nsOS2Locale.cpp \
 		nsCollationOS2.cpp \
 		nsDateTimeFormatOS2.cpp \
+		nsOS2Charset.cpp \
 		$(NULL)
 
 
@@ -60,3 +61,11 @@ include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/..
 
+nsOS2Charset.$(OBJ_SUFFIX): os2charset.properties.h
+
+os2charset.properties.h: $(srcdir)/../props2arrays.py os2charset.properties
+	$(PYTHON) $^ $@
+
+GARBAGE += \
+	os2charset.properties.h \
+	$(NULL)

@@ -47,13 +47,8 @@ EXPORTS	= \
 	GLContextProviderImpl.h \
 	nsCoreAnimationSupport.h \
 	EGLUtils.h \
-	$(NULL)
-
-ifdef MOZ_IPC
-EXPORTS	+= \
 	gfxSharedImageSurface.h \
 	$(NULL)
-endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
 EXPORTS += \
@@ -185,6 +180,7 @@ CPPSRCS	= \
 	gfxHarfBuzzShaper.cpp \
 	GLContext.cpp \
 	GLContextProviderOSMesa.cpp \
+	gfxSharedImageSurface.cpp \
 	$(NULL)
 
 # Are we targeting x86 or x64?  If so, build gfxAlphaRecoverySSE2.cpp.
@@ -201,12 +197,6 @@ ifdef SOLARIS_SUNPRO_CXX
 gfxAlphaRecoverySSE2.$(OBJ_SUFFIX): OS_CXXFLAGS += -xarch=sse2 -xO4
 endif
 
-endif
-
-ifdef MOZ_IPC
-CPPSRCS += \
-	gfxSharedImageSurface.cpp \
-	$(NULL)
 endif
 
 SHARED_LIBRARY_LIBS += \
