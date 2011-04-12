@@ -99,12 +99,10 @@ public:
 protected:
   // to help implement nsIDOMCSSRule
   nsresult AppendRulesToCssText(nsAString& aCssText);
-  // to implement methods on nsIDOMCSSRule
-  nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
 
   // to implement common methods on nsIDOMCSSMediaRule and
   // nsIDOMCSSMozDocumentRule
-  nsIDOMCSSRuleList* GetCssRules();
+  nsresult GetCssRules(nsIDOMCSSRuleList* *aRuleList);
   nsresult InsertRule(const nsAString & aRule, PRUint32 aIndex,
                       PRUint32* _retval);
   nsresult DeleteRule(PRUint32 aIndex);

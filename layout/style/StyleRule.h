@@ -341,8 +341,6 @@ public:
   // hooks for DOM rule
   void GetCssText(nsAString& aCssText);
   void SetCssText(const nsAString& aCssText);
-  nsCSSStyleSheet* GetParentStyleSheet() { return mSheet; }
-  GroupRule* GetParentRule() { return mParentRule; }
   void GetSelectorText(nsAString& aSelectorText);
   void SetSelectorText(const nsAString& aSelectorText);
 
