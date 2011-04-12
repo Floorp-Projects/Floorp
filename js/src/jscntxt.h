@@ -1086,6 +1086,7 @@ struct JSRuntime {
     int64               gcJitReleaseTime;
     JSGCMode            gcMode;
     volatile bool       gcIsNeeded;
+    JSObject           *gcWeakMapList;
 
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
