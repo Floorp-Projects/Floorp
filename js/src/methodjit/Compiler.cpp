@@ -3956,8 +3956,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
      * call can't be loop carried).
      */
     frame.tryCopyRegister(origThis, origCallee);
-    for (int i = 0; i < argc; i++)
-        frame.tryCopyRegister(frame.peek(-(i + 1)), origCallee);
+    for (unsigned i = 0; i < argc; i++)
+        frame.tryCopyRegister(frame.peek(-((int)i + 1)), origCallee);
 
     /*
      * If this is a polymorphic callsite, get a register for the callee too.
@@ -5919,7 +5919,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
                 return;
             }
         }
-        if (mayPushUndefined(0))
+        if (knownPushedType(0) != type)
             type = JSVAL_TYPE_UNKNOWN;
     }
 
