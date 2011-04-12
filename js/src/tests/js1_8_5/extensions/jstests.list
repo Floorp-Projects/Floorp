@@ -40,4 +40,3 @@ script regress-631723.js
 skip-if(!xulRuntime.shell) script regress-636818.js
 script regress-636697.js
 script is-generator.js
-script weakmap.js
