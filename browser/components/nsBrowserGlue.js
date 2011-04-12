@@ -261,6 +261,9 @@ BrowserGlue.prototype = {
         else if (data == "force-ui-migration") {
           this._migrateUI();
         }
+        else if (data == "force-distribution-customization") {
+          this._distributionCustomizer.applyCustomizations();
+        }
         break;
     }
   }, 
