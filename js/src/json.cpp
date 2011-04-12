@@ -240,7 +240,7 @@ public:
         }
 
         if (gapValue.value().isString()) {
-            if (!ValueToStringBuffer(cx, gapValue.value(), gap))
+            if (!gap.append(gapValue.value().toString()))
                 return false;
             if (gap.length() > 10)
                 gap.resize(10);
