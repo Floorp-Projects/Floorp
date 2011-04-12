@@ -282,6 +282,33 @@ nsGIOMimeApp::SetAsDefaultForFileExtensions(nsACString const& fileExts)
   return NS_OK;
 }
 
+/**
+ * Set default application for URI's of a particular scheme
+ * @param aURIScheme string containing the URI scheme
+ * @return NS_OK when application was set as default for URI scheme,
+ * NS_ERROR_FAILURE otherwise
+ */
+NS_IMETHODIMP
+nsGIOMimeApp::SetAsDefaultForURIScheme(nsACString const& aURIScheme)
+{
+  GError *error = NULL;
+  nsCAutoString contentType("x-scheme-handler/");
+  contentType.Append(aURIScheme);
+
+  g_app_info_set_as_default_for_type(mApp,
+                                     contentType.get(),
+                                     &error);
+  if (error) {
+    g_warning("Cannot set application as default for URI scheme (%s): %s",
+              PromiseFlatCString(aURIScheme).get(),
+              error->message);
+    g_error_free(error);
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 nsresult
 nsGIOService::Init()
 {
@@ -321,6 +348,23 @@ nsGIOService::GetMimeTypeFromExtension(const nsACString& aExtension,
 }
 // used in nsGNOMERegistry
 // -----------------------------------------------------------------------------
+NS_IMETHODIMP
+nsGIOService::GetAppForURIScheme(const nsACString& aURIScheme,
+                                 nsIGIOMimeApp** aApp)
+{
+  *aApp = nsnull;
+
+  GAppInfo *app_info = g_app_info_get_default_for_uri_scheme(
+                          PromiseFlatCString(aURIScheme).get());
+  if (app_info) {
+    nsGIOMimeApp *mozApp = new nsGIOMimeApp(app_info);
+    NS_ADDREF(*aApp = mozApp);
+  } else {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsGIOService::GetAppForMimeType(const nsACString& aMimeType,
                                 nsIGIOMimeApp**   aApp)
