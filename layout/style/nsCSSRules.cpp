@@ -583,9 +583,7 @@ GroupRule::AppendStyleRule(nsICSSRule* aRule)
   aRule->SetStyleSheet(mSheet);
   aRule->SetParentRule(this);
   if (mSheet) {
-    // XXXldb Shouldn't we be using |WillDirty| and |DidDirty| (and
-    // shouldn't |SetModified| be removed?
-    mSheet->SetModified(PR_TRUE);
+    mSheet->SetModifiedByChildRule();
   }
 }
 
