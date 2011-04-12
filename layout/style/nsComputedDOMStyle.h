@@ -368,6 +368,7 @@ private:
   nsIDOMCSSValue* DoGetTransitionDelay();
   nsIDOMCSSValue* DoGetTransitionTimingFunction();
 
+#ifdef MOZ_CSS_ANIMATIONS
   /* CSS Animations */
   nsIDOMCSSValue* DoGetAnimationName();
   nsIDOMCSSValue* DoGetAnimationDuration();
@@ -377,6 +378,7 @@ private:
   nsIDOMCSSValue* DoGetAnimationFillMode();
   nsIDOMCSSValue* DoGetAnimationIterationCount();
   nsIDOMCSSValue* DoGetAnimationPlayState();
+#endif
 
   /* SVG properties */
   nsIDOMCSSValue* DoGetFill();
