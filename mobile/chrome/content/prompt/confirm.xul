@@ -19,7 +19,8 @@
   </commandset>
 
   <vbox class="prompt-header" flex="1">
-    <label id="prompt-confirm-title" class="prompt-title" crop="center" flex="1"/>
+    <description id="prompt-confirm-title" class="prompt-title" crop="center" flex="1"/>
+    <separator id="prompt-confirm-separator" class="prompt-line"/>
 
     <scrollbox orient="vertical" class="prompt-message" flex="1">
       <description id="prompt-confirm-message"/>

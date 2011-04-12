@@ -19,13 +19,14 @@
   </commandset>
 
   <vbox class="prompt-header" flex="1">
-    <label id="prompt-prompt-title" class="prompt-title" crop="center" flex="1"/>
+    <description id="prompt-prompt-title" class="prompt-title" crop="center" flex="1"/>
+    <separator class="prompt-line"/>
 
     <scrollbox orient="vertical" class="prompt-message" flex="1">
       <description id="prompt-prompt-message"/>
     </scrollbox>
 
-    <textbox id="prompt-prompt-textbox"/>
+    <textbox id="prompt-prompt-textbox" class="prompt-edit"/>
 
     <button id="prompt-prompt-checkbox" type="checkbox" class="button-checkbox" collapsed="true" pack="start" flex="1">
       <image class="button-image-icon"/>
