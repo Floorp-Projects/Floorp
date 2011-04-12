@@ -133,6 +133,10 @@ public:
   }
   virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult) = 0;
 
+  // to implement methods on nsIDOMCSSRule
+  nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
+  nsresult GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet);
+
 protected:
   nsCSSStyleSheet*  mSheet;
   GroupRule*        mParentRule;
