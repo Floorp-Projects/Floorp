@@ -35,18 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsDOMTransitionEvent.h"
+#include "nsDOMAnimationEvent.h"
 #include "nsGUIEvent.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"
 #include "nsIXPCScriptable.h"
 
-nsDOMTransitionEvent::nsDOMTransitionEvent(nsPresContext *aPresContext,
-                                           nsTransitionEvent *aEvent)
+nsDOMAnimationEvent::nsDOMAnimationEvent(nsPresContext *aPresContext,
+                                         nsAnimationEvent *aEvent)
   : nsDOMEvent(aPresContext, aEvent ? aEvent
-                                    : new nsTransitionEvent(PR_FALSE, 0,
-                                                            EmptyString(),
-                                                            0.0))
+                                    : new nsAnimationEvent(PR_FALSE, 0,
+                                                           EmptyString(),
+                                                           0.0))
 {
   if (aEvent) {
     mEventIsInternal = PR_FALSE;
@@ -57,59 +57,59 @@ nsDOMTransitionEvent::nsDOMTransitionEvent(nsPresContext *aPresContext,
   }
 }
 
-nsDOMTransitionEvent::~nsDOMTransitionEvent()
+nsDOMAnimationEvent::~nsDOMAnimationEvent()
 {
   if (mEventIsInternal) {
-    delete TransitionEvent();
+    delete AnimationEvent();
     mEvent = nsnull;
   }
 }
 
-DOMCI_DATA(TransitionEvent, nsDOMTransitionEvent)
+DOMCI_DATA(AnimationEvent, nsDOMAnimationEvent)
 
-NS_INTERFACE_MAP_BEGIN(nsDOMTransitionEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTransitionEvent)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TransitionEvent)
+NS_INTERFACE_MAP_BEGIN(nsDOMAnimationEvent)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMAnimationEvent)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(AnimationEvent)
 NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
-NS_IMPL_ADDREF_INHERITED(nsDOMTransitionEvent, nsDOMEvent)
-NS_IMPL_RELEASE_INHERITED(nsDOMTransitionEvent, nsDOMEvent)
+NS_IMPL_ADDREF_INHERITED(nsDOMAnimationEvent, nsDOMEvent)
+NS_IMPL_RELEASE_INHERITED(nsDOMAnimationEvent, nsDOMEvent)
 
 NS_IMETHODIMP
-nsDOMTransitionEvent::GetPropertyName(nsAString & aPropertyName)
+nsDOMAnimationEvent::GetAnimationName(nsAString & aAnimationName)
 {
-  aPropertyName = TransitionEvent()->propertyName;
+  aAnimationName = AnimationEvent()->animationName;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTransitionEvent::GetElapsedTime(float *aElapsedTime)
+nsDOMAnimationEvent::GetElapsedTime(float *aElapsedTime)
 {
-  *aElapsedTime = TransitionEvent()->elapsedTime;
+  *aElapsedTime = AnimationEvent()->elapsedTime;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTransitionEvent::InitTransitionEvent(const nsAString & typeArg,
-                                          PRBool canBubbleArg,
-                                          PRBool cancelableArg,
-                                          const nsAString & propertyNameArg,
-                                          float elapsedTimeArg)
+nsDOMAnimationEvent::InitAnimationEvent(const nsAString & typeArg,
+                                        PRBool canBubbleArg,
+                                        PRBool cancelableArg,
+                                        const nsAString & animationNameArg,
+                                        float elapsedTimeArg)
 {
   nsresult rv = nsDOMEvent::InitEvent(typeArg, canBubbleArg, cancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  TransitionEvent()->propertyName = propertyNameArg;
-  TransitionEvent()->elapsedTime = elapsedTimeArg;
+  AnimationEvent()->animationName = animationNameArg;
+  AnimationEvent()->elapsedTime = elapsedTimeArg;
 
   return NS_OK;
 }
 
 nsresult
-NS_NewDOMTransitionEvent(nsIDOMEvent **aInstancePtrResult,
-                         nsPresContext *aPresContext,
-                         nsTransitionEvent *aEvent)
+NS_NewDOMAnimationEvent(nsIDOMEvent **aInstancePtrResult,
+                        nsPresContext *aPresContext,
+                        nsAnimationEvent *aEvent)
 {
-  nsDOMTransitionEvent *it = new nsDOMTransitionEvent(aPresContext, aEvent);
+  nsDOMAnimationEvent *it = new nsDOMAnimationEvent(aPresContext, aEvent);
   return CallQueryInterface(it, aInstancePtrResult);
 }
