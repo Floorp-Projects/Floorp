@@ -4,8 +4,8 @@
 
 /* File in use partial MAR file patch apply success test */
 
-const TEST_ID = "0181";
-const MAR_IN_USE_WIN_FILE = "data/partial_in_use_win.mar";
+const TEST_ID = "0183";
+const MAR_IN_USE_WIN_FILE = "data/partial.mar";
 
 // The files are in the same order as they are applied from the mar
 var TEST_FILES = [
@@ -35,8 +35,8 @@ var TEST_FILES = [
   relPathDir       : "0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial_in_use_win_before.exe",
-  compareFile      : "data/partial_in_use_win_after.exe"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/partial.png"
 }, {
   fileName         : "10text0",
   relPathDir       : "1/10/",
@@ -63,8 +63,8 @@ var TEST_FILES = [
   relPathDir       : "",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial_in_use_win_before.exe",
-  compareFile      : "data/partial_in_use_win_after.exe"
+  originalFile     : "data/complete.png",
+  compareFile      : "data/partial.png"
 }];
 
 function run_test() {
@@ -78,9 +78,17 @@ function run_test() {
 
   setupUpdaterTest(MAR_IN_USE_WIN_FILE);
 
+  let fileInUseBin = getApplyDirFile(TEST_DIRS[2].relPathDir +
+                                     TEST_DIRS[2].files[0]);
+  // Remove the empty file created for the test so the helper application can
+  // replace it.
+  fileInUseBin.remove(false);
+
+  let helperBin = do_get_file(HELPER_BIN_FILE);
+  let fileInUseDir = getApplyDirFile(TEST_DIRS[2].relPathDir);
+  helperBin.copyTo(fileInUseDir, TEST_DIRS[2].files[0]);
+
   // Launch an existing file so it is in use during the update
-  let fileInUseBin = getApplyDirFile(TEST_FILES[3].relPathDir +
-                                    TEST_FILES[3].fileName);
   let args = [getApplyDirPath(), "input", "output", "-s", "20"];
   let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
                          createInstance(AUS_Ci.nsIProcess);
