@@ -84,6 +84,7 @@ CPPSRCS		= \
 		nsDOMEventTargetHelper.cpp \
 		nsDOMScrollAreaEvent.cpp \
 		nsDOMTransitionEvent.cpp \
+		nsDOMAnimationEvent.cpp \
 		nsDOMPopStateEvent.cpp \
 		nsDOMCloseEvent.cpp \
 		$(NULL)

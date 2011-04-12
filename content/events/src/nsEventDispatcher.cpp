@@ -777,6 +777,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     case NS_TRANSITION_EVENT:
       return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext,
                                       static_cast<nsTransitionEvent*>(aEvent));
+    case NS_ANIMATION_EVENT:
+      return NS_NewDOMAnimationEvent(aDOMEvent, aPresContext,
+                                     static_cast<nsAnimationEvent*>(aEvent));
     }
 
     // For all other types of events, create a vanilla event object.
@@ -856,6 +859,8 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
   // is probably wrong!
   if (aEventType.LowerCaseEqualsLiteral("transitionevent"))
     return NS_NewDOMTransitionEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("animationevent"))
+    return NS_NewDOMAnimationEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("popstateevent"))
     return NS_NewDOMPopStateEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("mozaudioavailableevent"))
