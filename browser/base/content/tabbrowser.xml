@@ -1265,7 +1265,7 @@
             notificationbox.appendChild(stack);
 
             var position = this.tabs.length - 1;
-            var uniqueId = "panel" + Date.now() + position;
+            var uniqueId = "panel" + Math.floor(Date.now()) + position;
             notificationbox.id = uniqueId;
             t.linkedPanel = uniqueId;
             t.linkedBrowser = b;
@@ -2408,7 +2408,7 @@
           this.mCurrentTab = this.tabContainer.firstChild;
           document.addEventListener("keypress", this, false);
 
-          var uniqueId = "panel" + Date.now();
+          var uniqueId = "panel" + Math.floor(Date.now());
           this.mPanelContainer.childNodes[0].id = uniqueId;
           this.mCurrentTab.linkedPanel = uniqueId;
           this.mCurrentTab._tPos = 0;
