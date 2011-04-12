@@ -144,54 +144,25 @@ int NS_main(int argc, NS_tchar **argv)
 
   int i = 0;
 
-#ifdef WINCE
-  NS_tchar cwd[MAXPATHLEN];
-  if (argv[1][wcslen(argv[1]) - 1] != NS_T('/') &&
-      argv[1][wcslen(argv[1]) - 1] != NS_T('\\')) {
-    NS_tsnprintf(cwd, sizeof(cwd)/sizeof(cwd[0]),
-                 NS_T("%s"), argv[1]);
-  } else {
-    NS_tsnprintf(cwd, sizeof(cwd)/sizeof(cwd[0]),
-                 NS_T("%s/"), argv[1]);
-  }
-#else
   if (NS_tchdir(argv[1]) != 0) {
     return 1;
   }
-#endif
 
   // File in use test helper section
   if (!NS_tstrcmp(argv[4], NS_T("-s"))) {
-#ifdef WINCE
-    NS_tchar inFilePath[MAXPATHLEN];
-    NS_tsnprintf(inFilePath, sizeof(inFilePath)/sizeof(inFilePath[0]),
-                 NS_T("%s%s"), cwd, argv[2]);
-    NS_tchar outFilePath[MAXPATHLEN];
-    NS_tsnprintf(outFilePath, sizeof(outFilePath)/sizeof(outFilePath[0]),
-                 NS_T("%s%s"), cwd, argv[3]);
-#else
     NS_tchar inFilePath[MAXPATHLEN];
     NS_tsnprintf(inFilePath, sizeof(inFilePath)/sizeof(inFilePath[0]),
                  NS_T("%s"), argv[2]);
     NS_tchar outFilePath[MAXPATHLEN];
     NS_tsnprintf(outFilePath, sizeof(outFilePath)/sizeof(outFilePath[0]),
                  NS_T("%s"), argv[3]);
-#endif
 
     int seconds = NS_ttoi(argv[5]);
 #ifdef XP_WIN
     HANDLE hFile = INVALID_HANDLE_VALUE;
     if (argc == 7) {
-#ifdef WINCE
-      NS_tchar lockfile[MAXPATHLEN];
-      NS_tsnprintf(lockfile, sizeof(lockfile)/sizeof(lockfile[0]),
-                   NS_T("%s%s"), cwd, argv[6]);
-      hFile = CreateFileW(lockfile,
-                          GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
-#else
       hFile = CreateFileW(argv[6],
                           DELETE | GENERIC_WRITE, 0,
-#endif
                           NULL, OPEN_EXISTING, 0, NULL);
       if (hFile == INVALID_HANDLE_VALUE) {
         WriteMsg(outFilePath, "error_locking");
@@ -219,13 +190,8 @@ int NS_main(int argc, NS_tchar **argv)
 
   // Command line argument test helper section
   NS_tchar logFilePath[MAXPATHLEN];
-#ifdef WINCE
-  NS_tsnprintf(logFilePath, sizeof(logFilePath)/sizeof(logFilePath[0]),
-               NS_T("%s%s"), cwd, argv[2]);
-#else
   NS_tsnprintf(logFilePath, sizeof(logFilePath)/sizeof(logFilePath[0]),
                NS_T("%s"), argv[2]);
-#endif
 
   FILE* logFP = NS_tfopen(logFilePath, NS_T("wb"));
   for (i = 1; i < argc; ++i) {
