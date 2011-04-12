@@ -927,10 +927,6 @@ nsXULTreeItemAccessibleBase::GroupPosition(PRInt32 *aGroupLevel,
 PRUint64
 nsXULTreeItemAccessibleBase::NativeState()
 {
-
-  if (IsDefunct())
-    return states::DEFUNCT;
-
   // focusable and selectable states
   PRUint64 state = states::FOCUSABLE | states::SELECTABLE;
 
