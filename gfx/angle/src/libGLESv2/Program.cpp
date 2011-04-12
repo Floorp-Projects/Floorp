@@ -2732,7 +2732,12 @@ GLint Program::getActiveUniformMaxLength()
     {
         if (!mUniforms[uniformIndex]->name.empty() && mUniforms[uniformIndex]->name.substr(0, 3) != "dx_")
         {
-            maxLength = std::max((int)(undecorate(mUniforms[uniformIndex]->name).length() + 1), maxLength);
+            int length = (int)(undecorate(mUniforms[uniformIndex]->name).length() + 1);
+            if (mUniforms[uniformIndex]->arraySize != 1)
+            {
+                length += 3;  // Counting in "[0]".
+            }
+            maxLength = std::max(length, maxLength);
         }
     }
 
