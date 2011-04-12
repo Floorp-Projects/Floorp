@@ -1172,7 +1172,8 @@ nsHTMLParanoidFragmentSink::CloseContainer(const nsHTMLTag aTag)
                             0, PR_FALSE);
           // Mark the sheet as complete.
           if (NS_SUCCEEDED(rv)) {
-            sheet->SetModified(PR_FALSE);
+            NS_ABORT_IF_FALSE(!sheet->IsModified(),
+                              "should not get marked modified during parsing");
             sheet->SetComplete();
           }
           if (NS_SUCCEEDED(rv)) {
