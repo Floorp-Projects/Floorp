@@ -88,6 +88,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jshashtable.h"
+#include "jsweakmap.h"
 
 #include "jsstrinlines.h"
 #include "jscompartment.h"
@@ -2190,6 +2191,8 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     rt->gcMarkingTracer = &gcmarker;
     gcmarker.stackLimit = cx->stackLimit;
 
+    rt->gcWeakMapList = NULL;
+
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
          r.front()->clearMarkBitmap();
 
@@ -2212,8 +2215,10 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * Mark weak roots.
      */
     while (true) {
-        if (!js_TraceWatchPoints(&gcmarker))
+        if (!js_TraceWatchPoints(&gcmarker) &&
+            !WeakMap::markIteratively(&gcmarker)) {
             break;
+        }
         gcmarker.markDelayedChildren();
     }
 
@@ -2260,6 +2265,9 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
     /* Finalize watch points associated with unreachable objects. */
     js_SweepWatchPoints(cx);
+
+    /* Finalize unreachable (key,value) pairs in all weak maps. */
+    WeakMap::sweep(cx);
 
 #ifdef DEBUG
     /* Save the pre-sweep count of scope-mapped properties. */
