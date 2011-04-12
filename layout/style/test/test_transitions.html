@@ -7,6 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
   <title>Test for Bug 435441</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="animation_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style type="text/css">
 
@@ -43,11 +44,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
 
 /** Test for Bug 435441 **/
 
-function px_to_num(str)
-{
-    return Number(String(str).match(/^([\d.]+)px$/)[1]);
-}
-
 // Run tests simultaneously so we don't have to take up too much time.
 SimpleTest.waitForExplicitFinish();
 var gTestsRunning = 0;
@@ -79,36 +75,6 @@ function process_future_calls(index)
     for (var i = 0; i < calls.length; ++i) {
         calls[i]();
         TestFinished();
-    }
-}
-
-function bezier(x1, y1, x2, y2) {
-    // Cubic bezier with control points (0, 0), (x1, y1), (x2, y2), and (1, 1).
-    function x_for_t(t) {
-        var omt = 1-t;
-        return 3 * omt * omt * t * x1 + 3 * omt * t * t * x2 + t * t * t;
-    }
-    function y_for_t(t) {
-        var omt = 1-t;
-        return 3 * omt * omt * t * y1 + 3 * omt * t * t * y2 + t * t * t;
-    }
-    function t_for_x(x) {
-        // Binary subdivision.
-        var mint = 0, maxt = 1;
-        for (var i = 0; i < 30; ++i) {
-            var guesst = (mint + maxt) / 2;
-            var guessx = x_for_t(guesst);
-            if (x < guessx)
-                maxt = guesst;
-            else
-                mint = guesst;
-        }
-        return (mint + maxt) / 2;
-    }
-    return function bezier_closure(x) {
-        if (x == 0) return 0;
-        if (x == 1) return 1;
-        return y_for_t(t_for_x(x));
     }
 }
 

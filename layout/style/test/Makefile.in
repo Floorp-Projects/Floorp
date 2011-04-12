@@ -196,6 +196,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_visited_lying.html \
 		test_visited_pref.html \
 		test_visited_reftests.html \
+		animation_utils.js \
 		css_properties.js \
 		property_database.js \
 		descriptor_database.js \
