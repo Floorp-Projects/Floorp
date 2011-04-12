@@ -102,6 +102,7 @@ class nsUserFontSet;
 struct nsFontFaceRuleContainer;
 class nsObjectFrame;
 class nsTransitionManager;
+class nsAnimationManager;
 class nsRefreshDriver;
 class imgIContainer;
 
@@ -238,6 +239,7 @@ public:
     { return GetPresShell()->FrameManager(); } 
 
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
+  nsAnimationManager* AnimationManager() { return mAnimationManager; }
 
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 #endif
@@ -1061,6 +1063,7 @@ protected:
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
   nsRefPtr<nsTransitionManager> mTransitionManager;
+  nsRefPtr<nsAnimationManager> mAnimationManager;
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
 

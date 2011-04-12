@@ -240,6 +240,7 @@ class nsStyleSet
     eStyleAttrSheet,
     eOverrideSheet, // CSS
     eTransitionSheet,
+    eAnimationSheet,
     eSheetTypeCount
     // be sure to keep the number of bits in |mDirty| below and in
     // NS_RULE_NODE_LEVEL_MASK updated when changing the number of sheet
@@ -364,7 +365,9 @@ class nsStyleSet
              PRBool aIsLink,
              PRBool aIsVisitedLink,
              nsIAtom* aPseudoTag,
-             nsCSSPseudoElements::Type aPseudoType);
+             nsCSSPseudoElements::Type aPseudoType,
+             PRBool aDoAnimation,
+             mozilla::dom::Element* aElementForAnimation);
 
   nsPresContext* PresContext() { return mRuleTree->GetPresContext(); }
 

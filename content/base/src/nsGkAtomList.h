@@ -1829,6 +1829,9 @@ GK_ATOM(volumechange, "volumechange")
 #endif
 
 // Content property names
+GK_ATOM(animationsProperty, "AnimationsProperty")        // FrameAnimations*
+GK_ATOM(animationsOfBeforeProperty, "AnimationsOfBeforeProperty") // FrameAnimations*
+GK_ATOM(animationsOfAfterProperty, "AnimationsOfAfterProperty") // FrameAnimations*
 GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
 GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
 GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*

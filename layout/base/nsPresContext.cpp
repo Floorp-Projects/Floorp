@@ -95,6 +95,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsObjectFrame.h"
 #include "nsTransitionManager.h"
+#include "nsAnimationManager.h"
 #include "mozilla/dom/Element.h"
 #include "nsIFrameMessageManager.h"
 #include "FrameLayerBuilder.h"
@@ -914,6 +915,10 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   if (!mTransitionManager)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  mAnimationManager = new nsAnimationManager(this);
+  if (!mAnimationManager)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   if (mDocument->GetDisplayDocument()) {
     NS_ASSERTION(mDocument->GetDisplayDocument()->GetShell() &&
                  mDocument->GetDisplayDocument()->GetShell()->GetPresContext(),
@@ -1075,6 +1080,10 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (mTransitionManager) {
       mTransitionManager->Disconnect();
       mTransitionManager = nsnull;
+    }
+    if (mAnimationManager) {
+      mAnimationManager->Disconnect();
+      mAnimationManager = nsnull;
     }
   }
 }
@@ -1625,6 +1634,7 @@ nsPresContext::RebuildAllStyleData(nsChangeHint aExtraHint)
   }
 
   RebuildUserFontSet();
+  AnimationManager()->KeyframesListIsDirty();
 
   mShell->FrameConstructor()->RebuildAllStyleData(aExtraHint);
 }
