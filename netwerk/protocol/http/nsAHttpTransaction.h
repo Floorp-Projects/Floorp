@@ -45,6 +45,8 @@ class nsAHttpSegmentReader;
 class nsAHttpSegmentWriter;
 class nsIInterfaceRequestor;
 class nsIEventTarget;
+class nsITransport;
+class nsHttpRequestHead;
 
 //----------------------------------------------------------------------------
 // Abstract base class for a HTTP transaction:
@@ -61,13 +63,14 @@ public:
     // called by the connection when it takes ownership of the transaction.
     virtual void SetConnection(nsAHttpConnection *) = 0;
 
-    // called by the connection to get security callbacks to set on the 
+    // called by the connection to get security callbacks to set on the
     // socket transport.
     virtual void GetSecurityCallbacks(nsIInterfaceRequestor **,
                                       nsIEventTarget **) = 0;
 
     // called to report socket status (see nsITransportEventSink)
-    virtual void OnTransportStatus(nsresult status, PRUint64 progress) = 0;
+    virtual void OnTransportStatus(nsITransport* transport,
+                                   nsresult status, PRUint64 progress) = 0;
 
     // called to check the transaction status.
     virtual PRBool   IsDone() = 0;
@@ -86,19 +89,28 @@ public:
 
     // called to close the transaction
     virtual void Close(nsresult reason) = 0;
+
+    // called to indicate a failure at the SSL setup level
+    virtual void SetSSLConnectFailed() = 0;
+    
+    // called to retrieve the request headers of the transaction
+    virtual nsHttpRequestHead *RequestHead() = 0;
 };
 
 #define NS_DECL_NSAHTTPTRANSACTION \
     void SetConnection(nsAHttpConnection *); \
     void GetSecurityCallbacks(nsIInterfaceRequestor **, \
                               nsIEventTarget **);       \
-    void OnTransportStatus(nsresult status, PRUint64 progress); \
+    void OnTransportStatus(nsITransport* transport, \
+                           nsresult status, PRUint64 progress); \
     PRBool   IsDone(); \
     nsresult Status(); \
     PRUint32 Available(); \
     nsresult ReadSegments(nsAHttpSegmentReader *, PRUint32, PRUint32 *); \
     nsresult WriteSegments(nsAHttpSegmentWriter *, PRUint32, PRUint32 *); \
-    void     Close(nsresult reason);
+    void     Close(nsresult reason);                                    \
+    void     SetSSLConnectFailed();                                     \
+    nsHttpRequestHead *RequestHead();
 
 //-----------------------------------------------------------------------------
 // nsAHttpSegmentReader

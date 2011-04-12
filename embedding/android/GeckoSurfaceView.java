@@ -383,7 +383,10 @@ class GeckoSurfaceView
             outAttrs.imeOptions = EditorInfo.IME_ACTION_SEND;
         else if (mIMEActionHint != null && mIMEActionHint.length() != 0)
             outAttrs.actionLabel = mIMEActionHint;
-            
+
+        if (mIMELandscapeFS == false)
+            outAttrs.imeOptions |= EditorInfo.IME_FLAG_NO_EXTRACT_UI;
+
         inputConnection.reset();
         return inputConnection;
     }
@@ -624,6 +627,7 @@ class GeckoSurfaceView
     int mIMEState;
     String mIMETypeHint;
     String mIMEActionHint;
+    boolean mIMELandscapeFS;
 
     // Software rendering
     ByteBuffer mSoftwareBuffer;

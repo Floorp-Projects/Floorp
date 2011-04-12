@@ -35,9 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
-# include "gfxSharedImageSurface.h"
-#endif
+#include "gfxSharedImageSurface.h"
 
 #include "CanvasLayerOGL.h"
 
@@ -67,6 +65,12 @@ CanvasLayerOGL::Destroy()
       cx->MakeCurrent();
       cx->fDeleteTextures(1, &mTexture);
     }
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+    if (mPixmap) {
+        sGLXLibrary.DestroyPixmap(mPixmap);
+        mPixmap = 0;
+    }
+#endif
 
     mDestroyed = PR_TRUE;
   }
@@ -84,9 +88,22 @@ CanvasLayerOGL::Initialize(const Data& aData)
     return;
   }
 
+  mOGLManager->MakeCurrent();
+
   if (aData.mSurface) {
     mCanvasSurface = aData.mSurface;
     mNeedsYFlip = PR_FALSE;
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+    mPixmap = sGLXLibrary.CreatePixmap(aData.mSurface);
+    if (mPixmap) {
+        if (aData.mSurface->GetContentType() == gfxASurface::CONTENT_COLOR_ALPHA) {
+            mLayerProgram = gl::RGBALayerProgramType;
+        } else {
+            mLayerProgram = gl::RGBXLayerProgramType;
+        }
+        MakeTexture();
+    }
+#endif
   } else if (aData.mGLContext) {
     if (!aData.mGLContext->IsOffscreen()) {
       NS_WARNING("CanvasLayerOGL with a non-offscreen GL context given");
@@ -144,6 +161,12 @@ CanvasLayerOGL::UpdateSurface()
   if (mDestroyed || mDelayedUpdates) {
     return;
   }
+
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+  if (mPixmap) {
+    return;
+  }
+#endif
 
   mOGLManager->MakeCurrent();
 
@@ -228,6 +251,12 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
     program = mOGLManager->GetColorTextureLayerProgram(mLayerProgram);
   }
 
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+  if (mPixmap && !mDelayedUpdates) {
+    sGLXLibrary.BindTexImage(mPixmap);
+  }
+#endif
+
   ApplyFilter(mFilter);
 
   program->Activate();
@@ -239,13 +268,17 @@ CanvasLayerOGL::RenderLayer(int aPreviousDestination,
 
   mOGLManager->BindAndDrawQuad(program, mNeedsYFlip ? true : false);
 
+#if defined(MOZ_WIDGET_GTK2) && !defined(MOZ_PLATFORM_MAEMO)
+  if (mPixmap && !mDelayedUpdates) {
+    sGLXLibrary.ReleaseTexImage(mPixmap);
+  }
+#endif
+
   if (useGLContext) {
     gl()->UnbindTex2DOffscreen(mCanvasGLContext);
   }
 }
 
-
-#ifdef MOZ_IPC
 
 ShadowCanvasLayerOGL::ShadowCanvasLayerOGL(LayerManagerOGL* aManager)
   : ShadowCanvasLayer(aManager, nsnull)
@@ -334,5 +367,3 @@ ShadowCanvasLayerOGL::RenderLayer(int aPreviousFrameBuffer,
 
   mOGLManager->BindAndDrawQuad(program);
 }
-
-#endif  // MOZ_IPC

@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(a6cf907a-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(ab7e88aa-7c95-4d0a-94de-c632ca0c25cc)]
 interface nsIDOMEntityReference : nsIDOMNode
 {
 };

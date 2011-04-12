@@ -441,7 +441,7 @@ struct uint8_clamped {
         return *this;
     }
 
-    inline uint8_clamped& operator= (int32 x) { 
+    inline uint8_clamped& operator= (int32 x) {
         val = (x >= 0)
               ? ((x < 255)
                  ? uint8(x)
@@ -450,7 +450,7 @@ struct uint8_clamped {
         return *this;
     }
 
-    inline uint8_clamped& operator= (const jsdouble x) { 
+    inline uint8_clamped& operator= (const jsdouble x) {
         val = uint8(js_TypedArray_uint8_clamp_double(x));
         return *this;
     }
@@ -853,14 +853,9 @@ class TypedArrayTemplate
         if (!obj)
             return false;
 
-        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp + 2))
-            return false;
-
         if (obj->getClass() != fastClass()) {
             // someone tried to apply this subarray() to the wrong class
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_INCOMPATIBLE_METHOD,
-                                 fastClass()->name, "subarray", obj->getClass()->name);
+            ReportIncompatibleMethod(cx, vp, fastClass());
             return false;
         }
 
@@ -915,14 +910,9 @@ class TypedArrayTemplate
         if (!obj)
             return false;
 
-        if (!InstanceOf(cx, obj, ThisTypeArray::fastClass(), vp + 2))
-            return false;
-
         if (obj->getClass() != fastClass()) {
             // someone tried to apply this set() to the wrong class
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                 JSMSG_INCOMPATIBLE_METHOD,
-                                 fastClass()->name, "set", obj->getClass()->name);
+            ReportIncompatibleMethod(cx, vp, fastClass());
             return false;
         }
 
@@ -1152,7 +1142,7 @@ class TypedArrayTemplate
 
         return NativeType(int32(0));
     }
-    
+
     static bool
     copyFrom(JSContext *cx, JSObject *thisTypedArrayObj,
              JSObject *ar, jsuint len, jsuint offset = 0)

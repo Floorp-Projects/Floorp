@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+    <script type="text/javascript">
+        function reframe(node) {
+            node.style.display = "none";
+            document.body.offsetWidth;
+            node.style.display = "block";
+            document.documentElement.className='';
+        }
+    </script>
+</head>
+<body>
+    <iframe onload="reframe(this)" src="642800-iframe.html" id="iframe" style="width: 500px; height: 200px"></iframe>
+
+</body>
+</html>
+

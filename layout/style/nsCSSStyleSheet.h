@@ -56,7 +56,6 @@ class nsICSSRule;
 class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;
 class nsMediaList;
-class nsICSSGroupRule;
 class nsIPrincipal;
 class nsIURI;
 class nsMediaList;
@@ -67,6 +66,7 @@ template<class E, class A> class nsTArray;
 
 namespace mozilla {
 namespace css {
+class GroupRule;
 class ImportRule;
 }
 }
@@ -172,9 +172,9 @@ public:
   PRInt32 StyleRuleCount() const;
   nsresult GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
 
-  nsresult DeleteRuleFromGroup(nsICSSGroupRule* aGroup, PRUint32 aIndex);
-  nsresult InsertRuleIntoGroup(const nsAString& aRule, nsICSSGroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
-  nsresult ReplaceRuleInGroup(nsICSSGroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
+  nsresult DeleteRuleFromGroup(mozilla::css::GroupRule* aGroup, PRUint32 aIndex);
+  nsresult InsertRuleIntoGroup(const nsAString& aRule, mozilla::css::GroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
+  nsresult ReplaceRuleInGroup(mozilla::css::GroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
 
   PRInt32 StyleSheetCount() const;
 
@@ -210,7 +210,12 @@ public:
                                           nsIDOMNode* aCloneOwningNode) const;
 
   PRBool IsModified() const { return mDirty; }
-  void SetModified(PRBool aModified) { mDirty = aModified; }
+
+  void SetModifiedByChildRule() {
+    NS_ASSERTION(mDirty,
+                 "sheet must be marked dirty before handing out child rules");
+    DidDirty();
+  }
 
   nsresult AddRuleProcessor(nsCSSRuleProcessor* aProcessor);
   nsresult DropRuleProcessor(nsCSSRuleProcessor* aProcessor);

@@ -534,7 +534,7 @@ customReturnInterfaces = [
     ]
 
 nsIDOMNode_GetChildNodes_customMethodCallCode = """
-    nsIDOMNodeList* result = self->GetChildNodesList();
+    nsChildContentList* result = static_cast<nsChildContentList*>(self->GetChildNodesList());
     rv = result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 """
 

@@ -80,7 +80,7 @@ struct AtkStateMap {
   AtkStateType atkState;
   EStateMapEntryType stateMapEntryType;
 
-  static PRInt32 GetStateIndexFor(PRUint32 aState)
+  static PRInt32 GetStateIndexFor(PRUint64 aState)
   {
     PRInt32 stateIndex = -1;
     while (aState > 0) {
@@ -93,72 +93,53 @@ struct AtkStateMap {
 
 
 // Map array from cross platform roles to  ATK roles
-static const AtkStateMap gAtkStateMap[] = {                       // Cross Platform States
-  { kNone,                                    kMapOpposite },     // nsIAccessibleStates::STATE_UNAVAILABLE     = 0x00000001
-  { ATK_STATE_SELECTED,                       kMapDirectly },     // nsIAccessibleStates::STATE_SELECTED        = 0x00000002
-  { ATK_STATE_FOCUSED,                        kMapDirectly },     // nsIAccessibleStates::STATE_FOCUSED         = 0x00000004
-  { ATK_STATE_PRESSED,                        kMapDirectly },     // nsIAccessibleStates::STATE_PRESSED         = 0x00000008
-  { ATK_STATE_CHECKED,                        kMapDirectly },     // nsIAccessibleStates::STATE_CHECKED         = 0x00000010
-  { ATK_STATE_INDETERMINATE,                  kMapDirectly },     // nsIAccessibleStates::STATE_MIXED           = 0x00000020
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_READONLY        = 0x00000040
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_HOTTRACKED      = 0x00000080
-  { ATK_STATE_DEFAULT,                        kMapDirectly },     // nsIAccessibleStates::STATE_DEFAULT         = 0x00000100
-  { ATK_STATE_EXPANDED,                       kMapDirectly },     // nsIAccessibleStates::STATE_EXPANDED        = 0x00000200
-  { kNone,                                    kNoStateChange },   // nsIAccessibleStates::STATE_COLLAPSED       = 0x00000400
-  { ATK_STATE_BUSY,                           kMapDirectly },     // nsIAccessibleStates::STATE_BUSY            = 0x00000800
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_FLOATING        = 0x00001000
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_CHECKABLE       = 0x00002000
-  { ATK_STATE_ANIMATED,                       kMapDirectly },     // nsIAccessibleStates::STATE_ANIMATED        = 0x00004000
-  { ATK_STATE_VISIBLE,                        kMapOpposite },     // nsIAccessibleStates::STATE_INVISIBLE       = 0x00008000
-  { ATK_STATE_SHOWING,                        kMapOpposite },     // nsIAccessibleStates::STATE_OFFSCREEN       = 0x00010000
-  { ATK_STATE_RESIZABLE,                      kMapDirectly },     // nsIAccessibleStates::STATE_SIZEABLE        = 0x00020000
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_MOVEABLE        = 0x00040000
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_SELFVOICING     = 0x00080000
-  { ATK_STATE_FOCUSABLE,                      kMapDirectly },     // nsIAccessibleStates::STATE_FOCUSABLE       = 0x00100000
-  { ATK_STATE_SELECTABLE,                     kMapDirectly },     // nsIAccessibleStates::STATE_SELECTABLE      = 0x00200000
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_LINKED          = 0x00400000
-  { ATK_STATE_VISITED,                        kMapDirectly },     // nsIAccessibleStates::STATE_TRAVERSED       = 0x00800000
-  { ATK_STATE_MULTISELECTABLE,                kMapDirectly },     // nsIAccessibleStates::STATE_MULTISELECTABLE = 0x01000000
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_EXTSELECTABLE   = 0x02000000
-  { ATK_STATE_REQUIRED,                       kMapDirectly },     // nsIAccessibleStates::STATE_REQUIRED        = 0x04000000
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_ALERT_MEDIUM    = 0x08000000
-  { ATK_STATE_INVALID_ENTRY,                  kMapDirectly },     // nsIAccessibleStates::STATE_INVALID         = 0x10000000
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_PROTECTED       = 0x20000000
-  { kNone,                                    kMapDirectly },     // nsIAccessibleStates::STATE_HASPOPUP        = 0x40000000
-  { kNone,                                    kNoSuchState },     //                                            = 0x80000000
-};
-
-static const AtkStateMap gAtkStateMapExt[] = {                    // Cross Platform States
-  { ATK_STATE_SUPPORTS_AUTOCOMPLETION,        kMapDirectly },     // nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION = 0x00000001
-  { ATK_STATE_DEFUNCT,                        kMapDirectly },     // nsIAccessibleStates::EXT_STATE_DEFUNCT                 = 0x00000002
-  { ATK_STATE_SELECTABLE_TEXT,                kMapDirectly },     // nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT         = 0x00000004
-  { ATK_STATE_EDITABLE,                       kMapDirectly },     // nsIAccessibleStates::EXT_STATE_EDITABLE                = 0x00000008
-  { ATK_STATE_ACTIVE,                         kMapDirectly },     // nsIAccessibleStates::EXT_STATE_ACTIVE                  = 0x00000010
-  { ATK_STATE_MODAL,                          kMapDirectly },     // nsIAccessibleStates::EXT_STATE_MODAL                   = 0x00000020
-  { ATK_STATE_MULTI_LINE,                     kMapDirectly },     // nsIAccessibleStates::EXT_STATE_MULTI_LINE              = 0x00000040
-  { ATK_STATE_HORIZONTAL,                     kMapDirectly },     // nsIAccessibleStates::EXT_STATE_HORIZONTAL              = 0x00000080
-  { ATK_STATE_OPAQUE,                         kMapDirectly },     // nsIAccessibleStates::EXT_STATE_OPAQUE                  = 0x00000100
-  { ATK_STATE_SINGLE_LINE,                    kMapDirectly },     // nsIAccessibleStates::EXT_STATE_SINGLE_LINE             = 0x00000200
-  { ATK_STATE_TRANSIENT,                      kMapDirectly },     // nsIAccessibleStates::EXT_STATE_TRANSIENT               = 0x00000400
-  { ATK_STATE_VERTICAL,                       kMapDirectly },     // nsIAccessibleStates::EXT_STATE_VERTICAL                = 0x00000800
-  { ATK_STATE_STALE,                          kMapDirectly },     // nsIAccessibleStates::EXT_STATE_STALE                   = 0x00001000
-  { ATK_STATE_ENABLED,                        kMapDirectly },     // nsIAccessibleStates::EXT_STATE_ENABLED                 = 0x00002000
-  { ATK_STATE_SENSITIVE,                      kMapDirectly },     // nsIAccessibleStates::EXT_STATE_SENSITIVE               = 0x00004000
-  { ATK_STATE_EXPANDABLE,                     kMapDirectly },     // nsIAccessibleStates::EXT_STATE_EXPANDABLE              = 0x00008000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x00010000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x00020000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x00040000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x00080000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x00100000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x00200000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x00400000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x00800000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x01000000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x02000000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x04000000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x08000000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x10000000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x20000000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x40000000
-  { kNone,                                    kNoSuchState },     //                                                        = 0x80000000
+static const AtkStateMap gAtkStateMap[] = {                     // Cross Platform States
+  { kNone,                                    kMapOpposite },   // states::UNAVAILABLE             = 1 << 0
+  { ATK_STATE_SELECTED,                       kMapDirectly },   // states::SELECTED                = 1 << 1
+  { ATK_STATE_FOCUSED,                        kMapDirectly },   // states::FOCUSED                 = 1 << 2
+  { ATK_STATE_PRESSED,                        kMapDirectly },   // states::PRESSED                 = 1 << 3
+  { ATK_STATE_CHECKED,                        kMapDirectly },   // states::CHECKED                 = 1 << 4
+  { ATK_STATE_INDETERMINATE,                  kMapDirectly },   // states::MIXED                   = 1 << 5
+  { kNone,                                    kMapDirectly },   // states::READONLY                = 1 << 6
+  { kNone,                                    kMapDirectly },   // states::HOTTRACKED              = 1 << 7
+  { ATK_STATE_DEFAULT,                        kMapDirectly },   // states::DEFAULT                 = 1 << 8
+  { ATK_STATE_EXPANDED,                       kMapDirectly },   // states::EXPANDED                = 1 << 9
+  { kNone,                                    kNoStateChange }, // states::COLLAPSED               = 1 << 10
+  { ATK_STATE_BUSY,                           kMapDirectly },   // states::BUSY                    = 1 << 11
+  { kNone,                                    kMapDirectly },   // states::FLOATING                = 1 << 12
+  { kNone,                                    kMapDirectly },   // states::CHECKABLE               = 1 << 13
+  { ATK_STATE_ANIMATED,                       kMapDirectly },   // states::ANIMATED                = 1 << 14
+  { ATK_STATE_VISIBLE,                        kMapOpposite },   // states::INVISIBLE               = 1 << 15
+  { ATK_STATE_SHOWING,                        kMapOpposite },   // states::OFFSCREEN               = 1 << 16
+  { ATK_STATE_RESIZABLE,                      kMapDirectly },   // states::SIZEABLE                = 1 << 17
+  { kNone,                                    kMapDirectly },   // states::MOVEABLE                = 1 << 18
+  { kNone,                                    kMapDirectly },   // states::SELFVOICING             = 1 << 19
+  { ATK_STATE_FOCUSABLE,                      kMapDirectly },   // states::FOCUSABLE               = 1 << 20
+  { ATK_STATE_SELECTABLE,                     kMapDirectly },   // states::SELECTABLE              = 1 << 21
+  { kNone,                                    kMapDirectly },   // states::LINKED                  = 1 << 22
+  { ATK_STATE_VISITED,                        kMapDirectly },   // states::TRAVERSED               = 1 << 23
+  { ATK_STATE_MULTISELECTABLE,                kMapDirectly },   // states::MULTISELECTABLE         = 1 << 24
+  { kNone,                                    kMapDirectly },   // states::EXTSELECTABLE           = 1 << 25
+  { ATK_STATE_REQUIRED,                       kMapDirectly },   // states::STATE_REQUIRED          = 1 << 26
+  { kNone,                                    kMapDirectly },   // states::ALERT_MEDIUM            = 1 << 27
+  { ATK_STATE_INVALID_ENTRY,                  kMapDirectly },   // states::INVALID                 = 1 << 28
+  { kNone,                                    kMapDirectly },   // states::PROTECTED               = 1 << 29
+  { kNone,                                    kMapDirectly },   // states::HASPOPUP                = 1 << 30
+  { ATK_STATE_SUPPORTS_AUTOCOMPLETION,        kMapDirectly },   // states::SUPPORTS_AUTOCOMPLETION = 1 << 31
+  { ATK_STATE_DEFUNCT,                        kMapDirectly },   // states::DEFUNCT                 = 1 << 32
+  { ATK_STATE_SELECTABLE_TEXT,                kMapDirectly },   // states::SELECTABLE_TEXT         = 1 << 33
+  { ATK_STATE_EDITABLE,                       kMapDirectly },   // states::EDITABLE                = 1 << 34
+  { ATK_STATE_ACTIVE,                         kMapDirectly },   // states::ACTIVE                  = 1 << 35
+  { ATK_STATE_MODAL,                          kMapDirectly },   // states::MODAL                   = 1 << 36
+  { ATK_STATE_MULTI_LINE,                     kMapDirectly },   // states::MULTI_LINE              = 1 << 37
+  { ATK_STATE_HORIZONTAL,                     kMapDirectly },   // states::HORIZONTAL              = 1 << 38
+  { ATK_STATE_OPAQUE,                         kMapDirectly },   // states::OPAQUE                  = 1 << 39
+  { ATK_STATE_SINGLE_LINE,                    kMapDirectly },   // states::SINGLE_LINE             = 1 << 40
+  { ATK_STATE_TRANSIENT,                      kMapDirectly },   // states::TRANSIENT               = 1 << 41
+  { ATK_STATE_VERTICAL,                       kMapDirectly },   // states::VERTICAL                = 1 << 42
+  { ATK_STATE_STALE,                          kMapDirectly },   // states::STALE                   = 1 << 43
+  { ATK_STATE_ENABLED,                        kMapDirectly },   // states::ENABLED                 = 1 << 44
+  { ATK_STATE_SENSITIVE,                      kMapDirectly },   // states::SENSITIVE               = 1 << 45
+  { ATK_STATE_EXPANDABLE,                     kMapDirectly },   // states::EXPANDABLE              = 1 << 46
+  { kNone,                                    kNoSuchState },   //                                 = 1 << 47
 };

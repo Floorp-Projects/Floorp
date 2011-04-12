@@ -1978,8 +1978,10 @@ HUD_SERVICE.prototype =
   {
     // Pipe the message to createMessageNode().
     let hud = HUDService.hudReferences[aHUDId];
-    let mappedArguments = Array.map(aArguments, hud.jsterm.formatResult,
-                                    hud.jsterm);
+    function formatResult(x) {
+      return (typeof(x) == "string") ? x : hud.jsterm.formatResult(x);
+    }
+    let mappedArguments = Array.map(aArguments, formatResult);
     let joinedArguments = Array.join(mappedArguments, " ");
     let node = ConsoleUtils.createMessageNode(hud.outputNode.ownerDocument,
                                               CATEGORY_WEBDEV,
@@ -4961,7 +4963,7 @@ ConsoleUtils = {
    */
   timestamp: function ConsoleUtils_timestamp()
   {
-    return Date.now();
+    return Math.floor(Date.now());
   },
 
   /**

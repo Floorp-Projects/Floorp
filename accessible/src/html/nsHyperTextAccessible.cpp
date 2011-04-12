@@ -39,6 +39,7 @@
 
 #include "nsHyperTextAccessible.h"
 
+#include "States.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccessibilityService.h"
 #include "nsAccUtils.h"
@@ -173,14 +174,10 @@ nsHyperTextAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_TEXT_CONTAINER; // In ATK this works
 }
 
-nsresult
-nsHyperTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
+PRUint64
+nsHyperTextAccessible::NativeState()
 {
-  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
-
-  if (!aExtraState)
-    return NS_OK;
+  PRUint64 states = nsAccessibleWrap::NativeState();
 
   nsCOMPtr<nsIEditor> editor;
   GetAssociatedEditor(getter_AddRefs(editor));
@@ -188,17 +185,17 @@ nsHyperTextAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
     PRUint32 flags;
     editor->GetFlags(&flags);
     if (0 == (flags & nsIPlaintextEditor::eEditorReadonlyMask)) {
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_EDITABLE;
+      states |= states::EDITABLE;
     }
   } else if (mContent->Tag() == nsAccessibilityAtoms::article) {
     // We want <article> to behave like a document in terms of readonly state.
-    *aState |= nsIAccessibleStates::STATE_READONLY;
+    states |= states::READONLY;
   }
 
   if (GetChildCount() > 0)
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_SELECTABLE_TEXT;
+    states |= states::SELECTABLE_TEXT;
 
-  return NS_OK;
+  return states;
 }
 
 // Substring must be entirely within the same text node
@@ -2212,7 +2209,6 @@ nsHyperTextAccessible::GetChildOffset(PRUint32 aChildIndex,
   PRUint32 lastOffset = mOffsets.IsEmpty() ?
     0 : mOffsets[mOffsets.Length() - 1];
 
-  EnsureChildren();
   while (mOffsets.Length() < aChildIndex) {
     nsAccessible* child = mChildren[mOffsets.Length()];
     lastOffset += nsAccUtils::TextLength(child);

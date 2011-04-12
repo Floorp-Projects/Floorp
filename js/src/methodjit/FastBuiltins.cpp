@@ -327,8 +327,8 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
     if (applyTricks == LazyArgsObj)
         return Compile_InlineAbort;
 
-    FrameEntry *origCallee = frame.peek(-(argc + 2));
-    FrameEntry *thisValue = frame.peek(-(argc + 1));
+    FrameEntry *origCallee = frame.peek(-((int)argc + 2));
+    FrameEntry *thisValue = frame.peek(-((int)argc + 1));
 
     if (!origCallee->isConstant() || !origCallee->isType(JSVAL_TYPE_OBJECT))
         return Compile_InlineAbort;
@@ -349,7 +349,7 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
                            : JSVAL_TYPE_UNKNOWN;
 
     /* All argument types must be known. */
-    for (unsigned i=0; i<argc; i++) {
+    for (int i=0; i<argc; i++) {
         FrameEntry * arg = frame.peek(-(i+1));
 
         if (!arg->isTypeKnown())

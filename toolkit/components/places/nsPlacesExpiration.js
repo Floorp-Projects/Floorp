@@ -194,13 +194,15 @@ const STATUS = {
 
 // Represents actions on which a query will run.
 const ACTION = {
-  TIMED: 1 << 0,
-  CLEAR_HISTORY: 1 << 1,
-  SHUTDOWN: 1 << 2,
-  CLEAN_SHUTDOWN: 1 << 3,
-  IDLE: 1 << 4,
-  DEBUG: 1 << 5,
-  TIMED_OVERLIMIT: 1 << 6,
+  TIMED: 1 << 0, // happens every this._interval
+  CLEAR_HISTORY: 1 << 1, // happens when history is cleared
+  SHUTDOWN: 1 << 2, // happens at shutdown when the db has a DIRTY state
+  CLEAN_SHUTDOWN: 1 << 3,  // happens at shutdown when the db has a CLEAN or
+                           // UNKNOWN state
+  IDLE: 1 << 4, // happens once on idle
+  DEBUG: 1 << 5, // happens whenever TOPIC_DEBUG_START_EXPIRATION is dispatched
+  TIMED_OVERLIMIT: 1 << 6, // just like TIMED, but also when we have too much
+                           // history
 };
 
 // The queries we use to expire.
@@ -400,7 +402,31 @@ const EXPIRATION_QUERIES = {
     sql: "DELETE FROM expiration_notify",
     actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.SHUTDOWN |
              ACTION.IDLE | ACTION.DEBUG
-  }
+  },
+
+  // The following queries are used to adjust the sqlite_stat1 table to help the
+  // query planner create better queries.  These should always be run LAST, and
+  // are therefore at the end of the object.
+
+  QUERY_ANALYZE_MOZ_PLACES: {
+    sql: "ANALYZE moz_places",
+    actions: ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY | ACTION.IDLE |
+             ACTION.DEBUG
+  },
+  QUERY_ANALYZE_MOZ_BOOKMARKS: {
+    sql: "ANALYZE moz_bookmarks",
+    actions: ACTION.IDLE | ACTION.DEBUG
+  },
+  QUERY_ANALYZE_MOZ_HISTORYVISITS: {
+    sql: "ANALYZE moz_historyvisits",
+    actions: ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY | ACTION.IDLE |
+             ACTION.DEBUG
+  },
+  QUERY_ANALYZE_MOZ_INPUTHISTORY: {
+    sql: "ANALYZE moz_inputhistory",
+    actions: ACTION.TIMED | ACTION.TIMED_OVERLIMIT | ACTION.CLEAR_HISTORY |
+             ACTION.IDLE | ACTION.DEBUG
+  },
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -735,8 +761,11 @@ nsPlacesExpiration.prototype = {
   /**
    * Execute async statements to expire with the specified queries.
    *
-   * @param aQueryNames
-   *        The names of the queries to use for this expiration step.
+   * @param aAction
+   *        The ACTION we are expiring for.  See the ACTION const for values.
+   * @param aLimit
+   *        Whether to use small, large or no limits when expiring.  See the
+   *        LIMIT const for values.
    */
   _expireWithActionAndLimit:
   function PEX__expireWithActionAndLimit(aAction, aLimit)
@@ -865,9 +894,9 @@ nsPlacesExpiration.prototype = {
   },
 
   /**
-   * Creates a new timer based on this._syncInterval.
+   * Creates a new timer based on this._interval.
    *
-   * @return a REPEATING_SLACK nsITimer that runs every this._syncInterval.
+   * @return a REPEATING_SLACK nsITimer that runs every this._interval.
    */
   _newTimer: function PEX__newTimer()
   {

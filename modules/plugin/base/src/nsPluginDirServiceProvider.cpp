@@ -433,7 +433,7 @@ nsPluginDirServiceProvider::GetFile(const char *charProp, PRBool *persistant,
                       nsIWindowsRegKey::ACCESS_READ);
     if (NS_FAILED(rv)) {
       rv = regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-                        NS_LITERAL_STRING("software\\Adobe\\Adobe Reader"),
+                        NS_LITERAL_STRING("software\\Adobe\\Adobe Acrobat"),
                         nsIWindowsRegKey::ACCESS_READ);
       if (NS_FAILED(rv)) {
         return NS_ERROR_FAILURE;

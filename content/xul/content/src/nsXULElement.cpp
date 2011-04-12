@@ -248,8 +248,8 @@ nsXULElement::nsXULElement(already_AddRefed<nsINodeInfo> aNodeInfo)
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumElements);
 }
 
-nsXULElement::nsXULSlots::nsXULSlots(PtrBits aFlags)
-    : nsXULElement::nsDOMSlots(aFlags)
+nsXULElement::nsXULSlots::nsXULSlots()
+    : nsXULElement::nsDOMSlots()
 {
 }
 
@@ -264,7 +264,7 @@ nsXULElement::nsXULSlots::~nsXULSlots()
 nsINode::nsSlots*
 nsXULElement::CreateSlots()
 {
-    return new nsXULSlots(mFlagsOrSlots);
+    return new nsXULSlots();
 }
 
 /* static */
@@ -279,13 +279,13 @@ nsXULElement::Create(nsXULPrototypeElement* aPrototype, nsINodeInfo *aNodeInfo,
 
         element->mPrototype = aPrototype;
         if (aPrototype->mHasIdAttribute) {
-            element->SetFlags(NODE_HAS_ID);
+            element->SetHasID();
         }
         if (aPrototype->mHasClassAttribute) {
             element->SetFlags(NODE_MAY_HAVE_CLASS);
         }
         if (aPrototype->mHasStyleAttribute) {
-            element->SetFlags(NODE_MAY_HAVE_STYLE);
+            element->SetMayHaveStyle();
         }
 
         NS_ASSERTION(aPrototype->mScriptTypeID != nsIProgrammingLanguage::UNKNOWN,
@@ -1408,7 +1408,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     // XXX Know how to remove POPUP event listeners when an attribute is unset?
 
     if (isId) {
-        UnsetFlags(NODE_HAS_ID);
+        ClearHasID();
     }
 
     if (aNameSpaceID == kNameSpaceID_None) {
@@ -1778,15 +1778,15 @@ nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 nsIAtom*
 nsXULElement::DoGetID() const
 {
-    NS_ASSERTION(HasFlag(NODE_HAS_ID), "Unexpected call");
+    NS_ASSERTION(HasID(), "Unexpected call");
     const nsAttrValue* attr =
         FindLocalOrProtoAttr(kNameSpaceID_None, nsGkAtoms::id);
 
-    // We need the nullcheck here because during unlink the prototype looses
+    // We need the nullcheck here because during unlink the prototype loses
     // all of its attributes. We might want to change that.
     // The nullcheck would also be needed if we make UnsetAttr use
     // nsGenericElement::UnsetAttr as that calls out to various code between
-    // removing the attribute and clearing the NODE_HAS_ID flag.
+    // removing the attribute and calling ClearHasID().
 
     return attr ? attr->GetAtomValue() : nsnull;
 }
@@ -1807,7 +1807,7 @@ nsXULElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 css::StyleRule*
 nsXULElement::GetInlineStyleRule()
 {
-    if (!HasFlag(NODE_MAY_HAVE_STYLE)) {
+    if (!MayHaveStyle()) {
         return nsnull;
     }
     // Fetch the cached style rule from the attributes.
@@ -2560,6 +2560,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_NATIVE(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
         static_cast<nsXULPrototypeElement*>(tmp)->Unlink();
     }
+    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
+        static_cast<nsXULPrototypeScript*>(tmp)->UnlinkJSObjects();
+    }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NATIVE_BEGIN(nsXULPrototypeNode)
     if (tmp->mType == nsXULPrototypeNode::eType_Element) {
@@ -2600,15 +2603,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_NATIVE_BEGIN(nsXULPrototypeNode)
                                                 script->mScriptObject.mObject)
     }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN_NATIVE(nsXULPrototypeNode, AddRef)
-    if (tmp->mType == nsXULPrototypeNode::eType_Element) {
-        static_cast<nsXULPrototypeElement*>(tmp)->UnlinkJSObjects();
-    }
-    else if (tmp->mType == nsXULPrototypeNode::eType_Script) {
-        static_cast<nsXULPrototypeScript*>(tmp)->UnlinkJSObjects();
-    }
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-//NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXULPrototypeNode, AddRef)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsXULPrototypeNode, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsXULPrototypeNode, Release)
 
 //----------------------------------------------------------------------
@@ -2904,18 +2899,13 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
 }
 
 void
-nsXULPrototypeElement::UnlinkJSObjects()
+nsXULPrototypeElement::Unlink()
 {
     if (mHoldsScriptObject) {
         nsContentUtils::DropScriptObjects(mScriptTypeID, this,
                                           &NS_CYCLE_COLLECTION_NAME(nsXULPrototypeNode));
         mHoldsScriptObject = PR_FALSE;
     }
-}
-
-void
-nsXULPrototypeElement::Unlink()
-{
     mNumAttributes = 0;
     delete[] mAttributes;
     mAttributes = nsnull;

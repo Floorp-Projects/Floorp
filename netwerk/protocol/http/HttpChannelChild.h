@@ -109,6 +109,10 @@ public:
                               PRBool aMerge);
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
+  NS_IMETHOD GetLocalAddress(nsACString& addr);
+  NS_IMETHOD GetLocalPort(PRInt32* port);
+  NS_IMETHOD GetRemoteAddress(nsACString& addr);
+  NS_IMETHOD GetRemotePort(PRInt32* port);
   // nsISupportsPriority
   NS_IMETHOD SetPriority(PRInt32 value);
   // nsIResumableChannel
@@ -131,12 +135,15 @@ protected:
                           const PRUint32& cacheExpirationTime,
                           const nsCString& cachedCharset,
                           const nsCString& securityInfoSerialization);
-  bool RecvOnDataAvailable(const nsCString& data, 
-                           const PRUint32& offset,
-                           const PRUint32& count);
+  bool RecvOnTransportAndData(const nsresult& status,
+                              const PRUint64& progress,
+                              const PRUint64& progressMax,
+                              const nsCString& data,
+                              const PRUint32& offset,
+                              const PRUint32& count);
   bool RecvOnStopRequest(const nsresult& statusCode);
   bool RecvOnProgress(const PRUint64& progress, const PRUint64& progressMax);
-  bool RecvOnStatus(const nsresult& status, const nsString& statusArg);
+  bool RecvOnStatus(const nsresult& status);
   bool RecvCancelEarly(const nsresult& status);
   bool RecvRedirect1Begin(const PRUint32& newChannel,
                           const URI& newURI,
@@ -169,19 +176,22 @@ private:
   bool mKeptAlive;
 
   void OnStartRequest(const nsHttpResponseHead& responseHead,
-                          const PRBool& useResponseHead,
-                          const RequestHeaderTuples& requestHeaders,
-                          const PRBool& isFromCache,
-                          const PRBool& cacheEntryAvailable,
-                          const PRUint32& cacheExpirationTime,
-                          const nsCString& cachedCharset,
-                          const nsCString& securityInfoSerialization);
-  void OnDataAvailable(const nsCString& data, 
-                       const PRUint32& offset,
-                       const PRUint32& count);
+                      const PRBool& useResponseHead,
+                      const RequestHeaderTuples& requestHeaders,
+                      const PRBool& isFromCache,
+                      const PRBool& cacheEntryAvailable,
+                      const PRUint32& cacheExpirationTime,
+                      const nsCString& cachedCharset,
+                      const nsCString& securityInfoSerialization);
+  void OnTransportAndData(const nsresult& status,
+                          const PRUint64 progress,
+                          const PRUint64& progressMax,
+                          const nsCString& data,
+                          const PRUint32& offset,
+                          const PRUint32& count);
   void OnStopRequest(const nsresult& statusCode);
   void OnProgress(const PRUint64& progress, const PRUint64& progressMax);
-  void OnStatus(const nsresult& status, const nsString& statusArg);
+  void OnStatus(const nsresult& status);
   void OnCancel(const nsresult& status);
   void Redirect1Begin(const PRUint32& newChannelId,
                       const URI& newUri,
@@ -192,7 +202,7 @@ private:
 
   friend class StartRequestEvent;
   friend class StopRequestEvent;
-  friend class DataAvailableEvent;
+  friend class TransportAndDataEvent;
   friend class ProgressEvent;
   friend class StatusEvent;
   friend class CancelEvent;

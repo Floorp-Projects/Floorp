@@ -58,10 +58,8 @@
 #include "nsFilePicker.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsIMEPicker.h"
-#ifdef MOZ_IPC
 #include "nsFilePickerProxy.h"
 #include "nsXULAppAPI.h"
-#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
@@ -91,16 +89,14 @@ nsFilePickerConstructor(nsISupports *aOuter, REFNSIID aIID,
 {
   *aResult = nsnull;
   if (aOuter != nsnull) {
-      return NS_ERROR_NO_AGGREGATION;
+    return NS_ERROR_NO_AGGREGATION;
   }
   nsCOMPtr<nsIFilePicker> picker;
-  
-#ifdef MOZ_IPC
-    if (XRE_GetProcessType() == GeckoProcessType_Content)
-        picker = new nsFilePickerProxy();
-    else 
-#endif
-        picker = new nsFilePicker;
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content)
+    picker = new nsFilePickerProxy();
+  else
+    picker = new nsFilePicker;
 
   return picker->QueryInterface(aIID, aResult);
 }

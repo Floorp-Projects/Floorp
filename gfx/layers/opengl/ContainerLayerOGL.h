@@ -38,10 +38,8 @@
 #ifndef GFX_CONTAINERLAYEROGL_H
 #define GFX_CONTAINERLAYEROGL_H
 
-#ifdef MOZ_IPC
-# include "mozilla/layers/PLayers.h"
-# include "mozilla/layers/ShadowLayers.h"
-#endif
+#include "mozilla/layers/PLayers.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #include "Layers.h"
 #include "LayerManagerOGL.h"
@@ -100,7 +98,6 @@ public:
   }
 };
 
-#ifdef MOZ_IPC
 class ShadowContainerLayerOGL : public ShadowContainerLayer,
                                 public LayerOGL
 {
@@ -139,7 +136,6 @@ public:
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 };
-#endif  // MOZ_IPC
 
 } /* layers */
 } /* mozilla */

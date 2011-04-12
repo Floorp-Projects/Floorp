@@ -91,7 +91,6 @@ LOCAL_INCLUDES += -I$(topsrcdir)/xpcom/base
 endif
 
 # dependent libraries
-ifdef MOZ_IPC
 STATIC_LIBS += \
   jsipc_s \
   domipc_s \
@@ -111,16 +110,12 @@ ifneq (Android,$(OS_TARGET))
 OS_LIBS += -lrt
 endif
 endif
-endif
 
 STATIC_LIBS += \
 	xpcom_core \
 	ucvutil_s \
+	chromium_s \
 	$(NULL)
-
-ifdef MOZ_IPC
-STATIC_LIBS += chromium_s
-endif
 
 ifndef WINCE
 STATIC_LIBS += \
@@ -152,11 +147,8 @@ COMPONENT_LIBS += \
 	pipnss \
 	appcomps \
 	composer \
+	jetpack_s \
 	$(NULL)
-
-ifdef MOZ_IPC
-COMPONENT_LIBS +=  jetpack_s
-endif
 
 ifdef BUILD_CTYPES
 COMPONENT_LIBS += \

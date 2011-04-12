@@ -40,6 +40,7 @@
 
 #include "nsAccUtils.h"
 #include "nsRelUtils.h"
+#include "States.h"
 
 // NOTE: alphabetically ordered
 #include "nsIDocument.h"
@@ -102,37 +103,36 @@ nsXULTabAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_PAGETAB;
 }
 
-nsresult
-nsXULTabAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
+PRUint64
+nsXULTabAccessible::NativeState()
 {
   // Possible states: focused, focusable, unavailable(disabled), offscreen.
 
   // get focus and disable status from base class
-  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 state = nsAccessibleWrap::NativeState();
 
   // In the past, tabs have been focusable in classic theme
   // They may be again in the future
   // Check style for -moz-user-focus: normal to see if it's focusable
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
+  state &= ~states::FOCUSABLE;
 
   nsIFrame *frame = mContent->GetPrimaryFrame();
   if (frame) {
     const nsStyleUserInterface* ui = frame->GetStyleUserInterface();
     if (ui->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL)
-      *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+      state |= states::FOCUSABLE;
   }
 
   // Check whether the tab is selected
-  *aState |= nsIAccessibleStates::STATE_SELECTABLE;
-  *aState &= ~nsIAccessibleStates::STATE_SELECTED;
+  state |= states::SELECTABLE;
+  state &= ~states::SELECTED;
   nsCOMPtr<nsIDOMXULSelectControlItemElement> tab(do_QueryInterface(mContent));
   if (tab) {
     PRBool selected = PR_FALSE;
     if (NS_SUCCEEDED(tab->GetSelected(&selected)) && selected)
-      *aState |= nsIAccessibleStates::STATE_SELECTED;
+      state |= states::SELECTED;
   }
-  return NS_OK;
+  return state;
 }
 
 // nsIAccessible

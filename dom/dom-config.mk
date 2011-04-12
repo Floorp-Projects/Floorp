@@ -14,6 +14,7 @@ DOM_SRCDIRS = \
   content/base/src \
   content/html/content/src \
   content/html/document/src \
+  content/svg/content/src \
   layout/generic \
   layout/style \
   layout/xul/base/src \

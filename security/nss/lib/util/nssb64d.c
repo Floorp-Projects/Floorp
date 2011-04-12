@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: t; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -562,9 +563,14 @@ PL_Base64DecodeBuffer (const char *src, PRUint32 srclen, unsigned char *dest,
     PLBase64Decoder *data = NULL;
     PRStatus status;
 
-    PR_ASSERT(srclen > 0);
-    if (srclen == 0)
+    if (srclen == 0) {
+	*output_destlen = 0;
+	if (dest == NULL) {
+	    /* PR_Malloc(0) is undefined */
+	    return (unsigned char *) PR_Malloc(1);
+	}
 	return dest;
+    }
 
     /*
      * How much space could we possibly need for decoding this input?

@@ -3582,7 +3582,8 @@ nsRuleNode::ComputeUIResetData(void* aStartStruct,
   COMPUTE_END_RESET(UIReset, ui)
 }
 
-// Information about each transition property that is constant.
+// Information about each transition or animation property that is
+// constant.
 struct TransitionPropInfo {
   nsCSSProperty property;
   // Location of the count of the property's computed value.
@@ -3602,8 +3603,31 @@ static const TransitionPropInfo transitionPropInfo[4] = {
     &nsStyleDisplay::mTransitionTimingFunctionCount },
 };
 
-// Information about each transition property that changes during
-// ComputeDisplayData.
+#ifdef MOZ_CSS_ANIMATIONS
+// Each property's index in this array must match its index in the
+// mutable array |animationPropData| below.
+static const TransitionPropInfo animationPropInfo[8] = {
+  { eCSSProperty_animation_delay,
+    &nsStyleDisplay::mAnimationDelayCount },
+  { eCSSProperty_animation_duration,
+    &nsStyleDisplay::mAnimationDurationCount },
+  { eCSSProperty_animation_name,
+    &nsStyleDisplay::mAnimationNameCount },
+  { eCSSProperty_animation_timing_function,
+    &nsStyleDisplay::mAnimationTimingFunctionCount },
+  { eCSSProperty_animation_direction,
+    &nsStyleDisplay::mAnimationDirectionCount },
+  { eCSSProperty_animation_fill_mode,
+    &nsStyleDisplay::mAnimationFillModeCount },
+  { eCSSProperty_animation_play_state,
+    &nsStyleDisplay::mAnimationPlayStateCount },
+  { eCSSProperty_animation_iteration_count,
+    &nsStyleDisplay::mAnimationIterationCountCount },
+};
+#endif
+
+// Information about each transition or animation property that changes
+// during ComputeDisplayData.
 struct TransitionPropData {
   const nsCSSValueList *list;
   nsCSSUnit unit;
@@ -3674,7 +3698,6 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     d.list = (value.GetUnit() == eCSSUnit_List ||
               value.GetUnit() == eCSSUnit_ListDep)
       ? value.GetListValue() : nsnull;
-    d.num = 0;
 
     // General algorithm to determine how many total transitions we need
     // to build.  For each property:
@@ -3838,6 +3861,28 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                array->Item(3).GetFloatValue()));
           }
           break;
+        case eCSSUnit_Steps:
+          {
+            nsCSSValue::Array* array =
+              timingFunction.list->mValue.GetArrayValue();
+            NS_ASSERTION(array && array->Count() == 2,
+                         "Need 2 items");
+            NS_ASSERTION(array->Item(0).GetUnit() == eCSSUnit_Integer,
+                         "unexpected first value");
+            NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
+                         (array->Item(1).GetIntValue() ==
+                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
+                          array->Item(1).GetIntValue() ==
+                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END),
+                         "unexpected second value");
+            transition->SetTimingFunction(
+              nsTimingFunction((
+                array->Item(1).GetIntValue() ==
+                  NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END)
+                  ? nsTimingFunction::StepEnd : nsTimingFunction::StepStart,
+                array->Item(0).GetIntValue()));
+          }
+          break;
         default:
           NS_NOTREACHED("Invalid transition property unit");
       }
@@ -3855,6 +3900,326 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       }
     }
   }
+
+#ifdef MOZ_CSS_ANIMATIONS
+  // Each property's index in this array must match its index in the
+  // const array |animationPropInfo| above.
+  TransitionPropData animationPropData[8];
+  TransitionPropData& animDelay = animationPropData[0];
+  TransitionPropData& animDuration = animationPropData[1];
+  TransitionPropData& animName = animationPropData[2];
+  TransitionPropData& animTimingFunction = animationPropData[3];
+  TransitionPropData& animDirection = animationPropData[4];
+  TransitionPropData& animFillMode = animationPropData[5];
+  TransitionPropData& animPlayState = animationPropData[6];
+  TransitionPropData& animIterationCount = animationPropData[7];
+
+#define FOR_ALL_ANIMATION_PROPS(var_) \
+    for (PRUint32 var_ = 0; var_ < 8; ++var_)
+
+  // CSS Animations.  See transitions, above.
+
+  PRUint32 numAnimations = 0;
+  FOR_ALL_ANIMATION_PROPS(p) {
+    const TransitionPropInfo& i = animationPropInfo[p];
+    TransitionPropData& d = animationPropData[p];
+
+    // cache whether any of the properties are specified as 'inherit' so
+    // we can use it below
+
+    const nsCSSValue& value = *aRuleData->ValueFor(i.property);
+    d.unit = value.GetUnit();
+    d.list = (value.GetUnit() == eCSSUnit_List ||
+              value.GetUnit() == eCSSUnit_ListDep)
+      ? value.GetListValue() : nsnull;
+
+    // General algorithm to determine how many total animations we need
+    // to build.  For each property:
+    //  - if there is no value specified in for the property in
+    //    displayData, use the values from the start struct, but only if
+    //    they were explicitly specified
+    //  - if there is a value specified for the property in displayData:
+    //    - if the value is 'inherit', count the number of values for
+    //      that property are specified by the parent, but only those
+    //      that were explicitly specified
+    //    - otherwise, count the number of values specified in displayData
+
+
+    // calculate number of elements
+    if (d.unit == eCSSUnit_Inherit) {
+      d.num = parentDisplay->*(i.sdCount);
+      canStoreInRuleTree = PR_FALSE;
+    } else if (d.list) {
+      d.num = ListLength(d.list);
+    } else {
+      d.num = display->*(i.sdCount);
+    }
+    if (d.num > numAnimations)
+      numAnimations = d.num;
+  }
+
+  if (!display->mAnimations.SetLength(numAnimations)) {
+    NS_WARNING("failed to allocate animations array");
+    display->mAnimations.SetLength(1);
+    NS_ABORT_IF_FALSE(display->mAnimations.Length() == 1,
+                      "could not allocate using auto array buffer");
+    numAnimations = 1;
+    FOR_ALL_ANIMATION_PROPS(p) {
+      TransitionPropData& d = animationPropData[p];
+
+      d.num = 1;
+    }
+  }
+
+  FOR_ALL_ANIMATION_PROPS(p) {
+    const TransitionPropInfo& i = animationPropInfo[p];
+    TransitionPropData& d = animationPropData[p];
+
+    display->*(i.sdCount) = d.num;
+  }
+
+  // Fill in the animations we just allocated with the appropriate values.
+  for (PRUint32 i = 0; i < numAnimations; ++i) {
+    nsAnimation *animation = &display->mAnimations[i];
+
+    if (i >= animDelay.num) {
+      animation->SetDelay(display->mAnimations[i % animDelay.num].GetDelay());
+    } else if (animDelay.unit == eCSSUnit_Inherit) {
+      // FIXME (Bug 522599) (for all animation properties): write a test that
+      // detects when this was wrong for i >= animDelay.num if parent had
+      // count for this property not equal to length
+      NS_ABORT_IF_FALSE(i < parentDisplay->mAnimationDelayCount,
+                        "animDelay.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      animation->SetDelay(parentDisplay->mAnimations[i].GetDelay());
+    } else if (animDelay.unit == eCSSUnit_Initial) {
+      animation->SetDelay(0.0);
+    } else if (animDelay.list) {
+      switch (animDelay.list->mValue.GetUnit()) {
+        case eCSSUnit_Seconds:
+          animation->SetDelay(PR_MSEC_PER_SEC *
+                              animDelay.list->mValue.GetFloatValue());
+          break;
+        case eCSSUnit_Milliseconds:
+          animation->SetDelay(animDelay.list->mValue.GetFloatValue());
+          break;
+        default:
+          NS_NOTREACHED("Invalid delay unit");
+      }
+    }
+
+    if (i >= animDuration.num) {
+      animation->SetDuration(
+        display->mAnimations[i % animDuration.num].GetDuration());
+    } else if (animDuration.unit == eCSSUnit_Inherit) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mAnimationDurationCount,
+                        "animDuration.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      animation->SetDuration(parentDisplay->mAnimations[i].GetDuration());
+    } else if (animDuration.unit == eCSSUnit_Initial) {
+      animation->SetDuration(0.0);
+    } else if (animDuration.list) {
+      switch (animDuration.list->mValue.GetUnit()) {
+        case eCSSUnit_Seconds:
+          animation->SetDuration(PR_MSEC_PER_SEC *
+                                 animDuration.list->mValue.GetFloatValue());
+          break;
+        case eCSSUnit_Milliseconds:
+          animation->SetDuration(animDuration.list->mValue.GetFloatValue());
+          break;
+        default:
+          NS_NOTREACHED("Invalid duration unit");
+      }
+    }
+
+    if (i >= animName.num) {
+      animation->SetName(display->mAnimations[i % animName.num].GetName());
+    } else if (animName.unit == eCSSUnit_Inherit) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mAnimationNameCount,
+                        "animName.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      animation->SetName(parentDisplay->mAnimations[i].GetName());
+    } else if (animName.unit == eCSSUnit_Initial) {
+      animation->SetName(EmptyString());
+    } else if (animName.list) {
+      switch (animName.list->mValue.GetUnit()) {
+        case eCSSUnit_Ident: {
+          nsDependentString
+            nameStr(animName.list->mValue.GetStringBufferValue());
+          animation->SetName(nameStr);
+          break;
+        }
+        case eCSSUnit_None: {
+          animation->SetName(EmptyString());
+          break;
+        }
+        default:
+          NS_ABORT_IF_FALSE(PR_FALSE,
+            nsPrintfCString(64, "Invalid animation-name unit %d",
+                                animName.list->mValue.GetUnit()).get());
+      }
+    }
+
+    if (i >= animTimingFunction.num) {
+      animation->SetTimingFunction(
+        display->mAnimations[i % animTimingFunction.num].GetTimingFunction());
+    } else if (animTimingFunction.unit == eCSSUnit_Inherit) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mAnimationTimingFunctionCount,
+                        "animTimingFunction.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      animation->SetTimingFunction(
+        parentDisplay->mAnimations[i].GetTimingFunction());
+    } else if (animTimingFunction.unit == eCSSUnit_Initial) {
+      animation->SetTimingFunction(
+        nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
+    } else if (animTimingFunction.list) {
+      switch (animTimingFunction.list->mValue.GetUnit()) {
+        case eCSSUnit_Enumerated:
+          animation->SetTimingFunction(
+            nsTimingFunction(animTimingFunction.list->mValue.GetIntValue()));
+          break;
+        case eCSSUnit_Cubic_Bezier:
+          {
+            nsCSSValue::Array* array =
+              animTimingFunction.list->mValue.GetArrayValue();
+            NS_ASSERTION(array && array->Count() == 4,
+                         "Need 4 control points");
+            animation->SetTimingFunction(
+              nsTimingFunction(array->Item(0).GetFloatValue(),
+                               array->Item(1).GetFloatValue(),
+                               array->Item(2).GetFloatValue(),
+                               array->Item(3).GetFloatValue()));
+          }
+          break;
+        case eCSSUnit_Steps:
+          {
+            nsCSSValue::Array* array =
+              animTimingFunction.list->mValue.GetArrayValue();
+            NS_ASSERTION(array && array->Count() == 2,
+                         "Need 2 items");
+            NS_ASSERTION(array->Item(0).GetUnit() == eCSSUnit_Integer,
+                         "unexpected first value");
+            NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
+                         (array->Item(1).GetIntValue() ==
+                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
+                          array->Item(1).GetIntValue() ==
+                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END),
+                         "unexpected second value");
+            animation->SetTimingFunction(
+              nsTimingFunction((
+                array->Item(1).GetIntValue() ==
+                  NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END)
+                  ? nsTimingFunction::StepEnd : nsTimingFunction::StepStart,
+                array->Item(0).GetIntValue()));
+          }
+          break;
+        default:
+          NS_NOTREACHED("Invalid animation property unit");
+      }
+    }
+
+    if (i >= animDirection.num) {
+      animation->SetDirection(display->mAnimations[i % animDirection.num].GetDirection());
+    } else if (animDirection.unit == eCSSUnit_Inherit) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mAnimationDirectionCount,
+                        "animDirection.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      animation->SetDirection(parentDisplay->mAnimations[i].GetDirection());
+    } else if (animDirection.unit == eCSSUnit_Initial) {
+      animation->SetDirection(NS_STYLE_ANIMATION_DIRECTION_NORMAL);
+    } else if (animDirection.list) {
+      NS_ABORT_IF_FALSE(animDirection.list->mValue.GetUnit() == eCSSUnit_Enumerated,
+                        nsPrintfCString(64,
+                                        "Invalid animation-direction unit %d",
+                                        animDirection.list->mValue.GetUnit()).get());
+
+      animation->SetDirection(animDirection.list->mValue.GetIntValue());
+    }
+
+    if (i >= animFillMode.num) {
+      animation->SetFillMode(display->mAnimations[i % animFillMode.num].GetFillMode());
+    } else if (animFillMode.unit == eCSSUnit_Inherit) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mAnimationFillModeCount,
+                        "animFillMode.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      animation->SetFillMode(parentDisplay->mAnimations[i].GetFillMode());
+    } else if (animFillMode.unit == eCSSUnit_Initial) {
+      animation->SetFillMode(NS_STYLE_ANIMATION_FILL_MODE_NONE);
+    } else if (animFillMode.list) {
+      NS_ABORT_IF_FALSE(animFillMode.list->mValue.GetUnit() == eCSSUnit_Enumerated,
+                        nsPrintfCString(64,
+                                        "Invalid animation-fill-mode unit %d",
+                                        animFillMode.list->mValue.GetUnit()).get());
+
+      animation->SetFillMode(animFillMode.list->mValue.GetIntValue());
+    }
+
+    if (i >= animPlayState.num) {
+      animation->SetPlayState(display->mAnimations[i % animPlayState.num].GetPlayState());
+    } else if (animPlayState.unit == eCSSUnit_Inherit) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mAnimationPlayStateCount,
+                        "animPlayState.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      animation->SetPlayState(parentDisplay->mAnimations[i].GetPlayState());
+    } else if (animPlayState.unit == eCSSUnit_Initial) {
+      animation->SetPlayState(NS_STYLE_ANIMATION_PLAY_STATE_RUNNING);
+    } else if (animPlayState.list) {
+      NS_ABORT_IF_FALSE(animPlayState.list->mValue.GetUnit() == eCSSUnit_Enumerated,
+                        nsPrintfCString(64,
+                                        "Invalid animation-play-state unit %d",
+                                        animPlayState.list->mValue.GetUnit()).get());
+
+      animation->SetPlayState(animPlayState.list->mValue.GetIntValue());
+    }
+
+    if (i >= animIterationCount.num) {
+      animation->SetIterationCount(display->mAnimations[i % animIterationCount.num].GetIterationCount());
+    } else if (animIterationCount.unit == eCSSUnit_Inherit) {
+      NS_ABORT_IF_FALSE(i < parentDisplay->mAnimationIterationCountCount,
+                        "animIterationCount.num computed incorrectly");
+      NS_ABORT_IF_FALSE(!canStoreInRuleTree,
+                        "should have made canStoreInRuleTree false above");
+      animation->SetIterationCount(parentDisplay->mAnimations[i].GetIterationCount());
+    } else if (animIterationCount.unit == eCSSUnit_Initial) {
+      animation->SetIterationCount(1.0f);
+    } else if (animIterationCount.list) {
+      switch(animIterationCount.list->mValue.GetUnit()) {
+        case eCSSUnit_Enumerated:
+          NS_ABORT_IF_FALSE(animIterationCount.list->mValue.GetIntValue() ==
+                              NS_STYLE_ANIMATION_ITERATION_COUNT_INFINITE,
+                            "unexpected value");
+          animation->SetIterationCount(NS_IEEEPositiveInfinity());
+          break;
+        case eCSSUnit_Number:
+          animation->SetIterationCount(
+            animIterationCount.list->mValue.GetFloatValue());
+          break;
+        default:
+          NS_ABORT_IF_FALSE(PR_FALSE,
+                            "unexpected animation-iteration-count unit");
+      }
+    }
+
+    FOR_ALL_ANIMATION_PROPS(p) {
+      const TransitionPropInfo& info = animationPropInfo[p];
+      TransitionPropData& d = animationPropData[p];
+
+      // if we're at the end of the list, start at the beginning and repeat
+      // until we're out of animations to populate
+      if (d.list) {
+        d.list = d.list->mNext ? d.list->mNext :
+          aRuleData->ValueFor(info.property)->GetListValue();
+      }
+    }
+  }
+#endif
 
   // opacity: factor, inherit, initial
   SetFactor(*aRuleData->ValueForOpacity(), display->mOpacity, canStoreInRuleTree,
