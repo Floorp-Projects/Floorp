@@ -106,15 +106,15 @@ nsGIOMimeApp::GetCommand(nsACString& aCommand)
 {
   get_commandline_t g_app_info_get_commandline_ptr;
 
-  void *libHandle = dlopen("libgio-2.0.so", RTLD_LAZY);
+  void *libHandle = dlopen("libgio-2.0.so.0", RTLD_LAZY);
   if (!libHandle) {
     return NS_ERROR_FAILURE;
   }
   dlerror(); /* clear any existing error */
   g_app_info_get_commandline_ptr =
     (get_commandline_t) dlsym(libHandle, "g_app_info_get_commandline");
-  if (dlerror() != NULL) {
-    const char cmd = *g_app_info_get_commandline_ptr(mApp);
+  if (dlerror() == NULL) {
+    const char *cmd = g_app_info_get_commandline_ptr(mApp);
     if (!cmd) {
       dlclose(libHandle);
       return NS_ERROR_FAILURE;
@@ -419,50 +419,23 @@ nsGIOService::CreateAppFromCommand(nsACString const& cmd,
   GAppInfo *app_info = NULL, *app_info_from_list = NULL;
   GList *apps = g_app_info_get_all();
   GList *apps_p = apps;
-  get_commandline_t g_app_info_get_commandline_ptr;
-
-  void *libHandle = dlopen("libgio-2.0.so", RTLD_LAZY);
-  if (!libHandle) {
-    return NS_ERROR_FAILURE;
-  }
-  dlerror(); /* clear any existing error */
-  g_app_info_get_commandline_ptr =
-    (get_commandline_t) dlsym(libHandle, "g_app_info_get_commandline");
-  if (dlerror() != NULL) {
-    g_app_info_get_commandline_ptr = NULL;
-  }
 
   // Try to find relevant and existing GAppInfo in all installed application
+  // We do this by comparing each GAppInfo's executable with out own
   while (apps_p) {
     app_info_from_list = (GAppInfo*) apps_p->data;
-    /* This is  a silly test. It just compares app names but not
-     * commands. This is due to old version of Glib/Gio. The required
-     * function which allows to do a regular check of existence of desktop file
-     * is possible by using function g_app_info_get_commandline. This function
-     * has been introduced in Glib 2.20. */
-    if (app_info_from_list && strcmp(g_app_info_get_name(app_info_from_list),
-                                     PromiseFlatCString(appName).get()) == 0 )
-    {
-      if (g_app_info_get_commandline_ptr)
-      {
-        /* Following test is only possible with Glib >= 2.20.
-         * Compare path only by using strncmp */
-        if (strncmp(g_app_info_get_commandline_ptr(app_info_from_list),
-                    PromiseFlatCString(cmd).get(),
-                    strlen(PromiseFlatCString(cmd).get())) == 0)
-        {
-          app_info = app_info_from_list;
-          break;
-        } else {
-          g_object_unref(app_info_from_list);
-        }
-      } else {
+    if (!app_info) {
+      // If the executable is not absolute, get it's full path
+      char *executable = g_find_program_in_path(g_app_info_get_executable(app_info_from_list));
+
+      if (executable && strcmp(executable, PromiseFlatCString(cmd).get()) == 0) {
+        g_object_ref (app_info_from_list);
         app_info = app_info_from_list;
-        break;
       }
-    } else {
-      g_object_unref(app_info_from_list);
+      g_free(executable);
     }
+
+    g_object_unref(app_info_from_list);
     apps_p = apps_p->next;
   }
   g_list_free(apps);
@@ -477,12 +450,10 @@ nsGIOService::CreateAppFromCommand(nsACString const& cmd,
   if (!app_info) {
     g_warning("Cannot create application info from command: %s", error->message);
     g_error_free(error);
-    dlclose(libHandle);
     return NS_ERROR_FAILURE;
   }
   nsGIOMimeApp *mozApp = new nsGIOMimeApp(app_info);
   NS_ENSURE_TRUE(mozApp, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*appInfo = mozApp);
-  dlclose(libHandle);
   return NS_OK;
 }
