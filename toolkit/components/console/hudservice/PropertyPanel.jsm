@@ -135,20 +135,6 @@ function presentableValueFor(aObject)
 }
 
 /**
- * Tells if the given function is native or not.
- *
- * @param function aFunction
- *        The function you want to check if it is native or not.
- *
- * @return boolean
- *         True if the given function is native, false otherwise.
- */
-function isNativeFunction(aFunction)
-{
-  return typeof aFunction == "function" && !("prototype" in aFunction);
-}
-
-/**
  * Get an array of property name value pairs for the tree.
  *
  * @param object aObject
@@ -159,31 +145,15 @@ function isNativeFunction(aFunction)
 function namesAndValuesOf(aObject)
 {
   let pairs = [];
-  let value, presentable, getter;
-
-  let isDOMDocument = aObject instanceof Ci.nsIDOMDocument;
+  let value, presentable;
 
   for (var propName in aObject) {
-    // See bug 632275: skip deprecated width and height properties.
-    if (isDOMDocument && (propName == "width" || propName == "height")) {
+    try {
+      value = aObject[propName];
+      presentable = presentableValueFor(value);
+    }
+    catch (ex) {
       continue;
-    }
-
-    // Also skip non-native getters.
-    // TODO: implement a safer way to skip non-native getters. See bug 647235.
-    getter = aObject.__lookupGetter__(propName);
-    if (getter && !isNativeFunction(getter)) {
-      value = ""; // Value is never displayed.
-      presentable = {type: TYPE_OTHER, display: "Getter"};
-    }
-    else {
-      try {
-        value = aObject[propName];
-        presentable = presentableValueFor(value);
-      }
-      catch (ex) {
-        continue;
-      }
     }
 
     let pair = {};

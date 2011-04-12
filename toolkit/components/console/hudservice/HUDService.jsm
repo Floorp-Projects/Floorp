@@ -3527,7 +3527,7 @@ let ConsoleAPIObserver = {
       HUDService.logConsoleAPIMessage(hudId, aMessage.level, aMessage.arguments);
     }
     else if (aTopic == "quit-application-granted") {
-      HUDService.shutdown();
+      this.shutdown();
     }
   },
 
@@ -5845,7 +5845,7 @@ HUDWindowObserver = {
   uninit: function HWO_uninit()
   {
     Services.obs.removeObserver(this, "content-document-global-created");
-    Services.obs.removeObserver(this, "xpcom-shutdown");
+    HUDService.shutdown();
     this.initialConsoleCreated = false;
   },
 
