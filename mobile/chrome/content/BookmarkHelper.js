@@ -16,7 +16,7 @@ var BookmarkHelper = {
       return;
 
     // When opening the bookmark helper dialog be sure there is not others
-    // popup opened like the bookmakr popup
+    // popup opened like the bookmark popup
     BookmarkPopup.hide();
 
     let title = PlacesUtils.bookmarks.getItemTitle(itemId);

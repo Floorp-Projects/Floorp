@@ -873,9 +873,9 @@
         <xul:image xbl:inherits="src"/>
         <xul:vbox flex="1">
           <xul:vbox flex="1">
-            <xul:textbox anonid="name" xbl:inherits="value=title"/>
-            <xul:textbox anonid="uri" xbl:inherits="value=uri"/>
-            <xul:textbox anonid="tags" xbl:inherits="value=tags" emptytext="&editBookmarkTags.label;"/>
+            <xul:textbox anonid="name" xbl:inherits="value=title" class="prompt-edit" flex="1"/>
+            <xul:textbox anonid="uri" xbl:inherits="value=uri" class="prompt-edit" flex="1"/>
+            <xul:textbox anonid="tags" xbl:inherits="value=tags" emptytext="&editBookmarkTags.label;" class="prompt-edit" flex="1"/>
           </xul:vbox>
 
          <xul:hbox class="bookmark-controls" align="center">
