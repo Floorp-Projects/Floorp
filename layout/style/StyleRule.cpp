@@ -1169,9 +1169,7 @@ DOMCSSStyleRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
     *aSheet = nsnull;
     return NS_OK;
   }
-  nsRefPtr<nsCSSStyleSheet> sheet = Rule()->GetParentStyleSheet();
-  sheet.forget(aSheet);
-  return NS_OK;
+  return Rule()->GetParentStyleSheet(aSheet);
 }
 
 NS_IMETHODIMP
@@ -1181,12 +1179,7 @@ DOMCSSStyleRule::GetParentRule(nsIDOMCSSRule** aParentRule)
     *aParentRule = nsnull;
     return NS_OK;
   }
-  GroupRule* rule = Rule()->GetParentRule();
-  if (!rule) {
-    *aParentRule = nsnull;
-    return NS_OK;
-  }
-  return rule->GetDOMRule(aParentRule);
+  return Rule()->GetParentRule(aParentRule);
 }
 
 NS_IMETHODIMP
