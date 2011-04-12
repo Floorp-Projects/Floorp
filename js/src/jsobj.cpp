@@ -1618,6 +1618,8 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
 
     if (!cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN))
         return JS_FALSE;
+    if (!cx->markTypePropertyConfigured(obj->getType(), id))
+        return false;
 
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, StrictPropertyStub,
@@ -1655,6 +1657,8 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
 
     if (!cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN))
         return JS_FALSE;
+    if (!cx->markTypePropertyConfigured(obj->getType(), id))
+        return false;
 
     vp->setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
@@ -2449,8 +2453,9 @@ DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &des
     if (!desc.get.isUndefined() || !desc.set.isUndefined()) {
         if (!cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN))
             return false;
-    }
-    if (!desc.configurable() || !desc.enumerable() || !desc.writable()) {
+        if (!cx->markTypePropertyConfigured(obj->getType(), id))
+            return false;
+    } else if (!desc.configurable() || !desc.enumerable() || !desc.writable()) {
         if (!cx->markTypePropertyConfigured(obj->getType(), id))
             return false;
     }
