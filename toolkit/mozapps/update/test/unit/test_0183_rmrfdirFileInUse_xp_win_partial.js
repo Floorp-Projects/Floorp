@@ -1,48 +1,11 @@
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is mozilla.org code.
- *
- * The Initial Developer of the Original Code is
- * the Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2008
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *   Robert Strong <robert.bugzilla@gmail.com> (Original Author)
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK *****
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* General Partial MAR File Patch Apply Test */
+/* File in use inside removed dir partial MAR file patch apply success test */
 
-const TEST_ID = "0111";
-// All we care about is that the last modified time has changed so that Mac OS
-// X Launch Services invalidates its cache so the test allows up to one minute
-// difference in the last modified time.
-const MAX_TIME_DIFFERENCE = 60000;
+const TEST_ID = "0183";
+const MAR_IN_USE_WIN_FILE = "data/partial.mar";
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -143,7 +106,7 @@ const TEST_FILES = [
   compareContents  : "FromPartial\n",
   originalFile     : null,
   compareFile      : null,
-  originalPerms    : 0644,
+  originalPerms    : null,
   comparePerms     : 0644
 }, {
   description      : "Patched by update.manifest if the parent directory " +
@@ -154,7 +117,7 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/complete.png",
   compareFile      : "data/partial.png",
-  originalPerms    : 0644,
+  originalPerms    : null,
   comparePerms     : 0644
 }, {
   description      : "Patched by update.manifest if the parent directory " +
@@ -165,7 +128,7 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/complete.png",
   compareFile      : "data/partial.png",
-  originalPerms    : 0644,
+  originalPerms    : null,
   comparePerms     : 0644
 }, {
   description      : "Patched by update.manifest (patch)",
@@ -176,7 +139,7 @@ const TEST_FILES = [
   originalFile     : "data/complete.png",
   compareFile      : "data/partial.png",
   originalPerms    : 0755,
-  comparePerms     : 0755
+  comparePerms     : null
 }, {
   description      : "Patched by update.manifest (patch)",
   fileName         : "0exe0.exe",
@@ -186,7 +149,7 @@ const TEST_FILES = [
   originalFile     : "data/complete.png",
   compareFile      : "data/partial.png",
   originalPerms    : 0755,
-  comparePerms     : 0755
+  comparePerms     : null
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "00text0",
@@ -196,7 +159,7 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null,
   originalPerms    : 0644,
-  comparePerms     : 0644
+  comparePerms     : null
 }, {
   description      : "Patched by update.manifest (patch)",
   fileName         : "00png0.png",
@@ -271,62 +234,57 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  if (IS_ANDROID) {
-    logTestInfo("this test is not applicable to Android... returning early");
+  if (!IS_WIN || IS_WINCE) {
+    logTestInfo("this test is only applicable to Windows... returning early");
     return;
   }
 
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
-  setupUpdaterTest(MAR_PARTIAL_FILE);
+  setupUpdaterTest(MAR_IN_USE_WIN_FILE);
 
-  let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-  let applyToDir = getApplyDirFile();
+  let fileInUseBin = getApplyDirFile(TEST_DIRS[2].relPathDir +
+                                     TEST_DIRS[2].files[0]);
+  // Remove the empty file created for the test so the helper application can
+  // replace it.
+  fileInUseBin.remove(false);
 
-  // Check that trying to change channels for a partial update doesn't change
-  // the update channel (the channel-prefs.js file should not be updated).
-  let force = updatesDir.clone();
-  force.append(CHANNEL_CHANGE_FILE);
-  force.create(AUS_Ci.nsIFile.FILE_TYPE, PERMS_FILE);
+  let helperBin = do_get_file(HELPER_BIN_FILE);
+  let fileInUseDir = getApplyDirFile(TEST_DIRS[2].relPathDir);
+  helperBin.copyTo(fileInUseDir, TEST_DIRS[2].files[0]);
 
-  // For Mac OS X set the last modified time for the root directory to a date in
-  // the past to test that the last modified time is updated on all updates since
-  // the precomplete file in the root of the bundle is renamed, etc. (bug 600098).
-  if (IS_MACOSX) {
-    let now = Date.now();
-    let yesterday = now - (1000 * 60 * 60 * 24);
-    applyToDir.lastModifiedTime = yesterday;
-  }
+  // Launch an existing file so it is in use during the update
+  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "20"];
+  let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
+                         createInstance(AUS_Ci.nsIProcess);
+  fileInUseProcess.init(fileInUseBin);
+  fileInUseProcess.run(false, args, args.length);
 
-  // apply the partial mar
+  do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
+}
+
+function doUpdate() {
+  // apply the complete mar
   let exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for success when " +
               "applying a partial mar");
   do_check_eq(exitValue, 0);
 
+  setupHelperFinish();
+}
+
+function checkUpdate() {
   logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
+  let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
   do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
 
-  // For Mac OS X check that the last modified time for a directory has been
-  // updated after a successful update (bug 600098).
-  if (IS_MACOSX) {
-    logTestInfo("testing last modified time on the apply to directory has " +
-                "changed after a successful update (bug 600098)");
-    let now = Date.now();
-    let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
-    do_check_true(timeDiff < MAX_TIME_DIFFERENCE);
-  }
-
   checkFilesAfterUpdateSuccess();
-  // Sorting on Linux is different so skip this check for now.
-  if (!IS_UNIX) {
-    checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
-  }
+  checkUpdateLogContains(ERR_BACKUP_DISCARD);
 
-  logTestInfo("testing tobedeleted directory doesn't exist");
+  logTestInfo("testing tobedeleted directory exists");
   let toBeDeletedDir = getApplyDirFile("tobedeleted", true);
-  do_check_false(toBeDeletedDir.exists());
+  do_check_true(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
 }

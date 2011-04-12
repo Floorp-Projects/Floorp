@@ -44,18 +44,10 @@
 #include <process.h>
 #include <io.h>
 
-#ifdef WINCE_WINDOWS_MOBILE
-#include <aygshell.h>
-#endif
-
 #include "resource.h"
 #include "progressui.h"
 #include "readstrings.h"
 #include "errors.h"
-
-#ifdef WINCE
-#include "updater_wince.h"
-#endif
 
 #define TIMER_ID 1
 #define TIMER_INTERVAL 100
@@ -182,88 +174,6 @@ InitDialog(HWND hDlg)
   if (hInfoFont)
     hOldFont = (HFONT)SelectObject(hDCInfo, hInfoFont);
 
-  // There are three scenarios that need to be handled differently
-  // 1. Windows Mobile where dialog should be full screen.
-  // 2. Windows CE where the dialog might wrap.
-  // 3. Windows where the dialog should never wrap. The Windows CE and Windows
-  //    scenarios could be combined but then we would have to calculate the
-  //    extra border space added by the Aero theme which just adds complexity.
-#ifdef WINCE
-#ifdef WINCE_WINDOWS_MOBILE
-  RECT rcDlgInner1, rcDlgInner2, rcInfoOuter1, rcInfoOuter2;
-  // The dialog's client rectangle and the window rectangle for the text before
-  // making the dialog full screen are needed to calculate the change in border
-  // sizes.
-  GetClientRect(hDlg, &rcDlgInner1);
-  GetWindowRect(hWndInfo, &rcInfoOuter1);
-
-  // Make the dialog fullscreen
-  SHINITDLGINFO shidi;
-  shidi.dwMask = SHIDIM_FLAGS;
-  shidi.dwFlags = SHIDIF_SIZEDLGFULLSCREEN;
-  shidi.hDlg = hDlg;
-  SHInitDialog(&shidi);
-  if (!SHInitDialog(&shidi))
-    return;
-
-  // Hide the OK button
-  SHDoneButton(hDlg, SHDB_HIDE);
-
-  GetClientRect(hDlg, &rcDlgInner2);
-  GetWindowRect(hWndInfo, &rcInfoOuter2);
-  textSize.left = 0;
-  // Calculate the maximum possible width for the text by adding to the
-  // existing text rectangle's window width the change in the dialog rectangle's
-  // client width and the change in the text rectangle's window left position
-  // after the dialog has been made full screen.
-  textSize.right = (rcInfoOuter2.right - rcInfoOuter2.left) + \
-                   (rcDlgInner2.right - rcDlgInner1.right) + \
-                   (rcInfoOuter1.left - rcInfoOuter2.left);
-#else
-  RECT rcWorkArea, rcInfoOuter1;
-  GetWindowRect(hWndInfo, &rcInfoOuter1);
-  SystemParametersInfo(SPI_GETWORKAREA, NULL, &rcWorkArea, NULL);
-  textSize.left = 0;
-  // Calculate the maximum possible width for the text by subtracting from the
-  // existing working area's width the text rectangle's margin.
-  textSize.right = (rcWorkArea.right - rcWorkArea.left) - \
-                   (rcInfoOuter1.left + rcInfoOuter1.right);
-#endif
-  // Measure the space needed for the text allowing multiple lines if necessary.
-  // DT_CALCRECT means nothing is drawn.
-  if (DrawText(hDCInfo, szwInfo, -1, &textSize,
-               DT_CALCRECT | DT_NOCLIP | DT_WORDBREAK)) {
-    GetClientRect(hWndInfo, &infoSize);
-    SIZE extra;
-    // Calculate the additional space needed for the text by subtracting from
-    // the rectangle returned by DrawText the existing client rectangle's width
-    // and height.
-    extra.cx = (textSize.right - textSize.left) - \
-               (infoSize.right - infoSize.left);
-    extra.cy = (textSize.bottom - textSize.top) - \
-               (infoSize.bottom - infoSize.top);
-    // XXX rstrong - add 2 pixels to the width to prevent the text from wrapping
-    // due to Windows CE and Windows Mobile adding an extra pixel to the
-    // beginning and the end of the text. Though I have found no good reason for
-    // this it has been consistent with multiple font sizes.
-    extra.cx += 2;
-
-    RESIZE_WINDOW(hWndInfo, extra.cx, extra.cy);
-    RESIZE_WINDOW(hWndPro, extra.cx, 0);
-
-#ifdef WINCE_WINDOWS_MOBILE
-    // Move the controls 1 pixel to the left on Windows Mobile to compensate for
-    // the 2 extra pixels added to the controls above. This isn't needed on
-    // Windows CE for reasons of the unknown variety.
-    MOVE_WINDOW(hWndInfo, -1, 0);
-    MOVE_WINDOW(hWndPro, -1, extra.cy);
-#else
-    RESIZE_WINDOW(hDlg, extra.cx, extra.cy);
-    MOVE_WINDOW(hWndPro, 0, extra.cy);
-#endif
-  }
-
-#else
   // Measure the space needed for the text on a single line. DT_CALCRECT means
   // nothing is drawn.
   if (DrawText(hDCInfo, szwInfo, -1, &textSize,
@@ -288,17 +198,11 @@ InitDialog(HWND hDlg)
       MOVE_WINDOW(hWndPro, 0, extra.cy);
     }
   }
-#endif
 
   if (hOldFont)
     SelectObject(hDCInfo, hOldFont);
 
   ReleaseDC(hWndInfo, hDCInfo);
-
-  // On Windows Mobile the dialog is full screen so don't center it.
-#ifndef WINCE_WINDOWS_MOBILE
-  CenterDialog(hDlg);  // make dialog appear in the center of the screen
-#endif
 
   SetTimer(hDlg, TIMER_ID, TIMER_INTERVAL, NULL);
 }
