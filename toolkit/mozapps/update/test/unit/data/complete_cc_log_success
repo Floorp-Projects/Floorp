@@ -233,27 +233,27 @@ FINISH REMOVEFILE a/b/2/20/20png0.png
 FINISH REMOVEFILE a/b/0/0exe0.exe
 FINISH REMOVEFILE a/b/0/00/00text0
 FINISH REMOVEDIR a/b/searchplugins/
-non-fatal error removing directory: a/b/searchplugins/, rv: 0
+a/b/searchplugins/, rv: 0
 FINISH REMOVEDIR a/b/extensions/extensions1/
-non-fatal error removing directory: a/b/extensions/extensions1/, rv: 0
+a/b/extensions/extensions1/, rv: 0
 FINISH REMOVEDIR a/b/extensions/extensions0/
-non-fatal error removing directory: a/b/extensions/extensions0/, rv: 0
+a/b/extensions/extensions0/, rv: 0
 FINISH REMOVEDIR a/b/extensions/
-non-fatal error removing directory: a/b/extensions/, rv: 0
+a/b/extensions/, rv: 0
 FINISH REMOVEDIR a/b/defaults/pref/
-non-fatal error removing directory: a/b/defaults/pref/, rv: 0
+a/b/defaults/pref/, rv: 0
 FINISH REMOVEDIR a/b/defaults/
-non-fatal error removing directory: a/b/defaults/, rv: 0
+a/b/defaults/, rv: 0
 FINISH REMOVEDIR a/b/2/20/
 FINISH REMOVEDIR a/b/2/
 FINISH REMOVEDIR a/b/0/00/
-non-fatal error removing directory: a/b/0/00/, rv: 0
+a/b/0/00/, rv: 0
 FINISH REMOVEDIR a/b/0/
-non-fatal error removing directory: a/b/0/, rv: 0
+a/b/0/, rv: 0
 FINISH REMOVEDIR a/b/
-non-fatal error removing directory: a/b/, rv: 0
+a/b/, rv: 0
 FINISH REMOVEDIR a/
-non-fatal error removing directory: a/, rv: 0
+a/, rv: 0
 FINISH ADD a/b/defaults/pref/channel-prefs.js
 FINISH ADD precomplete
 FINISH ADD a/b/searchplugins/searchpluginstext0
@@ -294,9 +294,9 @@ FINISH REMOVEDIR a/b/9/94/
 directory no longer exists; skipping
 FINISH REMOVEDIR a/b/9/93/
 FINISH REMOVEDIR a/b/9/92/
-non-fatal error removing directory: a/b/9/92/, rv: 0
+a/b/9/92/, rv: 0
 FINISH REMOVEDIR a/b/9/91/
-non-fatal error removing directory: a/b/9/91/, rv: 0
+a/b/9/91/, rv: 0
 FINISH REMOVEDIR a/b/9/90/
 FINISH REMOVEDIR a/b/9/90/
 directory no longer exists; skipping
@@ -322,9 +322,9 @@ FINISH REMOVEDIR a/b/8/84/
 directory no longer exists; skipping
 FINISH REMOVEDIR a/b/8/83/
 FINISH REMOVEDIR a/b/8/82/
-non-fatal error removing directory: a/b/8/82/, rv: 0
+a/b/8/82/, rv: 0
 FINISH REMOVEDIR a/b/8/81/
-non-fatal error removing directory: a/b/8/81/, rv: 0
+a/b/8/81/, rv: 0
 FINISH REMOVEDIR a/b/8/80/
 FINISH REMOVEDIR a/b/8/80/
 directory no longer exists; skipping

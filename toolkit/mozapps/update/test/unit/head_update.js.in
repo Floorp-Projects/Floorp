@@ -672,6 +672,8 @@ function checkUpdateLogContents(aCompareLogFile) {
   updateLogContents = updateLogContents.replace(/\r/g, "");
   // Replace error codes since they are different on each platform.
   updateLogContents = updateLogContents.replace(/, err:.*\n/g, "\n");
+  // Replace to make the log parsing happy.
+  updateLogContents = updateLogContents.replace(/non-fatal error removing directory: /g, "");
 
   let compareLog = do_get_file(aCompareLogFile);
   let compareLogContents = readFileBytes(compareLog);
