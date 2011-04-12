@@ -113,13 +113,10 @@ public:
     mPropertyValuePairs.AppendElement(v);
   }
 
-  // Caller must fill in returned value, when non-null.
+  // Caller must fill in returned value.
   nsStyleAnimation::Value* AddEmptyValue(nsCSSProperty aProperty)
   {
     PropertyValuePair *p = mPropertyValuePairs.AppendElement();
-    if (!p) {
-      return nsnull;
-    }
     p->mProperty = aProperty;
     return &p->mValue;
   }
@@ -130,7 +127,7 @@ public:
   };
 
 private:
-  nsTArray<PropertyValuePair> mPropertyValuePairs;
+  InfallibleTArray<PropertyValuePair> mPropertyValuePairs;
 };
 
 class ComputedTimingFunction {
