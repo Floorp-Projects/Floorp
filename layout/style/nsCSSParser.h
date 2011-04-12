@@ -44,6 +44,7 @@
 #include "nsCSSProperty.h"
 #include "nsColor.h"
 #include "nsCOMArray.h"
+#include "nsCOMPtr.h"
 
 class nsICSSRule;
 class nsCSSStyleSheet;
@@ -52,6 +53,7 @@ class nsIURI;
 class nsIUnicharInputStream;
 struct nsCSSSelectorList;
 class nsMediaList;
+class nsCSSKeyframeRule;
 
 namespace mozilla {
 namespace css {
@@ -193,6 +195,24 @@ public:
                                nsIURI*             aURL,
                                PRUint32            aLineNumber,
                                nsCSSSelectorList** aSelectorList);
+
+  /*
+   * Parse a keyframe rule (which goes inside an @keyframes rule).
+   * Return it if the parse was successful.
+   */
+  already_AddRefed<nsCSSKeyframeRule>
+  ParseKeyframeRule(const nsSubstring& aBuffer,
+                    nsIURI*            aURL,
+                    PRUint32           aLineNumber);
+
+  /*
+   * Parse a selector list for a keyframe rule.  Return whether
+   * the parse succeeded.
+   */
+  bool ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
+                                   nsIURI*            aURL,
+                                   PRUint32           aLineNumber,
+                                   nsTArray<float>&   aSelectorList);
 
 protected:
   // This is a CSSParserImpl*, but if we expose that type name in this

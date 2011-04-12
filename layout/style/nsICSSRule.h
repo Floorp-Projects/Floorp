@@ -78,6 +78,8 @@ public:
     MEDIA_RULE,
     FONT_FACE_RULE,
     PAGE_RULE,
+    KEYFRAME_RULE,
+    KEYFRAMES_RULE,
     DOCUMENT_RULE
   };
 
