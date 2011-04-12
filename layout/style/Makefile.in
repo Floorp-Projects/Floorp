@@ -112,7 +112,6 @@ CPPSRCS		= \
 		Declaration.cpp \
 		nsCSSKeywords.cpp \
 		Loader.cpp \
-		nsAnimationManager.cpp \
 		nsCSSParser.cpp \
 		nsCSSProps.cpp \
 		nsCSSPseudoClasses.cpp \
@@ -147,6 +146,12 @@ CPPSRCS		= \
 		nsTransitionManager.cpp \
 		StyleRule.cpp \
 		$(NULL)
+
+ifdef MOZ_CSS_ANIMATIONS
+CPPSRCS		+= \
+		nsAnimationManager.cpp \
+		$(NULL)
+endif
 
 FORCE_STATIC_LIB = 1
 
