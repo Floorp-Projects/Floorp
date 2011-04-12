@@ -114,7 +114,7 @@ JSStackFrame::pc(JSContext *cx, JSStackFrame *next)
 {
     JS_ASSERT_IF(next, next->prev_ == this);
 
-    StackSegment *seg = cx->containingSegment(this);
+    StackSegment *seg = cx->stack().containingSegment(this);
     JSFrameRegs *regs = seg->getCurrentRegs();
     if (regs->fp == this)
         return regs->pc;
@@ -944,7 +944,7 @@ Execute(JSContext *cx, JSObject *chain, JSScript *script,
         /* NB: prev may not be in cx->currentSegment. */
         initialVarObj = (prev == cx->maybefp())
                         ? &prev->varobj(cx)
-                        : &prev->varobj(cx->containingSegment(prev));
+                        : &prev->varobj(cx->stack().containingSegment(prev));
     } else {
         /* The scope chain could be anything, so innerize just in case. */
         JSObject *innerizedChain = chain;

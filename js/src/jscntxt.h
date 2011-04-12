@@ -380,9 +380,7 @@ class StackSegment
         return *initialVarObj;
     }
 
-#ifdef DEBUG
     JS_REQUIRES_STACK bool contains(const JSStackFrame *fp) const;
-#endif
 
     JSStackFrame *computeNextFrame(JSStackFrame *fp) const;
 };
@@ -682,6 +680,9 @@ class StackSpace
     /* These functions are called inside Execute, not Execute clients. */
     bool getExecuteFrame(JSContext *cx, JSScript *script, ExecuteFrameGuard *fg) const;
     void pushExecuteFrame(JSContext *cx, JSObject *initialVarObj, ExecuteFrameGuard *fg);
+
+    /* Get the segment which contains the target frame. */
+    js::StackSegment *containingSegment(const JSStackFrame *target);
 
     /*
      * Since RAII cannot be used for inline frames, callers must manually
@@ -1786,12 +1787,6 @@ struct JSContext
 
     /* Undoes calls to suspendActiveSegment. */
     void restoreSegment();
-
-    /*
-     * Perform a linear search of all frames in all segments in the given context
-     * for the given frame, returning the segment, if found, and null otherwise.
-     */
-    js::StackSegment *containingSegment(const JSStackFrame *target);
 
     /* Search the call stack for the nearest frame with static level targetLevel. */
     JSStackFrame *findFrameAtLevel(uintN targetLevel) const {
