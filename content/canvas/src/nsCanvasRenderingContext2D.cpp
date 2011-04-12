@@ -1966,7 +1966,7 @@ nsresult
 nsCanvasRenderingContext2D::DrawRect(const gfxRect& rect, Style style)
 {
     if (!FloatValidate(rect.pos.x, rect.pos.y, rect.size.width, rect.size.height))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     PathAutoSaveRestore pathSR(this);
 
