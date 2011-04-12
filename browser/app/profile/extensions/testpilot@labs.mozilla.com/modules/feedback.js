@@ -104,12 +104,18 @@ var FeedbackManager = {
      */
     let ioService = Cc["@mozilla.org/network/io-service;1"]
       .getService(Ci.nsIIOService);
-    let uri = ioService.newURI(url, null, null);
-    let path = uri.path;
-    if (uri.host == "input.mozilla.com") {
-      if (path.indexOf("feedback" > -1) || path.indexOf("happy" > -1) || path.indexOf("sad" > -1)) {
-        return true;
+    try {
+      let uri = ioService.newURI(url, null, null);
+      let path = uri.path;
+      if (uri.host == "input.mozilla.com") {
+        if (path.indexOf("feedback" > -1) || path.indexOf("happy" > -1) || path.indexOf("sad" > -1)) {
+          return true;
+        }
       }
+    } catch(e) {
+      /* newURI throws an exception if we try to parse urls like "about:config".  (Bug 644582)
+       * Those are not the urls we're looking for anyway. */
+      return false;
     }
     return false;
   },
