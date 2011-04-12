@@ -1,7 +1,6 @@
 import os
 import shutil
 import sha
-import sha
 from os.path import join, getsize
 from stat import *
 import re
@@ -17,7 +16,8 @@ class PatchInfo:
     """ Represents the meta-data associated with a patch
         work_dir = working dir where files are stored for this patch
         archive_files = list of files to include in this patch
-        manifest = set of patch instructions
+        manifestv1 = set of manifest version 1 patch instructions
+        manifestv2 = set of manifest version 2 patch instructions
         file_exclusion_list = 
         files to exclude from this patch. names without slashes will be
                               excluded anywhere in the directory hiearchy.   names with slashes
@@ -26,7 +26,8 @@ class PatchInfo:
     def __init__(self, work_dir, file_exclusion_list, path_exclusion_list):
         self.work_dir=work_dir
         self.archive_files=[]
-        self.manifest=[]
+        self.manifestv1=[]
+        self.manifestv2=[]
         self.file_exclusion_list=file_exclusion_list
         self.path_exclusion_list=path_exclusion_list
         
@@ -39,12 +40,15 @@ class PatchInfo:
         if filename.startswith("extensions/"):
             # Directory immediately following extensions is used for the test
             testdir = "extensions/"+filename.split("/")[1]
-            self.manifest.append('add-if "'+testdir+'" "'+filename+'"')
+            self.manifestv1.append('add-if "'+testdir+'" "'+filename+'"')
+            self.manifestv2.append('add-if "'+testdir+'" "'+filename+'"')
         elif filename.startswith("Contents/MacOS/extensions/"):
             testdir = "Contents/MacOS/extensions/"+filename.split("/")[3]
-            self.manifest.append('add-if "'+testdir+'" "'+filename+'"')
+            self.manifestv1.append('add-if "'+testdir+'" "'+filename+'"')
+            self.manifestv2.append('add-if "'+testdir+'" "'+filename+'"')
         else:
-            self.manifest.append('add "'+filename+'"')
+            self.manifestv1.append('add "'+filename+'"')
+            self.manifestv2.append('add "'+filename+'"')
            
     def append_patch_instruction(self, filename, patchname):
         """ Appends an patch instruction for this patch.   
@@ -60,51 +64,84 @@ class PatchInfo:
         """
         if filename.startswith("extensions/"):
             testdir = "extensions/"+filename.split("/")[1]
-            self.manifest.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
+            self.manifestv1.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
+            self.manifestv2.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
         elif filename.startswith("Contents/MacOS/extensions/"):
             testdir = "Contents/MacOS/extensions/"+filename.split("/")[3]
-            self.manifest.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
+            self.manifestv1.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
+            self.manifestv2.append('patch-if "'+testdir+'" "'+patchname+'" "'+filename+'"')
         elif (filename.startswith("searchplugins/") or
              filename.startswith("Contents/MacOS/searchplugins/")):
-            self.manifest.append('patch-if "'+filename+'" "'+patchname+'" "'+filename+'"')
+            self.manifestv1.append('patch-if "'+filename+'" "'+patchname+'" "'+filename+'"')
+            self.manifestv2.append('patch-if "'+filename+'" "'+patchname+'" "'+filename+'"')
         else:
-            self.manifest.append('patch "'+patchname+'" "'+filename+'"')
+            self.manifestv1.append('patch "'+patchname+'" "'+filename+'"')
+            self.manifestv2.append('patch "'+patchname+'" "'+filename+'"')
                 
     def append_remove_instruction(self, filename):
         """ Appends an remove instruction for this patch.   
             This was ported from
             mozilla/tools/update-packaging/common.sh/make_remove_instruction
         """
-        self.manifest.append('remove "'+filename+'"')
+        if filename.endswith("/"):
+            self.manifestv2.append('rmdir "'+filename+'"')
+        elif filename.endswith("/*"):
+            filename = filename[:-1]
+            self.manifestv2.append('rmrfdir "'+filename+'"')
+        else:
+            self.manifestv1.append('remove "'+filename+'"')
+            self.manifestv2.append('remove "'+filename+'"')
 
-    def create_manifest_file(self):
-        """ Createst the manifest file into to the root of the work_dir """
+    def create_manifest_files(self):
+        """ Createst the v1 manifest file in the root of the work_dir """
         manifest_file_path = os.path.join(self.work_dir,"update.manifest")
-        manifest_file = open(manifest_file_path, "w")
-        manifest_file.writelines(string.join(self.manifest, '\n'))
+        manifest_file = open(manifest_file_path, "wb")
+        manifest_file.writelines(string.join(self.manifestv1, '\n'))
         manifest_file.writelines("\n")
         manifest_file.close()    
 
         bzip_file(manifest_file_path)
         self.archive_files.append('"update.manifest"')
 
+        """ Createst the v2 manifest file in the root of the work_dir """
+        manifest_file_path = os.path.join(self.work_dir,"updatev2.manifest")
+        manifest_file = open(manifest_file_path, "wb")
+        manifest_file.writelines("type \"partial\"\n")
+        manifest_file.writelines(string.join(self.manifestv2, '\n'))
+        manifest_file.writelines("\n")
+        manifest_file.close()
+
+        bzip_file(manifest_file_path)
+        self.archive_files.append('"updatev2.manifest"')
 
     def build_marfile_entry_hash(self, root_path):
-         """ Iterates through the root_path, creating a MarFileEntry for each file
-             in that path.  Excluseds any filenames in the file_exclusion_list
-         """
-         mar_entry_hash = {}
-         filename_set = set()
-         for root, dirs, files in os.walk(root_path):
-             for name in files:
-                 # filename is relative path from root directory
-                 partial_path = root[len(root_path)+1:]
-                 if name not in self.file_exclusion_list:
-                     filename = os.path.join(partial_path, name)
-                     if "/"+filename not in self.path_exclusion_list:
-                         mar_entry_hash[filename]=MarFileEntry(root_path, filename)
-                         filename_set.add(filename)
-         return mar_entry_hash, filename_set
+        """ Iterates through the root_path, creating a MarFileEntry for each file
+            and directory in that path.  Excludes any filenames in the file_exclusion_list
+        """
+        mar_entry_hash = {}
+        filename_set = set()
+        dirname_set = set()
+        for root, dirs, files in os.walk(root_path):
+            for name in files:
+                # filename is the relative path from root directory
+                partial_path = root[len(root_path)+1:]
+                if name not in self.file_exclusion_list:
+                    filename = os.path.join(partial_path, name)
+                    if "/"+filename not in self.path_exclusion_list:
+                        mar_entry_hash[filename]=MarFileEntry(root_path, filename)
+                        filename_set.add(filename)
+
+            for name in dirs:
+                # dirname is the relative path from root directory
+                partial_path = root[len(root_path)+1:]
+                if name not in self.file_exclusion_list:
+                    dirname = os.path.join(partial_path, name)
+                    if "/"+dirname not in self.path_exclusion_list:
+                        dirname = dirname+"/"
+                        mar_entry_hash[dirname]=MarFileEntry(root_path, dirname)
+                        dirname_set.add(dirname)
+
+        return mar_entry_hash, filename_set, dirname_set
  
        
 class MarFileEntry:
@@ -118,7 +155,7 @@ class MarFileEntry:
     def __init__(self, root, name):
         """root = path the the top of the mar
            name = relative path within the mar"""
-        self.name=name
+        self.name=name.replace("\\", "/")
         self.abs_path=os.path.join(root,name)
         self.sha_cache=None
 
@@ -219,10 +256,10 @@ def create_partial_patch_for_file(from_marfile_entry, to_marfile_entry, shas, pa
         shas[from_marfile_entry.sha(),to_marfile_entry.sha()] = (file_in_manifest_name,file_in_manifest_abspath)
         patch_info.archive_files.append('"'+file_in_manifest_name+'"')        
     else:
-        print "skipping diff: " + from_marfile_entry.name
         filename, src_file_abs_path = shas[from_marfile_entry.sha(),to_marfile_entry.sha()]
         # We've already calculated the patch for this pair of files.   
         if (filename.endswith(".patch")):
+            print "skipping diff: " + from_marfile_entry.name
             # Patch was smaller than file - add patch instruction to manifest
             file_in_manifest_name = to_marfile_entry.name+'.patch';
             patch_info.append_patch_instruction(to_marfile_entry.name, file_in_manifest_name)
@@ -250,62 +287,78 @@ def process_explicit_remove_files(dir_path, patch_info):
     list_file_path = os.path.join(dir_path, "removed-files")
     prefix=""
     if not os.path.exists(list_file_path):
-        # Mac has is in Contents/MacOS/
+        # On Mac removed-files contains relative paths from Contents/MacOS/
         prefix= "Contents/MacOS"
         list_file_path = os.path.join(dir_path, prefix+"/removed-files")
 
     if (os.path.exists(list_file_path)):
         list_file = bz2.BZ2File(list_file_path,"r") # throws if doesn't exist
 
+        lines = []
         for line in list_file:
-            line = line.strip()
-            # Exclude any blank lines or any lines ending with a slash, which indicate
-            # directories.  The updater doesn't know how to remove entire directories.
-            if line and not line.endswith("/"): 
-                patch_info.append_remove_instruction(os.path.join(prefix,line))
+            lines.append(line.strip())
+
+        lines.sort(reverse=True)
+        for line in lines:
+            # Exclude any blank and comment lines.
+            if line and not line.startswith("#"):
+                # Python on windows uses \ for path separators and the update
+                # manifests expects / for path separators on all platforms.
+                line=os.path.join(prefix,line).replace("\\", "/")
+                patch_info.append_remove_instruction(line)
 
 def create_partial_patch(from_dir_path, to_dir_path, patch_filename, shas, patch_info, forced_updates):
     """ Builds a partial patch by comparing the files in from_dir_path to thoes of to_dir_path"""
     # Cannocolize the paths for safey
     from_dir_path = os.path.abspath(from_dir_path)
     to_dir_path = os.path.abspath(to_dir_path)
-    # First create a hashtable of the from  and to directories
-    from_dir_hash,from_dir_set = patch_info.build_marfile_entry_hash(from_dir_path)
-    to_dir_hash,to_dir_set = patch_info.build_marfile_entry_hash(to_dir_path)
+    # Create a hashtable of the from  and to directories
+    from_dir_hash,from_file_set,from_dir_set = patch_info.build_marfile_entry_hash(from_dir_path)
+    to_dir_hash,to_file_set,to_dir_set = patch_info.build_marfile_entry_hash(to_dir_path)
+    # Require that the precomplete file is included in the to complete update
+    if "precomplete" not in to_file_set:
+        raise Exception, "missing precomplete file in: "+to_dir_path
     # Create a list of the forced updates 
     forced_list = forced_updates.strip().split('|')
-    
+    forced_list.append("precomplete")
+
     # Files which exist in both sets need to be patched
-    patch_filenames = list(from_dir_set.intersection(to_dir_set))
-    patch_filenames.sort()
+    patch_filenames = list(from_file_set.intersection(to_file_set))
+    patch_filenames.sort(reverse=True)
     for filename in patch_filenames:
         from_marfile_entry = from_dir_hash[filename]
         to_marfile_entry = to_dir_hash[filename]
         if filename in forced_list:
             print "Forcing "+ filename
             # This filename is in the forced list, explicitly add
-       	    create_add_patch_for_file(to_dir_hash[filename], patch_info)
+            create_add_patch_for_file(to_dir_hash[filename], patch_info)
         else: 
           if from_marfile_entry.sha() != to_marfile_entry.sha():
               # Not the same - calculate a patch
               create_partial_patch_for_file(from_marfile_entry, to_marfile_entry, shas, patch_info)
 
-    # files in from_dir not in to_dir need to be removed
-    remove_filenames = list(from_dir_set - to_dir_set)
-    remove_filenames.sort()
-    for filename in remove_filenames:
-        patch_info.append_remove_instruction(from_dir_hash[filename].name)
-
     # files in to_dir not in from_dir need to added
-    add_filenames = list(to_dir_set - from_dir_set)
-    add_filenames.sort()
+    add_filenames = list(to_file_set - from_file_set)
+    add_filenames.sort(reverse=True)
     for filename in add_filenames:
         create_add_patch_for_file(to_dir_hash[filename], patch_info)
 
+    # files in from_dir not in to_dir need to be removed
+    remove_filenames = list(from_file_set - to_file_set)
+    remove_filenames.sort(reverse=True)
+    for filename in remove_filenames:
+        patch_info.append_remove_instruction(from_dir_hash[filename].name)
+
     process_explicit_remove_files(to_dir_path, patch_info)
     
-    # Construct Manifest file
-    patch_info.create_manifest_file()
+    # directories in from_dir not in to_dir need to be removed
+    remove_dirnames = list(from_dir_set - to_dir_set)
+    remove_dirnames.sort(reverse=True)
+    for dirname in remove_dirnames:
+        patch_info.append_remove_instruction(from_dir_hash[dirname].name)
+
+    # Construct the Manifest files
+    patch_info.create_manifest_files()
     
     # And construct the mar
     mar_cmd = 'mar -C '+patch_info.work_dir+' -c output.mar '+string.join(patch_info.archive_files, ' ')    
@@ -402,7 +455,7 @@ def create_partial_patches(patches):
 
             mar_extract_time = time.time()
 
-            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['channel-prefs.js','update.manifest','removed-files'],['/readme.txt']),forced_updates)
+            partial_filename = create_partial_patch(work_dir_from, work_dir_to, patch_filename, shas, PatchInfo(work_dir, ['channel-prefs.js','update.manifest','updatev2.manifest','removed-files'],['/readme.txt']),forced_updates)
             partial_buildid = to_buildid
             partial_shasum = sha.sha(open(partial_filename).read()).hexdigest()
             partial_size = str(os.path.getsize(partial_filename))
