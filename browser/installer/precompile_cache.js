@@ -43,6 +43,14 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const MODE_RDONLY   = 0x01;
+const MODE_WRONLY   = 0x02;
+const MODE_CREATE   = 0x08;
+const MODE_APPEND   = 0x10;
+const MODE_TRUNCATE = 0x20;
+
+var out;
+
 function setenv(name, val) {
   try {
     var environment = Components.classes["@mozilla.org/process/environment;1"].
@@ -71,6 +79,7 @@ function load_entries(entries, prefix) {
       continue;
     if (c.indexOf("services-crypto") >= 0)
       continue;
+    out.writeString(c + "\n");
     load(prefix + c);
   }
 }
@@ -78,6 +87,7 @@ function load_entries(entries, prefix) {
 function load_custom_entries(entries, subst) {
   while (entries.hasMore()) {
     var c = entries.getNext();
+    out.writeString(c + "\n");
     load("resource://" + subst + "/" + c.replace("modules/" + subst + "/", ""));
   }
 }
@@ -94,7 +104,7 @@ function openJar(file) {
   return zipreader;
 }
 
-function populate_startupcache(omnijarName, startupcacheName) {
+function populate_startupcache(omnijarName, startupcacheName, logName) {
   var file = getGreDir();
   file.append(omnijarName);
   zipreader = openJar(file);
@@ -102,6 +112,18 @@ function populate_startupcache(omnijarName, startupcacheName) {
   var scFile = getGreDir();
   scFile.append(startupcacheName);
   setenv("MOZ_STARTUP_CACHE", scFile.path);
+
+  var logFile = getGreDir();
+  logFile.append(logName);
+  var stream = Cc["@mozilla.org/network/file-output-stream;1"]
+                 .createInstance(Ci.nsIFileOutputStream);
+
+  stream.init(logFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0666, 0);
+
+  out = Cc["@mozilla.org/intl/converter-output-stream;1"]
+          .createInstance(Ci.nsIConverterOutputStream);
+
+  out.init(stream, "UTF-8", 0, 0);
 
   // the sync part below doesn't work as smoothly
   let ioService = Cc["@mozilla.org/network/io-service;1"].
@@ -126,4 +148,5 @@ function populate_startupcache(omnijarName, startupcacheName) {
   load_entries(zipreader.findEntries("modules/*js"), "resource://gre/");
   load_entries(zipreader.findEntries("modules/*jsm"), "resource://gre/");
   zipreader.close();
+  out.close();
 }
