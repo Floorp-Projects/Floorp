@@ -153,10 +153,6 @@ nsXFormsAccessible::GetValue(nsAString& aValue)
 PRUint64
 nsXFormsAccessible::NativeState()
 {
-
-  if (IsDefunct())
-    return states::DEFUNCT;
-
   NS_ENSURE_TRUE(sXFormsService, 0);
 
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));

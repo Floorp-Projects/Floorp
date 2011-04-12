@@ -144,7 +144,7 @@ nsApplicationAccessible::GetKeyboardShortcut(nsAString &aKeyboardShortcut)
 PRUint64
 nsApplicationAccessible::State()
 {
-  return NativeState();
+  return IsDefunct() ? states::DEFUNCT : 0;
 }
 
 NS_IMETHODIMP
@@ -375,7 +375,7 @@ nsApplicationAccessible::NativeRole()
 PRUint64
 nsApplicationAccessible::NativeState()
 {
-  return IsDefunct() ? states::DEFUNCT : 0;
+  return 0;
 }
 
 void
