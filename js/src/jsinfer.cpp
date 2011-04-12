@@ -2549,7 +2549,7 @@ TypeObject::splicePrototype(JSContext *cx, JSObject *proto)
     unsigned count = getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
         Property *prop = getProperty(i);
-        if (prop)
+        if (prop && !JSID_IS_EMPTY(prop->id))
             getFromPrototypes(cx, prop);
     }
 
@@ -2571,12 +2571,14 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
     InferSpew(ISpewOps, "typeSet: T%p property %s %s",
               &base->types, name(), TypeIdString(id));
 
-    /* Check all transitive instances for this property. */
-    if (instanceList)
-        storeToInstances(cx, base);
+    if (!JSID_IS_EMPTY(id)) {
+        /* Check all transitive instances for this property. */
+        if (instanceList)
+            storeToInstances(cx, base);
 
-    /* Pull in this property from all prototypes up the chain. */
-    getFromPrototypes(cx, base);
+        /* Pull in this property from all prototypes up the chain. */
+        getFromPrototypes(cx, base);
+    }
 
     return true;
 }
