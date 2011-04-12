@@ -106,6 +106,7 @@ EXPORTS_mozilla/css = \
 		$(NULL)
 
 CPPSRCS		= \
+		AnimationCommon.cpp \
 		nsCSSAnonBoxes.cpp \
 		nsCSSDataBlock.cpp \
 		Declaration.cpp \
