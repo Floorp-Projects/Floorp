@@ -64,6 +64,8 @@ XPIDLSRCS =					\
 	nsIDOMCSSImportRule.idl			\
 	nsIDOMCSSMediaRule.idl			\
 	nsIDOMCSSMozDocumentRule.idl		\
+	nsIDOMMozCSSKeyframeRule.idl		\
+	nsIDOMMozCSSKeyframesRule.idl		\
 	nsIDOMCSSPageRule.idl			\
 	nsIDOMCSSStyleRule.idl			\
 	nsIDOMCSSUnknownRule.idl		\

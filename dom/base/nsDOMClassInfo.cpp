@@ -327,6 +327,8 @@
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
+#include "nsIDOMMozCSSKeyframeRule.h"
+#include "nsIDOMMozCSSKeyframesRule.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleSheet.h"
@@ -1481,6 +1483,11 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   NS_DEFINE_CLASSINFO_DATA(EventException, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+
+  NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframeRule, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(MozCSSKeyframesRule, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -4212,6 +4219,14 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(EventException, nsIDOMEventException)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventException)
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframeRule, nsIDOMMozCSSKeyframeRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(MozCSSKeyframesRule, nsIDOMMozCSSKeyframesRule)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMMozCSSKeyframesRule)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG

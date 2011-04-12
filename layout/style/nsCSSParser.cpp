@@ -254,6 +254,16 @@ public:
                                PRUint32 aLineNumber, // for error reporting
                                nsCSSSelectorList **aSelectorList);
 
+  already_AddRefed<nsCSSKeyframeRule>
+  ParseKeyframeRule(const nsSubstring& aBuffer,
+                    nsIURI*            aURL,
+                    PRUint32           aLineNumber);
+
+  bool ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
+                                   nsIURI* aURL, // for error reporting
+                                   PRUint32 aLineNumber, // for error reporting
+                                   nsTArray<float>& aSelectorList);
+
 protected:
   class nsAutoParseCompoundProperty;
   friend class nsAutoParseCompoundProperty;
@@ -357,6 +367,9 @@ protected:
                                   nsCSSValue& aValue);
 
   PRBool ParsePageRule(RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aProcessData);
+  already_AddRefed<nsCSSKeyframeRule> ParseKeyframeRule();
+  PRBool ParseKeyframeSelectorList(nsTArray<float>& aSelectorList);
 
   enum nsSelectorParsingStatus {
     // we have parsed a selector and we saw a token that cannot be
@@ -1300,6 +1313,56 @@ CSSParserImpl::ParseSelectorString(const nsSubstring& aSelectorString,
   return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
+
+already_AddRefed<nsCSSKeyframeRule>
+CSSParserImpl::ParseKeyframeRule(const nsSubstring&  aBuffer,
+                                 nsIURI*             aURI,
+                                 PRUint32            aLineNumber)
+{
+  InitScanner(aBuffer, aURI, aLineNumber, aURI, nsnull);
+
+  AssertInitialState();
+
+  nsRefPtr<nsCSSKeyframeRule> result = ParseKeyframeRule();
+  if (GetToken(PR_TRUE)) {
+    // extra garbage at the end
+    result = nsnull;
+  }
+
+  OUTPUT_ERROR();
+  ReleaseScanner();
+
+  return result.forget();
+}
+
+bool
+CSSParserImpl::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
+                                           nsIURI* aURI, // for error reporting
+                                           PRUint32 aLineNumber, // for error reporting
+                                           nsTArray<float>& aSelectorList)
+{
+  NS_ABORT_IF_FALSE(aSelectorList.IsEmpty(), "given list should start empty");
+
+  InitScanner(aSelectorString, aURI, aLineNumber, aURI, nsnull);
+
+  AssertInitialState();
+
+  bool success = ParseKeyframeSelectorList(aSelectorList) &&
+                 // must consume entire input string
+                 !GetToken(PR_TRUE);
+
+  OUTPUT_ERROR();
+  ReleaseScanner();
+
+  if (success) {
+    NS_ASSERTION(!aSelectorList.IsEmpty(), "should not be empty");
+  } else {
+    aSelectorList.Clear();
+  }
+
+  return success;
+}
+
 //----------------------------------------------------------------------
 
 PRBool
@@ -1528,6 +1591,10 @@ CSSParserImpl::ParseAtRule(RuleAppendFunc aAppendFunc,
 
   } else if (mToken.mIdent.LowerCaseEqualsLiteral("page")) {
     parseFunc = &CSSParserImpl::ParsePageRule;
+    newSection = eCSSSection_General;
+
+  } else if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-keyframes")) {
+    parseFunc = &CSSParserImpl::ParseKeyframesRule;
     newSection = eCSSSection_General;
 
   } else {
@@ -2242,6 +2309,101 @@ CSSParserImpl::ParsePageRule(RuleAppendFunc aAppendFunc, void* aData)
   return PR_FALSE;
 }
 
+PRBool
+CSSParserImpl::ParseKeyframesRule(RuleAppendFunc aAppendFunc, void* aData)
+{
+  if (!GetToken(PR_TRUE)) {
+    REPORT_UNEXPECTED_EOF(PEKeyframeNameEOF);
+    return PR_FALSE;
+  }
+
+  if (mToken.mType != eCSSToken_Ident) {
+    REPORT_UNEXPECTED_TOKEN(PEKeyframeBadName);
+    UngetToken();
+    return PR_FALSE;
+  }
+  nsString name(mToken.mIdent);
+
+  if (!ExpectSymbol('{', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(PEKeyframeBrace);
+    return PR_FALSE;
+  }
+
+  nsRefPtr<nsCSSKeyframesRule> rule = new nsCSSKeyframesRule(name);
+
+  while (!ExpectSymbol('}', PR_TRUE)) {
+    nsRefPtr<nsCSSKeyframeRule> kid = ParseKeyframeRule();
+    if (kid) {
+      rule->AppendStyleRule(kid);
+    } else {
+      OUTPUT_ERROR();
+      SkipRuleSet(PR_TRUE);
+    }
+  }
+
+  (*aAppendFunc)(rule, aData);
+  return PR_TRUE;
+}
+
+already_AddRefed<nsCSSKeyframeRule>
+CSSParserImpl::ParseKeyframeRule()
+{
+  nsTArray<float> selectorList;
+  if (!ParseKeyframeSelectorList(selectorList)) {
+    REPORT_UNEXPECTED(PEBadSelectorKeyframeRuleIgnored);
+    return nsnull;
+  }
+
+  nsAutoPtr<css::Declaration> declaration(ParseDeclarationBlock(PR_TRUE));
+  if (!declaration) {
+    REPORT_UNEXPECTED(PEBadSelectorKeyframeRuleIgnored);
+    return nsnull;
+  }
+
+  // Takes ownership of declaration, and steals contents of selectorList.
+  nsRefPtr<nsCSSKeyframeRule> rule =
+    new nsCSSKeyframeRule(selectorList, declaration);
+
+  return rule.forget();
+}
+
+PRBool
+CSSParserImpl::ParseKeyframeSelectorList(nsTArray<float>& aSelectorList)
+{
+  for (;;) {
+    if (!GetToken(PR_TRUE)) {
+      // The first time through the loop, this means we got an empty
+      // list.  Otherwise, it means we have a trailing comma.
+      return PR_FALSE;
+    }
+    float value;
+    switch (mToken.mType) {
+      case eCSSToken_Percentage:
+        value = mToken.mNumber;
+        break;
+      case eCSSToken_Ident:
+        if (mToken.mIdent.LowerCaseEqualsLiteral("from")) {
+          value = 0.0f;
+          break;
+        }
+        if (mToken.mIdent.LowerCaseEqualsLiteral("to")) {
+          value = 1.0f;
+          break;
+        }
+        // fall through
+      default:
+        UngetToken();
+        // The first time through the loop, this means we got an empty
+        // list.  Otherwise, it means we have a trailing comma.
+        return PR_FALSE;
+    }
+    aSelectorList.AppendElement(value);
+    if (!ExpectSymbol(',', PR_TRUE)) {
+      return PR_TRUE;
+    }
+  }
+}
+
 void
 CSSParserImpl::SkipUntil(PRUnichar aStopSymbol)
 {
@@ -2421,7 +2583,6 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
   // Next parse the declaration block
   css::Declaration* declaration = ParseDeclarationBlock(PR_TRUE);
   if (nsnull == declaration) {
-    // XXX skip something here
     delete slist;
     return PR_FALSE;
   }
@@ -8657,4 +8818,24 @@ nsCSSParser::ParseSelectorString(const nsSubstring&  aSelectorString,
 {
   return static_cast<CSSParserImpl*>(mImpl)->
     ParseSelectorString(aSelectorString, aURI, aLineNumber, aSelectorList);
+}
+
+already_AddRefed<nsCSSKeyframeRule>
+nsCSSParser::ParseKeyframeRule(const nsSubstring& aBuffer,
+                               nsIURI*            aURI,
+                               PRUint32           aLineNumber)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    ParseKeyframeRule(aBuffer, aURI, aLineNumber);
+}
+
+bool
+nsCSSParser::ParseKeyframeSelectorString(const nsSubstring& aSelectorString,
+                                         nsIURI*            aURI,
+                                         PRUint32           aLineNumber,
+                                         nsTArray<float>&   aSelectorList)
+{
+  return static_cast<CSSParserImpl*>(mImpl)->
+    ParseKeyframeSelectorString(aSelectorString, aURI, aLineNumber,
+                                aSelectorList);
 }
