@@ -1921,6 +1921,20 @@ nsStyleBackground::Layer::operator==(const Layer& aOther) const
 //
 void nsTimingFunction::AssignFromKeyword(PRInt32 aTimingFunctionType)
 {
+  switch (aTimingFunctionType) {
+    case NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START:
+      mType = StepStart;
+      mSteps = 1;
+      return;
+    case NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END:
+      mType = StepEnd;
+      mSteps = 1;
+      return;
+    default:
+      mType = Function;
+      break;
+  }
+
   PR_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE == 0);
   PR_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_LINEAR == 1);
   PR_STATIC_ASSERT(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN == 2);
@@ -1937,10 +1951,10 @@ void nsTimingFunction::AssignFromKeyword(PRInt32 aTimingFunctionType)
 
   NS_ABORT_IF_FALSE(0 <= aTimingFunctionType && aTimingFunctionType < 5,
                     "keyword out of range");
-  mX1 = timingFunctionValues[aTimingFunctionType][0];
-  mY1 = timingFunctionValues[aTimingFunctionType][1];
-  mX2 = timingFunctionValues[aTimingFunctionType][2];
-  mY2 = timingFunctionValues[aTimingFunctionType][3];
+  mFunc.mX1 = timingFunctionValues[aTimingFunctionType][0];
+  mFunc.mY1 = timingFunctionValues[aTimingFunctionType][1];
+  mFunc.mX2 = timingFunctionValues[aTimingFunctionType][2];
+  mFunc.mY2 = timingFunctionValues[aTimingFunctionType][3];
 }
 
 nsTransition::nsTransition(const nsTransition& aCopy)

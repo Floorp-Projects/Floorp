@@ -647,6 +647,8 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN      2
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_OUT     3
 #define NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE_IN_OUT  4
+#define NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START   5
+#define NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END     6
 
 // See nsStyleText
 // Note: these values pickup after the text-align values because there

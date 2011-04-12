@@ -168,6 +168,8 @@ private:
   void GetImageRectString(nsIURI* aURI,
                           const nsStyleSides& aCropRect,
                           nsString& aString);
+  void AppendTimingFunction(nsDOMCSSValueList *aValueList,
+                            const nsTimingFunction& aTimingFunction);
 
   /* Properties queryable as CSSValues.
    * To avoid a name conflict with nsIDOM*CSS2Properties, these are all
