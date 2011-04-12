@@ -1065,6 +1065,21 @@ nsStyleSet::AppendFontFaceRules(nsPresContext* aPresContext,
   return PR_TRUE;
 }
 
+PRBool
+nsStyleSet::AppendKeyframesRules(nsPresContext* aPresContext,
+                                 nsTArray<nsCSSKeyframesRule*>& aArray)
+{
+  NS_ENSURE_FALSE(mInShutdown, PR_FALSE);
+
+  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(gCSSSheetTypes); ++i) {
+    nsCSSRuleProcessor *ruleProc = static_cast<nsCSSRuleProcessor*>
+                                    (mRuleProcessors[gCSSSheetTypes[i]].get());
+    if (ruleProc && !ruleProc->AppendKeyframesRules(aPresContext, aArray))
+      return PR_FALSE;
+  }
+  return PR_TRUE;
+}
+
 void
 nsStyleSet::BeginShutdown(nsPresContext* aPresContext)
 {
