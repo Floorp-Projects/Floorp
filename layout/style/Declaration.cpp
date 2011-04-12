@@ -674,6 +674,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       }
       break;
     }
+#ifdef MOZ_CSS_ANIMATIONS
     case eCSSProperty_animation: {
       const nsCSSProperty* subprops =
         nsCSSProps::SubpropertyEntryFor(eCSSProperty_animation);
@@ -724,6 +725,7 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       }
       break;
     }
+#endif
     case eCSSProperty_marker: {
       const nsCSSValue &endValue =
         *data->ValueFor(eCSSProperty_marker_end);

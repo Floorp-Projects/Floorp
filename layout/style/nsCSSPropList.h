@@ -364,6 +364,7 @@ CSS_PROP_FONT(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 #endif
+#ifdef MOZ_CSS_ANIMATIONS
 CSS_PROP_SHORTHAND(
     -moz-animation,
     animation,
@@ -454,6 +455,7 @@ CSS_PROP_DISPLAY(
     kTransitionTimingFunctionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+#endif
 CSS_PROP_BACKENDONLY(
     azimuth,
     azimuth,

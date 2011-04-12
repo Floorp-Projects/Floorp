@@ -482,7 +482,9 @@ DOMCI_CLASS(PopStateEvent)
 DOMCI_CLASS(EventListenerInfo)
 
 DOMCI_CLASS(TransitionEvent)
+#ifdef MOZ_CSS_ANIMATIONS
 DOMCI_CLASS(AnimationEvent)
+#endif
 
 DOMCI_CLASS(ContentFrameMessageManager)
 
@@ -510,5 +512,7 @@ DOMCI_CLASS(IDBDatabaseException)
 
 DOMCI_CLASS(EventException)
 
+#ifdef MOZ_CSS_ANIMATIONS
 DOMCI_CLASS(MozCSSKeyframeRule)
 DOMCI_CLASS(MozCSSKeyframesRule)
+#endif

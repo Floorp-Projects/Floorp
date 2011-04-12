@@ -48,8 +48,10 @@
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
+#ifdef MOZ_CSS_ANIMATIONS
 #include "nsIDOMMozCSSKeyframeRule.h"
 #include "nsIDOMMozCSSKeyframesRule.h"
+#endif
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsICSSRuleList.h"
 #include "nsAutoPtr.h"
@@ -313,6 +315,7 @@ private:
 } // namespace css
 } // namespace mozilla
 
+#ifdef MOZ_CSS_ANIMATIONS
 class nsCSSKeyframeRule;
 
 class NS_FINAL_CLASS nsCSSKeyframeStyleDeclaration
@@ -438,5 +441,6 @@ private:
 
   nsString                                   mName;
 };
+#endif
 
 #endif /* !defined(nsCSSRules_h_) */
