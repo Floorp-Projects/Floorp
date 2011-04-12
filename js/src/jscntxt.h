@@ -2167,6 +2167,12 @@ struct JSContext
     /* Mark a type as possibly having special equality hooks. */
     inline bool markTypeObjectHasSpecialEquality(js::types::TypeObject *obj);
 
+    /* Mark any property which has been deleted or reconfigured. */
+    inline bool markTypePropertyConfigured(js::types::TypeObject *obj, jsid id);
+
+    /* Mark a global object as having had its slots reallocated. */
+    inline bool markGlobalReallocation(JSObject *obj);
+
     /*
      * For an array or object which has not yet escaped and been referenced elsewhere,
      * pick a new type based on the object's current contents.

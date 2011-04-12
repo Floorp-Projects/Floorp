@@ -2450,6 +2450,10 @@ DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &des
         if (!cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN))
             return false;
     }
+    if (!desc.configurable() || !desc.enumerable() || !desc.writable()) {
+        if (!cx->markTypePropertyConfigured(obj->getType(), id))
+            return false;
+    }
 
     if (obj->isArray())
         return DefinePropertyOnArray(cx, obj, id, desc, throwError, rval);
@@ -4056,14 +4060,16 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
         goto bad;
     }
 
-    /*
-     * Pre-brand the prototype and constructor if they have built-in methods.
-     * This avoids extra shape guard branch exits in the tracejitted code.
-     */
-    if (fs)
-        proto->brand(cx);
-    if (ctor != proto && static_fs)
-        ctor->brand(cx);
+    if (!cx->typeInferenceEnabled()) {
+        /*
+         * Pre-brand the prototype and constructor if they have built-in methods.
+         * This avoids extra shape guard branch exits in the tracejitted code.
+         */
+        if (fs)
+            proto->brand(cx);
+        if (ctor != proto && static_fs)
+            ctor->brand(cx);
+    }
 
     type = proto->getNewType(cx);
     if (!type)
@@ -4265,6 +4271,7 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
                                             allocCount * sizeof(Value));
     if (!tmpslots)
         return false;    /* Leave dslots as its old size. */
+    bool changed = slots != tmpslots;
     slots = tmpslots;
     capacity = actualCapacity;
 
@@ -4272,6 +4279,10 @@ JSObject::growSlots(JSContext *cx, size_t newcap)
         /* Initialize the additional slots we added. This is not required for dense arrays. */
         ClearValueRange(slots + oldAllocCount, allocCount - oldAllocCount, false);
     }
+
+    if (changed && isGlobal())
+        cx->markGlobalReallocation(this);  /* :XXX: Handle failure? */
+
     return true;
 }
 
@@ -4304,6 +4315,7 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
     Value *tmpslots = (Value*) cx->realloc_(slots, newcap * sizeof(Value));
     if (!tmpslots)
         return;  /* Leave slots at its old size. */
+    bool changed = slots != tmpslots;
     slots = tmpslots;
     capacity = newcap;
 
@@ -4312,6 +4324,9 @@ JSObject::shrinkSlots(JSContext *cx, size_t newcap)
         if (!isDenseArray())
             clearSlotRange(fill, newcap - fill);
     }
+
+    if (changed && isGlobal())
+        cx->markGlobalReallocation(this);  /* :XXX: Handle failure? */
 }
 
 bool

@@ -1363,11 +1363,7 @@ struct JSObject : js::gc::Cell {
         return (op ? op : js_GetAttributes)(cx, this, id, attrsp);
     }
 
-    JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp) {
-        js::AttributesOp op = getOps()->setAttributes;
-        return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
-    }
-
+    inline JSBool setAttributes(JSContext *cx, jsid id, uintN *attrsp);
     inline JSBool deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict);
 
     JSBool enumerate(JSContext *cx, JSIterateOp iterop, js::Value *statep, jsid *idp) {

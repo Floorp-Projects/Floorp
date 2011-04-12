@@ -112,8 +112,10 @@ class FrameState
     typedef JSC::MacroAssembler::RegisterID RegisterID;
     typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
     typedef JSC::MacroAssembler::Address Address;
+    typedef JSC::MacroAssembler::AbsoluteAddress AbsoluteAddress;
     typedef JSC::MacroAssembler::Jump Jump;
     typedef JSC::MacroAssembler::Imm32 Imm32;
+    typedef JSC::MacroAssembler::ImmPtr ImmPtr;
 
     static const uint32 InvalidIndex = 0xFFFFFFFF;
 
@@ -264,7 +266,7 @@ class FrameState
     /*
      * Loads a value from memory and pushes it.
      */
-    inline void push(Address address, JSValueType knownType);
+    inline void push(Address address, JSValueType knownType, bool reuseBase = false);
 
     /*
      * Pushes a known type and allocated payload onto the operation stack.

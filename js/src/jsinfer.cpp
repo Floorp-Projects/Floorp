@@ -427,7 +427,12 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
 void
 TypeSet::print(JSContext *cx)
 {
-    if ((typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET) == 0 && !objectCount) {
+    if (typeFlags & TYPE_FLAG_OWN_PROPERTY)
+        printf(" [own]");
+    if (typeFlags & TYPE_FLAG_CONFIGURED_PROPERTY)
+        printf(" [configured]");
+
+    if (baseFlags() == 0 && !objectCount) {
         printf(" missing");
         return;
     }
@@ -524,8 +529,29 @@ public:
         : TypeConstraint("condensed", script)
     {}
 
-    void newType(JSContext *cx, TypeSet *source, jstype type);
-    void newObjectState(JSContext *cx);
+    void checkAnalysis(JSContext *cx)
+    {
+        if (script->types) {
+            /*
+             * The script was analyzed, had the analysis collected/condensed,
+             * and then was reanalyzed. There are other constraints specifying
+             * exactly what the script depends on to trigger recompilation, and
+             * we can ignore this new type.
+             *
+             * Note that for this to hold, reanalysis of a script must always
+             * trigger recompilation, to ensure the freeze constraints which
+             * describe what the compiler depends on are in place.
+             */
+            return;
+        }
+
+        AnalyzeScriptTypes(cx, script);
+    }
+
+    void newType(JSContext *cx, TypeSet*, jstype) { checkAnalysis(cx); }
+    void newPropertyState(JSContext *cx, TypeSet*) { checkAnalysis(cx); }
+    void newObjectState(JSContext *cx, TypeObject*) { checkAnalysis(cx); }
+    void slotsReallocation(JSContext *cx) { checkAnalysis(cx); }
 
     bool condensed() { return true; }
 };
@@ -1176,34 +1202,6 @@ TypeConstraintGenerator::newType(JSContext *cx, TypeSet *source, jstype type)
 // Freeze constraints
 /////////////////////////////////////////////////////////////////////
 
-void
-TypeConstraintCondensed::newType(JSContext *cx, TypeSet *source, jstype type)
-{
-    if (script->types) {
-        /*
-         * The script was analyzed, had the analysis collected/condensed,
-         * and then was reanalyzed. There are other constraints specifying
-         * exactly what the script depends on to trigger recompilation, and
-         * we can ignore this new type.
-         *
-         * Note that for this to hold, reanalysis of a script must always
-         * trigger recompilation, to ensure the freeze constraints which
-         * describe what the compiler depends on are in place.
-         */
-        return;
-    }
-
-    AnalyzeScriptTypes(cx, script);
-}
-
-void
-TypeConstraintCondensed::newObjectState(JSContext *cx)
-{
-    if (script->types)
-        return;
-    AnalyzeScriptTypes(cx, script);
-}
-
 /* Constraint which marks all types as pushed by some bytecode. */
 class TypeConstraintPushAll : public TypeConstraint
 {
@@ -1265,7 +1263,7 @@ TypeSet::Clone(JSContext *cx, TypeSet *source, ClonedTypeSet *target)
     if (cx->compartment->types.compiledScript && !source->unknown())
         source->addFreeze(cx);
 
-    target->typeFlags = source->typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
+    target->typeFlags = source->baseFlags();
     target->objectCount = source->objectCount;
     if (source->objectCount >= 2) {
         target->objectSet = (TypeObject **) cx->calloc_(sizeof(TypeObject*) * source->objectCount);
@@ -1346,7 +1344,7 @@ GetValueTypeFromTypeFlags(TypeFlags flags)
 JSValueType
 TypeSet::getKnownTypeTag(JSContext *cx)
 {
-    TypeFlags flags = typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET;
+    TypeFlags flags = baseFlags();
     JSValueType type;
 
     if (objectCount)
@@ -1417,8 +1415,6 @@ CombineObjectKind(TypeObject *object, ObjectKind kind)
 class TypeConstraintFreezeObjectKind : public TypeConstraint
 {
 public:
-    TypeObject *object;
-
     /*
      * Kind being specialized by the parent FreezeObjectConstraint. This may
      * have already changed since this constraint was created.
@@ -1426,18 +1422,18 @@ public:
     ObjectKind *pkind;
     ObjectKind localKind;
 
-    TypeConstraintFreezeObjectKind(TypeObject *object, ObjectKind *pkind, JSScript *script)
-        : TypeConstraint("freezeObjectKind", script), object(object), pkind(pkind)
+    TypeConstraintFreezeObjectKind(ObjectKind *pkind, JSScript *script)
+        : TypeConstraint("freezeObjectKind", script), pkind(pkind)
     {}
 
-    TypeConstraintFreezeObjectKind(TypeObject *object, ObjectKind localKind, JSScript *script)
-        : TypeConstraint("freezeObjectKind", script), object(object), pkind(&this->localKind),
+    TypeConstraintFreezeObjectKind(ObjectKind localKind, JSScript *script)
+        : TypeConstraint("freezeObjectKind", script), pkind(&this->localKind),
           localKind(localKind)
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type) {}
 
-    void newObjectState(JSContext *cx)
+    void newObjectState(JSContext *cx, TypeObject *object)
     {
         ObjectKind nkind = CombineObjectKind(object, *pkind);
         if (nkind != *pkind) {
@@ -1485,7 +1481,7 @@ public:
                     return;
                 elementTypes->add(cx,
                     ArenaNew<TypeConstraintFreezeObjectKind>(cx->compartment->types.pool,
-                                                             object, &kind, script), false);
+                                                             &kind, script), false);
             }
 
             if (nkind == kind) {
@@ -1539,7 +1535,7 @@ TypeSet::GetObjectKind(JSContext *cx, TypeObject *object)
             return OBJECT_UNKNOWN;
         elementTypes->add(cx,
             ArenaNew<TypeConstraintFreezeObjectKind>(cx->compartment->types.pool,
-                                                     object, kind, cx->compartment->types.compiledScript), false);
+                                                     kind, cx->compartment->types.compiledScript), false);
     }
 
     return kind;
@@ -1558,15 +1554,82 @@ ObjectStateChange(JSContext *cx, TypeObject *object, bool markingUnknown)
     }
     TypeConstraint *constraint = elementTypes->constraintList;
     while (constraint) {
-        constraint->newObjectState(cx);
+        constraint->newObjectState(cx, object);
         constraint = constraint->next;
     }
+}
+
+class TypeConstraintWatchReallocation : public TypeConstraint
+{
+public:
+    TypeConstraintWatchReallocation(JSScript *script)
+        : TypeConstraint("watchReallocation", script)
+    {}
+
+    void newType(JSContext *cx, TypeSet *source, jstype type) {}
+
+    void slotsReallocation(JSContext *cx) {
+        cx->compartment->types.addPendingRecompile(cx, script);
+    }
+};
+
+void
+TypeSet::WatchObjectReallocation(JSContext *cx, JSObject *obj)
+{
+    JS_ASSERT(obj->isGlobal() && !obj->getType()->unknownProperties());
+    TypeSet *types = obj->getType()->getProperty(cx, JSID_VOID, false);
+    if (!types)
+        return;
+
+    types->add(cx, ArenaNew<TypeConstraintWatchReallocation>(cx->compartment->types.pool,
+                                                             cx->compartment->types.compiledScript), false);
+}
+
+class TypeConstraintFreezeOwnProperty : public TypeConstraint
+{
+public:
+    bool updated;
+    bool configurable;
+
+    TypeConstraintFreezeOwnProperty(JSScript *script, bool configurable)
+        : TypeConstraint("freezeOwnProperty", script),
+          updated(false), configurable(configurable)
+    {}
+
+    void newType(JSContext *cx, TypeSet *source, jstype type) {}
+
+    void newPropertyState(JSContext *cx, TypeSet *source)
+    {
+        if (updated)
+            return;
+        if (source->hasAnyFlag(configurable
+                               ? TYPE_FLAG_CONFIGURED_PROPERTY
+                               : TYPE_FLAG_OWN_PROPERTY)) {
+            updated = true;
+            cx->compartment->types.addPendingRecompile(cx, script);
+        }
+    }
+};
+
+bool
+TypeSet::isOwnProperty(JSContext *cx, bool configurable)
+{
+    if (hasAnyFlag(configurable
+                   ? TYPE_FLAG_CONFIGURED_PROPERTY
+                   : TYPE_FLAG_OWN_PROPERTY)) {
+        return true;
+    }
+
+    add(cx, ArenaNew<TypeConstraintFreezeOwnProperty>(cx->compartment->types.pool,
+                                                      cx->compartment->types.compiledScript,
+                                                      configurable), false);
+    return false;
 }
 
 bool
 TypeSet::knownNonEmpty(JSContext *cx)
 {
-    if ((typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET) != 0 || objectCount != 0)
+    if (baseFlags() != 0 || objectCount != 0)
         return true;
 
     add(cx, ArenaNew<TypeConstraintFreeze>(cx->compartment->types.pool,
@@ -1578,7 +1641,7 @@ TypeSet::knownNonEmpty(JSContext *cx)
 JSObject *
 TypeSet::getSingleton(JSContext *cx)
 {
-    if ((typeFlags & ~TYPE_FLAG_INTERMEDIATE_SET) != 0 || objectCount != 1)
+    if (baseFlags() != 0 || objectCount != 1)
         return NULL;
 
     TypeObject *object = (TypeObject *) objectSet;
@@ -2437,7 +2500,7 @@ TypeObject::storeToInstances(JSContext *cx, Property *base)
         Property *p =
             HashSetLookup<jsid,Property,Property>(object->propertySet, object->propertyCount, base->id);
         if (p)
-            base->ownTypes.addBaseSubset(cx, object, &p->types);
+            base->types.addBaseSubset(cx, object, &p->types);
         if (object->instanceList)
             object->storeToInstances(cx, base);
         object = object->instanceNext;
@@ -2453,7 +2516,7 @@ TypeObject::getFromPrototypes(JSContext *cx, Property *base)
          Property *p =
              HashSetLookup<jsid,Property,Property>(object->propertySet, object->propertyCount, base->id);
          if (p)
-             p->ownTypes.addBaseSubset(cx, this, &base->types);
+             p->types.addBaseSubset(cx, this, &base->types);
          obj = obj->getProto();
      }
 }
@@ -2507,10 +2570,6 @@ TypeObject::addProperty(JSContext *cx, jsid id, Property **pprop)
 
     InferSpew(ISpewOps, "typeSet: T%p property %s %s",
               &base->types, name(), TypeIdString(id));
-    InferSpew(ISpewOps, "typeSet: T%p own property %s %s",
-              &base->ownTypes, name(), TypeIdString(id));
-
-    base->ownTypes.addBaseSubset(cx, this, &base->types);
 
     /* Check all transitive instances for this property. */
     if (instanceList)
@@ -2566,8 +2625,10 @@ TypeObject::markUnknown(JSContext *cx)
     unsigned count = getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
         Property *prop = getProperty(i);
-        if (prop)
-            prop->ownTypes.addType(cx, TYPE_UNKNOWN);
+        if (prop) {
+            prop->types.addType(cx, TYPE_UNKNOWN);
+            prop->types.setOwnProperty(cx, true);
+        }
     }
 }
 
@@ -2603,7 +2664,7 @@ TypeObject::print(JSContext *cx)
         Property *prop = getProperty(i);
         if (prop) {
             printf("\n    %s:", TypeIdString(prop->id));
-            prop->ownTypes.print(cx);
+            prop->types.print(cx);
         }
     }
 
@@ -4369,10 +4430,8 @@ CondenseTypeObjectList(JSContext *cx, TypeCompartment *compartment, TypeObject *
         unsigned count = object->getPropertyCount();
         for (unsigned i = 0; i < count; i++) {
             Property *prop = object->getProperty(i);
-            if (prop) {
+            if (prop)
                 TypeSet::CondenseSweepTypeSet(cx, compartment, pcondensed, &prop->types);
-                TypeSet::CondenseSweepTypeSet(cx, compartment, pcondensed, &prop->ownTypes);
-            }
         }
 
         object = object->next;
@@ -4391,7 +4450,6 @@ static void
 DestroyProperty(JSContext *cx, Property *prop)
 {
     prop->types.destroy(cx);
-    prop->ownTypes.destroy(cx);
     cx->delete_(prop);
 }
 

@@ -516,6 +516,7 @@ class Compiler : public BaseCompiler
     bool debugMode_;
     bool addTraceHints;
     bool inlining;
+    bool hasGlobalReallocation;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
 
@@ -599,6 +600,7 @@ class Compiler : public BaseCompiler
     inline bool preserveArgType(unsigned i);
     void fixDoubleTypes();
     void restoreAnalysisTypes(uint32 stackDepth);
+    void watchGlobalReallocation();
     JSValueType knownThisType();
     JSValueType knownArgumentType(uint32 arg);
     JSValueType knownLocalType(uint32 local);
@@ -675,10 +677,10 @@ class Compiler : public BaseCompiler
     CompileStatus jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index);
     CompileStatus jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index);
     void jsop_eleminc(JSOp op, VoidStub);
-    void jsop_getgname(uint32 index, JSValueType type);
+    void jsop_getgname(uint32 index);
     void jsop_getgname_slow(uint32 index);
     void jsop_callgname_epilogue();
-    void jsop_setgname(JSAtom *atom, bool usePropertyCache);
+    void jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuaranteed);
     void jsop_setgname_slow(JSAtom *atom, bool usePropertyCache);
     void jsop_bindgname();
     void jsop_setelem_slow();
