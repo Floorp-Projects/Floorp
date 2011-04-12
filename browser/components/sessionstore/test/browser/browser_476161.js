@@ -47,7 +47,7 @@ function test() {
     let doc = tab.linkedBrowser.contentDocument;
     
     doc.getElementById("modify1").value += Math.random();
-    doc.getElementById("modify2").value += " " + Math.floor(Date.now());
+    doc.getElementById("modify2").value += " " + Date.now();
     
     let tab2 = gBrowser.duplicateTab(tab);
     tab2.linkedBrowser.addEventListener("load", function(aEvent) {

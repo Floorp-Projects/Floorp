@@ -60,7 +60,7 @@ function test() {
   
     let testURL = "about:config";
     let uniqueKey = "bug 394759";
-    let uniqueValue = "unik" + Math.floor(Date.now());
+    let uniqueValue = "unik" + Date.now();
     let uniqueText = "pi != " + Math.random();
   
   
