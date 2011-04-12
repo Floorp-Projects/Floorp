@@ -262,7 +262,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
      * Move a memory address which contains either an int32 or double into fpreg,
      * converting to double in the int32 case.
      */
-    void moveInt32OrDouble(Address address, FPRegisterID fpreg)
+    template <typename T>
+    void moveInt32OrDouble(T address, FPRegisterID fpreg)
     {
         Jump notInteger = testInt32(Assembler::NotEqual, address);
         convertInt32ToDouble(payloadOf(address), fpreg);

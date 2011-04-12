@@ -100,6 +100,7 @@ JSObject::brand(JSContext *cx)
     JS_ASSERT(!generic());
     JS_ASSERT(!branded());
     JS_ASSERT(isNative());
+    JS_ASSERT(!cx->typeInferenceEnabled());
     generateOwnShape(cx);
     if (js_IsPropertyCacheDisabled(cx))  // check for rt->shapeGen overflow
         return false;
@@ -122,9 +123,21 @@ JSObject::unbrand(JSContext *cx)
 }
 
 inline JSBool
+JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
+{
+    if (!cx->markTypePropertyConfigured(getType(), id))
+        return false;
+    js::AttributesOp op = getOps()->setAttributes;
+    return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
+}
+
+inline JSBool
 JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
 {
-    cx->addTypePropertyId(getType(), id, js::types::TYPE_UNDEFINED);
+    if (!cx->addTypePropertyId(getType(), id, js::types::TYPE_UNDEFINED))
+        return false;
+    if (!cx->markTypePropertyConfigured(getType(), id))
+        return false;
     js::DeleteIdOp op = getOps()->deleteProperty;
     return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
 }

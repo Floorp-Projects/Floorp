@@ -47,10 +47,6 @@
 #include "jsprvtd.h"
 #include "jsvalue.h"
 
-#ifndef _MSC_VER
-#include <sys/time.h>
-#endif
-
 namespace js {
     struct CallArgs;
 namespace analyze {
@@ -174,10 +170,23 @@ public:
     virtual void newType(JSContext *cx, TypeSet *source, jstype type) = 0;
 
     /*
+     * For constraints attached to an object property's type set, mark the
+     * property as having been configured or received an own property.
+     */
+    virtual void newPropertyState(JSContext *cx, TypeSet *source) {}
+
+    /*
      * For constraints attached to the index type set of an object (JSID_VOID),
      * mark a change in one of the object's dynamic property flags.
      */
-    virtual void newObjectState(JSContext *cx) {}
+    virtual void newObjectState(JSContext *cx, TypeObject *object) {}
+
+    /*
+     * For constraints attached to the index type set of a global object,
+     * mark a reallocation on the object's dynamic slots. This can happen
+     * multiple times over the life of the object.
+     */
+    virtual void slotsReallocation(JSContext *cx) {}
 
     /*
      * Whether this is an input type constraint condensed from the original
@@ -232,7 +241,19 @@ enum {
     TYPE_FLAG_UNKNOWN   = 1 << TYPE_UNKNOWN,
 
     /* Flag for type sets which are cleared on GC. */
-    TYPE_FLAG_INTERMEDIATE_SET = 0x1000
+    TYPE_FLAG_INTERMEDIATE_SET    = 0x1000,
+
+    /* For object property type sets, whether this property has been directly written. */
+    TYPE_FLAG_OWN_PROPERTY        = 0x2000,
+
+    /*
+     * For object property type sets, whether the property has ever been
+     * deleted or reconfigured as non-writable.
+     */
+    TYPE_FLAG_CONFIGURED_PROPERTY = 0x4000,
+
+    /* Mask of non-type flags on a type set. */
+    TYPE_FLAG_BASE_MASK           = 0x7000
 };
 
 /* Vector of the above flags. */
@@ -260,12 +281,18 @@ class TypeSet
     void print(JSContext *cx);
 
     void setIntermediate() { typeFlags |= TYPE_FLAG_INTERMEDIATE_SET; }
+    void setOwnProperty(bool configurable) {
+        typeFlags |= TYPE_FLAG_OWN_PROPERTY;
+        if (configurable)
+            typeFlags |= TYPE_FLAG_CONFIGURED_PROPERTY;
+    }
 
     inline void destroy(JSContext *cx);
 
     /* Whether this set contains a specific type. */
     inline bool hasType(jstype type);
 
+    TypeFlags baseFlags() { return typeFlags & ~TYPE_FLAG_BASE_MASK; }
     bool hasAnyFlag(TypeFlags flags) { return typeFlags & flags; }
     bool unknown() { return typeFlags & TYPE_FLAG_UNKNOWN; }
 
@@ -277,6 +304,9 @@ class TypeSet
 
     /* Add all types in a cloned set to this set. */
     void addTypeSet(JSContext *cx, ClonedTypeSet *types);
+
+    /* Mark this type set as representing an own property or configured property. */
+    inline void setOwnProperty(JSContext *cx, bool configured);
 
     /*
      * Iterate through the objects in this set. getObjectCount overapproximates
@@ -330,6 +360,18 @@ class TypeSet
     /* Get the fixed kind of a particular object. */
     static ObjectKind GetObjectKind(JSContext *cx, TypeObject *object);
 
+    /* Watch for slot reallocations on a particular object. */
+    static void WatchObjectReallocation(JSContext *cx, JSObject *object);
+
+    /*
+     * For type sets on a property, return true if the property has any 'own'
+     * values assigned. If configurable is set, return 'true' if the property
+     * has additionally been reconfigured as non-configurable, non-enumerable
+     * or non-writable (this only applies to properties that have changed after
+     * having been created, not to e.g. properties non-writable on creation).
+     */
+    bool isOwnProperty(JSContext *cx, bool configurable);
+
     /* Whether any objects in this type set have unknown properties. */
     bool hasUnknownProperties(JSContext *cx);
 
@@ -372,9 +414,6 @@ struct Property
 
     /* Possible types for this property, including types inherited from prototypes. */
     TypeSet types;
-
-    /* Types for this property resulting from direct sets on the object. */
-    TypeSet ownTypes;
 
     Property(jsid id)
         : id(id)
@@ -742,18 +781,6 @@ struct TypeCompartment
 
     void init(JSContext *cx);
     ~TypeCompartment();
-
-    uint64 currentTime()
-    {
-#if 0
-        timeval current;
-        gettimeofday(&current, NULL);
-        return current.tv_sec * (uint64_t) 1000000 + current.tv_usec;
-#else
-        /* Timing not available on Windows. */
-        return 0;
-#endif
-    }
 
     /* Add a type to register with a list of constraints. */
     inline void addPending(JSContext *cx, TypeConstraint *constraint, TypeSet *source, jstype type);

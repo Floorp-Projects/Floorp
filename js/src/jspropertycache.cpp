@@ -160,7 +160,8 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                 break;
             }
 
-            if (!pobj->generic() && shape->hasDefaultGetter() && pobj->containsSlot(shape->slot)) {
+            if (!pobj->generic() && shape->hasDefaultGetter() && pobj->containsSlot(shape->slot) &&
+                !cx->typeInferenceEnabled()) {
                 const Value &v = pobj->nativeGetSlot(shape->slot);
                 JSObject *funobj;
 
