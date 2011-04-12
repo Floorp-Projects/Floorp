@@ -2463,7 +2463,7 @@ Downloader.prototype = {
 
     // If this is a patch that we know about, then select it.  If it is a patch
     // that we do not know about, then remove it and use our default logic.
-    var useComplete = false;
+    var useComplete = getDesiredChannel() ? true : false;
     if (selectedPatch) {
       LOG("Downloader:_selectPatch - found existing patch with state: " +
           state);
