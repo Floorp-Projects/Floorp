@@ -108,12 +108,6 @@
 using namespace js;
 using namespace js::gc;
 
-static const size_t ARENA_HEADER_SIZE_HACK = 40;
-static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
-
-static void
-FreeContext(JSContext *cx);
-
 #ifdef DEBUG
 JS_REQUIRES_STACK bool
 StackSegment::contains(const JSStackFrame *fp) const
@@ -151,6 +145,21 @@ StackSegment::computeNextFrame(JSStackFrame *fp) const
     return next;
 }
 
+StackSpace::StackSpace()
+  : base(NULL),
+#ifdef XP_WIN
+    commitEnd(NULL),
+#endif
+    end(NULL),
+    currentSegment(NULL),
+#ifdef DEBUG
+    invokeSegment(NULL),
+    invokeFrame(NULL),
+#endif
+    invokeArgEnd(NULL)
+{
+}
+
 bool
 StackSpace::init()
 {
@@ -182,9 +191,10 @@ StackSpace::init()
     return true;
 }
 
-void
-StackSpace::finish()
+StackSpace::~StackSpace()
 {
+    if (!base)
+        return;
 #ifdef XP_WIN
     VirtualFree(base, (commitEnd - base) * sizeof(Value), MEM_DECOMMIT);
     VirtualFree(base, 0, MEM_RELEASE);
@@ -508,90 +518,61 @@ AllFramesIter::operator++()
     return *this;
 }
 
-bool
-JSThreadData::init()
-{
-#ifdef DEBUG
-    /* The data must be already zeroed. */
-    for (size_t i = 0; i != sizeof(*this); ++i)
-        JS_ASSERT(reinterpret_cast<uint8*>(this)[i] == 0);
-#endif
-    if (!stackSpace.init())
-        return false;
-    dtoaState = js_NewDtoaState();
-    if (!dtoaState) {
-        finish();
-        return false;
-    }
-    nativeStackBase = GetNativeStackBase();
+namespace js {
 
+ThreadData::ThreadData()
+  : interruptFlags(0),
+#ifdef JS_THREADSAFE
+    requestDepth(0),
+#endif
 #ifdef JS_TRACER
-    /* Set the default size for the code cache to 16MB. */
-    maxCodeCacheBytes = 16 * 1024 * 1024;
+    onTraceCompartment(NULL),
+    recordingCompartment(NULL),
+    profilingCompartment(NULL),
+    maxCodeCacheBytes(DEFAULT_JIT_CACHE_SIZE),
 #endif
-
-    return true;
+    waiveGCQuota(false),
+    dtoaState(NULL),
+    nativeStackBase(GetNativeStackBase()),
+    pendingProxyOperation(NULL)
+{
 }
 
-void
-JSThreadData::finish()
+ThreadData::~ThreadData()
 {
     if (dtoaState)
         js_DestroyDtoaState(dtoaState);
+}
 
-    js_FinishGSNCache(&gsnCache);
-    propertyCache.~PropertyCache();
-    stackSpace.finish();
+bool
+ThreadData::init()
+{
+    return stackSpace.init() && !!(dtoaState = js_NewDtoaState());
 }
 
 void
-JSThreadData::mark(JSTracer *trc)
+ThreadData::triggerOperationCallback(JSRuntime *rt)
 {
-    stackSpace.mark(trc);
-}
-
-void
-JSThreadData::purge(JSContext *cx)
-{
-    js_PurgeGSNCache(&gsnCache);
-
-    /* FIXME: bug 506341. */
-    propertyCache.purge(cx);
-}
+    /*
+     * Use JS_ATOMIC_SET and JS_ATOMIC_INCREMENT in the hope that it ensures
+     * the write will become immediately visible to other processors polling
+     * the flag.  Note that we only care about visibility here, not read/write
+     * ordering: this field can only be written with the GC lock held.
+     */
+    if (interruptFlags)
+        return;
+    JS_ATOMIC_SET(&interruptFlags, 1);
 
 #ifdef JS_THREADSAFE
-
-static JSThread *
-NewThread(void *id)
-{
-    JS_ASSERT(js_CurrentThreadId() == id);
-    JSThread *thread = (JSThread *) OffTheBooks::calloc_(sizeof(JSThread));
-    if (!thread)
-        return NULL;
-    JS_INIT_CLIST(&thread->contextList);
-    thread->id = id;
-    if (!thread->data.init()) {
-        Foreground::free_(thread);
-        return NULL;
-    }
-    return thread;
+    /* rt->interruptCounter does not reflect suspended threads. */
+    if (requestDepth != 0)
+        JS_ATOMIC_INCREMENT(&rt->interruptCounter);
+#endif
 }
 
-static void
-DestroyThread(JSThread *thread)
-{
-    /* The thread must have zero contexts. */
-    JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
+} /* namespace js */
 
-    /*
-     * The conservative GC scanner should be disabled when the thread leaves
-     * the last request.
-     */
-    JS_ASSERT(!thread->data.conservativeGC.hasStackToScan());
-
-    thread->data.finish();
-    Foreground::free_(thread);
-}
+#ifdef JS_THREADSAFE
 
 JSThread *
 js_CurrentThread(JSRuntime *rt)
@@ -618,14 +599,17 @@ js_CurrentThread(JSRuntime *rt)
             thread->data.nativeStackBase = GetNativeStackBase();
     } else {
         JS_UNLOCK_GC(rt);
-        thread = NewThread(id);
-        if (!thread)
+
+        thread = OffTheBooks::new_<JSThread>(id);
+        if (!thread || !thread->init()) {
+            Foreground::delete_(thread);
             return NULL;
+        }
         JS_LOCK_GC(rt);
         js_WaitForGC(rt);
         if (!rt->threads.relookupOrAdd(p, id, thread)) {
             JS_UNLOCK_GC(rt);
-            DestroyThread(thread);
+            Foreground::delete_(thread);
             return NULL;
         }
 
@@ -668,7 +652,7 @@ js_ClearContextThread(JSContext *cx)
 
 #endif /* JS_THREADSAFE */
 
-JSThreadData *
+ThreadData *
 js_CurrentThreadData(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
@@ -686,13 +670,10 @@ JSBool
 js_InitThreads(JSRuntime *rt)
 {
 #ifdef JS_THREADSAFE
-    if (!rt->threads.init(4))
-        return false;
+    return rt->threads.init(4);
 #else
-    if (!rt->threadData.init())
-        return false;
+    return rt->threadData.init();
 #endif
-    return true;
 }
 
 void
@@ -703,12 +684,9 @@ js_FinishThreads(JSRuntime *rt)
         return;
     for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
         JSThread *thread = r.front().value;
-        JS_ASSERT(JS_CLIST_IS_EMPTY(&thread->contextList));
-        DestroyThread(thread);
+        Foreground::delete_(thread);
     }
     rt->threads.clear();
-#else
-    rt->threadData.finish();
 #endif
 }
 
@@ -723,8 +701,7 @@ js_PurgeThreads(JSContext *cx)
 
         if (JS_CLIST_IS_EMPTY(&thread->contextList)) {
             JS_ASSERT(cx->thread != thread);
-
-            DestroyThread(thread);
+            Foreground::delete_(thread);
             e.removeFront();
         } else {
             thread->data.purge(cx);
@@ -734,6 +711,9 @@ js_PurgeThreads(JSContext *cx)
     cx->runtime->threadData.purge(cx);
 #endif
 }
+
+static const size_t ARENA_HEADER_SIZE_HACK = 40;
+static const size_t TEMP_POOL_CHUNK_SIZE = 4096 - ARENA_HEADER_SIZE_HACK;
 
 JSContext *
 js_NewContext(JSRuntime *rt, size_t stackChunkSize)
@@ -769,13 +749,13 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     JS_ASSERT(cx->resolveFlags == 0);
 
     if (!cx->busyArrays.init()) {
-        FreeContext(cx);
+        Foreground::delete_(cx);
         return NULL;
     }
 
 #ifdef JS_THREADSAFE
     if (!js_InitContextThread(cx)) {
-        FreeContext(cx);
+        Foreground::delete_(cx);
         return NULL;
     }
 #endif
@@ -1107,35 +1087,6 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     cx->dstOffsetCache.dumpStats();
 #endif
     JS_UNLOCK_GC(rt);
-    FreeContext(cx);
-}
-
-static void
-FreeContext(JSContext *cx)
-{
-#ifdef JS_THREADSAFE
-    JS_ASSERT(!cx->thread);
-#endif
-
-    /* Free the stuff hanging off of cx. */
-    VOUCH_DOES_NOT_REQUIRE_STACK();
-    JS_FinishArenaPool(&cx->tempPool);
-    JS_FinishArenaPool(&cx->regExpPool);
-
-    if (cx->lastMessage)
-        cx->free_(cx->lastMessage);
-
-    /* Remove any argument formatters. */
-    JSArgumentFormatMap *map = cx->argumentFormatMap;
-    while (map) {
-        JSArgumentFormatMap *temp = map;
-        map = map->next;
-        cx->free_(temp);
-    }
-
-    JS_ASSERT(!cx->resolvingList);
-
-    /* Finally, free cx itself. */
     Foreground::delete_(cx);
 }
 
@@ -1720,7 +1671,7 @@ JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
-    JSThreadData *td = JS_THREAD_DATA(cx);
+    ThreadData *td = JS_THREAD_DATA(cx);
 
     JS_ASSERT_REQUEST_DEPTH(cx);
     JS_ASSERT(td->interruptFlags != 0);
@@ -1799,7 +1750,7 @@ TriggerOperationCallback(JSContext *cx)
      * assume that the calling thread is in a request so JSThread cannot be
      * GC-ed.
      */
-    JSThreadData *td;
+    ThreadData *td;
 #ifdef JS_THREADSAFE
     JSThread *thread = cx->thread;
     if (!thread)
@@ -1914,6 +1865,31 @@ JSContext::JSContext(JSRuntime *rt)
     regs(NULL),
     busyArrays()
 {}
+
+JSContext::~JSContext()
+{
+#ifdef JS_THREADSAFE
+    JS_ASSERT(!thread);
+#endif
+
+    /* Free the stuff hanging off of cx. */
+    VOUCH_DOES_NOT_REQUIRE_STACK();
+    JS_FinishArenaPool(&tempPool);
+    JS_FinishArenaPool(&regExpPool);
+
+    if (lastMessage)
+        Foreground::free_(lastMessage);
+
+    /* Remove any argument formatters. */
+    JSArgumentFormatMap *map = argumentFormatMap;
+    while (map) {
+        JSArgumentFormatMap *temp = map;
+        map = map->next;
+        Foreground::free_(temp);
+    }
+
+    JS_ASSERT(!resolvingList);
+}
 
 void
 JSContext::resetCompartment()

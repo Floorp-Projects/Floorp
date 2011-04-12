@@ -703,53 +703,24 @@ static JSFunctionSpec string_functions[] = {
 jschar      js_empty_ucstr[]  = {0};
 JSSubString js_EmptySubString = {0, js_empty_ucstr};
 
-static JSBool
-str_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
-{
-    JSString *str;
-
-    if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
-        if (obj->getClass() == &js_StringClass) {
-            /* Follow ECMA-262 by fetching intrinsic length of our string. */
-            str = obj->getPrimitiveThis().toString();
-        } else {
-            /* Preserve compatibility: convert obj to a string primitive. */
-            str = js_ValueToString(cx, ObjectValue(*obj));
-            if (!str)
-                return JS_FALSE;
-        }
-
-        vp->setInt32(str->length());
-    }
-
-    return JS_TRUE;
-}
-
 #define STRING_ELEMENT_ATTRS (JSPROP_ENUMERATE|JSPROP_READONLY|JSPROP_PERMANENT)
 
 static JSBool
 str_enumerate(JSContext *cx, JSObject *obj)
 {
-    JSString *str, *str1;
-    size_t i, length;
-
-    str = obj->getPrimitiveThis().toString();
-
-    length = str->length();
-    for (i = 0; i < length; i++) {
-        str1 = js_NewDependentString(cx, str, i, 1);
+    JSString *str = obj->getPrimitiveThis().toString();
+    for (size_t i = 0, length = str->length(); i < length; i++) {
+        JSString *str1 = js_NewDependentString(cx, str, i, 1);
         if (!str1)
-            return JS_FALSE;
+            return false;
         if (!obj->defineProperty(cx, INT_TO_JSID(i), StringValue(str1),
                                  PropertyStub, StrictPropertyStub,
                                  STRING_ELEMENT_ATTRS)) {
-            return JS_FALSE;
+            return false;
         }
     }
 
-    return obj->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
-                               UndefinedValue(), NULL, NULL,
-                               JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED);
+    return true;
 }
 
 static JSBool
@@ -777,11 +748,11 @@ str_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
 Class js_StringClass = {
     js_String_str,
-    JSCLASS_HAS_RESERVED_SLOTS(1) | JSCLASS_NEW_RESOLVE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_String),
+    JSCLASS_HAS_RESERVED_SLOTS(JSObject::STRING_RESERVED_SLOTS) |
+    JSCLASS_NEW_RESOLVE | JSCLASS_HAS_CACHED_PROTO(JSProto_String),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
-    str_getProperty,
+    PropertyStub,         /* getProperty */
     StrictPropertyStub,   /* setProperty */
     str_enumerate,
     (JSResolveOp)str_resolve,
@@ -3475,9 +3446,8 @@ js_String(JSContext *cx, uintN argc, Value *vp)
 
     if (IsConstructing(vp)) {
         JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
-        if (!obj)
+        if (!obj || !obj->initString(cx, str))
             return false;
-        obj->setPrimitiveThis(StringValue(str));
         vp->setObject(*obj);
     } else {
         vp->setString(str);
@@ -3541,27 +3511,83 @@ static JSFunctionSpec string_static_methods[] = {
     JS_FS_END
 };
 
-JSObject *
-js_InitStringClass(JSContext *cx, JSObject *obj)
+const Shape *
+JSObject::assignInitialStringShape(JSContext *cx)
 {
-    JSObject *proto;
+    JS_ASSERT(!cx->compartment->initialStringShape);
+    JS_ASSERT(isString());
+    JS_ASSERT(nativeEmpty());
 
-    /* Define the escape, unescape functions in the global object. */
-    if (!JS_DefineFunctions(cx, obj, string_functions))
+    return addDataProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
+                           JSSLOT_STRING_LENGTH, JSPROP_PERMANENT | JSPROP_READONLY);
+}
+
+JSObject *
+js_InitStringClass(JSContext *cx, JSObject *global)
+{
+    JS_ASSERT(global->isGlobal());
+    JS_ASSERT(global->isNative());
+
+    /*
+     * Define escape/unescape, the URI encode/decode functions, and maybe
+     * uneval on the global object.
+     */
+    if (!JS_DefineFunctions(cx, global, string_functions))
         return NULL;
 
-    proto = js_InitClass(cx, obj, NULL, &js_StringClass, js_String, 1,
-                         NULL, string_methods,
-                         NULL, string_static_methods);
-    if (!proto)
+    /* Create and initialize String.prototype. */
+    JSObject *objectProto;
+    if (!js_GetClassPrototype(cx, global, JSProto_Object, &objectProto))
         return NULL;
-    proto->setPrimitiveThis(StringValue(cx->runtime->emptyString));
-    if (!js_DefineNativeProperty(cx, proto, ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
-                                 UndefinedValue(), NULL, NULL,
-                                 JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED, 0, 0,
-                                 NULL)) {
-        return JS_FALSE;
+
+    JSObject *proto = NewObject<WithProto::Class>(cx, &js_StringClass, objectProto, global);
+    if (!proto || !proto->initString(cx, cx->runtime->emptyString))
+        return NULL;
+
+    /* Now create the String function. */
+    JSAtom *atom = CLASS_ATOM(cx, String);
+    JSFunction *ctor = js_NewFunction(cx, NULL, js_String, 1, JSFUN_CONSTRUCTOR, global, atom);
+    if (!ctor)
+        return NULL;
+
+    /* String creates string objects. */
+    FUN_CLASP(ctor) = &js_StringClass;
+
+    /* Define String.prototype and String.prototype.constructor. */
+    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                              ObjectValue(*proto), PropertyStub, StrictPropertyStub,
+                              JSPROP_PERMANENT | JSPROP_READONLY) ||
+        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
+                               ObjectValue(*ctor), PropertyStub, StrictPropertyStub, 0))
+    {
+        return NULL;
     }
+
+    /* Add properties and methods to the prototype and the constructor. */
+    if (!JS_DefineFunctions(cx, proto, string_methods) ||
+        !JS_DefineFunctions(cx, ctor, string_static_methods))
+    {
+        return NULL;
+    }
+
+    /* Pre-brand String and String.prototype for trace-jitted code. */
+    proto->brand(cx);
+    ctor->brand(cx);
+
+    /*
+     * Make sure proto's emptyShape is available to be shared by String
+     * objects. JSObject::emptyShape is a one-slot cache. If we omit this, some
+     * other class could snap it up. (The risk is particularly great for
+     * Object.prototype.)
+     *
+     * All callers of JSObject::initSharingEmptyShape depend on this.
+     */
+    if (!proto->getEmptyShape(cx, &js_StringClass, FINALIZE_OBJECT0))
+        return NULL;
+
+    /* Install the fully-constructed String and String.prototype. */
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_String, ctor, proto))
+        return NULL;
 
     return proto;
 }
@@ -3575,28 +3601,38 @@ js_NewString(JSContext *cx, jschar *chars, size_t length)
     return JSFixedString::new_(cx, chars, length);
 }
 
-static JS_ALWAYS_INLINE JSShortString *
+static JS_ALWAYS_INLINE JSFixedString *
 NewShortString(JSContext *cx, const jschar *chars, size_t length)
 {
+    /*
+     * Don't bother trying to find a static atom; measurement shows that not
+     * many get here (for one, Atomize is catching them).
+     */
+
     JS_ASSERT(JSShortString::lengthFits(length));
-    JSShortString *str = js_NewGCShortString(cx);
+    JSInlineString *str = JSInlineString::lengthFits(length)
+                          ? JSInlineString::new_(cx)
+                          : JSShortString::new_(cx);
     if (!str)
         return NULL;
+
     jschar *storage = str->init(length);
     PodCopy(storage, chars, length);
     storage[length] = 0;
     return str;
 }
 
-static JSShortString *
+static JSInlineString *
 NewShortString(JSContext *cx, const char *chars, size_t length)
 {
     JS_ASSERT(JSShortString::lengthFits(length));
-    JSShortString *str = js_NewGCShortString(cx);
+    JSInlineString *str = JSInlineString::lengthFits(length)
+                          ? JSInlineString::new_(cx)
+                          : JSShortString::new_(cx);
     if (!str)
         return NULL;
-    jschar *storage = str->init(length);
 
+    jschar *storage = str->init(length);
     if (js_CStringsAreUTF8) {
 #ifdef DEBUG
         size_t oldLength = length;
@@ -3616,7 +3652,32 @@ NewShortString(JSContext *cx, const char *chars, size_t length)
     return str;
 }
 
-static const size_t sMinWasteSize = 16;
+jschar *
+StringBuffer::extractWellSized()
+{
+    size_t capacity = cb.capacity();
+    size_t length = cb.length();
+
+    jschar *buf = cb.extractRawBuffer();
+    if (!buf)
+        return NULL;
+
+    /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
+    JS_ASSERT(capacity >= length);
+    if (length > CharBuffer::sMaxInlineStorage &&
+        capacity - length > (length >> 2)) {
+        size_t bytes = sizeof(jschar) * (length + 1);
+        JSContext *cx = context();
+        jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
+        if (!tmp) {
+            cx->free_(buf);
+            return NULL;
+        }
+        buf = tmp;
+    }
+
+    return buf;
+}
 
 JSFixedString *
 StringBuffer::finishString()
@@ -3636,23 +3697,9 @@ StringBuffer::finishString()
     if (!cb.append('\0'))
         return NULL;
 
-    size_t capacity = cb.capacity();
-
-    jschar *buf = cb.extractRawBuffer();
+    jschar *buf = extractWellSized();
     if (!buf)
         return NULL;
-
-    /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
-    JS_ASSERT(capacity >= length);
-    if (capacity > sMinWasteSize && capacity - length > (length >> 2)) {
-        size_t bytes = sizeof(jschar) * (length + 1);
-        jschar *tmp = (jschar *)cx->realloc_(buf, bytes);
-        if (!tmp) {
-            cx->free_(buf);
-            return NULL;
-        }
-        buf = tmp;
-    }
 
     JSFixedString *str = js_NewString(cx, buf, length);
     if (!str)
@@ -3812,20 +3859,14 @@ js_ValueToString(JSContext *cx, const Value &arg)
 
 /* This function implements E-262-3 section 9.8, toString. */
 bool
-js::ValueToStringBuffer(JSContext *cx, const Value &arg, StringBuffer &sb)
+js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
 {
     Value v = arg;
     if (v.isObject() && !DefaultValue(cx, &v.toObject(), JSTYPE_STRING, &v))
         return false;
 
-    if (v.isString()) {
-        JSString *str = v.toString();
-        size_t length = str->length();
-        const jschar *chars = str->getChars(cx);
-        if (!chars)
-            return false;
-        return sb.append(chars, length);
-    }
+    if (v.isString())
+        return sb.append(v.toString());
     if (v.isNumber())
         return NumberValueToStringBuffer(cx, v, sb);
     if (v.isBoolean())
@@ -3854,11 +3895,17 @@ js_ValueToSource(JSContext *cx, const Value &v)
         return js_ValueToString(cx, v);
     }
 
-    JSAtom *atom = cx->runtime->atomState.toSourceAtom;
-    AutoValueRooter tvr(cx);
-    if (!js_TryMethod(cx, &v.toObject(), atom, 0, NULL, tvr.addr()))
-        return NULL;
-    return js_ValueToString(cx, tvr.value());
+    Value rval = NullValue();
+    Value fval;
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.toSourceAtom);
+    if (!js_GetMethod(cx, &v.toObject(), id, JSGET_NO_METHOD_BARRIER, &fval))
+        return false;
+    if (js_IsCallable(fval)) {
+        if (!ExternalInvoke(cx, v, fval, 0, NULL, &rval))
+            return false;
+    }
+
+    return js_ValueToString(cx, rval);
 }
 
 namespace js {
