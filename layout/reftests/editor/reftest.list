@@ -60,5 +60,3 @@ fails-if(Android) != spellcheck-hyphen-multiple-invalid.html spellcheck-hyphen-m
 == caret_on_presshell_reinit.html caret_on_presshell_reinit-ref.html
 == caret_on_presshell_reinit-2.html caret_on_presshell_reinit-ref.html
 == 642800.html 642800-ref.html
-== selection_visibility_after_reframe.html selection_visibility_after_reframe-ref.html
-!= selection_visibility_after_reframe-2.html selection_visibility_after_reframe-ref.html
