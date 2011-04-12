@@ -148,7 +148,12 @@ public:
   void DropReference();
 
   /**
-   * See nsISelectElement.idl for documentation on this method
+   * Finds the index of a given option element
+   *
+   * @param aOption the option to get the index of
+   * @param aStartIndex the index to start looking at
+   * @param aForward TRUE to look forward, FALSE to look backward
+   * @return the option index
    */
   nsresult GetOptionIndex(mozilla::dom::Element* aOption,
                           PRInt32 aStartIndex, PRBool aForward,
