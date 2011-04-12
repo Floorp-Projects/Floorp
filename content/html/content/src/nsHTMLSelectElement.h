@@ -228,7 +228,7 @@ private:
   static void* operator new(size_t) CPP_THROW_NEW { return 0; }
   static void operator delete(void*, size_t) {}
   /** The select element which option list is being mutated. */
-  nsCOMPtr<nsISelectElement> mSelect;
+  nsRefPtr<nsHTMLSelectElement> mSelect;
   /** PR_TRUE if the current mutation is the first one in the stack. */
   PRBool                     mTopLevelMutation;
   /** PR_TRUE if it is known that the option list must be recreated. */
