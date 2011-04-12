@@ -2,29 +2,26 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* Application in use complete MAR file patch apply success test */
+/* Channel change complete MAR file patch apply test */
 
-const TEST_ID = "0160";
+const TEST_ID = "0120";
 // All we care about is that the last modified time has changed so that Mac OS
 // X Launch Services invalidates its cache so the test allows up to one minute
 // difference in the last modified time.
 const MAX_TIME_DIFFERENCE = 60000;
 
-// The files are listed in the same order as they are applied from the mar's
-// update.manifest. Complete updates have remove file and rmdir directory
-// operations located in the precomplete file performed first.
+// The files are in the same order as they are applied from the mar
 const TEST_FILES = [
 {
-  description      : "Only added by update.manifest for complete updates " +
-                     "when there is a channel change (add-cc)",
+  description      : "Added by update.manifest (add-cc)",
   fileName         : "channel-prefs.js",
   relPathDir       : "a/b/defaults/pref/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
+  originalContents : "ToBeReplacedWithFromComplete\n",
+  compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null,
   originalPerms    : 0767,
-  comparePerms     : 0767
+  comparePerms     : 0644
 }, {
   description      : "Added by update.manifest (add)",
   fileName         : "precomplete",
@@ -33,7 +30,7 @@ const TEST_FILES = [
   compareContents  : null,
   originalFile     : "data/partial_precomplete",
   compareFile      : "data/complete_precomplete",
-  originalPerms    : 0666,
+  originalPerms    : 0755,
   comparePerms     : 0644
 }, {
   description      : "Added by update.manifest (add)",
@@ -235,9 +232,8 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  if (!IS_UNIX || IS_ANDROID) {
-    logTestInfo("this test is only applicable to XP_UNIX platforms except " +
-                "for Android... returning early");
+  if (IS_ANDROID) {
+    logTestInfo("this test is not applicable to Android... returning early");
     return;
   }
 
@@ -246,20 +242,14 @@ function run_test() {
 
   setupUpdaterTest(MAR_COMPLETE_FILE);
 
-  // Launch the callback helper application so it is in use during the update
-  let callbackApp = getApplyDirFile("a/b/" + CALLBACK_BIN_FILE);
-  callbackApp.permissions = PERMS_DIRECTORY;
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "20"];
-  let callbackAppProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                           createInstance(AUS_Ci.nsIProcess);
-  callbackAppProcess.init(callbackApp);
-  callbackAppProcess.run(false, args, args.length);
-
-  do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
-}
-
-function doUpdate() {
+  let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
   let applyToDir = getApplyDirFile();
+
+  // Check that trying to change channels for a complete update changes the
+  // update channel (the channel-prefs.js file should be updated).
+  let force = updatesDir.clone();
+  force.append(CHANNEL_CHANGE_FILE);
+  force.create(AUS_Ci.nsIFile.FILE_TYPE, PERMS_FILE);
 
   // For Mac OS X set the last modified time for the root directory to a date in
   // the past to test that the last modified time is updated on a successful
@@ -276,11 +266,6 @@ function doUpdate() {
               "applying a complete mar");
   do_check_eq(exitValue, 0);
 
-  setupHelperFinish();
-}
-
-
-function checkUpdate() {
   logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
   do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
@@ -291,12 +276,16 @@ function checkUpdate() {
     logTestInfo("testing last modified time on the apply to directory has " +
                 "changed after a successful update (bug 600098)");
     let now = Date.now();
-    let applyToDir = getApplyDirFile();
     let timeDiff = Math.abs(applyToDir.lastModifiedTime - now);
     do_check_true(timeDiff < MAX_TIME_DIFFERENCE);
   }
 
   checkFilesAfterUpdateSuccess();
+  checkUpdateLogContents(LOG_COMPLETE_CC_SUCCESS);
+
+  logTestInfo("testing tobedeleted directory doesn't exist");
+  let toBeDeletedDir = getApplyDirFile("tobedeleted", true);
+  do_check_false(toBeDeletedDir.exists());
 
   checkCallbackAppLog();
 }

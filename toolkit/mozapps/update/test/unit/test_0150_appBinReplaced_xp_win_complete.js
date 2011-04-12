@@ -2,9 +2,10 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File locked complete MAR file patch apply failure test */
+/* Replace app binary complete MAR file patch apply success test */
 
-const TEST_ID = "0170";
+const TEST_ID = "0150";
+const MAR_COMPLETE_WIN_FILE = "data/complete_win.mar";
 
 // The files are listed in the same order as they are applied from the mar's
 // update.manifest. Complete updates have remove file and rmdir directory
@@ -20,168 +21,174 @@ const TEST_FILES = [
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "precomplete",
   relPathDir       : "",
   originalContents : null,
   compareContents  : null,
   originalFile     : "data/partial_precomplete",
-  compareFile      : "data/partial_precomplete"
+  compareFile      : "data/complete_precomplete"
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "searchpluginstext0",
   relPathDir       : "a/b/searchplugins/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
+  originalContents : "ToBeReplacedWithFromComplete\n",
+  compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "searchpluginspng1.png",
   relPathDir       : "a/b/searchplugins/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : null,
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "searchpluginspng0.png",
   relPathDir       : "a/b/searchplugins/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "removed-files",
   relPathDir       : "a/b/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "data/partial_removed-files",
-  compareFile      : "data/partial_removed-files"
+  compareFile      : "data/complete_removed-files"
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Added by update.manifest if the parent directory " +
+                     "exists (add-if)",
   fileName         : "extensions1text0",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
-  compareContents  : null,
+  compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Added by update.manifest if the parent directory " +
+                     "exists (add-if)",
   fileName         : "extensions1png1.png",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/partial.png",
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Added by update.manifest if the parent directory " +
+                     "exists (add-if)",
   fileName         : "extensions1png0.png",
   relPathDir       : "a/b/extensions/extensions1/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
-  compareFile      : null
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Added by update.manifest if the parent directory " +
+                     "exists (add-if)",
   fileName         : "extensions0text0",
   relPathDir       : "a/b/extensions/extensions0/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
+  originalContents : "ToBeReplacedWithFromComplete\n",
+  compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Added by update.manifest if the parent directory " +
+                     "exists (add-if)",
   fileName         : "extensions0png1.png",
   relPathDir       : "a/b/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : null,
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add-if)",
+  description      : "Added by update.manifest if the parent directory " +
+                     "exists (add-if)",
   fileName         : "extensions0png0.png",
   relPathDir       : "a/b/extensions/extensions0/",
   originalContents : null,
   compareContents  : null,
   originalFile     : null,
-  compareFile      : null
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "exe0.exe",
   relPathDir       : "a/b/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : "data/partial_in_use_win_after.exe",
+  compareFile      : "data/partial_in_use_win_before.exe"
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "10text0",
   relPathDir       : "a/b/1/10/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
+  originalContents : "ToBeReplacedWithFromComplete\n",
+  compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add) file in use",
   fileName         : "0exe0.exe",
   relPathDir       : "a/b/0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
+  originalFile     : "data/partial_in_use_win_after.exe",
+  compareFile      : "data/partial_in_use_win_before.exe"
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "00text1",
   relPathDir       : "a/b/0/00/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
+  originalContents : "ToBeReplacedWithFromComplete\n",
+  compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "00text0",
   relPathDir       : "a/b/0/00/",
-  originalContents : "ShouldNotBeReplaced\n",
-  compareContents  : "ShouldNotBeReplaced\n",
+  originalContents : "ToBeReplacedWithFromComplete\n",
+  compareContents  : "FromComplete\n",
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not added for failed update (add)",
+  description      : "Added by update.manifest (add)",
   fileName         : "00png0.png",
   relPathDir       : "a/b/0/00/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial.png",
-  compareFile      : "data/partial.png"
+  originalFile     : null,
+  compareFile      : "data/complete.png"
 }, {
-  description      : "Not removed for failed update (remove)",
+  description      : "Removed by precomplete (remove)",
   fileName         : "20text0",
   relPathDir       : "a/b/2/20/",
-  originalContents : "ShouldNotBeDeleted\n",
-  compareContents  : "ShouldNotBeDeleted\n",
+  originalContents : "ToBeDeleted\n",
+  compareContents  : null,
   originalFile     : null,
   compareFile      : null
 }, {
-  description      : "Not removed for failed update (remove)",
+  description      : "Removed by precomplete (remove)",
   fileName         : "20png0.png",
   relPathDir       : "a/b/2/20/",
-  originalContents : "ShouldNotBeDeleted\n",
-  compareContents  : "ShouldNotBeDeleted\n",
+  originalContents : "ToBeDeleted\n",
+  compareContents  : null,
   originalFile     : null,
   compareFile      : null
 }];
 
 ADDITIONAL_TEST_DIRS = [
 {
-  description  : "Not removed for failed update (rmdir)",
+  description  : "Removed by precomplete (rmdir)",
   relPathDir   : "a/b/2/20/",
-  dirRemoved   : false
+  dirRemoved   : true
 }, {
-  description  : "Not removed for failed update (rmdir)",
+  description  : "Removed by precomplete (rmdir)",
   relPathDir   : "a/b/2/",
-  dirRemoved   : false
+  dirRemoved   : true
 }];
 
 function run_test() {
@@ -193,46 +200,21 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
-  setupUpdaterTest(MAR_COMPLETE_FILE);
+  setupUpdaterTest(MAR_COMPLETE_WIN_FILE);
 
-  // Exclusively lock an existing file so it is in use during the update
-  let helperBin = do_get_file(HELPER_BIN_FILE);
-  let helperDestDir = getApplyDirFile("a/b/");
-  helperBin.copyTo(helperDestDir, HELPER_BIN_FILE);
-  helperBin = getApplyDirFile("a/b/" + HELPER_BIN_FILE);
-  // Strip off the first two directories so the path has to be from the helper's
-  // working directory.
-  let lockFileRelPath = TEST_FILES[3].relPathDir.split("/");
-  lockFileRelPath = lockFileRelPath.slice(2);
-  lockFileRelPath = lockFileRelPath.join("/") + "/" + TEST_FILES[3].fileName;
-  let args = [getApplyDirPath() + "a/b/", "input", "output", "-s", "20", lockFileRelPath];
-  let lockFileProcess = AUS_Cc["@mozilla.org/process/util;1"].
-                     createInstance(AUS_Ci.nsIProcess);
-  lockFileProcess.init(helperBin);
-  lockFileProcess.run(false, args, args.length);
+  gCallbackBinFile = "exe0.exe";
 
-  do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
-}
-
-function doUpdate() {
   // apply the complete mar
   let exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for success when " +
               "applying a complete mar");
   do_check_eq(exitValue, 0);
 
-  setupHelperFinish();
-}
-
-function checkUpdate() {
-  logTestInfo("testing update.status should be " + STATE_FAILED);
+  logTestInfo("testing update.status should be " + STATE_SUCCEEDED);
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-  // The update status format for a failure is failed: # where # is the error
-  // code for the failure.
-  do_check_eq(readStatusFile(updatesDir).split(": ")[0], STATE_FAILED);
+  do_check_eq(readStatusFile(updatesDir), STATE_SUCCEEDED);
 
-  checkFilesAfterUpdateFailure();
-  checkUpdateLogContains(ERR_RENAME_FILE);
+  checkFilesAfterUpdateSuccess();
 
   logTestInfo("testing tobedeleted directory doesn't exist");
   let toBeDeletedDir = getApplyDirFile("tobedeleted", true);
