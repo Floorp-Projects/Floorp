@@ -41,9 +41,9 @@
 #include "nsRuleProcessorData.h"
 #include "nsStyleSet.h"
 #include "nsCSSRules.h"
-#include "mozilla/TimeStamp.h"
 #include "nsStyleAnimation.h"
 #include "nsSMILKeySpline.h"
+#include "nsEventDispatcher.h"
 
 using namespace mozilla;
 
@@ -66,6 +66,11 @@ struct AnimationSegment
  */
 struct ElementAnimation
 {
+  ElementAnimation()
+    : mLastNotification(LAST_NOTIFICATION_NONE)
+  {
+  }
+
   nsString mName; // empty string for 'none'
   float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
   PRUint8 mDirection;
@@ -89,8 +94,19 @@ struct ElementAnimation
   TimeStamp mPauseStart;
   TimeDuration mIterationDuration;
 
+  enum {
+    LAST_NOTIFICATION_NONE = PRUint32(-1),
+    LAST_NOTIFICATION_END = PRUint32(-2)
+  };
+  // One of the above constants, or an integer for the iteration
+  // whose start we last notified on.
+  PRUint32 mLastNotification;
+
   InfallibleTArray<AnimationSegment> mSegments;
 };
+
+typedef nsAnimationManager::EventArray EventArray;
+typedef nsAnimationManager::AnimationEventInfo AnimationEventInfo;
 
 /**
  * Data about all of the animations running on an element.
@@ -105,12 +121,15 @@ struct ElementAnimations : public mozilla::css::CommonElementAnimationData
   {
   }
 
-  void EnsureStyleRuleFor(TimeStamp aRefreshTime);
+  void EnsureStyleRuleFor(TimeStamp aRefreshTime,
+                          EventArray &aEventsToDispatch);
+
+  bool IsForElement() const { // rather than for a pseudo-element
+    return mElementProperty == nsGkAtoms::animationsProperty;
+  }
 
   void PostRestyleForAnimation(nsPresContext *aPresContext) {
-    nsRestyleHint hint =
-      (mElementProperty == nsGkAtoms::animationsProperty)
-        ? eRestyle_Self : eRestyle_Subtree;
+    nsRestyleHint hint = IsForElement() ? eRestyle_Self : eRestyle_Subtree;
     aPresContext->PresShell()->RestyleForAnimation(mElement, hint);
   }
 
@@ -144,7 +163,8 @@ ElementAnimationsPropertyDtor(void           *aObject,
 }
 
 void
-ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime)
+ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
+                                      EventArray& aEventsToDispatch)
 {
   if (!mNeedsRefreshes) {
     // All of our animations are paused or completed.
@@ -167,7 +187,7 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime)
     nsCSSPropertySet properties;
 
     for (PRUint32 i = mAnimations.Length(); i-- != 0; ) {
-      const ElementAnimation &anim = mAnimations[i];
+      ElementAnimation &anim = mAnimations[i];
 
       if (anim.mSegments.Length() == 0 ||
           anim.mIterationDuration.ToMilliseconds() <= 0.0) {
@@ -187,7 +207,18 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime)
       // iterations we've completed up to the current position.
       double currentIterationCount =
         currentTimeDuration / anim.mIterationDuration;
+      bool dispatchStartOrIteration = false;
       if (currentIterationCount >= double(anim.mIterationCount)) {
+        // Dispatch 'animationend' when needed.
+        if (IsForElement() && 
+            anim.mLastNotification !=
+              ElementAnimation::LAST_NOTIFICATION_END) {
+          anim.mLastNotification = ElementAnimation::LAST_NOTIFICATION_END;
+          AnimationEventInfo ei(mElement, anim.mName, NS_ANIMATION_END,
+                                currentTimeDuration);
+          aEventsToDispatch.AppendElement(ei);
+        }
+
         if (!anim.FillsForwards()) {
           // No animation data.
           continue;
@@ -203,6 +234,8 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime)
             continue;
           }
           currentIterationCount = 0.0;
+        } else {
+          dispatchStartOrIteration = !anim.IsPaused();
         }
       }
 
@@ -221,6 +254,24 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime)
       if (anim.mDirection == NS_STYLE_ANIMATION_DIRECTION_ALTERNATE &&
           (whichIteration & 1) == 1) {
         positionInIteration = 1.0 - positionInIteration;
+      }
+
+      // Dispatch 'animationstart' or 'animationiteration' when needed.
+      if (IsForElement() && dispatchStartOrIteration &&
+          whichIteration != anim.mLastNotification) {
+        // Notify 'animationstart' even if a negative delay puts us
+        // past the first iteration.
+        // Note that when somebody changes the animation-duration
+        // dynamically, this will fire an extra iteration event
+        // immediately in many cases.  It's not clear to me if that's the
+        // right thing to do.
+        PRUint32 message =
+          anim.mLastNotification == ElementAnimation::LAST_NOTIFICATION_NONE
+            ? NS_ANIMATION_START : NS_ANIMATION_ITERATION;
+        anim.mLastNotification = whichIteration;
+        AnimationEventInfo ei(mElement, anim.mName, message,
+                              currentTimeDuration);
+        aEventsToDispatch.AppendElement(ei);
       }
 
       NS_ABORT_IF_FALSE(0.0 <= positionInIteration &&
@@ -450,6 +501,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           }
 
           newAnim->mStartTime = oldAnim->mStartTime;
+          newAnim->mLastNotification = oldAnim->mLastNotification;
 
           if (oldAnim->IsPaused()) {
             if (newAnim->IsPaused()) {
@@ -470,7 +522,11 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     ea->mAnimations.SwapElements(newAnimations);
     ea->mNeedsRefreshes = true;
 
-    ea->EnsureStyleRuleFor(refreshTime);
+    ea->EnsureStyleRuleFor(refreshTime, mPendingEvents);
+    // We don't actually dispatch the mPendingEvents now.  We'll either
+    // dispatch them the next time we get a refresh driver notification
+    // or the next time somebody calls
+    // nsPresShell::FlushPendingNotifications.
   }
 
   return GetAnimationRule(aElement, aStyleContext->GetPseudoType());
@@ -781,9 +837,27 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
        l = PR_NEXT_LINK(l)) {
     ElementAnimations *ea = static_cast<ElementAnimations*>(l);
     nsRefPtr<css::AnimValuesStyleRule> oldStyleRule = ea->mStyleRule;
-    ea->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh());
+    ea->EnsureStyleRuleFor(mPresContext->RefreshDriver()->MostRecentRefresh(),
+                           mPendingEvents);
     if (oldStyleRule != ea->mStyleRule) {
       ea->PostRestyleForAnimation(mPresContext);
+    }
+  }
+
+  DispatchEvents(); // may destroy us
+}
+
+void
+nsAnimationManager::DispatchEvents()
+{
+  EventArray events;
+  mPendingEvents.SwapElements(events);
+  for (PRUint32 i = 0, i_end = events.Length(); i < i_end; ++i) {
+    AnimationEventInfo &info = events[i];
+    nsEventDispatcher::Dispatch(info.mElement, mPresContext, &info.mEvent);
+
+    if (!mPresContext) {
+      break;
     }
   }
 }

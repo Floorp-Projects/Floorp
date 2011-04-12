@@ -60,6 +60,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     75%  { padding-bottom: 120px; -moz-animation-timing-function: linear }
     100% { padding-bottom: 20px; -moz-animation-timing-function: ease-out }
   }
+
+  #withbefore::before, #withafter::after {
+    content: "";
+    -moz-animation: anim2 1s linear alternate infinite;
+  }
   </style>
 </head>
 <body>
@@ -78,6 +83,7 @@ function advance_clock(milliseconds) {
 var display = document.getElementById("display");
 var div = null;
 var cs = null;
+var events_received = [];
 function new_div(style) {
   if (div != null || cs != null) {
     ok(false, "test author forgot to call done_div");
@@ -90,10 +96,49 @@ function new_div(style) {
   display.appendChild(div);
   cs = getComputedStyle(div, "");
 }
+function listen() {
+  events_received = [];
+  function listener(event) {
+    events_received.push(event);
+  }
+  div.addEventListener("animationstart", listener, false);
+  div.addEventListener("animationiteration", listener, false);
+  div.addEventListener("animationend", listener, false);
+}
+function check_events(events_expected, desc) {
+  // This function checks that the list of events_expected matches
+  // the received events -- but it only checks the properties that
+  // are present on events_expected.
+  is(events_received.length, events_expected.length,
+     "number of events received for " + desc);
+  for (var i = 0,
+       i_end = Math.min(events_expected.length, events_received.length);
+       i != i_end; ++i) {
+    var exp = events_expected[i];
+    var rec = events_received[i];
+    for (var prop in exp) {
+      if (prop == "elapsedTime") {
+        // Allow floating point error.
+        ok(Math.abs(rec.elapsedTime - exp.elapsedTime) < 0.000002,
+           "events[" + i + "]." + prop + " for " + desc +
+           " received=" + rec.elapsedTime + " expected=" + exp.elapsedTime);
+      } else {
+        is(rec[prop], exp[prop], "events[" + i + "]." + prop + " for " + desc);
+      }
+    }
+  }
+  for (var i = events_expected.length; i < events_received.length; ++i) {
+    ok(false, "unexpected " + events_received[i].type + " event for " + desc);
+  }
+  events_received = [];
+}
 function done_div() {
   display.removeChild(div);
   div = null;
   cs = null;
+  if (events_received.length) {
+    ok(false, "caller should have called check_events");
+  }
 }
 
 // take over the refresh driver right from the start.
@@ -119,6 +164,7 @@ function test_fill_mode(fill_mode, fills_backwards, fills_forwards)
     desc = "default fill mode: ";
   }
   new_div(style);
+  listen();
   if (fills_backwards)
     is(cs.marginLeft, "0px", desc + "does affect value during delay (0s)");
   else
@@ -128,7 +174,12 @@ function test_fill_mode(fill_mode, fills_backwards, fills_forwards)
     is(cs.marginLeft, "0px", desc + "does affect value during delay (2s)");
   else
     is(cs.marginLeft, "30px", desc + "doesn't affect value during delay (2s)");
+  check_events([], "before start in test_fill_mode");
   advance_clock(1000);
+  check_events([{ type: 'animationstart', target: div,
+                  bubbles: true, cancelable: true,
+                  animationName: 'anim1', elapsedTime: 0.0 }],
+               "right after start in test_fill_mode");
   if (fills_backwards)
     is(cs.marginLeft, "0px", desc + "affects value at start of animation");
   advance_clock(125);
@@ -141,7 +192,12 @@ function test_fill_mode(fill_mode, fills_backwards, fills_forwards)
   is(cs.marginLeft, "90px", desc + "affects value during animation");
   advance_clock(2375);
   is(cs.marginLeft, "99.5px", desc + "affects value during animation");
+  check_events([], "before end in test_fill_mode");
   advance_clock(125);
+  check_events([{ type: 'animationend', target: div,
+                  bubbles: true, cancelable: true,
+                  animationName: 'anim1', elapsedTime: 10.0 }],
+               "right after end in test_fill_mode");
   if (fills_forwards)
     is(cs.marginLeft, "100px", desc + "affects value at end of animation");
   advance_clock(10);
@@ -976,6 +1032,35 @@ is_approx(px_to_num(cs.marginTop), 100 - 50 * gTF.ease_in(0.2), 0.01,
           "delay and implicit starting values test");
 done_div();
 
+// test large negative delay that causes the animation to start
+// in the fourth iteration
+new_div("-moz-animation: anim2 1s -3.6s ease-in 5 alternate forwards");
+listen(); // rely on no flush having happened yet
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.4), 0.01,
+          "large negative delay test at 0ms");
+check_events([{ type: 'animationstart', target: div,
+                animationName: 'anim2', elapsedTime: 3.6 }],
+             "right after start in large negative delay test");
+advance_clock(380);
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.02), 0.01,
+          "large negative delay test at 380ms");
+check_events([]);
+advance_clock(20);
+is(cs.marginRight, "0px", "large negative delay test at 400ms");
+check_events([{ type: 'animationiteration', target: div,
+                animationName: 'anim2', elapsedTime: 4.0 }],
+             "right after start in large negative delay test");
+advance_clock(800);
+is_approx(px_to_num(cs.marginRight), 100 * gTF.ease_in(0.8), 0.01,
+          "large negative delay test at 1200ms");
+check_events([]);
+advance_clock(200);
+is(cs.marginRight, "100px", "large negative delay test at 1400ms");
+check_events([{ type: 'animationend', target: div,
+                animationName: 'anim2', elapsedTime: 5.0 }],
+             "right after start in large negative delay test");
+done_div();
+
 /*
  * css3-animations:  3.9. The 'animation-fill-mode' Property
  * http://dev.w3.org/csswg/css3-animations/#the-animation-fill-mode-property-
@@ -990,6 +1075,43 @@ done_div();
 
 // shorthand vs. longhand is adequately tested by the
 // property_database.js-based tests.
+
+/**
+ * Basic tests of animations on pseudo-elements
+ */
+new_div("");
+listen();
+div.id = "withbefore";
+var cs_before = getComputedStyle(div, ":before");
+is(cs_before.marginRight, "0px", ":before test at 0ms");
+advance_clock(400);
+is(cs_before.marginRight, "40px", ":before test at 400ms");
+advance_clock(800);
+is(cs_before.marginRight, "80px", ":before test at 1200ms");
+is(cs.marginRight, "0px", ":before animation should not affect element");
+advance_clock(800);
+is(cs_before.marginRight, "0px", ":before test at 2000ms");
+advance_clock(300);
+is(cs_before.marginRight, "30px", ":before test at 2300ms");
+check_events([], "no events should be fired for animations on :before");
+done_div();
+
+new_div("");
+listen();
+div.id = "withafter";
+var cs_after = getComputedStyle(div, ":after");
+is(cs_after.marginRight, "0px", ":after test at 0ms");
+advance_clock(400);
+is(cs_after.marginRight, "40px", ":after test at 400ms");
+advance_clock(800);
+is(cs_after.marginRight, "80px", ":after test at 1200ms");
+is(cs.marginRight, "0px", ":after animation should not affect element");
+advance_clock(800);
+is(cs_after.marginRight, "0px", ":after test at 2000ms");
+advance_clock(300);
+is(cs_after.marginRight, "30px", ":after test at 2300ms");
+check_events([], "no events should be fired for animations on :after");
+done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
