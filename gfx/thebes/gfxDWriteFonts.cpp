@@ -188,12 +188,6 @@ gfxDWriteFont::CreatePlatformShaper()
     mPlatformShaper = new gfxDWriteShaper(this);
 }
 
-nsString
-gfxDWriteFont::GetUniqueName()
-{
-    return mFontEntry->Name();
-}
-
 const gfxFont::Metrics&
 gfxDWriteFont::GetMetrics()
 {

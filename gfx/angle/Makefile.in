@@ -77,7 +77,7 @@ CPPSRCS = \
         ShaderLang.cpp \
         SymbolTable.cpp \
 	VariableInfo.cpp \
-	debug.cpp \
+	compilerdebug.cpp \
 	ossource_nspr.cpp \
 	util.cpp \
 	ValidateLimitations.cpp \
@@ -106,6 +106,7 @@ CPPSRCS += \
 ##	OutputHLSL.cpp \
 ##	TranslatorHLSL.cpp \
 ##	UnfoldSelect.cpp \
+##	SearchSymbol.cpp \
 ##	$(NULL)
 
 CSRCS   = \
@@ -124,6 +125,20 @@ ifndef MOZ_ENABLE_LIBXUL
 EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 endif
 
+# ANGLE only on Win32 for now, the solution isn't set up
+# for 64-bit yet. This is handled by MOZ_ANGLE which the configure script
+# leaves undefined in the 64-bit case.
+ifdef MOZ_ANGLE
+
+# libEGL depends on (links against!) libGLESv2!
+DIRS = src/libGLESv2 src/libEGL
+
+libs::
+	expand "$(MOZ_D3DX9_CAB)" -F:$(MOZ_D3DX9_DLL) "$(DIST)/bin"
+	expand "$(MOZ_D3DCOMPILER_CAB)" -F:$(MOZ_D3DCOMPILER_DLL) "$(DIST)/bin"
+
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # We have to filter out -pedantic, because of
@@ -131,65 +146,3 @@ include $(topsrcdir)/config/rules.mk
 # upstream at some point.
 CXXFLAGS := $(filter-out -pedantic,$(CXXFLAGS))
 CFLAGS := $(filter-out -pedantic,$(CFLAGS))
-
-# ANGLE only on Win32 for now, the solution isn't set up
-# for 64-bit yet. This is handled by MOZ_ANGLE which the configure script
-# leaves undefined in the 64-bit case.
-ifdef MOZ_ANGLE
-ifdef MOZ_DEBUG
-ANGLE_DIR = Debug
-else
-ANGLE_DIR = Release
-endif
-
-ifdef MOZ_DIRECTX_SDK_PATH
-# export is needed for INCLUDE and LIB because devenv //useenv will read these env vars
-export INCLUDE := $(INCLUDE);$(MOZ_DIRECTX_SDK_PATH)\include
-export LIB := $(LIB);$(MOZ_DIRECTX_SDK_PATH)\lib\$(MOZ_DIRECTX_SDK_CPU_SUFFIX)
-endif
-
-ANGLE_DEP_PATTERNS = \
-	src/common/*.cpp src/common/*.h \
-	src/compiler/*.cpp src/compiler/*.h \
-	src/compiler/preprocessor/*.cpp src/compiler/preprocessor/*.h \
-	src/libEGL/*.cpp src/libEGL/*.h \
-	src/libGLESv2/*.cpp src/libGLESv2/*.h \
-	$(NULL)
-
-ANGLE_DEPS = $(filter-out Gen_glslang.cpp Gen_glslang_tab.cpp glslang_tab.h,$(wildcard $(ANGLE_DEP_PATTERNS)))
-
-libs:: libGLESv2.dll libEGL.dll
-	$(INSTALL) $(IFLAGS2) libGLESv2.dll libEGL.dll $(MOZ_D3DX9_DLL) $(MOZ_D3DCOMPILER_DLL) $(DIST)/bin
-
-# we don't want this to attempt to parallel-build these dlls;
-# building one will build both.
-libGLESv2.dll: libEGL.dll
-
-libEGL.dll: $(GLOBAL_DEPS) $(ANGLE_DEPS)
-	@(echo "=== Building ANGLE via devenv.exe ===" \
-	&& rm -rf angle-build && mkdir angle-build \
-	&& cp -r $(srcdir)/src $(srcdir)/include angle-build \
-	&& cd angle-build/src \
-	&& echo "Upgrading solution..." \
-	&& devenv angle.sln //upgrade \
-	&& echo "Tweaking project files to use ASLR and DEP..." \
-	&& ( find . -name '*proj' | xargs \
-	     perl -i.bak -p \
-	          -e 'BEGIN{undef $/;} s/<RandomizedBaseAddress>([^<^>])*<\/RandomizedBaseAddress>/<RandomizedBaseAddress>true<\/RandomizedBaseAddress>/sgmi;' \
-	          -e 'BEGIN{undef $/;} s/<DataExecutionPrevention>([^<^>])*<\/DataExecutionPrevention>/<DataExecutionPrevention>true<\/DataExecutionPrevention>/sgmi;' \
-		  -e 's/RandomizedBaseAddress\=\"0\"/RandomizedBaseAddress\=\"1\"/g;' \
-		  -e 's/DataExecutionPrevention\=\"0\"/DataExecutionPrevention\=\"1\"/g;' \
-	   ) \
-	&& echo "Building solution, target $(ANGLE_DIR)|Win32..." \
-	&& ( devenv angle.sln //useenv //build "$(ANGLE_DIR)|Win32" //out ../../angle-build-log.txt \
-	       || (cat ../../angle-build-log.txt && exit 1) \
-	   ) \
-	&& echo "Copying dlls..." \
-	&& cp $(ANGLE_DIR)/*.dll ../.. \
-	&& cd ../.. \
-	&& echo "Extracting dlls from cab file..." \
-	&& expand "$(MOZ_D3DX9_CAB)" . -F:$(MOZ_D3DX9_DLL) \
-	&& expand "$(MOZ_D3DCOMPILER_CAB)" . -F:$(MOZ_D3DCOMPILER_DLL) \
-	)
-
-endif

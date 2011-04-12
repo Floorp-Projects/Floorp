@@ -319,9 +319,9 @@ inline static void DidAnimateAttr(Element *aFilterPrimitive)
 inline static void DidAnimateAttrViaParent(Element *aFilterPrimitive) {
   // No frame, use parent's
   NS_ASSERTION(!aFilterPrimitive->GetPrimaryFrame(), "Not expecting a frame");
-  Element *parent = nsSVGUtils::GetParentElement(aFilterPrimitive);
-  if (parent) {
-    DidAnimateAttr(parent);
+  nsIContent *parent = aFilterPrimitive->GetFlattenedTreeParent();
+  if (parent && parent->IsElement()) {
+    DidAnimateAttr(parent->AsElement());
   }
 }
 

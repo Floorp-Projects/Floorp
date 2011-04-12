@@ -47,3 +47,11 @@ tabpanels {
 .tab-throbber[busy] + .tab-icon-image {
   display: none;
 }
+
+.closing-tabs-spacer {
+  pointer-events: none;
+}
+
+.tabbrowser-tabs:not(:hover) > .tabbrowser-arrowscrollbox > .closing-tabs-spacer {
+  -moz-transition: width .15s ease-out;
+}

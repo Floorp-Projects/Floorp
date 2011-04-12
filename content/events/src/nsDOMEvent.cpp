@@ -37,10 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "base/basictypes.h"
 #include "IPC/IPCMessageUtils.h"
-#endif
 #include "nsCOMPtr.h"
 #include "nsDOMEvent.h"
 #include "nsEventStateManager.h"
@@ -108,6 +106,12 @@ static const char* const sEventNames[] = {
   "MozTouchUp",
   "MozScrolledAreaChanged",
   "transitionend"
+#ifdef MOZ_CSS_ANIMATIONS
+  ,
+  "animationstart",
+  "animationend",
+  "animationiteration"
+#endif
 };
 
 static char *sPopupAllowedEvents;
@@ -818,6 +822,18 @@ NS_METHOD nsDOMEvent::DuplicatePrivateData()
       NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
       break;
     }
+#ifdef MOZ_CSS_ANIMATIONS
+    case NS_ANIMATION_EVENT:
+    {
+      nsAnimationEvent* oldAnimationEvent =
+        static_cast<nsAnimationEvent*>(mEvent);
+      newEvent = new nsAnimationEvent(PR_FALSE, msg,
+                                      oldAnimationEvent->animationName,
+                                      oldAnimationEvent->elapsedTime);
+      NS_ENSURE_TRUE(newEvent, NS_ERROR_OUT_OF_MEMORY);
+      break;
+    }
+#endif
     case NS_MOZTOUCH_EVENT:
     {
       newEvent = new nsMozTouchEvent(PR_FALSE, msg, nsnull,
@@ -1348,6 +1364,14 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return sEventNames[eDOMEvents_MozScrolledAreaChanged];
   case NS_TRANSITION_END:
     return sEventNames[eDOMEvents_transitionend];
+#ifdef MOZ_CSS_ANIMATIONS
+  case NS_ANIMATION_START:
+    return sEventNames[eDOMEvents_animationstart];
+  case NS_ANIMATION_END:
+    return sEventNames[eDOMEvents_animationend];
+  case NS_ANIMATION_ITERATION:
+    return sEventNames[eDOMEvents_animationiteration];
+#endif
   default:
     break;
   }
@@ -1370,7 +1394,6 @@ nsDOMEvent::GetPreventDefault(PRBool* aReturn)
 void
 nsDOMEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
 {
-#ifdef MOZ_IPC
   if (aSerializeInterfaceType) {
     IPC::WriteParam(aMsg, NS_LITERAL_STRING("event"));
   }
@@ -1392,13 +1415,11 @@ nsDOMEvent::Serialize(IPC::Message* aMsg, PRBool aSerializeInterfaceType)
   IPC::WriteParam(aMsg, trusted);
 
   // No timestamp serialization for now!
-#endif
 }
 
 PRBool
 nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 {
-#ifdef MOZ_IPC
   nsString type;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &type), PR_FALSE);
 
@@ -1416,9 +1437,6 @@ nsDOMEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
   SetTrusted(trusted);
 
   return PR_TRUE;
-#else
-  return PR_FALSE;
-#endif
 }
 
 

@@ -76,9 +76,7 @@
 
 #include "mozilla/FunctionTimer.h"
 
-#ifdef MOZ_IPC
 #include "mozilla/net/NeckoCommon.h"
-#endif
 
 using namespace mozilla;
 
@@ -1023,11 +1021,9 @@ nsCacheService::Init()
     if (mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
 
-#ifdef MOZ_IPC
     if (mozilla::net::IsNeckoChild()) {
         return NS_ERROR_UNEXPECTED;
     }
-#endif
 
     CACHE_LOG_INIT();
 
@@ -1831,6 +1827,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
         if (mDiskDevice) {
             // Bypass the cache if Content-Length says the entry will be too big
             if (predictedDataSize != -1 &&
+                entry->StoragePolicy() != nsICache::STORE_ON_DISK_AS_FILE &&
                 mDiskDevice->EntryIsTooBig(predictedDataSize)) {
                 nsresult rv = nsCacheService::DoomEntry(entry);
                 NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");

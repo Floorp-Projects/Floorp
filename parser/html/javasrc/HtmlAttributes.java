@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2007 Henri Sivonen
- * Copyright (c) 2008-2009 Mozilla Foundation
+ * Copyright (c) 2008-2011 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -214,7 +214,7 @@ public final class HtmlAttributes implements Attributes {
 
     public @IdType String getType(int index) {
         if (index < length && index >= 0) {
-            return names[index].getType(mode);
+            return (names[index] == AttributeName.ID) ? "ID" : "CDATA";
         } else {
             return null;
         }

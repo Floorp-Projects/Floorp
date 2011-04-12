@@ -916,7 +916,7 @@ TypeConstraintNewObject::newType(JSContext *cx, TypeSet *source, jstype type)
         if (object->unknownProperties()) {
             target->addType(cx, TYPE_UNKNOWN);
         } else {
-            TypeSet *newTypes = object->getProperty(cx, JSID_EMPTY, true);
+            TypeSet *newTypes = object->getProperty(cx, JSID_EMPTY, false);
             if (!newTypes)
                 return;
             newTypes->addMonitorRead(cx, script, target);

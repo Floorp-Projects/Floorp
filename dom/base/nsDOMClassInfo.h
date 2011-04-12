@@ -49,14 +49,31 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsContentUtils.h"
 
-class nsIDOMWindow;
-class nsIDOMNSHTMLOptionCollection;
-class nsIPluginInstance;
-class nsIForm;
-class nsIDOMNodeList;
-class nsIDOMDocument;
-class nsIHTMLDocument;
+namespace mozilla {
+class DOMSVGLengthList;
+class DOMSVGNumberList;
+class DOMSVGPathSegList;
+class DOMSVGPointList;
+}
 class nsGlobalWindow;
+class nsIDOMDocument;
+class nsIDOMNSHTMLOptionCollection;
+class nsIDOMNodeList;
+class nsIDOMSVGLength;
+class nsIDOMSVGLengthList;
+class nsIDOMSVGNumber;
+class nsIDOMSVGNumberList;
+class nsIDOMSVGPathSeg;
+class nsIDOMSVGPathSegList;
+class nsIDOMSVGPoint;
+class nsIDOMSVGPointList;
+class nsIDOMSVGTransform;
+class nsIDOMSVGTransformList;
+class nsIDOMWindow;
+class nsIForm;
+class nsIHTMLDocument;
+class nsIPluginInstance;
+class nsSVGTransformList;
 
 struct nsDOMClassInfoData;
 
@@ -131,48 +148,6 @@ public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
   {
     return new nsDOMClassInfo(aData);
-  }
-
-  static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, const nsIID* aIID,
-                             PRBool aAllowWrapping, jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
-                             // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nsnull)
-  {
-    return WrapNative(cx, scope, native, nsnull, aIID, vp, aHolder,
-                      aAllowWrapping);
-  }
-
-  // Used for cases where PreCreate needs to wrap the native parent, and the
-  // native parent is likely to have been wrapped already.  |native| must
-  // implement nsWrapperCache, and nativeWrapperCache must be |native|'s
-  // nsWrapperCache.
-  static inline nsresult WrapNativeParent(JSContext *cx, JSObject *scope,
-                                          nsISupports *native,
-                                          nsWrapperCache *nativeWrapperCache,
-                                          JSObject **parentObj);
-
-  // Same as the WrapNative above, but use these if aIID is nsISupports' IID.
-  static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, PRBool aAllowWrapping,
-                             jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
-                             // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nsnull)
-  {
-    return WrapNative(cx, scope, native, nsnull, nsnull, vp, aHolder,
-                      aAllowWrapping);
-  }
-  static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                             nsISupports *native, nsWrapperCache *cache,
-                             PRBool aAllowWrapping, jsval *vp,
-                             // If non-null aHolder will keep the jsval alive
-                             // while there's a ref to it
-                             nsIXPConnectJSObjectHolder** aHolder = nsnull)
-  {
-    return WrapNative(cx, scope, native, cache, nsnull, vp, aHolder,
-                      aAllowWrapping);
   }
 
   static nsresult ThrowJSException(JSContext *cx, nsresult aResult);
@@ -258,12 +233,6 @@ protected:
             id == sStatus_id       ||
             id == sName_id);
   }
-
-  inline static nsresult WrapNative(JSContext *cx, JSObject *scope,
-                                    nsISupports *native, nsWrapperCache *cache,
-                                    const nsIID* aIID, jsval *vp,
-                                    nsIXPConnectJSObjectHolder** aHolder,
-                                    PRBool aAllowWrapping);
 
   static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;
@@ -552,6 +521,8 @@ public:
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
   NS_IMETHOD SetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsid id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD Enumerate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                       JSObject *obj, PRBool *_retval);
   NS_IMETHOD NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                         JSObject *obj, jsid id, PRUint32 flags,
                         JSObject **objp, PRBool *_retval);
@@ -1838,5 +1809,31 @@ public:
     return new nsWebGLViewportHandlerSH(aData);
   }
 };
+
+
+// Template for SVGXXXList helpers
+ 
+template<class ListInterfaceType, class ListType>
+class nsSVGListSH : public nsArraySH
+{
+protected:
+  nsSVGListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
+  {
+  }
+
+public:
+  virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                                 nsWrapperCache **aCache, nsresult *aResult);
+ 
+  static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsSVGListSH(aData);
+  }
+};
+
+typedef nsSVGListSH<nsIDOMSVGLengthList, mozilla::DOMSVGLengthList> nsSVGLengthListSH;
+typedef nsSVGListSH<nsIDOMSVGNumberList, mozilla::DOMSVGNumberList> nsSVGNumberListSH;
+typedef nsSVGListSH<nsIDOMSVGPathSegList, mozilla::DOMSVGPathSegList> nsSVGPathSegListSH;
+typedef nsSVGListSH<nsIDOMSVGPointList, mozilla::DOMSVGPointList> nsSVGPointListSH;
 
 #endif /* nsDOMClassInfo_h___ */

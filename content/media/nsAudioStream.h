@@ -64,14 +64,13 @@ public:
   // library after using it.
   static void ShutdownLibrary();
 
-  // Thread, usually for MOZ_IPC handling, that is shared between audio streams.
+  // Thread that is shared between audio streams.
   // This may return null in the child process
   nsIThread *GetThread();
 
   // AllocateStream will return either a local stream or a remoted stream
-  // depending on where you call it from.  If MOZ_IPC is enabled, and you
-  // call this from a child process, you may recieve an implementation which
-  // forwards to a compositing process.
+  // depending on where you call it from.  If you call this from a child process,
+  // you may receive an implementation which forwards to a compositing process.
   static nsAudioStream* AllocateStream();
 
   // Initialize the audio stream. aNumChannels is the number of audio channels 

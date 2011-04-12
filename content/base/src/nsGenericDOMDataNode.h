@@ -131,7 +131,6 @@ public:
   nsresult GetNamespaceURI(nsAString& aNamespaceURI);
   nsresult GetLocalName(nsAString& aLocalName);
   nsresult GetPrefix(nsAString& aPrefix);
-  nsresult SetPrefix(const nsAString& aPrefix);
   nsresult Normalize();
   nsresult IsSupported(const nsAString& aFeature,
                        const nsAString& aVersion,
@@ -301,8 +300,8 @@ protected:
   class nsDataSlots : public nsINode::nsSlots
   {
   public:
-    nsDataSlots(PtrBits aFlags)
-      : nsINode::nsSlots(aFlags),
+    nsDataSlots()
+      : nsINode::nsSlots(),
         mBindingParent(nsnull)
     {
     }
@@ -470,9 +469,6 @@ private:
   }                                                                         \
   NS_IMETHOD GetPrefix(nsAString& aPrefix) {                                \
     return nsGenericDOMDataNode::GetPrefix(aPrefix);                        \
-  }                                                                         \
-  NS_IMETHOD SetPrefix(const nsAString& aPrefix) {                          \
-    return nsGenericDOMDataNode::SetPrefix(aPrefix);                        \
   }                                                                         \
   NS_IMETHOD Normalize() {                                                  \
     return NS_OK;                                                           \

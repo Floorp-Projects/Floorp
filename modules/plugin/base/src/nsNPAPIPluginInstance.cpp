@@ -50,7 +50,6 @@
 #include "nsPluginLogging.h"
 #include "nsIPrivateBrowsingService.h"
 #include "nsContentUtils.h"
-#include "nsIContentUtils.h"
 
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
@@ -65,7 +64,7 @@ using namespace mozilla::plugins::parent;
 static NS_DEFINE_IID(kIOutputStreamIID, NS_IOUTPUTSTREAM_IID);
 static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
-NS_IMPL_ISUPPORTS2(nsNPAPIPluginInstance, nsIPluginInstance, nsIPluginInstance_MOZILLA_2_0_BRANCH)
+NS_IMPL_ISUPPORTS1(nsNPAPIPluginInstance, nsIPluginInstance)
 
 nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
   :
@@ -82,6 +81,7 @@ nsNPAPIPluginInstance::nsNPAPIPluginInstance(nsNPAPIPlugin* plugin)
     mTransparent(PR_FALSE),
     mCached(PR_FALSE),
     mWantsAllNetworkStreams(PR_FALSE),
+    mUsesDOMForCursor(PR_FALSE),
     mInPluginInitCall(PR_FALSE),
     mPlugin(plugin),
     mMIMEType(nsnull),
@@ -693,6 +693,18 @@ NPError nsNPAPIPluginInstance::SetWantsAllNetworkStreams(PRBool aWantsAllNetwork
   return NPERR_NO_ERROR;
 }
 
+NPError nsNPAPIPluginInstance::SetUsesDOMForCursor(PRBool aUsesDOMForCursor)
+{
+  mUsesDOMForCursor = aUsesDOMForCursor;
+  return NPERR_NO_ERROR;
+}
+
+PRBool
+nsNPAPIPluginInstance::UsesDOMForCursor()
+{
+  return mUsesDOMForCursor;
+}
+
 #ifdef XP_MACOSX
 void nsNPAPIPluginInstance::SetDrawingModel(NPDrawingModel aModel)
 {
@@ -863,19 +875,6 @@ nsNPAPIPluginInstance::AsyncSetWindow(NPWindow* window)
     return NS_ERROR_FAILURE;
 
   return library->AsyncSetWindow(&mNPP, window);
-}
-
-NS_IMETHODIMP
-nsNPAPIPluginInstance::GetSurface(gfxASurface** aSurface)
-{
-  if (RUNNING != mRunning)
-    return NS_OK;
-
-  AutoPluginLibraryCall library(this);
-  if (!library)
-    return NS_ERROR_FAILURE;
-
-  return library->GetSurface(&mNPP, aSurface);
 }
 
 NS_IMETHODIMP
@@ -1362,17 +1361,8 @@ NS_IMETHODIMP
 CarbonEventModelFailureEvent::Run()
 {
   nsString type = NS_LITERAL_STRING("npapi-carbon-event-model-failure");
-#ifdef MOZ_ENABLE_LIBXUL
   nsContentUtils::DispatchTrustedEvent(mContent->GetDocument(), mContent,
                                        type, PR_TRUE, PR_TRUE);
-#else
-  nsCOMPtr<nsIContentUtils_MOZILLA_2_0_BRANCH> cu =
-    do_GetService("@mozilla.org/content/contentutils-moz2.0;1");
-  if (cu) {
-    cu->DispatchTrustedEvent(mContent->GetDocument(), mContent,
-                             type, PR_TRUE, PR_TRUE);
-  }
-#endif
   return NS_OK;
 }
 

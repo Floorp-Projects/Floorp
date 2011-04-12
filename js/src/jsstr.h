@@ -1009,7 +1009,7 @@ ValueToString_TestForStringInline(JSContext *cx, const Value &v)
  * value to a string of jschars appended to the given buffer. On error, the
  * passed buffer may have partial results appended.
  */
-extern bool
+inline bool
 ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb);
 
 } /* namespace js */

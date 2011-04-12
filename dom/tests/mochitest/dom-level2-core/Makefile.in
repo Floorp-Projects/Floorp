@@ -292,15 +292,6 @@ _TEST_FILES_E	= \
 
 _TEST_FILES_F	= \
 		test_nodenormalize01.html \
-		test_nodesetprefix01.html \
-		test_nodesetprefix02.html \
-		test_nodesetprefix03.html \
-		test_nodesetprefix04.html \
-		test_nodesetprefix05.html \
-		test_nodesetprefix06.html \
-		test_nodesetprefix07.html \
-		test_nodesetprefix08.html \
-		test_nodesetprefix09.html \
 		test_normalize01.html \
 		test_ownerDocument01.html \
 		test_ownerElement01.html \
@@ -309,13 +300,6 @@ _TEST_FILES_F	= \
 		test_prefix02.html \
 		test_prefix03.html \
 		test_prefix04.html \
-		test_prefix05.html \
-		test_prefix06.html \
-		test_prefix07.html \
-		test_prefix08.html \
-		test_prefix09.html \
-		test_prefix10.html \
-		test_prefix11.html \
 		test_publicId01.html \
 		test_removeAttributeNS01.html \
 		test_removeAttributeNS02.html \

@@ -48,7 +48,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(a6cf9070-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(669a0f55-1e5d-4471-8de9-a6c6774354dd)]
 interface nsIDOMAttr : nsIDOMNode
 {
   readonly attribute DOMString            name;

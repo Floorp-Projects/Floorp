@@ -1272,18 +1272,6 @@ NS_IMPL_BOOL_ATTR(nsHTMLSelectElement, Required, required)
 NS_IMPL_NON_NEGATIVE_INT_ATTR_DEFAULT_VALUE(nsHTMLSelectElement, Size, size, 0)
 NS_IMPL_INT_ATTR(nsHTMLSelectElement, TabIndex, tabindex)
 
-NS_IMETHODIMP
-nsHTMLSelectElement::Blur()
-{
-  return nsGenericHTMLElement::Blur();
-}
-
-NS_IMETHODIMP
-nsHTMLSelectElement::Focus()
-{
-  return nsGenericHTMLElement::Focus();
-}
-
 PRBool
 nsHTMLSelectElement::IsHTMLFocusable(PRBool aWithMouse,
                                      PRBool *aIsFocusable, PRInt32 *aTabIndex)
@@ -2091,10 +2079,8 @@ NS_INTERFACE_TABLE_HEAD(nsHTMLOptionCollection)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsHTMLOptionCollection,
-                                          nsIHTMLCollection)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsHTMLOptionCollection,
-                                           nsIHTMLCollection)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsHTMLOptionCollection)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsHTMLOptionCollection)
 
 
 // nsIDOMNSHTMLOptionCollection interface

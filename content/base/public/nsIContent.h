@@ -76,8 +76,8 @@ enum nsLinkState {
 
 // IID for the nsIContent interface
 #define NS_ICONTENT_IID       \
-{ 0x5788c9eb, 0x646a, 0x4285, \
-  { 0xa2, 0x8c, 0xde, 0x0d, 0x43, 0x6b, 0x47, 0x72 } }
+{ 0x32b94ba0, 0x1ebc, 0x4dfc, \
+ { 0xba, 0x8c, 0x5f, 0x24, 0x2b, 0xcb, 0xaf, 0xce } }
 
 /**
  * A node of content in a document's content model. This interface
@@ -800,7 +800,7 @@ public:
    * GetIDAttributeName().  This may be null if there is no ID.
    */
   nsIAtom* GetID() const {
-    if (HasFlag(NODE_HAS_ID)) {
+    if (HasID()) {
       return DoGetID();
     }
     return nsnull;
@@ -960,7 +960,7 @@ public:
 protected:
   /**
    * Hook for implementing GetID.  This is guaranteed to only be
-   * called if the NODE_HAS_ID flag is set.
+   * called if HasID() is true.
    */
   virtual nsIAtom* DoGetID() const = 0;
 

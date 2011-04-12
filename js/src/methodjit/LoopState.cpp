@@ -45,7 +45,7 @@ using namespace js::mjit;
 using namespace js::analyze;
 
 LoopState::LoopState(JSContext *cx, JSScript *script,
-                     Compiler *cc, FrameState *frame,
+                     mjit::Compiler *cc, FrameState *frame,
                      Script *analysis, LifetimeScript *liveness)
     : cx(cx), script(script), cc(*cc), frame(*frame), analysis(analysis), liveness(liveness),
       lifetime(NULL), alloc(NULL), loopRegs(0), skipAnalysis(false),

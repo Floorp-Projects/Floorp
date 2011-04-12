@@ -33,18 +33,21 @@ HB_BEGIN_DECLS
 
 
 /* XXX vertical */
-hb_tag_t default_features[] = {
-  HB_TAG('c','a','l','t'),
-  HB_TAG('c','c','m','p'),
-  HB_TAG('c','l','i','g'),
-  HB_TAG('c','s','w','h'),
-  HB_TAG('c','u','r','s'),
-  HB_TAG('k','e','r','n'),
-  HB_TAG('l','i','g','a'),
-  HB_TAG('l','o','c','l'),
-  HB_TAG('m','a','r','k'),
-  HB_TAG('m','k','m','k'),
-  HB_TAG('r','l','i','g')
+struct {
+  hb_tag_t tag;
+  unsigned short priority;
+} default_features[] = {
+  { HB_TAG('c','a','l','t'), DEFAULT_PRIORITY },
+  { HB_TAG('c','c','m','p'), FIRST_PRIORITY },
+  { HB_TAG('c','l','i','g'), DEFAULT_PRIORITY },
+  { HB_TAG('c','s','w','h'), DEFAULT_PRIORITY },
+  { HB_TAG('c','u','r','s'), DEFAULT_PRIORITY },
+  { HB_TAG('k','e','r','n'), DEFAULT_PRIORITY },
+  { HB_TAG('l','i','g','a'), DEFAULT_PRIORITY },
+  { HB_TAG('l','o','c','l'), DEFAULT_PRIORITY },
+  { HB_TAG('m','a','r','k'), DEFAULT_PRIORITY },
+  { HB_TAG('m','k','m','k'), DEFAULT_PRIORITY },
+  { HB_TAG('r','l','i','g'), DEFAULT_PRIORITY }
 };
 
 static void
@@ -55,12 +58,12 @@ hb_ot_shape_collect_features (hb_ot_shape_plan_t       *plan,
 {
   switch (props->direction) {
     case HB_DIRECTION_LTR:
-      plan->map.add_bool_feature (HB_TAG ('l','t','r','a'));
-      plan->map.add_bool_feature (HB_TAG ('l','t','r','m'));
+      plan->map.add_bool_feature (HB_TAG ('l','t','r','a'), DEFAULT_PRIORITY);
+      plan->map.add_bool_feature (HB_TAG ('l','t','r','m'), DEFAULT_PRIORITY);
       break;
     case HB_DIRECTION_RTL:
-      plan->map.add_bool_feature (HB_TAG ('r','t','l','a'));
-      plan->map.add_bool_feature (HB_TAG ('r','t','l','m'), false);
+      plan->map.add_bool_feature (HB_TAG ('r','t','l','a'), DEFAULT_PRIORITY);
+      plan->map.add_bool_feature (HB_TAG ('r','t','l','m'), DEFAULT_PRIORITY, false);
       break;
     case HB_DIRECTION_TTB:
     case HB_DIRECTION_BTT:
@@ -69,13 +72,13 @@ hb_ot_shape_collect_features (hb_ot_shape_plan_t       *plan,
   }
 
   for (unsigned int i = 0; i < ARRAY_LENGTH (default_features); i++)
-    plan->map.add_bool_feature (default_features[i]);
+    plan->map.add_bool_feature (default_features[i].tag, default_features[i].priority);
 
   hb_ot_shape_complex_collect_features (plan, props);
 
   for (unsigned int i = 0; i < num_user_features; i++) {
     const hb_feature_t *feature = &user_features[i];
-    plan->map.add_feature (feature->tag, feature->value, (feature->start == 0 && feature->end == (unsigned int) -1));
+    plan->map.add_feature (feature->tag, feature->value, DEFAULT_PRIORITY, (feature->start == 0 && feature->end == (unsigned int) -1));
   }
 }
 
@@ -92,7 +95,7 @@ hb_ot_shape_setup_masks (hb_ot_shape_context_t *c)
   {
     const hb_feature_t *feature = &c->user_features[i];
     if (!(feature->start == 0 && feature->end == (unsigned int)-1)) {
-      unsigned int shift;
+      unsigned short shift;
       hb_mask_t mask = c->plan->map.get_mask (feature->tag, &shift);
       c->buffer->set_masks (feature->value << shift, mask, feature->start, feature->end);
     }

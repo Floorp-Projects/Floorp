@@ -1,0 +1,15 @@
+<html class="reftest-wait">
+  <body onload="start()">
+    <textarea dir="rtl" onfocus="done()">s</textarea>
+    <script>
+      var textarea = document.querySelector("textarea");
+      function start() {
+        textarea.focus();
+      }
+      function done() {
+        textarea.selectionStart = textarea.selectionEnd = 0;
+        document.documentElement.removeAttribute("class");
+      }
+    </script>
+  </body>
+</html>

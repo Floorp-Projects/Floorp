@@ -71,13 +71,6 @@ EXPORTS		= \
 		nsSubDocumentFrame.h \
 		$(NULL)
 
-ifdef IBMBIDI
-EXPORTS		+= \
-		nsBidiFrames.h      \
-		$(NULL)
-endif
-
-
 CPPSRCS		= \
 		nsAbsoluteContainingBlock.cpp \
 		nsBRFrame.cpp \
@@ -126,12 +119,6 @@ CPPSRCS		+= \
 		$(NULL)
 endif
 
-ifdef IBMBIDI
-CPPSRCS		+= \
-		nsBidiFrames.cpp \
-		$(NULL)
-endif
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 CMMSRCS		+= \
 		nsPluginUtilsOSX.mm \
@@ -159,6 +146,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/base/src \
 		-I$(srcdir)/../../content/html/content/src \
 		-I$(srcdir)/../../dom/base \
+		-I$(srcdir)/../../modules/plugin/base/src \
 		$(MOZ_CAIRO_CFLAGS) \
 		$(NULL)
 
