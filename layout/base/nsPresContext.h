@@ -1109,6 +1109,8 @@ protected:
 
   // container for per-context fonts (downloadable, SVG, etc.)
   nsUserFontSet*        mUserFontSet;
+  // The list of @font-face rules that we put into mUserFontSet
+  nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
   
   PRInt32               mFontScaler;
   nscoord               mMinimumFontSizePref;
