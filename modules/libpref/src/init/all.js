@@ -701,7 +701,7 @@ pref("network.http.proxy.keep-alive", true);
 pref("network.http.keep-alive.timeout", 115);
 
 // limit the absolute number of http connections.
-pref("network.http.max-connections", 30);
+pref("network.http.max-connections", 256);
 
 // limit the absolute number of http connections that can be established per
 // host.  if a http proxy server is enabled, then the "server" is the proxy
