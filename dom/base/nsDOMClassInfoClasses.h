@@ -507,3 +507,6 @@ DOMCI_CLASS(IDBVersionChangeRequest)
 DOMCI_CLASS(IDBDatabaseException)
 
 DOMCI_CLASS(EventException)
+
+DOMCI_CLASS(MozCSSKeyframeRule)
+DOMCI_CLASS(MozCSSKeyframesRule)

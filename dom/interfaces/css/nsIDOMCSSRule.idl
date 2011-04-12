@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(a6cf90c1-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(2938307a-9d70-4b63-8afc-0197e82318ad)]
 interface nsIDOMCSSRule : nsISupports
 {
   // RuleType
@@ -58,6 +58,8 @@ interface nsIDOMCSSRule : nsISupports
   const unsigned short      MEDIA_RULE                     = 4;
   const unsigned short      FONT_FACE_RULE                 = 5;
   const unsigned short      PAGE_RULE                      = 6;
+  const unsigned short      MOZ_KEYFRAMES_RULE             = 7;
+  const unsigned short      MOZ_KEYFRAME_RULE              = 8;
 
   readonly attribute unsigned short      type;
            attribute DOMString           cssText;

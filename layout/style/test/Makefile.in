@@ -152,6 +152,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_inherit_storage.html \
 		test_initial_computation.html \
 		test_initial_storage.html \
+		test_keyframes_rules.html \
 		test_media_queries.html \
 		test_media_queries_dynamic.html \
 		test_media_queries_dynamic_xbl.html \
