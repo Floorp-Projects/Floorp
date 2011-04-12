@@ -54,6 +54,7 @@ private:
   ~nsGNOMEShellService() {}
 
   NS_HIDDEN_(PRBool) KeyMatchesAppName(const char *aKeyValue) const;
+  NS_HIDDEN_(PRBool) CheckHandlerMatchesAppName(const nsACString& handler) const;
 
   NS_HIDDEN_(PRBool) GetAppPathFromLauncher();
   PRPackedBool mCheckedThisSession;
