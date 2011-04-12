@@ -1824,7 +1824,7 @@ int NS_main(int argc, NS_tchar **argv)
       LaunchMacPostProcess(argv[callbackIndex]);
     }
 #endif /* XP_MACOSX */
-    LaunchCallbackApp(argv[3], argc - callbackIndex, argv + callbackIndex);
+    LaunchCallbackApp(argv[4], argc - callbackIndex, argv + callbackIndex);
   }
 
   return 0;
