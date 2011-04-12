@@ -3882,6 +3882,35 @@ nsComputedDOMStyle::DoGetTransitionProperty()
   return valueList;
 }
 
+void
+nsComputedDOMStyle::AppendTimingFunction(nsDOMCSSValueList *aValueList,
+                                         const nsTimingFunction& aTimingFunction)
+{
+  nsROCSSPrimitiveValue* timingFunction = GetROCSSPrimitiveValue();
+  aValueList->AppendCSSValue(timingFunction);
+
+  if (aTimingFunction.mType == nsTimingFunction::Function) {
+    // set the value from the cubic-bezier control points
+    // (We could try to regenerate the keywords if we want.)
+    timingFunction->SetString(
+      nsPrintfCString(64, "cubic-bezier(%f, %f, %f, %f)",
+                          aTimingFunction.mFunc.mX1,
+                          aTimingFunction.mFunc.mY1,
+                          aTimingFunction.mFunc.mX2,
+                          aTimingFunction.mFunc.mY2));
+  } else {
+    nsString tmp;
+    tmp.AppendLiteral("steps(");
+    tmp.AppendInt(aTimingFunction.mSteps);
+    if (aTimingFunction.mType == nsTimingFunction::StepStart) {
+      tmp.AppendLiteral(", start)");
+    } else {
+      tmp.AppendLiteral(", end)");
+    }
+    timingFunction->SetString(tmp);
+  }
+}
+
 nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetTransitionTimingFunction()
 {
@@ -3893,16 +3922,8 @@ nsComputedDOMStyle::DoGetTransitionTimingFunction()
                     "first item must be explicit");
   PRUint32 i = 0;
   do {
-    const nsTransition *transition = &display->mTransitions[i];
-    nsROCSSPrimitiveValue* timingFunction = GetROCSSPrimitiveValue();
-    valueList->AppendCSSValue(timingFunction);
-
-    // set the value from the cubic-bezier control points
-    // (We could try to regenerate the keywords if we want.)
-    const nsTimingFunction& tf = transition->GetTimingFunction();
-    timingFunction->SetString(
-      nsPrintfCString(64, "cubic-bezier(%f, %f, %f, %f)",
-                          tf.mX1, tf.mY1, tf.mX2, tf.mY2));
+    AppendTimingFunction(valueList,
+                         display->mTransitions[i].GetTimingFunction());
   } while (++i < display->mTransitionTimingFunctionCount);
 
   return valueList;

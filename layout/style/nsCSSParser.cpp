@@ -113,7 +113,7 @@ namespace css = mozilla::css;
 #define VARIANT_NORMAL          0x080000  // M
 #define VARIANT_SYSFONT         0x100000  // eCSSUnit_System_Font
 #define VARIANT_GRADIENT        0x200000  // eCSSUnit_Gradient
-#define VARIANT_CUBIC_BEZIER    0x400000  // CSS transition timing function
+#define VARIANT_TIMING_FUNCTION 0x400000  // cubic-bezier() and steps()
 #define VARIANT_ALL             0x800000  //
 #define VARIANT_IMAGE_RECT    0x01000000  // eCSSUnit_Function
 // This is an extra bit that says that a VARIANT_ANGLE allows unitless zero:
@@ -154,7 +154,6 @@ namespace css = mozilla::css;
 #define VARIANT_HON  (VARIANT_HN | VARIANT_NONE)
 #define VARIANT_HOS  (VARIANT_INHERIT | VARIANT_NONE | VARIANT_STRING)
 #define VARIANT_LPN  (VARIANT_LP | VARIANT_NUMBER)
-#define VARIANT_TIMING_FUNCTION (VARIANT_KEYWORD | VARIANT_CUBIC_BEZIER)
 #define VARIANT_UK   (VARIANT_URL | VARIANT_KEYWORD)
 #define VARIANT_UO   (VARIANT_URL | VARIANT_NONE)
 #define VARIANT_ANGLE_OR_ZERO (VARIANT_ANGLE | VARIANT_ZERO_ANGLE)
@@ -517,6 +516,7 @@ protected:
   PRBool ParseTransitionTimingFunctionValueComponent(float& aComponent,
                                                      char aStop,
                                                      PRBool aCheckRange);
+  PRBool ParseTransitionStepTimingFunctionValues(nsCSSValue& aValue);
 
 #ifdef MOZ_SVG
   PRBool ParsePaint(nsCSSProperty aPropID);
@@ -4215,7 +4215,7 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
   VARIANT_NORMAL | \
   VARIANT_SYSFONT | \
   VARIANT_GRADIENT | \
-  VARIANT_CUBIC_BEZIER | \
+  VARIANT_TIMING_FUNCTION | \
   VARIANT_ALL | \
   VARIANT_CALC
 
@@ -4487,10 +4487,17 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     }
     return PR_TRUE;
   }
-  if (((aVariantMask & VARIANT_CUBIC_BEZIER) != 0) &&
+  if (((aVariantMask & VARIANT_TIMING_FUNCTION) != 0) &&
       (eCSSToken_Function == tk->mType)) {
-     if (tk->mIdent.LowerCaseEqualsLiteral("cubic-bezier")) {
+    if (tk->mIdent.LowerCaseEqualsLiteral("cubic-bezier")) {
       if (!ParseTransitionTimingFunctionValues(aValue)) {
+        SkipUntil(')');
+        return PR_FALSE;
+      }
+      return PR_TRUE;
+    }
+    if (tk->mIdent.LowerCaseEqualsLiteral("steps")) {
+      if (!ParseTransitionStepTimingFunctionValues(aValue)) {
         SkipUntil(')');
         return PR_FALSE;
       }
@@ -7954,6 +7961,48 @@ CSSParserImpl::ParseTransitionTimingFunctionValueComponent(float& aComponent,
     }
   }
   return PR_FALSE;
+}
+
+PRBool
+CSSParserImpl::ParseTransitionStepTimingFunctionValues(nsCSSValue& aValue)
+{
+  NS_ASSERTION(!mHavePushBack &&
+               mToken.mType == eCSSToken_Function &&
+               mToken.mIdent.LowerCaseEqualsLiteral("steps"),
+               "unexpected initial state");
+
+  nsRefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(2);
+
+  if (!ParsePositiveNonZeroVariant(val->Item(0), VARIANT_INTEGER, nsnull)) {
+    return PR_FALSE;
+  }
+
+  PRInt32 type = NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END;
+  if (ExpectSymbol(',', PR_TRUE)) {
+    if (!GetToken(PR_TRUE)) {
+      return PR_FALSE;
+    }
+    type = -1;
+    if (mToken.mType == eCSSToken_Ident) {
+      if (mToken.mIdent.LowerCaseEqualsLiteral("start")) {
+        type = NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START;
+      } else if (mToken.mIdent.LowerCaseEqualsLiteral("end")) {
+        type = NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END;
+      }
+    }
+    if (type == -1) {
+      UngetToken();
+      return PR_FALSE;
+    }
+  }
+  val->Item(1).SetIntValue(type, eCSSUnit_Enumerated);
+
+  if (!ExpectSymbol(')', PR_TRUE)) {
+    return PR_FALSE;
+  }
+
+  aValue.SetArrayValue(val, eCSSUnit_Steps);
+  return PR_TRUE;
 }
 
 static nsCSSValueList*

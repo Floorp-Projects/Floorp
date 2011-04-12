@@ -1309,6 +1309,8 @@ struct nsStyleVisibility {
 };
 
 struct nsTimingFunction {
+  enum Type { Function, StepStart, StepEnd };
+
   explicit nsTimingFunction(PRInt32 aTimingFunctionType
                               = NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE)
   {
@@ -1316,26 +1318,60 @@ struct nsTimingFunction {
   }
 
   nsTimingFunction(float x1, float y1, float x2, float y2)
-    : mX1(x1)
-    , mY1(y1)
-    , mX2(x2)
-    , mY2(y2)
-  {}
-
-  float mX1;
-  float mY1;
-  float mX2;
-  float mY2;
-
-  PRBool operator==(const nsTimingFunction& aOther) const
+    : mType(Function)
   {
-    return !(*this != aOther);
+    mFunc.mX1 = x1;
+    mFunc.mY1 = y1;
+    mFunc.mX2 = x2;
+    mFunc.mY2 = y2;
   }
 
-  PRBool operator!=(const nsTimingFunction& aOther) const
+  nsTimingFunction(Type aType, PRUint32 aSteps)
+    : mType(aType)
   {
-    return mX1 != aOther.mX1 || mY1 != aOther.mY1 ||
-           mX2 != aOther.mX2 || mY2 != aOther.mY2;
+    NS_ABORT_IF_FALSE(mType == StepStart || mType == StepEnd, "wrong type");
+    mSteps = aSteps;
+  }
+
+  nsTimingFunction(const nsTimingFunction& aOther)
+    : mType(aOther.mType)
+  {
+    if (mType == Function) {
+      mFunc.mX1 = aOther.mFunc.mX1;
+      mFunc.mY1 = aOther.mFunc.mY1;
+      mFunc.mX2 = aOther.mFunc.mX2;
+      mFunc.mY2 = aOther.mFunc.mY2;
+    } else {
+      mSteps = aOther.mSteps;
+    }
+  }
+
+  Type mType;
+  union {
+    struct {
+      float mX1;
+      float mY1;
+      float mX2;
+      float mY2;
+    } mFunc;
+    PRUint32 mSteps;
+  };
+
+  bool operator==(const nsTimingFunction& aOther) const
+  {
+    if (mType != aOther.mType) {
+      return false;
+    }
+    if (mType == Function) {
+      return mFunc.mX1 == aOther.mFunc.mX1 && mFunc.mY1 == aOther.mFunc.mY1 &&
+             mFunc.mX2 == aOther.mFunc.mX2 && mFunc.mY2 == aOther.mFunc.mY2;
+    }
+    return mSteps == aOther.mSteps;
+  }
+
+  bool operator!=(const nsTimingFunction& aOther) const
+  {
+    return !(*this == aOther);
   }
 
 private:

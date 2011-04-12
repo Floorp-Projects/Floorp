@@ -3838,6 +3838,28 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                array->Item(3).GetFloatValue()));
           }
           break;
+        case eCSSUnit_Steps:
+          {
+            nsCSSValue::Array* array =
+              timingFunction.list->mValue.GetArrayValue();
+            NS_ASSERTION(array && array->Count() == 2,
+                         "Need 2 items");
+            NS_ASSERTION(array->Item(0).GetUnit() == eCSSUnit_Integer,
+                         "unexpected first value");
+            NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
+                         (array->Item(1).GetIntValue() ==
+                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
+                          array->Item(1).GetIntValue() ==
+                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END),
+                         "unexpected second value");
+            transition->SetTimingFunction(
+              nsTimingFunction((
+                array->Item(1).GetIntValue() ==
+                  NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END)
+                  ? nsTimingFunction::StepEnd : nsTimingFunction::StepStart,
+                array->Item(0).GetIntValue()));
+          }
+          break;
         default:
           NS_NOTREACHED("Invalid transition property unit");
       }

@@ -179,6 +179,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_transitions_events.html \
 		test_transitions.html \
 		test_transitions_per_property.html \
+		test_transitions_step_functions.html \
 		test_transitions_dynamic_changes.html \
 		test_transitions_bug537151.html \
 		test_unclosed_parentheses.html \
