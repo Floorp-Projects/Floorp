@@ -2288,7 +2288,7 @@ CSS_PROP_DISPLAY(
     CSS_PROP_DOMPROP_PREFIXED(TransitionTimingFunction),
     CSS_PROPERTY_PARSE_VALUE_LIST |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
-    VARIANT_TIMING_FUNCTION, // used by list parsing
+    VARIANT_KEYWORD | VARIANT_TIMING_FUNCTION, // used by list parsing
     kTransitionTimingFunctionKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)

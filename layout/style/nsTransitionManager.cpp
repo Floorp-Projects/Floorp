@@ -65,6 +65,59 @@ namespace dom = mozilla::dom;
  * Per-Element data                                                          *
  *****************************************************************************/
 
+class ComputedTimingFunction {
+public:
+  typedef nsTimingFunction::Type Type;
+  void Init(const nsTimingFunction &aFunction);
+  double GetValue(double aPortion) const;
+private:
+  Type mType;
+  nsSMILKeySpline mTimingFunction;
+  PRUint32 mSteps;
+};
+
+void
+ComputedTimingFunction::Init(const nsTimingFunction &aFunction)
+{
+  mType = aFunction.mType;
+  if (mType == nsTimingFunction::Function) {
+    mTimingFunction.Init(aFunction.mFunc.mX1, aFunction.mFunc.mY1,
+                         aFunction.mFunc.mX2, aFunction.mFunc.mY2);
+  } else {
+    mSteps = aFunction.mSteps;
+  }
+}
+
+static inline double
+StepEnd(PRUint32 aSteps, double aPortion)
+{
+  NS_ABORT_IF_FALSE(0.0 <= aPortion && aPortion <= 1.0, "out of range");
+  PRUint32 step = PRUint32(aPortion * aSteps); // floor
+  return double(step) / double(aSteps);
+}
+
+double
+ComputedTimingFunction::GetValue(double aPortion) const
+{
+  switch (mType) {
+    case nsTimingFunction::Function:
+      return mTimingFunction.GetSplineValue(aPortion);
+    case nsTimingFunction::StepStart:
+      // There are diagrams in the spec that seem to suggest this check
+      // and the bounds point should not be symmetric with StepEnd, but
+      // should actually step up at rather than immediately after the
+      // fraction points.  However, we rely on rounding negative values
+      // up to zero, so we can't do that.  And it's not clear the spec
+      // really meant it.
+      return 1.0 - StepEnd(mSteps, 1.0 - aPortion);
+    default:
+      NS_ABORT_IF_FALSE(PR_FALSE, "bad type");
+      // fall through
+    case nsTimingFunction::StepEnd:
+      return StepEnd(mSteps, aPortion);
+  }
+}
+
 struct ElementPropertyTransition
 {
   nsCSSProperty mProperty;
@@ -73,7 +126,7 @@ struct ElementPropertyTransition
 
   // data from the relevant nsTransition
   TimeDuration mDuration;
-  nsSMILKeySpline mTimingFunction;
+  ComputedTimingFunction mTimingFunction;
 
   // This is the start value to be used for a check for whether a
   // transition is being reversed.  Normally the same as mStartValue,
@@ -134,7 +187,7 @@ ElementPropertyTransition::ValuePortionFor(TimeStamp aRefreshTime) const
       timePortion = 1.0; // we might be behind on flushing
   }
 
-  return mTimingFunction.GetSplineValue(timePortion);
+  return mTimingFunction.GetValue(timePortion);
 }
 
 /**
@@ -704,7 +757,7 @@ nsTransitionManager::ConsiderStartingTransition(nsCSSProperty aProperty,
   pt.mProperty = aProperty;
   pt.mStartTime = mostRecentRefresh + TimeDuration::FromMilliseconds(delay);
   pt.mDuration = TimeDuration::FromMilliseconds(duration);
-  pt.mTimingFunction.Init(tf.mX1, tf.mY1, tf.mX2, tf.mY2);
+  pt.mTimingFunction.Init(tf);
 
   if (!aElementTransitions) {
     aElementTransitions =
