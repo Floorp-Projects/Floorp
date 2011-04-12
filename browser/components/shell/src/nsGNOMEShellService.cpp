@@ -106,14 +106,14 @@ nsGNOMEShellService::Init()
 {
   nsresult rv;
 
-  // GConf _must_ be available, or we do not allow
+  // GConf or GIO _must_ be available, or we do not allow
   // CreateInstance to succeed.
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
   nsCOMPtr<nsIGIOService> giovfs =
     do_GetService(NS_GIOSERVICE_CONTRACTID);
 
-  if (!gconf)
+  if (!gconf && !giovfs)
     return NS_ERROR_NOT_AVAILABLE;
 
   // Check G_BROKEN_FILENAMES.  If it's set, then filenames in glib use
@@ -194,6 +194,27 @@ nsGNOMEShellService::KeyMatchesAppName(const char *aKeyValue) const
   return matches;
 }
 
+PRBool
+nsGNOMEShellService::CheckHandlerMatchesAppName(const nsACString &handler) const
+{
+  gint argc;
+  gchar **argv;
+  nsCAutoString command(handler);
+
+  // The string will be something of the form: [/path/to/]browser "%s"
+  // We want to remove all of the parameters and get just the binary name.
+
+  if (g_shell_parse_argv(command.get(), &argc, &argv, NULL) && argc > 0) {
+    command.Assign(argv[0]);
+    g_strfreev(argv);
+  }
+
+  if (!KeyMatchesAppName(command.get()))
+    return PR_FALSE; // the handler is set to another app
+
+  return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsGNOMEShellService::IsDefaultBrowser(PRBool aStartupCheck,
                                       PRBool* aIsDefaultBrowser)
@@ -203,31 +224,37 @@ nsGNOMEShellService::IsDefaultBrowser(PRBool aStartupCheck,
     mCheckedThisSession = PR_TRUE;
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
 
   PRBool enabled;
   nsCAutoString handler;
+  nsCOMPtr<nsIGIOMimeApp> gioApp;
 
   for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appProtocols); ++i) {
     if (!appProtocols[i].essential)
       continue;
 
-    handler.Truncate();
-    gconf->GetAppForProtocol(nsDependentCString(appProtocols[i].name),
-                             &enabled, handler);
+    if (gconf) {
+      handler.Truncate();
+      gconf->GetAppForProtocol(nsDependentCString(appProtocols[i].name),
+                               &enabled, handler);
 
-    // The string will be something of the form: [/path/to/]browser "%s"
-    // We want to remove all of the parameters and get just the binary name.
-
-    gint argc;
-    gchar **argv;
-
-    if (g_shell_parse_argv(handler.get(), &argc, &argv, NULL) && argc > 0) {
-      handler.Assign(argv[0]);
-      g_strfreev(argv);
+      if (!CheckHandlerMatchesAppName(handler) || !enabled)
+        return NS_OK; // the handler is disabled or set to another app
     }
 
-    if (!KeyMatchesAppName(handler.get()) || !enabled)
-      return NS_OK; // the handler is disabled or set to another app
+    if (giovfs) {
+      handler.Truncate();
+      giovfs->GetAppForURIScheme(nsDependentCString(appProtocols[i].name),
+                                 getter_AddRefs(gioApp));
+      if (!gioApp)
+        return NS_OK;
+
+      gioApp->GetCommand(handler);
+
+      if (!CheckHandlerMatchesAppName(handler))
+        return NS_OK; // the handler is set to another app
+    }
   }
 
   *aIsDefaultBrowser = PR_TRUE;
@@ -245,9 +272,10 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
 #endif
 
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   if (gconf) {
     nsCAutoString appKeyValue;
-    if(mAppIsInPath) {
+    if (mAppIsInPath) {
       // mAppPath is in the users path, so use only the basename as the launcher
       gchar *tmp = g_path_get_basename(mAppPath.get());
       appKeyValue = tmp;
@@ -266,13 +294,8 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
     }
   }
 
-  // set handler for .html and xhtml files and MIME types:
-  if (aClaimAllTypes) {
+  if (giovfs) {
     nsresult rv;
-    nsCOMPtr<nsIGIOService> giovfs =
-      do_GetService(NS_GIOSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, NS_OK);
-
     nsCOMPtr<nsIStringBundleService> bundleService =
       do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -295,10 +318,20 @@ nsGNOMEShellService::SetDefaultBrowser(PRBool aClaimAllTypes,
                                       getter_AddRefs(appInfo));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Add mime types for html, xhtml extension and set app to just created appinfo.
-    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appTypes); ++i) {
-      appInfo->SetAsDefaultForMimeType(nsDependentCString(appTypes[i].mimeType));
-      appInfo->SetAsDefaultForFileExtensions(nsDependentCString(appTypes[i].extensions));
+    // set handler for the protocols
+    for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appProtocols); ++i) {
+      if (appProtocols[i].essential || aClaimAllTypes) {
+        appInfo->SetAsDefaultForURIScheme(nsDependentCString(appProtocols[i].name));
+      }
+    }
+
+    // set handler for .html and xhtml files and MIME types:
+    if (aClaimAllTypes) {
+      // Add mime types for html, xhtml extension and set app to just created appinfo.
+      for (unsigned int i = 0; i < NS_ARRAY_LENGTH(appTypes); ++i) {
+        appInfo->SetAsDefaultForMimeType(nsDependentCString(appTypes[i].mimeType));
+        appInfo->SetAsDefaultForFileExtensions(nsDependentCString(appTypes[i].extensions));
+      }
     }
   }
 
@@ -408,24 +441,26 @@ nsGNOMEShellService::SetDesktopBackground(nsIDOMElement* aElement,
   // if the file was written successfully, set it as the system wallpaper
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
-  nsCAutoString options;
-  if (aPosition == BACKGROUND_TILE)
-    options.Assign("wallpaper");
-  else if (aPosition == BACKGROUND_STRETCH)
-    options.Assign("stretched");
-  else
-    options.Assign("centered");
+  if (gconf) {
+    nsCAutoString options;
+    if (aPosition == BACKGROUND_TILE)
+      options.Assign("wallpaper");
+    else if (aPosition == BACKGROUND_STRETCH)
+      options.Assign("stretched");
+    else
+      options.Assign("centered");
 
-  gconf->SetString(NS_LITERAL_CSTRING(kDesktopOptionsKey), options);
+    gconf->SetString(NS_LITERAL_CSTRING(kDesktopOptionsKey), options);
 
-  // Set the image to an empty string first to force a refresh
-  // (since we could be writing a new image on top of an existing
-  // Firefox_wallpaper.png and nautilus doesn't monitor the file for changes)
-  gconf->SetString(NS_LITERAL_CSTRING(kDesktopImageKey),
-                   EmptyCString());
+    // Set the image to an empty string first to force a refresh
+    // (since we could be writing a new image on top of an existing
+    // Firefox_wallpaper.png and nautilus doesn't monitor the file for changes)
+    gconf->SetString(NS_LITERAL_CSTRING(kDesktopImageKey),
+                     EmptyCString());
 
-  gconf->SetString(NS_LITERAL_CSTRING(kDesktopImageKey), filePath);
-  gconf->SetBool(NS_LITERAL_CSTRING(kDesktopDrawBGKey), PR_TRUE);
+    gconf->SetString(NS_LITERAL_CSTRING(kDesktopImageKey), filePath);
+    gconf->SetBool(NS_LITERAL_CSTRING(kDesktopDrawBGKey), PR_TRUE);
+  }
 
   return rv;
 }
@@ -439,7 +474,9 @@ nsGNOMEShellService::GetDesktopBackgroundColor(PRUint32 *aColor)
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
   nsCAutoString background;
-  gconf->GetString(NS_LITERAL_CSTRING(kDesktopColorKey), background);
+  if (gconf) {
+    gconf->GetString(NS_LITERAL_CSTRING(kDesktopColorKey), background);
+  }
 
   if (background.IsEmpty()) {
     *aColor = 0;
@@ -478,10 +515,12 @@ nsGNOMEShellService::SetDesktopBackgroundColor(PRUint32 aColor)
   NS_ASSERTION(aColor <= 0xffffff, "aColor has extra bits");
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
 
-  nsCAutoString colorString;
-  ColorToCString(aColor, colorString);
+  if (gconf) {
+    nsCAutoString colorString;
+    ColorToCString(aColor, colorString);
 
-  gconf->SetString(NS_LITERAL_CSTRING(kDesktopColorKey), colorString);
+    gconf->SetString(NS_LITERAL_CSTRING(kDesktopColorKey), colorString);
+  }
 
   return NS_OK;
 }
@@ -497,7 +536,17 @@ nsGNOMEShellService::OpenApplication(PRInt32 aApplication)
   else
     return NS_ERROR_NOT_AVAILABLE;
 
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
+  if (giovfs) {
+    nsCOMPtr<nsIGIOMimeApp> gioApp;
+    giovfs->GetAppForURIScheme(scheme, getter_AddRefs(gioApp));
+    if (gioApp)
+      return gioApp->Launch(EmptyCString());
+  }
+
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
+  if (!gconf)
+    return NS_ERROR_FAILURE;
 
   PRBool enabled;
   nsCAutoString appCommand;
