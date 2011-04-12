@@ -1618,9 +1618,9 @@ VersionIsKnown(JSVersion version)
     return VersionNumber(version) != JSVERSION_UNKNOWN;
 }
 
-typedef js::HashSet<JSObject *,
-                    js::DefaultHasher<JSObject *>,
-                    js::SystemAllocPolicy> BusyArraysMap;
+typedef HashSet<JSObject *,
+                DefaultHasher<JSObject *>,
+                SystemAllocPolicy> BusyArraysSet;
 
 } /* namespace js */
 
@@ -1714,7 +1714,7 @@ struct JSContext
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
-    js::BusyArraysMap   busyArrays;
+    js::BusyArraysSet   busyArrays;
 
     /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
     JSArgumentFormatMap *argumentFormatMap;
