@@ -8899,6 +8899,10 @@ if test "$MOZ_APP_COMPONENT_INCLUDE"; then
   AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_INCLUDE, "$MOZ_APP_COMPONENT_INCLUDE")
 fi
 
+if test "$MOZ_APP_COMPONENT_MODULES"; then
+  AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_MODULES, $MOZ_APP_COMPONENT_MODULES)
+fi
+
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
