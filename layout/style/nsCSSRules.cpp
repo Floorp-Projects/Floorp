@@ -66,13 +66,16 @@
 
 namespace css = mozilla::css;
 
-#define IMPL_STYLE_RULE_INHERIT(_class, super) \
-nsIDOMCSSRule* _class::GetDOMRuleWeak(nsresult *aResult) { *aResult = NS_OK; return this; }  \
-/* virtual */ void _class::MapRuleInfoInto(nsRuleData* aRuleData) { }
+#define IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
+nsIDOMCSSRule* class_::GetDOMRuleWeak(nsresult *aResult) \
+  { *aResult = NS_OK; return this; }
+#define IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_) \
+/* virtual */ void class_::MapRuleInfoInto(nsRuleData* aRuleData) \
+  { NS_ABORT_IF_FALSE(PR_FALSE, "should not be called"); }
 
-#define IMPL_STYLE_RULE_INHERIT2(_class, super) \
-/* virtual */ void _class::MapRuleInfoInto(nsRuleData* aRuleData) { }
-
+#define IMPL_STYLE_RULE_INHERIT(class_, super_) \
+IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
+IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_)
 
 // base class for all rule types in a CSS style sheet
 
@@ -546,7 +549,7 @@ GroupRule::~GroupRule()
   }
 }
 
-IMPL_STYLE_RULE_INHERIT2(GroupRule, Rule)
+IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(GroupRule, Rule)
 
 static PRBool
 SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
