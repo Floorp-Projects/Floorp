@@ -2158,7 +2158,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, float endAngle, PRBool ccw)
 {
     if (!FloatValidate(x,y,r,startAngle,endAngle))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     if (r < 0.0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
