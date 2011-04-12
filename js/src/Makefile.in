@@ -172,7 +172,6 @@ CPPSRCS		= \
 		jsstr.cpp \
 		jstypedarray.cpp \
 		jsutil.cpp \
-		jsweakmap.cpp \
 		jswrapper.cpp \
 		jsxdrapi.cpp \
 		jsxml.cpp \
@@ -252,7 +251,6 @@ INSTALLED_HEADERS = \
 		jstl.h \
 		jshashtable.h \
 		jsversion.h \
-		jsweakmap.h \
 		jswrapper.h \
 		jsxdrapi.h \
 		jsxml.h \
