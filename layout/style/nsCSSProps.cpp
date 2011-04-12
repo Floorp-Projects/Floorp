@@ -445,6 +445,31 @@ nsCSSProps::OtherNameFor(nsCSSProperty aProperty)
 
 /***************************************************************************/
 
+const PRInt32 nsCSSProps::kAnimationDirectionKTable[] = {
+  eCSSKeyword_normal, NS_STYLE_ANIMATION_DIRECTION_NORMAL,
+  eCSSKeyword_alternate, NS_STYLE_ANIMATION_DIRECTION_ALTERNATE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kAnimationFillModeKTable[] = {
+  eCSSKeyword_none, NS_STYLE_ANIMATION_FILL_MODE_NONE,
+  eCSSKeyword_forwards, NS_STYLE_ANIMATION_FILL_MODE_FORWARDS,
+  eCSSKeyword_backwards, NS_STYLE_ANIMATION_FILL_MODE_BACKWARDS,
+  eCSSKeyword_both, NS_STYLE_ANIMATION_FILL_MODE_BOTH,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kAnimationIterationCountKTable[] = {
+  eCSSKeyword_infinite, NS_STYLE_ANIMATION_ITERATION_COUNT_INFINITE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const PRInt32 nsCSSProps::kAnimationPlayStateKTable[] = {
+  eCSSKeyword_running, NS_STYLE_ANIMATION_PLAY_STATE_RUNNING,
+  eCSSKeyword_paused, NS_STYLE_ANIMATION_PLAY_STATE_PAUSED,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword_none,                   NS_THEME_NONE,
   eCSSKeyword_button,                 NS_THEME_BUTTON,
@@ -1610,6 +1635,21 @@ const PRUint32 nsCSSProps::kFlagsTable[eCSSProperty_COUNT] = {
 #define CSS_PROP_SHORTHAND(name_, id_, method_, flags_) flags_,
 #include "nsCSSPropList.h"
 #undef CSS_PROP_SHORTHAND
+};
+
+static const nsCSSProperty gAnimationSubpropTable[] = {
+  eCSSProperty_animation_duration,
+  eCSSProperty_animation_timing_function,
+  eCSSProperty_animation_delay,
+  eCSSProperty_animation_direction,
+  eCSSProperty_animation_fill_mode,
+  eCSSProperty_animation_iteration_count,
+  eCSSProperty_animation_play_state,
+  // List animation-name last so we serialize it last, in case it has
+  // a value that conflicts with one of the other properties.  (See
+  // how Declaration::GetValue serializes 'animation'.
+  eCSSProperty_animation_name,
+  eCSSProperty_UNKNOWN
 };
 
 static const nsCSSProperty gBorderRadiusSubpropTable[] = {
