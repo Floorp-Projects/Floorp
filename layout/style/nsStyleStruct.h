@@ -1386,7 +1386,6 @@ struct nsTransition {
 
   // Delay and Duration are in milliseconds
 
-  nsTimingFunction& GetTimingFunction() { return mTimingFunction; }
   const nsTimingFunction& GetTimingFunction() const { return mTimingFunction; }
   float GetDelay() const { return mDelay; }
   float GetDuration() const { return mDuration; }
@@ -1416,6 +1415,45 @@ private:
   nsCSSProperty mProperty;
   nsCOMPtr<nsIAtom> mUnknownProperty; // used when mProperty is
                                       // eCSSProperty_UNKNOWN
+};
+
+struct nsAnimation {
+  nsAnimation() { /* leaves uninitialized; see also SetInitialValues */ }
+  explicit nsAnimation(const nsAnimation& aCopy);
+
+  void SetInitialValues();
+
+  // Delay and Duration are in milliseconds
+
+  const nsTimingFunction& GetTimingFunction() const { return mTimingFunction; }
+  float GetDelay() const { return mDelay; }
+  float GetDuration() const { return mDuration; }
+  const nsString& GetName() const { return mName; }
+  PRUint8 GetDirection() const { return mDirection; }
+  PRUint8 GetFillMode() const { return mFillMode; }
+  PRUint8 GetPlayState() const { return mPlayState; }
+  float GetIterationCount() const { return mIterationCount; }
+
+  void SetTimingFunction(const nsTimingFunction& aTimingFunction)
+    { mTimingFunction = aTimingFunction; }
+  void SetDelay(float aDelay) { mDelay = aDelay; }
+  void SetDuration(float aDuration) { mDuration = aDuration; }
+  void SetName(const nsSubstring& aName) { mName = aName; }
+  void SetDirection(PRUint8 aDirection) { mDirection = aDirection; }
+  void SetFillMode(PRUint8 aFillMode) { mFillMode = aFillMode; }
+  void SetPlayState(PRUint8 aPlayState) { mPlayState = aPlayState; }
+  void SetIterationCount(float aIterationCount)
+    { mIterationCount = aIterationCount; }
+
+private:
+  nsTimingFunction mTimingFunction;
+  float mDuration;
+  float mDelay;
+  nsString mName; // empty string for 'none'
+  PRUint8 mDirection;
+  PRUint8 mFillMode;
+  PRUint8 mPlayState;
+  float mIterationCount; // NS_IEEEPositiveInfinity() means infinite
 };
 
 struct nsStyleDisplay {
@@ -1472,6 +1510,18 @@ struct nsStyleDisplay {
            mTransitionDurationCount,
            mTransitionDelayCount,
            mTransitionPropertyCount;
+
+  nsAutoTArray<nsAnimation, 1> mAnimations; // [reset]
+  // The number of elements in mAnimations that are not from repeating
+  // a list due to another property being longer.
+  PRUint32 mAnimationTimingFunctionCount,
+           mAnimationDurationCount,
+           mAnimationDelayCount,
+           mAnimationNameCount,
+           mAnimationDirectionCount,
+           mAnimationFillModeCount,
+           mAnimationPlayStateCount,
+           mAnimationIterationCountCount;
 
   PRBool IsBlockInside() const {
     return NS_STYLE_DISPLAY_BLOCK == mDisplay ||

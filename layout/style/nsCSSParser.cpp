@@ -107,6 +107,8 @@ namespace css = mozilla::css;
 #define VARIANT_COUNTER         0x000800  //
 #define VARIANT_ATTR            0x001000  //
 #define VARIANT_IDENTIFIER      0x002000  // D
+#define VARIANT_IDENTIFIER_NO_INHERIT 0x004000 // like above, but excluding
+                                               // 'inherit' and 'initial'
 #define VARIANT_AUTO            0x010000  // A
 #define VARIANT_INHERIT         0x020000  // H eCSSUnit_Initial, eCSSUnit_Inherit
 #define VARIANT_NONE            0x040000  // O
@@ -511,12 +513,23 @@ protected:
   PRBool ParseShadowItem(nsCSSValue& aValue, PRBool aIsBoxShadow);
   PRBool ParseShadowList(nsCSSProperty aProperty);
   PRBool ParseTransitionProperty();
-  PRBool ParseTransition();
   PRBool ParseTransitionTimingFunctionValues(nsCSSValue& aValue);
   PRBool ParseTransitionTimingFunctionValueComponent(float& aComponent,
                                                      char aStop,
                                                      PRBool aCheckRange);
   PRBool ParseTransitionStepTimingFunctionValues(nsCSSValue& aValue);
+  enum ParseAnimationOrTransitionShorthandResult {
+    eParseAnimationOrTransitionShorthand_Values,
+    eParseAnimationOrTransitionShorthand_Inherit,
+    eParseAnimationOrTransitionShorthand_Error
+  };
+  ParseAnimationOrTransitionShorthandResult
+    ParseAnimationOrTransitionShorthand(const nsCSSProperty* aProperties,
+                                        const nsCSSValue* aInitialValues,
+                                        nsCSSValue* aValues,
+                                        size_t aNumProperties);
+  PRBool ParseTransition();
+  PRBool ParseAnimation();
 
 #ifdef MOZ_SVG
   PRBool ParsePaint(nsCSSProperty aPropID);
@@ -4209,6 +4222,7 @@ CSSParserImpl::TranslateDimension(nsCSSValue& aValue,
   VARIANT_COUNTER | \
   VARIANT_ATTR | \
   VARIANT_IDENTIFIER | \
+  VARIANT_IDENTIFIER_NO_INHERIT | \
   VARIANT_AUTO | \
   VARIANT_INHERIT | \
   VARIANT_NONE | \
@@ -4297,6 +4311,10 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
   NS_ASSERTION(IsParsingCompoundProperty() ||
                ((~aVariantMask) & (VARIANT_LENGTH|VARIANT_COLOR)),
                "cannot distinguish lengths and colors in quirks mode");
+  NS_ABORT_IF_FALSE(!(aVariantMask & VARIANT_IDENTIFIER) ||
+                    !(aVariantMask & VARIANT_IDENTIFIER_NO_INHERIT),
+                    "must not set both VARIANT_IDENTIFIER and "
+                    "VARIANT_IDENTIFIER_NO_INHERIT");
 
   if (!GetToken(PR_TRUE)) {
     return PR_FALSE;
@@ -4467,8 +4485,12 @@ CSSParserImpl::ParseVariant(nsCSSValue& aValue,
     aValue.SetStringValue(buffer, eCSSUnit_String);
     return PR_TRUE;
   }
-  if (((aVariantMask & VARIANT_IDENTIFIER) != 0) &&
-      (eCSSToken_Ident == tk->mType)) {
+  if (((aVariantMask &
+        (VARIANT_IDENTIFIER | VARIANT_IDENTIFIER_NO_INHERIT)) != 0) &&
+      (eCSSToken_Ident == tk->mType) &&
+      ((aVariantMask & VARIANT_IDENTIFIER) != 0 ||
+       !(tk->mIdent.LowerCaseEqualsLiteral("inherit") ||
+         tk->mIdent.LowerCaseEqualsLiteral("initial")))) {
     aValue.SetStringValue(tk->mIdent, eCSSUnit_Ident);
     return PR_TRUE;
   }
@@ -5381,7 +5403,9 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty__moz_transform_origin:
     return ParseMozTransformOrigin();
   case eCSSProperty_transition:
-      return ParseTransition();
+    return ParseTransition();
+  case eCSSProperty_animation:
+    return ParseAnimation();
   case eCSSProperty_transition_property:
     return ParseTransitionProperty();
 
@@ -8024,6 +8048,89 @@ AppendValueToList(nsCSSValue& aContainer,
   return entry;
 }
 
+CSSParserImpl::ParseAnimationOrTransitionShorthandResult
+CSSParserImpl::ParseAnimationOrTransitionShorthand(
+                 const nsCSSProperty* aProperties,
+                 const nsCSSValue* aInitialValues,
+                 nsCSSValue* aValues,
+                 size_t aNumProperties)
+{
+  nsCSSValue tempValue;
+  // first see if 'inherit' or '-moz-initial' is specified.  If one is,
+  // it can be the only thing specified, so don't attempt to parse any
+  // additional properties
+  if (ParseVariant(tempValue, VARIANT_INHERIT, nsnull)) {
+    for (PRUint32 i = 0; i < aNumProperties; ++i) {
+      AppendValue(aProperties[i], tempValue);
+    }
+    return eParseAnimationOrTransitionShorthand_Inherit;
+  }
+
+  static const size_t maxNumProperties = 8;
+  NS_ABORT_IF_FALSE(aNumProperties <= maxNumProperties,
+                    "can't handle this many properties");
+  nsCSSValueList *cur[maxNumProperties];
+  PRBool parsedProperty[maxNumProperties];
+
+  for (size_t i = 0; i < aNumProperties; ++i) {
+    cur[i] = nsnull;
+  }
+  PRBool atEOP = PR_FALSE; // at end of property?
+  for (;;) { // loop over comma-separated transitions or animations
+    // whether a particular subproperty was specified for this
+    // transition or animation
+    for (size_t i = 0; i < aNumProperties; ++i) {
+      parsedProperty[i] = PR_FALSE;
+    }
+    for (;;) { // loop over values within a transition or animation
+      PRBool foundProperty = PR_FALSE;
+      // check to see if we're at the end of one full transition or
+      // animation definition (either because we hit a comma or because
+      // we hit the end of the property definition)
+      if (ExpectSymbol(',', PR_TRUE))
+        break;
+      if (CheckEndProperty()) {
+        atEOP = PR_TRUE;
+        break;
+      }
+
+      // else, try to parse the next transition or animation sub-property
+      for (PRUint32 i = 0; !foundProperty && i < aNumProperties; ++i) {
+        if (!parsedProperty[i]) {
+          // if we haven't found this property yet, try to parse it
+          if (ParseSingleValueProperty(tempValue, aProperties[i])) {
+            parsedProperty[i] = PR_TRUE;
+            cur[i] = AppendValueToList(aValues[i], cur[i], tempValue);
+            foundProperty = PR_TRUE;
+            break; // out of inner loop; continue looking for next sub-property
+          }
+        }
+      }
+      if (!foundProperty) {
+        // We're not at a ',' or at the end of the property, but we couldn't
+        // parse any of the sub-properties, so the declaration is invalid.
+        return eParseAnimationOrTransitionShorthand_Error;
+      }
+    }
+
+    // We hit the end of the property or the end of one transition
+    // or animation definition, add its components to the list.
+    for (PRUint32 i = 0; i < aNumProperties; ++i) {
+      // If all of the subproperties were not explicitly specified, fill
+      // in the missing ones with initial values.
+      if (!parsedProperty[i]) {
+        cur[i] = AppendValueToList(aValues[i], cur[i], aInitialValues[i]);
+      }
+    }
+
+    if (atEOP)
+      break;
+    // else we just hit a ',' so continue parsing the next compound transition
+  }
+
+  return eParseAnimationOrTransitionShorthand_Values;
+}
+
 PRBool
 CSSParserImpl::ParseTransition()
 {
@@ -8045,83 +8152,20 @@ CSSParserImpl::ParseTransition()
   // -duration, and -timing-function with some components missing.
   // there can be multiple transitions, separated with commas
 
-  nsCSSValue tempValue;
-  // first see if 'inherit' or '-moz-initial' is specified.  If one is,
-  // it can be the only thing specified, so don't attempt to parse any
-  // additional properties
-  if (ParseVariant(tempValue, VARIANT_INHERIT, nsnull)) {
-    for (PRUint32 i = 0; i < numProps; ++i) {
-      AppendValue(kTransitionProperties[i], tempValue);
-    }
-    return PR_TRUE;
-  }
+  nsCSSValue initialValues[numProps];
+  initialValues[0].SetFloatValue(0.0, eCSSUnit_Seconds);
+  initialValues[1].SetIntValue(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE,
+                               eCSSUnit_Enumerated);
+  initialValues[2].SetFloatValue(0.0, eCSSUnit_Seconds);
+  initialValues[3].SetAllValue();
 
   nsCSSValue values[numProps];
-  nsCSSValueList *cur[numProps] = { nsnull, nsnull, nsnull, nsnull };
-  PRBool atEOP = PR_FALSE; // at end of property?
-  for (;;) { // loop over comma-separated transitions
-    // whether a particular subproperty was specified for this transition
-    PRBool parsedProperty[numProps] =
-      { PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE };
-    for (;;) { // loop over values within a transition
-      PRBool foundProperty = PR_FALSE;
-      // check to see if we're at the end of one full transition definition
-      // (either because we hit a comma or because we hit the end of the
-      // property definition)
-      if (ExpectSymbol(',', PR_TRUE))
-        break;
-      if (CheckEndProperty()) {
-        atEOP = PR_TRUE;
-        break;
-      }
 
-      // else, try to parse the next transition sub-property
-      for (PRUint32 i = 0; !foundProperty && i < numProps; ++i) {
-        if (!parsedProperty[i]) {
-          // if we haven't found this property yet, try to parse it
-          if (ParseSingleValueProperty(tempValue, kTransitionProperties[i])) {
-            parsedProperty[i] = PR_TRUE;
-            cur[i] = AppendValueToList(values[i], cur[i], tempValue);
-            foundProperty = PR_TRUE;
-            break; // out of inner loop; continue looking for next sub-property
-          }
-        }
-      }
-      if (!foundProperty) {
-        // We're not at a ',' or at the end of the property, but we couldn't
-        // parse any of the sub-properties, so the declaration is invalid.
-        return PR_FALSE;
-      }
-    }
-
-    // We hit the end of the property or the end of one transition
-    // definition, add its components to the list.
-    for (PRUint32 i = 0; i < numProps; ++i) {
-      // If all of the subproperties were not explicitly specified, fill
-      // in the missing ones with initial values.
-      if (!parsedProperty[i]) {
-        switch (kTransitionProperties[i]) {
-          case eCSSProperty_transition_property:
-            tempValue.SetAllValue();
-            break;
-          case eCSSProperty_transition_duration:
-          case eCSSProperty_transition_delay:
-            tempValue.SetFloatValue(0.0, eCSSUnit_Seconds);
-            break;
-          case eCSSProperty_transition_timing_function:
-            tempValue.SetIntValue(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE,
-                                  eCSSUnit_Enumerated);
-            break;
-          default:
-            NS_ABORT_IF_FALSE(PR_FALSE, "Invalid transition property");
-        }
-        cur[i] = AppendValueToList(values[i], cur[i], tempValue);
-      }
-    }
-
-    if (atEOP)
-      break;
-    // else we just hit a ',' so continue parsing the next compound transition
+  ParseAnimationOrTransitionShorthandResult spres =
+    ParseAnimationOrTransitionShorthand(kTransitionProperties,
+                                        initialValues, values, numProps);
+  if (spres != eParseAnimationOrTransitionShorthand_Values) {
+    return spres != eParseAnimationOrTransitionShorthand_Error;
   }
 
   // Make two checks on the list for 'transition-property':
@@ -8164,6 +8208,59 @@ CSSParserImpl::ParseTransition()
   // Save all parsed transition sub-properties in mTempData
   for (PRUint32 i = 0; i < numProps; ++i) {
     AppendValue(kTransitionProperties[i], values[i]);
+  }
+  return PR_TRUE;
+}
+
+PRBool
+CSSParserImpl::ParseAnimation()
+{
+  static const nsCSSProperty kAnimationProperties[] = {
+    eCSSProperty_animation_duration,
+    eCSSProperty_animation_timing_function,
+    // Must check 'animation-delay' after 'animation-duration', since
+    // that's our assumption about what the spec means for the shorthand
+    // syntax (the first time given is the duration, and the second
+    // given is the delay).
+    eCSSProperty_animation_delay,
+    eCSSProperty_animation_direction,
+    eCSSProperty_animation_fill_mode,
+    eCSSProperty_animation_iteration_count,
+    eCSSProperty_animation_play_state,
+    // Must check 'animation-name' after 'animation-timing-function',
+    // 'animation-direction', 'animation-fill-mode',
+    // 'animation-iteration-count', and 'animation-play-state' since
+    // 'animation-property' accepts any keyword.
+    eCSSProperty_animation_name
+  };
+  static const PRUint32 numProps = NS_ARRAY_LENGTH(kAnimationProperties);
+  // this is a shorthand property that accepts -property, -delay,
+  // -duration, and -timing-function with some components missing.
+  // there can be multiple animations, separated with commas
+
+  nsCSSValue initialValues[numProps];
+  initialValues[0].SetFloatValue(0.0, eCSSUnit_Seconds);
+  initialValues[1].SetIntValue(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE,
+                               eCSSUnit_Enumerated);
+  initialValues[2].SetFloatValue(0.0, eCSSUnit_Seconds);
+  initialValues[3].SetIntValue(NS_STYLE_ANIMATION_DIRECTION_NORMAL, eCSSUnit_Enumerated);
+  initialValues[4].SetIntValue(NS_STYLE_ANIMATION_FILL_MODE_NONE, eCSSUnit_Enumerated);
+  initialValues[5].SetFloatValue(1.0f, eCSSUnit_Number);
+  initialValues[6].SetIntValue(NS_STYLE_ANIMATION_PLAY_STATE_RUNNING, eCSSUnit_Enumerated);
+  initialValues[7].SetNoneValue();
+
+  nsCSSValue values[numProps];
+
+  ParseAnimationOrTransitionShorthandResult spres =
+    ParseAnimationOrTransitionShorthand(kAnimationProperties,
+                                        initialValues, values, numProps);
+  if (spres != eParseAnimationOrTransitionShorthand_Values) {
+    return spres != eParseAnimationOrTransitionShorthand_Error;
+  }
+
+  // Save all parsed animation sub-properties in mTempData
+  for (PRUint32 i = 0; i < numProps; ++i) {
+    AppendValue(kAnimationProperties[i], values[i]);
   }
   return PR_TRUE;
 }

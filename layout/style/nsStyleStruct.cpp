@@ -1983,6 +1983,31 @@ void nsTransition::SetUnknownProperty(const nsAString& aUnknownProperty)
   mUnknownProperty = do_GetAtom(aUnknownProperty);
 }
 
+nsAnimation::nsAnimation(const nsAnimation& aCopy)
+  : mTimingFunction(aCopy.mTimingFunction)
+  , mDuration(aCopy.mDuration)
+  , mDelay(aCopy.mDelay)
+  , mName(aCopy.mName)
+  , mDirection(aCopy.mDirection)
+  , mFillMode(aCopy.mFillMode)
+  , mPlayState(aCopy.mPlayState)
+  , mIterationCount(aCopy.mIterationCount)
+{
+}
+
+void
+nsAnimation::SetInitialValues()
+{
+  mTimingFunction = nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE);
+  mDuration = 0.0;
+  mDelay = 0.0;
+  mName = EmptyString();
+  mDirection = NS_STYLE_ANIMATION_DIRECTION_NORMAL;
+  mFillMode = NS_STYLE_ANIMATION_FILL_MODE_NONE;
+  mPlayState = NS_STYLE_ANIMATION_PLAY_STATE_RUNNING;
+  mIterationCount = 1.0f;
+}
+
 nsStyleDisplay::nsStyleDisplay()
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
@@ -2003,6 +2028,7 @@ nsStyleDisplay::nsStyleDisplay()
   mSpecifiedTransform = nsnull;
   mTransformOrigin[0].SetPercentValue(0.5f); // Transform is centered on origin
   mTransformOrigin[1].SetPercentValue(0.5f); 
+
   mTransitions.AppendElement();
   NS_ABORT_IF_FALSE(mTransitions.Length() == 1,
                     "appending within auto buffer should never fail");
@@ -2011,6 +2037,19 @@ nsStyleDisplay::nsStyleDisplay()
   mTransitionDurationCount = 1;
   mTransitionDelayCount = 1;
   mTransitionPropertyCount = 1;
+
+  mAnimations.AppendElement();
+  NS_ABORT_IF_FALSE(mAnimations.Length() == 1,
+                    "appending within auto buffer should never fail");
+  mAnimations[0].SetInitialValues();
+  mAnimationTimingFunctionCount = 1;
+  mAnimationDurationCount = 1;
+  mAnimationDelayCount = 1;
+  mAnimationNameCount = 1;
+  mAnimationDirectionCount = 1;
+  mAnimationFillModeCount = 1;
+  mAnimationPlayStateCount = 1;
+  mAnimationIterationCountCount = 1;
 }
 
 nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
@@ -2019,6 +2058,15 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mTransitionDurationCount(aSource.mTransitionDurationCount)
   , mTransitionDelayCount(aSource.mTransitionDelayCount)
   , mTransitionPropertyCount(aSource.mTransitionPropertyCount)
+  , mAnimations(aSource.mAnimations)
+  , mAnimationTimingFunctionCount(aSource.mAnimationTimingFunctionCount)
+  , mAnimationDurationCount(aSource.mAnimationDurationCount)
+  , mAnimationDelayCount(aSource.mAnimationDelayCount)
+  , mAnimationNameCount(aSource.mAnimationNameCount)
+  , mAnimationDirectionCount(aSource.mAnimationDirectionCount)
+  , mAnimationFillModeCount(aSource.mAnimationFillModeCount)
+  , mAnimationPlayStateCount(aSource.mAnimationPlayStateCount)
+  , mAnimationIterationCountCount(aSource.mAnimationIterationCountCount)
 {
   MOZ_COUNT_CTOR(nsStyleDisplay);
   mAppearance = aSource.mAppearance;
@@ -2115,7 +2163,11 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
   // We do handle changes to transition-property, but we don't need to
   // bother with anything here, since the transition manager is notified
   // of any style context change anyway.
-  
+
+  // Note: Likewise, for animation-*, the animation manager gets
+  // notified about every new style context constructed, and it uses
+  // that opportunity to handle dynamic changes appropriately.
+
   return hint;
 }
 

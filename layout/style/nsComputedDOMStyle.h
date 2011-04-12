@@ -368,6 +368,16 @@ private:
   nsIDOMCSSValue* DoGetTransitionDelay();
   nsIDOMCSSValue* DoGetTransitionTimingFunction();
 
+  /* CSS Animations */
+  nsIDOMCSSValue* DoGetAnimationName();
+  nsIDOMCSSValue* DoGetAnimationDuration();
+  nsIDOMCSSValue* DoGetAnimationDelay();
+  nsIDOMCSSValue* DoGetAnimationTimingFunction();
+  nsIDOMCSSValue* DoGetAnimationDirection();
+  nsIDOMCSSValue* DoGetAnimationFillMode();
+  nsIDOMCSSValue* DoGetAnimationIterationCount();
+  nsIDOMCSSValue* DoGetAnimationPlayState();
+
   /* SVG properties */
   nsIDOMCSSValue* DoGetFill();
   nsIDOMCSSValue* DoGetStroke();

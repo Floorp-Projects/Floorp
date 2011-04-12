@@ -3929,6 +3929,185 @@ nsComputedDOMStyle::DoGetTransitionTimingFunction()
   return valueList;
 }
 
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAnimationName()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+
+  NS_ABORT_IF_FALSE(display->mAnimationNameCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsAnimation *animation = &display->mAnimations[i];
+    nsROCSSPrimitiveValue* property = GetROCSSPrimitiveValue();
+    valueList->AppendCSSValue(property);
+
+    const nsString& name = animation->GetName();
+    if (name.IsEmpty()) {
+      property->SetIdent(eCSSKeyword_none);
+    } else {
+      nsAutoString escaped;
+      nsStyleUtil::AppendEscapedCSSIdent(animation->GetName(), escaped);
+      property->SetString(escaped); // really want SetIdent
+    }
+  } while (++i < display->mAnimationNameCount);
+
+  return valueList;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAnimationDelay()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+
+  NS_ABORT_IF_FALSE(display->mAnimationDelayCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsAnimation *animation = &display->mAnimations[i];
+    nsROCSSPrimitiveValue* delay = GetROCSSPrimitiveValue();
+    valueList->AppendCSSValue(delay);
+    delay->SetTime((float)animation->GetDelay() / (float)PR_MSEC_PER_SEC);
+  } while (++i < display->mAnimationDelayCount);
+
+  return valueList;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAnimationDuration()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+
+  NS_ABORT_IF_FALSE(display->mAnimationDurationCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsAnimation *animation = &display->mAnimations[i];
+    nsROCSSPrimitiveValue* duration = GetROCSSPrimitiveValue();
+    valueList->AppendCSSValue(duration);
+
+    duration->SetTime((float)animation->GetDuration() / (float)PR_MSEC_PER_SEC);
+  } while (++i < display->mAnimationDurationCount);
+
+  return valueList;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAnimationTimingFunction()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+
+  NS_ABORT_IF_FALSE(display->mAnimationTimingFunctionCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    AppendTimingFunction(valueList,
+                         display->mAnimations[i].GetTimingFunction());
+  } while (++i < display->mAnimationTimingFunctionCount);
+
+  return valueList;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAnimationDirection()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+
+  NS_ABORT_IF_FALSE(display->mAnimationDirectionCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsAnimation *animation = &display->mAnimations[i];
+    nsROCSSPrimitiveValue* direction = GetROCSSPrimitiveValue();
+    valueList->AppendCSSValue(direction);
+    direction->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(animation->GetDirection(),
+                                     nsCSSProps::kAnimationDirectionKTable));
+  } while (++i < display->mAnimationDirectionCount);
+
+  return valueList;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAnimationFillMode()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+
+  NS_ABORT_IF_FALSE(display->mAnimationFillModeCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsAnimation *animation = &display->mAnimations[i];
+    nsROCSSPrimitiveValue* fillMode = GetROCSSPrimitiveValue();
+    valueList->AppendCSSValue(fillMode);
+    fillMode->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(animation->GetFillMode(),
+                                     nsCSSProps::kAnimationFillModeKTable));
+  } while (++i < display->mAnimationFillModeCount);
+
+  return valueList;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAnimationIterationCount()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+
+  NS_ABORT_IF_FALSE(display->mAnimationIterationCountCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsAnimation *animation = &display->mAnimations[i];
+    nsROCSSPrimitiveValue* iterationCount = GetROCSSPrimitiveValue();
+    valueList->AppendCSSValue(iterationCount);
+
+    float f = animation->GetIterationCount();
+    if (f == NS_IEEEPositiveInfinity()) {
+      iterationCount->SetIdent(eCSSKeyword_infinite);
+    } else {
+      iterationCount->SetNumber(f);
+    }
+  } while (++i < display->mAnimationIterationCountCount);
+
+  return valueList;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetAnimationPlayState()
+{
+  const nsStyleDisplay* display = GetStyleDisplay();
+
+  nsDOMCSSValueList *valueList = GetROCSSValueList(PR_TRUE);
+
+  NS_ABORT_IF_FALSE(display->mAnimationPlayStateCount > 0,
+                    "first item must be explicit");
+  PRUint32 i = 0;
+  do {
+    const nsAnimation *animation = &display->mAnimations[i];
+    nsROCSSPrimitiveValue* playState = GetROCSSPrimitiveValue();
+    valueList->AppendCSSValue(playState);
+    playState->SetIdent(
+      nsCSSProps::ValueToKeywordEnum(animation->GetPlayState(),
+                                     nsCSSProps::kAnimationPlayStateKTable));
+  } while (++i < display->mAnimationPlayStateCount);
+
+  return valueList;
+}
+
 #define COMPUTED_STYLE_MAP_ENTRY(_prop, _method)              \
   { eCSSProperty_##_prop, &nsComputedDOMStyle::DoGet##_method, PR_FALSE }
 #define COMPUTED_STYLE_MAP_ENTRY_LAYOUT(_prop, _method)       \
@@ -4081,6 +4260,14 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
      * Implementations of -moz- styles *
     \* ******************************* */
 
+    COMPUTED_STYLE_MAP_ENTRY(animation_delay,               AnimationDelay),
+    COMPUTED_STYLE_MAP_ENTRY(animation_direction,           AnimationDirection),
+    COMPUTED_STYLE_MAP_ENTRY(animation_duration,            AnimationDuration),
+    COMPUTED_STYLE_MAP_ENTRY(animation_fill_mode,           AnimationFillMode),
+    COMPUTED_STYLE_MAP_ENTRY(animation_iteration_count,     AnimationIterationCount),
+    COMPUTED_STYLE_MAP_ENTRY(animation_name,                AnimationName),
+    COMPUTED_STYLE_MAP_ENTRY(animation_play_state,          AnimationPlayState),
+    COMPUTED_STYLE_MAP_ENTRY(animation_timing_function,     AnimationTimingFunction),
     COMPUTED_STYLE_MAP_ENTRY(appearance,                    Appearance),
     COMPUTED_STYLE_MAP_ENTRY(background_clip,               BackgroundClip),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_inline_policy, BackgroundInlinePolicy),
