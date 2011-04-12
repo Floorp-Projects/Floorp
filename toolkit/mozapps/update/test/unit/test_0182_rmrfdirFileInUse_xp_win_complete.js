@@ -2,32 +2,31 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-/* File in use partial MAR file patch apply success test */
+/* File in use complete MAR file patch apply success test */
 
-const TEST_ID = "0181";
-const MAR_IN_USE_WIN_FILE = "data/partial_in_use_win.mar";
+const TEST_ID = "0182";
 
 // The files are in the same order as they are applied from the mar
-var TEST_FILES = [
+const TEST_FILES = [
 {
   fileName         : "00png0.png",
   relPathDir       : "0/00/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/complete.png",
-  compareFile      : "data/partial.png"
+  originalFile     : null,
+  compareFile      : "data/complete.png"
 }, {
   fileName         : "00text0",
   relPathDir       : "0/00/",
-  originalContents : "ToBeModified\n",
-  compareContents  : "Modified\n",
+  originalContents : "ToBeReplacedWithToBeModified\n",
+  compareContents  : "ToBeModified\n",
   originalFile     : null,
   compareFile      : null
 }, {
   fileName         : "00text1",
   relPathDir       : "0/00/",
-  originalContents : "ToBeDeleted\n",
-  compareContents  : null,
+  originalContents : "ToBeReplacedWithToBeDeleted\n",
+  compareContents  : "ToBeDeleted\n",
   originalFile     : null,
   compareFile      : null
 }, {
@@ -35,27 +34,13 @@ var TEST_FILES = [
   relPathDir       : "0/",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial_in_use_win_before.exe",
-  compareFile      : "data/partial_in_use_win_after.exe"
+  originalFile     : HELPER_BIN_FILE,
+  compareFile      : "data/complete.png"
 }, {
   fileName         : "10text0",
   relPathDir       : "1/10/",
-  originalContents : "ToBeDeleted\n",
-  compareContents  : null,
-  originalFile     : null,
-  compareFile      : null
-}, {
-  fileName         : "00text2",
-  relPathDir       : "0/00/",
-  originalContents : null,
-  compareContents  : "Added\n",
-  originalFile     : null,
-  compareFile      : null
-}, {
-  fileName         : "20text0",
-  relPathDir       : "2/20/",
-  originalContents : null,
-  compareContents  : "Added\n",
+  originalContents : "ToBeReplacedWithToBeDeleted\n",
+  compareContents  : "ToBeDeleted\n",
   originalFile     : null,
   compareFile      : null
 }, {
@@ -63,8 +48,8 @@ var TEST_FILES = [
   relPathDir       : "",
   originalContents : null,
   compareContents  : null,
-  originalFile     : "data/partial_in_use_win_before.exe",
-  compareFile      : "data/partial_in_use_win_after.exe"
+  originalFile     : HELPER_BIN_FILE,
+  compareFile      : "data/complete.png"
 }];
 
 function run_test() {
@@ -76,11 +61,21 @@ function run_test() {
   do_test_pending();
   do_register_cleanup(cleanupUpdaterTest);
 
-  setupUpdaterTest(MAR_IN_USE_WIN_FILE);
+  setupUpdaterTest(MAR_COMPLETE_FILE);
+
+  let fileInUseBin = getApplyDirFile(TEST_DIRS[4].relPathDir +
+                                     TEST_DIRS[4].subDirs[0] +
+                                     TEST_DIRS[4].subDirFiles[0]);
+  // Remove the empty file created for the test so the helper application can
+  // replace it.
+  fileInUseBin.remove(false);
+
+  let helperBin = do_get_file(HELPER_BIN_FILE);
+  let fileInUseDir = getApplyDirFile(TEST_DIRS[4].relPathDir +
+                                    TEST_DIRS[4].subDirs[0]);
+  helperBin.copyTo(fileInUseDir, TEST_DIRS[4].subDirFiles[0]);
 
   // Launch an existing file so it is in use during the update
-  let fileInUseBin = getApplyDirFile(TEST_FILES[3].relPathDir +
-                                    TEST_FILES[3].fileName);
   let args = [getApplyDirPath(), "input", "output", "-s", "20"];
   let fileInUseProcess = AUS_Cc["@mozilla.org/process/util;1"].
                          createInstance(AUS_Ci.nsIProcess);
@@ -94,7 +89,7 @@ function doUpdate() {
   // apply the complete mar
   let exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for success when " +
-              "applying a partial mar");
+              "applying a complete mar");
   do_check_eq(exitValue, 0);
 
   setupHelperFinish();

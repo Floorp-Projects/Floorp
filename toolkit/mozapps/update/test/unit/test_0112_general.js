@@ -43,8 +43,8 @@ const TEST_ID = "0112";
 // The files are in the same order as they are applied from the mar
 const TEST_FILES = [
 {
-  fileName         : "1_1_image1.png",
-  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/1/1_1/",
+  fileName         : "00png0.png",
+  relPathDir       : "0/00/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "data/complete.png",
@@ -52,8 +52,8 @@ const TEST_FILES = [
   originalPerms    : 0644,
   comparePerms     : null
 }, {
-  fileName         : "1_1_text1",
-  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/1/1_1/",
+  fileName         : "00text0",
+  relPathDir       : "0/00/",
   originalContents : "ShouldNotBeDeleted\n",
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
@@ -61,8 +61,8 @@ const TEST_FILES = [
   originalPerms    : 0644,
   comparePerms     : null
 }, {
-  fileName         : "1_1_text2",
-  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/1/1_1/",
+  fileName         : "00text1",
+  relPathDir       : "0/00/",
   originalContents : "ShouldNotBeDeleted\n",
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
@@ -70,8 +70,8 @@ const TEST_FILES = [
   originalPerms    : 0644,
   comparePerms     : null
 }, {
-  fileName         : "1_exe1.exe",
-  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/1/",
+  fileName         : "0exe0.exe",
+  relPathDir       : "0/",
   originalContents : null,
   compareContents  : null,
   originalFile     : "data/partial.png",
@@ -79,13 +79,22 @@ const TEST_FILES = [
   originalPerms    : 0755,
   comparePerms     : null
 }, {
-  fileName         : "2_1_text1",
-  destinationDir   : TEST_ID + APPLY_TO_DIR_SUFFIX + "/mar_test/2/2_1/",
+  fileName         : "10text0",
+  relPathDir       : "1/10/",
   originalContents : "ShouldNotBeDeleted\n",
   compareContents  : "ShouldNotBeDeleted\n",
   originalFile     : null,
   compareFile      : null,
   originalPerms    : 0644,
+  comparePerms     : null
+}, {
+  fileName         : "exe0.exe",
+  relPathDir       : "",
+  originalContents : null,
+  compareContents  : null,
+  originalFile     : "data/partial.png",
+  compareFile      : "data/partial.png",
+  originalPerms    : 0755,
   comparePerms     : null
 }];
 
@@ -96,22 +105,12 @@ function run_test() {
   }
 
   do_test_pending();
-  do_register_cleanup(end_test);
+  do_register_cleanup(cleanupUpdaterTest);
 
-  setupUpdaterTest(TEST_ID, MAR_PARTIAL_FILE, TEST_FILES);
+  setupUpdaterTest(MAR_PARTIAL_FILE);
 
-  // The testUpdate function is used for consistency with the tests that require
-  // a timeout before continuing the test.
-  testUpdate();
-}
-
-function end_test() {
-  cleanupUpdaterTest(TEST_ID);
-}
-
-function testUpdate() {
   let updatesDir = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX);
-  let applyToDir = do_get_file(TEST_ID + APPLY_TO_DIR_SUFFIX);
+  let applyToDir = getApplyDirFile();
 
   // For Mac OS X set the last modified time for a directory to a date in the
   // past to test that the last modified time on the directories in not updated
@@ -129,7 +128,7 @@ function testUpdate() {
   }
 
   // apply the partial mar
-  let exitValue = runUpdate(TEST_ID);
+  let exitValue = runUpdate();
   logTestInfo("testing updater binary process exitValue for success when " +
               "applying a partial mar");
   do_check_eq(exitValue, 0);
@@ -147,12 +146,12 @@ function testUpdate() {
     do_check_eq(applyToDir.lastModifiedTime, lastModTime);
   }
 
-  checkFilesAfterUpdateFailure(TEST_ID, TEST_FILES);
+  checkFilesAfterUpdateFailure();
 
   logTestInfo("testing tobedeleted directory doesn't exist");
   let toBeDeletedDir = applyToDir.clone();
   toBeDeletedDir.append("tobedeleted");
   do_check_false(toBeDeletedDir.exists());
 
-  checkCallbackAppLog(TEST_ID);
+  checkCallbackAppLog();
 }
