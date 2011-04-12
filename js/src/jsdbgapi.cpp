@@ -325,7 +325,7 @@ js_UntrapScriptCode(JSContext *cx, JSScript *script)
                 if (!code)
                     break;
                 memcpy(code, script->code, nbytes);
-                JS_PURGE_GSN_CACHE(cx);
+                GetGSNCache(cx)->purge();
             }
             code[trap->pc - script->code] = trap->op;
         }
@@ -1989,36 +1989,6 @@ JS_GetScriptTotalSize(JSContext *cx, JSScript *script)
     return nbytes;
 }
 
-JS_PUBLIC_API(uint32)
-JS_GetTopScriptFilenameFlags(JSContext *cx, JSStackFrame *fp)
-{
-    if (!fp)
-        fp = js_GetTopStackFrame(cx);
-    while (fp) {
-        if (fp->isScriptFrame())
-            return JS_GetScriptFilenameFlags(fp->script());
-        fp = fp->prev();
-    }
-    return 0;
- }
-
-JS_PUBLIC_API(uint32)
-JS_GetScriptFilenameFlags(JSScript *script)
-{
-    JS_ASSERT(script);
-    if (!script->filename)
-        return JSFILENAME_NULL;
-    return js_GetScriptFilenameFlags(script->filename);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_FlagScriptFilenamePrefix(JSRuntime *rt, const char *prefix, uint32 flags)
-{
-    if (!js_SaveScriptFilenameRT(rt, prefix, flags))
-        return JS_FALSE;
-    return JS_TRUE;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_IsSystemObject(JSContext *cx, JSObject *obj)
 {
@@ -2030,14 +2000,6 @@ JS_MakeSystemObject(JSContext *cx, JSObject *obj)
 {
     obj->setSystem();
     return true;
-}
-
-/************************************************************************/
-
-JS_PUBLIC_API(JSObject *)
-JS_UnwrapObject(JSContext *cx, JSObject *obj)
-{
-    return obj->unwrap();
 }
 
 /************************************************************************/

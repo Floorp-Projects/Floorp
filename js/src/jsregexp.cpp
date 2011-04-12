@@ -92,7 +92,7 @@ resc_trace(JSTracer *trc, JSObject *obj)
 }
 
 Class js::regexp_statics_class = {
-    "RegExpStatics", 
+    "RegExpStatics",
     JSCLASS_HAS_PRIVATE,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
@@ -146,7 +146,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     if (!clone)
         return NULL;
 
-    /* 
+    /*
      * This clone functionality does not duplicate the JITted code blob, which is necessary for
      * cross-compartment cloning functionality.
      */
@@ -427,10 +427,6 @@ regexp_finalize(JSContext *cx, JSObject *obj)
     re->decref(cx);
 }
 
-/* Forward static prototype. */
-static JSBool
-regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool test, Value *rval);
-
 #if JS_HAS_XDR
 
 #include "jsxdrapi.h"
@@ -502,8 +498,10 @@ js::Class js_RegExpClass = {
 JSBool
 js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 {
-    if (!InstanceOf(cx, obj, &js_RegExpClass, vp + 2))
+    if (!obj->isRegExp()) {
+        ReportIncompatibleMethod(cx, vp, &js_RegExpClass);
         return false;
+    }
 
     RegExp *re = RegExp::extractFrom(obj);
     if (!re) {
@@ -604,48 +602,51 @@ SwapRegExpInternals(JSContext *cx, JSObject *obj, Value *rval, JSString *str, ui
     return true;
 }
 
+enum ExecType { RegExpExec, RegExpTest };
+
+/*
+ * ES5 15.10.6.2 (and 15.10.6.3, which calls 15.10.6.2).
+ *
+ * RegExp.prototype.test doesn't need to create a results array, and we use
+ * |execType| to perform this optimization.
+ */
 static JSBool
-regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool test, Value *rval)
+ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
 {
-    if (!InstanceOf(cx, obj, &js_RegExpClass, argv))
+    /* Step 1. */
+    JSObject *obj = ToObject(cx, &vp[1]);
+    if (!obj)
         return false;
+    if (!obj->isRegExp()) {
+        JSFunction *fun = vp[0].toObject().getFunctionPrivate();
+        JSAutoByteString funNameBytes;
+        if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                                 "RegExp", funName, obj->getClass()->name);
+        }
+        return false;
+    }
 
     RegExp *re = RegExp::extractFrom(obj);
     if (!re)
         return true;
 
-    /* 
+    /*
      * Code execution under this call could swap out the guts of |obj|, so we
      * have to take a defensive refcount here.
      */
     AutoRefCount<RegExp> arc(cx, NeedsIncRef<RegExp>(re));
-
-    jsdouble lastIndex;
-    if (re->global() || re->sticky()) {
-        const Value v = obj->getRegExpLastIndex();
-        if (v.isInt32()) {
-            lastIndex = v.toInt32();
-        } else {
-            if (v.isDouble())
-                lastIndex = v.toDouble();
-            else if (!ValueToNumber(cx, v, &lastIndex))
-                return JS_FALSE;
-            lastIndex = js_DoubleToInteger(lastIndex);
-        }
-    } else {
-        lastIndex = 0;
-    }
-
     RegExpStatics *res = cx->regExpStatics();
 
+    /* Step 2. */
     JSString *input;
-    if (argc) {
-        input = js_ValueToString(cx, argv[0]);
+    if (argc > 0) {
+        input = js_ValueToString(cx, vp[2]);
         if (!input)
             return false;
-        argv[0] = StringValue(input);
+        vp[2] = StringValue(input);
     } else {
-        /* Need to grab input from statics. */
+        /* NON-STANDARD: Grab input from statics. */
         input = res->getPendingInput();
         if (!input) {
             JSAutoByteString sourceBytes(cx, re->getSource());
@@ -661,19 +662,43 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
         }
     }
 
-    if (lastIndex < 0 || input->length() < lastIndex) {
+    /* Step 3. */
+    size_t length = input->length();
+
+    /* Step 4. */
+    const Value &lastIndex = obj->getRegExpLastIndex();
+
+    /* Step 5. */
+    jsdouble i;
+    if (lastIndex.isInt32()) {
+        i = lastIndex.toInt32();
+    } else {
+        if (lastIndex.isDouble())
+            i = lastIndex.toDouble();
+        else if (!ValueToNumber(cx, lastIndex, &i))
+            return false;
+        i = js_DoubleToInteger(i);
+    }
+
+    /* Steps 6-7 (with sticky extension). */
+    if (!re->global() && !re->sticky())
+        i = 0;
+
+    /* Step 9a. */
+    if (i < 0 || i > length) {
         obj->zeroRegExpLastIndex();
-        *rval = NullValue();
+        *vp = NullValue();
         return true;
     }
 
-    size_t lastIndexInt(lastIndex);
-    if (!re->execute(cx, res, input, &lastIndexInt, !!test, rval))
+    /* Steps 8-21. */
+    size_t lastIndexInt(i);
+    if (!re->execute(cx, res, input, &lastIndexInt, execType == RegExpTest, vp))
         return false;
 
-    /* Update lastIndex. */
-    if (re->global() || (!rval->isNull() && re->sticky())) {
-        if (rval->isNull())
+    /* Step 11 (with sticky extension). */
+    if (re->global() || (!vp->isNull() && re->sticky())) {
+        if (vp->isNull())
             obj->zeroRegExpLastIndex();
         else
             obj->setRegExpLastIndex(lastIndexInt);
@@ -682,22 +707,18 @@ regexp_exec_sub(JSContext *cx, JSObject *obj, uintN argc, Value *argv, JSBool te
     return true;
 }
 
+/* ES5 15.10.6.2. */
 JSBool
 js_regexp_exec(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj)
-        return false;
-    return regexp_exec_sub(cx, obj, argc, vp + 2, JS_FALSE, vp);
+    return ExecuteRegExp(cx, RegExpExec, argc, vp);
 }
 
+/* ES5 15.10.6.3. */
 JSBool
 js_regexp_test(JSContext *cx, uintN argc, Value *vp)
 {
-    JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj)
-        return false;
-    if (!regexp_exec_sub(cx, obj, argc, vp + 2, JS_TRUE, vp))
+    if (!ExecuteRegExp(cx, RegExpTest, argc, vp))
         return false;
     if (!vp->isTrue())
         vp->setBoolean(false);
@@ -752,7 +773,7 @@ CompileRegExpAndSwap(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Valu
         sourceStr = js_ValueToString(cx, sourceValue);
         if (!sourceStr)
             return false;
-    }  
+    }
 
     uintN flags = 0;
     if (argc > 1 && !argv[1].isUndefined()) {
@@ -775,8 +796,12 @@ static JSBool
 regexp_compile(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj || !InstanceOf(cx, obj, &js_RegExpClass, JS_ARGV(cx, vp)))
+    if (!obj)
         return false;
+    if (!obj->isRegExp()) {
+        ReportIncompatibleMethod(cx, vp, &js_RegExpClass);
+        return false;
+    }
 
     return CompileRegExpAndSwap(cx, obj, argc, JS_ARGV(cx, vp), &JS_RVAL(cx, vp));
 }
