@@ -1375,7 +1375,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Scale(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mThebes->Scale(x, y);
     return NS_OK;
