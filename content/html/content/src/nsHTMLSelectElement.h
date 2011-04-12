@@ -253,6 +253,14 @@ public:
                       mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLSelectElement();
 
+  /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
+  static nsHTMLSelectElement* FromContent(nsIContent* aContent)
+  {
+    if (aContent && aContent->IsHTML(nsGkAtoms::select))
+      return static_cast<nsHTMLSelectElement*>(aContent);
+    return nsnull;
+  }
+ 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 

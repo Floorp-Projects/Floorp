@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLOptionElement.h"
+#include "nsHTMLSelectElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventTarget.h"
@@ -371,14 +372,14 @@ nsHTMLOptionElement::IntrinsicState() const
 }
 
 // Get the select content element that contains this option
-nsIContent*
+nsHTMLSelectElement*
 nsHTMLOptionElement::GetSelect()
 {
   nsIContent* parent = this;
   while ((parent = parent->GetParent()) &&
          parent->IsHTML()) {
     if (parent->Tag() == nsGkAtoms::select) {
-      return parent;
+      return nsHTMLSelectElement::FromContent(parent);
     }
     if (parent->Tag() != nsGkAtoms::optgroup) {
       break;
