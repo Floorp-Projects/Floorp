@@ -844,11 +844,7 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
     if (PREF_CHANGED(HTTP_PREF("max-connections"))) {
         rv = prefs->GetIntPref(HTTP_PREF("max-connections"), &val);
         if (NS_SUCCEEDED(rv)) {
-            PR_CallOnce(&nsSocketTransportService::gMaxCountInitOnce,
-                        nsSocketTransportService::DiscoverMaxCount);
-            mMaxConnections =
-                (PRUint16) NS_CLAMP((PRUint32)val, 1,
-                                    nsSocketTransportService::gMaxCount);
+            mMaxConnections = (PRUint16) NS_CLAMP(val, 1, NS_SOCKET_MAX_COUNT);
             if (mConnMgr)
                 mConnMgr->UpdateParam(nsHttpConnectionMgr::MAX_CONNECTIONS,
                                       mMaxConnections);
