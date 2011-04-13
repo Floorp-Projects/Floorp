@@ -102,7 +102,6 @@
 #include "nsIScriptGlobalObjectOwner.h"
 
 #include "nsIParserService.h"
-#include "nsISelectElement.h"
 
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsITimer.h"
