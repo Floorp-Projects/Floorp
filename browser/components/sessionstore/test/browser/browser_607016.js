@@ -150,5 +150,5 @@ function test() {
 
 // Helper function to create a random value
 function r() {
-  return "" + Math.floor(Date.now()) + Math.random();
+  return "" + Date.now() + Math.random();
 }

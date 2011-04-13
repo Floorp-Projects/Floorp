@@ -100,5 +100,5 @@ function waitForSaveState(aSaveStateCallback) {
 };
 
 function r() {
-  return Math.floor(Date.now()) + Math.random();
+  return Date.now() + Math.random();
 }
