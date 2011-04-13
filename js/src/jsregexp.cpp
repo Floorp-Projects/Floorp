@@ -824,6 +824,13 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
         if (argc >= 1 && argv[0].isObject() && argv[0].toObject().isRegExp() &&
             (argc == 1 || argv[1].isUndefined())) {
             *vp = argv[0];
+            /*
+             * Note: the type handler for RegExp only accounts for a new
+             * regexps for any associated compileAndGo RegExp global, not new
+             * regexps with different prototypes or RegExp.prototype itself.
+             */
+            if (!cx->markTypeCallerUnexpected(*vp))
+                return false;
             return true;
         }
     }
