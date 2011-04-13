@@ -1091,7 +1091,6 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
     if (fe->isCopy())
         fe = fe->copyOf();
 
-    /* Cannot clobber the address's register. */
     JS_ASSERT(!a->freeRegs.hasReg(address.base));
 
     /* If loading from memory, ensure destination differs. */
@@ -1111,12 +1110,19 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
         return;
     }
 
+    /* Don't clobber the address's register. */
+    bool pinAddressReg = !!regstate(address.base).fe();
+    if (pinAddressReg)
+        pinReg(address.base);
+
 #if defined JS_PUNBOX64
     if (fe->type.inMemory() && fe->data.inMemory()) {
         /* Future optimization: track that the Value is in a register. */
         RegisterID vreg = Registers::ValueReg;
         masm.loadPtr(addressOf(fe), vreg);
         masm.storePtr(vreg, address);
+        if (pinAddressReg)
+            unpinReg(address.base);
         return;
     }
 
@@ -1219,6 +1225,8 @@ FrameState::storeTo(FrameEntry *fe, Address address, bool popped)
             fe->type.setRegister(reg);
     }
 #endif
+    if (pinAddressReg)
+        unpinReg(address.base);
 }
 
 void
