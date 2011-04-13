@@ -1983,6 +1983,8 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
      (XRE_GetProcessType() == GeckoProcessType_Content &&
      (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
       styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
+     (scrollRange.width > 0 ||
+      scrollRange.height > 0) &&
      (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
 
   if (ShouldBuildLayer()) {
