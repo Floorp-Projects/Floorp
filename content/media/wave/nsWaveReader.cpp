@@ -171,9 +171,8 @@ nsresult nsWaveReader::ReadMetadata(nsVideoInfo* aInfo)
   MonitorAutoExit exitReaderMon(mMonitor);
   MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
 
-  float d = floorf(BytesToTime(GetDataLength() * 1000));
-  NS_ASSERTION(d <= PR_INT64_MAX, "Duration overflow");
-  mDecoder->GetStateMachine()->SetDuration(static_cast<PRInt64>(d));
+  mDecoder->GetStateMachine()->SetDuration(
+    static_cast<PRInt64>(BytesToTime(GetDataLength()) * USECS_PER_S));
 
   return NS_OK;
 }
@@ -229,16 +228,18 @@ PRBool nsWaveReader::DecodeAudioData()
     }
   }
 
-  float posTime = BytesToTime(pos);
-  float readSizeTime = BytesToTime(readSize);
-  NS_ASSERTION(posTime <= PR_INT64_MAX / 1000, "posTime overflow");
-  NS_ASSERTION(readSizeTime <= PR_INT64_MAX / 1000, "readSizeTime overflow");
+  double posTime = BytesToTime(pos);
+  double readSizeTime = BytesToTime(readSize);
+  NS_ASSERTION(posTime <= PR_INT64_MAX / USECS_PER_S, "posTime overflow");
+  NS_ASSERTION(readSizeTime <= PR_INT64_MAX / USECS_PER_S, "readSizeTime overflow");
   NS_ASSERTION(samples < PR_INT32_MAX, "samples overflow");
 
-  mAudioQueue.Push(new SoundData(pos, static_cast<PRInt64>(posTime * 1000),
-                                 static_cast<PRInt64>(readSizeTime * 1000),
+  mAudioQueue.Push(new SoundData(pos,
+                                 static_cast<PRInt64>(posTime * USECS_PER_S),
+                                 static_cast<PRInt64>(readSizeTime * USECS_PER_S),
                                  static_cast<PRInt32>(samples),
-                                 sampleBuffer.forget(), mChannels));
+                                 sampleBuffer.forget(),
+                                 mChannels));
 
   return PR_TRUE;
 }
@@ -258,15 +259,15 @@ nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   MonitorAutoEnter mon(mMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
                "Should be on state machine thread.");
-  LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));
+  LOG(PR_LOG_DEBUG, ("%p About to seek to %lld", mDecoder, aTarget));
   if (NS_FAILED(ResetDecode())) {
     return NS_ERROR_FAILURE;
   }
-  float d = BytesToTime(GetDataLength());
-  NS_ASSERTION(d < PR_INT64_MAX / 1000, "Duration overflow"); 
-  PRInt64 duration = static_cast<PRInt64>(d) * 1000;
-  PRInt64 seekTime = NS_MIN(aTarget, duration);
-  PRInt64 position = RoundDownToSample(static_cast<PRInt64>(TimeToBytes(seekTime) / 1000.f));
+  double d = BytesToTime(GetDataLength());
+  NS_ASSERTION(d < PR_INT64_MAX / USECS_PER_S, "Duration overflow"); 
+  PRInt64 duration = static_cast<PRInt64>(d * USECS_PER_S);
+  double seekTime = NS_MIN(aTarget, duration) / static_cast<double>(USECS_PER_S);
+  PRInt64 position = RoundDownToSample(static_cast<PRInt64>(TimeToBytes(seekTime)));
   NS_ASSERTION(PR_INT64_MAX - mWavePCMOffset > position, "Integer overflow during wave seek");
   position += mWavePCMOffset;
   return mDecoder->GetCurrentStream()->Seek(nsISeekableStream::NS_SEEK_SET, position);
@@ -281,8 +282,8 @@ nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
     NS_ASSERTION(startOffset >= mWavePCMOffset, "Integer underflow in GetBuffered");
     NS_ASSERTION(endOffset >= mWavePCMOffset, "Integer underflow in GetBuffered");
 
-    aBuffered->Add(floorf(BytesToTime(startOffset - mWavePCMOffset) * 1000.f) / 1000.0,
-                   floorf(BytesToTime(endOffset - mWavePCMOffset) * 1000.f) / 1000.0);
+    aBuffered->Add(BytesToTime(startOffset - mWavePCMOffset),
+                   BytesToTime(endOffset - mWavePCMOffset));
     startOffset = mDecoder->GetCurrentStream()->GetNextCachedData(endOffset);
   }
   return NS_OK;
@@ -508,7 +509,7 @@ nsWaveReader::FindDataOffset()
   return PR_TRUE;
 }
 
-float
+double
 nsWaveReader::BytesToTime(PRInt64 aBytes) const
 {
   NS_ABORT_IF_FALSE(aBytes >= 0, "Must be >= 0");
@@ -516,7 +517,7 @@ nsWaveReader::BytesToTime(PRInt64 aBytes) const
 }
 
 PRInt64
-nsWaveReader::TimeToBytes(float aTime) const
+nsWaveReader::TimeToBytes(double aTime) const
 {
   NS_ABORT_IF_FALSE(aTime >= 0.0f, "Must be >= 0");
   return RoundDownToSample(PRInt64(aTime * mSampleRate * mSampleSize));
