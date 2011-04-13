@@ -1094,7 +1094,7 @@ TypeSet::destroy(JSContext *cx)
         ::js_free(objectSet);
     while (constraintList) {
         TypeConstraint *next = constraintList->next;
-        if (constraintList->condensed() || constraintList->baseSubset())
+        if (constraintList->condensed() || constraintList->persistentObject())
             ::js_free(constraintList);
         constraintList = next;
     }
@@ -1169,7 +1169,7 @@ TypeSet::addType(JSContext *cx, jstype type)
     /* Propagate the type to all constraints. */
     TypeConstraint *constraint = constraintList;
     while (constraint) {
-        JS_ASSERT_IF(!constraint->baseSubset(),
+        JS_ASSERT_IF(!constraint->persistentObject(),
                      constraint->script->compartment == cx->compartment);
         cx->compartment->types.addPending(cx, constraint, this, type);
         constraint = constraint->next;
@@ -1191,7 +1191,7 @@ TypeSet::setOwnProperty(JSContext *cx, bool configured)
     /* Propagate the change to all constraints. */
     TypeConstraint *constraint = constraintList;
     while (constraint) {
-        JS_ASSERT_IF(!constraint->baseSubset(),
+        JS_ASSERT_IF(!constraint->persistentObject(),
                      constraint->script->compartment == cx->compartment);
         constraint->newPropertyState(cx, this);
         constraint = constraint->next;
@@ -1368,6 +1368,7 @@ TypeObject::name()
 inline TypeObject::TypeObject(jsid name, JSObject *proto)
     : proto(proto), emptyShapes(NULL),
       flags(0), isFunction(false), marked(false),
+      newScript(NULL), newScriptFinalizeKind(0), newScriptShape(NULL),
       initializerObject(false), initializerArray(false), initializerOffset(0),
       contribution(0), propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), next(NULL),
@@ -1410,6 +1411,23 @@ SweepClonedTypes(ClonedTypeSet *types)
         }
     }
 }
+
+class AutoTypeRooter : private AutoGCRooter {
+  public:
+    AutoTypeRooter(JSContext *cx, TypeObject *type
+                   JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : AutoGCRooter(cx, TYPE), type(type)
+    {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    friend void AutoGCRooter::trace(JSTracer *trc);
+    friend void MarkRuntime(JSTracer *trc);
+
+  private:
+    TypeObject *type;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
 
 } } /* namespace js::types */
 

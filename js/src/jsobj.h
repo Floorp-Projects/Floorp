@@ -654,9 +654,10 @@ struct JSObject : js::gc::Cell {
     /* Index into the dynamic slots array to use for a dynamic slot. */
     inline size_t dynamicSlotIndex(size_t slot);
 
+    inline size_t numFixedSlots() const;
+
   private:
     inline js::Value* fixedSlots() const;
-    inline size_t numFixedSlots() const;
     inline bool hasSlotsArray() const;
 
   public:
@@ -789,8 +790,8 @@ struct JSObject : js::gc::Cell {
     inline bool setTypeAndEmptyShape(JSContext *cx, js::types::TypeObject *newType);
     inline void setTypeAndShape(js::types::TypeObject *newType, const js::Shape *newShape);
 
-    inline js::types::TypeObject *getNewType(JSContext *cx);
-    void makeNewType(JSContext *cx);
+    inline js::types::TypeObject *getNewType(JSContext *cx, JSScript *script = NULL);
+    void makeNewType(JSContext *cx, JSScript *script);
 
     JSObject * getProto() const {
         return type->proto;

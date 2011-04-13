@@ -320,8 +320,11 @@ FrameState::push(Address address, JSValueType knownType, bool reuseBase)
 
     // Prevent us from clobbering this reg.
     bool free = a->freeRegs.hasReg(address.base);
+    bool needsPin = !free && regstate(address.base).fe();
     if (free)
         a->freeRegs.takeReg(address.base);
+    if (needsPin)
+        pinReg(address.base);
 
     RegisterID typeReg = allocReg();
 
@@ -332,6 +335,8 @@ FrameState::push(Address address, JSValueType knownType, bool reuseBase)
     // writes to the register.
     if (free)
         a->freeRegs.putReg(address.base);
+    if (needsPin)
+        unpinReg(address.base);
 
     RegisterID dataReg = reuseBase ? address.base : allocReg();
     masm.loadPayload(address, dataReg);
