@@ -84,7 +84,7 @@ MAKEFILES_dom="
   dom/src/storage/Makefile
   dom/src/threads/Makefile
   dom/locales/Makefile
-  dom/plugins/Makefile
+  dom/plugins/ipc/Makefile
   js/jetpack/Makefile
 "
 
