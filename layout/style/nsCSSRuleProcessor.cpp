@@ -726,62 +726,62 @@ static const PLDHashTableOps AttributeSelectorOps = {
 //--------------------------------
 
 // Class selectors hash table.
-struct ClassSelectorEntry : public PLDHashEntryHdr {
-  nsIAtom *mClass;
+struct AtomSelectorEntry : public PLDHashEntryHdr {
+  nsIAtom *mAtom;
   nsTArray<nsCSSSelector*> mSelectors;
 };
 
 static void
-ClassSelector_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
+AtomSelector_ClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
-  (static_cast<ClassSelectorEntry*>(hdr))->~ClassSelectorEntry();
+  (static_cast<AtomSelectorEntry*>(hdr))->~AtomSelectorEntry();
 }
 
 static PRBool
-ClassSelector_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
-                        const void *key)
+AtomSelector_InitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                       const void *key)
 {
-  ClassSelectorEntry *entry = static_cast<ClassSelectorEntry*>(hdr);
-  new (entry) ClassSelectorEntry();
-  entry->mClass = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
+  AtomSelectorEntry *entry = static_cast<AtomSelectorEntry*>(hdr);
+  new (entry) AtomSelectorEntry();
+  entry->mAtom = const_cast<nsIAtom*>(static_cast<const nsIAtom*>(key));
   return PR_TRUE;
 }
 
 static nsIAtom*
-ClassSelector_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
+AtomSelector_GetKey(PLDHashTable *table, const PLDHashEntryHdr *hdr)
 {
-  const ClassSelectorEntry *entry = static_cast<const ClassSelectorEntry*>(hdr);
-  return entry->mClass;
+  const AtomSelectorEntry *entry = static_cast<const AtomSelectorEntry*>(hdr);
+  return entry->mAtom;
 }
 
 // Case-sensitive ops.
-static const RuleHashTableOps ClassSelector_CSOps = {
+static const RuleHashTableOps AtomSelector_CSOps = {
   {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
   PL_DHashVoidPtrKeyStub,
   RuleHash_CSMatchEntry,
   PL_DHashMoveEntryStub,
-  ClassSelector_ClearEntry,
+  AtomSelector_ClearEntry,
   PL_DHashFinalizeStub,
-  ClassSelector_InitEntry
+  AtomSelector_InitEntry
   },
-  ClassSelector_GetKey
+  AtomSelector_GetKey
 };
 
 // Case-insensitive ops.
-static const RuleHashTableOps ClassSelector_CIOps = {
+static const RuleHashTableOps AtomSelector_CIOps = {
   {
   PL_DHashAllocTable,
   PL_DHashFreeTable,
   RuleHash_CIHashKey,
   RuleHash_CIMatchEntry,
   PL_DHashMoveEntryStub,
-  ClassSelector_ClearEntry,
+  AtomSelector_ClearEntry,
   PL_DHashFinalizeStub,
-  ClassSelector_InitEntry
+  AtomSelector_InitEntry
   },
-  ClassSelector_GetKey
+  AtomSelector_GetKey
 };
 
 //--------------------------------
@@ -800,9 +800,9 @@ struct RuleCascadeData {
     PL_DHashTableInit(&mAnonBoxRules, &RuleHash_TagTable_Ops, nsnull,
                       sizeof(RuleHashTagTableEntry), 16);
     PL_DHashTableInit(&mClassSelectors,
-                      aQuirksMode ? &ClassSelector_CIOps.ops :
-                                    &ClassSelector_CSOps.ops,
-                      nsnull, sizeof(ClassSelectorEntry), 16);
+                      aQuirksMode ? &AtomSelector_CIOps.ops :
+                                    &AtomSelector_CSOps.ops,
+                      nsnull, sizeof(AtomSelectorEntry), 16);
     memset(mPseudoElementRuleHashes, 0, sizeof(mPseudoElementRuleHashes));
 #ifdef MOZ_XUL
     PL_DHashTableInit(&mXULTreeRules, &RuleHash_TagTable_Ops, nsnull,
@@ -2387,8 +2387,8 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
         PRInt32 atomCount = elementClasses->GetAtomCount();
         for (PRInt32 i = 0; i < atomCount; ++i) {
           nsIAtom* curClass = elementClasses->AtomAt(i);
-          ClassSelectorEntry *entry =
-            static_cast<ClassSelectorEntry*>
+          AtomSelectorEntry *entry =
+            static_cast<AtomSelectorEntry*>
                        (PL_DHashTableOperate(&cascade->mClassSelectors,
                                              curClass, PL_DHASH_LOOKUP));
           if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
@@ -2570,10 +2570,10 @@ AddSelector(RuleCascadeData* aCascade,
     if (negation == aSelectorInTopLevel) {
       for (nsAtomList* curClass = negation->mClassList; curClass;
            curClass = curClass->mNext) {
-        ClassSelectorEntry *entry =
-          static_cast<ClassSelectorEntry*>(PL_DHashTableOperate(&aCascade->mClassSelectors,
-                                                                curClass->mAtom,
-                                                                PL_DHASH_ADD));
+        AtomSelectorEntry *entry =
+          static_cast<AtomSelectorEntry*>(PL_DHashTableOperate(&aCascade->mClassSelectors,
+                                                               curClass->mAtom,
+                                                               PL_DHASH_ADD));
         if (entry) {
           entry->mSelectors.AppendElement(aSelectorInTopLevel);
         }
