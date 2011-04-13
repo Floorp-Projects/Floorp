@@ -1429,7 +1429,7 @@ nsNavHistoryQueryOptions::GetSortingMode(PRUint16* aMode)
 NS_IMETHODIMP
 nsNavHistoryQueryOptions::SetSortingMode(PRUint16 aMode)
 {
-  if (aMode > SORT_BY_ANNOTATION_DESCENDING)
+  if (aMode > SORT_BY_FRECENCY_DESCENDING)
     return NS_ERROR_INVALID_ARG;
   mSort = aMode;
   return NS_OK;
