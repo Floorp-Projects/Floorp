@@ -479,27 +479,27 @@ IDBTransaction::IndexUpdateStatement(bool aAutoIncrement,
       if (aOverwrite) {
         return GetCachedStatement(
           "INSERT OR REPLACE INTO ai_unique_index_data "
-            "(index_id, ai_object_data_id, id, value) "
-          "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+            "(index_id, ai_object_data_id, value) "
+          "VALUES (:index_id, :object_data_id, :value)"
         );
       }
       return GetCachedStatement(
         "INSERT INTO ai_unique_index_data "
-          "(index_id, aI_object_data_id, id, value) "
-        "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+          "(index_id, aI_object_data_id, value) "
+        "VALUES (:index_id, :object_data_id, :value)"
       );
     }
     if (aOverwrite) {
       return GetCachedStatement(
         "INSERT OR REPLACE INTO ai_index_data "
-          "(index_id, ai_object_data_id, id, value) "
-        "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+          "(index_id, ai_object_data_id, value) "
+        "VALUES (:index_id, :object_data_id, :value)"
       );
     }
     return GetCachedStatement(
       "INSERT INTO ai_index_data "
-        "(index_id, ai_object_data_id, id, value) "
-      "VALUES (:index_id, :object_data_id, :object_data_key, :value)"
+        "(index_id, ai_object_data_id, value) "
+      "VALUES (:index_id, :object_data_id, :value)"
     );
   }
   if (aUnique) {
