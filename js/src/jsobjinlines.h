@@ -1489,14 +1489,17 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
     JS_ASSERT(!global->nativeLookup(id));
 
-    if (!cx->addTypePropertyId(global->getType(), id, ObjectValue(*ctor)))
-        return false;
-
-    if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0))
-        return false;
-
+    /* Set these first in case addTypePropertyId looks for this class. */
     global->setSlot(key, ObjectValue(*ctor));
     global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
+
+    if (!cx->addTypePropertyId(global->getType(), id, ObjectValue(*ctor)) ||
+        !global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0)) {
+        global->setSlot(key, UndefinedValue());
+        global->setSlot(key + JSProto_LIMIT, UndefinedValue());
+        return false;
+    }
+
     global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
     return true;
 }
