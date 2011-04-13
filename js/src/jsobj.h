@@ -797,6 +797,24 @@ struct JSObject : js::gc::Cell {
     inline const js::Value &getPrimitiveThis() const;
     inline void setPrimitiveThis(const js::Value &pthis);
 
+  private:
+    /* 0 is JSSLOT_PRIMITIVE_THIS */
+    static const uint32 JSSLOT_STRING_LENGTH = 1;
+
+    /*
+     * Compute the initial shape to associate with fresh String objects,
+     * encoding the initial length property. Return the shape after changing
+     * this String object's last property to it.
+     */
+    const js::Shape *assignInitialStringShape(JSContext *cx);
+
+  public:
+    static const uint32 STRING_RESERVED_SLOTS = 2;
+
+    inline size_t getStringLength() const;
+
+    inline bool initString(JSContext *cx, JSString *str);
+
     /*
      * Array-specific getters and setters (for both dense and slow arrays).
      */
@@ -1185,6 +1203,14 @@ struct JSObject : js::gc::Cell {
     bool reportReadOnly(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotConfigurable(JSContext* cx, jsid id, uintN report = JSREPORT_ERROR);
     bool reportNotExtensible(JSContext *cx, uintN report = JSREPORT_ERROR);
+
+    /*
+     * Get the property with the given id, then call it as a function with the
+     * given arguments, providing this object as |this|. If the property isn't
+     * callable a TypeError will be thrown. On success the value returned by
+     * the call is stored in *vp.
+     */
+    bool callMethod(JSContext *cx, jsid id, uintN argc, js::Value *argv, js::Value *vp);
 
   private:
     js::Shape *getChildProperty(JSContext *cx, js::Shape *parent, js::Shape &child);
@@ -1883,10 +1909,6 @@ js_ValueToNonNullObject(JSContext *cx, const js::Value &v);
 
 extern JSBool
 js_TryValueOf(JSContext *cx, JSObject *obj, JSType type, js::Value *rval);
-
-extern JSBool
-js_TryMethod(JSContext *cx, JSObject *obj, JSAtom *atom,
-             uintN argc, js::Value *argv, js::Value *rval);
 
 extern JSBool
 js_XDRObject(JSXDRState *xdr, JSObject **objp);

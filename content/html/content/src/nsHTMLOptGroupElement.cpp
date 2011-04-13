@@ -44,8 +44,6 @@
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 
-#include "nsISelectElement.h"
-#include "nsIDOMHTMLSelectElement.h"
 #include "nsEventDispatcher.h"
 #include "nsHTMLSelectElement.h"
 

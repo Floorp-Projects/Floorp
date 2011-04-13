@@ -111,16 +111,15 @@ public:
 
 protected:
   PRBool mNeedsConverter;
-  JSONParser *mJSONParser;
   JSContext *mCx;
   jsval *mRootVal;
   nsCOMPtr<nsIUnicodeDecoder> mDecoder;
   nsCString mSniffBuffer;
+  nsTArray<PRUnichar> mBufferedChars;
   DecodingMode mDecodingMode;
   nsresult ProcessBytes(const char* aBuffer, PRUint32 aByteLength);
   nsresult ConsumeConverted(const char* aBuffer, PRUint32 aByteLength);
   nsresult Consume(const PRUnichar *data, PRUint32 len);
-  void Cleanup();
 };
 
 #endif

@@ -179,8 +179,6 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
   // Parse a "200" format line, and remember the fields and their
   // ordering in mFormat. Multiple 200 lines stomp on each other.
 
-  delete[] mFormat;
-
   // Lets find out how many elements we have.
   // easier to do this then realloc
   const char* pos = aFormatStr;
@@ -203,6 +201,7 @@ nsDirIndexParser::ParseFormat(const char* aFormatStr) {
 
   } while (*pos);
 
+  delete[] mFormat;
   mFormat = new int[num+1];
   // Prevent NULL Deref - Bug 443299 
   if (mFormat == nsnull)

@@ -66,6 +66,10 @@ CPPSRCS = \
   nsSigHandlers.cpp \
   $(NULL)
 
+ifdef MOZ_INSTRUMENT_EVENT_LOOP
+CPPSRCS += EventTracer.cpp
+endif
+
 ifdef MOZ_SPLASHSCREEN
 ifeq ($(OS_ARCH),WINCE)
 CPPSRCS += nsSplashScreenWin.cpp

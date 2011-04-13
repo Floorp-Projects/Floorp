@@ -1,0 +1,140 @@
+# 
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is gecko.
+#
+# The Initial Developer of the Original Code is Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either of the GNU General Public License Version 2 or later (the "GPL"),
+# or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the GPL or the LGPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK *****
+
+DEPTH    = ../../../..
+topsrcdir  = @top_srcdir@
+srcdir    = @srcdir@
+VPATH    = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = libegl
+# On Windows, we don't automatically get "lib" prepended, but we need it.
+LIBRARY_NAME = libEGL
+MODULE_NAME = libegl
+FORCE_SHARED_LIB=1
+
+# ANGLE uses the STL, so we can't use our derpy STL wrappers.
+STL_FLAGS=
+
+# ANGLE uses exceptions internally, so we need to have exception handling
+# support
+ENABLE_CXX_EXCEPTIONS=1
+
+# Since we're building off in our own world, we don't want to have
+# mozilla-config.h and -DMOZILLA_CLIENT automatically included and defined, so
+# we just overwrite OS_COMPILE_C(XX)FLAGS.
+OS_COMPILE_CFLAGS = $(OS_CPPFLAGS)
+OS_COMPILE_CXXFLAGS = $(OS_CPPFLAGS)
+
+LOCAL_INCLUDES += -I$(srcdir)/../../include -I$(srcdir)/.. -I"$(DXSDK_DIR)/include"
+
+VPATH += $(srcdir)/.. \
+  $(srcdir)/../compiler \
+  $(srcdir)/../compiler/preprocessor \
+  $(srcdir)/../common \
+  $(NULL)
+
+# Translator/compiler first
+
+CPPSRCS = \
+  Compiler.cpp \
+  InfoSink.cpp \
+  Initialize.cpp \
+  InitializeDll.cpp \
+  Intermediate.cpp \
+  intermOut.cpp \
+  IntermTraverse.cpp \
+  MozAngleLink.cpp \
+  parseConst.cpp \
+  ParseHelper.cpp \
+  PoolAlloc.cpp \
+  QualifierAlive.cpp \
+  RemoveTree.cpp \
+  ShaderLang.cpp \
+  SymbolTable.cpp \
+  VariableInfo.cpp \
+  compilerdebug.cpp \
+  ossource_win.cpp \
+  util.cpp \
+  ValidateLimitations.cpp \
+  $(NULL)
+
+# flex/yacc generated files
+CPPSRCS += \
+  glslang_lex.cpp \
+  glslang_tab.cpp \
+  $(NULL)
+
+# HLSL translator backend
+CPPSRCS += \
+  CodeGenHLSL.cpp \
+  OutputHLSL.cpp \
+  TranslatorHLSL.cpp \
+  UnfoldSelect.cpp \
+  SearchSymbol.cpp \
+  $(NULL)
+
+CSRCS   = \
+  atom.c \
+  cpp.c \
+  cppstruct.c \
+  memory.c \
+  scanner.c \
+  symbols.c \
+  tokens.c \
+  $(NULL)
+
+DEFINES += -DANGLE_BUILD -DNOMINMAX -DLIBEGL_EXPORTS -D_CRT_SECURE_NO_DEPRECATE
+
+ifndef MOZ_DEBUG
+DEFINES += -D_SECURE_SCL=0
+endif
+
+CPPSRCS += \
+  debug.cpp \
+  Config.cpp \
+  Display.cpp \
+  libEGL.cpp \
+  main.cpp \
+  Surface.cpp \
+  $(NULL)
+
+DEFFILE = $(srcdir)/libEGL.def
+
+include $(topsrcdir)/config/rules.mk
+
+EXTRA_DSO_LDOPTS = "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/d3d9.lib" "$(MOZ_DIRECTX_SDK_PATH)/lib/x86/dxguid.lib" $(DIST)/lib/libGLESv2.lib

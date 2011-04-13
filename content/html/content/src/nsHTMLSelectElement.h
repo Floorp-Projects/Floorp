@@ -43,7 +43,6 @@
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsGenericHTMLElement.h"
-#include "nsISelectElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLOptionElement.h"
@@ -148,7 +147,12 @@ public:
   void DropReference();
 
   /**
-   * See nsISelectElement.idl for documentation on this method
+   * Finds the index of a given option element
+   *
+   * @param aOption the option to get the index of
+   * @param aStartIndex the index to start looking at
+   * @param aForward TRUE to look forward, FALSE to look backward
+   * @return the option index
    */
   nsresult GetOptionIndex(mozilla::dom::Element* aOption,
                           PRInt32 aStartIndex, PRBool aForward,
@@ -223,7 +227,7 @@ private:
   static void* operator new(size_t) CPP_THROW_NEW { return 0; }
   static void operator delete(void*, size_t) {}
   /** The select element which option list is being mutated. */
-  nsCOMPtr<nsISelectElement> mSelect;
+  nsRefPtr<nsHTMLSelectElement> mSelect;
   /** PR_TRUE if the current mutation is the first one in the stack. */
   PRBool                     mTopLevelMutation;
   /** PR_TRUE if it is known that the option list must be recreated. */
@@ -238,7 +242,6 @@ private:
  */
 class nsHTMLSelectElement : public nsGenericHTMLFormElement,
                             public nsIDOMHTMLSelectElement,
-                            public nsISelectElement,
                             public nsIConstraintValidation
 {
 public:
@@ -248,6 +251,14 @@ public:
                       mozilla::dom::FromParser aFromParser = mozilla::dom::NOT_FROM_PARSER);
   virtual ~nsHTMLSelectElement();
 
+  /** Typesafe, non-refcounting cast from nsIContent.  Cheaper than QI. **/
+  static nsHTMLSelectElement* FromContent(nsIContent* aContent)
+  {
+    if (aContent && aContent->IsHTML(nsGkAtoms::select))
+      return static_cast<nsHTMLSelectElement*>(aContent);
+    return nsnull;
+  }
+ 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -283,8 +294,82 @@ public:
 
   nsEventStates IntrinsicState() const;
 
-  // nsISelectElement
-  NS_DECL_NSISELECTELEMENT
+  /**
+   * To be called when stuff is added under a child of the select--but *before*
+   * they are actually added.
+   *
+   * @param aOptions the content that was added (usually just an option, but
+   *        could be an optgroup node with many child options)
+   * @param aParent the parent the options were added to (could be an optgroup)
+   * @param aContentIndex the index where the options are being added within the
+   *        parent (if the parent is an optgroup, the index within the optgroup)
+   */
+  NS_IMETHOD WillAddOptions(nsIContent* aOptions,
+                            nsIContent* aParent,
+                            PRInt32 aContentIndex,
+                            PRBool aNotify);
+
+  /**
+   * To be called when stuff is removed under a child of the select--but
+   * *before* they are actually removed.
+   *
+   * @param aParent the parent the option(s) are being removed from
+   * @param aContentIndex the index of the option(s) within the parent (if the
+   *        parent is an optgroup, the index within the optgroup)
+   */
+  NS_IMETHOD WillRemoveOptions(nsIContent* aParent,
+                               PRInt32 aContentIndex,
+                               PRBool aNotify);
+
+  /**
+   * Checks whether an option is disabled (even if it's part of an optgroup)
+   *
+   * @param aIndex the index of the option to check
+   * @return whether the option is disabled
+   */
+  NS_IMETHOD IsOptionDisabled(PRInt32 aIndex,
+                              PRBool *aIsDisabled NS_OUTPARAM);
+
+  /**
+   * Sets multiple options (or just sets startIndex if select is single)
+   * and handles notifications and cleanup and everything under the sun.
+   * When this method exits, the select will be in a consistent state.  i.e.
+   * if you set the last option to false, it will select an option anyway.
+   *
+   * @param aStartIndex the first index to set
+   * @param aEndIndex the last index to set (set same as first index for one
+   *        option)
+   * @param aIsSelected whether to set the option(s) to true or false
+   * @param aClearAll whether to clear all other options (for example, if you
+   *        are normal-clicking on the current option)
+   * @param aSetDisabled whether it is permissible to set disabled options
+   *        (for JavaScript)
+   * @param aNotify whether to notify frames and such
+   * @return whether any options were actually changed
+   */
+  NS_IMETHOD SetOptionsSelectedByIndex(PRInt32 aStartIndex,
+                                       PRInt32 aEndIndex,
+                                       PRBool aIsSelected,
+                                       PRBool aClearAll,
+                                       PRBool aSetDisabled,
+                                       PRBool aNotify,
+                                       PRBool* aChangedSomething NS_OUTPARAM);
+
+  /**
+   * Finds the index of a given option element
+   *
+   * @param aOption the option to get the index of
+   * @param aStartIndex the index to start looking at
+   * @param aForward TRUE to look forward, FALSE to look backward
+   * @return the option index
+   */
+  NS_IMETHOD GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
+                            PRInt32 aStartIndex,
+                            PRBool aForward,
+                            PRInt32* aIndex NS_OUTPARAM);
+
+  /** Whether or not there are optgroups in this select */
+  NS_IMETHOD GetHasOptGroups(PRBool* aHasGroups);
 
   /**
    * Called when an attribute is about to be changed

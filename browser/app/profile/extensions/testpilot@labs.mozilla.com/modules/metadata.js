@@ -47,6 +47,7 @@ const LOCALE_PREF = "general.useragent.locale";
 const EXTENSION_ID = "testpilot@labs.mozilla.com";
 const PREFIX_NS_EM = "http://www.mozilla.org/2004/em-rdf#";
 const PREFIX_ITEM_URI = "urn:mozilla:item:";
+const UPDATE_CHANNEL_PREF = "app.update.channel";
 
 /* The following preference, if present, stores answers to the basic panel
  * survey, which tell us user's general tech level, and so should be included
@@ -116,6 +117,19 @@ let MetadataCollector = {
       accessibilities.push({ name: prefName, value: prefValue });
     }
 
+    /* Detect accessibility instantiation
+     * (David Bolter's code from bug 577694) */
+    let enabled;
+    try {
+      enabled = Components.manager.QueryInterface(Ci.nsIServiceManager)
+                  .isServiceInstantiatedByContractID(
+                    "@mozilla.org/accessibilityService;1",
+                    Ci.nsISupports);
+    } catch (ex) {
+      enabled = false;
+    }
+    accessibilities.push({name: "isInstantiated", value: enabled});
+
     return accessibilities;
   },
 
@@ -155,6 +169,10 @@ let MetadataCollector = {
     }
   },
 
+  getUpdateChannel: function MetadataCollector_getUpdateChannel() {
+    return Application.prefs.getValue(UPDATE_CHANNEL_PREF, "");
+  },
+
   getMetadata: function MetadataCollector_getMetadata(callback) {
     let self = this;
     self.getTestPilotVersion(function(tpVersion) {
@@ -165,7 +183,8 @@ let MetadataCollector = {
 	           fxVersion: self.getVersion(),
                    operatingSystem: self.getOperatingSystem(),
                    tpVersion: tpVersion,
-                   surveyAnswers: self.getSurveyAnswers()}
+                   surveyAnswers: self.getSurveyAnswers(),
+                   updateChannel: self.getUpdateChannel()}
                  );
       });
     });

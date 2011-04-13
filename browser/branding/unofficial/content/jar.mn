@@ -1,6 +1,7 @@
 browser.jar:
 % content branding %content/branding/ contentaccessible=yes
   content/branding/about.png                     (about.png)
+  content/branding/about-background.png          (about-background.png)
   content/branding/about-logo.png                (about-logo.png)
   content/branding/about-wordmark.png            (about-wordmark.png)
   content/branding/icon48.png                    (icon48.png)

@@ -62,17 +62,21 @@
 #include "nsDOMError.h"
 #include "nsStyleUtil.h"
 #include "mozilla/css/Declaration.h"
+#include "nsCSSParser.h"
 #include "nsPrintfCString.h"
 
 namespace css = mozilla::css;
 
-#define IMPL_STYLE_RULE_INHERIT(_class, super) \
-nsIDOMCSSRule* _class::GetDOMRuleWeak(nsresult *aResult) { *aResult = NS_OK; return this; }  \
-/* virtual */ void _class::MapRuleInfoInto(nsRuleData* aRuleData) { }
+#define IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
+nsIDOMCSSRule* class_::GetDOMRuleWeak(nsresult *aResult) \
+  { *aResult = NS_OK; return this; }
+#define IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_) \
+/* virtual */ void class_::MapRuleInfoInto(nsRuleData* aRuleData) \
+  { NS_ABORT_IF_FALSE(PR_FALSE, "should not be called"); }
 
-#define IMPL_STYLE_RULE_INHERIT2(_class, super) \
-/* virtual */ void _class::MapRuleInfoInto(nsRuleData* aRuleData) { }
-
+#define IMPL_STYLE_RULE_INHERIT(class_, super_) \
+IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
+IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_)
 
 // base class for all rule types in a CSS style sheet
 
@@ -546,7 +550,7 @@ GroupRule::~GroupRule()
   }
 }
 
-IMPL_STYLE_RULE_INHERIT2(GroupRule, Rule)
+IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(GroupRule, Rule)
 
 static PRBool
 SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
@@ -583,9 +587,7 @@ GroupRule::AppendStyleRule(nsICSSRule* aRule)
   aRule->SetStyleSheet(mSheet);
   aRule->SetParentRule(this);
   if (mSheet) {
-    // XXXldb Shouldn't we be using |WillDirty| and |DidDirty| (and
-    // shouldn't |SetModified| be removed?
-    mSheet->SetModified(PR_TRUE);
+    mSheet->SetModifiedByChildRule();
   }
 }
 
@@ -1676,6 +1678,8 @@ nsCSSFontFaceRule::SetDesc(nsCSSFontDesc aDescID, nsCSSValue const & aValue)
                   aDescID < eCSSFontDesc_COUNT,
                   "aDescID out of range in nsCSSFontFaceRule::SetDesc");
 
+  // FIXME: handle dynamic changes
+
   mDecl.*nsCSSFontFaceStyleDecl::Fields[aDescID] = aValue;
 }
 
@@ -1688,3 +1692,443 @@ nsCSSFontFaceRule::GetDesc(nsCSSFontDesc aDescID, nsCSSValue & aValue)
 
   aValue = mDecl.*nsCSSFontFaceStyleDecl::Fields[aDescID];
 }
+
+#ifdef MOZ_CSS_ANIMATIONS
+// -------------------------------------------
+// nsCSSKeyframeStyleDeclaration
+//
+
+nsCSSKeyframeStyleDeclaration::nsCSSKeyframeStyleDeclaration(nsCSSKeyframeRule *aRule)
+  : mRule(aRule)
+{
+}
+
+nsCSSKeyframeStyleDeclaration::~nsCSSKeyframeStyleDeclaration()
+{
+  NS_ASSERTION(!mRule, "DropReference not called.");
+}
+
+NS_IMPL_ADDREF(nsCSSKeyframeStyleDeclaration)
+NS_IMPL_RELEASE(nsCSSKeyframeStyleDeclaration)
+
+css::Declaration*
+nsCSSKeyframeStyleDeclaration::GetCSSDeclaration(PRBool aAllocate)
+{
+  if (mRule) {
+    return mRule->Declaration();
+  } else {
+    return nsnull;
+  }
+}
+
+/*
+ * This is a utility function.  It will only fail if it can't get a
+ * parser.  This means it can return NS_OK without aURI or aCSSLoader
+ * being initialized.
+ */
+nsresult
+nsCSSKeyframeStyleDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
+                                                nsIURI** aBaseURI,
+                                                nsIPrincipal** aSheetPrincipal,
+                                                css::Loader** aCSSLoader)
+{
+  return GetCSSParsingEnvironmentForRule(mRule, aSheetURI, aBaseURI,
+                                         aSheetPrincipal, aCSSLoader);
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeStyleDeclaration::GetParentRule(nsIDOMCSSRule **aParent)
+{
+  NS_ENSURE_ARG_POINTER(aParent);
+
+  NS_IF_ADDREF(*aParent = mRule);
+  return NS_OK;
+}
+
+nsresult
+nsCSSKeyframeStyleDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
+{
+  NS_ABORT_IF_FALSE(aDecl, "must be non-null");
+  mRule->ChangeDeclaration(aDecl);
+  return NS_OK;
+}
+
+nsIDocument*
+nsCSSKeyframeStyleDeclaration::DocToUpdate()
+{
+  return nsnull;
+}
+
+// -------------------------------------------
+// nsCSSKeyframeRule
+//
+
+nsCSSKeyframeRule::nsCSSKeyframeRule(const nsCSSKeyframeRule& aCopy)
+  // copy everything except our reference count and mDOMDeclaration
+  : Rule(aCopy)
+  , mKeys(aCopy.mKeys)
+  , mDeclaration(new mozilla::css::Declaration(*aCopy.mDeclaration))
+{
+}
+
+nsCSSKeyframeRule::~nsCSSKeyframeRule()
+{
+  if (mDOMDeclaration) {
+    mDOMDeclaration->DropReference();
+  }
+}
+
+/* virtual */ already_AddRefed<nsICSSRule>
+nsCSSKeyframeRule::Clone() const
+{
+  nsCOMPtr<nsICSSRule> clone = new nsCSSKeyframeRule(*this);
+  return clone.forget();
+}
+
+NS_IMPL_ADDREF(nsCSSKeyframeRule)
+NS_IMPL_RELEASE(nsCSSKeyframeRule)
+
+DOMCI_DATA(MozCSSKeyframeRule, nsCSSKeyframeRule)
+
+// QueryInterface implementation for nsCSSKeyframeRule
+NS_INTERFACE_MAP_BEGIN(nsCSSKeyframeRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCSSKeyframeRule)
+NS_INTERFACE_MAP_END
+
+IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(nsCSSKeyframeRule, Rule)
+
+/* virtual */ void
+nsCSSKeyframeRule::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  // We need to implement MapRuleInfoInto because the animation manager
+  // constructs a rule node pointing to us in order to compute the
+  // styles it needs to animate.
+
+  // FIXME (spec): The spec doesn't say what to do with !important.
+  // We'll just map them.
+  if (mDeclaration->HasImportantData()) {
+    mDeclaration->MapImportantRuleInfoInto(aRuleData);
+  }
+  mDeclaration->MapNormalRuleInfoInto(aRuleData);
+}
+
+#ifdef DEBUG
+void
+nsCSSKeyframeRule::List(FILE* out, PRInt32 aIndent) const
+{
+  // FIXME: WRITE ME
+}
+#endif
+
+/* virtual */ PRInt32
+nsCSSKeyframeRule::GetType() const
+{
+  return nsICSSRule::KEYFRAME_RULE;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeRule::GetType(PRUint16* aType)
+{
+  *aType = nsIDOMCSSRule::MOZ_KEYFRAME_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeRule::GetCssText(nsAString& aCssText)
+{
+  nsCSSKeyframeRule::GetKeyText(aCssText);
+  aCssText.AppendLiteral(" { ");
+  nsAutoString tmp;
+  mDeclaration->ToString(tmp);
+  aCssText.Append(tmp);
+  aCssText.AppendLiteral(" }");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeRule::SetCssText(const nsAString& aCssText)
+{
+  // FIXME: implement???
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  NS_IF_ADDREF(*aSheet = mSheet);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  if (mParentRule) {
+    return mParentRule->GetDOMRule(aParentRule);
+  }
+  *aParentRule = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeRule::GetKeyText(nsAString& aKeyText)
+{
+  aKeyText.Truncate();
+  PRUint32 i = 0, i_end = mKeys.Length();
+  NS_ABORT_IF_FALSE(i_end != 0, "must have some keys");
+  for (;;) {
+    aKeyText.AppendFloat(mKeys[i] * 100.0f);
+    aKeyText.Append(PRUnichar('%'));
+    if (++i == i_end) {
+      break;
+    }
+    aKeyText.AppendLiteral(", ");
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
+{
+  nsCSSParser parser;
+  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
+
+  nsTArray<float> newSelectors;
+  // FIXME: pass filename and line number
+  if (parser.ParseKeyframeSelectorString(aKeyText, nsnull, 0, newSelectors)) {
+    newSelectors.SwapElements(mKeys);
+  } else {
+    // for now, we don't do anything if the parse fails
+  }
+
+  mSheet->SetModifiedByChildRule();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframeRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
+{
+  if (!mDOMDeclaration) {
+    mDOMDeclaration = new nsCSSKeyframeStyleDeclaration(this);
+  }
+  NS_ADDREF(*aStyle = mDOMDeclaration);
+  return NS_OK;
+}
+
+void
+nsCSSKeyframeRule::ChangeDeclaration(mozilla::css::Declaration* aDeclaration)
+{
+  mDeclaration = aDeclaration;
+
+  mSheet->SetModifiedByChildRule();
+}
+
+// -------------------------------------------
+// nsCSSKeyframesRule
+//
+
+nsCSSKeyframesRule::nsCSSKeyframesRule(const nsCSSKeyframesRule& aCopy)
+  // copy everything except our reference count.  GroupRule's copy
+  // constructor also doesn't copy the lazily-constructed
+  // mRuleCollection.
+  : GroupRule(aCopy),
+    mName(aCopy.mName)
+{
+}
+
+nsCSSKeyframesRule::~nsCSSKeyframesRule()
+{
+}
+
+/* virtual */ already_AddRefed<nsICSSRule>
+nsCSSKeyframesRule::Clone() const
+{
+  nsCOMPtr<nsICSSRule> clone = new nsCSSKeyframesRule(*this);
+  return clone.forget();
+}
+
+NS_IMPL_ADDREF_INHERITED(nsCSSKeyframesRule, mozilla::css::GroupRule)
+NS_IMPL_RELEASE_INHERITED(nsCSSKeyframesRule, mozilla::css::GroupRule)
+
+DOMCI_DATA(MozCSSKeyframesRule, nsCSSKeyframesRule)
+
+// QueryInterface implementation for nsCSSKeyframesRule
+NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
+  NS_INTERFACE_MAP_ENTRY(nsICSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMMozCSSKeyframesRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsICSSRule)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCSSKeyframesRule)
+NS_INTERFACE_MAP_END
+
+#ifdef DEBUG
+void
+nsCSSKeyframesRule::List(FILE* out, PRInt32 aIndent) const
+{
+  // FIXME: WRITE ME
+}
+#endif
+
+/* virtual */ PRInt32
+nsCSSKeyframesRule::GetType() const
+{
+  return nsICSSRule::KEYFRAMES_RULE;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::GetType(PRUint16* aType)
+{
+  *aType = nsIDOMCSSRule::MOZ_KEYFRAMES_RULE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::GetCssText(nsAString& aCssText)
+{
+  aCssText.AssignLiteral("@-moz-keyframes ");
+  aCssText.Append(mName);
+  aCssText.AppendLiteral(" {\n");
+  nsAutoString tmp;
+  for (PRUint32 i = 0, i_end = mRules.Count(); i != i_end; ++i) {
+    static_cast<nsCSSKeyframeRule*>(mRules[i])->GetCssText(tmp);
+    aCssText.Append(tmp);
+    aCssText.AppendLiteral("\n");
+  }
+  aCssText.AppendLiteral("}");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::SetCssText(const nsAString& aCssText)
+{
+  // FIXME: implement???
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
+{
+  NS_IF_ADDREF(*aSheet = mSheet);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::GetParentRule(nsIDOMCSSRule** aParentRule)
+{
+  if (mParentRule) {
+    return mParentRule->GetDOMRule(aParentRule);
+  }
+  *aParentRule = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::GetName(nsAString& aName)
+{
+  aName = mName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::SetName(const nsAString& aName)
+{
+  mName = aName;
+
+  mSheet->SetModifiedByChildRule();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::GetCssRules(nsIDOMCSSRuleList* *aRuleList)
+{
+  NS_ADDREF(*aRuleList = GroupRule::GetCssRules());
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::InsertRule(const nsAString& aRule)
+{
+  // The spec is confusing, and I think we should just append the rule,
+  // which also turns out to match WebKit:
+  // http://lists.w3.org/Archives/Public/www-style/2011Apr/0034.html
+  nsCSSParser parser;
+  NS_ENSURE_TRUE(parser, NS_OK);
+
+  // FIXME: pass filename and line number
+  nsRefPtr<nsCSSKeyframeRule> rule =
+    parser.ParseKeyframeRule(aRule, nsnull, 0);
+  if (rule) {
+    mRules.AppendObject(rule);
+    mSheet->SetModifiedByChildRule();
+  }
+
+  return NS_OK;
+}
+
+static const PRUint32 RULE_NOT_FOUND = PRUint32(-1);
+
+PRUint32
+nsCSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey)
+{
+  nsCSSParser parser;
+  NS_ENSURE_TRUE(parser, RULE_NOT_FOUND);
+
+  nsTArray<float> keys;
+  // FIXME: pass filename and line number
+  if (parser.ParseKeyframeSelectorString(aKey, nsnull, 0, keys)) {
+    // The spec isn't clear, but we'll match on the key list, which
+    // mostly matches what WebKit does, except we'll do last-match
+    // instead of first-match, and handling parsing differences better.
+    // http://lists.w3.org/Archives/Public/www-style/2011Apr/0036.html
+    // http://lists.w3.org/Archives/Public/www-style/2011Apr/0037.html
+    for (PRUint32 i = mRules.Count(); i-- != 0; ) {
+      if (static_cast<nsCSSKeyframeRule*>(mRules[i])->GetKeys() == keys) {
+        return i;
+      }
+    }
+  }
+
+  return RULE_NOT_FOUND;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
+{
+  PRUint32 index = FindRuleIndexForKey(aKey);
+  if (index != RULE_NOT_FOUND) {
+    mRules.RemoveObjectAt(index);
+    mSheet->SetModifiedByChildRule();
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSKeyframesRule::FindRule(const nsAString& aKey,
+                             nsIDOMMozCSSKeyframeRule** aResult)
+{
+  PRUint32 index = FindRuleIndexForKey(aKey);
+  if (index == RULE_NOT_FOUND) {
+    *aResult = nsnull;
+  } else {
+    NS_ADDREF(*aResult = static_cast<nsCSSKeyframeRule*>(mRules[index]));
+  }
+  return NS_OK;
+}
+
+// GroupRule interface
+/* virtual */ PRBool
+nsCSSKeyframesRule::UseForPresentation(nsPresContext* aPresContext,
+                                       nsMediaQueryResultCacheKey& aKey)
+{
+  NS_ABORT_IF_FALSE(PR_FALSE, "should not be called");
+  return PR_FALSE;
+}
+
+#endif

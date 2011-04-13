@@ -93,7 +93,7 @@ static long glock = LOCK_IS_FREE;
 #define Lock(lock) while (_InterlockedCompareExchange(lock, LOCK_IS_TAKEN, LOCK_IS_FREE) == LOCK_IS_TAKEN){};
 #define Unlock(lock) _InterlockedCompareExchange(lock, LOCK_IS_FREE, LOCK_IS_TAKEN);
 
-#if defined(WIN32) && !defined(UNDER_CE)
+#if defined(WIN32)
 	static void vprof_printf(const char* format, ...)
 	{
 		va_list args;

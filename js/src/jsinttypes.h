@@ -124,12 +124,6 @@ typedef unsigned JS_INT64_TYPE  JSUint64;
 typedef intptr_t JSIntPtr;
 typedef uintptr_t JSUintPtr;
 
-/* Windows Mobile defines intptr_t and uintptr_t in <crtdefs.h>.  Why not?  */
-#elif defined(JS_CRTDEFS_H_HAS_INTPTR_T)
-#include <crtdefs.h>
-typedef intptr_t JSIntPtr;
-typedef uintptr_t JSUintPtr;
-
 /* Failing that, the configure script will have found something.  */
 #elif defined(JS_INTPTR_TYPE)
 typedef signed   JS_INTPTR_TYPE JSIntPtr;

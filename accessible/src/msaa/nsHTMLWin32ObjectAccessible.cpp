@@ -77,10 +77,7 @@ nsHTMLWin32ObjectOwnerAccessible::NativeState()
 {
   // XXX: No HWND means this is windowless plugin which is not accessible in
   // the meantime.
-  if (mHwnd)
-    return nsAccessibleWrap::NativeState();
-
-  return IsDefunct() ? states::DEFUNCT : states::UNAVAILABLE;
+  return mHwnd ? nsAccessibleWrap::NativeState() : states::UNAVAILABLE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

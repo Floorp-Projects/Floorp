@@ -94,22 +94,12 @@ var TestPilotUIBuilder = {
       } catch (e) {
       }
     }
-
-    /* Show and hide Feedback menu items based on version -- if user is on beta channel in
-     * the final version, they get the 'broken' and 'idea' items.  Otherwise they get
-     * 'happy' and 'sad'.*/
-    if (this.isBetaChannel() && this.appVersionIsFinal()) {
-      window.document.getElementById("feedback-menu-happy-button").setAttribute("hidden", "true");
-      window.document.getElementById("feedback-menu-sad-button").setAttribute("hidden", "true");
-    } else {
-      window.document.getElementById("feedback-menu-broken-button").setAttribute("hidden", "true");
-      window.document.getElementById("feedback-menu-idea-button").setAttribute("hidden", "true");
-    }
   },
 
   isBetaChannel: function() {
-    // Nightly channel is treated the same as default channel.
-    return (this._prefs.getCharPref(UPDATE_CHANNEL_PREF) == "beta");
+    // Beta and aurora channels use feedback interface; nightly and release channels don't.
+    let channel = this._prefs.getCharPref(UPDATE_CHANNEL_PREF);
+    return (channel == "beta") || (channel == "betatest") || (channel == "aurora");
   },
 
   appVersionIsFinal: function() {

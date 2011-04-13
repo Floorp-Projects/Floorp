@@ -48,11 +48,25 @@
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
+#ifdef MOZ_CSS_ANIMATIONS
+#include "nsIDOMMozCSSKeyframeRule.h"
+#include "nsIDOMMozCSSKeyframesRule.h"
+#endif
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsICSSRuleList.h"
 #include "nsAutoPtr.h"
 #include "nsCSSProperty.h"
 #include "nsCSSValue.h"
 #include "nsIDOMCSSCharsetRule.h"
+#include "nsTArray.h"
+#include "nsDOMCSSDeclaration.h"
+#include "Declaration.h"
+
+namespace mozilla {
+namespace css {
+class StyleRule;
+}
+}
 
 class nsMediaList;
 
@@ -300,5 +314,133 @@ private:
 
 } // namespace css
 } // namespace mozilla
+
+#ifdef MOZ_CSS_ANIMATIONS
+class nsCSSKeyframeRule;
+
+class NS_FINAL_CLASS nsCSSKeyframeStyleDeclaration
+                         : public nsDOMCSSDeclaration
+{
+public:
+  nsCSSKeyframeStyleDeclaration(nsCSSKeyframeRule *aRule);
+  virtual ~nsCSSKeyframeStyleDeclaration();
+
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
+  void DropReference() { mRule = nsnull; }
+  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate);
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl);
+  virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
+                                            nsIURI** aBaseURI,
+                                            nsIPrincipal** aSheetPrincipal,
+                                            mozilla::css::Loader** aCSSLoader);
+  virtual nsIDocument* DocToUpdate();
+
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+
+  virtual nsINode *GetParentObject()
+  {
+    return nsnull;
+  }
+
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+
+  // This reference is not reference-counted. The rule object tells us
+  // when it's about to go away.
+  nsCSSKeyframeRule *mRule;
+};
+
+class NS_FINAL_CLASS nsCSSKeyframeRule : public mozilla::css::Rule,
+                                         public nsIDOMMozCSSKeyframeRule
+{
+public:
+  // WARNING: Steals the contents of aKeys *and* aDeclaration
+  nsCSSKeyframeRule(nsTArray<float> aKeys,
+                    nsAutoPtr<mozilla::css::Declaration> aDeclaration)
+    : mDeclaration(aDeclaration)
+  {
+    mKeys.SwapElements(aKeys);
+  }
+
+  nsCSSKeyframeRule(const nsCSSKeyframeRule& aCopy);
+  ~nsCSSKeyframeRule();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  // nsICSSRule methods
+  DECL_STYLE_RULE_INHERIT
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMMozCSSKeyframeRule interface
+  NS_DECL_NSIDOMMOZCSSKEYFRAMERULE
+
+  const nsTArray<float>& GetKeys() const     { return mKeys; }
+  mozilla::css::Declaration* Declaration()   { return mDeclaration; }
+
+  void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
+
+private:
+  nsAutoTArray<float, 1>                     mKeys;
+  nsAutoPtr<mozilla::css::Declaration>       mDeclaration;
+  // lazily created when needed:
+  nsRefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
+};
+
+class NS_FINAL_CLASS nsCSSKeyframesRule : public mozilla::css::GroupRule,
+                                          public nsIDOMMozCSSKeyframesRule
+{
+public:
+  nsCSSKeyframesRule(const nsSubstring& aName)
+    : mName(aName)
+  {
+  }
+  nsCSSKeyframesRule(const nsCSSKeyframesRule& aCopy);
+  ~nsCSSKeyframesRule();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  // nsICSSRule methods
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  {
+    *aResult = NS_OK;
+    return this;
+  }
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMMozCSSKeyframesRule interface
+  NS_DECL_NSIDOMMOZCSSKEYFRAMESRULE
+
+  // rest of GroupRule
+  virtual PRBool UseForPresentation(nsPresContext* aPresContext,
+                                    nsMediaQueryResultCacheKey& aKey);
+
+  const nsString& GetName() { return mName; }
+
+private:
+  PRUint32 FindRuleIndexForKey(const nsAString& aKey);
+
+  nsString                                   mName;
+};
+#endif
 
 #endif /* !defined(nsCSSRules_h_) */

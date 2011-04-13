@@ -105,6 +105,7 @@
 
 #include "nsFrameManager.h"
 #include "nsFrameLoader.h"
+#include "nsBidi.h"
 #include "nsBidiPresUtils.h"
 #include "Layers.h"
 #include "CanvasUtils.h"
@@ -1375,7 +1376,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Scale(float x, float y)
 {
     if (!FloatValidate(x,y))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     mThebes->Scale(x, y);
     return NS_OK;
@@ -1966,7 +1967,7 @@ nsresult
 nsCanvasRenderingContext2D::DrawRect(const gfxRect& rect, Style style)
 {
     if (!FloatValidate(rect.pos.x, rect.pos.y, rect.size.width, rect.size.height))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     PathAutoSaveRestore pathSR(this);
 
@@ -2158,7 +2159,7 @@ NS_IMETHODIMP
 nsCanvasRenderingContext2D::Arc(float x, float y, float r, float startAngle, float endAngle, PRBool ccw)
 {
     if (!FloatValidate(x,y,r,startAngle,endAngle))
-        return NS_ERROR_DOM_SYNTAX_ERR;
+        return NS_OK;
 
     if (r < 0.0)
         return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -2656,10 +2657,6 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     nsIDocument* document = presShell->GetDocument();
 
-    nsBidiPresUtils* bidiUtils = presShell->GetPresContext()->GetBidiUtils();
-    if (!bidiUtils)
-        return NS_ERROR_FAILURE;
-
     // replace all the whitespace characters with U+0020 SPACE
     nsAutoString textToDraw(aRawText);
     TextReplaceWhitespaceCharacters(textToDraw);
@@ -2705,15 +2702,17 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     // calls bidi algo twice since it needs the full text width and the
     // bounding boxes before rendering anything
-    rv = bidiUtils->ProcessText(textToDraw.get(),
-                                textToDraw.Length(),
-                                isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                presShell->GetPresContext(),
-                                processor,
-                                nsBidiPresUtils::MODE_MEASURE,
-                                nsnull,
-                                0,
-                                &totalWidth);
+    nsBidi bidiEngine;
+    rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                      textToDraw.Length(),
+                                      isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                      presShell->GetPresContext(),
+                                      processor,
+                                      nsBidiPresUtils::MODE_MEASURE,
+                                      nsnull,
+                                      0,
+                                      &totalWidth,
+                                      &bidiEngine);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2811,15 +2810,16 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
             ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
             processor.mThebes = ctx;
 
-            rv = bidiUtils->ProcessText(textToDraw.get(),
-                                        textToDraw.Length(),
-                                        isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                        presShell->GetPresContext(),
-                                        processor,
-                                        nsBidiPresUtils::MODE_DRAW,
-                                        nsnull,
-                                        0,
-                                        nsnull);
+            rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                              textToDraw.Length(),
+                                              isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                              presShell->GetPresContext(),
+                                              processor,
+                                              nsBidiPresUtils::MODE_DRAW,
+                                              nsnull,
+                                              0,
+                                              nsnull,
+                                              &bidiEngine);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -2848,15 +2848,16 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
         ApplyStyle(STYLE_FILL);
     }
 
-    rv = bidiUtils->ProcessText(textToDraw.get(),
-                                textToDraw.Length(),
-                                isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                presShell->GetPresContext(),
-                                processor,
-                                nsBidiPresUtils::MODE_DRAW,
-                                nsnull,
-                                0,
-                                nsnull);
+    rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                      textToDraw.Length(),
+                                      isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                      presShell->GetPresContext(),
+                                      processor,
+                                      nsBidiPresUtils::MODE_DRAW,
+                                      nsnull,
+                                      0,
+                                      nsnull,
+                                      &bidiEngine);
 
     // this needs to be restored before function can return
     if (doUseIntermediateSurface) {

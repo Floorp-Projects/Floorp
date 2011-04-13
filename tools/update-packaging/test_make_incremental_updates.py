@@ -7,36 +7,37 @@ from make_incremental_updates import PatchInfo, MarFileEntry
 class TestPatchInfo(unittest.TestCase):
     def setUp(self):
         self.work_dir = 'work_dir'
-        self.file_exclusion_list = ['channel-prefs.js','update.manifest','removed-files']
+        self.file_exclusion_list = ['channel-prefs.js','update.manifest','updatev2.manifest','removed-files']
         self.path_exclusion_list = ['/readme.txt']
         self.patch_info = PatchInfo(self.work_dir, self.file_exclusion_list, self.path_exclusion_list)
 
     def testPatchInfo(self):
         self.assertEquals(self.work_dir, self.patch_info.work_dir)
         self.assertEquals([], self.patch_info.archive_files)
-        self.assertEquals([], self.patch_info.manifest)
+        self.assertEquals([], self.patch_info.manifestv1)
+        self.assertEquals([], self.patch_info.manifestv2)
         self.assertEquals(self.file_exclusion_list, self.patch_info.file_exclusion_list)
         self.assertEquals(self.path_exclusion_list, self.patch_info.path_exclusion_list)
 
     def test_append_add_instruction(self):
         self.patch_info.append_add_instruction('file.test')
-        self.assertEquals(['add "file.test"'], self.patch_info.manifest)
+        self.assertEquals(['add "file.test"'], self.patch_info.manifestv1)
 
     def test_append_patch_instruction(self):
         self.patch_info.append_patch_instruction('file.test', 'patchname')
-        self.assertEquals(['patch "patchname" "file.test"'], self.patch_info.manifest)
+        self.assertEquals(['patch "patchname" "file.test"'], self.patch_info.manifestv1)
 
     """ FIXME touches the filesystem, need refactoring
     def test_append_remove_instruction(self):
         self.patch_info.append_remove_instruction('file.test')
-        self.assertEquals(['remove "file.test"'], self.patch_info.manifest)
+        self.assertEquals(['remove "file.test"'], self.patch_info.manifestv1)
 
     def test_create_manifest_file(self):
         self.patch_info.create_manifest_file()
     """
 
     def test_build_marfile_entry_hash(self):
-        self.assertEquals(({}, set([])), self.patch_info.build_marfile_entry_hash('root_path'))
+        self.assertEquals(({}, set([]), set([])), self.patch_info.build_marfile_entry_hash('root_path'))
 
 """ FIXME touches the filesystem, need refactoring
 class TestMarFileEntry(unittest.TestCase):
@@ -66,7 +67,7 @@ class TestMarFileEntry(unittest.TestCase):
 class TestMakeIncrementalUpdates(unittest.TestCase):
     def setUp(self):
         work_dir = '.'
-        self.patch_info = PatchInfo(work_dir, ['channel-prefs.js','update.manifest','removed-files'],['/readme.txt'])
+        self.patch_info = PatchInfo(work_dir, ['channel-prefs.js','update.manifest','updatev2.manifest','removed-files'],['/readme.txt'])
         root_path = '/'
         filename = 'test.file'
         self.mar_file_entry = MarFileEntry(root_path, filename)

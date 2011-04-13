@@ -674,7 +674,58 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       }
       break;
     }
+#ifdef MOZ_CSS_ANIMATIONS
+    case eCSSProperty_animation: {
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(eCSSProperty_animation);
+      static const size_t numProps = 8;
+      NS_ABORT_IF_FALSE(subprops[numProps] == eCSSProperty_UNKNOWN,
+                        "unexpected number of subproperties");
+      const nsCSSValue* values[numProps];
+      const nsCSSValueList* lists[numProps];
 
+      for (PRUint32 i = 0; i < numProps; ++i) {
+        values[i] = data->ValueFor(subprops[i]);
+        NS_ABORT_IF_FALSE(values[i]->GetUnit() == eCSSUnit_List ||
+                          values[i]->GetUnit() == eCSSUnit_ListDep,
+                          nsPrintfCString(32, "bad a-duration unit %d",
+                                          values[i]->GetUnit()).get());
+        lists[i] = values[i]->GetListValue();
+      }
+
+      for (;;) {
+        // We must serialize 'animation-name' last in case it has
+        // a value that conflicts with one of the other keyword properties.
+        NS_ABORT_IF_FALSE(subprops[numProps - 1] ==
+                            eCSSProperty_animation_name,
+                          "animation-name must be last");
+        bool done = false;
+        for (PRUint32 i = 0;;) {
+          lists[i]->mValue.AppendToString(subprops[i], aValue);
+          lists[i] = lists[i]->mNext;
+          if (!lists[i]) {
+            done = true;
+          }
+          if (++i == numProps) {
+            break;
+          }
+          aValue.Append(PRUnichar(' '));
+        }
+        if (done) {
+          break;
+        }
+        aValue.AppendLiteral(", ");
+      }
+      for (PRUint32 i = 0; i < numProps; ++i) {
+        if (lists[i]) {
+          // Lists not all the same length, can't use shorthand.
+          aValue.Truncate();
+          break;
+        }
+      }
+      break;
+    }
+#endif
     case eCSSProperty_marker: {
       const nsCSSValue &endValue =
         *data->ValueFor(eCSSProperty_marker_end);

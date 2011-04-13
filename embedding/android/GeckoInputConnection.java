@@ -157,7 +157,7 @@ public class GeckoInputConnection
             GeckoAppShell.sendEventToGecko(
                 new GeckoEvent(GeckoEvent.IME_COMPOSITION_END, 0, 0));
             mComposing = false;
-            mComposingText = null;
+            mComposingText = "";
 
             // Make sure caret stays at the same position
             GeckoAppShell.sendEventToGecko(
@@ -532,7 +532,7 @@ public class GeckoInputConnection
 
     public void reset() {
         mComposing = false;
-        mComposingText = null;
+        mComposingText = "";
         mUpdateRequest = null;
     }
 
@@ -578,7 +578,7 @@ public class GeckoInputConnection
     // Is a composition active?
     boolean mComposing;
     // Composition text when a composition is active
-    String mComposingText;
+    String mComposingText = "";
     // Start index of the composition within the text body
     int mCompositionStart;
     /* During a composition, we should not alter the real selection,

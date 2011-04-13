@@ -150,7 +150,7 @@ nsHTMLBRAccessible::NativeRole()
 PRUint64
 nsHTMLBRAccessible::NativeState()
 {
-  return IsDefunct() ? states::DEFUNCT : states::READONLY;
+  return states::READONLY;
 }
 
 nsresult
