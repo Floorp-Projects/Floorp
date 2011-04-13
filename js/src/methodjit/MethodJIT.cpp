@@ -313,15 +313,18 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_VMFRAME(PushActiveVMFrame) "\n"
 
-    "jmp *16(%ebp)"                      "\n"
+    "movl 28(%esp), %ebp"                "\n"   /* load fp for JIT code */
+    "jmp *72(%esp)"                      "\n"
 );
 
 asm volatile (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
-    "movl  %edx, 0x18(%ebx)"             "\n"
-    "movl  %ecx, 0x1C(%ebx)"             "\n"
+    "movl  %edx, 0x18(%ebp)"             "\n"
+    "movl  %ecx, 0x1C(%ebp)"             "\n"
+    "movl  %esp, %ebp"                   "\n"
+    "addl  $0x38, %ebp"                  "\n" /* Restore stack at STACK_BASE_DIFFERENCE */
     "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 
@@ -550,15 +553,18 @@ extern "C" {
             mov  ecx, esp;
             call PushActiveVMFrame;
 
-            jmp dword ptr [ebp + 16];
+            mov ebp, [esp + 28];  /* load fp for JIT code */
+            jmp dword ptr [esp + 72];
         }
     }
 
     __declspec(naked) void JaegerTrampolineReturn()
     {
         __asm {
-            mov [ebx + 0x18], edx;
-            mov [ebx + 0x1C], ecx;
+            mov [ebp + 0x18], edx;
+            mov [ebp + 0x1C], ecx;
+            mov  ebp, esp;
+            add  ebp, 0x38; /* Restore stack at STACK_BASE_DIFFERENCE */
             mov  ecx, esp;
             call PopActiveVMFrame;
 
