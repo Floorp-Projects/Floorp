@@ -110,7 +110,9 @@ struct Registers {
 #endif
 
     // Register that homes the current JSStackFrame.
-#if defined(JS_CPU_X86) || defined(JS_CPU_X64)
+#if defined(JS_CPU_X86)
+    static const RegisterID JSFrameReg = JSC::X86Registers::ebp;
+#elif defined(JS_CPU_X64)
     static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
 #elif defined(JS_CPU_ARM)
     static const RegisterID JSFrameReg = JSC::ARMRegisters::r11;
@@ -153,6 +155,9 @@ struct Registers {
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     static const uint32 TempRegs =
           (1 << JSC::X86Registers::eax)
+# if defined(JS_CPU_X86)
+        | (1 << JSC::X86Registers::ebx)
+# endif
         | (1 << JSC::X86Registers::ecx)
         | (1 << JSC::X86Registers::edx)
 # if defined(JS_CPU_X64)

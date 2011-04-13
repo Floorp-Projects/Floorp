@@ -634,6 +634,21 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
             if (pinlined)
                 *pinlined = ptr;
         }
+
+        restoreStackBase();
+    }
+
+    void restoreStackBase() {
+#if defined(JS_CPU_X86)
+        /*
+         * We use the %ebp base stack pointer on x86 to store the JSStackFrame.
+         * Restore this before calling so that debuggers can construct a
+         * coherent stack if we crash outside of JIT code.
+         */
+        JS_STATIC_ASSERT(JSFrameReg == JSC::X86Registers::ebp);
+        move(JSC::X86Registers::esp, JSFrameReg);
+        addPtr(Imm32(VMFrame::STACK_BASE_DIFFERENCE), JSFrameReg);
+#endif
     }
 
     // An infallible VM call is a stub call (taking a VMFrame & and one
@@ -652,11 +667,8 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         setupFallibleVMFrame(inlining, pc, pinlined, frameDepth);
         Call call = wrapVMCall(ptr);
 
-        if (inlining) {
-            // Restore the frame pointer from the VM, in case it pushed/popped
-            // some frames or expanded any inline frames.
-            loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
-        }
+        // Restore the frame pointer from the VM.
+        loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
 
         return call;
     }
