@@ -3,6 +3,11 @@
 # These files are in alphabetical order, except that files removed only on
 # certain platforms are after all of the regular files and obsolete Talkback and
 # Inspector files are at the very end.
+#if MOZ_UPDATE_CHANNEL == aurora
+#define SHIP_FEEDBACK
+#elif MOZ_UPDATE_CHANNEL == beta
+#define SHIP_FEEDBACK
+#endif
 .autoreg
 @DLL_PREFIX@jsj@DLL_SUFFIX@
 @DLL_PREFIX@sqlite3@DLL_SUFFIX@
@@ -86,7 +91,7 @@ defaults/profile/extensions/installed-extensions.txt
 defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/
 defaults/profile/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}/install.rdf
 defaults/profile/search.rdf
-#if MOZ_UPDATE_CHANNEL != beta
+#ifndef SHIP_FEEDBACK
 distribution/extensions/testpilot@labs.mozilla.com.xpi
 #endif
 extensions/talkback@mozilla.org/

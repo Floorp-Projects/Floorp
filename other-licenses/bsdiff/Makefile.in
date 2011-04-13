@@ -48,7 +48,11 @@ include $(DEPTH)/config/autoconf.mk
 HOST_PROGRAM = mbsdiff$(BIN_SUFFIX)
 HOST_CSRCS = bsdiff.c
 
+ifdef MOZ_NATIVE_BZ2
+HOST_LIBS += $(BZ2_LIBS)
+else
 HOST_LIBS += $(DIST)/host/lib/$(LIB_PREFIX)hostbz2.$(LIB_SUFFIX)
+endif
 
 ifneq (,$(filter WINCE WINNT,$(HOST_OS_ARCH)))
 HOST_EXTRA_LIBS += $(call EXPAND_LIBNAME,Ws2_32)

@@ -9,7 +9,7 @@
 
 #include "compiler/BaseTypes.h"
 #include "compiler/Common.h"
-#include "compiler/debug.h"
+#include "compiler/compilerdebug.h"
 
 //
 // Need to have association of line numbers to types in a list for building structs.

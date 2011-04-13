@@ -54,6 +54,7 @@
 #include "nsContentUtils.h"
 
 using mozilla::TimeStamp;
+using mozilla::TimeDuration;
 
 #define DEFAULT_FRAME_RATE 60
 #define DEFAULT_THROTTLED_FRAME_RATE 1
@@ -104,6 +105,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext *aPresContext)
   : mPresContext(aPresContext),
     mFrozen(false),
     mThrottled(false),
+    mTestControllingRefreshes(false),
     mTimerIsPrecise(false),
     mLastTimerInterval(0)
 {
@@ -114,6 +116,24 @@ nsRefreshDriver::~nsRefreshDriver()
   NS_ABORT_IF_FALSE(ObserverCount() == 0,
                     "observers should have unregistered");
   NS_ABORT_IF_FALSE(!mTimer, "timer should be gone");
+}
+
+// Method for testing.  See nsIDOMWindowUtils.advanceTimeAndRefresh
+// for description.
+void
+nsRefreshDriver::AdvanceTimeAndRefresh(PRInt64 aMilliseconds)
+{
+  mTestControllingRefreshes = true;
+  mMostRecentRefreshEpochTime += aMilliseconds * 1000;
+  mMostRecentRefresh += TimeDuration::FromMilliseconds(aMilliseconds);
+  Notify(nsnull);
+}
+
+void
+nsRefreshDriver::RestoreNormalRefresh()
+{
+  mTestControllingRefreshes = false;
+  Notify(nsnull); // will call UpdateMostRecentRefresh()
 }
 
 TimeStamp
@@ -211,6 +231,10 @@ nsRefreshDriver::ObserverCount() const
 void
 nsRefreshDriver::UpdateMostRecentRefresh()
 {
+  if (mTestControllingRefreshes) {
+    return;
+  }
+
   // Call JS_Now first, since that can have nonzero latency in some rare cases.
   mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
@@ -243,10 +267,15 @@ NS_IMPL_ISUPPORTS1(nsRefreshDriver, nsITimerCallback)
  */
 
 NS_IMETHODIMP
-nsRefreshDriver::Notify(nsITimer * /* unused */)
+nsRefreshDriver::Notify(nsITimer *aTimer)
 {
   NS_PRECONDITION(!mFrozen, "Why are we notified while frozen?");
   NS_PRECONDITION(mPresContext, "Why are we notified after disconnection?");
+
+  if (mTestControllingRefreshes && aTimer) {
+    // Ignore real refreshes from our timer (but honor the others).
+    return NS_OK;
+  }
 
   UpdateMostRecentRefresh();
 

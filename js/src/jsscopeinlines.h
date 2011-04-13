@@ -134,6 +134,32 @@ JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
     updateShape(cx);
 }
 
+inline bool
+JSObject::initString(JSContext *cx, JSString *str)
+{
+    JS_ASSERT(isString());
+    JS_ASSERT(nativeEmpty());
+
+    const js::Shape **shapep = &cx->compartment->initialStringShape;
+    if (*shapep) {
+        setLastProperty(*shapep);
+    } else {
+        *shapep = assignInitialStringShape(cx);
+        if (!*shapep)
+            return false;
+    }
+    JS_ASSERT(*shapep == lastProperty());
+    JS_ASSERT(!nativeEmpty());
+
+    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot ==
+              JSObject::JSSLOT_STRING_LENGTH);
+
+    setPrimitiveThis(js::StringValue(str));
+    JS_ASSERT(str->length() < JSString::MAX_LENGTH);
+    setSlot(JSSLOT_STRING_LENGTH, js::Int32Value(int32(str->length())));
+    return true;
+}
+
 namespace js {
 
 inline
@@ -230,7 +256,7 @@ Shape::get(JSContext* cx, JSObject *receiver, JSObject* obj, JSObject *pobj, js:
      */
     if (obj->getClass() == &js_WithClass)
         obj = js_UnwrapWithObject(cx, obj);
-    return js::CallJSPropertyOp(cx, getterOp(), obj, SHAPE_USERID(this), vp);
+    return js::CallJSPropertyOp(cx, getterOp(), receiver, SHAPE_USERID(this), vp);
 }
 
 inline bool

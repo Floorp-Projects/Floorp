@@ -42,7 +42,9 @@
 #include "nsIDOMCSSRule.h"
 #include "nsCSSParser.h"
 #include "mozilla/css/Loader.h"
+#include "nsCSSStyleSheet.h"
 #include "nsIStyleRule.h"
+#include "nsICSSRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsCSSProps.h"
 #include "nsCOMPtr.h"
@@ -267,6 +269,45 @@ nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   return RemoveProperty(propID);
+}
+
+/* static */ nsresult
+nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(
+                         nsICSSRule* aRule, nsIURI** aSheetURI,
+                         nsIURI** aBaseURI, nsIPrincipal** aSheetPrincipal,
+                         mozilla::css::Loader** aCSSLoader)
+{
+  // null out the out params since some of them may not get initialized below
+  *aSheetURI = nsnull;
+  *aBaseURI = nsnull;
+  *aSheetPrincipal = nsnull;
+  *aCSSLoader = nsnull;
+
+  if (aRule) {
+    nsIStyleSheet* sheet = aRule->GetStyleSheet();
+    if (sheet) {
+      NS_IF_ADDREF(*aSheetURI = sheet->GetSheetURI());
+      NS_IF_ADDREF(*aBaseURI = sheet->GetBaseURI());
+
+      nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
+      if (cssSheet) {
+        NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
+      }
+
+      nsIDocument* document = sheet->GetOwningDocument();
+      if (document) {
+        NS_ADDREF(*aCSSLoader = document->CSSLoader());
+      }
+    }
+  }
+
+  nsresult result = NS_OK;
+  if (!*aSheetPrincipal) {
+    result = CallCreateInstance("@mozilla.org/nullprincipal;1",
+                                aSheetPrincipal);
+  }
+
+  return result;
 }
 
 nsresult

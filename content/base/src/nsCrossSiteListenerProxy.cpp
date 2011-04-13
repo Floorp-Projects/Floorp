@@ -59,6 +59,7 @@
 #include "prtime.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
+#include "nsStreamUtils.h"
 
 #define PREFLIGHT_CACHE_SIZE 100
 
@@ -1002,7 +1003,8 @@ nsCORSPreflightListener::OnDataAvailable(nsIRequest *aRequest,
                                          PRUint32 sourceOffset,
                                          PRUint32 count)
 {
-  return NS_OK;
+  PRUint32 totalRead;
+  return inStr->ReadSegments(NS_DiscardSegment, nsnull, count, &totalRead);
 }
 
 NS_IMETHODIMP

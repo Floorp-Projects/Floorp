@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://testpilot/content/browser.css" type="text/css"?>
-<?xml-stylesheet href="chrome://testpilot-os/skin/feedback.css" type="text/css"?>
 
 <!DOCTYPE overlay [
   <!ENTITY % testpilotDTD SYSTEM "chrome://testpilot/locale/main.dtd">

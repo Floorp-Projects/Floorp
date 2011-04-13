@@ -294,10 +294,6 @@ nsDocAccessible::GetDescription(nsAString& aDescription)
 PRUint64
 nsDocAccessible::NativeState()
 {
-
-  if (IsDefunct())
-    return states::DEFUNCT;
-
   // The root content of the document might be removed so that mContent is
   // out of date.
   PRUint64 state = (mContent->GetCurrentDoc() == mDocument) ?

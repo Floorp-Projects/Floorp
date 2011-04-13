@@ -691,11 +691,12 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
       nsStyleUtil::AppendEscapedCSSIdent(buffer, aResult);
     }
   }
-  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Cubic_Bezier) {
+  else if (eCSSUnit_Array <= unit && unit <= eCSSUnit_Steps) {
     switch (unit) {
       case eCSSUnit_Counter:  aResult.AppendLiteral("counter(");  break;
       case eCSSUnit_Counters: aResult.AppendLiteral("counters("); break;
       case eCSSUnit_Cubic_Bezier: aResult.AppendLiteral("cubic-bezier("); break;
+      case eCSSUnit_Steps: aResult.AppendLiteral("steps("); break;
       default: break;
     }
 
@@ -716,6 +717,21 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
           aResult.AppendLiteral(" ");
         else
           aResult.AppendLiteral(", ");
+      }
+      if (unit == eCSSUnit_Steps && i == 1) {
+        NS_ABORT_IF_FALSE(array->Item(i).GetUnit() == eCSSUnit_Enumerated &&
+                          (array->Item(i).GetIntValue() ==
+                            NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
+                           array->Item(i).GetIntValue() ==
+                            NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END),
+                          "unexpected value");
+        if (array->Item(i).GetIntValue() ==
+              NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START) {
+          aResult.AppendLiteral("start");
+        } else {
+          aResult.AppendLiteral("end");
+        }
+        continue;
       }
       nsCSSProperty prop =
         ((eCSSUnit_Counter <= unit && unit <= eCSSUnit_Counters) &&
@@ -981,6 +997,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     case eCSSUnit_Array:        break;
     case eCSSUnit_Attr:
     case eCSSUnit_Cubic_Bezier:
+    case eCSSUnit_Steps:
     case eCSSUnit_Counter:
     case eCSSUnit_Counters:     aResult.Append(PRUnichar(')'));    break;
     case eCSSUnit_Local_Font:   break;

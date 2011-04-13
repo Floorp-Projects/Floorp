@@ -481,17 +481,6 @@ cairo_scaled_font_t *gfxOS2Font::CairoScaledFont()
     return mScaledFont;
 }
 
-nsString gfxOS2Font::GetUniqueName()
-{
-#ifdef DEBUG_thebes
-    printf("gfxOS2Font::GetUniqueName()=%s\n", (char *)GetName().get());
-#endif
-    // gfxFont::GetName() should already be unique enough
-    // Atsui uses that, too, while Win appends size, and properties...
-    // doesn't seem to get called at all anyway
-    return GetName();
-}
-
 PRBool gfxOS2Font::SetupCairoFont(gfxContext *aContext)
 {
 #ifdef DEBUG_thebes_2

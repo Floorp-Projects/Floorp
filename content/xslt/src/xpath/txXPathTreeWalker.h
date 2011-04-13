@@ -130,7 +130,8 @@ public:
     static txXPathNode* getDocument(const txXPathNode& aNode);
     static txXPathNode* getOwnerDocument(const txXPathNode& aNode);
     static PRInt32 getUniqueIdentifier(const txXPathNode& aNode);
-    static nsresult getXSLTId(const txXPathNode& aNode, nsAString& aResult);
+    static nsresult getXSLTId(const txXPathNode& aNode,
+                              const txXPathNode& aBase, nsAString& aResult);
     static void release(txXPathNode* aNode);
     static void getBaseURI(const txXPathNode& aNode, nsAString& aURI);
     static PRIntn comparePosition(const txXPathNode& aNode,

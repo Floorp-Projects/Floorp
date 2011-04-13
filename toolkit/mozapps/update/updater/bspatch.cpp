@@ -55,10 +55,6 @@
 # define SSIZE_MAX LONG_MAX
 #endif
 
-#ifdef WINCE
-#include "updater_wince.h"
-#endif
-
 int
 MBS_ReadHeader(FILE* file, MBSPatchHeader *header)
 {

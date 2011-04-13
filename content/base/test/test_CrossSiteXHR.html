@@ -567,6 +567,13 @@ function runTest() {
                  exposeHeaders: "  ,  ,,y-my-header,z-my-header,  ",
                  expectedResponseHeaders: ["y-my-header"],
                },
+               
+               // Check that sending a body in the OPTIONS response works
+               { pass: 1,
+                 method: "DELETE",
+                 allowMethods: "DELETE",
+                 preflightBody: "I'm a preflight response body",
+               },
                ];
 
   if (!runPreflightTests) {
@@ -635,6 +642,8 @@ function runTest() {
       req.url += "&responseHeaders=" + escape(test.responseHeaders.toSource());
     if (test.exposeHeaders)
       req.url += "&exposeHeaders=" + escape(test.exposeHeaders);
+    if (test.preflightBody)
+      req.url += "&preflightBody=" + escape(test.preflightBody);
 
     loaderWindow.postMessage(req.toSource(), origin);
     res = eval(yield);

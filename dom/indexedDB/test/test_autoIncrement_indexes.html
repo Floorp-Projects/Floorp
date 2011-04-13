@@ -1,0 +1,71 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html>
+<head>
+  <title>Indexed Database Property Test</title>
+
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script type="text/javascript;version=1.7">
+    function testSteps()
+    {
+      let request = mozIndexedDB.open(window.location.pathname);
+      request.onerror = errorHandler;
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let db = request.result;
+      db.onerror = errorHandler;
+
+      db.setVersion("1").onsuccess = grabEventAndContinueHandler;
+      let event = yield;
+
+      let objectStore = db.createObjectStore("foo", { keyPath: "id",
+                                                      autoIncrement: true });
+      objectStore.createIndex("first","first");
+      objectStore.createIndex("second","second");
+      objectStore.createIndex("third","third");
+
+      let data = { first: "foo", second: "foo", third: "foo" };
+
+      objectStore.add(data).onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      let key = event.target.result;
+      ok(key, "Added entry");
+
+      let objectStore = db.transaction("foo").objectStore("foo");
+      let first = objectStore.index("first");
+      let second = objectStore.index("second");
+      let third = objectStore.index("third");
+
+      first.get("foo").onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is (event.target.result.id, key, "Entry in first");
+
+      second.get("foo").onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is (event.target.result.id, key, "Entry in second");
+
+      third.get("foo").onsuccess = grabEventAndContinueHandler;
+      event = yield;
+
+      is (event.target.result.id, key, "Entry in third");
+
+      finishTest();
+      yield;
+    }
+  </script>
+  <script type="text/javascript;version=1.7" src="helpers.js"></script>
+
+</head>
+
+<body onload="runTest();"></body>
+
+</html>
