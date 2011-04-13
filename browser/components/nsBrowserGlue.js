@@ -264,6 +264,9 @@ BrowserGlue.prototype = {
         else if (data == "force-distribution-customization") {
           this._distributionCustomizer.applyCustomizations();
         }
+        else if (data == "force-places-init") {
+          this._initPlaces();
+        }
         break;
     }
   }, 
