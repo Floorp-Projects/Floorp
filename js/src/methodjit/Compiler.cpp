@@ -4950,7 +4950,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
                 Jump notObject = frame.testObject(Assembler::NotEqual, lhs);
                 stubcc.linkExit(notObject, Uses(2));
                 stubcc.leave();
-                masm.move(ImmPtr(atom), Registers::ArgReg1);
+                stubcc.masm.move(ImmPtr(atom), Registers::ArgReg1);
                 OOL_STUBCALL(STRICT_VARIANT(stubs::SetName));
             }
             RegisterID reg = frame.tempRegForData(lhs);
