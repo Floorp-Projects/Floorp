@@ -4242,7 +4242,7 @@ JS_IsArrayObject(JSContext *cx, JSObject *obj)
 {
     assertSameCompartment(cx, obj);
     return obj->isArray() ||
-           (obj->isWrapper() && JSWrapper::wrappedObject(obj)->isArray());
+           (obj->isWrapper() && obj->unwrap()->isArray());
 }
 
 JS_PUBLIC_API(JSBool)
