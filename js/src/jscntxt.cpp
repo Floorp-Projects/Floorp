@@ -2050,7 +2050,7 @@ StackSegment *
 StackSpace::containingSegment(const JSStackFrame *target)
 {
     for (StackSegment *seg = currentSegment; seg; seg = seg->getPreviousInMemory()) {
-        if (seg->contains(target))
+        if (seg->inContext() && seg->contains(target))
             return seg;
     }
     JS_NOT_REACHED("frame not in stack space");
