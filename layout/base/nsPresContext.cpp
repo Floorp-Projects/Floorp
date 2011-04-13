@@ -1772,6 +1772,177 @@ nsPresContext::HasAuthorSpecifiedRules(nsIFrame *aFrame, PRUint32 ruleTypeMask) 
                                         UseDocumentColors());
 }
 
+static void
+InsertFontFaceRule(nsCSSFontFaceRule *aRule, gfxUserFontSet* aFontSet,
+                   PRUint8 aSheetType)
+{
+  NS_ABORT_IF_FALSE(aRule->GetType() == nsICSSRule::FONT_FACE_RULE,
+                    "InsertFontFaceRule passed a non-fontface CSS rule");
+
+  // aRule->List();
+
+  nsAutoString fontfamily;
+  nsCSSValue val;
+
+  PRUint32 unit;
+  PRUint32 weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  PRUint32 stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  PRUint32 italicStyle = FONT_STYLE_NORMAL;
+  nsString featureSettings, languageOverride;
+
+  // set up family name
+  aRule->GetDesc(eCSSFontDesc_Family, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_String) {
+    val.GetStringValue(fontfamily);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face family name has unexpected unit");
+    // If there is no family name, this rule cannot contribute a
+    // usable font, so there is no point in processing it further.
+    return;
+  }
+
+  // set up weight
+  aRule->GetDesc(eCSSFontDesc_Weight, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Integer || unit == eCSSUnit_Enumerated) {
+    weight = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face weight has unexpected unit");
+  }
+
+  // set up stretch
+  aRule->GetDesc(eCSSFontDesc_Stretch, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Enumerated) {
+    stretch = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    stretch = NS_STYLE_FONT_STRETCH_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face stretch has unexpected unit");
+  }
+
+  // set up font style
+  aRule->GetDesc(eCSSFontDesc_Style, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Enumerated) {
+    italicStyle = val.GetIntValue();
+  } else if (unit == eCSSUnit_Normal) {
+    italicStyle = FONT_STYLE_NORMAL;
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face style has unexpected unit");
+  }
+
+  // set up font features
+  aRule->GetDesc(eCSSFontDesc_FontFeatureSettings, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Normal) {
+    // empty feature string
+  } else if (unit == eCSSUnit_String) {
+    val.GetStringValue(featureSettings);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face font-feature-settings has unexpected unit");
+  }
+
+  // set up font language override
+  aRule->GetDesc(eCSSFontDesc_FontLanguageOverride, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Normal) {
+    // empty feature string
+  } else if (unit == eCSSUnit_String) {
+    val.GetStringValue(languageOverride);
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null,
+                 "@font-face font-language-override has unexpected unit");
+  }
+
+  // set up src array
+  nsTArray<gfxFontFaceSrc> srcArray;
+
+  aRule->GetDesc(eCSSFontDesc_Src, val);
+  unit = val.GetUnit();
+  if (unit == eCSSUnit_Array) {
+    nsCSSValue::Array *srcArr = val.GetArrayValue();
+    size_t numSrc = srcArr->Count();
+    
+    for (size_t i = 0; i < numSrc; i++) {
+      val = srcArr->Item(i);
+      unit = val.GetUnit();
+      gfxFontFaceSrc *face = srcArray.AppendElements(1);
+      if (!face)
+        return;
+            
+      switch (unit) {
+       
+      case eCSSUnit_Local_Font:
+        val.GetStringValue(face->mLocalName);
+        face->mIsLocal = PR_TRUE;
+        face->mURI = nsnull;
+        face->mFormatFlags = 0;
+        break;
+      case eCSSUnit_URL:
+        face->mIsLocal = PR_FALSE;
+        face->mURI = val.GetURLValue();
+        NS_ASSERTION(face->mURI, "null url in @font-face rule");
+        face->mReferrer = val.GetURLStructValue()->mReferrer;
+        face->mOriginPrincipal = val.GetURLStructValue()->mOriginPrincipal;
+        NS_ASSERTION(face->mOriginPrincipal, "null origin principal in @font-face rule");
+        
+        // agent and user stylesheets are treated slightly differently,
+        // the same-site origin check and access control headers are
+        // enforced against the sheet principal rather than the document
+        // principal to allow user stylesheets to include @font-face rules
+        face->mUseOriginPrincipal = (aSheetType == nsStyleSet::eUserSheet ||
+                                     aSheetType == nsStyleSet::eAgentSheet);
+                                     
+        face->mLocalName.Truncate();
+        face->mFormatFlags = 0;
+        while (i + 1 < numSrc && (val = srcArr->Item(i+1), 
+                 val.GetUnit() == eCSSUnit_Font_Format)) {
+          nsDependentString valueString(val.GetStringBufferValue());
+          if (valueString.LowerCaseEqualsASCII("woff")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_WOFF; 
+          } else if (valueString.LowerCaseEqualsASCII("opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_OPENTYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE; 
+          } else if (valueString.LowerCaseEqualsASCII("truetype-aat")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_TRUETYPE_AAT; 
+          } else if (valueString.LowerCaseEqualsASCII("embedded-opentype")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_EOT;   
+          } else if (valueString.LowerCaseEqualsASCII("svg")) {
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_SVG;   
+          } else {
+            // unknown format specified, mark to distinguish from the 
+            // case where no format hints are specified
+            face->mFormatFlags |= gfxUserFontSet::FLAG_FORMAT_UNKNOWN;
+          }
+          i++;
+        }
+        break;
+      default:
+        NS_ASSERTION(unit == eCSSUnit_Local_Font || unit == eCSSUnit_URL,
+                     "strange unit type in font-face src array");
+        break;
+      }
+     }
+  } else {
+    NS_ASSERTION(unit == eCSSUnit_Null, "@font-face src has unexpected unit");
+  }
+  
+  if (!fontfamily.IsEmpty() && srcArray.Length() > 0) {
+    aFontSet->AddFontFace(fontfamily, srcArray, weight, stretch, italicStyle,
+                          featureSettings, languageOverride);
+  }
+}
+
 gfxUserFontSet*
 nsPresContext::GetUserFontSetInternal()
 {
@@ -1823,37 +1994,59 @@ nsPresContext::FlushUserFontSet()
 
   if (mUserFontSetDirty) {
     if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
+      nsRefPtr<gfxUserFontSet> oldUserFontSet = mUserFontSet;
+
       nsTArray<nsFontFaceRuleContainer> rules;
-      if (!mShell->StyleSet()->AppendFontFaceRules(this, rules)) {
-        if (mUserFontSet) {
-          mUserFontSet->Destroy();
-          NS_RELEASE(mUserFontSet);
-        }
+      if (!mShell->StyleSet()->AppendFontFaceRules(this, rules))
         return;
+
+      PRBool differ;
+      if (rules.Length() == mFontFaceRules.Length()) {
+        differ = PR_FALSE;
+        for (PRUint32 i = 0, i_end = rules.Length(); i < i_end; ++i) {
+          if (rules[i].mRule != mFontFaceRules[i].mRule ||
+              rules[i].mSheetType != mFontFaceRules[i].mSheetType) {
+            differ = PR_TRUE;
+            break;
+          }
+        }
+      } else {
+        differ = PR_TRUE;
       }
 
-      PRBool changed = PR_FALSE;
-
-      if (rules.Length() == 0) {
+      // Only rebuild things if the set of @font-face rules is different.
+      if (differ) {
         if (mUserFontSet) {
           mUserFontSet->Destroy();
           NS_RELEASE(mUserFontSet);
         }
-        changed = PR_TRUE;
-      } else if (!mUserFontSet) {
-        mUserFontSet = new nsUserFontSet(this);
-        NS_ADDREF(mUserFontSet);
+
+        if (rules.Length() > 0) {
+          nsUserFontSet *fs = new nsUserFontSet(this);
+          if (!fs)
+            return;
+          mUserFontSet = fs;
+          NS_ADDREF(mUserFontSet);
+
+          for (PRUint32 i = 0, i_end = rules.Length(); i < i_end; ++i) {
+            InsertFontFaceRule(rules[i].mRule, fs, rules[i].mSheetType);
+          }
+        }
       }
 
-      if (mUserFontSet) {
-        changed = mUserFontSet->UpdateRules(rules);
-      }
+#ifdef DEBUG
+      PRBool success =
+#endif
+        rules.SwapElements(mFontFaceRules);
+      NS_ASSERTION(success, "should never fail given both are heap arrays");
 
-      // We need to enqueue a style change reflow (for later) to
-      // reflect that we're modifying @font-face rules.  (However,
-      // without a reflow, nothing will happen to start any downloads
-      // that are needed.)
-      if (changed) {
+      if (mGetUserFontSetCalled && oldUserFontSet != mUserFontSet) {
+        // If we've changed, created, or destroyed a user font set, we
+        // need to trigger a style change reflow.
+        // We need to enqueue a style change reflow (for later) to
+        // reflect that we're dropping @font-face rules.  (However,
+        // without a reflow, nothing will happen to start any downloads
+        // that are needed.)
         UserFontSetUpdated();
       }
     }

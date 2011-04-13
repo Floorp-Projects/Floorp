@@ -131,9 +131,11 @@ StackSegment::contains(const JSStackFrame *fp) const
 #ifdef DEBUG
     bool found = false;
     JSStackFrame *stop = initialFrame->prev();
-    for (JSStackFrame *f = start; !found && f != stop; f = f->prev()) {
-        if (f == fp)
+    for (JSStackFrame *f = start; f != stop; f = f->prev()) {
+        if (f == fp) {
             found = true;
+            break;
+        }
     }
     JS_ASSERT(found);
 #endif

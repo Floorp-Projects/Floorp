@@ -46,7 +46,6 @@ MODULE       = content
 XPIDL_MODULE = content_html
 
 XPIDLSRCS = \
-		nsISelectElement.idl \
 		nsIFormSubmitObserver.idl \
 		nsIPhonetic.idl \
 		$(NULL)
