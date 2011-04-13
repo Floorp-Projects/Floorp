@@ -118,7 +118,6 @@
 #include "prprf.h"
 #include "prmem.h"
 
-#include "mozilla/WidgetTraceEvent.h"
 #include "nsIAppShell.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMNSUIEvent.h"
@@ -4595,13 +4594,6 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
       WNDPROC prevWindowProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
       return ::CallWindowProcW(prevWindowProc, hWnd, msg, wParam, lParam);
     }
-  }
-
-  if (msg == MOZ_WM_TRACE) {
-    // This is a tracer event for measuring event loop latency.
-    // See WidgetTraceEvent.cpp for more details.
-    mozilla::SignalTracerThread();
-    return 0;
   }
 
   // Get the window which caused the event and ask it to process the message

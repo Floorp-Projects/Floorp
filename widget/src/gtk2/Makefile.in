@@ -62,24 +62,23 @@ ifdef ACCESSIBILITY
 CSRCS += maiRedundantObjectFactory.c
 endif
 
-CPPSRCS = \
-  nsWindow.cpp \
-  nsAppShell.cpp \
-  nsWidgetFactory.cpp \
-  nsToolkit.cpp \
-  nsBidiKeyboard.cpp \
-  nsLookAndFeel.cpp \
-  nsGtkKeyUtils.cpp \
-  nsFilePicker.cpp \
-  nsSound.cpp \
-  nsNativeKeyBindings.cpp \
-  nsScreenGtk.cpp \
-  nsScreenManagerGtk.cpp \
-  nsImageToPixbuf.cpp \
-  nsAccessibilityHelper.cpp \
-  nsGtkIMModule.cpp \
-  WidgetTraceEvent.cpp \
-  $(NULL)
+CPPSRCS		= \
+		nsWindow.cpp \
+		nsAppShell.cpp \
+		nsWidgetFactory.cpp \
+		nsToolkit.cpp \
+		nsBidiKeyboard.cpp \
+		nsLookAndFeel.cpp \
+		nsGtkKeyUtils.cpp \
+		nsFilePicker.cpp \
+		nsSound.cpp \
+		nsNativeKeyBindings.cpp \
+		nsScreenGtk.cpp \
+		nsScreenManagerGtk.cpp \
+		nsImageToPixbuf.cpp \
+		nsAccessibilityHelper.cpp \
+		nsGtkIMModule.cpp \
+		$(NULL)
 
 ifdef MOZ_X11
 CPPSRCS         += nsIdleServiceGTK.cpp
