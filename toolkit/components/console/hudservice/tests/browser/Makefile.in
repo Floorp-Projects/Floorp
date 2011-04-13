@@ -133,6 +133,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_642108_pruneTest.js \
 	browser_webconsole_bug_585956_console_trace.js \
 	browser_webconsole_bug_595223_file_uri.js \
+	browser_webconsole_bug_632275_getters_document_width.js \
 	head.js \
 	$(NULL)
 
@@ -202,6 +203,7 @@ _BROWSER_TEST_PAGES = \
 	test-bug-621644-jsterm-dollar.html \
 	test-bug-632347-iterators-generators.html \
 	test-bug-585956-console-trace.html \
+	test-bug-632275-getters.html \
 	$(NULL)
 
 libs:: $(_BROWSER_TEST_FILES)
