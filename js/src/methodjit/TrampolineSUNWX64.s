@@ -37,8 +37,8 @@
 
 .text
 
-/ JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
-/                        JSFrameRegs *regs, uintptr_t inlineCallCount)
+/ JSBool JaegerTrampoline(JSContext *cx, StackFrame *fp, void *code,
+/                         FrameRegs *regs, uintptr_t inlineCallCount)
 .global JaegerTrampoline
 .type   JaegerTrampoline, @function
 JaegerTrampoline:

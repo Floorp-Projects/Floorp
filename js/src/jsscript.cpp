@@ -68,7 +68,6 @@
 #endif
 #include "methodjit/MethodJIT.h"
 
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 
@@ -1225,7 +1224,7 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
 
     script->compartment = cx->compartment;
 #ifdef CHECK_SCRIPT_OWNER
-    script->owner = cx->thread;
+    script->owner = cx->thread();
 #endif
 
     JS_APPEND_LINK(&script->links, &cx->compartment->scripts);
@@ -1470,7 +1469,7 @@ DestroyScript(JSContext *cx, JSScript *script)
         JS_PROPERTY_CACHE(cx).purgeForScript(cx, script);
 
 #ifdef CHECK_SCRIPT_OWNER
-        JS_ASSERT(script->owner == cx->thread);
+        JS_ASSERT(script->owner == cx->thread());
 #endif
     }
 
@@ -1646,7 +1645,7 @@ js_GetSrcNoteCached(JSContext *cx, JSScript *script, jsbytecode *pc)
 }
 
 uintN
-js_FramePCToLineNumber(JSContext *cx, JSStackFrame *fp)
+js_FramePCToLineNumber(JSContext *cx, StackFrame *fp)
 {
     return js_PCToLineNumber(cx, fp->script(),
                              fp->hasImacropc() ? fp->imacropc() : fp->pc(cx));
@@ -1662,7 +1661,7 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
     jssrcnote *sn;
     JSSrcNoteType type;
 
-    /* Cope with JSStackFrame.pc value prior to entering js_Interpret. */
+    /* Cope with StackFrame.pc value prior to entering js_Interpret. */
     if (!pc)
         return 0;
 
@@ -1767,12 +1766,12 @@ js_GetScriptLineExtent(JSScript *script)
 const char *
 js::CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
 {
-    if (!cx->hasfp()) {
+    if (!cx->running()) {
         *linenop = 0;
         return NULL;
     }
 
-    JSStackFrame *fp = cx->fp();
+    StackFrame *fp = cx->fp();
     while (fp->isDummyFrame())
         fp = fp->prev();
 

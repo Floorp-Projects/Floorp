@@ -49,8 +49,8 @@
 #include "jsscope.h"
 #include "jsgc.h"
 
-#include "jsgcinlines.h"
 #include "jscntxtinlines.h"
+#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
 inline void

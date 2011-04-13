@@ -169,7 +169,7 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
  * shape.
  */
 inline void
-JSObject::initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *frame)
+JSObject::initClonedBlock(JSContext *cx, JSObject *proto, js::StackFrame *frame)
 {
     init(cx, &js_BlockClass, proto, NULL, frame, false);
 
@@ -509,11 +509,11 @@ JSObject::callIsForEval() const
     return getSlot(JSSLOT_CALL_CALLEE).isNull();
 }
 
-inline JSStackFrame *
+inline js::StackFrame *
 JSObject::maybeCallObjStackFrame() const
 {
     JS_ASSERT(isCall());
-    return reinterpret_cast<JSStackFrame *>(getPrivate());
+    return reinterpret_cast<js::StackFrame *>(getPrivate());
 }
 
 inline void
@@ -881,12 +881,6 @@ JSObject::principals(JSContext *cx)
     return compPrincipals;
 }
 
-inline JSPrincipals *
-JSStackFrame::principals(JSContext *cx) const
-{
-    return scopeChain().principals(cx);
-}
-
 inline uint32
 JSObject::slotSpan() const
 {
@@ -1222,7 +1216,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
-    if (!cx->hasfp()) {
+    if (!cx->running()) {
         global = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, global);
         if (!global)

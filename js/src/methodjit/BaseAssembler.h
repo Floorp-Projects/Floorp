@@ -589,7 +589,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         if (frameDepth >= 0) {
             // sp = fp->slots() + frameDepth
             // regs->sp = sp
-            addPtr(Imm32(sizeof(JSStackFrame) + frameDepth * sizeof(jsval)),
+            addPtr(Imm32(sizeof(StackFrame) + frameDepth * sizeof(jsval)),
                    JSFrameReg,
                    ClobberInCall);
             storePtr(ClobberInCall, FrameAddress(offsetof(VMFrame, regs.sp)));
@@ -605,11 +605,11 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         setupInfallibleVMFrame(frameDepth);
 
         /* regs->fp = fp */
-        storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
+        storePtr(JSFrameReg, FrameAddress(VMFrame::offsetOfFp));
 
         /* PC -> regs->pc :( */
         storePtr(ImmPtr(pc),
-                 FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
+                 FrameAddress(offsetof(VMFrame, regs) + offsetof(FrameRegs, pc)));
     }
 
     // An infallible VM call is a stub call (taking a VMFrame & and one
@@ -753,7 +753,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = Assembler::JSPar
 struct FrameFlagsAddress : JSC::MacroAssembler::Address
 {
     FrameFlagsAddress()
-      : Address(JSFrameReg, JSStackFrame::offsetOfFlags())
+      : Address(JSFrameReg, StackFrame::offsetOfFlags())
     {}
 };
 

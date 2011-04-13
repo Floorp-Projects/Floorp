@@ -57,7 +57,7 @@ static const size_t CALLS_BEFORE_COMPILE = 16;
 static const size_t BACKEDGES_BEFORE_COMPILE = 16;
 
 static inline CompileStatus
-CanMethodJIT(JSContext *cx, JSScript *script, JSStackFrame *fp, CompileRequest request)
+CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest request)
 {
     if (!cx->methodJitEnabled)
         return Compile_Abort;
@@ -81,7 +81,7 @@ CanMethodJIT(JSContext *cx, JSScript *script, JSStackFrame *fp, CompileRequest r
  * methodjit. If so, we compile the given function.
  */
 static inline CompileStatus
-CanMethodJITAtBranch(JSContext *cx, JSScript *script, JSStackFrame *fp, jsbytecode *pc)
+CanMethodJITAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode *pc)
 {
     if (!cx->methodJitEnabled)
         return Compile_Abort;

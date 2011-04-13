@@ -181,6 +181,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
+		Stack.cpp \
 		$(NULL)
 
 INSTALLED_HEADERS = \
@@ -268,13 +269,26 @@ INSTALLED_HEADERS = \
 		$(NULL)
 
 ###############################################
+# BEGIN include sources for the vm subdirectory
+#
+VPATH		+= \
+		$(srcdir)/vm 	\
+		$(NULL)
+
+EXPORTS_NAMESPACES = vm
+
+EXPORTS_vm = \
+		Stack.h			\
+		$(NULL)
+
+###############################################
 # BEGIN include sources for low-level code shared with Gecko
 #
 VPATH		+= \
 		$(srcdir)/../../mfbt \
 		$(NULL)
 
-EXPORTS_NAMESPACES = mozilla
+EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
 		Util.h          \
