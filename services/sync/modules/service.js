@@ -1014,14 +1014,19 @@ WeaveSvc.prototype = {
     }))(),
 
   startOver: function() {
-    // Clear client-specific data from the server, including disabled engines.
-    for each (let engine in [Clients].concat(Engines.getAll())) {
-      try {
-        engine.removeClientData();
-      } catch(ex) {
-        this._log.warn("Deleting client data for " + engine.name + " failed:"
-                       + Utils.exceptionStr(ex));
+    // Deletion doesn't make sense if we aren't set up yet!
+    if (this.clusterURL != "") {
+      // Clear client-specific data from the server, including disabled engines.
+      for each (let engine in [Clients].concat(Engines.getAll())) {
+        try {
+          engine.removeClientData();
+        } catch(ex) {
+          this._log.warn("Deleting client data for " + engine.name + " failed:"
+                         + Utils.exceptionStr(ex));
+        }
       }
+    } else {
+      this._log.debug("Skipping client data removal: no cluster URL.");
     }
 
     // Set a username error so the status message shows "set up..."
