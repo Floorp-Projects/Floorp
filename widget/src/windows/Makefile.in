@@ -47,33 +47,32 @@ LIBRARY_NAME	= widget_windows
 LIBXUL_LIBRARY = 1
 
 
-CPPSRCS = \
-  nsWindow.cpp \
-  nsWindowGfx.cpp \
-  nsWindowDbg.cpp \
-  nsAppShell.cpp \
-  nsToolkit.cpp \
-  nsFilePicker.cpp \
-  nsScreenWin.cpp  \
-  nsScreenManagerWin.cpp \
-  nsLookAndFeel.cpp \
-  nsUXThemeData.cpp \
-  nsNativeThemeWin.cpp \
-  nsWinGesture.cpp \
-  nsIdleServiceWin.cpp \
-  nsSound.cpp \
-  nsIMM32Handler.cpp \
-  WindowHook.cpp \
-  WinTaskbar.cpp \
-  TaskbarPreview.cpp \
-  TaskbarTabPreview.cpp \
-  TaskbarWindowPreview.cpp \
-  TaskbarPreviewButton.cpp \
-  JumpListBuilder.cpp \
-  JumpListItem.cpp \
-  GfxInfo.cpp \
-  WidgetTraceEvent.cpp \
-  $(NULL)
+CPPSRCS		= \
+	nsWindow.cpp \
+	nsWindowGfx.cpp \
+	nsWindowDbg.cpp \
+	nsAppShell.cpp \
+	nsToolkit.cpp \
+	nsFilePicker.cpp \
+	nsScreenWin.cpp	\
+	nsScreenManagerWin.cpp \
+	nsLookAndFeel.cpp \
+	nsUXThemeData.cpp \
+	nsNativeThemeWin.cpp \
+	nsWinGesture.cpp \
+	nsIdleServiceWin.cpp \
+	nsSound.cpp \
+	nsIMM32Handler.cpp \
+	WindowHook.cpp \
+	WinTaskbar.cpp \
+	TaskbarPreview.cpp \
+	TaskbarTabPreview.cpp \
+	TaskbarWindowPreview.cpp \
+	TaskbarPreviewButton.cpp \
+ 	JumpListBuilder.cpp \
+ 	JumpListItem.cpp \
+	GfxInfo.cpp \
+	$(NULL)
 
 ifdef MOZ_CRASHREPORTER
 CPPSRCS += LSPAnnotator.cpp

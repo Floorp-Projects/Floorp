@@ -56,8 +56,6 @@
 // A magic APP message that can be sent to quit, sort of like a QUERYENDSESSION/ENDSESSION,
 // but without the query.
 #define MOZ_WM_APP_QUIT                   (WM_APP+0x0300)
-// Used as a "tracer" event to probe event loop latency.
-#define MOZ_WM_TRACE                      (WM_APP+0x0301)
 
 // GetWindowsVersion constants
 #define WIN2K_VERSION                     0x500

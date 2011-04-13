@@ -62,10 +62,6 @@ using mozilla::dom::ContentParent;
 #include "nsAppRunner.h"
 #include "nsUpdateDriver.h"
 
-#ifdef MOZ_INSTRUMENT_EVENT_LOOP
-#include "EventTracer.h"
-#endif
-
 #ifdef XP_MACOSX
 #include "MacLaunchHelper.h"
 #include "MacApplicationDelegate.h"
@@ -3748,13 +3744,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
           nativeApp->Enable();
         }
 
-#ifdef MOZ_INSTRUMENT_EVENT_LOOP
-        bool event_tracing_running = false;
-        if (PR_GetEnv("MOZ_INSTRUMENT_EVENT_LOOP")) {
-          event_tracing_running = mozilla::InitEventTracing();
-        }
-#endif /* MOZ_INSTRUMENT_EVENT_LOOP */
-
         NS_TIME_FUNCTION_MARK("Next: Run");
 
         NS_TIME_FUNCTION_MARK("appStartup->Run");
@@ -3773,11 +3762,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
         NS_TIME_FUNCTION_MARK("Next: Finish");
 
         NS_TIME_FUNCTION_MARK("appStartup->Run done");
-
-#ifdef MOZ_INSTRUMENT_EVENT_LOOP
-        if (event_tracing_running)
-          mozilla::ShutdownEventTracing();
-#endif
 
         // Check for an application initiated restart.  This is one that
         // corresponds to nsIAppStartup.quit(eRestart)
