@@ -799,6 +799,10 @@ struct RuleCascadeData {
                       sizeof(AttributeSelectorEntry), 16);
     PL_DHashTableInit(&mAnonBoxRules, &RuleHash_TagTable_Ops, nsnull,
                       sizeof(RuleHashTagTableEntry), 16);
+    PL_DHashTableInit(&mIdSelectors,
+                      aQuirksMode ? &AtomSelector_CIOps.ops :
+                                    &AtomSelector_CSOps.ops,
+                      nsnull, sizeof(AtomSelectorEntry), 16);
     PL_DHashTableInit(&mClassSelectors,
                       aQuirksMode ? &AtomSelector_CIOps.ops :
                                     &AtomSelector_CSOps.ops,
@@ -814,6 +818,7 @@ struct RuleCascadeData {
   {
     PL_DHashTableFinish(&mAttributeSelectors);
     PL_DHashTableFinish(&mAnonBoxRules);
+    PL_DHashTableFinish(&mIdSelectors);
     PL_DHashTableFinish(&mClassSelectors);
 #ifdef MOZ_XUL
     PL_DHashTableFinish(&mXULTreeRules);
@@ -828,8 +833,9 @@ struct RuleCascadeData {
   nsTArray<nsCSSSelector*> mStateSelectors;
   nsEventStates            mSelectorDocumentStates;
   PLDHashTable             mClassSelectors;
+  PLDHashTable             mIdSelectors;
   nsTArray<nsCSSSelector*> mPossiblyNegatedClassSelectors;
-  nsTArray<nsCSSSelector*> mIDSelectors;
+  nsTArray<nsCSSSelector*> mPossiblyNegatedIDSelectors;
   PLDHashTable             mAttributeSelectors;
   PLDHashTable             mAnonBoxRules;
 #ifdef MOZ_XUL
@@ -2374,8 +2380,23 @@ nsCSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData
   // ones we might have started matching.
   if (cascade) {
     if (aData->mAttribute == aData->mElement->GetIDAttributeName()) {
-      nsCSSSelector **iter = cascade->mIDSelectors.Elements(),
-                    **end = iter + cascade->mIDSelectors.Length();
+      nsIAtom* id = aData->mElement->GetID();
+      if (id) {
+        AtomSelectorEntry *entry =
+          static_cast<AtomSelectorEntry*>
+                     (PL_DHashTableOperate(&cascade->mIdSelectors,
+                                           id, PL_DHASH_LOOKUP));
+        if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+          nsCSSSelector **iter = entry->mSelectors.Elements(),
+                        **end = iter + entry->mSelectors.Length();
+          for(; iter != end; ++iter) {
+            AttributeEnumFunc(*iter, &data);
+          }
+        }
+      }
+
+      nsCSSSelector **iter = cascade->mPossiblyNegatedIDSelectors.Elements(),
+                    **end = iter + cascade->mPossiblyNegatedIDSelectors.Length();
       for(; iter != end; ++iter) {
         AttributeEnumFunc(*iter, &data);
       }
@@ -2562,8 +2583,19 @@ AddSelector(RuleCascadeData* aCascade,
       aCascade->mStateSelectors.AppendElement(aSelectorInTopLevel);
 
     // Build mIDSelectors
-    if (negation->mIDList) {
-      aCascade->mIDSelectors.AppendElement(aSelectorInTopLevel);
+    if (negation == aSelectorInTopLevel) {
+      for (nsAtomList* curID = negation->mIDList; curID;
+           curID = curID->mNext) {
+        AtomSelectorEntry *entry =
+          static_cast<AtomSelectorEntry*>(PL_DHashTableOperate(&aCascade->mIdSelectors,
+                                                               curID->mAtom,
+                                                               PL_DHASH_ADD));
+        if (entry) {
+          entry->mSelectors.AppendElement(aSelectorInTopLevel);
+        }
+      }
+    } else if (negation->mIDList) {
+      aCascade->mPossiblyNegatedIDSelectors.AppendElement(aSelectorInTopLevel);
     }
 
     // Build mClassSelectors
