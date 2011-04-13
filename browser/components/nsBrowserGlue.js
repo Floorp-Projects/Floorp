@@ -262,7 +262,9 @@ BrowserGlue.prototype = {
           this._migrateUI();
         }
         else if (data == "force-distribution-customization") {
+          this._distributionCustomizer.applyPrefDefaults();
           this._distributionCustomizer.applyCustomizations();
+          // To apply distribution bookmarks use "places-init-complete".
         }
         else if (data == "force-places-init") {
           this._initPlaces();

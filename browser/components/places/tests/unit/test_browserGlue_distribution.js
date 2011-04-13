@@ -39,28 +39,17 @@ function run_test()
   do_check_eq(PlacesUtils.history.databaseStatus,
               PlacesUtils.history.DATABASE_STATUS_CREATE);
 
-  // Initialize nsBrowserGlue.
-  let bg = Cc["@mozilla.org/browser/browserglue;1"].
-           getService(Ci.nsIBrowserGlue);
-
-  Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    Services.obs.removeObserver(arguments.callee,
-                                PlacesUtils.TOPIC_INIT_COMPLETE);
-    do_execute_soon(onPlacesInitComplete);
-  }, PlacesUtils.TOPIC_INIT_COMPLETE, false);
-}
-
-function onPlacesInitComplete()
-{
-  // Simulate browser startup.
-  bg.QueryInterface(Ci.nsIObserver).observe(null,
-                                            TOPIC_BROWSERGLUE_TEST,
-                                            TOPICDATA_DISTRIBUTION_CUSTOMIZATION);
+  // Force distribution.
+  Cc["@mozilla.org/browser/browserglue;1"].
+  getService(Ci.nsIObserver).observe(null,
+                                     TOPIC_BROWSERGLUE_TEST,
+                                     TOPICDATA_DISTRIBUTION_CUSTOMIZATION);
 
   // Test will continue on customization complete notification.
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     Services.obs.removeObserver(arguments.callee,
-                                TOPIC_CUSTOMIZATION_COMPLETE);
+                                TOPIC_CUSTOMIZATION_COMPLETE,
+                                false);
     do_execute_soon(onCustomizationComplete);
   }, TOPIC_CUSTOMIZATION_COMPLETE, false);
 }
