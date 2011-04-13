@@ -73,6 +73,8 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/Stack-inl.h"
+
 using namespace js;
 
 /*
@@ -2106,13 +2108,13 @@ date_toJSON(JSContext *cx, uintN argc, Value *vp)
     /* Step 6. */
     LeaveTrace(cx);
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, 0, &args))
+    if (!cx->stack.pushInvokeArgs(cx, 0, &args))
         return false;
 
     args.calleev() = toISO;
     args.thisv().setObject(*obj);
 
-    if (!Invoke(cx, args, 0))
+    if (!Invoke(cx, args))
         return false;
     *vp = args.rval();
     return true;

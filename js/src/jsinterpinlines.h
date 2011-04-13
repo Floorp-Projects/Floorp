@@ -52,425 +52,7 @@
 
 #include "jsfuninlines.h"
 
-inline void
-JSStackFrame::initPrev(JSContext *cx)
-{
-    JS_ASSERT(flags_ & JSFRAME_HAS_PREVPC);
-    if (JSFrameRegs *regs = cx->regs) {
-        prev_ = regs->fp;
-        prevpc_ = regs->pc;
-        JS_ASSERT_IF(!prev_->isDummyFrame() && !prev_->hasImacropc(),
-                     uint32(prevpc_ - prev_->script()->code) < prev_->script()->length);
-    } else {
-        prev_ = NULL;
-#ifdef DEBUG
-        prevpc_ = (jsbytecode *)0xbadc;
-#endif
-    }
-}
-
-inline void
-JSStackFrame::resetGeneratorPrev(JSContext *cx)
-{
-    flags_ |= JSFRAME_HAS_PREVPC;
-    initPrev(cx);
-}
-
-inline void
-JSStackFrame::initCallFrame(JSContext *cx, JSObject &callee, JSFunction *fun,
-                            uint32 nactual, uint32 flagsArg)
-{
-    JS_ASSERT((flagsArg & ~(JSFRAME_CONSTRUCTING |
-                            JSFRAME_OVERFLOW_ARGS |
-                            JSFRAME_UNDERFLOW_ARGS)) == 0);
-    JS_ASSERT(fun == callee.getFunctionPrivate());
-
-    /* Initialize stack frame members. */
-    flags_ = JSFRAME_FUNCTION | JSFRAME_HAS_PREVPC | JSFRAME_HAS_SCOPECHAIN | flagsArg;
-    exec.fun = fun;
-    args.nactual = nactual;  /* only need to write if over/under-flow */
-    scopeChain_ = callee.getParent();
-    initPrev(cx);
-    JS_ASSERT(!hasImacropc());
-    JS_ASSERT(!hasHookData());
-    JS_ASSERT(annotation() == NULL);
-    JS_ASSERT(!hasCallObj());
-}
-
-inline void
-JSStackFrame::resetInvokeCallFrame()
-{
-    /* Undo changes to frame made during execution; see initCallFrame */
-
-    JS_ASSERT(!(flags_ & ~(JSFRAME_FUNCTION |
-                           JSFRAME_OVERFLOW_ARGS |
-                           JSFRAME_UNDERFLOW_ARGS |
-                           JSFRAME_OVERRIDE_ARGS |
-                           JSFRAME_HAS_PREVPC |
-                           JSFRAME_HAS_RVAL |
-                           JSFRAME_HAS_SCOPECHAIN |
-                           JSFRAME_HAS_ANNOTATION |
-                           JSFRAME_HAS_HOOK_DATA |
-                           JSFRAME_HAS_CALL_OBJ |
-                           JSFRAME_HAS_ARGS_OBJ |
-                           JSFRAME_FINISHED_IN_INTERP)));
-
-    /*
-     * Since the stack frame is usually popped after PutActivationObjects,
-     * these bits aren't cleared. The activation objects must have actually
-     * been put, though.
-     */
-    JS_ASSERT_IF(flags_ & JSFRAME_HAS_CALL_OBJ, callObj().getPrivate() == NULL);
-    JS_ASSERT_IF(flags_ & JSFRAME_HAS_ARGS_OBJ, argsObj().getPrivate() == NULL);
-
-    flags_ &= JSFRAME_FUNCTION |
-              JSFRAME_OVERFLOW_ARGS |
-              JSFRAME_HAS_PREVPC |
-              JSFRAME_UNDERFLOW_ARGS;
-
-    JS_ASSERT(exec.fun == callee().getFunctionPrivate());
-    scopeChain_ = callee().getParent();
-}
-
-inline void
-JSStackFrame::initCallFrameCallerHalf(JSContext *cx, uint32 flagsArg,
-                                      void *ncode)
-{
-    JS_ASSERT((flagsArg & ~(JSFRAME_CONSTRUCTING |
-                            JSFRAME_FUNCTION |
-                            JSFRAME_OVERFLOW_ARGS |
-                            JSFRAME_UNDERFLOW_ARGS)) == 0);
-
-    flags_ = JSFRAME_FUNCTION | flagsArg;
-    prev_ = cx->regs->fp;
-    ncode_ = ncode;
-}
-
-/*
- * The "early prologue" refers to the members that are stored for the benefit
- * of slow paths before initializing the rest of the members.
- */
-inline void
-JSStackFrame::initCallFrameEarlyPrologue(JSFunction *fun, uint32 nactual)
-{
-    exec.fun = fun;
-    if (flags_ & (JSFRAME_OVERFLOW_ARGS | JSFRAME_UNDERFLOW_ARGS))
-        args.nactual = nactual;
-}
-
-/*
- * The "late prologue" refers to the members that are stored after having
- * checked for stack overflow and formal/actual arg mismatch.
- */
-inline void
-JSStackFrame::initCallFrameLatePrologue()
-{
-    SetValueRangeToUndefined(slots(), script()->nfixed);
-}
-
-inline void
-JSStackFrame::initEvalFrame(JSContext *cx, JSScript *script, JSStackFrame *prev, uint32 flagsArg)
-{
-    JS_ASSERT(flagsArg & JSFRAME_EVAL);
-    JS_ASSERT((flagsArg & ~(JSFRAME_EVAL | JSFRAME_DEBUGGER)) == 0);
-    JS_ASSERT(prev->isScriptFrame());
-
-    /* Copy (callee, thisv). */
-    js::Value *dstvp = (js::Value *)this - 2;
-    js::Value *srcvp = prev->hasArgs()
-                       ? prev->formalArgs() - 2
-                       : (js::Value *)prev - 2;
-    dstvp[0] = srcvp[0];
-    dstvp[1] = srcvp[1];
-    JS_ASSERT_IF(prev->isFunctionFrame(),
-                 dstvp[0].toObject().isFunction());
-
-    /* Initialize stack frame members. */
-    flags_ = flagsArg | JSFRAME_HAS_PREVPC | JSFRAME_HAS_SCOPECHAIN |
-             (prev->flags_ & (JSFRAME_FUNCTION | JSFRAME_GLOBAL));
-    if (isFunctionFrame()) {
-        exec = prev->exec;
-        args.script = script;
-    } else {
-        exec.script = script;
-    }
-
-    scopeChain_ = &prev->scopeChain();
-    prev_ = prev;
-    prevpc_ = prev->pc(cx);
-    JS_ASSERT(!hasImacropc());
-    JS_ASSERT(!hasHookData());
-    setAnnotation(prev->annotation());
-}
-
-inline void
-JSStackFrame::initGlobalFrame(JSScript *script, JSObject &chain, uint32 flagsArg)
-{
-    JS_ASSERT((flagsArg & ~(JSFRAME_EVAL | JSFRAME_DEBUGGER)) == 0);
-
-    /* Initialize (callee, thisv). */
-    js::Value *vp = (js::Value *)this - 2;
-    vp[0].setUndefined();
-    vp[1].setUndefined();  /* Set after frame pushed using thisObject */
-
-    /* Initialize stack frame members. */
-    flags_ = flagsArg | JSFRAME_GLOBAL | JSFRAME_HAS_PREVPC | JSFRAME_HAS_SCOPECHAIN;
-    exec.script = script;
-    args.script = (JSScript *)0xbad;
-    scopeChain_ = &chain;
-    prev_ = NULL;
-    JS_ASSERT(!hasImacropc());
-    JS_ASSERT(!hasHookData());
-    JS_ASSERT(annotation() == NULL);
-}
-
-inline void
-JSStackFrame::initDummyFrame(JSContext *cx, JSObject &chain)
-{
-    js::PodZero(this);
-    flags_ = JSFRAME_DUMMY | JSFRAME_HAS_PREVPC | JSFRAME_HAS_SCOPECHAIN;
-    initPrev(cx);
-    chain.isGlobal();
-    setScopeChainNoCallObj(chain);
-}
-
-inline void
-JSStackFrame::stealFrameAndSlots(js::Value *vp, JSStackFrame *otherfp,
-                                 js::Value *othervp, js::Value *othersp)
-{
-    JS_ASSERT(vp == (js::Value *)this - (otherfp->formalArgsEnd() - othervp));
-    JS_ASSERT(othervp == otherfp->actualArgs() - 2);
-    JS_ASSERT(othersp >= otherfp->slots());
-    JS_ASSERT(othersp <= otherfp->base() + otherfp->numSlots());
-
-    PodCopy(vp, othervp, othersp - othervp);
-    JS_ASSERT(vp == this->actualArgs() - 2);
-
-    /* Catch bad-touching of non-canonical args (e.g., generator_trace). */
-    if (otherfp->hasOverflowArgs())
-        Debug_SetValueRangeToCrashOnTouch(othervp, othervp + 2 + otherfp->numFormalArgs());
-
-    /*
-     * Repoint Call, Arguments, Block and With objects to the new live frame.
-     * Call and Arguments are done directly because we have pointers to them.
-     * Block and With objects are done indirectly through 'liveFrame'. See
-     * js_LiveFrameToFloating comment in jsiter.h.
-     */
-    if (hasCallObj()) {
-        JSObject &obj = callObj();
-        obj.setPrivate(this);
-        otherfp->flags_ &= ~JSFRAME_HAS_CALL_OBJ;
-        if (js_IsNamedLambda(fun())) {
-            JSObject *env = obj.getParent();
-            JS_ASSERT(env->getClass() == &js_DeclEnvClass);
-            env->setPrivate(this);
-        }
-    }
-    if (hasArgsObj()) {
-        JSObject &args = argsObj();
-        JS_ASSERT(args.isArguments());
-        if (args.isNormalArguments())
-            args.setPrivate(this);
-        else
-            JS_ASSERT(!args.getPrivate());
-        otherfp->flags_ &= ~JSFRAME_HAS_ARGS_OBJ;
-    }
-}
-
-inline js::Value &
-JSStackFrame::canonicalActualArg(uintN i) const
-{
-    if (i < numFormalArgs())
-        return formalArg(i);
-    JS_ASSERT(i < numActualArgs());
-    return actualArgs()[i];
-}
-
-template <class Op>
-inline bool
-JSStackFrame::forEachCanonicalActualArg(Op op)
-{
-    uintN nformal = fun()->nargs;
-    js::Value *formals = formalArgsEnd() - nformal;
-    uintN nactual = numActualArgs();
-    if (nactual <= nformal) {
-        uintN i = 0;
-        js::Value *actualsEnd = formals + nactual;
-        for (js::Value *p = formals; p != actualsEnd; ++p, ++i) {
-            if (!op(i, p))
-                return false;
-        }
-    } else {
-        uintN i = 0;
-        js::Value *formalsEnd = formalArgsEnd();
-        for (js::Value *p = formals; p != formalsEnd; ++p, ++i) {
-            if (!op(i, p))
-                return false;
-        }
-        js::Value *actuals = formalsEnd - (nactual + 2);
-        js::Value *actualsEnd = formals - 2;
-        for (js::Value *p = actuals; p != actualsEnd; ++p, ++i) {
-            if (!op(i, p))
-                return false;
-        }
-    }
-    return true;
-}
-
-template <class Op>
-inline bool
-JSStackFrame::forEachFormalArg(Op op)
-{
-    js::Value *formals = formalArgsEnd() - fun()->nargs;
-    js::Value *formalsEnd = formalArgsEnd();
-    uintN i = 0;
-    for (js::Value *p = formals; p != formalsEnd; ++p, ++i) {
-        if (!op(i, p))
-            return false;
-    }
-    return true;
-}
-
-namespace js {
-
-struct CopyTo
-{
-    Value *dst;
-    CopyTo(Value *dst) : dst(dst) {}
-    bool operator()(uintN, Value *src) {
-        *dst++ = *src;
-        return true;
-    }
-};
-
-}
-
-JS_ALWAYS_INLINE void
-JSStackFrame::clearMissingArgs()
-{
-    if (flags_ & JSFRAME_UNDERFLOW_ARGS)
-        SetValueRangeToUndefined(formalArgs() + numActualArgs(), formalArgsEnd());
-}
-
-inline JSObject &
-JSStackFrame::varobj(js::StackSegment *seg) const
-{
-    JS_ASSERT(seg->contains(this));
-    return isFunctionFrame() ? callObj() : seg->getInitialVarObj();
-}
-
-inline JSObject &
-JSStackFrame::varobj(JSContext *cx) const
-{
-    JS_ASSERT(cx->activeSegment()->contains(this));
-    return isFunctionFrame() ? callObj() : cx->activeSegment()->getInitialVarObj();
-}
-
-inline uintN
-JSStackFrame::numActualArgs() const
-{
-    JS_ASSERT(hasArgs());
-    if (JS_UNLIKELY(flags_ & (JSFRAME_OVERFLOW_ARGS | JSFRAME_UNDERFLOW_ARGS)))
-        return hasArgsObj() ? argsObj().getArgsInitialLength() : args.nactual;
-    return numFormalArgs();
-}
-
-inline js::Value *
-JSStackFrame::actualArgs() const
-{
-    JS_ASSERT(hasArgs());
-    js::Value *argv = formalArgs();
-    if (JS_UNLIKELY(flags_ & JSFRAME_OVERFLOW_ARGS)) {
-        uintN nactual = hasArgsObj() ? argsObj().getArgsInitialLength() : args.nactual;
-        return argv - (2 + nactual);
-    }
-    return argv;
-}
-
-inline js::Value *
-JSStackFrame::actualArgsEnd() const
-{
-    JS_ASSERT(hasArgs());
-    if (JS_UNLIKELY(flags_ & JSFRAME_OVERFLOW_ARGS))
-        return formalArgs() - 2;
-    return formalArgs() + numActualArgs();
-}
-
-inline void
-JSStackFrame::setArgsObj(JSObject &obj)
-{
-    JS_ASSERT_IF(hasArgsObj(), &obj == args.obj);
-    JS_ASSERT_IF(!hasArgsObj(), numActualArgs() == obj.getArgsInitialLength());
-    args.obj = &obj;
-    flags_ |= JSFRAME_HAS_ARGS_OBJ;
-}
-
-inline void
-JSStackFrame::setScopeChainNoCallObj(JSObject &obj)
-{
-#ifdef DEBUG
-    JS_ASSERT(&obj != NULL);
-    if (&obj != sInvalidScopeChain) {
-        if (hasCallObj()) {
-            JSObject *pobj = &obj;
-            while (pobj && pobj->getPrivate() != this)
-                pobj = pobj->getParent();
-            JS_ASSERT(pobj);
-        } else {
-            for (JSObject *pobj = &obj; pobj; pobj = pobj->getParent())
-                JS_ASSERT_IF(pobj->isCall(), pobj->getPrivate() != this);
-        }
-    }
-#endif
-    scopeChain_ = &obj;
-    flags_ |= JSFRAME_HAS_SCOPECHAIN;
-}
-
-inline void
-JSStackFrame::setScopeChainWithOwnCallObj(JSObject &obj)
-{
-    JS_ASSERT(&obj != NULL);
-    JS_ASSERT(!hasCallObj() && obj.isCall() && obj.getPrivate() == this);
-    scopeChain_ = &obj;
-    flags_ |= JSFRAME_HAS_SCOPECHAIN | JSFRAME_HAS_CALL_OBJ;
-}
-
-inline JSObject &
-JSStackFrame::callObj() const
-{
-    JS_ASSERT_IF(isNonEvalFunctionFrame() || isStrictEvalFrame(), hasCallObj());
-
-    JSObject *pobj = &scopeChain();
-    while (JS_UNLIKELY(pobj->getClass() != &js_CallClass)) {
-        JS_ASSERT(js::IsCacheableNonGlobalScope(pobj) || pobj->isWith());
-        pobj = pobj->getParent();
-    }
-    return *pobj;
-}
-
-inline void
-JSStackFrame::markActivationObjectsAsPut()
-{
-    if (flags_ & (JSFRAME_HAS_ARGS_OBJ | JSFRAME_HAS_CALL_OBJ)) {
-        if (hasArgsObj() && !argsObj().getPrivate()) {
-            args.nactual = args.obj->getArgsInitialLength();
-            flags_ &= ~JSFRAME_HAS_ARGS_OBJ;
-        }
-        if (hasCallObj() && !callObj().getPrivate()) {
-            /*
-             * For function frames, the call object may or may not have have an
-             * enclosing DeclEnv object, so we use the callee's parent, since
-             * it was the initial scope chain. For global (strict) eval frames,
-             * there is no calle, but the call object's parent is the initial
-             * scope chain.
-             */
-            scopeChain_ = isFunctionFrame()
-                          ? callee().getParent()
-                          : scopeChain_->getParent();
-            flags_ &= ~JSFRAME_HAS_CALL_OBJ;
-        }
-    }
-}
+#include "vm/Stack-inl.h"
 
 namespace js {
 
@@ -548,12 +130,11 @@ InvokeSessionGuard::invoke(JSContext *cx) const
 #else
     if (!optimized())
 #endif
-        return Invoke(cx, args_, 0);
+        return Invoke(cx, args_);
 
     /* Clear any garbage left from the last Invoke. */
-    JSStackFrame *fp = frame_.fp();
+    StackFrame *fp = frame_.fp();
     fp->clearMissingArgs();
-    PutActivationObjects(cx, frame_.fp());
     fp->resetInvokeCallFrame();
     SetValueRangeToUndefined(fp->slots(), script_->nfixed);
 
@@ -563,7 +144,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
         ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_);
-        cx->regs->pc = stop_;
+        cx->regs().pc = stop_;
 #else
         cx->regs->pc = script_->code;
         ok = Interpret(cx, cx->fp());
@@ -606,7 +187,7 @@ class PrimitiveBehavior<double> {
 } // namespace detail
 
 template <typename T>
-bool
+inline bool
 GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
 {
     typedef detail::PrimitiveBehavior<T> Behavior;
@@ -704,7 +285,7 @@ ComputeImplicitThis(JSContext *cx, JSObject *obj, const Value &funval, Value *vp
 }
 
 inline bool
-ComputeThis(JSContext *cx, JSStackFrame *fp)
+ComputeThis(JSContext *cx, StackFrame *fp)
 {
     Value &thisv = fp->thisValue();
     if (thisv.isObject())
@@ -761,7 +342,7 @@ ValuePropertyBearer(JSContext *cx, const Value &v, int spindex)
 }
 
 inline bool
-ScriptPrologue(JSContext *cx, JSStackFrame *fp)
+ScriptPrologue(JSContext *cx, StackFrame *fp)
 {
     JS_ASSERT_IF(fp->isNonEvalFunctionFrame() && fp->fun()->isHeavyweight(), fp->hasCallObj());
 
@@ -778,7 +359,7 @@ ScriptPrologue(JSContext *cx, JSStackFrame *fp)
 }
 
 inline bool
-ScriptEpilogue(JSContext *cx, JSStackFrame *fp, bool ok)
+ScriptEpilogue(JSContext *cx, StackFrame *fp, bool ok)
 {
     if (cx->compartment->debugMode)
         ok = ScriptDebugEpilogue(cx, fp, ok);
@@ -797,7 +378,7 @@ ScriptEpilogue(JSContext *cx, JSStackFrame *fp, bool ok)
 }
 
 inline bool
-ScriptPrologueOrGeneratorResume(JSContext *cx, JSStackFrame *fp)
+ScriptPrologueOrGeneratorResume(JSContext *cx, StackFrame *fp)
 {
     if (!fp->isGeneratorFrame())
         return ScriptPrologue(cx, fp);
@@ -807,7 +388,7 @@ ScriptPrologueOrGeneratorResume(JSContext *cx, JSStackFrame *fp)
 }
 
 inline bool
-ScriptEpilogueOrGeneratorYield(JSContext *cx, JSStackFrame *fp, bool ok)
+ScriptEpilogueOrGeneratorYield(JSContext *cx, StackFrame *fp, bool ok)
 {
     if (!fp->isYielding())
         return ScriptEpilogue(cx, fp, ok);
@@ -816,6 +397,6 @@ ScriptEpilogueOrGeneratorYield(JSContext *cx, JSStackFrame *fp, bool ok)
     return ok;
 }
 
-}
+}  /* namespace js */
 
 #endif /* jsinterpinlines_h__ */

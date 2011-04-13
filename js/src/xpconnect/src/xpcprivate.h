@@ -3626,9 +3626,9 @@ public:
     {
         if(cx)
         {
-            NS_ASSERTION(cx->thread, "Uh, JS context w/o a thread?");
+            NS_ASSERTION(cx->thread(), "Uh, JS context w/o a thread?");
 
-            if(cx->thread == sMainJSThread)
+            if(cx->thread() == sMainJSThread)
                 return sMainThreadData;
         }
         else if(sMainThreadData && sMainThreadData->mThread == PR_GetCurrentThread())
@@ -3733,7 +3733,7 @@ public:
         {sMainJSThread = nsnull; sMainThreadData = nsnull;}
 
     static PRBool IsMainThread(JSContext *cx)
-        { return cx->thread == sMainJSThread; }
+        { return cx->thread() == sMainJSThread; }
 
 private:
     XPCPerThreadData();

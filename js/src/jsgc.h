@@ -821,7 +821,7 @@ extern JS_FRIEND_API(bool)
 js_GCThingIsMarked(void *thing, uintN color);
 
 extern void
-js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
+js_TraceStackFrame(JSTracer *trc, js::StackFrame *fp);
 
 namespace js {
 

@@ -107,10 +107,10 @@ struct VMFrame
 
     VMFrame      *previous;
     void         *unused;
-    JSFrameRegs  regs;
+    FrameRegs    regs;
     JSContext    *cx;
     Value        *stackLimit;
-    JSStackFrame *entryfp;
+    StackFrame   *entryfp;
 
 #if defined(JS_CPU_X86)
     void *savedEBX;
@@ -178,8 +178,13 @@ struct VMFrame
 
     JSRuntime *runtime() { return cx->runtime; }
 
-    JSStackFrame *&fp() { return regs.fp; }
+    StackFrame *fp() { return regs.fp(); }
     mjit::JITScript *jit() { return fp()->jit(); }
+
+    static const size_t offsetOfFp = 5 * sizeof(void *) + FrameRegs::offsetOfFp;
+    static void staticAssert() {
+        JS_STATIC_ASSERT(offsetOfFp == offsetof(VMFrame, regs) + FrameRegs::offsetOfFp);
+    }
 };
 
 #ifdef JS_CPU_ARM
@@ -425,7 +430,7 @@ struct JITScript {
  * Execute the given mjit code. This is a low-level call and callers must
  * provide the same guarantees as JaegerShot/CheckStackAndEnterMethodJIT.
  */
-JSBool EnterMethodJIT(JSContext *cx, JSStackFrame *fp, void *code, Value *stackLimit);
+JSBool EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimit);
 
 /* Execute a method that has been JIT compiled. */
 JSBool JaegerShot(JSContext *cx);
@@ -445,7 +450,7 @@ void JS_FASTCALL
 ProfileStubCall(VMFrame &f);
 
 CompileStatus JS_NEVER_INLINE
-TryCompile(JSContext *cx, JSStackFrame *fp);
+TryCompile(JSContext *cx, StackFrame *fp);
 
 void
 ReleaseScriptCode(JSContext *cx, JSScript *script);

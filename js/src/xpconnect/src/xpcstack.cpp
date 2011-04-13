@@ -141,9 +141,10 @@ XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp,
     {
         NS_ADDREF(self);
 
-        if(fp->prev())
+        JSStackFrame *tmp = fp;
+        if(JSStackFrame *prev = JS_FrameIterator(cx, &tmp))
         {
-            if(NS_FAILED(CreateStack(cx, fp->prev(),
+            if(NS_FAILED(CreateStack(cx, prev,
                          (XPCJSStackFrame**) &self->mCaller)))
                 failed = JS_TRUE;
         }

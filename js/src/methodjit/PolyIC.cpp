@@ -404,8 +404,8 @@ class SetPropCompiler : public PICStubCompiler
 
             {
                 Address addr(pic.shapeReg, shape->setterOp() == SetCallArg
-                                           ? JSStackFrame::offsetOfFormalArg(fun, slot)
-                                           : JSStackFrame::offsetOfFixed(slot));
+                                           ? StackFrame::offsetOfFormalArg(fun, slot)
+                                           : StackFrame::offsetOfFixed(slot));
                 masm.storeValue(pic.u.vr, addr);
                 skipOver = masm.jump();
             }
@@ -907,7 +907,7 @@ class GetPropCompiler : public PICStubCompiler
          * up in the fast path, or put this offset in PICInfo?
          */
         uint32 thisvOffset = uint32(f.regs.sp - f.fp()->slots()) - 1;
-        Address thisv(JSFrameReg, sizeof(JSStackFrame) + thisvOffset * sizeof(Value));
+        Address thisv(JSFrameReg, sizeof(StackFrame) + thisvOffset * sizeof(Value));
         masm.storeValueFromComponents(ImmType(JSVAL_TYPE_STRING),
                                       pic.objReg, thisv);
 
@@ -1247,7 +1247,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
         /* For GETXPROP, the object is already in objReg. */
         if (pic.kind == ic::PICInfo::NAME)
-            masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
+            masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == getprop.holder);
         JS_ASSERT(getprop.holder == scopeChain->getGlobal());
@@ -1315,7 +1315,7 @@ class ScopeNameCompiler : public PICStubCompiler
 
         /* For GETXPROP, the object is already in objReg. */
         if (pic.kind == ic::PICInfo::NAME)
-            masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
+            masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
 
         JS_ASSERT(obj == getprop.holder);
         JS_ASSERT(getprop.holder != scopeChain->getGlobal());
@@ -1352,8 +1352,8 @@ class ScopeNameCompiler : public PICStubCompiler
 
         /* Not-escaped case. */
         {
-            Address addr(pic.shapeReg, kind == ARG ? JSStackFrame::offsetOfFormalArg(fun, slot)
-                                                   : JSStackFrame::offsetOfFixed(slot));
+            Address addr(pic.shapeReg, kind == ARG ? StackFrame::offsetOfFormalArg(fun, slot)
+                                                   : StackFrame::offsetOfFixed(slot));
             masm.loadPayload(addr, pic.objReg);
             masm.loadTypeTag(addr, pic.shapeReg);
             skipOver = masm.jump();
@@ -1459,7 +1459,7 @@ class ScopeNameCompiler : public PICStubCompiler
             /* Kludge to allow (typeof foo == "undefined") tests. */
             disable("property not found");
             if (pic.kind == ic::PICInfo::NAME) {
-                JSOp op2 = js_GetOpcode(cx, script, cx->regs->pc + JSOP_NAME_LENGTH);
+                JSOp op2 = js_GetOpcode(cx, script, cx->regs().pc + JSOP_NAME_LENGTH);
                 if (op2 == JSOP_TYPEOF) {
                     vp->setUndefined();
                     return true;
@@ -1531,7 +1531,7 @@ class BindNameCompiler : public PICStubCompiler
         BindNameLabels &labels = pic.bindNameLabels();
 
         /* Guard on the shape of the scope chain. */
-        masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
+        masm.loadPtr(Address(JSFrameReg, StackFrame::offsetOfScopeChain()), pic.objReg);
         masm.loadShape(pic.objReg, pic.shapeReg);
         Jump firstShape = masm.branch32(Assembler::NotEqual, pic.shapeReg,
                                         Imm32(scopeChain->shape()));
@@ -1751,7 +1751,7 @@ void JS_FASTCALL
 ic::CallProp(VMFrame &f, ic::PICInfo *pic)
 {
     JSContext *cx = f.cx;
-    JSFrameRegs &regs = f.regs;
+    FrameRegs &regs = f.regs;
 
     JSScript *script = f.fp()->script();
 
@@ -2102,8 +2102,8 @@ GetElementIC::attachGetProp(JSContext *cx, JSObject *obj, const Value &v, jsid i
 
     if (op == JSOP_CALLELEM) {
         // Emit a write of |obj| to the top of the stack, before we lose it.
-        Value *thisVp = &cx->regs->sp[-1];
-        Address thisSlot(JSFrameReg, JSStackFrame::offsetOfFixed(thisVp - cx->fp()->slots()));
+        Value *thisVp = &cx->regs().sp[-1];
+        Address thisSlot(JSFrameReg, StackFrame::offsetOfFixed(thisVp - cx->fp()->slots()));
         masm.storeValueFromComponents(ImmType(JSVAL_TYPE_OBJECT), objReg, thisSlot);
     }
 
