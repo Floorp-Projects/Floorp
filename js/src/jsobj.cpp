@@ -1216,7 +1216,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, JSStackFrame 
      * haven't wrapped that yet, do so now, before we make a copy of it for
      * the eval code to use.
      */
-    if (evalType == DIRECT_EVAL && !caller->computeThis(cx))
+    if (evalType == DIRECT_EVAL && !ComputeThis(cx, caller))
         return false;
 
     EvalScriptGuard esg(cx, linearStr);
@@ -1623,20 +1623,21 @@ const char js_lookupSetter_str[] = "__lookupSetter__";
 JS_FRIEND_API(JSBool)
 js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!BoxThisForVp(cx, vp))
+    CallArgs call = CallArgsFromVp(argc, vp);
+    if (!BoxNonStrictThis(cx, call))
         return false;
-    JSObject *obj = &vp[1].toObject();
+    JSObject *obj = &call.thisv().toObject();
 
-    if (argc <= 1 || !js_IsCallable(vp[3])) {
+    if (argc <= 1 || !js_IsCallable(call[1])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_getter_str);
         return JS_FALSE;
     }
-    PropertyOp getter = CastAsPropertyOp(&vp[3].toObject());
+    PropertyOp getter = CastAsPropertyOp(&call[1].toObject());
 
     jsid id;
-    if (!ValueToId(cx, vp[2], &id))
+    if (!ValueToId(cx, call[0], &id))
         return JS_FALSE;
     if (!CheckRedeclaration(cx, obj, id, JSPROP_GETTER))
         return JS_FALSE;
@@ -1648,7 +1649,7 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
-    vp->setUndefined();
+    call.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, StrictPropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
 }
@@ -1656,20 +1657,21 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
 JS_FRIEND_API(JSBool)
 js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
 {
-    if (!BoxThisForVp(cx, vp))
+    CallArgs call = CallArgsFromVp(argc, vp);
+    if (!BoxNonStrictThis(cx, call))
         return false;
-    JSObject *obj = &vp[1].toObject();
+    JSObject *obj = &call.thisv().toObject();
 
-    if (argc <= 1 || !js_IsCallable(vp[3])) {
+    if (argc <= 1 || !js_IsCallable(call[1])) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                              JSMSG_BAD_GETTER_OR_SETTER,
                              js_setter_str);
         return JS_FALSE;
     }
-    StrictPropertyOp setter = CastAsStrictPropertyOp(&vp[3].toObject());
+    StrictPropertyOp setter = CastAsStrictPropertyOp(&call[1].toObject());
 
     jsid id;
-    if (!ValueToId(cx, vp[2], &id))
+    if (!ValueToId(cx, call[0], &id))
         return JS_FALSE;
     if (!CheckRedeclaration(cx, obj, id, JSPROP_SETTER))
         return JS_FALSE;
@@ -1681,7 +1683,7 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
-    vp->setUndefined();
+    call.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
 }

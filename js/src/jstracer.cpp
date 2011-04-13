@@ -9999,7 +9999,7 @@ TraceRecorder::getThis(LIns*& this_ins)
      * trace-constant. getThisObject writes back to fp->thisValue(), so do
      * the same on trace.
      */
-    if (!fp->computeThis(cx))
+    if (!ComputeThis(cx, fp))
         RETURN_ERROR("computeThis failed");
 
     /* thisv is a reference, so it'll see the newly computed |this|. */
