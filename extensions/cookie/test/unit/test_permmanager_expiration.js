@@ -21,7 +21,7 @@ function do_run_test() {
 
   let pm = Services.permissions;
   let permURI = NetUtil.newURI("http://example.com");
-  let now = Math.floor(Date.now());
+  let now = Number(Date.now());
 
   // add a permission with *now* expiration
   pm.add(permURI, "test/expiration-perm-exp", 1, pm.EXPIRE_TIME, now);

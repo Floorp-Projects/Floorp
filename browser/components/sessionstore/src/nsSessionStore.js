@@ -713,7 +713,7 @@ SessionStoreService.prototype = {
       return;
 
     // assign it a unique identifier (timestamp)
-    aWindow.__SSi = "window" + Math.floor(Date.now());
+    aWindow.__SSi = "window" + Date.now();
 
     // and create its data object
     this._windows[aWindow.__SSi] = { tabs: [], selected: 0, _closedTabs: [] };
@@ -843,7 +843,7 @@ SessionStoreService.prototype = {
     let isFullyLoaded = this._isWindowLoaded(aWindow);
     if (!isFullyLoaded) {
       if (!aWindow.__SSi)
-        aWindow.__SSi = "window" + Math.floor(Date.now());
+        aWindow.__SSi = "window" + Date.now();
       this._windows[aWindow.__SSi] = this._statesToRestore[aWindow.__SS_restoreID];
       delete this._statesToRestore[aWindow.__SS_restoreID];
       delete aWindow.__SS_restoreID;
@@ -2981,7 +2981,7 @@ SessionStoreService.prototype = {
       // start might already be in use)
       var id = aIdMap[aEntry.ID] || 0;
       if (!id) {
-        for (id = Math.floor(Date.now()); id in aIdMap.used; id++);
+        for (id = Date.now(); id in aIdMap.used; id++);
         aIdMap[aEntry.ID] = id;
         aIdMap.used[id] = true;
       }
@@ -3751,7 +3751,7 @@ SessionStoreService.prototype = {
         // Assign a unique ID to correlate the window to be opened with the
         // remaining data
         window.__lastSessionWindowID = pinnedWindowState.__lastSessionWindowID
-                                     = "" + Math.floor(Date.now()) + Math.random();
+                                     = "" + Date.now() + Math.random();
 
         // Extract the cookies that belong with each pinned tab
         this._splitCookiesFromWindow(window, pinnedWindowState);
