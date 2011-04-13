@@ -1475,7 +1475,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp, jsval *thisv)
     if (!ac.enter())
         return false;
 
-    if (!fp->computeThis(cx))
+    if (!ComputeThis(cx, fp))
         return false;
     *thisv = Jsvalify(fp->thisValue());
     return true;

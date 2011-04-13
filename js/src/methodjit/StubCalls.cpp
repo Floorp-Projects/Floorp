@@ -1247,7 +1247,7 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
 void JS_FASTCALL
 stubs::This(VMFrame &f)
 {
-    if (!f.fp()->computeThis(f.cx))
+    if (!ComputeThis(f.cx, f.fp()))
         THROW();
     f.regs.sp[-1] = f.fp()->thisValue();
 }
