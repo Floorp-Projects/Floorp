@@ -78,8 +78,8 @@ function test() {
      "Invalid window for setWindowValue throws");
   ok(test(function() ss.deleteWindowValue({}, "")),
      "Invalid window for deleteWindowValue throws");
-  ok(test(function() ss.deleteWindowValue(window, Math.floor(Date.now()).toString())),
+  ok(test(function() ss.deleteWindowValue(window, Date.now().toString())),
      "Nonexistent value for deleteWindowValue throws");
-  ok(test(function() ss.deleteTabValue(gBrowser.selectedTab, Math.floor(Date.now()).toString())),
+  ok(test(function() ss.deleteTabValue(gBrowser.selectedTab, Date.now().toString())),
      "Nonexistent value for deleteTabValue throws");
 }

@@ -24,7 +24,7 @@ function test() {
   ////////////////////////////
   // setWindowValue, et al. //
   ////////////////////////////
-  let key = "Unique name: " + Math.floor(Date.now());
+  let key = "Unique name: " + Date.now();
   let value = "Unique value: " + Math.random();
   
   // test adding
@@ -43,7 +43,7 @@ function test() {
   // setTabValue, et al. //
   /////////////////////////
   key = "Unique name: " + Math.random();
-  value = "Unique value: " + Math.floor(Date.now());
+  value = "Unique value: " + Date.now();
   let tab = tabbrowser.addTab();
   tab.linkedBrowser.stop();
   

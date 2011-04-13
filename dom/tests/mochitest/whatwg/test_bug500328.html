@@ -346,7 +346,7 @@ function runTest() {
   statusMsg("Done loading file_bug500328_1.html for the second time.");
 
   var ifLink = iframeCw.document.getElementById("link-anchor1");
-  var rand = Math.floor(Date.now()) + "-" + Math.random();
+  var rand = Date.now() + "-" + Math.random();
   ifLink.href = rand;
 
   // Poll the document until the link has the correct color, or this test times

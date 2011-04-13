@@ -44,7 +44,7 @@ const dm = Cc["@mozilla.org/download-manager;1"].getService(nsIDownloadManager);
 // U+00E3 : LATIN SMALL LETTER A WITH TILDE
 // U+041B : CYRILLIC CAPITAL LETTER EL
 // U+3056 : HIRAGANA LETTER ZA
-const resultFileName = "test\u00e3\u041b\u3056" + Math.floor(Date.now()) + ".doc";
+const resultFileName = "test\u00e3\u041b\u3056" + Date.now() + ".doc";
 
 // Milliseconds between polls.
 const POLL_REGISTRY_TIMEOUT = 200;
