@@ -1,8 +1,8 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.4.0 [January 3, 2010]
- * Copyright (c) 1998-2010 Glenn Randers-Pehrson
+ * Last changed in libpng 1.4.6 [March 8, 2011]
+ * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -669,8 +669,8 @@ png_write_row(png_structp png_ptr, png_bytep row)
    if (png_ptr == NULL)
       return;
 
-   png_debug2(1, "in png_write_row (row %ld, pass %d)",
-      png_ptr->row_number, png_ptr->pass);
+   png_debug2(1, "in png_write_row (row %lu, pass %d)",
+      (unsigned long)png_ptr->row_number, png_ptr->pass);
 
    /* Initialize transformations and other stuff if first time */
    if (png_ptr->row_number == 0 && png_ptr->pass == 0)
@@ -786,7 +786,8 @@ png_write_row(png_structp png_ptr, png_bytep row)
       png_ptr->row_info.width);
 
    png_debug1(3, "row_info->color_type = %d", png_ptr->row_info.color_type);
-   png_debug1(3, "row_info->width = %lu", png_ptr->row_info.width);
+   png_debug1(3, "row_info->width = %lu",
+      (unsigned long)png_ptr->row_info.width);
    png_debug1(3, "row_info->channels = %d", png_ptr->row_info.channels);
    png_debug1(3, "row_info->bit_depth = %d", png_ptr->row_info.bit_depth);
    png_debug1(3, "row_info->pixel_depth = %d", png_ptr->row_info.pixel_depth);
@@ -1458,33 +1459,33 @@ png_write_png(png_structp png_ptr, png_infop info_ptr,
    /* It is REQUIRED to call this to finish writing the rest of the file */
    png_write_end(png_ptr, info_ptr);
 
-   transforms = transforms; /* Quiet compiler warnings */
-   params = params;
+   PNG_UNUSED(transforms)   /* Quiet compiler warnings */
+   PNG_UNUSED(params)
 }
 #endif
 
 #if defined(PNG_WRITE_APNG_SUPPORTED)
 void PNGAPI
 png_write_frame_head(png_structp png_ptr, png_infop info_ptr,
-    png_bytepp row_pointers, png_uint_32 width, png_uint_32 height, 
-    png_uint_32 x_offset, png_uint_32 y_offset, 
+    png_bytepp row_pointers, png_uint_32 width, png_uint_32 height,
+    png_uint_32 x_offset, png_uint_32 y_offset,
     png_uint_16 delay_num, png_uint_16 delay_den, png_byte dispose_op,
     png_byte blend_op)
 {
     png_debug(1, "in png_write_frame_head");
-    
+
     /* there is a chance this has been set after png_write_info was called,
     * so it would be set but not written. is there a way to be sure? */
     if (!(info_ptr->valid & PNG_INFO_acTL))
         png_error(png_ptr, "png_write_frame_head(): acTL not set");
-    
+
     png_write_reset(png_ptr);
-    
+
     png_write_reinit(png_ptr, info_ptr, width, height);
-    
-    if ( !(png_ptr->num_frames_written == 0 && 
+
+    if ( !(png_ptr->num_frames_written == 0 &&
            (png_ptr->apng_flags & PNG_FIRST_FRAME_HIDDEN) ) )
-        png_write_fcTL(png_ptr, width, height, x_offset, y_offset, 
+        png_write_fcTL(png_ptr, width, height, x_offset, y_offset,
                        delay_num, delay_den, dispose_op, blend_op);
 }
 
@@ -1492,9 +1493,8 @@ void PNGAPI
 png_write_frame_tail(png_structp png_ptr, png_infop png_info)
 {
     png_debug(1, "in png_write_frame_tail");
-    
+
     png_ptr->num_frames_written++;
 }
 #endif /* PNG_WRITE_APNG_SUPPORTED */
-
 #endif /* PNG_WRITE_SUPPORTED */

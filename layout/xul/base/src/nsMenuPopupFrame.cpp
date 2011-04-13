@@ -1235,51 +1235,49 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
     vFlip = FlipStyle_Outside;
   }
 
-  // if a panel is being moved, don't flip it. But always do this for content
-  // shells, so that the popup doesn't extend outside the containing frame.
-  if (aIsMove && mPopupType == ePopupTypePanel && !mInContentShell) {
-    hFlip = vFlip = FlipStyle_None;
+  // If a panel is being moved, don't constrain or flip it. But always do this for
+  // content shells, so that the popup doesn't extend outside the containing frame.
+  if (mInContentShell || !aIsMove || mPopupType != ePopupTypePanel) {
+    nsRect screenRect = GetConstraintRect(anchorRect, rootScreenRect);
+
+    // ensure that anchorRect is on screen
+    if (!anchorRect.IntersectRect(anchorRect, screenRect)) {
+      anchorRect.width = anchorRect.height = 0;
+      // if the anchor isn't within the screen, move it to the edge of the screen.
+      if (anchorRect.x < screenRect.x)
+        anchorRect.x = screenRect.x;
+      if (anchorRect.XMost() > screenRect.XMost())
+        anchorRect.x = screenRect.XMost();
+      if (anchorRect.y < screenRect.y)
+        anchorRect.y = screenRect.y;
+      if (anchorRect.YMost() > screenRect.YMost())
+        anchorRect.y = screenRect.YMost();
+    }
+
+    // shrink the the popup down if it is larger than the screen size
+    if (mRect.width > screenRect.width)
+      mRect.width = screenRect.width;
+    if (mRect.height > screenRect.height)
+      mRect.height = screenRect.height;
+
+    // at this point the anchor (anchorRect) is within the available screen
+    // area (screenRect) and the popup is known to be no larger than the screen.
+    // Next, check if there is enough space to show the popup at full size when
+    // positioned at screenPoint. If not, flip the popups to the opposite side
+    // of their anchor point, or resize them as necessary.
+    mRect.width = FlipOrResize(screenPoint.x, mRect.width, screenRect.x,
+                               screenRect.XMost(), anchorRect.x, anchorRect.XMost(),
+                               margin.left, margin.right, offsetForContextMenu, hFlip, &mHFlip);
+
+    mRect.height = FlipOrResize(screenPoint.y, mRect.height, screenRect.y,
+                                screenRect.YMost(), anchorRect.y, anchorRect.YMost(),
+                                margin.top, margin.bottom, offsetForContextMenu, vFlip, &mVFlip);
+
+    NS_ASSERTION(screenPoint.x >= screenRect.x && screenPoint.y >= screenRect.y &&
+                 screenPoint.x + mRect.width <= screenRect.XMost() &&
+                 screenPoint.y + mRect.height <= screenRect.YMost(),
+                 "Popup is offscreen");
   }
-
-  nsRect screenRect = GetConstraintRect(anchorRect, rootScreenRect);
-
-  // ensure that anchorRect is on screen
-  if (!anchorRect.IntersectRect(anchorRect, screenRect)) {
-    anchorRect.width = anchorRect.height = 0;
-    // if the anchor isn't within the screen, move it to the edge of the screen.
-    if (anchorRect.x < screenRect.x)
-      anchorRect.x = screenRect.x;
-    if (anchorRect.XMost() > screenRect.XMost())
-      anchorRect.x = screenRect.XMost();
-    if (anchorRect.y < screenRect.y)
-      anchorRect.y = screenRect.y;
-    if (anchorRect.YMost() > screenRect.YMost())
-      anchorRect.y = screenRect.YMost();
-  }
-
-  // shrink the the popup down if it is larger than the screen size
-  if (mRect.width > screenRect.width)
-    mRect.width = screenRect.width;
-  if (mRect.height > screenRect.height)
-    mRect.height = screenRect.height;
-
-  // at this point the anchor (anchorRect) is within the available screen
-  // area (screenRect) and the popup is known to be no larger than the screen.
-  // Next, check if there is enough space to show the popup at full size when
-  // positioned at screenPoint. If not, flip the popups to the opposite side
-  // of their anchor point, or resize them as necessary.
-  mRect.width = FlipOrResize(screenPoint.x, mRect.width, screenRect.x,
-                             screenRect.XMost(), anchorRect.x, anchorRect.XMost(),
-                             margin.left, margin.right, offsetForContextMenu, hFlip, &mHFlip);
-
-  mRect.height = FlipOrResize(screenPoint.y, mRect.height, screenRect.y,
-                              screenRect.YMost(), anchorRect.y, anchorRect.YMost(),
-                              margin.top, margin.bottom, offsetForContextMenu, vFlip, &mVFlip);
-
-  NS_ASSERTION(screenPoint.x >= screenRect.x && screenPoint.y >= screenRect.y &&
-               screenPoint.x + mRect.width <= screenRect.XMost() &&
-               screenPoint.y + mRect.height <= screenRect.YMost(),
-               "Popup is offscreen");
 
   // determine the x and y position of the view by subtracting the desired
   // screen position from the screen position of the root frame.
@@ -1539,13 +1537,13 @@ nsMenuPopupFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
 }
 
 nsMenuFrame*
-nsMenuPopupFrame::Enter()
+nsMenuPopupFrame::Enter(nsGUIEvent* aEvent)
 {
   mIncrementalString.Truncate();
 
   // Give it to the child.
   if (mCurrentMenu)
-    return mCurrentMenu->Enter();
+    return mCurrentMenu->Enter(aEvent);
 
   return nsnull;
 }
