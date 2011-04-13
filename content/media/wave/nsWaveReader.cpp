@@ -273,6 +273,10 @@ nsresult nsWaveReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTim
   return mDecoder->GetCurrentStream()->Seek(nsISeekableStream::NS_SEEK_SET, position);
 }
 
+static double RoundToUsecs(double aSeconds) {
+  return floor(aSeconds * USECS_PER_S) / USECS_PER_S;
+}
+
 nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   PRInt64 startOffset = mDecoder->GetCurrentStream()->GetNextCachedData(mWavePCMOffset);
@@ -282,8 +286,11 @@ nsresult nsWaveReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
     NS_ASSERTION(startOffset >= mWavePCMOffset, "Integer underflow in GetBuffered");
     NS_ASSERTION(endOffset >= mWavePCMOffset, "Integer underflow in GetBuffered");
 
-    aBuffered->Add(BytesToTime(startOffset - mWavePCMOffset),
-                   BytesToTime(endOffset - mWavePCMOffset));
+    // We need to round the buffered ranges' times to microseconds so that they
+    // have the same precision as the currentTime and duration attribute on 
+    // the media element.
+    aBuffered->Add(RoundToUsecs(BytesToTime(startOffset - mWavePCMOffset)),
+                   RoundToUsecs(BytesToTime(endOffset - mWavePCMOffset)));
     startOffset = mDecoder->GetCurrentStream()->GetNextCachedData(endOffset);
   }
   return NS_OK;
