@@ -116,6 +116,9 @@ TrampolineCompiler::compileTrampoline(Trampolines::TrampolinePtr *where,
 bool
 TrampolineCompiler::generateForceReturn(Assembler &masm)
 {
+    /* The JSStackFrame register may have been clobbered while returning, reload it. */
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
+
     /* if (hasArgsObj() || hasCallObj()) stubs::PutActivationObjects() */
     Jump noActObjs = masm.branchTest32(Assembler::Zero, FrameFlagsAddress(),
                                        Imm32(JSFRAME_HAS_CALL_OBJ | JSFRAME_HAS_ARGS_OBJ));
