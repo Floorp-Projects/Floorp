@@ -1053,8 +1053,8 @@ struct JSRuntime {
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;
     jsrefcount          gcKeepAtoms;
-    size_t              gcBytes;
-    size_t              gcTriggerBytes;
+    uint32              gcBytes;
+    uint32              gcTriggerBytes;
     size_t              gcLastBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
@@ -1264,9 +1264,6 @@ struct JSRuntime {
     jsrefcount          nonInlineCalls;
     jsrefcount          constructs;
 
-    jsrefcount          liveObjectProps;
-    jsrefcount          liveObjectPropsPreSweep;
-
     /*
      * NB: emptyShapes (in JSCompartment) is init'ed iff at least one
      * of these envars is set:
@@ -1352,6 +1349,7 @@ struct JSRuntime {
 
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
+    void reduceGCTriggerBytes(uint32 amount);
 
     /*
      * Call the system malloc while checking for GC memory pressure and

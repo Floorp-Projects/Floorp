@@ -375,7 +375,6 @@ js::PropertyTree::dumpShapeStats()
             meter(&bs, r.front());
     }
 
-    double props = rt->liveObjectPropsPreSweep;
     double nodes = compartment->livePropTreeNodes;
     double dicts = compartment->liveDictModeNodes;
 
@@ -387,8 +386,8 @@ js::PropertyTree::dumpShapeStats()
     double mean = JS_MeanAndStdDevBS(&bs, &sigma);
 
     fprintf(logfp,
-            "props %g nodes %g (dicts %g) beta %g meankids %g sigma %g max %u\n",
-            props, nodes, dicts, nodes / props, mean, sigma, bs.max);
+            "nodes %g (dicts %g) meankids %g sigma %g max %u\n",
+            nodes, dicts, mean, sigma, bs.max);
 
     JS_DumpHistogram(&bs, logfp);
 

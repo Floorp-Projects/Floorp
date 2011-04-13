@@ -52,6 +52,7 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 #include "jsstaticcheck.h"
+#include "jstypedarray.h"
 #include "jsxml.h"
 
 /* Headers included for inline implementations used by this header. */
@@ -793,10 +794,6 @@ JSObject::init(JSContext *cx, js::Class *aclasp, JSObject *proto, JSObject *pare
 inline void
 JSObject::finish(JSContext *cx)
 {
-#ifdef DEBUG
-    if (isNative())
-        JS_LOCK_RUNTIME_VOID(cx->runtime, cx->runtime->liveObjectProps -= propertyCount());
-#endif
     if (hasSlotsArray())
         freeSlotsArray(cx);
     if (emptyShapes)
@@ -981,6 +978,22 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
     return false;
 }
 
+static inline bool
+CanBeFinalizedInBackground(gc::FinalizeKind kind, Class *clasp)
+{
+    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
+    /* If the class has no finalizer or a finalizer that is safe to call on
+     * a different thread, we change the finalize kind. For example,
+     * FINALIZE_OBJECT0 calls the finalizer on the main thread,
+     * FINALIZE_OBJECT0_BACKGROUND calls the finalizer on the gcHelperThread.
+     * kind % 2 prevents from recursivly incrementing the finalize kind because
+     * we can call NewObject with a background finalize kind.
+     */
+    if (kind % 2 == 0 && (!clasp->finalize || clasp->flags & JSCLASS_CONCURRENT_FINALIZER))
+        return true;
+    return false;
+}
+
 /*
  * Helper optimized for creating a native instance of the given class (not the
  * class's prototype object). Use this in preference to NewObject, but use
@@ -993,11 +1006,16 @@ NewNativeClassInstance(JSContext *cx, Class *clasp, JSObject *proto,
 {
     JS_ASSERT(proto);
     JS_ASSERT(parent);
+    JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
 
     /*
      * Allocate an object from the GC heap and initialize all its fields before
      * doing any operation that can potentially trigger GC.
      */
+
+    if (CanBeFinalizedInBackground(kind, clasp))
+        kind = (gc::FinalizeKind)(kind + 1);
+
     JSObject* obj = js_NewGCObject(cx, kind);
 
     if (obj) {
@@ -1153,6 +1171,10 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent,
      *
      * The should be specialized by the template.
      */
+
+    if (!isFunction && CanBeFinalizedInBackground(kind, clasp))
+        kind = (gc::FinalizeKind)(kind + 1);
+
     JSObject* obj = isFunction ? js_NewGCFunction(cx) : js_NewGCObject(cx, kind);
     if (!obj)
         goto out;

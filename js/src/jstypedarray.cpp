@@ -1413,7 +1413,9 @@ TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, Value 
 
 Class ArrayBuffer::jsclass = {
     "ArrayBuffer",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_CONCURRENT_FINALIZER |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
