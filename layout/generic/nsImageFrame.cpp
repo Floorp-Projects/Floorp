@@ -1007,21 +1007,17 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
     nsresult rv = NS_ERROR_FAILURE;
 
     if (aPresContext->BidiEnabled()) {
-      nsBidiPresUtils* bidiUtils =  aPresContext->GetBidiUtils();
-      
-      if (bidiUtils) {
-        const nsStyleVisibility* vis = GetStyleVisibility();
-        if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-          rv = bidiUtils->RenderText(str, maxFit, NSBIDI_RTL,
-                                     aPresContext, aRenderingContext,
-                                     aRenderingContext,
-                                     aRect.XMost() - strWidth, y + maxAscent);
-        else
-          rv = bidiUtils->RenderText(str, maxFit, NSBIDI_LTR,
-                                     aPresContext, aRenderingContext,
-                                     aRenderingContext,
-                                     aRect.x, y + maxAscent);
-      }
+      const nsStyleVisibility* vis = GetStyleVisibility();
+      if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
+        rv = nsBidiPresUtils::RenderText(str, maxFit, NSBIDI_RTL,
+                                         aPresContext, aRenderingContext,
+                                         aRenderingContext,
+                                         aRect.XMost() - strWidth, y + maxAscent);
+      else
+        rv = nsBidiPresUtils::RenderText(str, maxFit, NSBIDI_LTR,
+                                         aPresContext, aRenderingContext,
+                                         aRenderingContext,
+                                         aRect.x, y + maxAscent);
     }
     if (NS_FAILED(rv))
       aRenderingContext.DrawString(str, maxFit, aRect.x, y + maxAscent);

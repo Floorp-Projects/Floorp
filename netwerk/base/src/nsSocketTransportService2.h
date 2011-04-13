@@ -47,6 +47,7 @@
 #include "pldhash.h"
 #include "prinrval.h"
 #include "prlog.h"
+#include "prinit.h"
 #include "prio.h"
 #include "nsASocketHandler.h"
 #include "nsIObserver.h"
@@ -65,7 +66,6 @@ extern PRLogModuleInfo *gSocketTransportLog;
 
 //-----------------------------------------------------------------------------
 
-#define NS_SOCKET_MAX_COUNT    50
 #define NS_SOCKET_POLL_TIMEOUT PR_INTERVAL_NO_TIMEOUT
 
 //-----------------------------------------------------------------------------
@@ -89,6 +89,12 @@ public:
 
     nsSocketTransportService();
 
+    // Max Socket count may need to get initialized/used by nsHttpHandler
+    // before this class is initialized.
+    static PRUint32 gMaxCount;
+    static PRCallOnceType gMaxCountInitOnce;
+    static PRStatus DiscoverMaxCount();
+
     //
     // the number of sockets that can be attached at any given time is
     // limited.  this is done because some operating systems (e.g., Win9x)
@@ -97,7 +103,7 @@ public:
     // call CanAttachSocket and check the result before creating a socket.
     //
     PRBool CanAttachSocket() {
-        return mActiveCount + mIdleCount < NS_SOCKET_MAX_COUNT;
+        return mActiveCount + mIdleCount < gMaxCount;
     }
 
 protected:
@@ -153,19 +159,25 @@ private:
         PRUint16          mElapsedTime;  // time elapsed w/o activity
     };
 
-    SocketContext mActiveList [ NS_SOCKET_MAX_COUNT ];
-    SocketContext mIdleList   [ NS_SOCKET_MAX_COUNT ];
+    SocketContext *mActiveList;                   /* mListSize entries */
+    SocketContext *mIdleList;                     /* mListSize entries */
 
+    PRUint32 mActiveListSize;
+    PRUint32 mIdleListSize;
     PRUint32 mActiveCount;
     PRUint32 mIdleCount;
 
-    nsresult DetachSocket(SocketContext *);
+    nsresult DetachSocket(SocketContext *, SocketContext *);
     nsresult AddToIdleList(SocketContext *);
     nsresult AddToPollList(SocketContext *);
     void RemoveFromIdleList(SocketContext *);
     void RemoveFromPollList(SocketContext *);
     void MoveToIdleList(SocketContext *sock);
     void MoveToPollList(SocketContext *sock);
+
+    PRBool GrowActiveList();
+    PRBool GrowIdleList();
+    void   InitMaxCount();
     
     //-------------------------------------------------------------------------
     // poll list (socket thread only)
@@ -174,7 +186,7 @@ private:
     // event cannot be created).
     //-------------------------------------------------------------------------
 
-    PRPollDesc mPollList[ NS_SOCKET_MAX_COUNT + 1 ];
+    PRPollDesc *mPollList;                        /* mListSize + 1 entries */
 
     PRIntervalTime PollTimeout();            // computes ideal poll timeout
     nsresult       DoPollIteration(PRBool wait);

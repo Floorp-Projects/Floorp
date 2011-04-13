@@ -38,7 +38,7 @@ DEPTH          = ../../../..
 topsrcdir      = @top_srcdir@
 srcdir         = @srcdir@
 VPATH          = @srcdir@
-relativesrcdir = other-licenses/branding/firefox/locales
+relativesrcdir = browser/branding/official/locales
 
 include $(DEPTH)/config/autoconf.mk
 
