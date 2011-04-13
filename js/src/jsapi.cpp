@@ -2057,7 +2057,10 @@ JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp)
 {
     assertSameCompartment(cx, JSValueArray(vp, 2));
-    return BoxThisForVp(cx, Valueify(vp)) ? vp[1] : JSVAL_NULL;
+    CallReceiver call = CallReceiverFromVp(Valueify(vp));
+    if (!BoxNonStrictThis(cx, call))
+        return JSVAL_NULL;
+    return Jsvalify(call.thisv());
 }
 
 JS_PUBLIC_API(void *)

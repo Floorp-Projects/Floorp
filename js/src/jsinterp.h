@@ -458,8 +458,6 @@ struct JSStackFrame
         return formalArgs()[-1];
     }
 
-    inline bool computeThis(JSContext *cx);
-
     /*
      * Callee
      *
@@ -481,6 +479,10 @@ struct JSStackFrame
 
     JSObject *maybeCallee() const {
         return isFunctionFrame() ? &callee() : NULL;
+    }
+
+    js::CallReceiver callReceiver() const {
+        return js::CallReceiverFromArgv(formalArgs());
     }
 
     /*
@@ -923,13 +925,22 @@ extern bool
 ScriptDebugEpilogue(JSContext *cx, JSStackFrame *fp, bool ok);
 
 /*
- * For a call's vp (which necessarily includes callee at vp[0] and the original
- * specified |this| at vp[1]), convert null/undefined |this| into the global
- * object for the callee and replace other primitives with boxed versions. The
- * callee must not be strict mode code.
+ * For a given |call|, convert null/undefined |this| into the global object for
+ * the callee and replace other primitives with boxed versions. This assumes
+ * that call.callee() is not strict mode code. This is the special/slow case of
+ * ComputeThis.
  */
 extern bool
-BoxThisForVp(JSContext *cx, js::Value *vp);
+BoxNonStrictThis(JSContext *cx, const CallReceiver &call);
+
+/*
+ * Ensure that fp->thisValue() is the correct value of |this| for the scripted
+ * call represented by |fp|. ComputeThis is necessary because fp->thisValue()
+ * may be set to 'undefined' when 'this' should really be the global object (as
+ * an optimization to avoid global-this computation).
+ */
+inline bool
+ComputeThis(JSContext *cx, JSStackFrame *fp);
 
 /*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
