@@ -88,7 +88,7 @@ struct StateRemat {
     // representation in a struct or union. This prevents bloating the IC
     // structs by an extra 8 bytes in some cases. 16 bits are needed to encode
     // the largest local:
-    //   ((UINT16_LIMIT - 1) * sizeof(Value) + sizeof(JSStackFrame),
+    //   ((UINT16_LIMIT - 1) * sizeof(Value) + sizeof(StackFrame),
     // And an extra bit for the sign on arguments.
 #define MIN_STATE_REMAT_BITS        21
 
@@ -96,7 +96,7 @@ struct StateRemat {
     bool inRegister() const { return offset_ >= 0 &&
                                      offset_ <= int32(JSC::MacroAssembler::TotalRegisters); }
     bool inMemory() const {
-        return offset_ >= int32(sizeof(JSStackFrame)) ||
+        return offset_ >= int32(sizeof(StackFrame)) ||
                offset_ < 0;
     }
 

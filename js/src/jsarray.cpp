@@ -111,6 +111,8 @@
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
+#include "vm/Stack-inl.h"
+
 using namespace js;
 using namespace js::gc;
 
@@ -366,7 +368,7 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
         index < obj->getArgsInitialLength() &&
         !(*vp = obj->getArgsElement(uint32(index))).isMagic(JS_ARGS_HOLE)) {
         *hole = JS_FALSE;
-        JSStackFrame *fp = (JSStackFrame *)obj->getPrivate();
+        StackFrame *fp = (StackFrame *)obj->getPrivate();
         if (fp != JS_ARGUMENTS_OBJECT_ON_TRACE) {
             if (fp)
                 *vp = fp->canonicalActualArg(index);
@@ -434,7 +436,7 @@ GetElements(JSContext *cx, JSObject *aobj, jsuint length, Value *vp)
          * fast path for deleted properties (MagicValue(JS_ARGS_HOLE) since
          * this requires general-purpose property lookup.
          */
-        if (JSStackFrame *fp = (JSStackFrame *) aobj->getPrivate()) {
+        if (StackFrame *fp = (StackFrame *) aobj->getPrivate()) {
             JS_ASSERT(fp->numActualArgs() <= JS_ARGS_LENGTH_MAX);
             if (!fp->forEachCanonicalActualArg(CopyNonHoleArgsTo(aobj, vp)))
                 goto found_deleted_prop;
@@ -1411,14 +1413,14 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
 
     LeaveTrace(cx);
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, 0, &args))
+    if (!cx->stack.pushInvokeArgs(cx, 0, &args))
         return false;
 
     args.calleev() = join;
     args.thisv().setObject(*obj);
 
     /* Do the call. */
-    if (!Invoke(cx, args, 0))
+    if (!Invoke(cx, args))
         return false;
     *vp = args.rval();
     return true;

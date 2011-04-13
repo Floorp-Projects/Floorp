@@ -85,8 +85,6 @@
 #endif
 
 #include "jsprobes.h"
-#include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jshashtable.h"
 #include "jsweakmap.h"
@@ -968,8 +966,8 @@ RecordNativeStackTopForGC(JSContext *cx)
 
 #ifdef JS_THREADSAFE
     /* Record the stack top here only if we are called from a request. */
-    JS_ASSERT(cx->thread->data.requestDepth >= ctd->requestThreshold);
-    if (cx->thread->data.requestDepth == ctd->requestThreshold)
+    JS_ASSERT(cx->thread()->data.requestDepth >= ctd->requestThreshold);
+    if (cx->thread()->data.requestDepth == ctd->requestThreshold)
         return;
 #endif
     ctd->recordStackTop();
@@ -1235,7 +1233,7 @@ bool
 CheckAllocation(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread);
+    JS_ASSERT(cx->thread());
 #endif
     JS_ASSERT(!cx->runtime->gcRunning);
     return true;
@@ -1642,7 +1640,7 @@ gc_lock_traversal(const GCLocks::Entry &entry, JSTracer *trc)
 }
 
 void
-js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp)
+js_TraceStackFrame(JSTracer *trc, StackFrame *fp)
 {
     MarkObject(trc, fp->scopeChain(), "scope chain");
     if (fp->isDummyFrame())
@@ -2622,9 +2620,9 @@ LetOtherGCFinish(JSContext *cx)
 {
     JSRuntime *rt = cx->runtime;
     JS_ASSERT(rt->gcThread);
-    JS_ASSERT(cx->thread != rt->gcThread);
+    JS_ASSERT(cx->thread() != rt->gcThread);
 
-    size_t requestDebit = cx->thread->data.requestDepth ? 1 : 0;
+    size_t requestDebit = cx->thread()->data.requestDepth ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
 #ifdef JS_TRACER
     JS_ASSERT_IF(requestDebit == 0, !JS_ON_TRACE(cx));
@@ -2693,7 +2691,7 @@ AutoGCSession::AutoGCSession(JSContext *cx)
     JSRuntime *rt = cx->runtime;
 
 #ifdef JS_THREADSAFE
-    if (rt->gcThread && rt->gcThread != cx->thread)
+    if (rt->gcThread && rt->gcThread != cx->thread())
         LetOtherGCFinish(cx);
 #endif
 
@@ -2702,7 +2700,7 @@ AutoGCSession::AutoGCSession(JSContext *cx)
 #ifdef JS_THREADSAFE
     /* No other thread is in GC, so indicate that we're now in GC. */
     JS_ASSERT(!rt->gcThread);
-    rt->gcThread = cx->thread;
+    rt->gcThread = cx->thread();
 
     /*
      * Notify operation callbacks on other threads, which will give them a
@@ -2712,7 +2710,7 @@ AutoGCSession::AutoGCSession(JSContext *cx)
      */
     for (JSThread::Map::Range r = rt->threads.all(); !r.empty(); r.popFront()) {
         JSThread *thread = r.front().value;
-        if (thread != cx->thread)
+        if (thread != cx->thread())
             thread->data.triggerOperationCallback(rt);
     }
 
@@ -2722,7 +2720,7 @@ AutoGCSession::AutoGCSession(JSContext *cx)
      * JS_NOTIFY_REQUEST_DONE, which will wake us up, is only called on
      * rt->requestCount transitions to 0.
      */
-    size_t requestDebit = cx->thread->data.requestDepth ? 1 : 0;
+    size_t requestDebit = cx->thread()->data.requestDepth ? 1 : 0;
     JS_ASSERT(requestDebit <= rt->requestCount);
     if (requestDebit != rt->requestCount) {
         rt->requestCount -= requestDebit;
@@ -2750,7 +2748,7 @@ AutoGCSession::~AutoGCSession()
     JSRuntime *rt = context->runtime;
     rt->gcRunning = false;
 #ifdef JS_THREADSAFE
-    JS_ASSERT(rt->gcThread == context->thread);
+    JS_ASSERT(rt->gcThread == context->thread());
     rt->gcThread = NULL;
     JS_NOTIFY_GC_DONE(rt);
 #endif
@@ -2773,7 +2771,7 @@ GCUntilDone(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind  GCTIM
         rt->gcPoke = true;
 #ifdef JS_THREADSAFE
         JS_ASSERT(rt->gcThread);
-        if (rt->gcThread != cx->thread) {
+        if (rt->gcThread != cx->thread()) {
             /* We do not return until another GC finishes. */
             LetOtherGCFinish(cx);
         }
@@ -2919,7 +2917,7 @@ SetProtoCheckingForCycles(JSContext *cx, JSObject *obj, JSObject *proto)
      * request.
      */
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread->data.requestDepth);
+    JS_ASSERT(cx->thread()->data.requestDepth);
 
     /*
      * This is only necessary if AutoGCSession below would wait for GC to
@@ -3000,7 +2998,7 @@ TraceRuntime(JSTracer *trc)
         JSRuntime *rt = cx->runtime;
         AutoLockGC lock(rt);
 
-        if (rt->gcThread != cx->thread) {
+        if (rt->gcThread != cx->thread()) {
             AutoGCSession gcsession(cx);
             AutoUnlockGC unlock(rt);
             RecordNativeStackTopForGC(trc->context);

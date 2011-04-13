@@ -90,15 +90,14 @@
 #include "jstypedarray.h"
 
 #include "jsatominlines.h"
-#include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
-#include "jscntxtinlines.h"
 #include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
 #include "jsstrinlines.h"
 #include "assembler/wtf/Platform.h"
+
+#include "vm/Stack-inl.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -845,7 +844,7 @@ JS_SetRuntimePrivate(JSRuntime *rt, void *data)
 static void
 StartRequest(JSContext *cx)
 {
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
 
     if (t->data.requestDepth) {
@@ -855,7 +854,7 @@ StartRequest(JSContext *cx)
         AutoLockGC lock(rt);
 
         /* Wait until the GC is finished. */
-        if (rt->gcThread != cx->thread) {
+        if (rt->gcThread != cx->thread()) {
             while (rt->gcThread)
                 JS_AWAIT_GC_DONE(rt);
         }
@@ -879,7 +878,7 @@ StartRequest(JSContext *cx)
 static void
 StopRequest(JSContext *cx)
 {
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
     JS_ASSERT(t->data.requestDepth != 0);
     if (t->data.requestDepth != 1) {
@@ -947,7 +946,7 @@ JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
 
     jsrefcount saveDepth = t->data.requestDepth;
@@ -967,7 +966,7 @@ JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
 #ifdef JS_THREADSAFE
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
     if (saveDepth == 0)
         return;
@@ -984,7 +983,7 @@ JS_PUBLIC_API(JSBool)
 JS_IsInRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
     return JS_THREAD_DATA(cx)->requestDepth != 0;
 #else
     return false;
@@ -1519,7 +1518,7 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    if (!cx->hasfp())
+    if (!cx->running())
         cx->resetCompartment();
 }
 
@@ -2762,7 +2761,7 @@ JS_PUBLIC_API(void)
 JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread);
+    JS_ASSERT(cx->thread());
 #endif
 
 #if JS_STACK_GROWTH_DIRECTION > 0
@@ -4210,7 +4209,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
-        if (cx->hasfp())
+        if (cx->running())
             parent = GetScopeChain(cx, cx->fp());
         if (!parent)
             parent = cx->globalObject;
@@ -5107,7 +5106,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // of object to create, create it, and clamp the return value to an object,
     // among other details. js_InvokeConstructor does the hard work.
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, argc, &args))
+    if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return NULL;
 
     args.calleev().setObject(*ctor);
@@ -5141,7 +5140,7 @@ JS_PUBLIC_API(JSOperationCallback)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
 #endif
     JSOperationCallback old = cx->operationCallback;
     cx->operationCallback = callback;
@@ -5183,9 +5182,9 @@ JS_IsRunning(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
 #ifdef JS_TRACER
-    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->hasfp());
+    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->running());
 #endif
-    JSStackFrame *fp = cx->maybefp();
+    StackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
         fp = fp->prev();
     return fp != NULL;
@@ -5195,11 +5194,11 @@ JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    JSStackFrame *fp = js_GetTopStackFrame(cx);
+    StackFrame *fp = js_GetTopStackFrame(cx);
     if (!fp)
         return NULL;
-    cx->saveActiveSegment();
-    return fp;
+    cx->stack.saveActiveSegment();
+    return Jsvalify(fp);
 }
 
 JS_PUBLIC_API(void)
@@ -5207,10 +5206,10 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT_NOT_ON_TRACE(cx);
-    JS_ASSERT(!cx->hasfp());
+    JS_ASSERT(!cx->running());
     if (!fp)
         return;
-    cx->restoreSegment();
+    cx->stack.restoreSegment();
 }
 
 /************************************************************************/
@@ -6031,9 +6030,9 @@ JS_SetContextThread(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JS_ASSERT(!cx->outstandingRequests);
-    if (cx->thread) {
-        JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-        return reinterpret_cast<jsword>(cx->thread->id);
+    if (cx->thread()) {
+        JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
+        return reinterpret_cast<jsword>(cx->thread()->id);
     }
 
     if (!js_InitContextThread(cx)) {
@@ -6057,7 +6056,7 @@ JS_ClearContextThread(JSContext *cx)
      * is a harmless no-op.
      */
     JS_ASSERT(cx->outstandingRequests == 0);
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     if (!t)
         return 0;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));

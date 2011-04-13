@@ -63,6 +63,7 @@
 #include "prmem.h"
 #include "jsapi.h"              // for JSAutoRequest
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
+#include "jsfriendapi.h"        // for JS_GetFrameScopeChainRaw
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
@@ -5851,13 +5852,13 @@ nsGlobalWindow::CallerInnerWindow()
   JSStackFrame *fp = nsnull;
   JS_FrameIterator(cx, &fp);
   if (fp) {
-    while (fp->isDummyFrame()) {
+    while (!JS_IsScriptFrame(cx, fp)) {
       if (!JS_FrameIterator(cx, &fp))
         break;
     }
 
     if (fp)
-      scope = &fp->scopeChain();
+      scope = JS_GetFrameScopeChainRaw(fp);
   }
 
   if (!scope)

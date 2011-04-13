@@ -67,6 +67,8 @@
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
+#include "vm/Stack-inl.h"
+
 using namespace js;
 using namespace js::gc;
 
@@ -336,14 +338,14 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
 
             LeaveTrace(cx);
             InvokeArgsGuard args;
-            if (!cx->stack().pushInvokeArgs(cx, 1, &args))
+            if (!cx->stack.pushInvokeArgs(cx, 1, &args))
                 return false;
 
             args.calleev() = toJSON;
             args.thisv() = *vp;
             args[0] = StringValue(keyStr);
 
-            if (!Invoke(cx, args, 0))
+            if (!Invoke(cx, args))
                 return false;
             *vp = args.rval();
         }
@@ -359,7 +361,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
 
         LeaveTrace(cx);
         InvokeArgsGuard args;
-        if (!cx->stack().pushInvokeArgs(cx, 2, &args))
+        if (!cx->stack.pushInvokeArgs(cx, 2, &args))
             return false;
 
         args.calleev() = ObjectValue(*scx->replacer);
@@ -367,7 +369,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
         args[0] = StringValue(keyStr);
         args[1] = *vp;
 
-        if (!Invoke(cx, args, 0))
+        if (!Invoke(cx, args))
             return false;
         *vp = args.rval();
     }

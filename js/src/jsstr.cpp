@@ -76,7 +76,6 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
-#include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsregexpinlines.h"
@@ -2452,7 +2451,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
 
     /* lambda(matchStr, matchStart, textstr) */
     static const uint32 lambdaArgc = 3;
-    if (!cx->stack().pushInvokeArgs(cx, lambdaArgc, &rdata.singleShot))
+    if (!cx->stack.pushInvokeArgs(cx, lambdaArgc, &rdata.singleShot))
         return false;
 
     CallArgs &args = rdata.singleShot;
@@ -2464,7 +2463,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
     sp[1].setInt32(fm.match());
     sp[2].setString(rdata.str);
 
-    if (!Invoke(cx, rdata.singleShot, 0))
+    if (!Invoke(cx, rdata.singleShot))
         return false;
 
     JSString *repstr = js_ValueToString(cx, args.rval());

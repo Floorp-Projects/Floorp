@@ -81,7 +81,7 @@ typedef struct JSThinLock {
     JSFatLock   *fat;
 } JSThinLock;
 
-#define CX_THINLOCK_ID(cx)       ((jsword)(cx)->thread)
+#define CX_THINLOCK_ID(cx)       ((jsword)(cx)->thread())
 #define CURRENT_THREAD_IS_ME(me) (((JSThread *)me)->id == js_CurrentThreadId())
 
 typedef PRLock JSLock;

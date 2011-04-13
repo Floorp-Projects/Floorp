@@ -98,7 +98,7 @@ private:
     
     PatchableAddress findPatch(JITScript *jit, void **location);
     void applyPatch(Compiler& c, PatchableAddress& toPatch);
-    bool recompile(JSStackFrame *fp, Vector<PatchableAddress> &patches,
+    bool recompile(StackFrame *fp, Vector<PatchableAddress> &patches,
                    Vector<CallSite> &sites);
     bool saveTraps(JITScript *jit, Vector<CallSite> *sites);
 };

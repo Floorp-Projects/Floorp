@@ -326,7 +326,7 @@ class Compiler : public BaseCompiler
         size_t offsetIndex;
     };
 
-    JSStackFrame *fp;
+    StackFrame *fp;
     JSScript *script;
     JSObject *scopeChain;
     JSObject *globalObj;
@@ -372,7 +372,7 @@ class Compiler : public BaseCompiler
     // follows interpreter usage in JSOP_LENGTH.
     enum { LengthAtomIndex = uint32(-2) };
 
-    Compiler(JSContext *cx, JSStackFrame *fp);
+    Compiler(JSContext *cx, StackFrame *fp);
     ~Compiler();
 
     CompileStatus compile();
