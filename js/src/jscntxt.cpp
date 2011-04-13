@@ -1029,6 +1029,9 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
         JS_ASSERT(!rt->gcRunning);
 
         JS_UNLOCK_GC(rt);
+#ifdef JS_THREADSAFE
+        rt->gcHelperThread.waitBackgroundSweepEnd(rt);
+#endif
 
         if (last) {
 #ifdef JS_THREADSAFE
@@ -1097,6 +1100,9 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
     cx->dstOffsetCache.dumpStats();
 #endif
     JS_UNLOCK_GC(rt);
+#ifdef JS_THREADSAFE
+    rt->gcHelperThread.waitBackgroundSweepEnd(rt);
+#endif
     Foreground::delete_(cx);
 }
 
@@ -1707,7 +1713,7 @@ js_InvokeOperationCallback(JSContext *cx)
          */
         bool delayedOutOfMemory;
         JS_LOCK_GC(rt);
-        delayedOutOfMemory = (rt->gcBytes > rt->gcMaxBytes);
+        delayedOutOfMemory = rt->gcBytes > rt->gcMaxBytes;
         JS_UNLOCK_GC(rt);
         if (delayedOutOfMemory) {
             js_ReportOutOfMemory(cx);
