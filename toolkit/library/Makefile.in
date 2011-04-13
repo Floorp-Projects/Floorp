@@ -253,6 +253,11 @@ ifdef MOZ_ENABLE_LIBXUL
 include $(srcdir)/libxul-rules.mk
 endif
 
+ifeq ($(OS_ARCH),OpenBSD)
+# Needed by nsAuthGSSAPI
+EXTRA_DSO_LDOPTS += -lkrb5 -lcrypto
+endif
+
 ifdef MOZ_JAVAXPCOM
 dlldeps-javaxpcom.cpp: $(topsrcdir)/extensions/java/xpcom/src/dlldeps-javaxpcom.cpp
 	$(INSTALL) $^ .
