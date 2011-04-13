@@ -2062,6 +2062,7 @@ mjit::Compiler::generateMethod()
                     stubcc.masm.move(Imm32(frameSize.staticArgc()), JSParamReg_Argc);
                 else
                     stubcc.masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), JSParamReg_Argc);
+                stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), JSFrameReg);
 
                 CallPatchInfo callPatch;
                 callPatch.hasSlowNcode = true;
@@ -3291,8 +3292,7 @@ mjit::Compiler::emitUncachedCall(uint32 argc, bool callingNew)
 
     Jump notCompiled = masm.branchTestPtr(Assembler::Zero, r0, r0);
 
-    if (!cx->typeInferenceEnabled())
-        masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
+    masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), JSFrameReg);
 
     callPatch.hasFastNcode = true;
     callPatch.fastNcodePatch =
@@ -3679,8 +3679,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
             stubcc.masm.move(Imm32(callIC.frameSize.staticArgc()), JSParamReg_Argc);
         else
             stubcc.masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), JSParamReg_Argc);
-        if (!cx->typeInferenceEnabled())
-            stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
+        stubcc.masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.sp)), JSFrameReg);
         callPatch.hasSlowNcode = true;
         callPatch.slowNcodePatch =
             stubcc.masm.storePtrWithPatch(ImmPtr(NULL),

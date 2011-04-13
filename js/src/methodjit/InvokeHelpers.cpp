@@ -428,6 +428,14 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     if (!newType) {
         if (JITScript *jit = newscript->getJIT(newfp->isConstructing())) {
             *pret = jit->invokeEntry;
+
+            /*
+             * Keep the old fp around and let the JIT code repush it. If we are
+             * rejoining into a recompiled frame then the code patching up
+             * doubles needs to see the calling script's frame.
+             */
+            f.regs.sp = (Value *) f.regs.fp;
+            f.regs.fp = f.regs.fp->prev();
             return true;
         }
     }
