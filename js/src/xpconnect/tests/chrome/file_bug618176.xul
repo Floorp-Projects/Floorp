@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=618176
+-->
+<window title="Mozilla Bug 618176"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  onload="start()">
+  <label value="Mozilla Bug 618176"/>
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+
+    const TEST_PAGE =
+"data:text/html,<script>var a=[1,2,3];</script>Hi";
+
+    const FRAME_SCRIPT = 
+"data:,addEventListener('pageshow', function() { sendAsyncMessage('test', content.wrappedJSObject.a) }, false);";
+   // s/content.wrappedJSObject.a/[ 1, 2, 3]/ and the test passes
+
+    function recvTest(m) {
+      var a = m.json;
+      opener.wrappedJSObject.is(a.length, 3, "array was serialized and deserialized");
+
+      messageManager.removeMessageListener("test", recvTest);
+      finish();
+    }
+
+    function start() {
+      messageManager.addMessageListener("test", recvTest);
+      messageManager.loadFrameScript(FRAME_SCRIPT, true);
+      setTimeout(function () { document.getElementById("browser").loadURI(TEST_PAGE); }, 0);
+    }
+
+    function finish() {
+      opener.setTimeout("done()", 0);
+      window.close();
+    }
+
+  ]]></script>
+
+  <browser id="browser" type="content" style="width: 200px; height: 200px;"/>
+</window>
