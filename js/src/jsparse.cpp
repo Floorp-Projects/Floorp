@@ -190,7 +190,7 @@ Parser::Parser(JSContext *cx, JSPrincipals *prin, JSStackFrame *cfp)
     tokenStream(cx),
     principals(NULL),
     callerFrame(cfp),
-    callerVarObj(cfp ? &cfp->varobj(cx->containingSegment(cfp)) : NULL),
+    callerVarObj(cfp ? &cfp->varobj(cx->stack().containingSegment(cfp)) : NULL),
     nodeList(NULL),
     functionCount(0),
     traceListHead(NULL),
