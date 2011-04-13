@@ -264,7 +264,8 @@ function nextContextMenuTest(desiredHeight)
 function testPopupMovement()
 {
   var button = document.getElementById("label");
-  var popup = document.getElementById((gTests[gTestIndex] == "panel movement") ? "panel" : "popup");
+  var isPanelTest = (gTests[gTestIndex] == "panel movement");
+  var popup = document.getElementById(isPanelTest ? "panel" : "popup");
 
   var screenX, screenY, buttonScreenX, buttonScreenY;
   var rect = popup.getBoundingClientRect();
@@ -273,21 +274,36 @@ function testPopupMovement()
   popup.moveTo(1, 1);
   [screenX, screenY] = getScreenXY(popup);
 
-  var expectedx = overlapOSChrome ? 1 : (screen.availLeft < 1 ? 1 : screen.availLeft);
-  var expectedy = overlapOSChrome ? 1 : (screen.availTop < 1 ? 1 : screen.availTop);
+  var expectedx = 1, expectedy = 1;
+  if (!isPanelTest && !overlapOSChrome) {
+    if (screen.availLeft >= 1) expectedx = screen.availLeft;
+    if (screen.availTop >= 1) expectedy = screen.availTop;
+  }
   is(screenX, expectedx, gTests[gTestIndex] + " (1, 1) x");
   is(screenY, expectedy, gTests[gTestIndex] + " (1, 1) y");
 
   popup.moveTo(100, 8000);
-  var expectedy = (overlapOSChrome ? screen.height + screen.top : screen.availHeight + screen.availTop) -
-                  Math.round(rect.height) - 3;
+  if (isPanelTest) {
+    expectedy = 8000;
+  }
+  else {
+    expectedy = (overlapOSChrome ? screen.height + screen.top : screen.availHeight + screen.availTop) -
+                Math.round(rect.height) - 3;
+  }
+
   [screenX, screenY] = getScreenXY(popup);
   is(screenX, 100, gTests[gTestIndex] + " (100, 8000) x");
   is(screenY, expectedy, gTests[gTestIndex] + " (100, 8000) y");
 
   popup.moveTo(6000, 100);
-  expectedx = (overlapOSChrome ? screen.width + screen.left : screen.availWidth + screen.availLeft) -
-              Math.round(rect.width) - 3;
+
+  if (isPanelTest) {
+    expectedx = 6000;
+  }
+  else {
+    expectedx = (overlapOSChrome ? screen.width + screen.left : screen.availWidth + screen.availLeft) -
+                Math.round(rect.width) - 3;
+  }
 
   [screenX, screenY] = getScreenXY(popup);
   is(screenX, expectedx, gTests[gTestIndex] + " (6000, 100) x");
