@@ -1094,6 +1094,9 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         return false;
     }
 
+    if (!cx->markTypePropertyConfigured(obj->getType(), propid))
+        return false;
+
     JSObject *pobj;
     JSProperty *prop;
     if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))

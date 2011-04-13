@@ -1796,7 +1796,6 @@ TypeCompartment::newInitializerTypeObject(JSContext *cx, JSScript *script,
          * observed by other code before all properties have been added. Mark
          * all the properties as definite properties of the object.
          */
-        JS_ASSERT(!script->hasSharps);
         JSObject *baseobj = script->getObject(GET_SLOTNO(script->code + offset));
 
         if (!res->addDefiniteProperties(cx, baseobj, false))
@@ -2684,8 +2683,10 @@ TypeObject::addDefiniteProperties(JSContext *cx, JSObject *obj, bool clearUnknow
                  * initializers).
                  */
                 TypeSet *parentTypes = proto->getType()->getProperty(cx, id, false);
-                if (!parentTypes || parentTypes->unknown())
+                if (!parentTypes || parentTypes->unknown()) {
+                    cx->compartment->types.checkPendingRecompiles(cx);
                     return false;
+                }
                 parentTypes->addBaseClearDefinite(cx, this);
             }
         } else {
@@ -4544,11 +4545,15 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript)
              */
             baseobj = NewReshapedObject(cx, type, baseobj->getParent(), kind,
                                         (const js::Shape *) baseobj->lastProperty());
-            if (!baseobj)
+            if (!baseobj) {
+                cx->compartment->types.checkPendingRecompiles(cx);
                 return;
+            }
 
-            if (!type->addDefiniteProperties(cx, baseobj, true))
+            if (!type->addDefiniteProperties(cx, baseobj, true)) {
+                cx->compartment->types.checkPendingRecompiles(cx);
                 return;
+            }
 
             type->newScript = newScript;
             type->newScriptFinalizeKind = unsigned(kind);
