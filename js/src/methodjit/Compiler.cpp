@@ -1922,6 +1922,8 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETTHISPROP)
             /* Push thisv onto stack. */
             jsop_this();
+            if (cx->typeInferenceEnabled())
+                frame.extra(frame.peek(-1)).types = script->thisTypes();
             if (!jsop_getprop(script->getAtom(fullAtomIndex(PC)), knownPushedType(0)))
                 return Compile_Error;
           END_CASE(JSOP_GETTHISPROP);
@@ -1931,6 +1933,8 @@ mjit::Compiler::generateMethod()
             /* Push arg onto stack. */
             uint32 arg = GET_SLOTNO(PC);
             frame.pushArg(arg, knownArgumentType(arg));
+            if (cx->typeInferenceEnabled())
+                frame.extra(frame.peek(-1)).types = script->argTypes(arg);
             if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[ARGNO_LEN])), knownPushedType(0)))
                 return Compile_Error;
           }
@@ -1940,6 +1944,8 @@ mjit::Compiler::generateMethod()
           {
             uint32 local = GET_SLOTNO(PC);
             frame.pushLocal(local, knownLocalType(local));
+            if (cx->typeInferenceEnabled() && local < script->nfixed)
+                frame.extra(frame.peek(-1)).types = script->localTypes(local);
             if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[SLOTNO_LEN])), knownPushedType(0)))
                 return Compile_Error;
           }
@@ -2380,14 +2386,22 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_BINDNAME)
 
           BEGIN_CASE(JSOP_SETPROP)
-            if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true))
+          {
+            jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
+            bool pop = JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next);
+            if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true, pop))
                 return Compile_Error;
+          }
           END_CASE(JSOP_SETPROP)
 
           BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETMETHOD)
-            if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true))
+          {
+            jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
+            bool pop = JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next);
+            if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true, pop))
                 return Compile_Error;
+          }
           END_CASE(JSOP_SETNAME)
 
           BEGIN_CASE(JSOP_THROW)
@@ -4363,6 +4377,39 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     frame.forgetMismatchedObject(top);
 
     /*
+     * Check if we are accessing a known type which always has the property
+     * in a particular inline slot. Get the property directly in this case,
+     * without using an IC.
+     */
+    JSOp op = JSOp(*PC);
+    types::TypeSet *types = frame.extra(top).types;
+    if ((op == JSOP_GETPROP || op == JSOP_GETTHISPROP || op == JSOP_GETARGPROP || op == JSOP_GETLOCALPROP) &&
+        types && !types->unknown() && types->getObjectCount() == 1 &&
+        !types->getObject(0)->unknownProperties()) {
+        JS_ASSERT(usePropCache);
+        types::TypeObject *object = types->getObject(0);
+        types::TypeSet *propertyTypes = object->getProperty(cx, ATOM_TO_JSID(atom), false);
+        if (!propertyTypes)
+            return false;
+        if (propertyTypes->isDefiniteProperty() && !propertyTypes->isOwnProperty(cx, true)) {
+            types->addFreeze(cx);
+            uint32 slot = propertyTypes->definiteSlot();
+            if (!top->isTypeKnown()) {
+                Jump notObject = frame.testObject(Assembler::NotEqual, top);
+                stubcc.linkExit(notObject, Uses(1));
+                stubcc.leave();
+                OOL_STUBCALL(stubs::GetProp);
+            }
+            RegisterID reg = frame.tempRegForData(top);
+            frame.pop();
+            frame.push(Address(reg, JSObject::getFixedSlotOffset(slot)), knownType);
+            if (!top->isTypeKnown())
+                stubcc.rejoin(Changes(1));
+            return true;
+        }
+    }
+
+    /*
      * These two must be loaded first. The objReg because the string path
      * wants to read it, and the shapeReg because it could cause a spill that
      * the string path wouldn't sink back.
@@ -4867,7 +4914,7 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
 }
 
 bool
-mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
+mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed)
 {
     REJOIN_SITE_2(usePropCache
                   ? STRICT_VARIANT(stubs::SetName)
@@ -4881,6 +4928,38 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     if (lhs->isTypeKnown() && lhs->getKnownType() != JSVAL_TYPE_OBJECT) {
         jsop_setprop_slow(atom, usePropCache);
         return true;
+    }
+
+    /*
+     * Set the property directly if we are accessing a known object which
+     * always has the property in a particular inline slot.
+     */
+    types::TypeSet *types = frame.extra(lhs).types;
+    if (JSOp(*PC) == JSOP_SETPROP && types &&
+        !types->unknown() && types->getObjectCount() == 1 &&
+        !types->getObject(0)->unknownProperties()) {
+        JS_ASSERT(usePropCache);
+        types::TypeObject *object = types->getObject(0);
+        types::TypeSet *propertyTypes = object->getProperty(cx, ATOM_TO_JSID(atom), false);
+        if (!propertyTypes)
+            return false;
+        if (propertyTypes->isDefiniteProperty() && !propertyTypes->isOwnProperty(cx, true)) {
+            types->addFreeze(cx);
+            uint32 slot = propertyTypes->definiteSlot();
+            if (!lhs->isTypeKnown()) {
+                Jump notObject = frame.testObject(Assembler::NotEqual, lhs);
+                stubcc.linkExit(notObject, Uses(2));
+                stubcc.leave();
+                masm.move(ImmPtr(atom), Registers::ArgReg1);
+                OOL_STUBCALL(STRICT_VARIANT(stubs::SetName));
+            }
+            RegisterID reg = frame.tempRegForData(lhs);
+            frame.storeTo(rhs, Address(reg, JSObject::getFixedSlotOffset(slot)), popGuaranteed);
+            frame.shimmy(1);
+            if (!lhs->isTypeKnown())
+                stubcc.rejoin(Changes(1));
+            return true;
+        }
     }
 
     JSOp op = JSOp(*PC);
@@ -5410,7 +5489,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
             return Compile_Retry;
         // OBJ N+1
 
-        if (!jsop_setprop(atom, false))
+        if (!jsop_setprop(atom, false, pop))
             return Compile_Error;
         // N+1
 
@@ -5439,7 +5518,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
             return Compile_Retry;
         // N OBJ N+1
 
-        if (!jsop_setprop(atom, false))
+        if (!jsop_setprop(atom, false, true))
             return Compile_Error;
         // N N+1
 
@@ -5499,7 +5578,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.shimmy(1);
         // OBJ V+1
 
-        if (!jsop_setprop(atom, false))
+        if (!jsop_setprop(atom, false, pop))
             return Compile_Error;
         // V+1
 
@@ -5535,7 +5614,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
         frame.dupAt(-2);
         // OBJ N N+1 OBJ N+1
 
-        if (!jsop_setprop(atom, false))
+        if (!jsop_setprop(atom, false, true))
             return Compile_Error;
         // OBJ N N+1 N+1
 
@@ -6883,7 +6962,7 @@ mjit::Compiler::jsop_forprop(JSAtom *atom)
 
     // Before: ITER OBJ VALUE
     // After:  ITER VALUE
-    jsop_setprop(atom, false);
+    jsop_setprop(atom, false, true);
 
     // Before: ITER VALUE
     // After:  ITER

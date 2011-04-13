@@ -1611,6 +1611,13 @@ AutoGCRooter::trace(JSTracer *trc)
         static_cast<js::AutoBindingsRooter *>(this)->bindings.trace(trc);
         return;
       }
+
+      case TYPE: {
+        types::TypeObject *type = static_cast<types::AutoTypeRooter *>(this)->type;
+        if (!type->marked)
+            type->trace(trc);
+        return;
+      }
     }
 
     JS_ASSERT(tag >= 0);

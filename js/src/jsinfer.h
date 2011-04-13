@@ -197,11 +197,12 @@ public:
     virtual bool condensed() { return false; }
 
     /*
-     * If this is a persistent subset constraint, the object being propagated
-     * into. Such constraints describe relationships between TypeObject
-     * properties which are independent of the analysis of any script.
+     * If this is a persistent constraint other than a condensed constraint,
+     * the target object of the constraint. Such constraints describe
+     * relationships between TypeObjects which are independent of the analysis
+     * of any script.
      */
-    virtual TypeObject * baseSubset() { return NULL; }
+    virtual TypeObject * persistentObject() { return NULL; }
 };
 
 /*
@@ -241,19 +242,33 @@ enum {
     TYPE_FLAG_UNKNOWN   = 1 << TYPE_UNKNOWN,
 
     /* Flag for type sets which are cleared on GC. */
-    TYPE_FLAG_INTERMEDIATE_SET    = 0x1000,
+    TYPE_FLAG_INTERMEDIATE_SET    = 0x0100,
 
-    /* For object property type sets, whether this property has been directly written. */
-    TYPE_FLAG_OWN_PROPERTY        = 0x2000,
+    /* Flags for type sets which are on object properties. */
+
+    /* Whether this property has ever been directly written. */
+    TYPE_FLAG_OWN_PROPERTY        = 0x0200,
 
     /*
-     * For object property type sets, whether the property has ever been
-     * deleted or reconfigured as non-writable.
+     * Whether the property has ever been deleted or reconfigured to behave
+     * differently from a normal native property (e.g. made non-writable or
+     * given a scripted getter or setter).
      */
-    TYPE_FLAG_CONFIGURED_PROPERTY = 0x4000,
+    TYPE_FLAG_CONFIGURED_PROPERTY = 0x0400,
+
+    /*
+     * Whether the property is definitely in a particular inline slot on all
+     * objects from which it has not been deleted or reconfigured. Implies
+     * OWN_PROPERTY and unlike OWN/CONFIGURED property, this cannot change.
+     */
+    TYPE_FLAG_DEFINITE_PROPERTY   = 0x0800,
+
+    /* If the property is definite, mask and shift storing the slot. */
+    TYPE_FLAG_DEFINITE_MASK       = 0xf000,
+    TYPE_FLAG_DEFINITE_SHIFT      = 12,
 
     /* Mask of non-type flags on a type set. */
-    TYPE_FLAG_BASE_MASK           = 0x7000
+    TYPE_FLAG_BASE_MASK           = 0xffffff00
 };
 
 /* Vector of the above flags. */
@@ -280,13 +295,6 @@ class TypeSet
 
     void print(JSContext *cx);
 
-    void setIntermediate() { typeFlags |= TYPE_FLAG_INTERMEDIATE_SET; }
-    void setOwnProperty(bool configurable) {
-        typeFlags |= TYPE_FLAG_OWN_PROPERTY;
-        if (configurable)
-            typeFlags |= TYPE_FLAG_CONFIGURED_PROPERTY;
-    }
-
     inline void destroy(JSContext *cx);
 
     /* Whether this set contains a specific type. */
@@ -295,6 +303,12 @@ class TypeSet
     TypeFlags baseFlags() { return typeFlags & ~TYPE_FLAG_BASE_MASK; }
     bool hasAnyFlag(TypeFlags flags) { return typeFlags & flags; }
     bool unknown() { return typeFlags & TYPE_FLAG_UNKNOWN; }
+
+    bool isDefiniteProperty() { return typeFlags & TYPE_FLAG_DEFINITE_PROPERTY; }
+    unsigned definiteSlot() {
+        JS_ASSERT(isDefiniteProperty());
+        return typeFlags >> TYPE_FLAG_DEFINITE_SHIFT;
+    }
 
     /*
      * Add a type to this set, calling any constraint handlers if this is a new
@@ -316,6 +330,17 @@ class TypeSet
     inline unsigned getObjectCount();
     inline TypeObject *getObject(unsigned i);
 
+    void setIntermediate() { typeFlags |= TYPE_FLAG_INTERMEDIATE_SET; }
+    void setOwnProperty(bool configurable) {
+        typeFlags |= TYPE_FLAG_OWN_PROPERTY;
+        if (configurable)
+            typeFlags |= TYPE_FLAG_CONFIGURED_PROPERTY;
+    }
+    void setDefinite(unsigned slot) {
+        JS_ASSERT(slot <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT));
+        typeFlags |= TYPE_FLAG_DEFINITE_PROPERTY | (slot << TYPE_FLAG_DEFINITE_SHIFT);
+    }
+
     /* Add specific kinds of constraints to this set. */
     inline void add(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
     void addSubset(JSContext *cx, JSScript *script, TypeSet *target);
@@ -333,6 +358,7 @@ class TypeSet
     void addMonitorRead(JSContext *cx, JSScript *script, TypeSet *target);
 
     void addBaseSubset(JSContext *cx, TypeObject *object, TypeSet *target);
+    void addBaseClearDefinite(JSContext *cx, TypeObject *object);
     void addCondensed(JSContext *cx, JSScript *script);
 
     /*
@@ -478,6 +504,15 @@ struct TypeObject
     bool marked;
 
     /*
+     * If non-NULL, objects of this type have always been constructed using
+     * 'new' on the specified script. Moreover the given finalize kind and
+     * initial shape should also be used for the object.
+     */
+    JSScript *newScript;
+    /* gc::FinalizeKind */ unsigned newScriptFinalizeKind;
+    Shape *newScriptShape;
+
+    /*
      * Whether this is an Object or Array keyed to an offset in the script containing
      * this in its objects list.
      */
@@ -564,9 +599,11 @@ struct TypeObject
     /* Helpers */
 
     bool addProperty(JSContext *cx, jsid id, Property **pprop);
+    bool addDefiniteProperties(JSContext *cx, JSObject *obj, bool clearUnknown);
     void addPrototype(JSContext *cx, TypeObject *proto);
     void setFlags(JSContext *cx, TypeObjectFlags flags);
     void markUnknown(JSContext *cx);
+    void clearNewScript(JSContext *cx);
     void storeToInstances(JSContext *cx, Property *base);
     void getFromPrototypes(JSContext *cx, Property *base);
 
