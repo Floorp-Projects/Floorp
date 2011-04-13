@@ -55,6 +55,9 @@
 #undef DrawText
 #endif
 
+struct BidiParagraphData;
+struct BidiLineData;
+
 /**
  * A structure representing some continuation state for each frame on the line,
  * used to determine the first and the last continuation frame for each
@@ -118,7 +121,6 @@ class nsBidiPresUtils {
 public:
   nsBidiPresUtils();
   ~nsBidiPresUtils();
-  PRBool IsSuccessful(void) const;
   
   /**
    * Interface for the processor used by ProcessText. Used by process text to
@@ -174,9 +176,11 @@ public:
    *
    *  @lina 06/18/2000
    */
-  nsresult Resolve(nsBlockFrame* aBlockFrame);
-  void ResolveParagraph(nsBlockFrame* aBlockFrame);
-  void ResolveParagraphWithinBlock(nsBlockFrame* aBlockFrame);
+  static nsresult Resolve(nsBlockFrame* aBlockFrame);
+  static nsresult ResolveParagraph(nsBlockFrame* aBlockFrame,
+                                   BidiParagraphData* aBpd);
+  static void ResolveParagraphWithinBlock(nsBlockFrame* aBlockFrame,
+                                          BidiParagraphData* aBpd);
 
   /**
    * Reorder this line using Bidi engine.
@@ -184,8 +188,8 @@ public:
    * 
    * @lina 05/02/2000
    */
-  void ReorderFrames(nsIFrame*            aFirstFrameOnLine,
-                     PRInt32              aNumFramesOnLine);
+  static void ReorderFrames(nsIFrame*            aFirstFrameOnLine,
+                            PRInt32              aNumFramesOnLine);
 
   /**
    * Format Unicode text, taking into account bidi capabilities
@@ -194,11 +198,11 @@ public:
    *
    * @lina 06/18/2000 
    */
-  nsresult FormatUnicodeText(nsPresContext* aPresContext,
-                             PRUnichar*      aText,
-                             PRInt32&        aTextLength,
-                             nsCharType      aCharType,
-                             PRBool          aIsOddLevel);
+  static nsresult FormatUnicodeText(nsPresContext* aPresContext,
+                                    PRUnichar*      aText,
+                                    PRInt32&        aTextLength,
+                                    nsCharType      aCharType,
+                                    PRBool          aIsOddLevel);
 
   /**
    * Reorder plain text using the Unicode Bidi algorithm and send it to
@@ -217,26 +221,26 @@ public:
    * @param[in,out] aPosResolve array of logical positions to resolve into visual positions; can be nsnull if this functionality is not required
    * @param aPosResolveCount number of items in the aPosResolve array
    */
-  nsresult RenderText(const PRUnichar*       aText,
-                      PRInt32                aLength,
-                      nsBidiDirection        aBaseDirection,
-                      nsPresContext*         aPresContext,
-                      nsRenderingContext&    aRenderingContext,
-                      nsRenderingContext&    aTextRunConstructionContext,
-                      nscoord                aX,
-                      nscoord                aY,
-                      nsBidiPositionResolve* aPosResolve = nsnull,
-                      PRInt32                aPosResolveCount = 0)
+  static nsresult RenderText(const PRUnichar*       aText,
+                             PRInt32                aLength,
+                             nsBidiDirection        aBaseDirection,
+                             nsPresContext*         aPresContext,
+                             nsRenderingContext&    aRenderingContext,
+                             nsRenderingContext&    aTextRunConstructionContext,
+                             nscoord                aX,
+                             nscoord                aY,
+                             nsBidiPositionResolve* aPosResolve = nsnull,
+                             PRInt32                aPosResolveCount = 0)
   {
     return ProcessTextForRenderingContext(aText, aLength, aBaseDirection, aPresContext, aRenderingContext,
                                           aTextRunConstructionContext, MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nsnull);
   }
   
-  nscoord MeasureTextWidth(const PRUnichar*     aText,
-                           PRInt32              aLength,
-                           nsBidiDirection      aBaseDirection,
-                           nsPresContext*       aPresContext,
-                           nsRenderingContext&  aRenderingContext)
+  static nscoord MeasureTextWidth(const PRUnichar*     aText,
+                                  PRInt32              aLength,
+                                  nsBidiDirection      aBaseDirection,
+                                  nsPresContext*       aPresContext,
+                                  nsRenderingContext&  aRenderingContext)
   {
     nscoord length;
     nsresult rv = ProcessTextForRenderingContext(aText, aLength, aBaseDirection, aPresContext,
@@ -253,10 +257,10 @@ public:
    * @param[out] aLeftMost : leftmost frame on this line
    * @param[out] aRightMost : rightmost frame on this line
    */
-  PRBool CheckLineOrder(nsIFrame*  aFirstFrameOnLine,
-                        PRInt32    aNumFramesOnLine,
-                        nsIFrame** aLeftmost,
-                        nsIFrame** aRightmost);
+  static PRBool CheckLineOrder(nsIFrame*  aFirstFrameOnLine,
+                               PRInt32    aNumFramesOnLine,
+                               nsIFrame** aLeftmost,
+                               nsIFrame** aRightmost);
 
   /**
    * Get the frame to the right of the given frame, on the same line.
@@ -265,9 +269,9 @@ public:
    * @param aFirstFrameOnLine : first frame of the line to be tested
    * @param aNumFramesOnLine : number of frames on this line
    */
-  nsIFrame* GetFrameToRightOf(const nsIFrame*  aFrame,
-                              nsIFrame*        aFirstFrameOnLine,
-                              PRInt32          aNumFramesOnLine);
+  static nsIFrame* GetFrameToRightOf(const nsIFrame*  aFrame,
+                                     nsIFrame*        aFirstFrameOnLine,
+                                     PRInt32          aNumFramesOnLine);
     
   /**
    * Get the frame to the left of the given frame, on the same line.
@@ -276,9 +280,9 @@ public:
    * @param aFirstFrameOnLine : first frame of the line to be tested
    * @param aNumFramesOnLine : number of frames on this line
    */
-  nsIFrame* GetFrameToLeftOf(const nsIFrame*  aFrame,
-                             nsIFrame*        aFirstFrameOnLine,
-                             PRInt32          aNumFramesOnLine);
+  static nsIFrame* GetFrameToLeftOf(const nsIFrame*  aFrame,
+                                    nsIFrame*        aFirstFrameOnLine,
+                                    PRInt32          aNumFramesOnLine);
     
   /**
    * Get the bidi embedding level of the given (inline) frame.
@@ -312,15 +316,16 @@ public:
    * @param aPosResolveCount number of items in the aPosResolve array
    * @param[out] aWidth Pointer to where the width will be stored (may be null)
    */
-  nsresult ProcessText(const PRUnichar*       aText,
-                       PRInt32                aLength,
-                       nsBidiDirection        aBaseDirection,
-                       nsPresContext*         aPresContext,
-                       BidiProcessor&         aprocessor,
-                       Mode                   aMode,
-                       nsBidiPositionResolve* aPosResolve,
-                       PRInt32                aPosResolveCount,
-                       nscoord*               aWidth);
+  static nsresult ProcessText(const PRUnichar*       aText,
+                              PRInt32                aLength,
+                              nsBidiDirection        aBaseDirection,
+                              nsPresContext*         aPresContext,
+                              BidiProcessor&         aprocessor,
+                              Mode                   aMode,
+                              nsBidiPositionResolve* aPosResolve,
+                              PRInt32                aPosResolveCount,
+                              nscoord*               aWidth,
+                              nsBidi*                aBidiEngine);
 
   /**
    * Make a copy of a string, converting from logical to visual order
@@ -335,36 +340,25 @@ public:
    * @param aOverride if TRUE, the text has a bidi override, according to
    *                    the direction in aDir
    */
-  void CopyLogicalToVisual(const nsAString& aSource,
-                           nsAString& aDest,
-                           nsBidiLevel aBaseDirection,
-                           PRBool aOverride);
-
-  /**
-   * Guess at how much memory is being used by this nsBidiPresUtils instance,
-   * including memory used by nsBidi.
-   */
-  PRUint32 EstimateMemoryUsed();
-
-  void Traverse(nsCycleCollectionTraversalCallback &cb) const;
-  void Unlink();
+  static void CopyLogicalToVisual(const nsAString& aSource,
+                                  nsAString& aDest,
+                                  nsBidiLevel aBaseDirection,
+                                  PRBool aOverride);
 
 private:
-  nsresult ProcessTextForRenderingContext(const PRUnichar*       aText,
-                                          PRInt32                aLength,
-                                          nsBidiDirection        aBaseDirection,
-                                          nsPresContext*         aPresContext,
-                                          nsRenderingContext&    aRenderingContext,
-                                          nsRenderingContext&    aTextRunConstructionContext,
-                                          Mode                   aMode,
-                                          nscoord                aX, // DRAW only
-                                          nscoord                aY, // DRAW only
-                                          nsBidiPositionResolve* aPosResolve,  /* may be null */
-                                          PRInt32                aPosResolveCount,
-                                          nscoord*               aWidth /* may be null */);
-  void AdvanceAndAppendFrame(nsIFrame**                 aFrame,
-                             nsBlockInFlowLineIterator* aLineIter,
-                             nsIFrame**                 aNextSibling);
+  static nsresult
+  ProcessTextForRenderingContext(const PRUnichar*       aText,
+                                 PRInt32                aLength,
+                                 nsBidiDirection        aBaseDirection,
+                                 nsPresContext*         aPresContext,
+                                 nsRenderingContext&    aRenderingContext,
+                                 nsRenderingContext&    aTextRunConstructionContext,
+                                 Mode                   aMode,
+                                 nscoord                aX, // DRAW only
+                                 nscoord                aY, // DRAW only
+                                 nsBidiPositionResolve* aPosResolve,  /* may be null */
+                                 PRInt32                aPosResolveCount,
+                                 nscoord*               aWidth /* may be null */);
 
   /**
    * Traverse the child frames of the block element and:
@@ -374,26 +368,10 @@ private:
    *  than one paragraph for bidi resolution, resolve the paragraph up to that
    *  point.
    */
-  void TraverseFrames(nsBlockFrame*              aBlockFrame,
-                      nsBlockInFlowLineIterator* aLineIter,
-                      nsIFrame*                  aCurrentFrame);
-
-  /**
-   * Initialize the logically-ordered array of frames
-   * using the top-level frames of a single line
-   */
-  void InitLogicalArrayFromLine(nsIFrame* aFirstFrameOnLine,
-                                PRInt32   aNumFramesOnLine);
-
-  /**
-   * Reorder the frame array from logical to visual order
-   * 
-   * @param aReordered TRUE on return if the visual order is different from
-   *                   the logical order
-   * @param aHasRTLFrames TRUE on return if at least one of the frames is RTL
-   *                      (and therefore might have reordered descendents)
-   */
-  nsresult Reorder(PRBool& aReordered, PRBool& aHasRTLFrames);
+  static void TraverseFrames(nsBlockFrame*              aBlockFrame,
+                             nsBlockInFlowLineIterator* aLineIter,
+                             nsIFrame*                  aCurrentFrame,
+                             BidiParagraphData*         aBpd);
   
   /*
    * Position aFrame and it's descendants to their visual places. Also if aFrame
@@ -408,10 +386,10 @@ private:
    *                             adding its right margin)
    * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
    */
-  void RepositionFrame(nsIFrame*              aFrame,
-                       PRBool                 aIsOddLevel,
-                       nscoord&               aLeft,
-                       nsContinuationStates*  aContinuationStates) const;
+  static void RepositionFrame(nsIFrame*              aFrame,
+                              PRBool                 aIsOddLevel,
+                              nscoord&               aLeft,
+                              nsContinuationStates*  aContinuationStates);
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
@@ -421,8 +399,8 @@ private:
    *                             be initialized
    * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
    */
-  void InitContinuationStates(nsIFrame*              aFrame,
-                              nsContinuationStates*  aContinuationStates) const;
+  static void InitContinuationStates(nsIFrame*              aFrame,
+                                     nsContinuationStates*  aContinuationStates);
 
   /*
    * Determine if aFrame is leftmost or rightmost, and set aIsLeftMost and
@@ -439,10 +417,10 @@ private:
    * @param[out] aIsLeftMost     TRUE means aFrame is leftmost frame or continuation
    * @param[out] aIsRightMost    TRUE means aFrame is rightmost frame or continuation
    */
-   void IsLeftOrRightMost(nsIFrame*              aFrame,
-                          nsContinuationStates*  aContinuationStates,
-                          PRBool&                aIsLeftMost /* out */,
-                          PRBool&                aIsRightMost /* out */) const;
+   static void IsLeftOrRightMost(nsIFrame*              aFrame,
+                                 nsContinuationStates*  aContinuationStates,
+                                 PRBool&                aIsLeftMost /* out */,
+                                 PRBool&                aIsRightMost /* out */);
 
   /**
    *  Adjust frame positions following their visual order
@@ -451,7 +429,8 @@ private:
    *
    *  @lina 04/11/2000
    */
-  void RepositionInlineFrames(nsIFrame* aFirstChild) const;
+  static void RepositionInlineFrames(BidiLineData* aBld,
+                                     nsIFrame* aFirstChild);
   
   /**
    * Helper method for Resolve()
@@ -468,12 +447,12 @@ private:
    * @see Resolve()
    * @see RemoveBidiContinuation()
    */
-  inline
-  void EnsureBidiContinuation(nsIFrame*       aFrame,
-                              nsIFrame**      aNewFrame,
-                              PRInt32&        aFrameIndex,
-                              PRInt32         aStart,
-                              PRInt32         aEnd);
+  static inline
+  nsresult EnsureBidiContinuation(nsIFrame*       aFrame,
+                                  nsIFrame**      aNewFrame,
+                                  PRInt32&        aFrameIndex,
+                                  PRInt32         aStart,
+                                  PRInt32         aEnd);
 
   /**
    * Helper method for Resolve()
@@ -491,20 +470,23 @@ private:
    * @see Resolve()
    * @see EnsureBidiContinuation()
    */
-  void RemoveBidiContinuation(nsIFrame*       aFrame,
-                              PRInt32         aFirstIndex,
-                              PRInt32         aLastIndex,
-                              PRInt32&        aOffset) const;
-  void CalculateCharType(PRInt32& aOffset,
-                         PRInt32  aCharTypeLimit,
-                         PRInt32& aRunLimit,
-                         PRInt32& aRunLength,
-                         PRInt32& aRunCount,
-                         PRUint8& aCharType,
-                         PRUint8& aPrevCharType) const;
+  static void RemoveBidiContinuation(BidiParagraphData* aBpd,
+                                     nsIFrame*          aFrame,
+                                     PRInt32            aFirstIndex,
+                                     PRInt32            aLastIndex,
+                                     PRInt32&           aOffset);
+  static void CalculateCharType(nsBidi*          aBidiEngine,
+                                const PRUnichar* aText,
+                                PRInt32&         aOffset,
+                                PRInt32          aCharTypeLimit,
+                                PRInt32&         aRunLimit,
+                                PRInt32&         aRunLength,
+                                PRInt32&         aRunCount,
+                                PRUint8&         aCharType,
+                                PRUint8&         aPrevCharType);
   
-  void StripBidiControlCharacters(PRUnichar* aText,
-                                  PRInt32&   aTextLength) const;
+  static void StripBidiControlCharacters(PRUnichar* aText,
+                                         PRInt32&   aTextLength);
 
   static PRBool WriteLogicalToVisual(const PRUnichar* aSrc,
                                      PRUint32 aSrcLength,
@@ -512,26 +494,9 @@ private:
                                      nsBidiLevel aBaseDirection,
                                      nsBidi* aBidiEngine);
 
- static void WriteReverse(const PRUnichar* aSrc,
-                          PRUint32 aSrcLength,
-                          PRUnichar* aDest);
-
-  nsString        mBuffer;
-  nsTArray<PRUnichar> mEmbeddingStack;
-  nsTArray<nsIFrame*> mLogicalFrames;
-  nsTArray<nsLineBox*> mLinePerFrame;
-  nsTArray<nsIFrame*> mVisualFrames;
-  nsDataHashtable<nsISupportsHashKey, PRInt32> mContentToFrameIndex;
-  PRInt32         mArraySize;
-  PRInt32*        mIndexMap;
-  PRUint8*        mLevels;
-  nsresult        mSuccess;
-  PRPackedBool    mIsVisual;
-  nsBidiLevel     mParaLevel;
-  nsIFrame*       mPrevFrame;
-  nsIContent*     mPrevContent;
-
-  nsBidi*         mBidiEngine;
+  static void WriteReverse(const PRUnichar* aSrc,
+                           PRUint32 aSrcLength,
+                           PRUnichar* aDest);
 };
 
 #endif /* nsBidiPresUtils_h___ */

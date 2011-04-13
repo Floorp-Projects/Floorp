@@ -1434,15 +1434,6 @@ public:
     return PL_DHASH_NEXT;
   }
 
-  static PLDHashOperator LiveShellBidiSizeEnumerator(PresShellPtrKey *aEntry,
-                                                     void *userArg)
-  {
-    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
-    PRUint32 *val = (PRUint32*)userArg;
-    *val += aShell->mPresContext->GetBidiMemoryUsed();
-    return PL_DHASH_NEXT;
-  }
-
   static PRUint32
   EstimateShellsMemory(nsTHashtable<PresShellPtrKey>::Enumerator aEnumerator)
   {
@@ -1454,10 +1445,6 @@ public:
                                   
   static PRInt64 SizeOfLayoutMemoryReporter() {
     return EstimateShellsMemory(LiveShellSizeEnumerator);
-  }
-
-  static PRInt64 SizeOfBidiMemoryReporter() {
-    return EstimateShellsMemory(LiveShellBidiSizeEnumerator);
   }
 
 protected:
@@ -1675,13 +1662,6 @@ NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
     PresShell::SizeOfLayoutMemoryReporter,
     "Memory used by layout PresShell, PresContext, and other related areas.")
 
-NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
-    "explicit/layout/bidi",
-    KIND_HEAP,
-    UNITS_BYTES,
-    PresShell::SizeOfBidiMemoryReporter,
-    "Memory used by layout Bidi processor.")
-
 PresShell::PresShell()
   : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
 {
@@ -1710,7 +1690,6 @@ PresShell::PresShell()
   static bool registeredReporter = false;
   if (!registeredReporter) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutBidi));
     Preferences::AddBoolVarCache(&sSynthMouseMove,
                                  "layout.reflow.synthMouseMove", PR_TRUE);
     registeredReporter = true;
