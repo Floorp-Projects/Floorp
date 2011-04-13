@@ -13,7 +13,7 @@ function test() {
   /////////////////
   // getTabState //
   /////////////////
-  let key = "Unique key: " + Math.floor(Date.now());
+  let key = "Unique key: " + Date.now();
   let value = "Unique value: " + Math.random();
   let testURL = "about:config";
   
@@ -44,7 +44,7 @@ function test() {
   //////////////////////////////////
   let key2 = "key2";
   let value2 = "Value " + Math.random();
-  let value3 = "Another value: " + Math.floor(Date.now());
+  let value3 = "Another value: " + Date.now();
   let state = { entries: [{ url: testURL }], extData: { key2: value2 } };
   
   // create a new tab
