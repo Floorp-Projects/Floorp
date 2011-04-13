@@ -87,7 +87,9 @@ static JSObject *iterator_iterator(JSContext *cx, JSObject *obj, JSBool keysonly
 
 Class js_IteratorClass = {
     "Iterator",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_CONCURRENT_FINALIZER |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_Iterator),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */

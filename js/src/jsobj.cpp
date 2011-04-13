@@ -2944,6 +2944,9 @@ NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
     JS_ASSERT(clasp->isNative());
     gc::FinalizeKind kind = gc::FinalizeKind(_kind);
 
+    if (CanBeFinalizedInBackground(kind, clasp))
+        kind = (gc::FinalizeKind)(kind + 1);
+
     JSObject* obj = js_NewGCObject(cx, kind);
     if (!obj)
         return NULL;
