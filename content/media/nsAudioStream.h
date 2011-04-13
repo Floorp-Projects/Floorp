@@ -106,7 +106,7 @@ public:
   // Resume audio playback
   virtual void Resume() = 0;
 
-  // Return the position in milliseconds of the sample being played by the
+  // Return the position in microseconds of the sample being played by the
   // audio hardware.
   virtual PRInt64 GetPosition() = 0;
 
