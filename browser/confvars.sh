@@ -51,4 +51,4 @@ MOZ_APP_VERSION=$FIREFOX_VERSION
 MOZ_EXTENSIONS_DEFAULT=" gnomevfs"
 # MOZ_APP_DISPLAYNAME will be set by branding/configure.sh
 MOZ_BRANDING_DIRECTORY=browser/branding/nightly
-MOZ_OFFICIAL_BRANDING_DIRECTORY=other-licenses/branding/firefox
+MOZ_OFFICIAL_BRANDING_DIRECTORY=browser/branding/official
