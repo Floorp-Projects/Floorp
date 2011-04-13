@@ -84,7 +84,7 @@ function test()
   }
   reportCompare(expect, actual, summary + ': 3');
 
-  expect = 'TypeError: ({}) is not a function';
+  expect = "TypeError: can't convert ({toString:{}}) to primitive type";
   try
   {
     3 + ({toString:({}) }) ;

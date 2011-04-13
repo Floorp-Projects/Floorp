@@ -3036,6 +3036,11 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     DeleteProperty(nsGkAtoms::transitionsOfBeforeProperty);
     DeleteProperty(nsGkAtoms::transitionsOfAfterProperty);
     DeleteProperty(nsGkAtoms::transitionsProperty);
+#ifdef MOZ_CSS_ANIMATIONS
+    DeleteProperty(nsGkAtoms::animationsOfBeforeProperty);
+    DeleteProperty(nsGkAtoms::animationsOfAfterProperty);
+    DeleteProperty(nsGkAtoms::animationsProperty);
+#endif
   }
 
   // Unset this since that's what the old code effectively did.

@@ -75,6 +75,81 @@ function initial_font_family_is_sans_serif()
 var gInitialFontFamilyIsSansSerif = initial_font_family_is_sans_serif();
 
 var gCSSProperties = {
+	"-moz-animation": {
+		domProp: "MozAnimation",
+		inherited: false,
+		type: CSS_TYPE_TRUE_SHORTHAND,
+		subproperties: [ "-moz-animation-name", "-moz-animation-duration", "-moz-animation-timing-function", "-moz-animation-delay", "-moz-animation-direction", "-moz-animation-fill-mode", "-moz-animation-iteration-count", "-moz-animation-play-state" ],
+		initial_values: [ "none none 0s 0s ease normal running 1.0", "none", "0s", "ease", "normal", "running", "1.0" ],
+		other_values: [ "bounce 1s linear 2s", "bounce 1s 2s linear", "bounce linear 1s 2s", "linear bounce 1s 2s", "linear 1s bounce 2s", "linear 1s 2s bounce", "1s bounce linear 2s", "1s bounce 2s linear", "1s 2s bounce linear", "1s linear bounce 2s", "1s linear 2s bounce", "1s 2s linear bounce", "bounce linear 1s", "bounce 1s linear", "linear bounce 1s", "linear 1s bounce", "1s bounce linear", "1s linear bounce", "1s 2s bounce", "1s bounce 2s", "bounce 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "bounce 1s", "1s bounce", "linear 1s", "1s linear", "1s 2s", "2s 1s", "bounce", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s bounce, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32bounce linear 2s", "1s -bounce linear 2s", "1s -\\32bounce linear 2s", "1s \\32 0bounce linear 2s", "1s -\\32 0bounce linear 2s", "1s \\2bounce linear 2s", "1s -\\2bounce linear 2s", "2s, 1s bounce", "1s bounce, 2s", "2s all, 1s bounce", "1s bounce, 2s all", "1s bounce, 2s none", "2s none, 1s bounce", "2s bounce, 1s all", "2s all, 1s bounce" ],
+		invalid_values: [  "2s inherit", "inherit 2s", "2s bounce, 1s inherit", "2s inherit, 1s bounce", "2s initial" ]
+	},
+	"-moz-animation-delay": {
+		domProp: "MozAnimationDelay",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0s", "0ms" ],
+		other_values: [ "1s", "250ms", "-100ms", "-1s", "1s, 250ms, 2.3s"],
+		invalid_values: [ "0", "0px" ]
+	},
+	"-moz-animation-direction": {
+		domProp: "MozAnimationDirection",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "normal" ],
+		other_values: [ "alternate", "normal, alternate", "alternate, normal", "normal, normal", "normal, normal, normal" ],
+		invalid_values: [ "normal normal", "inherit, normal" ]
+	},
+	"-moz-animation-duration": {
+		domProp: "MozAnimationDuration",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "0s", "0ms" ],
+		other_values: [ "1s", "250ms", "-1ms", "-2s", "1s, 250ms, 2.3s"],
+		invalid_values: [ "0", "0px" ]
+	},
+	"-moz-animation-fill-mode": {
+		domProp: "MozAnimationFillMode",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "forwards", "backwards", "both", "none, none", "forwards, backwards", "forwards, none", "none, both" ],
+		invalid_values: [ "all"]
+	},
+	"-moz-animation-iteration-count": {
+		domProp: "MozAnimationIterationCount",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "1" ],
+		other_values: [ "infinite", "0", "0.5", "7.75", "-0.0", "1, 2, 3", "infinite, 2", "1, infinite" ],
+		// negatives forbidden per
+		// http://lists.w3.org/Archives/Public/www-style/2011Mar/0355.html
+		invalid_values: [ "none", "-1", "-0.5", "-1, infinite", "infinite, -3" ]
+	},
+	"-moz-animation-name": {
+		domProp: "MozAnimationName",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "all", "ball", "mall", "color", "bounce, bubble, opacity", "foobar", "auto", "\\32bounce", "-bounce", "-\\32bounce", "\\32 0bounce", "-\\32 0bounce", "\\2bounce", "-\\2bounce" ],
+		invalid_values: [ "bounce, initial", "initial, bounce", "bounce, inherit", "inherit, bounce" ]
+	},
+	"-moz-animation-play-state": {
+		domProp: "MozAnimationPlayState",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "running" ],
+		other_values: [ "paused", "running, running", "paused, running", "paused, paused", "running, paused", "paused, running, running, running, paused, running" ],
+		invalid_values: [ "0" ]
+	},
+	"-moz-animation-timing-function": {
+		domProp: "MozAnimationTimingFunction",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "ease", "cubic-bezier(0.25, 0.1, 0.25, 1.0)" ],
+		other_values: [ "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)", "step-start", "step-end", "steps(1)", "steps(2, start)", "steps(386)", "steps(3, end)" ],
+		invalid_values: [ "none", "auto", "cubic-bezier(0.25, 0.1, 0.25)", "cubic-bezier(0.25, 0.1, 0.25, 0.25, 1.0)", "cubic-bezier(-0.5, 0.5, 0.5, 0.5)", "cubic-bezier(1.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.5, 0.5, -0.5, 0.5)", "cubic-bezier(0.5, 0.5, 1.5, 0.5)", "steps(2, step-end)", "steps(0)", "steps(-2)", "steps(0, step-end, 1)" ]
+	},
 	"-moz-appearance": {
 		domProp: "MozAppearance",
 		inherited: false,
@@ -2608,7 +2683,7 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_TRUE_SHORTHAND,
 		subproperties: [ "-moz-transition-property", "-moz-transition-duration", "-moz-transition-timing-function", "-moz-transition-delay" ],
-		initial_values: [ "all 0s ease 0s" ],
+		initial_values: [ "all 0s ease 0s", "all", "0s", "0s 0s", "ease" ],
 		other_values: [ "width 1s linear 2s", "width 1s 2s linear", "width linear 1s 2s", "linear width 1s 2s", "linear 1s width 2s", "linear 1s 2s width", "1s width linear 2s", "1s width 2s linear", "1s 2s width linear", "1s linear width 2s", "1s linear 2s width", "1s 2s linear width", "width linear 1s", "width 1s linear", "linear width 1s", "linear 1s width", "1s width linear", "1s linear width", "1s 2s width", "1s width 2s", "width 1s 2s", "1s 2s linear", "1s linear 2s", "linear 1s 2s", "width 1s", "1s width", "linear 1s", "1s linear", "1s 2s", "2s 1s", "width", "linear", "1s", "height", "2s", "ease-in-out", "2s ease-in", "opacity linear", "ease-out 2s", "2s color, 1s width, 500ms height linear, 1s opacity 4s cubic-bezier(0.0, 0.1, 1.0, 1.0)", "1s \\32width linear 2s", "1s -width linear 2s", "1s -\\32width linear 2s", "1s \\32 0width linear 2s", "1s -\\32 0width linear 2s", "1s \\2width linear 2s", "1s -\\2width linear 2s" ],
 		invalid_values: [ "2s, 1s width", "1s width, 2s", "2s all, 1s width", "1s width, 2s all", "1s width, 2s none", "2s none, 1s width", "2s inherit", "inherit 2s", "2s width, 1s inherit", "2s inherit, 1s width", "2s initial", "2s all, 1s width", "2s width, 1s all" ]
 	},
@@ -2641,8 +2716,8 @@ var gCSSProperties = {
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "ease", "cubic-bezier(0.25, 0.1, 0.25, 1.0)" ],
-		other_values: [ "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)" ],
-		invalid_values: [ "none", "auto", "cubic-bezier(0.25, 0.1, 0.25)", "cubic-bezier(0.25, 0.1, 0.25, 0.25, 1.0)", "cubic-bezier(-0.5, 0.5, 0.5, 0.5)", "cubic-bezier(1.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.5, 0.5, -0.5, 0.5)", "cubic-bezier(0.5, 0.5, 1.5, 0.5)" ]
+		other_values: [ "linear", "ease-in", "ease-out", "ease-in-out", "linear, ease-in, cubic-bezier(0.1, 0.2, 0.8, 0.9)", "cubic-bezier(0.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.25, 1.5, 0.75, -0.5)", "step-start", "step-end", "steps(1)", "steps(2, start)", "steps(386)", "steps(3, end)" ],
+		invalid_values: [ "none", "auto", "cubic-bezier(0.25, 0.1, 0.25)", "cubic-bezier(0.25, 0.1, 0.25, 0.25, 1.0)", "cubic-bezier(-0.5, 0.5, 0.5, 0.5)", "cubic-bezier(1.5, 0.5, 0.5, 0.5)", "cubic-bezier(0.5, 0.5, -0.5, 0.5)", "cubic-bezier(0.5, 0.5, 1.5, 0.5)", "steps(2, step-end)", "steps(0)", "steps(-2)", "steps(0, step-end, 1)" ]
 	},
 	"unicode-bidi": {
 		domProp: "unicodeBidi",

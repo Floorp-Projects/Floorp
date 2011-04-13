@@ -1068,37 +1068,8 @@ DOMCSSDeclarationImpl::GetCSSParsingEnvironment(nsIURI** aSheetURI,
                                                 nsIPrincipal** aSheetPrincipal,
                                                 css::Loader** aCSSLoader)
 {
-  // null out the out params since some of them may not get initialized below
-  *aSheetURI = nsnull;
-  *aBaseURI = nsnull;
-  *aSheetPrincipal = nsnull;
-  *aCSSLoader = nsnull;
-
-  if (mRule) {
-    nsIStyleSheet* sheet = mRule->GetStyleSheet();
-    if (sheet) {
-      NS_IF_ADDREF(*aSheetURI = sheet->GetSheetURI());
-      NS_IF_ADDREF(*aBaseURI = sheet->GetBaseURI());
-
-      nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
-      if (cssSheet) {
-        NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
-      }
-
-      nsIDocument* document = sheet->GetOwningDocument();
-      if (document) {
-        NS_ADDREF(*aCSSLoader = document->CSSLoader());
-      }
-    }
-  }
-
-  nsresult result = NS_OK;
-  if (!*aSheetPrincipal) {
-    result = CallCreateInstance("@mozilla.org/nullprincipal;1",
-                                aSheetPrincipal);
-  }
-
-  return result;
+  return GetCSSParsingEnvironmentForRule(mRule, aSheetURI, aBaseURI,
+                                         aSheetPrincipal, aCSSLoader);
 }
 
 NS_IMETHODIMP

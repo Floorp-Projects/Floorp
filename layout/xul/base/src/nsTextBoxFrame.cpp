@@ -533,32 +533,28 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
 
     if (mState & NS_FRAME_IS_BIDI) {
       presContext->SetBidiEnabled();
-      nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
-
-      if (bidiUtils) {
-        const nsStyleVisibility* vis = GetStyleVisibility();
-        nsBidiDirection direction = (NS_STYLE_DIRECTION_RTL == vis->mDirection) ? NSBIDI_RTL : NSBIDI_LTR;
-        if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
-           // We let the RenderText function calculate the mnemonic's
-           // underline position for us.
-           nsBidiPositionResolve posResolve;
-           posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
-           rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
-                                      presContext, aRenderingContext,
-                                      *refContext,
-                                      aTextRect.x, baseline,
-                                      &posResolve,
-                                      1);
-           mAccessKeyInfo->mBeforeWidth = posResolve.visualLeftTwips;
-           mAccessKeyInfo->mAccessWidth = posResolve.visualWidth;
-        }
-        else
-        {
-           rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
-                                      presContext, aRenderingContext,
-                                      *refContext,
-                                      aTextRect.x, baseline);
-        }
+      const nsStyleVisibility* vis = GetStyleVisibility();
+      nsBidiDirection direction = (NS_STYLE_DIRECTION_RTL == vis->mDirection) ? NSBIDI_RTL : NSBIDI_LTR;
+      if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
+          // We let the RenderText function calculate the mnemonic's
+          // underline position for us.
+          nsBidiPositionResolve posResolve;
+          posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
+          rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
+                                           presContext, aRenderingContext,
+                                           *refContext,
+                                           aTextRect.x, baseline,
+                                           &posResolve,
+                                           1);
+          mAccessKeyInfo->mBeforeWidth = posResolve.visualLeftTwips;
+          mAccessKeyInfo->mAccessWidth = posResolve.visualWidth;
+      }
+      else
+      {
+          rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
+                                           presContext, aRenderingContext,
+                                           *refContext,
+                                           aTextRect.x, baseline);
       }
     }
     if (NS_FAILED(rv) )

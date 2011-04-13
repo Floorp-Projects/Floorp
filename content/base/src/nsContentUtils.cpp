@@ -688,6 +688,12 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::onMozTouchUp,                  NS_MOZTOUCH_UP, EventNameType_None, NS_MOZTOUCH_EVENT },
 
     { nsGkAtoms::ontransitionend,               NS_TRANSITION_END, EventNameType_None, NS_TRANSITION_EVENT }
+#ifdef MOZ_CSS_ANIMATIONS
+    ,
+    { nsGkAtoms::onanimationstart,              NS_ANIMATION_START, EventNameType_None, NS_ANIMATION_EVENT },
+    { nsGkAtoms::onanimationend,                NS_ANIMATION_END, EventNameType_None, NS_ANIMATION_EVENT },
+    { nsGkAtoms::onanimationiteration,          NS_ANIMATION_ITERATION, EventNameType_None, NS_ANIMATION_EVENT }
+#endif
   };
 
   sAtomEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;

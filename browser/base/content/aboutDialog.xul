@@ -70,7 +70,7 @@
 
   <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>
 
-  <vbox>
+  <vbox id="aboutDialogContainer">
     <hbox id="clientBox">
       <vbox id="leftBox" flex="1"/>
       <vbox id="rightBox" flex="1">

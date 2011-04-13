@@ -151,6 +151,10 @@ function handleRequest(request, response)
     response.setHeader("Content-Type", "application/xml", false);
     response.write("<res>hello pass</res>\n");
   }
+  if (isPreflight && "preflightBody" in query) {
+    response.setHeader("Content-Type", "text/plain", false);
+    response.write(query.preflightBody);
+  }
 }
 
 function sendHttp500(response, text) {

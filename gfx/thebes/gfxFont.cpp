@@ -1243,8 +1243,9 @@ gfxFont::Draw(gfxTextRun *aTextRun, PRUint32 aStart, PRUint32 aEnd,
          * in more than GLYPH_BUFFER_SIZE glyphs.  Do this before we
          * flush, since that'll blow away the num_glyphs.
          */
-        gfxFontTestStore::CurrentStore()->AddItem(GetUniqueName(),
-                                                  glyphs.mGlyphBuffer, glyphs.mNumGlyphs);
+        gfxFontTestStore::CurrentStore()->AddItem(GetName(),
+                                                  glyphs.mGlyphBuffer,
+                                                  glyphs.mNumGlyphs);
     }
 
     // draw any remaining glyphs

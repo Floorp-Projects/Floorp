@@ -88,20 +88,20 @@ nsSafeOptionListMutation::nsSafeOptionListMutation(nsIContent* aSelect,
                                                    nsIContent* aKid,
                                                    PRUint32 aIndex,
                                                    PRBool aNotify)
-  : mSelect(do_QueryInterface(aSelect)), mTopLevelMutation(PR_FALSE),
-    mNeedsRebuild(PR_FALSE)
+  : mSelect(nsHTMLSelectElement::FromContent(aSelect))
+  , mTopLevelMutation(PR_FALSE)
+  , mNeedsRebuild(PR_FALSE)
 {
-  nsHTMLSelectElement* select = static_cast<nsHTMLSelectElement*>(mSelect.get());
-  if (select) {
-    mTopLevelMutation = !select->mMutating;
+  if (mSelect) {
+    mTopLevelMutation = !mSelect->mMutating;
     if (mTopLevelMutation) {
-      select->mMutating = PR_TRUE;
+      mSelect->mMutating = PR_TRUE;
     } else {
       // This is very unfortunate, but to handle mutation events properly,
       // option list must be up-to-date before inserting or removing options.
       // Fortunately this is called only if mutation event listener
       // adds or removes options.
-      select->RebuildOptionsArray(aNotify);
+      mSelect->RebuildOptionsArray(aNotify);
     }
     nsresult rv;
     if (aKid) {
@@ -116,16 +116,14 @@ nsSafeOptionListMutation::nsSafeOptionListMutation(nsIContent* aSelect,
 nsSafeOptionListMutation::~nsSafeOptionListMutation()
 {
   if (mSelect) {
-    nsHTMLSelectElement* select =
-      static_cast<nsHTMLSelectElement*>(mSelect.get());
     if (mNeedsRebuild || (mTopLevelMutation && mGuard.Mutated(1))) {
-      select->RebuildOptionsArray(PR_TRUE);
+      mSelect->RebuildOptionsArray(PR_TRUE);
     }
     if (mTopLevelMutation) {
-      select->mMutating = PR_FALSE;
+      mSelect->mMutating = PR_FALSE;
     }
 #ifdef DEBUG
-    select->VerifyOptionsArray();
+    mSelect->VerifyOptionsArray();
 #endif
   }
 }
@@ -187,9 +185,8 @@ DOMCI_NODE_DATA(HTMLSelectElement, nsHTMLSelectElement)
 
 // QueryInterface implementation for nsHTMLSelectElement
 NS_INTERFACE_TABLE_HEAD_CYCLE_COLLECTION_INHERITED(nsHTMLSelectElement)
-  NS_HTML_CONTENT_INTERFACE_TABLE3(nsHTMLSelectElement,
+  NS_HTML_CONTENT_INTERFACE_TABLE2(nsHTMLSelectElement,
                                    nsIDOMHTMLSelectElement,
-                                   nsISelectElement,
                                    nsIConstraintValidation)
   NS_HTML_CONTENT_INTERFACE_TABLE_TO_MAP_SEGUE(nsHTMLSelectElement,
                                                nsGenericHTMLFormElement)

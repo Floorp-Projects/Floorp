@@ -39,6 +39,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLOptionElement.h"
+#include "nsHTMLSelectElement.h"
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMEventTarget.h"
@@ -48,9 +49,7 @@
 #include "nsIForm.h"
 #include "nsIDOMText.h"
 #include "nsIDOMNode.h"
-#include "nsGenericElement.h"
 #include "nsIDOMHTMLCollection.h"
-#include "nsISelectElement.h"
 #include "nsISelectControlFrame.h"
 
 // Notify/query select frame for selected state
@@ -135,8 +134,7 @@ nsHTMLOptionElement::GetForm(nsIDOMHTMLFormElement** aForm)
   NS_ENSURE_ARG_POINTER(aForm);
   *aForm = nsnull;
 
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectControl =
-    do_QueryInterface(GetSelect());
+  nsHTMLSelectElement* selectControl = GetSelect();
 
   if (selectControl) {
     selectControl->GetForm(aForm);
@@ -201,7 +199,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 {
   // Note: The select content obj maintains all the PresState
   // so defer to it to get the answer
-  nsCOMPtr<nsISelectElement> selectInt = do_QueryInterface(GetSelect());
+  nsHTMLSelectElement* selectInt = GetSelect();
   if (selectInt) {
     PRInt32 index;
     GetIndex(&index);
@@ -230,8 +228,7 @@ nsHTMLOptionElement::GetIndex(PRInt32* aIndex)
   *aIndex = -1; // -1 indicates the index was not found
 
   // Get our containing select content object.
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement =
-    do_QueryInterface(GetSelect());
+  nsHTMLSelectElement* selectElement = GetSelect();
 
   if (selectElement) {
     // Get the options from the select object.
@@ -288,9 +285,9 @@ nsHTMLOptionElement::BeforeSetAttr(PRInt32 aNamespaceID, nsIAtom* aName,
   }
   
   // We just changed out selected state (since we look at the "selected"
-  // attribute when mSelectedChanged is false.  Let's tell our select about
+  // attribute when mSelectedChanged is false).  Let's tell our select about
   // it.
-  nsCOMPtr<nsISelectElement> selectInt = do_QueryInterface(GetSelect());
+  nsHTMLSelectElement* selectInt = GetSelect();
   if (!selectInt) {
     return NS_OK;
   }
@@ -371,14 +368,14 @@ nsHTMLOptionElement::IntrinsicState() const
 }
 
 // Get the select content element that contains this option
-nsIContent*
+nsHTMLSelectElement*
 nsHTMLOptionElement::GetSelect()
 {
   nsIContent* parent = this;
   while ((parent = parent->GetParent()) &&
          parent->IsHTML()) {
     if (parent->Tag() == nsGkAtoms::select) {
-      return parent;
+      return nsHTMLSelectElement::FromContent(parent);
     }
     if (parent->Tag() != nsGkAtoms::optgroup) {
       break;

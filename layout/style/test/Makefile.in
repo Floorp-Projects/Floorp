@@ -179,6 +179,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_transitions_events.html \
 		test_transitions.html \
 		test_transitions_per_property.html \
+		test_transitions_step_functions.html \
 		test_transitions_dynamic_changes.html \
 		test_transitions_bug537151.html \
 		test_unclosed_parentheses.html \
@@ -194,6 +195,7 @@ _TEST_FILES =	test_acid3_test46.html \
 		test_visited_lying.html \
 		test_visited_pref.html \
 		test_visited_reftests.html \
+		animation_utils.js \
 		css_properties.js \
 		property_database.js \
 		descriptor_database.js \
@@ -223,6 +225,13 @@ _TEST_FILES =	test_acid3_test46.html \
 		visited_image_loading_frame.html \
 		visited_image_loading_frame_empty.html \
 		$(NULL)
+
+ifdef MOZ_CSS_ANIMATIONS
+_TEST_FILES +=	\
+		test_animations.html \
+		test_keyframes_rules.html \
+		$(NULL)
+endif
 
 _VISITED_REFTEST_FILES = \
 		$(shell find $(topsrcdir)/layout/reftests/css-visited/ -name '*.html' -o -name '*.xhtml') \

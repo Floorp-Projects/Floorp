@@ -103,7 +103,6 @@
 #include "nsIHttpChannel.h"
 #include "nsIFile.h"
 #include "nsIEventListenerManager.h"
-#include "nsISelectElement.h"
 #include "nsFrameSelection.h"
 #include "nsISelectionPrivate.h"//for toStringwithformat code
 

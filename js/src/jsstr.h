@@ -77,8 +77,8 @@
  *    property via a flat string's "extensible" property.
  *
  *  - To avoid allocating small char arrays, short strings can be stored inline
- *    in the string header. To increase the max size of such inline strings,
- *    double-wide string headers (JSShortString) can be used.
+ *    in the string header (JSInlineString). To increase the max size of such
+ *    inline strings, extra-large string headers can be used (JSShortString).
  *
  *  - To avoid comparing O(n) string equality comparison, strings can be
  *    canonicalized to "atoms" (JSAtom) such that there is a single atom with a
@@ -100,27 +100,31 @@
  * C++ type                     operations+fields / invariants+properties
  *
  * JSString (abstract)          getCharsZ, getChars, length / -
- *    | \
- *    | JSRope                  leftChild, rightChild / -
- *    |
+ *  | \
+ *  | JSRope                    leftChild, rightChild / -
+ *  |
  * JSLinearString (abstract)    chars / not null-terminated
- *    | \
- *    | JSDependentString       base / -
- *    |
+ *  | \
+ *  | JSDependentString         base / -
+ *  |
  * JSFlatString (abstract)      chars / not null-terminated
- *    | \
- *    | JSExtensibleString      capacity / no external pointers into char array
- *    |
+ *  | \
+ *  | JSExtensibleString        capacity / no external pointers into char array
+ *  |
  * JSFixedString                - / may have external pointers into char array
- *    | \   \
- *    |  \  JSExternalString    - / chars stored in header
- *    |   \
- *    |   JSShortString         - / chars stored in header
- *    |    |
- * JSAtom  |                    - / string equality === pointer equality
- *    | \  |
- *    | JSShortAtom             - / atomized JSShortString
- *    |
+ *  | \  \
+ *  |  \ JSExternalString       - / char array memory managed by embedding
+ *  |   \
+ *  |   JSInlineString          - / chars stored in header
+ *  |     | \
+ *  |     | JSShortString       - / header is fat
+ *  |     |        |
+ * JSAtom |        |            - / string equality === pointer equality
+ *  | \   |        |
+ *  | JSInlineAtom |            - / atomized JSInlineString
+ *  |       \      |
+ *  |       JSShortAtom         - / atomized JSShortString
+ *  |
  * JSStaticAtom                 - / header and chars statically allocated
  *
  * Classes marked with (abstract) above are not literally C++ Abstract Base
@@ -149,7 +153,7 @@ class JSString : public js::gc::Cell
             JSString               *left;               /* JSRope */
         } u1;
         union {
-            jschar                 inlineStorage[NUM_INLINE_CHARS]; /* JSShortString */
+            jschar                 inlineStorage[NUM_INLINE_CHARS]; /* JS(Inline|Short)String */
             struct {
                 union {
                     JSLinearString *base;               /* JSDependentString */
@@ -187,6 +191,7 @@ class JSString : public js::gc::Cell
      *   JSFlatString          xx00
      *   JSExtensibleString    1100
      *   JSFixedString         xy00 where xy != 11
+     *   JSInlineString        0100 and chars == inlineStorage
      *   JSShortString         0100 and in FINALIZE_SHORT_STRING arena
      *   JSExternalString      0100 and in FINALIZE_EXTERNAL_STRING arena
      *   JSAtom                x000
@@ -444,6 +449,10 @@ class JSFlatString : public JSLinearString
         JS_ASSERT(isFlat());
         return chars();
     }
+
+    /* Only called by the GC for strings with the FINALIZE_STRING kind. */
+
+    inline void finalize(JSRuntime *rt);
 };
 
 JS_STATIC_ASSERT(sizeof(JSFlatString) == sizeof(JSString));
@@ -475,6 +484,63 @@ class JSFixedString : public JSFlatString
 };
 
 JS_STATIC_ASSERT(sizeof(JSFixedString) == sizeof(JSString));
+
+class JSInlineString : public JSFixedString
+{
+    static const size_t MAX_INLINE_LENGTH = NUM_INLINE_CHARS - 1;
+
+  public:
+    static inline JSInlineString *new_(JSContext *cx);
+
+    inline jschar *init(size_t length);
+
+    inline void resetLength(size_t length);
+
+    static bool lengthFits(size_t length) {
+        return length <= MAX_INLINE_LENGTH;
+    }
+
+};
+
+JS_STATIC_ASSERT(sizeof(JSInlineString) == sizeof(JSString));
+
+class JSShortString : public JSInlineString
+{
+    /* This can be any value that is a multiple of sizeof(gc::FreeCell). */
+    static const size_t INLINE_EXTENSION_CHARS = sizeof(JSString::Data) / sizeof(jschar);
+
+    static void staticAsserts() {
+        JS_STATIC_ASSERT(INLINE_EXTENSION_CHARS % sizeof(js::gc::FreeCell) == 0);
+        JS_STATIC_ASSERT(MAX_SHORT_LENGTH + 1 ==
+                         (sizeof(JSShortString) -
+                          offsetof(JSShortString, d.inlineStorage)) / sizeof(jschar));
+    }
+
+    jschar inlineStorageExtension[INLINE_EXTENSION_CHARS];
+
+  public:
+    static inline JSShortString *new_(JSContext *cx);
+
+    jschar *inlineStorageBeforeInit() {
+        return d.inlineStorage;
+    }
+
+    inline void initAtOffsetInBuffer(const jschar *chars, size_t length);
+
+    static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
+                                           INLINE_EXTENSION_CHARS
+                                           -1 /* null terminator */;
+
+    static bool lengthFits(size_t length) {
+        return length <= MAX_SHORT_LENGTH;
+    }
+
+    /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
+
+    JS_ALWAYS_INLINE void finalize(JSContext *cx);
+};
+
+JS_STATIC_ASSERT(sizeof(JSShortString) == 2 * sizeof(JSString));
 
 class JSExternalString : public JSFixedString
 {
@@ -515,59 +581,6 @@ class JSExternalString : public JSFixedString
 };
 
 JS_STATIC_ASSERT(sizeof(JSExternalString) == sizeof(JSString));
-
-class JSShortString : public JSFixedString
-{
-    /* This can be any value that is a multiple of sizeof(gc::FreeCell). */
-    static const size_t INLINE_EXTENSION_CHARS = sizeof(JSString::Data) / sizeof(jschar);
-
-    static void staticAsserts() {
-        JS_STATIC_ASSERT(INLINE_EXTENSION_CHARS % sizeof(js::gc::FreeCell) == 0);
-        JS_STATIC_ASSERT(MAX_SHORT_LENGTH + 1 ==
-                         (sizeof(JSShortString) -
-                          offsetof(JSShortString, d.inlineStorage)) / sizeof(jschar));
-    }
-
-    jschar inlineStorageExtension[INLINE_EXTENSION_CHARS];
-
-  public:
-    jschar *inlineStorageBeforeInit() {
-        return d.inlineStorage;
-    }
-
-    jschar *init(size_t length) {
-        JS_ASSERT(lengthFits(length));
-        d.u1.chars = d.inlineStorage;
-        d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
-        return d.inlineStorage;
-    }
-
-    void resetLength(size_t length) {
-        JS_ASSERT(lengthFits(length));
-        d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
-    }
-
-    void initAtOffsetInBuffer(const jschar *chars, size_t length) {
-        JS_ASSERT(lengthFits(length + (chars - d.inlineStorage)));
-        JS_ASSERT(chars >= d.inlineStorage && chars < d.inlineStorage + MAX_SHORT_LENGTH);
-        d.lengthAndFlags = buildLengthAndFlags(length, FIXED_FLAGS);
-        d.u1.chars = chars;
-    }
-
-    static const size_t MAX_SHORT_LENGTH = JSString::NUM_INLINE_CHARS +
-                                           INLINE_EXTENSION_CHARS
-                                           -1 /* null terminator */;
-
-    static inline bool lengthFits(size_t length) {
-        return length <= MAX_SHORT_LENGTH;
-    }
-
-    /* Only called by the GC for strings with the FINALIZE_EXTERNAL_STRING kind. */
-
-    JS_ALWAYS_INLINE void finalize(JSContext *cx);
-};
-
-JS_STATIC_ASSERT(sizeof(JSShortString) == 2 * sizeof(JSString));
 
 class JSAtom : public JSFixedString
 {
@@ -627,11 +640,23 @@ class JSAtom : public JSFixedString
 
     /* Return null if no static atom exists for the given (chars, length). */
     static inline JSStaticAtom *lookupStatic(const jschar *chars, size_t length);
+
+    inline void finalize(JSRuntime *rt);
 };
 
 JS_STATIC_ASSERT(sizeof(JSAtom) == sizeof(JSString));
 
-class JSShortAtom : public JSShortString /*, JSAtom */
+class JSInlineAtom : public JSInlineString /*, JSAtom */
+{
+    /*
+     * JSInlineAtom is not explicitly used and is only present for consistency.
+     * See Atomize() for how JSInlineStrings get morphed into JSInlineAtoms.
+     */
+};
+
+JS_STATIC_ASSERT(sizeof(JSInlineAtom) == sizeof(JSInlineString));
+
+class JSShortAtom : public JSShortString /*, JSInlineAtom */
 {
     /*
      * JSShortAtom is not explicitly used and is only present for consistency.
@@ -984,7 +1009,7 @@ ValueToString_TestForStringInline(JSContext *cx, const Value &v)
  * value to a string of jschars appended to the given buffer. On error, the
  * passed buffer may have partial results appended.
  */
-extern bool
+inline bool
 ValueToStringBuffer(JSContext *cx, const Value &v, StringBuffer &sb);
 
 } /* namespace js */

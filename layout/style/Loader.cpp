@@ -1694,8 +1694,8 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
   // Go through and deal with the whole linked list.
   SheetLoadData* data = aLoadData;
   while (data) {
-
-    data->mSheet->SetModified(PR_FALSE); // it's clean
+    NS_ABORT_IF_FALSE(!data->mSheet->IsModified(),
+                      "should not get marked modified during parsing");
     data->mSheet->SetComplete();
     if (data->mMustNotify && (data->mObserver || !mObservers.IsEmpty())) {
       // Don't notify here so we don't trigger script.  Remember the

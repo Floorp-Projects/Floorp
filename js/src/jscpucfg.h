@@ -42,7 +42,7 @@
 
 #define JS_HAVE_LONG_LONG
 
-#if defined(XP_WIN) || defined(XP_OS2) || defined(WINCE)
+#if defined(XP_WIN) || defined(XP_OS2)
 
 #if defined(_WIN64)
 
@@ -57,7 +57,7 @@
 #error "CPU type is unknown"
 #endif /* !(defined(_M_X64) || defined(_M_AMD64) || defined(_AMD64_)) */
 
-#elif defined(_WIN32) || defined(XP_OS2) || defined(WINCE)
+#elif defined(_WIN32) || defined(XP_OS2)
 
 #ifdef __WATCOMC__
 #define HAVE_VA_LIST_AS_ARRAY 1
@@ -70,7 +70,7 @@
 #define JS_BITS_PER_WORD_LOG2   5
 #define JS_ALIGN_OF_POINTER 4L
 
-#endif /* _WIN32 || XP_OS2 || WINCE*/
+#endif /* _WIN32 || XP_OS2 */
 
 #elif defined(XP_UNIX)
 

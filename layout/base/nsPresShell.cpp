@@ -66,6 +66,9 @@
 #include "nsStyleSet.h"
 #include "nsCSSStyleSheet.h" // XXX for UA sheet loading hack, can this go away please?
 #include "nsIDOMCSSStyleSheet.h"  // for Pref-related rule management (bugs 22963,20760,31816)
+#ifdef MOZ_CSS_ANIMATIONS
+#include "nsAnimationManager.h"
+#endif
 #include "nsINameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsIServiceManager.h"
 #include "nsFrame.h"
@@ -1405,15 +1408,6 @@ public:
     return PL_DHASH_NEXT;
   }
 
-  static PLDHashOperator LiveShellBidiSizeEnumerator(PresShellPtrKey *aEntry,
-                                                     void *userArg)
-  {
-    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
-    PRUint32 *val = (PRUint32*)userArg;
-    *val += aShell->mPresContext->GetBidiMemoryUsed();
-    return PL_DHASH_NEXT;
-  }
-
   static PRUint32
   EstimateShellsMemory(nsTHashtable<PresShellPtrKey>::Enumerator aEnumerator)
   {
@@ -1425,10 +1419,6 @@ public:
                                   
   static PRInt64 SizeOfLayoutMemoryReporter(void *) {
     return EstimateShellsMemory(LiveShellSizeEnumerator);
-  }
-
-  static PRInt64 SizeOfBidiMemoryReporter(void *) {
-    return EstimateShellsMemory(LiveShellBidiSizeEnumerator);
   }
 
 protected:
@@ -1646,12 +1636,6 @@ NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
                              PresShell::SizeOfLayoutMemoryReporter,
                              nsnull)
 
-NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
-                             "layout/bidi",
-                             "Memory in use by layout Bidi processor.",
-                             PresShell::SizeOfBidiMemoryReporter,
-                             nsnull)
-
 PresShell::PresShell()
 {
   mSelection = nsnull;
@@ -1679,7 +1663,6 @@ PresShell::PresShell()
   static bool registeredReporter = false;
   if (!registeredReporter) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutBidi));
     registeredReporter = true;
   }
 
@@ -4789,6 +4772,14 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       mFrameConstructor->ProcessPendingRestyles();
     }
 
+#ifdef MOZ_CSS_ANIMATIONS
+    // Dispatch any 'animationstart' events those (or earlier) restyles
+    // queued up.
+    if (!mIsDestroying) {
+      mPresContext->AnimationManager()->DispatchEvents();
+    }
+#endif
+
     // Process whatever XBL constructors those restyles queued up.  This
     // ensures that onload doesn't fire too early and that we won't do extra
     // reflows after those constructors run.
@@ -4796,12 +4787,13 @@ PresShell::FlushPendingNotifications(mozFlushType aType)
       mDocument->BindingManager()->ProcessAttachedQueue();
     }
 
-    // Now those constructors might have posted restyle events.  At the same
-    // time, we still need up-to-date style data.  In particular, reflow
-    // depends on style being completely up to date.  If it's not, then style
-    // context reparenting, which can happen during reflow, might suddenly pick
-    // up the new rules and we'll end up with frames whose style doesn't match
-    // the frame type.
+    // Now those constructors or events might have posted restyle
+    // events.  At the same time, we still need up-to-date style data.
+    // In particular, reflow depends on style being completely up to
+    // date.  If it's not, then style context reparenting, which can
+    // happen during reflow, might suddenly pick up the new rules and
+    // we'll end up with frames whose style doesn't match the frame
+    // type.
     if (!mIsDestroying) {
       nsAutoScriptBlocker scriptBlocker;
       mFrameConstructor->CreateNeededFrames();
@@ -5105,6 +5097,9 @@ nsIPresShell::ReconstructStyleDataInternal()
 
   if (mPresContext) {
     mPresContext->RebuildUserFontSet();
+#ifdef MOZ_CSS_ANIMATIONS
+    mPresContext->AnimationManager()->KeyframesListIsDirty();
+#endif
   }
 
   Element* root = mDocument->GetRootElement();

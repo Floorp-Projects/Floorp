@@ -958,8 +958,6 @@ public:
     const nsString& GetName() const { return mFontEntry->Name(); }
     const gfxFontStyle *GetStyle() const { return &mStyle; }
 
-    virtual nsString GetUniqueName() { return GetName(); }
-
     virtual gfxFont* CopyWithAntialiasOption(AntialiasOption anAAOption) {
         // platforms where this actually matters should override
         return nsnull;

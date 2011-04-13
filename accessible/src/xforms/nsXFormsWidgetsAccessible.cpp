@@ -60,10 +60,6 @@ nsXFormsDropmarkerWidgetAccessible::NativeRole()
 PRUint64
 nsXFormsDropmarkerWidgetAccessible::NativeState()
 {
-
-  if (IsDefunct())
-    return states::DEFUNCT;
-
   PRBool isOpen = PR_FALSE;
   nsCOMPtr<nsIDOMNode> DOMNode(do_QueryInterface(mContent));
   nsresult rv = sXFormsService->IsDropmarkerOpen(DOMNode, &isOpen);
