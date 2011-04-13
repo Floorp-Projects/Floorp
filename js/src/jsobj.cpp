@@ -2892,6 +2892,41 @@ js_Object(JSContext *cx, uintN argc, Value *vp)
     return JS_TRUE;
 }
 
+JSObject *
+js::NewReshapedObject(JSContext *cx, TypeObject *type, JSObject *parent,
+                      gc::FinalizeKind kind, const Shape *shape)
+{
+    JSObject *res = NewObjectWithType(cx, type, parent, kind);
+    if (!res)
+        return NULL;
+
+    if (JSID_IS_EMPTY(shape->id))
+        return res;
+
+    /* Get all the ids in the object, in order. */
+    js::AutoIdVector ids(cx);
+    for (unsigned i = 0; i <= shape->slot; i++) {
+        if (!ids.append(JSID_VOID))
+            return NULL;
+    }
+    const js::Shape *nshape = shape;
+    while (!JSID_IS_EMPTY(nshape->id)) {
+        ids[nshape->slot] = nshape->id;
+        nshape = nshape->previous();
+    }
+
+    /* Construct the new shape. */
+    for (unsigned i = 0; i < ids.length(); i++) {
+        if (!js_DefineNativeProperty(cx, res, ids[i], js::UndefinedValue(), NULL, NULL,
+                                     JSPROP_ENUMERATE, 0, 0, NULL, 0)) {
+            return NULL;
+        }
+    }
+    JS_ASSERT(!res->inDictionaryMode());
+
+    return res;
+}
+
 JSObject*
 js_CreateThis(JSContext *cx, JSObject *callee)
 {
@@ -2920,7 +2955,20 @@ js_CreateThis(JSContext *cx, JSObject *callee)
 JSObject *
 js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *proto)
 {
-    /* Caller must ensure that proto's new type is not marked as an array. */
+    if (proto) {
+        JSScript *calleeScript = callee->getFunctionPrivate()->script();
+        types::TypeObject *type = proto->getNewType(cx, calleeScript);
+
+        if (type && type->newScript) {
+            JS_ASSERT(type->newScript == calleeScript);
+            gc::FinalizeKind kind = gc::FinalizeKind(type->newScriptFinalizeKind);
+            JSObject *res = NewObjectWithType(cx, type, callee->getParent(), kind);
+            if (res)
+                res->setMap(type->newScriptShape);
+            return res;
+        }
+    }
+
     gc::FinalizeKind kind = NewObjectGCKind(cx, &js_ObjectClass);
     return NewNonFunction<WithProto::Class>(cx, &js_ObjectClass, proto, callee->getParent(), kind);
 }
@@ -2935,23 +2983,34 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
         return NULL;
     }
     JSObject *proto;
-    if (protov.isObject()) {
+    if (protov.isObject())
         proto = &protov.toObject();
-        TypeObject *type = proto->getNewType(cx);
-        if (!type)
-            return NULL;
-    } else {
+    else
         proto = NULL;
-    }
     JSObject *obj = js_CreateThisForFunctionWithProto(cx, callee, proto);
+
     if (obj && newType) {
+        /*
+         * Make a new type and a new object with the type, reshaped according
+         * to any properties already added by CreateThisForFunctionWithProto.
+         */
         JS_ASSERT(cx->typeInferenceEnabled());
-        types::TypeObject *type = cx->newTypeObject("SpecializedThis", obj->getProto());
-        if (!type || !obj->setTypeAndUniqueShape(cx, type))
+
+        static unsigned count = 0;
+        char *name = (char *) alloca(30);
+        JS_snprintf(name, 30, "SpecializedThis:%u", ++count);
+
+        types::TypeObject *type = cx->newTypeObject(name, obj->getProto());
+        types::AutoTypeRooter root(cx, type);
+
+        obj = NewReshapedObject(cx, type, obj->getParent(), gc::FinalizeKind(obj->finalizeKind()),
+                                (const Shape *) obj->lastProperty());
+        if (!obj)
             return NULL;
         if (!callee->getFunctionPrivate()->script()->typeSetThis(cx, (types::jstype) type))
             return NULL;
     }
+
     return obj;
 }
 
@@ -3038,9 +3097,6 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
     const Value &protov = ctor->getSlotRef(protoSlot);
     if (protov.isObject()) {
         proto = &protov.toObject();
-        TypeObject *type = proto->getNewType(cx);
-        if (!type)
-            return NULL;
     } else {
         /*
          * GetInterpretedFunctionPrototype found that ctor.prototype is

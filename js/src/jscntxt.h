@@ -2329,7 +2329,8 @@ class AutoGCRooter {
         STRING =      -14, /* js::AutoStringRooter */
         IDVECTOR =    -15, /* js::AutoIdVector */
         BINDINGS =    -16, /* js::Bindings */
-        SHAPEVECTOR = -17  /* js::AutoShapeVector */
+        SHAPEVECTOR = -17, /* js::AutoShapeVector */
+        TYPE =        -18  /* js::types::AutoTypeRooter */
     };
 
     private:

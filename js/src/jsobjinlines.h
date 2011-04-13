@@ -858,12 +858,16 @@ JSObject::setWithThis(JSObject *thisp)
 }
 
 inline js::types::TypeObject *
-JSObject::getNewType(JSContext *cx)
+JSObject::getNewType(JSContext *cx, JSScript *script)
 {
     if (isDenseArray() && !makeDenseArraySlow(cx))
         return NULL;
-    if (!newType)
-        makeNewType(cx);
+    if (newType) {
+        if (newType->newScript != script && newType->newScript)
+            newType->clearNewScript(cx);
+    } else {
+        makeNewType(cx, script);
+    }
     return newType;
 }
 
@@ -1369,6 +1373,39 @@ NewObject(JSContext *cx, js::Class *clasp, JSObject *proto, JSObject *parent)
     gc::FinalizeKind kind = gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(clasp));
     return NewObject<withProto>(cx, clasp, proto, parent, kind);
 }
+
+/*
+ * Create a plain object with the specified type. This bypasses getNewType to
+ * avoid losing creation site information for objects made by scripted 'new'.
+ */
+static JS_ALWAYS_INLINE JSObject *
+NewObjectWithType(JSContext *cx, types::TypeObject *type, JSObject *parent, gc::FinalizeKind kind)
+{
+    JSObject* obj = js_NewGCObject(cx, kind);
+    if (!obj)
+        goto out;
+
+    /*
+     * Default parent to the parent of the prototype, which was set from
+     * the parent of the prototype's constructor.
+     */
+    obj->init(cx, &js_ObjectClass, type,
+              (!parent && type->proto) ? type->proto->getParent() : parent,
+              NULL, false);
+
+    if (!InitScopeForObject(cx, obj, &js_ObjectClass, type, kind)) {
+        obj = NULL;
+        goto out;
+    }
+
+out:
+    Probes::createObject(cx, obj);
+    return obj;
+}
+
+extern JSObject *
+NewReshapedObject(JSContext *cx, types::TypeObject *type, JSObject *parent,
+                  gc::FinalizeKind kind, const Shape *shape);
 
 /*
  * As for gc::GetGCObjectKind, where numSlots is a guess at the final size of

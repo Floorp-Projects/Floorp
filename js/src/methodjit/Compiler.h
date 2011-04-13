@@ -690,7 +690,7 @@ class Compiler : public BaseCompiler
     bool jsop_getprop(JSAtom *atom, JSValueType type,
                       bool typeCheck = true, bool usePropCache = true);
     bool jsop_length();
-    bool jsop_setprop(JSAtom *atom, bool usePropCache = true);
+    bool jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed);
     void jsop_setprop_slow(JSAtom *atom, bool usePropCache = true);
     bool jsop_callprop_slow(JSAtom *atom);
     bool jsop_callprop(JSAtom *atom);
