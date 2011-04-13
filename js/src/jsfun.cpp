@@ -223,10 +223,11 @@ struct STATIC_SKIP_INFERENCE PutArg
 {
     PutArg(Value *dst) : dst(dst) {}
     Value *dst;
-    void operator()(uintN, Value *src) {
+    bool operator()(uintN, Value *src) {
         if (!dst->isMagic(JS_ARGS_HOLE))
             *dst = *src;
         ++dst;
+        return true;
     }
 };
 
