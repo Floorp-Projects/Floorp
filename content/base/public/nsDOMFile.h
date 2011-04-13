@@ -57,6 +57,7 @@ class nsIInputStream;
 class nsIClassInfo;
 
 class nsDOMFile : public nsIDOMFile,
+                  public nsIDOMBlob_MOZILLA_2_0_BRANCH,
                   public nsIXHRSendable,
                   public nsICharsetDetectionObserver
 {
@@ -64,6 +65,7 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMBLOB
   NS_DECL_NSIDOMFILE
+  NS_DECL_NSIDOMBLOB_MOZILLA_2_0_BRANCH
   NS_DECL_NSIXHRSENDABLE
 
   nsDOMFile(nsIFile *aFile, const nsAString& aContentType)
@@ -149,8 +151,9 @@ public:
   NS_IMETHOD GetSize(PRUint64*);
   NS_IMETHOD GetInternalStream(nsIInputStream**);
   NS_IMETHOD GetMozFullPathInternal(nsAString&);
-  NS_IMETHOD Slice(PRUint64 aStart, PRUint64 aLength,
-                   const nsAString& aContentType, nsIDOMBlob **aBlob);
+  NS_IMETHOD MozSlice(PRInt64 aStart, PRInt64 aEnd,
+                      const nsAString& aContentType, PRUint8 optional_argc,
+                      nsIDOMBlob **aBlob);
 
 protected:
   friend class DataOwnerAdapter; // Needs to see DataOwner
