@@ -393,6 +393,15 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *index)
         uint32 rhs = lifetime->testRHS;
         int32 constant = lifetime->testConstant;
 
+        /*
+         * If the LHS can decrease in the loop, it could become negative and
+         * underflow the array.
+         */
+        if (!liveness->nonDecreasing(lifetime->testLHS, lifetime)) {
+            JaegerSpew(JSpew_Analysis, "Index may decrease in future iterations\n");
+            return false;
+        }
+
         uint32 write = liveness->firstWrite(lifetime->testLHS, lifetime);
         JS_ASSERT(write != LifetimeLoop::UNASSIGNED);
         if (write < uint32(PC - script->code)) {

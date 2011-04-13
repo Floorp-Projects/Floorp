@@ -494,6 +494,24 @@ struct LifetimeVariable
         return uint32(-1);
     }
 
+    /* Return true if the variable cannot decrease during the body of a loop. */
+    bool nonDecreasing(JSScript *script, LifetimeLoop *loop) {
+        Lifetime *segment = lifetime ? lifetime : saved;
+        while (segment && segment->start <= loop->backedge) {
+            if (segment->start >= loop->head && segment->write) {
+                switch (JSOp(script->code[segment->start])) {
+                  case JSOP_INCLOCAL:
+                  case JSOP_LOCALINC:
+                    break;
+                  default:
+                    return false;
+                }
+            }
+            segment = segment->next;
+        }
+        return true;
+    }
+
     /*
      * If the variable is only written once in the body of a loop, offset of
      * that write. -1 otherwise.
@@ -560,6 +578,11 @@ class LifetimeScript
     uint32 firstWrite(uint32 slot, LifetimeLoop *loop) {
         JS_ASSERT(slot < nLifetimes);
         return lifetimes[slot].firstWrite(loop);
+    }
+
+    bool nonDecreasing(uint32 slot, LifetimeLoop *loop) {
+        JS_ASSERT(slot < nLifetimes);
+        return lifetimes[slot].nonDecreasing(script, loop);
     }
 
     uint32 onlyWrite(uint32 slot, LifetimeLoop *loop) {
