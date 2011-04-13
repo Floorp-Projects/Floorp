@@ -88,8 +88,6 @@ private:
 
 static PRBool sProcessedGetURLEvent = PR_FALSE;
 
-@class GeckoNSApplication;
-
 // Methods that can be called from non-Objective-C code.
 
 // This is needed, on relaunch, to force the OS to use the "Cocoa Dock API"
@@ -99,7 +97,7 @@ EnsureUseCocoaDockAPI()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [GeckoNSApplication sharedApplication];
+  [NSApplication sharedApplication];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -114,7 +112,7 @@ SetupMacApplicationDelegate()
   AutoAutoreleasePool pool;
 
   // Ensure that ProcessPendingGetURLAppleEvents() doesn't regress bug 377166.
-  [GeckoNSApplication sharedApplication];
+  [NSApplication sharedApplication];
 
   // This call makes it so that application:openFile: doesn't get bogus calls
   // from Cocoa doing its own parsing of the argument string. And yes, we need

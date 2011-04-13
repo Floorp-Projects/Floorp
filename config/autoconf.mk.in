@@ -716,8 +716,6 @@ ANDROID_PACKAGE_NAME = @ANDROID_PACKAGE_NAME@
 
 JS_SHARED_LIBRARY = @JS_SHARED_LIBRARY@
 
-MOZ_INSTRUMENT_EVENT_LOOP = @MOZ_INSTRUMENT_EVENT_LOOP@
-
 # We only want to do the pymake sanity on Windows, other os's can cope
 ifeq (,$(filter-out WINNT WINCE,$(HOST_OS_ARCH)))
 # Ensure invariants between GNU Make and pymake

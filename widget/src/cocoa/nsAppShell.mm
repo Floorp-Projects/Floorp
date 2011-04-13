@@ -43,8 +43,6 @@
 #import <Cocoa/Cocoa.h>
 #include <dlfcn.h>
 
-#include "CustomCocoaEvents.h"
-#include "mozilla/WidgetTraceEvent.h"
 #include "nsAppShell.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
@@ -171,27 +169,6 @@ PRBool nsCocoaAppModalWindowList::GeckoModalAboveCocoaModal()
   return (topItem.mWidget != nsnull);
 }
 
-// GeckoNSApplication
-//
-// Subclass of NSApplication for filtering out certain events.
-@interface GeckoNSApplication : NSApplication
-{
-}
-@end
-
-@implementation GeckoNSApplication
-- (void)sendEvent:(NSEvent *)anEvent
-{
-  if ([anEvent type] == NSApplicationDefined &&
-      [anEvent subtype] == kEventSubtypeTrace) {
-    mozilla::SignalTracerThread();
-    return;
-  }
-  [super sendEvent:anEvent];
-}
-@end
-
-
 // AppShellDelegate
 //
 // Cocoa bridge class.  An object of this class is registered to receive
@@ -309,7 +286,7 @@ nsAppShell::Init()
   [NSBundle loadNibFile:
                      [NSString stringWithUTF8String:(const char*)nibPath.get()]
       externalNameTable:
-           [NSDictionary dictionaryWithObject:[GeckoNSApplication sharedApplication]
+           [NSDictionary dictionaryWithObject:[NSApplication sharedApplication]
                                        forKey:@"NSOwner"]
                withZone:NSDefaultMallocZone()];
 
@@ -411,7 +388,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
                                        timestamp:0
                                     windowNumber:0
                                          context:NULL
-                                         subtype:kEventSubtypeNone
+                                         subtype:0
                                            data1:0
                                            data2:0]
              atStart:NO];
@@ -433,7 +410,7 @@ nsAppShell::ProcessGeckoEvents(void* aInfo)
                                      timestamp:0
                                   windowNumber:0
                                        context:NULL
-                                       subtype:kEventSubtypeNone
+                                       subtype:0
                                          data1:0
                                          data2:0]
            atStart:NO];
