@@ -268,14 +268,6 @@ nsFontMetrics::SpaceWidth()
     return CEIL_TO_TWIPS(GetMetrics().spaceWidth);
 }
 
-already_AddRefed<nsIAtom>
-nsFontMetrics::GetLanguage()
-{
-    nsIAtom* result = mLanguage.get();
-    NS_IF_ADDREF(result);
-    return result;
-}
-
 PRInt32
 nsFontMetrics::GetMaxStringLength()
 {
