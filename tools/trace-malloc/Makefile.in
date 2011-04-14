@@ -68,7 +68,9 @@ CSRCS            = \
 		formdata.c \
 		$(NULL)
 
+ifndef MOZ_PROFILE_GENERATE
 PROGRAM		= spacetrace$(BIN_SUFFIX)
+endif
 
 ifeq ($(OS_ARCH),WINNT)
 LOCAL_INCLUDES	+= -I$(topsrcdir)/config/os2
