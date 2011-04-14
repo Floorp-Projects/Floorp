@@ -150,18 +150,16 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
     PRInt32 n = mFontMetrics.Length() - 1;
     for (PRInt32 i = n; i >= 0; --i) {
         fm = mFontMetrics[i];
-        if (fm->Font().Equals(aFont) && fm->GetUserFontSet() == aUserFontSet) {
-            nsCOMPtr<nsIAtom> language = fm->GetLanguage();
-            if (aLanguage == language.get()) {
-                if (i != n) {
-                    // promote it to the end of the cache
-                    mFontMetrics.RemoveElementAt(i);
-                    mFontMetrics.AppendElement(fm);
-                }
-                fm->GetThebesFontGroup()->UpdateFontList();
-                NS_ADDREF(aMetrics = fm);
-                return NS_OK;
+        if (fm->Font().Equals(aFont) && fm->GetUserFontSet() == aUserFontSet &&
+            fm->Language() == aLanguage) {
+            if (i != n) {
+                // promote it to the end of the cache
+                mFontMetrics.RemoveElementAt(i);
+                mFontMetrics.AppendElement(fm);
             }
+            fm->GetThebesFontGroup()->UpdateFontList();
+            NS_ADDREF(aMetrics = fm);
+            return NS_OK;
         }
     }
 
