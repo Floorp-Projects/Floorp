@@ -785,7 +785,7 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   nsMediaStream* stream = mDecoder->GetCurrentStream();
 
-  PRUint64 timecodeScale;
+  uint64_t timecodeScale;
   if (!mContext || nestegg_tstamp_scale(mContext, &timecodeScale) == -1) {
     return NS_OK;
   }
