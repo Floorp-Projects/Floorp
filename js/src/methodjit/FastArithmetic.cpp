@@ -1054,6 +1054,7 @@ mjit::Compiler::jsop_mod()
 
     if (gotNegZero.isSet()) {
         stubcc.linkExit(gotNegZero.getJump(), Uses(2));
+        stubcc.leave();
         OOL_STUBCALL(stubs::NegZeroHelper);
         stubcc.rejoin(Changes(1));
     }
