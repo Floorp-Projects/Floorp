@@ -519,7 +519,6 @@ stubs::GetElem(VMFrame &f)
     f.regs.sp[-2] = *copyFrom;
 
     if (copyFrom->isUndefined()) {
-        cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
         if (!f.script()->typeMonitorUndefined(cx, f.pc()))
             THROW();
     }

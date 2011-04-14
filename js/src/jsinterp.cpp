@@ -4660,7 +4660,6 @@ BEGIN_CASE(JSOP_GETELEM)
     regs.sp[-1] = *copyFrom;
     assertSameCompartment(cx, regs.sp[-1]);
     if (copyFrom->isUndefined()) {
-        cx->addTypeProperty(obj->getType(), NULL, TYPE_UNDEFINED);
         if (!script->typeMonitorUndefined(cx, regs.pc))
             goto error;
     }

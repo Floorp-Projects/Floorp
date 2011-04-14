@@ -2570,8 +2570,6 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
     if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
         THROW();
     if (f.regs.sp[-2].isUndefined()) {
-        if (idval.isInt32())
-            cx->addTypeProperty(obj->getType(), NULL, types::TYPE_UNDEFINED);
         if (!f.script()->typeMonitorUndefined(cx, f.pc()))
             THROW();
     }
