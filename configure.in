@@ -6438,7 +6438,7 @@ if test -n "$LIBJPEG_TURBO_X86_ASM" -o -n "$LIBJPEG_TURBO_X64_ASM" ; then
     dnl on Linux and 1.1 or newer everywhere else.
     if test "$OS_ARCH" = "Linux" ; then
         if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -eq "0" -a "$_YASM_RELEASE" -lt "1" \) ; then
-            AC_MSG_ERROR([yasm 1.0.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_RELEASE.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+            AC_MSG_ERROR([yasm 1.0.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
         fi
     else
         if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
