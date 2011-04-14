@@ -58,8 +58,8 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       nsNodeInfoManager *aNodeInfoManager,
                       nsIPrincipal *aPrincipal,
                       nsIAtom *aName,
-                      nsIDOMNamedNodeMap *aEntities,
-                      nsIDOMNamedNodeMap *aNotations,
+                      nsIDOMNamedNodeMap*,
+                      nsIDOMNamedNodeMap*,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
                       const nsAString& aInternalSubset)
@@ -69,17 +69,13 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
   NS_ENSURE_ARG_POINTER(aDocType);
   NS_ENSURE_ARG_POINTER(aName);
 
-  nsresult rv;
-
   nsRefPtr<nsNodeInfoManager> nimgr;
   if (aNodeInfoManager) {
     nimgr = aNodeInfoManager;
   }
   else {
     nimgr = new nsNodeInfoManager();
-    NS_ENSURE_TRUE(nimgr, NS_ERROR_OUT_OF_MEMORY);
-    
-    rv = nimgr->Init(nsnull);
+    nsresult rv = nimgr->Init(nsnull);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nimgr->SetDocumentPrincipal(aPrincipal);
@@ -90,12 +86,8 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                           kNameSpaceID_None);
   NS_ENSURE_TRUE(ni, NS_ERROR_OUT_OF_MEMORY);
 
-  *aDocType = new nsDOMDocumentType(ni.forget(), aName, aEntities, aNotations,
-                                    aPublicId, aSystemId, aInternalSubset);
-  if (!*aDocType) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
+  *aDocType = new nsDOMDocumentType(ni.forget(), aName, aPublicId, aSystemId,
+                                    aInternalSubset);
   NS_ADDREF(*aDocType);
 
   return NS_OK;
@@ -103,15 +95,11 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
 
 nsDOMDocumentType::nsDOMDocumentType(already_AddRefed<nsINodeInfo> aNodeInfo,
                                      nsIAtom *aName,
-                                     nsIDOMNamedNodeMap *aEntities,
-                                     nsIDOMNamedNodeMap *aNotations,
                                      const nsAString& aPublicId,
                                      const nsAString& aSystemId,
                                      const nsAString& aInternalSubset) :
   nsGenericDOMDataNode(aNodeInfo),
   mName(aName),
-  mEntities(aEntities),
-  mNotations(aNotations),
   mPublicId(aPublicId),
   mSystemId(aSystemId),
   mInternalSubset(aInternalSubset)
@@ -155,30 +143,6 @@ NS_IMETHODIMP
 nsDOMDocumentType::GetName(nsAString& aName)
 {
   mName->ToString(aName);
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsDOMDocumentType::GetEntities(nsIDOMNamedNodeMap** aEntities)
-{
-  NS_ENSURE_ARG_POINTER(aEntities);
-
-  *aEntities = mEntities;
-
-  NS_IF_ADDREF(*aEntities);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsDOMDocumentType::GetNotations(nsIDOMNamedNodeMap** aNotations)
-{
-  NS_ENSURE_ARG_POINTER(aNotations);
-
-  *aNotations = mNotations;
-
-  NS_IF_ADDREF(*aNotations);
-
   return NS_OK;
 }
 
@@ -238,8 +202,8 @@ nsGenericDOMDataNode*
 nsDOMDocumentType::CloneDataNode(nsINodeInfo *aNodeInfo, PRBool aCloneText) const
 {
   nsCOMPtr<nsINodeInfo> ni = aNodeInfo;
-  return new nsDOMDocumentType(ni.forget(), mName, mEntities, mNotations,
-                               mPublicId, mSystemId, mInternalSubset);
+  return new nsDOMDocumentType(ni.forget(), mName, mPublicId, mSystemId,
+                               mInternalSubset);
 }
 
 nsresult
