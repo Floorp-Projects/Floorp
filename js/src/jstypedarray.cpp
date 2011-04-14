@@ -1325,7 +1325,7 @@ class TypedArrayTemplate
         if (size != 0 && count >= INT32_MAX / size) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_NEED_DIET, "size and count");
-            return false;
+            return NULL;
         }
 
         int32 bytelen = size * count;
@@ -1660,7 +1660,7 @@ TypedArrayConstruct(JSContext *cx, jsint atype, uintN argc, Value *argv)
 
       default:
         JS_NOT_REACHED("shouldn't have gotten here");
-        return false;
+        return NULL;
     }
 }
 

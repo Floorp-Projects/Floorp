@@ -686,7 +686,7 @@ AtSafePoint(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp();
     if (fp->hasImacropc())
-        return false;
+        return NULL;
 
     JSScript *script = fp->script();
     return script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs->pc);
