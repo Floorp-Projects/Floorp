@@ -41,8 +41,6 @@
  * Assure EventUtils can perform synthesizeDrop as specified
  */
 
-_tests\testing\mochitest\chrome\testing\mochitest\tests\SimpleTest\tests\test_synthesizeDrop.xul
-
 -->
 <window title="Mozilla Bug 462172 extra tests for synthesizeDrop"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -70,8 +68,8 @@ var drag1 = [[
 function doOnDrop(aEvent)
 {
   gData = aEvent.dataTransfer.getData(drag1[0][0].type);
-  aEvent.preventDefault; // cancels event and keeps dropEffect
-                         // as was before event.
+  aEvent.preventDefault(); // cancels event and keeps dropEffect
+                           // as was before event.
 }
 
 function doOnDragEnter(aEvent)

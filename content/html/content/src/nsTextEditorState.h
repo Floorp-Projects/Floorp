@@ -210,6 +210,8 @@ public:
 
   void ClearValueCache() { mCachedValue.Truncate(); }
 
+  void HideSelectionIfBlurred();
+
 private:
   // not copy constructible
   nsTextEditorState(const nsTextEditorState&);

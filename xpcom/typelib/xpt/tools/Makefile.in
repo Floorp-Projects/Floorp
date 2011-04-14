@@ -45,64 +45,15 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 INTERNAL_TOOLS	= 1
 
-SIMPLE_PROGRAMS	= xpt_dump$(BIN_SUFFIX) xpt_link$(BIN_SUFFIX)
-
-CSRCS		= xpt_dump.c xpt_link.c
-
-SDK_BINARY     =                   \
-		$(SIMPLE_PROGRAMS) \
-		$(NULL)
-
-ifdef CROSS_COMPILE
-HOST_SIMPLE_PROGRAMS	= $(addprefix host_, $(SIMPLE_PROGRAMS:$(BIN_SUFFIX)=$(HOST_BIN_SUFFIX)))
-HOST_CSRCS		= $(CSRCS)
-endif
-
-LIBS		= $(DIST)/lib/$(LIB_PREFIX)xpt.$(LIB_SUFFIX)
-
-ifdef WRAP_MALLOC_CFLAGS
-LIBS		+= -lmozalloc
-endif
-
-USE_STATIC_LIBS = 1
+SDK_BINARY = \
+  xpt.py \
+  $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-# Do not link to jemalloc
-ifeq ($(OS_ARCH),SunOS)
-SOLARIS_JEMALLOC_LDFLAGS =
-endif
-
-# Compile directly against the static lib, so we can use the tools
-# during the build without the shared library path being set.
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
-DEFINES		+= -DEXPORT_XPT_API
-endif
-
-ifdef CROSS_COMPILE
-HOST_LIBS		= $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.$(LIB_SUFFIX)
-HOST_EXTRA_DEPS		= $(wildcard $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.*)
-
-ifdef HOST_NSPR_MDCPUCFG
-HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
-endif
-
-ifdef WINCE
-# Compile directly against the static lib, so we can use the tools
-# during the build without the shared library path being set.
-HOST_CFLAGS +=  -DEXPORT_XPT_API
-LDFLAGS += -NODEFAULTLIB:MSVCRT
-endif
-
-endif
-
-
-# Build xpt_link and xpt_dump early.  (libs creates .deps used by libs.)
+# Install xpt.py in SDK early
 export::
 	@$(MAKE) libs
 
-# XXX, bug 417045, make -jN combines badly with -save-temps in   
-# CFLAGS/CXXFLAGS (for stabs symbols with XCode3)
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-.NOTPARALLEL:
-endif
+check::
+	$(PYTHON) $(srcdir)/runtests.py

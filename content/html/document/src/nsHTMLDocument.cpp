@@ -3287,7 +3287,7 @@ nsHTMLDocument::EditingStateChanged()
   }
 
   PRBool makeWindowEditable = mEditingState == eOff;
-  PRBool updateState;
+  bool updateState = false;
   PRBool spellRecheckAll = PR_FALSE;
   nsCOMPtr<nsIEditor> editor;
 
@@ -3356,7 +3356,7 @@ nsHTMLDocument::EditingStateChanged()
       rv = editSession->DisableJSAndPlugins(window);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      updateState = PR_TRUE;
+      updateState = true;
       spellRecheckAll = oldState == eContentEditable;
     }
     else if (oldState == eDesignMode) {
@@ -3366,11 +3366,7 @@ nsHTMLDocument::EditingStateChanged()
       rv = editSession->RestoreJSAndPlugins(window);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      updateState = PR_TRUE;
-    }
-    else {
-      // contentEditable is being turned on (and designMode is off).
-      updateState = PR_FALSE;
+      updateState = true;
     }
 
     rv = presShell->SetAgentStyleSheets(agentSheets);

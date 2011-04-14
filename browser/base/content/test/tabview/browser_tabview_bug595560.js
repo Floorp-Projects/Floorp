@@ -25,8 +25,10 @@ function onTabViewWindowLoaded() {
   window.removeEventListener("tabviewshown", onTabViewWindowLoaded, false);
   ok(TabView.isVisible(), "Tab View is visible");
 
-  let contentWindow = document.getElementById("tab-view").contentWindow;
-  testOne(contentWindow);
+  afterAllTabItemsUpdated(function() { 
+    let contentWindow = document.getElementById("tab-view").contentWindow;
+    testOne(contentWindow);
+  });
 }
 
 function testOne(contentWindow) {

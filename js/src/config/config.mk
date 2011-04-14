@@ -342,6 +342,11 @@ ifdef SIMPLE_PROGRAMS
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 
+# No sense in profiling unit tests
+ifdef CPP_UNIT_TESTS
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+
 # Enable profile-based feedback
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_GENERATE
@@ -442,11 +447,10 @@ PURIFY = purify $(PURIFYOPTIONS)
 QUANTIFY = quantify $(QUANTIFYOPTIONS)
 ifdef CROSS_COMPILE
 XPIDL_COMPILE = $(LIBXUL_DIST)/host/bin/host_xpidl$(HOST_BIN_SUFFIX)
-XPIDL_LINK = $(LIBXUL_DIST)/host/bin/host_xpt_link$(HOST_BIN_SUFFIX)
 else
 XPIDL_COMPILE = $(LIBXUL_DIST)/bin/xpidl$(BIN_SUFFIX)
-XPIDL_LINK = $(LIBXUL_DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
+XPIDL_LINK = $(PYTHON) $(SDK_BIN_DIR)/xpt.py link
 
 # Java macros
 JAVA_GEN_DIR  = _javagen

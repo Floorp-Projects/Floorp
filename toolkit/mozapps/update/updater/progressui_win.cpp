@@ -204,6 +204,8 @@ InitDialog(HWND hDlg)
 
   ReleaseDC(hWndInfo, hDCInfo);
 
+  CenterDialog(hDlg);  // make dialog appear in the center of the screen
+
   SetTimer(hDlg, TIMER_ID, TIMER_INTERVAL, NULL);
 }
 
