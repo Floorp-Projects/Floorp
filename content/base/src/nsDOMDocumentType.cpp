@@ -58,8 +58,6 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       nsNodeInfoManager *aNodeInfoManager,
                       nsIPrincipal *aPrincipal,
                       nsIAtom *aName,
-                      nsIDOMNamedNodeMap*,
-                      nsIDOMNamedNodeMap*,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
                       const nsAString& aInternalSubset)
