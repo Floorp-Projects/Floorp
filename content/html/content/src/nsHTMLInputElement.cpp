@@ -2310,8 +2310,7 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           }
 
           /*
-           * If this is input type=text, and the user hit enter, fire onChange
-           * and submit the form (if we are in one)
+           * For some input types, if the user hits enter, the form is submitted.
            *
            * Bug 99920, bug 109463 and bug 147850:
            * (a) if there is a submit control in the form, click the first
@@ -2325,42 +2324,19 @@ nsHTMLInputElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
           if (aVisitor.mEvent->message == NS_KEY_PRESS &&
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
-              (mType == NS_FORM_INPUT_TEXT ||
-               mType == NS_FORM_INPUT_EMAIL ||
-               mType == NS_FORM_INPUT_SEARCH ||
-               mType == NS_FORM_INPUT_PASSWORD ||
-               mType == NS_FORM_INPUT_TEL ||
-               mType == NS_FORM_INPUT_URL ||
-               mType == NS_FORM_INPUT_FILE)) {
+               IsSingleLineTextControl(PR_FALSE, mType)) {
+            nsIFrame* primaryFrame = GetPrimaryFrame();
+            if (primaryFrame) {
+              nsITextControlFrame* textFrame = do_QueryFrame(primaryFrame);
 
-            PRBool isButton = PR_FALSE;
-            // If this is an enter on the button of a file input, don't submit
-            // -- that's supposed to put up the filepicker
-            if (mType == NS_FORM_INPUT_FILE) {
-              nsCOMPtr<nsIContent> maybeButton =
-                do_QueryInterface(aVisitor.mEvent->originalTarget);
-              if (maybeButton) {
-                isButton = maybeButton->AttrValueIs(kNameSpaceID_None,
-                                                    nsGkAtoms::type,
-                                                    nsGkAtoms::button,
-                                                    eCaseMatters);
+              // Fire onChange (if necessary)
+              if (textFrame) {
+                textFrame->CheckFireOnChange();
               }
             }
 
-            if (!isButton) {
-              nsIFrame* primaryFrame = GetPrimaryFrame();
-              if (primaryFrame) {
-                nsITextControlFrame* textFrame = do_QueryFrame(primaryFrame);
-              
-                // Fire onChange (if necessary)
-                if (textFrame) {
-                  textFrame->CheckFireOnChange();
-                }
-              }
-
-              rv = MaybeSubmitForm(aVisitor.mPresContext);
-              NS_ENSURE_SUCCESS(rv, rv);
-            }
+            rv = MaybeSubmitForm(aVisitor.mPresContext);
+            NS_ENSURE_SUCCESS(rv, rv);
           }
 
         } break; // NS_KEY_PRESS || NS_KEY_UP

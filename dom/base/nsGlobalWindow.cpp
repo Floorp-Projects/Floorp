@@ -2760,13 +2760,10 @@ nsGlobalWindow::DispatchDOMEvent(nsEvent* aEvent,
 }
 
 void
-nsGlobalWindow::OnFinalize(PRUint32 aLangID, void *aObject)
+nsGlobalWindow::OnFinalize(JSObject* aObject)
 {
-  NS_ASSERTION(aLangID == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
-
   if (aObject == mJSObject) {
-    mJSObject = nsnull;
+    mJSObject = NULL;
   }
 }
 
@@ -10711,12 +10708,6 @@ nsNavigator::GetProductSub(nsAString& aProductSub)
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsNavigator::GetSecurityPolicy(nsAString& aSecurityPolicy)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -250,13 +250,14 @@ public:
   virtual void Shutdown() = 0;
 
   // Called from the main thread to get the duration. The decoder monitor
-  // must be obtained before calling this. It is in units of milliseconds.
+  // must be obtained before calling this. It is in units of microseconds.
   virtual PRInt64 GetDuration() = 0;
 
   // Called from the main thread to set the duration of the media resource
   // if it is able to be obtained via HTTP headers. Called from the 
   // state machine thread to set the duration if it is obtained from the
   // media metadata. The decoder monitor must be obtained before calling this.
+  // aDuration is in microseconds.
   virtual void SetDuration(PRInt64 aDuration) = 0;
 
   // Functions used by assertions to ensure we're calling things
@@ -387,10 +388,10 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Call on the main thread only.
   virtual PRBool IsEnded() const;
 
-  // Set the duration of the media resource in units of milliseconds.
+  // Set the duration of the media resource in units of seconds.
   // This is called via a channel listener if it can pick up the duration
   // from a content header. Must be called from the main thread only.
-  virtual void SetDuration(PRInt64 aDuration);
+  virtual void SetDuration(double aDuration);
 
   // Set a flag indicating whether seeking is supported
   virtual void SetSeekable(PRBool aSeekable);
