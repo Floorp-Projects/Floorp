@@ -1922,6 +1922,62 @@ TypeCompartment::dynamicCall(JSContext *cx, JSObject *callee,
 bool
 TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jstype type)
 {
+    /*
+     * For inc/dec ops, we need to go back and reanalyze the affected opcode
+     * taking the overflow into account. We won't see an explicit adjustment
+     * of the type of the thing being inc/dec'ed, nor will adding TYPE_DOUBLE to
+     * the pushed value affect that type. We only handle inc/dec operations
+     * that do not have an object lvalue; INCNAME/INCPROP/INCELEM and friends
+     * should call typeMonitorAssign to update the property type.
+     */
+    jsbytecode *pc = script->code + offset;
+    JSOp op = JSOp(*pc);
+    const JSCodeSpec *cs = &js_CodeSpec[op];
+    if (cs->format & (JOF_INC | JOF_DEC)) {
+        AutoEnterTypeInference enter(cx);
+
+        switch (op) {
+          case JSOP_INCGNAME:
+          case JSOP_DECGNAME:
+          case JSOP_GNAMEINC:
+          case JSOP_GNAMEDEC: {
+            jsid id = GetAtomId(cx, script, pc, 0);
+            TypeObject *global = script->getGlobalType();
+            if (!global->unknownProperties()) {
+                TypeSet *types = global->getProperty(cx, id, true);
+                if (!types)
+                    break;
+                types->addType(cx, type);
+            }
+            break;
+          }
+
+          case JSOP_INCLOCAL:
+          case JSOP_DECLOCAL:
+          case JSOP_LOCALINC:
+          case JSOP_LOCALDEC:
+            if (GET_SLOTNO(pc) < script->nfixed) {
+                TypeSet *types = script->localTypes(GET_SLOTNO(pc));
+                types->addType(cx, type);
+            }
+            break;
+
+          case JSOP_INCARG:
+          case JSOP_DECARG:
+          case JSOP_ARGINC:
+          case JSOP_ARGDEC: {
+            TypeSet *types = script->argTypes(GET_SLOTNO(pc));
+            types->addType(cx, type);
+            break;
+          }
+
+          default:;
+        }
+
+        if (!checkPendingRecompiles(cx))
+            return false;
+    }
+
     if (script->types) {
         /*
          * If the pushed set already has this type, we don't need to ensure
@@ -1983,58 +2039,6 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
      */
     if (script->fun && !script->fun->getType()->unknownProperties())
         ObjectStateChange(cx, script->fun->getType(), false);
-
-    /*
-     * For inc/dec ops, we need to go back and reanalyze the affected opcode
-     * taking the overflow into account. We won't see an explicit adjustment
-     * of the type of the thing being inc/dec'ed, nor will adding TYPE_DOUBLE to
-     * the pushed value affect that type. We only handle inc/dec operations
-     * that do not have an object lvalue; INCNAME/INCPROP/INCELEM and friends
-     * should call typeMonitorAssign to update the property type.
-     */
-    jsbytecode *pc = script->code + offset;
-    JSOp op = JSOp(*pc);
-    const JSCodeSpec *cs = &js_CodeSpec[op];
-    if (cs->format & (JOF_INC | JOF_DEC)) {
-
-        switch (op) {
-          case JSOP_INCGNAME:
-          case JSOP_DECGNAME:
-          case JSOP_GNAMEINC:
-          case JSOP_GNAMEDEC: {
-            jsid id = GetAtomId(cx, script, pc, 0);
-            TypeObject *global = script->getGlobalType();
-            if (!global->unknownProperties()) {
-                TypeSet *types = global->getProperty(cx, id, true);
-                if (!types)
-                    break;
-                types->addType(cx, type);
-            }
-            break;
-          }
-
-          case JSOP_INCLOCAL:
-          case JSOP_DECLOCAL:
-          case JSOP_LOCALINC:
-          case JSOP_LOCALDEC:
-            if (GET_SLOTNO(pc) < script->nfixed) {
-                TypeSet *types = script->localTypes(GET_SLOTNO(pc));
-                types->addType(cx, type);
-            }
-            break;
-
-          case JSOP_INCARG:
-          case JSOP_DECARG:
-          case JSOP_ARGINC:
-          case JSOP_ARGDEC: {
-            TypeSet *types = script->argTypes(GET_SLOTNO(pc));
-            types->addType(cx, type);
-            break;
-          }
-
-          default:;
-        }
-    }
 
     return checkPendingRecompiles(cx);
 }

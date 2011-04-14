@@ -95,6 +95,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     outerScript(outerScript),
     isConstructing(isConstructing),
     globalObj(outerScript->global),
+    globalSlots(globalObj ? globalObj->getRawSlots() : NULL),
     patchFrames(patchFrames),
     savedTraps(NULL),
     frame(cx, *thisFromCtor(), masm, stubcc),
@@ -700,6 +701,13 @@ CompileStatus
 mjit::Compiler::finishThisUp(JITScript **jitp)
 {
     RETURN_IF_OOM(Compile_Error);
+
+    /*
+     * Watch for reallocation of the global slots while we were in the middle
+     * of compiling due to, e.g. standard class initialization.
+     */
+    if (globalObj && globalObj->getRawSlots() != globalSlots)
+        return Compile_Retry;
 
     for (size_t i = 0; i < branchPatches.length(); i++) {
         Label label = labelOf(branchPatches[i].pc, branchPatches[i].inlineIndex);
