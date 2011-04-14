@@ -911,57 +911,35 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
 
     return status
 
-  """ 
-   Copies an "installed" extension into the extensions directory of the given profile
-   extensionSource - the source location of the extension files.  This can be either 
+  """
+   Copies an extension into the extensions directory of the given profile.
+   extensionSource - the source location of the extension files.  This can be either
                      a directory or a path to an xpi file.
    profileDir      - the profile directory we are copying into.  We will create the
-                     "extensions" directory there if it doesn't exist
+                     "extensions" directory there if it doesn't exist.
    extensionID     - the id of the extension to be used as the containing directory for the
-                     extension, i.e.
+                     extension, if extensionSource is a directory, i.e.
                  this is the name of the folder in the <profileDir>/extensions/<extensionID>
   """
-  def installExtension(self, extensionSource, profileDir, extensionID):
-    if not os.path.exists(extensionSource):
-      self.log.info("INFO | automation.py | Cannot install extension no source at: %s", extensionSource) 
-      return
-      
-    if not os.path.exists(profileDir):
-      self.log.info("INFO | automation.py | Cannot install extension invalid profileDir at: %s", profileDir)
+  def installExtension(self, extensionSource, profileDir, extensionID = None):
+    if not os.path.isdir(profileDir):
+      self.log.info("INFO | automation.py | Cannot install extension, invalid profileDir at: %s", profileDir)
       return
 
-    # See if we have an XPI or a directory
-    tmpd = None
-    if os.path.isfile(extensionSource):
-      # shutil.copytree() needs a directory as source.
-      tmpd = tempfile.mkdtemp()
-      extrootdir = self.extractZip(extensionSource, tmpd)
-    else:
-      extrootdir = extensionSource 
     extnsdir = os.path.join(profileDir, "extensions")
-    extnshome = os.path.join(extnsdir, extensionID)
 
-    # Now we copy the extension source into the extnshome
-    shutil.copytree(extrootdir, extnshome)
+    if os.path.isfile(extensionSource):
+      # Copy extension xpi directly.
+      # "destination file is created or overwritten".
+      shutil.copy2(extensionSource, extnsdir)
+    elif os.path.isdir(extensionSource):
+      if extensionID == None:
+        self.log.info("INFO | automation.py | Cannot install extension, missing extensionID")
+        return
 
-    # Remove (temporary) extracted XPI directory.
-    if tmpd:
-      # Ignore (unlikely) error, as nothing can be done about it.
-      shutil.rmtree(tmpd, True)
-
-  def extractZip(self, filename, dest):
-    z = zipfile.ZipFile(filename, 'r')
-    for n in z.namelist():
-      fullpath = os.path.join(dest, n)
-      parentdir = os.path.dirname(fullpath)
-      if not os.path.isdir(parentdir):
-        os.makedirs(parentdir)
-      # Windows too returns '/', not os.sep ('\').
-      if not n.endswith('/'):
-        data = z.read(n)
-        f = open(fullpath, 'w')
-        f.write(data)
-        f.close()
-    z.close()
-    return dest
-
+      # Copy extension tree into its own directory.
+      # "destination directory must not already exist".
+      shutil.copytree(extensionSource, os.path.join(extnsdir, extensionID))
+    else:
+      self.log.info("INFO | automation.py | Cannot install extension, invalid extensionSource at: %s", extensionSource)
+      return
