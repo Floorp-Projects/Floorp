@@ -140,6 +140,25 @@ nsCOMArray_base::RemoveObjectAt(PRInt32 aIndex)
     return PR_FALSE;
 }
 
+PRBool
+nsCOMArray_base::RemoveObjectsAt(PRInt32 aIndex, PRInt32 aCount)
+{
+    if (PRUint32(aIndex) + PRUint32(aCount) <= PRUint32(Count())) {
+        nsVoidArray elementsToDestroy(aCount);
+        for (PRInt32 i = 0; i < aCount; ++i) {
+            elementsToDestroy.InsertElementAt(mArray.FastElementAt(aIndex + i), i);
+        }
+        PRBool result = mArray.RemoveElementsAt(aIndex, aCount);
+        for (PRInt32 i = 0; i < aCount; ++i) {
+            nsISupports* element = static_cast<nsISupports*> (elementsToDestroy.FastElementAt(i));
+            NS_IF_RELEASE(element);
+        }
+        return result;
+    }
+
+    return PR_FALSE;
+}
+
 // useful for destructors
 PRBool
 ReleaseObjects(void* aElement, void*)
