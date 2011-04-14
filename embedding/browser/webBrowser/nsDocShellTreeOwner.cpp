@@ -467,6 +467,18 @@ nsDocShellTreeOwner::GetPersistence(PRBool* aPersistPosition,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsDocShellTreeOwner::GetTargetableShellCount(PRUint32* aResult)
+{
+  if(mTreeOwner) {
+    mTreeOwner->GetTargetableShellCount(aResult);
+  } else {
+    *aResult = 0;
+  }
+
+  return NS_OK;
+}
+
 //*****************************************************************************
 // nsDocShellTreeOwner::nsIBaseWindow
 //*****************************************************************************   
