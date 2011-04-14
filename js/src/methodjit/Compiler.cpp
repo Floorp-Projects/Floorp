@@ -4313,6 +4313,7 @@ mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
 bool
 mjit::Compiler::jsop_length()
 {
+    REJOIN_SITE(stubs::Length);
     FrameEntry *top = frame.peek(-1);
 
     if (top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_STRING) {
@@ -4329,6 +4330,29 @@ mjit::Compiler::jsop_length()
             frame.pop();
             frame.pushTypedPayload(JSVAL_TYPE_INT32, str);
         }
+        return true;
+    }
+
+    /*
+     * Check if we are accessing the 'length' property of a known dense array
+     * which must fit in an int32.
+     */
+    types::TypeSet *types = frame.extra(top).types;
+    types::ObjectKind kind = types ? types->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
+    if ((kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
+        knownPushedType(0) == JSVAL_TYPE_INT32) {
+        bool isObject = top->isTypeKnown();
+        if (!isObject) {
+            Jump notObject = frame.testObject(Assembler::NotEqual, top);
+            stubcc.linkExit(notObject, Uses(1));
+            stubcc.leave();
+            OOL_STUBCALL(stubs::Length);
+        }
+        RegisterID reg = frame.tempRegForData(top);
+        frame.pop();
+        frame.push(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
+        if (!isObject)
+            stubcc.rejoin(Changes(1));
         return true;
     }
 
@@ -4393,7 +4417,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
         if (propertyTypes->isDefiniteProperty() && !propertyTypes->isOwnProperty(cx, true)) {
             types->addFreeze(cx);
             uint32 slot = propertyTypes->definiteSlot();
-            if (!top->isTypeKnown()) {
+            bool isObject = top->isTypeKnown();
+            if (!isObject) {
                 Jump notObject = frame.testObject(Assembler::NotEqual, top);
                 stubcc.linkExit(notObject, Uses(1));
                 stubcc.leave();
@@ -4402,7 +4427,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             RegisterID reg = frame.tempRegForData(top);
             frame.pop();
             frame.push(Address(reg, JSObject::getFixedSlotOffset(slot)), knownType);
-            if (!top->isTypeKnown())
+            if (!isObject)
                 stubcc.rejoin(Changes(1));
             return true;
         }
@@ -4945,7 +4970,8 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
         if (propertyTypes->isDefiniteProperty() && !propertyTypes->isOwnProperty(cx, true)) {
             types->addFreeze(cx);
             uint32 slot = propertyTypes->definiteSlot();
-            if (!lhs->isTypeKnown()) {
+            bool isObject = lhs->isTypeKnown();
+            if (!isObject) {
                 Jump notObject = frame.testObject(Assembler::NotEqual, lhs);
                 stubcc.linkExit(notObject, Uses(2));
                 stubcc.leave();
@@ -4955,7 +4981,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
             RegisterID reg = frame.tempRegForData(lhs);
             frame.storeTo(rhs, Address(reg, JSObject::getFixedSlotOffset(slot)), popGuaranteed);
             frame.shimmy(1);
-            if (!lhs->isTypeKnown())
+            if (!isObject)
                 stubcc.rejoin(Changes(1));
             return true;
         }
