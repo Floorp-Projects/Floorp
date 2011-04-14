@@ -1738,7 +1738,6 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
             THROW();
     }
     
-    Value rval = f.regs.sp[-1];
     stub(f, pic);
 }
 

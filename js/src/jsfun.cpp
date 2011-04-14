@@ -1051,7 +1051,7 @@ CreateEvalCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *callobj = NewCallObject(cx, fp->script(), fp->scopeChain(), NULL);
     if (!callobj)
-        return false;
+        return NULL;
 
     callobj->setPrivate(fp);
     fp->setScopeChainWithOwnCallObj(*callobj);
@@ -2645,7 +2645,7 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
     const Shape *shape = funobj->nativeLookup(id);
     if (!shape) {
         if (!ResolveInterpretedFunctionPrototype(cx, funobj))
-            return false;
+            return NULL;
         shape = funobj->nativeLookup(id);
     }
     JS_ASSERT(!shape->configurable());
