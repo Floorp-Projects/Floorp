@@ -172,7 +172,9 @@ LOCAL_INCLUDES	= \
 
 libs::
 	$(INSTALL) $(srcdir)/test.properties $(DIST)/bin/res
+ifneq (,$(SIMPLE_PROGRAMS))
 	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
+endif
 
 # Copy TestHarness.h into its own module, for ease of setting up includes
 # correctly.
