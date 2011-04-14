@@ -137,6 +137,7 @@ CPPSRCS		= \
 		jscompartment.cpp \
 		jsdate.cpp \
 		jsdbgapi.cpp \
+		jsdbg.cpp \
 		jsdhash.cpp \
 		jsdtoa.cpp \
 		jsemit.cpp \
