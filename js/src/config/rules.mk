@@ -1453,13 +1453,6 @@ endif
 ################################################################################
 # Copy each element of EXPORTS to $(DIST)/include
 
-ifdef MOZ_JAVAXPCOM
-ifneq ($(XPIDLSRCS),)
-$(JAVA_DIST_DIR)::
-	$(NSINSTALL) -D $@
-endif
-endif
-
 ifneq ($(XPI_NAME),)
 $(FINAL_TARGET):
 	$(NSINSTALL) -D $@
@@ -1631,46 +1624,6 @@ endif
 	$(LOOP_OVER_PARALLEL_DIRS)
 	$(LOOP_OVER_DIRS)
 	$(LOOP_OVER_TOOL_DIRS)
-
-ifdef MOZ_JAVAXPCOM
-ifneq ($(XPIDLSRCS),)
-
-JAVA_XPIDLSRCS = $(XPIDLSRCS)
-
-# A single IDL file can contain multiple interfaces, which result in multiple
-# Java interface files.  So use hidden dependency files.
-JAVADEPFILES = $(addprefix $(JAVA_GEN_DIR)/.,$(JAVA_XPIDLSRCS:.idl=.java.pp))
-
-$(JAVA_GEN_DIR):
-	$(NSINSTALL) -D $@
-GARBAGE_DIRS += $(JAVA_GEN_DIR)
-
-# generate .java files into _javagen/[package name dirs]
-_JAVA_GEN_DIR = $(JAVA_GEN_DIR)/$(JAVA_IFACES_PKG_NAME)
-$(_JAVA_GEN_DIR):
-	$(NSINSTALL) -D $@
-
-$(JAVA_GEN_DIR)/.%.java.pp: %.idl $(XPIDL_COMPILE) $(_JAVA_GEN_DIR)
-	$(REPORT_BUILD)
-	$(ELOG) $(XPIDL_COMPILE) -m java -w $(XPIDL_FLAGS) -I$(srcdir) -I$(IDL_DIR) -o $(_JAVA_GEN_DIR)/$* $(_VPATH_SRCS)
-	@$(TOUCH) $@
-
-# "Install" generated Java interfaces.  We segregate them based on the XPI_NAME.
-# If XPI_NAME is not set, install into the "default" directory.
-ifneq ($(XPI_NAME),)
-JAVA_INSTALL_DIR = $(JAVA_DIST_DIR)/$(XPI_NAME)
-else
-JAVA_INSTALL_DIR = $(JAVA_DIST_DIR)/default
-endif
-
-$(JAVA_INSTALL_DIR):
-	$(NSINSTALL) -D $@
-
-export:: $(JAVA_DIST_DIR) $(JAVADEPFILES) $(JAVA_INSTALL_DIR)
-	(cd $(JAVA_GEN_DIR) && tar $(TAR_CREATE_FLAGS) - .) | (cd $(JAVA_INSTALL_DIR) && tar -xf -)
-
-endif # XPIDLSRCS
-endif # MOZ_JAVAXPCOM
 
 ################################################################################
 # Copy each element of EXTRA_COMPONENTS to $(FINAL_TARGET)/components

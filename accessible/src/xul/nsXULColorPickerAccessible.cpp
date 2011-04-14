@@ -38,6 +38,7 @@
 
 #include "nsXULColorPickerAccessible.h"
 
+#include "States.h"
 #include "nsAccUtils.h"
 #include "nsAccTreeWalker.h"
 #include "nsCoreUtils.h"
@@ -80,30 +81,28 @@ nsXULColorPickerTileAccessible::NativeRole()
   return nsIAccessibleRole::ROLE_PUSHBUTTON;
 }
 
-nsresult
-nsXULColorPickerTileAccessible::GetStateInternal(PRUint32 *aState,
-                                                 PRUint32 *aExtraState)
+PRUint64
+nsXULColorPickerTileAccessible::NativeState()
 {
   // Possible states: focused, focusable, selected.
 
   // get focus and disable status from base class
-  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 states = nsAccessibleWrap::NativeState();
 
-  *aState |= nsIAccessibleStates::STATE_FOCUSABLE;
+  states |= states::FOCUSABLE;
 
   // Focused?
   PRBool isFocused = mContent->HasAttr(kNameSpaceID_None,
                                        nsAccessibilityAtoms::hover);
   if (isFocused)
-    *aState |= nsIAccessibleStates::STATE_FOCUSED;
+    states |= states::FOCUSED;
 
   PRBool isSelected = mContent->HasAttr(kNameSpaceID_None,
                                         nsAccessibilityAtoms::selected);
   if (isSelected)
-    *aState |= nsIAccessibleStates::STATE_SELECTED;
+    states |= states::SELECTED;
 
-  return NS_OK;
+  return states;
 }
 
 
@@ -133,20 +132,17 @@ nsXULColorPickerAccessible::Init()
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULColorPickerAccessible: nsAccessible
 
-nsresult
-nsXULColorPickerAccessible::GetStateInternal(PRUint32 *aState,
-                                             PRUint32 *aExtraState)
+PRUint64
+nsXULColorPickerAccessible::NativeState()
 {
   // Possible states: focused, focusable, unavailable(disabled).
 
   // get focus and disable status from base class
-  nsresult rv = nsAccessibleWrap::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 states = nsAccessibleWrap::NativeState();
 
-  *aState |= nsIAccessibleStates::STATE_FOCUSABLE |
-             nsIAccessibleStates::STATE_HASPOPUP;
+  states |= states::FOCUSABLE | states::HASPOPUP;
 
-  return NS_OK;
+  return states;
 }
 
 PRUint32

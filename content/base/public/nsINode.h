@@ -162,11 +162,14 @@ enum {
   // Set if the node has the accesskey attribute set.
   NODE_HAS_ACCESSKEY           = 0x00020000U,
 
+  // Set if the node is handling a click.
+  NODE_HANDLING_CLICK          = 0x00040000U,
+
   // Two bits for the script-type ID.  Not enough to represent all
   // nsIProgrammingLanguage values, but we don't care.  In practice,
   // we can represent the ones we want, and we can fail the others at
   // runtime.
-  NODE_SCRIPT_TYPE_OFFSET =               18,
+  NODE_SCRIPT_TYPE_OFFSET =               19,
 
   NODE_SCRIPT_TYPE_SIZE =                  2,
 

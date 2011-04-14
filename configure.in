@@ -1,5 +1,5 @@
 dnl -*- Mode: Autoconf; tab-width: 4; indent-tabs-mode: nil; -*-
-dnl vi: set tabstop=4 shiftwidth=4 expandtab:
+dnl vi: set tabstop=4 shiftwidth=4 expandtab syntax=m4:
 dnl ***** BEGIN LICENSE BLOCK *****
 dnl Version: MPL 1.1/GPL 2.0/LGPL 2.1
 dnl
@@ -2669,6 +2669,7 @@ ia64*-hpux*)
     RC=rc.exe
     RCFLAGS='-n'
     MOZ_USER_DIR="Mozilla"
+    ZIP="$ZIP -X"
 
     if test "$MOZTOOLS"; then
         MOZ_TOOLS_DIR=`echo $MOZTOOLS | sed -e 's|\\\\|/|g'`
@@ -4927,11 +4928,6 @@ AC_SUBST(SYSTEM_HUNSPELL)
 dnl ========================================================
 dnl Java SDK support
 dnl ========================================================
-JAVA_INCLUDE_PATH=
-MOZ_ARG_WITH_STRING(java-include-path,
-[  --with-java-include-path=dir
-                          Location of Java SDK headers],
-    JAVA_INCLUDE_PATH=$withval)
 
 JAVA_BIN_PATH=
 MOZ_ARG_WITH_STRING(java-bin-path,
@@ -4954,9 +4950,9 @@ MOZ_BRANDING_DIRECTORY=
 MOZ_OFFICIAL_BRANDING=
 MOZ_FEEDS=1
 MOZ_INSTALLER=1
-MOZ_JAVAXPCOM=
 MOZ_JSDEBUGGER=1
 MOZ_MATHML=1
+MOZ_CSS_ANIMATIONS=1
 MOZ_MORK=
 MOZ_MORKREADER=1
 MOZ_AUTH_EXTENSION=1
@@ -6220,29 +6216,6 @@ MOZ_ARG_DISABLE_BOOL(universalchardet,
   MOZ_UNIVERSALCHARDET=,
   MOZ_UNIVERSALCHARDET=1 )
 
-dnl ========================================================
-dnl JavaXPCOM
-dnl ========================================================
-case "${target}" in
-*-wince*)
-    MOZ_JAVAXPCOM=
-    ;;
-esac
-
-MOZ_ARG_ENABLE_BOOL(javaxpcom,
-[  --enable-javaxpcom
-                          Enable Java-XPCOM bridge],
-    MOZ_JAVAXPCOM=1,
-    MOZ_JAVAXPCOM=)
-
-case "$host_os" in
-  *mingw*)
-    if test -n "$JAVA_HOME"; then
-      JAVA_HOME=`cd "$JAVA_HOME" && pwd`
-    fi
-    ;;
-esac
-
 if test -n "${JAVA_BIN_PATH}"; then
   dnl Look for javac and jar in the specified path.
   JAVA_PATH="$JAVA_BIN_PATH"
@@ -6258,29 +6231,6 @@ MOZ_PATH_PROG(JAR, jar, :, [$JAVA_PATH])
 if test -n "${JAVA_BIN_PATH}" -o "$OS_TARGET" = Android; then
   if test -z "$JAVA" -o "$JAVA" = ":" -o -z "$JAVAC" -o "$JAVAC" = ":" -o -z "$JAR" -o "$JAR" = ":"; then
     AC_MSG_ERROR([The programs java, javac and jar were not found.  Set \$JAVA_HOME to your java sdk directory or use --with-java-bin-path={java-bin-dir}])
-  fi
-fi
-
-if test -n "${MOZ_JAVAXPCOM}"; then
-  if test -n "${JAVA_INCLUDE_PATH}"; then
-    dnl Make sure jni.h exists in the given include path.
-    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([jni.h was not found in given include path $JAVA_INCLUDE_PATH.])
-    fi
-  else
-    case "$target_os" in
-      darwin*)
-        dnl Default to java system location
-        JAVA_INCLUDE_PATH=/System/Library/Frameworks/JavaVM.framework/Headers
-        ;;
-      *)
-        dnl Try $JAVA_HOME
-        JAVA_INCLUDE_PATH="$JAVA_HOME/include"
-        ;;
-    esac
-    if test ! -f "$JAVA_INCLUDE_PATH/jni.h"; then
-      AC_MSG_ERROR([The header jni.h was not found.  Set \$JAVA_HOME to your java sdk directory, use --with-java-bin-path={java-bin-dir}, or reconfigure with --disable-javaxpcom.])
-    fi
   fi
 fi
 
@@ -6481,9 +6431,16 @@ if test -n "$LIBJPEG_TURBO_X86_ASM" -o -n "$LIBJPEG_TURBO_X64_ASM" ; then
         AC_MSG_ERROR([yasm is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you do not appear to have yasm installed.  Either install it or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
     fi
 
-    dnl Check for yasm 1.1 or greater.
-    if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
-        AC_MSG_ERROR([yasm 1.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+    dnl Check that we have the right yasm version.  We require 1.0.1 or newer
+    dnl on Linux and 1.1 or newer everywhere else.
+    if test "$OS_ARCH" = "Linux" ; then
+        if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -eq "0" -a "$_YASM_RELEASE" -lt "1" \) ; then
+            AC_MSG_ERROR([yasm 1.0.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+        fi
+    else
+        if test "$_YASM_MAJOR_VERSION" -lt "1" -o \( "$_YASM_MAJOR_VERSION" -eq "1" -a "$_YASM_MINOR_VERSION" -lt "1" \) ; then
+            AC_MSG_ERROR([yasm 1.1 or greater is required to build with libjpeg-turbo's optimized JPEG decoding routines, but you appear to have version $_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.  Upgrade to the newest version or configure with --disable-libjpeg-turbo to use the pure C JPEG decoder.  See https://developer.mozilla.org/en/YASM for more details.])
+        fi
     fi
 fi
 
@@ -6577,6 +6534,8 @@ MOZ_ARG_DISABLE_BOOL(mathml,
 if test "$MOZ_MATHML"; then
   AC_DEFINE(MOZ_MATHML)
 fi
+
+AC_DEFINE(MOZ_CSS_ANIMATIONS)
 
 dnl ========================================================
 dnl Keeping AC_DEFINE(MOZ_SVG) for the moment in case of something needs it.
@@ -8940,6 +8899,10 @@ if test "$MOZ_APP_COMPONENT_INCLUDE"; then
   AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_INCLUDE, "$MOZ_APP_COMPONENT_INCLUDE")
 fi
 
+if test "$MOZ_APP_COMPONENT_MODULES"; then
+  AC_DEFINE_UNQUOTED(MOZ_APP_COMPONENT_MODULES, $MOZ_APP_COMPONENT_MODULES)
+fi
+
 dnl ========================================================
 dnl =
 dnl = Maintainer debug option (no --enable equivalent)
@@ -8968,6 +8931,7 @@ AC_SUBST(MINIMO)
 AC_SUBST(MOZ_PLATFORM_MAEMO)
 AC_SUBST(MOZ_AUTH_EXTENSION)
 AC_SUBST(MOZ_MATHML)
+AC_SUBST(MOZ_CSS_ANIMATIONS)
 AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_XTF)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
@@ -8995,7 +8959,6 @@ AC_SUBST(MOZ_PROFILING)
 AC_SUBST(MOZ_QUANTIFY)
 AC_SUBST(LIBICONV)
 AC_SUBST(MOZ_PLACES)
-AC_SUBST(MOZ_PLACES_BOOKMARKS)
 AC_SUBST(MOZ_STORAGE)
 AC_SUBST(MOZ_TOOLKIT_SEARCH)
 AC_SUBST(MOZ_FEEDS)
@@ -9003,8 +8966,6 @@ AC_SUBST(NS_PRINTING)
 AC_SUBST(MOZ_WEBGL)
 AC_SUBST(MOZ_HELP_VIEWER)
 
-AC_SUBST(MOZ_JAVAXPCOM)
-AC_SUBST(JAVA_INCLUDE_PATH)
 AC_SUBST(JAVA)
 AC_SUBST(JAVAC)
 AC_SUBST(JAR)

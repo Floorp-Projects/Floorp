@@ -36,22 +36,22 @@ function test_locally_changed_keys() {
   do_test_pending();
   let server = httpd_setup({
     // Special.
-    "/1.0/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
-    "/1.0/johndoe/info/collections": collectionsHelper.handler,
-    "/1.0/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta", meta_global.handler()),
+    "/1.1/johndoe/info/collections": collectionsHelper.handler,
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", keysWBO.handler()),
       
     // Track modified times.
-    "/1.0/johndoe/storage/clients": upd("clients", clients.handler()),
-    "/1.0/johndoe/storage/clients/foobar": upd("clients", new ServerWBO("clients").handler()),
-    "/1.0/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
+    "/1.1/johndoe/storage/clients": upd("clients", clients.handler()),
+    "/1.1/johndoe/storage/clients/foobar": upd("clients", new ServerWBO("clients").handler()),
+    "/1.1/johndoe/storage/tabs": upd("tabs", new ServerCollection().handler()),
     
     // Just so we don't get 404s in the logs.
-    "/1.0/johndoe/storage/bookmarks": new ServerCollection().handler(),
-    "/1.0/johndoe/storage/forms": new ServerCollection().handler(),
-    "/1.0/johndoe/storage/passwords": new ServerCollection().handler(),
-    "/1.0/johndoe/storage/prefs": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/bookmarks": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/forms": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/passwords": new ServerCollection().handler(),
+    "/1.1/johndoe/storage/prefs": new ServerCollection().handler(),
     
-    "/1.0/johndoe/storage/history": upd("history", history.handler()),
+    "/1.1/johndoe/storage/history": upd("history", history.handler()),
   });
 
   try {
@@ -144,7 +144,7 @@ function test_locally_changed_keys() {
       wbo.modified = modified;
       history.wbos[id] = wbo;
       server.registerPathHandler(
-        "/1.0/johndoe/storage/history/record-no--" + i,
+        "/1.1/johndoe/storage/history/record-no--" + i,
         upd("history", wbo.handler()));
     }
     
@@ -204,7 +204,7 @@ function test_locally_changed_keys() {
       wbo.modified = modified;
       history.wbos[id] = wbo;
       server.registerPathHandler(
-        "/1.0/johndoe/storage/history/record-no--" + i,
+        "/1.1/johndoe/storage/history/record-no--" + i,
         upd("history", wbo.handler()));
     }
     collections.history = Date.now()/1000;

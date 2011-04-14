@@ -195,7 +195,7 @@ IsLeapYear(jsint year)
 }
 
 static inline jsint
-DaysInYear(jsint year) 
+DaysInYear(jsint year)
 {
     return IsLeapYear(year) ? 366 : 365;
 }
@@ -632,8 +632,8 @@ date_UTC(JSContext *cx, uintN argc, Value *vp)
 
 /*
  * Read and convert decimal digits from s[*i] into *result
- * while *i < limit. 
- * 
+ * while *i < limit.
+ *
  * Succeed if any digits are converted. Advance *i only
  * as digits are consumed.
  */
@@ -642,7 +642,7 @@ digits(size_t *result, const jschar *s, size_t *i, size_t limit)
 {
     size_t init = *i;
     *result = 0;
-    while (*i < limit && 
+    while (*i < limit &&
            ('0' <= s[*i] && s[*i] <= '9')) {
         *result *= 10;
         *result += (s[*i] - '0');
@@ -651,11 +651,11 @@ digits(size_t *result, const jschar *s, size_t *i, size_t limit)
     return (*i != init);
 }
 
-/* 
+/*
  * Read and convert decimal digits to the right of a decimal point,
  * representing a fractional integer, from s[*i] into *result
- * while *i < limit. 
- * 
+ * while *i < limit.
+ *
  * Succeed if any digits are converted. Advance *i only
  * as digits are consumed.
  */
@@ -665,7 +665,7 @@ fractional(jsdouble *result, const jschar *s, size_t *i, size_t limit)
     jsdouble factor = 0.1;
     size_t init = *i;
     *result = 0.0;
-    while (*i < limit && 
+    while (*i < limit &&
            ('0' <= s[*i] && s[*i] <= '9')) {
         *result += (s[*i] - '0') * factor;
         factor *= 0.1;
@@ -674,9 +674,9 @@ fractional(jsdouble *result, const jschar *s, size_t *i, size_t limit)
     return (*i != init);
 }
 
-/* 
- * Read and convert exactly n decimal digits from s[*i] 
- * to s[min(*i+n,limit)] into *result. 
+/*
+ * Read and convert exactly n decimal digits from s[*i]
+ * to s[min(*i+n,limit)] into *result.
  *
  * Succeed if exactly n digits are converted. Advance *i only
  * on success.
@@ -688,12 +688,12 @@ ndigits(size_t n, size_t *result, const jschar *s, size_t* i, size_t limit)
 
     if (digits(result, s, i, JS_MIN(limit, init+n)))
         return ((*i - init) == n);
-    
+
     *i = init;
     return JS_FALSE;
 }
 
-/* 
+/*
  * Parse a string in one of the date-time formats given by the W3C
  * "NOTE-datetime" specification. These formats make up a restricted
  * profile of the ISO 8601 format. Quoted here:
@@ -714,7 +714,7 @@ ndigits(size_t n, size_t *result, const jschar *s, size_t* i, size_t limit)
  *   be aded to a date later. If the time is missing then we assume
  *   00:00 UTC.  If the time is present but the time zone field is
  *   missing then we use local time.
- * 
+ *
  * Date part:
  *
  *  Year:
@@ -730,7 +730,7 @@ ndigits(size_t n, size_t *result, const jschar *s, size_t* i, size_t limit)
  *
  *  Hours and minutes:
  *     Thh:mmTZD (eg T19:20+01:00)
- * 
+ *
  *  Hours, minutes and seconds:
  *     Thh:mm:ssTZD (eg T19:20:30+01:00)
  *
@@ -775,22 +775,22 @@ date_parseISOString(JSLinearString *str, jsdouble *result, JSContext *cx)
 #define NEED(ch)                                                     \
     JS_BEGIN_MACRO                                                   \
         if (i >= limit || s[i] != ch) { goto syntax; } else { ++i; } \
-    JS_END_MACRO 
+    JS_END_MACRO
 
 #define DONE_DATE_UNLESS(ch)                                            \
     JS_BEGIN_MACRO                                                      \
         if (i >= limit || s[i] != ch) { goto done_date; } else { ++i; } \
-    JS_END_MACRO 
+    JS_END_MACRO
 
 #define DONE_UNLESS(ch)                                            \
     JS_BEGIN_MACRO                                                 \
         if (i >= limit || s[i] != ch) { goto done; } else { ++i; } \
-    JS_END_MACRO 
+    JS_END_MACRO
 
 #define NEED_NDIGITS(n, field)                                      \
     JS_BEGIN_MACRO                                                  \
         if (!ndigits(n, &field, s, &i, limit)) { goto syntax; }     \
-    JS_END_MACRO 
+    JS_END_MACRO
 
     s = str->chars();
     limit = str->length();
@@ -841,12 +841,12 @@ date_parseISOString(JSLinearString *str, jsdouble *result, JSContext *cx)
     if (year > 275943 // ceil(1e8/365) + 1970
         || (month == 0 || month > 12)
         || (day == 0 || day > size_t(DaysInMonth(year,month)))
-        || hour > 24 
+        || hour > 24
         || ((hour == 24) && (min > 0 || sec > 0))
-        || min > 59 
+        || min > 59
         || sec > 59
         || tzHour > 23
-        || tzMin > 59) 
+        || tzMin > 59)
         goto syntax;
 
     if (i != limit)
@@ -861,7 +861,7 @@ date_parseISOString(JSLinearString *str, jsdouble *result, JSContext *cx)
     if (isLocalTime) {
         msec = UTC(msec, cx);
     } else {
-        msec -= ((tzMul) * ((tzHour * msPerHour) 
+        msec -= ((tzMul) * ((tzHour * msPerHour)
                             + (tzMin * msPerMinute)));
     }
 
@@ -1211,10 +1211,13 @@ date_now_tn(JSContext*)
 static JSBool
 GetUTCTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *dp)
 {
-    if (!InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
-        return JS_FALSE;
+    if (!obj->isDate()) {
+        if (vp)
+            ReportIncompatibleMethod(cx, vp, &js_DateClass);
+        return false;
+    }
     *dp = obj->getDateUTCTime().toNumber();
-    return JS_TRUE;
+    return true;
 }
 
 /*
@@ -1388,8 +1391,13 @@ FillLocalTimes(JSContext *cx, JSObject *obj)
 static inline JSBool
 GetAndCacheLocalTime(JSContext *cx, JSObject *obj, Value *vp, jsdouble *time = NULL)
 {
-    if (!obj || !InstanceOf(cx, obj, &js_DateClass, vp ? vp + 2 : NULL))
+    if (!obj)
         return false;
+    if (!obj->isDate()) {
+        if (vp)
+            ReportIncompatibleMethod(cx, vp, &js_DateClass);
+        return false;
+    }
 
     /* If the local time is undefined, we need to fill in the cached values. */
     if (obj->getSlot(JSObject::JSSLOT_DATE_LOCAL_TIME).isUndefined()) {
@@ -1679,8 +1687,10 @@ date_setTime(JSContext *cx, uintN argc, Value *vp)
     if (!obj)
         return false;
 
-    if (!InstanceOf(cx, obj, &js_DateClass, vp + 2))
+    if (!obj->isDate()) {
+        ReportIncompatibleMethod(cx, vp, &js_DateClass);
         return false;
+    }
 
     if (argc == 0) {
         SetDateToNaN(cx, obj, vp);

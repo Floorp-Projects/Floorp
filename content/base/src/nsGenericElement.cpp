@@ -1930,11 +1930,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventRTTearoff)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
 NS_INTERFACE_MAP_END_AGGREGATED(mNode)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMEventRTTearoff,
-                                          nsIDOMEventTarget)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsDOMEventRTTearoff,
-                                                        nsIDOMEventTarget,
-                                                        LastRelease())
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventRTTearoff)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsDOMEventRTTearoff,
+                                              LastRelease())
 
 nsDOMEventRTTearoff *
 nsDOMEventRTTearoff::Create(nsINode *aNode)
@@ -2217,40 +2215,6 @@ NS_IMETHODIMP
 nsGenericElement::GetPrefix(nsAString& aPrefix)
 {
   mNodeInfo->GetPrefix(aPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::SetPrefix(const nsAString& aPrefix)
-{
-  // XXX: Validate the prefix string!
-
-  nsCOMPtr<nsIAtom> prefix;
-
-  if (!aPrefix.IsEmpty()) {
-    prefix = do_GetAtom(aPrefix);
-    NS_ENSURE_TRUE(prefix, NS_ERROR_OUT_OF_MEMORY);
-  }
-
-  if (!nsContentUtils::IsValidNodeName(mNodeInfo->NameAtom(), prefix,
-                                       mNodeInfo->NamespaceID())) {
-    return NS_ERROR_DOM_NAMESPACE_ERR;
-  }
-
-  nsAutoScriptBlocker scriptBlocker;
-
-  nsCOMPtr<nsINodeInfo> newNodeInfo;
-  nsresult rv = nsContentUtils::PrefixChanged(mNodeInfo, prefix,
-                                              getter_AddRefs(newNodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mNodeInfo.swap(newNodeInfo);
-  NodeInfoChanged(newNodeInfo);
-
-  // The id-handling code need to react to unexpected changes to an elements
-  // nodeinfo as that can change the elements id-attribute.
-  nsMutationGuard::DidMutate();
-
   return NS_OK;
 }
 
@@ -3072,6 +3036,11 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
     DeleteProperty(nsGkAtoms::transitionsOfBeforeProperty);
     DeleteProperty(nsGkAtoms::transitionsOfAfterProperty);
     DeleteProperty(nsGkAtoms::transitionsProperty);
+#ifdef MOZ_CSS_ANIMATIONS
+    DeleteProperty(nsGkAtoms::animationsOfBeforeProperty);
+    DeleteProperty(nsGkAtoms::animationsOfAfterProperty);
+    DeleteProperty(nsGkAtoms::animationsProperty);
+#endif
   }
 
   // Unset this since that's what the old code effectively did.
@@ -4307,11 +4276,8 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsGenericElement)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsGenericElement)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGenericElement)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 
@@ -4503,10 +4469,9 @@ NS_INTERFACE_MAP_BEGIN(nsGenericElement)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContent)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsGenericElement, nsIContent)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS_WITH_DESTROY(nsGenericElement,
-                                                        nsIContent,
-                                                        nsNodeUtils::LastRelease(this))
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsGenericElement)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsGenericElement,
+                                              nsNodeUtils::LastRelease(this))
 
 nsresult
 nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)

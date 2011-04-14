@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -47,6 +47,12 @@ JS_BEGIN_EXTERN_C
 
 extern JS_FRIEND_API(JSString *)
 JS_GetAnonymousString(JSRuntime *rt);
+
+extern JS_FRIEND_API(JSObject *)
+JS_FindCompilationScope(JSContext *cx, JSObject *obj);
+
+extern JS_FRIEND_API(JSObject *)
+JS_UnwrapObject(JSObject *obj);
 
 JS_END_EXTERN_C
 

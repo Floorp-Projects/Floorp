@@ -295,6 +295,13 @@ protected:
    * Get the mutable state of the element.
    */
   PRBool IsMutable() const;
+
+  /**
+   * Returns whether the current value is the empty string.
+   *
+   * @return whether the current value is the empty string.
+   */
+  bool IsValueEmpty() const;
 };
 
 
@@ -367,18 +374,6 @@ nsHTMLTextAreaElement::GetForm(nsIDOMHTMLFormElement** aForm)
 // nsIContent
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::Blur()
-{
-  return nsGenericHTMLElement::Blur();
-}
-
-NS_IMETHODIMP
-nsHTMLTextAreaElement::Focus()
-{
-  return nsGenericHTMLElement::Focus();
-}
-
-NS_IMETHODIMP
 nsHTMLTextAreaElement::Select()
 {
   // XXX Bug?  We have to give the input focus before contents can be
@@ -449,7 +444,6 @@ nsHTMLTextAreaElement::IsHTMLFocusable(PRBool aWithMouse,
   return PR_FALSE;
 }
 
-NS_IMPL_STRING_ATTR(nsHTMLTextAreaElement, AccessKey, accesskey)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Autofocus, autofocus)
 NS_IMPL_UINT_ATTR_NON_ZERO_DEFAULT_VALUE(nsHTMLTextAreaElement, Cols, cols, DEFAULT_COLS)
 NS_IMPL_BOOL_ATTR(nsHTMLTextAreaElement, Disabled, disabled)
@@ -1099,12 +1093,9 @@ nsHTMLTextAreaElement::IntrinsicState() const
   }
 
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::placeholder) &&
-      !nsContentUtils::IsFocusedContent((nsIContent*)(this))) {
-    nsAutoString value;
-    GetValueInternal(value, PR_TRUE);
-    if (value.IsEmpty()) {
-      state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
-    }
+      !nsContentUtils::IsFocusedContent((nsIContent*)(this)) &&
+      IsValueEmpty()) {
+    state |= NS_EVENT_STATE_MOZ_PLACEHOLDER;
   }
 
   return state;
@@ -1263,6 +1254,15 @@ nsHTMLTextAreaElement::IsMutable() const
   return (!HasAttr(kNameSpaceID_None, nsGkAtoms::readonly) && !IsDisabled());
 }
 
+bool
+nsHTMLTextAreaElement::IsValueEmpty() const
+{
+  nsAutoString value;
+  GetValueInternal(value, PR_TRUE);
+
+  return value.IsEmpty();
+}
+
 // nsIConstraintValidation
 
 NS_IMETHODIMP
@@ -1310,10 +1310,7 @@ nsHTMLTextAreaElement::IsValueMissing() const
     return PR_FALSE;
   }
 
-  nsAutoString value;
-  GetValueInternal(value, PR_TRUE);
-
-  return value.IsEmpty();
+  return IsValueEmpty();
 }
 
 void

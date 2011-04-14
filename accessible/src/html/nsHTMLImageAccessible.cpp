@@ -38,6 +38,7 @@
 
 #include "nsHTMLImageAccessible.h"
 
+#include "States.h"
 #include "nsAccessibilityAtoms.h"
 #include "nsAccUtils.h"
 
@@ -68,14 +69,13 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageAccessible, nsAccessible,
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessible public
 
-nsresult
-nsHTMLImageAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
+PRUint64
+nsHTMLImageAccessible::NativeState()
 {
   // The state is a bitfield, get our inherited state, then logically OR it with
-  // STATE_ANIMATED if this is an animated image.
+  // states::ANIMATED if this is an animated image.
 
-  nsresult rv = nsLinkableAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 state = nsLinkableAccessible::NativeState();
 
   nsCOMPtr<nsIImageLoadingContent> content(do_QueryInterface(mContent));
   nsCOMPtr<imgIRequest> imageRequest;
@@ -92,10 +92,10 @@ nsHTMLImageAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
     PRBool animated;
     imgContainer->GetAnimated(&animated);
     if (animated)
-      *aState |= nsIAccessibleStates::STATE_ANIMATED;
+      state |= states::ANIMATED;
   }
 
-  return NS_OK;
+  return state;
 }
 
 nsresult

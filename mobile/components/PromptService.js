@@ -239,6 +239,17 @@ Prompt.prototype = {
     return browser.importDialog(this._domWin, aSrc, aParams);
   },
 
+  _setupPrompt: function setupPrompt(aDoc, aType, aTitle, aText, aCheck) {
+    aDoc.getElementById("prompt-" + aType + "-title").appendChild(aDoc.createTextNode(aTitle));
+    aDoc.getElementById("prompt-" + aType + "-message").appendChild(aDoc.createTextNode(aText));
+
+    if (aCheck && aCheck.msg) {
+      aDoc.getElementById("prompt-" + aType + "-checkbox").checked = aCheck.value;
+      this.setLabelForNode(aDoc.getElementById("prompt-" + aType + "-checkbox-label"), aCheck.msg);
+      aDoc.getElementById("prompt-" + aType + "-checkbox").removeAttribute("collapsed");
+    }
+  },
+
   commonPrompt: function commonPrompt(aTitle, aText, aValue, aCheckMsg, aCheckState, isPassword) {
     var params = new Object();
     params.result = false;
@@ -247,15 +258,8 @@ Prompt.prototype = {
 
     let dialog = this.openDialog("chrome://browser/content/prompt/prompt.xul", params);
     let doc = this._doc;
-    doc.getElementById("prompt-prompt-title").value = aTitle;
-    doc.getElementById("prompt-prompt-message").appendChild(doc.createTextNode(aText));
-
-    doc.getElementById("prompt-prompt-checkbox").checked = aCheckState.value;
-    this.setLabelForNode(doc.getElementById("prompt-prompt-checkbox-label"), aCheckMsg);
+    this._setupPrompt(doc, "prompt", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
     doc.getElementById("prompt-prompt-textbox").value = aValue.value;
-    if (aCheckMsg)
-      doc.getElementById("prompt-prompt-checkbox").removeAttribute("collapsed");
-
     if (isPassword)
       doc.getElementById("prompt-prompt-textbox").type = "password";
 
@@ -348,8 +352,7 @@ Prompt.prototype = {
   alert: function alert(aTitle, aText) {
     let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", null);
     let doc = this._doc;
-    doc.getElementById("prompt-alert-title").value = aTitle;
-    doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
+    this._setupPrompt(doc, "alert", aTitle, aText);
 
     dialog.waitForClose();
   },
@@ -357,13 +360,7 @@ Prompt.prototype = {
   alertCheck: function alertCheck(aTitle, aText, aCheckMsg, aCheckState) {
     let dialog = this.openDialog("chrome://browser/content/prompt/alert.xul", aCheckState);
     let doc = this._doc;
-    doc.getElementById("prompt-alert-title").value = aTitle;
-    doc.getElementById("prompt-alert-message").appendChild(doc.createTextNode(aText));
-
-    doc.getElementById("prompt-alert-checkbox").checked = aCheckState.value;
-    this.setLabelForNode(doc.getElementById("prompt-alert-checkbox-label"), aCheckMsg);
-    doc.getElementById("prompt-alert-checkbox").removeAttribute("collapsed");
-
+    this._setupPrompt(doc, "alert", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
     dialog.waitForClose();
   },
 
@@ -373,8 +370,7 @@ Prompt.prototype = {
 
     let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
     let doc = this._doc;
-    doc.getElementById("prompt-confirm-title").value = aTitle;
-    doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
+    this._setupPrompt(doc, "confirm", aTitle, aText);
 
     dialog.waitForClose();
     return params.result;
@@ -387,12 +383,7 @@ Prompt.prototype = {
 
     let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
     let doc = this._doc;
-    doc.getElementById("prompt-confirm-title").value = aTitle;
-    doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
-
-    doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
-    this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-label"), aCheckMsg);
-    doc.getElementById("prompt-confirm-checkbox").removeAttribute("collapsed");
+    this._setupPrompt(doc, "prompt", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
 
     dialog.waitForClose();
     return params.result;
@@ -418,14 +409,7 @@ Prompt.prototype = {
 
     let dialog = this.openDialog("chrome://browser/content/prompt/confirm.xul", params);
     let doc = this._doc;
-    doc.getElementById("prompt-confirm-title").value = aTitle;
-    doc.getElementById("prompt-confirm-message").appendChild(doc.createTextNode(aText));
-
-    doc.getElementById("prompt-confirm-checkbox").checked = aCheckState.value;
-    this.setLabelForNode(doc.getElementById("prompt-confirm-checkbox-label"), aCheckMsg);
-    if (aCheckMsg)
-      doc.getElementById("prompt-confirm-checkbox").removeAttribute("collapsed");
-
+    this._setupPrompt(doc, "confirm", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
 
     let bbox = doc.getElementById("prompt-confirm-buttons-box");
     while (bbox.lastChild)
@@ -500,16 +484,10 @@ Prompt.prototype = {
 
     let dialog = this.openDialog("chrome://browser/content/prompt/promptPassword.xul", params);
     let doc = this._doc;
-    doc.getElementById("prompt-password-title").value = aTitle;
-    doc.getElementById("prompt-password-message").appendChild(doc.createTextNode(aText));
-    doc.getElementById("prompt-password-checkbox").checked = aCheckState.value;
+    this._setupPrompt(doc, "password", aTitle, aText, {value: aCheckState.value, msg: aCheckMsg});
 
     doc.getElementById("prompt-password-user").value = aUsername.value;
     doc.getElementById("prompt-password-password").value = aPassword.value;
-    if (aCheckMsg) {
-      doc.getElementById("prompt-password-checkbox").removeAttribute("collapsed");
-      this.setLabelForNode(doc.getElementById("prompt-password-checkbox-label"), aCheckMsg);
-    }
 
     dialog.waitForClose();
     return params.result;
@@ -522,8 +500,7 @@ Prompt.prototype = {
 
     let dialog = this.openDialog("chrome://browser/content/prompt/select.xul", params);
     let doc = this._doc;
-    doc.getElementById("prompt-select-title").value = aTitle;
-    doc.getElementById("prompt-select-message").appendChild(doc.createTextNode(aText));
+    this._setupPrompt(doc, "select", aTitle, aText);
 
     let list = doc.getElementById("prompt-select-list");
     for (let i = 0; i < aCount; i++)

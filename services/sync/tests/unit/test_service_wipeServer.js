@@ -44,9 +44,9 @@ function test_withCollectionList_fail() {
   let diesel_coll = new FakeCollection();
 
   let server = httpd_setup({
-    "/1.0/johndoe/storage/steam": steam_coll.handler(),
-    "/1.0/johndoe/storage/petrol": serviceUnavailable,
-    "/1.0/johndoe/storage/diesel": diesel_coll.handler()
+    "/1.1/johndoe/storage/steam": steam_coll.handler(),
+    "/1.1/johndoe/storage/petrol": serviceUnavailable,
+    "/1.1/johndoe/storage/diesel": diesel_coll.handler()
   });
   do_test_pending();
 
@@ -99,10 +99,10 @@ function test_wipeServer_leaves_collections() {
   }
 
   let server = httpd_setup({
-    "/1.0/johndoe/storage/steam": steam_coll.handler(),
-    "/1.0/johndoe/storage/diesel": diesel_coll.handler(),
-    "/1.0/johndoe/storage/keys": keys_coll.handler(),
-    "/1.0/johndoe/info/collections": info_collections
+    "/1.1/johndoe/storage/steam": steam_coll.handler(),
+    "/1.1/johndoe/storage/diesel": diesel_coll.handler(),
+    "/1.1/johndoe/storage/keys": keys_coll.handler(),
+    "/1.1/johndoe/info/collections": info_collections
   });
   do_test_pending();
 

@@ -4783,6 +4783,17 @@ if test "$MOZ_DISABLE_WARNINGS_AS_ERRORS"; then
    WARNINGS_AS_ERRORS=''
 fi
 
+dnl ========================================================
+dnl = Enable treating compile warnings as errors
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(sm-fail-on-warnings,
+[  --enable-sm-fail-on-warnings
+                          Enable warnings as errors],
+    FAIL_ON_WARNINGS=1,
+    FAIL_ON_WARNINGS= )
+
+AC_SUBST(FAIL_ON_WARNINGS)
+
 dnl = Enable trace malloc
 dnl ========================================================
 NS_TRACE_MALLOC=${MOZ_TRACE_MALLOC}
@@ -5997,9 +6008,6 @@ if test "$JS_HAS_CTYPES"; then
   fi
   if test "$CROSS_COMPILE"; then
     case "$target" in
-    *-mingw*)
-      ac_configure_args="$ac_configure_args --build=$build --host=${target_cpu}-${target_os} HOST_CC=\"$HOST_CC\" CC=\"$CC\""
-      ;;
     *-android*)
       CFLAGS="$ANDROID_CFLAGS"
       CPPFLAGS="$ANDROID_CPPFLAGS"

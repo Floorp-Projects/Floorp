@@ -2804,19 +2804,15 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
   nsresult rv = NS_ERROR_FAILURE;
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
-
-    if (bidiUtils) {
-      if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
-        aDirection = aFrame->GetStyleVisibility()->mDirection;
-      }
-      nsBidiDirection direction =
-        (NS_STYLE_DIRECTION_RTL == aDirection) ?
-        NSBIDI_RTL : NSBIDI_LTR;
-      rv = bidiUtils->RenderText(aString, aLength, direction,
-                                 presContext, *aContext, *aContext,
-                                 aPoint.x, aPoint.y);
+    if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
+      aDirection = aFrame->GetStyleVisibility()->mDirection;
     }
+    nsBidiDirection direction =
+      (NS_STYLE_DIRECTION_RTL == aDirection) ?
+      NSBIDI_RTL : NSBIDI_LTR;
+    rv = nsBidiPresUtils::RenderText(aString, aLength, direction,
+                                     presContext, *aContext, *aContext,
+                                     aPoint.x, aPoint.y);
   }
   if (NS_FAILED(rv))
 #endif // IBMBIDI
@@ -2835,16 +2831,12 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 #ifdef IBMBIDI
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
-
-    if (bidiUtils) {
-      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
-      nsBidiDirection direction =
-        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-        NSBIDI_RTL : NSBIDI_LTR;
-      return bidiUtils->MeasureTextWidth(aString, aLength,
-                                         direction, presContext, *aContext);
-    }
+    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+    nsBidiDirection direction =
+      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+      NSBIDI_RTL : NSBIDI_LTR;
+    return nsBidiPresUtils::MeasureTextWidth(aString, aLength,
+                                             direction, presContext, *aContext);
   }
 #endif // IBMBIDI
   aContext->SetTextRunRTL(PR_FALSE);
@@ -3065,7 +3057,11 @@ nsLayoutUtils::GetClosestLayer(nsIFrame* aFrame)
 GraphicsFilter
 nsLayoutUtils::GetGraphicsFilterForFrame(nsIFrame* aForFrame)
 {
+#ifdef MOZ_GFX_OPTIMIZE_MOBILE
+  GraphicsFilter defaultFilter = gfxPattern::FILTER_NEAREST;
+#else
   GraphicsFilter defaultFilter = gfxPattern::FILTER_GOOD;
+#endif
 #ifdef MOZ_SVG
   nsIFrame *frame = nsCSSRendering::IsCanvasFrame(aForFrame) ?
     nsCSSRendering::FindBackgroundStyleFrame(aForFrame) : aForFrame;

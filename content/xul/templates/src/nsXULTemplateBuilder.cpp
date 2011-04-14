@@ -301,10 +301,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULTemplateBuilder)
     tmp->Traverse(cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsXULTemplateBuilder,
-                                          nsIXULTemplateBuilder)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsXULTemplateBuilder,
-                                           nsIXULTemplateBuilder)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsXULTemplateBuilder)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULTemplateBuilder)
 
 DOMCI_DATA(XULTemplateBuilder, nsXULTemplateBuilder)
 

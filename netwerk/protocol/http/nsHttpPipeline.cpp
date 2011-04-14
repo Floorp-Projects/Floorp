@@ -303,6 +303,33 @@ nsHttpPipeline::SetLastTransactionExpectedNoContent(PRBool val)
      mConnection->SetLastTransactionExpectedNoContent(val);
 }
 
+nsHttpConnection *
+nsHttpPipeline::TakeHttpConnection()
+{
+    if (mConnection)
+        return mConnection->TakeHttpConnection();
+    return nsnull;
+}
+
+void
+nsHttpPipeline::SetSSLConnectFailed()
+{
+    nsAHttpTransaction *trans = Request(0);
+
+    if (trans)
+        trans->SetSSLConnectFailed();
+}
+
+nsHttpRequestHead *
+nsHttpPipeline::RequestHead()
+{
+    nsAHttpTransaction *trans = Request(0);
+
+    if (trans)
+        return trans->RequestHead();
+    return nsnull;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpPipeline::nsAHttpConnection
 //-----------------------------------------------------------------------------
@@ -340,7 +367,8 @@ nsHttpPipeline::GetSecurityCallbacks(nsIInterfaceRequestor **result,
 }
 
 void
-nsHttpPipeline::OnTransportStatus(nsresult status, PRUint64 progress)
+nsHttpPipeline::OnTransportStatus(nsITransport* transport,
+                                  nsresult status, PRUint64 progress)
 {
     LOG(("nsHttpPipeline::OnStatus [this=%x status=%x progress=%llu]\n",
         this, status, progress));
@@ -350,10 +378,10 @@ nsHttpPipeline::OnTransportStatus(nsresult status, PRUint64 progress)
     nsAHttpTransaction *trans;
     switch (status) {
     case NS_NET_STATUS_RECEIVING_FROM:
-        // forward this only to the transaction currently recieving data 
+        // forward this only to the transaction currently recieving data
         trans = Response(0);
         if (trans)
-            trans->OnTransportStatus(status, progress);
+            trans->OnTransportStatus(transport, status, progress);
         break;
     default:
         // forward other notifications to all transactions
@@ -361,7 +389,7 @@ nsHttpPipeline::OnTransportStatus(nsresult status, PRUint64 progress)
         for (i=0; i<count; ++i) {
             trans = Request(i);
             if (trans)
-                trans->OnTransportStatus(status, progress);
+                trans->OnTransportStatus(transport, status, progress);
         }
         break;
     }

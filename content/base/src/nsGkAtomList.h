@@ -632,6 +632,11 @@ GK_ATOM(ol, "ol")
 GK_ATOM(omitXmlDeclaration, "omit-xml-declaration")
 GK_ATOM(onabort, "onabort")
 GK_ATOM(onafterscriptexecute, "onafterscriptexecute")
+#ifdef MOZ_CSS_ANIMATIONS
+GK_ATOM(onanimationend, "onanimationend")
+GK_ATOM(onanimationiteration, "onanimationiteration")
+GK_ATOM(onanimationstart, "onanimationstart")
+#endif
 GK_ATOM(onbeforecopy, "onbeforecopy")
 GK_ATOM(onbeforecut, "onbeforecut")
 GK_ATOM(onbeforepaste, "onbeforepaste")
@@ -1713,7 +1718,6 @@ GK_ATOM(columnSetFrame, "ColumnSetFrame")
 GK_ATOM(comboboxControlFrame, "ComboboxControlFrame")
 GK_ATOM(comboboxDisplayFrame, "ComboboxDisplayFrame")
 GK_ATOM(deckFrame, "DeckFrame")
-GK_ATOM(directionalFrame, "DirectionalFrame")
 GK_ATOM(fieldSetFrame, "FieldSetFrame")
 GK_ATOM(frameSetFrame, "FrameSetFrame")
 GK_ATOM(gfxButtonControlFrame, "gfxButtonControlFrame")
@@ -1830,6 +1834,11 @@ GK_ATOM(volumechange, "volumechange")
 #endif
 
 // Content property names
+#ifdef MOZ_CSS_ANIMATIONS
+GK_ATOM(animationsProperty, "AnimationsProperty")        // FrameAnimations*
+GK_ATOM(animationsOfBeforeProperty, "AnimationsOfBeforeProperty") // FrameAnimations*
+GK_ATOM(animationsOfAfterProperty, "AnimationsOfAfterProperty") // FrameAnimations*
+#endif
 GK_ATOM(transitionsProperty, "TransitionsProperty")        // FrameTransitions*
 GK_ATOM(transitionsOfBeforeProperty, "TransitionsOfBeforeProperty") // FrameTransitions*
 GK_ATOM(transitionsOfAfterProperty, "TransitionsOfAfterProperty") // FrameTransitions*

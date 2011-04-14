@@ -42,12 +42,9 @@
 
 #include "AccessibleComponent_i.c"
 
-#include "nsIAccessNode.h"
-#include "nsIAccessible.h"
-#include "nsIAccessibleStates.h"
-#include "nsAccessNodeWrap.h"
+#include "nsAccessible.h"
+#include "States.h"
 
-#include "nsCOMPtr.h"
 #include "nsString.h"
 
 #include "nsIDOMCSSPrimitiveValue.h"
@@ -85,21 +82,17 @@ __try {
   *aX = 0;
   *aY = 0;
 
-  nsCOMPtr<nsIAccessible> acc(do_QueryObject(this));
+  nsRefPtr<nsAccessible> acc(do_QueryObject(this));
   if (!acc)
     return E_FAIL;
 
   // If the object is not on any screen the returned position is (0,0).
-  PRUint32 states = 0;
-  nsresult rv = acc->GetState(&states, nsnull);
-  if (NS_FAILED(rv))
-    return GetHRESULT(rv);
-
-  if (states & nsIAccessibleStates::STATE_INVISIBLE)
+  PRUint64 state = acc->State();
+  if (state & states::INVISIBLE)
     return S_OK;
 
   PRInt32 x = 0, y = 0, width = 0, height = 0;
-  rv = acc->GetBounds(&x, &y, &width, &height);
+  nsresult rv = acc->GetBounds(&x, &y, &width, &height);
   if (NS_FAILED(rv))
     return GetHRESULT(rv);
 

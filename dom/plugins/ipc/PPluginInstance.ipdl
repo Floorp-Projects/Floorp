@@ -1,0 +1,256 @@
+/* -*- Mode: C++; c-basic-offset: 2; indent-tabs-mode: nil; tab-width: 8 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is Mozilla Plugins.
+ *
+ * The Initial Developer of the Original Code is
+ *   Chris Jones <jones.chris.g@gmail.com>.
+ * Portions created by the Initial Developer are Copyright (C) 2009
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Benjamin Smedberg <benjamin@smedbergs.us>
+ *   Ben Turner <bent.mozilla@gmail.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+include protocol PPluginBackgroundDestroyer;
+include protocol PPluginModule;
+include protocol PPluginScriptableObject;
+include protocol PBrowserStream;
+include protocol PPluginStream;
+include protocol PStreamNotify;
+include protocol PPluginSurface;
+
+include "mozilla/plugins/PluginMessageUtils.h";
+
+using NPError;
+using NPRemoteWindow;
+using NPRemoteEvent;
+using NPRect;
+using NPNURLVariable;
+using NPCoordinateSpace;
+using mozilla::plugins::NativeWindowHandle;
+using mozilla::gfxSurfaceType;
+using gfxIntSize;
+using mozilla::null_t;
+using mozilla::plugins::WindowsSharedMemoryHandle;
+using nsIntRect;
+
+namespace mozilla {
+namespace plugins {
+
+struct SurfaceDescriptorX11 {
+  int XID;
+  int xrenderPictID;
+  gfxIntSize size;
+};
+
+union SurfaceDescriptor {
+  Shmem;
+  SurfaceDescriptorX11;
+  PPluginSurface; // used on Windows
+  // Descriptor can be null here in case
+  // 1) of first Show call (prevSurface is null)
+  // 2) when child is going to destroy
+  //    and it just want to grab prevSurface
+  //     back without giving new surface
+  null_t;
+};
+
+rpc protocol PPluginInstance
+{
+  manager PPluginModule;
+
+  manages PPluginBackgroundDestroyer;
+  manages PPluginScriptableObject;
+  manages PBrowserStream;
+  manages PPluginStream;
+  manages PStreamNotify;
+  manages PPluginSurface;
+
+child:
+  rpc __delete__();
+
+  rpc NPP_SetWindow(NPRemoteWindow window);
+
+  // this message is not used on non-X platforms
+  rpc NPP_GetValue_NPPVpluginNeedsXEmbed()
+    returns (bool value, NPError result);
+  rpc NPP_GetValue_NPPVpluginScriptableNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+
+  rpc NPP_SetValue_NPNVprivateModeBool(bool value) returns (NPError result);
+
+  rpc NPP_HandleEvent(NPRemoteEvent event)
+    returns (int16_t handled);
+  // special cases where we need to a shared memory buffer
+  rpc NPP_HandleEvent_Shmem(NPRemoteEvent event, Shmem buffer)
+    returns (int16_t handled, Shmem rtnbuffer);
+  // special cases where we need an iosurface
+  rpc NPP_HandleEvent_IOSurface(NPRemoteEvent event, uint32_t surfaceid)
+    returns (int16_t handled);
+  // special cases of HandleEvent to make mediating races simpler
+  rpc Paint(NPRemoteEvent event)
+    returns (int16_t handled);
+  // this is only used on windows to forward WM_WINDOWPOSCHANGE
+  async WindowPosChanged(NPRemoteEvent event);
+
+  // ********************** Async plugins rendering
+  // see https://wiki.mozilla.org/Gecko:AsyncPluginPainting
+  // **********************
+
+  // Async version of SetWindow call
+  // @param surfaceType - gfxASurface::gfxSurfaceType
+  //        plugin child must create offscreen buffer
+  //        with type equals to surfaceType
+  async AsyncSetWindow(gfxSurfaceType surfaceType, NPRemoteWindow window);
+
+  // There is now an opaque background behind this instance (or the
+  // background was updated).  The changed area is |rect|.  The
+  // browser owns the background surface, and it's read-only from
+  // within the plugin process.  |background| is either null_t to
+  // refer to the existing background or a fresh descriptor.
+  async UpdateBackground(SurfaceDescriptor background, nsIntRect rect);
+
+  rpc NPP_Destroy()
+    returns (NPError rv);
+
+parent:
+  rpc NPN_GetValue_NPNVjavascriptEnabledBool()
+    returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVisOfflineBool()
+    returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVWindowNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+  rpc NPN_GetValue_NPNVPluginElementNPObject()
+    returns (nullable PPluginScriptableObject value, NPError result);
+  rpc NPN_GetValue_NPNVprivateModeBool()
+    returns (bool value, NPError result);
+  rpc NPN_GetValue_NPNVnetscapeWindow()
+    returns (NativeWindowHandle value, NPError result);
+
+  rpc NPN_SetValue_NPPVpluginWindow(bool windowed)
+    returns (NPError result);
+  rpc NPN_SetValue_NPPVpluginTransparent(bool transparent)
+    returns (NPError result);
+  rpc NPN_SetValue_NPPVpluginUsesDOMForCursor(bool useDOMForCursor)
+    returns (NPError result);
+  rpc NPN_SetValue_NPPVpluginDrawingModel(int drawingModel)
+    returns (NPError result);
+  rpc NPN_SetValue_NPPVpluginEventModel(int eventModel)
+    returns (NPError result);
+
+  rpc NPN_GetURL(nsCString url, nsCString target)
+    returns (NPError result);
+  rpc NPN_PostURL(nsCString url, nsCString target, nsCString buffer, bool file)
+    returns (NPError result);
+
+  /**
+   * Covers both NPN_GetURLNotify and NPN_PostURLNotify.
+   * @TODO This would be more readable as an overloaded method,
+   *       but IPDL doesn't allow that for constructors.
+   */
+  rpc PStreamNotify(nsCString url, nsCString target, bool post,
+                    nsCString buffer, bool file)
+    returns (NPError result);
+
+  async NPN_InvalidateRect(NPRect rect);
+
+  // Give |newSurface|, containing this instance's updated pixels, to
+  // the browser for compositing.  When this method returns, any surface 
+  // previously passed to Show may be destroyed.
+  //
+  // @param rect - actually updated rectangle, comparing to prevSurface content
+  //               could be used for partial render of layer to topLevel context
+  // @param newSurface - remotable surface
+  // @param prevSurface - if the previous surface was shared-memory, returns
+  //                      the shmem for reuse
+  sync Show(NPRect updatedRect, SurfaceDescriptor newSurface)
+    returns (SurfaceDescriptor prevSurface);
+
+  async PPluginSurface(WindowsSharedMemoryHandle handle,
+                       gfxIntSize size,
+                       bool transparent);
+
+  rpc NPN_PushPopupsEnabledState(bool aState);
+
+  rpc NPN_PopPopupsEnabledState();
+
+  rpc NPN_GetValueForURL(NPNURLVariable variable, nsCString url)
+    returns (nsCString value, NPError result);
+
+  rpc NPN_SetValueForURL(NPNURLVariable variable, nsCString url,
+                         nsCString value)
+    returns (NPError result);
+
+  rpc NPN_GetAuthenticationInfo(nsCString protocol_, nsCString host,
+                                int32_t port, nsCString scheme,
+                                nsCString realm)
+    returns (nsCString username, nsCString password, NPError result);
+
+  rpc NPN_ConvertPoint(double sourceX, bool ignoreDestX, double sourceY, bool ignoreDestY, NPCoordinateSpace sourceSpace,
+                       NPCoordinateSpace destSpace)
+    returns (double destX, double destY, bool result);
+
+  // Send notification that a plugin tried to negotiate Carbon NPAPI so that
+  // users can be notified that restarting the browser in i386 mode may allow
+  // them to use the plugin.
+  sync NegotiatedCarbon();
+
+both:
+  async PPluginScriptableObject();
+
+child:
+  /* NPP_NewStream */
+  rpc PBrowserStream(nsCString url,
+                     uint32_t length,
+                     uint32_t lastmodified,
+                     nullable PStreamNotify notifyData,
+                     nsCString headers,
+                     nsCString mimeType,
+                     bool seekable)
+    returns (NPError rv,
+             uint16_t stype);
+
+parent:
+  /* NPN_NewStream */
+  rpc PPluginStream(nsCString mimeType,
+                    nsCString target)
+    returns (NPError result);
+
+parent:
+  rpc PluginFocusChange(bool gotFocus);
+
+child:
+  rpc SetPluginFocus();
+  rpc UpdateWindow();
+
+  async PPluginBackgroundDestroyer();
+};
+
+} // namespace plugins
+} // namespace mozilla

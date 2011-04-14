@@ -9,10 +9,10 @@ function run_test() {
 
   do_test_pending();
   let server = httpd_setup({
-    "/1.0/johndoe/info/collection_usage": httpd_handler(200, "OK", JSON.stringify(collection_usage)),
-    "/1.0/johndoe/info/quota":            httpd_handler(200, "OK", JSON.stringify(quota)),
-    "/1.0/janedoe/info/collection_usage": httpd_handler(200, "OK", "gargabe"),
-    "/1.0/janedoe/info/quota":            httpd_handler(200, "OK", "more garbage")
+    "/1.1/johndoe/info/collection_usage": httpd_handler(200, "OK", JSON.stringify(collection_usage)),
+    "/1.1/johndoe/info/quota":            httpd_handler(200, "OK", JSON.stringify(quota)),
+    "/1.1/janedoe/info/collection_usage": httpd_handler(200, "OK", "gargabe"),
+    "/1.1/janedoe/info/quota":            httpd_handler(200, "OK", "more garbage")
   });
 
   try {

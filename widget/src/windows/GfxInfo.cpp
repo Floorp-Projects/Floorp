@@ -619,10 +619,30 @@ static const PRUint32 deviceFamilyIntelGMAX4500HD[] = {
     0
 };
 
-// see bug 612007
-static const PRUint32 deviceFamilyNvidia6200TurboCache[] = {
-    0x0161, /* NV44 [GeForce 6200 TurboCache(TM)] */
+// Glitches whilst scrolling (see bugs 612007, 644787, 645872)
+static const PRUint32 deviceFamilyNvidiaBlockD3D9Layers[] = {
+    0x00f3, /* NV43 [GeForce 6200 (TM)] */
+    0x0146, /* NV43 [Geforce Go 6600TE/6200TE (TM)] */
+    0x014f, /* NV43 [GeForce 6200 (TM)] */
+    0x0161, /* NV44 [GeForce 6200 TurboCache (TM)] */
     0x0162, /* NV44 [GeForce 6200SE TurboCache (TM)] */
+    0x0163, /* NV44 [GeForce 6200 LE (TM)] */
+    0x0164, /* NV44 [GeForce Go 6200 (TM)] */
+    0x0167, /* NV43 [GeForce Go 6200/6400 (TM)] */
+    0x0168, /* NV43 [GeForce Go 6200/6400 (TM)] */
+    0x0169, /* NV44 [GeForce 6250 (TM)] */
+    0x0221, /* NV44A [GeForce 6200 (TM)] */
+    0x0222, /* NV44 [GeForce 6200 A-LE (TM)] */
+    0x0240, /* C51PV [GeForce 6150 (TM)] */
+    0x0241, /* C51 [GeForce 6150 LE (TM)] */
+    0x0242, /* C51G [GeForce 6100 (TM)] */
+    0x0244, /* C51 [Geforce Go 6150 (TM)] */
+    0x0245, /* C51 [Quadro NVS 210S/GeForce 6150LE (TM)] */
+    0x0247, /* C51 [GeForce Go 6100 (TM)] */
+    0x03d0, /* C61 [GeForce 6150SE nForce 430 (TM)] */
+    0x03d1, /* C61 [GeForce 6100 nForce 405 (TM)] */
+    0x03d2, /* C61 [GeForce 6100 nForce 400 (TM)] */
+    0x03d5, /* C61 [GeForce 6100 nForce 420 (TM)] */
     0
 };
 
@@ -647,9 +667,11 @@ static const GfxDriverInfo gDriverInfo[] = {
     GfxDriverInfo::allFeatures, nsIGfxInfo::FEATURE_BLOCKED_DRIVER_VERSION,
     DRIVER_LESS_THAN, V(8,17,12,5721), "257.21" ),
 
-  // bug 612007: disable D3D9 layers on NVIDIA 6200 TurboCache series.
+  /* Disable D3D9 layers on NVIDIA 6100/6150/6200 series due to glitches
+   * whilst scrolling. See bugs: 612007, 644787 & 645872.
+   */
   GfxDriverInfo( DRIVER_OS_ALL,
-    vendorNVIDIA, (GfxDeviceFamily) deviceFamilyNvidia6200TurboCache,
+    vendorNVIDIA, (GfxDeviceFamily) deviceFamilyNvidiaBlockD3D9Layers,
     nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, nsIGfxInfo::FEATURE_BLOCKED_DEVICE,
     DRIVER_LESS_THAN, allDriverVersions ),
 

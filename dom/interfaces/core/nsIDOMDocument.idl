@@ -54,7 +54,7 @@ interface nsIDOMDOMConfiguration;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(fde1a53b-cf60-4997-a0b2-1aa1dc55492e)]
+[scriptable, uuid(3e7421c4-9964-4184-8c75-d291eecdba35)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;

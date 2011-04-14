@@ -67,7 +67,7 @@ public:
   void (*callback)(NPP npp, uint32_t timerID);
 };
 
-class nsNPAPIPluginInstance : public nsIPluginInstance_MOZILLA_2_0_BRANCH
+class nsNPAPIPluginInstance : public nsIPluginInstance
 {
 private:
   typedef mozilla::PluginLibrary PluginLibrary;
@@ -75,7 +75,6 @@ private:
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPLUGININSTANCE
-  NS_DECL_NSIPLUGININSTANCE_MOZILLA_2_0_BRANCH
 
   nsNPAPIPlugin* GetPlugin();
 
@@ -91,6 +90,9 @@ public:
   NPError SetTransparent(PRBool aTransparent);
 
   NPError SetWantsAllNetworkStreams(PRBool aWantsAllNetworkStreams);
+
+  NPError SetUsesDOMForCursor(PRBool aUsesDOMForCursor);
+  PRBool UsesDOMForCursor();
 
 #ifdef XP_MACOSX
   void SetDrawingModel(NPDrawingModel aModel);
@@ -183,6 +185,7 @@ protected:
   PRPackedBool mTransparent;
   PRPackedBool mCached;
   PRPackedBool mWantsAllNetworkStreams;
+  PRPackedBool mUsesDOMForCursor;
 
 public:
   // True while creating the plugin, or calling NPP_SetWindow() on it.

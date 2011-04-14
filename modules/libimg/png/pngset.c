@@ -1,8 +1,8 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.4.1 [February 25, 2010]
- * Copyright (c) 1998-2010 Glenn Randers-Pehrson
+ * Last changed in libpng 1.4.6 [January 14, 2011]
+ * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -260,7 +260,7 @@ png_set_IHDR(png_structp png_ptr, png_infop info_ptr,
       info_ptr->rowbytes = 0;
    else
       info_ptr->rowbytes = PNG_ROWBYTES(info_ptr->pixel_depth, width);
-   
+
 #if defined(PNG_APNG_SUPPORTED)
    /* for non-animated png. this may be overwritten from an acTL chunk later */
    info_ptr->num_frames = 1;
@@ -695,6 +695,13 @@ png_set_text_2(png_structp png_ptr, png_infop info_ptr, png_textp text_ptr,
       if (text_ptr[i].key == NULL)
           continue;
 
+      if (text_ptr[i].compression < PNG_TEXT_COMPRESSION_NONE ||
+          text_ptr[i].compression >= PNG_TEXT_COMPRESSION_LAST)
+      {
+         png_warning(png_ptr, "text compression mode is out of range");
+         continue;
+      }
+
       key_len = png_strlen(text_ptr[i].key);
 
       if (text_ptr[i].compression <= 0)
@@ -939,49 +946,49 @@ png_set_sPLT(png_structp png_ptr,
 
 #if defined(PNG_APNG_SUPPORTED)
 png_uint_32 PNGAPI
-png_set_acTL(png_structp png_ptr, png_infop info_ptr, 
+png_set_acTL(png_structp png_ptr, png_infop info_ptr,
     png_uint_32 num_frames, png_uint_32 num_plays)
 {
     png_debug1(1, "in %s storage function", "acTL");
 
     if (png_ptr == NULL || info_ptr == NULL)
     {
-        png_warning(png_ptr, 
+        png_warning(png_ptr,
                     "Call to png_set_acTL() with NULL png_ptr "
                     "or info_ptr ignored");
         return (0);
     }
     if (num_frames == 0)
     {
-        png_warning(png_ptr, 
+        png_warning(png_ptr,
                     "Ignoring attempt to set acTL with num_frames zero");
         return (0);
     }
     if (num_frames > PNG_UINT_31_MAX)
     {
-        png_warning(png_ptr, 
+        png_warning(png_ptr,
                     "Ignoring attempt to set acTL with num_frames > 2^31-1");
         return (0);
     }
     if (num_plays > PNG_UINT_31_MAX)
     {
-        png_warning(png_ptr, 
+        png_warning(png_ptr,
                     "Ignoring attempt to set acTL with num_plays "
                     "> 2^31-1");
         return (0);
     }
-    
+
     info_ptr->num_frames = num_frames;
     info_ptr->num_plays = num_plays;
-    
+
     info_ptr->valid |= PNG_INFO_acTL;
-    
+
     return (1);
 }
 
 /* delay_num and delay_den can hold any 16-bit values including zero */
 png_uint_32 PNGAPI
-png_set_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr, 
+png_set_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
     png_uint_32 width, png_uint_32 height,
     png_uint_32 x_offset, png_uint_32 y_offset,
     png_uint_16 delay_num, png_uint_16 delay_den,
@@ -991,15 +998,15 @@ png_set_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
 
     if (png_ptr == NULL || info_ptr == NULL)
     {
-        png_warning(png_ptr, 
+        png_warning(png_ptr,
                     "Call to png_set_fcTL() with NULL png_ptr or info_ptr "
                     "ignored");
         return (0);
     }
-    
-    png_ensure_fcTL_is_valid(png_ptr, width, height, x_offset, y_offset, 
+
+    png_ensure_fcTL_is_valid(png_ptr, width, height, x_offset, y_offset,
                              delay_num, delay_den, dispose_op, blend_op);
-    
+
     /* For efficiency, ignore BLEND_OP_OVER when image is opaque.
      * See bug #441971 and #455140
      */
@@ -1023,20 +1030,20 @@ png_set_next_frame_fcTL(png_structp png_ptr, png_infop info_ptr,
     info_ptr->next_frame_delay_den = delay_den;
     info_ptr->next_frame_dispose_op = dispose_op;
     info_ptr->next_frame_blend_op = blend_op;
-    
+
     info_ptr->valid |= PNG_INFO_fcTL;
-    
+
     return (1);
 }
 
 void /* PRIVATE */
-png_ensure_fcTL_is_valid(png_structp png_ptr, 
+png_ensure_fcTL_is_valid(png_structp png_ptr,
     png_uint_32 width, png_uint_32 height,
     png_uint_32 x_offset, png_uint_32 y_offset,
     png_uint_16 delay_num, png_uint_16 delay_den,
     png_byte dispose_op, png_byte blend_op)
 {
-    if (width + x_offset > png_ptr->first_frame_width || 
+    if (width + x_offset > png_ptr->first_frame_width ||
         height + y_offset > png_ptr->first_frame_height)
         png_error(png_ptr, "dimensions of a frame are greater than"
                            "the ones in IHDR");
@@ -1064,15 +1071,15 @@ png_set_first_frame_is_hidden(png_structp png_ptr, png_infop info_ptr,
                               png_byte is_hidden)
 {
     png_debug(1, "in png_first_frame_is_hidden()");
-    
+
     if (png_ptr == NULL)
         return 0;
-    
+
     if(is_hidden)
         png_ptr->apng_flags |= PNG_FIRST_FRAME_HIDDEN;
     else
         png_ptr->apng_flags &= ~PNG_FIRST_FRAME_HIDDEN;
-    
+
     return 1;
 }
 #endif /* PNG_APNG_SUPPORTED */
@@ -1149,7 +1156,7 @@ png_set_unknown_chunk_location(png_structp png_ptr, png_infop info_ptr,
 
 #ifdef PNG_MNG_FEATURES_SUPPORTED
 png_uint_32 PNGAPI
-png_permit_mng_features (png_structp png_ptr, png_uint_32 mng_features)
+png_permit_mng_features(png_structp png_ptr, png_uint_32 mng_features)
 {
    png_debug(1, "in png_permit_mng_features");
 
@@ -1263,7 +1270,7 @@ png_set_invalid(png_structp png_ptr, png_infop info_ptr, int mask)
 #ifdef PNG_SET_USER_LIMITS_SUPPORTED
 /* This function was added to libpng 1.2.6 */
 void PNGAPI
-png_set_user_limits (png_structp png_ptr, png_uint_32 user_width_max,
+png_set_user_limits(png_structp png_ptr, png_uint_32 user_width_max,
     png_uint_32 user_height_max)
 {
    /* Images with dimensions larger than these limits will be
@@ -1278,7 +1285,7 @@ png_set_user_limits (png_structp png_ptr, png_uint_32 user_width_max,
 
 /* This function was added to libpng 1.4.0 */
 void PNGAPI
-png_set_chunk_cache_max (png_structp png_ptr,
+png_set_chunk_cache_max(png_structp png_ptr,
    png_uint_32 user_chunk_cache_max)
 {
     if (png_ptr)
@@ -1287,7 +1294,7 @@ png_set_chunk_cache_max (png_structp png_ptr,
 
 /* This function was added to libpng 1.4.1 */
 void PNGAPI
-png_set_chunk_malloc_max (png_structp png_ptr,
+png_set_chunk_malloc_max(png_structp png_ptr,
    png_alloc_size_t user_chunk_malloc_max)
 {
     if (png_ptr)

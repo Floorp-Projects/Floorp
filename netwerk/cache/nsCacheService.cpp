@@ -1827,6 +1827,7 @@ nsCacheService::EnsureEntryHasDevice(nsCacheEntry * entry)
         if (mDiskDevice) {
             // Bypass the cache if Content-Length says the entry will be too big
             if (predictedDataSize != -1 &&
+                entry->StoragePolicy() != nsICache::STORE_ON_DISK_AS_FILE &&
                 mDiskDevice->EntryIsTooBig(predictedDataSize)) {
                 nsresult rv = nsCacheService::DoomEntry(entry);
                 NS_ASSERTION(NS_SUCCEEDED(rv),"DoomEntry() failed.");
