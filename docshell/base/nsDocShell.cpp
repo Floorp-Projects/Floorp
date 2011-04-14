@@ -49,7 +49,6 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsIComponentManager.h"
 #include "nsIContent.h"
-#include "nsIContentUtils.h"
 #include "mozilla/dom/Element.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -6491,11 +6490,9 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
   // too, of course.
   mFiredUnloadEvent = PR_FALSE;
 
-  nsCOMPtr<nsIContentUtils> cutils = do_GetService("@mozilla.org/content/contentutils;1");
-  if (!cutils)
-      return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDocumentLoaderFactory> docFactory =
+      nsContentUtils::FindInternalContentViewer("text/html");
 
-  nsCOMPtr<nsIDocumentLoaderFactory> docFactory = cutils->FindInternalContentViewer("text/html");
   if (docFactory) {
     // generate (about:blank) document to load
     docFactory->CreateBlankDocument(mLoadGroup, aPrincipal,
@@ -7520,13 +7517,8 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
 {
     nsCOMPtr<nsIChannel> aOpenedChannel = do_QueryInterface(request);
 
-    nsCOMPtr<nsIContentUtils> cutils = do_GetService("@mozilla.org/content/contentutils;1");
-    if (!cutils) {
-        return NS_ERROR_FAILURE;
-    }
-
     nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
-        cutils->FindInternalContentViewer(aContentType);
+        nsContentUtils::FindInternalContentViewer(aContentType);
     if (!docLoaderFactory) {
         return NS_ERROR_FAILURE;
     }
