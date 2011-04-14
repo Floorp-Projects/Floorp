@@ -231,13 +231,7 @@ public:
     TreeFragment* toTreeFragment();
 };
 
-#ifdef NJ_NO_VARIADIC_MACROS
-
-#define debug_only_stmt(action)            /* */
-static void debug_only_printf(int mask, const char *fmt, ...) JS_BEGIN_MACRO JS_END_MACRO
-#define debug_only_print0(mask, str)       JS_BEGIN_MACRO JS_END_MACRO
-
-#elif defined(JS_JIT_SPEW)
+#if defined(JS_JIT_SPEW)
 
 // Top level Nanojit config object.
 extern nanojit::Config NJConfig;
