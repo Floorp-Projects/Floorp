@@ -6486,23 +6486,37 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
 }
 #endif
 
-void
+static const Shape *
+LastConfigurableShape(JSObject *obj)
+{
+    for (Shape::Range r(obj->lastProperty()->all()); !r.empty(); r.popFront()) {
+        const Shape *shape = &r.front();
+        if (shape->configurable())
+            return shape;
+    }
+    return NULL;
+}
+
+bool
 js_ClearNative(JSContext *cx, JSObject *obj)
 {
-    /*
-     * Clear obj of all obj's properties. FIXME: we do not clear reserved slots
-     * lying below JSSLOT_FREE(clasp). JS_ClearScope does that.
-     */
-    if (!obj->nativeEmpty()) {
-        /* Now that we're done using real properties, clear obj. */
-        obj->clear(cx);
-
-        /* Clear slot values since obj->clear reset our shape to empty. */
-        uint32 freeslot = JSSLOT_FREE(obj->getClass());
-        uint32 n = obj->numSlots();
-        for (uint32 i = freeslot; i < n; ++i)
-            obj->setSlot(i, UndefinedValue());
+    /* Remove all configurable properties from obj. */
+    while (const Shape *shape = LastConfigurableShape(obj)) {
+        if (!obj->removeProperty(cx, shape->id))
+            return false;
     }
+
+    /* Set all remaining writable plain data properties to undefined. */
+    for (Shape::Range r(obj->lastProperty()->all()); !r.empty(); r.popFront()) {
+        const Shape *shape = &r.front();
+        if (shape->isDataDescriptor() &&
+            shape->writable() &&
+            shape->hasDefaultSetter() &&
+            obj->containsSlot(shape->slot)) {
+            obj->setSlot(shape->slot, UndefinedValue());
+        }
+    }
+    return true;
 }
 
 bool
