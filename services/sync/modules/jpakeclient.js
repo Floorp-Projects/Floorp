@@ -203,6 +203,11 @@ JPAKEClient.prototype = {
     this._log.debug("Aborting...");
     this._finished = true;
     let self = this;
+
+    // Default to "user aborted".
+    if (!error)
+      error = JPAKE_ERROR_USERABORT;
+
     if (error == JPAKE_ERROR_CHANNEL
         || error == JPAKE_ERROR_NETWORK
         || error == JPAKE_ERROR_NODATA) {
