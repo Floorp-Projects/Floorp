@@ -94,8 +94,6 @@ NS_NewDOMDocumentType(nsIDOMDocumentType** aDocType,
                       nsNodeInfoManager *aOwnerDoc,
                       nsIPrincipal *aPrincipal,
                       nsIAtom *aName,
-                      nsIDOMNamedNodeMap *aEntities,
-                      nsIDOMNamedNodeMap *aNotations,
                       const nsAString& aPublicId,
                       const nsAString& aSystemId,
                       const nsAString& aInternalSubset);
