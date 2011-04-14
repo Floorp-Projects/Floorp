@@ -20,6 +20,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=414796
 
 <pre id="test">
 <script class="testbody" type="text/javascript">
+
+// File constructors should not work from non-chrome code
+try {
+  var file = File("/etc/passwd");
+  ok(false, "Did not throw on unprivileged attempt to construct a File");
+} catch (e) {
+  ok(true, "Threw on an unprivileged attempt to construct a File");
+}
+
 const minFileSize = 20000;
 var fileNum = 1;
 var testRanCounter = 0;

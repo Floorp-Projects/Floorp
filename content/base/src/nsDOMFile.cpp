@@ -64,6 +64,7 @@
 #include "nsFileDataProtocolHandler.h"
 #include "nsStringStream.h"
 #include "CheckedInt.h"
+#include "nsJSUtils.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -143,6 +144,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMFile)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIDOMFile, mIsFullFile)
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
   NS_INTERFACE_MAP_ENTRY(nsICharsetDetectionObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIJSNativeInitializer)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(File, mIsFullFile)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO_CONDITIONAL(Blob, !mIsFullFile)
 NS_INTERFACE_MAP_END
@@ -162,6 +164,14 @@ DOMFileResult(nsresult rv)
   }
 
   return rv;
+}
+
+/* static */ nsresult
+nsDOMFile::NewFile(nsISupports* *aNewObject)
+{
+  nsCOMPtr<nsISupports> file = do_QueryObject(new nsDOMFile(nsnull));
+  file.forget(aNewObject);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -608,6 +618,48 @@ nsDOMFile::Notify(const char* aCharset, nsDetectionConfident aConf)
 {
   mCharset.Assign(aCharset);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMFile::Initialize(nsISupports* aOwner,
+                      JSContext* aCx,
+                      JSObject* aObj,
+                      PRUint32 aArgc,
+                      jsval* aArgv)
+{
+  if (!nsContentUtils::IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR; // Real short trip
+  }
+
+  NS_ENSURE_TRUE(aArgc > 0, NS_ERROR_UNEXPECTED);
+
+  // We expect to get a path to represent as a File object
+  if (!JSVAL_IS_STRING(aArgv[0]))
+    return NS_ERROR_UNEXPECTED;
+
+  JSString* str = JS_ValueToString(aCx, aArgv[0]);
+  NS_ENSURE_TRUE(str, NS_ERROR_XPC_BAD_CONVERT_JS);
+
+  nsDependentJSString xpcomStr;
+  if (!xpcomStr.init(aCx, str)) {
+    return NS_ERROR_XPC_BAD_CONVERT_JS;
+  }
+
+  nsCOMPtr<nsILocalFile> localFile;
+  nsresult rv = NS_NewLocalFile(xpcomStr,
+                                PR_FALSE, getter_AddRefs(localFile));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIFile> file = do_QueryInterface(localFile, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool exists;
+  rv = file->Exists(&exists);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(exists, NS_ERROR_FILE_NOT_FOUND);
+
+  mFile = file;
   return NS_OK;
 }
 
