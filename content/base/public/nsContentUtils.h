@@ -132,7 +132,6 @@ class nsPresContext;
 class nsIChannel;
 struct nsIntMargin;
 class nsPIDOMWindow;
-class nsIDocumentLoaderFactory;
 
 #ifndef have_PrefChangedFunc_typedef
 typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
@@ -1741,18 +1740,6 @@ public:
    * and XBL and false otherwise.
    */
   static bool AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal);
-
-  enum ContentViewerType
-  {
-      TYPE_UNSUPPORTED,
-      TYPE_CONTENT,
-      TYPE_PLUGIN,
-      TYPE_UNKNOWN
-  };
-
-  static already_AddRefed<nsIDocumentLoaderFactory>
-  FindInternalContentViewer(const char* aType,
-                            ContentViewerType* aLoaderType = nsnull);
 
 private:
   static PRBool InitializeEventTable();

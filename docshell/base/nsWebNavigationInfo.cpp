@@ -39,9 +39,9 @@
 #include "nsIWebNavigation.h"
 #include "nsString.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIContentUtils.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIPluginHost.h"
-#include "nsContentUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsWebNavigationInfo, nsIWebNavigationInfo)
 
@@ -110,25 +110,29 @@ nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType,
   NS_PRECONDITION(aIsSupported, "Null out param?");
 
 
-  nsContentUtils::ContentViewerType vtype = nsContentUtils::TYPE_UNSUPPORTED;
+  nsCOMPtr<nsIContentUtils> cutils = do_GetService("@mozilla.org/content/contentutils;1");
+  if (!cutils)
+      return NS_ERROR_FAILURE;
+
+  nsIContentUtils::ContentViewerType vtype = nsIContentUtils::TYPE_UNSUPPORTED;
 
   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory =
-    nsContentUtils::FindInternalContentViewer(aType.get(), &vtype);
-
+    cutils->FindInternalContentViewer(aType.get(), &vtype);
+  
   switch (vtype) {
-  case nsContentUtils::TYPE_UNSUPPORTED:
+  case nsIContentUtils::TYPE_UNSUPPORTED:
     *aIsSupported = nsIWebNavigationInfo::UNSUPPORTED;
     break;
 
-  case nsContentUtils::TYPE_PLUGIN:
+  case nsIContentUtils::TYPE_PLUGIN:
     *aIsSupported = nsIWebNavigationInfo::PLUGIN;
     break;
 
-  case nsContentUtils::TYPE_UNKNOWN:
+  case nsIContentUtils::TYPE_UNKNOWN:
     *aIsSupported = nsIWebNavigationInfo::OTHER;
     break;
 
-  case nsContentUtils::TYPE_CONTENT:
+  case nsIContentUtils::TYPE_CONTENT:
     PRBool isImage = PR_FALSE;
     mImgLoader->SupportImageWithMimeType(aType.get(), &isImage);
     if (isImage) {
@@ -139,6 +143,6 @@ nsWebNavigationInfo::IsTypeSupportedInternal(const nsCString& aType,
     }
     break;
   }
-
+  
   return NS_OK;
 }
