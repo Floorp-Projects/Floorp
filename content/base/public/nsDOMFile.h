@@ -44,6 +44,7 @@
 #include "nsIDOMFileList.h"
 #include "nsIDOMFileError.h"
 #include "nsIInputStream.h"
+#include "nsIJSNativeInitializer.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "mozilla/AutoRestore.h"
@@ -59,7 +60,8 @@ class nsIClassInfo;
 class nsDOMFile : public nsIDOMFile,
                   public nsIDOMBlob_MOZILLA_2_0_BRANCH,
                   public nsIXHRSendable,
-                  public nsICharsetDetectionObserver
+                  public nsICharsetDetectionObserver,
+                  public nsIJSNativeInitializer
 {
 public:
   NS_DECL_ISUPPORTS
@@ -97,6 +99,17 @@ public:
 
   // from nsICharsetDetectionObserver
   NS_IMETHOD Notify(const char *aCharset, nsDetectionConfident aConf);
+
+  // nsIJSNativeInitializer
+  NS_IMETHOD Initialize(nsISupports* aOwner,
+                        JSContext* aCx,
+                        JSObject* aObj,
+                        PRUint32 aArgc,
+                        jsval* aArgv);
+
+  // DOMClassInfo constructor (for File("foo"))
+  static nsresult
+  NewFile(nsISupports* *aNewObject);
 
 protected:
   nsCOMPtr<nsIFile> mFile;
