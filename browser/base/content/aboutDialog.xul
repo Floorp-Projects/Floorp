@@ -67,6 +67,7 @@
 #else
         title="&aboutDialog.title;"
 #endif
+        aria-describedby="version distribution distributionId"
         >
 
   <script type="application/javascript" src="chrome://browser/content/aboutDialog.js"/>
@@ -82,7 +83,7 @@
         <!-- Make sure the selectedIndex attribute is always set so that the CSS
              selectors for transitions work -->        
         <deck id="contentDeck" selectedIndex="0">
-          <vbox id="detailsBox">
+          <vbox id="detailsBox" aria-describedby="communityDesc contributeDesc">
             <vbox id="updateBox">
 #ifdef MOZ_UPDATER
               <deck id="updateDeck" orient="vertical">
@@ -119,10 +120,10 @@
             <description class="text-blurb" id="currentChannelText" hidden="true">
               &channel.description.start;<label id="currentChannel"/>&channel.description.end;<label id="channelChangeLink" class="text-link" onclick="gChannelSelector.show();">&channel.change;</label>
             </description>
-            <description class="text-blurb">
+            <description class="text-blurb" id="communityDesc">
               &community.start2;<label class="text-link" href="http://www.mozilla.org/">&community.mozillaLink;</label>&community.middle2;<label class="text-link" href="about:credits">&community.creditsLink;</label>&community.end2;
             </description>
-            <description class="text-blurb">
+            <description class="text-blurb" id="contributeDesc">
               &contribute.start;<label class="text-link" href="http://www.mozilla.org/contribute/">&contribute.getInvolvedLink;</label>&contribute.end;
             </description>
           </vbox>
@@ -130,7 +131,7 @@
           <vbox id="channelSelector">
             <hbox pack="start" align="center">
               <label id="channelSelectorStart">&channel.selector.start;</label>
-              <menulist id="channelMenulist" onselect="gChannelSelector.selectChannel(this.selectedItem);">
+              <menulist id="channelMenulist" onselect="gChannelSelector.selectChannel(this.selectedItem);" aria-labelledby="channelSelectorStart channelMenulist channelSelectorEnd">
                 <menupopup>
                   <menuitem id="releaseMenuitem" label="Release" value="release"/>
                   <menuitem id="betaMenuitem" label="Beta" value="beta"/>
@@ -138,7 +139,7 @@
                   <menuitem id="auroraMenuitem" label="Aurora" value="aurora"/>
                 </menupopup>
               </menulist>
-              <label>&channel.selector.end;</label>
+              <label id="channelSelectorEnd">&channel.selector.end;</label>
             </hbox>
 
             <deck id="channelDescriptionDeck" selectedIndex="0">
