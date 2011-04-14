@@ -87,7 +87,7 @@ public:
 
   // Returns state of xforms element taking into account state of instance node
   // that it is bound to.
-  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual PRUint64 NativeState();
 
   // Denies accessible nodes in anonymous content of xforms element by
   // always returning PR_FALSE value.
@@ -149,7 +149,7 @@ public:
   NS_IMETHOD GetAssociatedEditor(nsIEditor **aEditor);
 
   // nsAccessible
-  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual PRUint64 NativeState();
 };
 
 

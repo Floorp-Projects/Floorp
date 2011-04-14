@@ -55,7 +55,7 @@ interface nsIEditActionListener;
 interface nsIInlineSpellChecker;
 interface nsITransferable;
 
-[scriptable, uuid(78b0bde0-ab69-428b-ab30-fcc09eead499)]
+[scriptable, uuid(bd5d93f0-6451-11e0-ae3e-0800200c9a66)]
 
 interface nsIEditor  : nsISupports
 {
@@ -572,11 +572,7 @@ interface nsIEditor  : nsISupports
 
   /* checks if a node is read-only or not */
   [notxpcom] boolean isModifiableNode(in nsIDOMNode aNode);
-};
 
-[uuid(54c0bc08-6c0e-4967-bb0d-ec991d78a8b3)]
-interface nsIEditor_MOZILLA_2_0_BRANCH : nsISupports
-{
   /**
    * Will be set to true if the last keypress event that the editor has handled
    * has been trusted.  The value will only be valid when the edit action listeners

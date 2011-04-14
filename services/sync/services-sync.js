@@ -1,5 +1,4 @@
 pref("services.sync.serverURL", "https://auth.services.mozilla.com/");
-pref("services.sync.storageAPI", "1.0");
 pref("services.sync.userURL", "user/");
 pref("services.sync.miscURL", "misc/");
 pref("services.sync.termsURL", "https://services.mozilla.com/tos/");
@@ -9,6 +8,7 @@ pref("services.sync.syncKeyHelpURL", "https://services.mozilla.com/help/synckey"
 
 pref("services.sync.lastversion", "firstrun");
 pref("services.sync.autoconnect", true);
+pref("services.sync.sendVersionInfo", true);
 
 pref("services.sync.engine.bookmarks", true);
 pref("services.sync.engine.history", true);

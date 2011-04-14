@@ -33,6 +33,8 @@
    -   Dão Gottwald <dao@mozilla.com>
    -   Paul O’Shannessy <paul@oshannessy.com>
    -   Rob Arnold <tellrob@gmail.com>
+   -   Frank Yan <fyan@mozilla.com>
+   -   Patrick Walton <pcwalton@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -234,6 +236,7 @@
 
           this.moveTabTo(aTab, this._numPinnedTabs);
           aTab.setAttribute("pinned", "true");
+          this.tabContainer._unlockTabSizing();
           this.tabContainer._positionPinnedTabs();
           this.tabContainer.adjustTabstrip();
 
@@ -258,6 +261,7 @@
           aTab.setAttribute("fadein", "true");
           aTab.removeAttribute("pinned");
           aTab.style.MozMarginStart = "";
+          this.tabContainer._unlockTabSizing();
           this.tabContainer._positionPinnedTabs();
           this.tabContainer.adjustTabstrip();
 
@@ -1204,6 +1208,8 @@
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
 
+            this.tabContainer._unlockTabSizing();
+
             // When overflowing, new tabs are scrolled into view smoothly, which
             // doesn't go well together with the width transition. So we skip the
             // transition in that case.
@@ -1435,8 +1441,10 @@
         <parameter name="aParams"/>
         <body>
           <![CDATA[
-            if (aParams)
+            if (aParams) {
               var animate = aParams.animate;
+              var byMouse = aParams.byMouse;
+            }
 
             // Handle requests for synchronously removing an already
             // asynchronously closing tab.
@@ -1451,6 +1459,11 @@
             if (!this._beginRemoveTab(aTab, false, null, true))
               return;
 
+            if (!aTab.pinned && !aTab.hidden && aTab._fullyOpen && byMouse)
+              this.tabContainer._lockTabSizing(aTab);
+            else
+              this.tabContainer._unlockTabSizing();
+
             if (!animate /* the caller didn't opt in */ ||
                 isLastTab ||
                 aTab.pinned ||
@@ -1463,6 +1476,7 @@
             }
 
             this._blurTab(aTab);
+            aTab.style.maxWidth = ""; // ensure that fade-out transition happens
             aTab.removeAttribute("fadein");
 
             setTimeout(function (tab, tabbrowser) {
@@ -1637,6 +1651,10 @@
 
               // update tab close buttons state
               this.tabContainer.adjustTabstrip();
+
+              setTimeout(function(tabs) {
+                tabs._lastTabClosedByMouse = false;
+              }, 0, this.tabContainer);
             }
 
             // update first-tab/last-tab/beforeselected/afterselected attributes
@@ -2412,6 +2430,7 @@
           this.mPanelContainer.childNodes[0].id = uniqueId;
           this.mCurrentTab.linkedPanel = uniqueId;
           this.mCurrentTab._tPos = 0;
+          this.mCurrentTab._fullyOpen = true;
           this.mCurrentTab.linkedBrowser = this.mCurrentBrowser;
 
           // set up the shared autoscroll popup
@@ -2591,25 +2610,28 @@
     </implementation>
 
     <handlers>
-      <handler event="underflow"><![CDATA[
-         if (event.detail == 0)
-           return; // Ignore vertical events
+      <handler event="underflow" phase="capturing"><![CDATA[
+        if (event.detail == 0)
+          return; // Ignore vertical events
 
-         var tabs = document.getBindingParent(this);
-         tabs.removeAttribute("overflow");
+        var tabs = document.getBindingParent(this);
+        tabs.removeAttribute("overflow");
 
-         tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser.removeTab,
-                                               tabs.tabbrowser);
+        if (tabs._lastTabClosedByMouse)
+          tabs._expandSpacerBy(this._scrollButtonDown.clientWidth);
 
-         tabs._positionPinnedTabs();
+        tabs.tabbrowser._removingTabs.forEach(tabs.tabbrowser.removeTab,
+                                              tabs.tabbrowser);
+
+        tabs._positionPinnedTabs();
       ]]></handler>
       <handler event="overflow"><![CDATA[
-         if (event.detail == 0)
-           return; // Ignore vertical events
+        if (event.detail == 0)
+          return; // Ignore vertical events
 
-         var tabs = document.getBindingParent(this);
-         tabs.setAttribute("overflow", "true");
-         tabs._positionPinnedTabs();
+        var tabs = document.getBindingParent(this);
+        tabs.setAttribute("overflow", "true");
+        tabs._positionPinnedTabs();
       ]]></handler>
     </handlers>
   </binding>
@@ -2640,6 +2662,8 @@
                            command="cmd_newNavigatorTab"
                            onclick="checkForMiddleClick(this, event);"
                            tooltiptext="&newTabButton.tooltip;"/>
+        <xul:spacer class="closing-tabs-spacer" anonid="closing-tabs-spacer"
+                    style="width: 0;"/>
       </xul:arrowscrollbox>
     </content>
 
@@ -2811,6 +2835,104 @@
         ]]></body>
       </method>
 
+      <field name="_closingTabsSpacer">
+        document.getAnonymousElementByAttribute(this, "anonid", "closing-tabs-spacer");
+      </field>
+
+      <field name="_tabDefaultMaxWidth">NaN</field>
+      <field name="_lastTabClosedByMouse">false</field>
+      <field name="_hasTabTempMaxWidth">false</field>
+      <field name="_usingClosingTabsSpacer">false</field>
+
+      <!-- Try to keep the active tab's close button under the mouse cursor -->
+      <method name="_lockTabSizing">
+        <parameter name="aTab"/>
+        <body><![CDATA[
+          var tabs = this.tabbrowser.visibleTabs;
+          if (!tabs.length)
+            return;
+
+          var isEndTab = (aTab._tPos > tabs[tabs.length-1]._tPos);
+          var tabWidth = aTab.getBoundingClientRect().width;
+
+          if (!this._tabDefaultMaxWidth)
+            this._tabDefaultMaxWidth =
+              parseFloat(window.getComputedStyle(aTab).maxWidth);
+          this._lastTabClosedByMouse = true;
+
+          if (this.getAttribute("overflow") == "true") {
+            // Don't need to do anything if we're in overflow mode and aren't scrolled
+            // all the way to the right, or if we're closing the last tab.
+            if (isEndTab || !this.mTabstrip._scrollButtonDown.disabled)
+              return;
+
+            // If the tab has an owner that will become the active tab, the owner will
+            // be to the left of it, so we actually want the left tab to slide over.
+            // This can't be done as easily in non-overflow mode, so we don't bother.
+            if (aTab.owner)
+              return;
+
+            this._expandSpacerBy(tabWidth);
+          } else { // non-overflow mode
+            // Locking is neither in effect nor needed, so let tabs expand normally.
+            if (isEndTab && !this._hasTabTempMaxWidth)
+              return;
+
+            let numPinned = this.tabbrowser._numPinnedTabs;
+            // Force tabs to stay the same width, unless we're closing the last tab,
+            // which case we need to let them expand just enough so that the overall
+            // tabbar width is the same.
+            if (isEndTab) {
+              let numNormalTabs = tabs.length - numPinned;
+              tabWidth = tabWidth * (numNormalTabs + 1) / numNormalTabs;
+              if (tabWidth > this._tabDefaultMaxWidth)
+                tabWidth = this._tabDefaultMaxWidth;
+            }
+            tabWidth += "px";
+            for (let i = numPinned; i < tabs.length; i++) {
+              let tab = tabs[i];
+              tab.style.maxWidth = tabWidth;
+              if (!isEndTab) { // keep tabs the same width
+                tab.style.MozTransition = "none";
+                tab.clientTop; // flush styles to skip animation; see bug 649247
+                tab.style.MozTransition = "";
+              }
+            }
+            this._hasTabTempMaxWidth = true;
+            this.tabbrowser.addEventListener("mousemove", this, false);
+            window.addEventListener("mouseout", this, false);
+          }
+        ]]></body>
+      </method>
+
+      <method name="_expandSpacerBy">
+        <parameter name="pixels"/>
+        <body><![CDATA[
+          let spacer = this._closingTabsSpacer;
+          spacer.style.width = parseFloat(spacer.style.width) + pixels + "px";
+          this._usingClosingTabsSpacer = true;
+          this.tabbrowser.addEventListener("mousemove", this, false);
+          window.addEventListener("mouseout", this, false);
+        ]]></body>
+      </method>
+
+      <method name="_unlockTabSizing">
+        <body><![CDATA[
+          this.tabbrowser.removeEventListener("mousemove", this, false);
+          window.removeEventListener("mouseout", this, false);
+          if (this._hasTabTempMaxWidth) {
+            this._hasTabTempMaxWidth = false;
+            let tabs = this.tabbrowser.visibleTabs;
+            for (let i = 0; i < tabs.length; i++)
+              tabs[i].style.maxWidth = "";
+          }
+          if (this._usingClosingTabsSpacer) {
+            this._usingClosingTabsSpacer = false;
+            this._closingTabsSpacer.style.width = 0;
+          }
+        ]]></body>
+      </method>
+
       <method name="_positionPinnedTabs">
         <body><![CDATA[
           var numPinned = this.tabbrowser._numPinnedTabs;
@@ -2863,6 +2985,16 @@
                 this.mTabstripWidth = width;
               }
               this.tabbrowser.updateWindowResizers();
+              break;
+            case "mouseout":
+              // If the "related target" (the node to which the pointer went) is not
+              // a child of the current document, the mouse just left the window.
+              let relatedTarget = aEvent.relatedTarget;
+              if (relatedTarget && relatedTarget.ownerDocument == document)
+                break;
+            case "mousemove":
+              if (document.getElementById("tabContextMenu").state != "open")
+                this._unlockTabSizing();
               break;
           }
         ]]></body>
@@ -2999,8 +3131,9 @@
       <method name="_handleNewTab">
         <parameter name="tab"/>
         <body><![CDATA[
-          if (tab.parentNode != this)
+          if (tab.parentNode != this || tab._fullyOpen)
             return;
+          tab._fullyOpen = true;
 
           this.adjustTabstrip();
 
@@ -3019,7 +3152,7 @@
           this.mTabstrip._updateScrollButtonsDisabledState();
         ]]></body>
       </method>
-      
+
       <method name="_canAdvanceToTab">
         <parameter name="aTab"/>
         <body>
@@ -3073,7 +3206,7 @@
 
         if (event.target.localName == "tab") {
           if (this.childNodes.length > 1 || !this._closeWindowWithLastTab)
-            this.tabbrowser.removeTab(event.target, {animate: true});
+            this.tabbrowser.removeTab(event.target, {animate: true, byMouse: true});
         } else if (event.originalTarget.localName == "box") {
           BrowserOpenTab();
         } else {
@@ -3399,7 +3532,7 @@
         // Reset the "ignored click" flag
         this._ignoredClick = false;
 
-        tabContainer.tabbrowser.removeTab(bindingParent, {animate: true});
+        tabContainer.tabbrowser.removeTab(bindingParent, {animate: true, byMouse: true});
         tabContainer._blockDblClick = true;
 
         /* XXXmano hack (see bug 343628):
@@ -3487,6 +3620,7 @@
 
       <field name="mOverCloseButton">false</field>
       <field name="mCorrespondingMenuitem">null</field>
+      <field name="_fullyOpen">false</field>
     </implementation>
 
     <handlers>

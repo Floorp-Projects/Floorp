@@ -114,10 +114,9 @@ private:
 // nsJSScriptTimeoutHandler
 // QueryInterface implementation for nsJSScriptTimeoutHandler
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSScriptTimeoutHandler)
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsJSScriptTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSScriptTimeoutHandler)
   tmp->ReleaseJSObjects();
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSScriptTimeoutHandler)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSScriptTimeoutHandler)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
     nsCAutoString foo("nsJSScriptTimeoutHandler");
@@ -315,11 +314,9 @@ nsJSScriptTimeoutHandler::Init(nsGlobalWindow *aWindow, PRBool *aIsInterval,
 
     mExpr = expr;
 
-    nsIPrincipal *prin = aWindow->GetPrincipal();
-
     // Get the calling location.
     const char *filename;
-    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo, prin)) {
+    if (nsJSUtils::GetCallingLocation(cx, &filename, &mLineNo)) {
       mFileName.Assign(filename);
     }
   } else if (funobj) {

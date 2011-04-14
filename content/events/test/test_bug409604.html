@@ -22,14 +22,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
 
   var modifier = Components.interfaces.nsIDOMNSEvent.ALT_MASK |
                  Components.interfaces.nsIDOMNSEvent.SHIFT_MASK;
-  var expectedFocus = "d,g,h,k,l,m,n";
+  var expectedFocus = "a,c,d,e,f,g,h,i,j,k,l,m,n,p,x,y";
   // XXX the "map" test is causing trouble, see bug 433089
-  // var expectedClick = "a,b,c,e,f,i,j";
-  var expectedClick = "a,c,e,f,i,j";
   var focusArray = expectedFocus.split(",");
-  var clickArray = expectedClick.split(",");
-  var invalidElementId = "invalid";
-  var invalidTags = [
+  var unfocusableElementId = "invalid";
+  var unfocusableTags = [
       {tag: "abbr", content: "text", attribs: {title: "something"}},
       {tag: "acronym", content: "text", attribs: {title: "something"}},
       {tag: "address", content: "text"},
@@ -63,7 +60,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       {tag: "li", content: "text", parent: "ol"},
       {tag: "li", content: "text", parent: "ul"},
       {tag: "noscript", content: "text"},
-      {tag: "object", content: "text"},
       {tag: "ol", content: "<li>text</li>"},
       {tag: "optgroup", content: "<option>text</option>", attribs: {label: "some label"}, parent: "select"},
       {tag: "option", content: "text", parent: "select"},
@@ -71,7 +67,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       {tag: "pre", content: "text"},
       {tag: "q", content: "text"},
       {tag: "samp", content: "text"},
-      {tag: "select", content: "<option>text</option>"},
       {tag: "small", content: "text"},
       {tag: "span", content: "text"},
       {tag: "strong", content: "text"},
@@ -133,9 +128,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
 
   function handleClick(e) {
     ok("accessKey" in e, "(click) accesskey property not found on element");
-    var expected = clickArray.shift();
-    ok(expected == e.accessKey, "(click) unexpected element: " + e.accessKey +
-       " expected: " + expected);
   }
 
   function handleInvalid(e) {
@@ -154,19 +146,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
     utils.sendKeyEvent("keyup", key, key, modifier);
   }
 
-  function testValidElements() {
-    for (var code = "a".charCodeAt(0); code <= "o".charCodeAt(0); ++ code) {
+  function testFocusableElements() {
+    for (var code = "a".charCodeAt(0); code <= "y".charCodeAt(0); ++ code) {
       // XXX the "map" test is causing trouble, see bug 433089
       if (code == "b".charCodeAt(0))
         continue;
       pressAccessKey(code);
     }
     ok(focusArray.length == 0, "(focus) unhandled elements remaining: " + focusArray.join(","));
-    ok(clickArray.length == 0, "(click) unhandled elements remaining: " + clickArray.join(","));
   }
 
-  function createInvalidElement(elem, accesskey) {
-    ok("tag" in elem, "invalid object passed to createInvalidElement: " + elem.toString());
+  function createUnfocusableElement(elem, accesskey) {
+    ok("tag" in elem, "invalid object passed to createUnfocusableElement: " + elem.toString());
     var e = document.createElement(elem.tag);
     if ("content" in elem) {
       e.innerHTML = elem.content;
@@ -177,7 +168,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       }
     }
     e.setAttribute("accesskey", accesskey);
-    e.setAttribute("onclick", "handleInvalid(event.target); event.preventDefault();");
+    e.setAttribute("onclick", "handleClick(event.target); event.preventDefault();");
     e.setAttribute("onfocus", "handleInvalid(event.target);");
     var parent = null;
     var elementToInsert = null;
@@ -196,7 +187,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
     }
     ok(parent != null, "parent element not specified for element: " + elem.tag);
     ok(elementToInsert != null, "elementToInsert not specified for element: " + elem.tag);
-    elementToInsert.setAttribute("id", invalidElementId);
+    elementToInsert.setAttribute("id", unfocusableElementId);
     if ("where" in elem) {
       if (elem.where == "first") {
         parent.insertBefore(elementToInsert, parent.firstChild);
@@ -208,25 +199,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
     }
   }
 
-  function destroyInvalidElement() {
-    var el = document.getElementById(invalidElementId);
-    ok(el != null, "invalid element not found");
+  function destroyUnfocusableElement() {
+    var el = document.getElementById(unfocusableElementId);
+    ok(el != null, "unfocusable element not found");
     el.parentNode.removeChild(el);
-    ok(document.getElementById(invalidElementId) == null, "invalid element not properly removed");
+    ok(document.getElementById(unfocusableElementId) == null, "unfocusable element not properly removed");
   }
 
-  function testInvalidElements() {
+  function testUnfocusableElements() {
     var i, e;
-    for (i = 0; i < invalidTags.length; ++ i) {
-      createInvalidElement(invalidTags[i], "z");
+    for (i = 0; i < unfocusableTags.length; ++ i) {
+      createUnfocusableElement(unfocusableTags[i], "z");
       pressAccessKey("z".charCodeAt(0));
-      destroyInvalidElement();
+      destroyUnfocusableElement();
     }
     for (i = 0; i < invalidElements.length; ++ i) {
       e = document.getElementById(invalidElements[i]);
       ok(e != null, "element with ID " + invalidElements[i] + " not found");
       e.setAttribute("accesskey", "z");
-      e.setAttribute("onclick", "handleInvalid(event.target); event.preventDefault();");
+      e.setAttribute("onclick", "handleClick(event.target); event.preventDefault();");
       e.setAttribute("onfocus", "handleInvalid(event.target);");
       pressAccessKey("z".charCodeAt(0));
       e.removeAttribute("accesskey");
@@ -236,8 +227,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
   }
 
   function start() {
-    testValidElements();
-    testInvalidElements();
+    testFocusableElements();
+    testUnfocusableElements();
     setOrRestoreContentAccess(0);
     SimpleTest.finish();
   }
@@ -265,7 +256,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
         <col></col>
       </colgroup>
       <tr>
-        <td>a</td><td><a href="#" onclick="handleClick(event.target); return false;" accesskey="a">test link</a></td>
+        <td>a</td><td><a href="#" onclick="handleClick(event.target); return false;" accesskey="a" onfocus="handleFocus(event.target);">test link"</a></td>
       </tr>
 <!-- the "map" test is causing trouble, see bug 433089
       <tr>
@@ -276,48 +267,133 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=409604
       </tr>
 -->
       <tr>
-        <td>button</td><td><button onclick="handleClick(event.target);" accesskey="c">test button</button></td>
+        <td>button</td><td><button onclick="handleClick(event.target);" accesskey="c" onfocus="handleFocus(event.target);">test button"</button></td>
       </tr>
       <tr>
-        <td>input type="text"</td><td><input type="text" value="" onfocus="handleFocus(event.target);" accesskey="d"></td>
+        <td>input type="text"</td><td><input type="text" value="" onclick="handleClick(event.target);" onfocus="handleFocus(event.target);" accesskey="d"></td>
       </tr>
       <tr>
-        <td>input type="button"</td><td><input type="button" value="type='button'" onclick="handleClick(event.target);" accesskey="e"></td>
+        <td>input type="button"</td><td><input type="button" value="type='button'" onclick="handleClick(event.target);" onfocus="handleFocus(event.target);" accesskey="e"></td>
       </tr>
       <tr>
-        <td>input type="checkbox"</td><td><input type="checkbox" onclick="handleClick(event.target);" accesskey="f"></td>
+        <td>input type="checkbox"</td><td><input type="checkbox" onclick="handleClick(event.target);" onfocus="handleFocus(event.target)" accesskey="f"></td>
       </tr>
       <tr>
-        <td>input type="radio"</td><td><input type="radio" name="radio" onfocus="handleFocus(event.target);" accesskey="g"></td>
+        <td>input type="radio"</td><td><input type="radio" name="radio" onclick="handleClick(event.target);" onfocus="handleFocus(event.target);" accesskey="g"></td>
       </tr>
       <tr>
-        <td>input type="password"</td><td><input type="password" onfocus="handleFocus(event.target);" accesskey="h"></td>
+        <td>input type="password"</td><td><input type="password" onclick="handleClick(event.target);" onfocus="handleFocus(event.target);" accesskey="h"></td>
       </tr>
       <tr>
-        <td>input type="submit"</td><td><input type="submit" value="type='submit'" onclick="handleClick(event.target); return false;" accesskey="i"></td>
+        <td>input type="submit"</td><td><input type="submit" value="type='submit'" onclick="handleClick(event.target); return false;" 
+                                               onfocus="handleFocus(event.target);" accesskey="i"></td>
       </tr>
       <tr>
-        <td>input type="reset"</td><td><input type="submit" value="type='reset'" onclick="handleClick(event.target);" accesskey="j"></td>
+        <td>input type="reset"</td><td><input type="submit" value="type='reset'" onclick="handleClick(event.target);" 
+                                              onfocus="handleFocus(event.target);" accesskey="j"></td>
       </tr>
       <tr>
-        <td>label</td><td><label accesskey="k">test label
-                          <input type="text" value="test for label" onfocus="handleFocus(event.target);"></label></td>
+        <td>label</td><td><label accesskey="k" onclick="handleClick(event.target);" onfocus="handleInvalid(event.target);">test label
+                          <input type="text" value="test for label" onfocus="handleFocus(event.target);" onclick="handleClick(event.target);"></label></td>
       </tr>
       <tr>
         <td>legend</td><td><fieldset><legend accesskey="l">test legend</legend>
-                           <input type="text" value="test for legend" onfocus="handleFocus(event.target);"></fieldset></td>
+                           <input type="text" value="test for legend" onfocus="handleFocus(event.target);" onclick="handleClick(event.target);" ></fieldset></td>
       </tr>
       <tr>
-        <td>textarea</td><td><textarea onfocus="handleFocus(event.target);" accesskey="m">test text</textarea></td>
+        <td>textarea</td><td><textarea onfocus="handleFocus(event.target);" onclick="handleClick(event.target);" accesskey="m">test text</textarea></td>
       </tr>
       <tr>
-        <td>label (label invisible)</td><td><label for="txt1" accesskey="n" style="display:none">test label</label>
-                          <input type="text" id="txt1" value="test for label" onfocus="handleFocus(event.target);"></td>
+        <td>label (label invisible)</td><td><label for="txt1" accesskey="n" style="display:none"
+               onclick="handleClick(event.target);" onfocus="handleInvalid(event.target);">test label</label>
+                          <input type="text" id="txt1" value="test for label" onclick="handleClick(event.target);" onfocus="handleFocus(event.target);"></td>
       </tr>
       <tr>
-        <td>label (control invisible)</td><td><label for="txt2" accesskey="o">test label</label>
-                          <input type="text" id="txt2" value="test for label" onfocus="handleInvalid(event.target);" style="display:none"></td>
+        <td>label (control invisible)</td><td><label for="txt2" accesskey="o"
+               onclick="handleClick(event.target);" onfocus="handleInvalid(event.target);">test label</label>
+                          <input type="text" id="txt2" value="test for label" onclick="handleClick(event.target);" 
+                                 onfocus="handleInvalid(event.target);" style="display:none"></td>
       </tr>
+      <tr>
+        <td>select</td>
+        <td>
+            <select onclick="handleClick(event.target);" onfocus="handleFocus(event.target)" accesskey="p"><option>option</option></select>
+        </td>
+      </tr>
+      <tr>
+        <td>object</td>
+        <td>
+          <object onclick="handleClick(event.target);" onfocus="handleInvalid(event.target)" accesskey="q">an object</object>
+        </td>
+      </tr>
+      <tr>
+          <td>a without href</td>
+          <td>
+                <a onclick="handleClick(event.target);" onfocus="handleInvalid(event.target)" accesskey="r">an object</object>
+          </td>
+      </tr>
+      <tr>
+          <td>disabled button</td>
+          <td>
+              <button disabled="" onclick="handleClick(event.target);" onfocus="handleInvalid(event.target)" accesskey="s">disabled</button>
+          </td>
+      </tr>
+      <tr>
+          <td>disabled input</td>
+          <td>
+              <input disabled="" onclick="handleClick(event.target);" onfocus="handleInvalid(event.target)" accesskey="t"></input>
+          </td>
+      </tr>
+      <tr>
+          <td>hidden input</td>
+          <td>
+              <input type="hidden" onclick="handleClick(event.target);" onfocus="handleInvalid(event.target)" accesskey="u">disabled</input>
+          </td>
+      </tr>
+      <tr>
+          <td>disabled select</td>
+          <td>
+              <select disabled onclick="handleClick(event.target);" onfocus="handleInvalid(event.target)" accesskey="v">
+                  <option>disabled</option>
+              </select>
+          </td>
+      </tr>
+      <tr>
+          <td>disabled textarea</td>
+          <td>
+              <textarea disabled onclick="handleClick(event.target);" onfocus="handleInvalid(event.target)" accesskey="w">disabled</textarea>
+          </td>
+      </tr>
+      <tr>
+          <td>scrollable div(focusable)</td>
+          <td>
+              <div onclick="handleClick(event.target);" onfocus="handleFocus(event.target)" accesskey="x" style="height: 50px; overflow: auto;">
+                  The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy
+
+                  dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the
+
+                  lazy dog. The quick brown fox jumps over the lazy dog.
+                  The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy
+
+                  dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the
+
+                  lazy dog. The quick brown fox jumps over the lazy dog.
+                  The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy
+
+                  dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the
+
+                  lazy dog. The quick brown fox jumps over the lazy dog.
+                  </div>
+          </td>
+      </tr>
+      <tr>
+            <td>contenteditable div(focusable)</td>
+            <td>
+                <div onclick="handleClick(event.target);" onfocus="handleFocus(event.target)" accesskey="y" contenteditable="true">
+                    Test text.....
+                </div>
+            </td>
+        </tr>
     </tbody>
   </table>
   <dl id="dl"></dl>

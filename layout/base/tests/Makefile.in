@@ -140,6 +140,10 @@ _TEST_FILES =	\
 		     bug633044-1-ref.html \
 		     bug644428-1.html \
 		     bug644428-1-ref.html \
+		     bug646382-1.html \
+		     bug646382-1-ref.html \
+		     bug646382-2.html \
+		     bug646382-2-ref.html \
 		test_bug514127.html \
 		test_bug518777.html \
 		test_bug548545.xhtml \
@@ -327,6 +331,7 @@ _TEST_FILES += \
 		test_bug588174.html \
 		test_bug607529.html \
 		file_bug607529.html \
+		test_bug644768.html \
 		$(NULL)
 endif
 

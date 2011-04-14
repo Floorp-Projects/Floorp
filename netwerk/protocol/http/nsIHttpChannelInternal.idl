@@ -46,12 +46,12 @@ class nsCString;
 interface nsIURI;
 interface nsIProxyInfo;
 
-/** 
- * Dumping ground for http.  This interface will never be frozen.  If you are 
- * using any feature exposed by this interface, be aware that this interface 
+/**
+ * Dumping ground for http.  This interface will never be frozen.  If you are
+ * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(44e35ead-6656-4f9e-b51d-ebaf1bee6e2e)]
+[scriptable, uuid(12eb906a-71fe-4b79-b33a-6fe9ab57ea38)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -91,17 +91,58 @@ interface nsIHttpChannelInternal : nsISupports
     attribute boolean forceAllowThirdPartyCookie;
 
     /**
-     * Returns true iff the channel has been canceled.
+     * True iff the channel has been canceled.
      */
     readonly attribute boolean canceled;
 
     /**
-     * Lets externalhandler tell the channel it is open on behalf of a download
+     * External handlers may set this to true to notify the channel
+     * that it is open on behalf of a download.
      */
     attribute boolean channelIsForDownload;
 
     /**
-     * Transfer chain of redirected cache-keys 
+     * The local IP address to which this channel is bound, in the
+     * format produced by PR_NetAddrToString. May be IPv4 or IPv6.
+     * Note: in the presence of NAT, this may not be the same as the
+     * address that the remote host thinks it's talking to.
+     *
+     * May throw NS_ERROR_NOT_AVAILABLE if accessed when the channel's
+     * endpoints are not yet determined, or in any case when
+     * nsIHttpActivityObserver.isActive is false. See bugs 534698 and 526207.
+     */
+    readonly attribute AUTF8String localAddress;
+
+    /**
+     * The local port number to which this channel is bound.
+     *
+     * May throw NS_ERROR_NOT_AVAILABLE if accessed when the channel's
+     * endpoints are not yet determined, or in any case when
+     * nsIHttpActivityObserver.isActive is false. See bugs 534698 and 526207.
+     */
+    readonly attribute PRInt32 localPort;
+
+    /**
+     * The IP address of the remote host that this channel is
+     * connected to, in the format produced by PR_NetAddrToString.
+     *
+     * May throw NS_ERROR_NOT_AVAILABLE if accessed when the channel's
+     * endpoints are not yet determined, or in any case when
+     * nsIHttpActivityObserver.isActive is false. See bugs 534698 and 526207.
+     */
+    readonly attribute AUTF8String remoteAddress;
+
+    /**
+     * The remote port number that this channel is connected to.
+     *
+     * May throw NS_ERROR_NOT_AVAILABLE if accessed when the channel's
+     * endpoints are not yet determined, or in any case when
+     * nsIHttpActivityObserver.isActive is false. See bugs 534698 and 526207.
+     */
+    readonly attribute PRInt32 remotePort;
+
+    /**
+     * Transfer chain of redirected cache-keys.
      */
     [noscript] void setCacheKeysRedirectChain(in StringArray cacheKeys);
 };

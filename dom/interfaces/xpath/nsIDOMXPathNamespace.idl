@@ -42,7 +42,7 @@
 
 #include "nsIDOMNode.idl"
 
-[scriptable, uuid(75506f87-b504-11d5-a7f2-ca108ab8b6fc)]
+[scriptable, uuid(978f4c11-3b29-40af-8c29-a4e0689f2776)]
 interface nsIDOMXPathNamespace : nsIDOMNode
 {
   // XPathNodeType

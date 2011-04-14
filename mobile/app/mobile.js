@@ -395,9 +395,9 @@ pref("dom.max_script_run_time", 20);
 pref("devtools.errorconsole.enabled", false);
 
 // kinetic tweakables
-pref("browser.ui.kinetic.updateInterval", 30);
-pref("browser.ui.kinetic.decelerationRate", 20);
-pref("browser.ui.kinetic.speedSensitivity", 80);
+pref("browser.ui.kinetic.updateInterval", 16);
+pref("browser.ui.kinetic.exponentialC", 1400);
+pref("browser.ui.kinetic.polynomialC", 100);
 pref("browser.ui.kinetic.swipeLength", 160);
 
 // zooming
@@ -450,13 +450,6 @@ pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/beta/faq/");
 #else
 pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/mobile/features/");
 pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/mobile/faq/");
-#endif
-
-pref("app.promo.spark.baseURL", "http://spark.mozilla.org");
-#ifdef MOZ_OFFICIAL_BRANDING
-pref("app.promo.spark.endDate", "2011-05-01");
-#else
-pref("app.promo.spark.endDate", "2011-01-01");
 #endif
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
@@ -584,6 +577,12 @@ pref("indexedDB.feature.enabled", false);
 // prevent video elements from preloading too much data
 pref("media.preload.default", 1); // default to preload none
 pref("media.preload.auto", 2);    // preload metadata if preload=auto
+
+//  0: don't show fullscreen keyboard
+//  1: always show fullscreen keyboard
+// -1: show fullscreen keyboard based on threshold pref
+pref("widget.ime.android.landscape_fullscreen", 0);
+pref("widget.ime.android.fullscreen_threshold", 300); // in hundreths of inches
 
 // optimize images memory usage
 pref("image.mem.decodeondraw", true);

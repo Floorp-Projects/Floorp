@@ -171,11 +171,10 @@ let TabView = {
   show: function() {
     if (this.isVisible())
       return;
-    
+
+    let self = this;
     this._initFrame(function() {
-      let event = document.createEvent("Events");
-      event.initEvent("tabviewshow", false, false);
-      dispatchEvent(event);
+      self._window.UI.showTabView(true);
     });
   },
 
@@ -184,9 +183,7 @@ let TabView = {
     if (!this.isVisible())
       return;
 
-    let event = document.createEvent("Events");
-    event.initEvent("tabviewhide", false, false);
-    dispatchEvent(event);
+    this._window.UI.exit();
   },
 
   // ----------

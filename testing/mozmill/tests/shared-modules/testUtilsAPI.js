@@ -313,8 +313,8 @@ function getDefaultHomepage() {
  */
 function getEntity(urls, entityId)
 {
-  // Add xhtml11.dtd to prevent missing entity errors with XHTML files
-  urls.push("resource:///res/dtd/xhtml11.dtd");
+  // Add htmlmathml-f.ent to prevent missing entity errors with XHTML files
+  urls.push("resource:///res/dtd/htmlmathml-f.ent");
 
   // Build a string of external entities
   var extEntities = "";

@@ -538,7 +538,7 @@ nsXPConnect::ToParticipant(void *p)
 }
 
 NS_IMETHODIMP
-nsXPConnect::RootAndUnlinkJSObjects(void *p)
+nsXPConnect::Root(void *p)
 {
     return NS_OK;
 }
@@ -864,17 +864,15 @@ nsXPConnect::GetOutstandingRequests(JSContext* cx)
 class JSContextParticipant : public nsCycleCollectionParticipant
 {
 public:
-    NS_IMETHOD RootAndUnlinkJSObjects(void *n)
+    NS_IMETHOD Root(void *n)
     {
-        JSContext *cx = static_cast<JSContext*>(n);
-        NS_ASSERTION(cx->globalObject, "global object NULL before unlinking");
-        cx->globalObject = nsnull;
         return NS_OK;
     }
     NS_IMETHOD Unlink(void *n)
     {
-        // We must not unlink a JSContext because Root/Unroot don't ensure that
-        // the pointer is still valid.
+        JSContext *cx = static_cast<JSContext*>(n);
+        NS_ASSERTION(cx->globalObject, "global object NULL before unlinking");
+        cx->globalObject = nsnull;
         return NS_OK;
     }
     NS_IMETHOD Unroot(void *n)
@@ -2357,23 +2355,6 @@ nsXPConnect::JSToVariant(JSContext* ctx, const jsval &value, nsIVariant** _retva
     if(!(*_retval)) 
         return NS_ERROR_FAILURE;
 
-    return NS_OK;
-}
-
-/* void flagSystemFilenamePrefix (in string filenamePrefix,
- *                                in PRBool aWantNativeWrappers); */
-NS_IMETHODIMP 
-nsXPConnect::FlagSystemFilenamePrefix(const char *aFilenamePrefix,
-                                      PRBool aWantNativeWrappers)
-{
-    NS_PRECONDITION(aFilenamePrefix, "bad param");
-
-    JSRuntime* rt = GetRuntime()->GetJSRuntime();;
-    uint32 flags = JSFILENAME_SYSTEM;
-    if(aWantNativeWrappers)
-        flags |= JSFILENAME_PROTECTED;
-    if(!JS_FlagScriptFilenamePrefix(rt, aFilenamePrefix, flags))
-        return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
 }
 

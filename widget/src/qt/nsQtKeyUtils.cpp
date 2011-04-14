@@ -173,20 +173,13 @@ static struct nsKeyConverter nsKeycodes[] =
 };
 
 
-#define IS_XSUN_XSERVER(dpy) \
-    (strstr(XServerVendor(dpy), "Sun Microsystems") != NULL)
-
-// map Sun Keyboard special keysyms on to NS_VK keys
+#ifdef SOLARIS
 struct nsKeyConverter nsSunKeycodes[] = {
-    {NS_VK_ESCAPE, Qt::Key_F11 }, //bug 57262, Sun Stop key generates F11 keysym
     {NS_VK_F1, Qt::Key_Help }, //Mapping Help key to F1
     {NS_VK_F11, 0x1005ff10 }, //Sun F11 key generates SunF36(0x1005ff10) keysym
-    {NS_VK_F12, 0x1005ff11 }, //Sun F12 key generates SunF37(0x1005ff11) keysym
-    {NS_VK_PAGE_UP,    Qt::Key_F29 }, //KP_Prior
-    {NS_VK_PAGE_DOWN,  Qt::Key_F35 }, //KP_Next
-    {NS_VK_HOME,       Qt::Key_F27 }, //KP_Home
-    {NS_VK_END,        Qt::Key_F33 }, //KP_End
+    {NS_VK_F12, 0x1005ff11 }  //Sun F12 key generates SunF37(0x1005ff11) keysym
 };
+#endif
 
 int
 QtKeyCodeToDOMKeyCode(int aKeysym)
@@ -210,14 +203,14 @@ QtKeyCodeToDOMKeyCode(int aKeysym)
 //    if (aKeysym >= Qt::Key_KP_0 && aKeysym <= Qt::Key_KP_9)
 //        return aKeysym - Qt::Key_KP_0 + NS_VK_NUMPAD0;
 
+#ifdef SOLARIS
     // map Sun Keyboard special keysyms
-//    if (IS_XSUN_XSERVER(Qt::Key_DISPLAY())) {
-//        length = sizeof(nsSunKeycodes) / sizeof(struct nsKeyConverter);
-//        for (i = 0; i < length; i++) {
-//            if (nsSunKeycodes[i].keysym == aKeysym)
-//                return(nsSunKeycodes[i].vkCode);
-//        }
-//    }
+    length = sizeof(nsSunKeycodes) / sizeof(struct nsKeyConverter);
+    for (i = 0; i < length; i++) {
+        if (nsSunKeycodes[i].keysym == aKeysym)
+            return(nsSunKeycodes[i].vkCode);
+    }
+#endif
 
     // misc other things
     length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);

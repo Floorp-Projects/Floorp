@@ -1112,16 +1112,14 @@ nsJSContext::DestroyJSContext()
 
 // QueryInterface implementation for nsJSContext
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSContext)
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsJSContext)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
   NS_ASSERTION(!tmp->mContext || tmp->mContext->outstandingRequests == 0,
                "Trying to unlink a context with outstanding requests.");
   tmp->mIsInitialized = PR_FALSE;
   tmp->mGCOnDestruction = PR_FALSE;
   tmp->DestroyJSContext();
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
-NS_IMPL_CYCLE_COLLECTION_TRACE_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mGlobalObjectRef)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSContext)
@@ -1139,8 +1137,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSContext)
 NS_INTERFACE_MAP_END
 
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsJSContext, nsIScriptContext)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSContext, nsIScriptContext)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSContext)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSContext)
 
 nsrefcnt
 nsJSContext::GetCCRefcnt()
@@ -1906,32 +1904,29 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
     --mExecuteDepth;
 
     if (!ok) {
-      // Tell XPConnect about any pending exceptions. This is needed
-      // to avoid dropping JS exceptions in case we got here through
-      // nested calls through XPConnect.
-
-      ReportPendingException();
-
       // Don't pass back results from failed calls.
       rval = JSVAL_VOID;
 
       // Tell the caller that the handler threw an error.
       rv = NS_ERROR_FAILURE;
+    } else if (rval == JSVAL_NULL) {
+      *arv = nsnull;
+    } else if (!JS_WrapValue(mContext, &rval)) {
+      rv = NS_ERROR_FAILURE;
+    } else {
+      rv = nsContentUtils::XPConnect()->JSToVariant(mContext, rval, arv);
     }
+
+    // Tell XPConnect about any pending exceptions. This is needed
+    // to avoid dropping JS exceptions in case we got here through
+    // nested calls through XPConnect.
+    if (NS_FAILED(rv))
+      ReportPendingException();
 
     sSecurityManager->PopContextPrincipal(mContext);
   }
 
   pusher.Pop();
-
-  // Convert to variant before calling ScriptEvaluated, as it may GC, meaning
-  // we would need to root rval.
-  if (NS_SUCCEEDED(rv)) {
-    if (rval == JSVAL_NULL)
-      *arv = nsnull;
-    else
-      rv = nsContentUtils::XPConnect()->JSToVariant(mContext, rval, arv);
-  }
 
   // ScriptEvaluated needs to come after we pop the stack
   ScriptEvaluated(PR_TRUE);
@@ -2258,7 +2253,9 @@ nsresult
 nsJSContext::ConnectToInner(nsIScriptGlobalObject *aNewInner, void *aOuterGlobal)
 {
   NS_ENSURE_ARG(aNewInner);
+#ifdef DEBUG
   JSObject *newInnerJSObject = (JSObject *)aNewInner->GetScriptGlobal(JAVASCRIPT);
+#endif
   JSObject *outerGlobal = (JSObject *)aOuterGlobal;
 
   // Now that we're connecting the outer global to the inner one,
@@ -3984,10 +3981,9 @@ nsJSArgArray::ReleaseJSObjects()
 
 // QueryInterface implementation for nsJSArgArray
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSArgArray)
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsJSArgArray)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSArgArray)
   tmp->ReleaseJSObjects();
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-NS_IMPL_CYCLE_COLLECTION_UNLINK_0(nsJSArgArray)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSArgArray)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -4010,8 +4006,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSArgArray)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJSArgArray)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsJSArgArray, nsIJSArgArray)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSArgArray, nsIJSArgArray)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSArgArray)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSArgArray)
 
 nsresult
 nsJSArgArray::GetArgs(PRUint32 *argc, void **argv)
