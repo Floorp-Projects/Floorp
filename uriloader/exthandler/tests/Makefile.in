@@ -75,5 +75,7 @@ export PERSONAL_MAILCAP=$(shell cd $(srcdir) && pwd)/mailcap
 endif
 
 # need the executable for running the xpcshell unit tests
+ifneq (,$(SIMPLE_PROGRAMS))
 libs::
 	$(INSTALL) $(SIMPLE_PROGRAMS) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
+endif
