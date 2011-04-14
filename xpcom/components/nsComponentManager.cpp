@@ -1324,6 +1324,7 @@ FreeFactoryEntries(const nsID& aCID,
 {
     aEntry->mFactory = NULL;
     aEntry->mServiceObject = NULL;
+    delete aEntry;
     return PL_DHASH_NEXT;
 }
 
@@ -1797,6 +1798,7 @@ nsComponentManagerImpl::UnregisterFactory(const nsCID& aClass,
         // nsFactoryEntry::GetFactory)
         f->mFactory.swap(dyingFactory);
         f->mServiceObject.swap(dyingServiceObject);
+        delete f;
     }
 
     return NS_OK;
@@ -1941,6 +1943,7 @@ nsFactoryEntry::nsFactoryEntry(const mozilla::Module::CIDEntry* entry,
     : mCIDEntry(entry)
     , mModule(module)
 {
+    MOZ_COUNT_CTOR(nsFactoryEntry);
 }
 
 nsFactoryEntry::nsFactoryEntry(const nsCID& aCID, nsIFactory* factory)
@@ -1948,6 +1951,7 @@ nsFactoryEntry::nsFactoryEntry(const nsCID& aCID, nsIFactory* factory)
     , mModule(NULL)
     , mFactory(factory)
 {
+    MOZ_COUNT_CTOR(nsFactoryEntry);
     mozilla::Module::CIDEntry* e = new mozilla::Module::CIDEntry();
     nsCID* cid = new nsCID;
     *cid = aCID;
@@ -1962,6 +1966,7 @@ nsFactoryEntry::~nsFactoryEntry()
         delete mCIDEntry->cid;
         delete mCIDEntry;
     }
+    MOZ_COUNT_DTOR(nsFactoryEntry);
 }
 
 already_AddRefed<nsIFactory>
