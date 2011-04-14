@@ -262,16 +262,18 @@ function test_abort_receiver(next) {
       do_throw("onComplete shouldn't be called.");
     },
     onAbort: function onAbort(error) {
-      // Manual abort = no error
-      do_check_eq(error, undefined);
-      // Ensure channel was cleared, no error report.
+      // Manual abort = userabort.
+      do_check_eq(error, JPAKE_ERROR_USERABORT);
+      // Ensure channel was cleared.
       do_check_eq(channels[this.cid].data, undefined);
-      do_check_eq(error_report, undefined);
+      do_check_eq(error_report, JPAKE_ERROR_USERABORT);
+      error_report = undefined;
       next();
     },
     displayPIN: function displayPIN(pin) {
       this.cid = pin.slice(JPAKE_LENGTH_SECRET);
-      Utils.delay(function() { rec.abort(); }, 0, this, "_timer");
+      Utils.delay(function() { rec.abort(); },
+                  0, this, "_timer");
     }
   });
   rec.receiveNoPIN();
@@ -286,8 +288,10 @@ function test_abort_sender(next) {
       do_throw("displayPIN shouldn't have been called!");
     },
     onAbort: function onAbort(error) {
-      // Manual abort == no error.
-      do_check_eq(error, undefined);
+      // Manual abort == userabort.
+      do_check_eq(error, JPAKE_ERROR_USERABORT);
+      do_check_eq(error_report, JPAKE_ERROR_USERABORT);
+      error_report = undefined;
     },
     onComplete: function onComplete() {
       do_throw("Shouldn't have completed!");
@@ -310,8 +314,8 @@ function test_abort_sender(next) {
       this.cid = pin.slice(JPAKE_LENGTH_SECRET);
       Utils.delay(function() { snd.sendWithPIN(pin, DATA); }, 0,
                   this, "_timer");
-      Utils.delay(function() { snd.abort(); }, POLLINTERVAL,
-                  this, "_abortTimer");
+      Utils.delay(function() { snd.abort(); },
+                  POLLINTERVAL, this, "_abortTimer");
     }
   });
   rec.receiveNoPIN();
