@@ -428,6 +428,7 @@ class Compiler : public BaseCompiler
     bool isConstructing;
 
     JSObject *globalObj;
+    Value *globalSlots;
 
     /* Existing frames on the stack whose slots may need to be updated. */
     const Vector<PatchableFrame> *patchFrames;
