@@ -361,6 +361,11 @@ ifeq (,$(filter-out WINNT WINCE,$(HOST_OS_ARCH)))
 HOST_PDBFILE=$(basename $(@F)).pdb
 endif
 
+# Don't build SIMPLE_PROGRAMS during the MOZ_PROFILE_GENERATE pass
+ifdef MOZ_PROFILE_GENERATE
+SIMPLE_PROGRAMS :=
+endif
+
 ifndef TARGETS
 TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(JAVA_LIBRARY)
 endif
@@ -1701,7 +1706,7 @@ endif
 
 endif # SDK_LIBRARY
 
-ifneq (,$(SDK_BINARY))
+ifneq (,$(strip $(SDK_BINARY)))
 $(SDK_BIN_DIR)::
 	$(NSINSTALL) -D $@
 
