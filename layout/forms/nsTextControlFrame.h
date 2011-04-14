@@ -205,16 +205,16 @@ public: //for methods who access nsTextControlFrame directly
     ValueSetter(nsTextControlFrame* aFrame,
                 PRBool aHasFocusValue)
       : mFrame(aFrame)
-      , mInited(PR_FALSE)
-    {
-      NS_ASSERTION(aFrame, "Should pass a valid frame");
-
       // This method isn't used for user-generated changes, except for calls
       // from nsFileControlFrame which sets mFireChangeEventState==true and
       // restores it afterwards (ie. we want 'change' events for those changes).
       // Focused value must be updated to prevent incorrect 'change' events,
       // but only if user hasn't changed the value.
-      mFocusValueInit = !mFrame->mFireChangeEventState && aHasFocusValue;
+      , mFocusValueInit(!mFrame->mFireChangeEventState && aHasFocusValue)
+      , mOuterTransaction(false)
+      , mInited(false)
+    {
+      NS_ASSERTION(aFrame, "Should pass a valid frame");
     }
     void Cancel() {
       mInited = PR_FALSE;
