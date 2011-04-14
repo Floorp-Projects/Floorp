@@ -90,11 +90,7 @@ endif # BUILD_STATIC_LIBS
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
-ifdef WINCE
-WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
-else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
-endif
 endif
 endif #LIBXUL_SDK
 
@@ -134,13 +130,6 @@ ifeq (http,$(patsubst http%,http,$(SOURCE_REPO)))
 DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
 endif
 
-ifdef WINCE
-DEFINES += -DWINCE=1
-endif
-
-ifeq ($(OS_ARCH),WINCE)
-REDIT_PATH = $(LIBXUL_DIST)/host/bin
-endif
 ifeq ($(OS_ARCH),WINNT)
 REDIT_PATH = $(LIBXUL_DIST)/bin
 endif
@@ -196,9 +185,6 @@ ifdef LIBXUL_SDK
 endif
 ifdef MOZ_FASTSTART
 ifdef _MSC_VER
-ifdef WINCE
-	cp $(LIBXUL_DIST)/bin/faststartstub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY_FASTSTART)
-endif
 endif
 endif
 ifndef SKIP_COPY_XULRUNNER
@@ -210,7 +196,7 @@ endif # SKIP_COPY_XULRUNNER
 
 	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
 
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/$(APP_ICON).ico $(DIST)/bin/chrome/icons/default/$(APP_ICON).ico
 	cp $(srcdir)/$(APP_SPLASH).bmp $(DIST)/bin/$(APP_SPLASH).bmp
 	$(REDIT_PATH)/redit$(HOST_BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY) $(srcdir)/$(APP_ICON).ico
