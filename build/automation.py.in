@@ -634,10 +634,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       pExitCode = ctypes.wintypes.DWORD()
       ctypes.windll.kernel32.GetExitCodeProcess(pHandle, ctypes.byref(pExitCode))
       ctypes.windll.kernel32.CloseHandle(pHandle)
-      if (pExitCode.value == STILL_ACTIVE):
-        return True
-      else:
-        return False
+      return pExitCode.value == STILL_ACTIVE
 
     def killPid(self, pid):
       PROCESS_TERMINATE = 0x0001
@@ -668,10 +665,7 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
         # Wait on it to see if it's a zombie. This can throw OSError.ECHILD if
         # the process terminates before we get to this point.
         wpid, wstatus = os.waitpid(pid, os.WNOHANG)
-        if wpid == 0:
-          return True
-
-        return False
+        return wpid == 0
       except OSError, err:
         # Catch the errors we might expect from os.kill/os.waitpid, 
         # and re-raise any others
@@ -928,16 +922,18 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
                  this is the name of the folder in the <profileDir>/extensions/<extensionID>
   """
   def installExtension(self, extensionSource, profileDir, extensionID):
-    if (not os.path.exists(extensionSource)):
+    if not os.path.exists(extensionSource):
       self.log.info("INFO | automation.py | Cannot install extension no source at: %s", extensionSource) 
       return
       
-    if (not os.path.exists(profileDir)):
+    if not os.path.exists(profileDir):
       self.log.info("INFO | automation.py | Cannot install extension invalid profileDir at: %s", profileDir)
       return
 
     # See if we have an XPI or a directory
-    if (os.path.isfile(extensionSource)):
+    tmpd = None
+    if os.path.isfile(extensionSource):
+      # shutil.copytree() needs a directory as source.
       tmpd = tempfile.mkdtemp()
       extrootdir = self.extractZip(extensionSource, tmpd)
     else:
@@ -948,6 +944,11 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
     # Now we copy the extension source into the extnshome
     shutil.copytree(extrootdir, extnshome)
 
+    # Remove (temporary) extracted XPI directory.
+    if tmpd:
+      # Ignore (unlikely) error, as nothing can be done about it.
+      shutil.rmtree(tmpd, True)
+
   def extractZip(self, filename, dest):
     z = zipfile.ZipFile(filename, 'r')
     for n in z.namelist():
@@ -955,7 +956,8 @@ user_pref("camino.use_system_proxy_settings", false); // Camino-only, harmless t
       parentdir = os.path.dirname(fullpath)
       if not os.path.isdir(parentdir):
         os.makedirs(parentdir)
-      if (not n.endswith(os.sep)):
+      # Windows too returns '/', not os.sep ('\').
+      if not n.endswith('/'):
         data = z.read(n)
         f = open(fullpath, 'w')
         f.write(data)
