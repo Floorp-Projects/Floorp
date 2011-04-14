@@ -1004,7 +1004,7 @@ nsresult nsMediaFileStream::Open(nsIStreamListener** aStreamListener)
     *aStreamListener = nsnull;
   }
 
-  nsresult rv;
+  nsresult rv = NS_OK;
   if (aStreamListener) {
     // The channel is already open. We need a synchronous stream that
     // implements nsISeekableStream, so we have to find the underlying
