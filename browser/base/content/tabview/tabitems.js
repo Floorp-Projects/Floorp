@@ -1143,7 +1143,7 @@ let TabItems = {
   _checkHeartbeat: function TabItems__checkHeartbeat() {
     this._heartbeat = null;
 
-    if (this.isPaintingPaused() || !UI.isIdle())
+    if (this.isPaintingPaused() || !UI.isIdle)
       return;
 
     let accumTime = 0;
