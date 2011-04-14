@@ -1441,8 +1441,8 @@ nsDOMImplementation::CreateDocumentType(const nsAString& aQualifiedName,
   // Indicate that there is no internal subset (not just an empty one)
   nsAutoString voidString;
   voidString.SetIsVoid(PR_TRUE);
-  return NS_NewDOMDocumentType(aReturn, nsnull, mPrincipal, name, nsnull,
-                               nsnull, aPublicId, aSystemId, voidString);
+  return NS_NewDOMDocumentType(aReturn, nsnull, mPrincipal, name, aPublicId,
+                               aSystemId, voidString);
 }
 
 NS_IMETHODIMP
@@ -1507,8 +1507,6 @@ nsDOMImplementation::CreateHTMLDocument(const nsAString& aTitle,
                                       NULL, // aNodeInfoManager
                                       mPrincipal, // aPrincipal
                                       nsGkAtoms::html, // aName
-                                      NULL, // aEntities
-                                      NULL, // aNotations
                                       EmptyString(), // aPublicId
                                       EmptyString(), // aSystemId
                                       voidString); // aInternalSubset
