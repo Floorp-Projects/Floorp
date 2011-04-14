@@ -144,28 +144,6 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
 
   gfxASurface::gfxImageFormat format = GetOffscreenFormat();
 
-  // 'prescale' is true if the scaling is to be done as part of the
-  // YCbCr to RGB conversion rather than on the RGB data when rendered.
-  PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0;
-  if (format == gfxASurface::ImageFormatRGB16_565) {
-    if (have_ycbcr_to_rgb565()) {
-      // yuv2rgb16 with scale function not yet available for NEON
-      prescale = PR_FALSE;
-    } else {
-      // yuv2rgb16 function not yet available for non-NEON
-      format = gfxASurface::ImageFormatRGB24;
-    }
-  }
-  gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
-                  prescale ? mScaleHint.height : aData.mPicSize.height);
-
-  mStride = gfxASurface::FormatStrideForWidth(format, size.width);
-  mBuffer = new PRUint8[size.height * mStride];
-  if (!mBuffer) {
-    // out of memory
-    return;
-  }
-
   gfx::YUVType type = gfx::YV12;
   if (aData.mYSize.width == aData.mCbCrSize.width &&
       aData.mYSize.height == aData.mCbCrSize.height) {
@@ -182,7 +160,41 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   else {
     NS_ERROR("YCbCr format not supported");
   }
- 
+
+  // 'prescale' is true if the scaling is to be done as part of the
+  // YCbCr to RGB conversion rather than on the RGB data when rendered.
+  // We don't prescale if the image has an offset. See bug 639415.
+  PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0 &&
+                    aData.mPicX == 0 && aData.mPicY == 0;
+  if (format == gfxASurface::ImageFormatRGB16_565) {
+#if defined(HAVE_YCBCR_TO_RGB565)
+    if (prescale && gfx::IsConvertYCbCrToRGB565Fast(aData.mPicX,
+                                                    aData.mPicY,
+                                                    aData.mPicSize.width,
+                                                    aData.mPicSize.height,
+                                                    type)) {
+      // yuv2rgb16 with scale function not yet available for NEON
+      prescale = PR_FALSE;
+    } else
+#endif
+    {
+      // yuv2rgb16 function not yet available for non-NEON, and currently
+      // using it requires a number of extra graphics operations, so it's
+      // probably better to fall back to 24-bit RGB.
+      // See https://bugzilla.mozilla.org/show_bug.cgi?id=641196
+      format = gfxASurface::ImageFormatRGB24;
+    }
+  }
+  gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
+                  prescale ? mScaleHint.height : aData.mPicSize.height);
+
+  mStride = gfxASurface::FormatStrideForWidth(format, size.width);
+  mBuffer = new PRUint8[size.height * mStride];
+  if (!mBuffer) {
+    // out of memory
+    return;
+  }
+
   // Convert from YCbCr to RGB now, scaling the image if needed.
   if (size != aData.mPicSize) {
     if (format == gfxASurface::ImageFormatRGB24) {
@@ -204,8 +216,8 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
        NS_ERROR("Fail, ScaleYCbCrToRGB format not supported\n");
     }
   } else { // no prescale
+#if defined(HAVE_YCBCR_TO_RGB565)
     if (format == gfxASurface::ImageFormatRGB16_565) {
-      NS_ASSERTION(have_ycbcr_to_rgb565(), "Cannot convert YCbCr to RGB565");
       gfx::ConvertYCbCrToRGB565(aData.mYChannel,
                                 aData.mCbChannel,
                                 aData.mCrChannel,
@@ -218,7 +230,8 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                                 aData.mCbCrStride,
                                 mStride,
                                 type);
-    } else { // format != gfxASurface::ImageFormatRGB16_565
+    } else // format != gfxASurface::ImageFormatRGB16_565
+#endif
       gfx::ConvertYCbCrToRGB32(aData.mYChannel,
                                aData.mCbChannel,
                                aData.mCrChannel,
@@ -231,7 +244,6 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                                aData.mCbCrStride,
                                mStride,
                                type);
-    }
   }
   SetOffscreenFormat(format);
   mSize = size;

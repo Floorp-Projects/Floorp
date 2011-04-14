@@ -260,7 +260,7 @@ JS_END_EXTERN_C
 #ifdef __cplusplus
 
 /* 
- * User guide to memory memangement within SpiderMonkey:
+ * User guide to memory management within SpiderMonkey:
  *
  * Quick tips:
  *

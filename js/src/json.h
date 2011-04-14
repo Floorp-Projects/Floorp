@@ -134,4 +134,12 @@ js_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len
 extern bool
 js_FinishJSONParse(JSContext *cx, JSONParser *jp, const js::Value &reviver);
 
+namespace js {
+
+extern JS_FRIEND_API(JSBool)
+ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, const Value &filter,
+                     Value *vp, DecodingMode decodingMode = STRICT);
+
+} /* namespace js */
+
 #endif /* json_h___ */

@@ -688,6 +688,12 @@ nsContentUtils::InitializeEventTable() {
     { nsGkAtoms::onMozTouchUp,                  NS_MOZTOUCH_UP, EventNameType_None, NS_MOZTOUCH_EVENT },
 
     { nsGkAtoms::ontransitionend,               NS_TRANSITION_END, EventNameType_None, NS_TRANSITION_EVENT }
+#ifdef MOZ_CSS_ANIMATIONS
+    ,
+    { nsGkAtoms::onanimationstart,              NS_ANIMATION_START, EventNameType_None, NS_ANIMATION_EVENT },
+    { nsGkAtoms::onanimationend,                NS_ANIMATION_END, EventNameType_None, NS_ANIMATION_EVENT },
+    { nsGkAtoms::onanimationiteration,          NS_ANIMATION_ITERATION, EventNameType_None, NS_ANIMATION_EVENT }
+#endif
   };
 
   sAtomEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
@@ -6514,21 +6520,3 @@ nsIContentUtils2::CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChann
 {
   return nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
 }
-
-#ifndef MOZ_ENABLE_LIBXUL
-
-NS_IMPL_ISUPPORTS1(nsIContentUtils_MOZILLA_2_0_BRANCH, nsIContentUtils_MOZILLA_2_0_BRANCH)
-
-nsresult
-nsIContentUtils_MOZILLA_2_0_BRANCH::DispatchTrustedEvent(nsIDocument* aDoc,
-                                                         nsISupports* aTarget,
-                                                         const nsAString& aEventName,
-                                                         PRBool aCanBubble,
-                                                         PRBool aCancelable,
-                                                         PRBool *aDefaultAction)
-{
-  return nsContentUtils::DispatchTrustedEvent(aDoc, aTarget, aEventName,
-                                              aCanBubble, aCancelable, aDefaultAction);
-}
-
-#endif

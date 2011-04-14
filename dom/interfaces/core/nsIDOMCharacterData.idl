@@ -47,7 +47,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(a6cf9072-15b3-11d2-932e-00805f8add32)]
+[scriptable, uuid(6ce64178-d600-4e5e-a33a-5bde69f05bd5)]
 interface nsIDOMCharacterData : nsIDOMNode
 {
            attribute DOMString            data;

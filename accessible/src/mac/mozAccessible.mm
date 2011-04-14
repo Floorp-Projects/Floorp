@@ -548,16 +548,12 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 - (BOOL)isFocused
 {
-  PRUint32 state = 0;
-  mGeckoAccessible->GetState (&state, nsnull);
-  return (state & nsIAccessibleStates::STATE_FOCUSED) != 0;
+  return (mGeckoAccessible->State() & states::FOCUSED) != 0;
 }
 
 - (BOOL)canBeFocused
 {
-  PRUint32 state = 0;
-  mGeckoAccessible->GetState (&state, nsnull);
-  return (state & nsIAccessibleStates::STATE_FOCUSABLE) != 0;
+  return mGeckoAccessible->State() & states::FOCUSABLE;
 }
 
 - (BOOL)focus
@@ -568,9 +564,7 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 
 - (BOOL)isEnabled
 {
-  PRUint32 state = 0;
-  mGeckoAccessible->GetState (&state, nsnull);
-  return (state & nsIAccessibleStates::STATE_UNAVAILABLE) == 0;
+  return (mGeckoAccessible->State() & states::UNAVAILABLE) == 0;
 }
 
 // The root accessible calls this when the focused node was

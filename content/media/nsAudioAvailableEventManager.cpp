@@ -39,8 +39,8 @@
 
 #include "nsTArray.h"
 #include "nsAudioAvailableEventManager.h"
+#include "VideoUtils.h"
 
-#define MILLISECONDS_PER_SECOND 1000.0f
 #define MAX_PENDING_EVENTS 100
 
 using namespace mozilla;
@@ -82,6 +82,7 @@ nsAudioAvailableEventManager::nsAudioAvailableEventManager(nsBuiltinDecoder* aDe
   mDecoder(aDecoder),
   mSignalBuffer(new float[mDecoder->GetFrameBufferLength()]),
   mSignalBufferLength(mDecoder->GetFrameBufferLength()),
+  mNewSignalBufferLength(mSignalBufferLength),
   mSignalBufferPosition(0),
   mMonitor("media.audioavailableeventmanager")
 {
@@ -106,7 +107,7 @@ void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
   while (mPendingEvents.Length() > 0) {
     nsAudioAvailableEventRunner* e =
       (nsAudioAvailableEventRunner*)mPendingEvents[0].get();
-    if (e->mTime * MILLISECONDS_PER_SECOND > aCurrentTime) {
+    if (e->mTime * USECS_PER_S > aCurrentTime) {
       break;
     }
     nsCOMPtr<nsIRunnable> event = mPendingEvents[0];
@@ -119,7 +120,9 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
                                                          PRUint32 aAudioDataLength,
                                                          PRUint64 aEndTimeSampleOffset)
 {
-  PRUint32 currentBufferSize = mDecoder->GetFrameBufferLength();
+  MonitorAutoEnter mon(mMonitor);
+
+  PRUint32 currentBufferSize = mNewSignalBufferLength;
   if (currentBufferSize == 0) {
     NS_WARNING("Decoder framebuffer length not set.");
     return;
@@ -154,8 +157,6 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
     }
     audioData += signalBufferTail;
     audioDataLength -= signalBufferTail;
-
-    MonitorAutoEnter mon(mMonitor);
 
     if (mPendingEvents.Length() > 0) {
       // Check last event timecode to make sure that all queued events
@@ -227,7 +228,7 @@ void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
          (mSignalBufferLength - mSignalBufferPosition) * sizeof(float));
 
   // Force this last event to go now.
-  float time = (aEndTime / MILLISECONDS_PER_SECOND) - 
+  float time = (aEndTime / static_cast<float>(USECS_PER_S)) - 
                (mSignalBufferPosition / mSamplesPerSecond);
   nsCOMPtr<nsIRunnable> lastEvent =
     new nsAudioAvailableEventRunner(mDecoder, mSignalBuffer.forget(),
@@ -236,3 +237,11 @@ void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
 
   mSignalBufferPosition = 0;
 }
+
+void nsAudioAvailableEventManager::SetSignalBufferLength(PRUint32 aLength)
+{
+  MonitorAutoEnter mon(mMonitor);
+
+  mNewSignalBufferLength = aLength;
+}
+

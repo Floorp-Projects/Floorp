@@ -254,23 +254,12 @@ interface nsIPluginInstance : nsISupports
     void notifyPainted();
 
     /**
-     * This should return a valid gfxASurface pointer, or null if there is nothing to render yet.
-     * NO LONGER USED. Do not call.
-     */
-    void getSurface(out gfxASurfacePtr aSurface);
-
-    /**
      * @return true if plugin module supports async rendering
      */
     PRBool useAsyncPainting();
-};
 
-
-// XXX kill me after branching
-[noscript, uuid(24235105-ac5f-483b-86ec-7c9446ddcb8a)]
-interface nsIPluginInstance_MOZILLA_2_0_BRANCH : nsIPluginInstance
-{
     PRBool isRemoteDrawingCoreAnimation();
+
     /**
      * Returns a new Image object which draws an asynchronously-rendered
      * plugin. The Image is created using aContainer.
@@ -278,6 +267,7 @@ interface nsIPluginInstance_MOZILLA_2_0_BRANCH : nsIPluginInstance
      * been received, or if the plugin is not using async rendering.
      */
     void getImage(in ImageContainerPtr aContainer, out ImagePtr aImage);
+
     /**
      * Returns the size of the Image object that would be created if we called
      * getImage.
@@ -285,6 +275,7 @@ interface nsIPluginInstance_MOZILLA_2_0_BRANCH : nsIPluginInstance
      * been received, or if the plugin is not using async rendering.
      */
     void getImageSize(in nsIntSizePtr aSize);
+
     /**
      * This is the second leg in the trip to PluginInstanceParent.  It
      * approximately follows the ReadbackSink API.

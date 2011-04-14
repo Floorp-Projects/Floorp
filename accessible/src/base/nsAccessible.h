@@ -130,9 +130,8 @@ public:
    * method.
    *
    * @param  [in/out] where to fill the states into.
-   * @param  [in/out] where to fill the extra states into
    */
-  virtual nsresult GetARIAState(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual void ApplyARIAState(PRUint64* aState);
 
   /**
    * Returns the accessible name provided by native markup. It doesn't take
@@ -176,12 +175,15 @@ public:
   virtual PRUint32 NativeRole();
 
   /**
-   * Return the state of accessible that doesn't take into account ARIA states.
-   * Use nsIAccessible::state to get all states for accessible. If
-   * second argument is omitted then second bit field of accessible state won't
-   * be calculated.
+   * Return all states of accessible (including ARIA states).
    */
-  virtual nsresult GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState);
+  virtual PRUint64 State();
+
+  /**
+   * Return the states of accessible, not taking into account ARIA states.
+   * Use State() to get complete set of states.
+   */
+  virtual PRUint64 NativeState();
 
   /**
    * Returns attributes for accessible without explicitly setted ARIA
@@ -620,7 +622,7 @@ protected:
    *
    * @param aStates  [in] states of the accessible
    */
-  PRUint32 GetActionRule(PRUint32 aStates);
+  PRUint32 GetActionRule(PRUint64 aStates);
 
   /**
    * Return group info.

@@ -370,7 +370,7 @@ private:
       strEventType.AssignLiteral("reload");                                    \
   } else if (type == nsIAccessibleEvent::EVENT_STATE_CHANGE) {                 \
     AccStateChangeEvent* event = downcast_accEvent(aEvent);                    \
-    if (event->GetState() == nsIAccessibleStates::STATE_BUSY) {                \
+    if (event->GetState() == states::BUSY) {                                   \
       strEventType.AssignLiteral("busy ");                                     \
       if (event->IsStateEnabled())                                             \
         strEventType.AppendLiteral("true");                                    \

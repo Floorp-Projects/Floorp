@@ -40,7 +40,7 @@
 #include "nsARIAMap.h"
 
 #include "nsIAccessibleRole.h"
-#include "nsIAccessibleStates.h"
+#include "States.h"
 
 #include "nsAccessibilityAtoms.h"
 #include "nsIContent.h"
@@ -96,7 +96,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    nsIAccessibleStates::STATE_READONLY
+    states::READONLY
   },
   {
     "button",
@@ -137,7 +137,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eHasValueMinMax,
     eOpenCloseAction,
     eNoLiveAttr,
-    nsIAccessibleStates::STATE_COLLAPSED | nsIAccessibleStates::STATE_HASPOPUP,
+    states::COLLAPSED | states::HASPOPUP,
     eARIAAutoComplete,
     eARIAReadonly
   },
@@ -166,7 +166,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    nsIAccessibleStates::STATE_READONLY
+    states::READONLY
   },
   {
     "grid",
@@ -175,7 +175,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    nsIAccessibleStates::STATE_FOCUSABLE,
+    states::FOCUSABLE,
     eARIAMultiSelectable,
     eARIAReadonly
   },
@@ -233,7 +233,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eJumpAction,
     eNoLiveAttr,
-    nsIAccessibleStates::STATE_LINKED
+    states::LINKED
   },
   {
     "list",
@@ -242,7 +242,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction,
     eNoLiveAttr,
-    nsIAccessibleStates::STATE_READONLY,
+    states::READONLY,
     eARIAMultiSelectable
   },
   {
@@ -263,7 +263,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eNoValue,
     eNoAction, // XXX: should depend on state, parent accessible
     eNoLiveAttr,
-    nsIAccessibleStates::STATE_READONLY,
+    states::READONLY,
     eARIASelectable,
     eARIACheckedMixed
   },
@@ -370,7 +370,7 @@ nsRoleMapEntry nsARIAMap::gWAIRoleMap[] =
     eHasValueMinMax,
     eNoAction,
     eNoLiveAttr,
-    nsIAccessibleStates::STATE_READONLY
+    states::READONLY
   },
   {
     "radio",
@@ -600,86 +600,75 @@ nsStateMapEntry nsARIAMap::gWAIStateMap[] = {
 
   // eARIAAutoComplete
   nsStateMapEntry(&nsAccessibilityAtoms::aria_autocomplete,
-                  "inline", 0, nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                  "list", nsIAccessibleStates::STATE_HASPOPUP, nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION,
-                  "both", nsIAccessibleStates::STATE_HASPOPUP, nsIAccessibleStates::EXT_STATE_SUPPORTS_AUTOCOMPLETION),
+                  "inline", states::SUPPORTS_AUTOCOMPLETION,
+                  "list", states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION,
+                  "both", states::HASPOPUP | states::SUPPORTS_AUTOCOMPLETION),
 
   // eARIABusy
   nsStateMapEntry(&nsAccessibilityAtoms::aria_busy,
-                  "true", nsIAccessibleStates::STATE_BUSY, 0,
-                  "error", nsIAccessibleStates::STATE_INVALID, 0),
+                  "true", states::BUSY,
+                  "error", states::INVALID),
 
   // eARIACheckableBool
   nsStateMapEntry(&nsAccessibilityAtoms::aria_checked, kBoolType,
-                  nsIAccessibleStates::STATE_CHECKABLE,
-                  nsIAccessibleStates::STATE_CHECKED, 0,
-                  0, 0, PR_TRUE),
+                  states::CHECKABLE, states::CHECKED, 0, PR_TRUE),
 
   // eARIACheckableMixed
   nsStateMapEntry(&nsAccessibilityAtoms::aria_checked, kMixedType,
-                  nsIAccessibleStates::STATE_CHECKABLE,
-                  nsIAccessibleStates::STATE_CHECKED, 0,
-                  0, 0, PR_TRUE),
+                  states::CHECKABLE, states::CHECKED, 0, PR_TRUE),
 
   // eARIACheckedMixed
   nsStateMapEntry(&nsAccessibilityAtoms::aria_checked, kMixedType,
-                  nsIAccessibleStates::STATE_CHECKABLE,
-                  nsIAccessibleStates::STATE_CHECKED, 0),
+                  states::CHECKABLE, states::CHECKED, 0),
 
   // eARIADisabled
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_disabled, kBoolType, 0,
-                  nsIAccessibleStates::STATE_UNAVAILABLE, 0),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_disabled, kBoolType,
+                  0, states::UNAVAILABLE),
 
   // eARIAExpanded
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_expanded, kBoolType, 0,
-                  nsIAccessibleStates::STATE_EXPANDED, 0,
-                  nsIAccessibleStates::STATE_COLLAPSED, 0),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_expanded, kBoolType,
+                  0, states::EXPANDED, states::COLLAPSED),
 
   // eARIAHasPopup
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_haspopup, kBoolType, 0,
-                  nsIAccessibleStates::STATE_HASPOPUP, 0),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_haspopup, kBoolType,
+                  0, states::HASPOPUP),
 
   // eARIAInvalid
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_invalid, kBoolType, 0,
-                  nsIAccessibleStates::STATE_INVALID, 0),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_invalid, kBoolType,
+                  0, states::INVALID),
 
   // eARIAMultiline
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_multiline, kBoolType, 0,
-                  0, nsIAccessibleStates::EXT_STATE_MULTI_LINE,
-                  0, nsIAccessibleStates::EXT_STATE_SINGLE_LINE, PR_TRUE),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_multiline, kBoolType,
+                  0, states::MULTI_LINE, states::SINGLE_LINE, PR_TRUE),
 
   // eARIAMultiSelectable
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_multiselectable, kBoolType, 0,
-                  nsIAccessibleStates::STATE_MULTISELECTABLE | nsIAccessibleStates::STATE_EXTSELECTABLE, 0),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_multiselectable, kBoolType,
+                  0, states::MULTISELECTABLE | states::EXTSELECTABLE),
 
   // eARIAOrientation
   nsStateMapEntry(&nsAccessibilityAtoms::aria_orientation, eUseFirstState,
-                  "vertical", 0, nsIAccessibleStates::EXT_STATE_VERTICAL,
-                  "horizontal", 0, nsIAccessibleStates::EXT_STATE_HORIZONTAL),
+                  "vertical", states::VERTICAL,
+                  "horizontal", states::HORIZONTAL),
 
   // eARIAPressed
   nsStateMapEntry(&nsAccessibilityAtoms::aria_pressed, kMixedType,
-                  nsIAccessibleStates::STATE_CHECKABLE,
-                  nsIAccessibleStates::STATE_PRESSED, 0),
+                  states::CHECKABLE, states::PRESSED),
 
   // eARIAReadonly
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_readonly, kBoolType, 0,
-                  nsIAccessibleStates::STATE_READONLY, 0),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_readonly, kBoolType,
+                  0, states::READONLY),
 
   // eARIAReadonlyOrEditable
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_readonly, kBoolType, 0,
-                  nsIAccessibleStates::STATE_READONLY, 0,
-                  0, nsIAccessibleStates::EXT_STATE_EDITABLE, PR_TRUE),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_readonly, kBoolType,
+                  0, states::READONLY, states::EDITABLE, PR_TRUE),
 
   // eARIARequired
-  nsStateMapEntry(&nsAccessibilityAtoms::aria_required, kBoolType, 0,
-                  nsIAccessibleStates::STATE_REQUIRED, 0),
+  nsStateMapEntry(&nsAccessibilityAtoms::aria_required, kBoolType,
+                  0, states::REQUIRED),
 
   // eARIASelectable
   nsStateMapEntry(&nsAccessibilityAtoms::aria_selected, kBoolType,
-                  nsIAccessibleStates::STATE_SELECTABLE,
-                  nsIAccessibleStates::STATE_SELECTED, 0,
-                  0, 0, PR_TRUE)
+                  states::SELECTABLE, states::SELECTED, 0, PR_TRUE)
 };
 
 /**
@@ -752,83 +741,66 @@ nsStateMapEntry::nsStateMapEntry() :
   mPermanentState(0),
   mValue1(nsnull),
   mState1(0),
-  mExtraState1(0),
   mValue2(nsnull),
   mState2(0),
-  mExtraState2(0),
   mValue3(nsnull),
   mState3(0),
-  mExtraState3(0),
   mDefaultState(0),
-  mDefaultExtraState(0),
   mDefinedIfAbsent(PR_FALSE)
 {}
 
-nsStateMapEntry::nsStateMapEntry(nsIAtom **aAttrName, eStateValueType aType,
-                                 PRUint32 aPermanentState,
-                                 PRUint32 aTrueState, PRUint32 aTrueExtraState,
-                                 PRUint32 aFalseState, PRUint32 aFalseExtraState,
+nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName, eStateValueType aType,
+                                 PRUint64 aPermanentState,
+                                 PRUint64 aTrueState,
+                                 PRUint64 aFalseState,
                                  PRBool aDefinedIfAbsent) :
   mAttributeName(aAttrName),
   mIsToken(PR_TRUE),
   mPermanentState(aPermanentState),
   mValue1("false"),
   mState1(aFalseState),
-  mExtraState1(aFalseExtraState),
   mValue2(nsnull),
   mState2(0),
-  mExtraState2(0),
   mValue3(nsnull),
   mState3(0),
-  mExtraState3(0),
   mDefaultState(aTrueState),
-  mDefaultExtraState(aTrueExtraState),
   mDefinedIfAbsent(aDefinedIfAbsent)
 {
   if (aType == kMixedType) {
     mValue2 = "mixed";
-    mState2 = nsIAccessibleStates::STATE_MIXED;
+    mState2 = states::MIXED;
   }
 }
 
-nsStateMapEntry::nsStateMapEntry(nsIAtom **aAttrName,
-                                 const char *aValue1,
-                                 PRUint32 aState1, PRUint32 aExtraState1,
-                                 const char *aValue2,
-                                 PRUint32 aState2, PRUint32 aExtraState2,
-                                 const char *aValue3,
-                                 PRUint32 aState3, PRUint32 aExtraState3) :
+nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName,
+                                 const char* aValue1, PRUint64 aState1,
+                                 const char* aValue2, PRUint64 aState2,
+                                 const char* aValue3, PRUint64 aState3) :
   mAttributeName(aAttrName), mIsToken(PR_FALSE), mPermanentState(0),
-  mValue1(aValue1), mState1(aState1), mExtraState1(aExtraState1),
-  mValue2(aValue2), mState2(aState2), mExtraState2(aExtraState2),
-  mValue3(aValue3), mState3(aState3), mExtraState3(aExtraState3),
-  mDefaultState(0), mDefaultExtraState(0), mDefinedIfAbsent(PR_FALSE)
+  mValue1(aValue1), mState1(aState1),
+  mValue2(aValue2), mState2(aState2),
+  mValue3(aValue3), mState3(aState3),
+  mDefaultState(0), mDefinedIfAbsent(PR_FALSE)
 {
 }
 
-nsStateMapEntry::nsStateMapEntry(nsIAtom **aAttrName,
+nsStateMapEntry::nsStateMapEntry(nsIAtom** aAttrName,
                                  EDefaultStateRule aDefaultStateRule,
-                                 const char *aValue1,
-                                 PRUint32 aState1, PRUint32 aExtraState1,
-                                 const char *aValue2,
-                                 PRUint32 aState2, PRUint32 aExtraState2,
-                                 const char *aValue3,
-                                 PRUint32 aState3, PRUint32 aExtraState3) :
+                                 const char* aValue1, PRUint64 aState1,
+                                 const char* aValue2, PRUint64 aState2,
+                                 const char* aValue3, PRUint64 aState3) :
   mAttributeName(aAttrName), mIsToken(PR_TRUE), mPermanentState(0),
-  mValue1(aValue1), mState1(aState1), mExtraState1(aExtraState1),
-  mValue2(aValue2), mState2(aState2), mExtraState2(aExtraState2),
-  mValue3(aValue3), mState3(aState3), mExtraState3(aExtraState3),
-  mDefaultState(0), mDefaultExtraState(0), mDefinedIfAbsent(PR_TRUE)
+  mValue1(aValue1), mState1(aState1),
+  mValue2(aValue2), mState2(aState2),
+  mValue3(aValue3), mState3(aState3),
+  mDefaultState(0), mDefinedIfAbsent(PR_TRUE)
 {
-  if (aDefaultStateRule == eUseFirstState) {
+  if (aDefaultStateRule == eUseFirstState)
     mDefaultState = aState1;
-    mDefaultExtraState = aExtraState1;
-  }
 }
 
 PRBool
-nsStateMapEntry::MapToStates(nsIContent *aContent,
-                             PRUint32 *aState, PRUint32 *aExtraState,
+nsStateMapEntry::MapToStates(nsIContent* aContent, PRUint64* aState,
                              eStateMapEntryID aStateMapEntryID)
 {
   // Return true if we should continue.
@@ -846,9 +818,6 @@ nsStateMapEntry::MapToStates(nsIContent *aContent,
         *aState |= entry.mPermanentState;
       if (entry.mState1)
         *aState |= entry.mState1;
-      if (aExtraState && entry.mExtraState1)
-        *aExtraState |= entry.mExtraState1;
-
       return PR_TRUE;
     }
 
@@ -887,19 +856,12 @@ nsStateMapEntry::MapToStates(nsIContent *aContent,
 
       if (entry.mState1)
         *aState |= entry.mState1;
-
-      if (aExtraState && entry.mExtraState1)
-        *aExtraState |= entry.mExtraState1;
-
     } else if (entry.mValue2) {
       if (attrValue.EqualsASCII(entry.mValue2)) {
         applyDefaultStates = PR_FALSE;
 
         if (entry.mState2)
           *aState |= entry.mState2;
-
-        if (aExtraState && entry.mExtraState2)
-          *aExtraState |= entry.mExtraState2;
 
       } else if (entry.mValue3) {
         if (attrValue.EqualsASCII(entry.mValue3)) {
@@ -908,8 +870,6 @@ nsStateMapEntry::MapToStates(nsIContent *aContent,
           if (entry.mState3)
             *aState |= entry.mState3;
 
-          if (aExtraState && entry.mExtraState3)
-            *aExtraState |= entry.mExtraState3;
         }
       }
     }
@@ -918,8 +878,6 @@ nsStateMapEntry::MapToStates(nsIContent *aContent,
   if (applyDefaultStates) {
     if (entry.mDefaultState)
       *aState |= entry.mDefaultState;
-    if (entry.mDefaultExtraState && aExtraState)
-      *aExtraState |= entry.mDefaultExtraState;
   }
 
   return PR_TRUE;

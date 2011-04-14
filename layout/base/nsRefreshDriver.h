@@ -88,6 +88,13 @@ public:
   NS_DECL_NSITIMERCALLBACK
 
   /**
+   * Methods for testing, exposed via nsIDOMWindowUtils.  See
+   * nsIDOMWindowUtils.advanceTimeAndRefresh for description.
+   */
+  void AdvanceTimeAndRefresh(PRInt64 aMilliseconds);
+  void RestoreNormalRefresh();
+
+  /**
    * Return the time of the most recent refresh.  This is intended to be
    * used by callers who want to start an animation now and want to know
    * what time to consider the start of the animation.  (This helps
@@ -237,6 +244,7 @@ private:
 
   bool mFrozen;
   bool mThrottled;
+  bool mTestControllingRefreshes;
   /* If mTimer is non-null, this boolean indicates whether the timer is
      a precise timer.  If mTimer is null, this boolean's value can be
      anything.  */

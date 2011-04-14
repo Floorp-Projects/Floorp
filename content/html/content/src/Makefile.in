@@ -110,6 +110,7 @@ CPPSRCS		= \
 		nsHTMLUnknownElement.cpp \
 		nsDOMValidityState.cpp \
 		nsIConstraintValidation.cpp \
+		nsRadioVisitor.cpp \
 		$(NULL)
 
 ifdef MOZ_MEDIA

@@ -1,15 +1,7 @@
+Cu.import("resource://services-sync/engines/bookmarks.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/util.js");
-try {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-}
-catch(ex) {
-  Cu.import("resource://gre/modules/utils.js");
-}
-
-// Grab a backstage pass so we can fetch the anno constant. Evil but useful.
-let bsp = Cu.import("resource://services-sync/engines/bookmarks.js");
-const SYNC_GUID_ANNO = bsp.GUID_ANNO;      // Not the same as Places' GUID_ANNO!
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 
 Engines.register(BookmarksEngine);
 let engine = Engines.get("bookmarks");
@@ -248,55 +240,33 @@ function test_tracking() {
   }
 }
 
-function test_guid_stripping() {
-  // Gecko <2.0
-  if (store._haveGUIDColumn) {
-    _("We have a GUID column; not testing anno GUID fixing.");
-    return;
-  }
+function test_onItemChanged() {
+  // Anno that's in ANNOS_TO_TRACK.
+  const GENERATOR_ANNO = "microsummary/generatorURI";
 
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
-  let folder = Svc.Bookmark.createFolder(Svc.Bookmark.bookmarksMenuFolder,
-                                         "Test Folder",
-                                         Svc.Bookmark.DEFAULT_INDEX);
-  function createBmk() {
-    return Svc.Bookmark.insertBookmark(folder,
-                                       Utils.makeURI("http://getfirefox.com"),
-                                       Svc.Bookmark.DEFAULT_INDEX,
-                                       "Get Firefox!");
-  }
-
   do_check_eq([id for (id in tracker.changedIDs)].length, 0);
 
   try {
-    _("Directly testing GUID stripping.");
+    Svc.Obs.notify("weave:engine:stop-tracking");
+    let folder = Svc.Bookmark.createFolder(Svc.Bookmark.bookmarksMenuFolder,
+                                           "Parent",
+                                           Svc.Bookmark.DEFAULT_INDEX);
+    _("Track changes to annos.");
+    let b = Svc.Bookmark.insertBookmark(folder,
+                                        Utils.makeURI("http://getfirefox.com"),
+                                        Svc.Bookmark.DEFAULT_INDEX,
+                                        "Get Firefox!");
+    let bGUID = engine._store.GUIDForId(b);
+    _("New item is " + b);
+    _("GUID: " + bGUID);
 
     Svc.Obs.notify("weave:engine:start-tracking");
-    tracker.ignoreAll = false;
-    let suspect = createBmk();
-    let victim = createBmk();
+    Svc.Annos.setItemAnnotation(b, GENERATOR_ANNO, "http://foo.bar/", 0,
+                                Svc.Annos.EXPIRE_NEVER);
+    do_check_true(tracker.changedIDs[bGUID] > 0);
 
-    _("Suspect: " + suspect + ", victim: " + victim);
-
-    let suspectGUID = store.GUIDForId(suspect);
-    let victimGUID  = store.GUIDForId(victim);
-    _("Set the GUID on one entry to be the same as another.");
-    do_check_neq(suspectGUID, victimGUID);
-    Svc.Annos.setItemAnnotation(suspect, SYNC_GUID_ANNO, store.GUIDForId(victim),
-                                0, Svc.Annos.EXPIRE_NEVER);
-
-    _("Tracker changed it to something else.");
-    let newGUID = store.GUIDForId(suspect);
-    do_check_neq(newGUID, victimGUID);
-    do_check_neq(newGUID, suspectGUID);
-
-    _("Victim GUID remains unchanged.");
-    do_check_eq(victimGUID, store.GUIDForId(victim));
-
-    _("New GUID is in the tracker.");
-    _(JSON.stringify(tracker.changedIDs));
-    do_check_neq(tracker.changedIDs[newGUID], null);
   } finally {
     _("Clean up.");
     store.wipe();
@@ -312,8 +282,8 @@ function run_test() {
   Log4Moz.repository.getLogger("Store.Bookmarks").level = Log4Moz.Level.Trace;
   Log4Moz.repository.getLogger("Tracker.Bookmarks").level = Log4Moz.Level.Trace;
 
+  test_onItemChanged();
   test_copying_places();
   test_tracking();
-  test_guid_stripping();
 }
 

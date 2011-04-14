@@ -1178,13 +1178,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
           case JSTRAP_RETURN:
             f.cx->clearPendingException();
             f.cx->fp()->setReturnValue(rval);
-#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
-            *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                         f.cx->jaegerCompartment()->forceReturnFastTrampoline());
-#else
-            *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                         f.cx->jaegerCompartment()->forceReturnTrampoline());
-#endif
+            *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
             break;
 
           case JSTRAP_ERROR:
@@ -1238,13 +1232,7 @@ stubs::Trap(VMFrame &f, uint32 trapTypes)
       case JSTRAP_RETURN:
         f.cx->clearPendingException();
         f.cx->fp()->setReturnValue(rval);
-#if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
-        *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                     f.cx->jaegerCompartment()->forceReturnFastTrampoline());
-#else
-        *f.returnAddressLocation() = JS_FUNC_TO_DATA_PTR(void *,
-                                     f.cx->jaegerCompartment()->forceReturnTrampoline());
-#endif
+        *f.returnAddressLocation() = f.cx->jaegerCompartment()->forceReturnFromFastCall();
         break;
 
       case JSTRAP_ERROR:

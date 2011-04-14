@@ -84,7 +84,7 @@ MAKEFILES_dom="
   dom/src/storage/Makefile
   dom/src/threads/Makefile
   dom/locales/Makefile
-  dom/plugins/Makefile
+  dom/plugins/ipc/Makefile
   js/jetpack/Makefile
 "
 
@@ -128,6 +128,8 @@ MAKEFILES_gfx="
   gfx/thebes/Makefile
   gfx/qcms/Makefile
   gfx/angle/Makefile
+  gfx/angle/src/libGLESv2/Makefile
+  gfx/angle/src/libEGL/Makefile
 "
 
 MAKEFILES_htmlparser="
@@ -552,9 +554,6 @@ MAKEFILES_embedding="
   embedding/browser/activex/src/plugin/Makefile
   embedding/browser/build/Makefile
   embedding/browser/webBrowser/Makefile
-  embedding/browser/gtk/Makefile
-  embedding/browser/gtk/src/Makefile
-  embedding/browser/gtk/tests/Makefile
   embedding/components/Makefile
   embedding/components/appstartup/Makefile
   embedding/components/appstartup/src/Makefile
@@ -1139,16 +1138,6 @@ if [ "$MOZ_XTF" ]; then
     content/xtf/Makefile
     content/xtf/public/Makefile
     content/xtf/src/Makefile
-  "
-fi
-
-if [ "$MOZ_JAVAXPCOM" ]; then
-  add_makefiles "
-    extensions/java/Makefile
-    extensions/java/xpcom/Makefile
-    extensions/java/xpcom/interfaces/Makefile
-    extensions/java/xpcom/src/Makefile
-    extensions/java/xpcom/glue/Makefile
   "
 fi
 

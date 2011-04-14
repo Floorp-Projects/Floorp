@@ -1030,6 +1030,14 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
+    // Expose the URI from which the script was imported through a special
+    // variable that we insert into the JSM.
+    JSString *exposedUri = JS_NewStringCopyN(cx, nativePath.get(), nativePath.Length());
+    if (!JS_DefineProperty(cx, global, "__URI__",
+                           STRING_TO_JSVAL(exposedUri), nsnull, nsnull, 0))
+        return NS_ERROR_FAILURE;
+
+
     JSObject *scriptObj = nsnull;
 
 #ifdef MOZ_ENABLE_LIBXUL  
@@ -1188,14 +1196,6 @@ mozJSComponentLoader::GlobalForLocation(nsILocalFile *aComponentFile,
 #endif
         return NS_ERROR_FAILURE;
     }
-
-    // Flag this script as a system script
-    // FIXME: BUG 346139: We actually want to flag this exact filename, not
-    // anything that starts with this filename... Maybe we need a way to do
-    // that?  On the other hand, the fact that this is in our components dir
-    // means that if someone snuck a malicious file into this dir we're screwed
-    // anyway...  So maybe flagging as a prefix is fine.
-    xpc->FlagSystemFilenamePrefix(nativePath.get(), PR_TRUE);
 
 #ifdef DEBUG_shaver_off
     fprintf(stderr, "mJCL: compiled JS component %s\n",

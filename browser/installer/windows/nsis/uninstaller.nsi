@@ -107,6 +107,7 @@ VIAddVersionKey "OriginalFilename" "helper.exe"
 !insertmacro UnloadUAC
 !insertmacro WriteRegDWORD2
 !insertmacro WriteRegStr2
+!insertmacro CheckIfRegistryKeyExists
 
 !insertmacro un.ChangeMUIHeaderImage
 !insertmacro un.CheckForFilesInUse
@@ -266,6 +267,7 @@ Section "Uninstall"
     ${un.RegCleanFileHandler}  ".shtml" "FirefoxHTML"
     ${un.RegCleanFileHandler}  ".xht"   "FirefoxHTML"
     ${un.RegCleanFileHandler}  ".xhtml" "FirefoxHTML"
+    ${un.RegCleanFileHandler}  ".webm"  "FirefoxHTML"
   ${EndIf}
 
   SetShellVarContext all  ; Set SHCTX to HKLM

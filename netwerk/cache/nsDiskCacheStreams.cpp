@@ -148,6 +148,9 @@ nsDiskCacheInputStream::Read(char * buffer, PRUint32 count, PRUint32 * bytesRead
     if (mPos == mStreamEnd)  return NS_OK;
     if (mPos > mStreamEnd)   return NS_ERROR_UNEXPECTED;
     
+    if (count > mStreamEnd - mPos)
+        count = mStreamEnd - mPos;
+
     if (mFD) {
         // just read from file
         PRInt32  result = PR_Read(mFD, buffer, count);
@@ -158,9 +161,6 @@ nsDiskCacheInputStream::Read(char * buffer, PRUint32 count, PRUint32 * bytesRead
         
     } else if (mBuffer) {
         // read data from mBuffer
-        if (count > mStreamEnd - mPos)
-            count = mStreamEnd - mPos;
-    
         memcpy(buffer, mBuffer + mPos, count);
         mPos += count;
         *bytesRead = count;
@@ -757,12 +757,9 @@ nsDiskCacheStreamIO::FlushBufferToFile()
         rv = OpenCacheFile(PR_RDWR | PR_CREATE_FILE, &mFD);
         if (NS_FAILED(rv))  return rv;
 
-#if 0
         PRInt64 dataSize = mBinding->mCacheEntry->PredictedDataSize();
-// Appears to cause bug 617123?  Disabled for now.
         if (dataSize != -1)
             mozilla::fallocate(mFD, PR_MIN(dataSize, kPreallocateLimit));
-#endif
     }
     
     // write buffer

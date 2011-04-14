@@ -1,16 +1,28 @@
 #aboutDialog {
-  padding-top: 0;
-  -moz-padding-end: 0;
-  padding-bottom: 10px;
-  -moz-padding-start: 0;
   width: 620px;
 }
 
+/* Official branding has Firefox logo on the left side of the window. 
+   Nightly/aurora branding has background image applied to entire window. */
+%ifdef MOZ_OFFICIAL_BRANDING
 #clientBox {
   background-color: #F7F7F7;
   color: #222222;
 }
+%else
+#aboutDialogContainer {
+  background-image: url("chrome://branding/content/about-background.png");
+  background-repeat: no-repeat;
+  background-color: #000;
+  color: #fff;
+}
 
+.text-link {
+  color: #fff !important;
+}
+%endif
+
+%ifdef MOZ_OFFICIAL_BRANDING
 #leftBox {
   background-image: url("chrome://branding/content/about-logo.png");
   background-repeat: no-repeat;
@@ -20,6 +32,7 @@
   margin-top:20px;
   -moz-margin-start: 30px;
 }
+%endif
 
 #rightBox {
   background-image: url("chrome://branding/content/about-wordmark.png");
@@ -27,8 +40,14 @@
   /* padding-top creates room for the wordmark */
   padding-top: 38px;
   margin-top:20px;
-  -moz-margin-end: 30px;
-  -moz-margin-start: 30px;
+%ifdef MOZ_OFFICIAL_BRANDING
+  margin-left: 30px;
+  margin-right: 30px;
+%else 
+  /* this margin prevents text from overlapping the planet image */
+  margin-left: 280px;
+  margin-right: 20px;
+%endif
 }
 
 #rightBox:-moz-locale-dir(rtl) {
@@ -37,10 +56,13 @@
 
 #bottomBox {
   padding: 15px 10px 0;
+%ifndef MOZ_OFFICIAL_BRANDING
+  background-color: rgba(0,0,0,.7);
+%endif
 }
 
 #version {
-  margin-top: 5px;
+  margin-top: 10px;
   -moz-margin-start: 0;
 }
 
@@ -89,12 +111,16 @@
   margin: 0 40px;
 }
 
+/* we assume trademark text only appears in offical builds */
+%ifdef MOZ_OFFICIAL_BRANDING
 #trademark {
   font-size: xx-small;
   text-align: center;
   color: #999999;
   margin-top: 10px;
+  margin-bottom: 10px;
 }
+%endif
 
 #currentChannel {
   margin: 0;

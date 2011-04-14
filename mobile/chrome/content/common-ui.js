@@ -30,7 +30,7 @@ var BrowserSearch = {
 
     this.engines.forEach(function(aEngine) {
       let button = document.createElement("button");
-      button.className = "prompt-button";
+      button.className = "action-button";
       button.setAttribute("label", aEngine.name);
       button.setAttribute("crop", "end");
       button.setAttribute("pack", "start");
