@@ -46,6 +46,7 @@
 #include "nsNetUtil.h"
 #include "nsWWJSUtils.h"
 #include "plstr.h"
+#include "nsIContentUtils.h"
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
@@ -512,7 +513,9 @@ nsWindowWatcher::OpenWindowJSInternal(nsIDOMWindow *aParent,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = 0;
 
-  if (!nsContentUtils::IsSafeToRunScript()) {
+  nsCOMPtr<nsIContentUtils> utils =
+    do_GetService("@mozilla.org/content/contentutils;1");
+  if (utils && !utils->IsSafeToRunScript()) {
     return NS_ERROR_FAILURE;
   }
 
