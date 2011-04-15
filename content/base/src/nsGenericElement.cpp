@@ -4582,7 +4582,9 @@ nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID, nsIAtom* aName,
         // Need to store the old value
         info.mValue->ToString(*aOldValue);
         valueMatches = aValue.Equals(*aOldValue);
-      } else if (aNotify) {
+      } else {
+        NS_ABORT_IF_FALSE(aNotify,
+                          "Either hasListeners or aNotify should be true.");
         valueMatches = info.mValue->Equals(aValue, eCaseMatters);
       }
       if (valueMatches && aPrefix == info.mName->GetPrefix()) {

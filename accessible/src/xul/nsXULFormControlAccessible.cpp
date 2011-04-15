@@ -110,21 +110,6 @@ nsXULButtonAccessible::DoAction(PRUint8 aIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULButtonAccessible: nsAccessNode
-
-PRBool
-nsXULButtonAccessible::Init()
-{
-  if (!nsAccessibleWrap::Init())
-    return PR_FALSE;
-
-  if (ContainsMenu())
-    nsCoreUtils::GeneratePopupTree(mContent);
-
-  return PR_TRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // nsXULButtonAccessible: nsAccessible
 
 PRUint32

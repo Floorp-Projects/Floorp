@@ -43,8 +43,7 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
-#include "nsIRenderingContext.h"
-#include "nsIFontMetrics.h"
+#include "nsRenderingContext.h"
 
 #include "nsTArray.h"
 #include "nsCSSFrameConstructor.h"
@@ -639,10 +638,10 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
       // XXX should instead use style data from the row of reference here ?
       aReflowState.rendContext->SetFont(GetStyleFont()->mFont,
                                         aPresContext->GetUserFontSet());
-      nsCOMPtr<nsIFontMetrics> fm;
-      aReflowState.rendContext->GetFontMetrics(*getter_AddRefs(fm));
       nscoord axisHeight;
-      GetAxisHeight(*aReflowState.rendContext, fm, axisHeight);
+      GetAxisHeight(*aReflowState.rendContext,
+                    aReflowState.rendContext->FontMetrics(),
+                    axisHeight);
       if (rowFrame) {
         // anchor the table on the axis of the row of reference
         // XXX fallback to baseline because it is a hard problem
@@ -662,7 +661,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   mReference.y = aDesiredSize.ascent;
 
   // just make-up a bounding metrics
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   mBoundingMetrics.ascent = aDesiredSize.ascent;
   mBoundingMetrics.descent = aDesiredSize.height - aDesiredSize.ascent;
   mBoundingMetrics.width = aDesiredSize.width;

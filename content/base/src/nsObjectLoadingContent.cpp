@@ -1077,6 +1077,10 @@ nsObjectLoadingContent::ObjectState() const
         case ePluginUnsupported:
           state |= NS_EVENT_STATE_TYPE_UNSUPPORTED;
           break;
+        case ePluginOutdated:
+        case ePluginOtherState:
+          // Do nothing, but avoid a compile warning
+          break;
       }
       return state;
   };
