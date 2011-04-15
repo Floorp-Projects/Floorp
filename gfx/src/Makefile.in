@@ -73,14 +73,13 @@ EXPORTS	= \
 	nsMargin.h \
 	nsTransform2D.h \
 	nsRenderingContext.h \
-	nsIFontMetrics.h \
+	nsFontMetrics.h \
 	nsIDeviceContext.h \
 	nsGfxCIID.h \
 	nsIRegion.h \
 	nsITheme.h \
 	nsThemeConstants.h \
 	gfxCrashReporterUtils.h \
-	nsIThebesFontMetrics.h \
 	nsBoundingMetrics.h \
 	$(NULL)
 
@@ -101,7 +100,7 @@ CPPSRCS = \
         nsThebesRegion.cpp \
         nsThebesGfxFactory.cpp \
         nsRenderingContext.cpp \
-        nsThebesFontMetrics.cpp \
+        nsFontMetrics.cpp \
         nsThebesFontEnumerator.cpp \
        $(NULL)
 

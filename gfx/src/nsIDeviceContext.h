@@ -46,7 +46,7 @@
 #include "nsStringFwd.h"
 
 class nsIView;
-class nsIFontMetrics;
+class nsFontMetrics;
 class nsIWidget;
 class nsIDeviceContextSpec;
 class nsIAtom;
@@ -309,7 +309,7 @@ public:
   NS_IMETHOD  GetSystemFont(nsSystemFontID aID, nsFont *aFont) const = 0;
 
   /**
-   * Get the nsIFontMetrics that describe the properties of
+   * Get the nsFontMetrics that describe the properties of
    * an nsFont.
    * @param aFont font description to obtain metrics for
    * @param aLanguage the language of the document
@@ -319,10 +319,10 @@ public:
    */
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                             gfxUserFontSet* aUserFontSet,
-                            nsIFontMetrics*& aMetrics) = 0;
+                            nsFontMetrics*& aMetrics) = 0;
 
   /**
-   * Get the nsIFontMetrics that describe the properties of
+   * Get the nsFontMetrics that describe the properties of
    * an nsFont.
    * @param aFont font description to obtain metrics for
    * @param aMetrics out parameter for font metrics
@@ -330,7 +330,7 @@ public:
    * @return error status
    */
   NS_IMETHOD  GetMetricsFor(const nsFont& aFont, gfxUserFontSet* aUserFontSet,
-                            nsIFontMetrics*& aMetrics) = 0;
+                            nsFontMetrics*& aMetrics) = 0;
 
   /**
    * Check to see if a particular named font exists.
@@ -347,7 +347,7 @@ public:
    * Notification when a font metrics instance created for this device is
    * about to be deleted
    */
-  NS_IMETHOD FontMetricsDeleted(const nsIFontMetrics* aFontMetrics) = 0;
+  NS_IMETHOD FontMetricsDeleted(const nsFontMetrics* aFontMetrics) = 0;
 
   /**
    * Attempt to free up resoruces by flushing out any fonts no longer
