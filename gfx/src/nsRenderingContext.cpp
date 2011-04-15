@@ -449,12 +449,6 @@ nsRenderingContext::FillPolygon(const nsPoint twPoints[], PRInt32 aNumPoints)
 //
 
 void
-nsRenderingContext::SetRightToLeftText(PRBool aIsRTL)
-{
-    mFontMetrics->SetRightToLeftText(aIsRTL);
-}
-
-void
 nsRenderingContext::SetTextRunRTL(PRBool aIsRTL)
 {
     mFontMetrics->SetTextRunRTL(aIsRTL);
@@ -464,26 +458,22 @@ void
 nsRenderingContext::SetFont(const nsFont& aFont, nsIAtom* aLanguage,
                             gfxUserFontSet *aUserFontSet)
 {
-    nsCOMPtr<nsIFontMetrics> newMetrics;
     mDeviceContext->GetMetricsFor(aFont, aLanguage, aUserFontSet,
-                                  *getter_AddRefs(newMetrics));
-    mFontMetrics = reinterpret_cast<nsIThebesFontMetrics*>(newMetrics.get());
+                                  *getter_AddRefs(mFontMetrics));
 }
 
 void
 nsRenderingContext::SetFont(const nsFont& aFont,
                             gfxUserFontSet *aUserFontSet)
 {
-    nsCOMPtr<nsIFontMetrics> newMetrics;
     mDeviceContext->GetMetricsFor(aFont, nsnull, aUserFontSet,
-                                  *getter_AddRefs(newMetrics));
-    mFontMetrics = reinterpret_cast<nsIThebesFontMetrics*>(newMetrics.get());
+                                  *getter_AddRefs(mFontMetrics));
 }
 
 void
-nsRenderingContext::SetFont(nsIFontMetrics *aFontMetrics)
+nsRenderingContext::SetFont(nsFontMetrics *aFontMetrics)
 {
-    mFontMetrics = static_cast<nsIThebesFontMetrics*>(aFontMetrics);
+    mFontMetrics = aFontMetrics;
 }
 
 PRInt32
@@ -498,9 +488,7 @@ nscoord
 nsRenderingContext::GetWidth(char aC)
 {
     if (aC == ' ' && mFontMetrics) {
-        nscoord width;
-        mFontMetrics->GetSpaceWidth(width);
-        return width;
+        return mFontMetrics->SpaceWidth();
     }
 
     return GetWidth(&aC, 1);
@@ -531,7 +519,7 @@ nsRenderingContext::GetWidth(const char* aString, PRUint32 aLength)
     nscoord width = 0;
     while (aLength > 0) {
         PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
-        width += GetWidthInternal(aString, len);
+        width += mFontMetrics->GetWidth(aString, len, this);
         aLength -= len;
         aString += len;
     }
@@ -545,7 +533,7 @@ nsRenderingContext::GetWidth(const PRUnichar *aString, PRUint32 aLength)
     nscoord width = 0;
     while (aLength > 0) {
         PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
-        width += GetWidthInternal(aString, len);
+        width += mFontMetrics->GetWidth(aString, len, this);
         aLength -= len;
         aString += len;
     }
@@ -562,15 +550,15 @@ nsRenderingContext::GetBoundingMetrics(const PRUnichar* aString,
     // Assign directly in the first iteration. This ensures that
     // negative ascent/descent can be returned and the left bearing
     // is properly initialized.
-    nsBoundingMetrics totalMetrics;
-    mFontMetrics->GetBoundingMetrics(aString, len, this, totalMetrics);
+    nsBoundingMetrics totalMetrics
+        = mFontMetrics->GetBoundingMetrics(aString, len, this);
     aLength -= len;
     aString += len;
 
     while (aLength > 0) {
         len = FindSafeLength(aString, aLength, maxChunkLength);
-        nsBoundingMetrics metrics;
-        mFontMetrics->GetBoundingMetrics(aString, len, this, metrics);
+        nsBoundingMetrics metrics
+            = mFontMetrics->GetBoundingMetrics(aString, len, this);
         totalMetrics += metrics;
         aLength -= len;
         aString += len;
@@ -586,11 +574,11 @@ nsRenderingContext::DrawString(const char *aString, PRUint32 aLength,
     PRUint32 maxChunkLength = GetMaxChunkLength();
     while (aLength > 0) {
         PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
-        mFontMetrics->DrawString(aString, len, aX, aY, nsnull, this);
+        mFontMetrics->DrawString(aString, len, aX, aY, this);
         aLength -= len;
 
         if (aLength > 0) {
-            nscoord width = GetWidthInternal(aString, len);
+            nscoord width = mFontMetrics->GetWidth(aString, len, this);
             aX += width;
             aString += len;
         }
@@ -613,7 +601,7 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
         return;
     }
 
-    PRBool isRTL = mFontMetrics->GetRightToLeftText();
+    PRBool isRTL = mFontMetrics->GetTextRunRTL();
 
     // If we're drawing right to left, we must start at the end.
     if (isRTL) {
@@ -622,7 +610,7 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
 
     while (aLength > 0) {
         PRInt32 len = FindSafeLength(aString, aLength, maxChunkLength);
-        nscoord width = GetWidthInternal(aString, len);
+        nscoord width = mFontMetrics->GetWidth(aString, len, this);
         if (isRTL) {
             aX -= width;
         }
@@ -633,28 +621,4 @@ nsRenderingContext::DrawString(const PRUnichar *aString, PRUint32 aLength,
         aLength -= len;
         aString += len;
     }
-}
-
-nscoord
-nsRenderingContext::GetWidthInternal(const char* aString, PRUint32 aLength)
-{
-    if (aLength == 0) {
-        return 0;
-    }
-
-    nscoord width;
-    mFontMetrics->GetWidth(aString, aLength, width, this);
-    return width;
-}
-
-nscoord
-nsRenderingContext::GetWidthInternal(const PRUnichar *aString, PRUint32 aLength)
-{
-    if (aLength == 0) {
-        return 0;
-    }
-
-    nscoord width;
-    mFontMetrics->GetWidth(aString, aLength, width, nsnull, this);
-    return width;
 }

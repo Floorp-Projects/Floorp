@@ -46,7 +46,6 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsRenderingContext.h"
-#include "nsIFontMetrics.h"
 
 #include "nsMathMLmfracFrame.h"
 #include "nsDisplayList.h"
@@ -270,7 +269,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
   aRenderingContext.SetFont(GetStyleFont()->mFont,
                             presContext->GetUserFontSet());
-  nsIFontMetrics* fm = aRenderingContext.FontMetrics();
+  nsFontMetrics* fm = aRenderingContext.FontMetrics();
 
   nscoord defaultRuleThickness, axisHeight;
   GetRuleThickness(aRenderingContext, fm, defaultRuleThickness);
@@ -437,8 +436,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     nscoord slashRatio = 3;
 
     // Define the constant used in the expression of the maximum width
-    nscoord em;
-    fm->GetEmHeight(em);
+    nscoord em = fm->EmHeight();
     nscoord slashMaxWidthConstant = 2 * em;
 
     // For large line thicknesses the minimum slash height is limited to the
@@ -478,8 +476,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       numShift += delta;
       denShift += delta;
     } else {
-      nscoord xHeight = 0;
-      fm->GetXHeight (xHeight);
+      nscoord xHeight = fm->XHeight();
       numShift += xHeight / 2;
       denShift += xHeight / 4;
     }

@@ -42,7 +42,7 @@
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
-#include "nsIThebesFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "gfxContext.h"
@@ -120,10 +120,9 @@ public:
     void SetFont(const nsFont& aFont, nsIAtom* aLanguage,
                  gfxUserFontSet *aUserFontSet);
     void SetFont(const nsFont& aFont, gfxUserFontSet *aUserFontSet);
-    void SetFont(nsIFontMetrics *aFontMetrics);
-    nsIThebesFontMetrics *FontMetrics() { return mFontMetrics; } // may be null
+    void SetFont(nsFontMetrics *aFontMetrics);
+    nsFontMetrics *FontMetrics() { return mFontMetrics; } // may be null
 
-    void SetRightToLeftText(PRBool aIsRTL);
     void SetTextRunRTL(PRBool aIsRTL);
 
     nscoord GetWidth(char aC);
@@ -146,12 +145,10 @@ public:
 
 protected:
     PRInt32 GetMaxChunkLength();
-    nscoord GetWidthInternal(const char *aString, PRUint32 aLength);
-    nscoord GetWidthInternal(const PRUnichar *aString, PRUint32 aLength);
 
     nsRefPtr<gfxContext> mThebes;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
-    nsCOMPtr<nsIThebesFontMetrics> mFontMetrics;
+    nsRefPtr<nsFontMetrics> mFontMetrics;
 
     double mP2A; // cached app units per device pixel value
 };

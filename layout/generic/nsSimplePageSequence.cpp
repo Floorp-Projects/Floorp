@@ -43,7 +43,6 @@
 #include "nsGkAtoms.h"
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
-#include "nsIFontMetrics.h"
 #include "nsIPrintSettings.h"
 #include "nsPageFrame.h"
 #include "nsStyleConsts.h"

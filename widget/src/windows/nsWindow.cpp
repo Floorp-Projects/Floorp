@@ -136,7 +136,7 @@
 #include "nsIClipboard.h"
 #include "nsIMM32Handler.h"
 #include "nsILocalFile.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsIFontEnumerator.h"
 #include "nsIDeviceContext.h"
 #include "nsILookAndFeel.h"

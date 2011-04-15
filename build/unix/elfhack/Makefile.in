@@ -48,9 +48,12 @@ INTERNAL_TOOLS = 1
 HOST_PROGRAM = elfhack
 NO_DIST_INSTALL = 1
 
+VPATH += $(topsrcdir)/build
+
 HOST_CPPSRCS = \
   elf.cpp \
   elfhack.cpp \
+  $(STDCXX_COMPAT) \
   $(NULL)
 
 OS_CXXFLAGS := $(filter-out -fno-exceptions,$(OS_CXXFLAGS)) -fexceptions

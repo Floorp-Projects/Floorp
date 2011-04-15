@@ -50,7 +50,7 @@ class nsIDOMEvent;
 class nsRegion;
 class nsDisplayListBuilder;
 class nsDisplayItem;
-class nsIFontMetrics;
+class nsFontMetrics;
 class nsClientRectList;
 
 #include "prtypes.h"
@@ -738,7 +738,7 @@ public:
    * @return success or failure code
    */
   static nsresult GetFontMetricsForFrame(const nsIFrame* aFrame,
-                                         nsIFontMetrics** aFontMetrics);
+                                         nsFontMetrics** aFontMetrics);
 
   /**
    * Get the font metrics corresponding to the given style data.
@@ -747,7 +747,7 @@ public:
    * @return success or failure code
    */
   static nsresult GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
-                                                nsIFontMetrics** aFontMetrics);
+                                                nsFontMetrics** aFontMetrics);
 
   /**
    * Find the immediate child of aParent whose frame subtree contains
@@ -935,7 +935,7 @@ public:
    *
    * Returns the baseline position relative to the top of the line.
    */
-  static nscoord GetCenteredFontBaseline(nsIFontMetrics* aFontMetrics,
+  static nscoord GetCenteredFontBaseline(nsFontMetrics* aFontMetrics,
                                          nscoord         aLineHeight);
 
   /**
