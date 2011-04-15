@@ -40,3 +40,4 @@ script regress-631723.js
 skip-if(!xulRuntime.shell) script regress-636818.js
 script regress-636697.js
 skip-if(!xulRuntime.shell) script debug-object-01.js
+skip-if(!xulRuntime.shell) script debug-object-02.js
