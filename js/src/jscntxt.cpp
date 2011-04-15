@@ -65,6 +65,7 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsmath.h"

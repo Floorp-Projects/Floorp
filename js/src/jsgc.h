@@ -1068,10 +1068,55 @@ struct ConservativeGCThreadData {
     }
 };
 
+template<class T>
+struct MarkStack {
+    T *stack;
+    uintN tos, limit;
+
+    bool push(T item) {
+        if (tos == limit)
+            return false;
+        stack[tos++] = item;
+        return true;
+    }
+
+    bool isEmpty() { return tos == 0; }
+
+    T pop() {
+        JS_ASSERT(!isEmpty());
+        return stack[--tos];
+    }
+
+    T &peek() {
+        JS_ASSERT(!isEmpty());
+        return stack[tos-1];
+    }
+
+    MarkStack(void **buffer, size_t size)
+    {
+        tos = 0;
+        limit = size / sizeof(T) - 1;
+        stack = (T *)buffer;
+    }
+};
+
+struct LargeMarkItem
+{
+    JSObject *obj;
+    uintN markpos;
+
+    LargeMarkItem(JSObject *obj) : obj(obj), markpos(0) {}
+};
+
+static const size_t OBJECT_MARK_STACK_SIZE = 32768 * sizeof(JSObject *);
+static const size_t XML_MARK_STACK_SIZE = 1024 * sizeof(JSXML *);
+static const size_t LARGE_MARK_STACK_SIZE = 64 * sizeof(LargeMarkItem);
+
 struct GCMarker : public JSTracer {
   private:
     /* The color is only applied to objects, functions and xml. */
     uint32 color;
+
   public:
     jsuword stackLimit;
     /* See comments before delayMarkingChildren is jsgc.cpp. */
@@ -1092,6 +1137,10 @@ struct GCMarker : public JSTracer {
     void dumpConservativeRoots();
 #endif
 
+    MarkStack<JSObject *> objStack;
+    MarkStack<JSXML *> xmlStack;
+    MarkStack<LargeMarkItem> largeStack;
+
   public:
     explicit GCMarker(JSContext *cx);
     ~GCMarker();
@@ -1101,17 +1150,30 @@ struct GCMarker : public JSTracer {
     }
 
     void setMarkColor(uint32 newColor) {
-        /*
-         * We must process any delayed marking here, otherwise we confuse
-         * colors.
-         */
-        markDelayedChildren();
+        /* We must process the mark stack here, otherwise we confuse colors. */
+        drainMarkStack();
         color = newColor;
     }
 
     void delayMarkingChildren(const void *thing);
 
-    JS_FRIEND_API(void) markDelayedChildren();
+    void markDelayedChildren();
+
+    bool isMarkStackEmpty() {
+        return objStack.isEmpty() && xmlStack.isEmpty() && largeStack.isEmpty();
+    }
+
+    JS_FRIEND_API(void) drainMarkStack();
+
+    void pushObject(JSObject *obj) {
+        if (!objStack.push(obj))
+            delayMarkingChildren(obj);
+    }
+
+    void pushXML(JSXML *xml) {
+        if (!xmlStack.push(xml))
+            delayMarkingChildren(xml);
+    }
 };
 
 void

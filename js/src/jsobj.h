@@ -432,8 +432,6 @@ struct JSObject : js::gc::Cell {
         return &getClass()->ops;
     }
 
-    inline void trace(JSTracer *trc);
-
     uint32 shape() const {
         JS_ASSERT(objShape != JSObjectMap::INVALID_SHAPE);
         return objShape;
