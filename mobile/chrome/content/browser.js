@@ -1439,8 +1439,8 @@ Browser.WebProgress.prototype = {
       }
 
       aTab.scrolledAreaChanged();
-      if (browser.currentURI.spec != "about:blank")
-        aTab.updateThumbnail();
+      aTab.updateThumbnail();
+
       browser.messageManager.addMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
     });
   }
