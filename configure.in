@@ -5107,6 +5107,16 @@ else
   AC_MSG_RESULT([no])
 fi
 
+# Allow someone to change MOZ_APP_NAME in mozconfig
+MOZ_ARG_WITH_STRING(app-name,
+[--with-app-name=APPNAME sets MOZ_APP_NAME to APPNAME],
+WITH_APP_NAME=$withval,
+)
+
+if test -n "$WITH_APP_NAME" ; then
+    MOZ_APP_NAME="$WITH_APP_NAME"
+fi
+
 # Now is a good time to test for logic errors, define mismatches, etc.
 case "$MOZ_BUILD_APP" in
 xulrunner)
