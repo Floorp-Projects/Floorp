@@ -297,6 +297,8 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
 inline bool
 JSContext::markTypeCallerUnexpected(const js::Value &value)
 {
+    if (!typeInferenceEnabled())
+        return true;
     return markTypeCallerUnexpected(js::types::GetValueType(this, value));
 }
 
@@ -425,19 +427,6 @@ JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
 {
     return addTypeFlags(obj, js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
                         (notDense ? js::types::OBJECT_FLAG_NON_DENSE_ARRAY : 0));
-}
-
-inline bool
-JSContext::markTypeArrayShrank(js::types::TypeObject *obj)
-{
-    /*
-     * For simplicity in determining whether to hoist array bounds checks,
-     * we mark types with arrays that have shrunk (a rare operation) as
-     * possibly non-dense.
-     */
-    return addTypeFlags(obj, js::types::OBJECT_FLAG_ARRAY_SHRANK |
-                        js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
-                        js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
 }
 
 inline bool

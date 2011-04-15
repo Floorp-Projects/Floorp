@@ -887,6 +887,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                             ? masm.size() + from.returnOffset
                             : from.returnOffset;
         to.initialize(codeOffset, from.inlineIndex, from.inlinepc - script->code, from.id);
+
+        /*
+         * Patch stores of the base call's return address for InvariantFailure
+         * calls. InvariantFailure will patch its own return address to this
+         * pointer before triggering recompilation.
+         */
+        if (from.loopPatch.hasPatch)
+            stubCode.patch(from.loopPatch.codePatch, result + codeOffset);
     }
 
     /* Build the table of rejoin sites. */
@@ -899,6 +907,14 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
         uint32 codeOffset = (uint8 *) stubCode.locationOf(from.label).executableAddress() - result;
         to.initialize(codeOffset, from.pc - outerScript->code, from.id);
+
+        /*
+         * Patch stores of the rejoin site's return address for InvariantFailure
+         * calls. We need to preserve the rejoin site we were at in case of
+         * cascading recompilations and loop invariant failures.
+         */
+        if (from.loopPatch.hasPatch)
+            stubCode.patch(from.loopPatch.codePatch, result + codeOffset);
     }
 
 #if defined JS_MONOIC
@@ -3200,11 +3216,6 @@ mjit::Compiler::emitStubCall(void *ptr, DataLabelPtr *pinline)
     JaegerSpew(JSpew_Insns, " ---- CALLING STUB ---- \n");
     Call cl = masm.fallibleVMCall(cx->typeInferenceEnabled(),
                                   ptr, outerPC(), pinline, frame.totalDepth());
-    if (loop && loop->generatingInvariants()) {
-        Jump j = masm.jump();
-        Label l = masm.label();
-        loop->addInvariantCall(j, l, false);
-    }
     JaegerSpew(JSpew_Insns, " ---- END STUB CALL ---- \n");
     return cl;
 }
@@ -4115,6 +4126,11 @@ mjit::Compiler::inlineStubCall(void *stub, bool needsRejoin)
     InternalCallSite site(masm.callReturnOffset(cl), a->inlineIndex, PC,
                           (size_t)stub, false, needsRejoin);
     site.inlinePatch = inlinePatch;
+    if (loop && loop->generatingInvariants()) {
+        Jump j = masm.jump();
+        Label l = masm.label();
+        loop->addInvariantCall(j, l, false, callSites.length(), true);
+    }
     addCallSite(site);
 }
 
@@ -4171,7 +4187,7 @@ mjit::Compiler::addRejoinSite(void *stub, bool ool, Label oolLabel)
     if (loop && loop->generatingInvariants()) {
         Jump j = stubcc.masm.jump();
         Label l = stubcc.masm.label();
-        loop->addInvariantCall(j, l, true);
+        loop->addInvariantCall(j, l, true, rejoinSites.length() - 1, false);
     }
 
     if (ool) {
@@ -6544,7 +6560,6 @@ mjit::Compiler::finishLoop(jsbytecode *head)
      * and after jumpAndTrace'ing on that edge we can pop it from the frame.
      */
     JS_ASSERT(loop && loop->headOffset() == uint32(head - script->code));
-    loop->flushLoop(stubcc);
 
     jsbytecode *entryTarget = script->code + loop->entryOffset();
 
@@ -6563,20 +6578,23 @@ mjit::Compiler::finishLoop(jsbytecode *head)
     }
 #endif
 
-    Vector<Jump> hoistJumps(cx);
-
     loop->entryJump().linkTo(masm.label(), &masm);
-
-        if (!loop->checkHoistedBounds(entryTarget, masm, &hoistJumps))
-            return false;
-        for (unsigned i = 0; i < hoistJumps.length(); i++)
-            stubcc.linkExitDirect(hoistJumps[i], stubcc.masm.label());
 
     {
         REJOIN_SITE(stubs::MissedBoundsCheckEntry);
         OOL_STUBCALL(stubs::MissedBoundsCheckEntry);
+
+        if (loop->generatingInvariants()) {
+            /*
+             * To do the initial load of the invariants, jump to the invariant
+             * restore point after the call just emitted. :XXX: fix hackiness.
+             */
+            if (oomInVector)
+                return false;
+            Label label = callSites[callSites.length() - 1].loopJumpLabel;
+            stubcc.linkExitDirect(masm.jump(), label);
+        }
         stubcc.crossJump(stubcc.masm.jump(), masm.label());
-        hoistJumps.clear();
     }
 
     frame.prepareForJump(entryTarget, masm, true);
@@ -6591,23 +6609,28 @@ mjit::Compiler::finishLoop(jsbytecode *head)
          */
         LoopEntry entry;
         entry.pcOffset = head - script->code;
-        entry.label = stubcc.masm.label();
-        loopEntries.append(entry);
 
-        REJOIN_SITE(stubs::MissedBoundsCheckHead);
-        if (!loop->checkHoistedBounds(head, stubcc.masm, &hoistJumps))
-            return false;
-        Jump skipCall = stubcc.masm.jump();
-        for (unsigned i = 0; i < hoistJumps.length(); i++)
-            hoistJumps[i].linkTo(stubcc.masm.label(), &stubcc.masm);
+        AutoRejoinSite autoRejoinHead(this, JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckHead));
         OOL_STUBCALL(stubs::MissedBoundsCheckHead);
-        skipCall.linkTo(stubcc.masm.label(), &stubcc.masm);
-        hoistJumps.clear();
 
+        if (loop->generatingInvariants()) {
+            if (oomInVector)
+                return false;
+            entry.label = callSites[callSites.length() - 1].loopJumpLabel;
+        } else {
+            entry.label = stubcc.masm.label();
+        }
+
+        autoRejoinHead.oolRejoin(stubcc.masm.label());
         frame.prepareForJump(head, stubcc.masm, true);
         if (!stubcc.jumpInScript(stubcc.masm.jump(), head))
             return false;
+
+        loopEntries.append(entry);
     }
+
+    /* Write out loads and tests of loop invariants at all calls in the loop body. */
+    loop->flushLoop(stubcc);
 
     LoopState *nloop = loop->outer;
     cx->delete_(loop);

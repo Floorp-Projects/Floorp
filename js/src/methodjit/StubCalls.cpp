@@ -2886,27 +2886,39 @@ stubs::AssertArgumentTypes(VMFrame &f)
 }
 #endif
 
-void JS_FASTCALL
-stubs::MissedBoundsCheckEntry(VMFrame &f)
+/*
+ * These two are never actually called, they just give us a place to rejoin if
+ * there is an invariant failure when initially entering a loop.
+ */
+void JS_FASTCALL stubs::MissedBoundsCheckEntry(VMFrame &f) {}
+void JS_FASTCALL stubs::MissedBoundsCheckHead(VMFrame &f) {}
+
+void * JS_FASTCALL
+stubs::InvariantFailure(VMFrame &f, void *rval)
 {
+    /*
+     * Patch this call to the return site of the call triggering the invariant
+     * failure (or a MissedBoundsCheck* function if the failure occurred on
+     * initial loop entry), and trigger a recompilation which will then
+     * redirect to the rejoin point for that call. We want to make things look
+     * to the recompiler like we are still inside that call, and that after
+     * recompilation we will return to the call's rejoin point.
+     */
+    void *repatchCode = f.scratch;
+    JS_ASSERT(repatchCode);
+    void **frameAddr = f.returnAddressLocation();
+    *frameAddr = repatchCode;
+
     /* Recompile the script, and don't hoist any bounds checks. */
     JS_ASSERT(!f.script()->failedBoundsCheck);
     f.script()->failedBoundsCheck = true;
 
     Recompiler recompiler(f.cx, f.script());
     if (!recompiler.recompile())
-        THROW();
-}
+        THROWV(NULL);
 
-void JS_FASTCALL
-stubs::MissedBoundsCheckHead(VMFrame &f)
-{
-    /*
-     * This stub is needed as we can emit bounds checks in two places when
-     * finishing a loop (for entry from JIT code, and entry from the
-     * interpreter), and need to rejoin at the right one.
-     */
-    stubs::MissedBoundsCheckEntry(f);
+    /* Return the same value (if any) as the call triggering the invariant failure. */
+    return rval;
 }
 
 void JS_FASTCALL

@@ -2155,9 +2155,6 @@ struct JSContext
     /* Mark an array type as being not packed and, possibly, not dense. */
     inline bool markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
 
-    /* Mark an array type as having had its length shrink dynamically. */
-    inline bool markTypeArrayShrank(js::types::TypeObject *obj);
-
     /* Mark a function as being uninlineable (its .arguments property has been accessed). */
     inline bool markTypeFunctionUninlineable(js::types::TypeObject *obj);
 

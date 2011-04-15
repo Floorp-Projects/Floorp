@@ -2823,8 +2823,6 @@ TypeObject::print(JSContext *cx)
             printf(" packed");
         if (!hasFlags(OBJECT_FLAG_NON_DENSE_ARRAY))
             printf(" dense");
-        if (hasFlags(OBJECT_FLAG_ARRAY_SHRANK))
-            printf(" arrayShrank");
         if (hasFlags(OBJECT_FLAG_UNINLINEABLE))
             printf(" uninlineable");
         if (hasFlags(OBJECT_FLAG_SPECIAL_EQUALITY))
