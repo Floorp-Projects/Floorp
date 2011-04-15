@@ -1068,6 +1068,11 @@ struct JSRuntime {
     volatile bool       gcIsNeeded;
     JSObject           *gcWeakMapList;
 
+    /* Pre-allocated space for the GC mark stacks. Pointer type ensures alignment. */
+    void                *gcMarkStackObjs[js::OBJECT_MARK_STACK_SIZE];
+    void                *gcMarkStackXMLs[js::XML_MARK_STACK_SIZE];
+    void                *gcMarkStackLarges[js::LARGE_MARK_STACK_SIZE];
+
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
      * gcTriggerCompartment is reset to NULL and a global GC is performed.

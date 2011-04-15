@@ -56,6 +56,7 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jshashtable.h"
 #include "jsinterp.h"
 #include "jsiter.h"
