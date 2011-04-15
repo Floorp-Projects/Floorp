@@ -144,6 +144,7 @@ CPPSRCS		= \
 		jsfriendapi.cpp \
 		jsfun.cpp \
 		jsgc.cpp \
+		jsgcmark.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
 		jshash.cpp \
@@ -206,6 +207,7 @@ INSTALLED_HEADERS = \
 		jsfun.h \
 		jsfriendapi.h \
 		jsgc.h \
+		jsgcmark.h \
 		jscell.h \
 		jsgcchunk.h \
 		jsgcstats.h \

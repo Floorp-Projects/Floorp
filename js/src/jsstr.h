@@ -364,7 +364,7 @@ class JSString : public js::gc::Cell
 
     /* Called during GC for any string. */
 
-    inline void mark(JSTracer *trc);
+    void mark(JSTracer *trc);
 
     /* Offsets for direct field from jit code. */
 
@@ -404,7 +404,7 @@ JS_STATIC_ASSERT(sizeof(JSRope) == sizeof(JSString));
 class JSLinearString : public JSString
 {
     friend class JSString;
-    inline void mark(JSTracer *trc);
+    void mark(JSTracer *trc);
 
   public:
     JS_ALWAYS_INLINE
