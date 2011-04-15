@@ -224,7 +224,7 @@ enum ObjectKind {
     OBJECT_NONE,
     OBJECT_UNKNOWN,
     OBJECT_PACKED_ARRAY,
-    OBJECT_DENSE_ARRAY,         /* Excludes arrays whose length has shrunk. */
+    OBJECT_DENSE_ARRAY,
     OBJECT_INLINEABLE_FUNCTION,
     OBJECT_SCRIPTED_FUNCTION,
     OBJECT_NO_SPECIAL_EQUALITY
@@ -466,17 +466,11 @@ enum {
     /* Whether any objects this represents are not packed arrays. */
     OBJECT_FLAG_NON_PACKED_ARRAY = 1 << 1,
 
-    /*
-     * Whether any objects this represents are arrays whose length has shrunk
-     * due to explicit assignments to .length.
-     */
-    OBJECT_FLAG_ARRAY_SHRANK = 1 << 2,
-
     /* Whether any objects this represents have had their .arguments accessed. */
-    OBJECT_FLAG_UNINLINEABLE = 1 << 3,
+    OBJECT_FLAG_UNINLINEABLE = 1 << 2,
 
     /* Whether any objects this represents have an equality hook. */
-    OBJECT_FLAG_SPECIAL_EQUALITY = 1 << 4
+    OBJECT_FLAG_SPECIAL_EQUALITY = 1 << 3
 };
 typedef uint32 TypeObjectFlags;
 

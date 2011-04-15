@@ -670,9 +670,6 @@ array_length_setter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value 
     if (oldlen < newlen)
         return obj->setArrayLength(cx, newlen);
 
-    if (!cx->markTypeArrayShrank(obj->getType()))
-        return false;
-
     if (obj->isDenseArray()) {
         /*
          * Don't reallocate if we're not actually shrinking our slots. If we do
@@ -2357,9 +2354,6 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
         return JS_FALSE;
 
     obj->setDenseArrayLength(index);
-    if (!cx->markTypeArrayShrank(obj->getType()))
-        return JS_FALSE;
-
     return JS_TRUE;
 }
 
@@ -2403,13 +2397,10 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
             }
             Value *elems = obj->getDenseArrayElements();
             memmove(elems, elems + 1, length * sizeof(jsval));
-            if (cx->typeInferenceEnabled()) {
+            if (cx->typeInferenceEnabled())
                 obj->setDenseArrayInitializedLength(obj->getDenseArrayInitializedLength() - 1);
-                if (!cx->markTypeArrayShrank(obj->getType()))
-                    return JS_FALSE;
-            } else {
+            else
                 obj->setDenseArrayElement(length, MagicValue(JS_ARRAY_HOLE));
-            }
             JS_ALWAYS_TRUE(obj->setArrayLength(cx, length));
             if (!js_SuppressDeletedIndexProperties(cx, obj, length, length + 1))
                 return JS_FALSE;

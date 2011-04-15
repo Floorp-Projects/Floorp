@@ -40,7 +40,7 @@
 #define jsjaeger_loopstate_h__
 
 #include "jsanalyze.h"
-#include "methodjit/BaseCompiler.h"
+#include "methodjit/Compiler.h"
 
 namespace js {
 namespace mjit {
@@ -68,12 +68,8 @@ namespace mjit {
  *
  * Bounds check hoisting. If we can determine a loop invariant test which
  * implies the bounds check at one or more array accesses, we hoist that and
- * only check it when initially entering the loop (from JIT code or the
- * interpreter). This condition never needs to be checked again within the
- * loop, but can be invalidated if the script's arguments are indirectly
- * written via the 'arguments' property/local (which loop analysis assumes
- * does not happen) or if the involved arrays shrink dynamically through
- * assignments to the length property.
+ * check it when initially entering the loop (from JIT code or the
+ * interpreter) and after every stub or C++ call.
  *
  * Loop invariant code motion. If we can determine a computation (arithmetic,
  * array slot pointer or property access) is loop invariant, we give it a slot
@@ -140,6 +136,10 @@ class LoopState : public MacroAssemblerTypedefs
         Jump jump;
         Label label;
         bool ool;
+
+        /* Index into Compiler's callSites or rejoinSites */
+        unsigned patchIndex;
+        bool patchCall;
     };
     Vector<RestoreInvariantCall> restoreInvariantCalls;
 
@@ -170,8 +170,8 @@ class LoopState : public MacroAssemblerTypedefs
     };
     Vector<InvariantArraySlots, 4, CompilerAllocPolicy> invariantArraySlots;
 
-    bool hasInvariants() { return !invariantArraySlots.empty(); }
-    void restoreInvariants(Assembler &masm);
+    bool hasInvariants() { return !hoistedBoundsChecks.empty() || !invariantArraySlots.empty(); }
+    void restoreInvariants(Assembler &masm, Vector<Jump> *jumps);
 
   public:
 
@@ -189,7 +189,7 @@ class LoopState : public MacroAssemblerTypedefs
     bool generatingInvariants() { return !skipAnalysis; }
 
     /* Add a call with trailing jump/label, after which invariants need to be restored. */
-    void addInvariantCall(Jump jump, Label label, bool ool);
+    void addInvariantCall(Jump jump, Label label, bool ool, unsigned patchIndex, bool patchCall);
 
     uint32 headOffset() { return lifetime->head; }
     uint32 getLoopRegs() { return loopRegs.freeMask; }
@@ -224,8 +224,6 @@ class LoopState : public MacroAssemblerTypedefs
 
     bool hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *id);
     FrameEntry *invariantSlots(const FrameEntry *obj);
-
-    bool checkHoistedBounds(jsbytecode *PC, Assembler &masm, Vector<Jump> *jumps);
 };
 
 } /* namespace mjit */
