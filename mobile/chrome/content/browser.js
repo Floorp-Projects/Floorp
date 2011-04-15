@@ -57,8 +57,6 @@ function getBrowser() {
   return Browser.selectedBrowser;
 }
 
-const kBrowserFormZoomLevelMin = 0.8;
-const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 
 const kDefaultBrowserWidth = 800;
