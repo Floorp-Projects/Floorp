@@ -71,6 +71,13 @@ JSObject::isWrapper() const
     return isProxy() && getProxyHandler()->family() == &sWrapperFamily;
 }
 
+JSWrapper *
+JSObject::getWrapperHandler() const
+{
+    JS_ASSERT(isWrapper());
+    return static_cast<JSWrapper *>(getProxyHandler());
+}
+
 JSObject *
 JSObject::unwrap(uintN *flagsp)
 {
