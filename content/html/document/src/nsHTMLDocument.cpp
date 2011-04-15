@@ -1399,12 +1399,6 @@ nsHTMLDocument::AdoptNode(nsIDOMNode* aSource, nsIDOMNode** aRetval)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetDomConfig(nsIDOMDOMConfiguration** aDomConfig)
-{
-  return nsDocument::GetDomConfig(aDomConfig);
-}
-
-NS_IMETHODIMP
 nsHTMLDocument::NormalizeDocument()
 {
   return nsDocument::NormalizeDocument();
