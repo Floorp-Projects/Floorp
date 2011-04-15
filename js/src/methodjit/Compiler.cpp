@@ -95,7 +95,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     outerScript(outerScript),
     isConstructing(isConstructing),
     globalObj(outerScript->global),
-    globalSlots(globalObj ? globalObj->getRawSlots() : NULL),
+    globalSlots((globalObj && globalObj->isGlobal()) ? globalObj->getRawSlots() : NULL),
     patchFrames(patchFrames),
     savedTraps(NULL),
     frame(cx, *thisFromCtor(), masm, stubcc),
@@ -706,7 +706,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
      * Watch for reallocation of the global slots while we were in the middle
      * of compiling due to, e.g. standard class initialization.
      */
-    if (globalObj && globalObj->getRawSlots() != globalSlots)
+    if (globalSlots && globalObj->getRawSlots() != globalSlots)
         return Compile_Retry;
 
     for (size_t i = 0; i < branchPatches.length(); i++) {
@@ -2917,7 +2917,8 @@ mjit::Compiler::jsop_getglobal(uint32 index)
         return;
     }
 
-    if (cx->typeInferenceEnabled() && !globalObj->getType()->unknownProperties()) {
+    if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
+        !globalObj->getType()->unknownProperties()) {
         Value *value = &globalObj->getSlotRef(slot);
         if (!value->isUndefined()) {
             watchGlobalReallocation();
@@ -6030,7 +6031,8 @@ mjit::Compiler::jsop_getgname(uint32 index)
      * be part of an INCGNAME op.
      */
     JSValueType type = JSVAL_TYPE_UNKNOWN;
-    if (cx->typeInferenceEnabled() && !globalObj->getType()->unknownProperties()) {
+    if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
+        !globalObj->getType()->unknownProperties()) {
         types::TypeSet *types = globalObj->getType()->getProperty(cx, ATOM_TO_JSID(atom), false);
         if (!types)
             return;
@@ -6233,7 +6235,8 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache, bool popGuara
         return;
     }
 
-    if (cx->typeInferenceEnabled() && !globalObj->getType()->unknownProperties()) {
+    if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
+        !globalObj->getType()->unknownProperties()) {
         /*
          * Note: object branding is disabled when inference is enabled. With
          * branding there is no way to ensure that a non-function property
