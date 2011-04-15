@@ -47,7 +47,6 @@
 #include "nsHTMLVideoElement.h"
 #include "nsIDOMHTMLVideoElement.h"
 #include "nsDisplayList.h"
-#include "nsIRenderingContext.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
 #include "nsPresContext.h"
@@ -491,7 +490,7 @@ nsVideoFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-nsSize nsVideoFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+nsSize nsVideoFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                      nsSize aCBSize,
                                      nscoord aAvailableWidth,
                                      nsSize aMargin,
@@ -517,14 +516,14 @@ nsSize nsVideoFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
                                                            aPadding);
 }
 
-nscoord nsVideoFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nscoord nsVideoFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = GetVideoIntrinsicSize(aRenderingContext).width;
   DISPLAY_MIN_WIDTH(this, result);
   return result;
 }
 
-nscoord nsVideoFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nscoord nsVideoFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = GetVideoIntrinsicSize(aRenderingContext).width;
   DISPLAY_PREF_WIDTH(this, result);
@@ -564,7 +563,7 @@ PRBool nsVideoFrame::ShouldDisplayPoster()
 }
 
 nsSize
-nsVideoFrame::GetVideoIntrinsicSize(nsIRenderingContext *aRenderingContext)
+nsVideoFrame::GetVideoIntrinsicSize(nsRenderingContext *aRenderingContext)
 {
   // Defaulting size to 300x150 if no size given.
   nsIntSize size(300, 150);

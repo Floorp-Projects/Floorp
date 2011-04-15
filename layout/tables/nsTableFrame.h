@@ -269,7 +269,7 @@ public:
    * columns, row groups, rows, and cells), and the table border, and all
    * internal borders if border-collapse is on.
    */
-  void PaintTableBorderBackground(nsIRenderingContext& aRenderingContext,
+  void PaintTableBorderBackground(nsRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
                                   nsPoint aPt, PRUint32 aBGPaintFlags);
 
@@ -308,22 +308,22 @@ public:
   void SetBCDamageArea(const nsRect& aValue);
   PRBool BCRecalcNeeded(nsStyleContext* aOldStyleContext,
                         nsStyleContext* aNewStyleContext);
-  void PaintBCBorders(nsIRenderingContext& aRenderingContext,
+  void PaintBCBorders(nsRenderingContext& aRenderingContext,
                       const nsRect&        aDirtyRect);
 
   virtual void MarkIntrinsicWidthsDirty();
   // For border-collapse tables, the caller must not add padding and
   // border to the results of these functions.
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
   virtual IntrinsicWidthOffsetData
-    IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext);
+    IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext);
 
-  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+  virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap);
-  virtual nsSize ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+  virtual nsSize ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                  nsSize aCBSize, nscoord aAvailableWidth,
                                  nsSize aMargin, nsSize aBorder,
                                  nsSize aPadding, PRBool aShrinkWrap);
@@ -331,7 +331,7 @@ public:
    * A copy of nsFrame::ShrinkWidthToFit that calls a different
    * GetPrefWidth, since tables have two different ones.
    */
-  nscoord TableShrinkWidthToFit(nsIRenderingContext *aRenderingContext,
+  nscoord TableShrinkWidthToFit(nsRenderingContext *aRenderingContext,
                                 nscoord aWidthInCB);
 
   // XXXldb REWRITE THIS COMMENT!
@@ -557,7 +557,7 @@ protected:
   // This calls the col group and column reflow methods, which do two things:
   //  (1) set all the dimensions to 0
   //  (2) notify the table about colgroups or columns with hidden visibility
-  void ReflowColGroups(nsIRenderingContext* aRenderingContext);
+  void ReflowColGroups(nsRenderingContext* aRenderingContext);
 
   /** return the width of the table taking into account visibility collapse
     * on columns and colgroups

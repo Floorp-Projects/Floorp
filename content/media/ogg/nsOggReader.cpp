@@ -107,7 +107,8 @@ nsOggReader::nsOggReader(nsBuiltinDecoder* aDecoder)
     mTheoraSerial(0),
     mPageOffset(0),
     mTheoraGranulepos(-1),
-    mVorbisGranulepos(-1)
+    mVorbisGranulepos(-1),
+    mDataOffset(0)
 {
   MOZ_COUNT_CTOR(nsOggReader);
 }
@@ -324,7 +325,6 @@ nsresult nsOggReader::ReadMetadata(nsVideoInfo* aInfo)
     mInfo.mDisplay = nsIntSize(mInfo.mPicture.width,
                                mInfo.mPicture.height);
   }
-  mInfo.mDataOffset = mDataOffset;
 
   if (mSkeletonState && mSkeletonState->HasIndex()) {
     // Extract the duration info out of the index, so we don't need to seek to
@@ -906,9 +906,13 @@ VideoData* nsOggReader::FindStartTime(PRInt64 aOffset,
                "Should be on state machine thread.");
   nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream != nsnull, nsnull);
-  nsresult res = stream->Seek(nsISeekableStream::NS_SEEK_SET, aOffset);
+  // Ensure aOffset is after mDataOffset, the offset of the first non-header page.
+  // This prevents us from trying to parse header pages as content pages.
+  NS_ASSERTION(mDataOffset > 0, "Must know mDataOffset by now");
+  PRInt64 offset = NS_MAX(mDataOffset, aOffset);
+  nsresult res = stream->Seek(nsISeekableStream::NS_SEEK_SET, offset);
   NS_ENSURE_SUCCESS(res, nsnull);
-  return nsBuiltinDecoderReader::FindStartTime(aOffset, aOutStartTime);
+  return nsBuiltinDecoderReader::FindStartTime(offset, aOutStartTime);
 }
 
 PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
@@ -918,7 +922,8 @@ PRInt64 nsOggReader::FindEndTime(PRInt64 aEndOffset)
                "Should be on state machine thread.");
   NS_ASSERTION(mDataOffset > 0,
                "Should have offset of first non-header page");
-  PRInt64 endTime = FindEndTime(mDataOffset, aEndOffset, PR_FALSE, &mOggState);
+  PRInt64 offset = NS_MAX(mDataOffset, aEndOffset);
+  PRInt64 endTime = FindEndTime(mDataOffset, offset, PR_FALSE, &mOggState);
   // Reset read head to start of media data.
   nsMediaStream* stream = mDecoder->GetCurrentStream();
   NS_ENSURE_TRUE(stream != nsnull, -1);
