@@ -48,7 +48,9 @@ bool
 ReportMoreArgsNeeded(JSContext *cx, const char *name, uintN required)
 {
     JS_ASSERT(required < 10);
-    char s[2] = { '0' + required, '\0' };
+    char s[2];
+    s[0] = '0' + required;
+    s[1] = '\0';
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_MORE_ARGS_NEEDED,
                          name, s, required == 1 ? "" : "s");
     return false;
