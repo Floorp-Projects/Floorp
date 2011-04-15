@@ -1147,7 +1147,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       let $icon = iQ(icon);
       if ($icon.data("xulTab") == event.target) {
         $icon.attr("src", Utils.defaultFaviconURL);
+        return false;
       }
+      return true;
     });
   },
 
@@ -1193,9 +1195,10 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     iQ(".appTabIcon", this.$appTabTray).each(function(icon) {
       let $icon = iQ(icon);
       if ($icon.data("xulTab") != xulTab)
-        return;
+        return true;
         
       $icon.remove();
+      return false;
     });
     
     // adjust the tray
@@ -1215,7 +1218,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     elements.each(function(icon) {
       let $icon = iQ(icon);
       if ($icon.data("xulTab") != xulTab)
-        return;
+        return true;
 
       let targetIndex = xulTab._tPos;
 
@@ -1226,6 +1229,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         iQ(".appTabIcon:nth-child(" + (targetIndex + 1) + ")", self.$appTabTray)[0]);
       else
         $icon.appendTo(self.$appTabTray);
+      return false;
     });
   },
 
@@ -2037,10 +2041,11 @@ let GroupItems = {
       iQ(".appTabIcon", groupItem.$appTabTray).each(function(icon) {
         let $icon = iQ(icon);
         if ($icon.data("xulTab") != xulTab)
-          return;
+          return true;
 
         if (iconUrl != $icon.attr("src"))
           $icon.attr("src", iconUrl);
+        return false;
       });
     });
   },  
