@@ -1129,6 +1129,7 @@ struct JSObject : js::gc::Cell {
     inline void setProxyPrivate(const js::Value &priv);
     inline const js::Value &getProxyExtra() const;
     inline void setProxyExtra(const js::Value &extra);
+    JSWrapper *getWrapperHandler() const;
 
     /*
      * With object-specific getters and setters.
