@@ -42,7 +42,6 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIFontMetrics.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsMathMLTokenFrame.h"
@@ -210,11 +209,10 @@ nsMathMLTokenFrame::Place(nsRenderingContext& aRenderingContext,
     mBoundingMetrics += childSize.mBoundingMetrics;
   }
 
-  nsCOMPtr<nsIFontMetrics> fm =
+  nsRefPtr<nsFontMetrics> fm =
     PresContext()->GetMetricsFor(GetStyleFont()->mFont);
-  nscoord ascent, descent;
-  fm->GetMaxAscent(ascent);
-  fm->GetMaxDescent(descent);
+  nscoord ascent = fm->MaxAscent();
+  nscoord descent = fm->MaxDescent();
 
   aDesiredSize.mBoundingMetrics = mBoundingMetrics;
   aDesiredSize.width = mBoundingMetrics.width;

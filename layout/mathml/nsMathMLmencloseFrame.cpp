@@ -48,7 +48,6 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsRenderingContext.h"
-#include "nsIFontMetrics.h"
 #include "nsWhitespaceTokenizer.h"
 
 #include "nsMathMLmencloseFrame.h"
@@ -378,7 +377,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   nscoord mEmHeight;
   aRenderingContext.SetFont(GetStyleFont()->mFont,
                             PresContext()->GetUserFontSet());
-  nsIFontMetrics* fm = aRenderingContext.FontMetrics();
+  nsFontMetrics* fm = aRenderingContext.FontMetrics();
   GetRuleThickness(aRenderingContext, fm, mRuleThickness);
   GetEmHeight(fm, mEmHeight);
 
@@ -400,7 +399,7 @@ nsMathMLmencloseFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       // Rule 11, App. G, TeXbook
       // psi = clearance between rule and content
       if (NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags))
-        fm->GetXHeight(phi);
+        phi = fm->XHeight();
       else
         phi = mRuleThickness;
       psi = mRuleThickness + phi / 4;

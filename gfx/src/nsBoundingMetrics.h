@@ -43,7 +43,7 @@
 /* Struct used for accurate measurements of a string, in order to
  * allow precise positioning when processing MathML.  This is in its
  * own header file because some very-widely-included headers need it
- * but not the rest of nsIFontMetrics, or vice versa.
+ * but not the rest of nsFontMetrics, or vice versa.
  */
 
 #ifdef MOZ_MATHML

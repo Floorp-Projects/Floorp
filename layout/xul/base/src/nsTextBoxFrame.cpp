@@ -49,7 +49,6 @@
 #include "nsTextBoxFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
@@ -72,7 +71,6 @@
 #include "nsCSSRendering.h"
 #include "nsIReflowCallback.h"
 #include "nsBoxFrame.h"
-#include "nsIThebesFontMetrics.h"
 
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
@@ -478,13 +476,12 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
       }
     } while (context && hasDecorations && (0 != decorMask));
 
-    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
 
     nscoord offset;
     nscoord size;
-    nscoord ascent;
-    fontMet->GetMaxAscent(ascent);
+    nscoord ascent = fontMet->MaxAscent();
 
     nscoord baseline =
       presContext->RoundAppUnitsToNearestDevPixels(aTextRect.y + ascent);
@@ -574,9 +571,9 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
-       nsIThebesFontMetrics* fm = static_cast<nsIThebesFontMetrics*>(fontMet.get());
-       fm->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
-                      aTextRect.x, baseline, &aRenderingContext, refContext.get());
+       fontMet->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
+                           aTextRect.x, baseline, &aRenderingContext,
+                           refContext.get());
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
@@ -657,9 +654,9 @@ nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext)
                                                     mAccesskeyIndex]);
 
          nscoord offset, baseline;
-         nsIFontMetrics* metrics = aRenderingContext.FontMetrics();
+         nsFontMetrics* metrics = aRenderingContext.FontMetrics();
          metrics->GetUnderline(offset, mAccessKeyInfo->mAccessUnderlineSize);
-         metrics->GetMaxAscent(baseline);
+         baseline = metrics->MaxAscent();
          mAccessKeyInfo->mAccessOffset = baseline - offset;
     }
 }
@@ -998,16 +995,19 @@ nsTextBoxFrame::MarkIntrinsicWidthsDirty()
 }
 
 void
-nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext,
-                                const nsString& aString, nsSize& aSize, nscoord& aAscent)
+nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext,
+                            nsRenderingContext& aRenderingContext,
+                            const nsString& aString,
+                            nsSize& aSize, nscoord& aAscent)
 {
-    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
-    fontMet->GetHeight(aSize.height);
+    aSize.height = fontMet->MaxHeight();
     aRenderingContext.SetFont(fontMet);
     aSize.width =
-      nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aString.get(), aString.Length());
-    fontMet->GetMaxAscent(aAscent);
+      nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
+                                    aString.get(), aString.Length());
+    aAscent = fontMet->MaxAscent();
 }
 
 void

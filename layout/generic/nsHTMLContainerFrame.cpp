@@ -61,8 +61,6 @@
 #include "nsWidgetsCID.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
-#include "nsIThebesFontMetrics.h"
 #include "gfxFont.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
@@ -107,10 +105,9 @@ void
 nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
                                nsRenderingContext* aCtx)
 {
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
-  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
-  gfxFontGroup* fontGroup = tfm->GetThebesFontGroup();
+  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   if (!firstFont)
     return; // OOM
@@ -188,10 +185,9 @@ void
 nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
                            nsRenderingContext* aCtx)
 {
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(mFrame, getter_AddRefs(fm));
-  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
-  gfxFontGroup* fontGroup = tfm->GetThebesFontGroup();
+  gfxFontGroup* fontGroup = fm->GetThebesFontGroup();
   gfxFont* firstFont = fontGroup->GetFontAt(0);
   if (!firstFont)
     return; // OOM
@@ -344,11 +340,10 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
     return NS_OK;
 
   // Hide text decorations if we're currently hiding @font-face fallback text
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsresult rv = nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm.get());
-  if (tfm->GetThebesFontGroup()->ShouldSkipDrawing())
+  if (fm->GetThebesFontGroup()->ShouldSkipDrawing())
     return NS_OK;
 
   // Do standards mode painting of 'text-decoration's: under+overline

@@ -47,7 +47,6 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"
-#include "nsIFontMetrics.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsAutoPtr.h"
@@ -644,7 +643,7 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
   }
 
   nsLayoutUtils::SetFontFromStyle(aReflowState.rendContext, mStyleContext);
-  nsIFontMetrics* fm = aReflowState.rendContext->FontMetrics();
+  nsFontMetrics* fm = aReflowState.rendContext->FontMetrics();
 
   if (fm) {
     // Compute final height of the frame.
@@ -657,8 +656,8 @@ nsInlineFrame::ReflowFrames(nsPresContext* aPresContext,
     // The height of our box is the sum of our font size plus the top
     // and bottom border and padding. The height of children do not
     // affect our height.
-    fm->GetMaxAscent(aMetrics.ascent);
-    fm->GetHeight(aMetrics.height);
+    aMetrics.ascent = fm->MaxAscent();
+    aMetrics.height = fm->MaxHeight();
   } else {
     NS_WARNING("Cannot get font metrics - defaulting sizes to 0");
     aMetrics.ascent = aMetrics.height = 0;
@@ -914,9 +913,10 @@ nscoord
 nsInlineFrame::GetBaseline() const
 {
   nscoord ascent = 0;
-  nsCOMPtr<nsIFontMetrics> fm;
-  if (NS_SUCCEEDED(nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm)))) {
-    fm->GetMaxAscent(ascent);
+  nsRefPtr<nsFontMetrics> fm;
+  nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
+  if (fm) {
+    ascent = fm->MaxAscent();
   }
   return NS_MIN(mRect.height, ascent + GetUsedBorderAndPadding().top);
 }

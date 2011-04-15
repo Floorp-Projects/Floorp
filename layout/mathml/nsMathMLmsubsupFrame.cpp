@@ -45,7 +45,6 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsRenderingContext.h"
-#include "nsIFontMetrics.h"
 
 #include "nsMathMLmsubsupFrame.h"
 
@@ -196,11 +195,10 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
 
   aRenderingContext.SetFont(baseFrame->GetStyleFont()->mFont,
                             aPresContext->GetUserFontSet());
-  nsIFontMetrics* fm = aRenderingContext.FontMetrics();
+  nsFontMetrics* fm = aRenderingContext.FontMetrics();
 
   // get x-height (an ex)
-  nscoord xHeight;
-  fm->GetXHeight (xHeight);
+  nscoord xHeight = fm->XHeight();
 
   nscoord ruleSize;
   GetRuleThickness (aRenderingContext, fm, ruleSize);
