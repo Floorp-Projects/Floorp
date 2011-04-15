@@ -1781,17 +1781,6 @@ nsMenuPopupFrame::AttributeChanged(PRInt32 aNameSpaceID,
     }
   }
 
-  // accessibility needs this to ensure the frames get constructed when the
-  // menugenerated attribute is set, see bug 279703 comment 42 for discussion
-  if (aAttribute == nsGkAtoms::menugenerated &&
-      mFrames.IsEmpty() && !mGeneratedChildren) {
-    EnsureWidget();
-
-    // indicate that the children have been generated and then generate them
-    mGeneratedChildren = PR_TRUE;
-    PresContext()->PresShell()->FrameConstructor()->GenerateChildFrames(this);
-  }
-
   return rv;
 }
 

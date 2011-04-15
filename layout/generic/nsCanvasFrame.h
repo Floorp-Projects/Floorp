@@ -40,17 +40,15 @@
 #ifndef nsCanvasFrame_h___
 #define nsCanvasFrame_h___
 
-
 #include "nsHTMLContainerFrame.h"
-#include "nsStyleContext.h"
-#include "nsIRenderingContext.h"
-#include "nsGUIEvent.h"
-#include "nsGkAtoms.h"
 #include "nsIScrollPositionListener.h"
-#include "nsDisplayList.h"
 #include "nsAbsoluteContainingBlock.h"
+#include "nsDisplayList.h"
+#include "nsGkAtoms.h"
 
 class nsPresContext;
+class nsRenderingContext;
+class nsEvent;
 
 /**
  * Root frame class.
@@ -59,7 +57,7 @@ class nsPresContext;
  * It only supports having a single child frame which must be an area
  * frame
  */
-class nsCanvasFrame : public nsHTMLContainerFrame, 
+class nsCanvasFrame : public nsHTMLContainerFrame,
                       public nsIScrollPositionListener
 {
 public:
@@ -89,8 +87,8 @@ public:
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
@@ -111,7 +109,7 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  void PaintFocus(nsIRenderingContext& aRenderingContext, nsPoint aPt);
+  void PaintFocus(nsRenderingContext& aRenderingContext, nsPoint aPt);
 
   // nsIScrollPositionListener
   virtual void ScrollPositionWillChange(nscoord aX, nscoord aY);
@@ -224,7 +222,7 @@ public:
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
 
   void SetExtraBackgroundColor(nscolor aColor)
   {

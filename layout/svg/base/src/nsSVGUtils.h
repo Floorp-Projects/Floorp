@@ -45,7 +45,7 @@
 #include "nsCOMPtr.h"
 #include "nsRect.h"
 #include "gfxContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "gfxRect.h"
 #include "gfxMatrix.h"
 #include "nsSVGMatrix.h"
@@ -161,7 +161,7 @@ public:
   /**
    * Render SVG to a legacy rendering context
    */
-  nsSVGRenderState(nsIRenderingContext *aContext);
+  nsSVGRenderState(nsRenderingContext *aContext);
   /**
    * Render SVG to a modern rendering context
    */
@@ -171,7 +171,7 @@ public:
    */
   nsSVGRenderState(gfxASurface *aSurface);
 
-  nsIRenderingContext *GetRenderingContext(nsIFrame *aFrame);
+  nsRenderingContext *GetRenderingContext(nsIFrame *aFrame);
   gfxContext *GetGfxContext() { return mGfxContext; }
 
   void SetRenderMode(RenderMode aMode) { mRenderMode = aMode; }
@@ -184,7 +184,7 @@ public:
 
 private:
   RenderMode                    mRenderMode;
-  nsCOMPtr<nsIRenderingContext> mRenderingContext;
+  nsRefPtr<nsRenderingContext> mRenderingContext;
   nsRefPtr<gfxContext>          mGfxContext;
   PRPackedBool                  mPaintingToWindow;
 };

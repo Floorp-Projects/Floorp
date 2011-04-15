@@ -77,7 +77,7 @@ class TableBackgroundPainter
     TableBackgroundPainter(nsTableFrame*        aTableFrame,
                            Origin               aOrigin,
                            nsPresContext*       aPresContext,
-                           nsIRenderingContext& aRenderingContext,
+                           nsRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            const nsPoint&       aPt,
                            PRUint32             aBGPaintFlags);
@@ -233,7 +233,7 @@ class TableBackgroundPainter
     };
 
     nsPresContext*      mPresContext;
-    nsIRenderingContext& mRenderingContext;
+    nsRenderingContext& mRenderingContext;
     nsPoint              mRenderPt;
     nsRect               mDirtyRect;
 #ifdef DEBUG

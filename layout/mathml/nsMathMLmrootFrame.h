@@ -75,7 +75,7 @@ public:
          nsReflowStatus&          aStatus);
 
   virtual nscoord
-  GetIntrinsicWidth(nsIRenderingContext* aRenderingContext);
+  GetIntrinsicWidth(nsRenderingContext* aRenderingContext);
 
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,

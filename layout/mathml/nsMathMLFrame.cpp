@@ -57,6 +57,7 @@
 #include "nsStyleUtil.h"
 #include "nsDisplayList.h"
 #include "nsAttrName.h"
+#include "nsRenderingContext.h"
 
 eMathMLFrameType
 nsMathMLFrame::GetMathMLFrameType()
@@ -275,66 +276,42 @@ nsMathMLFrame::GetAttribute(nsIContent* aContent,
 }
 
 /* static */ void
-nsMathMLFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
-                                nsIFontMetrics*      aFontMetrics,
+nsMathMLFrame::GetRuleThickness(nsRenderingContext& aRenderingContext,
+                                nsFontMetrics*      aFontMetrics,
                                 nscoord&             aRuleThickness)
 {
   // get the bounding metrics of the overbar char, the rendering context
   // is assumed to have been set with the font of the current style context
-#ifdef NS_DEBUG
-  nsCOMPtr<nsIFontMetrics> currFontMetrics;
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(currFontMetrics));
-  NS_ASSERTION(currFontMetrics->Font().Equals(aFontMetrics->Font()),
-      "unexpected state");
-#endif
-  nscoord xHeight;
-  aFontMetrics->GetXHeight(xHeight);
+  NS_ASSERTION(aRenderingContext.FontMetrics()->Font().
+               Equals(aFontMetrics->Font()),
+               "unexpected state");
+
+  nscoord xHeight = aFontMetrics->XHeight();
   PRUnichar overBar = 0x00AF;
-  nsBoundingMetrics bm;
-  nsresult rv = aRenderingContext.GetBoundingMetrics(&overBar, PRUint32(1), bm);
-  if (NS_SUCCEEDED(rv)) {
-    aRuleThickness = bm.ascent + bm.descent;
-  }
-  if (NS_FAILED(rv) || aRuleThickness <= 0 || aRuleThickness >= xHeight) {
+  nsBoundingMetrics bm = aRenderingContext.GetBoundingMetrics(&overBar, 1);
+  aRuleThickness = bm.ascent + bm.descent;
+  if (aRuleThickness <= 0 || aRuleThickness >= xHeight) {
     // fall-back to the other version
     GetRuleThickness(aFontMetrics, aRuleThickness);
   }
-
-#if 0
-  nscoord oldRuleThickness;
-  GetRuleThickness(aFontMetrics, oldRuleThickness);
-
-  PRUnichar sqrt = 0xE063; // a sqrt glyph from TeX's CMEX font
-  rv = aRenderingContext.GetBoundingMetrics(&sqrt, PRUint32(1), bm);
-  nscoord sqrtrule = bm.ascent; // according to TeX, the ascent should be the rule
-
-  printf("xheight:%4d rule:%4d oldrule:%4d  sqrtrule:%4d\n",
-          xHeight, aRuleThickness, oldRuleThickness, sqrtrule);
-#endif
 }
 
 /* static */ void
-nsMathMLFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
-                             nsIFontMetrics*      aFontMetrics,
+nsMathMLFrame::GetAxisHeight(nsRenderingContext& aRenderingContext,
+                             nsFontMetrics*      aFontMetrics,
                              nscoord&             aAxisHeight)
 {
   // get the bounding metrics of the minus sign, the rendering context
   // is assumed to have been set with the font of the current style context
-#ifdef NS_DEBUG
-  nsCOMPtr<nsIFontMetrics> currFontMetrics;
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(currFontMetrics));
-  NS_ASSERTION(currFontMetrics->Font().Equals(aFontMetrics->Font()),
-	"unexpected state");
-#endif
-  nscoord xHeight;
-  aFontMetrics->GetXHeight(xHeight);
+  NS_ASSERTION(aRenderingContext.FontMetrics()->Font().
+               Equals(aFontMetrics->Font()),
+               "unexpected state");
+
+  nscoord xHeight = aFontMetrics->XHeight();
   PRUnichar minus = 0x2212; // not '-', but official Unicode minus sign
-  nsBoundingMetrics bm;
-  nsresult rv = aRenderingContext.GetBoundingMetrics(&minus, PRUint32(1), bm);
-  if (NS_SUCCEEDED(rv)) {
-    aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
-  }
-  if (NS_FAILED(rv) || aAxisHeight <= 0 || aAxisHeight >= xHeight) {
+  nsBoundingMetrics bm = aRenderingContext.GetBoundingMetrics(&minus, 1);
+  aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
+  if (aAxisHeight <= 0 || aAxisHeight >= xHeight) {
     // fall-back to the other version
     GetAxisHeight(aFontMetrics, aAxisHeight);
   }
@@ -361,10 +338,9 @@ nsMathMLFrame::CalcLength(nsPresContext*   aPresContext,
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
   }
   else if (eCSSUnit_XHeight == unit) {
-    nscoord xHeight;
     const nsStyleFont* font = aStyleContext->GetStyleFont();
-    nsCOMPtr<nsIFontMetrics> fm = aPresContext->GetMetricsFor(font->mFont);
-    fm->GetXHeight(xHeight);
+    nsRefPtr<nsFontMetrics> fm = aPresContext->GetMetricsFor(font->mFont);
+    nscoord xHeight = fm->XHeight();
     return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
   }
 
@@ -466,14 +442,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLBoundingMetrics", TYPE_MATHML_BOUNDING_METRICS)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLBoundingMetrics::Paint(nsDisplayListBuilder* aBuilder,
-                                           nsIRenderingContext* aCtx)
+                                           nsRenderingContext* aCtx)
 {
   aCtx->SetColor(NS_RGB(0,0,255));
   aCtx->DrawRect(mRect + ToReferenceFrame());
@@ -511,14 +487,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLBar", TYPE_MATHML_BAR)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLBar::Paint(nsDisplayListBuilder* aBuilder,
-                               nsIRenderingContext* aCtx)
+                               nsRenderingContext* aCtx)
 {
   // paint the bar with the current text color
   aCtx->SetColor(mFrame->GetStyleColor()->mColor);
