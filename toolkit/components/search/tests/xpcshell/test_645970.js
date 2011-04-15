@@ -1,3 +1,5 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -11,15 +13,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org Code.
- *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2003
+ * The Initial Developer of the Original Code is POTI Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2007
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Christopher A. Aillon <christopher@aillon.com> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,27 +33,30 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "domstubs.idl"
+let Cc = Components.classes;
+let Ci = Components.interfaces;
 
-interface nsIVariant;
-
+var gPrefService = Cc["@mozilla.org/preferences-service;1"]
+                    .getService(Ci.nsIPrefService)
+                    .QueryInterface(Ci.nsIPrefBranch);
 /**
- * The nsIDOMDOMConfiguration interface represents the configuration
- * of a document and maintains a table of recognized parameters.
- *
- * For more information on this interface, please see
- * http://www.w3.org/TR/DOM-Level-3-Core/
+ * Test nsSearchService with nested jar: uris
  */
+function run_test() {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "2");
 
-// Introduced in DOM Level 3:
-[scriptable, uuid(cfb5b821-9016-4a79-9d98-87b57c3ea0c7)]
-interface nsIDOMDOMConfiguration : nsISupports
-{
-  void               setParameter(in DOMString name, 
-                                  in nsIVariant value)
-                                        raises(DOMException);
-  nsIVariant         getParameter(in DOMString name)
-                                        raises(DOMException);
-  boolean            canSetParameter(in DOMString name, 
-                                     in nsIVariant value);
-};
+  do_load_manifest("data/chrome.manifest");
+
+  let url  = "chrome://testsearchplugin/locale/searchplugins/";
+  gPrefService.setCharPref("browser.search.jarURIs", url);
+
+  gPrefService.setBoolPref("browser.search.loadFromJars", true);
+
+  // The search service needs to be started after the jarURIs pref has been
+  // set in order to initiate it correctly
+  let searchService = Cc["@mozilla.org/browser/search-service;1"]
+                       .getService(Ci.nsIBrowserSearchService);
+  let engine = searchService.getEngineByName("bug645970");
+  do_check_neq(engine, null);
+}
+

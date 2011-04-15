@@ -56,7 +56,7 @@
 #include "nsIWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
-#include "nsIThebesFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "gfxFont.h"
 #include "nsStyleUtil.h"
 #include "nsCSSPseudoElements.h"
@@ -308,19 +308,16 @@ static nscoord CalcLengthWith(const nsCSSValue& aValue,
     case eCSSUnit_XHeight: {
       nsFont font = styleFont->mFont;
       font.size = aFontSize;
-      nsCOMPtr<nsIFontMetrics> fm =
+      nsRefPtr<nsFontMetrics> fm =
         aPresContext->GetMetricsFor(font, aUseUserFontSet);
-      nscoord xHeight;
-      fm->GetXHeight(xHeight);
-      return ScaleCoord(aValue, float(xHeight));
+      return ScaleCoord(aValue, float(fm->XHeight()));
     }
     case eCSSUnit_Char: {
       nsFont font = styleFont->mFont;
       font.size = aFontSize;
-      nsCOMPtr<nsIFontMetrics> fm =
+      nsRefPtr<nsFontMetrics> fm =
         aPresContext->GetMetricsFor(font, aUseUserFontSet);
-      nsCOMPtr<nsIThebesFontMetrics> tfm(do_QueryInterface(fm));
-      gfxFloat zeroWidth = (tfm->GetThebesFontGroup()->GetFontAt(0)
+      gfxFloat zeroWidth = (fm->GetThebesFontGroup()->GetFontAt(0)
                             ->GetMetrics().zeroOrAveCharWidth);
 
       return ScaleCoord(aValue, NS_ceil(aPresContext->AppUnitsPerDevPixel() *

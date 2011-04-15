@@ -61,7 +61,6 @@
 #include "nsIPresShell.h"
 #include "nsStyleContext.h"
 #include "nsIView.h"
-#include "nsIFontMetrics.h"
 #include "nsHTMLParts.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMEvent.h"
@@ -89,6 +88,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsCSSRendering.h"
 #include "FrameLayerBuilder.h"
+#include "nsRenderingContext.h"
 
 #ifdef IBMBIDI
 #include "nsBidiPresUtils.h"
@@ -569,7 +569,7 @@ nsBlockFrame::GetCaretBaseline() const
       return bp.top + firstLine->mFirstChild->GetCaretBaseline();
     }
   }
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   return nsLayoutUtils::GetCenteredFontBaseline(fm, nsHTMLReflowState::
       CalcLineHeight(GetStyleContext(), contentRect.height)) +
@@ -701,7 +701,7 @@ nsBlockFrame::MarkIntrinsicWidthsDirty()
 }
 
 /* virtual */ nscoord
-nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsBlockFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nsIFrame* firstInFlow = GetFirstContinuation();
   if (firstInFlow != this)
@@ -778,7 +778,7 @@ nsBlockFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBlockFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsBlockFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nsIFrame* firstInFlow = GetFirstContinuation();
   if (firstInFlow != this)
@@ -2368,13 +2368,12 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         metrics.ascent = metrics.height;
       }
 
-      nsIRenderingContext *rc = aState.mReflowState.rendContext;
+      nsRenderingContext *rc = aState.mReflowState.rendContext;
       nsLayoutUtils::SetFontFromStyle(rc, GetStyleContext());
-      nsCOMPtr<nsIFontMetrics> fm;
-      rc->GetFontMetrics(*getter_AddRefs(fm));
 
       nscoord minAscent =
-        nsLayoutUtils::GetCenteredFontBaseline(fm, aState.mMinLineHeight);
+        nsLayoutUtils::GetCenteredFontBaseline(rc->FontMetrics(),
+                                               aState.mMinLineHeight);
       nscoord minDescent = aState.mMinLineHeight - minAscent;
 
       aState.mY += NS_MAX(minAscent, metrics.ascent) +

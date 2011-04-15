@@ -38,6 +38,7 @@
 
 let TabView = {
   _deck: null,
+  _iframe: null,
   _window: null,
   _firstUseExperienced: false,
   _browserKeyHandlerInitialized: false,
@@ -135,17 +136,17 @@ let TabView = {
       this._deck = document.getElementById("tab-view-deck");
 
       // ___ create the frame
-      let iframe = document.createElement("iframe");
-      iframe.id = "tab-view";
-      iframe.setAttribute("transparent", "true");
-      iframe.flex = 1;
+      this._iframe = document.createElement("iframe");
+      this._iframe.id = "tab-view";
+      this._iframe.setAttribute("transparent", "true");
+      this._iframe.flex = 1;
 
       if (typeof callback == "function")
         window.addEventListener("tabviewframeinitialized", callback, false);
 
-      iframe.setAttribute("src", "chrome://browser/content/tabview.html");
-      this._deck.appendChild(iframe);
-      this._window = iframe.contentWindow;
+      this._iframe.setAttribute("src", "chrome://browser/content/tabview.html");
+      this._deck.appendChild(this._iframe);
+      this._window = this._iframe.contentWindow;
 
       if (this._tabShowEventListener) {
         gBrowser.tabContainer.removeEventListener(
@@ -163,8 +164,8 @@ let TabView = {
   },
 
   // ----------
-  isVisible: function() {
-    return (this._deck ? this._deck.selectedIndex == 1 : false);
+  isVisible: function TabView_isVisible() {
+    return (this._deck ? this._deck.selectedPanel == this._iframe : false);
   },
 
   // ----------

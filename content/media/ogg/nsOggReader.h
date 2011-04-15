@@ -282,6 +282,11 @@ private:
 
   // The granulepos of the last decoded Vorbis sample.
   PRInt64 mVorbisGranulepos;
+
+  // The offset of the first non-header page in the file, in bytes.
+  // Used to seek to the start of the media, and to prevent us trying to
+  // decode pages before this offset (the header pages) as content pages.
+  PRInt64 mDataOffset;
 };
 
 #endif

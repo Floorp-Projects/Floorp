@@ -42,7 +42,7 @@
 
 #include "nsNativeThemeCocoa.h"
 #include "nsObjCExceptions.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsThemeConstants.h"
@@ -1494,18 +1494,19 @@ nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect,
 }
 
 NS_IMETHODIMP
-nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame* aFrame,
-                                         PRUint8 aWidgetType, const nsRect& aRect,
+nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
+                                         nsIFrame* aFrame,
+                                         PRUint8 aWidgetType,
+                                         const nsRect& aRect,
                                          const nsRect& aDirtyRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   // setup to draw into the correct port
-  nsCOMPtr<nsIDeviceContext> dctx;
-  aContext->GetDeviceContext(*getter_AddRefs(dctx));
-  PRInt32 p2a = dctx->AppUnitsPerDevPixel();
+  PRInt32 p2a = aContext->AppUnitsPerDevPixel();
 
-  gfxRect nativeDirtyRect(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  gfxRect nativeDirtyRect(aDirtyRect.x, aDirtyRect.y,
+                          aDirtyRect.width, aDirtyRect.height);
   gfxRect nativeWidgetRect(aRect.x, aRect.y, aRect.width, aRect.height);
   nativeWidgetRect.ScaleInverse(gfxFloat(p2a));
   nativeDirtyRect.ScaleInverse(gfxFloat(p2a));
@@ -1513,7 +1514,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsIRenderingContext* aContext, nsIFrame
   if (nativeWidgetRect.IsEmpty())
     return NS_OK; // Don't attempt to draw invisible widgets.
 
-  nsRefPtr<gfxContext> thebesCtx = aContext->ThebesContext();
+  gfxContext* thebesCtx = aContext->ThebesContext();
   if (!thebesCtx)
     return NS_ERROR_FAILURE;
 
@@ -2115,7 +2116,7 @@ static const PRInt32 kRegularScrollbarThumbMinSize = 22;
 static const PRInt32 kSmallScrollbarThumbMinSize = 19;
 
 NS_IMETHODIMP
-nsNativeThemeCocoa::GetMinimumWidgetSize(nsIRenderingContext* aContext,
+nsNativeThemeCocoa::GetMinimumWidgetSize(nsRenderingContext* aContext,
                                          nsIFrame* aFrame,
                                          PRUint8 aWidgetType,
                                          nsIntSize* aResult,

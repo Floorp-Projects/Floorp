@@ -330,11 +330,6 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
           mInfo.mStereoMode = STEREO_MODE_MONO;
         }
       }
-
-      // mDataOffset is not used by the WebM backend.
-      // See bug 566779 for a suggestion to refactor
-      // and remove it.
-      mInfo.mDataOffset = -1;
     }
     else if (!mHasAudio && type == NESTEGG_TRACK_AUDIO) {
       nestegg_audio_params params;
@@ -785,7 +780,7 @@ nsresult nsWebMReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   nsMediaStream* stream = mDecoder->GetCurrentStream();
 
-  PRUint64 timecodeScale;
+  uint64_t timecodeScale;
   if (!mContext || nestegg_tstamp_scale(mContext, &timecodeScale) == -1) {
     return NS_OK;
   }

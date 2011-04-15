@@ -24,7 +24,7 @@
     function doTest()
     {
       //////////////////////////////////////////////////////////////////////////
-      // button1
+      // button
 
       var accTree = {
         role: ROLE_PUSHBUTTON,
@@ -34,112 +34,14 @@
       testAccessibleTree("button1", accTree);
 
       //////////////////////////////////////////////////////////////////////////
-      // button2
-
-      accTree = {
-        role: ROLE_PUSHBUTTON,
-        name: "hello",
-        children: [
-          {
-            role: ROLE_MENUPOPUP,
-            children: [
-              {
-                role: ROLE_MENUITEM
-              },
-              {
-                role: ROLE_MENUITEM
-              }
-            ]
-          }
-        ]
-      };
-      testAccessibleTree("button2", accTree);
-
-      //////////////////////////////////////////////////////////////////////////
-      // button3
-
-      accTree = {
-        role: ROLE_PUSHBUTTON,
-        name: "hello",
-        children: [
-          {
-            role: ROLE_MENUPOPUP,
-            children: [
-              {
-                role: ROLE_MENUITEM
-              },
-              {
-                role: ROLE_MENUITEM
-              }
-            ]
-          },
-          {
-            role: ROLE_PUSHBUTTON,
-            children: [
-            ]
-          }
-        ]
-      };
-      testAccessibleTree("button3", accTree);
-
-      //////////////////////////////////////////////////////////////////////////
-      // button4
+      // toolbarbutton
 
       var accTree = {
         role: ROLE_PUSHBUTTON,
         name: "hello",
         children: [ ]
       };
-      testAccessibleTree("button4", accTree);
-
-      //////////////////////////////////////////////////////////////////////////
-      // button5
-
-      accTree = {
-        role: ROLE_PUSHBUTTON,
-        name: "hello",
-        children: [
-          {
-            role: ROLE_MENUPOPUP,
-            children: [
-              {
-                role: ROLE_MENUITEM
-              },
-              {
-                role: ROLE_MENUITEM
-              }
-            ]
-          }
-        ]
-      };
-      testAccessibleTree("button5", accTree);
-
-      //////////////////////////////////////////////////////////////////////////
-      // button6
-
-      accTree = {
-        role: ROLE_PUSHBUTTON,
-        name: "hello",
-        children: [
-          {
-            role: ROLE_MENUPOPUP,
-            children: [
-              {
-                role: ROLE_MENUITEM
-              },
-              {
-                role: ROLE_MENUITEM
-              }
-            ]
-          },
-          {
-            role: ROLE_PUSHBUTTON,
-            children: [
-            ]
-          }
-        ]
-      };
-      testAccessibleTree("button6", accTree);
+      testAccessibleTree("button2", accTree);
 
       SimpleTest.finish()
     }
@@ -165,32 +67,7 @@
 
     <vbox flex="1">
       <button id="button1" label="hello"/>
-      <button id="button2" type="menu" label="hello">
-        <menupopup>
-          <menuitem label="menuitem"/>
-          <menuitem label="menuitem"/>
-        </menupopup>
-      </button>
-      <button id="button3" type="menu-button" label="hello">
-        <menupopup>
-          <menuitem label="menuitem"/>
-          <menuitem label="menuitem"/>
-        </menupopup>
-      </button>
-
-      <toolbarbutton id="button4" label="hello"/>
-      <toolbarbutton id="button5" type="menu" label="hello">
-        <menupopup>
-          <menuitem label="menuitem"/>
-          <menuitem label="menuitem"/>
-        </menupopup>
-      </toolbarbutton>
-      <toolbarbutton id="button6" type="menu-button" label="hello">
-        <menupopup>
-          <menuitem label="menuitem"/>
-          <menuitem label="menuitem"/>
-        </menupopup>
-      </toolbarbutton>
+      <toolbarbutton id="button2" label="hello"/>
     </vbox>
   </hbox>
 

@@ -1788,7 +1788,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     this.resizeOptions.minWidth = GroupItems.minGroupWidth;
     this.resizeOptions.minHeight = GroupItems.minGroupHeight;
-    this.resizeOptions.start = function () self._unfreezeItemSize();
+
+    let start = this.resizeOptions.start;
+    this.resizeOptions.start = function (event) {
+      start.call(self, event);
+      self._unfreezeItemSize();
+    }
 
     if (value) {
       immediately ? this.$resizer.show() : this.$resizer.fadeIn();

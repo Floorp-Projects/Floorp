@@ -47,7 +47,6 @@
 #include "nsWindow.h"
 #include "nsGTKToolkit.h"
 #include "nsIDeviceContext.h"
-#include "nsIRenderingContext.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsIDOMNode.h"

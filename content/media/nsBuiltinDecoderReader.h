@@ -92,10 +92,6 @@ public:
   // to and displayed at this size.
   nsIntSize mDisplay;
 
-  // The offset of the first non-header page in the file, in bytes.
-  // Used to seek to the start of the media.
-  PRInt64 mDataOffset;
-
   // Indicates the frame layout for single track stereo videos.
   mozilla::layers::StereoMode mStereoMode;
 
@@ -512,10 +508,6 @@ protected:
   // Reference to the owning decoder object. Do not hold the
   // reader's monitor when accessing this.
   nsBuiltinDecoder* mDecoder;
-
-  // The offset of the start of the first non-header page in the file.
-  // Used to seek to media start time.
-  PRInt64 mDataOffset;
 
   // Stores presentation info required for playback. The reader's monitor
   // must be held when accessing this.
