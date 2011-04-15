@@ -14,7 +14,9 @@
   var onLoadFunction = window.onload;
   window.onload = function()
   {
-    window.setTimeout(onLoadFunction, 500);
+    var img1 = document.getElementById("img1");
+    img1.addEventListener("load", onLoadFunction, false);
+    img1.src = "https://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg";
   }
 
   function runTest()
@@ -34,9 +36,5 @@
 
 <body>
   <img id="img1" src="https://example.com/tests/security/ssl/mixedcontent/hugebmp.sjs" />
-  <script type="text/javascript">
-    var img1 = document.getElementById("img1");
-    img1.src = "https://example.com/tests/security/ssl/mixedcontent/moonsurface.jpg";
-  </script>
 </body>
 </html>
