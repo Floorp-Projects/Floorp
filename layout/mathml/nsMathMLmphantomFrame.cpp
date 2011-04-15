@@ -42,8 +42,6 @@
 #include "nsFrame.h"
 #include "nsPresContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
-#include "nsIFontMetrics.h"
 
 #include "nsMathMLmphantomFrame.h"
 

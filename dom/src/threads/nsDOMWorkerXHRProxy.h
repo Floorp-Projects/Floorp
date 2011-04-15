@@ -45,6 +45,7 @@
 #include "nsIRequestObserver.h"
 
 // Other includes
+#include "nsIDOMEventTarget.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsStringGlue.h"
@@ -74,8 +75,9 @@ class nsDOMWorkerXHRProxy : public nsIRunnable,
   friend class nsDOMWorkerXHR;
   friend class nsDOMWorkerXHRUpload;
 
-  typedef nsresult (NS_STDCALL nsIDOMEventTarget::*EventListenerFunction)
-    (const nsAString&, nsIDOMEventListener*, PRBool);
+  typedef NS_STDCALL_FUNCPROTO(nsresult, EventListenerFunction, nsIDOMEventTarget,
+                               AddEventListener,
+                               (const nsAString&, nsIDOMEventListener*, PRBool));
 
 public:
   typedef nsAutoTArray<nsCOMPtr<nsIRunnable>, 5> SyncEventQueue;

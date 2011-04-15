@@ -416,7 +416,7 @@ let UI = {
   // Function: isTabViewVisible
   // Returns true if the TabView UI is currently shown.
   isTabViewVisible: function UI_isTabViewVisible() {
-    return gTabViewDeck.selectedIndex == 1;
+    return gTabViewDeck.selectedPanel == gTabViewFrame;
   },
 
   // ---------
@@ -455,7 +455,7 @@ let UI = {
     // Restore the full height when showing TabView
     gTabViewFrame.style.marginTop = "";
 #endif
-    gTabViewDeck.selectedIndex = 1;
+    gTabViewDeck.selectedPanel = gTabViewFrame;
     gWindow.TabsInTitlebar.allowedBy("tabview-open", false);
     gTabViewFrame.contentWindow.focus();
 
@@ -537,7 +537,7 @@ let UI = {
     // as well as avoiding the flash of black as we animate out
     gTabViewFrame.style.marginTop = gBrowser.boxObject.y + "px";
 #endif
-    gTabViewDeck.selectedIndex = 0;
+    gTabViewDeck.selectedPanel = gBrowserPanel;
     gWindow.TabsInTitlebar.allowedBy("tabview-open", true);
     gBrowser.contentWindow.focus();
 

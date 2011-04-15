@@ -46,9 +46,8 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "gfxPlatform.h"
-#include "nsIFontMetrics.h"
 
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
@@ -65,9 +64,6 @@
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
 
-#if ALERT_MISSING_FONTS
-#include "nsIStringBundle.h"
-#endif
 #include "nsDisplayList.h"
 
 #include "nsMathMLOperators.h"
@@ -131,47 +127,6 @@ typedef enum {eExtension_base, eExtension_variants, eExtension_parts}
 #define NS_TABLE_STATE_ERROR       -1
 #define NS_TABLE_STATE_EMPTY        0
 #define NS_TABLE_STATE_READY        1
-
-// helper to check if a font is installed
-static PRBool
-CheckFontExistence(nsPresContext* aPresContext, const nsString& aFontName)
-{
-  PRBool aliased;
-  nsAutoString localName;
-  nsIDeviceContext *deviceContext = aPresContext->DeviceContext();
-  deviceContext->GetLocalFontName(aFontName, localName, aliased);
-  // XXXkt CheckFontExistence always returns NS_OK.
-  PRBool rv = (aliased || (NS_OK == deviceContext->CheckFontExistence(localName)));
-  // (see bug 35824 for comments about the aliased localName)
-  return rv;
-}
-
-#if ALERT_MISSING_FONTS
-// alert the user if some of the needed MathML fonts are not installed.
-// it is non-modal (i.e., it doesn't wait for input from the user)
-static void
-AlertMissingFonts(nsString& aMissingFonts)
-{
-  nsCOMPtr<nsIStringBundleService> sbs =
-    mozilla::services::GetStringBundleService();
-  if (!sbs)
-    return;
-
-  nsCOMPtr<nsIStringBundle> sb;
-  sbs->CreateBundle("resource://gre/res/fonts/mathfont.properties", getter_AddRefs(sb));
-  if (!sb)
-    return;
-
-  nsXPIDLString title, message;
-  const PRUnichar* strings[] = { aMissingFonts.get() };
-  sb->GetStringFromName(NS_LITERAL_STRING("mathfont_missing_dialog_title").get(), getter_Copies(title));
-  sb->FormatStringFromName(NS_LITERAL_STRING("mathfont_missing_dialog_message").get(),
-                           strings, 1, getter_Copies(message));
-
-  // XXX Bug 309090 - could show a notification bar here. Bug 563114 removed
-  // the nsINonBlockingAlertService interface that was previously used here.
-}
-#endif
 
 // helper to trim off comments from data in a MathFont Property File
 static void
@@ -403,7 +358,7 @@ nsGlyphTable::ElementAt(nsPresContext* aPresContext, nsMathMLChar* aChar, PRUint
           return kNullGlyph;
         }
         // The char cannot be handled if this font is not installed
-        if (!mFontName[font].Length() || !CheckFontExistence(aPresContext, mFontName[font])) {
+        if (!mFontName[font].Length()) {
           return kNullGlyph;
         }
       }
@@ -716,36 +671,10 @@ GetFontExtensionPref(nsIPrefBranch* aPrefBranch, PRUnichar aChar,
     GetPrefValue(aPrefBranch, alternateKey.get(), aValue);
 }
 
-#if ALERT_MISSING_FONTS
-struct MathFontEnumContext {
-  nsPresContext* mPresContext;
-  nsString*       mMissingFamilyList;
-};
-#endif
 
 static PRBool
 MathFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
-#if ALERT_MISSING_FONTS
-  // check if the font is missing
-  MathFontEnumContext* context = (MathFontEnumContext*)aData;
-  nsPresContext* presContext = context->mPresContext;
-  nsString* missingFamilyList = context->mMissingFamilyList;
-  if (!CheckFontExistence(presContext, aFamily)) {
-//#ifndef _WIN32
-   // XXX In principle, the mathfont-family list in the mathfont.properties file
-   // is customizable depending on the platform. For now, this is here since there
-   // is no need to alert Linux users about TrueType fonts specific to Windows.
-   if (aFamily.LowerCaseEqualsLiteral("mt extra"))
-     return PR_TRUE; // continue to try other fonts
-//#endif
-    if (!missingFamilyList->IsEmpty()) {
-      missingFamilyList->AppendLiteral(", ");
-    }
-    missingFamilyList->Append(aFamily);
-  }
-#endif
-
   if (!gGlyphTableList->AddGlyphTable(aFamily))
     return PR_FALSE; // stop in low-memory situations
   return PR_TRUE; // don't stop
@@ -800,21 +729,7 @@ InitGlobals(nsPresContext* aPresContext)
   // Parse the font list and append an entry for each family to gGlyphTableList
   nsAutoString missingFamilyList;
 
-#if ALERT_MISSING_FONTS
-  // We don't really need all these fonts, so alerting on some missing is not
-  // right.  The best place to alert would be Stretch when we notice that we
-  // can't get the char we want.  In this way the user would not be alerted
-  // unnecessarily when the document contains only simple math.  The alert
-  // also needs a "don't tell me again box".
-  MathFontEnumContext context = {aPresContext, &missingFamilyList};
-  font.EnumerateFamilies(MathFontEnumCallback, &context);
-  // alert the user if some of the expected fonts are missing
-  if (!missingFamilyList.IsEmpty()) {
-    AlertMissingFonts(missingFamilyList);
-  }
-#else
   font.EnumerateFamilies(MathFontEnumCallback, nsnull);
-#endif
   return rv;
 }
 
@@ -864,7 +779,7 @@ nsMathMLChar::SetData(nsPresContext* aPresContext,
   // some assumptions until proven otherwise
   // note that mGlyph is not initialized
   mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   mGlyphTable = nsnull;
   // check if stretching is applicable ...
   if (gGlyphTableList && (1 == mData.Length())) {
@@ -1133,7 +1048,7 @@ insert:
 // Update the font and rendering context if there is a family change
 static void
 SetFontFamily(nsPresContext*       aPresContext,
-              nsIRenderingContext& aRenderingContext,
+              nsRenderingContext& aRenderingContext,
               nsFont&              aFont,
               const nsGlyphTable*  aGlyphTable,
               const nsGlyphCode&   aGlyphCode,
@@ -1151,7 +1066,7 @@ class nsMathMLChar::StretchEnumContext {
 public:
   StretchEnumContext(nsMathMLChar*        aChar,
                      nsPresContext*       aPresContext,
-                     nsIRenderingContext& aRenderingContext,
+                     nsRenderingContext& aRenderingContext,
                      nsStretchDirection   aStretchDirection,
                      nscoord              aTargetSize,
                      PRUint32             aStretchHint,
@@ -1182,7 +1097,7 @@ private:
 
   nsMathMLChar* mChar;
   nsPresContext* mPresContext;
-  nsIRenderingContext& mRenderingContext;
+  nsRenderingContext& mRenderingContext;
   const nsStretchDirection mDirection;
   const nscoord mTargetSize;
   const PRUint32 mStretchHint;
@@ -1244,47 +1159,44 @@ nsMathMLChar::StretchEnumContext::TryVariants(nsGlyphTable*    aGlyphTable,
                  !font.name.Equals(mChar->mFamily),
                  "glyph table incorrectly set -- duplicate found");
 
-    nsBoundingMetrics bm;
-    nsresult rv = mRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
-    if (NS_SUCCEEDED(rv)) {
-      nscoord charSize =
-        isVertical ? bm.ascent + bm.descent
-                   : bm.rightBearing - bm.leftBearing;
+    nsBoundingMetrics bm = mRenderingContext.GetBoundingMetrics(&ch.code, 1);
+    nscoord charSize =
+      isVertical ? bm.ascent + bm.descent
+      : bm.rightBearing - bm.leftBearing;
 
-      if (largeopOnly ||
-          IsSizeBetter(charSize, bestSize, mTargetSize, mStretchHint)) {
-        mGlyphFound = PR_TRUE;
-        if (maxWidth) {
-          // IsSizeBetter() checked that charSize < maxsize;
-          // Leave ascent, descent, and bestsize as these contain maxsize.
-          if (mBoundingMetrics.width < bm.width)
-            mBoundingMetrics.width = bm.width;
-          if (mBoundingMetrics.leftBearing > bm.leftBearing)
-            mBoundingMetrics.leftBearing = bm.leftBearing;
-          if (mBoundingMetrics.rightBearing < bm.rightBearing)
-            mBoundingMetrics.rightBearing = bm.rightBearing;
-          // Continue to check other sizes unless largeopOnly
-          haveBetter = largeopOnly;
-        }
-        else {
-          mBoundingMetrics = bm;
-          haveBetter = PR_TRUE;
-          bestSize = charSize;
-          mChar->mGlyphTable = aGlyphTable;
-          mChar->mGlyph = ch;
-          mChar->mFamily = font.name;
-        }
-#ifdef NOISY_SEARCH
-        printf("    size:%d Current best\n", size);
-#endif
+    if (largeopOnly ||
+        IsSizeBetter(charSize, bestSize, mTargetSize, mStretchHint)) {
+      mGlyphFound = PR_TRUE;
+      if (maxWidth) {
+        // IsSizeBetter() checked that charSize < maxsize;
+        // Leave ascent, descent, and bestsize as these contain maxsize.
+        if (mBoundingMetrics.width < bm.width)
+          mBoundingMetrics.width = bm.width;
+        if (mBoundingMetrics.leftBearing > bm.leftBearing)
+          mBoundingMetrics.leftBearing = bm.leftBearing;
+        if (mBoundingMetrics.rightBearing < bm.rightBearing)
+          mBoundingMetrics.rightBearing = bm.rightBearing;
+        // Continue to check other sizes unless largeopOnly
+        haveBetter = largeopOnly;
       }
       else {
-#ifdef NOISY_SEARCH
-        printf("    size:%d Rejected!\n", size);
-#endif
-        if (haveBetter)
-          break; // Not making an futher progress, stop searching
+        mBoundingMetrics = bm;
+        haveBetter = PR_TRUE;
+        bestSize = charSize;
+        mChar->mGlyphTable = aGlyphTable;
+        mChar->mGlyph = ch;
+        mChar->mFamily = font.name;
       }
+#ifdef NOISY_SEARCH
+      printf("    size:%d Current best\n", size);
+#endif
+    }
+    else {
+#ifdef NOISY_SEARCH
+      printf("    size:%d Rejected!\n", size);
+#endif
+      if (haveBetter)
+        break; // Not making an futher progress, stop searching
     }
 
     // if largeopOnly is set, break now
@@ -1356,7 +1268,6 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
     }
     // empty slots are filled with the glue if it is not null
     if (!ch.Exists()) ch = glue;
-    nsBoundingMetrics bm;
     chdata[i] = ch;
     if (!ch.Exists()) {
       // Null glue indicates that a rule will be drawn, which can stretch to
@@ -1366,12 +1277,7 @@ nsMathMLChar::StretchEnumContext::TryParts(nsGlyphTable*    aGlyphTable,
     else {
       SetFontFamily(mChar->mStyleContext->PresContext(), mRenderingContext,
                     font, aGlyphTable, ch, aFamily);
-      nsresult rv = mRenderingContext.GetBoundingMetrics(&ch.code, 1, bm);
-      if (NS_FAILED(rv)) {
-        // stop if we failed to compute the bounding metrics of a part.
-        NS_WARNING("GetBoundingMetrics failed");
-        return PR_FALSE; // to next table
-      }
+      nsBoundingMetrics bm = mRenderingContext.GetBoundingMetrics(&ch.code, 1);
 
       // TODO: For the generic Unicode table, ideally we should check that the
       // glyphs are actually found and that they each come from the same
@@ -1525,7 +1431,7 @@ nsMathMLChar::StretchEnumContext::EnumCallback(const nsString& aFamily,
 
 nsresult
 nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
-                              nsIRenderingContext&     aRenderingContext,
+                              nsRenderingContext&     aRenderingContext,
                               nsStretchDirection&      aStretchDirection,
                               const nsBoundingMetrics& aContainerSize,
                               nsBoundingMetrics&       aDesiredStretchSize,
@@ -1561,14 +1467,8 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
   }
 
   aRenderingContext.SetFont(font, aPresContext->GetUserFontSet());
-  nsresult rv =
-    aRenderingContext.GetBoundingMetrics(mData.get(), PRUint32(mData.Length()),
-                                         aDesiredStretchSize);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("GetBoundingMetrics failed");
-    mDirection = NS_STRETCH_DIRECTION_UNSUPPORTED;
-    return rv;
-  }
+  aDesiredStretchSize =
+    aRenderingContext.GetBoundingMetrics(mData.get(), PRUint32(mData.Length()));
 
   if (!maxWidth) {
     mUnscaledAscent = aDesiredStretchSize.ascent;
@@ -1798,7 +1698,7 @@ nsMathMLChar::StretchInternal(nsPresContext*           aPresContext,
 
 nsresult
 nsMathMLChar::Stretch(nsPresContext*           aPresContext,
-                      nsIRenderingContext&     aRenderingContext,
+                      nsRenderingContext&     aRenderingContext,
                       nsStretchDirection       aStretchDirection,
                       const nsBoundingMetrics& aContainerSize,
                       nsBoundingMetrics&       aDesiredStretchSize,
@@ -1836,7 +1736,7 @@ nsMathMLChar::Stretch(nsPresContext*           aPresContext,
 // considered.
 nscoord
 nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext,
-                          nsIRenderingContext& aRenderingContext,
+                          nsRenderingContext& aRenderingContext,
                           PRUint32 aStretchHint,
                           float aMaxSize, PRBool aMaxSizeIsAbsolute)
 {
@@ -1852,7 +1752,7 @@ nsMathMLChar::GetMaxWidth(nsPresContext* aPresContext,
 
 nsresult
 nsMathMLChar::ComposeChildren(nsPresContext*      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
+                              nsRenderingContext& aRenderingContext,
                               nsGlyphTable*        aGlyphTable,
                               nscoord              aTargetSize,
                               nsBoundingMetrics&   aCompositeSize,
@@ -1946,14 +1846,14 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLSelectionRect", TYPE_MATHML_SELECTION_RECT)
 private:
   nsRect    mRect;
 };
 
 void nsDisplayMathMLSelectionRect::Paint(nsDisplayListBuilder* aBuilder,
-                                         nsIRenderingContext* aCtx)
+                                         nsRenderingContext* aCtx)
 {
   // get color to use for selection from the look&feel object
   nscolor bgColor = NS_RGB(0, 0, 0);
@@ -1978,7 +1878,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLCharBackground", TYPE_MATHML_CHAR_BACKGROUND)
 private:
   nsStyleContext* mStyleContext;
@@ -1986,7 +1886,7 @@ private:
 };
 
 void nsDisplayMathMLCharBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                          nsIRenderingContext* aCtx)
+                                          nsRenderingContext* aCtx)
 {
   const nsStyleBorder* border = mStyleContext->GetStyleBorder();
   nsRect rect(mRect + ToReferenceFrame());
@@ -2021,7 +1921,7 @@ public:
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx)
+                     nsRenderingContext* aCtx)
   {
     mChar->PaintForeground(mFrame->PresContext(), *aCtx,
                            ToReferenceFrame(), mIsSelected);
@@ -2054,7 +1954,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("MathMLCharDebug", TYPE_MATHML_CHAR_DEBUG)
 
 private:
@@ -2062,7 +1962,7 @@ private:
 };
 
 void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
-                                     nsIRenderingContext* aCtx)
+                                     nsRenderingContext* aCtx)
 {
   // for visual debug
   PRIntn skipSides = 0;
@@ -2129,10 +2029,10 @@ nsMathMLChar::Display(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsMathMLChar::ApplyTransforms(nsIRenderingContext& aRenderingContext, nsRect &r)
+nsMathMLChar::ApplyTransforms(nsRenderingContext& aRenderingContext, nsRect &r)
 {
   // apply the transforms
-  aRenderingContext.Translate(r.x, r.y);
+  aRenderingContext.Translate(r.TopLeft());
   aRenderingContext.Scale(mScaleX, mScaleY);
 
   // update the bounding rectangle.
@@ -2143,7 +2043,7 @@ nsMathMLChar::ApplyTransforms(nsIRenderingContext& aRenderingContext, nsRect &r)
 
 void
 nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
-                              nsIRenderingContext& aRenderingContext,
+                              nsRenderingContext& aRenderingContext,
                               nsPoint aPt,
                               PRBool aIsSelected)
 {
@@ -2210,12 +2110,12 @@ nsMathMLChar::PaintForeground(nsPresContext* aPresContext,
  */
 
 class AutoPushClipRect {
-  nsIRenderingContext& mCtx;
+  nsRenderingContext& mCtx;
 public:
-  AutoPushClipRect(nsIRenderingContext& aCtx, const nsRect& aRect)
+  AutoPushClipRect(nsRenderingContext& aCtx, const nsRect& aRect)
     : mCtx(aCtx) {
     mCtx.PushState();
-    mCtx.SetClipRect(aRect, nsClipCombine_kIntersect);
+    mCtx.IntersectClip(aRect);
   }
   ~AutoPushClipRect() {
     mCtx.PopState();
@@ -2238,13 +2138,12 @@ SnapToDevPixels(const gfxContext* aThebesContext, PRInt32 aAppUnitsPerGfxUnit,
 // paint a stretchy char by assembling glyphs vertically
 nsresult
 nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
-                              nsIRenderingContext& aRenderingContext,
+                              nsRenderingContext& aRenderingContext,
                               nsFont&              aFont,
                               nsStyleContext*      aStyleContext,
                               nsGlyphTable*        aGlyphTable,
                               nsRect&              aRect)
 {
-  nsresult rv = NS_OK;
   // Get the device pixel size in the vertical direction.
   // (This makes no effort to optimize for non-translation transformations.)
   nscoord oneDevPixel = aPresContext->AppUnitsPerDevPixel();
@@ -2280,11 +2179,7 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
     if (ch.Exists()) {
       SetFontFamily(aPresContext, aRenderingContext,
                     aFont, aGlyphTable, ch, mFamily);
-      rv = aRenderingContext.GetBoundingMetrics(&ch.code, 1, bmdata[i]);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("GetBoundingMetrics failed");
-        return rv;
-      }
+      bmdata[i] = aRenderingContext.GetBoundingMetrics(&ch.code, 1);
     }
     chdata[i] = ch;
     ++i;
@@ -2471,13 +2366,12 @@ nsMathMLChar::PaintVertically(nsPresContext*      aPresContext,
 // paint a stretchy char by assembling glyphs horizontally
 nsresult
 nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
-                                nsIRenderingContext& aRenderingContext,
+                                nsRenderingContext& aRenderingContext,
                                 nsFont&              aFont,
                                 nsStyleContext*      aStyleContext,
                                 nsGlyphTable*        aGlyphTable,
                                 nsRect&              aRect)
 {
-  nsresult rv = NS_OK;
   // Get the device pixel size in the horizontal direction.
   // (This makes no effort to optimize for non-translation transformations.)
   nscoord oneDevPixel = aPresContext->AppUnitsPerDevPixel();
@@ -2513,11 +2407,7 @@ nsMathMLChar::PaintHorizontally(nsPresContext*      aPresContext,
     if (ch.Exists()) {
       SetFontFamily(aPresContext, aRenderingContext,
                     aFont, aGlyphTable, ch, mFamily);
-      rv = aRenderingContext.GetBoundingMetrics(&ch.code, 1, bmdata[i]);
-      if (NS_FAILED(rv)) {
-        NS_WARNING("GetBoundingMetrics failed");
-        return rv;
-      }
+      bmdata[i] = aRenderingContext.GetBoundingMetrics(&ch.code, 1);
     }
     chdata[i] = ch;
     ++i;

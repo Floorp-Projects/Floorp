@@ -144,7 +144,7 @@
 
 #include "nsServiceManagerUtils.h"
 #include "nsITimer.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
@@ -624,9 +624,11 @@ nsMouseWheelTransaction::SetTimeout()
     timer.swap(sTimer);
   }
   sTimer->Cancel();
+#ifdef DEBUG
   nsresult rv =
-    sTimer->InitWithFuncCallback(OnTimeout, nsnull, GetTimeoutTime(),
-                                 nsITimer::TYPE_ONE_SHOT);
+#endif
+  sTimer->InitWithFuncCallback(OnTimeout, nsnull, GetTimeoutTime(),
+                               nsITimer::TYPE_ONE_SHOT);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "nsITimer::InitWithFuncCallback failed");
 }
 
@@ -2488,12 +2490,11 @@ GetScrollableLineHeight(nsIFrame* aTargetFrame)
   // Fall back to the font height of the target frame.
   const nsStyleFont* font = aTargetFrame->GetStyleFont();
   const nsFont& f = font->mFont;
-  nsCOMPtr<nsIFontMetrics> fm = aTargetFrame->PresContext()->GetMetricsFor(f);
+  nsRefPtr<nsFontMetrics> fm = aTargetFrame->PresContext()->GetMetricsFor(f);
   NS_ASSERTION(fm, "FontMetrics is null!");
-  nscoord lineHeight = 0;
   if (fm)
-    fm->GetHeight(lineHeight);
-  return lineHeight;
+    return fm->MaxHeight();
+  return 0;
 }
 
 void
@@ -3278,11 +3279,12 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               // Shift focus forward or back depending on shift key
               PRBool isDocMove = ((nsInputEvent*)aEvent)->isControl ||
                                  (keyEvent->keyCode == NS_VK_F6);
-              PRUint32 dir = ((nsInputEvent*)aEvent)->isShift ?
-                             (isDocMove ? nsIFocusManager::MOVEFOCUS_BACKWARDDOC :
-                                          nsIFocusManager::MOVEFOCUS_BACKWARD) :
-                             (isDocMove ? nsIFocusManager::MOVEFOCUS_FORWARDDOC :
-                                          nsIFocusManager::MOVEFOCUS_FORWARD);
+              PRUint32 dir =
+                static_cast<nsInputEvent*>(aEvent)->isShift ?
+                  (isDocMove ? static_cast<PRUint32>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC) :
+                               static_cast<PRUint32>(nsIFocusManager::MOVEFOCUS_BACKWARD)) :
+                  (isDocMove ? static_cast<PRUint32>(nsIFocusManager::MOVEFOCUS_FORWARDDOC) :
+                               static_cast<PRUint32>(nsIFocusManager::MOVEFOCUS_FORWARD));
               nsCOMPtr<nsIDOMElement> result;
               fm->MoveFocus(mDocument->GetWindow(), nsnull, dir,
                             nsIFocusManager::FLAG_BYKEY,

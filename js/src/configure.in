@@ -1,5 +1,5 @@
 dnl -*- Mode: Autoconf; tab-width: 4; indent-tabs-mode: nil; -*-
-dnl vi: set tabstop=4 shiftwidth=4 expandtab:
+dnl vi: set tabstop=4 shiftwidth=4 expandtab syntax=m4:
 dnl ***** BEGIN LICENSE BLOCK *****
 dnl Version: MPL 1.1/GPL 2.0/LGPL 2.1
 dnl
@@ -3455,32 +3455,35 @@ case $target in
     AC_CHECK_LIB(socket, socket)
 esac
 
-AC_MSG_CHECKING(for ARM SIMD support in compiler)
-AC_TRY_COMPILE([],
-               [asm("uqadd8 r1, r1, r2");],
-               result="yes", result="no")
-AC_MSG_RESULT("$result")
-if test "$result" = "yes"; then
-    AC_DEFINE(HAVE_ARM_SIMD)
-    HAVE_ARM_SIMD=1
-fi
-AC_SUBST(HAVE_ARM_SIMD)
+if test "$CPU_ARCH" = "arm"; then
+  AC_MSG_CHECKING(for ARM SIMD support in compiler)
+  AC_TRY_COMPILE([],
+                 [asm("uqadd8 r1, r1, r2");],
+                 result="yes", result="no")
+  AC_MSG_RESULT("$result")
+  if test "$result" = "yes"; then
+      AC_DEFINE(HAVE_ARM_SIMD)
+      HAVE_ARM_SIMD=1
+  fi
 
-AC_MSG_CHECKING(for ARM NEON support in compiler)
-_SAVE_CFLAGS="$CFLAGS"
-if test "$GNU_CC"; then
-  # gcc needs -mfpu=neon to recognize NEON instructions
-  CFLAGS="$CFLAGS -mfpu=neon -mfloat-abi=softfp"
+  AC_MSG_CHECKING(for ARM NEON support in compiler)
+  _SAVE_CFLAGS="$CFLAGS"
+  if test "$GNU_CC"; then
+    # gcc needs -mfpu=neon to recognize NEON instructions
+    CFLAGS="$CFLAGS -mfpu=neon -mfloat-abi=softfp"
+  fi
+  AC_TRY_COMPILE([],
+                 [asm("vadd.i8 d0, d0, d0");],
+                 result="yes", result="no")
+  AC_MSG_RESULT("$result")
+  if test "$result" = "yes"; then
+      AC_DEFINE(HAVE_ARM_NEON)
+      HAVE_ARM_NEON=1
+  fi
+  CFLAGS="$_SAVE_CFLAGS"
 fi
-AC_TRY_COMPILE([],
-               [asm("vadd.i8 d0, d0, d0");],
-               result="yes", result="no")
-AC_MSG_RESULT("$result")
-if test "$result" = "yes"; then
-    AC_DEFINE(HAVE_ARM_NEON)
-    HAVE_ARM_NEON=1
-fi
-CFLAGS="$_SAVE_CFLAGS"
+
+AC_SUBST(HAVE_ARM_SIMD)
 AC_SUBST(HAVE_ARM_NEON)
 
 dnl ========================================================

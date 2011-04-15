@@ -4710,21 +4710,22 @@ nsContentUtils::RemoveScriptBlocker()
 
   PRUint32 firstBlocker = sRunnersCountAtFirstBlocker;
   PRUint32 lastBlocker = (PRUint32)sBlockedScriptRunners->Count();
+  PRUint32 originalFirstBlocker = firstBlocker;
+  PRUint32 blockersCount = lastBlocker - firstBlocker;
   sRunnersCountAtFirstBlocker = 0;
   NS_ASSERTION(firstBlocker <= lastBlocker,
                "bad sRunnersCountAtFirstBlocker");
 
   while (firstBlocker < lastBlocker) {
     nsCOMPtr<nsIRunnable> runnable = (*sBlockedScriptRunners)[firstBlocker];
-    sBlockedScriptRunners->RemoveObjectAt(firstBlocker);
-    --lastBlocker;
+    ++firstBlocker;
 
     runnable->Run();
-    NS_ASSERTION(lastBlocker == (PRUint32)sBlockedScriptRunners->Count() &&
-                 sRunnersCountAtFirstBlocker == 0,
+    NS_ASSERTION(sRunnersCountAtFirstBlocker == 0,
                  "Bad count");
     NS_ASSERTION(!sScriptBlockerCount, "This is really bad");
   }
+  sBlockedScriptRunners->RemoveObjectsAt(originalFirstBlocker, blockersCount);
 }
 
 /* static */
