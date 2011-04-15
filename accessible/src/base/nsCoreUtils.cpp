@@ -761,47 +761,6 @@ nsCoreUtils::IsColumnHidden(nsITreeColumn *aColumn)
                               nsAccessibilityAtoms::_true, eCaseMatters);
 }
 
-void
-nsCoreUtils::GeneratePopupTree(nsIContent *aContent, PRBool aIsAnon)
-{
-  // Set menugenerated="true" on the menupopup node to generate the sub-menu
-  // items if they have not been generated.
-
-  nsCOMPtr<nsIDOMNodeList> list;
-  if (aIsAnon) {    
-    nsIDocument* document = aContent->GetCurrentDoc();
-    if (document)
-      document->GetXBLChildNodesFor(aContent, getter_AddRefs(list));
-
-  } else {
-    list = aContent->GetChildNodesList();
-  }
-
-  PRUint32 length = 0;
-  if (!list || NS_FAILED(list->GetLength(&length)))
-    return;
-
-  for (PRUint32 idx = 0; idx < length; idx++) {
-    nsCOMPtr<nsIDOMNode> childNode;
-    list->Item(idx, getter_AddRefs(childNode));
-    nsCOMPtr<nsIContent> child(do_QueryInterface(childNode));
-
-    PRBool isPopup = child->NodeInfo()->Equals(nsAccessibilityAtoms::menupopup,
-                                               kNameSpaceID_XUL) ||
-                     child->NodeInfo()->Equals(nsAccessibilityAtoms::panel,
-                                               kNameSpaceID_XUL);
-    if (isPopup && !child->AttrValueIs(kNameSpaceID_None,
-                                       nsAccessibilityAtoms::menugenerated,
-                                       nsAccessibilityAtoms::_true,
-                                       eCaseMatters)) {
-
-      child->SetAttr(kNameSpaceID_None, nsAccessibilityAtoms::menugenerated,
-                     NS_LITERAL_STRING("true"), PR_TRUE);
-      return;
-    }
-  }
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsAccessibleDOMStringList

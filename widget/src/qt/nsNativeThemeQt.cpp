@@ -74,7 +74,7 @@
 #ifdef MOZ_X11
 #include "gfxXlibSurface.h"
 #endif
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 
 nsNativeThemeQt::nsNativeThemeQt()
 {
@@ -123,7 +123,7 @@ _qimage_from_gfximage_format (gfxASurface::gfxImageFormat aFormat)
 }
 
 NS_IMETHODIMP
-nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
+nsNativeThemeQt::DrawWidgetBackground(nsRenderingContext* aContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType,
                                       const nsRect& aRect,
@@ -172,7 +172,7 @@ nsNativeThemeQt::DrawWidgetBackground(nsIRenderingContext* aContext,
 
 nsresult
 nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
-                                      nsIRenderingContext* aContext,
+                                      nsRenderingContext* aContext,
                                       nsIFrame* aFrame,
                                       PRUint8 aWidgetType,
                                       const nsRect& aRect,
@@ -200,7 +200,7 @@ nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
     QMatrix qctm(ctm.xx, ctm.yx, ctm.xy, ctm.yy, ctm.x0, ctm.y0);
     qPainter->setWorldMatrix(qctm, true);
 
-    PRInt32 p2a = GetAppUnitsPerDevPixel(aContext);
+    PRInt32 p2a = aContext->AppUnitsPerDevPixel();
 
     QRect r = qRectInPixels(aRect, p2a);
     QRect cr = qRectInPixels(aClipRect, p2a);
@@ -386,7 +386,7 @@ nsNativeThemeQt::GetWidgetPadding(nsIDeviceContext* ,
 }
 
 NS_IMETHODIMP
-nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+nsNativeThemeQt::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType,
                                       nsIntSize* aResult, PRBool* aIsOverridable)
 {
@@ -395,7 +395,7 @@ nsNativeThemeQt::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* a
 
     QStyle *s = qApp->style();
 
-    PRInt32 p2a = GetAppUnitsPerDevPixel(aContext);
+    PRInt32 p2a = aContext->AppUnitsPerDevPixel();
 
     switch (aWidgetType) {
     case NS_THEME_RADIO:

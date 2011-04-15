@@ -46,7 +46,7 @@
 #include "nsLineLayout.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsFrameManager.h"
 #include "nsDisplayList.h"
@@ -65,7 +65,7 @@ nsPlaceholderFrame::~nsPlaceholderFrame()
 }
 
 /* virtual */ nscoord
-nsPlaceholderFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsPlaceholderFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -73,7 +73,7 @@ nsPlaceholderFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsPlaceholderFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsPlaceholderFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
@@ -105,7 +105,7 @@ nsPlaceholderFrame::GetMaxSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 /* virtual */ void
-nsPlaceholderFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+nsPlaceholderFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                       nsIFrame::InlineMinWidthData *aData)
 {
   // Override AddInlineMinWith so that *nothing* happens.  In
@@ -120,7 +120,7 @@ nsPlaceholderFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
 }
 
 /* virtual */ void
-nsPlaceholderFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+nsPlaceholderFrame::AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
                                        nsIFrame::InlinePrefWidthData *aData)
 {
   // Override AddInlinePrefWith so that *nothing* happens.  In
@@ -210,7 +210,7 @@ nsPlaceholderFrame::GetParentStyleContextFrame(nsPresContext* aPresContext,
 
 #ifdef DEBUG
 static void
-PaintDebugPlaceholder(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+PaintDebugPlaceholder(nsIFrame* aFrame, nsRenderingContext* aCtx,
                       const nsRect& aDirtyRect, nsPoint aPt)
 {
   aCtx->SetColor(NS_RGB(0, 255, 255));

@@ -69,7 +69,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsILookAndFeel.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
@@ -262,7 +262,7 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
  * @param aPt the offset of this frame, relative to the rendering reference
  * frame
  */
-void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
+void nsListControlFrame::PaintFocus(nsRenderingContext& aRC, nsPoint aPt)
 {
   if (mFocused != this) return;
 
@@ -486,7 +486,7 @@ nsListControlFrame::CalcHeightOfARow()
 }
 
 nscoord
-nsListControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsListControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -502,7 +502,7 @@ nsListControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsListControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsListControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -1878,11 +1878,11 @@ nscoord
 nsListControlFrame::CalcFallbackRowHeight()
 {
   nscoord rowHeight = 0;
-  
-  nsCOMPtr<nsIFontMetrics> fontMet;
+
+  nsRefPtr<nsFontMetrics> fontMet;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
   if (fontMet) {
-    fontMet->GetHeight(rowHeight);
+    rowHeight = fontMet->MaxHeight();
   }
 
   return rowHeight;
