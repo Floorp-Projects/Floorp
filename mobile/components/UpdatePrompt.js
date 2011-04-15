@@ -104,7 +104,7 @@ UpdatePrompt.prototype = {
       // Unconditionally use the "major" type here as for now it is always a new version
       // without additional description required for a minor update message
       let message = gUpdateBundle.formatStringFromName("intro_major", [brandName, aUpdate.displayVersion], 2);
-      let button0 = gUpdateBundle.GetStringFromName("updateButton_major");
+      let button0 = gUpdateBundle.GetStringFromName("okButton");
       let button1 = gUpdateBundle.GetStringFromName("askLaterButton");
       let prompt = Services.prompt;
       let flags = prompt.BUTTON_POS_0 * prompt.BUTTON_TITLE_IS_STRING + prompt.BUTTON_POS_1 * prompt.BUTTON_TITLE_IS_STRING;
