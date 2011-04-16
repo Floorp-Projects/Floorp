@@ -81,6 +81,8 @@ parent:
             bool                chooseApplicationCache,
             nsCString           appCacheClientID);
 
+  // Used to connect redirected-to channel on the parent with redirected-to
+  // channel on the child.
   ConnectChannel(PRUint32 channelId);
 
   SetPriority(PRUint16 priority);
@@ -131,15 +133,20 @@ child:
                  nsCString           cachedCharset,
                  nsCString           securityInfoSerialization);
 
-  OnDataAvailable(nsCString data, 
-                  PRUint32  offset, 
-                  PRUint32  count);
+  // Combines a single OnDataAvailable and its associated OnProgress &
+  // OnStatus calls into one IPDL message
+  OnTransportAndData(nsresult  status,
+                     PRUint64  progress,
+                     PRUint64  progressMax,
+                     nsCString data,
+                     PRUint32  offset,
+                     PRUint32  count);
 
   OnStopRequest(nsresult statusCode);
 
   OnProgress(PRUint64 progress, PRUint64 progressMax);
 
-  OnStatus(nsresult status, nsString statusArg);
+  OnStatus(nsresult status);
 
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.

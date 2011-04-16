@@ -120,6 +120,13 @@ class HashTable : private AllocPolicy
         Ptr(Entry &entry) : entry(&entry) {}
 
       public:
+        /* Leaves Ptr uninitialized. */
+        Ptr() {
+#ifdef DEBUG
+            entry = (Entry *)0xbad;
+#endif
+        }
+
         bool found() const                    { return entry->isLive(); }
         operator ConvertibleToBool() const    { return found() ? &Ptr::nonNull : 0; }
         bool operator==(const Ptr &rhs) const { JS_ASSERT(found() && rhs.found()); return entry == rhs.entry; }
@@ -142,6 +149,9 @@ class HashTable : private AllocPolicy
 #else
         AddPtr(Entry &entry, HashNumber hn) : Ptr(entry), keyHash(hn) {}
 #endif
+      public:
+        /* Leaves AddPtr uninitialized. */
+        AddPtr() {}
     };
 
     /*

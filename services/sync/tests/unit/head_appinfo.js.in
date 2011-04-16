@@ -66,9 +66,18 @@ registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"
 
 }
 
-// Provide resource://services-sync if it isn't already available
-let weaveService = Cc["@mozilla.org/weave/service;1"].getService();
-weaveService.wrappedJSObject.addResourceAlias();
+// Register resource aliases. Normally done in SyncComponents.manifest.
+function addResourceAlias() {
+  Cu.import("resource://gre/modules/Services.jsm");
+  const resProt = Services.io.getProtocolHandler("resource")
+                          .QueryInterface(Ci.nsIResProtocolHandler);
+  let uri;
+  uri = Services.io.newURI("resource:///modules/services-sync/", null, null);
+  resProt.setSubstitution("services-sync", uri);
+  uri = Services.io.newURI("resource:///modules/services-crypto/", null, null);
+  resProt.setSubstitution("services-crypto", uri);
+}
+addResourceAlias();
 
 
 // Some tests hang on OSX debug builds. See bug 604565.

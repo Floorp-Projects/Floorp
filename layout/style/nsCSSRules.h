@@ -43,91 +43,45 @@
 #ifndef nsCSSRules_h_
 #define nsCSSRules_h_
 
-#include "nsCSSRule.h"
-#include "nsICSSGroupRule.h"
+#include "Rule.h"
+#include "mozilla/css/GroupRule.h"
 #include "nsIDOMCSSMediaRule.h"
 #include "nsIDOMCSSMozDocumentRule.h"
 #include "nsIDOMCSSFontFaceRule.h"
+#ifdef MOZ_CSS_ANIMATIONS
+#include "nsIDOMMozCSSKeyframeRule.h"
+#include "nsIDOMMozCSSKeyframesRule.h"
+#endif
 #include "nsIDOMCSSStyleDeclaration.h"
+#include "nsICSSRuleList.h"
 #include "nsAutoPtr.h"
 #include "nsCSSProperty.h"
 #include "nsCSSValue.h"
+#include "nsIDOMCSSCharsetRule.h"
+#include "nsTArray.h"
+#include "nsDOMCSSDeclaration.h"
+#include "Declaration.h"
 
-class CSSGroupRuleRuleListImpl;
+namespace mozilla {
+namespace css {
+class StyleRule;
+}
+}
+
 class nsMediaList;
-template<class T> struct already_AddRefed;
 
-#define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
-virtual already_AddRefed<nsIStyleSheet> GetStyleSheet() const; \
-virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); \
-virtual void SetParentRule(nsICSSGroupRule* aRule); \
-virtual void MapRuleInfoInto(nsRuleData* aRuleData);
+namespace mozilla {
+namespace css {
 
-#define DECL_STYLE_RULE_INHERIT  \
-DECL_STYLE_RULE_INHERIT_NO_DOMRULE \
-nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
-
-// inherits from nsCSSRule and also implements methods on nsICSSGroupRule
-// so they can be shared between nsCSSMediaRule and nsCSSDocumentRule
-class nsCSSGroupRule : public nsCSSRule, public nsICSSGroupRule
-{
-protected:
-  nsCSSGroupRule();
-  nsCSSGroupRule(const nsCSSGroupRule& aCopy);
-  virtual ~nsCSSGroupRule();
-
-  // Implement part of nsISupports.
-  NS_IMETHOD_(nsrefcnt) AddRef();
-  NS_IMETHOD_(nsrefcnt) Release();
-protected:
-  nsAutoRefCnt mRefCnt;
-  NS_DECL_OWNINGTHREAD
-public:
-
-  // implement part of nsIStyleRule and nsICSSRule
-  DECL_STYLE_RULE_INHERIT_NO_DOMRULE
-
-  // to help implement nsIStyleRule
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-public:
-  // implement nsICSSGroupRule
-  NS_IMETHOD AppendStyleRule(nsICSSRule* aRule);
-  NS_IMETHOD StyleRuleCount(PRInt32& aCount) const;
-  NS_IMETHOD GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
-  NS_IMETHOD_(PRBool) EnumerateRulesForwards(RuleEnumFunc aFunc, void * aData) const;
-  NS_IMETHOD DeleteStyleRuleAt(PRUint32 aIndex);
-  NS_IMETHOD InsertStyleRulesAt(PRUint32 aIndex,
-                                nsCOMArray<nsICSSRule>& aRules);
-  NS_IMETHOD ReplaceStyleRule(nsICSSRule *aOld, nsICSSRule *aNew);
-
-protected:
-  // to help implement nsIDOMCSSRule
-  nsresult AppendRulesToCssText(nsAString& aCssText);
-  // to implement methods on nsIDOMCSSRule
-  nsresult GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet);
-  nsresult GetParentRule(nsIDOMCSSRule** aParentRule);
-
-  // to implement common methods on nsIDOMCSSMediaRule and
-  // nsIDOMCSSMozDocumentRule
-  nsresult GetCssRules(nsIDOMCSSRuleList* *aRuleList);
-  nsresult InsertRule(const nsAString & aRule, PRUint32 aIndex,
-                      PRUint32* _retval);
-  nsresult DeleteRule(PRUint32 aIndex);
-
-  nsCOMArray<nsICSSRule> mRules;
-  CSSGroupRuleRuleListImpl* mRuleCollection;
-};
-
-class NS_FINAL_CLASS nsCSSMediaRule : public nsCSSGroupRule,
-                                      public nsIDOMCSSMediaRule
+class NS_FINAL_CLASS MediaRule : public GroupRule,
+                                 public nsIDOMCSSMediaRule
 {
 public:
-  nsCSSMediaRule();
-  nsCSSMediaRule(const nsCSSMediaRule& aCopy);
-  virtual ~nsCSSMediaRule();
+  MediaRule();
+private:
+  MediaRule(const MediaRule& aCopy);
+  ~MediaRule();
+public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -137,10 +91,10 @@ public:
 #endif
 
   // nsICSSRule methods
-  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); //override nsCSSGroupRule
+  virtual void SetStyleSheet(nsCSSStyleSheet* aSheet); //override GroupRule
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<nsICSSRule> Clone() const;
-  nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
   {
     *aResult = NS_OK;
     return this;
@@ -152,9 +106,9 @@ public:
   // nsIDOMCSSMediaRule interface
   NS_DECL_NSIDOMCSSMEDIARULE
 
-  // rest of nsICSSGroupRule interface
-  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
-                                         nsMediaQueryResultCacheKey& aKey);
+  // rest of GroupRule
+  virtual PRBool UseForPresentation(nsPresContext* aPresContext,
+                                    nsMediaQueryResultCacheKey& aKey);
 
   // @media rule methods
   nsresult SetMedia(nsMediaList* aMedia);
@@ -163,13 +117,15 @@ protected:
   nsRefPtr<nsMediaList> mMedia;
 };
 
-class NS_FINAL_CLASS nsCSSDocumentRule : public nsCSSGroupRule,
-                                         public nsIDOMCSSMozDocumentRule
+class NS_FINAL_CLASS DocumentRule : public GroupRule,
+                                    public nsIDOMCSSMozDocumentRule
 {
 public:
-  nsCSSDocumentRule(void);
-  nsCSSDocumentRule(const nsCSSDocumentRule& aCopy);
-  virtual ~nsCSSDocumentRule(void);
+  DocumentRule();
+private:
+  DocumentRule(const DocumentRule& aCopy);
+  ~DocumentRule();
+public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -181,7 +137,7 @@ public:
   // nsICSSRule methods
   virtual PRInt32 GetType() const;
   virtual already_AddRefed<nsICSSRule> Clone() const;
-  nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
   {
     *aResult = NS_OK;
     return this;
@@ -193,9 +149,9 @@ public:
   // nsIDOMCSSMozDocumentRule interface
   NS_DECL_NSIDOMCSSMOZDOCUMENTRULE
 
-  // rest of nsICSSGroupRule interface
-  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext,
-                                         nsMediaQueryResultCacheKey& aKey);
+  // rest of GroupRule
+  virtual PRBool UseForPresentation(nsPresContext* aPresContext,
+                                    nsMediaQueryResultCacheKey& aKey);
 
   enum Function {
     eURL,
@@ -223,6 +179,9 @@ public:
 protected:
   nsAutoPtr<URL> mURLs; // linked list of |struct URL| above.
 };
+
+} // namespace css
+} // namespace mozilla
 
 // A nsCSSFontFaceStyleDecl is always embedded in a nsCSSFontFaceRule.
 class nsCSSFontFaceRule;
@@ -257,8 +216,7 @@ private:
   void* operator new(size_t size) CPP_THROW_NEW;
 };
 
-class NS_FINAL_CLASS nsCSSFontFaceRule : public nsCSSRule,
-                                         public nsICSSRule,
+class NS_FINAL_CLASS nsCSSFontFaceRule : public mozilla::css::Rule,
                                          public nsIDOMCSSFontFaceRule
 {
 public:
@@ -266,9 +224,9 @@ public:
 
   nsCSSFontFaceRule(const nsCSSFontFaceRule& aCopy)
     // copy everything except our reference count
-    : nsCSSRule(aCopy), mDecl(aCopy.mDecl) {}
+    : mozilla::css::Rule(aCopy), mDecl(aCopy.mDecl) {}
 
-  NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS_INHERITED
 
   // nsIStyleRule methods
 #ifdef DEBUG
@@ -315,5 +273,174 @@ nsCSSFontFaceStyleDecl::ContainingRule() const
   return reinterpret_cast<const nsCSSFontFaceRule*>
     (reinterpret_cast<const char*>(this) - offsetof(nsCSSFontFaceRule, mDecl));
 }
+
+namespace mozilla {
+namespace css {
+
+class NS_FINAL_CLASS CharsetRule : public Rule,
+                                   public nsIDOMCSSCharsetRule
+{
+public:
+  CharsetRule(const nsAString& aEncoding);
+private:
+  // For |Clone|
+  CharsetRule(const CharsetRule& aCopy);
+  ~CharsetRule() {}
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  DECL_STYLE_RULE_INHERIT
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  // nsICSSRule methods
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMCSSCharsetRule methods
+  NS_IMETHOD GetEncoding(nsAString& aEncoding);
+  NS_IMETHOD SetEncoding(const nsAString& aEncoding);
+
+private:
+  nsString  mEncoding;
+};
+
+} // namespace css
+} // namespace mozilla
+
+#ifdef MOZ_CSS_ANIMATIONS
+class nsCSSKeyframeRule;
+
+class NS_FINAL_CLASS nsCSSKeyframeStyleDeclaration
+                         : public nsDOMCSSDeclaration
+{
+public:
+  nsCSSKeyframeStyleDeclaration(nsCSSKeyframeRule *aRule);
+  virtual ~nsCSSKeyframeStyleDeclaration();
+
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
+  void DropReference() { mRule = nsnull; }
+  virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate);
+  virtual nsresult SetCSSDeclaration(mozilla::css::Declaration* aDecl);
+  virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
+                                            nsIURI** aBaseURI,
+                                            nsIPrincipal** aSheetPrincipal,
+                                            mozilla::css::Loader** aCSSLoader);
+  virtual nsIDocument* DocToUpdate();
+
+  NS_IMETHOD_(nsrefcnt) AddRef();
+  NS_IMETHOD_(nsrefcnt) Release();
+
+  virtual nsINode *GetParentObject()
+  {
+    return nsnull;
+  }
+
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+
+  // This reference is not reference-counted. The rule object tells us
+  // when it's about to go away.
+  nsCSSKeyframeRule *mRule;
+};
+
+class NS_FINAL_CLASS nsCSSKeyframeRule : public mozilla::css::Rule,
+                                         public nsIDOMMozCSSKeyframeRule
+{
+public:
+  // WARNING: Steals the contents of aKeys *and* aDeclaration
+  nsCSSKeyframeRule(nsTArray<float> aKeys,
+                    nsAutoPtr<mozilla::css::Declaration> aDeclaration)
+    : mDeclaration(aDeclaration)
+  {
+    mKeys.SwapElements(aKeys);
+  }
+
+  nsCSSKeyframeRule(const nsCSSKeyframeRule& aCopy);
+  ~nsCSSKeyframeRule();
+
+  NS_DECL_ISUPPORTS
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  // nsICSSRule methods
+  DECL_STYLE_RULE_INHERIT
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMMozCSSKeyframeRule interface
+  NS_DECL_NSIDOMMOZCSSKEYFRAMERULE
+
+  const nsTArray<float>& GetKeys() const     { return mKeys; }
+  mozilla::css::Declaration* Declaration()   { return mDeclaration; }
+
+  void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
+
+private:
+  nsAutoTArray<float, 1>                     mKeys;
+  nsAutoPtr<mozilla::css::Declaration>       mDeclaration;
+  // lazily created when needed:
+  nsRefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
+};
+
+class NS_FINAL_CLASS nsCSSKeyframesRule : public mozilla::css::GroupRule,
+                                          public nsIDOMMozCSSKeyframesRule
+{
+public:
+  nsCSSKeyframesRule(const nsSubstring& aName)
+    : mName(aName)
+  {
+  }
+  nsCSSKeyframesRule(const nsCSSKeyframesRule& aCopy);
+  ~nsCSSKeyframesRule();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // nsIStyleRule methods
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
+#endif
+
+  // nsICSSRule methods
+  virtual PRInt32 GetType() const;
+  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual nsIDOMCSSRule* GetDOMRuleWeak(nsresult *aResult)
+  {
+    *aResult = NS_OK;
+    return this;
+  }
+
+  // nsIDOMCSSRule interface
+  NS_DECL_NSIDOMCSSRULE
+
+  // nsIDOMMozCSSKeyframesRule interface
+  NS_DECL_NSIDOMMOZCSSKEYFRAMESRULE
+
+  // rest of GroupRule
+  virtual PRBool UseForPresentation(nsPresContext* aPresContext,
+                                    nsMediaQueryResultCacheKey& aKey);
+
+  const nsString& GetName() { return mName; }
+
+private:
+  PRUint32 FindRuleIndexForKey(const nsAString& aKey);
+
+  nsString                                   mName;
+};
+#endif
 
 #endif /* !defined(nsCSSRules_h_) */

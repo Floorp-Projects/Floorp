@@ -102,6 +102,9 @@ class nsUserFontSet;
 struct nsFontFaceRuleContainer;
 class nsObjectFrame;
 class nsTransitionManager;
+#ifdef MOZ_CSS_ANIMATIONS
+class nsAnimationManager;
+#endif
 class nsRefreshDriver;
 class imgIContainer;
 
@@ -238,6 +241,9 @@ public:
     { return GetPresShell()->FrameManager(); } 
 
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
+#ifdef MOZ_CSS_ANIMATIONS
+  nsAnimationManager* AnimationManager() { return mAnimationManager; }
+#endif
 
   nsRefreshDriver* RefreshDriver() { return mRefreshDriver; }
 #endif
@@ -982,6 +988,11 @@ public:
   }
   inline void ForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
 
+  PRBool GetContainsUpdatePluginGeometryFrame()
+  {
+    return mContainsUpdatePluginGeometryFrame;
+  }
+
   void SetContainsUpdatePluginGeometryFrame(PRBool aValue)
   {
     mContainsUpdatePluginGeometryFrame = aValue;
@@ -1024,6 +1035,8 @@ protected:
 
   NS_HIDDEN_(void) UpdateCharSet(const nsAFlatCString& aCharSet);
 
+  void AppUnitsPerDevPixelChanged();
+
   PRBool MayHavePaintEventListener();
 
   void HandleRebuildUserFontSet() {
@@ -1054,6 +1067,9 @@ protected:
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
   nsRefPtr<nsTransitionManager> mTransitionManager;
+#ifdef MOZ_CSS_ANIMATIONS
+  nsRefPtr<nsAnimationManager> mAnimationManager;
+#endif
   nsIAtom*              mMedium;        // initialized by subclass ctors;
                                         // weak pointer to static atom
 
@@ -1297,6 +1313,14 @@ public:
    * mContainsUpdatePluginGeometryFrame is set in the frame's prescontext.
    */
   void RootForgetUpdatePluginGeometryFrame(nsIFrame* aFrame);
+
+  /**
+   * Call this when a document is going to no longer be valid for plugin updates
+   * (say by going into the bfcache). If mContainsUpdatePluginGeometryFrame is
+   * set in the prescontext then it will be cleared along with
+   * mUpdatePluginGeometryForFrame.
+   */
+  void RootForgetUpdatePluginGeometryFrameForPresContext(nsPresContext* aPresContext);
 
   /**
    * Increment DOM-modification generation counter to indicate that

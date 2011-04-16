@@ -40,10 +40,11 @@
 
 interface nsIDOMSVGPathSeg;
 
-[scriptable, uuid(94a6db98-3f34-4529-a35f-89ef49713795)]
+[scriptable, uuid(1e4efb5c-7b0f-4338-a92e-6ca5402b303c)]
 interface nsIDOMSVGPathSegList : nsISupports
 { 
   readonly attribute unsigned long numberOfItems;
+  readonly attribute unsigned long length;  // synonym for numberOfItems
 
   void clear();
           // raises(nsIDOMDOMException);
@@ -60,4 +61,3 @@ interface nsIDOMSVGPathSegList : nsISupports
   nsIDOMSVGPathSeg appendItem(in nsIDOMSVGPathSeg newItem);
                     // raises(nsIDOMDOMException, nsIDOMSVGException);
 };
-

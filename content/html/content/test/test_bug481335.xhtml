@@ -26,7 +26,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=481335
 
 /** Test for Bug 481335 **/
 SimpleTest.waitForExplicitFinish();
-var rand = Date.now() + "-" + Math.random();
+var rand = Math.floor(Date.now()) + "-" + Math.random();
 
 is($("t").href, "",
    "Unexpected href before set");

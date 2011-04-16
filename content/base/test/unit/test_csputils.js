@@ -73,11 +73,11 @@ function do_check_has_key(foo, key, stack) {
     stack = Components.stack.caller;
 
   var keys = [];
-  for(let k in keys) { keys.push(k); }
+  for (let k in foo) { keys.push(k); }
   var text = key + " in [" + keys.join(",") + "]";
 
-  for(var x in foo) {
-    if(x == key) {
+  for (var x in foo) {
+    if (x == key) {
       //succeed
       ++_passedChecks;
       dump("TEST-PASS | " + stack.filename + " | [" + stack.name + " : " +
@@ -359,21 +359,52 @@ test(
 
       var cspr;
       var cspr_allowval;
+      var SD = CSPRep.SRC_DIRECTIVES;
 
       // check default policy "allow *"
       cspr = CSPRep.fromString("allow *", "http://self.com:80");
-      //"ALLOW directive is missing when specified in fromString"
-      do_check_has_key(cspr._directives, CSPRep.SRC_DIRECTIVES.ALLOW);
+      // "DEFAULT_SRC directive is missing when specified in fromString"
+      do_check_has_key(cspr._directives, SD.DEFAULT_SRC);
 
       // ... and check that the other directives were auto-filled with the
-      // ALLOW one.
-      var SD = CSPRep.SRC_DIRECTIVES;
-      cspr_allowval = cspr._directives[SD.ALLOW];
-      for(var d in CSPRep.SRC_DIRECTIVES) {
+      // DEFAULT_SRC one.
+      cspr_allowval = cspr._directives[SD.DEFAULT_SRC];
+      for(var d in SD) {
         //"Missing key " + d
         do_check_has_key(cspr._directives, SD[d]);
         //"Implicit directive " + d + " has non-allow value."
         do_check_eq(cspr._directives[SD[d]].toString(), cspr_allowval.toString());
+      }
+    });
+
+
+test(
+    function test_CSPRep_defaultSrc() {
+      var cspr, cspr_default_val, cspr_allow;
+      var SD = CSPRep.SRC_DIRECTIVES;
+
+      // apply policy of "default-src *" (e.g. "allow *")
+      cspr = CSPRep.fromString("default-src *", "http://self.com:80");
+      // "DEFAULT_SRC directive is missing when specified in fromString"
+      do_check_has_key(cspr._directives, SD.DEFAULT_SRC);
+
+      // check that the other directives were auto-filled with the
+      // DEFAULT_SRC one.
+      cspr_default_val = cspr._directives[SD.DEFAULT_SRC];
+      for (var d in SD) {
+        do_check_has_key(cspr._directives, SD[d]);
+        // "Implicit directive " + d + " has non-default-src value."
+        do_check_eq(cspr._directives[SD[d]].toString(), cspr_default_val.toString());
+      }
+
+      // check that |allow *| and |default-src *| are parsed equivalently and
+      // result in the same set of explicit policy directives
+      cspr = CSPRep.fromString("default-src *", "http://self.com:80");
+      cspr_allow = CSPRep.fromString("allow *", "http://self.com:80");
+
+      for (var d in SD) {
+        do_check_equivalent(cspr._directives[SD[d]],
+                            cspr_allow._directives[SD[d]]);
       }
     });
 

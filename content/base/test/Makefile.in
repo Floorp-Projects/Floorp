@@ -472,6 +472,7 @@ _TEST_FILES2 = \
 		test_bug558431.html \
 		file_bug558431.html \
 		file_bug558431.html^headers^ \
+		test_bug604592.html \
 		test_bug628938.html \
 		test_bug626262.html \
 		$(NULL)

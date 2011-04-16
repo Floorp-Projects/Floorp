@@ -202,7 +202,6 @@ function TabItem(tab, options) {
 
   this.setResizable(true, options.immediately);
   this.droppable(true);
-  this._updateDebugBounds();
 
   TabItems.register(this);
 
@@ -228,16 +227,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.$canvas[0].width = w;
     this.$canvas[0].height = h;
     this.tabCanvas.paint();
-  },
-
-  // ----------
-  // Function: _getFontSizeFromWidth
-  // Private method that returns the fontsize to use given the tab's width
-  _getFontSizeFromWidth: function TabItem__getFontSizeFromWidth(width) {
-    let widthRange = new Range(0,TabItems.tabWidth);
-    let proportion = widthRange.proportion(width-TabItems.tabItemPadding.x, true);
-    // proportion is in [0,1]
-    return TabItems.fontSizeRange.scale(proportion);
   },
 
   // ----------
@@ -374,6 +363,19 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
               (!GroupItems.getActiveGroupItem() && !self.tab.hidden))
             GroupItems.setActiveGroupItem(self.parent);
         }
+      } else {
+        // When duplicating a non-blank orphaned tab, create a group including both of them.
+        // This prevents overlaid tabs in Tab View (only one tab appears to be there).
+        // In addition, as only one active orphaned tab is shown when Tab View is hidden
+        // and there are two tabs shown after the duplication, it also prevents
+        // the inactive tab to suddenly disappear when toggling Tab View twice.
+        //
+        // Fixes:
+        //   Bug 645653 - Middle-click on reload button to duplicate orphan tabs does not create a group
+        //   Bug 643119 - Ctrl+Drag to duplicate does not work for orphaned tabs
+        //   ... (and any other way of duplicating a non-blank orphaned tab).
+        if (GroupItems.getActiveGroupItem() == null)
+          GroupItems.newTab(self, {immediately: true});
       }
     } else {
       // create tab by double click is handled in UI_init().
@@ -441,16 +443,14 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     if (rect.width != this.bounds.width || options.force) {
       css.width = rect.width - TabItems.tabItemPadding.x;
-      css.fontSize = this._getFontSizeFromWidth(rect.width);
+      css.fontSize = TabItems.getFontSizeFromWidth(rect.width);
       css.fontSize += 'px';
     }
 
     if (rect.height != this.bounds.height || options.force) {
+      css.height = rect.height - TabItems.tabItemPadding.y;
       if (!this.isStacked)
-          css.height = rect.height - TabItems.tabItemPadding.y -
-                       TabItems.fontSizeRange.max;
-      else
-        css.height = rect.height - TabItems.tabItemPadding.y;
+        css.height -= TabItems.fontSizeRange.max;
     }
 
     if (Utils.isEmptyObject(css))
@@ -524,7 +524,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
 
     UI.clearShouldResizeItems();
 
-    this._updateDebugBounds();
     rect = this.getBounds(); // ensure that it's a <Rect>
 
     if (!Utils.isRect(this.bounds))
@@ -645,11 +644,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let $canvas = this.$canvas;
 
     UI.setActiveTab(this);
-    if (this.parent) {
-      GroupItems.setActiveGroupItem(this.parent);
-    } else {
-      GroupItems.setActiveOrphanTab(this);
-    }
+    GroupItems.setActiveGroupItem(this.parent);
 
     TabItems._update(this.tab, {force: true});
 
@@ -714,8 +709,6 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let onZoomDone = function onZoomDone() {
       $tab.removeClass("front");
       $canvas.css("-moz-transform", null);
-
-      GroupItems.setActiveOrphanTab(null);
 
       if (typeof complete == "function")
         complete();
@@ -1095,8 +1088,8 @@ let TabItems = {
       Utils.assertThrow(tab._tabViewTabItem, "should already be linked");
       // note that it's ok to unlink an app tab; see .handleTabUnpin
 
-      if (tab._tabViewTabItem == GroupItems.getActiveOrphanTab())
-        GroupItems.setActiveOrphanTab(null);
+      if (tab._tabViewTabItem == UI.getActiveOrphanTab())
+        UI.setActiveTab(null);
 
       this.unregister(tab._tabViewTabItem);
       tab._tabViewTabItem._sendToSubscribers("close");
@@ -1288,57 +1281,59 @@ let TabItems = {
 
     return sane;
   },
-  
+
+  // ----------
+  // Function: getFontSizeFromWidth
+  // Private method that returns the fontsize to use given the tab's width
+  getFontSizeFromWidth: function TabItem_getFontSizeFromWidth(width) {
+    let widthRange = new Range(0, TabItems.tabWidth);
+    let proportion = widthRange.proportion(width - TabItems.tabItemPadding.x, true);
+    // proportion is in [0,1]
+    return TabItems.fontSizeRange.scale(proportion);
+  },
+
   // ----------
   // Function: _getWidthForHeight
   // Private method that returns the tabitem width given a height.
-  // Set options.hideTitle=true to measure without a title.
-  // Default is to measure with a title.
-  _getWidthForHeight: function TabItems__getWidthForHeight(height, options) {    
-    let titleSize = (options !== undefined && options.hideTitle === true) ? 
-      0 : TabItems.fontSizeRange.max;
-    return Math.max(0, Math.max(TabItems.minTabHeight, height - titleSize)) * 
-      TabItems.invTabAspect;
+  _getWidthForHeight: function TabItems__getWidthForHeight(height) {
+    return height * TabItems.invTabAspect;
   },
 
   // ----------
   // Function: _getHeightForWidth
   // Private method that returns the tabitem height given a width.
-  // Set options.hideTitle=false to measure without a title.
-  // Default is to measure with a title.
-  _getHeightForWidth: function TabItems__getHeightForWidth(width, options) {
-    let titleSize = (options !== undefined && options.hideTitle === true) ? 
-      0 : TabItems.fontSizeRange.max;
-    return Math.max(0, Math.max(TabItems.minTabWidth,width)) *
-      TabItems.tabAspect + titleSize;
+  _getHeightForWidth: function TabItems__getHeightForWidth(width) {
+    return width * TabItems.tabAspect;
   },
-  
+
   // ----------
   // Function: calcValidSize
   // Pass in a desired size, and receive a size based on proper title
   // size and aspect ratio.
   calcValidSize: function TabItems_calcValidSize(size, options) {
     Utils.assert(Utils.isPoint(size), 'input is a Point');
-    let retSize = new Point(0,0);
-    if (size.x==-1) {
-      retSize.x = this._getWidthForHeight(size.y, options);
-      retSize.y = size.y;
-    } else if (size.y==-1) {
-      retSize.x = size.x;
-      retSize.y = this._getHeightForWidth(size.x, options);
-    } else {
-      let fitHeight = this._getHeightForWidth(size.x, options);
-      let fitWidth = this._getWidthForHeight(size.y, options);
 
-      // Go with the smallest final dimension.
-      if (fitWidth < size.x) {
-        retSize.x = fitWidth;
-        retSize.y = size.y;
-      } else {
-        retSize.x = size.x;
-        retSize.y = fitHeight;
-      }
+    let width = Math.max(TabItems.minTabWidth, size.x);
+    let showTitle = !options || !options.hideTitle;
+    let titleSize = showTitle ? TabItems.fontSizeRange.max : 0;
+    let height = Math.max(TabItems.minTabHeight, size.y - titleSize);
+    let retSize = new Point(width, height);
+
+    if (size.x > -1)
+      retSize.y = this._getHeightForWidth(width);
+    if (size.y > -1)
+      retSize.x = this._getWidthForHeight(height);
+
+    if (size.x > -1 && size.y > -1) {
+      if (retSize.x < size.x)
+        retSize.y = this._getHeightForWidth(retSize.x);
+      else
+        retSize.x = this._getWidthForHeight(retSize.y);
     }
+
+    if (showTitle)
+      retSize.y += titleSize;
+
     return retSize;
   }
 };

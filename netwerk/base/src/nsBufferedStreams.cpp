@@ -35,10 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "IPC/IPCMessageUtils.h"
 #include "mozilla/net/NeckoMessageUtils.h"
-#endif
 
 #include "nsBufferedStreams.h"
 #include "nsStreamUtils.h"
@@ -491,7 +489,6 @@ nsBufferedInputStream::GetUnbufferedStream(nsISupports* *aStream)
 PRBool
 nsBufferedInputStream::Read(const IPC::Message *aMsg, void **aIter)
 {
-#ifdef MOZ_IPC
     using IPC::ReadParam;
 
     PRUint32 bufferSize;
@@ -506,22 +503,17 @@ nsBufferedInputStream::Read(const IPC::Message *aMsg, void **aIter)
         return PR_FALSE;
 
     return PR_TRUE;
-#else
-    return PR_FALSE;
-#endif
 }
 
 void
 nsBufferedInputStream::Write(IPC::Message *aMsg)
 {
-#ifdef MOZ_IPC
     using IPC::WriteParam;
 
     WriteParam(aMsg, mBufferSize);
 
     IPC::InputStream inputStream(Source());
     WriteParam(aMsg, inputStream);
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

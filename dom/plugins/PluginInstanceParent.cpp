@@ -366,6 +366,15 @@ PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginTransparent(
 }
 
 bool
+PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginUsesDOMForCursor(
+    const bool& useDOMForCursor, NPError* result)
+{
+    *result = mNPNIface->setvalue(mNPP, NPPVpluginUsesDOMForCursorBool,
+                                  (void*)(NPBool)useDOMForCursor);
+    return true;
+}
+
+bool
 PluginInstanceParent::AnswerNPN_SetValue_NPPVpluginDrawingModel(
     const int& drawingModel, NPError* result)
 {
@@ -585,16 +594,6 @@ PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
         return NS_ERROR_FAILURE;
 
     return NS_OK;
-}
-
-nsresult
-PluginInstanceParent::GetSurface(gfxASurface** aSurface)
-{
-    if (mFrontSurface) {
-      NS_ADDREF(*aSurface = mFrontSurface);
-      return NS_OK;
-    }
-    return NS_ERROR_NOT_AVAILABLE;
 }
 
 nsresult

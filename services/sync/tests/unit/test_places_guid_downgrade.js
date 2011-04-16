@@ -95,8 +95,7 @@ function test_history_guids() {
   dump("tbguid: " + tbguid + "\n");
 
   _("History: Verify GUIDs are added to the guid column.");
-  let stmt = Utils.createStatement(
-    Svc.History.DBConnection,
+  let stmt = Svc.History.DBConnection.createAsyncStatement(
     "SELECT id FROM moz_places WHERE guid = :guid");
 
   stmt.params.guid = fxguid;
@@ -108,8 +107,7 @@ function test_history_guids() {
   do_check_eq(result.length, 1);
 
   _("History: Verify GUIDs weren't added to annotations.");
-  stmt = Utils.createStatement(
-    Svc.History.DBConnection,
+  stmt = Svc.History.DBConnection.createAsyncStatement(
     "SELECT a.content AS guid FROM moz_annos a WHERE guid = :guid");
 
   stmt.params.guid = fxguid;
@@ -136,8 +134,7 @@ function test_bookmark_guids() {
   let tbguid = store.GUIDForId(tbid);
 
   _("Bookmarks: Verify GUIDs are added to the guid column.");
-  let stmt = Utils.createStatement(
-    Svc.History.DBConnection,
+  let stmt = Svc.History.DBConnection.createAsyncStatement(
     "SELECT id FROM moz_bookmarks WHERE guid = :guid");
 
   stmt.params.guid = fxguid;
@@ -151,8 +148,7 @@ function test_bookmark_guids() {
   do_check_eq(result[0].id, tbid);
 
   _("Bookmarks: Verify GUIDs weren't added to annotations.");
-  stmt = Utils.createStatement(
-    Svc.History.DBConnection,
+  stmt = Svc.History.DBConnection.createAsyncStatement(
     "SELECT a.content AS guid FROM moz_items_annos a WHERE guid = :guid");
 
   stmt.params.guid = fxguid;

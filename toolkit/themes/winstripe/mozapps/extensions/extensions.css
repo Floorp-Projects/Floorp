@@ -375,11 +375,8 @@
 @media all and (-moz-windows-default-theme) {
   #header-search {
     -moz-appearance: none;
-    border: 1px solid;
-    border-color: rgba(0, 0, 0, 0.25) rgba(0, 0, 0, 0.32) rgba(0, 0, 0, 0.37);
-    border-radius: 4px;
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1) inset,
-                0 1px 0 rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(0, 0, 0, 0.32);
+    border-radius: 3.5px;
     padding-bottom: 2px;
     background-color: rgba(255, 255, 255, 0.4);
   }
@@ -1177,7 +1174,7 @@
   background: -moz-linear-gradient(rgba(251, 252, 253, 0.95), rgba(246, 247, 248, 0) 49%, 
                                    rgba(211, 212, 213, 0.45) 51%, rgba(225, 226, 229, 0.3));
   background-clip: padding-box;
-  border-radius: 4.5px;
+  border-radius: 3.5px;
   border: 1px solid rgba(31, 64, 100, 0.4);
   border-top-color: rgba(31, 64, 100, 0.3);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25) inset,

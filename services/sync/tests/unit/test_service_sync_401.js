@@ -20,9 +20,9 @@ function run_test() {
 
   do_test_pending();
   let server = httpd_setup({
-    "/1.0/johndoe/storage/crypto/keys": new ServerWBO().handler(),
-    "/1.0/johndoe/storage/meta/global": new ServerWBO().handler(),
-    "/1.0/johndoe/info/collections": login_handler
+    "/1.1/johndoe/storage/crypto/keys": new ServerWBO().handler(),
+    "/1.1/johndoe/storage/meta/global": new ServerWBO().handler(),
+    "/1.1/johndoe/info/collections": login_handler
   });
 
   const GLOBAL_SCORE = 42;

@@ -287,7 +287,7 @@ JSStackFrame::canonicalActualArg(uintN i) const
 }
 
 template <class Op>
-inline void
+inline bool
 JSStackFrame::forEachCanonicalActualArg(Op op)
 {
     uintN nformal = fun()->nargs;
@@ -296,53 +296,50 @@ JSStackFrame::forEachCanonicalActualArg(Op op)
     if (nactual <= nformal) {
         uintN i = 0;
         js::Value *actualsEnd = formals + nactual;
-        for (js::Value *p = formals; p != actualsEnd; ++p, ++i)
-            op(i, p);
+        for (js::Value *p = formals; p != actualsEnd; ++p, ++i) {
+            if (!op(i, p))
+                return false;
+        }
     } else {
         uintN i = 0;
         js::Value *formalsEnd = formalArgsEnd();
-        for (js::Value *p = formals; p != formalsEnd; ++p, ++i)
-            op(i, p);
+        for (js::Value *p = formals; p != formalsEnd; ++p, ++i) {
+            if (!op(i, p))
+                return false;
+        }
         js::Value *actuals = formalsEnd - (nactual + 2);
         js::Value *actualsEnd = formals - 2;
-        for (js::Value *p = actuals; p != actualsEnd; ++p, ++i)
-            op(i, p);
+        for (js::Value *p = actuals; p != actualsEnd; ++p, ++i) {
+            if (!op(i, p))
+                return false;
+        }
     }
+    return true;
 }
 
 template <class Op>
-inline void
+inline bool
 JSStackFrame::forEachFormalArg(Op op)
 {
     js::Value *formals = formalArgsEnd() - fun()->nargs;
     js::Value *formalsEnd = formalArgsEnd();
     uintN i = 0;
-    for (js::Value *p = formals; p != formalsEnd; ++p, ++i)
-        op(i, p);
+    for (js::Value *p = formals; p != formalsEnd; ++p, ++i) {
+        if (!op(i, p))
+            return false;
+    }
+    return true;
 }
 
 namespace js {
-
-struct STATIC_SKIP_INFERENCE CopyNonHoleArgsTo
-{
-    CopyNonHoleArgsTo(JSObject *aobj, Value *dst) : aobj(aobj), dst(dst) {}
-    JSObject *aobj;
-    Value *dst;
-    void operator()(uintN argi, Value *src) {
-        if (aobj->getArgsElement(argi).isMagic(JS_ARGS_HOLE))
-            dst->setUndefined();
-        else
-            *dst = *src;
-        ++dst;
-    }
-};
 
 struct CopyTo
 {
     Value *dst;
     CopyTo(Value *dst) : dst(dst) {}
-    void operator()(uintN, Value *src) {
+    bool operator()(uintN, Value *src) {
         *dst++ = *src;
+        return true;
     }
 };
 

@@ -44,8 +44,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-include $(topsrcdir)/toolkit/mozapps/installer/package-name.mk
-
 # input location for the build, usually $(DIST)
 # set this to $(DIST)/l10n-stage per override for L10n builds
 PACKAGE_BASE_DIR	= $(DIST)
@@ -72,7 +70,20 @@ MBSDIFF_BIN	= $(LIBXUL_DIST)/host/bin/mbsdiff$(HOST_BIN_SUFFIX)
 
 full-update:: complete-patch
 
+ifeq ($(OS_TARGET), WINNT)
+MOZ_PKG_FORMAT	:= SFX7Z
+UNPACKAGE	= "$(subst $(DIST),$(_ABS_DIST),$(INSTALLER_PACKAGE))"
+ifdef AB_CD
+UNPACKAGE	= "$(PACKAGE_BASE_DIR)/$(PACKAGE)"
+endif
+endif
+
 complete-patch::
+ifeq ($(OS_TARGET), WINNT)
+	test -f $(UNPACKAGE)
+	$(RM) -rf "$(PACKAGE_DIR)"
+	cd $(PACKAGE_BASE_DIR) && $(INNER_UNMAKE_PACKAGE)
+endif
 	mkdir -p $(STAGE_DIR)
 	MAR=$(MAR_BIN) \
 	  $(srcdir)/make_full_update.sh \
@@ -89,3 +100,4 @@ partial-patch::
 	  "$(DST_BUILD)"
 
 include $(topsrcdir)/config/rules.mk
+include $(topsrcdir)/toolkit/mozapps/installer/packager.mk

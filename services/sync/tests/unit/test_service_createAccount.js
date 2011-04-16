@@ -23,10 +23,7 @@ function run_test() {
     // jane@doe.com
     "/user/1.0/vuuf3eqgloxpxmzph27f5a6ve7gzlrms": send(400, "Bad Request", "2"),
     // jim@doe.com
-    "/user/1.0/vz6fhecgw5t3sgx3a4cektoiokyczkqd": send(500, "Server Error", "Server Error"),
-    "/user/1.0/johndoe": send(200, "OK", "0"),
-    "/user/1.0/janedoe": send(400, "Bad Request", "2"),
-    "/user/1.0/jimdoe": send(500, "Server Error", "Server Error")
+    "/user/1.0/vz6fhecgw5t3sgx3a4cektoiokyczkqd": send(500, "Server Error", "Server Error")
   });
   try {
     Service.serverURL = "http://localhost:8080/";
@@ -64,24 +61,6 @@ function run_test() {
     res = Service.createAccount("john@doe.com", "mysecretpw",
                                 "challenge", "response");
     do_check_eq(secretHeader, "my-server-secret");
-
-
-    // Backwards compat with the Firefox UI. Remove once bug 595066 has landed.
-
-    _("Create an old-style account.");
-    res = Service.createAccount("johndoe", "mysecretpw", "john@doe.com",
-                                "challenge", "response");
-    do_check_eq(res, null);
-
-    _("Invalid captcha or other user-friendly error.");
-    res = Service.createAccount("janedoe", "anothersecretpw", "jane@doe.com",
-                                "challenge", "response");
-    do_check_eq(res, "invalid-captcha");
-
-    _("Generic server error.");
-    res = Service.createAccount("jimdoe", "preciousss", "jim@doe.com",
-                                "challenge", "response");
-    do_check_eq(res, "generic-server-error");
 
   } finally {
     Svc.Prefs.resetBranch("");

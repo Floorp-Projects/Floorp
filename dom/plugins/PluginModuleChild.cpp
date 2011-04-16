@@ -186,9 +186,9 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
 
     mPluginFilename = aPluginFilename.c_str();
     nsCOMPtr<nsILocalFile> pluginFile;
-    NS_NewNativeLocalFile(mPluginFilename,
-                          PR_TRUE,
-                          getter_AddRefs(pluginFile));
+    NS_NewLocalFile(NS_ConvertUTF8toUTF16(mPluginFilename),
+                    PR_TRUE,
+                    getter_AddRefs(pluginFile));
 
     PRBool exists;
     pluginFile->Exists(&exists);

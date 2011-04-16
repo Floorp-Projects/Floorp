@@ -125,18 +125,20 @@ function test() {
   // make sure we don't freeze item size when removing an item from a stack
   let testRemoveWhileStacked = function () {
     let oldBounds = groupItem.getBounds();
-    groupItem.setSize(150, 200, true);
+    groupItem.setSize(250, 250, true);
     groupItem.setUserSize();
 
     let originalBounds = groupItem.getChild(0).getBounds();
-    ok(!groupItem._isStacked, 'testRemoveWhileStacked: group is not stacked');
+    ok(!groupItem.isStacked(), 'testRemoveWhileStacked: group is not stacked');
 
-    // add a new tab to let the group stack
-    win.gBrowser.loadOneTab('about:blank', {inBackground: true});
-    ok(groupItem._isStacked, 'testRemoveWhileStacked: group is now stacked');
+    // add new tabs to let the group stack
+    while (!groupItem.isStacked())
+      win.gBrowser.loadOneTab('about:blank', {inBackground: true});
 
     afterAllTabsLoaded(function () {
       groupItem.getChild(0).close();
+      ok(!groupItem.isStacked(), 'testRemoveWhileStacked: group is not stacked');
+
       let bounds = groupItem.getChild(0).getBounds();
       ok(originalBounds.equals(bounds), 'testRemoveWhileStacked: tabs did not change their size');
 
@@ -156,7 +158,7 @@ function test() {
     groupItem.setSize(100, 100, true);
     groupItem.setUserSize();
 
-    ok(groupItem._isStacked, 'testExpandedMode: group is stacked');
+    ok(groupItem.isStacked(), 'testExpandedMode: group is stacked');
 
     groupItem.addSubscriber(groupItem, 'expanded', function () {
       groupItem.removeSubscriber(groupItem, 'expanded');
@@ -173,7 +175,7 @@ function test() {
       let tabItem = groupItem.getChild(1);
       let bounds = tabItem.getBounds();
 
-      for (let i=0; i<3; i++)
+      while (groupItem.getChildren().length > 2)
         groupItem.getChild(1).close();
 
       ok(originalBounds.equals(groupItem.getChild(0).getBounds()), 'testExpandedMode: tabs did not change their size');

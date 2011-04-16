@@ -165,14 +165,14 @@ nsMathMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
       tag == nsGkAtoms::mtext_ || tag == nsGkAtoms::mspace_)
     return FindAttributeDependence(aAttribute, tokenMap,
                                    NS_ARRAY_LENGTH(tokenMap));
-  if (tag == nsGkAtoms::mstyle_)
+  if (tag == nsGkAtoms::mstyle_ ||
+      tag == nsGkAtoms::math)
     return FindAttributeDependence(aAttribute, mstyleMap,
                                    NS_ARRAY_LENGTH(mstyleMap));
 
   if (tag == nsGkAtoms::maction_ ||
       tag == nsGkAtoms::maligngroup_ ||
       tag == nsGkAtoms::malignmark_ ||
-      tag == nsGkAtoms::math ||
       tag == nsGkAtoms::menclose_ ||
       tag == nsGkAtoms::merror_ ||
       tag == nsGkAtoms::mfenced_ ||
