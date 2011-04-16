@@ -460,7 +460,10 @@ enum {
      */
     OBJECT_FLAG_UNKNOWN_MASK = uint32(-1),
 
-    /* Whether any objects this represents are not dense arrays. */
+    /*
+     * Whether any objects this represents are not dense arrays. This also
+     * includes dense arrays whose length property does not fit in an int32.
+     */
     OBJECT_FLAG_NON_DENSE_ARRAY = 1 << 0,
 
     /* Whether any objects this represents are not packed arrays. */

@@ -144,33 +144,44 @@ class LoopState : public MacroAssemblerTypedefs
     Vector<RestoreInvariantCall> restoreInvariantCalls;
 
     /*
-     * Array bounds check hoisted out of the loop. This is a check that needs
-     * to be performed, expressed in terms of the state at the loop head.
+     * Aggregate structure for all loop invariant code and hoisted checks we
+     * can perform. These are all stored in the same vector as they may depend
+     * on each other and we need to emit code restoring them in order.
      */
-    struct HoistedBoundsCheck
-    {
-        /* initializedLength(array) > value + constant */
-        uint32 arraySlot;
-        uint32 valueSlot;
-        int32 constant;
+    struct InvariantEntry {
+        enum {
+            /*
+             * initializedLength(array) > value + constant.
+             * Unsigned comparison, so will fail if value + constant < 0
+             */
+            BOUNDS_CHECK,
+
+            /* value + constant >= 0 */
+            NEGATIVE_CHECK,
+
+            INVARIANT_SLOTS,
+            INVARIANT_LENGTH
+        } kind;
+        union {
+            struct {
+                uint32 arraySlot;
+                uint32 valueSlot;
+                int32 constant;
+            } check;
+            struct {
+                uint32 arraySlot;
+                uint32 temporary;
+            } array;
+        } u;
+        InvariantEntry() { PodZero(this); }
     };
-    Vector<HoistedBoundsCheck, 4, CompilerAllocPolicy> hoistedBoundsChecks;
+    Vector<InvariantEntry, 4, CompilerAllocPolicy> invariantEntries;
 
     bool loopInvariantEntry(const FrameEntry *fe);
     bool addHoistedCheck(uint32 arraySlot, uint32 valueSlot, int32 constant);
+    void addNegativeCheck(uint32 valueSlot, int32 constant);
 
-    /*
-     * Track analysis temporaries in the frame state which hold slots pointers
-     * for arrays throughout the loop.
-     */
-    struct InvariantArraySlots
-    {
-        uint32 arraySlot;
-        uint32 temporary;
-    };
-    Vector<InvariantArraySlots, 4, CompilerAllocPolicy> invariantArraySlots;
-
-    bool hasInvariants() { return !hoistedBoundsChecks.empty() || !invariantArraySlots.empty(); }
+    bool hasInvariants() { return !invariantEntries.empty(); }
     void restoreInvariants(Assembler &masm, Vector<Jump> *jumps);
 
   public:
@@ -224,6 +235,74 @@ class LoopState : public MacroAssemblerTypedefs
 
     bool hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *id);
     FrameEntry *invariantSlots(const FrameEntry *obj);
+    FrameEntry *invariantLength(const FrameEntry *obj);
+
+  private:
+    /* Analysis information for the loop. */
+
+    /* Stack information at points within this loop. */
+    analyze::StackAnalysis stack;
+
+    /*
+     * Any inequality known to hold at the head of the loop. This has the
+     * form 'lhs <= rhs + constant' or 'lhs >= rhs + constant', depending on
+     * lessEqual. The lhs may be modified within the loop body (the test is
+     * invalid afterwards), and the rhs is invariant. This information is only
+     * valid if the LHS/RHS are known integers.
+     */
+    enum { UNASSIGNED = uint32(-1) };
+    uint32 testLHS;
+    uint32 testRHS;
+    int32 testConstant;
+    bool testLessEqual;
+
+    /*
+     * The rhs in the test is testRHS.length; for the test to be valid, the
+     * length must not be directly modified within the loop.
+     */
+    bool testLength;
+
+    /*
+     * A variable which will be incremented or decremented exactly once in each
+     * iteration of the loop. The offset of the operation is indicated, which
+     * may or may not run after the initial entry into the loop.
+     */
+    struct Increment {
+        uint32 slot;
+        uint32 offset;
+    };
+    Vector<Increment, 4, CompilerAllocPolicy> increments;
+
+    /* It is unknown which arrays grow or which objects are modified in this loop. */
+    bool unknownModset;
+
+    /*
+     * Arrays which might grow during this loop. This is a guess, and may
+     * underapproximate the actual set of such arrays.
+     */
+    Vector<types::TypeObject *, 4, CompilerAllocPolicy> growArrays;
+
+    /* Properties which might be modified during this loop. */
+    struct ModifiedProperty {
+        types::TypeObject *object;
+        jsid id;
+    };
+    Vector<ModifiedProperty, 4, CompilerAllocPolicy> modifiedProperties;
+
+    void analyzeLoopTest();
+    void analyzeLoopIncrements();
+    void analyzeModset();
+
+    bool loopVariableAccess(jsbytecode *pc);
+    bool getLoopTestAccess(jsbytecode *pc, uint32 *slotp, int32 *constantp);
+
+    bool addGrowArray(types::TypeObject *object);
+    bool addModifiedProperty(types::TypeObject *object, jsid id);
+
+    bool hasGrowArray(types::TypeObject *object);
+    bool hasModifiedProperty(types::TypeObject *object, jsid id);
+
+    inline types::TypeSet *poppedTypes(jsbytecode *pc, unsigned which);
 };
 
 } /* namespace mjit */

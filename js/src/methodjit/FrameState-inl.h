@@ -618,13 +618,13 @@ FrameState::tempRegForData(FrameEntry *fe, RegisterID reg, Assembler &masm) cons
 inline bool
 FrameState::shouldAvoidTypeRemat(FrameEntry *fe)
 {
-    return !fe->isCopy() && !fe->isInvariant() && fe->type.inMemory();
+    return !fe->isCopy() && fe->type.inMemory();
 }
 
 inline bool
 FrameState::shouldAvoidDataRemat(FrameEntry *fe)
 {
-    return !fe->isCopy() && !fe->isInvariant() && fe->data.inMemory();
+    return !fe->isCopy() && fe->data.inMemory();
 }
 
 inline void
@@ -1116,7 +1116,7 @@ FrameState::unpinKilledReg(RegisterID reg)
 inline void
 FrameState::forgetAllRegs(FrameEntry *fe)
 {
-    if (fe->isCopy() || fe->isInvariant())
+    if (fe->isCopy())
         return;
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
@@ -1223,13 +1223,20 @@ FrameState::pushThis()
     pushCopyOf(indexOfFe(fe));
 }
 
+inline void
+FrameState::pushTemporary(FrameEntry *fe)
+{
+    JS_ASSERT(isTemporary(fe));
+    pushCopyOf(indexOfFe(fe));
+}
+
 void
-FrameState::learnThisIsObject()
+FrameState::learnThisIsObject(bool unsync)
 {
     // This is safe, albeit hacky. This is only called from the compiler,
     // and only on the first use of |this| inside a basic block. Thus,
     // there are no copies of |this| anywhere.
-    learnType(this_, JSVAL_TYPE_OBJECT);
+    learnType(this_, JSVAL_TYPE_OBJECT, unsync);
 }
 
 inline void
@@ -1307,8 +1314,7 @@ inline bool
 FrameState::tryFastDoubleLoad(FrameEntry *fe, FPRegisterID fpReg, Assembler &masm) const
 {
 #ifdef JS_CPU_X86
-    if (!fe->isCopy() && !fe->isInvariant() &&
-        fe->type.inRegister() && fe->data.inRegister()) {
+    if (!fe->isCopy() && fe->type.inRegister() && fe->data.inRegister()) {
         masm.fastLoadDouble(fe->data.reg(), fe->type.reg(), fpReg);
         return true;
     }
