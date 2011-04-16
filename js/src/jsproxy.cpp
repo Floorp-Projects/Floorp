@@ -981,6 +981,19 @@ proxy_TraceFunction(JSTracer *trc, JSObject *obj)
     MarkValue(trc, GetConstruct(obj), "construct");
 }
 
+static JSBool
+proxy_Fix(JSContext *cx, JSObject *obj, bool *fixed, AutoIdVector *props)
+{
+    JS_ASSERT(obj->isProxy());
+    JSBool isFixed;
+    bool ok = FixProxy(cx, obj, &isFixed);
+    if (ok) {
+        *fixed = isFixed;
+        return GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, props);
+    }
+    return false;
+}
+
 static void
 proxy_Finalize(JSContext *cx, JSObject *obj)
 {
@@ -1036,7 +1049,7 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
         proxy_DeleteProperty,
         NULL,             /* enumerate       */
         proxy_TypeOf,
-        NULL,             /* fix             */
+        proxy_Fix,        /* fix             */
         NULL,             /* thisObject      */
         NULL,             /* clear           */
     }
