@@ -720,6 +720,78 @@ Script::analyze(JSContext *cx, JSScript *script)
 }
 
 /////////////////////////////////////////////////////////////////////
+// Stack Analysis
+/////////////////////////////////////////////////////////////////////
+
+bool
+StackAnalysis::analyze(JSArenaPool &pool, JSScript *script,
+                       uint32 start, uint32 length, Script *analysis)
+{
+    this->script = script;
+    this->start = start;
+    this->length = length;
+
+    poppedArray = ArenaArray<PoppedValue*>(pool, length);
+    if (!poppedArray)
+        return false;
+    PodZero(poppedArray, length);
+
+    PoppedValue *stack = ArenaArray<PoppedValue>(pool, script->nslots - script->nfixed);
+    if (!stack)
+        return false;
+
+    unsigned depth = analysis->getCode(start).stackDepth;
+    for (unsigned i = 0; i < depth; i++)
+        stack[i].reset();
+
+    unsigned offset = start;
+    while (offset < start + length) {
+        jsbytecode *pc = script->code + offset;
+        uint32 successorOffset = offset + GetBytecodeLength(pc);
+
+        Bytecode *code = analysis->maybeCode(pc);
+        if (!code) {
+            offset = successorOffset;
+            continue;
+        }
+
+        for (unsigned i = depth; i < code->stackDepth; i++)
+            stack[i].reset();
+        depth = code->stackDepth;
+
+        if (code->jumpTarget) {
+            for (unsigned i = 0; i < depth; i++)
+                stack[i].reset();
+        }
+
+        unsigned nuses = GetUseCount(script, offset);
+        unsigned ndefs = GetDefCount(script, offset);
+
+        if (nuses) {
+            PoppedValue *popped = ArenaArray<PoppedValue>(pool, nuses);
+            if (!popped)
+                return false;
+            for (unsigned i = 0; i < nuses; i++)
+                popped[i] = stack[depth - 1 - i];
+            poppedArray[offset - start] = popped;
+        }
+
+        for (unsigned i = 0; i < ndefs; i++) {
+            PoppedValue &value = stack[depth - nuses + i];
+            value.offset = offset;
+            value.which = i;
+        }
+
+        depth -= nuses;
+        depth += ndefs;
+
+        offset = successorOffset;
+    }
+
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////////
 // Live Range Analysis
 /////////////////////////////////////////////////////////////////////
 
@@ -1121,368 +1193,6 @@ LifetimeScript::extendVariable(JSContext *cx, LifetimeVariable &var, unsigned st
     tail->start = segment->end;
     tail->loopTail = true;
     segment->next = tail;
-
-    return true;
-}
-
-/* Whether pc is a loop test operand accessing a variable modified by the loop. */
-bool
-LifetimeScript::loopVariableAccess(LifetimeLoop *loop, jsbytecode *pc)
-{
-    unsigned nargs = script->fun ? script->fun->nargs : 0;
-    switch (JSOp(*pc)) {
-      case JSOP_GETLOCAL:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC:
-        if (analysis->localEscapes(GET_SLOTNO(pc)))
-            return false;
-        return firstWrite(2 + nargs + GET_SLOTNO(pc), loop) != uint32(-1);
-      case JSOP_GETARG:
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC:
-        if (analysis->argEscapes(GET_SLOTNO(pc)))
-            return false;
-        return firstWrite(2 + GET_SLOTNO(pc), loop) != uint32(-1);
-      default:
-        return false;
-    }
-}
-
-/*
- * Get any slot/constant accessed by a loop test operand, in terms of its value
- * at the start of the next loop iteration.
- */
-bool
-LifetimeScript::getLoopTestAccess(jsbytecode *pc, uint32 *slotp, int32 *constantp)
-{
-    *slotp = LifetimeLoop::UNASSIGNED;
-    *constantp = 0;
-
-    /*
-     * If the pc is modifying a variable and the value tested is its earlier value
-     * (e.g. 'x++ < n'), we need to account for the modification --- at the start
-     * of the next iteration, the value compared will have been 'x - 1'.
-     * Note that we don't need to worry about other accesses to the variable
-     * in the condition like 'x++ < x', as loop tests where both operands are
-     * modified by the loop are rejected.
-     */
-
-    JSOp op = JSOp(*pc);
-    switch (op) {
-
-      case JSOP_GETLOCAL:
-      case JSOP_INCLOCAL:
-      case JSOP_DECLOCAL:
-      case JSOP_LOCALINC:
-      case JSOP_LOCALDEC: {
-        uint32 local = GET_SLOTNO(pc);
-        if (analysis->localEscapes(local))
-            return false;
-        *slotp = 2 + (script->fun ? script->fun->nargs : 0) + local;  /* :XXX: factor out */
-        if (op == JSOP_LOCALINC)
-            *constantp = -1;
-        else if (op == JSOP_LOCALDEC)
-            *constantp = 1;
-        return true;
-      }
-
-      case JSOP_GETARG:
-      case JSOP_INCARG:
-      case JSOP_DECARG:
-      case JSOP_ARGINC:
-      case JSOP_ARGDEC: {
-        uint32 arg = GET_SLOTNO(pc);
-        if (analysis->argEscapes(GET_SLOTNO(pc)))
-            return false;
-        *slotp = 2 + arg;  /* :XXX: factor out */
-        if (op == JSOP_ARGINC)
-            *constantp = -1;
-        else if (op == JSOP_ARGDEC)
-            *constantp = 1;
-        return true;
-      }
-
-      case JSOP_ZERO:
-        *constantp = 0;
-        return true;
-
-      case JSOP_ONE:
-        *constantp = 1;
-        return true;
-
-      case JSOP_UINT16:
-        *constantp = (int32_t) GET_UINT16(pc);
-        return true;
-
-      case JSOP_UINT24:
-        *constantp = (int32_t) GET_UINT24(pc);
-        return true;
-
-      case JSOP_INT8:
-        *constantp = GET_INT8(pc);
-        return true;
-
-      case JSOP_INT32:
-        /*
-         * Don't allow big constants out of the range of an object's max
-         * nslots, to avoid integer overflow.
-         */
-        *constantp = GET_INT32(pc);
-        if (*constantp >= JSObject::NSLOTS_LIMIT || *constantp <= -JSObject::NSLOTS_LIMIT)
-            return false;
-        return true;
-
-      default:
-        return false;
-    }
-}
-
-void
-LifetimeScript::analyzeLoopTest(LifetimeLoop *loop)
-{
-    /*
-     * Try to pick out loop tests like 'A cmp B', where A and B are locals/args
-     * or constants, and at most one is modified in the body of the loop.
-     * :TODO: bug 618692 once more general loop invariant code motion is in
-     * place, this needs to be more robust. Also, LoopState::checkHoistedBounds
-     * depends on the test not storing anything between the entry and backedge,
-     * and also needs to be more robust.
-     */
-
-    /* Don't handle do-while loops. */
-    if (loop->entry == loop->head)
-        return;
-
-    /* Don't handle loops with branching inside their condition. */
-    if (loop->entry < loop->lastBlock)
-        return;
-
-    /*
-     * Only handle loops with four opcodes between the entry and backedge:
-     * get/inc/dec lhs, get/inc/dec rhs, compare, jump to head
-     */
-    jsbytecode *backedge = script->code + loop->backedge;
-
-    jsbytecode *one = script->code + loop->entry;
-    if (one == backedge)
-        return;
-    jsbytecode *two = one + GetBytecodeLength(one);
-    if (two == backedge)
-        return;
-    jsbytecode *three = two + GetBytecodeLength(two);
-    if (three == backedge)
-        return;
-    if (three + GetBytecodeLength(three) != backedge || JSOp(*backedge) != JSOP_IFNE)
-        return;
-
-    /* Only handle inequalities in the compare condition. */
-    JSOp cmpop = JSOp(*three);
-    switch (cmpop) {
-      case JSOP_GT:
-      case JSOP_GE:
-      case JSOP_LT:
-      case JSOP_LE:
-        break;
-      default:
-        return;
-    }
-
-    /* Reverse the condition if the LHS is not modified by the loop. */
-    if (!loopVariableAccess(loop, one)) {
-        jsbytecode *tmp = one;
-        one = two;
-        two = tmp;
-        cmpop = ReverseCompareOp(cmpop);
-    }
-
-    /* Only handle comparisons where the RHS is not modified by the loop. */
-    if (loopVariableAccess(loop, two))
-        return;
-
-    uint32 lhs;
-    int32 lhsConstant;
-    if (!getLoopTestAccess(one, &lhs, &lhsConstant))
-        return;
-
-    uint32 rhs;
-    int32 rhsConstant;
-    if (!getLoopTestAccess(two, &rhs, &rhsConstant))
-        return;
-
-    if (lhs == LifetimeLoop::UNASSIGNED)
-        return;
-
-    /* Passed all filters, this is a loop test we can capture. */
-
-    loop->testLHS = lhs;
-    loop->testRHS = rhs;
-    loop->testConstant = rhsConstant - lhsConstant;
-
-    switch (cmpop) {
-      case JSOP_GT:
-        loop->testConstant++;  /* x > y ==> x >= y + 1 */
-        /* FALLTHROUGH */
-      case JSOP_GE:
-        loop->testLessEqual = false;
-        break;
-
-      case JSOP_LT:
-        loop->testConstant--;  /* x < y ==> x <= y - 1 */
-      case JSOP_LE:
-        loop->testLessEqual = true;
-        break;
-
-      default:
-        JS_NOT_REACHED("Bad op");
-        return;
-    }
-}
-
-bool
-LifetimeScript::analyzeLoopIncrements(JSContext *cx, LifetimeLoop *loop)
-{
-    /*
-     * Find locals and arguments which are used in exactly one inc/dec operation in every
-     * iteration of the loop (we only match against the last basic block, but could
-     * also handle the first basic block).
-     */
-
-    Vector<LifetimeLoop::Increment> increments(cx);
-
-    unsigned nargs = script->fun ? script->fun->nargs : 0;
-    for (unsigned i = 0; i < nargs; i++) {
-        if (analysis->argEscapes(i))
-            continue;
-
-        uint32 offset = onlyWrite(2 + i, loop);
-        if (offset == uint32(-1) || offset < loop->lastBlock)
-            continue;
-
-        JSOp op = JSOp(script->code[offset]);
-        if (op == JSOP_SETARG)
-            continue;
-
-        LifetimeLoop::Increment inc;
-        inc.slot = 2 + i;  /* :XXX: factor out */
-        inc.offset = offset;
-        if (!increments.append(inc))
-            return false;
-    }
-
-    for (unsigned i = 0; i < script->nfixed; i++) {
-        if (analysis->localEscapes(i))
-            continue;
-
-        uint32 offset = onlyWrite(2 + nargs + i, loop);
-        if (offset == uint32(-1) || offset < loop->lastBlock)
-            continue;
-
-        JSOp op = JSOp(script->code[offset]);
-        if (op == JSOP_SETLOCAL || op == JSOP_SETLOCALPOP)
-            continue;
-
-        LifetimeLoop::Increment inc;
-        inc.slot = 2 + (script->fun ? script->fun->nargs : 0) + i;  /* :XXX: factor out */
-        inc.offset = offset;
-        if (!increments.append(inc))
-            return false;
-    }
-
-    loop->increments = ArenaArray<LifetimeLoop::Increment>(pool, increments.length());
-    if (!loop->increments)
-        return false;
-    loop->nIncrements = increments.length();
-
-    for (unsigned i = 0; i < increments.length(); i++)
-        loop->increments[i] = increments[i];
-
-    return true;
-}
-
-bool
-LifetimeScript::analyzeLoopModset(JSContext *cx, LifetimeLoop *loop)
-{
-    Vector<types::TypeObject *> growArrays(cx);
-
-    /*
-     * To figure out modsets, we need to know the type sets on the stack at
-     * each point. These were generated when running inference on the script,
-     * but are no longer retained and we need to reconstruct them here.
-     */
-
-    types::TypeSet **stack = ArenaArray<types::TypeSet*>(pool, script->nslots);
-    if (!stack)
-        return false;
-
-    unsigned offset = loop->head;
-    unsigned stackDepth = 0;
-
-    while (offset < loop->backedge) {
-        jsbytecode *pc = script->code + offset;
-        unsigned successorOffset = offset + GetBytecodeLength(pc);
-
-        analyze::Bytecode *opinfo = analysis->maybeCode(offset);
-        if (!opinfo) {
-            offset = successorOffset;
-            continue;
-        }
-
-        if (opinfo->stackDepth > stackDepth) {
-            unsigned ndefs = opinfo->stackDepth - stackDepth;
-            memset(&stack[stackDepth], 0, ndefs * sizeof(types::TypeSet*));
-        }
-        stackDepth = opinfo->stackDepth;
-
-        switch (JSOp(*pc)) {
-
-          case JSOP_SETHOLE: {
-            types::TypeSet *types = stack[opinfo->stackDepth - 3];
-            if (types && !types->unknown()) {
-                unsigned count = types->getObjectCount();
-                for (unsigned i = 0; i < count; i++) {
-                    types::TypeObject *object = types->getObject(i);
-                    if (object) {
-                        bool found = false;
-                        for (unsigned i = 0; !found && i < growArrays.length(); i++) {
-                            if (growArrays[i] == object)
-                                found = true;
-                        }
-                        if (!found && !growArrays.append(object))
-                            return false;
-                    }
-                }
-            } else {
-                loop->unknownModset = true;
-            }
-            break;
-          }
-
-          default:
-            break;
-        }
-
-        unsigned nuses = analyze::GetUseCount(script, offset);
-        unsigned ndefs = analyze::GetDefCount(script, offset);
-        memset(&stack[stackDepth - nuses], 0, ndefs * sizeof(types::TypeSet*));
-        stackDepth = stackDepth - nuses + ndefs;
-
-        for (unsigned i = 0; i < ndefs; i++)
-            stack[stackDepth - ndefs + i] = script->types->pushed(offset, i);
-
-        offset = successorOffset;
-    }
-
-    loop->growArrays = ArenaArray<types::TypeObject*>(pool, growArrays.length());
-    if (!loop->growArrays)
-        return false;
-    loop->nGrowArrays = growArrays.length();
-
-    for (unsigned i = 0; i < growArrays.length(); i++)
-        loop->growArrays[i] = growArrays[i];
 
     return true;
 }

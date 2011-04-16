@@ -366,11 +366,14 @@ class FrameState
     void pushArg(uint32 n, JSValueType knownType);
     void pushCallee();
     void pushThis();
-    inline void learnThisIsObject();
+    void pushTemporary(FrameEntry *fe);
+    inline void learnThisIsObject(bool unsync = true);
 
     inline FrameEntry *getStack(uint32 slot);
     inline FrameEntry *getLocal(uint32 slot);
     inline FrameEntry *getArg(uint32 slot);
+
+    inline FrameEntry *getOrTrack(uint32 index);
 
     /*
      * Allocates a temporary register for a FrameEntry's type. The register
@@ -915,7 +918,6 @@ class FrameState
     inline void syncData(FrameEntry *fe);
     inline void syncAndForgetFe(FrameEntry *fe);
 
-    inline FrameEntry *getOrTrack(uint32 index);
     inline FrameEntry *getCallee();
     inline FrameEntry *getThis();
     inline void forgetAllRegs(FrameEntry *fe);

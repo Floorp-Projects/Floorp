@@ -428,10 +428,16 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
 {
     JS_ASSERT(isArray());
 
-    if (length > INT32_MAX &&
-        !cx->addTypePropertyId(getType(), ATOM_TO_JSID(cx->runtime->atomState.lengthAtom),
-                               js::types::TYPE_DOUBLE)) {
-        return false;
+    if (length > INT32_MAX) {
+        /*
+         * Mark the type of this object as possibly not a dense array, per the
+         * requirements of OBJECT_FLAG_NON_DENSE_ARRAY.
+         */
+        if (!cx->markTypeArrayNotPacked(getType(), true))
+            return false;
+        jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
+        if (!cx->addTypePropertyId(getType(), lengthId, js::types::TYPE_DOUBLE))
+            return false;
     }
 
     setPrivate((void*) length);

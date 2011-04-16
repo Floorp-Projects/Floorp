@@ -1333,15 +1333,12 @@ FrameState::assertValidRegisterState() const
         JS_ASSERT(i == fe->trackerIndex());
 
         if (fe->isCopy()) {
+            JS_ASSERT_IF(!fe->copyOf()->temporary, fe > fe->copyOf());
             JS_ASSERT(fe->trackerIndex() > fe->copyOf()->trackerIndex());
-            JS_ASSERT(fe > fe->copyOf());
             JS_ASSERT(!deadEntry(fe->copyOf()));
             JS_ASSERT(fe->copyOf()->isCopied());
             continue;
         }
-
-        if (fe->isInvariant())
-            continue;
 
         if (fe->type.inRegister()) {
             checkedFreeRegs.takeReg(fe->type.reg());
@@ -1536,7 +1533,7 @@ FrameState::sync(Assembler &masm, Uses uses) const
 #endif
         }
 
-        bool copy = fe->isCopy() || fe->isInvariant();
+        bool copy = fe->isCopy();
 
         /* If a part still needs syncing, it is either a copy or constant. */
 #if defined JS_PUNBOX64
@@ -1626,7 +1623,7 @@ FrameState::syncAndKill(Registers kill, Uses uses, Uses ignore)
 
         syncFe(fe);
 
-        if (fe->isCopy() || fe->isInvariant())
+        if (fe->isCopy())
             continue;
 
         /* Forget registers. */
@@ -2071,7 +2068,7 @@ FrameState::ensureInMemoryDoubles(Assembler &masm)
     for (uint32 i = 0; i < a->tracker.nentries; i++) {
         FrameEntry *fe = a->tracker[i];
         if (!deadEntry(fe) && fe->isType(JSVAL_TYPE_DOUBLE) &&
-            !fe->isCopy() && !fe->isInvariant() && !fe->isConstant()) {
+            !fe->isCopy() && !fe->isConstant()) {
             masm.ensureInMemoryDouble(addressOf(fe));
         }
     }
@@ -2086,10 +2083,7 @@ FrameState::pushCopyOf(uint32 index)
     if (backing->isConstant()) {
         fe->setConstant(Jsvalify(backing->getValue()));
     } else {
-        if (backing->isTypeKnown())
-            fe->setType(backing->getKnownType());
-        else
-            fe->type.invalidate();
+        fe->type.invalidate();
         fe->data.invalidate();
         if (backing->isCopy()) {
             backing = backing->copyOf();
@@ -2109,6 +2103,9 @@ FrameState::pushCopyOf(uint32 index)
 FrameEntry *
 FrameState::walkTrackerForUncopy(FrameEntry *original)
 {
+    /* Temporary entries are immutable and should never be uncopied. */
+    JS_ASSERT(!isTemporary(original));
+
     uint32 firstCopy = InvalidIndex;
     FrameEntry *bestFe = NULL;
     uint32 ncopies = 0;
@@ -2382,6 +2379,8 @@ FrameState::forgetEntry(FrameEntry *fe)
 void
 FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
 {
+    JS_ASSERT(!isTemporary(target));
+
     /* Detect something like (x = x) which is a no-op. */
     FrameEntry *top = peek(-1);
     if (top->isCopy() && top->copyOf() == target) {
@@ -3045,6 +3044,7 @@ FrameState::allocTemporary()
         return uint32(-1);
     FrameEntry *fe = temporariesTop++;
     fe->lastLoop = 0;
+    fe->temporary = true;
     return fe - temporaries;
 }
 
