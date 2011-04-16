@@ -575,6 +575,8 @@ usage(void)
                       "  -w            Report strict warnings\n"
                       "  -W            Do not report strict warnings\n"
                       "  -x            Toggle JSOPTION_XML flag\n"
+                      "  -U            Enable UTF-8 C-strings; also affects scripts loaded via\n"
+                      "                run, snarf, read, or entered into the REPL\n"
                       "  -C            Compile-only; do not execute\n"
                       "  -i            Enable interactive read-eval-print loop\n"
                       "  -j            Enable the TraceMonkey tracing JIT\n"
@@ -947,6 +949,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             PR_Sleep(PR_SecondsToInterval(atoi(argv[i])));
             break;
 #endif
+
+        case 'U': /* Already handled in main() */
+            break;
 
         default:
             return usage();
@@ -5909,6 +5914,13 @@ main(int argc, char **argv, char **envp)
 
     argc--;
     argv++;
+
+    int i;
+    for (i = 0; i < argc; i++) {
+        if (argv[i][0] == '-' && argv[i][1] == 'U' && argv[i][2] == '\0') {
+            JS_SetCStringsAreUTF8();
+        }
+    }
 
 #ifdef XP_WIN
     // Set the timer calibration delay count to 0 so we get high
