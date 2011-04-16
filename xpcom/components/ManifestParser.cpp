@@ -603,10 +603,8 @@ ParseManifestCommon(NSLocationType aType, nsILocalFile* aFile,
       continue;
 
     if (directive->regfunc) {
-#ifdef MOZ_IPC
       if (GeckoProcessType_Default != XRE_GetProcessType())
         continue;
-#endif
 
       if (!nsChromeRegistry::gChromeRegistry) {
         nsCOMPtr<nsIChromeRegistry> cr =

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2010 Mozilla Foundation
+ * Copyright (c) 2008-2011 Mozilla Foundation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a 
  * copy of this software and associated documentation files (the "Software"), 
@@ -489,6 +489,7 @@ class nsHtml5ElementName
 #define NS_HTML5ELEMENT_NAME_SCOPING_AS_SVG (1 << 26)
 #define NS_HTML5ELEMENT_NAME_SCOPING_AS_MATHML (1 << 25)
 #define NS_HTML5ELEMENT_NAME_HTML_INTEGRATION_POINT (1 << 24)
+#define NS_HTML5ELEMENT_NAME_OPTIONAL_END_TAG (1 << 23)
 
 
 #endif

@@ -106,6 +106,7 @@ protected:
     DeallocPPluginInstance(PPluginInstanceParent* aActor);
 
 public:
+    // aFilePath is UTF8, not native!
     PluginModuleParent(const char* aFilePath);
     virtual ~PluginModuleParent();
 
@@ -230,7 +231,6 @@ private:
 
     virtual bool HasRequiredFunctions();
     virtual nsresult AsyncSetWindow(NPP instance, NPWindow* window);
-    virtual nsresult GetSurface(NPP instance, gfxASurface** aSurface);
     virtual nsresult GetImage(NPP instance, mozilla::layers::ImageContainer* aContainer, mozilla::layers::Image** aImage);
     virtual nsresult GetImageSize(NPP instance, nsIntSize* aSize);
     NS_OVERRIDE virtual bool UseAsyncPainting() { return true; }

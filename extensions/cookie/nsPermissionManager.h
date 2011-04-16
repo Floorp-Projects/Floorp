@@ -251,7 +251,6 @@ private:
   // An array to store the strings identifying the different types.
   nsTArray<nsCString>          mTypeArray;
 
-#ifdef MOZ_IPC
   // Whether we should update the child process with every change to a
   // permission. This is set to true once the child is ready to receive
   // such updates.
@@ -262,7 +261,6 @@ public:
   {
     mUpdateChildProcess = PR_TRUE;
   }
-#endif
 };
 
 // {4F6B5E00-0C36-11d5-A535-0010A401EB10}

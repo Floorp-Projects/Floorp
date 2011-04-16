@@ -104,8 +104,7 @@ HEADERS = \
 
 export:: $(TARGETS) $(HEADERS)
 	$(INSTALL) $(IFLAGS1) $(HEADERS) $(DIST)/include
-	-rm -f $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
-	-rm -f $(DIST)/bin/chrome/chromelist.txt
+	-$(RM) $(FINAL_LINK_COMPS) $(FINAL_LINK_LIBS) $(FINAL_LINK_COMP_NAMES)
 ifdef HOST_PROGRAM
 	$(INSTALL) $(HOST_PROGRAM) $(DIST)/bin
 endif

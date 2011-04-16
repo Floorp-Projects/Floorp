@@ -95,21 +95,17 @@ nsJSEventListener::~nsJSEventListener()
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsJSEventListener)
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsJSEventListener)
-  if (tmp->mContext &&
-      tmp->mContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT) {
-    NS_DROP_JS_OBJECTS(tmp, nsJSEventListener);
-    tmp->mScopeObject = nsnull;
-  }
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSEventListener)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mTarget)
   if (tmp->mContext) {
-    if (tmp->mScopeObject) {
+    if (tmp->mContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT) {
+      NS_DROP_JS_OBJECTS(tmp, nsJSEventListener);
+    }
+    else {
       nsContentUtils::DropScriptObjects(tmp->mContext->GetScriptTypeID(), tmp,
                                   &NS_CYCLE_COLLECTION_NAME(nsJSEventListener));
-      tmp->mScopeObject = nsnull;
     }
+    tmp->mScopeObject = nsnull;
     NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContext)
   }
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -130,8 +126,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsJSEventListener)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMEventListener)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsJSEventListener, nsIDOMEventListener)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsJSEventListener, nsIDOMEventListener)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSEventListener)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSEventListener)
 
 nsresult
 nsJSEventListener::GetJSVal(const nsAString& aEventName, jsval* aJSVal)

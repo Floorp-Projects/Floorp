@@ -37,6 +37,8 @@
 
 #include "AccGroupInfo.h"
 
+#include "States.h"
+
 AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
   mPosInSet(0), mSetSize(0), mParent(nsnull)
 {
@@ -59,8 +61,7 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
       break;
 
     // If sibling is not visible and hasn't the same base role.
-    if (BaseRole(siblingRole) != aRole ||
-        nsAccUtils::State(sibling) & nsIAccessibleStates::STATE_INVISIBLE)
+    if (BaseRole(siblingRole) != aRole || sibling->State() & states::INVISIBLE)
       continue;
 
     // Check if it's hierarchical flatten structure, i.e. if the sibling
@@ -103,8 +104,7 @@ AccGroupInfo::AccGroupInfo(nsAccessible* aItem, PRUint32 aRole) :
       break;
 
     // If sibling is visible and has the same base role
-    if (BaseRole(siblingRole) != aRole ||
-        nsAccUtils::State(sibling) & nsIAccessibleStates::STATE_INVISIBLE)
+    if (BaseRole(siblingRole) != aRole || sibling->State() & states::INVISIBLE)
       continue;
 
     // and check if it's hierarchical flatten structure.

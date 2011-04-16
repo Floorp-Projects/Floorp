@@ -43,6 +43,7 @@
 #include "nsCoreUtils.h"
 #include "nsDocAccessible.h"
 #include "nsRelUtils.h"
+#include "States.h"
 
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
@@ -93,33 +94,31 @@ NS_IMPL_RELEASE_INHERITED(nsXULTreeAccessible, nsAccessible)
 ////////////////////////////////////////////////////////////////////////////////
 // nsXULTreeAccessible: nsAccessible implementation
 
-nsresult
-nsXULTreeAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
+PRUint64
+nsXULTreeAccessible::NativeState()
 {
   // Get focus status from base class.
-  nsresult rv = nsAccessible::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 state = nsAccessible::NativeState();
 
   // readonly state
-  *aState |= nsIAccessibleStates::STATE_READONLY;
+  state |= states::READONLY;
 
   // remove focusable and focused states since tree items are focusable for AT
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSABLE;
-  *aState &= ~nsIAccessibleStates::STATE_FOCUSED;
+  state &= ~(states::FOCUSABLE | states::FOCUSED);
 
   // multiselectable state.
   nsCOMPtr<nsITreeSelection> selection;
   mTreeView->GetSelection(getter_AddRefs(selection));
-  NS_ENSURE_STATE(selection);
+  NS_ENSURE_TRUE(selection, state);
 
   PRBool isSingle = PR_FALSE;
-  rv = selection->GetSingle(&isSingle);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = selection->GetSingle(&isSingle);
+  NS_ENSURE_SUCCESS(rv, state);
 
   if (!isSingle)
-    *aState |= nsIAccessibleStates::STATE_MULTISELECTABLE;
+    state |= states::MULTISELECTABLE;
 
-  return NS_OK;
+  return state;
 }
 
 NS_IMETHODIMP
@@ -925,33 +924,17 @@ nsXULTreeItemAccessibleBase::GroupPosition(PRInt32 *aGroupLevel,
   return NS_OK;
 }
 
-nsresult
-nsXULTreeItemAccessibleBase::GetStateInternal(PRUint32 *aState,
-                                              PRUint32 *aExtraState)
+PRUint64
+nsXULTreeItemAccessibleBase::NativeState()
 {
-  NS_ENSURE_ARG_POINTER(aState);
-
-  *aState = 0;
-  if (aExtraState)
-    *aExtraState = 0;
-
-  if (IsDefunct()) {
-    if (aExtraState)
-      *aExtraState = nsIAccessibleStates::EXT_STATE_DEFUNCT;
-    return NS_OK_DEFUNCT_OBJECT;
-  }
-
   // focusable and selectable states
-  *aState = nsIAccessibleStates::STATE_FOCUSABLE |
-    nsIAccessibleStates::STATE_SELECTABLE;
+  PRUint64 state = states::FOCUSABLE | states::SELECTABLE;
 
   // expanded/collapsed state
   if (IsExpandable()) {
     PRBool isContainerOpen;
     mTreeView->IsContainerOpen(mRow, &isContainerOpen);
-    *aState |= isContainerOpen ?
-      static_cast<PRUint32>(nsIAccessibleStates::STATE_EXPANDED) :
-      static_cast<PRUint32>(nsIAccessibleStates::STATE_COLLAPSED);
+    state |= isContainerOpen ? states::EXPANDED : states::COLLAPSED;
   }
 
   // selected state
@@ -961,7 +944,7 @@ nsXULTreeItemAccessibleBase::GetStateInternal(PRUint32 *aState,
     PRBool isSelected;
     selection->IsSelected(mRow, &isSelected);
     if (isSelected)
-      *aState |= nsIAccessibleStates::STATE_SELECTED;
+      state |= states::SELECTED;
   }
 
   // focused state
@@ -971,7 +954,7 @@ nsXULTreeItemAccessibleBase::GetStateInternal(PRUint32 *aState,
     PRInt32 currentIndex;
     multiSelect->GetCurrentIndex(&currentIndex);
     if (currentIndex == mRow) {
-      *aState |= nsIAccessibleStates::STATE_FOCUSED;
+      state |= states::FOCUSED;
     }
   }
 
@@ -980,9 +963,9 @@ nsXULTreeItemAccessibleBase::GetStateInternal(PRUint32 *aState,
   mTree->GetFirstVisibleRow(&firstVisibleRow);
   mTree->GetLastVisibleRow(&lastVisibleRow);
   if (mRow < firstVisibleRow || mRow > lastVisibleRow)
-    *aState |= nsIAccessibleStates::STATE_INVISIBLE;
+    state |= states::INVISIBLE;
 
-  return NS_OK;
+  return state;
 }
 
 PRInt32

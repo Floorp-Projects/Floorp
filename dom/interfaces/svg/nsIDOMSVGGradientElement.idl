@@ -50,7 +50,7 @@
 interface nsIDOMSVGAnimatedEnumeration;
 interface nsIDOMSVGAnimatedTransformList;
 
-[scriptable, uuid(988b2de4-137b-4bb8-a15e-fe94038e9cf3)]
+[scriptable, uuid(8114186f-29ef-4642-b4e2-762f331661e5)]
 interface nsIDOMSVGGradientElement
   : nsIDOMSVGElement
 /*
@@ -88,7 +88,7 @@ interface nsIDOMSVGGradientElement
 // Linear gradient
 interface nsIDOMSVGAnimatedLength;
 
-[scriptable, uuid(7e15fce5-b208-43e1-952a-c570ebad0619)]
+[scriptable, uuid(44e59baf-4ca5-48af-9749-69b30be11917)]
 interface nsIDOMSVGLinearGradientElement
   : nsIDOMSVGGradientElement
 { 
@@ -110,7 +110,7 @@ interface nsIDOMSVGLinearGradientElement
 // Radial gradient
 interface nsIDOMSVGAnimatedLength;
 
-[scriptable, uuid(d0262ae1-31a4-44be-b82e-85e4cfe280fd)]
+[scriptable, uuid(67d79c33-76b6-421a-a7ff-bb6793a4fd46)]
 interface nsIDOMSVGRadialGradientElement
   : nsIDOMSVGGradientElement
 { 

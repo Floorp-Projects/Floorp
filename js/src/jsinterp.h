@@ -396,8 +396,13 @@ struct JSStackFrame
     inline js::Value *actualArgsEnd() const;
 
     inline js::Value &canonicalActualArg(uintN i) const;
-    template <class Op> inline void forEachCanonicalActualArg(Op op);
-    template <class Op> inline void forEachFormalArg(Op op);
+
+    /*
+     * Apply 'op' to each arg of the specified type. Stop if 'op' returns
+     * false. Return 'true' iff all 'op' calls returned true.
+     */
+    template <class Op> inline bool forEachCanonicalActualArg(Op op);
+    template <class Op> inline bool forEachFormalArg(Op op);
 
     inline void clearMissingArgs();
 
@@ -1087,25 +1092,8 @@ SameValue(JSContext *cx, const Value &v1, const Value &v2, JSBool *same);
 extern JSType
 TypeOfValue(JSContext *cx, const Value &v);
 
-inline bool
-InstanceOf(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
-{
-    if (obj && obj->getClass() == clasp)
-        return true;
-    extern bool InstanceOfSlow(JSContext *, JSObject *, Class *, Value *);
-    return InstanceOfSlow(cx, obj, clasp, argv);
-}
-
 extern JSBool
 HasInstance(JSContext *cx, JSObject *obj, const js::Value *v, JSBool *bp);
-
-inline void *
-GetInstancePrivate(JSContext *cx, JSObject *obj, Class *clasp, Value *argv)
-{
-    if (!InstanceOf(cx, obj, clasp, argv))
-        return NULL;
-    return obj->getPrivate();
-}
 
 extern bool
 ValueToId(JSContext *cx, const Value &v, jsid *idp);

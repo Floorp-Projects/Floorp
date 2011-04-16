@@ -81,13 +81,13 @@ function test_urls() {
     Service.clusterURL = "http://weave.cluster/";
     do_check_eq(Svc.Prefs.get("clusterURL"), "http://weave.cluster/");
 
-    do_check_eq(Service.userBaseURL, "http://weave.cluster/1.0/johndoe/");
+    do_check_eq(Service.userBaseURL, "http://weave.cluster/1.1/johndoe/");
     do_check_eq(Service.infoURL,
-                "http://weave.cluster/1.0/johndoe/info/collections");
+                "http://weave.cluster/1.1/johndoe/info/collections");
     do_check_eq(Service.storageURL,
-                "http://weave.cluster/1.0/johndoe/storage/");
+                "http://weave.cluster/1.1/johndoe/storage/");
     do_check_eq(Service.metaURL,
-                "http://weave.cluster/1.0/johndoe/storage/meta/global");
+                "http://weave.cluster/1.1/johndoe/storage/meta/global");
 
     _("The 'miscURL' and 'userURL' attributes can be relative to 'serverURL' or absolute.");
     Svc.Prefs.set("miscURL", "relative/misc/");

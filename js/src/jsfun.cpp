@@ -223,10 +223,11 @@ struct STATIC_SKIP_INFERENCE PutArg
 {
     PutArg(Value *dst) : dst(dst) {}
     Value *dst;
-    void operator()(uintN, Value *src) {
+    bool operator()(uintN, Value *src) {
         if (!dst->isMagic(JS_ARGS_HOLE))
             *dst = *src;
         ++dst;
+        return true;
     }
 };
 
@@ -513,7 +514,7 @@ ArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     LeaveTrace(cx);
 
-    if (!InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
+    if (!obj->isNormalArguments())
         return true;
 
     if (JSID_IS_INT(id)) {
@@ -566,7 +567,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
     LeaveTrace(cx);
 #endif
 
-    if (!InstanceOf(cx, obj, &js_ArgumentsClass, NULL))
+
+    if (!obj->isNormalArguments())
         return true;
 
     if (JSID_IS_INT(id)) {
@@ -662,7 +664,7 @@ StrictArgGetter(JSContext *cx, JSObject *obj, jsid id, Value *vp)
 {
     LeaveTrace(cx);
 
-    if (!InstanceOf(cx, obj, &StrictArgumentsClass, NULL))
+    if (!obj->isStrictArguments())
         return true;
 
     if (JSID_IS_INT(id)) {
@@ -688,7 +690,7 @@ static JSBool
 
 StrictArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
-    if (!InstanceOf(cx, obj, &StrictArgumentsClass, NULL))
+    if (!obj->isStrictArguments())
         return true;
 
     if (JSID_IS_INT(id)) {
@@ -1570,15 +1572,15 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
      * the non-standard properties when the directly addressed object (obj)
      * is a function object (i.e., when this loop does not iterate).
      */
-    JSFunction *fun;
-    while (!(fun = (JSFunction *)
-                   GetInstancePrivate(cx, obj, &js_FunctionClass, NULL))) {
+
+    while (!obj->isFunction()) {
         if (slot != FUN_LENGTH)
             return true;
         obj = obj->getProto();
         if (!obj)
             return true;
     }
+    JSFunction *fun = obj->getFunctionPrivate();
 
     /* Find fun's top-most activation record. */
     JSStackFrame *fp;
@@ -2117,15 +2119,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
     Value fval = vp[1];
 
     if (!js_IsCallable(fval)) {
-        if (JSString *str = js_ValueToString(cx, fval)) {
-            JSAutoByteString bytes(cx, str);
-            if (!!bytes) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, js_call_str,
-                                     bytes.ptr());
-            }
-        }
+        ReportIncompatibleMethod(cx, vp, &js_FunctionClass);
         return false;
     }
 
@@ -2162,15 +2156,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
     /* Step 1. */
     Value fval = vp[1];
     if (!js_IsCallable(fval)) {
-        if (JSString *str = js_ValueToString(cx, fval)) {
-            JSAutoByteString bytes(cx, str);
-            if (!!bytes) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, js_apply_str,
-                                     bytes.ptr());
-            }
-        }
+        ReportIncompatibleMethod(cx, vp, &js_FunctionClass);
         return false;
     }
 
@@ -2336,6 +2322,30 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
 
 }
 
+#if JS_HAS_GENERATORS
+static JSBool
+fun_isGenerator(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *funobj;
+    if (!IsFunctionObject(vp[1], &funobj)) {
+        JS_SET_RVAL(cx, vp, BooleanValue(false));
+        return true;
+    }
+
+    JSFunction *fun = GET_FUNCTION_PRIVATE(cx, funobj);
+
+    bool result = false;
+    if (fun->isInterpreted()) {
+        JSScript *script = fun->u.i.script;
+        JS_ASSERT(script->length != 0);
+        result = script->code[0] == JSOP_GENERATOR;
+    }
+
+    JS_SET_RVAL(cx, vp, BooleanValue(result));
+    return true;
+}
+#endif
+
 /* ES5 15.3.4.5. */
 static JSBool
 fun_bind(JSContext *cx, uintN argc, Value *vp)
@@ -2345,14 +2355,7 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
 
     /* Step 2. */
     if (!js_IsCallable(thisv)) {
-        if (JSString *str = js_ValueToString(cx, thisv)) {
-            JSAutoByteString bytes(cx, str);
-            if (!!bytes) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_INCOMPATIBLE_PROTO,
-                                     js_Function_str, "bind", bytes.ptr());
-            }
-        }
+        ReportIncompatibleMethod(cx, vp, &js_FunctionClass);
         return false;
     }
 
@@ -2405,6 +2408,9 @@ static JSFunctionSpec function_methods[] = {
     JS_FN(js_apply_str,      js_fun_apply,   2,0),
     JS_FN(js_call_str,       js_fun_call,    1,0),
     JS_FN("bind",            fun_bind,       1,0),
+#if JS_HAS_GENERATORS
+    JS_FN("isGenerator",     fun_isGenerator,0,0),
+#endif
     JS_FS_END
 };
 

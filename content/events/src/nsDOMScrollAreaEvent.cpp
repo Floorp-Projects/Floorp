@@ -35,10 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "base/basictypes.h"
 #include "IPC/IPCMessageUtils.h"
-#endif
 
 #include "nsDOMScrollAreaEvent.h"
 #include "nsGUIEvent.h"
@@ -116,7 +114,6 @@ nsDOMScrollAreaEvent::InitScrollAreaEvent(const nsAString &aEventType,
   return NS_OK;
 }
 
-#ifdef MOZ_IPC
 void
 nsDOMScrollAreaEvent::Serialize(IPC::Message* aMsg,
                                 PRBool aSerializeInterfaceType)
@@ -152,7 +149,6 @@ nsDOMScrollAreaEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
 
   return PR_TRUE;
 }
-#endif
 
 nsresult
 NS_NewDOMScrollAreaEvent(nsIDOMEvent **aInstancePtrResult,

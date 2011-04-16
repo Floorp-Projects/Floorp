@@ -45,3 +45,4 @@ load 498698-1.html
 asserts(1) load 578604-1.html # bug 584564
 asserts(5) load 590302-1.xhtml # bug 584564
 load 626014.xhtml
+load 639733.xhtml

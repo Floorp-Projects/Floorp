@@ -45,9 +45,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef MOZ_IPC
 #include "base/basictypes.h"
-#endif 
 
 #include "nsHttpChannel.h"
 #include "nsHttpHandler.h"
@@ -136,13 +134,16 @@ nsHttpChannel::nsHttpChannel()
     , mRequestTimeInitialized(PR_FALSE)
 {
     LOG(("Creating nsHttpChannel [this=%p]\n", this));
+    // Subfields of unions cannot be targeted in an initializer list
+    mSelfAddr.raw.family = PR_AF_UNSPEC;
+    mPeerAddr.raw.family = PR_AF_UNSPEC;
 }
 
 nsHttpChannel::~nsHttpChannel()
 {
     LOG(("Destroying nsHttpChannel [this=%p]\n", this));
 
-    if (mAuthProvider) 
+    if (mAuthProvider)
         mAuthProvider->Disconnect(NS_ERROR_ABORT);
 }
 
@@ -152,7 +153,7 @@ nsHttpChannel::Init(nsIURI *uri,
                     nsProxyInfo *proxyInfo)
 {
     nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
         return rv;
 
     LOG(("nsHttpChannel::Init [this=%p]\n", this));
@@ -160,7 +161,7 @@ nsHttpChannel::Init(nsIURI *uri,
     mAuthProvider =
         do_CreateInstance("@mozilla.org/network/http-channel-auth-provider;1",
                           &rv);
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv))
         return rv;
     rv = mAuthProvider->Init(this);
 
@@ -3713,6 +3714,66 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetRemoteAddress(nsACString & _result)
+{
+    if (mPeerAddr.raw.family == PR_AF_UNSPEC)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    _result.SetCapacity(64);
+    PR_NetAddrToString(&mPeerAddr, _result.BeginWriting(), 64);
+    _result.SetLength(strlen(_result.BeginReading()));
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetRemotePort(PRInt32 * _result)
+{
+    NS_ENSURE_ARG_POINTER(_result);
+
+    if (mPeerAddr.raw.family == PR_AF_INET) {
+        *_result = (PRInt32)PR_ntohs(mPeerAddr.inet.port);
+    }
+    else if (mPeerAddr.raw.family == PR_AF_INET6) {
+        *_result = (PRInt32)PR_ntohs(mPeerAddr.ipv6.port);
+    }
+    else
+        return NS_ERROR_NOT_AVAILABLE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetLocalAddress(nsACString & _result)
+{
+    if (mSelfAddr.raw.family == PR_AF_UNSPEC)
+        return NS_ERROR_NOT_AVAILABLE;
+
+    _result.SetCapacity(64);
+    PR_NetAddrToString(&mSelfAddr, _result.BeginWriting(), 64);
+    _result.SetLength(strlen(_result.BeginReading()));
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHttpChannel::GetLocalPort(PRInt32 * _result)
+{
+    NS_ENSURE_ARG_POINTER(_result);
+
+    if (mSelfAddr.raw.family == PR_AF_INET) {
+        *_result = (PRInt32)PR_ntohs(mSelfAddr.inet.port);
+    }
+    else if (mSelfAddr.raw.family == PR_AF_INET6) {
+        *_result = (PRInt32)PR_ntohs(mSelfAddr.ipv6.port);
+    }
+    else
+        return NS_ERROR_NOT_AVAILABLE;
+
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -4154,6 +4215,16 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
     // cache the progress sink so we don't have to query for it each time.
     if (!mProgressSink)
         GetCallback(mProgressSink);
+
+    if (status == nsISocketTransport::STATUS_CONNECTED_TO ||
+        status == nsISocketTransport::STATUS_WAITING_FOR) {
+        nsCOMPtr<nsISocketTransport> socketTransport =
+            do_QueryInterface(trans);
+        if (socketTransport) {
+            socketTransport->GetSelfAddr(&mSelfAddr);
+            socketTransport->GetPeerAddr(&mPeerAddr);
+        }
+    }
 
     // block socket status event after Cancel or OnStopRequest has been called.
     if (mProgressSink && NS_SUCCEEDED(mStatus) && mIsPending && !(mLoadFlags & LOAD_BACKGROUND)) {

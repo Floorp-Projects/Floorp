@@ -429,7 +429,8 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
     [mWindow setHasShadow:YES];
   }
 
-  [mWindow setBackgroundColor:[NSColor whiteColor]];
+  [mWindow setBackgroundColor:[NSColor clearColor]];
+  [mWindow setOpaque:NO];
   [mWindow setContentMinSize:NSMakeSize(60, 60)];
   [mWindow disableCursorRects];
 

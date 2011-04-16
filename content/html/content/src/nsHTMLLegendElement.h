@@ -64,14 +64,15 @@ public:
   // nsIDOMElement
   NS_FORWARD_NSIDOMELEMENT(nsGenericHTMLElement::)
 
-  // nsIDOMHTMLElement
-  NS_FORWARD_NSIDOMHTMLELEMENT(nsGenericHTMLElement::)
-
   // nsIDOMHTMLLegendElement
   NS_DECL_NSIDOMHTMLLEGENDELEMENT
 
-  // nsGenericHTMLElement
-  NS_IMETHODIMP Focus();
+    // Forward nsIDOMHTMLElement -- We don't override Click()
+  NS_FORWARD_NSIDOMHTMLELEMENT_NOFOCUSCLICK(nsGenericHTMLElement::)
+  NS_IMETHOD Click() { 
+    return nsGenericHTMLElement::Click(); 
+  }
+  NS_IMETHOD Focus();
 
   virtual void PerformAccesskey(PRBool aKeyCausesActivation,
                                 PRBool aIsTrustedEvent);

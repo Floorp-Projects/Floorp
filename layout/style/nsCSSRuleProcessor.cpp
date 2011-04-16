@@ -59,7 +59,7 @@
 #include "nsICSSPseudoComparator.h"
 #include "nsCSSRuleProcessor.h"
 #include "mozilla/css/StyleRule.h"
-#include "nsICSSGroupRule.h"
+#include "mozilla/css/GroupRule.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIEventStateManager.h"
@@ -837,6 +837,9 @@ struct RuleCascadeData {
 #endif
 
   nsTArray<nsFontFaceRuleContainer> mFontFaceRules;
+#ifdef MOZ_CSS_ANIMATIONS
+  nsTArray<nsCSSKeyframesRule*> mKeyframesRules;
+#endif
 
   // Looks up or creates the appropriate list in |mAttributeSelectors|.
   // Returns null only on allocation failure.
@@ -2454,6 +2457,25 @@ nsCSSRuleProcessor::AppendFontFaceRules(
   return PR_TRUE;
 }
 
+#ifdef MOZ_CSS_ANIMATIONS
+// Append all the currently-active keyframes rules to aArray.  Return
+// true for success and false for failure.
+PRBool
+nsCSSRuleProcessor::AppendKeyframesRules(
+                              nsPresContext *aPresContext,
+                              nsTArray<nsCSSKeyframesRule*>& aArray)
+{
+  RuleCascadeData* cascade = GetRuleCascade(aPresContext);
+
+  if (cascade) {
+    if (!aArray.AppendElements(cascade->mKeyframesRules))
+      return PR_FALSE;
+  }
+  
+  return PR_TRUE;
+}
+#endif
+
 nsresult
 nsCSSRuleProcessor::ClearRuleCascades()
 {
@@ -2719,11 +2741,17 @@ static PLDHashTableOps gRulesByWeightOps = {
 struct CascadeEnumData {
   CascadeEnumData(nsPresContext* aPresContext,
                   nsTArray<nsFontFaceRuleContainer>& aFontFaceRules,
+#ifdef MOZ_CSS_ANIMATIONS
+                  nsTArray<nsCSSKeyframesRule*>& aKeyframesRules,
+#endif
                   nsMediaQueryResultCacheKey& aKey,
                   PLArenaPool& aArena,
                   PRUint8 aSheetType)
     : mPresContext(aPresContext),
       mFontFaceRules(aFontFaceRules),
+#ifdef MOZ_CSS_ANIMATIONS
+      mKeyframesRules(aKeyframesRules),
+#endif
       mCacheKey(aKey),
       mArena(aArena),
       mSheetType(aSheetType)
@@ -2741,6 +2769,9 @@ struct CascadeEnumData {
 
   nsPresContext* mPresContext;
   nsTArray<nsFontFaceRuleContainer>& mFontFaceRules;
+#ifdef MOZ_CSS_ANIMATIONS
+  nsTArray<nsCSSKeyframesRule*>& mKeyframesRules;
+#endif
   nsMediaQueryResultCacheKey& mCacheKey;
   PLArenaPool& mArena;
   // Hooray, a manual PLDHashTable since nsClassHashtable doesn't
@@ -2756,6 +2787,7 @@ struct CascadeEnumData {
  *      the primary CSS cascade), where they are separated by weight
  *      but kept in order per-weight, and
  *  (2) add any @font-face rules, in order, into data->mFontFaceRules.
+ *  (3) add any @keyframes rules, in order, into data->mKeyframesRules.
  */
 static PRBool
 CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
@@ -2782,7 +2814,7 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
   }
   else if (nsICSSRule::MEDIA_RULE == type ||
            nsICSSRule::DOCUMENT_RULE == type) {
-    nsICSSGroupRule* groupRule = (nsICSSGroupRule*)aRule;
+    css::GroupRule* groupRule = static_cast<css::GroupRule*>(aRule);
     if (groupRule->UseForPresentation(data->mPresContext, data->mCacheKey))
       if (!groupRule->EnumerateRulesForwards(CascadeRuleEnumFunc, aData))
         return PR_FALSE;
@@ -2795,6 +2827,15 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
     ptr->mRule = fontFaceRule;
     ptr->mSheetType = data->mSheetType;
   }
+#ifdef MOZ_CSS_ANIMATIONS
+  else if (nsICSSRule::KEYFRAMES_RULE == type) {
+    nsCSSKeyframesRule *keyframesRule =
+      static_cast<nsCSSKeyframesRule*>(aRule);
+    if (!data->mKeyframesRules.AppendElement(keyframesRule)) {
+      return PR_FALSE;
+    }
+  }
+#endif
 
   return PR_TRUE;
 }
@@ -2895,6 +2936,9 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
                           eCompatibility_NavQuirks == aPresContext->CompatibilityMode()));
     if (newCascade) {
       CascadeEnumData data(aPresContext, newCascade->mFontFaceRules,
+#ifdef MOZ_CSS_ANIMATIONS
+                           newCascade->mKeyframesRules,
+#endif
                            newCascade->mCacheKey,
                            newCascade->mRuleHash.Arena(),
                            mSheetType);

@@ -1120,6 +1120,67 @@
   !endif
 !macroend
 
+/**
+ * Helper for checking for the existence of a registry key.
+ * SHCTX is the root key to search.
+ *
+ * @param   _MAIN_KEY
+ *          Sub key to iterate for the key in question
+ * @param   _KEY
+ *          Key name to search for
+ * @return  _RESULT
+ *          'true' / 'false' result
+ */
+!macro CheckIfRegistryKeyExists
+  !ifndef CheckIfRegistryKeyExists
+    !verbose push
+    !verbose ${_MOZFUNC_VERBOSE}
+    !define CheckIfRegistryKeyExists "!insertmacro CheckIfRegistryKeyExistsCall"
+
+    Function CheckIfRegistryKeyExists
+      ; stack: main key, key
+      Exch $R9 ; main key
+      Exch 1
+      Exch $R8 ; key
+      Push $R7
+      Push $R6
+      Push $R5
+
+      StrCpy $R5 "false"
+      StrCpy $R7 "0" # loop index
+      ${Do}
+        EnumRegKey $R6 SHCTX "$R9" "$R7"
+        ${If} "$R6" == "$R8"
+          StrCpy $R5 "true"
+          ${Break}
+        ${EndIf}
+        IntOp $R7 $R7 + 1
+      ${LoopWhile} $R6 != ""
+      ClearErrors
+
+      StrCpy $R9 $R5
+
+      Pop $R5
+      Pop $R6
+      Pop $R7
+      Exch $R8
+      Exch 1
+      Exch $R9
+    FunctionEnd
+
+    !verbose pop
+  !endif
+!macroend
+
+!macro CheckIfRegistryKeyExistsCall _MAIN_KEY _KEY _RESULT
+  !verbose push
+  !verbose ${_MOZFUNC_VERBOSE}
+  Push "${_KEY}"
+  Push "${_MAIN_KEY}"
+  Call CheckIfRegistryKeyExists
+  Pop ${_RESULT}
+  !verbose pop
+!macroend
 
 ################################################################################
 # Macros for adding file and protocol handlers

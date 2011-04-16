@@ -109,6 +109,16 @@ window.onload = function () {
 
 function populateExtensionsSection() {
   AddonManager.getAddonsByTypes(["extension"], function(extensions) {
+    extensions.sort(function(a,b) {
+      if (a.isActive != b.isActive)
+        return b.isActive ? 1 : -1;
+      let lc = a.name.localeCompare(b.name);
+      if (lc != 0)
+        return lc;
+      if (a.version != b.version)
+        return a.version > b.version ? 1 : -1;
+      return 0;
+    });
     let trExtensions = [];
     for (let i = 0; i < extensions.length; i++) {
       let extension = extensions[i];

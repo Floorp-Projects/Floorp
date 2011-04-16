@@ -84,3 +84,5 @@ random-if(winWidget) HTTP(..) != kerning-01.html kerning-01-notref.html
 random-if(!cocoaWidget) == 577380.html 577380-ref.html
 # Test for OpenType Arabic shaping support
 HTTP(..) == arabic-shaping-1.html arabic-shaping-1-ref.html
+# check ligature in Arial Bold on Windows, for bug 644184; may fail on other platforms depending on fonts
+random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.html
