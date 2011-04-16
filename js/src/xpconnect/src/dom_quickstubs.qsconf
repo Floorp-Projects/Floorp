@@ -108,7 +108,6 @@ members = [
     'nsIDOMDocument.createTextNode',
     'nsIDOMDocument.documentURI',
     'nsIDOMDocument.adoptNode',
-    'nsIDOMDocument.renameNode',
     'nsIDOMElement.removeAttributeNS',
     'nsIDOMElement.removeAttribute',
     'nsIDOMElement.getAttribute',
