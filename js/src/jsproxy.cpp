@@ -953,7 +953,7 @@ proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
 {
     // TODO: throwing away strict
     bool deleted;
-    if (!JSProxy::delete_(cx, obj, id, &deleted))
+    if (!JSProxy::delete_(cx, obj, id, &deleted) || !js_SuppressDeletedProperty(cx, obj, id))
         return false;
     rval->setBoolean(deleted);
     return true;
