@@ -7730,21 +7730,10 @@ dnl ========================================================
 dnl = libstdc++ compatibility hacks
 dnl ========================================================
 
-STDCXX_COMPAT=stdc++compat.cpp
-MOZ_ARG_DISABLE_BOOL(stdcxx-compat,
-[  --disable-stdcxx-compat Disable libstdc++ compatibility],
-    STDCXX_COMPAT=)
-
-# Disable on platforms where it doesn't make sense
-if test -n "$STDCXX_COMPAT"; then
-    case "${OS_TARGET}" in
-    Linux)
-        ;;
-    *)
-        STDCXX_COMPAT=
-        ;;
-    esac
-fi
+STDCXX_COMPAT=
+MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
+[  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
+    STDCXX_COMPAT=stdc++compat.cpp)
 
 AC_SUBST(STDCXX_COMPAT)
 
