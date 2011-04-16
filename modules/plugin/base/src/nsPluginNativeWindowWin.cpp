@@ -721,7 +721,6 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
   }
 
   LONG_PTR style = GetWindowLongPtr(hWnd, GWL_STYLE);
-#ifdef MOZ_IPC
   // Out of process plugins must not have the WS_CLIPCHILDREN style set on their
   // parent windows or else synchronous paints (via UpdateWindow() and others)
   // will cause deadlocks.
@@ -729,9 +728,6 @@ nsresult nsPluginNativeWindowWin::SubclassAndAssociateWindow()
     style &= ~WS_CLIPCHILDREN;
   else
     style |= WS_CLIPCHILDREN;
-#else
-  style |= WS_CLIPCHILDREN;
-#endif
   SetWindowLongPtr(hWnd, GWL_STYLE, style);
 
   mPluginWinProc = (WNDPROC)SetWindowLongPtr(hWnd, GWLP_WNDPROC, (LONG_PTR)PluginWndProc);

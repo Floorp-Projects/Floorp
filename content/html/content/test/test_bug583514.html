@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=562932
+-->
+<head>
+  <title>Test for Bug 583514</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=583514">Mozilla Bug 583514</a>
+<p id="display"></p>
+<div id="content">
+  <div id="a" accesskey="a" onfocus="divfocus = true;" onclick="divclicked = true;">
+    <input id="b" accesskey = "b" onfocus="inputfocus = true;" onclick="inputclicked = true;">
+  </div>
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+    /** Test for Bug 583514 **/
+
+    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+
+    var Cc = Components.classes;
+    var Ci = Components.interfaces;
+
+    var modifier = Cc["@mozilla.org/preferences-service;1"].
+    getService(Ci.nsIPrefBranch).
+    getIntPref("ui.key.contentAccess");
+
+    var divfocus = false;
+    var divclicked = false;
+    var inputfocus = false;
+    var inputclicked = false;
+
+    var utils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    //utils.sendNativeKeyEvent(0, 65, modifier, "a", "a");
+
+    utils.sendKeyEvent("keypress", "a", 65, modifier);
+
+    is(divfocus, false, "accesskey does not focus div");
+    is(divclicked, true, "accesskey fires click at div");
+    is(inputfocus, false, "input was not targeted");
+    is(inputclicked, false, "inpt was not targeted");
+
+    divclicked = false;
+
+    utils.sendKeyEvent("keypress", "b", 66, modifier);
+
+    is(divfocus, false, "focus cannot bubble to div");
+    is(divclicked, true, "click bubbles to div");
+    is(inputfocus, true, "accesskey focuses input");
+    is(inputclicked, true, "accesskey clicks input");
+
+</script>
+</pre>
+</body>
+</html>

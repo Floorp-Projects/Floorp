@@ -5,7 +5,6 @@ script parse.js
 script parse-crockford-01.js
 script parse-primitives.js
 script parse-reviver.js
-fails script parse-octal-syntax-error.js # our JSON.parse wrongly accepts octal numbers
 script parse-syntax-errors-01.js
 script parse-syntax-errors-02.js
 script stringify.js
@@ -20,3 +19,11 @@ script stringify-replacer.js
 script stringify-replacer-with-array-indexes.js
 script stringify-toJSON-arguments.js
 script trailing-comma.js
+
+# These tests pass with the new parser but fail with the old one.  If you're
+# changing which parser is used, you'll need to change these test declarations
+# accordingly.  (And if you're removing the old parser, re-alphabetize these
+# tests into the list above.)
+script parse-number-syntax.js
+script parse-octal-syntax-error.js
+script parse-syntax-errors-03.js

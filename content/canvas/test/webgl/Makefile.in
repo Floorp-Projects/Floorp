@@ -53,7 +53,7 @@ _TEST_FILES = \
 
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
-	$(TAR) cC $(srcdir) \
+	$(TAR) -cf - -C $(srcdir) \
 	  resources \
 	  conformance \
-	  | $(TAR) xC $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+	  | $(TAR) -xf - -C $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

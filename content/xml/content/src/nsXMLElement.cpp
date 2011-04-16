@@ -89,7 +89,7 @@ nsXMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
       (!guard.Mutated(0) ||
        !mNodeInfo->GetIDAttributeAtom() ||
        !HasAttr(kNameSpaceID_None, GetIDAttributeName()))) {
-    UnsetFlags(NODE_HAS_ID);
+    ClearHasID();
   }
   
   return rv;
@@ -104,7 +104,7 @@ nsXMLElement::GetIDAttributeName() const
 nsIAtom*
 nsXMLElement::DoGetID() const
 {
-  NS_ASSERTION(HasFlag(NODE_HAS_ID), "Unexpected call");
+  NS_ASSERTION(HasID(), "Unexpected call");
 
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(GetIDAttributeName());
   return attrVal ? attrVal->GetAtomValue() : nsnull;
@@ -118,7 +118,7 @@ nsXMLElement::NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
                "Can only change document if we're not inside one");
   nsIDocument* doc = GetCurrentDoc();
 
-  if (HasFlag(NODE_HAS_ID) && doc) {
+  if (HasID() && doc) {
     const nsAttrValue* attrVal =
       mAttrsAndChildren.GetAttr(aOldNodeInfo->GetIDAttributeAtom());
     if (attrVal) {
@@ -126,13 +126,13 @@ nsXMLElement::NodeInfoChanged(nsINodeInfo* aOldNodeInfo)
     }
   }
   
-  UnsetFlags(NODE_HAS_ID);
+  ClearHasID();
 
   nsIAtom* IDName = GetIDAttributeName();
   if (IDName) {
     const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(IDName);
     if (attrVal) {
-      SetFlags(NODE_HAS_ID);
+      SetHasID();
       if (attrVal->Type() == nsAttrValue::eString) {
         nsString idVal(attrVal->GetStringValue());
 
@@ -160,11 +160,11 @@ nsXMLElement::ParseAttribute(PRInt32 aNamespaceID,
     // not that it has an emptystring as the id.
     RemoveFromIdTable();
     if (aValue.IsEmpty()) {
-      UnsetFlags(NODE_HAS_ID);
+      ClearHasID();
       return PR_FALSE;
     }
     aResult.ParseAtom(aValue);
-    SetFlags(NODE_HAS_ID);
+    SetHasID();
     AddToIdTable(aResult.GetAtomValue());
     return PR_TRUE;
   }
@@ -182,7 +182,7 @@ nsXMLElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                                              aCompileEventHandlers);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (aDocument && HasFlag(NODE_HAS_ID) && !GetBindingParent()) {
+  if (aDocument && HasID() && !GetBindingParent()) {
     aDocument->AddToIdTable(this, DoGetID());
   }
 

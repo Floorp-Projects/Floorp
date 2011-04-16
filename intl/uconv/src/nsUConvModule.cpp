@@ -45,22 +45,17 @@
 #include "nsEncoderDecoderUtils.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeEncoder.h"
-#include "nsICharsetAlias.h"
 #include "nsIServiceManager.h"
 
 
 #include "nsUConvCID.h"
 #include "nsCharsetConverterManager.h"
-#include "nsCharsetAlias.h"
 #include "nsTextToSubURI.h"
 #include "nsUTF8ConverterService.h"
 #include "nsConverterInputStream.h"
 #include "nsConverterOutputStream.h"
-#include "nsPlatformCharset.h"
 #include "nsScriptableUConv.h"
 
-#ifndef MOZ_USE_NATIVE_UCONV
-#include "nsIPlatformCharset.h"
 #include "nsITextToSubURI.h"
 
 #include "nsUConvDll.h"
@@ -566,34 +561,18 @@ const PRUint16 g_ufJohabJamoMapping[] ={
 #include "johabjamo.uf"
 };
 
-#else // MOZ_USE_NATIVE_UCONV
-
-#include "nsINativeUConvService.h"
-#include "nsNativeUConvService.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(NativeUConvService)
-
-#endif // #ifndef MOZ_USE_NATIVE_UCONV
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetConverterManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextToSubURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUTF8ConverterService)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterInputStream)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConverterOutputStream)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptableUnicodeConverter)
 
 NS_DEFINE_NAMED_CID(NS_ICHARSETCONVERTERMANAGER_CID);
-NS_DEFINE_NAMED_CID(NS_CHARSETALIAS_CID);
 NS_DEFINE_NAMED_CID(NS_TEXTTOSUBURI_CID);
-NS_DEFINE_NAMED_CID(NS_PLATFORMCHARSET_CID);
 NS_DEFINE_NAMED_CID(NS_CONVERTERINPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_CONVERTEROUTPUTSTREAM_CID);
 NS_DEFINE_NAMED_CID(NS_ISCRIPTABLEUNICODECONVERTER_CID);
-#ifdef MOZ_USE_NATIVE_UCONV
-NS_DEFINE_NAMED_CID(NS_NATIVE_UCONV_SERVICE_CID);
-#else
 NS_DEFINE_NAMED_CID(NS_UTF8CONVERTERSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_ISO88591TOUNICODE_CID);
 NS_DEFINE_NAMED_CID(NS_CP1252TOUNICODE_CID);
@@ -780,19 +759,13 @@ NS_DEFINE_NAMED_CID(NS_UNICODETOHZ_CID);
 NS_DEFINE_NAMED_CID(NS_GB18030TOUNICODE_CID);
 NS_DEFINE_NAMED_CID(NS_UNICODETOGB18030_CID);
 NS_DEFINE_NAMED_CID(NS_ISO2022CNTOUNICODE_CID);
-#endif
 
 static const mozilla::Module::CIDEntry kUConvCIDs[] = {
   { &kNS_ICHARSETCONVERTERMANAGER_CID, false, NULL, nsCharsetConverterManagerConstructor },
-  { &kNS_CHARSETALIAS_CID, false, NULL, nsCharsetAlias2Constructor },
   { &kNS_TEXTTOSUBURI_CID, false, NULL, nsTextToSubURIConstructor },
-  { &kNS_PLATFORMCHARSET_CID, false, NULL, nsPlatformCharsetConstructor },
   { &kNS_CONVERTERINPUTSTREAM_CID, false, NULL, nsConverterInputStreamConstructor },
   { &kNS_CONVERTEROUTPUTSTREAM_CID, false, NULL, nsConverterOutputStreamConstructor },
   { &kNS_ISCRIPTABLEUNICODECONVERTER_CID, false, NULL, nsScriptableUnicodeConverterConstructor },
-#ifdef MOZ_USE_NATIVE_ICONV
-  { &kNS_NATIVE_UCONV_SERVICE_CID, false, NULL, NativeUConvServiceConstructor },
-#else
   { &kNS_UTF8CONVERTERSERVICE_CID, false, NULL, nsUTF8ConverterServiceConstructor },
   { &kNS_ISO88591TOUNICODE_CID, false, NULL, nsISO88591ToUnicodeConstructor },
   { &kNS_CP1252TOUNICODE_CID, false, NULL, nsCP1252ToUnicodeConstructor },
@@ -979,21 +952,15 @@ static const mozilla::Module::CIDEntry kUConvCIDs[] = {
   { &kNS_GB18030TOUNICODE_CID, false, NULL, nsGB18030ToUnicodeConstructor },
   { &kNS_UNICODETOGB18030_CID, false, NULL, nsUnicodeToGB18030Constructor },
   { &kNS_ISO2022CNTOUNICODE_CID, false, NULL, nsISO2022CNToUnicodeConstructor },
-#endif
   { NULL },
 };
 
 static const mozilla::Module::ContractIDEntry kUConvContracts[] = {
   { NS_CHARSETCONVERTERMANAGER_CONTRACTID, &kNS_ICHARSETCONVERTERMANAGER_CID },
-  { NS_CHARSETALIAS_CONTRACTID, &kNS_CHARSETALIAS_CID },
   { NS_ITEXTTOSUBURI_CONTRACTID, &kNS_TEXTTOSUBURI_CID },
-  { NS_PLATFORMCHARSET_CONTRACTID, &kNS_PLATFORMCHARSET_CID },
   { NS_CONVERTERINPUTSTREAM_CONTRACTID, &kNS_CONVERTERINPUTSTREAM_CID },
   { "@mozilla.org/intl/converter-output-stream;1", &kNS_CONVERTEROUTPUTSTREAM_CID },
   { NS_ISCRIPTABLEUNICODECONVERTER_CONTRACTID, &kNS_ISCRIPTABLEUNICODECONVERTER_CID },
-#ifdef MOZ_USE_NATIVE_ICONV
-  { NS_NATIVE_UCONV_SERVICE_CONTRACT_ID, &kNS_NATIVE_UCONV_SERVICE_CID },
-#else
   { NS_UTF8CONVERTERSERVICE_CONTRACTID, &kNS_UTF8CONVERTERSERVICE_CID },
   { NS_ISO88591TOUNICODE_CONTRACTID, &kNS_ISO88591TOUNICODE_CID },
   { NS_CP1252TOUNICODE_CONTRACTID, &kNS_CP1252TOUNICODE_CID },
@@ -1180,7 +1147,6 @@ static const mozilla::Module::ContractIDEntry kUConvContracts[] = {
   { NS_UNICODEDECODER_CONTRACTID_BASE "gb18030", &kNS_GB18030TOUNICODE_CID },
   { NS_UNICODEENCODER_CONTRACTID_BASE "gb18030", &kNS_UNICODETOGB18030_CID },
   { NS_UNICODEDECODER_CONTRACTID_BASE "ISO-2022-CN", &kNS_ISO2022CNTOUNICODE_CID },
-#endif
   { NULL }
 };
 

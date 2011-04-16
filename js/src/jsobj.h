@@ -797,6 +797,24 @@ struct JSObject : js::gc::Cell {
     inline const js::Value &getPrimitiveThis() const;
     inline void setPrimitiveThis(const js::Value &pthis);
 
+  private:
+    /* 0 is JSSLOT_PRIMITIVE_THIS */
+    static const uint32 JSSLOT_STRING_LENGTH = 1;
+
+    /*
+     * Compute the initial shape to associate with fresh String objects,
+     * encoding the initial length property. Return the shape after changing
+     * this String object's last property to it.
+     */
+    const js::Shape *assignInitialStringShape(JSContext *cx);
+
+  public:
+    static const uint32 STRING_RESERVED_SLOTS = 2;
+
+    inline size_t getStringLength() const;
+
+    inline bool initString(JSContext *cx, JSString *str);
+
     /*
      * Array-specific getters and setters (for both dense and slow arrays).
      */

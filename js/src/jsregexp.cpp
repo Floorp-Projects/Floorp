@@ -92,7 +92,7 @@ resc_trace(JSTracer *trc, JSObject *obj)
 }
 
 Class js::regexp_statics_class = {
-    "RegExpStatics", 
+    "RegExpStatics",
     JSCLASS_HAS_PRIVATE,
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
@@ -146,7 +146,7 @@ js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *proto)
     if (!clone)
         return NULL;
 
-    /* 
+    /*
      * This clone functionality does not duplicate the JITted code blob, which is necessary for
      * cross-compartment cloning functionality.
      */
@@ -498,8 +498,10 @@ js::Class js_RegExpClass = {
 JSBool
 js_regexp_toString(JSContext *cx, JSObject *obj, Value *vp)
 {
-    if (!InstanceOf(cx, obj, &js_RegExpClass, vp + 2))
+    if (!obj->isRegExp()) {
+        ReportIncompatibleMethod(cx, vp, &js_RegExpClass);
         return false;
+    }
 
     RegExp *re = RegExp::extractFrom(obj);
     if (!re) {
@@ -629,7 +631,7 @@ ExecuteRegExp(JSContext *cx, ExecType execType, uintN argc, Value *vp)
     if (!re)
         return true;
 
-    /* 
+    /*
      * Code execution under this call could swap out the guts of |obj|, so we
      * have to take a defensive refcount here.
      */
@@ -771,7 +773,7 @@ CompileRegExpAndSwap(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Valu
         sourceStr = js_ValueToString(cx, sourceValue);
         if (!sourceStr)
             return false;
-    }  
+    }
 
     uintN flags = 0;
     if (argc > 1 && !argv[1].isUndefined()) {
@@ -794,8 +796,12 @@ static JSBool
 regexp_compile(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ToObject(cx, &vp[1]);
-    if (!obj || !InstanceOf(cx, obj, &js_RegExpClass, JS_ARGV(cx, vp)))
+    if (!obj)
         return false;
+    if (!obj->isRegExp()) {
+        ReportIncompatibleMethod(cx, vp, &js_RegExpClass);
+        return false;
+    }
 
     return CompileRegExpAndSwap(cx, obj, argc, JS_ARGV(cx, vp), &JS_RVAL(cx, vp));
 }

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+ <head>
+  <meta charset="UTF-8">
+  <title>Bidirectional Text Test 2 - CSS</title>
+  <style>
+   p { font-family: monospace; text-align: left; }
+.rtl { direction: rtl; }
+.ltr { direction: ltr; }
+.rle { direction: rtl; unicode-bidi: embed; }
+.lre { direction: ltr; unicode-bidi: embed; }
+.rlo { direction: rtl; unicode-bidi: bidi-override; }
+.lro { direction: ltr; unicode-bidi: bidi-override; }
+.embed { unicode-bidi: embed; }
+.override { unicode-bidi: bidi-override; }
+  </style>
+ </head>
+<!-- Testcases based on http://dbaron.org/css/test/bidi2 by L. David Baron. -->
+ <body>
+  <p>The following lines should all read "ABCDEFGHI":</p>
+  <p>ABCDEFGHI</p>
+  <p class="rtl">ABCDEFGHI</p>
+  <p class="rtl">ABC<span>DEF</span>GHI</p>
+  <p class="rlo">IHGFEDCBA</p>
+  <p class="rlo">IHG<span>FED</span>CBA</p>
+  <p class="rlo">IHG<span class="embed">DEF</span>CBA</p>
+  <p class="rlo">IHG<span class="override">FED</span>CBA</p>
+  <p class="rlo">IHG<span style="unicode-bidi: inherit">FED</span>CBA</p>
+  <p class="rlo">IHG<span class="lro">DEF</span>CBA</p>
+ </body>
+</html>

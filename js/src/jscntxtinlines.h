@@ -741,12 +741,12 @@ CallJSNativeConstructor(JSContext *cx, js::Native native, uintN argc, js::Value 
 }
 
 JS_ALWAYS_INLINE bool
-CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *obj, jsid id, js::Value *vp)
+CallJSPropertyOp(JSContext *cx, js::PropertyOp op, JSObject *receiver, jsid id, js::Value *vp)
 {
-    assertSameCompartment(cx, obj, id, *vp);
-    JSBool ok = op(cx, obj, id, vp);
+    assertSameCompartment(cx, receiver, id, *vp);
+    JSBool ok = op(cx, receiver, id, vp);
     if (ok)
-        assertSameCompartment(cx, obj, *vp);
+        assertSameCompartment(cx, receiver, *vp);
     return ok;
 }
 

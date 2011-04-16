@@ -141,16 +141,13 @@ interface nsIPluginHost : nsISupports
    *  specify PR_FALSE) 
    * @result - NS_OK if this operation was successful
    */
-%{C++
-  NS_IMETHOD
-  GetURL(nsISupports* pluginInst,
-         const char* url,
-         const char* target = NULL,
-         nsIPluginStreamListener* streamListener = NULL,
-         const char* altHost = NULL,
-         const char* referrer = NULL,
-         PRBool forceJSEnabled = PR_FALSE) = 0;
-%}
+  [noscript] void getURL(in nsISupports pluginInt,
+                         in string url,
+                         in string target,
+                         in nsIPluginStreamListener streamListener,
+                         in string altHost,
+                         in string referrer,
+                         in boolean forceJSEnabled);
 
   /**
    * Posts to a URL with post data and/or post headers.
@@ -183,21 +180,18 @@ interface nsIPluginHost : nsISupports
    * post headers
    * @result - NS_OK if this operation was successful
    */
-%{C++
-  NS_IMETHOD
-  PostURL(nsISupports* pluginInst,
-          const char* url,
-          PRUint32 postDataLen,
-          const char* postData,
-          PRBool isFile = PR_FALSE,
-          const char* target = NULL,
-          nsIPluginStreamListener* streamListener = NULL,
-          const char* altHost = NULL,
-          const char* referrer = NULL,
-          PRBool forceJSEnabled = PR_FALSE,
-          PRUint32 postHeadersLength = 0,
-          const char* postHeaders = NULL) = 0;
-%}
+  [noscript] void postURL(in nsISupports pluginInst,
+                          in string url,
+                          in PRUint32 postDataLen,
+                          in string postData,
+                          in boolean isFile,
+                          in string target,
+                          in nsIPluginStreamListener streamListener,
+                          in string altHost,
+                          in string referrer,
+                          in boolean forceJSEnabled,
+                          in PRUint32 postHeadersLength,
+                          in string postHeaders);
 
   /**
    * Returns the proxy info for a given URL. The caller is required to
@@ -284,19 +278,9 @@ interface nsIPluginHost : nsISupports
    */
   [noscript] nsIPluginTag getPluginTagForInstance(in nsIPluginInstance aInstance);
   
-%{C++
-  virtual void AddIdleTimeTarget(nsIPluginInstanceOwner* objectFrame, PRBool isVisible) = 0;
-  virtual void RemoveIdleTimeTarget(nsIPluginInstanceOwner* objectFrame) = 0;
-%}
-};
+  [noscript, notxpcom] void addIdleTimeTarget(in nsIPluginInstanceOwner objectFrame, in boolean isVisible);
+  [noscript, notxpcom] void removeIdleTimeTarget(in nsIPluginInstanceOwner objectFrame);
 
-/*
- * Methods for clearing plugin private data. These should be moved onto
- * nsIPluginHost proper post-Gecko 2.0.
- */
-[scriptable, uuid(0b0a2fb8-dc2b-4df2-b721-4b7a4008df6c)]
-interface nsIPluginHost_MOZILLA_2_0_BRANCH : nsISupports
-{
   /*
    * Flags for use with clearSiteData.
    *

@@ -10,7 +10,7 @@ const testURL2 = "http://mochi.test:8888/browser/browser/base/content/test/brows
 Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSubScriptLoader)
                                            .loadSubScript("chrome://browser/content/sanitize.js");
 
-const pluginHostIface = Ci.nsIPluginHost_MOZILLA_2_0_BRANCH;
+const pluginHostIface = Ci.nsIPluginHost;
 var pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost);
 pluginHost.QueryInterface(pluginHostIface);
 

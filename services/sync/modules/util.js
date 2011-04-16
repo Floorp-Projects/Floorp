@@ -47,15 +47,7 @@ Cu.import("resource://services-sync/ext/Observers.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
 Cu.import("resource://services-sync/ext/StringBundle.js");
 Cu.import("resource://services-sync/log4moz.js");
-
-let NetUtil;
-try {
-  let ns = {};
-  Cu.import("resource://gre/modules/NetUtil.jsm", ns);
-  NetUtil = ns.NetUtil;
-} catch (ex) {
-  // Firefox 3.5 :(
-}
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Constants for makeSyncCallback, waitForSyncCallback
 const CB_READY = {};
@@ -218,15 +210,6 @@ let Utils = {
         db.commitTransaction();
       }
     }
-  },
-
-  createStatement: function createStatement(db, query) {
-    // Gecko 2.0
-    if (db.createAsyncStatement)
-      return db.createAsyncStatement(query);
-
-    // Gecko <2.0
-    return db.createStatement(query);
   },
 
   // Prototype for mozIStorageCallback, used in queryAsync below.
@@ -1069,21 +1052,6 @@ let Utils = {
       return;
     }
 
-    // Gecko < 2.0
-    if (!NetUtil || !NetUtil.newChannel) {
-      let json;
-      try {
-        let [is] = Utils.open(file, "<");
-        json = JSON.parse(Utils.readStream(is));
-        is.close();
-      } catch (ex) {
-        if (that._log)
-          that._log.debug("Failed to load json: " + Utils.exceptionStr(ex));
-      }
-      callback.call(that, json);
-      return;
-    }
-
     let channel = NetUtil.newChannel(file);
     channel.contentType = "application/json";
 
@@ -1127,21 +1095,10 @@ let Utils = {
     let json = typeof obj == "function" ? obj.call(that) : obj;
     let out = JSON.stringify(json);
 
-    // Firefox 3.5
-    if (!NetUtil) {
-      let [fos] = Utils.open(file, ">");
-      fos.writeString(out);
-      fos.close();
-      if (typeof callback == "function") {
-        callback.call(that);
-      }
-      return;
-    }
-
     let fos = Cc["@mozilla.org/network/safe-file-output-stream;1"]
                 .createInstance(Ci.nsIFileOutputStream);
     fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, PERMS_FILE,
-             fos.DEFER_OPEN || 0);
+             fos.DEFER_OPEN);
     let is = this._utf8Converter.convertToInputStream(out);
     NetUtil.asyncCopy(is, fos, function (result) {
       if (typeof callback == "function") {
@@ -1190,59 +1147,6 @@ let Utils = {
     return thisObj[name] = timer;
   },
 
-  // Gecko <2.0
-  open: function open(pathOrFile, mode, perms) {
-    let stream, file;
-
-    if (pathOrFile instanceof Ci.nsIFile) {
-      file = pathOrFile;
-    } else {
-      file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      dump("PATH IS" + pathOrFile + "\n");
-      file.initWithPath(pathOrFile);
-    }
-
-    if (!perms)
-      perms = PERMS_FILE;
-
-    switch(mode) {
-    case "<": {
-      if (!file.exists())
-        throw "Cannot open file for reading, file does not exist";
-      let fis = Cc["@mozilla.org/network/file-input-stream;1"].
-        createInstance(Ci.nsIFileInputStream);
-      fis.init(file, MODE_RDONLY, perms, 0);
-      stream = Cc["@mozilla.org/intl/converter-input-stream;1"].
-        createInstance(Ci.nsIConverterInputStream);
-      stream.init(fis, "UTF-8", 4096,
-                  Ci.nsIConverterInputStream.DEFAULT_REPLACEMENT_CHARACTER);
-    } break;
-
-    case ">": {
-      let fos = Cc["@mozilla.org/network/file-output-stream;1"].
-        createInstance(Ci.nsIFileOutputStream);
-      fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, perms, 0);
-      stream = Cc["@mozilla.org/intl/converter-output-stream;1"]
-        .createInstance(Ci.nsIConverterOutputStream);
-      stream.init(fos, "UTF-8", 4096, 0x0000);
-    } break;
-
-    case ">>": {
-      let fos = Cc["@mozilla.org/network/file-output-stream;1"].
-        createInstance(Ci.nsIFileOutputStream);
-      fos.init(file, MODE_WRONLY | MODE_CREATE | MODE_APPEND, perms, 0);
-      stream = Cc["@mozilla.org/intl/converter-output-stream;1"]
-        .createInstance(Ci.nsIConverterOutputStream);
-      stream.init(fos, "UTF-8", 4096, 0x0000);
-    } break;
-
-    default:
-      throw "Illegal mode to open(): " + mode;
-    }
-
-    return [stream, file];
-  },
-
   getIcon: function(iconUri, defaultIcon) {
     try {
       let iconURI = Utils.makeURI(iconUri);
@@ -1261,16 +1165,6 @@ let Utils = {
 
     // basically returns "Unknown Error"
     return Str.errors.get("error.reason.unknown");
-  },
-
-  // Gecko <2.0
-  // assumes an nsIConverterInputStream
-  readStream: function Weave_readStream(is) {
-    let ret = "", str = {};
-    while (is.readString(4096, str) != 0) {
-      ret += str.value;
-    }
-    return ret;
   },
 
   encodeUTF8: function(str) {
@@ -1672,15 +1566,9 @@ this.__defineGetter__("_sessionCID", function() {
 
 Svc.__defineGetter__("Crypto", function() {
   let cryptoSvc;
-  try {
-    let ns = {};
-    Cu.import("resource://services-crypto/WeaveCrypto.js", ns);
-    cryptoSvc = new ns.WeaveCrypto();
-  } catch (ex) {
-    // Fallback to binary WeaveCrypto
-    cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"].
-                getService(Ci.IWeaveCrypto);
-  }
+  let ns = {};
+  Cu.import("resource://services-crypto/WeaveCrypto.js", ns);
+  cryptoSvc = new ns.WeaveCrypto();
   delete Svc.Crypto;
   return Svc.Crypto = cryptoSvc;
 });

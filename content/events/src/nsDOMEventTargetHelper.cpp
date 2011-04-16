@@ -86,10 +86,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMEventTargetHelper)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMEventTargetHelper,
-                                          nsPIDOMEventTarget)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_AMBIGUOUS(nsDOMEventTargetHelper,
-                                           nsPIDOMEventTarget)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMEventTargetHelper)
 
 
 NS_IMETHODIMP

@@ -35,6 +35,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "States.h"
 #include "nsAccessibilityService.h"
 #include "nsApplicationAccessibleWrap.h"
 #include "nsAccUtils.h"
@@ -185,27 +186,23 @@ PRUint32 nsRootAccessible::GetChromeFlags()
 }
 #endif
 
-nsresult
-nsRootAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
+PRUint64
+nsRootAccessible::NativeState()
 {
-  nsresult rv = nsDocAccessibleWrap::GetStateInternal(aState, aExtraState);
-  NS_ENSURE_A11Y_SUCCESS(rv, rv);
+  PRUint64 states = nsDocAccessibleWrap::NativeState();
 
 #ifdef MOZ_XUL
   PRUint32 chromeFlags = GetChromeFlags();
   if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
-    *aState |= nsIAccessibleStates::STATE_SIZEABLE;
+    states |= states::SIZEABLE;
   }
   if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR) {
     // If it has a titlebar it's movable
     // XXX unless it's minimized or maximized, but not sure
     //     how to detect that
-    *aState |= nsIAccessibleStates::STATE_MOVEABLE;
+    states |= states::MOVEABLE;
   }
 #endif
-
-  if (!aExtraState)
-    return NS_OK;
 
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
   if (fm) {
@@ -215,16 +212,16 @@ nsRootAccessible::GetStateInternal(PRUint32 *aState, PRUint32 *aExtraState)
     nsCOMPtr<nsIDOMWindow> activeWindow;
     fm->GetActiveWindow(getter_AddRefs(activeWindow));
     if (activeWindow == rootWindow)
-      *aExtraState |= nsIAccessibleStates::EXT_STATE_ACTIVE;
+      states |= states::ACTIVE;
   }
 
 #ifdef MOZ_XUL
   if (GetChromeFlags() & nsIWebBrowserChrome::CHROME_MODAL) {
-    *aExtraState |= nsIAccessibleStates::EXT_STATE_MODAL;
+    states |= states::MODAL;
   }
 #endif
 
-  return NS_OK;
+  return states;
 }
 
 const char* const docEvents[] = {
@@ -365,7 +362,7 @@ nsRootAccessible::FireAccessibleFocusEvent(nsAccessible* aFocusAccessible,
   nsDocAccessible* focusDocument = focusAccessible->GetDocAccessible();
   NS_ASSERTION(focusDocument, "No document while accessible is in document?!");
 
-  gLastFocusedAccessiblesState = nsAccUtils::State(focusAccessible);
+  gLastFocusedAccessiblesState = focusAccessible->State();
 
   // Fire menu start/end events for ARIA menus.
   if (focusAccessible->ARIARole() == nsIAccessibleRole::ROLE_MENUITEM) {
@@ -559,18 +556,16 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 #endif
 
   if (eventType.EqualsLiteral("RadioStateChange")) {
-    PRUint32 state = nsAccUtils::State(accessible);
+    PRUint64 state = accessible->State();
 
     // radiogroup in prefWindow is exposed as a list,
     // and panebutton is exposed as XULListitem in A11y.
     // nsXULListitemAccessible::GetStateInternal uses STATE_SELECTED in this case,
-    // so we need to check nsIAccessibleStates::STATE_SELECTED also.
-    PRBool isEnabled = (state & (nsIAccessibleStates::STATE_CHECKED |
-                        nsIAccessibleStates::STATE_SELECTED)) != 0;
+    // so we need to check states::SELECTED also.
+    PRBool isEnabled = (state & (states::CHECKED | states::SELECTED)) != 0;
 
     nsRefPtr<AccEvent> accEvent =
-      new AccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
-                              PR_FALSE, isEnabled);
+      new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
     nsEventShell::FireEvent(accEvent);
 
     if (isEnabled)
@@ -580,13 +575,12 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   }
 
   if (eventType.EqualsLiteral("CheckboxStateChange")) {
-    PRUint32 state = nsAccUtils::State(accessible);
+    PRUint64 state = accessible->State();
 
-    PRBool isEnabled = !!(state & nsIAccessibleStates::STATE_CHECKED);
+    PRBool isEnabled = !!(state & states::CHECKED);
 
     nsRefPtr<AccEvent> accEvent =
-      new AccStateChangeEvent(accessible, nsIAccessibleStates::STATE_CHECKED,
-                              PR_FALSE, isEnabled);
+      new AccStateChangeEvent(accessible, states::CHECKED, isEnabled);
 
     nsEventShell::FireEvent(accEvent);
     return;
@@ -615,12 +609,11 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
 
 #ifdef MOZ_XUL
   if (treeItemAccessible && eventType.EqualsLiteral("OpenStateChange")) {
-    PRUint32 state = nsAccUtils::State(accessible); // collapsed/expanded changed
-    PRBool isEnabled = (state & nsIAccessibleStates::STATE_EXPANDED) != 0;
+    PRUint64 state = accessible->State();
+    PRBool isEnabled = (state & states::EXPANDED) != 0;
 
     nsRefPtr<AccEvent> accEvent =
-      new AccStateChangeEvent(accessible, nsIAccessibleStates::STATE_EXPANDED,
-                              PR_FALSE, isEnabled);
+      new AccStateChangeEvent(accessible, states::EXPANDED, isEnabled);
     nsEventShell::FireEvent(accEvent);
     return;
   }
@@ -724,7 +717,7 @@ nsRootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
         // It is not top level menuitem
         // Only fire focus event if it is not inside collapsed popup
         // and not a listitem of a combo box
-        if (nsAccUtils::State(containerAccessible) & nsIAccessibleStates::STATE_COLLAPSED) {
+        if (containerAccessible->State() & states::COLLAPSED) {
           nsAccessible *containerParent = containerAccessible->GetParent();
           if (!containerParent)
             return;
@@ -817,7 +810,7 @@ nsRootAccessible::GetContentDocShell(nsIDocShellTreeItem *aStart)
     // a background tab (tabbed browsing)
     nsAccessible *parent = accDoc->GetParent();
     while (parent) {
-      if (nsAccUtils::State(parent) & nsIAccessibleStates::STATE_INVISIBLE)
+      if (parent->State() & states::INVISIBLE)
         return nsnull;
 
       if (parent == this)
@@ -905,9 +898,7 @@ nsRootAccessible::HandlePopupShownEvent(nsAccessible* aAccessible)
     if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
         comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
       nsRefPtr<AccEvent> event =
-        new AccStateChangeEvent(combobox,
-                                nsIAccessibleStates::STATE_EXPANDED,
-                                PR_FALSE, PR_TRUE);
+        new AccStateChangeEvent(combobox, states::EXPANDED, PR_TRUE);
       if (event)
         nsEventShell::FireEvent(event);
     }
@@ -943,9 +934,7 @@ nsRootAccessible::HandlePopupHidingEvent(nsINode* aNode,
   if (comboboxRole == nsIAccessibleRole::ROLE_COMBOBOX ||
       comboboxRole == nsIAccessibleRole::ROLE_AUTOCOMPLETE) {
     nsRefPtr<AccEvent> event =
-      new AccStateChangeEvent(combobox,
-                              nsIAccessibleStates::STATE_EXPANDED,
-                              PR_FALSE, PR_FALSE);
+      new AccStateChangeEvent(combobox, states::EXPANDED, PR_FALSE);
     if (event)
       nsEventShell::FireEvent(event);
   }

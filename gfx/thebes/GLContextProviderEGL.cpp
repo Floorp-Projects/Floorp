@@ -1266,6 +1266,13 @@ public:
         return true;
     }
 
+    virtual void BindTexture(GLenum aTextureUnit)
+    {
+        mGLContext->fActiveTexture(aTextureUnit);
+        mGLContext->fBindTexture(LOCAL_GL_TEXTURE_2D, Texture());
+        mGLContext->fActiveTexture(LOCAL_GL_TEXTURE0);
+    }
+
     virtual PRBool InUpdate() const { return !!mUpdateSurface; }
 
     virtual void Resize(const nsIntSize& aSize)

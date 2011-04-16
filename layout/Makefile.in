@@ -52,14 +52,11 @@ PARALLEL_DIRS = \
 		tables \
 		xul/base/public \
 		xul/base/src \
+		ipc \
 		$(NULL)
 
 ifdef NS_PRINTING
 PARALLEL_DIRS += printing
-endif
-
-ifdef MOZ_IPC
-PARALLEL_DIRS += ipc
 endif
 
 ifdef MOZ_MATHML

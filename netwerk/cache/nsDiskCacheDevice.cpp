@@ -785,8 +785,10 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
     PRUint32  newSizeK =  ((newSize + 0x3FF) >> 10);
 
     // If the new size is larger than max. file size or larger than
-    // 1/8 the cache capacity (which is in KiB's), doom the entry and abort
-    if (EntryIsTooBig(newSize)) {
+    // 1/8 the cache capacity (which is in KiB's), and the entry has
+    // not been marked for file storage, doom the entry and abort.
+    if (EntryIsTooBig(newSize) &&
+        entry->StoragePolicy() != nsICache::STORE_ON_DISK_AS_FILE) {
 #ifdef DEBUG
         nsresult rv =
 #endif

@@ -100,10 +100,6 @@ nsDOMAttribute::~nsDOMAttribute()
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsDOMAttribute)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_BEGIN(nsDOMAttribute)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
-NS_IMPL_CYCLE_COLLECTION_ROOT_END
-
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttribute)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mNodeInfo)
@@ -122,6 +118,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttribute)
     NS_RELEASE(tmp->mChild);
     tmp->mFirstChild = nsnull;
   }
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_LISTENERMANAGER
   NS_IMPL_CYCLE_COLLECTION_UNLINK_USERDATA
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
@@ -148,9 +145,9 @@ NS_INTERFACE_TABLE_HEAD(nsDOMAttribute)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Attr)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF_AMBIGUOUS(nsDOMAttribute, nsIDOMAttr)
-NS_IMPL_CYCLE_COLLECTING_RELEASE_FULL(nsDOMAttribute, nsIDOMAttr,
-                                      nsNodeUtils::LastRelease(this))
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMAttribute)
+NS_IMPL_CYCLE_COLLECTING_RELEASE_WITH_DESTROY(nsDOMAttribute,
+                                              nsNodeUtils::LastRelease(this))
 
 void
 nsDOMAttribute::SetMap(nsDOMAttributeMap *aMap)
@@ -467,49 +464,6 @@ NS_IMETHODIMP
 nsDOMAttribute::GetPrefix(nsAString& aPrefix)
 {
   mNodeInfo->GetPrefix(aPrefix);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMAttribute::SetPrefix(const nsAString& aPrefix)
-{
-  // XXX: Validate the prefix string!
-
-  nsCOMPtr<nsINodeInfo> newNodeInfo;
-  nsCOMPtr<nsIAtom> prefix;
-
-  if (!aPrefix.IsEmpty()) {
-    prefix = do_GetAtom(aPrefix);
-    if (!prefix) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  if (!nsContentUtils::IsValidNodeName(mNodeInfo->NameAtom(), prefix,
-                                       mNodeInfo->NamespaceID())) {
-    return NS_ERROR_DOM_NAMESPACE_ERR;
-  }
-
-  nsresult rv = nsContentUtils::PrefixChanged(mNodeInfo, prefix,
-                                              getter_AddRefs(newNodeInfo));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsIContent* content = GetContentInternal();
-  if (content) {
-    nsCOMPtr<nsIAtom> name = GetNameAtom(content);
-    PRInt32 nameSpaceID = mNodeInfo->NamespaceID();
-
-    nsAutoString tmpValue;
-    if (content->GetAttr(nameSpaceID, name, tmpValue)) {
-      content->UnsetAttr(nameSpaceID, name, PR_TRUE);
-
-      content->SetAttr(newNodeInfo->NamespaceID(), name,
-                       newNodeInfo->GetPrefixAtom(), tmpValue, PR_TRUE);
-    }
-  }
-
-  newNodeInfo.swap(mNodeInfo);
-
   return NS_OK;
 }
 

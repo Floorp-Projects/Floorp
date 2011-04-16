@@ -90,12 +90,6 @@ USE_STATIC_LIBS = 1
 DEFINES += -DUNICODE -D_UNICODE
 endif
 
-ifeq ($(OS_ARCH),WINCE)
-USE_STATIC_LIBS = 1
-DEFINES += -DUNICODE -D_UNICODE
-WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 # TestAUSReadStrings runs during check in the following directory with a Unicode

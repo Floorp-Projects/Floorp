@@ -7424,73 +7424,7 @@ CheckForSSE2()
 
 #if defined(NANOJIT_ARM)
 
-#if defined(_MSC_VER) && defined(WINCE)
-
-// these come in from jswince.asm
-extern "C" int js_arm_try_armv5_op();
-extern "C" int js_arm_try_armv6_op();
-extern "C" int js_arm_try_armv7_op();
-extern "C" int js_arm_try_vfp_op();
-
-static unsigned int
-arm_check_arch()
-{
-    unsigned int arch = 4;
-    __try {
-        js_arm_try_armv5_op();
-        arch = 5;
-        js_arm_try_armv6_op();
-        arch = 6;
-        js_arm_try_armv7_op();
-        arch = 7;
-    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
-    }
-    return arch;
-}
-
-static bool
-arm_check_vfp()
-{
-#ifdef WINCE_WINDOWS_MOBILE
-    return false;
-#else
-    bool ret = false;
-    __try {
-        js_arm_try_vfp_op();
-        ret = true;
-    } __except(GetExceptionCode() == EXCEPTION_ILLEGAL_INSTRUCTION) {
-        ret = false;
-    }
-    return ret;
-#endif
-}
-
-#define HAVE_ENABLE_DISABLE_DEBUGGER_EXCEPTIONS 1
-
-/* See "Suppressing Exception Notifications while Debugging", at
- * http://msdn.microsoft.com/en-us/library/ms924252.aspx
- */
-static void
-disable_debugger_exceptions()
-{
-    // 2 == TLSSLOT_KERNEL
-    DWORD kctrl = (DWORD) TlsGetValue(2);
-    // 0x12 = TLSKERN_NOFAULT | TLSKERN_NOFAULTMSG
-    kctrl |= 0x12;
-    TlsSetValue(2, (LPVOID) kctrl);
-}
-
-static void
-enable_debugger_exceptions()
-{
-    // 2 == TLSSLOT_KERNEL
-    DWORD kctrl = (DWORD) TlsGetValue(2);
-    // 0x12 = TLSKERN_NOFAULT | TLSKERN_NOFAULTMSG
-    kctrl &= ~0x12;
-    TlsSetValue(2, (LPVOID) kctrl);
-}
-
-#elif defined(__GNUC__) && defined(AVMPLUS_LINUX)
+#if defined(__GNUC__) && defined(AVMPLUS_LINUX)
 
 // Assume ARMv4 by default.
 static unsigned int arm_arch = 4;
@@ -10221,8 +10155,9 @@ class BoxArg
         : tr(tr), addr(addr) {}
     TraceRecorder *tr;
     Address addr;
-    void operator()(uintN argi, Value *src) {
+    bool operator()(uintN argi, Value *src) {
         tr->box_value_into(*src, tr->get(src), OffsetAddress(addr, argi * sizeof(Value)));
+        return true;
     }
 };
 

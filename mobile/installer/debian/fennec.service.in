@@ -1,0 +1,5 @@
+#filter substitution
+[D-BUS Service]
+Name=mozilla.@MOZ_APP_NAME@
+Exec=@installdir@/fennec 
+

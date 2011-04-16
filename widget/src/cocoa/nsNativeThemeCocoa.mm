@@ -233,6 +233,10 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  // provide a local autorelease pool, as this is called during startup
+  // before the main event-loop pool is in place
+  nsAutoreleasePool pool;
+
   mPushButtonCell = [[NSButtonCell alloc] initTextCell:nil];
   [mPushButtonCell setButtonType:NSMomentaryPushInButton];
   [mPushButtonCell setHighlightsBy:NSPushInCellMask];
