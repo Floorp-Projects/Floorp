@@ -1404,15 +1404,6 @@ nsHTMLDocument::NormalizeDocument()
   return nsDocument::NormalizeDocument();
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::RenameNode(nsIDOMNode* aNode,
-                           const nsAString& aNamespaceURI,
-                           const nsAString& aQualifiedName,
-                           nsIDOMNode** aRetval)
-{
-  return nsDocument::RenameNode(aNode, aNamespaceURI, aQualifiedName, aRetval);
-}
-
 //
 // nsIDOMHTMLDocument interface implementation
 //

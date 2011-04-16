@@ -6180,16 +6180,6 @@ nsDocument::NormalizeDocument()
 }
 
 NS_IMETHODIMP
-nsDocument::RenameNode(nsIDOMNode *aNode,
-                       const nsAString& namespaceURI,
-                       const nsAString& qualifiedName,
-                       nsIDOMNode **aReturn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
 {
   return nsINode::GetOwnerDocument(aOwnerDocument);
