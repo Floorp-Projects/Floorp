@@ -2662,8 +2662,8 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent);
  * the compiler.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
-                          const char *bytes, size_t length);
+JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8,
+                          JSObject *obj, const char *bytes, size_t length);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_CompileScript(JSContext *cx, JSObject *obj,
@@ -3184,6 +3184,8 @@ JS_SetCStringsAreUTF8(void);
  * UTF-8, and JS_DecodeBytes decodes from UTF-8, which may create additional
  * errors if the character sequence is malformed.  If UTF-8 support is
  * disabled, the functions deflate and inflate, respectively.
+ *
+ * JS_DecodeUTF8() always behaves the same independently of JS_CStringsAreUTF8().
  */
 JS_PUBLIC_API(JSBool)
 JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
@@ -3192,6 +3194,10 @@ JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
 JS_PUBLIC_API(JSBool)
 JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
                size_t *dstlenp);
+
+JS_PUBLIC_API(JSBool)
+JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
+              size_t *dstlenp);
 
 /*
  * A variation on JS_EncodeCharacters where a null terminated string is

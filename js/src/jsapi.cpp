@@ -4616,7 +4616,7 @@ JS_CompileScript(JSContext *cx, JSObject *obj, const char *bytes, size_t length,
 }
 
 JS_PUBLIC_API(JSBool)
-JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *bytes, size_t length)
+JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *obj, const char *bytes, size_t length)
 {
     jschar *chars;
     JSBool result;
@@ -4625,7 +4625,10 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *bytes, size_
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    chars = js_InflateString(cx, bytes, &length);
+    if (bytes_are_utf8)
+        chars = js_InflateString(cx, bytes, &length, JS_TRUE);
+    else
+        chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return JS_TRUE;
 
@@ -5535,6 +5538,13 @@ JS_PUBLIC_API(JSBool)
 JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_t *dstlenp)
 {
     return js_InflateStringToBuffer(cx, src, srclen, dst, dstlenp);
+}
+
+JS_PUBLIC_API(JSBool)
+JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
+              size_t *dstlenp)
+{
+    return js_InflateUTF8StringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
 JS_PUBLIC_API(char *)
