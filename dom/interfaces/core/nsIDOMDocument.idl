@@ -52,7 +52,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(cf88ac5e-49d9-4294-9255-ff80a1727f91)]
+[scriptable, uuid(1ae51729-c57c-43cd-91f4-2ffee5c5d493)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -110,9 +110,4 @@ interface nsIDOMDocument : nsIDOMNode
                                         raises(DOMException);
   // Introduced in DOM Level 3:
   void               normalizeDocument();
-  // Introduced in DOM Level 3:
-  nsIDOMNode         renameNode(in nsIDOMNode node, 
-                                in DOMString namespaceURI, 
-                                in DOMString qualifiedName)
-                                        raises(DOMException);
 };
