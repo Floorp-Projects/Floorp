@@ -327,6 +327,38 @@ struct UntrapOpcode
 };
 
 /*
+ * Analysis over a range of bytecode to determine where each popped value was
+ * originally pushed.
+ */
+struct StackAnalysis
+{
+    /* For values whose pushed location is not known. */
+    static const uint32 UNKNOWN_PUSHED = uint32(-1);
+
+    struct PoppedValue {
+        uint32 offset;
+        uint32 which;
+        void reset() { offset = UNKNOWN_PUSHED; which = 0; }
+    };
+
+    PoppedValue **poppedArray;
+    uint32 start;
+    uint32 length;
+
+    JSScript *script;
+
+    bool analyze(JSArenaPool &pool, JSScript *script, uint32 start, uint32 length,
+                 Script *analysis);
+
+    const PoppedValue &popped(uint32 offset, uint32 which) {
+        return poppedArray[offset - start][which];
+    }
+    const PoppedValue &popped(jsbytecode *pc, uint32 which) {
+        return popped(pc - script->code, which);
+    }
+};
+
+/*
  * Lifetime analysis. The goal of this analysis is to make a single backwards pass
  * over a script to approximate the regions where each variable is live, without
  * doing a full fixpointing live-variables pass. This is based on the algorithm
@@ -401,34 +433,6 @@ struct LifetimeLoop
     uint32 lastBlock;
 
     /*
-     * Any inequality known to hold at the head of the loop. This has the
-     * form 'lhs <= rhs + constant' or 'lhs >= rhs + constant', depending on
-     * lessEqual. The lhs may be modified within the loop body (the test is
-     * invalid afterwards), and the rhs is invariant. This information is only
-     * valid if the LHS/RHS are known integers.
-     */
-    enum { UNASSIGNED = uint32(-1) };
-    uint32 testLHS;
-    uint32 testRHS;
-    int32 testConstant;
-    bool testLessEqual;
-
-    /*
-     * A variable which will be incremented or decremented exactly once in each
-     * iteration of the loop. The offset of the operation is indicated, which
-     * may or may not run after the initial entry into the loop.
-     */
-    struct Increment {
-        uint32 slot;
-        uint32 offset;
-    };
-    Increment *increments;
-    uint32 nIncrements;
-
-    /* It is unknown which arrays grow or which objects are modified in this loop. */
-    bool unknownModset;
-
-    /*
      * This loop contains safe points in its body which the interpreter might
      * join at directly.
      */
@@ -436,13 +440,6 @@ struct LifetimeLoop
 
     /* This loop has calls or inner loops. */
     bool hasCallsLoops;
-
-    /*
-     * Arrays which might grow during this loop. This is a guess, and may
-     * underapproximate the actual set of such arrays.
-     */
-    types::TypeObject **growArrays;
-    uint32 nGrowArrays;
 };
 
 /* Lifetime and register information for a bytecode. */
@@ -590,22 +587,11 @@ class LifetimeScript
         return lifetimes[slot].onlyWrite(loop);
     }
 
-    /*
-     * Note: loop analysis depends on the function not having had indirect
-     * modification of its arguments. Clients must watch for this.
-     */
-    void analyzeLoopTest(LifetimeLoop *loop);
-    bool analyzeLoopIncrements(JSContext *cx, LifetimeLoop *loop);
-    bool analyzeLoopModset(JSContext *cx, LifetimeLoop *loop);
-
   private:
 
     inline bool addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset);
     inline bool killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset);
     inline bool extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end);
-
-    bool loopVariableAccess(LifetimeLoop *loop, jsbytecode *pc);
-    bool getLoopTestAccess(jsbytecode *pc, uint32 *slotp, int32 *constantp);
 };
 
 } /* namespace analyze */

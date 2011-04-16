@@ -60,7 +60,7 @@ class FrameEntry
     /* Accessors for entries which are known constants. */
 
     bool isConstant() const {
-        if (isCopy() || isInvariant())
+        if (isCopy())
             return false;
         return data.isConstant();
     }
@@ -156,22 +156,9 @@ class FrameEntry
         return backing() == other->backing();
     }
 
-    /*
-     * Accessors for entries which are copies of analysis temporaries. All
-     * temporaries are invariant, so these behave more like constants than like
-     * copies of mutable entries.
-     */
-
-    bool isInvariant() const { return !!invariant_; }
-
-    FrameEntry *invariant() {
-        JS_ASSERT(isInvariant());
-        return invariant_;
-    }
-
   private:
     void setType(JSValueType type_) {
-        JS_ASSERT(!isCopy() && !isInvariant());
+        JS_ASSERT(!isCopy());
         type.setConstant();
 #if defined JS_NUNBOX32
         v_.s.tag = JSVAL_TYPE_TO_TAG(type_);
@@ -191,7 +178,6 @@ class FrameEntry
     void clear() {
         copied = false;
         copy = NULL;
-        invariant_ = NULL;
     }
 
     uint32 trackerIndex() {
@@ -242,7 +228,7 @@ class FrameEntry
 
     FrameEntry *copyOf() const {
         JS_ASSERT(isCopy());
-        JS_ASSERT(copy < this);
+        JS_ASSERT_IF(!copy->temporary, copy < this);
         return copy;
     }
 
@@ -256,19 +242,10 @@ class FrameEntry
     void setCopyOf(FrameEntry *fe) {
         JS_ASSERT(!isCopied());
         copy = fe;
-        invariant_ = NULL;
         if (fe) {
             type.invalidate();
             data.invalidate();
         }
-    }
-
-    void setInvariant(FrameEntry *fe) {
-        JS_ASSERT(!isCopied());
-        copy = NULL;
-        invariant_ = fe;
-        type.invalidate();
-        data.invalidate();
     }
 
     inline bool isTracked() const {
@@ -280,7 +257,7 @@ class FrameEntry
     }
 
     inline bool dataInRegister(AnyRegisterID reg) const {
-        JS_ASSERT(!copy && !invariant_);
+        JS_ASSERT(!copy);
         return reg.isReg()
             ? (data.inRegister() && data.reg() == reg.reg())
             : (data.inFPRegister() && data.fpreg() == reg.fpreg());
@@ -292,17 +269,21 @@ class FrameEntry
     RematInfo  type;
     RematInfo  data;
     uint32     index_;
-    FrameEntry *invariant_;
     FrameEntry *copy;
     bool       copied;
     bool       tracked;
     bool       inlined;
+    bool       temporary;
 
     /*
      * Offset of the last loop in which this entry was written or had a loop
      * register assigned.
      */
     uint32     lastLoop;
+
+#if JS_BITS_PER_WORD == 32
+    void *padding;
+#endif
 };
 
 } /* namespace mjit */
