@@ -729,24 +729,11 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
     }
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    PRUnichar * docTitleStr;
-    PRUnichar * docURLStr;
-
-    GetDisplayTitleAndURL(mPrt->mPrintObject, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
-
-    // Nobody ever cared about the file name passed in, as far as I can tell
-    rv = mPrt->mPrintDC->PrepareDocument(docTitleStr, nsnull);
-
-    if (docTitleStr) nsMemory::Free(docTitleStr);
-    if (docURLStr) nsMemory::Free(docURLStr);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRBool doNotify;
     ShowPrintProgress(PR_TRUE, doNotify);
     if (!doNotify) {
       // Print listener setup...
-      mPrt->OnStartPrinting();    
+      mPrt->OnStartPrinting();
       rv = DocumentReadyForPrinting();
       NS_ENSURE_SUCCESS(rv, rv);
     }
