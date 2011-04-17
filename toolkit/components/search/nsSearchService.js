@@ -3393,8 +3393,7 @@ SearchService.prototype = {
     var currentEnginePref = BROWSER_SEARCH_PREF + "selectedEngine";
 
     if (this._currentEngine == this.defaultEngine) {
-      if (gPrefSvc.prefHasUserValue(currentEnginePref))
-        gPrefSvc.clearUserPref(currentEnginePref);
+      gPrefSvc.clearUserPref(currentEnginePref);
     }
     else {
       setLocalizedPref(currentEnginePref, this._currentEngine.name);
