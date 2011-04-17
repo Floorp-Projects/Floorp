@@ -58,17 +58,17 @@ public:
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect);
 
-  NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
+  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult);
 
-  virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
+  virtual PRBool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult);
 
-  virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext,
+  virtual PRBool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
                                    nsRect* aOverflowRect);
@@ -109,7 +109,7 @@ protected:
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aClipRect);
-  nsresult ClassicGetWidgetBorder(nsIDeviceContext* aContext, 
+  nsresult ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult);

@@ -177,7 +177,7 @@ protected:
   friend class CharacterIterator;
 
   // Use a power of 2 here. It's not so important to match
-  // nsIDeviceContext::AppUnitsPerDevPixel, but since we do a lot of
+  // nsDeviceContext::AppUnitsPerDevPixel, but since we do a lot of
   // multiplying by 1/GetTextRunUnitsFactor, it's good for it to be a
   // power of 2 to avoid accuracy loss.
   static PRUint32 GetTextRunUnitsFactor() { return 64; }

@@ -900,7 +900,7 @@ TabChild::InitWidget(const nsIntSize& size)
         nsnull, 0,              // no parents
         nsIntRect(nsIntPoint(0, 0), size),
         nsnull,                 // HandleWidgetEvent
-        nsnull                  // nsIDeviceContext
+        nsnull                  // nsDeviceContext
         );
 
     RenderFrameChild* remoteFrame =
