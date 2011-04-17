@@ -655,11 +655,10 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
   rv = devspec->Init(nsnull, mPrt->mPrintSettings, aIsPrintPreview);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPrt->mPrintDC = do_CreateInstance("@mozilla.org/gfx/devicecontext;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mPrt->mPrintDC = new nsDeviceContext();
   rv = mPrt->mPrintDC->InitForPrinting(devspec);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   if (aIsPrintPreview) {
     mPrt->mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
 

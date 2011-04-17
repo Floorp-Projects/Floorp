@@ -158,9 +158,6 @@ using mozilla::layers::LayerManagerOGL;
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
 
-/* For PrepareNativeWidget */
-static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
                                    gdouble aMouseX, gdouble aMouseY,

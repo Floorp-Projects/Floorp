@@ -156,9 +156,6 @@ nsRefPtr<nsShmImage> gShmImage;
 static int gBufferPixmapUsageCount = 0;
 static gfxIntSize gBufferMaxSize(0, 0);
 
-/* For PrepareNativeWidget */
-static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-
 // initialization static functions 
 static nsresult    initialize_prefs        (void);
 
