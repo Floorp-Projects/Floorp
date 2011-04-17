@@ -366,11 +366,6 @@ case "$target" in
                           The path to the Windows CE SDK],
     WINCE_SDK_DIR=$withval)
 
-    MOZ_ARG_WITH_STRING(ogles-sdk,
-    [  --with-ogles-sdk=OGLES_SDK_DIR
-                          The path to the OGLES SDK],
-    OGLES_SDK_DIR=$withval)
-
     AC_DEFINE(WINCE)
     
     export WINCE=1
@@ -384,9 +379,9 @@ case "$target" in
 
     _pwd=`pwd -W`
     _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
-    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" \
-    TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" target="$target" \
-    -C $srcdir/build/wince/tools
+    make WINCE_SDK_DIR="$WINCE_SDK_DIR" \
+         TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" target="$target" \
+         -C $srcdir/build/wince/tools
 
     CC="$_pwd/dist/sdk/bin/$target-gcc.exe"
     CXX="$_pwd/dist/sdk/bin/$target-gcc.exe"
@@ -8604,15 +8599,16 @@ if test "$MOZ_TREE_CAIRO"; then
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
+    case "$MOZ_WIDGET_TOOLKIT" in
+      qt)
         QT_SURFACE_FEATURE="#define CAIRO_HAS_QT_SURFACE 1"
-    fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+        ;;
+      cocoa)
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
         QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
         QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
-    fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
+        ;;
+      windows)
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
         if test -z "$WINCE"; then
             WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
@@ -8637,15 +8633,15 @@ if test "$MOZ_TREE_CAIRO"; then
         if test -n "$WIN32_D2D_SURFACE_FEATURE"; then
           MOZ_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
         fi
-
-    fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
+        ;;
+      os2)
         OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
         CAIRO_FT_LIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
-    fi
+        ;;
+    esac
     if test "$USE_FC_FREETYPE"; then
         FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
     fi
@@ -8655,7 +8651,6 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(MOZ_ENABLE_D3D9_LAYER)
     AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
     AC_SUBST(CAIRO_FT_CFLAGS)
-    AC_SUBST(HAS_OGLES)
 
     if test "$MOZ_DEBUG"; then
       SANITY_CHECKING_FEATURE="#define CAIRO_DO_SANITY_CHECKING 1"
@@ -9041,7 +9036,6 @@ AC_SUBST(MOZ_OS2_TOOLS)
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
-AC_SUBST(OGLES_SDK_DIR)
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
