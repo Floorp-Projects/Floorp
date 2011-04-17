@@ -1357,6 +1357,7 @@ struct JSObject : js::gc::Cell {
     inline bool isXMLId() const;
     inline bool isNamespace() const;
     inline bool isQName() const;
+    inline bool isWeakMap() const;
 
     inline bool isProxy() const;
     inline bool isObjectProxy() const;
@@ -1996,6 +1997,9 @@ IsAnyBuiltinEval(JSFunction *fun);
 /* 'call' should be for the eval/Function native invocation. */
 extern JSPrincipals *
 PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx);
+
+extern JSObject *
+NonNullObject(JSContext *cx, const Value &v);
 
 }
 

@@ -88,6 +88,7 @@
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jshashtable.h"
+#include "jsweakmap.h"
 
 #include "jsstrinlines.h"
 #include "jscompartment.h"
@@ -1000,6 +1001,8 @@ js_FinishGC(JSRuntime *rt)
     }
     rt->compartments.clear();
     rt->atomsCompartment = NULL;
+
+    rt->gcWeakMapList = NULL;
 
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
         ReleaseGCChunk(rt, r.front());
@@ -2501,8 +2504,10 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * Mark weak roots.
      */
     while (true) {
-        if (!js_TraceWatchPoints(&gcmarker))
+        if (!js_TraceWatchPoints(&gcmarker) &&
+            !WeakMap::markIteratively(&gcmarker)) {
             break;
+        }
         gcmarker.markDelayedChildren();
     }
 
@@ -2534,6 +2539,10 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      * the GC.
      */
     TIMESTAMP(startSweep);
+
+    /* Finalize unreachable (key,value) pairs in all weak maps. */
+    WeakMap::sweep(cx);
+
     js_SweepAtomState(cx);
 
     /* Finalize watch points associated with unreachable objects. */

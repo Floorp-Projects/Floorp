@@ -84,6 +84,7 @@
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
 #include "jsvector.h"
+#include "jsweakmap.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
 
@@ -1676,6 +1677,7 @@ static JSStdName standard_class_atoms[] = {
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
     {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
+    {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &WeakMap::jsclass},
     {NULL,                              0, NULL, NULL}
 };
 
