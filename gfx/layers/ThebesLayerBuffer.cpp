@@ -40,7 +40,7 @@
 #include "gfxContext.h"
 #include "gfxPlatform.h"
 #include "gfxUtils.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 
 namespace mozilla {
 namespace layers {
@@ -189,7 +189,7 @@ MovePixels(gfxASurface* aBuffer,
   // seaming are likely.  Assume that the precision of these
   // computations is 1 app unit, and toss in a fudge factor of 2.0.
   static const gfxFloat kPrecision =
-    1.0 / gfxFloat(nsIDeviceContext::AppUnitsPerCSSPixel());
+    1.0 / gfxFloat(nsDeviceContext::AppUnitsPerCSSPixel());
   // FIXME/bug 637852: we've decided to live with transient glitches
   // during fast-panning for the time being.
   NS_WARN_IF_FALSE(

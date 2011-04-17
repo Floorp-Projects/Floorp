@@ -40,8 +40,7 @@
 #define NSRENDERINGCONTEXT__H__
 
 #include "nsAutoPtr.h"
-#include "nsCOMPtr.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -65,12 +64,12 @@ public:
 
     NS_INLINE_DECL_REFCOUNTING(nsRenderingContext)
 
-    void Init(nsIDeviceContext* aContext, gfxASurface* aThebesSurface);
-    void Init(nsIDeviceContext* aContext, gfxContext* aThebesContext);
+    void Init(nsDeviceContext* aContext, gfxASurface* aThebesSurface);
+    void Init(nsDeviceContext* aContext, gfxContext* aThebesContext);
 
     // These accessors will never return null.
     gfxContext *ThebesContext() { return mThebes; }
-    nsIDeviceContext *DeviceContext() { return mDeviceContext; }
+    nsDeviceContext *DeviceContext() { return mDeviceContext; }
     PRInt32 AppUnitsPerDevPixel() { return mP2A; }
 
     // Graphics state
@@ -148,7 +147,7 @@ protected:
     PRInt32 GetMaxChunkLength();
 
     nsRefPtr<gfxContext> mThebes;
-    nsCOMPtr<nsIDeviceContext> mDeviceContext;
+    nsRefPtr<nsDeviceContext> mDeviceContext;
     nsRefPtr<nsFontMetrics> mFontMetrics;
 
     double mP2A; // cached app units per device pixel value
