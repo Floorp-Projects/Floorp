@@ -48,11 +48,11 @@ SimpleTest.waitForFocus(function() {
       newInput.focus();
       newInput.dispatchEvent(event);
 
-      hitEventLoop(function() {
+      setTimeout(function() {
         ok(!popupShown, "Popup must not be opened");
         SpecialPowers.removeAutoCompletePopupEventListener(window, listener);
         SimpleTest.finish();
-      }, 100);
+      }, 1000);
     }, 0);
   }, false);
 
@@ -60,14 +60,6 @@ SimpleTest.waitForFocus(function() {
   initValue.value = "foo";
   synthesizeKey("VK_ENTER", {});
 });
-
-function hitEventLoop(func, times) {
-  if (times > 0) {
-    setTimeout(hitEventLoop, 0, func, times - 1);
-  } else {
-    setTimeout(func, 0);
-  }
-}
 
 </script>
 </pre>
