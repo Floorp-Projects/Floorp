@@ -265,7 +265,7 @@ add_test(function() {
     is_element_hidden(get("detail-contrib-suggested"), "Contributions amount should be hidden");
 
     is_element_visible(get("detail-dateUpdated"), "Update date should not be hidden");
-    is(Date.parse(get("detail-dateUpdated").value), gDate.getTime(), "Update date should be correct");
+    is(get("detail-dateUpdated").value, formatDate(gDate), "Update date should be correct");
 
     is_element_hidden(get("detail-rating-row"), "Rating should be hidden");
 
@@ -312,7 +312,7 @@ add_test(function() {
     is_element_hidden(get("detail-contributions"), "Contributions section should be hidden");
 
     is_element_visible(get("detail-dateUpdated"), "Update date should not be hidden");
-    is(Date.parse(get("detail-dateUpdated").value), gDate.getTime(), "Update date should be correct");
+    is(get("detail-dateUpdated").value, formatDate(gDate), "Update date should be correct");
 
     is_element_visible(get("detail-rating-row"), "Rating row should not be hidden");
     is_element_hidden(get("detail-rating"), "Rating should be hidden");
