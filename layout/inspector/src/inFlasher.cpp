@@ -142,7 +142,7 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inFlasher::DrawElementOutline(nsIDOMElement* aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
@@ -159,20 +159,19 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
     nsPoint offset;
     nsIWidget* widget = frame->GetNearestWidget(offset);
     if (widget) {
-      nsRefPtr<nsRenderingContext> rcontext;
-      frame->PresContext()->DeviceContext()->
-        CreateRenderingContext(widget, *getter_AddRefs(rcontext));
-      if (rcontext) {
-        nsRect rect(offset, frame->GetSize());
-        if (mInvert) {
-          rcontext->InvertRect(rect);
-        }
+      nsRefPtr<nsRenderingContext> rcontext = new nsRenderingContext();
+      rcontext->Init(frame->PresContext()->DeviceContext(),
+                     widget->GetThebesSurface());
 
-        PRBool isLastFrame = frame->GetNextContinuation() == nsnull;
-        DrawOutline(rect.x, rect.y, rect.width, rect.height, rcontext,
-                    isFirstFrame, isLastFrame);
-        isFirstFrame = PR_FALSE;
+      nsRect rect(offset, frame->GetSize());
+      if (mInvert) {
+        rcontext->InvertRect(rect);
       }
+
+      PRBool isLastFrame = frame->GetNextContinuation() == nsnull;
+      DrawOutline(rect.x, rect.y, rect.width, rect.height, rcontext,
+                  isFirstFrame, isLastFrame);
+      isFirstFrame = PR_FALSE;
     }
     frame = frame->GetNextContinuation();
   }

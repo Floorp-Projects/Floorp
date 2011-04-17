@@ -443,58 +443,15 @@ nsDeviceContext::Init(nsIWidget *aWidget)
 }
 
 nsresult
-nsDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
-                                        nsRenderingContext *&aContext)
-{
-    nsresult rv;
-
-    aContext = nsnull;
-    nsRefPtr<nsRenderingContext> pContext;
-    rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
-    if (NS_SUCCEEDED(rv)) {
-        nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
-        if (surface) {
-            pContext->Init(this, surface);
-            aContext = pContext;
-            NS_ADDREF(aContext);
-        } else {
-            rv = NS_ERROR_FAILURE;
-        }
-    }
-
-    return rv;
-}
-
-nsresult
 nsDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
 {
-    nsresult rv = NS_OK;
+    NS_ABORT_IF_FALSE(mPrintingSurface, "only call for printing dcs");
 
-    aContext = nsnull;
-    nsRefPtr<nsRenderingContext> pContext;
-    rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
-    if (NS_SUCCEEDED(rv)) {
-        if (mPrintingSurface) {
-            pContext->Init(this, mPrintingSurface);
-            pContext->Scale(mPrintingScale, mPrintingScale);
-            aContext = pContext;
-            NS_ADDREF(aContext);
-        } else {
-            rv = NS_ERROR_FAILURE;
-        }
-    }
+    nsRefPtr<nsRenderingContext> pContext = new nsRenderingContext();
 
-    return rv;
-}
-
-nsresult
-nsDeviceContext::CreateRenderingContextInstance(nsRenderingContext *&aContext)
-{
-    nsRefPtr<nsRenderingContext> renderingContext = new nsRenderingContext();
-    if (!renderingContext)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    aContext = renderingContext;
+    pContext->Init(this, mPrintingSurface);
+    pContext->Scale(mPrintingScale, mPrintingScale);
+    aContext = pContext;
     NS_ADDREF(aContext);
 
     return NS_OK;

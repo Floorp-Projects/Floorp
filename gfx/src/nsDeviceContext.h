@@ -97,27 +97,12 @@ public:
     nsresult InitForPrinting(nsIDeviceContextSpec *aDevSpec);
 
     /**
-     * Create a rendering context and initialize it from an nsIWidget
-     * @param aWidget widget to initialize context from
-     * @param aContext out parameter for new rendering context
-     * @return error status
-     */
-    nsresult CreateRenderingContext(nsIWidget *aWidget,
-                                    nsRenderingContext *&aContext);
-
-    /**
-     * Create a rendering context and initialize it.
+     * Create a rendering context and initialize it.  Only call this
+     * method on device contexts that were initialized for printing.
      * @param aContext out parameter for new rendering context
      * @return error status
      */
     nsresult CreateRenderingContext(nsRenderingContext *&aContext);
-
-    /**
-     * Create an uninitalised rendering context.
-     * @param aContext out parameter for new rendering context
-     * @return error status
-     */
-    nsresult CreateRenderingContextInstance(nsRenderingContext *&aContext);
 
     /**
      * Gets the number of app units in one CSS pixel; this number is global,

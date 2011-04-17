@@ -3761,10 +3761,8 @@ PresShell::GetReferenceRenderingContext()
   nsDeviceContext* devCtx = mPresContext->DeviceContext();
   nsRefPtr<nsRenderingContext> rc;
   if (mPresContext->IsScreen()) {
-    devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
-    if (rc) {
-      rc->Init(devCtx, gfxPlatform::GetPlatform()->ScreenReferenceSurface());
-    }
+    rc = new nsRenderingContext();
+    rc->Init(devCtx, gfxPlatform::GetPlatform()->ScreenReferenceSurface());
   } else {
     devCtx->CreateRenderingContext(*getter_AddRefs(rc));
   }
@@ -5283,8 +5281,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
 
   AutoSaveRestoreRenderingState _(this);
 
-  nsRefPtr<nsRenderingContext> rc;
-  devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
+  nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(devCtx, aThebesContext);
 
   PRBool wouldFlushRetainedLayers = PR_FALSE;
@@ -5608,8 +5605,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   context.Rectangle(gfxRect(0, 0, pixelArea.width, pixelArea.height));
   context.Fill();
 
-  nsRefPtr<nsRenderingContext> rc;
-  deviceContext->CreateRenderingContextInstance(*getter_AddRefs(rc));
+  nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(deviceContext, surface);
 
   if (aRegion) {
