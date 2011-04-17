@@ -346,7 +346,7 @@ nsNativeThemeQt::DrawWidgetBackground(QPainter *qPainter,
 }
 
 NS_IMETHODIMP
-nsNativeThemeQt::GetWidgetBorder(nsIDeviceContext* ,
+nsNativeThemeQt::GetWidgetBorder(nsDeviceContext* ,
                                  nsIFrame* aFrame,
                                  PRUint8 aWidgetType,
                                  nsIntMargin* aResult)
@@ -369,7 +369,7 @@ nsNativeThemeQt::GetWidgetBorder(nsIDeviceContext* ,
 }
 
 PRBool
-nsNativeThemeQt::GetWidgetPadding(nsIDeviceContext* ,
+nsNativeThemeQt::GetWidgetPadding(nsDeviceContext* ,
                                   nsIFrame*, PRUint8 aWidgetType,
                                   nsIntMargin* aResult)
 {

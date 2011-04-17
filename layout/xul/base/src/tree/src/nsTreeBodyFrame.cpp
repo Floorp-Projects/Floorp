@@ -3751,8 +3751,8 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
       PRInt32 width, height;
       image->GetWidth(&width);
       image->GetHeight(&height);
-      nsSize size(width*nsIDeviceContext::AppUnitsPerCSSPixel(),
-                  height*nsIDeviceContext::AppUnitsPerCSSPixel());
+      nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
+                  height*nsDeviceContext::AppUnitsPerCSSPixel());
       nsLayoutUtils::DrawImage(&aRenderingContext, image,
           nsLayoutUtils::GetGraphicsFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),
@@ -3772,8 +3772,8 @@ nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex,
       PRInt32 width, height;
       image->GetWidth(&width);
       image->GetHeight(&height);
-      nsSize size(width*nsIDeviceContext::AppUnitsPerCSSPixel(),
-                  height*nsIDeviceContext::AppUnitsPerCSSPixel());
+      nsSize size(width*nsDeviceContext::AppUnitsPerCSSPixel(),
+                  height*nsDeviceContext::AppUnitsPerCSSPixel());
       nsLayoutUtils::DrawImage(&aRenderingContext, image,
           nsLayoutUtils::GetGraphicsFilterForFrame(this),
           nsRect(meterRect.TopLeft(), size), meterRect, meterRect.TopLeft(),

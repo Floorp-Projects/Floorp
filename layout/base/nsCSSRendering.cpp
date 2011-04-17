@@ -1197,7 +1197,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
       // Draw the widget shape
       gfxContextMatrixAutoSaveRestore save(shadowContext);
-      nsIDeviceContext* devCtx = aPresContext->DeviceContext();
+      nsDeviceContext* devCtx = aPresContext->DeviceContext();
       nsRefPtr<nsRenderingContext> wrapperCtx;
       devCtx->CreateRenderingContextInstance(*getter_AddRefs(wrapperCtx));
       wrapperCtx->Init(devCtx, shadowContext);
