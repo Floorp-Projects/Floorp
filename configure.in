@@ -681,7 +681,10 @@ case "$target" in
         AC_DEFINE(HAVE_SEH_EXCEPTIONS)
 
         if test -n "$WIN32_REDIST_DIR"; then
-            WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
+          if test ! -d "$WIN32_REDIST_DIR"; then
+            AC_MSG_ERROR([Invalid Win32 Redist directory: ${WIN32_REDIST_DIR}])
+          fi
+          WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
         fi
 
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
@@ -7434,8 +7437,15 @@ if test "$NS_TRACE_MALLOC"; then
     MOZ_MEMORY=
 fi
 
-if test "$MOZ_MEMORY"; then
-
+if test -z "$MOZ_MEMORY"; then
+  case "${target}" in
+    *-mingw*)
+      if test -z "$WIN32_REDIST_DIR"; then
+        AC_MSG_WARN([When not building jemalloc, you need to set WIN32_REDIST_DIR to the path to the Visual C++ Redist (usually VCINSTALLDIR\redist\x86\Microsoft.VC80.CRT, for VC++ v8) if you intend to distribute your build.])
+      fi
+      ;;
+  esac
+else
   dnl Don't try to run compiler tests on Windows  
   if test "$OS_ARCH" = "WINNT"; then
     if test -z "$HAVE_64BIT_OS"; then
@@ -7549,7 +7559,7 @@ if test "$MOZ_MEMORY"; then
     AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
     AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
   fi
-fi
+fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)
 AC_SUBST(WIN32_CRT_SRC_DIR)
