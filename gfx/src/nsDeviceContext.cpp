@@ -108,6 +108,7 @@ public:
 
 protected:
     nsDeviceContext*          mContext; // owner
+    nsCOMPtr<nsIAtom>         mLocaleLanguage;
     nsTArray<nsFontMetrics*>  mFontMetrics;
 };
 
@@ -125,6 +126,15 @@ nsFontCache::Init(nsDeviceContext* aContext)
     nsCOMPtr<nsIObserverService> obs = GetObserverService();
     if (obs)
         obs->AddObserver(this, "memory-pressure", PR_FALSE);
+
+    nsCOMPtr<nsILanguageAtomService> langService;
+    langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+    if (langService) {
+        mLocaleLanguage = langService->GetLocaleLanguage();
+    }
+    if (!mLocaleLanguage) {
+        mLocaleLanguage = do_GetAtom("x-western");
+    }
 }
 
 void
@@ -149,6 +159,9 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                            gfxUserFontSet* aUserFontSet,
                            nsFontMetrics*& aMetrics)
 {
+    if (!aLanguage)
+        aLanguage = mLocaleLanguage;
+
     // First check our cache
     // start from the end, which is where we put the most-recent-used element
 
@@ -276,13 +289,27 @@ nsDeviceContext::~nsDeviceContext()
     }
 }
 
-void
-nsDeviceContext::CreateFontCache()
+nsresult
+nsDeviceContext::GetMetricsFor(const nsFont& aFont,
+                               nsIAtom* aLanguage,
+                               gfxUserFontSet* aUserFontSet,
+                               nsFontMetrics*& aMetrics)
 {
-    mFontCache = new nsFontCache();
-    NS_ADDREF(mFontCache);
-    mFontCache->Init(this);
-    GetLocaleLanguage();
+    if (!mFontCache) {
+        mFontCache = new nsFontCache();
+        NS_ADDREF(mFontCache);
+        mFontCache->Init(this);
+    }
+
+    return mFontCache->GetMetricsFor(aFont, aLanguage, aUserFontSet, aMetrics);
+}
+
+nsresult
+nsDeviceContext::FlushFontCache(void)
+{
+    if (mFontCache)
+        mFontCache->Flush();
+    return NS_OK;
 }
 
 nsresult
@@ -291,93 +318,6 @@ nsDeviceContext::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
     if (mFontCache) {
         mFontCache->FontMetricsDeleted(aFontMetrics);
     }
-    return NS_OK;
-}
-
-void
-nsDeviceContext::GetLocaleLanguage(void)
-{
-    if (!mLocaleLanguage) {
-        nsCOMPtr<nsILanguageAtomService> langService;
-        langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
-        if (langService) {
-            mLocaleLanguage = langService->GetLocaleLanguage();
-        }
-        if (!mLocaleLanguage) {
-            mLocaleLanguage = do_GetAtom("x-western");
-        }
-    }
-}
-
-nsresult
-nsDeviceContext::GetMetricsFor(const nsFont& aFont,
-                               nsIAtom* aLanguage,
-                               gfxUserFontSet* aUserFontSet,
-                               nsFontMetrics*& aMetrics)
-{
-    if (!mFontCache)
-        CreateFontCache();
-
-    // XXX figure out why aLanguage is NULL sometimes
-    //      -> see nsPageFrame.cpp:511
-    if (!aLanguage) {
-        aLanguage = mLocaleLanguage;
-    }
-
-    return mFontCache->GetMetricsFor(aFont, aLanguage, aUserFontSet, aMetrics);
-}
-
-nsresult
-nsDeviceContext::GetMetricsFor(const nsFont& aFont,
-                               gfxUserFontSet* aUserFontSet,
-                               nsFontMetrics*& aMetrics)
-{
-    if (!mFontCache)
-        CreateFontCache();
-
-    return mFontCache->GetMetricsFor(aFont, mLocaleLanguage, aUserFontSet,
-                                     aMetrics);
-}
-
-struct FontEnumData {
-    FontEnumData(nsString& aFaceName) : mFaceName(aFaceName) {}
-    nsString& mFaceName;
-};
-
-static PRBool
-FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
-{
-    FontEnumData* data = (FontEnumData*)aData;
-    data->mFaceName = aFamily;
-    return PR_FALSE; // stop
-}
-
-nsresult
-nsDeviceContext::FirstExistingFont(const nsFont& aFont,
-                                   nsString& aFaceName)
-{
-    FontEnumData data(aFaceName);
-    if (aFont.EnumerateFamilies(FontEnumCallback, &data)) {
-        return NS_ERROR_FAILURE; // can only happen for an empty font
-    }
-    return NS_OK;
-}
-
-nsresult
-nsDeviceContext::GetLocalFontName(const nsString& aFaceName,
-                                  nsString& aLocalName,
-                                  PRBool& aAliased)
-{
-    aLocalName = aFaceName;
-    aAliased = PR_FALSE;
-    return NS_OK;
-}
-
-nsresult
-nsDeviceContext::FlushFontCache(void)
-{
-    if (mFontCache)
-        mFontCache->Flush();
     return NS_OK;
 }
 
@@ -503,20 +443,6 @@ nsDeviceContext::Init(nsIWidget *aWidget)
 }
 
 nsresult
-nsDeviceContext::CreateRenderingContext(nsIView *aView,
-                                        nsRenderingContext *&aContext)
-{
-    // This is currently only called by the caret code
-    NS_ENSURE_ARG_POINTER(aView);
-    NS_PRECONDITION(aView->HasWidget(), "View has no widget!");
-
-    nsCOMPtr<nsIWidget> widget;
-    widget = aView->GetWidget();
-
-    return CreateRenderingContext(widget, aContext);
-}
-
-nsresult
 nsDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
                                         nsRenderingContext *&aContext)
 {
@@ -624,12 +550,6 @@ nsDeviceContext::GetSystemFont(nsSystemFontID aID, nsFont *aFont) const
 }
 
 nsresult
-nsDeviceContext::CheckFontExistence(const nsString& aFaceName)
-{
-    return NS_OK;
-}
-
-nsresult
 nsDeviceContext::GetDepth(PRUint32& aDepth)
 {
     if (mDepth == 0) {
@@ -691,17 +611,6 @@ nsDeviceContext::GetClientRect(nsRect &aRect)
 }
 
 nsresult
-nsDeviceContext::PrepareNativeWidget(nsIWidget* aWidget, void** aOut)
-{
-    *aOut = nsnull;
-    return NS_OK;
-}
-
-
-/*
- * below methods are for printing
- */
-nsresult
 nsDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 {
     NS_ENSURE_ARG_POINTER(aDevice);
@@ -718,15 +627,6 @@ nsDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 
     return NS_OK;
 }
-
-
-nsresult
-nsDeviceContext::PrepareDocument(PRUnichar * aTitle,
-                                 PRUnichar*  aPrintToFileName)
-{
-    return NS_OK;
-}
-
 
 nsresult
 nsDeviceContext::BeginDocument(PRUnichar*  aTitle,
@@ -813,8 +713,6 @@ nsDeviceContext::EndPage(void)
 
     return rv;
 }
-
-/** End printing methods **/
 
 void
 nsDeviceContext::ComputeClientRectUsingScreen(nsRect* outRect)
