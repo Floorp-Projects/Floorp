@@ -5559,7 +5559,7 @@ function middleMousePaste(event) {
 
   // Strip embedded newlines and surrounding whitespace, to match the URL
   // bar's behavior (stripsurroundingwhitespace)
-  clipboard.replace(/\s*\n\s*/g, "");
+  clipboard = clipboard.replace(/\s*\n\s*/g, "");
 
   let url = getShortcutOrURI(clipboard);
   try {
