@@ -41,14 +41,13 @@
 #define _NS_DEVICECONTEXT_H_
 
 #include "nsCOMPtr.h"
-#include "nsIAtom.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIScreenManager.h"
 #include "nsIWidget.h"
 #include "nsCoord.h"
 #include "gfxContext.h"
 
-class nsIView;
+class nsIAtom;
 class nsFontCache;
 class gfxUserFontSet;
 
@@ -98,15 +97,6 @@ public:
     nsresult InitForPrinting(nsIDeviceContextSpec *aDevSpec);
 
     /**
-     * Create a rendering context and initialize it from an nsIView
-     * @param aView view to initialize context from
-     * @param aContext out parameter for new rendering context
-     * @return error status
-     */
-    nsresult CreateRenderingContext(nsIView *aView,
-                                    nsRenderingContext *&aContext);
-
-    /**
      * Create a rendering context and initialize it from an nsIWidget
      * @param aWidget widget to initialize context from
      * @param aContext out parameter for new rendering context
@@ -130,24 +120,10 @@ public:
     nsresult CreateRenderingContextInstance(nsRenderingContext *&aContext);
 
     /**
-     * We are in the process of creating the native widget for
-     * aWidget.  Do any device-specific processing required to
-     * initialize the native widget for this device. A pointer to some
-     * platform-specific data is returned in aOut.
-     */
-    nsresult PrepareNativeWidget(nsIWidget *aWidget, void **aOut);
-
-    /**
      * Gets the number of app units in one CSS pixel; this number is global,
      * not unique to each device context.
      */
     static PRInt32 AppUnitsPerCSSPixel() { return 60; }
-
-    /**
-     * Convert app units to CSS pixels.  This is a global scale factor.
-     */
-    static gfxFloat AppUnitsToGfxCSSPixels(nscoord aAppUnits)
-    { return gfxFloat(aAppUnits) / AppUnitsPerCSSPixel(); }
 
     /**
      * Gets the number of app units in one device pixel; this number
@@ -219,18 +195,6 @@ public:
                            nsFontMetrics*& aMetrics);
 
     /**
-     * Get the nsFontMetrics that describe the properties of
-     * an nsFont.
-     * @param aFont font description to obtain metrics for
-     * @param aMetrics out parameter for font metrics
-     * @param aUserFontSet user font set
-     * @return error status
-     */
-    nsresult GetMetricsFor(const nsFont& aFont,
-                           gfxUserFontSet* aUserFontSet,
-                           nsFontMetrics*& aMetrics);
-
-    /**
      * Notification when a font metrics instance created for this device is
      * about to be deleted
      */
@@ -242,17 +206,6 @@ public:
      * @return error status
      */
     nsresult FlushFontCache();
-
-    /**
-     * Check to see if a particular named font exists.
-     * @param aFontName character string of font face name
-     * @return NS_OK if font is available, else font is unavailable
-     */
-    nsresult CheckFontExistence(const nsString& aFaceName);
-    nsresult FirstExistingFont(const nsFont& aFont, nsString& aFaceName);
-    nsresult GetLocalFontName(const nsString& aFaceName, nsString& aLocalName,
-                              PRBool& aAliased);
-
 
     /**
      * Return the bit depth of the device.
@@ -291,17 +244,6 @@ public:
      * @return error status
      */
     nsresult GetClientRect(nsRect& aRect);
-
-    /**
-     * Do anything that needs to be done to prepare for printing.
-     * @param aTitle - title of Document
-     * @param aPrintToFileName - name of file to print to, if NULL
-     * then don't print to file
-     *
-     * @return error status
-     */
-    nsresult PrepareDocument(PRUnichar *aTitle,
-                             PRUnichar *aPrintToFileName);
 
     /**
      * Inform the output device that output of a document is beginning
@@ -369,19 +311,11 @@ public:
     PRBool SetPixelScale(float aScale);
 
     /**
-     * Get the pixel scaling factor; defaults to 1.0, but can be changed with
-     * SetPixelScale.
-     */
-    float GetPixelScale() const { return mPixelScale; }
-
-    /**
      * True if this device context was created for printing.
      */
     PRBool IsPrinterSurface();
 
 protected:
-    void CreateFontCache();
-    void GetLocaleLanguage();
     void SetDPI();
     void ComputeClientRectUsingScreen(nsRect *outRect);
     void ComputeFullAreaUsingScreen(nsRect *outRect);
@@ -399,7 +333,6 @@ protected:
     float    mPrintingScale;
 
     nsFontCache*                   mFontCache;
-    nsCOMPtr<nsIAtom>              mLocaleLanguage;
     nsCOMPtr<nsIWidget>            mWidget;
     nsCOMPtr<nsIScreenManager>     mScreenManager;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
