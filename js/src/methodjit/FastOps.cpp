@@ -1111,7 +1111,7 @@ mjit::Compiler::jsop_setelem_dense()
     // hoist the initialized length check, we make the slots pointer loop
     // invariant and never access the object itself.
     RegisterID slotsReg;
-    bool hoisted = loop && !a->parent && loop->hoistArrayLengthCheck(obj, id);
+    bool hoisted = loop && !a->parent && loop->hoistArrayLengthCheck(obj, 1);
 
     if (hoisted) {
         FrameEntry *slotsFe = loop->invariantSlots(obj);
@@ -1435,7 +1435,7 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     // We checked in the caller that prototypes do not have indexed properties.
     bool allowUndefined = mayPushUndefined(0);
 
-    bool hoisted = loop && !a->parent && loop->hoistArrayLengthCheck(obj, id);
+    bool hoisted = loop && !a->parent && loop->hoistArrayLengthCheck(obj, 0);
 
     // Get a register with either the object or its slots, depending on whether
     // we are hoisting the bounds check.
