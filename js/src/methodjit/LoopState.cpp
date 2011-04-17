@@ -998,7 +998,7 @@ LoopState::analyzeLoopTest()
     types::TypeSet *lhsTypes = cc.getTypeSet(lhs);
     if (!lhsTypes || lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
         return;
-    if (rhs != UNASSIGNED) {
+    if (rhs != UNASSIGNED && !rhsLength) {
         types::TypeSet *rhsTypes = cc.getTypeSet(rhs);
         if (!rhsTypes || rhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
             return;
