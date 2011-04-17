@@ -42,7 +42,6 @@
 #include <windows.h>
 #include "nsNativeThemeWin.h"
 #include "nsRenderingContext.h"
-#include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsTransform2D.h"

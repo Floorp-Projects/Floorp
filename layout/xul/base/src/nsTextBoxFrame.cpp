@@ -48,7 +48,6 @@
 #include "nsReadableUtils.h"
 #include "nsTextBoxFrame.h"
 #include "nsCOMPtr.h"
-#include "nsIDeviceContext.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
 #include "nsRenderingContext.h"

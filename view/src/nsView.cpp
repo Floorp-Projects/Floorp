@@ -40,7 +40,6 @@
 #include "nsWidgetsCID.h"
 #include "nsViewManager.h"
 #include "nsGUIEvent.h"
-#include "nsIDeviceContext.h"
 #include "nsIComponentManager.h"
 #include "nsGfxCIID.h"
 #include "nsIRegion.h"

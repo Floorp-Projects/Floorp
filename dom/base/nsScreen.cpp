@@ -39,7 +39,6 @@
 #include "nscore.h"
 #include "nsScreen.h"
 #include "nsIDocShell.h"
-#include "nsIDeviceContext.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsDOMClassInfo.h"

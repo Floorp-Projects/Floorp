@@ -53,7 +53,6 @@
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
-#include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 #include "nsTransform2D.h"
 #include "nsIMenuFrame.h"

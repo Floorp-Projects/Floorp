@@ -42,7 +42,6 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsPageContentFrame.h"
 #include "nsDisplayList.h"

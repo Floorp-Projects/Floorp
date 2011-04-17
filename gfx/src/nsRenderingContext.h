@@ -47,6 +47,7 @@
 #include "nsCoord.h"
 #include "gfxContext.h"
 
+struct nsPoint;
 class nsIntRegion;
 
 typedef enum {

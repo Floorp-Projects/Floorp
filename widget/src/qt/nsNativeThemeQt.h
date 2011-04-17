@@ -46,7 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsNativeTheme.h"
-#include "nsIDeviceContext.h"
 
 class QComboBox;
 class QStyleOptionButton;
@@ -54,6 +53,7 @@ class QStyleOptionFrameV2;
 class QStyleOptionComboBox;
 class QRect;
 class nsIFrame;
+class nsIDeviceContext;
 
 class nsNativeThemeQt : private nsNativeTheme,
                         public nsITheme
