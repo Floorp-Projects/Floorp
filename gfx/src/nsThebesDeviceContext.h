@@ -45,16 +45,7 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
-#include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "nsWeakReference.h"
 #include "gfxContext.h"
-
-#include "prlog.h"
-
-#ifdef PR_LOGGING
-extern PRLogModuleInfo* gThebesGFXLog;
-#endif
 
 #ifdef XP_WIN
 #include "gfxWindowsSurface.h"
@@ -64,9 +55,7 @@ extern PRLogModuleInfo* gThebesGFXLog;
 
 class nsFontCache;
 
-class nsThebesDeviceContext : public nsIDeviceContext,
-                              public nsIObserver,
-                              public nsSupportsWeakReference
+class nsThebesDeviceContext : public nsIDeviceContext
 {
 public:
     nsThebesDeviceContext();
@@ -75,7 +64,6 @@ public:
     static void Shutdown();
 
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIOBSERVER
 
     NS_IMETHOD Init(nsIWidget *aWidget);
     NS_IMETHOD InitForPrinting(nsIDeviceContextSpec *aDevSpec);
