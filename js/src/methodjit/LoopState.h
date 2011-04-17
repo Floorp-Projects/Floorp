@@ -151,12 +151,12 @@ class LoopState : public MacroAssemblerTypedefs
     struct InvariantEntry {
         enum {
             /*
-             * initializedLength(array) > value + constant.
+             * initializedLength(array) > value1 + value2 + constant.
              * Unsigned comparison, so will fail if value + constant < 0
              */
             BOUNDS_CHECK,
 
-            /* value + constant >= 0 */
+            /* value1 + constant >= 0 */
             NEGATIVE_CHECK,
 
             INVARIANT_SLOTS,
@@ -165,7 +165,8 @@ class LoopState : public MacroAssemblerTypedefs
         union {
             struct {
                 uint32 arraySlot;
-                uint32 valueSlot;
+                uint32 valueSlot1;
+                uint32 valueSlot2;
                 int32 constant;
             } check;
             struct {
@@ -177,12 +178,12 @@ class LoopState : public MacroAssemblerTypedefs
     };
     Vector<InvariantEntry, 4, CompilerAllocPolicy> invariantEntries;
 
-    bool loopInvariantEntry(const FrameEntry *fe);
-    bool addHoistedCheck(uint32 arraySlot, uint32 valueSlot, int32 constant);
+    bool loopInvariantEntry(uint32 slot);
+    bool addHoistedCheck(uint32 arraySlot, uint32 valueSlot1, uint32 valueSlot2, int32 constant);
     void addNegativeCheck(uint32 valueSlot, int32 constant);
 
     bool hasInvariants() { return !invariantEntries.empty(); }
-    void restoreInvariants(Assembler &masm, Vector<Jump> *jumps);
+    void restoreInvariants(jsbytecode *pc, Assembler &masm, Vector<Jump> *jumps);
 
   public:
 
@@ -233,7 +234,7 @@ class LoopState : public MacroAssemblerTypedefs
 
     void flushLoop(StubCompiler &stubcc);
 
-    bool hoistArrayLengthCheck(const FrameEntry *obj, const FrameEntry *id);
+    bool hoistArrayLengthCheck(const FrameEntry *obj, unsigned indexPopped);
     FrameEntry *invariantSlots(const FrameEntry *obj);
     FrameEntry *invariantLength(const FrameEntry *obj);
 
@@ -294,7 +295,7 @@ class LoopState : public MacroAssemblerTypedefs
     void analyzeModset();
 
     bool loopVariableAccess(jsbytecode *pc);
-    bool getLoopTestAccess(jsbytecode *pc, uint32 *slotp, int32 *constantp);
+    bool getLoopTestAccess(jsbytecode *pc, uint32 *pslot, int32 *pconstant);
 
     bool addGrowArray(types::TypeObject *object);
     bool addModifiedProperty(types::TypeObject *object, jsid id);
@@ -302,7 +303,12 @@ class LoopState : public MacroAssemblerTypedefs
     bool hasGrowArray(types::TypeObject *object);
     bool hasModifiedProperty(types::TypeObject *object, jsid id);
 
+    uint32 getIncrement(uint32 slot);
+    int32 adjustConstantForIncrement(jsbytecode *pc, uint32 slot);
+
     inline types::TypeSet *poppedTypes(jsbytecode *pc, unsigned which);
+
+    bool getEntryValue(uint32 offset, uint32 popped, uint32 *pslot, int32 *pconstant);
 };
 
 } /* namespace mjit */
