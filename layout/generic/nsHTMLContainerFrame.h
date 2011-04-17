@@ -55,7 +55,7 @@ class nsLineBox;
 // Some macros for container classes to do sanity checking on
 // width/height/x/y values computed during reflow.
 // NOTE: AppUnitsPerCSSPixel value hardwired here to remove the
-// dependency on nsIDeviceContext.h.  It doesn't matter if it's a
+// dependency on nsDeviceContext.h.  It doesn't matter if it's a
 // little off.
 #ifdef DEBUG
 #define CRAZY_W (1000000*60)

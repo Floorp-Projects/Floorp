@@ -185,7 +185,7 @@ nsFormControlFrame::GetUsableScreenRect(nsPresContext* aPresContext)
 {
   nsRect screen;
 
-  nsIDeviceContext *context = aPresContext->DeviceContext();
+  nsDeviceContext *context = aPresContext->DeviceContext();
   PRBool dropdownCanOverlapOSBar = PR_FALSE;
   nsILookAndFeel *lookAndFeel = aPresContext->LookAndFeel();
   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar,

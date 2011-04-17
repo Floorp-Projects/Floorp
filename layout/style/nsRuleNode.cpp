@@ -2654,7 +2654,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     }
 
     // XXXldb All of this platform-specific stuff should be in the
-    // nsIDeviceContext implementations, not here.
+    // nsDeviceContext implementations, not here.
 
 #ifdef XP_WIN
     //

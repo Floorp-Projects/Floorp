@@ -438,7 +438,7 @@ protected:
 
   nsWeakPtr mContainer; // it owns me!
   nsWeakPtr mTopContainerWhilePrinting;
-  nsCOMPtr<nsIDeviceContext> mDeviceContext;  // We create and own this baby
+  nsRefPtr<nsDeviceContext> mDeviceContext;  // We create and own this baby
 
   // the following six items are explicitly in this order
   // so they will be destroyed in the reverse order (pinkerton, scc)
@@ -2277,7 +2277,7 @@ DocumentViewerImpl::MakeWindow(const nsSize& aSize, nsIView* aContainerView)
   if (NS_FAILED(rv))
     return rv;
 
-  nsIDeviceContext *dx = mPresContext->DeviceContext();
+  nsDeviceContext *dx = mPresContext->DeviceContext();
 
   rv = mViewManager->Init(dx);
   if (NS_FAILED(rv))

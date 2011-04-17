@@ -532,7 +532,7 @@ nsSimplePageSequenceFrame::PrintNextPage()
   mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &printOddPages);
 
   // Begin printing of the document
-  nsIDeviceContext *dc = PresContext()->DeviceContext();
+  nsDeviceContext *dc = PresContext()->DeviceContext();
 
   nsresult rv = NS_OK;
 

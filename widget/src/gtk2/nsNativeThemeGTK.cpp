@@ -878,7 +878,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
+nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType, nsIntMargin* aResult)
 {
   GtkTextDirection direction = GetTextDirection(aFrame);
@@ -929,7 +929,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
 }
 
 PRBool
-nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
+nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame, PRUint8 aWidgetType,
                                    nsIntMargin* aResult)
 {
@@ -958,7 +958,7 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
 }
 
 PRBool
-nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
+nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                     nsIFrame* aFrame, PRUint8 aWidgetType,
                                     nsRect* aOverflowRect)
 {

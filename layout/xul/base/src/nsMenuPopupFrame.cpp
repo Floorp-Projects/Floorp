@@ -1158,7 +1158,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // the screen rectangle of the root frame, in dev pixels.
   nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
-  nsIDeviceContext* devContext = presContext->DeviceContext();
+  nsDeviceContext* devContext = presContext->DeviceContext();
   nscoord offsetForContextMenu = 0;
   // if mScreenXPos and mScreenYPos are -1, then we are anchored. If they
   // have other values, then the popup appears unanchored at that screen

@@ -878,7 +878,7 @@ nsPresContext::UpdateAfterPreferencesChanged()
 }
 
 nsresult
-nsPresContext::Init(nsIDeviceContext* aDeviceContext)
+nsPresContext::Init(nsDeviceContext* aDeviceContext)
 {
   NS_ASSERTION(!mInitialized, "attempt to reinit pres context");
   NS_ENSURE_ARG(aDeviceContext);

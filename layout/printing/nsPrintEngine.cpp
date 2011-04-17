@@ -207,7 +207,7 @@ static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecified
 // Forward Declarations
 static void DumpPrintObjectsListStart(const char * aStr, nsTArray<nsPrintObject*> * aDocList);
 static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel= 0, FILE* aFD = nsnull);
-static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aDC, int aLevel= 0, FILE * aFD = nsnull);
+static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsDeviceContext * aDC, int aLevel= 0, FILE * aFD = nsnull);
 
 #define DUMP_DOC_LIST(_title) DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
 #define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject);
@@ -430,7 +430,7 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
 static void DumpViews(nsIDocShell* aDocShell, FILE* out);
 static void DumpLayoutData(char* aTitleStr, char* aURLStr,
                            nsPresContext* aPresContext,
-                           nsIDeviceContext * aDC, nsIFrame * aRootFrame,
+                           nsDeviceContext * aDC, nsIFrame * aRootFrame,
                            nsIDocShell * aDocShell, FILE* aFD);
 #endif
 
@@ -3567,7 +3567,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
 void DumpLayoutData(char*              aTitleStr,
                     char*              aURLStr,
                     nsPresContext*    aPresContext,
-                    nsIDeviceContext * aDC,
+                    nsDeviceContext * aDC,
                     nsIFrame *         aRootFrame,
                     nsIDocShekk *      aDocShell,
                     FILE*              aFD = nsnull)
@@ -3701,7 +3701,7 @@ static void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLS
 
 //-------------------------------------------------------------
 static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
-                                       nsIDeviceContext * aDC,
+                                       nsDeviceContext * aDC,
                                        int aLevel, FILE * aFD)
 {
   if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;
