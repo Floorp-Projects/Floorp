@@ -42,7 +42,6 @@
 #include "nsCSSKeywords.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsIDeviceContext.h"
 #include "nsCSSValue.h"
 #include "nsIDocShell.h"
 #include "nsLayoutUtils.h"

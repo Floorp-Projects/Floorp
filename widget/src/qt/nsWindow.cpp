@@ -94,7 +94,6 @@ using namespace QtMobility;
 #endif
 
 #include "nsToolkit.h"
-#include "nsIDeviceContext.h"
 #include "nsIdleService.h"
 #include "nsRenderingContext.h"
 #include "nsIRegion.h"

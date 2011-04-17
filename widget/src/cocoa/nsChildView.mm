@@ -59,7 +59,6 @@
 #include "nsIPrefBranch.h"
 
 #include "nsFontMetrics.h"
-#include "nsIDeviceContext.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIViewManager.h"

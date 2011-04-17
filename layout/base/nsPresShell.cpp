@@ -84,7 +84,6 @@
 #include "nsHashtable.h"
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
-#include "nsIDeviceContext.h"
 #include "nsEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsGUIEvent.h"
@@ -8081,7 +8080,6 @@ nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
 #ifdef NS_DEBUG
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
-#include "nsIDeviceContext.h"
 #include "nsIURL.h"
 #include "nsILinkHandler.h"
 

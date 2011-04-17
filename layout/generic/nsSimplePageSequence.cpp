@@ -41,7 +41,6 @@
 #include "gfxContext.h"
 #include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
-#include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
 #include "nsIPrintSettings.h"
 #include "nsPageFrame.h"

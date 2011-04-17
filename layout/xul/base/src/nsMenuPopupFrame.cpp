@@ -60,7 +60,6 @@
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
-#include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"

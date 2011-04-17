@@ -80,7 +80,6 @@
 #include "nsLayoutStylesheetCache.h"
 
 #include "nsViewsCID.h"
-#include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"

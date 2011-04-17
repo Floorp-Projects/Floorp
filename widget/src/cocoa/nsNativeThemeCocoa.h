@@ -45,12 +45,11 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsILookAndFeel.h"
-#include "nsIDeviceContext.h"
 #include "nsNativeTheme.h"
-
 #include "gfxASurface.h"
 
 @class CellDrawView;
+class nsIDeviceContext;
 
 class nsNativeThemeCocoa : private nsNativeTheme,
                            public nsITheme
@@ -95,7 +94,6 @@ public:
 protected:  
 
   nsresult GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID);
-  nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
   nsIntMargin RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame);
 
   // HITheme drawing routines

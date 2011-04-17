@@ -60,7 +60,6 @@
 #include "nsIDOMEvent.h"
 #include "nsWidgetsCID.h"
 #include "nsCOMPtr.h"
-#include "nsIDeviceContext.h"
 #include "gfxFont.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"

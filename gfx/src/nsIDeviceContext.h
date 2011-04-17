@@ -41,7 +41,6 @@
 
 #include "nsISupports.h"
 #include "nsCoord.h"
-#include "nsRect.h"
 #include "gfxTypes.h"
 #include "nsStringFwd.h"
 
@@ -50,123 +49,10 @@ class nsFontMetrics;
 class nsIWidget;
 class nsIDeviceContextSpec;
 class nsIAtom;
+class nsRect;
 class gfxUserFontSet;
 class nsRenderingContext;
-
 struct nsFont;
-
-//a cross platform way of specifying a native device context
-typedef void * nsNativeDeviceContext;
-
-/* error codes for printer device contexts */
-#define NS_ERROR_GFX_PRINTER_BASE (1) /* adjustable :-) */
-/* Unix: print command (lp/lpr) not found */
-#define NS_ERROR_GFX_PRINTER_CMD_NOT_FOUND          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+1)
-/* Unix: print command returned an error */  
-#define NS_ERROR_GFX_PRINTER_CMD_FAILURE            \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+2)
-/* no printer available (e.g. cannot find _any_ printer) */
-#define NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE  \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+3)
-/* _specified_ (by name) printer not found */
-#define NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND         \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+4)
-/* access to printer denied */
-#define NS_ERROR_GFX_PRINTER_ACCESS_DENIED          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+5)
-/* invalid printer attribute (for example: unsupported paper size etc.) */
-#define NS_ERROR_GFX_PRINTER_INVALID_ATTRIBUTE      \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+6)
-/* printer not "ready" (offline ?) */
-#define NS_ERROR_GFX_PRINTER_PRINTER_NOT_READY     \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+8)
-/* printer out of paper */
-#define NS_ERROR_GFX_PRINTER_OUT_OF_PAPER           \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+9)
-/* generic printer I/O error */
-#define NS_ERROR_GFX_PRINTER_PRINTER_IO_ERROR       \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+10)
-/* print-to-file: could not open output file */
-#define NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE    \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+11)
-/* print-to-file: I/O error while printing to file */
-#define NS_ERROR_GFX_PRINTER_FILE_IO_ERROR          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+12)
-/* print preview: needs at least one printer */
-#define NS_ERROR_GFX_PRINTER_PRINTPREVIEW          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+13)
-/* print: starting document */
-#define NS_ERROR_GFX_PRINTER_STARTDOC          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+14)
-/* print: ending document */
-#define NS_ERROR_GFX_PRINTER_ENDDOC          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+15)
-/* print: starting page */
-#define NS_ERROR_GFX_PRINTER_STARTPAGE          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+16)
-/* print: ending page */
-#define NS_ERROR_GFX_PRINTER_ENDPAGE          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+17)
-/* print: print while in print preview */
-#define NS_ERROR_GFX_PRINTER_PRINT_WHILE_PREVIEW          \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+18)
-/* requested page size not supported by printer */
-#define NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+19)
-/* requested page orientation not supported */
-#define NS_ERROR_GFX_PRINTER_ORIENTATION_NOT_SUPPORTED \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+20)
-/* requested colorspace not supported (like printing "color" on a "grayscale"-only printer) */
-#define NS_ERROR_GFX_PRINTER_COLORSPACE_NOT_SUPPORTED \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+21)
-/* too many copies requested */
-#define NS_ERROR_GFX_PRINTER_TOO_MANY_COPIES \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+22)
-/* driver configuration error */
-#define NS_ERROR_GFX_PRINTER_DRIVER_CONFIGURATION_ERROR \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+23)
-/* The document is still being loaded, can't Print Preview */
-#define NS_ERROR_GFX_PRINTER_DOC_IS_BUSY_PP \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+24)
-/* The document was asked to be destroyed while we were preparing printing */
-#define NS_ERROR_GFX_PRINTER_DOC_WAS_DESTORYED \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+25)
-/* Cannot Print or Print Preview XUL Documents */
-#define NS_ERROR_GFX_PRINTER_NO_XUL \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+26)
-/* The toolkit no longer supports the Print Dialog (for embedders) */
-#define NS_ERROR_GFX_NO_PRINTDIALOG_IN_TOOLKIT \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+27)
-/* The was wasn't any Print Prompt service registered (this shouldn't happen) */
-#define NS_ERROR_GFX_NO_PRINTROMPTSERVICE \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+28)
-/* requested plex mode not supported by printer */
-#define NS_ERROR_GFX_PRINTER_PLEX_NOT_SUPPORTED \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+29)
-/* The document is still being loaded */
-#define NS_ERROR_GFX_PRINTER_DOC_IS_BUSY \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+30)
-/* Printing is not implemented */
-#define NS_ERROR_GFX_PRINTING_NOT_IMPLEMENTED \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+31)
-/* Cannot load the matching print module */
-#define NS_ERROR_GFX_COULD_NOT_LOAD_PRINT_MODULE \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+32)   
-/* requested resolution/quality mode not supported by printer */
-#define NS_ERROR_GFX_PRINTER_RESOLUTION_NOT_SUPPORTED \
-  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+33)
-      
-/**
- * Conts need for Print Preview
- */
-#ifdef NS_PRINT_PREVIEW
-const PRUint8 kUseAltDCFor_NONE            = 0x00; // Do not use the AltDC for anything
-const PRUint8 kUseAltDCFor_FONTMETRICS     = 0x01; // Use it for only getting the font metrics
-const PRUint8 kUseAltDCFor_CREATERC_REFLOW = 0x02; // Use when creating RenderingContexts for Reflow
-const PRUint8 kUseAltDCFor_CREATERC_PAINT  = 0x04; // Use when creating RenderingContexts for Painting
-const PRUint8 kUseAltDCFor_SURFACE_DIM     = 0x08; // Use it for getting the Surface Dimensions
-#endif
 
 #define NS_IDEVICE_CONTEXT_IID   \
 { 0x30a9d22f, 0x8e51, 0x40af, \
