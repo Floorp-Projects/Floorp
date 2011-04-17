@@ -53,7 +53,6 @@ using mozilla::unused;
 #include "nsWindow.h"
 #include "nsIObserverService.h"
 
-#include "nsIDeviceContext.h"
 #include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"
 

@@ -49,7 +49,6 @@
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
 #include "nsIEventStateManager.h"
-#include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
 #include "nsIScrollPositionListener.h"
 #include "nsDisplayList.h"

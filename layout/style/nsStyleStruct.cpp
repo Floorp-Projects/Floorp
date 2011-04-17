@@ -51,7 +51,6 @@
 #include "nsThemeConstants.h"
 #include "nsString.h"
 #include "nsPresContext.h"
-#include "nsIDeviceContext.h"
 #include "nsIWidget.h"
 #include "nsIStyleRule.h"
 #include "nsCRT.h"

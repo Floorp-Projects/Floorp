@@ -138,7 +138,6 @@
 #include "nsILocalFile.h"
 #include "nsFontMetrics.h"
 #include "nsIFontEnumerator.h"
-#include "nsIDeviceContext.h"
 #include "nsILookAndFeel.h"
 #include "nsGUIEvent.h"
 #include "nsFont.h"

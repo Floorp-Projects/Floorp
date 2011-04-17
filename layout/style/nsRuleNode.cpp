@@ -52,7 +52,6 @@
 #include "nsRuleNode.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
-#include "nsIDeviceContext.h"
 #include "nsIWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
