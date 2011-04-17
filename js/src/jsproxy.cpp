@@ -1159,16 +1159,6 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
     return obj;
 }
 
-static JSObject *
-NonNullObject(JSContext *cx, const Value &v)
-{
-    if (v.isPrimitive()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
-        return NULL;
-    }
-    return &v.toObject();
-}
-
 static JSBool
 proxy_create(JSContext *cx, uintN argc, Value *vp)
 {
