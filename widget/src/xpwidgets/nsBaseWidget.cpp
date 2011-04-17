@@ -210,14 +210,9 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     NS_ADDREF(mContext);
   }
   else {
-    nsresult  res;
-    
-    static NS_DEFINE_CID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    
-    res = CallCreateInstance(kDeviceContextCID, &mContext);
-
-    if (NS_SUCCEEDED(res))
-      mContext->Init(nsnull);
+    mContext = new nsDeviceContext();
+    NS_ADDREF(mContext);
+    mContext->Init(nsnull);
   }
 
   if (nsnull != aInitData) {
