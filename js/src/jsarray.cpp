@@ -1312,8 +1312,6 @@ static JSBool
 array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
                    JSString *sepstr, Value *rval)
 {
-    JS_CHECK_RECURSION(cx, return false);
-
     static const jschar comma = ',';
     const jschar *sep;
     size_t seplen;
@@ -1395,6 +1393,8 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
 static JSBool
 array_toString(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
@@ -1429,6 +1429,8 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 array_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
@@ -1526,6 +1528,8 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
 static JSBool
 array_join(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     JSString *str;
     if (argc == 0 || vp[2].isUndefined()) {
         str = NULL;

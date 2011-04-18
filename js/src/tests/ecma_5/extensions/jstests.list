@@ -9,6 +9,7 @@ script bug352085.js
 script bug472534.js
 script bug496985.js
 script bug566661.js
+script array-toString-recursion.js
 skip-if(!xulRuntime.shell) script cross-global-eval-is-indirect.js # needs newGlobal()
 script eval-native-callback-is-indirect.js
 script extension-methods-reject-null-undefined-this.js
