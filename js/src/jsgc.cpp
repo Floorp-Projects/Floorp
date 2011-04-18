@@ -61,6 +61,7 @@
 #include "jsatom.h"
 #include "jscntxt.h"
 #include "jsversion.h"
+#include "jsdbg.h"
 #include "jsdbgapi.h"
 #include "jsexn.h"
 #include "jsfun.h"
@@ -2372,9 +2373,7 @@ SweepCompartments(JSContext *cx, JSGCInvocationKind gckind)
     while (read < end) {
         JSCompartment *compartment = *read++;
 
-        if (!compartment->hold &&
-            (compartment->arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT))
-        {
+        if (compartment->isAboutToBeCollected(gckind)) {
             JS_ASSERT(compartment->freeLists.isEmpty());
             if (callback)
                 (void) callback(cx, compartment, JSCOMPARTMENT_DESTROY);
@@ -2505,7 +2504,9 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
      */
     while (true) {
         if (!js_TraceWatchPoints(&gcmarker) &&
-            !WeakMap::markIteratively(&gcmarker)) {
+            !WeakMap::markIteratively(&gcmarker) &&
+            !Debug::mark(&gcmarker, comp, gckind))
+        {
             break;
         }
         gcmarker.markDelayedChildren();

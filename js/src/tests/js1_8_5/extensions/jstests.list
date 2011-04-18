@@ -43,3 +43,16 @@ script is-generator.js
 script weakmap.js
 skip-if(!xulRuntime.shell) script debug-object-01.js
 skip-if(!xulRuntime.shell) script debug-object-02.js
+skip-if(!xulRuntime.shell) script debug-object-03.js
+skip-if(!xulRuntime.shell) script debug-object-04.js
+skip-if(!xulRuntime.shell) script debug-object-05.js
+skip-if(!xulRuntime.shell) script debug-object-06.js
+skip-if(!xulRuntime.shell) script debug-object-07.js
+skip-if(!xulRuntime.shell) script debug-object-08.js
+skip-if(!xulRuntime.shell) script debug-object-09.js
+skip-if(!xulRuntime.shell) script debug-object-10.js
+skip-if(!xulRuntime.shell) script debug-object-11.js
+skip-if(!xulRuntime.shell) script debug-object-12.js
+skip-if(!xulRuntime.shell) script debug-object-13.js
+skip-if(!xulRuntime.shell) script debug-object-14.js
+skip-if(!xulRuntime.shell) script debug-object-15.js

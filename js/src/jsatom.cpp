@@ -213,7 +213,10 @@ const char *const js_common_atom_names[] = {
     "keys",                     /* keysAtom                     */
     "iterate",                  /* iterateAtom                  */
 
-    "WeakMap"                   /* WeakMapAtom                  */
+    "WeakMap",                  /* WeakMapAtom                  */
+
+    "return",                   /* returnAtom                   */
+    "throw"                     /* throwAtom                    */
 };
 
 JS_STATIC_ASSERT(JS_ARRAY_LENGTH(js_common_atom_names) * sizeof(JSAtom *) ==
