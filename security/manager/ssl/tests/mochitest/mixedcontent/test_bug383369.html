@@ -48,13 +48,31 @@
     var downloadManager = Components.classes["@mozilla.org/download-manager;1"]
       .getService(Components.interfaces.nsIDownloadManager);
     var theWindow = window;
-    window.setTimeout(function()
-    {
-      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-      downloadManager.cleanUp();
-      theWindow.location = "bug383369step2.html";
-    }, 3000);
-  
+    var observer = {
+      observe: function(subject, topic, data) {
+        switch (topic) {
+        case "dl-done":
+        case "dl-failed":
+        case "dl-blocked":
+        case "dl-dirty":
+          netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+          downloadManager.cleanUp();
+          theWindow.location = "bug383369step2.html";
+          observerService.removeObserver(this, "dl-done");
+          observerService.removeObserver(this, "dl-failed");
+          observerService.removeObserver(this, "dl-blocked");
+          observerService.removeObserver(this, "dl-dirty");
+          break;
+        }
+      }
+    };
+    var observerService = Components.classes["@mozilla.org/observer-service;1"]
+      .getService(Components.interfaces.nsIObserverService);
+    observerService.addObserver(observer, "dl-done", false);
+    observerService.addObserver(observer, "dl-failed", false);
+    observerService.addObserver(observer, "dl-blocked", false);
+    observerService.addObserver(observer, "dl-dirty", false);
+
     window.location = "download.auto";
   }
 
