@@ -51,11 +51,6 @@ endif
 
 DIRS		= external component
 
-# Disabled because manifests make this test difficult to run correctly.
-# ifdef MOZ_ENABLE_LIBXUL
-# DIRS += xptinfo
-# endif
-
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= windows
 endif

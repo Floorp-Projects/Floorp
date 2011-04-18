@@ -43,8 +43,10 @@
 #include "CheckedInt.h"
 #include "nsMathUtils.h"
 
-typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleSetterType)(const nsAString &, nsISupports *);
-typedef nsresult (NS_STDCALL nsIDOMCanvasRenderingContext2D::*CanvasStyleGetterType)(nsAString &, nsISupports **, PRInt32 *);
+typedef NS_STDCALL_FUNCPROTO(nsresult, CanvasStyleSetterType, nsIDOMCanvasRenderingContext2D,
+                             SetStrokeStyle_multi, (const nsAString &, nsISupports *));
+typedef NS_STDCALL_FUNCPROTO(nsresult, CanvasStyleGetterType, nsIDOMCanvasRenderingContext2D,
+                             GetStrokeStyle_multi, (nsAString &, nsISupports **, PRInt32 *));
 
 static JSBool
 Canvas2D_SetStyleHelper(JSContext *cx, JSObject *obj, jsid id, jsval *vp,

@@ -874,7 +874,7 @@
         <xul:vbox flex="1">
           <xul:vbox flex="1">
             <xul:textbox anonid="name" xbl:inherits="value=title" class="prompt-edit" flex="1"/>
-            <xul:textbox anonid="uri" xbl:inherits="value=uri" type="url" class="uri-element" class="prompt-edit" flex="1"/>
+            <xul:textbox anonid="uri" xbl:inherits="value=uri" type="url" class="uri-element prompt-edit" flex="1"/>
             <xul:textbox anonid="tags" xbl:inherits="value=tags" emptytext="&editBookmarkTags.label;" class="prompt-edit" flex="1"/>
           </xul:vbox>
 
