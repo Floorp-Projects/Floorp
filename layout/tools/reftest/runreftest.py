@@ -168,11 +168,14 @@ class RefTest(object):
     "Copy extra files or dirs specified on the command line to the testing profile."
     for f in options.extraProfileFiles:
       abspath = self.getFullPath(f)
-      dest = os.path.join(profileDir, os.path.basename(abspath))
-      if os.path.isdir(abspath):
+      if os.path.isfile(abspath):
+        shutil.copy2(abspath, profileDir)
+      elif os.path.isdir(abspath):
+        dest = os.path.join(profileDir, os.path.basename(abspath))
         shutil.copytree(abspath, dest)
       else:
-        shutil.copy(abspath, dest)
+        self.automation.log.warning("WARNING | runreftest.py | Failed to copy %s to profile", abspath)
+        continue
 
   def installExtensionsToProfile(self, options, profileDir):
     "Install the specified extensions on the command line to the testing profile."
