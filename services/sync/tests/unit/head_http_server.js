@@ -1,3 +1,10 @@
+// Use the same method that record.js does, which mirrors the server.
+// The server returns timestamps with 1/100 sec granularity. Note that this is
+// subject to change: see Bug 650435.
+function new_timestamp() {
+  return Math.round(Date.now() / 10) / 100;
+}
+  
 function httpd_setup (handlers) {
   let server = new nsHttpServer();
   for (let path in handlers) {
@@ -47,6 +54,9 @@ function readBytesFromInputStream(inputStream, count) {
  * Represent a WBO on the server
  */
 function ServerWBO(id, initialPayload) {
+  if (!id) {
+    throw "No ID for ServerWBO!";
+  }
   this.id = id;
   if (!initialPayload) {
     return;
@@ -56,7 +66,7 @@ function ServerWBO(id, initialPayload) {
     initialPayload = JSON.stringify(initialPayload);
   }
   this.payload = initialPayload;
-  this.modified = Date.now() / 1000;
+  this.modified = new_timestamp();
 }
 ServerWBO.prototype = {
 
@@ -65,13 +75,13 @@ ServerWBO.prototype = {
   },
 
   get: function() {
-    return JSON.stringify(this, ['id', 'modified', 'payload']);
+    return JSON.stringify(this, ["id", "modified", "payload"]);
   },
 
   put: function(input) {
     input = JSON.parse(input);
     this.payload = input.payload;
-    this.modified = Date.now() / 1000;
+    this.modified = new_timestamp();
   },
 
   delete: function() {
@@ -105,10 +115,10 @@ ServerWBO.prototype = {
 
         case "DELETE":
           self.delete();
-          body = JSON.stringify(Date.now() / 1000);
+          body = JSON.stringify(new_timestamp());
           break;
       }
-      response.setHeader('X-Weave-Timestamp', ''+Date.now()/1000, false);
+      response.setHeader("X-Weave-Timestamp", "" + new_timestamp(), false);
       response.setStatusLine(request.httpVersion, statusCode, status);
       response.bodyOutputStream.write(body, body.length);
     };
@@ -189,13 +199,13 @@ ServerCollection.prototype = {
       }
       if (wbo) {
         wbo.payload = record.payload;
-        wbo.modified = Date.now() / 1000;
+        wbo.modified = new_timestamp();
         success.push(record.id);
       } else {
         failed[record.id] = "no wbo configured";
       }
     }
-    return {modified: Date.now() / 1000,
+    return {modified: new_timestamp(),
             success: success,
             failed: failed};
   },
@@ -219,11 +229,11 @@ ServerCollection.prototype = {
 
       // Parse queryString
       let options = {};
-      for each (let chunk in request.queryString.split('&')) {
+      for each (let chunk in request.queryString.split("&")) {
         if (!chunk) {
           continue;
         }
-        chunk = chunk.split('=');
+        chunk = chunk.split("=");
         if (chunk.length == 1) {
           options[chunk[0]] = "";
         } else {
@@ -231,7 +241,7 @@ ServerCollection.prototype = {
         }
       }
       if (options.ids) {
-        options.ids = options.ids.split(',');
+        options.ids = options.ids.split(",");
       }
       if (options.newer) {
         options.newer = parseFloat(options.newer);
@@ -252,10 +262,12 @@ ServerCollection.prototype = {
 
         case "DELETE":
           self.delete(options);
-          body = JSON.stringify(Date.now() / 1000);
+          body = JSON.stringify(new_timestamp());
           break;
       }
-      response.setHeader('X-Weave-Timestamp', ''+Date.now()/1000, false);
+      response.setHeader("X-Weave-Timestamp",
+                         "" + new_timestamp(),
+                         false);
       response.setStatusLine(request.httpVersion, statusCode, status);
       response.bodyOutputStream.write(body, body.length);
     };
@@ -268,7 +280,7 @@ ServerCollection.prototype = {
  */
 function sync_httpd_setup(handlers) {
   handlers["/1.1/foo/storage/meta/global"]
-      = (new ServerWBO('global', {})).handler();
+      = (new ServerWBO("global", {})).handler();
   return httpd_setup(handlers);
 }
 
@@ -286,7 +298,7 @@ function track_collections_helper() {
    * Update the timestamp of a collection.
    */
   function update_collection(coll) {
-    let timestamp = Date.now() / 1000;
+    let timestamp = new_timestamp();
     collections[coll] = timestamp;
   }
 
@@ -315,7 +327,9 @@ function track_collections_helper() {
         throw "Non-GET on info_collections.";
     }
         
-    response.setHeader('X-Weave-Timestamp', ''+Date.now()/1000, false);
+    response.setHeader("X-Weave-Timestamp",
+                       "" + new_timestamp(),
+                       false);
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.bodyOutputStream.write(body, body.length);
   }
