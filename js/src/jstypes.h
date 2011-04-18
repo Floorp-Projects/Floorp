@@ -307,9 +307,6 @@
 
 #ifdef _MSC_VER
 # include "jscpucfg.h"  /* We can't auto-detect MSVC configuration */
-# if _MSC_VER < 1400
-#  define NJ_NO_VARIADIC_MACROS
-# endif
 #else
 # include "jsautocfg.h" /* Use auto-detected configuration */
 #endif

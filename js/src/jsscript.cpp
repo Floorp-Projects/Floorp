@@ -1781,6 +1781,22 @@ js_GetScriptLineExtent(JSScript *script)
     return 1 + lineno - script->lineno;
 }
 
+const char *
+js::CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
+{
+    if (!cx->hasfp()) {
+        *linenop = 0;
+        return NULL;
+    }
+
+    JSStackFrame *fp = cx->fp();
+    while (fp->isDummyFrame())
+        fp = fp->prev();
+
+    *linenop = js_FramePCToLineNumber(cx, fp);
+    return fp->script()->filename;
+}
+
 class DisablePrincipalsTranscoding {
     JSSecurityCallbacks *callbacks;
     JSPrincipalsTranscoder temp;
