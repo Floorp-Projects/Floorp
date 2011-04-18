@@ -1,6 +1,0 @@
-LIBRARY	"Setup"
-EXPORTS
-	Install_Init @1
-	Install_Exit @2
-	Uninstall_Init @3
-	Uninstall_Exit @4

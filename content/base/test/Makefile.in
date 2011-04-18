@@ -475,6 +475,7 @@ _TEST_FILES2 = \
 		test_bug604592.html \
 		test_bug628938.html \
 		test_bug626262.html \
+		test_plugin_freezing.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason
@@ -482,9 +483,6 @@ ifneq (,$(filter gtk2 windows,$(MOZ_WIDGET_TOOLKIT)))
 _TEST_FILES2 += 	test_copyimage.html \
 		$(NULL)
 endif
-
-# Disabled; see bug 492181
-#		test_plugin_freezing.html
 
 # Disabled for now. Mochitest isn't reliable enough for these.
 # test_bug444546.html \

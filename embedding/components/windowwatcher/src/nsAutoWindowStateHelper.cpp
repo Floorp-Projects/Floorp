@@ -56,7 +56,7 @@ nsAutoWindowStateHelper::nsAutoWindowStateHelper(nsIDOMWindow *aWindow)
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(aWindow));
 
   if (window) {
-    window->EnterModalState();
+    mCallerWindow = window->EnterModalState();
   }
 }
 
@@ -65,7 +65,7 @@ nsAutoWindowStateHelper::~nsAutoWindowStateHelper()
   nsCOMPtr<nsPIDOMWindow> window(do_QueryInterface(mWindow));
 
   if (window) {
-    window->LeaveModalState(nsnull);
+    window->LeaveModalState(mCallerWindow);
   }
 
   if (mDefaultEnabled) {

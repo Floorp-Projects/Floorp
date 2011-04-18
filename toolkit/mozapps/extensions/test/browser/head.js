@@ -326,6 +326,17 @@ function get_string(aName) {
   return bundle.formatStringFromName(aName, args, args.length);
 }
 
+function formatDate(aDate) {
+  return Cc["@mozilla.org/intl/scriptabledateformat;1"]
+           .getService(Ci.nsIScriptableDateFormat)
+           .FormatDate("",
+                       Ci.nsIScriptableDateFormat.dateFormatLong,
+                       aDate.getFullYear(),
+                       aDate.getMonth() + 1,
+                       aDate.getDate()
+                       );
+}
+
 function is_hidden(aElement) {
   var style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, "");
   if (style.display == "none")

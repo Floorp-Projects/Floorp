@@ -20,7 +20,7 @@
  *
  * Contributor(s):
  *  Bob Moss <bmoss@mozilla.com>
- * 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -45,52 +45,52 @@ import android.os.Looper;
 import android.os.Message;
 
 class AlertLooperThread extends Thread
-	{
-	public Handler mHandler;
-	private Looper looper = null;
-	private DoAlert da	= null;
-	private Timer alertTimer = null;
-	private ContextWrapper contextWrapper = null;
-	
-	AlertLooperThread(ContextWrapper ctxW)
-		{
-		this.contextWrapper = ctxW;
-		}
-	
-	public Timer getAlertTimer()
-		{
-		return alertTimer;
-		}
+    {
+    public Handler mHandler;
+    private Looper looper = null;
+    private DoAlert da    = null;
+    private Timer alertTimer = null;
+    private ContextWrapper contextWrapper = null;
 
-	public void term()
-		{
-		if (da != null)
-			da.term();
-		}
+    AlertLooperThread(ContextWrapper ctxW)
+        {
+        this.contextWrapper = ctxW;
+        }
 
-	public void quit()
-		{
-		if (looper != null)
-			looper.quit();
-		}
+    public Timer getAlertTimer()
+        {
+        return alertTimer;
+        }
 
-	public void run()
-		{
-		Looper.prepare();
-    
-		looper = Looper.myLooper();
-      
-		mHandler = new Handler()
-    		{
-			public void handleMessage(Message msg)
-        		{
-				// process incoming messages here
-        		}
-    		};
-      
-    	alertTimer = new Timer();
-    	da = new DoAlert(contextWrapper);
-    	alertTimer.scheduleAtFixedRate(da, 0, 5000);
-    	Looper.loop();
-		}
-	}
+    public void term()
+        {
+        if (da != null)
+            da.term();
+        }
+
+    public void quit()
+        {
+        if (looper != null)
+            looper.quit();
+        }
+
+    public void run()
+        {
+        Looper.prepare();
+
+        looper = Looper.myLooper();
+
+        mHandler = new Handler()
+            {
+            public void handleMessage(Message msg)
+                {
+                // process incoming messages here
+                }
+            };
+
+        alertTimer = new Timer();
+        da = new DoAlert(contextWrapper);
+        alertTimer.scheduleAtFixedRate(da, 0, 5000);
+        Looper.loop();
+        }
+    }

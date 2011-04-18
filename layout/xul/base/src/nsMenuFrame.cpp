@@ -832,7 +832,7 @@ nsMenuFrame::SetDebug(nsBoxLayoutState& aState, nsIFrame* aList, PRBool aDebug)
 // In either case, do nothing if the item is disabled.
 //
 nsMenuFrame*
-nsMenuFrame::Enter()
+nsMenuFrame::Enter(nsGUIEvent *aEvent)
 {
   if (IsDisabled()) {
 #ifdef XP_WIN
@@ -853,7 +853,7 @@ nsMenuFrame::Enter()
   if (!IsOpen()) {
     // The enter key press applies to us.
     if (!IsMenu() && mMenuParent)
-      Execute(0);          // Execute our event handler
+      Execute(aEvent);          // Execute our event handler
     else
       return this;
   }

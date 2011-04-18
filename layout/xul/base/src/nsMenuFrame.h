@@ -174,7 +174,7 @@ public:
   // one in its parent popup. This will carry out the command attached to
   // the menuitem. If the menu should be opened, this frame will be returned,
   // otherwise null will be returned.
-  nsMenuFrame* Enter();
+  nsMenuFrame* Enter(nsGUIEvent* aEvent);
 
   virtual void SetParent(nsIFrame* aParent);
 

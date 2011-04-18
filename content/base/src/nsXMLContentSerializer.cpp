@@ -1319,7 +1319,8 @@ void
 nsXMLContentSerializer::IncrIndentation(nsIAtom* aName)
 {
   // we want to keep the source readable
-  if(mDoWrap && mIndent.Length() >= mMaxColumn - MIN_INDENTED_LINE_LENGTH) {
+  if (mDoWrap &&
+      mIndent.Length() >= PRUint32(mMaxColumn) - MIN_INDENTED_LINE_LENGTH) {
     ++mIndentOverflow;
   }
   else {
@@ -1658,7 +1659,7 @@ nsXMLContentSerializer::AppendToStringFormatedWrapped(const nsASingleFragmentStr
   PRBool mayIgnoreStartOfLineWhitespaceSequence =
     (!mColPos || (mIsIndentationAddedOnCurrentLine &&
                   sequenceStartAfterAWhitespace &&
-                  mColPos == mIndent.Length()));
+                  PRUint32(mColPos) == mIndent.Length()));
 
   while (pos < end) {
     sequenceStart = pos;

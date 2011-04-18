@@ -7,18 +7,13 @@ const PR_RDONLY = 0x1;  // see prio.h
 
 const special_type = "application/x-our-special-type";
 
-var test_index = 0;
-var test_array = [
+[
   test_read_file,
   test_read_dir_1,
   test_read_dir_2,
   test_upload_file,
   do_test_finished
-];
-
-function run_next_test() {
-  test_array[test_index++]();
-}
+].forEach(add_test);
 
 function getFile(key) {
   var dirSvc = Components.classes["@mozilla.org/file/directory_service;1"]
@@ -228,6 +223,5 @@ function test_upload_file() {
 }
 
 function run_test() {
-  do_test_pending();
   run_next_test();
 }

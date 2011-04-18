@@ -15,7 +15,7 @@ import sys
 import datetime
 import shutil
 from optparse import OptionParser
-from build.util import check_call
+from subprocess import check_call
 
 topsrcdir = os.path.dirname(__file__)
 if topsrcdir == '':

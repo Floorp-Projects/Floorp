@@ -100,12 +100,12 @@ NS_HandleScriptError(nsIScriptGlobalObject *aScriptGlobal,
 
 
 #define NS_ISCRIPTGLOBALOBJECT_IID \
-{ 0xe9f3f2c1, 0x2d94, 0x4722, \
-  { 0xbb, 0xd4, 0x2b, 0xf6, 0xfd, 0xf4, 0x2f, 0x48 } }
+{ 0x4eb16819, 0x4e81, 0x406e, \
+  { 0x93, 0x05, 0x6f, 0x30, 0xfc, 0xd2, 0x62, 0x4a } }
 
 /**
-  * The global object which keeps a script context for each supported script
-  * language. This often used to store per-window global state.
+ * The global object which keeps a script context for each supported script
+ * language. This often used to store per-window global state.
  */
 
 class nsIScriptGlobalObject : public nsISupports
@@ -156,8 +156,7 @@ public:
    * After this call, the passed object is dead - which should generally be the
    * same object the global is using for a global for that language.
    */
-
-  virtual void OnFinalize(PRUint32 aLangID, void *aScriptGlobal) = 0;
+  virtual void OnFinalize(JSObject* aObject) = 0;
 
   /**
    * Called to enable/disable scripts.

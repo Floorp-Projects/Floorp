@@ -83,7 +83,7 @@ struct nsRect;
 
 class imgIRequest;
 
-class nsIFontMetrics;
+class nsFontMetrics;
 class nsIFrame;
 class nsFrameManager;
 class nsILinkHandler;
@@ -109,7 +109,7 @@ class nsRefreshDriver;
 class imgIContainer;
 
 #ifdef MOZ_REFLOW_PERF
-class nsIRenderingContext;
+class nsRenderingContext;
 #endif
 
 enum nsWidgetType {
@@ -328,7 +328,7 @@ public:
    * (which is used from media query matching, which is in turn called
    * when building the user font set).
    */
-  NS_HIDDEN_(already_AddRefed<nsIFontMetrics>)
+  NS_HIDDEN_(already_AddRefed<nsFontMetrics>)
   GetMetricsFor(const nsFont& aFont, PRBool aUseUserFontSet = PR_TRUE);
 
   /**

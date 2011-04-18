@@ -42,6 +42,9 @@
 #define GLCONTEXT_H_
 
 #include <stdio.h>
+#if defined(XP_UNIX)
+#include <stdint.h>
+#endif
 #include <string.h>
 #include <ctype.h>
 

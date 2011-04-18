@@ -104,7 +104,7 @@ HTTP(..) == load-badfullname.html load-badfullname-ref.html
 HTTP(..) != 507960-1-nofont.html 507960-1-ref.html
 # check that the WOFF version loads, with and without a format hint
 HTTP(..) == 507960-1-woff.html 507960-1-ref.html
-fails-if(Android) HTTP(..) == 507960-1-woff-hint.html 507960-1-ref.html
+HTTP(..) == 507960-1-woff-hint.html 507960-1-ref.html
 # try damaged fonts that should still load (bad checksums)
 HTTP(..) == 507960-1-bad-checksums-ttf.html 507960-1-ref.html
 HTTP(..) == 507960-1-bad-checksums-woff.html 507960-1-ref.html

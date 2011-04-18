@@ -74,8 +74,6 @@ LSPAnnotationGatherer::Annotate()
   PRBool enabled;
   if (cr && NS_SUCCEEDED(cr->GetEnabled(&enabled)) && enabled) {
     cr->AnnotateCrashReport(NS_LITERAL_CSTRING("Winsock_LSP"), mString);
-    nsCString note = NS_LITERAL_CSTRING("Winsock LSPs: ");
-    note.Append(mString);
   }
   mThread->Shutdown();
 }

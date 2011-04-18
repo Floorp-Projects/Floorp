@@ -85,7 +85,6 @@ JSValIsInterfaceOfType(JSContext *cx, jsval v, REFNSIID iid)
     return JS_FALSE;
 }
 
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 char* xpc_CloneAllAccess()
 {
     static const char allAccess[] = "AllAccess";
@@ -103,7 +102,6 @@ char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 
     return nsnull;
 }
-#endif
 
 /***************************************************************************/
 
@@ -112,10 +110,7 @@ char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[])
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-    ++count;
-#endif
+    const PRUint32 count = 3;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -133,9 +128,7 @@ nsXPCComponents_Interfaces::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PUSH_IID(nsIScriptableInterfaces)
     PUSH_IID(nsIXPCScriptable)
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     PUSH_IID(nsISecurityCheckedComponent)
-#endif
 #undef PUSH_IID
 
     return NS_OK;
@@ -233,9 +226,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Interfaces)
   NS_INTERFACE_MAP_ENTRY(nsIScriptableInterfaces)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
-#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptableInterfaces)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -379,7 +370,6 @@ nsXPCComponents_Interfaces::NewResolve(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::CanCreateWrapper(const nsIID * iid, char **_retval)
@@ -415,7 +405,6 @@ nsXPCComponents_Interfaces::CanSetProperty(const nsIID * iid, const PRUnichar *p
     *_retval = nsnull;
     return NS_OK;
 }
-#endif
 
 /***************************************************************************/
 /***************************************************************************/
@@ -424,10 +413,8 @@ nsXPCComponents_Interfaces::CanSetProperty(const nsIID * iid, const PRUnichar *p
 class nsXPCComponents_InterfacesByID :
             public nsIScriptableInterfacesByID,
             public nsIXPCScriptable,
-            public nsIClassInfo
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-          , public nsISecurityCheckedComponent
-#endif
+            public nsIClassInfo,
+            public nsISecurityCheckedComponent
 {
 public:
     // all the interface method declarations...
@@ -435,9 +422,7 @@ public:
     NS_DECL_NSISCRIPTABLEINTERFACESBYID
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
-#endif
 
 public:
     nsXPCComponents_InterfacesByID();
@@ -453,10 +438,7 @@ private:
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-    ++count;
-#endif
+    const PRUint32 count = 3;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -474,9 +456,7 @@ nsXPCComponents_InterfacesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray
 
     PUSH_IID(nsIScriptableInterfacesByID)
     PUSH_IID(nsIXPCScriptable)
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     PUSH_IID(nsISecurityCheckedComponent)
-#endif
 #undef PUSH_IID
 
     return NS_OK;
@@ -560,9 +540,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents_InterfacesByID)
   NS_INTERFACE_MAP_ENTRY(nsIScriptableInterfacesByID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
-#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptableInterfacesByID)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -716,7 +694,6 @@ nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     return NS_OK;
 }
 
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsXPCComponents_InterfacesByID::CanCreateWrapper(const nsIID * iid, char **_retval)
@@ -752,7 +729,6 @@ nsXPCComponents_InterfacesByID::CanSetProperty(const nsIID * iid, const PRUnicha
     *_retval = nsnull;
     return NS_OK;
 }
-#endif
 
 /***************************************************************************/
 /***************************************************************************/
@@ -783,7 +759,7 @@ public:
 NS_IMETHODIMP 
 nsXPCComponents_Classes::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
+    const PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -1035,7 +1011,7 @@ public:
 NS_IMETHODIMP 
 nsXPCComponents_ClassesByID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
+    const PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -1306,7 +1282,7 @@ public:
 NS_IMETHODIMP 
 nsXPCComponents_Results::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
+    const PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -1535,7 +1511,7 @@ private:
 NS_IMETHODIMP 
 nsXPCComponents_ID::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
+    const PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -1763,7 +1739,7 @@ private:
 NS_IMETHODIMP 
 nsXPCComponents_Exception::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
+    const PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -2058,7 +2034,7 @@ private:
 NS_IMETHODIMP 
 nsXPCConstructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
+    const PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -2324,7 +2300,7 @@ private:
 NS_IMETHODIMP 
 nsXPCComponents_Constructor::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
+    const PRUint32 count = 2;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -2659,18 +2635,14 @@ private:
 
 class nsXPCComponents_Utils :
             public nsIXPCComponents_Utils,
-            public nsIXPCScriptable
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-          , public nsISecurityCheckedComponent
-#endif
+            public nsIXPCScriptable,
+            public nsISecurityCheckedComponent
 {
 public:
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCSCRIPTABLE
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
-#endif
     NS_DECL_NSIXPCCOMPONENTS_UTILS
 
 public:
@@ -2684,9 +2656,7 @@ private:
 NS_INTERFACE_MAP_BEGIN(nsXPCComponents_Utils)
   NS_INTERFACE_MAP_ENTRY(nsIXPCComponents_Utils)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
-#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents_Utils)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -2963,7 +2933,6 @@ nsXPCComponents_Utils::ReportError()
     return NS_OK;
 }
 
-#ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
@@ -3125,8 +3094,6 @@ static JSFunctionSpec SandboxFunctions[] = {
     {nsnull,nsnull,0,0}
 };
 
-#endif /* !XPCONNECT_STANDALONE */
-
 /***************************************************************************/
 nsXPCComponents_utils_Sandbox::nsXPCComponents_utils_Sandbox()
 {
@@ -3152,8 +3119,6 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_utils_Sandbox)
 #define                             XPC_MAP_WANT_CONSTRUCT
 #define XPC_MAP_FLAGS               0
 #include "xpc_map_end.h" /* This #undef's the above. */
-
-#ifndef XPCONNECT_STANDALONE
 
 static bool
 WrapForSandbox(JSContext *cx, bool wantXrays, jsval *vp)
@@ -3263,7 +3228,6 @@ xpc_CreateSandboxObject(JSContext * cx, jsval * vp, nsISupports *prinOrSop, JSOb
 
     return NS_OK;
 }
-#endif /* !XPCONNECT_STANDALONE */
 
 /* PRBool call(in nsIXPConnectWrappedNative wrapper,
                in JSContextPtr cx,
@@ -3310,9 +3274,6 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
                                                PRUint32 argc, jsval * argv,
                                                jsval * vp, PRBool *_retval)
 {
-#ifdef XPCONNECT_STANDALONE
-    return NS_ERROR_NOT_AVAILABLE;
-#else /* XPCONNECT_STANDALONE */
     if (argc < 1)
         return ThrowAndFail(NS_ERROR_XPC_NOT_ENOUGH_ARGS, cx, _retval);
 
@@ -3418,7 +3379,6 @@ nsXPCComponents_utils_Sandbox::CallOrConstruct(nsIXPConnectWrappedNative *wrappe
     *_retval = PR_TRUE;
 
     return rv;
-#endif /* XPCONNECT_STANDALONE */
 }
 
 class ContextHolder : public nsISupports
@@ -3486,9 +3446,6 @@ ContextHolder::ContextHolderOperationCallback(JSContext *cx)
 NS_IMETHODIMP
 nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
 {
-#ifdef XPCONNECT_STANDALONE
-    return NS_ERROR_NOT_AVAILABLE;
-#else /* XPCONNECT_STANDALONE */
     nsresult rv;
 
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
@@ -3578,10 +3535,8 @@ nsXPCComponents_Utils::EvalInSandbox(const nsAString &source)
         cc->SetReturnValueWasSet(PR_TRUE);
 
     return rv;
-#endif /* XPCONNECT_STANDALONE */
 }
 
-#ifndef XPCONNECT_STANDALONE
 nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
@@ -3756,7 +3711,6 @@ xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
 
     return rv;
 }
-#endif /* !XPCONNECT_STANDALONE */
 
 /* JSObject import (in AUTF8String registryLocation,
  *                  [optional] in JSObject targetObj);
@@ -3865,7 +3819,6 @@ nsXPCComponents_Utils::GetGlobalForObject()
   return NS_OK;
 }
 
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::CanCreateWrapper(const nsIID * iid, char **_retval)
@@ -3900,7 +3853,6 @@ nsXPCComponents_Utils::CanSetProperty(const nsIID * iid, const PRUnichar *proper
     *_retval = nsnull;
     return NS_OK;
 }
-#endif
 
 /***************************************************************************/
 /***************************************************************************/
@@ -3913,9 +3865,7 @@ NS_INTERFACE_MAP_BEGIN(nsXPCComponents)
   NS_INTERFACE_MAP_ENTRY(nsIXPCComponents)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
   NS_INTERFACE_MAP_ENTRY(nsIClassInfo)
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
-#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIXPCComponents)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -3927,10 +3877,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents)
 NS_IMETHODIMP 
 nsXPCComponents::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 {
-    PRUint32 count = 2;
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-    ++count;
-#endif
+    const PRUint32 count = 3;
     *aCount = count;
     nsIID **array;
     *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
@@ -3948,9 +3895,7 @@ nsXPCComponents::GetInterfaces(PRUint32 *aCount, nsIID * **aArray)
 
     PUSH_IID(nsIXPCComponents)
     PUSH_IID(nsIXPCScriptable)
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     PUSH_IID(nsISecurityCheckedComponent)
-#endif
 #undef PUSH_IID
 
     return NS_OK;
@@ -4273,7 +4218,6 @@ NS_IMETHODIMP nsXPCComponents::ReportError()
     return utils->ReportError();
 }
 
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsXPCComponents::CanCreateWrapper(const nsIID * iid, char **_retval)
@@ -4309,4 +4253,3 @@ nsXPCComponents::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName
     *_retval = nsnull;
     return NS_OK;
 }
-#endif

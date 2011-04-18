@@ -35,10 +35,10 @@ document.addEventListener('readystatechange', function(event) {
 window.addEventListener('readystatechange', function(event) {
   ok(false, 'window listener', 'readystatechange event should not bubble to window');
 }, false);
-setTimeout(function() {
+addLoadEvent(function() {
   is(i, states.length, 'readystatechange event count');
   SimpleTest.finish();
-}, 1000);
+});
 
 </script>
 </pre>

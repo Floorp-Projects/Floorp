@@ -104,8 +104,8 @@ private:
 
   // Returns PR_TRUE if we should decode up to the seek target rather than
   // seeking to the target using a bisection search or index-assisted seek.
-  // We should do this if the seek target (aTarget, in ms), lies not too far
-  // ahead of the current playback position (aCurrentTime, in ms).
+  // We should do this if the seek target (aTarget, in usecs), lies not too far
+  // ahead of the current playback position (aCurrentTime, in usecs).
   PRBool CanDecodeToTarget(PRInt64 aTarget,
                            PRInt64 aCurrentTime);
 
@@ -152,10 +152,10 @@ private:
     }
 
     PRInt64 mOffsetStart, mOffsetEnd; // in bytes.
-    PRInt64 mTimeStart, mTimeEnd; // in ms.
+    PRInt64 mTimeStart, mTimeEnd; // in usecs.
   };
 
-  // Seeks to aTarget ms in the buffered range aRange using bisection search,
+  // Seeks to aTarget usecs in the buffered range aRange using bisection search,
   // or to the keyframe prior to aTarget if we have video. aStartTime must be
   // the presentation time at the start of media, and aEndTime the time at
   // end of media. aRanges must be the time/byte ranges buffered in the media
@@ -166,7 +166,7 @@ private:
                                const nsTArray<SeekRange>& aRanges,
                                const SeekRange& aRange);
 
-  // Seeks to before aTarget ms in media using bisection search. If the media
+  // Seeks to before aTarget usecs in media using bisection search. If the media
   // has video, this will seek to before the keyframe required to render the
   // media at aTarget. Will use aRanges in order to narrow the bisection
   // search space. aStartTime must be the presentation time at the start of
@@ -208,11 +208,11 @@ private:
   PRBool ReadOggPacket(nsOggCodecState* aCodecState, ogg_packet* aPacket);
 
   // Performs a seek bisection to move the media stream's read cursor to the
-  // last ogg page boundary which has end time before aTarget ms on both the
+  // last ogg page boundary which has end time before aTarget usecs on both the
   // Theora and Vorbis bitstreams. Limits its search to data inside aRange;
   // i.e. it will only read inside of the aRange's start and end offsets.
-  // aFuzz is the number of ms of leniency we'll allow; we'll terminate the
-  // seek when we land in the range (aTime - aFuzz, aTime) ms.
+  // aFuzz is the number of usecs of leniency we'll allow; we'll terminate the
+  // seek when we land in the range (aTime - aFuzz, aTime) usecs.
   nsresult SeekBisection(PRInt64 aTarget,
                          const SeekRange& aRange,
                          PRUint32 aFuzz);
@@ -228,7 +228,7 @@ private:
   nsresult GetSeekRanges(nsTArray<SeekRange>& aRanges);
 
   // Returns the range in which you should perform a seek bisection if
-  // you wish to seek to aTarget ms, given the known (buffered) byte ranges
+  // you wish to seek to aTarget usecs, given the known (buffered) byte ranges
   // in aRanges. If aExact is PR_TRUE, we only return an exact copy of a
   // range in which aTarget lies, or a null range if aTarget isn't contained
   // in any of the (buffered) ranges. Otherwise, when aExact is PR_FALSE,
@@ -282,6 +282,11 @@ private:
 
   // The granulepos of the last decoded Vorbis sample.
   PRInt64 mVorbisGranulepos;
+
+  // The offset of the first non-header page in the file, in bytes.
+  // Used to seek to the start of the media, and to prevent us trying to
+  // decode pages before this offset (the header pages) as content pages.
+  PRInt64 mDataOffset;
 };
 
 #endif

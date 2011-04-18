@@ -63,11 +63,7 @@ var CI = Components.interfaces;
 var prefs =
   CC["@mozilla.org/preferences-service;1"].getService(CI.nsIPrefBranch);
 
-try {
-    prefs.clearUserPref('font.minimum-size.x-western');
-} catch (ex) {
-    // throws if it wasn't already set
-}
+prefs.clearUserPref('font.minimum-size.x-western');
 
 // preference change is async (although one setTimeout might be enough?)
 setTimeout(setTimeout, 0, step1, 0);

@@ -7,7 +7,7 @@
 
 const TEST_URL = "http://www.example.com/";
 
-let gTests = [
+[
 
   function test_no_bookmark() {
     PlacesUtils.asyncGetBookmarkIds(TEST_URL, function (aItemIds, aURI) {
@@ -79,7 +79,7 @@ let gTests = [
     }, this);
   },
 
-];
+].forEach(add_test);
 
 function run_test() {
   run_next_test();

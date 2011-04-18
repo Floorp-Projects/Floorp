@@ -39,11 +39,9 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(95cd5ad4-ae8a-4f0e-b168-35e03d5e0b9a)]
+[scriptable, uuid(386e9eee-1f06-40a6-a1a7-ed986646b793)]
 interface nsIDOMNSHTMLDocument : nsISupports
 {
-  readonly attribute long                 width;
-  readonly attribute long                 height;
            attribute DOMString            alinkColor;
            attribute DOMString            linkColor;
            attribute DOMString            vlinkColor;

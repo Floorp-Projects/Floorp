@@ -88,8 +88,8 @@ public:
   NS_IMETHOD SetInitialChildList(nsIAtom*        aListName,
                                  nsFrameList&    aChildList);
 
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
 
   NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -238,7 +238,7 @@ public:
    * @param aPt the offset of this frame, relative to the rendering reference
    * frame
    */
-  void PaintFocus(nsIRenderingContext& aRC, nsPoint aPt);
+  void PaintFocus(nsRenderingContext& aRC, nsPoint aPt);
   /**
    * If this frame IsFocused(), invalidates an area that includes anything
    * that PaintFocus will or could have painted --- basically the whole

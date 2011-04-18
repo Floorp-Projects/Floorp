@@ -71,10 +71,10 @@ const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Position = 4;
 const PRInt32 nsNavBookmarks::kFindBookmarksIndex_Title = 5;
 
 // These columns sit to the right of the kGetInfoIndex_* columns.
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 13;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_Type = 14;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_PlaceID = 15;
-const PRInt32 nsNavBookmarks::kGetChildrenIndex_ServiceContractId = 16;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_Position = 14;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_Type = 15;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_PlaceID = 16;
+const PRInt32 nsNavBookmarks::kGetChildrenIndex_ServiceContractId = 17;
 
 const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_ID = 0;
 const PRInt32 nsNavBookmarks::kGetItemPropertiesIndex_URI = 1;
@@ -315,7 +315,7 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   RETURN_IF_STMT(mDBGetChildren, NS_LITERAL_CSTRING(
     "SELECT h.id, h.url, IFNULL(b.title, h.title), h.rev_host, h.visit_count, "
            "h.last_visit_date, f.url, null, b.id, b.dateAdded, b.lastModified, "
-           "b.parent, null, b.position, b.type, b.fk, b.folder_type "
+           "b.parent, null, h.frecency, b.position, b.type, b.fk, b.folder_type "
     "FROM moz_bookmarks b "
     "LEFT JOIN moz_places h ON b.fk = h.id "
     "LEFT JOIN moz_favicons f ON h.favicon_id = f.id "

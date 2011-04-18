@@ -1254,7 +1254,7 @@ nsXBLBinding::DoInitJSClass(JSContext *cx, JSObject *global, JSObject *obj,
 {
   // First ensure our JS class is initialized.
   jsval val;
-  JSObject* proto;
+  JSObject* proto = NULL;
 
   nsCAutoString className(aClassName);
   JSObject* parent_proto = nsnull;  // If we have an "obj" we can set this

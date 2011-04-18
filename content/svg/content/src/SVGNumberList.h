@@ -139,14 +139,14 @@ private:
   }
 
   void ReplaceItem(PRUint32 aIndex, const float &aNumber) {
-    NS_ASSERTION(aIndex < mNumbers.Length(),
-                 "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mNumbers.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mNumbers[aIndex] = aNumber;
   }
 
   void RemoveItem(PRUint32 aIndex) {
-    NS_ASSERTION(aIndex < mNumbers.Length(),
-                 "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mNumbers.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mNumbers.RemoveElementAt(aIndex);
   }
 

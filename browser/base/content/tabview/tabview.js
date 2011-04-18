@@ -33,6 +33,7 @@ var gWindow = window.parent;
 var gBrowser = gWindow.gBrowser;
 var gTabView = gWindow.TabView;
 var gTabViewDeck = gWindow.document.getElementById("tab-view-deck");
+var gBrowserPanel = gWindow.document.getElementById("browser-panel");
 var gTabViewFrame = gWindow.document.getElementById("tab-view");
 
 # NB: Certain files need to evaluate before others

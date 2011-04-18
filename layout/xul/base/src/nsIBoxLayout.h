@@ -43,7 +43,7 @@
 
 class nsBoxLayout;
 class nsBoxLayoutState;
-class nsIRenderingContext;
+class nsRenderingContext;
 struct nsRect;
 
 // 6a529924-c73d-4fae-af7a-0e8084e701d5

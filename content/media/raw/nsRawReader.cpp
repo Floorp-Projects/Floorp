@@ -129,7 +129,7 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
   if (length != -1) {
     mozilla::MonitorAutoExit autoExitMonitor(mMonitor);
     mozilla::MonitorAutoEnter autoMonitor(mDecoder->GetMonitor());
-    mDecoder->GetStateMachine()->SetDuration(1000 *
+    mDecoder->GetStateMachine()->SetDuration(USECS_PER_S *
                                            (length - sizeof(nsRawVideoHeader)) /
                                            (mFrameSize * mFrameRate));
   }
@@ -184,7 +184,7 @@ PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   if (!mFrameSize)
     return PR_FALSE; // Metadata read failed.  We should refuse to play.
 
-  PRInt64 currentFrameTime = 1000 * mCurrentFrame / mFrameRate;
+  PRInt64 currentFrameTime = USECS_PER_S * mCurrentFrame / mFrameRate;
   PRUint32 length = mFrameSize - sizeof(nsRawPacketHeader);
 
   nsAutoArrayPtr<PRUint8> buffer(new PRUint8[length]);
@@ -212,7 +212,7 @@ PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
       break;
 
     mCurrentFrame++;
-    currentFrameTime += 1000.0 / mFrameRate;
+    currentFrameTime += static_cast<double>(USECS_PER_S) / mFrameRate;
   }
 
   VideoData::YCbCrBuffer b;
@@ -237,7 +237,7 @@ PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                    mDecoder->GetImageContainer(),
                                    -1,
                                    currentFrameTime,
-                                   currentFrameTime + (1000 / mFrameRate),
+                                   currentFrameTime + (USECS_PER_S / mFrameRate),
                                    b,
                                    1, // In raw video every frame is a keyframe
                                    -1);
@@ -247,7 +247,7 @@ PRBool nsRawReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
   mVideoQueue.Push(v);
   mCurrentFrame++;
   decoded++;
-  currentFrameTime += 1000 / mFrameRate;
+  currentFrameTime += USECS_PER_S / mFrameRate;
 
   return PR_TRUE;
 }
@@ -264,7 +264,7 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
   PRUint32 frame = mCurrentFrame;
   if (aTime >= UINT_MAX)
     return NS_ERROR_FAILURE;
-  mCurrentFrame = aTime * mFrameRate / 1000;
+  mCurrentFrame = aTime * mFrameRate / USECS_PER_S;
 
   PRUint32 offset;
   if (!MulOverflow32(mCurrentFrame, mFrameSize, offset))

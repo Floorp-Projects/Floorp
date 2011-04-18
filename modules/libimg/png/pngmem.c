@@ -1,8 +1,8 @@
 
 /* pngmem.c - stub functions for memory allocation
  *
- * Last changed in libpng 1.4.2 [May 6, 2010]
- * Copyright (c) 1998-2010 Glenn Randers-Pehrson
+ * Last changed in libpng 1.4.6 [April 10, 2011]
+ * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -601,7 +601,7 @@ png_set_mem_fn(png_structp png_ptr, png_voidp mem_ptr, png_malloc_ptr
  * pointer before png_write_destroy and png_read_destroy are called.
  */
 png_voidp PNGAPI
-png_get_mem_ptr(png_structp png_ptr)
+png_get_mem_ptr(png_const_structp png_ptr)
 {
    if (png_ptr == NULL)
       return (NULL);

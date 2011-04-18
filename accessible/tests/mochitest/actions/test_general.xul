@@ -29,7 +29,12 @@
         {
           ID: "menu",
           actionName: "click",
-          events: CLICK_EVENTS
+          events: CLICK_EVENTS,
+          // Wait for focus event, it guarantees us the submenu tree is created,
+          // that's necessary for next test.
+          eventSeq: [
+            new invokerChecker(EVENT_FOCUS, getNode("menu"))
+          ]
         },
         {
           ID: "submenu",

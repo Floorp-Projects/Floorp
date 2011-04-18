@@ -130,6 +130,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsIDeviceContextSpec.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
+#include "nsRenderingContext.h"
 
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
@@ -2083,7 +2084,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
         fprintf(fd, "Title: %s\n", docStr?docStr:"");
         fprintf(fd, "URL:   %s\n", urlStr?urlStr:"");
         fprintf(fd, "--------------- Frames ----------------\n");
-        nsCOMPtr<nsIRenderingContext> renderingContext;
+        nsRefPtr<nsRenderingContext> renderingContext;
         mPrt->mPrintDocDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
         RootFrameList(aPO->mPresContext, fd, 0);
         //DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
@@ -2334,8 +2335,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
 
         poPresContext->SetIsRenderingOnlySelection(PR_TRUE);
         // temporarily creating rendering context
-        // which is needed to dinf the selection frames
-        nsCOMPtr<nsIRenderingContext> rc;
+        // which is needed to find the selection frames
+        nsRefPtr<nsRenderingContext> rc;
         mPrt->mPrintDC->CreateRenderingContext(*getter_AddRefs(rc));
 
         // find the starting and ending page numbers
@@ -2563,7 +2564,7 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
  */
 nsresult 
 nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
-                                           nsIRenderingContext& aRC,
+                                           nsRenderingContext& aRC,
                                            nsIAtom*        aList,
                                            nsIFrame *      aParentFrame,
                                            nsRect&         aRect,
@@ -2607,7 +2608,7 @@ nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
 // Find the Frame that is XMost
 nsresult 
 nsPrintEngine::FindSelectionBounds(nsPresContext* aPresContext,
-                                   nsIRenderingContext& aRC,
+                                   nsRenderingContext& aRC,
                                    nsIFrame *      aParentFrame,
                                    nsRect&         aRect,
                                    nsIFrame *&     aStartFrame,
@@ -2638,7 +2639,7 @@ nsPrintEngine::FindSelectionBounds(nsPresContext* aPresContext,
 nsresult 
 nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
                                         nsPresContext*       aPresContext,
-                                        nsIRenderingContext&  aRC,
+                                        nsRenderingContext&  aRC,
                                         nsISelection*         aSelection,
                                         nsIPageSequenceFrame* aPageSeqFrame,
                                         nsIFrame**            aStartFrame,
@@ -3491,7 +3492,7 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
  */
 static void DumpFrames(FILE*                 out,
                        nsPresContext*       aPresContext,
-                       nsIRenderingContext * aRendContext,
+                       nsRenderingContext * aRendContext,
                        nsIFrame *            aFrame,
                        PRInt32               aLevel)
 {
@@ -3597,7 +3598,7 @@ void DumpLayoutData(char*              aTitleStr,
     fprintf(fd, "URL:   %s\n", aURLStr?aURLStr:"");
     fprintf(fd, "--------------- Frames ----------------\n");
     fprintf(fd, "--------------- Frames ----------------\n");
-    nsCOMPtr<nsIRenderingContext> renderingContext;
+    nsRefPtr<nsRenderingContext> renderingContext;
     aDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
     RootFrameList(aPresContext, fd, 0);
     //DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);

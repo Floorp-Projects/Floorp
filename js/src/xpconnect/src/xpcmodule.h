@@ -39,7 +39,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "xpcprivate.h"
-#include "mozJSLoaderConstructors.h"
+#include "mozilla/ModuleUtils.h"
+#include "mozJSComponentLoader.h"
+#include "mozJSSubScriptLoader.h"
 
 /* Module implementation for the xpconnect library. */
 
@@ -52,6 +54,8 @@
     {0xfe4f7592, 0xc1fc, 0x4662,                                              \
       { 0xac, 0x83, 0x53, 0x88, 0x41, 0x31, 0x88, 0x3 } }
 
+#define MOZJSSUBSCRIPTLOADER_CONTRACTID "@mozilla.org/moz/jssubscript-loader;1"
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSID)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCException)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCJSContextStackIterator)
@@ -59,6 +63,9 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIXPConnect,
                                          nsXPConnect::GetSingleton)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsXPCComponents_Interfaces)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader)
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
 
 #ifdef XPC_IDISPATCH_SUPPORT
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIDispatchSupport,
@@ -105,7 +112,7 @@ NS_DEFINE_NAMED_CID(NS_IDISPATCH_SUPPORT_CID);
   { NS_SCRIPTABLE_INTERFACES_CONTRACTID, &kSCRIPTABLE_INTERFACES_CID }, \
   { XPC_JSCONTEXT_STACK_ITERATOR_CONTRACTID, &kNS_XPC_JSCONTEXT_STACK_ITERATOR_CID }, \
   { MOZJSCOMPONENTLOADER_CONTRACTID, &kMOZJSCOMPONENTLOADER_CID }, \
-  { mozJSSubScriptLoadContractID, &kMOZ_JSSUBSCRIPTLOADER_CID }, \
+  { MOZJSSUBSCRIPTLOADER_CONTRACTID, &kMOZ_JSSUBSCRIPTLOADER_CID }, \
   XPCIDISPATCH_CONTRACTS
 
 #define XPCONNECT_CATEGORIES \

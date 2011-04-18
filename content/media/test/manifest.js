@@ -214,6 +214,7 @@ var gErrorTests = [
 // These are files that have nontrivial duration and are useful for seeking within.
 var gSeekTests = [
   { name:"r11025_s16_c1.wav", type:"audio/x-wav", duration:1.0 },
+  { name:"audio.wav", type:"audio/x-wav", duration:0.031247 },
   { name:"seek.ogv", type:"video/ogg", duration:3.966 },
   { name:"320x240.ogv", type:"video/ogg", duration:0.233 },
   { name:"seek.webm", type:"video/webm", duration:3.966 },

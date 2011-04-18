@@ -112,7 +112,7 @@ public:
 
   // Called when Enter is pressed while the menubar is focused. If the current
   // menu is open, let the child handle the key.
-  nsMenuFrame* Enter();
+  nsMenuFrame* Enter(nsGUIEvent* aEvent);
 
   // Used to handle ALT+key combos
   nsMenuFrame* FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent);
