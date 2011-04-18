@@ -366,11 +366,6 @@ case "$target" in
                           The path to the Windows CE SDK],
     WINCE_SDK_DIR=$withval)
 
-    MOZ_ARG_WITH_STRING(ogles-sdk,
-    [  --with-ogles-sdk=OGLES_SDK_DIR
-                          The path to the OGLES SDK],
-    OGLES_SDK_DIR=$withval)
-
     AC_DEFINE(WINCE)
     
     export WINCE=1
@@ -384,9 +379,9 @@ case "$target" in
 
     _pwd=`pwd -W`
     _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
-    make OGLES_SDK_DIR="$OGLES_SDK_DIR" WINCE_SDK_DIR="$WINCE_SDK_DIR" \
-    TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" target="$target" \
-    -C $srcdir/build/wince/tools
+    make WINCE_SDK_DIR="$WINCE_SDK_DIR" \
+         TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" target="$target" \
+         -C $srcdir/build/wince/tools
 
     CC="$_pwd/dist/sdk/bin/$target-gcc.exe"
     CXX="$_pwd/dist/sdk/bin/$target-gcc.exe"
@@ -686,7 +681,10 @@ case "$target" in
         AC_DEFINE(HAVE_SEH_EXCEPTIONS)
 
         if test -n "$WIN32_REDIST_DIR"; then
-            WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
+          if test ! -d "$WIN32_REDIST_DIR"; then
+            AC_MSG_ERROR([Invalid Win32 Redist directory: ${WIN32_REDIST_DIR}])
+          fi
+          WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
         fi
 
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
@@ -3524,26 +3522,6 @@ else
             [XSS_LIBS="-lXss $XEXT_LIBS $XLIBS"
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
 
-    dnl ========================================================
-    dnl = Check for XIE
-    dnl ========================================================
-    AC_CHECK_LIB(XIE, XieFloGeometry, [MOZ_XIE_LIBS="-lXIE"],,
-        $XLIBS $XEXT_LIBS)
-    MOZ_CHECK_HEADER(X11/extensions/XIElib.h)
-
-    if test "$MOZ_XIE_LIBS"; then
-	dnl ====================================================
-	dnl = If XIE is present and is desired, turn it on
-	dnl ====================================================
-	case $target in
-	    *-hpux*)
-		;;
-	    *)
-		HAVE_XIE=1
-		;;
-	esac
-    fi
-
 	LDFLAGS="$_SAVE_LDFLAGS"
 
     dnl ========================================================
@@ -5106,6 +5084,16 @@ if test -f "${srcdir}/${MOZ_BUILD_APP}/confvars.sh" ; then
   . "${srcdir}/${MOZ_BUILD_APP}/confvars.sh"
 else
   AC_MSG_RESULT([no])
+fi
+
+# Allow someone to change MOZ_APP_NAME in mozconfig
+MOZ_ARG_WITH_STRING(app-name,
+[--with-app-name=APPNAME sets MOZ_APP_NAME to APPNAME],
+WITH_APP_NAME=$withval,
+)
+
+if test -n "$WITH_APP_NAME" ; then
+    MOZ_APP_NAME="$WITH_APP_NAME"
 fi
 
 # Now is a good time to test for logic errors, define mismatches, etc.
@@ -7430,8 +7418,15 @@ if test "$NS_TRACE_MALLOC"; then
     MOZ_MEMORY=
 fi
 
-if test "$MOZ_MEMORY"; then
-
+if test -z "$MOZ_MEMORY"; then
+  case "${target}" in
+    *-mingw*)
+      if test -z "$WIN32_REDIST_DIR"; then
+        AC_MSG_WARN([When not building jemalloc, you need to set WIN32_REDIST_DIR to the path to the Visual C++ Redist (usually VCINSTALLDIR\redist\x86\Microsoft.VC80.CRT, for VC++ v8) if you intend to distribute your build.])
+      fi
+      ;;
+  esac
+else
   dnl Don't try to run compiler tests on Windows  
   if test "$OS_ARCH" = "WINNT"; then
     if test -z "$HAVE_64BIT_OS"; then
@@ -7545,7 +7540,7 @@ if test "$MOZ_MEMORY"; then
     AC_DEFINE(HAVE_JEMALLOC_POSIX_MEMALIGN)
     AC_DEFINE(HAVE_JEMALLOC_MEMALIGN)
   fi
-fi
+fi # MOZ_MEMORY
 AC_SUBST(MOZ_MEMORY)
 AC_SUBST(MOZ_MEMORY_LDFLAGS)
 AC_SUBST(WIN32_CRT_SRC_DIR)
@@ -7721,21 +7716,10 @@ dnl ========================================================
 dnl = libstdc++ compatibility hacks
 dnl ========================================================
 
-STDCXX_COMPAT=stdc++compat.cpp
-MOZ_ARG_DISABLE_BOOL(stdcxx-compat,
-[  --disable-stdcxx-compat Disable libstdc++ compatibility],
-    STDCXX_COMPAT=)
-
-# Disable on platforms where it doesn't make sense
-if test -n "$STDCXX_COMPAT"; then
-    case "${OS_TARGET}" in
-    Linux)
-        ;;
-    *)
-        STDCXX_COMPAT=
-        ;;
-    esac
-fi
+STDCXX_COMPAT=
+MOZ_ARG_ENABLE_BOOL(stdcxx-compat,
+[  --enable-stdcxx-compat  Enable compatibility with older libstdc++],
+    STDCXX_COMPAT=stdc++compat.cpp)
 
 AC_SUBST(STDCXX_COMPAT)
 
@@ -8606,15 +8590,16 @@ if test "$MOZ_TREE_CAIRO"; then
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="$FT2_CFLAGS"
     fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "qt"; then
+    case "$MOZ_WIDGET_TOOLKIT" in
+      qt)
         QT_SURFACE_FEATURE="#define CAIRO_HAS_QT_SURFACE 1"
-    fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "cocoa"; then
+        ;;
+      cocoa)
         QUARTZ_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_SURFACE 1"
         QUARTZ_IMAGE_SURFACE_FEATURE="#define CAIRO_HAS_QUARTZ_IMAGE_SURFACE 1"
         QUARTZ_FONT_FEATURE="#define CAIRO_HAS_QUARTZ_FONT 1"
-    fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "windows"; then
+        ;;
+      windows)
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
         if test -z "$WINCE"; then
             WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
@@ -8639,15 +8624,15 @@ if test "$MOZ_TREE_CAIRO"; then
         if test -n "$WIN32_D2D_SURFACE_FEATURE"; then
           MOZ_CHECK_HEADER(d3d10.h, MOZ_ENABLE_D3D10_LAYER=1)
         fi
-
-    fi
-    if test "$MOZ_WIDGET_TOOLKIT" = "os2"; then
+        ;;
+      os2)
         OS2_SURFACE_FEATURE="#define CAIRO_HAS_OS2_SURFACE 1"
         FT_FONT_FEATURE="#define CAIRO_HAS_FT_FONT 1"
         MOZ_ENABLE_CAIRO_FT=1
         CAIRO_FT_CFLAGS="-I${MZFTCFGFT2}/include"
         CAIRO_FT_LIBS="-L${MZFTCFGFT2}/lib -lmozft -lmzfntcfg"
-    fi
+        ;;
+    esac
     if test "$USE_FC_FREETYPE"; then
         FC_FONT_FEATURE="#define CAIRO_HAS_FC_FONT 1"
     fi
@@ -8657,7 +8642,6 @@ if test "$MOZ_TREE_CAIRO"; then
     AC_SUBST(MOZ_ENABLE_D3D9_LAYER)
     AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
     AC_SUBST(CAIRO_FT_CFLAGS)
-    AC_SUBST(HAS_OGLES)
 
     if test "$MOZ_DEBUG"; then
       SANITY_CHECKING_FEATURE="#define CAIRO_DO_SANITY_CHECKING 1"
@@ -8998,9 +8982,6 @@ AC_SUBST(JAR)
 
 AC_SUBST(MOZ_PROFILELOCKING)
 
-AC_SUBST(HAVE_XIE)
-AC_SUBST(MOZ_XIE_LIBS)
-
 AC_SUBST(BUILD_STATIC_LIBS)
 AC_SUBST(MOZ_ENABLE_LIBXUL)
 AC_SUBST(ENABLE_TESTS)
@@ -9043,7 +9024,6 @@ AC_SUBST(MOZ_OS2_TOOLS)
 AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
-AC_SUBST(OGLES_SDK_DIR)
 
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)

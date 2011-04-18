@@ -183,36 +183,41 @@ let UI = {
           });
         }
         if (e.originalTarget.id == "content") {
-          // Create an orphan tab on double click
-          if (Date.now() - self._lastClick <= self.DBLCLICK_INTERVAL && 
-              (self._lastClickPositions.x - self.DBLCLICK_OFFSET) <= e.clientX &&
-              (self._lastClickPositions.x + self.DBLCLICK_OFFSET) >= e.clientX &&
-              (self._lastClickPositions.y - self.DBLCLICK_OFFSET) <= e.clientY &&
-              (self._lastClickPositions.y + self.DBLCLICK_OFFSET) >= e.clientY) {
-            GroupItems.setActiveGroupItem(null);
-            TabItems.creatingNewOrphanTab = true;
-
-            let newTab = 
-              gBrowser.loadOneTab("about:blank", { inBackground: true });
-
-            let box = 
-              new Rect(e.clientX - Math.floor(TabItems.tabWidth/2),
-                       e.clientY - Math.floor(TabItems.tabHeight/2),
-                       TabItems.tabWidth, TabItems.tabHeight);
-            newTab._tabViewTabItem.setBounds(box, true);
-            newTab._tabViewTabItem.pushAway(true);
-            UI.setActiveTab(newTab._tabViewTabItem);
-
-            TabItems.creatingNewOrphanTab = false;
-            newTab._tabViewTabItem.zoomIn(true);
-
+          if (!Utils.isLeftClick(e)) {
             self._lastClick = 0;
             self._lastClickPositions = null;
-            gTabView.firstUseExperienced = true;
           } else {
-            self._lastClick = Date.now();
-            self._lastClickPositions = new Point(e.clientX, e.clientY);
-            self._createGroupItemOnDrag(e);
+            // Create an orphan tab on double click
+            if (Date.now() - self._lastClick <= self.DBLCLICK_INTERVAL && 
+                (self._lastClickPositions.x - self.DBLCLICK_OFFSET) <= e.clientX &&
+                (self._lastClickPositions.x + self.DBLCLICK_OFFSET) >= e.clientX &&
+                (self._lastClickPositions.y - self.DBLCLICK_OFFSET) <= e.clientY &&
+                (self._lastClickPositions.y + self.DBLCLICK_OFFSET) >= e.clientY) {
+              GroupItems.setActiveGroupItem(null);
+              TabItems.creatingNewOrphanTab = true;
+
+              let newTab =
+                gBrowser.loadOneTab("about:blank", { inBackground: true });
+
+              let box =
+                new Rect(e.clientX - Math.floor(TabItems.tabWidth/2),
+                         e.clientY - Math.floor(TabItems.tabHeight/2),
+                         TabItems.tabWidth, TabItems.tabHeight);
+              newTab._tabViewTabItem.setBounds(box, true);
+              newTab._tabViewTabItem.pushAway(true);
+              UI.setActiveTab(newTab._tabViewTabItem);
+
+              TabItems.creatingNewOrphanTab = false;
+              newTab._tabViewTabItem.zoomIn(true);
+
+              self._lastClick = 0;
+              self._lastClickPositions = null;
+              gTabView.firstUseExperienced = true;
+            } else {
+              self._lastClick = Date.now();
+              self._lastClickPositions = new Point(e.clientX, e.clientY);
+              self._createGroupItemOnDrag(e);
+            }
           }
         }
       });

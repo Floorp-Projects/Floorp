@@ -6174,28 +6174,10 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 }
 
 NS_IMETHODIMP
-nsDocument::GetDomConfig(nsIDOMDOMConfiguration **aConfig)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsDocument::NormalizeDocument()
 {
-  // We don't support DOMConfigurations yet, so this just
-  // does a straight shot of normalization.
   return Normalize();
 }
-
-NS_IMETHODIMP
-nsDocument::RenameNode(nsIDOMNode *aNode,
-                       const nsAString& namespaceURI,
-                       const nsAString& qualifiedName,
-                       nsIDOMNode **aReturn)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 NS_IMETHODIMP
 nsDocument::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
