@@ -700,8 +700,11 @@ pref("network.http.proxy.keep-alive", true);
 // the packet is lost or delayed on the route.
 pref("network.http.keep-alive.timeout", 115);
 
-// limit the absolute number of http connections.
-pref("network.http.max-connections", 30);
+// Limit the absolute number of http connections.
+// Note: the socket transport service will clamp the number below 256 if the OS
+// cannot allocate that many FDs, and it also always tries to reserve up to 250
+// file descriptors for things other than sockets.   
+pref("network.http.max-connections", 256);
 
 // limit the absolute number of http connections that can be established per
 // host.  if a http proxy server is enabled, then the "server" is the proxy
@@ -1868,16 +1871,16 @@ pref("font.name-list.monospace.el", "Lucida Grande");
 pref("font.name-list.cursive.el", "Lucida Grande");
 pref("font.name-list.fantasy.el", "Lucida Grande");
 
-pref("font.name.serif.he", "Raanana");
-pref("font.name.sans-serif.he", "Arial Hebrew");
-pref("font.name.monospace.he", "Arial Hebrew");
-pref("font.name.cursive.he", "Corsiva Hebrew");
-pref("font.name.fantasy.he", "Corsiva Hebrew");
-pref("font.name-list.serif.he", "Raanana");
-pref("font.name-list.sans-serif.he", "Arial Hebrew");
-pref("font.name-list.monospace.he", "Arial Hebrew");
-pref("font.name-list.cursive.he", "Corsiva Hebrew");
-pref("font.name-list.fantasy.he", "Corsiva Hebrew");
+pref("font.name.serif.he", "Times New Roman");
+pref("font.name.sans-serif.he", "Arial");
+pref("font.name.monospace.he", "Courier New");
+pref("font.name.cursive.he", "Times New Roman");
+pref("font.name.fantasy.he", "Times New Roman");
+pref("font.name-list.serif.he", "Times New Roman");
+pref("font.name-list.sans-serif.he", "Arial");
+pref("font.name-list.monospace.he", "Courier New");
+pref("font.name-list.cursive.he", "Times New Roman");
+pref("font.name-list.fantasy.he", "Times New Roman");
 
 pref("font.name.serif.ja", "Hiragino Mincho Pro"); 
 pref("font.name.sans-serif.ja", "Hiragino Kaku Gothic Pro"); 

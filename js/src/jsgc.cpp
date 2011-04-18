@@ -218,7 +218,7 @@ Arena<T>::mark(T *thing, JSTracer *trc)
     if (alignedThing > &t.things[ThingsPerArena-1] || alignedThing < &t.things[0])
         return CGCT_NOTARENA;
 
-    if (!aheader.compartment || inFreeList(alignedThing))
+    if (inFreeList(alignedThing))
         return CGCT_NOTLIVE;
 
     JS_ASSERT(sizeof(T) == aheader.thingSize);
@@ -243,7 +243,7 @@ checkArenaListsForThing(JSCompartment *comp, void *thing)
         comp->arenas[FINALIZE_OBJECT12].arenasContainThing<JSObject_Slots12>(thing) ||
         comp->arenas[FINALIZE_OBJECT16].arenasContainThing<JSObject_Slots16>(thing) ||
         comp->arenas[FINALIZE_FUNCTION].arenasContainThing<JSFunction>(thing) ||
-        comp->arenas[FINALIZE_FUNCTION].arenasContainThing<Shape>(thing) ||
+        comp->arenas[FINALIZE_SHAPE].arenasContainThing<Shape>(thing) ||
 #if JS_HAS_XML_SUPPORT
         comp->arenas[FINALIZE_XML].arenasContainThing<JSXML>(thing) ||
 #endif
@@ -644,6 +644,9 @@ MarkIfGCThingWord(JSTracer *trc, jsuword w, uint32 &thingKind)
 
     ArenaHeader *aheader = cell->arena()->header();
 
+    if (!aheader->compartment)
+        return CGCT_NOTLIVE;
+
     ConservativeGCTest test;
     thingKind = aheader->thingKind;
 
@@ -753,7 +756,7 @@ MarkRangeConservatively(JSTracer *trc, const jsuword *begin, const jsuword *end)
 }
 
 static void
-MarkThreadDataConservatively(JSTracer *trc, JSThreadData *td)
+MarkThreadDataConservatively(JSTracer *trc, ThreadData *td)
 {
     ConservativeGCThreadData *ctd = &td->conservativeGC;
     JS_ASSERT(ctd->hasStackToScan());
@@ -1778,36 +1781,6 @@ js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp)
             *listp = script->u.nextToGC;
             script->u.nextToGC = NULL;
             js_DestroyCachedScript(cx, script);
-        }
-    }
-}
-
-/*
- * This function is called from js_FinishAtomState to force the finalization
- * of the permanently interned strings when cx is not available.
- */
-void
-js_FinalizeStringRT(JSRuntime *rt, JSString *str)
-{
-    JS_RUNTIME_UNMETER(rt, liveStrings);
-    JS_ASSERT(str->isLinear() && !str->isStaticAtom());
-
-    if (str->isDependent()) {
-        /* A dependent string can not be external and must be valid. */
-        JS_ASSERT(str->arena()->header()->thingKind == FINALIZE_STRING);
-        JS_ASSERT(str->asDependent().base());
-        JS_RUNTIME_UNMETER(rt, liveDependentStrings);
-    } else {
-        unsigned thingKind = str->arena()->header()->thingKind;
-        JS_ASSERT(unsigned(FINALIZE_SHORT_STRING) <= thingKind &&
-                  thingKind <= unsigned(FINALIZE_EXTERNAL_STRING));
-
-        jschar *chars = const_cast<jschar *>(str->asFlat().chars());
-        if (thingKind == FINALIZE_STRING) {
-            rt->stringMemoryUsed -= str->length() * 2;
-            rt->free_(chars);
-        } else if (thingKind == FINALIZE_EXTERNAL_STRING) {
-            ((JSExternalString *)str)->finalize();
         }
     }
 }

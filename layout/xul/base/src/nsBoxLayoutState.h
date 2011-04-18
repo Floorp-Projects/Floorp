@@ -50,7 +50,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 
-class nsIRenderingContext;
+class nsRenderingContext;
 class nsCalculatedBoxInfo;
 struct nsHTMLReflowMetrics;
 class nsString;
@@ -59,7 +59,7 @@ class nsHTMLReflowCommand;
 class NS_STACK_CLASS nsBoxLayoutState
 {
 public:
-  nsBoxLayoutState(nsPresContext* aPresContext, nsIRenderingContext* aRenderingContext = nsnull,
+  nsBoxLayoutState(nsPresContext* aPresContext, nsRenderingContext* aRenderingContext = nsnull,
                    PRUint16 aReflowDepth = 0) NS_HIDDEN;
   nsBoxLayoutState(const nsBoxLayoutState& aState) NS_HIDDEN;
 
@@ -77,7 +77,7 @@ public:
   // nsBoxLayoutState and should be null-checked before it is used.
   // However, passing a null rendering context to the constructor when
   // doing box layout or intrinsic size calculation will cause bugs.
-  nsIRenderingContext* GetRenderingContext() const { return mRenderingContext; }
+  nsRenderingContext* GetRenderingContext() const { return mRenderingContext; }
 
   void PushStackMemory() { PresShell()->PushStackMemory(); ++mReflowDepth; }
   void PopStackMemory()  { PresShell()->PopStackMemory(); --mReflowDepth; }
@@ -88,7 +88,7 @@ public:
   
 private:
   nsRefPtr<nsPresContext> mPresContext;
-  nsIRenderingContext *mRenderingContext;
+  nsRenderingContext *mRenderingContext;
   PRUint32 mLayoutFlags;
   PRUint16 mReflowDepth; 
   PRPackedBool mPaintingDisabled;

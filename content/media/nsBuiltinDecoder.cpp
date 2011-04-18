@@ -83,7 +83,7 @@ double nsBuiltinDecoder::GetDuration()
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mDuration >= 0) {
-     return static_cast<double>(mDuration) / 1000.0;
+     return static_cast<double>(mDuration) / static_cast<double>(USECS_PER_S);
   }
   return std::numeric_limits<double>::quiet_NaN();
 }
@@ -220,11 +220,28 @@ nsresult nsBuiltinDecoder::Load(nsMediaStream* aStream,
     MonitorAutoEnter mon(mMonitor);
     mDecoderStateMachine->SetSeekable(mSeekable);
     mDecoderStateMachine->SetDuration(mDuration);
+    
+    if (mFrameBufferLength > 0) {
+      // The valid mFrameBufferLength value was specified earlier
+      mDecoderStateMachine->SetFrameBufferLength(mFrameBufferLength);
+    }
   }
 
   ChangeState(PLAY_STATE_LOADING);
 
   return StartStateMachineThread();
+}
+
+nsresult nsBuiltinDecoder::RequestFrameBufferLength(PRUint32 aLength)
+{
+  nsresult res = nsMediaDecoder::RequestFrameBufferLength(aLength);
+  NS_ENSURE_SUCCESS(res,res);
+
+  MonitorAutoEnter mon(mMonitor);
+  if (mDecoderStateMachine) {
+      mDecoderStateMachine->SetFrameBufferLength(aLength);
+  }
+  return res;
 }
 
 nsresult nsBuiltinDecoder::StartStateMachineThread()
@@ -328,15 +345,12 @@ void nsBuiltinDecoder::AudioAvailable(float* aFrameBuffer,
 }
 
 void nsBuiltinDecoder::MetadataLoaded(PRUint32 aChannels,
-                                      PRUint32 aRate,
-                                      PRUint32 aFrameBufferLength)
+                                      PRUint32 aRate)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   if (mShuttingDown) {
     return;
   }
-
-  mFrameBufferLength = aFrameBufferLength;
 
   // Only inform the element of MetadataLoaded if not doing a load() in order
   // to fulfill a seek, otherwise we'll get multiple metadataloaded events.
@@ -524,7 +538,7 @@ double nsBuiltinDecoder::ComputePlaybackRate(PRPackedBool* aReliable)
   PRInt64 length = mStream ? mStream->GetLength() : -1;
   if (mDuration >= 0 && length >= 0) {
     *aReliable = PR_TRUE;
-    return double(length)*1000.0/mDuration;
+    return length * static_cast<double>(USECS_PER_S) / mDuration;
   }
   return mPlaybackStatistics.GetRateAtLastStop(aReliable);
 }
@@ -800,15 +814,15 @@ void nsBuiltinDecoder::DurationChanged()
   UpdatePlaybackRate();
 
   if (mElement && oldDuration != mDuration) {
-    LOG(PR_LOG_DEBUG, ("%p duration changed to %lldms", this, mDuration));
+    LOG(PR_LOG_DEBUG, ("%p duration changed to %lld", this, mDuration));
     mElement->DispatchEvent(NS_LITERAL_STRING("durationchange"));
   }
 }
 
-void nsBuiltinDecoder::SetDuration(PRInt64 aDuration)
+void nsBuiltinDecoder::SetDuration(double aDuration)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
-  mDuration = aDuration;
+  mDuration = static_cast<PRInt64>(NS_round(aDuration * static_cast<double>(USECS_PER_S)));
 
   MonitorAutoEnter mon(mMonitor);
   if (mDecoderStateMachine) {

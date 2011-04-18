@@ -50,8 +50,6 @@
 # include "prthread.h"
 #endif
 
-JS_BEGIN_EXTERN_C
-
 #ifdef JS_THREADSAFE
 
 #if (defined(_WIN32) && defined(_M_IX86)) ||                                  \
@@ -217,13 +215,10 @@ js_CompareAndSwap(jsword *w, jsword ov, jsword nv)
 #define JS_ATOMIC_SET_MASK(w, mask) (*(w) |= (mask))
 #define JS_ATOMIC_CLEAR_MASK(w, mask) (*(w) &= ~(mask))
 
-#endif /* JS_THREADSAFE */
+#endif
 
-JS_END_EXTERN_C
-
-#if defined JS_THREADSAFE && defined __cplusplus
+#ifdef JS_THREADSAFE
 namespace js {
-
 class AutoLock {
   private:
     JSLock *lock;
@@ -232,8 +227,10 @@ class AutoLock {
     AutoLock(JSLock *lock) : lock(lock) { JS_ACQUIRE_LOCK(lock); }
     ~AutoLock() { JS_RELEASE_LOCK(lock); }
 };
-
-}
+}  /* namespace js */
+# define JS_AUTO_LOCK_GUARD(name, l) AutoLock name((l));
+#else
+# define JS_AUTO_LOCK_GUARD(name, l)
 #endif
 
 #endif /* jslock_h___ */

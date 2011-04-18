@@ -40,6 +40,7 @@
 #include "txNodeSet.h"
 #include "txXPathTreeWalker.h"
 #include "txXSLTFunctions.h"
+#include "txExecutionState.h"
 
 /*
   Implementation of XSLT 1.0 extension function: generate-id
@@ -68,6 +69,14 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
     if (!requireParams(0, 1, aContext))
         return NS_ERROR_XPATH_BAD_ARGUMENT_COUNT;
 
+    txExecutionState* es = 
+        static_cast<txExecutionState*>(aContext->getPrivateContext());
+    if (!es) {
+        NS_ERROR(
+            "called xslt extension function \"current\" with wrong context");
+        return NS_ERROR_UNEXPECTED;
+    }
+
     nsresult rv = NS_OK;
     if (mParams.IsEmpty()) {
         StringResult* strRes;
@@ -75,6 +84,7 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
         NS_ENSURE_SUCCESS(rv, rv);
 
         txXPathNodeUtils::getXSLTId(aContext->getContextNode(),
+                                    es->getSourceDocument(),
                                     strRes->mValue);
 
         *aResult = strRes;
@@ -97,7 +107,8 @@ GenerateIdFunctionCall::evaluate(txIEvalContext* aContext,
     rv = aContext->recycler()->getStringResult(&strRes);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    txXPathNodeUtils::getXSLTId(nodes->get(0), strRes->mValue);
+    txXPathNodeUtils::getXSLTId(nodes->get(0), es->getSourceDocument(),
+                                strRes->mValue);
 
     *aResult = strRes;
  

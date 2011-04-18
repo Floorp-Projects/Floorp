@@ -1361,14 +1361,27 @@ nsAccessibleWrap::FireAtkTextChangedEvent(AccEvent* aEvent,
     PRInt32 start = event->GetStartOffset();
     PRUint32 length = event->GetLength();
     PRBool isInserted = event->IsTextInserted();
-
     PRBool isFromUserInput = aEvent->IsFromUserInput();
+    char* signal_name = nsnull;
 
-    char *signal_name = g_strconcat(isInserted ? "text_changed::insert" : "text_changed::delete",
-                                    isFromUserInput ? "" : kNonUserInputEvent, NULL);
-    g_signal_emit_by_name(aObject, signal_name, start, length);
-    g_free (signal_name);
+    if (gHaveNewTextSignals) {
+        nsAutoString text;
+        event->GetModifiedText(text);
+        signal_name = g_strconcat(isInserted ? "text-insert" : "text-remove",
+                                  isFromUserInput ? "" : "::system", NULL);
+        g_signal_emit_by_name(aObject, signal_name, start, length,
+                              NS_ConvertUTF16toUTF8(text).get());
+    } else {
+        // XXX remove this code and the gHaveNewTextSignals check when we can
+        // stop supporting old atk since it doesn't really work anyway
+        // see bug 619002
+        signal_name = g_strconcat(isInserted ? "text_changed::insert" :
+                                  "text_changed::delete",
+                                  isFromUserInput ? "" : kNonUserInputEvent, NULL);
+        g_signal_emit_by_name(aObject, signal_name, start, length);
+    }
 
+    g_free(signal_name);
     return NS_OK;
 }
 

@@ -51,6 +51,7 @@ using namespace mozilla::dom;
 #include "nsAutoPtr.h"
 #include "nsAudioStream.h"
 #include "nsAlgorithm.h"
+#include "VideoUtils.h"
 extern "C" {
 #include "sydneyaudio/sydney_audio.h"
 }
@@ -74,7 +75,6 @@ PRLogModuleInfo* gAudioStreamLog = nsnull;
 #endif
 
 #define FAKE_BUFFER_SIZE 176400
-#define MILLISECONDS_PER_SECOND 1000
 
 class nsAudioStreamLocal : public nsAudioStream
 {
@@ -551,7 +551,7 @@ PRInt64 nsAudioStreamLocal::GetPosition()
 {
   PRInt64 sampleOffset = GetSampleOffset();
   if (sampleOffset >= 0) {
-    return ((MILLISECONDS_PER_SECOND * sampleOffset) / mRate / mChannels);
+    return ((USECS_PER_S * sampleOffset) / mRate / mChannels);
   }
   return -1;
 }
@@ -718,7 +718,7 @@ PRInt64 nsAudioStreamRemote::GetPosition()
 {
   PRInt64 sampleOffset = GetSampleOffset();
   if (sampleOffset >= 0) {
-    return ((MILLISECONDS_PER_SECOND * sampleOffset) / mRate / mChannels);
+    return ((USECS_PER_S * sampleOffset) / mRate / mChannels);
   }
   return 0;
 }
@@ -734,7 +734,7 @@ nsAudioStreamRemote::GetSampleOffset()
     return 0;
 
   PRInt64 time   = mAudioChild->GetLastKnownSampleOffsetTime();
-  PRInt64 result = offset + (mRate * mChannels * (PR_IntervalNow() - time) / MILLISECONDS_PER_SECOND);
+  PRInt64 result = offset + (mRate * mChannels * (PR_IntervalNow() - time) / USECS_PER_S);
 
   return result;
 }

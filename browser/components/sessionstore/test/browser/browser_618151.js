@@ -80,19 +80,6 @@ function runNextTest() {
   }
 }
 
-// helper, works only for single window
-function waitForBrowserState(aState, aSetStateCallback) {
-  let tabsRestored = 0;
-  gBrowser.tabContainer.addEventListener("SSTabRestored", function() {
-    if (++tabsRestored == aState.windows[0].tabs.length) {
-      gBrowser.tabContainer.removeEventListener("SSTabRestored", arguments.callee, true);
-      executeSoon(aSetStateCallback);
-    }
-  }, true);
-  ss.setBrowserState(JSON.stringify(aState));
-}
-
-
 function test_setup() {
   function onSSTabRestored(aEvent) {
     gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);

@@ -110,21 +110,6 @@ nsXULButtonAccessible::DoAction(PRUint8 aIndex)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsXULButtonAccessible: nsAccessNode
-
-PRBool
-nsXULButtonAccessible::Init()
-{
-  if (!nsAccessibleWrap::Init())
-    return PR_FALSE;
-
-  if (ContainsMenu())
-    nsCoreUtils::GeneratePopupTree(mContent);
-
-  return PR_TRUE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // nsXULButtonAccessible: nsAccessible
 
 PRUint32
@@ -330,10 +315,6 @@ nsXULDropmarkerAccessible::NativeRole()
 PRUint64
 nsXULDropmarkerAccessible::NativeState()
 {
-
-  if (IsDefunct())
-    return states::DEFUNCT;
-
   return DropmarkerOpen(PR_FALSE) ? states::PRESSED : 0;
 }
 
@@ -815,7 +796,7 @@ nsXULToolbarSeparatorAccessible::NativeRole()
 PRUint64
 nsXULToolbarSeparatorAccessible::NativeState()
 {
-  return IsDefunct() ? states::DEFUNCT : 0;
+  return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
