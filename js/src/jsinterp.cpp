@@ -2669,7 +2669,8 @@ Interpret(JSContext *cx, JSStackFrame *entryFrame, uintN inlineCallCount, JSInte
     if (interpMode == JSINTERP_NORMAL) {
         JS_ASSERT_IF(!regs.fp->isGeneratorFrame(), regs.pc == script->code);
         bool newType = regs.fp->isConstructing() && cx->typeInferenceEnabled() &&
-            regs.fp->prev() && UseNewType(cx, regs.fp->prev()->script(), regs.fp->prev()->pc(cx));
+            regs.fp->prev() && regs.fp->prev()->isScriptFrame() &&
+            UseNewType(cx, regs.fp->prev()->script(), regs.fp->prev()->pc(cx));
         if (!ScriptPrologueOrGeneratorResume(cx, regs.fp, newType))
             goto error;
     }
