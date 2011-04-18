@@ -102,7 +102,6 @@ public class WatcherService extends Service
 
 
     private IWatcherService.Stub stub = new IWatcherService.Stub() {
-        @Override
         public int UpdateApplication(String sAppName, String sFileName, String sOutFile, int bReboot) throws RemoteException
             {
             return UpdtApp(sAppName, sFileName, sOutFile, bReboot);
@@ -841,7 +840,6 @@ public class WatcherService extends Service
             runner.start();
         }
 
-        @Override
         public void run() {
                bInstalling = true;
             UpdtApp(msPkgName, msPkgFileName, msOutFile, mbReboot);
