@@ -45,7 +45,7 @@
 #include "nsBoxLayoutState.h"
 
 nsBoxLayoutState::nsBoxLayoutState(nsPresContext* aPresContext,
-                                   nsIRenderingContext* aRenderingContext,
+                                   nsRenderingContext* aRenderingContext,
                                    PRUint16 aReflowDepth)
   : mPresContext(aPresContext)
   , mRenderingContext(aRenderingContext)

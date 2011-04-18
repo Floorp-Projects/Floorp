@@ -39,8 +39,8 @@
 
 #include "nsTArray.h"
 #include "nsAudioAvailableEventManager.h"
+#include "VideoUtils.h"
 
-#define MILLISECONDS_PER_SECOND 1000.0f
 #define MAX_PENDING_EVENTS 100
 
 using namespace mozilla;
@@ -107,7 +107,7 @@ void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
   while (mPendingEvents.Length() > 0) {
     nsAudioAvailableEventRunner* e =
       (nsAudioAvailableEventRunner*)mPendingEvents[0].get();
-    if (e->mTime * MILLISECONDS_PER_SECOND > aCurrentTime) {
+    if (e->mTime * USECS_PER_S > aCurrentTime) {
       break;
     }
     nsCOMPtr<nsIRunnable> event = mPendingEvents[0];
@@ -228,7 +228,7 @@ void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
          (mSignalBufferLength - mSignalBufferPosition) * sizeof(float));
 
   // Force this last event to go now.
-  float time = (aEndTime / MILLISECONDS_PER_SECOND) - 
+  float time = (aEndTime / static_cast<float>(USECS_PER_S)) - 
                (mSignalBufferPosition / mSamplesPerSecond);
   nsCOMPtr<nsIRunnable> lastEvent =
     new nsAudioAvailableEventRunner(mDecoder, mSignalBuffer.forget(),

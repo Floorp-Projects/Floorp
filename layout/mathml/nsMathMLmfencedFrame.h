@@ -78,7 +78,7 @@ public:
                               const nsDisplayListSet& aLists);
 
   virtual nscoord
-  GetIntrinsicWidth(nsIRenderingContext* aRenderingContext);
+  GetIntrinsicWidth(nsRenderingContext* aRenderingContext);
 
   NS_IMETHOD
   AttributeChanged(PRInt32         aNameSpaceID,
@@ -96,7 +96,7 @@ public:
   // helper routines to format the MathMLChars involved here
   static nsresult
   ReflowChar(nsPresContext*      aPresContext,
-             nsIRenderingContext& aRenderingContext,
+             nsRenderingContext& aRenderingContext,
              nsMathMLChar*        aMathMLChar,
              nsOperatorFlags      aForm,
              PRInt32              aScriptLevel,

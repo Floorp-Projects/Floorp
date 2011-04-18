@@ -49,6 +49,10 @@
 
 #include "nsBidiUtils.h"
 
+#if defined(XP_UNIX)
+#include <stdint.h>
+#endif
+
 #ifdef DEBUG
 #include <stdio.h>
 #endif

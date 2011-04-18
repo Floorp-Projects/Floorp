@@ -36,6 +36,33 @@ NS_GFX_(bool) IsConvertYCbCrToRGB565Fast(int pic_x,
                                          int pic_width,
                                          int pic_height,
                                          YUVType yuv_type);
+
+// Scale a frame of YUV to 16 bit RGB565.
+NS_GFX_(void) ScaleYCbCrToRGB565(const PRUint8 *yplane,
+                                 const PRUint8 *uplane,
+                                 const PRUint8 *vplane,
+                                 PRUint8 *rgbframe,
+                                 int source_x0,
+                                 int source_y0,
+                                 int source_width,
+                                 int source_height,
+                                 int width,
+                                 int height,
+                                 int ystride,
+                                 int uvstride,
+                                 int rgbstride,
+                                 YUVType yuv_type,
+                                 ScaleFilter filter);
+
+// Used to test if we have an accelerated version.
+NS_GFX_(bool) IsScaleYCbCrToRGB565Fast(int source_x0,
+                                       int source_y0,
+                                       int source_width,
+                                       int source_height,
+                                       int width,
+                                       int height,
+                                       YUVType yuv_type,
+                                       ScaleFilter filter);
 #endif // HAVE_YCBCR_TO_RGB565
 
 }  // namespace gfx

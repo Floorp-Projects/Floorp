@@ -39,8 +39,7 @@
 // for strtod()
 #include <stdlib.h>
 
-#include "nsIDeviceContext.h"
-#include "nsIRenderingContext.h"
+#include "nsSystemFontsGTK2.h"
 #include "prlink.h"
 
 #include <gtk/gtk.h>
@@ -52,7 +51,6 @@
 #endif
 
 #include <fontconfig/fontconfig.h>
-#include "nsSystemFontsGTK2.h"
 #include "gfxPlatformGtk.h"
 
 // Glue to avoid build/runtime dependencies on Pango > 1.6

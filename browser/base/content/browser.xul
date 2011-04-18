@@ -463,7 +463,7 @@
 #endif
 
 <deck flex="1" id="tab-view-deck">
-<vbox flex="1">
+<vbox flex="1" id="browser-panel">
 
   <toolbox id="navigator-toolbox"
            defaultmode="icons" mode="icons"

@@ -52,6 +52,7 @@ NO_DIST_INSTALL = 1
 VPATH += \
   $(srcdir)/../google-breakpad/src/processor/ \
   $(srcdir)/../google-breakpad/src/common/ \
+  $(topsrcdir)/build/ \
   $(NULL)
 
 CPPSRCS = \
@@ -61,6 +62,7 @@ CPPSRCS = \
   logging.cc \
   minidump.cc \
   pathname_stripper.cc \
+  $(STDCXX_COMPAT) \
   $(NULL)
 
 LOCAL_INCLUDES += \

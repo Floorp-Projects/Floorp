@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
-#include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
@@ -591,13 +590,13 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("TableRowBackground", TYPE_TABLE_ROW_BACKGROUND)
 };
 
 void
 nsDisplayTableRowBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                   nsIRenderingContext* aCtx) {
+                                   nsRenderingContext* aCtx) {
   nsTableFrame* tableFrame = nsTableFrame::GetTableFrame(mFrame);
 
   TableBackgroundPainter painter(tableFrame,

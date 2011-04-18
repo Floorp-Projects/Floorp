@@ -128,6 +128,7 @@
 #include "nsGfxCIID.h"
 #include "nsStyleSheetService.h"
 #include "nsURILoader.h"
+#include "nsRenderingContext.h"
 
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants
@@ -3293,7 +3294,7 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 
   nscoord prefWidth;
   {
-    nsCOMPtr<nsIRenderingContext> rcx =
+    nsRefPtr<nsRenderingContext> rcx =
       presShell->GetReferenceRenderingContext();
     NS_ENSURE_TRUE(rcx, NS_ERROR_FAILURE);
     prefWidth = root->GetPrefWidth(rcx);

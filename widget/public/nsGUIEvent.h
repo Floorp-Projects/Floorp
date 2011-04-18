@@ -71,7 +71,7 @@ namespace dom {
 #ifdef ACCESSIBILITY
 class nsAccessible;
 #endif
-class nsIRenderingContext;
+class nsRenderingContext;
 class nsIMenuItem;
 class nsIContent;
 class nsIURI;

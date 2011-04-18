@@ -785,7 +785,6 @@ interface nsIXPConnect : nsISupports
         [array, size_is(interfaceCount)] in nsIIDPtr interfaceArray);
 
 %{C++
-#ifndef XPCONNECT_STANDALONE
     /**
      * Get the object principal for this wrapper.  Note that this may well end
      * up being null; in that case one should seek principals elsewhere.  Null
@@ -794,7 +793,6 @@ interface nsIXPConnect : nsISupports
      */
     virtual nsIPrincipal* GetPrincipal(JSObject* obj,
                                        PRBool allowShortCircuit) const = 0;
-#endif
     virtual char* DebugPrintJSStack(PRBool showArgs,
                                     PRBool showLocals,
                                     PRBool showThisProps) = 0;

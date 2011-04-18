@@ -132,7 +132,7 @@ var TabUtils = {
     // of active Panoramas as well as for windows in which
     // Panorama has yet to be activated. We uses object sniffing to
     // determine the type of tab and then returns its name.     
-    return tab.label != undefined ? tab.label : tab.$tabTitle[0].innerHTML;
+    return tab.label != undefined ? tab.label : tab.$tabTitle[0].textContent;
   },
   
   // ---------

@@ -342,6 +342,11 @@ ifdef SIMPLE_PROGRAMS
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 
+# No sense in profiling unit tests
+ifdef CPP_UNIT_TESTS
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+
 # Enable profile-based feedback
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_GENERATE
@@ -442,11 +447,10 @@ PURIFY = purify $(PURIFYOPTIONS)
 QUANTIFY = quantify $(QUANTIFYOPTIONS)
 ifdef CROSS_COMPILE
 XPIDL_COMPILE = $(LIBXUL_DIST)/host/bin/host_xpidl$(HOST_BIN_SUFFIX)
-XPIDL_LINK = $(LIBXUL_DIST)/host/bin/host_xpt_link$(HOST_BIN_SUFFIX)
 else
 XPIDL_COMPILE = $(LIBXUL_DIST)/bin/xpidl$(BIN_SUFFIX)
-XPIDL_LINK = $(LIBXUL_DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
+XPIDL_LINK = $(PYTHON) $(SDK_BIN_DIR)/xpt.py link
 
 # Java macros
 JAVA_GEN_DIR  = _javagen
@@ -607,10 +611,6 @@ SDK_BIN_DIR = $(DIST)/sdk/bin
 DEPENDENCIES	= .md
 
 MOZ_COMPONENT_LIBS=$(XPCOM_LIBS) $(MOZ_COMPONENT_NSPR_LIBS)
-
-ifeq (xpconnect, $(findstring xpconnect, $(BUILD_MODULES)))
-DEFINES +=  -DXPCONNECT_STANDALONE
-endif
 
 ifeq ($(OS_ARCH),OS2)
 ELF_DYNSTR_GC	= echo
@@ -845,3 +845,7 @@ EXPAND_CC = $(EXPAND_LIBS_EXEC) --uselist -- $(CC)
 EXPAND_CCC = $(EXPAND_LIBS_EXEC) --uselist -- $(CCC)
 EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist -- $(LD)
 EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) --uselist -- $(MKSHLIB)
+
+ifdef STDCXX_COMPAT
+CHECK_STDCXX = objdump -p $(1) | grep -e 'GLIBCXX_3\.4\.\(9\|[1-9][0-9]\)' && echo "Error: We don't want these libstdc++ symbol versions to be used" && exit 1 || exit 0
+endif

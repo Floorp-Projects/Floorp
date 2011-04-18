@@ -600,7 +600,7 @@ static void printSize(char * aDesc, nscoord aSize)
 #endif
 
 /* virtual */ nscoord
-nsBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsBoxFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -622,7 +622,7 @@ nsBoxFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBoxFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsBoxFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -1270,20 +1270,20 @@ public:
     aOutFrames->AppendElement(this);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("XULDebug", TYPE_XUL_DEBUG)
 };
 
 void
 nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
-                         nsIRenderingContext* aCtx)
+                         nsRenderingContext* aCtx)
 {
   static_cast<nsBoxFrame*>(mFrame)->
     PaintXULDebugOverlay(*aCtx, ToReferenceFrame());
 }
 
 static void
-PaintXULDebugBackground(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+PaintXULDebugBackground(nsIFrame* aFrame, nsRenderingContext* aCtx,
                         const nsRect& aDirtyRect, nsPoint aPt)
 {
   static_cast<nsBoxFrame*>(aFrame)->PaintXULDebugBackground(*aCtx, aPt);
@@ -1378,7 +1378,7 @@ nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 // whereas it did used to respect OVERFLOW_CLIP, but too bad.
 #ifdef DEBUG_LAYOUT
 void
-nsBoxFrame::PaintXULDebugBackground(nsIRenderingContext& aRenderingContext,
+nsBoxFrame::PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
                                     nsPoint aPt)
 {
   nsMargin border;
@@ -1448,7 +1448,7 @@ nsBoxFrame::PaintXULDebugBackground(nsIRenderingContext& aRenderingContext,
 }
 
 void
-nsBoxFrame::PaintXULDebugOverlay(nsIRenderingContext& aRenderingContext,
+nsBoxFrame::PaintXULDebugOverlay(nsRenderingContext& aRenderingContext,
                                  nsPoint aPt)
   nsMargin border;
   GetBorder(border);
@@ -1574,7 +1574,7 @@ nsBoxFrame::GetDebug(PRBool& aDebug)
 
 #ifdef DEBUG_LAYOUT
 void
-nsBoxFrame::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
+nsBoxFrame::DrawLine(nsRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
 {
     if (aHorizontal)
        aRenderingContext.DrawLine(x1,y1,x2,y2);
@@ -1583,7 +1583,7 @@ nsBoxFrame::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizontal,
 }
 
 void
-nsBoxFrame::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
+nsBoxFrame::FillRect(nsRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
 {
     if (aHorizontal)
        aRenderingContext.FillRect(x,y,width,height);
@@ -1592,7 +1592,7 @@ nsBoxFrame::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizontal,
 }
 
 void 
-nsBoxFrame::DrawSpacer(nsPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
+nsBoxFrame::DrawSpacer(nsPresContext* aPresContext, nsRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
 {    
          nscoord onePixel = aPresContext->IntScaledPixelsToTwips(1);
 

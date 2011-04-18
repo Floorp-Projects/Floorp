@@ -41,8 +41,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsStyleContext.h"
 #include "nsMathMLAtoms.h"
 #include "nsMathMLOperators.h"
@@ -85,7 +84,7 @@ public:
   virtual eMathMLFrameType GetMathMLFrameType();
 
   NS_IMETHOD
-  Stretch(nsIRenderingContext& aRenderingContext,
+  Stretch(nsRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize)
@@ -241,7 +240,7 @@ public:
                       nscoord&        aSubDrop) 
   {
     const nsStyleFont* font = aChild->GetStyleFont();
-    nsCOMPtr<nsIFontMetrics> fm = aChild->PresContext()->GetMetricsFor(
+    nsRefPtr<nsFontMetrics> fm = aChild->PresContext()->GetMetricsFor(
                                                               font->mFont);
     GetSubDrop(fm, aSubDrop);
   }
@@ -251,7 +250,7 @@ public:
                       nscoord&        aSupDrop) 
   {
     const nsStyleFont* font = aChild->GetStyleFont();
-    nsCOMPtr<nsIFontMetrics> fm = aChild->PresContext()->GetMetricsFor(
+    nsRefPtr<nsFontMetrics> fm = aChild->PresContext()->GetMetricsFor(
                                                               font->mFont);
     GetSupDrop(fm, aSupDrop);
   }
@@ -267,25 +266,23 @@ public:
 
   // 2 levels of subscript shifts
   static void
-  GetSubScriptShifts(nsIFontMetrics* fm, 
+  GetSubScriptShifts(nsFontMetrics* fm, 
                      nscoord&        aSubScriptShift1, 
                      nscoord&        aSubScriptShift2)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     aSubScriptShift1 = NSToCoordRound(150.000f/430.556f * xHeight);
     aSubScriptShift2 = NSToCoordRound(247.217f/430.556f * xHeight);
   }
 
   // 3 levels of superscript shifts
   static void
-  GetSupScriptShifts(nsIFontMetrics* fm, 
+  GetSupScriptShifts(nsFontMetrics* fm, 
                      nscoord&        aSupScriptShift1, 
                      nscoord&        aSupScriptShift2, 
                      nscoord&        aSupScriptShift3)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     aSupScriptShift1 = NSToCoordRound(412.892f/430.556f * xHeight);
     aSupScriptShift2 = NSToCoordRound(362.892f/430.556f * xHeight);
     aSupScriptShift3 = NSToCoordRound(288.889f/430.556f * xHeight);
@@ -294,77 +291,71 @@ public:
   // these are TeX specific params not found in ordinary fonts
 
   static void
-  GetSubDrop(nsIFontMetrics* fm,
+  GetSubDrop(nsFontMetrics* fm,
              nscoord&        aSubDrop)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     aSubDrop = NSToCoordRound(50.000f/430.556f * xHeight);
   }
 
   static void
-  GetSupDrop(nsIFontMetrics* fm,
+  GetSupDrop(nsFontMetrics* fm,
              nscoord&        aSupDrop)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     aSupDrop = NSToCoordRound(386.108f/430.556f * xHeight);
   }
 
   static void
-  GetNumeratorShifts(nsIFontMetrics* fm, 
+  GetNumeratorShifts(nsFontMetrics* fm, 
                      nscoord&        numShift1, 
                      nscoord&        numShift2, 
                      nscoord&        numShift3)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     numShift1 = NSToCoordRound(676.508f/430.556f * xHeight);
     numShift2 = NSToCoordRound(393.732f/430.556f * xHeight);
     numShift3 = NSToCoordRound(443.731f/430.556f * xHeight);
   }
 
   static void
-  GetDenominatorShifts(nsIFontMetrics* fm, 
+  GetDenominatorShifts(nsFontMetrics* fm, 
                        nscoord&        denShift1, 
                        nscoord&        denShift2)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     denShift1 = NSToCoordRound(685.951f/430.556f * xHeight);
     denShift2 = NSToCoordRound(344.841f/430.556f * xHeight);
   }
 
   static void
-  GetEmHeight(nsIFontMetrics* fm,
+  GetEmHeight(nsFontMetrics* fm,
               nscoord&        emHeight)
   {
-#if 0 
+#if 0
     // should switch to this API in order to scale with changes of TextZoom
-    fm->GetEmHeight(emHeight);
+    emHeight = fm->EmHeight();
 #else
     emHeight = NSToCoordRound(float(fm->Font().size));
 #endif
   }
 
   static void
-  GetAxisHeight (nsIFontMetrics* fm,
+  GetAxisHeight (nsFontMetrics* fm,
                  nscoord&        axisHeight)
   {
-    fm->GetXHeight (axisHeight);
-    axisHeight = NSToCoordRound(250.000f/430.556f * axisHeight);
+    axisHeight = NSToCoordRound(250.000f/430.556f * fm->XHeight());
   }
 
   static void
-  GetBigOpSpacings(nsIFontMetrics* fm, 
+  GetBigOpSpacings(nsFontMetrics* fm, 
                    nscoord&        bigOpSpacing1,
                    nscoord&        bigOpSpacing2,
                    nscoord&        bigOpSpacing3,
                    nscoord&        bigOpSpacing4,
                    nscoord&        bigOpSpacing5)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     bigOpSpacing1 = NSToCoordRound(111.111f/430.556f * xHeight);
     bigOpSpacing2 = NSToCoordRound(166.667f/430.556f * xHeight);
     bigOpSpacing3 = NSToCoordRound(200.000f/430.556f * xHeight);
@@ -373,11 +364,10 @@ public:
   }
 
   static void
-  GetRuleThickness(nsIFontMetrics* fm,
+  GetRuleThickness(nsFontMetrics* fm,
                    nscoord&        ruleThickness)
   {
-    nscoord xHeight;
-    fm->GetXHeight(xHeight);
+    nscoord xHeight = fm->XHeight();
     ruleThickness = NSToCoordRound(40.000f/430.556f * xHeight);
   }
 
@@ -385,13 +375,13 @@ public:
   // Here are some slower variants to obtain the desired metrics
   // by actually measuring some characters
   static void
-  GetRuleThickness(nsIRenderingContext& aRenderingContext, 
-                   nsIFontMetrics*      aFontMetrics,
+  GetRuleThickness(nsRenderingContext& aRenderingContext, 
+                   nsFontMetrics*      aFontMetrics,
                    nscoord&             aRuleThickness);
 
   static void
-  GetAxisHeight(nsIRenderingContext& aRenderingContext, 
-                nsIFontMetrics*      aFontMetrics,
+  GetAxisHeight(nsRenderingContext& aRenderingContext, 
+                nsFontMetrics*      aFontMetrics,
                 nscoord&             aAxisHeight);
 
 protected:

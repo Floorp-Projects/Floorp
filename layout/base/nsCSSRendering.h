@@ -40,7 +40,6 @@
 #ifndef nsCSSRendering_h___
 #define nsCSSRendering_h___
 
-#include "nsIRenderingContext.h"
 #include "nsStyleConsts.h"
 #include "gfxBlur.h"
 #include "gfxContext.h"
@@ -49,6 +48,7 @@
 struct nsPoint;
 class nsStyleContext;
 class nsPresContext;
+class nsRenderingContext;
 
 struct nsCSSRendering {
   /**
@@ -62,13 +62,13 @@ struct nsCSSRendering {
   static void Shutdown();
   
   static void PaintBoxShadowInner(nsPresContext* aPresContext,
-                                  nsIRenderingContext& aRenderingContext,
+                                  nsRenderingContext& aRenderingContext,
                                   nsIFrame* aForFrame,
                                   const nsRect& aFrameArea,
                                   const nsRect& aDirtyRect);
 
   static void PaintBoxShadowOuter(nsPresContext* aPresContext,
-                                  nsIRenderingContext& aRenderingContext,
+                                  nsRenderingContext& aRenderingContext,
                                   nsIFrame* aForFrame,
                                   const nsRect& aFrameArea,
                                   const nsRect& aDirtyRect);
@@ -83,7 +83,7 @@ struct nsCSSRendering {
    * when rendering. If 0 then no sides are skipped.
    */
   static void PaintBorder(nsPresContext* aPresContext,
-                          nsIRenderingContext& aRenderingContext,
+                          nsRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
@@ -95,7 +95,7 @@ struct nsCSSRendering {
    * getting it from aStyleContext.
    */
   static void PaintBorderWithStyleBorder(nsPresContext* aPresContext,
-                                         nsIRenderingContext& aRenderingContext,
+                                         nsRenderingContext& aRenderingContext,
                                          nsIFrame* aForFrame,
                                          const nsRect& aDirtyRect,
                                          const nsRect& aBorderArea,
@@ -110,7 +110,7 @@ struct nsCSSRendering {
    * when rendering. If 0 then no sides are skipped.
    */
   static void PaintOutline(nsPresContext* aPresContext,
-                          nsIRenderingContext& aRenderingContext,
+                          nsRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
@@ -123,7 +123,7 @@ struct nsCSSRendering {
    * Not used for controls, because the native theme may differ.
    */
   static void PaintFocus(nsPresContext* aPresContext,
-                         nsIRenderingContext& aRenderingContext,
+                         nsRenderingContext& aRenderingContext,
                          const nsRect& aFocusRect,
                          nscolor aColor);
 
@@ -131,7 +131,7 @@ struct nsCSSRendering {
    * Render a gradient for an element.
    */
   static void PaintGradient(nsPresContext* aPresContext,
-                            nsIRenderingContext& aRenderingContext,
+                            nsRenderingContext& aRenderingContext,
                             nsStyleGradient* aGradient,
                             const nsRect& aDirtyRect,
                             const nsRect& aOneCellArea,
@@ -234,7 +234,7 @@ struct nsCSSRendering {
     PAINTBG_TO_WINDOW = 0x04
   };
   static void PaintBackground(nsPresContext* aPresContext,
-                              nsIRenderingContext& aRenderingContext,
+                              nsRenderingContext& aRenderingContext,
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
                               const nsRect& aBorderArea,
@@ -247,7 +247,7 @@ struct nsCSSRendering {
    * background is drawn on the canvas.
    */
   static void PaintBackgroundWithSC(nsPresContext* aPresContext,
-                                    nsIRenderingContext& aRenderingContext,
+                                    nsRenderingContext& aRenderingContext,
                                     nsIFrame* aForFrame,
                                     const nsRect& aDirtyRect,
                                     const nsRect& aBorderArea,
@@ -275,7 +275,7 @@ struct nsCSSRendering {
 
   // Draw a border segment in the table collapsing border model without
   // beveling corners
-  static void DrawTableBorderSegment(nsIRenderingContext& aContext,
+  static void DrawTableBorderSegment(nsRenderingContext& aContext,
                                      PRUint8              aBorderStyle,  
                                      nscolor              aBorderColor,
                                      const nsStyleBackground* aBGColor,

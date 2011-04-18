@@ -20,10 +20,6 @@ function test() {
        prefix + ": panorama button should not be in the toolbar");
   }
 
-  let assertNumberOfGroups = function (num) {
-    is(cw.GroupItems.groupItems.length, num, prefix + ': there are ' + num + ' groups');
-  }
-
   let assertNumberOfTabs = function (num) {
     is(win.gBrowser.tabs.length, num, prefix + ': there are ' + num + ' tabs');
   }
@@ -91,7 +87,7 @@ function test() {
       assertToolbarButtonExists();
 
       next();
-    });
+    }, win);
   }
 
   let testDragToCreateOrphan = function (tab) {
@@ -124,14 +120,19 @@ function test() {
     prefix = 're-adding-after-removal';
     assertToolbarButtonNotExists();
 
-    TabView.firstUseExperienced = true;
+    win.TabView.firstUseExperienced = true;
+    assertToolbarButtonExists();
     removeToolbarButton();
-
-    TabView.firstUseExperienced = true;
-    TabView._addToolbarButton();
-
     assertToolbarButtonNotExists();
-    next();
+
+    win.close();
+
+    newWindowWithTabView(function (newWin) {
+      win = newWin;
+      win.TabView.firstUseExperienced = true;
+      assertToolbarButtonNotExists();
+      next();
+    });
   }
 
   let tests = [testNameGroup, testDragToCreateGroup, testCreateOrphan,
@@ -140,39 +141,39 @@ function test() {
   let next = function () {
     let test = tests.shift();
 
-    if (win)
-      win.close();
-
     if (!test) {
       finish();
       return;
     }
 
-    newWindowWithTabView(
-      function (newWin) {
-        cw = win.TabView.getContentWindow();
-        let groupItem = cw.GroupItems.groupItems[0];
-        groupItem.setSize(200, 200, true);
-        groupItem.setUserSize();
+    if (win)
+      win.close();
 
+    TabView.firstUseExperienced = false;
+
+    let onLoad = function (newWin) {
+      win = newWin;
+      removeToolbarButton();
+    }
+
+    let onShow = function () {
+      cw = win.TabView.getContentWindow();
+
+      let groupItem = cw.GroupItems.groupItems[0];
+      groupItem.setSize(200, 200, true);
+      groupItem.setUserSize();
+
+      SimpleTest.waitForFocus(function () {
         assertToolbarButtonNotExists();
         test();
-      },
-      function(newWin) {
-        win = newWin;
-        removeToolbarButton();
-        TabView.firstUseExperienced = false;
-        TabView.init();
-      }
-    );
+      }, cw);
+    }
+
+    newWindowWithTabView(onShow, onLoad);
   }
 
   waitForExplicitFinish();
-
-  registerCleanupFunction(function () {
-    if (win && !win.closed)
-      win.close();
-  });
+  registerCleanupFunction(function () win && win.close());
 
   next();
 }

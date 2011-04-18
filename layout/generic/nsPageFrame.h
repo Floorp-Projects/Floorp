@@ -81,11 +81,11 @@ public:
 
   virtual void SetSharedPageData(nsSharedPageData* aPD);
 
-  void PaintPrintPreviewBackground(nsIRenderingContext& aRenderingContext,
+  void PaintPrintPreviewBackground(nsRenderingContext& aRenderingContext,
                                    nsPoint aPt);
-  void PaintHeaderFooter(nsIRenderingContext& aRenderingContext,
+  void PaintHeaderFooter(nsRenderingContext& aRenderingContext,
                          nsPoint aPt);
-  void PaintPageContent(nsIRenderingContext& aRenderingContext,
+  void PaintPageContent(nsRenderingContext& aRenderingContext,
                         const nsRect&        aDirtyRect,
                         nsPoint              aPt);
 
@@ -98,12 +98,12 @@ protected:
     eFooter
   } nsHeaderFooterEnum;
 
-  nscoord GetXPosition(nsIRenderingContext& aRenderingContext, 
+  nscoord GetXPosition(nsRenderingContext& aRenderingContext, 
                        const nsRect&        aRect, 
                        PRInt32              aJust,
                        const nsString&      aStr);
 
-  void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+  void DrawHeaderFooter(nsRenderingContext& aRenderingContext,
                         nsHeaderFooterEnum   aHeaderFooter,
                         PRInt32              aJust,
                         const nsString&      sStr,
@@ -112,7 +112,7 @@ protected:
                         nscoord              aAscent,
                         nscoord              aWidth);
 
-  void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
+  void DrawHeaderFooter(nsRenderingContext& aRenderingContext,
                         nsHeaderFooterEnum   aHeaderFooter,
                         const nsString&      aStrLeft,
                         const nsString&      aStrRight,

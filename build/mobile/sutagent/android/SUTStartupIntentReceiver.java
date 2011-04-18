@@ -20,7 +20,7 @@
  *
  * Contributor(s):
  *  Bob Moss <bmoss@mozilla.com>
- * 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -43,11 +43,11 @@ import android.content.Intent;
 
 public class SUTStartupIntentReceiver extends BroadcastReceiver
 {
-	@Override
-	public void onReceive(Context context, Intent intent)
-		{
-		Intent mySUTAgentIntent = new Intent(context, SUTAgentAndroid.class);
-		mySUTAgentIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  
-		context.startActivity(mySUTAgentIntent);
-		}
+    @Override
+    public void onReceive(Context context, Intent intent)
+        {
+        Intent mySUTAgentIntent = new Intent(context, SUTAgentAndroid.class);
+        mySUTAgentIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(mySUTAgentIntent);
+        }
 }

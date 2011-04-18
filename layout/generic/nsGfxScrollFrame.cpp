@@ -51,7 +51,7 @@
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocument.h"
 #include "nsBoxLayoutState.h"
@@ -748,7 +748,7 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState,
 }
 
 nscoord
-nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsIRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext)
 {
   nsGfxScrollFrameInner::ScrollbarStyles ss = GetScrollbarStyles();
   if (ss.mVertical != NS_STYLE_OVERFLOW_SCROLL || !mInner.mVScrollbarBox)
@@ -764,7 +764,7 @@ nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsIRenderingContext *aRenderingCo
 }
 
 /* virtual */ nscoord
-nsHTMLScrollFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = mInner.mScrolledFrame->GetMinWidth(aRenderingContext);
   DISPLAY_MIN_WIDTH(this, result);
@@ -772,7 +772,7 @@ nsHTMLScrollFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsHTMLScrollFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = mInner.mScrolledFrame->GetPrefWidth(aRenderingContext);
   DISPLAY_PREF_WIDTH(this, result);
@@ -1983,6 +1983,8 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
      (XRE_GetProcessType() == GeckoProcessType_Content &&
      (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
       styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
+     (scrollRange.width > 0 ||
+      scrollRange.height > 0) &&
      (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
 
   if (ShouldBuildLayer()) {
@@ -2200,11 +2202,11 @@ nsGfxScrollFrameInner::GetLineScrollAmount() const
 {
   const nsStyleFont* font = mOuter->GetStyleFont();
   const nsFont& f = font->mFont;
-  nsCOMPtr<nsIFontMetrics> fm = mOuter->PresContext()->GetMetricsFor(f);
+  nsRefPtr<nsFontMetrics> fm = mOuter->PresContext()->GetMetricsFor(f);
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
   nscoord fontHeight = 1;
   if (fm) {
-    fm->GetHeight(fontHeight);
+    fontHeight = fm->MaxHeight();
   }
 
   return nsSize(fontHeight, fontHeight);

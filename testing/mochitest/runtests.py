@@ -211,7 +211,8 @@ class MochitestOptions(optparse.OptionParser):
                     action = "append", dest = "extensionsToInstall",
                     help = "install the specified extension in the testing profile."
                            "The extension file's name should be <id>.xpi where <id> is"
-                           "the extension's id as indicated in its install.rdf.")
+                           "the extension's id as indicated in its install.rdf."
+                           "An optional path can be specified too.")
     defaults["extensionsToInstall"] = []
 
     self.add_option("--profile-path", action = "store",
@@ -350,9 +351,8 @@ class MochitestServer:
 
   def stop(self):
     try:
-      c = urllib2.urlopen(self.shutdownURL)
-      c.read()
-      c.close()
+      with urllib2.urlopen(self.shutdownURL) as c:
+        c.read()
 
       rtncode = self._process.poll()
       if rtncode is None:
@@ -680,17 +680,17 @@ class Mochitest(object):
          "logPath": logFile,
          "testPath": testPath}
 
-    config = open(os.path.join(options.profilePath, "testConfig.js"), "w")
-    config.write(content)
-    config.close() 
-
+    with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
+      config.write(content)
 
   def addChromeToProfile(self, options):
     "Adds MochiKit chrome tests to the profile."
 
+    # Create (empty) chrome directory.
     chromedir = os.path.join(options.profilePath, "chrome")
     os.mkdir(chromedir)
 
+    # Write userChrome.css.
     chrome = """
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to XUL */
 toolbar,
@@ -701,79 +701,91 @@ toolbar#nav-bar {
   background-image: none !important;
 }
 """
+    with open(os.path.join(options.profilePath, "userChrome.css"), "a") as chromeFile:
+      chromeFile.write(chrome)
 
-    # write userChrome.css
-    chromeFile = open(os.path.join(options.profilePath, "userChrome.css"), "a")
-    chromeFile.write(chrome)
-    chromeFile.close()
+    # Call copyTestsJarToProfile(), Write tests.manifest.
+    manifest = os.path.join(options.profilePath, "tests.manifest")
+    with open(manifest, "w") as manifestFile:
+      if self.copyTestsJarToProfile(options):
+        # Register tests.jar.
+        manifestFile.write("content mochitests jar:tests.jar!/content/\n");
+      else:
+        # Register chrome directory.
+        chrometestDir = os.path.abspath(".") + "/"
+        if self.automation.IS_WIN32:
+          chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
+        manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
 
+    # Call installChromeJar().
+    jarDir = "mochijar"
+    if not os.path.isdir(os.path.join(self.SCRIPT_DIRECTORY, jarDir)):
+      self.automation.log.warning("TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension")
+      return None
 
-    # register our chrome dir
-    chrometestDir = os.path.abspath(".") + "/"
-    if self.automation.IS_WIN32:
-      chrometestDir = "file:///" + chrometestDir.replace("\\", "/")
-
-    manifest = os.path.join(options.profilePath, 'tests.manifest')
-
-    browser_chrome = ""
+    # Support Firefox (browser) and SeaMonkey (navigator).
+    chrome = ""
     if options.browserChrome:
-      browser_chrome = """overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/browser-test-overlay.xul
+      chrome += """
 overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul
+overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/browser-test-overlay.xul
 """
     elif (options.chrome == False) and (options.a11y == False):
       #only do the ipc-overlay.xul for mochitest-plain.  
       #Currently there are focus issues in chrome tests and issues with new windows and dialogs when using ipc
-      browser_chrome += "overlay chrome://browser/content/browser.xul chrome://mochikit/content/ipc-overlay.xul\n"
+      chrome += """
+overlay chrome://browser/content/browser.xul chrome://mochikit/content/ipc-overlay.xul
+overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/ipc-overlay.xul
+"""
 
-    jarDir = 'mochijar'
-    if not os.path.exists(os.path.join(self.SCRIPT_DIRECTORY, jarDir)):
-      print "TEST-UNEXPECTED-FAIL | invalid setup: missing mochikit extension"
-      return None
+    self.installChromeJar(jarDir, chrome, options)
 
-    manifestFile = open(manifest, "w")
-    if self.installTestsJar(options):
-      manifestFile.write("content mochitests jar:tests.jar!/content/\n");
-    else:
-      manifestFile.write("content mochitests %s contentaccessible=yes\n" % chrometestDir)
-    manifestFile.close()
-
-    self.installChromeJar(jarDir, browser_chrome, options)
     return manifest
 
-  def installChromeJar(self, jarDirName, browser_chrome, options):
+  def installChromeJar(self, jarDirName, chrome, options):
     """
       copy mochijar directory to profile as an extension so we have chrome://mochikit for all harness code
     """
-    jarDir = os.path.join(options.profilePath, 'extensions', 'mochikit@mozilla.org')
-    shutil.copytree(os.path.join(self.SCRIPT_DIRECTORY, jarDirName), jarDir)
-    with open(os.path.join(jarDir, "chrome.manifest"), 'a') as mfile:
-      mfile.write(browser_chrome)
+    self.automation.installExtension(os.path.join(self.SCRIPT_DIRECTORY, jarDirName), \
+                                     options.profilePath, "mochikit@mozilla.org")
 
-    return jarDir
+    # Write chrome.manifest.
+    with open(os.path.join(options.profilePath, "extensions", "mochikit@mozilla.org", "chrome.manifest"), "a") as mfile:
+      mfile.write(chrome)
 
-  def installTestsJar(self, options):
+  def copyTestsJarToProfile(self, options):
     """ copy tests.jar to the profile directory so we can auto register it in the .xul harness """
-    if os.path.exists(os.path.join(self.SCRIPT_DIRECTORY, 'tests.jar')):
-      shutil.copy(os.path.join(self.SCRIPT_DIRECTORY, 'tests.jar'), options.profilePath)
-      return True
-    return False
+    testsJarFile = os.path.join(self.SCRIPT_DIRECTORY, "tests.jar")
+    if not os.path.isfile(testsJarFile):
+      return False
+
+    shutil.copy2(testsJarFile, options.profilePath)
+    return True
 
   def copyExtraFilesToProfile(self, options):
     "Copy extra files or dirs specified on the command line to the testing profile."
     for f in options.extraProfileFiles:
       abspath = self.getFullPath(f)
-      dest = os.path.join(options.profilePath, os.path.basename(abspath))
-      if os.path.isdir(abspath):
+      if os.path.isfile(abspath):
+        shutil.copy2(abspath, options.profilePath)
+      elif os.path.isdir(abspath):
+        dest = os.path.join(options.profilePath, os.path.basename(abspath))
         shutil.copytree(abspath, dest)
       else:
-        shutil.copy(abspath, dest)
+        self.automation.log.warning("WARNING | runtests.py | Failed to copy %s to profile", abspath)
+        continue
 
   def installExtensionsToProfile(self, options):
-    "Install the specified extensions on the command line to the testing profile."
+    "Install application distributed extensions and specified on the command line ones to testing profile."
+    # Install distributed extensions, if application has any.
+    distExtDir = os.path.join(options.app[ : options.app.rfind(os.sep)], "distribution", "extensions")
+    if os.path.isdir(distExtDir):
+      for f in os.listdir(distExtDir):
+        self.automation.installExtension(os.path.join(distExtDir, f), options.profilePath)
+
+    # Install custom extensions.
     for f in options.extensionsToInstall:
-      abspath = self.getFullPath(f)
-      extensionID = f[:f.rfind(".")]
-      self.automation.installExtension(abspath, options.profilePath, extensionID)
+      self.automation.installExtension(self.getFullPath(f), options.profilePath)
 
 def main():
   automation = Automation()

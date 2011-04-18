@@ -62,6 +62,8 @@
  *
  *****************************************************************************/
 
+class nsDiskCacheDeviceDeactivateEntryEvent;
+
 class nsDiskCacheBinding : public nsISupports, public PRCList {
 public:
     NS_DECL_ISUPPORTS
@@ -79,6 +81,12 @@ public:
     nsDiskCacheStreamIO*    mStreamIO;      // strong reference
     PRBool                  mDoomed;        // record is not stored in cache map
     PRUint8                 mGeneration;    // possibly just reservation
+
+    // If set, points to a pending event which will deactivate |mCacheEntry|.
+    // If not set then either |mCacheEntry| is not deactivated, or it has been
+    // deactivated but the device returned it from FindEntry() before the event
+    // fired. In both two latter cases this binding is to be considered valid.
+    nsDiskCacheDeviceDeactivateEntryEvent *mDeactivateEvent;
 };
 
 

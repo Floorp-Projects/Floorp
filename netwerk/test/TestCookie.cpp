@@ -372,7 +372,14 @@ main(PRInt32 argc, char *argv[])
       GetACookie(cookieService, "http://foo.domain.com", nsnull, getter_Copies(cookie));
       rv[13] = CheckResult(cookie.get(), MUST_BE_NULL);
 
-      allTestsPassed = PrintResult(rv, 14) && allTestsPassed;
+      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=taco; path=\"/bogus\"", nsnull);
+      GetACookie(cookieService, "http://path.net/path/file", nsnull, getter_Copies(cookie));
+      rv[14] = CheckResult(cookie.get(), MUST_EQUAL, "test=taco");
+      SetACookie(cookieService, "http://path.net/path/file", nsnull, "test=taco; max-age=-1", nsnull);
+      GetACookie(cookieService, "http://path.net/path/file", nsnull, getter_Copies(cookie));
+      rv[15] = CheckResult(cookie.get(), MUST_BE_NULL);
+
+      allTestsPassed = PrintResult(rv, 16) && allTestsPassed;
 
 
       // *** path tests

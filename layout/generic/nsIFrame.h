@@ -85,7 +85,7 @@ class nsHTMLReflowCommand;
 class nsIAtom;
 class nsPresContext;
 class nsIPresShell;
-class nsIRenderingContext;
+class nsRenderingContext;
 class nsIView;
 class nsIWidget;
 class nsIDOMRange;
@@ -1406,7 +1406,7 @@ public:
    *
    * This method must not return a negative value.
    */
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext) = 0;
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext) = 0;
 
   /**
    * Get the intrinsic width of the frame.  This must be greater than or
@@ -1414,7 +1414,7 @@ public:
    *
    * Otherwise, all the comments for |GetMinWidth| above apply.
    */
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext) = 0;
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext) = 0;
 
   /**
    * |InlineIntrinsicWidth| represents the intrinsic width information
@@ -1471,11 +1471,11 @@ public:
     // current line total is negative.  When it is, we need to ignore
     // optional breaks to prevent min-width from ending up bigger than
     // pref-width.
-    void ForceBreak(nsIRenderingContext *aRenderingContext);
+    void ForceBreak(nsRenderingContext *aRenderingContext);
 
     // If the break here is actually taken, aHyphenWidth must be added to the
     // width of the current line.
-    void OptionallyBreak(nsIRenderingContext *aRenderingContext,
+    void OptionallyBreak(nsRenderingContext *aRenderingContext,
                          nscoord aHyphenWidth = 0);
 
     // The last text frame processed so far in the current line, when
@@ -1490,7 +1490,7 @@ public:
   };
 
   struct InlinePrefWidthData : public InlineIntrinsicWidthData {
-    void ForceBreak(nsIRenderingContext *aRenderingContext);
+    void ForceBreak(nsRenderingContext *aRenderingContext);
   };
 
   /**
@@ -1513,7 +1513,7 @@ public:
    * which calls |GetMinWidth|.
    */
   virtual void
-  AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+  AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                     InlineMinWidthData *aData) = 0;
 
   /**
@@ -1527,7 +1527,7 @@ public:
    * based on using all *mandatory* breakpoints within the frame.
    */
   virtual void
-  AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+  AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
                      InlinePrefWidthData *aData) = 0;
 
   /**
@@ -1544,7 +1544,7 @@ public:
     {}
   };
   virtual IntrinsicWidthOffsetData
-    IntrinsicWidthOffsets(nsIRenderingContext* aRenderingContext) = 0;
+    IntrinsicWidthOffsets(nsRenderingContext* aRenderingContext) = 0;
 
   /*
    * For replaced elements only. Gets the intrinsic dimensions of this element.
@@ -1625,7 +1625,7 @@ public:
    *                     it's floating, absolutely positioned, or
    *                     inline-block).
    */
-  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+  virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap) = 0;

@@ -47,7 +47,7 @@ interface nsIObserver;
  *
  * @see nsIPrefBranch
  */
-[scriptable, uuid(74567534-eb94-4b1c-8f45-389643bfc555)]
+[scriptable, uuid(784de8e2-e72f-441a-ae74-9d5fdfe13be3)]
 interface nsIPrefBranch2 : nsIPrefBranch
 {
   /**

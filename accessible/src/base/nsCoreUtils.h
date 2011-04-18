@@ -367,16 +367,6 @@ public:
     return aContent->NodeInfo()->Equals(nsAccessibilityAtoms::th) ||
       aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::scope);
   }
-
-  /**
-   * Generates frames for popup subtree.
-   *
-   * @param aContent [in] DOM node containing the menupopup element as a child
-   * @param aIsAnon  [in] specifies whether popup should be searched inside of
-   *                  anonymous or explicit content
-   */
-  static void GeneratePopupTree(nsIContent *aContent,
-                                PRBool aIsAnon = PR_FALSE);
 };
 
 

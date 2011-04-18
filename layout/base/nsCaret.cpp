@@ -51,13 +51,12 @@
 #include "nsIScrollableFrame.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMRange.h"
-#include "nsIFontMetrics.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIContent.h"
 #include "nsIPresShell.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "nsPresContext.h"
 #include "nsILookAndFeel.h"
@@ -357,12 +356,12 @@ nsCaret::GetGeometryForFrame(nsIFrame* aFrame,
   NS_ASSERTION(frame, "We should not be in the middle of reflow");
   nscoord baseline = frame->GetCaretBaseline();
   nscoord ascent = 0, descent = 0;
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(aFrame, getter_AddRefs(fm));
   NS_ASSERTION(fm, "We should be able to get the font metrics");
   if (fm) {
-    fm->GetMaxAscent(ascent);
-    fm->GetMaxDescent(descent);
+    ascent = fm->MaxAscent();
+    descent = fm->MaxDescent();
   }
   nscoord height = ascent + descent;
   framePos.y = baseline - ascent;
@@ -526,7 +525,7 @@ void nsCaret::UpdateCaretPosition()
 }
 
 void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
-                         nsIRenderingContext *aCtx,
+                         nsRenderingContext *aCtx,
                          nsIFrame* aForFrame,
                          const nsPoint &aOffset)
 {

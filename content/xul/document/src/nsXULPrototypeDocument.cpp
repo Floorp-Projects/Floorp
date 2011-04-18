@@ -81,7 +81,7 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
     // nsIScriptGlobalObject methods
-    virtual void OnFinalize(PRUint32 aLangID, void *aGlobal);
+    virtual void OnFinalize(JSObject* aObject);
     virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
     virtual void *GetScriptGlobal(PRUint32 lang);
@@ -124,7 +124,7 @@ nsXULPDGlobalObject_finalize(JSContext *cx, JSObject *obj)
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(nativeThis));
 
     if (sgo) {
-        sgo->OnFinalize(nsIProgrammingLanguage::JAVASCRIPT, obj);
+        sgo->OnFinalize(obj);
     }
 
     // The addref was part of JSObject construction
@@ -777,10 +777,8 @@ nsXULPDGlobalObject::ClearGlobalObjectOwner()
 
 
 void
-nsXULPDGlobalObject::OnFinalize(PRUint32 aLangID, void *aObject)
+nsXULPDGlobalObject::OnFinalize(JSObject* aObject)
 {
-  NS_ABORT_IF_FALSE(aLangID == nsIProgrammingLanguage::JAVASCRIPT,
-                    "We don't support this language ID");
   mJSObject = NULL;
 }
 

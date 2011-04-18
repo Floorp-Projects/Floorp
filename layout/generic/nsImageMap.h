@@ -50,7 +50,7 @@
 
 class nsIDOMHTMLAreaElement;
 class nsIDOMHTMLMapElement;
-class nsIRenderingContext;
+class nsRenderingContext;
 class nsIURI;
 class nsString;
 class nsIDOMEvent;
@@ -73,7 +73,7 @@ public:
   PRBool IsInside(nscoord aX, nscoord aY,
                   nsIContent** aContent) const;
 
-  void Draw(nsIFrame* aFrame, nsIRenderingContext& aRC);
+  void Draw(nsIFrame* aFrame, nsRenderingContext& aRC);
   
   /** 
    * Called just before the nsImageFrame releases us. 
