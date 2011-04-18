@@ -10,7 +10,7 @@ Cu.import("resource://services-sync/log4moz.js");
   
 Engines.register(TabEngine);
 
-function v4_upgrade(next) {
+add_test(function v4_upgrade() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
 
   let clients = new ServerCollection();
@@ -184,11 +184,11 @@ function v4_upgrade(next) {
     
   } finally {
     Weave.Svc.Prefs.resetBranch("");
-    server.stop(next);
+    server.stop(run_next_test);
   }
-}
+});
 
-function v5_upgrade(next) {
+add_test(function v5_upgrade() {
   let passphrase = "abcdeabcdeabcdeabcdeabcdea";
 
   // Tracking info/collections.
@@ -292,15 +292,13 @@ function v5_upgrade(next) {
     
   } finally {
     Weave.Svc.Prefs.resetBranch("");
-    server.stop(next);
+    server.stop(run_next_test);
   }
-}
+});
 
 function run_test() {
   let logger = Log4Moz.repository.rootLogger;
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
-  
-  do_test_pending();
-  Utils.asyncChain(v4_upgrade, v5_upgrade,
-                   do_test_finished)();
+
+  run_next_test();
 }
