@@ -3521,26 +3521,6 @@ else
             [XSS_LIBS="-lXss $XEXT_LIBS $XLIBS"
              AC_DEFINE(HAVE_LIBXSS)],, $XEXT_LIBS $XLIBS))
 
-    dnl ========================================================
-    dnl = Check for XIE
-    dnl ========================================================
-    AC_CHECK_LIB(XIE, XieFloGeometry, [MOZ_XIE_LIBS="-lXIE"],,
-        $XLIBS $XEXT_LIBS)
-    MOZ_CHECK_HEADER(X11/extensions/XIElib.h)
-
-    if test "$MOZ_XIE_LIBS"; then
-	dnl ====================================================
-	dnl = If XIE is present and is desired, turn it on
-	dnl ====================================================
-	case $target in
-	    *-hpux*)
-		;;
-	    *)
-		HAVE_XIE=1
-		;;
-	esac
-    fi
-
 	LDFLAGS="$_SAVE_LDFLAGS"
 
     dnl ========================================================
@@ -9000,9 +8980,6 @@ AC_SUBST(JAVAC)
 AC_SUBST(JAR)
 
 AC_SUBST(MOZ_PROFILELOCKING)
-
-AC_SUBST(HAVE_XIE)
-AC_SUBST(MOZ_XIE_LIBS)
 
 AC_SUBST(BUILD_STATIC_LIBS)
 AC_SUBST(MOZ_ENABLE_LIBXUL)
