@@ -22,9 +22,7 @@ function httpd_handler(statusCode, status, body) {
 }
 
 function httpd_basic_auth_handler(body, metadata, response) {
-  // no btoa() in xpcshell.  it's guest:guest
-  if (metadata.hasHeader("Authorization") &&
-      metadata.getHeader("Authorization") == "Basic Z3Vlc3Q6Z3Vlc3Q=") {
+  if (basic_auth_matches(metadata, "guest", "guest")) {
     response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
   } else {
