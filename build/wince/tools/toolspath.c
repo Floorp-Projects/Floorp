@@ -199,8 +199,8 @@ DWORD run(char** args)
  _putenv("LIBPATH=");
  _putenv("CC=");
 
- _putenv("INCLUDE=" SHUNT_INC ";" WM_SDK_INC ";" OGLES_SDK_INC ";" WCE_INC);
- _putenv("LIB=" WCE_LIB ";" OGLES_SDK_LIB ";" WCE_CRT);
+ _putenv("INCLUDE=" SHUNT_INC ";" WM_SDK_INC ";" WCE_INC);
+ _putenv("LIB=" WCE_LIB ";" WCE_CRT);
 
  i = strlen(args[0]);
  for (j=0; j<i; j++)

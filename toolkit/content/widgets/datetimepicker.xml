@@ -20,7 +20,7 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Neil Deakin <enndeakin@sympatico.ca> (Original Author)
+   -   Neil Deakin <enndeakin@gmail.com> (Original Author)
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -645,6 +645,11 @@
       </property>
       <property name="open" onget="return false;" onset="return val;"/>
 
+      <property name="displayedMonth" onget="return this.month;"
+                onset="this.month = val; return val;"/>
+      <property name="displayedYear" onget="return this.year;"
+                onset="this.year = val; return val;"/>
+
       <method name="_setValueNoSync">
         <parameter name="aValue"/>
         <body>
@@ -989,6 +994,25 @@
         </setter>
       </property>
 
+      <property name="displayedMonth">
+        <getter>
+          return this._displayedDate.getMonth();
+        </getter>
+        <setter>
+          this._updateUI(this.monthField, val, true);
+          return val;
+        </setter>
+      </property>
+      <property name="displayedYear">
+        <getter>
+          return this._displayedDate.getFullYear();
+        </getter>
+        <setter>
+          this._updateUI(this.yearField, val, true);
+          return val;
+        </setter>
+      </property>
+
       <method name="_init">
         <body>
           <![CDATA[
@@ -1030,15 +1054,30 @@
       <method name="_updateUI">
         <parameter name="aField"/>
         <parameter name="aValue"/>
-        <parameter name="aIncDecMonth"/>
+        <parameter name="aCheckMonth"/>
         <body>
           <![CDATA[
             var date;
             var currentMonth;
-            if (aIncDecMonth) {
+            if (aCheckMonth) {
               if (!this._displayedDate)
                 this._displayedDate = this.dateValue;
-              this._displayedDate.setMonth(aValue);
+
+              var expectedMonth = aValue;
+              if (aField == this.monthField) {
+                this._displayedDate.setMonth(aValue);
+              }
+              else {
+                expectedMonth = this._displayedDate.getMonth();
+                this._displayedDate.setFullYear(aValue);
+              }
+
+              if (expectedMonth != -1 && expectedMonth != 12 &&
+                  expectedMonth != this._displayedDate.getMonth()) {
+                // If the month isn't what was expected, then the month overflowed.
+                // Setting the date to 0 will go back to the last day of the right month.
+                this._displayedDate.setDate(0);
+              }
 
               date = new Date(this._displayedDate);
               currentMonth = this._displayedDate.getMonth();
@@ -1249,6 +1288,24 @@
               this.boxObject.openMenu(val);
             return val;
           ]]>
+        </setter>
+      </property>
+      <property name="displayedMonth">
+        <getter>
+          return document.getAnonymousElementByAttribute(this, "anonid", "grid").displayedMonth;
+        </getter>
+        <setter>
+          document.getAnonymousElementByAttribute(this, "anonid", "grid").displayedMonth = val;
+          return val;
+        </setter>
+      </property>
+      <property name="displayedYear">
+        <getter>
+          return document.getAnonymousElementByAttribute(this, "anonid", "grid").displayedYear;
+        </getter>
+        <setter>
+          document.getAnonymousElementByAttribute(this, "anonid", "grid").displayedYear = val;
+          return val;
         </setter>
       </property>
     </implementation>

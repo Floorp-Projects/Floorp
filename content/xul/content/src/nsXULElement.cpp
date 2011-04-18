@@ -774,8 +774,8 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
     // XXX sXBL/XBL2 issue! Owner or current document?
     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mElement->GetOwnerDoc());
 
-    nsIScriptContext *context;
-    nsXULPrototypeElement *elem = mElement->mPrototype;
+    nsIScriptContext* context = NULL;
+    nsXULPrototypeElement* elem = mElement->mPrototype;
     if (elem && xuldoc) {
         // It'll be shared among the instances of the prototype.
 

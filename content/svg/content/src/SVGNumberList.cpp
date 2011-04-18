@@ -47,7 +47,7 @@
 #include "nsTextFormatter.h"
 #include "nsCharSeparatedTokenizer.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 nsresult
 SVGNumberList::CopyFrom(const SVGNumberList& rhs)
@@ -108,3 +108,5 @@ SVGNumberList::SetValueFromString(const nsAString& aValue)
   }
   return CopyFrom(temp);
 }
+
+} // namespace mozilla

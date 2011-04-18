@@ -106,8 +106,7 @@ public:
     nsresult closePrevious(PRBool aFlushText);
 
     nsresult createResultDocument(const nsSubstring& aName, PRInt32 aNsID,
-                                  nsIDOMDocument* aSourceDocument,
-                                  nsIDOMDocument* aResultDocument);
+                                  nsIDOMDocument* aSourceDocument);
 
 private:
     nsresult createTxWrapper();

@@ -65,7 +65,6 @@
 #include "nsIXPConnect.h"
 #include "jsapi.h"
 
-#include "nsIRenderingContext.h"
 #include "nsITimer.h"
 
 #include "nsEventDispatcher.h"
@@ -1820,7 +1819,7 @@ nsresult nsHTMLMediaElement::InitializeDecoderAsClone(nsMediaDecoder* aOriginal)
 
   double duration = aOriginal->GetDuration();
   if (duration >= 0) {
-    decoder->SetDuration(PRInt64(NS_round(duration * 1000)));
+    decoder->SetDuration(duration);
     decoder->SetSeekable(aOriginal->GetSeekable());
   }
 

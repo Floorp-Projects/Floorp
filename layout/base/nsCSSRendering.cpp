@@ -119,7 +119,7 @@ public:
    * @see nsLayoutUtils::DrawImage() for other parameters
    */
   void Draw(nsPresContext*       aPresContext,
-            nsIRenderingContext& aRenderingContext,
+            nsRenderingContext& aRenderingContext,
             const nsRect&        aDest,
             const nsRect&        aFill,
             const nsPoint&       aAnchor,
@@ -358,13 +358,13 @@ protected:
 
 /* Local functions */
 static void DrawBorderImage(nsPresContext* aPresContext,
-                            nsIRenderingContext& aRenderingContext,
+                            nsRenderingContext& aRenderingContext,
                             nsIFrame* aForFrame,
                             const nsRect& aBorderArea,
                             const nsStyleBorder& aStyleBorder,
                             const nsRect& aDirtyRect);
 
-static void DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
+static void DrawBorderImageComponent(nsRenderingContext& aRenderingContext,
                                      nsIFrame* aForFrame,
                                      imgIContainer* aImage,
                                      const nsRect& aDirtyRect,
@@ -472,7 +472,7 @@ nsCSSRendering::ComputePixelRadii(const nscoord *aAppUnitsRadii,
 
 void
 nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
-                            nsIRenderingContext& aRenderingContext,
+                            nsRenderingContext& aRenderingContext,
                             nsIFrame* aForFrame,
                             const nsRect& aDirtyRect,
                             const nsRect& aBorderArea,
@@ -513,7 +513,7 @@ nsCSSRendering::PaintBorder(nsPresContext* aPresContext,
 
 void
 nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
-                                           nsIRenderingContext& aRenderingContext,
+                                           nsRenderingContext& aRenderingContext,
                                            nsIFrame* aForFrame,
                                            const nsRect& aDirtyRect,
                                            const nsRect& aBorderArea,
@@ -664,7 +664,7 @@ GetOutlineInnerRect(nsIFrame* aFrame)
 
 void
 nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
-                             nsIRenderingContext& aRenderingContext,
+                             nsRenderingContext& aRenderingContext,
                              nsIFrame* aForFrame,
                              const nsRect& aDirtyRect,
                              const nsRect& aBorderArea,
@@ -793,7 +793,7 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
 
 void
 nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
-                           nsIRenderingContext& aRenderingContext,
+                           nsRenderingContext& aRenderingContext,
                            const nsRect& aFocusRect,
                            nscolor aColor)
 {
@@ -1073,7 +1073,7 @@ nsCSSRendering::DidPaint()
 
 void
 nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
-                                    nsIRenderingContext& aRenderingContext,
+                                    nsRenderingContext& aRenderingContext,
                                     nsIFrame* aForFrame,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
@@ -1199,10 +1199,10 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       // Draw the widget shape
       gfxContextMatrixAutoSaveRestore save(shadowContext);
       nsIDeviceContext* devCtx = aPresContext->DeviceContext();
-      nsCOMPtr<nsIRenderingContext> wrapperCtx;
+      nsRefPtr<nsRenderingContext> wrapperCtx;
       devCtx->CreateRenderingContextInstance(*getter_AddRefs(wrapperCtx));
       wrapperCtx->Init(devCtx, shadowContext);
-      wrapperCtx->Translate(shadowItem->mXOffset, shadowItem->mYOffset);
+      wrapperCtx->Translate(nsPoint(shadowItem->mXOffset, shadowItem->mYOffset));
 
       nsRect nativeRect;
       nativeRect.IntersectRect(frameRect, aDirtyRect);
@@ -1265,7 +1265,7 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
 void
 nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
-                                    nsIRenderingContext& aRenderingContext,
+                                    nsRenderingContext& aRenderingContext,
                                     nsIFrame* aForFrame,
                                     const nsRect& aFrameArea,
                                     const nsRect& aDirtyRect)
@@ -1430,7 +1430,7 @@ nsCSSRendering::PaintBoxShadowInner(nsPresContext* aPresContext,
 
 void
 nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
-                                nsIRenderingContext& aRenderingContext,
+                                nsRenderingContext& aRenderingContext,
                                 nsIFrame* aForFrame,
                                 const nsRect& aDirtyRect,
                                 const nsRect& aBorderArea,
@@ -1924,7 +1924,7 @@ FindTileStart(nscoord aDirtyCoord, nscoord aTilePos, nscoord aTileDim)
 
 void
 nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
-                              nsIRenderingContext& aRenderingContext,
+                              nsRenderingContext& aRenderingContext,
                               nsStyleGradient* aGradient,
                               const nsRect& aDirtyRect,
                               const nsRect& aOneCellArea,
@@ -2248,7 +2248,7 @@ PrepareBackgroundLayer(nsPresContext* aPresContext,
 
 void
 nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
-                                      nsIRenderingContext& aRenderingContext,
+                                      nsRenderingContext& aRenderingContext,
                                       nsIFrame* aForFrame,
                                       const nsRect& aDirtyRect,
                                       const nsRect& aBorderArea,
@@ -2733,7 +2733,7 @@ nsCSSRendering::GetBackgroundLayerRect(nsPresContext* aPresContext,
 
 static void
 DrawBorderImage(nsPresContext*       aPresContext,
-                nsIRenderingContext& aRenderingContext,
+                nsRenderingContext& aRenderingContext,
                 nsIFrame*            aForFrame,
                 const nsRect&        aBorderArea,
                 const nsStyleBorder& aStyleBorder,
@@ -2940,7 +2940,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
 }
 
 static void
-DrawBorderImageComponent(nsIRenderingContext& aRenderingContext,
+DrawBorderImageComponent(nsRenderingContext& aRenderingContext,
                          nsIFrame*            aForFrame,
                          imgIContainer*       aImage,
                          const nsRect&        aDirtyRect,
@@ -3076,7 +3076,7 @@ SetPoly(const nsRect& aRect,
 }
 
 static void
-DrawSolidBorderSegment(nsIRenderingContext& aContext,
+DrawSolidBorderSegment(nsRenderingContext& aContext,
                        nsRect               aRect,
                        nscoord              aTwipsPerPixel,
                        PRUint8              aStartBevelSide = 0,
@@ -3090,13 +3090,13 @@ DrawSolidBorderSegment(nsIRenderingContext& aContext,
     // simple line or rectangle
     if ((NS_SIDE_TOP == aStartBevelSide) || (NS_SIDE_BOTTOM == aStartBevelSide)) {
       if (1 == aRect.height)
-        aContext.DrawLine(aRect.x, aRect.y, aRect.x, aRect.y + aRect.height);
+        aContext.DrawLine(aRect.TopLeft(), aRect.BottomLeft());
       else
         aContext.FillRect(aRect);
     }
     else {
       if (1 == aRect.width)
-        aContext.DrawLine(aRect.x, aRect.y, aRect.x + aRect.width, aRect.y);
+        aContext.DrawLine(aRect.TopLeft(), aRect.TopRight());
       else
         aContext.FillRect(aRect);
     }
@@ -3166,7 +3166,7 @@ GetDashInfo(nscoord  aBorderLength,
 }
 
 void
-nsCSSRendering::DrawTableBorderSegment(nsIRenderingContext&     aContext,
+nsCSSRendering::DrawTableBorderSegment(nsRenderingContext&     aContext,
                                        PRUint8                  aBorderStyle,
                                        nscolor                  aBorderColor,
                                        const nsStyleBackground* aBGColor,
@@ -3926,7 +3926,7 @@ ImageRenderer::ComputeSize(const nsSize& aDefault)
 
 void
 ImageRenderer::Draw(nsPresContext*       aPresContext,
-                         nsIRenderingContext& aRenderingContext,
+                         nsRenderingContext& aRenderingContext,
                          const nsRect&        aDest,
                          const nsRect&        aFill,
                          const nsPoint&       aAnchor,

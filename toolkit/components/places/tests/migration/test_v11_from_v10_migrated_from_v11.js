@@ -118,12 +118,12 @@ function test_final_state()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let gTests = [
+[
   test_initial_state,
   test_bookmark_guids_non_null,
   test_place_guids_non_null,
   test_final_state,
-];
+].forEach(add_test);
 
 function run_test()
 {

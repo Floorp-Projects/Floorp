@@ -39,8 +39,6 @@
 
 #include "nsIDOMNode.idl"
 
-interface nsIDOMDOMConfiguration;
-
 /**
  * The nsIDOMDocument interface represents the entire HTML or XML document.
  * Conceptually, it is the root of the document tree, and provides the 
@@ -54,7 +52,7 @@ interface nsIDOMDOMConfiguration;
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(3e7421c4-9964-4184-8c75-d291eecdba35)]
+[scriptable, uuid(1ae51729-c57c-43cd-91f4-2ffee5c5d493)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -111,12 +109,5 @@ interface nsIDOMDocument : nsIDOMNode
   nsIDOMNode         adoptNode(in nsIDOMNode source)
                                         raises(DOMException);
   // Introduced in DOM Level 3:
-  readonly attribute nsIDOMDOMConfiguration domConfig;
-  // Introduced in DOM Level 3:
   void               normalizeDocument();
-  // Introduced in DOM Level 3:
-  nsIDOMNode         renameNode(in nsIDOMNode node, 
-                                in DOMString namespaceURI, 
-                                in DOMString qualifiedName)
-                                        raises(DOMException);
 };

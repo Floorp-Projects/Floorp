@@ -113,6 +113,8 @@ libs:: unit/head_update.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/head_update.js
 
 ifndef ANDROID
+ifndef MOZ_PROFILE_GENERATE
 libs::
 	$(INSTALL) TestAUSHelper$(BIN_SUFFIX) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
+endif
 endif # ANDROID

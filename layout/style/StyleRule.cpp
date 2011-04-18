@@ -57,7 +57,6 @@
 #include "nsString.h"
 #include "nsStyleConsts.h"
 #include "nsStyleUtil.h"
-#include "nsIFontMetrics.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSStyleRuleDOMWrapper.h"
 #include "nsIDOMCSSStyleDeclaration.h"

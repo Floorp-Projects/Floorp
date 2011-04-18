@@ -69,104 +69,83 @@ ok(size > 65536, "test data sufficiently large");
 
 
 // Test that basic properties work
-function testBasics(file, size, type) {
-  is(file.type, type, "[B0] mozGetAsFile type");
-  is(file.size, size, "[B0] file is correct size");
-  ok(file instanceof File, "[B0] file is a File");
-  ok(file instanceof Blob, "[B0] file is also a Blob");
+function testFile(file, size, type, contents, fileType) {
+  is(file.type, type, fileType + " file is correct type");
+  is(file.size, size, fileType + " file is correct size");
+  ok(file instanceof File, fileType + " file is a File");
+  ok(file instanceof Blob, fileType + " file is also a Blob");
   
-  var slice = file.slice(0, size);
-  is(slice.type, "", "[B1] full-size type");
-  is(slice.size, size, "[B1] full-size size");
-  ok(slice instanceof Blob, "[B1] slice is a Blob");
-  ok(!(slice instanceof File), "[B1] slice is not a File");
+  var slice = file.mozSlice(0, size);
+  ok(slice instanceof Blob, fileType + " fullsize slice is a Blob");
+  ok(!(slice instanceof File), fileType + " fullsize slice is not a File");
   
-  slice = file.slice(0, 1234);
-  is(slice.type, "", "[B2] sized type");
-  is(slice.size, 1234, "[B2] sized size");
-  ok(slice instanceof Blob, "[B2] slice is a Blob");
-  ok(!(slice instanceof File), "[B2] slice is not a File");
+  slice = file.mozSlice(0, 1234);
+  ok(slice instanceof Blob, fileType + " sized slice is a Blob");
+  ok(!(slice instanceof File), fileType + " sized slice is not a File");
   
-  slice = file.slice(size-500, 1000);
-  is(slice.type, "", "[B3] end-sized type");
-  is(slice.size, 500, "[B3] end-sized size");
-  
-  slice = file.slice(size+500, 1000);
-  is(slice.type, "", "[B4] sized type");
-  is(slice.size, 0, "[B4] sized size");
+  slice = file.mozSlice(0, size, "foo/bar");
+  is(slice.type, "foo/bar", fileType + " fullsize slice foo/bar type");
 
-  slice = file.slice(0, 0);
-  is(slice.type, "", "[B5] sized type");
-  is(slice.size, 0, "[B5] sized size");
-
-  slice = file.slice(1000, 0);
-  is(slice.type, "", "[B6] sized type");
-  is(slice.size, 0, "[B6] sized size");
+  slice = file.mozSlice(0, 5432, "foo/bar");
+  is(slice.type, "foo/bar", fileType + " sized slice foo/bar type");
   
-  slice = file.slice(0, size, "foo/bar");
-  is(slice.type, "foo/bar", "[B7] full-size foo/bar type");
-  is(slice.size, size, "[B7] full-size foo/bar size");
+  is(slice.mozSlice(0, 10).type, "", fileType + " slice-slice type");
+  is(slice.mozSlice(0, 10).size, 10, fileType + " slice-slice size");
+  is(slice.mozSlice(0, 10, "hello/world").type, "hello/world", fileType + " slice-slice hello/world type");
+  is(slice.mozSlice(0, 10, "hello/world").size, 10, fileType + " slice-slice hello/world size");
 
-  slice = file.slice(0, 5432, "foo/bar");
-  is(slice.type, "foo/bar", "[B8] sized foo/bar type");
-  is(slice.size, 5432, "[B8] sized foo/bar size");
+  var indexes = [[0, size, size],
+                 [0, 1234, 1234],
+                 [size-500, size, 500],
+                 [size-500, size+500, 500],
+                 [size+500, size+1500, 0],
+                 [0, 0, 0],
+                 [1000, 1000, 0],
+                 [size, size, 0],
+                 [0, undefined, size],
+                 [100, undefined, size-100],
+                 [-100, undefined, 100],
+                 [100, -100, size-200],
+                 [-size-100, undefined, size],
+                 [-2*size-100, 500, 500],
+                 [0, -size-100, 0],
+                 [100, -size-100, 0],
+                 [50, -size+100, 50],
+                 [0, 33000, 33000],
+                 [1000, 34000, 33000],
+                ];
   
-  is(slice.slice(0, 10).type, "", "[B9] slice-slice type");
-  is(slice.slice(0, 10).size, 10, "[B9] slice-slice size");
-  is(slice.slice(0, 10, "hello/world").type, "hello/world", "[B9] slice-slice hello/world type");
-  is(slice.slice(0, 10, "hello/world").size, 10, "[B9] slice-slice hello/world type");
+  for (var i = 0; i < indexes.length; ++i) {
+    var sliceContents;
+    var testName;
+    if (indexes[i][1] == undefined) {
+      slice = file.mozSlice(indexes[i][0]);
+      sliceContents = contents.slice(indexes[i][0]);
+      testName = fileType + " slice(" + indexes[i][0] + ")";
+    }
+    else {
+      slice = file.mozSlice(indexes[i][0], indexes[i][1]);
+      sliceContents = contents.slice(indexes[i][0], indexes[i][1]);
+      testName = fileType + " slice(" + indexes[i][0] + ", " + indexes[i][1] + ")";
+    }
+    is(slice.type, "", testName + " type");
+    is(slice.size, indexes[i][2], testName + " size");
+    is(sliceContents.length, indexes[i][2], testName + " data size");
+    checkFileContents(slice, sliceContents, testName);
+  }
+
+  // Slice of slice
+  var slice = file.mozSlice(0, 40000);
+  checkFileContents(slice.mozSlice(5000, 42000), contents.slice(5000, 40000), "file slice slice");
+  
+  // ...of slice of slice
+  slice = slice.mozSlice(5000, 42000).mozSlice(400, 700);
+  gc();
+  checkFileContents(slice, contents.slice(5400, 5700), "file slice slice slice");
 }
 
-testBasics(memFile, size, "image/png");
-testBasics(fileFile, size, "");
-
-
-// Test reading various slices
-
-// Full file
-testFile(memFile, fileData, "mem file");
-testFile(fileFile, fileData, "file file");
-
-// Simple slice
-testFile(memFile.slice(0, 33000), fileData.substr(0, 33000), "mem file slice");
-testFile(fileFile.slice(0, 33000), fileData.substr(0, 33000), "file file slice");
-
-// Simple slice not starting at beginning
-testFile(memFile.slice(1000, 33000), fileData.substr(1000, 33000), "mem file slice starting at non-zero");
-testFile(fileFile.slice(1000, 33000), fileData.substr(1000, 33000), "file file slice starting at non-zero");
-
-// Slice of slice
-var memSlice = memFile.slice(0, 40000);
-var fileSlice = fileFile.slice(0, 40000);
-testFile(memSlice.slice(5000, 37000), fileData.substr(5000, 35000), "mem file slice slice");
-testFile(fileSlice.slice(5000, 37000), fileData.substr(5000, 35000), "file file slice slice");
-
-// ...of slice of slice
-memSlice = memSlice.slice(5000, 37000).slice(400, 300);
-fileSlice = fileSlice.slice(5000, 37000).slice(400, 300);
-gc();
-testFile(memSlice, fileData.substr(5400, 300), "mem file slice slice slice");
-testFile(fileSlice, fileData.substr(5400, 300), "file file slice slice slice");
-
-// empty slice
-testFile(memFile.slice(4711, 0), "", "mem file empty slice (1)");
-testFile(fileFile.slice(4711, 0), "", "file file empty slice (1)");
-testFile(memFile.slice(0, 0), "", "mem file empty slice (2)");
-testFile(fileFile.slice(0, 0), "", "file file empty slice (2)");
-
-// slice at end
-testFile(memFile.slice(size-1000, 1000), fileData.substr(size-1000, 1000), "mem file slice at end");
-testFile(fileFile.slice(size-1000, 1000), fileData.substr(size-1000, 1000), "file file slice at end");
-
-// slice across end
-testFile(memFile.slice(size-500, 1000), fileData.substr(size-500, 500), "mem file slice across end");
-testFile(fileFile.slice(size-500, 1000), fileData.substr(size-500, 500), "file file slice across end");
-
-// slice past end
-testFile(memFile.slice(size, 1000), "", "mem file slice past end (1)");
-testFile(fileFile.slice(size, 1000), "", "file file slice past end (1)");
-testFile(memFile.slice(size + 1000, 1000), "", "mem file slice past end (2)");
-testFile(fileFile.slice(size + 1000, 1000), "", "file file slice past end (2)");
+testFile(memFile, size, "image/png", fileData, "memFile");
+testFile(fileFile, size, "", fileData, "fileFile");
 
 
 // Try loading directly from slice into an image
@@ -202,7 +181,7 @@ function imageLoadHandler(event) {
 var imgfile = createFileWithData(testBinaryData + fileData + testBinaryData);
 is(imgfile.size, size + testBinaryData.length * 2, "correct file size (middle)");
 var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, size));
+img.src = URL.createObjectURL(imgfile.mozSlice(testBinaryData.length, testBinaryData.length + size));
 img.onload = imageLoadHandler;
 expectedTestCount++;
 
@@ -210,7 +189,7 @@ expectedTestCount++;
 var imgfile = createFileWithData(fileData + testBinaryData);
 is(imgfile.size, size + testBinaryData.length, "correct file size (start)");
 var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(0, size));
+img.src = URL.createObjectURL(imgfile.mozSlice(0, size));
 img.onload = imageLoadHandler;
 expectedTestCount++;
 
@@ -218,7 +197,7 @@ expectedTestCount++;
 var imgfile = createFileWithData(testBinaryData + fileData);
 is(imgfile.size, size + testBinaryData.length, "correct file size (end)");
 var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, size));
+img.src = URL.createObjectURL(imgfile.mozSlice(testBinaryData.length, testBinaryData.length + size));
 img.onload = imageLoadHandler;
 expectedTestCount++;
 
@@ -226,13 +205,15 @@ expectedTestCount++;
 var imgfile = createFileWithData(testBinaryData + fileData);
 is(imgfile.size, size + testBinaryData.length, "correct file size (past end)");
 var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, size + 1000));
+img.src = URL.createObjectURL(imgfile.mozSlice(testBinaryData.length, testBinaryData.length + size + 1000));
 img.onload = imageLoadHandler;
 expectedTestCount++;
 
 
 // Utility functions
-function testFile(file, contents, test) {
+function checkFileContents(file, contents, test) {
+  SimpleTest.requestLongerTimeout(2);
+
   // Load file using FileReader
   var r = new FileReader();
   r.onload = getFileReaderLoadHandler(contents, contents.length, "FileReader.readAsBinaryString of " + test);

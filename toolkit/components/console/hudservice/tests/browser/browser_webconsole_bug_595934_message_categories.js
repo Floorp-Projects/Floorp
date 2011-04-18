@@ -59,11 +59,7 @@ const TESTS = [
     category: "DOM:HTML",
     matchString: "document.all",
   },
-  { // #9
-    file: "test-bug-595934-dom-events-external.html",
-    category: "DOM Events",
-    matchString: "clientWidth",
-  },
+  // #9 was a warning about document.width, for which support has been removed.
   { // #10
     file: "test-bug-595934-dom-events-external2.html",
     category: "DOM Events",

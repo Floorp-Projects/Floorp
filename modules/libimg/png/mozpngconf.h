@@ -42,15 +42,23 @@
 
 #define PNG_NO_GLOBAL_ARRAYS
 
+#ifdef _MSC_VER
+/* The PNG_PEDANTIC_WARNINGS (attributes) fail to build with some MSC
+ * compilers; we'll play it safe and disable them for all MSC compilers.
+ */
+#define PNG_NO_PEDANTIC_WARNINGS
+#endif
+
 #ifndef MOZ_PNG_READ
 #define PNG_NO_READ_SUPPORTED
 #endif
+#define PNG_NO_READ_BGR
 #define PNG_NO_SET_USER_LIMITS
 #define PNG_NO_USER_LIMITS
 #define PNG_NO_ASSEMBLER_CODE
 #define PNG_NO_WARN_UNINITIALIZED_ROW
 #define PNG_NO_READ_BACKGROUND
-#define PNG_NO_READ_DITHER
+#define PNG_NO_READ_QUANTIZE
 #define PNG_NO_READ_INVERT
 #define PNG_NO_READ_SHIFT
 #define PNG_NO_READ_PACK
@@ -61,8 +69,10 @@
 #define PNG_NO_READ_INVERT_ALPHA
 #define PNG_NO_READ_RGB_TO_GRAY
 #define PNG_NO_READ_USER_TRANSFORM
+
 #define PNG_NO_READ_bKGD
 #define PNG_NO_READ_hIST
+#define PNG_NO_READ_oFFs
 #define PNG_NO_READ_pCAL
 #define PNG_NO_READ_pHYs
 #define PNG_NO_READ_sBIT
@@ -75,7 +85,6 @@
 #define PNG_NO_READ_EMPTY_PLTE
 #define PNG_NO_READ_OPT_PLTE
 #define PNG_NO_READ_STRIP_ALPHA
-#define PNG_NO_READ_oFFs
 #define PNG_NO_SEQUENTIAL_READ_SUPPORTED
 
 #ifndef MOZ_PNG_WRITE
@@ -118,6 +127,7 @@
 
 #define PNG_NO_HANDLE_AS_UNKNOWN
 #define PNG_NO_INFO_IMAGE
+#define PNG_NO_IO_STATE
 #define PNG_NO_USER_MEM
 #define PNG_NO_FIXED_POINT_SUPPORTED
 #define PNG_NO_MNG_FEATURES
@@ -126,7 +136,7 @@
 #define PNG_NO_ZALLOC_ZERO
 #define PNG_NO_ERROR_NUMBERS
 #define PNG_NO_EASY_ACCESS
-
+#define PNG_NO_TIME_RFC1123
 
 /* Mangle names of exported libpng functions so different libpng versions
    can coexist. It is recommended that if you do this, you give your

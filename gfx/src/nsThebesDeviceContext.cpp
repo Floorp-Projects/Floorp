@@ -39,8 +39,6 @@
 
 #include "nsFont.h"
 #include "nsGfxCIID.h"
-#include "nsIFontMetrics.h"
-#include "nsHashtable.h"
 #include "nsILanguageAtomService.h"
 #include "nsUnicharUtils.h"
 
@@ -50,7 +48,7 @@
 #include "mozilla/Services.h"
 
 #include "nsThebesDeviceContext.h"
-#include "nsThebesRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "gfxUserFontSet.h"
 #include "gfxPlatform.h"
 
@@ -107,15 +105,14 @@ public:
     nsresult Init(nsIDeviceContext* aContext);
     nsresult GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
                            gfxUserFontSet* aUserFontSet,
-                           nsIFontMetrics*& aMetrics);
+                           nsFontMetrics*& aMetrics);
 
-    nsresult FontMetricsDeleted(const nsIFontMetrics* aFontMetrics);
+    nsresult FontMetricsDeleted(const nsFontMetrics* aFontMetrics);
     nsresult Compact();
     nsresult Flush();
-    nsresult CreateFontMetricsInstance(nsIFontMetrics** fm);
 
 protected:
-    nsTArray<nsIFontMetrics*> mFontMetrics;
+    nsTArray<nsFontMetrics*>  mFontMetrics;
     nsIDeviceContext         *mContext; // we do not addref this since
                                         // ownership is implied. MMP.
 };
@@ -144,38 +141,33 @@ nsFontCache::Init(nsIDeviceContext* aContext)
 
 nsresult
 nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
-  gfxUserFontSet* aUserFontSet, nsIFontMetrics*& aMetrics)
+  gfxUserFontSet* aUserFontSet, nsFontMetrics*& aMetrics)
 {
     // First check our cache
     // start from the end, which is where we put the most-recent-used element
 
-    nsIFontMetrics* fm;
+    nsFontMetrics* fm;
     PRInt32 n = mFontMetrics.Length() - 1;
     for (PRInt32 i = n; i >= 0; --i) {
         fm = mFontMetrics[i];
-        nsIThebesFontMetrics* tfm = static_cast<nsIThebesFontMetrics*>(fm);
-        if (fm->Font().Equals(aFont) && tfm->GetUserFontSet() == aUserFontSet) {
-            nsCOMPtr<nsIAtom> language;
-            fm->GetLanguage(getter_AddRefs(language));
-            if (aLanguage == language.get()) {
-                if (i != n) {
-                    // promote it to the end of the cache
-                    mFontMetrics.RemoveElementAt(i);
-                    mFontMetrics.AppendElement(fm);
-                }
-                tfm->GetThebesFontGroup()->UpdateFontList();
-                NS_ADDREF(aMetrics = fm);
-                return NS_OK;
+        if (fm->Font().Equals(aFont) && fm->GetUserFontSet() == aUserFontSet &&
+            fm->Language() == aLanguage) {
+            if (i != n) {
+                // promote it to the end of the cache
+                mFontMetrics.RemoveElementAt(i);
+                mFontMetrics.AppendElement(fm);
             }
+            fm->GetThebesFontGroup()->UpdateFontList();
+            NS_ADDREF(aMetrics = fm);
+            return NS_OK;
         }
     }
 
     // It's not in the cache. Get font metrics and then cache them.
 
-    aMetrics = nsnull;
-    nsresult rv = CreateFontMetricsInstance(&fm);
-    if (NS_FAILED(rv)) return rv;
-    rv = fm->Init(aFont, aLanguage, mContext, aUserFontSet);
+    fm = new nsFontMetrics();
+    NS_ADDREF(fm);
+    nsresult rv = fm->Init(aFont, aLanguage, mContext, aUserFontSet);
     if (NS_SUCCEEDED(rv)) {
         // the mFontMetrics list has the "head" at the end, because append
         // is cheaper than insert
@@ -192,13 +184,12 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
     // objects are available. Compact the cache and try again.
 
     Compact();
-    rv = CreateFontMetricsInstance(&fm);
-    if (NS_FAILED(rv)) return rv;
+    fm = new nsFontMetrics();
+    NS_ADDREF(fm);
     rv = fm->Init(aFont, aLanguage, mContext, aUserFontSet);
     if (NS_SUCCEEDED(rv)) {
         mFontMetrics.AppendElement(fm);
         aMetrics = fm;
-        NS_ADDREF(aMetrics);
         return NS_OK;
     }
     fm->Destroy();
@@ -218,14 +209,7 @@ nsFontCache::GetMetricsFor(const nsFont& aFont, nsIAtom* aLanguage,
     return rv;
 }
 
-nsresult
-nsFontCache::CreateFontMetricsInstance(nsIFontMetrics** fm)
-{
-    static NS_DEFINE_CID(kFontMetricsCID, NS_FONT_METRICS_CID);
-    return CallCreateInstance(kFontMetricsCID, fm);
-}
-
-nsresult nsFontCache::FontMetricsDeleted(const nsIFontMetrics* aFontMetrics)
+nsresult nsFontCache::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
 {
     mFontMetrics.RemoveElement(aFontMetrics);
     return NS_OK;
@@ -236,8 +220,8 @@ nsresult nsFontCache::Compact()
     // Need to loop backward because the running element can be removed on
     // the way
     for (PRInt32 i = mFontMetrics.Length()-1; i >= 0; --i) {
-        nsIFontMetrics* fm = mFontMetrics[i];
-        nsIFontMetrics* oldfm = fm;
+        nsFontMetrics* fm = mFontMetrics[i];
+        nsFontMetrics* oldfm = fm;
         // Destroy() isn't here because we want our device context to be
         // notified
         NS_RELEASE(fm); // this will reset fm to nsnull
@@ -254,7 +238,7 @@ nsresult nsFontCache::Compact()
 nsresult nsFontCache::Flush()
 {
     for (PRInt32 i = mFontMetrics.Length()-1; i >= 0; --i) {
-        nsIFontMetrics* fm = mFontMetrics[i];
+        nsFontMetrics* fm = mFontMetrics[i];
         // Destroy() will unhook our device context from the fm so that we
         // won't waste time in triggering the notification of
         // FontMetricsDeleted() in the subsequent release
@@ -285,7 +269,6 @@ nsThebesDeviceContext::nsThebesDeviceContext()
 
     mFontCache = nsnull;
     mWidget = nsnull;
-    mFontAliasTable = nsnull;
 
     mDepth = 0;
     mWidth = 0;
@@ -298,12 +281,6 @@ nsThebesDeviceContext::nsThebesDeviceContext()
 #endif
 }
 
-static PRBool DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
-{
-    delete ((nsString*)aValue);
-    return PR_TRUE;
-}
-
 nsThebesDeviceContext::~nsThebesDeviceContext()
 {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -313,11 +290,6 @@ nsThebesDeviceContext::~nsThebesDeviceContext()
     if (nsnull != mFontCache) {
         delete mFontCache;
         mFontCache = nsnull;
-    }
-
-    if (nsnull != mFontAliasTable) {
-        mFontAliasTable->Enumerate(DeleteValue);
-        delete mFontAliasTable;
     }
 }
 
@@ -339,7 +311,7 @@ NS_IMETHODIMP nsThebesDeviceContext::CreateFontCache()
     return mFontCache->Init(this);
 }
 
-NS_IMETHODIMP nsThebesDeviceContext::FontMetricsDeleted(const nsIFontMetrics* aFontMetrics)
+NS_IMETHODIMP nsThebesDeviceContext::FontMetricsDeleted(const nsFontMetrics* aFontMetrics)
 {
     if (mFontCache) {
         mFontCache->FontMetricsDeleted(aFontMetrics);
@@ -363,7 +335,7 @@ nsThebesDeviceContext::GetLocaleLanguage(void)
 }
 
 NS_IMETHODIMP nsThebesDeviceContext::GetMetricsFor(const nsFont& aFont,
-  nsIAtom* aLanguage, gfxUserFontSet* aUserFontSet, nsIFontMetrics*& aMetrics)
+  nsIAtom* aLanguage, gfxUserFontSet* aUserFontSet, nsFontMetrics*& aMetrics)
 {
     if (nsnull == mFontCache) {
         nsresult rv = CreateFontCache();
@@ -386,7 +358,7 @@ NS_IMETHODIMP nsThebesDeviceContext::GetMetricsFor(const nsFont& aFont,
 
 NS_IMETHODIMP nsThebesDeviceContext::GetMetricsFor(const nsFont& aFont,
                                                    gfxUserFontSet* aUserFontSet,
-                                                   nsIFontMetrics*& aMetrics)
+                                                   nsFontMetrics*& aMetrics)
 {
     if (nsnull == mFontCache) {
         nsresult rv = CreateFontCache();
@@ -402,171 +374,37 @@ NS_IMETHODIMP nsThebesDeviceContext::GetMetricsFor(const nsFont& aFont,
 }
 
 struct FontEnumData {
-    FontEnumData(nsIDeviceContext* aDC, nsString& aFaceName)
-        : mDC(aDC), mFaceName(aFaceName)
-    {}
-    nsIDeviceContext* mDC;
-    nsString&         mFaceName;
+    FontEnumData(nsString& aFaceName) : mFaceName(aFaceName) {}
+    nsString& mFaceName;
 };
 
-static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+static PRBool
+FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
     FontEnumData* data = (FontEnumData*)aData;
-    // XXX for now, all generic fonts are presumed to exist
-    //     we may want to actually check if there's an installed conversion
-    if (aGeneric) {
-        data->mFaceName = aFamily;
-        return PR_FALSE; // found one, stop.
-    }
-    else {
-        nsAutoString local;
-        PRBool       aliased;
-        data->mDC->GetLocalFontName(aFamily, local, aliased);
-        if (aliased || (NS_SUCCEEDED(data->mDC->CheckFontExistence(local)))) {
-            data->mFaceName = local;
-            return PR_FALSE; // found one, stop.
-        }
-    }
-    return PR_TRUE; // didn't exist, continue looking
+    data->mFaceName = aFamily;
+    return PR_FALSE; // stop
 }
 
-NS_IMETHODIMP nsThebesDeviceContext::FirstExistingFont(const nsFont& aFont, nsString& aFaceName)
+NS_IMETHODIMP
+nsThebesDeviceContext::FirstExistingFont(const nsFont& aFont,
+                                         nsString& aFaceName)
 {
-    FontEnumData data(this, aFaceName);
+    FontEnumData data(aFaceName);
     if (aFont.EnumerateFamilies(FontEnumCallback, &data)) {
-        return NS_ERROR_FAILURE; // ran out
+        return NS_ERROR_FAILURE; // can only happen for an empty font
     }
     return NS_OK;
 }
 
-class FontAliasKey: public nsHashKey
+NS_IMETHODIMP
+nsThebesDeviceContext::GetLocalFontName(const nsString& aFaceName,
+                                        nsString& aLocalName,
+                                        PRBool& aAliased)
 {
-public:
-    FontAliasKey(const nsString& aString)
-    { mString.Assign(aString); }
-
-    virtual PRUint32 HashCode(void) const;
-    virtual PRBool Equals(const nsHashKey *aKey) const;
-    virtual nsHashKey *Clone(void) const;
-
-    nsString mString;
-};
-
-PRUint32 FontAliasKey::HashCode(void) const
-{
-    PRUint32 hash = 0;
-    const PRUnichar* string = mString.get();
-    PRUnichar ch;
-    while ((ch = *string++) != 0) {
-        // FYI: hash = hash*37 + ch
-        ch = ToUpperCase(ch);
-        hash = ((hash << 5) + (hash << 2) + hash) + ch;
-    }
-    return hash;
-}
-
-PRBool FontAliasKey::Equals(const nsHashKey *aKey) const
-{
-    return mString.Equals(((FontAliasKey*)aKey)->mString, nsCaseInsensitiveStringComparator());
-}
-
-nsHashKey* FontAliasKey::Clone(void) const
-{
-    return new FontAliasKey(mString);
-}
-
-nsresult nsThebesDeviceContext::CreateFontAliasTable()
-{
-    nsresult result = NS_OK;
-
-    if (nsnull == mFontAliasTable) {
-        mFontAliasTable = new nsHashtable();
-        if (nsnull != mFontAliasTable) {
-
-            nsAutoString times;         times.AssignLiteral("Times");
-            nsAutoString timesNewRoman; timesNewRoman.AssignLiteral("Times New Roman");
-            nsAutoString timesRoman;    timesRoman.AssignLiteral("Times Roman");
-            nsAutoString arial;         arial.AssignLiteral("Arial");
-            nsAutoString helvetica;     helvetica.AssignLiteral("Helvetica");
-            nsAutoString courier;       courier.AssignLiteral("Courier");
-            nsAutoString courierNew;    courierNew.AssignLiteral("Courier New");
-            nsAutoString nullStr;
-
-            AliasFont(times, timesNewRoman, timesRoman, PR_FALSE);
-            AliasFont(timesRoman, timesNewRoman, times, PR_FALSE);
-            AliasFont(timesNewRoman, timesRoman, times, PR_FALSE);
-            AliasFont(arial, helvetica, nullStr, PR_FALSE);
-            AliasFont(helvetica, arial, nullStr, PR_FALSE);
-            AliasFont(courier, courierNew, nullStr, PR_TRUE);
-            AliasFont(courierNew, courier, nullStr, PR_FALSE);
-        }
-        else {
-            result = NS_ERROR_OUT_OF_MEMORY;
-        }
-    }
-    return result;
-}
-
-nsresult nsThebesDeviceContext::AliasFont(const nsString& aFont,
-                                          const nsString& aAlias,
-                                          const nsString& aAltAlias,
-                                          PRBool aForceAlias)
-{
-    nsresult result = NS_OK;
-
-    if (nsnull != mFontAliasTable) {
-        if (aForceAlias || NS_FAILED(CheckFontExistence(aFont))) {
-            if (NS_SUCCEEDED(CheckFontExistence(aAlias))) {
-                nsString* entry = new nsString(aAlias);
-                if (nsnull != entry) {
-                    FontAliasKey key(aFont);
-                    mFontAliasTable->Put(&key, entry);
-                }
-                else {
-                    result = NS_ERROR_OUT_OF_MEMORY;
-                }
-            }
-            else if (!aAltAlias.IsEmpty() && NS_SUCCEEDED(CheckFontExistence(aAltAlias))) {
-                nsString* entry = new nsString(aAltAlias);
-                if (nsnull != entry) {
-                    FontAliasKey key(aFont);
-                    mFontAliasTable->Put(&key, entry);
-                }
-                else {
-                    result = NS_ERROR_OUT_OF_MEMORY;
-                }
-            }
-        }
-    }
-    else {
-        result = NS_ERROR_FAILURE;
-    }
-    return result;
-}
-
-NS_IMETHODIMP nsThebesDeviceContext::GetLocalFontName(const nsString& aFaceName,
-                                                      nsString& aLocalName,
-                                                      PRBool& aAliased)
-{
-    nsresult result = NS_OK;
-
-    if (nsnull == mFontAliasTable) {
-        result = CreateFontAliasTable();
-    }
-
-    if (nsnull != mFontAliasTable) {
-        FontAliasKey key(aFaceName);
-        const nsString* alias = (const nsString*)mFontAliasTable->Get(&key);
-        if (nsnull != alias) {
-            aLocalName = *alias;
-            aAliased = PR_TRUE;
-        }
-        else {
-            aLocalName = aFaceName;
-            aAliased = PR_FALSE;
-        }
-    }
-    return result;
+    aLocalName = aFaceName;
+    aAliased = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsThebesDeviceContext::FlushFontCache(void)
@@ -711,7 +549,7 @@ nsThebesDeviceContext::Init(nsIWidget *aWidget)
 
 NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIView *aView,
-                                              nsIRenderingContext *&aContext)
+                                              nsRenderingContext *&aContext)
 {
     // This is currently only called by the caret code
     NS_ENSURE_ARG_POINTER(aView);
@@ -725,23 +563,21 @@ nsThebesDeviceContext::CreateRenderingContext(nsIView *aView,
 
 NS_IMETHODIMP
 nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
-                                              nsIRenderingContext *&aContext)
+                                              nsRenderingContext *&aContext)
 {
     nsresult rv;
 
     aContext = nsnull;
-    nsCOMPtr<nsIRenderingContext> pContext;
+    nsRefPtr<nsRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
         nsRefPtr<gfxASurface> surface(aWidget->GetThebesSurface());
-        if (surface)
-            rv = pContext->Init(this, surface);
-        else
-            rv = NS_ERROR_FAILURE;
-
-        if (NS_SUCCEEDED(rv)) {
+        if (surface) {
+            pContext->Init(this, surface);
             aContext = pContext;
             NS_ADDREF(aContext);
+        } else {
+            rv = NS_ERROR_FAILURE;
         }
     }
 
@@ -749,23 +585,21 @@ nsThebesDeviceContext::CreateRenderingContext(nsIWidget *aWidget,
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
+nsThebesDeviceContext::CreateRenderingContext(nsRenderingContext *&aContext)
 {
     nsresult rv = NS_OK;
 
     aContext = nsnull;
-    nsCOMPtr<nsIRenderingContext> pContext;
+    nsRefPtr<nsRenderingContext> pContext;
     rv = CreateRenderingContextInstance(*getter_AddRefs(pContext));
     if (NS_SUCCEEDED(rv)) {
-        if (mPrintingSurface)
-            rv = pContext->Init(this, mPrintingSurface);
-        else
-            rv = NS_ERROR_FAILURE;
-
-        if (NS_SUCCEEDED(rv)) {
+        if (mPrintingSurface) {
+            pContext->Init(this, mPrintingSurface);
             pContext->Scale(mPrintingScale, mPrintingScale);
             aContext = pContext;
             NS_ADDREF(aContext);
+        } else {
+            rv = NS_ERROR_FAILURE;
         }
     }
 
@@ -773,9 +607,9 @@ nsThebesDeviceContext::CreateRenderingContext(nsIRenderingContext *&aContext)
 }
 
 NS_IMETHODIMP
-nsThebesDeviceContext::CreateRenderingContextInstance(nsIRenderingContext *&aContext)
+nsThebesDeviceContext::CreateRenderingContextInstance(nsRenderingContext *&aContext)
 {
-    nsCOMPtr<nsIRenderingContext> renderingContext = new nsThebesRenderingContext();
+    nsRefPtr<nsRenderingContext> renderingContext = new nsRenderingContext();
     if (!renderingContext)
         return NS_ERROR_OUT_OF_MEMORY;
 

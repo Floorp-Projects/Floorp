@@ -39,7 +39,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsLayoutUtils.h"
-#include "nsIFontMetrics.h"
 #include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -1401,7 +1400,7 @@ GetNextPage(nsIFrame* aPageContentFrame)
 }
 
 nsresult
-nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
+nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                           const nsRegion& aDirtyRegion, nscolor aBackstop,
                           PRUint32 aFlags)
 {
@@ -1496,7 +1495,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
         nsPoint pos = rootScrollableFrame->GetScrollPosition();
         visibleRegion.MoveBy(-pos);
         if (aRenderingContext) {
-          aRenderingContext->Translate(pos.x, pos.y);
+          aRenderingContext->Translate(pos);
         }
       }
       builder.SetIgnoreScrollFrame(rootScrollFrame);
@@ -1645,7 +1644,7 @@ nsLayoutUtils::PaintFrame(nsIRenderingContext* aRenderingContext, nsIFrame* aFra
     nsIWidget *widget = aFrame->GetNearestWidget();
     if (widget) {
       PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
-      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(presContext->AppUnitsPerDevPixel()));
+      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
       widget->UpdateTransparentRegion(visibleWindowRegion);
     }
   }
@@ -1692,7 +1691,7 @@ nsLayoutUtils::GetZIndex(nsIFrame* aFrame) {
  * before the cursor aIndex contains the index of the text where the cursor falls
  */
 PRBool
-nsLayoutUtils::BinarySearchForPosition(nsIRenderingContext* aRendContext,
+nsLayoutUtils::BinarySearchForPosition(nsRenderingContext* aRendContext,
                         const PRUnichar* aText,
                         PRInt32    aBaseWidth,
                         PRInt32    aBaseInx,
@@ -1705,7 +1704,7 @@ nsLayoutUtils::BinarySearchForPosition(nsIRenderingContext* aRendContext,
   PRInt32 range = aEndInx - aStartInx;
   if ((range == 1) || (range == 2 && NS_IS_HIGH_SURROGATE(aText[aStartInx]))) {
     aIndex   = aStartInx + aBaseInx;
-    aRendContext->GetWidth(aText, aIndex, aTextWidth);
+    aTextWidth = aRendContext->GetWidth(aText, aIndex);
     return PR_TRUE;
   }
 
@@ -1715,8 +1714,7 @@ nsLayoutUtils::BinarySearchForPosition(nsIRenderingContext* aRendContext,
   if (NS_IS_HIGH_SURROGATE(aText[inx-1]))
     inx++;
 
-  PRInt32 textWidth = 0;
-  aRendContext->GetWidth(aText, inx, textWidth);
+  PRInt32 textWidth = aRendContext->GetWidth(aText, inx);
 
   PRInt32 fullWidth = aBaseWidth + textWidth;
   if (fullWidth == aCursorPos) {
@@ -1869,7 +1867,7 @@ nsLayoutUtils::GetTextShadowRectsUnion(const nsRect& aTextAndDecorationsRect,
 
 nsresult
 nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame,
-                                      nsIFontMetrics** aFontMetrics)
+                                      nsFontMetrics** aFontMetrics)
 {
   return nsLayoutUtils::GetFontMetricsForStyleContext(aFrame->GetStyleContext(),
                                                       aFontMetrics);
@@ -1877,7 +1875,7 @@ nsLayoutUtils::GetFontMetricsForFrame(const nsIFrame* aFrame,
 
 nsresult
 nsLayoutUtils::GetFontMetricsForStyleContext(nsStyleContext* aStyleContext,
-                                             nsIFontMetrics** aFontMetrics)
+                                             nsFontMetrics** aFontMetrics)
 {
   // pass the user font set object into the device context to pass along to CreateFontGroup
   gfxUserFontSet* fs = aStyleContext->PresContext()->GetUserFontSet();
@@ -2125,7 +2123,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
 enum eWidthProperty { PROP_WIDTH, PROP_MAX_WIDTH, PROP_MIN_WIDTH };
 static PRBool
 GetIntrinsicCoord(const nsStyleCoord& aStyle,
-                  nsIRenderingContext* aRenderingContext,
+                  nsRenderingContext* aRenderingContext,
                   nsIFrame* aFrame,
                   eWidthProperty aProperty,
                   nscoord& aResult)
@@ -2170,7 +2168,7 @@ static PRInt32 gNoiseIndent = 0;
 #endif
 
 /* static */ nscoord
-nsLayoutUtils::IntrinsicForContainer(nsIRenderingContext *aRenderingContext,
+nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
                                      nsIFrame *aFrame,
                                      IntrinsicWidthType aType)
 {
@@ -2415,7 +2413,7 @@ nsLayoutUtils::ComputeWidthDependentValue(
 
 /* static */ nscoord
 nsLayoutUtils::ComputeWidthValue(
-                 nsIRenderingContext* aRenderingContext,
+                 nsRenderingContext* aRenderingContext,
                  nsIFrame*            aFrame,
                  nscoord              aContainingBlockWidth,
                  nscoord              aContentEdgeToBoxSizing,
@@ -2503,7 +2501,7 @@ nsLayoutUtils::ComputeHeightDependentValue(
 
 /* static */ nsSize
 nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
-                   nsIRenderingContext* aRenderingContext, nsIFrame* aFrame,
+                   nsRenderingContext* aRenderingContext, nsIFrame* aFrame,
                    const nsIFrame::IntrinsicSize& aIntrinsicSize,
                    nsSize aIntrinsicRatio, nsSize aCBSize,
                    nsSize aMargin, nsSize aBorder, nsSize aPadding)
@@ -2772,7 +2770,7 @@ nsLayoutUtils::ComputeSizeWithIntrinsicDimensions(
 
 /* static */ nscoord
 nsLayoutUtils::MinWidthFromInline(nsIFrame* aFrame,
-                                  nsIRenderingContext* aRenderingContext)
+                                  nsRenderingContext* aRenderingContext)
 {
   nsIFrame::InlineMinWidthData data;
   DISPLAY_MIN_WIDTH(aFrame, data.prevLines);
@@ -2783,7 +2781,7 @@ nsLayoutUtils::MinWidthFromInline(nsIFrame* aFrame,
 
 /* static */ nscoord
 nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
-                                   nsIRenderingContext* aRenderingContext)
+                                   nsRenderingContext* aRenderingContext)
 {
   nsIFrame::InlinePrefWidthData data;
   DISPLAY_PREF_WIDTH(aFrame, data.prevLines);
@@ -2794,7 +2792,7 @@ nsLayoutUtils::PrefWidthFromInline(nsIFrame* aFrame,
 
 void
 nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
-                          nsIRenderingContext* aContext,
+                          nsRenderingContext* aContext,
                           const PRUnichar*     aString,
                           PRInt32              aLength,
                           nsPoint              aPoint,
@@ -2824,7 +2822,7 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
 
 nscoord
 nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
-                              nsIRenderingContext* aContext,
+                              nsRenderingContext* aContext,
                               const PRUnichar*     aString,
                               PRInt32              aLength)
 {
@@ -2840,18 +2838,15 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
   }
 #endif // IBMBIDI
   aContext->SetTextRunRTL(PR_FALSE);
-  nscoord width;
-  aContext->GetWidth(aString, aLength, width);
-  return width;
+  return aContext->GetWidth(aString, aLength);
 }
 
 /* static */ nscoord
-nsLayoutUtils::GetCenteredFontBaseline(nsIFontMetrics* aFontMetrics,
+nsLayoutUtils::GetCenteredFontBaseline(nsFontMetrics* aFontMetrics,
                                        nscoord         aLineHeight)
 {
-  nscoord fontAscent, fontHeight;
-  aFontMetrics->GetMaxAscent(fontAscent);
-  aFontMetrics->GetHeight(fontHeight);
+  nscoord fontAscent = aFontMetrics->MaxAscent();
+  nscoord fontHeight = aFontMetrics->MaxHeight();
 
   nscoord leading = aLineHeight - fontHeight;
   return fontAscent + leading/2;
@@ -3257,7 +3252,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
 
 
 static nsresult
-DrawImageInternal(nsIRenderingContext* aRenderingContext,
+DrawImageInternal(nsRenderingContext* aRenderingContext,
                   imgIContainer*       aImage,
                   GraphicsFilter       aGraphicsFilter,
                   const nsRect&        aDest,
@@ -3267,9 +3262,7 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
                   const nsIntSize&     aImageSize,
                   PRUint32             aImageFlags)
 {
-  nsCOMPtr<nsIDeviceContext> dc;
-  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
-  PRInt32 appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
+  PRInt32 appUnitsPerDevPixel = aRenderingContext->AppUnitsPerDevPixel();
   gfxContext* ctx = aRenderingContext->ThebesContext();
 
   SnappedImageDrawingParameters drawingParams =
@@ -3291,7 +3284,7 @@ DrawImageInternal(nsIRenderingContext* aRenderingContext,
 }
 
 /* static */ void
-nsLayoutUtils::DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
+nsLayoutUtils::DrawPixelSnapped(nsRenderingContext* aRenderingContext,
                                 gfxDrawable*         aDrawable,
                                 GraphicsFilter       aFilter,
                                 const nsRect&        aDest,
@@ -3299,9 +3292,7 @@ nsLayoutUtils::DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
                                 const nsPoint&       aAnchor,
                                 const nsRect&        aDirty)
 {
-  nsCOMPtr<nsIDeviceContext> dc;
-  aRenderingContext->GetDeviceContext(*getter_AddRefs(dc));
-  PRInt32 appUnitsPerDevPixel = dc->AppUnitsPerDevPixel();
+  PRInt32 appUnitsPerDevPixel = aRenderingContext->AppUnitsPerDevPixel();
   gfxContext* ctx = aRenderingContext->ThebesContext();
   gfxIntSize drawableSize = aDrawable->Size();
   nsIntSize imageSize(drawableSize.width, drawableSize.height);
@@ -3334,7 +3325,7 @@ nsLayoutUtils::DrawPixelSnapped(nsIRenderingContext* aRenderingContext,
 }
 
 /* static */ nsresult
-nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
+nsLayoutUtils::DrawSingleUnscaledImage(nsRenderingContext* aRenderingContext,
                                        imgIContainer*       aImage,
                                        GraphicsFilter       aGraphicsFilter,
                                        const nsPoint&       aDest,
@@ -3370,7 +3361,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsIRenderingContext* aRenderingContext,
 }
 
 /* static */ nsresult
-nsLayoutUtils::DrawSingleImage(nsIRenderingContext* aRenderingContext,
+nsLayoutUtils::DrawSingleImage(nsRenderingContext* aRenderingContext,
                                imgIContainer*       aImage,
                                GraphicsFilter       aGraphicsFilter,
                                const nsRect&        aDest,
@@ -3452,7 +3443,7 @@ nsLayoutUtils::ComputeSizeForDrawing(imgIContainer *aImage,
 
 
 /* static */ nsresult
-nsLayoutUtils::DrawImage(nsIRenderingContext* aRenderingContext,
+nsLayoutUtils::DrawImage(nsRenderingContext* aRenderingContext,
                          imgIContainer*       aImage,
                          GraphicsFilter       aGraphicsFilter,
                          const nsRect&        aDest,
@@ -3495,7 +3486,7 @@ nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
 }
 
 void
-nsLayoutUtils::SetFontFromStyle(nsIRenderingContext* aRC, nsStyleContext* aSC)
+nsLayoutUtils::SetFontFromStyle(nsRenderingContext* aRC, nsStyleContext* aSC)
 {
   const nsStyleFont* font = aSC->GetStyleFont();
   const nsStyleVisibility* visibility = aSC->GetStyleVisibility();

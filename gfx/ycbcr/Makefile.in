@@ -76,8 +76,12 @@ endif # linux
 endif # windows
 
 ifeq (arm,$(findstring arm,$(OS_TEST)))
+ifdef HAVE_ARM_NEON
 CPPSRCS += yuv_convert_arm.cpp \
            $(NULL)
+ASFILES = yuv_row_arm.$(ASM_SUFFIX) \
+          $(NULL)
+endif
 endif
 
 EXTRA_DSO_LDOPTS += \

@@ -52,7 +52,7 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == 263359-3.html 263359-3-ref.html
 == 263359-4.html 263359-4-ref.html
 random-if(winWidget) == 267459-1.html 267459-1-ref.html # depends on windows version, see bug 590101
-== 267459-2.html 267459-2-ref.html
+fails-if(Android) == 267459-2.html 267459-2-ref.html # bug 650567
 == 299065-1.html 299065-1-ref.html
 random-if(winWidget) == 305643-1.html 305643-1-ref.html # depends on windows version, see bug 590101
 == 332655-1.html 332655-1-ref.html

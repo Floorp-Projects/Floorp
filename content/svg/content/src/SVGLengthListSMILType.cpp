@@ -122,16 +122,41 @@ SVGLengthListSMILType::Add(nsSMILValue& aDest,
   // should be, not zeros, and those values are not explicit or otherwise
   // available.
 
+  NS_ABORT_IF_FALSE(!dest.IsEmpty() || !valueToAdd.IsEmpty(),
+                    "Expecting at least one non-identity operand");
+
+  if (!valueToAdd.Element()) { // Adding identity value - no-op
+    NS_ABORT_IF_FALSE(valueToAdd.IsEmpty(),
+                      "Identity values should be empty");
+    return NS_OK;
+  }
+
+  if (!dest.Element()) { // Adding *to* an identity value
+    NS_ABORT_IF_FALSE(dest.IsEmpty(),
+                      "Identity values should be empty");
+    if (!dest.SetLength(valueToAdd.Length())) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    for (PRUint32 i = 0; i < dest.Length(); ++i) {
+      dest[i].SetValueAndUnit(valueToAdd[i].GetValueInCurrentUnits() * aCount,
+                              valueToAdd[i].GetUnit());
+    }
+    dest.SetInfo(valueToAdd.Element(), valueToAdd.Axis(),
+                 valueToAdd.CanZeroPadList()); // propagate target element info!
+    return NS_OK;
+  }
+  NS_ABORT_IF_FALSE(dest.Element() == valueToAdd.Element(),
+                    "adding values from different elements...?");
+
+  // Zero-pad our |dest| list, if necessary.
   if (dest.Length() < valueToAdd.Length()) {
     if (!dest.CanZeroPadList()) {
       // nsSVGUtils::ReportToConsole
       return NS_ERROR_FAILURE;
     }
 
-    NS_ASSERTION(valueToAdd.CanZeroPadList() || dest.Length() == 0,
-                 "Only \"zero\" nsSMILValues from the SMIL engine should "
-                 "return PR_TRUE for CanZeroPadList() when the attribute "
-                 "being animated can't be zero padded");
+    NS_ABORT_IF_FALSE(valueToAdd.CanZeroPadList(),
+                      "values disagree about attribute's zero-paddibility");
 
     PRUint32 i = dest.Length();
     if (!dest.SetLength(valueToAdd.Length())) {
@@ -153,13 +178,14 @@ SVGLengthListSMILType::Add(nsSMILValue& aDest,
                                                        dest.Element(),
                                                        dest.Axis());
     }
-    dest[i].SetValueAndUnit(dest[i].GetValueInCurrentUnits() + valToAdd,
-                            dest[i].GetUnit());
+    dest[i].SetValueAndUnit(
+      dest[i].GetValueInCurrentUnits() + valToAdd * aCount,
+      dest[i].GetUnit());
   }
 
-  // propagate flag:
-  dest.SetCanZeroPadList(dest.CanZeroPadList() &&
-                         valueToAdd.CanZeroPadList());
+  // propagate target element info!
+  dest.SetInfo(valueToAdd.Element(), valueToAdd.Axis(),
+               dest.CanZeroPadList() && valueToAdd.CanZeroPadList());
 
   return NS_OK;
 }
@@ -181,8 +207,8 @@ SVGLengthListSMILType::ComputeDistance(const nsSMILValue& aFrom,
   // and documenting SVGLengthListAndInfo::CanZeroPadList().
 
   NS_ASSERTION((from.CanZeroPadList() == to.CanZeroPadList()) ||
-               (from.CanZeroPadList() && from.Length() == 0) ||
-               (to.CanZeroPadList() && to.Length() == 0),
+               (from.CanZeroPadList() && from.IsEmpty()) ||
+               (to.CanZeroPadList() && to.IsEmpty()),
                "Only \"zero\" nsSMILValues from the SMIL engine should "
                "return PR_TRUE for CanZeroPadList() when the attribute "
                "being animated can't be zero padded");
@@ -256,8 +282,8 @@ SVGLengthListSMILType::Interpolate(const nsSMILValue& aStartVal,
   // and documenting SVGLengthListAndInfo::CanZeroPadList().
 
   NS_ASSERTION((start.CanZeroPadList() == end.CanZeroPadList()) ||
-               (start.CanZeroPadList() && start.Length() == 0) ||
-               (end.CanZeroPadList() && end.Length() == 0),
+               (start.CanZeroPadList() && start.IsEmpty()) ||
+               (end.CanZeroPadList() && end.IsEmpty()),
                "Only \"zero\" nsSMILValues from the SMIL engine should "
                "return PR_TRUE for CanZeroPadList() when the attribute "
                "being animated can't be zero padded");
@@ -299,9 +325,9 @@ SVGLengthListSMILType::Interpolate(const nsSMILValue& aStartVal,
                               end[i].GetUnit());
   }
 
-  // propagate flag:
-  result.SetCanZeroPadList(start.CanZeroPadList() &&
-                           end.CanZeroPadList());
+  // propagate target element info!
+  result.SetInfo(end.Element(), end.Axis(),
+                 start.CanZeroPadList() && end.CanZeroPadList());
 
   return NS_OK;
 }

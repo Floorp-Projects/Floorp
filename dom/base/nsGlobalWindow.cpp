@@ -2760,13 +2760,10 @@ nsGlobalWindow::DispatchDOMEvent(nsEvent* aEvent,
 }
 
 void
-nsGlobalWindow::OnFinalize(PRUint32 aLangID, void *aObject)
+nsGlobalWindow::OnFinalize(JSObject* aObject)
 {
-  NS_ASSERTION(aLangID == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
-
   if (aObject == mJSObject) {
-    mJSObject = nsnull;
+    mJSObject = NULL;
   }
 }
 
@@ -5122,9 +5119,9 @@ nsGlobalWindow::Print()
         printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
       }
 
-      EnterModalState();
+      nsCOMPtr<nsIDOMWindow> callerWin = EnterModalState();
       webBrowserPrint->Print(printSettings, nsnull);
-      LeaveModalState(nsnull);
+      LeaveModalState(callerWin);
 
       PRBool savePrintSettings =
         nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
@@ -6483,8 +6480,6 @@ nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
     }
   }
 
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-
   if (aCallerWin) {
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aCallerWin));
     nsIScriptContext *scx = sgo->GetContext();
@@ -6836,7 +6831,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
 
   options.AppendLiteral(",scrollbars=1,centerscreen=1,resizable=0");
 
-  EnterModalState();
+  nsCOMPtr<nsIDOMWindow> callerWin = EnterModalState();
   nsresult rv = OpenInternal(aURI, EmptyString(), options,
                              PR_FALSE,          // aDialog
                              PR_TRUE,           // aContentModal
@@ -6846,7 +6841,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
-  LeaveModalState(nsnull);
+  LeaveModalState(callerWin);
 
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -10711,12 +10706,6 @@ nsNavigator::GetProductSub(nsAString& aProductSub)
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsNavigator::GetSecurityPolicy(nsAString& aSecurityPolicy)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP

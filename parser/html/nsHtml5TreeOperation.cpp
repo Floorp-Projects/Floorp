@@ -625,8 +625,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                             aBuilder->GetNodeInfoManager(),
                             nsnull,
                             name,
-                            nsnull,
-                            nsnull,
                             publicId,
                             systemId,
                             voidString);

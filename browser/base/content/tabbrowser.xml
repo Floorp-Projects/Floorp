@@ -814,7 +814,7 @@
               }
             } catch (e) {}
 
-            if (window.TabView) {
+            if ("TabView" in window) {
               let groupName = TabView.getActiveGroupName();
               if (groupName)
                 newTitle = groupName + sep + newTitle;
@@ -828,7 +828,7 @@
       <method name="updateTitlebar">
         <body>
           <![CDATA[
-            if (window.TabView && TabView.isVisible()) {
+            if ("TabView" in window && TabView.isVisible()) {
               // ToDo: this will be removed when we gain ability to draw to the menu bar.
               // Bug 586175
               this.ownerDocument.title = TabView.windowTitle;

@@ -49,7 +49,7 @@
         <xul:hbox align="center">
           <xul:description anonid="subscribeUsingDescription" class="subscribeUsingDescription"/>
           <xul:menulist anonid="handlersMenuList" class="handlersMenuList" aria-labelledby="subscribeUsingDescription">
-            <xul:menupopup menugenerated="true" anonid="handlersMenuPopup" class="handlersMenuPopup">
+            <xul:menupopup anonid="handlersMenuPopup" class="handlersMenuPopup">
               <xul:menuitem anonid="liveBookmarksMenuItem" label="&feedLiveBookmarks;" class="menuitem-iconic liveBookmarksMenuItem" image="chrome://browser/skin/page-livemarks.png" selected="true"/>
               <xul:menuseparator/>
             </xul:menupopup>

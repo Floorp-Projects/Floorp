@@ -54,7 +54,7 @@ public:
   NS_DECL_NSIOBSERVER
 
   // The nsITheme interface.
-  NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
+  NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame, PRUint8 aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect);
@@ -72,7 +72,7 @@ public:
                                                PRUint8 aWidgetType,
                                                nsRect* aOverflowRect);
 
-  NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext,
+  NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext,
                                   nsIFrame* aFrame, PRUint8 aWidgetType,
                                   nsIntSize* aResult, PRBool* aIsOverridable);
 

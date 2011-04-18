@@ -1,9 +1,9 @@
 
 /* pngpriv.h - private declarations for use inside libpng
  *
- * libpng version 1.4.3 - June 26, 2010
+ * libpng version 1.4.7 - April 10, 2011
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2010 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -28,14 +28,16 @@
 
 #include <stdlib.h>
 
+#ifndef PNG_EXTERN
 /* The functions exported by PNG_EXTERN are internal functions, which
  * aren't usually used outside the library (as far as I know), so it is
  * debatable if they should be exported at all.  In the future, when it
  * is possible to have run-time registry of chunk-handling functions,
  * some of these will be made available again.
-#define PNG_EXTERN extern
+#  define PNG_EXTERN extern
  */
-#define PNG_EXTERN
+#  define PNG_EXTERN
+#endif
 
 /* Other defines specific to compilers can go here.  Try to keep
  * them inside an appropriate ifdef/endif pair for portability.
@@ -75,10 +77,6 @@
 #if defined(WIN32) || defined(_Windows) || defined(_WINDOWS) || \
     defined(_WIN32) || defined(__WIN32__)
 #  include <windows.h>  /* defines _WINDOWS_ macro */
-/* I have no idea why is this necessary... */
-#  ifdef _MSC_VER
-#    include <malloc.h>
-#  endif
 #endif
 
 /* Various modes of operation.  Note that after an init, mode is set to
@@ -301,6 +299,9 @@ PNG_EXTERN void png_reset_crc PNGARG((png_structp png_ptr));
 PNG_EXTERN void png_write_data PNGARG((png_structp png_ptr, png_bytep data,
    png_size_t length));
 
+/* Read and check the PNG file signature */
+PNG_EXTERN void png_read_sig PNGARG((png_structp png_ptr, png_infop info_ptr));
+
 /* Read the chunk header (length + type name) */
 PNG_EXTERN png_uint_32 png_read_chunk_header PNGARG((png_structp png_ptr));
 
@@ -481,9 +482,9 @@ PNG_EXTERN void png_write_sCAL_s PNGARG((png_structp png_ptr,
 PNG_EXTERN void png_write_acTL PNGARG((png_structp png_ptr,
    png_uint_32 num_frames, png_uint_32 num_plays));
 
-PNG_EXTERN void png_write_fcTL PNGARG((png_structp png_ptr, 
-   png_uint_32 width, png_uint_32 height, 
-   png_uint_32 x_offset, png_uint_32 y_offset, 
+PNG_EXTERN void png_write_fcTL PNGARG((png_structp png_ptr,
+   png_uint_32 width, png_uint_32 height,
+   png_uint_32 x_offset, png_uint_32 y_offset,
    png_uint_16 delay_num, png_uint_16 delay_den,
    png_byte dispose_op, png_byte blend_op));
 #endif
@@ -550,7 +551,7 @@ PNG_EXTERN void png_progressive_read_reset PNGARG((png_structp png_ptr));
 #ifdef PNG_WRITE_APNG_SUPPORTED
 /* Private, reset some things to become ready for writing next frame */
 PNG_EXTERN void png_write_reset PNGARG((png_structp png_ptr));
-PNG_EXTERN void png_write_reinit PNGARG((png_structp png_ptr, 
+PNG_EXTERN void png_write_reinit PNGARG((png_structp png_ptr,
    png_infop info_ptr, png_uint_32 width, png_uint_32 height));
 #endif
 
@@ -706,7 +707,7 @@ PNG_EXTERN void png_handle_hIST PNGARG((png_structp png_ptr, png_infop info_ptr,
 #endif
 
 #ifdef PNG_READ_iCCP_SUPPORTED
-extern void png_handle_iCCP PNGARG((png_structp png_ptr, png_infop info_ptr,
+PNG_EXTERN void png_handle_iCCP PNGARG((png_structp png_ptr, png_infop info_ptr,
    png_uint_32 length));
 #endif /* PNG_READ_iCCP_SUPPORTED */
 
@@ -741,7 +742,7 @@ PNG_EXTERN void png_handle_sCAL PNGARG((png_structp png_ptr, png_infop info_ptr,
 #endif
 
 #ifdef PNG_READ_sPLT_SUPPORTED
-extern void png_handle_sPLT PNGARG((png_structp png_ptr, png_infop info_ptr,
+PNG_EXTERN void png_handle_sPLT PNGARG((png_structp png_ptr, png_infop info_ptr,
    png_uint_32 length));
 #endif /* PNG_READ_sPLT_SUPPORTED */
 
@@ -778,7 +779,7 @@ PNG_EXTERN void png_handle_fcTL PNGARG((png_structp png_ptr, png_infop info_ptr,
 PNG_EXTERN void png_have_info PNGARG((png_structp png_ptr, png_infop info_ptr));
 PNG_EXTERN void png_handle_fdAT PNGARG((png_structp png_ptr, png_infop info_ptr,
    png_uint_32 length));
-PNG_EXTERN void png_ensure_sequence_number PNGARG((png_structp png_ptr, 
+PNG_EXTERN void png_ensure_sequence_number PNGARG((png_structp png_ptr,
    png_uint_32 length));
 #endif
 
@@ -874,14 +875,14 @@ PNG_EXTERN void png_check_IHDR PNGARG((png_structp png_ptr,
    int filter_type));
 
 /* Free all memory used by the read (old method - NOT DLL EXPORTED) */
-extern void png_read_destroy PNGARG((png_structp png_ptr, png_infop info_ptr,
+PNG_EXTERN void png_read_destroy PNGARG((png_structp png_ptr, png_infop info_ptr,
    png_infop end_info_ptr));
 
 /* Free any memory used in png_ptr struct (old method - NOT DLL EXPORTED) */
-extern void png_write_destroy PNGARG((png_structp png_ptr));
+PNG_EXTERN void png_write_destroy PNGARG((png_structp png_ptr));
 
 #ifdef USE_FAR_KEYWORD  /* memory model conversion function */
-extern void *png_far_to_near PNGARG((png_structp png_ptr,png_voidp ptr,
+PNG_EXTERN void *png_far_to_near PNGARG((png_structp png_ptr,png_voidp ptr,
    int check));
 #endif /* USE_FAR_KEYWORD */
 

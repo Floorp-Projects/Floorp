@@ -49,12 +49,10 @@
  * http://www.w3.org/TR/DOM-Level-2-Core/
  */
 
-[scriptable, uuid(5725a7de-2883-45a5-878e-30773cd82478)]
+[scriptable, uuid(bfd028d4-fbbd-4d69-8899-dbee1778dde2)]
 interface nsIDOMDocumentType : nsIDOMNode
 {
   readonly attribute  DOMString            name;
-  readonly attribute  nsIDOMNamedNodeMap   entities;
-  readonly attribute  nsIDOMNamedNodeMap   notations;
   readonly attribute  DOMString            publicId;
   readonly attribute  DOMString            systemId;
   readonly attribute  DOMString            internalSubset;

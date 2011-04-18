@@ -182,7 +182,7 @@ public:
            aBuilder->ToReferenceFrame(listFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx) {
+                     nsRenderingContext* aCtx) {
     nsListControlFrame* listFrame = GetEnclosingListFrame(GetUnderlyingFrame());
     // listFrame must be non-null or we wouldn't get called.
     listFrame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(listFrame));

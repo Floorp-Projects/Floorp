@@ -80,6 +80,10 @@ To have the battery of generic tests run for a new list attribute, add an elemen
   attr_val_5a:
   attr_val_5b:
     Two attribute values containing five different items.
+  attr_val_5b_firstItem_x3_constructor:
+    Function to construct a list-item that should match the first item in a
+    SVGXxxList after three repeats of a cumulative animation to attr_val_5b.
+    This function takes t.item_constructor as its only argument.
   item_constructor:
     Function to create a dummy list item.
   item_is:
@@ -104,7 +108,12 @@ var tests = [
     attr_val_3b: '30in 10, 20ex',
     attr_val_4 : '10 20ex, 30in ,40cm',
     attr_val_5a: '10 20ex, 30in ,40cm , 50%',
-    attr_val_5b: '50% 10, 20ex ,30in , 40cm',
+    attr_val_5b: '20 50%, 20ex ,30in , 40cm',
+    attr_val_5b_firstItem_x3_constructor: function(constructor) {
+      var expected = constructor();
+      expected.value = 60;
+      return expected;
+    },
     item_constructor: function() {
       // We need this function literal to avoid "Illegal operation on
       // WrappedNative prototype object" NS_ERROR_XPC_BAD_OP_ON_WN_PROTO.
@@ -127,6 +136,11 @@ var tests = [
     attr_val_4 : '40 20 10 80',
     attr_val_5a: '90 30 60 20 70',
     attr_val_5b: '30 20 70 30 90',
+    attr_val_5b_firstItem_x3_constructor: function(constructor) {
+      var expected = constructor();
+      expected.value = 90;
+      return expected;
+    },
     item_constructor: function() {
       // We need this function literal to avoid "Illegal operation on
       // WrappedNative prototype object" NS_ERROR_XPC_BAD_OP_ON_WN_PROTO.
@@ -149,6 +163,11 @@ var tests = [
     attr_val_4 : '.5 .3 .8 .2',
     attr_val_5a: '3 4 5 6 7',
     attr_val_5b: '7 6 5 4 3',
+    attr_val_5b_firstItem_x3_constructor: function(constructor) {
+      var expected = constructor();
+      expected.value = 21;
+      return expected;
+    },
     item_constructor: function() {
       // We need this function literal to avoid "Illegal operation on
       // WrappedNative prototype object" NS_ERROR_XPC_BAD_OP_ON_WN_PROTO.
@@ -171,6 +190,12 @@ var tests = [
     attr_val_4 : ' 10,10 50,50 90,10 200,100 ',
     attr_val_5a: ' 10,10 50,50 90,10 130,50 170,10 ',
     attr_val_5b: ' 50,10 50,10 90,50 130,10 170,50 ',
+    attr_val_5b_firstItem_x3_constructor: function(constructor) {
+      var expected = constructor();
+      expected.x = 150;
+      expected.y = 30;
+      return expected;
+    },
     item_constructor: function() {
       // XXX return different values each time
       return document.getElementById('svg').createSVGPoint();
@@ -203,17 +228,43 @@ var tests = [
     attr_val_4 : 'M 10,10 L 50,50 L 90,10 M 200,100',
     attr_val_5a: 'M 10,10 L 50,50 L 90,10 L 130,50 L 170,10',
     attr_val_5b: 'M 50,10 L 50,10 L 90,50 L 130,10 L 170,50',
+    attr_val_5b_firstItem_x3_constructor: function(constructor) {
+      var expected = constructor();
+      is(expected.pathSegTypeAsLetter, "M",
+         "test error -- expected constructor to generate a segment of type M");
+      expected.x = 150;
+      expected.y = 30;
+      return expected;
+    },
     item_constructor: function() {
       // XXX return different values each time
       return document.getElementById('path').createSVGPathSegMovetoAbs(1, 1);
     },
     item_is: function(itemA, itemB, message) {
-      ok(typeof(itemA.pathSegType) != 'undefined' &&
-         typeof(itemB.pathSegType) != 'undefined',
-         'expecting pathSegType property');
+      ok(typeof(itemA.pathSegTypeAsLetter) != 'undefined' &&
+         typeof(itemB.pathSegTypeAsLetter) != 'undefined',
+         'expecting pathSegTypeAsLetter property');
 
-      // NOTE: Just comparing pathSegType - probably sufficient for our purposes
-      is(itemA.pathSegType, itemB.pathSegType, message);
+      // First: are we dealing  with the same type of segment?
+      is(itemA.pathSegTypeAsLetter, itemB.pathSegTypeAsLetter, message);
+      if (itemA.pathSegTypeAsLetter != itemB.pathSegTypeAsLetter)
+        return;  // The rest of this function is nonsense if types don't match.
+
+      // Make sure property-counts match (so we can iterate across itemA's
+      // properties and not worry about itemB having extra properties that
+      // we might be skipping over).
+      is(keys(itemA).length, keys(itemB).length,
+        'expecting same property-count when comparing path segs of same type.');
+
+      // Compare the properties, skipping the constant properties inherited
+      // from 'SVGPathSeg', and skipping the pathSegTypeAsLetter field since we
+      // already checked that above. 
+      for (var prop in itemA) {
+        if (!SVGPathSeg.hasOwnProperty(prop) &&
+            prop != 'pathSegTypeAsLetter') {
+          is(itemA[prop], itemB[prop], message);
+        }
+      }
     }
   },
 /*
@@ -238,12 +289,30 @@ var tests = [
       return SVGPathElement.createSVGPathSegLinetoAbs(1, 1);
     },
     item_is: function(itemA, itemB, message) {
-      ok(typeof(itemA.pathSegType) != 'undefined' &&
-         typeof(itemB.pathSegType) != 'undefined',
-         'expecting pathSegType property');
+      ok(typeof(itemA.pathSegTypeAsLetter) != 'undefined' &&
+         typeof(itemB.pathSegTypeAsLetter) != 'undefined',
+         'expecting pathSegTypeAsLetter property');
 
-      // NOTE: Just comparing pathSegType - probably sufficient for our purposes
-      is(itemA.pathSegType, itemB.pathSegType, message);
+      // First: are we dealing  with the same type of segment?
+      is(itemA.pathSegTypeAsLetter, itemB.pathSegTypeAsLetter, message);
+      if (itemA.pathSegTypeAsLetter != itemB.pathSegTypeAsLetter)
+        return;  // The rest of this function is nonsense if types don't match.
+
+      // Make sure property-counts match (so we can iterate across itemA's
+      // properties and not worry about itemB having extra properties that
+      // we might be skipping over).
+      is(keys(itemA).length, keys(itemB).length,
+        'expecting same property-count when comparing path segs of same type.');
+
+      // Compare the properties, skipping the constant properties inherited
+      // from 'SVGPathSeg', and skipping the pathSegTypeAsLetter field since we
+      // already checked that above. 
+      for (var prop in itemA) {
+        if (!SVGPathSeg.hasOwnProperty(prop) &&
+            prop != 'pathSegTypeAsLetter') {
+          is(itemA[prop], itemB[prop], message);
+        }
+      }
     }
   },
   {
@@ -299,12 +368,12 @@ var tests = [
 /*
 This function returns a DocumentFragment with three 'animate' element children. The duration of the three animations is as follows:
 
-  animation 1: |  *-----------*-----------*
+  animation 1: |  *-----------*-----------*-----------*
   animation 2: |     *--*
   animation 3: |                    *--*
-               |__________________________________> time (s)
-               |  |  |  |  |  |  |  |  |  |  |  |
-               0  1  2  3  4  5  6  7  8  9 10 11
+               |___________________________________________> time (s)
+               |  |  |  |  |  |  |  |  |  |  |  |  |  |  |
+               0  1  2  3  4  5  6  7  8  9 10 11 12 13 14
 
 The first animation repeats once so that we can test state on a repeat animation.
 
@@ -343,7 +412,8 @@ function create_animate_elements(test)
   animate1.setAttribute('to', test.attr_val_5b);
   animate1.setAttribute('begin', '1s');
   animate1.setAttribute('dur', '4s');
-  animate1.setAttribute('repeatCount', '2');
+  animate1.setAttribute('repeatCount', '3');
+  animate1.setAttribute('accumulate', 'sum');
   animate1.setAttribute('fill', 'freeze');
   df.appendChild(animate1);
 
@@ -1217,9 +1287,9 @@ function run_animation_timeline_tests()
   }
 
 
-  /********************    t = 10s    ********************/
+  /********************    t = 13s    ********************/
 
-  svg.setCurrentTime(10); // all animations have finished, but one is frozen
+  svg.setCurrentTime(13); // all animations have finished, but one is frozen
 
   for each (var t in tests) {
     if (!t.animVal)
@@ -1236,6 +1306,12 @@ function run_animation_timeline_tests()
        ' should still be more than the same as the number of items in '+
        t.bv_path+' since one of the animations is still frozen.');
 
+    var expected = t.attr_val_5b_firstItem_x3_constructor(t.item_constructor);
+    t.item_is(t.animVal.getItem(0), expected,
+      'animation with accumulate="sum" and repeatCount="3" for attribute "'+
+       t.attr_name+'" should end up at 3x the "to" value.');
+
+    // Unfreeze frozen animation (removing its effects)
     var frozen_animate_element =
       t.element.querySelector('animate[fill][attributeName="'+t.attr_name+'"]');
     frozen_animate_element.removeAttribute('fill');

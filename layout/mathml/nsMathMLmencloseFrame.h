@@ -85,12 +85,12 @@ public:
                                              nsStyleContext* aContext);
   
   virtual nsresult
-  Place(nsIRenderingContext& aRenderingContext,
+  Place(nsRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
   
   virtual nsresult
-  MeasureForWidth(nsIRenderingContext& aRenderingContext,
+  MeasureForWidth(nsRenderingContext& aRenderingContext,
                   nsHTMLReflowMetrics& aDesiredSize);
   
   NS_IMETHOD
@@ -126,7 +126,7 @@ protected:
   nsMathMLmencloseFrame(nsStyleContext* aContext);
   virtual ~nsMathMLmencloseFrame();
 
-  nsresult PlaceInternal(nsIRenderingContext& aRenderingContext,
+  nsresult PlaceInternal(nsRenderingContext& aRenderingContext,
                          PRBool               aPlaceOrigin,
                          nsHTMLReflowMetrics& aDesiredSize,
                          PRBool               aWidthOnly);

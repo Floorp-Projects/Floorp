@@ -38,6 +38,7 @@
 
 #include "arm.h"
 
+#if defined(MOZILLA_ARM_HAVE_CPUID_DETECTION)
 namespace {
 
 // arm.h has parallel #ifs which declare MOZILLA_ARM_HAVE_CPUID_DETECTION.
@@ -45,16 +46,17 @@ namespace {
 // we don't compile one of these detection methods. The detection code here is
 // based on the CPU detection in libtheora.
 
-#if defined(_MSC_VER)
+#  if defined(_MSC_VER)
 //For GetExceptionCode() and EXCEPTION_ILLEGAL_INSTRUCTION.
-#  define WIN32_LEAN_AND_MEAN
-#  define WIN32_EXTRA_LEAN
-#  include <windows.h>
+#    define WIN32_LEAN_AND_MEAN
+#    define WIN32_EXTRA_LEAN
+#    include <windows.h>
 
+#    if !defined(MOZILLA_PRESUME_EDSP)
 static bool
 check_edsp(void)
 {
-#  if defined(MOZILLA_MAY_SUPPORT_EDSP)
+#      if defined(MOZILLA_MAY_SUPPORT_EDSP)
   __try
   {
     //PLD [r13]
@@ -65,14 +67,16 @@ check_edsp(void)
   {
     //Ignore exception.
   }
-#  endif
+#      endif
   return false;
 }
+#    endif // !MOZILLA_PRESUME_EDSP
 
+#    if !defined(MOZILLA_PRESUME_ARMV6)
 static bool
 check_armv6(void)
 {
-#  if defined(MOZILLA_MAY_SUPPORT_ARMV6)
+#      if defined(MOZILLA_MAY_SUPPORT_ARMV6)
   __try
   {
     //SHADD8 r3,r3,r3
@@ -83,14 +87,16 @@ check_armv6(void)
   {
     //Ignore exception.
   }
-#  endif
+#      endif
   return false;
 }
+#    endif // !MOZILLA_PRESUME_ARMV6
 
+#    if !defined(MOZILLA_PRESUME_NEON)
 static bool
 check_neon(void)
 {
-#  if defined(MOZILLA_MAY_SUPPORT_NEON)
+#      if defined(MOZILLA_MAY_SUPPORT_NEON)
   __try
   {
     //VORR q0,q0,q0
@@ -101,14 +107,15 @@ check_neon(void)
   {
     //Ignore exception.
   }
-#  endif
+#      endif
   return false;
 }
+#    endif // !MOZILLA_PRESUME_NEON
 
-#elif defined(__linux__) || defined(ANDROID)
-#  include <stdio.h>
-#  include <stdlib.h>
-#  include <string.h>
+#  elif defined(__linux__) || defined(ANDROID)
+#    include <stdio.h>
+#    include <stdlib.h>
+#    include <string.h>
 
 enum{
   MOZILLA_HAS_EDSP_FLAG=1,
@@ -161,40 +168,46 @@ get_arm_cpu_flags(void)
 // Cache a local copy so we only have to read /proc/cpuinfo once.
 static unsigned arm_cpu_flags = get_arm_cpu_flags();
 
+#    if !defined(MOZILLA_PRESUME_EDSP)
 static bool
 check_edsp(void)
 {
   return (arm_cpu_flags & MOZILLA_HAS_EDSP_FLAG) != 0;
 }
+#    endif
 
+#    if !defined(MOZILLA_PRESUME_ARMV6)
 static bool
 check_armv6(void)
 {
   return (arm_cpu_flags & MOZILLA_HAS_ARMV6_FLAG) != 0;
 }
+#    endif
 
+#    if !defined(MOZILLA_PRESUME_NEON)
 static bool
 check_neon(void)
 {
   return (arm_cpu_flags & MOZILLA_HAS_NEON_FLAG) != 0;
+#    endif
 }
 
-#endif
+#  endif // defined(__linux__) || defined(ANDROID)
 
 }
 
 namespace mozilla {
   namespace arm_private {
-#if defined(MOZILLA_ARM_HAVE_CPUID_DETECTION)
-#if !defined(MOZILLA_PRESUME_EDSP)
+#  if !defined(MOZILLA_PRESUME_EDSP)
     bool edsp_enabled = check_edsp();
-#endif
-#if !defined(MOZILLA_PRESUME_ARMV6)
+#  endif
+#  if !defined(MOZILLA_PRESUME_ARMV6)
     bool armv6_enabled = check_armv6();
-#endif
-#if !defined(MOZILLA_PRESUME_NEON)
+#  endif
+#  if !defined(MOZILLA_PRESUME_NEON)
     bool neon_enabled = check_neon();
-#endif
-#endif
+#  endif
   } // namespace arm_private
 } // namespace mozilla
+
+#endif // MOZILLA_ARM_HAVE_CPUID_DETECTION

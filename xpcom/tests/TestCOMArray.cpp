@@ -107,7 +107,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IBar, NS_IBAR_IID)
 class Bar : public IBar {
 public:
 
-  Bar(nsCOMArray<IBar>& aArray, PRInt32 aIndex);
+  explicit Bar(nsCOMArray<IBar>& aArray);
   ~Bar();
 
   // nsISupports implementation
@@ -117,22 +117,20 @@ public:
 
 private:
   nsCOMArray<IBar>& mArray;
-  PRInt32 mIndex;
 };
 
 PRInt32 Bar::sReleaseCalled = 0;
 
 typedef nsCOMArray<IBar> Array2;
 
-Bar::Bar(Array2& aArray, PRInt32 aIndex)
+Bar::Bar(Array2& aArray)
   : mArray(aArray)
-  , mIndex(aIndex)
 {
 }
 
 Bar::~Bar()
 {
-  if (mArray.RemoveObjectAt(mIndex)) {
+  if (mArray.RemoveObject(this)) {
     fail("We should never manage to remove the object here");
   }
 }
@@ -212,11 +210,21 @@ int main(int argc, char **argv)
   {
     Array2 arr2;
 
-    IBar *ninthObject;
+    IBar *thirdObject,
+         *fourthObject,
+         *fifthObject,
+         *ninthObject;
     for (PRInt32 i = 0; i < 20; ++i) {
-      nsCOMPtr<IBar> bar = new Bar(arr2, i);
-      if (i == 8) {
-        ninthObject = bar;
+      nsCOMPtr<IBar> bar = new Bar(arr2);
+      switch (i) {
+      case 2:
+        thirdObject = bar; break;
+      case 3:
+        fourthObject = bar; break;
+      case 4:
+        fifthObject = bar; break;
+      case 8:
+        ninthObject = bar; break;
       }
       arr2.AppendObject(bar);
     }
@@ -227,15 +235,51 @@ int main(int argc, char **argv)
     if (Bar::sReleaseCalled != base + 10) {
       fail("Release called multiple times for SetCount");
     }
+    if (arr2.Count() != 10) {
+      fail("SetCount(10) should remove exactly ten objects");
+    }
 
     arr2.RemoveObjectAt(9);
     if (Bar::sReleaseCalled != base + 11) {
       fail("Release called multiple times for RemoveObjectAt");
     }
+    if (arr2.Count() != 9) {
+      fail("RemoveObjectAt should remove exactly one object");
+    }
 
     arr2.RemoveObject(ninthObject);
     if (Bar::sReleaseCalled != base + 12) {
       fail("Release called multiple times for RemoveObject");
+    }
+    if (arr2.Count() != 8) {
+      fail("RemoveObject should remove exactly one object");
+    }
+
+    arr2.RemoveObjectsAt(2, 3);
+    if (Bar::sReleaseCalled != base + 15) {
+      fail("Release called more or less than three times for RemoveObjectsAt");
+    }
+    if (arr2.Count() != 5) {
+      fail("RemoveObjectsAt should remove exactly three objects");
+    }
+    for (PRInt32 j = 0; j < arr2.Count(); ++j) {
+      if (arr2.ObjectAt(j) == thirdObject) {
+        fail("RemoveObjectsAt should have removed thirdObject");
+      }
+      if (arr2.ObjectAt(j) == fourthObject) {
+        fail("RemoveObjectsAt should have removed fourthObject");
+      }
+      if (arr2.ObjectAt(j) == fifthObject) {
+        fail("RemoveObjectsAt should have removed fifthObject");
+      }
+    }
+
+    arr2.RemoveObjectsAt(4, 1);
+    if (Bar::sReleaseCalled != base + 16) {
+      fail("Release called more or less than one time for RemoveObjectsAt");
+    }
+    if (arr2.Count() != 4) {
+      fail("RemoveObjectsAt should work for removing the last element");
     }
 
     arr2.Clear();
@@ -250,7 +294,7 @@ int main(int argc, char **argv)
     Array2 arr2;
 
     for (PRInt32 i = 0; i < 20; ++i) {
-      nsCOMPtr<IBar> bar  = new Bar(arr2, i);
+      nsCOMPtr<IBar> bar  = new Bar(arr2);
       arr2.AppendObject(bar);
     }
 
