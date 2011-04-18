@@ -922,22 +922,7 @@ obj_valueOf(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeobj)
 {
-    // CSP is static per document, so if our check said yes before, that
-    // answer is still valid.
-    JSObject *global = scopeobj->getGlobal();
-    Value v = global->getReservedSlot(JSRESERVED_GLOBAL_EVAL_ALLOWED);
-    if (v.isUndefined()) {
-        JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
-
-        // if there are callbacks, make sure that the CSP callback is installed and
-        // that it permits eval().
-        v.setBoolean((!callbacks || !callbacks->contentSecurityPolicyAllows) ||
-                     callbacks->contentSecurityPolicyAllows(cx));
-
-        // update the cache in the global object for the result of the security check
-        js_SetReservedSlot(cx, global, JSRESERVED_GLOBAL_EVAL_ALLOWED, v);
-    }
-    return !v.isFalse();
+    return scopeobj->getGlobal()->isEvalAllowed(cx);
 }
 
 /* We should be able to assert this for *any* fp->scopeChain(). */
@@ -1319,9 +1304,7 @@ DirectEval(JSContext *cx, const CallArgs &call)
 bool
 IsBuiltinEvalForScope(JSObject *scopeChain, const Value &v)
 {
-    JSObject *global = scopeChain->getGlobal();
-    JS_ASSERT((global->getClass()->flags & JSCLASS_GLOBAL_FLAGS) == JSCLASS_GLOBAL_FLAGS);
-    return global->getReservedSlot(JSRESERVED_GLOBAL_EVAL) == v;
+    return scopeChain->getGlobal()->getOriginalEval() == v;
 }
 
 bool
@@ -3796,10 +3779,8 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
     JSObject *evalobj = js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;
-    if (obj->isGlobal()) {
-        if (!js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_EVAL, ObjectValue(*evalobj)))
-            return NULL;
-    }
+    if (obj->isGlobal())
+        obj->asGlobal()->setOriginalEval(evalobj);
 
     return proto;
 }
@@ -6560,14 +6541,13 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
     return true;
 }
 
-JSObject *
+GlobalObject *
 JSObject::getGlobal() const
 {
     JSObject *obj = const_cast<JSObject *>(this);
     while (JSObject *parent = obj->getParent())
         obj = parent;
-    JS_ASSERT(obj->isGlobal());
-    return obj;
+    return obj->asGlobal();
 }
 
 JSBool
