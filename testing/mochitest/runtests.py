@@ -771,7 +771,14 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-t
         continue
 
   def installExtensionsToProfile(self, options):
-    "Install the specified extensions on the command line to the testing profile."
+    "Install application distributed extensions and specified on the command line ones to testing profile."
+    # Install distributed extensions, if application has any.
+    distExtDir = os.path.join(options.app[ : options.app.rfind(os.sep)], "distribution", "extensions")
+    if os.path.isdir(distExtDir):
+      for f in os.listdir(distExtDir):
+        self.automation.installExtension(os.path.join(distExtDir, f), options.profilePath)
+
+    # Install custom extensions.
     for f in options.extensionsToInstall:
       self.automation.installExtension(self.getFullPath(f), options.profilePath)
 
