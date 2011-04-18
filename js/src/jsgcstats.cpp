@@ -460,7 +460,7 @@ GCTimer::finish(bool lastGC) {
                     TIMEDIFF(sweepObjectEnd, sweepStringEnd),
                     TIMEDIFF(sweepStringEnd, sweepShapeEnd),
                     TIMEDIFF(sweepShapeEnd, sweepDestroyEnd));
-            fprintf(gcFile, "%7d, %7d, %7d \n", newChunkCount, destroyChunkCount);
+            fprintf(gcFile, "%7d, %7d\n", newChunkCount, destroyChunkCount);
             fflush(gcFile);
 
             if (lastGC) {
