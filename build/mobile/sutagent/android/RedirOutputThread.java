@@ -49,6 +49,7 @@ public class RedirOutputThread extends Thread
 	InputStream	sutOut;
 	Process pProc;
 	String	strOutput;
+	int	nExitCode = -1;
 	
 	public RedirOutputThread(Process pProc, OutputStream out)
 		{
@@ -134,7 +135,6 @@ public class RedirOutputThread extends Thread
 				} 
 			catch (IOException e)
 				{
-//				Toast.makeText(SUTAgentAndroid.me.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
 				e.printStackTrace();
 				}
 			}
@@ -147,15 +147,14 @@ public class RedirOutputThread extends Thread
 	private boolean IsProcRunning(Process pProc)
 		{
 		boolean bRet = false;
-		@SuppressWarnings("unused")
-		int nExitCode = 0;
 	
 		try
 			{
 			nExitCode = pProc.exitValue();
 			}
 		catch (IllegalThreadStateException z)
-			{	
+			{
+			nExitCode = -1;
 			bRet = true;
 			}
 

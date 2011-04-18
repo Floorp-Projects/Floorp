@@ -45,18 +45,17 @@ import java.net.SocketException;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Timer;
+
 import com.mozilla.SUTAgentAndroid.service.ASMozStub;
 import com.mozilla.SUTAgentAndroid.service.DoCommand;
-
-// import dalvik.system.VMRuntime;
 import android.app.Activity;
-import android.app.KeyguardManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
-// import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
@@ -65,8 +64,7 @@ import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
 import android.os.BatteryManager;
 import android.os.Bundle;
-import android.os.Debug;
-import android.os.PowerManager;
+import android.os.Handler;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
@@ -79,11 +77,12 @@ import android.widget.Toast;
 
 public class SUTAgentAndroid extends Activity 
 	{
+	final Handler mHandler = new Handler();
+
 	public static final int START_PRG = 1959;
 	MenuItem mExitMenuItem;
 	Timer timer = null;
 	
-//	public static SUTAgentAndroid me = null;
     public static String sUniqueID = null;
     public static String sLocalIPAddr = null;
     public static String sACStatus = null;
@@ -100,13 +99,14 @@ public class SUTAgentAndroid extends Activity
     private static String HardwareID = "";
     private static String Pool = "";
     private static String sRegString = "";
+    private static String sNTPServer = "";
     
     private WifiLock wl = null;
-    private PowerManager.WakeLock pwl = null;
     
     private BroadcastReceiver battReceiver = null;
-//    private ComponentName service = null;
-
+    
+    private TextView  tv = null;
+    
 	public boolean onCreateOptionsMenu(Menu menu)
 		{
 		mExitMenuItem = menu.add("Exit");
@@ -133,31 +133,10 @@ public class SUTAgentAndroid extends Activity
     public void onCreate(Bundle savedInstanceState)
     	{
         super.onCreate(savedInstanceState);
+        
         setContentView(R.layout.main);
 
-//        Debug.waitForDebugger();
-
-//        long lHeapSize = VMRuntime.getRuntime().getMinimumHeapSize();
-//        lHeapSize = 16000000;
-//        VMRuntime.getRuntime().setMinimumHeapSize(lHeapSize);
-        
-        // Keep phone from locking or remove lock on screen
-        KeyguardManager km = (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
-        if (km != null)
-        	{
-        	KeyguardManager.KeyguardLock kl = km.newKeyguardLock("SUTAgent");
-        	if (kl != null)
-        		kl.disableKeyguard();
-        	}
-        
-        // No sleeping on the job
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        if (pm != null)
-        	{
-        	pwl = pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "SUTAgent");
-        	if (pwl != null)
-        		pwl.acquire();
-        	}
+        fixScreenOrientation();
         
         DoCommand dc = new DoCommand(getApplication());
         
@@ -170,13 +149,12 @@ public class SUTAgentAndroid extends Activity
         SUTAgentAndroid.RegSvrIPPort = dc.GetIniData("Registration Server", "PORT", sIniFile);
         SUTAgentAndroid.HardwareID = dc.GetIniData("Registration Server", "HARDWARE", sIniFile);
         SUTAgentAndroid.Pool = dc.GetIniData("Registration Server", "POOL", sIniFile);
+        SUTAgentAndroid.sNTPServer = dc.GetIniData("NTP Server", "IPAddr", sIniFile);
 
-        TextView  tv = (TextView) this.findViewById(R.id.Textview01);
+        tv = (TextView) this.findViewById(R.id.Textview01);
 
         if (getLocalIpAddress() == null)
         	setUpNetwork(sIniFile);
-        
-//        me = this;
         
         WifiInfo wifi;
         WifiManager wifiMan = (WifiManager)getSystemService(Context.WIFI_SERVICE);
@@ -195,7 +173,7 @@ public class SUTAgentAndroid extends Activity
         if (sUniqueID == null)
         	{
         	BluetoothAdapter ba = BluetoothAdapter.getDefaultAdapter();
-        	if (ba.isEnabled() != true)
+        	if ((ba != null) && (ba.isEnabled() != true))
         		{
         		ba.enable();
         		while(ba.getState() != BluetoothAdapter.STATE_ON)
@@ -225,8 +203,11 @@ public class SUTAgentAndroid extends Activity
         		}
         	else
         		{
-        		sUniqueID = ba.getAddress();
-        		sUniqueID.toLowerCase();
+        		if (ba != null)
+        			{
+        			sUniqueID = ba.getAddress();
+        			sUniqueID.toLowerCase();
+        			}
         		}
         	}
 
@@ -258,6 +239,8 @@ public class SUTAgentAndroid extends Activity
         sConfig += "Network Info" + lineSep;
         sConfig += "\tMac Address: " + macAddress + lineSep;
         sConfig += "\tIP Address: " + sLocalIPAddr + lineSep;
+
+        displayStatus(sConfig);
         
         sRegString = "NAME=" + sUniqueID;
         sRegString += "&IPADDR=" + sLocalIPAddr;
@@ -273,35 +256,28 @@ public class SUTAgentAndroid extends Activity
         
         String sTemp = Uri.encode(sRegString,"=&");
         sRegString = "register " + sTemp;
-        
+
         if (!bNetworkingStarted)
         	{
         	Thread thread = new Thread(null, doStartService, "StartServiceBkgnd");
         	thread.start();
-//        	ToDoListening(1,300,dc);
         	bNetworkingStarted = true;
-        	String sRegRet = "";
-        	if (RegSvrIPAddr.length() > 0)
-        		{
-        		sRegRet = dc.RegisterTheDevice(RegSvrIPAddr, RegSvrIPPort, sRegString);
-        		if (sRegRet.contains("ok"))
-        			{
-        			sConfig += "Registered with testserver" + lineSep;
-        			sConfig += "\tIPAddress: " + RegSvrIPAddr + lineSep;
-        			if (RegSvrIPPort.length() > 0)
-        				sConfig += "\tPort: " + RegSvrIPPort + lineSep;
-        			}
-        		else
-        			sConfig += "Not registered with testserver" + lineSep;
-        		}
-    		else
-    			sConfig += "Not registered with testserver" + lineSep;
+        	
+        	Thread thread2 = new Thread(null, doRegisterDevice, "RegisterDeviceBkgnd");
+        	thread2.start();
         	}
         
-        tv.setText(sConfig);
-
         monitorBatteryState();
         
+    	// If we are returning from an update let'em know we're back
+    	Thread thread3 = new Thread(null, doUpdateCallback, "UpdateCallbackBkgnd");
+    	thread3.start();
+    	
+    	if (SUTAgentAndroid.sNTPServer.length() > 0) {
+        	Thread thread4 = new Thread(null, doSetClock, "SetClockBkgrnd");
+        	thread4.start();
+    	}
+    	
         final Button goButton = (Button) findViewById(R.id.Button01);
         goButton.setOnClickListener(new OnClickListener() {
             public void onClick(View v) {
@@ -309,6 +285,31 @@ public class SUTAgentAndroid extends Activity
                 }
         	});
         }
+    
+    private class UpdateStatus implements Runnable {
+    	public String sText = "";
+    	
+    	UpdateStatus(String sStatus) {
+    		sText = sStatus;
+    	}
+    	
+		@Override
+		public void run() {
+			displayStatus(sText);
+		}
+    }
+ 
+    public synchronized void displayStatus(String sStatus) {
+    	String sTVText = (String) tv.getText();
+    	sTVText += sStatus;
+    	tv.setText(sTVText);
+    }
+    
+    public void fixScreenOrientation()
+    	{
+    	setRequestedOrientation((getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) ?
+    							ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);    	
+    	}
     
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     	{
@@ -330,19 +331,11 @@ public class SUTAgentAndroid extends Activity
     		bNetworkingStarted = false;
     		
 			unregisterReceiver(battReceiver);
-	        KeyguardManager km = (KeyguardManager)getSystemService(Context.KEYGUARD_SERVICE);
-	        if (km != null)
-	        	{
-	        	KeyguardManager.KeyguardLock kl = km.newKeyguardLock("SUTAgent");
-	        	if (kl != null)
-	        		kl.reenableKeyguard();
-	        	}
-	        
-	        if (pwl != null)
-	        	pwl.release();
 	        
 	    	if (wl != null)
 	    		wl.release();
+	    	
+	    	System.exit(0);
     		}
     	}
     
@@ -453,7 +446,6 @@ public class SUTAgentAndroid extends Activity
 			nRet = Settings.System.getInt(cr, Settings.System.WIFI_USE_STATIC_IP);
 			String foo2 = "" + nRet;
 		} catch (SettingNotFoundException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 */
@@ -614,7 +606,67 @@ public class SUTAgentAndroid extends Activity
     	
     	return(bRet);
     	}
+
+    // If there is an update.info file callback the server and send the status
+    private Runnable doUpdateCallback = new Runnable() {
+    	public void run() {
+    		DoCommand dc = new DoCommand(getApplication());
+    		String sRet = dc.UpdateCallBack("update.info");
+    		if (sRet.length() > 0) {
+        		if (sRet.contains("ok")) {
+        			sRet = "Callback Server contacted successfully" + lineSep;
+    			} else if (sRet.contains("Nothing to do")) {
+    				sRet = "";
+    			} else {
+    				sRet = "Callback Server NOT contacted successfully" + lineSep;
+    			}
+    		}
+            if (sRet.length() > 0)
+            	mHandler.post(new UpdateStatus(sRet));
+            dc = null;
+    	}
+    };
     
+    private Runnable doSetClock = new Runnable() {
+    	public void run() {
+			String sRet = "";
+
+    		DoCommand dc = new DoCommand(getApplication());
+
+    		sRet = dc.SetSystemTime(sNTPServer, null, null);
+    		
+           	mHandler.post(new UpdateStatus(sRet));
+           	
+            dc = null;
+    	}
+    };
+    
+    // registers with the reg server defined in the SUTAgent.ini file
+    private Runnable doRegisterDevice = new Runnable() {
+    	public void run() {
+    		DoCommand dc = new DoCommand(getApplication());
+    		String sRet = "";
+        	if (RegSvrIPAddr.length() > 0) {
+        		String sRegRet = dc.RegisterTheDevice(RegSvrIPAddr, RegSvrIPPort, sRegString);
+        		if (sRegRet.contains("ok")) {
+        			sRet += "Registered with testserver" + lineSep;
+        			sRet += "\tIPAddress: " + RegSvrIPAddr + lineSep;
+        			if (RegSvrIPPort.length() > 0)
+        				sRet += "\tPort: " + RegSvrIPPort + lineSep;
+    			} else {
+    				sRet += "Not registered with testserver" + lineSep;
+    			}
+    		} else {
+    			sRet += "Not registered with testserver" + lineSep;
+    		}
+        	
+        if (sRet.length() > 0)
+        	mHandler.post(new UpdateStatus(sRet));
+        dc = null;
+    	}
+    };
+    
+    // this starts the listener service for the command and data channels
     private Runnable doStartService = new Runnable()
     	{
     	public void run()
@@ -622,101 +674,8 @@ public class SUTAgentAndroid extends Activity
 			Intent listenerService = new Intent();
 			listenerService.setAction("com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE");
 			startService(listenerService);
-//			service = startService(listenerService);
     		}
     	};
-/*
-    class ToDoListener extends TimerTask 
-    	{
-    	boolean 	bFirstRun = true;
-    	DoCommand	dc = null;
-    	
-    	ToDoListener() {}
-    	
-    	ToDoListener(DoCommand dc)
-    		{
-    		this.dc = dc;
-    		}
-    	
-		public void run ()
-			{
-			if (bFirstRun == true)
-				{
-				Intent listenerService = new Intent();
-				listenerService.setAction("com.mozilla.SUTAgentAndroid.service.LISTENER_SERVICE");
-				service = startService(listenerService);
-				bFirstRun = false;
-				}
-			else
-				{
-				if (dc != null)
-					{
-					String sRet = this.dc.SendPing("www.mozilla.org", null);
-					if (sRet.contains("3 received"))
-						this.dc.StopAlert();
-					else
-						this.dc.StartAlert();
-					sRet = null;
-					System.gc();
-					}
-				}
-			}
-		}
-	
-	public void ToDoListening(int delay, int interval, DoCommand dc)
-		{
-		if (timer == null)
-			timer = new Timer();
-//		timer.scheduleAtFixedRate(new ToDoListener(dc), delay * 1000, interval * 1000);
-//		timer.schedule(new ToDoListener(dc), delay * 1000);
-		timer.schedule(new ToDoListener(), delay * 1000);
-		}
-
-	class DoHeartBeat extends TimerTask
-		{
-    	PrintWriter out;
-	
-    	DoHeartBeat(PrintWriter out)
-			{
-    		this.out = out;
-			}
-	
-    	public void run ()
-			{
-    		String sRet = "";
-    		
-    		Calendar cal = Calendar.getInstance();
-    		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HH:mm:ss");
-    		sRet = sdf.format(cal.getTime());
-    		sRet += " Thump thump - " + sUniqueID + "\r\n";
-
-    		out.write(sRet);
-    		out.flush();
-			}
-		}
-
-	public void StartHeartBeat(PrintWriter out)
-		{
-		// start the heartbeat
-		this.dataOut = out;
-		if (timer == null)
-			timer = new Timer();
-		timer.scheduleAtFixedRate(new DoHeartBeat(dataOut), 0, 60000);
-		}
-	
-	public void StopHeartBeat()
-		{
-		// stop the heartbeat
-		this.dataOut = null;
-		if (timer != null)
-			{
-			timer.cancel();
-			timer.purge();
-			timer = null;
-			System.gc();
-			}
-		}
-*/	
 	
     public String getLocalIpAddress()
 		{
