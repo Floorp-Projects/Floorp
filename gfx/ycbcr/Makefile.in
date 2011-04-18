@@ -53,8 +53,13 @@ endif
 
 
 ifdef _MSC_VER
+ifeq ($(OS_TEST),x86_64)
+CPPSRCS += yuv_row_win64.cpp \
+           $(NULL)
+else
 CPPSRCS += yuv_row_win.cpp \
            $(NULL)
+endif
 else
 ifeq ($(OS_ARCH),Linux)
 CPPSRCS += yuv_row_posix.cpp \
