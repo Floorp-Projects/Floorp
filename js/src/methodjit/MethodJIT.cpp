@@ -184,7 +184,7 @@ JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x38);
 JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
 JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 
-asm volatile (
+asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampoline) "\n"
 SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
@@ -231,7 +231,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "jmp *0(%rsp)"                      "\n"
 );
 
-asm volatile (
+asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
@@ -251,7 +251,7 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
     "ret"                                "\n"
 );
 
-asm volatile (
+asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
 SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
@@ -286,7 +286,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x2c);
 JS_STATIC_ASSERT(offsetof(VMFrame, regs.fp) == 0x1C);
 
-asm volatile (
+asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampoline) "\n"
 SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
@@ -316,7 +316,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "jmp *16(%ebp)"                      "\n"
 );
 
-asm volatile (
+asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
@@ -334,7 +334,7 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
     "ret"                                "\n"
 );
 
-asm volatile (
+asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
 SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
@@ -387,7 +387,7 @@ JS_STATIC_ASSERT(JSReturnReg_Type == JSC::ARMRegisters::r2);
 #define FUNCTION_HEADER_EXTRA
 #endif
 
-asm volatile (
+asm (
 ".text\n"
 FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(JaegerTrampoline)   "\n"
@@ -446,7 +446,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"         "\n"
 "   bx     r4"                                  "\n"
 );
 
-asm volatile (
+asm (
 ".text\n"
 FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn)   "\n"
@@ -466,7 +466,7 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":"         "\n"
 "   pop     {r4-r11,pc}"                    "\n"
 );
 
-asm volatile (
+asm (
 ".text\n"
 FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(JaegerThrowpoline)  "\n"
@@ -491,7 +491,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 "   pop     {r4-r11,pc}"                    "\n"
 );
 
-asm volatile (
+asm (
 ".text\n"
 FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(JaegerStubVeneer)   "\n"

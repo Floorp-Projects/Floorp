@@ -155,7 +155,7 @@ JSObject::initString(JSContext *cx, JSString *str)
               JSObject::JSSLOT_STRING_LENGTH);
 
     setPrimitiveThis(js::StringValue(str));
-    JS_ASSERT(str->length() < JSString::MAX_LENGTH);
+    JS_ASSERT(str->length() <= JSString::MAX_LENGTH);
     setSlot(JSSLOT_STRING_LENGTH, js::Int32Value(int32(str->length())));
     return true;
 }

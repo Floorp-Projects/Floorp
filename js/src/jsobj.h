@@ -761,6 +761,8 @@ struct JSObject : js::gc::Cell {
         privateData = data;
     }
 
+    /* N.B. Infallible: NULL means 'no principal', not an error. */
+    inline JSPrincipals *principals(JSContext *cx);
 
     /*
      * ES5 meta-object properties and operations.
@@ -1356,6 +1358,7 @@ struct JSObject : js::gc::Cell {
     inline bool isXMLId() const;
     inline bool isNamespace() const;
     inline bool isQName() const;
+    inline bool isWeakMap() const;
 
     inline bool isProxy() const;
     inline bool isObjectProxy() const;
@@ -1369,6 +1372,17 @@ struct JSObject : js::gc::Cell {
 
 /* Check alignment for any fixed slots allocated after the object. */
 JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0);
+
+/*
+ * The only sensible way to compare JSObject with == is by identity. We use
+ * const& instead of * as a syntactic way to assert non-null. This leads to an
+ * abundance of address-of operators to identity. Hence this overload.
+ */
+static JS_ALWAYS_INLINE bool
+operator==(const JSObject &lhs, const JSObject &rhs)
+{
+    return &lhs == &rhs;
+}
 
 inline js::Value*
 JSObject::fixedSlots() const {
@@ -1917,7 +1931,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp);
 extern void
 js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
-extern void
+extern bool
 js_ClearNative(JSContext *cx, JSObject *obj);
 
 extern bool
@@ -1926,18 +1940,9 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, js::Value *vp);
 extern bool
 js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const js::Value &v);
 
-extern JSBool
-js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
-                         JSPrincipals *principals, JSAtom *caller);
-
 /* For CSP -- checks if eval() and friends are allowed to run. */
 extern JSBool
 js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeObj);
-
-/* NB: Infallible. */
-extern const char *
-js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
-                   JSPrincipals *principals, uintN *linenop);
 
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
@@ -1971,21 +1976,13 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
 
-enum EvalType { INDIRECT_EVAL, DIRECT_EVAL };
-
 /*
- * Common code implementing direct and indirect eval.
- *
- * Evaluate vp[2], if it is a string, in the context of the given calling
- * frame, with the provided scope chain, with the semantics of either a direct
- * or indirect eval (see ES5 10.4.2).  If this is an indirect eval, scopeobj
- * must be a global object.
- *
- * On success, store the completion value in *vp and return true.
+ * Performs a direct eval for the given arguments, which must correspond to the
+ * currently-executing stack frame, which must be a script frame. On completion
+ * the result is returned in call.rval.
  */
-extern bool
-EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
-           JSObject *scopeobj);
+extern JS_REQUIRES_STACK bool
+DirectEval(JSContext *cx, const CallArgs &call);
 
 /*
  * True iff |v| is the built-in eval function for the global object that
@@ -1997,6 +1994,13 @@ IsBuiltinEvalForScope(JSObject *scopeChain, const js::Value &v);
 /* True iff fun is a built-in eval function. */
 extern bool
 IsAnyBuiltinEval(JSFunction *fun);
+
+/* 'call' should be for the eval/Function native invocation. */
+extern JSPrincipals *
+PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx);
+
+extern JSObject *
+NonNullObject(JSContext *cx, const Value &v);
 
 }
 
