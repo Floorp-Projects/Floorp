@@ -3,4 +3,8 @@
     
     <string name="hello">Hello World, SUTAgentAndroid!</string>
     <string name="app_name">SUTAgentAndroid</string>
+	
+
+<string name="foreground_service_started">Foreground Service Started (ASMozStub)</string>
+
 </resources>
