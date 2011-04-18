@@ -470,8 +470,8 @@ Chunk::releaseArena(Arena<T> *arena)
     JS_ASSERT(size_t(comp->gcBytes) >= sizeof(Arena<T>));
 #ifdef JS_THREADSAFE
     if (rt->gcHelperThread.sweeping) {
-        rt->reduceGCTriggerBytes(3 * sizeof(Arena<T>));
-        comp->reduceGCTriggerBytes(3 * sizeof(Arena<T>));
+        rt->reduceGCTriggerBytes(GC_HEAP_GROWTH_FACTOR * sizeof(Arena<T>));
+        comp->reduceGCTriggerBytes(GC_HEAP_GROWTH_FACTOR * sizeof(Arena<T>));
     }
 #endif
     JS_ATOMIC_ADD(&rt->gcBytes, -sizeof(Arena<T>));
