@@ -5,3 +5,4 @@ script 15.5.4.11-01.js
 script split-01.js
 script split-undefined-separator.js
 script split-xregexp.js
+script string-object-length.js
