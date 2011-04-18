@@ -92,7 +92,7 @@ function run_test() {
     catch(ex) {
       error = ex;
     }
-    do_check_eq(error, "Record id mismatch: resource,other");
+    do_check_eq(error, "Record id mismatch: resource != other");
 
     log.info("Make sure wrong hmacs cause failures");
     cryptoWrap.encrypt(keyBundle);
