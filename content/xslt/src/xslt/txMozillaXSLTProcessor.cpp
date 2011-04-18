@@ -155,7 +155,9 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
         }
     }
 
-    return NS_OK;
+    NS_RUNTIMEABORT("Unknown output method");
+
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -203,7 +205,9 @@ txToDocHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
         }
     }
 
-    return NS_OK;
+    NS_RUNTIMEABORT("Unknown output method");
+
+    return NS_ERROR_FAILURE;
 }
 
 nsresult
