@@ -539,7 +539,7 @@ function test_readInputStreamToString_too_many_bytes()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let tests = [
+[
   test_async_write_file,
   test_async_write_file_deferred,
   test_async_write_file_safe,
@@ -565,32 +565,11 @@ let tests = [
   test_readInputStreamToString_no_bytes_arg,
   test_readInputStreamToString_blocking_stream,
   test_readInputStreamToString_too_many_bytes,
-];
+].forEach(add_test);
 let index = 0;
-
-function run_next_test()
-{
-  if (index < tests.length) {
-    do_test_pending();
-
-    // Asynchronous test exceptions do not kill the test...
-    do_execute_soon(function() {
-      try {
-        print("Running the next test: " + tests[index].name);
-        tests[index++]();
-      }
-      catch (e) {
-        do_throw(e);
-      }
-    });
-  }
-
-  do_test_finished();
-}
 
 function run_test()
 {
-  do_test_pending();
   run_next_test();
 }
 
