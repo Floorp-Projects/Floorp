@@ -59,6 +59,7 @@
 #include "nsIMenuFrame.h"
 #include "prlink.h"
 #include "nsIDOMHTMLInputElement.h"
+#include "nsRenderingContext.h"
 #include "nsWidgetAtoms.h"
 #include "mozilla/Services.h"
 
@@ -756,7 +757,7 @@ nsNativeThemeGTK::GetExtraSizeForWidget(nsIFrame* aFrame, PRUint8 aWidgetType,
 }
 
 NS_IMETHODIMP
-nsNativeThemeGTK::DrawWidgetBackground(nsIRenderingContext* aContext,
+nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        const nsRect& aRect,
@@ -979,7 +980,7 @@ nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
+nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
                                        nsIFrame* aFrame, PRUint8 aWidgetType,
                                        nsIntSize* aResult, PRBool* aIsOverridable)
 {
@@ -1135,12 +1136,9 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsIRenderingContext* aContext,
   case NS_THEME_TREEVIEW_HEADER_CELL:
     {
       // Just include our border, and let the box code augment the size.
-
-      nsCOMPtr<nsIDeviceContext> dc;
-      aContext->GetDeviceContext(*getter_AddRefs(dc));
-
       nsIntMargin border;
-      nsNativeThemeGTK::GetWidgetBorder(dc, aFrame, aWidgetType, &border);
+      nsNativeThemeGTK::GetWidgetBorder(aContext->DeviceContext(),
+                                        aFrame, aWidgetType, &border);
       aResult->width = border.left + border.right;
       aResult->height = border.top + border.bottom;
     }

@@ -108,7 +108,7 @@ gfxUserFontSet::~gfxUserFontSet()
 {
 }
 
-void
+gfxFontEntry*
 gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             const nsTArray<gfxFontFaceSrc>& aFontFaceSrcList,
                             PRUint32 aWeight,
@@ -118,6 +118,8 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
                             const nsString& aLanguageOverride,
                             gfxSparseBitSet *aUnicodeRanges)
 {
+    gfxProxyFontEntry *proxyEntry = nsnull;
+
     nsAutoString key(aFamilyName);
     ToLowerCase(key);
 
@@ -135,29 +137,47 @@ gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
     }
 
     // construct a new face and add it into the family
-    if (family) {
-        nsTArray<gfxFontFeature> featureSettings;
-        gfxFontStyle::ParseFontFeatureSettings(aFeatureSettings,
-                                               featureSettings);
-        PRUint32 languageOverride =
-            gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
-        gfxProxyFontEntry *proxyEntry = 
-            new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch, 
-                                  aItalicStyle,
-                                  featureSettings,
-                                  languageOverride,
-                                  aUnicodeRanges);
-        family->AddFontEntry(proxyEntry);
+    nsTArray<gfxFontFeature> featureSettings;
+    gfxFontStyle::ParseFontFeatureSettings(aFeatureSettings,
+                                           featureSettings);
+    PRUint32 languageOverride =
+        gfxFontStyle::ParseFontLanguageOverride(aLanguageOverride);
+    proxyEntry =
+        new gfxProxyFontEntry(aFontFaceSrcList, family, aWeight, aStretch,
+                              aItalicStyle,
+                              featureSettings,
+                              languageOverride,
+                              aUnicodeRanges);
+    family->AddFontEntry(proxyEntry);
 #ifdef PR_LOGGING
-        if (LOG_ENABLED()) {
-            LOG(("userfonts (%p) added (%s) with style: %s weight: %d stretch: %d", 
-                 this, NS_ConvertUTF16toUTF8(aFamilyName).get(), 
-                 (aItalicStyle & FONT_STYLE_ITALIC ? "italic" : 
-                     (aItalicStyle & FONT_STYLE_OBLIQUE ? "oblique" : "normal")), 
-                 aWeight, aStretch));
-        }
-#endif
+    if (LOG_ENABLED()) {
+        LOG(("userfonts (%p) added (%s) with style: %s weight: %d stretch: %d",
+             this, NS_ConvertUTF16toUTF8(aFamilyName).get(),
+             (aItalicStyle & FONT_STYLE_ITALIC ? "italic" :
+                 (aItalicStyle & FONT_STYLE_OBLIQUE ? "oblique" : "normal")),
+             aWeight, aStretch));
     }
+#endif
+
+    return proxyEntry;
+}
+
+void
+gfxUserFontSet::AddFontFace(const nsAString& aFamilyName,
+                            gfxFontEntry     *aFontEntry)
+{
+    nsAutoString key(aFamilyName);
+    ToLowerCase(key);
+
+    PRBool found;
+
+    gfxMixedFontFamily *family = mFontFamilies.GetWeak(key, &found);
+    if (!family) {
+        family = new gfxMixedFontFamily(aFamilyName);
+        mFontFamilies.Put(key, family);
+    }
+
+    family->AddFontEntry(aFontEntry);
 }
 
 gfxFontEntry*
@@ -541,7 +561,7 @@ gfxUserFontSet::OnLoadComplete(gfxFontEntry *aFontToLoad,
             fe->mFeatureSettings.AppendElements(pe->mFeatureSettings);
             fe->mLanguageOverride = pe->mLanguageOverride;
 
-            static_cast<gfxMixedFontFamily*>(pe->mFamily)->ReplaceFontEntry(pe, fe);
+            ReplaceFontEntry(pe, fe);
             IncrementGeneration();
 #ifdef PR_LOGGING
             if (LOG_ENABLED()) {
@@ -630,7 +650,7 @@ gfxUserFontSet::LoadNext(gfxProxyFontEntry *aProxyEntry)
                      PRUint32(mGeneration)));
                 fe->mFeatureSettings.AppendElements(aProxyEntry->mFeatureSettings);
                 fe->mLanguageOverride = aProxyEntry->mLanguageOverride;
-                static_cast<gfxMixedFontFamily*>(aProxyEntry->mFamily)->ReplaceFontEntry(aProxyEntry, fe);
+                ReplaceFontEntry(aProxyEntry, fe);
                 return STATUS_LOADED;
             } else {
                 LOG(("userfonts (%p) [src %d] failed local: (%s) for (%s)\n", 

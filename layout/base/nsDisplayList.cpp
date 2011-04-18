@@ -45,6 +45,7 @@
 #include "nsDisplayList.h"
 
 #include "nsCSSRendering.h"
+#include "nsRenderingContext.h"
 #include "nsISelectionController.h"
 #include "nsIPresShell.h"
 #include "nsRegion.h"
@@ -499,7 +500,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 }
 
 void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
-                              nsIRenderingContext* aCtx,
+                              nsRenderingContext* aCtx,
                               PRUint32 aFlags) const {
   PaintForFrame(aBuilder, aCtx, aBuilder->ReferenceFrame(), aFlags);
 }
@@ -510,7 +511,7 @@ void nsDisplayList::PaintRoot(nsDisplayListBuilder* aBuilder,
  * root of the layer manager, drawing into the ThebesLayers.
  */
 void nsDisplayList::PaintForFrame(nsDisplayListBuilder* aBuilder,
-                                  nsIRenderingContext* aCtx,
+                                  nsRenderingContext* aCtx,
                                   nsIFrame* aForFrame,
                                   PRUint32 aFlags) const {
   NS_ASSERTION(mDidComputeVisibility,
@@ -818,7 +819,7 @@ PRBool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
 }
 
 void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
-                                nsIRenderingContext* aCtx) {
+                                nsRenderingContext* aCtx) {
   aCtx->SetColor(mColor);
   aCtx->FillRect(mVisibleRect);
 }
@@ -1227,7 +1228,7 @@ nsDisplayBackground::ShouldFixToViewport(nsDisplayListBuilder* aBuilder)
 
 void
 nsDisplayBackground::Paint(nsDisplayListBuilder* aBuilder,
-                           nsIRenderingContext* aCtx) {
+                           nsRenderingContext* aCtx) {
   nsPoint offset = ToReferenceFrame();
   PRUint32 flags = aBuilder->GetBackgroundPaintFlags();
   nsDisplayItem* nextItem = GetAbove();
@@ -1262,7 +1263,7 @@ nsDisplayOutline::GetBounds(nsDisplayListBuilder* aBuilder) {
 
 void
 nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder,
-                        nsIRenderingContext* aCtx) {
+                        nsRenderingContext* aCtx) {
   // TODO join outlines together
   nsPoint offset = ToReferenceFrame();
   nsCSSRendering::PaintOutline(mFrame->PresContext(), *aCtx, mFrame,
@@ -1312,7 +1313,7 @@ nsDisplayEventReceiver::HitTest(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayCaret::Paint(nsDisplayListBuilder* aBuilder,
-                      nsIRenderingContext* aCtx) {
+                      nsRenderingContext* aCtx) {
   // Note: Because we exist, we know that the caret is visible, so we don't
   // need to check for the caret's visibility.
   mCaret->PaintCaret(aBuilder, aCtx, mFrame, ToReferenceFrame());
@@ -1349,7 +1350,7 @@ nsDisplayBorder::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBorder::Paint(nsDisplayListBuilder* aBuilder,
-                       nsIRenderingContext* aCtx) {
+                       nsRenderingContext* aCtx) {
   nsPoint offset = ToReferenceFrame();
   nsCSSRendering::PaintBorder(mFrame->PresContext(), *aCtx, mFrame,
                               mVisibleRect,
@@ -1398,7 +1399,7 @@ ComputeDisjointRectangles(const nsRegion& aRegion,
 
 void
 nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
-                               nsIRenderingContext* aCtx) {
+                               nsRenderingContext* aCtx) {
   nsPoint offset = ToReferenceFrame();
   nsRect borderRect = nsRect(offset, mFrame->GetSize());
   nsPresContext* presContext = mFrame->PresContext();
@@ -1407,7 +1408,7 @@ nsDisplayBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
 
   for (PRUint32 i = 0; i < rects.Length(); ++i) {
     aCtx->PushState();
-    aCtx->SetClipRect(rects[i], nsClipCombine_kIntersect);
+    aCtx->IntersectClip(rects[i]);
     nsCSSRendering::PaintBoxShadowOuter(presContext, *aCtx, mFrame,
                                         borderRect, rects[i]);
     aCtx->PopState();
@@ -1451,7 +1452,7 @@ nsDisplayBoxShadowOuter::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 void
 nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
-                               nsIRenderingContext* aCtx) {
+                               nsRenderingContext* aCtx) {
   nsPoint offset = ToReferenceFrame();
   nsRect borderRect = nsRect(offset, mFrame->GetSize());
   nsPresContext* presContext = mFrame->PresContext();
@@ -1460,7 +1461,7 @@ nsDisplayBoxShadowInner::Paint(nsDisplayListBuilder* aBuilder,
 
   for (PRUint32 i = 0; i < rects.Length(); ++i) {
     aCtx->PushState();
-    aCtx->SetClipRect(rects[i], nsClipCombine_kIntersect);
+    aCtx->IntersectClip(rects[i]);
     nsCSSRendering::PaintBoxShadowInner(presContext, *aCtx, mFrame,
                                         borderRect, rects[i]);
     aCtx->PopState();
@@ -1547,7 +1548,7 @@ PRBool nsDisplayWrapList::IsVaryingRelativeToMovingFrame(nsDisplayListBuilder* a
 }
 
 void nsDisplayWrapList::Paint(nsDisplayListBuilder* aBuilder,
-                              nsIRenderingContext* aCtx) {
+                              nsRenderingContext* aCtx) {
   NS_ERROR("nsDisplayWrapList should have been flattened away for painting");
 }
 
@@ -1886,7 +1887,7 @@ nsDisplayClip::~nsDisplayClip() {
 #endif
 
 void nsDisplayClip::Paint(nsDisplayListBuilder* aBuilder,
-                          nsIRenderingContext* aCtx) {
+                          nsRenderingContext* aCtx) {
   NS_ERROR("nsDisplayClip should have been flattened away for painting");
 }
 
@@ -2059,7 +2060,7 @@ void nsDisplayZoom::HitTest(nsDisplayListBuilder *aBuilder,
 }
 
 void nsDisplayZoom::Paint(nsDisplayListBuilder* aBuilder,
-                          nsIRenderingContext* aCtx)
+                          nsRenderingContext* aCtx)
 {
   mList.PaintForFrame(aBuilder, aCtx, mFrame, nsDisplayList::PAINT_DEFAULT);
 }
@@ -2570,7 +2571,7 @@ nsDisplaySVGEffects::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect
 }
 
 void nsDisplaySVGEffects::Paint(nsDisplayListBuilder* aBuilder,
-                                nsIRenderingContext* aCtx)
+                                nsRenderingContext* aCtx)
 {
   nsSVGIntegrationUtils::PaintFramesWithEffects(aCtx,
           mEffectsFrame, mVisibleRect, aBuilder, &mList);

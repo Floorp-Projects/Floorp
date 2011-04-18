@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessible XUL button hierarchy tests">
+
+  <script type="application/javascript" 
+          src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js" />
+  <script type="application/javascript"
+          src="../role.js" />
+  <script type="application/javascript"
+          src="../events.js" />
+
+  <script type="application/javascript">
+  <![CDATA[
+    ////////////////////////////////////////////////////////////////////////////
+    // Test
+
+    function openColorpicker(aColorpickerID)
+    {
+      this.node = getNode(aColorpickerID);
+
+      this.eventSeq = [];
+
+      var it = new colorButtonIterator(this.node);
+      for (var btnNode = it.next(); btnNode = it.next(); btnNode)
+        this.eventSeq.push(new invokerChecker(EVENT_SHOW, btnNode));
+
+      var popupNode = getPopupNode(this.node);
+      this.eventSeq.push(new invokerChecker(EVENT_REORDER, popupNode));
+
+      this.invoke = function openColorpicker_invoke()
+      {
+        var tree =
+          { BUTTONDROPDOWNGRID: [
+            { ALERT: [ ] }
+          ] };
+        testAccessibleTree(this.node, tree);
+
+        this.node.showPopup();
+      }
+
+      this.finalCheck = function openColorpicker_finalCheck()
+      {
+        var tree =
+          { BUTTONDROPDOWNGRID: [
+            { ALERT: [ ] }
+          ] };
+
+        var colorButtons = tree.BUTTONDROPDOWNGRID[0].ALERT;
+        var it = new colorButtonIterator(this.node);
+        while (it.next()) {
+          var obj = { PUSHBUTTON: [ ] };
+          colorButtons.push(obj);
+        }
+
+        testAccessibleTree(this.node, tree);
+      }
+
+      this.getID = function openColorpicker_getID()
+      {
+        return "open colorpicker " + prettyName(aColorpickerID);
+      }
+    }
+
+    function getPopupNode(aColorpickerNode)
+    {
+      return aColorpickerNode.mPicker.parentNode;
+    }
+
+    function colorButtonIterator(aColorpickerNode)
+    {
+      this.container = aColorpickerNode.mPicker.mBox;
+      this.group = this.container.firstChild;
+      this.item = null;
+
+      this.next = function colorButtonIterator_next()
+      {
+        if (!this.group)
+          return null;
+
+        if (!this.item) {
+          this.item = this.group.firstChild;
+          return this.item;
+        }
+
+        if (this.item.nextSibling) {
+          this.item = this.item.nextSibling;
+          return this.item;
+        }
+
+        if (this.group.nextSibling) {
+          this.group = this.group.nextSibling;
+          this.item = this.group.firstChild;
+          return this.item;
+        }
+
+        this.group = null;
+        this.item = null;
+        return null;
+      }
+    }
+
+    //gA11yEventDumpToConsole = true; // debug stuff
+
+    var gQueue = null;
+    function doTest()
+    {
+      gQueue = new eventQueue();
+      gQueue.push(new openColorpicker("colorpicker"));
+      gQueue.invoke(); // Will call SimpleTest.finish()
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+    <body xmlns="http://www.w3.org/1999/xhtml">
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=249292"
+         title="Ensure accessible children for toolbarbutton types 'menu' and 'menu-button'">
+        Mozilla Bug 249292
+      </a>
+      <a target="_blank"
+         href="https://bugzilla.mozilla.org/show_bug.cgi?id=630486"
+         title="Don't force accessible creation for popup children.">
+        Mozilla Bug 630486
+      </a>
+      <br/>
+      <p id="display"></p>
+      <div id="content" style="display: none">
+      </div>
+      <pre id="test">
+      </pre>
+    </body>
+
+    <vbox flex="1">
+      <colorpicker id="colorpicker" type="button"/>
+    </vbox>
+  </hbox>
+
+</window>
+

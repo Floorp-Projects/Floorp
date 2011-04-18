@@ -51,7 +51,7 @@
 #include "nsIComponentManager.h"
 #include "nsButtonFrameRenderer.h"
 
-class nsIRenderingContext;
+class nsRenderingContext;
 class nsPresContext;
 
 class nsHTMLButtonControlFrame : public nsHTMLContainerFrame,
@@ -70,9 +70,9 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
 
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
 
   NS_IMETHOD Reflow(nsPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,

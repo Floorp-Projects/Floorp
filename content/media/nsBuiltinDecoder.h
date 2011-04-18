@@ -250,13 +250,14 @@ public:
   virtual void Shutdown() = 0;
 
   // Called from the main thread to get the duration. The decoder monitor
-  // must be obtained before calling this. It is in units of milliseconds.
+  // must be obtained before calling this. It is in units of microseconds.
   virtual PRInt64 GetDuration() = 0;
 
   // Called from the main thread to set the duration of the media resource
   // if it is able to be obtained via HTTP headers. Called from the 
   // state machine thread to set the duration if it is obtained from the
   // media metadata. The decoder monitor must be obtained before calling this.
+  // aDuration is in microseconds.
   virtual void SetDuration(PRInt64 aDuration) = 0;
 
   // Functions used by assertions to ensure we're calling things
@@ -303,6 +304,10 @@ public:
   // with the decode monitor held. Called on the state machine thread and
   // the main thread.
   virtual void StartBuffering() = 0;
+
+  // Sets the current size of the framebuffer used in MozAudioAvailable events.
+  // Called on the state machine thread and the main thread.
+  virtual void SetFrameBufferLength(PRUint32 aLength) = 0;
 };
 
 class nsBuiltinDecoder : public nsMediaDecoder
@@ -383,10 +388,10 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Call on the main thread only.
   virtual PRBool IsEnded() const;
 
-  // Set the duration of the media resource in units of milliseconds.
+  // Set the duration of the media resource in units of seconds.
   // This is called via a channel listener if it can pick up the duration
   // from a content header. Must be called from the main thread only.
-  virtual void SetDuration(PRInt64 aDuration);
+  virtual void SetDuration(double aDuration);
 
   // Set a flag indicating whether seeking is supported
   virtual void SetSeekable(PRBool aSeekable);
@@ -446,6 +451,10 @@ class nsBuiltinDecoder : public nsMediaDecoder
     return mDecoderStateMachine->NotifyDataArrived(aBuffer, aLength, aOffset);
   }
 
+  // Sets the length of the framebuffer used in MozAudioAvailable events.
+  // The new size must be between 512 and 16384.
+  virtual nsresult RequestFrameBufferLength(PRUint32 aLength);
+
  public:
   // Return the current state. Can be called on any thread. If called from
   // a non-main thread, the decoder monitor must be held.
@@ -491,8 +500,7 @@ class nsBuiltinDecoder : public nsMediaDecoder
   // Called when the metadata from the media file has been read.
   // Call on the main thread only.
   void MetadataLoaded(PRUint32 aChannels,
-                      PRUint32 aRate,
-                      PRUint32 aFrameBufferLength);
+                      PRUint32 aRate);
 
   // Called when the first frame has been loaded.
   // Call on the main thread only.

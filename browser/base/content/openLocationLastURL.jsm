@@ -96,8 +96,7 @@ let gOpenLocationLastURL = {
     }
   },
   reset: function() {
-    if (prefSvc.prefHasUserValue(LAST_URL_PREF))
-        prefSvc.clearUserPref(LAST_URL_PREF);
+    prefSvc.clearUserPref(LAST_URL_PREF);
     gOpenLocationLastURLData = "";
   }
 };

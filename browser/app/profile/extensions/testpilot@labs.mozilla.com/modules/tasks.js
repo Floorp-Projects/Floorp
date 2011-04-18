@@ -552,6 +552,21 @@ TestPilotExperiment.prototype = {
     }
   },
 
+  getStudyMetadata: function TestPilotExperiment_getStudyMetadata() {
+    try {
+      if (this._handlers.getStudyMetadata) {
+        let metadata = this._handlers.getStudyMetadata();
+        if (metadata.length) {
+          // getStudyMetadata must return an array, otherwise it is invalid.
+          return metadata;
+        }
+      }
+    } catch(e) {
+      this._logger.warn("Error in getStudyMetadata: " + e);
+    }
+    return null;
+  },
+
   _reschedule: function TestPilotExperiment_reschedule() {
     // Schedule next run of test:
     // add recurrence interval to start date and store!
@@ -753,6 +768,15 @@ TestPilotExperiment.prototype = {
       json.metadata = md;
       json.metadata.task_guid = self.getGuid(self._id);
       json.metadata.event_headers = self._dataStore.getPropertyNames();
+      let moreMd = self.getStudyMetadata();
+      if (moreMd) {
+        for (let i = 0; i < moreMd.length; i++) {
+          if (moreMd[i].name && moreMd[i].value) {
+            json.metadata[ moreMd[i].name ] = moreMd[i].value; // TODO sanitize strings?
+            // TODO handle case where name or value are something other than strings?
+          }
+        }
+      }
       self._dataStore.getJSONRows(function(rows) {
                                     json.events = rows;
                                     callback( JSON.stringify(json) );

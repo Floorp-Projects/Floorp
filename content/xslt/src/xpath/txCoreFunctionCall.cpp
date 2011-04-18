@@ -329,7 +329,7 @@ txCoreFunctionCall::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             rv = mParams[1]->evaluateToString(aContext, arg2);
             NS_ENSURE_SUCCESS(rv, rv);
 
-            PRBool result;
+            PRBool result = PR_FALSE;
             if (arg2.IsEmpty()) {
                 result = PR_TRUE;
             }

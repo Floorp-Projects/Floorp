@@ -57,8 +57,6 @@ function getBrowser() {
   return Browser.selectedBrowser;
 }
 
-const kBrowserFormZoomLevelMin = 0.8;
-const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 
 const kDefaultBrowserWidth = 800;
@@ -1439,8 +1437,8 @@ Browser.WebProgress.prototype = {
       }
 
       aTab.scrolledAreaChanged();
-      if (browser.currentURI.spec != "about:blank")
-        aTab.updateThumbnail();
+      aTab.updateThumbnail();
+
       browser.messageManager.addMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
     });
   }

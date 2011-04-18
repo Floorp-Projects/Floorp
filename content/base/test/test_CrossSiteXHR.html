@@ -567,6 +567,13 @@ function runTest() {
                  exposeHeaders: "  ,  ,,y-my-header,z-my-header,  ",
                  expectedResponseHeaders: ["y-my-header"],
                },
+               
+               // Check that sending a body in the OPTIONS response works
+               { pass: 1,
+                 method: "DELETE",
+                 allowMethods: "DELETE",
+                 preflightBody: "I'm a preflight response body",
+               },
                ];
 
   if (!runPreflightTests) {
@@ -635,6 +642,8 @@ function runTest() {
       req.url += "&responseHeaders=" + escape(test.responseHeaders.toSource());
     if (test.exposeHeaders)
       req.url += "&exposeHeaders=" + escape(test.exposeHeaders);
+    if (test.preflightBody)
+      req.url += "&preflightBody=" + escape(test.preflightBody);
 
     loaderWindow.postMessage(req.toSource(), origin);
     res = eval(yield);
@@ -841,6 +850,11 @@ function runTest() {
          "wrong events in test for " + test.toSource());
     }
   }
+
+  // Make sure to clear cookies to avoid affecting other tests
+  document.cookie = "a=; path=/; expires=Thu, 01-Jan-1970 00:00:01 GMT"
+  is(document.cookie, "", "No cookies should be left over");
+
 
   // Test redirects
   is(loader.src, "http://example.org/tests/content/base/test/file_CrossSiteXHR_inner.html");

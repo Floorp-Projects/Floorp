@@ -155,7 +155,6 @@ function isRestartShown(aShown, isUpdate, aCallback) {
 }
 
 function checkInstallAlert(aShown, aCallback) {
-  info("checkInstallAlert " + aShown + "\n");
   checkAlert(null, "xpinstall", null, aShown, function(aNotifyBox, aNotification) {
     if (aShown) {
       let button = aNotification.childNodes[0];
@@ -170,13 +169,11 @@ function checkInstallAlert(aShown, aCallback) {
 }
 
 function checkDownloadNotification(aCallback) {
-  dump("checkDownloadNotification\n");
   let msg = /download/i;
   checkNotification(/Add-ons/, msg, ADDON_IMG, aCallback);
 }
 
 function checkInstallNotification(aRestart, aCallback) {
-  dump("checkInstallNotification " + aRestart + "\n");
   let msg = null;
   if (aRestart)
     msg = /restart/i;
@@ -184,7 +181,6 @@ function checkInstallNotification(aRestart, aCallback) {
 }
 
 function checkNotification(aTitle, aMessage, aIcon, aCallback) {
-  dump("checkNotification " + aTitle + " " + aMessage + " " + aIcon + "\n");
   let doTest = function() {
     ok(document.getElementById("alerts-container").classList.contains("showing"), "Alert shown");
     let title = document.getElementById("alerts-title").value;
@@ -209,7 +205,6 @@ function checkNotification(aTitle, aMessage, aIcon, aCallback) {
 }
 
 function checkAlert(aId, aName, aLabel, aShown, aCallback) {
-  info("checkAlert " + aId + " " + aName + " " + aLabel + " " + aShown + "\n");
   let msg = null;
   if (aId)
     msg = document.getElementById(aId);
@@ -307,7 +302,9 @@ function loadUrl(aURL, aCallback, aNewTab) {
 }
 
 function checkInstallPopup(aName, aCallback) {
-  testPrompt("Installing Add-on", aName, [ {label: "Install", click: true}, {label: "Cancel", click: false}], aCallback);
+  testPrompt("Installing Add-on", aName, [ {label: "Install", click: true},
+                                           {label: "Cancel", click: false}],
+                                  aCallback);
 }
 
 function testPrompt(aTitle, aMessage, aButtons, aCallback) {
@@ -318,12 +315,12 @@ function testPrompt(aTitle, aMessage, aButtons, aCallback) {
     if (prompt) {
       let title = document.getElementById("prompt-confirm-title");
       let message = document.getElementById("prompt-confirm-message");
-      is(aTitle, title.value, "Correct title shown");
+      is(aTitle, title.textContent, "Correct title shown");
       is(aMessage, message.textContent, "Correct message shown");
 
-     let buttons = document.getElementsByClassName("prompt-button");
+      let buttons = document.querySelectorAll("#prompt-confirm-buttons-box .prompt-button");
       let clickButton = null;
-      ok(buttons.length == aButtons.length, "Prompt has correct number of buttons");
+      is(buttons.length, aButtons.length, "Prompt has correct number of buttons");
       if (buttons.length == aButtons.length) {
         for (let i = 0; i < buttons.length; i++) {
           is(buttons[i].label, aButtons[i].label, "Button has correct label");
@@ -351,23 +348,15 @@ function testPrompt(aTitle, aMessage, aButtons, aCallback) {
 
 // Installs an addon via the urlbar.
 function installFromURLBar(aAddon) {
-  info("installFromURLBar " + aAddon + "\n");
   return function() {
     loadUrl(gTestURL, function() {
-      info("loadUrl: " + gTestURL + "\n");
       loadUrl(aAddon.sourceURL, null, false);
-      info("loadUrl: " + aAddon.sourceURL + "(2)\n");
       checkInstallAlert(true, function() {
-        dump("info: checkInstallAlert callback\n");
         checkDownloadNotification(function() {
-          dump("info: checkDownloadNotification callback\n");
           checkInstallPopup(aAddon.name, function() {
-            dump("info: checkInstallPopup callback\n");
             checkInstallNotification(!aAddon.bootstrapped, function() {
-              dump("info: checkInstallNotification callback\n");
               open_manager(true, function() {
                 isRestartShown(!aAddon.bootstrapped, false, function() {
-                  dump("info: isRestartShown callback\n");
                   let elt = get_addon_element(aAddon.id);
                   if (aAddon.bootstrapped) {
                     checkAddonListing(aAddon, elt, "local");
@@ -443,41 +432,26 @@ function installListener(aSettings) {
 
 installListener.prototype = {
   onNewInstall : function(install) { },
-  onDownloadStarted : function(install) {
-    info("download started");
-  },
-  onDownloadProgress : function(install) {
-    info("download progress");
-  },
-  onDownloadEnded : function(install) {
-    info("download ended");
-  },
-  onDownloadCancelled : function(install) {
-    info("download cancelled");
-  },
+  onDownloadStarted : function(install) { },
+  onDownloadProgress : function(install) { },
+  onDownloadEnded : function(install) { },
+  onDownloadCancelled : function(install) { },
   onDownloadFailed : function(install) {
     if(this.addon.willFail)
       ok(false, "Install failed");
-    info("download failed");
   },
-  onInstallStarted : function(install) {
-    info("Install started");
-  },
+  onInstallStarted : function(install) { },
   onInstallEnded : function(install, addon) {
-    info("Install ended");
     let self = this;
     isRestartShown(!this.addon.bootstrapped, false, function() {
       if(self.onComplete)
         self.onComplete();
     });
   },
-  onInstallCancelled : function(install) {
-    info("Install cancelled");
-  },
+  onInstallCancelled : function(install) { },
   onInstallFailed : function(install) {
     if(this.willFail)
       ok(false, "Install failed");
-    info("install failed");
   },
   onExternalInstall : function(install, existing, needsRestart) { },
 };

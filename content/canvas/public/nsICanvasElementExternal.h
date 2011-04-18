@@ -48,7 +48,7 @@ struct gfxRect;
 #define NS_ICANVASELEMENTEXTERNAL_IID \
   { 0x51870f54, 0x6c4c, 0x469a, {0xad, 0x46, 0xf0, 0xa9, 0x8e, 0x32, 0xa7, 0xe2 } }
 
-class nsIRenderingContext;
+class nsRenderingContext;
 class nsICanvasRenderingContextInternal;
 
 struct _cairo_surface;

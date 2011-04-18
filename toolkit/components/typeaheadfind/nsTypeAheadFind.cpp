@@ -72,7 +72,6 @@
 #include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
-#include "nsISelectElement.h"
 #include "nsILink.h"
 #include "nsTextFragment.h"
 #include "nsIDOMNSEditableElement.h"
