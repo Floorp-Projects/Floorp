@@ -1168,9 +1168,16 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
 {
     JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
     if (handler) {
+        JSTrapStatus st = JSTRAP_CONTINUE;
         Value rval;
-        switch (handler(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
-                        f.cx->debugHooks->debuggerHandlerData)) {
+        if (JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler) {
+            st = handler(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
+                         f.cx->debugHooks->debuggerHandlerData);
+        }
+        if (st == JSTRAP_CONTINUE)
+            st = f.cx->compartment->onDebuggerStatement(f.cx, &rval);
+
+        switch (st) {
           case JSTRAP_THROW:
             f.cx->setPendingException(rval);
             THROW();

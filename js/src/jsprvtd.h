@@ -180,6 +180,8 @@ struct Shape;
 struct EmptyShape;
 class Bindings;
 
+class Debug;
+
 } /* namespace js */
 
 } /* export "C++" */

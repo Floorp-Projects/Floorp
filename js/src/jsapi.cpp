@@ -3461,6 +3461,25 @@ DefineProperty(JSContext *cx, JSObject *obj, const char *name, const Value &valu
             return JS_FALSE;
         id = ATOM_TO_JSID(atom);
     }
+
+    if (attrs & JSPROP_NATIVE_ACCESSORS) {
+        JS_ASSERT(!(flags & (JSPROP_GETTER | JSPROP_SETTER)));
+        flags &= ~JSPROP_NATIVE_ACCESSORS;
+        if (getter) {
+            JSObject *getobj = JS_NewFunction(cx, (JSNative) getter, 0, 0, obj->getGlobal(), NULL);
+            if (!getobj)
+                return false;
+            getter = JS_DATA_TO_FUNC_PTR(PropertyOp, getobj);
+            attrs |= JSPROP_GETTER;
+        }
+        if (setter) {
+            JSObject *setobj = JS_NewFunction(cx, (JSNative) setter, 1, 0, obj->getGlobal(), NULL);
+            if (!setobj)
+                return false;
+            setter = JS_DATA_TO_FUNC_PTR(StrictPropertyOp, setobj);
+            attrs |= JSPROP_SETTER;
+        }
+    }
     return DefinePropertyById(cx, obj, id, value, getter, setter, attrs, flags, tinyid);
 }
 

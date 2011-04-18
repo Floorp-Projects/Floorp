@@ -370,6 +370,8 @@ class DtoaCache {
 } /* namespace js */
 
 struct JS_FRIEND_API(JSCompartment) {
+    typedef js::Vector<js::Debug *, 0, js::SystemAllocPolicy> DebugVector;
+
     JSRuntime                    *rt;
     JSPrincipals                 *principals;
     js::gc::Chunk                *chunk;
@@ -483,6 +485,7 @@ struct JS_FRIEND_API(JSCompartment) {
     void finalizeStringArenaLists(JSContext *cx, JSGCInvocationKind gckind);
     void finalizeShapeArenaLists(JSContext *cx, JSGCInvocationKind gckind);
     bool arenaListsAreEmpty();
+    bool isAboutToBeCollected(JSGCInvocationKind gckind);
 
     void setGCLastBytes(size_t lastBytes);
     void reduceGCTriggerBytes(uint32 amount);
@@ -501,6 +504,11 @@ struct JS_FRIEND_API(JSCompartment) {
 
     BackEdgeMap                  backEdgeTable;
 
+    DebugVector debuggers;
+
+    // Implemented in jsdbg.cpp
+    JSTrapStatus dispatchDebuggerStatement(JSContext *cx, js::Value *vp);
+
     JSCompartment *thisForCtor() { return this; }
   public:
     js::MathCache *getMathCache(JSContext *cx) {
@@ -509,6 +517,15 @@ struct JS_FRIEND_API(JSCompartment) {
 
     size_t backEdgeCount(jsbytecode *pc) const;
     size_t incBackEdgeCount(jsbytecode *pc);
+
+    const DebugVector &getDebuggers() const { return debuggers; }
+
+    JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp) {
+        return debuggers.empty() ? JSTRAP_CONTINUE : dispatchDebuggerStatement(cx, vp);
+    }
+
+    bool addDebug(js::Debug *dbg) { return debuggers.append(dbg); }
+    void removeDebug(js::Debug *dbg);
 };
 
 #define JS_SCRIPTS_TO_GC(cx)    ((cx)->compartment->scriptsToGC)
