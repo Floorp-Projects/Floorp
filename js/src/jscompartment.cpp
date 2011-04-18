@@ -600,3 +600,7 @@ JSCompartment::incBackEdgeCount(jsbytecode *pc)
     return 1;  /* oom not reported by backEdgeTable, so ignore. */
 }
 
+bool
+JSCompartment::isAboutToBeCollected(JSGCInvocationKind gckind) {
+    return !hold && (arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT);
+}
