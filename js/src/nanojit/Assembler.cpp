@@ -1330,7 +1330,6 @@ namespace nanojit
                 intersectRegisterState(label->regs);
             }
             Branches branches = asm_branch(branchOnFalse, cond, 0);
-printf("b1=%p %p\n",branches.branch1,branches.branch2);
             if (branches.branch1) {
                 _patches.put(branches.branch1,to);
             }
