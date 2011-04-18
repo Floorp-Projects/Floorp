@@ -3616,6 +3616,9 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b)
     JS_ASSERT(a->compartment() == b->compartment());
     JS_ASSERT(a->isFunction() == b->isFunction());
 
+    /* Don't try to swap a JSFunction for a plain function JSObject. */
+    JS_ASSERT_IF(a->isFunction(), a->structSize() == b->structSize());
+
     /*
      * Regexp guts are more complicated -- we would need to migrate the
      * refcounted JIT code blob for them across compartments instead of just
@@ -3647,38 +3650,77 @@ JSObject::TradeGuts(JSContext *cx, JSObject *a, JSObject *b)
         /*
          * If the objects are of differing sizes, then we need to get arrays of
          * all the slots and copy them over manually; whether a given slot is
-         * inline or not will vary between the objects. This situation must
-         * only happen when we are swapping proxies, which are non-native and
-         * thus do not have shapes depending on the number of inline slots.
+         * inline or not will vary between the objects. If either result object
+         * is native, it needs a new shape to preserve the invariant that
+         * objects with the same shape have the same number of inline slots.
          */
-        JS_ASSERT(a->isProxy() && b->isProxy());
+
+        if (a->isNative())
+            a->generateOwnShape(cx);
+        if (b->isNative())
+            b->generateOwnShape(cx);
+
+        unsigned acap = a->numSlots();
+        unsigned bcap = b->numSlots();
 
         AutoValueVector avals(cx);
-        if (!avals.reserve(a->numSlots()))
+        if (!avals.reserve(acap))
             return false;
-        for (size_t i = 0; i < a->numSlots(); i++)
+        for (size_t i = 0; i < acap; i++)
             avals.infallibleAppend(a->getSlot(i));
 
         AutoValueVector bvals(cx);
-        if (!bvals.reserve(b->numSlots()))
+        if (!bvals.reserve(bcap))
             return false;
-        for (size_t i = 0; i < b->numSlots(); i++)
+        for (size_t i = 0; i < bcap; i++)
             bvals.infallibleAppend(b->getSlot(i));
 
-        if (a->isFunction()) {
-            JSFunction tmp;
-            memcpy(&tmp, a, sizeof tmp);
-            memcpy(a, b, sizeof tmp);
-            memcpy(b, &tmp, sizeof tmp);
-        } else {
-            JSObject tmp;
-            memcpy(&tmp, a, sizeof tmp);
-            memcpy(a, b, sizeof tmp);
-            memcpy(b, &tmp, sizeof tmp);
+        unsigned afixed = a->numFixedSlots();
+        unsigned bfixed = b->numFixedSlots();
+
+        /*
+         * Get new slot pointers to use after the swap. Do this before the
+         * swap so if these fail the original objects are preserved.
+         */
+        Value *newaslots = NULL, *newbslots = NULL;
+        if (afixed < bcap) {
+            newaslots = (Value *) cx->malloc_(sizeof(Value) * (bcap - afixed));
+            if (!newaslots)
+                return false;
+        }
+        if (bfixed < acap) {
+            newbslots = (Value *) cx->malloc_(sizeof(Value) * (acap - bfixed));
+            if (!newbslots) {
+                if (newaslots)
+                    cx->free_(newaslots);
+                return false;
+            }
         }
 
-        a->copySlotRange(0, bvals.begin(), a->numSlots());
-        b->copySlotRange(0, avals.begin(), b->numSlots());
+        /* From here the swap is infallible. */
+
+        /* Wipe out any dynamic slots, we will reallocate if needed. */
+        if (a->hasSlotsArray())
+            cx->free_(a->slots);
+        if (b->hasSlotsArray())
+            cx->free_(b->slots);
+
+        JSObject tmp;
+        memcpy(&tmp, a, sizeof tmp);
+        memcpy(a, b, sizeof tmp);
+        memcpy(b, &tmp, sizeof tmp);
+
+        a->flags = (a->flags & ~FIXED_SLOTS_MASK) | (afixed << FIXED_SLOTS_SHIFT);
+        a->slots = newaslots;
+        a->capacity = Max(afixed, bcap);
+        a->copySlotRange(0, bvals.begin(), bcap);
+        a->clearSlotRange(bcap, a->capacity - bcap);
+
+        b->flags = (b->flags & ~FIXED_SLOTS_MASK) | (bfixed << FIXED_SLOTS_SHIFT);
+        b->slots = newbslots;
+        b->capacity = Max(bfixed, acap);
+        b->copySlotRange(0, avals.begin(), acap);
+        b->clearSlotRange(acap, b->capacity - acap);
     }
 
     return true;
