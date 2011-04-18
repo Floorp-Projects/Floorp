@@ -20,7 +20,7 @@
  *
  * Contributor(s):
  *  Bob Moss <bmoss@mozilla.com>
- * 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -49,151 +49,151 @@ import java.net.SocketTimeoutException;
 
 public class CmdWorkerThread extends Thread
 {
-	private RunCmdThread theParent = null;
-	private Socket socket	= null;
-	private String prompt = null;
-	boolean bListening	= true;
+    private RunCmdThread theParent = null;
+    private Socket socket    = null;
+    private String prompt = null;
+    boolean bListening    = true;
 
-	public CmdWorkerThread(RunCmdThread theParent, Socket workerSocket)
-		{
-		super("CmdWorkerThread");
-		this.theParent = theParent;
-		this.socket = workerSocket;
-		byte pr [] = new byte [3];
-		pr[0] = '$';
-		pr[1] = '>';
-		pr[2] = 0;
-		prompt = new String(pr,0,3);
-		}
+    public CmdWorkerThread(RunCmdThread theParent, Socket workerSocket)
+        {
+        super("CmdWorkerThread");
+        this.theParent = theParent;
+        this.socket = workerSocket;
+        byte pr [] = new byte [3];
+        pr[0] = '$';
+        pr[1] = '>';
+        pr[2] = 0;
+        prompt = new String(pr,0,3);
+        }
 
-	public void StopListening()
-		{
-		bListening = false;
-		}
-	
-	private String readLine(BufferedInputStream in)
-		{
-		String sRet = "";
-		int nByte = 0;
-		char cChar = 0;
-		
-		try 
-			{
-			nByte = in.read();
-			while (nByte != -1)
-				{
-				cChar = ((char)(nByte & 0xFF));
-				if ((cChar != '\r') && (cChar != '\n'))
-					sRet += cChar;
-				else
-					break;
-				nByte = in.read();
-				}
-			
-			if ((in.available() > 0) && (cChar != '\n'))
-				{
-				in.mark(1024);
-				nByte = in.read();
-				
-				if (nByte != -1)
-					{
-					cChar = ((char)(nByte & 0xFF));
-					if (cChar != '\n')
-						{
-						in.reset();
-						}
-					}
-				}
-			}
-		catch (IOException e)
-			{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			}
-		
-		if (sRet.length() == 0)
-			sRet = null;
-		
-		return(sRet);
-		}
+    public void StopListening()
+        {
+        bListening = false;
+        }
 
-	public void run()
-		{
-		try {
-			OutputStream cmdOut = socket.getOutputStream();
-			InputStream cmdIn = socket.getInputStream();
-			PrintWriter out = new PrintWriter(cmdOut, true);
-			BufferedInputStream in = new BufferedInputStream(cmdIn);
-			String inputLine, outputLine;
-			DoCommand dc = new DoCommand(theParent.svc);
+    private String readLine(BufferedInputStream in)
+        {
+        String sRet = "";
+        int nByte = 0;
+        char cChar = 0;
 
-			int nAvail = cmdIn.available();
-			cmdIn.skip(nAvail);
-				
-			out.print(prompt);
-			out.flush();
+        try
+            {
+            nByte = in.read();
+            while (nByte != -1)
+                {
+                cChar = ((char)(nByte & 0xFF));
+                if ((cChar != '\r') && (cChar != '\n'))
+                    sRet += cChar;
+                else
+                    break;
+                nByte = in.read();
+                }
 
-			while (bListening)
-				{
-				if (!(in.available() > 0))
-					{
-					socket.setSoTimeout(500);
-					try {
-						int nRead = cmdIn.read();
-						if (nRead == -1)
-							{
-							bListening = false;
-							continue;
-							}
-						else
-							{
-							inputLine = ((char)nRead) + "";
-							socket.setSoTimeout(120000);
-							}
-						}
-					catch(SocketTimeoutException toe)
-						{
-						continue;
-						}
-					}
-				else
-					inputLine = "";
-				
-				if ((inputLine += readLine(in)) != null)
-					{
-					outputLine = dc.processCommand(inputLine, out, in, cmdOut);
-					if (outputLine.length() > 0)
-						{
-						out.print(outputLine + "\n" + prompt);
-						}
-					else
-						out.print(prompt);
-					out.flush();
-					if (outputLine.equals("exit"))
-						{
-						theParent.StopListening();
-						bListening = false;
-						}
-					if (outputLine.equals("quit"))
-						{
-						bListening = false;
-						}
-					outputLine = null;
-					System.gc();
-					}
-				else
-					break;
-				}
-			out.close();
-			out = null;
-			in.close();
-			in = null;
-			socket.close();
-		}
-	catch (IOException e)
-		{
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-		}
-	}
+            if ((in.available() > 0) && (cChar != '\n'))
+                {
+                in.mark(1024);
+                nByte = in.read();
+
+                if (nByte != -1)
+                    {
+                    cChar = ((char)(nByte & 0xFF));
+                    if (cChar != '\n')
+                        {
+                        in.reset();
+                        }
+                    }
+                }
+            }
+        catch (IOException e)
+            {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            }
+
+        if (sRet.length() == 0)
+            sRet = null;
+
+        return(sRet);
+        }
+
+    public void run()
+        {
+        try {
+            OutputStream cmdOut = socket.getOutputStream();
+            InputStream cmdIn = socket.getInputStream();
+            PrintWriter out = new PrintWriter(cmdOut, true);
+            BufferedInputStream in = new BufferedInputStream(cmdIn);
+            String inputLine, outputLine;
+            DoCommand dc = new DoCommand(theParent.svc);
+
+            int nAvail = cmdIn.available();
+            cmdIn.skip(nAvail);
+
+            out.print(prompt);
+            out.flush();
+
+            while (bListening)
+                {
+                if (!(in.available() > 0))
+                    {
+                    socket.setSoTimeout(500);
+                    try {
+                        int nRead = cmdIn.read();
+                        if (nRead == -1)
+                            {
+                            bListening = false;
+                            continue;
+                            }
+                        else
+                            {
+                            inputLine = ((char)nRead) + "";
+                            socket.setSoTimeout(120000);
+                            }
+                        }
+                    catch(SocketTimeoutException toe)
+                        {
+                        continue;
+                        }
+                    }
+                else
+                    inputLine = "";
+
+                if ((inputLine += readLine(in)) != null)
+                    {
+                    outputLine = dc.processCommand(inputLine, out, in, cmdOut);
+                    if (outputLine.length() > 0)
+                        {
+                        out.print(outputLine + "\n" + prompt);
+                        }
+                    else
+                        out.print(prompt);
+                    out.flush();
+                    if (outputLine.equals("exit"))
+                        {
+                        theParent.StopListening();
+                        bListening = false;
+                        }
+                    if (outputLine.equals("quit"))
+                        {
+                        bListening = false;
+                        }
+                    outputLine = null;
+                    System.gc();
+                    }
+                else
+                    break;
+                }
+            out.close();
+            out = null;
+            in.close();
+            in = null;
+            socket.close();
+        }
+    catch (IOException e)
+        {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+        }
+    }
 }

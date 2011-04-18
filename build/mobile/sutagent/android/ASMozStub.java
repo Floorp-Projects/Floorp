@@ -20,7 +20,7 @@
  *
  * Contributor(s):
  *  Bob Moss <bmoss@mozilla.com>
- * 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -55,22 +55,22 @@ import android.view.Gravity;
 import android.widget.Toast;
 
 public class ASMozStub extends android.app.Service {
-	
-	private ServerSocket cmdChnl = null;
-	private ServerSocket dataChnl = null;
-	private Handler handler = new Handler();
-	RunCmdThread runCmdThrd = null;
-	RunDataThread runDataThrd = null;
-	Thread monitor = null;
-	Timer timer = null;
-	
-	@SuppressWarnings("unchecked")
-	private static final Class[] mStartForegroundSignature = new Class[] {
+
+    private ServerSocket cmdChnl = null;
+    private ServerSocket dataChnl = null;
+    private Handler handler = new Handler();
+    RunCmdThread runCmdThrd = null;
+    RunDataThread runDataThrd = null;
+    Thread monitor = null;
+    Timer timer = null;
+
+    @SuppressWarnings("unchecked")
+    private static final Class[] mStartForegroundSignature = new Class[] {
         int.class, Notification.class};
-	@SuppressWarnings("unchecked")
-	private static final Class[] mStopForegroundSignature = new Class[] {
+    @SuppressWarnings("unchecked")
+    private static final Class[] mStopForegroundSignature = new Class[] {
         boolean.class};
-	
+
     private NotificationManager mNM;
     private Method mStartForeground;
     private Method mStopForeground;
@@ -78,89 +78,89 @@ public class ASMozStub extends android.app.Service {
     private Object[] mStopForegroundArgs = new Object[1];
 
     @Override
-	public IBinder onBind(Intent intent)
-		{
-		return null;
-		}
-	
-	@Override
-	public void onCreate() {
-		super.onCreate();
-		
+    public IBinder onBind(Intent intent)
+        {
+        return null;
+        }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+
         mNM = (NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         try {
             mStartForeground = getClass().getMethod("startForeground", mStartForegroundSignature);
             mStopForeground = getClass().getMethod("stopForeground", mStopForegroundSignature);
-        	}
+            }
         catch (NoSuchMethodException e) {
             // Running on an older platform.
             mStartForeground = mStopForeground = null;
-        	}
-		
-        doToast("Listener Service created...");
-		}
+            }
 
-	public void onStart(Intent intent, int startId) {
-		super.onStart(intent, startId);
-		
-		try {
-			cmdChnl = new ServerSocket(20701);
-			runCmdThrd = new RunCmdThread(cmdChnl, this, handler);
-			runCmdThrd.start();
-			doToast("Command channel port 20701 ...");
-			
-			dataChnl = new ServerSocket(20700);
-			runDataThrd = new RunDataThread(dataChnl, this);
-			runDataThrd.start();
-			doToast("Data channel port 20700 ...");
-			
+        doToast("Listener Service created...");
+        }
+
+    public void onStart(Intent intent, int startId) {
+        super.onStart(intent, startId);
+
+        try {
+            cmdChnl = new ServerSocket(20701);
+            runCmdThrd = new RunCmdThread(cmdChnl, this, handler);
+            runCmdThrd.start();
+            doToast("Command channel port 20701 ...");
+
+            dataChnl = new ServerSocket(20700);
+            runDataThrd = new RunDataThread(dataChnl, this);
+            runDataThrd.start();
+            doToast("Data channel port 20700 ...");
+
             Notification notification = new Notification();
             startForegroundCompat(R.string.foreground_service_started, notification);
-			} 
-		catch (Exception e) {
-			doToast(e.toString());
-//			Toast.makeText(getApplication().getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
-			}
-		
-		return;
-		}
-	
-	public void onDestroy()
-		{
-		super.onDestroy();
-		
-		if (runCmdThrd.isAlive())
-			{
-			runCmdThrd.StopListening();
-			}
-		
-		if (runDataThrd.isAlive())
-			{
-			runDataThrd.StopListening();
-			}
-		
-		NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
-		notificationManager.cancel(1959);
-		
-		stopForegroundCompat(R.string.foreground_service_started);
-		
-		doToast("Listener Service destroyed...");
-		
-		System.exit(0);
-		}
-	
-	public void SendToDataChannel(String strToSend)
-		{
-		if (runDataThrd.isAlive())
-			runDataThrd.SendToDataChannel(strToSend);
-		}
-	
-	public void doToast(String sMsg) {
-		Toast toast = Toast.makeText(this, sMsg, Toast.LENGTH_LONG);
-		toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 100);
-		toast.show();
-	}
-	
+            }
+        catch (Exception e) {
+            doToast(e.toString());
+//            Toast.makeText(getApplication().getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
+            }
+
+        return;
+        }
+
+    public void onDestroy()
+        {
+        super.onDestroy();
+
+        if (runCmdThrd.isAlive())
+            {
+            runCmdThrd.StopListening();
+            }
+
+        if (runDataThrd.isAlive())
+            {
+            runDataThrd.StopListening();
+            }
+
+        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(1959);
+
+        stopForegroundCompat(R.string.foreground_service_started);
+
+        doToast("Listener Service destroyed...");
+
+        System.exit(0);
+        }
+
+    public void SendToDataChannel(String strToSend)
+        {
+        if (runDataThrd.isAlive())
+            runDataThrd.SendToDataChannel(strToSend);
+        }
+
+    public void doToast(String sMsg) {
+        Toast toast = Toast.makeText(this, sMsg, Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.TOP|Gravity.CENTER_HORIZONTAL, 0, 100);
+        toast.show();
+    }
+
     /**
      * This is a wrapper around the new startForeground method, using the older
      * APIs if it is not available.
