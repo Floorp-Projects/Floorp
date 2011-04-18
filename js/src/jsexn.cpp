@@ -80,9 +80,6 @@ static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
 static JSBool
-exn_enumerate(JSContext *cx, JSObject *obj);
-
-static JSBool
 exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp);
 
