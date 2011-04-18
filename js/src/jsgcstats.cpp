@@ -415,7 +415,6 @@ GCMarker::dumpConservativeRoots()
 
 jsrefcount newChunkCount = 0;
 jsrefcount destroyChunkCount = 0;
-uint32 arenaCount = 0;
 
 GCTimer::GCTimer() {
     getFirstEnter();
@@ -461,7 +460,7 @@ GCTimer::finish(bool lastGC) {
                     TIMEDIFF(sweepObjectEnd, sweepStringEnd),
                     TIMEDIFF(sweepStringEnd, sweepShapeEnd),
                     TIMEDIFF(sweepShapeEnd, sweepDestroyEnd));
-            fprintf(gcFile, "%7d, %7d, %7d \n", newChunkCount, destroyChunkCount, arenaCount);
+            fprintf(gcFile, "%7d, %7d, %7d \n", newChunkCount, destroyChunkCount);
             fflush(gcFile);
 
             if (lastGC) {
