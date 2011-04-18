@@ -61,9 +61,7 @@
 
 #include "jsapi.h"
 #include "jsdbgapi.h"
-#include "jsobj.h"
-#include "jsscript.h"
-#include "jscntxt.h"
+#include "jsfriendapi.h"
 
 #include "mozilla/FunctionTimer.h"
 
@@ -218,24 +216,12 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     // Remember an object out of the calling compartment so that we
     // can properly wrap the result later.
     JSObject *result_obj = target_obj;
-
-    // We unwrap wrappers here. This is a little weird, but it's what's being
-    // asked of us.
-    if (target_obj->isWrapper())
-    {
-        target_obj = target_obj->unwrap();
-    }
-
-    // Innerize the target_obj so that we compile the loaded script in the
-    // correct (inner) scope.
-    if (JSObjectOp op = target_obj->getClass()->ext.innerObject)
-    {
-        target_obj = op(cx, target_obj);
-        if (!target_obj) return NS_ERROR_FAILURE;
+    target_obj = JS_FindCompilationScope(cx, target_obj);
+    if (!target_obj) return NS_ERROR_FAILURE;
 #ifdef DEBUG_rginda
+    if (target_obj != result_obj)
         fprintf (stderr, "Final global: %p\n", target_obj);
 #endif
-    }
 
     JSAutoEnterCompartment ac;
     if (!ac.enter(cx, target_obj))

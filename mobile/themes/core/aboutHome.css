@@ -125,7 +125,8 @@ body[dir="ltr"] .section-box .openall {
 }
 
 .section-box .version {
-  -moz-margin-start: 12px;
+  /* The addon title is not localized, so keep the margin on the left side */
+  margin-left: 12px;
   font-size: 18px;
   color: gray;
 }
@@ -254,44 +255,5 @@ body[dir="rtl"] {
 
   body[dir="rtl"]  #support {
     border-radius: 8px 0 0 8px;
-  }
-}
-
-#promo {
-  font-weight: bold;
-  color: rgb(254,210,13);
-  background-color: black;
-  border-radius: 6px;
-  padding: 10px;
-  margin-top: 24px;
-  box-shadow: inset rgba(0, 0, 0, 0.2) 0 -3px 0px, rgba(0, 0, 0, 0.1) 0px 2px 0px;
-  display: none;
-}
-
-#promo-label {
-  padding-left: 16px;
-}
-
-#promo-button {
-  padding: 8px;
-  margin: 0;
-  color: black;
-  font-size: 18px;
-  -moz-padding-end: 20px;
-}
-
-body[dir="ltr"] #promo-button {
-  float: right;
-  background: rgb(254,210,13) url("images/arrowright-16.png") 99% center no-repeat;
-}
-
-body[dir="rtl"] #promo-button {
-  float: left;
-  background: rgb(254,210,13) url("images/arrowleft-16.png") 1% center no-repeat;
-}
-
-@media (max-width: 399px) {
-  #promo-button {
-    display: none;
   }
 }

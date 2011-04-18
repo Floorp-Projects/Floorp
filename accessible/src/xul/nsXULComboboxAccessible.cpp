@@ -57,16 +57,6 @@ nsXULComboboxAccessible::
 {
 }
 
-PRBool
-nsXULComboboxAccessible::Init()
-{
-  if (!nsAccessibleWrap::Init())
-    return PR_FALSE;
-
-  nsCoreUtils::GeneratePopupTree(mContent);
-  return PR_TRUE;
-}
-
 PRUint32
 nsXULComboboxAccessible::NativeRole()
 {

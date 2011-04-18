@@ -136,14 +136,14 @@ private:
   }
 
   void ReplaceItem(PRUint32 aIndex, const SVGLength &aLength) {
-    NS_ASSERTION(aIndex < mLengths.Length(),
-                 "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mLengths.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mLengths[aIndex] = aLength;
   }
 
   void RemoveItem(PRUint32 aIndex) {
-    NS_ASSERTION(aIndex < mLengths.Length(),
-                 "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mLengths.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mLengths.RemoveElementAt(aIndex);
   }
 
@@ -222,7 +222,7 @@ public:
   }
 
   PRUint8 Axis() const {
-    NS_ASSERTION(mElement, "Axis() isn't valid");
+    NS_ABORT_IF_FALSE(mElement, "Axis() isn't valid");
     return mAxis;
   }
 

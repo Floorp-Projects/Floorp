@@ -40,12 +40,12 @@
 #ifndef nsIMathMLFrame_h___
 #define nsIMathMLFrame_h___
 
-#include "nsIRenderingContext.h"
 #include "nsIFrame.h"
 
 struct nsPresentationData;
 struct nsEmbellishData;
 struct nsHTMLReflowMetrics;
+class nsRenderingContext;
 
 // For MathML, this 'type' will be used to determine the spacing between frames
 // Subclasses can return a 'type' that will give them a particular spacing
@@ -113,7 +113,7 @@ public:
   *        of the frame, on output the size after stretching.
   */
   NS_IMETHOD 
-  Stretch(nsIRenderingContext& aRenderingContext,
+  Stretch(nsRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize) = 0;

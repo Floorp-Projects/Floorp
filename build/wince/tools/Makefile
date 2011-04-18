@@ -72,7 +72,6 @@ endif
 CFLAGS += \
   -DVC_PATH='"$(subst \,\\,$(VCINSTALLDIR))\\"' \
   -DWM_SDK_PATH='"$(subst \,\\,$(WINCE_SDK_DIR))\\"' \
-  -DOGLES_SDK_PATH='"$(subst \,\\,$(OGLES_SDK_DIR))\\"' \
   -DMOZCE_DEVENV='"$(MOZCE_DEVENV)"' \
   -DTOPSRCDIR='"$(TOPSRCDIR)"' \
   $(NULL)

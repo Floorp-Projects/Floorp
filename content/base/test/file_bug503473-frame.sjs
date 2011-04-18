@@ -13,7 +13,7 @@ function handleRequest(request, response) {
     '  parent.done();' +
     '  document.close();' +
     '}' +
-    'setTimeout(doWrite, 1);' +
+    'setTimeout(doWrite, 0);' +
     '</script>' 
   );
 

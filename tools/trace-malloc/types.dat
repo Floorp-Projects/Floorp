@@ -2935,7 +2935,7 @@ nsString::SetCapacity(unsigned int)
 nsString::SetLength(unsigned int)
 nsAString::do_AssignFromReadable(nsAString const &)
 nsAString::AssignFromReadable(nsAString const &)
-nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext *, nsIRenderingContext &, int)
+nsTextBoxFrame::CalculateTitleForWidth(nsIPresContext *, nsRenderingContext &, int)
 
 # ----------------------------------------------------------------------
 #

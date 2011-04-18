@@ -16,6 +16,10 @@ function runNextTest() {
   else {
     // Close the awesome panel just in case
     BrowserUI.activePanel = null;
+
+    for (let iTab=0; iTab<newTabs.length; iTab++)
+      Browser.closeTab(newTabs[iTab], { forceClose: true });
+
     finish();
   }
 }

@@ -100,7 +100,7 @@ public:
    * of the scrolled contents.
    */
   virtual nsMargin GetDesiredScrollbarSizes(nsPresContext* aPresContext,
-                                            nsIRenderingContext* aRC) = 0;
+                                            nsRenderingContext* aRC) = 0;
 
   /**
    * Get the area of the scrollport relative to the origin of this frame's

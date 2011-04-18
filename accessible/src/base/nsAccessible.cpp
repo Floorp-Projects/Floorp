@@ -695,9 +695,6 @@ nsAccessible::IsVisible(PRBool* aIsOffscreen)
 PRUint64
 nsAccessible::NativeState()
 {
-  if (IsDefunct())
-    return states::DEFUNCT;
-
   PRUint64 state = 0;
   nsEventStates intrinsicState = mContent->IntrinsicState();
 
@@ -1527,10 +1524,10 @@ nsAccessible::GetState(PRUint32* aState, PRUint32* aExtraState)
 PRUint64
 nsAccessible::State()
 {
-  PRUint64 state = NativeState();
-  if (state & states::DEFUNCT)
-    return state;
+  if (IsDefunct())
+    return states::DEFUNCT;
 
+  PRUint64 state = NativeState();
   // Apply ARIA states to be sure accessible states will be overriden.
   ApplyARIAState(&state);
 

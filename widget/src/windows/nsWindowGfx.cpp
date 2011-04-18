@@ -64,7 +64,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "gfxWindowsPlatform.h"
 #include "nsGfxCIID.h"
 #include "gfxContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsIDeviceContext.h"
 #include "prmem.h"
 
@@ -106,15 +106,6 @@ using namespace mozilla::layers;
 
 static nsAutoPtr<PRUint8>  sSharedSurfaceData;
 static gfxIntSize          sSharedSurfaceSize;
-
-/**************************************************************
- *
- * SECTION: global variables.
- *
- **************************************************************/
-
-static NS_DEFINE_CID(kRegionCID,                  NS_REGION_CID);
-static NS_DEFINE_IID(kRenderingContextCID,        NS_RENDERING_CONTEXT_CID);
 
 /**************************************************************
  **************************************************************

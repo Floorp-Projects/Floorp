@@ -48,6 +48,7 @@ class nsCSSParser;
 class nsIURI;
 class nsIPrincipal;
 class nsIDocument;
+class nsICSSRule;
 
 namespace mozilla {
 namespace css {
@@ -106,6 +107,15 @@ protected:
                                             nsIURI** aBaseURI,
                                             nsIPrincipal** aSheetPrincipal,
                                             mozilla::css::Loader** aCSSLoader) = 0;
+
+  // An implementation for GetCSSParsingEnvironment for callers wrapping
+  // an nsICSSRule.
+  static nsresult
+  GetCSSParsingEnvironmentForRule(nsICSSRule* aRule,
+                                  nsIURI** aSheetURI,
+                                  nsIURI** aBaseURI,
+                                  nsIPrincipal** aSheetPrincipal,
+                                  mozilla::css::Loader** aCSSLoader);
 
   nsresult ParsePropertyValue(const nsCSSProperty aPropID,
                               const nsAString& aPropValue,

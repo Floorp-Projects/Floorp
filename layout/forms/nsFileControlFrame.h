@@ -71,7 +71,7 @@ public:
   virtual nsresult GetFormProperty(nsIAtom* aName, nsAString& aValue) const;
   virtual void SetFocus(PRBool aOn, PRBool aRepaint);
 
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   
   NS_IMETHOD Reflow(nsPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,

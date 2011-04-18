@@ -90,12 +90,6 @@ USE_STATIC_LIBS = 1
 DEFINES += -DUNICODE -D_UNICODE
 endif
 
-ifeq ($(OS_ARCH),WINCE)
-USE_STATIC_LIBS = 1
-DEFINES += -DUNICODE -D_UNICODE
-WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 # TestAUSReadStrings runs during check in the following directory with a Unicode
@@ -119,6 +113,8 @@ libs:: unit/head_update.js.in
 	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py -Fsubstitution $(DEFINES) $(ACDEFINES) $^ > $(TESTROOT)/unit/head_update.js
 
 ifndef ANDROID
+ifndef MOZ_PROFILE_GENERATE
 libs::
 	$(INSTALL) TestAUSHelper$(BIN_SUFFIX) $(DEPTH)/_tests/xpcshell/$(relativesrcdir)/unit
+endif
 endif # ANDROID

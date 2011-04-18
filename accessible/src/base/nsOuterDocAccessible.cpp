@@ -89,7 +89,7 @@ nsOuterDocAccessible::GetChildAtPoint(PRInt32 aX, PRInt32 aY,
   nsAccessible* child = GetChildAt(0);
   NS_ENSURE_TRUE(child, nsnull);
 
-  if (aWhichChild = eDeepestChild)
+  if (aWhichChild == eDeepestChild)
     return child->GetChildAtPoint(aX, aY, eDeepestChild);
   return child;
 }

@@ -200,15 +200,17 @@ class JaegerCompartment {
         activeFrame_ = activeFrame_->previous;
     }
 
-    Trampolines::TrampolinePtr forceReturnTrampoline() const {
-        return trampolines.forceReturn;
+    void *forceReturnFromExternC() const {
+        return JS_FUNC_TO_DATA_PTR(void *, trampolines.forceReturn);
     }
 
+    void *forceReturnFromFastCall() const {
 #if (defined(JS_NO_FASTCALL) && defined(JS_CPU_X86)) || defined(_WIN64)
-    Trampolines::TrampolinePtr forceReturnFastTrampoline() const {
-        return trampolines.forceReturnFast;
-    }
+        return JS_FUNC_TO_DATA_PTR(void *, trampolines.forceReturnFast);
+#else
+        return JS_FUNC_TO_DATA_PTR(void *, trampolines.forceReturn);
 #endif
+    }
 };
 
 /*

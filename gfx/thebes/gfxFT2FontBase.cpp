@@ -170,12 +170,6 @@ gfxFT2FontBase::GetMetrics()
     return mMetrics;
 }
 
-nsString
-gfxFT2FontBase::GetUniqueName()
-{
-    return GetName();
-}
-
 // Get the glyphID of a space
 PRUint32
 gfxFT2FontBase::GetSpaceGlyph()

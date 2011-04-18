@@ -47,6 +47,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "gfxUtils.h"
 #include "nsImageFrame.h"
+#include "nsRenderingContext.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -1314,15 +1315,23 @@ ContainerState::ProcessDisplayItems(const nsDisplayList& aList,
 
     // Assign the item to a layer
     if (layerState == LAYER_ACTIVE_FORCE ||
+        layerState == LAYER_ACTIVE_EMPTY ||
         layerState == LAYER_ACTIVE && (aClip.mRoundedClipRects.IsEmpty() ||
         // We can use the visible rect here only because the item has its own
         // layer, like the comment below.
         !aClip.IsRectClippedByRoundedCorner(item->GetVisibleRect()))) {
+
+      // LAYER_ACTIVE_EMPTY means the layer is created just for its metadata.
+      // We should never see an empty layer with any visible content!
+      NS_ASSERTION(layerState != LAYER_ACTIVE_EMPTY ||
+                   itemVisibleRect.IsEmpty(),
+                   "State is LAYER_ACTIVE_EMPTY but visible rect is not.");
+
       // If the item would have its own layer but is invisible, just hide it.
       // Note that items without their own layers can't be skipped this
       // way, since their ThebesLayer may decide it wants to draw them
       // into its buffer even if they're currently covered.
-      if (itemVisibleRect.IsEmpty()) {
+      if (itemVisibleRect.IsEmpty() && layerState != LAYER_ACTIVE_EMPTY) {
         InvalidateForLayerChange(item, nsnull);
         continue;
       }
@@ -1883,7 +1892,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     }
   }
 
-  nsRefPtr<nsIRenderingContext> rc;
+  nsRefPtr<nsRenderingContext> rc;
   nsresult rv =
     presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
   if (NS_FAILED(rv))

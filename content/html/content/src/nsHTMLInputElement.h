@@ -50,6 +50,7 @@
 #include "nsIConstraintValidation.h"
 #include "nsDOMFile.h"
 #include "nsHTMLFormElement.h" // for ShouldShowInvalidUI()
+#include "nsIFile.h"
 
 //
 // Accessors for mBitField
@@ -108,8 +109,6 @@ private:
   nsInterfaceHashtable<nsStringHashKey, nsILocalFile> mUploadLastDirStore;
   PRBool mInPrivateBrowsing;
 };
-
-class nsIRadioVisitor;
 
 class nsHTMLInputElement : public nsGenericHTMLFormElement,
                            public nsImageLoadingContent,
