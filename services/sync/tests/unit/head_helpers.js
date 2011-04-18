@@ -367,10 +367,6 @@ function ensureThrows(func) {
   };
 }
 
-function asyncChainTests() {
-  return Utils.asyncChain.apply(this, Array.map(arguments, ensureThrows));
-}
-
 
 /**
  * Print some debug message to the console. All arguments will be printed,
