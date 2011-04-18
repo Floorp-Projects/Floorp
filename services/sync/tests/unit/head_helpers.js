@@ -402,3 +402,11 @@ function encryptPayload(cleartext) {
           hmac: Utils.sha256HMAC(cleartext, Utils.makeHMACKey(""))};
 }
 
+function basic_auth_header(user, password) {
+  return "Basic " + btoa(user + ":" + Utils.encodeUTF8(password));
+}
+
+function basic_auth_matches(req, user, password) {
+  return req.hasHeader("Authorization") &&
+         (req.getHeader("Authorization") == basic_auth_header(user, password));
+}

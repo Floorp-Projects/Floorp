@@ -6,12 +6,8 @@ Cu.import("resource://services-sync/util.js");
 
 function login_handling(handler) {
   return function (request, response) {
-    // btoa('johndoe:ilovejane') == am9obmRvZTppbG92ZWphbmU=
-    // btoa('janedoe:ilovejohn') == amFuZWRvZTppbG92ZWpvaG4=
-    let header = request.getHeader("Authorization");
-    if (header &&
-        header == "Basic am9obmRvZTppbG92ZWphbmU=" ||
-        header == "Basic amFuZWRvZTppbG92ZWpvaG4=") {
+    if (basic_auth_matches(request, "johndoe", "ilovejane") ||
+        basic_auth_matches(request, "janedoe", "ilovejohn")) {
       handler(request, response);
     } else {
       let body = "Unauthorized";
