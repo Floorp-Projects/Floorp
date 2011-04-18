@@ -249,7 +249,7 @@ CryptoWrapper.prototype = {
 
     // Verify that the encrypted id matches the requested record's id.
     if (this.cleartext.id != this.id)
-      throw "Record id mismatch: " + [this.cleartext.id, this.id];
+      throw "Record id mismatch: " + this.cleartext.id + " != " + this.id;
 
     return this.cleartext;
   },
