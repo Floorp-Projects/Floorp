@@ -398,11 +398,7 @@ struct JSObject : js::gc::Cell {
 
         /* The top 5 bits of an object's flags are its number of fixed slots. */
         FIXED_SLOTS_SHIFT         =    27,
-        FIXED_SLOTS_BIT0          = 0x01 << FIXED_SLOTS_SHIFT,
-        FIXED_SLOTS_BIT1          = 0x02 << FIXED_SLOTS_SHIFT,
-        FIXED_SLOTS_BIT2          = 0x04 << FIXED_SLOTS_SHIFT,
-        FIXED_SLOTS_BIT3          = 0x08 << FIXED_SLOTS_SHIFT,
-        FIXED_SLOTS_BIT4          = 0x10 << FIXED_SLOTS_SHIFT
+        FIXED_SLOTS_MASK          = 0x1f << FIXED_SLOTS_SHIFT
     };
 
     /*
