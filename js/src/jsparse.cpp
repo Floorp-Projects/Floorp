@@ -4426,7 +4426,7 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
  * into the appropriate use chains; creates placeholder definitions;
  * and so on.  CheckDestructuring is called with |data| NULL (since we
  * won't be binding any new names), and we specialize lvalues as
- * appropriate.  If right is NULL, we just check for well-formed lvalues.
+ * appropriate.
  *
  * In declaration-like contexts, the normal variable reference
  * processing would just be an obstruction, because we're going to
@@ -4443,87 +4443,59 @@ FindPropertyValue(JSParseNode *pn, JSParseNode *pnid, FindPropValData *data)
  * either of these functions, you might have to change the other to
  * match.
  */
-static JSBool
-CheckDestructuring(JSContext *cx, BindData *data,
-                   JSParseNode *left, JSParseNode *right,
-                   JSTreeContext *tc)
+static bool
+CheckDestructuring(JSContext *cx, BindData *data, JSParseNode *left, JSTreeContext *tc)
 {
-    JSBool ok;
-    FindPropValData fpvd;
-    JSParseNode *lhs, *rhs, *pn, *pn2;
+    bool ok;
 
     if (left->pn_type == TOK_ARRAYCOMP) {
         ReportCompileErrorNumber(cx, TS(tc->parser), left, JSREPORT_ERROR,
                                  JSMSG_ARRAY_COMP_LEFTSIDE);
-        return JS_FALSE;
+        return false;
     }
 
-#if JS_HAS_DESTRUCTURING_SHORTHAND
-    if (right && right->pn_arity == PN_LIST && (right->pn_xflags & PNX_DESTRUCT)) {
-        ReportCompileErrorNumber(cx, TS(tc->parser), right, JSREPORT_ERROR,
-                                 JSMSG_BAD_OBJECT_INIT);
-        return JS_FALSE;
-    }
-#endif
-
-    fpvd.table.ops = NULL;
-    lhs = left->pn_head;
     if (left->pn_type == TOK_RB) {
-        rhs = (right && right->pn_type == left->pn_type)
-              ? right->pn_head
-              : NULL;
-
-        while (lhs) {
-            pn = lhs, pn2 = rhs;
-
+        for (JSParseNode *pn = left->pn_head; pn; pn = pn->pn_next) {
             /* Nullary comma is an elision; binary comma is an expression.*/
             if (pn->pn_type != TOK_COMMA || pn->pn_arity != PN_NULLARY) {
                 if (pn->pn_type == TOK_RB || pn->pn_type == TOK_RC) {
-                    ok = CheckDestructuring(cx, data, pn, pn2, tc);
+                    ok = CheckDestructuring(cx, data, pn, tc);
                 } else {
                     if (data) {
-                        if (pn->pn_type != TOK_NAME)
-                            goto no_var_name;
-
+                        if (pn->pn_type != TOK_NAME) {
+                            ReportCompileErrorNumber(cx, TS(tc->parser), pn, JSREPORT_ERROR,
+                                                     JSMSG_NO_VARIABLE_NAME);
+                            return false;
+                        }
                         ok = BindDestructuringVar(cx, data, pn, tc);
                     } else {
                         ok = BindDestructuringLHS(cx, pn, tc);
                     }
                 }
                 if (!ok)
-                    goto out;
+                    return false;
             }
-
-            lhs = lhs->pn_next;
-            if (rhs)
-                rhs = rhs->pn_next;
         }
     } else {
         JS_ASSERT(left->pn_type == TOK_RC);
-        fpvd.numvars = left->pn_count;
-        fpvd.maxstep = 0;
-        rhs = NULL;
-
-        while (lhs) {
-            JS_ASSERT(lhs->pn_type == TOK_COLON);
-            pn = lhs->pn_right;
+        for (JSParseNode *pair = left->pn_head; pair; pair = pair->pn_next) {
+            JS_ASSERT(pair->pn_type == TOK_COLON);
+            JSParseNode *pn = pair->pn_right;
 
             if (pn->pn_type == TOK_RB || pn->pn_type == TOK_RC) {
-                if (right)
-                    rhs = FindPropertyValue(right, lhs->pn_left, &fpvd);
-                ok = CheckDestructuring(cx, data, pn, rhs, tc);
+                ok = CheckDestructuring(cx, data, pn, tc);
             } else if (data) {
-                if (pn->pn_type != TOK_NAME)
-                    goto no_var_name;
-
+                if (pn->pn_type != TOK_NAME) {
+                    ReportCompileErrorNumber(cx, TS(tc->parser), pn, JSREPORT_ERROR,
+                                             JSMSG_NO_VARIABLE_NAME);
+                    return false;
+                }
                 ok = BindDestructuringVar(cx, data, pn, tc);
             } else {
                 ok = BindDestructuringLHS(cx, pn, tc);
             }
             if (!ok)
-                goto out;
-
-            lhs = lhs->pn_next;
+                return false;
         }
     }
 
@@ -4547,28 +4519,16 @@ CheckDestructuring(JSContext *cx, BindData *data,
      */
     if (data &&
         data->binder == BindLet &&
-        OBJ_BLOCK_COUNT(cx, tc->blockChain()) == 0) {
-        ok = !!js_DefineNativeProperty(cx, tc->blockChain(),
-                                       ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
-                                       UndefinedValue(), NULL, NULL,
-                                       JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                       Shape::HAS_SHORTID, 0, NULL);
-        if (!ok)
-            goto out;
+        OBJ_BLOCK_COUNT(cx, tc->blockChain()) == 0 &&
+        !js_DefineNativeProperty(cx, tc->blockChain(),
+                                 ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
+                                 UndefinedValue(), NULL, NULL,
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                                 Shape::HAS_SHORTID, 0, NULL)) {
+        return false;
     }
 
-    ok = JS_TRUE;
-
-  out:
-    if (fpvd.table.ops)
-        JS_DHashTableFinish(&fpvd.table);
-    return ok;
-
-  no_var_name:
-    ReportCompileErrorNumber(cx, TS(tc->parser), pn, JSREPORT_ERROR,
-                             JSMSG_NO_VARIABLE_NAME);
-    ok = JS_FALSE;
-    goto out;
+    return true;
 }
 
 /*
@@ -4661,7 +4621,7 @@ Parser::destructuringExpr(BindData *data, TokenKind tt)
     tc->flags &= ~TCF_DECL_DESTRUCTURING;
     if (!pn)
         return NULL;
-    if (!CheckDestructuring(context, data, pn, NULL, tc))
+    if (!CheckDestructuring(context, data, pn, tc))
         return NULL;
     return pn;
 }
@@ -5392,7 +5352,7 @@ Parser::forStatement()
           case TOK_RB:
           case TOK_RC:
             /* Check for valid lvalues in var-less destructuring for-in. */
-            if (pn1 == pn2 && !CheckDestructuring(context, NULL, pn2, NULL, tc))
+            if (pn1 == pn2 && !CheckDestructuring(context, NULL, pn2, tc))
                 return NULL;
 
             if (versionNumber() == JSVERSION_1_7) {
@@ -6326,7 +6286,7 @@ Parser::variables(bool inLetHead)
             if (!pn2)
                 return NULL;
 
-            if (!CheckDestructuring(context, &data, pn2, NULL, tc))
+            if (!CheckDestructuring(context, &data, pn2, tc))
                 return NULL;
             if ((tc->flags & TCF_IN_FOR_INIT) &&
                 tokenStream.peekToken() == TOK_IN) {
@@ -6692,7 +6652,7 @@ Parser::assignExpr()
             return NULL;
         }
         JSParseNode *rhs = assignExpr();
-        if (!rhs || !CheckDestructuring(context, NULL, pn, rhs, tc))
+        if (!rhs || !CheckDestructuring(context, NULL, pn, tc))
             return NULL;
         return JSParseNode::newBinaryOrAppend(TOK_ASSIGN, op, pn, rhs, tc);
       }
@@ -7279,7 +7239,7 @@ Parser::comprehensionTail(JSParseNode *kid, uintN blockid,
 #if JS_HAS_DESTRUCTURING
           case TOK_LB:
           case TOK_LC:
-            if (!CheckDestructuring(context, &data, pn3, NULL, tc))
+            if (!CheckDestructuring(context, &data, pn3, tc))
                 return NULL;
 
             if (versionNumber() == JSVERSION_1_7) {
