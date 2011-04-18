@@ -293,7 +293,6 @@ public class SUTAgentAndroid extends Activity
             sText = sStatus;
         }
 
-        @Override
         public void run() {
             displayStatus(sText);
         }
