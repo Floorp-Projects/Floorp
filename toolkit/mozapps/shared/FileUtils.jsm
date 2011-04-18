@@ -59,7 +59,7 @@ var FileUtils = {
   PERMS_DIRECTORY : 0755,
 
   /**
-   * Gets the file at the specified hierarchy under a Directory Service key.
+   * Gets a file at the specified hierarchy under a nsIDirectoryService key.
    * @param   key
    *          The Directory Service Key to start from
    * @param   pathArray
@@ -77,8 +77,8 @@ var FileUtils = {
   },
 
   /**
-   * Gets the specified directory at the specified hierarchy under a
-   * Directory Service key.
+   * Gets a directory at the specified hierarchy under a nsIDirectoryService
+   * key.
    * @param   key
    *          The Directory Service Key to start from
    * @param   pathArray
@@ -89,9 +89,7 @@ var FileUtils = {
    *          should be created if it does not exist, false otherwise.
    * @param   followLinks (optional)
    *          true if links should be followed, false otherwise.
-   * @return  nsIFile object for the location specified. If the directory
-   *          requested does not exist, it is created, along with any
-   *          parent directories that need to be created.
+   * @return  nsIFile object for the location specified.
    */
   getDir: function FileUtils_getDir(key, pathArray, shouldCreate, followLinks) {
     var dir = gDirService.get(key, Ci.nsILocalFile);
