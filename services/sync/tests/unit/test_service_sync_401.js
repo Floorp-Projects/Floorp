@@ -2,9 +2,7 @@ Cu.import("resource://services-sync/main.js");
 
 function login_handling(handler) {
   return function (request, response) {
-    // btoa('johndoe:ilovejane') == am9obmRvZTppbG92ZWphbmU=
-    if (request.hasHeader("Authorization") &&
-        request.getHeader("Authorization") == "Basic am9obmRvZTppbG92ZWphbmU=") {
+    if (basic_auth_matches(request, "johndoe", "ilovejane")) {
       handler(request, response);
     } else {
       let body = "Unauthorized";
