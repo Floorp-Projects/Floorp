@@ -113,7 +113,8 @@ WrapperFactory::WaiveXray(JSContext *cx, JSObject *obj)
             JSAutoEnterCompartment ac;
             if (!ac.enter(cx, obj))
                 return nsnull;
-            wobj = JSWrapper::New(cx, obj, proto, obj->getGlobal(), &WaiveXrayWrapperWrapper);
+            wobj = JSWrapper::New(cx, obj, proto, JS_GetGlobalForObject(cx, obj),
+                                  &WaiveXrayWrapperWrapper);
             if (!wobj)
                 return nsnull;
 
@@ -253,7 +254,7 @@ WrapperFactory::Rewrap(JSContext *cx, JSObject *obj, JSObject *wrappedProto, JSO
     JSWrapper *wrapper;
     CompartmentPrivate *targetdata = static_cast<CompartmentPrivate *>(target->data);
     if (AccessCheck::isChrome(target)) {
-        if (AccessCheck::isChrome(origin) || obj->getGlobal()->isSystem()) {
+        if (AccessCheck::isChrome(origin) || JS_GetGlobalForObject(cx, obj)->isSystem()) {
             wrapper = &JSCrossCompartmentWrapper::singleton;
         } else if (flags & WAIVE_XRAY_WRAPPER_FLAG) {
             // If we waived the X-ray wrapper for this object, wrap it into a
@@ -381,7 +382,7 @@ JSObject *
 WrapperFactory::WrapSOWObject(JSContext *cx, JSObject *obj)
 {
     JSObject *wrapperObj =
-        JSWrapper::New(cx, obj, obj->getProto(), obj->getGlobal(),
+        JSWrapper::New(cx, obj, obj->getProto(), JS_GetGlobalForObject(cx, obj),
                        &FilteringWrapper<JSWrapper,
                                          OnlyIfSubjectIsSystem>::singleton);
     return wrapperObj;
