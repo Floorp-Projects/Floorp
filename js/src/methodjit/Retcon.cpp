@@ -68,7 +68,7 @@ AutoScriptRetrapper::untrap(jsbytecode *pc)
 {
     if (!traps.append(pc))
         return false;
-    *pc = JS_GetTrapOpcode(cx, script, pc);
+    *pc = JS_GetTrapOpcode(traps.allocPolicy().context(), script, pc);
     return true;
 }
 

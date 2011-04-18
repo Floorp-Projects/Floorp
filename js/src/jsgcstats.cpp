@@ -113,11 +113,17 @@ UpdateCompartmentStats(JSCompartment *comp, unsigned thingKind, uint32 nlivearen
 
 static const char *const GC_ARENA_NAMES[] = {
     "object_0",
+    "object_0_background",
     "object_2",
+    "object_2_background",
     "object_4",
+    "object_4_background",
     "object_8",
+    "object_8_background",
     "object_12",
+    "object_12_background",
     "object_16",
+    "object_16_background",
     "function",
     "shape",
 #if JS_HAS_XML_SUPPORT
@@ -144,16 +150,22 @@ GetAlignedThing(void *thing, int thingKind)
     Cell *cell = (Cell *)thing;
     switch (thingKind) {
         case FINALIZE_OBJECT0:
+        case FINALIZE_OBJECT0_BACKGROUND:
             return (void *)GetArena<JSObject>(cell)->getAlignedThing(thing);
         case FINALIZE_OBJECT2:
+        case FINALIZE_OBJECT2_BACKGROUND:
             return (void *)GetArena<JSObject_Slots2>(cell)->getAlignedThing(thing);
         case FINALIZE_OBJECT4:
+        case FINALIZE_OBJECT4_BACKGROUND:
             return (void *)GetArena<JSObject_Slots4>(cell)->getAlignedThing(thing);
         case FINALIZE_OBJECT8:
+        case FINALIZE_OBJECT8_BACKGROUND:
             return (void *)GetArena<JSObject_Slots8>(cell)->getAlignedThing(thing);
         case FINALIZE_OBJECT12:
+        case FINALIZE_OBJECT12_BACKGROUND:
             return (void *)GetArena<JSObject_Slots12>(cell)->getAlignedThing(thing);
         case FINALIZE_OBJECT16:
+        case FINALIZE_OBJECT16_BACKGROUND:
             return (void *)GetArena<JSObject_Slots16>(cell)->getAlignedThing(thing);
         case FINALIZE_STRING:
             return (void *)GetArena<JSString>(cell)->getAlignedThing(thing);
@@ -168,7 +180,7 @@ GetAlignedThing(void *thing, int thingKind)
             return (void *)GetArena<JSXML>(cell)->getAlignedThing(thing);
 #endif
         default:
-            JS_ASSERT(false);
+            JS_NOT_REACHED("wrong kind");
             return NULL;
     }
 }
@@ -178,21 +190,27 @@ void GetSizeAndThingsPerArena(int thingKind, size_t &thingSize, size_t &thingsPe
 {
     switch (thingKind) {
         case FINALIZE_OBJECT0:
+        case FINALIZE_OBJECT0_BACKGROUND:
             GetSizeAndThings<JSObject>(thingSize, thingsPerArena);
             break;
         case FINALIZE_OBJECT2:
+        case FINALIZE_OBJECT2_BACKGROUND:
             GetSizeAndThings<JSObject_Slots2>(thingSize, thingsPerArena);
             break;
         case FINALIZE_OBJECT4:
+        case FINALIZE_OBJECT4_BACKGROUND:
             GetSizeAndThings<JSObject_Slots4>(thingSize, thingsPerArena);
             break;
         case FINALIZE_OBJECT8:
+        case FINALIZE_OBJECT8_BACKGROUND:
             GetSizeAndThings<JSObject_Slots8>(thingSize, thingsPerArena);
             break;
         case FINALIZE_OBJECT12:
+        case FINALIZE_OBJECT12_BACKGROUND:
             GetSizeAndThings<JSObject_Slots12>(thingSize, thingsPerArena);
             break;
         case FINALIZE_OBJECT16:
+        case FINALIZE_OBJECT16_BACKGROUND:
             GetSizeAndThings<JSObject_Slots16>(thingSize, thingsPerArena);
             break;
         case FINALIZE_EXTERNAL_STRING:
@@ -211,7 +229,7 @@ void GetSizeAndThingsPerArena(int thingKind, size_t &thingSize, size_t &thingsPe
             break;
 #endif
         default:
-            JS_ASSERT(false);
+            JS_NOT_REACHED("wrong kind");
     }
 }
 
@@ -397,6 +415,7 @@ GCMarker::dumpConservativeRoots()
 
 jsrefcount newChunkCount = 0;
 jsrefcount destroyChunkCount = 0;
+uint32 arenaCount = 0;
 
 GCTimer::GCTimer() {
     getFirstEnter();
@@ -442,7 +461,7 @@ GCTimer::finish(bool lastGC) {
                     TIMEDIFF(sweepObjectEnd, sweepStringEnd),
                     TIMEDIFF(sweepStringEnd, sweepShapeEnd),
                     TIMEDIFF(sweepShapeEnd, sweepDestroyEnd));
-            fprintf(gcFile, "%7d, %7d \n", newChunkCount, destroyChunkCount);
+            fprintf(gcFile, "%7d, %7d, %7d \n", newChunkCount, destroyChunkCount, arenaCount);
             fflush(gcFile);
 
             if (lastGC) {

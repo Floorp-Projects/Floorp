@@ -168,7 +168,7 @@ bool
 JSCompartment::arenaListsAreEmpty()
 {
   for (unsigned i = 0; i < FINALIZE_LIMIT; i++) {
-       if (!arenas[i].isEmpty())
+       if (!arenas[i].isEmpty() || arenas[i].hasToBeFinalized)
            return false;
   }
   return true;

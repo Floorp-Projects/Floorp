@@ -2109,7 +2109,7 @@ date_toJSON(JSContext *cx, uintN argc, Value *vp)
     if (!cx->stack().pushInvokeArgs(cx, 0, &args))
         return false;
 
-    args.callee() = toISO;
+    args.calleev() = toISO;
     args.thisv().setObject(*obj);
 
     if (!Invoke(cx, args, 0))

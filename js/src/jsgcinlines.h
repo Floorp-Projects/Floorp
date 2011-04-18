@@ -138,16 +138,22 @@ GetGCKindSlots(FinalizeKind thingKind)
     /* Using a switch in hopes that thingKind will usually be a compile-time constant. */
     switch (thingKind) {
       case FINALIZE_OBJECT0:
+      case FINALIZE_OBJECT0_BACKGROUND:
         return 0;
       case FINALIZE_OBJECT2:
+      case FINALIZE_OBJECT2_BACKGROUND:
         return 2;
       case FINALIZE_OBJECT4:
+      case FINALIZE_OBJECT4_BACKGROUND:
         return 4;
       case FINALIZE_OBJECT8:
+      case FINALIZE_OBJECT8_BACKGROUND:
         return 8;
       case FINALIZE_OBJECT12:
+      case FINALIZE_OBJECT12_BACKGROUND:
         return 12;
       case FINALIZE_OBJECT16:
+      case FINALIZE_OBJECT16_BACKGROUND:
         return 16;
       default:
         JS_NOT_REACHED("Bad object finalize kind");
@@ -281,7 +287,8 @@ Mark(JSTracer *trc, T *thing)
     JS_ASSERT_IF(trc->context->runtime->gcCurrentCompartment, IS_GC_MARKING_TRACER(trc));
 
     JSRuntime *rt = trc->context->runtime;
-
+    JS_ASSERT(thing->arena()->header()->compartment);
+    JS_ASSERT(thing->arena()->header()->compartment->rt == rt);
     /* Don't mark things outside a compartment if we are in a per-compartment GC */
     if (rt->gcCurrentCompartment && thing->compartment() != rt->gcCurrentCompartment)
         goto out;

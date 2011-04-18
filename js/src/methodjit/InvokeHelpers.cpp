@@ -444,8 +444,10 @@ stubs::Eval(VMFrame &f, uint32 argc)
     }
 
     JS_ASSERT(f.regs.fp == f.cx->fp());
-    if (!DirectEval(f.cx, argc, vp))
+    if (!DirectEval(f.cx, CallArgsFromVp(argc, vp)))
         THROW();
+
+    f.regs.sp = vp + 1;
 }
 
 void
@@ -684,7 +686,7 @@ AtSafePoint(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp();
     if (fp->hasImacropc())
-        return false;
+        return NULL;
 
     JSScript *script = fp->script();
     return script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs->pc);
