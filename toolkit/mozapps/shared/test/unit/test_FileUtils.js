@@ -97,9 +97,12 @@ add_test(function test_openSafeFileOutputStream_defaultFlags() {
   do_check_true(fos instanceof Components.interfaces.nsIFileOutputStream);
   do_check_true(fos instanceof Components.interfaces.nsISafeOutputStream);
 
-  //TODO FileUtils.openSafeFileOutputStream() should use DEFER_OPEN in which
-  // case we want to verify that the file hasn't been created yet and gets
-  // created once we write to it.
+  // FileUtils.openSafeFileOutputStream() opens the stream with DEFER_OPEN
+  // which means the file will not be open until we write to it.
+  do_check_false(file.exists());
+
+  let data = "imagine";
+  fos.write(data, data.length);
   do_check_true(file.exists());
 
   // No nsIXULRuntime in xpcshell, so use this trick to determine whether we're
@@ -117,8 +120,10 @@ add_test(function test_openSafeFileOutputStream_defaultFlags() {
 // as the default mode flags, but we can pass in our own if we want to.
 add_test(function test_openSafeFileOutputStream_modeFlags() {
   let file = FileUtils.getFile("ProfD", ["paul"]);
+  let fos = FileUtils.openSafeFileOutputStream(file, FileUtils.MODE_WRONLY);
+  let data = "yesterday";
   do_check_throws(function () {
-    FileUtils.openSafeFileOutputStream(file, FileUtils.MODE_WRONLY);
+    fos.write(data, data.length);
   }, Components.results.NS_ERROR_FILE_NOT_FOUND);
   do_check_false(file.exists());
 
