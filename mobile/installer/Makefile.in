@@ -235,35 +235,3 @@ installer: deb
 # relative to $(DIST)
 UPLOAD_EXTRA_FILES += ../mobile/$(DEB_PKG_NAME) deb_name.txt
 endif
-
-ifeq ($(OS_ARCH),WINCE)
-
-VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
-
-UNPACKAGE = $(LIBXUL_DIST)/xulrunner*$(PKG_SUFFIX)
-
-cab: stage-package package-xulrunner
-	cd $(DIST) && $(PYTHON) $(ABS_TOPSRCDIR)/build/package/wince/make_wince_cab.py $(CABARGS) "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" "$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(PKG_PATH)$(PKG_BASENAME).cab" &&  echo "Installer $(PKG_PATH)$(PKG_BASENAME).cab created!"
-
-installer: 7zip-installer zip
-
-zip:
-	cd $(DIST) && $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
-
-7zip-installer: stage-package package-xulrunner
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	cd $(DIST) && $(PYTHON) $(ABS_TOPSRCDIR)/build/package/wince/make_wince_cab.py -setupdll -s "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" "$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(MOZ_PKG_DIR)/setup.cab"
-	$(NSINSTALL) $(DIST)/$(MOZ_PKG_DIR)/setup.ini $(DIST)
-ifdef LIBXUL_SDK
-	mv $(DIST)/$(MOZ_GRE_PKG_DIR)/uninstall.exe $(DIST)/$(MOZ_PKG_DIR)/ 
-endif
-	cd $(DIST) &&                                                       \
-	  7z a $(PKG_PATH)$(PKG_BASENAME).7z $(MOZ_PKG_DIR) setup.ini       \
-	    -x!$(MOZ_GRE_PKG_DIR)/xulrunner-stub-installer.sfx              \
-	    -x!$(MOZ_PKG_DIR)/setup.ini &&                                  \
-	  cat $(MOZ_GRE_PKG_DIR)/xulrunner-stub-installer.sfx               \
-	    $(PKG_PATH)$(PKG_BASENAME).7z>$(PKG_PATH)$(PKG_BASENAME).exe && \
-	  rm $(PKG_PATH)$(PKG_BASENAME).7z &&                               \
-	  rm setup.ini
-
-endif
