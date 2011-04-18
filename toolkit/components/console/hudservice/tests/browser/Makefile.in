@@ -168,8 +168,6 @@ _BROWSER_TEST_PAGES = \
 	test-bug-595934-workers.js \
 	test-bug-595934-dom-html-external.html \
 	test-bug-595934-dom-html-external.js \
-	test-bug-595934-dom-events-external.html \
-	test-bug-595934-dom-events-external.js \
 	test-bug-595934-dom-events-external2.html \
 	test-bug-595934-dom-events-external2.js \
 	test-bug-595934-canvas.html \
