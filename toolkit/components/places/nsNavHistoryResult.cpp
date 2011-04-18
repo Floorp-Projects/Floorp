@@ -245,7 +245,8 @@ nsNavHistoryResultNode::nsNavHistoryResultNode(
   mFolderId(-1),
   mDateAdded(0),
   mLastModified(0),
-  mIndentLevel(-1)
+  mIndentLevel(-1),
+  mFrecency(0)
 {
   mTags.SetIsVoid(PR_TRUE);
 }
@@ -932,6 +933,10 @@ nsNavHistoryContainerResultNode::GetSortingComparator(PRUint16 aSortType)
       return &SortComparison_TagsLess;
     case nsINavHistoryQueryOptions::SORT_BY_TAGS_DESCENDING:
       return &SortComparison_TagsGreater;
+    case nsINavHistoryQueryOptions::SORT_BY_FRECENCY_ASCENDING:
+      return &SortComparison_FrecencyLess;
+    case nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING:
+      return &SortComparison_FrecencyGreater;
     default:
       NS_NOTREACHED("Bad sorting type");
       return nsnull;
@@ -1424,6 +1429,31 @@ PRInt32 nsNavHistoryContainerResultNode::SortComparison_TagsGreater(
     nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure)
 {
   return -SortComparison_TagsLess(a, b, closure);
+}
+
+/**
+ * Fall back on date and bookmarked status, for conflict resolution.
+ */
+PRInt32
+nsNavHistoryContainerResultNode::SortComparison_FrecencyLess(
+  nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure
+)
+{
+  PRInt32 value = CompareIntegers(a->mFrecency, b->mFrecency);
+  if (value == 0) {
+    value = ComparePRTime(a->mTime, b->mTime);
+    if (value == 0) {
+      value = nsNavHistoryContainerResultNode::SortComparison_Bookmark(a, b, closure);
+    }
+  }
+  return value;
+}
+PRInt32
+nsNavHistoryContainerResultNode::SortComparison_FrecencyGreater(
+  nsNavHistoryResultNode* a, nsNavHistoryResultNode* b, void* closure
+)
+{
+  return -nsNavHistoryContainerResultNode::SortComparison_FrecencyLess(a, b, closure);
 }
 
 /**
@@ -4478,7 +4508,7 @@ nsNavHistoryResult::SetSortingMode(PRUint16 aSortingMode)
 {
   NS_ENSURE_STATE(mRootNode);
 
-  if (aSortingMode > nsINavHistoryQueryOptions::SORT_BY_ANNOTATION_DESCENDING)
+  if (aSortingMode > nsINavHistoryQueryOptions::SORT_BY_FRECENCY_DESCENDING)
     return NS_ERROR_INVALID_ARG;
 
   // Keep everything in sync.

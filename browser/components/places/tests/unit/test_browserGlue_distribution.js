@@ -1,62 +1,20 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et: */
-/* ***** BEGIN LICENSE BLOCK *****
- * Version: MPL 1.1/GPL 2.0/LGPL 2.1
- *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
- *
- * Software distributed under the License is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
- * for the specific language governing rights and limitations under the
- * License.
- *
- * The Original Code is Places Unit Test code.
- *
- * The Initial Developer of the Original Code is Mozilla Foundation.
- * Portions created by the Initial Developer are Copyright (C) 2009
- * the Initial Developer. All Rights Reserved.
- *
- * Contributor(s):
- *  Marco Bonardo <mak77@bonardo.net>
- *
- * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
- * in which case the provisions of the GPL or the LGPL are applicable instead
- * of those above. If you wish to allow use of your version of this file only
- * under the terms of either the GPL or the LGPL, and not to allow others to
- * use your version of this file under the terms of the MPL, indicate your
- * decision by deleting the provisions above and replace them with the notice
- * and other provisions required by the GPL or the LGPL. If you do not delete
- * the provisions above, a recipient may use your version of this file under
- * the terms of any one of the MPL, the GPL or the LGPL.
- *
- * ***** END LICENSE BLOCK ***** */
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Tests that nsBrowserGlue does not overwrite bookmarks imported from the
- * migrators.  They usually run before nsBrowserGlue, so if we find any
- * bookmark on init, we should not try to import.
+ * Tests that nsBrowserGlue correctly imports bookmarks from distribution.ini.
  */
 
 const PREF_SMART_BOOKMARKS_VERSION = "browser.places.smartBookmarksVersion";
 const PREF_BMPROCESSED = "distribution.516444.bookmarksProcessed";
 const PREF_DISTRIBUTION_ID = "distribution.id";
 
-const TOPIC_FINAL_UI_STARTUP = "final-ui-startup";
+const TOPICDATA_DISTRIBUTION_CUSTOMIZATION = "force-distribution-customization";
 const TOPIC_CUSTOMIZATION_COMPLETE = "distribution-customization-complete";
+const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
 
-function run_test() {
-  // This is needed but we still have to investigate the reason, could just be
-  // we try to act too late in the game, moving our shutdown earlier will help.
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
-  // TODO: re-enable when bug 523936 is fixed.
-  return;
-
+function run_test()
+{
   do_test_pending();
 
   // Copy distribution.ini file to our app dir.
@@ -68,82 +26,67 @@ function run_test() {
     iniFile.remove(false);
     print("distribution.ini already exists, did some test forget to cleanup?");
   }
-
   let testDistributionFile = gTestDir.clone();
   testDistributionFile.append("distribution.ini");
   testDistributionFile.copyTo(distroDir, "distribution.ini");
   do_check_true(testDistributionFile.exists());
 
   // Disable Smart Bookmarks creation.
-  let ps = Cc["@mozilla.org/preferences-service;1"].
-           getService(Ci.nsIPrefBranch);
-  ps.setIntPref(PREF_SMART_BOOKMARKS_VERSION, -1);
-  // Avoid migrateUI, we are just simulating a partial startup.
-  ps.setIntPref("browser.migration.version", 4);
+  Services.prefs.setIntPref(PREF_SMART_BOOKMARKS_VERSION, -1);
 
-  // Initialize Places through the History Service.
-  let hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-           getService(Ci.nsINavHistoryService);
-  // Check a new database has been created.
-  // nsBrowserGlue will use databaseStatus to manage initialization.
-  do_check_eq(hs.databaseStatus, hs.DATABASE_STATUS_CREATE);
+  // Initialize Places through the History Service and check that a new
+  // database has been created.
+  do_check_eq(PlacesUtils.history.databaseStatus,
+              PlacesUtils.history.DATABASE_STATUS_CREATE);
 
-  // Initialize nsBrowserGlue.
-  let bg = Cc["@mozilla.org/browser/browserglue;1"].
-           getService(Ci.nsIBrowserGlue);
+  // Force distribution.
+  Cc["@mozilla.org/browser/browserglue;1"].
+  getService(Ci.nsIObserver).observe(null,
+                                     TOPIC_BROWSERGLUE_TEST,
+                                     TOPICDATA_DISTRIBUTION_CUSTOMIZATION);
 
-  let os = Cc["@mozilla.org/observer-service;1"].
-           getService(Ci.nsIObserverService);
-  let observer = {
-    observe: function(aSubject, aTopic, aData) {
-      os.removeObserver(this, PlacesUtils.TOPIC_INIT_COMPLETE);
-
-      // Simulate browser startup.
-      bg.QueryInterface(Ci.nsIObserver).observe(null,
-                                                TOPIC_FINAL_UI_STARTUP,
-                                                null);
-      // Test will continue on customization complete notification.
-      let cObserver = {
-        observe: function(aSubject, aTopic, aData) {
-          os.removeObserver(this, TOPIC_CUSTOMIZATION_COMPLETE);
-          do_execute_soon(continue_test);
-        }
-      }
-      os.addObserver(cObserver, TOPIC_CUSTOMIZATION_COMPLETE, false);
-    }
-  }
-  os.addObserver(observer, PlacesUtils.TOPIC_INIT_COMPLETE, false);
+  // Test will continue on customization complete notification.
+  Services.obs.addObserver(function(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(arguments.callee,
+                                TOPIC_CUSTOMIZATION_COMPLETE,
+                                false);
+    do_execute_soon(onCustomizationComplete);
+  }, TOPIC_CUSTOMIZATION_COMPLETE, false);
 }
 
-function continue_test() {
-  let bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-           getService(Ci.nsINavBookmarksService);
-
-  dump_table("moz_bookmarks");
-
+function onCustomizationComplete()
+{
   // Check the custom bookmarks exist on menu.
-  let menuItemId = bs.getIdForItemAt(bs.bookmarksMenuFolder, 0);
+  let menuItemId =
+    PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId, 0);
   do_check_neq(menuItemId, -1);
-  do_check_eq(bs.getItemTitle(menuItemId), "Menu Link Before");
-  menuItemId = bs.getIdForItemAt(bs.bookmarksMenuFolder, 1 + DEFAULT_BOOKMARKS_ON_MENU);
+  do_check_eq(PlacesUtils.bookmarks.getItemTitle(menuItemId),
+              "Menu Link Before");
+  menuItemId =
+    PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId,
+                                         1 + DEFAULT_BOOKMARKS_ON_MENU);
   do_check_neq(menuItemId, -1);
-  do_check_eq(bs.getItemTitle(menuItemId), "Menu Link After");
+  do_check_eq(PlacesUtils.bookmarks.getItemTitle(menuItemId),
+              "Menu Link After");
 
   // Check the custom bookmarks exist on toolbar.
-  let toolbarItemId = bs.getIdForItemAt(bs.toolbarFolder, 0);
+  let toolbarItemId =
+    PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId, 0);
   do_check_neq(toolbarItemId, -1);
-  do_check_eq(bs.getItemTitle(toolbarItemId), "Toolbar Link Before");
-  toolbarItemId = bs.getIdForItemAt(bs.toolbarFolder, 1 + DEFAULT_BOOKMARKS_ON_TOOLBAR);
+  do_check_eq(PlacesUtils.bookmarks.getItemTitle(toolbarItemId),
+              "Toolbar Link Before");
+  toolbarItemId =
+    PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.toolbarFolderId,
+                                         1 + DEFAULT_BOOKMARKS_ON_TOOLBAR);
   do_check_neq(toolbarItemId, -1);
-  do_check_eq(bs.getItemTitle(toolbarItemId), "Toolbar Link After");
+  do_check_eq(PlacesUtils.bookmarks.getItemTitle(toolbarItemId),
+              "Toolbar Link After");
 
   // Check the bmprocessed pref has been created.
-  let ps = Cc["@mozilla.org/preferences-service;1"].
-           getService(Ci.nsIPrefBranch);
-  do_check_true(ps.getBoolPref(PREF_BMPROCESSED));
+  do_check_true(Services.prefs.getBoolPref(PREF_BMPROCESSED));
 
   // Check distribution prefs have been created.
-  do_check_eq(ps.getCharPref(PREF_DISTRIBUTION_ID), "516444");
+  do_check_eq(Services.prefs.getCharPref(PREF_DISTRIBUTION_ID), "516444");
 
   do_test_finished();
 }
