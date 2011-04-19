@@ -1009,10 +1009,8 @@ nsRect
 nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
 {
   /* Get a new gfxRect whose units are app units by scaling by the specified factor. */
-  gfxRect scaledRect = aRect * aFactor;
-
-  /* Round outward. */
-  scaledRect.RoundOut();
+  gfxRect scaledRect = aRect;
+  scaledRect.ScaleRoundOut(aFactor);
 
   /* We now need to constrain our results to the max and min values for coords. */
   ConstrainToCoordValues(scaledRect.x);

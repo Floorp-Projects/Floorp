@@ -41,7 +41,19 @@
 #include "gfxTypes.h"
 #include "gfxPoint.h"
 #include "gfxCore.h"
-#include "nsDebug.h" 
+#include "nsDebug.h"
+#include "mozilla/BaseMargin.h"
+#include "mozilla/BaseRect.h"
+
+struct gfxMargin : public mozilla::BaseMargin<gfxFloat, gfxMargin> {
+  typedef mozilla::BaseMargin<gfxFloat, gfxMargin> Super;
+
+  // Constructors
+  gfxMargin() : Super() {}
+  gfxMargin(const gfxMargin& aMargin) : Super(aMargin) {}
+  gfxMargin(gfxFloat aLeft,  gfxFloat aTop, gfxFloat aRight, gfxFloat aBottom)
+    : Super(aLeft, aTop, aRight, aBottom) {}
+};
 
 namespace mozilla {
     namespace css {
@@ -73,77 +85,15 @@ static inline mozilla::css::Corner operator++(mozilla::css::Corner& corner, int)
     return corner;
 }
 
-struct THEBES_API gfxRect
-{
-    gfxFloat x, y;
-    gfxFloat width, height;
+struct THEBES_API gfxRect :
+    public mozilla::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> {
+    typedef mozilla::BaseRect<gfxFloat, gfxRect, gfxPoint, gfxSize, gfxMargin> Super;
 
-    gfxRect() {}
-    gfxRect(const gfxPoint& _pos, const gfxSize& _size) :
-        x(_pos.x), y(_pos.y), width(_size.width), height(_size.height) {}
-    gfxRect(gfxFloat _x, gfxFloat _y, gfxFloat _width, gfxFloat _height) :
-        x(_x), y(_y), width(_width), height(_height) {}
-
-    int operator==(const gfxRect& s) const {
-        return x == s.x && y == s.y && width == s.width && height == s.height;
-    }
-    PRBool IsEqualEdges(const gfxRect& aRect) const {
-      return x == aRect.x && y == aRect.y &&
-             width == aRect.width && height == aRect.height;
-    }
-    // Return true if the rectangles contain the same area of the plane.
-    // Use when we do not care about differences in empty rectangles.
-    PRBool IsEqualInterior(const gfxRect& aRect) const {
-      return IsEqualEdges(aRect) || (IsEmpty() && aRect.IsEmpty());
-    }
-
-    void MoveTo(const gfxPoint& aPt) { x = aPt.x; y = aPt.y; }
-    const gfxRect& MoveBy(const gfxPoint& aPt) {
-        x += aPt.x;
-        y += aPt.y;
-        return *this;
-    }
-    void SizeTo(const gfxSize& aSize) { width = aSize.width; height = aSize.height; }
-
-    gfxRect operator+(const gfxPoint& aPt) const {
-        return gfxRect(x + aPt.x, y + aPt.y, width, height);
-    }
-    gfxRect operator-(const gfxPoint& aPt) const {
-        return gfxRect(x - aPt.x, y - aPt.y, width, height);
-    }
-    gfxRect operator+(const gfxSize& aSize) const {
-        return gfxRect(x + aSize.width, y + aSize.height, width, height);
-    }
-    gfxRect operator-(const gfxSize& aSize) const {
-        return gfxRect(x - aSize.width, y - aSize.height, width, height);
-    }
-    gfxRect operator*(const gfxFloat aScale) const {
-        return gfxRect(x * aScale, y * aScale, width * aScale, height * aScale);
-    }
-
-    const gfxRect& operator+=(const gfxPoint& aPt) {
-        x += aPt.x;
-        y += aPt.y;
-        return *this;
-    }
-    const gfxRect& operator-=(const gfxPoint& aPt) {
-        x -= aPt.x;
-        y -= aPt.y;
-        return *this;
-    }
-
-    gfxFloat Width() const { return width; }
-    gfxFloat Height() const { return height; }
-    gfxFloat X() const { return x; }
-    gfxFloat Y() const { return y; }
-    gfxFloat XMost() const { return x + width; }
-    gfxFloat YMost() const { return y + height; }
-
-    PRBool IsEmpty() const { return width <= 0 || height <= 0; }
-    gfxRect Intersect(const gfxRect& aRect) const;
-    gfxRect Union(const gfxRect& aRect) const;
-    PRBool Contains(const gfxRect& aRect) const;
-    PRBool Contains(const gfxPoint& aPoint) const;
+    gfxRect() : Super() {}
+    gfxRect(const gfxPoint& aPos, const gfxSize& aSize) :
+        Super(aPos, aSize) {}
+    gfxRect(gfxFloat aX, gfxFloat aY, gfxFloat aWidth, gfxFloat aHeight) :
+        Super(aX, aY, aWidth, aHeight) {}
 
     /**
      * Return true if all components of this rect are within
@@ -153,20 +103,12 @@ struct THEBES_API gfxRect
      */
     PRBool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
 
-    gfxSize Size() const { return gfxSize(width, height); }
-
     void Inset(gfxFloat k) {
-        x += k;
-        y += k;
-        width = PR_MAX(0.0, width - k * 2.0);
-        height = PR_MAX(0.0, height - k * 2.0);
+        Deflate(k, k);
     }
 
     void Inset(gfxFloat top, gfxFloat right, gfxFloat bottom, gfxFloat left) {
-        x += left;
-        y += top;
-        width = PR_MAX(0.0, width - (right+left));
-        height = PR_MAX(0.0, height - (bottom+top));
+        Deflate(gfxMargin(left, top, right, bottom));
     }
 
     void Inset(const gfxFloat *sides) {
@@ -174,25 +116,15 @@ struct THEBES_API gfxRect
     }
 
     void Inset(const gfxIntSize& aSize) {
-        Inset(aSize.height, aSize.width, aSize.height, aSize.width);
+        Deflate(aSize.width, aSize.height);
     }
 
     void Outset(gfxFloat k) {
-        x -= k;
-        y -= k;
-        width = PR_MAX(0.0, width + k * 2.0);
-        height = PR_MAX(0.0, height + k * 2.0);
+        Inflate(k, k);
     }
 
     void Outset(gfxFloat top, gfxFloat right, gfxFloat bottom, gfxFloat left) {
-        x -= left;
-        y -= top;
-        width = PR_MAX(0.0, width + (right+left));
-        height = PR_MAX(0.0, height + (bottom+top));
-    }
-
-    void Outset(const gfxFloat *sides) {
-        Outset(sides[0], sides[1], sides[2], sides[3]);
+        Inflate(gfxMargin(left, top, right, bottom));
     }
 
     void Outset(const gfxIntSize& aSize) {
@@ -219,13 +151,6 @@ struct THEBES_API gfxRect
     // Snap the rectangle edges to integer coordinates, such that the
     // resulting rectangle contains the original rectangle.
     void RoundOut();
-
-    // grabbing specific points
-    gfxPoint TopLeft() const { return gfxPoint(x, y); }
-    gfxPoint TopRight() const { return gfxPoint(x, y) + gfxPoint(width, 0.0); }
-    gfxPoint BottomLeft() const { return gfxPoint(x, y) + gfxPoint(0.0, height); }
-    gfxPoint BottomRight() const { return gfxPoint(x, y) + gfxPoint(width, height); }
-    gfxPoint Center() const { return gfxPoint(x, y) + gfxPoint(width, height)/2.0; }
 
     gfxPoint AtCorner(mozilla::css::Corner corner) const {
         switch (corner) {
