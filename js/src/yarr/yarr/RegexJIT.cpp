@@ -62,6 +62,16 @@ class RegexGenerator : private MacroAssembler {
     static const RegisterID regT1 = MIPSRegisters::t5;
 
     static const RegisterID returnRegister = MIPSRegisters::v0;
+#elif WTF_CPU_SPARC
+    static const RegisterID input = SparcRegisters::i0;
+    static const RegisterID index = SparcRegisters::i1;
+    static const RegisterID length = SparcRegisters::i2;
+    static const RegisterID output = SparcRegisters::i3;
+
+    static const RegisterID regT0 = SparcRegisters::i4;
+    static const RegisterID regT1 = SparcRegisters::i5;
+
+    static const RegisterID returnRegister = SparcRegisters::i0;
 #elif WTF_CPU_X86
     static const RegisterID input = X86Registers::eax;
     static const RegisterID index = X86Registers::edx;
@@ -564,8 +574,13 @@ class RegexGenerator : private MacroAssembler {
     void generatePatternCharacterPair(TermGenerationState& state)
     {
         const RegisterID character = regT0;
+#if WTF_CPU_BIG_ENDIAN
+        UChar ch2 = state.term().patternCharacter;
+        UChar ch1 = state.lookaheadTerm().patternCharacter;
+#else
         UChar ch1 = state.term().patternCharacter;
         UChar ch2 = state.lookaheadTerm().patternCharacter;
+#endif
 
         int mask = 0;
         int chPair = ch1 | (ch2 << 16);
@@ -1449,6 +1464,10 @@ class RegexGenerator : private MacroAssembler {
         push(ARMRegisters::r8); // scratch register
 #endif
         move(ARMRegisters::r3, output);
+#elif WTF_CPU_SPARC
+        save(Imm32(-m_pattern.m_body->m_callFrameSize * sizeof(void*)));
+        // set m_callFrameSize to 0 avoid and stack movement later.
+        m_pattern.m_body->m_callFrameSize = 0;
 #elif WTF_CPU_MIPS
         // Do nothing.
 #endif
@@ -1471,6 +1490,9 @@ class RegexGenerator : private MacroAssembler {
         pop(ARMRegisters::r6);
         pop(ARMRegisters::r5);
         pop(ARMRegisters::r4);
+#elif WTF_CPU_SPARC
+        ret_and_restore();
+        return;
 #elif WTF_CPU_MIPS
         // Do nothing
 #endif
