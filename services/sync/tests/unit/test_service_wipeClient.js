@@ -64,7 +64,7 @@ function test_withEngineList() {
 }
 
 function test_startOver_clears_keys() {
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
   do_check_true(!!CollectionKeys.keyForCollection());
   Service.startOver();
   do_check_false(!!CollectionKeys.keyForCollection());
