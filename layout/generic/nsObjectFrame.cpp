@@ -1746,7 +1746,7 @@ nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
   window.clipRect.bottom = window.height;
   window.type = NPWindowTypeDrawable;
 
-  Rect gwBounds;
+  ::Rect gwBounds;
   ::SetRect(&gwBounds, 0, 0, window.width, window.height);
 
   nsTArray<char> buffer(window.width * window.height * 4);
