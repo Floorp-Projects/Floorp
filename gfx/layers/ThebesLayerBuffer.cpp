@@ -265,7 +265,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     }
 
     if ((aFlags & PAINT_WILL_RESAMPLE) &&
-        (neededRegion.GetBounds() != destBufferRect ||
+        (!neededRegion.GetBounds().IsEqualInterior(destBufferRect) ||
          neededRegion.GetNumRects() > 1)) {
       // The area we add to neededRegion might not be painted opaquely
       contentType = gfxASurface::CONTENT_COLOR_ALPHA;

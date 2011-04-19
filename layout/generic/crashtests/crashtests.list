@@ -254,7 +254,7 @@ load 461294-1.html
 load 463350-1.html
 load 463350-2.html
 load 463350-3.html
-asserts(6-8) load 463741-1.html # Bug 575011
+load 463741-1.html
 load 465651-1.html
 load 467137-1.html
 load 467213-1.html

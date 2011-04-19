@@ -95,7 +95,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
         nsIntRect shadowIntRect;
         gfxUtils::GfxRectToIntRect(rect, &shadowIntRect);
         mSkipRect.IntersectRect(mSkipRect, shadowIntRect);
-        if (mSkipRect == shadowIntRect)
+        if (mSkipRect.IsEqualInterior(shadowIntRect))
           return nsnull;
 
         mSkipRect -= shadowIntRect.TopLeft();

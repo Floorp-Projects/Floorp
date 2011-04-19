@@ -2395,7 +2395,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         nsIntPoint origin = GetWindowOriginInPixels(PR_TRUE);
         nsIntRect winlessRect = nsIntRect(origin, nsIntSize(window->width, window->height));
 
-        if (mWindowlessRect != winlessRect) {
+        if (!mWindowlessRect.IsEqualEdges(winlessRect)) {
           mWindowlessRect = winlessRect;
 
           WINDOWPOS winpos;
