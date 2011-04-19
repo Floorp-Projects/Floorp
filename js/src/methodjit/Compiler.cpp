@@ -3625,7 +3625,7 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
 
     pic.shapeGuard = masm.label();
-    Jump inlineJump = masm.branchPtr(Assembler::NotEqual, parent, ImmPtr(0));
+    Jump inlineJump = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
     {
         RESERVE_OOL_SPACE(stubcc.masm);
         pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(0));
@@ -3694,7 +3694,7 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 
     Address address(reg, offsetof(JSObject, parent));
 
-    Jump j = masm.branchPtr(Assembler::NotEqual, address, ImmPtr(0));
+    Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(address), ImmPtr(0));
 
     stubcc.linkExit(j, Uses(0));
     stubcc.leave();
@@ -4634,7 +4634,7 @@ mjit::Compiler::jsop_instanceof()
     Label loop = masm.label();
 
     /* Walk prototype chain, break out on NULL or hit. */
-    masm.loadPtr(protoAddr, obj);
+    masm.loadPayload(protoAddr, obj);
     Jump isFalse2 = masm.branchTestPtr(Assembler::Zero, obj, obj);
     Jump isTrue = masm.branchPtr(Assembler::NotEqual, obj, proto);
     isTrue.linkTo(loop, &masm);

@@ -54,10 +54,6 @@ namespace JSC { typedef MacroAssemblerX86 MacroAssemblerBase; }
 #include "MacroAssemblerX86_64.h"
 namespace JSC { typedef MacroAssemblerX86_64 MacroAssemblerBase; }
 
-#elif WTF_CPU_SPARC
-#include "MacroAssemblerSparc.h"
-namespace JSC { typedef MacroAssemblerSparc MacroAssemblerBase; }
-
 #else
 #error "The MacroAssembler is not supported on this platform."
 #endif
