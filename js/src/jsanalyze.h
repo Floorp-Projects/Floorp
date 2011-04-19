@@ -386,9 +386,15 @@ struct Lifetime
     uint32 end;
 
     /*
-     * This is an artificial segment extending the lifetime of a variable to
-     * the end of a loop, when it is live at the head of the loop. It will not
-     * be used anymore in the loop body until the next iteration.
+     * In a loop body, endpoint to extend this lifetime with if the variable is
+     * live in the next iteration.
+     */
+    uint32 savedEnd;
+
+    /*
+     * This is an artificial segment extending the lifetime of this variable
+     * when it is live at the head of the loop. It will not be used until the
+     * next iteration.
      */
     bool loopTail;
 
@@ -401,8 +407,9 @@ struct Lifetime
     /* Next lifetime. The variable is dead from this->end to next->start. */
     Lifetime *next;
 
-    Lifetime(uint32 offset, Lifetime *next)
-        : start(offset), end(offset), loopTail(false), write(false), next(next)
+    Lifetime(uint32 offset, uint32 savedEnd, Lifetime *next)
+        : start(offset), end(offset), savedEnd(savedEnd),
+          loopTail(false), write(false), next(next)
     {}
 };
 
