@@ -90,15 +90,44 @@ struct THEBES_API gfxRect {
         return (pos != s.pos) || (size != s.size);
     }
 
+    void MoveTo(const gfxPoint& aPt) { pos = aPt; }
     const gfxRect& MoveBy(const gfxPoint& aPt) {
         pos = pos + aPt;
         return *this;
     }
+    void SizeTo(const gfxSize& aSize) { size = aSize; }
+
     gfxRect operator+(const gfxPoint& aPt) const {
         return gfxRect(pos + aPt, size);
     }
     gfxRect operator-(const gfxPoint& aPt) const {
         return gfxRect(pos - aPt, size);
+    }
+    gfxRect operator+(const gfxSize& aSize) const {
+        return gfxRect(pos + gfxPoint(aSize.width, aSize.height), size);
+    }
+    gfxRect operator-(const gfxSize& aSize) const {
+        return gfxRect(pos - gfxPoint(aSize.width, aSize.height), size);
+    }
+    gfxRect operator*(const gfxFloat aScale) const {
+        return gfxRect(pos * aScale, size * aScale);
+    }
+
+    const gfxRect& operator+=(const gfxPoint& aPt) {
+        pos += aPt;
+        return *this;
+    }
+    const gfxRect& operator-=(const gfxPoint& aPt) {
+        pos -= aPt;
+        return *this;
+    }
+    const gfxRect& operator+=(const gfxSize& aSize) {
+        pos += gfxPoint(aSize.width, aSize.height);
+        return *this;
+    }
+    const gfxRect& operator-=(const gfxSize& aSize) {
+        pos -= gfxPoint(aSize.width, aSize.height);
+        return *this;
     }
 
     gfxFloat Width() const { return size.width; }
@@ -122,8 +151,7 @@ struct THEBES_API gfxRect {
      */
     PRBool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
 
-    gfxPoint TopLeft() { return pos; }
-    gfxPoint BottomRight() { return gfxPoint(XMost(), YMost()); }
+    gfxSize Size() const { return size; }
 
     void Inset(gfxFloat k) {
         pos.x += k;

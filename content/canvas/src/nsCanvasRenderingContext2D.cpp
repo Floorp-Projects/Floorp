@@ -1965,7 +1965,7 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 nsresult
 nsCanvasRenderingContext2D::DrawRect(const gfxRect& rect, Style style)
 {
-    if (!FloatValidate(rect.pos.x, rect.pos.y, rect.size.width, rect.size.height))
+    if (!FloatValidate(rect.X(), rect.Y(), rect.Width(), rect.Height()))
         return NS_OK;
 
     PathAutoSaveRestore pathSR(this);

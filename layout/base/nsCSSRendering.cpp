@@ -1617,7 +1617,7 @@ SetupBackgroundClip(BackgroundClipState& aClipState, gfxContext *aCtx,
       // http://hg.mozilla.org/mozilla-central/rev/50e934e4979b landed.
       NS_WARNING("converted background area should not be empty");
       // Make our caller not do anything.
-      aClipState.mDirtyRectGfx.size.SizeTo(0.0, 0.0);
+      aClipState.mDirtyRectGfx.SizeTo(gfxSize(0.0, 0.0));
       return;
     }
 
@@ -1657,7 +1657,7 @@ DrawBackgroundColor(BackgroundClipState& aClipState, gfxContext *aCtx,
     // http://hg.mozilla.org/mozilla-central/rev/50e934e4979b landed.
     NS_WARNING("converted background area should not be empty");
     // Make our caller not do anything.
-    aClipState.mDirtyRectGfx.size.SizeTo(0.0, 0.0);
+    aClipState.mDirtyRectGfx.SizeTo(gfxSize(0.0, 0.0));
     return;
   }
 
@@ -1942,10 +1942,10 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   gfxPoint lineStart, lineEnd;
   double radiusX = 0, radiusY = 0; // for radial gradients only
   if (aGradient->mShape == NS_STYLE_GRADIENT_SHAPE_LINEAR) {
-    ComputeLinearGradientLine(aPresContext, aGradient, oneCellArea.size,
+    ComputeLinearGradientLine(aPresContext, aGradient, oneCellArea.Size(),
                               &lineStart, &lineEnd);
   } else {
-    ComputeRadialGradientLine(aPresContext, aGradient, oneCellArea.size,
+    ComputeRadialGradientLine(aPresContext, aGradient, oneCellArea.Size(),
                               &lineStart, &lineEnd, &radiusX, &radiusY);
   }
   gfxFloat lineLength = NS_hypot(lineEnd.x - lineStart.x,
@@ -2192,9 +2192,9 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       // tile with the overall area we're supposed to be filling
       gfxRect fillRect = tileRect.Intersect(areaToFill);
       ctx->NewPath();
-      ctx->Translate(tileRect.pos);
+      ctx->Translate(tileRect.TopLeft());
       ctx->SetPattern(gradientPattern);
-      ctx->Rectangle(fillRect - tileRect.pos, PR_TRUE);
+      ctx->Rectangle(fillRect - tileRect.TopLeft(), PR_TRUE);
       ctx->Fill();
       ctx->SetMatrix(ctm);
     }
@@ -3560,7 +3560,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       rect.pos.x += lineHeight / 2.0;
       aGfxContext->NewPath();
 
-      gfxPoint pt(rect.pos);
+      gfxPoint pt(rect.TopLeft());
       gfxFloat rightMost = pt.x + rect.Width() + lineHeight;
       gfxFloat adv = rect.Height() - lineHeight;
       gfxFloat flatLengthAtVertex = NS_MAX((lineHeight - 1.0) * 2.0, 1.0);
@@ -3568,7 +3568,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       pt.x -= lineHeight;
       aGfxContext->MoveTo(pt); // 1
 
-      pt.x = rect.pos.x;
+      pt.x = rect.X();
       aGfxContext->LineTo(pt); // 2
 
       PRBool goDown = PR_TRUE;
@@ -3640,9 +3640,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
 
   PRBool canLiftUnderline = aDescentLimit >= 0.0;
 
-  gfxRect r;
-  r.pos.x = NS_floor(aPt.x + 0.5);
-  r.size.width = NS_round(aLineSize.width);
+  gfxRect r(NS_floor(aPt.x + 0.5), 0, NS_round(aLineSize.width), 0);
 
   gfxFloat lineHeight = NS_round(aLineSize.height);
   lineHeight = NS_MAX(lineHeight, 1.0);
