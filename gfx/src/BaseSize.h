@@ -35,44 +35,67 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef CANVASIMAGECACHE_H_
-#define CANVASIMAGECACHE_H_
-
-class nsIDOMElement;
-class nsHTMLCanvasElement;
-class imgIRequest;
-class gfxASurface;
-
-#include "gfxPoint.h"
+#ifndef MOZILLA_BASESIZE_H_
+#define MOZILLA_BASESIZE_H_
 
 namespace mozilla {
 
-class CanvasImageCache {
-public:
-  /**
-   * Notify that image element aImage was (or is about to be) drawn to aCanvas
-   * using the first frame of aRequest's image. The data for the surface is
-   * in aSurface, and the image size is in aSize.
-   */
-  static void NotifyDrawImage(nsIDOMElement* aImage,
-                              nsHTMLCanvasElement* aCanvas,
-                              imgIRequest* aRequest,
-                              gfxASurface* aSurface,
-                              const gfxIntSize& aSize);
+/**
+ * Do not use this class directly. Subclass it, pass that subclass as the
+ * Sub parameter, and only use that subclass. This allows methods to safely
+ * cast 'this' to 'Sub*'.
+ */
+template <class T, class Sub>
+struct BaseSize {
+  T width, height;
 
-  /**
-   * Check whether aImage has recently been drawn into aCanvas. If we return
-   * a non-null surface, then the image was recently drawn into the canvas
-   * (with the same image request) and the returned surface contains the image
-   * data, and the image size will be returned in aSize.
-   */
-  static gfxASurface* Lookup(nsIDOMElement* aImage,
-                             nsHTMLCanvasElement* aCanvas,
-                             gfxIntSize* aSize);
+  // Constructors
+  BaseSize() : width(0), height(0) {}
+  BaseSize(T aWidth, T aHeight) : width(aWidth), height(aHeight) {}
 
-  static void Shutdown();
+  void SizeTo(T aWidth, T aHeight) { width = aWidth; height = aHeight; }
+
+  // Note that '=' isn't defined so we'll get the
+  // compiler generated default assignment operator
+
+  bool operator==(const Sub& aSize) const {
+    return width == aSize.width && height == aSize.height;
+  }
+  bool operator!=(const Sub& aSize) const {
+    return width != aSize.width || height != aSize.height;
+  }
+  bool operator<=(const Sub& aSize) const {
+    return width <= aSize.width && height <= aSize.height;
+  }
+  bool operator<(const Sub& aSize) const {
+    return *this <= aSize && *this != aSize;
+  }
+
+  Sub operator+(const Sub& aSize) const {
+    return Sub(width + aSize.width, height + aSize.height);
+  }
+  Sub operator-(const Sub& aSize) const {
+    return Sub(width - aSize.width, height - aSize.height);
+  }
+  Sub& operator+=(const Sub& aSize) {
+    width += aSize.width;
+    height += aSize.height;
+    return *static_cast<Sub*>(this);
+  }
+  Sub& operator-=(const Sub& aSize) {
+    width -= aSize.width;
+    height -= aSize.height;
+    return *static_cast<Sub*>(this);
+  }
+
+  Sub operator*(T aScale) const {
+    return Sub(width * aScale, height * aScale);
+  }
+  Sub operator/(T aScale) const {
+    return Sub(width / aScale, height / aScale);
+  }
 };
 
 }
 
-#endif /* CANVASIMAGECACHE_H_ */
+#endif /* MOZILLA_BASESIZE_H_ */

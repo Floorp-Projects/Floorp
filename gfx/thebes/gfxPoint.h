@@ -39,125 +39,30 @@
 #define GFX_POINT_H
 
 #include "nsMathUtils.h"
+#include "mozilla/BaseSize.h"
+#include "mozilla/BasePoint.h"
+#include "nsSize.h"
+#include "nsPoint.h"
 
 #include "gfxTypes.h"
 
-/*
- * gfxSize and gfxIntSize -- please keep their member functions in sync.
- * also note: gfxIntSize may be replaced by nsIntSize at some point...
- */
-struct THEBES_API gfxIntSize {
-    PRInt32 width, height;
+typedef nsIntSize gfxIntSize;
 
-    gfxIntSize() {}
-    gfxIntSize(PRInt32 _width, PRInt32 _height) : width(_width), height(_height) {}
+struct THEBES_API gfxSize : public mozilla::BaseSize<gfxFloat, gfxSize> {
+    typedef mozilla::BaseSize<gfxFloat, gfxSize> Super;
 
-    void SizeTo(PRInt32 _width, PRInt32 _height) {width = _width; height = _height;}
-
-    int operator==(const gfxIntSize& s) const {
-        return ((width == s.width) && (height == s.height));
-    }
-    int operator!=(const gfxIntSize& s) const {
-        return ((width != s.width) || (height != s.height));
-    }
-    bool operator<(const gfxIntSize& s) const {
-        return (operator<=(s) &&
-                (width < s.width || height < s.height));
-    }
-    bool operator<=(const gfxIntSize& s) const {
-        return (width <= s.width) && (height <= s.height);
-    }
-    gfxIntSize operator+(const gfxIntSize& s) const {
-        return gfxIntSize(width + s.width, height + s.height);
-    }
-    gfxIntSize operator-() const {
-        return gfxIntSize(- width, - height);
-    }
-    gfxIntSize operator-(const gfxIntSize& s) const {
-        return gfxIntSize(width - s.width, height - s.height);
-    }
-    gfxIntSize operator*(const PRInt32 v) const {
-        return gfxIntSize(width * v, height * v);
-    }
-    gfxIntSize operator/(const PRInt32 v) const {
-        return gfxIntSize(width / v, height / v);
-    }
+    gfxSize() : Super() {}
+    gfxSize(gfxFloat aWidth, gfxFloat aHeight) : Super(aWidth, aHeight) {}
+    gfxSize(const nsIntSize& aSize) : Super(aSize.width, aSize.height) {}
 };
 
-struct THEBES_API gfxSize {
-    gfxFloat width, height;
+struct THEBES_API gfxPoint : public mozilla::BasePoint<gfxFloat, gfxPoint> {
+    typedef mozilla::BasePoint<gfxFloat, gfxPoint> Super;
 
-    gfxSize() {}
-    gfxSize(gfxFloat _width, gfxFloat _height) : width(_width), height(_height) {}
-    gfxSize(const gfxIntSize& size) : width(size.width), height(size.height) {}
+    gfxPoint() : Super() {}
+    gfxPoint(gfxFloat aX, gfxFloat aY) : Super(aX, aY) {}
+    gfxPoint(const nsIntPoint& aPoint) : Super(aPoint.x, aPoint.y) {}
 
-    void SizeTo(gfxFloat _width, gfxFloat _height) {width = _width; height = _height;}
-
-    int operator==(const gfxSize& s) const {
-        return ((width == s.width) && (height == s.height));
-    }
-    int operator!=(const gfxSize& s) const {
-        return ((width != s.width) || (height != s.height));
-    }
-    gfxSize operator+(const gfxSize& s) const {
-        return gfxSize(width + s.width, height + s.height);
-    }
-    gfxSize operator-() const {
-        return gfxSize(- width, - height);
-    }
-    gfxSize operator-(const gfxSize& s) const {
-        return gfxSize(width - s.width, height - s.height);
-    }
-    gfxSize operator*(const gfxFloat v) const {
-        return gfxSize(width * v, height * v);
-    }
-    gfxSize operator/(const gfxFloat v) const {
-        return gfxSize(width / v, height / v);
-    }
-};
-
-
-
-struct THEBES_API gfxPoint {
-    gfxFloat x, y;
-
-    gfxPoint() { }
-    gfxPoint(gfxFloat _x, gfxFloat _y) : x(_x), y(_y) {}
-
-    void MoveTo(gfxFloat aX, gfxFloat aY) { x = aX; y = aY; }
-
-    int operator==(const gfxPoint& p) const {
-        return ((x == p.x) && (y == p.y));
-    }
-    int operator!=(const gfxPoint& p) const {
-        return ((x != p.x) || (y != p.y));
-    }
-    const gfxPoint& operator+=(const gfxPoint& p) {
-        x += p.x;
-        y += p.y;
-        return *this;
-    }
-    gfxPoint operator+(const gfxPoint& p) const {
-        return gfxPoint(x + p.x, y + p.y);
-    }
-    gfxPoint operator+(const gfxSize& s) const {
-        return gfxPoint(x + s.width, y + s.height);
-    }
-    gfxPoint operator-(const gfxPoint& p) const {
-        return gfxPoint(x - p.x, y - p.y);
-    }
-    gfxPoint operator-(const gfxSize& s) const {
-        return gfxPoint(x - s.width, y - s.height);
-    }
-    gfxPoint operator-() const {
-        return gfxPoint(- x, - y);
-    }
-    gfxPoint operator*(const gfxFloat v) const {
-        return gfxPoint(x * v, y * v);
-    }
-    gfxPoint operator/(const gfxFloat v) const {
-        return gfxPoint(x / v, y / v);
-    }
     // Round() is *not* rounding to nearest integer if the values are negative.
     // They are always rounding as floor(n + 0.5).
     // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14
