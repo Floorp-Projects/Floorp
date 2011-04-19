@@ -450,7 +450,7 @@ XPIDL_COMPILE = $(LIBXUL_DIST)/host/bin/host_xpidl$(HOST_BIN_SUFFIX)
 else
 XPIDL_COMPILE = $(LIBXUL_DIST)/bin/xpidl$(BIN_SUFFIX)
 endif
-XPIDL_LINK = $(PYTHON) $(LIBXUL_SDK)/sdk/bin/xpt.py link
+XPIDL_LINK = $(PYTHON) $(SDK_BIN_DIR)/xpt.py link
 
 # Java macros
 JAVA_GEN_DIR  = _javagen
