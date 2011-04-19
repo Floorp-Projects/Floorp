@@ -1360,6 +1360,8 @@ DocumentViewerImpl::Open(nsISupports *aState, nsISHEntry *aSHEntry)
   nsresult rv = InitInternal(mParentWidget, aState, mBounds, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  mHidden = PR_FALSE;
+
   if (mPresShell)
     mPresShell->SetForwardingContainer(nsnull);
 
