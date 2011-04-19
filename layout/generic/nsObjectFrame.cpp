@@ -6000,7 +6000,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   // Round out the dirty rect to plugin pixels to ensure the plugin draws
   // enough pixels for interpolation to device pixels.
-  gfxRect dirtyRect = aDirtyRect + -pluginRect.pos;
+  gfxRect dirtyRect = aDirtyRect - pluginRect.TopLeft();
   dirtyRect.RoundOut();
 
   // Plugins can only draw an integer number of pixels.
@@ -6013,14 +6013,14 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   // draw a suitable number of pixels for interpolation to device pixels in
   // Renderer::Draw, but such cases are not common enough to warrant the
   // effort now.
-  nsIntSize pluginSize(NS_lround(pluginRect.size.width),
-                       NS_lround(pluginRect.size.height));
+  nsIntSize pluginSize(NS_lround(pluginRect.width),
+                       NS_lround(pluginRect.height));
 
   // Determine what the plugin needs to draw.
-  nsIntRect pluginDirtyRect(PRInt32(dirtyRect.pos.x),
-                            PRInt32(dirtyRect.pos.y),
-                            PRInt32(dirtyRect.size.width),
-                            PRInt32(dirtyRect.size.height));
+  nsIntRect pluginDirtyRect(PRInt32(dirtyRect.x),
+                            PRInt32(dirtyRect.y),
+                            PRInt32(dirtyRect.width),
+                            PRInt32(dirtyRect.height));
   if (!pluginDirtyRect.
       IntersectRect(nsIntRect(0, 0, pluginSize.width, pluginSize.height),
                     pluginDirtyRect))
@@ -6043,7 +6043,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   // Renderer::Draw() draws a rectangle with top-left at the aContext origin.
   gfxContextAutoSaveRestore autoSR(aContext);
-  aContext->Translate(pluginRect.pos);
+  aContext->Translate(pluginRect.TopLeft());
 
   Renderer renderer(window, this, pluginSize, pluginDirtyRect);
 #ifdef MOZ_WIDGET_GTK2

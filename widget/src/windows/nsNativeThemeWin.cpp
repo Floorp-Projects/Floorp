@@ -1259,13 +1259,13 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
   if (aWidgetType == NS_THEME_DROPDOWN_BUTTON &&
       part == CBP_DROPMARKER_VISTA && IsHTMLContent(aFrame))
   {
-    tr.pos.y -= 1.0;
-    tr.size.width += 1.0;
-    tr.size.height += 2.0;
+    tr.y -= 1.0;
+    tr.width += 1.0;
+    tr.height += 2.0;
 
-    dr.pos.y -= 1.0;
-    dr.size.width += 1.0;
-    dr.size.height += 2.0;
+    dr.y -= 1.0;
+    dr.width += 1.0;
+    dr.height += 2.0;
   }
 
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();

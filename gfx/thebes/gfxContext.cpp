@@ -362,8 +362,8 @@ gfxRect
 gfxContext::DeviceToUser(const gfxRect& rect) const
 {
     gfxRect ret = rect;
-    cairo_device_to_user(mCairo, &ret.pos.x, &ret.pos.y);
-    cairo_device_to_user_distance(mCairo, &ret.size.width, &ret.size.height);
+    cairo_device_to_user(mCairo, &ret.x, &ret.y);
+    cairo_device_to_user_distance(mCairo, &ret.width, &ret.height);
     return ret;
 }
 

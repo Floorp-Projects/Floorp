@@ -394,9 +394,9 @@ nsCSSBorderRenderer::DoSideClipWithoutCornersSubPath(mozilla::css::Side aSide)
                mOuterRect.Size() - sideCornerSum);
 
   if (aSide == NS_SIDE_TOP || aSide == NS_SIDE_BOTTOM)
-    rect.size.height = mBorderWidths[aSide];
+    rect.height = mBorderWidths[aSide];
   else
-    rect.size.width = mBorderWidths[aSide];
+    rect.width = mBorderWidths[aSide];
 
   mContext->Rectangle(rect);
 }
@@ -611,24 +611,24 @@ nsCSSBorderRenderer::FillSolidBorder(const gfxRect& aOuterRect,
 
   if ((aSides & (SIDE_BIT_TOP | SIDE_BIT_LEFT)) == (SIDE_BIT_TOP | SIDE_BIT_LEFT)) {
     // adjust the left's top down a bit
-    r[NS_SIDE_LEFT].pos.y += aBorderSizes[NS_SIDE_TOP];
-    r[NS_SIDE_LEFT].size.height -= aBorderSizes[NS_SIDE_TOP];
+    r[NS_SIDE_LEFT].y += aBorderSizes[NS_SIDE_TOP];
+    r[NS_SIDE_LEFT].height -= aBorderSizes[NS_SIDE_TOP];
   }
 
   if ((aSides & (SIDE_BIT_TOP | SIDE_BIT_RIGHT)) == (SIDE_BIT_TOP | SIDE_BIT_RIGHT)) {
     // adjust the top's left a bit
-    r[NS_SIDE_TOP].size.width -= aBorderSizes[NS_SIDE_RIGHT];
+    r[NS_SIDE_TOP].width -= aBorderSizes[NS_SIDE_RIGHT];
   }
 
   if ((aSides & (SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT)) == (SIDE_BIT_BOTTOM | SIDE_BIT_RIGHT)) {
     // adjust the right's bottom a bit
-    r[NS_SIDE_RIGHT].size.height -= aBorderSizes[NS_SIDE_BOTTOM];
+    r[NS_SIDE_RIGHT].height -= aBorderSizes[NS_SIDE_BOTTOM];
   }
 
   if ((aSides & (SIDE_BIT_BOTTOM | SIDE_BIT_LEFT)) == (SIDE_BIT_BOTTOM | SIDE_BIT_LEFT)) {
     // adjust the bottom's left a bit
-    r[NS_SIDE_BOTTOM].pos.x += aBorderSizes[NS_SIDE_LEFT];
-    r[NS_SIDE_BOTTOM].size.width -= aBorderSizes[NS_SIDE_LEFT];
+    r[NS_SIDE_BOTTOM].x += aBorderSizes[NS_SIDE_LEFT];
+    r[NS_SIDE_BOTTOM].width -= aBorderSizes[NS_SIDE_LEFT];
   }
 
   // Filling these one by one is faster than filling them all at once.
