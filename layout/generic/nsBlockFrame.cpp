@@ -5917,7 +5917,7 @@ nsBlockFrame::ReflowPushedFloats(nsBlockReflowState& aState,
 
       // Invalidate if there was a position or size change
       nsRect rect = f->GetRect();
-      if (rect != oldRect) {
+      if (!rect.IsEqualInterior(oldRect)) {
         nsRect dirtyRect = oldOverflow;
         dirtyRect.MoveBy(oldRect.x, oldRect.y);
         Invalidate(dirtyRect);

@@ -124,15 +124,9 @@
 
 #include "nsIXPCScriptNotify.h"  // used to notify: ScriptEvaluated
 
-#ifndef XPCONNECT_STANDALONE
-#define XPC_USE_SECURITY_CHECKED_COMPONENT
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIPrincipal.h"
-#endif
-
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 #include "nsISecurityCheckedComponent.h"
-#endif
 
 #include "nsIThreadInternal.h"
 
@@ -571,12 +565,10 @@ public:
     // This returns the singleton nsCycleCollectionParticipant for JSContexts.
     static nsCycleCollectionParticipant *JSContextParticipant();
 
-#ifndef XPCONNECT_STANDALONE
     virtual nsIPrincipal* GetPrincipal(JSObject* obj,
                                        PRBool allowShortCircuit) const;
 
     void RecordTraversal(void *p, nsISupports *s);
-#endif
     virtual char* DebugPrintJSStack(PRBool showArgs,
                                     PRBool showLocals,
                                     PRBool showThisProps);
@@ -612,10 +604,8 @@ private:
 #endif
     nsAutoPtr<XPCCallContext> mCycleCollectionContext;
 
-#ifndef XPCONNECT_STANDALONE
     typedef nsBaseHashtable<nsVoidPtrHashKey, nsISupports*, nsISupports*> ScopeSet;
     ScopeSet mScopes;
-#endif
     nsCOMPtr<nsIXPCScriptable> mBackstagePass;
 
     static PRUint32 gReportAllJSExceptions;
@@ -1511,12 +1501,10 @@ public:
     JSObject*
     GetPrototypeNoHelper(XPCCallContext& ccx);
 
-#ifndef XPCONNECT_STANDALONE
     nsIPrincipal*
     GetPrincipal() const
     {return mScriptObjectPrincipal ?
          mScriptObjectPrincipal->GetPrincipal() : nsnull;}
-#endif
     
     JSObject*
     GetPrototypeJSFunction() const {return mPrototypeJSFunction;}
@@ -1619,14 +1607,12 @@ private:
 
     XPCContext*                      mContext;
 
-#ifndef XPCONNECT_STANDALONE
     // The script object principal instance corresponding to our current global
     // JS object.
     // XXXbz what happens if someone calls JS_SetPrivate on mGlobalJSObject.
     // How do we deal?  Do we need to?  I suspect this isn't worth worrying
     // about, since all of our scope objects are verified as not doing that.
     nsIScriptObjectPrincipal* mScriptObjectPrincipal;
-#endif
 };
 
 JSObject* xpc_CloneJSFunction(XPCCallContext &ccx, JSObject *funobj,
@@ -2451,9 +2437,7 @@ public:
     NS_CYCLE_COLLECTION_PARTICIPANT_INSTANCE
     NS_DECL_CYCLE_COLLECTION_UNMARK_PURPLE_STUB(XPCWrappedNative)
 
-#ifndef XPCONNECT_STANDALONE
     nsIPrincipal* GetObjectPrincipal() const;
-#endif
 
     JSBool
     IsValid() const {return nsnull != mFlatJSObject;}
@@ -3514,10 +3498,9 @@ protected:
 
 // nsJSIID
 
-class nsJSIID : public nsIJSIID, public nsIXPCScriptable
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-          , public nsISecurityCheckedComponent
-#endif
+class nsJSIID : public nsIJSIID,
+                public nsIXPCScriptable,
+                public nsISecurityCheckedComponent
 {
 public:
     NS_DECL_ISUPPORTS
@@ -3528,9 +3511,7 @@ public:
     // we implement the rest...
     NS_DECL_NSIJSIID
     NS_DECL_NSIXPCSCRIPTABLE
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
-#endif
 
     static nsJSIID* NewID(nsIInterfaceInfo* aInfo);
 
@@ -3788,7 +3769,6 @@ private:
 };
 
 /***************************************************************************/
-#ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
 
 class BackstagePass : public nsIScriptObjectPrincipal,
@@ -3814,24 +3794,6 @@ public:
 private:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
-
-#else
-
-class BackstagePass : public nsIXPCScriptable, public nsIClassInfo
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIXPCSCRIPTABLE
-  NS_DECL_NSICLASSINFO
-
-  BackstagePass()
-  {
-  }
-
-  virtual ~BackstagePass() { }
-};
-
-#endif
 
 class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
                                public nsSupportsWeakReference
@@ -3861,20 +3823,15 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService,
 
 class nsXPCComponents : public nsIXPCComponents,
                         public nsIXPCScriptable,
-                        public nsIClassInfo
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-                      , public nsISecurityCheckedComponent
-#endif
+                        public nsIClassInfo,
+                        public nsISecurityCheckedComponent
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCCOMPONENTS
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
-
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
-#endif
 
 public:
     static JSBool
@@ -3907,10 +3864,8 @@ private:
 class nsXPCComponents_Interfaces :
             public nsIScriptableInterfaces,
             public nsIXPCScriptable,
-            public nsIClassInfo
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
-          , public nsISecurityCheckedComponent
-#endif
+            public nsIClassInfo,
+            public nsISecurityCheckedComponent
 {
 public:
     // all the interface method declarations...
@@ -3918,9 +3873,7 @@ public:
     NS_DECL_NSISCRIPTABLEINTERFACES
     NS_DECL_NSIXPCSCRIPTABLE
     NS_DECL_NSICLASSINFO
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
-#endif
 
 public:
     nsXPCComponents_Interfaces();
@@ -4268,7 +4221,6 @@ DEFINE_AUTO_MARKING_ARRAY_PTR_TYPE(AutoMarkingNativeInterfacePtrArrayPtr,
     AutoMarkingJSVal AUTO_MARK_JSVAL_HELPER(_automarker_,__LINE__)           \
     (ccx, &AUTO_MARK_JSVAL_HELPER(_val_,__LINE__))
 
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /***************************************************************************/
 // Allocates a string that grants all access ("AllAccess")
 
@@ -4277,7 +4229,6 @@ extern char* xpc_CloneAllAccess();
 // Returns access if wideName is in list
 
 extern char * xpc_CheckAccessList(const PRUnichar* wideName, const char* list[]);
-#endif
 
 /***************************************************************************/
 // in xpcvariant.cpp...
@@ -4377,7 +4328,6 @@ public:
 };
 
 /***************************************************************************/
-#ifndef XPCONNECT_STANDALONE
 
 #define PRINCIPALHOLDER_IID \
 {0xbf109f49, 0xf94a, 0x43d8, {0x93, 0xdb, 0xe4, 0x66, 0x49, 0xc5, 0xd9, 0x7d}}
@@ -4403,8 +4353,6 @@ private:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(PrincipalHolder, PRINCIPALHOLDER_IID)
 
-#endif /* !XPCONNECT_STANDALONE */
-
 /***************************************************************************/
 // Utilities
 
@@ -4414,8 +4362,6 @@ xpc_GetJSPrivate(JSObject *obj)
     return obj->getPrivate();
 }
 
-
-#ifndef XPCONNECT_STANDALONE
 
 // Helper for creating a sandbox object to use for evaluating
 // untrusted code completely separated from all other code in the
@@ -4444,7 +4390,6 @@ nsresult
 xpc_EvalInSandbox(JSContext *cx, JSObject *sandbox, const nsAString& source,
                   const char *filename, PRInt32 lineNo,
                   JSVersion jsVersion, PRBool returnStringOnly, jsval *rval);
-#endif /* !XPCONNECT_STANDALONE */
 
 /***************************************************************************/
 // Inlined utilities.

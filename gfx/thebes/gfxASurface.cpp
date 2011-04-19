@@ -290,8 +290,8 @@ void
 gfxASurface::MarkDirty(const gfxRect& r)
 {
     cairo_surface_mark_dirty_rectangle(mSurface,
-                                       (int) r.pos.x, (int) r.pos.y,
-                                       (int) r.size.width, (int) r.size.height);
+                                       (int) r.X(), (int) r.Y(),
+                                       (int) r.Width(), (int) r.Height());
 }
 
 void

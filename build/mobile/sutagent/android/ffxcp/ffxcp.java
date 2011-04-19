@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,17 +11,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Android SUTAgent code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Bob Moss.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Nisheeth Ranjan <nisheeth@netscape.com> (original author)
- *   Peter Van der Beken <peterv@netscape.com>
- *
+ *  Bob Moss <bmoss@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,21 +34,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+package org.mozilla.ffxcp;
 
-#include "nsISupports.idl"
+import android.app.Activity;
+import android.os.Bundle;
 
-interface nsIDOMNode;
-interface nsIDOMDocument;
-
-/**
- * @deprecated Use nsIXSLTProcessor instead!!
- */
-
-[deprecated, scriptable, uuid(3fbff728-2d20-11d3-aef3-00108300ff91)]
-interface nsIXSLTProcessorObsolete : nsISupports
-{
-    void transformDocument(in nsIDOMNode aSourceDOM,
-                           in nsIDOMNode aStyleDOM,
-                           in nsIDOMDocument aOutputDOC,
-                           in nsISupports aObserver);
-};
+public class ffxcp extends Activity {
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+    }
+}
