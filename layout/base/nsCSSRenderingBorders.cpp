@@ -490,7 +490,7 @@ nsCSSBorderRenderer::DoSideClipSubPath(mozilla::css::Side aSide)
   else if (endIsDashed && isDashed)
     endType = SIDE_CLIP_RECTANGLE;
 
-  gfxPoint midPoint = mInnerRect.pos + mInnerRect.size / 2.0;
+  gfxPoint midPoint = mInnerRect.Center();
 
   start[0] = mOuterRect.CCWCorner(aSide);
   start[1] = mInnerRect.CCWCorner(aSide);

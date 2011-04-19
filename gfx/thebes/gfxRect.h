@@ -192,9 +192,10 @@ struct THEBES_API gfxRect {
 
     // grabbing specific points
     gfxPoint TopLeft() const { return gfxPoint(pos); }
-    gfxPoint TopRight() const { return pos + gfxSize(size.width, 0.0); }
-    gfxPoint BottomLeft() const { return pos + gfxSize(0.0, size.height); }
-    gfxPoint BottomRight() const { return pos + size; }
+    gfxPoint TopRight() const { return pos + gfxPoint(size.width, 0.0); }
+    gfxPoint BottomLeft() const { return pos + gfxPoint(0.0, size.height); }
+    gfxPoint BottomRight() const { return pos + gfxPoint(size.width, size.height); }
+    gfxPoint Center() const { return pos + gfxPoint(size.width, size.height)/2.0; }
 
     gfxPoint AtCorner(mozilla::css::Corner corner) const {
         switch (corner) {

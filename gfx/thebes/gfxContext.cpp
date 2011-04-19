@@ -254,7 +254,7 @@ void
 gfxContext::Ellipse(const gfxPoint& center, const gfxSize& dimensions)
 {
     gfxSize halfDim = dimensions / 2.0;
-    gfxRect r(center - halfDim, dimensions);
+    gfxRect r(center - gfxPoint(halfDim.width, halfDim.height), dimensions);
     gfxCornerSizes c(halfDim, halfDim, halfDim, halfDim);
 
     RoundedRectangle (r, c);
@@ -430,9 +430,9 @@ gfxContext::UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale) const
         return PR_FALSE;
 #undef WITHIN_E
 
-    gfxPoint p1 = UserToDevice(rect.pos);
-    gfxPoint p2 = UserToDevice(rect.pos + gfxSize(rect.size.width, 0.0));
-    gfxPoint p3 = UserToDevice(rect.pos + rect.size);
+    gfxPoint p1 = UserToDevice(rect.TopLeft());
+    gfxPoint p2 = UserToDevice(rect.TopRight());
+    gfxPoint p3 = UserToDevice(rect.BottomRight());
 
     // Check that the rectangle is axis-aligned. For an axis-aligned rectangle,
     // two opposite corners define the entire rectangle. So check if
