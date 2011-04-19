@@ -777,7 +777,7 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
   gfxFloat e = presContext->AppUnitsToGfxUnits(mThickness);
   gfxCtx->SetLineWidth(e);
 
-  rect.Inset(e / 2.0);
+  rect.Deflate(e / 2.0);
 
   gfxCtx->NewPath();
 
