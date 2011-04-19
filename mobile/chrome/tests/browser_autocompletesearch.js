@@ -45,7 +45,11 @@ function saveMockCache() {
     oldCacheFile.remove(true);
 
   let mockCachePath = gTestPath;
-  let mockCacheFile = getChromeDir(getResolvedURI(mockCachePath));
+  info("mock path: " + mockCachePath);
+  let mockCacheURI = getResolvedURI(mockCachePath);
+  info("mock URI: " + mockCacheURI.spec);
+  let mockCacheFile = getChromeDir(mockCacheURI);
+  info("mock file: " + mockCacheFile.path);
   mockCacheFile.append("mock_autocomplete.json");
   mockCacheFile.copyToFollowingLinks(gProfileDir, "autocomplete.json");
 
