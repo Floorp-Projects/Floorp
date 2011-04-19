@@ -3445,7 +3445,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       aGfxContext->SetLineCap(gfxContext::LINE_CAP_BUTT);
       aGfxContext->SetDash(dash, 2, 0.0);
       // We should continue to draw the last dash even if it is not in the rect.
-      rect.size.width += dashWidth;
+      rect.width += dashWidth;
       break;
     }
     case NS_STYLE_TEXT_DECORATION_STYLE_DOTTED: {
@@ -3464,7 +3464,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       }
       aGfxContext->SetDash(dash, 2, 0.0);
       // We should continue to draw the last dot even if it is not in the rect.
-      rect.size.width += dashWidth;
+      rect.width += dashWidth;
       break;
     }
     case NS_STYLE_TEXT_DECORATION_STYLE_WAVY:
@@ -3486,7 +3486,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
   }
 
   // The y position should be set to the middle of the line.
-  rect.pos.y += lineHeight / 2;
+  rect.y += lineHeight / 2;
 
   aGfxContext->SetColor(gfxRGBA(aColor));
   aGfxContext->SetLineWidth(lineHeight);
@@ -3515,7 +3515,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
       aGfxContext->NewPath();
       aGfxContext->MoveTo(rect.TopLeft());
       aGfxContext->LineTo(rect.TopRight());
-      rect.size.height -= lineHeight;
+      rect.height -= lineHeight;
       aGfxContext->MoveTo(rect.BottomLeft());
       aGfxContext->LineTo(rect.BottomRight());
       aGfxContext->Stroke();
@@ -3557,7 +3557,7 @@ nsCSSRendering::PaintDecorationLine(gfxContext* aGfxContext,
        *  7. Repeat from 2 until reached to right-most edge of the area.
        */
 
-      rect.pos.x += lineHeight / 2.0;
+      rect.x += lineHeight / 2.0;
       aGfxContext->NewPath();
 
       gfxPoint pt(rect.TopLeft());
@@ -3649,7 +3649,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
   gfxFloat descentLimit = NS_floor(aDescentLimit);
 
   gfxFloat suggestedMaxRectHeight = NS_MAX(NS_MIN(ascent, descentLimit), 1.0);
-  r.size.height = lineHeight;
+  r.height = lineHeight;
   if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE) {
     /**
      *  We will draw double line as:
@@ -3668,12 +3668,12 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
      */
     gfxFloat gap = NS_round(lineHeight / 2.0);
     gap = NS_MAX(gap, 1.0);
-    r.size.height = lineHeight * 2.0 + gap;
+    r.height = lineHeight * 2.0 + gap;
     if (canLiftUnderline) {
       if (r.Height() > suggestedMaxRectHeight) {
         // Don't shrink the line height, because the thickness has some meaning.
         // We can just shrink the gap at this time.
-        r.size.height = NS_MAX(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
+        r.height = NS_MAX(suggestedMaxRectHeight, lineHeight * 2.0 + 1.0);
       }
     }
   } else if (aStyle == NS_STYLE_TEXT_DECORATION_STYLE_WAVY) {
@@ -3690,14 +3690,14 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
      * |        XXXXXX            XXXXXX           |
      * +-------------------------------------------+
      */
-    r.size.height = lineHeight > 2.0 ? lineHeight * 4.0 : lineHeight * 3.0;
+    r.height = lineHeight > 2.0 ? lineHeight * 4.0 : lineHeight * 3.0;
     if (canLiftUnderline) {
       if (r.Height() > suggestedMaxRectHeight) {
         // Don't shrink the line height even if there is not enough space,
         // because the thickness has some meaning.  E.g., the 1px wavy line and
         // 2px wavy line can be used for different meaning in IME selections
         // at same time.
-        r.size.height = NS_MAX(suggestedMaxRectHeight, lineHeight * 2.0);
+        r.height = NS_MAX(suggestedMaxRectHeight, lineHeight * 2.0);
       }
     }
   }
@@ -3731,7 +3731,7 @@ nsCSSRendering::GetTextDecorationRectInternal(const gfxPoint& aPt,
     default:
       NS_ERROR("Invalid decoration value!");
   }
-  r.pos.y = baseline - NS_floor(offset + 0.5);
+  r.y = baseline - NS_floor(offset + 0.5);
   return r;
 }
 

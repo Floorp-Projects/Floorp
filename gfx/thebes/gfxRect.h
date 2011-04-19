@@ -73,71 +73,67 @@ static inline mozilla::css::Corner operator++(mozilla::css::Corner& corner, int)
     return corner;
 }
 
-struct THEBES_API gfxRect {
-    // pt? point?
-    gfxPoint pos;
-    gfxSize size;
+struct THEBES_API gfxRect
+{
+    gfxFloat x, y;
+    gfxFloat width, height;
 
     gfxRect() {}
-    gfxRect(const gfxPoint& _pos, const gfxSize& _size) : pos(_pos), size(_size) {}
+    gfxRect(const gfxPoint& _pos, const gfxSize& _size) :
+        x(_pos.x), y(_pos.y), width(_size.width), height(_size.height) {}
     gfxRect(gfxFloat _x, gfxFloat _y, gfxFloat _width, gfxFloat _height) :
-        pos(_x, _y), size(_width, _height) {}
+        x(_x), y(_y), width(_width), height(_height) {}
 
     int operator==(const gfxRect& s) const {
-        return (pos == s.pos) && (size == s.size);
+        return x == s.x && y == s.y && width == s.width && height == s.height;
     }
     int operator!=(const gfxRect& s) const {
-        return (pos != s.pos) || (size != s.size);
+        return !(*this == s);
     }
 
-    void MoveTo(const gfxPoint& aPt) { pos = aPt; }
+    void MoveTo(const gfxPoint& aPt) { x = aPt.x; y = aPt.y; }
     const gfxRect& MoveBy(const gfxPoint& aPt) {
-        pos = pos + aPt;
+        x += aPt.x;
+        y += aPt.y;
         return *this;
     }
-    void SizeTo(const gfxSize& aSize) { size = aSize; }
+    void SizeTo(const gfxSize& aSize) { width = aSize.width; height = aSize.height; }
 
     gfxRect operator+(const gfxPoint& aPt) const {
-        return gfxRect(pos + aPt, size);
+        return gfxRect(x + aPt.x, y + aPt.y, width, height);
     }
     gfxRect operator-(const gfxPoint& aPt) const {
-        return gfxRect(pos - aPt, size);
+        return gfxRect(x - aPt.x, y - aPt.y, width, height);
     }
     gfxRect operator+(const gfxSize& aSize) const {
-        return gfxRect(pos + gfxPoint(aSize.width, aSize.height), size);
+        return gfxRect(x + aSize.width, y + aSize.height, width, height);
     }
     gfxRect operator-(const gfxSize& aSize) const {
-        return gfxRect(pos - gfxPoint(aSize.width, aSize.height), size);
+        return gfxRect(x - aSize.width, y - aSize.height, width, height);
     }
     gfxRect operator*(const gfxFloat aScale) const {
-        return gfxRect(pos * aScale, size * aScale);
+        return gfxRect(x * aScale, y * aScale, width * aScale, height * aScale);
     }
 
     const gfxRect& operator+=(const gfxPoint& aPt) {
-        pos += aPt;
+        x += aPt.x;
+        y += aPt.y;
         return *this;
     }
     const gfxRect& operator-=(const gfxPoint& aPt) {
-        pos -= aPt;
-        return *this;
-    }
-    const gfxRect& operator+=(const gfxSize& aSize) {
-        pos += gfxPoint(aSize.width, aSize.height);
-        return *this;
-    }
-    const gfxRect& operator-=(const gfxSize& aSize) {
-        pos -= gfxPoint(aSize.width, aSize.height);
+        x -= aPt.x;
+        y -= aPt.y;
         return *this;
     }
 
-    gfxFloat Width() const { return size.width; }
-    gfxFloat Height() const { return size.height; }
-    gfxFloat X() const { return pos.x; }
-    gfxFloat Y() const { return pos.y; }
-    gfxFloat XMost() const { return pos.x + size.width; }
-    gfxFloat YMost() const { return pos.y + size.height; }
+    gfxFloat Width() const { return width; }
+    gfxFloat Height() const { return height; }
+    gfxFloat X() const { return x; }
+    gfxFloat Y() const { return y; }
+    gfxFloat XMost() const { return x + width; }
+    gfxFloat YMost() const { return y + height; }
 
-    PRBool IsEmpty() const { return size.width <= 0 || size.height <= 0; }
+    PRBool IsEmpty() const { return width <= 0 || height <= 0; }
     gfxRect Intersect(const gfxRect& aRect) const;
     gfxRect Union(const gfxRect& aRect) const;
     PRBool Contains(const gfxRect& aRect) const;
@@ -151,20 +147,20 @@ struct THEBES_API gfxRect {
      */
     PRBool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
 
-    gfxSize Size() const { return size; }
+    gfxSize Size() const { return gfxSize(width, height); }
 
     void Inset(gfxFloat k) {
-        pos.x += k;
-        pos.y += k;
-        size.width = PR_MAX(0.0, size.width - k * 2.0);
-        size.height = PR_MAX(0.0, size.height - k * 2.0);
+        x += k;
+        y += k;
+        width = PR_MAX(0.0, width - k * 2.0);
+        height = PR_MAX(0.0, height - k * 2.0);
     }
 
     void Inset(gfxFloat top, gfxFloat right, gfxFloat bottom, gfxFloat left) {
-        pos.x += left;
-        pos.y += top;
-        size.width = PR_MAX(0.0, size.width - (right+left));
-        size.height = PR_MAX(0.0, size.height - (bottom+top));
+        x += left;
+        y += top;
+        width = PR_MAX(0.0, width - (right+left));
+        height = PR_MAX(0.0, height - (bottom+top));
     }
 
     void Inset(const gfxFloat *sides) {
@@ -176,17 +172,17 @@ struct THEBES_API gfxRect {
     }
 
     void Outset(gfxFloat k) {
-        pos.x -= k;
-        pos.y -= k;
-        size.width = PR_MAX(0.0, size.width + k * 2.0);
-        size.height = PR_MAX(0.0, size.height + k * 2.0);
+        x -= k;
+        y -= k;
+        width = PR_MAX(0.0, width + k * 2.0);
+        height = PR_MAX(0.0, height + k * 2.0);
     }
 
     void Outset(gfxFloat top, gfxFloat right, gfxFloat bottom, gfxFloat left) {
-        pos.x -= left;
-        pos.y -= top;
-        size.width = PR_MAX(0.0, size.width + (right+left));
-        size.height = PR_MAX(0.0, size.height + (bottom+top));
+        x -= left;
+        y -= top;
+        width = PR_MAX(0.0, width + (right+left));
+        height = PR_MAX(0.0, height + (bottom+top));
     }
 
     void Outset(const gfxFloat *sides) {
@@ -219,11 +215,11 @@ struct THEBES_API gfxRect {
     void RoundOut();
 
     // grabbing specific points
-    gfxPoint TopLeft() const { return gfxPoint(pos); }
-    gfxPoint TopRight() const { return pos + gfxPoint(size.width, 0.0); }
-    gfxPoint BottomLeft() const { return pos + gfxPoint(0.0, size.height); }
-    gfxPoint BottomRight() const { return pos + gfxPoint(size.width, size.height); }
-    gfxPoint Center() const { return pos + gfxPoint(size.width, size.height)/2.0; }
+    gfxPoint TopLeft() const { return gfxPoint(x, y); }
+    gfxPoint TopRight() const { return gfxPoint(x, y) + gfxPoint(width, 0.0); }
+    gfxPoint BottomLeft() const { return gfxPoint(x, y) + gfxPoint(0.0, height); }
+    gfxPoint BottomRight() const { return gfxPoint(x, y) + gfxPoint(width, height); }
+    gfxPoint Center() const { return gfxPoint(x, y) + gfxPoint(width, height)/2.0; }
 
     gfxPoint AtCorner(mozilla::css::Corner corner) const {
         switch (corner) {
@@ -272,27 +268,27 @@ struct THEBES_API gfxRect {
 
     void Scale(gfxFloat k) {
         NS_ASSERTION(k >= 0.0, "Invalid (negative) scale factor");
-        pos.x *= k;
-        pos.y *= k;
-        size.width *= k;
-        size.height *= k;
+        x *= k;
+        y *= k;
+        width *= k;
+        height *= k;
     }
 
     void Scale(gfxFloat sx, gfxFloat sy) {
         NS_ASSERTION(sx >= 0.0, "Invalid (negative) scale factor");
         NS_ASSERTION(sy >= 0.0, "Invalid (negative) scale factor");
-        pos.x *= sx;
-        pos.y *= sy;
-        size.width *= sx;
-        size.height *= sy;
+        x *= sx;
+        y *= sy;
+        width *= sx;
+        height *= sy;
     }
 
     void ScaleInverse(gfxFloat k) {
         NS_ASSERTION(k > 0.0, "Invalid (negative) scale factor");
-        pos.x /= k;
-        pos.y /= k;
-        size.width /= k;
-        size.height /= k;
+        x /= k;
+        y /= k;
+        width /= k;
+        height /= k;
     }
 };
 

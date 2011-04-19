@@ -1193,19 +1193,19 @@ nsSVGUtils::GetClipRectForFrame(nsIFrame *aFrame,
       gfxRect(clipPxRect.x, clipPxRect.y, clipPxRect.width, clipPxRect.height);
 
     if (NS_STYLE_CLIP_RIGHT_AUTO & disp->mClipFlags) {
-      clipRect.size.width = aWidth - clipRect.X();
+      clipRect.width = aWidth - clipRect.X();
     }
     if (NS_STYLE_CLIP_BOTTOM_AUTO & disp->mClipFlags) {
-      clipRect.size.height = aHeight - clipRect.Y();
+      clipRect.height = aHeight - clipRect.Y();
     }
 
     if (disp->mOverflowX != NS_STYLE_OVERFLOW_HIDDEN) {
-      clipRect.pos.x = aX;
-      clipRect.size.width = aWidth;
+      clipRect.x = aX;
+      clipRect.width = aWidth;
     }
     if (disp->mOverflowY != NS_STYLE_OVERFLOW_HIDDEN) {
-      clipRect.pos.y = aY;
-      clipRect.size.height = aHeight;
+      clipRect.y = aY;
+      clipRect.height = aHeight;
     }
      
     return clipRect;

@@ -275,7 +275,7 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
       // GetUserStrokeExtent gets the extents wrong we can still use it
       // to get the device space position of zero length stroked paths.
       extent = context->GetUserStrokeExtent();
-      extent += extent.Size()/2;
+      extent += gfxPoint(extent.width, extent.height)/2;
       extent.SizeTo(gfxSize(0, 0));
     }
     extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);

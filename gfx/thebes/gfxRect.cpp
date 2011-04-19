@@ -97,10 +97,10 @@ PRBool
 gfxRect::WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const
 {
     NS_ASSERTION(-0.5 < aEpsilon && aEpsilon < 0.5, "Nonsense epsilon value");
-    return (WithinEpsilonOfInteger(pos.x, aEpsilon) &&
-            WithinEpsilonOfInteger(pos.y, aEpsilon) &&
-            WithinEpsilonOfInteger(size.width, aEpsilon) &&
-            WithinEpsilonOfInteger(size.height, aEpsilon));
+    return (WithinEpsilonOfInteger(x, aEpsilon) &&
+            WithinEpsilonOfInteger(y, aEpsilon) &&
+            WithinEpsilonOfInteger(width, aEpsilon) &&
+            WithinEpsilonOfInteger(height, aEpsilon));
 }
 
 void
@@ -112,11 +112,11 @@ gfxRect::Round()
     gfxFloat x1 = NS_floor(XMost() + 0.5);
     gfxFloat y1 = NS_floor(YMost() + 0.5);
 
-    pos.x = x0;
-    pos.y = y0;
+    x = x0;
+    y = y0;
 
-    size.width = x1 - x0;
-    size.height = y1 - y0;
+    width = x1 - x0;
+    height = y1 - y0;
 }
 
 void
@@ -127,11 +127,11 @@ gfxRect::RoundIn()
     gfxFloat x1 = NS_floor(XMost());
     gfxFloat y1 = NS_floor(YMost());
 
-    pos.x = x0;
-    pos.y = y0;
+    x = x0;
+    y = y0;
 
-    size.width = x1 - x0;
-    size.height = y1 - y0;
+    width = x1 - x0;
+    height = y1 - y0;
 }
 
 void
@@ -142,11 +142,11 @@ gfxRect::RoundOut()
     gfxFloat x1 = NS_ceil(XMost());
     gfxFloat y1 = NS_ceil(YMost());
 
-    pos.x = x0;
-    pos.y = y0;
+    x = x0;
+    y = y0;
 
-    size.width = x1 - x0;
-    size.height = y1 - y0;
+    width = x1 - x0;
+    height = y1 - y0;
 }
 
 /* Clamp r to CAIRO_COORD_MIN .. CAIRO_COORD_MAX
@@ -164,35 +164,35 @@ gfxRect::Condition()
 {
     // if either x or y is way out of bounds;
     // note that we don't handle negative w/h here
-    if (pos.x > CAIRO_COORD_MAX) {
-        pos.x = CAIRO_COORD_MAX;
-        size.width = 0.0;
+    if (x > CAIRO_COORD_MAX) {
+        x = CAIRO_COORD_MAX;
+        width = 0.0;
     } 
 
-    if (pos.y > CAIRO_COORD_MAX) {
-        pos.y = CAIRO_COORD_MAX;
-        size.height = 0.0;
+    if (y > CAIRO_COORD_MAX) {
+        y = CAIRO_COORD_MAX;
+        height = 0.0;
     }
 
-    if (pos.x < CAIRO_COORD_MIN) {
-        size.width += pos.x - CAIRO_COORD_MIN;
-        if (size.width < 0.0)
-            size.width = 0.0;
-        pos.x = CAIRO_COORD_MIN;
+    if (x < CAIRO_COORD_MIN) {
+        width += x - CAIRO_COORD_MIN;
+        if (width < 0.0)
+            width = 0.0;
+        x = CAIRO_COORD_MIN;
     }
 
-    if (pos.y < CAIRO_COORD_MIN) {
-        size.height += pos.y - CAIRO_COORD_MIN;
-        if (size.height < 0.0)
-            size.height = 0.0;
-        pos.y = CAIRO_COORD_MIN;
+    if (y < CAIRO_COORD_MIN) {
+        height += y - CAIRO_COORD_MIN;
+        if (height < 0.0)
+            height = 0.0;
+        y = CAIRO_COORD_MIN;
     }
 
-    if (pos.x + size.width > CAIRO_COORD_MAX) {
-        size.width = CAIRO_COORD_MAX - pos.x;
+    if (x + width > CAIRO_COORD_MAX) {
+        width = CAIRO_COORD_MAX - x;
     }
 
-    if (pos.y + size.height > CAIRO_COORD_MAX) {
-        size.height = CAIRO_COORD_MAX - pos.y;
+    if (y + height > CAIRO_COORD_MAX) {
+        height = CAIRO_COORD_MAX - y;
     }
 }
