@@ -67,8 +67,6 @@ struct Registers {
     static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
 #elif defined(JS_CPU_ARM)
     static const RegisterID JSFrameReg = JSC::ARMRegisters::r11;
-#elif defined(JS_CPU_SPARC)
-    static const RegisterID JSFrameReg = JSC::SparcRegisters::l0;
 #endif
 
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
@@ -89,14 +87,6 @@ struct Registers {
     static const RegisterID ArgReg0 = JSC::ARMRegisters::r0;
     static const RegisterID ArgReg1 = JSC::ARMRegisters::r1;
     static const RegisterID ArgReg2 = JSC::ARMRegisters::r2;
-#elif JS_CPU_SPARC
-    static const RegisterID ReturnReg = JSC::SparcRegisters::o0;
-    static const RegisterID ArgReg0 = JSC::SparcRegisters::o0;
-    static const RegisterID ArgReg1 = JSC::SparcRegisters::o1;
-    static const RegisterID ArgReg2 = JSC::SparcRegisters::o2;
-    static const RegisterID ArgReg3 = JSC::SparcRegisters::o3;
-    static const RegisterID ArgReg4 = JSC::SparcRegisters::o4;
-    static const RegisterID ArgReg5 = JSC::SparcRegisters::o5;
 #endif
 
     static const RegisterID StackPointer = JSC::MacroAssembler::stackPointerRegister;
@@ -178,30 +168,6 @@ struct Registers {
     // r15 is PC (program counter).
 
     static const uint32 SingleByteRegs = TempRegs | SavedRegs;
-#elif defined(JS_CPU_SPARC)
-    static const uint32 TempRegs =
-          (1 << JSC::SparcRegisters::o0)
-        | (1 << JSC::SparcRegisters::o1)
-        | (1 << JSC::SparcRegisters::o2)
-        | (1 << JSC::SparcRegisters::o3)
-        | (1 << JSC::SparcRegisters::o4)
-        | (1 << JSC::SparcRegisters::o5);
-
-    static const uint32 SavedRegs =
-          (1 << JSC::SparcRegisters::l2)
-        | (1 << JSC::SparcRegisters::l3)
-        | (1 << JSC::SparcRegisters::l4)
-        | (1 << JSC::SparcRegisters::l5)
-        | (1 << JSC::SparcRegisters::l6)
-        | (1 << JSC::SparcRegisters::l7)
-        | (1 << JSC::SparcRegisters::i0)
-        | (1 << JSC::SparcRegisters::i1)
-        | (1 << JSC::SparcRegisters::i2)
-        | (1 << JSC::SparcRegisters::i3)
-        | (1 << JSC::SparcRegisters::i4)
-        | (1 << JSC::SparcRegisters::i5);
-
-    static const uint32 SingleByteRegs = TempRegs | SavedRegs;
 #else
 # error "Unsupported platform"
 #endif
@@ -229,8 +195,6 @@ struct Registers {
 # endif
 #elif defined(JS_CPU_ARM)
         return 4;
-#elif defined(JS_CPU_SPARC)
-        return 6;
 #endif
     }
 
@@ -271,15 +235,6 @@ struct Registers {
             JSC::ARMRegisters::r1,
             JSC::ARMRegisters::r2,
             JSC::ARMRegisters::r3
-        };
-#elif defined(JS_CPU_SPARC)
-        static const RegisterID regs[] = {
-            JSC::SparcRegisters::o0,
-            JSC::SparcRegisters::o1,
-            JSC::SparcRegisters::o2,
-            JSC::SparcRegisters::o3,
-            JSC::SparcRegisters::o4,
-            JSC::SparcRegisters::o5
         };
 #endif
         JS_ASSERT(numArgRegs(conv) == JS_ARRAY_LENGTH(regs));
@@ -407,27 +362,6 @@ struct FPRegisters {
     static const FPRegisterID Second = JSC::ARMRegisters::d1;
     static const FPRegisterID Temp0 = JSC::ARMRegisters::d2;
     static const FPRegisterID Temp1 = JSC::ARMRegisters::d3;
-#elif defined(JS_CPU_SPARC)
-    static const uint32 TotalFPRegisters = 16;
-    static const uint32 TempFPRegs = 
-          (1 << JSC::SparcRegisters::f0)
-        | (1 << JSC::SparcRegisters::f2)
-        | (1 << JSC::SparcRegisters::f4)
-        | (1 << JSC::SparcRegisters::f6)
-        | (1 << JSC::SparcRegisters::f8)
-        | (1 << JSC::SparcRegisters::f10)
-        | (1 << JSC::SparcRegisters::f12)
-        | (1 << JSC::SparcRegisters::f14)
-        | (1 << JSC::SparcRegisters::f16)
-        | (1 << JSC::SparcRegisters::f18)
-        | (1 << JSC::SparcRegisters::f20)
-        | (1 << JSC::SparcRegisters::f22)
-        | (1 << JSC::SparcRegisters::f24)
-        | (1 << JSC::SparcRegisters::f26)
-        | (1 << JSC::SparcRegisters::f28);
-    /* FIXME: Temporary hack until FPRegister allocation exists. */
-    static const FPRegisterID First  = JSC::SparcRegisters::f0;
-    static const FPRegisterID Second = JSC::SparcRegisters::f2;
 #else
 # error "Unsupported platform"
 #endif
