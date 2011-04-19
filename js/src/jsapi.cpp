@@ -84,6 +84,7 @@
 #include "prmjtime.h"
 #include "jsstaticcheck.h"
 #include "jsvector.h"
+#include "jsweakmap.h"
 #include "jswrapper.h"
 #include "jstypedarray.h"
 
@@ -1176,7 +1177,7 @@ JS_ToggleOptions(JSContext *cx, uint32 options)
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
-    return "JavaScript-C 1.8.0 pre-release 1 2007-10-03";
+    return "JavaScript-C 1.8.5+ 2011-04-16";
 }
 
 JS_PUBLIC_API(JSCompartmentCallback)
@@ -1683,6 +1684,7 @@ static JSStdName standard_class_atoms[] = {
 #endif
     {js_InitJSONClass,                  EAGER_ATOM_AND_CLASP(JSON)},
     {js_InitTypedArrayClasses,          EAGER_CLASS_ATOM(ArrayBuffer), &js::ArrayBuffer::jsclass},
+    {js_InitWeakMapClass,               EAGER_CLASS_ATOM(WeakMap), &WeakMap::jsclass},
     {NULL,                              0, NULL, NULL}
 };
 
@@ -2064,7 +2066,10 @@ JS_PUBLIC_API(jsval)
 JS_ComputeThis(JSContext *cx, jsval *vp)
 {
     assertSameCompartment(cx, JSValueArray(vp, 2));
-    return BoxThisForVp(cx, Valueify(vp)) ? vp[1] : JSVAL_NULL;
+    CallReceiver call = CallReceiverFromVp(Valueify(vp));
+    if (!BoxNonStrictThis(cx, call))
+        return JSVAL_NULL;
+    return Jsvalify(call.thisv());
 }
 
 JS_PUBLIC_API(void *)
@@ -4058,7 +4063,7 @@ JS_Enumerate(JSContext *cx, JSObject *obj)
     AutoIdVector props(cx);
     JSIdArray *ida;
     if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props) || !VectorToIdArray(cx, props, &ida))
-        return false;
+        return NULL;
     for (size_t n = 0; n < size_t(ida->length); ++n)
         JS_ASSERT(js_CheckForStringIndex(ida->vector[n]) == ida->vector[n]);
     return ida;
@@ -4840,7 +4845,7 @@ JS_CompileScript(JSContext *cx, JSObject *obj, const char *bytes, size_t length,
 }
 
 JS_PUBLIC_API(JSBool)
-JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *bytes, size_t length)
+JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8, JSObject *obj, const char *bytes, size_t length)
 {
     jschar *chars;
     JSBool result;
@@ -4849,7 +4854,10 @@ JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj, const char *bytes, size_
 
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj);
-    chars = js_InflateString(cx, bytes, &length);
+    if (bytes_are_utf8)
+        chars = js_InflateString(cx, bytes, &length, JS_TRUE);
+    else
+        chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return JS_TRUE;
 
@@ -5223,7 +5231,7 @@ JS_ExecuteScript(JSContext *cx, JSObject *obj, JSObject *scriptObj, jsval *rval)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, scriptObj);
 
-    JSBool ok = Execute(cx, obj, scriptObj->getScript(), NULL, 0, Valueify(rval));
+    JSBool ok = Execute(cx, *obj, scriptObj->getScript(), NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
     return ok;
 }
@@ -5258,7 +5266,7 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
     script->isUncachedEval = true;
 
     JS_ASSERT(script->getVersion() == compileVersion);
-    bool ok = Execute(cx, obj, script, NULL, 0, Valueify(rval));
+    bool ok = Execute(cx, *obj, script, NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
 
     js_DestroyScript(cx, script);
@@ -5407,7 +5415,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     if (!cx->stack().pushInvokeArgs(cx, argc, &args))
         return NULL;
 
-    args.callee().setObject(*ctor);
+    args.calleev().setObject(*ctor);
     args.thisv().setNull();
     memcpy(args.argv(), argv, argc * sizeof(jsval));
 
@@ -5756,6 +5764,13 @@ JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst, size_
     return js_InflateStringToBuffer(cx, src, srclen, dst, dstlenp);
 }
 
+JS_PUBLIC_API(JSBool)
+JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
+              size_t *dstlenp)
+{
+    return js_InflateUTF8StringToBuffer(cx, src, srclen, dst, dstlenp);
+}
+
 JS_PUBLIC_API(char *)
 JS_EncodeString(JSContext *cx, JSString *str)
 {
@@ -5820,28 +5835,6 @@ JS_TryJSON(JSContext *cx, jsval *vp)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, *vp);
     return js_TryJSON(cx, Valueify(vp));
-}
-
-JS_PUBLIC_API(JSONParser *)
-JS_BeginJSONParse(JSContext *cx, jsval *vp)
-{
-    CHECK_REQUEST(cx);
-    return js_BeginJSONParse(cx, Valueify(vp));
-}
-
-JS_PUBLIC_API(JSBool)
-JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len)
-{
-    CHECK_REQUEST(cx);
-    return js_ConsumeJSONText(cx, jp, data, len);
-}
-
-JS_PUBLIC_API(JSBool)
-JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver)
-{
-    CHECK_REQUEST(cx);
-    assertSameCompartment(cx, reviver);
-    return js_FinishJSONParse(cx, jp, Valueify(reviver));
 }
 
 JS_PUBLIC_API(JSBool)

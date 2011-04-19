@@ -763,9 +763,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
             shape->parent->setTable(NULL);
             shape->setTable(table);
         }
-#ifdef DEBUG
-        LIVE_SCOPE_METER(cx, ++cx->runtime->liveObjectProps);
-#endif
+
         CHECK_SHAPE_CONSISTENCY(this);
         METER(adds);
         return shape;
@@ -1219,7 +1217,6 @@ JSObject::removeProperty(JSContext *cx, jsid id)
     }
 
     CHECK_SHAPE_CONSISTENCY(this);
-    LIVE_SCOPE_METER(cx, --cx->runtime->liveObjectProps);
     METER(removes);
     return true;
 }
@@ -1227,8 +1224,6 @@ JSObject::removeProperty(JSContext *cx, jsid id)
 void
 JSObject::clear(JSContext *cx)
 {
-    LIVE_SCOPE_METER(cx, cx->runtime->liveObjectProps -= propertyCount());
-
     Shape *shape = lastProp;
     JS_ASSERT(inDictionaryMode() == shape->inDictionary());
 
@@ -1288,7 +1283,7 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
     if (shape.isMethod()) {
 #ifdef DEBUG
         const Value &prev = nativeGetSlot(shape.slot);
-        JS_ASSERT(&shape.methodObject() == &prev.toObject());
+        JS_ASSERT(shape.methodObject() == prev.toObject());
         JS_ASSERT(canHaveMethodBarrier());
         JS_ASSERT(hasMethodBarrier());
         JS_ASSERT(!shape.rawSetter || shape.rawSetter == js_watch_set);

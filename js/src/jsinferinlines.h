@@ -505,10 +505,10 @@ JSContext::typeMonitorAssign(JSObject *obj, jsid id, const js::Value &rval)
 inline bool
 JSContext::typeMonitorCall(const js::CallArgs &args, bool constructing)
 {
-    if (!typeInferenceEnabled() || !args.callee().isObject())
+    if (!typeInferenceEnabled())
         return true;
 
-    JSObject *callee = &args.callee().toObject();
+    JSObject *callee = &args.callee();
     if (!callee->isFunction() || !callee->getFunctionPrivate()->isInterpreted())
         return true;
 

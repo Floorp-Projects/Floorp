@@ -134,7 +134,7 @@ JSStackFrame::resetInvokeCallFrame()
                            JSFRAME_HAS_HOOK_DATA |
                            JSFRAME_HAS_CALL_OBJ |
                            JSFRAME_HAS_ARGS_OBJ |
-                           JSFRAME_FINISHED_IN_INTERPRETER)));
+                           JSFRAME_FINISHED_IN_INTERP)));
 
     /*
      * Since the stack frame is usually popped after PutActivationObjects,
@@ -373,29 +373,6 @@ JSStackFrame::clearMissingArgs()
         SetValueRangeToUndefined(formalArgs() + numActualArgs(), formalArgsEnd());
 }
 
-inline bool
-JSStackFrame::computeThis(JSContext *cx)
-{
-    js::Value &thisv = thisValue();
-    if (thisv.isObject())
-        return true;
-    if (isFunctionFrame()) {
-        if (fun()->inStrictMode())
-            return true;
-        /*
-         * Eval function frames have their own |this| slot, which is a copy of the function's
-         * |this| slot. If we lazily wrap a primitive |this| in an eval function frame, the
-         * eval's frame will get the wrapper, but the function's frame will not. To prevent
-         * this, we always wrap a function's |this| before pushing an eval frame, and should
-         * thus never see an unwrapped primitive in a non-strict eval function frame.
-         */
-        JS_ASSERT(!isEvalFrame());
-    }
-    if (!js::BoxThisForVp(cx, &thisv - 1))
-        return false;
-    return true;
-}
-
 inline JSObject &
 JSStackFrame::varobj(js::StackSegment *seg) const
 {
@@ -583,6 +560,9 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     formals_[-2] = savedCallee_;
     formals_[-1] = savedThis_;
 
+    /* Prevent spurious accessing-callee-after-rval assert. */
+    args_.calleeHasBeenReset();
+
     if (!optimized())
         return Invoke(cx, args_, 0);
 
@@ -655,6 +635,27 @@ class PrimitiveBehavior<double> {
 };
 
 } // namespace detail
+
+template <typename T>
+bool
+GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
+{
+    typedef detail::PrimitiveBehavior<T> Behavior;
+
+    const Value &thisv = vp[1];
+    if (Behavior::isType(thisv)) {
+        *v = Behavior::extract(thisv);
+        return true;
+    }
+
+    if (thisv.isObject() && thisv.toObject().getClass() == Behavior::getClass()) {
+        *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
+        return true;
+    }
+
+    ReportIncompatibleMethod(cx, vp, Behavior::getClass());
+    return false;
+}
 
 /*
  * Compute the implicit |this| parameter for a call expression where the callee
@@ -733,25 +734,25 @@ ComputeImplicitThis(JSContext *cx, JSObject *obj, const Value &funval, Value *vp
     return true;
 }
 
-template <typename T>
-bool
-GetPrimitiveThis(JSContext *cx, Value *vp, T *v)
+inline bool
+ComputeThis(JSContext *cx, JSStackFrame *fp)
 {
-    typedef detail::PrimitiveBehavior<T> Behavior;
-
-    const Value &thisv = vp[1];
-    if (Behavior::isType(thisv)) {
-        *v = Behavior::extract(thisv);
+    Value &thisv = fp->thisValue();
+    if (thisv.isObject())
         return true;
+    if (fp->isFunctionFrame()) {
+        if (fp->fun()->inStrictMode())
+            return true;
+        /*
+         * Eval function frames have their own |this| slot, which is a copy of the function's
+         * |this| slot. If we lazily wrap a primitive |this| in an eval function frame, the
+         * eval's frame will get the wrapper, but the function's frame will not. To prevent
+         * this, we always wrap a function's |this| before pushing an eval frame, and should
+         * thus never see an unwrapped primitive in a non-strict eval function frame.
+         */
+        JS_ASSERT(!fp->isEvalFrame());
     }
-
-    if (thisv.isObject() && thisv.toObject().getClass() == Behavior::getClass()) {
-        *v = Behavior::extract(thisv.toObject().getPrimitiveThis());
-        return true;
-    }
-
-    ReportIncompatibleMethod(cx, vp, Behavior::getClass());
-    return false;
+    return BoxNonStrictThis(cx, fp->callReceiver());
 }
 
 /*
