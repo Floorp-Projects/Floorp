@@ -128,6 +128,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_611795.js \
 	browser_webconsole_bug_618311_close_panels.js \
 	browser_webconsole_bug_618311_private_browsing.js \
+	browser_webconsole_bug_626484_output_copy_order.js \
 	browser_webconsole_bug_632347_iterators_generators.js \
 	browser_webconsole_bug_642108_refForOutputNode.js \
 	browser_webconsole_bug_642108_pruneTest.js \
