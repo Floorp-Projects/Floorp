@@ -221,7 +221,7 @@ TableBackgroundPainter::TableBackgroundData::SetBCBorder(nsMargin& aBorder,
   }
 
   NS_FOR_CSS_SIDES(side) {
-    mSynthBorder->SetBorderWidth(side, aBorder.side(side));
+    mSynthBorder->SetBorderWidth(side, aBorder.Side(side));
   }
   
   mBorder = mSynthBorder;
