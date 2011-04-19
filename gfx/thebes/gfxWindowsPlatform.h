@@ -236,8 +236,6 @@ public:
 
     static void GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion);
 
-    static void GetFontCacheSize(nsAString& aSize);
-
     virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
 
 #ifdef CAIRO_HAS_DWRITE_FONT

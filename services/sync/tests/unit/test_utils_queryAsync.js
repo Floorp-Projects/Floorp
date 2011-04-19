@@ -1,7 +1,11 @@
 _("Make sure queryAsync will synchronously fetch rows for a query asyncly");
 Cu.import("resource://services-sync/util.js");
 
+const SQLITE_CONSTRAINT_VIOLATION = 19;  // http://www.sqlite.org/c3ref/c_abort.html
+
 function run_test() {
+  initTestLogging("Trace");
+
   _("Using the form service to test queries");
   function c(query) Svc.Form.DBConnection.createStatement(query);
 
@@ -64,14 +68,14 @@ function run_test() {
   do_check_eq(r10.length, 3);
 
   _("Generate an execution error");
-  let r11, except, query = c("UPDATE moz_formhistory SET value = NULL WHERE fieldname = 'more'");
+  let r11, except, query = c("INSERT INTO moz_formhistory (fieldname, value) VALUES ('one', NULL)");
   try {
     r11 = Utils.queryAsync(query);
   } catch(e) {
     except = e;
   }
   do_check_true(!!except);
-  do_check_eq(except.result, 19); // constraint violation error
+  do_check_eq(except.result, SQLITE_CONSTRAINT_VIOLATION);
 
   _("Cleaning up");
   Utils.queryAsync(c("DELETE FROM moz_formhistory"));
