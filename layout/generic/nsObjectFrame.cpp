@@ -4290,7 +4290,7 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
 PRBool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
 {
-  if (mInstance)
+  if (!mInstance)
     return PR_FALSE;
 
   PRBool coreAnimation;
