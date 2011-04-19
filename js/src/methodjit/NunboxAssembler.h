@@ -72,24 +72,16 @@ struct ImmPayload : JSC::MacroAssembler::Imm32
 
 class NunboxAssembler : public JSC::MacroAssembler
 {
-  public:
-#ifdef IS_BIG_ENDIAN
-    static const uint32 PAYLOAD_OFFSET = 4;
-    static const uint32 TAG_OFFSET     = 0;
-#else
     static const uint32 PAYLOAD_OFFSET = 0;
     static const uint32 TAG_OFFSET     = 4;
-#endif
 
   public:
     static const JSC::MacroAssembler::Scale JSVAL_SCALE = JSC::MacroAssembler::TimesEight;
 
-    Address payloadOf(Address address) {
-        return Address(address.base, address.offset + PAYLOAD_OFFSET);
-    }
-  
-    BaseIndex payloadOf(BaseIndex address) {
-        return BaseIndex(address.base, address.index, address.scale, address.offset + PAYLOAD_OFFSET);
+    template <typename T>
+    T payloadOf(T address) {
+        JS_ASSERT(PAYLOAD_OFFSET == 0);
+        return address;
     }
 
     Address tagOf(Address address) {
@@ -193,7 +185,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         JS_ASSERT(differenceBetween(start, endType) == 6);
         JS_ASSERT(differenceBetween(endType, endPayload) == 6);
         return start;
-#elif defined JS_CPU_ARM || defined JS_CPU_SPARC
+#elif defined JS_CPU_ARM
         /* 
          * On ARM, the first instruction loads the offset from a literal pool, so the label
          * returned points at that instruction.
@@ -225,7 +217,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         JS_ASSERT(differenceBetween(start, endType) == 6);
         JS_ASSERT(differenceBetween(endType, endPayload) == 6);
         return start;
-#elif defined JS_CPU_ARM || defined JS_CPU_SPARC
+#elif defined JS_CPU_ARM
         return store64WithAddressOffsetPatch(treg, dreg, address);
 #endif
     }
@@ -241,7 +233,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         JS_ASSERT(differenceBetween(start, endType) == 10);
         JS_ASSERT(differenceBetween(endType, endPayload) == 6);
         return start;
-#elif defined JS_CPU_ARM || defined JS_CPU_SPARC
+#elif defined JS_CPU_ARM
         return store64WithAddressOffsetPatch(type, dreg, address);
 #endif
     }
@@ -261,7 +253,7 @@ class NunboxAssembler : public JSC::MacroAssembler
         JS_ASSERT(differenceBetween(start, endType) == 10);
         JS_ASSERT(differenceBetween(endType, endPayload) == 10);
         return start;
-#elif defined JS_CPU_ARM || defined JS_CPU_SPARC
+#elif defined JS_CPU_ARM
         return store64WithAddressOffsetPatch(type, payload, address);
 #endif
     }
@@ -328,7 +320,7 @@ class NunboxAssembler : public JSC::MacroAssembler
     }
 
     void loadPrivate(Address privAddr, RegisterID to) {
-        loadPtr(payloadOf(privAddr), to);
+        loadPtr(privAddr, to);
     }
 
     void loadObjPrivate(RegisterID base, RegisterID to) {
@@ -443,8 +435,6 @@ class NunboxAssembler : public JSC::MacroAssembler
         m_assembler.movd_rr(srcDest, dataReg);
         m_assembler.psrldq_rr(srcDest, 4);
         m_assembler.movd_rr(srcDest, typeReg);
-#elif defined JS_CPU_SPARC
-        breakDoubleTo32(srcDest, typeReg, dataReg);
 #else
         JS_NOT_REACHED("implement this - push double, pop pop is easiest");
 #endif

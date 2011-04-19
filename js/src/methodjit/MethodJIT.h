@@ -45,7 +45,6 @@
 
 #if !defined JS_CPU_X64 && \
     !defined JS_CPU_X86 && \
-    !defined JS_CPU_SPARC && \
     !defined JS_CPU_ARM
 # error "Oh no, you should define a platform so this compiles."
 #endif
@@ -60,39 +59,6 @@ namespace mjit { struct JITScript; }
 
 struct VMFrame
 {
-#if defined(JS_CPU_SPARC)
-    void *savedL0;
-    void *savedL1;
-    void *savedL2;
-    void *savedL3;
-    void *savedL4;
-    void *savedL5;
-    void *savedL6;
-    void *savedL7;
-    void *savedI0;
-    void *savedI1;
-    void *savedI2;
-    void *savedI3;
-    void *savedI4;
-    void *savedI5;
-    void *savedI6;
-    void *savedI7;
-
-    void *str_p;
-
-    void *outgoing_p0;
-    void *outgoing_p1;
-    void *outgoing_p2;
-    void *outgoing_p3;
-    void *outgoing_p4;
-    void *outgoing_p5;
-
-    void *outgoing_p6;
-
-    void *reserve_0;
-    void *reserve_1;
-#endif
-
     union Arguments {
         struct {
             void *ptr;
@@ -164,13 +130,6 @@ struct VMFrame
 
     inline void** returnAddressLocation() {
         return reinterpret_cast<void**>(this) - 1;
-    }
-#elif defined(JS_CPU_SPARC)
-    JSStackFrame *topRetrunAddr;
-    void* veneerReturn;
-    void* _align;
-    inline void** returnAddressLocation() {
-        return reinterpret_cast<void**>(&this->veneerReturn);
     }
 #else
 # error "The VMFrame layout isn't defined for your processor architecture!"

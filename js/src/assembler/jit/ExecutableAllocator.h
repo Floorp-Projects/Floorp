@@ -35,22 +35,6 @@
 #include "jsvector.h"
 #include "jslock.h"
 
-#if WTF_CPU_SPARC
-#ifdef linux  // bugzilla 502369
-static void sync_instruction_memory(caddr_t v, u_int len)
-{
-    caddr_t end = v + len;
-    caddr_t p = v;
-    while (p < end) {
-        asm("flush %0" : : "r" (p));
-        p += 32;
-    }
-}
-#else
-extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
-#endif
-#endif
-
 #if WTF_PLATFORM_IPHONE
 #include <libkern/OSCacheControl.h>
 #include <sys/mman.h>
@@ -409,11 +393,6 @@ public:
     static void cacheFlush(void* code, size_t size)
     {
         CacheRangeFlush(code, size, CACHE_SYNC_ALL);
-    }
-#elif WTF_CPU_SPARC
-    static void cacheFlush(void* code, size_t size)
-    {
-        sync_instruction_memory((caddr_t)code, size);
     }
 #else
     #error "The cacheFlush support is missing on this platform."

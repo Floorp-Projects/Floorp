@@ -1556,13 +1556,13 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         Assembler::Condition oppositeCond = (op == JSOP_STRICTEQ) ? Assembler::NotEqual : Assembler::Equal;
 
-#ifndef JS_CPU_X64
+#if defined JS_CPU_X86 || defined JS_CPU_ARM
         static const int CanonicalNaNType = 0x7FF80000;
         masm.setPtr(oppositeCond, treg, Imm32(CanonicalNaNType), result);
-#else
+#elif defined JS_CPU_X64
         static const void *CanonicalNaNType = (void *)0x7FF8000000000000; 
-        masm.move(ImmPtr(CanonicalNaNType), Registers::ScratchReg);
-        masm.setPtr(oppositeCond, treg, Registers::ScratchReg, result);
+        masm.move(ImmPtr(CanonicalNaNType), JSC::X86Registers::r11);
+        masm.setPtr(oppositeCond, treg, JSC::X86Registers::r11, result);
 #endif
 
         frame.popn(2);
@@ -1585,13 +1585,13 @@ mjit::Compiler::jsop_stricteq(JSOp op)
 
         /* This is only true if the other side is |null|. */
         RegisterID result = frame.allocReg(Registers::SingleByteRegs);
-#ifndef JS_CPU_X64
+#if defined JS_CPU_X86 || defined JS_CPU_ARM
         JSValueTag mask = known->getKnownTag();
         if (frame.shouldAvoidTypeRemat(test))
             masm.set32(cond, masm.tagOf(frame.addressOf(test)), Imm32(mask), result);
         else
             masm.set32(cond, frame.tempRegForType(test), Imm32(mask), result);
-#else
+#elif defined JS_CPU_X64
         RegisterID maskReg = frame.allocReg();
         masm.move(ImmTag(known->getKnownTag()), maskReg);
 
@@ -1667,7 +1667,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         return;
     }
 
-#if !defined JS_CPU_ARM && !defined JS_CPU_SPARC
+#ifndef JS_CPU_ARM
     /* Try an integer fast-path. */
     bool needStub = false;
     if (!lhs->isTypeKnown()) {

@@ -46,7 +46,7 @@
 namespace js {
 namespace mjit {
 
-#ifdef JS_POLYIC_TYPED_ARRAY
+#if defined(JS_POLYIC) && (defined JS_CPU_X86 || defined JS_CPU_X64)
 
 typedef JSC::MacroAssembler::RegisterID RegisterID;
 typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
