@@ -178,7 +178,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   // really need it or not, and the inner view will get it as the
   // parent.
   if (!HasView()) {
-    rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
+    rv = nsContainerFrame::CreateViewForFrame(this, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

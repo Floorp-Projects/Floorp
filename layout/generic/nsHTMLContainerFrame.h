@@ -72,23 +72,6 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   /**
-   * Helper method to wrap views around frames. Used by containers
-   * under special circumstances (can be used by leaf frames as well)
-   */
-  static nsresult CreateViewForFrame(nsIFrame* aFrame,
-                                     PRBool aForce);
-
-  static nsresult ReparentFrameView(nsPresContext* aPresContext,
-                                    nsIFrame*       aChildFrame,
-                                    nsIFrame*       aOldParentFrame,
-                                    nsIFrame*       aNewParentFrame);
-
-  static nsresult ReparentFrameViewList(nsPresContext*     aPresContext,
-                                        const nsFrameList& aChildFrameList,
-                                        nsIFrame*          aOldParentFrame,
-                                        nsIFrame*          aNewParentFrame);
-
-  /**
    * Helper method to create next-in-flows if necessary. If aFrame
    * already has a next-in-flow then this method does
    * nothing. Otherwise, a new continuation frame is created and
