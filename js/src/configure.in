@@ -568,17 +568,9 @@ fi
 
 dnl Special win32 checks
 dnl ========================================================
-case "$target" in
-*-wince|*-winmo)
-    WINVER=500
-    WINSDK_TARGETVER=502
-    ;;
-*)
-    WINVER=502
-    dnl Target the Windows 7 SDK by default
-    WINSDK_TARGETVER=601
-    ;;
-esac
+WINVER=502
+dnl Target the Windows 7 SDK by default
+WINSDK_TARGETVER=601
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
@@ -600,7 +592,7 @@ case "$WINSDK_TARGETVER" in
 esac
 
 case "$target" in
-*-mingw*|*-wince|*-winmo)
+*-mingw*)
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
@@ -894,24 +886,17 @@ if test -n "$_WIN32_MSVC"; then
     # some facts here.
 
     # Common to all MSVC environments:
+
     # Windows lacks <stdint.h>, but has __int8, and so on.
     AC_DEFINE(JS_HAVE___INTN)
     AC_DEFINE(HAVE_LOCALECONV)
+    AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
+    AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
 
-    case "$target" in
-    *-wince|*-winmo)
-        AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
-        AC_DEFINE(JS_CRTDEFS_H_HAS_INTPTR_T)
-        ;;
-    *)
-        AC_DEFINE(HAVE_SYSTEMTIMETOFILETIME)
-        AC_DEFINE(HAVE_GETSYSTEMTIMEASFILETIME)
-        # Windows <stddef.h> defines intptr_t and uintptr_t.
-        # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
-        # VS2008: http://msdn.microsoft.com/en-us/library/323b6b3k.aspx
-        AC_DEFINE(JS_STDDEF_H_HAS_INTPTR_T)
-        ;;
-    esac
+    # Windows <stddef.h> defines intptr_t and uintptr_t.
+    # VS2005: http://msdn.microsoft.com/en-us/library/323b6b3k(VS.80).aspx
+    # VS2008: http://msdn.microsoft.com/en-us/library/323b6b3k.aspx
+    AC_DEFINE(JS_STDDEF_H_HAS_INTPTR_T)
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -1224,8 +1209,6 @@ if test -n "$CROSS_COMPILE"; then
         gnu*)         OS_ARCH=GNU ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
-        wince*)       OS_ARCH=WINCE ;;
-        winmo*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
     case "${target}" in
@@ -1433,19 +1416,6 @@ SINIX-N | SINIX-Y | SINIX-Z |ReliantUNIX-M)
 UnixWare)
     OS_ARCH=UNIXWARE
     OS_RELEASE=`uname -v`
-    ;;
-WINCE)
-    OS_ARCH=WINCE
-    case "${target_os}" in
-    *winmo)
-        OS_TARGET=WINMO
-        WINCE_WINDOWS_MOBILE=1
-        AC_DEFINE(WINCE_WINDOWS_MOBILE)
-        ;;
-    *)
-        OS_TARGET=WINCE
-        ;;
-    esac
     ;;
 Darwin)
     case "${target_cpu}" in
@@ -1810,7 +1780,7 @@ dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
-*mingw*|*wince|*winmo)
+*mingw*)
     # we need Python 2.5 on Windows
     PYTHON_VERSION=2.5
     if test -n "$_WIN32_MSVC"; then
@@ -2156,102 +2126,6 @@ ia64*-hpux*)
     ;;
     esac
     ;;
-
-*-wince*|*-winmo*)
-    TARGET_COMPILER_ABI=msvc
-    MOZ_TOOLS_DIR=`echo $MOZ_TOOLS`
-    AR_LIST="$AR -list"
-    AR_EXTRACT=
-    AR_DELETE="$AR d"
-    AR_FLAGS='-OUT:"$@"'
-    AS="$AS_BIN"
-
-    DSO_CFLAGS=
-    DSO_PIC_CFLAGS=
-    DLL_SUFFIX=.dll
-    BIN_SUFFIX='.exe'
-    if test -z "$RC"; then 
-        RC=rc.exe  
-    fi
-    # certain versions of cygwin's makedepend barf on the 
-    # #include <string> vs -I./dist/include/string issue so don't use it
-    SYSTEM_MAKEDEPEND=
-
-    HOST_CC=cl
-    HOST_CXX=cl
-    HOST_LD=link
-    HOST_AR='lib'
-    HOST_AR_FLAGS='-OUT:$@'
-    HOST_RANLIB='echo ranlib'
-    HOST_CFLAGS="$HOST_CFLAGS -D_X86_"
-        
-        
-    WARNINGS_AS_ERRORS='-WX'
-    MOZ_OPTIMIZE_FLAGS='-Ox'
-    AR_FLAGS='-NOLOGO -OUT:"$@"'
-    ASM_SUFFIX=asm
-    CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
-    CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
-    DLL_PREFIX=
-    DOXYGEN=:
-    DSO_LDOPTS=-SUBSYSTEM:WINDOWSCE
-    DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-    GARBAGE=
-    IMPORT_LIB_SUFFIX=lib
-    dnl Need to force-link against mozalloc because it's used in the shunt
-    LIBS="$LIBS \$(LIBXUL_DIST)/lib/mozalloc.lib"
-    LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-    LIB_PREFIX=
-    LIB_SUFFIX=lib 
-    MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ $(DSO_LDOPTS)'
-    MKSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ $(DSO_LDOPTS)'
-    MKSHLIB_FORCE_ALL=
-    MKSHLIB_UNFORCE_ALL=
-    MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-    MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-    MOZ_DEBUG_FLAGS='-Zi'
-    MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
-    MOZ_FIX_LINK_PATHS=
-    MOZ_JS_LIBS='$(libdir)/mozjs.lib'
-    OBJ_SUFFIX=obj
-    RANLIB='echo not_ranlib'
-    STRIP='echo not_strip'
-    TARGET_NSPR_MDCPUCFG='\"md/_wince.cfg\"'
-    UNZIP=unzip
-    XARGS=xargs
-    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-    ZIP=zip
-
-    AC_DEFINE(HAVE_SNPRINTF)
-    AC_DEFINE(_WINDOWS)
-    AC_DEFINE(WIN32)
-    AC_DEFINE(XP_WIN)
-    AC_DEFINE(XP_WIN32)
-    AC_DEFINE(HW_THREADS)
-    AC_DEFINE(STDC_HEADERS)
-    AC_DEFINE(NEW_H, <new>)
-    AC_DEFINE(WIN32_LEAN_AND_MEAN)
-    AC_DEFINE(HAVE_LOCALTIME_R)
-
-    TARGET_MD_ARCH=win32
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
-    BIN_SUFFIX='.exe'
-    MOZ_USER_DIR="Mozilla"
-
-    dnl Default to Windows Mobile components enabled
-    WINCE_WINDOWS_MOBILE=1
-
-    MOZ_ARG_DISABLE_BOOL(windows-mobile-components,
-    [  --disable-windows-mobile-components
-                          Disable Windows Mobile specific components from
-                          CE build],
-    WINCE_WINDOWS_MOBILE=,
-    WINCE_WINDOWS_MOBILE=1)
- 
-    if test "$WINCE_WINDOWS_MOBILE"; then
-        AC_DEFINE(WINCE_WINDOWS_MOBILE)
-    fi
-;;
 
 *-symbian*)
 
@@ -2789,7 +2663,7 @@ case "$target" in
 *-aix4.3*|*-aix5*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-mingw*|*-wince|*-winmo)
+*-mingw*)
     if test -z "$GNU_CC"; then
         NO_LD_ARCHIVE_FLAGS=
     fi
@@ -2821,7 +2695,7 @@ case "$target" in
     *-darwin*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
         ;;
-    *-mingw*|*-wince|*-winmo)
+    *-mingw*)
         if test -n "$GNU_CC"; then
            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         fi
@@ -2953,7 +2827,7 @@ case "$target" in
 *-gnu*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
-*-mingw*|*-wince|*-winmo)
+*-mingw*)
     AC_DEFINE(AVMPLUS_WIN32)
     ;;
 *-os2*)
@@ -3778,7 +3652,7 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
 fi
 
 case $target_os in
-    darwin*|mingw*|os2*|wince*|winmo*)
+    darwin*|mingw*|os2*)
         ;;
     *)
     
@@ -4870,17 +4744,6 @@ if test "$MOZ_MEMORY"; then
     AC_DEFINE(MOZ_MEMORY_WINDOWS)
     # the interesting bits will get passed down in MOZ_MEMORY_LDFLAGS
     ;;
-  *-*wince)
-    AC_DEFINE(MOZ_MEMORY_WINCE)
-    AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    if test -z "$WINCE_WINDOWS_MOBILE"; then
-      AC_DEFINE(MOZ_MEMORY_WINCE6)
-    fi
-    ;;
-  *-*winmo)
-    AC_DEFINE(MOZ_MEMORY_WINCE)
-    AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    ;;
   *-android*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
     AC_DEFINE(MOZ_MEMORY_ANDROID)
@@ -5552,7 +5415,7 @@ EDITLINE_LIBS=
 JS_DISABLE_SHELL=
 
 case "$target" in
-*-mingw*|*-wince*|*-winmo*)
+*-mingw*)
     NO_EDITLINE=1
     ;;
 *-symbian*)
@@ -5693,10 +5556,6 @@ AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(PYTHON)
-
-AC_SUBST(WINCE)
-AC_SUBST(WINCE_SDK_DIR)
-AC_SUBST(WINCE_WINDOWS_MOBILE)
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
@@ -5845,7 +5704,7 @@ if test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_MACOSX)
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE"; then
+elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
 fi
