@@ -57,6 +57,8 @@ class Debug {
     JSCompartment *debuggeeCompartment;  // Weak reference.
     JSObject *hooksObject;  // See Debug.prototype.hooks. Strong reference.
 
+    bool enabled;
+
     // True if hooksObject had a debuggerHandler property when the hooks
     // property was set.
     bool hasDebuggerHandler;
@@ -70,6 +72,8 @@ class Debug {
     static Class jsclass;
     static JSBool getHooks(JSContext *cx, uintN argc, Value *vp);
     static JSBool setHooks(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getEnabled(JSContext *cx, uintN argc, Value *vp);
+    static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool construct(JSContext *cx, uintN argc, Value *vp);
     static JSPropertySpec properties[];
 
@@ -109,7 +113,7 @@ class Debug {
         return debuggeeCompartment == c;
     }
 
-    bool observesDebuggerStatement() const { return hasDebuggerHandler; }
+    bool observesDebuggerStatement() const { return enabled && hasDebuggerHandler; }
     JSTrapStatus onDebuggerStatement(JSContext *cx, Value *vp);
 };
 
