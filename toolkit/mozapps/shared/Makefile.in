@@ -39,6 +39,7 @@ DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
+relativesrcdir = toolkit/mozapps/shared
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -51,6 +52,7 @@ EXTRA_PP_JS_MODULES = \
 
 ifdef ENABLE_TESTS
 DIRS += test/chrome
+XPCSHELL_TESTS = test/unit
 endif
 
 include $(topsrcdir)/config/rules.mk
