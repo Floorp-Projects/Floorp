@@ -4350,7 +4350,7 @@ mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
 bool
 mjit::Compiler::jsop_length()
 {
-    REJOIN_SITE(stubs::Length);
+    REJOIN_SITE_3(stubs::Length, ic::GetProp, stubs::GetProp);
     FrameEntry *top = frame.peek(-1);
 
     if (top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_STRING) {
@@ -4383,6 +4383,8 @@ mjit::Compiler::jsop_length()
         }
     }
 
+    frame.forgetMismatchedObject(top);
+
     /*
      * Check if we are accessing the 'length' property of a known dense array.
      * Note that if the types are known to indicate dense arrays, their lengths
@@ -4390,8 +4392,7 @@ mjit::Compiler::jsop_length()
      */
     types::TypeSet *types = frame.extra(top).types;
     types::ObjectKind kind = types ? types->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
-    if ((kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
-        !top->isNotType(JSVAL_TYPE_OBJECT)) {
+    if (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) {
         bool isObject = top->isTypeKnown();
         if (!isObject) {
             Jump notObject = frame.testObject(Assembler::NotEqual, top);
@@ -4459,7 +4460,6 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     types::TypeSet *types = frame.extra(top).types;
     if ((op == JSOP_GETPROP || op == JSOP_GETTHISPROP ||
          op == JSOP_GETARGPROP || op == JSOP_GETLOCALPROP) &&
-        !top->isNotType(JSVAL_TYPE_OBJECT) &&
         types && !types->unknown() && types->getObjectCount() == 1 &&
         !types->getObject(0)->unknownProperties()) {
         JS_ASSERT(usePropCache);
@@ -5012,7 +5012,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
      * always has the property in a particular inline slot.
      */
     types::TypeSet *types = frame.extra(lhs).types;
-    if (JSOp(*PC) == JSOP_SETPROP && !lhs->isNotType(JSVAL_TYPE_OBJECT) &&
+    if (JSOp(*PC) == JSOP_SETPROP &&
         types && !types->unknown() && types->getObjectCount() == 1 &&
         !types->getObject(0)->unknownProperties()) {
         JS_ASSERT(usePropCache);
