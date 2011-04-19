@@ -119,27 +119,6 @@ class JaegerCompartment;
 }
 
 /*
- * Allocation policy that calls JSContext memory functions and reports errors
- * to the context. Since the JSContext given on construction is stored for
- * the lifetime of the container, this policy may only be used for containers
- * whose lifetime is a shorter than the given JSContext.
- */
-class ContextAllocPolicy
-{
-    JSContext *cx;
-
-  public:
-    ContextAllocPolicy(JSContext *cx) : cx(cx) {}
-    JSContext *context() const { return cx; }
-
-    /* Inline definitions below. */
-    void *malloc_(size_t bytes);
-    void free_(void *p);
-    void *realloc_(void *p, size_t bytes);
-    void reportAllocOverflow() const;
-};
-
-/*
  * A StackSegment (referred to as just a 'segment') contains a prev-linked set
  * of stack frames and the slots associated with each frame. A segment and its
  * contained frames/slots also have a precise memory layout that is described
@@ -411,7 +390,7 @@ class InvokeArgsGuard : public CallArgs
  */
 struct InvokeArgsAlreadyOnTheStack : CallArgs
 {
-    InvokeArgsAlreadyOnTheStack(Value *vp, uintN argc) : CallArgs(vp + 2, argc) {}
+    InvokeArgsAlreadyOnTheStack(Value *vp, uintN argc) : CallArgs(argc, vp + 2) {}
 };
 
 /* See StackSpace::pushInvokeFrame. */
@@ -1080,8 +1059,8 @@ struct JSRuntime {
     js::RootedValueMap  gcRootsHash;
     js::GCLocks         gcLocksHash;
     jsrefcount          gcKeepAtoms;
-    size_t              gcBytes;
-    size_t              gcTriggerBytes;
+    uint32              gcBytes;
+    uint32              gcTriggerBytes;
     size_t              gcLastBytes;
     size_t              gcMaxBytes;
     size_t              gcMaxMallocBytes;
@@ -1093,6 +1072,7 @@ struct JSRuntime {
     int64               gcJitReleaseTime;
     JSGCMode            gcMode;
     volatile bool       gcIsNeeded;
+    JSObject           *gcWeakMapList;
 
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
@@ -1291,9 +1271,6 @@ struct JSRuntime {
     jsrefcount          nonInlineCalls;
     jsrefcount          constructs;
 
-    jsrefcount          liveObjectProps;
-    jsrefcount          liveObjectPropsPreSweep;
-
     /*
      * NB: emptyShapes (in JSCompartment) is init'ed iff at least one
      * of these envars is set:
@@ -1379,6 +1356,7 @@ struct JSRuntime {
 
     void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
+    void reduceGCTriggerBytes(uint32 amount);
 
     /*
      * Call the system malloc while checking for GC memory pressure and
@@ -1455,7 +1433,6 @@ struct JSRuntime {
             onTooMuchMalloc();
     }
 
-  private:
     /*
      * The function must be called outside the GC lock.
      */
@@ -3279,30 +3256,6 @@ js_RegenerateShapeForGC(JSRuntime *rt)
 
 namespace js {
 
-inline void *
-ContextAllocPolicy::malloc_(size_t bytes)
-{
-    return cx->malloc_(bytes);
-}
-
-inline void
-ContextAllocPolicy::free_(void *p)
-{
-    cx->free_(p);
-}
-
-inline void *
-ContextAllocPolicy::realloc_(void *p, size_t bytes)
-{
-    return cx->realloc_(p, bytes);
-}
-
-inline void
-ContextAllocPolicy::reportAllocOverflow() const
-{
-    js_ReportAllocationOverflow(cx);
-}
-
 template<class T>
 class AutoVectorRooter : protected AutoGCRooter
 {
@@ -3362,7 +3315,8 @@ class AutoVectorRooter : protected AutoGCRooter
     friend void AutoGCRooter::trace(JSTracer *trc);
 
   private:
-    Vector<T, 8> vector;
+    typedef Vector<T, 8> VectorImpl;
+    VectorImpl vector;
     JS_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 

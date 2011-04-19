@@ -1062,7 +1062,7 @@ CreateEvalCallObject(JSContext *cx, JSStackFrame *fp)
 {
     JSObject *callobj = NewCallObject(cx, fp->script(), fp->scopeChain(), NULL);
     if (!callobj)
-        return false;
+        return NULL;
 
     callobj->setPrivate(fp);
     fp->setScopeChainWithOwnCallObj(*callobj);
@@ -1472,7 +1472,7 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
     if (thisv.isObject()) {
         JS_ASSERT(funobj.getFunctionPrivate() == fun);
 
-        if (&fun->compiledFunObj() == &funobj && fun->methodAtom()) {
+        if (fun->compiledFunObj() == funobj && fun->methodAtom()) {
             JSObject *thisp = &thisv.toObject();
             JSObject *first_barriered_thisp = NULL;
 
@@ -1498,10 +1498,10 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                          * In either case we must allow for the method property
                          * to have been replaced, or its value overwritten.
                          */
-                        if (shape->isMethod() && &shape->methodObject() == &funobj) {
+                        if (shape->isMethod() && shape->methodObject() == funobj) {
                             if (!thisp->methodReadBarrier(cx, *shape, vp))
                                 return false;
-                            calleeValue().setObject(vp->toObject());
+                            calleev().setObject(vp->toObject());
                             return true;
                         }
 
@@ -1514,7 +1514,7 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
                                 clone->hasMethodObj(*thisp)) {
                                 JS_ASSERT_IF(!clone->getType()->singleton, clone != &funobj);
                                 *vp = v;
-                                calleeValue().setObject(*clone);
+                                calleev().setObject(*clone);
                                 return true;
                             }
                         }
@@ -1543,7 +1543,7 @@ JSStackFrame::getValidCalleeObject(JSContext *cx, Value *vp)
             if (!newfunobj)
                 return false;
             newfunobj->setMethodObj(*first_barriered_thisp);
-            calleeValue().setObject(*newfunobj);
+            calleev().setObject(*newfunobj);
             vp->setObject(*newfunobj);
             return true;
         }
@@ -2201,7 +2201,7 @@ js_fun_call(JSContext *cx, uintN argc, Value *vp)
         return JS_FALSE;
 
     /* Push fval, thisv, and the args. */
-    args.callee() = fval;
+    args.calleev() = fval;
     args.thisv() = thisv;
     memcpy(args.argv(), argv, argc * sizeof *argv);
 
@@ -2252,7 +2252,7 @@ js_fun_apply(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /* Push fval, obj, and aobj's elements as args. */
-    args.callee() = fval;
+    args.calleev() = fval;
     args.thisv() = vp[2];
 
     /* Steps 7-8. */
@@ -2376,7 +2376,7 @@ CallOrConstructBoundFunction(JSContext *cx, uintN argc, Value *vp)
     memcpy(args.argv() + argslen, vp + 2, argc * sizeof(Value));
 
     /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
-    args.callee().setObject(*target);
+    args.calleev().setObject(*target);
 
     if (!constructing)
         args.thisv() = boundThis;
@@ -2513,12 +2513,13 @@ OnBadFormal(JSContext *cx, TokenKind tt)
 static JSBool
 Function(JSContext *cx, uintN argc, Value *vp)
 {
+    CallArgs call = CallArgsFromVp(argc, vp);
+
     JS::Anchor<JSObject *> obj(NewFunction(cx, NULL));
     if (!obj.get())
         return false;
 
-    JSObject &callee = JS_CALLEE(cx, vp).toObject();
-    JSObject &calleeParent = *callee.getParent();
+    JSObject &calleeParent = *call.callee().getParent();
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
@@ -2536,32 +2537,6 @@ Function(JSContext *cx, uintN argc, Value *vp)
         return false;
 
     /*
-     * Function is static and not called directly by other functions in this
-     * file, therefore it is callable only as a native function by js_Invoke.
-     * Find the scripted caller, possibly skipping other native frames such as
-     * are built for Function.prototype.call or .apply activations that invoke
-     * Function indirectly from a script.
-     */
-    JSStackFrame *caller = js_GetScriptedCaller(cx, NULL);
-    uintN lineno;
-    const char *filename;
-    JSPrincipals *principals;
-    if (caller) {
-        principals = js_EvalFramePrincipals(cx, &callee, caller);
-        filename = js_ComputeFilename(cx, caller, principals, &lineno);
-    } else {
-        filename = NULL;
-        lineno = 0;
-        principals = NULL;
-    }
-
-    /* Belt-and-braces: check that the caller has access to parent. */
-    if (!js_CheckPrincipalsAccess(cx, &calleeParent, principals,
-                                  CLASS_ATOM(cx, Function))) {
-        return false;
-    }
-
-    /*
      * CSP check: whether new Function() is allowed at all.
      * Report errors via CSP is done in the script security manager.
      * js_CheckContentSecurityPolicy is defined in jsobj.cpp
@@ -2574,7 +2549,10 @@ Function(JSContext *cx, uintN argc, Value *vp)
     Bindings bindings(cx);
     AutoBindingsRooter root(cx, bindings);
 
-    Value *argv = JS_ARGV(cx, vp);
+    uintN lineno;
+    const char *filename = CurrentScriptFileAndLine(cx, &lineno);
+
+    Value *argv = call.argv();
     uintN n = argc ? argc - 1 : 0;
     if (n > 0) {
         /*
@@ -2714,10 +2692,12 @@ Function(JSContext *cx, uintN argc, Value *vp)
         length = 0;
     }
 
-    JS_SET_RVAL(cx, vp, ObjectValue(*obj.get()));
-    return Compiler::compileFunctionBody(cx, fun, principals, &bindings,
-                                         chars, length, filename, lineno,
-                                         cx->findVersion());
+    JSPrincipals *principals = PrincipalsForCompiledCode(call, cx);
+    bool ok = Compiler::compileFunctionBody(cx, fun, principals, &bindings,
+                                            chars, length, filename, lineno,
+                                            cx->findVersion());
+    call.rval().setObject(obj);
+    return ok;
 }
 
 namespace js {
@@ -2742,7 +2722,7 @@ LookupInterpretedFunctionPrototype(JSContext *cx, JSObject *funobj)
     const Shape *shape = funobj->nativeLookup(id);
     if (!shape) {
         if (!ResolveInterpretedFunctionPrototype(cx, funobj))
-            return false;
+            return NULL;
         shape = funobj->nativeLookup(id);
     }
     JS_ASSERT(!shape->configurable());

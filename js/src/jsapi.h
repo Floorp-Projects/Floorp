@@ -1406,6 +1406,7 @@ class Anchor: AnchorPermitted<T> {
     explicit Anchor(T t) { hold = t; }
     inline ~Anchor();
     T &get() { return hold; }
+    const T &get() const { return hold; }
     void set(const T &t) { hold = t; }
     void clear() { hold = 0; }
   private:
@@ -1949,6 +1950,7 @@ struct JSClass {
 #define JSCLASS_NEW_ENUMERATE           (1<<1)  /* has JSNewEnumerateOp hook */
 #define JSCLASS_NEW_RESOLVE             (1<<2)  /* has JSNewResolveOp hook */
 #define JSCLASS_PRIVATE_IS_NSISUPPORTS  (1<<3)  /* private is (nsISupports *) */
+#define JSCLASS_CONCURRENT_FINALIZER    (1<<4)  /* finalize is called on background thread */
 #define JSCLASS_NEW_RESOLVE_GETS_START  (1<<5)  /* JSNewResolveOp gets starting
                                                    object in prototype chain
                                                    passed in via *objp in/out
@@ -2768,8 +2770,8 @@ JS_TypeHandlerThis(JSContext*, JSTypeFunction*, JSTypeCallsite*);
  * the compiler.
  */
 extern JS_PUBLIC_API(JSBool)
-JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
-                          const char *bytes, size_t length);
+JS_BufferIsCompilableUnit(JSContext *cx, JSBool bytes_are_utf8,
+                          JSObject *obj, const char *bytes, size_t length);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_CompileScript(JSContext *cx, JSObject *obj,
@@ -3290,6 +3292,8 @@ JS_SetCStringsAreUTF8(void);
  * UTF-8, and JS_DecodeBytes decodes from UTF-8, which may create additional
  * errors if the character sequence is malformed.  If UTF-8 support is
  * disabled, the functions deflate and inflate, respectively.
+ *
+ * JS_DecodeUTF8() always behaves the same independently of JS_CStringsAreUTF8().
  */
 JS_PUBLIC_API(JSBool)
 JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
@@ -3298,6 +3302,10 @@ JS_EncodeCharacters(JSContext *cx, const jschar *src, size_t srclen, char *dst,
 JS_PUBLIC_API(JSBool)
 JS_DecodeBytes(JSContext *cx, const char *src, size_t srclen, jschar *dst,
                size_t *dstlenp);
+
+JS_PUBLIC_API(JSBool)
+JS_DecodeUTF8(JSContext *cx, const char *src, size_t srclen, jschar *dst,
+              size_t *dstlenp);
 
 /*
  * A variation on JS_EncodeCharacters where a null terminated string is
@@ -3393,7 +3401,7 @@ class JSAutoByteString {
 typedef JSBool (* JSONWriteCallback)(const jschar *buf, uint32 len, void *data);
 
 /*
- * JSON.stringify as specified by ES3.1 (draft)
+ * JSON.stringify as specified by ES5.
  */
 JS_PUBLIC_API(JSBool)
 JS_Stringify(JSContext *cx, jsval *vp, JSObject *replacer, jsval space,
@@ -3406,17 +3414,8 @@ JS_PUBLIC_API(JSBool)
 JS_TryJSON(JSContext *cx, jsval *vp);
 
 /*
- * JSON.parse as specified by ES3.1 (draft)
+ * JSON.parse as specified by ES5.
  */
-JS_PUBLIC_API(JSONParser *)
-JS_BeginJSONParse(JSContext *cx, jsval *vp);
-
-JS_PUBLIC_API(JSBool)
-JS_ConsumeJSONText(JSContext *cx, JSONParser *jp, const jschar *data, uint32 len);
-
-JS_PUBLIC_API(JSBool)
-JS_FinishJSONParse(JSContext *cx, JSONParser *jp, jsval reviver);
-
 JS_PUBLIC_API(JSBool)
 JS_ParseJSON(JSContext *cx, const jschar *chars, uint32 len, jsval *vp);
 

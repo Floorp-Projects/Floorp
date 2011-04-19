@@ -130,6 +130,8 @@ class Assembler : public ValueAssembler
     static const RegisterID ClobberInCall = JSC::X86Registers::ecx;
 #elif defined(JS_CPU_ARM)
     static const RegisterID ClobberInCall = JSC::ARMRegisters::r2;
+#elif defined(JS_CPU_SPARC)
+    static const RegisterID ClobberInCall = JSC::SparcRegisters::l1;
 #endif
 
     /* :TODO: OOM */
@@ -178,6 +180,10 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::X86Registe
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Type  = JSC::ARMRegisters::r2;
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::ARMRegisters::r1;
 static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegisters::r1;
+#elif defined(JS_CPU_SPARC)
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::SparcRegisters::i0;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data = JSC::SparcRegisters::i1;
+static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegisters::i2;
 #endif
 
     size_t distanceOf(Label l) {
@@ -288,7 +294,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         static const uint64 DoubleNegMask = 0x8000000000000000ULL;
         loadDouble(&DoubleNegMask, Registers::FPConversionTemp);
         xorDouble(Registers::FPConversionTemp, fpreg);
-#elif defined JS_CPU_ARM
+#elif defined JS_CPU_ARM || defined JS_CPU_SPARC
         negDouble(fpreg, fpreg);
 #endif
     }
@@ -392,8 +398,16 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
     // Windows x64 requires extra space in between calls.
 #ifdef _WIN64
     static const uint32 ShadowStackSpace = 32;
+#elif defined(JS_CPU_SPARC)
+    static const uint32 ShadowStackSpace = 92;
 #else
     static const uint32 ShadowStackSpace = 0;
+#endif
+
+#if defined(JS_CPU_SPARC)
+    static const uint32 BaseStackSpace = 104;
+#else
+    static const uint32 BaseStackSpace = 0;
 #endif
 
     // Prepare the stack for a call sequence. This must be called AFTER all
@@ -454,7 +468,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegiste
         //
         // Note that it's not required we're in a call - stackAdjust can be 0.
         JS_ASSERT(marker.base <= extraStackSpace);
-        return Address(stackPointerRegister, stackAdjust + extraStackSpace - marker.base);
+        return Address(stackPointerRegister, BaseStackSpace + stackAdjust + extraStackSpace - marker.base);
     }
 
     // This is an internal function only for use inside a setupABICall(),

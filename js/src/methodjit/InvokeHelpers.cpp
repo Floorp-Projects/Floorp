@@ -317,7 +317,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
             return NULL;
     }
 
-    CallArgs args(fp->formalArgs(), fp->numFormalArgs());
+    CallArgs args = CallArgsFromArgv(fp->numFormalArgs(), fp->formalArgs());
     if (!cx->typeMonitorCall(args, fp->isConstructing()))
         return NULL;
 
@@ -384,7 +384,7 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
         if (!cx->compartment->types.checkPendingRecompiles(cx))
             return false;
     } else {
-        CallArgs args(vp + 2, argc);
+        CallArgs args = CallArgsFromVp(argc, vp);
         if (!cx->typeMonitorCall(args, flags & JSFRAME_CONSTRUCTING))
             return false;
     }
@@ -496,8 +496,10 @@ stubs::Eval(VMFrame &f, uint32 argc)
     }
 
     JS_ASSERT(f.regs.fp == f.cx->fp());
-    if (!DirectEval(f.cx, argc, vp))
+    if (!DirectEval(f.cx, CallArgsFromVp(argc, vp)))
         THROW();
+
+    f.regs.sp = vp + 1;
 }
 
 void
@@ -736,7 +738,7 @@ AtSafePoint(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp();
     if (fp->hasImacropc())
-        return false;
+        return NULL;
 
     JSScript *script = fp->script();
     return script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs->pc);
