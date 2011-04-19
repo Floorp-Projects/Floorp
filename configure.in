@@ -357,47 +357,6 @@ AR_FLAGS='cr $@'
 
 if test "$COMPILE_ENVIRONMENT"; then
 
-dnl Do some special WinCE toolchain stuff
-case "$target" in
-*wince|*winmo)
-
-    MOZ_ARG_WITH_STRING(wince-sdk,
-    [  --with-wince-sdk=WINCE_SDK_DIR
-                          The path to the Windows CE SDK],
-    WINCE_SDK_DIR=$withval)
-
-    AC_DEFINE(WINCE)
-    
-    export WINCE=1
-
-    echo -----------------------------------------------------------------------------
-    echo Building Windows CE Shunt Library and Tool Chain
-    echo Using SDK in:
-    echo $WINCE_SDK_DIR
-
-    ac_exeext=.exe
-
-    _pwd=`pwd -W`
-    _topsrcdirwin=`cd \`dirname $0\`; pwd -W`
-    make WINCE_SDK_DIR="$WINCE_SDK_DIR" \
-         TOPSRCDIR="$_topsrcdirwin" OBJDIR="$_pwd" target="$target" \
-         -C $srcdir/build/wince/tools
-
-    CC="$_pwd/dist/sdk/bin/$target-gcc.exe"
-    CXX="$_pwd/dist/sdk/bin/$target-gcc.exe"
-    CPP="$_pwd/dist/sdk/bin/$target-gcc.exe -E -nologo"
-    CXXCPP="$_pwd/dist/sdk/bin/$target-gcc.exe -TP -E -nologo"
-    LD="$_pwd/dist/sdk/bin/$target-link.exe"
-    AR="$_pwd/dist/sdk/bin/$target-lib.exe"
-    AS="$_pwd/dist/sdk/bin/$target-as.exe"
-    RC="$_pwd/dist/sdk/bin/$target-res.exe"
-
-
-    echo -----------------------------------------------------------------------------
-
-    ;;
-esac
-
 if test -n "$CROSS_COMPILE" -a "$target" != "$host"; then
     echo "cross compiling from $host to $target"
     cross_compiling=yes
@@ -567,19 +526,12 @@ if test "$GXX" = yes; then
    fi
 fi
 
+dnl ========================================================
 dnl Special win32 checks
 dnl ========================================================
-case "$target" in
-*-wince|*-winmo)
-    WINVER=500
-    WINSDK_TARGETVER=502
-    ;;
-*)
-    WINVER=502
-    dnl Target the Windows 7 SDK by default
-    WINSDK_TARGETVER=601
-    ;;
-esac
+WINVER=502
+dnl Target the Windows 7 SDK by default
+WINSDK_TARGETVER=601
 
 MOZ_ARG_WITH_STRING(windows-version,
 [  --with-windows-version=WINSDK_TARGETVER
@@ -608,7 +560,7 @@ fi
 fi
 
 case "$target" in
-*-mingw*|*-wince|*-winmo)
+*-mingw*)
     if test "$GCC" != "yes"; then
         # Check to see if we are really running in a msvc environemnt
         _WIN32_MSVC=1
@@ -931,15 +883,9 @@ if test -n "$_WIN32_MSVC"; then
 
     # Since we're skipping compiler and library checks, hard-code
     # some facts here.
-    case "$target" in
-    *-wince|*-winmo)
-        ;;
-    *)
-        AC_DEFINE(HAVE_IO_H)
-        AC_DEFINE(HAVE_SETBUF)
-        AC_DEFINE(HAVE_ISATTY)
-        ;;
-    esac
+    AC_DEFINE(HAVE_IO_H)
+    AC_DEFINE(HAVE_SETBUF)
+    AC_DEFINE(HAVE_ISATTY)
 fi
 
 fi # COMPILE_ENVIRONMENT
@@ -1274,8 +1220,6 @@ if test -n "$CROSS_COMPILE"; then
         gnu*)         OS_ARCH=GNU ;;
         solaris*)     OS_ARCH=SunOS OS_RELEASE=5 ;;
         mingw*)       OS_ARCH=WINNT ;;
-        wince*)       OS_ARCH=WINCE ;;
-        winmo*)       OS_ARCH=WINCE ;;
         darwin*)      OS_ARCH=Darwin OS_TARGET=Darwin ;;
     esac
     case "${target}" in
@@ -1478,19 +1422,6 @@ SINIX-N | SINIX-Y | SINIX-Z |ReliantUNIX-M)
 UnixWare)
     OS_ARCH=UNIXWARE
     OS_RELEASE=`uname -v`
-    ;;
-WINCE)
-    OS_ARCH=WINCE
-    case "${target_os}" in
-    *winmo)
-        OS_TARGET=WINMO
-        WINCE_WINDOWS_MOBILE=1
-        AC_DEFINE(WINCE_WINDOWS_MOBILE)
-        ;;
-    *)
-        OS_TARGET=WINCE
-        ;;
-    esac
     ;;
 Darwin)
     case "${target_cpu}" in
@@ -1923,7 +1854,7 @@ dnl ========================================================
 dnl System overrides of the defaults for host
 dnl ========================================================
 case "$host" in
-*mingw*|*wince|*winmo)
+*mingw*)
     if test -n "$_WIN32_MSVC"; then
         HOST_AR=lib
         HOST_AR_FLAGS='-NOLOGO -OUT:"$@"'
@@ -2281,105 +2212,6 @@ ia64*-hpux*)
     ;;
     esac
     ;;
-
-*-wince*|*-winmo*)
-    TARGET_COMPILER_ABI=msvc
-    _PLATFORM_DEFAULT_TOOLKIT=cairo-windows
-    MOZ_TOOLS_DIR=`cd $MOZ_TOOLS && pwd -W`
-    MOZ_BUILD_ROOT=`cd $MOZ_BUILD_ROOT && pwd -W`
-    AR_LIST="$AR -list"
-    AR_EXTRACT=
-    AR_DELETE="$AR d"
-    AR_FLAGS='-OUT:"$@"'
-    MOZ_MEMORY=1
-    NSS_DISABLE_DBM=1
-    MOZ_OGG=
-    ac_configure_args="$ac_configure_args --enable-win32-target=WINCE"
-
-    if test "$AS_BIN"; then
-        AS="$AS_BIN"
-    fi
-    DSO_CFLAGS=
-    DSO_PIC_CFLAGS=
-    DLL_SUFFIX=.dll
-    BIN_SUFFIX='.exe'
-    if test -z "$RC"; then 
-        RC=rc.exe  
-    fi
-    # certain versions of cygwin's makedepend barf on the 
-    # #include <string> vs -I./dist/include/string issue so don't use it
-    SYSTEM_MAKEDEPEND=
-
-    HOST_CC=cl
-    HOST_CXX=cl
-    HOST_LD=link
-    HOST_AR='lib'
-    HOST_AR_FLAGS='-OUT:$@'
-    HOST_RANLIB='echo ranlib'
-    HOST_CFLAGS="$HOST_CFLAGS -D_X86_"
-        
-        
-    WARNINGS_AS_ERRORS='-WX'
-    MOZ_OPTIMIZE_FLAGS='-Ox'
-    AR_FLAGS='-NOLOGO -OUT:"$@"'
-    ASM_SUFFIX=asm
-    CFLAGS="$CFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
-    CXXFLAGS="$CXXFLAGS -W3 -Gy -Fd\$(COMPILE_PDBFILE)"
-    DLL_PREFIX=
-    DOXYGEN=:
-    DSO_LDOPTS=-SUBSYSTEM:WINDOWSCE
-    DYNAMIC_XPCOM_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xpcom_core.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-    GARBAGE=
-    IMPORT_LIB_SUFFIX=lib
-    dnl Need to force-link against mozalloc because it's used in the shunt
-    LIBS="$LIBS \$(LIBXUL_DIST)/lib/mozalloc.lib"
-    LIBXUL_LIBS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/xul.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-    LIB_PREFIX=
-    LIB_SUFFIX=lib 
-    MKCSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ $(DSO_LDOPTS)'
-    MKSHLIB='$(LD) -NOLOGO -DLL -OUT:$@ $(DSO_LDOPTS)'
-    MKSHLIB_FORCE_ALL=
-    MKSHLIB_UNFORCE_ALL=
-    MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-    MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
-    MOZ_DEBUG_FLAGS='-Zi'
-    MOZ_DEBUG_LDFLAGS='-DEBUG -DEBUGTYPE:CV'
-    MOZ_FIX_LINK_PATHS=
-    OBJ_SUFFIX=obj
-    RANLIB='echo not_ranlib'
-    STRIP='echo not_strip'
-    TARGET_NSPR_MDCPUCFG='\"md/_wince.cfg\"'
-    UNZIP=unzip
-    XARGS=xargs
-    XPCOM_FROZEN_LDOPTS='$(LIBXUL_DIST)/lib/xpcom.lib $(LIBXUL_DIST)/lib/mozalloc.lib'
-    ZIP=zip
-    MOZ_TREE_FREETYPE=1
-
-    AC_DEFINE(HAVE_SNPRINTF)
-    AC_DEFINE(_WINDOWS)
-    AC_DEFINE(WIN32)
-    AC_DEFINE(XP_WIN)
-    AC_DEFINE(XP_WIN32)
-    AC_DEFINE(HW_THREADS)
-    AC_DEFINE(STDC_HEADERS)
-    AC_DEFINE(NEW_H, <new>)
-    AC_DEFINE(WIN32_LEAN_AND_MEAN)
-    AC_DEFINE(HAVE_LOCALTIME_R)
-
-    TARGET_MD_ARCH=win32
-    _PLATFORM_DEFAULT_TOOLKIT='cairo-windows'
-    BIN_SUFFIX='.exe'
-    MOZ_USER_DIR="Mozilla"
-
-    MOZ_GFX_OPTIMIZE_MOBILE=1
-
-    # Sanity check for WINCE_WINDOWS_MOBILE
-    # XXX disabled until we can fix the mobile tinderbox
-    ##if test "$WINCE_WINDOWS_MOBILE"; then
-    ##   MOZ_CHECK_HEADER(tpcshell.h, [],
-    ##        AC_MSG_ERROR([Can't find tpcshell.h in your SDK; are you sure you don't need --disable-windows-mobile-components?]))
-    ##fi
-;;
 
 *-mingw*)
     DSO_CFLAGS=
@@ -2897,7 +2729,7 @@ case "$target" in
 *-aix4.3*|*-aix5*)
     NO_LD_ARCHIVE_FLAGS=
     ;;
-*-mingw*|*-wince|*-winmo)
+*-mingw*)
     if test -z "$GNU_CC"; then
         NO_LD_ARCHIVE_FLAGS=
     fi
@@ -2931,7 +2763,7 @@ case "$target" in
     *-darwin*)
         MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,-exported_symbols_list -Wl,$(BUILD_TOOLS)/gnu-ld-scripts/components-export-list'
         ;;
-    *-mingw*|*-wince|*-winmo)
+    *-mingw*)
         if test -n "$GNU_CC"; then
            MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         fi
@@ -3883,7 +3715,7 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
 fi
 
 case $target_os in
-    darwin*|mingw*|os2*|wince*|winmo*)
+    darwin*|mingw*|os2*)
         ;;
     *)
     
@@ -4623,10 +4455,7 @@ if test -n "$MOZ_NATIVE_NSPR"; then
                 AC_MSG_ERROR([system NSPR does not support PR_STATIC_ASSERT or including prtypes.h does not provide it]))
     CFLAGS=$_SAVE_CFLAGS
 else
-    if test "$OS_ARCH" = "WINCE"; then
-        NSPR_CFLAGS="-I${LIBXUL_DIST}/include/nspr"
-        NSPR_LIBS="${LIBXUL_DIST}/lib/nspr${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plc${NSPR_VERSION}.lib ${LIBXUL_DIST}/lib/plds${NSPR_VERSION}.lib "
-    elif test "$OS_ARCH" = "WINNT"; then
+    if test "$OS_ARCH" = "WINNT"; then
         NSPR_CFLAGS="-I${LIBXUL_DIST}/include/nspr"
         if test -n "$GNU_CC"; then
             NSPR_LIBS="-L${LIBXUL_DIST}/lib -lnspr${NSPR_VERSION} -lplc${NSPR_VERSION} -lplds${NSPR_VERSION}"
@@ -4700,7 +4529,7 @@ else
         \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)nss$NSS_VERSION\$(DLL_SUFFIX) \
         \$(LIBXUL_DIST)/lib/\$(DLL_PREFIX)nssutil$NSS_VERSION\$(DLL_SUFFIX)"
 
-   if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "WINCE" -o "$OS_ARCH" = "OS2"; then
+   if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT" -o "$OS_ARCH" = "OS2"; then
        NSS_LIBS="\
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)crmf.\$(LIB_SUFFIX) \
         \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)smime$NSS_VERSION.\$(LIB_SUFFIX) \
@@ -4999,7 +4828,7 @@ XPC_IDISPATCH_SUPPORT=
 
 
 case "${target}" in
-*android*|*darwin*|*wince*|*winmo*)
+*android*|*darwin*)
     ACCESSIBILITY=
     ;;
 *)
@@ -5152,7 +4981,7 @@ MOZ_ARG_HEADER(Toolkit Options)
                             Mac OS X - cairo-cocoa
                             Neutrino/QNX - photon
                             OS/2 - cairo-os2
-                            Win32/WinCE - cairo-windows
+                            Win32 - cairo-windows
                             Gtk2 with DirectFB - cairo-gtk2-dfb
                             * - cairo-gtk2
                             * - cairo-qt],
@@ -5189,11 +5018,6 @@ photon)
 cairo-windows)
     MOZ_WIDGET_TOOLKIT=windows
     MOZ_WEBGL=1
-    case "${target}" in
-    *-wince*)
-        NS_PRINTING=
-        ;;
-    esac
     MOZ_PDF_PRINTING=1
     ;;
 
@@ -6575,7 +6399,7 @@ dnl ========================================================
 dnl Installer
 dnl ========================================================
 case "$target_os" in
-    aix*|solaris*|linux*|mingw*|os2*|wince*|winmo*)
+    aix*|solaris*|linux*|mingw*|os2*)
         MOZ_INSTALLER=1
         ;;
 esac
@@ -7510,17 +7334,6 @@ else
     dnl Also pass this to NSPR/NSS
     DLLFLAGS="$DLLFLAGS $MOZ_MEMORY_LDFLAGS"
     export DLLFLAGS
-    ;;
-  *-*wince)
-    AC_DEFINE(MOZ_MEMORY_WINCE)
-    AC_DEFINE(MOZ_MEMORY_WINDOWS)
-    if test -z "$WINCE_WINDOWS_MOBILE"; then
-      AC_DEFINE(MOZ_MEMORY_WINCE6)
-    fi
-    ;;
-  *-*winmo)
-    AC_DEFINE(MOZ_MEMORY_WINCE)
-    AC_DEFINE(MOZ_MEMORY_WINDOWS)
     ;;
   *-android*)
     AC_DEFINE(MOZ_MEMORY_LINUX)
@@ -8601,19 +8414,13 @@ if test "$MOZ_TREE_CAIRO"; then
         ;;
       windows)
         WIN32_SURFACE_FEATURE="#define CAIRO_HAS_WIN32_SURFACE 1"
-        if test -z "$WINCE"; then
-            WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
-            if test "$MOZ_WINSDK_TARGETVER" -ge "06010000"; then
-                WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
-                WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
-                MOZ_ENABLE_D2D_SURFACE=1
-                MOZ_ENABLE_DWRITE_FONT=1
-            else
-                WIN32_DWRITE_FONT_FEATURE=
-                WIN32_D2D_SURFACE_FEATURE=
-            fi
+        WIN32_FONT_FEATURE="#define CAIRO_HAS_WIN32_FONT 1"
+        if test "$MOZ_WINSDK_TARGETVER" -ge "06010000"; then
+            WIN32_DWRITE_FONT_FEATURE="#define CAIRO_HAS_DWRITE_FONT 1"
+            WIN32_D2D_SURFACE_FEATURE="#define CAIRO_HAS_D2D_SURFACE 1"
+            MOZ_ENABLE_D2D_SURFACE=1
+            MOZ_ENABLE_DWRITE_FONT=1
         else
-            WIN32_FONT_FEATURE=
             WIN32_DWRITE_FONT_FEATURE=
             WIN32_D2D_SURFACE_FEATURE=
         fi
@@ -8827,8 +8634,7 @@ if test "$NECKO_WIFI" -a \
         "$OS_ARCH" != "Linux" -a \
         "$OS_ARCH" != "Darwin" -a \
         "$OS_ARCH" != "SunOS" -a \
-        "$OS_ARCH" != "WINNT" -a \
-        "$OS_ARCH" != "WINCE"; then
+        "$OS_ARCH" != "WINNT"; then
   AC_MSG_ERROR([Necko WiFi scanning not supported on your platform, use --disable-necko-wifi])
 fi
 
@@ -8866,12 +8672,7 @@ MOZ_ARG_DISABLE_BOOL(ctypes,
     BUILD_CTYPES=1)
 AC_SUBST(BUILD_CTYPES)
 if test "$BUILD_CTYPES"; then
-  if test "$OS_ARCH" = "WINCE" -a `echo $OS_TEST | grep -ic arm` = 1; then
-    # Disable ctypes for arm/wince.
-    BUILD_CTYPES=
-  else
     AC_DEFINE(BUILD_CTYPES)
-  fi
 fi
 
 dnl NECKO_ configuration options are not global
@@ -9048,10 +8849,6 @@ AC_SUBST(MOZ_TOOLS_DIR)
 AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(PYTHON)
 AC_SUBST(MAKENSISU)
-
-AC_SUBST(WINCE)
-AC_SUBST(WINCE_SDK_DIR)
-AC_SUBST(WINCE_WINDOWS_MOBILE)
 
 dnl Echo the CFLAGS to remove extra whitespace.
 CFLAGS=`echo \
@@ -9276,7 +9073,7 @@ dnl ========================================================
 if test "$OS_ARCH" = "Darwin"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
-elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2" -a "$OS_ARCH" != "WINCE"; then
+elif test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "OS2"; then
   AC_DEFINE(XP_UNIX)
   AC_DEFINE(UNIX_ASYNC_DNS)
 fi
@@ -9499,7 +9296,7 @@ fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
     AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
-    if test "$OS_ARCH" != "WINNT" -a "$OS_ARCH" != "WINCE"; then
+    if test "$OS_ARCH" != "WINNT"; then
        NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$LIBXUL_DIST --exec-prefix=$MOZ_BUILD_ROOT/dist --libdir=$LIBXUL_DIST/lib --libs`
        $PERL -pi.bak -e "s '^NSPR_LIBS\\s*=.*'NSPR_LIBS = $NSPR_LIBS'" config/autoconf.mk
        NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$LIBXUL_DIST --exec-prefix=$MOZ_BUILD_ROOT/dist --includedir=$LIBXUL_DIST/include/nspr --cflags`
