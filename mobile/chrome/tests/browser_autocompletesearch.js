@@ -56,7 +56,7 @@ function saveMockCache() {
     let fileName = fileHandler.getFileFromURLSpec(mockCacheURI.JARFile.spec);
     zReader.open(fileName);
 
-    let extract = mockCacheURI.JARFile.spec.split("!")[1];
+    let extract = mockCacheURI.spec.split("!")[1];
     extract = extract.substring(1, extract.lastIndexOf("/") + 1);
     extract += "mock_autocomplete.json";
     info("extract path: " + extract);
