@@ -658,7 +658,7 @@ nsSVGOuterSVGFrame::UpdateAndInvalidateCoveredRegion(nsIFrame *aFrame)
   Invalidate(nsSVGUtils::FindFilterInvalidation(aFrame, oldRegion));
   svgFrame->UpdateCoveredRegion();
   nsRect newRegion = svgFrame->GetCoveredRegion();
-  if (oldRegion == newRegion)
+  if (oldRegion.IsEqualInterior(newRegion))
     return PR_FALSE;
 
   Invalidate(nsSVGUtils::FindFilterInvalidation(aFrame, newRegion));

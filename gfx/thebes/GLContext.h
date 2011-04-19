@@ -1147,7 +1147,7 @@ public:
 
         nsIntRect thisRect = ScissorRect();
         mScissorStack.TruncateLength(mScissorStack.Length() - 1);
-        if (thisRect != ScissorRect()) {
+        if (!thisRect.IsEqualInterior(ScissorRect())) {
             raw_fScissor(ScissorRect().x, ScissorRect().y,
                               ScissorRect().width, ScissorRect().height);
         }
@@ -1198,7 +1198,7 @@ public:
 
         nsIntRect thisRect = ViewportRect();
         mViewportStack.TruncateLength(mViewportStack.Length() - 1);
-        if (thisRect != ViewportRect()) {
+        if (!thisRect.IsEqualInterior(ViewportRect())) {
             raw_fViewport(ViewportRect().x, ViewportRect().y,
                           ViewportRect().width, ViewportRect().height);
         }

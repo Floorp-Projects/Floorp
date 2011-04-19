@@ -514,6 +514,6 @@ gfxUtils::GfxRectToIntRect(const gfxRect& aIn, nsIntRect* aOut)
 {
   *aOut = nsIntRect(PRInt32(aIn.X()), PRInt32(aIn.Y()),
   PRInt32(aIn.Width()), PRInt32(aIn.Height()));
-  return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height) == aIn;
+  return gfxRect(aOut->x, aOut->y, aOut->width, aOut->height).IsEqualEdges(aIn);
 }
 

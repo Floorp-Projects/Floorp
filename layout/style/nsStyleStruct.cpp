@@ -699,7 +699,7 @@ nsChangeHint nsStyleList::CalcDifference(const nsStyleList& aOther) const
     return NS_STYLE_HINT_FRAMECHANGE;
   if (EqualImages(mListStyleImage, aOther.mListStyleImage) &&
       mListStyleType == aOther.mListStyleType) {
-    if (mImageRegion == aOther.mImageRegion)
+    if (mImageRegion.IsEqualInterior(aOther.mImageRegion))
       return NS_STYLE_HINT_NONE;
     if (mImageRegion.width == aOther.mImageRegion.width &&
         mImageRegion.height == aOther.mImageRegion.height)
@@ -1599,7 +1599,7 @@ nsStyleImage::ComputeActualCropRect(nsIntRect& aActualCropRect,
   aActualCropRect.IntersectRect(imageRect, cropRect);
 
   if (aIsEntireImage)
-    *aIsEntireImage = (aActualCropRect == imageRect);
+    *aIsEntireImage = aActualCropRect.IsEqualInterior(imageRect);
   return PR_TRUE;
 }
 
@@ -2128,7 +2128,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mBreakBefore != aOther.mBreakBefore
       || mBreakAfter != aOther.mBreakAfter
       || mAppearance != aOther.mAppearance
-      || mClipFlags != aOther.mClipFlags || mClip != aOther.mClip)
+      || mClipFlags != aOther.mClipFlags || !mClip.IsEqualInterior(aOther.mClip))
     NS_UpdateHint(hint, NS_CombineHint(nsChangeHint_ReflowFrame, nsChangeHint_RepaintFrame));
 
   if (mOpacity != aOther.mOpacity) {

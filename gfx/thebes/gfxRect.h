@@ -87,8 +87,14 @@ struct THEBES_API gfxRect
     int operator==(const gfxRect& s) const {
         return x == s.x && y == s.y && width == s.width && height == s.height;
     }
-    int operator!=(const gfxRect& s) const {
-        return !(*this == s);
+    PRBool IsEqualEdges(const gfxRect& aRect) const {
+      return x == aRect.x && y == aRect.y &&
+             width == aRect.width && height == aRect.height;
+    }
+    // Return true if the rectangles contain the same area of the plane.
+    // Use when we do not care about differences in empty rectangles.
+    PRBool IsEqualInterior(const gfxRect& aRect) const {
+      return IsEqualEdges(aRect) || (IsEmpty() && aRect.IsEmpty());
     }
 
     void MoveTo(const gfxPoint& aPt) { x = aPt.x; y = aPt.y; }
