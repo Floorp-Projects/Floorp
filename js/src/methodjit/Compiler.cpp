@@ -1943,59 +1943,11 @@ mjit::Compiler::generateMethod()
             jsop_eleminc(op, STRICT_VARIANT(stubs::ElemDec));
           END_CASE(JSOP_ELEMDEC)
 
-          BEGIN_CASE(JSOP_GETTHISPROP)
-            /* Push thisv onto stack. */
-            jsop_this();
-            if (cx->typeInferenceEnabled()) {
-                /*
-                 * Make a new type set to capture the types of the value just
-                 * pushed. This is duplicating the work done to handle
-                 * GETTHISPROP within inference itself, as with this fused
-                 * opcode there is no place to hang the result of transforming
-                 * 'this' into an object.
-                 */
-                types::TypeSet *newTypes = types::TypeSet::make(cx, "thisprop");
-                if (!newTypes)
-                    return Compile_Error;
-                script->thisTypes()->addTransformThis(cx, script, newTypes);
-                frame.extra(frame.peek(-1)).types = newTypes;
-            }
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(PC)), knownPushedType(0)))
-                return Compile_Error;
-          END_CASE(JSOP_GETTHISPROP);
-
-          BEGIN_CASE(JSOP_GETARGPROP)
-          {
-            /* Push arg onto stack. */
-            uint32 arg = GET_SLOTNO(PC);
-            frame.pushArg(arg, knownArgumentType(arg));
-            if (cx->typeInferenceEnabled())
-                frame.extra(frame.peek(-1)).types = script->argTypes(arg);
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[ARGNO_LEN])), knownPushedType(0)))
-                return Compile_Error;
-          }
-          END_CASE(JSOP_GETARGPROP)
-
-          BEGIN_CASE(JSOP_GETLOCALPROP)
-          {
-            uint32 local = GET_SLOTNO(PC);
-            frame.pushLocal(local, knownLocalType(local));
-            if (cx->typeInferenceEnabled() && local < script->nfixed)
-                frame.extra(frame.peek(-1)).types = script->localTypes(local);
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[SLOTNO_LEN])), knownPushedType(0)))
-                return Compile_Error;
-          }
-          END_CASE(JSOP_GETLOCALPROP)
-
           BEGIN_CASE(JSOP_GETPROP)
+          BEGIN_CASE(JSOP_LENGTH)
             if (!jsop_getprop(script->getAtom(fullAtomIndex(PC)), knownPushedType(0)))
                 return Compile_Error;
           END_CASE(JSOP_GETPROP)
-
-          BEGIN_CASE(JSOP_LENGTH)
-            if (!jsop_length())
-                return Compile_Error;
-          END_CASE(JSOP_LENGTH)
 
           BEGIN_CASE(JSOP_GETELEM)
             if (!jsop_getelem(false))
@@ -4347,78 +4299,6 @@ mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
     return true;
 }
 
-bool
-mjit::Compiler::jsop_length()
-{
-    REJOIN_SITE_3(stubs::Length, ic::GetProp, stubs::GetProp);
-    FrameEntry *top = frame.peek(-1);
-
-    if (top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_STRING) {
-        if (top->isConstant()) {
-            JSString *str = top->getValue().toString();
-            Value v;
-            v.setNumber(uint32(str->length()));
-            frame.pop();
-            frame.push(v);
-        } else {
-            RegisterID str = frame.ownRegForData(top);
-            masm.loadPtr(Address(str, JSString::offsetOfLengthAndFlags()), str);
-            masm.urshift32(Imm32(JSString::LENGTH_SHIFT), str);
-            frame.pop();
-            frame.pushTypedPayload(JSVAL_TYPE_INT32, str);
-        }
-        return true;
-    }
-
-    /*
-     * Check if this is an array we can make a loop invariant entry for.
-     * This will fail for objects which are not definitely dense arrays.
-     */
-    if (loop && loop->generatingInvariants()) {
-        FrameEntry *fe = loop->invariantLength(top);
-        if (fe) {
-            frame.pop();
-            frame.pushTemporary(fe);
-            return true;
-        }
-    }
-
-    frame.forgetMismatchedObject(top);
-
-    /*
-     * Check if we are accessing the 'length' property of a known dense array.
-     * Note that if the types are known to indicate dense arrays, their lengths
-     * must fit in an int32.
-     */
-    types::TypeSet *types = frame.extra(top).types;
-    types::ObjectKind kind = types ? types->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
-    if (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) {
-        bool isObject = top->isTypeKnown();
-        if (!isObject) {
-            Jump notObject = frame.testObject(Assembler::NotEqual, top);
-            stubcc.linkExit(notObject, Uses(1));
-            stubcc.leave();
-            OOL_STUBCALL(stubs::Length);
-        }
-        RegisterID reg = frame.tempRegForData(top);
-        frame.pop();
-        frame.push(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
-        if (!isObject)
-            stubcc.rejoin(Changes(1));
-        return true;
-    }
-
-#if defined JS_POLYIC
-    return jsop_getprop(cx->runtime->atomState.lengthAtom, knownPushedType(0));
-#else
-    prepareStubCall(Uses(1));
-    INLINE_STUBCALL(stubs::Length);
-    frame.pop();
-    pushSyncedEntry(0);
-    return true;
-#endif
-}
-
 #ifdef JS_MONOIC
 void
 mjit::Compiler::passMICAddress(GlobalNameICInfo &ic)
@@ -4438,10 +4318,27 @@ bool
 mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
                              bool doTypeCheck, bool usePropCache)
 {
-    REJOIN_SITE_3(usePropCache ? ic::GetProp : ic::GetPropNoCache,
-                  stubs::GetProp, stubs::GetPropNoCache);
-
+    REJOIN_SITE_3(ic::GetProp, ic::GetPropNoCache, stubs::GetProp);
     FrameEntry *top = frame.peek(-1);
+
+    /* Handle length accesses on known strings without using a PIC. */
+    if (atom == cx->runtime->atomState.lengthAtom &&
+        top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_STRING) {
+        if (top->isConstant()) {
+            JSString *str = top->getValue().toString();
+            Value v;
+            v.setNumber(uint32(str->length()));
+            frame.pop();
+            frame.push(v);
+        } else {
+            RegisterID str = frame.ownRegForData(top);
+            masm.loadPtr(Address(str, JSString::offsetOfLengthAndFlags()), str);
+            masm.urshift32(Imm32(JSString::LENGTH_SHIFT), str);
+            frame.pop();
+            frame.pushTypedPayload(JSVAL_TYPE_INT32, str);
+        }
+        return true;
+    }
 
     /* If the incoming type will never PIC, take slow path. */
     if (top->isNotType(JSVAL_TYPE_OBJECT)) {
@@ -4451,6 +4348,44 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
 
     frame.forgetMismatchedObject(top);
 
+    if (atom == cx->runtime->atomState.lengthAtom) {
+        /*
+         * Check if this is an array we can make a loop invariant entry for.
+         * This will fail for objects which are not definitely dense arrays.
+         */
+        if (loop && loop->generatingInvariants()) {
+            FrameEntry *fe = loop->invariantLength(top);
+            if (fe) {
+                frame.pop();
+                frame.pushTemporary(fe);
+                return true;
+            }
+        }
+
+        /*
+         * Check if we are accessing the 'length' property of a known dense array.
+         * Note that if the types are known to indicate dense arrays, their lengths
+         * must fit in an int32.
+         */
+        types::TypeSet *types = frame.extra(top).types;
+        types::ObjectKind kind = types ? types->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
+        if (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) {
+            bool isObject = top->isTypeKnown();
+            if (!isObject) {
+                Jump notObject = frame.testObject(Assembler::NotEqual, top);
+                stubcc.linkExit(notObject, Uses(1));
+                stubcc.leave();
+                OOL_STUBCALL(stubs::GetProp);
+            }
+            RegisterID reg = frame.tempRegForData(top);
+            frame.pop();
+            frame.push(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
+            if (!isObject)
+                stubcc.rejoin(Changes(1));
+            return true;
+        }
+    }
+
     /*
      * Check if we are accessing a known type which always has the property
      * in a particular inline slot. Get the property directly in this case,
@@ -4458,9 +4393,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
      */
     JSOp op = JSOp(*PC);
     types::TypeSet *types = frame.extra(top).types;
-    if ((op == JSOP_GETPROP || op == JSOP_GETTHISPROP ||
-         op == JSOP_GETARGPROP || op == JSOP_GETLOCALPROP) &&
-        types && !types->unknown() && types->getObjectCount() == 1 &&
+    if (op == JSOP_GETPROP && types && !types->unknown() && types->getObjectCount() == 1 &&
         !types->getObject(0)->unknownProperties()) {
         JS_ASSERT(usePropCache);
         types::TypeObject *object = types->getObject(0);

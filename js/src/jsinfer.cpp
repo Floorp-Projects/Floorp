@@ -3341,47 +3341,6 @@ AnalyzeBytecode(JSContext *cx, AnalyzeState &state, JSScript *script, uint32 off
         break;
       }
 
-      case JSOP_GETTHISPROP: {
-        jsid id = GetAtomId(cx, script, pc, 0);
-
-        /* Need a new type set to model conversion of NULL to the global object. */
-        TypeSet *newTypes = TypeSet::make(cx, "thisprop");
-        if (!newTypes)
-            return false;
-        script->thisTypes()->addTransformThis(cx, script, newTypes);
-        newTypes->addGetProperty(cx, script, pc, &pushed[0], id);
-
-        if (CheckNextTest(pc))
-            pushed[0].addType(cx, TYPE_UNDEFINED);
-        break;
-      }
-
-      case JSOP_GETARGPROP: {
-        TypeSet *types = script->argTypes(GET_ARGNO(pc));
-
-        jsid id = GetAtomId(cx, script, pc, SLOTNO_LEN);
-        types->addGetProperty(cx, script, pc, &pushed[0], id);
-
-        if (CheckNextTest(pc))
-            pushed[0].addType(cx, TYPE_UNDEFINED);
-        break;
-      }
-
-      case JSOP_GETLOCALPROP: {
-        uint32 local = GET_SLOTNO(pc);
-        TypeSet *types = local < script->nfixed ? script->localTypes(local) : NULL;
-        if (types) {
-            jsid id = GetAtomId(cx, script, pc, SLOTNO_LEN);
-            types->addGetProperty(cx, script, pc, &pushed[0], id);
-        } else {
-            pushed[0].addType(cx, TYPE_UNKNOWN);
-        }
-
-        if (CheckNextTest(pc))
-            pushed[0].addType(cx, TYPE_UNDEFINED);
-        break;
-      }
-
       case JSOP_GETELEM:
       case JSOP_CALLELEM:
         /*
@@ -4082,8 +4041,6 @@ AnalyzeScriptProperties(JSContext *cx, JSScript *script)
           case JSOP_LOCALINC:
           case JSOP_LOCALDEC:
           case JSOP_GETPROP:
-          case JSOP_GETARGPROP:
-          case JSOP_GETLOCALPROP:
           case JSOP_GETELEM:
           case JSOP_LENGTH:
           case JSOP_ADD:

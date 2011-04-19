@@ -445,7 +445,6 @@ Script::analyze(JSContext *cx, JSScript *script)
             break;
 
           case JSOP_THIS:
-          case JSOP_GETTHISPROP:
             usesThis = true;
             break;
 
@@ -569,7 +568,6 @@ Script::analyze(JSContext *cx, JSScript *script)
             break;
 
           case JSOP_CALLLOCAL:
-          case JSOP_GETLOCALPROP:
           case JSOP_INCLOCAL:
           case JSOP_DECLOCAL:
           case JSOP_LOCALINC:
@@ -884,8 +882,7 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
 
         switch (op) {
           case JSOP_GETARG:
-          case JSOP_CALLARG:
-          case JSOP_GETARGPROP: {
+          case JSOP_CALLARG: {
             unsigned arg = GET_ARGNO(pc);
             if (!analysis->argEscapes(arg)) {
                 if (!addVariable(cx, args[arg], offset))
@@ -918,8 +915,7 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
           }
 
           case JSOP_GETLOCAL:
-          case JSOP_CALLLOCAL:
-          case JSOP_GETLOCALPROP: {
+          case JSOP_CALLLOCAL: {
             unsigned local = GET_SLOTNO(pc);
             if (!analysis->localEscapes(local)) {
                 JS_ASSERT(local < nfixed);
@@ -956,7 +952,6 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
           }
 
           case JSOP_THIS:
-          case JSOP_GETTHISPROP:
             if (!addVariable(cx, *thisVar, offset))
                 return false;
             break;
