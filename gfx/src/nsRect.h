@@ -83,7 +83,7 @@ struct NS_GFX nsRect {
   PRBool IsEmpty() const {
     return (PRBool) ((height <= 0) || (width <= 0));
   }
-  void   Empty() {width = height = 0;}
+  void SetEmpty() {width = height = 0;}
 
   // Returns true if this rectangle contains the interior of aRect. Always
   // returns true if aRect is empty, and always returns false is aRect is
@@ -121,7 +121,7 @@ struct NS_GFX nsRect {
   //
   // 'this' can be the same object as either aRect1 or aRect2
   void UnionRectEdges(const nsRect& aRect1, const nsRect& aRect2);
-  
+
   // Accessors
   void SetRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {
     x = aX; y = aY; width = aWidth; height = aHeight;

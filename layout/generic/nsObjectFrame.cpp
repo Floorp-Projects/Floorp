@@ -2951,7 +2951,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 
   // Make sure that our windowless rect has been zeroed out, so if we
   // get reinstantiated we'll send the right messages to the plug-in.
-  mWindowlessRect.Empty();
+  mWindowlessRect.SetEmpty();
 
   PRBool oldVal = mPreventInstantiation;
   mPreventInstantiation = PR_TRUE;

@@ -2930,7 +2930,7 @@ PluginInstanceChild::ShowPluginFrame()
     // Clear accRect here to be able to pass
     // test_invalidate_during_plugin_paint  test
     nsIntRect rect = mAccumulatedInvalidRect;
-    mAccumulatedInvalidRect.Empty();
+    mAccumulatedInvalidRect.SetEmpty();
 
     // Fix up old invalidations that might have been made when our
     // surface was a different size

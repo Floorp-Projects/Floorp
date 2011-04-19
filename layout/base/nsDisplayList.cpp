@@ -1387,7 +1387,7 @@ ComputeDisjointRectangles(const nsRegion& aRegion,
 
     if (!accumulated.IsEmpty()) {
       aRects->AppendElement(accumulated);
-      accumulated.Empty();
+      accumulated.SetEmpty();
     }
 
     if (!r)
