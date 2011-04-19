@@ -959,7 +959,7 @@ function DoDrawWindow(ctx, x, y, w, h)
         // browser element
         flags |= ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
     } else if (gBrowserIsRemote) {
-        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | can't drawWindow remote content\n");
+        gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " + gCurrentURL + " | can't drawWindow remote content\n");
         ++gTestResults.Exception;
     }
 
