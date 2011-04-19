@@ -2981,8 +2981,14 @@ HUD_SERVICE.prototype =
 
     let strings = [];
     let newGroup = false;
-    for (let i = 0; i < aOutputNode.selectedCount; i++) {
-      let item = aOutputNode.selectedItems[i];
+
+    let children = aOutputNode.children;
+
+    for (let i = 0; i < children.length; i++) {
+      let item = children[i];
+      if (!item.selected) {
+        continue;
+      }
 
       // Add dashes between groups so that group boundaries show up in the
       // copied output.
