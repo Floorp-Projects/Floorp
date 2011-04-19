@@ -308,26 +308,26 @@ ConditionRect(gfxRect& r) {
         return PR_FALSE;
 
     if (r.X() < 0.0) {
-        r.size.width += r.X();
-        if (r.size.width < 0.0)
+        r.width += r.X();
+        if (r.width < 0.0)
             return PR_FALSE;
-        r.pos.x = 0.0;
+        r.x = 0.0;
     }
 
     if (r.XMost() > CAIRO_COORD_MAX) {
-        r.size.width = CAIRO_COORD_MAX - r.X();
+        r.width = CAIRO_COORD_MAX - r.X();
     }
 
     if (r.Y() < 0.0) {
-        r.size.height += r.Y();
+        r.height += r.Y();
         if (r.Height() < 0.0)
             return PR_FALSE;
 
-        r.pos.y = 0.0;
+        r.y = 0.0;
     }
 
     if (r.YMost() > CAIRO_COORD_MAX) {
-        r.size.height = CAIRO_COORD_MAX - r.Y();
+        r.height = CAIRO_COORD_MAX - r.Y();
     }
     return PR_TRUE;
 }
