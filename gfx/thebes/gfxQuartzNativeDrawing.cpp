@@ -107,7 +107,7 @@ gfxQuartzNativeDrawing::BeginNativeDrawing()
         // bug 382049 - need to explicity set the composite operation to sourceOver
         CGContextSetCompositeOperation(mCGContext, kPrivateCGCompositeSourceOver);
     } else {
-        mQuartzSurface = new gfxQuartzSurface(mNativeRect.size,
+        mQuartzSurface = new gfxQuartzSurface(mNativeRect.Size(),
                                               gfxASurface::ImageFormatARGB32);
         if (mQuartzSurface->CairoStatus())
             return nsnull;
@@ -133,6 +133,6 @@ gfxQuartzNativeDrawing::EndNativeDrawing()
 
         // Copy back to destination
         mContext->Translate(mNativeRect.TopLeft());
-        mContext->DrawSurface(mQuartzSurface, mNativeRect.size);
+        mContext->DrawSurface(mQuartzSurface, mNativeRect.Size());
     }
 }

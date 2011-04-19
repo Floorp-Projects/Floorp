@@ -293,21 +293,17 @@ public:
   static const PRInt32 kGetInfoIndex_Title;
   static const PRInt32 kGetInfoIndex_RevHost;
   static const PRInt32 kGetInfoIndex_VisitCount;
+  static const PRInt32 kGetInfoIndex_VisitDate;
+  static const PRInt32 kGetInfoIndex_FaviconURL;
+  static const PRInt32 kGetInfoIndex_SessionId;
   static const PRInt32 kGetInfoIndex_ItemId;
   static const PRInt32 kGetInfoIndex_ItemDateAdded;
   static const PRInt32 kGetInfoIndex_ItemLastModified;
-  static const PRInt32 kGetInfoIndex_ItemTags;
   static const PRInt32 kGetInfoIndex_ItemParentId;
+  static const PRInt32 kGetInfoIndex_ItemTags;
+  static const PRInt32 kGetInfoIndex_Frecency;
 
   PRInt64 GetTagsFolder();
-
-  // Constants for the columns returned by the above statement
-  // (in addition to the ones above).
-  static const PRInt32 kGetInfoIndex_VisitDate;
-  static const PRInt32 kGetInfoIndex_FaviconURL;
-
-  // used in execute queries to get session ID info (only for visits)
-  static const PRInt32 kGetInfoIndex_SessionId;
 
   // this actually executes a query and gives you results, it is used by
   // nsNavHistoryQueryResultNode
