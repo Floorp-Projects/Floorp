@@ -346,7 +346,7 @@ class SetPropCompiler : public PICStubCompiler
             } else {
                 /* Check capacity. */
                 Address capacity(pic.objReg, offsetof(JSObject, capacity));
-                masm.load32(masm.payloadOf(capacity), pic.shapeReg);
+                masm.load32(capacity, pic.shapeReg);
                 Jump overCapacity = masm.branch32(Assembler::LessThanOrEqual, pic.shapeReg,
                                                   Imm32(shape->slot));
                 if (!slowExits.append(overCapacity))
@@ -1853,7 +1853,7 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
         if (status == Lookup_Error)
             THROW();
     }
-    
+
     Value rval = f.regs.sp[-1];
     nstub(f, atom);
 }

@@ -343,7 +343,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
             if (!cx->stack().pushInvokeArgs(cx, 1, &args))
                 return false;
 
-            args.callee() = toJSON;
+            args.calleev() = toJSON;
             args.thisv() = *vp;
             args[0] = StringValue(keyStr);
 
@@ -366,7 +366,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
         if (!cx->stack().pushInvokeArgs(cx, 2, &args))
             return false;
 
-        args.callee() = ObjectValue(*scx->replacer);
+        args.calleev() = ObjectValue(*scx->replacer);
         args.thisv() = ObjectValue(*holder);
         args[0] = StringValue(keyStr);
         args[1] = *vp;

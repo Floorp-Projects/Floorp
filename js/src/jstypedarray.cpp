@@ -1337,7 +1337,7 @@ class TypedArrayTemplate
         if (size != 0 && count >= INT32_MAX / size) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
                                  JSMSG_NEED_DIET, "size and count");
-            return false;
+            return NULL;
         }
 
         int32 bytelen = size * count;
@@ -1425,7 +1425,9 @@ TypedArrayTemplate<double>::copyIndexToValue(JSContext *cx, uint32 index, Value 
 
 Class ArrayBuffer::jsclass = {
     "ArrayBuffer",
-    JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
+    JSCLASS_HAS_PRIVATE |
+    JSCLASS_CONCURRENT_FINALIZER |
+    JSCLASS_HAS_CACHED_PROTO(JSProto_ArrayBuffer),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -1690,7 +1692,7 @@ TypedArrayConstruct(JSContext *cx, jsint atype, uintN argc, Value *argv)
 
       default:
         JS_NOT_REACHED("shouldn't have gotten here");
-        return false;
+        return NULL;
     }
 }
 

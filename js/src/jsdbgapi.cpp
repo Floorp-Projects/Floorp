@@ -1399,49 +1399,11 @@ JS_GetScriptedCaller(JSContext *cx, JSStackFrame *fp)
     return js_GetScriptedCaller(cx, fp);
 }
 
-JSPrincipals *
-js_StackFramePrincipals(JSContext *cx, JSStackFrame *fp)
-{
-    JSSecurityCallbacks *callbacks;
-
-    if (fp->isFunctionFrame()) {
-        callbacks = JS_GetSecurityCallbacks(cx);
-        if (callbacks && callbacks->findObjectPrincipals) {
-            if (&fp->fun()->compiledFunObj() != &fp->callee())
-                return callbacks->findObjectPrincipals(cx, &fp->callee());
-            /* FALL THROUGH */
-        }
-    }
-    if (fp->isScriptFrame())
-        return fp->script()->principals;
-    return NULL;
-}
-
-JSPrincipals *
-js_EvalFramePrincipals(JSContext *cx, JSObject *callee, JSStackFrame *caller)
-{
-    JSPrincipals *principals, *callerPrincipals;
-    JSSecurityCallbacks *callbacks;
-
-    callbacks = JS_GetSecurityCallbacks(cx);
-    if (callbacks && callbacks->findObjectPrincipals)
-        principals = callbacks->findObjectPrincipals(cx, callee);
-    else
-        principals = NULL;
-    if (!caller)
-        return principals;
-    callerPrincipals = js_StackFramePrincipals(cx, caller);
-    return (callerPrincipals && principals &&
-            callerPrincipals->subsume(callerPrincipals, principals))
-           ? principals
-           : callerPrincipals;
-}
-
 JS_PUBLIC_API(void *)
 JS_GetFrameAnnotation(JSContext *cx, JSStackFrame *fp)
 {
     if (fp->annotation() && fp->isScriptFrame()) {
-        JSPrincipals *principals = js_StackFramePrincipals(cx, fp);
+        JSPrincipals *principals = fp->principals(cx);
 
         if (principals && principals->globalPrivilegesEnabled(cx, principals)) {
             /*
@@ -1466,7 +1428,7 @@ JS_GetFramePrincipalArray(JSContext *cx, JSStackFrame *fp)
 {
     JSPrincipals *principals;
 
-    principals = js_StackFramePrincipals(cx, fp);
+    principals = fp->principals(cx);
     if (!principals)
         return NULL;
     return principals->getPrincipalArray(cx, principals);
@@ -1530,7 +1492,7 @@ JS_GetFrameThis(JSContext *cx, JSStackFrame *fp, jsval *thisv)
     if (!ac.enter())
         return false;
 
-    if (!fp->computeThis(cx))
+    if (!ComputeThis(cx, fp))
         return false;
     *thisv = Jsvalify(fp->thisValue());
     return true;
@@ -1668,7 +1630,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
      * we use a static level that will cause us not to attempt to optimize
      * variable references made by this frame.
      */
-    JSScript *script = Compiler::compileScript(cx, scobj, fp, js_StackFramePrincipals(cx, fp),
+    JSScript *script = Compiler::compileScript(cx, scobj, fp, fp->principals(cx),
                                                TCF_COMPILE_N_GO, chars, length,
                                                filename, lineno, cx->findVersion(),
                                                NULL, UpvarCookie::UPVAR_LEVEL_LIMIT);
@@ -1677,7 +1639,7 @@ JS_EvaluateUCInStackFrame(JSContext *cx, JSStackFrame *fp,
         return false;
 
     script->isUncachedEval = true;
-    bool ok = Execute(cx, scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL, Valueify(rval));
+    bool ok = Execute(cx, *scobj, script, fp, JSFRAME_DEBUGGER | JSFRAME_EVAL, Valueify(rval));
 
     js_DestroyScript(cx, script);
     return ok;

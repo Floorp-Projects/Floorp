@@ -159,7 +159,7 @@
 
 /* CPU(SPARC) - any SPARC, true for CPU(SPARC32) and CPU(SPARC64) */
 #if WTF_CPU_SPARC32 || WTF_CPU_SPARC64
-#define WTF_CPU_SPARC
+#define WTF_CPU_SPARC 1
 #endif
 
 /* CPU(X86) - i386 / x86 32-bit */
@@ -857,6 +857,8 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 /* The JIT is tested & working on x86 Windows */
 #elif WTF_CPU_X86 && WTF_PLATFORM_WIN
     #define ENABLE_JIT 1
+#elif WTF_CPU_SPARC
+    #define ENABLE_JIT 1
 #endif
 
 #if WTF_PLATFORM_QT
@@ -920,6 +922,7 @@ on MinGW. See https://bugs.webkit.org/show_bug.cgi?id=29268 */
 /* YARR supports x86 & x86-64, and has been tested on Mac and Windows. */
 #if (WTF_CPU_X86 \
  || WTF_CPU_X86_64 \
+ || WTF_CPU_SPARC \
  || WTF_CPU_ARM_TRADITIONAL \
  || WTF_CPU_ARM_THUMB2 \
  || WTF_CPU_X86)

@@ -202,9 +202,9 @@ namespace nanojit
         void asm_cmp(LIns *cond); \
         void asm_cmpi(LIns *cond); \
         void asm_cmpd(LIns *cond);\
-        NIns* asm_branch_helper(bool, LIns* cond, NIns*);\
-        NIns* asm_branchi_helper(bool, LIns* cond, NIns*);\
-        NIns* asm_branchd_helper(bool, LIns* cond, NIns*);\
+        Branches asm_branch_helper(bool, LIns* cond, NIns*);\
+        Branches asm_branchi_helper(bool, LIns* cond, NIns*);\
+        Branches asm_branchd_helper(bool, LIns* cond, NIns*);\
         void asm_div_mod(LIns *cond); \
         void asm_load(int d, Register r); \
         void asm_immd(Register r, uint64_t q, double d, bool canClobberCCs); \

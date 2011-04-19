@@ -43,6 +43,7 @@
 #ifndef jshashtable_h_
 #define jshashtable_h_
 
+#include "jsalloc.h"
 #include "jstl.h"
 
 /* Gross special case for Gecko, which defines malloc/calloc/free. */

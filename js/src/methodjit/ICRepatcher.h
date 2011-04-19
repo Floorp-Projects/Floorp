@@ -72,7 +72,7 @@ class Repatcher : public JSC::RepatchBuffer
 
     /* Patch a stub call. */
     void relink(CodeLocationCall call, FunctionPtr stub) {
-#if defined JS_CPU_X64 || defined JS_CPU_X86
+#if defined JS_CPU_X64 || defined JS_CPU_X86 || defined JS_CPU_SPARC
         JSC::RepatchBuffer::relink(call, stub);
 #elif defined JS_CPU_ARM
         /*
@@ -95,7 +95,7 @@ class Repatcher : public JSC::RepatchBuffer
 
     /* Patch the offset of a Value load emitted by loadValueWithAddressOffsetPatch. */
     void patchAddressOffsetForValueLoad(CodeLocationLabel label, uint32 offset) {
-#if defined JS_CPU_X64 || defined JS_CPU_ARM
+#if defined JS_CPU_X64 || defined JS_CPU_ARM || defined JS_CPU_SPARC
         repatch(label.dataLabel32AtOffset(0), offset);
 #elif defined JS_CPU_X86
         static const unsigned LOAD_TYPE_OFFSET = 6;
@@ -115,7 +115,7 @@ class Repatcher : public JSC::RepatchBuffer
     }
 
     void patchAddressOffsetForValueStore(CodeLocationLabel label, uint32 offset, bool typeConst) {
-#if defined JS_CPU_ARM || defined JS_CPU_X64
+#if defined JS_CPU_ARM || defined JS_CPU_X64 || defined JS_CPU_SPARC
         (void) typeConst;
         repatch(label.dataLabel32AtOffset(0), offset);
 #elif defined JS_CPU_X86

@@ -955,7 +955,7 @@ proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
 {
     // TODO: throwing away strict
     bool deleted;
-    if (!JSProxy::delete_(cx, obj, id, &deleted))
+    if (!JSProxy::delete_(cx, obj, id, &deleted) || !js_SuppressDeletedProperty(cx, obj, id))
         return false;
     rval->setBoolean(deleted);
     return true;
@@ -1166,16 +1166,6 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
         return NULL;
 
     return obj;
-}
-
-static JSObject *
-NonNullObject(JSContext *cx, const Value &v)
-{
-    if (v.isPrimitive()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
-        return NULL;
-    }
-    return &v.toObject();
 }
 
 static JSBool

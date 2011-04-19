@@ -231,6 +231,23 @@ namespace nanojit
         LabelState *get(LIns *);
     };
 
+    /**
+     * Some architectures (i386, X64) can emit two branches that need patching
+     * in some situations. This is returned by asm_branch() implementations
+     * with 0, 1 or 2 of these fields set to a non-NULL value. (If only 1 is set, 
+     * it must be patch1, not patch2.)
+     */
+    struct Branches 
+    {
+        NIns* const branch1;
+        NIns* const branch2;
+        inline explicit Branches(NIns* b1 = NULL, NIns* b2 = NULL) 
+            : branch1(b1)
+            , branch2(b2)
+        {
+        }
+    };
+
     /** map tracking the register allocation state at each bailout point
      *  (represented by SideExit*) in a trace fragment. */
     typedef HashMap<SideExit*, RegAlloc*> RegAllocMap;
@@ -481,7 +498,7 @@ namespace nanojit
             void        asm_nongp_copy(Register r, Register s);
             void        asm_call(LIns*);
             Register    asm_binop_rhs_reg(LIns* ins);
-            NIns*       asm_branch(bool branchOnFalse, LIns* cond, NIns* targ);
+            Branches    asm_branch(bool branchOnFalse, LIns* cond, NIns* targ);
             NIns*       asm_branch_ov(LOpcode op, NIns* targ);
             void        asm_jtbl(LIns* ins, NIns** table);
             void        asm_insert_random_nop();
