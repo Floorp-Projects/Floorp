@@ -178,7 +178,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   // really need it or not, and the inner view will get it as the
   // parent.
   if (!HasView()) {
-    rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
+    rv = nsContainerFrame::CreateViewForFrame(this, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -939,7 +939,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
   NS_PRECONDITION(aDocument, "");
 
   // Our docshell and view trees have been updated for the new hierarchy.
-  // Now also update all nsThebesDeviceContext::mWidget to that of the
+  // Now also update all nsDeviceContext::mWidget to that of the
   // container view in the new hierarchy.
   nsCOMPtr<nsISupports> container = aDocument->GetContainer();
   nsCOMPtr<nsIDocShell> ds = do_QueryInterface(container);
@@ -951,7 +951,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
       if (dv) {
         nsCOMPtr<nsPresContext> pc;
         dv->GetPresContext(getter_AddRefs(pc));
-        nsIDeviceContext* dc = pc ? pc->DeviceContext() : nsnull;
+        nsDeviceContext* dc = pc ? pc->DeviceContext() : nsnull;
         if (dc) {
           nsIView* v = dv->FindContainerView();
           dc->Init(v ? v->GetNearestWidget(nsnull) : nsnull);

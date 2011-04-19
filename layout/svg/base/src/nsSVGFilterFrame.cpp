@@ -169,7 +169,7 @@ nsAutoFilterInstance::nsAutoFilterInstance(nsIFrame *aTarget,
     // We don't care if this overflows, because we can handle upscaling/
     // downscaling to filterRes
     PRBool overflow;
-    filterRes = nsSVGUtils::ConvertToSurfaceSize(filterRegion.size * scale,
+    filterRes = nsSVGUtils::ConvertToSurfaceSize(filterRegion.Size() * scale,
                                                  &overflow);
   }
 

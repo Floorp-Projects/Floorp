@@ -166,6 +166,10 @@ public:
 
     PRBool MakeCurrentImpl(PRBool aForce = PR_FALSE)
     {
+        if (!aForce && [NSOpenGLContext currentContext] == mContext) {
+            return PR_TRUE;
+        }
+
         if (mContext) {
             [mContext makeCurrentContext];
         }

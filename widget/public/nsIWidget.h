@@ -60,7 +60,7 @@ class   nsIAppShell;
 class   nsIToolkit;
 class   nsFontMetrics;
 class   nsRenderingContext;
-class   nsIDeviceContext;
+class   nsDeviceContext;
 struct  nsFont;
 class   nsIRollupListener;
 class   nsIMenuRollup;
@@ -307,7 +307,7 @@ class nsIWidget : public nsISupports {
                       nsNativeWidget   aNativeParent,
                       const nsIntRect  &aRect,
                       EVENT_CALLBACK   aHandleEventFunction,
-                      nsIDeviceContext *aContext,
+                      nsDeviceContext *aContext,
                       nsIAppShell      *aAppShell = nsnull,
                       nsIToolkit       *aToolkit = nsnull,
                       nsWidgetInitData *aInitData = nsnull) = 0;
@@ -331,7 +331,7 @@ class nsIWidget : public nsISupports {
     virtual already_AddRefed<nsIWidget>
     CreateChild(const nsIntRect  &aRect,
                 EVENT_CALLBACK   aHandleEventFunction,
-                nsIDeviceContext *aContext,
+                nsDeviceContext *aContext,
                 nsIAppShell      *aAppShell = nsnull,
                 nsIToolkit       *aToolkit = nsnull,
                 nsWidgetInitData *aInitData = nsnull,
@@ -350,7 +350,7 @@ class nsIWidget : public nsISupports {
      * aContext The new device context for the view
      */
     NS_IMETHOD AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
-                                    nsIDeviceContext *aContext) = 0;
+                                    nsDeviceContext *aContext) = 0;
 
     /**
      * Accessor functions to get and set secondary client data. Used by
@@ -936,7 +936,7 @@ class nsIWidget : public nsISupports {
     virtual void FreeNativeData(void * data, PRUint32 aDataType) = 0;//~~~
 
     // GetDeviceContext returns a weak pointer to this widget's device context
-    virtual nsIDeviceContext* GetDeviceContext() = 0;
+    virtual nsDeviceContext* GetDeviceContext() = 0;
 
     //@}
 

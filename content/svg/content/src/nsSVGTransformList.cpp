@@ -180,8 +180,7 @@ nsSVGTransformList::SetValueString(const nsAString& aValue)
   if (NS_FAILED(rv)) {
     // there was a parse error.
     rv = NS_ERROR_DOM_SYNTAX_ERR;
-  }
-  else {
+  } else {
     WillModify();
     ReleaseTransforms();
     PRInt32 count = xforms.Count();
@@ -235,6 +234,9 @@ NS_IMETHODIMP nsSVGTransformList::GetNumberOfItems(PRUint32 *aNumberOfItems)
 /* void clear (); */
 NS_IMETHODIMP nsSVGTransformList::Clear()
 {
+  if (mTransforms.IsEmpty()) {
+    return NS_OK;
+  }
   WillModify();
   ReleaseTransforms();
   DidModify();

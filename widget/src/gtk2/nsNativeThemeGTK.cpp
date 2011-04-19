@@ -53,7 +53,6 @@
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
-#include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 #include "nsTransform2D.h"
 #include "nsIMenuFrame.h"
@@ -788,7 +787,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
   }
 
   // Translate the dirty rect so that it is wrt the widget top-left.
-  dirtyRect.MoveBy(-rect.pos);
+  dirtyRect.MoveBy(-rect.TopLeft());
   // Round out the dirty rect to gdk pixels to ensure that gtk draws
   // enough pixels for interpolation to device pixels.
   dirtyRect.RoundOut();
@@ -837,7 +836,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
     // Rects are in device coords.
     ctx->IdentityMatrix(); 
   }
-  ctx->Translate(rect.pos + gfxPoint(drawingRect.x, drawingRect.y));
+  ctx->Translate(rect.TopLeft() + gfxPoint(drawingRect.x, drawingRect.y));
 
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
                "Trying to render an unsafe widget!");
@@ -879,7 +878,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
+nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType, nsIntMargin* aResult)
 {
   GtkTextDirection direction = GetTextDirection(aFrame);
@@ -930,7 +929,7 @@ nsNativeThemeGTK::GetWidgetBorder(nsIDeviceContext* aContext, nsIFrame* aFrame,
 }
 
 PRBool
-nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
+nsNativeThemeGTK::GetWidgetPadding(nsDeviceContext* aContext,
                                    nsIFrame* aFrame, PRUint8 aWidgetType,
                                    nsIntMargin* aResult)
 {
@@ -959,7 +958,7 @@ nsNativeThemeGTK::GetWidgetPadding(nsIDeviceContext* aContext,
 }
 
 PRBool
-nsNativeThemeGTK::GetWidgetOverflow(nsIDeviceContext* aContext,
+nsNativeThemeGTK::GetWidgetOverflow(nsDeviceContext* aContext,
                                     nsIFrame* aFrame, PRUint8 aWidgetType,
                                     nsRect* aOverflowRect)
 {
@@ -1246,11 +1245,7 @@ nsNativeThemeGTK::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
 NS_IMETHODIMP
 nsNativeThemeGTK::ThemeChanged()
 {
-  // this totally sucks.  this method is really supposed to be
-  // static, which is why we can call it without any initialization.
-  static NS_DEFINE_CID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-  nsCOMPtr<nsIDeviceContext> dctx = do_CreateInstance(kDeviceContextCID);
-  dctx->ClearCachedSystemFonts();
+  nsDeviceContext::ClearCachedSystemFonts();
 
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   return NS_OK;

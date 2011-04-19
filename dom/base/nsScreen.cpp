@@ -39,7 +39,6 @@
 #include "nscore.h"
 #include "nsScreen.h"
 #include "nsIDocShell.h"
-#include "nsIDeviceContext.h"
 #include "nsPresContext.h"
 #include "nsCOMPtr.h"
 #include "nsDOMClassInfo.h"
@@ -129,7 +128,7 @@ nsScreen::GetHeight(PRInt32* aHeight)
 NS_IMETHODIMP
 nsScreen::GetPixelDepth(PRInt32* aPixelDepth)
 {
-  nsIDeviceContext* context = GetDeviceContext();
+  nsDeviceContext* context = GetDeviceContext();
 
   if (!context) {
     *aPixelDepth = -1;
@@ -195,7 +194,7 @@ nsScreen::GetAvailTop(PRInt32* aAvailTop)
   return rv;
 }
 
-nsIDeviceContext*
+nsDeviceContext*
 nsScreen::GetDeviceContext()
 {
   return nsLayoutUtils::GetDeviceContextForScreenInfo(mDocShell);
@@ -204,7 +203,7 @@ nsScreen::GetDeviceContext()
 nsresult
 nsScreen::GetRect(nsRect& aRect)
 {
-  nsIDeviceContext *context = GetDeviceContext();
+  nsDeviceContext *context = GetDeviceContext();
 
   if (!context) {
     return NS_ERROR_FAILURE;
@@ -223,7 +222,7 @@ nsScreen::GetRect(nsRect& aRect)
 nsresult
 nsScreen::GetAvailRect(nsRect& aRect)
 {
-  nsIDeviceContext *context = GetDeviceContext();
+  nsDeviceContext *context = GetDeviceContext();
 
   if (!context) {
     return NS_ERROR_FAILURE;

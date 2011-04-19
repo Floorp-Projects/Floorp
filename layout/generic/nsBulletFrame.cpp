@@ -314,9 +314,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
 
   case NS_STYLE_LIST_STYLE_SQUARE:
     {
-      nsRect rect(mPadding.TopLeft() + aPt,
-                  nsSize(mRect.width - mPadding.LeftRight(),
-                         mRect.height - mPadding.TopBottom()));
+      nsRect rect(aPt, mRect.Size());
+      rect.Deflate(mPadding);
+
       // Snap the height and the width of the rectangle to device pixels,
       // and then center the result within the original rectangle, so that
       // all square bullets at the same font size have the same visual
