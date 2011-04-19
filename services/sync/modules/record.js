@@ -46,6 +46,9 @@ const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
 
+const CRYPTO_COLLECTION = "crypto";
+const KEYS_WBO = "keys";
+
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/log4moz.js");
@@ -287,7 +290,7 @@ Utils.lazy(this, "CollectionKeys", CollectionKeyManager);
  * use the last modified time to bring itself up to date.
  */
 function CollectionKeyManager() {
-  this._lastModified = 0;
+  this.lastModified = 0;
   this._collections = {};
   this._default = null;
 
@@ -331,16 +334,12 @@ CollectionKeyManager.prototype = {
 
   clear: function clear() {
     this._log.info("Clearing CollectionKeys...");
-    this._lastModified = 0;
+    this.lastModified = 0;
     this._collections = {};
     this._default = null;
   },
 
   keyForCollection: function(collection) {
-
-    // Moderately temporary debugging code.
-    this._log.trace("keyForCollection: " + collection + ". Default is " + (this._default ? "not null." : "null."));
-
     if (collection && this._collections[collection])
       return this._collections[collection];
 
@@ -350,8 +349,33 @@ CollectionKeyManager.prototype = {
   /**
    * If `collections` (an array of strings) is provided, iterate
    * over it and generate random keys for each collection.
+   * Create a WBO for the given data.
    */
-  generateNewKeys: function(collections) {
+  _makeWBO: function(collections, defaultBundle) {
+    let wbo = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
+    let c = {};
+    for (let k in collections) {
+      c[k] = collections[k].keyPair;
+    }
+    wbo.cleartext = {
+      "default":     defaultBundle ? defaultBundle.keyPair : null,
+      "collections": c,
+      "collection":  CRYPTO_COLLECTION,
+      "id":          KEYS_WBO
+    };
+    return wbo;
+  },
+
+  /**
+   * Create a WBO for the current keys.
+   */
+  asWBO: function(collection, id)
+    this._makeWBO(this._collections, this._default),
+
+  /**
+   * Compute a new default key, and new keys for any specified collections.
+   */
+  newKeys: function(collections) {
     let newDefaultKey = new BulkKeyBundle(null, DEFAULT_KEYBUNDLE_NAME);
     newDefaultKey.generateRandom();
 
@@ -363,44 +387,37 @@ CollectionKeyManager.prototype = {
         newColls[c] = b;
       });
     }
-    this._default = newDefaultKey;
-    this._collections = newColls;
-    this._lastModified = (Math.round(Date.now()/10)/100);
+    return [newDefaultKey, newColls];
   },
 
-  asWBO: function(collection, id) {
-    let wbo = new CryptoWrapper(collection || "crypto", id || "keys");
-    let c = {};
-    for (let k in this._collections) {
-      c[k] = this._collections[k].keyPair;
-    }
-    wbo.cleartext = {
-      "default": this._default ? this._default.keyPair : null,
-      "collections": c,
-      "id": id,
-      "collection": collection
-    };
-    wbo.modified = this._lastModified;
-    return wbo;
+  /**
+   * Generates new keys, but does not replace our local copy. Use this to
+   * verify an upload before storing.
+   */
+  generateNewKeysWBO: function(collections) {
+    let newDefaultKey, newColls;
+    [newDefaultKey, newColls] = this.newKeys(collections);
+
+    return this._makeWBO(newColls, newDefaultKey);
   },
 
   // Take the fetched info/collections WBO, checking the change
   // time of the crypto collection.
   updateNeeded: function(info_collections) {
 
-    this._log.info("Testing for updateNeeded. Last modified: " + this._lastModified);
+    this._log.info("Testing for updateNeeded. Last modified: " + this.lastModified);
 
     // No local record of modification time? Need an update.
-    if (!this._lastModified)
+    if (!this.lastModified)
       return true;
 
     // No keys on the server? We need an update, though our
     // update handling will be a little more drastic...
-    if (!("crypto" in info_collections))
+    if (!(CRYPTO_COLLECTION in info_collections))
       return true;
 
     // Otherwise, we need an update if our modification time is stale.
-    return (info_collections["crypto"] > this._lastModified);
+    return (info_collections[CRYPTO_COLLECTION] > this.lastModified);
   },
 
   //
@@ -414,21 +431,13 @@ CollectionKeyManager.prototype = {
   //
   setContents: function setContents(payload, modified) {
 
+    if (!modified)
+      throw "No modified time provided to setContents.";
+
     let self = this;
 
-    // The server will round the time, which can lead to us having spurious
-    // key refreshes. Do the best we can to get an accurate timestamp, but
-    // rounded to 2 decimal places.
-    // We could use .toFixed(2), but that's a little more multiplication and
-    // division...
-    function bumpModified() {
-      let lm = modified || (Math.round(Date.now()/10)/100);
-      self._log.info("Bumping last modified to " + lm);
-      self._lastModified = lm;
-    }
-
-    this._log.info("Setting CollectionKeys contents. Our last modified: "
-        + this._lastModified + ", input modified: " + modified + ".");
+    this._log.info("Setting CollectionKeys contents. Our last modified: " +
+                   this.lastModified + ", input modified: " + modified + ".");
 
     if (!payload)
       throw "No payload in CollectionKeys.setContents().";
@@ -467,8 +476,8 @@ CollectionKeyManager.prototype = {
     let sameColls = collComparison.same;
 
     if (sameDefault && sameColls) {
-      this._log.info("New keys are the same as our old keys! Bumping local modified time and returning.");
-      bumpModified();
+      self._log.info("New keys are the same as our old keys! Bumped local modified time.");
+      self.lastModified = modified;
       return false;
     }
 
@@ -479,7 +488,9 @@ CollectionKeyManager.prototype = {
     this._default     = newDefault;
     this._collections = newCollections;
 
-    bumpModified();
+    // Always trust the server.
+    self._log.info("Bumping last modified to " + modified);
+    self.lastModified = modified;
 
     return sameDefault ? collComparison.changed : true;
   },

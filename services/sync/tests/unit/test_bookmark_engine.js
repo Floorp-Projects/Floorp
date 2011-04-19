@@ -360,7 +360,7 @@ function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
 
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
 
   run_next_test();
 }

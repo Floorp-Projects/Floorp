@@ -55,7 +55,7 @@ function setUp() {
 }
 
 function generateAndUploadKeys() {
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
   let serverKeys = CollectionKeys.asWBO("crypto", "keys");
   serverKeys.encrypt(Weave.Service.syncKeyBundle);
   return serverKeys.upload("http://localhost:8080/1.1/johndoe/storage/crypto/keys").success;
