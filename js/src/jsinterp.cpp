@@ -74,10 +74,11 @@
 #include "jstracer.h"
 #include "jslibmath.h"
 #include "jsvector.h"
+#ifdef JS_METHODJIT
 #include "methodjit/MethodJIT.h"
 #include "methodjit/MethodJIT-inl.h"
 #include "methodjit/Logging.h"
-
+#endif
 #include "jsatominlines.h"
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
