@@ -27,7 +27,7 @@
 
 
 load('base.js');
-load('deltablue.js');
+load('splay.js');
 
 var success = true;
 
