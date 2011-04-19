@@ -102,6 +102,10 @@ class RemoteOptions(ReftestOptions):
                     help = "Name of log file on the device relative to device root.  PLEASE USE ONLY A FILENAME.")
         defaults["remoteLogFile"] = None
 
+        self.add_option("--enable-privilege", action="store_true", dest = "enablePrivilege",
+                    help = "add webserver and port to the user.js file for remote script access and universalXPConnect")
+        defaults["enablePrivilege"] = False
+
         self.add_option("--pidfile", action = "store",
                     type = "string", dest = "pidFile",
                     help = "name of the pidfile to generate")
@@ -315,6 +319,15 @@ class RemoteReftest(RefTest):
 
     def createReftestProfile(self, options, profileDir):
         RefTest.createReftestProfile(self, options, profileDir, server=options.remoteWebServer)
+
+        #workaround for jsreftests.
+        if options.enablePrivilege:
+          fhandle = open(os.path.join(profileDir, "user.js"), 'a')
+          fhandle.write("""
+user_pref("capability.principal.codebase.p2.granted", "UniversalPreferencesWrite UniversalXPConnect UniversalBrowserWrite UniversalPreferencesRead UniversalBrowserRead");
+user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
+""" % (options.remoteWebServer, options.httpPort))
+          fhandle.close()
 
         if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
             raise devicemanager.FileError("Failed to copy profiledir to device")
