@@ -29,7 +29,10 @@ function finish() {
 }
 SimpleTest.waitForFocus(function() {
   synthesizeMouse(document.getElementsByTagName("img")[0], 50, 50, {});
-  setTimeout(finish, 50); // Sorry!
+  // Hit the event loop twice before doing the test
+  setTimeout(function() {
+    setTimeout(finish, 0);
+  }, 0);
 });
 
 

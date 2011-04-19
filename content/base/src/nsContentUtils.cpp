@@ -3332,6 +3332,17 @@ nsContentUtils::GetEventId(nsIAtom* aName)
   return NS_USER_DEFINED_EVENT;
 }
 
+// static
+PRUint32
+nsContentUtils::GetEventCategory(const nsAString& aName)
+{
+  EventNameMapping mapping;
+  if (sStringEventTable->Get(aName, &mapping))
+    return mapping.mStructType;
+
+  return NS_EVENT;
+}
+
 nsIAtom*
 nsContentUtils::GetEventIdAndAtom(const nsAString& aName,
                                   PRUint32 aEventStruct,
