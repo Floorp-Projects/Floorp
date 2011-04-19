@@ -711,13 +711,19 @@ nsIFrame::ApplySkipSides(nsMargin& aMargin) const
 }
 
 nsRect
+nsIFrame::GetPaddingRectRelativeToSelf() const
+{
+  nsMargin bp(GetUsedBorder());
+  ApplySkipSides(bp);
+  nsRect r(0, 0, mRect.width, mRect.height);
+  r.Deflate(bp);
+  return r;
+}
+
+nsRect
 nsIFrame::GetPaddingRect() const
 {
-  nsMargin b(GetUsedBorder());
-  ApplySkipSides(b);
-  nsRect r(mRect);
-  r.Deflate(b);
-  return r;
+  return GetPaddingRectRelativeToSelf() + GetPosition();
 }
 
 PRBool
@@ -728,13 +734,19 @@ nsIFrame::IsTransformed() const
 }
 
 nsRect
-nsIFrame::GetContentRect() const
+nsIFrame::GetContentRectRelativeToSelf() const
 {
   nsMargin bp(GetUsedBorderAndPadding());
   ApplySkipSides(bp);
-  nsRect r(mRect);
+  nsRect r(0, 0, mRect.width, mRect.height);
   r.Deflate(bp);
   return r;
+}
+
+nsRect
+nsIFrame::GetContentRect() const
+{
+  return GetContentRectRelativeToSelf() + GetPosition();
 }
 
 PRBool
@@ -6590,7 +6602,8 @@ nsIFrame::IsFocusable(PRInt32 *aTabIndex, PRBool aWithMouse)
         // When clicked on, the selection position within the element 
         // will be enough to make them keyboard scrollable.
         nsIScrollableFrame *scrollFrame = do_QueryFrame(this);
-        if (scrollFrame && !scrollFrame->GetActualScrollbarSizes().IsZero()) {
+        if (scrollFrame &&
+            scrollFrame->GetActualScrollbarSizes() != nsMargin(0,0,0,0)) {
             // Scroll bars will be used for overflow
             isFocusable = PR_TRUE;
             tabIndex = 0;
