@@ -367,6 +367,9 @@ endif
 ifeq (arm, $(TARGET_CPU))
 #CPPSRCS		+= only_on_arm.cpp
 endif
+ifeq (sparc, $(findstring sparc,$(TARGET_CPU)))
+ASFILES +=	TrampolineSparc.s
+endif
 #
 # END enclude sources for the method JIT
 #############################################
@@ -392,7 +395,7 @@ CPPSRCS += 	checks.cc \
 # END enclude sources for V8 dtoa
 #############################################
 
-ifeq (,$(filter-out powerpc sparc,$(TARGET_CPU)))
+ifeq (,$(filter-out powerpc,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
