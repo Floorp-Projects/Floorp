@@ -87,6 +87,9 @@ ServerWBO.prototype = {
     delete this.modified;
   },
 
+  // This handler sets `newModified` on the response body if the collection
+  // timestamp has changed. This allows wrapper handlers to extract information
+  // that otherwise would exist only in the body stream.
   handler: function() {
     let self = this;
 
@@ -109,11 +112,14 @@ ServerWBO.prototype = {
         case "PUT":
           self.put(readBytesFromInputStream(request.bodyInputStream));
           body = JSON.stringify(self.modified);
+          response.newModified = self.modified;
           break;
 
         case "DELETE":
           self.delete();
-          body = JSON.stringify(new_timestamp());
+          let ts = new_timestamp();
+          body = JSON.stringify(ts);
+          response.newModified = ts;
           break;
       }
       response.setHeader("X-Weave-Timestamp", "" + new_timestamp(), false);
@@ -217,6 +223,8 @@ ServerCollection.prototype = {
     }
   },
 
+  // This handler sets `newModified` on the response body if the collection
+  // timestamp has changed.
   handler: function() {
     let self = this;
 
@@ -256,11 +264,14 @@ ServerCollection.prototype = {
         case "POST":
           let res = self.post(readBytesFromInputStream(request.bodyInputStream));
           body = JSON.stringify(res);
+          response.newModified = res.modified;
           break;
 
         case "DELETE":
           self.delete(options);
-          body = JSON.stringify(new_timestamp());
+          let ts = new_timestamp();
+          body = JSON.stringify(ts);
+          response.newModified = ts;
           break;
       }
       response.setHeader("X-Weave-Timestamp",
@@ -295,8 +306,9 @@ function track_collections_helper() {
   /*
    * Update the timestamp of a collection.
    */
-  function update_collection(coll) {
-    let timestamp = new_timestamp();
+  function update_collection(coll, ts) {
+    _("Updating collection " + coll + " to " + ts);
+    let timestamp = ts || new_timestamp();
     collections[coll] = timestamp;
   }
 
@@ -306,9 +318,13 @@ function track_collections_helper() {
    */
   function with_updated_collection(coll, f) {
     return function(request, response) {
-      if (request.method != "GET")
-        update_collection(coll);
       f.call(this, request, response);
+
+      // Update the collection timestamp to the appropriate modified time.
+      // This is either a value set by the handler, or the current time.
+      if (request.method != "GET") {
+        update_collection(coll, response.newModified)
+      }
     };
   }
 
