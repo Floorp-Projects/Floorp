@@ -339,7 +339,7 @@ class SetPropCompiler : public PICStubCompiler
             } else {
                 /* Check capacity. */
                 Address capacity(pic.objReg, offsetof(JSObject, capacity));
-                masm.load32(masm.payloadOf(capacity), pic.shapeReg);
+                masm.load32(capacity, pic.shapeReg);
                 Jump overCapacity = masm.branch32(Assembler::LessThanOrEqual, pic.shapeReg,
                                                   Imm32(shape->slot));
                 if (!slowExits.append(overCapacity))
