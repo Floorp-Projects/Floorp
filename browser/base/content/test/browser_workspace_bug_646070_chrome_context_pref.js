@@ -5,9 +5,15 @@
 // Reference to the Workspace chrome window object.
 let gWorkspaceWindow;
 
+let gOldPref;
+let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
+
 function test()
 {
   waitForExplicitFinish();
+
+  gOldPref = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
+  Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, true);
 
   gBrowser.selectedTab = gBrowser.addTab();
   gBrowser.selectedBrowser.addEventListener("load", function() {
@@ -19,7 +25,7 @@ function test()
     gWorkspaceWindow.addEventListener("load", runTests, false);
   }, true);
 
-  content.location = "data:text/html,initialization test for Workspace";
+  content.location = "data:text/html,Workspace test for bug 646070 - chrome context preference";
 }
 
 function runTests()
@@ -28,31 +34,30 @@ function runTests()
 
   let ws = gWorkspaceWindow.Workspace;
   ok(ws, "Workspace object exists in new window");
-  is(typeof ws.execute, "function", "Workspace.execute() exists");
-  is(typeof ws.inspect, "function", "Workspace.inspect() exists");
-  is(typeof ws.print, "function", "Workspace.print() exists");
 
   let contextMenu = gWorkspaceWindow.document.getElementById("ws-context-menu");
   ok(contextMenu, "Context menu element exists");
-  is(contextMenu.getAttribute("hidden"), "true", "Context menu is hidden");
+  ok(!contextMenu.hasAttribute("hidden"), "Context menu is visible");
 
   let errorConsoleCommand = gWorkspaceWindow.document.
                             getElementById("ws-cmd-errorConsole");
   ok(errorConsoleCommand, "Error console command element exists");
-  is(errorConsoleCommand.getAttribute("disabled"), "true",
-     "Error console command is disabled");
+  ok(!errorConsoleCommand.hasAttribute("disabled"),
+     "Error console command is enabled");
 
   let errorConsoleMenu = gWorkspaceWindow.document.
                          getElementById("ws-menu-errorConsole");
   ok(errorConsoleMenu, "Error console menu element exists");
-  is(errorConsoleMenu.getAttribute("hidden"), "true",
-     "Error console menu item is hidden");
+  ok(!errorConsoleMenu.hasAttribute("hidden"),
+     "Error console menuitem is visible");
 
   let chromeContextCommand = gWorkspaceWindow.document.
                             getElementById("ws-cmd-chromeContext");
   ok(chromeContextCommand, "Chrome context command element exists");
-  is(chromeContextCommand.getAttribute("disabled"), "true",
+  ok(!chromeContextCommand.hasAttribute("disabled"),
      "Chrome context command is disabled");
+
+  Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, gOldPref);
 
   gWorkspaceWindow.close();
   gWorkspaceWindow = null;
