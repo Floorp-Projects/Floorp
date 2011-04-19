@@ -439,8 +439,8 @@ nsCanvasFrame::Reflow(nsPresContext*           aPresContext,
     if (overflow) {
       NS_ASSERTION(overflow->OnlyChild(),
                    "must have doc root as canvas frame's only child");
-      nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, *overflow,
-                                                  prevCanvasFrame, this);
+      nsContainerFrame::ReparentFrameViewList(aPresContext, *overflow,
+                                              prevCanvasFrame, this);
       // Prepend overflow to the our child list. There may already be
       // children placeholders for fixed-pos elements, which don't get
       // reflowed but must not be lost until the canvas frame is destroyed.
