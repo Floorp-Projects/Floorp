@@ -986,11 +986,9 @@ let TabItems = {
 
       // ___ icon
       if (this.shouldLoadFavIcon(tab.linkedBrowser)) {
-        let iconUrl = tab.image;
-        if (!iconUrl)
-          iconUrl = Utils.defaultFaviconURL;
-
-        if (iconUrl != tabItem.$favImage[0].src)
+        let iconUrl = gFavIconService.getFaviconImageForPage(
+                        tab.linkedBrowser.currentURI).spec;
+        if (tabItem.$favImage[0].src != iconUrl)
           tabItem.$favImage[0].src = iconUrl;
 
         iQ(tabItem.$fav[0]).show();

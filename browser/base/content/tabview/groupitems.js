@@ -1140,19 +1140,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       self.remove(child, newOptions);
     });
   },
-  
-  // ----------
-  // Handles error event for loading app tab's fav icon.
-  _onAppTabError : function(event) {
-    iQ(".appTabIcon", this.$appTabTray).each(function(icon) {
-      let $icon = iQ(icon);
-      if ($icon.data("xulTab") == event.target) {
-        $icon.attr("src", Utils.defaultFaviconURL);
-        return false;
-      }
-      return true;
-    });
-  },
 
   // ----------
   // Adds the given xul:tab as an app tab in this group's apptab tray
@@ -1167,10 +1154,9 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   addAppTab: function GroupItem_addAppTab(xulTab, options) {
     let self = this;
 
-    xulTab.addEventListener("error", this._onAppTabError, false);
-
     // add the icon
-    let iconUrl = xulTab.image || Utils.defaultFaviconURL;
+    let iconUrl = gFavIconService.getFaviconImageForPage(
+                    xulTab.linkedBrowser.currentURI).spec;
     let $appTab = iQ("<img>")
       .addClass("appTabIcon")
       .attr("src", iconUrl)
@@ -1204,8 +1190,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     
     // adjust the tray
     this.adjustAppTabTray(true);
-
-    xulTab.removeEventListener("error", this._onAppTabError, false);
   },
 
   // ----------
@@ -1227,7 +1211,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (targetIndex < (length - 1))
         self.$appTabTray[0].insertBefore(
           icon,
-        iQ(".appTabIcon:nth-child(" + (targetIndex + 1) + ")", self.$appTabTray)[0]);
+          iQ(".appTabIcon:nth-child(" + (targetIndex + 1) + ")", self.$appTabTray)[0]);
       else
         $icon.appendTo(self.$appTabTray);
       return false;
@@ -2037,7 +2021,8 @@ let GroupItems = {
     if (xulTab.ownerDocument.defaultView != gWindow || !xulTab.pinned)
       return;
 
-    let iconUrl = xulTab.image || Utils.defaultFaviconURL;
+    let iconUrl = gFavIconService.getFaviconImageForPage(
+                    xulTab.linkedBrowser.currentURI).spec;
     this.groupItems.forEach(function(groupItem) {
       iQ(".appTabIcon", groupItem.$appTabTray).each(function(icon) {
         let $icon = iQ(icon);
