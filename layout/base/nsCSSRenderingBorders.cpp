@@ -188,10 +188,11 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(PRInt32 aAppUnitsPerPixel,
   }
 
   mInnerRect = mOuterRect;
-  mInnerRect.Inset(mBorderStyles[0] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[0] : 0,
-                   mBorderStyles[1] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[1] : 0,
-                   mBorderStyles[2] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[2] : 0,
-                   mBorderStyles[3] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[3] : 0);
+  mInnerRect.Deflate(
+      gfxMargin(mBorderStyles[3] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[3] : 0,
+                mBorderStyles[0] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[0] : 0,
+                mBorderStyles[1] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[1] : 0,
+                mBorderStyles[2] != NS_STYLE_BORDER_STYLE_NONE ? mBorderWidths[2] : 0));
 
   ComputeBorderCornerDimensions(mOuterRect, mInnerRect, mBorderRadii, &mBorderCornerDimensions);
 
@@ -563,7 +564,7 @@ nsCSSBorderRenderer::FillSolidBorder(const gfxRect& aOuterRect,
       CheckFourFloatsEqual(aBorderSizes, aBorderSizes[0]))
   {
     gfxRect r(aOuterRect);
-    r.Inset(aBorderSizes[0] / 2.0);
+    r.Deflate(aBorderSizes[0] / 2.0);
     mContext->SetLineWidth(aBorderSizes[0]);
 
     mContext->NewPath();
@@ -707,7 +708,7 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorde
     gfxRGBA lineColor = ComputeCompositeColorForLine(i, aCompositeColors);
 
     gfxRect siRect = soRect;
-    siRect.Inset(1.0, 1.0, 1.0, 1.0);
+    siRect.Deflate(1.0);
 
     // now cap the rects to the real mInnerRect
     gfxPoint tl = siRect.TopLeft();
@@ -904,7 +905,8 @@ nsCSSBorderRenderer::DrawBorderSides(PRIntn aSides)
   for (unsigned int i = 0; i < borderColorStyleCount; i++) {
     // walk siRect inwards at the start of the loop to get the
     // correct inner rect.
-    siRect.Inset(borderWidths[i]);
+    siRect.Deflate(gfxMargin(borderWidths[i][3], borderWidths[i][0],
+                             borderWidths[i][1], borderWidths[i][2]));
 
     if (borderColorStyle[i] != BorderColorStyleNone) {
       gfxRGBA color = ComputeColorForLine(i,
@@ -1113,7 +1115,7 @@ nsCSSBorderRenderer::DrawSingleWidthSolidBorder()
   // Easy enough to deal with.
   mContext->SetLineWidth(1);
   gfxRect rect = mOuterRect;
-  rect.Inset(0.5);
+  rect.Deflate(0.5);
 
   const twoFloats cornerAdjusts[4] = { { +0.5,  0   },
                                        {    0, +0.5 },
@@ -1158,8 +1160,8 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
   ComputeInnerRadii(mBorderRadii, mBorderWidths, &innerRadii);
 
   gfxRect strokeRect = mOuterRect;
-  strokeRect.Inset(mBorderWidths[0] / 2.0, mBorderWidths[1] / 2.0,
-                    mBorderWidths[2] / 2.0, mBorderWidths[3] / 2.0);
+  strokeRect.Deflate(gfxMargin(mBorderWidths[3] / 2.0, mBorderWidths[0] / 2.0,
+                               mBorderWidths[1] / 2.0, mBorderWidths[2] / 2.0));
 
   NS_FOR_CSS_CORNERS(i) {
       // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)
@@ -1292,7 +1294,7 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
   mContext->SetLineWidth(1);
   memcpy(currentColors, mCompositeColors, sizeof(nsBorderColors*) * 4);
   gfxRect rect = mOuterRect;
-  rect.Inset(0.5);
+  rect.Deflate(0.5);
 
   const twoFloats cornerAdjusts[4] = { { +0.5,  0   },
                                         {    0, +0.5 },
@@ -1347,7 +1349,7 @@ nsCSSBorderRenderer::DrawRectangularCompositeColors()
     if (currentColors[0] && currentColors[0]->mNext) {
       currentColors[0] = currentColors[0]->mNext;
     }
-    rect.Inset(1);
+    rect.Deflate(1);
   }
 }
 
@@ -1419,7 +1421,7 @@ nsCSSBorderRenderer::DrawBorders()
     // Very simple case.
     SetupStrokeStyle(NS_SIDE_TOP);
     gfxRect rect = mOuterRect;
-    rect.Inset(mBorderWidths[0] / 2.0);
+    rect.Deflate(mBorderWidths[0] / 2.0);
     mContext->NewPath();
     mContext->Rectangle(rect);
     mContext->Stroke();
@@ -1441,7 +1443,7 @@ nsCSSBorderRenderer::DrawBorders()
     mContext->SetDash(&dash, 1, 0.5);
     mContext->SetAntialiasMode(gfxContext::MODE_ALIASED);
     gfxRect rect = mOuterRect;
-    rect.Inset(mBorderWidths[0] / 2.0);
+    rect.Deflate(mBorderWidths[0] / 2.0);
     mContext->NewPath();
     mContext->Rectangle(rect);
     mContext->Stroke();
@@ -1469,7 +1471,7 @@ nsCSSBorderRenderer::DrawBorders()
     if (noCornerOutsideCenter) {
       // Relatively simple case.
       SetupStrokeStyle(NS_SIDE_TOP);
-      mOuterRect.Inset(mBorderWidths[0] / 2.0);
+      mOuterRect.Deflate(mBorderWidths[0] / 2.0);
       NS_FOR_CSS_CORNERS(corner) {
         if (mBorderRadii.sizes[corner].height == 0 || mBorderRadii.sizes[corner].width == 0) {
           continue;

@@ -201,6 +201,7 @@ struct BaseRect {
   void SizeTo(T aWidth, T aHeight) { width = aWidth; height = aHeight; }
   void SizeTo(const SizeT& aSize) { width = aSize.width; height = aSize.height; }
 
+  void Inflate(T aD) { Inflate(aD, aD); }
   void Inflate(T aDx, T aDy)
   {
     x -= aDx;
@@ -215,7 +216,9 @@ struct BaseRect {
     width += aMargin.LeftRight();
     height += aMargin.TopBottom();
   }
+  void Inflate(const SizeT& aSize) { Inflate(aSize.width, aSize.height); }
 
+  void Deflate(T aD) { Deflate(aD, aD); }
   void Deflate(T aDx, T aDy)
   {
     x += aDx;
@@ -230,6 +233,7 @@ struct BaseRect {
     width = NS_MAX(T(0), width - aMargin.LeftRight());
     height = NS_MAX(T(0), height - aMargin.TopBottom());
   }
+  void Deflate(const SizeT& aSize) { Deflate(aSize.width, aSize.height); }
 
   // Return true if the rectangles contain the same set of points, including
   // points on the edges.

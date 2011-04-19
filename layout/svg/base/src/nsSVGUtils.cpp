@@ -1438,7 +1438,7 @@ nsSVGUtils::PathExtentsToMaxStrokeExtents(const gfxRect& aPathExtents,
   double dy = style_expansion * (fabs(ctm.yy) + fabs(ctm.yx));
 
   gfxRect strokeExtents = aPathExtents;
-  strokeExtents.Outset(dy, dx, dy, dx);
+  strokeExtents.Inflate(dx, dy);
   return strokeExtents;
 }
 
