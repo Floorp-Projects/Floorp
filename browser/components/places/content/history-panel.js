@@ -84,11 +84,11 @@ function searchHistory(aInput)
     case "visited":
       resultType = NHQO.RESULTS_AS_URI;
       sortingMode = NHQO.SORT_BY_VISITCOUNT_DESCENDING;
-      break; 
+      break;
     case "lastvisited":
       resultType = NHQO.RESULTS_AS_URI;
       sortingMode = NHQO.SORT_BY_DATE_DESCENDING;
-      break; 
+      break;
     case "dayandsite":
       resultType = NHQO.RESULTS_AS_DATE_SITE_QUERY;
       break;
@@ -105,7 +105,7 @@ function searchHistory(aInput)
   if (aInput) {
     query.searchTerms = aInput;
     if (gHistoryGrouping != "visited" && gHistoryGrouping != "lastvisited") {
-      sortingMode = NHQO.SORT_BY_TITLE_ASCENDING;
+      sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
       resultType = NHQO.RESULTS_AS_URI;
     }
   }

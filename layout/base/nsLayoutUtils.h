@@ -1212,7 +1212,7 @@ public:
    * dimensions for the given docshell.  For some reason, this is more
    * complicated than it ought to be in multi-monitor situations.
    */
-  static nsIDeviceContext*
+  static nsDeviceContext*
   GetDeviceContextForScreenInfo(nsIDocShell* aDocShell);
 
   /**

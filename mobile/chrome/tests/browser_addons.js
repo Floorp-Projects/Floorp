@@ -70,6 +70,7 @@ var gCurrentTab = null;
 
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
   Services.prefs.setCharPref(PREF_GETADDONS_GETRECOMMENDED,      TESTROOT + "browser_install.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_BROWSERECOMMENDED,   TESTROOT + "browser_install.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_BROWSESEARCHRESULTS, TESTROOT + "browser_install.xml");
@@ -201,7 +202,11 @@ function checkNotification(aTitle, aMessage, aIcon, aCallback) {
     aCallback();
   };
 
-  waitFor(doTest, function() { return AlertsHelper.container.hidden == false; });
+  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+  if (sysInfo.get("device"))
+    aCallback();
+  else
+    waitFor(doTest, function() { return AlertsHelper.container.hidden == false; });
 }
 
 function checkAlert(aId, aName, aLabel, aShown, aCallback) {

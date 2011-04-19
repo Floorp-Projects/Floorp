@@ -588,7 +588,7 @@ nsBaseDragService::DrawDragForImage(nsPresContext* aPresContext,
 
   // if the image is larger than half the screen size, scale it down. This
   // scaling algorithm is the same as is used in nsPresShell::PaintRangePaintInfo
-  nsIDeviceContext* deviceContext = aPresContext->DeviceContext();
+  nsDeviceContext* deviceContext = aPresContext->DeviceContext();
   nsRect maxSize;
   deviceContext->GetClientRect(maxSize);
   nscoord maxWidth = aPresContext->AppUnitsToDevPixels(maxSize.width >> 1);

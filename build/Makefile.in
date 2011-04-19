@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = build
 
-ifeq (,$(filter WINCE WINNT OS2,$(OS_ARCH)))
+ifeq (,$(filter WINNT OS2,$(OS_ARCH)))
 DIRS		= unix
 endif
 
@@ -53,26 +53,14 @@ ifeq (WINNT,$(OS_ARCH))
 DIRS = win32
 endif
 
-ifdef WINCE
-# We need jemalloc built before the shunt
-ifdef MOZ_MEMORY
-DIRS += wince/tools \
-	$(DEPTH)/memory/jemalloc \
-	wince/shunt \
-	$(DEPTH)/memory/mozalloc \
-	$(NULL)
-else
-DIRS += wince/tools \
-	wince/shunt \
-	$(DEPTH)/memory/mozalloc \
-	$(NULL)
-endif
-endif
-
 DIRS += pgo
 
 ifeq (Android,$(OS_TARGET))
-  DIRS += mobile/sutagent/android
+  DIRS += mobile/sutagent/android \
+          mobile/sutagent/android/watcher \
+          mobile/sutagent/android/ffxcp \
+          mobile/sutagent/android/fencp \
+          $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -1009,22 +1009,18 @@ nsRect
 nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
 {
   /* Get a new gfxRect whose units are app units by scaling by the specified factor. */
-  gfxRect scaledRect(aRect.pos.x * aFactor, aRect.pos.y * aFactor,
-                     aRect.size.width * aFactor,
-                     aRect.size.height * aFactor);
-
-  /* Round outward. */
-  scaledRect.RoundOut();
+  gfxRect scaledRect = aRect;
+  scaledRect.ScaleRoundOut(aFactor);
 
   /* We now need to constrain our results to the max and min values for coords. */
-  ConstrainToCoordValues(scaledRect.pos.x);
-  ConstrainToCoordValues(scaledRect.pos.y);
-  ConstrainToCoordValues(scaledRect.size.width);
-  ConstrainToCoordValues(scaledRect.size.height);
+  ConstrainToCoordValues(scaledRect.x);
+  ConstrainToCoordValues(scaledRect.y);
+  ConstrainToCoordValues(scaledRect.width);
+  ConstrainToCoordValues(scaledRect.height);
 
   /* Now typecast everything back.  This is guaranteed to be safe. */
-  return nsRect(nscoord(scaledRect.pos.x), nscoord(scaledRect.pos.y),
-                nscoord(scaledRect.size.width), nscoord(scaledRect.size.height));
+  return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
+                nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
 }
 
 
@@ -3088,8 +3084,8 @@ static gfxPoint
 MapToFloatImagePixels(const gfxSize& aSize,
                       const gfxRect& aDest, const gfxPoint& aPt)
 {
-  return gfxPoint(((aPt.x - aDest.pos.x)*aSize.width)/aDest.size.width,
-                  ((aPt.y - aDest.pos.y)*aSize.height)/aDest.size.height);
+  return gfxPoint(((aPt.x - aDest.X())*aSize.width)/aDest.Width(),
+                  ((aPt.y - aDest.Y())*aSize.height)/aDest.Height());
 }
 
 /**
@@ -3104,8 +3100,8 @@ static gfxPoint
 MapToFloatUserPixels(const gfxSize& aSize,
                      const gfxRect& aDest, const gfxPoint& aPt)
 {
-  return gfxPoint(aPt.x*aDest.size.width/aSize.width + aDest.pos.x,
-                  aPt.y*aDest.size.height/aSize.height + aDest.pos.y);
+  return gfxPoint(aPt.x*aDest.Width()/aSize.width + aDest.X(),
+                  aPt.y*aDest.Height()/aSize.height + aDest.Y());
 }
 
 /* static */ gfxRect
@@ -3338,7 +3334,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(nsRenderingContext* aRenderingContext,
   aImage->GetHeight(&imageSize.height);
   NS_ENSURE_TRUE(imageSize.width > 0 && imageSize.height > 0, NS_ERROR_FAILURE);
 
-  nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
+  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
   nsSize size(imageSize.width*appUnitsPerCSSPixel,
               imageSize.height*appUnitsPerCSSPixel);
 
@@ -3383,7 +3379,7 @@ nsLayoutUtils::DrawSingleImage(nsRenderingContext* aRenderingContext,
   if (aSourceArea) {
     source = *aSourceArea;
   } else {
-    nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
+    nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
     source.SizeTo(imageSize.width*appUnitsPerCSSPixel,
                   imageSize.height*appUnitsPerCSSPixel);
   }
@@ -3478,7 +3474,7 @@ nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
   double scaleY = double(aDestArea.height)/aImageSourceArea.height;
   nscoord destOffsetX = NSToCoordRound(aImageSourceArea.x*scaleX);
   nscoord destOffsetY = NSToCoordRound(aImageSourceArea.y*scaleY);
-  nscoord appUnitsPerCSSPixel = nsIDeviceContext::AppUnitsPerCSSPixel();
+  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
   nscoord wholeSizeX = NSToCoordRound(aWholeImageSize.width*appUnitsPerCSSPixel*scaleX);
   nscoord wholeSizeY = NSToCoordRound(aWholeImageSize.height*appUnitsPerCSSPixel*scaleY);
   return nsRect(aDestArea.TopLeft() - nsPoint(destOffsetX, destOffsetY),
@@ -3680,7 +3676,7 @@ nsLayoutUtils::GetRectDifferenceStrips(const nsRect& aR1, const nsRect& aR2,
   aHStrip->height -= HStripStart;
 }
 
-nsIDeviceContext*
+nsDeviceContext*
 nsLayoutUtils::GetDeviceContextForScreenInfo(nsIDocShell* aDocShell)
 {
   nsCOMPtr<nsIDocShell> docShell = aDocShell;
@@ -3700,7 +3696,7 @@ nsLayoutUtils::GetDeviceContextForScreenInfo(nsIDocShell* aDocShell)
     nsRefPtr<nsPresContext> presContext;
     docShell->GetPresContext(getter_AddRefs(presContext));
     if (presContext) {
-      nsIDeviceContext* context = presContext->DeviceContext();
+      nsDeviceContext* context = presContext->DeviceContext();
       if (context) {
         return context;
       }

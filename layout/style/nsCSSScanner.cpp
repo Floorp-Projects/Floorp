@@ -86,7 +86,7 @@ static const PRUint8 IS_WHITESPACE = 0x08;
 #define XI  IS_IDENT            |IS_HEX_DIGIT
 #define XSI IS_IDENT|START_IDENT|IS_HEX_DIGIT
 
-static const PRUint8 gLexTable[256] = {
+static const PRUint8 gLexTable[] = {
 //                                     TAB LF      FF  CR
    0,  0,  0,  0,  0,  0,  0,  0,  0,  W,  W,  0,  W,  W,  0,  0,
 //
@@ -103,23 +103,25 @@ static const PRUint8 gLexTable[256] = {
    0,  XSI,XSI,XSI,XSI,XSI,XSI,SI, SI, SI, SI, SI, SI, SI, SI, SI,
 // p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~
    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, 0,  0,  0,  0,  0,
-//
+// U+008*
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-//
+// U+009*
    0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-// NBSP¡   ¢   £   ¤   ¥   ¦   §   ¨   ©   ª   «   ¬   ­   ®   ¯
+// U+00A*
    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-// °   ±   ²   ³   ´   µ   ¶   ·   ¸   ¹   º   »   ¼   ½   ¾   ¿
+// U+00B*
    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-// À   Á   Â   Ã   Ä   Å   Æ   Ç   È   É   Ê   Ë   Ì   Í   Î   Ï
+// U+00C*
    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-// Ð   Ñ   Ò   Ó   Ô   Õ   Ö   ×   Ø   Ù   Ú   Û   Ü   Ý   Þ   ß
+// U+00D*
    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-// à   á   â   ã   ä   å   æ   ç   è   é   ê   ë   ì   í   î   ï
+// U+00E*
    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
-// ð   ñ   ò   ó   ô   õ   ö   ÷   ø   ù   ú   û   ü   ý   þ   ÿ
+// U+00F*
    SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI, SI,
 };
+
+PR_STATIC_ASSERT(NS_ARRAY_LENGTH(gLexTable) == 256);
 
 #undef W
 #undef S

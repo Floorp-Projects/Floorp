@@ -52,7 +52,6 @@
 #include "nsRuleNode.h"
 #include "nscore.h"
 #include "nsIServiceManager.h"
-#include "nsIDeviceContext.h"
 #include "nsIWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIPresShell.h"
@@ -2655,7 +2654,7 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
     }
 
     // XXXldb All of this platform-specific stuff should be in the
-    // nsIDeviceContext implementations, not here.
+    // nsDeviceContext implementations, not here.
 
 #ifdef XP_WIN
     //
@@ -5215,7 +5214,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
       else if (eCSSUnit_Inherit == value.GetUnit()) {
         canStoreInRuleTree = PR_FALSE;
         border->SetBorderWidth(side,
-                               parentBorder->GetComputedBorder().side(side));
+                               parentBorder->GetComputedBorder().Side(side));
       }
       else if (eCSSUnit_Initial == value.GetUnit()) {
         border->SetBorderWidth(side,
@@ -5476,7 +5475,7 @@ nsRuleNode::ComputeBorderData(void* aStartStruct,
   } else if (eCSSUnit_Inherit == borderImageValue->GetUnit()) {
     canStoreInRuleTree = PR_FALSE;
     NS_FOR_CSS_SIDES(side) {
-      border->SetBorderImageWidthOverride(side, parentBorder->mBorderImageWidth.side(side));
+      border->SetBorderImageWidthOverride(side, parentBorder->mBorderImageWidth.Side(side));
     }
     border->mBorderImageSplit = parentBorder->mBorderImageSplit;
     border->mBorderImageHFill = parentBorder->mBorderImageHFill;
