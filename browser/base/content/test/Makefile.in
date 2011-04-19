@@ -198,6 +198,7 @@ _BROWSER_FILES = \
                  browser_workspace_inspect.js \
                  browser_workspace_files.js \
                  browser_workspace_ui.js \
+                 browser_workspace_bug_646070_chrome_context_pref.js \
                  browser_overflowScroll.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
