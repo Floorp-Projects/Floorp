@@ -48,8 +48,10 @@ namespace mozilla {
  */
 template <class T, class Sub>
 struct BaseMargin {
-  typedef mozilla::css::Side Side;
+  typedef mozilla::css::Side SideT;
 
+  // Do not change the layout of these members; the Side() methods below
+  // depend on this order.
   T top, right, bottom, left;
 
   // Constructors
@@ -65,12 +67,14 @@ struct BaseMargin {
   T LeftRight() const { return left + right; }
   T TopBottom() const { return top + bottom; }
 
-  T& side(Side aSide) {
+  T& Side(SideT aSide) {
     NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
+    // This is ugly!
     return *(&top + aSide);
   }
-  T side(Side aSide) const {
+  T Side(SideT aSide) const {
     NS_PRECONDITION(aSide <= NS_SIDE_LEFT, "Out of range side");
+    // This is ugly!
     return *(&top + aSide);
   }
 

@@ -438,7 +438,7 @@ nsHTMLContainerFrame::PaintTextDecorationLine(
   PRIntn skip = GetSkipSides();
   NS_FOR_CSS_SIDES(side) {
     if (skip & (1 << side)) {
-      bp.side(side) = 0;
+      bp.Side(side) = 0;
     }
   }
   nscoord innerWidth = mRect.width - bp.left - bp.right;

@@ -1034,7 +1034,7 @@ struct nsRecessedBorder : public nsStyleBorder {
       // Note: use SetBorderColor here because we want to make sure
       // the "special" flags are unset.
       SetBorderColor(side, NS_RGB(0, 0, 0));
-      mBorder.side(side) = aBorderWidth;
+      mBorder.Side(side) = aBorderWidth;
       // Note: use SetBorderStyle here because we want to affect
       // mComputedBorder
       SetBorderStyle(side, NS_STYLE_BORDER_STYLE_INSET);
