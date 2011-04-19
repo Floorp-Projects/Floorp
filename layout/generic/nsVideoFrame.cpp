@@ -278,7 +278,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetContentFlags(Layer::CONTENT_OPAQUE);
   // Set a transform on the layer to draw the video in the right place
   gfxMatrix transform;
-  transform.Translate(r.pos);
+  transform.Translate(r.TopLeft());
   transform.Scale(r.Width()/frameSize.width, r.Height()/frameSize.height);
   layer->SetTransform(gfx3DMatrix::From2D(transform));
   layer->SetVisibleRegion(nsIntRect(0, 0, videoSize.width, videoSize.height));

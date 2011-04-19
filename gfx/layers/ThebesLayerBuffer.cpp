@@ -55,7 +55,7 @@ ScaledSize(const nsIntSize& aSize, float aXScale, float aYScale)
   gfxRect rect(0, 0, aSize.width, aSize.height);
   rect.Scale(aXScale, aYScale);
   rect.RoundOut();
-  return nsIntSize(rect.size.width, rect.size.height);
+  return nsIntSize(rect.Width(), rect.Height());
 }
 
 nsIntRect
@@ -201,9 +201,9 @@ MovePixels(gfxASurface* aBuffer,
   src.Round();
   dest.Round();
 
-  aBuffer->MovePixels(nsIntRect(src.pos.x, src.pos.y,
-                                src.size.width, src.size.height),
-                      nsIntPoint(dest.pos.x, dest.pos.y));
+  aBuffer->MovePixels(nsIntRect(src.X(), src.Y(),
+                                src.Width(), src.Height()),
+                      nsIntPoint(dest.X(), dest.Y()));
 }
 
 static void
@@ -265,7 +265,7 @@ ThebesLayerBuffer::BeginPaint(ThebesLayer* aLayer, ContentType aContentType,
     }
 
     if ((aFlags & PAINT_WILL_RESAMPLE) &&
-        (neededRegion.GetBounds() != destBufferRect ||
+        (!neededRegion.GetBounds().IsEqualInterior(destBufferRect) ||
          neededRegion.GetNumRects() > 1)) {
       // The area we add to neededRegion might not be painted opaquely
       contentType = gfxASurface::CONTENT_COLOR_ALPHA;

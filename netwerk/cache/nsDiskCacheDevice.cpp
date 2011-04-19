@@ -80,6 +80,7 @@
 #include "nsISimpleEnumerator.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "nsThreadUtils.h"
 
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
 
@@ -450,6 +451,38 @@ nsDiskCacheDevice::GetDeviceID()
     return DISK_CACHE_DEVICE_ID;
 }
 
+class nsDiskCacheDeviceDeactivateEntryEvent : public nsRunnable {
+public:
+    nsDiskCacheDeviceDeactivateEntryEvent(nsDiskCacheDevice *device,
+                                          nsCacheEntry * entry,
+                                          nsDiskCacheBinding * binding)
+        : mCanceled(PR_FALSE),
+          mEntry(entry),
+          mDevice(device),
+          mBinding(binding)
+    {
+    }
+
+    NS_IMETHOD Run()
+    {
+        nsCacheServiceAutoLock lock;
+#ifdef PR_LOGGING
+        CACHE_LOG_DEBUG(("nsDiskCacheDeviceDeactivateEntryEvent[%p]\n", this));
+#endif
+        if (!mCanceled) {
+            (void) mDevice->DeactivateEntry_Private(mEntry, mBinding);
+        }
+        return NS_OK;
+    }
+    
+    void CancelEvent() { mCanceled = PR_TRUE; }
+private:
+    PRBool mCanceled;
+    nsCacheEntry *mEntry;
+    nsDiskCacheDevice *mDevice;
+    nsDiskCacheBinding *mBinding;
+};
+
 
 /**
  *  FindEntry -
@@ -474,6 +507,16 @@ nsDiskCacheDevice::FindEntry(nsCString * key, PRBool *collision)
     if (binding && !binding->mCacheEntry->Key()->Equals(*key)) {
         *collision = PR_TRUE;
         return nsnull;
+    } else if (binding && binding->mDeactivateEvent) {
+        binding->mDeactivateEvent->CancelEvent();
+        binding->mDeactivateEvent = nsnull;
+        CACHE_LOG_DEBUG(("CACHE: reusing deactivated entry %p " \
+                         "req-key=%s  entry-key=%s\n",
+                         binding->mCacheEntry, key, binding->mCacheEntry->Key()));
+
+        return binding->mCacheEntry; // just return this one, observing that
+                                     // FindActiveBinding() does not return
+                                     // bindings to doomed entries
     }
     binding = nsnull;
 
@@ -511,12 +554,32 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
 {
     nsresult              rv = NS_OK;
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
-    NS_ASSERTION(binding, "DeactivateEntry: binding == nsnull");
-    if (!binding)  return NS_ERROR_UNEXPECTED;
+    if (!IsValidBinding(binding))
+        return NS_ERROR_UNEXPECTED;
 
     CACHE_LOG_DEBUG(("CACHE: disk DeactivateEntry [%p %x]\n",
         entry, binding->mRecord.HashNumber()));
 
+    nsDiskCacheDeviceDeactivateEntryEvent *event =
+        new nsDiskCacheDeviceDeactivateEntryEvent(this, entry, binding);
+
+    // ensure we can cancel the event via the binding later if necessary
+    binding->mDeactivateEvent = event;
+
+    rv = nsCacheService::DispatchToCacheIOThread(event);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "DeactivateEntry: Failed dispatching "
+                                   "deactivation event");
+    return NS_OK;
+}
+
+/**
+ *  NOTE: called while holding the cache service lock
+ */
+nsresult
+nsDiskCacheDevice::DeactivateEntry_Private(nsCacheEntry * entry,
+                                           nsDiskCacheBinding * binding)
+{
+    nsresult rv = NS_OK;
     if (entry->IsDoomed()) {
         // delete data, entry, record from disk for entry
         rv = mCacheMap.DeleteStorage(&binding->mRecord);
@@ -644,7 +707,8 @@ nsDiskCacheDevice::DoomEntry(nsCacheEntry * entry)
 
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
     NS_ASSERTION(binding, "DoomEntry: binding == nsnull");
-    if (!binding)  return;
+    if (!binding)
+        return;
 
     if (!binding->mDoomed) {
         // so it can't be seen by FindEntry() ever again.
@@ -675,8 +739,9 @@ nsDiskCacheDevice::OpenInputStreamForEntry(nsCacheEntry *      entry,
 
     nsresult             rv;
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
-    NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
-    
+    if (!IsValidBinding(binding))
+        return NS_ERROR_UNEXPECTED;
+
     NS_ASSERTION(binding->mCacheEntry == entry, "binding & entry don't point to each other");
 
     rv = binding->EnsureStreamIO();
@@ -703,7 +768,8 @@ nsDiskCacheDevice::OpenOutputStreamForEntry(nsCacheEntry *      entry,
 
     nsresult             rv;
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
-    NS_ENSURE_TRUE(binding, NS_ERROR_UNEXPECTED);
+    if (!IsValidBinding(binding))
+        return NS_ERROR_UNEXPECTED;
     
     NS_ASSERTION(binding->mCacheEntry == entry, "binding & entry don't point to each other");
 
@@ -727,11 +793,9 @@ nsDiskCacheDevice::GetFileForEntry(nsCacheEntry *    entry,
     nsresult             rv;
         
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
-    if (!binding) {
-        NS_WARNING("GetFileForEntry: binding == nsnull");
+    if (!IsValidBinding(binding))
         return NS_ERROR_UNEXPECTED;
-    }
-    
+
     // check/set binding->mRecord for separate file, sync w/mCacheMap
     if (binding->mRecord.DataLocationInitialized()) {
         if (binding->mRecord.DataFile() != 0)
@@ -776,8 +840,8 @@ nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
         return NS_OK;
 
     nsDiskCacheBinding * binding = GetCacheEntryBinding(entry);
-    NS_ASSERTION(binding, "OnDataSizeChange: binding == nsnull");
-    if (!binding)  return NS_ERROR_UNEXPECTED;
+    if (!IsValidBinding(binding))
+        return NS_ERROR_UNEXPECTED;
 
     NS_ASSERTION(binding->mRecord.ValidRecord(), "bad record");
 

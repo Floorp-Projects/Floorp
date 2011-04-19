@@ -42,7 +42,7 @@
     Test.include("notfound.js");
 
     // If init is called directly, it works.
-    setTimeout('init();', 10);
+    setTimeout('init();', 0);
 
     SimpleTest.waitForExplicitFinish();
 

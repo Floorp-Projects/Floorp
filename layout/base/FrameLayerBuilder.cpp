@@ -1651,7 +1651,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   state.Finish(&flags);
 
   nsRect bounds = state.GetChildrenBounds();
-  NS_ASSERTION(bounds == aChildren.GetBounds(aBuilder), "Wrong bounds");
+  NS_ASSERTION(bounds.IsEqualInterior(aChildren.GetBounds(aBuilder)), "Wrong bounds");
   nsIntRect pixBounds = bounds.ToOutsidePixels(appUnitsPerDevPixel);
   containerLayer->SetVisibleRegion(pixBounds);
   // Make sure that rounding the visible region out didn't add any area

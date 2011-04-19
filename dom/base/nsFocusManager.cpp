@@ -196,9 +196,11 @@ nsFocusManager::Init()
     nsContentUtils::GetBoolPref("accessibility.mouse_focuses_formcontrol", PR_FALSE);
 
   nsIPrefBranch2* prefBranch = nsContentUtils::GetPrefBranch();
-  prefBranch->AddObserver("accessibility.browsewithcaret", fm, PR_TRUE);
-  prefBranch->AddObserver("accessibility.tabfocus_applies_to_xul", fm, PR_TRUE);
-  prefBranch->AddObserver("accessibility.mouse_focuses_formcontrol", fm, PR_TRUE);
+  if (prefBranch) {
+    prefBranch->AddObserver("accessibility.browsewithcaret", fm, PR_TRUE);
+    prefBranch->AddObserver("accessibility.tabfocus_applies_to_xul", fm, PR_TRUE);
+    prefBranch->AddObserver("accessibility.mouse_focuses_formcontrol", fm, PR_TRUE);
+  }
 
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {

@@ -991,6 +991,15 @@ public:
   static PRUint32 GetEventId(nsIAtom* aName);
 
   /**
+   * Return the category for the event with the given name. The name is the
+   * event name *without* the 'on' prefix. Returns NS_EVENT if the event
+   * is not known to be in any particular category.
+   *
+   * @param aName the event name to look up
+   */
+  static PRUint32 GetEventCategory(const nsAString& aName);
+
+  /**
    * Return the event id and atom for the event with the given name.
    * The name is the event name *without* the 'on' prefix.
    * Returns NS_USER_DEFINED_EVENT on the aEventID if the

@@ -411,7 +411,7 @@ nsTreeBodyFrame::SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRec
                            PRBool aRemoveOverflowArea)
 {
   nscoord horzWidth = CalcHorzWidth(GetScrollParts());
-  if ((aRect != mRect || mHorzWidth != horzWidth) && !mReflowCallbackPosted) {
+  if ((!aRect.IsEqualEdges(mRect) || mHorzWidth != horzWidth) && !mReflowCallbackPosted) {
     mReflowCallbackPosted = PR_TRUE;
     PresContext()->PresShell()->PostReflowCallback(this);
   }

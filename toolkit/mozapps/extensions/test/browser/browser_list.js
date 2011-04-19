@@ -135,7 +135,7 @@ add_test(function() {
     is(get_node(addon, "description").value, "A test add-on", "Description should be correct");
     is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
     is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
-    is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
+    is(get_node(addon, "date-updated").value, formatDate(gDate), "Update date should be correct");
 
     is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
     is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");
@@ -370,7 +370,7 @@ add_test(function() {
       is(get_node(addon, "description").value, "A test add-on", "Description should be correct");
       is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
       is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
-      is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
+      is(get_node(addon, "date-updated").value, formatDate(gDate), "Update date should be correct");
 
       is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
       is_element_visible(get_node(addon, "enable-btn"), "Enable button should be visible");
@@ -573,7 +573,7 @@ add_test(function() {
   is(get_node(addon, "description").value, "A test add-on with a new description", "Description should be correct");
   is_element_hidden(get_class_node(addon, "disabled-postfix"), "Disabled postfix should be hidden");
   is_element_hidden(get_class_node(addon, "update-postfix"), "Update postfix should be hidden");
-  is(Date.parse(get_node(addon, "date-updated").value), gDate.getTime(), "Update date should be correct");
+  is(get_node(addon, "date-updated").value, formatDate(gDate), "Update date should be correct");
 
   is_element_hidden(get_node(addon, "preferences-btn"), "Preferences button should be hidden");
   is_element_hidden(get_node(addon, "enable-btn"), "Enable button should be hidden");

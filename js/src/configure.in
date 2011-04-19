@@ -674,10 +674,6 @@ case "$target" in
         _MOZ_EXCEPTIONS_FLAGS_ON='-EHsc'
         _MOZ_EXCEPTIONS_FLAGS_OFF=''
 
-        if test -n "$WIN32_REDIST_DIR"; then
-            WIN32_REDIST_DIR=`cd "$WIN32_REDIST_DIR" && pwd`
-        fi
-
         dnl Ensure that mt.exe is 'Microsoft (R) Manifest Tool',
         dnl not something else like "magnetic tape manipulation utility".
         MSMT_TOOL=`mt 2>&1|grep 'Microsoft (R) Manifest Tool'`
@@ -5696,7 +5692,6 @@ dnl win32 options
 AC_SUBST(MOZ_MAPINFO)
 AC_SUBST(MOZ_BROWSE_INFO)
 AC_SUBST(MOZ_TOOLS_DIR)
-AC_SUBST(WIN32_REDIST_DIR)
 AC_SUBST(PYTHON)
 
 AC_SUBST(WINCE)

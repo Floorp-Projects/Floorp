@@ -788,7 +788,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
   }
 
   // Translate the dirty rect so that it is wrt the widget top-left.
-  dirtyRect.MoveBy(-rect.pos);
+  dirtyRect.MoveBy(-rect.TopLeft());
   // Round out the dirty rect to gdk pixels to ensure that gtk draws
   // enough pixels for interpolation to device pixels.
   dirtyRect.RoundOut();
@@ -837,7 +837,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
     // Rects are in device coords.
     ctx->IdentityMatrix(); 
   }
-  ctx->Translate(rect.pos + gfxPoint(drawingRect.x, drawingRect.y));
+  ctx->Translate(rect.TopLeft() + gfxPoint(drawingRect.x, drawingRect.y));
 
   NS_ASSERTION(!IsWidgetTypeDisabled(mDisabledWidgetTypes, aWidgetType),
                "Trying to render an unsafe widget!");
