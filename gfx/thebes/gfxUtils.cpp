@@ -272,15 +272,15 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
 
     nsRefPtr<gfxContext> tmpCtx = new gfxContext(temp);
     tmpCtx->SetOperator(OptimalFillOperator());
-    aDrawable->Draw(tmpCtx, needed - needed.pos, PR_TRUE,
-                    gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.pos));
+    aDrawable->Draw(tmpCtx, needed - needed.TopLeft(), PR_TRUE,
+                    gfxPattern::FILTER_FAST, gfxMatrix().Translate(needed.TopLeft()));
 
     nsRefPtr<gfxPattern> resultPattern = new gfxPattern(temp);
     if (!resultPattern)
         return nsnull;
 
     nsRefPtr<gfxDrawable> drawable = 
-        new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.pos));
+        new gfxSurfaceDrawable(temp, size, gfxMatrix().Translate(-needed.TopLeft()));
     return drawable.forget();
 }
 

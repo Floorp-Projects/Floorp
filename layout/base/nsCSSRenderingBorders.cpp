@@ -225,10 +225,10 @@ ComputeBorderCornerDimensions(const gfxRect& aOuterRect,
                               const gfxCornerSizes& aRadii,
                               gfxCornerSizes *aDimsRet)
 {
-  gfxFloat topWidth = aInnerRect.pos.y - aOuterRect.pos.y;
-  gfxFloat leftWidth = aInnerRect.pos.x - aOuterRect.pos.x;
-  gfxFloat rightWidth = aOuterRect.size.width - aInnerRect.size.width - leftWidth;
-  gfxFloat bottomWidth = aOuterRect.size.height - aInnerRect.size.height - topWidth;
+  gfxFloat leftWidth = aInnerRect.X() - aOuterRect.X();
+  gfxFloat topWidth = aInnerRect.Y() - aOuterRect.Y();
+  gfxFloat rightWidth = aOuterRect.Width() - aInnerRect.Width() - leftWidth;
+  gfxFloat bottomWidth = aOuterRect.Height() - aInnerRect.Height() - topWidth;
 
   if (AllCornersZeroSize(aRadii)) {
     // These will always be in pixel units from CSS
@@ -354,11 +354,11 @@ nsCSSBorderRenderer::DoCornerSubPath(mozilla::css::Corner aCorner)
   gfxPoint offset(0.0, 0.0);
 
   if (aCorner == C_TR || aCorner == C_BR)
-    offset.x = mOuterRect.size.width - mBorderCornerDimensions[aCorner].width;
+    offset.x = mOuterRect.Width() - mBorderCornerDimensions[aCorner].width;
   if (aCorner == C_BR || aCorner == C_BL)
-    offset.y = mOuterRect.size.height - mBorderCornerDimensions[aCorner].height;
+    offset.y = mOuterRect.Height() - mBorderCornerDimensions[aCorner].height;
 
-  mContext->Rectangle(gfxRect(mOuterRect.pos + offset,
+  mContext->Rectangle(gfxRect(mOuterRect.TopLeft() + offset,
                               mBorderCornerDimensions[aCorner]));
 }
 
@@ -375,11 +375,11 @@ nsCSSBorderRenderer::DoSideClipWithoutCornersSubPath(mozilla::css::Side aSide)
   if (aSide == NS_SIDE_TOP) {
     offset.x = mBorderCornerDimensions[C_TL].width;
   } else if (aSide == NS_SIDE_RIGHT) {
-    offset.x = mOuterRect.size.width - mBorderWidths[NS_SIDE_RIGHT];
+    offset.x = mOuterRect.Width() - mBorderWidths[NS_SIDE_RIGHT];
     offset.y = mBorderCornerDimensions[C_TR].height;
   } else if (aSide == NS_SIDE_BOTTOM) {
     offset.x = mBorderCornerDimensions[C_BL].width;
-    offset.y = mOuterRect.size.height - mBorderWidths[NS_SIDE_BOTTOM];
+    offset.y = mOuterRect.Height() - mBorderWidths[NS_SIDE_BOTTOM];
   } else if (aSide == NS_SIDE_LEFT) {
     offset.y = mBorderCornerDimensions[C_TL].height;
   }
@@ -390,8 +390,8 @@ nsCSSBorderRenderer::DoSideClipWithoutCornersSubPath(mozilla::css::Side aSide)
   // with both proceeding clockwise.
   gfxSize sideCornerSum = mBorderCornerDimensions[mozilla::css::Corner(aSide)]
                         + mBorderCornerDimensions[mozilla::css::Corner(NEXT_SIDE(aSide))];
-  gfxRect rect(mOuterRect.pos + offset,
-               mOuterRect.size - sideCornerSum);
+  gfxRect rect(mOuterRect.TopLeft() + offset,
+               mOuterRect.Size() - sideCornerSum);
 
   if (aSide == NS_SIDE_TOP || aSide == NS_SIDE_BOTTOM)
     rect.size.height = mBorderWidths[aSide];
@@ -581,29 +581,27 @@ nsCSSBorderRenderer::FillSolidBorder(const gfxRect& aOuterRect,
 
   // compute base rects for each side
   if (aSides & SIDE_BIT_TOP) {
-    r[NS_SIDE_TOP].pos = aOuterRect.TopLeft();
-    r[NS_SIDE_TOP].size.width = aOuterRect.size.width;
-    r[NS_SIDE_TOP].size.height = aBorderSizes[NS_SIDE_TOP];
+    r[NS_SIDE_TOP] =
+        gfxRect(aOuterRect.X(), aOuterRect.Y(),
+                aOuterRect.Width(), aBorderSizes[NS_SIDE_TOP]);
   }
 
   if (aSides & SIDE_BIT_BOTTOM) {
-    r[NS_SIDE_BOTTOM].pos = aOuterRect.BottomLeft();
-    r[NS_SIDE_BOTTOM].pos.y -= aBorderSizes[NS_SIDE_BOTTOM];
-    r[NS_SIDE_BOTTOM].size.width = aOuterRect.size.width;
-    r[NS_SIDE_BOTTOM].size.height = aBorderSizes[NS_SIDE_BOTTOM];
+    r[NS_SIDE_BOTTOM] =
+        gfxRect(aOuterRect.X(), aOuterRect.YMost() - aBorderSizes[NS_SIDE_BOTTOM],
+                aOuterRect.Width(), aBorderSizes[NS_SIDE_BOTTOM]);
   }
 
   if (aSides & SIDE_BIT_LEFT) {
-    r[NS_SIDE_LEFT].pos = aOuterRect.TopLeft();
-    r[NS_SIDE_LEFT].size.width = aBorderSizes[NS_SIDE_LEFT];
-    r[NS_SIDE_LEFT].size.height = aOuterRect.size.height;
+    r[NS_SIDE_LEFT] =
+        gfxRect(aOuterRect.X(), aOuterRect.Y(),
+                aBorderSizes[NS_SIDE_LEFT], aOuterRect.Height());
   }
 
   if (aSides & SIDE_BIT_RIGHT) {
-    r[NS_SIDE_RIGHT].pos = aOuterRect.TopRight();
-    r[NS_SIDE_RIGHT].pos.x -= aBorderSizes[NS_SIDE_RIGHT];
-    r[NS_SIDE_RIGHT].size.width = aBorderSizes[NS_SIDE_RIGHT];
-    r[NS_SIDE_RIGHT].size.height = aOuterRect.size.height;
+    r[NS_SIDE_RIGHT] =
+        gfxRect(aOuterRect.XMost() - aBorderSizes[NS_SIDE_RIGHT], aOuterRect.Y(),
+                aBorderSizes[NS_SIDE_RIGHT], aOuterRect.Height());
   }
 
   // If two sides meet at a corner that we're rendering, then
@@ -695,7 +693,6 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorde
 
   // the generic composite colors path; each border is 1px in size
   gfxRect soRect = mOuterRect;
-  gfxRect siRect;
   gfxFloat maxBorderWidth = 0;
   NS_FOR_CSS_SIDES (i) {
     maxBorderWidth = NS_MAX(maxBorderWidth, mBorderWidths[i]);
@@ -703,21 +700,18 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorde
 
   gfxFloat fakeBorderSizes[4];
 
-  gfxRGBA lineColor;
-  gfxPoint tl, br;
-
   gfxPoint itl = mInnerRect.TopLeft();
   gfxPoint ibr = mInnerRect.BottomRight();
 
   for (PRUint32 i = 0; i < PRUint32(maxBorderWidth); i++) {
-    lineColor = ComputeCompositeColorForLine(i, aCompositeColors);
+    gfxRGBA lineColor = ComputeCompositeColorForLine(i, aCompositeColors);
 
-    siRect = soRect;
+    gfxRect siRect = soRect;
     siRect.Inset(1.0, 1.0, 1.0, 1.0);
 
     // now cap the rects to the real mInnerRect
-    tl = siRect.TopLeft();
-    br = siRect.BottomRight();
+    gfxPoint tl = siRect.TopLeft();
+    gfxPoint br = siRect.BottomRight();
 
     tl.x = NS_MIN(tl.x, itl.x);
     tl.y = NS_MIN(tl.y, itl.y);
@@ -725,9 +719,7 @@ nsCSSBorderRenderer::DrawBorderSidesCompositeColors(PRIntn aSides, const nsBorde
     br.x = NS_MAX(br.x, ibr.x);
     br.y = NS_MAX(br.y, ibr.y);
 
-    siRect.pos = tl;
-    siRect.size.width = br.x - tl.x;
-    siRect.size.height = br.y - tl.y;
+    siRect = gfxRect(tl.x, tl.y, br.x - tl.x , br.y - tl.y);
 
     fakeBorderSizes[NS_SIDE_TOP] = siRect.TopLeft().y - soRect.TopLeft().y;
     fakeBorderSizes[NS_SIDE_RIGHT] = soRect.TopRight().x - siRect.TopRight().x;

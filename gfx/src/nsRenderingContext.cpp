@@ -304,30 +304,30 @@ static PRBool
 ConditionRect(gfxRect& r) {
     // if either x or y is way out of bounds;
     // note that we don't handle negative w/h here
-    if (r.pos.x > CAIRO_COORD_MAX || r.pos.y > CAIRO_COORD_MAX)
+    if (r.X() > CAIRO_COORD_MAX || r.Y() > CAIRO_COORD_MAX)
         return PR_FALSE;
 
-    if (r.pos.x < 0.0) {
-        r.size.width += r.pos.x;
+    if (r.X() < 0.0) {
+        r.size.width += r.X();
         if (r.size.width < 0.0)
             return PR_FALSE;
         r.pos.x = 0.0;
     }
 
-    if (r.pos.x + r.size.width > CAIRO_COORD_MAX) {
-        r.size.width = CAIRO_COORD_MAX - r.pos.x;
+    if (r.XMost() > CAIRO_COORD_MAX) {
+        r.size.width = CAIRO_COORD_MAX - r.X();
     }
 
-    if (r.pos.y < 0.0) {
-        r.size.height += r.pos.y;
-        if (r.size.height < 0.0)
+    if (r.Y() < 0.0) {
+        r.size.height += r.Y();
+        if (r.Height() < 0.0)
             return PR_FALSE;
 
         r.pos.y = 0.0;
     }
 
-    if (r.pos.y + r.size.height > CAIRO_COORD_MAX) {
-        r.size.height = CAIRO_COORD_MAX - r.pos.y;
+    if (r.YMost() > CAIRO_COORD_MAX) {
+        r.size.height = CAIRO_COORD_MAX - r.Y();
     }
     return PR_TRUE;
 }
