@@ -1946,8 +1946,20 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETTHISPROP)
             /* Push thisv onto stack. */
             jsop_this();
-            if (cx->typeInferenceEnabled())
-                frame.extra(frame.peek(-1)).types = script->thisTypes();
+            if (cx->typeInferenceEnabled()) {
+                /*
+                 * Make a new type set to capture the types of the value just
+                 * pushed. This is duplicating the work done to handle
+                 * GETTHISPROP within inference itself, as with this fused
+                 * opcode there is no place to hang the result of transforming
+                 * 'this' into an object.
+                 */
+                types::TypeSet *newTypes = types::TypeSet::make(cx, "thisprop");
+                if (!newTypes)
+                    return Compile_Error;
+                script->thisTypes()->addTransformThis(cx, script, newTypes);
+                frame.extra(frame.peek(-1)).types = newTypes;
+            }
             if (!jsop_getprop(script->getAtom(fullAtomIndex(PC)), knownPushedType(0)))
                 return Compile_Error;
           END_CASE(JSOP_GETTHISPROP);
