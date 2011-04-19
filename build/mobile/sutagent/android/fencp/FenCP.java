@@ -1,6 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -13,23 +11,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is Android SUTAgent code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * Bob Moss.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
- * Contributors:
- *   Mike Shaver <shaver@zeroknowledge.com>
- *   John Bandhauer <jband@netscape.com>
- *   IBM Corp.
- *   Robert Ginda <rginda@netscape.com>
+ * Contributor(s):
+ *  Bob Moss <bmoss@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -40,24 +34,16 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+package org.mozilla.fencp;
 
-#ifdef XPCONNECT_STANDALONE
-#define NO_SUBSCRIPT_LOADER
-#endif
+import android.app.Activity;
+import android.os.Bundle;
 
-#if defined XPCONNECT_STANDALONE || !defined XPCONNECT_MODULE
-#include "mozilla/ModuleUtils.h"
-#include "nsICategoryManager.h"
-#include "mozJSComponentLoader.h"
-
-#ifndef NO_SUBSCRIPT_LOADER
-#include "mozJSSubScriptLoader.h"
-const char mozJSSubScriptLoadContractID[] = "@mozilla.org/moz/jssubscript-loader;1";
-#endif
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader)
-
-#ifndef NO_SUBSCRIPT_LOADER
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSSubScriptLoader)
-#endif
-#endif
+public class FenCP extends Activity {
+    /** Called when the activity is first created. */
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+    }
+}

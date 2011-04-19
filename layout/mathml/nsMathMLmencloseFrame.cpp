@@ -777,14 +777,14 @@ void nsDisplayNotation::Paint(nsDisplayListBuilder* aBuilder,
   gfxFloat e = presContext->AppUnitsToGfxUnits(mThickness);
   gfxCtx->SetLineWidth(e);
 
-  rect.Inset(e / 2.0);
+  rect.Deflate(e / 2.0);
 
   gfxCtx->NewPath();
 
   switch(mType)
     {
     case NOTATION_CIRCLE:
-      gfxCtx->Ellipse(rect.pos + rect.size / 2.0, rect.size);
+      gfxCtx->Ellipse(rect.Center(), rect.Size());
       break;
 
     case NOTATION_ROUNDEDBOX:

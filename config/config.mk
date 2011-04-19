@@ -612,10 +612,6 @@ DEPENDENCIES	= .md
 
 MOZ_COMPONENT_LIBS=$(XPCOM_LIBS) $(MOZ_COMPONENT_NSPR_LIBS)
 
-ifeq (xpconnect, $(findstring xpconnect, $(BUILD_MODULES)))
-DEFINES +=  -DXPCONNECT_STANDALONE
-endif
-
 ifeq ($(OS_ARCH),OS2)
 ELF_DYNSTR_GC	= echo
 else

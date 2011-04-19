@@ -37,7 +37,7 @@
         if (win.mozPaintCount == initialCount) {
           is(win.mozPaintCount, initialCount, "Waiting for mozPaintCount to increase.");
           // Do not use SimpleTest.executeSoon() here: give a little more time.
-          setTimeout(nextStep, 25);
+          setTimeout(nextStep, 0);
           return;
         }
 

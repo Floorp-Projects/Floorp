@@ -497,7 +497,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     FinishReflowChild(mLegendFrame, aPresContext, &legendReflowState, 
                       legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
   } else if (!mLegendFrame) {
-    mLegendRect.Empty();
+    mLegendRect.SetEmpty();
     mLegendSpace = 0;
   } else {
     // mLegendSpace and mLegendRect haven't changed, but we need
