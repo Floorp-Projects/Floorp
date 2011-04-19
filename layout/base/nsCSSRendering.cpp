@@ -1468,7 +1468,7 @@ nsCSSRendering::PaintBackground(nsPresContext* aPresContext,
 static PRBool
 IsOpaqueBorderEdge(const nsStyleBorder& aBorder, mozilla::css::Side aSide)
 {
-  if (aBorder.GetActualBorder().side(aSide) == 0)
+  if (aBorder.GetActualBorder().Side(aSide) == 0)
     return PR_TRUE;
   switch (aBorder.GetBorderStyle(aSide)) {
   case NS_STYLE_BORDER_STYLE_SOLID:
@@ -2798,7 +2798,7 @@ DrawBorderImage(nsPresContext*       aPresContext,
       value = 0;
     if (value > imgDimension)
       value = imgDimension;
-    split.side(s) = NS_lround(value);
+    split.Side(s) = NS_lround(value);
   }
 
   nsMargin border(aStyleBorder.GetActualBorder());
