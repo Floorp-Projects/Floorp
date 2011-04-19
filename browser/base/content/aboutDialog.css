@@ -87,7 +87,9 @@
 }
 
 #updateDeck > hbox > label:not([class="text-link"]) {
+%ifdef MOZ_OFFICIAL_BRANDING
   color: #909090;
+%endif
   font-style:italic;
 }
 
