@@ -72,8 +72,6 @@ PREPARE REMOVEFILE a/b/7/71/7xtest.exe
 PREPARE REMOVEFILE a/b/7/71/7xtext0
 PREPARE REMOVEFILE a/b/7/71/7xtext1
 PREPARE REMOVEDIR a/b/7/71/
-PREPARE REMOVEFILE a/b/7/7text0
-PREPARE REMOVEFILE a/b/7/7text1
 PREPARE REMOVEDIR a/b/7/
 PREPARE REMOVEDIR a/b/6/
 PREPARE REMOVEFILE a/b/5/5text1
@@ -168,10 +166,6 @@ FINISH REMOVEFILE a/b/7/71/7xtext0
 backup_restore: backup file doesn't exist: a/b/7/71/7xtext0.moz-backup
 FINISH REMOVEFILE a/b/7/71/7xtext1
 backup_restore: backup file doesn't exist: a/b/7/71/7xtext1.moz-backup
-FINISH REMOVEFILE a/b/7/7text0
-backup_restore: backup file doesn't exist: a/b/7/7text0.moz-backup
-FINISH REMOVEFILE a/b/7/7text1
-backup_restore: backup file doesn't exist: a/b/7/7text1.moz-backup
 FINISH REMOVEFILE a/b/5/5text1
 backup_restore: backup file doesn't exist: a/b/5/5text1.moz-backup
 FINISH REMOVEFILE a/b/5/5text0
