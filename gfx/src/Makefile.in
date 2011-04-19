@@ -62,6 +62,7 @@ XPIDLSRCS = \
 EXPORTS_NAMESPACES = mozilla
 
 EXPORTS_mozilla = \
+	BaseMargin.h \
 	BasePoint.h \
 	BaseSize.h \
 	$(NULL)
