@@ -41,6 +41,8 @@
 
 #include "xptiprivate.h"
 
+using namespace mozilla;
+
 // static 
 xptiTypelibGuts* 
 xptiTypelibGuts::Create(XPTHeader* aHeader)
@@ -73,10 +75,13 @@ xptiTypelibGuts::GetEntryAt(PRUint16 i)
     xptiWorkingSet* set =
         xptiInterfaceInfoManager::GetSingleton()->GetWorkingSet();
 
-    if (iface->iid.Equals(zeroIID))
-        r = set->mNameTable.Get(iface->name);
-    else
-        r = set->mIIDTable.Get(iface->iid);
+    {
+        MonitorAutoEnter monitor(set->mTableMonitor);
+        if (iface->iid.Equals(zeroIID))
+            r = set->mNameTable.Get(iface->name);
+        else
+            r = set->mIIDTable.Get(iface->iid);
+    }
 
     if (r)
         SetEntryAt(i, r);
