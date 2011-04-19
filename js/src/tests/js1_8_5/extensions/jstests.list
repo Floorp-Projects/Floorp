@@ -56,3 +56,5 @@ skip-if(!xulRuntime.shell) script debug-object-12.js
 skip-if(!xulRuntime.shell) script debug-object-13.js
 skip-if(!xulRuntime.shell) script debug-object-14.js
 skip-if(!xulRuntime.shell) script debug-object-15.js
+skip-if(!xulRuntime.shell) script debug-object-16.js
+skip-if(!xulRuntime.shell) script debug-object-17.js

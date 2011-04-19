@@ -114,7 +114,8 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
 // === Debug hook dispatch
 
 Debug::Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment)
-  : object(dbg), debuggeeCompartment(compartment), hooksObject(hooks), hasDebuggerHandler(false)
+  : object(dbg), debuggeeCompartment(compartment), hooksObject(hooks),
+    enabled(true), hasDebuggerHandler(false)
 {
 }
 
@@ -348,6 +349,24 @@ Debug::setHooks(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
+Debug::getEnabled(JSContext *cx, uintN argc, Value *vp)
+{
+    THISOBJ(cx, vp, Debug, "get enabled", thisobj, dbg);
+    vp->setBoolean(dbg->enabled);
+    return true;
+}
+
+JSBool
+Debug::setEnabled(JSContext *cx, uintN argc, Value *vp)
+{
+    REQUIRE_ARGC("Debug.set enabled", 1);
+    THISOBJ(cx, vp, Debug, "set enabled", thisobj, dbg);
+    dbg->enabled = js_ValueToBoolean(vp[2]);
+    vp->setUndefined();
+    return true;
+}
+
+JSBool
 Debug::construct(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debug", 1);
@@ -395,6 +414,7 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
 
 JSPropertySpec Debug::properties[] = {
     JS_PSGS("hooks", Debug::getHooks, Debug::setHooks, 0),
+    JS_PSGS("enabled", Debug::getEnabled, Debug::setEnabled, 0),
     JS_PS_END
 };
     
