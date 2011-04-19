@@ -161,7 +161,7 @@ TableBackgroundPainter::TableBackgroundData::Destroy(nsPresContext* aPresContext
 void
 TableBackgroundPainter::TableBackgroundData::Clear()
 {
-  mRect.Empty();
+  mRect.SetEmpty();
   mFrame = nsnull;
   mBorder = nsnull;
   mVisible = PR_FALSE;

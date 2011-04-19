@@ -1636,7 +1636,7 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // The out-of-flow frame did not intersect the dirty area. We may still
       // need to traverse into it, since it may contain placeholders we need
       // to enter to reach other out-of-flow frames that are visible.
-      dirty.Empty();
+      dirty.SetEmpty();
     }
     pseudoStackingContext = PR_TRUE;
   } else if (aBuilder->GetSelectedFramesOnly() &&
