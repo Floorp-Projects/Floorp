@@ -502,7 +502,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     if (!matrixIsIntegerTranslation) {
         // The filter footprint means that the affected rectangle is a
         // little larger than the drawingRect;
-        affectedRect.Outset(filterRadius);
+        affectedRect.Inflate(filterRadius);
 
         NATIVE_DRAWING_NOTE("FALLBACK: matrix not integer translation");
     } else if (!canDrawOverBackground) {
@@ -531,7 +531,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, nsIntSize size,
     if (!matrixIsIntegerTranslation) {
         // The source surface may need to be a little larger than the clip
         // extents due to the filter footprint.
-        clipExtents.Outset(filterRadius);
+        clipExtents.Inflate(filterRadius);
     }
     clipExtents.RoundOut();
 

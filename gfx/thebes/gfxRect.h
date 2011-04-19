@@ -44,6 +44,7 @@
 #include "nsDebug.h"
 #include "mozilla/BaseMargin.h"
 #include "mozilla/BaseRect.h"
+#include "nsRect.h"
 
 struct gfxMargin : public mozilla::BaseMargin<gfxFloat, gfxMargin> {
   typedef mozilla::BaseMargin<gfxFloat, gfxMargin> Super;
@@ -94,6 +95,8 @@ struct THEBES_API gfxRect :
         Super(aPos, aSize) {}
     gfxRect(gfxFloat aX, gfxFloat aY, gfxFloat aWidth, gfxFloat aHeight) :
         Super(aX, aY, aWidth, aHeight) {}
+    gfxRect(const nsIntRect& aRect) :
+        Super(aRect.x, aRect.y, aRect.width, aRect.height) {}
 
     /**
      * Return true if all components of this rect are within
@@ -102,34 +105,6 @@ struct THEBES_API gfxRect :
      * for x,y,width,height.
      */
     PRBool WithinEpsilonOfIntegerPixels(gfxFloat aEpsilon) const;
-
-    void Inset(gfxFloat k) {
-        Deflate(k, k);
-    }
-
-    void Inset(gfxFloat top, gfxFloat right, gfxFloat bottom, gfxFloat left) {
-        Deflate(gfxMargin(left, top, right, bottom));
-    }
-
-    void Inset(const gfxFloat *sides) {
-        Inset(sides[0], sides[1], sides[2], sides[3]);
-    }
-
-    void Inset(const gfxIntSize& aSize) {
-        Deflate(aSize.width, aSize.height);
-    }
-
-    void Outset(gfxFloat k) {
-        Inflate(k, k);
-    }
-
-    void Outset(gfxFloat top, gfxFloat right, gfxFloat bottom, gfxFloat left) {
-        Inflate(gfxMargin(left, top, right, bottom));
-    }
-
-    void Outset(const gfxIntSize& aSize) {
-        Outset(aSize.height, aSize.width, aSize.height, aSize.width);
-    }
 
     // Round the rectangle edges to integer coordinates, such that the rounded
     // rectangle has the same set of pixel centers as the original rectangle.

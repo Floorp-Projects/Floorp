@@ -63,7 +63,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     mBlurRadius = aBlurRadius;
 
     gfxRect rect(aRect);
-    rect.Outset(aBlurRadius + aSpreadRadius);
+    rect.Inflate(aBlurRadius + aSpreadRadius);
     rect.RoundOut();
 
     if (aDirtyRect) {
@@ -72,7 +72,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
         mHasDirtyRect = PR_TRUE;
         mDirtyRect = *aDirtyRect;
         gfxRect requiredBlurArea = mDirtyRect.Intersect(rect);
-        requiredBlurArea.Outset(aBlurRadius + aSpreadRadius);
+        requiredBlurArea.Inflate(aBlurRadius + aSpreadRadius);
         rect = requiredBlurArea.Intersect(rect);
     } else {
         mHasDirtyRect = PR_FALSE;
@@ -90,7 +90,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
         // expensive int<->float conversions if we were to use gfxRect instead.
         gfxRect skipRect = *aSkipRect;
         skipRect.RoundIn();
-        skipRect.Inset(aBlurRadius + aSpreadRadius);
+        skipRect.Deflate(aBlurRadius + aSpreadRadius);
         gfxUtils::GfxRectToIntRect(skipRect, &mSkipRect);
         nsIntRect shadowIntRect;
         gfxUtils::GfxRectToIntRect(rect, &shadowIntRect);

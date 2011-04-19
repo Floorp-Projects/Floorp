@@ -251,7 +251,7 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
         aUserSpaceToImageSpace.TransformBounds(userSpaceClipExtents);
     // Inflate by one pixel because bilinear filtering will sample at most
     // one pixel beyond the computed image pixel coordinate.
-    imageSpaceClipExtents.Outset(1.0);
+    imageSpaceClipExtents.Inflate(1.0);
 
     gfxRect needed = imageSpaceClipExtents.Intersect(aSourceRect);
     needed = needed.Intersect(aSubimage);
