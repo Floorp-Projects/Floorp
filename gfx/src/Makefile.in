@@ -59,8 +59,16 @@ XPIDLSRCS = \
 	gfxidltypes.idl \
 	$(NULL)
 
+EXPORTS_NAMESPACES = mozilla
+
+EXPORTS_mozilla = \
+	BasePoint.h \
+	BaseSize.h \
+	$(NULL)
+
 EXPORTS	= \
 	gfxCore.h \
+	gfxCrashReporterUtils.h \
 	nsColor.h \
 	nsColorNames.h \
 	nsColorNameList.h \
@@ -79,13 +87,11 @@ EXPORTS	= \
 	nsIRegion.h \
 	nsITheme.h \
 	nsThemeConstants.h \
-	gfxCrashReporterUtils.h \
 	nsBoundingMetrics.h \
 	$(NULL)
 
 ifdef MOZ_X11
-EXPORTS_NAMESPACES	= mozilla
-EXPORTS_mozilla		= X11Util.h
+EXPORTS_mozilla	+= X11Util.h
 endif
 
 CPPSRCS = \

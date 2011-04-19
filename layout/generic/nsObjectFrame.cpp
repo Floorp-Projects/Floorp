@@ -4258,7 +4258,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 #ifdef XP_MACOSX
 
 #ifndef NP_NO_CARBON
-static void InitializeEventRecord(EventRecord* event, Point* aMousePosition)
+static void InitializeEventRecord(EventRecord* event, ::Point* aMousePosition)
 {
   memset(event, 0, sizeof(EventRecord));
   if (aMousePosition) {
@@ -5283,7 +5283,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
                   presContext->AppUnitsToDevPixels(pt.y));
 #ifndef NP_NO_CARBON
   nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
-  Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
+  ::Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
   if (eventModel == NPEventModelCarbon) {
     if (event && anEvent.eventStructType == NS_MOUSE_EVENT) {
       static_cast<EventRecord*>(event)->where = carbonPt;
