@@ -49,6 +49,8 @@ let upd = collectionsHelper.with_updated_collection;
 function sync_httpd_setup(handlers) {
     
   handlers["/1.1/johndoe/info/collections"] = collectionsHelper.handler;
+  delete collectionsHelper.collections.crypto;
+  delete collectionsHelper.collections.meta;
   
   let cr = new ServerWBO("keys");
   handlers["/1.1/johndoe/storage/crypto/keys"] =
@@ -94,8 +96,8 @@ function test_newAccount() {
     _("Engine continues to be enabled.");
     do_check_true(engine.enabled);
   } finally {
-    server.stop(do_test_finished);
     Service.startOver();
+    server.stop(do_test_finished);
   }
 }
 
@@ -127,8 +129,8 @@ function test_enabledLocally() {
     _("Engine continues to be enabled.");
     do_check_true(engine.enabled);
   } finally {
-    server.stop(do_test_finished);
     Service.startOver();
+    server.stop(do_test_finished);
   }
 }
 
@@ -170,8 +172,8 @@ function test_disabledLocally() {
     _("Engine continues to be disabled.");
     do_check_false(engine.enabled);
   } finally {
-    server.stop(do_test_finished);
     Service.startOver();
+    server.stop(do_test_finished);
   }
 }
 
@@ -186,13 +188,23 @@ function test_enabledRemotely() {
                       version: engine.version}}
   });
   let server = sync_httpd_setup({
-    "/1.1/johndoe/storage/meta/global": metaWBO.handler(),
-    "/1.1/johndoe/storage/steam": new ServerWBO("steam", {}).handler()
+    "/1.1/johndoe/storage/meta/global":
+    upd("meta", metaWBO.handler()),
+      
+    "/1.1/johndoe/storage/steam":
+    upd("steam", new ServerWBO("steam", {}).handler())
   });
   do_test_pending();
   setUp();
 
+  // We need to be very careful how we do this, so that we don't trigger a
+  // fresh start!
   try {
+    _("Upload some keys to avoid a fresh start.");
+    let wbo = CollectionKeys.generateNewKeysWBO();
+    wbo.encrypt(Service.syncKeyBundle);
+    do_check_eq(200, wbo.upload(Service.cryptoKeysURL).status);
+
     _("Engine is disabled.");
     do_check_false(engine.enabled);
 
@@ -206,8 +218,8 @@ function test_enabledRemotely() {
     _("Meta record still present.");
     do_check_eq(metaWBO.data.engines.steam.syncID, engine.syncID);
   } finally {
-    server.stop(do_test_finished);
     Service.startOver();
+    server.stop(do_test_finished);
   }
 }
 
@@ -252,8 +264,8 @@ function test_disabledRemotelyTwoClients() {
     do_check_false(engine.enabled);
     
   } finally {
-    server.stop(do_test_finished);
     Service.startOver();
+    server.stop(do_test_finished);
   }
 }
 
@@ -285,8 +297,8 @@ function test_disabledRemotely() {
     do_check_true(engine.enabled);
     
   } finally {
-    server.stop(do_test_finished);
     Service.startOver();
+    server.stop(do_test_finished);
   }
 }
 
@@ -322,8 +334,8 @@ function test_dependentEnginesEnabledLocally() {
     do_check_true(steamEngine.enabled);
     do_check_true(stirlingEngine.enabled);
   } finally {
-    server.stop(do_test_finished);
     Service.startOver();
+    server.stop(do_test_finished);
   }
 }
 
@@ -376,8 +388,8 @@ function test_dependentEnginesDisabledLocally() {
     do_check_false(steamEngine.enabled);
     do_check_false(stirlingEngine.enabled);
   } finally {
-    server.stop(do_test_finished);
     Service.startOver();
+    server.stop(do_test_finished);
   }
 }
 
