@@ -108,7 +108,7 @@ function run_test() {
 
     // Checking per-collection keys and default key handling.
     
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
     let bu = "http://localhost:8080/storage/bookmarks/foo";
     let bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
     bookmarkItem.encrypt();
@@ -119,7 +119,7 @@ function run_test() {
     
     // Per-collection keys.
     // Generate a key for "bookmarks".
-    CollectionKeys.generateNewKeys(["bookmarks"]);
+    generateNewKeys(["bookmarks"]);
     bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
     do_check_eq(bookmarkItem.collection, "bookmarks");
     

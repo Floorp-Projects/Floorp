@@ -1,4 +1,5 @@
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/record.js");
 var btoa;
 
 // initialize nss
@@ -188,7 +189,6 @@ function FakeCryptoService() {
   Svc.Crypto = this;
   Utils.sha256HMAC = this.sha256HMAC;
 
-  Cu.import("resource://services-sync/record.js");
   CryptoWrapper.prototype.ciphertextHMAC = this.ciphertextHMAC;
 }
 FakeCryptoService.prototype = {
@@ -396,6 +396,12 @@ function encryptPayload(cleartext) {
   return {ciphertext: cleartext, // ciphertext == cleartext with fake crypto
           IV: "irrelevant",
           hmac: Utils.sha256HMAC(cleartext, Utils.makeHMACKey(""))};
+}
+
+function generateNewKeys(collections) {
+  let wbo = CollectionKeys.generateNewKeysWBO(collections);
+  let modified = new_timestamp();
+  CollectionKeys.setContents(wbo.cleartext, modified);
 }
 
 function basic_auth_header(user, password) {
