@@ -53,6 +53,7 @@ const WORKSPACE_CONTEXT_CHROME = 2;
 const WORKSPACE_WINDOW_URL = "chrome://browser/content/workspace.xul";
 const WORKSPACE_L10N = "chrome://browser/locale/workspace.properties";
 const WORKSPACE_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
+const DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
 
 /**
  * The workspace object handles the Workspace window functionality.
@@ -544,9 +545,30 @@ var Workspace = {
     return aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
            getInterface(Ci.nsIDOMWindowUtils).outerWindowID;
   },
+
+  /**
+   * The Workspace window DOMContentLoaded event handler.
+   */
+  onLoad: function HS_onLoad()
+  {
+    let contextMenu = document.getElementById("ws-context-menu");
+    let errorConsoleMenu = document.getElementById("ws-menu-errorConsole");
+    let errorConsoleCommand = document.getElementById("ws-cmd-errorConsole");
+    let chromeContextCommand = document.getElementById("ws-cmd-chromeContext");
+
+    let chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
+    if (chrome) {
+      contextMenu.removeAttribute("hidden");
+      errorConsoleMenu.removeAttribute("hidden");
+      errorConsoleCommand.removeAttribute("disabled");
+      chromeContextCommand.removeAttribute("disabled");
+    }
+  },
 };
 
 XPCOMUtils.defineLazyGetter(Workspace, "strings", function () {
   return Services.strings.createBundle(WORKSPACE_L10N);
 });
+
+addEventListener("DOMContentLoaded", Workspace.onLoad.bind(Workspace), false);
 

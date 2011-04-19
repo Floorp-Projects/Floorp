@@ -73,8 +73,8 @@
   <command id="ws-cmd-inspect" oncommand="Workspace.inspect();"/>
   <command id="ws-cmd-print" oncommand="Workspace.print();"/>
   <command id="ws-cmd-contentContext" oncommand="Workspace.setContentContext();"/>
-  <command id="ws-cmd-chromeContext" oncommand="Workspace.setChromeContext();"/>
-  <command id="ws-cmd-errorConsole" oncommand="Workspace.openErrorConsole();"/>
+  <command id="ws-cmd-chromeContext" oncommand="Workspace.setChromeContext();" disabled="true"/>
+  <command id="ws-cmd-errorConsole" oncommand="Workspace.openErrorConsole();" disabled="true"/>
   <command id="ws-cmd-webConsole" oncommand="Workspace.openWebConsole();"/>
 </commandset>
 
@@ -254,7 +254,7 @@
     </menupopup>
   </menu>
 
-  <menu id="ws-context-menu"
+  <menu id="ws-context-menu" hidden="true"
         label="&contextMenu.label;"
         accesskey="&contextMenu.accesskey;">
     <menupopup id="ws-menu-context">
@@ -276,7 +276,7 @@
         label="&toolsMenu.label;"
         accesskey="&toolsMenu.accesskey;">
     <menupopup id="ws-menu-tools">
-      <menuitem id="ws-menu-errorConsole"
+      <menuitem id="ws-menu-errorConsole" hidden="true"
                 label="&errorConsoleCmd.label;"
                 accesskey="&errorConsoleCmd.accesskey;"
                 key="ws-key-errorConsole"
