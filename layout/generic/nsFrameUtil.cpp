@@ -606,7 +606,7 @@ nsFrameUtil::CompareTrees(Node* tree1, Node* tree2)
       DumpNode(tree2, stdout, 1);
       result = PR_FALSE; // we have a non-critical failure, so remember that but continue
     }
-    if (tree1->bbox != tree2->bbox) {
+    if (tree1->bbox.IsEqualInterior(tree2->bbox)) {
       printf("frame bbox mismatch: %d,%d,%d,%d vs. %d,%d,%d,%d\n",
              tree1->bbox.x, tree1->bbox.y,
              tree1->bbox.width, tree1->bbox.height,

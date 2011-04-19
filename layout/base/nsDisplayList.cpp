@@ -443,7 +443,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 #ifdef DEBUG
   nsRegion r;
   r.And(*aVisibleRegion, GetBounds(aBuilder));
-  NS_ASSERTION(r.GetBounds() == aListVisibleBounds,
+  NS_ASSERTION(r.GetBounds().IsEqualInterior(aListVisibleBounds),
                "bad aListVisibleBounds");
 #endif
   mVisibleRect = aListVisibleBounds;
@@ -1919,7 +1919,7 @@ PRBool nsDisplayClip::TryMerge(nsDisplayListBuilder* aBuilder,
   if (aItem->GetType() != TYPE_CLIP)
     return PR_FALSE;
   nsDisplayClip* other = static_cast<nsDisplayClip*>(aItem);
-  if (other->mClip != mClip)
+  if (!other->mClip.IsEqualInterior(mClip))
     return PR_FALSE;
   mList.AppendToBottom(&other->mList);
   return PR_TRUE;
@@ -2015,7 +2015,7 @@ PRBool nsDisplayClipRoundedRect::TryMerge(nsDisplayListBuilder* aBuilder, nsDisp
     return PR_FALSE;
   nsDisplayClipRoundedRect* other =
     static_cast<nsDisplayClipRoundedRect*>(aItem);
-  if (mClip != other->mClip ||
+  if (!mClip.IsEqualInterior(other->mClip) ||
       memcmp(mRadii, other->mRadii, sizeof(mRadii)) != 0)
     return PR_FALSE;
   mList.AppendToBottom(&other->mList);

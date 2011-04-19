@@ -138,7 +138,7 @@ ThebesLayerD3D9::UpdateTextures(SurfaceMode aMode)
   }
 
   if (HaveTextures(aMode)) {
-    if (mTextureRect != visibleRect) {
+    if (!mTextureRect.IsEqualInterior(visibleRect)) {
       nsRefPtr<IDirect3DTexture9> oldTexture = mTexture;
       nsRefPtr<IDirect3DTexture9> oldTextureOnWhite = mTextureOnWhite;
 
@@ -221,7 +221,7 @@ ThebesLayerD3D9::RenderThebesLayer(ReadbackProcessor* aReadback)
   // doesn't fill the entire texture rect we need to make sure we draw all the
   // pixels in the texture rect anyway in case they get sampled.
   nsIntRegion neededRegion = mVisibleRegion;
-  if (neededRegion.GetBounds() != newTextureRect ||
+  if (!neededRegion.GetBounds().IsEqualInterior(newTextureRect) ||
       neededRegion.GetNumRects() > 1) {
     gfxMatrix transform2d;
     if (!GetEffectiveTransform().Is2D(&transform2d) ||

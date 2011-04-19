@@ -124,13 +124,13 @@ PRBool nsRect::UnionRect(const nsRect &aRect1, const nsRect &aRect2)
     // aRect2 is empty so set the result to aRect1
     *this = aRect1;
   } else {
-    UnionRectIncludeEmpty(aRect1, aRect2);
+    UnionRectEdges(aRect1, aRect2);
   }
 
   return result;
 }
 
-void nsRect::UnionRectIncludeEmpty(const nsRect &aRect1, const nsRect &aRect2)
+void nsRect::UnionRectEdges(const nsRect &aRect1, const nsRect &aRect2)
 {
   nscoord xmost1 = aRect1.XMost();
   nscoord xmost2 = aRect2.XMost();

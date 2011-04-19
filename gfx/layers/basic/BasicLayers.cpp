@@ -467,7 +467,7 @@ ClipToContain(gfxContext* aContext, const nsIntRect& aRect)
   aContext->Clip();
   aContext->SetMatrix(currentMatrix);
 
-  return aContext->DeviceToUser(deviceRect) == userRect;
+  return aContext->DeviceToUser(deviceRect).IsEqualInterior(userRect);
 }
 
 static nsIntRegion

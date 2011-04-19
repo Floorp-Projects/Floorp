@@ -130,7 +130,7 @@ _get_rectangular_clip (cairo_t *cr,
             goto FINISH;
         }
 
-        if (rect == bounds) {
+        if (rect.IsEqualInterior(bounds)) {
             /* the bounds are entirely inside the clip region so we don't need to clip. */
             *need_clip = PR_FALSE;
             goto FINISH;

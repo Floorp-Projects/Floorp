@@ -275,7 +275,7 @@ gfxImageSurface::MovePixels(const nsIntRect& aSourceRect,
                       source.Size() == dest.Size() &&
                       offset == (dest.TopLeft() - source.TopLeft()),
                       "Messed up clipping, crash or corruption will follow");
-    if (source.IsEmpty() || source == dest) {
+    if (source.IsEmpty() || source.IsEqualInterior(dest)) {
         return;
     }
 

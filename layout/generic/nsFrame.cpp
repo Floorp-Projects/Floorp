@@ -6127,7 +6127,7 @@ nsIFrame::SetOverflowAreas(const nsOverflowAreas& aOverflowAreas)
            t = -vis.y, // top: positive is upwards
            r = vis.XMost() - mRect.width, // right: positive is rightwards
            b = vis.YMost() - mRect.height; // bottom: positive is downwards
-  if (aOverflowAreas.ScrollableOverflow() == nsRect(nsPoint(0, 0), GetSize()) &&
+  if (aOverflowAreas.ScrollableOverflow().IsEqualEdges(nsRect(nsPoint(0, 0), GetSize())) &&
       l <= NS_FRAME_OVERFLOW_DELTA_MAX &&
       t <= NS_FRAME_OVERFLOW_DELTA_MAX &&
       r <= NS_FRAME_OVERFLOW_DELTA_MAX &&
@@ -6202,7 +6202,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   if (aNewSize.width != 0 || !IsInlineFrame(this)) {
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
       nsRect& o = aOverflowAreas.Overflow(otype);
-      o.UnionRectIncludeEmpty(o, bounds);
+      o.UnionRectEdges(o, bounds);
     }
   }
 
@@ -6216,7 +6216,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
                             disp->mAppearance, &r)) {
       NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
         nsRect& o = aOverflowAreas.Overflow(otype);
-        o.UnionRectIncludeEmpty(o, r);
+        o.UnionRectEdges(o, r);
       }
     }
   }
@@ -6260,7 +6260,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
   }
 
   PRBool visualOverflowChanged =
-    GetVisualOverflowRect() != aOverflowAreas.VisualOverflow();
+    !GetVisualOverflowRect().IsEqualInterior(aOverflowAreas.VisualOverflow());
 
   if (aOverflowAreas != nsOverflowAreas(bounds, bounds)) {
     SetOverflowAreas(aOverflowAreas);

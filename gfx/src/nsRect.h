@@ -85,37 +85,42 @@ struct NS_GFX nsRect {
   }
   void   Empty() {width = height = 0;}
 
-  // Containment
+  // Returns true if this rectangle contains the interior of aRect. Always
+  // returns true if aRect is empty, and always returns false is aRect is
+  // nonempty but this rect is empty.
   PRBool Contains(const nsRect& aRect) const;
+  // Returns true if this rectangle contains the given point; if the point
+  // is on the edge of the rectangle, this returns true.
   PRBool Contains(nscoord aX, nscoord aY) const;
   PRBool Contains(const nsPoint& aPoint) const {return Contains(aPoint.x, aPoint.y);}
 
-  // Intersection. Returns TRUE if the receiver overlaps aRect and
-  // FALSE otherwise
+  // Intersection. Returns TRUE if the receiver's area has non-empty
+  // intersection with aRect's area, and FALSE otherwise.
+  // Always returns false if aRect is empty or 'this' is empty.
   PRBool Intersects(const nsRect& aRect) const;
 
-  // Computes the area in which aRect1 and aRect2 overlap, and fills 'this' with
-  // the result. Returns FALSE if the rectangles don't intersect, and sets 'this'
-  // rect to be an empty rect.
+  // Sets 'this' to be a rectangle containing the intersection of the points
+  // (including edges) of aRect1 and aRect2, or 0,0,0,0 if that intersection is
+  // empty. Returns false if the resulting rectangle is empty.
   //
   // 'this' can be the same object as either aRect1 or aRect2
   PRBool IntersectRect(const nsRect& aRect1, const nsRect& aRect2);
 
-  // Computes the smallest rectangle that contains both aRect1 and aRect2 and
-  // fills 'this' with the result, ignoring empty input rectangles.
+  // Computes the smallest rectangle that contains both the area of both
+  // aRect1 and aRect2, and fills 'this' with the result.
+  // Thus, empty input rectangles are ignored.
   // Returns FALSE and sets 'this' rect to be an empty rect if both aRect1
   // and aRect2 are empty.
   //
   // 'this' can be the same object as either aRect1 or aRect2
   PRBool UnionRect(const nsRect& aRect1, const nsRect& aRect2);
 
-  // Computes the smallest rectangle that contains both aRect1 and aRect2,
-  // where empty input rectangles are allowed to affect the result; the
-  // top-left of an empty input rectangle will be inside or on the edge of
-  // the result.
+  // Computes the smallest rectangle that contains both the points (including
+  // edges) of both aRect1 and aRect2.
+  // Thus, empty input rectangles are allowed to affect the result.
   //
   // 'this' can be the same object as either aRect1 or aRect2
-  void UnionRectIncludeEmpty(const nsRect& aRect1, const nsRect& aRect2);
+  void UnionRectEdges(const nsRect& aRect1, const nsRect& aRect2);
   
   // Accessors
   void SetRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight) {
@@ -143,22 +148,18 @@ struct NS_GFX nsRect {
   void Deflate(const nsSize& aSize) {Deflate(aSize.width, aSize.height);}
   void Deflate(const nsMargin& aMargin);
 
-  // Overloaded operators. Note that '=' isn't defined so we'll get the
-  // compiler generated default assignment operator.
-  PRBool  operator==(const nsRect& aRect) const {
-    return (PRBool) ((IsEmpty() && aRect.IsEmpty()) ||
-                     ((x == aRect.x) && (y == aRect.y) &&
-                      (width == aRect.width) && (height == aRect.height)));
-  }
-  PRBool  operator!=(const nsRect& aRect) const {
-    return (PRBool) !operator==(aRect);
-  }
-
-  // Useful when we care about the exact x/y/width/height values being
-  // equal (i.e. we care about differences in empty rectangles)
-  PRBool IsExactEqual(const nsRect& aRect) const {
+  // Return true if the rectangles contain the same set of points, including
+  // points on the edges.
+  // Use when we care about the exact x/y/width/height values being
+  // equal (i.e. we care about differences in empty rectangles).
+  PRBool IsEqualEdges(const nsRect& aRect) const {
     return x == aRect.x && y == aRect.y &&
            width == aRect.width && height == aRect.height;
+  }
+  // Return true if the rectangles contain the same area of the plane.
+  // Use when we do not care about differences in empty rectangles.
+  PRBool IsEqualInterior(const nsRect& aRect) const {
+    return IsEqualEdges(aRect) || (IsEmpty() && aRect.IsEmpty());
   }
 
   // Arithmetic with nsPoints
@@ -265,12 +266,21 @@ struct NS_GFX nsIntRect {
   // Overloaded operators. Note that '=' isn't defined so we'll get the
   // compiler generated default assignment operator.
   PRBool operator==(const nsIntRect& aRect) const {
-    return (PRBool) ((IsEmpty() && aRect.IsEmpty()) ||
-                     ((x == aRect.x) && (y == aRect.y) &&
-                      (width == aRect.width) && (height == aRect.height)));
+    return IsEqualEdges(aRect);
   }
-  PRBool  operator!=(const nsIntRect& aRect) const {
-    return (PRBool) !operator==(aRect);
+
+  // Return true if the rectangles contain the same set of points, including
+  // points on the edges.
+  // Use when we care about the exact x/y/width/height values being
+  // equal (i.e. we care about differences in empty rectangles).
+  PRBool IsEqualEdges(const nsIntRect& aRect) const {
+    return x == aRect.x && y == aRect.y &&
+           width == aRect.width && height == aRect.height;
+  }
+  // Return true if the rectangles contain the same area of the plane.
+  // Use when we do not care about differences in empty rectangles.
+  PRBool IsEqualInterior(const nsIntRect& aRect) const {
+    return IsEqualEdges(aRect) || (IsEmpty() && aRect.IsEmpty());
   }
 
   nsIntRect  operator+(const nsIntPoint& aPoint) const {
