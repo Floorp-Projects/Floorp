@@ -1697,12 +1697,6 @@ class BindNameCompiler : public PICStubCompiler
 };
 
 static void JS_FASTCALL
-DisabledLengthIC(VMFrame &f, ic::PICInfo *pic)
-{
-    stubs::Length(f);
-}
-
-static void JS_FASTCALL
 DisabledGetPropIC(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::GetProp(f);
@@ -1722,7 +1716,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     JSAtom *atom = pic->atom;
     if (atom == f.cx->runtime->atomState.lengthAtom) {
         if (f.regs.sp[-1].isString()) {
-            GetPropCompiler cc(f, script, NULL, *pic, NULL, DisabledLengthIC);
+            GetPropCompiler cc(f, script, NULL, *pic, NULL, DisabledGetPropIC);
             LookupStatus status = cc.generateStringLengthStub();
             if (status == Lookup_Error)
                 THROW();
@@ -1733,7 +1727,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
             JSObject *obj = &f.regs.sp[-1].toObject();
             if (obj->isArray() || (obj->isArguments() && !obj->isArgsLengthOverridden()) ||
                 obj->isString()) {
-                GetPropCompiler cc(f, script, obj, *pic, NULL, DisabledLengthIC);
+                GetPropCompiler cc(f, script, obj, *pic, NULL, DisabledGetPropIC);
                 if (obj->isArray()) {
                     LookupStatus status = cc.generateArrayLengthStub();
                     if (status == Lookup_Error)

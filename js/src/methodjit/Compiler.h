@@ -538,10 +538,6 @@ class Compiler : public BaseCompiler
 
     friend class CompilerAllocPolicy;
   public:
-    // Special atom index used to indicate that the atom is 'length'. This
-    // follows interpreter usage in JSOP_LENGTH.
-    enum { LengthAtomIndex = uint32(-2) };
-
     Compiler(JSContext *cx, JSScript *outerScript, bool isConstructing,
              const Vector<PatchableFrame> *patchFrames);
     ~Compiler();
@@ -710,7 +706,6 @@ class Compiler : public BaseCompiler
     void jsop_unbrand();
     bool jsop_getprop(JSAtom *atom, JSValueType type,
                       bool typeCheck = true, bool usePropCache = true);
-    bool jsop_length();
     bool jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed);
     void jsop_setprop_slow(JSAtom *atom, bool usePropCache = true);
     bool jsop_callprop_slow(JSAtom *atom);
