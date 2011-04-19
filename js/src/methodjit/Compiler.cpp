@@ -4378,7 +4378,8 @@ mjit::Compiler::jsop_length()
      */
     types::TypeSet *types = frame.extra(top).types;
     types::ObjectKind kind = types ? types->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
-    if ((kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY)) {
+    if ((kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
+        !top->isNotType(JSVAL_TYPE_OBJECT)) {
         bool isObject = top->isTypeKnown();
         if (!isObject) {
             Jump notObject = frame.testObject(Assembler::NotEqual, top);
@@ -4444,7 +4445,9 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
      */
     JSOp op = JSOp(*PC);
     types::TypeSet *types = frame.extra(top).types;
-    if ((op == JSOP_GETPROP || op == JSOP_GETTHISPROP || op == JSOP_GETARGPROP || op == JSOP_GETLOCALPROP) &&
+    if ((op == JSOP_GETPROP || op == JSOP_GETTHISPROP ||
+         op == JSOP_GETARGPROP || op == JSOP_GETLOCALPROP) &&
+        !top->isNotType(JSVAL_TYPE_OBJECT) &&
         types && !types->unknown() && types->getObjectCount() == 1 &&
         !types->getObject(0)->unknownProperties()) {
         JS_ASSERT(usePropCache);
@@ -4997,8 +5000,8 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
      * always has the property in a particular inline slot.
      */
     types::TypeSet *types = frame.extra(lhs).types;
-    if (JSOp(*PC) == JSOP_SETPROP && types &&
-        !types->unknown() && types->getObjectCount() == 1 &&
+    if (JSOp(*PC) == JSOP_SETPROP && !lhs->isNotType(JSVAL_TYPE_OBJECT) &&
+        types && !types->unknown() && types->getObjectCount() == 1 &&
         !types->getObject(0)->unknownProperties()) {
         JS_ASSERT(usePropCache);
         types::TypeObject *object = types->getObject(0);
