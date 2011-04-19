@@ -307,7 +307,7 @@ public:
       nscoord mRadii[8];
 
       bool operator==(const RoundedRect& aOther) const {
-        if (mRect != aOther.mRect) {
+        if (!mRect.IsEqualInterior(aOther.mRect)) {
           return false;
         }
 
@@ -354,7 +354,7 @@ public:
 
     bool operator==(const Clip& aOther) const {
       return mHaveClipRect == aOther.mHaveClipRect &&
-             (!mHaveClipRect || mClipRect == aOther.mClipRect) &&
+             (!mHaveClipRect || mClipRect.IsEqualInterior(aOther.mClipRect)) &&
              mRoundedClipRects == aOther.mRoundedClipRects;
     }
     bool operator!=(const Clip& aOther) const {

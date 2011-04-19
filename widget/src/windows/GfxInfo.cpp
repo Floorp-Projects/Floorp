@@ -102,13 +102,7 @@ GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
 {
-  nsAutoString str;
-  gfxWindowsPlatform::GetPlatform()->GetDLLVersion(L"dwrite.dll", str);
-  aDwriteVersion.Assign(str);
-  aDwriteVersion.Append(L", font cache ");
-  gfxWindowsPlatform::GetPlatform()->GetFontCacheSize(str);
-  aDwriteVersion.Append(str);
-
+  gfxWindowsPlatform::GetPlatform()->GetDLLVersion(L"dwrite.dll", aDwriteVersion);
   return NS_OK;
 }
 

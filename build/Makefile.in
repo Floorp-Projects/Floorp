@@ -72,7 +72,11 @@ endif
 DIRS += pgo
 
 ifeq (Android,$(OS_TARGET))
-  DIRS += mobile/sutagent/android
+  DIRS += mobile/sutagent/android \
+          mobile/sutagent/android/watcher \
+          mobile/sutagent/android/ffxcp \
+          mobile/sutagent/android/fencp \
+          $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk

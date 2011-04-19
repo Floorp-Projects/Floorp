@@ -595,7 +595,7 @@ nsImageFrame::OnDataAvailable(imgIRequest *aRequest,
 
   // XXX We really need to round this out, now that we're doing better
   // image scaling!
-  nsRect r = (*aRect == nsIntRect::GetMaxSizedIntRect()) ?
+  nsRect r = aRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect()) ?
     GetInnerArea() :
     SourceRectToDest(*aRect);
 
@@ -679,7 +679,7 @@ nsImageFrame::FrameChanged(imgIContainer *aContainer,
     return NS_OK;
   }
 
-  nsRect r = (*aDirtyRect == nsIntRect::GetMaxSizedIntRect()) ?
+  nsRect r = aDirtyRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect()) ?
     GetInnerArea() :
     SourceRectToDest(*aDirtyRect);
 
@@ -1034,7 +1034,7 @@ struct nsRecessedBorder : public nsStyleBorder {
       // Note: use SetBorderColor here because we want to make sure
       // the "special" flags are unset.
       SetBorderColor(side, NS_RGB(0, 0, 0));
-      mBorder.side(side) = aBorderWidth;
+      mBorder.Side(side) = aBorderWidth;
       // Note: use SetBorderStyle here because we want to affect
       // mComputedBorder
       SetBorderStyle(side, NS_STYLE_BORDER_STYLE_INSET);
@@ -1223,9 +1223,9 @@ nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
   mImage->GetHeight(&imageHeight);
 
   gfxMatrix transform;
-  transform.Translate(destRect.pos);
-  transform.Scale(destRect.size.width/imageWidth,
-                  destRect.size.height/imageHeight);
+  transform.Translate(destRect.TopLeft());
+  transform.Scale(destRect.Width()/imageWidth,
+                  destRect.Height()/imageHeight);
   aLayer->SetTransform(gfx3DMatrix::From2D(transform));
 
   aLayer->SetVisibleRegion(nsIntRect(0, 0, imageWidth, imageHeight));

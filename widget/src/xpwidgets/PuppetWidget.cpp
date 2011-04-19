@@ -215,7 +215,7 @@ PuppetWidget::Resize(PRInt32 aWidth,
     InvalidateRegion(this, dirty);
   }
 
-  if (oldBounds != mBounds) {
+  if (!oldBounds.IsEqualEdges(mBounds)) {
     DispatchResizeEvent();
   }
 

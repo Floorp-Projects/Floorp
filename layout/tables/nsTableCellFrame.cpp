@@ -1176,7 +1176,7 @@ nsBCTableCellFrame::PaintBackground(nsRenderingContext& aRenderingContext,
 #endif
 
   NS_FOR_CSS_SIDES(side) {
-    myBorder.SetBorderWidth(side, borderWidth.side(side));
+    myBorder.SetBorderWidth(side, borderWidth.Side(side));
   }
 
   nsRect rect(aPt, GetSize());
