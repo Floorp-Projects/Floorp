@@ -321,9 +321,7 @@ NS_INTERFACE_MAP_BEGIN(nsJSIID)
   NS_INTERFACE_MAP_ENTRY(nsIJSID)
   NS_INTERFACE_MAP_ENTRY(nsIJSIID)
   NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
-#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIJSID)
   NS_IMPL_QUERY_CLASSINFO(nsJSIID)
 NS_INTERFACE_MAP_END_THREADSAFE
@@ -560,7 +558,6 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
     return rv;
 }
 
-#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsJSIID::CanCreateWrapper(const nsIID * iid, char **_retval)
@@ -597,7 +594,6 @@ nsJSIID::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char *
     *_retval = nsnull;
     return NS_OK;
 }
-#endif
 
 /***************************************************************************/
 

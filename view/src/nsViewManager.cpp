@@ -302,7 +302,7 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   nsRect newDim(0, 0, aWidth, aHeight);
   mRootView->GetDimensions(oldDim);
   // We care about resizes even when one dimension is already zero.
-  if (!oldDim.IsExactEqual(newDim)) {
+  if (!oldDim.IsEqualEdges(newDim)) {
     // Don't resize the widget. It is already being set elsewhere.
     mRootView->SetDimensions(newDim, PR_TRUE, PR_FALSE);
     if (mObserver)
@@ -1352,7 +1352,7 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   nsRect oldDimensions;
 
   view->GetDimensions(oldDimensions);
-  if (!oldDimensions.IsExactEqual(aRect)) {
+  if (!oldDimensions.IsEqualEdges(aRect)) {
     // resize the view.
     // Prevent Invalidation of hidden views 
     if (view->GetVisibility() == nsViewVisibility_kHide) {  

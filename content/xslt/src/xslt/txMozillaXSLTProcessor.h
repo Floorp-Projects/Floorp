@@ -43,7 +43,6 @@
 #include "nsStubMutationObserver.h"
 #include "nsIDocumentTransformer.h"
 #include "nsIXSLTProcessor.h"
-#include "nsIXSLTProcessorObsolete.h"
 #include "nsIXSLTProcessorPrivate.h"
 #include "txExpandedNameMap.h"
 #include "txNamespaceMap.h"
@@ -71,7 +70,6 @@ class txIGlobalParameter;
  * txMozillaXSLTProcessor is a front-end to the XSLT Processor.
  */
 class txMozillaXSLTProcessor : public nsIXSLTProcessor,
-                               public nsIXSLTProcessorObsolete,
                                public nsIXSLTProcessorPrivate,
                                public nsIDocumentTransformer,
                                public nsStubMutationObserver,
@@ -95,9 +93,6 @@ public:
 
     // nsIXSLTProcessor interface
     NS_DECL_NSIXSLTPROCESSOR
-
-    // nsIXSLTProcessorObsolete interface
-    NS_DECL_NSIXSLTPROCESSOROBSOLETE
 
     // nsIXSLTProcessorPrivate interface
     NS_DECL_NSIXSLTPROCESSORPRIVATE
@@ -133,8 +128,7 @@ public:
         return mSource;
     }
 
-    nsresult TransformToDoc(nsIDOMDocument *aOutputDoc,
-                            nsIDOMDocument **aResult);
+    nsresult TransformToDoc(nsIDOMDocument **aResult);
 
     PRBool IsLoadDisabled()
     {

@@ -233,9 +233,6 @@ OS_LIBS += $(call EXPAND_LIBNAME, ceosutil libcmt comsuppw)
 ifdef WINCE_WINDOWS_MOBILE
 OS_LIBS += $(call EXPAND_LIBNAME, cellcore)
 endif
-ifdef HAS_OGLES
-OS_LIBS += $(call EXPAND_LIBNAME, libGLESv2 libEGL)
-endif
 endif
 
 ifdef MOZ_JPROF

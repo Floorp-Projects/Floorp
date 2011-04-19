@@ -524,7 +524,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       // We have to check for this.
       nsRect newChildRect(child->GetRect());
 
-      if (newChildRect != childRect) {
+      if (!newChildRect.IsEqualEdges(childRect)) {
 #ifdef DEBUG_GROW
         child->DumpBox(stdout);
         printf(" GREW from (%d,%d) -> (%d,%d)\n", childRect.width, childRect.height, newChildRect.width, newChildRect.height);
@@ -1163,7 +1163,7 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
       if (recompute)
             ComputeChildSizes(aBox, aState, containingWidth, aBoxSizes, aComputedBoxSizes);
 
-      if (childCurrentRect != aChildActualRect) {
+      if (!childCurrentRect.IsEqualEdges(aChildActualRect)) {
         // the childRect includes the margin
         // make sure we remove it before setting 
         // the bounds.

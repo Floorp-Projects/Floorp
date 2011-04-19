@@ -170,7 +170,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                   &mOpenerScreenRect.width,
                                   &mOpenerScreenRect.height);
     if (NS_FAILED(rv)) {
-      mOpenerScreenRect.Empty();
+      mOpenerScreenRect.SetEmpty();
     } else {
       initialX = mOpenerScreenRect.x;
       initialY = mOpenerScreenRect.y;
