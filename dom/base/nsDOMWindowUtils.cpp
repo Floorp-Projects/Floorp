@@ -300,7 +300,7 @@ nsDOMWindowUtils::SetDisplayPortForElement(float aXPx, float aYPx,
 
   nsRect lastDisplayPort;
   if (nsLayoutUtils::GetDisplayPort(content, &lastDisplayPort) &&
-      displayport == lastDisplayPort) {
+      displayport.IsEqualInterior(lastDisplayPort)) {
     return NS_OK;
   }
 

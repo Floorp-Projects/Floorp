@@ -211,7 +211,7 @@ nsViewManager::CreateRegion(nsIRegion* *result)
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
+NS_IMETHODIMP nsViewManager::Init(nsDeviceContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
 
@@ -302,7 +302,7 @@ void nsViewManager::DoSetWindowDimensions(nscoord aWidth, nscoord aHeight)
   nsRect newDim(0, 0, aWidth, aHeight);
   mRootView->GetDimensions(oldDim);
   // We care about resizes even when one dimension is already zero.
-  if (!oldDim.IsExactEqual(newDim)) {
+  if (!oldDim.IsEqualEdges(newDim)) {
     // Don't resize the widget. It is already being set elsewhere.
     mRootView->SetDimensions(newDim, PR_TRUE, PR_FALSE);
     if (mObserver)
@@ -1352,7 +1352,7 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, const nsRect &aRect, PRB
   nsRect oldDimensions;
 
   view->GetDimensions(oldDimensions);
-  if (!oldDimensions.IsExactEqual(aRect)) {
+  if (!oldDimensions.IsEqualEdges(aRect)) {
     // resize the view.
     // Prevent Invalidation of hidden views 
     if (view->GetVisibility() == nsViewVisibility_kHide) {  
@@ -1521,7 +1521,7 @@ NS_IMETHODIMP nsViewManager::GetViewObserver(nsIViewObserver *&aObserver)
     return NS_ERROR_NO_INTERFACE;
 }
 
-NS_IMETHODIMP nsViewManager::GetDeviceContext(nsIDeviceContext *&aContext)
+NS_IMETHODIMP nsViewManager::GetDeviceContext(nsDeviceContext *&aContext)
 {
   NS_IF_ADDREF(mContext);
   aContext = mContext;

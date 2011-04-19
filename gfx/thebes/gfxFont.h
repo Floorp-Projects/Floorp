@@ -209,6 +209,7 @@ public:
         mIsBadUnderlineFont(PR_FALSE), mIsUserFont(PR_FALSE),
         mIsLocalUserFont(PR_FALSE), mStandardFace(aIsStandardFace),
         mSymbolFont(PR_FALSE),
+        mIgnoreGDEF(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mHasCmapTable(PR_FALSE),
         mCmapInitialized(PR_FALSE),
@@ -234,6 +235,7 @@ public:
     PRBool IsItalic() const { return mItalic; }
     PRBool IsBold() const { return mWeight >= 600; } // bold == weights 600 and above
     PRBool IsSymbolFont() const { return mSymbolFont; }
+    PRBool IgnoreGDEF() const { return mIgnoreGDEF; }
 
     inline PRBool HasCmapTable() {
         if (!mCmapInitialized) {
@@ -309,6 +311,7 @@ public:
     PRPackedBool     mIsLocalUserFont  : 1;
     PRPackedBool     mStandardFace : 1;
     PRPackedBool     mSymbolFont  : 1;
+    PRPackedBool     mIgnoreGDEF  : 1;
 
     PRUint16         mWeight;
     PRInt16          mStretch;
@@ -338,6 +341,7 @@ protected:
         mIsLocalUserFont(PR_FALSE),
         mStandardFace(PR_FALSE),
         mSymbolFont(PR_FALSE),
+        mIgnoreGDEF(PR_FALSE),
         mWeight(500), mStretch(NS_FONT_STRETCH_NORMAL),
         mHasCmapTable(PR_FALSE),
         mCmapInitialized(PR_FALSE),
@@ -489,6 +493,13 @@ public:
     nsTArray<nsRefPtr<gfxFontEntry> >& GetFontList() { return mAvailableFonts; }
     
     void AddFontEntry(nsRefPtr<gfxFontEntry> aFontEntry) {
+        // bug 589682 - set the IgnoreGDEF flag on entries for Italic faces
+        // of Times New Roman, because of buggy table in those fonts
+        if (aFontEntry->IsItalic() && !aFontEntry->IsUserFont() &&
+            Name().EqualsLiteral("Times New Roman"))
+        {
+            aFontEntry->mIgnoreGDEF = PR_TRUE;
+        }
         mAvailableFonts.AppendElement(aFontEntry);
         aFontEntry->SetFamily(this);
     }

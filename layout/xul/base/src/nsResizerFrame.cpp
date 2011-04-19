@@ -112,9 +112,9 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           nsRect rect = frameToResize->GetScreenRectInAppUnits();
           switch (frameToResize->GetStylePosition()->mBoxSizing) {
             case NS_STYLE_BOX_SIZING_CONTENT:
-              rect -= frameToResize->GetUsedPadding();
+              rect.Deflate(frameToResize->GetUsedPadding());
             case NS_STYLE_BOX_SIZING_PADDING:
-              rect -= frameToResize->GetUsedBorder();
+              rect.Deflate(frameToResize->GetUsedBorder());
             default:
               break;
           }

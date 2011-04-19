@@ -941,7 +941,9 @@ public:
    * other rectangles of the frame, in app units, relative to the parent.
    */
   nsRect GetPaddingRect() const;
+  nsRect GetPaddingRectRelativeToSelf() const;
   nsRect GetContentRect() const;
+  nsRect GetContentRectRelativeToSelf() const;
 
   /**
    * Get the size, in app units, of the border radii. It returns FALSE iff all

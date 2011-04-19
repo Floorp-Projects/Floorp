@@ -60,7 +60,6 @@
 #include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "nsIDocument.h"
-#include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
@@ -1159,7 +1158,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   // the screen rectangle of the root frame, in dev pixels.
   nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
-  nsIDeviceContext* devContext = presContext->DeviceContext();
+  nsDeviceContext* devContext = presContext->DeviceContext();
   nscoord offsetForContextMenu = 0;
   // if mScreenXPos and mScreenYPos are -1, then we are anchored. If they
   // have other values, then the popup appears unanchored at that screen
@@ -1356,7 +1355,7 @@ nsMenuPopupFrame::GetConstraintRect(const nsRect& aAnchorRect,
   }
 
   // keep a 3 pixel margin to the right and bottom of the screen for the WinXP dropshadow
-  screenRectPixels.SizeBy(-3, -3);
+  screenRectPixels.SizeTo(screenRectPixels.width - 3, screenRectPixels.height - 3);
 
   nsRect screenRect = screenRectPixels.ToAppUnits(presContext->AppUnitsPerDevPixel());
   if (mInContentShell) {
