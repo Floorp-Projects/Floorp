@@ -5050,7 +5050,7 @@ nsTextFrame::GetSnappedBaselineY(gfxContext* aContext, gfxFloat aY)
   gfxRect putativeRect(0, baseline/appUnitsPerDevUnit, 1, 1);
   if (!aContext->UserToDevicePixelSnapped(putativeRect))
     return baseline;
-  return aContext->DeviceToUser(putativeRect.pos).y*appUnitsPerDevUnit;
+  return aContext->DeviceToUser(putativeRect.TopLeft()).y*appUnitsPerDevUnit;
 }
 
 void

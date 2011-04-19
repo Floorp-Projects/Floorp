@@ -1544,12 +1544,12 @@ RENDER_AGAIN:
     // are because we might have drawn something above them (like a background-image).
     ctx->Save();
     ctx->ResetClip();
-    ctx->Translate(dr.pos);
+    ctx->Translate(dr.TopLeft());
 
     // Create a rounded rectangle to follow the buttons' look.
-    gfxRect buttonbox1(0.0, 0.0, dr.size.width, dr.size.height - 2.0);
-    gfxRect buttonbox2(1.0, dr.size.height - 2.0, dr.size.width - 1.0, 1.0);
-    gfxRect buttonbox3(2.0, dr.size.height - 1.0, dr.size.width - 3.0, 1.0);
+    gfxRect buttonbox1(0.0, 0.0, dr.Width(), dr.Height() - 2.0);
+    gfxRect buttonbox2(1.0, dr.Height() - 2.0, dr.Width() - 1.0, 1.0);
+    gfxRect buttonbox3(2.0, dr.Height() - 1.0, dr.Width() - 3.0, 1.0);
 
     gfxContext::GraphicsOperator currentOp = ctx->CurrentOperator();
     ctx->SetOperator(gfxContext::OPERATOR_CLEAR);

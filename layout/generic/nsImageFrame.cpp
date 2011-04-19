@@ -1223,9 +1223,9 @@ nsDisplayImage::ConfigureLayer(ImageLayer* aLayer)
   mImage->GetHeight(&imageHeight);
 
   gfxMatrix transform;
-  transform.Translate(destRect.pos);
-  transform.Scale(destRect.size.width/imageWidth,
-                  destRect.size.height/imageHeight);
+  transform.Translate(destRect.TopLeft());
+  transform.Scale(destRect.Width()/imageWidth,
+                  destRect.Height()/imageHeight);
   aLayer->SetTransform(gfx3DMatrix::From2D(transform));
 
   aLayer->SetVisibleRegion(nsIntRect(0, 0, imageWidth, imageHeight));

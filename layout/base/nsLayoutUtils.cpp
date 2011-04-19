@@ -1009,9 +1009,7 @@ nsRect
 nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
 {
   /* Get a new gfxRect whose units are app units by scaling by the specified factor. */
-  gfxRect scaledRect(aRect.pos.x * aFactor, aRect.pos.y * aFactor,
-                     aRect.size.width * aFactor,
-                     aRect.size.height * aFactor);
+  gfxRect scaledRect = aRect * aFactor;
 
   /* Round outward. */
   scaledRect.RoundOut();
@@ -1023,8 +1021,8 @@ nsLayoutUtils::RoundGfxRectToAppRect(const gfxRect &aRect, float aFactor)
   ConstrainToCoordValues(scaledRect.size.height);
 
   /* Now typecast everything back.  This is guaranteed to be safe. */
-  return nsRect(nscoord(scaledRect.pos.x), nscoord(scaledRect.pos.y),
-                nscoord(scaledRect.size.width), nscoord(scaledRect.size.height));
+  return nsRect(nscoord(scaledRect.X()), nscoord(scaledRect.Y()),
+                nscoord(scaledRect.Width()), nscoord(scaledRect.Height()));
 }
 
 
@@ -3088,8 +3086,8 @@ static gfxPoint
 MapToFloatImagePixels(const gfxSize& aSize,
                       const gfxRect& aDest, const gfxPoint& aPt)
 {
-  return gfxPoint(((aPt.x - aDest.pos.x)*aSize.width)/aDest.size.width,
-                  ((aPt.y - aDest.pos.y)*aSize.height)/aDest.size.height);
+  return gfxPoint(((aPt.x - aDest.X())*aSize.width)/aDest.Width(),
+                  ((aPt.y - aDest.Y())*aSize.height)/aDest.Height());
 }
 
 /**
@@ -3104,8 +3102,8 @@ static gfxPoint
 MapToFloatUserPixels(const gfxSize& aSize,
                      const gfxRect& aDest, const gfxPoint& aPt)
 {
-  return gfxPoint(aPt.x*aDest.size.width/aSize.width + aDest.pos.x,
-                  aPt.y*aDest.size.height/aSize.height + aDest.pos.y);
+  return gfxPoint(aPt.x*aDest.Width()/aSize.width + aDest.X(),
+                  aPt.y*aDest.Height()/aSize.height + aDest.Y());
 }
 
 /* static */ gfxRect

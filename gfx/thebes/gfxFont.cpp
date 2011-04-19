@@ -1360,9 +1360,9 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                             advance, metrics.mBoundingBox.Height());
                     }
                     if (isRTL) {
-                        glyphRect.pos.x -= advance;
+                        glyphRect -= gfxPoint(advance, 0);
                     }
-                    glyphRect.pos.x += x;
+                    glyphRect += gfxPoint(x, 0);
                     metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                 }
             }
@@ -1389,9 +1389,9 @@ gfxFont::Measure(gfxTextRun *aTextRun,
                             advance, metrics.mAscent + metrics.mDescent);
                     }
                     if (isRTL) {
-                        glyphRect.pos.x -= advance;
+                        glyphRect -= gfxPoint(advance, 0);
                     }
-                    glyphRect.pos.x += x;
+                    glyphRect += gfxPoint(x, 0);
                     metrics.mBoundingBox = metrics.mBoundingBox.Union(glyphRect);
                     x += direction*advance;
                 }
@@ -1414,7 +1414,7 @@ gfxFont::Measure(gfxTextRun *aTextRun,
         metrics.mBoundingBox = metrics.mBoundingBox.Union(fontBox);
     }
     if (isRTL) {
-        metrics.mBoundingBox.pos.x -= x;
+        metrics.mBoundingBox -= gfxPoint(x, 0);
     }
 
     metrics.mAdvanceWidth = x*direction;
@@ -1943,10 +1943,10 @@ gfxGlyphExtents::SetTightGlyphExtents(PRUint32 aGlyphID, const gfxRect& aExtents
     HashEntry *entry = mTightGlyphExtents.PutEntry(aGlyphID);
     if (!entry)
         return;
-    entry->x = aExtentsAppUnits.pos.x;
-    entry->y = aExtentsAppUnits.pos.y;
-    entry->width = aExtentsAppUnits.size.width;
-    entry->height = aExtentsAppUnits.size.height;
+    entry->x = aExtentsAppUnits.X();
+    entry->y = aExtentsAppUnits.Y();
+    entry->width = aExtentsAppUnits.Width();
+    entry->height = aExtentsAppUnits.Height();
 }
 
 gfxFontGroup::gfxFontGroup(const nsAString& aFamilies, const gfxFontStyle *aStyle, gfxUserFontSet *aUserFontSet)
