@@ -88,11 +88,6 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    netwerk/necko-config.h xpcom/xpcom-config.h xpcom/xpcom-private.h \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out
 
-ifdef WINCE
-check::
-	$(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py copy $(DIST)/bin
-endif
-
 default alldep all:: $(topsrcdir)/configure config.status
 	$(RM) -r $(DIST)/sdk
 	$(RM) -r $(DIST)/include
@@ -195,21 +190,6 @@ endif
 	  mv $(SYMBOL_INDEX_NAME).tmp $(SYMBOL_INDEX_NAME)
 	cd $(DIST)/crashreporter-symbols && \
           zip -r9D "../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip" . -i "*.sym" -i "*.txt"
-else
-ifdef WINCE
-ifdef SYMBOLSTORE_PATH
-	echo building symbol store with symstore.exe
-	$(RM) -r $(DIST)/symbols
-	$(RM) "$(DIST)/$(SYMBOL_ARCHIVE_BASENAME).zip"
-	$(NSINSTALL) -D $(DIST)/symbols
-	$(SYMBOLSTORE_PATH) add -r -f "$(subst /,\,$(shell pwd -W))\*.PDB" \
-	  -s $(DIST)/symbols/ -t "$(MOZ_PKG_APPNAME)" -v "$(MOZ_PKG_VERSION)"
-	echo packing symbols
-	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
-	cd $(DIST)/symbols && \
-	  zip -r9D "../$(PKG_PATH)$(SYMBOL_ARCHIVE_BASENAME).zip" .
-endif # SYMBOLSTORE_PATH
-endif # WINCE
 endif # MOZ_CRASHREPORTER
 
 uploadsymbols:

@@ -79,7 +79,7 @@ class nsCSSStyleSheet;
 class nsIViewManager;
 class nsIDOMEvent;
 class nsIDOMEventTarget;
-class nsIDeviceContext;
+class nsDeviceContext;
 class nsIParser;
 class nsIDOMNode;
 class nsIDOMElement;

@@ -63,11 +63,8 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     mBlurRadius = aBlurRadius;
 
     gfxRect rect(aRect);
-    rect.Outset(aBlurRadius + aSpreadRadius);
+    rect.Inflate(aBlurRadius + aSpreadRadius);
     rect.RoundOut();
-
-    if (rect.IsEmpty())
-        return nsnull;
 
     if (aDirtyRect) {
         // If we get passed a dirty rect from layout, we can minimize the
@@ -75,11 +72,17 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
         mHasDirtyRect = PR_TRUE;
         mDirtyRect = *aDirtyRect;
         gfxRect requiredBlurArea = mDirtyRect.Intersect(rect);
-        requiredBlurArea.Outset(aBlurRadius + aSpreadRadius);
+        requiredBlurArea.Inflate(aBlurRadius + aSpreadRadius);
         rect = requiredBlurArea.Intersect(rect);
     } else {
         mHasDirtyRect = PR_FALSE;
     }
+
+    // Check rect empty after accounting for aDirtyRect, since that may have
+    // make the rectangle empty. BoxBlurVertical and BoxBlurHorizontal require
+    // that we have a nonzero number of rows and columns.
+    if (rect.IsEmpty())
+        return nsnull;
 
     if (aSkipRect) {
         // If we get passed a skip rect, we can lower the amount of
@@ -87,12 +90,12 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
         // expensive int<->float conversions if we were to use gfxRect instead.
         gfxRect skipRect = *aSkipRect;
         skipRect.RoundIn();
-        skipRect.Inset(aBlurRadius + aSpreadRadius);
+        skipRect.Deflate(aBlurRadius + aSpreadRadius);
         gfxUtils::GfxRectToIntRect(skipRect, &mSkipRect);
         nsIntRect shadowIntRect;
         gfxUtils::GfxRectToIntRect(rect, &shadowIntRect);
         mSkipRect.IntersectRect(mSkipRect, shadowIntRect);
-        if (mSkipRect == shadowIntRect)
+        if (mSkipRect.IsEqualInterior(shadowIntRect))
           return nsnull;
 
         mSkipRect -= shadowIntRect.TopLeft();
@@ -138,6 +141,8 @@ BoxBlurHorizontal(unsigned char* aInput,
                   PRInt32 aRows,
                   const nsIntRect& aSkipRect)
 {
+    NS_ASSERTION(aWidth > 0, "Can't handle zero width here");
+
     PRInt32 boxSize = aLeftLobe + aRightLobe + 1;
     PRBool skipRectCoversWholeRow = 0 >= aSkipRect.x &&
                                     aWidth <= aSkipRect.XMost();
@@ -156,6 +161,8 @@ BoxBlurHorizontal(unsigned char* aInput,
         PRInt32 alphaSum = 0;
         for (PRInt32 i = 0; i < boxSize; i++) {
             PRInt32 pos = i - aLeftLobe;
+            // See assertion above; if aWidth is zero, then we would have no
+            // valid position to clamp to.
             pos = NS_MAX(pos, 0);
             pos = NS_MIN(pos, aWidth - 1);
             alphaSum += aInput[aWidth * y + pos];
@@ -174,6 +181,8 @@ BoxBlurHorizontal(unsigned char* aInput,
                 alphaSum = 0;
                 for (PRInt32 i = 0; i < boxSize; i++) {
                     PRInt32 pos = x + i - aLeftLobe;
+                    // See assertion above; if aWidth is zero, then we would have no
+                    // valid position to clamp to.
                     pos = NS_MAX(pos, 0);
                     pos = NS_MIN(pos, aWidth - 1);
                     alphaSum += aInput[aWidth * y + pos];
@@ -205,6 +214,8 @@ BoxBlurVertical(unsigned char* aInput,
                 PRInt32 aRows,
                 const nsIntRect& aSkipRect)
 {
+    NS_ASSERTION(aRows > 0, "Can't handle zero rows here");
+
     PRInt32 boxSize = aTopLobe + aBottomLobe + 1;
     PRBool skipRectCoversWholeColumn = 0 >= aSkipRect.y &&
                                        aRows <= aSkipRect.YMost();
@@ -220,6 +231,8 @@ BoxBlurVertical(unsigned char* aInput,
         PRInt32 alphaSum = 0;
         for (PRInt32 i = 0; i < boxSize; i++) {
             PRInt32 pos = i - aTopLobe;
+            // See assertion above; if aRows is zero, then we would have no
+            // valid position to clamp to.
             pos = NS_MAX(pos, 0);
             pos = NS_MIN(pos, aRows - 1);
             alphaSum += aInput[aWidth * pos + x];
@@ -234,6 +247,8 @@ BoxBlurVertical(unsigned char* aInput,
                 alphaSum = 0;
                 for (PRInt32 i = 0; i < boxSize; i++) {
                     PRInt32 pos = y + i - aTopLobe;
+                    // See assertion above; if aRows is zero, then we would have no
+                    // valid position to clamp to.
                     pos = NS_MAX(pos, 0);
                     pos = NS_MIN(pos, aRows - 1);
                     alphaSum += aInput[aWidth * pos + x];

@@ -61,10 +61,10 @@
 
   <text transform="translate(320, 20)" rotate="10 20 30">JKL
 
-    <!-- The value should be "310 320 330" immediately. -->
+    <!-- The value should be "310 320 330" at 3s. -->
     <animate attributeName="rotate"
              calcMode="discrete"
-             begin="0s" dur="30s"
+             begin="0s" dur="6s"
              to="310 320 330"
              fill="freeze"/>
 

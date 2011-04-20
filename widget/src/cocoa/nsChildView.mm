@@ -59,7 +59,6 @@
 #include "nsIPrefBranch.h"
 
 #include "nsFontMetrics.h"
-#include "nsIDeviceContext.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIViewManager.h"
@@ -535,7 +534,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
                              nsNativeWidget aNativeParent,
                              const nsIntRect &aRect,
                              EVENT_CALLBACK aHandleEventFunction,
-                             nsIDeviceContext *aContext,
+                             nsDeviceContext *aContext,
                              nsIAppShell *aAppShell,
                              nsIToolkit *aToolkit,
                              nsWidgetInitData *aInitData)

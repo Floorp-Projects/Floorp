@@ -15,22 +15,32 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=419132
 <div id="content" style="display: none">
   
 </div>
-<iframe src="bug419132.html"></iframe>
+<iframe id="i"></iframe>
 <pre id="test">
 <script type="application/javascript">
 
 /** Test for Bug 419132 **/
 
 SimpleTest.waitForExplicitFinish();
-
-setTimeout(finish, 60000)
-
-function finish()
-{
-  ok(true, "This is a mochikit version of a crash test. To complete is to pass.");
-  SimpleTest.finish();
-}
-
+addLoadEvent(function() {
+  var iframe = document.getElementById("i");
+  var loadCounts = 4;
+  iframe.addEventListener("load", function() {
+    if (--loadCounts == 0) {
+      ok(true, "This is a mochikit version of a crash test. To complete is to pass.");
+      SimpleTest.finish();
+    } else {
+      // Garbage collect after every other load
+      if ((loadCounts % 2) == 1) {
+        SpecialPowers.gc();
+      }
+      setTimeout(function() {
+        iframe.contentWindow.location.reload();
+      }, 0);
+    }
+  }, false);
+  iframe.src = "bug419132.html";
+});
 
 </script>
 </pre>

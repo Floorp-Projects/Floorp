@@ -438,12 +438,6 @@ function openTabPrompt(domWin, tabPrompt, args) {
         winUtils.leaveModalStateWithWindow(callerWin);
 
         PromptUtils.fireDialogEvent(domWin, "DOMModalDialogClosed");
-
-        // Restore focus to the previously focused element within tab.
-        let fm = Cc["@mozilla.org/focus-manager;1"].
-                 getService(Ci.nsIFocusManager);
-        let e = fm.getFocusedElementForWindow(domWin.top, false, {});
-        fm.setFocus(e, fm.FLAG_NOSCROLL);
     }
 
     let newPrompt;

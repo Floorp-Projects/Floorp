@@ -53,6 +53,7 @@
 #ifdef MOZ_PLATFORM_MAEMO
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
+#include "nsIPrefService.h"
 #include "mozilla/Services.h"
 #endif
 
@@ -588,6 +589,22 @@ nsGtkIMModule::SetInputMode(nsWindow* aCaller, const IMEContext* aContext)
     GtkIMContext *im = GetContext();
     if (im) {
         if (IsEnabled()) {
+            // Ensure that opening the virtual keyboard is allowed for this specific
+            // IMEContext depending on the content.ime.strict.policy pref
+            if (mIMEContext.mStatus != nsIWidget::IME_STATUS_DISABLED && 
+                mIMEContext.mStatus != nsIWidget::IME_STATUS_PLUGIN) {
+
+                nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
+
+                PRBool useStrictPolicy = PR_FALSE;
+                if (NS_SUCCEEDED(prefs->GetBoolPref("content.ime.strict_policy", &useStrictPolicy))) {
+                    if (useStrictPolicy && !mIMEContext.FocusMovedByUser() && 
+                        mIMEContext.FocusMovedInContentProcess()) {
+                        return NS_OK;
+                    }
+                }
+            }
+
             // It is not desired that the hildon's autocomplete mechanism displays
             // user previous entered passwds, so lets make completions invisible
             // in these cases.

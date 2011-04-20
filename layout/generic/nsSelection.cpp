@@ -94,7 +94,6 @@ static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 #include "nsCaret.h"
 
 
-#include "nsIDeviceContext.h"
 #include "nsITimer.h"
 #include "nsIServiceManager.h"
 #include "nsFrameManager.h"
@@ -5556,7 +5555,7 @@ nsTypedSelection::GetSelectionAnchorGeometry(SelectionRegion aRegion,
   // make focusRect relative to anchorFrame
   focusRect += focusFrame->GetOffsetTo(anchorFrame);
 
-  aRect->UnionRectIncludeEmpty(anchorRect, focusRect);
+  aRect->UnionRectEdges(anchorRect, focusRect);
   return anchorFrame;
 }
 

@@ -204,7 +204,7 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
     return NS_OK;
   }
 
-  nsRect r = (*aDirtyRect == nsIntRect::GetMaxSizedIntRect()) ?
+  nsRect r = aDirtyRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect()) ?
     nsRect(nsPoint(0, 0), mFrame->GetSize()) :
     aDirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
 

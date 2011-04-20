@@ -84,7 +84,6 @@
 #include "nsHashtable.h"
 #include "nsIViewObserver.h"
 #include "nsContainerFrame.h"
-#include "nsIDeviceContext.h"
 #include "nsEventStateManager.h"
 #include "nsDOMEvent.h"
 #include "nsGUIEvent.h"
@@ -3759,13 +3758,11 @@ PresShell::GetReferenceRenderingContext()
 {
   NS_TIME_FUNCTION_MIN(1.0);
 
-  nsIDeviceContext* devCtx = mPresContext->DeviceContext();
+  nsDeviceContext* devCtx = mPresContext->DeviceContext();
   nsRefPtr<nsRenderingContext> rc;
   if (mPresContext->IsScreen()) {
-    devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
-    if (rc) {
-      rc->Init(devCtx, gfxPlatform::GetPlatform()->ScreenReferenceSurface());
-    }
+    rc = new nsRenderingContext();
+    rc->Init(devCtx, gfxPlatform::GetPlatform()->ScreenReferenceSurface());
   } else {
     devCtx->CreateRenderingContext(*getter_AddRefs(rc));
   }
@@ -4026,7 +4023,7 @@ AccumulateFrameBounds(nsIFrame* aContainerFrame,
     // We can't use nsRect::UnionRect since it drops empty rects on
     // the floor, and we need to include them.  (Thus we need
     // aHaveRect to know when to drop the initial value on the floor.)
-    aRect.UnionRectIncludeEmpty(aRect, frameBounds);
+    aRect.UnionRectEdges(aRect, frameBounds);
   } else {
     aHaveRect = PR_TRUE;
     aRect = frameBounds;
@@ -5273,7 +5270,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
   aThebesContext->Translate(gfxPoint(-nsPresContext::AppUnitsToFloatCSSPixels(aRect.x),
                                      -nsPresContext::AppUnitsToFloatCSSPixels(aRect.y)));
 
-  nsIDeviceContext* devCtx = mPresContext->DeviceContext();
+  nsDeviceContext* devCtx = mPresContext->DeviceContext();
   gfxFloat scale = gfxFloat(devCtx->AppUnitsPerDevPixel())/nsPresContext::AppUnitsPerCSSPixel();
   aThebesContext->Scale(scale, scale);
 
@@ -5284,8 +5281,7 @@ PresShell::RenderDocument(const nsRect& aRect, PRUint32 aFlags,
 
   AutoSaveRestoreRenderingState _(this);
 
-  nsRefPtr<nsRenderingContext> rc;
-  devCtx->CreateRenderingContextInstance(*getter_AddRefs(rc));
+  nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(devCtx, aThebesContext);
 
   PRBool wouldFlushRetainedLayers = PR_FALSE;
@@ -5551,7 +5547,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   if (!pc || aArea.width == 0 || aArea.height == 0)
     return nsnull;
 
-  nsIDeviceContext* deviceContext = pc->DeviceContext();
+  nsDeviceContext* deviceContext = pc->DeviceContext();
 
   // use the rectangle to create the surface
   nsIntRect pixelArea = aArea.ToOutsidePixels(pc->AppUnitsPerDevPixel());
@@ -5609,8 +5605,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   context.Rectangle(gfxRect(0, 0, pixelArea.width, pixelArea.height));
   context.Fill();
 
-  nsRefPtr<nsRenderingContext> rc;
-  deviceContext->CreateRenderingContextInstance(*getter_AddRefs(rc));
+  nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(deviceContext, surface);
 
   if (aRegion) {
@@ -7723,13 +7718,13 @@ PresShell::DoReflow(nsIFrame* target, PRBool aInterruptible)
                 desiredSize.height == size.height),
                "non-root frame's desired size changed during an "
                "incremental reflow");
-  NS_ASSERTION(desiredSize.VisualOverflow() ==
+  NS_ASSERTION(desiredSize.VisualOverflow().IsEqualInterior(
                  nsRect(nsPoint(0, 0),
-                        nsSize(desiredSize.width, desiredSize.height)),
+                        nsSize(desiredSize.width, desiredSize.height))),
                "reflow roots must not have visible overflow");
-  NS_ASSERTION(desiredSize.ScrollableOverflow() ==
+  NS_ASSERTION(desiredSize.ScrollableOverflow().IsEqualEdges(
                  nsRect(nsPoint(0, 0),
-                        nsSize(desiredSize.width, desiredSize.height)),
+                        nsSize(desiredSize.width, desiredSize.height))),
                "reflow roots must not have scrollable overflow");
   NS_ASSERTION(status == NS_FRAME_COMPLETE,
                "reflow roots should never split");
@@ -8081,7 +8076,6 @@ nsIPresShell::RemoveRefreshObserverExternal(nsARefreshObserver* aObserver,
 #ifdef NS_DEBUG
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
-#include "nsIDeviceContext.h"
 #include "nsIURL.h"
 #include "nsILinkHandler.h"
 
@@ -8193,7 +8187,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       }
       else if (nsnull != k1) {
         // Verify that the frames are the same size
-        if (k1->GetRect() != k2->GetRect()) {
+        if (!k1->GetRect().IsEqualInterior(k2->GetRect())) {
           ok = PR_FALSE;
           LogVerifyMessage(k1, k2, "(frame rects)", k1->GetRect(), k2->GetRect());
         }
@@ -8210,7 +8204,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
           LogVerifyMessage(k1, k2, "child views are not matched\n");
         }
         else if (nsnull != v1) {
-          if (v1->GetBounds() != v2->GetBounds()) {
+          if (!v1->GetBounds().IsEqualInterior(v2->GetBounds())) {
             LogVerifyMessage(k1, k2, "(view rects)", v1->GetBounds(), v2->GetBounds());
           }
 
@@ -8224,7 +8218,7 @@ CompareTrees(nsPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
           else if (nsnull != w1) {
             w1->GetBounds(r1);
             w2->GetBounds(r2);
-            if (r1 != r2) {
+            if (!r1.IsEqualEdges(r2)) {
               LogVerifyMessage(k1, k2, "(widget rects)", r1, r2);
             }
           }
@@ -8432,7 +8426,7 @@ PresShell::VerifyIncrementalReflow()
                                         nsPresContext::eContext_Galley);
   NS_ENSURE_TRUE(cx, PR_FALSE);
 
-  nsIDeviceContext *dc = mPresContext->DeviceContext();
+  nsDeviceContext *dc = mPresContext->DeviceContext();
   nsresult rv = cx->Init(dc);
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
 

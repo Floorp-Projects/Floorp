@@ -46,7 +46,6 @@
 #include "nsCSSRendering.h"
 #include "nsISupports.h"
 #include "nsGkAtoms.h"
-#include "nsIDeviceContext.h"
 #include "nsStyleConsts.h"
 #include "nsFormControlFrame.h"
 #include "nsGUIEvent.h"

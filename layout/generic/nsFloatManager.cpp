@@ -345,7 +345,7 @@ nsFloatManager::StoreRegionFor(nsIFrame* aFloat,
   nsresult rv = NS_OK;
   nsRect rect = aFloat->GetRect();
   FrameProperties props = aFloat->Properties();
-  if (aRegion == rect) {
+  if (aRegion.IsEqualEdges(rect)) {
     props.Delete(FloatRegionProperty());
   }
   else {
