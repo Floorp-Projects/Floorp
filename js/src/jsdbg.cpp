@@ -115,25 +115,39 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
 
 Debug::Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment)
   : object(dbg), debuggeeCompartment(compartment), hooksObject(hooks),
-    enabled(true), hasDebuggerHandler(false)
+    uncaughtExceptionHook(NULL), enabled(true), hasDebuggerHandler(false)
 {
 }
 
 JSTrapStatus
-Debug::fireUncaughtExceptionHook(JSContext *cx)
+Debug::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
 {
-    // FIXME
-    JS_ReportPendingException(cx);
-    JS_ClearPendingException(cx);
+    JSContext *cx = ac.context;
+    if (cx->isExceptionPending()) {
+        if (callHook && uncaughtExceptionHook) {
+            Value fval = ObjectValue(*uncaughtExceptionHook);
+            Value exc = cx->getPendingException();
+            Value rv;
+            cx->clearPendingException();
+            if (ExternalInvoke(cx, UndefinedValue(), fval, 1, &exc, &rv))
+                return parseResumptionValue(ac, true, rv, vp, false);
+        }
+ 
+        if (cx->isExceptionPending()) {
+            JS_ReportPendingException(cx);
+            cx->clearPendingException();
+        }
+    }
     return JSTRAP_ERROR;
 }
 
 JSTrapStatus
-Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp)
+Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
+                            bool callHook)
 {
     vp->setUndefined();
     if (!ok)
-        return fireUncaughtExceptionHook(ac.context);
+        return handleUncaughtException(ac, vp, callHook);
     if (rv.isUndefined())
         return JSTRAP_CONTINUE;
     if (rv.isNull())
@@ -153,18 +167,18 @@ Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value
         !shape->isDataDescriptor())
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_BAD_RESUMPTION);
-        return fireUncaughtExceptionHook(cx);
+        return handleUncaughtException(ac, vp, callHook);
     }
 
     if (!js_NativeGet(cx, obj, obj, shape, 0, vp))
-        return fireUncaughtExceptionHook(cx);
+        return handleUncaughtException(ac, vp, callHook);
 
     // Throwing or returning objects is not yet supported. It requires
     // unwrapping.
     if (vp->isObject()) {
         vp->setUndefined();
         NotImplemented(cx);
-        return fireUncaughtExceptionHook(cx);
+        return handleUncaughtException(ac, vp, callHook);
     }
 
     ac.leave();
@@ -281,8 +295,9 @@ void
 Debug::trace(JSTracer *trc, JSObject *obj)
 {
     if (Debug *dbg = (Debug *) obj->getPrivate()) {
-        if (dbg->hooksObject)
-            MarkObject(trc, *dbg->hooksObject, "hooks");
+        MarkObject(trc, *dbg->hooksObject, "hooks");
+        if (dbg->uncaughtExceptionHook)
+            MarkObject(trc, *dbg->uncaughtExceptionHook, "hooks");
     }
 }
 
@@ -325,7 +340,7 @@ JSBool
 Debug::getHooks(JSContext *cx, uintN argc, Value *vp)
 {
     THISOBJ(cx, vp, Debug, "get hooks", thisobj, dbg);
-    vp->setObjectOrNull(dbg->hooksObject);
+    vp->setObject(*dbg->hooksObject);
     return true;
 }
 
@@ -362,6 +377,26 @@ Debug::setEnabled(JSContext *cx, uintN argc, Value *vp)
     REQUIRE_ARGC("Debug.set enabled", 1);
     THISOBJ(cx, vp, Debug, "set enabled", thisobj, dbg);
     dbg->enabled = js_ValueToBoolean(vp[2]);
+    vp->setUndefined();
+    return true;
+}
+
+JSBool
+Debug::getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
+{
+    THISOBJ(cx, vp, Debug, "get uncaughtExceptionHook", thisobj, dbg);
+    vp->setObjectOrNull(dbg->uncaughtExceptionHook);
+    return true;
+}
+
+JSBool
+Debug::setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
+{
+    REQUIRE_ARGC("Debug.set uncaughtExceptionHook", 1);
+    THISOBJ(cx, vp, Debug, "set uncaughtExceptionHook", thisobj, dbg);
+    if (!vp[2].isObjectOrNull())
+        return ReportObjectRequired(cx);
+    dbg->uncaughtExceptionHook = vp[2].toObjectOrNull();
     vp->setUndefined();
     return true;
 }
@@ -415,6 +450,8 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
 JSPropertySpec Debug::properties[] = {
     JS_PSGS("hooks", Debug::getHooks, Debug::setHooks, 0),
     JS_PSGS("enabled", Debug::getEnabled, Debug::setEnabled, 0),
+    JS_PSGS("uncaughtExceptionHook", Debug::getUncaughtExceptionHook,
+            Debug::setUncaughtExceptionHook, 0),
     JS_PS_END
 };
     
