@@ -1093,6 +1093,7 @@ class EvalScriptGuard
     ~EvalScriptGuard() {
         if (script_) {
             js_CallDestroyScriptHook(cx_, script_);
+            script_->isActiveEval = false;
             script_->isCachedEval = true;
             script_->u.nextToGC = *bucket_;
             *bucket_ = script_;
@@ -1108,6 +1109,8 @@ class EvalScriptGuard
                                               principals, scopeobj, bucket_)) {
             js_CallNewScriptHook(cx_, found, NULL);
             script_ = found;
+            script_->isCachedEval = false;
+            script_->isActiveEval = true;
         }
     }
 
@@ -1115,6 +1118,7 @@ class EvalScriptGuard
         /* NewScriptFromCG has already called js_CallNewScriptHook. */
         JS_ASSERT(!script_ && script);
         script_ = script;
+        script_->isActiveEval = true;
     }
 
     bool foundScript() {
