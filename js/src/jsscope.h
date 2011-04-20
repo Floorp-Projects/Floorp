@@ -548,10 +548,6 @@ struct Shape : public JSObjectMap
 
     inline bool isSharedPermanent() const;
 
-    void regenerate(JSTracer *trc) const;
-    void markChildrenNotParent(JSTracer *trc) const;
-    void markChildren(JSTracer *trc) const;
-
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
 
     uint8 attributes() const { return attrs; }

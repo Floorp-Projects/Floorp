@@ -56,6 +56,7 @@
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -4698,16 +4699,7 @@ xml_finalize(JSContext *cx, JSObject *obj)
 static void
 xml_trace_vector(JSTracer *trc, JSXML **vec, uint32 len)
 {
-    uint32 i;
-    JSXML *xml;
-
-    for (i = 0; i < len; i++) {
-        xml = vec[i];
-        if (xml) {
-            JS_SET_TRACING_INDEX(trc, "xml_vector", i);
-            Mark(trc, xml);
-        }
-    }
+    MarkXMLRange(trc, len, vec, "xml_vector");
 }
 
 /*

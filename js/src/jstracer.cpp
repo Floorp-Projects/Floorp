@@ -65,6 +65,8 @@
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
+#include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jsmath.h"

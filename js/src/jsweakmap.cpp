@@ -46,6 +46,7 @@
 #include "jshashtable.h"
 #include "jsobj.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsweakmap.h"
 
 #include "jsgcinlines.h"

@@ -53,6 +53,8 @@
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
+#include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -1561,26 +1563,12 @@ js_TraceScript(JSTracer *trc, JSScript *script)
 
     if (JSScript::isValidOffset(script->objectsOffset)) {
         JSObjectArray *objarray = script->objects();
-        uintN i = objarray->length;
-        do {
-            --i;
-            if (objarray->vector[i]) {
-                JS_SET_TRACING_INDEX(trc, "objects", i);
-                Mark(trc, objarray->vector[i]);
-            }
-        } while (i != 0);
+        MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
     }
 
     if (JSScript::isValidOffset(script->regexpsOffset)) {
         JSObjectArray *objarray = script->regexps();
-        uintN i = objarray->length;
-        do {
-            --i;
-            if (objarray->vector[i]) {
-                JS_SET_TRACING_INDEX(trc, "regexps", i);
-                Mark(trc, objarray->vector[i]);
-            }
-        } while (i != 0);
+        MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
     }
 
     if (JSScript::isValidOffset(script->constOffset)) {
@@ -1593,14 +1581,10 @@ js_TraceScript(JSTracer *trc, JSScript *script)
      * separately if, e.g. we are GC'ing while type inference code is active,
      * and we need to make sure both the script and the object survive the GC.
      */
-    if (!script->isCachedEval && !script->isUncachedEval && script->u.object) {
-        JS_SET_TRACING_NAME(trc, "object");
-        Mark(trc, script->u.object);
-    }
-    if (script->fun) {
-        JS_SET_TRACING_NAME(trc, "script_fun");
-        Mark(trc, script->fun);
-    }
+    if (!script->isCachedEval && !script->isUncachedEval && script->u.object)
+        MarkObject(trc, *script->u.object, "object");
+    if (script->fun)
+        MarkObject(trc, *script->fun, "script_fun");
 
     if (IS_GC_MARKING_TRACER(trc) && script->filename)
         js_MarkScriptFilename(script->filename);

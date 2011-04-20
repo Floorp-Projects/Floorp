@@ -55,6 +55,7 @@
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsobj.h"

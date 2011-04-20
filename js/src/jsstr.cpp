@@ -124,7 +124,7 @@ Untag(JSString *str)
     return (JSRope *)(size_t(str) & ~size_t(1));
 }
 
-JS_ALWAYS_INLINE void
+void
 JSLinearString::mark(JSTracer *)
 {
     JSLinearString *str = this;
@@ -132,7 +132,7 @@ JSLinearString::mark(JSTracer *)
         str = str->asDependent().base();
 }
 
-JS_ALWAYS_INLINE void
+void
 JSString::mark(JSTracer *trc)
 {
     if (isLinear()) {
@@ -190,12 +190,6 @@ JSString::mark(JSTracer *trc)
     }
 }
 
-void
-js::gc::TypedMarker(JSTracer *trc, JSString *str)
-{
-    str->mark(trc);
-}
-
 static JS_ALWAYS_INLINE size_t
 RopeCapacityFor(size_t length)
 {
@@ -235,7 +229,7 @@ JSRope::flatten(JSContext *maybecx)
      * times they have been visited. Since ropes can be dags, a node may be
      * encountered multiple times during traversal. However, step 3 above leaves
      * a valid dependent string, so everything works out. This algorithm is
-     * homomorphic to TypedMarker(JSTracer *, JSString *).
+     * homomorphic to marking code.
      *
      * While ropes avoid all sorts of quadratic cases with string
      * concatenation, they can't help when ropes are immediately flattened.

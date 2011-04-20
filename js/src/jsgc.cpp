@@ -66,6 +66,7 @@
 #include "jsfun.h"
 #include "jsgc.h"
 #include "jsgcchunk.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -223,8 +224,7 @@ Arena<T>::mark(T *thing, JSTracer *trc)
         return CGCT_NOTLIVE;
 
     JS_ASSERT(sizeof(T) == aheader.thingSize);
-    JS_SET_TRACING_NAME(trc, "machine stack");
-    js::gc::Mark(trc, alignedThing);
+    js::gc::MarkRoot(trc, alignedThing, "machine stack");
 
 #ifdef JS_DUMP_CONSERVATIVE_GC_ROOTS
     if (alignedThing != thing)
@@ -1434,33 +1434,6 @@ js_UnlockGCThingRT(JSRuntime *rt, void *thing)
     }
 }
 
-JS_PUBLIC_API(void)
-JS_TraceChildren(JSTracer *trc, void *thing, uint32 kind)
-{
-    switch (kind) {
-      case JSTRACE_OBJECT: {
-        MarkChildren(trc, (JSObject *)thing);
-        break;
-      }
-
-      case JSTRACE_STRING: {
-        MarkChildren(trc, (JSString *)thing);
-        break;
-      }
-
-      case JSTRACE_SHAPE: {
-        MarkChildren(trc, (Shape *)thing);
-        break;
-      }
-
-#if JS_HAS_XML_SUPPORT
-      case JSTRACE_XML:
-        MarkChildren(trc, (JSXML *)thing);
-        break;
-#endif
-    }
-}
-
 namespace js {
 
 /*
@@ -1478,7 +1451,12 @@ namespace js {
  */
 
 GCMarker::GCMarker(JSContext *cx)
-  : color(0), stackLimit(0), unmarkedArenaStackTop(NULL)
+  : color(0),
+    stackLimit(0),
+    unmarkedArenaStackTop(NULL),
+    objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
+    xmlStack(cx->runtime->gcMarkStackXMLs, sizeof(cx->runtime->gcMarkStackXMLs)),
+    largeStack(cx->runtime->gcMarkStackLarges, sizeof(cx->runtime->gcMarkStackLarges))
 {
     JS_TRACER_INIT(this, cx, NULL);
 #ifdef DEBUG
@@ -2362,7 +2340,13 @@ SweepCrossCompartmentWrappers(JSContext *cx)
         }
     }
 
-    /* Remove dead wrappers from the compartment map. */
+    /*
+     * Sweep the compartment:
+     * (1) Remove dead wrappers from the compartment map.
+     * (2) Finalize any unused empty shapes.
+     * (3) Sweep the trace JIT of unused code.
+     * (4) Sweep the method JIT ICs and release infrequently used JIT code.
+     */
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
         (*c)->sweep(cx, releaseInterval);
 }
@@ -2505,21 +2489,15 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
 
     MarkRuntime(&gcmarker);
 
-    /*
-     * Mark children of things that caused too deep recursion during the above
-     * tracing.
-     */
-    gcmarker.markDelayedChildren();
+    gcmarker.drainMarkStack();
 
     /*
      * Mark weak roots.
      */
     while (true) {
-        if (!js_TraceWatchPoints(&gcmarker) &&
-            !WeakMap::markIteratively(&gcmarker)) {
+        if (!js_TraceWatchPoints(&gcmarker) && !WeakMap::markIteratively(&gcmarker))
             break;
-        }
-        gcmarker.markDelayedChildren();
+        gcmarker.drainMarkStack();
     }
 
     rt->gcMarkingTracer = NULL;
@@ -2942,27 +2920,6 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 #endif
     GCTIMER_END(gckind == GC_LAST_CONTEXT);
 }
-
-void
-JSObject::markSlots(JSTracer *trc)
-{
-    JS_ASSERT(isNative());
-    JS_ASSERT(slotSpan() <= numSlots());
-    uint32 nfixed = numFixedSlots();
-    uint32 nslots = slotSpan();
-    uint32 i;
-    for (i = 0; i < nslots && i < nfixed; i++) {
-        const Value &v = fixedSlots()[i];
-        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, this, i);
-        MarkValueRaw(trc, v);
-    }
-    for (; i < nslots; i++) {
-        const Value &v = slots[i - nfixed];
-        JS_SET_TRACING_DETAILS(trc, js_PrintObjectSlotName, this, i);
-        MarkValueRaw(trc, v);
-    }
-}
-
 
 namespace js {
 namespace gc {
