@@ -179,8 +179,8 @@ function FakeGUIDService() {
 
 
 /*
- * Mock implementation of IWeaveCrypto.  It does not encrypt or
- * decrypt, just returns the input verbatimly.
+ * Mock implementation of WeaveCrypto. It does not encrypt or
+ * decrypt, merely returning the input verbatim.
  */
 function FakeCryptoService() {
   this.counter = 0;
