@@ -27,7 +27,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=613113
 SimpleTest.waitForExplicitFinish();
 
 var invalidEvent = false;
-var submit = false;
 
 var form = document.forms[0];
 var button = document.getElementsByTagName('button')[0];
@@ -39,24 +38,19 @@ output.addEventListener("invalid", function() {
   } else {
     invalidEvent = true;
     ok(true, "invalid event has been caught");
+    setTimeout(function() {
+      SimpleTest.finish();
+    }, 0);
   }
 }, false);
 
 form.addEventListener("submit", function() {
-  submit = true;
+  ok(false, "submit event should not have been send");
 }, false);
 
 output.setCustomValidity("foo");
 
 button.click();
-
-setTimeout(function() {
-  if (!invalidEvent) {
-    ok(false, "invalid event should have been caught");
-  }
-  ok(!submit, "submit event should not have been send");
-  SimpleTest.finish();
-}, 1000);
 
 </script>
 </pre>
