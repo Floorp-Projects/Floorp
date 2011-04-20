@@ -68,7 +68,7 @@
 #include "nsFrameTraversal.h"
 #include "nsObjectFrame.h"
 #include "nsEventDispatcher.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIMEStateManager.h"
 #include "nsIWebNavigation.h"
 #include "nsCaret.h"

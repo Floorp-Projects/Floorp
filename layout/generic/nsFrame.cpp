@@ -2076,7 +2076,9 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   //We often get out of sync state issues with mousedown events that
   //get interrupted by alerts/dialogs.
   //Check with the ESM to see if we should process this one
-  if (!aPresContext->EventStateManager()->EventStatusOK(aEvent)) 
+  PRBool eventOK;
+  aPresContext->EventStateManager()->EventStatusOK(aEvent, &eventOK);
+  if (!eventOK) 
     return NS_OK;
 
   nsresult rv;

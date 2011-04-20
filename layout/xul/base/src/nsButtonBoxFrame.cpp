@@ -48,7 +48,7 @@
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsGUIEvent.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIDOMElement.h"
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
@@ -92,7 +92,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         if (NS_VK_SPACE == keyEvent->keyCode) {
-          nsEventStateManager *esm = aPresContext->EventStateManager();
+          nsIEventStateManager *esm = aPresContext->EventStateManager();
           // :hover:active state
           esm->SetContentState(mContent, NS_EVENT_STATE_HOVER);
           esm->SetContentState(mContent, NS_EVENT_STATE_ACTIVE);
@@ -121,7 +121,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         if (NS_VK_SPACE == keyEvent->keyCode) {
           // only activate on keyup if we're already in the :hover:active state
-          nsEventStateManager *esm = aPresContext->EventStateManager();
+          nsIEventStateManager *esm = aPresContext->EventStateManager();
           nsEventStates buttonState = esm->GetContentState(mContent);
           if (buttonState.HasAllStates(NS_EVENT_STATE_ACTIVE |
                                        NS_EVENT_STATE_HOVER)) {

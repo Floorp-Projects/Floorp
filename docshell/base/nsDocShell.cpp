@@ -201,7 +201,7 @@
 #include "nsIGlobalHistory3.h"
 
 #ifdef DEBUG_DOCSHELL_FOCUS
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #endif
 
 #include "nsIFrame.h"

@@ -126,7 +126,7 @@
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"

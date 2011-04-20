@@ -61,7 +61,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMXULPopupElement.h"
 #include "nsIEditingSession.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIFrame.h"
 #include "nsHTMLSelectAccessible.h"
 #include "nsIInterfaceRequestorUtils.h"

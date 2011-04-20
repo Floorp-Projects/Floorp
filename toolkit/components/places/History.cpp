@@ -51,6 +51,7 @@
 #include "mozilla/storage.h"
 #include "mozilla/dom/Link.h"
 #include "nsDocShellCID.h"
+#include "nsIEventStateManager.h"
 #include "mozilla/Services.h"
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"

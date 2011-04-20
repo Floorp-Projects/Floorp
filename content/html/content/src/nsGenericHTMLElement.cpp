@@ -86,7 +86,7 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsDOMCSSDeclaration.h"
@@ -1056,8 +1056,9 @@ nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisito
   //Need to check if we hit an imagemap area and if so see if we're handling
   //the event on that map or on a link farther up the tree.  If we're on a
   //link farther up, do nothing.
-  nsCOMPtr<nsIContent> target = aVisitor.mPresContext->EventStateManager()->
-    GetEventTargetContent(aVisitor.mEvent);
+  nsCOMPtr<nsIContent> target;
+  aVisitor.mPresContext->EventStateManager()->
+    GetEventTargetContent(aVisitor.mEvent, getter_AddRefs(target));
 
   return !target || !IsArea(target) || IsArea(this);
 }
@@ -3352,7 +3353,7 @@ nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
   nsPresContext *presContext = GetPresContext();
 
   if (presContext) {
-    nsEventStateManager *esm = presContext->EventStateManager();
+    nsIEventStateManager *esm = presContext->EventStateManager();
 
     // Register or unregister as appropriate.
     if (aDoReg) {

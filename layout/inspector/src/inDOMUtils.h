@@ -40,11 +40,11 @@
 
 #include "inIDOMUtils.h"
 
+#include "nsIEventStateManager.h"
 #include "nsISupportsArray.h"
 
 class nsRuleNode;
 class nsStyleContext;
-class nsIContent;
 
 class inDOMUtils : public inIDOMUtils
 {

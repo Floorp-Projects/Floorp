@@ -76,7 +76,7 @@ class nsNativeTheme : public nsITimerCallback
 
   nsNativeTheme();
 
-  // Returns the content state (hover, focus, etc), see nsEventStateManager.h
+  // Returns the content state (hover, focus, etc), see nsIEventStateManager.h
   nsEventStates GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType);
 
   // Returns whether the widget is already styled by content

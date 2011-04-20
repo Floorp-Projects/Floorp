@@ -43,7 +43,7 @@
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsString.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -91,7 +91,7 @@ nsNativeTheme::GetContentState(nsIFrame* aFrame, PRUint8 aWidgetType)
   if (!shell)
     return nsEventStates();
 
-  nsEventStateManager* esm = shell->GetPresContext()->EventStateManager();
+  nsIEventStateManager* esm = shell->GetPresContext()->EventStateManager();
   nsEventStates flags = esm->GetContentState(aFrame->GetContent(), PR_TRUE);
   
   if (isXULCheckboxRadio && aWidgetType == NS_THEME_RADIO) {

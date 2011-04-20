@@ -46,7 +46,7 @@
 #include "nsXMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "imgIRequest.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 
 class nsGenConImageContent : public nsXMLElement,
                              public nsImageLoadingContent
