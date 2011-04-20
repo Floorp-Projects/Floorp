@@ -83,6 +83,10 @@ union SurfaceDescriptor {
   SurfaceDescriptorX11;
 };
 
+union SharedImage {
+  SurfaceDescriptor;
+};
+
 struct ThebesBuffer {
   SurfaceDescriptor buffer;
   nsIntRect rect;
@@ -109,7 +113,7 @@ struct OpDestroyCanvasFrontBuffer { PLayer layer; };
 struct OpCreateImageBuffer {
   PLayer layer;
   nsIntSize size;
-  SurfaceDescriptor initialFront;
+  SharedImage initialFront;
 };
 struct OpDestroyImageFrontBuffer { PLayer layer; };
 
@@ -178,7 +182,7 @@ struct OpPaintCanvas  {
 
 struct OpPaintImage  {
   PLayer layer;
-  SurfaceDescriptor newFrontBuffer;
+  SharedImage newFrontBuffer;
 };
 
 
