@@ -456,7 +456,8 @@ struct JSScript {
                                                      obsolete eval(s, o) in
                                                      this script */
     bool            hasSingletons:1;  /* script has singleton objects */
-    bool            isCachedEval:1;   /* script came from eval() */
+    bool            isActiveEval:1;   /* script came from eval(), and is still active */
+    bool            isCachedEval:1;   /* script came from eval(), and is in eval cache */
     bool            isUncachedEval:1; /* script came from EvaluateScript */
     bool            calledWithNew:1;  /* script has been called using 'new' */
     bool            analyzed:1;       /* script has been analyzed by type inference */

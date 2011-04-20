@@ -3882,6 +3882,14 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     if (applyTricks == LazyArgsObj)
         return Compile_InlineAbort;
 
+    /* Don't inline from functions which could have a non-global scope object. */
+    if (!outerScript->compileAndGo ||
+        (outerScript->fun && outerScript->fun->getParent() != globalObj) ||
+        (outerScript->fun && outerScript->fun->isHeavyweight()) ||
+        outerScript->isActiveEval) {
+        return Compile_InlineAbort;
+    }
+
     FrameEntry *origCallee = frame.peek(-((int)argc + 2));
     FrameEntry *origThis = frame.peek(-((int)argc + 1));
 
@@ -3914,7 +3922,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     unsigned count = types->getObjectCount();
     for (unsigned i = 0; i < count; i++) {
         types::TypeObject *object = types->getObject(i);
-        JS_ASSERT(object);  /* Hash case for types->objectSet not possible here. */
+        if (!object)
+            continue;
 
         if (!object->singleton || !object->singleton->isFunction())
             return Compile_InlineAbort;
@@ -3929,9 +3938,7 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
          * allows us to inline calls between non-inner functions. Also check
          * for consistent strictness between the functions.
          */
-        if (!outerScript->compileAndGo ||
-            (outerScript->fun && outerScript->fun->getParent() != globalObj) ||
-            !script->compileAndGo ||
+        if (!script->compileAndGo ||
             fun->getParent() != globalObj ||
             outerScript->strictModeCode != script->strictModeCode) {
             return Compile_InlineAbort;
@@ -4008,7 +4015,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
 
     for (unsigned i = 0; i < count; i++) {
         types::TypeObject *object = types->getObject(i);
-        JS_ASSERT(object);
+        if (!object)
+            continue;
 
         JSFunction *fun = object->singleton->getFunctionPrivate();
 
