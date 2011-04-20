@@ -42,6 +42,8 @@
 #include <string.h>
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsprvtd.h"
 #include "jsnum.h"
 #include "jsobj.h"

@@ -49,6 +49,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsregexp.h"

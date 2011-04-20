@@ -49,6 +49,7 @@
 #include "jscntxtinlines.h"
 #include "jscompartment.h"
 #include "jsscope.h"
+#include "jsgcmark.h"
 
 #include "jsgcinlines.h"
 #include "jsinterpinlines.h"
@@ -1089,8 +1090,6 @@ JITScript::trace(JSTracer *trc)
      * to maintain references to any scripts whose code was inlined into this.
      */
     InlineFrame *inlineFrames_ = inlineFrames();
-    for (unsigned i = 0; i < nInlineFrames; i++) {
-        JS_SET_TRACING_NAME(trc, "jitscript_fun");
-        Mark(trc, inlineFrames_[i].fun);
-    }
+    for (unsigned i = 0; i < nInlineFrames; i++)
+        MarkObject(trc, *inlineFrames_[i].fun, "jitscript_fun");
 }

@@ -61,6 +61,7 @@
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -941,17 +942,14 @@ js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeobj)
     return !v.isFalse();
 }
 
+/* We should be able to assert this for *any* fp->scopeChain(). */
 static void
-AssertScopeChainValidity(JSContext *cx, JSObject &scopeobj)
+AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 {
 #ifdef DEBUG
-    JSObject *inner = &scopeobj;
-    OBJ_TO_INNER_OBJECT(cx, inner);
-    JS_ASSERT(inner && inner == &scopeobj);
-
     for (JSObject *o = &scopeobj; o; o = o->getParent()) {
         if (JSObjectOp op = o->getClass()->ext.innerObject)
-            JS_ASSERT(op(cx, o) == &scopeobj);
+            JS_ASSERT(op(cx, o) == o);
     }
 #endif
 }
@@ -1148,7 +1146,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, JSStackFrame 
            JSObject &scopeobj)
 {
     JS_ASSERT((evalType == INDIRECT_EVAL) == (caller == NULL));
-    AssertScopeChainValidity(cx, scopeobj);
+    AssertInnerizedScopeChain(cx, scopeobj);
 
     /*
      * CSP check: Is eval() allowed at all?
