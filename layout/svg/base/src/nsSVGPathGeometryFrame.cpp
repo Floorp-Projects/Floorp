@@ -483,6 +483,12 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
 
   aContext->Multiply(matrix);
 
+  // Hack to let SVGPathData::ConstructPath know if we have square caps:
+  const nsStyleSVG* style = GetStyleSVG();
+  if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
+    aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
+  }
+
   aContext->NewPath();
   static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(aContext);
 }
