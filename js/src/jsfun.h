@@ -152,12 +152,10 @@ struct JSFunction : public JSObject_Slots2
     bool isConstructor()     const { return flags & JSFUN_CONSTRUCTOR; }
     bool isHeavyweight()     const { return JSFUN_HEAVYWEIGHT_TEST(flags); }
     bool isFlatClosure()     const { return FUN_KIND(this) == JSFUN_FLAT_CLOSURE; }
-
     bool isFunctionPrototype() const { return flags & JSFUN_PROTOTYPE; }
-
+    bool isInterpretedConstructor() const { return isInterpreted() && !isFunctionPrototype(); }
     /* Returns the strictness of this function, which must be interpreted. */
     inline bool inStrictMode() const;
-
     void setArgCount(uint16 nargs) {
         JS_ASSERT(this->nargs == 0);
         this->nargs = nargs;
