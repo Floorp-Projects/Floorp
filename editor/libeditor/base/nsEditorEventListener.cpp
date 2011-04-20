@@ -71,7 +71,6 @@
 #include "nsIDOMNSRange.h"
 #include "nsEditorUtils.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIEventStateManager.h"
 #include "nsISelectionPrivate.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIFocusManager.h"

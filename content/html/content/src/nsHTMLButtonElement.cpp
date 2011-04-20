@@ -50,7 +50,6 @@
 #include "nsEventStateManager.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
-#include "nsIEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDocument.h"
@@ -377,7 +376,7 @@ nsHTMLButtonElement::PostHandleEvent(nsEventChainPostVisitor& aVisitor)
             if (static_cast<nsMouseEvent*>(aVisitor.mEvent)->button ==
                   nsMouseEvent::eLeftButton) {
               if (NS_IS_TRUSTED_EVENT(aVisitor.mEvent)) {
-                nsIEventStateManager* esm =
+                nsEventStateManager* esm =
                   aVisitor.mPresContext->EventStateManager();
                 nsEventStateManager::SetActiveManager(
                   static_cast<nsEventStateManager*>(esm), this);
