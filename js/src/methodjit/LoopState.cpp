@@ -614,6 +614,9 @@ LoopState::invariantSlots(const FrameEntry *obj)
 FrameEntry *
 LoopState::invariantLength(const FrameEntry *obj)
 {
+    if (skipAnalysis || script->failedBoundsCheck)
+        return NULL;
+
     obj = obj->backing();
     uint32 slot = frame.indexOfFe(obj);
 
