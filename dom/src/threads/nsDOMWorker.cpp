@@ -767,7 +767,6 @@ nsDOMWorkerFunctions::CTypesLazyGetter(JSContext* aCx,
          JS_GetPropertyById(aCx, aObj, aId, aVp);
 }
 #endif
-
 JSFunctionSpec gDOMWorkerFunctions[] = {
   { "dump",                nsDOMWorkerFunctions::Dump,                1, 0 },
   { "setTimeout",          nsDOMWorkerFunctions::SetTimeout,          1, 0 },
@@ -775,19 +774,16 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { "setInterval",         nsDOMWorkerFunctions::SetInterval,         1, 0 },
   { "clearInterval",       nsDOMWorkerFunctions::KillTimeout,         1, 0 },
   { "importScripts",       nsDOMWorkerFunctions::LoadScripts,         1, 0 },
-  { "XMLHttpRequest",      nsDOMWorkerFunctions::NewXMLHttpRequest,   0, 0 },
-  { "Worker",              nsDOMWorkerFunctions::NewWorker,           1, 0 },
+  { "XMLHttpRequest",      nsDOMWorkerFunctions::NewXMLHttpRequest,   0, JSFUN_CONSTRUCTOR },
+  { "Worker",              nsDOMWorkerFunctions::NewWorker,           1, JSFUN_CONSTRUCTOR },
   { "atob",                nsDOMWorkerFunctions::AtoB,                1, 0 },
   { "btoa",                nsDOMWorkerFunctions::BtoA,                1, 0 },
   { nsnull,                nsnull,                                    0, 0 }
 };
-
 JSFunctionSpec gDOMWorkerChromeFunctions[] = {
-  { "ChromeWorker",        nsDOMWorkerFunctions::NewChromeWorker,     1, 0 },
+  { "ChromeWorker",        nsDOMWorkerFunctions::NewChromeWorker,     1, JSFUN_CONSTRUCTOR },
   { nsnull,                nsnull,                                    0, 0 }
 };
-
-
 enum DOMWorkerStructuredDataType
 {
   // We have a special tag for XPCWrappedNatives that are being passed between
