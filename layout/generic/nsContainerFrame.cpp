@@ -66,6 +66,7 @@
 #include "nsLayoutErrors.h"
 #include "nsDisplayList.h"
 #include "nsContentErrors.h"
+#include "nsIEventStateManager.h"
 #include "nsListControlFrame.h"
 #include "nsIBaseWindow.h"
 #include "nsThemeConstants.h"

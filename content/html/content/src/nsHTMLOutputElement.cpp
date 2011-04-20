@@ -41,7 +41,7 @@
 #include "nsDOMSettableTokenList.h"
 #include "nsStubMutationObserver.h"
 #include "nsIConstraintValidation.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 #include "mozAutoDocUpdate.h"
 #include "nsHTMLFormElement.h"
 

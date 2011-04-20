@@ -66,7 +66,7 @@
 #include "nsUnicharUtils.h"
 #include "nsStyleSet.h"
 #include "nsIViewManager.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
 #include "nsIDOMXULElement.h"

@@ -62,7 +62,7 @@
 #include "mozilla/css/GroupRule.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsGkAtoms.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"

@@ -44,7 +44,7 @@
 #include "nsDisplayList.h"
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"

@@ -40,6 +40,7 @@
 #include "nsDOMMouseEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
+#include "nsIEventStateManager.h"
 #include "nsContentUtils.h"
 
 nsDOMMouseEvent::nsDOMMouseEvent(nsPresContext* aPresContext,

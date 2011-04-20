@@ -62,7 +62,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULLabelElement.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsITheme.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
@@ -1151,15 +1151,17 @@ nsTextBoxFrame::RegUnregAccessKey(PRBool aDoReg)
     if (accessKey.IsEmpty())
         return NS_OK;
 
+    nsresult rv;
+
     // With a valid PresContext we can get the ESM 
     // and (un)register the access key
-    nsEventStateManager *esm = PresContext()->EventStateManager();
+    nsIEventStateManager *esm = PresContext()->EventStateManager();
 
     PRUint32 key = accessKey.First();
     if (aDoReg)
-        esm->RegisterAccessKey(mContent, key);
+        rv = esm->RegisterAccessKey(mContent, key);
     else
-        esm->UnregisterAccessKey(mContent, key);
+        rv = esm->UnregisterAccessKey(mContent, key);
 
-    return NS_OK;
+    return rv;
 }

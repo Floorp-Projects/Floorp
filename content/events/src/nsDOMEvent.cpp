@@ -316,7 +316,8 @@ nsDOMEvent::GetTargetFromFrame()
   if (!mPresContext) { return nsnull; }
 
   // Get the target frame (have to get the ESM first)
-  nsIFrame* targetFrame = mPresContext->EventStateManager()->GetEventTarget();
+  nsIFrame* targetFrame = nsnull;
+  mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
   if (!targetFrame) { return nsnull; }
 
   // get the real content

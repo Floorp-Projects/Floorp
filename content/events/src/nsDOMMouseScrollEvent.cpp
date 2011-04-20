@@ -38,6 +38,7 @@
 #include "nsDOMMouseScrollEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
+#include "nsIEventStateManager.h"
 #include "nsContentUtils.h"
 
 nsDOMMouseScrollEvent::nsDOMMouseScrollEvent(nsPresContext* aPresContext,

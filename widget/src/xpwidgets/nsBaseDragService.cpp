@@ -59,6 +59,7 @@
 #include "nsISelectionPrivate.h"
 #include "nsPresContext.h"
 #include "nsIDOMDataTransfer.h"
+#include "nsIEventStateManager.h"
 #include "nsICanvasElementExternal.h"
 #include "nsIImageLoadingContent.h"
 #include "imgIContainer.h"

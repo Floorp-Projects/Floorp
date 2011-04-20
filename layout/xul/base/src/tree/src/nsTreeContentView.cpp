@@ -42,7 +42,7 @@
 #include "nsTreeContentView.h"
 #include "nsChildIterator.h"
 #include "nsIDOMClassInfo.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 #include "nsINodeInfo.h"
 #include "nsIXULSortService.h"
 #include "nsContentUtils.h"

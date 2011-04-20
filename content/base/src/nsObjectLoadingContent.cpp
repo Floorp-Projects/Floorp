@@ -53,7 +53,7 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIExternalProtocolHandler.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginDocument.h"
 #include "nsIPluginHost.h"

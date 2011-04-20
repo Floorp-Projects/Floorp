@@ -73,7 +73,7 @@
 #include "nsLayoutUtils.h"
 #include "nsContentUtils.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIBoxLayout.h"
 #include "nsIPopupBoxObject.h"
 #include "nsPIWindowRoot.h"
@@ -833,7 +833,7 @@ nsMenuPopupFrame::HidePopup(PRBool aDeselectMenu, nsPopupState aNewState)
   // XXX, bug 137033, In Windows, if mouse is outside the window when the menupopup closes, no
   // mouse_enter/mouse_exit event will be fired to clear current hover state, we should clear it manually.
   // This code may not the best solution, but we can leave it here until we find the better approach.
-  nsEventStateManager *esm = PresContext()->EventStateManager();
+  nsIEventStateManager *esm = PresContext()->EventStateManager();
 
   nsEventStates state = esm->GetContentState(mContent);
 
