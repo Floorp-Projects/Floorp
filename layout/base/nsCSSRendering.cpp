@@ -57,7 +57,6 @@
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsTransform2D.h"
-#include "nsIDeviceContext.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
@@ -1198,15 +1197,13 @@ nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
 
       // Draw the widget shape
       gfxContextMatrixAutoSaveRestore save(shadowContext);
-      nsIDeviceContext* devCtx = aPresContext->DeviceContext();
-      nsRefPtr<nsRenderingContext> wrapperCtx;
-      devCtx->CreateRenderingContextInstance(*getter_AddRefs(wrapperCtx));
-      wrapperCtx->Init(devCtx, shadowContext);
-      wrapperCtx->Translate(nsPoint(shadowItem->mXOffset, shadowItem->mYOffset));
+      nsRefPtr<nsRenderingContext> wrapperCtx = new nsRenderingContext();
+      wrapperCtx->Init(aPresContext->DeviceContext(), shadowContext);
+      wrapperCtx->Translate(nsPoint(shadowItem->mXOffset,
+                                    shadowItem->mYOffset));
 
       nsRect nativeRect;
       nativeRect.IntersectRect(frameRect, aDirtyRect);
-
       aPresContext->GetTheme()->DrawWidgetBackground(wrapperCtx, aForFrame,
           styleDisplay->mAppearance, aFrameArea, nativeRect);
     } else {

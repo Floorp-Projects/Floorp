@@ -619,7 +619,10 @@ xptiInterfaceEntry::HasAncestor(const nsIID * iid, PRBool *_retval)
 nsresult 
 xptiInterfaceEntry::GetInterfaceInfo(xptiInterfaceInfo** info)
 {
-    MonitorAutoEnter lock(xptiInterfaceInfoManager::GetInfoMonitor());
+#ifdef DEBUG
+    xptiInterfaceInfoManager::GetSingleton()->GetWorkingSet()->mTableMonitor.
+        AssertCurrentThreadIn();
+#endif
     LOG_INFO_MONITOR_ENTRY;
 
     if(!mInfo)
@@ -644,6 +647,19 @@ xptiInterfaceEntry::LockedInvalidateInterfaceInfo()
         mInfo->Invalidate(); 
         mInfo = nsnull;
     }
+}
+
+PRBool
+xptiInterfaceInfo::BuildParent()
+{
+    mozilla::MonitorAutoEnter monitor(xptiInterfaceInfoManager::GetSingleton()->
+                                    GetWorkingSet()->mTableMonitor);
+    NS_ASSERTION(mEntry && 
+                 mEntry->IsFullyResolved() && 
+                 !mParent &&
+                 mEntry->Parent(),
+                "bad BuildParent call");
+    return NS_SUCCEEDED(mEntry->Parent()->GetInterfaceInfo(&mParent));
 }
 
 /***************************************************************************/
@@ -679,9 +695,11 @@ xptiInterfaceInfo::Release(void)
     NS_LOG_RELEASE(this, cnt, "xptiInterfaceInfo");
     if(!cnt)
     {
-        MonitorAutoEnter lock(xptiInterfaceInfoManager::GetInfoMonitor());
+        mozilla::MonitorAutoEnter monitor(xptiInterfaceInfoManager::
+                                          GetSingleton()->GetWorkingSet()->
+                                          mTableMonitor);
         LOG_INFO_MONITOR_ENTRY;
-        
+
         // If GetInterfaceInfo added and *released* a reference before we 
         // acquired the monitor then 'this' might already be dead. In that
         // case we would not want to try to access any instance data. We
@@ -695,7 +713,7 @@ xptiInterfaceInfo::Release(void)
         // then we want to bail out of here without destorying the object.
         if(mRefCnt)
             return 1;
-        
+
         if(mEntry)
         {
             mEntry->LockedInterfaceInfoDeathNotification();

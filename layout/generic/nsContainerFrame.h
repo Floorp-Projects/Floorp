@@ -117,8 +117,25 @@ public:
                                      nsIFrame*      aNextInFlow,
                                      PRBool         aDeletingEmptyFrames);
 
+  /**
+   * Helper method to wrap views around frames. Used by containers
+   * under special circumstances (can be used by leaf frames as well)
+   */
+  static nsresult CreateViewForFrame(nsIFrame* aFrame,
+                                     PRBool aForce);
+
   // Positions the frame's view based on the frame's origin
   static void PositionFrameView(nsIFrame* aKidFrame);
+
+  static nsresult ReparentFrameView(nsPresContext* aPresContext,
+                                    nsIFrame*       aChildFrame,
+                                    nsIFrame*       aOldParentFrame,
+                                    nsIFrame*       aNewParentFrame);
+
+  static nsresult ReparentFrameViewList(nsPresContext*     aPresContext,
+                                        const nsFrameList& aChildFrameList,
+                                        nsIFrame*          aOldParentFrame,
+                                        nsIFrame*          aNewParentFrame);
 
   // Set the view's size and position after its frame has been reflowed.
   //

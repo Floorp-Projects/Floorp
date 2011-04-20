@@ -211,7 +211,7 @@ nsViewManager::CreateRegion(nsIRegion* *result)
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-NS_IMETHODIMP nsViewManager::Init(nsIDeviceContext* aContext)
+NS_IMETHODIMP nsViewManager::Init(nsDeviceContext* aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null ptr");
 
@@ -1521,7 +1521,7 @@ NS_IMETHODIMP nsViewManager::GetViewObserver(nsIViewObserver *&aObserver)
     return NS_ERROR_NO_INTERFACE;
 }
 
-NS_IMETHODIMP nsViewManager::GetDeviceContext(nsIDeviceContext *&aContext)
+NS_IMETHODIMP nsViewManager::GetDeviceContext(nsDeviceContext *&aContext)
 {
   NS_IF_ADDREF(mContext);
   aContext = mContext;

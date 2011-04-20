@@ -147,7 +147,7 @@ MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFI
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 ifdef MOZ_MEMORY
-ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifneq ($(OS_ARCH),WINNT)
 JEMALLOC_LIBS = $(MKSHLIB_FORCE_ALL) $(call EXPAND_MOZLIBNAME,jemalloc) $(MKSHLIB_UNFORCE_ALL)
 # If we are linking jemalloc into a program, we want the jemalloc symbols
 # to be exported
@@ -398,7 +398,7 @@ endif
 # Force _all_ exported methods to be |_declspec(dllexport)| when we're
 # building them into the executable.
 
-ifeq (,$(filter-out WINNT WINCE OS2, $(OS_ARCH)))
+ifeq (,$(filter-out WINNT OS2, $(OS_ARCH)))
 ifdef BUILD_STATIC_LIBS
 DEFINES += \
         -D_IMPL_NS_GFX \
@@ -589,11 +589,9 @@ endif
 # we link statically or dynamic?  Assuming dynamic for now.
 
 ifneq (WINNT_,$(OS_ARCH)_$(GNU_CC))
-ifneq (,$(filter-out WINCE,$(OS_ARCH)))
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 ifdef LIBXUL_SDK
 LIBS_DIR	+= -L$(LIBXUL_SDK)/bin -L$(LIBXUL_SDK)/lib
-endif
 endif
 endif
 
@@ -805,9 +803,6 @@ MERGE_FILE = $(LOCALE_SRCDIR)/$(1)
 endif
 MERGE_FILES = $(foreach f,$(1),$(call MERGE_FILE,$(f)))
 
-ifdef WINCE
-RUN_TEST_PROGRAM = $(PYTHON) $(topsrcdir)/build/mobile/devicemanager-run-test.py
-else
 ifeq (OS2,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(topsrcdir)/build/os2/test_os2.cmd "$(DIST)"
 else
@@ -815,7 +810,6 @@ ifneq (WINNT,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif # ! WINNT
 endif # ! OS2
-endif # ! WINCE
 
 #
 # Java macros
