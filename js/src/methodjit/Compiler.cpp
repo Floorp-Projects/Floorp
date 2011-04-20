@@ -2065,12 +2065,35 @@ mjit::Compiler::generateMethod()
                 addReturnSite(true /* ool */);
 
                 autoRejoinNcode.oolRejoin(stubcc.masm.label());
-                stubcc.masm.storeValueFromComponents(JSReturnReg_Type, JSReturnReg_Data,
-                                                     frame.addressOf(frame.peek(-1)));
+
+                /*
+                 * Watch for lowered calls and applies, which behave differently
+                 * from every other rejoin path in JM and require the return
+                 * value to be loaded from a different address.
+                 */
+                bool loweredCallApply =
+                    (frameSize.isDynamic() || frameSize.staticArgc() != GET_ARGC(PC));
+                Address address = frame.addressOf(frame.peek(-1));
+                if (loweredCallApply) {
+                    frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+                    address = frame.addressOf(frame.peek(-1));
+                    frame.pop();
+                }
+
+                stubcc.masm.storeValueFromComponents(JSReturnReg_Type, JSReturnReg_Data, address);
                 fallthrough.linkTo(stubcc.masm.label(), &stubcc.masm);
-                if (knownPushedType(0) == JSVAL_TYPE_DOUBLE)
-                    stubcc.masm.ensureInMemoryDouble(frame.addressOf(frame.peek(-1)));
-                stubcc.rejoin(Changes(1));
+
+                /*
+                 * We can't just reload from the return address as inlineCallHelper
+                 * does, as if we inlined a call here there may be other registers
+                 * that need to be reloaded.
+                 */
+                if (loweredCallApply) {
+                    frame.reloadEntry(stubcc.masm, address, frame.peek(-1));
+                    stubcc.crossJump(stubcc.masm.jump(), masm.label());
+                } else {
+                    stubcc.rejoin(Changes(1));
+                }
 
                 callPatches.append(callPatch);
             }
@@ -3722,7 +3745,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     frame.popn(speculatedArgc + 2);
     frame.takeReg(JSReturnReg_Type);
     frame.takeReg(JSReturnReg_Data);
-    FPRegisterID fpreg = frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, type);
+    frame.pushRegs(JSReturnReg_Type, JSReturnReg_Data, type);
 
     /*
      * Now that the frame state is set, generate the rejoin path. Note that, if
@@ -3734,10 +3757,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     rejoin1.linkTo(callIC.slowJoinPoint, &stubcc.masm);
     rejoin2.linkTo(callIC.slowJoinPoint, &stubcc.masm);
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW RESTORE CODE ---- \n");
-    if (type == JSVAL_TYPE_DOUBLE)
-        stubcc.masm.moveInt32OrDouble(icRvalAddr, fpreg);
-    else
-        stubcc.masm.loadValueAsComponents(icRvalAddr, JSReturnReg_Type, JSReturnReg_Data);
+    frame.reloadEntry(stubcc.masm, icRvalAddr, frame.peek(-1));
     stubcc.crossJump(stubcc.masm.jump(), masm.label());
     JaegerSpew(JSpew_Insns, " ---- END SLOW RESTORE CODE ---- \n");
 

@@ -280,6 +280,12 @@ class FrameState
      */
     inline FPRegisterID pushRegs(RegisterID type, RegisterID data, JSValueType knownType);
 
+    /*
+     * Load an address into a frame entry in registers. For handling call paths
+     * where merge() would otherwise reload from the wrong address.
+     */
+    inline void reloadEntry(Assembler &masm, Address address, FrameEntry *fe);
+
     /* Push a value which is definitely a double. */
     void pushDouble(FPRegisterID fpreg);
     void pushDouble(Address address);

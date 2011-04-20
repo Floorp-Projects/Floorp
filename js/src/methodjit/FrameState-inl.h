@@ -376,6 +376,22 @@ FrameState::pushRegs(RegisterID type, RegisterID data, JSValueType knownType)
 }
 
 inline void
+FrameState::reloadEntry(Assembler &masm, Address address, FrameEntry *fe)
+{
+    if (fe->data.inRegister()) {
+        if (fe->type.inRegister()) {
+            masm.loadValueAsComponents(address, fe->type.reg(), fe->data.reg());
+        } else {
+            JS_ASSERT(fe->isTypeKnown());
+            masm.loadPayload(address, fe->data.reg());
+        }
+    } else {
+        JS_ASSERT(fe->data.inFPRegister());
+        masm.moveInt32OrDouble(address, fe->data.fpreg());
+    }
+}
+
+inline void
 FrameState::pushTypedPayload(JSValueType type, RegisterID payload)
 {
     JS_ASSERT(type != JSVAL_TYPE_DOUBLE);
