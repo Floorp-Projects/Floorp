@@ -2353,7 +2353,7 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
     if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
         return JS_FALSE;
 
-    if (cx->typeInferenceEnabled())
+    if (cx->typeInferenceEnabled() && obj->getDenseArrayInitializedLength() > index)
         obj->setDenseArrayInitializedLength(index);
     obj->setDenseArrayLength(index);
     return JS_TRUE;
