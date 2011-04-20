@@ -101,6 +101,16 @@ class RemoteOptions(ReftestOptions):
                     type = "string", dest = "remoteLogFile",
                     help = "Name of log file on the device relative to device root.  PLEASE USE ONLY A FILENAME.")
         defaults["remoteLogFile"] = None
+
+        self.add_option("--enable-privilege", action="store_true", dest = "enablePrivilege",
+                    help = "add webserver and port to the user.js file for remote script access and universalXPConnect")
+        defaults["enablePrivilege"] = False
+
+        self.add_option("--pidfile", action = "store",
+                    type = "string", dest = "pidFile",
+                    help = "name of the pidfile to generate")
+        defaults["pidFile"] = ""
+
         defaults["localLogName"] = None
 
         self.set_defaults(**defaults)
@@ -152,6 +162,11 @@ class RemoteOptions(ReftestOptions):
             options.localLogName = options.logFile
 
         options.logFile = options.remoteLogFile
+
+        if (options.pidFile != ""):
+            f = open(options.pidFile, 'w')
+            f.write("%s" % os.getpid())
+            f.close()
 
         # TODO: Copied from main, but I think these are no longer used in a post xulrunner world
         #options.xrePath = options.remoteTestRoot + self._automation._product + '/xulrunner'
@@ -238,6 +253,7 @@ class RemoteReftest(RefTest):
         self.remoteTestRoot = options.remoteTestRoot
         self.remoteLogFile = options.remoteLogFile
         self.localLogName = options.localLogName
+        self.pidFile = options.pidFile
         if self.automation.IS_DEBUG_BUILD:
             self.SERVER_STARTUP_TIMEOUT = 180
         else:
@@ -304,6 +320,15 @@ class RemoteReftest(RefTest):
     def createReftestProfile(self, options, profileDir):
         RefTest.createReftestProfile(self, options, profileDir, server=options.remoteWebServer)
 
+        #workaround for jsreftests.
+        if options.enablePrivilege:
+          fhandle = open(os.path.join(profileDir, "user.js"), 'a')
+          fhandle.write("""
+user_pref("capability.principal.codebase.p2.granted", "UniversalPreferencesWrite UniversalXPConnect UniversalBrowserWrite UniversalPreferencesRead UniversalBrowserRead");
+user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
+""" % (options.remoteWebServer, options.httpPort))
+          fhandle.close()
+
         if (self._devicemanager.pushDir(profileDir, options.remoteProfile) == None):
             raise devicemanager.FileError("Failed to copy profiledir to device")
 
@@ -336,6 +361,11 @@ class RemoteReftest(RefTest):
         self._devicemanager.removeDir(self.remoteProfile)
         self._devicemanager.removeDir(self.remoteTestRoot)
         RefTest.cleanup(self, profileDir)
+        if (self.pidFile != ""):
+            try:
+                os.remove(self.pidFile)
+            except:
+                print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % self.pidFile
 
 def main():
     dm_none = DeviceManager(None, None)
