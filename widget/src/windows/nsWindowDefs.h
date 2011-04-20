@@ -244,6 +244,18 @@ struct nsAlternativeCharCode; // defined in nsGUIEvent.h
 struct nsFakeCharMessage {
   UINT mCharCode;
   UINT mScanCode;
+
+  MSG GetCharMessage(HWND aWnd)
+  {
+    MSG msg;
+    msg.hwnd = aWnd;
+    msg.message = WM_CHAR;
+    msg.wParam = static_cast<WPARAM>(mCharCode);
+    msg.lParam = static_cast<LPARAM>(mScanCode);
+    msg.time = 0;
+    msg.pt.x = msg.pt.y = 0;
+    return msg;
+  }
 };
 
 // Used in char processing

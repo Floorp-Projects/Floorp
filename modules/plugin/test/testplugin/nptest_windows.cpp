@@ -458,6 +458,27 @@ handleEventInternal(InstanceData* instanceData, NPEvent* pe, LRESULT* result)
       return true;
     }
 
+    case WM_KEYDOWN:
+      instanceData->lastKeyText.erase();
+      *result = 0;
+      return true;
+
+    case WM_CHAR: {
+      *result = 0;
+      wchar_t uniChar = static_cast<wchar_t>(pe->wParam);
+      if (!uniChar) {
+        return true;
+      }
+      char utf8Char[6];
+      int len =
+        ::WideCharToMultiByte(CP_UTF8, 0, &uniChar, 1, utf8Char, 6, NULL, NULL);
+      if (len == 0 || len > 6) {
+        return true;
+      }
+      instanceData->lastKeyText.append(utf8Char, len);
+      return true;
+    }
+
     default:
       return false;
   }
