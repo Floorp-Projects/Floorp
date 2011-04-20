@@ -272,9 +272,9 @@ gfxPlatform::Init()
     gPlatform = new gfxOS2Platform;
 #elif defined(ANDROID)
     gPlatform = new gfxAndroidPlatform;
+#else
+    #error "No gfxPlatform implementation available"
 #endif
-    if (!gPlatform)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rv;
 

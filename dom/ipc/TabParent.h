@@ -104,7 +104,7 @@ public:
     virtual bool RecvEndIMEComposition(const PRBool& aCancel,
                                        nsString* aComposition);
     virtual bool RecvGetIMEEnabled(PRUint32* aValue);
-    virtual bool RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction);
+    virtual bool RecvSetInputMode(const PRUint32& aValue, const nsString& aType, const nsString& aAction, const PRUint32& aReason);
     virtual bool RecvGetIMEOpenState(PRBool* aValue);
     virtual bool RecvSetIMEOpenState(const PRBool& aValue);
     virtual bool RecvGetDPI(float* aValue);

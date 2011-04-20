@@ -42,7 +42,6 @@
 #include <windows.h>
 #include "nsNativeThemeWin.h"
 #include "nsRenderingContext.h"
-#include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsTransform2D.h"
@@ -1259,13 +1258,13 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
   if (aWidgetType == NS_THEME_DROPDOWN_BUTTON &&
       part == CBP_DROPMARKER_VISTA && IsHTMLContent(aFrame))
   {
-    tr.pos.y -= 1.0;
-    tr.size.width += 1.0;
-    tr.size.height += 2.0;
+    tr.y -= 1.0;
+    tr.width += 1.0;
+    tr.height += 2.0;
 
-    dr.pos.y -= 1.0;
-    dr.size.width += 1.0;
-    dr.size.height += 2.0;
+    dr.y -= 1.0;
+    dr.width += 1.0;
+    dr.height += 2.0;
   }
 
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();
@@ -1544,12 +1543,12 @@ RENDER_AGAIN:
     // are because we might have drawn something above them (like a background-image).
     ctx->Save();
     ctx->ResetClip();
-    ctx->Translate(dr.pos);
+    ctx->Translate(dr.TopLeft());
 
     // Create a rounded rectangle to follow the buttons' look.
-    gfxRect buttonbox1(0.0, 0.0, dr.size.width, dr.size.height - 2.0);
-    gfxRect buttonbox2(1.0, dr.size.height - 2.0, dr.size.width - 1.0, 1.0);
-    gfxRect buttonbox3(2.0, dr.size.height - 1.0, dr.size.width - 3.0, 1.0);
+    gfxRect buttonbox1(0.0, 0.0, dr.Width(), dr.Height() - 2.0);
+    gfxRect buttonbox2(1.0, dr.Height() - 2.0, dr.Width() - 1.0, 1.0);
+    gfxRect buttonbox3(2.0, dr.Height() - 1.0, dr.Width() - 3.0, 1.0);
 
     gfxContext::GraphicsOperator currentOp = ctx->CurrentOperator();
     ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -1585,7 +1584,7 @@ RENDER_AGAIN:
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext, 
+nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult)
@@ -1672,7 +1671,7 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 }
 
 PRBool
-nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext, 
+nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext, 
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
                                    nsIntMargin* aResult)
@@ -1809,7 +1808,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
 }
 
 PRBool
-nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext, 
+nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext, 
                                     nsIFrame* aFrame,
                                     PRUint8 aOverflowRect,
                                     nsRect* aResult)
@@ -2347,7 +2346,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 nsresult
-nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext, 
+nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult)

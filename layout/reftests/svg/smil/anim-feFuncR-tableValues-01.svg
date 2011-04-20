@@ -85,10 +85,10 @@
     <feComponentTransfer>
       <feFuncR type="table" tableValues="0 0 0 0">
 
-        <!-- The value should be "0 2 2 0" immediately. -->
+        <!-- The value should be "0 2 2 0" from 1s onwards. -->
         <animate attributeName="tableValues"
                  calcMode="discrete"
-                 begin="0s" dur="3s"
+                 begin="0s" dur="2s"
                  to="0 2 2 0"
                  fill="freeze"/>
 

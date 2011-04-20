@@ -40,16 +40,30 @@
 #include "nsCOMPtr.h"
 #include "nsGfxCIID.h"
 
+#include "nsThebesFontEnumerator.h"
+#include "nsThebesRegion.h"
 #include "nsScriptableRegion.h"
 
-#include "nsThebesDeviceContext.h"
-#include "nsThebesRegion.h"
-#include "nsThebesFontEnumerator.h"
+#include "nsDeviceContext.h"
 #include "gfxPlatform.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesDeviceContext)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRegion)
+// This service doesn't do anything; its only purpose is to force the
+// gfx module constructor to be called (and hence gfxPlatform::Init).
+// It's invoked at app-startup time and may also be invoked directly
+// (as do_GetService("@mozilla.org/gfx/init;1")) from code (like the
+// libpr0n module constructor) that wants to make sure gfx is
+// initialized.
+
+namespace {
+class GfxInitialization : public nsISupports {
+    NS_DECL_ISUPPORTS
+};
+
+NS_IMPL_ISUPPORTS0(GfxInitialization)
+}
+
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesFontEnumerator)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsThebesRegion)
 
 static nsresult
 nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -92,24 +106,31 @@ nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult
   return rv;
 }
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(GfxInitialization)
+
 NS_DEFINE_NAMED_CID(NS_FONT_ENUMERATOR_CID);
-NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_CID);
 NS_DEFINE_NAMED_CID(NS_REGION_CID);
 NS_DEFINE_NAMED_CID(NS_SCRIPTABLE_REGION_CID);
+NS_DEFINE_NAMED_CID(NS_GFX_INITIALIZATION_CID);
 
 static const mozilla::Module::CIDEntry kThebesCIDs[] = {
     { &kNS_FONT_ENUMERATOR_CID, false, NULL, nsThebesFontEnumeratorConstructor },
-    { &kNS_DEVICE_CONTEXT_CID, false, NULL, nsThebesDeviceContextConstructor },
     { &kNS_REGION_CID, false, NULL, nsThebesRegionConstructor },
     { &kNS_SCRIPTABLE_REGION_CID, false, NULL, nsScriptableRegionConstructor },
+    { &kNS_GFX_INITIALIZATION_CID, false, NULL, GfxInitializationConstructor },
     { NULL }
 };
 
 static const mozilla::Module::ContractIDEntry kThebesContracts[] = {
     { "@mozilla.org/gfx/fontenumerator;1", &kNS_FONT_ENUMERATOR_CID },
-    { "@mozilla.org/gfx/devicecontext;1", &kNS_DEVICE_CONTEXT_CID },
     { "@mozilla.org/gfx/region/nsThebes;1", &kNS_REGION_CID },
     { "@mozilla.org/gfx/region;1", &kNS_SCRIPTABLE_REGION_CID },
+    { "@mozilla.org/gfx/init;1", &kNS_GFX_INITIALIZATION_CID },
+    { NULL }
+};
+
+static const mozilla::Module::CategoryEntry kThebesCategories[] = {
+    { "app-startup", "Gfx Initialization", "service,@mozilla.org/gfx/init;1" },
     { NULL }
 };
 
@@ -122,7 +143,7 @@ nsThebesGfxModuleCtor()
 static void
 nsThebesGfxModuleDtor()
 {
-    nsThebesDeviceContext::Shutdown();
+    nsDeviceContext::ClearCachedSystemFonts();
     gfxPlatform::Shutdown();
 }
 
@@ -130,7 +151,7 @@ static const mozilla::Module kThebesModule = {
     mozilla::Module::kVersion,
     kThebesCIDs,
     kThebesContracts,
-    NULL,
+    kThebesCategories,
     NULL,
     nsThebesGfxModuleCtor,
     nsThebesGfxModuleDtor

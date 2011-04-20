@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBaseWidget.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 #include "nsCOMPtr.h"
 #include "nsGfxCIID.h"
 #include "nsWidgetsCID.h"
@@ -163,7 +163,7 @@ nsBaseWidget::~nsBaseWidget()
 void nsBaseWidget::BaseCreate(nsIWidget *aParent,
                               const nsIntRect &aRect,
                               EVENT_CALLBACK aHandleEventFunction,
-                              nsIDeviceContext *aContext,
+                              nsDeviceContext *aContext,
                               nsIAppShell *aAppShell,
                               nsIToolkit *aToolkit,
                               nsWidgetInitData *aInitData)
@@ -210,14 +210,9 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     NS_ADDREF(mContext);
   }
   else {
-    nsresult  res;
-    
-    static NS_DEFINE_CID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    
-    res = CallCreateInstance(kDeviceContextCID, &mContext);
-
-    if (NS_SUCCEEDED(res))
-      mContext->Init(nsnull);
+    mContext = new nsDeviceContext();
+    NS_ADDREF(mContext);
+    mContext->Init(nsnull);
   }
 
   if (nsnull != aInitData) {
@@ -257,7 +252,7 @@ NS_IMETHODIMP nsBaseWidget::SetClientData(void* aClientData)
 already_AddRefed<nsIWidget>
 nsBaseWidget::CreateChild(const nsIntRect  &aRect,
                           EVENT_CALLBACK   aHandleEventFunction,
-                          nsIDeviceContext *aContext,
+                          nsDeviceContext *aContext,
                           nsIAppShell      *aAppShell,
                           nsIToolkit       *aToolkit,
                           nsWidgetInitData *aInitData,
@@ -297,7 +292,7 @@ nsBaseWidget::CreateChild(const nsIntRect  &aRect,
 // Attach a view to our widget which we'll send events to. 
 NS_IMETHODIMP
 nsBaseWidget::AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction,
-                                   nsIDeviceContext *aContext)
+                                   nsDeviceContext *aContext)
 {
   NS_ASSERTION((mWindowType == eWindowType_toplevel ||
                 mWindowType == eWindowType_dialog ||
@@ -920,7 +915,7 @@ nsIToolkit* nsBaseWidget::GetToolkit()
 // Return the used device context
 //
 //-------------------------------------------------------------------------
-nsIDeviceContext* nsBaseWidget::GetDeviceContext() 
+nsDeviceContext* nsBaseWidget::GetDeviceContext() 
 {
   return mContext; 
 }

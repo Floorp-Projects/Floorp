@@ -63,7 +63,6 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsFormControlFrame.h" //for registering accesskeys
-#include "nsIDeviceContext.h" // to measure fonts
 
 #include "nsIContent.h"
 #include "nsIAtom.h"

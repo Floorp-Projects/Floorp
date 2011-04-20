@@ -69,7 +69,6 @@
 #include "nsTArray.h"
 #include "nsIDOMText.h"
 #include "nsIDocument.h"
-#include "nsIDeviceContext.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsCompatibility.h"
@@ -5050,7 +5049,7 @@ nsTextFrame::GetSnappedBaselineY(gfxContext* aContext, gfxFloat aY)
   gfxRect putativeRect(0, baseline/appUnitsPerDevUnit, 1, 1);
   if (!aContext->UserToDevicePixelSnapped(putativeRect))
     return baseline;
-  return aContext->DeviceToUser(putativeRect.pos).y*appUnitsPerDevUnit;
+  return aContext->DeviceToUser(putativeRect.TopLeft()).y*appUnitsPerDevUnit;
 }
 
 void
@@ -6040,15 +6039,9 @@ nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
   PRBool hyphenating = frag->GetLength() > 0 &&
     (mTextRun->GetFlags() & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0;
   if (hyphenating) {
-    len = GetContentOffset() + GetInFlowContentLength() - iter.GetOriginalOffset();
-#ifdef DEBUG
-    // check that the length we're going to pass to PropertyProvider matches
-    // the expected range of text in the run
-    gfxSkipCharsIterator tmpIter(iter);
-    tmpIter.AdvanceOriginal(len);
-    NS_ASSERTION(tmpIter.GetSkippedOffset() == flowEndInTextRun,
-                 "nsTextFragment length mismatch?");
-#endif
+    gfxSkipCharsIterator tmp(iter);
+    len = PR_MIN(GetContentOffset() + GetInFlowContentLength(),
+                 tmp.ConvertSkippedToOriginal(flowEndInTextRun)) - iter.GetOriginalOffset();
   }
   PropertyProvider provider(mTextRun, textStyle, frag, this,
                             iter, len, nsnull, 0);

@@ -56,7 +56,6 @@
 #include "nsIDOMNSHTMLOptionCollectn.h" 
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
-#include "nsIDeviceContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsEventDispatcher.h"

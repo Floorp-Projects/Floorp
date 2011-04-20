@@ -1651,7 +1651,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   state.Finish(&flags);
 
   nsRect bounds = state.GetChildrenBounds();
-  NS_ASSERTION(bounds == aChildren.GetBounds(aBuilder), "Wrong bounds");
+  NS_ASSERTION(bounds.IsEqualInterior(aChildren.GetBounds(aBuilder)), "Wrong bounds");
   nsIntRect pixBounds = bounds.ToOutsidePixels(appUnitsPerDevPixel);
   containerLayer->SetVisibleRegion(pixBounds);
   // Make sure that rounding the visible region out didn't add any area
@@ -1892,11 +1892,7 @@ FrameLayerBuilder::DrawThebesLayer(ThebesLayer* aLayer,
     }
   }
 
-  nsRefPtr<nsRenderingContext> rc;
-  nsresult rv =
-    presContext->DeviceContext()->CreateRenderingContextInstance(*getter_AddRefs(rc));
-  if (NS_FAILED(rv))
-    return;
+  nsRefPtr<nsRenderingContext> rc = new nsRenderingContext();
   rc->Init(presContext->DeviceContext(), aContext);
 
   Clip currentClip;

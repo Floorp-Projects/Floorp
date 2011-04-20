@@ -7289,7 +7289,7 @@ nsDocShell::RestoreFromHistory()
     // cached viewer size (skipping the resize if they are equal).
 
     if (newRootView) {
-        if (!newBounds.IsEmpty() && newBounds != oldBounds) {
+        if (!newBounds.IsEmpty() && !newBounds.IsEqualEdges(oldBounds)) {
 #ifdef DEBUG_PAGE_CACHE
             printf("resize widget(%d, %d, %d, %d)\n", newBounds.x,
                    newBounds.y, newBounds.width, newBounds.height);

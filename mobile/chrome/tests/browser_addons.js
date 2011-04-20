@@ -70,6 +70,7 @@ var gCurrentTab = null;
 
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
   Services.prefs.setCharPref(PREF_GETADDONS_GETRECOMMENDED,      TESTROOT + "browser_install.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_BROWSERECOMMENDED,   TESTROOT + "browser_install.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_BROWSESEARCHRESULTS, TESTROOT + "browser_install.xml");

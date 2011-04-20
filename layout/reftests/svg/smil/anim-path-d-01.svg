@@ -302,7 +302,7 @@
           ">
     <animate attributeName="d"
              calcMode="discrete"
-             begin="0s" dur="20s"
+             begin="0s" dur="2s"
              to="M10,10
                  L40,10
                  l-30,60

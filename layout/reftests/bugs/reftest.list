@@ -1563,6 +1563,7 @@ fails-if(Android) fails-if(cocoaWidget) == 586683-1.html 586683-1-ref.html
 == 589615-1a.xhtml 589615-1-ref.html
 == 589615-1b.html 589615-1-ref.html
 == 589672-1.html 589672-1-ref.html
+!= 589682-1.html 589682-1-notref.html
 skip-if(!browserIsRemote) == 593243-1.html 593243-1-ref.html # bug 593168
 skip-if(!browserIsRemote) == 593243-2.html 593243-2-ref.html # bug 593168
 == 593544-1.html 593544-1-ref.html

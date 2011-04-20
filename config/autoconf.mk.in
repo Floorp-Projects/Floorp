@@ -655,10 +655,6 @@ MOZ_MAPINFO	= @MOZ_MAPINFO@
 
 MOZ_PHOENIX	= @MOZ_PHOENIX@
 MOZ_XULRUNNER	= @MOZ_XULRUNNER@
-WINCE		= @WINCE@
-WINCE_SDK_DIR   = @WINCE_SDK_DIR@
-
-WINCE_WINDOWS_MOBILE = @WINCE_WINDOWS_MOBILE@
 
 MOZ_DISTRIBUTION_ID = @MOZ_DISTRIBUTION_ID@
 
@@ -712,7 +708,7 @@ ANDROID_PACKAGE_NAME = @ANDROID_PACKAGE_NAME@
 JS_SHARED_LIBRARY = @JS_SHARED_LIBRARY@
 
 # We only want to do the pymake sanity on Windows, other os's can cope
-ifeq (,$(filter-out WINNT WINCE,$(HOST_OS_ARCH)))
+ifeq ($(HOST_OS_ARCH),WINNT)
 # Ensure invariants between GNU Make and pymake
 # Checked here since we want the sane error in a file that
 # actually can be found regardless of path-style.
@@ -722,4 +718,4 @@ endif
 ifeq (1_a,$(.PYMAKE)_$(firstword a$(subst /, ,$(srcdir))))
 $(error MSYS-style srcdir being used with Pymake. Did you mean to run GNU Make instead? [see-also: https://developer.mozilla.org/en/Gmake_vs._Pymake])
 endif
-endif # Windows
+endif # WINNT

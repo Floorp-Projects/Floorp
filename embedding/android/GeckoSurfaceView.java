@@ -619,6 +619,7 @@ class GeckoSurfaceView
     public static final int IME_STATE_DISABLED = 0;
     public static final int IME_STATE_ENABLED = 1;
     public static final int IME_STATE_PASSWORD = 2;
+    public static final int IME_STATE_PLUGIN = 3;
 
     GeckoInputConnection inputConnection;
     KeyListener mKeyListener;

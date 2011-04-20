@@ -52,7 +52,7 @@
 #include <uconv.h> // XXX hack XXX
 
 class nsString;
-class nsIDeviceContext;
+class nsDeviceContext;
 
 #ifndef min
 #define min(a,b) (((a) < (b)) ? (a) : (b))

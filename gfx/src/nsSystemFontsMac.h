@@ -39,7 +39,7 @@
 #define _NS_SYSTEMFONTSMAC_H_
 
 #include "gfxFont.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 
 class nsSystemFontsMac
 {

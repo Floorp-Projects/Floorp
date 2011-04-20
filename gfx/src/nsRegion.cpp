@@ -1151,7 +1151,7 @@ void nsRegion::SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aC
         {
           aResult.InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ah));
         } else
-        if (*pSrcRect == aRect)         // 4. subset
+        if (pSrcRect->IsEqualInterior(aRect)) // 4. subset
         {                               // Current rectangle is equal to aRect
           pSrcRect = pSrcRect->next;    // don't add this one to the result, it's removed
           break;                        // No any other rectangle in region can intersect it
@@ -1261,10 +1261,10 @@ PRBool nsRegion::IsEqual (const nsRegion& aRegion) const
     return (mRectCount == 0) ? PR_TRUE : PR_FALSE;
 
   if (mRectCount == 1 && aRegion.mRectCount == 1) // Both regions are simple rectangles
-    return (*mRectListHead.next == *aRegion.mRectListHead.next);
+    return (mRectListHead.next->IsEqualInterior(*aRegion.mRectListHead.next));
   else                                            // At least one is complex region.
   {
-    if (mBoundRect != aRegion.mBoundRect)         // If regions are equal then bounding rectangles should match
+    if (!mBoundRect.IsEqualInterior(aRegion.mBoundRect)) // If regions are equal then bounding rectangles should match
       return PR_FALSE;
     else
     {

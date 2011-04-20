@@ -246,7 +246,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::UpdateCoveredRegion()
 {
-  mRect.Empty();
+  mRect.SetEmpty();
 
   nsRefPtr<gfxContext> context =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
@@ -275,10 +275,8 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
       // GetUserStrokeExtent gets the extents wrong we can still use it
       // to get the device space position of zero length stroked paths.
       extent = context->GetUserStrokeExtent();
-      extent.pos.x += extent.size.width / 2;
-      extent.pos.y += extent.size.height / 2;
-      extent.size.width = 0;
-      extent.size.height = 0;
+      extent += gfxPoint(extent.width, extent.height)/2;
+      extent.SizeTo(gfxSize(0, 0));
     }
     extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);
   } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {

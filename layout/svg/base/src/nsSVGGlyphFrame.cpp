@@ -474,7 +474,7 @@ nsSVGGlyphFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGGlyphFrame::UpdateCoveredRegion()
 {
-  mRect.Empty();
+  mRect.SetEmpty();
 
   gfxMatrix matrix = GetCanvasTM();
   if (matrix.IsSingular()) {

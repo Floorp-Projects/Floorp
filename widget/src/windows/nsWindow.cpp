@@ -138,7 +138,6 @@
 #include "nsILocalFile.h"
 #include "nsFontMetrics.h"
 #include "nsIFontEnumerator.h"
-#include "nsIDeviceContext.h"
 #include "nsILookAndFeel.h"
 #include "nsGUIEvent.h"
 #include "nsFont.h"
@@ -550,7 +549,7 @@ nsWindow::Create(nsIWidget *aParent,
                  nsNativeWidget aNativeParent,
                  const nsIntRect &aRect,
                  EVENT_CALLBACK aHandleEventFunction,
-                 nsIDeviceContext *aContext,
+                 nsDeviceContext *aContext,
                  nsIAppShell *aAppShell,
                  nsIToolkit *aToolkit,
                  nsWidgetInitData *aInitData)
@@ -1537,7 +1536,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
     if (mWindowType == eWindowType_plugin &&
         (!mLayerManager || mLayerManager->GetBackendType() == LayerManager::LAYERS_D3D9) &&
         mClipRects &&
-        (mClipRectCount != 1 || mClipRects[0] != nsIntRect(0, 0, mBounds.width, mBounds.height))) {
+        (mClipRectCount != 1 || !mClipRects[0].IsEqualInterior(nsIntRect(0, 0, mBounds.width, mBounds.height)))) {
       flags |= SWP_NOCOPYBITS;
     }
     VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0, flags));

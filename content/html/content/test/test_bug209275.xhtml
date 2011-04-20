@@ -153,13 +153,13 @@ function run() {
   // Because link coloring is asynchronous, we wait until it is updated (or we
   // timeout and fail anyway).
   while (getColor($('colorlink')) != visitedColor) {
-    setTimeout(continueTest, 10);
+    setTimeout(continueTest, 0);
     yield;
   }
   is(getColor($('colorlink')), visitedColor,
      "Wrong link color after base change.");
   while (getFill($('ellipselink')) != visitedFill) {
-    setTimeout(continueTest, 10);
+    setTimeout(continueTest, 0);
     yield;
   }
   is(getFill($('ellipselink')), visitedFill,
