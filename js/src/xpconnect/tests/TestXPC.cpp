@@ -129,7 +129,7 @@ static JSFunctionSpec glob_functions[] = {
 };
 
 static JSClass global_class = {
-    "global", 0,
+    "global", JSCLASS_GLOBAL_FLAGS,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_StrictPropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   nsnull
 };
