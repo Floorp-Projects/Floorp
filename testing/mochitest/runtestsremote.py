@@ -96,6 +96,11 @@ class RemoteOptions(MochitestOptions):
                     help = "ip address where the remote web server is hosted at")
         defaults["sslPort"] = automation.DEFAULT_SSL_PORT
 
+        self.add_option("--pidfile", action = "store",
+                    type = "string", dest = "pidFile",
+                    help = "name of the pidfile to generate")
+        defaults["pidFile"] = ""
+
         defaults["remoteTestRoot"] = None
         defaults["logFile"] = "mochitest.log"
         defaults["autorun"] = True
@@ -149,6 +154,11 @@ class RemoteOptions(MochitestOptions):
             else:
                 options.xrePath = options.utilityPath
 
+        if (options.pidFile != ""):
+            f = open(options.pidFile, 'w')
+            f.write("%s" % os.getpid())
+            f.close()
+
         return options
 
     def verifyOptions(self, options, mochitest):
@@ -183,6 +193,11 @@ class MochiRemote(Mochitest):
         self._dm.getFile(self.remoteLog, self.localLog)
         self._dm.removeFile(self.remoteLog)
         self._dm.removeDir(self.remoteProfile)
+        if (options.pidFile != ""):
+            try:
+                os.remove(options.pidFile)
+            except:
+                print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % options.pidFile
 
     def findPath(self, paths, filename = None):
         for path in paths:

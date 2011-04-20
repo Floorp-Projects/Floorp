@@ -2824,6 +2824,9 @@ case "$target" in
 *-freebsd*|*-kfreebsd*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;
+*-openbsd*)
+    AC_DEFINE(AVMPLUS_UNIX)
+    ;;
 *-gnu*)
     AC_DEFINE(AVMPLUS_UNIX)
     ;;

@@ -54,9 +54,40 @@ Components.utils.import("resource://gre/modules/Services.jsm");
   });
 }, this);
 
+function getIDHashForString(aStr) {
+  // return the two-digit hexadecimal code for a byte
+  function toHexString(charCode)
+    ("0" + charCode.toString(16)).slice(-2);
+
+  let hasher = Cc["@mozilla.org/security/hash;1"].
+               createInstance(Ci.nsICryptoHash);
+  hasher.init(Ci.nsICryptoHash.MD5);
+  let stringStream = Cc["@mozilla.org/io/string-input-stream;1"].
+                     createInstance(Ci.nsIStringInputStream);
+                     stringStream.data = aStr ? aStr : "null";
+  hasher.updateFromStream(stringStream, -1);
+
+  // convert the binary hash data to a hex string.
+  let binary = hasher.finish(false);
+  let hash = [toHexString(binary.charCodeAt(i)) for (i in binary)].join("").toLowerCase();
+  return "{" + hash.substr(0, 8) + "-" +
+               hash.substr(8, 4) + "-" +
+               hash.substr(12, 4) + "-" +
+               hash.substr(16, 4) + "-" +
+               hash.substr(20) + "}";
+}
+
 var PluginProvider = {
   // A dictionary mapping IDs to names and descriptions
   plugins: null,
+
+  /**
+   * Called when the application is shutting down. Only necessary for tests
+   * to be able to simulate a shutdown.
+   */
+  shutdown: function PL_shutdown() {
+    this.plugins = null;
+  },
 
   /**
    * Called to get an Addon with a particular ID.
@@ -73,17 +104,9 @@ var PluginProvider = {
     if (aId in this.plugins) {
       let name = this.plugins[aId].name;
       let description = this.plugins[aId].description;
+      let tags = this.plugins[aId].tags;
 
-      let tags = Cc["@mozilla.org/plugin/host;1"].
-                 getService(Ci.nsIPluginHost).
-                 getPluginTags({});
-      let selected = [];
-      tags.forEach(function(aTag) {
-        if (aTag.name == name && aTag.description == description)
-          selected.push(aTag);
-      }, this);
-
-      aCallback(new PluginWrapper(aId, name, description, selected));
+      aCallback(new PluginWrapper(aId, name, description, tags));
     }
     else {
       aCallback(null);
@@ -148,19 +171,24 @@ var PluginProvider = {
                getPluginTags({});
 
     this.plugins = {};
-    let seen = {};
+    let plugins = {};
     tags.forEach(function(aTag) {
-      if (!(aTag.name in seen))
-        seen[aTag.name] = {};
-      if (!(aTag.description in seen[aTag.name])) {
-        let id = Cc["@mozilla.org/uuid-generator;1"].
-                 getService(Ci.nsIUUIDGenerator).
-                 generateUUID();
-        this.plugins[id] = {
+      if (!(aTag.name in plugins))
+        plugins[aTag.name] = {};
+      if (!(aTag.description in plugins[aTag.name])) {
+        let plugin = {
           name: aTag.name,
-          description: aTag.description
+          description: aTag.description,
+          tags: [aTag]
         };
-        seen[aTag.name][aTag.description] = true;
+
+        let id = getIDHashForString(aTag.name + aTag.description);
+
+        plugins[aTag.name][aTag.description] = plugin;
+        this.plugins[id] = plugin;
+      }
+      else {
+        plugins[aTag.name][aTag.description].tags.push(aTag);
       }
     }, this);
   }
