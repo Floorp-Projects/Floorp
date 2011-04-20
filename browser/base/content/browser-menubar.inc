@@ -550,6 +550,11 @@
                         accesskey="&webConsoleCmd.accesskey;"
                         key="key_webConsole"
                         oncommand="HUDConsoleUI.toggleHUD();"/>
+              <menuitem id="menu_workspace"
+                        hidden="true"
+                        label="&workspace.label;"
+                        key="key_workspace"
+                        command="Tools:Workspace"/>
               <menuitem id="menu_pageInfo"
                         accesskey="&pageInfoCmd.accesskey;"
                         label="&pageInfoCmd.label;"

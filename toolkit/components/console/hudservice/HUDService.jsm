@@ -5513,6 +5513,18 @@ HeadsUpDisplayUICommands = {
   },
 
   /**
+   * Find the hudId for the active chrome window.
+   * @return string|null
+   *         The hudId or null if the active chrome window has no open Web
+   *         Console.
+   */
+  getOpenHUD: function UIC_getOpenHUD() {
+    let chromeWindow = HUDService.currentContext();
+    let contentWindow = chromeWindow.gBrowser.selectedBrowser.contentWindow;
+    return HUDService.getHudIdByWindow(contentWindow);
+  },
+
+  /**
    * The event handler that is called whenever a user switches a filter on or
    * off.
    *

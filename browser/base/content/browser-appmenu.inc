@@ -187,6 +187,11 @@
                     type="checkbox"
                     command="Tools:Inspect"
                     key="key_inspect"/>
+          <menuitem id="appmenu_workspace"
+                    hidden="true"
+                    label="&workspace.label;"
+                    key="key_workspace"
+                    command="Tools:Workspace"/>
           <menuitem id="appmenu_pageSource"
                     label="&viewPageSourceCmd.label;"
                     command="View:PageSource"
