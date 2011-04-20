@@ -165,10 +165,10 @@ public:
    */
   void CreatedImageBuffer(ShadowableLayer* aImage,
                           nsIntSize aSize,
-                          gfxSharedImageSurface* aInitialFrontSurface);
+                          const SurfaceDescriptor& aInitialFrontSurface);
   void CreatedCanvasBuffer(ShadowableLayer* aCanvas,
                            nsIntSize aSize,
-                           gfxSharedImageSurface* aInitialFrontSurface);
+                           const SurfaceDescriptor& aInitialFrontSurface);
 
   /**
    * The specified layer is destroying its buffers.
@@ -225,9 +225,9 @@ public:
    * ImageLayers.  This is slow, and will be optimized.
    */
   void PaintedImage(ShadowableLayer* aImage,
-                    gfxSharedImageSurface* aNewFrontSurface);
+                    const SurfaceDescriptor& aNewFrontSurface);
   void PaintedCanvas(ShadowableLayer* aCanvas,
-                     gfxSharedImageSurface* aNewFrontSurface);
+                     const SurfaceDescriptor& aNewFrontSurface);
 
   /**
    * End the current transaction and forward it to ShadowLayerManager.
@@ -569,6 +569,17 @@ class ShadowCanvasLayer : public ShadowLayer,
                           public CanvasLayer
 {
 public:
+
+  /**
+   * CONSTRUCTION PHASE ONLY
+   *
+   * Initialize this with a (temporary) front surface with the given
+   * size.  This is expected to be followed with a Swap() in the same
+   * transaction to bring in real pixels.  Init() may only be called
+   * once.
+   */
+  virtual void Init(const SurfaceDescriptor& front, const nsIntSize& aSize) = 0;
+
   /**
    * CONSTRUCTION PHASE ONLY
    *
@@ -576,8 +587,7 @@ public:
    * out the old front surface (the new back surface for the remote
    * layer).
    */
-  virtual already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* aNewFront) = 0;
+  virtual void Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -609,14 +619,13 @@ public:
    * transaction to bring in real pixels.  Init() may only be called
    * once.
    */
-  virtual PRBool Init(gfxSharedImageSurface* aFront, const nsIntSize& aSize) = 0;
+  virtual PRBool Init(const SurfaceDescriptor& front, const nsIntSize& aSize) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY
    * @see ShadowCanvasLayer::Swap
    */
-  virtual already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* newFront) = 0;
+  virtual void Swap(const SurfaceDescriptor& aFront, SurfaceDescriptor* aNewBack) = 0;
 
   /**
    * CONSTRUCTION PHASE ONLY
@@ -650,6 +659,7 @@ protected:
   {}
 };
 
+PRBool IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface);
 
 } // namespace layers
 } // namespace mozilla
