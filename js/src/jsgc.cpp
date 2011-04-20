@@ -1452,7 +1452,6 @@ namespace js {
 
 GCMarker::GCMarker(JSContext *cx)
   : color(0),
-    stackLimit(0),
     unmarkedArenaStackTop(NULL),
     objStack(cx->runtime->gcMarkStackObjs, sizeof(cx->runtime->gcMarkStackObjs)),
     xmlStack(cx->runtime->gcMarkStackXMLs, sizeof(cx->runtime->gcMarkStackXMLs)),
@@ -2450,7 +2449,6 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     JS_ASSERT(IS_GC_MARKING_TRACER(&gcmarker));
     JS_ASSERT(gcmarker.getMarkColor() == BLACK);
     rt->gcMarkingTracer = &gcmarker;
-    gcmarker.stackLimit = cx->stackLimit;
 #ifdef JS_THREADSAFE
     /*
      * cx->gcBackgroundFree is set if we need several mark-and-sweep loops to
