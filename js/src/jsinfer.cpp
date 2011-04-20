@@ -44,6 +44,7 @@
 #include "jsdate.h"
 #include "jsexn.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinfer.h"
 #include "jsmath.h"
 #include "jsnum.h"
