@@ -154,7 +154,7 @@ const TEST_ADDONS = [ "appdisabled_1", "appdisabled_2",
                       "userdisabled_1", "userdisabled_2" ];
 
 
-const TEST_TIMEOUT = 20000; // 20 seconds
+const TEST_TIMEOUT = 25000; // 25 seconds
 var gTimeoutTimer;
 
 // The number of SimpleTest.executeSoon calls to perform when waiting on an

@@ -1952,7 +1952,7 @@ static const nsIntMargin kAquaComboboxBorder(4, 3, 20, 3);
 static const nsIntMargin kAquaSearchfieldBorder(19, 3, 5, 2);
 
 NS_IMETHODIMP
-nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext, 
+nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext, 
                                     nsIFrame* aFrame,
                                     PRUint8 aWidgetType,
                                     nsIntMargin* aResult)
@@ -2059,7 +2059,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsIDeviceContext* aContext,
 // whatever values you want in GetWidgetBorder and only use this to return PR_TRUE
 // if you want to override CSS padding values.
 PRBool
-nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext, 
+nsNativeThemeCocoa::GetWidgetPadding(nsDeviceContext* aContext, 
                                      nsIFrame* aFrame,
                                      PRUint8 aWidgetType,
                                      nsIntMargin* aResult)
@@ -2080,7 +2080,7 @@ nsNativeThemeCocoa::GetWidgetPadding(nsIDeviceContext* aContext,
 }
 
 PRBool
-nsNativeThemeCocoa::GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
+nsNativeThemeCocoa::GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                       PRUint8 aWidgetType, nsRect* aOverflowRect)
 {
   switch (aWidgetType) {

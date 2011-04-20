@@ -813,7 +813,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   // XXX is the above comment correct?
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
 
-  nsCOMPtr<nsIDeviceContext> dx;
+  nsRefPtr<nsDeviceContext> dx;
   viewMan->GetDeviceContext(*getter_AddRefs(dx));
 
   //this is ugly. it was ripped off from didreflow(). MMP
@@ -4290,7 +4290,7 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
 PRBool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
 {
-  if (mInstance)
+  if (!mInstance)
     return PR_FALSE;
 
   PRBool coreAnimation;

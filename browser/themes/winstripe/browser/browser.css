@@ -1176,50 +1176,79 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
 /* identity box */
 
 #identity-box {
-  background-color: -moz-dialog;
-  background-image: -moz-linear-gradient(rgba(255,255,255,.25), rgba(0,0,0,.15));
-  color: -moz-dialogText;
-  border-radius: 2px;
+  background-image: -moz-linear-gradient(hsl(0,0%,98%), hsl(0,0%,92%));
+  box-shadow: 0 1px 0 hsla(0,0%,0%,.05) inset;
+  -moz-border-end: 1px solid hsla(0,0%,0%,.1);
+  padding: 2px;
+  margin: -2px;
+  -moz-margin-end: 0;
+}
+
+#identity-box:-moz-locale-dir(ltr) {
+  border-top-left-radius: 2.5px;
+  border-bottom-left-radius: 2.5px;
+}
+
+#identity-box:-moz-locale-dir(rtl) {
+  border-top-right-radius: 2.5px;
+  border-bottom-right-radius: 2.5px;
 }
 
 #identity-box:hover {
-  background-image: -moz-linear-gradient(rgba(255,255,255,.5), rgba(50%,50%,50%,.2), rgba(0,0,0,.15));
+  background-image: -moz-linear-gradient(hsl(0,0%,95%), hsl(0,0%,87%));
 }
 
 #identity-box[open="true"],
 #identity-box:hover:active {
-  background-image: -moz-linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.1));
-}
-
-#identity-box.verifiedDomain,
-#identity-box.verifiedIdentity {
-  color: white;
-  text-shadow: 0 1px 0 rgba(0,0,0,.25);
-  box-shadow: 0 0 0 1px rgba(0,0,0,.2) inset;
+  background-image: -moz-linear-gradient(hsl(0,0%,92%), hsl(0,0%,82%));
+  box-shadow: 0 1px 1px hsla(0,0%,0%,.3) inset,
+              0 1px 3px hsla(0,0%,0%,.3) inset;
 }
 
 #identity-box.verifiedDomain {
-  background-color: hsl(219,45%,60%);
+  background-image: -moz-linear-gradient(hsl(215,60%,92%), hsl(215,58%,88%));
+  box-shadow: 0 1px 0 hsla(215,54%,33%,.05) inset;
+  -moz-border-end-color: hsla(215,54%,33%,.2);
+  color: hsl(215,54%,33%);
+}
+
+#identity-box.verifiedDomain:hover {
+  background-image: -moz-linear-gradient(hsl(215,85%,85%), hsl(215,70%,68%));
+}
+
+#identity-box.verifiedDomain[open="true"],
+#identity-box.verifiedDomain:hover:active {
+  background-image: -moz-linear-gradient(hsl(215,80%,80%), hsl(215,67%,65%));
+  box-shadow: 0 1px 1px hsla(215,54%,33%,.7) inset,
+              0 1px 3px 1px hsla(215,54%,33%,.5) inset;
 }
 
 #identity-box.verifiedIdentity {
-  background-color: hsl(92,45%,52%);
+  background-image: -moz-linear-gradient(hsl(91,70%,90%), hsl(93,60%,81%));
+  box-shadow: 0 1px 0 hsla(92,81%,16%,.05) inset;
+  -moz-border-end-color: hsla(92,81%,16%,.2);
+  color: hsl(92,100%,20%);
+}
+
+#identity-box.verifiedIdentity:hover {
+  background-image: -moz-linear-gradient(hsl(92,69%,77%), hsl(92,44%,51%));
+}
+
+#identity-box.verifiedIdentity[open="true"],
+#identity-box.verifiedIdentity:hover:active {
+  background-image: -moz-linear-gradient(hsl(92,65%,70%), hsl(92,40%,48%));
+  box-shadow: 0 1px 1px hsla(92,81%,16%,.6) inset,
+              0 1px 3px 1px hsla(92,81%,16%,.5) inset;
 }
 
 #identity-box:-moz-focusring {
-  outline: 1px dotted -moz-DialogText;
+  outline: 1px dotted #000;
   outline-offset: -3px;
-}
-
-#identity-box.verifiedDomain:-moz-focusring,
-#identity-box.verifiedIdentity:-moz-focusring {
-  outline-color: white;
 }
 
 #identity-icon-labels {
   -moz-margin-start: 1px;
   -moz-margin-end: 3px;
-  -moz-transform: translate(0, -1px);
 }
 
 /* Location bar dropmarker */
@@ -1255,7 +1284,6 @@ html|*.urlbar-input:-moz-lwtheme:-moz-placeholder,
   width: 24px;
   height: 18px;
   padding: 1px 4px;
-  background: url(urlbar-favicon-glow.png) center center no-repeat;
 }
 
 #page-proxy-favicon:not([src]) {
@@ -2029,7 +2057,25 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
 
 /* Notification icon box */
 #notification-popup-box {
-  margin: 0 3px;
+  position: relative;
+  background-color: #fff;
+  background-clip: padding-box;
+  padding-left: 3px;
+  border-radius: 2.5px 0 0 2.5px;
+  -moz-border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 / 0 8px 0 0;
+  -moz-margin-end: -8px;
+  margin-top: -2px;
+  margin-bottom: -2px;
+}
+
+#notification-popup-box:not([hidden]) + #identity-box {
+  -moz-padding-start: 10px;
+  border-radius: 0;
+}
+
+#notification-popup-box:-moz-locale-dir(rtl),
+.notification-anchor-icon:-moz-locale-dir(rtl) {
+  -moz-transform: scaleX(-1);
 }
 
 .notification-anchor-icon {

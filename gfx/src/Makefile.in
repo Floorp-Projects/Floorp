@@ -84,7 +84,7 @@ EXPORTS	= \
 	nsTransform2D.h \
 	nsRenderingContext.h \
 	nsFontMetrics.h \
-	nsIDeviceContext.h \
+	nsDeviceContext.h \
 	nsGfxCIID.h \
 	nsIRegion.h \
 	nsITheme.h \
@@ -104,7 +104,7 @@ CPPSRCS = \
         nsTransform2D.cpp \
         nsScriptableRegion.cpp \
         gfxCrashReporterUtils.cpp \
-        nsThebesDeviceContext.cpp \
+        nsDeviceContext.cpp \
         nsThebesRegion.cpp \
         nsThebesGfxFactory.cpp \
         nsRenderingContext.cpp \

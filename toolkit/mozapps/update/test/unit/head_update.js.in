@@ -673,12 +673,16 @@ function checkUpdateLogContents(aCompareLogFile) {
   // Replace error codes since they are different on each platform.
   updateLogContents = updateLogContents.replace(/, err:.*\n/g, "\n");
   // Replace to make the log parsing happy.
-  updateLogContents = updateLogContents.replace(/non-fatal error removing directory: /g, "");
+  updateLogContents = updateLogContents.replace(/non-fatal error /g, "");
+  // The FindFile results when enumerating the filesystem on Windows is not
+  // determistic so the results matching the following need to be ignored.
+  updateLogContents = updateLogContents.replace(/.* a\/b\/7\/7text.*\n/g, "");
+
 
   let compareLog = do_get_file(aCompareLogFile);
   let compareLogContents = readFileBytes(compareLog);
 
-  do_check_eq(updateLogContents, compareLogContents);
+  do_check_eq(compareLogContents, updateLogContents);
 }
 
 function checkUpdateLogContains(aCheckString) {

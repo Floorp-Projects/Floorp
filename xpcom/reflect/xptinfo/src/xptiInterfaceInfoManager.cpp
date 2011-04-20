@@ -80,8 +80,6 @@ xptiInterfaceInfoManager::FreeInterfaceInfoManager()
 xptiInterfaceInfoManager::xptiInterfaceInfoManager()
     :   mWorkingSet(),
         mResolveLock("xptiInterfaceInfoManager.mResolveLock"),
-        mAutoRegLock("xptiInterfaceInfoManager.mAutoRegLock"), // FIXME: unused!
-        mInfoMonitor("xptiInterfaceInfoManager.mInfoMonitor"),
         mAdditionalManagersLock(
             "xptiInterfaceInfoManager.mAdditionalManagersLock")
 {
@@ -235,6 +233,7 @@ xptiInterfaceInfoManager::RegisterXPTHeader(XPTHeader* aHeader)
 
     xptiTypelibGuts* typelib = xptiTypelibGuts::Create(aHeader);
 
+    MonitorAutoEnter monitor(mWorkingSet.mTableMonitor);
     for(PRUint16 k = 0; k < aHeader->num_interfaces; k++)
         VerifyAndAddEntryIfNew(aHeader->interface_directory + k, k, typelib);
 }
@@ -255,6 +254,7 @@ xptiInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifa
     if (!iface->interface_descriptor)
         return;
     
+    mWorkingSet.mTableMonitor.AssertCurrentThreadIn();
     xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(iface->iid);
     if (entry) {
         // XXX validate this info to find possible inconsistencies
@@ -306,6 +306,7 @@ EntryToInfo(xptiInterfaceEntry* entry, nsIInterfaceInfo **_retval)
 xptiInterfaceEntry*
 xptiInterfaceInfoManager::GetInterfaceEntryForIID(const nsIID *iid)
 {
+    MonitorAutoEnter monitor(mWorkingSet.mTableMonitor);
     return mWorkingSet.mIIDTable.Get(*iid);
 }
 
@@ -315,7 +316,8 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetInfoForIID(const nsIID * iid, nsIInte
     NS_ASSERTION(iid, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
-    xptiInterfaceEntry* entry = GetInterfaceEntryForIID(iid);
+    MonitorAutoEnter monitor(mWorkingSet.mTableMonitor);
+    xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(*iid);
     return EntryToInfo(entry, _retval);
 }
 
@@ -325,6 +327,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetInfoForName(const char *name, nsIInte
     NS_ASSERTION(name, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
+    MonitorAutoEnter monitor(mWorkingSet.mTableMonitor);
     xptiInterfaceEntry* entry = mWorkingSet.mNameTable.Get(name);
     return EntryToInfo(entry, _retval);
 }
@@ -335,7 +338,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetIIDForName(const char *name, nsIID * 
     NS_ASSERTION(name, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
-
+    MonitorAutoEnter monitor(mWorkingSet.mTableMonitor);
     xptiInterfaceEntry* entry = mWorkingSet.mNameTable.Get(name);
     if (!entry) {
         *_retval = nsnull;
@@ -351,6 +354,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **
     NS_ASSERTION(iid, "bad param");
     NS_ASSERTION(_retval, "bad param");
 
+    MonitorAutoEnter monitor(mWorkingSet.mTableMonitor);
     xptiInterfaceEntry* entry = mWorkingSet.mIIDTable.Get(*iid);
     if (!entry) {
         *_retval = nsnull;
@@ -384,6 +388,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateInterfaces(nsIEnumerator **_ret
     if (!array)
         return NS_ERROR_UNEXPECTED;
 
+    MonitorAutoEnter monitor(mWorkingSet.mTableMonitor);
     mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayAppender, array);
 
     return array->Enumerate(_retval);
@@ -419,6 +424,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::EnumerateInterfacesWhoseNamesStartWith(c
     if (!array)
         return NS_ERROR_UNEXPECTED;
 
+    MonitorAutoEnter monitor(mWorkingSet.mTableMonitor);
     ArrayAndPrefix args = {array, prefix, PL_strlen(prefix)};
     mWorkingSet.mNameTable.EnumerateRead(xpti_ArrayPrefixAppender, &args);
 

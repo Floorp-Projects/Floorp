@@ -46,7 +46,6 @@
 #include "prlink.h"
 #include "nsWindow.h"
 #include "nsGTKToolkit.h"
-#include "nsIDeviceContext.h"
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsIDOMNode.h"
@@ -158,9 +157,6 @@ using mozilla::layers::LayerManagerOGL;
 // Don't put more than this many rects in the dirty region, just fluff
 // out to the bounding-box if there are more
 #define MAX_RECTS_IN_REGION 100
-
-/* For PrepareNativeWidget */
-static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 
 /* utility functions */
 static PRBool     check_for_rollup(GdkWindow *aWindow,
@@ -3826,7 +3822,7 @@ nsWindow::Create(nsIWidget        *aParent,
                  nsNativeWidget    aNativeParent,
                  const nsIntRect  &aRect,
                  EVENT_CALLBACK    aHandleEventFunction,
-                 nsIDeviceContext *aContext,
+                 nsDeviceContext *aContext,
                  nsIAppShell      *aAppShell,
                  nsIToolkit       *aToolkit,
                  nsWidgetInitData *aInitData)
