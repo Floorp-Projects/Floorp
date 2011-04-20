@@ -38,7 +38,7 @@
 #include "nsFormControlFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsILookAndFeel.h"
 
 //#define FCF_NOISY
@@ -128,12 +128,13 @@ nsFormControlFrame::RegUnRegAccessKey(nsIFrame * aFrame, PRBool aDoReg)
   nsIContent* content = aFrame->GetContent();
   content->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
   if (!accessKey.IsEmpty()) {
-    nsIEventStateManager *stateManager = presContext->EventStateManager();
+    nsEventStateManager *stateManager = presContext->EventStateManager();
     if (aDoReg) {
-      return stateManager->RegisterAccessKey(content, (PRUint32)accessKey.First());
+      stateManager->RegisterAccessKey(content, (PRUint32)accessKey.First());
     } else {
-      return stateManager->UnregisterAccessKey(content, (PRUint32)accessKey.First());
+      stateManager->UnregisterAccessKey(content, (PRUint32)accessKey.First());
     }
+    return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
