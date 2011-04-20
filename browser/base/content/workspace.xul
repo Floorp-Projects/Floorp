@@ -1,0 +1,331 @@
+<?xml version="1.0"?>
+#ifdef 0
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Workspace.
+   -
+   - The Initial Developer of the Original Code is
+   - The Mozilla Foundation.
+   - Portions created by the Initial Developer are Copyright (C) 2011
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Rob Campbell <robcee@mozilla.com> (original author)
+   -   Mihai Sucan <mihai.sucan@gmail.com>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the GPL or the LGPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+#endif
+<!DOCTYPE window [
+<!ENTITY % workspaceDTD SYSTEM "chrome://browser/locale/workspace.dtd" >
+ %workspaceDTD;
+]>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
+
+<window id="main-window"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&window.title;"
+        windowtype="devtools:workspace"
+        screenX="4" screenY="4"
+        width="640" height="480"
+        persist="screenX screenY width height sizemode">
+
+<script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
+<script type="application/javascript" src="chrome://browser/content/workspace.js"/>
+
+<commandset id="editMenuCommands"/>
+
+<commandset id="ws-commandset">
+  <command id="ws-cmd-newWindow" oncommand="Workspace.openWorkspace();"/>
+  <command id="ws-cmd-openFile" oncommand="Workspace.openFile();"/>
+  <command id="ws-cmd-save" oncommand="Workspace.saveFile();"/>
+  <command id="ws-cmd-saveas" oncommand="Workspace.saveFileAs();"/>
+
+  <!-- TODO: bug 650340 - implement printFile()
+  <command id="ws-cmd-printFile" oncommand="Workspace.printFile();" disabled="true"/>
+ -->
+
+  <command id="ws-cmd-close" oncommand="window.close();"/>
+  <command id="ws-cmd-execute" oncommand="Workspace.execute();"/>
+  <command id="ws-cmd-inspect" oncommand="Workspace.inspect();"/>
+  <command id="ws-cmd-print" oncommand="Workspace.print();"/>
+  <command id="ws-cmd-contentContext" oncommand="Workspace.setContentContext();"/>
+  <command id="ws-cmd-chromeContext" oncommand="Workspace.setChromeContext();"/>
+  <command id="ws-cmd-errorConsole" oncommand="Workspace.openErrorConsole();"/>
+  <command id="ws-cmd-webConsole" oncommand="Workspace.openWebConsole();"/>
+</commandset>
+
+<keyset id="ws-keyset">
+  <key id="ws-key-window"
+       key="&newWindowCmd.commandkey;"
+       command="ws-cmd-newWindow"
+       modifiers="accel"/>
+  <key id="ws-key-open"
+       key="&openFileCmd.commandkey;"
+       command="ws-cmd-openFile"
+       modifiers="accel"/>
+  <key id="ws-key-save"
+       key="&saveFileCmd.commandkey;"
+       command="ws-cmd-save"
+       modifiers="accel"/>
+  <key id="ws-key-close"
+       key="&closeCmd.key;"
+       command="ws-cmd-close"
+       modifiers="accel"/>
+
+  <!-- TODO: bug 650340 - implement printFile
+  <key id="ws-key-printFile"
+       key="&printCmd.commandkey;"
+       command="ws-cmd-printFile"
+       modifiers="accel"/>
+  -->
+
+  <key id="key_cut"
+       key="&cutCmd.key;"
+       modifiers="accel"/>
+
+  <key id="key_copy"
+       key="&copyCmd.key;"
+       modifiers="accel"/>
+  <key id="key_paste"
+       key="&pasteCmd.key;"
+       modifiers="accel"/>
+  <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
+  <key id="key_undo" key="&undoCmd.key;" modifiers="accel"/>
+  <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"/>
+  <key id="ws-key-execute"
+       key="&execute.key;"
+       command="ws-cmd-execute"
+       modifiers="accel"/>
+  <key id="ws-key-inspect"
+       key="&inspect.key;"
+       command="ws-cmd-inspect"
+       modifiers="accel"/>
+  <key id="ws-key-print"
+       key="&print.key;"
+       command="ws-cmd-print"
+       modifiers="accel"/>
+  <key id="ws-key-errorConsole"
+       key="&errorConsoleCmd.commandkey;"
+       command="ws-cmd-errorConsole"
+       modifiers="accel,shift"/>
+  <key id="ws-key-webConsole"
+       key="&webConsoleCmd.commandkey;"
+       command="ws-cmd-webConsole"
+       modifiers="accel,shift"/>
+</keyset>
+
+
+<menubar id="ws-menubar">
+  <menu id="ws-file-menu" label="&fileMenu.label;"
+        accesskey="&fileMenu.accesskey;">
+    <menupopup id="ws-menu-filepopup">
+      <menuitem id="ws-menu-newworkspace"
+                label="&newWindowCmd.label;"
+                accesskey="&newWindowCmd.accesskey;"
+                key="ws-key-window"
+                command="ws-cmd-newWindow"/>
+      <menuseparator/>
+      <menuitem id="ws-menu-open"
+                label="&openFileCmd.label;"
+                command="ws-cmd-openFile"
+                key="ws-key-open"
+                accesskey="&openFileCmd.accesskey;"/>
+      <menuitem id="ws-menu-save"
+                label="&saveFileCmd.label;"
+                accesskey="&saveFileCmd.accesskey;"
+                key="ws-key-save"
+                command="ws-cmd-save"/>
+      <menuitem id="ws-menu-saveas"
+                label="&saveFileAsCmd.label;"
+                accesskey="&saveFileAsCmd.accesskey;"
+                command="ws-cmd-saveas"/>
+      <menuseparator/>
+
+      <!-- TODO: bug 650340 - implement printFile
+      <menuitem id="ws-menu-print"
+                label="&printCmd.label;"
+                accesskey="&printCmd.accesskey;"
+                command="ws-cmd-printFile"/>
+      <menuseparator/>
+      -->
+
+      <menuitem id="ws-menu-close"
+                label="&closeCmd.label;"
+                key="ws-key-close"
+                accesskey="&closeCmd.accesskey;"
+                command="ws-cmd-close"/>
+    </menupopup>
+  </menu>
+
+  <menu id="ws-edit-menu" label="&editMenu.label;"
+        accesskey="&editMenu.accesskey;">
+    <menupopup id="ws-menu_editpopup">
+      <menuitem id="ws-menu_undo"
+                label="&undoCmd.label;"
+                key="key_undo"
+                accesskey="&undoCmd.accesskey;"
+                disabled="true"
+                oncommand="cmd_undo"/>
+      <menuitem id="ws-menu-redo"
+                label="&redoCmd.label;"
+                key="key_redo"
+                disabled="true"
+                accesskey="&redoCmd.accesskey;"
+                command="cmd_redo"/>
+      <menuseparator/>
+      <menuitem id="ws-menu-cut"
+                label="&cutCmd.label;"
+                key="key_cut"
+                accesskey="&cutCmd.accesskey;"
+                command="cmd_cut"/>
+      <menuitem id="ws-menu-copy"
+                label="&copyCmd.label;"
+                key="key_copy"
+                accesskey="&copyCmd.accesskey;"
+                command="cmd_copy"/>
+      <menuitem id="ws-menu-paste"
+                label="&pasteCmd.label;"
+                key="key_paste"
+                accesskey="&pasteCmd.accesskey;"
+                command="cmd_paste"/>
+      <menuseparator/>
+      <menuitem id="ws-menu-selectAll"
+                label="&selectAllCmd.label;"
+                key="key_selectAll"
+                accesskey="&selectAllCmd.accesskey;"
+                command="cmd_selectAll"/>
+      <menuseparator/>
+
+      <!-- TODO: bug 650345 - implement search and replace
+      <menuitem id="ws-menu-find"
+                label="&findOnCmd.label;"
+                accesskey="&findOnCmd.accesskey;"
+                key="key_find"
+                disabled="true"
+                command="cmd_find"/>
+      <menuitem id="ws-menu-findAgain"
+                label="&findAgainCmd.label;"
+                accesskey="&findAgainCmd.accesskey;"
+                key="key_findAgain"
+                disabled="true"
+                command="cmd_findAgain"/>
+      <menuseparator id="ws-execute-separator"/>
+      -->
+
+      <menuitem id="ws-text-execute"
+                label="&execute.label;"
+                accesskey="&execute.accesskey;"
+                key="ws-key-execute"
+                command="ws-cmd-execute"/>
+      <menuitem id="ws-text-inspect"
+                label="&inspect.label;"
+                accesskey="&inspect.accesskey;"
+                key="ws-key-inspect"
+                command="ws-cmd-inspect"/>
+      <menuitem id="ws-text-print"
+                label="&print.label;"
+                accesskey="&print.accesskey;"
+                key="ws-key-print"
+                command="ws-cmd-print"/>
+    </menupopup>
+  </menu>
+
+  <menu id="ws-context-menu"
+        label="&contextMenu.label;"
+        accesskey="&contextMenu.accesskey;">
+    <menupopup id="ws-menu-context">
+      <menuitem id="ws-menu-content"
+                label="&contentContext.label;"
+                accesskey="&contentContext.accesskey;"
+                command="ws-cmd-contentContext"
+                checked="true"
+                type="radio"/>
+      <menuitem id="ws-menu-chrome"
+                command="ws-cmd-chromeContext"
+                label="&chromeContext.label;"
+                accesskey="&chromeContext.accesskey;"
+                type="radio"/>
+    </menupopup>
+  </menu>
+
+  <menu id="ws-tools-menu"
+        label="&toolsMenu.label;"
+        accesskey="&toolsMenu.accesskey;">
+    <menupopup id="ws-menu-tools">
+      <menuitem id="ws-menu-errorConsole"
+                label="&errorConsoleCmd.label;"
+                accesskey="&errorConsoleCmd.accesskey;"
+                key="ws-key-errorConsole"
+                command="ws-cmd-errorConsole"/>
+      <menuitem id="ws-menu-webConsole"
+                label="&webConsoleCmd.label;"
+                accesskey="&webConsoleCmd.accesskey;"
+                key="ws-key-webConsole"
+                command="ws-cmd-webConsole"/>
+    </menupopup>
+  </menu>
+</menubar>
+
+<popupset id="workspace-popups">
+  <menupopup id="workspace-text-popup">
+    <menuitem id="menu_cut"/>
+    <menuitem id="menu_copy"/>
+    <menuitem id="menu_paste"/>
+    <menuitem id="menu_delete"/>
+    <menuseparator/>
+    <menuitem id="menu_selectAll"/>
+    <menuseparator/>
+    <menuitem id="ws-text-execute"
+              label="&execute.label;"
+              accesskey="&execute.accesskey;"
+              key="ws-key-execute"
+              command="ws-cmd-execute"/>
+    <menuitem id="ws-text-inspect"
+              label="&inspect.label;"
+              accesskey="&inspect.accesskey;"
+              key="ws-key-inspect"
+              command="ws-cmd-inspect"/>
+    <menuitem id="ws-text-print"
+              label="&print.label;"
+              accesskey="&print.accesskey;"
+              key="ws-key-print"
+              command="ws-cmd-print"/>
+  </menupopup>
+</popupset>
+
+<textbox id="workspace-textbox"
+         multiline="true"
+         flex="1"
+         context="workspace-text-popup"
+         placeholder="&textbox.placeholder;" />
+<statusbar id="workspace-statusbar" align="end">
+  <statusbarpanel id="workspace-status"
+                  label="&contentContext.label;"
+                  class="statusbarpanel-iconic-text"/>
+  <spacer flex="1"/>
+</statusbar>
+</window>
