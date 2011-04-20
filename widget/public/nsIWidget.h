@@ -233,6 +233,29 @@ struct nsIMEUpdatePreference {
 struct IMEContext {
   PRUint32 mStatus;
 
+  /* Does the change come from a trusted source */
+  enum {
+    FOCUS_REMOVED       = 0x0001,
+    FOCUS_MOVED_UNKNOWN = 0x0002,
+    FOCUS_MOVED_BY_MOVEFOCUS = 0x0004,
+    FOCUS_MOVED_BY_MOUSE = 0x0008,
+    FOCUS_MOVED_BY_KEY = 0x0010,
+    FOCUS_MOVED_TO_MENU = 0x0020,
+    FOCUS_MOVED_FROM_MENU = 0x0040,
+    EDITOR_STATE_MODIFIED = 0x0080,
+    FOCUS_FROM_CONTENT_PROCESS = 0x0100
+  };
+
+  PRBool FocusMovedByUser() const {
+    return (mReason & FOCUS_MOVED_BY_MOUSE) || (mReason & FOCUS_MOVED_BY_KEY);
+  };
+
+  PRBool FocusMovedInContentProcess() const {
+    return (mReason & FOCUS_FROM_CONTENT_PROCESS);
+  };
+
+  PRUint32 mReason;
+
   /* The type of the input if the input is a html input field */
   nsString mHTMLInputType;
 
