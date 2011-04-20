@@ -59,7 +59,7 @@ function checkLinkColor(aElmId, aExpectedColor, aMessage) {
     return utils.getVisitedDependentComputedStyle($(aElmId), "", "color");
   }
   while (getColor() != aExpectedColor) {
-    setTimeout(continueTest, 10);
+    setTimeout(continueTest, 0);
     return false;
   }
   is(getColor(), aExpectedColor, aMessage);
