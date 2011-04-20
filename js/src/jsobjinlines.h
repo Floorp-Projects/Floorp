@@ -1423,6 +1423,25 @@ NewObjectGCKind(JSContext *cx, js::Class *clasp)
     return gc::FINALIZE_OBJECT4;
 }
 
+static JS_ALWAYS_INLINE JSObject*
+NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
+                        /*gc::FinalizeKind*/ unsigned _kind)
+{
+    JS_ASSERT(clasp->isNative());
+    gc::FinalizeKind kind = gc::FinalizeKind(_kind);
+
+    if (CanBeFinalizedInBackground(kind, clasp))
+        kind = (gc::FinalizeKind)(kind + 1);
+
+    JSObject* obj = js_NewGCObject(cx, kind);
+    if (!obj)
+        return NULL;
+
+    if (!obj->initSharingEmptyShape(cx, clasp, proto, proto->getParent(), NULL, kind))
+        return NULL;
+    return obj;
+}
+
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */
 static inline JSObject *
 CopyInitializerObject(JSContext *cx, JSObject *baseobj)

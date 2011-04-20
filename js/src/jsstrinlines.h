@@ -43,8 +43,8 @@
 #include "jsatom.h"
 #include "jsstr.h"
 
-#include "jsgcinlines.h"
 #include "jscntxtinlines.h"
+#include "jsgcinlines.h"
 
 namespace js {
 
