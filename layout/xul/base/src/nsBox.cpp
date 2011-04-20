@@ -514,8 +514,9 @@ nsBox::GetFlex(nsBoxLayoutState& aState)
 PRUint32
 nsIFrame::GetOrdinal(nsBoxLayoutState& aState)
 {
-  PRUint32 ordinal = DEFAULT_ORDINAL_GROUP;
+  PRUint32 ordinal = GetStyleXUL()->mBoxOrdinal;
 
+  // When present, attribute value overrides CSS.
   nsIContent* content = GetContent();
   if (content) {
     PRInt32 error;
@@ -524,14 +525,6 @@ nsIFrame::GetOrdinal(nsBoxLayoutState& aState)
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, value);
     if (!value.IsEmpty()) {
       ordinal = value.ToInteger(&error);
-    }
-    else {
-      // No attribute value.  Check CSS.
-      const nsStyleXUL* boxInfo = GetStyleXUL();
-      if (boxInfo->mBoxOrdinal > 1) {
-        // The ordinal group was defined in CSS.
-        ordinal = (nscoord)boxInfo->mBoxOrdinal;
-      }
     }
   }
 
