@@ -69,7 +69,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsIDOMHTMLElement.h"
-#include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsISelection.h"
 #include "nsILink.h"
