@@ -56,15 +56,16 @@ class Debug {
     JSObject *object;  // The Debug object. Strong reference.
     JSCompartment *debuggeeCompartment;  // Weak reference.
     JSObject *hooksObject;  // See Debug.prototype.hooks. Strong reference.
-
+    JSObject *uncaughtExceptionHook;  // Strong reference.
     bool enabled;
 
     // True if hooksObject had a debuggerHandler property when the hooks
     // property was set.
     bool hasDebuggerHandler;
 
-    JSTrapStatus fireUncaughtExceptionHook(JSContext *cx);
-    JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp);
+    JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
+    JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
+                                      bool callHook = true);
 
     static void trace(JSTracer *trc, JSObject *obj);
     static void finalize(JSContext *cx, JSObject *obj);
@@ -74,6 +75,8 @@ class Debug {
     static JSBool setHooks(JSContext *cx, uintN argc, Value *vp);
     static JSBool getEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
+    static JSBool setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
     static JSBool construct(JSContext *cx, uintN argc, Value *vp);
     static JSPropertySpec properties[];
 
