@@ -17,21 +17,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=608030
 
 /** Test for Bug 608030 **/
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefService = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefService);
-var domBranch = prefService.getBranch("dom.");
-
 function get_pref()
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return domBranch.getBoolPref("send_after_paint_to_content");
+  return SpecialPowers.getBoolPref("dom.send_after_paint_to_content");
 }
 
 function set_pref(val)
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    domBranch.setBoolPref("send_after_paint_to_content", val);
+  SpecialPowers.setBoolPref("dom.send_after_paint_to_content", val);
 }
 
 SimpleTest.waitForExplicitFinish();

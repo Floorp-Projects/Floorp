@@ -869,8 +869,8 @@ nsColumnSetFrame::DrainOverflowColumns()
   if (prev) {
     nsAutoPtr<nsFrameList> overflows(prev->StealOverflowFrames());
     if (overflows) {
-      nsHTMLContainerFrame::ReparentFrameViewList(PresContext(), *overflows,
-                                                  prev, this);
+      nsContainerFrame::ReparentFrameViewList(PresContext(), *overflows,
+                                              prev, this);
 
       mFrames.InsertFrames(this, nsnull, *overflows);
     }

@@ -113,7 +113,7 @@ public:
   virtual void            SetShowsToolbarButton(PRBool aShow) {}
   NS_IMETHOD              HideWindowChrome(PRBool aShouldHide);
   NS_IMETHOD              MakeFullScreen(PRBool aFullScreen);
-  virtual nsIDeviceContext* GetDeviceContext();
+  virtual nsDeviceContext* GetDeviceContext();
   virtual nsIToolkit*     GetToolkit();
   virtual LayerManager*   GetLayerManager(LayerManagerPersistence aPersistence,
                                           bool* aAllowRetaining = nsnull);
@@ -164,12 +164,12 @@ public:
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
               EVENT_CALLBACK   aHandleEventFunction,
-              nsIDeviceContext *aContext,
+              nsDeviceContext *aContext,
               nsIAppShell      *aAppShell = nsnull,
               nsIToolkit       *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull,
               PRBool           aForceUseIWidgetParent = PR_FALSE);
-  NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsIDeviceContext *aContext);
+  NS_IMETHOD              AttachViewToTopLevel(EVENT_CALLBACK aViewEventFunction, nsDeviceContext *aContext);
   virtual ViewWrapper*    GetAttachedViewPtr();
   NS_IMETHOD              SetAttachedViewPtr(ViewWrapper* aViewWrapper);
   NS_IMETHOD              ResizeClient(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
@@ -227,7 +227,7 @@ protected:
   virtual void            BaseCreate(nsIWidget *aParent,
                                      const nsIntRect &aRect,
                                      EVENT_CALLBACK aHandleEventFunction,
-                                     nsIDeviceContext *aContext,
+                                     nsDeviceContext *aContext,
                                      nsIAppShell *aAppShell,
                                      nsIToolkit *aToolkit,
                                      nsWidgetInitData *aInitData);
@@ -268,7 +268,7 @@ protected:
   ViewWrapper*      mViewWrapperPtr;
   EVENT_CALLBACK    mEventCallback;
   EVENT_CALLBACK    mViewCallback;
-  nsIDeviceContext* mContext;
+  nsDeviceContext* mContext;
   nsIToolkit*       mToolkit;
   nsRefPtr<LayerManager> mLayerManager;
   nsRefPtr<LayerManager> mBasicLayerManager;

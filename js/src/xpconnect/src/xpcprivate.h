@@ -2744,6 +2744,7 @@ protected:
                      XPCNativeSet* aSet);
 
     virtual ~XPCWrappedNative();
+    void Destroy();
 
 private:
     enum {

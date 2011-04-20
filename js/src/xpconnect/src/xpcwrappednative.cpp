@@ -932,6 +932,12 @@ XPCWrappedNative::~XPCWrappedNative()
 {
     DEBUG_TrackDeleteWrapper(this);
 
+    Destroy();
+}
+
+void
+XPCWrappedNative::Destroy()
+{
     XPCWrappedNativeProto* proto = GetProto();
 
     if(mScriptableInfo &&
@@ -939,6 +945,7 @@ XPCWrappedNative::~XPCWrappedNative()
         (proto && proto->GetScriptableInfo() != mScriptableInfo)))
     {
         delete mScriptableInfo;
+        mScriptableInfo = nsnull;
     }
 
     XPCWrappedNativeScope *scope = GetScope();
@@ -959,7 +966,11 @@ XPCWrappedNative::~XPCWrappedNative()
         XPCJSRuntime* rt = GetRuntime();
         if(rt && rt->GetDoingFinalization())
         {
-            if(!rt->DeferredRelease(mIdentity))
+            if(rt->DeferredRelease(mIdentity))
+            {
+                mIdentity = nsnull;
+            }
+            else
             {
                 NS_WARNING("Failed to append object for deferred release.");
                 // XXX do we really want to do this???
@@ -971,6 +982,8 @@ XPCWrappedNative::~XPCWrappedNative()
             NS_RELEASE(mIdentity);
         }
     }
+
+    mMaybeScope = nsnull;
 }
 
 // This is factored out so that it can be called publicly 
@@ -1277,7 +1290,8 @@ NS_IMPL_THREADSAFE_RELEASE(XPCWrappedNative)
  *
  *  - The wrapper has a pointer to the nsISupports 'view' of the wrapped native
  *    object i.e... mIdentity. This is held until the wrapper's refcount goes
- *    to zero and the wrapper is released.
+ *    to zero and the wrapper is released, or until an expired wrapper (i.e.,
+ *    one unlinked by the cycle collector) has had its JS object finalized.
  *
  *  - The wrapper also has 'tearoffs'. It has one tearoff for each interface
  *    that is actually used on the native object. 'Used' means we have either
@@ -1372,23 +1386,6 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
         }
     }
 
-    if(IsWrapperExpired())
-    {
-        GetScope()->GetWrappedNativeMap()->Remove(this);
-
-        XPCWrappedNativeProto* proto = GetProto();
-
-        if(mScriptableInfo &&
-           (!HasProto() ||
-            (proto && proto->GetScriptableInfo() != mScriptableInfo)))
-        {
-            delete mScriptableInfo;
-            mScriptableInfo = nsnull;
-        }
-
-        mMaybeScope = nsnull;
-    }
-
     nsWrapperCache *cache = nsnull;
     CallQueryInterface(mIdentity, &cache);
     if(cache)
@@ -1403,6 +1400,11 @@ XPCWrappedNative::FlatJSObjectFinalized(JSContext *cx)
     NS_ASSERTION(*(int*)mIdentity != 0xdddddddd, "bad pointer!");
     NS_ASSERTION(*(int*)mIdentity != 0,          "bad pointer!");
 #endif
+
+    if(IsWrapperExpired())
+    {
+        Destroy();
+    }
 
     // Note that it's not safe to touch mNativeWrapper here since it's
     // likely that it has already been finalized.

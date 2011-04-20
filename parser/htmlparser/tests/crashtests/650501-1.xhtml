@@ -1,0 +1,22 @@
+
+<html xmlns="http://www.w3.org/1999/xhtml"> 
+<head> 
+<script> 
+<![CDATA[
+ 
+function boom()
+{
+  var a = document.createElement("div");
+  a.innerHTML = "<script>1;<\/script>";
+ 
+  var b = document.createElement("div")
+  try { b.innerHTML = "<"; } catch (invalidXML) { }
+ 
+  document.documentElement.appendChild(a);
+}
+ 
+]]>
+</script> 
+</head> 
+<body onload="boom();"></body> 
+</html>

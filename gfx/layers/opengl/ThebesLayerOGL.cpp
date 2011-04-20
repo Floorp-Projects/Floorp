@@ -485,7 +485,7 @@ BasicBufferOGL::BeginPaint(ContentType aContentType,
     }
  
     if ((aFlags & PAINT_WILL_RESAMPLE) &&
-        (neededRegion.GetBounds() != destBufferRect ||
+        (!neededRegion.GetBounds().IsEqualInterior(destBufferRect) ||
          neededRegion.GetNumRects() > 1)) {
       // The area we add to neededRegion might not be painted opaquely
       if (mode == Layer::SURFACE_OPAQUE) {
@@ -918,8 +918,8 @@ ShadowBufferOGL::Upload(gfxASurface* aUpdate, const nsIntRegion& aUpdated,
   destRect.RoundOut();
 
   // NB: this gfxContext must not escape EndUpdate() below
-  nsIntRegion scaledDestRegion(nsIntRect(destRect.pos.x, destRect.pos.y,
-                                         destRect.size.width, destRect.size.height));
+  nsIntRegion scaledDestRegion(nsIntRect(destRect.X(), destRect.Y(),
+                                         destRect.Width(), destRect.Height()));
   mTexImage->DirectUpdate(aUpdate, scaledDestRegion);
 
   mBufferRect = aRect;

@@ -157,9 +157,10 @@ function testNext() {
   pos++;
   if (pos < TESTS.length) {
     if (TESTS[pos].onload) {
+      let position = pos;
       browser.addEventListener("load", function(aEvent) {
         browser.removeEventListener(aEvent.type, arguments.callee, true);
-        TESTS[pos].onload(aEvent);
+        TESTS[position].onload(aEvent);
       }, true);
     }
 

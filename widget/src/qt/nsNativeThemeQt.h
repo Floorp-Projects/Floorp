@@ -46,7 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsNativeTheme.h"
-#include "nsIDeviceContext.h"
 
 class QComboBox;
 class QStyleOptionButton;
@@ -54,6 +53,7 @@ class QStyleOptionFrameV2;
 class QStyleOptionComboBox;
 class QRect;
 class nsIFrame;
+class nsDeviceContext;
 
 class nsNativeThemeQt : private nsNativeTheme,
                         public nsITheme
@@ -68,7 +68,7 @@ public:
                                   const nsRect& aRect,
                                   const nsRect& aClipRect);
 
-  NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext,
+  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext,
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult);
@@ -89,7 +89,7 @@ public:
 
   PRBool WidgetIsContainer(PRUint8 aWidgetType);
 
-  virtual NS_HIDDEN_(PRBool) GetWidgetPadding(nsIDeviceContext* aContext,
+  virtual NS_HIDDEN_(PRBool) GetWidgetPadding(nsDeviceContext* aContext,
                                               nsIFrame* aFrame,
                                               PRUint8 aWidgetType,
                                               nsIntMargin* aResult);

@@ -61,6 +61,9 @@ _CHROME_FILES = \
 		window_bug583948.xul \
 		test_bug497875.xul \
 		     bug497875-iframe.xul \
+		test_bug335375.xul \
+		overlay1_bug335375.xul \
+		overlay2_bug335375.xul \
 		$(NULL)
 
 libs:: $(_TEST_FILES)

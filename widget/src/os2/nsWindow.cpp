@@ -74,7 +74,6 @@
 #include "nsDragService.h"
 #include "nsGfxCIID.h"
 #include "nsHashKeys.h"
-#include "nsIDeviceContext.h"
 #include "nsIMenuRollup.h"
 #include "nsIPrefService.h"
 #include "nsIRollupListener.h"
@@ -339,7 +338,7 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
                            nsNativeWidget aNativeParent,
                            const nsIntRect& aRect,
                            EVENT_CALLBACK aHandleEventFunction,
-                           nsIDeviceContext* aContext,
+                           nsDeviceContext* aContext,
                            nsIAppShell* aAppShell,
                            nsIToolkit* aToolkit,
                            nsWidgetInitData* aInitData)
@@ -364,32 +363,9 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
     }
   }
 
-  // Save the event callback function.
-  mEventCallback = aHandleEventFunction;
+  BaseCreate(aParent, aRect, aHandleEventFunction,
+             aContext, aAppShell, aToolkit, aInitData);
 
-  // Make sure a device context exists.
-  if (aContext) {
-    mContext = aContext;
-    NS_ADDREF(mContext);
-  } else {
-    static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
-    nsresult rv = CallCreateInstance(kDeviceContextCID, &mContext);
-    NS_ENSURE_SUCCESS(rv, rv);
-    mContext->Init(nsnull);
-  }
-
-  // XXX Toolkit is obsolete & will be removed.
-  if (!mToolkit) {
-    if (aToolkit) {
-      mToolkit = aToolkit;
-    } else if (pParent) {
-      mToolkit = pParent->GetToolkit();
-    } else {
-      mToolkit = new nsToolkit;
-      mToolkit->Init(PR_GetCurrentThread());
-    }
-    NS_ADDREF(mToolkit);
-  }
 
 #ifdef DEBUG_FOCUS
   mWindowIdentifier = currentWindowIdentifier;
@@ -398,9 +374,6 @@ NS_METHOD nsWindow::Create(nsIWidget* aParent,
 
   // Some basic initialization.
   if (aInitData) {
-    mWindowType = aInitData->mWindowType;
-    mBorderStyle = aInitData->mBorderStyle;
-
     // Suppress creation of a Thebes surface for windows that will never
     // be painted because they're always covered by another window.
     if (mWindowType == eWindowType_toplevel ||
@@ -1045,7 +1018,7 @@ void nsWindow::SetPluginClipRegion(const Configuration& aConfiguration)
 
   // If nothing has changed, exit.
   if (!StoreWindowClipRegion(aConfiguration.mClipRegion) &&
-      mBounds == aConfiguration.mBounds) {
+      mBounds.IsEqualInterior(aConfiguration.mBounds)) {
     return;
   }
 

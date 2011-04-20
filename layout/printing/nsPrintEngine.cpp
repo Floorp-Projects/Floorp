@@ -126,7 +126,6 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
-#include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
@@ -208,7 +207,7 @@ static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecified
 // Forward Declarations
 static void DumpPrintObjectsListStart(const char * aStr, nsTArray<nsPrintObject*> * aDocList);
 static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel= 0, FILE* aFD = nsnull);
-static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aDC, int aLevel= 0, FILE * aFD = nsnull);
+static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsDeviceContext * aDC, int aLevel= 0, FILE * aFD = nsnull);
 
 #define DUMP_DOC_LIST(_title) DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
 #define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject);
@@ -431,7 +430,7 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
 static void DumpViews(nsIDocShell* aDocShell, FILE* out);
 static void DumpLayoutData(char* aTitleStr, char* aURLStr,
                            nsPresContext* aPresContext,
-                           nsIDeviceContext * aDC, nsIFrame * aRootFrame,
+                           nsDeviceContext * aDC, nsIFrame * aRootFrame,
                            nsIDocShell * aDocShell, FILE* aFD);
 #endif
 
@@ -656,11 +655,10 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
   rv = devspec->Init(nsnull, mPrt->mPrintSettings, aIsPrintPreview);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPrt->mPrintDC = do_CreateInstance("@mozilla.org/gfx/devicecontext;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mPrt->mPrintDC = new nsDeviceContext();
   rv = mPrt->mPrintDC->InitForPrinting(devspec);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   if (aIsPrintPreview) {
     mPrt->mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
 
@@ -731,24 +729,11 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
     }
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    PRUnichar * docTitleStr;
-    PRUnichar * docURLStr;
-
-    GetDisplayTitleAndURL(mPrt->mPrintObject, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
-
-    // Nobody ever cared about the file name passed in, as far as I can tell
-    rv = mPrt->mPrintDC->PrepareDocument(docTitleStr, nsnull);
-
-    if (docTitleStr) nsMemory::Free(docTitleStr);
-    if (docURLStr) nsMemory::Free(docURLStr);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRBool doNotify;
     ShowPrintProgress(PR_TRUE, doNotify);
     if (!doNotify) {
       // Print listener setup...
-      mPrt->OnStartPrinting();    
+      mPrt->OnStartPrinting();
       rv = DocumentReadyForPrinting();
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -3569,7 +3554,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
 void DumpLayoutData(char*              aTitleStr,
                     char*              aURLStr,
                     nsPresContext*    aPresContext,
-                    nsIDeviceContext * aDC,
+                    nsDeviceContext * aDC,
                     nsIFrame *         aRootFrame,
                     nsIDocShekk *      aDocShell,
                     FILE*              aFD = nsnull)
@@ -3703,7 +3688,7 @@ static void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLS
 
 //-------------------------------------------------------------
 static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
-                                       nsIDeviceContext * aDC,
+                                       nsDeviceContext * aDC,
                                        int aLevel, FILE * aFD)
 {
   if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;

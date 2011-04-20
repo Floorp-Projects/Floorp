@@ -247,14 +247,14 @@ gfxContext::Rectangle(const gfxRect& rect, PRBool snapToPixels)
         }
     }
 
-    cairo_rectangle(mCairo, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
+    cairo_rectangle(mCairo, rect.X(), rect.Y(), rect.Width(), rect.Height());
 }
 
 void
 gfxContext::Ellipse(const gfxPoint& center, const gfxSize& dimensions)
 {
     gfxSize halfDim = dimensions / 2.0;
-    gfxRect r(center - halfDim, dimensions);
+    gfxRect r(center - gfxPoint(halfDim.width, halfDim.height), dimensions);
     gfxCornerSizes c(halfDim, halfDim, halfDim, halfDim);
 
     RoundedRectangle (r, c);
@@ -362,8 +362,8 @@ gfxRect
 gfxContext::DeviceToUser(const gfxRect& rect) const
 {
     gfxRect ret = rect;
-    cairo_device_to_user(mCairo, &ret.pos.x, &ret.pos.y);
-    cairo_device_to_user_distance(mCairo, &ret.size.width, &ret.size.height);
+    cairo_device_to_user(mCairo, &ret.x, &ret.y);
+    cairo_device_to_user_distance(mCairo, &ret.width, &ret.height);
     return ret;
 }
 
@@ -386,11 +386,7 @@ gfxContext::UserToDevice(const gfxSize& size) const
 gfxRect
 gfxContext::UserToDevice(const gfxRect& rect) const
 {
-    double xmin, ymin, xmax, ymax;
-    xmin = rect.pos.x;
-    ymin = rect.pos.y;
-    xmax = rect.pos.x + rect.size.width;
-    ymax = rect.pos.y + rect.size.height;
+    double xmin = rect.X(), ymin = rect.Y(), xmax = rect.XMost(), ymax = rect.YMost();
 
     double x[3], y[3];
     x[0] = xmin;  y[0] = ymax;
@@ -430,9 +426,9 @@ gfxContext::UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale) const
         return PR_FALSE;
 #undef WITHIN_E
 
-    gfxPoint p1 = UserToDevice(rect.pos);
-    gfxPoint p2 = UserToDevice(rect.pos + gfxSize(rect.size.width, 0.0));
-    gfxPoint p3 = UserToDevice(rect.pos + rect.size);
+    gfxPoint p1 = UserToDevice(rect.TopLeft());
+    gfxPoint p2 = UserToDevice(rect.TopRight());
+    gfxPoint p3 = UserToDevice(rect.BottomRight());
 
     // Check that the rectangle is axis-aligned. For an axis-aligned rectangle,
     // two opposite corners define the entire rectangle. So check if
@@ -444,9 +440,9 @@ gfxContext::UserToDevicePixelSnapped(gfxRect& rect, PRBool ignoreScale) const
         p1.Round();
         p3.Round();
 
-        rect.pos = gfxPoint(NS_MIN(p1.x, p3.x), NS_MIN(p1.y, p3.y));
-        rect.size = gfxSize(NS_MAX(p1.x, p3.x) - rect.pos.x,
-                            NS_MAX(p1.y, p3.y) - rect.pos.y);
+        rect.MoveTo(gfxPoint(NS_MIN(p1.x, p3.x), NS_MIN(p1.y, p3.y)));
+        rect.SizeTo(gfxSize(NS_MAX(p1.x, p3.x) - rect.X(),
+                            NS_MAX(p1.y, p3.y) - rect.Y()));
         return PR_TRUE;
     }
 
@@ -497,8 +493,8 @@ gfxContext::PixelSnappedRectangleAndSetPattern(const gfxRect& rect,
         IdentityMatrix();
     }
 
-    Translate(r.pos);
-    r.pos.x = r.pos.y = 0;
+    Translate(r.TopLeft());
+    r.MoveTo(gfxPoint(0, 0));
     Rectangle(r);
     SetPattern(pattern);
 
@@ -635,7 +631,7 @@ void
 gfxContext::Clip(const gfxRect& rect)
 {
     cairo_new_path(mCairo);
-    cairo_rectangle(mCairo, rect.pos.x, rect.pos.y, rect.size.width, rect.size.height);
+    cairo_rectangle(mCairo, rect.X(), rect.Y(), rect.Width(), rect.Height());
     cairo_clip(mCairo);
 }
 
@@ -977,9 +973,9 @@ gfxContext::RoundedRectangle(const gfxRect& rect,
     gfxPoint pc, p0, p1, p2, p3;
 
     if (draw_clockwise)
-        cairo_move_to(mCairo, rect.pos.x + corners[NS_CORNER_TOP_LEFT].width, rect.pos.y);
+        cairo_move_to(mCairo, rect.X() + corners[NS_CORNER_TOP_LEFT].width, rect.Y());
     else
-        cairo_move_to(mCairo, rect.pos.x + rect.size.width - corners[NS_CORNER_TOP_RIGHT].width, rect.pos.y);
+        cairo_move_to(mCairo, rect.X() + rect.Width() - corners[NS_CORNER_TOP_RIGHT].width, rect.Y());
 
     NS_FOR_CSS_CORNERS(i) {
         // the corner index -- either 1 2 3 0 (cw) or 0 3 2 1 (ccw)

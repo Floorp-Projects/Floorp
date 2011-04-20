@@ -39,65 +39,28 @@
 #define NSSIZE_H
 
 #include "nsCoord.h"
+#include "mozilla/BaseSize.h"
 
 // Maximum allowable size
 #define NS_MAXSIZE nscoord_MAX
 
-struct nsSize {
-  nscoord width, height;
+struct nsSize : public mozilla::BaseSize<nscoord, nsSize> {
+  typedef mozilla::BaseSize<nscoord, nsSize> Super;
 
-  // Constructors
-  nsSize() {}
-  nsSize(const nsSize& aSize) {width = aSize.width; height = aSize.height;}
-  nsSize(nscoord aWidth, nscoord aHeight) {width = aWidth; height = aHeight;}
-
-  void SizeTo(nscoord aWidth, nscoord aHeight) {width = aWidth; height = aHeight;}
-  void SizeBy(nscoord aDeltaWidth, nscoord aDeltaHeight) {width += aDeltaWidth;
-                                                          height += aDeltaHeight;}
-
-  // Overloaded operators. Note that '=' isn't defined so we'll get the
-  // compiler generated default assignment operator
-  PRBool  operator==(const nsSize& aSize) const {
-    return (PRBool) ((width == aSize.width) && (height == aSize.height));
-  }
-  PRBool  operator!=(const nsSize& aSize) const {
-    return (PRBool) ((width != aSize.width) || (height != aSize.height));
-  }
-  nsSize operator+(const nsSize& aSize) const {
-    return nsSize(width + aSize.width, height + aSize.height);
-  }
-  nsSize& operator+=(const nsSize& aSize) {width += aSize.width;
-                                           height += aSize.height;
-                                           return *this;}
+  nsSize() : Super() {}
+  nsSize(const nsSize& aSize) : Super(aSize) {}
+  nsSize(nscoord aWidth, nscoord aHeight) : Super(aWidth, aHeight) {}
 
   // Converts this size from aFromAPP, an appunits per pixel ratio, to aToAPP.
   inline nsSize ConvertAppUnits(PRInt32 aFromAPP, PRInt32 aToAPP) const;
 };
 
-struct nsIntSize {
-  PRInt32 width, height;
+struct nsIntSize : public mozilla::BaseSize<PRInt32, nsIntSize> {
+  typedef mozilla::BaseSize<PRInt32, nsIntSize> Super;
 
-  nsIntSize() {}
-  nsIntSize(const nsIntSize& aSize) {width = aSize.width; height = aSize.height;}
-  nsIntSize(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
-
-  // Overloaded operators. Note that '=' isn't defined so we'll get the
-  // compiler generated default assignment operator
-  PRBool  operator==(const nsIntSize& aSize) const {
-    return (PRBool) ((width == aSize.width) && (height == aSize.height));
-  }
-  PRBool  operator!=(const nsIntSize& aSize) const {
-    return (PRBool) ((width != aSize.width) || (height != aSize.height));
-  }
-  PRBool  operator<(const nsIntSize& aSize) const {
-    return (PRBool) (operator<=(aSize) &&
-                     (width < aSize.width || height < aSize.height));
-  }
-  PRBool  operator<=(const nsIntSize& aSize) const {
-    return (PRBool) ((width <= aSize.width) && (height <= aSize.height));
-  }
-
-  void SizeTo(PRInt32 aWidth, PRInt32 aHeight) {width = aWidth; height = aHeight;}
+  nsIntSize() : Super() {}
+  nsIntSize(const nsIntSize& aSize) : Super(aSize) {}
+  nsIntSize(PRInt32 aWidth, PRInt32 aHeight) : Super(aWidth, aHeight) {}
 };
 
 inline nsSize

@@ -190,18 +190,7 @@ CommonDialog.prototype = {
             button.setAttribute("default", "true");
 
         // Set default focus / selection.
-        if (!this.hasInputField) {
-            let isOSX = ("nsILocalFileMac" in Components.interfaces);
-            if (isOSX)
-                this.ui.infoBody.focus();
-            else
-                button.focus();
-        } else {
-            if (this.args.promptType == "promptPassword")
-                this.ui.password1Textbox.select();
-            else
-                this.ui.loginTextbox.select();
-        }
+        this.setDefaultFocus(true);
 
         if (this.args.enableDelay) {
             this.setButtonsEnabledState(false);
@@ -308,6 +297,33 @@ CommonDialog.prototype = {
     onFocusTimeout : function() {
         this.focusTimer = null;
         this.setButtonsEnabledState(true);
+    },
+
+    setDefaultFocus : function(isInitialLoad) {
+        let b = (this.args.defaultButtonNum || 0);
+        let button = this.ui["button" + b];
+
+        if (!this.hasInputField) {
+            let isOSX = ("nsILocalFileMac" in Components.interfaces);
+            if (isOSX)
+                this.ui.infoBody.focus();
+            else
+                button.focus();
+        } else {
+            // When the prompt is initialized, focus and select the textbox
+            // contents. Afterwards, only focus the textbox.
+            if (this.args.promptType == "promptPassword") {
+                if (isInitialLoad)
+                    this.ui.password1Textbox.select();
+                else
+                    this.ui.password1Textbox.focus();
+            } else {
+                if (isInitialLoad)
+                    this.ui.loginTextbox.select();
+                else
+                    this.ui.loginTextbox.focus();
+            }
+        }
     },
 
     onCheckbox : function() {

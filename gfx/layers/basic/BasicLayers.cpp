@@ -467,7 +467,7 @@ ClipToContain(gfxContext* aContext, const nsIntRect& aRect)
   aContext->Clip();
   aContext->SetMatrix(currentMatrix);
 
-  return aContext->DeviceToUser(deviceRect) == userRect;
+  return aContext->DeviceToUser(deviceRect).IsEqualInterior(userRect);
 }
 
 static nsIntRegion
@@ -1059,7 +1059,7 @@ ToOutsideIntRect(const gfxRect &aRect)
 {
   gfxRect r = aRect;
   r.RoundOut();
-  return nsIntRect(r.pos.x, r.pos.y, r.size.width, r.size.height);
+  return nsIntRect(r.X(), r.Y(), r.Width(), r.Height());
 }
 
 static nsIntRect
@@ -1067,7 +1067,7 @@ ToInsideIntRect(const gfxRect& aRect)
 {
   gfxRect r = aRect;
   r.RoundIn();
-  return nsIntRect(r.pos.x, r.pos.y, r.size.width, r.size.height);
+  return nsIntRect(r.X(), r.Y(), r.Width(), r.Height());
 }
 
 /**
@@ -1194,11 +1194,11 @@ BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
 
   nsRefPtr<gfxContext> ctx =
     mCachedSurface.Get(aContent,
-                       gfxIntSize(clip.size.width, clip.size.height),
+                       gfxIntSize(clip.Width(), clip.Height()),
                        currentSurf);
   /* Align our buffer for the original surface */
-  ctx->Translate(-clip.pos);
-  *aSavedOffset = clip.pos;
+  ctx->Translate(-clip.TopLeft());
+  *aSavedOffset = clip.TopLeft();
   ctx->Multiply(saveMatrix.Matrix());
   return ctx.forget();
 }
