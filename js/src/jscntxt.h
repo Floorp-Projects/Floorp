@@ -2510,10 +2510,8 @@ class AutoEnumStateRooter : private AutoGCRooter
 
     ~AutoEnumStateRooter() {
         if (!stateValue.isNull()) {
-#ifdef DEBUG
-            JSBool ok =
-#endif
-            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
+            DebugOnly<JSBool> ok =
+                obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
             JS_ASSERT(ok);
         }
     }
