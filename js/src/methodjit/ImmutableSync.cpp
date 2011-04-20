@@ -101,10 +101,6 @@ ImmutableSync::allocReg()
             if (!fe)
                 return reg;
 
-            /* Take any register used for a loop temporary. */
-            if (frame->isTemporary(fe))
-                return reg;
-
             evictFromFrame = i;
 
             /*
@@ -149,7 +145,7 @@ ImmutableSync::allocReg()
 inline ImmutableSync::SyncEntry &
 ImmutableSync::entryFor(FrameEntry *fe)
 {
-    JS_ASSERT(fe <= top);
+    JS_ASSERT(fe <= top || frame->isTemporary(fe));
     SyncEntry &e = entries[frame->indexOfFe(fe)];
     if (e.generation != generation)
         e.reset(generation);
