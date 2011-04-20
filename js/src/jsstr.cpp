@@ -91,7 +91,7 @@ using namespace js::gc;
 bool
 JSString::isShort() const
 {
-    bool is_short = arena()->header()->thingKind == FINALIZE_SHORT_STRING;
+    bool is_short = arenaHeader()->getThingKind() == FINALIZE_SHORT_STRING;
     JS_ASSERT_IF(is_short, isFlat());
     return is_short;
 }
@@ -106,7 +106,7 @@ JSString::isFixed() const
 bool
 JSString::isExternal() const
 {
-    bool is_external = arena()->header()->thingKind == FINALIZE_EXTERNAL_STRING;
+    bool is_external = arenaHeader()->getThingKind() == FINALIZE_EXTERNAL_STRING;
     JS_ASSERT_IF(is_external, isFixed());
     return is_external;
 }

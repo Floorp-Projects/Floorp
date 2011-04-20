@@ -327,7 +327,7 @@ JSObject::setPrimitiveThis(const js::Value &pthis)
 inline /* gc::FinalizeKind */ unsigned
 JSObject::finalizeKind() const
 {
-    return js::gc::FinalizeKind(arena()->header()->thingKind);
+    return js::gc::FinalizeKind(arenaHeader()->getThingKind());
 }
 
 inline size_t
