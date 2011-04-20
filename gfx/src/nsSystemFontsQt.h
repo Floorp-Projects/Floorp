@@ -40,7 +40,7 @@
 #define _NS_SYSTEMFONTSQT_H_
 
 #include "gfxFont.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 
 class nsSystemFontsQt
 {

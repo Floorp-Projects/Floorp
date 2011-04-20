@@ -42,7 +42,6 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsCSSFrameConstructor.h"
-#include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsPageContentFrame.h"
 #include "nsDisplayList.h"
@@ -511,7 +510,7 @@ nsPageFrame::PaintHeaderFooter(nsRenderingContext& aRenderingContext,
 
   // Get the FontMetrics to determine width.height of strings
   nsRefPtr<nsFontMetrics> fontMet;
-  pc->DeviceContext()->GetMetricsFor(*mPD->mHeadFootFont,
+  pc->DeviceContext()->GetMetricsFor(*mPD->mHeadFootFont, nsnull,
                                      pc->GetUserFontSet(),
                                      *getter_AddRefs(fontMet));
 

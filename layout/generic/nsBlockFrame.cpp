@@ -674,8 +674,8 @@ static void ReparentFrame(nsIFrame* aFrame, nsIFrame* aOldParent,
 
   // When pushing and pulling frames we need to check for whether any
   // views need to be reparented
-  nsHTMLContainerFrame::ReparentFrameView(aFrame->PresContext(), aFrame,
-                                          aOldParent, aNewParent);
+  nsContainerFrame::ReparentFrameView(aFrame->PresContext(), aFrame,
+                                      aOldParent, aNewParent);
 }
  
 //////////////////////////////////////////////////////////////////////

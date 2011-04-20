@@ -53,7 +53,6 @@ using mozilla::unused;
 #include "nsWindow.h"
 #include "nsIObserverService.h"
 
-#include "nsIDeviceContext.h"
 #include "nsRenderingContext.h"
 #include "nsIDOMSimpleGestureEvent.h"
 
@@ -198,7 +197,7 @@ nsWindow::Create(nsIWidget *aParent,
                  nsNativeWidget aNativeParent,
                  const nsIntRect &aRect,
                  EVENT_CALLBACK aHandleEventFunction,
-                 nsIDeviceContext *aContext,
+                 nsDeviceContext *aContext,
                  nsIAppShell *aAppShell,
                  nsIToolkit *aToolkit,
                  nsWidgetInitData *aInitData)

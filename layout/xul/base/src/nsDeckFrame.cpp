@@ -114,7 +114,7 @@ static void
 CreateViewsForFrames(const nsFrameList& aFrames)
 {
   for (nsFrameList::Enumerator f(aFrames); !f.AtEnd(); f.Next()) {
-    nsHTMLContainerFrame::CreateViewForFrame(f.get(), PR_TRUE);
+    nsContainerFrame::CreateViewForFrame(f.get(), PR_TRUE);
   }
 }
 

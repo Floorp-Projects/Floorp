@@ -62,7 +62,7 @@
 class nsIPresShell;
 class nsIContent;
 class nsRenderingContext;
-class nsIDeviceContext;
+class nsDeviceContext;
 class nsDisplayTableItem;
 class nsDisplayItem;
 
