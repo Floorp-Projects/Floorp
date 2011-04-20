@@ -86,6 +86,8 @@
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/StringObject-inl.h"
+
 #if JS_HAS_GENERATORS
 #include "jsiter.h"
 #endif
@@ -2930,25 +2932,6 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee)
 
 #ifdef JS_TRACER
 
-static JS_ALWAYS_INLINE JSObject*
-NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
-                        /*gc::FinalizeKind*/ unsigned _kind)
-{
-    JS_ASSERT(clasp->isNative());
-    gc::FinalizeKind kind = gc::FinalizeKind(_kind);
-
-    if (CanBeFinalizedInBackground(kind, clasp))
-        kind = (gc::FinalizeKind)(kind + 1);
-
-    JSObject* obj = js_NewGCObject(cx, kind);
-    if (!obj)
-        return NULL;
-
-    if (!obj->initSharingEmptyShape(cx, clasp, proto, proto->getParent(), NULL, kind))
-        return NULL;
-    return obj;
-}
-
 JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
@@ -2978,11 +2961,8 @@ JSObject* FASTCALL
 js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
-    JS_ASSERT(FINALIZE_OBJECT2 == gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(&js_StringClass)));
-    JSObject *obj = NewObjectWithClassProto(cx, &js_StringClass, proto, FINALIZE_OBJECT2);
-    if (!obj || !obj->initString(cx, str))
-        return NULL;
-    return obj;
+    JS_ASSERT(proto);
+    return StringObject::createWithProto(cx, str, *proto);
 }
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
                      nanojit::ACCSET_STORE_ANY)
@@ -6236,12 +6216,8 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
 JSObject *
 PrimitiveToObject(JSContext *cx, const Value &v)
 {
-    if (v.isString()) {
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
-        if (!obj || !obj->initString(cx, v.toString()))
-            return NULL;
-        return obj;
-    }
+    if (v.isString())
+        return StringObject::create(cx, v.toString());
 
     JS_ASSERT(v.isNumber() || v.isBoolean());
     Class *clasp = v.isNumber() ? &js_NumberClass : &js_BooleanClass;
