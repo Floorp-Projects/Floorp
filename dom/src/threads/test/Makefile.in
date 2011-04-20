@@ -131,7 +131,7 @@ _SUBDIR_TEST_FILES = \
 _CHROME_TEST_FILES = \
   test_chromeWorker.xul \
   test_chromeWorkerComponent.xul \
-  test_chromeWorkerJSM.xul \
+  $(warning test_chromeWorkerJSM.xul disabled because the respective code has major problems and is being rewritten, see bug 625222) \
   chromeWorker_worker.js \
   chromeWorker_subworker.js \
   $(NULL)
