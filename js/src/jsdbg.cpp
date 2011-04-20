@@ -129,7 +129,7 @@ Debug::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
             Value exc = cx->getPendingException();
             Value rv;
             cx->clearPendingException();
-            if (ExternalInvoke(cx, UndefinedValue(), fval, 1, &exc, &rv))
+            if (ExternalInvoke(cx, ObjectValue(*object), fval, 1, &exc, &rv))
                 return parseResumptionValue(ac, true, rv, vp, false);
         }
  
@@ -394,8 +394,12 @@ Debug::setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debug.set uncaughtExceptionHook", 1);
     THISOBJ(cx, vp, Debug, "set uncaughtExceptionHook", thisobj, dbg);
-    if (!vp[2].isObjectOrNull())
-        return ReportObjectRequired(cx);
+    if (!vp[2].isNull() && (!vp[2].isObject() || !vp[2].toObject().isCallable())) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_ASSIGN_FUNCTION_OR_NULL,
+                             "uncaughtExceptionHook");
+        return false;
+    }
+
     dbg->uncaughtExceptionHook = vp[2].toObjectOrNull();
     vp->setUndefined();
     return true;

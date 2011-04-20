@@ -14,6 +14,7 @@ dbg.hooks = {
     }
 };
 dbg.uncaughtExceptionHook = function (exc) {
+    assertEq(this, dbg);
     assertEq(exc instanceof TypeError, true);
     log += '!';
 };
