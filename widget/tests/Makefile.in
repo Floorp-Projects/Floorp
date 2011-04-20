@@ -113,6 +113,7 @@ _CHROME_FILES  += taskbar_previews.xul \
 		window_state_windows.xul \
 		taskbar_progress.xul \
 		test_chrome_context_menus_win.xul \
+		test_plugin_input_event.html \
 		chrome_context_menus_win.xul \
 		$(NULL)
 
