@@ -4153,9 +4153,7 @@ WatchdogMain(void *arg)
             PRIntervalTime sleepDuration = gWatchdogHasTimeout
                                            ? gWatchdogTimeout - now
                                            : PR_INTERVAL_NO_TIMEOUT;
-#ifdef DEBUG
-            PRStatus status =
-#endif
+            DebugOnly<PRStatus> status =
                 PR_WaitCondVar(gWatchdogWakeup, sleepDuration);
             JS_ASSERT(status == PR_SUCCESS);
         }

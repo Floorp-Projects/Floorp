@@ -1000,10 +1000,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
              * JSCONTEXT_DESTROY callback is not allowed to fail and must
              * return true.
              */
-#ifdef DEBUG
-            JSBool callbackStatus =
-#endif
-            cxCallback(cx, JSCONTEXT_DESTROY);
+            DebugOnly<JSBool> callbackStatus = cxCallback(cx, JSCONTEXT_DESTROY);
             JS_ASSERT(callbackStatus);
         }
     }
