@@ -73,7 +73,7 @@ JSObject::getEmptyShape(JSContext *cx, js::Class *aclasp,
 
     if (!emptyShapes) {
         emptyShapes = (js::EmptyShape**)
-            cx->calloc_(sizeof(js::EmptyShape*) * js::gc::JS_FINALIZE_OBJECT_LIMIT);
+            cx->calloc_(sizeof(js::EmptyShape*) * js::gc::FINALIZE_FUNCTION_AND_OBJECT_LAST);
         if (!emptyShapes)
             return NULL;
 
