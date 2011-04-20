@@ -95,6 +95,7 @@
 #include "nsThreadUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsIContent.h"
+#include "nsIEventStateManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsGUIEvent.h"
 

@@ -57,7 +57,6 @@
 #include "nsIMutableArray.h"
 #include "nsBindingManager.h"
 #include "nsComputedDOMStyle.h"
-#include "nsEventStateManager.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -237,7 +236,7 @@ inDOMUtils::SetContentState(nsIDOMElement *aElement, nsEventStates::InternalType
 {
   NS_ENSURE_ARG_POINTER(aElement);
   
-  nsRefPtr<nsEventStateManager> esm = inLayoutUtils::GetEventStateManagerFor(aElement);
+  nsCOMPtr<nsIEventStateManager> esm = inLayoutUtils::GetEventStateManagerFor(aElement);
   if (esm) {
     nsCOMPtr<nsIContent> content;
     content = do_QueryInterface(aElement);
@@ -255,7 +254,7 @@ inDOMUtils::GetContentState(nsIDOMElement *aElement, nsEventStates::InternalType
 
   NS_ENSURE_ARG_POINTER(aElement);
 
-  nsRefPtr<nsEventStateManager> esm = inLayoutUtils::GetEventStateManagerFor(aElement);
+  nsCOMPtr<nsIEventStateManager> esm = inLayoutUtils::GetEventStateManagerFor(aElement);
   if (esm) {
     nsCOMPtr<nsIContent> content;
     content = do_QueryInterface(aElement);

@@ -81,6 +81,7 @@
 #include "nsIHTMLCollection.h"
 
 #include "nsIConstraintValidation.h"
+#include "nsIEventStateManager.h"
 
 #include "nsIDOMHTMLButtonElement.h"
 

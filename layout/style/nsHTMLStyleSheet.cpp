@@ -59,7 +59,7 @@
 #include "nsStyleContext.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
 #include "nsStyleConsts.h"

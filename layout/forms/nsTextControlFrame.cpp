@@ -92,6 +92,7 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIEventStateManager.h"
 
 #include "nsIDOMFocusListener.h" //onchange events
 #include "nsIDOMCharacterData.h" //for selection setting helper func

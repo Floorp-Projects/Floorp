@@ -51,7 +51,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"

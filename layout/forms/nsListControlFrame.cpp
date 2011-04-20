@@ -59,7 +59,7 @@
 #include "nsHTMLParts.h"
 #include "nsIDOMEventTarget.h"
 #include "nsEventDispatcher.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
@@ -87,6 +87,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
+#include "nsIEventStateManager.h"
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -2071,8 +2072,9 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     }
   }
 
-  nsCOMPtr<nsIContent> content = PresContext()->EventStateManager()->
-    GetEventTargetContent(nsnull);
+  nsCOMPtr<nsIContent> content;
+  PresContext()->EventStateManager()->
+    GetEventTargetContent(nsnull, getter_AddRefs(content));
 
   nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
   if (optionContent) {

@@ -52,7 +52,7 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIAtom.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsPresContext.h"
 #include "nsILookAndFeel.h"

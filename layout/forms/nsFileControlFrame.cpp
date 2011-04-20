@@ -91,7 +91,7 @@
 #include "nsICapturePicker.h"
 #include "nsIFileURL.h"
 #include "nsDOMFile.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 
 namespace dom = mozilla::dom;
 

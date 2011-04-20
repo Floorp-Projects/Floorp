@@ -75,7 +75,7 @@
 #include "nsRootAccessibleWrap.h"
 #include "nsTextFragment.h"
 #include "mozilla/Services.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 
 #ifdef MOZ_XUL
 #include "nsXULAlertAccessible.h"

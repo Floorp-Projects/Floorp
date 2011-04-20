@@ -124,7 +124,7 @@ public:
    * test is used for optimization only, and may err on the side of
    * reporting more dependencies than really exist.
    *
-   * Event states are defined in nsEventStates.h.
+   * Event states are defined in nsIEventStateManager.h.
    */
   virtual nsRestyleHint
     HasStateDependentStyle(StateRuleProcessorData* aData) = 0;

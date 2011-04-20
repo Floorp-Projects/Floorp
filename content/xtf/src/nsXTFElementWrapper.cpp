@@ -48,7 +48,7 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsEventStateManager.h"
+#include "nsIEventStateManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEvent.h"
 #include "nsGUIEvent.h"
@@ -974,7 +974,7 @@ nsXTFElementWrapper::RegUnregAccessKey(PRBool aDoReg)
   if (!presContext)
     return;
 
-  nsEventStateManager *esm = presContext->EventStateManager();
+  nsIEventStateManager *esm = presContext->EventStateManager();
   if (!esm)
     return;
 

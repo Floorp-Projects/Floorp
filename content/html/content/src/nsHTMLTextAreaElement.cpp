@@ -58,7 +58,7 @@
 #include "nsMappedAttributes.h"
 #include "nsIFormControlFrame.h"
 #include "nsITextControlFrame.h"
-#include "nsEventStates.h"
+#include "nsIEventStateManager.h"
 #include "nsLinebreakConverter.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"

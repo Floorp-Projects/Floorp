@@ -89,7 +89,7 @@ class nsFrameManager;
 class nsILinkHandler;
 class nsStyleContext;
 class nsIAtom;
-class nsEventStateManager;
+class nsIEventStateManager;
 class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
