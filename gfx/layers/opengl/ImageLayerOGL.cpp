@@ -790,11 +790,12 @@ ShadowImageLayerOGL::~ShadowImageLayerOGL()
 {}
 
 PRBool
-ShadowImageLayerOGL::Init(const SurfaceDescriptor& aFront,
+ShadowImageLayerOGL::Init(const SharedImage& aFront,
                           const nsIntSize& aSize)
 {
   mDeadweight = aFront;
-  nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aFront);
+  nsRefPtr<gfxASurface> surf = 
+    ShadowLayerForwarder::OpenDescriptor(aFront.get_SurfaceDescriptor());
   gfxSize sz = surf->GetSize();
   mTexImage = gl()->CreateTextureImage(nsIntSize(sz.width, sz.height),
                                        surf->GetContentType(),
@@ -803,10 +804,11 @@ ShadowImageLayerOGL::Init(const SurfaceDescriptor& aFront,
 }
 
 void
-ShadowImageLayerOGL::Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack)
+ShadowImageLayerOGL::Swap(const SharedImage& aNewFront, SharedImage* aNewBack)
 {
   if (!mDestroyed && mTexImage) {
-    nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront);
+    nsRefPtr<gfxASurface> surf = 
+      ShadowLayerForwarder::OpenDescriptor(aNewFront.get_SurfaceDescriptor());
     // XXX this is always just ridiculously slow
     gfxSize sz = surf->GetSize();
     nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));

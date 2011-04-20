@@ -2433,9 +2433,9 @@ public:
     ShadowImageLayer::Disconnect();
   }
 
-  virtual PRBool Init(const SurfaceDescriptor& front, const nsIntSize& size);
+  virtual PRBool Init(const SharedImage& front, const nsIntSize& size);
 
-  virtual void Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack);
+  virtual void Swap(const SharedImage& aNewFront, SharedImage* aNewBack);
 
   virtual void DestroyFrontBuffer()
   {
@@ -2457,19 +2457,19 @@ protected:
 };
 
 PRBool
-BasicShadowImageLayer::Init(const SurfaceDescriptor& front,
+BasicShadowImageLayer::Init(const SharedImage& front,
                             const nsIntSize& size)
 {
-  mFrontBuffer = front;
+  mFrontBuffer = front.get_SurfaceDescriptor();
   mSize = gfxIntSize(size.width, size.height);
   return PR_TRUE;
 }
 
 void
-BasicShadowImageLayer::Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack)
+BasicShadowImageLayer::Swap(const SharedImage& aNewFront, SharedImage* aNewBack)
 {
   *aNewBack = mFrontBuffer;
-  mFrontBuffer = aNewFront;
+  mFrontBuffer = aNewFront.get_SurfaceDescriptor();
 }
 
 void
