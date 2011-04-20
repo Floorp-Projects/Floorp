@@ -5589,7 +5589,6 @@ JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **bufp, size_t *nbytesp,
 
 JS_PUBLIC_API(JSBool)
 JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
-                   ReadStructuredCloneOp optionalReadOp,
                    const JSStructuredCloneCallbacks *optionalCallbacks,
                    void *closure)
 {
