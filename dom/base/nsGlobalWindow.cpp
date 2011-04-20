@@ -7682,7 +7682,8 @@ nsGlobalWindow::PageHidden()
   mNeedsFocus = PR_TRUE;
 }
 
-class HashchangeCallback : public nsRunnable {
+class HashchangeCallback : public nsRunnable
+{
 public:
   HashchangeCallback(const nsAString &aOldURL,
                      const nsAString &aNewURL,
