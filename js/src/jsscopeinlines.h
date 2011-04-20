@@ -49,6 +49,8 @@
 #include "jsscope.h"
 #include "jsgc.h"
 
+#include "vm/StringObject.h"
+
 #include "jscntxtinlines.h"
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -134,33 +136,28 @@ JSObject::extend(JSContext *cx, const js::Shape *shape, bool isDefinitelyAtom)
     updateShape(cx);
 }
 
+namespace js {
+
 inline bool
-JSObject::initString(JSContext *cx, JSString *str)
+StringObject::init(JSContext *cx, JSString *str)
 {
-    JS_ASSERT(isString());
     JS_ASSERT(nativeEmpty());
 
-    const js::Shape **shapep = &cx->compartment->initialStringShape;
+    const Shape **shapep = &cx->compartment->initialStringShape;
     if (*shapep) {
         setLastProperty(*shapep);
     } else {
-        *shapep = assignInitialStringShape(cx);
+        *shapep = assignInitialShape(cx);
         if (!*shapep)
             return false;
     }
     JS_ASSERT(*shapep == lastProperty());
     JS_ASSERT(!nativeEmpty());
+    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot == LENGTH_SLOT);
 
-    JS_ASSERT(nativeLookup(ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))->slot ==
-              JSObject::JSSLOT_STRING_LENGTH);
-
-    setPrimitiveThis(js::StringValue(str));
-    JS_ASSERT(str->length() <= JSString::MAX_LENGTH);
-    setSlot(JSSLOT_STRING_LENGTH, js::Int32Value(int32(str->length())));
+    setStringThis(str);
     return true;
 }
-
-namespace js {
 
 inline
 Shape::Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot, uintN attrs,
