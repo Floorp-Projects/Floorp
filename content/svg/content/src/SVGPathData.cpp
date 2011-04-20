@@ -258,6 +258,7 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
   PRUint32 i = 0;
   while (i < mData.Length()) {
     segType = SVGPathSegUtils::DecodeType(mData[i++]);
+    PRUint32 argCount = SVGPathSegUtils::ArgCountForType(segType);
 
     switch (segType)
     {
@@ -269,25 +270,21 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
     case nsIDOMSVGPathSeg::PATHSEG_MOVETO_ABS:
       pathStart = segEnd = gfxPoint(mData[i], mData[i+1]);
       aCtx->MoveTo(segEnd);
-      i += 2;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_MOVETO_REL:
       pathStart = segEnd = segStart + gfxPoint(mData[i], mData[i+1]);
       aCtx->MoveTo(segEnd);
-      i += 2;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_LINETO_ABS:
       segEnd = gfxPoint(mData[i], mData[i+1]);
       aCtx->LineTo(segEnd);
-      i += 2;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_LINETO_REL:
       segEnd = segStart + gfxPoint(mData[i], mData[i+1]);
       aCtx->LineTo(segEnd);
-      i += 2;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_ABS:
@@ -295,7 +292,6 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
       cp2 = gfxPoint(mData[i+2], mData[i+3]);
       segEnd = gfxPoint(mData[i+4], mData[i+5]);
       aCtx->CurveTo(cp1, cp2, segEnd);
-      i += 6;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_REL:
@@ -303,7 +299,6 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
       cp2 = segStart + gfxPoint(mData[i+2], mData[i+3]);
       segEnd = segStart + gfxPoint(mData[i+4], mData[i+5]);
       aCtx->CurveTo(cp1, cp2, segEnd);
-      i += 6;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_ABS:
@@ -313,7 +308,6 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
       segEnd = gfxPoint(mData[i+2], mData[i+3]); // set before setting tcp2!
       tcp2 = cp1 + (segEnd - cp1) / 3;
       aCtx->CurveTo(tcp1, tcp2, segEnd);
-      i += 4;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_REL:
@@ -323,7 +317,6 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
       segEnd = segStart + gfxPoint(mData[i+2], mData[i+3]); // set before setting tcp2!
       tcp2 = cp1 + (segEnd - cp1) / 3;
       aCtx->CurveTo(tcp1, tcp2, segEnd);
-      i += 4;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_ARC_ABS:
@@ -345,27 +338,26 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
           }
         }
       }
-      i += 7;
       break;
     }
 
     case nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_ABS:
-      segEnd = gfxPoint(mData[i++], segStart.y);
+      segEnd = gfxPoint(mData[i], segStart.y);
       aCtx->LineTo(segEnd);
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_LINETO_HORIZONTAL_REL:
-      segEnd = segStart + gfxPoint(mData[i++], 0.0f);
+      segEnd = segStart + gfxPoint(mData[i], 0.0f);
       aCtx->LineTo(segEnd);
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_ABS:
-      segEnd = gfxPoint(segStart.x, mData[i++]);
+      segEnd = gfxPoint(segStart.x, mData[i]);
       aCtx->LineTo(segEnd);
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_LINETO_VERTICAL_REL:
-      segEnd = segStart + gfxPoint(0.0f, mData[i++]);
+      segEnd = segStart + gfxPoint(0.0f, mData[i]);
       aCtx->LineTo(segEnd);
       break;
 
@@ -374,7 +366,6 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
       cp2 = gfxPoint(mData[i],   mData[i+1]);
       segEnd = gfxPoint(mData[i+2], mData[i+3]);
       aCtx->CurveTo(cp1, cp2, segEnd);
-      i += 4;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_CUBIC_SMOOTH_REL:
@@ -382,7 +373,6 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
       cp2 = segStart + gfxPoint(mData[i], mData[i+1]);
       segEnd = segStart + gfxPoint(mData[i+2], mData[i+3]);
       aCtx->CurveTo(cp1, cp2, segEnd);
-      i += 4;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_ABS:
@@ -392,7 +382,6 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
       segEnd = gfxPoint(mData[i], mData[i+1]); // set before setting tcp2!
       tcp2 = cp1 + (segEnd - cp1) / 3;
       aCtx->CurveTo(tcp1, tcp2, segEnd);
-      i += 2;
       break;
 
     case nsIDOMSVGPathSeg::PATHSEG_CURVETO_QUADRATIC_SMOOTH_REL:
@@ -402,13 +391,13 @@ SVGPathData::ConstructPath(gfxContext *aCtx) const
       segEnd = segStart + gfxPoint(mData[i], mData[i+1]); // changed before setting tcp2!
       tcp2 = cp1 + (segEnd - cp1) / 3;
       aCtx->CurveTo(tcp1, tcp2, segEnd);
-      i += 2;
       break;
 
     default:
       NS_NOTREACHED("Bad path segment type");
       return; // according to spec we'd use everything up to the bad seg anyway
     }
+    i += argCount;
     prevSegType = segType;
     segStart = segEnd;
   }
