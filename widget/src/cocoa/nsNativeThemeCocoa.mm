@@ -111,6 +111,108 @@ extern "C" {
 
 @end
 
+/**
+ * NSProgressBarCell is used to draw progress bars of any size.
+ */
+@interface NSProgressBarCell : NSCell
+{
+    /*All instance variables are private*/
+    double mValue;
+    double mMax;
+    bool   mIsIndeterminate;
+    bool   mIsHorizontal;
+}
+
+- (void)setValue:(double)value;
+- (double)value;
+- (void)setMax:(double)max;
+- (double)max;
+- (void)setIndeterminate:(bool)aIndeterminate;
+- (bool)isIndeterminate;
+- (void)setHorizontal:(bool)aIsHorizontal;
+- (bool)isHorizontal;
+- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView;
+@end
+
+@implementation NSProgressBarCell
+
+- (void)setMax:(double)aMax
+{
+  mMax = aMax;
+}
+
+- (double)max
+{
+  return mMax;
+}
+
+- (void)setValue:(double)aValue
+{
+  mValue = aValue;
+}
+
+- (double)value
+{
+  return mValue;
+}
+
+- (void)setIndeterminate:(bool)aIndeterminate
+{
+  mIsIndeterminate = aIndeterminate;
+}
+
+- (bool)isIndeterminate
+{
+  return mIsIndeterminate;
+}
+
+- (void)setHorizontal:(bool)aIsHorizontal
+{
+  mIsHorizontal = aIsHorizontal;
+}
+
+- (bool)isHorizontal
+{
+  return mIsHorizontal;
+}
+
+- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
+{
+  CGContext* cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
+
+  HIThemeTrackDrawInfo tdi;
+
+  tdi.version = 0;
+  tdi.min = 0;
+
+  tdi.value = PR_INT32_MAX * (mValue / mMax);
+  tdi.max = PR_INT32_MAX;
+  tdi.bounds = NSRectToCGRect(cellFrame);
+  tdi.attributes = mIsHorizontal ? kThemeTrackHorizontal : 0;
+  tdi.enableState = [self controlTint] == NSClearControlTint ? kThemeTrackInactive
+                                                             : kThemeTrackActive;
+
+  NSControlSize size = [self controlSize];
+  if (size == NSRegularControlSize) {
+    tdi.kind = mIsIndeterminate ? kThemeLargeIndeterminateBar
+                                : kThemeLargeProgressBar;
+  } else {
+    NS_ASSERTION(size == NSSmallControlSize,
+                 "We shouldn't have another size than small and regular for the moment");
+    tdi.kind = mIsIndeterminate ? kThemeMediumIndeterminateBar
+                                : kThemeMediumProgressBar;
+  }
+
+  PRInt32 stepsPerSecond = mIsIndeterminate ? 60 : 30;
+  PRInt32 milliSecondsPerStep = 1000 / stepsPerSecond;
+  tdi.trackInfo.progress.phase = PR_IntervalToMilliseconds(PR_IntervalNow()) /
+                                 milliSecondsPerStep % 32;
+
+  HIThemeDrawTrack(&tdi, NULL, cgContext, kHIThemeOrientationNormal);
+}
+
+@end
+
 // Workaround for Bug 542048
 // On 64-bit, NSSearchFieldCells don't draw focus rings.
 #if defined(__x86_64__)
@@ -266,6 +368,8 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mComboBoxCell setEditable:YES];
   [mComboBoxCell setFocusRingType:NSFocusRingTypeExterior];
 
+  mProgressBarCell = [[NSProgressBarCell alloc] init];
+
   mCellDrawView = [[CellDrawView alloc] init];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -275,6 +379,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  [mProgressBarCell release];
   [mPushButtonCell release];
   [mRadioButtonCell release];
   [mCheckboxCell release];
@@ -1032,13 +1137,44 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static void
-RenderProgress(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
-{
-  HIThemeTrackDrawInfo* tdi = (HIThemeTrackDrawInfo*)aData;
-  tdi->bounds = aRenderRect;
-  HIThemeDrawTrack(tdi, NULL, cgContext, kHIThemeOrientationNormal);
-}
+static const CellRenderSettings progressSettings[2] = {
+  // Determined settings.
+  {
+    {
+      NSZeroSize, // mini
+      NSMakeSize(0, 10), // small
+      NSMakeSize(0, 16)  // regular
+    },
+    {
+      NSZeroSize, NSZeroSize, NSZeroSize
+    },
+    {
+      { // Leopard
+        {0, 0, 0, 0},     // mini
+        {1, 1, 1, 1},     // small
+        {1, 1, 1, 1}      // regular
+      }
+    }
+  },
+  // There is no horizontal margin in regular undetermined size.
+  {
+    {
+      NSZeroSize, // mini
+      NSMakeSize(0, 10), // small
+      NSMakeSize(0, 16)  // regular
+    },
+    {
+      NSZeroSize, NSZeroSize, NSZeroSize
+    },
+    {
+      { // Leopard
+        {0, 0, 0, 0},     // mini
+        {1, 1, 1, 1},     // small
+        {0, 1, 0, 1}      // regular
+      }
+    }
+  }
+};
 
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
@@ -1048,24 +1184,19 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  HIThemeTrackDrawInfo tdi;
+  NSProgressBarCell* cell = mProgressBarCell;
 
-  PRInt32 stepsPerSecond = inIsIndeterminate ? 60 : 30;
-  PRInt32 milliSecondsPerStep = 1000 / stepsPerSecond;
+  [cell setValue:inValue];
+  [cell setMax:inMaxValue];
+  [cell setIndeterminate:inIsIndeterminate];
+  [cell setHorizontal:inIsHorizontal];
+  [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint]
+                                                      : NSClearControlTint)];
 
-  tdi.version = 0;
-  tdi.kind = inIsIndeterminate ? kThemeMediumIndeterminateBar: kThemeMediumProgressBar;
-  tdi.bounds = inBoxRect;
-  tdi.min = 0;
-  tdi.max = PR_INT32_MAX;
-  tdi.value = PR_INT32_MAX * (inValue / inMaxValue);
-  tdi.attributes = inIsHorizontal ? kThemeTrackHorizontal : 0;
-  tdi.enableState = FrameIsInActiveWindow(aFrame) ? kThemeTrackActive : kThemeTrackInactive;
-  tdi.trackInfo.progress.phase = PR_IntervalToMilliseconds(PR_IntervalNow()) /
-                                 milliSecondsPerStep % 16;
-
-  RenderTransformedHIThemeControl(cgContext, inBoxRect, RenderProgress, &tdi,
-                                  IsFrameRTL(aFrame));
+  DrawCellWithSnapping(cell, cgContext, inBoxRect,
+                       progressSettings[inIsIndeterminate],
+                       VerticalAlignFactor(aFrame), mCellDrawView,
+                       IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
