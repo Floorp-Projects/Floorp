@@ -56,6 +56,7 @@
 #include "jscntxt.h"
 #include "jsdate.h"
 #include "jsversion.h"
+#include "jsdbg.h"
 #include "jsdbgapi.h"
 #include "jsfun.h"
 #include "jsgc.h"
@@ -6173,7 +6174,7 @@ BEGIN_CASE(JSOP_DEBUGGER)
     if (JSDebuggerHandler handler = cx->debugHooks->debuggerHandler)
         st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->debuggerHandlerData);
     if (st == JSTRAP_CONTINUE)
-        st = cx->compartment->onDebuggerStatement(cx, &rval);
+        st = Debug::onDebuggerStatement(cx, &rval);
     switch (st) {
       case JSTRAP_ERROR:
         goto error;

@@ -206,11 +206,9 @@ CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Va
 }
 
 JSTrapStatus
-Debug::onDebuggerStatement(JSContext *cx, Value *vp)
+Debug::handleDebuggerStatement(JSContext *cx, Value *vp)
 {
-    if (!hasDebuggerHandler)
-        return JSTRAP_CONTINUE;
-
+    JS_ASSERT(hasDebuggerHandler);
     AutoCompartment ac(cx, hooksObject);
     if (!ac.enter())
         return JSTRAP_ERROR;
@@ -222,7 +220,7 @@ Debug::onDebuggerStatement(JSContext *cx, Value *vp)
 }
 
 JSTrapStatus
-JSCompartment::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
+Debug::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
 {
     // Determine which debuggers will receive this event, and in what order.
     // Make a copy of the list, since the original is mutable and we will be
@@ -230,6 +228,8 @@ JSCompartment::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
     // Note: In the general case, 'triggered' contains references to objects in
     // different compartments--every compartment *except* this one.
     AutoValueVector triggered(cx);
+    JSCompartment *compartment = cx->compartment;
+    const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
     for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
         Debug *dbg = *p;
         if (dbg->observesDebuggerStatement()) {
@@ -242,7 +242,7 @@ JSCompartment::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
     // should still be delivered.
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debug *dbg = Debug::fromJSObject(&p->toObject());
-        if (dbg->observesCompartment(this) && dbg->observesDebuggerStatement()) {
+        if (dbg->observesCompartment(compartment) && dbg->observesDebuggerStatement()) {
             JSTrapStatus st = dbg->onDebuggerStatement(cx, vp);
             if (st != JSTRAP_CONTINUE)
                 return st;
@@ -299,18 +299,6 @@ Debug::trace(JSTracer *trc, JSObject *obj)
         if (dbg->uncaughtExceptionHook)
             MarkObject(trc, *dbg->uncaughtExceptionHook, "hooks");
     }
-}
-
-void
-JSCompartment::removeDebug(Debug *dbg)
-{
-    for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
-        if (*p == dbg) {
-            debuggers.erase(p);
-            return;
-        }
-    }
-    JS_NOT_REACHED("JSCompartment::removeDebug");
 }
 
 void
@@ -458,7 +446,7 @@ JSPropertySpec Debug::properties[] = {
             Debug::setUncaughtExceptionHook, 0),
     JS_PS_END
 };
-    
+
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineDebugObject(JSContext *cx, JSObject *obj)

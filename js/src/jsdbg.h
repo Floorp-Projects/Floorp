@@ -43,6 +43,7 @@
 #define jsdbg_h__
 
 #include "jsapi.h"
+#include "jscompartment.h"
 #include "jsgc.h"
 #include "jswrapper.h"
 #include "jsvalue.h"
@@ -80,7 +81,11 @@ class Debug {
     static JSBool construct(JSContext *cx, uintN argc, Value *vp);
     static JSPropertySpec properties[];
 
-    bool hasAnyLiveHooks() const { return observesDebuggerStatement(); }
+    inline bool hasAnyLiveHooks() const;
+
+    inline bool observesDebuggerStatement() const;
+    static JSTrapStatus dispatchDebuggerStatement(JSContext *cx, Value *vp);
+    JSTrapStatus handleDebuggerStatement(JSContext *cx, Value *vp);
 
   public:
     Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment);
@@ -101,24 +106,54 @@ class Debug {
     //
     static bool mark(GCMarker *trc, JSCompartment *compartment, JSGCInvocationKind gckind);
 
-    JSObject *toJSObject() const {
-        JS_ASSERT(object);
-        return object;
-    }
+    inline JSObject *toJSObject() const;
+    static inline Debug *fromJSObject(JSObject *obj);
 
-    static Debug *fromJSObject(JSObject *obj) {
-        JS_ASSERT(obj->getClass() == &jsclass);
-        return (Debug *) obj->getPrivate();
-    }
+    inline bool observesCompartment(JSCompartment *c) const;
 
-    bool observesCompartment(JSCompartment *c) const {
-        JS_ASSERT(c);
-        return debuggeeCompartment == c;
-    }
-
-    bool observesDebuggerStatement() const { return enabled && hasDebuggerHandler; }
-    JSTrapStatus onDebuggerStatement(JSContext *cx, Value *vp);
+    static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
 };
+
+bool
+Debug::hasAnyLiveHooks() const
+{
+    return observesDebuggerStatement();
+}
+
+bool
+Debug::observesCompartment(JSCompartment *c) const
+{
+    JS_ASSERT(c);
+    return debuggeeCompartment == c;
+}
+
+JSObject *
+Debug::toJSObject() const
+{
+    JS_ASSERT(object);
+    return object;
+}
+
+Debug *
+Debug::fromJSObject(JSObject *obj)
+{
+    JS_ASSERT(obj->getClass() == &jsclass);
+    return (Debug *) obj->getPrivate();
+}
+
+bool
+Debug::observesDebuggerStatement() const
+{
+    return enabled && hasDebuggerHandler;
+}
+
+JSTrapStatus
+Debug::onDebuggerStatement(JSContext *cx, js::Value *vp)
+{
+    return cx->compartment->getDebuggers().empty()
+           ? JSTRAP_CONTINUE
+           : dispatchDebuggerStatement(cx, vp);
+}
 
 }
 

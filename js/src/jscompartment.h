@@ -506,9 +506,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     DebugVector debuggers;
 
-    // Implemented in jsdbg.cpp
-    JSTrapStatus dispatchDebuggerStatement(JSContext *cx, js::Value *vp);
-
     JSCompartment *thisForCtor() { return this; }
   public:
     js::MathCache *getMathCache(JSContext *cx) {
@@ -519,10 +516,6 @@ struct JS_FRIEND_API(JSCompartment) {
     size_t incBackEdgeCount(jsbytecode *pc);
 
     const DebugVector &getDebuggers() const { return debuggers; }
-
-    JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp) {
-        return debuggers.empty() ? JSTRAP_CONTINUE : dispatchDebuggerStatement(cx, vp);
-    }
 
     bool addDebug(js::Debug *dbg) { return debuggers.append(dbg); }
     void removeDebug(js::Debug *dbg);
