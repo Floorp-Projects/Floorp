@@ -660,8 +660,6 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
     return NS_OK;
   }
   
-  nsPresContext* presContext = line->mFirstChild->PresContext();
-
   nsIFrame* leftmostFrame;
   nsIFrame* rightmostFrame;
   *aIsReordered = nsBidiPresUtils::CheckLineOrder(line->mFirstChild, line->GetChildCount(), &leftmostFrame, &rightmostFrame);
