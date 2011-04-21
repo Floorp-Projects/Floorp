@@ -192,7 +192,7 @@ ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
                                           const SurfaceDescriptor& aTempFrontBuffer)
 {
   OptionalThebesBuffer buffer = null_t();
-  if (IsSurfaceDescriptorValid(aTempFrontBuffer)) {
+  if (SurfaceDescriptor::T__None != aTempFrontBuffer.type()) {
     buffer = ThebesBuffer(aTempFrontBuffer,
                           aBufferRect,
                           nsIntPoint(0, 0));
@@ -207,21 +207,21 @@ ShadowLayerForwarder::CreatedThebesBuffer(ShadowableLayer* aThebes,
 void
 ShadowLayerForwarder::CreatedImageBuffer(ShadowableLayer* aImage,
                                          nsIntSize aSize,
-                                         const SurfaceDescriptor& aTempFrontSurface)
+                                         gfxSharedImageSurface* aTempFrontSurface)
 {
   mTxn->AddEdit(OpCreateImageBuffer(NULL, Shadow(aImage),
                                     aSize,
-                                    aTempFrontSurface));
+                                    aTempFrontSurface->GetShmem()));
 }
 
 void
 ShadowLayerForwarder::CreatedCanvasBuffer(ShadowableLayer* aCanvas,
                                           nsIntSize aSize,
-                                          const SurfaceDescriptor& aTempFrontSurface)
+                                          gfxSharedImageSurface* aTempFrontSurface)
 {
   mTxn->AddEdit(OpCreateCanvasBuffer(NULL, Shadow(aCanvas),
                                      aSize,
-                                     aTempFrontSurface));
+                                     aTempFrontSurface->GetShmem()));
 }
 
 void
@@ -291,17 +291,17 @@ ShadowLayerForwarder::PaintedThebesBuffer(ShadowableLayer* aThebes,
 }
 void
 ShadowLayerForwarder::PaintedImage(ShadowableLayer* aImage,
-                                   const SurfaceDescriptor& aNewFrontSurface)
+                                   gfxSharedImageSurface* aNewFrontSurface)
 {
   mTxn->AddPaint(OpPaintImage(NULL, Shadow(aImage),
-                              aNewFrontSurface));
+                              aNewFrontSurface->GetShmem()));
 }
 void
 ShadowLayerForwarder::PaintedCanvas(ShadowableLayer* aCanvas,
-                                    const SurfaceDescriptor& aNewFrontSurface)
+                                    gfxSharedImageSurface* aNewFrontSurface)
 {
   mTxn->AddPaint(OpPaintCanvas(NULL, Shadow(aCanvas),
-                               aNewFrontSurface));
+                               aNewFrontSurface->GetShmem()));
 }
 
 PRBool
@@ -635,12 +635,6 @@ ShadowLayerManager::PlatformSyncBeforeReplyUpdate()
 }
 
 #endif  // !defined(MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS)
-
-PRBool
-IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface)
-{
-  return SurfaceDescriptor::T__None != aSurface.type();
-}
 
 } // namespace layers
 } // namespace mozilla
