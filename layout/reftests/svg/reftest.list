@@ -196,6 +196,8 @@ fails-if(Android) random-if(gtk2Widget) != text-language-01.xhtml text-language-
 == text-layout-03.svg text-layout-03-ref.svg
 == text-scale-01.svg text-scale-01-ref.svg
 == text-stroke-scaling-01.svg text-stroke-scaling-01-ref.svg
+== stroke-linecap-square-w-zero-length-segs-01.svg pass.svg
+== stroke-linecap-square-w-zero-length-segs-02.svg pass.svg
 == text-style-01a.svg text-style-01-ref.svg
 == text-style-01b.svg text-style-01-ref.svg
 == text-style-01c.svg text-style-01-ref.svg

@@ -66,7 +66,8 @@ protected:
     : nsSVGGlyphFrameBase(aContext),
       mTextRun(nsnull),
       mStartIndex(0),
-      mWhitespaceHandling(COMPRESS_WHITESPACE)
+      mWhitespaceHandling(COMPRESS_WHITESPACE),
+      mPropagateTransform(PR_TRUE)
       {}
   ~nsSVGGlyphFrame()
   {
@@ -126,8 +127,6 @@ public:
   virtual void NotifySVGChanged(PRUint32 aFlags);
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
-  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
-  virtual PRBool GetMatrixPropagation();
   NS_IMETHOD_(PRBool) IsDisplayContainer() { return PR_FALSE; }
   NS_IMETHOD_(PRBool) HasValidCoveredRect() { return PR_TRUE; }
 
@@ -229,6 +228,7 @@ protected:
   // The start index into the position and rotation data
   PRUint32 mStartIndex;
   PRUint8 mWhitespaceHandling;
+  PRPackedBool mPropagateTransform;
 };
 
 #endif

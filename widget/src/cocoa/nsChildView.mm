@@ -5649,6 +5649,15 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
           return;
         }
       }
+
+      // Don't send complex text input to a plugin in Cocoa event mode if
+      // either the Control key or the Command key is pressed -- even if the
+      // plugin has requested it, or we are already in IME composition.  This
+      // conforms to our behavior in 64-bit mode and fixes bug 619217.
+      NSUInteger modifierFlags = [theEvent modifierFlags];
+      if ((modifierFlags & NSControlKeyMask) || (modifierFlags & NSCommandKeyMask)) {
+        return;
+      }
     }
 
     // This will take care of all Carbon plugin events and also send Cocoa plugin
