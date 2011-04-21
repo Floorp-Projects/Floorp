@@ -1114,6 +1114,11 @@ namespace JSC {
             return true;
         }
 
+        static bool canLinkJump(void* code, JmpSrc where, void* value)
+        {
+            return true;
+        }
+
         static void linkCall(void* code, JmpSrc from, void* to)
         {
             js::JaegerSpew(js::JSpew_Insns,
