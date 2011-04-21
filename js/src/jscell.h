@@ -46,11 +46,16 @@ namespace js {
 namespace gc {
 
 template <typename T> struct Arena;
-struct ArenaBitmap;
 struct ArenaHeader;
 struct MarkingDelay;
 struct Chunk;
 struct FreeCell;
+
+/*
+ * Live objects are marked black. How many other additional colors are available
+ * depends on the size of the GCThing.
+ */
+static const uint32 BLACK = 0;
 
 /*
  * A GC cell is the base class for GC Things like JSObject, JSShortString,
@@ -68,11 +73,9 @@ struct Cell {
     inline uintptr_t address() const;
     inline ArenaHeader *arenaHeader() const;
     inline Chunk *chunk() const;
-    inline ArenaBitmap *bitmap() const;
-    JS_ALWAYS_INLINE size_t cellIndex() const;
 
-    JS_ALWAYS_INLINE bool isMarked(uint32 color) const;
-    JS_ALWAYS_INLINE bool markIfUnmarked(uint32 color) const;
+    JS_ALWAYS_INLINE bool isMarked(uint32 color = BLACK) const;
+    JS_ALWAYS_INLINE bool markIfUnmarked(uint32 color = BLACK) const;
     JS_ALWAYS_INLINE void unmark(uint32 color) const;
 
     inline JSCompartment *compartment() const;
