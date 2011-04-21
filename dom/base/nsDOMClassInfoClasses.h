@@ -478,6 +478,7 @@ DOMCI_CLASS(PaintRequestList)
 
 DOMCI_CLASS(ScrollAreaEvent)
 DOMCI_CLASS(PopStateEvent)
+DOMCI_CLASS(HashChangeEvent)
 
 DOMCI_CLASS(EventListenerInfo)
 

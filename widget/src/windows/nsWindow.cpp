@@ -118,6 +118,7 @@
 #include "prprf.h"
 #include "prmem.h"
 
+#include "mozilla/WidgetTraceEvent.h"
 #include "nsIAppShell.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIDOMNSUIEvent.h"
@@ -3993,10 +3994,17 @@ PRBool nsWindow::DispatchPluginEvent(UINT aMessage,
 }
 
 void nsWindow::RemoveMessageAndDispatchPluginEvent(UINT aFirstMsg,
-                                                   UINT aLastMsg)
+                 UINT aLastMsg, nsFakeCharMessage* aFakeCharMessage)
 {
   MSG msg;
-  ::GetMessageW(&msg, mWnd, aFirstMsg, aLastMsg);
+  if (aFakeCharMessage) {
+    if (aFirstMsg > WM_CHAR || aLastMsg < WM_CHAR) {
+      return;
+    }
+    msg = aFakeCharMessage->GetCharMessage(mWnd);
+  } else {
+    ::GetMessageW(&msg, mWnd, aFirstMsg, aLastMsg);
+  }
   DispatchPluginEvent(msg);
 }
 
@@ -4590,6 +4598,13 @@ LRESULT CALLBACK nsWindow::WindowProcInternal(HWND hWnd, UINT msg, WPARAM wParam
       WNDPROC prevWindowProc = (WNDPROC)::GetWindowLongPtr(hWnd, GWLP_USERDATA);
       return ::CallWindowProcW(prevWindowProc, hWnd, msg, wParam, lParam);
     }
+  }
+
+  if (msg == MOZ_WM_TRACE) {
+    // This is a tracer event for measuring event loop latency.
+    // See WidgetTraceEvent.cpp for more details.
+    mozilla::SignalTracerThread();
+    return 0;
   }
 
   // Get the window which caused the event and ask it to process the message
@@ -6986,6 +7001,8 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
     PRBool anyCharMessagesRemoved = PR_FALSE;
 
     if (aFakeCharMessage) {
+      RemoveMessageAndDispatchPluginEvent(WM_KEYFIRST, WM_KEYLAST,
+                                          aFakeCharMessage);
       anyCharMessagesRemoved = PR_TRUE;
     } else {
       while (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR))
@@ -7010,9 +7027,12 @@ LRESULT nsWindow::OnKeyDown(const MSG &aMsg,
   else if (gotMsg &&
            (aFakeCharMessage ||
             msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
-    if (aFakeCharMessage)
+    if (aFakeCharMessage) {
+      MSG msg = aFakeCharMessage->GetCharMessage(mWnd);
       return OnCharRaw(aFakeCharMessage->mCharCode,
-                       aFakeCharMessage->mScanCode, aModKeyState, extraFlags);
+                       aFakeCharMessage->mScanCode,
+                       aModKeyState, extraFlags, &msg);
+    }
 
     // If prevent default set for keydown, do same for keypress
     ::GetMessageW(&msg, mWnd, msg.message, msg.message);

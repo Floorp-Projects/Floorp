@@ -56,6 +56,8 @@
 // A magic APP message that can be sent to quit, sort of like a QUERYENDSESSION/ENDSESSION,
 // but without the query.
 #define MOZ_WM_APP_QUIT                   (WM_APP+0x0300)
+// Used as a "tracer" event to probe event loop latency.
+#define MOZ_WM_TRACE                      (WM_APP+0x0301)
 
 // GetWindowsVersion constants
 #define WIN2K_VERSION                     0x500
@@ -244,6 +246,18 @@ struct nsAlternativeCharCode; // defined in nsGUIEvent.h
 struct nsFakeCharMessage {
   UINT mCharCode;
   UINT mScanCode;
+
+  MSG GetCharMessage(HWND aWnd)
+  {
+    MSG msg;
+    msg.hwnd = aWnd;
+    msg.message = WM_CHAR;
+    msg.wParam = static_cast<WPARAM>(mCharCode);
+    msg.lParam = static_cast<LPARAM>(mScanCode);
+    msg.time = 0;
+    msg.pt.x = msg.pt.y = 0;
+    return msg;
+  }
 };
 
 // Used in char processing

@@ -127,8 +127,8 @@
           </vbox>
 
           <vbox id="channelSelector">
-            <hbox pack="center" align="center">
-              <label>&channel.selector.start;</label>
+            <hbox pack="start" align="center">
+              <label id="channelSelectorStart">&channel.selector.start;</label>
               <menulist id="channelMenulist" onselect="gChannelSelector.selectChannel(this.selectedItem);">
                 <menupopup>
                   <menuitem id="releaseMenuitem" label="Release" value="release"/>
@@ -146,9 +146,14 @@
               <description id="auroraDescription" class="channel-description">&channel.aurora.description;</description>
             </deck>
 
-            <hbox id="channelSelectorButtons" pack="center">
+            <hbox id="channelSelectorButtons" pack="end">
+#ifdef XP_UNIX
+              <button oncommand="gChannelSelector.cancel();" label="&channel.selector.cancelButton;"/>
+              <button oncommand="gChannelSelector.apply();" label="&channel.selector.applyButton;"/>
+#else
               <button oncommand="gChannelSelector.apply();" label="&channel.selector.applyButton;"/>
               <button oncommand="gChannelSelector.cancel();" label="&channel.selector.cancelButton;"/>
+#endif
             </hbox>
           </vbox>
         </deck>

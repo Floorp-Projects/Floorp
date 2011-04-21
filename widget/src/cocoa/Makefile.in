@@ -60,40 +60,41 @@ EXPORTS = \
 		$(NULL)
 
 CMMSRCS = \
-		nsBidiKeyboard.mm \
-		nsClipboard.mm \
-		nsMenuX.mm \
-		nsMenuBarX.mm \
-		nsMenuItemX.mm \
-		nsMenuItemIconX.mm \
-		nsMenuUtilsX.mm \
-		nsMenuGroupOwnerX.mm \
-		nsFilePicker.mm \
-		nsDragService.mm \
-		nsToolkit.mm \
-		nsAppShell.mm \
-		nsCocoaUtils.mm \
-		nsCocoaWindow.mm \
-		nsChildView.mm \
-		nsWindowMap.mm \
-		nsWidgetFactory.mm \
-		nsCursorManager.mm \
-		nsMacCursor.mm \
-		nsScreenCocoa.mm \
-		nsScreenManagerCocoa.mm \
-		nsSound.mm \
-		nsLookAndFeel.mm \
-		nsNativeThemeCocoa.mm \
-		nsDeviceContextSpecX.mm \
-		nsPrintDialogX.mm \
-		nsPrintOptionsX.mm \
-		nsPrintSettingsX.mm \
-		nsIdleServiceX.mm \
-		nsCocoaTextInputHandler.mm \
-		nsMacDockSupport.mm \
-		nsStandaloneNativeMenu.mm \
-		GfxInfo.mm \
-		$(NULL)
+  nsBidiKeyboard.mm \
+  nsClipboard.mm \
+  nsMenuX.mm \
+  nsMenuBarX.mm \
+  nsMenuItemX.mm \
+  nsMenuItemIconX.mm \
+  nsMenuUtilsX.mm \
+  nsMenuGroupOwnerX.mm \
+  nsFilePicker.mm \
+  nsDragService.mm \
+  nsToolkit.mm \
+  nsAppShell.mm \
+  nsCocoaUtils.mm \
+  nsCocoaWindow.mm \
+  nsChildView.mm \
+  nsWindowMap.mm \
+  nsWidgetFactory.mm \
+  nsCursorManager.mm \
+  nsMacCursor.mm \
+  nsScreenCocoa.mm \
+  nsScreenManagerCocoa.mm \
+  nsSound.mm \
+  nsLookAndFeel.mm \
+  nsNativeThemeCocoa.mm \
+  nsDeviceContextSpecX.mm \
+  nsPrintDialogX.mm \
+  nsPrintOptionsX.mm \
+  nsPrintSettingsX.mm \
+  nsIdleServiceX.mm \
+  nsCocoaTextInputHandler.mm \
+  nsMacDockSupport.mm \
+  nsStandaloneNativeMenu.mm \
+  GfxInfo.mm \
+  WidgetTraceEvent.mm \
+  $(NULL)
 
 ifeq (x86_64,$(TARGET_CPU))
 CMMSRCS += ComplexTextInputPanel.mm

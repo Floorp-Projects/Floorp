@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for plugin input event</title>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css"
+          href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display">
+  <embed id="plugin" type="application/x-test" wmode="opaque">
+</p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var gPlugin = document.getElementById("plugin");
+
+var gUtils = window.
+      QueryInterface(Components.interfaces.nsIInterfaceRequestor).
+      getInterface(Components.interfaces.nsIDOMWindowUtils);
+
+function doTest() {
+  gPlugin.focus();
+
+  is(gUtils.IMEStatus, gUtils.IME_STATUS_PLUGIN,
+     "Plugin failed to get focus");
+
+  is(gPlugin.getLastKeyText(), "", "Must be empty before first key test");
+
+  gUtils.sendNativeKeyEvent(0x409 /* US */,
+                            0x41, 0,
+                            "a", "a");
+  is(gPlugin.getLastKeyText(), "a", "Invalid character was inputted");
+
+  gUtils.sendNativeKeyEvent(0x407 /* German */,
+                            0xBB, 0,
+                            "+", "+");
+  is(gPlugin.getLastKeyText(), "+", "Invalid character was inputted");
+
+  gUtils.sendNativeKeyEvent(0x407 /* German */,
+                            0xBB, 0x1400 /* Ctrl + Alt (AltGr) */,
+                            "~", "+");
+  is(gPlugin.getLastKeyText(), "~", "Invalid character was inputted");
+
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForFocus(doTest);
+
+</script>
+</body>
+</html>

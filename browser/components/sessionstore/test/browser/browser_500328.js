@@ -44,11 +44,15 @@ function checkState(tab) {
 
   let popStateCount = 0;
 
-  let handler = function(aEvent) {
+  tab.linkedBrowser.addEventListener('popstate', function(aEvent) {
     let contentWindow = tab.linkedBrowser.contentWindow;
     if (popStateCount == 0) {
       popStateCount++;
-      //ok(aEvent.state, "Event should have a state property.");
+
+      is(tab.linkedBrowser.contentWindow.testState, 'foo',
+         'testState after going back');
+
+      ok(aEvent.state, "Event should have a state property.");
       is(JSON.stringify(tab.linkedBrowser.contentWindow.history.state), JSON.stringify({obj1:1}),
          "first popstate object.");
 
@@ -78,15 +82,16 @@ function checkState(tab) {
 
       // Clean up after ourselves and finish the test.
       tab.linkedBrowser.removeEventListener("popstate", arguments.callee, true);
-      tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
       gBrowser.removeTab(tab);
       finish();
     }
-  };
+  }, true);
 
-  tab.linkedBrowser.addEventListener("load", handler, true);
-  tab.linkedBrowser.addEventListener("popstate", handler, true);
+  // Set some state in the page's window.  When we go back(), the page should
+  // be retrieved from bfcache, and this state should still be there.
+  tab.linkedBrowser.contentWindow.testState = 'foo';
 
+  // Now go back.  This should trigger the popstate event handler above.
   tab.linkedBrowser.contentWindow.history.back();
 }
 
@@ -119,20 +124,24 @@ function test() {
       let contentWindow = tab.linkedBrowser.contentWindow;
       let history = contentWindow.history;
       history.pushState({obj1:1}, "title-obj1");
-      history.pushState({obj2:2}, "title-obj2", "?foo");
+      history.pushState({obj2:2}, "title-obj2", "page2");
       history.replaceState({obj3:3}, "title-obj3");
 
       let state = ss.getTabState(tab);
+      gBrowser.removeTab(tab);
 
-      // In order to make sure that setWindowState actually modifies the
-      // window's state, we modify the state here.  checkState will fail if
-      // this change isn't overwritten by setWindowState.
-      history.replaceState({should_be_overwritten:true}, "title-overwritten");
+      // Restore the state into a new tab.  Things don't work well when we
+      // restore into the old tab, but that's not a real use case anyway.
+      let tab2 = gBrowser.addTab("about:blank");
+      ss.setTabState(tab2, state, true);
 
-      // Restore the state and make sure it looks right, after giving the event
-      // loop a chance to flush.
-      ss.setTabState(tab, state, true);
-      executeSoon(function() { checkState(tab); });
+      // Run checkState() once the tab finishes loading its restored state.
+      tab2.linkedBrowser.addEventListener("load", function() {
+        tab2.linkedBrowser.removeEventListener("load", arguments.callee, true);
+        SimpleTest.executeSoon(function() {
+          checkState(tab2);
+        });
+      }, true);
 
     }, true);
   }, true);
