@@ -245,9 +245,10 @@ public:
   virtual ~ShadowImageLayerOGL();
 
   // ShadowImageLayer impl
-  virtual PRBool Init(const SurfaceDescriptor& aFront, const nsIntSize& aSize);
+  virtual PRBool Init(gfxSharedImageSurface* aFront, const nsIntSize& aSize);
 
-  virtual void Swap(const SurfaceDescriptor& aFront, SurfaceDescriptor* aNewBack);
+  virtual already_AddRefed<gfxSharedImageSurface>
+  Swap(gfxSharedImageSurface* aNewFront);
 
   virtual void DestroyFrontBuffer();
 
@@ -264,7 +265,11 @@ public:
 private:
   nsRefPtr<TextureImage> mTexImage;
 
-  SurfaceDescriptor mDeadweight;
+
+  // XXX FIXME holding to free
+  nsRefPtr<gfxSharedImageSurface> mDeadweight;
+
+
 };
 
 } /* layers */
