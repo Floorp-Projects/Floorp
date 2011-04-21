@@ -1543,7 +1543,7 @@ function run_test_26() {
 
       observerService.removeObserver(this);
 
-      do_test_finished();
+      run_test_27();
     }
   });
 
@@ -1557,4 +1557,65 @@ function run_test_26() {
 
     aInstall.install();
   }, "application/x-xpinstall");
+}
+
+
+// Tests that an install can be restarted during onDownloadCancelled after being
+// cancelled in mid-download
+function run_test_27() {
+  prepare_test({ }, [
+    "onNewInstall"
+  ]);
+
+  let url = "http://localhost:4444/addons/test_install3.xpi";
+  AddonManager.getInstallForURL(url, function(aInstall) {
+    ensure_test_completed();
+
+    do_check_neq(aInstall, null);
+    do_check_eq(aInstall.state, AddonManager.STATE_AVAILABLE);
+
+    aInstall.addListener({
+      onDownloadProgress: function() {
+        aInstall.removeListener(this);
+        aInstall.cancel();
+      }
+    });
+
+    prepare_test({}, [
+      "onDownloadStarted",
+      "onDownloadCancelled",
+    ], check_test_27);
+    aInstall.install();
+  }, "application/x-xpinstall");
+}
+
+function check_test_27(aInstall) {
+  prepare_test({
+    "addon3@tests.mozilla.org": [
+      "onInstalling"
+    ]
+  }, [
+    "onDownloadStarted",
+    "onDownloadEnded",
+    "onInstallStarted",
+    "onInstallEnded"
+  ], finish_test_27);
+
+  aInstall.install();
+}
+
+function finish_test_27(aInstall) {
+  prepare_test({
+    "addon3@tests.mozilla.org": [
+      "onOperationCancelled"
+    ]
+  }, [
+    "onInstallCancelled"
+  ]);
+
+  aInstall.cancel();
+
+  ensure_test_completed();
+
+  do_test_finished();
 }
