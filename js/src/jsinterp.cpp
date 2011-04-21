@@ -614,7 +614,8 @@ RunScript(JSContext *cx, JSScript *script, JSStackFrame *fp)
 
     /* FIXME: Once bug 470510 is fixed, make this an assert. */
     if (script->compileAndGo) {
-        if (fp->scopeChain().getGlobal()->isCleared()) {
+        int32 flags = fp->scopeChain().getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
+        if (flags & JSGLOBAL_FLAGS_CLEARED) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CLEARED_SCOPE);
             return false;
         }
@@ -6470,7 +6471,7 @@ END_CASE(JSOP_XMLPI)
 BEGIN_CASE(JSOP_GETFUNNS)
 {
     Value rval;
-    if (!cx->fp()->scopeChain().getGlobal()->getFunctionNamespace(cx, &rval))
+    if (!js_GetFunctionNamespace(cx, &rval))
         goto error;
     PUSH_COPY(rval);
 }
