@@ -32,9 +32,11 @@ function runTests()
   is(typeof ws.inspect, "function", "Workspace.inspect() exists");
   is(typeof ws.print, "function", "Workspace.print() exists");
 
-  let contextMenu = gWorkspaceWindow.document.getElementById("ws-context-menu");
-  ok(contextMenu, "Context menu element exists");
-  is(contextMenu.getAttribute("hidden"), "true", "Context menu is hidden");
+  let chromeContextMenu = gWorkspaceWindow.document.
+                          getElementById("ws-menu-chrome");
+  ok(chromeContextMenu, "Chrome context menuitem element exists");
+  is(chromeContextMenu.getAttribute("hidden"), "true",
+     "Chrome context menuitem is hidden");
 
   let errorConsoleCommand = gWorkspaceWindow.document.
                             getElementById("ws-cmd-errorConsole");

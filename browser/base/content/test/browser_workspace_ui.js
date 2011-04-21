@@ -37,6 +37,7 @@ function runTests()
     "ws-text-inspect": "inspect",
     "ws-menu-content": "setContentContext",
     "ws-menu-chrome": "setChromeContext",
+    "ws-menu-resetContext": "resetContext",
     "ws-menu-errorConsole": "openErrorConsole",
     "ws-menu-webConsole": "openWebConsole",
   };
