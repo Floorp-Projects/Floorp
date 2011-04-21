@@ -107,6 +107,17 @@ const size_t ArenaShift = 12;
 const size_t ArenaSize = size_t(1) << ArenaShift;
 const size_t ArenaMask = ArenaSize - 1;
 
+/*
+ * The mark bitmap has one bit per each GC cell. For multi-cell GC things this
+ * wastes space but allows to avoid expensive devisions by thing's size when
+ * accessing the bitmap. In addition this allows to use some bits for colored
+ * marking during the cycle GC.
+ */
+const size_t ArenaCellCount = size_t(1) << (ArenaShift - Cell::CellShift);
+const size_t ArenaBitmapBits = ArenaCellCount;
+const size_t ArenaBitmapBytes = ArenaBitmapBits / 8;
+const size_t ArenaBitmapWords = ArenaBitmapBits / JS_BITS_PER_WORD;
+
 template <typename T> struct Arena;
 
 /* Every arena has a header. */
@@ -121,7 +132,6 @@ struct ArenaHeader {
   public:
     inline uintptr_t address() const;
     inline Chunk *chunk() const;
-    inline ArenaBitmap *bitmap() const;
 
     template <typename T>
     Arena<T> *getArena() {
@@ -214,68 +224,6 @@ struct Arena {
     bool finalize(JSContext *cx);
 };
 
-void FinalizeArena(ArenaHeader *aheader);
-
-/*
- * Live objects are marked black. How many other additional colors are available
- * depends on the size of the GCThing.
- */
-static const uint32 BLACK = 0;
-
-/* An arena bitmap contains enough mark bits for all the cells in an arena. */
-struct ArenaBitmap {
-    static const size_t BitCount = ArenaSize / Cell::CellSize;
-    static const size_t BitWords = BitCount / JS_BITS_PER_WORD;
-
-    uintptr_t bitmap[BitWords];
-
-    JS_ALWAYS_INLINE bool isMarked(size_t bit, uint32 color) {
-        bit += color;
-        JS_ASSERT(bit < BitCount);
-        uintptr_t *word = &bitmap[bit / JS_BITS_PER_WORD];
-        return *word & (uintptr_t(1) << (bit % JS_BITS_PER_WORD));
-    }
-
-    JS_ALWAYS_INLINE bool markIfUnmarked(size_t bit, uint32 color) {
-        JS_ASSERT(bit + color < BitCount);
-        uintptr_t *word = &bitmap[bit / JS_BITS_PER_WORD];
-        uintptr_t mask = (uintptr_t(1) << (bit % JS_BITS_PER_WORD));
-        if (*word & mask)
-            return false;
-        *word |= mask;
-        if (color != BLACK) {
-            bit += color;
-            word = &bitmap[bit / JS_BITS_PER_WORD];
-            mask = (uintptr_t(1) << (bit % JS_BITS_PER_WORD));
-            if (*word & mask)
-                return false;
-            *word |= mask;
-        }
-        return true;
-    }
-
-    JS_ALWAYS_INLINE void unmark(size_t bit, uint32 color) {
-        bit += color;
-        JS_ASSERT(bit < BitCount);
-        uintptr_t *word = &bitmap[bit / JS_BITS_PER_WORD];
-        *word &= ~(uintptr_t(1) << (bit % JS_BITS_PER_WORD));
-    }
-
-#ifdef DEBUG
-    bool noBitsSet() {
-        for (unsigned i = 0; i < BitWords; i++) {
-            if (bitmap[i] != uintptr_t(0))
-                return false;
-        }
-        return true;
-    }
-#endif
-};
-
-/* Ensure that bitmap covers the whole arena. */
-JS_STATIC_ASSERT(ArenaSize % Cell::CellSize == 0);
-JS_STATIC_ASSERT(ArenaBitmap::BitCount % JS_BITS_PER_WORD == 0);
-
 /*
  * When recursive marking uses too much stack the marking is delayed and
  * the corresponding arenas are put into a stack using a linked via the
@@ -355,18 +303,81 @@ struct ChunkInfo {
 #endif
 };
 
-/* Chunks contain arenas and associated data structures (mark bitmap, delayed marking state). */
+const size_t BytesPerArena = ArenaSize + ArenaBitmapBytes + sizeof(MarkingDelay);
+const size_t ArenasPerChunk = (GC_CHUNK_SIZE - sizeof(ChunkInfo)) / BytesPerArena;
+
+/* A chunk bitmap contains enough mark bits for all the cells in a chunk. */
+struct ChunkBitmap {
+    uintptr_t bitmap[ArenaBitmapWords * ArenasPerChunk];
+
+    JS_ALWAYS_INLINE void getMarkWordAndMask(const Cell *cell, uint32 color,
+                                             uintptr_t **wordp, uintptr_t *maskp);
+
+    JS_ALWAYS_INLINE bool isMarked(const Cell *cell, uint32 color) {
+        uintptr_t *word, mask;
+        getMarkWordAndMask(cell, color, &word, &mask);
+        return *word & mask;
+    }
+
+    JS_ALWAYS_INLINE bool markIfUnmarked(const Cell *cell, uint32 color) {
+        uintptr_t *word, mask;
+        getMarkWordAndMask(cell, BLACK, &word, &mask);
+        if (*word & mask)
+            return false;
+        *word |= mask;
+        if (color != BLACK) {
+            /*
+             * We use getMarkWordAndMask to recalculate both mask and word as
+             * doing just mask << color may overflow the mask.
+             */
+            getMarkWordAndMask(cell, color, &word, &mask);
+            if (*word & mask)
+                return false;
+            *word |= mask;
+        }
+        return true;
+    }
+
+    JS_ALWAYS_INLINE void unmark(const Cell *cell, uint32 color) {
+        uintptr_t *word, mask;
+        getMarkWordAndMask(cell, color, &word, &mask);
+        *word &= ~mask;
+    }
+
+    void clear() {
+        PodArrayZero(bitmap);
+    }
+
+#ifdef DEBUG
+    bool noBitsSet(ArenaHeader *aheader) {
+        /*
+         * We assume that the part of the bitmap corresponding to the arena
+         * has the exact number of words so we do not need to deal with a word
+         * that covers bits from two arenas.
+         */
+        JS_STATIC_ASSERT(ArenaBitmapBits == ArenaBitmapWords * JS_BITS_PER_WORD);
+
+        uintptr_t *word, unused;
+        getMarkWordAndMask(reinterpret_cast<Cell *>(aheader->address()), BLACK, &word, &unused);
+        for (size_t i = 0; i != ArenaBitmapWords; i++) {
+            if (word[i])
+                return false;
+        }
+        return true;
+    }
+#endif
+};
+
+JS_STATIC_ASSERT(ArenaBitmapBytes * ArenasPerChunk == sizeof(ChunkBitmap));
+
+/*
+ * Chunks contain arenas and associated data structures (mark bitmap, delayed
+ * marking state).
+ */
 struct Chunk {
-    static const size_t BytesPerArena = ArenaSize +
-                                        sizeof(ArenaBitmap) +
-                                        sizeof(MarkingDelay);
-
-    static const size_t ArenasPerChunk = (GC_CHUNK_SIZE - sizeof(ChunkInfo)) / BytesPerArena;
-
     Arena<FreeCell> arenas[ArenasPerChunk];
-    ArenaBitmap     bitmaps[ArenasPerChunk];
+    ChunkBitmap     bitmap;
     MarkingDelay    markingDelay[ArenasPerChunk];
-
     ChunkInfo       info;
 
     static Chunk *fromAddress(uintptr_t addr) {
@@ -384,7 +395,6 @@ struct Chunk {
         return (addr & GC_CHUNK_MASK) >> ArenaShift;
     }
 
-    void clearMarkBitmap();
     bool init(JSRuntime *rt);
 
     bool unused();
@@ -399,7 +409,7 @@ struct Chunk {
     JSRuntime *getRuntime();
 };
 JS_STATIC_ASSERT(sizeof(Chunk) <= GC_CHUNK_SIZE);
-JS_STATIC_ASSERT(sizeof(Chunk) + Chunk::BytesPerArena > GC_CHUNK_SIZE);
+JS_STATIC_ASSERT(sizeof(Chunk) + BytesPerArena > GC_CHUNK_SIZE);
 
 inline uintptr_t
 Cell::address() const
@@ -427,20 +437,6 @@ Cell::chunk() const
     return reinterpret_cast<Chunk *>(addr);
 }
 
-ArenaBitmap *
-Cell::bitmap() const
-{
-    return &chunk()->bitmaps[Chunk::arenaIndex(address())];
-}
-
-STATIC_POSTCONDITION_ASSUME(return < ArenaBitmap::BitCount)
-size_t
-Cell::cellIndex() const
-{
-    uintptr_t addr = address();
-    return (addr & ArenaMask) >> Cell::CellShift;
-}
-
 #ifdef DEBUG
 inline bool
 Cell::isAligned() const
@@ -465,10 +461,15 @@ ArenaHeader::chunk() const
     return Chunk::fromAddress(address());
 }
 
-inline ArenaBitmap *
-ArenaHeader::bitmap() const
+JS_ALWAYS_INLINE void
+ChunkBitmap::getMarkWordAndMask(const Cell *cell, uint32 color,
+                                uintptr_t **wordp, uintptr_t *maskp)
 {
-    return &chunk()->bitmaps[Chunk::arenaIndex(address())];
+    JS_ASSERT(cell->chunk() == Chunk::fromAddress(reinterpret_cast<uintptr_t>(this)));
+    size_t bit = (cell->address() & GC_CHUNK_MASK) / Cell::CellSize + color;
+    JS_ASSERT(bit < ArenaBitmapBits * ArenasPerChunk);
+    *maskp = uintptr_t(1) << (bit % JS_BITS_PER_WORD);
+    *wordp = &bitmap[bit / JS_BITS_PER_WORD];
 }
 
 inline MarkingDelay *
@@ -487,17 +488,17 @@ AssertValidColor(const void *thing, uint32 color)
 }
 
 inline bool
-Cell::isMarked(uint32 color = BLACK) const
+Cell::isMarked(uint32 color) const
 {
     AssertValidColor(this, color);
-    return bitmap()->isMarked(cellIndex(), color);
+    return chunk()->bitmap.isMarked(this, color);
 }
 
 bool
-Cell::markIfUnmarked(uint32 color = BLACK) const
+Cell::markIfUnmarked(uint32 color) const
 {
     AssertValidColor(this, color);
-    return bitmap()->markIfUnmarked(cellIndex(), color);
+    return chunk()->bitmap.markIfUnmarked(this, color);
 }
 
 void
@@ -505,7 +506,7 @@ Cell::unmark(uint32 color) const
 {
     JS_ASSERT(color != BLACK);
     AssertValidColor(this, color);
-    bitmap()->unmark(cellIndex(), color);
+    chunk()->bitmap.unmark(this, color);
 }
 
 JSCompartment *
@@ -601,7 +602,7 @@ struct ArenaList {
 #ifdef DEBUG
     bool markedThingsInArenaList() {
         for (ArenaHeader *aheader = head; aheader; aheader = aheader->next) {
-            if (!aheader->bitmap()->noBitsSet())
+            if (!aheader->chunk()->bitmap.noBitsSet(aheader))
                 return true;
         }
         return false;
@@ -891,7 +892,7 @@ class GCHelperThread {
         js::gc::ArenaHeader *head;
 
     };
-    
+
     Vector<FinalizeListAndHead, 64, js::SystemAllocPolicy> finalizeVector;
 
     JS_FRIEND_API(void)
