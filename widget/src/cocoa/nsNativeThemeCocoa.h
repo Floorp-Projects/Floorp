@@ -49,6 +49,7 @@
 #include "gfxASurface.h"
 
 @class CellDrawView;
+@class NSProgressBarCell;
 class nsDeviceContext;
 
 class nsNativeThemeCocoa : private nsNativeTheme,
@@ -152,6 +153,7 @@ private:
   NSSearchFieldCell* mSearchFieldCell;
   NSPopUpButtonCell* mDropdownCell;
   NSComboBoxCell* mComboBoxCell;
+  NSProgressBarCell* mProgressBarCell;
   CellDrawView* mCellDrawView;
 };
 
