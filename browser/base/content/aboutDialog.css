@@ -134,13 +134,16 @@
   margin-top: 10px;
 }
 
+#channelSelectorStart {
+  -moz-margin-start: 0;
+}
+
 #channelMenulist {
   margin: 0;
 }
 
 .channel-description {
   margin: 10px 0;
-  text-align: center;
 }
 
 #detailsBox,

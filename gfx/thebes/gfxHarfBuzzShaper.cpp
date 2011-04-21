@@ -58,6 +58,10 @@
 #include "nsUnicodeRange.h"
 #include "nsCRT.h"
 
+#if defined(XP_WIN)
+#include "gfxWindowsPlatform.h"
+#endif
+
 #define FloatToFixed(f) (65536 * (f))
 #define FixedToFloat(f) ((f) * (1.0 / 65536.0))
 // Right shifts of negative (signed) integers are undefined, as are overflows
@@ -946,8 +950,12 @@ GetRoundOffsetsToPixels(gfxContext *aContext,
 #if CAIRO_HAS_DWRITE_FONT // dwrite backend is not in std cairo releases yet
         case CAIRO_FONT_TYPE_DWRITE:
             // show_glyphs is implemented on the font and so is used for
-            // all surface types.
-            return;
+            // all surface types; however, it may pixel-snap depending on
+            // the dwrite rendering mode
+            if (gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() ==
+                DWRITE_MEASURING_MODE_NATURAL) {
+                return;
+            }
 #endif
         case CAIRO_FONT_TYPE_QUARTZ:
             // Quartz surfaces implement show_glyphs for Quartz fonts
