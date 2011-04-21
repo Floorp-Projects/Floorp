@@ -82,11 +82,7 @@ else
   ELOG :=
 endif
 
-ifeq ($(OS_ARCH),WINNT)
 _VPATH_SRCS = $(abspath $<)
-else
-_VPATH_SRCS = $<
-endif
 
 # Add $(DIST)/lib to VPATH so that -lfoo dependencies are followed
 VPATH += $(DIST)/lib

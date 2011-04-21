@@ -79,6 +79,7 @@ _TEST_FILES = \
 		test_SVGAnimatedImageSMILDisabled.html \
 		animated-svg-image-helper.html \
 		animated-svg-image-helper.svg \
+		test_stroke-linecap-hit-testing.xhtml \
 		test_SVGLengthList.xhtml \
 		test_SVGLengthList-2.xhtml \
 		test_SVGPathSegList.xhtml \

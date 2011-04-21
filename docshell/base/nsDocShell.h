@@ -332,8 +332,8 @@ protected:
                                    nsIURILoader * aURILoader,
                                    PRBool aBypassClassifier);
 
-    nsresult ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
-                            PRUint32 aLoadType, PRBool * aDoHashchange);
+    nsresult ScrollToAnchor(nsACString & curHash, nsACString & newHash,
+                            PRUint32 aLoadType);
 
     // Tries to stringify a given variant by converting it to JSON.  This only
     // works if the variant is backed by a JSVal.
