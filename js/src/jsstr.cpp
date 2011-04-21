@@ -102,6 +102,14 @@ JSString::isFixed() const
 }
 #endif
 
+bool
+JSString::isExternal() const
+{
+    bool is_external = arena()->header()->thingKind == FINALIZE_EXTERNAL_STRING;
+    JS_ASSERT_IF(is_external, isFixed());
+    return is_external;
+}
+
 static JS_ALWAYS_INLINE JSString *
 Tag(JSRope *str)
 {
