@@ -2814,7 +2814,7 @@ JS_NewExternalStringWithClosure(JSContext *cx, const jschar *chars, size_t lengt
 }
 
 extern JS_PUBLIC_API(JSBool)
-JS_IsExternalString(JSContext *, JSString *str)
+JS_IsExternalString(JSContext *cx, JSString *str)
 {
     CHECK_REQUEST(cx);
     return str->isExternal();
