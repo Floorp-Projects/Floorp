@@ -1753,6 +1753,39 @@ pref("gfx.font_rendering.cleartype.use_for_downloadable_fonts", true);
 // use cleartype rendering for all fonts always (win xp only)
 pref("gfx.font_rendering.cleartype.always_use_for_content", false);
 
+// ClearType tuning parameters for directwrite/d2d.
+//
+// Allows overriding of underlying registry values in:
+//   HKCU/Software/Microsoft/Avalon.Graphics/<display> (contrast and level)
+//   HKLM/Software/Microsoft/Avalon.Graphics/<display> (gamma, pixel structure)
+// and selection of the ClearType/antialiasing mode.
+//
+// A value of -1 implies use the default value, otherwise value ranges 
+// follow registry settings:
+//   gamma [1000, 2200]  default: based on screen, typically 2200 (== 2.2)
+//   enhanced contrast [0, 1000] default: 50
+//   cleartype level [0, 100] default: 100
+//   pixel structure [0, 2] default: 0 (flat/RGB/BGR)
+//   rendering mode [0, 5] default: 0
+//     0 = use default for font & size;
+//     1 = aliased;
+//     2 = GDI Classic;
+//     3 = GDI Natural Widths;
+//     4 = Natural;
+//     5 = Natural Symmetric
+//
+// See:
+//   http://msdn.microsoft.com/en-us/library/aa970267.aspx
+//   http://msdn.microsoft.com/en-us/library/dd368190%28v=VS.85%29.aspx
+// Note: DirectWrite uses the "Enhanced Contrast Level" value rather than the 
+// "Text Contrast Level" value
+
+pref("gfx.font_rendering.cleartype_params.gamma", -1);
+pref("gfx.font_rendering.cleartype_params.enhanced_contrast", -1);
+pref("gfx.font_rendering.cleartype_params.cleartype_level", -1);
+pref("gfx.font_rendering.cleartype_params.pixel_structure", -1);
+pref("gfx.font_rendering.cleartype_params.rendering_mode", -1);
+
 pref("ui.key.menuAccessKeyFocuses", true);
 
 // override double-click word selection behavior.

@@ -2666,7 +2666,6 @@ gfxFontGroup::GetGeneration()
 void
 gfxFontGroup::UpdateFontList()
 {
-    // if user font set is set, check to see if font list needs updating
     if (mUserFontSet && mCurrGeneration != GetGeneration()) {
         // xxx - can probably improve this to detect when all fonts were found, so no need to update list
         mFonts.Clear();

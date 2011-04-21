@@ -61,7 +61,6 @@ namespace std {
 }
 
 namespace std __attribute__((visibility("default"))) {
-
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ >= 5)
     /* Hack to avoid GLIBCXX_3.4.14 symbol versions */
     struct _List_node_base
@@ -73,34 +72,60 @@ namespace std __attribute__((visibility("default"))) {
         void transfer(_List_node_base * const __first,
                       _List_node_base * const __last) throw();
 
+/* Hack to avoid GLIBCXX_3.4.15 symbol versions */
+#if (__GNUC__ == 4) && (__GNUC_MINOR__ >= 6)
+        static void swap(_List_node_base& __x, _List_node_base& __y) throw ();
+    };
+
+    namespace __detail {
+
+    struct _List_node_base
+    {
+#endif
         void _M_hook(_List_node_base * const __position) throw ();
 
         void _M_unhook() throw ();
 
         void _M_transfer(_List_node_base * const __first,
                          _List_node_base * const __last) throw();
+
+#if (__GNUC__ == 4) && (__GNUC_MINOR__ >= 6)
+        static void swap(_List_node_base& __x, _List_node_base& __y) throw ();
+#endif
     };
 
     /* The functions actually have the same implementation */
     void
     _List_node_base::_M_hook(_List_node_base * const __position) throw ()
     {
-        hook(__position);
+        ((std::_List_node_base *)this)->hook((std::_List_node_base * const) __position);
     }
 
     void
     _List_node_base::_M_unhook() throw ()
     {
-        unhook();
+        ((std::_List_node_base *)this)->unhook();
     }
 
     void
     _List_node_base::_M_transfer(_List_node_base * const __first,
                                  _List_node_base * const __last) throw ()
     {
-        transfer(__first, __last);
+        ((std::_List_node_base *)this)->transfer((std::_List_node_base * const)__first,
+                                                 (std::_List_node_base * const)__last);
     }
+
+#if (__GNUC__ == 4) && (__GNUC_MINOR__ >= 6)
+    void
+    _List_node_base::swap(_List_node_base& __x, _List_node_base& __y) throw ()
+    {
+        std::_List_node_base::swap(*((std::_List_node_base *) &__x),
+                                   *((std::_List_node_base *) &__y));
+    }
+}
 #endif
+
+#endif /* (__GNUC__ == 4) && (__GNUC_MINOR__ >= 5) */
 
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ >= 4)
     /* Hack to avoid GLIBCXX_3.4.11 symbol versions

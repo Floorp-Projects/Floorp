@@ -551,14 +551,23 @@ var gViewController = {
   },
 
   loadView: function(aViewId) {
-    if (aViewId == this.currentViewId)
-      return;
+    var isRefresh = false;
+    if (aViewId == this.currentViewId) {
+      if (this.isLoading)
+        return;
+      if (!("refresh" in this.currentViewObj))
+        return;
+      if (!this.currentViewObj.canRefresh())
+        return;
+      isRefresh = true;
+    }
 
     var state = {
       view: aViewId,
       previousView: this.currentViewId
     };
-    gHistory.pushState(state);
+    if (!isRefresh)
+      gHistory.pushState(state);
     this.loadViewInternal(aViewId, this.currentViewId, state);
   },
 
@@ -598,7 +607,7 @@ var gViewController = {
     if (!viewObj.node)
       throw new Error("Root node doesn't exist for '" + view.type + "' view");
 
-    if (this.currentViewObj) {
+    if (this.currentViewObj && aViewId != aPreviousView) {
       try {
         let canHide = this.currentViewObj.hide();
         if (canHide === false)
@@ -617,7 +626,11 @@ var gViewController = {
 
     this.viewPort.selectedPanel = this.currentViewObj.node;
     this.viewPort.selectedPanel.setAttribute("loading", "true");
-    this.currentViewObj.show(view.param, ++this.currentViewRequest, aState);
+
+    if (aViewId == aPreviousView)
+      this.currentViewObj.refresh(view.param, ++this.currentViewRequest, aState);
+    else
+      this.currentViewObj.show(view.param, ++this.currentViewRequest, aState);
   },
 
   // Moves back in the document history and removes the current history entry
@@ -1655,7 +1668,7 @@ var gDiscoverView = {
                                               Ci.nsIWebProgress.NOTIFY_STATE_ALL);
 
       if (self.loaded)
-        self._loadURL(self.homepageURL.spec, notifyInitialized);
+        self._loadURL(self.homepageURL.spec, false, notifyInitialized);
       else
         notifyInitialized();
     }
@@ -1689,7 +1702,7 @@ var gDiscoverView = {
     });
   },
 
-  show: function(aParam, aRequest, aState) {
+  show: function(aParam, aRequest, aState, aIsRefresh) {
     gViewController.updateCommands();
 
     // If we're being told to load a specific URL then just do that
@@ -1698,9 +1711,11 @@ var gDiscoverView = {
       this._loadURL(aState.url);
     }
 
-    // If the view has loaded before and the error page is not visible then
-    // there is nothing else to do
-    if (this.loaded && this.node.selectedPanel != this._error) {
+    // If the view has loaded before and still at the homepage (if refreshing),
+    // and the error page is not visible then there is nothing else to do
+    if (this.loaded && this.node.selectedPanel != this._error &&
+        (!aIsRefresh || (this._browser.currentURI &&
+         this._browser.currentURI.spec == this._browser.homePage))) {
       gViewController.notifyViewChanged();
       return;
     }
@@ -1714,8 +1729,19 @@ var gDiscoverView = {
       return;
     }
 
-    this._loadURL(this.homepageURL.spec,
+    this._loadURL(this.homepageURL.spec, aIsRefresh,
                   gViewController.notifyViewChanged.bind(gViewController));
+  },
+  
+  canRefresh: function() {
+    if (this._browser.currentURI &&
+        this._browser.currentURI.spec == this._browser.homePage)
+      return false;
+    return true;
+  },
+
+  refresh: function(aParam, aRequest, aState) {
+    this.show(aParam, aRequest, aState, true);
   },
 
   hide: function() { },
@@ -1724,7 +1750,7 @@ var gDiscoverView = {
     this.node.selectedPanel = this._error;
   },
 
-  _loadURL: function(aURL, aCallback) {
+  _loadURL: function(aURL, aKeepHistory, aCallback) {
     if (this._browser.currentURI.spec == aURL) {
       if (aCallback)
         aCallback();
@@ -1734,8 +1760,11 @@ var gDiscoverView = {
     if (aCallback)
       this._loadListeners.push(aCallback);
 
-    this._browser.loadURIWithFlags(aURL,
-                                   Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY);
+    var flags = 0;
+    if (!aKeepHistory)
+      flags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+
+    this._browser.loadURIWithFlags(aURL, flags);
   },
 
   onLocationChange: function(aWebProgress, aRequest, aLocation) {
