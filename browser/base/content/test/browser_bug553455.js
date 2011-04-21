@@ -726,46 +726,42 @@ function test_cancel_restart() {
     // Cancel the download
     EventUtils.synthesizeMouse(button, 2, 2, {});
 
-    // Downloads cannot be restarted synchronously, bug 611755
-    executeSoon(function() {
-      // Notification should have changed to cancelled
-      notification = aPanel.childNodes[0];
-      is(notification.id, "addon-install-cancelled-notification", "Should have seen the cancelled notification");
+    // Notification should have changed to cancelled
+    notification = aPanel.childNodes[0];
+    is(notification.id, "addon-install-cancelled-notification", "Should have seen the cancelled notification");
 
-      // Wait for the install confirmation dialog
-      wait_for_install_dialog(function(aWindow) {
-        // Wait for the complete notification
-        wait_for_notification(function(aPanel) {
-          let notification = aPanel.childNodes[0];
-          is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
-          is(notification.button.label, "Restart Now", "Should have seen the right button");
-          is(notification.getAttribute("label"),
-             "XPI Test will be installed after you restart " + gApp + ".",
-             "Should have seen the right message");
+    // Wait for the install confirmation dialog
+    wait_for_install_dialog(function(aWindow) {
+      // Wait for the complete notification
+      wait_for_notification(function(aPanel) {
+        let notification = aPanel.childNodes[0];
+        is(notification.id, "addon-install-complete-notification", "Should have seen the install complete");
+        is(notification.button.label, "Restart Now", "Should have seen the right button");
+        is(notification.getAttribute("label"),
+           "XPI Test will be installed after you restart " + gApp + ".",
+           "Should have seen the right message");
 
-          AddonManager.getAllInstalls(function(aInstalls) {
-            is(aInstalls.length, 1, "Should be one pending install");
-            aInstalls[0].cancel();
+        AddonManager.getAllInstalls(function(aInstalls) {
+          is(aInstalls.length, 1, "Should be one pending install");
+          aInstalls[0].cancel();
 
-            Services.perms.remove("example.com", "install");
-            wait_for_notification_close(runNextTest);
-            gBrowser.removeTab(gBrowser.selectedTab);
-          });
+          Services.perms.remove("example.com", "install");
+          wait_for_notification_close(runNextTest);
+          gBrowser.removeTab(gBrowser.selectedTab);
         });
-
-        aWindow.document.documentElement.acceptDialog();
       });
 
-      // Restart the download
-      EventUtils.synthesizeMouse(notification.button, 20, 10, {});
-
-      // Should be back to a progress notification
-      ok(PopupNotifications.isPanelOpen, "Notification should still be open");
-      is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
-      notification = aPanel.childNodes[0];
-      is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
-
+      aWindow.document.documentElement.acceptDialog();
     });
+
+    // Restart the download
+    EventUtils.synthesizeMouse(notification.button, 20, 10, {});
+
+    // Should be back to a progress notification
+    ok(PopupNotifications.isPanelOpen, "Notification should still be open");
+    is(PopupNotifications.panel.childNodes.length, 1, "Should be only one notification");
+    notification = aPanel.childNodes[0];
+    is(notification.id, "addon-progress-notification", "Should have seen the progress notification");
   });
 
   var pm = Services.perms;
