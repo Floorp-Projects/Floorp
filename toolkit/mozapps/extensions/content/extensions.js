@@ -55,6 +55,7 @@ const PREF_CHECK_UPDATE_SECURITY = "extensions.checkUpdateSecurity";
 const PREF_AUTOUPDATE_DEFAULT = "extensions.update.autoUpdateDefault";
 const PREF_GETADDONS_CACHE_ENABLED = "extensions.getAddons.cache.enabled";
 const PREF_GETADDONS_CACHE_ID_ENABLED = "extensions.%ID%.getAddons.cache.enabled";
+const PREF_UI_LASTCATEGORY = "extensions.ui.lastCategory";
 
 const BRANCH_REGEXP = /^([^\.]+\.[0-9]+[a-z]*).*/gi;
 
@@ -111,9 +112,28 @@ function initialize() {
   gEventManager.initialize();
   Services.obs.addObserver(sendEMPong, "EM-ping", false);
   Services.obs.notifyObservers(window, "EM-loaded", "");
-  // Send this after the above notifications to give observers of them a chance
-  // to initialize us to a different view.
-  gViewController.updateState(window.history.state);
+
+  // If the initial view has already been selected (by a call to loadView from
+  // the above notifications) then bail out now
+  if (gViewController.initialViewSelected)
+    return;
+
+  // If there is a history state to restore then use that
+  if (window.history.state) {
+    gViewController.updateState(window.history.state);
+    return;
+  }
+
+  // Default to the last selected category
+  var view = gCategories.node.value;
+
+  // Allow passing in a view through the window arguments
+  if ("arguments" in window && window.arguments.length > 0 &&
+      "view" in window.arguments[0]) {
+    view = window.arguments[0].view;
+  }
+
+  gViewController.loadInitialView(view);
 }
 
 function notifyInitialized() {
@@ -515,29 +535,7 @@ var gViewController = {
   },
 
   updateState: function(state) {
-    // If this is a navigation to a previous state then load that state
-    if (state) {
-      this.loadViewInternal(state.view, state.previousView, state);
-      return;
-    }
-
-    // If the initial view has already been selected (by a call to loadView) then
-    // bail out now
-    if (this.initialViewSelected)
-      return;
-
-    // Otherwise load the default view
-    var view = VIEW_DEFAULT;
-    if (gCategories.node.selectedItem &&
-        gCategories.node.selectedItem.id != "category-search")
-      view = gCategories.node.selectedItem.value;
-
-    if ("arguments" in window && window.arguments.length > 0) {
-      if ("view" in window.arguments[0])
-        view = window.arguments[0].view;
-    }
-
-    this.loadInitialView(view);
+    this.loadViewInternal(state.view, state.previousView, state);
   },
 
   parseViewId: function(aViewId) {
@@ -1417,7 +1415,15 @@ var gCategories = {
     this.node = document.getElementById("categories");
     this._search = this.get("addons://search/");
 
-    this.maybeHideSearch();
+    try {
+      this.node.value = Services.prefs.getCharPref(PREF_UI_LASTCATEGORY);
+    } catch (e) { }
+
+    // If there was no last view or no existing category matched the last view
+    // then the list will default to selecting the search category and we never
+    // want to show that as the first view so switch to the default category
+    if (this.node.selectedItem == this._search)
+      this.node.value = VIEW_DEFAULT;
 
     var self = this;
     this.node.addEventListener("select", function() {
@@ -1508,6 +1514,8 @@ var gCategories = {
       view = gViewController.parseViewId(aPreviousView);
     }
 
+    Services.prefs.setCharPref(PREF_UI_LASTCATEGORY, aId);
+
     if (this.node.selectedItem &&
         this.node.selectedItem.value == aId) {
       this.node.selectedItem.hidden = false;
@@ -1527,8 +1535,6 @@ var gCategories = {
       this.node.selectedItem = item;
       this.node.suppressOnSelect = false;
       this.node.ensureElementIsVisible(item);
-      // When supressing onselect last-selected doesn't get updated
-      this.node.setAttribute("last-selected", item.id);
 
       this.maybeHideSearch();
     }
