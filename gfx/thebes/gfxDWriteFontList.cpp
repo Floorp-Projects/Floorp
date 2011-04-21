@@ -728,8 +728,7 @@ gfxDWriteFontList::InitFontList()
 
         // determine dwrite version
         nsAutoString dwriteVers;
-        gfxWindowsPlatform::GetPlatform()->GetDLLVersion(L"dwrite.dll",
-                                                         dwriteVers);
+        gfxWindowsPlatform::GetDLLVersion(L"dwrite.dll", dwriteVers);
         LOG_FONTINIT(("InitFontList\n"));
         LOG_FONTINIT(("Start: %s %s\n", nowDate, nowTime));
         LOG_FONTINIT(("Uptime: %9.3f s\n", upTime/1000));
@@ -961,8 +960,7 @@ gfxDWriteFontList::DelayedInitFontList()
 
         // determine dwrite version
         nsAutoString dwriteVers;
-        gfxWindowsPlatform::GetPlatform()->GetDLLVersion(L"dwrite.dll",
-                                                         dwriteVers);
+        gfxWindowsPlatform::GetDLLVersion(L"dwrite.dll", dwriteVers);
         LOG_FONTINIT(("DelayedInitFontList\n"));
         LOG_FONTINIT(("Start: %s %s\n", nowDate, nowTime));
         LOG_FONTINIT(("Uptime: %9.3f s\n", upTime/1000));
