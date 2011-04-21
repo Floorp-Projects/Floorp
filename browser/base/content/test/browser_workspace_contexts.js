@@ -86,6 +86,38 @@ function runTests()
   is(typeof ws.execute()[1].addTab, "function",
      "chrome context has access to chrome objects");
 
+  // Check that the sandbox is cached.
+
+  ws.textbox.value = "typeof foobarBug636725cache;";
+  is(ws.execute()[1], "undefined", "global variable does not exist");
+
+  ws.textbox.value = "var foobarBug636725cache = 'foo';";
+  ws.execute();
+
+  ws.textbox.value = "typeof foobarBug636725cache;";
+  is(ws.execute()[1], "string",
+     "global variable exists across two different executions");
+
+  ws.resetContext();
+
+  is(ws.execute()[1], "undefined",
+     "global variable no longer exists after calling resetContext()");
+
+  ws.textbox.value = "var foobarBug636725cache2 = 'foo';";
+  ws.execute();
+
+  ws.textbox.value = "typeof foobarBug636725cache2;";
+  is(ws.execute()[1], "string",
+     "global variable exists across two different executions");
+
+  ws.setContentContext();
+
+  is(ws.executionContext, gWorkspaceWindow.WORKSPACE_CONTEXT_CONTENT,
+     "executionContext is content");
+
+  is(ws.execute()[1], "undefined",
+     "global variable no longer exists after changing the context");
+
   gWorkspaceWindow.close();
   gWorkspaceWindow = null;
   gBrowser.removeCurrentTab();

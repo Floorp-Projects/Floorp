@@ -98,6 +98,12 @@ var Workspace = {
   get browserWindow() Services.wm.getMostRecentWindow("navigator:browser"),
 
   /**
+   * Reference to the last chrome window of type navigator:browser. We use this
+   * to check if the chrome window changed since the last code evaluation.
+   */
+  _previousWindow: null,
+
+  /**
    * Get the gBrowser object of the most recent browser window.
    */
   get gBrowser()
@@ -107,7 +113,15 @@ var Workspace = {
   },
 
   /**
-   * Get the Cu.Sandbox object for the active tab content window object.
+   * Cached Cu.Sandbox object for the active tab content window object.
+   */
+  _contentSandbox: null,
+
+  /**
+   * Get the Cu.Sandbox object for the active tab content window object. Note
+   * that the returned object is cached for later reuse. The cached object is
+   * kept only for the current browser window and it is reset for each context
+   * switch or navigator:browser window switch.
    */
   get contentSandbox()
   {
@@ -117,17 +131,29 @@ var Workspace = {
       return;
     }
 
-    // TODO: bug 646524 - need to cache sandboxes if
-    // currentBrowser == previousBrowser
-    let contentWindow = this.gBrowser.selectedBrowser.contentWindow;
-    return new Cu.Sandbox(contentWindow,
-                          { sandboxPrototype: contentWindow,
-                            wantXrays: false });
+    if (!this._contentSandbox ||
+        this.browserWindow != this._previousBrowserWindow) {
+      let contentWindow = this.gBrowser.selectedBrowser.contentWindow;
+      this._contentSandbox = new Cu.Sandbox(contentWindow,
+        { sandboxPrototype: contentWindow, wantXrays: false });
+
+      this._previousBrowserWindow = this.browserWindow;
+    }
+
+    return this._contentSandbox;
   },
 
   /**
-   * Get the Cu.Sandbox object for the most recently active navigator:browser
+   * Cached Cu.Sandbox object for the most recently active navigator:browser
    * chrome window object.
+   */
+  _chromeSandbox: null,
+
+  /**
+   * Get the Cu.Sandbox object for the most recently active navigator:browser
+   * chrome window object. Note that the returned object is cached for later
+   * reuse. The cached object is kept only for the current browser window and it
+   * is reset for each context switch or navigator:browser window switch.
    */
   get chromeSandbox()
   {
@@ -137,9 +163,15 @@ var Workspace = {
       return;
     }
 
-    return new Cu.Sandbox(this.browserWindow,
-                          { sandboxPrototype: this.browserWindow,
-                            wantXrays: false });
+    if (!this._chromeSandbox ||
+        this.browserWindow != this._previousBrowserWindow) {
+      this._chromeSandbox = new Cu.Sandbox(this.browserWindow,
+        { sandboxPrototype: this.browserWindow, wantXrays: false });
+
+      this._previousBrowserWindow = this.browserWindow;
+    }
+
+    return this._chromeSandbox;
   },
 
   /**
@@ -519,6 +551,7 @@ var Workspace = {
     content.setAttribute("checked", true);
     this.statusbarStatus.label = content.getAttribute("label");
     this.executionContext = WORKSPACE_CONTEXT_CONTENT;
+    this.resetContext();
   },
 
   /**
@@ -531,6 +564,17 @@ var Workspace = {
     chrome.setAttribute("checked", true);
     this.statusbarStatus.label = chrome.getAttribute("label");
     this.executionContext = WORKSPACE_CONTEXT_CHROME;
+    this.resetContext();
+  },
+
+  /**
+   * Reset the cached Cu.Sandbox object for the current context.
+   */
+  resetContext: function WS_resetContext()
+  {
+    this._chromeSandbox = null;
+    this._contentSandbox = null;
+    this._previousWindow = null;
   },
 
   /**
@@ -551,14 +595,14 @@ var Workspace = {
    */
   onLoad: function HS_onLoad()
   {
-    let contextMenu = document.getElementById("ws-context-menu");
+    let chromeContextMenu = document.getElementById("ws-menu-chrome");
     let errorConsoleMenu = document.getElementById("ws-menu-errorConsole");
     let errorConsoleCommand = document.getElementById("ws-cmd-errorConsole");
     let chromeContextCommand = document.getElementById("ws-cmd-chromeContext");
 
     let chrome = Services.prefs.getBoolPref(DEVTOOLS_CHROME_ENABLED);
     if (chrome) {
-      contextMenu.removeAttribute("hidden");
+      chromeContextMenu.removeAttribute("hidden");
       errorConsoleMenu.removeAttribute("hidden");
       errorConsoleCommand.removeAttribute("disabled");
       chromeContextCommand.removeAttribute("disabled");
