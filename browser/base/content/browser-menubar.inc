@@ -553,6 +553,7 @@
               <menuitem id="menu_workspace"
                         hidden="true"
                         label="&workspace.label;"
+                        accesskey="&workspace.accesskey;"
                         key="key_workspace"
                         command="Tools:Workspace"/>
               <menuitem id="menu_pageInfo"

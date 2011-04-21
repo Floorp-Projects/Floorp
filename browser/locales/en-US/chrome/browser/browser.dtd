@@ -192,6 +192,7 @@ can reach it easily. -->
 <!ENTITY inspectMenu.commandkey       "I">
 
 <!ENTITY workspace.label               "Workspace">
+<!ENTITY workspace.accesskey           "O">
 <!ENTITY workspace.keycode             "VK_F4">
 <!ENTITY workspace.keytext             "F4">
 
