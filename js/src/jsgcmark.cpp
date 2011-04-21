@@ -552,7 +552,7 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
 
     Class *clasp = obj->getClass();
     if (clasp->trace) {
-        if (obj->isDenseArray() && obj->getDenseArrayCapacity() > LARGE_OBJECT_CHUNK_SIZE)
+        if (obj->isDenseArray() && obj->getDenseArrayInitializedLength() > LARGE_OBJECT_CHUNK_SIZE)
             gcmarker->largeStack.push(LargeMarkItem(obj));
         else
             clasp->trace(gcmarker, obj);
@@ -593,18 +593,21 @@ ScanLargeObject(GCMarker *gcmarker, LargeMarkItem &item)
 {
     JSObject *obj = item.obj;
 
+    uintN start = item.markpos;
+    uintN stop;
     uint32 capacity;
     if (obj->isDenseArray()) {
-        capacity = obj->getDenseArrayCapacity();
+        capacity = obj->getDenseArrayInitializedLength();
+        stop = JS_MIN(start + LARGE_OBJECT_CHUNK_SIZE, capacity);
+        for (uintN i=stop; i>start; i--)
+            ScanValue(gcmarker, obj->getDenseArrayElement(i-1));
     } else {
         JS_ASSERT(obj->isNative());
         capacity = obj->slotSpan();
+        stop = JS_MIN(start + LARGE_OBJECT_CHUNK_SIZE, capacity);
+        for (uintN i=stop; i>start; i--)
+            ScanValue(gcmarker, obj->getSlot(i-1));
     }
-
-    uintN start = item.markpos;
-    uintN stop = JS_MIN(start + LARGE_OBJECT_CHUNK_SIZE, capacity);
-    for (uintN i=stop; i>start; i--)
-        ScanValue(gcmarker, obj->getSlot(i-1));
 
     if (stop == capacity)
         return true;
