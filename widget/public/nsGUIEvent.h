@@ -1826,7 +1826,8 @@ inline PRBool NS_IsEventUsingCoordinates(nsEvent* aEvent)
 inline PRBool NS_IsEventTargetedAtFocusedWindow(nsEvent* aEvent)
 {
   return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
-         NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_CONTENT_COMMAND_EVENT(aEvent);
+         NS_IS_CONTEXT_MENU_KEY(aEvent) ||
+         NS_IS_CONTENT_COMMAND_EVENT(aEvent) || NS_IS_PLUGIN_EVENT(aEvent);
 }
 
 /**
