@@ -3861,6 +3861,10 @@ function JSPropertyProvider(aScope, aInputValue)
 
 function isIteratorOrGenerator(aObject)
 {
+  if (aObject === null) {
+    return false;
+  }
+
   if (typeof aObject == "object") {
     if (typeof aObject.__iterator__ == "function" ||
         aObject.constructor && aObject.constructor.name == "Iterator") {
