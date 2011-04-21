@@ -234,7 +234,7 @@ gfxPlatform::GetPlatform()
     return gPlatform;
 }
 
-nsresult
+void
 gfxPlatform::Init()
 {
     NS_ASSERTION(!gPlatform, "Already started???");
@@ -281,9 +281,7 @@ gfxPlatform::Init()
 #if defined(XP_MACOSX) || defined(XP_WIN) || defined(ANDROID) // temporary, until this is implemented on others
     rv = gfxPlatformFontList::Init();
     if (NS_FAILED(rv)) {
-        NS_ERROR("Could not initialize gfxPlatformFontList");
-        Shutdown();
-        return rv;
+        NS_RUNTIMEABORT("Could not initialize gfxPlatformFontList");
     }
 #endif
 
@@ -291,30 +289,22 @@ gfxPlatform::Init()
         gPlatform->CreateOffscreenSurface(gfxIntSize(1,1),
                                           gfxASurface::CONTENT_COLOR_ALPHA);
     if (!gPlatform->mScreenReferenceSurface) {
-        NS_ERROR("Could not initialize mScreenReferenceSurface");
-        Shutdown();
-        return NS_ERROR_OUT_OF_MEMORY;
+        NS_RUNTIMEABORT("Could not initialize mScreenReferenceSurface");
     }
 
     rv = gfxFontCache::Init();
     if (NS_FAILED(rv)) {
-        NS_ERROR("Could not initialize gfxFontCache");
-        Shutdown();
-        return rv;
+        NS_RUNTIMEABORT("Could not initialize gfxFontCache");
     }
 
     rv = gfxTextRunWordCache::Init();
     if (NS_FAILED(rv)) {
-        NS_ERROR("Could not initialize gfxTextRunWordCache");
-        Shutdown();
-        return rv;
+        NS_RUNTIMEABORT("Could not initialize gfxTextRunWordCache");
     }
 
     rv = gfxTextRunCache::Init();
     if (NS_FAILED(rv)) {
-        NS_ERROR("Could not initialize gfxTextRunCache");
-        Shutdown();
-        return rv;
+        NS_RUNTIMEABORT("Could not initialize gfxTextRunCache");
     }
 
     /* Pref migration hook. */
@@ -330,8 +320,6 @@ gfxPlatform::Init()
         prefs->AddObserver("gfx.downloadable_fonts.", fontPrefObserver, PR_FALSE);
         prefs->AddObserver("gfx.font_rendering.", fontPrefObserver, PR_FALSE);
     }
-
-    return NS_OK;
 }
 
 void

@@ -137,7 +137,8 @@ static const mozilla::Module::CategoryEntry kThebesCategories[] = {
 static nsresult
 nsThebesGfxModuleCtor()
 {
-    return gfxPlatform::Init();
+    gfxPlatform::Init();
+    return NS_OK;
 }
 
 static void
