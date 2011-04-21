@@ -61,6 +61,7 @@
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
+#include "nsIDOMHTMLProgressElement.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -1042,7 +1043,7 @@ RenderProgress(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
                                  PRBool inIsIndeterminate, PRBool inIsHorizontal,
-                                 PRInt32 inValue, PRInt32 inMaxValue,
+                                 double inValue, double inMaxValue,
                                  nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
@@ -1056,8 +1057,8 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect
   tdi.kind = inIsIndeterminate ? kThemeMediumIndeterminateBar: kThemeMediumProgressBar;
   tdi.bounds = inBoxRect;
   tdi.min = 0;
-  tdi.max = inMaxValue;
-  tdi.value = inValue;
+  tdi.max = PR_INT32_MAX;
+  tdi.value = PR_INT32_MAX * (inValue / inMaxValue);
   tdi.attributes = inIsHorizontal ? kThemeTrackHorizontal : 0;
   tdi.enableState = FrameIsInActiveWindow(aFrame) ? kThemeTrackActive : kThemeTrackInactive;
   tdi.trackInfo.progress.phase = PR_IntervalToMilliseconds(PR_IntervalNow()) /
@@ -2526,4 +2527,40 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
   default:
     return eUnknownTransparency;
   }
+}
+
+double
+nsNativeThemeCocoa::GetProgressValue(nsIFrame* aFrame)
+{
+  // When we are using the HTML progress element,
+  // we can get the value from the IDL property.
+  if (aFrame) {
+    nsCOMPtr<nsIDOMHTMLProgressElement> progress =
+      do_QueryInterface(aFrame->GetContent());
+    if (progress) {
+      double value;
+      progress->GetValue(&value);
+      return value;
+    }
+  }
+
+  return (double)CheckIntAttr(aFrame, nsWidgetAtoms::value, 0);
+}
+
+double
+nsNativeThemeCocoa::GetProgressMaxValue(nsIFrame* aFrame)
+{
+  // When we are using the HTML progress element,
+  // we can get the max from the IDL property.
+  if (aFrame) {
+    nsCOMPtr<nsIDOMHTMLProgressElement> progress =
+      do_QueryInterface(aFrame->GetContent());
+    if (progress) {
+      double max;
+      progress->GetMax(&max);
+      return max;
+    }
+  }
+
+  return (double)PR_MAX(CheckIntAttr(aFrame, nsWidgetAtoms::max, 100), 1);
 }
