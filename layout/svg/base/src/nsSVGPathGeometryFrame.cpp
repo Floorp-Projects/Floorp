@@ -335,23 +335,6 @@ nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::SetMatrixPropagation(PRBool aPropagate)
-{
-  if (aPropagate) {
-    AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
-  } else {
-    RemoveStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
-  }
-  return NS_OK;
-}
-
-PRBool
-nsSVGPathGeometryFrame::GetMatrixPropagation()
-{
-  return (GetStateBits() & NS_STATE_SVG_PROPAGATE_TRANSFORM) != 0;
-}
-
 gfxRect
 nsSVGPathGeometryFrame::GetBBoxContribution(const gfxMatrix &aToBBoxUserspace)
 {
@@ -499,6 +482,12 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
   }
 
   aContext->Multiply(matrix);
+
+  // Hack to let SVGPathData::ConstructPath know if we have square caps:
+  const nsStyleSVG* style = GetStyleSVG();
+  if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
+    aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
+  }
 
   aContext->NewPath();
   static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(aContext);

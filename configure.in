@@ -2456,7 +2456,11 @@ ia64*-hpux*)
 	;;
 
 *-openbsd*)
-    DLL_SUFFIX='.so.$(if $(SO_VERSION),$(SO_VERSION),1.0)'
+    if test "$SO_VERSION"; then
+        DLL_SUFFIX=".so.$SO_VERSION"
+    else
+        DLL_SUFFIX=".so.1.0"
+    fi
     MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib -Wl,-rpath-link,$(if $(X11BASE),$(X11BASE),/usr/X11R6)/lib'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
