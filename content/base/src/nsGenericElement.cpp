@@ -66,7 +66,7 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
@@ -110,7 +110,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIDOMEventListener.h"
-#include "nsEventStateManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 
@@ -5379,10 +5378,8 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
                                nsIFocusManager::FLAG_NOSCROLL);
           }
 
-          nsIEventStateManager* esm =
-            aVisitor.mPresContext->EventStateManager();
           nsEventStateManager::SetActiveManager(
-            static_cast<nsEventStateManager*>(esm), this);
+            aVisitor.mPresContext->EventStateManager(), this);
         }
       }
     }

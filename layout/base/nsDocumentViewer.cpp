@@ -58,7 +58,6 @@
 #include "nsIDocument.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIEventStateManager.h"
 #include "nsStyleSet.h"
 #include "nsIStyleSheet.h"
 #include "nsCSSStyleSheet.h"

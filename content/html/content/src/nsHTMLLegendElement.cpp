@@ -42,7 +42,6 @@
 #include "nsStyleConsts.h"
 #include "nsIForm.h"
 #include "nsIFormControl.h"
-#include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"
