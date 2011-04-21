@@ -43,7 +43,6 @@
 #include "nsIDOMEvent.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
-#include "nsIEventStateManager.h"
 #include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"

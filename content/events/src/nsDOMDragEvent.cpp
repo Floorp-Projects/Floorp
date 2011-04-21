@@ -39,7 +39,6 @@
 #include "nsIServiceManager.h"
 #include "nsGUIEvent.h"
 #include "nsContentUtils.h"
-#include "nsIEventStateManager.h"
 #include "nsDOMDataTransfer.h"
 #include "nsIDragService.h"
 

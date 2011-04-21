@@ -39,7 +39,6 @@
 #ifndef nsEventStateManager_h__
 #define nsEventStateManager_h__
 
-#include "nsIEventStateManager.h"
 #include "nsEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
@@ -56,6 +55,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsFocusManager.h"
 #include "nsIDocument.h"
+#include "nsEventStates.h"
 
 class nsIPresShell;
 class nsIDocShell;
@@ -75,7 +75,6 @@ class TabParent;
  */
 
 class nsEventStateManager : public nsSupportsWeakReference,
-                            public nsIEventStateManager,
                             public nsIObserver
 {
   friend class nsMouseWheelTransaction;
@@ -86,7 +85,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
-  NS_IMETHOD Init();
+  nsresult Init();
   nsresult Shutdown();
 
   /* The PreHandleEvent method is called before event dispatch to either
@@ -96,44 +95,86 @@ public:
    * PostHandleEvent.  Any centralized event processing which must occur before
    * DOM or frame event handling should occur here as well.
    */
-  NS_IMETHOD PreHandleEvent(nsPresContext* aPresContext,
-                         nsEvent *aEvent,
-                         nsIFrame* aTargetFrame,
-                         nsEventStatus* aStatus,
-                         nsIView* aView);
+  nsresult PreHandleEvent(nsPresContext* aPresContext,
+                          nsEvent *aEvent,
+                          nsIFrame* aTargetFrame,
+                          nsEventStatus* aStatus,
+                          nsIView* aView);
 
   /* The PostHandleEvent method should contain all system processing which
    * should occur conditionally based on DOM or frame processing.  It should
    * also contain any centralized event processing which must occur after
    * DOM and frame processing.
    */
-  NS_IMETHOD PostHandleEvent(nsPresContext* aPresContext,
-                             nsEvent *aEvent,
-                             nsIFrame* aTargetFrame,
-                             nsEventStatus* aStatus,
-                             nsIView* aView);
+  nsresult PostHandleEvent(nsPresContext* aPresContext,
+                           nsEvent *aEvent,
+                           nsIFrame* aTargetFrame,
+                           nsEventStatus* aStatus,
+                           nsIView* aView);
 
-  NS_IMETHOD NotifyDestroyPresContext(nsPresContext* aPresContext);
-  NS_IMETHOD SetPresContext(nsPresContext* aPresContext);
-  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
+  void NotifyDestroyPresContext(nsPresContext* aPresContext);
+  void SetPresContext(nsPresContext* aPresContext);
+  void ClearFrameRefs(nsIFrame* aFrame);
 
-  NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
-  NS_IMETHOD GetEventTargetContent(nsEvent* aEvent, nsIContent** aContent);
+  nsIFrame* GetEventTarget();
+  already_AddRefed<nsIContent> GetEventTargetContent(nsEvent* aEvent);
 
+  /**
+   * Returns the content state of aContent.
+   * @param aContent      The control whose state is requested.
+   * @param aFollowLabels Whether to reflect a label's content state on its
+   *                      associated control. If aFollowLabels is true and
+   *                      aContent is a control which has a label that has the 
+   *                      hover or active content state set, GetContentState
+   *                      will pretend that those states are also set on aContent.
+   * @return              The content state.
+   */
   virtual nsEventStates GetContentState(nsIContent *aContent,
                                         PRBool aFollowLabels = PR_FALSE);
-  virtual PRBool SetContentState(nsIContent *aContent, nsEventStates aState);
-  NS_IMETHOD ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
-  NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK);
 
-  // Access Key Registration
-  NS_IMETHOD RegisterAccessKey(nsIContent* aContent, PRUint32 aKey);
-  NS_IMETHOD UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey);
-  NS_IMETHOD GetRegisteredAccessKey(nsIContent* aContent, PRUint32* aKey);
+  /**
+   * Notify that the given NS_EVENT_STATE_* bit has changed for this content.
+   * @param aContent Content which has changed states
+   * @param aState   Corresponding state flags such as NS_EVENT_STATE_FOCUS
+   * @return  Whether the content was able to change all states. Returns PR_FALSE
+   *                  if a resulting DOM event causes the content node passed in
+   *                  to not change states. Note, the frame for the content may
+   *                  change as a result of the content state change, because of
+   *                  frame reconstructions that may occur, but this does not
+   *                  affect the return value.
+   */
+  PRBool SetContentState(nsIContent *aContent, nsEventStates aState);
+  void ContentRemoved(nsIDocument* aDocument, nsIContent* aContent);
+  PRBool EventStatusOK(nsGUIEvent* aEvent);
 
-  NS_IMETHOD SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
-                       PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
-                       nsIWidget* aWidget, PRBool aLockCursor);
+  /**
+   * Register accesskey on the given element. When accesskey is activated then
+   * the element will be notified via nsIContent::PerformAccesskey() method.
+   *
+   * @param  aContent  the given element
+   * @param  aKey      accesskey
+   */
+  void RegisterAccessKey(nsIContent* aContent, PRUint32 aKey);
+
+  /**
+   * Unregister accesskey for the given element.
+   *
+   * @param  aContent  the given element
+   * @param  aKey      accesskey
+   */
+  void UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey);
+
+  /**
+   * Get accesskey registered on the given element or 0 if there is none.
+   *
+   * @param  aContent  the given element
+   * @return           registered accesskey
+   */
+  PRUint32 GetRegisteredAccessKey(nsIContent* aContent);
+
+  nsresult SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
+                     PRBool aHaveHotspot, float aHotspotX, float aHotspotY,
+                     nsIWidget* aWidget, PRBool aLockCursor); 
 
   static void StartHandlingUserInput()
   {
@@ -150,16 +191,23 @@ public:
     return sUserInputEventDepth > 0;
   }
 
+  /**
+   * Returns true if the current code is being executed as a result of user input.
+   * This includes timers or anything else that is initiated from user input.
+   * However, mouse hover events are not counted as user input, nor are
+   * page load events. If this method is called from asynchronously executed code,
+   * such as during layout reflows, it will return false.
+   */
   NS_IMETHOD_(PRBool) IsHandlingUserInputExternal() { return IsHandlingUserInput(); }
   
   nsPresContext* GetPresContext() { return mPresContext; }
 
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsEventStateManager,
-                                           nsIEventStateManager)
+                                           nsIObserver)
 
   static nsIDocument* sMouseOverDocument;
 
-  static nsIEventStateManager* GetActiveEventStateManager() { return sActiveESM; }
+  static nsEventStateManager* GetActiveEventStateManager() { return sActiveESM; }
 
   // Sets aNewESM to be the active event state manager, and
   // if aContent is non-null, marks the object as active.
@@ -488,5 +536,7 @@ private:
   static void* operator new(size_t /*size*/) CPP_THROW_NEW { return nsnull; }
   static void operator delete(void* /*memory*/) {}
 };
+
+#define NS_EVENT_NEEDS_FRAME(event) (!NS_IS_ACTIVATION_EVENT(event))
 
 #endif // nsEventStateManager_h__

@@ -89,7 +89,7 @@ class nsFrameManager;
 class nsILinkHandler;
 class nsStyleContext;
 class nsIAtom;
-class nsIEventStateManager;
+class nsEventStateManager;
 class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
@@ -545,7 +545,7 @@ public:
   void SetPrintPreviewScale(float aScale) { mPPScale = aScale; }
 
   nsDeviceContext* DeviceContext() { return mDeviceContext; }
-  nsIEventStateManager* EventStateManager() { return mEventManager; }
+  nsEventStateManager* EventStateManager() { return mEventManager; }
   nsIAtom* GetLanguageFromCharset() { return mLanguage; }
 
   float TextZoom() { return mTextZoom; }
@@ -1053,7 +1053,7 @@ protected:
                                         // Cannot reintroduce cycles
                                         // since there is no dependency
                                         // from gfx back to layout.
-  nsIEventStateManager* mEventManager;  // [STRONG]
+  nsEventStateManager* mEventManager;   // [STRONG]
   nsILookAndFeel*       mLookAndFeel;   // [STRONG]
   nsRefPtr<nsRefreshDriver> mRefreshDriver;
   nsRefPtr<nsTransitionManager> mTransitionManager;

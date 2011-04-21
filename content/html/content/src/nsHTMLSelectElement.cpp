@@ -52,7 +52,7 @@
 
 #include "nsIDOMHTMLOptGroupElement.h"
 #include "nsHTMLOptionElement.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "nsGUIEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIBoxObject.h"
