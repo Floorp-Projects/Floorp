@@ -1850,7 +1850,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
+    if (JS_UNLIKELY(rval.isPrimitive()) && regs.sp[-1].isObject()) {
         regs.sp[-2].setString(pic->atom);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             THROW();
@@ -2369,7 +2369,7 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(f.regs.sp[-2].isUndefined()) && thisv.isObject()) {
+    if (JS_UNLIKELY(f.regs.sp[-2].isPrimitive()) && thisv.isObject()) {
         f.regs.sp[-2] = f.regs.sp[-1];
         f.regs.sp[-1].setObject(*thisObj);
         if (!js_OnUnknownMethod(cx, f.regs.sp - 2))

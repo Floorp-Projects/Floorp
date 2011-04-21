@@ -514,7 +514,7 @@ stubs::CallElem(VMFrame &f)
         THROW();
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(regs.sp[-2].isUndefined()) && thisv.isObject()) {
+    if (JS_UNLIKELY(regs.sp[-2].isPrimitive()) && thisv.isObject()) {
         regs.sp[-2] = regs.sp[-1];
         regs.sp[-1].setObject(*thisObj);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
@@ -1994,7 +1994,7 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
         }
     }
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
+    if (JS_UNLIKELY(rval.isPrimitive()) && regs.sp[-1].isObject()) {
         regs.sp[-2].setString(origAtom);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
             THROW();

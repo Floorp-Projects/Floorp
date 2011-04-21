@@ -4198,7 +4198,7 @@ BEGIN_CASE(JSOP_CALLPROP)
         }
     }
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(rval.isUndefined()) && regs.sp[-1].isObject()) {
+    if (JS_UNLIKELY(rval.isPrimitive()) && regs.sp[-1].isObject()) {
         LOAD_ATOM(0, atom);
         regs.sp[-2].setString(atom);
         if (!js_OnUnknownMethod(cx, regs.sp - 2))
@@ -4458,7 +4458,7 @@ BEGIN_CASE(JSOP_CALLELEM)
         goto error;
 
 #if JS_HAS_NO_SUCH_METHOD
-    if (JS_UNLIKELY(regs.sp[-2].isUndefined()) && thisv.isObject()) {
+    if (JS_UNLIKELY(regs.sp[-2].isPrimitive()) && thisv.isObject()) {
         /* For js_OnUnknownMethod, sp[-2] is the index, and sp[-1] is the object missing it. */
         regs.sp[-2] = regs.sp[-1];
         regs.sp[-1].setObject(*thisObj);
