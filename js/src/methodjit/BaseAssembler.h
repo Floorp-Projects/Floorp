@@ -608,8 +608,10 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
 
         /* PC -> regs->pc :( */
-        storePtr(ImmPtr(pc),
-                 FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
+        if (pc) {
+            storePtr(ImmPtr(pc),
+                     FrameAddress(offsetof(VMFrame, regs) + offsetof(JSFrameRegs, pc)));
+        }
     }
 
     // An infallible VM call is a stub call (taking a VMFrame & and one
@@ -691,6 +693,39 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         }
 
         return fails;
+    }
+
+    //
+    // Class to assist with computing offsets into a frame being pushed from JIT code.
+    struct AdjustedFrame {
+        AdjustedFrame(uint32 baseOffset)
+         : baseOffset(baseOffset)
+        { }
+
+        uint32 baseOffset;
+
+        JSC::MacroAssembler::Address addrOf(uint32 offset) {
+            return JSC::MacroAssembler::Address(JSFrameReg, baseOffset + offset);
+        }
+    };
+
+    // Implements JSStackFrame::initCallFrameCallerHalf.
+    DataLabelPtr emitStaticFrame(bool isNew, uint32 frameDepth, void *returnAddress) {
+        AdjustedFrame newfp(sizeof(JSStackFrame) + frameDepth * sizeof(Value));
+    
+        Address flagsAddr = newfp.addrOf(JSStackFrame::offsetOfFlags());
+        uint32 extraFlags = isNew ? JSFRAME_CONSTRUCTING : 0;
+        store32(Imm32(JSFRAME_FUNCTION | extraFlags), flagsAddr);
+    
+        Address prevAddr = newfp.addrOf(JSStackFrame::offsetOfPrev());
+        storePtr(JSFrameReg, prevAddr);
+    
+        Address ncodeAddr = newfp.addrOf(JSStackFrame::offsetOfncode());
+        DataLabelPtr ptr = storePtrWithPatch(ImmPtr(returnAddress), ncodeAddr);
+    
+        addPtr(Imm32(sizeof(JSStackFrame) + frameDepth * sizeof(Value)), JSFrameReg);
+
+        return ptr;
     }
 
     void loadObjClass(RegisterID objReg, RegisterID destReg) {

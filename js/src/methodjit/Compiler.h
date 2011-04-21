@@ -126,47 +126,8 @@ class Compiler : public BaseCompiler
     };
 
     /* InlineFrameAssembler wants to see this. */
-  public:
-    struct CallGenInfo {
-        CallGenInfo(jsbytecode *pc) : pc(pc) {}
-
-        /*
-         * These members map to members in CallICInfo. See that structure for
-         * more comments.
-         */
-        jsbytecode   *pc;
-        DataLabelPtr funGuard;
-        Jump         funJump;
-        Jump         hotJump;
-        Call         oolCall;
-        Label        joinPoint;
-        Label        slowJoinPoint;
-        Label        slowPathStart;
-        Label        hotPathLabel;
-        DataLabelPtr addrLabel1;
-        DataLabelPtr addrLabel2;
-        Jump         oolJump;
-        Label        icCall;
-        RegisterID   funObjReg;
-        RegisterID   funPtrReg;
-        FrameSize    frameSize;
-    };
-
   private:
 #endif
-
-    /*
-     * Writes of call return addresses which needs to be delayed until the final
-     * absolute address of the join point is known.
-     */
-    struct CallPatchInfo {
-        CallPatchInfo() : hasFastNcode(false), hasSlowNcode(false) {}
-        Label joinPoint;
-        DataLabelPtr fastNcodePatch;
-        DataLabelPtr slowNcodePatch;
-        bool hasFastNcode;
-        bool hasSlowNcode;
-    };
 
     struct BaseICInfo {
         BaseICInfo(JSOp op) : op(op)
@@ -186,6 +147,23 @@ class Compiler : public BaseCompiler
             to.op = op;
             JS_ASSERT(to.op == op);
         }
+    };
+
+    struct CallICInfo : public BaseICInfo {
+        CallICInfo(JSOp op) : BaseICInfo(op)
+        { }
+        jsbytecode *pc;
+        RegisterID calleeData;
+        FrameSize frameSize;
+        Jump inlineJump;
+        bool speculatedFunCallOrApply;
+        DataLabelPtr failedSpeculationParam;
+        DataLabelPtr ncodePatch;
+        DataLabelPtr calleePtr;
+        Address rval;
+        Label completedRejoinOffset;
+        bool hasExtendedInlinePath;
+        Jump inlineCall;
     };
 
     struct GetElementICInfo : public BaseICInfo {
@@ -342,7 +320,6 @@ class Compiler : public BaseCompiler
 #if defined JS_MONOIC
     js::Vector<GetGlobalNameICInfo, 16, CompilerAllocPolicy> getGlobalNames;
     js::Vector<SetGlobalNameICInfo, 16, CompilerAllocPolicy> setGlobalNames;
-    js::Vector<CallGenInfo, 64, CompilerAllocPolicy> callICs;
     js::Vector<EqualityGenInfo, 64, CompilerAllocPolicy> equalityICs;
     js::Vector<TraceGenInfo, 64, CompilerAllocPolicy> traceICs;
 #endif
@@ -351,7 +328,7 @@ class Compiler : public BaseCompiler
     js::Vector<GetElementICInfo, 16, CompilerAllocPolicy> getElemICs;
     js::Vector<SetElementICInfo, 16, CompilerAllocPolicy> setElemICs;
 #endif
-    js::Vector<CallPatchInfo, 64, CompilerAllocPolicy> callPatches;
+    js::Vector<CallICInfo, 16, CompilerAllocPolicy> callICs;
     js::Vector<InternalCallSite, 64, CompilerAllocPolicy> callSites;
     js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
     js::Vector<JumpTable, 16> jumpTables;
@@ -432,12 +409,6 @@ class Compiler : public BaseCompiler
     void emitReturnValue(Assembler *masm, FrameEntry *fe);
     void dispatchCall(VoidPtrStubUInt32 stub, uint32 argc);
     void interruptCheckHelper();
-    void emitUncachedCall(uint32 argc, bool callingNew);
-    void checkCallApplySpeculation(uint32 callImmArgc, uint32 speculatedArgc,
-                                   FrameEntry *origCallee, FrameEntry *origThis,
-                                   MaybeRegisterID origCalleeType, RegisterID origCalleeData,
-                                   MaybeRegisterID origThisType, RegisterID origThisData,
-                                   Jump *uncachedCallSlowRejoin, CallPatchInfo *uncachedCallPatch);
     void inlineCallHelper(uint32 argc, bool callingNew);
     void fixPrimitiveReturn(Assembler *masm, FrameEntry *fe);
     void jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index);
