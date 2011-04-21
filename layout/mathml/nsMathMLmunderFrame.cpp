@@ -282,8 +282,6 @@ nsMathMLmunderFrame::Place(nsRenderingContext& aRenderingContext,
                             PresContext()->GetUserFontSet());
   nsFontMetrics* fm = aRenderingContext.FontMetrics();
 
-  nscoord xHeight = fm->XHeight();
-
   nscoord ruleThickness;
   GetRuleThickness (aRenderingContext, fm, ruleThickness);
 
