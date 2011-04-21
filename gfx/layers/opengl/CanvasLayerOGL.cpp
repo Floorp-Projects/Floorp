@@ -52,10 +52,6 @@
 #include <OpenGL/OpenGL.h>
 #endif
 
-#ifdef MOZ_X11
-#include "gfxXlibSurface.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
@@ -297,40 +293,34 @@ ShadowCanvasLayerOGL::~ShadowCanvasLayerOGL()
 void
 ShadowCanvasLayerOGL::Initialize(const Data& aData)
 {
-  NS_RUNTIMEABORT("Incompatibe surface type");
-}
-
-void
-ShadowCanvasLayerOGL::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize)
-{
-  mDeadweight = aNewFront;
-  nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(mDeadweight);
-
-  mTexImage = gl()->CreateTextureImage(nsIntSize(aSize.width, aSize.height),
-                                       surf->GetContentType(),
+  mDeadweight = static_cast<gfxSharedImageSurface*>(aData.mSurface);
+  gfxSize sz = mDeadweight->GetSize();
+  mTexImage = gl()->CreateTextureImage(nsIntSize(sz.width, sz.height),
+                                       mDeadweight->GetContentType(),
                                        LOCAL_GL_CLAMP_TO_EDGE);
 }
 
-void
-ShadowCanvasLayerOGL::Swap(const SurfaceDescriptor& aNewFront,
-                           SurfaceDescriptor* aNewBack)
+already_AddRefed<gfxSharedImageSurface>
+ShadowCanvasLayerOGL::Swap(gfxSharedImageSurface* aNewFront)
 {
   if (!mDestroyed && mTexImage) {
-    nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront);
-    gfxSize sz = surf->GetSize();
+    // XXX this is always just ridiculously slow
+
+    gfxSize sz = aNewFront->GetSize();
     nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
-    mTexImage->DirectUpdate(surf, updateRegion);
+    mTexImage->DirectUpdate(aNewFront, updateRegion);
   }
 
-  *aNewBack = aNewFront;
+  return aNewFront;
 }
 
 void
 ShadowCanvasLayerOGL::DestroyFrontBuffer()
 {
   mTexImage = nsnull;
-  if (IsSurfaceDescriptorValid(mDeadweight)) {
-    mOGLManager->DestroySharedSurface(&mDeadweight, mAllocator);
+  if (mDeadweight) {
+    mOGLManager->DestroySharedSurface(mDeadweight, mAllocator);
+    mDeadweight = nsnull;
   }
 }
 
