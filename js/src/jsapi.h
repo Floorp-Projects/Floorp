@@ -1874,11 +1874,37 @@ JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer);
 
 /*
  * Create a new JSString whose chars member refers to external memory, i.e.,
- * memory requiring spe, type-specific finalization.  The type code must
- * be a nonnegative return value from JS_AddExternalStringFinalizer.
+ * memory requiring type-specific finalization.  The type code must be a
+ * nonnegative return value from JS_AddExternalStringFinalizer.
  */
 extern JS_PUBLIC_API(JSString *)
-JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type);
+JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length, intN type);
+
+/*
+ * Like JS_NewExternalString, except that 'closure' can be retrieved later via
+ * JS_GetExternalStringClosure. This closure data is a black blox to the JS
+ * engine and may be used by the embedding to associate extra data with an
+ * external string. E.g., an embedding may want to associate a pointer to the
+ * object that owns the chars of an external string so that, when this external
+ * string is finalized, the owner object can be deleted.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_NewExternalStringWithClosure(JSContext *cx, const jschar *chars, size_t length,
+                                intN type, void *closure);
+
+/*
+ * Return whether 'str' was created with JS_NewExternalString or
+ * JS_NewExternalStringWithClosure.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_IsExternalString(JSContext *cx, JSString *str);
+
+/*
+ * Return the 'closure' arg passed to JS_NewExternalStringWithClosure or NULL
+ * if the external string was created via JS_NewExternalString.
+ */
+extern JS_PUBLIC_API(void *)
+JS_GetExternalStringClosure(JSContext *cx, JSString *str);
 
 /*
  * Deprecated. Use JS_SetNativeStackQuoata instead.
