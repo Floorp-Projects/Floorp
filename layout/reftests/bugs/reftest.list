@@ -675,7 +675,7 @@ fails-if(Android) != 376532-3.html 376532-3-ref.html
 == 379178-html.html 379178-html-ref.html
 == 379178-svg.svg 379178-svg-ref.svg
 == 379316-1.html 379316-1-ref.html
-fails-if(Android) random-if(cocoaWidget) == 379316-2.html 379316-2-ref.html # bug 379786
+fails-if(Android) random-if(cocoaWidget) fails-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 379316-2.html 379316-2-ref.html # bug 379786
 == 379328-1.html 379328-1-ref.html
 == 379349-1a.xhtml 379349-1-ref.xhtml
 == 379349-1b.xhtml 379349-1-ref.xhtml
