@@ -261,7 +261,6 @@ namespace js {
 
 struct NativeIterator;
 class RegExp;
-class GlobalObject;
 
 }
 
@@ -699,13 +698,11 @@ struct JSObject : js::gc::Cell {
         parent = newParent;
     }
 
-    JS_FRIEND_API(js::GlobalObject *) getGlobal() const;
+    JS_FRIEND_API(JSObject *) getGlobal() const;
 
     bool isGlobal() const {
         return !!(getClass()->flags & JSCLASS_IS_GLOBAL);
     }
-
-    inline js::GlobalObject *asGlobal();
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);

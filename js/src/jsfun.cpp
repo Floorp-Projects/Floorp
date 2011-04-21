@@ -98,7 +98,7 @@ using namespace js::gc;
 inline JSObject *
 JSObject::getThrowTypeError() const
 {
-    return getGlobal()->getThrowTypeError();
+    return &getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_THROWTYPEERROR).toObject();
 }
 
 JSBool
@@ -2693,13 +2693,14 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 
     if (obj->isGlobal()) {
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
-        JSFunction *throwTypeError =
+        JSObject *throwTypeError =
             js_NewFunction(cx, NULL, reinterpret_cast<Native>(ThrowTypeError), 0,
                            0, obj, NULL);
         if (!throwTypeError)
             return NULL;
 
-        obj->asGlobal()->setThrowTypeError(throwTypeError);
+        JS_ALWAYS_TRUE(js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_THROWTYPEERROR,
+                                          ObjectValue(*throwTypeError)));
     }
 
     return proto;
