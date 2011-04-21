@@ -42,6 +42,7 @@
 #include "jsscope.h"
 #include "jsobj.h"
 #include "jslibmath.h"
+#include "jsdbg.h"
 #include "jsiter.h"
 #include "jsnum.h"
 #include "jsxml.h"
@@ -1175,7 +1176,7 @@ stubs::Debugger(VMFrame &f, jsbytecode *pc)
                          f.cx->debugHooks->debuggerHandlerData);
         }
         if (st == JSTRAP_CONTINUE)
-            st = f.cx->compartment->onDebuggerStatement(f.cx, &rval);
+            st = Debug::onDebuggerStatement(f.cx, &rval);
 
         switch (st) {
           case JSTRAP_THROW:

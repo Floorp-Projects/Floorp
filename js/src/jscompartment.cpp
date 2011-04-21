@@ -601,6 +601,19 @@ JSCompartment::incBackEdgeCount(jsbytecode *pc)
 }
 
 bool
-JSCompartment::isAboutToBeCollected(JSGCInvocationKind gckind) {
+JSCompartment::isAboutToBeCollected(JSGCInvocationKind gckind)
+{
     return !hold && (arenaListsAreEmpty() || gckind == GC_LAST_CONTEXT);
+}
+
+void
+JSCompartment::removeDebug(Debug *dbg)
+{
+    for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
+        if (*p == dbg) {
+            debuggers.erase(p);
+            return;
+        }
+    }
+    JS_NOT_REACHED("JSCompartment::removeDebug");
 }
