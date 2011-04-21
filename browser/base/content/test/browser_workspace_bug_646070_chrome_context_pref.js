@@ -35,9 +35,11 @@ function runTests()
   let ws = gWorkspaceWindow.Workspace;
   ok(ws, "Workspace object exists in new window");
 
-  let contextMenu = gWorkspaceWindow.document.getElementById("ws-context-menu");
-  ok(contextMenu, "Context menu element exists");
-  ok(!contextMenu.hasAttribute("hidden"), "Context menu is visible");
+  let chromeContextMenu = gWorkspaceWindow.document.
+                          getElementById("ws-menu-chrome");
+  ok(chromeContextMenu, "Chrome context menuitem element exists");
+  ok(!chromeContextMenu.hasAttribute("hidden"),
+     "Chrome context menuitem is visible");
 
   let errorConsoleCommand = gWorkspaceWindow.document.
                             getElementById("ws-cmd-errorConsole");

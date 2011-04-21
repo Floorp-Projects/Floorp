@@ -73,6 +73,12 @@
 <!ENTITY chromeContext.label          "Chrome">
 <!ENTITY chromeContext.accesskey      "H">
 
+<!-- LOCALIZATION NOTE (resetContext.label): This command allows the developer
+  -  to reset/clear the global object of the context where the code executes.
+  -->
+<!ENTITY resetContext.label           "Reset">
+<!ENTITY resetContext.accesskey       "R">
+
 <!ENTITY toolsMenu.label              "Tools">
 <!ENTITY toolsMenu.accesskey          "T">
 

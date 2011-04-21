@@ -74,6 +74,7 @@
   <command id="ws-cmd-print" oncommand="Workspace.print();"/>
   <command id="ws-cmd-contentContext" oncommand="Workspace.setContentContext();"/>
   <command id="ws-cmd-chromeContext" oncommand="Workspace.setChromeContext();" disabled="true"/>
+  <command id="ws-cmd-resetContext" oncommand="Workspace.resetContext();"/>
   <command id="ws-cmd-errorConsole" oncommand="Workspace.openErrorConsole();" disabled="true"/>
   <command id="ws-cmd-webConsole" oncommand="Workspace.openWebConsole();"/>
 </commandset>
@@ -254,7 +255,7 @@
     </menupopup>
   </menu>
 
-  <menu id="ws-context-menu" hidden="true"
+  <menu id="ws-context-menu"
         label="&contextMenu.label;"
         accesskey="&contextMenu.accesskey;">
     <menupopup id="ws-menu-context">
@@ -264,11 +265,16 @@
                 command="ws-cmd-contentContext"
                 checked="true"
                 type="radio"/>
-      <menuitem id="ws-menu-chrome"
+      <menuitem id="ws-menu-chrome" hidden="true"
                 command="ws-cmd-chromeContext"
                 label="&chromeContext.label;"
                 accesskey="&chromeContext.accesskey;"
                 type="radio"/>
+      <menuseparator/>
+      <menuitem id="ws-menu-resetContext"
+                command="ws-cmd-resetContext"
+                label="&resetContext.label;"
+                accesskey="&resetContext.accesskey;"/>
     </menupopup>
   </menu>
 
