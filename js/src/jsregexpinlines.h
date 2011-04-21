@@ -65,7 +65,7 @@ namespace js {
 extern Class regexp_statics_class;
 
 static inline JSObject *
-regexp_statics_construct(JSContext *cx, GlobalObject *parent)
+regexp_statics_construct(JSContext *cx, JSObject *parent)
 {
     JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, parent);
     if (!obj)
@@ -593,9 +593,9 @@ RegExp::extractFrom(JSObject *obj)
 /* RegExpStatics inlines. */
 
 inline RegExpStatics *
-RegExpStatics::extractFrom(js::GlobalObject *globalObj)
+RegExpStatics::extractFrom(JSObject *global)
 {
-    Value resVal = globalObj->getRegExpStatics();
+    Value resVal = global->getReservedSlot(JSRESERVED_GLOBAL_REGEXP_STATICS);
     RegExpStatics *res = static_cast<RegExpStatics *>(resVal.toObject().getPrivate());
     return res;
 }

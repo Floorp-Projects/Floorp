@@ -167,7 +167,7 @@ class RegExpStatics
   public:
     RegExpStatics() : bufferLink(NULL), copied(false) { clear(); }
 
-    static RegExpStatics *extractFrom(GlobalObject *globalObj);
+    static RegExpStatics *extractFrom(JSObject *global);
 
     /* Mutators. */
 

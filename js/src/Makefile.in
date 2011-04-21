@@ -147,7 +147,6 @@ CPPSRCS		= \
 		jsgcmark.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
-		GlobalObject.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -213,7 +212,6 @@ INSTALLED_HEADERS = \
 		jsgcchunk.h \
 		jsgcstats.h \
 		jscompartment.h \
-		GlobalObject.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \
