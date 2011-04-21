@@ -789,7 +789,7 @@ public:
   /**
    * Method to get the _intrinsic_ content state of this content node.  This is
    * the state that is independent of the node's presentation.  To get the full
-   * content state, use nsIEventStateManager.  Also see nsIEventStateManager
+   * content state, use nsEventStateManager.  Also see nsEventStateManager
    * for the possible bits that could be set here.
    */
   virtual nsEventStates IntrinsicState() const;

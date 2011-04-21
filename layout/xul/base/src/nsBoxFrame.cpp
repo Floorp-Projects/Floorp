@@ -85,12 +85,11 @@
 #include "nsWidgetsCID.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIEventStateManager.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsITheme.h"
 #include "nsTransform2D.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsEventDispatcher.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
@@ -1930,17 +1929,15 @@ nsBoxFrame::RegUnregAccessKey(PRBool aDoReg)
 
   // With a valid PresContext we can get the ESM 
   // and register the access key
-  nsIEventStateManager *esm = PresContext()->EventStateManager();
-
-  nsresult rv;
+  nsEventStateManager *esm = PresContext()->EventStateManager();
 
   PRUint32 key = accessKey.First();
   if (aDoReg)
-    rv = esm->RegisterAccessKey(mContent, key);
+    esm->RegisterAccessKey(mContent, key);
   else
-    rv = esm->UnregisterAccessKey(mContent, key);
+    esm->UnregisterAccessKey(mContent, key);
 
-  return rv;
+  return NS_OK;
 }
 
 PRBool

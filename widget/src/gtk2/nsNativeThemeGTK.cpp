@@ -49,7 +49,6 @@
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
-#include "nsIEventStateManager.h"
 #include "nsIViewManager.h"
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"

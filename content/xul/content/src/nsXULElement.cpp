@@ -83,7 +83,7 @@
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsIFastLoadService.h"
 #include "nsHTMLStyleSheet.h"
