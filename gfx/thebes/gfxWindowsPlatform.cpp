@@ -158,6 +158,13 @@ NS_IMPL_ISUPPORTS1(D2DVRAMReporter, nsIMemoryReporter)
 #define GFX_USE_CLEARTYPE_ALWAYS "gfx.font_rendering.cleartype.always_use_for_content"
 #define GFX_DOWNLOADABLE_FONTS_USE_CLEARTYPE "gfx.font_rendering.cleartype.use_for_downloadable_fonts"
 
+#define GFX_CLEARTYPE_PARAMS           "gfx.font_rendering.cleartype_params."
+#define GFX_CLEARTYPE_PARAMS_GAMMA     "gfx.font_rendering.cleartype_params.gamma"
+#define GFX_CLEARTYPE_PARAMS_CONTRAST  "gfx.font_rendering.cleartype_params.enhanced_contrast"
+#define GFX_CLEARTYPE_PARAMS_LEVEL     "gfx.font_rendering.cleartype_params.cleartype_level"
+#define GFX_CLEARTYPE_PARAMS_STRUCTURE "gfx.font_rendering.cleartype_params.pixel_structure"
+#define GFX_CLEARTYPE_PARAMS_MODE      "gfx.font_rendering.cleartype_params.rendering_mode"
+
 #ifdef MOZ_FT2_FONTS
 static FT_Library gPlatformFTLibrary = NULL;
 #endif
@@ -342,6 +349,8 @@ gfxWindowsPlatform::UpdateRenderMode()
                 reinterpret_cast<IUnknown**>(&factory));
             mDWriteFactory = factory;
             factory->Release();
+
+            SetupClearTypeParams(pref);
 
             if (hr == S_OK)
               reporter.SetSuccessful();
@@ -790,6 +799,8 @@ gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aP
         mUseClearTypeForDownloadableFonts = UNINITIALIZED_VALUE;
     } else if (!strcmp(GFX_USE_CLEARTYPE_ALWAYS, aPref)) {
         mUseClearTypeAlways = UNINITIALIZED_VALUE;
+    } else if (!strncmp(GFX_CLEARTYPE_PARAMS, aPref, strlen(GFX_CLEARTYPE_PARAMS))) {
+        SetupClearTypeParams(aPrefBranch);
     } else {
         clearTextFontCaches = PR_FALSE;
     }
@@ -801,6 +812,67 @@ gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aP
         }
         gfxTextRunWordCache::Flush();
     }
+}
+
+void
+gfxWindowsPlatform::SetupClearTypeParams(nsIPrefBranch *aPrefBranch)
+{
+#if CAIRO_HAS_DWRITE_FONT
+    if (GetDWriteFactory()) {
+        // any missing prefs will default to invalid (-1) and be ignored;
+        // out-of-range values will also be ignored
+        FLOAT gamma = -1.0;
+        FLOAT contrast = -1.0;
+        FLOAT level = -1.0;
+        int geometry = -1;
+        int mode = -1;
+        PRInt32 value;
+        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_GAMMA,
+                                                 &value))) {
+            if (value >= 1000 && value <= 2200) {
+                gamma = (FLOAT)value / 1000.0;
+            }
+        }
+        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_CONTRAST,
+                                                 &value))) {
+            if (value >= 0 && value <= 1000) {
+                contrast = (FLOAT)value / 100.0;
+            }
+        }
+        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_LEVEL,
+                                                 &value))) {
+            if (value >= 0 && value <= 100) {
+                level = (FLOAT)value / 100.0;
+            }
+        }
+        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_STRUCTURE,
+                                                 &value))) {
+            if (value >= 0 && value <= 2) {
+                geometry = value;
+            }
+        }
+        if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_MODE,
+                                                 &value))) {
+            if (value >= 0 && value <= 5) {
+                mode = value;
+            }
+        }
+        cairo_dwrite_set_cleartype_params(gamma, contrast, level, geometry, mode);
+
+        switch (mode) {
+        case DWRITE_RENDERING_MODE_ALIASED:
+        case DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC:
+            mMeasuringMode = DWRITE_MEASURING_MODE_GDI_CLASSIC;
+            break;
+        case DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL:
+            mMeasuringMode = DWRITE_MEASURING_MODE_GDI_NATURAL;
+            break;
+        default:
+            mMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
+            break;
+        }
+    }
+#endif
 }
 
 bool

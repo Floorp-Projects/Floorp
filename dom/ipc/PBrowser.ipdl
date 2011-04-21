@@ -169,7 +169,7 @@ parent:
 
     sync GetIMEEnabled() returns (PRUint32 value);
 
-    SetInputMode(PRUint32 value, nsString type, nsString actionHint);
+    SetInputMode(PRUint32 value, nsString type, nsString actionHint, PRUint32 reason);
 
     sync GetIMEOpenState() returns (PRBool value);
 
