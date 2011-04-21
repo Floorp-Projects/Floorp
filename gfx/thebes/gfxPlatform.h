@@ -147,12 +147,13 @@ public:
     static gfxPlatform *GetPlatform();
 
     /**
-     * Start up Thebes. This can fail.
+     * Start up Thebes.
      */
-    static nsresult Init();
+    static void Init();
 
     /**
-     * Clean up static objects to shut down thebes.
+     * Shut down Thebes.
+     * Init() arranges for this to be called at an appropriate time.
      */
     static void Shutdown();
 
