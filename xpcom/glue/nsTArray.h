@@ -342,7 +342,7 @@ public:
 // The Alloc template parameter can be used to choose between
 // "fallible" and "infallible" nsTArray (if available), defaulting to
 // fallible.  If the *fallible* allocator is used, the return value of
-// methods that might allocate doesn't need to be checked; Append() is
+// methods that might allocate needs to be checked; Append() is
 // one such method.  These return values don't need to be checked if
 // the *in*fallible allocator is chosen.  When in doubt, choose the
 // infallible allocator.

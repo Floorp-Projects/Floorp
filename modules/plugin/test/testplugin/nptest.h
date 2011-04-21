@@ -138,6 +138,7 @@ typedef struct InstanceData {
   int32_t focusEventCount;
   int32_t eventModel;
   bool closeStream;
+  std::string lastKeyText;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);

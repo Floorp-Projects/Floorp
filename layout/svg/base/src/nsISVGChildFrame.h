@@ -105,11 +105,6 @@ public:
   NS_IMETHOD NotifyRedrawSuspended()=0;
   NS_IMETHOD NotifyRedrawUnsuspended()=0;
 
-  // Set whether we should stop multiplying matrices when building up
-  // the current transformation matrix at this frame.
-  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate)=0;
-  virtual PRBool GetMatrixPropagation()=0;
-
   /**
    * Get this frame's contribution to the rect returned by a GetBBox() call
    * that occurred either on this element, or on one of its ancestors.

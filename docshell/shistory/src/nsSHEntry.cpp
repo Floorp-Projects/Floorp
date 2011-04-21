@@ -105,7 +105,6 @@ static void StopTrackingEntry(nsSHEntry *aEntry)
 nsSHEntry::nsSHEntry() 
   : mLoadType(0)
   , mID(gEntryID++)
-  , mPageIdentifier(mID)
   , mDocIdentifier(gEntryDocIdentifier++)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
@@ -130,7 +129,6 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mLayoutHistoryState(other.mLayoutHistoryState)
   , mLoadType(0)         // XXX why not copy?
   , mID(other.mID)
-  , mPageIdentifier(other.mPageIdentifier)
   , mDocIdentifier(other.mDocIdentifier)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
@@ -388,18 +386,6 @@ NS_IMETHODIMP nsSHEntry::GetID(PRUint32 * aResult)
 NS_IMETHODIMP nsSHEntry::SetID(PRUint32  aID)
 {
   mID = aID;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::GetPageIdentifier(PRUint32 * aResult)
-{
-  *aResult = mPageIdentifier;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::SetPageIdentifier(PRUint32 aPageIdentifier)
-{
-  mPageIdentifier = aPageIdentifier;
   return NS_OK;
 }
 
