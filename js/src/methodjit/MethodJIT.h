@@ -100,7 +100,6 @@ struct VMFrame
             void *ptr3;
         } x;
         struct {
-            uint32 lazyArgsObj;
             uint32 dynamicArgc;
         } call;
     } u;
@@ -188,6 +187,12 @@ extern "C" void JaegerStubVeneer(void);
 #endif
 
 namespace mjit {
+
+enum LookupStatus {
+    Lookup_Error = 0,
+    Lookup_Uncacheable,
+    Lookup_Cacheable
+};
 
 /*
  * Trampolines to force returns from jit code.
@@ -293,7 +298,7 @@ namespace ic {
     struct SetGlobalNameIC;
     struct EqualityICInfo;
     struct TraceICInfo;
-    struct CallICInfo;
+    struct CallIC;
 # endif
 }
 }
@@ -318,8 +323,6 @@ typedef void (JS_FASTCALL *VoidStubJSObj)(VMFrame &, JSObject *);
 typedef void (JS_FASTCALL *VoidStubPC)(VMFrame &, jsbytecode *);
 typedef JSBool (JS_FASTCALL *BoolStubUInt32)(VMFrame &f, uint32);
 #ifdef JS_MONOIC
-typedef void (JS_FASTCALL *VoidStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
-typedef void * (JS_FASTCALL *VoidPtrStubCallIC)(VMFrame &, js::mjit::ic::CallICInfo *);
 typedef void (JS_FASTCALL *VoidStubGetGlobal)(VMFrame &, js::mjit::ic::GetGlobalNameIC *);
 typedef void (JS_FASTCALL *VoidStubSetGlobal)(VMFrame &, js::mjit::ic::SetGlobalNameIC *);
 typedef JSBool (JS_FASTCALL *BoolStubEqualityIC)(VMFrame &, js::mjit::ic::EqualityICInfo *);
@@ -343,6 +346,7 @@ struct NativeMapEntry {
 struct JITScript {
     typedef JSC::MacroAssemblerCodeRef CodeRef;
     CodeRef         code;       /* pool & code addresses */
+    JSScript        *script;    /* parent script */
 
 
     void            *invokeEntry;       /* invoke address */
@@ -360,10 +364,10 @@ struct JITScript {
     uint32          nNmapPairs:31;      /* The NativeMapEntrys are sorted by .bcOff.
                                            .ncode values may not be NULL. */
     bool            singleStepMode:1;   /* compiled in "single step mode" */
+    uint32          nCallICs;
 #ifdef JS_MONOIC
     uint32          nGetGlobalNames;
     uint32          nSetGlobalNames;
-    uint32          nCallICs;
     uint32          nEqualityICs;
     uint32          nTraceICs;
 #endif
@@ -381,10 +385,10 @@ struct JITScript {
 #endif
 
     NativeMapEntry *nmap() const;
+    ic::CallIC *callICs() const;
 #ifdef JS_MONOIC
     ic::GetGlobalNameIC *getGlobalNames() const;
     ic::SetGlobalNameIC *setGlobalNames() const;
-    ic::CallICInfo *callICs() const;
     ic::EqualityICInfo *equalityICs() const;
     ic::TraceICInfo *traceICs() const;
 #endif
@@ -403,10 +407,10 @@ struct JITScript {
         return jcheck >= jitcode && jcheck < jitcode + code.m_size;
     }
 
-    void nukeScriptDependentICs();
-    void sweepCallICs(JSContext *cx, bool purgeAll);
-    void purgeMICs();
-    void purgePICs();
+    void sweepICs(JSContext *cx);   // After GC, sweeps ICs caching dead objects.
+    void purgeICs(JSContext *cx);   // On pool-decaying GC, removes all extra ICs
+    void purgeMICs();               // Removes mono ICs only, on shape-regen GC
+    void purgePICs();               // Removes poly ICs only, on every GC
 
     size_t scriptDataSize();
 

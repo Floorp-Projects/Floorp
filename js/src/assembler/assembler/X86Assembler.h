@@ -2387,6 +2387,11 @@ public:
         intptr_t offset = reinterpret_cast<intptr_t>(to) - reinterpret_cast<intptr_t>(from);
         return (offset == static_cast<int32_t>(offset));
     }
+
+    static bool canLinkJump(void* code, JmpSrc where, void* value)
+    {
+        return canRelinkJump(reinterpret_cast<char*>(code) + where.m_offset, value);
+    }
     
     static void relinkCall(void* from, void* to)
     {

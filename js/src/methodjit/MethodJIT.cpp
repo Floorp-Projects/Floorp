@@ -752,31 +752,31 @@ JITScript::nmapSectionLimit() const
     return (char *)nmap() + sizeof(NativeMapEntry) * nNmapPairs;
 }
 
+ic::CallIC *
+JITScript::callICs() const
+{
+    return (ic::CallIC *)nmapSectionLimit();
+}
+
 #ifdef JS_MONOIC
 ic::GetGlobalNameIC *
 JITScript::getGlobalNames() const
 {
-    return (ic::GetGlobalNameIC *)nmapSectionLimit();
+    return (ic::GetGlobalNameIC *)((char *)callICs() + sizeof(ic::CallIC) * nCallICs);
 }
 
 ic::SetGlobalNameIC *
 JITScript::setGlobalNames() const
 {
-    return (ic::SetGlobalNameIC *)((char *)nmapSectionLimit() +
+    return (ic::SetGlobalNameIC *)((char *)getGlobalNames() +
             sizeof(ic::GetGlobalNameIC) * nGetGlobalNames);
-}
-
-ic::CallICInfo *
-JITScript::callICs() const
-{
-    return (ic::CallICInfo *)((char *)setGlobalNames() +
-            sizeof(ic::SetGlobalNameIC) * nSetGlobalNames);
 }
 
 ic::EqualityICInfo *
 JITScript::equalityICs() const
 {
-    return (ic::EqualityICInfo *)((char *)callICs() + sizeof(ic::CallICInfo) * nCallICs);
+    return (ic::EqualityICInfo *)((char *)setGlobalNames() +
+            sizeof(ic::SetGlobalNameIC) * nSetGlobalNames);
 }
 
 ic::TraceICInfo *
@@ -794,7 +794,7 @@ JITScript::monoICSectionsLimit() const
 char *
 JITScript::monoICSectionsLimit() const
 {
-    return nmapSectionsLimit();
+    return (char *)callICs() + sizeof(ic::CallIC) * nCallICs;
 }
 #endif  // JS_MONOIC
 
@@ -870,10 +870,6 @@ mjit::JITScript::~JITScript()
     {
         (*pExecPool)->release();
     }
-    
-    ic::CallICInfo *callICs_ = callICs();
-    for (uint32 i = 0; i < nCallICs; i++)
-        callICs_[i].releasePools();
 #endif
 }
 
@@ -886,7 +882,6 @@ mjit::JITScript::scriptDataSize()
 #if defined JS_MONOIC
         sizeof(ic::GetGlobalNameIC) * nGetGlobalNames +
         sizeof(ic::SetGlobalNameIC) * nSetGlobalNames +
-        sizeof(ic::CallICInfo) * nCallICs +
         sizeof(ic::EqualityICInfo) * nEqualityICs +
         sizeof(ic::TraceICInfo) * nTraceICs +
 #endif
@@ -992,11 +987,11 @@ JITScript::nativeToPC(void *returnAddress) const
 {
     size_t low = 0;
     size_t high = nCallICs;
-    js::mjit::ic::CallICInfo *callICs_ = callICs();
+    js::mjit::ic::CallIC *callICs_ = callICs();
     while (high > low + 1) {
         /* Could overflow here on a script with 2 billion calls. Oh well. */
         size_t mid = (high + low) / 2;
-        void *entry = callICs_[mid].funGuard.executableAddress();
+        void *entry = callICs_[mid].fastPathStart.executableAddress();
 
         /*
          * Use >= here as the return address of the call is likely to be
@@ -1008,9 +1003,9 @@ JITScript::nativeToPC(void *returnAddress) const
             low = mid;
     }
 
-    js::mjit::ic::CallICInfo &ic = callICs_[low];
+    js::mjit::ic::CallIC &ic = callICs_[low];
 
-    JS_ASSERT((uint8*)ic.funGuard.executableAddress() + ic.joinPointOffset == returnAddress);
+    JS_ASSERT((uint8*)ic.fastPathStart.executableAddress() + ic.inlineRejoinOffset == returnAddress);
     return ic.pc;
 }
 
