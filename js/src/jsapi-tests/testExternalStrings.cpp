@@ -27,15 +27,23 @@ BEGIN_TEST(testExternalStrings)
 {
     intN op = JS_AddExternalStringFinalizer(finalize_str);
 
-    CHECK(JS_NewExternalString(cx, arr, arrlen, op));
-    CHECK(JS_NewExternalStringWithClosure(cx, arr, arrlen, op, magic));
+    const unsigned N = 1000;
+
+    for (unsigned i = 0; i < N; ++i) {
+        CHECK(JS_NewExternalString(cx, arr, arrlen, op));
+        CHECK(JS_NewExternalStringWithClosure(cx, arr, arrlen, op, magic));
+    }
 
     // clear that newborn root
     JS_NewUCStringCopyN(cx, arr, arrlen);
 
     JS_GC(cx);
-    CHECK(finalized_noclosure == 1);
-    CHECK(finalized_closure == 1);
+
+    // a generous fudge factor to account for strings rooted by conservative gc
+    const unsigned epsilon = 10;
+
+    CHECK((N - finalized_noclosure) < epsilon);
+    CHECK((N - finalized_closure) < epsilon);
 
     return true;
 }
