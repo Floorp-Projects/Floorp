@@ -92,9 +92,46 @@ public:
 	return family;
     }
 
+    static IDWriteRenderingParams *RenderingParams()
+    {
+	if (!mRenderingParams) {
+	    CreateRenderingParams();
+	}
+	if (mRenderingParams) {
+	    mRenderingParams->AddRef();
+	}
+	return mRenderingParams;
+    }
+
+    static void SetRenderingParams(FLOAT aGamma,
+				   FLOAT aEnhancedContrast,
+				   FLOAT aClearTypeLevel,
+				   int aPixelGeometry,
+				   int aRenderingMode)
+    {
+	mGamma = aGamma;
+	mEnhancedContrast = aEnhancedContrast;
+	mClearTypeLevel = aClearTypeLevel;
+        mPixelGeometry = aPixelGeometry;
+        mRenderingMode = aRenderingMode;
+	// discard any current RenderingParams object
+	if (mRenderingParams) {
+	    mRenderingParams->Release();
+	    mRenderingParams = NULL;
+	}
+    }
+
 private:
+    static void CreateRenderingParams();
+
     static IDWriteFactory *mFactoryInstance;
     static IDWriteFontCollection *mSystemCollection;
+    static IDWriteRenderingParams *mRenderingParams;
+    static FLOAT mGamma;
+    static FLOAT mEnhancedContrast;
+    static FLOAT mClearTypeLevel;
+    static int mPixelGeometry;
+    static int mRenderingMode;
 };
 
 /* cairo_font_face_t implementation */
