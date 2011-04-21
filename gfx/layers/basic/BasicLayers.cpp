@@ -1631,6 +1631,13 @@ public:
   {
     NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
   }
+  
+  virtual void SetBackBufferYUVImage(gfxSharedImageSurface* aYBuffer,
+                                     gfxSharedImageSurface* aUBuffer,
+                                     gfxSharedImageSurface* aVBuffer)
+  {
+    NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
+  }
 
   virtual void Disconnect()
   {
@@ -1965,6 +1972,15 @@ public:
     mBackBuffer = aBuffer;
   }
 
+  virtual void SetBackBufferYUVImage(gfxSharedImageSurface* aYBuffer,
+                                     gfxSharedImageSurface* aUBuffer,
+                                     gfxSharedImageSurface* aVBuffer)
+  {
+    mBackBufferY = aYBuffer;
+    mBackBufferU = aUBuffer;
+    mBackBufferV = aVBuffer;
+  }
+
   virtual void Disconnect()
   {
     mBackBuffer = SurfaceDescriptor();
@@ -1977,12 +1993,88 @@ private:
     return static_cast<BasicShadowLayerManager*>(mManager);
   }
 
+  // For YUV Images these are the 3 planes (Y, Cb and Cr),
+  // for RGB images only mBackSurface is used.
   SurfaceDescriptor mBackBuffer;
+  nsRefPtr<gfxSharedImageSurface> mBackBufferY;
+  nsRefPtr<gfxSharedImageSurface> mBackBufferU;
+  nsRefPtr<gfxSharedImageSurface> mBackBufferV;
+  gfxIntSize mCbCrSize;
 };
  
 void
 BasicShadowableImageLayer::Paint(gfxContext* aContext)
 {
+  nsRefPtr<Image> image = mContainer->GetCurrentImage();
+
+  if (image->GetFormat() == Image::PLANAR_YCBCR && BasicManager()->IsCompositingCheap()) {
+    PlanarYCbCrImage *YCbCrImage = static_cast<PlanarYCbCrImage*>(image.get());
+    const PlanarYCbCrImage::Data *data = YCbCrImage->GetData();
+    NS_ASSERTION(data, "Must be able to retrieve yuv data from image!");
+
+    if (mSize != data->mYSize || mCbCrSize != data->mCbCrSize) {
+
+      if (mBackBufferY) {
+        BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBufferY);
+        BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBufferU);
+        BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBufferV);
+        BasicManager()->DestroyedImageBuffer(BasicManager()->Hold(this));
+      }
+      mSize = data->mYSize;
+      mCbCrSize = data->mCbCrSize;
+
+      nsRefPtr<gfxSharedImageSurface> tmpYSurface;
+      nsRefPtr<gfxSharedImageSurface> tmpUSurface;
+      nsRefPtr<gfxSharedImageSurface> tmpVSurface;
+
+      if (!BasicManager()->AllocDoubleBuffer(
+            mSize,
+            gfxASurface::CONTENT_ALPHA,
+            getter_AddRefs(tmpYSurface), getter_AddRefs(mBackBufferY)))
+        NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
+      
+      if (!BasicManager()->AllocDoubleBuffer(
+            mCbCrSize,
+            gfxASurface::CONTENT_ALPHA,
+            getter_AddRefs(tmpUSurface), getter_AddRefs(mBackBufferU)))
+        NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
+      
+      if (!BasicManager()->AllocDoubleBuffer(
+            mCbCrSize,
+            gfxASurface::CONTENT_ALPHA,
+            getter_AddRefs(tmpVSurface), getter_AddRefs(mBackBufferV)))
+        NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
+
+      YUVImage yuv(tmpYSurface->GetShmem(),
+                   tmpUSurface->GetShmem(),
+                   tmpVSurface->GetShmem());
+
+      BasicManager()->CreatedImageBuffer(BasicManager()->Hold(this),
+                                         nsIntSize(mSize.width, mSize.height),
+                                         yuv);
+
+    }
+      
+    memcpy(mBackBufferY->Data(), 
+           data->mYChannel, 
+           data->mYStride * mSize.height);
+    memcpy(mBackBufferU->Data(), 
+           data->mCbChannel, 
+           data->mCbCrStride * mCbCrSize.height);
+    memcpy(mBackBufferV->Data(), 
+           data->mCrChannel, 
+           data->mCbCrStride * mCbCrSize.height);
+      
+    YUVImage yuv(mBackBufferY->GetShmem(),
+                 mBackBufferU->GetShmem(),
+                 mBackBufferV->GetShmem());
+  
+    BasicManager()->PaintedImage(BasicManager()->Hold(this),
+                                 yuv);
+
+    return;
+  }
+
   gfxIntSize oldSize = mSize;
   nsRefPtr<gfxPattern> pat = GetAndPaintCurrentImage(aContext, GetEffectiveOpacity());
   if (!pat || !HasShadow())
@@ -2822,6 +2914,26 @@ BasicShadowLayerManager::ForwardTransaction()
         const OpBufferSwap& obs = reply.get_OpBufferSwap();
         const SurfaceDescriptor& descr = obs.newBackBuffer();
         GetBasicShadowable(obs)->SetBackBuffer(descr);
+        break;
+      }
+
+      case EditReply::TOpImageSwap: {
+        MOZ_LAYERS_LOG(("[LayersForwarder] YUVBufferSwap"));
+
+        const OpImageSwap& ois = reply.get_OpImageSwap();
+        BasicShadowableLayer* layer = GetBasicShadowable(ois);
+        const SharedImage& newBack = ois.newBackImage();
+
+        if (newBack.type() == SharedImage::TSurfaceDescriptor) {
+          layer->SetBackBuffer(newBack.get_SurfaceDescriptor());
+        } else {
+          const YUVImage& yuv = newBack.get_YUVImage();
+          nsRefPtr<gfxSharedImageSurface> YSurf = gfxSharedImageSurface::Open(yuv.Ydata());
+          nsRefPtr<gfxSharedImageSurface> USurf = gfxSharedImageSurface::Open(yuv.Udata());
+          nsRefPtr<gfxSharedImageSurface> VSurf = gfxSharedImageSurface::Open(yuv.Vdata());
+          layer->SetBackBufferYUVImage(YSurf, USurf, VSurf);
+        }
+        
         break;
       }
 

@@ -438,8 +438,8 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
         newFront = SurfaceDescriptor();
       }
 
-      replyv.push_back(OpBufferSwap(shadow, NULL,
-                                    newBack));
+      replyv.push_back(OpImageSwap(shadow, NULL,
+                                   newBack));
 
       break;
     }

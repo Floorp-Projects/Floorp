@@ -166,7 +166,7 @@ public:
    */
   void CreatedImageBuffer(ShadowableLayer* aImage,
                           nsIntSize aSize,
-                          const SurfaceDescriptor& aInitialFrontSurface);
+                          const SharedImage& aInitialFrontImage);
   void CreatedCanvasBuffer(ShadowableLayer* aCanvas,
                            nsIntSize aSize,
                            const SurfaceDescriptor& aInitialFrontSurface);
@@ -226,7 +226,7 @@ public:
    * ImageLayers.  This is slow, and will be optimized.
    */
   void PaintedImage(ShadowableLayer* aImage,
-                    const SurfaceDescriptor& aNewFrontSurface);
+                    const SharedImage& aNewFrontImage);
   void PaintedCanvas(ShadowableLayer* aCanvas,
                      const SurfaceDescriptor& aNewFrontSurface);
 
