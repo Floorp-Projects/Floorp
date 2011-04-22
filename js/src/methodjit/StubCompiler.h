@@ -51,7 +51,6 @@ namespace js {
 namespace mjit {
 
 class Compiler;
-class FrameSize;
 
 class StubCompiler
 {
@@ -137,7 +136,6 @@ class StubCompiler
     void fixCrossJumps(uint8 *ncode, size_t offset, size_t total);
     bool jumpInScript(Jump j, jsbytecode *target);
     void crossJump(Jump j, Label l);
-    Jump emitCallTail(const FrameSize &frameSize, JSC::MacroAssembler::Address rval);
 
     Call emitStubCall(void *ptr, uint32 id);
     Call emitStubCall(void *ptr, int32 slots, uint32 id);

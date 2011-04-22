@@ -187,96 +187,91 @@ struct EqualityICInfo {
 
 JSBool JS_FASTCALL Equality(VMFrame &f, ic::EqualityICInfo *ic);
 
-struct CallDescription {
-    CallDescription(uint32 argc) : argc(argc), code(NULL)
-    { }
-    JSObject    *callee;
-    JSFunction  *fun;
-    uint32      argc;
-    void        *code;
-    bool        unjittable;     // Only set if fun && fun->isInterpreted()
-};
-
-struct CallIC {
+/* See MonoIC.cpp, CallCompiler for more information on call ICs. */
+struct CallICInfo {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
-    typedef JSC::MacroAssembler::Call Call;
 
-    JSC::CodeLocationLabel fastPathStart;
+    enum PoolIndex {
+        Pool_ScriptStub,
+        Pool_ClosureStub,
+        Pool_NativeStub,
+        Total_Pools
+    };
+
+    JSC::ExecutablePool *pools[Total_Pools];
+
+    /* Used for rooting and reification. */
+    JSObject *fastGuardedObject;
+    JSObject *fastGuardedNative;
+
+    /* PC at the call site. */
+    jsbytecode *pc;
+
+    FrameSize frameSize;
+
+    /* Function object identity guard. */
+    JSC::CodeLocationDataLabelPtr funGuard;
+
+    /* Starting point for all slow call paths. */
     JSC::CodeLocationLabel slowPathStart;
 
-    jsbytecode  *pc;
-    FrameSize   frameSize;
+    /* Inline to OOL jump, redirected by stubs. */
+    JSC::CodeLocationJump funJump;
 
-    uint32      slowCallOffset : 12;        // For repatching the slow call.
-    uint32      inlineRejoinOffset : 10;    // Return address for inline calls.
-    uint32      completedRejoinOffset : 10; // Return address for completed clals.
-    uint32      inlineJumpOffset : 10;      // For patching the inline path.
-    uint32      inlineCalleeGuard : 10;     // If there is an extended inline
-                                            // path, this is the offest to
-                                            // patch the guarded callee obj.
-    uint32      inlineCallOffset : 10;      // Offset of jump-to-script instruction
+    /* Offset to inline scripted call, from funGuard. */
+    uint32 hotJumpOffset   : 16;
+    uint32 joinPointOffset : 16;
 
-    RegisterID  calleeData : 5;
-    bool hasExtendedInlinePath : 1;
+    /* Out of line slow call. */
+    uint32 oolCallOffset   : 16;
 
-    // Offset the return value from JSFrameReg.
-    uint32 rvalOffset;
+    /* Jump to patch for out-of-line scripted calls. */
+    uint32 oolJumpOffset   : 16;
 
-    // If a path has been generated, |pool| is non-NULL.
-    mutable JSC::ExecutablePool *pool;
+    /* Label for out-of-line call to IC function. */
+    uint32 icCallOffset    : 16;
 
-    // inlineCallee is the funobj being guarded on the inline path,
-    // if hasExtendedInlinePath is true. Otherwise, it is unused.
-    mutable JSObject *inlineCallee;
+    /* Offset for deep-fun check to rejoin at. */
+    uint32 hotPathOffset   : 16;
 
-    // guardedNative is non-NULL if |pool| is non-NULL and a native stub
-    // has been generated.
-    mutable JSObject *guardedNative;
+    /* Join point for all slow call paths. */
+    uint32 slowJoinOffset  : 16;
 
-    bool shouldDisable(JSContext *cx, JITScript *jit, CallDescription &call);
-    void purge(JITScript *jit, Repatcher &repatcher);
-    void disable(Repatcher &repatcher);
-    bool update(JSContext *cx, JITScript *jit, CallDescription &call);
-    JSOp op() const;
-    void reenable(JITScript *jit, Repatcher &repatcher);
-    void purgeInlineGuard(Repatcher &repatcher);
-    void purgeStub(Repatcher &repatcher);
+    RegisterID funObjReg : 5;
+    RegisterID funPtrReg : 5;
+    bool hit : 1;
+    bool hasJsFunCheck : 1;
 
-    JSC::CodeLocationLabel inlineRejoinLabel() const {
-       return fastPathStart.labelAtOffset(inlineRejoinOffset);
+    inline void reset() {
+        fastGuardedObject = NULL;
+        fastGuardedNative = NULL;
+        hit = false;
+        hasJsFunCheck = false;
+        pools[0] = pools[1] = pools[2] = NULL;
     }
-    void *returnAddress() const {
-        return inlineRejoinLabel().executableAddress();
+
+    inline void releasePools() {
+        releasePool(Pool_ScriptStub);
+        releasePool(Pool_ClosureStub);
+        releasePool(Pool_NativeStub);
     }
-    JSC::CodeLocationLabel completedRejoinLabel() const {
-        return fastPathStart.labelAtOffset(completedRejoinOffset);
-    }
-    JSC::CodeLocationJump inlineJump() const {
-        return fastPathStart.jumpAtOffset(inlineJumpOffset);
-    }
-    JSC::CodeLocationCall slowCall() const {
-        return slowPathStart.callAtOffset(slowCallOffset);
-    }
-    JSC::CodeLocationDataLabelPtr calleePtr() const {
-        JS_ASSERT(hasExtendedInlinePath);
-        return fastPathStart.dataLabelPtrAtOffset(inlineCalleeGuard);
-    }
-    JSC::CodeLocationJump inlineCall() const {
-        JS_ASSERT(hasExtendedInlinePath);
-        return fastPathStart.jumpAtOffset(inlineCallOffset);
+
+    inline void releasePool(PoolIndex index) {
+        if (pools[index]) {
+            pools[index]->release();
+            pools[index] = NULL;
+        }
     }
 };
 
-template <bool UpdateIC> void * JS_FASTCALL New(VMFrame &f, ic::CallIC *ic);
-template <bool DynamicArgc, bool UpdateIC> void * JS_FASTCALL Call(VMFrame &f, ic::CallIC *ic);
-template <bool LazyArgsObj> JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
-void * JS_FASTCALL FailedFunCall(VMFrame &f, ic::CallIC *ic);
-void * JS_FASTCALL FailedFunApply(VMFrame &f, ic::CallIC *ic);
-void * JS_FASTCALL FailedFunApplyLazyArgs(VMFrame &f, ic::CallIC *ic);
+void * JS_FASTCALL New(VMFrame &f, ic::CallICInfo *ic);
+void * JS_FASTCALL Call(VMFrame &f, ic::CallICInfo *ic);
+void JS_FASTCALL NativeNew(VMFrame &f, ic::CallICInfo *ic);
+void JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
+JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
 
 void PurgeMICs(JSContext *cx, JSScript *script);
-void SweepICs(JSContext *cx, JSScript *script);
-void PurgeICs(JSContext *cx, JSScript *script);
+void SweepCallICs(JSContext *cx, JSScript *script, bool purgeAll);
 
 } /* namespace ic */
 } /* namespace mjit */
