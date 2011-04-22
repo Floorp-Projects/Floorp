@@ -5469,7 +5469,6 @@ ParseSelectorList(nsINode* aNode,
   NS_ENSURE_STATE(doc);
 
   nsCSSParser parser(doc->CSSLoader());
-  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   nsCSSSelectorList* selectorList;
   nsresult rv = parser.ParseSelectorString(aSelectorString,
