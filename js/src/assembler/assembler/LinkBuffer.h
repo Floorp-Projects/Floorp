@@ -119,11 +119,6 @@ public:
             MacroAssembler::linkJump(code(), list.m_jumps[i], label);
     }
 
-    bool canLink(Jump jump, CodeLocationLabel label)
-    {
-        return MacroAssembler::canPatchJump(code(), jump, label);
-    }
-
     void patch(DataLabelPtr label, void* value)
     {
         MacroAssembler::linkPointer(code(), label.m_label, value);
