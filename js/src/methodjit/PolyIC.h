@@ -63,6 +63,12 @@ static const uint32 MAX_GETELEM_IC_STUBS = 17;
 
 void PurgePICs(JSContext *cx);
 
+enum LookupStatus {
+    Lookup_Error = 0,
+    Lookup_Uncacheable,
+    Lookup_Cacheable
+};
+
 struct BaseIC : public MacroAssemblerTypedefs {
     BaseIC() { }
 

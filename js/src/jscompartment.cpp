@@ -512,8 +512,8 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
         if (script->hasJITCode()) {
+            mjit::ic::SweepCallICs(cx, script, discardScripts);
             if (discardScripts) {
-                mjit::ic::PurgeICs(cx, script);
                 if (script->jitNormal &&
                     ScriptPoolDestroyed(cx, script->jitNormal, releaseInterval, counter)) {
                     mjit::ReleaseScriptCode(cx, script);
@@ -523,8 +523,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
                     ScriptPoolDestroyed(cx, script->jitCtor, releaseInterval, counter)) {
                     mjit::ReleaseScriptCode(cx, script);
                 }
-            } else {
-                mjit::ic::SweepICs(cx, script);
             }
         }
     }

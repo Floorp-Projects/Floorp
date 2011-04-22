@@ -222,30 +222,3 @@ StubCompiler::jumpInScript(Jump j, jsbytecode *target)
     }
 }
 
-// Emits code for an out-of-line path where a stub call has either performed a
-// call already, or has returned a JIT address to enter.
-JSC::MacroAssembler::Jump
-StubCompiler::emitCallTail(const FrameSize &frameSize, JSC::MacroAssembler::Address rval)
-{
-    RegisterID r0 = Registers::ReturnReg;
-
-    // The convention is that, if the return value is NULL, then the call has
-    // already completed, and the return value must be loaded from the stack.
-    // Otherwise, the call has not yet taken place, and we should jump to it:
-    // the frame is set up, even ncode.
-    Jump noJIT = masm.branchTestPtr(Assembler::Zero, r0, r0);
-    if (frameSize.isStatic())
-        masm.move(Imm32(frameSize.staticArgc()), JSParamReg_Argc);
-    else
-        masm.load32(FrameAddress(offsetof(VMFrame, u.call.dynamicArgc)), JSParamReg_Argc);
-    masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
-    masm.jump(r0);
-
-    // In the non-JIT case, we demand the return value be placed in a
-    // consistent location, that is, in the |this| position for speculated
-    // funcall/funapply and in |callee| otherwise.
-    noJIT.linkTo(masm.label(), &masm);
-    masm.loadValueAsComponents(rval, JSReturnReg_Type, JSReturnReg_Data);
-    return masm.jump();
-}
-
