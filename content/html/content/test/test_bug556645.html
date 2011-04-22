@@ -6,9 +6,10 @@
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="runTest()">
+<body>
 <script>
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTest);
 
 function runTest()
 {
