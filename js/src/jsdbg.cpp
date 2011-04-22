@@ -243,7 +243,7 @@ Debug::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debug *dbg = Debug::fromJSObject(&p->toObject());
         if (dbg->observesCompartment(compartment) && dbg->observesDebuggerStatement()) {
-            JSTrapStatus st = dbg->onDebuggerStatement(cx, vp);
+            JSTrapStatus st = dbg->handleDebuggerStatement(cx, vp);
             if (st != JSTRAP_CONTINUE)
                 return st;
         }
