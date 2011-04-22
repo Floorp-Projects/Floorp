@@ -705,11 +705,6 @@ class FrameState
     void maybeUnpinReg(MaybeRegisterID reg);
 
     /*
-     * Given a constant FrameEntry, assigns its contents to registers.
-     */
-    void forgetConstant(FrameEntry *fe);
-
-    /*
      * Dups the top item on the stack.
      */
     inline void dup();
