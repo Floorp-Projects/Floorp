@@ -2210,7 +2210,6 @@ CreateFontStyleRule(const nsAString& aFont,
     // Pass the CSS Loader object to the parser, to allow parser error reports
     // to include the outer window ID.
     nsCSSParser parser(document->CSSLoader());
-    NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = parser.ParseStyleAttribute(EmptyString(), docURL, baseURL,
                                              principal, getter_AddRefs(rule));
@@ -3680,7 +3679,6 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     // Pass the CSS Loader object to the parser, to allow parser error reports
     // to include the outer window ID.
     nsCSSParser parser(elementDoc ? elementDoc->CSSLoader() : nsnull);
-    NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
     nsresult rv = parser.ParseColorString(PromiseFlatString(aBGColor),
                                           nsnull, 0, &bgColor);
     NS_ENSURE_SUCCESS(rv, rv);

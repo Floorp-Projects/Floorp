@@ -81,11 +81,6 @@ private:
   nsCSSParser& operator=(nsCSSParser const&);
 
 public:
-  // If this is false, memory allocation failed in the constructor
-  // and all other methods will crash.
-  operator bool() const
-  { return !!mImpl; }
-
   // Set a style sheet for the parser to fill in. The style sheet must
   // implement the nsCSSStyleSheet interface.  Null can be passed in to clear
   // out an existing stylesheet reference.
