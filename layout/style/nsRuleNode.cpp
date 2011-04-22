@@ -3709,6 +3709,49 @@ CountTransitionProps(const TransitionPropInfo* aInfo,
   return numTransitions;
 }
 
+static void
+ComputeTimingFunction(const nsCSSValue& aValue, nsTimingFunction& aResult)
+{
+  switch (aValue.GetUnit()) {
+    case eCSSUnit_Enumerated:
+      aResult = nsTimingFunction(aValue.GetIntValue());
+      break;
+    case eCSSUnit_Cubic_Bezier:
+      {
+        nsCSSValue::Array* array = aValue.GetArrayValue();
+        NS_ASSERTION(array && array->Count() == 4,
+                     "Need 4 control points");
+        aResult = nsTimingFunction(array->Item(0).GetFloatValue(),
+                                   array->Item(1).GetFloatValue(),
+                                   array->Item(2).GetFloatValue(),
+                                   array->Item(3).GetFloatValue());
+      }
+      break;
+    case eCSSUnit_Steps:
+      {
+        nsCSSValue::Array* array = aValue.GetArrayValue();
+        NS_ASSERTION(array && array->Count() == 2,
+                     "Need 2 items");
+        NS_ASSERTION(array->Item(0).GetUnit() == eCSSUnit_Integer,
+                     "unexpected first value");
+        NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
+                     (array->Item(1).GetIntValue() ==
+                       NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
+                      array->Item(1).GetIntValue() ==
+                       NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END),
+                     "unexpected second value");
+        nsTimingFunction::Type type =
+          (array->Item(1).GetIntValue() ==
+            NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END)
+            ? nsTimingFunction::StepEnd : nsTimingFunction::StepStart;
+        aResult = nsTimingFunction(type, array->Item(0).GetIntValue());
+      }
+      break;
+    default:
+      NS_NOTREACHED("Invalid transition property unit");
+  }
+}
+
 const void*
 nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                const nsRuleData* aRuleData,
@@ -3856,49 +3899,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       transition->SetTimingFunction(
         nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
     } else if (timingFunction.list) {
-      switch (timingFunction.list->mValue.GetUnit()) {
-        case eCSSUnit_Enumerated:
-          transition->SetTimingFunction(
-            nsTimingFunction(timingFunction.list->mValue.GetIntValue()));
-          break;
-        case eCSSUnit_Cubic_Bezier:
-          {
-            nsCSSValue::Array* array =
-              timingFunction.list->mValue.GetArrayValue();
-            NS_ASSERTION(array && array->Count() == 4,
-                         "Need 4 control points");
-            transition->SetTimingFunction(
-              nsTimingFunction(array->Item(0).GetFloatValue(),
-                               array->Item(1).GetFloatValue(),
-                               array->Item(2).GetFloatValue(),
-                               array->Item(3).GetFloatValue()));
-          }
-          break;
-        case eCSSUnit_Steps:
-          {
-            nsCSSValue::Array* array =
-              timingFunction.list->mValue.GetArrayValue();
-            NS_ASSERTION(array && array->Count() == 2,
-                         "Need 2 items");
-            NS_ASSERTION(array->Item(0).GetUnit() == eCSSUnit_Integer,
-                         "unexpected first value");
-            NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
-                         (array->Item(1).GetIntValue() ==
-                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
-                          array->Item(1).GetIntValue() ==
-                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END),
-                         "unexpected second value");
-            transition->SetTimingFunction(
-              nsTimingFunction((
-                array->Item(1).GetIntValue() ==
-                  NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END)
-                  ? nsTimingFunction::StepEnd : nsTimingFunction::StepStart,
-                array->Item(0).GetIntValue()));
-          }
-          break;
-        default:
-          NS_NOTREACHED("Invalid transition property unit");
-      }
+      ComputeTimingFunction(timingFunction.list->mValue,
+                            transition->TimingFunctionSlot());
     }
 
     FOR_ALL_TRANSITION_PROPS(p) {
@@ -4057,49 +4059,8 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       animation->SetTimingFunction(
         nsTimingFunction(NS_STYLE_TRANSITION_TIMING_FUNCTION_EASE));
     } else if (animTimingFunction.list) {
-      switch (animTimingFunction.list->mValue.GetUnit()) {
-        case eCSSUnit_Enumerated:
-          animation->SetTimingFunction(
-            nsTimingFunction(animTimingFunction.list->mValue.GetIntValue()));
-          break;
-        case eCSSUnit_Cubic_Bezier:
-          {
-            nsCSSValue::Array* array =
-              animTimingFunction.list->mValue.GetArrayValue();
-            NS_ASSERTION(array && array->Count() == 4,
-                         "Need 4 control points");
-            animation->SetTimingFunction(
-              nsTimingFunction(array->Item(0).GetFloatValue(),
-                               array->Item(1).GetFloatValue(),
-                               array->Item(2).GetFloatValue(),
-                               array->Item(3).GetFloatValue()));
-          }
-          break;
-        case eCSSUnit_Steps:
-          {
-            nsCSSValue::Array* array =
-              animTimingFunction.list->mValue.GetArrayValue();
-            NS_ASSERTION(array && array->Count() == 2,
-                         "Need 2 items");
-            NS_ASSERTION(array->Item(0).GetUnit() == eCSSUnit_Integer,
-                         "unexpected first value");
-            NS_ASSERTION(array->Item(1).GetUnit() == eCSSUnit_Enumerated &&
-                         (array->Item(1).GetIntValue() ==
-                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_START ||
-                          array->Item(1).GetIntValue() ==
-                           NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END),
-                         "unexpected second value");
-            animation->SetTimingFunction(
-              nsTimingFunction((
-                array->Item(1).GetIntValue() ==
-                  NS_STYLE_TRANSITION_TIMING_FUNCTION_STEP_END)
-                  ? nsTimingFunction::StepEnd : nsTimingFunction::StepStart,
-                array->Item(0).GetIntValue()));
-          }
-          break;
-        default:
-          NS_NOTREACHED("Invalid animation property unit");
-      }
+      ComputeTimingFunction(animTimingFunction.list->mValue,
+                            animation->TimingFunctionSlot());
     }
 
     if (i >= animDirection.num) {
