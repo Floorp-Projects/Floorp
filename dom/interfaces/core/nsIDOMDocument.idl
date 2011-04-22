@@ -52,7 +52,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(1ae51729-c57c-43cd-91f4-2ffee5c5d493)]
+[scriptable, uuid(2d305b95-a030-4d24-a12c-7fabf61a8c3c)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -101,8 +101,6 @@ interface nsIDOMDocument : nsIDOMNode
   // Introduced in DOM Level 3:
            attribute DOMString       xmlVersion;
                                         // raises(DOMException) on setting
-  // Introduced in DOM Level 3:
-           attribute boolean         strictErrorChecking;
   // Introduced in DOM Level 3:
            attribute DOMString       documentURI;
   // Introduced in DOM Level 3:
