@@ -627,7 +627,7 @@ usage(void)
                       "                Default is %u.\n", DEFAULT_MAX_STACK_SIZE);
 #ifdef DEBUG
     fprintf(gErrFile, "  -A <max>      After <max> memory allocations, act like we're OOM.\n");
-    fprintf(gErrFile, "  -O <max>      At exit, print the number of memory allocations in \n"
+    fprintf(gErrFile, "  -O            At exit, print the number of memory allocations in \n"
                       "                the program.\n");
 #endif
 #ifdef JS_THREADSAFE
