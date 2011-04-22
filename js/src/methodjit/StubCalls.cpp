@@ -2840,21 +2840,20 @@ stubs::CheckArgumentTypes(VMFrame &f)
     JSScript *script = fun->script();
     RecompilationMonitor monitor(f.cx);
 
-    /* Postpone recompilations until all args have been updated. */
-    types::AutoEnterTypeInference enter(f.cx);
+    {
+        /* Postpone recompilations until all args have been updated. */
+        types::AutoEnterTypeInference enter(f.cx);
 
-    if (!f.fp()->isConstructing()) {
-        if (!script->typeSetThis(f.cx, fp->thisValue()))
-            THROW();
+        if (!f.fp()->isConstructing()) {
+            if (!script->typeSetThis(f.cx, fp->thisValue()))
+                THROW();
+        }
+
+        for (unsigned i = 0; i < fun->nargs; i++) {
+            if (!script->typeSetArgument(f.cx, i, fp->formalArg(i)))
+                THROW();
+        }
     }
-
-    for (unsigned i = 0; i < fun->nargs; i++) {
-        if (!script->typeSetArgument(f.cx, i, fp->formalArg(i)))
-            THROW();
-    }
-
-    if (!f.cx->compartment->types.checkPendingRecompiles(f.cx))
-        THROW();
 
     if (monitor.recompiled())
         return;

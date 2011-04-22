@@ -559,10 +559,6 @@ Recompiler::recompile()
     JS_ASSERT_IF(keepCtor, script->jitCtor);
 
     cx->compartment->types.recompilations++;
-
-    if (!cx->compartment->types.checkPendingRecompiles(cx))
-        return Compile_Error;
-
     return true;
 }
 

@@ -1829,7 +1829,7 @@ MarkRuntime(JSTracer *trc)
         MarkContext(trc, acx);
 
     for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c) {
-        if ((*c)->types.inferenceDepth)
+        if ((*c)->activeAnalysis)
             (*c)->markTypes(trc);
 #ifdef JS_TRACER
         (*c)->traceMonitor.mark(trc);

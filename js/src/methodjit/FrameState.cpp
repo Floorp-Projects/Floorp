@@ -63,6 +63,7 @@ FrameState::~FrameState()
 {
     while (a) {
         ActiveFrame *parent = a->parent;
+        a->script->analysis(cx)->clearAllocations();
 #if defined JS_NUNBOX32
         a->reifier.~ImmutableSync();
 #endif
@@ -115,8 +116,7 @@ FrameState::getUnsyncedEntries(uint32 *pdepth, Vector<UnsyncedEntry> *unsyncedEn
 }
 
 bool
-FrameState::pushActiveFrame(JSScript *script, uint32 argc,
-                            analyze::Script *analysis, analyze::LifetimeScript *liveness)
+FrameState::pushActiveFrame(JSScript *script, uint32 argc)
 {
     uint32 depth = a ? totalDepth() : 0;
     uint32 nentries = feLimit(script);
@@ -147,9 +147,6 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc,
     newa->script = script;
     newa->freeRegs = Registers(Registers::AvailAnyRegs);
 
-    newa->analysis = analysis;
-    newa->liveness = liveness;
-
     newa->entries = (FrameEntry *)cursor;
     cursor += sizeof(FrameEntry) * nentries;
 
@@ -169,7 +166,7 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc,
     this->a = newa;
     updateActiveFrame();
 
-    if (a->parent && a->analysis->inlineable(argc)) {
+    if (a->parent && script->analysis(cx)->inlineable(argc)) {
         a->depth = depth + VALUES_PER_STACK_FRAME;
 
         /* Mark all registers which are in use by the parent or its own parent. */
@@ -257,6 +254,8 @@ FrameState::popActiveFrame()
     FrameEntry *parentSP = a->parentSP;
     ActiveFrame *parent = a->parent;
 
+    analysis->clearAllocations();
+
 #if defined JS_NUNBOX32
     a->reifier.~ImmutableSync();
 #endif
@@ -272,6 +271,7 @@ void
 FrameState::updateActiveFrame()
 {
     script = a->script;
+    analysis = script->analysis(cx);
     entries = a->entries;
     callee_ = a->callee_;
     this_ = a->this_;
@@ -464,7 +464,7 @@ FrameState::variableLive(FrameEntry *fe, jsbytecode *pc) const
     JS_ASSERT(fe < spBase && fe != callee_);
 
     uint32 offset = pc - script->code;
-    return a->liveness->live(indexOfFe(fe), offset);
+    return analysis->liveness(indexOfFe(fe)).live(offset);
 }
 
 bool
@@ -713,11 +713,11 @@ RegisterAllocation *
 FrameState::computeAllocation(jsbytecode *target)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    RegisterAllocation *alloc = ArenaNew<RegisterAllocation>(a->liveness->pool, false);
+    RegisterAllocation *alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, false);
     if (!alloc)
         return NULL;
 
-    if (a->analysis->getCode(target).exceptionEntry || a->analysis->getCode(target).switchTarget ||
+    if (analysis->getCode(target).exceptionEntry || analysis->getCode(target).switchTarget ||
         JSOp(*target) == JSOP_TRAP) {
         /* State must be synced at exception and switch targets, and at traps. */
 #ifdef DEBUG
@@ -821,7 +821,7 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
 
     Registers regs = 0;
 
-    RegisterAllocation *&alloc = a->liveness->getCode(target).allocation;
+    RegisterAllocation *&alloc = analysis->getAllocation(target);
     if (!alloc) {
         alloc = computeAllocation(target);
         if (!alloc)
@@ -955,14 +955,14 @@ FrameState::discardForJoin(jsbytecode *target, uint32 stackDepth)
         return true;
     }
 
-    RegisterAllocation *&alloc = a->liveness->getCode(target).allocation;
+    RegisterAllocation *&alloc = analysis->getAllocation(target);
 
     if (!alloc) {
         /*
          * This shows up for loop entries which are not reachable from the
          * loop head, and for exception, switch target and trap safe points.
          */
-        alloc = ArenaNew<RegisterAllocation>(a->liveness->pool, false);
+        alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, false);
         if (!alloc)
             return false;
     }
@@ -1019,7 +1019,7 @@ FrameState::consistentRegisters(jsbytecode *target)
      * which is not consistent with the target's register state has already
      * been synced, and no stores will need to be issued by prepareForJump.
      */
-    RegisterAllocation *alloc = a->liveness->getCode(target).allocation;
+    RegisterAllocation *alloc = analysis->getAllocation(target);
     JS_ASSERT(alloc);
 
     Registers regs(Registers::AvailAnyRegs);
@@ -1051,7 +1051,7 @@ FrameState::prepareForJump(jsbytecode *target, Assembler &masm, bool synced)
 
     JS_ASSERT_IF(!synced, !consistentRegisters(target));
 
-    RegisterAllocation *alloc = a->liveness->getCode(target).allocation;
+    RegisterAllocation *alloc = analysis->getAllocation(target);
     JS_ASSERT(alloc);
 
     Registers regs = 0;
@@ -2306,57 +2306,42 @@ FrameState::separateBinaryEntries(FrameEntry *lhs, FrameEntry *rhs)
 }
 
 void
-FrameState::storeLocal(uint32 n, JSValueType type, bool popGuaranteed, bool fixedType)
+FrameState::storeLocal(uint32 n, bool popGuaranteed, bool fixedType)
 {
     FrameEntry *local = getLocal(n);
 
-    if (a->analysis->localEscapes(n)) {
+    if (analysis->slotEscapes(indexOfFe(local))) {
         JS_ASSERT(local->data.inMemory());
         storeTo(peek(-1), addressOf(local), popGuaranteed);
         return;
     }
 
-    storeTop(local, type, popGuaranteed);
+    storeTop(local, popGuaranteed);
 
     if (loop)
         local->lastLoop = loop->headOffset();
-
-    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE &&
-        fixedType && !local->type.synced()) {
-        /*
-         * Except when inlining, known types are always in sync for locals.
-         * If we are inlining, the known type is filled in when the frame is
-         * expanded (which happens upon any recompilation activity).
-         */
-        local->type.sync();
-    }
 
     if (inTryBlock)
         syncFe(local);
 }
 
 void
-FrameState::storeArg(uint32 n, JSValueType type, bool popGuaranteed)
+FrameState::storeArg(uint32 n, bool popGuaranteed)
 {
     // Note that args are always immediately synced, because they can be
     // aliased (but not written to) via f.arguments.
     FrameEntry *arg = getArg(n);
 
-    if (a->analysis->argEscapes(n)) {
+    if (analysis->slotEscapes(indexOfFe(arg))) {
         JS_ASSERT(arg->data.inMemory());
         storeTo(peek(-1), addressOf(arg), popGuaranteed);
         return;
     }
 
-    storeTop(arg, type, popGuaranteed);
+    storeTop(arg, popGuaranteed);
 
     if (loop)
         arg->lastLoop = loop->headOffset();
-
-    if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE && !arg->type.synced()) {
-        /* Known types are always in sync for args. (Frames which update args are not inlined). */
-        arg->type.sync();
-    }
 
     syncFe(arg);
 }
@@ -2377,7 +2362,7 @@ FrameState::forgetEntry(FrameEntry *fe)
 }
 
 void
-FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
+FrameState::storeTop(FrameEntry *target, bool popGuaranteed)
 {
     JS_ASSERT(!isTemporary(target));
 
@@ -2388,6 +2373,15 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
         return;
     }
 
+    /*
+     * If this is overwriting a known non-double type with another value of the
+     * same type, then make sure we keep the type marked as synced after doing
+     * the copy.
+     */
+    bool wasSynced = target->type.synced();
+    JSValueType oldType = target->isTypeKnown() ? target->getKnownType() : JSVAL_TYPE_UNKNOWN;
+    bool trySyncType = wasSynced && oldType != JSVAL_TYPE_UNKNOWN && oldType != JSVAL_TYPE_DOUBLE;
+
     /* Completely invalidate the local variable. */
     forgetEntry(target);
     target->resetUnsynced();
@@ -2397,6 +2391,8 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
         target->setCopyOf(NULL);
         target->setNotCopied();
         target->setConstant(Jsvalify(top->getValue()));
+        if (trySyncType && target->isType(oldType))
+            target->type.sync();
         return;
     }
 
@@ -2425,6 +2421,8 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
                 swapInTracker(backing, target);
             target->setNotCopied();
             target->setCopyOf(backing);
+            if (trySyncType && target->isType(oldType))
+                target->type.sync();
             return;
         }
 
@@ -2468,18 +2466,9 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
 
     if (backing->isType(JSVAL_TYPE_DOUBLE)) {
         FPRegisterID fpreg = tempFPRegForData(backing);
-        if (type != JSVAL_TYPE_DOUBLE) {
-            masm.storeDouble(fpreg, addressOf(target));
-            target->resetSynced();
-
-            /* We're about to invalidate the backing, so forget the FP register. */
-            forgetReg(fpreg);
-        } else {
-            target->data.setFPRegister(fpreg);
-            regstate(fpreg).reassociate(target);
-        }
-
         target->setType(JSVAL_TYPE_DOUBLE);
+        target->data.setFPRegister(fpreg);
+        regstate(fpreg).reassociate(target);
     } else {
         /*
          * Move the backing store down - we spill registers here, but we could be
@@ -2495,43 +2484,22 @@ FrameState::storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed)
         target->data.setRegister(reg);
         regstate(reg).reassociate(target);
 
-        if (type == JSVAL_TYPE_UNKNOWN) {
-            if (backing->isTypeKnown()) {
-                target->setType(backing->getKnownType());
-            } else {
-                pinReg(reg);
-                RegisterID typeReg = tempRegForType(backing);
-                unpinReg(reg);
-                target->type.setRegister(typeReg);
-                regstate(typeReg).reassociate(target);
-            }
-        } else if (type != JSVAL_TYPE_DOUBLE || backing->isType(JSVAL_TYPE_INT32)) {
-            /*
-             * Treat the stored entry as an int even if inference has marked it
-             * as a float (we will fixDoubles on it before branching), to avoid
-             * demoting the backing.
-             */
-            if (type == JSVAL_TYPE_DOUBLE)
-                type = JSVAL_TYPE_INT32;
-            JS_ASSERT_IF(backing->isTypeKnown(), backing->isType(type));
-            if (!backing->isTypeKnown())
-                learnType(backing, type);
-            target->setType(type);
+        if (backing->isTypeKnown()) {
+            target->setType(backing->getKnownType());
         } else {
-            FPRegisterID fpreg = allocFPReg();
-            syncFe(backing);
-            masm.moveInt32OrDouble(addressOf(backing), fpreg);
-
-            forgetAllRegs(backing);
-            backing->setType(JSVAL_TYPE_DOUBLE);
-            target->setType(JSVAL_TYPE_DOUBLE);
-            target->data.setFPRegister(fpreg);
-            regstate(fpreg).associate(target, RematInfo::DATA);
+            pinReg(reg);
+            RegisterID typeReg = tempRegForType(backing);
+            unpinReg(reg);
+            target->type.setRegister(typeReg);
+            regstate(typeReg).reassociate(target);
         }
     }
 
     backing->setCopyOf(target);
     JS_ASSERT(top->copyOf() == target);
+
+    if (trySyncType && target->isType(oldType))
+        target->type.sync();
 
     /*
      * Right now, |backing| is a copy of |target| (note the reversal), but
@@ -2551,7 +2519,7 @@ FrameState::shimmy(uint32 n)
 {
     JS_ASSERT(sp - n >= spBase);
     int32 depth = 0 - int32(n);
-    storeTop(peek(depth - 1), JSVAL_TYPE_UNKNOWN, true);
+    storeTop(peek(depth - 1), true);
     popn(n);
 }
 
@@ -2560,7 +2528,7 @@ FrameState::shift(int32 n)
 {
     JS_ASSERT(n < 0);
     JS_ASSERT(sp + n - 1 >= spBase);
-    storeTop(peek(n - 1), JSVAL_TYPE_UNKNOWN, true);
+    storeTop(peek(n - 1), true);
     pop();
 }
 

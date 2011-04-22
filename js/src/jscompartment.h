@@ -387,6 +387,15 @@ struct JS_FRIEND_API(JSCompartment) {
     js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
 #endif
 
+    /*
+     * Pool for analysis and intermediate type information in this compartment.
+     * Cleared on every GC, unless the GC happens during analysis (indicated
+     * by activeAnalysis, which is implied by activeInference).
+     */
+    JSArenaPool                  pool;
+    bool                         activeAnalysis;
+    bool                         activeInference;
+
     /* Type information about the scripts and objects in this compartment. */
     js::types::TypeCompartment   types;
 

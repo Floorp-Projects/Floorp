@@ -392,7 +392,7 @@ enum JITScriptStatus {
 
 namespace js {
 namespace mjit { struct JITScript; }
-namespace analyze { class Script; }
+namespace analyze { class ScriptAnalysis; }
 }
 #endif
 
@@ -532,8 +532,19 @@ struct JSScript {
     /* Any possibly unexpected values pushed by opcodes in this script. */
     js::types::TypeResult *typeResults;
 
-    /* Results of type inference analysis for this script. Destroyed on GC. */
-    js::types::TypeScript *types;
+    /* Bytecode analysis and type inference results for this script. Destroyed on GC. */
+  private:
+    js::analyze::ScriptAnalysis *analysis_;
+    void makeAnalysis(JSContext *cx);
+  public:
+
+    bool hasAnalysis() { return analysis_ != NULL; }
+
+    js::analyze::ScriptAnalysis *analysis(JSContext *cx) {
+        if (!analysis_)
+            makeAnalysis(cx);
+        return analysis_;
+    }
 
     inline JSObject *getGlobal();
     inline js::types::TypeObject *getGlobalType();
@@ -550,6 +561,9 @@ struct JSScript {
     inline js::types::TypeSet *localTypes(unsigned i);
     inline js::types::TypeSet *upvarTypes(unsigned i);
 
+    /* Follows slot layout in jsanalyze.h, can get this/arg/local type sets. */
+    inline js::types::TypeSet *slotTypes(unsigned slot);
+
   private:
     bool makeVarTypes(JSContext *cx);
   public:
@@ -563,7 +577,7 @@ struct JSScript {
     inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
 
     void condenseTypes(JSContext *cx);
-    void sweepTypes(JSContext *cx);
+    void sweepAnalysis(JSContext *cx);
 
     /* Get a type object for an allocation site in this script. */
     inline js::types::TypeObject *

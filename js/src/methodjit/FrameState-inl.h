@@ -1187,10 +1187,10 @@ FrameState::syncAt(int32 n)
 }
 
 inline void
-FrameState::pushLocal(uint32 n, JSValueType knownType)
+FrameState::pushLocal(uint32 n)
 {
     FrameEntry *fe = getLocal(n);
-    if (!a->analysis->localEscapes(n)) {
+    if (!analysis->slotEscapes(analyze::LocalSlot(script, n))) {
         pushCopyOf(indexOfFe(fe));
     } else {
 #ifdef DEBUG
@@ -1199,29 +1199,27 @@ FrameState::pushLocal(uint32 n, JSValueType knownType)
          * SETLOCAL equivocation of stack slots, and let expressions, just
          * weakly assert on the fixed local vars.
          */
-        FrameEntry *fe = &locals[n];
-        if (fe->isTracked() && n < script->nfixed) {
-            JS_ASSERT(fe->type.inMemory());
+        if (fe->isTracked() && n < script->nfixed)
             JS_ASSERT(fe->data.inMemory());
-        }
 #endif
-        push(addressOf(fe), knownType);
+        JSValueType type = fe->isTypeKnown() ? fe->getKnownType() : JSVAL_TYPE_UNKNOWN;
+        push(addressOf(fe), type);
     }
 }
 
 inline void
-FrameState::pushArg(uint32 n, JSValueType knownType)
+FrameState::pushArg(uint32 n)
 {
     FrameEntry *fe = getArg(n);
-    if (!a->analysis->argEscapes(n)) {
+    if (!analysis->slotEscapes(analyze::ArgSlot(n))) {
         pushCopyOf(indexOfFe(fe));
     } else {
 #ifdef DEBUG
-        FrameEntry *fe = &args[n];
         if (fe->isTracked())
             JS_ASSERT(fe->data.inMemory());
 #endif
-        push(addressOf(fe), knownType);
+        JSValueType type = fe->isTypeKnown() ? fe->getKnownType() : JSVAL_TYPE_UNKNOWN;
+        push(addressOf(fe), type);
     }
 }
 
