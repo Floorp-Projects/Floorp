@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="gen.next();">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=523771">Mozilla Bug 523771</a>
 <p id="display"></p>
 <iframe name="target_iframe" id="target_iframe"></iframe>
@@ -67,9 +67,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
 <pre id="test">
 <script class="testbody" type="text/javascript;version=1.8">
 
-SimpleTest.waitForExplicitFinish();
-
 var gen = runTest();
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  gen.next();
+});
 
 var expectedSub = [
   // Submit input
