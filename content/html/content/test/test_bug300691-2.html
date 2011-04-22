@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="done();">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=300691">Mozilla Bug 300691</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -17,7 +17,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=300691
 </div>
 <pre id="test">
 <script type="text/javascript">
-  SimpleTest.waitForExplicitFinish();
   // First, setup.  We'll be toggling these variables as we go.
   var test1Ran = false;
   var test2Ran = false;
@@ -134,6 +133,9 @@ function done() {
      "src attribute still got executed, so this shouldn't have been");
   SimpleTest.finish();
 }
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(done);
 </script>
 </pre>
 </body>
