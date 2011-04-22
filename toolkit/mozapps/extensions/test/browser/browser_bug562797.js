@@ -844,3 +844,63 @@ add_test(function() {
     });
   }, true);
 });
+
+// Tests that refreshing the disicovery pane integrates properly with history
+add_test(function() {
+  open_manager("addons://list/plugin", function(aManager) {
+    is_in_list(aManager, "addons://list/plugin", false, false);
+
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-discover"), { }, aManager);
+
+    wait_for_view_load(aManager, function(aManager) {
+      is_in_discovery(aManager, MAIN_URL, true, false);
+
+      clickLink(aManager, "link-good", function() {
+        is_in_discovery(aManager, SECOND_URL, true, false);
+
+        EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-discover"), { }, aManager);
+        
+        waitForLoad(aManager, function() {
+          is_in_discovery(aManager, MAIN_URL, true, false);
+
+          go_back(aManager);
+
+          waitForLoad(aManager, function() {
+            is_in_discovery(aManager, SECOND_URL, true, true);
+
+            go_back(aManager);
+
+            waitForLoad(aManager, function() {
+              is_in_discovery(aManager, MAIN_URL, true, true);
+
+              go_back(aManager);
+
+              wait_for_view_load(aManager, function(aManager) {
+                is_in_list(aManager, "addons://list/plugin", false, true);
+
+                go_forward(aManager);
+
+                wait_for_view_load(aManager, function(aManager) {
+                  is_in_discovery(aManager, MAIN_URL, true, true);
+
+                  waitForLoad(aManager, function() {
+                    is_in_discovery(aManager, SECOND_URL, true, true);
+
+                    waitForLoad(aManager, function() {
+                      is_in_discovery(aManager, MAIN_URL, true, false);
+
+                      close_manager(aManager, run_next_test);
+                    });
+                    go_forward(aManager);
+                  });
+
+                  go_forward(aManager);
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});

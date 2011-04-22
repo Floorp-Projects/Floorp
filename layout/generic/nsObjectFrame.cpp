@@ -1972,6 +1972,7 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
   }
 }
 
+#ifdef XP_MACOSX
 static void DrawPlugin(ImageContainer* aContainer, void* aPluginInstanceOwner)
 {
   nsObjectFrame* frame = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner)->GetOwner();
@@ -1985,6 +1986,7 @@ static void OnDestroyImage(void* aPluginInstanceOwner)
   nsPluginInstanceOwner* owner = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner);
   NS_IF_RELEASE(owner);
 }
+#endif // XP_MACOSX
 
 void
 nsObjectFrame::UpdateImageLayer(ImageContainer* aContainer, const gfxRect& aRect)
@@ -2783,6 +2785,7 @@ private:
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
 
+#if defined(XP_MACOSX) || defined (XP_WIN)
 static const char*
 GetMIMEType(nsIPluginInstance *aPluginInstance)
 {
@@ -2793,6 +2796,7 @@ GetMIMEType(nsIPluginInstance *aPluginInstance)
   }
   return "";
 }
+#endif // XP_MACOSX || XP_WIN
 
 static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
