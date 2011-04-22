@@ -806,14 +806,6 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
           aResult);
       }
     }
-    else if (eCSSProperty_azimuth == aProperty) {
-      PRInt32 intValue = GetIntValue();
-      AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, (intValue & ~NS_STYLE_AZIMUTH_BEHIND)), aResult);
-      if ((NS_STYLE_AZIMUTH_BEHIND & intValue) != 0) {
-        aResult.Append(PRUnichar(' '));
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_AZIMUTH_BEHIND), aResult);
-      }
-    }
     else if (eCSSProperty_marks == aProperty) {
       PRInt32 intValue = GetIntValue();
       if (intValue == NS_STYLE_PAGE_MARKS_NONE) {
