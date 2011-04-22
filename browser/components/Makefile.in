@@ -70,16 +70,11 @@ PARALLEL_DIRS = \
   sessionstore \
   shell \
   sidebar \
+  migration \
   $(NULL)
 
-ifndef WINCE
-PARALLEL_DIRS += migration
-endif
-
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows) 
-ifndef WINCE
 PARALLEL_DIRS += wintaskbar
-endif
 endif
 
 ifdef MOZ_SAFE_BROWSING
