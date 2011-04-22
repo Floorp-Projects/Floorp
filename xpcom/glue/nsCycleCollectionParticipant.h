@@ -400,6 +400,15 @@ public:
                                                      _name "[i]");             \
     }
 
+#define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_OF_NSCOMPTR(_field)         \
+    {                                                                          \
+      PRUint32 i, length = tmp->_field.Length();                               \
+      for (i = 0; i < length; ++i) {                                           \
+        NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, #_field "[i]");                 \
+        cb.NoteXPCOMChild(tmp->_field[i].get());                               \
+      }                                                                        \
+    }
+
 #define NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY_MEMBER(_field,              \
                                                           _element_class)      \
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSTARRAY(tmp->_field, _element_class,    \

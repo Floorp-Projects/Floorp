@@ -73,6 +73,7 @@
 #include "nsIWidget.h"
 #include "mozilla/TimeStamp.h"
 #include "nsIContent.h"
+#include "prclist.h"
 
 class nsImageLoader;
 #ifdef IBMBIDI
@@ -107,6 +108,7 @@ class nsAnimationManager;
 #endif
 class nsRefreshDriver;
 class imgIContainer;
+class nsIDOMMediaQueryList;
 
 #ifdef MOZ_REFLOW_PERF
 class nsRenderingContext;
@@ -268,6 +270,12 @@ public:
     if (mPendingMediaFeatureValuesChanged)
       MediaFeatureValuesChanged(PR_FALSE);
   }
+
+  /**
+   * Support for window.matchMedia()
+   */
+  void MatchMedia(const nsAString& aMediaQueryList,
+                  nsIDOMMediaQueryList** aResult);
 
   /**
    * Access compatibility mode for this context.  This is the same as
@@ -1076,6 +1084,8 @@ protected:
                         mImageLoaders[IMAGE_LOAD_TYPE_COUNT];
 
   nsWeakPtr             mContainer;
+
+  PRCList               mDOMMediaQueryLists;
 
   PRInt32               mMinFontSize;   // Min font size, defaults to 0
   float                 mTextZoom;      // Text zoom, defaults to 1.0
