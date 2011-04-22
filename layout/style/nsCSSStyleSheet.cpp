@@ -577,7 +577,6 @@ nsresult
 nsMediaList::SetText(const nsAString& aMediaText)
 {
   nsCSSParser parser;
-  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   PRBool htmlMode = PR_FALSE;
   if (mStyleSheet) {
@@ -1781,8 +1780,6 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   }
 
   nsCSSParser css(loader, this);
-  if (!css)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
@@ -1991,9 +1988,6 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   }
 
   nsCSSParser css(loader, this);
-  if (!css) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   // parse and grab the rule
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
