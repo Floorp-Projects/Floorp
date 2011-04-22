@@ -1633,11 +1633,6 @@ public:
     {
         return true;
     }
-
-    static bool canLinkJump(void* code, JmpSrc where, void* value)
-    {
-        return true;
-    }
     
     static void relinkCall(void* from, void* to)
     {

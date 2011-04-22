@@ -59,11 +59,11 @@ class CodeLocationDataLabelPtr;
 class CodeLocationCommon : public MacroAssemblerCodePtr {
 public:
     CodeLocationInstruction instructionAtOffset(int offset);
-    CodeLocationLabel labelAtOffset(int offset) const;
-    CodeLocationJump jumpAtOffset(int offset) const;
-    CodeLocationCall callAtOffset(int offset) const;
+    CodeLocationLabel labelAtOffset(int offset);
+    CodeLocationJump jumpAtOffset(int offset);
+    CodeLocationCall callAtOffset(int offset);
     CodeLocationNearCall nearCallAtOffset(int offset);
-    CodeLocationDataLabelPtr dataLabelPtrAtOffset(int offset) const;
+    CodeLocationDataLabelPtr dataLabelPtrAtOffset(int offset);
     CodeLocationDataLabel32 dataLabel32AtOffset(int offset);
 
 protected:
@@ -146,19 +146,19 @@ inline CodeLocationInstruction CodeLocationCommon::instructionAtOffset(int offse
     return CodeLocationInstruction(reinterpret_cast<char*>(dataLocation()) + offset);
 }
 
-inline CodeLocationLabel CodeLocationCommon::labelAtOffset(int offset) const
+inline CodeLocationLabel CodeLocationCommon::labelAtOffset(int offset)
 {
     ASSERT_VALID_CODE_OFFSET(offset);
     return CodeLocationLabel(reinterpret_cast<char*>(dataLocation()) + offset);
 }
 
-inline CodeLocationJump CodeLocationCommon::jumpAtOffset(int offset) const
+inline CodeLocationJump CodeLocationCommon::jumpAtOffset(int offset)
 {
     ASSERT_VALID_CODE_OFFSET(offset);
     return CodeLocationJump(reinterpret_cast<char*>(dataLocation()) + offset);
 }
 
-inline CodeLocationCall CodeLocationCommon::callAtOffset(int offset) const
+inline CodeLocationCall CodeLocationCommon::callAtOffset(int offset)
 {
     ASSERT_VALID_CODE_OFFSET(offset);
     return CodeLocationCall(reinterpret_cast<char*>(dataLocation()) + offset);
@@ -170,7 +170,7 @@ inline CodeLocationNearCall CodeLocationCommon::nearCallAtOffset(int offset)
     return CodeLocationNearCall(reinterpret_cast<char*>(dataLocation()) + offset);
 }
 
-inline CodeLocationDataLabelPtr CodeLocationCommon::dataLabelPtrAtOffset(int offset) const
+inline CodeLocationDataLabelPtr CodeLocationCommon::dataLabelPtrAtOffset(int offset)
 {
     ASSERT_VALID_CODE_OFFSET(offset);
     return CodeLocationDataLabelPtr(reinterpret_cast<char*>(dataLocation()) + offset);
