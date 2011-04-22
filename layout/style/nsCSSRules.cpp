@@ -888,7 +888,7 @@ MediaRule::UseForPresentation(nsPresContext* aPresContext,
                                    nsMediaQueryResultCacheKey& aKey)
 {
   if (mMedia) {
-    return mMedia->Matches(aPresContext, aKey);
+    return mMedia->Matches(aPresContext, &aKey);
   }
   return PR_TRUE;
 }

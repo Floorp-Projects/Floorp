@@ -505,7 +505,7 @@ nsMediaQuery::Clone() const
 
 PRBool
 nsMediaQuery::Matches(nsPresContext* aPresContext,
-                      nsMediaQueryResultCacheKey& aKey) const
+                      nsMediaQueryResultCacheKey* aKey) const
 {
   if (mHadUnknownExpression)
     return PR_FALSE;
@@ -520,7 +520,9 @@ nsMediaQuery::Matches(nsPresContext* aPresContext,
     NS_ENSURE_SUCCESS(rv, PR_FALSE); // any better ideas?
 
     match = expr.Matches(aPresContext, actual);
-    aKey.AddExpression(&expr, match);
+    if (aKey) {
+      aKey->AddExpression(&expr, match);
+    }
   }
 
   return match == !mNegated;
@@ -591,7 +593,7 @@ nsMediaList::SetText(const nsAString& aMediaText)
 
 PRBool
 nsMediaList::Matches(nsPresContext* aPresContext,
-                     nsMediaQueryResultCacheKey& aKey)
+                     nsMediaQueryResultCacheKey* aKey)
 {
   for (PRInt32 i = 0, i_end = mArray.Length(); i < i_end; ++i) {
     if (mArray[i]->Matches(aPresContext, aKey)) {
@@ -1163,7 +1165,7 @@ nsCSSStyleSheet::UseForPresentation(nsPresContext* aPresContext,
                                     nsMediaQueryResultCacheKey& aKey) const
 {
   if (mMedia) {
-    return mMedia->Matches(aPresContext, aKey);
+    return mMedia->Matches(aPresContext, &aKey);
   }
   return PR_TRUE;
 }
