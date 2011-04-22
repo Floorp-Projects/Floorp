@@ -80,7 +80,7 @@ typedef struct _cairo_d2d_device cairo_d2d_device_t;
 
 struct _cairo_d2d_surface {
     _cairo_d2d_surface() : d2d_clip(NULL), clipping(false), isDrawing(false),
-	textRenderingInit(true)
+	textRenderingInit(false)
     {
 	_cairo_clip_init (&this->clip);
     }

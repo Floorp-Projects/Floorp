@@ -5125,6 +5125,7 @@ AddonInstall.prototype = {
   loadGroup: null,
   badCertHandler: null,
   listeners: null,
+  restartDownload: false,
 
   name: null,
   type: null,
@@ -5505,6 +5506,20 @@ AddonInstall.prototype = {
     if (this.state != AddonManager.STATE_DOWNLOADING)
       return;
 
+    if (this.channel) {
+      // A previous download attempt hasn't finished cleaning up yet, signal
+      // that it should restart when complete
+      LOG("Waiting for previous download to complete");
+      this.restartDownload = true;
+      return;
+    }
+
+    this.openChannel();
+  },
+
+  openChannel: function AI_openChannel() {
+    this.restartDownload = false;
+
     try {
       this.file = getTemporaryFile();
       this.ownsTempFile = true;
@@ -5650,6 +5665,8 @@ AddonInstall.prototype = {
     // If the download was cancelled then all events will have already been sent
     if (aStatus == Cr.NS_BINDING_ABORTED) {
       this.removeTemporaryFile();
+      if (this.restartDownload)
+        this.openChannel();
       return;
     }
 
