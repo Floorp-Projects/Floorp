@@ -453,7 +453,6 @@ protected:
   void InitBoxPropsAsPhysical(const nsCSSProperty *aSourceProperties);
 
   // Property specific parsing routines
-  PRBool ParseAzimuth(nsCSSValue& aValue);
   PRBool ParseBackground();
 
   struct BackgroundParseState {
@@ -506,7 +505,6 @@ protected:
   PRBool ParseRect(nsCSSProperty aPropID);
   PRBool ParseContent();
   PRBool ParseCounterData(nsCSSProperty aPropID);
-  PRBool ParseCue();
   PRBool ParseCursor();
   PRBool ParseFont();
   PRBool ParseFontWeight(nsCSSValue& aValue);
@@ -522,7 +520,6 @@ protected:
   PRBool ParseOutline();
   PRBool ParseOverflow();
   PRBool ParsePadding();
-  PRBool ParsePause();
   PRBool ParseQuotes();
   PRBool ParseSize();
   PRBool ParseTextDecoration(nsCSSValue& aValue);
@@ -2067,6 +2064,8 @@ CSSParserImpl::ParseGroupRule(css::GroupRule* aRule,
       break;
     }
     if (eCSSToken_AtKeyword == mToken.mType) {
+      REPORT_UNEXPECTED_TOKEN(PEGroupRuleNestedAtRule);
+      OUTPUT_ERROR();
       SkipAtRule(PR_TRUE); // group rules cannot contain @rules
       continue;
     }
@@ -5523,8 +5522,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_counter_increment:
   case eCSSProperty_counter_reset:
     return ParseCounterData(aPropID);
-  case eCSSProperty_cue:
-    return ParseCue();
   case eCSSProperty_cursor:
     return ParseCursor();
   case eCSSProperty_font:
@@ -5565,8 +5562,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
   case eCSSProperty_padding_start:
     return ParseDirectionalBoxProperty(eCSSProperty_padding_start,
                                        NS_BOXPROP_SOURCE_LOGICAL);
-  case eCSSProperty_pause:
-    return ParsePause();
   case eCSSProperty_quotes:
     return ParseQuotes();
   case eCSSProperty_size:
@@ -5624,10 +5619,7 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
 
   if (nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_VALUE_PARSER_FUNCTION)) {
     switch (aPropID) {
-      case eCSSProperty_azimuth:
-        return ParseAzimuth(aValue);
       case eCSSProperty_font_family:
-      case eCSSProperty_voice_family:
         return ParseFamily(aValue);
       case eCSSProperty_font_weight:
         return ParseFontWeight(aValue);
@@ -5774,36 +5766,6 @@ CSSParserImpl::InitBoxPropsAsPhysical(const nsCSSProperty *aSourceProperties)
        *prop != eCSSProperty_UNKNOWN; ++prop) {
     AppendValue(*prop, physical);
   }
-}
-
-PRBool
-CSSParserImpl::ParseAzimuth(nsCSSValue& aValue)
-{
-  if (ParseVariant(aValue, VARIANT_HK | VARIANT_ANGLE,
-                   nsCSSProps::kAzimuthKTable)) {
-    if (eCSSUnit_Enumerated == aValue.GetUnit()) {
-      PRInt32 intValue = aValue.GetIntValue();
-      if ((NS_STYLE_AZIMUTH_LEFT_SIDE <= intValue) &&
-          (intValue <= NS_STYLE_AZIMUTH_BEHIND)) {  // look for optional modifier
-        nsCSSValue  modifier;
-        if (ParseEnum(modifier, nsCSSProps::kAzimuthKTable)) {
-          PRInt32 enumValue = modifier.GetIntValue();
-          if (((intValue == NS_STYLE_AZIMUTH_BEHIND) &&
-               (NS_STYLE_AZIMUTH_LEFT_SIDE <= enumValue) && (enumValue <= NS_STYLE_AZIMUTH_RIGHT_SIDE)) ||
-              ((enumValue == NS_STYLE_AZIMUTH_BEHIND) &&
-               (NS_STYLE_AZIMUTH_LEFT_SIDE <= intValue) && (intValue <= NS_STYLE_AZIMUTH_RIGHT_SIDE))) {
-            aValue.SetIntValue(intValue | enumValue, eCSSUnit_Enumerated);
-            return PR_TRUE;
-          }
-          // Put the unknown identifier back and return
-          UngetToken();
-          return PR_FALSE;
-        }
-      }
-    }
-    return PR_TRUE;
-  }
-  return PR_FALSE;
 }
 
 static nsCSSValue
@@ -7002,32 +6964,6 @@ CSSParserImpl::ParseCounterData(nsCSSProperty aPropID)
 }
 
 PRBool
-CSSParserImpl::ParseCue()
-{
-  nsCSSValue before;
-  if (ParseSingleValueProperty(before, eCSSProperty_cue_before)) {
-    if (eCSSUnit_Inherit != before.GetUnit() &&
-        eCSSUnit_Initial != before.GetUnit()) {
-      nsCSSValue after;
-      if (ParseSingleValueProperty(after, eCSSProperty_cue_after)) {
-        if (ExpectEndProperty()) {
-          AppendValue(eCSSProperty_cue_before, before);
-          AppendValue(eCSSProperty_cue_after, after);
-          return PR_TRUE;
-        }
-        return PR_FALSE;
-      }
-    }
-    if (ExpectEndProperty()) {
-      AppendValue(eCSSProperty_cue_before, before);
-      AppendValue(eCSSProperty_cue_after, before);
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
-
-PRBool
 CSSParserImpl::ParseCursor()
 {
   nsCSSValue value;
@@ -7946,31 +7882,6 @@ CSSParserImpl::ParsePadding()
   // do this now, in case 4 values weren't specified
   InitBoxPropsAsPhysical(kPaddingSources);
   return ParseBoxProperties(kPaddingSideIDs);
-}
-
-PRBool
-CSSParserImpl::ParsePause()
-{
-  nsCSSValue  before;
-  if (ParseSingleValueProperty(before, eCSSProperty_pause_before)) {
-    if (eCSSUnit_Inherit != before.GetUnit() && eCSSUnit_Initial != before.GetUnit()) {
-      nsCSSValue after;
-      if (ParseSingleValueProperty(after, eCSSProperty_pause_after)) {
-        if (ExpectEndProperty()) {
-          AppendValue(eCSSProperty_pause_before, before);
-          AppendValue(eCSSProperty_pause_after, after);
-          return PR_TRUE;
-        }
-        return PR_FALSE;
-      }
-    }
-    if (ExpectEndProperty()) {
-      AppendValue(eCSSProperty_pause_before, before);
-      AppendValue(eCSSProperty_pause_after, before);
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
 }
 
 PRBool

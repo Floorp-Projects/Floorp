@@ -1,4 +1,3 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -15,16 +14,16 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * The Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Johnny Stenback <jst@netscape.com> (original author)
+ *   Ted Mielczarek <ted.mielczarek@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -36,24 +35,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMDocument.idl"
+/*
+ * This file defines constants to be used in the "subtype" field of
+ * NSApplicationDefined type NSEvents.
+ */
 
-[scriptable, uuid(f493687c-ea80-471b-965b-11467ebea24b)]
-interface nsIDOMXMLDocument : nsIDOMDocument
-{
-  // DOM Level 3 Load & Save, DocumentLS
-  // http://www.w3.org/TR/DOM-Level-3-LS/load-save.html#LS-DocumentLS
-  /**
-   * Whether to load synchronously or asynchronously.
-   * The default is async==true.
-   */
-  attribute boolean            async;
- 
-  /**
-   * Load an XML document.
-   *
-   * @param  url URL to an XML document.
-   * @return     True if load successfull.
-   */
-  boolean                      load(in DOMString url);
-};
+#ifndef WIDGET_COCOA_CUSTOMCOCOAEVENTS_H_
+#define WIDGET_COCOA_CUSTOMCOCOAEVENTS_H_
+
+// Empty event, just used for prodding the event loop into responding.
+const short kEventSubtypeNone = 0;
+// Tracer event, used for timing the event loop responsiveness.
+const short kEventSubtypeTrace = 1;
+
+#endif /* WIDGET_COCOA_CUSTOMCOCOAEVENTS_H_ */
