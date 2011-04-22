@@ -2064,6 +2064,8 @@ CSSParserImpl::ParseGroupRule(css::GroupRule* aRule,
       break;
     }
     if (eCSSToken_AtKeyword == mToken.mType) {
+      REPORT_UNEXPECTED_TOKEN(PEGroupRuleNestedAtRule);
+      OUTPUT_ERROR();
       SkipAtRule(PR_TRUE); // group rules cannot contain @rules
       continue;
     }
