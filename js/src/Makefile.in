@@ -674,7 +674,7 @@ check-jstests:
 
 
 check:: check-jit-test
-#check:: check-jstests
+check:: check-jstests
 check-valgrind:: check-jit-test-valgrind
 
 DIST_GARBAGE = config.cache config.log config.status \
