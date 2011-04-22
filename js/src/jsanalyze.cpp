@@ -45,29 +45,22 @@
 #include "jsinferinlines.h"
 #include "jsobjinlines.h"
 
+void
+JSScript::makeAnalysis(JSContext *cx)
+{
+    JS_ASSERT(!analysis_);
+    analysis_ = cx->new_<js::analyze::ScriptAnalysis>(this);
+}
+
 namespace js {
 namespace analyze {
-
-/////////////////////////////////////////////////////////////////////
-// Script
-/////////////////////////////////////////////////////////////////////
-
-Script::Script()
-{
-    PodZero(this);
-}
-
-Script::~Script()
-{
-    JS_FinishArenaPool(&pool);
-}
 
 /////////////////////////////////////////////////////////////////////
 // Bytecode
 /////////////////////////////////////////////////////////////////////
 
 bool
-Bytecode::mergeDefines(JSContext *cx, Script *script, bool initial,
+Bytecode::mergeDefines(JSContext *cx, ScriptAnalysis *script, bool initial,
                        unsigned newDepth, uint32 *newArray, unsigned newCount)
 {
     if (initial) {
@@ -123,7 +116,8 @@ Bytecode::mergeDefines(JSContext *cx, Script *script, bool initial,
                  * with progressively smaller sets of defined variables.
                  */
                 if (!owned) {
-                    uint32 *reallocArray = ArenaArray<uint32>(script->pool, defineCount);
+                    uint32 *reallocArray =
+                        ArenaArray<uint32>(cx->compartment->pool, defineCount);
                     if (!reallocArray) {
                         script->setOOM(cx);
                         return false;
@@ -142,21 +136,35 @@ Bytecode::mergeDefines(JSContext *cx, Script *script, bool initial,
     return true;
 }
 
+#ifdef DEBUG
+void
+PrintBytecode(JSContext *cx, JSScript *script, jsbytecode *pc)
+{
+    printf("#%u:", script->id());
+    void *mark = JS_ARENA_MARK(&cx->tempPool);
+    Sprinter sprinter;
+    INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+    js_Disassemble1(cx, script, pc, pc - script->code, true, &sprinter);
+    fprintf(stdout, "%s", sprinter.base);
+    JS_ARENA_RELEASE(&cx->tempPool, mark);
+}
+#endif
+
 /////////////////////////////////////////////////////////////////////
-// Analysis
+// Bytecode Analysis
 /////////////////////////////////////////////////////////////////////
 
 inline bool
-Script::addJump(JSContext *cx, unsigned offset,
-                unsigned *currentOffset, unsigned *forwardJump,
-                unsigned stackDepth, uint32 *defineArray, unsigned defineCount)
+ScriptAnalysis::addJump(JSContext *cx, unsigned offset,
+                        unsigned *currentOffset, unsigned *forwardJump,
+                        unsigned stackDepth, uint32 *defineArray, unsigned defineCount)
 {
     JS_ASSERT(offset < script->length);
 
     Bytecode *&code = codeArray[offset];
     bool initial = (code == NULL);
     if (initial) {
-        code = ArenaNew<Bytecode>(pool);
+        code = ArenaNew<Bytecode>(cx->compartment->pool);
         if (!code) {
             setOOM(cx);
             return false;
@@ -168,6 +176,10 @@ Script::addJump(JSContext *cx, unsigned offset,
     code->jumpTarget = true;
 
     if (offset < *currentOffset) {
+        JSOp op = JSOp(script->code[offset]);
+        if (op == JSOP_TRACE || op == JSOP_NOTRACE)
+            code->loopHead = true;
+
         /* Scripts containing loops are never inlined. */
         isInlineable = false;
 
@@ -185,9 +197,9 @@ Script::addJump(JSContext *cx, unsigned offset,
 }
 
 inline void
-Script::setLocal(uint32 local, uint32 offset)
+ScriptAnalysis::setLocal(uint32 local, uint32 offset)
 {
-    JS_ASSERT(local < localCount());
+    JS_ASSERT(local < script->nfixed);
     JS_ASSERT(offset != LOCAL_CONDITIONALLY_DEFINED);
 
     /*
@@ -203,19 +215,10 @@ Script::setLocal(uint32 local, uint32 offset)
      * and mark a as definitely defined.  a is not in the define array when taking
      * the loop's back edge, so it is treated as possibly undefined when written to x.
      */
-    JS_ASSERT(locals[local] == LOCAL_CONDITIONALLY_DEFINED ||
-              locals[local] == offset || offset == LOCAL_USE_BEFORE_DEF);
+    JS_ASSERT(definedLocals[local] == LOCAL_CONDITIONALLY_DEFINED ||
+              definedLocals[local] == offset || offset == LOCAL_USE_BEFORE_DEF);
 
-    locals[local] = offset;
-}
-
-static inline ptrdiff_t
-GetJumpOffset(jsbytecode *pc, jsbytecode *pc2)
-{
-    uint32 type = JOF_OPTYPE(*pc);
-    if (JOF_TYPE_IS_EXTENDED_JUMP(type))
-        return GET_JUMPX_OFFSET(pc2);
-    return GET_JUMP_OFFSET(pc2);
+    definedLocals[local] = offset;
 }
 
 // return whether op bytecodes do not fallthrough (they may do a jump).
@@ -247,61 +250,68 @@ BytecodeNoFallThrough(JSOp op)
 }
 
 void
-Script::analyze(JSContext *cx, JSScript *script)
+ScriptAnalysis::analyzeBytecode(JSContext *cx)
 {
-    JS_InitArenaPool(&pool, "script_analyze", 256, 8, NULL);
-
-    JS_ASSERT(script && !codeArray && !locals);
-    this->script = script;
+    JS_ASSERT(cx->compartment->activeAnalysis);
+    JS_ASSERT(!ranBytecode());
+    JSArenaPool &pool = cx->compartment->pool;
 
     unsigned length = script->length;
     unsigned nargs = script->fun ? script->fun->nargs : 0;
-    unsigned nfixed = localCount();
+
+    numSlots = TotalSlots(script);
 
     codeArray = ArenaArray<Bytecode*>(pool, length);
-    locals = ArenaArray<uint32>(pool, nfixed);
-    closedArgs = ArenaArray<JSPackedBool>(pool, nargs);
-    closedVars = ArenaArray<JSPackedBool>(pool, nfixed);
+    definedLocals = ArenaArray<uint32>(pool, script->nfixed);
+    escapedSlots = ArenaArray<JSPackedBool>(pool, numSlots);
 
-    if (!codeArray || !locals || !closedArgs || !closedVars) {
+    if (!codeArray || !definedLocals || !escapedSlots) {
         setOOM(cx);
         return;
     }
 
     PodZero(codeArray, length);
 
-    for (unsigned i = 0; i < nfixed; i++)
-        locals[i] = LOCAL_CONDITIONALLY_DEFINED;
-
-    PodZero(closedArgs, nargs);
-    for (uint32 i = 0; i < script->nClosedArgs; i++) {
-        unsigned arg = script->getClosedArg(i);
-        JS_ASSERT(arg < nargs);
-        closedArgs[arg] = true;
-    }
-
-    PodZero(closedVars, nfixed);
-    for (uint32 i = 0; i < script->nClosedVars; i++) {
-        unsigned local = script->getClosedVar(i);
-        if (local < nfixed)
-            closedVars[local] = true;
-    }
+    for (unsigned i = 0; i < script->nfixed; i++)
+        definedLocals[i] = LOCAL_CONDITIONALLY_DEFINED;
 
     /*
-     * Treat locals as having a possible use-before-def if they could be accessed
-     * by debug code or by eval, or if they could be accessed by an inner script.
+     * Populate arg and local slots which can escape and be accessed in ways
+     * other than through ARG* and LOCAL* opcodes (though arguments can still
+     * be indirectly read but not written through 'arguments' properties).
+     * All escaping locals are treated as having possible use-before-defs.
      */
 
-    if (script->usesEval || cx->compartment->debugMode) {
-        for (uint32 i = 0; i < nfixed; i++)
-            setLocal(i, LOCAL_USE_BEFORE_DEF);
+    PodZero(escapedSlots, numSlots);
+
+    if (script->usesEval || script->usesArguments || script->compartment->debugMode) {
+        for (unsigned i = 0; i < nargs; i++)
+            escapedSlots[ArgSlot(i)] = true;
+    } else {
+        for (unsigned i = 0; i < script->nClosedArgs; i++) {
+            unsigned arg = script->getClosedArg(i);
+            JS_ASSERT(arg < nargs);
+            escapedSlots[ArgSlot(arg)] = true;
+        }
     }
 
-    for (uint32 i = 0; i < script->nClosedVars; i++) {
-        uint32 slot = script->getClosedVar(i);
-        if (slot < nfixed)
-            setLocal(slot, LOCAL_USE_BEFORE_DEF);
+    if (script->usesEval || script->compartment->debugMode) {
+        for (unsigned i = 0; i < script->nfixed; i++) {
+            escapedSlots[LocalSlot(script, i)] = true;
+            setLocal(i, LOCAL_USE_BEFORE_DEF);
+        }
+    } else {
+        for (uint32 i = 0; i < script->nClosedVars; i++) {
+            unsigned local = script->getClosedVar(i);
+            escapedSlots[LocalSlot(script, local)] = true;
+            setLocal(local, LOCAL_USE_BEFORE_DEF);
+        }
     }
+
+    /* Maximum number of locals we will keep track of in defined variables analysis. */
+    static const uint32 LOCAL_LIMIT = 50;
+    for (unsigned i = LOCAL_LIMIT; i < script->nfixed; i++)
+        setLocal(i, LOCAL_USE_BEFORE_DEF);
 
     /*
      * If the script is in debug mode, JS_SetFrameReturnValue can be called at
@@ -316,6 +326,8 @@ Script::analyze(JSContext *cx, JSScript *script)
         script->usesEval || script->usesArguments || cx->compartment->debugMode) {
         isInlineable = false;
     }
+
+    canTrackVars = true;
 
     /*
      * If we are in the middle of one or more jumps, the offset of the highest
@@ -386,7 +398,7 @@ Script::analyze(JSContext *cx, JSScript *script)
 
         if (untrap.trap) {
             code->safePoint = true;
-            isInlineable = false;
+            isInlineable = canTrackVars = false;
         }
 
         unsigned stackDepth = code->stackDepth;
@@ -405,10 +417,10 @@ Script::analyze(JSContext *cx, JSScript *script)
              */
             for (unsigned i = 0; i < defineCount; i++) {
                 uint32 local = defineArray[i];
-                JS_ASSERT_IF(locals[local] != LOCAL_CONDITIONALLY_DEFINED &&
-                             locals[local] != LOCAL_USE_BEFORE_DEF,
-                             locals[local] <= offset);
-                if (locals[local] == LOCAL_CONDITIONALLY_DEFINED)
+                JS_ASSERT_IF(definedLocals[local] != LOCAL_CONDITIONALLY_DEFINED &&
+                             definedLocals[local] != LOCAL_USE_BEFORE_DEF,
+                             definedLocals[local] <= offset);
+                if (definedLocals[local] == LOCAL_CONDITIONALLY_DEFINED)
                     setLocal(local, offset);
             }
             defineArray = code->defineArray = NULL;
@@ -444,6 +456,13 @@ Script::analyze(JSContext *cx, JSScript *script)
             isInlineable = false;
             break;
 
+          case JSOP_DEFFUN:
+          case JSOP_DEFVAR:
+          case JSOP_DEFCONST:
+          case JSOP_SETCONST:
+            isInlineable = canTrackVars = false;
+            break;
+
           case JSOP_THIS:
             usesThis = true;
             break;
@@ -456,7 +475,7 @@ Script::analyze(JSContext *cx, JSScript *script)
 
           case JSOP_TABLESWITCH:
           case JSOP_TABLESWITCHX: {
-            isInlineable = false;
+            isInlineable = canTrackVars = false;
             jsbytecode *pc2 = pc;
             unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
             unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
@@ -490,7 +509,7 @@ Script::analyze(JSContext *cx, JSScript *script)
 
           case JSOP_LOOKUPSWITCH:
           case JSOP_LOOKUPSWITCHX: {
-            isInlineable = false;
+            isInlineable = canTrackVars = false;
             jsbytecode *pc2 = pc;
             unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
             unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
@@ -527,7 +546,7 @@ Script::analyze(JSContext *cx, JSScript *script)
              * exception but is not caught by a later handler in the same function:
              * no more code will execute, and it does not matter what is defined.
              */
-            isInlineable = false;
+            isInlineable = canTrackVars = false;
             JSTryNote *tn = script->trynotes()->vector;
             JSTryNote *tnlimit = tn + script->trynotes()->length;
             for (; tn < tnlimit; tn++) {
@@ -560,7 +579,7 @@ Script::analyze(JSContext *cx, JSScript *script)
              */
             if (pc[JSOP_GETLOCAL_LENGTH] != JSOP_POP) {
                 uint32 local = GET_SLOTNO(pc);
-                if (local < nfixed && !localDefined(local, offset)) {
+                if (local < script->nfixed && !localDefined(local, offset)) {
                     setLocal(local, LOCAL_USE_BEFORE_DEF);
                     isInlineable = false;
                 }
@@ -573,7 +592,7 @@ Script::analyze(JSContext *cx, JSScript *script)
           case JSOP_LOCALINC:
           case JSOP_LOCALDEC: {
             uint32 local = GET_SLOTNO(pc);
-            if (local < nfixed && !localDefined(local, offset)) {
+            if (local < script->nfixed && !localDefined(local, offset)) {
                 setLocal(local, LOCAL_USE_BEFORE_DEF);
                 isInlineable = false;
             }
@@ -591,7 +610,7 @@ Script::analyze(JSContext *cx, JSScript *script)
              * will not treat the variable as ever being defined in the loop body
              * (see setLocal).
              */
-            if (local < nfixed && locals[local] == LOCAL_CONDITIONALLY_DEFINED) {
+            if (local < script->nfixed && definedLocals[local] == LOCAL_CONDITIONALLY_DEFINED) {
                 if (forwardJump) {
                     /* Add this local to the variables defined after this bytecode. */
                     uint32 *newArray = ArenaArray<uint32>(pool, defineCount + 1);
@@ -622,10 +641,6 @@ Script::analyze(JSContext *cx, JSScript *script)
           case JSOP_ARGDEC:
           case JSOP_THROW:
           case JSOP_EXCEPTION:
-          case JSOP_DEFFUN:
-          case JSOP_DEFVAR:
-          case JSOP_DEFCONST:
-          case JSOP_SETCONST:
           case JSOP_DEFLOCALFUN:
           case JSOP_DEFLOCALFUN_FC:
           case JSOP_LAMBDA:
@@ -715,132 +730,51 @@ Script::analyze(JSContext *cx, JSScript *script)
 
     JS_ASSERT(!failed());
     JS_ASSERT(forwardJump == 0 && forwardCatch == 0);
+
+    ranBytecode_ = true;
 }
 
 /////////////////////////////////////////////////////////////////////
-// Stack Analysis
+// Lifetime Analysis
 /////////////////////////////////////////////////////////////////////
 
-bool
-StackAnalysis::analyze(JSArenaPool &pool, JSScript *script,
-                       uint32 start, uint32 length, Script *analysis)
+void
+ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 {
-    this->script = script;
-    this->start = start;
-    this->length = length;
+    JS_ASSERT(cx->compartment->activeAnalysis && !ranLifetimes() && !failed());
 
-    poppedArray = ArenaArray<PoppedValue*>(pool, length);
-    if (!poppedArray)
-        return false;
-    PodZero(poppedArray, length);
-
-    PoppedValue *stack = ArenaArray<PoppedValue>(pool, script->nslots - script->nfixed);
-    if (!stack)
-        return false;
-
-    unsigned depth = analysis->getCode(start).stackDepth;
-    for (unsigned i = 0; i < depth; i++)
-        stack[i].reset();
-
-    unsigned offset = start;
-    while (offset < start + length) {
-        jsbytecode *pc = script->code + offset;
-        uint32 successorOffset = offset + GetBytecodeLength(pc);
-
-        Bytecode *code = analysis->maybeCode(pc);
-        if (!code) {
-            offset = successorOffset;
-            continue;
-        }
-
-        for (unsigned i = depth; i < code->stackDepth; i++)
-            stack[i].reset();
-        depth = code->stackDepth;
-
-        if (code->jumpTarget) {
-            for (unsigned i = 0; i < depth; i++)
-                stack[i].reset();
-        }
-
-        unsigned nuses = GetUseCount(script, offset);
-        unsigned ndefs = GetDefCount(script, offset);
-
-        if (nuses) {
-            PoppedValue *popped = ArenaArray<PoppedValue>(pool, nuses);
-            if (!popped)
-                return false;
-            for (unsigned i = 0; i < nuses; i++)
-                popped[i] = stack[depth - 1 - i];
-            poppedArray[offset - start] = popped;
-        }
-
-        for (unsigned i = 0; i < ndefs; i++) {
-            PoppedValue &value = stack[depth - nuses + i];
-            value.offset = offset;
-            value.which = i;
-        }
-
-        depth -= nuses;
-        depth += ndefs;
-
-        offset = successorOffset;
+    if (!ranBytecode()) {
+        analyzeBytecode(cx);
+        if (failed())
+            return;
     }
 
-    return true;
-}
+    JSArenaPool &pool = cx->compartment->pool;
 
-/////////////////////////////////////////////////////////////////////
-// Live Range Analysis
-/////////////////////////////////////////////////////////////////////
+    lifetimes = ArenaArray<LifetimeVariable>(pool, numSlots);
+    if (!lifetimes) {
+        setOOM(cx);
+        return;
+    }
+    PodZero(lifetimes, numSlots);
 
-LifetimeScript::LifetimeScript()
-{
-    PodZero(this);
-}
+    /*
+     * Variables which are currently dead. On forward branches to locations
+     * where these are live, they need to be marked as live.
+     */
+    LifetimeVariable **saved = (LifetimeVariable **)
+        cx->calloc_(numSlots * sizeof(LifetimeVariable*));
+    if (!saved) {
+        setOOM(cx);
+        return;
+    }
+    unsigned savedCount = 0;
 
-LifetimeScript::~LifetimeScript()
-{
-    JS_FinishArenaPool(&pool);
-}
-
-bool
-LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *script)
-{
-    JS_ASSERT(analysis->hasAnalyzed() && !analysis->failed());
-
-    JS_InitArenaPool(&pool, "script_liverange", 256, 8, NULL);
-
-    this->analysis = analysis;
-    this->script = script;
-
-    codeArray = ArenaArray<LifetimeBytecode>(pool, script->length);
-    if (!codeArray)
-        return false;
-    PodZero(codeArray, script->length);
-
-    unsigned nfixed = analysis->localCount();
-    unsigned nargs = script->fun ? script->fun->nargs : 0;
-
-    nLifetimes = 2 + nargs + nfixed;
-    lifetimes = ArenaArray<LifetimeVariable>(pool, nLifetimes);
-    if (!lifetimes)
-        return false;
-    PodZero(lifetimes, nLifetimes);
-
-    LifetimeVariable *thisVar = lifetimes + 1;
-    LifetimeVariable *args = lifetimes + 2;
-    LifetimeVariable *locals = lifetimes + 2 + nargs;
-
-    saved = ArenaArray<LifetimeVariable*>(pool, nLifetimes);
-    if (!saved)
-        return false;
-    savedCount = 0;
-
-    LifetimeLoop *loop = NULL;
+    LoopAnalysis *loop = NULL;
 
     uint32 offset = script->length - 1;
     while (offset < script->length) {
-        Bytecode *code = analysis->maybeCode(offset);
+        Bytecode *code = maybeCode(offset);
         if (!code) {
             offset--;
             continue;
@@ -851,22 +785,18 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
 
         UntrapOpcode untrap(cx, script, script->code + offset);
 
-        if (codeArray[offset].loop) {
+        if (code->loop) {
             /*
              * This is the head of a loop, we need to go and make sure that any
              * variables live at the head are live at the backedge and points prior.
              * For each such variable, look for the last lifetime segment in the body
              * and extend it to the end of the loop.
              */
-            JS_ASSERT(loop == codeArray[offset].loop);
-            unsigned backedge = codeArray[offset].loop->backedge;
-            for (unsigned i = 0; i < nfixed; i++) {
-                if (locals[i].lifetime && !extendVariable(cx, locals[i], offset, backedge))
-                    return false;
-            }
-            for (unsigned i = 0; i < nargs; i++) {
-                if (args[i].lifetime && !extendVariable(cx, args[i], offset, backedge))
-                    return false;
+            JS_ASSERT(loop == code->loop);
+            unsigned backedge = code->loop->backedge;
+            for (unsigned i = 0; i < numSlots; i++) {
+                if (lifetimes[i].lifetime)
+                    extendVariable(cx, lifetimes[i], offset, backedge);
             }
 
             loop = loop->parent;
@@ -882,79 +812,44 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
 
         switch (op) {
           case JSOP_GETARG:
-          case JSOP_CALLARG: {
-            unsigned arg = GET_ARGNO(pc);
-            if (!analysis->argEscapes(arg)) {
-                if (!addVariable(cx, args[arg], offset))
-                    return false;
-            }
+          case JSOP_CALLARG:
+          case JSOP_GETLOCAL:
+          case JSOP_CALLLOCAL:
+          case JSOP_THIS: {
+            uint32 slot = GetBytecodeSlot(script, pc);
+            if (!slotEscapes(slot))
+                addVariable(cx, lifetimes[slot], offset, saved, savedCount);
             break;
           }
 
-          case JSOP_SETARG: {
-            unsigned arg = GET_ARGNO(pc);
-            if (!analysis->argEscapes(arg)) {
-                if (!killVariable(cx, args[arg], offset))
-                    return false;
-            }
+          case JSOP_SETARG:
+          case JSOP_SETLOCAL:
+          case JSOP_SETLOCALPOP:
+          case JSOP_DEFLOCALFUN:
+          case JSOP_DEFLOCALFUN_FC:
+          case JSOP_FORARG:
+          case JSOP_FORLOCAL: {
+            uint32 slot = GetBytecodeSlot(script, pc);
+            if (!slotEscapes(slot))
+                killVariable(cx, lifetimes[slot], offset, saved, savedCount);
             break;
           }
 
           case JSOP_INCARG:
           case JSOP_DECARG:
           case JSOP_ARGINC:
-          case JSOP_ARGDEC: {
-            unsigned arg = GET_ARGNO(pc);
-            if (!analysis->argEscapes(arg)) {
-                if (!killVariable(cx, args[arg], offset))
-                    return false;
-                if (!addVariable(cx, args[arg], offset))
-                    return false;
-            }
-            break;
-          }
-
-          case JSOP_GETLOCAL:
-          case JSOP_CALLLOCAL: {
-            unsigned local = GET_SLOTNO(pc);
-            if (!analysis->localEscapes(local)) {
-                JS_ASSERT(local < nfixed);
-                if (!addVariable(cx, locals[local], offset))
-                    return false;
-            }
-            break;
-          }
-
-          case JSOP_SETLOCAL:
-          case JSOP_SETLOCALPOP:
-          case JSOP_DEFLOCALFUN: {
-            unsigned local = GET_SLOTNO(pc);
-            if (!analysis->localEscapes(local)) {
-                JS_ASSERT(local < nfixed);
-                if (!killVariable(cx, locals[local], offset))
-                    return false;
-            }
-            break;
-          }
-
+          case JSOP_ARGDEC:
           case JSOP_INCLOCAL:
           case JSOP_DECLOCAL:
           case JSOP_LOCALINC:
           case JSOP_LOCALDEC: {
-            unsigned local = GET_SLOTNO(pc);
-            if (!analysis->localEscapes(local)) {
-                if (!killVariable(cx, locals[local], offset))
-                    return false;
-                if (!addVariable(cx, locals[local], offset))
-                    return false;
+            uint32 slot = GetBytecodeSlot(script, pc);
+            if (!slotEscapes(slot)) {
+                killVariable(cx, lifetimes[slot], offset, saved, savedCount);
+                addVariable(cx, lifetimes[slot], offset, saved, savedCount);
             }
             break;
           }
-
-          case JSOP_THIS:
-            if (!addVariable(cx, *thisVar, offset))
-                return false;
-            break;
 
           case JSOP_IFEQ:
           case JSOP_IFEQX:
@@ -965,78 +860,75 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
           case JSOP_AND:
           case JSOP_ANDX:
           case JSOP_GOTO:
-          case JSOP_GOTOX: {
+          case JSOP_GOTOX:
+          case JSOP_ENDFILTER: {
             /*
              * Forward jumps need to pull in all variables which are live at
              * their target offset --- the variables live before the jump are
              * the union of those live at the fallthrough and at the target.
              */
-            uint32 targetOffset = offset + GetJumpOffset(pc, pc);
+            uint32 targetOffset = FollowBranch(script, offset);
+
+            /*
+             * Watch for 'continue' statements in the loop body, which are
+             * jumps to the entry offset separate from the initial jump.
+             */
+            if (loop && loop->entry == targetOffset && loop->entry > loop->lastBlock)
+                loop->lastBlock = loop->entry;
+
             if (targetOffset < offset) {
+                /* This is a loop back edge, no lifetime to pull in yet. */
                 JSOp nop = JSOp(script->code[targetOffset]);
-                if (nop == JSOP_GOTO || nop == JSOP_GOTOX) {
-                    /* This is a continue, short circuit the backwards goto. */
-                    jsbytecode *target = script->code + targetOffset;
-                    targetOffset = targetOffset + GetJumpOffset(target, target);
+                JS_ASSERT(nop == JSOP_TRACE || nop == JSOP_NOTRACE);
 
-                    /*
-                     * Unless this is continuing an outer loop, it is a jump to
-                     * the entry offset separate from the initial jump.
-                     * Prune the last block in the loop.
-                     */
-                    JS_ASSERT(loop);
-                    if (loop->entry == targetOffset && loop->entry > loop->lastBlock)
-                        loop->lastBlock = loop->entry;
-                } else {
-                    /* This is a loop back edge, no lifetime to pull in yet. */
-                    JS_ASSERT(nop == JSOP_TRACE || nop == JSOP_NOTRACE);
+                /*
+                 * If we already have a loop, it is an outer loop and we
+                 * need to prune the last block in the loop --- we do not
+                 * track 'continue' statements for outer loops.
+                 */
+                if (loop && loop->entry > loop->lastBlock)
+                    loop->lastBlock = loop->entry;
 
-                    /*
-                     * If we already have a loop, it is an outer loop and we
-                     * need to prune the last block in the loop --- we do not
-                     * track 'continue' statements for outer loops.
-                     */
-                    if (loop && loop->entry > loop->lastBlock)
-                        loop->lastBlock = loop->entry;
-
-                    LifetimeLoop *nloop = ArenaNew<LifetimeLoop>(pool);
-                    if (!nloop)
-                        return false;
-                    PodZero(nloop);
-
-                    if (loop)
-                        loop->hasCallsLoops = true;
-
-                    nloop->parent = loop;
-                    loop = nloop;
-
-                    codeArray[targetOffset].loop = loop;
-                    loop->head = targetOffset;
-                    loop->backedge = offset;
-                    loop->lastBlock = loop->head;
-
-                    /*
-                     * Find the entry jump, which will be a GOTO for 'for' or
-                     * 'while' loops or a fallthrough for 'do while' loops.
-                     */
-                    uint32 entry = targetOffset;
-                    if (entry) {
-                        do {
-                            entry--;
-                        } while (!analysis->maybeCode(entry));
-
-                        jsbytecode *entrypc = script->code + entry;
-                        if (JSOp(*entrypc) == JSOP_GOTO || JSOp(*entrypc) == JSOP_GOTOX)
-                            loop->entry = entry + GetJumpOffset(entrypc, entrypc);
-                        else
-                            loop->entry = targetOffset;
-                    } else {
-                        /* Do-while loop at the start of the script. */
-                        loop->entry = targetOffset;
-                    }
-
-                    break;
+                LoopAnalysis *nloop = ArenaNew<LoopAnalysis>(pool);
+                if (!nloop) {
+                    cx->free_(saved);
+                    setOOM(cx);
+                    return;
                 }
+                PodZero(nloop);
+
+                if (loop)
+                    loop->hasCallsLoops = true;
+
+                nloop->parent = loop;
+                loop = nloop;
+
+                getCode(targetOffset).loop = loop;
+                loop->head = targetOffset;
+                loop->backedge = offset;
+                loop->lastBlock = loop->head;
+
+                /*
+                 * Find the entry jump, which will be a GOTO for 'for' or
+                 * 'while' loops or a fallthrough for 'do while' loops.
+                 */
+                uint32 entry = targetOffset;
+                if (entry) {
+                    do {
+                        entry--;
+                    } while (!maybeCode(entry));
+
+                    jsbytecode *entrypc = script->code + entry;
+                    if (JSOp(*entrypc) == JSOP_GOTO || JSOp(*entrypc) == JSOP_GOTOX)
+                        loop->entry = entry + GetJumpOffset(entrypc, entrypc);
+                    else
+                        loop->entry = targetOffset;
+                } else {
+                    /* Do-while loop at the start of the script. */
+                    loop->entry = targetOffset;
+                }
+
+                break;
             }
             for (unsigned i = 0; i < savedCount; i++) {
                 LifetimeVariable &var = *saved[i];
@@ -1047,8 +939,11 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
                      * lifetime segment for the variable.
                      */
                     var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
-                    if (!var.lifetime)
-                        return false;
+                    if (!var.lifetime) {
+                        cx->free_(saved);
+                        setOOM(cx);
+                        return;
+                    }
                     var.saved = NULL;
                     saved[i--] = saved[--savedCount];
                 } else if (loop && !var.savedEnd) {
@@ -1073,8 +968,11 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
             for (unsigned i = 0; i < savedCount; i++) {
                 LifetimeVariable &var = *saved[i];
                 var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
-                if (!var.lifetime)
-                    return false;
+                if (!var.lifetime) {
+                    cx->free_(saved);
+                    setOOM(cx);
+                    return;
+                }
                 var.saved = NULL;
                 saved[i--] = saved[--savedCount];
             }
@@ -1096,14 +994,16 @@ LifetimeScript::analyze(JSContext *cx, analyze::Script *analysis, JSScript *scri
         offset--;
     }
 
-    return true;
+    cx->free_(saved);
+
+    ranLifetimes_ = true;
 }
 
 #ifdef DEBUG
 void
-LifetimeScript::dumpVariable(LifetimeVariable &var)
+LifetimeVariable::print() const
 {
-    Lifetime *segment = var.lifetime ? var.lifetime : var.saved;
+    Lifetime *segment = lifetime ? lifetime : saved;
     while (segment) {
         printf(" (%u,%u%s)", segment->start, segment->end, segment->loopTail ? ",tail" : "");
         segment = segment->next;
@@ -1112,8 +1012,9 @@ LifetimeScript::dumpVariable(LifetimeVariable &var)
 }
 #endif /* DEBUG */
 
-inline bool
-LifetimeScript::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset)
+inline void
+ScriptAnalysis::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
+                            LifetimeVariable **&saved, unsigned &savedCount)
 {
     if (var.lifetime) {
         JS_ASSERT(offset < var.lifetime->start);
@@ -1129,27 +1030,31 @@ LifetimeScript::addVariable(JSContext *cx, LifetimeVariable &var, unsigned offse
                 }
             }
         }
-        var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
-        if (!var.lifetime)
-            return false;
+        var.lifetime = ArenaNew<Lifetime>(cx->compartment->pool, offset, var.savedEnd, var.saved);
+        if (!var.lifetime) {
+            setOOM(cx);
+            return;
+        }
         var.saved = NULL;
     }
-    return true;
 }
 
-inline bool
-LifetimeScript::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset)
+inline void
+ScriptAnalysis::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offset,
+                             LifetimeVariable **&saved, unsigned &savedCount)
 {
     if (!var.lifetime) {
         /* Make a point lifetime indicating the write. */
         if (!var.saved)
             saved[savedCount++] = &var;
-        var.saved = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
-        if (!var.saved)
-            return false;
+        var.saved = ArenaNew<Lifetime>(cx->compartment->pool, offset, var.savedEnd, var.saved);
+        if (!var.saved) {
+            setOOM(cx);
+            return;
+        }
         var.saved->write = true;
         var.savedEnd = 0;
-        return true;
+        return;
     }
     JS_ASSERT(offset < var.lifetime->start);
 
@@ -1166,12 +1071,11 @@ LifetimeScript::killVariable(JSContext *cx, LifetimeVariable &var, unsigned offs
     var.lifetime = NULL;
 
     saved[savedCount++] = &var;
-
-    return true;
 }
 
-inline bool
-LifetimeScript::extendVariable(JSContext *cx, LifetimeVariable &var, unsigned start, unsigned end)
+inline void
+ScriptAnalysis::extendVariable(JSContext *cx, LifetimeVariable &var,
+                               unsigned start, unsigned end)
 {
     JS_ASSERT(var.lifetime);
     var.lifetime->start = start;
@@ -1215,9 +1119,11 @@ LifetimeScript::extendVariable(JSContext *cx, LifetimeVariable &var, unsigned st
         }
         JS_ASSERT(savedEnd <= end);
         if (savedEnd > segment->end) {
-            Lifetime *tail = ArenaNew<Lifetime>(pool, savedEnd, 0, segment->next);
-            if (!tail)
-                return false;
+            Lifetime *tail = ArenaNew<Lifetime>(cx->compartment->pool, savedEnd, 0, segment->next);
+            if (!tail) {
+                setOOM(cx);
+                return;
+            }
             tail->start = segment->end;
             tail->loopTail = true;
 
@@ -1239,9 +1145,577 @@ LifetimeScript::extendVariable(JSContext *cx, LifetimeVariable &var, unsigned st
             segment = segment->next;
         }
     }
+}
 
+void
+ScriptAnalysis::clearAllocations()
+{
+    /*
+     * Clear out storage used for register allocations in a compilation once
+     * that compilation has finished. Register allocations are only used for
+     * a single compilation.
+     */
+    for (unsigned i = 0; i < script->length; i++) {
+        Bytecode *code = maybeCode(i);
+        if (code)
+            code->allocation = NULL;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////
+// SSA Analysis
+/////////////////////////////////////////////////////////////////////
+
+void
+ScriptAnalysis::analyzeSSA(JSContext *cx)
+{
+    JS_ASSERT(cx->compartment->activeAnalysis && !ranSSA() && !failed());
+
+    if (!ranLifetimes()) {
+        analyzeLifetimes(cx);
+        if (failed())
+            return;
+    }
+
+    JSArenaPool &pool = cx->compartment->pool;
+    unsigned maxDepth = script->nslots - script->nfixed;
+
+    /*
+     * Current value of each variable and stack value. Empty for missing or
+     * untracked entries, i.e. escaping locals and arguments.
+     */
+    SSAValue *values = (SSAValue *)
+        cx->calloc_((numSlots + maxDepth) * sizeof(SSAValue));
+    if (!values) {
+        setOOM(cx);
+        return;
+    }
+
+    SSAValue *stack = values + numSlots;
+    uint32 stackDepth = 0;
+
+    for (uint32 slot = ArgSlot(0); slot < numSlots; slot++) {
+        if (trackSlot(slot))
+            values[slot].initInitial(slot);
+    }
+
+    /*
+     * All target offsets for forward jumps we in the middle of. We lazily add
+     * pending entries at these targets for the original value of variables
+     * modified before the branch rejoins.
+     */
+    Vector<uint32> branchTargets(cx);
+
+    uint32 offset = 0;
+    while (offset < script->length) {
+        jsbytecode *pc = script->code + offset;
+        UntrapOpcode untrap(cx, script, pc);
+
+        uint32 successorOffset = offset + GetBytecodeLength(pc);
+
+        Bytecode *code = maybeCode(pc);
+        if (!code) {
+            offset = successorOffset;
+            continue;
+        }
+
+        if (code->stackDepth > stackDepth)
+            PodZero(stack + stackDepth, code->stackDepth - stackDepth);
+        stackDepth = code->stackDepth;
+
+        if (code->loop) {
+            /*
+             * Make sure there is a pending value array for phi nodes at the
+             * loop head. We won't be able to clear these until we reach the
+             * loop's back edge.
+             *
+             * We need phi nodes for all variables which might be modified
+             * during the loop. This ensures that in the loop body we have
+             * already updated state to reflect possible changes that happen
+             * before the back edge, and don't need to go back and fix things
+             * up when we *do* get to the back edge. This could be made lazier.
+             *
+             * We don't make phi nodes for values on the stack at the head of
+             * the loop. These may be popped during the loop (i.e. for ITER
+             * loops), but in such cases the original value is pushed back.
+             */
+            Vector<SlotValue> *&pending = code->pendingValues;
+            if (pending) {
+                removeBranchTarget(branchTargets, offset);
+            } else {
+                pending = cx->new_< Vector<SlotValue> >(cx);
+                if (!pending) {
+                    setOOM(cx);
+                    return;
+                }
+            }
+
+            /*
+             * Make phi nodes and update state for slots which are already in
+             * pending from previous branches to the loop head, and which are
+             * modified in the body of the loop.
+             */
+            for (unsigned i = 0; i < pending->length(); i++) {
+                SlotValue &v = (*pending)[i];
+                if (v.slot < numSlots && liveness(v.slot).firstWrite(code->loop) != uint32(-1)) {
+                    if (v.value.kind() != SSAValue::PHI || v.value.phiOffset() < offset) {
+                        SSAValue ov = v.value;
+                        if (!makePhi(cx, v.slot, offset, &ov))
+                            return;
+                        insertPhi(cx, ov, v.value);
+                        v.value = ov;
+                    }
+                }
+                if (code->fallthrough || code->jumpFallthrough)
+                    mergeValue(cx, offset, values[v.slot], &v);
+                mergeBranchTarget(cx, values[v.slot], v.slot, branchTargets);
+                values[v.slot] = v.value;
+            }
+
+            /*
+             * Make phi nodes for all other slots which might be modified
+             * during the loop. This ensures that in the loop body we have
+             * already updated state to reflect possible changes that happen
+             * before the back edge, and don't need to go back and fix things
+             * up when we *do* get to the back edge. This could be made lazier.
+             */
+            for (uint32 slot = ArgSlot(0); slot < numSlots + stackDepth; slot++) {
+                if (slot >= numSlots || !trackSlot(slot))
+                    continue;
+                if (liveness(slot).firstWrite(code->loop) == uint32(-1))
+                    continue;
+                if (values[slot].kind() == SSAValue::PHI && values[slot].phiOffset() == offset) {
+                    /* There is already a pending entry for this slot. */
+                    continue;
+                }
+                SSAValue ov;
+                if (!makePhi(cx, slot, offset, &ov))
+                    return;
+                if (code->fallthrough || code->jumpFallthrough)
+                    insertPhi(cx, ov, values[slot]);
+                mergeBranchTarget(cx, values[slot], slot, branchTargets);
+                values[slot] = ov;
+                if (!pending->append(SlotValue(slot, ov))) {
+                    setOOM(cx);
+                    return;
+                }
+            }
+        } else if (code->pendingValues) {
+            /*
+             * New values at this point from a previous jump to this bytecode.
+             * If there is fallthrough from the previous instruction, merge
+             * with the current state and create phi nodes where necessary,
+             * otherwise replace current values with the new values.
+             */
+            removeBranchTarget(branchTargets, offset);
+            Vector<SlotValue> *pending = code->pendingValues;
+            for (unsigned i = 0; i < pending->length(); i++) {
+                SlotValue &v = (*pending)[i];
+                if (code->fallthrough || code->jumpFallthrough)
+                    mergeValue(cx, offset, values[v.slot], &v);
+                mergeBranchTarget(cx, values[v.slot], v.slot, branchTargets);
+                values[v.slot] = v.value;
+            }
+            freezeNewValues(cx, offset);
+        }
+
+        unsigned nuses = GetUseCount(script, offset);
+        unsigned ndefs = GetDefCount(script, offset);
+        JS_ASSERT(stackDepth >= nuses);
+
+        unsigned xuses = ExtendedUse(pc) ? nuses + 1 : nuses;
+
+        if (xuses) {
+            code->poppedValues = (SSAValue *)ArenaArray<SSAValue>(pool, xuses);
+            if (!code->poppedValues) {
+                setOOM(cx);
+                return;
+            }
+            for (unsigned i = 0; i < nuses; i++) {
+                SSAValue &v = stack[stackDepth - 1 - i];
+                code->poppedValues[i] = v;
+                v.clear();
+            }
+            if (xuses > nuses) {
+                /*
+                 * For SETLOCAL, INCLOCAL, etc. opcodes, add an extra popped
+                 * value holding the value of the local before the op.
+                 */
+                uint32 slot = GetBytecodeSlot(script, pc);
+                if (trackSlot(slot))
+                    code->poppedValues[nuses] = values[slot];
+                else
+                    code->poppedValues[nuses].clear();
+            }
+        }
+
+        stackDepth -= nuses;
+
+        for (unsigned i = 0; i < ndefs; i++)
+            stack[stackDepth + i].initPushed(offset, i);
+
+        stackDepth += ndefs;
+
+        JSOp op = (JSOp)*pc;
+        switch (op) {
+          case JSOP_SETARG:
+          case JSOP_SETLOCAL:
+          case JSOP_SETLOCALPOP:
+          case JSOP_DEFLOCALFUN:
+          case JSOP_DEFLOCALFUN_FC:
+          case JSOP_FORARG:
+          case JSOP_FORLOCAL:
+          case JSOP_INCARG:
+          case JSOP_DECARG:
+          case JSOP_ARGINC:
+          case JSOP_ARGDEC:
+          case JSOP_INCLOCAL:
+          case JSOP_DECLOCAL:
+          case JSOP_LOCALINC:
+          case JSOP_LOCALDEC: {
+            uint32 slot = GetBytecodeSlot(script, pc);
+            if (trackSlot(slot)) {
+                mergeBranchTarget(cx, values[slot], slot, branchTargets);
+                values[slot].initWritten(slot, offset);
+            }
+            if (op == JSOP_FORARG || op == JSOP_FORLOCAL)
+                stack[stackDepth - 1] = code->poppedValues[0];
+            break;
+          }
+
+          case JSOP_GETARG:
+          case JSOP_CALLARG:
+          case JSOP_GETLOCAL:
+          case JSOP_CALLLOCAL: {
+            uint32 slot = GetBytecodeSlot(script, pc);
+            if (trackSlot(slot)) {
+                /*
+                 * Propagate the current value of the local to the pushed value,
+                 * and remember it with an extended use on the opcode.
+                 */
+                stack[stackDepth - 1] = code->poppedValues[0] = values[slot];
+            }
+            break;
+          }
+
+          /* Short circuit ops which push back one of their operands. */
+
+          case JSOP_MOREITER:
+          case JSOP_FORELEM:
+            stack[stackDepth - 2] = code->poppedValues[0];
+            break;
+
+          case JSOP_FORNAME:
+          case JSOP_FORGNAME:
+            stack[stackDepth - 1] = code->poppedValues[0];
+            break;
+
+          case JSOP_FORPROP:
+          case JSOP_INITPROP:
+          case JSOP_INITMETHOD:
+            stack[stackDepth - 1] = code->poppedValues[1];
+            break;
+
+          case JSOP_INITELEM:
+            stack[stackDepth - 1] = code->poppedValues[2];
+            break;
+
+          default:;
+        }
+
+        uint32 type = JOF_TYPE(js_CodeSpec[op].format);
+        if (type == JOF_JUMP || type == JOF_JUMPX) {
+            unsigned targetOffset = FollowBranch(script, offset);
+
+            unsigned targetDepth = getCode(targetOffset).stackDepth;
+            JS_ASSERT(targetDepth <= stackDepth);
+
+            /*
+             * If there is already an active branch to target, make sure its
+             * pending values reflect any changes made since the first branch.
+             * Otherwise, add a new pending branch and determine its pending
+             * values lazily.
+             */
+            Vector<SlotValue> *&pending = getCode(targetOffset).pendingValues;
+            if (pending) {
+                for (unsigned i = 0; i < pending->length(); i++) {
+                    SlotValue &v = (*pending)[i];
+                    mergeValue(cx, targetOffset, values[v.slot], &v);
+                }
+            } else {
+                JS_ASSERT(targetOffset > offset);
+                pending = cx->new_< Vector<SlotValue> >(cx);
+                if (!pending || !branchTargets.append(targetOffset)) {
+                    setOOM(cx);
+                    return;
+                }
+            }
+
+            /*
+             * Make sure there is a pending entry for each value on the stack.
+             * The number of stack entries at join points is usually zero, and
+             * we don't want to look at the active branches while popping and
+             * pushing values in each opcode.
+             */
+            for (unsigned i = 0; i < targetDepth; i++)
+                checkPendingValue(cx, stack[i], StackSlot(script, i), pending);
+
+            /*
+             * If this is a back edge, we're done with the loop and can freeze
+             * the phi values at the head now.
+             */
+            if (targetOffset < offset)
+                freezeNewValues(cx, targetOffset);
+        }
+
+        offset = successorOffset;
+    }
+
+    ranSSA_ = true;
+}
+
+/* Get a phi node's capacity for a given length. */
+static inline unsigned
+PhiNodeCapacity(unsigned length)
+{
+    if (length <= 4)
+        return 4;
+
+    unsigned log2;
+    JS_FLOOR_LOG2(log2, length - 1);
+    return 1 << (log2 + 1);
+}
+
+bool
+ScriptAnalysis::makePhi(JSContext *cx, uint32 slot, uint32 offset, SSAValue *pv)
+{
+    SSAPhiNode *node = ArenaNew<SSAPhiNode>(cx->compartment->pool);
+    SSAValue *options = ArenaArray<SSAValue>(cx->compartment->pool, PhiNodeCapacity(0));
+    if (!node || !options) {
+        setOOM(cx);
+        return false;
+    }
+    node->slot = slot;
+    node->options = options;
+    pv->initPhi(offset, node);
     return true;
 }
+
+void
+ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
+{
+    JS_ASSERT(phi.kind() == SSAValue::PHI);
+    SSAPhiNode *node = phi.phiNode();
+
+    /*
+     * Filter dupes inserted into small nodes to keep things clean and avoid
+     * extra type constraints, but don't bother on large phi nodes to avoid
+     * quadratic behavior.
+     */
+    if (node->length <= 8) {
+        for (unsigned i = 0; i < node->length; i++) {
+            if (v.equals(node->options[i]))
+                return;
+        }
+    }
+
+    if (node->length < PhiNodeCapacity(node->length)) {
+        node->options[node->length++] = v;
+        return;
+    }
+
+    SSAValue *newOptions = ArenaArray<SSAValue>(cx->compartment->pool,
+                                                PhiNodeCapacity(node->length + 1));
+    if (!newOptions) {
+        setOOM(cx);
+        return;
+    }
+
+    PodCopy(newOptions, node->options, node->length);
+    node->options = newOptions;
+    node->options[node->length++] = v;
+}
+
+inline void
+ScriptAnalysis::mergeValue(JSContext *cx, uint32 offset, const SSAValue &v, SlotValue *pv)
+{
+    JS_ASSERT(v.kind() != SSAValue::EMPTY && pv->value.kind() != SSAValue::EMPTY);
+
+    if (v.equals(pv->value))
+        return;
+
+    if (pv->value.kind() != SSAValue::PHI || pv->value.phiOffset() < offset) {
+        SSAValue ov = pv->value;
+        if (makePhi(cx, pv->slot, offset, &pv->value)) {
+            insertPhi(cx, pv->value, v);
+            insertPhi(cx, pv->value, ov);
+        }
+        return;
+    }
+
+    JS_ASSERT(pv->value.phiOffset() == offset);
+    insertPhi(cx, pv->value, v);
+}
+
+void
+ScriptAnalysis::checkPendingValue(JSContext *cx, const SSAValue &v, uint32 slot,
+                                  Vector<SlotValue> *pending)
+{
+    JS_ASSERT(v.kind() != SSAValue::EMPTY);
+
+    for (unsigned i = 0; i < pending->length(); i++) {
+        if ((*pending)[i].slot == slot)
+            return;
+    }
+
+    if (!pending->append(SlotValue(slot, v)))
+        setOOM(cx);
+}
+
+void
+ScriptAnalysis::mergeBranchTarget(JSContext *cx, const SSAValue &value, uint32 slot,
+                                  const Vector<uint32> &branchTargets)
+{
+    if (slot >= numSlots) {
+        /*
+         * There is no need to lazily check that there are pending values at
+         * branch targets for slots on the stack, these are added to pending
+         * eagerly.
+         */
+        return;
+    }
+
+    JS_ASSERT(trackSlot(slot));
+
+    /*
+     * Before changing the value of a variable, make sure the old value is
+     * marked at the target of any branches jumping over the current opcode.
+     */
+    for (unsigned i = 0; i < branchTargets.length(); i++) {
+        Vector<SlotValue> *pending = getCode(branchTargets[i]).pendingValues;
+        checkPendingValue(cx, value, slot, pending);
+    }
+}
+
+void
+ScriptAnalysis::removeBranchTarget(Vector<uint32> &branchTargets, uint32 offset)
+{
+    for (unsigned i = 0; i < branchTargets.length(); i++) {
+        if (branchTargets[i] == offset) {
+            branchTargets[i] = branchTargets.back();
+            branchTargets.popBack();
+            return;
+        }
+    }
+    JS_NOT_REACHED("Missing target");
+}
+
+void
+ScriptAnalysis::freezeNewValues(JSContext *cx, uint32 offset)
+{
+    Bytecode &code = getCode(offset);
+
+    Vector<SlotValue> *pending = code.pendingValues;
+    code.pendingValues = NULL;
+
+    unsigned count = pending->length();
+    if (count == 0) {
+        cx->delete_(pending);
+        return;
+    }
+
+    code.newValues = ArenaArray<SlotValue>(cx->compartment->pool, count + 1);
+    if (!code.newValues) {
+        setOOM(cx);
+        return;
+    }
+
+    for (unsigned i = 0; i < count; i++)
+        code.newValues[i] = (*pending)[i];
+    code.newValues[count].slot = 0;
+    code.newValues[count].value.clear();
+
+    cx->delete_(pending);
+}
+
+#ifdef DEBUG
+
+void
+ScriptAnalysis::printSSA(JSContext *cx)
+{
+    printf("\n");
+
+    for (unsigned offset = 0; offset < script->length; offset++) {
+        Bytecode *code = maybeCode(offset);
+        if (!code)
+            continue;
+
+        jsbytecode *pc = script->code + offset;
+        PrintBytecode(cx, script, pc);
+
+        SlotValue *newv = code->newValues;
+        if (newv) {
+            while (newv->slot) {
+                if (newv->value.kind() != SSAValue::PHI || newv->value.phiOffset() != offset) {
+                    newv++;
+                    continue;
+                }
+                printf("  phi ");
+                newv->value.print();
+                printf(" [");
+                for (unsigned i = 0; i < newv->value.phiLength(); i++) {
+                    if (i)
+                        printf(",");
+                    newv->value.phiValue(i).print();
+                }
+                printf("]\n");
+                newv++;
+            }
+        }
+
+        unsigned nuses = GetUseCount(script, offset);
+        unsigned xuses = ExtendedUse(pc) ? nuses + 1 : nuses;
+
+        for (unsigned i = 0; i < xuses; i++) {
+            printf("  popped%d: ", i);
+            code->poppedValues[i].print();
+            printf("\n");
+        }
+    }
+
+    printf("\n"); 
+}
+
+void
+SSAValue::print() const
+{
+    switch (kind()) {
+
+      case EMPTY:
+        printf("empty");
+        break;
+
+      case PUSHED:
+        printf("pushed:%05u#%u", pushedOffset(), pushedIndex());
+        break;
+
+      case VAR:
+        if (varInitial())
+            printf("initial:%u", varSlot());
+        else
+            printf("write:%05u", varOffset());
+        break;
+
+      case PHI:
+        printf("phi:%05u#%u", phiOffset(), phiSlot());
+        break;
+
+      default:
+        JS_NOT_REACHED("Bad kind");
+    }
+}
+
+#endif  /* DEBUG */
 
 } /* namespace analyze */
 } /* namespace js */

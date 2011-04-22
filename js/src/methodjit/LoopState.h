@@ -89,13 +89,12 @@ class LoopState : public MacroAssemblerTypedefs
 {
     JSContext *cx;
     JSScript *script;
+    analyze::ScriptAnalysis *analysis;
     Compiler &cc;
     FrameState &frame;
-    analyze::Script *analysis;
-    analyze::LifetimeScript *liveness;
 
     /* Basic information about this loop. */
-    analyze::LifetimeLoop *lifetime;
+    analyze::LoopAnalysis *lifetime;
 
     /* Allocation at the head of the loop, has all loop carried variables. */
     RegisterAllocation *alloc;
@@ -179,7 +178,8 @@ class LoopState : public MacroAssemblerTypedefs
     Vector<InvariantEntry, 4, CompilerAllocPolicy> invariantEntries;
 
     bool loopInvariantEntry(uint32 slot);
-    bool addHoistedCheck(uint32 arraySlot, uint32 valueSlot1, uint32 valueSlot2, int32 constant);
+    bool addHoistedCheck(uint32 arraySlot,
+                         uint32 valueSlot1, uint32 valueSlot2, int32 constant);
     void addNegativeCheck(uint32 valueSlot, int32 constant);
 
     bool hasInvariants() { return !invariantEntries.empty(); }
@@ -194,8 +194,7 @@ class LoopState : public MacroAssemblerTypedefs
     jsbytecode *PC;
 
     LoopState(JSContext *cx, JSScript *script,
-              Compiler *cc, FrameState *frame,
-              analyze::Script *analysis, analyze::LifetimeScript *liveness);
+              Compiler *cc, FrameState *frame);
     bool init(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
 
     bool generatingInvariants() { return !skipAnalysis; }
@@ -234,15 +233,17 @@ class LoopState : public MacroAssemblerTypedefs
 
     void flushLoop(StubCompiler &stubcc);
 
-    bool hoistArrayLengthCheck(const FrameEntry *obj, unsigned indexPopped);
+    /*
+     * These should only be used for entries which are known to be dense arrays
+     * (if they are objects at all).
+     */
+    bool hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes,
+                               unsigned indexPopped);
     FrameEntry *invariantSlots(const FrameEntry *obj);
-    FrameEntry *invariantLength(const FrameEntry *obj);
+    FrameEntry *invariantLength(const FrameEntry *obj, types::TypeSet *objTypes);
 
   private:
     /* Analysis information for the loop. */
-
-    /* Stack information at points within this loop. */
-    analyze::StackAnalysis stack;
 
     /*
      * Any inequality known to hold at the head of the loop. This has the
@@ -262,6 +263,7 @@ class LoopState : public MacroAssemblerTypedefs
      * length must not be directly modified within the loop.
      */
     bool testLength;
+    bool testLengthKnownObject;
 
     /*
      * A variable which will be incremented or decremented exactly once in each
@@ -305,8 +307,6 @@ class LoopState : public MacroAssemblerTypedefs
 
     uint32 getIncrement(uint32 slot);
     int32 adjustConstantForIncrement(jsbytecode *pc, uint32 slot);
-
-    inline types::TypeSet *poppedTypes(jsbytecode *pc, unsigned which);
 
     bool getEntryValue(uint32 offset, uint32 popped, uint32 *pslot, int32 *pconstant);
 };

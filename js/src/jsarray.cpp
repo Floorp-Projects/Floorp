@@ -1492,7 +1492,7 @@ InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned co
 
         TypeSet *types = type->getProperty(cx, JSID_VOID, true);
         if (!types)
-            return JS_FALSE;
+            return false;
 
         for (unsigned i = 0; i < count; i++) {
             if (vector[i].isMagic(JS_ARRAY_HOLE))
@@ -1500,8 +1500,6 @@ InitArrayTypes(JSContext *cx, TypeObject *type, const Value *vector, unsigned co
             jstype valtype = GetValueType(cx, vector[i]);
             types->addType(cx, valtype);
         }
-
-        return cx->compartment->types.checkPendingRecompiles(cx);
     }
     return true;
 }

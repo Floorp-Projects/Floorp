@@ -1546,7 +1546,7 @@ class ScopeNameCompiler : public PICStubCompiler
             JSScript *newscript = getprop.obj->getCallObjCalleeFunction()->script();
             uint16 slot = uint16(getprop.shape->shortid);
             if (!newscript->ensureVarTypes(cx))
-                return cx->compartment->types.checkPendingRecompiles(cx);
+                return false;
             if (shape->getterOp() == GetCallArg)
                 types = newscript->argTypes(slot);
             else if (shape->getterOp() == GetCallVar)
@@ -1555,15 +1555,15 @@ class ScopeNameCompiler : public PICStubCompiler
             JS_ASSERT(!getprop.obj->getParent());
             if (getprop.obj->getType()->unknownProperties()) {
                 f.script()->typeMonitorResult(cx, f.pc(), types::TYPE_UNKNOWN);
-                return cx->compartment->types.checkPendingRecompiles(cx);
+                return true;
             }
             types = getprop.obj->getType()->getProperty(cx, shape->id, false);
             if (!types)
-                return cx->compartment->types.checkPendingRecompiles(cx);
+                return false;
         }
 
         types->pushAllTypes(cx, f.script(), f.pc());
-        return cx->compartment->types.checkPendingRecompiles(cx);
+        return true;
     }
 };
  

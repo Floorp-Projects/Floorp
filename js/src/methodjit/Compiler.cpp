@@ -133,6 +133,8 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     oomInVector(false),
     applyTricks(NoApplyTricks)
 {
+    JS_ASSERT(!outerScript->isUncachedEval);
+
     /* :FIXME: bug 637856 disabling traceJit if inference is enabled */
     if (cx->typeInferenceEnabled())
         addTraceHints = false;
@@ -198,33 +200,45 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
         outer = newa;
     }
 
-    newa->analysis.analyze(cx, script);
-
-    if (newa->analysis.OOM())
+    analyze::ScriptAnalysis *newAnalysis = script->analysis(cx);
+    if (!newAnalysis)
         return Compile_Error;
-    if (newa->analysis.failed()) {
+    if (!newAnalysis->failed() && !newAnalysis->ranBytecode())
+        newAnalysis->analyzeBytecode(cx);
+
+    if (newAnalysis->OOM())
+        return Compile_Error;
+    if (newAnalysis->failed()) {
         JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
         return Compile_Abort;
     }
 
-    if (cx->typeInferenceEnabled() && !newa->liveness.analyze(cx, &newa->analysis, script)) {
-        js_ReportOutOfMemory(cx);
-        return Compile_Error;
+    if (cx->typeInferenceEnabled()) {
+        if (!newAnalysis->ranSSA())
+            newAnalysis->analyzeSSA(cx);
+        if (!newAnalysis->failed() && !newAnalysis->ranLifetimes())
+            newAnalysis->analyzeLifetimes(cx);
+        if (newAnalysis->failed()) {
+            js_ReportOutOfMemory(cx);
+            return Compile_Error;
+        }
     }
 
 #ifdef JS_METHODJIT_SPEW
     if (cx->typeInferenceEnabled() && IsJaegerSpewChannelActive(JSpew_Regalloc)) {
         unsigned nargs = script->fun ? script->fun->nargs : 0;
         for (unsigned i = 0; i < nargs; i++) {
-            if (!newa->analysis.argEscapes(i)) {
+            uint32 slot = analyze::ArgSlot(i);
+            if (!newAnalysis->slotEscapes(slot)) {
                 JaegerSpew(JSpew_Regalloc, "Argument %u:", i);
-                newa->liveness.dumpSlot(2 + i);
+                newAnalysis->liveness(slot).print();
             }
         }
         for (unsigned i = 0; i < script->nfixed; i++) {
-            if (!newa->analysis.localEscapes(i)) {
+            uint32 slot = analyze::LocalSlot(script, i);
+            if (!newAnalysis->slotEscapes(slot)) {
                 JaegerSpew(JSpew_Regalloc, "Local %u:", i);
-                newa->liveness.dumpSlot(2 + nargs + i);
+                newAnalysis->liveness(slot).print();
             }
         }
     }
@@ -233,7 +247,7 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
     if (a)
         frame.getUnsyncedEntries(&newa->depth, &newa->unsyncedEntries);
 
-    if (!frame.pushActiveFrame(script, argc, &newa->analysis, &newa->liveness)) {
+    if (!frame.pushActiveFrame(script, argc)) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
@@ -255,6 +269,7 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
     }
 
     this->script = script;
+    this->analysis = newAnalysis;
     this->PC = script->code;
     this->a = newa;
 
@@ -270,6 +285,7 @@ mjit::Compiler::popActiveFrame()
     this->PC = a->parentPC;
     this->a = a->parent;
     this->script = a->script;
+    this->analysis = this->script->analysis(cx);
 
     frame.popActiveFrame();
 }
@@ -304,7 +320,7 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     outerScript->debugMode = debugMode();
 #endif
 
-    JS_ASSERT(cx->compartment->types.inferenceDepth);
+    JS_ASSERT(cx->compartment->activeInference);
 
     {
         types::AutoEnterCompilation enter(cx, outerScript);
@@ -372,8 +388,7 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
 mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
     : parent(NULL), parentPC(NULL), script(NULL), inlineIndex(uint32(-1)),
-      jumpMap(NULL), hasThisType(false), argumentTypes(NULL), localTypes(NULL),
-      unsyncedEntries(cx),
+      jumpMap(NULL), unsyncedEntries(cx),
       needReturnValue(false), syncReturnValue(false),
       returnValueDouble(false), returnSet(false), returnParentRegs(0),
       temporaryParentRegs(0), returnJumps(NULL)
@@ -382,8 +397,6 @@ mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
 mjit::Compiler::ActiveFrame::~ActiveFrame()
 {
     js::Foreground::free_(jumpMap);
-    js::Foreground::array_delete(argumentTypes);
-    js::Foreground::array_delete(localTypes);
 }
 
 mjit::Compiler::~Compiler()
@@ -400,40 +413,45 @@ CompileStatus
 mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
 {
     /* Analyze the script if we have not already done so. */
-    if (!script->types) {
-        /* Uncached eval scripts are not analyzed or compiled. */
-        if (script->isUncachedEval)
-            return Compile_Abort;
-        types::AnalyzeScriptTypes(cx, script);
-        if (!script->types)
+    analyze::ScriptAnalysis *analysis = script->analysis(cx);
+    if (!analysis->ranInference()) {
+        analysis->analyzeTypes(cx);
+        if (!analysis->ranInference())
             return Compile_Error;
     }
 
-    /* Get the known types of arguments and locals. */
+    /*
+     * During our walk of the script, we need to preserve the invariant that at
+     * join points the in memory type tag is always in sync with the known type
+     * tag of the variable's SSA value at that join point. In particular, SSA
+     * values inferred as (int|double) must in fact be doubles, stored either
+     * in floating point registers or in memory. (There is an exception for
+     * locals with a dead value at the current point, whose type may or may not
+     * be synced).
+     *
+     * To ensure this, we need to know the SSA values for each variable at each
+     * join point, which the SSA analysis does not store explicitly. These can
+     * be recovered, though. During the forward walk, the SSA value of a var
+     * (and its associated type set) change only when we see an explicit assign
+     * to the var or get to a join point with a phi node for that var. So we
+     * can duplicate the effects of that walk here by watching for writes to
+     * vars (updateVarTypes) and new phi nodes at join points.
+     *
+     * When we get to a branch and need to know a variable's value at the
+     * branch target, we know it will either be a phi node at the target or
+     * the variable's current value, as no phi node is created at the target
+     * only if a variable has the same value on all incoming edges.
+     */
 
-    uint32 nargs = script->fun ? script->fun->nargs : 0;
-    if (nargs) {
-        a->argumentTypes = cx->array_new<JSValueType>(nargs);
-        if (!a->argumentTypes)
-            return Compile_Error;
-        for (unsigned i = 0; i < nargs; i++) {
-            JSValueType type = JSVAL_TYPE_UNKNOWN;
-            if (!a->analysis.argEscapes(i))
-                type = script->argTypes(i)->getKnownTypeTag(cx);
-            a->argumentTypes[i] = type;
-        }
-    }
+    a->varTypes = (VarType *)
+        cx->calloc_(analyze::TotalSlots(script) * sizeof(VarType));
+    if (!a->varTypes)
+        return Compile_Error;
 
-    if (script->nfixed) {
-        a->localTypes = cx->array_new<JSValueType>(script->nfixed);
-        if (!a->localTypes)
-            return Compile_Error;
-        for (unsigned i = 0; i < script->nfixed; i++) {
-            JSValueType type = JSVAL_TYPE_UNKNOWN;
-            if (!a->analysis.localHasUseBeforeDef(i))
-                type = script->localTypes(i)->getKnownTypeTag(cx);
-            a->localTypes[i] = type;
-        }
+    for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
+        VarType &vt = a->varTypes[slot];
+        vt.types = script->slotTypes(slot);
+        vt.type = vt.types->getKnownTypeTag(cx);
     }
 
     return Compile_Okay;
@@ -449,6 +467,10 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
         return Compile_Abort;
 #endif
 
+    // Uncached eval scripts are not analyzed or compiled.
+    if (fp->script()->isUncachedEval)
+        return Compile_Abort;
+
     // Ensure that constructors have at least one slot.
     if (fp->isConstructing() && !fp->script()->nslots)
         fp->script()->nslots++;
@@ -463,9 +485,6 @@ mjit::TryCompile(JSContext *cx, JSStackFrame *fp)
         Compiler cc(cx, fp->script(), fp->isConstructing(), NULL);
         status = cc.compile();
     }
-
-    if (!cx->compartment->types.checkPendingRecompiles(cx))
-        return Compile_Error;
 
     return status;
 }
@@ -576,7 +595,7 @@ mjit::Compiler::generatePrologue()
          * :FIXME: bug 604541: write undefined if we might be using the tracer, so it works.
          */
         for (uint32 i = 0; i < script->nfixed; i++) {
-            if (a->analysis.localHasUseBeforeDef(i) || addTraceHints) {
+            if (analysis->localHasUseBeforeDef(i) || addTraceHints) {
                 Address local(JSFrameReg, sizeof(JSStackFrame) + i * sizeof(Value));
                 masm.storeValue(UndefinedValue(), local);
             }
@@ -590,7 +609,7 @@ mjit::Compiler::generatePrologue()
 
         j.linkTo(masm.label(), &masm);
 
-        if (a->analysis.usesScopeChain() && !script->fun->isHeavyweight()) {
+        if (analysis->usesScopeChain() && !script->fun->isHeavyweight()) {
             /*
              * Load the scope chain into the frame if necessary.  The scope chain
              * is always set for global and eval frames, and will have been set by
@@ -614,81 +633,18 @@ mjit::Compiler::generatePrologue()
         INLINE_STUBCALL(stubs::ScriptDebugPrologue);
     }
 
-    /*
-     * Set initial types of locals with known type. These will stay synced
-     * through the rest of the script, allowing us to avoid syncing the types
-     * of locals after writing their payloads. Notes:
-     *
-     * - We don't call generatePrologue and perform this syncing when inlining
-     *   frames; such locals are not assumed to be synced after being assigned.
-     *
-     * - If we are recompiling, the earlier compilation might not have known
-     *   the type of the local (its type set was empty, say), in which case
-     *   it wouldn't have stored that type tag. We need to walk the frames and
-     *   fixup the type tags accordingly.
-     */
-    for (uint32 i = 0; i < script->nfixed; i++) {
-        JSValueType type = knownLocalType(i);
-        if (type != JSVAL_TYPE_UNKNOWN) {
-            JS_ASSERT(!a->analysis.localHasUseBeforeDef(i));
-            /* Doubles will be written entirely when syncing. */
-            if (type != JSVAL_TYPE_DOUBLE) {
-                Address local(JSFrameReg, sizeof(JSStackFrame) + i * sizeof(Value));
-                masm.storeTypeTag(ImmType(type), local);
-                for (unsigned j = 0; patchFrames && j < patchFrames->length(); j++) {
-                    JSStackFrame *patchfp = (*patchFrames)[j].fp;
-                    patchfp->varSlot(i).boxNonDoubleFrom(type, (uint64*) &patchfp->varSlot(i));
-                }
-            }
-            frame.learnType(frame.getLocal(i), type, false);
-        }
-    }
-
-    /*
-     * Learn types of arguments with known type, and make sure double arguments
-     * are actually doubles and not ints.
-     */
-    for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
-        JSValueType type = knownArgumentType(i);
-        if (type != JSVAL_TYPE_UNKNOWN) {
-            if (type == JSVAL_TYPE_DOUBLE) {
-                if (!a->analysis.argEscapes(i))
-                    frame.ensureDouble(frame.getArg(i));
-            } else {
-                frame.learnType(frame.getArg(i), type, false);
-            }
+    if (cx->typeInferenceEnabled()) {
+        /* Convert integer arguments which were inferred as (int|double) to doubles. */
+        for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
+            uint32 slot = analyze::ArgSlot(i);
+            if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
+                frame.ensureDouble(frame.getArg(i));
         }
     }
 
     recompileCheckHelper();
 
     return Compile_Okay;
-}
-
-void
-mjit::Compiler::generateInlinePrologue()
-{
-    /*
-     * The types of locals in inlined frames are left unsynced even if known.
-     * (Note that we mark as uninlineable all scripts containing locals with
-     * uses before defs). We will treat these locals as synced while compiling
-     * the script, and need to actually do the syncing if we ever expand the
-     * inline frame (which happens on recompilation, and recompilation is the
-     * only way we will ever need to observe the known type of the local).
-     */
-    for (uint32 i = 0; i < script->nfixed; i++) {
-        JS_ASSERT(!a->analysis.localHasUseBeforeDef(i));
-        JSValueType type = knownLocalType(i);
-        if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE) {
-            FrameEntry *fe = frame.getLocal(i);
-            UnsyncedEntry entry;
-            PodZero(&entry);
-            entry.offset = frame.frameOffset(fe);
-            entry.knownType = true;
-            entry.u.type = type;
-            a->unsyncedEntries.append(entry);
-        }
-    }
 }
 
 CompileStatus
@@ -743,10 +699,10 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     size_t nNmapLive = loopEntries.length();
     for (size_t i = 0; i < script->length; i++) {
-        analyze::Bytecode *opinfo = a->analysis.maybeCode(i);
+        analyze::Bytecode *opinfo = analysis->maybeCode(i);
         if (opinfo && opinfo->safePoint) {
             /* loopEntries cover any safe points which are at loop heads. */
-            if (!cx->typeInferenceEnabled() || !a->liveness.getCode(i).loop)
+            if (!cx->typeInferenceEnabled() || !opinfo->loopHead)
                 nNmapLive++;
         }
     }
@@ -812,7 +768,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     size_t ix = 0;
     if (jit->nNmapPairs > 0) {
         for (size_t i = 0; i < script->length; i++) {
-            analyze::Bytecode *opinfo = a->analysis.maybeCode(i);
+            analyze::Bytecode *opinfo = analysis->maybeCode(i);
             if (opinfo && opinfo->safePoint) {
                 Label L = jumpMap[i];
                 JS_ASSERT(L.isValid());
@@ -1341,7 +1297,7 @@ mjit::Compiler::generateMethod()
             trap |= stubs::JSTRAP_SINGLESTEP;
         variadicRejoin = false;
 
-        analyze::Bytecode *opinfo = a->analysis.maybeCode(PC);
+        analyze::Bytecode *opinfo = analysis->maybeCode(PC);
 
         if (!opinfo) {
             if (op == JSOP_STOP)
@@ -1360,7 +1316,7 @@ mjit::Compiler::generateMethod()
         frame.setInTryBlock(opinfo->inTryBlock);
         if (opinfo->jumpTarget || trap) {
             if (fallthrough) {
-                fixDoubleTypes();
+                fixDoubleTypes(PC);
 
                 /*
                  * Watch for fallthrough to the head of a 'do while' loop.
@@ -1368,7 +1324,7 @@ mjit::Compiler::generateMethod()
                  * of the loop so sync, branch, and fix it up after the loop
                  * has been processed.
                  */
-                if (cx->typeInferenceEnabled() && a->liveness.getCode(PC).loop) {
+                if (cx->typeInferenceEnabled() && analysis->getCode(PC).loopHead) {
                     frame.syncAndForgetEverything();
                     Jump j = masm.jump();
                     if (!startLoop(PC, j, PC))
@@ -1382,7 +1338,7 @@ mjit::Compiler::generateMethod()
 
             if (!frame.discardForJoin(PC, opinfo->stackDepth))
                 return Compile_Error;
-            restoreAnalysisTypes(opinfo->stackDepth);
+            restoreAnalysisTypes();
             fallthrough = true;
 
             if (!cx->typeInferenceEnabled()) {
@@ -1482,24 +1438,10 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GOTO)
           BEGIN_CASE(JSOP_DEFAULT)
           {
-            jsbytecode *target = PC + GET_JUMP_OFFSET(PC);
-            fixDoubleTypes();
+            unsigned targetOffset = analyze::FollowBranch(script, PC - script->code);
+            jsbytecode *target = script->code + targetOffset;
 
-            /*
-             * Watch out for backward jumps linking 'continue' statements
-             * together. These are jumping to another GOTO at the head of the
-             * loop, which should be short circuited so we don't mistake this
-             * for an actual loop back edge. :XXX: could there be a trap at
-             * the target?
-             */
-            if (target < PC) {
-                if (JSOp(*target) == JSOP_GOTO) {
-                    target = target + GET_JUMP_OFFSET(target);
-                    JS_ASSERT(target >= PC);
-                } else if (JSOp(*target) == JSOP_GOTOX) {
-                    return Compile_Abort;
-                }
-            }
+            fixDoubleTypes(target);
 
             /*
              * Watch for gotos which are entering a 'for' or 'while' loop.
@@ -1507,8 +1449,8 @@ mjit::Compiler::generateMethod()
              * followed by the head of the loop.
              */
             jsbytecode *next = PC + JSOP_GOTO_LENGTH;
-            if (cx->typeInferenceEnabled() && a->analysis.maybeCode(next) &&
-                a->liveness.getCode(next).loop) {
+            if (cx->typeInferenceEnabled() && analysis->maybeCode(next) &&
+                analysis->getCode(next).loopHead) {
                 frame.syncAndForgetEverything();
                 Jump j = masm.jump();
                 if (!startLoop(next, j, target))
@@ -1526,7 +1468,6 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_IFEQ)
           BEGIN_CASE(JSOP_IFNE)
-            fixDoubleTypes();
             if (!jsop_ifneq(op, PC + GET_JUMP_OFFSET(PC)))
                 return Compile_Error;
           END_CASE(JSOP_IFNE)
@@ -1548,18 +1489,20 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_FORARG)
           {
+            updateVarType();
             uint32 arg = GET_SLOTNO(PC);
             iterNext();
-            frame.storeArg(arg, knownArgumentType(arg), true);
+            frame.storeArg(arg, true);
             frame.pop();
           }
           END_CASE(JSOP_FORARG)
 
           BEGIN_CASE(JSOP_FORLOCAL)
           {
+            updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             iterNext();
-            frame.storeLocal(slot, knownLocalType(slot), true, true);
+            frame.storeLocal(slot, true, true);
             frame.pop();
           }
           END_CASE(JSOP_FORLOCAL)
@@ -1588,14 +1531,14 @@ mjit::Compiler::generateMethod()
             /* Detect fusions. */
             jsbytecode *next = &PC[JSOP_GE_LENGTH];
             JSOp fused = JSOp(*next);
-            if ((fused != JSOP_IFEQ && fused != JSOP_IFNE) || a->analysis.jumpTarget(next))
+            if ((fused != JSOP_IFEQ && fused != JSOP_IFNE) || analysis->jumpTarget(next))
                 fused = JSOP_NOP;
 
             /* Get jump target, if any. */
             jsbytecode *target = NULL;
             if (fused != JSOP_NOP) {
                 target = next + GET_JUMP_OFFSET(next);
-                fixDoubleTypes();
+                fixDoubleTypes(target);
             }
 
             BoolStub stub = NULL;
@@ -1653,7 +1596,7 @@ mjit::Compiler::generateMethod()
                             result = !result;
 
                         if (result) {
-                            fixDoubleTypes();
+                            fixDoubleTypes(target);
                             if (!frame.syncForBranch(target, Uses(0)))
                                 return Compile_Error;
                             if (needRejoins(PC)) {
@@ -1958,7 +1901,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETHOLE)
           {
             jsbytecode *next = &PC[JSOP_SETELEM_LENGTH];
-            bool pop = (JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next));
+            bool pop = (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next));
             if (!jsop_setelem(pop))
                 return Compile_Error;
           }
@@ -2146,7 +2089,6 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_OR)
           BEGIN_CASE(JSOP_AND)
-            fixDoubleTypes();
             if (!jsop_andor(op, PC + GET_JUMP_OFFSET(PC)))
                 return Compile_Error;
           END_CASE(JSOP_AND)
@@ -2154,10 +2096,11 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TABLESWITCH)
             /*
              * Note: there is no need to syncForBranch for the various targets of
-             * switch statement.  The liveness analysis has already marked these as
-             * allocated with no registers in use.
+             * switch statement. The liveness analysis has already marked these as
+             * allocated with no registers in use. There is also no need to fix
+             * double types, as we don't track types of slots in scripts with
+             * switch statements (could be fixed).
              */
-            fixDoubleTypes();
 #if defined JS_CPU_ARM /* Need to implement jump(BaseIndex) for ARM */
             frame.syncAndKillEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
@@ -2176,7 +2119,6 @@ mjit::Compiler::generateMethod()
           END_CASE(JSOP_TABLESWITCH)
 
           BEGIN_CASE(JSOP_LOOKUPSWITCH)
-            fixDoubleTypes();
             frame.syncAndForgetEverything();
             masm.move(ImmPtr(PC), Registers::ArgReg1);
 
@@ -2198,7 +2140,6 @@ mjit::Compiler::generateMethod()
             jsop_stricteq(JSOP_STRICTEQ);
             // X cond
 
-            fixDoubleTypes();
             if (!jsop_ifneq(JSOP_IFNE, PC + GET_JUMP_OFFSET(PC)))
                 return Compile_Error;
           END_CASE(JSOP_CASE)
@@ -2239,7 +2180,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETARG)
           {
             uint32 arg = GET_SLOTNO(PC);
-            frame.pushArg(arg, knownArgumentType(arg));
+            frame.pushArg(arg);
           }
           END_CASE(JSOP_GETARG)
 
@@ -2249,7 +2190,7 @@ mjit::Compiler::generateMethod()
             if (JSObject *singleton = pushedSingleton(0))
                 frame.push(ObjectValue(*singleton));
             else
-                frame.pushArg(arg, knownArgumentType(arg));
+                frame.pushArg(arg);
             frame.push(UndefinedValue());
           }
           END_CASE(JSOP_GETARG)
@@ -2260,10 +2201,10 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETARG)
           {
-            uint32 arg = GET_SLOTNO(PC);
+            updateVarType();
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next);
-            frame.storeArg(arg, knownArgumentType(arg), pop);
+            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
+            frame.storeArg(GET_SLOTNO(PC), pop);
             if (pop) {
                 frame.pop();
                 PC += JSOP_SETARG_LENGTH + JSOP_POP_LENGTH;
@@ -2275,16 +2216,16 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GETLOCAL)
           {
             uint32 slot = GET_SLOTNO(PC);
-            frame.pushLocal(slot, knownPushedType(0));
+            frame.pushLocal(slot);
           }
           END_CASE(JSOP_GETLOCAL)
 
           BEGIN_CASE(JSOP_SETLOCAL)
           {
-            uint32 slot = GET_SLOTNO(PC);
+            updateVarType();
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next);
-            frame.storeLocal(slot, knownLocalType(slot), pop, true);
+            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
+            frame.storeLocal(GET_SLOTNO(PC), pop, true);
             if (pop) {
                 frame.pop();
                 PC += JSOP_SETLOCAL_LENGTH + JSOP_POP_LENGTH;
@@ -2295,8 +2236,9 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETLOCALPOP)
           {
+            updateVarType();
             uint32 slot = GET_SLOTNO(PC);
-            frame.storeLocal(slot, knownLocalType(slot), true, true);
+            frame.storeLocal(slot, true, true);
             frame.pop();
           }
           END_CASE(JSOP_SETLOCALPOP)
@@ -2345,7 +2287,7 @@ mjit::Compiler::generateMethod()
           {
             jsbytecode *next = &PC[JSOP_ARGINC_LENGTH];
             bool popped = false;
-            if (JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next))
+            if (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next))
                 popped = true;
             if (!jsop_arginc(op, GET_SLOTNO(PC), popped))
                 return Compile_Retry;
@@ -2363,7 +2305,7 @@ mjit::Compiler::generateMethod()
           {
             jsbytecode *next = &PC[JSOP_LOCALINC_LENGTH];
             bool popped = false;
-            if (JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next))
+            if (JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next))
                 popped = true;
             /* These manually advance the PC. */
             if (!jsop_localinc(op, GET_SLOTNO(PC), popped))
@@ -2400,7 +2342,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETPROP)
           {
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next);
+            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true, pop))
                 return Compile_Error;
           }
@@ -2410,7 +2352,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETMETHOD)
           {
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next);
+            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true, pop))
                 return Compile_Error;
           }
@@ -2530,6 +2472,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
           {
             REJOIN_SITE_ANY();
+            updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
             prepareStubCall(Uses(frame.frameSlots()));
@@ -2632,6 +2575,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
             REJOIN_SITE_ANY();
+            updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
             prepareStubCall(Uses(0));
@@ -2662,7 +2606,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETGNAME)
           {
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
-            bool pop = JSOp(*next) == JSOP_POP && !a->analysis.jumpTarget(next);
+            bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             jsop_setgname(script->getAtom(fullAtomIndex(PC)), true, pop);
           }
           END_CASE(JSOP_SETGNAME)
@@ -2741,7 +2685,7 @@ mjit::Compiler::generateMethod()
             if (JSObject *singleton = pushedSingleton(0))
                 frame.push(ObjectValue(*singleton));
             else
-                frame.pushLocal(slot, knownPushedType(0));
+                frame.pushLocal(slot);
             frame.push(UndefinedValue());
           }
           END_CASE(JSOP_CALLLOCAL)
@@ -2775,7 +2719,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_TRACE)
           BEGIN_CASE(JSOP_NOTRACE)
           {
-            if (a->analysis.jumpTarget(PC)) {
+            if (analysis->jumpTarget(PC)) {
                 interruptCheckHelper();
                 recompileCheckHelper();
             }
@@ -2833,7 +2777,7 @@ mjit::Compiler::generateMethod()
                 FrameEntry *fe = frame.getStack(opinfo->stackDepth - nuses + i);
                 if (fe) {
                     /* fe may be NULL for conditionally pushed entries, e.g. JSOP_AND */
-                    frame.extra(fe).types = script->types->pushed(oldPC - script->code, i);
+                    frame.extra(fe).types = analysis->pushedTypes(oldPC - script->code, i);
                 }
             }
         }
@@ -2983,7 +2927,7 @@ mjit::Compiler::loadReturnValue(Assembler *masm, FrameEntry *fe)
          // Load a return value from POPV or SETRVAL into the return registers,
          // otherwise return undefined.
         masm->loadValueAsComponents(UndefinedValue(), typeReg, dataReg);
-        if (a->analysis.usesReturnValue()) {
+        if (analysis->usesReturnValue()) {
             Jump rvalClear = masm->branchTest32(Assembler::Zero,
                                                FrameFlagsAddress(),
                                                Imm32(JSFRAME_HAS_RVAL));
@@ -3009,7 +2953,7 @@ mjit::Compiler::fixPrimitiveReturn(Assembler *masm, FrameEntry *fe)
     // We can just load |thisv| if either of the following is true:
     //  (1) There is no explicit return value, AND fp->rval is not used.
     //  (2) There is an explicit return value, and it's known to be primitive.
-    if ((!fe && !a->analysis.usesReturnValue()) ||
+    if ((!fe && !analysis->usesReturnValue()) ||
         (fe && fe->isTypeKnown() && fe->getKnownType() != JSVAL_TYPE_OBJECT))
     {
         if (ool)
@@ -3142,7 +3086,7 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
             (JSOp(*PC) == JSOP_STOP) ||
             (JSOp(*PC) == JSOP_RETURN &&
              (JSOp(*(PC + JSOP_RETURN_LENGTH)) == JSOP_STOP &&
-              !a->analysis.maybeCode(PC + JSOP_RETURN_LENGTH)));
+              !analysis->maybeCode(PC + JSOP_RETURN_LENGTH)));
         if (!endOfScript)
             a->returnJumps->append(masm.jump());
 
@@ -3249,7 +3193,7 @@ mjit::Compiler::recompileCheckHelper()
 {
     REJOIN_SITE(stubs::RecompileForInline);
 
-    if (!a->analysis.hasFunctionCalls() || !cx->typeInferenceEnabled() ||
+    if (!analysis->hasFunctionCalls() || !cx->typeInferenceEnabled() ||
         script->callCount() >= CALLS_BACKEDGES_BEFORE_INLINING) {
         return;
     }
@@ -3413,7 +3357,7 @@ mjit::Compiler::canUseApplyTricks()
     jsbytecode *nextpc = PC + JSOP_ARGUMENTS_LENGTH;
     return *nextpc == JSOP_FUNAPPLY &&
            IsLowerableFunCallOrApply(nextpc) &&
-           !a->analysis.jumpTarget(nextpc) &&
+           !analysis->jumpTarget(nextpc) &&
            !debugMode() && !a->parent;
 }
 
@@ -3956,18 +3900,18 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         if (frame.totalDepth() + VALUES_PER_STACK_FRAME + fun->script()->nslots >= stackLimit)
             return Compile_InlineAbort;
 
-        analyze::Script analysis;
-        analysis.analyze(cx, script);
-
-        if (analysis.OOM())
+        analyze::ScriptAnalysis *analysis = script->analysis(cx);
+        if (analysis && !analysis->failed() && !analysis->ranBytecode())
+            analysis->analyzeBytecode(cx);
+        if (!analysis || analysis->OOM())
             return Compile_Error;
-        if (analysis.failed())
+        if (analysis->failed())
             return Compile_Abort;
 
-        if (!analysis.inlineable(argc))
+        if (!analysis->inlineable(argc))
             return Compile_InlineAbort;
 
-        if (analysis.usesThisValue() && origThis->isNotType(JSVAL_TYPE_OBJECT))
+        if (analysis->usesThisValue() && origThis->isNotType(JSVAL_TYPE_OBJECT))
             return Compile_InlineAbort;
     }
 
@@ -4051,7 +3995,6 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         }
         a->temporaryParentRegs = temporaryParentRegs;
 
-        generateInlinePrologue();
         status = generateMethod();
         if (status != Compile_Okay) {
             popActiveFrame();
@@ -4257,11 +4200,12 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
 bool
 mjit::Compiler::emitStubCmpOp(BoolStub stub, AutoRejoinSite &autoRejoin, jsbytecode *target, JSOp fused)
 {
-    fixDoubleTypes();
-    if (target)
+    if (target) {
+        fixDoubleTypes(target);
         frame.syncAndKillEverything();
-    else
+    } else {
         frame.syncAndKill(Uses(2));
+    }
 
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stub);
@@ -4376,13 +4320,13 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
 
     frame.forgetMismatchedObject(top);
 
-    if (atom == cx->runtime->atomState.lengthAtom) {
+    if (JSOp(*PC) == JSOP_LENGTH) {
         /*
          * Check if this is an array we can make a loop invariant entry for.
          * This will fail for objects which are not definitely dense arrays.
          */
         if (loop && loop->generatingInvariants()) {
-            FrameEntry *fe = loop->invariantLength(top);
+            FrameEntry *fe = loop->invariantLength(top, frame.extra(top).types);
             if (fe) {
                 frame.pop();
                 frame.pushTemporary(fe);
@@ -5265,7 +5209,7 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
     // set. Rather, it relies on the up-front analysis statically determining
     // whether BINDNAME can be used, which reifies the scope chain at the
     // prologue.
-    JS_ASSERT(a->analysis.usesScopeChain());
+    JS_ASSERT(analysis->usesScopeChain());
 
     pic.shapeReg = frame.allocReg();
     pic.objReg = frame.allocReg();
@@ -5390,7 +5334,9 @@ mjit::Compiler::jsop_this()
     if (script->fun && !script->strictModeCode) {
         FrameEntry *thisFe = frame.peek(-1);
         if (!thisFe->isTypeKnown()) {
-            JSValueType type = knownThisType();
+            JSValueType type = cx->typeInferenceEnabled()
+                ? script->thisTypes()->getKnownTypeTag(cx)
+                : JSVAL_TYPE_UNKNOWN;
             if (type != JSVAL_TYPE_OBJECT) {
                 Jump notObj = frame.testObject(Assembler::NotEqual, thisFe);
                 stubcc.linkExit(notObj, Uses(1));
@@ -5416,7 +5362,7 @@ mjit::Compiler::jsop_gnameinc(JSOp op, VoidStubAtom stub, uint32 index)
 
 #if defined JS_MONOIC
     jsbytecode *next = &PC[JSOP_GNAMEINC_LENGTH];
-    bool pop = (JSOp(*next) == JSOP_POP) && !a->analysis.jumpTarget(next);
+    bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
     int amt = (op == JSOP_GNAMEINC || op == JSOP_INCGNAME) ? -1 : 1;
 
     if (pop || (op == JSOP_INCGNAME || op == JSOP_DECGNAME)) {
@@ -5507,7 +5453,7 @@ mjit::Compiler::jsop_nameinc(JSOp op, VoidStubAtom stub, uint32 index)
     JSAtom *atom = script->getAtom(index);
 #if defined JS_POLYIC
     jsbytecode *next = &PC[JSOP_NAMEINC_LENGTH];
-    bool pop = (JSOp(*next) == JSOP_POP) && !a->analysis.jumpTarget(next);
+    bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
     int amt = (op == JSOP_NAMEINC || op == JSOP_INCNAME) ? -1 : 1;
 
     if (pop || (op == JSOP_INCNAME || op == JSOP_DECNAME)) {
@@ -5584,7 +5530,7 @@ mjit::Compiler::jsop_propinc(JSOp op, VoidStubAtom stub, uint32 index)
     JSAtom *atom = script->getAtom(index);
 #if defined JS_POLYIC
     jsbytecode *next = &PC[JSOP_PROPINC_LENGTH];
-    bool pop = (JSOp(*next) == JSOP_POP) && !a->analysis.jumpTarget(next);
+    bool pop = (JSOp(*next) == JSOP_POP) && !analysis->jumpTarget(next);
     int amt = (op == JSOP_PROPINC || op == JSOP_INCPROP) ? -1 : 1;
 
     if (pop || (op == JSOP_INCPROP || op == JSOP_DECPROP)) {
@@ -5863,7 +5809,7 @@ mjit::Compiler::iterMore()
               ? GET_JUMP_OFFSET(target)
               : GET_JUMPX_OFFSET(target);
 
-    fixDoubleTypes();
+    fixDoubleTypes(target);
     if (!frame.syncForBranch(target, Uses(1)))
         return false;
 
@@ -6529,7 +6475,7 @@ mjit::Compiler::startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
         loop->clearLoopRegisters();
     }
 
-    LoopState *nloop = cx->new_<LoopState>(cx, script, this, &frame, &a->analysis, &a->liveness);
+    LoopState *nloop = cx->new_<LoopState>(cx, script, this, &frame);
     if (!nloop || !nloop->init(head, entry, entryTarget))
         return false;
 
@@ -6564,7 +6510,7 @@ mjit::Compiler::finishLoop(jsbytecode *head)
 
 #ifdef DEBUG
     if (IsJaegerSpewChannelActive(JSpew_Regalloc)) {
-        RegisterAllocation *alloc = a->liveness.getCode(head).allocation;
+        RegisterAllocation *alloc = analysis->getAllocation(head);
         JaegerSpew(JSpew_Regalloc, "loop allocation at %u:", head - script->code);
         frame.dumpAllocation(alloc);
     }
@@ -6599,7 +6545,7 @@ mjit::Compiler::finishLoop(jsbytecode *head)
         return false;
 
     PC = head;
-    if (!a->analysis.getCode(head).safePoint) {
+    if (!analysis->getCode(head).safePoint) {
         /*
          * Emit a stub into the OOL path which loads registers from a synced state
          * and jumps to the loop head, for rejoining from the interpreter.
@@ -6616,6 +6562,20 @@ mjit::Compiler::finishLoop(jsbytecode *head)
             entry.label = callSites[callSites.length() - 1].loopJumpLabel;
         } else {
             entry.label = stubcc.masm.label();
+        }
+
+        /*
+         * The interpreter may store integers in slots we assume are doubles,
+         * make sure state is consistent before joining. Note that we don't
+         * need any handling for other safe points the interpreter can enter
+         * from, i.e. from switch and try blocks, as we don't assume double
+         * variables are coherent in such cases.
+         */
+        for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
+            if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE) {
+                FrameEntry *fe = frame.getOrTrack(slot);
+                stubcc.masm.ensureInMemoryDouble(frame.addressOf(fe));
+            }
         }
 
         autoRejoinHead.oolRejoin(stubcc.masm.label());
@@ -6674,9 +6634,9 @@ mjit::Compiler::jumpAndTrace(Jump j, jsbytecode *target, Jump *slow, bool *tramp
     RegisterAllocation *lvtarget = NULL;
     bool consistent = true;
     if (cx->typeInferenceEnabled()) {
-        RegisterAllocation *&alloc = a->liveness.getCode(target).allocation;
+        RegisterAllocation *&alloc = analysis->getAllocation(target);
         if (!alloc) {
-            alloc = ArenaNew<RegisterAllocation>(a->liveness.pool, false);
+            alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, false);
             if (!alloc)
                 return false;
         }
@@ -6829,7 +6789,7 @@ mjit::Compiler::enterBlock(JSObject *obj)
     // Otherwise, we would simply be using a stale FpReg value.
     // Additionally, we check the interrupt flag to allow interrupting
     // deeply nested exception handling.
-    if (a->analysis.getCode(PC).exceptionEntry) {
+    if (analysis->getCode(PC).exceptionEntry) {
         masm.loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
         interruptCheckHelper();
     }
@@ -7071,68 +7031,96 @@ mjit::Compiler::jsop_forgname(JSAtom *atom)
  * Whether to ensure that locals/args known to be ints or doubles should be
  * preserved as doubles across control flow edges.
  */
-
 inline bool
-mjit::Compiler::preserveLocalType(unsigned i)
+mjit::Compiler::fixDoubleSlot(uint32 slot)
 {
-    return !a->analysis.localEscapes(i);
-}
+    if (!analysis->trackSlot(slot))
+        return false;
 
-inline bool
-mjit::Compiler::preserveArgType(unsigned i)
-{
     /*
      * Don't preserve double arguments in inline calls across branches, as we
      * can't mutate them when inlining. :XXX: could be more precise here.
      */
-    return !a->analysis.argEscapes(i) && !a->parent;
+    if (slot < analyze::LocalSlot(script, 0) && a->parent)
+        return false;
+
+    return true;
 }
 
 void
-mjit::Compiler::fixDoubleTypes()
+mjit::Compiler::fixDoubleTypes(jsbytecode *target)
 {
     if (!cx->typeInferenceEnabled())
         return;
 
-    for (uint32 i = 0; !a->parent && script->fun && i < script->fun->nargs; i++) {
-        JSValueType type = knownArgumentType(i);
-        if (type == JSVAL_TYPE_DOUBLE && preserveArgType(i)) {
-            FrameEntry *fe = frame.getArg(i);
+    /*
+     * Temporarily fix up the variable types to reflect state at the branch
+     * target. As described in prepareInferenceTypes, the target state consists
+     * of the current state plus any phi nodes introduced at the target.
+     */
+    Vector<SlotType, 8, CompilerAllocPolicy> restoreTypes(CompilerAllocPolicy(cx, *this));
+    const analyze::SlotValue *newv = analysis->newValues(target);
+    if (newv) {
+        while (newv->slot) {
+            if (newv->value.kind() != analyze::SSAValue::PHI ||
+                newv->value.phiOffset() != uint32(target - script->code)) {
+                newv++;
+                continue;
+            }
+            if (newv->slot < analyze::TotalSlots(script)) {
+                VarType &vt = a->varTypes[newv->slot];
+                restoreTypes.append(SlotType(newv->slot, vt));
+                vt.types = analysis->getValueTypes(newv->value);
+                vt.type = vt.types->getKnownTypeTag(cx);
+            }
+            newv++;
+        }
+    }
+
+    for (uint32 slot = analyze::ArgSlot(0);
+         slot < analyze::LocalSlot(script, script->nfixed);
+         slot++) {
+        if (!fixDoubleSlot(slot))
+            continue;
+        if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE) {
+            FrameEntry *fe = frame.getOrTrack(slot);
             if (!fe->isType(JSVAL_TYPE_DOUBLE))
                 frame.ensureDouble(fe);
         }
     }
 
-    for (uint32 i = 0; i < script->nfixed; i++) {
-        JSValueType type = knownLocalType(i);
-        if (type == JSVAL_TYPE_DOUBLE && preserveLocalType(i)) {
-            FrameEntry *fe = frame.getLocal(i);
-            if (!fe->isType(JSVAL_TYPE_DOUBLE))
-                frame.ensureDouble(fe);
-        }
+    for (unsigned i = 0; i < restoreTypes.length(); i++) {
+        const SlotType &rt = restoreTypes[i];
+        a->varTypes[rt.slot] = rt.vt;
     }
 }
 
 void
-mjit::Compiler::restoreAnalysisTypes(uint32 stackDepth)
+mjit::Compiler::restoreAnalysisTypes()
 {
     if (!cx->typeInferenceEnabled())
         return;
 
-    /* Restore known types of locals/args, for join points or after forgetting everything. */
-    for (uint32 i = 0; i < script->nfixed; i++) {
-        JSValueType type = knownLocalType(i);
-        if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || preserveLocalType(i))) {
-            FrameEntry *fe = frame.getLocal(i);
-            JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(type));
-            if (!fe->isTypeKnown())
-                frame.learnType(fe, type, false);
+    /* Update variable types for all new values at this bytecode. */
+    const analyze::SlotValue *newv = analysis->newValues(PC);
+    if (newv) {
+        while (newv->slot) {
+            if (newv->slot < analyze::TotalSlots(script)) {
+                VarType &vt = a->varTypes[newv->slot];
+                vt.types = analysis->getValueTypes(newv->value);
+                vt.type = vt.types->getKnownTypeTag(cx);
+            }
+            newv++;
         }
     }
-    for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
-        JSValueType type = knownArgumentType(i);
-        if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || preserveArgType(i))) {
-            FrameEntry *fe = frame.getArg(i);
+
+    /* Restore known types of locals/args. */
+    for (uint32 slot = analyze::ArgSlot(0);
+         slot < analyze::LocalSlot(script, script->nfixed);
+         slot++) {
+        JSValueType type = a->varTypes[slot].type;
+        if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || fixDoubleSlot(slot))) {
+            FrameEntry *fe = frame.getOrTrack(slot);
             JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(type));
             if (!fe->isTypeKnown())
                 frame.learnType(fe, type, false);
@@ -7150,33 +7138,51 @@ mjit::Compiler::watchGlobalReallocation()
     hasGlobalReallocation = true;
 }
 
-JSValueType
-mjit::Compiler::knownThisType()
+void
+mjit::Compiler::updateVarType()
 {
     if (!cx->typeInferenceEnabled())
-        return JSVAL_TYPE_UNKNOWN;
-    if (a->hasThisType)
-        return a->thisType;
-    a->hasThisType = true;
-    a->thisType = script->thisTypes()->getKnownTypeTag(cx);
-    return a->thisType;
-}
+        return;
 
-JSValueType
-mjit::Compiler::knownArgumentType(uint32 arg)
-{
-    if (!cx->typeInferenceEnabled())
-        return JSVAL_TYPE_UNKNOWN;
-    JS_ASSERT(script->fun && arg < script->fun->nargs);
-    return a->argumentTypes[arg];
-}
+    /*
+     * For any non-escaping variable written at the current opcode, update the
+     * associated type sets according to the written type, keeping the type set
+     * for each variable in sync with what the SSA analysis has determined
+     * (see prepareInferenceTypes).
+     */
 
-JSValueType
-mjit::Compiler::knownLocalType(uint32 local)
-{
-    if (!cx->typeInferenceEnabled() || local >= script->nfixed)
-        return JSVAL_TYPE_UNKNOWN;
-    return a->localTypes[local];
+    types::TypeSet *types = NULL;
+    switch (JSOp(*PC)) {
+      case JSOP_SETARG:
+      case JSOP_SETLOCAL:
+      case JSOP_SETLOCALPOP:
+      case JSOP_DEFLOCALFUN:
+      case JSOP_DEFLOCALFUN_FC:
+      case JSOP_INCARG:
+      case JSOP_DECARG:
+      case JSOP_ARGINC:
+      case JSOP_ARGDEC:
+      case JSOP_INCLOCAL:
+      case JSOP_DECLOCAL:
+      case JSOP_LOCALINC:
+      case JSOP_LOCALDEC:
+        types = pushedTypeSet(0);
+        break;
+      case JSOP_FORARG:
+      case JSOP_FORLOCAL:
+        types = pushedTypeSet(1);
+        break;
+      default:
+        JS_NOT_REACHED("Bad op");
+    }
+
+    uint32 slot = analyze::GetBytecodeSlot(script, PC);
+
+    if (analysis->trackSlot(slot)) {
+        VarType &vt = a->varTypes[slot];
+        vt.types = types;
+        vt.type = types->getKnownTypeTag(cx);
+    }
 }
 
 JSValueType
@@ -7184,7 +7190,7 @@ mjit::Compiler::knownPushedType(uint32 pushed)
 {
     if (!cx->typeInferenceEnabled())
         return JSVAL_TYPE_UNKNOWN;
-    types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
+    types::TypeSet *types = analysis->pushedTypes(PC, pushed);
     return types->getKnownTypeTag(cx);
 }
 
@@ -7199,22 +7205,8 @@ mjit::Compiler::mayPushUndefined(uint32 pushed)
      * If this returns false and undefined subsequently becomes a feasible
      * value pushed by the bytecode, recompilation will *NOT* be triggered.
      */
-    types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
+    types::TypeSet *types = analysis->pushedTypes(PC, pushed);
     return types->hasType(types::TYPE_UNDEFINED);
-}
-
-types::TypeSet *
-mjit::Compiler::argTypeSet(uint32 arg)
-{
-    return cx->typeInferenceEnabled() ? script->argTypes(arg) : NULL;
-}
-
-types::TypeSet *
-mjit::Compiler::localTypeSet(uint32 local)
-{
-    if (!cx->typeInferenceEnabled() || local >= script->nfixed)
-        return NULL;
-    return script->localTypes(local);
 }
 
 types::TypeSet *
@@ -7222,37 +7214,13 @@ mjit::Compiler::pushedTypeSet(uint32 pushed)
 {
     if (!cx->typeInferenceEnabled())
         return NULL;
-    return script->types->pushed(PC - script->code, pushed);
-}
-
-types::TypeSet *
-mjit::Compiler::getTypeSet(uint32 slot)
-{
-    if (!cx->typeInferenceEnabled())
-        return NULL;
-
-    if (slot == 0) /* callee */
-        return NULL;
-    if (slot == 1) /* this */
-        return script->thisTypes();
-    slot -= 2;
-
-    unsigned nargs = script->fun ? script->fun->nargs : 0;
-
-    if (slot < nargs)
-        return script->argTypes(slot);
-    slot -= nargs;
-
-    if (slot < script->nfixed)
-        return script->localTypes(slot);
-
-    return frame.extra(2 + nargs + slot).types;
+    return analysis->pushedTypes(PC, pushed);
 }
 
 bool
 mjit::Compiler::monitored(jsbytecode *pc)
 {
-    return cx->typeInferenceEnabled() && script->types->monitored(pc - script->code);
+    return cx->typeInferenceEnabled() && analysis->monitoredTypes(pc - script->code);
 }
 
 void
@@ -7267,7 +7235,7 @@ mjit::Compiler::pushedSingleton(unsigned pushed)
     if (!cx->typeInferenceEnabled())
         return NULL;
 
-    types::TypeSet *types = script->types->pushed(PC - script->code, pushed);
+    types::TypeSet *types = analysis->pushedTypes(PC, pushed);
     return types->getSingleton(cx);
 }
 

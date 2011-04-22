@@ -437,6 +437,18 @@ class Compiler : public BaseCompiler
         Label label;
     };
 
+    struct VarType {
+        JSValueType type;
+        types::TypeSet *types;
+    };
+
+    struct SlotType
+    {
+        uint32 slot;
+        VarType vt;
+        SlotType(uint32 slot, VarType vt) : slot(slot), vt(vt) {}
+    };
+
     JSScript *outerScript;
     bool isConstructing;
 
@@ -464,15 +476,12 @@ class Compiler : public BaseCompiler
         jsbytecode *parentPC;
         JSScript *script;
         uint32 inlineIndex;
-        analyze::Script analysis;
-        analyze::LifetimeScript liveness;
         Label *jumpMap;
-        bool hasThisType;
-        JSValueType thisType;
-        JSValueType *argumentTypes;
-        JSValueType *localTypes;
         uint32 depth;
         Vector<UnsyncedEntry> unsyncedEntries; // :XXX: handle OOM
+
+        /* Current types for non-escaping vars in the script. */
+        VarType *varTypes;
 
         /* State for managing return from inlined frames. */
         bool needReturnValue;
@@ -491,6 +500,7 @@ class Compiler : public BaseCompiler
     ActiveFrame *outer;
 
     JSScript *script;
+    analyze::ScriptAnalysis *analysis;
     jsbytecode *PC;
     bool variadicRejoin;  /* There is a variadic rejoin for PC. */
 
@@ -589,9 +599,6 @@ class Compiler : public BaseCompiler
     jsbytecode *inlinePC() { return PC; }
     uint32 inlineIndex() { return a->inlineIndex; }
 
-    types::TypeSet *getTypeSet(uint32 slot);
-    types::TypeSet *getTypeSet(const FrameEntry *fe) { return getTypeSet(frame.indexOfFe(fe)); }
-
     Assembler &getAssembler(bool ool) { return ool ? stubcc.masm : masm; }
 
     InvariantCodePatch *getInvariantPatch(unsigned index, bool call) {
@@ -609,23 +616,17 @@ class Compiler : public BaseCompiler
     CompileStatus finishThisUp(JITScript **jitp);
     CompileStatus pushActiveFrame(JSScript *script, uint32 argc);
     void popActiveFrame();
-    void generateInlinePrologue();
 
     /* Analysis helpers. */
     CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);
-    inline bool preserveLocalType(unsigned i);
-    inline bool preserveArgType(unsigned i);
-    void fixDoubleTypes();
-    void restoreAnalysisTypes(uint32 stackDepth);
+    inline bool fixDoubleSlot(uint32 slot);
+    void fixDoubleTypes(jsbytecode *target);
+    void restoreAnalysisTypes();
     void watchGlobalReallocation();
-    JSValueType knownThisType();
-    JSValueType knownArgumentType(uint32 arg);
-    JSValueType knownLocalType(uint32 local);
+    void updateVarType();
     JSValueType knownPushedType(uint32 pushed);
     bool arrayPrototypeHasIndexedProperty();
     bool mayPushUndefined(uint32 pushed);
-    types::TypeSet *argTypeSet(uint32 arg);
-    types::TypeSet *localTypeSet(uint32 local);
     types::TypeSet *pushedTypeSet(uint32 which);
     bool monitored(jsbytecode *pc);
     bool testSingletonProperty(JSObject *obj, jsid id);

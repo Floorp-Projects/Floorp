@@ -368,8 +368,8 @@ class FrameState
 
     // Pushes a copy of a slot (formal argument, local variable, or stack slot)
     // onto the operation stack.
-    void pushLocal(uint32 n, JSValueType knownType);
-    void pushArg(uint32 n, JSValueType knownType);
+    void pushLocal(uint32 n);
+    void pushArg(uint32 n);
     void pushCallee();
     void pushThis();
     void pushTemporary(FrameEntry *fe);
@@ -603,13 +603,10 @@ class FrameState
     void loadForReturn(FrameEntry *fe, RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
     void loadThisForReturn(RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
 
-    /*
-     * Stores the top stack slot back to a local or slot.  type indicates any known
-     * type for the local/slot.
-     */
-    void storeLocal(uint32 n, JSValueType type, bool popGuaranteed = false, bool fixedType = false);
-    void storeArg(uint32 n, JSValueType type, bool popGuaranteed = false);
-    void storeTop(FrameEntry *target, JSValueType type, bool popGuaranteed);
+    /* Stores the top stack slot back to a local or slot. */
+    void storeLocal(uint32 n, bool popGuaranteed = false, bool fixedType = false);
+    void storeArg(uint32 n, bool popGuaranteed = false);
+    void storeTop(FrameEntry *target, bool popGuaranteed);
 
     /*
      * Restores state from a slow path.
@@ -872,8 +869,7 @@ class FrameState
 
     void getUnsyncedEntries(uint32 *pdepth, Vector<UnsyncedEntry> *unsyncedEntries);
 
-    bool pushActiveFrame(JSScript *script, uint32 argc,
-                         analyze::Script *analysis, analyze::LifetimeScript *liveness);
+    bool pushActiveFrame(JSScript *script, uint32 argc);
     void popActiveFrame();
 
     void discardLocalRegisters();
@@ -1077,15 +1073,13 @@ class FrameState
 #if defined JS_NUNBOX32
         mutable ImmutableSync reifier;
 #endif
-
-        analyze::Script *analysis;
-        analyze::LifetimeScript *liveness;
     };
     ActiveFrame *a;
 
     /* State derived/copied from the active frame. :XXX: remove? */
 
     JSScript *script;
+    analyze::ScriptAnalysis *analysis;
 
     FrameEntry *entries;
     FrameEntry *callee_;

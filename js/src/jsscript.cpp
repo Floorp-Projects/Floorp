@@ -1502,7 +1502,7 @@ DestroyScript(JSContext *cx, JSScript *script)
     PurgeScriptFragments(&script->compartment->traceMonitor, script);
 #endif
 
-    JS_ASSERT(!script->types);
+    JS_ASSERT(!script->hasAnalysis());
 
     /* Migrate any type objects associated with this script to the compartment. */
     types::TypeObject *obj = script->typeObjects;

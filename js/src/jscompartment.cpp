@@ -131,7 +131,11 @@ JSCompartment::init(JSContext *cx)
 #ifdef JS_GCMETER
     memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
 #endif
+
+    activeAnalysis = activeInference = false;
     types.init(cx);
+
+    JS_InitArenaPool(&pool, "analysis", 4096, 8, NULL);
 
     if (!crossCompartmentWrappers.init())
         return false;
@@ -495,7 +499,7 @@ void
 JSCompartment::markTypes(JSTracer *trc)
 {
     /* Mark all scripts and type objects in the compartment. */ 
-    JS_ASSERT(types.inferenceDepth);
+    JS_ASSERT(activeAnalysis);
 
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
@@ -585,7 +589,7 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
 #endif
 
-    if (!types.inferenceDepth && types.inferenceEnabled) {
+    if (!activeAnalysis && types.inferenceEnabled) {
         for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
             JSScript *script = reinterpret_cast<JSScript *>(cursor);
             script->condenseTypes(cx);
@@ -598,12 +602,12 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
-        script->sweepTypes(cx);
+        script->sweepAnalysis(cx);
     }
 
-    if (!types.inferenceDepth) {
-        /* Reset the inference pool, releasing all intermediate type data. */
-        JS_FinishArenaPool(&types.pool);
+    if (!activeAnalysis) {
+        /* Reset the analysis pool, releasing all analysis and intermediate type data. */
+        JS_FinishArenaPool(&pool);
 
         /*
          * Destroy eval'ed scripts, now that any type inference information referring
