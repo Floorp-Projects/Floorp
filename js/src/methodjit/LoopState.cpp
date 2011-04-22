@@ -46,9 +46,8 @@ using namespace js::mjit;
 using namespace js::analyze;
 
 LoopState::LoopState(JSContext *cx, JSScript *script,
-                     mjit::Compiler *cc, FrameState *frame,
-                     Script *analysis, LifetimeScript *liveness)
-    : cx(cx), script(script), cc(*cc), frame(*frame), analysis(analysis), liveness(liveness),
+                     mjit::Compiler *cc, FrameState *frame)
+    : cx(cx), script(script), analysis(script->analysis(cx)), cc(*cc), frame(*frame),
       lifetime(NULL), alloc(NULL), loopRegs(0), skipAnalysis(false),
       loopJoins(CompilerAllocPolicy(cx, *cc)),
       loopPatches(CompilerAllocPolicy(cx, *cc)),
@@ -67,17 +66,12 @@ LoopState::LoopState(JSContext *cx, JSScript *script,
 bool
 LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
 {
-    this->lifetime = liveness->getCode(head).loop;
+    this->lifetime = analysis->getLoop(head);
     JS_ASSERT(lifetime &&
               lifetime->head == uint32(head - script->code) &&
               lifetime->entry == uint32(entryTarget - script->code));
 
     this->entry = entry;
-
-    if (!stack.analyze(liveness->pool, script, lifetime->head,
-                       lifetime->backedge - lifetime->head + 1, analysis)) {
-        return false;
-    }
 
     analyzeLoopTest();
     analyzeLoopIncrements();
@@ -109,10 +103,10 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
                    types::TypeIdString(modifiedProperties[i].id));
     }
 
-    RegisterAllocation *&alloc = liveness->getCode(head).allocation;
+    RegisterAllocation *&alloc = analysis->getAllocation(head);
     JS_ASSERT(!alloc);
 
-    alloc = ArenaNew<RegisterAllocation>(liveness->pool, true);
+    alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, true);
     if (!alloc)
         return false;
 
@@ -242,26 +236,9 @@ LoopState::clearLoopRegisters()
 bool
 LoopState::loopInvariantEntry(uint32 slot)
 {
-    unsigned nargs = script->fun ? script->fun->nargs : 0;
-
-    if (slot >= 2 + nargs + script->nfixed)
+    if (slot == analyze::CalleeSlot() || analysis->slotEscapes(slot))
         return false;
-
-    if (liveness->firstWrite(slot, lifetime) != uint32(-1))
-        return false;
-
-    if (slot == 0) /* callee */
-        return false;
-    if (slot == 1) /* this */
-        return true;
-    slot -= 2;
-
-    if (slot < nargs && !analysis->argEscapes(slot))
-        return true;
-    if (script->fun)
-        slot -= script->fun->nargs;
-
-    return !analysis->localEscapes(slot);
+    return analysis->liveness(slot).firstWrite(lifetime) == uint32(-1);
 }
 
 bool
@@ -394,7 +371,7 @@ LoopState::setLoopReg(AnyRegisterID reg, FrameEntry *fe)
          * so need to update the register state at that entry point so that the right
          * things get loaded when we enter the loop.
          */
-        RegisterAllocation *entry = liveness->getCode(lifetime->entry).allocation;
+        RegisterAllocation *entry = analysis->getAllocation(lifetime->entry);
         JS_ASSERT(entry && !entry->assigned(reg));
         entry->set(reg, slot, true);
     }
@@ -423,15 +400,11 @@ SafeSub(int32 one, int32 two, int32 *res)
 }
 
 bool
-LoopState::hoistArrayLengthCheck(const FrameEntry *obj, unsigned indexPopped)
+LoopState::hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes,
+                                 unsigned indexPopped)
 {
     if (skipAnalysis || script->failedBoundsCheck)
         return false;
-
-    /*
-     * Note: this should only be used when the object is known to be a dense
-     * array (if it is an object at all).
-     */
 
     obj = obj->backing();
 
@@ -449,7 +422,6 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, unsigned indexPopped)
      * but it actually can, we will probably recompile after the hoisted
      * bounds check fails.
      */
-    types::TypeSet *objTypes = cc.getTypeSet(obj);
     JS_ASSERT(objTypes && !objTypes->unknown());
     if (!growArrays.empty()) {
         unsigned count = objTypes->getObjectCount();
@@ -492,7 +464,7 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, unsigned indexPopped)
      * underflow the array. We currently only hoist bounds checks for loops
      * which walk arrays going forward.
      */
-    if (!liveness->nonDecreasing(index, lifetime)) {
+    if (!analysis->liveness(index).nonDecreasing(script, lifetime)) {
         JaegerSpew(JSpew_Analysis, "Index may decrease in future iterations\n");
         return false;
     }
@@ -509,21 +481,17 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, unsigned indexPopped)
     if (index == testLHS && testLessEqual) {
         uint32 rhs = testRHS;
 
-        if (rhs != UNASSIGNED) {
-            types::TypeSet *types = cc.getTypeSet(rhs);
-            if (!types) {
-                JaegerSpew(JSpew_Analysis, "Unknown type of branch test\n");
-                return false;
-            }
-            if (testLength) {
-                FrameEntry *rhsFE = frame.getOrTrack(rhs);
-                FrameEntry *lengthEntry = invariantLength(rhsFE);
-                if (!lengthEntry) {
-                    JaegerSpew(JSpew_Analysis, "Could not get invariant entry for length\n");
-                    return false;
-                }
-                rhs = frame.indexOfFe(lengthEntry);
-            }
+        if (testLength) {
+            FrameEntry *rhsFE = frame.getOrTrack(rhs);
+            FrameEntry *lengthEntry = invariantLength(rhsFE, NULL);
+
+            /*
+             * An entry for the length should have been constructed while
+             * processing the test.
+             */
+            JS_ASSERT(lengthEntry);
+
+            rhs = frame.indexOfFe(lengthEntry);
         }
 
         int32 constant;
@@ -612,7 +580,7 @@ LoopState::invariantSlots(const FrameEntry *obj)
 }
 
 FrameEntry *
-LoopState::invariantLength(const FrameEntry *obj)
+LoopState::invariantLength(const FrameEntry *obj, types::TypeSet *objTypes)
 {
     if (skipAnalysis || script->failedBoundsCheck)
         return NULL;
@@ -630,12 +598,13 @@ LoopState::invariantLength(const FrameEntry *obj)
         }
     }
 
+    if (!objTypes)
+        return NULL;
+
     if (!loopInvariantEntry(frame.indexOfFe(obj)))
         return NULL;
 
-    /* Make sure this is a dense array whose length fits in an int32. */
-    types::TypeSet *types = cc.getTypeSet(slot);
-    types::ObjectKind kind = types ? types->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
+    types::ObjectKind kind = objTypes->getKnownObjectKind(cx);
     if (kind != types::OBJECT_DENSE_ARRAY && kind != types::OBJECT_PACKED_ARRAY)
         return NULL;
 
@@ -644,14 +613,14 @@ LoopState::invariantLength(const FrameEntry *obj)
      * to the elements of any of the accessed arrays. This could invoke an
      * inline path which updates the length.
      */
-    for (unsigned i = 0; i < types->getObjectCount(); i++) {
-        types::TypeObject *object = types->getObject(i);
+    for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
+        types::TypeObject *object = objTypes->getObject(i);
         if (!object)
             continue;
         if (object->unknownProperties() || hasModifiedProperty(object, JSID_VOID))
             return NULL;
     }
-    types->addFreeze(cx);
+    objTypes->addFreeze(cx);
 
     uint32 which = frame.allocTemporary();
     if (which == uint32(-1))
@@ -676,9 +645,9 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm, Vector<Jump> *jump
 {
     /*
      * Restore all invariants in memory when entering the loop or after any
-     * scripted or C++ call, and check that all hoisted conditions. Care should
-     * be taken not to clobber the return register or callee-saved registers,
-     * which may still be live after some calls.
+     * scripted or C++ call, and check that all hoisted conditions still hold.
+     * Care should be taken not to clobber the return register or callee-saved
+     * registers, which may still be live after some calls.
      */
 
     Registers regs(Registers::TempRegs);
@@ -739,12 +708,9 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm, Vector<Jump> *jump
 
           case InvariantEntry::INVARIANT_SLOTS:
           case InvariantEntry::INVARIANT_LENGTH: {
-            /* Make sure this is an object before trying to access its slots or length. */
             uint32 array = entry.u.array.arraySlot;
-            if (cc.getTypeSet(array)->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT) {
-                Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(array));
-                jumps->append(notObject);
-            }
+            Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(array));
+            jumps->append(notObject);
             masm.loadPayload(frame.addressOf(array), T0);
 
             uint32 offset = (entry.kind == InvariantEntry::INVARIANT_SLOTS)
@@ -764,17 +730,6 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm, Vector<Jump> *jump
 
 /* Loop analysis methods. */
 
-/* :XXX: factor out into more common code. */
-static inline uint32 localSlot(JSScript *script, uint32 local) {
-    return 2 + (script->fun ? script->fun->nargs : 0) + local;
-}
-static inline uint32 argSlot(uint32 arg) {
-    return 2 + arg;
-}
-static inline uint32 thisSlot() {
-    return 1;
-}
-
 /* Whether pc is a loop test operand accessing a variable modified by the loop. */
 bool
 LoopState::loopVariableAccess(jsbytecode *pc)
@@ -785,48 +740,18 @@ LoopState::loopVariableAccess(jsbytecode *pc)
       case JSOP_DECLOCAL:
       case JSOP_LOCALINC:
       case JSOP_LOCALDEC:
-        if (analysis->localEscapes(GET_SLOTNO(pc)))
-            return false;
-        return liveness->firstWrite(localSlot(script, GET_SLOTNO(pc)), lifetime) != uint32(-1);
       case JSOP_GETARG:
       case JSOP_INCARG:
       case JSOP_DECARG:
       case JSOP_ARGINC:
-      case JSOP_ARGDEC:
-        if (analysis->argEscapes(GET_SLOTNO(pc)))
+      case JSOP_ARGDEC: {
+        uint32 slot = GetBytecodeSlot(script, pc);
+        if (analysis->slotEscapes(slot))
             return false;
-        return liveness->firstWrite(argSlot(GET_SLOTNO(pc)), lifetime) != uint32(-1);
+        return analysis->liveness(slot).firstWrite(lifetime) != uint32(-1);
+      }
       default:
         return false;
-    }
-}
-
-static inline int32
-GetBytecodeInteger(jsbytecode *pc)
-{
-    switch (JSOp(*pc)) {
-
-      case JSOP_ZERO:
-        return 0;
-
-      case JSOP_ONE:
-        return 1;
-
-      case JSOP_UINT16:
-        return (int32_t) GET_UINT16(pc);
-
-      case JSOP_UINT24:
-        return (int32_t) GET_UINT24(pc);
-
-      case JSOP_INT8:
-        return GET_INT8(pc);
-
-      case JSOP_INT32:
-        return GET_INT32(pc);
-
-      default:
-        JS_NOT_REACHED("Bad op");
-        return 0;
     }
 }
 
@@ -850,37 +775,36 @@ LoopState::getLoopTestAccess(jsbytecode *pc, uint32 *pslot, int32 *pconstant)
      */
 
     JSOp op = JSOp(*pc);
+    const JSCodeSpec *cs = &js_CodeSpec[op];
+
     switch (op) {
 
       case JSOP_GETLOCAL:
       case JSOP_INCLOCAL:
       case JSOP_DECLOCAL:
       case JSOP_LOCALINC:
-      case JSOP_LOCALDEC: {
-        uint32 local = GET_SLOTNO(pc);
-        if (analysis->localEscapes(local))
-            return false;
-        *pslot = localSlot(script, local);
-        if (op == JSOP_LOCALINC)
-            *pconstant = -1;
-        else if (op == JSOP_LOCALDEC)
-            *pconstant = 1;
-        return true;
-      }
-
+      case JSOP_LOCALDEC:
       case JSOP_GETARG:
       case JSOP_INCARG:
       case JSOP_DECARG:
       case JSOP_ARGINC:
       case JSOP_ARGDEC: {
-        uint32 arg = GET_SLOTNO(pc);
-        if (analysis->argEscapes(arg))
+        uint32 slot = GetBytecodeSlot(script, pc);
+        if (analysis->slotEscapes(slot))
             return false;
-        *pslot = argSlot(arg);
-        if (op == JSOP_ARGINC)
-            *pconstant = -1;
-        else if (op == JSOP_ARGDEC)
-            *pconstant = 1;
+
+        /* Only consider tests on known integers. */
+        types::TypeSet *types = analysis->pushedTypes(pc, 0);
+        if (types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+            return false;
+
+        *pslot = slot;
+        if (cs->format & JOF_POST) {
+            if (cs->format & JOF_INC)
+                *pconstant = -1;
+            else
+                *pconstant = 1;
+        }
         return true;
       }
 
@@ -913,10 +837,10 @@ LoopState::analyzeLoopTest()
     jsbytecode *backedge = script->code + lifetime->backedge;
     if (JSOp(*backedge) != JSOP_IFNE)
         return;
-    StackAnalysis::PoppedValue test = stack.popped(backedge, 0);
-    if (test.offset == StackAnalysis::UNKNOWN_PUSHED)
+    const SSAValue &test = analysis->poppedValue(backedge, 0);
+    if (test.kind() != SSAValue::PUSHED)
         return;
-    JSOp cmpop = JSOp(script->code[test.offset]);
+    JSOp cmpop = JSOp(script->code[test.pushedOffset()]);
     switch (cmpop) {
       case JSOP_GT:
       case JSOP_GE:
@@ -927,16 +851,14 @@ LoopState::analyzeLoopTest()
         return;
     }
 
-    StackAnalysis::PoppedValue poppedOne = stack.popped(test.offset, 1);
-    StackAnalysis::PoppedValue poppedTwo = stack.popped(test.offset, 0);
+    const SSAValue &poppedOne = analysis->poppedValue(test.pushedOffset(), 1);
+    const SSAValue &poppedTwo = analysis->poppedValue(test.pushedOffset(), 0);
 
-    if (poppedOne.offset == StackAnalysis::UNKNOWN_PUSHED ||
-        poppedTwo.offset == StackAnalysis::UNKNOWN_PUSHED) {
+    if (poppedOne.kind() != SSAValue::PUSHED || poppedTwo.kind() != SSAValue::PUSHED)
         return;
-    }
 
-    jsbytecode *one = script->code + poppedOne.offset;
-    jsbytecode *two = script->code + poppedTwo.offset;
+    jsbytecode *one = script->code + poppedOne.pushedOffset();
+    jsbytecode *two = script->code + poppedTwo.pushedOffset();
 
     /* Reverse the condition if the RHS is modified by the loop. */
     if (loopVariableAccess(two)) {
@@ -961,33 +883,24 @@ LoopState::analyzeLoopTest()
 
     if (JSOp(*two) == JSOP_LENGTH) {
         /* Handle 'this.length' or 'x.length' for loop invariant 'x'. */
-        StackAnalysis::PoppedValue array = stack.popped(two, 0);
-        if (array.offset == StackAnalysis::UNKNOWN_PUSHED)
+        const SSAValue &array = analysis->poppedValue(two, 0);
+        if (array.kind() != SSAValue::PUSHED)
             return;
-        jsbytecode *arraypc = script->code + array.offset;
+        jsbytecode *arraypc = script->code + array.pushedOffset();
         if (loopVariableAccess(arraypc))
             return;
         switch (JSOp(*arraypc)) {
-          case JSOP_GETLOCAL: {
-            uint32 local = GET_SLOTNO(arraypc);
-            if (analysis->localEscapes(local))
-                return;
-            rhs = localSlot(script, local);
+          case JSOP_GETLOCAL:
+          case JSOP_GETARG:
+          case JSOP_THIS: {
+            rhs = GetBytecodeSlot(script, arraypc);
             break;
           }
-          case JSOP_GETARG: {
-            uint32 arg = GET_SLOTNO(arraypc);
-            if (analysis->argEscapes(arg))
-                return;
-            rhs = argSlot(arg);
-            break;
-          }
-          case JSOP_THIS:
-            rhs = thisSlot();
-            break;
           default:
             return;
         }
+        if (!invariantLength(frame.getOrTrack(rhs), analysis->getValueTypes(array)))
+            return;
         rhsLength = true;
     } else {
         if (!getLoopTestAccess(two, &rhs, &rhsConstant))
@@ -996,16 +909,6 @@ LoopState::analyzeLoopTest()
 
     if (lhs == UNASSIGNED)
         return;
-
-    /* Only consider comparisons on known integers. */
-    types::TypeSet *lhsTypes = cc.getTypeSet(lhs);
-    if (!lhsTypes || lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
-        return;
-    if (rhs != UNASSIGNED && !rhsLength) {
-        types::TypeSet *rhsTypes = cc.getTypeSet(rhs);
-        if (!rhsTypes || rhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
-            return;
-    }
 
     int32 constant;
     if (!SafeSub(rhsConstant, lhsConstant, &constant))
@@ -1037,49 +940,26 @@ LoopState::analyzeLoopIncrements()
      * also handle the first basic block).
      */
 
-    unsigned nargs = script->fun ? script->fun->nargs : 0;
-    for (unsigned i = 0; i < nargs; i++) {
-        if (analysis->argEscapes(i))
+    for (uint32 slot = ArgSlot(0); slot < LocalSlot(script, script->nfixed); slot++) {
+        if (analysis->slotEscapes(slot))
             continue;
 
-        uint32 offset = liveness->onlyWrite(argSlot(i), lifetime);
+        uint32 offset = analysis->liveness(slot).onlyWrite(lifetime);
         if (offset == uint32(-1) || offset < lifetime->lastBlock)
             continue;
 
         JSOp op = JSOp(script->code[offset]);
-        if (op == JSOP_SETARG)
-            continue;
+        const JSCodeSpec *cs = &js_CodeSpec[op];
+        if (cs->format & (JOF_INC | JOF_DEC)) {
+            types::TypeSet *types = analysis->pushedTypes(offset);
+            if (types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
+                continue;
 
-        types::TypeSet *types = cc.getTypeSet(argSlot(i));
-        if (!types || types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
-            continue;
-
-        Increment inc;
-        inc.slot = argSlot(i);
-        inc.offset = offset;
-        increments.append(inc);
-    }
-
-    for (unsigned i = 0; i < script->nfixed; i++) {
-        if (analysis->localEscapes(i))
-            continue;
-
-        uint32 offset = liveness->onlyWrite(localSlot(script, i), lifetime);
-        if (offset == uint32(-1) || offset < lifetime->lastBlock)
-            continue;
-
-        JSOp op = JSOp(script->code[offset]);
-        if (op == JSOP_SETLOCAL || op == JSOP_SETLOCALPOP)
-            continue;
-
-        types::TypeSet *types = cc.getTypeSet(localSlot(script, i));
-        if (!types || types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
-            continue;
-
-        Increment inc;
-        inc.slot = localSlot(script, i);
-        inc.offset = offset;
-        increments.append(inc);
+            Increment inc;
+            inc.slot = slot;
+            inc.offset = offset;
+            increments.append(inc);
+        }
     }
 }
 
@@ -1104,8 +984,8 @@ LoopState::analyzeModset()
 
           case JSOP_SETHOLE:
           case JSOP_SETELEM: {
-            types::TypeSet *objTypes = poppedTypes(pc, 2);
-            types::TypeSet *elemTypes = poppedTypes(pc, 1);
+            types::TypeSet *objTypes = analysis->poppedTypes(pc, 2);
+            types::TypeSet *elemTypes = analysis->poppedTypes(pc, 1);
 
             /*
              * Mark the modset as unknown if the index might be non-integer,
@@ -1251,15 +1131,6 @@ LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32 slot)
     }
 }
 
-inline types::TypeSet *
-LoopState::poppedTypes(jsbytecode *pc, unsigned which)
-{
-    StackAnalysis::PoppedValue value = stack.popped(pc, which);
-    if (value.offset == StackAnalysis::UNKNOWN_PUSHED)
-        return NULL;
-    return script->types->pushed(value.offset, value.which);
-}
-
 bool
 LoopState::getEntryValue(uint32 offset, uint32 popped, uint32 *pslot, int32 *pconstant)
 {
@@ -1268,42 +1139,31 @@ LoopState::getEntryValue(uint32 offset, uint32 popped, uint32 *pslot, int32 *pco
      * expression 'slot + constant' with the same value as the stack value
      * and expressed in terms of the state at loop entry.
      */
-    StackAnalysis::PoppedValue value = stack.popped(offset, popped);
-    if (value.offset == StackAnalysis::UNKNOWN_PUSHED)
+    const SSAValue &value = analysis->poppedValue(offset, popped);
+    if (value.kind() != SSAValue::PUSHED)
         return false;
 
-    jsbytecode *pc = script->code + value.offset;
+    jsbytecode *pc = script->code + value.pushedOffset();
     JSOp op = (JSOp)*pc;
 
     switch (op) {
 
       case JSOP_GETLOCAL:
       case JSOP_LOCALINC:
-      case JSOP_INCLOCAL: {
-        uint32 local = GET_SLOTNO(pc);
-        if (analysis->localEscapes(local))
-            return false;
-        uint32 write = liveness->firstWrite(localSlot(script, local), lifetime);
-        if (write != uint32(-1) && write < value.offset) {
-            /* Variable has been modified since the start of the loop. */
-            return false;
-        }
-        *pslot = localSlot(script, local);
-        *pconstant = (op == JSOP_INCLOCAL) ? 1 : 0;
-        return true;
-      }
-
+      case JSOP_INCLOCAL:
       case JSOP_GETARG:
       case JSOP_ARGINC:
       case JSOP_INCARG: {
-        uint32 arg = GET_SLOTNO(pc);
-        if (analysis->argEscapes(arg))
+        uint32 slot = GetBytecodeSlot(script, pc);
+        if (analysis->slotEscapes(slot))
             return false;
-        uint32 write = liveness->firstWrite(argSlot(arg), lifetime);
-        if (write != uint32(-1) && write < value.offset)
+        uint32 write = analysis->liveness(slot).firstWrite(lifetime);
+        if (write != uint32(-1) && write < value.pushedOffset()) {
+            /* Variable has been modified since the start of the loop. */
             return false;
-        *pslot = argSlot(arg);
-        *pconstant = (op == JSOP_INCARG) ? 1 : 0;
+        }
+        *pslot = slot;
+        *pconstant = (op == JSOP_INCLOCAL || op == JSOP_INCARG) ? 1 : 0;
         return true;
       }
 

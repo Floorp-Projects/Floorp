@@ -381,8 +381,6 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
             if (!newscript->typeSetArgument(cx, i, &argTypes[1 + i]))
                 return false;
         }
-        if (!cx->compartment->types.checkPendingRecompiles(cx))
-            return false;
     } else {
         CallArgs args = CallArgsFromVp(argc, vp);
         if (!cx->typeMonitorCall(args, flags & JSFRAME_CONSTRUCTING))

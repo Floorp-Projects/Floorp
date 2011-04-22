@@ -143,49 +143,38 @@ TypeIdString(jsid id)
 struct AutoEnterTypeInference
 {
     JSContext *cx;
-#ifdef DEBUG
-    unsigned depth;
-#endif
+    bool oldActiveAnalysis;
+    bool oldActiveInference;
 
     AutoEnterTypeInference(JSContext *cx, bool compiling = false)
-        : cx(cx)
+        : cx(cx), oldActiveAnalysis(cx->compartment->activeAnalysis),
+          oldActiveInference(cx->compartment->activeInference)
     {
-#ifdef DEBUG
-        depth = cx->compartment->types.inferenceDepth;
-#endif
         JS_ASSERT_IF(!compiling, cx->compartment->types.inferenceEnabled);
-        cx->compartment->types.inferenceDepth++;
+        cx->compartment->activeAnalysis = true;
+        cx->compartment->activeInference = true;
     }
 
     ~AutoEnterTypeInference()
     {
+        cx->compartment->activeAnalysis = oldActiveAnalysis;
+        cx->compartment->activeInference = oldActiveInference;
+
         /*
-         * This should have been reset by checkPendingRecompiles.
-         * :FIXME: be more tolerant and clean up anyways, the caller may be
-         * propagating an OOM or other error.
+         * If there are no more type inference activations on the stack,
+         * process any triggered recompilations. Note that we should not be
+         * invoking any scripted code while type inference is running.
+         * :TODO: assert this.
          */
-        JS_ASSERT(cx->compartment->types.inferenceDepth == depth);
+        if (!cx->compartment->activeInference) {
+            TypeCompartment *types = &cx->compartment->types;
+            if (types->pendingNukeTypes)
+                types->nukeTypes(cx);
+            else if (types->pendingRecompiles)
+                types->processPendingRecompiles(cx);
+        }
     }
 };
-
-bool
-TypeCompartment::checkPendingRecompiles(JSContext *cx)
-{
-    JS_ASSERT(inferenceDepth);
-    if (--inferenceDepth != 0) {
-        /*
-         * There is still a type inference activation on the stack, wait for it to
-         * finish before handling any recompilations. Note that we should not be
-         * invoking any scripted code while the inference is running :TODO: assert this.
-         */
-        return true;
-    }
-    if (pendingNukeTypes)
-        return nukeTypes(cx);
-    else if (pendingRecompiles && !processPendingRecompiles(cx))
-        return false;
-    return true;
-}
 
 /*
  * Structure marking the currently compiled script, for constraints which can
@@ -345,14 +334,14 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jst
 
     js::types::TypeSet *types = obj->getProperty(this, id, true);
     if (!types || types->hasType(type))
-        return compartment->types.checkPendingRecompiles(this);
+        return true;
 
     js::types::InferSpew(js::types::ISpewOps, "externalType: property %s %s: %s",
                          obj->name(), js::types::TypeIdString(id),
                          js::types::TypeString(type));
     types->addType(this, type);
 
-    return compartment->types.checkPendingRecompiles(this);
+    return true;
 }
 
 inline bool
@@ -374,13 +363,13 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::Clo
 
     js::types::TypeSet *types = obj->getProperty(this, id, true);
     if (!types)
-        return compartment->types.checkPendingRecompiles(this);
+        return true;
 
     js::types::InferSpew(js::types::ISpewOps, "externalType: property %s %s",
                          obj->name(), js::types::TypeIdString(id));
     types->addTypeSet(this, set);
 
-    return compartment->types.checkPendingRecompiles(this);
+    return true;
 }
 
 inline js::types::TypeObject *
@@ -408,7 +397,7 @@ JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid seco
     firstTypes->addBaseSubset(this, obj, secondTypes);
     secondTypes->addBaseSubset(this, obj, firstTypes);
 
-    return compartment->types.checkPendingRecompiles(this);
+    return true;
 }
 
 inline bool
@@ -419,7 +408,7 @@ JSContext::addTypeFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags f
 
     js::types::AutoEnterTypeInference enter(this);
     obj->setFlags(this, flags);
-    return compartment->types.checkPendingRecompiles(this);
+    return true;
 }
 
 inline bool
@@ -456,7 +445,7 @@ JSContext::markTypePropertyConfigured(js::types::TypeObject *obj, jsid id)
     if (types)
         types->setOwnProperty(this, true);
 
-    return compartment->types.checkPendingRecompiles(this);
+    return true;
 }
 
 inline bool
@@ -480,7 +469,7 @@ JSContext::markGlobalReallocation(JSObject *obj)
         }
     }
 
-    return compartment->types.checkPendingRecompiles(this);
+    return true;
 }
 
 inline bool
@@ -491,7 +480,7 @@ JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
 
     js::types::AutoEnterTypeInference enter(this);
     obj->markUnknown(this);
-    return compartment->types.checkPendingRecompiles(this);
+    return true;
 }
 
 inline bool
@@ -543,39 +532,48 @@ inline js::types::TypeSet *
 JSScript::returnTypes()
 {
     JS_ASSERT(varTypes);
-    return &varTypes[0];
+    return &varTypes[js::analyze::CalleeSlot()];
 }
 
 inline js::types::TypeSet *
 JSScript::thisTypes()
 {
     JS_ASSERT(varTypes);
-    return &varTypes[1];
+    return &varTypes[js::analyze::ThisSlot()];
 }
+
+/*
+ * Note: for non-escaping arguments and locals, argTypes/localTypes reflect
+ * only the initial type of the variable (e.g. passed values for argTypes,
+ * or undefined for localTypes) and not types from subsequent assignments.
+ */
 
 inline js::types::TypeSet *
 JSScript::argTypes(unsigned i)
 {
     JS_ASSERT(varTypes && fun && i < fun->nargs);
-    return &varTypes[2 + i];
+    return &varTypes[js::analyze::ArgSlot(i)];
 }
 
 inline js::types::TypeSet *
 JSScript::localTypes(unsigned i)
 {
     JS_ASSERT(varTypes && i < nfixed);
-    if (fun)
-        i += fun->nargs;
-    return &varTypes[2 + i];
+    return &varTypes[js::analyze::LocalSlot(this, i)];
 }
 
 inline js::types::TypeSet *
 JSScript::upvarTypes(unsigned i)
 {
     JS_ASSERT(varTypes && i < bindings.countUpvars());
-    if (fun)
-        i += fun->nargs;
-    return &varTypes[2 + nfixed + i];
+    return &varTypes[js::analyze::LocalSlot(this, nfixed) + i];
+}
+
+inline js::types::TypeSet *
+JSScript::slotTypes(unsigned slot)
+{
+    JS_ASSERT(slot < js::analyze::TotalSlots(this));
+    return &varTypes[slot];
 }
 
 inline JSObject *
@@ -676,7 +674,8 @@ JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
         return false;
 
     /* Analyze the script regardless if -a was used. */
-    bool analyze = !types && cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) && !isUncachedEval;
+    bool analyze = !(analysis_ && analysis_->ranInference()) &&
+        cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) && !isUncachedEval;
 
     if (!thisTypes()->hasType(type) || analyze) {
         js::types::AutoEnterTypeInference enter(cx);
@@ -685,10 +684,14 @@ JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
                              id(), js::types::TypeString(type));
         thisTypes()->addType(cx, type);
 
-        if (analyze && !types)
-            js::types::AnalyzeScriptTypes(cx, this);
+        if (analyze && !(analysis_ && analysis_->ranInference())) {
+            js::analyze::ScriptAnalysis *analysis = this->analysis(cx);
+            if (!analysis)
+                return false;
+            analysis->analyzeTypes(cx);
+        }
 
-        return cx->compartment->types.checkPendingRecompiles(cx);
+        return true;
     }
 
     return true;
@@ -712,7 +715,7 @@ JSScript::typeSetThis(JSContext *cx, js::types::ClonedTypeSet *set)
     js::types::InferSpew(js::types::ISpewOps, "externalType: setThis #%u", id());
     thisTypes()->addTypeSet(cx, set);
 
-    return cx->compartment->types.checkPendingRecompiles(cx);
+    return true;
 }
 
 inline bool
@@ -732,9 +735,10 @@ JSScript::typeSetNewCalled(JSContext *cx)
     if (analyzed) {
         /* Regenerate types for the function. */
         js::types::AutoEnterTypeInference enter(cx);
-        js::types::AnalyzeScriptNew(cx, this);
-        if (!cx->compartment->types.checkPendingRecompiles(cx))
+        js::analyze::ScriptAnalysis *analysis = this->analysis(cx);
+        if (!analysis)
             return false;
+        analysis->analyzeTypesNew(cx);
     }
     return true;
 }
@@ -753,7 +757,7 @@ JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type)
                              id(), local, js::types::TypeString(type));
         localTypes(local)->addType(cx, type);
 
-        return compartment->types.checkPendingRecompiles(cx);
+        return true;
     }
     return true;
 }
@@ -778,7 +782,7 @@ JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *
     js::types::InferSpew(js::types::ISpewOps, "externalType: setLocal #%u %u", id(), local);
     localTypes(local)->addTypeSet(cx, set);
 
-    return compartment->types.checkPendingRecompiles(cx);
+    return true;
 }
 
 inline bool
@@ -795,7 +799,7 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type)
                              id(), arg, js::types::TypeString(type));
         argTypes(arg)->addType(cx, type);
 
-        return cx->compartment->types.checkPendingRecompiles(cx);
+        return true;
     }
     return true;
 }
@@ -820,7 +824,7 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet 
     js::types::InferSpew(js::types::ISpewOps, "externalType: setArg #%u %u", id(), arg);
     argTypes(arg)->addTypeSet(cx, set);
 
-    return cx->compartment->types.checkPendingRecompiles(cx);
+    return true;
 }
 
 inline bool
@@ -838,7 +842,7 @@ JSScript::typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value)
                              id(), upvar, js::types::TypeString(type));
         upvarTypes(upvar)->addType(cx, type);
 
-        return cx->compartment->types.checkPendingRecompiles(cx);
+        return true;
     }
     return true;
 }
@@ -963,7 +967,7 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
     }
 
     U **newValues = pool
-        ? ArenaArray<U*>(cx->compartment->types.pool, newCapacity)
+        ? ArenaArray<U*>(cx->compartment->pool, newCapacity)
         : (U **) js::OffTheBooks::malloc_(newCapacity * sizeof(U*));
     if (!newValues) {
         cx->compartment->types.setPendingNukeTypes(cx);
@@ -1010,7 +1014,7 @@ HashSetInsert(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
             return (U **) &values;
 
         values = pool
-            ? ArenaArray<U*>(cx->compartment->types.pool, SET_ARRAY_SIZE)
+            ? ArenaArray<U*>(cx->compartment->pool, SET_ARRAY_SIZE)
             : (U **) js::OffTheBooks::malloc_(SET_ARRAY_SIZE * sizeof(U*));
         if (!values) {
             values = (U **) oldData;
@@ -1119,7 +1123,7 @@ inline void
 TypeSet::addType(JSContext *cx, jstype type)
 {
     JS_ASSERT(type);
-    JS_ASSERT(cx->compartment->types.inferenceDepth);
+    JS_ASSERT(cx->compartment->activeInference);
 
     if (unknown())
         return;
@@ -1208,9 +1212,9 @@ TypeSet::getObject(unsigned i)
 inline TypeSet *
 TypeSet::make(JSContext *cx, const char *name)
 {
-    JS_ASSERT(cx->compartment->types.inferenceDepth);
+    JS_ASSERT(cx->compartment->activeInference);
 
-    TypeSet *res = ArenaNew<TypeSet>(cx->compartment->types.pool);
+    TypeSet *res = ArenaNew<TypeSet>(cx->compartment->pool);
     if (!res) {
         cx->compartment->types.setPendingNukeTypes(cx);
         return NULL;
@@ -1233,7 +1237,7 @@ TypeCallsite::TypeCallsite(JSContext *cx, JSScript *script, const jsbytecode *pc
       thisTypes(NULL), thisType(0), returnTypes(NULL)
 {
     /* Caller must check for failure. */
-    argumentTypes = ArenaArray<TypeSet*>(cx->compartment->types.pool, argumentCount);
+    argumentTypes = ArenaArray<TypeSet*>(cx->compartment->pool, argumentCount);
 }
 
 inline bool
@@ -1269,7 +1273,7 @@ TypeCallsite::compileAndGo()
 inline TypeSet *
 TypeObject::getProperty(JSContext *cx, jsid id, bool assign)
 {
-    JS_ASSERT(cx->compartment->types.inferenceDepth);
+    JS_ASSERT(cx->compartment->activeInference);
     JS_ASSERT(JSID_IS_VOID(id) || JSID_IS_EMPTY(id) || JSID_IS_STRING(id));
     JS_ASSERT_IF(JSID_IS_STRING(id), JSID_TO_STRING(id) != NULL);
     JS_ASSERT(!unknownProperties());
@@ -1304,45 +1308,8 @@ TypeObject::getProperty(unsigned i)
 }
 
 /////////////////////////////////////////////////////////////////////
-// TypeScript
+// TypeObject
 /////////////////////////////////////////////////////////////////////
-
-inline bool
-TypeScript::monitored(uint32 offset)
-{
-    JS_ASSERT(offset < script->length);
-    return 0x1 & (size_t) pushedArray[offset];
-}
-
-inline void
-TypeScript::setMonitored(uint32 offset)
-{
-    JS_ASSERT(script->compartment->types.inferenceDepth);
-    JS_ASSERT(offset < script->length);
-    pushedArray[offset] = (TypeSet *) (0x1 | (size_t) pushedArray[offset]);
-}
-
-inline TypeSet *
-TypeScript::pushed(uint32 offset)
-{
-    JS_ASSERT(offset < script->length);
-    return (TypeSet *) (~0x1 & (size_t) pushedArray[offset]);
-}
-
-inline TypeSet *
-TypeScript::pushed(uint32 offset, uint32 index)
-{
-    JS_ASSERT(offset < script->length);
-    JS_ASSERT(index < js::analyze::GetDefCount(script, offset));
-    return pushed(offset) + index;
-}
-
-inline void
-TypeScript::addType(JSContext *cx, uint32 offset, uint32 index, jstype type)
-{
-    TypeSet *types = pushed(offset, index);
-    types->addType(cx, type);
-}
 
 inline const char *
 TypeObject::name()
@@ -1419,5 +1386,13 @@ class AutoTypeRooter : private AutoGCRooter {
 };
 
 } } /* namespace js::types */
+
+inline void
+js::analyze::ScriptAnalysis::addPushedType(JSContext *cx, uint32 offset, uint32 which,
+                                           js::types::jstype type)
+{
+    js::types::TypeSet *pushed = pushedTypes(offset, which);
+    pushed->addType(cx, type);
+}
 
 #endif // jsinferinlines_h___
