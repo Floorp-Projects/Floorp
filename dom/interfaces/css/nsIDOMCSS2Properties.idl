@@ -50,12 +50,9 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(cd0e6cfe-7278-49b2-a1d6-c2b87b6eb7e0)]
+[scriptable, uuid(f28df617-ac8b-48e0-8094-c4642ab43940)]
 interface nsIDOMCSS2Properties : nsISupports
 {
-           attribute DOMString        azimuth;
-                                        // raises(DOMException) on setting
-
            attribute DOMString        background;
                                         // raises(DOMException) on setting
 
@@ -182,15 +179,6 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        counterReset;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        cue;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        cueAfter;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        cueBefore;
-                                        // raises(DOMException) on setting
-
            attribute DOMString        cursor;
                                         // raises(DOMException) on setting
 
@@ -198,9 +186,6 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        display;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        elevation;
                                         // raises(DOMException) on setting
 
            attribute DOMString        emptyCells;
@@ -335,52 +320,16 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        pageBreakInside;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        pause;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        pauseAfter;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        pauseBefore;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        pitch;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        pitchRange;
-                                        // raises(DOMException) on setting
-
            attribute DOMString        position;
                                         // raises(DOMException) on setting
 
            attribute DOMString        quotes;
                                         // raises(DOMException) on setting
 
-           attribute DOMString        richness;
-                                        // raises(DOMException) on setting
-
            attribute DOMString        right;
                                         // raises(DOMException) on setting
 
            attribute DOMString        size;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        speak;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        speakHeader;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        speakNumeral;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        speakPunctuation;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        speechRate;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        stress;
                                         // raises(DOMException) on setting
 
            attribute DOMString        tableLayout;
@@ -411,12 +360,6 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        visibility;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        voiceFamily;
-                                        // raises(DOMException) on setting
-
-           attribute DOMString        volume;
                                         // raises(DOMException) on setting
 
            attribute DOMString        whiteSpace;
