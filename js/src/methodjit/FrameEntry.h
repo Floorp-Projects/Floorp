@@ -118,7 +118,7 @@ class FrameEntry
 
 #if defined JS_NUNBOX32
     JSValueTag getKnownTag() const {
-        JS_ASSERT(v_.s.tag != JSVAL_TAG_CLEAR);
+        JS_ASSERT(backing()->v_.s.tag != JSVAL_TAG_CLEAR);
         return backing()->v_.s.tag;
     }
 #elif defined JS_PUNBOX64
