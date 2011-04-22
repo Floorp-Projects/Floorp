@@ -57,7 +57,7 @@ function test() {
     hideGroupItem(groupItem, function () {
       is(cw.UI.getActiveTab(), tabItem2, "tabItem2 is active");
       unhideGroupItem(groupItem, function () {
-        cw.UI.setActiveTab(tabItem);
+        cw.UI.setActive(tabItem);
         closeGroupItem(groupItem2, next);
       });
     });
@@ -71,7 +71,7 @@ function test() {
     hideGroupItem(groupItem, function () {
       is(cw.UI.getActiveTab(), tabItem2, "tabItem2 is active");
       unhideGroupItem(groupItem, function () {
-        cw.UI.setActiveTab(tabItem);
+        cw.UI.setActive(tabItem);
         tabItem2.close();
         next();
       });

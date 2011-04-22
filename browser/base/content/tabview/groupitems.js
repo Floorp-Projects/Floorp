@@ -708,12 +708,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let closeCenter = this.getBounds().center();
     // Find closest tab to make active
     let closestTabItem = UI.getClosestTab(closeCenter);
-    UI.setActiveTab(closestTabItem);
-
-    if (closestTabItem && closestTabItem.parent)
-      GroupItems.setActiveGroupItem(closestTabItem.parent);
-    else
-      GroupItems.setActiveGroupItem(null);
+    UI.setActive(closestTabItem);
   },
 
   // ----------
@@ -744,9 +739,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     this.droppable(true);
     this.setTrenches(this.bounds);
 
-    GroupItems.setActiveGroupItem(this);
-    if (this._activeTab)
-      UI.setActiveTab(this._activeTab);
+    UI.setActive(this);
 
     iQ(this.container).show().animate({
       "-moz-transform": "scale(1)",
@@ -1012,10 +1005,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           if (dontArrange)
             self._freezeItemSize(count);
 
-          if (self._children.length > 0 && self._activeTab) {
-            GroupItems.setActiveGroupItem(self);
-            UI.setActiveTab(self._activeTab);
-          }
+          if (self._children.length > 0 && self._activeTab)
+            UI.setActive(self);
         });
 
         item.setParent(this);
@@ -1027,11 +1018,11 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         if (iQ(item.container).hasClass("focus"))
           this.setActiveTab(item);
 
-        // if it matches the selected tab or no active tab and the browser 
+        // if it matches the selected tab or no active tab and the browser
         // tab is hidden, the active group item would be set.
-        if (item.tab == gBrowser.selectedTab || 
+        if (item.tab == gBrowser.selectedTab ||
             (!GroupItems.getActiveGroupItem() && !item.tab.hidden))
-          GroupItems.setActiveGroupItem(this);
+          UI.setActive(this);
       }
 
       if (!options.dontArrange)
@@ -1166,7 +1157,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         if (!Utils.isLeftClick(event))
           return;
 
-        GroupItems.setActiveGroupItem(self);
+        UI.setActive(self, { dontSetActiveTabInGroup: true });
         UI.goToTab(iQ(this).data("xulTab"));
       });
 
@@ -1523,8 +1514,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   expand: function GroupItem_expand() {
     var self = this;
     // ___ we're stacked, and command is held down so expand
-    GroupItems.setActiveGroupItem(self);
-    UI.setActiveTab(this.getTopChild());
+    UI.setActive(this.getTopChild());
     
     var startBounds = this.getChild(0).getBounds();
     var $tray = iQ("<div>").css({
@@ -1740,7 +1730,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       if (dropIndex !== false)
         options = {index: dropIndex};
       this.add(drag.info.$el, options);
-      GroupItems.setActiveGroupItem(this);
+      UI.setActive(this);
       dropIndex = false;
     };
     this.dropOptions.out = function GroupItem_dropOptions_out(event) {
@@ -1795,7 +1785,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // Function: newTab
   // Creates a new tab within this groupItem.
   newTab: function GroupItem_newTab(url) {
-    GroupItems.setActiveGroupItem(this);
+    UI.setActive(this, { dontSetActiveTabInGroup: true });
     let newTab = gBrowser.loadOneTab(url || "about:blank", {inBackground: true});
 
     // TabItems will have handled the new tab and added the tabItem property.
@@ -2170,7 +2160,7 @@ let GroupItems = {
       if (activeGroupId) {
         let activeGroupItem = this.groupItem(activeGroupId);
         if (activeGroupItem)
-          this.setActiveGroupItem(activeGroupItem);
+          UI.setActive(activeGroupItem);
       }
 
       this._inited = true;
@@ -2307,7 +2297,7 @@ let GroupItems = {
         if (targetGroupItem) {
           // add the new tabItem to the first group item
           targetGroupItem.add(tabItem);
-          this.setActiveGroupItem(targetGroupItem);
+          UI.setActive(targetGroupItem);
           return;
         } else {
           // find the first visible group item
@@ -2316,7 +2306,7 @@ let GroupItems = {
           });
           if (visibleGroupItems.length > 0) {
             visibleGroupItems[0].add(tabItem);
-            this.setActiveGroupItem(visibleGroupItems[0]);
+            UI.setActive(visibleGroupItems[0]);
             return;
           }
         }
@@ -2345,7 +2335,7 @@ let GroupItems = {
     newGroupItemBounds.inset(-40,-40);
     let newGroupItem = new GroupItem(tabItems, { bounds: newGroupItemBounds });
     newGroupItem.snap();
-    this.setActiveGroupItem(newGroupItem);
+    UI.setActive(newGroupItem);
   },
 
   // ----------
@@ -2405,11 +2395,7 @@ let GroupItems = {
   updateActiveGroupItemAndTabBar: function GroupItems_updateActiveGroupItemAndTabBar(tabItem) {
     Utils.assertThrow(tabItem && tabItem.isATabItem, "tabItem must be a TabItem");
 
-    let groupItem = tabItem.parent;
-    this.setActiveGroupItem(groupItem);
-    if (groupItem)
-      groupItem.setActiveTab(tabItem);
-
+    UI.setActive(tabItem);
     this._updateTabBar();
   },
 

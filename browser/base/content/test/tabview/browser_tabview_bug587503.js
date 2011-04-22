@@ -19,7 +19,7 @@ function onTabViewWindowLoaded(win) {
   let box = new contentWindow.Rect(100, 100, 400, 430);
   let group = new contentWindow.GroupItem([], { bounds: box });
   ok(group.isEmpty(), "This group is empty");
-  contentWindow.GroupItems.setActiveGroupItem(group);
+  contentWindow.UI.setActive(group);
   
   // Create a bunch of tabs in the group
   let tabs = [];
@@ -167,12 +167,12 @@ function simulateSlowDragDrop(srcElement, offsetX, offsetY, contentWindow, time)
 }
 
 function checkDropIndexAndDropSpace(item, group, offsetX, offsetY, contentWindow, callback, time) {
-  contentWindow.UI.setActiveTab(item);
+  contentWindow.UI.setActive(item);
   let dropSpaceActiveValues = [];
   let recordDropSpaceValue = function() {
     dropSpaceActiveValues.push(group._dropSpaceActive);
   };
-//  contentWindow.iQ(item.container).css({border: 'red 1px solid'});
+
   let onDrop = function() {
     item.container.removeEventListener('dragover', recordDropSpaceValue, false);
     item.container.removeEventListener('drop', onDrop, false);

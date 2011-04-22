@@ -9,7 +9,7 @@ function test() {
     let bounds = new cw.Rect(20, 20, 200, 200);
     let groupItem = new cw.GroupItem([], {bounds: bounds, immediately: true});
 
-    cw.GroupItems.setActiveGroupItem(groupItem);
+    cw.UI.setActive(groupItem);
     gBrowser.loadOneTab('http://mochi.test:8888/', {inBackground: true});
     gBrowser.loadOneTab('http://mochi.test:8888/', {inBackground: true});
 
