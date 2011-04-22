@@ -587,7 +587,7 @@ nsMediaList::SetText(const nsAString& aMediaText)
     htmlMode = !!node;
   }
 
-  return parser.ParseMediaList(nsString(aMediaText), nsnull, 0,
+  return parser.ParseMediaList(aMediaText, nsnull, 0,
                                this, htmlMode);
 }
 
