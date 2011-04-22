@@ -70,23 +70,6 @@ ReportAtomNotDefined(JSContext *cx, JSAtom *atom)
         js_ReportIsNotDefined(cx, printable.ptr());
 }
 
-// Clean up a frame and return.
-static inline void
-InlineReturn(VMFrame &f)
-{
-    JSContext *cx = f.cx;
-    JSStackFrame *fp = f.regs.fp;
-
-    JS_ASSERT(f.fp() != f.entryfp);
-
-    JS_ASSERT(!js_IsActiveWithOrBlock(cx, &fp->scopeChain(), 0));
-
-    Value *newsp = fp->actualArgs() - 1;
-    newsp[-1] = fp->returnValue();
-    cx->stack().popInlineFrame(cx, fp->prev(), newsp);
-}
-
-
 #define NATIVE_SET(cx,obj,shape,entry,strict,vp)                              \
     JS_BEGIN_MACRO                                                            \
         if (shape->hasDefaultSetter() &&                                      \

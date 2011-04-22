@@ -1693,16 +1693,3 @@ FrameState::maybeUnpinReg(MaybeRegisterID reg)
         unpinReg(reg.reg());
 }
 
-void
-FrameState::forgetConstant(FrameEntry *fe)
-{
-    JS_ASSERT(fe->isConstant());
-    RegisterID typeReg = allocReg();
-    RegisterID dataReg = allocReg();
-    masm.loadValueAsComponents(fe->getValue(), typeReg, dataReg);
-    regstate[typeReg].associate(fe, RematInfo::TYPE);
-    regstate[dataReg].associate(fe, RematInfo::DATA);
-    fe->type.setRegister(typeReg);
-    fe->data.setRegister(dataReg);
-}
-
