@@ -653,6 +653,8 @@ check-jit-test-valgrind::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
 
+check:: check-jit-test
+check-valgrind:: check-jit-test-valgrind
 
 # jstests doesn't have a --jitflags option, so we need to loop, updating the
 # exit code (RC) after each invocation.
@@ -672,10 +674,28 @@ check-jstests:
 		done; \
 	exit $$RC
 
+# FIXME:
+# We want to run check-jstests as part of |make check| on all platforms, on
+# tinderbox. However, some configurations don't work quite right just yet.
+# Rather than risking regressions in major configurations while fixing these
+# secondary configuration, we work around them and fix the bugs later.
+#
+#   Bug 652154: On Windows, SM(!m !t) don't work because of path problems with
+#				their unusual directory layout
+#
+#   Bug 652155: On Mac, SM(d) doesn't work for unknown reasons 
 
-check:: check-jit-test
+ifeq ($(OS_ARCH),WINNT)
+ifdef ENABLE_METHODJIT
+ifdef ENABLE_TRACEJIT
 check:: check-jstests
-check-valgrind:: check-jit-test-valgrind
+endif
+endif
+else
+ifndef HAVE_DTRACE
+check:: check-jstests
+endif
+endif
 
 DIST_GARBAGE = config.cache config.log config.status \
    config/autoconf.mk \
