@@ -3630,6 +3630,85 @@ struct TransitionPropData {
   PRUint32 num;
 };
 
+static PRUint32
+CountTransitionProps(const TransitionPropInfo* aInfo,
+                     TransitionPropData* aData,
+                     size_t aLength,
+                     nsStyleDisplay* aDisplay,
+                     const nsStyleDisplay* aParentDisplay,
+                     const nsRuleData* aRuleData,
+                     PRBool& aCanStoreInRuleTree)
+{
+  // The four transition properties or eight animation properties are
+  // stored in nsCSSDisplay in a single array for all properties.  The
+  // number of transitions is equal to the number of items in the
+  // longest property's value.  Properties that have fewer values than
+  // the longest are filled in by repeating the list.  However, this
+  // repetition does not extend the computed value of that particular
+  // property (for purposes of inheritance, or, in our code, for when
+  // other properties are overridden by a more specific rule).
+
+  // But actually, since the spec isn't clear yet, we'll fully compute
+  // all of them (so we can switch easily later), but only care about
+  // the ones up to the number of items for 'transition-property', per
+  // http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html .
+
+  // Transitions are difficult to handle correctly because of this.  For
+  // example, we need to handle scenarios such as:
+  //  * a more general rule specifies transition-property: a, b, c;
+  //  * a more specific rule overrides as transition-property: d;
+  //
+  // If only the general rule applied, we would fill in the extra
+  // properties (duration, delay, etc) with initial values to create 3
+  // fully-specified transitions.  But when the more specific rule
+  // applies, we should only create a single transition.  In order to do
+  // this we need to remember which properties were explicitly specified
+  // and which ones were just filled in with initial values to get a
+  // fully-specified transition, which we do by remembering the number
+  // of values for each property.
+
+  PRUint32 numTransitions = 0;
+  for (size_t i = 0; i < aLength; ++i) {
+    const TransitionPropInfo& info = aInfo[i];
+    TransitionPropData& data = aData[i];
+
+    // cache whether any of the properties are specified as 'inherit' so
+    // we can use it below
+
+    const nsCSSValue& value = *aRuleData->ValueFor(info.property);
+    data.unit = value.GetUnit();
+    data.list = (value.GetUnit() == eCSSUnit_List ||
+                 value.GetUnit() == eCSSUnit_ListDep)
+                  ? value.GetListValue() : nsnull;
+
+    // General algorithm to determine how many total transitions we need
+    // to build.  For each property:
+    //  - if there is no value specified in for the property in
+    //    displayData, use the values from the start struct, but only if
+    //    they were explicitly specified
+    //  - if there is a value specified for the property in displayData:
+    //    - if the value is 'inherit', count the number of values for
+    //      that property are specified by the parent, but only those
+    //      that were explicitly specified
+    //    - otherwise, count the number of values specified in displayData
+
+
+    // calculate number of elements
+    if (data.unit == eCSSUnit_Inherit) {
+      data.num = aParentDisplay->*(info.sdCount);
+      aCanStoreInRuleTree = PR_FALSE;
+    } else if (data.list) {
+      data.num = ListLength(data.list);
+    } else {
+      data.num = aDisplay->*(info.sdCount);
+    }
+    if (data.num > numTransitions)
+      numTransitions = data.num;
+  }
+
+  return numTransitions;
+}
+
 const void*
 nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                const nsRuleData* aRuleData,
@@ -3652,73 +3731,11 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
                                       for (PRUint32 var_ = 0; var_ < 4; ++var_)
 
   // CSS Transitions
-
-  // The four transition properties are stored in nsCSSDisplay in a
-  // single array for all properties.  The number of transitions is
-  // equal to the number of items in the longest property's value.
-  // Properties that have fewer values than the longest are filled in by
-  // repeating the list.  However, this repetition does not extend the
-  // computed value of that particular property (for purposes of
-  // inheritance, or, in our code, for when other properties are
-  // overridden by a more specific rule).
-
-  // But actually, since the spec isn't clear yet, we'll fully compute
-  // all of them (so we can switch easily later), but only care about
-  // the ones up to the number of items for 'transition-property', per
-  // http://lists.w3.org/Archives/Public/www-style/2009Aug/0109.html .
-
-  // Transitions are difficult to handle correctly because of this.  For
-  // example, we need to handle scenarios such as:
-  //  * a more general rule specifies transition-property: a, b, c;
-  //  * a more specific rule overrides as transition-property: d;
-  //
-  // If only the general rule applied, we would fill in the extra
-  // properties (duration, delay, etc) with initial values to create 3
-  // fully-specified transitions.  But when the more specific rule
-  // applies, we should only create a single transition.  In order to do
-  // this we need to remember which properties were explicitly specified
-  // and which ones were just filled in with initial values to get a
-  // fully-specified transition, which we do by remembering the number
-  // of values for each property.
-
-  PRUint32 numTransitions = 0;
-  FOR_ALL_TRANSITION_PROPS(p) {
-    const TransitionPropInfo& i = transitionPropInfo[p];
-    TransitionPropData& d = transitionPropData[p];
-
-    // cache whether any of the properties are specified as 'inherit' so
-    // we can use it below
-
-    const nsCSSValue& value = *aRuleData->ValueFor(i.property);
-    d.unit = value.GetUnit();
-    d.list = (value.GetUnit() == eCSSUnit_List ||
-              value.GetUnit() == eCSSUnit_ListDep)
-      ? value.GetListValue() : nsnull;
-
-    // General algorithm to determine how many total transitions we need
-    // to build.  For each property:
-    //  - if there is no value specified in for the property in
-    //    displayData, use the values from the start struct, but only if
-    //    they were explicitly specified
-    //  - if there is a value specified for the property in displayData:
-    //    - if the value is 'inherit', count the number of values for
-    //      that property are specified by the parent, but only those
-    //      that were explicitly specified
-    //    - otherwise, count the number of values specified in displayData
-
-
-    // calculate number of elements
-    if (d.unit == eCSSUnit_Inherit) {
-      d.num = parentDisplay->*(i.sdCount);
-      canStoreInRuleTree = PR_FALSE;
-    } else if (d.list) {
-      d.num = ListLength(d.list);
-    } else {
-      d.num = display->*(i.sdCount);
-    }
-    if (d.num > numTransitions)
-      numTransitions = d.num;
-  }
+  PRUint32 numTransitions =
+    CountTransitionProps(transitionPropInfo, transitionPropData,
+                         NS_ARRAY_LENGTH(transitionPropData),
+                         display, parentDisplay, aRuleData,
+                         canStoreInRuleTree);
 
   if (!display->mTransitions.SetLength(numTransitions)) {
     NS_WARNING("failed to allocate transitions array");
@@ -3913,46 +3930,13 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
 #define FOR_ALL_ANIMATION_PROPS(var_) \
     for (PRUint32 var_ = 0; var_ < 8; ++var_)
 
-  // CSS Animations.  See transitions, above.
+  // CSS Animations.
 
-  PRUint32 numAnimations = 0;
-  FOR_ALL_ANIMATION_PROPS(p) {
-    const TransitionPropInfo& i = animationPropInfo[p];
-    TransitionPropData& d = animationPropData[p];
-
-    // cache whether any of the properties are specified as 'inherit' so
-    // we can use it below
-
-    const nsCSSValue& value = *aRuleData->ValueFor(i.property);
-    d.unit = value.GetUnit();
-    d.list = (value.GetUnit() == eCSSUnit_List ||
-              value.GetUnit() == eCSSUnit_ListDep)
-      ? value.GetListValue() : nsnull;
-
-    // General algorithm to determine how many total animations we need
-    // to build.  For each property:
-    //  - if there is no value specified in for the property in
-    //    displayData, use the values from the start struct, but only if
-    //    they were explicitly specified
-    //  - if there is a value specified for the property in displayData:
-    //    - if the value is 'inherit', count the number of values for
-    //      that property are specified by the parent, but only those
-    //      that were explicitly specified
-    //    - otherwise, count the number of values specified in displayData
-
-
-    // calculate number of elements
-    if (d.unit == eCSSUnit_Inherit) {
-      d.num = parentDisplay->*(i.sdCount);
-      canStoreInRuleTree = PR_FALSE;
-    } else if (d.list) {
-      d.num = ListLength(d.list);
-    } else {
-      d.num = display->*(i.sdCount);
-    }
-    if (d.num > numAnimations)
-      numAnimations = d.num;
-  }
+  PRUint32 numAnimations =
+    CountTransitionProps(animationPropInfo, animationPropData,
+                         NS_ARRAY_LENGTH(animationPropData),
+                         display, parentDisplay, aRuleData,
+                         canStoreInRuleTree);
 
   if (!display->mAnimations.SetLength(numAnimations)) {
     NS_WARNING("failed to allocate animations array");
