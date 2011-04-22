@@ -888,7 +888,7 @@ MediaRule::UseForPresentation(nsPresContext* aPresContext,
                                    nsMediaQueryResultCacheKey& aKey)
 {
   if (mMedia) {
-    return mMedia->Matches(aPresContext, aKey);
+    return mMedia->Matches(aPresContext, &aKey);
   }
   return PR_TRUE;
 }
@@ -1895,7 +1895,6 @@ NS_IMETHODIMP
 nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
 {
   nsCSSParser parser;
-  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   nsTArray<float> newSelectors;
   // FIXME: pass filename and line number
@@ -2059,7 +2058,6 @@ nsCSSKeyframesRule::InsertRule(const nsAString& aRule)
   // which also turns out to match WebKit:
   // http://lists.w3.org/Archives/Public/www-style/2011Apr/0034.html
   nsCSSParser parser;
-  NS_ENSURE_TRUE(parser, NS_OK);
 
   // FIXME: pass filename and line number
   nsRefPtr<nsCSSKeyframeRule> rule =
@@ -2078,7 +2076,6 @@ PRUint32
 nsCSSKeyframesRule::FindRuleIndexForKey(const nsAString& aKey)
 {
   nsCSSParser parser;
-  NS_ENSURE_TRUE(parser, RULE_NOT_FOUND);
 
   nsTArray<float> keys;
   // FIXME: pass filename and line number

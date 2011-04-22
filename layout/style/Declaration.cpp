@@ -483,14 +483,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
       AppendValueToString(eCSSProperty_background_color, aValue);
       break;
     }
-    case eCSSProperty_cue: {
-      if (AppendValueToString(eCSSProperty_cue_before, aValue)) {
-        aValue.Append(PRUnichar(' '));
-        if (!AppendValueToString(eCSSProperty_cue_after, aValue))
-          aValue.Truncate();
-      }
-      break;
-    }
     case eCSSProperty_font: {
       // systemFont might not be present; the others are guaranteed to be
       // based on the shorthand check at the beginning of the function
@@ -586,14 +578,6 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         *data->ValueFor(eCSSProperty_overflow_y);
       if (xValue == yValue)
         xValue.AppendToString(eCSSProperty_overflow_x, aValue);
-      break;
-    }
-    case eCSSProperty_pause: {
-      if (AppendValueToString(eCSSProperty_pause_before, aValue)) {
-        aValue.Append(PRUnichar(' '));
-        if (!AppendValueToString(eCSSProperty_pause_after, aValue))
-          aValue.Truncate();
-      }
       break;
     }
     case eCSSProperty_transition: {
