@@ -20,7 +20,7 @@ function onTabViewWindowLoaded() {
   is(contentWindow.GroupItems.groupItems.length, 1, "There is one group item on startup");
   originalGroupItem = contentWindow.GroupItems.groupItems[0];
   is(originalGroupItem.getChildren().length, 1, "There should be one Tab Item in that group.");
-  contentWindow.GroupItems.setActiveGroupItem(originalGroupItem);
+  contentWindow.UI.setActive(originalGroupItem);
 
   [originalTab] = gBrowser.visibleTabs;
 
@@ -104,7 +104,7 @@ function testGroupItemWithTabItem(contentWindow) {
       // visibility of tabview
       let tabItems = contentWindow.TabItems.getItems();
       ok(tabItems[0], "A tab item exists");
-      contentWindow.UI.setActiveTab(tabItems[0]);
+      contentWindow.UI.setActive(tabItems[0]);
 
       TabView.toggle();
     });

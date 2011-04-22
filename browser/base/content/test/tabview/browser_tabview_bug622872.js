@@ -30,7 +30,7 @@ function part1(win) {
   ok(!originalGroup.getChildren().some(function(child) child == newTabItem),"The new tab was orphaned");
   newTabItem.pushAway();
   // activate this tab item
-  contentWindow.UI.setActiveTab(newTabItem);
+  contentWindow.UI.setActive(newTabItem);
 
   // PART 2: close this orphan tab (newTab)
   let part2 = function part2() {

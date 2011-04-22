@@ -24,7 +24,7 @@ function onTabViewWindowLoaded() {
   is(contentWindow.GroupItems.groupItems.length, 1, "There is one group item on startup");
   originalGroupItem = contentWindow.GroupItems.groupItems[0];
   is(originalGroupItem.getChildren().length, 1, "There should be one Tab Item in that group.");
-  contentWindow.GroupItems.setActiveGroupItem(originalGroupItem);
+  contentWindow.UI.setActive(originalGroupItem);
 
   [originalTab] = gBrowser.visibleTabs;
 
@@ -45,7 +45,7 @@ function testEmptyGroupItem(contentWindow) {
      "The number of groups is increased by 1");
 
   // add four blank items
-  contentWindow.GroupItems.setActiveGroupItem(emptyGroupItem);
+  contentWindow.UI.setActive(emptyGroupItem);
 
   let numNewTabs = 4;
   let items = [];

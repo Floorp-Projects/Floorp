@@ -361,7 +361,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           // tab is hidden, the active group item would be set.
           if (self.tab == gBrowser.selectedTab ||
               (!GroupItems.getActiveGroupItem() && !self.tab.hidden))
-            GroupItems.setActiveGroupItem(self.parent);
+            UI.setActive(self.parent);
         }
       } else {
         // When duplicating a non-blank orphaned tab, create a group including both of them.
@@ -643,9 +643,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let $tabEl = this.$container;
     let $canvas = this.$canvas;
 
-    UI.setActiveTab(this);
-    GroupItems.setActiveGroupItem(this.parent);
-
+    UI.setActive(this);
     TabItems._update(this.tab, {force: true});
 
     // Zoom in!
@@ -714,7 +712,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         complete();
     };
 
-    UI.setActiveTab(this);
+    UI.setActive(this);
     TabItems._update(this.tab, {force: true});
 
     $tab.addClass("front");
@@ -1082,7 +1080,7 @@ let TabItems = {
       // note that it's ok to unlink an app tab; see .handleTabUnpin
 
       if (tab._tabViewTabItem == UI.getActiveOrphanTab())
-        UI.setActiveTab(null);
+        UI.setActive(null, { onlyRemoveActiveTab: true });
 
       this.unregister(tab._tabViewTabItem);
       tab._tabViewTabItem._sendToSubscribers("close");
