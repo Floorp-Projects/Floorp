@@ -1369,18 +1369,6 @@ nsHTMLDocument::SetXmlVersion(const nsAString& aXmlVersion)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetStrictErrorChecking(PRBool* aStrictErrorChecking)
-{
-  return nsDocument::GetStrictErrorChecking(aStrictErrorChecking);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetStrictErrorChecking(PRBool aStrictErrorChecking)
-{
-  return nsDocument::SetStrictErrorChecking(aStrictErrorChecking);
-}
-
-NS_IMETHODIMP
 nsHTMLDocument::GetDocumentURI(nsAString& aDocumentURI)
 {
   return nsDocument::GetDocumentURI(aDocumentURI);

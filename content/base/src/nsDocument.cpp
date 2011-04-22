@@ -5920,21 +5920,6 @@ nsDocument::SetXmlVersion(const nsAString& aXmlVersion)
 }
 
 NS_IMETHODIMP
-nsDocument::GetStrictErrorChecking(PRBool *aStrictErrorChecking)
-{
-  // This attribute is true by default, and we don't really support it being false.
-  *aStrictErrorChecking = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetStrictErrorChecking(PRBool aStrictErrorChecking)
-{
-  // We don't really support non-strict error checking, so just no-op for now.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocument::GetDocumentURI(nsAString& aDocumentURI)
 {
   if (mDocumentURI) {
