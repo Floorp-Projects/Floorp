@@ -1921,9 +1921,9 @@ static PRBool SelectorMatches(Element* aElement,
       // Bit-based pseudo-classes
       if (statesToCheck.HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE) &&
           aTreeMatchContext.mCompatMode == eCompatibility_NavQuirks &&
-          // global selector (but don't check .class):
+          // global selector:
           !aSelector->HasTagSelector() && !aSelector->mIDList && 
-          !aSelector->mAttrList &&
+          !aSelector->mClassList && !aSelector->mAttrList &&
           // This (or the other way around) both make :not() asymmetric
           // in quirks mode (and it's hard to work around since we're
           // testing the current mNegations, not the first
