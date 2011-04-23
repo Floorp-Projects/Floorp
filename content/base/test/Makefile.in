@@ -363,6 +363,7 @@ _TEST_FILES2 = \
 		bug475156.sjs \
 		test_bug544642.html \
 		test_bug564863.xhtml \
+		test_bug588990.html \
 		test_copypaste.html \
 		test_bug503481.html \
 		file_bug503481.sjs \
