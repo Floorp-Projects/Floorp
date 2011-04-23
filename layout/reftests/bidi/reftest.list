@@ -29,6 +29,8 @@ random-if(cocoaWidget) == mirroring-02.html mirroring-02-ref.html
 == mixedChartype-02-j.html mixedChartype-02-ref.html
 == mixedChartype-03.html mixedChartype-03-ref.html
 == mixedChartype-03-j.html mixedChartype-03-ref.html
+== unicode-bidi-anonymous-001.html unicode-bidi-anonymous-001-ref.html
+== unicode-bidi-anonymous-002.html unicode-bidi-anonymous-002-ref.html
 == with-first-letter-1a.html with-first-letter-1-ref.html
 == with-first-letter-1b.html with-first-letter-1-ref.html
 == with-first-letter-2a.html with-first-letter-2-ref.html
