@@ -50,7 +50,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(f28df617-ac8b-48e0-8094-c4642ab43940)]
+[scriptable, uuid(35c15ba1-932d-4a95-8f08-ddcdd50c041a)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -677,7 +677,13 @@ interface nsIDOMCSS2Properties : nsISupports
            attribute DOMString        backgroundSize;
                                         // raises(DOMException) on setting
 
+           attribute DOMString        MozTextBlink;
+                                        // raises(DOMException) on setting
+
            attribute DOMString        MozTextDecorationColor;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozTextDecorationLine;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozTextDecorationStyle;

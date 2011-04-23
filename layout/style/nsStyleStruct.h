@@ -81,8 +81,8 @@ struct nsCSSValueList;
 #define NS_STYLE_INHERIT_MASK             0x00ffffff
 
 // Additional bits for nsStyleContext's mBits:
-// See nsStyleContext::HasTextDecorations
-#define NS_STYLE_HAS_TEXT_DECORATIONS     0x01000000
+// See nsStyleContext::HasTextDecorationLines
+#define NS_STYLE_HAS_TEXT_DECORATION_LINES 0x01000000
 // See nsStyleContext::HasPseudoElementData.
 #define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA  0x02000000
 // See nsStyleContext::RelevantLinkIsVisited
@@ -1210,7 +1210,8 @@ struct nsStyleTextReset {
 
   nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
 
-  PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
+  PRUint8 mTextBlink;                   // [reset] see nsStyleConsts.h
+  PRUint8 mTextDecorationLine;          // [reset] see nsStyleConsts.h
   PRUint8 mUnicodeBidi;                 // [reset] see nsStyleConsts.h
 protected:
   PRUint8 mTextDecorationStyle;         // [reset] see nsStyleConsts.h

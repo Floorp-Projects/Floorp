@@ -3371,26 +3371,32 @@ nsRuleNode::ComputeTextResetData(void* aStartStruct,
     }
   }
 
-  // text-decoration: enum (bit field), inherit, initial
-  const nsCSSValue* decorationValue = aRuleData->ValueForTextDecoration();
-  if (eCSSUnit_Enumerated == decorationValue->GetUnit()) {
-    PRInt32 td = decorationValue->GetIntValue();
-    text->mTextDecoration = td;
-    if (td & NS_STYLE_TEXT_DECORATION_PREF_ANCHORS) {
+  // text-blink: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForTextBlink(), text->mTextBlink,
+              canStoreInRuleTree, SETDSC_ENUMERATED, parentText->mTextBlink,
+              NS_STYLE_TEXT_BLINK_NONE, 0, 0, 0, 0);
+
+  // text-decoration-line: enum (bit field), inherit, initial
+  const nsCSSValue* decorationLineValue =
+    aRuleData->ValueForTextDecorationLine();
+  if (eCSSUnit_Enumerated == decorationLineValue->GetUnit()) {
+    PRInt32 td = decorationLineValue->GetIntValue();
+    text->mTextDecorationLine = td;
+    if (td & NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS) {
       PRBool underlineLinks =
         mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks);
       if (underlineLinks) {
-        text->mTextDecoration |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        text->mTextDecorationLine |= NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
       }
       else {
-        text->mTextDecoration &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        text->mTextDecorationLine &= ~NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
       }
     }
-  } else if (eCSSUnit_Inherit == decorationValue->GetUnit()) {
+  } else if (eCSSUnit_Inherit == decorationLineValue->GetUnit()) {
     canStoreInRuleTree = PR_FALSE;
-    text->mTextDecoration = parentText->mTextDecoration;
-  } else if (eCSSUnit_Initial == decorationValue->GetUnit()) {
-    text->mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
+    text->mTextDecorationLine = parentText->mTextDecorationLine;
+  } else if (eCSSUnit_Initial == decorationLineValue->GetUnit()) {
+    text->mTextDecorationLine = NS_STYLE_TEXT_DECORATION_LINE_NONE;
   }
 
   // text-decoration-color: color, string, enum, inherit, initial

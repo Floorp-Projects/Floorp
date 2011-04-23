@@ -451,15 +451,15 @@ protected:
       return HasUnderline() || HasOverline() || HasStrikeout();
     }
     PRBool HasUnderline() {
-      return (mDecorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) &&
+      return (mDecorations & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) &&
              mUnderStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
     }
     PRBool HasOverline() {
-      return (mDecorations & NS_STYLE_TEXT_DECORATION_OVERLINE) &&
+      return (mDecorations & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) &&
              mOverStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
     }
     PRBool HasStrikeout() {
-      return (mDecorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) &&
+      return (mDecorations & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) &&
              mStrikeStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
     }
   };

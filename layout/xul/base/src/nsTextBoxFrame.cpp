@@ -426,16 +426,17 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     PRUint8 underStyle;
     PRUint8 strikeStyle;
     nsStyleContext* context = mStyleContext;
-  
-    PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE; // Begin with no decorations
-    PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | NS_STYLE_TEXT_DECORATION_OVERLINE |
-                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH; // A mask of all possible decorations.
-    PRBool hasDecorations = context->HasTextDecorations();
+
+    // Begin with no decorations
+    PRUint8 decorations = NS_STYLE_TEXT_DECORATION_LINE_NONE;
+    // A mask of all possible decorations.
+    PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK;
+    PRBool hasDecorationLines = context->HasTextDecorationLines();
 
     do {  // find decoration colors
       const nsStyleTextReset* styleText = context->GetStyleTextReset();
       
-      if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
+      if (decorMask & styleText->mTextDecorationLine) {  // a decoration defined here
         nscolor color;
         if (aOverrideColor) {
           color = *aOverrideColor;
@@ -448,32 +449,35 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         }
         PRUint8 style = styleText->GetDecorationStyle();
 
-        if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE & decorMask &
+              styleText->mTextDecorationLine) {
           underColor = color;
           underStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-          decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+          decorations |= NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
         }
-        if (NS_STYLE_TEXT_DECORATION_OVERLINE & decorMask & styleText->mTextDecoration) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_OVERLINE & decorMask &
+              styleText->mTextDecorationLine) {
           overColor = color;
           overStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
-          decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+          decorations |= NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
         }
-        if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decorMask & styleText->mTextDecoration) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH & decorMask &
+              styleText->mTextDecorationLine) {
           strikeColor = color;
           strikeStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-          decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+          decorations |= NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
         }
       }
       if (0 != decorMask) {
         context = context->GetParent();
         if (context) {
-          hasDecorations = context->HasTextDecorations();
+          hasDecorationLines = context->HasTextDecorationLines();
         }
       }
-    } while (context && hasDecorations && (0 != decorMask));
+    } while (context && hasDecorationLines && (0 != decorMask));
 
     nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
@@ -505,14 +509,14 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         nsCSSRendering::PaintDecorationLine(ctx, underColor,
                           pt, gfxSize(width, sizePixel),
                           ascentPixel, offsetPixel,
-                          NS_STYLE_TEXT_DECORATION_UNDERLINE, underStyle);
+                          NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, underStyle);
       }
       if ((decorations & NS_FONT_DECORATION_OVERLINE) &&
           overStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
         nsCSSRendering::PaintDecorationLine(ctx, overColor,
                           pt, gfxSize(width, sizePixel),
                           ascentPixel, ascentPixel,
-                          NS_STYLE_TEXT_DECORATION_OVERLINE, overStyle);
+                          NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, overStyle);
       }
     }
 
@@ -593,7 +597,8 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
       gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
       nsCSSRendering::PaintDecorationLine(ctx, strikeColor,
                         pt, gfxSize(width, sizePixel), ascentPixel, offsetPixel,
-                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH, strikeStyle);
+                        NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
+                        strikeStyle);
     }
 }
 
