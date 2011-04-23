@@ -65,6 +65,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
     content: "";
     -moz-animation: anim2 1s linear alternate infinite;
   }
+
+  @-moz-keyframes multiprop {
+    0% {
+      padding-top: 10px; padding-left: 30px;
+      -moz-animation-timing-function: ease;
+    }
+    25% {
+      padding-left: 50px;
+      -moz-animation-timing-function: ease-out;
+    }
+    50% {
+      padding-top: 40px;
+    }
+    75% {
+      padding-top: 80px; padding-left: 60px;
+      -moz-animation-timing-function: ease-in;
+    }
+  }
   </style>
 </head>
 <body>
@@ -1111,6 +1129,55 @@ is(cs_after.marginRight, "0px", ":after test at 2000ms");
 advance_clock(300);
 is(cs_after.marginRight, "30px", ":after test at 2300ms");
 check_events([], "no events should be fired for animations on :after");
+done_div();
+
+/**
+ * Test handling of properties that are present in only some of the
+ * keyframes.
+ */
+new_div("-moz-animation: multiprop 1s ease-in-out alternate infinite");
+is(cs.paddingTop, "10px", "multiprop top at 0ms");
+is(cs.paddingLeft, "30px", "multiprop top at 0ms");
+advance_clock(100);
+is_approx(px_to_num(cs.paddingTop), 10 + 30 * gTF.ease(0.2), 0.01,
+          "multiprop top at 100ms");
+is_approx(px_to_num(cs.paddingLeft), 30 + 20 * gTF.ease(0.4), 0.01,
+          "multiprop left at 100ms");
+advance_clock(200);
+is_approx(px_to_num(cs.paddingTop), 10 + 30 * gTF.ease(0.6), 0.01,
+          "multiprop top at 300ms");
+is_approx(px_to_num(cs.paddingLeft), 50 + 10 * gTF.ease_out(0.1), 0.01,
+          "multiprop left at 300ms");
+advance_clock(300);
+is_approx(px_to_num(cs.paddingTop), 40 + 40 * gTF.ease_in_out(0.4), 0.01,
+          "multiprop top at 600ms");
+is_approx(px_to_num(cs.paddingLeft), 50 + 10 * gTF.ease_out(0.7), 0.01,
+          "multiprop left at 600ms");
+advance_clock(200);
+is_approx(px_to_num(cs.paddingTop), 80 - 80 * gTF.ease_in(0.2), 0.01,
+          "multiprop top at 800ms");
+is_approx(px_to_num(cs.paddingLeft), 60 - 60 * gTF.ease_in(0.2), 0.01,
+          "multiprop left at 800ms");
+advance_clock(400);
+is_approx(px_to_num(cs.paddingTop), 80 - 80 * gTF.ease_in(0.2), 0.01,
+          "multiprop top at 1200ms");
+is_approx(px_to_num(cs.paddingLeft), 60 - 60 * gTF.ease_in(0.2), 0.01,
+          "multiprop left at 1200ms");
+advance_clock(200);
+is_approx(px_to_num(cs.paddingTop), 40 + 40 * gTF.ease_in_out(0.4), 0.01,
+          "multiprop top at 1400ms");
+is_approx(px_to_num(cs.paddingLeft), 50 + 10 * gTF.ease_out(0.7), 0.01,
+          "multiprop left at 1400ms");
+advance_clock(300);
+is_approx(px_to_num(cs.paddingTop), 10 + 30 * gTF.ease(0.6), 0.01,
+          "multiprop top at 1700ms");
+is_approx(px_to_num(cs.paddingLeft), 50 + 10 * gTF.ease_out(0.1), 0.01,
+          "multiprop left at 1700ms");
+advance_clock(200);
+is_approx(px_to_num(cs.paddingTop), 10 + 30 * gTF.ease(0.2), 0.01,
+          "multiprop top at 1900ms");
+is_approx(px_to_num(cs.paddingLeft), 30 + 20 * gTF.ease(0.4), 0.01,
+          "multiprop left at 1900ms");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

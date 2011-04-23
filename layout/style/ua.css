@@ -121,6 +121,7 @@
 *|*::-moz-anonymous-block, *|*::-moz-cell-content {
   display: block !important;
   position: static !important;
+  unicode-bidi: inherit;
 }
 
 *|*::-moz-anonymous-block, *|*::-moz-anonymous-positioned-block {
@@ -207,6 +208,7 @@
   z-index: inherit;
   clip: inherit;
   opacity: inherit;
+  unicode-bidi: inherit;
 }
 
 /* Printing */

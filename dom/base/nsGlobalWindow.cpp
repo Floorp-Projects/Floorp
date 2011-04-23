@@ -86,6 +86,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsDOMThreadService.h"
 #include "nsAutoJSValHolder.h"
+#include "nsDOMMediaQueryList.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -127,7 +128,7 @@
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
@@ -3920,6 +3921,32 @@ nsGlobalWindow::GetMozAnimationStartTime(PRInt64 *aTime)
 
   // If all else fails, just be compatible with Date.now()
   *aTime = JS_Now() / PR_USEC_PER_MSEC;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
+                           nsIDOMMediaQueryList** aResult)
+{
+  // FIXME: This whole forward-to-outer and then get a pres
+  // shell/context off the docshell dance is sort of silly; it'd make
+  // more sense to forward to the inner, but it's what everyone else
+  // (GetSelection, GetScrollXY, etc.) does around here.
+  FORWARD_TO_OUTER(MatchMedia, (aMediaQueryList, aResult),
+                   NS_ERROR_NOT_INITIALIZED);
+
+  *aResult = nsnull;
+
+  if (!mDocShell)
+    return NS_OK;
+
+  nsRefPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+
+  if (!presContext)
+    return NS_OK;
+
+  presContext->MatchMedia(aMediaQueryList, aResult);
   return NS_OK;
 }
 
@@ -8017,7 +8044,9 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     *aSessionStorage = nsnull;
 
     nsString documentURI;
-    mDocument->GetDocumentURI(documentURI);
+    if (mDocument) {
+      mDocument->GetDocumentURI(documentURI);
+    }
 
     nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
                                                           documentURI,
@@ -8101,7 +8130,9 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsString documentURI;
-    mDocument->GetDocumentURI(documentURI);
+    if (mDocument) {
+      mDocument->GetDocumentURI(documentURI);
+    }
 
     rv = storageManager->GetLocalStorageForPrincipal(principal,
                                                      documentURI,

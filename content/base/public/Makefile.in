@@ -53,7 +53,6 @@ nsIContentIterator.h \
 nsContentErrors.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
-nsIContentUtils.h \
 nsIDocument.h \
 nsIDocumentObserver.h \
 nsIMutationObserver.h \

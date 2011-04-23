@@ -74,7 +74,6 @@
 // for event firing in context menus
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
-#include "nsIEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIViewManager.h"
@@ -301,7 +300,7 @@ nsXULPopupListener::FireFocusOnTargetContent(nsIDOMNode* aTargetNode)
       }
     }
 
-    nsIEventStateManager *esm = context->EventStateManager();
+    nsEventStateManager *esm = context->EventStateManager();
     nsCOMPtr<nsIContent> focusableContent = do_QueryInterface(element);
     esm->SetContentState(focusableContent, NS_EVENT_STATE_ACTIVE);
   }

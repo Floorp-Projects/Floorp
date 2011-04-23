@@ -40,7 +40,7 @@
 #include "nsXULLabelFrame.h"
 #include "nsHTMLParts.h"
 #include "nsINameSpaceManager.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 
 nsIFrame*
 NS_NewXULLabelFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -80,16 +80,15 @@ nsXULLabelFrame::RegUnregAccessKey(PRBool aDoReg)
 
   // With a valid PresContext we can get the ESM 
   // and register the access key
-  nsIEventStateManager *esm = PresContext()->EventStateManager();
-  nsresult rv;
+  nsEventStateManager *esm = PresContext()->EventStateManager();
 
   PRUint32 key = accessKey.First();
   if (aDoReg)
-    rv = esm->RegisterAccessKey(mContent, key);
+    esm->RegisterAccessKey(mContent, key);
   else
-    rv = esm->UnregisterAccessKey(mContent, key);
+    esm->UnregisterAccessKey(mContent, key);
 
-  return rv;
+  return NS_OK;
 }
 
 /////////////////////////////////////////////////////////////////////////////

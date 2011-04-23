@@ -47,7 +47,6 @@
 #include "nsIDocument.h"
 #include "nsIDocShell.h"
 #include "nsPresContext.h"
-#include "nsIEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsLiteralString.h"
 
