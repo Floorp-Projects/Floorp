@@ -6668,7 +6668,7 @@ PRUint16 nsWindow::GetMouseInputSource()
 }
 #endif
 /*
- * OnMouseWheel - mouse wheele event processing. This was originally embedded
+ * OnMouseWheel - mouse wheel event processing. This was originally embedded
  * within the message case block. If returning true result should be returned
  * immediately (no more processing).
  */
@@ -6727,10 +6727,10 @@ PRBool nsWindow::OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, PRBool& ge
     return PR_FALSE; // break
 
   // The mousewheel event will be dispatched to the toplevel
-  // window.  We need to give it to the child window
+  // window.  We need to give it to the child window.
   PRBool quit;
   if (!HandleScrollingPlugins(msg, wParam, lParam, result, aRetValue, quit))
-    return quit; // return immediately if its not our window
+    return quit; // return immediately if it's not our window
 
   // We should cancel the surplus delta if the current window is not
   // same as previous.
