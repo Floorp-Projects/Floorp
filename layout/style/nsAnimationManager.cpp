@@ -186,8 +186,8 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     // Therefore, we iterate from last animation to first.
     nsCSSPropertySet properties;
 
-    for (PRUint32 i = mAnimations.Length(); i-- != 0; ) {
-      ElementAnimation &anim = mAnimations[i];
+    for (PRUint32 animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+      ElementAnimation &anim = mAnimations[animIdx];
 
       if (anim.mSegments.Length() == 0 ||
           anim.mIterationDuration.ToMilliseconds() <= 0.0) {
@@ -314,9 +314,9 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
       double valuePosition =
         segment->mTimingFunction.GetValue(positionInSegment);
 
-      for (PRUint32 j = 0, j_end = segment->mProperties.Length();
-           j != j_end; ++j) {
-        const AnimationSegmentProperty &prop = segment->mProperties[j];
+      for (PRUint32 propIdx = 0, propEnd = segment->mProperties.Length();
+           propIdx != propEnd; ++propIdx) {
+        const AnimationSegmentProperty &prop = segment->mProperties[propIdx];
         if (properties.HasProperty(prop.mProperty)) {
           // A later animation already set this property.
           continue;
@@ -476,9 +476,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       // (or potentially optimize BuildAnimations to avoid rebuilding it
       // in the first place).
       if (!ea->mAnimations.IsEmpty()) {
-        for (PRUint32 i = 0, i_end = newAnimations.Length();
-             i != i_end; ++i) {
-          ElementAnimation *newAnim = &newAnimations[i];
+        for (PRUint32 newIdx = 0, newEnd = newAnimations.Length();
+             newIdx != newEnd; ++newIdx) {
+          ElementAnimation *newAnim = &newAnimations[newIdx];
 
           // Find the matching animation with this name in the old list
           // of animations.  Because of this code, they must all have
@@ -489,8 +489,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // We'll use the last one since it's more likely to be the one
           // doing something.
           const ElementAnimation *oldAnim = nsnull;
-          for (PRUint32 j = ea->mAnimations.Length(); j-- != 0; ) {
-            const ElementAnimation *a = &ea->mAnimations[j];
+          for (PRUint32 oldIdx = ea->mAnimations.Length(); oldIdx-- != 0; ) {
+            const ElementAnimation *a = &ea->mAnimations[oldIdx];
             if (a->mName == newAnim->mName) {
               oldAnim = a;
               break;
@@ -633,8 +633,9 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay *disp = aStyleContext->GetStyleDisplay();
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  for (PRUint32 i = 0, i_end = disp->mAnimations.Length(); i != i_end; ++i) {
-    const nsAnimation& aSrc = disp->mAnimations[i];
+  for (PRUint32 animIdx = 0, animEnd = disp->mAnimations.Length();
+       animIdx != animEnd; ++animIdx) {
+    const nsAnimation& aSrc = disp->mAnimations[animIdx];
     ElementAnimation& aDest = *aAnimations.AppendElement();
 
     aDest.mName = aSrc.GetName();
@@ -663,16 +664,18 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     // earlier ones (no cascading).
     nsDataHashtable<PercentageHashKey, nsCSSKeyframeRule*> keyframes;
     keyframes.Init(16); // FIXME: make infallible!
-    for (PRUint32 j = 0, j_end = rule->StyleRuleCount(); j != j_end; ++j) {
-      nsICSSRule* cssRule = rule->GetStyleRuleAt(j);
+    for (PRUint32 ruleIdx = 0, ruleEnd = rule->StyleRuleCount();
+         ruleIdx != ruleEnd; ++ruleIdx) {
+      nsICSSRule* cssRule = rule->GetStyleRuleAt(ruleIdx);
       NS_ABORT_IF_FALSE(cssRule, "must have rule");
       NS_ABORT_IF_FALSE(cssRule->GetType() == nsICSSRule::KEYFRAME_RULE,
                         "must be keyframe rule");
       nsCSSKeyframeRule *kfRule = static_cast<nsCSSKeyframeRule*>(cssRule);
 
       const nsTArray<float> &keys = kfRule->GetKeys();
-      for (PRUint32 k = 0, k_end = keys.Length(); k != k_end; ++k) {
-        float key = keys[k];
+      for (PRUint32 keyIdx = 0, keyEnd = keys.Length();
+           keyIdx != keyEnd; ++keyIdx) {
+        float key = keys[keyIdx];
         // FIXME (spec):  The spec doesn't say what to do with
         // out-of-range keyframes.  We'll ignore them.
         // (And PercentageHashKey currently assumes we either ignore or
@@ -705,8 +708,9 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                      fromKeyframe.mRule->Declaration());
     }
 
-    for (PRUint32 j = 1, j_end = sortedKeyframes.Length(); j != j_end; ++j) {
-      KeyframeData toKeyframe = sortedKeyframes[j];
+    for (PRUint32 kfIdx = 1, kfEnd = sortedKeyframes.Length();
+         kfIdx != kfEnd; ++kfIdx) {
+      KeyframeData toKeyframe = sortedKeyframes[kfIdx];
       nsRefPtr<nsStyleContext> toContext =
         resolvedStyles.Get(mPresContext, aStyleContext, toKeyframe.mRule);
 
