@@ -100,6 +100,7 @@
 #include "mozilla/dom/Element.h"
 #include "nsIFrameMessageManager.h"
 #include "FrameLayerBuilder.h"
+#include "nsDOMMediaQueryList.h"
 
 #ifdef MOZ_SMIL
 #include "nsSMILAnimationController.h"
@@ -254,12 +255,17 @@ nsPresContext::nsPresContext(nsIDocument* aDocument, nsPresContextType aType)
   NS_ASSERTION(mDocument, "Null document");
   mUserFontSet = nsnull;
   mUserFontSetDirty = PR_TRUE;
+
+  PR_INIT_CLIST(&mDOMMediaQueryLists);
 }
 
 nsPresContext::~nsPresContext()
 {
   NS_PRECONDITION(!mShell, "Presshell forgot to clear our mShell pointer");
   SetShell(nsnull);
+
+  NS_ABORT_IF_FALSE(PR_CLIST_IS_EMPTY(&mDOMMediaQueryLists),
+                    "must not have media query lists left");
 
   // Disconnect the refresh driver *after* the transition manager, which
   // needs it.
@@ -349,7 +355,7 @@ TraverseImageLoader(const void * aKey, nsRefPtr<nsImageLoader>& aData,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsPresContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDocument);
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mDeviceContext); // not xpcom
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mEventManager);
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR_AMBIGUOUS(mEventManager, nsIObserver);
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLookAndFeel); // a service
   // NS_IMPL_CYCLE_COLLECTION_TRAVERSE_RAWPTR(mLanguage); // an atom
 
@@ -1405,12 +1411,20 @@ void
 nsPresContext::SetupBorderImageLoaders(nsIFrame* aFrame,
                                        const nsStyleBorder* aStyleBorder)
 {
+  // We get called the first time we try to draw a border-image, and
+  // also when the border image changes (including when it changes from
+  // non-null to null).
+  imgIRequest *borderImage = aStyleBorder->GetBorderImage();
+  if (!borderImage) {
+    SetImageLoaders(aFrame, BORDER_IMAGE, nsnull);
+    return;
+  }
+
   PRUint32 actions = nsImageLoader::ACTION_REDRAW_ON_LOAD;
   if (aStyleBorder->ImageBorderDiffers())
     actions |= nsImageLoader::ACTION_REFLOW_ON_LOAD;
   nsRefPtr<nsImageLoader> loader =
-    nsImageLoader::Create(aFrame, aStyleBorder->GetBorderImage(),
-                          actions, nsnull);
+    nsImageLoader::Create(aFrame, borderImage, actions, nsnull);
   SetImageLoaders(aFrame, BORDER_IMAGE, loader);
 }
 
@@ -1643,11 +1657,56 @@ nsPresContext::MediaFeatureValuesChanged(PRBool aCallerWillRebuildStyleData)
       !aCallerWillRebuildStyleData) {
     RebuildAllStyleData(nsChangeHint(0));
   }
+
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    NS_ABORT_IF_FALSE(mDocument->IsBeingUsedAsImage(),
+                      "How did we get here?  Are we failing to notify "
+                      "listeners that we should notify?");
+    return;
+  }
+
+  // Media query list listeners should be notified from a queued task
+  // (in HTML5 terms), although we also want to notify them on certain
+  // flushes.  (We're already running off an event.)
+  //
+  // Note that we do this after the new style from media queries in
+  // style sheets has been computed.
+
+  if (!PR_CLIST_IS_EMPTY(&mDOMMediaQueryLists)) {
+    // We build a list of all the notifications we're going to send
+    // before we send any of them.  (The spec says the notifications
+    // should be a queued task, so any removals that happen during the
+    // notifications shouldn't affect what gets notified.)  Furthermore,
+    // we hold strong pointers to everything we're going to make
+    // notification calls to, since each notification involves calling
+    // arbitrary script that might otherwise destroy these objects, or,
+    // for that matter, |this|.
+    //
+    // Note that we intentionally send the notifications to media query
+    // list in the order they were created and, for each list, to the
+    // listeners in the order added.
+    nsDOMMediaQueryList::NotifyList notifyList;
+    for (PRCList *l = PR_LIST_HEAD(&mDOMMediaQueryLists);
+         l != &mDOMMediaQueryLists; l = PR_NEXT_LINK(l)) {
+      nsDOMMediaQueryList *mql = static_cast<nsDOMMediaQueryList*>(l);
+      mql->MediumFeaturesChanged(notifyList);
+    }
+
+    for (PRUint32 i = 0, i_end = notifyList.Length(); i != i_end; ++i) {
+      nsDOMMediaQueryList::HandleChangeData &d = notifyList[i];
+      d.listener->HandleChange(d.mql);
+    }
+
+    // NOTE:  When |notifyList| goes out of scope, our destructor could run.
+  }
 }
 
 void
 nsPresContext::PostMediaFeatureValuesChangedEvent()
 {
+  // FIXME: We should probably replace this event with use of
+  // nsRefreshDriver::AddStyleFlushObserver (except the pres shell would
+  // need to track whether it's been added).
   if (!mPendingMediaFeatureValuesChanged) {
     nsCOMPtr<nsIRunnable> ev =
       NS_NewRunnableMethod(this, &nsPresContext::HandleMediaFeatureValuesChangedEvent);
@@ -1665,6 +1724,19 @@ nsPresContext::HandleMediaFeatureValuesChangedEvent()
   if (mPendingMediaFeatureValuesChanged && mShell) {
     MediaFeatureValuesChanged(PR_FALSE);
   }
+}
+
+void
+nsPresContext::MatchMedia(const nsAString& aMediaQueryList,
+                          nsIDOMMediaQueryList** aResult)
+{
+  nsRefPtr<nsDOMMediaQueryList> result =
+    new nsDOMMediaQueryList(this, aMediaQueryList);
+
+  // Insert the new item at the end of the linked list.
+  PR_INSERT_BEFORE(result, &mDOMMediaQueryLists);
+
+  result.forget(aResult);
 }
 
 void

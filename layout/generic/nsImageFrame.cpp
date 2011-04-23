@@ -88,7 +88,6 @@
 #include "imgIContainer.h"
 #include "imgILoader.h"
 
-#include "nsContentPolicyUtils.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
@@ -96,7 +95,7 @@
 
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "nsLayoutErrors.h"
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"

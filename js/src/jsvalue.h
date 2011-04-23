@@ -89,24 +89,19 @@
 
 /* To avoid a circular dependency, pull in the necessary pieces of jsnum.h. */
 
-#include <math.h>
-#if defined(XP_WIN) || defined(XP_OS2)
-#include <float.h>
-#endif
-#ifdef SOLARIS
-#include <ieeefp.h>
-#endif
+#define JSDOUBLE_SIGNBIT (((uint64) 1) << 63)
+#define JSDOUBLE_EXPMASK (((uint64) 0x7ff) << 52)
+#define JSDOUBLE_MANTMASK ((((uint64) 1) << 52) - 1)
 
-static inline int
+static JS_ALWAYS_INLINE JSBool
 JSDOUBLE_IS_NEGZERO(jsdouble d)
 {
-#ifdef WIN32
-    return (d == 0 && (_fpclass(d) & _FPCLASS_NZ));
-#elif defined(SOLARIS)
-    return (d == 0 && copysign(1, d) < 0);
-#else
-    return (d == 0 && signbit(d));
-#endif
+    union {
+        jsdouble d;
+        uint64 bits;
+    } x;
+    x.d = d;
+    return x.bits == JSDOUBLE_SIGNBIT;
 }
 
 static inline bool

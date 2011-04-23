@@ -54,10 +54,10 @@
 #include "nsIMultiPartChannel.h"
 #include "nsIInputStreamTee.h"
 #include "nsPrintfCString.h"
-#include "nsIContentUtils.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocument.h"
 #include "nsIWebNavigation.h"
+#include "nsContentUtils.h"
 
 #define MAGIC_REQUEST_CONTEXT 0x01020304
 
@@ -1423,9 +1423,7 @@ nsPluginStreamListenerPeer::AsyncOnChannelRedirect(nsIChannel *oldChannel, nsICh
         return rv;
       }
       if (method.EqualsLiteral("POST")) {
-        nsCOMPtr<nsIContentUtils2> contentUtils2 = do_GetService("@mozilla.org/content/contentutils2;1");
-        NS_ENSURE_TRUE(contentUtils2, NS_ERROR_FAILURE);
-        rv = contentUtils2->CheckSameOrigin(oldChannel, newChannel);
+        rv = nsContentUtils::CheckSameOrigin(oldChannel, newChannel);
         if (NS_FAILED(rv)) {
           return rv;
         }

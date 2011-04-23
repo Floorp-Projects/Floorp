@@ -4242,21 +4242,20 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
   // A mask of all possible decorations.
   // FIXME: Per spec, we still need to draw all relevant decorations
   // from ancestors, not just the nearest one from each.
-  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | 
-                      NS_STYLE_TEXT_DECORATION_OVERLINE |
-                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK;
 
   PRBool isChild; // ignored
   for (nsIFrame* f = this; decorMask && f;
        NS_SUCCEEDED(f->GetParentStyleContextFrame(aPresContext, &f, &isChild))
          || (f = nsnull)) {
     nsStyleContext* context = f->GetStyleContext();
-    if (!context->HasTextDecorations()) {
+    if (!context->HasTextDecorationLines()) {
       break;
     }
     const nsStyleTextReset* styleText = context->GetStyleTextReset();
     if (!useOverride && 
-        (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & styleText->mTextDecoration)) {
+        (NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL &
+           styleText->mTextDecorationLine)) {
       // This handles the <a href="blah.html"><font color="green">La 
       // la la</font></a> case. The link underline should be green.
       useOverride = PR_TRUE;
@@ -4265,7 +4264,7 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
     }
 
     // FIXME: see above (remove this check)
-    PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
+    PRUint8 useDecorations = decorMask & styleText->mTextDecorationLine;
     if (useDecorations) {// a decoration defined here
       nscolor color = context->GetVisitedDependentColor(
                                  eCSSProperty_text_decoration_color);
@@ -4279,23 +4278,23 @@ nsTextFrame::GetTextDecorations(nsPresContext* aPresContext)
       // containing line; otherwise use the element's font); when
       // drawing it should always be relative to the line baseline.
       // This way we move the decorations for relative positioning.
-      if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
+      if (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE & useDecorations) {
         decorations.mUnderColor = useOverride ? overrideColor : color;
         decorations.mUnderStyle = styleText->GetDecorationStyle();
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
       }
-      if (NS_STYLE_TEXT_DECORATION_OVERLINE & useDecorations) {
+      if (NS_STYLE_TEXT_DECORATION_LINE_OVERLINE & useDecorations) {
         decorations.mOverColor = useOverride ? overrideColor : color;
         decorations.mOverStyle = styleText->GetDecorationStyle();
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
       }
-      if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & useDecorations) {
+      if (NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH & useDecorations) {
         decorations.mStrikeColor = useOverride ? overrideColor : color;
         decorations.mStrikeStyle = styleText->GetDecorationStyle();
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+        decorations.mDecorations |= NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
       }
     }
 
@@ -4387,7 +4386,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     size.height = fontMetrics.underlineSize;
     nsCSSRendering::PaintDecorationLine(
       aCtx, lineColor, pt, size, ascent, fontMetrics.maxAscent,
-      NS_STYLE_TEXT_DECORATION_OVERLINE, decorations.mOverStyle);
+      NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, decorations.mOverStyle);
   }
   if (decorations.HasUnderline()) {
     lineColor = aOverrideColor ? *aOverrideColor : decorations.mUnderColor;
@@ -4395,7 +4394,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     gfxFloat offset = aProvider.GetFontGroup()->GetUnderlineOffset();
     nsCSSRendering::PaintDecorationLine(
       aCtx, lineColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_UNDERLINE, decorations.mUnderStyle);
+      NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, decorations.mUnderStyle);
   }
   if (decorations.HasStrikeout()) {
     lineColor = aOverrideColor ? *aOverrideColor : decorations.mStrikeColor;
@@ -4403,7 +4402,7 @@ nsTextFrame::PaintTextDecorations(gfxContext* aCtx, const gfxRect& aDirtyRect,
     gfxFloat offset = fontMetrics.strikeoutOffset;
     nsCSSRendering::PaintDecorationLine(
       aCtx, lineColor, pt, size, ascent, offset,
-      NS_STYLE_TEXT_DECORATION_LINE_THROUGH, decorations.mStrikeStyle);
+      NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, decorations.mStrikeStyle);
   }
 }
 
@@ -4549,7 +4548,7 @@ static void DrawSelectionDecorations(gfxContext* aContext, SelectionType aType,
   size.height *= relativeSize;
   nsCSSRendering::PaintDecorationLine(
     aContext, color, pt, size, aAscent, aFontMetrics.underlineOffset,
-    NS_STYLE_TEXT_DECORATION_UNDERLINE, style, descentLimit);
+    NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, style, descentLimit);
 }
 
 /**
@@ -5340,9 +5339,8 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     size.height *= relativeSize;
     decorationArea =
       nsCSSRendering::GetTextDecorationRect(aPresContext, size,
-                                            ascent, underlineOffset,
-                                            NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                                            style, descentLimit);
+        ascent, underlineOffset, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+        style, descentLimit);
     aRect.UnionRect(aRect, decorationArea);
   }
   DestroySelectionDetails(details);
@@ -6315,7 +6313,7 @@ RoundOut(const gfxRect& aRect)
 nsRect
 nsTextFrame::ComputeTightBounds(gfxContext* aContext) const
 {
-  if ((GetStyleContext()->HasTextDecorations() &&
+  if ((GetStyleContext()->HasTextDecorationLines() &&
        eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) ||
       (GetStateBits() & TEXT_HYPHEN_BREAK)) {
     // This is conservative, but OK.

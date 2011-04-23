@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566160
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body onload="setTimeout(runTests);">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=566160">Mozilla Bug 566160</a>
 <p id="display"></p>
 <style>
@@ -69,6 +69,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566160
 /** Test for Bug 566160 **/
 
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  setTimeout(runTests, 0);
+});
 
 var gTestResults = {
   frame1: "data:text/html,?foo=foo",

@@ -168,14 +168,10 @@ public:
   PRBool IsInvalidName();
   void AddNameElement(Element* aElement);
   void RemoveNameElement(Element* aElement);
-  PRBool HasNameContentList() {
-    return mNameContentList != nsnull;
-  }
   PRBool IsEmpty();
   nsBaseContentList* GetNameContentList() {
     return mNameContentList;
   }
-  nsresult CreateNameContentList();
 
   /**
    * Returns the element if we know the element associated with this
@@ -258,9 +254,7 @@ private:
   // empty if there are no elementswith this ID.
   // The elements are stored as weak pointers.
   nsSmallVoidArray mIdContentList;
-  // NAME_NOT_VALID if this id cannot be used as a 'name'.  Otherwise
-  // stores Elements.
-  nsBaseContentList *mNameContentList;
+  nsRefPtr<nsBaseContentList> mNameContentList;
   nsRefPtr<nsContentList> mDocAllList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
   nsRefPtr<Element> mImageElement;

@@ -31,8 +31,8 @@ var tests = {
 var p = document.getElementById("display");
 
 for (var test in tests) {
-  p.setAttribute("style", "elevation: " + test);
-  is(p.style.getPropertyValue("elevation"), test,
+  p.setAttribute("style", "-moz-transform: rotate(" + test + ")");
+  is(p.style.getPropertyValue("-moz-transform"), "rotate(" + test + ")",
      test + " serializes to exactly itself");
   // We can't test any equivalence since we don't have any properties
   // with angle values that we compute.  (-moz-transform doesn't help.)
