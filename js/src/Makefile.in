@@ -690,12 +690,12 @@ check-jstests:
 ifeq ($(OS_ARCH),WINNT)
 ifdef ENABLE_METHODJIT
 ifdef ENABLE_TRACEJIT
-check:: check-jstests
+#check:: check-jstests
 endif
 endif
 else
 ifndef HAVE_DTRACE
-check:: check-jstests
+#check:: check-jstests
 endif
 endif
 
