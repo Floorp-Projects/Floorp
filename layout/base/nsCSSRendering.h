@@ -301,9 +301,9 @@ struct nsCSSRendering {
    *                              the baseline of the text (if the value is
    *                              positive, the line is lifted up)
    *     @param aDecoration       which line will be painted. The value can be
-   *                              NS_STYLE_TEXT_DECORATION_UNDERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_OVERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
+   *                              NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE or
+   *                              NS_STYLE_TEXT_DECORATION_LINE_OVERLINE or
+   *                              NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH.
    *     @param aStyle            the style of the decoration line such as
    *                              NS_STYLE_TEXT_DECORATION_STYLE_*.
    *     @param aDescentLimit     If aDescentLimit is zero or larger and the
@@ -341,9 +341,9 @@ struct nsCSSRendering {
    *                              the baseline of the text (if the value is
    *                              positive, the line is lifted up)
    *     @param aDecoration       which line will be painted. The value can be
-   *                              NS_STYLE_TEXT_DECORATION_UNDERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_OVERLINE or
-   *                              NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
+   *                              NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE or
+   *                              NS_STYLE_TEXT_DECORATION_LINE_OVERLINE or
+   *                              NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH.
    *     @param aStyle            the style of the decoration line such as
    *                              NS_STYLE_TEXT_DECORATION_STYLE_*.
    *     @param aDescentLimit     If aDescentLimit is zero or larger and the

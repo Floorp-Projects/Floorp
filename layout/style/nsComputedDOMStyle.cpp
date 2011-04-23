@@ -2262,25 +2262,47 @@ nsComputedDOMStyle::DoGetTextAlign()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozTextBlink()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleTextReset()->mTextBlink,
+                                   nsCSSProps::kTextBlinkKTable));
+
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetTextDecoration()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
-  PRInt32 intValue = GetStyleTextReset()->mTextDecoration;
+  PRUint8 line = GetStyleTextReset()->mTextDecorationLine;
+  // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
+  // don't want these to appear in the computed style.
+  line &= ~(NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS |
+            NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
+  PRUint8 blink = GetStyleTextReset()->mTextBlink;
 
-  if (NS_STYLE_TEXT_DECORATION_NONE == intValue) {
+  if (blink == NS_STYLE_TEXT_BLINK_NONE &&
+      line == NS_STYLE_TEXT_DECORATION_LINE_NONE) {
     val->SetIdent(eCSSKeyword_none);
   } else {
-    nsAutoString decorationString;
-    // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
-    // don't want these to appear in the computed style.
-    intValue &= ~(NS_STYLE_TEXT_DECORATION_PREF_ANCHORS |
-                  NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL);
-    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration, intValue,
-                                       NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                                       NS_STYLE_TEXT_DECORATION_BLINK,
-                                       decorationString);
-    val->SetString(decorationString);
+    nsAutoString str;
+    if (line != NS_STYLE_TEXT_DECORATION_LINE_NONE) {
+      nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration_line,
+        line, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+        NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, str);
+    }
+    if (blink != NS_STYLE_TEXT_BLINK_NONE) {
+      if (!str.IsEmpty()) {
+        str.Append(PRUnichar(' '));
+      }
+      nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_blink, blink,
+        NS_STYLE_TEXT_BLINK_BLINK, NS_STYLE_TEXT_BLINK_BLINK, str);
+    }
+    val->SetString(str);
   }
 
   return val;
@@ -2299,6 +2321,30 @@ nsComputedDOMStyle::DoGetMozTextDecorationColor()
   }
 
   SetToRGBAColor(val, color);
+
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozTextDecorationLine()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  PRInt32 intValue = GetStyleTextReset()->mTextDecorationLine;
+
+  if (NS_STYLE_TEXT_DECORATION_LINE_NONE == intValue) {
+    val->SetIdent(eCSSKeyword_none);
+  } else {
+    nsAutoString decorationLineString;
+    // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
+    // don't want these to appear in the computed style.
+    intValue &= ~(NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS |
+                  NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
+    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration_line,
+      intValue, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+      NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, decorationLineString);
+    val->SetString(decorationLineString);
+  }
 
   return val;
 }
@@ -4347,7 +4393,9 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(stroke_width,                  StrokeWidth),
     COMPUTED_STYLE_MAP_ENTRY(text_anchor,                   TextAnchor),
     COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering),
+    COMPUTED_STYLE_MAP_ENTRY(text_blink,                    MozTextBlink),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_color,         MozTextDecorationColor),
+    COMPUTED_STYLE_MAP_ENTRY(text_decoration_line,          MozTextDecorationLine),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_style,         MozTextDecorationStyle)
 
   };

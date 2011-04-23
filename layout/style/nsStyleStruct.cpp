@@ -2601,7 +2601,8 @@ nsStyleTextReset::nsStyleTextReset(void)
 { 
   MOZ_COUNT_CTOR(nsStyleTextReset);
   mVerticalAlign.SetIntValue(NS_STYLE_VERTICAL_ALIGN_BASELINE, eStyleUnit_Enumerated);
-  mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
+  mTextBlink = NS_STYLE_TEXT_BLINK_NONE;
+  mTextDecorationLine = NS_STYLE_TEXT_DECORATION_LINE_NONE;
   mTextDecorationColor = NS_RGB(0,0,0);
   mTextDecorationStyle =
     NS_STYLE_TEXT_DECORATION_STYLE_SOLID | BORDER_COLOR_FOREGROUND;
@@ -2623,15 +2624,15 @@ nsChangeHint nsStyleTextReset::CalcDifference(const nsStyleTextReset& aOther) co
 {
   if (mVerticalAlign == aOther.mVerticalAlign
       && mUnicodeBidi == aOther.mUnicodeBidi) {
+    // Reflow for blink changes
+    if (mTextBlink != aOther.mTextBlink) {
+      return NS_STYLE_HINT_REFLOW;
+    }
+
     PRUint8 lineStyle = GetDecorationStyle();
     PRUint8 otherLineStyle = aOther.GetDecorationStyle();
-    if (mTextDecoration != aOther.mTextDecoration ||
+    if (mTextDecorationLine != aOther.mTextDecorationLine ||
         lineStyle != otherLineStyle) {
-      // Reflow for blink changes
-      if ((mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK) !=
-            (aOther.mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK)) {
-        return NS_STYLE_HINT_REFLOW;
-      }
       // Reflow for decoration line style changes only to or from double or
       // wave because that may cause overflow area changes
       if (lineStyle == NS_STYLE_TEXT_DECORATION_STYLE_DOUBLE ||

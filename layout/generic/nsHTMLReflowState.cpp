@@ -1878,8 +1878,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext* aPresContext,
   mFlags.mBlinks = (parentReflowState && parentReflowState->mFlags.mBlinks);
   if (!mFlags.mBlinks && BlinkIsAllowed()) {
     const nsStyleTextReset* st = frame->GetStyleTextReset();
-    mFlags.mBlinks = 
-      ((st->mTextDecoration & NS_STYLE_TEXT_DECORATION_BLINK) != 0);
+    mFlags.mBlinks = (st->mTextBlink != NS_STYLE_TEXT_BLINK_NONE);
   }
 }
 
