@@ -223,11 +223,16 @@ nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
 
     // Get our language preferences
     if (!acceptLangs.IsEmpty()) {
-      printf("Bug 652050 diagnostic: intl.accept_languages is nonempty.\n");
+      // XXXdholbert Temporary diagnostic to verify a theory in Bug 652050
+#ifdef ANDROID
+      printf_stderr("Bug 652050 diagnostic: intl.accept_languages is nonempty.\n");
+#endif
       return MatchesLanguagePreferences(value, acceptLangs);
     } else {
       // For now, evaluate to true.
-      printf("Bug 652050 diagnostic: intl.accept_languages is EMPTY!\n");
+#ifdef ANDROID
+      printf_stderr("Bug 652050 diagnostic: intl.accept_languages is EMPTY!\n");
+#endif
       NS_WARNING("no default language specified for systemLanguage conditional test");
       return !value.IsEmpty();
     }
