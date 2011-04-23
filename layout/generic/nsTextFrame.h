@@ -448,18 +448,19 @@ protected:
     { }
 
     PRBool HasDecorationlines() {
-      return !!(mDecorations & (NS_STYLE_TEXT_DECORATION_UNDERLINE |
-                                NS_STYLE_TEXT_DECORATION_OVERLINE |
-                                NS_STYLE_TEXT_DECORATION_LINE_THROUGH));
+      return HasUnderline() || HasOverline() || HasStrikeout();
     }
     PRBool HasUnderline() {
-      return !!(mDecorations & NS_STYLE_TEXT_DECORATION_UNDERLINE);
+      return (mDecorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) &&
+             mUnderStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
     }
     PRBool HasOverline() {
-      return !!(mDecorations & NS_STYLE_TEXT_DECORATION_OVERLINE);
+      return (mDecorations & NS_STYLE_TEXT_DECORATION_OVERLINE) &&
+             mOverStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
     }
     PRBool HasStrikeout() {
-      return !!(mDecorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH);
+      return (mDecorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) &&
+             mStrikeStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE;
     }
   };
   TextDecorations GetTextDecorations(nsPresContext* aPresContext);
