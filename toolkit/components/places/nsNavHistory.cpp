@@ -2872,13 +2872,18 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     nsRefPtr<nsNavHistoryResultNode> tempRootNode;
     rv = bookmarks->ResultNodeForContainer(folderId, options,
                                            getter_AddRefs(tempRootNode));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rootNode = tempRootNode->GetAsContainer();
-  } else {
-    // complex query
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                     "Generating a generic empty node for a broken query!");
+    if (NS_SUCCEEDED(rv)) {
+      rootNode = tempRootNode->GetAsContainer();
+    }
+  }
+
+  if (!rootNode) {
+    // Either this is not a folder shortcut, or is a broken one.  In both cases
+    // just generate a query node.
     rootNode = new nsNavHistoryQueryResultNode(EmptyCString(), EmptyCString(),
                                                queries, options);
-    NS_ENSURE_TRUE(rootNode, NS_ERROR_OUT_OF_MEMORY);
   }
 
   // Create the result that will hold nodes.  Inject batching status into it.
@@ -6485,44 +6490,49 @@ nsNavHistory::QueryRowToResult(PRInt64 itemId, const nsACString& aURI,
   nsCOMPtr<nsNavHistoryQueryOptions> options;
   nsresult rv = QueryStringToQueryArray(aURI, &queries,
                                         getter_AddRefs(options));
-  if (NS_FAILED(rv)) {
-    // This was a query that did not parse, what do we do? We don't want to
-    // return failure since that will kill the whole query process. Instead
-    // make a query node with the query as a string. This way we have a valid
-    // node for the user to manipulate that will look like a query, but it will
-    // never populate since the query string is invalid.
-    *aNode = new nsNavHistoryQueryResultNode(aURI, aTitle, aFavicon);
-    if (! *aNode)
-      return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(*aNode);
-  } else {
+  // If this failed the query does not parse correctly, let the error pass and
+  // handle it later.
+  if (NS_SUCCEEDED(rv)) {
+    // Check if this is a folder shortcut, so we can take a faster path.
     PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries, options);
     if (folderId) {
-      // simple bookmarks folder, magically generate a bookmarks folder node
       nsNavBookmarks *bookmarks = nsNavBookmarks::GetBookmarksService();
       NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
 
-      // this addrefs for us
+      // This AddRefs for us.
       rv = bookmarks->ResultNodeForContainer(folderId, options, aNode);
-      NS_ENSURE_SUCCESS(rv, rv);
+      // If this failed the shortcut is pointing to nowhere, let the error pass
+      // and handle it later.
+      if (NS_SUCCEEDED(rv)) {
+        // This is the query itemId, and is what is exposed by node.itemId.
+        (*aNode)->GetAsFolder()->mQueryItemId = itemId;
 
-      // this is the query item-Id, and is what is exposed by node.itemId
-      (*aNode)->GetAsFolder()->mQueryItemId = itemId;
-
-      // Use the query item title, unless it's void (in that case,
-      // we keep the concrete folder title set)
-      if (!aTitle.IsVoid())
-        (*aNode)->mTitle = aTitle;
-    } else {
-      // regular query
+        // Use the query item title, unless it's void (in that case use the 
+        // concrete folder title).
+        if (!aTitle.IsVoid()) {
+          (*aNode)->mTitle = aTitle;
+        }
+      }
+    }
+    else {
+      // This is a regular query.
       *aNode = new nsNavHistoryQueryResultNode(aTitle, EmptyCString(), aTime,
                                                queries, options);
-      if (! *aNode)
-        return NS_ERROR_OUT_OF_MEMORY;
       (*aNode)->mItemId = itemId;
       NS_ADDREF(*aNode);
     }
   }
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Generating a generic empty node for a broken query!");
+    // This is a broken query, that either did not parse or points to not
+    // existing data.  We don't want to return failure since that will kill the
+    // whole result.  Instead make a generic empty query node.
+    *aNode = new nsNavHistoryQueryResultNode(aTitle, aFavicon, aURI);
+    (*aNode)->mItemId = itemId;
+    NS_ADDREF(*aNode);
+  }
+
   return NS_OK;
 }
 
