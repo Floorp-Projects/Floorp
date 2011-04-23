@@ -93,7 +93,6 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetName(nsAString& aName);
-  NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GetFocusedChild(nsIAccessible **aFocusedChild);
   NS_IMETHOD TakeFocus(void);
@@ -114,6 +113,7 @@ public:
   virtual nsIDocument* GetDocumentNode() const { return mDocument; }
 
   // nsAccessible
+  virtual void Description(nsString& aDescription);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
   virtual void ApplyARIAState(PRUint64* aState);
