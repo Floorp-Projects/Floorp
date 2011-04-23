@@ -396,8 +396,8 @@ function testScope(aTester, aTest) {
     self.SimpleTest.waitForFocus(callback, targetWindow, expectBlankPage);
   };
 
-  this.waitForClipboard = function test_waitForClipboard(expected, setup, success, failure) {
-    self.SimpleTest.waitForClipboard(expected, setup, success, failure);
+  this.waitForClipboard = function test_waitForClipboard(expected, setup, success, failure, flavor) {
+    self.SimpleTest.waitForClipboard(expected, setup, success, failure, flavor);
   };
 
   this.registerCleanupFunction = function test_registerCleanupFunction(aFunction) {
