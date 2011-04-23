@@ -580,6 +580,56 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue) const
         xValue.AppendToString(eCSSProperty_overflow_x, aValue);
       break;
     }
+    case eCSSProperty_text_decoration: {
+      // If text-decoration-color or text-decoration-style isn't initial value,
+      // we cannot serialize the text-decoration shorthand value.
+      const nsCSSValue &decorationColor =
+        *data->ValueFor(eCSSProperty_text_decoration_color);
+      const nsCSSValue &decorationStyle =
+        *data->ValueFor(eCSSProperty_text_decoration_style);
+
+      NS_ABORT_IF_FALSE(decorationStyle.GetUnit() == eCSSUnit_Enumerated,
+                        nsPrintfCString(32, "bad text-decoration-style unit %d",
+                                        decorationStyle.GetUnit()).get());
+
+      if (decorationColor.GetUnit() != eCSSUnit_Enumerated ||
+          decorationColor.GetIntValue() != NS_STYLE_COLOR_MOZ_USE_TEXT_COLOR ||
+          decorationStyle.GetIntValue() !=
+            NS_STYLE_TEXT_DECORATION_STYLE_SOLID) {
+        return;
+      }
+
+      const nsCSSValue &textBlink =
+        *data->ValueFor(eCSSProperty_text_blink);
+      const nsCSSValue &decorationLine =
+        *data->ValueFor(eCSSProperty_text_decoration_line);
+
+      NS_ABORT_IF_FALSE(textBlink.GetUnit() == eCSSUnit_Enumerated,
+                        nsPrintfCString(32, "bad text-blink unit %d",
+                                        textBlink.GetUnit()).get());
+      NS_ABORT_IF_FALSE(decorationLine.GetUnit() == eCSSUnit_Enumerated,
+                        nsPrintfCString(32, "bad text-decoration-line unit %d",
+                                        decorationLine.GetUnit()).get());
+
+      PRBool blinkNone = (textBlink.GetIntValue() == NS_STYLE_TEXT_BLINK_NONE);
+      PRBool lineNone =
+        (decorationLine.GetIntValue() == NS_STYLE_TEXT_DECORATION_LINE_NONE);
+
+      if (blinkNone && lineNone) {
+        AppendValueToString(eCSSProperty_text_decoration_line, aValue);
+      } else {
+        if (!blinkNone) {
+          AppendValueToString(eCSSProperty_text_blink, aValue);
+        }
+        if (!lineNone) {
+          if (!aValue.IsEmpty()) {
+            aValue.Append(PRUnichar(' '));
+          }
+          AppendValueToString(eCSSProperty_text_decoration_line, aValue);
+        }
+      }
+      break;
+    }
     case eCSSProperty_transition: {
       const nsCSSValue &transProp =
         *data->ValueFor(eCSSProperty_transition_property);

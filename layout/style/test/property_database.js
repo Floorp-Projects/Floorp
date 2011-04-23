@@ -2432,13 +2432,23 @@ var gCSSProperties = {
 		other_values: [ "center", "justify", "end" ],
 		invalid_values: []
 	},
-	"text-decoration": {
-		domProp: "textDecoration",
+	"-moz-text-blink": {
+		domProp: "MozTextBlink",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "underline", "overline", "line-through", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
-		invalid_values: [ "underline none", "none underline", "line-through blink line-through" ]
+		other_values: [ "blink" ],
+		invalid_values: [ "underline", "overline", "line-through", "none underline", "underline blink", "blink underline" ]
+	},
+	"text-decoration": {
+		domProp: "textDecoration",
+		inherited: false,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		subproperties: [ "-moz-text-blink", "-moz-text-decoration-color", "-moz-text-decoration-line", "-moz-text-decoration-style" ],
+		initial_values: [ "none" ],
+		other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
+		invalid_values: [ "none none", "underline none", "none underline", "blink none", "none blink", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink",
+		                  "underline red solid", "underline #ff0000", "solid underline", "red underline", "#ff0000 underline" ]
 	},
 	"-moz-text-decoration-color": {
 		domProp: "MozTextDecorationColor",
@@ -2448,6 +2458,14 @@ var gCSSProperties = {
 		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+	},
+	"-moz-text-decoration-line": {
+		domProp: "MozTextDecorationLine",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "underline", "overline", "line-through", "line-through underline", "underline overline line-through", "-moz-anchor-decoration", "-moz-anchor-decoration" ],
+		invalid_values: [ "none none", "underline none", "none underline", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink" ]
 	},
 	"-moz-text-decoration-style": {
 		domProp: "MozTextDecorationStyle",

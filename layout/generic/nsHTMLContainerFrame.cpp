@@ -130,12 +130,12 @@ nsDisplayTextDecoration::Paint(nsDisplayListBuilder* aBuilder,
 
   nsPoint pt = ToReferenceFrame();
   nsHTMLContainerFrame* f = static_cast<nsHTMLContainerFrame*>(mFrame);
-  if (mDecoration == NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+  if (mDecoration == NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
     gfxFloat underlineOffset = fontGroup->GetUnderlineOffset();
     f->PaintTextDecorationLine(aCtx->ThebesContext(), pt, mLine, mColor,
                                mStyle, underlineOffset, ascent,
                                metrics.underlineSize, mDecoration);
-  } else if (mDecoration == NS_STYLE_TEXT_DECORATION_OVERLINE) {
+  } else if (mDecoration == NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
     f->PaintTextDecorationLine(aCtx->ThebesContext(), pt, mLine, mColor,
                                mStyle, metrics.maxAscent, ascent,
                                metrics.underlineSize, mDecoration);
@@ -240,23 +240,24 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
   nsRect underlineRect;
   nsRect overlineRect;
   nsRect lineThroughRect;
-  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
     gfxSize size(lineWidth, metrics.underlineSize);
     underlineRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
                        ascent, underlineOffset,
-                       NS_STYLE_TEXT_DECORATION_UNDERLINE, mUnderlineStyle);
+                       NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+                       mUnderlineStyle);
   }
-  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_OVERLINE) {
+  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
     gfxSize size(lineWidth, metrics.underlineSize);
     overlineRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
                        ascent, metrics.maxAscent,
-                       NS_STYLE_TEXT_DECORATION_OVERLINE, mOverlineStyle);
+                       NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, mOverlineStyle);
   }
-  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
+  if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
     gfxSize size(lineWidth, metrics.strikeoutSize);
     lineThroughRect = nsCSSRendering::GetTextDecorationRect(presContext, size,
                        ascent, metrics.strikeoutOffset,
-                       NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+                       NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
                        mStrikeThroughStyle);
   }
 
@@ -276,13 +277,13 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
     }
 
     nsRect shadowRect(0, 0, 0, 0);
-    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
       shadowRect.UnionRect(shadowRect, underlineRect + linePt);
     }
-    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_OVERLINE) {
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
       shadowRect.UnionRect(shadowRect, overlineRect + linePt);
     }
-    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
       shadowRect.UnionRect(shadowRect, lineThroughRect + linePt);
     }
 
@@ -299,21 +300,23 @@ nsDisplayTextShadow::Paint(nsDisplayListBuilder* aBuilder,
       continue;
     }
 
-    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) {
       f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
                                  mUnderlineStyle, underlineOffset, ascent,
-                                 metrics.underlineSize, NS_STYLE_TEXT_DECORATION_UNDERLINE);
+                                 metrics.underlineSize,
+                                 NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE);
     }
-    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_OVERLINE) {
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) {
       f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
                                  mOverlineStyle, metrics.maxAscent, ascent,
-                                 metrics.underlineSize, NS_STYLE_TEXT_DECORATION_OVERLINE);
+                                 metrics.underlineSize,
+                                 NS_STYLE_TEXT_DECORATION_LINE_OVERLINE);
     }
-    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
+    if (mDecorationFlags & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) {
       f->PaintTextDecorationLine(shadowCtx, pt, mLine, shadowColor,
                                  mStrikeThroughStyle, metrics.strikeoutOffset,
                                  ascent, metrics.strikeoutSize,
-                                 NS_STYLE_TEXT_DECORATION_LINE_THROUGH);
+                                 NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH);
     }
 
     contextBoxBlur.DoPaint();
@@ -350,12 +353,12 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
   // nsTextFrame::PaintTextDecorations.  (See bug 1777.)
   nscolor underColor, overColor, strikeColor;
   PRUint8 underStyle, overStyle, strikeStyle;
-  PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE;
+  PRUint8 decorations = NS_STYLE_TEXT_DECORATION_LINE_NONE;
   GetTextDecorations(PresContext(), aLine != nsnull, decorations, underColor, 
                      overColor, strikeColor, underStyle, overStyle,
                      strikeStyle);
 
-  if (decorations == NS_STYLE_TEXT_DECORATION_NONE) {
+  if (decorations == NS_STYLE_TEXT_DECORATION_LINE_NONE) {
     return NS_OK;
   }
 
@@ -369,24 +372,27 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if ((decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) &&
+  if ((decorations & NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE) &&
       underStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
     rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_UNDERLINE,
+      nsDisplayTextDecoration(aBuilder, this,
+                              NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
                               underColor, underStyle, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  if ((decorations & NS_STYLE_TEXT_DECORATION_OVERLINE) &&
+  if ((decorations & NS_STYLE_TEXT_DECORATION_LINE_OVERLINE) &&
       overStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
     rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_OVERLINE,
+      nsDisplayTextDecoration(aBuilder, this,
+                              NS_STYLE_TEXT_DECORATION_LINE_OVERLINE,
                               overColor, overStyle, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  if ((decorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) &&
+  if ((decorations & NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH) &&
       strikeStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
     rv = aAboveTextDecorations->AppendNewToTop(new (aBuilder)
-      nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+      nsDisplayTextDecoration(aBuilder, this,
+                              NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
                               strikeColor, strikeStyle, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -473,8 +479,8 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
                                          PRUint8& aOverStyle,
                                          PRUint8& aStrikeStyle)
 {
-  aDecorations = NS_STYLE_TEXT_DECORATION_NONE;
-  if (!mStyleContext->HasTextDecorations()) {
+  aDecorations = NS_STYLE_TEXT_DECORATION_LINE_NONE;
+  if (!mStyleContext->HasTextDecorationLines()) {
     // This is a necessary, but not sufficient, condition for text
     // decorations.
     return; 
@@ -482,8 +488,8 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
 
   if (!aIsBlock) {
     const nsStyleTextReset* styleTextReset = this->GetStyleTextReset();
-    aDecorations = styleTextReset->mTextDecoration &
-                   NS_STYLE_TEXT_DECORATION_LINES_MASK;
+    aDecorations = styleTextReset->mTextDecorationLine &
+                   NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK;
     if (aDecorations) {
       nscolor color =
         this->GetVisitedDependentColor(eCSSProperty_text_decoration_color);
@@ -499,35 +505,35 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
     // must win.  At any point in the loop below, this variable
     // indicates which decorations we are still paying attention to;
     // it starts set to all possible decorations.
-    PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_LINES_MASK;
+    PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK;
 
     // walk tree
     for (nsIFrame* frame = this; frame; frame = frame->GetParent()) {
       const nsStyleTextReset* styleTextReset = frame->GetStyleTextReset();
-      PRUint8 decors = styleTextReset->mTextDecoration & decorMask;
+      PRUint8 decors = styleTextReset->mTextDecorationLine & decorMask;
       if (decors) {
         // A *new* text-decoration is found.
         nscolor color = frame->GetVisitedDependentColor(
                                  eCSSProperty_text_decoration_color);
         PRUint8 style = styleTextReset->GetDecorationStyle();
 
-        if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decors) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE & decors) {
           aUnderColor = color;
           aUnderStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-          aDecorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+          aDecorations |= NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
         }
-        if (NS_STYLE_TEXT_DECORATION_OVERLINE & decors) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_OVERLINE & decors) {
           aOverColor = color;
           aOverStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
-          aDecorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+          aDecorations |= NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
         }
-        if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decors) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH & decors) {
           aStrikeColor = color;
           aStrikeStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-          aDecorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+          aDecorations |= NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
         }
       }
       // If all possible decorations have now been specified, no
@@ -565,7 +571,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
   if (aDecorations) {
     // If this frame contains no text, we're required to ignore this property
     if (!HasTextFrameDescendantOrInFlow(this)) {
-      aDecorations = NS_STYLE_TEXT_DECORATION_NONE;
+      aDecorations = NS_STYLE_TEXT_DECORATION_LINE_NONE;
     }
   }
 }

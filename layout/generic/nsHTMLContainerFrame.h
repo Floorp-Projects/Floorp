@@ -141,7 +141,7 @@ protected:
    *                         in aDecoration is set. It is undefined otherwise.
    *                         The style is one of
    *                         NS_STYLE_TEXT_DECORATION_STYLE_* consts.
-   *  NOTE: This function assigns NS_STYLE_TEXT_DECORATION_NONE to
+   *  NOTE: This function assigns NS_STYLE_TEXT_DECORATION_LINE_NONE to
    *        aDecorations for text-less frames.  See bug 20163 for
    *        details.
    *  NOTE: The results of color and style for each lines were not initialized
@@ -172,10 +172,10 @@ protected:
    *                                i.e. negative offsets draws *below*
    *                                the baseline.
    *    @param aSize              the thickness of the line
-   *    @param aDecoration        which line will be painted
-   *                                i.e., NS_STYLE_TEXT_DECORATION_UNDERLINE or
-   *                                      NS_STYLE_TEXT_DECORATION_OVERLINE or
-   *                                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH.
+   *    @param aDecoration        which line will be painted i.e.,
+   *                              NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE or
+   *                              NS_STYLE_TEXT_DECORATION_LINE_OVERLINE or
+   *                              NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH.
    */
   virtual void PaintTextDecorationLine(gfxContext* aCtx,
                                        const nsPoint& aPt,

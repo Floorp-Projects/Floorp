@@ -2130,16 +2130,20 @@ CSS_PROP_TEXT(
     kTextAlignKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_TEXTRESET(
+CSS_PROP_SHORTHAND(
     text-decoration,
     text_decoration,
     TextDecoration,
+    CSS_PROPERTY_PARSE_FUNCTION)
+CSS_PROP_TEXTRESET(
+    -moz-text-blink,
+    text_blink,
+    CSS_PROP_DOMPROP_PREFIXED(TextBlink),
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
-    0,
-    kTextDecorationKTable,
-    offsetof(nsStyleTextReset, mTextDecoration),
+    VARIANT_HK,
+    kTextBlinkKTable,
+    offsetof(nsStyleTextReset, mTextBlink),
     eStyleAnimType_EnumU8)
 CSS_PROP_TEXTRESET(
     -moz-text-decoration-color,
@@ -2152,6 +2156,17 @@ CSS_PROP_TEXTRESET(
     kBorderColorKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
+CSS_PROP_TEXTRESET(
+    -moz-text-decoration-line,
+    text_decoration_line,
+    CSS_PROP_DOMPROP_PREFIXED(TextDecorationLine),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    0,
+    kTextDecorationLineKTable,
+    offsetof(nsStyleTextReset, mTextDecorationLine),
+    eStyleAnimType_EnumU8)
 CSS_PROP_TEXTRESET(
     -moz-text-decoration-style,
     text_decoration_style,
