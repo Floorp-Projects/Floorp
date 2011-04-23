@@ -1692,9 +1692,17 @@ nsPresContext::MediaFeatureValuesChanged(PRBool aCallerWillRebuildStyleData)
       mql->MediumFeaturesChanged(notifyList);
     }
 
-    for (PRUint32 i = 0, i_end = notifyList.Length(); i != i_end; ++i) {
-      nsDOMMediaQueryList::HandleChangeData &d = notifyList[i];
-      d.listener->HandleChange(d.mql);
+    if (!notifyList.IsEmpty()) {
+      nsPIDOMWindow *win = mDocument->GetInnerWindow();
+      nsCOMPtr<nsPIDOMEventTarget> et = do_QueryInterface(win);
+      nsCxPusher pusher;
+
+      for (PRUint32 i = 0, i_end = notifyList.Length(); i != i_end; ++i) {
+        if (pusher.RePush(et)) {
+          nsDOMMediaQueryList::HandleChangeData &d = notifyList[i];
+          d.listener->HandleChange(d.mql);
+        }
+      }
     }
 
     // NOTE:  When |notifyList| goes out of scope, our destructor could run.
