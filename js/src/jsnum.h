@@ -41,6 +41,12 @@
 #define jsnum_h___
 
 #include <math.h>
+#if defined(XP_WIN) || defined(XP_OS2)
+#include <float.h>
+#endif
+#ifdef SOLARIS
+#include <ieeefp.h>
+#endif
 #include "jsvalue.h"
 
 #include "jsstdint.h"
@@ -79,32 +85,37 @@ typedef union jsdpun {
     jsdouble d;
 } jsdpun;
 
-/* Low-level floating-point predicates. See bug 640494. */
-
 static inline int
 JSDOUBLE_IS_NaN(jsdouble d)
 {
-    jsdpun u;
-    u.d = d;
-    return (u.u64 & JSDOUBLE_EXPMASK) == JSDOUBLE_EXPMASK &&
-           (u.u64 & JSDOUBLE_MANTMASK) != 0;
+#ifdef WIN32
+    return _isnan(d);
+#else
+    return isnan(d);
+#endif
 }
 
 static inline int
 JSDOUBLE_IS_FINITE(jsdouble d)
 {
-    /* -0 is finite. NaNs are not. */
-    jsdpun u;
-    u.d = d;
-    return (u.u64 & JSDOUBLE_EXPMASK) != JSDOUBLE_EXPMASK;
+#ifdef WIN32
+    return _finite(d);
+#else
+    return finite(d);
+#endif
 }
 
 static inline int
 JSDOUBLE_IS_INFINITE(jsdouble d)
 {
-    jsdpun u;
-    u.d = d;
-    return (u.u64 & ~JSDOUBLE_SIGNBIT) == JSDOUBLE_EXPMASK;
+#ifdef WIN32
+    int c = _fpclass(d);
+    return c == _FPCLASS_NINF || c == _FPCLASS_PINF;
+#elif defined(SOLARIS)
+    return !finite(d) && !isnan(d);
+#else
+    return isinf(d);
+#endif
 }
 
 #define JSDOUBLE_HI32_SIGNBIT   0x80000000
@@ -116,9 +127,13 @@ JSDOUBLE_IS_INFINITE(jsdouble d)
 static inline bool
 JSDOUBLE_IS_NEG(jsdouble d)
 {
-    jsdpun u;
-    u.d = d;
-    return (u.s.hi & JSDOUBLE_HI32_SIGNBIT) != 0;
+#ifdef WIN32
+    return JSDOUBLE_IS_NEGZERO(d) || d < 0;
+#elif defined(SOLARIS)
+    return copysign(1, d) < 0;
+#else
+    return signbit(d);
+#endif
 }
 
 static inline uint32
