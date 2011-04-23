@@ -518,8 +518,11 @@ GetNativeFromGeckoAccessible(nsIAccessible *anAccessible)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
+  if (mGeckoAccessible->IsDefunct())
+    return nil;
+
   nsAutoString desc;
-  mGeckoAccessible->GetDescription (desc);
+  mGeckoAccessible->Description(desc);
   return desc.IsEmpty() ? nil : [NSString stringWithCharacters:desc.BeginReading() length:desc.Length()];
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;

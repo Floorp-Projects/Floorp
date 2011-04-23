@@ -64,15 +64,12 @@ nsXFormsLabelAccessible::GetNameInternal(nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXFormsLabelAccessible::GetDescription(nsAString& aDescription)
+void
+nsXFormsLabelAccessible::Description(nsString& aDescription)
 {
-  nsAutoString description;
-  nsresult rv = nsTextEquivUtils::
+  nsTextEquivUtils::
     GetTextEquivFromIDRefs(this, nsAccessibilityAtoms::aria_describedby,
-                           description);
-  aDescription = description;
-  return rv;
+                           aDescription);
 }
 
 

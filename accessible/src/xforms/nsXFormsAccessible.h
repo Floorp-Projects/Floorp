@@ -77,10 +77,9 @@ public:
   // Returns value of instance node that xforms element is bound to.
   NS_IMETHOD GetValue(nsAString& aValue);
 
-  // Returns value of child xforms 'hint' element.
-  NS_IMETHOD GetDescription(nsAString& aDescription);
-
   // nsAccessible
+  // Returns value of child xforms 'hint' element.
+  virtual void Description(nsString& aDescription);
 
   // Returns value of child xforms 'label' element.
   virtual nsresult GetNameInternal(nsAString& aName);
