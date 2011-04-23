@@ -529,21 +529,26 @@ BookmarksStore.prototype = {
     }
 
     tags.containerOpen = true;
-    for (let i = 0; i < tags.childCount; i++) {
-      let child = tags.getChild(i);
-      if (child.title == tag) {
-        // Found the tag, so fix up the query to use the right id.
-        this._log.debug("Tag query folder: " + tag + " = " + child.itemId);
-        
-        this._log.trace("Replacing folders in: " + uri);
-        for each (let q in queriesRef.value)
-          q.setFolders([child.itemId], 1);
-        
-        record.bmkUri = Svc.History.queriesToQueryString(queriesRef.value,
-                                                         queryCountRef.value,
-                                                         optionsRef.value);
-        return;
+    try {
+      for (let i = 0; i < tags.childCount; i++) {
+        let child = tags.getChild(i);
+        if (child.title == tag) {
+          // Found the tag, so fix up the query to use the right id.
+          this._log.debug("Tag query folder: " + tag + " = " + child.itemId);
+          
+          this._log.trace("Replacing folders in: " + uri);
+          for each (let q in queriesRef.value)
+            q.setFolders([child.itemId], 1);
+          
+          record.bmkUri = Svc.History.queriesToQueryString(queriesRef.value,
+                                                           queryCountRef.value,
+                                                           optionsRef.value);
+          return;
+        }
       }
+    }
+    finally {
+      tags.containerOpen = false;
     }
   },
   
@@ -1245,12 +1250,16 @@ BookmarksStore.prototype = {
         !this._ls.isLivemark(node.itemId)) {
       node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
       node.containerOpen = true;
-
-      // Remember all the children GUIDs and recursively get more
-      for (let i = 0; i < node.childCount; i++) {
-        let child = node.getChild(i);
-        items[this.GUIDForId(child.itemId)] = true;
-        this._getChildren(child, items);
+      try {
+        // Remember all the children GUIDs and recursively get more
+        for (let i = 0; i < node.childCount; i++) {
+          let child = node.getChild(i);
+          items[this.GUIDForId(child.itemId)] = true;
+          this._getChildren(child, items);
+        }
+      }
+      finally {
+        node.containerOpen = false;
       }
     }
 
