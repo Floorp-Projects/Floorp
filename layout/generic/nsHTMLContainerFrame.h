@@ -144,6 +144,8 @@ protected:
    *  NOTE: This function assigns NS_STYLE_TEXT_DECORATION_NONE to
    *        aDecorations for text-less frames.  See bug 20163 for
    *        details.
+   *  NOTE: The results of color and style for each lines were not initialized
+   *        if the line wasn't included in aDecorations.
    */
   void GetTextDecorations(nsPresContext* aPresContext, 
                           PRBool aIsBlock,
