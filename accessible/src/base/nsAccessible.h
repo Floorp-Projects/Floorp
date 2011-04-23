@@ -120,6 +120,11 @@ public:
   // Public methods
 
   /**
+   * get the description of this accessible
+   */
+  virtual void Description(nsString& aDescription);
+
+  /**
    * Returns the accessible name specified by ARIA.
    */
   nsresult GetARIAName(nsAString& aName);

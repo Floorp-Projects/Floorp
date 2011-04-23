@@ -82,7 +82,6 @@ public:
   nsXULMenuitemAccessible(nsIContent *aContent, nsIWeakReference *aShell);
 
   // nsIAccessible
-  NS_IMETHOD GetDescription(nsAString& aDescription);
   NS_IMETHOD GetKeyboardShortcut(nsAString& _retval);
   NS_IMETHOD GetDefaultKeyBinding(nsAString& aKeyBinding);
   NS_IMETHOD DoAction(PRUint8 index);
@@ -90,6 +89,7 @@ public:
   NS_IMETHOD GetNumActions(PRUint8 *_retval);
 
   // nsAccessible
+  virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();
