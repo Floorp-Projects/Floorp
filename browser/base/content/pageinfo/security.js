@@ -374,5 +374,7 @@ function previousVisitCount(host, endTimeReference) {
 
   var result = historyService.executeQuery(query, options);
   result.root.containerOpen = true;
-  return result.root.childCount;
+  var cc = result.root.childCount;
+  result.root.containerOpen = false;
+  return cc;
 }
