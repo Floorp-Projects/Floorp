@@ -1221,7 +1221,10 @@ nsFrameManager::ReResolveStyleContext(nsPresContext     *aPresContext,
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
       if (!parentContext) {
-        if (oldContext->GetRuleNode() == newContext->GetRuleNode()) {
+        if (oldContext->GetRuleNode() == newContext->GetRuleNode() &&
+            oldContext->IsLinkContext() == newContext->IsLinkContext() &&
+            oldContext->RelevantLinkVisited() ==
+              newContext->RelevantLinkVisited()) {
           // We're the root of the style context tree and the new style
           // context returned has the same rule node.  This means that
           // we can use FindChildWithRules to keep a lot of the old
