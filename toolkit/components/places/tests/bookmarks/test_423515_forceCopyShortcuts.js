@@ -136,10 +136,14 @@ function run_test() {
   do_check_eq(queryNode.childCount, 1);
   var child = queryNode.getChild(0);
   do_check_true(bookmarkURI.equals(uri(child.uri)));
+  queryNode.containerOpen = false;
 
   var queryNode2 = root.getChild(root.childCount-1);
   do_check_eq(queryNode2.type, queryNode2.RESULT_TYPE_QUERY);
   queryNode2.QueryInterface(Ci.nsINavHistoryContainerResultNode);
   queryNode2.containerOpen = true;
   do_check_eq(queryNode2.childCount, 0);
+  queryNode.containerOpen = false;
+
+  root.containerOpen = false;
 }

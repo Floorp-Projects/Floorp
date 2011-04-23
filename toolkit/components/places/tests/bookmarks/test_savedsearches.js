@@ -110,6 +110,7 @@ function run_test() {
       node.QueryInterface(Ci.nsINavHistoryContainerResultNode);
       do_check_eq(node.containerOpen, false);
     }
+    rootNode.containerOpen = false;
   }
   catch(ex) {
     do_throw("expandQueries=0 query error: " + ex);
@@ -162,6 +163,7 @@ function run_test() {
                            bmsvc.DEFAULT_INDEX, searchTerm + "blah");
       do_check_eq(node.childCount, 1);
     }
+    rootNode.containerOpen = false;
   }
   catch(ex) {
     do_throw("expandQueries=1 bookmarks query: " + ex);
@@ -222,6 +224,7 @@ function run_test() {
       // test live-update of query results - delete a history visit that matches the query
       bhist.removePage(uri("http://foo.com"));
       do_check_eq(node.childCount, 1);
+      node.containerOpen = false;
     }
 
     // test live-update of moved queries
@@ -243,6 +246,9 @@ function run_test() {
       var tmpFolderNode = root.getChild(1);
       do_throw("query was not removed");
     } catch(ex) {}
+
+    tmpFolderNode.containerOpen = false;
+    rootNode.containerOpen = false;
   }
   catch(ex) {
     do_throw("expandQueries=1 bookmarks query: " + ex);
