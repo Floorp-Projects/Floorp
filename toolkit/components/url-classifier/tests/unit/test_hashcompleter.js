@@ -271,7 +271,7 @@ callback.prototype = {
            chunkId + "\n");
       dump("Actual values:\nhash: " + JSON.stringify(this._completion.hash) +
            "\ntable: " + this._completion.table + "\nchunkId: " +
-           this.completion.chunkId + "\n");
+           this._completion.chunkId + "\n");
     }
 
     do_check_true(this._completion.expectCompletion);
