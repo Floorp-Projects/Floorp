@@ -355,8 +355,9 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
                      overColor, strikeColor, underStyle, overStyle,
                      strikeStyle);
 
-  if (decorations == NS_STYLE_TEXT_DECORATION_NONE)
+  if (decorations == NS_STYLE_TEXT_DECORATION_NONE) {
     return NS_OK;
+  }
 
   // The text-shadow spec says that any text decorations must also have a
   // shadow applied to them. So draw the shadows as part of the display
@@ -368,19 +369,22 @@ nsHTMLContainerFrame::DisplayTextDecorations(nsDisplayListBuilder* aBuilder,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  if (decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
+  if ((decorations & NS_STYLE_TEXT_DECORATION_UNDERLINE) &&
+      underStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
     rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
       nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_UNDERLINE,
                               underColor, underStyle, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  if (decorations & NS_STYLE_TEXT_DECORATION_OVERLINE) {
+  if ((decorations & NS_STYLE_TEXT_DECORATION_OVERLINE) &&
+      overStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
     rv = aBelowTextDecorations->AppendNewToTop(new (aBuilder)
       nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_OVERLINE,
                               overColor, overStyle, aLine));
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  if (decorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) {
+  if ((decorations & NS_STYLE_TEXT_DECORATION_LINE_THROUGH) &&
+      strikeStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
     rv = aAboveTextDecorations->AppendNewToTop(new (aBuilder)
       nsDisplayTextDecoration(aBuilder, this, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
                               strikeColor, strikeStyle, aLine));
