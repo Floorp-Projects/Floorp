@@ -44,6 +44,7 @@
 
 *|*::-moz-fieldset-content {
   display: block;
+  unicode-bidi: inherit;
   height: 100%;   /* Need this so percentage heights of kids work right */
 }
 
