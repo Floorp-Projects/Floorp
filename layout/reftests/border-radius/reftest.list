@@ -77,3 +77,5 @@ random-if(winWidget) HTTP(..) == corner-joins-2.xhtml corner-joins-2-ref.xhtml
 == scroll-1.html scroll-1-ref.html # see bug 602892
 
 == zero-radius-clip-1.html zero-radius-clip-ref.html
+
+== iframe-1.html iframe-1-ref.html

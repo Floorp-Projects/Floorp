@@ -44,8 +44,9 @@ interface nsIControllers;
 interface nsIDOMLocation;
 interface nsIVariant;
 interface nsIAnimationFrameListener;
+interface nsIDOMMediaQueryList;
 
-[scriptable, uuid(9d6a1157-0719-46a7-b49f-7ffeaa0b5c86)]
+[scriptable, uuid(04eafa93-efbe-4254-9d65-91c344fa7ff2)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
@@ -232,6 +233,11 @@ interface nsIDOMWindowInternal : nsIDOMWindow2
    * The current animation start time in milliseconds since the epoch.
    */
   readonly attribute long long mozAnimationStartTime;
+
+  /**
+   * http://dev.w3.org/csswg/cssom-view/#extensions-to-the-window-interface
+   */
+  nsIDOMMediaQueryList matchMedia(in DOMString media_query_list);
 };
 
 [scriptable, uuid(8fc58f56-f769-4368-a098-edd08550cf1a)]

@@ -60,7 +60,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIScrollableFrame.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsISelection2.h"
 #include "nsISelectionController.h"
 #include "nsPIDOMWindow.h"
@@ -206,7 +206,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
 
   // Accesskeys are registered by @accesskey attribute only. At first check
   // whether it is presented on the given element to avoid the slow
-  // nsIEventStateManager::GetRegisteredAccessKey() method.
+  // nsEventStateManager::GetRegisteredAccessKey() method.
   if (!aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::accesskey))
     return 0;
 
@@ -222,13 +222,11 @@ nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
   if (!presContext)
     return 0;
 
-  nsIEventStateManager *esm = presContext->EventStateManager();
+  nsEventStateManager *esm = presContext->EventStateManager();
   if (!esm)
     return 0;
 
-  PRUint32 key = 0;
-  esm->GetRegisteredAccessKey(aContent, &key);
-  return key;
+  return esm->GetRegisteredAccessKey(aContent);
 }
 
 nsIContent *

@@ -80,7 +80,7 @@
 #include "nsIDOMHTMLHRElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIEditorDocShell.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsISelection.h"
 #include "nsISelectionPrivate.h"
 #include "nsFrameSelection.h"
@@ -2076,9 +2076,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
   //We often get out of sync state issues with mousedown events that
   //get interrupted by alerts/dialogs.
   //Check with the ESM to see if we should process this one
-  PRBool eventOK;
-  aPresContext->EventStateManager()->EventStatusOK(aEvent, &eventOK);
-  if (!eventOK) 
+  if (!aPresContext->EventStateManager()->EventStatusOK(aEvent)) 
     return NS_OK;
 
   nsresult rv;
