@@ -1411,12 +1411,20 @@ void
 nsPresContext::SetupBorderImageLoaders(nsIFrame* aFrame,
                                        const nsStyleBorder* aStyleBorder)
 {
+  // We get called the first time we try to draw a border-image, and
+  // also when the border image changes (including when it changes from
+  // non-null to null).
+  imgIRequest *borderImage = aStyleBorder->GetBorderImage();
+  if (!borderImage) {
+    SetImageLoaders(aFrame, BORDER_IMAGE, nsnull);
+    return;
+  }
+
   PRUint32 actions = nsImageLoader::ACTION_REDRAW_ON_LOAD;
   if (aStyleBorder->ImageBorderDiffers())
     actions |= nsImageLoader::ACTION_REFLOW_ON_LOAD;
   nsRefPtr<nsImageLoader> loader =
-    nsImageLoader::Create(aFrame, aStyleBorder->GetBorderImage(),
-                          actions, nsnull);
+    nsImageLoader::Create(aFrame, borderImage, actions, nsnull);
   SetImageLoaders(aFrame, BORDER_IMAGE, loader);
 }
 
