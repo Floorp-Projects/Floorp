@@ -460,6 +460,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
           case JSOP_DEFVAR:
           case JSOP_DEFCONST:
           case JSOP_SETCONST:
+          case JSOP_ENTERWITH:
             isInlineable = canTrackVars = false;
             break;
 
