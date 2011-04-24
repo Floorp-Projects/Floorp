@@ -143,13 +143,6 @@ interface nsIMarkupDocumentViewer : nsISupports
   attribute octet bidiSupport;
 
   /**
-   * bidiCharacterSet: whether to force the user's character set
-   *                   1 - use the document character set
-   *                   2 - use the character set chosen by the user
-   */
-  attribute octet bidiCharacterSet;  
-  
-  /**
    * Use this attribute to access all the Bidi options in one operation
    */
   attribute PRUint32 bidiOptions;
