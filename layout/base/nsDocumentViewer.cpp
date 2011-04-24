@@ -3201,6 +3201,27 @@ NS_IMETHODIMP DocumentViewerImpl::GetBidiSupport(PRUint8* aSupport)
   return NS_OK;
 }
 
+NS_IMETHODIMP DocumentViewerImpl::SetBidiCharacterSet(PRUint8 aCharacterSet)
+{
+  PRUint32 bidiOptions;
+
+  GetBidiOptions(&bidiOptions);
+  SET_BIDI_OPTION_CHARACTERSET(bidiOptions, aCharacterSet);
+  SetBidiOptions(bidiOptions);
+  return NS_OK;
+}
+
+NS_IMETHODIMP DocumentViewerImpl::GetBidiCharacterSet(PRUint8* aCharacterSet)
+{
+  PRUint32 bidiOptions;
+
+  if (aCharacterSet) {
+    GetBidiOptions(&bidiOptions);
+    *aCharacterSet = GET_BIDI_OPTION_CHARACTERSET(bidiOptions);
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP DocumentViewerImpl::SetBidiOptions(PRUint32 aBidiOptions)
 {
   if (mPresContext) {
