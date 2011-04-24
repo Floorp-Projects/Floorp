@@ -38,10 +38,7 @@
  
 #include "nsXMLPrettyPrinter.h"
 #include "nsContentUtils.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMViewCSS.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIObserver.h"
 #include "nsIXSLTProcessor.h"
@@ -95,16 +92,13 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
         nsCOMPtr<nsIDOMCSSStyleDeclaration> computedStyle;
         nsCOMPtr<nsIDOMDocument> frameOwnerDoc;
         frameElem->GetOwnerDocument(getter_AddRefs(frameOwnerDoc));
-        nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(frameOwnerDoc);
-        if (docView) {
-            nsCOMPtr<nsIDOMAbstractView> defaultView;
-            docView->GetDefaultView(getter_AddRefs(defaultView));
-            nsCOMPtr<nsIDOMViewCSS> defaultCSSView =
-                do_QueryInterface(defaultView);
-            if (defaultCSSView) {
-                defaultCSSView->GetComputedStyle(frameElem,
-                                                 EmptyString(),
-                                                 getter_AddRefs(computedStyle));
+        if (frameOwnerDoc) {
+            nsCOMPtr<nsIDOMWindow> window;
+            frameOwnerDoc->GetDefaultView(getter_AddRefs(window));
+            if (window) {
+                window->GetComputedStyle(frameElem,
+                                         EmptyString(),
+                                         getter_AddRefs(computedStyle));
             }
         }
 

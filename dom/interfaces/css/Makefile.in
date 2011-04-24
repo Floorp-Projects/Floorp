@@ -71,7 +71,6 @@ XPIDLSRCS =					\
 	nsIDOMDocumentCSS.idl			\
 	nsIDOMRGBColor.idl			\
 	nsIDOMRect.idl				\
-	nsIDOMViewCSS.idl			\
 	nsIDOMNSRGBAColor.idl			\
 	$(NULL)
 
