@@ -1539,9 +1539,22 @@ ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
 inline void
 ScriptAnalysis::mergeValue(JSContext *cx, uint32 offset, const SSAValue &v, SlotValue *pv)
 {
-    JS_ASSERT(v.kind() != SSAValue::EMPTY && pv->value.kind() != SSAValue::EMPTY);
+    /* Make sure that v is accounted for in the pending value or phi value at pv. */
 
-    if (v.equals(pv->value))
+    /*
+     * Note: it would be nice to assert that v is also non-empty, but this can
+     * crop up when handling switch and try blocks. We don't track SSA values
+     * for variables in scripts containing these opcodes, and don't propagate
+     * the stack to all targets of the switch or try, under the assumption that
+     * code within the switch/try won't modify the stack. This assumption is
+     * not valid, however, when the script contains return statements within
+     * 'for in' blocks which then pop the stack with an ENDITER and clear out
+     * its contents before we get to the switch/try branch targets. This should
+     * be cleaned up.
+     */
+    JS_ASSERT(pv->value.kind() != SSAValue::EMPTY);
+
+    if (v.equals(pv->value) || v.kind() == SSAValue::EMPTY)
         return;
 
     if (pv->value.kind() != SSAValue::PHI || pv->value.phiOffset() < offset) {
@@ -1561,12 +1574,12 @@ void
 ScriptAnalysis::checkPendingValue(JSContext *cx, const SSAValue &v, uint32 slot,
                                   Vector<SlotValue> *pending)
 {
-    JS_ASSERT(v.kind() != SSAValue::EMPTY);
-
     for (unsigned i = 0; i < pending->length(); i++) {
         if ((*pending)[i].slot == slot)
             return;
     }
+
+    JS_ASSERT(v.kind() != SSAValue::EMPTY);
 
     if (!pending->append(SlotValue(slot, v)))
         setOOM(cx);
