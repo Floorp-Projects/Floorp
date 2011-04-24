@@ -118,7 +118,7 @@ nsDOMXULCommandEvent::GetSourceEvent(nsIDOMEvent** aSourceEvent)
 NS_IMETHODIMP
 nsDOMXULCommandEvent::InitCommandEvent(const nsAString& aType,
                                        PRBool aCanBubble, PRBool aCancelable,
-                                       nsIDOMAbstractView *aView,
+                                       nsIDOMWindow* aView,
                                        PRInt32 aDetail,
                                        PRBool aCtrlKey, PRBool aAltKey,
                                        PRBool aShiftKey, PRBool aMetaKey,
@@ -144,9 +144,5 @@ nsresult NS_NewDOMXULCommandEvent(nsIDOMEvent** aInstancePtrResult,
                                   nsInputEvent *aEvent) 
 {
   nsDOMXULCommandEvent* it = new nsDOMXULCommandEvent(aPresContext, aEvent);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   return CallQueryInterface(it, aInstancePtrResult);
 }

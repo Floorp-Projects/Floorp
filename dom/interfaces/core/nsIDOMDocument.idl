@@ -52,7 +52,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(2d305b95-a030-4d24-a12c-7fabf61a8c3c)]
+[scriptable, uuid(d12f0ecf-434a-4b5c-81ad-354e3b9037b9)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -108,4 +108,11 @@ interface nsIDOMDocument : nsIDOMNode
                                         raises(DOMException);
   // Introduced in DOM Level 3:
   void               normalizeDocument();
+
+  /**
+   * The window associated with this document.
+   *
+   * @see http://www.whatwg.org/html/#dom-document-defaultview
+   */
+  readonly attribute nsIDOMWindow    defaultView;
 };
