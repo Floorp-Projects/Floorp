@@ -1,6 +1,7 @@
 var sjcl = {
     cipher: {},
 };
+var global = 99;
 sjcl.cipher.aes = function (a) {
     var b, c, d, e, f = this.h[0][4],
     g = this.h[1];
@@ -9,7 +10,7 @@ sjcl.cipher.aes = function (a) {
     for (a = 8; a < 60; a++) {
         c = d[a - 1];
         if (a % 8 === 0) {
-            c = 99;
+            c = global;
             if (0 === 0) {
                 h = 2;
             }

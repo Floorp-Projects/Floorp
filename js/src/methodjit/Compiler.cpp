@@ -1327,11 +1327,22 @@ mjit::Compiler::generateMethod()
              * :XXX: this code is hacky and slow, but doesn't run that much.
              */
             for (unsigned i = 0; i < fixedDoubleEntries.length(); i++) {
-                FrameEntry *fe = fixedDoubleEntries[i];
+                FrameEntry *fe = frame.getOrTrack(fixedDoubleEntries[i]);
                 frame.ensureInteger(fe);
             }
         }
         fixedDoubleEntries.clear();
+
+#ifdef DEBUG
+        if (fallthrough && cx->typeInferenceEnabled()) {
+            for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
+                if (a->varTypes[slot].type == JSVAL_TYPE_INT32) {
+                    FrameEntry *fe = frame.getOrTrack(slot);
+                    JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
+                }
+            }
+        }
+#endif
 
         if (opinfo->jumpTarget || trap) {
             if (fallthrough) {
@@ -7097,9 +7108,7 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
         }
     }
 
-    for (uint32 slot = analyze::ArgSlot(0);
-         slot < analyze::LocalSlot(script, script->nfixed);
-         slot++) {
+    for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
         if (!fixDoubleSlot(slot))
             continue;
         if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE) {
@@ -7109,7 +7118,7 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
                  * Remember any slots we converted to double, so we can convert
                  * them back into ints at the start of the next iteration.
                  */
-                fixedDoubleEntries.append(fe);
+                fixedDoubleEntries.append(frame.indexOfFe(fe));
                 frame.ensureDouble(fe);
             }
         }
@@ -7141,9 +7150,7 @@ mjit::Compiler::restoreAnalysisTypes()
     }
 
     /* Restore known types of locals/args. */
-    for (uint32 slot = analyze::ArgSlot(0);
-         slot < analyze::LocalSlot(script, script->nfixed);
-         slot++) {
+    for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
         JSValueType type = a->varTypes[slot].type;
         if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || fixDoubleSlot(slot))) {
             FrameEntry *fe = frame.getOrTrack(slot);
