@@ -5127,9 +5127,25 @@ function getBrowserSelection(aCharLen) {
   // selections of more than 150 characters aren't useful
   const kMaxSelectionLen = 150;
   const charLen = Math.min(aCharLen || kMaxSelectionLen, kMaxSelectionLen);
+  let commandDispatcher = document.commandDispatcher;
 
-  var focusedWindow = document.commandDispatcher.focusedWindow;
+  var focusedWindow = commandDispatcher.focusedWindow;
   var selection = focusedWindow.getSelection().toString();
+  // try getting a selected text in text input.
+  if (!selection) {
+    let element = commandDispatcher.focusedElement;
+    function isOnTextInput(elem) {
+      // we avoid to return a value if a selection is in password field.
+      // ref. bug 565717
+      return elem instanceof HTMLTextAreaElement ||
+             (elem instanceof HTMLInputElement && elem.mozIsTextField(true));
+    };
+
+    if (isOnTextInput(element)) {
+      selection = element.QueryInterface(Ci.nsIDOMNSEditableElement)
+                         .editor.selection.toString();
+    }
+  }
 
   if (selection) {
     if (selection.length > charLen) {
