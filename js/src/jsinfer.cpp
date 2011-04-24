@@ -803,7 +803,7 @@ PropertyAccess(JSContext *cx, JSScript *script, const jsbytecode *pc, TypeObject
     }
 
     /* Reads from objects with unknown properties are unknown, writes to such objects are ignored. */
-    if (object->unknownProperties() || cx->compartment->debugMode) {
+    if (object->unknownProperties()) {
         if (!assign)
             target->addType(cx, TYPE_UNKNOWN);
         return;
@@ -3099,6 +3099,13 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
         if (CheckNextTest(pc))
             pushed[0].addType(cx, TYPE_UNDEFINED);
+
+        /*
+         * GETGNAME can refer to non-global names if EvaluateInStackFrame
+         * introduces new bindings.
+         */
+        if (cx->compartment->debugMode)
+            pushed[0].addType(cx, TYPE_UNKNOWN);
         break;
       }
 
@@ -3109,6 +3116,9 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         jsid id = GetAtomId(cx, script, pc, 0);
         PropertyAccess(cx, script, pc, script->getGlobalType(), true, NULL, id);
         PropertyAccess(cx, script, pc, script->getGlobalType(), false, &pushed[0], id);
+
+        if (cx->compartment->debugMode)
+            pushed[0].addType(cx, TYPE_UNKNOWN);
         break;
       }
 
