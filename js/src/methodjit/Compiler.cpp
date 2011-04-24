@@ -118,6 +118,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     callSites(CompilerAllocPolicy(cx, *thisFromCtor())),
     rejoinSites(CompilerAllocPolicy(cx, *thisFromCtor())),
     doubleList(CompilerAllocPolicy(cx, *thisFromCtor())),
+    fixedDoubleEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTables(CompilerAllocPolicy(cx, *thisFromCtor())),
     jumpTableOffsets(CompilerAllocPolicy(cx, *thisFromCtor())),
     loopEntries(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -638,7 +639,7 @@ mjit::Compiler::generatePrologue()
         for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
             uint32 slot = analyze::ArgSlot(i);
             if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
-                frame.ensureNumber(frame.getArg(i), false /* integer */);
+                frame.ensureDouble(frame.getArg(i));
         }
     }
 
@@ -1314,9 +1315,28 @@ mjit::Compiler::generateMethod()
 
         frame.setPC(PC);
         frame.setInTryBlock(opinfo->inTryBlock);
+
+        if (fallthrough) {
+            /*
+             * If there is fallthrough from the previous opcode and we changed
+             * any entries into doubles for a branch at that previous op,
+             * revert those entries into integers. Maintain an invariant that
+             * for any variables inferred to be integers, the compiler
+             * maintains them as integers slots, both for faster code inside
+             * basic blocks and for fewer conversions needed when branching.
+             * :XXX: this code is hacky and slow, but doesn't run that much.
+             */
+            for (unsigned i = 0; i < fixedDoubleEntries.length(); i++) {
+                FrameEntry *fe = fixedDoubleEntries[i];
+                frame.ensureInteger(fe);
+            }
+        }
+        fixedDoubleEntries.clear();
+
         if (opinfo->jumpTarget || trap) {
             if (fallthrough) {
                 fixDoubleTypes(PC);
+                fixedDoubleEntries.clear();
 
                 /*
                  * Watch for fallthrough to the head of a 'do while' loop.
@@ -3006,7 +3026,7 @@ mjit::Compiler::emitInlineReturnValue(FrameEntry *fe)
 
     if (a->returnValueDouble) {
         JS_ASSERT(fe);
-        frame.ensureNumber(fe, false /* integer */);
+        frame.ensureDouble(fe);
         Registers mask(a->returnSet
                        ? Registers::maskReg(a->returnRegister)
                        : Registers::AvailFPRegs);
@@ -7084,18 +7104,14 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
             continue;
         if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE) {
             FrameEntry *fe = frame.getOrTrack(slot);
-            if (!fe->isType(JSVAL_TYPE_DOUBLE))
-                frame.ensureNumber(fe, false /* integer */);
-        }
-        if (a->varTypes[slot].type == JSVAL_TYPE_INT32) {
-            /*
-             * Normally the entry will be maintained as an integer, but this is
-             * not required and can occur in circumstances such as after we
-             * converted the entry to a double for a previous branch.
-             */
-            FrameEntry *fe = frame.getOrTrack(slot);
-            if (!fe->isType(JSVAL_TYPE_INT32))
-                frame.ensureNumber(fe, true /* integer */);
+            if (!fe->isType(JSVAL_TYPE_DOUBLE)) {
+                /*
+                 * Remember any slots we converted to double, so we can convert
+                 * them back into ints at the start of the next iteration.
+                 */
+                fixedDoubleEntries.append(fe);
+                frame.ensureDouble(fe);
+            }
         }
     }
 
