@@ -237,7 +237,7 @@ toolbarbutton.bookmark-item > menupopup {
 }
 
 .bookmark-item[livemark] .menuitem-iconic {
-  list-style-image: url("chrome://browser/skin/places/livemarkItem.png");
+  list-style-image: url("chrome://browser/skin/livemark-item.png");
 }
 
 .bookmark-item menuitem[openInTabs],
