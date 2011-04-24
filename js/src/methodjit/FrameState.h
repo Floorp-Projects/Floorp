@@ -290,8 +290,8 @@ class FrameState
     void pushDouble(FPRegisterID fpreg);
     void pushDouble(Address address);
 
-    /* Ensure that fe is definitely a double.  It must already be either int or double. */
-    void ensureDouble(FrameEntry *fe);
+    /* Ensure that fe is definitely an int or double. It must already be either int or double. */
+    void ensureNumber(FrameEntry *fe, bool integer);
 
     /*
      * Emit code to masm ensuring that all in memory slots thought to be

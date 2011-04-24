@@ -638,7 +638,7 @@ mjit::Compiler::generatePrologue()
         for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
             uint32 slot = analyze::ArgSlot(i);
             if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
-                frame.ensureDouble(frame.getArg(i));
+                frame.ensureNumber(frame.getArg(i), false /* integer */);
         }
     }
 
@@ -3006,7 +3006,7 @@ mjit::Compiler::emitInlineReturnValue(FrameEntry *fe)
 
     if (a->returnValueDouble) {
         JS_ASSERT(fe);
-        frame.ensureDouble(fe);
+        frame.ensureNumber(fe, false /* integer */);
         Registers mask(a->returnSet
                        ? Registers::maskReg(a->returnRegister)
                        : Registers::AvailFPRegs);
@@ -7085,7 +7085,17 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
         if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE) {
             FrameEntry *fe = frame.getOrTrack(slot);
             if (!fe->isType(JSVAL_TYPE_DOUBLE))
-                frame.ensureDouble(fe);
+                frame.ensureNumber(fe, false /* integer */);
+        }
+        if (a->varTypes[slot].type == JSVAL_TYPE_INT32) {
+            /*
+             * Normally the entry will be maintained as an integer, but this is
+             * not required and can occur in circumstances such as after we
+             * converted the entry to a double for a previous branch.
+             */
+            FrameEntry *fe = frame.getOrTrack(slot);
+            if (!fe->isType(JSVAL_TYPE_INT32))
+                frame.ensureNumber(fe, true /* integer */);
         }
     }
 
