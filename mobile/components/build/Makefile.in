@@ -85,9 +85,5 @@ LOCAL_INCLUDES += $(MOZ_QT_CFLAGS)
 EXTRA_DSO_LDOPTS += $(MOZ_QT_LIBS)
 endif
 
-ifdef WINCE
-OS_LIBS += $(call EXPAND_LIBNAME, aygshell cellcore)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
