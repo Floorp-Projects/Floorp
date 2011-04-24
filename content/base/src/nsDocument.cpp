@@ -75,8 +75,6 @@
 #include "nsDOMAttribute.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDOMImplementation.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDOMDocumentXBL.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsGenericElement.h"
@@ -5069,16 +5067,14 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 
 
 NS_IMETHODIMP
-nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
+nsDocument::GetDefaultView(nsIDOMWindow** aDefaultView)
 {
-  nsPIDOMWindow* win = GetWindow();
-  if (win) {
-    return CallQueryInterface(win, aDefaultView);
-  }
-
   *aDefaultView = nsnull;
-
-  return NS_OK;
+  nsPIDOMWindow* win = GetWindow();
+  if (!win) {
+    return NS_OK;
+  }
+  return CallQueryInterface(win, aDefaultView);
 }
 
 NS_IMETHODIMP

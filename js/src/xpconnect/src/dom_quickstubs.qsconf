@@ -71,6 +71,7 @@ members = [
     #'nsIDOMWindow.document',
     'nsIDOMWindow.getSelection',
     'nsIDOMWindow.scrollByLines',
+    'nsIDOMWindow.getComputedStyle',
     'nsIDOMJSWindow.dump',
     'nsIDOMScreen.top',
     'nsIDOMScreen.height',
@@ -108,6 +109,7 @@ members = [
     'nsIDOMDocument.createTextNode',
     'nsIDOMDocument.documentURI',
     'nsIDOMDocument.adoptNode',
+    'nsIDOMDocument.defaultView',
     'nsIDOMElement.removeAttributeNS',
     'nsIDOMElement.removeAttribute',
     'nsIDOMElement.getAttribute',
@@ -173,7 +175,6 @@ members = [
     'nsIDOMElementCSSInlineStyle.*',
     'nsIDOMCSS2Properties.*',
     'nsIDOMRect.*',
-    'nsIDOMViewCSS.getComputedStyle',
     'nsIDOMCSSStyleDeclaration.*',
 
     # dom/interfaces/events
@@ -385,9 +386,6 @@ members = [
     # dom/interfaces/traversal
     'nsIDOMDocumentTraversal.createNodeIterator',
     'nsIDOMNodeIterator.nextNode',
-
-    # dom/interfaces/views
-    'nsIDOMDocumentView.defaultView',
 
     # dom/interfaces/xbl - None.
 
