@@ -39,7 +39,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(028e0e6e-8b01-11d3-aae7-0010838a3123)]
+[scriptable, uuid(e44d7977-20f2-442e-bc13-0f2f52992a4c)]
 interface nsIDOMKeyEvent : nsIDOMUIEvent
 {
   const unsigned long DOM_VK_CANCEL         = 0x03;
@@ -193,7 +193,7 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   void                      initKeyEvent(in DOMString typeArg,
                                          in boolean canBubbleArg,
                                          in boolean cancelableArg,
-                                         in nsIDOMAbstractView viewArg,
+                                         in nsIDOMWindow viewArg,
                                          in boolean ctrlKeyArg,
                                          in boolean altKeyArg,
                                          in boolean shiftKeyArg,

@@ -46,7 +46,7 @@ interface nsIVariant;
 interface nsIAnimationFrameListener;
 interface nsIDOMMediaQueryList;
 
-[scriptable, uuid(04eafa93-efbe-4254-9d65-91c344fa7ff2)]
+[scriptable, uuid(4d95736f-8130-43cb-a276-5bc554eca80a)]
 interface nsIDOMWindowInternal : nsIDOMWindow2
 {
   readonly attribute nsIDOMWindowInternal        window;
