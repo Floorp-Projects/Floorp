@@ -1114,6 +1114,12 @@ JSObject::makeDenseArraySlow(JSContext *cx)
     capacity = numFixedSlots() + arrayCapacity;
     clasp = &js_SlowArrayClass;
 
+    /*
+     * Root all values in the array during conversion, as SlowArrayClass only
+     * protects up to its slot span.
+     */
+    AutoValueArray autoArray(cx, slots, arrayInitialized);
+
     /* The initialized length is used iff this is a dense array. */
     initializedLength = 0;
     JS_ASSERT(newType == NULL);
