@@ -2012,14 +2012,17 @@ FrameState::pushDouble(Address address)
 }
 
 void
-FrameState::ensureDouble(FrameEntry *fe)
+FrameState::ensureNumber(FrameEntry *fe, bool integer)
 {
-    if (fe->isType(JSVAL_TYPE_DOUBLE))
+    if (fe->isType(integer ? JSVAL_TYPE_INT32 : JSVAL_TYPE_DOUBLE))
         return;
 
     if (fe->isConstant()) {
-        JS_ASSERT(fe->getValue().isInt32());
-        Value newValue = DoubleValue(double(fe->getValue().toInt32()));
+        Value newValue;
+        if (integer)
+            newValue = Int32Value(int32(fe->getValue().toDouble()));
+        else
+            newValue = DoubleValue(double(fe->getValue().toInt32()));
         fe->setConstant(Jsvalify(newValue));
         return;
     }
@@ -2040,22 +2043,49 @@ FrameState::ensureDouble(FrameEntry *fe)
         }
     }
 
-    FPRegisterID fpreg = allocFPReg();
+    if (integer) {
+        RegisterID reg = allocReg();
+        if (backing->isType(JSVAL_TYPE_DOUBLE)) {
+            FPRegisterID fpreg = tempFPRegForData(backing);
+            Jump j = masm.branchTruncateDoubleToInt32(fpreg, reg);
+            j.linkTo(masm.label(), &masm);
+        } else {
+            syncFe(backing);
+            Jump notInteger = masm.testInt32(Assembler::NotEqual, addressOf(backing));
+            masm.loadPayload(addressOf(backing), reg);
+            Jump fallthrough = masm.jump();
+            notInteger.linkTo(masm.label(), &masm);
+            FPRegisterID fpreg = allocFPReg();
+            masm.loadDouble(addressOf(backing), fpreg);
+            Jump j = masm.branchTruncateDoubleToInt32(fpreg, reg);
+            j.linkTo(masm.label(), &masm);
+            fallthrough.linkTo(masm.label(), &masm);
+            freeReg(fpreg);
+        }
 
-    if (backing->isType(JSVAL_TYPE_INT32)) {
-        RegisterID data = tempRegForData(backing);
-        masm.convertInt32ToDouble(data, fpreg);
+        if (fe == backing)
+            forgetAllRegs(fe);
+        fe->resetUnsynced();
+        fe->setType(JSVAL_TYPE_INT32);
+        fe->data.setRegister(reg);
+        regstate(reg).associate(fe, RematInfo::DATA);
     } else {
-        syncFe(backing);
-        masm.moveInt32OrDouble(addressOf(backing), fpreg);
-    }
+        FPRegisterID fpreg = allocFPReg();
+        if (backing->isType(JSVAL_TYPE_INT32)) {
+            RegisterID data = tempRegForData(backing);
+            masm.convertInt32ToDouble(data, fpreg);
+        } else {
+            syncFe(backing);
+            masm.moveInt32OrDouble(addressOf(backing), fpreg);
+        }
 
-    if (fe == backing)
-        forgetAllRegs(fe);
-    fe->resetUnsynced();
-    fe->setType(JSVAL_TYPE_DOUBLE);
-    fe->data.setFPRegister(fpreg);
-    regstate(fpreg).associate(fe, RematInfo::DATA);
+        if (fe == backing)
+            forgetAllRegs(fe);
+        fe->resetUnsynced();
+        fe->setType(JSVAL_TYPE_DOUBLE);
+        fe->data.setFPRegister(fpreg);
+        regstate(fpreg).associate(fe, RematInfo::DATA);
+    }
 
     fe->data.unsync();
     fe->type.unsync();
