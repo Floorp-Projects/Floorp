@@ -526,6 +526,7 @@ class Compiler : public BaseCompiler
     js::Vector<InternalCallSite, 64, CompilerAllocPolicy> callSites;
     js::Vector<InternalRejoinSite, 64, CompilerAllocPolicy> rejoinSites;
     js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
+    js::Vector<FrameEntry*, 4, CompilerAllocPolicy> fixedDoubleEntries;
     js::Vector<JumpTable, 16> jumpTables;
     js::Vector<uint32, 16> jumpTableOffsets;
     js::Vector<LoopEntry, 16> loopEntries;
