@@ -81,6 +81,13 @@ function selectText(element) {
   subwindow.getSelection().addRange(div);
 }
 
+function selectInputText(element) {
+  // Clear any previous selections before selecting new element.
+  subwindow.getSelection().removeAllRanges();
+
+  element.select();
+}
+
 function getVisibleMenuItems(aMenu, aData) {
     var items = [];
     var accessKeys = {};
@@ -783,7 +790,50 @@ function runTest(testNum) {
                           "context-viewimageinfo",        true
                          ].concat(inspectItems));
         closeContextMenu();
+        selectInputText(select_inputtext); // Select text prior to opening context menu.
+        openContextMenuFor(select_inputtext); // Invoke context menu for next test.
+        return;
 
+    case 27:
+        // Context menu for selected text in input
+        checkContextMenu(["context-undo",        false,
+                          "---",                 null,
+                          "context-cut",         true,
+                          "context-copy",        true,
+                          "context-paste",       null, // ignore clipboard state
+                          "context-delete",      true,
+                          "---",                 null,
+                          "context-selectall",   true,
+                          "context-searchselect",true,
+                          "---",                 null,
+                          "spell-check-enabled", true
+                         ].concat(inspectItems));
+        closeContextMenu();
+        selectInputText(select_inputtext_password); // Select text prior to opening context menu.
+        openContextMenuFor(select_inputtext_password); // Invoke context menu for next test.
+        return;
+
+    case 28:
+        // Context menu for selected text in input[type="password"]
+          checkContextMenu(["context-undo",        false,
+                            "---",                 null,
+                            "context-cut",         true,
+                            "context-copy",        true,
+                            "context-paste",       null, // ignore clipboard state
+                            "context-delete",      true,
+                            "---",                 null,
+                            "context-selectall",   true,
+                            "---",                 null,
+                            "spell-check-enabled", true,
+                            //spell checker is shown on input[type="password"] on this testcase
+                            "spell-dictionaries",  true,
+                                ["spell-check-dictionary-en-US", true,
+                                 "---",                          null,
+                                 "spell-add-dictionaries",       true], null
+                           ].concat(inspectItems));
+        closeContextMenu();
+
+        // finish test
         subwindow.close();
         SimpleTest.finish();
         return;
@@ -810,7 +860,7 @@ var subwindow, chromeWin, contextMenu, lastElement;
 var text, link, mailto, input, img, canvas, video_ok, video_bad, video_bad2,
     iframe, video_in_iframe, image_in_iframe, textarea, contenteditable,
     inputspell, pagemenu, dom_full_screen, plainTextItems, audio_in_video,
-    imagelink;
+    selecttext, selecttextlink, imagelink, select_inputtext, select_inputtext_password;
 
 function startTest() {
     chromeWin = SpecialPowers.wrap(subwindow)
@@ -856,6 +906,8 @@ function startTest() {
     dom_full_screen = subwindow.document.getElementById("test-dom-full-screen");
     selecttext = subwindow.document.getElementById("test-select-text");
     selecttextlink = subwindow.document.getElementById("test-select-text-link");
+    select_inputtext = subwindow.document.getElementById("test-select-input-text");
+    select_inputtext_password = subwindow.document.getElementById("test-select-input-text-type-password");
 
     contextMenu.addEventListener("popupshown", function() { runTest(++testNum); }, false);
     runTest(1);
