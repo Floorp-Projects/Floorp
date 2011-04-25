@@ -2206,11 +2206,8 @@ GetNamedItemHelper(nsTArray<nsRefPtr<nsHTMLOptionElement> > &aElements,
 
 nsISupports*
 nsHTMLOptionCollection::GetNamedItem(const nsAString& aName,
-                                     nsWrapperCache **aCache,
-                                     nsresult* aResult)
+                                     nsWrapperCache **aCache)
 {
-  *aResult = NS_OK;
-
   nsINode *item = GetNamedItemHelper(mElements, aName);
   *aCache = item;
   return item;

@@ -262,8 +262,7 @@ public:
   // nsIHTMLCollection
   // GetNodeAt already declared as part of nsINodeList
   virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache** aCache,
-                                    nsresult* aResult);
+                                    nsWrapperCache** aCache);
 
   // nsContentList public methods
   NS_HIDDEN_(nsINode*) GetParentObject() { return mRootNode; }
