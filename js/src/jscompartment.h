@@ -390,10 +390,6 @@ struct JS_FRIEND_API(JSCompartment) {
 
     bool                         hold;
 
-#ifdef JS_GCMETER
-    js::gc::JSGCArenaStats       compartmentStats[js::gc::FINALIZE_LIMIT];
-#endif
-
 #ifdef JS_TRACER
     /* Trace-tree JIT recorder/interpreter state. */
     js::TraceMonitor             traceMonitor;
@@ -486,9 +482,9 @@ struct JS_FRIEND_API(JSCompartment) {
     void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
     void finishArenaLists();
-    void finalizeObjectArenaLists(JSContext *cx, JSGCInvocationKind gckind);
-    void finalizeStringArenaLists(JSContext *cx, JSGCInvocationKind gckind);
-    void finalizeShapeArenaLists(JSContext *cx, JSGCInvocationKind gckind);
+    void finalizeObjectArenaLists(JSContext *cx);
+    void finalizeStringArenaLists(JSContext *cx);
+    void finalizeShapeArenaLists(JSContext *cx);
     bool arenaListsAreEmpty();
 
     void setGCLastBytes(size_t lastBytes);
