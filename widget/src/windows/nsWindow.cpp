@@ -5213,7 +5213,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM &wParam, LPARAM &lParam,
 
     case WM_SETTINGCHANGE:
       getWheelInfo = PR_TRUE;
-      OnSettingsChange(wParam, lParam);
       break;
 
     case WM_INPUTLANGCHANGEREQUEST:
@@ -7286,13 +7285,6 @@ PRBool nsWindow::OnResize(nsIntRect &aWindowRect)
 PRBool nsWindow::OnHotKey(WPARAM wParam, LPARAM lParam)
 {
   return PR_TRUE;
-}
-
-void nsWindow::OnSettingsChange(WPARAM wParam, LPARAM lParam)
-{
-  if (mWindowType == eWindowType_dialog ||
-      mWindowType == eWindowType_toplevel )
-    nsWindowGfx::OnSettingsChangeGfx(wParam);
 }
 
 /* static */
