@@ -2169,22 +2169,19 @@ nsHTMLOptionCollection::SetSelectedIndex(PRInt32 aSelectedIndex)
 NS_IMETHODIMP
 nsHTMLOptionCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  nsresult rv;
-  nsISupports* item = GetNodeAt(aIndex, &rv);
+  nsISupports* item = GetNodeAt(aIndex);
   if (!item) {
     *aReturn = nsnull;
 
-    return rv;
+    return NS_OK;
   }
 
   return CallQueryInterface(item, aReturn);
 }
 
 nsIContent*
-nsHTMLOptionCollection::GetNodeAt(PRUint32 aIndex, nsresult* aResult)
+nsHTMLOptionCollection::GetNodeAt(PRUint32 aIndex)
 {
-  *aResult = NS_OK;
-
   return static_cast<nsIContent*>(ItemAsOption(aIndex));
 }
 
@@ -2209,11 +2206,8 @@ GetNamedItemHelper(nsTArray<nsRefPtr<nsHTMLOptionElement> > &aElements,
 
 nsISupports*
 nsHTMLOptionCollection::GetNamedItem(const nsAString& aName,
-                                     nsWrapperCache **aCache,
-                                     nsresult* aResult)
+                                     nsWrapperCache **aCache)
 {
-  *aResult = NS_OK;
-
   nsINode *item = GetNamedItemHelper(mElements, aName);
   *aCache = item;
   return item;
