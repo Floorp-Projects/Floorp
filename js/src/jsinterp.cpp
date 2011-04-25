@@ -1250,56 +1250,36 @@ InvokeConstructor(JSContext *cx, const CallArgs &argsRef)
     JS_ASSERT(!js_FunctionClass.construct);
     CallArgs args = argsRef;
 
-    JSObject *callee;
-    if (args.calleev().isPrimitive() || !(callee = &args.callee())->getParent()) {
-        js_ReportIsNotFunction(cx, &args.calleev(), JSV2F_CONSTRUCT);
-        return false;
-    }
+    if (args.calleev().isObject()) {
+        JSObject *callee = &args.callee();
+        Class *clasp = callee->getClass();
+        if (clasp == &js_FunctionClass) {
+            JSFunction *fun = callee->getFunctionPrivate();
 
-    /* Handle the fast-constructors cases before falling into the general case . */
-    Class *clasp = callee->getClass();
-    JSFunction *fun = NULL;
-    if (clasp == &js_FunctionClass) {
-        fun = callee->getFunctionPrivate();
-        if (fun->isConstructor()) {
-            args.thisv().setMagicWithObjectOrNullPayload(NULL);
-            return CallJSNativeConstructor(cx, fun->u.n.native, args.argc(), args.base());
-        }
-    } else if (clasp->construct) {
-        args.thisv().setMagicWithObjectOrNullPayload(NULL);
-        return CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
-    }
-
-    /* Scripts create their own |this| in JSOP_BEGIN */
-    if (!fun || !fun->isInterpreted()) {
-        JSObject *obj = js_CreateThis(cx, callee);
-        if (!obj)
-            return false;
-        args.thisv().setObject(*obj);
-    }
-
-    if (!Invoke(cx, args, JSINVOKE_CONSTRUCT))
-        return false;
-
-    if (args.rval().isPrimitive()) {
-        if (clasp != &js_FunctionClass) {
-            /* native [[Construct]] returning primitive is error */
-            JSAutoByteString bytes;
-            if (js_ValueToPrintable(cx, args.rval(), &bytes)) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_BAD_NEW_RESULT, bytes.ptr());
-                return false;
+            if (fun->isConstructor()) {
+                args.thisv().setMagicWithObjectOrNullPayload(NULL);
+                return CallJSNativeConstructor(cx, fun->u.n.native, args.argc(), args.base());
             }
+
+            if (!fun->isInterpretedConstructor())
+                goto error;
+
+            if (!Invoke(cx, args, JSINVOKE_CONSTRUCT))
+                return false;
+
+            JS_ASSERT(args.rval().isObject());
+            JS_RUNTIME_METER(cx->runtime, constructs);
+            return true;
         }
-
-        /* The interpreter fixes rval for us. */
-        JS_ASSERT(!fun->isInterpreted());
-
-        args.rval() = args.thisv();
+        if (clasp->construct) {
+            args.thisv().setMagicWithObjectOrNullPayload(NULL);
+            return CallJSNativeConstructor(cx, clasp->construct, args.argc(), args.base());
+        }
     }
 
-    JS_RUNTIME_METER(cx->runtime, constructs);
-    return true;
+error:
+    js_ReportIsNotFunction(cx, &args.calleev(), JSV2F_CONSTRUCT);
+    return false;
 }
 
 bool
@@ -4580,14 +4560,13 @@ BEGIN_CASE(JSOP_NEW)
     argc = GET_ARGC(regs.pc);
     vp = regs.sp - (2 + argc);
     JS_ASSERT(vp >= regs.fp->base());
-
     /*
      * Assign lval, callee, and newfun exactly as the code at inline_call: expects to
      * find them, to avoid nesting a js_Interpret call via js_InvokeConstructor.
      */
     if (IsFunctionObject(vp[0], &callee)) {
         newfun = callee->getFunctionPrivate();
-        if (newfun->isInterpreted()) {
+        if (newfun->isInterpretedConstructor()) {
             if (newfun->u.i.script->isEmpty()) {
                 JSObject *obj2 = js_CreateThisForFunction(cx, callee);
                 if (!obj2)
