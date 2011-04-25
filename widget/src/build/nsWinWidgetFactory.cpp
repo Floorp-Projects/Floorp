@@ -63,13 +63,9 @@
 
 #include "nsClipboardHelper.h"
 
-#ifdef WINCE
-#include "nsClipboardCE.h"
-#else
 #include "nsClipboard.h"
 #include "nsBidiKeyboard.h"
 #include "nsDragService.h"
-#endif
 #include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 
@@ -110,10 +106,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
-#ifndef WINCE
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 #ifdef NS_PRINTING
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintOptionsWin, Init)
@@ -137,7 +131,7 @@ NS_DEFINE_NAMED_CID(NS_CLIPBOARDHELPER_CID);
 NS_DEFINE_NAMED_CID(NS_SOUND_CID);
 NS_DEFINE_NAMED_CID(NS_TRANSFERABLE_CID);
 NS_DEFINE_NAMED_CID(NS_HTMLFORMATCONVERTER_CID);
-#ifndef WINCE
+
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
 NS_DEFINE_NAMED_CID(NS_WIN_TASKBAR_CID);
 NS_DEFINE_NAMED_CID(NS_WIN_JUMPLISTBUILDER_CID);
@@ -146,9 +140,10 @@ NS_DEFINE_NAMED_CID(NS_WIN_JUMPLISTSEPARATOR_CID);
 NS_DEFINE_NAMED_CID(NS_WIN_JUMPLISTLINK_CID);
 NS_DEFINE_NAMED_CID(NS_WIN_JUMPLISTSHORTCUT_CID);
 #endif
+
 NS_DEFINE_NAMED_CID(NS_DRAGSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_BIDIKEYBOARD_CID);
-#endif
+
 #ifdef NS_PRINTING
 NS_DEFINE_NAMED_CID(NS_PRINTSETTINGSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTER_ENUMERATOR_CID);
@@ -173,7 +168,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
   { &kNS_SOUND_CID, false, NULL, nsSoundConstructor },
   { &kNS_TRANSFERABLE_CID, false, NULL, nsTransferableConstructor },
   { &kNS_HTMLFORMATCONVERTER_CID, false, NULL, nsHTMLFormatConverterConstructor },
-#ifndef WINCE
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   { &kNS_WIN_TASKBAR_CID, false, NULL, WinTaskbarConstructor },
   { &kNS_WIN_JUMPLISTBUILDER_CID, false, NULL, JumpListBuilderConstructor },
@@ -184,7 +178,6 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
 #endif
   { &kNS_DRAGSERVICE_CID, false, NULL, nsDragServiceConstructor },
   { &kNS_BIDIKEYBOARD_CID, false, NULL, nsBidiKeyboardConstructor },
-#endif
 #ifdef NS_PRINTING
   { &kNS_PRINTSETTINGSSERVICE_CID, false, NULL, nsPrintOptionsWinConstructor },
   { &kNS_PRINTER_ENUMERATOR_CID, false, NULL, nsPrinterEnumeratorWinConstructor },
@@ -210,7 +203,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
   { "@mozilla.org/sound;1", &kNS_SOUND_CID },
   { "@mozilla.org/widget/transferable;1", &kNS_TRANSFERABLE_CID },
   { "@mozilla.org/widget/htmlformatconverter;1", &kNS_HTMLFORMATCONVERTER_CID },
-#ifndef WINCE
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7
   { "@mozilla.org/windows-taskbar;1", &kNS_WIN_TASKBAR_CID },
   { "@mozilla.org/windows-jumplistbuilder;1", &kNS_WIN_JUMPLISTBUILDER_CID },
@@ -221,7 +213,6 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
 #endif
   { "@mozilla.org/widget/dragservice;1", &kNS_DRAGSERVICE_CID },
   { "@mozilla.org/widget/bidikeyboard;1", &kNS_BIDIKEYBOARD_CID },
-#endif
 #ifdef NS_PRINTING
   { "@mozilla.org/gfx/printsettings-service;1", &kNS_PRINTSETTINGSSERVICE_CID },
   { "@mozilla.org/gfx/printerenumerator;1", &kNS_PRINTER_ENUMERATOR_CID },

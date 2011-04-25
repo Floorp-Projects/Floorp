@@ -112,7 +112,6 @@ _CHROME_FILES += native_menus_window.xul \
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifneq ($(OS_ARCH), WINCE)
 _CHROME_FILES  += taskbar_previews.xul \
 		window_state_windows.xul \
 		taskbar_progress.xul \
@@ -123,7 +122,6 @@ _CHROME_FILES  += taskbar_previews.xul \
 
 _TEST_FILES +=	test_bug565392.html \
 		$(NULL)
-endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
