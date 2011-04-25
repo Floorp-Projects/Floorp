@@ -7772,10 +7772,10 @@ nsGlobalWindow::DispatchSyncPopState()
   }
 
   // Get the document's pending state object -- it contains the data we're
-  // going to send along with the popstate event.  The object is serialized as
-  // JSON.
+  // going to send along with the popstate event.  The object is serialized
+  // using structured clone.
   nsCOMPtr<nsIVariant> stateObj;
-  rv = mDoc->GetMozCurrentStateObject(getter_AddRefs(stateObj));
+  rv = mDoc->GetStateObject(getter_AddRefs(stateObj));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Obtain a presentation shell for use in creating a popstate event.

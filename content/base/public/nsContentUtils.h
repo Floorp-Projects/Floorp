@@ -190,6 +190,11 @@ public:
   static nsresult Init();
 
   /**
+   * Get a JSContext from the document's scope object.
+   */
+  static JSContext* GetContextFromDocument(nsIDocument *aDocument);
+
+  /**
    * Get a scope from aNewDocument. Also get a context through the scope of one
    * of the documents, from the stack or the safe context.
    *

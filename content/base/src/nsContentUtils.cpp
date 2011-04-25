@@ -1391,8 +1391,8 @@ nsContentUtils::InProlog(nsINode *aNode)
   return !root || doc->IndexOf(aNode) < doc->IndexOf(root);
 }
 
-static JSContext *
-GetContextFromDocument(nsIDocument *aDocument)
+JSContext *
+nsContentUtils::GetContextFromDocument(nsIDocument *aDocument)
 {
   nsIScriptGlobalObject *sgo = aDocument->GetScopeObject();
   if (!sgo) {
