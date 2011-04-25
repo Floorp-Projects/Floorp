@@ -60,6 +60,7 @@ _TEST_FILES = \
 		test_animLengthRelativeUnits.xhtml \
 		test_animLengthUnits.xhtml \
 		test_bbox.xhtml \
+		test_bbox-with-invalid-viewBox.xhtml \
 		bbox-helper.svg \
 		bounds-helper.svg \
 		test_dataTypes.html \
