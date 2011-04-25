@@ -1723,8 +1723,7 @@ var XPIProvider = {
             addon = loadManifestFromZipFile(stagedXPI);
           }
           catch (e) {
-            ERROR("Unable to read add-on manifest for " + stagedXPI.leafName +
-                  " in XPI stage of " + aLocation.name, e);
+            ERROR("Unable to read add-on manifest from " + stagedXPI.path, e);
             continue;
           }
 
@@ -1822,7 +1821,7 @@ var XPIProvider = {
         }
 
         aManifests[aLocation.name][id] = null;
-        let existingAddonID = null;
+        let existingAddonID = id;
 
         // Check for a cached AddonInternal for this add-on, it may contain
         // updated compatibility information
@@ -1839,18 +1838,55 @@ var XPIProvider = {
             fis.init(jsonfile, -1, 0, 0);
             aManifests[aLocation.name][id] = json.decodeFromStream(fis,
                                                                    jsonfile.fileSize);
-            existingAddonID = aManifests[aLocation.name][id].existingAddonID;
+            existingAddonID = aManifests[aLocation.name][id].existingAddonID || id;
           }
           catch (e) {
-            ERROR("Unable to read add-on manifest for " + id + " in " +
-                  aLocation.name, e);
+            ERROR("Unable to read add-on manifest from " + jsonfile.path, e);
           }
           finally {
             fis.close();
           }
         }
 
+        // If there was no cached AddonInternal then load it directly
+        if (!aManifests[aLocation.name][id]) {
+          try {
+            aManifests[aLocation.name][id] = loadManifestFromFile(stageDirEntry);
+            existingAddonID = aManifests[aLocation.name][id].existingAddonID || id;
+          }
+          catch (e) {
+            // This add-on can't be installed so just remove it now
+            stageDirEntry.remove(true);
+            ERROR("Unable to read add-on manifest from " + stageDirEntry.path, e);
+          }
+        }
+
+        var oldBootstrap = null;
         LOG("Processing install of " + id + " in " + aLocation.name);
+        if (existingAddonID in this.bootstrappedAddons) {
+          try {
+            var existingAddon = aLocation.getLocationForID(existingAddonID);
+            if (this.bootstrappedAddons[existingAddonID].descriptor ==
+                existingAddon.persistentDescriptor) {
+              oldBootstrap = this.bootstrappedAddons[existingAddonID];
+
+              // We'll be replacing a currently active bootstrapped add-on so
+              // call its uninstall method
+              let oldVersion = aManifests[aLocation.name][id].version;
+              let newVersion = oldBootstrap.version;
+              let uninstallReason = Services.vc.compare(newVersion, oldVersion) < 0 ?
+                                    BOOTSTRAP_REASONS.ADDON_UPGRADE :
+                                    BOOTSTRAP_REASONS.ADDON_DOWNGRADE;
+
+              this.callBootstrapMethod(existingAddonID, oldBootstrap.version,
+                                       existingAddon, "uninstall", uninstallReason);
+              this.unloadBootstrapScope(existingAddonID);
+            }
+          }
+          catch (e) {
+          }
+        }
+
         try {
           var addonInstallLocation = aLocation.installAddon(id, stageDirEntry,
                                                             existingAddonID);
@@ -1861,6 +1897,13 @@ var XPIProvider = {
           ERROR("Failed to install staged add-on " + id + " in " + aLocation.name,
                 e);
           delete aManifests[aLocation.name][id];
+
+          if (oldBootstrap) {
+            // Re-install the old add-on
+            this.callBootstrapMethod(existingAddonID, oldBootstrap.version,
+                                     existingAddon, "install",
+                                     BOOTSTRAP_REASONS.ADDON_INSTALL);
+          }
           continue;
         }
       }
@@ -1873,7 +1916,7 @@ var XPIProvider = {
         // Non-critical, just saves some perf on startup if we clean this up.
         LOG("Error removing staging dir " + stagingDir.path, e);
       }
-    });
+    }, this);
     return changed;
   },
 
@@ -2523,6 +2566,11 @@ var XPIProvider = {
     // needs to be updated
     let updateDatabase = aAppChanged;
 
+    // Load the list of bootstrapped add-ons first so processFileChanges can
+    // modify it
+    this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
+                                         "{}"));
+
     // First install any new add-ons into the locations, if there are any
     // changes then we must update the database with the information in the
     // install locations
@@ -2541,11 +2589,6 @@ var XPIProvider = {
     if (aAppChanged !== false &&
         Prefs.getBoolPref(PREF_INSTALL_DISTRO_ADDONS, true))
       updateDatabase = this.installDistributionAddons(manifests) | updateDatabase;
-
-    // Load the list of bootstrapped add-ons first so processFileChanges can
-    // modify it
-    this.bootstrappedAddons = JSON.parse(Prefs.getCharPref(PREF_BOOTSTRAP_ADDONS,
-                                         "{}"));
 
     let state = this.getInstallLocationStates();
 
