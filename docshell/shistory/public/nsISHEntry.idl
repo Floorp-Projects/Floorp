@@ -50,6 +50,7 @@ interface nsIURI;
 interface nsIInputStream;
 interface nsIDocShellTreeItem;
 interface nsISupportsArray;
+interface nsIStructuredCloneContainer;
 %{C++
 struct nsIntRect;
 class nsDocShellEditorData;
@@ -201,9 +202,9 @@ interface nsISHEntry : nsIHistoryEntry
 
     /**
      * Get/set data associated with this history state via a pushState() call,
-     * encoded as JSON.
+     * serialized using structured clone.
      **/
-    attribute AString stateData;
+    attribute nsIStructuredCloneContainer stateData;
 
     /**
      * Gets the owning pointer to the editor data assosicated with

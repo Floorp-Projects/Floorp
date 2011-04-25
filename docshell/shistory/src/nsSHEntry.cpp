@@ -142,8 +142,8 @@ nsSHEntry::nsSHEntry(const nsSHEntry &other)
   , mParent(other.mParent)
   , mViewerBounds(0, 0, 0, 0)
   , mOwner(other.mOwner)
-  , mStateData(other.mStateData)
   , mDocShellID(other.mDocShellID)
+  , mStateData(other.mStateData)
 {
 }
 
@@ -992,16 +992,17 @@ nsSHEntry::HasDetachedEditor()
 }
 
 NS_IMETHODIMP
-nsSHEntry::GetStateData(nsAString &aStateData)
+nsSHEntry::GetStateData(nsIStructuredCloneContainer **aContainer)
 {
-  aStateData.Assign(mStateData);
+  NS_ENSURE_ARG_POINTER(aContainer);
+  NS_IF_ADDREF(*aContainer = mStateData);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSHEntry::SetStateData(const nsAString &aDataStr)
+nsSHEntry::SetStateData(nsIStructuredCloneContainer *aContainer)
 {
-  mStateData.Assign(aDataStr);
+  mStateData = aContainer;
   return NS_OK;
 }
 
