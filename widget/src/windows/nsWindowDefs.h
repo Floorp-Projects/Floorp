@@ -169,24 +169,11 @@
    */
 #endif // #ifndef APPCOMMAND_BROWSER_BACKWARD
 
-#if defined(WINCE)
-#ifndef RDW_NOINTERNALPAINT
-#define RDW_NOINTERNALPAINT     0
-#endif
-#ifndef ERROR
-#define ERROR 0
-#endif
-#endif // defined(WINCE)
-
 //Tablet PC Mouse Input Source
-#if !defined(WINCE)
 #define TABLET_INK_SIGNATURE 0xFFFFFF00
 #define TABLET_INK_CHECK     0xFF515700
 #define TABLET_INK_TOUCH     0x00000080
 #define MOUSE_INPUT_SOURCE() GetMouseInputSource()
-#else
-#define MOUSE_INPUT_SOURCE() nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE
-#endif
 
 /**************************************************************
  *

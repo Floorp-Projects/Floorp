@@ -87,12 +87,6 @@ CPPSRCS		+= \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH), WINCE)
-CPPSRCS += \
-	nsWindowCE.cpp \
-	nsClipboardCE.cpp \
-	$(NULL)
-else
 CPPSRCS += \
 	KeyboardLayout.cpp \
 	IEnumFE.cpp  \
@@ -107,7 +101,6 @@ CPPSRCS += \
 	$(NULL)
 ifdef NS_ENABLE_TSF
 CPPSRCS		+= nsTextStore.cpp
-endif
 endif
 
 
@@ -137,10 +130,6 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 FORCE_STATIC_LIB = 1
-
-ifdef WINCE
-EXTRA_DSO_LDOPTS += ddraw.lib
-endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
