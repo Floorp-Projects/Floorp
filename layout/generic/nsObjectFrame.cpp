@@ -224,6 +224,7 @@ using mozilla::DefaultXDisplay;
 #define INCL_PM
 #define INCL_GPI
 #include <os2.h>
+#include "gfxOS2Surface.h"
 #endif
 
 #ifdef CreateEvent // Thank you MS.
@@ -1663,7 +1664,7 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 #ifdef XP_OS2
 static void *
-GetPSFromRC(nsRenderingContext& aRC)
+GetPSFromRC(nsRenderingContext& aRenderingContext)
 {
   nsRefPtr<gfxASurface>
     surf = aRenderingContext.ThebesContext()->CurrentSurface();
