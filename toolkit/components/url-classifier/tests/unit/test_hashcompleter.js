@@ -264,6 +264,16 @@ function callback(completion) {
 }
 callback.prototype = {
   completion: function completion(hash, table, chunkId, trusted) {
+    // This check was added as part of diagnostics for bug 652294.
+    if (!this._completion.expectCompletion) {
+      dump("Did not expect a completion for this result. Provided values:\n" +
+           "hash: " + JSON.stringify(hash) + "\ntable: " + table + "chunkId: " +
+           chunkId + "\n");
+      dump("Actual values:\nhash: " + JSON.stringify(this._completion.hash) +
+           "\ntable: " + this._completion.table + "\nchunkId: " +
+           this._completion.chunkId + "\n");
+    }
+
     do_check_true(this._completion.expectCompletion);
 
     if (this._completion.multipleCompletions) {

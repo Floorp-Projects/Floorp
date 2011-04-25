@@ -9,7 +9,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=287465
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="doTest()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=287465">Mozilla Bug 287465</a>
 <p id="display"></p>
 <div id="content" style="display:none">
@@ -24,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=287465
 <script class="testbody" type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(doTest);
 
 function doTest() {
   function checkSVGDocument(id) {

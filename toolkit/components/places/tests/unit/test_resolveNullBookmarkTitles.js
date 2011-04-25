@@ -93,4 +93,5 @@ function run_test() {
   // so they are reversed
   do_check_eq(root.getChild(0).title, "bar title");
   do_check_eq(root.getChild(1).title, "foo title");
+  root.containerOpen = false;
 }

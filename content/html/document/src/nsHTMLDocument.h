@@ -243,8 +243,6 @@ protected:
   nsresult GetBodySize(PRInt32* aWidth,
                        PRInt32* aHeight);
 
-  nsresult PrePopulateIdentifierMap();
-
   nsIContent *MatchId(nsIContent *aContent, const nsAString& aId);
 
   static PRBool MatchLinks(nsIContent *aContent, PRInt32 aNamespaceID,

@@ -14,6 +14,36 @@ function makeEngine() {
 }
 var syncTesting = new SyncTestingInfrastructure(makeEngine);
 
+add_test(function bad_record_allIDs() {
+  _("Ensure that bad Places queries don't cause an error in getAllIDs.");
+  let engine = new BookmarksEngine();
+  let store = engine._store;
+  let badRecordID = Svc.Bookmark.insertBookmark(
+      Svc.Bookmark.toolbarFolder,
+      Utils.makeURI("place:folder=1138"),
+      Svc.Bookmark.DEFAULT_INDEX,
+      null);
+
+  do_check_true(badRecordID > 0);
+  _("Record is " + badRecordID);
+  _("Type: " + Svc.Bookmark.getItemType(badRecordID));
+
+  _("Fetching children.");
+  store._getChildren("toolbar", {});
+
+  _("Fetching all IDs.");
+  let all = store.getAllIDs();
+  
+  _("All IDs: " + JSON.stringify(all));
+  do_check_true("menu" in all);
+  do_check_true("toolbar" in all);
+  
+  _("Clean up.");
+  Svc.Bookmark.removeItem(badRecordID);
+  run_next_test();
+});
+  
+  
 add_test(function test_ID_caching() {
 
   _("Ensure that Places IDs are not cached.");

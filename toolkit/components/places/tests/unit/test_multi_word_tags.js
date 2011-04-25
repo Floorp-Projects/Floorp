@@ -99,6 +99,7 @@ function run_test() {
   do_check_eq(root.getChild(0).uri, "http://site.tld/1");
   do_check_eq(root.getChild(1).uri, "http://site.tld/4");
   do_check_eq(root.getChild(2).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "bar";
   result = histsvc.executeQuery(query, options);
@@ -109,6 +110,7 @@ function run_test() {
   do_check_eq(root.getChild(1).uri, "http://site.tld/4");
   do_check_eq(root.getChild(2).uri, "http://site.tld/5");
   do_check_eq(root.getChild(3).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "cheese";
   result = histsvc.executeQuery(query, options);
@@ -118,6 +120,7 @@ function run_test() {
   do_check_eq(root.getChild(0).uri, "http://site.tld/3");
   do_check_eq(root.getChild(1).uri, "http://site.tld/5");
   do_check_eq(root.getChild(2).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "foo bar";
   result = histsvc.executeQuery(query, options);
@@ -126,6 +129,7 @@ function run_test() {
   do_check_eq(root.childCount, 2);
   do_check_eq(root.getChild(0).uri, "http://site.tld/4");
   do_check_eq(root.getChild(1).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "bar foo";
   result = histsvc.executeQuery(query, options);
@@ -134,6 +138,7 @@ function run_test() {
   do_check_eq(root.childCount, 2);
   do_check_eq(root.getChild(0).uri, "http://site.tld/4");
   do_check_eq(root.getChild(1).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "bar cheese";
   result = histsvc.executeQuery(query, options);
@@ -142,6 +147,7 @@ function run_test() {
   do_check_eq(root.childCount, 2);
   do_check_eq(root.getChild(0).uri, "http://site.tld/5");
   do_check_eq(root.getChild(1).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "cheese bar";
   result = histsvc.executeQuery(query, options);
@@ -150,6 +156,7 @@ function run_test() {
   do_check_eq(root.childCount, 2);
   do_check_eq(root.getChild(0).uri, "http://site.tld/5");
   do_check_eq(root.getChild(1).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "foo bar cheese";
   result = histsvc.executeQuery(query, options);
@@ -157,6 +164,7 @@ function run_test() {
   root.containerOpen = true;
   do_check_eq(root.childCount, 1);
   do_check_eq(root.getChild(0).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "cheese foo bar";
   result = histsvc.executeQuery(query, options);
@@ -164,6 +172,7 @@ function run_test() {
   root.containerOpen = true;
   do_check_eq(root.childCount, 1);
   do_check_eq(root.getChild(0).uri, "http://site.tld/6");
+  root.containerOpen = false;
 
   query.searchTerms = "cheese bar foo";
   result = histsvc.executeQuery(query, options);
@@ -171,4 +180,5 @@ function run_test() {
   root.containerOpen = true;
   do_check_eq(root.childCount, 1);
   do_check_eq(root.getChild(0).uri, "http://site.tld/6");
+  root.containerOpen = false;
 }

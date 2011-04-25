@@ -86,9 +86,6 @@ nsWinGesture::nsWinGesture() :
 
 PRBool nsWinGesture::InitLibrary()
 {
-#ifdef WINCE
-  return PR_FALSE;
-#else
   if (getGestureInfo) {
     return PR_TRUE;
   } else if (sLibraryHandle) {
@@ -156,7 +153,6 @@ PRBool nsWinGesture::InitLibrary()
   }
 
   return PR_TRUE;
-#endif
 }
 
 #define GCOUNT 5

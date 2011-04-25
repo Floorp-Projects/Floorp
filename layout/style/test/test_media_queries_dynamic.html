@@ -57,11 +57,6 @@ function run() {
     ok(!query_applies(cs), cs._originalQueryText + " should not apply");
   }
 
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-  const CI = Components.interfaces;
-  var iframe_docshell = subwin.QueryInterface(CI.nsIInterfaceRequestor).getInterface(CI.nsIWebNavigation).QueryInterface(CI.nsIDocShell);
-  var iframe_mudv = iframe_docshell.contentViewer.QueryInterface(CI.nsIMarkupDocumentViewer);
-
   var content_div = document.getElementById("content");
   content_div.style.font = "-moz-initial";
   var em_size =
@@ -95,26 +90,26 @@ function run() {
   should_apply(wh_queries[1]);
   should_apply(wh_queries[2]);
   should_not_apply(wh_queries[3]);
-  iframe_mudv.textZoom = 2.0;
+  SpecialPowers.setTextZoom(subwin, 2.0);
   isnot(wh_queries[0].fontSize, em_size + "px", "text zoom is not 1.0");
   should_not_apply(wh_queries[4]);
   should_apply(wh_queries[5]);
   should_apply(wh_queries[6]);
   should_not_apply(wh_queries[7]);
-  iframe_mudv.textZoom = 1.0;
+  SpecialPowers.setTextZoom(subwin, 1.0);
   is(wh_queries[0].fontSize, em_size + "px", "text zoom is 1.0");
   is(subwin.innerHeight, 228, "full zoom is 1.0");
   should_not_apply(wh_queries[0]);
   should_apply(wh_queries[1]);
   should_apply(wh_queries[2]);
   should_not_apply(wh_queries[3]);
-  iframe_mudv.fullZoom = 2.0;
+  SpecialPowers.setFullZoom(subwin, 2.0);
   isnot(subwin.innerHeight, 228, "full zoom is not 1.0");
   should_not_apply(wh_queries[4]);
   should_apply(wh_queries[5]);
   should_apply(wh_queries[6]);
   should_not_apply(wh_queries[7]);
-  iframe_mudv.fullZoom = 1.0;
+  SpecialPowers.setFullZoom(subwin, 1.0);
   is(subwin.innerHeight, 228, "full zoom is 1.0");
 
   SimpleTest.finish();

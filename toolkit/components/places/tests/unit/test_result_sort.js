@@ -159,6 +159,7 @@ function run_test() {
     result.sortingMode = NHQO.SORT_BY_FRECENCY_ASCENDING;
     checkOrder(id1, id3, id2);
 
+    root.containerOpen = false;
     do_test_finished();
   });
 }

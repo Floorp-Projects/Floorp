@@ -118,7 +118,6 @@
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMDocumentView.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsDOMDragEvent.h"
 #include "nsIDOMNSEditableElement.h"
@@ -811,7 +810,7 @@ nsEventStateManager::UpdateUserActivityTimer(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::Init()
 {
   nsCOMPtr<nsIObserverService> observerService =
@@ -996,8 +995,7 @@ nsEventStateManager::Observe(nsISupports *aSubject,
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsEventStateManager)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsEventStateManager)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIEventStateManager)
-   NS_INTERFACE_MAP_ENTRY(nsIEventStateManager)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END
@@ -1047,8 +1045,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsEventStateManager)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMARRAY(mAccessKeys);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                     nsEvent *aEvent,
                                     nsIFrame* aTargetFrame,
@@ -2818,7 +2815,7 @@ NodeAllowsClickThrough(nsINode* aNode)
 }
 #endif
 
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
                                      nsEvent *aEvent,
                                      nsIFrame* aTargetFrame,
@@ -2993,8 +2990,7 @@ nsEventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       ClearGlobalActiveContent(this);
       if (IsMouseEventReal(aEvent)) {
         if (!mCurrentTarget) {
-          nsIFrame* targ;
-          GetEventTarget(&targ);
+          GetEventTarget();
         }
         if (mCurrentTarget) {
           ret = CheckForAndDispatchClick(presContext, (nsMouseEvent*)aEvent,
@@ -3356,28 +3352,24 @@ nsEventStateManager::IsTargetCrossProcess(nsGUIEvent *aEvent)
   return TabParent::GetIMETabParent() != nsnull;
 }
 
-NS_IMETHODIMP
+void
 nsEventStateManager::NotifyDestroyPresContext(nsPresContext* aPresContext)
 {
   nsIMEStateManager::OnDestroyPresContext(aPresContext);
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsEventStateManager::SetPresContext(nsPresContext* aPresContext)
 {
   mPresContext = aPresContext;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
 {
   if (aFrame && aFrame == mCurrentTarget) {
     mCurrentTargetContent = aFrame->GetContent();
   }
-
-  return NS_OK;
 }
 
 void
@@ -3436,7 +3428,7 @@ nsEventStateManager::UpdateCursor(nsPresContext* aPresContext,
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsEventStateManager::SetCursor(PRInt32 aCursor, imgIContainer* aContainer,
                                PRBool aHaveHotspot,
                                float aHotspotX, float aHotspotY,
@@ -3698,8 +3690,7 @@ nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent, nsIContent* aMovingInto)
         docshell->GetPresContext(getter_AddRefs(presContext));
 
         if (presContext) {
-          nsEventStateManager* kidESM =
-            static_cast<nsEventStateManager*>(presContext->EventStateManager());
+          nsEventStateManager* kidESM = presContext->EventStateManager();
           // Not moving into any element in this subdocument
           kidESM->NotifyMouseOut(aEvent, nsnull);
         }
@@ -3757,9 +3748,7 @@ nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
     if (docContent) {
       nsIPresShell *parentShell = parentDoc->GetShell();
       if (parentShell) {
-        nsEventStateManager* parentESM =
-          static_cast<nsEventStateManager*>
-                     (parentShell->GetPresContext()->EventStateManager());
+        nsEventStateManager* parentESM = parentShell->GetPresContext()->EventStateManager();
         parentESM->NotifyMouseOver(aEvent, docContent);
       }
     }
@@ -3804,8 +3793,7 @@ nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
   case NS_MOUSE_MOVE:
     {
       // Get the target content target (mousemove target == mouseover target)
-      nsCOMPtr<nsIContent> targetElement;
-      GetEventTargetContent(aEvent, getter_AddRefs(targetElement));
+      nsCOMPtr<nsIContent> targetElement = GetEventTargetContent(aEvent);
       if (!targetElement) {
         // We're always over the document root, even if we're only
         // over dead space in a page (whose frame is not associated with
@@ -4093,8 +4081,7 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
 
     nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
     if (presShell) {
-      nsCOMPtr<nsIContent> mouseContent;
-      GetEventTargetContent(aEvent, getter_AddRefs(mouseContent));
+      nsCOMPtr<nsIContent> mouseContent = GetEventTargetContent(aEvent);
 
       ret = presShell->HandleEventWithTarget(&event, mCurrentTarget,
                                              mouseContent, aStatus);
@@ -4120,61 +4107,56 @@ nsEventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
   return ret;
 }
 
-NS_IMETHODIMP
-nsEventStateManager::GetEventTarget(nsIFrame **aFrame)
+nsIFrame*
+nsEventStateManager::GetEventTarget()
 {
   nsIPresShell *shell;
   if (mCurrentTarget ||
       !mPresContext ||
       !(shell = mPresContext->GetPresShell())) {
-    *aFrame = mCurrentTarget;
-    return NS_OK;
+    return mCurrentTarget;
   }
 
   if (mCurrentTargetContent) {
     mCurrentTarget = mPresContext->GetPrimaryFrameFor(mCurrentTargetContent);
     if (mCurrentTarget) {
-      *aFrame = mCurrentTarget;
-      return NS_OK;
+      return mCurrentTarget;
     }
   }
 
   nsIFrame* frame = shell->GetEventTargetFrame();
-  *aFrame = mCurrentTarget = frame;
-  return NS_OK;
+  return (mCurrentTarget = frame);
 }
 
-NS_IMETHODIMP
-nsEventStateManager::GetEventTargetContent(nsEvent* aEvent,
-                                           nsIContent** aContent)
+already_AddRefed<nsIContent>
+nsEventStateManager::GetEventTargetContent(nsEvent* aEvent)
 {
   if (aEvent &&
       (aEvent->message == NS_FOCUS_CONTENT ||
        aEvent->message == NS_BLUR_CONTENT)) {
-    NS_IF_ADDREF(*aContent = GetFocusedContent());
-    return NS_OK;
+    nsCOMPtr<nsIContent> content = GetFocusedContent();
+    return content.forget();
   }
 
   if (mCurrentTargetContent) {
-    *aContent = mCurrentTargetContent;
-    NS_IF_ADDREF(*aContent);
-    return NS_OK;
+    nsCOMPtr<nsIContent> content = mCurrentTargetContent;
+    return content.forget();
   }
 
-  *aContent = nsnull;
+  nsIContent *content = nsnull;
 
   nsIPresShell *presShell = mPresContext->GetPresShell();
   if (presShell) {
-    *aContent = presShell->GetEventTargetContent(aEvent).get();
+    content = presShell->GetEventTargetContent(aEvent).get();
   }
 
   // Some events here may set mCurrentTarget but not set the corresponding
   // event target in the PresShell.
-  if (!*aContent && mCurrentTarget) {
-    mCurrentTarget->GetContentForEvent(mPresContext, aEvent, aContent);
+  if (!content && mCurrentTarget) {
+    mCurrentTarget->GetContentForEvent(mPresContext, aEvent, &content);
   }
 
-  return NS_OK;
+  return content;
 }
 
 static already_AddRefed<nsIContent>
@@ -4419,7 +4401,7 @@ nsEventStateManager::SetContentState(nsIContent *aContent, nsEventStates aState)
   return PR_TRUE;
 }
 
-NS_IMETHODIMP
+void
 nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent)
 {
   // inform the focus manager that the content is being removed. If this
@@ -4452,59 +4434,44 @@ nsEventStateManager::ContentRemoved(nsIDocument* aDocument, nsIContent* aContent
     // See bug 292146 for why we want to null this out
     mLastMouseOverElement = nsnull;
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEventStateManager::EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK)
+PRBool
+nsEventStateManager::EventStatusOK(nsGUIEvent* aEvent)
 {
-  *aOK = PR_TRUE;
-  if (aEvent->message == NS_MOUSE_BUTTON_DOWN &&
-      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton) {
-    if (!sNormalLMouseEventInProcess) {
-      *aOK = PR_FALSE;
-    }
-  }
-  return NS_OK;
+  return !(aEvent->message == NS_MOUSE_BUTTON_DOWN &&
+      static_cast<nsMouseEvent*>(aEvent)->button == nsMouseEvent::eLeftButton  && 
+      !sNormalLMouseEventInProcess);
 }
 
 //-------------------------------------------
 // Access Key Registration
 //-------------------------------------------
-NS_IMETHODIMP
+void
 nsEventStateManager::RegisterAccessKey(nsIContent* aContent, PRUint32 aKey)
 {
   if (aContent && mAccessKeys.IndexOf(aContent) == -1)
     mAccessKeys.AppendObject(aContent);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsEventStateManager::UnregisterAccessKey(nsIContent* aContent, PRUint32 aKey)
 {
   if (aContent)
     mAccessKeys.RemoveObject(aContent);
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsEventStateManager::GetRegisteredAccessKey(nsIContent* aContent,
-                                            PRUint32* aKey)
+PRUint32
+nsEventStateManager::GetRegisteredAccessKey(nsIContent* aContent)
 {
   NS_ENSURE_ARG(aContent);
-  NS_ENSURE_ARG_POINTER(aKey);
-  *aKey = 0;
 
   if (mAccessKeys.IndexOf(aContent) == -1)
-    return NS_OK;
+    return 0;
 
   nsAutoString accessKey;
   aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);
-  *aKey = accessKey.First();
-  return NS_OK;
+  return accessKey.First();
 }
 
 void

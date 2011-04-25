@@ -2855,7 +2855,9 @@ SessionStoreService.prototype = {
     if (activeIndex >= tabData.entries.length)
       activeIndex = tabData.entries.length - 1;
 
-    // Reset currentURI.
+    // Reset currentURI.  This creates a new session history entry with a new
+    // doc identifier, so we need to explicitly save and restore the old doc
+    // identifier (corresponding to the SHEntry at activeIndex) below.
     browser.webNavigation.setCurrentURI(this._getURIFromString("about:blank"));
 
     // Attach data that will be restored on "load" event, after tab is restored.

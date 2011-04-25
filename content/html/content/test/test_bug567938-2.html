@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=567938
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body onload="runTests();">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=567938">Mozilla Bug 567938</a>
 <p id="display"></p>
 <iframe id='iframe' name="submit_frame" style="visibility: hidden;"></iframe>
@@ -24,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=567938
 /** Test for Bug 567938 **/
 
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
 
 var gTestData = ["submit", "image"];
 var gCurrentTest = 0;

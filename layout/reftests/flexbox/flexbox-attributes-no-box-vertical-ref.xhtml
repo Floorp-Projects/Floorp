@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>Test that XUL attributes are not supported on non-XUL elements</title>
+<style type="text/css">
+<![CDATA[
+
+html, body {
+  display: -moz-box;
+  margin: 0; padding: 0;
+  width: 100%; height: 100%;
+}
+
+body > div {
+  display: -moz-box;
+  background: yellow;
+  -moz-box-flex: 1;
+  -moz-box-orient: vertical;
+}
+
+div > div {
+  display: -moz-box;
+  -moz-box-flex: 1;
+  border: 1px solid blue;
+}
+
+]]>
+</style>
+</head>
+<body>
+<div>
+  <div>2</div>
+  <div>1</div>
+  <div>width</div>
+  <div>height</div>
+  <div>minwidth</div>
+  <div>minheight</div>
+  <div>maxwidth</div>
+  <div>maxheight</div>
+  <div>flex</div>
+</div>
+</body>
+</html>

@@ -52,7 +52,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(1ae51729-c57c-43cd-91f4-2ffee5c5d493)]
+[scriptable, uuid(d12f0ecf-434a-4b5c-81ad-354e3b9037b9)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -102,12 +102,17 @@ interface nsIDOMDocument : nsIDOMNode
            attribute DOMString       xmlVersion;
                                         // raises(DOMException) on setting
   // Introduced in DOM Level 3:
-           attribute boolean         strictErrorChecking;
-  // Introduced in DOM Level 3:
            attribute DOMString       documentURI;
   // Introduced in DOM Level 3:
   nsIDOMNode         adoptNode(in nsIDOMNode source)
                                         raises(DOMException);
   // Introduced in DOM Level 3:
   void               normalizeDocument();
+
+  /**
+   * The window associated with this document.
+   *
+   * @see http://www.whatwg.org/html/#dom-document-defaultview
+   */
+  readonly attribute nsIDOMWindow    defaultView;
 };

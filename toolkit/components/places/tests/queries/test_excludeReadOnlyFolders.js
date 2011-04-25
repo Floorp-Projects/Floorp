@@ -65,6 +65,8 @@ function run_test() {
   // Results
   var result = PlacesUtils.history.executeQuery(query, options);
   var root = result.root;
+  root.containerOpen = true;
+
   displayResultSet(root);
   // The readonly folder should not be in our result set.
   do_check_eq(1, root.childCount);
