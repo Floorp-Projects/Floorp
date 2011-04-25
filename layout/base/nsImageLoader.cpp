@@ -118,6 +118,8 @@ nsresult
 nsImageLoader::Load(imgIRequest *aImage)
 {
   NS_ASSERTION(!mRequest, "can't reuse image loaders");
+  NS_ASSERTION(mFrame, "not initialized");
+  NS_ASSERTION(aImage, "must have non-null image");
 
   if (!mFrame)
     return NS_ERROR_NOT_INITIALIZED;

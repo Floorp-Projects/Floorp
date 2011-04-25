@@ -37,13 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "resource.h"
-#ifdef WINCE
-#include "winuser.h"
-#include "aygshell.h"
-#define DS_CONTEXTHELP 0
-#else
 #include <winresrc.h>
-#endif
 #include <dlgs.h>
 
 IDC_GRAB                CURSOR  DISCARDABLE     "res/grab.cur"

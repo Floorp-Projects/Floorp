@@ -47,7 +47,7 @@
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
@@ -176,7 +176,7 @@ nsDOMUIEvent::GetClientPoint()
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetView(nsIDOMAbstractView** aView)
+nsDOMUIEvent::GetView(nsIDOMWindow** aView)
 {
   *aView = mView;
   NS_IF_ADDREF(*aView);
@@ -191,7 +191,11 @@ nsDOMUIEvent::GetDetail(PRInt32* aDetail)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg)
+nsDOMUIEvent::InitUIEvent(const nsAString& typeArg,
+                          PRBool canBubbleArg,
+                          PRBool cancelableArg,
+                          nsIDOMWindow* viewArg,
+                          PRInt32 detailArg)
 {
   nsresult rv = nsDOMEvent::InitEvent(typeArg, canBubbleArg, cancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -258,7 +262,7 @@ nsDOMUIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
   nsIFrame* targetFrame = nsnull;
 
   if (mPresContext) {
-    mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
+    targetFrame = mPresContext->EventStateManager()->GetEventTarget();
   }
 
   *aRangeParent = nsnull;
@@ -286,7 +290,7 @@ nsDOMUIEvent::GetRangeOffset(PRInt32* aRangeOffset)
   nsIFrame* targetFrame = nsnull;
 
   if (mPresContext) {
-    mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
+    targetFrame = mPresContext->EventStateManager()->GetEventTarget();
   }
 
   if (targetFrame) {
@@ -334,8 +338,7 @@ nsDOMUIEvent::GetLayerPoint()
     return mLayerPoint;
   }
   // XXX I'm not really sure this is correct; it's my best shot, though
-  nsIFrame* targetFrame;
-  mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
+  nsIFrame* targetFrame = mPresContext->EventStateManager()->GetEventTarget();
   if (!targetFrame)
     return mLayerPoint;
   nsIFrame* layer = nsLayoutUtils::GetClosestLayer(targetFrame);
@@ -419,9 +422,5 @@ nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsGUIEvent *aEvent) 
 {
   nsDOMUIEvent* it = new nsDOMUIEvent(aPresContext, aEvent);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   return CallQueryInterface(it, aInstancePtrResult);
 }

@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=372098
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <base target="bug372098"></base>
 </head>
-<body onload="handle_load();">
+<body>
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=372098">Mozilla Bug 372098</a>
   <p id="display"></p>
   <div id="content" style="display:none;">
@@ -30,9 +30,11 @@ var area_passed = false;
 
 /* Start the test */
 
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(handle_load);
+
 function handle_load()
 {
-  SimpleTest.waitForExplicitFinish();
   sendMouseEvent({type:'click'}, 'a');
 }
 

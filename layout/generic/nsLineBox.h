@@ -1379,6 +1379,16 @@ class nsLineList {
       link_type tmp(y.mLink);
       y.mLink = mLink;
       mLink = tmp;
+
+      if (!empty()) {
+        mLink._mNext->_mPrev = &mLink;
+        mLink._mPrev->_mNext = &mLink;
+      }
+
+      if (!y.empty()) {
+        y.mLink._mNext->_mPrev = &y.mLink;
+        y.mLink._mPrev->_mNext = &y.mLink;
+      }
     }
 
     void clear()

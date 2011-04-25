@@ -144,7 +144,7 @@ gTests.push({
     // Should fire "TapSingle"
     info("Test good single tap");
     clearEvents();
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, {});
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, {});
 
     // We wait a bit because of the delay allowed for double clicking on device
     // where it is not native
@@ -163,8 +163,8 @@ gTests.push({
     // Should fire "TapDouble"
     info("Test good double tap");
     clearEvents();
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, {});
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, {});
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, {});
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, {});
 
     setTimeout(function() {
       ok(checkEvents(["TapDouble"]), "Fired a good double tap");
@@ -182,8 +182,8 @@ gTests.push({
     // Should fire "TapSingle", "TapSingle"
     info("Test two single taps in different locations");
     clearEvents();
-    EventUtils.synthesizeMouse(inputHandler, width / 3, height / 3, {});
-    EventUtils.synthesizeMouse(inputHandler, width * 2 / 3, height * 2 / 3, {});
+    EventUtils.synthesizeMouse(document.documentElement, width / 3, height / 3, {});
+    EventUtils.synthesizeMouse(document.documentElement, width * 2 / 3, height * 2 / 3, {});
 
     setTimeout(function() {
       ok(checkEvents(["TapSingle", "TapSingle"]), "Fired two single taps in different places, not a double tap");
@@ -200,9 +200,9 @@ gTests.push({
 
     info("Test a pan - non-tap event");
     clearEvents();
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 3, { type: "mousedown" });
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height * 2 / 3, { type: "mousemove" });
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height * 2 / 3, { type: "mouseup" });
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 3, { type: "mousedown" });
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height * 2 / 3, { type: "mousemove" });
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height * 2 / 3, { type: "mouseup" });
     ok(checkEvents([]), "Fired a pan which should be seen as a non event");
     clearEvents();
 
@@ -216,14 +216,16 @@ gTests.push({
 
     info("Test a long pan - non-tap event");
     clearEvents();
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 3, { type: "mousedown" });
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height * 2 / 3, { type: "mousemove" });
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 3, { type: "mousedown" });
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height * 2 / 3, { type: "mousemove" });
     setTimeout(function() {
-      EventUtils.synthesizeMouse(inputHandler, width / 2, height * 2 / 3, { type: "mouseup" });
+      EventUtils.synthesizeMouse(document.documentElement, width / 2, height * 2 / 3, { type: "mouseup" });
       ok(checkEvents([]), "Fired a pan + delay which should be seen as a non-event");
       clearEvents();
 
-      gCurrentTest.longTapPassTest();
+      window.addEventListener("PanFinished", function() {
+        setTimeout(gCurrentTest.longTapPassTest, 0);
+      }, true);
     }, 500);
   },
 
@@ -235,7 +237,7 @@ gTests.push({
 
     window.addEventListener("TapLong", function() {
       window.removeEventListener("TapLong", arguments.callee, true);
-      EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, { type: "mouseup" });
+      EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, { type: "mouseup" });
       ok(checkEvents(["TapLong"]), "Fired a good long tap");
       clearEvents();
     }, true);
@@ -247,7 +249,7 @@ gTests.push({
 
     info("Test a good long pan");
     clearEvents();
-    EventUtils.synthesizeMouse(inputHandler, width / 2, height / 2, { type: "mousedown" });
+    EventUtils.synthesizeMouse(document.documentElement, width / 2, height / 2, { type: "mousedown" });
   },
 
   contextPlainLinkTest: function() {

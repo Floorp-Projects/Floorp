@@ -433,8 +433,9 @@ SimpleTest.waitForClipboard_polls = 0;
  * on the clipboard. This only uses the global clipboard and only for text/unicode
  * values.
  *
- * @param aExpectedVal
- *        The string value that is expected to be on the clipboard
+ * @param aExpectedStringOrValidatorFn
+ *        The string value that is expected to be on the clipboard or a
+ *        validator function getting cripboard data and returning a bool.
  * @param aSetupFn
  *        A function responsible for setting the clipboard to the expected value,
  *        called after the known value setting succeeds.
@@ -443,8 +444,14 @@ SimpleTest.waitForClipboard_polls = 0;
  * @param aFailureFn
  *        A function called if the expected value isn't found on the clipboard
  *        within 5s. It can also be called if the known value can't be found.
+ * @param aFlavor [optional] The flavor to look for.  Defaults to "text/unicode".
  */
-SimpleTest.waitForClipboard = function(aExpectedVal, aSetupFn, aSuccessFn, aFailureFn) {
+SimpleTest.__waitForClipboardMonotonicCounter = 0;
+SimpleTest.__defineGetter__("_waitForClipboardMonotonicCounter", function () {
+  return SimpleTest.__waitForClipboardMonotonicCounter++;
+});
+SimpleTest.waitForClipboard = function(aExpectedStringOrValidatorFn, aSetupFn,
+                                       aSuccessFn, aFailureFn, aFlavor) {
     if (ipcMode) {
       //TODO: support waitForClipboard via events to chrome
       dump("E10S_TODO: bug 573735 addresses adding support for this");
@@ -456,18 +463,27 @@ SimpleTest.waitForClipboard = function(aExpectedVal, aSetupFn, aSuccessFn, aFail
     var cbSvc = Components.classes["@mozilla.org/widget/clipboard;1"].
                 getService(Components.interfaces.nsIClipboard);
 
+    var requestedFlavor = aFlavor || "text/unicode";
+
+    function dataToString(aData)
+      aData.QueryInterface(Components.interfaces.nsISupportsString).data;
+
+    // Build a default validator function for common string input.
+    var inputValidatorFn = typeof(aExpectedStringOrValidatorFn) == "string"
+        ? function(aData) aData && dataToString(aData) == aExpectedStringOrValidatorFn
+        : aExpectedStringOrValidatorFn;
+
     // reset for the next use
     function reset() {
         SimpleTest.waitForClipboard_polls = 0;
     }
 
-    function wait(expectedVal, successFn, failureFn) {
+    function wait(validatorFn, successFn, failureFn, flavor) {
         netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
 
         if (++SimpleTest.waitForClipboard_polls > 50) {
             // Log the failure.
-            SimpleTest.ok(false, "Timed out while polling clipboard for pasted data. " +
-                                 "Expected " + expectedVal);
+            SimpleTest.ok(false, "Timed out while polling clipboard for pasted data.");
             reset();
             failureFn();
             return;
@@ -475,36 +491,39 @@ SimpleTest.waitForClipboard = function(aExpectedVal, aSetupFn, aSuccessFn, aFail
 
         var xferable = Components.classes["@mozilla.org/widget/transferable;1"].
                        createInstance(Components.interfaces.nsITransferable);
-        xferable.addDataFlavor("text/unicode");
+        xferable.addDataFlavor(flavor);
         cbSvc.getData(xferable, cbSvc.kGlobalClipboard);
         var data = {};
         try {
-            xferable.getTransferData("text/unicode", data, {});
-            data = data.value.QueryInterface(Components.interfaces.nsISupportsString).data;
+            xferable.getTransferData(flavor, data, {});
         } catch (e) {}
+        data = data.value || null;
 
-        if (data == expectedVal) {
+        if (validatorFn(data)) {
             // Don't show the success message when waiting for preExpectedVal
-            if (data != preExpectedVal)
-                SimpleTest.ok(true,
-                              "Clipboard has the correct value (" + expectedVal + ")");
+            if (preExpectedVal)
+                preExpectedVal = null;
+            else
+                SimpleTest.ok(true, "Clipboard has the correct value");
             reset();
             successFn();
         } else {
-            setTimeout(function() wait(expectedVal, successFn, failureFn), 100);
+            setTimeout(function() wait(validatorFn, successFn, failureFn, flavor), 100);
         }
     }
 
-    // First we wait for a known value != aExpectedVal
-    var preExpectedVal = aExpectedVal + "-waitForClipboard-known-value";
+    // First we wait for a known value different from the expected one.
+    var preExpectedVal = SimpleTest._waitForClipboardMonotonicCounter +
+                         "-waitForClipboard-known-value";
     var cbHelperSvc = Components.classes["@mozilla.org/widget/clipboardhelper;1"].
                       getService(Components.interfaces.nsIClipboardHelper);
     cbHelperSvc.copyString(preExpectedVal);
-    wait(preExpectedVal, function() {
-        // Call the original setup fn
-        aSetupFn();
-        wait(aExpectedVal, aSuccessFn, aFailureFn);
-    }, aFailureFn);
+    wait(function(aData) aData && dataToString(aData) == preExpectedVal,
+         function() {
+           // Call the original setup fn
+           aSetupFn();
+           wait(inputValidatorFn, aSuccessFn, aFailureFn, requestedFlavor);
+         }, aFailureFn, "text/unicode");
 }
 
 /**

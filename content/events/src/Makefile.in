@@ -46,6 +46,10 @@ MODULE		= content
 LIBRARY_NAME	= gkconevents_s
 LIBXUL_LIBRARY  = 1
 
+EXPORTS		= \
+		nsEventStateManager.h \
+		$(NULL)
+		
 CPPSRCS		= \
 		nsEventListenerManager.cpp \
 		nsEventStateManager.cpp \

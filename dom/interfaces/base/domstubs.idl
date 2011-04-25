@@ -77,10 +77,6 @@ interface nsIDOMLinkStyle;
 interface nsIDOMStyleSheet;
 interface nsIDOMMediaList;
 
-// Views
-interface nsIDOMAbstractView;
-interface nsIDOMDocumentView;
-
 // Base
 interface nsIDOMWindow;
 interface nsIDOMWindowInternal;
@@ -130,4 +126,3 @@ interface nsIDOMRange;
 interface nsIDOMCRMFObject;
 interface nsIDOMCrypto;
 interface nsIDOMPkcs11;
-

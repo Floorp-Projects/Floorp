@@ -128,9 +128,9 @@ public:
                      PRBool aRelevantLinkVisited);
 
   // Does this style context or any of its ancestors have text
-  // decorations?
-  PRBool HasTextDecorations() const
-    { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATIONS); }
+  // decoration lines?
+  PRBool HasTextDecorationLines() const
+    { return !!(mBits & NS_STYLE_HAS_TEXT_DECORATION_LINES); }
 
   // Does this style context represent the style for a pseudo-element or
   // inherit data from such a style context?  Whether this returns true

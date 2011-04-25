@@ -38,7 +38,6 @@
 #include "nsDOMMouseScrollEvent.h"
 #include "nsGUIEvent.h"
 #include "nsIContent.h"
-#include "nsIEventStateManager.h"
 #include "nsContentUtils.h"
 
 nsDOMMouseScrollEvent::nsDOMMouseScrollEvent(nsPresContext* aPresContext,
@@ -89,7 +88,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 
 NS_IMETHODIMP
 nsDOMMouseScrollEvent::InitMouseScrollEvent(const nsAString & aType, PRBool aCanBubble, PRBool aCancelable,
-                                nsIDOMAbstractView *aView, PRInt32 aDetail, PRInt32 aScreenX, 
+                                nsIDOMWindow *aView, PRInt32 aDetail, PRInt32 aScreenX, 
                                 PRInt32 aScreenY, PRInt32 aClientX, PRInt32 aClientY, 
                                 PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey, 
                                 PRBool aMetaKey, PRUint16 aButton, nsIDOMEventTarget *aRelatedTarget,
@@ -130,9 +129,5 @@ nsresult NS_NewDOMMouseScrollEvent(nsIDOMEvent** aInstancePtrResult,
                                    nsInputEvent *aEvent) 
 {
   nsDOMMouseScrollEvent* it = new nsDOMMouseScrollEvent(aPresContext, aEvent);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   return CallQueryInterface(it, aInstancePtrResult);
 }

@@ -89,6 +89,9 @@ function run_test() {
   bmsvc.insertBookmark(exposedFolder, uri("http://uri2.tld"), bmsvc.DEFAULT_INDEX, "");
   do_check_eq(folder.childCount, 2);
 
+  folder.containerOpen = false;
+  rootNode.containerOpen = false;
+
   // Bug 457681
   // Make the dynamic container read-only and check that it appear in the result
   bmsvc.setFolderReadonly(remoteContainer, true);

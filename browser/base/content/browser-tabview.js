@@ -42,6 +42,8 @@ let TabView = {
   _window: null,
   _firstUseExperienced: false,
   _browserKeyHandlerInitialized: false,
+  _isFrameLoading: false,
+  _initFrameCallbacks: [],
   VISIBILITY_IDENTIFIER: "tabview-visibility",
 
   // ----------
@@ -128,34 +130,52 @@ let TabView = {
   // Creates the frame and calls the callback once it's loaded. 
   // If the frame already exists, calls the callback immediately. 
   _initFrame: function TabView__initFrame(callback) {
+    let hasCallback = typeof callback == "function";
+
     if (this._window) {
-      if (typeof callback == "function")
+      if (hasCallback)
         callback();
-    } else {
-      // ___ find the deck
-      this._deck = document.getElementById("tab-view-deck");
+      return;
+    }
 
-      // ___ create the frame
-      this._iframe = document.createElement("iframe");
-      this._iframe.id = "tab-view";
-      this._iframe.setAttribute("transparent", "true");
-      this._iframe.flex = 1;
+    if (hasCallback)
+      this._initFrameCallbacks.push(callback);
 
-      if (typeof callback == "function")
-        window.addEventListener("tabviewframeinitialized", callback, false);
+    if (this._isFrameLoading)
+      return;
 
-      this._iframe.setAttribute("src", "chrome://browser/content/tabview.html");
-      this._deck.appendChild(this._iframe);
-      this._window = this._iframe.contentWindow;
+    this._isFrameLoading = true;
 
-      if (this._tabShowEventListener) {
+    // ___ find the deck
+    this._deck = document.getElementById("tab-view-deck");
+
+    // ___ create the frame
+    this._iframe = document.createElement("iframe");
+    this._iframe.id = "tab-view";
+    this._iframe.setAttribute("transparent", "true");
+    this._iframe.flex = 1;
+
+    let self = this;
+
+    window.addEventListener("tabviewframeinitialized", function onInit() {
+      window.removeEventListener("tabviewframeinitialized", onInit, false);
+
+      self._isFrameLoading = false;
+      self._window = self._iframe.contentWindow;
+      self._setBrowserKeyHandlers();
+
+      if (self._tabShowEventListener) {
         gBrowser.tabContainer.removeEventListener(
-          "TabShow", this._tabShowEventListener, true);
-        this._tabShowEventListener = null;
+          "TabShow", self._tabShowEventListener, true);
+        self._tabShowEventListener = null;
       }
 
-      this._setBrowserKeyHandlers();
-    }
+      self._initFrameCallbacks.forEach(function (cb) cb());
+      self._initFrameCallbacks = [];
+    }, false);
+
+    this._iframe.setAttribute("src", "chrome://browser/content/tabview.html");
+    this._deck.appendChild(this._iframe);
   },
 
   // ----------

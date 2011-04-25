@@ -61,7 +61,6 @@
 #include "nsThemeConstants.h"
 #include "nsILookAndFeel.h"
 #include "nsIServiceManager.h"
-#include "nsIEventStateManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include <malloc.h>
 

@@ -49,8 +49,6 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsWidgetAtoms.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMViewCSS.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSValue.h"
@@ -201,24 +199,27 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   if (!hasImageAttr) {
     // If the content node has no "image" attribute, get the
     // "list-style-image" property from CSS.
-    nsCOMPtr<nsIDOMDocumentView> domDocumentView =
-     do_QueryInterface(mContent->GetDocument());
-    if (!domDocumentView) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMDocument> domDocument =
+      do_QueryInterface(mContent->GetDocument());
+    if (!domDocument)
+      return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIDOMAbstractView> domAbstractView;
-    rv = domDocumentView->GetDefaultView(getter_AddRefs(domAbstractView));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIDOMViewCSS> domViewCSS = do_QueryInterface(domAbstractView);
-    if (!domViewCSS) return NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDOMWindow> window;
+    rv = domDocument->GetDefaultView(getter_AddRefs(window));
+    if (NS_FAILED(rv))
+      return rv;
+    if (!window)
+      return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mContent);
-    if (!domElement) return NS_ERROR_FAILURE;
+    if (!domElement)
+      return NS_ERROR_FAILURE;
 
 
-    rv = domViewCSS->GetComputedStyle(domElement, EmptyString(),
-                                      getter_AddRefs(cssStyleDecl));
-    if (NS_FAILED(rv)) return rv;
+    rv = window->GetComputedStyle(domElement, EmptyString(),
+                                  getter_AddRefs(cssStyleDecl));
+    if (NS_FAILED(rv))
+      return rv;
 
     NS_NAMED_LITERAL_STRING(listStyleImage, "list-style-image");
     rv = cssStyleDecl->GetPropertyCSSValue(listStyleImage,

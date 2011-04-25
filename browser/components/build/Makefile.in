@@ -54,13 +54,10 @@ endif
 
 EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME_PATH,unicharutil_external_s,$(LIBXUL_DIST)/lib)
 
-# migration requires mozreg, which doesn't build on WINCE; only include
-# it on non-CE
-ifndef WINCE
+# migration requires mozreg
 LOCAL_INCLUDES += -I$(srcdir)/../migration/src
 SHARED_LIBRARY_LIBS += ../migration/src/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)
 EXTRA_DSO_LDOPTS += $(LIBXUL_DIST)/lib/$(LIB_PREFIX)mozreg_s.$(LIB_SUFFIX)
-endif
 
 # This has to come after the above chunk, because mozreg_s has dependencies on
 # stuff in MOZ_COMPONENT_LIBS.
