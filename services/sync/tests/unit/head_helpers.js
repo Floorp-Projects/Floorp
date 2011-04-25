@@ -1,4 +1,5 @@
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://services-sync/record.js");
 var btoa;
 
 // initialize nss
@@ -178,8 +179,8 @@ function FakeGUIDService() {
 
 
 /*
- * Mock implementation of IWeaveCrypto.  It does not encrypt or
- * decrypt, just returns the input verbatimly.
+ * Mock implementation of WeaveCrypto. It does not encrypt or
+ * decrypt, merely returning the input verbatim.
  */
 function FakeCryptoService() {
   this.counter = 0;
@@ -188,7 +189,6 @@ function FakeCryptoService() {
   Svc.Crypto = this;
   Utils.sha256HMAC = this.sha256HMAC;
 
-  Cu.import("resource://services-sync/record.js");
   CryptoWrapper.prototype.ciphertextHMAC = this.ciphertextHMAC;
 }
 FakeCryptoService.prototype = {
@@ -367,10 +367,6 @@ function ensureThrows(func) {
   };
 }
 
-function asyncChainTests() {
-  return Utils.asyncChain.apply(this, Array.map(arguments, ensureThrows));
-}
-
 
 /**
  * Print some debug message to the console. All arguments will be printed,
@@ -402,3 +398,17 @@ function encryptPayload(cleartext) {
           hmac: Utils.sha256HMAC(cleartext, Utils.makeHMACKey(""))};
 }
 
+function generateNewKeys(collections) {
+  let wbo = CollectionKeys.generateNewKeysWBO(collections);
+  let modified = new_timestamp();
+  CollectionKeys.setContents(wbo.cleartext, modified);
+}
+
+function basic_auth_header(user, password) {
+  return "Basic " + btoa(user + ":" + Utils.encodeUTF8(password));
+}
+
+function basic_auth_matches(req, user, password) {
+  return req.hasHeader("Authorization") &&
+         (req.getHeader("Authorization") == basic_auth_header(user, password));
+}

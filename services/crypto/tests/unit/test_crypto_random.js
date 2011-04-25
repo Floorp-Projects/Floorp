@@ -1,12 +1,6 @@
-let cryptoSvc;
-try {
-  Components.utils.import("resource://services-crypto/WeaveCrypto.js");
-  cryptoSvc = new WeaveCrypto();
-} catch (ex) {
-  // Fallback to binary WeaveCrypto
-  cryptoSvc = Cc["@labs.mozilla.com/Weave/Crypto;1"]
-                .getService(Ci.IWeaveCrypto);
-}
+let WeaveCryptoModule = Cu.import("resource://services-crypto/WeaveCrypto.js");
+
+let cryptoSvc = new WeaveCrypto();
 
 function run_test() {
   if (this.gczeal) {
@@ -51,7 +45,7 @@ function run_test() {
   iv = cryptoSvc.generateRandomIV();
   do_check_eq(iv.length, 24);
 
-  cryptoSvc.algorithm = Ci.IWeaveCrypto.AES_256_CBC;
+  cryptoSvc.algorithm = WeaveCryptoModule.AES_256_CBC;
   keydata  = cryptoSvc.generateRandomKey();
   do_check_eq(keydata.length, 44);
   keydata2 = cryptoSvc.generateRandomKey();
