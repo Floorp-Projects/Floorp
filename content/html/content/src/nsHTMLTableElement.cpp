@@ -126,7 +126,7 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult);
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex);
   virtual nsISupports* GetNamedItem(const nsAString& aName,
                                     nsWrapperCache **aCache,
                                     nsresult* aResult);
@@ -281,7 +281,7 @@ GetItemOrCountInRowGroup(nsIDOMHTMLCollection* rows,
 }
 
 nsIContent*
-TableRowsCollection::GetNodeAt(PRUint32 aIndex, nsresult *aResult)
+TableRowsCollection::GetNodeAt(PRUint32 aIndex)
 {
   DO_FOR_EACH_ROWGROUP(
     PRUint32 count;
@@ -294,21 +294,17 @@ TableRowsCollection::GetNodeAt(PRUint32 aIndex, nsresult *aResult)
     aIndex -= count;
   );
 
-  *aResult = NS_OK;
-
   return nsnull;
 }
 
 NS_IMETHODIMP 
 TableRowsCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  nsresult rv;
-
-  nsISupports* node = GetNodeAt(aIndex, &rv);
+  nsISupports* node = GetNodeAt(aIndex);
   if (!node) {
     *aReturn = nsnull;
 
-    return rv;
+    return NS_OK;
   }
 
   return CallQueryInterface(node, aReturn);
