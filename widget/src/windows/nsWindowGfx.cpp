@@ -160,12 +160,6 @@ nsWindowGfx::ConvertHRGNToRegion(HRGN aRgn)
  **************************************************************
  **************************************************************/
 
-void nsWindowGfx::OnSettingsChangeGfx(WPARAM wParam)
-{
-  // Previously contained only an ifdef WINCE_WINDOWS_MOBILE
-  // TODO: Remove this and adjust references
-}
-
 // GetRegionToPaint returns the invalidated region that needs to be painted
 nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
                                        PAINTSTRUCT ps, HDC aDC)
