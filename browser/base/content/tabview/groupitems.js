@@ -78,7 +78,6 @@ function GroupItem(listOfEls, options) {
   this.id = options.id || GroupItems.getNextID();
   this._isStacked = false;
   this.expanded = null;
-  this.topChild = null;
   this.hidden = false;
   this.fadeAwayUndoButtonDelay = 15000;
   this.fadeAwayUndoButtonDuration = 300;
@@ -303,6 +302,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         "tab must be null (if no children) or a TabItem");
 
     this._activeTab = tab;
+    this.arrange({immediately: true});
   },
 
   // -----------
@@ -350,8 +350,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   // determined by whether the tab is this group's topChild, or
   // if it doesn't have one, its first child.
   isTopOfStack: function GroupItem_isTopOfStack(item) {
-    return this.isStacked() && ((this.topChild == item) ||
-      (!this.topChild && this.getChild(0) == item));
+    return this.isStacked() && item == this.getTopChild();
   },
 
   // ----------
@@ -618,7 +617,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       var zIndex = topZIndex;
       var self = this;
       this._children.forEach(function(child) {
-        if (child == self.topChild)
+        if (child == self.getTopChild())
           child.setZ(topZIndex + 1);
         else {
           child.setZ(zIndex);
@@ -1436,11 +1435,12 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var self = this;
     var children = [];
 
-    // ensure this.topChild is the first item in childrenToArrange
-    let topChildPos = childrenToArrange.indexOf(this.topChild);
+    // ensure topChild is the first item in childrenToArrange
+    let topChild = this.getTopChild();
+    let topChildPos = childrenToArrange.indexOf(topChild);
     if (topChildPos > 0) {
       childrenToArrange.splice(topChildPos, 1);
-      childrenToArrange.unshift(this.topChild);
+      childrenToArrange.unshift(topChild);
     }
 
     childrenToArrange.forEach(function GroupItem__stackArrange_order(child) {
@@ -1495,7 +1495,6 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
       box.inset(8, 8);
       arrangeOptions = Utils.extend({}, options, {z: 99999});
     } else {
-      this.topChild = null;
       this._isStacked = false;
       arrangeOptions = Utils.extend({}, options, {
         columns: this._columns
@@ -1541,8 +1540,7 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     var self = this;
     // ___ we're stacked, and command is held down so expand
     GroupItems.setActiveGroupItem(self);
-    let activeTab = this.topChild || this.getChildren()[0];
-    UI.setActiveTab(activeTab);
+    UI.setActiveTab(this.getTopChild());
     
     var startBounds = this.getChild(0).getBounds();
     var $tray = iQ("<div>").css({
@@ -1858,13 +1856,14 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
   },
 
   // ----------
-  // Function: setTopChild
-  // Sets the <Item> that should be displayed on top when in stack mode.
-  setTopChild: function GroupItem_setTopChild(topChild) {
-    this.topChild = topChild;
+  // Function: getTopChild
+  // Gets the <Item> that should be displayed on top when in stack mode.
+  getTopChild: function GroupItem_getTopChild() {
+    if (!this.getChildren().length) {
+      return null;
+    }
 
-    this.arrange({animate: false});
-    // this.arrange calls this.save for us
+    return this.getActiveTab() || this.getChild(0);
   },
 
   // ----------
