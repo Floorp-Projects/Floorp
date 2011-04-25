@@ -453,12 +453,11 @@ RegExp::createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
     if (!re)
         return NULL;
     JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
-    if (!obj) {
+    if (!obj ||
+        !obj->initRegExp(cx, re.get())) {
         re->decref(cx);
         return NULL;
     }
-    if (!obj->initRegExp(cx, re.get()))
-        return NULL;
     return obj;
 }
 
