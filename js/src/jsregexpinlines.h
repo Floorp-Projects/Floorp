@@ -443,6 +443,12 @@ RegExp::createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
     JSString *str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
+    /*
+     * NewBuiltinClassInstance can GC before we store re in the private field
+     * of the object. At that point the only reference to the source string
+     * could be from the malloc-allocated GC-invisible re. So we must anchor.
+     */
+    JS::Anchor<JSString *> anchor(str);
     AlreadyIncRefed<RegExp> re = RegExp::create(cx, str, flags);
     if (!re)
         return NULL;
