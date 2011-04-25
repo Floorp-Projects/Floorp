@@ -120,9 +120,6 @@ JSCompartment::init()
         arenas[i].init();
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
         freeLists.finalizables[i] = NULL;
-#ifdef JS_GCMETER
-    memset(&compartmentStats, 0, sizeof(JSGCArenaStats) * FINALIZE_LIMIT);
-#endif
     if (!crossCompartmentWrappers.init())
         return false;
 
@@ -160,7 +157,7 @@ bool
 JSCompartment::arenaListsAreEmpty()
 {
   for (unsigned i = 0; i < FINALIZE_LIMIT; i++) {
-       if (!arenas[i].isEmpty() || arenas[i].hasToBeFinalized)
+       if (!arenas[i].isEmpty())
            return false;
   }
   return true;

@@ -463,10 +463,10 @@ js::PropertyTree::dumpShapeStats()
 #endif /* DEBUG */
 }
 
+#ifdef DEBUG
 void
 js::PropertyTree::dumpShapes(JSContext *cx)
 {
-#ifdef DEBUG
     JSRuntime *rt = cx->runtime;
 
     if (const char *filename = rt->propTreeDumpFilename) {
@@ -494,5 +494,5 @@ js::PropertyTree::dumpShapes(JSContext *cx)
             fclose(dumpfp);
         }
     }
-#endif
 }
+#endif

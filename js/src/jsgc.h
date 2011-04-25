@@ -72,6 +72,7 @@ js_TraceXML(JSTracer *trc, JSXML* thing);
 
 namespace js {
 
+struct GCHelperThread;
 struct Shape;
 
 namespace gc {
@@ -150,6 +151,15 @@ struct ArenaHeader {
 
 #ifdef DEBUG
     JS_FRIEND_API(size_t) getThingSize() const;
+#endif
+
+#if defined DEBUG || defined JS_GCMETER
+    static size_t CountListLength(const ArenaHeader *aheader) {
+        size_t n = 0;
+        for (; aheader; aheader = aheader->next)
+            ++n;
+        return n;
+    }
 #endif
 };
 
@@ -298,9 +308,6 @@ struct ChunkInfo {
     EmptyArenaLists emptyArenaLists;
     size_t          age;
     size_t          numFree;
-#ifdef JS_THREADSAFE
-    PRLock          *chunkLock;
-#endif
 };
 
 const size_t BytesPerArena = ArenaSize + ArenaBitmapBytes + sizeof(MarkingDelay);
@@ -395,8 +402,7 @@ struct Chunk {
         return (addr & GC_CHUNK_MASK) >> ArenaShift;
     }
 
-    bool init(JSRuntime *rt);
-
+    void init(JSRuntime *rt);
     bool unused();
     bool hasAvailableArenas();
     bool withinArenasRange(Cell *cell);
@@ -577,54 +583,111 @@ GetGCThingRuntime(void *thing)
 }
 
 /* The arenas in a list have uniform kind. */
-struct ArenaList {
-    ArenaHeader           *head;          /* list start */
-    ArenaHeader           *cursor;        /* arena with free things */
-    volatile bool         hasToBeFinalized;
+class ArenaList {
+  private:
+    ArenaHeader     *head;      /* list start */
+    ArenaHeader     **cursor;   /* arena with free things */
 
-    inline void init() {
+#ifdef JS_THREADSAFE
+    /*
+     * The background finalization adds the finalized arenas to the list at
+     * the *cursor position. backgroundFinalizeState controls the interaction
+     * between the GC lock and the access to the list from the allocation
+     * thread.
+     *
+     * BFS_DONE indicates that the finalizations is not running or cannot
+     * affect this arena list. The allocation thread can access the list
+     * outside the GC lock.
+     *
+     * In BFS_RUN and BFS_JUST_FINISHED the allocation thread must take the
+     * lock. The former indicates that the finalization still runs. The latter
+     * signals that finalization just added to the list finalized arenas. In
+     * that case the lock effectively serves as a read barrier to ensure that
+     * the allocation thread see all the writes done during finalization.
+     */
+    enum BackgroundFinalizeState {
+        BFS_DONE,
+        BFS_RUN,
+        BFS_JUST_FINISHED
+    };
+
+    volatile BackgroundFinalizeState backgroundFinalizeState;
+#endif
+
+  public:
+#ifdef JS_GCMETER
+    JSGCArenaStats  stats;
+#endif
+
+    void init() {
         head = NULL;
-        cursor = NULL;
-        hasToBeFinalized = false;
+        cursor = &head;
+#ifdef JS_THREADSAFE
+        backgroundFinalizeState = BFS_DONE;
+#endif
+#ifdef JS_GCMETER
+        PodZero(&stats);
+#endif
     }
 
-    inline ArenaHeader *getNextWithFreeList() {
-        JS_ASSERT(!hasToBeFinalized);
-        while (cursor) {
-            ArenaHeader *aheader = cursor;
-            cursor = aheader->next;
-            if (aheader->freeList)
-                return aheader;
-        }
-        return NULL;
+    inline ArenaHeader *searchForFreeArena();
+
+    template <typename T>
+    inline ArenaHeader *getArenaWithFreeList(JSContext *cx, unsigned thingKind);
+
+    template<typename T>
+    void finalizeNow(JSContext *cx);
+
+#ifdef JS_THREADSAFE
+    template<typename T>
+    inline void finalizeLater(JSContext *cx);
+
+    static void backgroundFinalize(JSContext *cx, ArenaHeader *listHead);
+
+    bool willBeFinalizedLater() const {
+        return backgroundFinalizeState == BFS_RUN;
     }
+#endif
 
 #ifdef DEBUG
     bool markedThingsInArenaList() {
+# ifdef JS_THREADSAFE
+        /* The background finalization must have stopped at this point. */
+        JS_ASSERT(backgroundFinalizeState == BFS_DONE ||
+                  backgroundFinalizeState == BFS_JUST_FINISHED);
+# endif
         for (ArenaHeader *aheader = head; aheader; aheader = aheader->next) {
             if (!aheader->chunk()->bitmap.noBitsSet(aheader))
                 return true;
         }
         return false;
     }
-#endif
-
-    inline void insert(ArenaHeader *aheader) {
-        aheader->next = head;
-        head = aheader;
-    }
+#endif /* DEBUG */
 
     void releaseAll(unsigned thingKind) {
-        while (head) {
-            ArenaHeader *next = head->next;
-            head->chunk()->releaseArena(head);
-            head = next;
+# ifdef JS_THREADSAFE
+        /*
+         * We can only call this during the shutdown after the last GC when
+         * the background finalization is disabled.
+         */
+        JS_ASSERT(backgroundFinalizeState == BFS_DONE);
+# endif
+        while (ArenaHeader *aheader = head) {
+            head = aheader->next;
+            aheader->chunk()->releaseArena(aheader);
         }
-        head = NULL;
-        cursor = NULL;
+        cursor = &head;
     }
 
-    inline bool isEmpty() const {
+    bool isEmpty() const {
+#ifdef JS_THREADSAFE
+        /*
+         * The arena cannot be empty if the background finalization is not yet
+         * done.
+         */
+        if (backgroundFinalizeState != BFS_DONE)
+            return false;
+#endif
         return !head;
     }
 };
@@ -856,8 +919,6 @@ js_WaitForGC(JSRuntime *rt);
 extern void
 js_DestroyScriptsToGC(JSContext *cx, JSCompartment *comp);
 
-extern void
-FinalizeArenaList(JSContext *cx, js::gc::ArenaList *arenaList, js::gc::ArenaHeader *head);
 
 namespace js {
 
@@ -887,13 +948,9 @@ class GCHelperThread {
     void            **freeCursor;
     void            **freeCursorEnd;
 
-    struct FinalizeListAndHead {
-        js::gc::ArenaList   *list;
-        js::gc::ArenaHeader *head;
+    Vector<js::gc::ArenaHeader *, 64, js::SystemAllocPolicy> finalizeVector;
 
-    };
-
-    Vector<FinalizeListAndHead, 64, js::SystemAllocPolicy> finalizeVector;
+    friend class js::gc::ArenaList;
 
     JS_FRIEND_API(void)
     replenishAndFreeLater(void *ptr);
@@ -927,8 +984,7 @@ class GCHelperThread {
     /* Must be called with GC lock taken. */
     void startBackgroundSweep(JSRuntime *rt);
 
-    /* Must be called outside the GC lock. */
-    void waitBackgroundSweepEnd(JSRuntime *rt);
+    void waitBackgroundSweepEnd(JSRuntime *rt, bool gcUnlocked = true);
 
     void freeLater(void *ptr) {
         JS_ASSERT(!sweeping);
@@ -936,18 +992,6 @@ class GCHelperThread {
             *freeCursor++ = ptr;
         else
             replenishAndFreeLater(ptr);
-    }
-
-    bool finalizeLater(js::gc::ArenaList *list) {
-        JS_ASSERT(!sweeping);
-        JS_ASSERT(!list->hasToBeFinalized);
-        if (!list->head)
-            return true;
-        FinalizeListAndHead f = {list, list->head};
-        if (!finalizeVector.append(f))
-            return false;
-        list->hasToBeFinalized = true;
-        return true;
     }
 
     void setContext(JSContext *context) { cx = context; }

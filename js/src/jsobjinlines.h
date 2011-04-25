@@ -1119,6 +1119,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, JSObject* pro
 static inline bool
 CanBeFinalizedInBackground(gc::FinalizeKind kind, Class *clasp)
 {
+#ifdef JS_THREADSAFE
     JS_ASSERT(kind <= gc::FINALIZE_OBJECT_LAST);
     /* If the class has no finalizer or a finalizer that is safe to call on
      * a different thread, we change the finalize kind. For example,
@@ -1129,6 +1130,7 @@ CanBeFinalizedInBackground(gc::FinalizeKind kind, Class *clasp)
      */
     if (kind % 2 == 0 && (!clasp->finalize || clasp->flags & JSCLASS_CONCURRENT_FINALIZER))
         return true;
+#endif
     return false;
 }
 
