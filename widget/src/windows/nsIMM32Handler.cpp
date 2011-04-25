@@ -67,7 +67,6 @@ static nsIMM32Handler* gIMM32Handler = nsnull;
 PRLogModuleInfo* gIMM32Log = nsnull;
 #endif
 
-#ifdef ENABLE_IME_MOUSE_HANDLING
 static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 
 //-------------------------------------------------------------------------
@@ -85,8 +84,6 @@ static UINT sWM_MSIME_MOUSE = 0; // mouse message for MSIME 98/2000
 #define IMEMOUSE_MDOWN      0x04
 #define IMEMOUSE_WUP        0x10    // wheel up
 #define IMEMOUSE_WDOWN      0x20    // wheel down
-
-#endif
 
 PRPackedBool nsIMM32Handler::sIsStatusChanged = PR_FALSE;
 PRPackedBool nsIMM32Handler::sIsIME = PR_TRUE;
@@ -111,12 +108,9 @@ nsIMM32Handler::Initialize()
     gIMM32Log = PR_NewLogModule("nsIMM32HandlerWidgets");
 #endif
 
-#ifdef ENABLE_IME_MOUSE_HANDLING
   if (!sWM_MSIME_MOUSE) {
     sWM_MSIME_MOUSE = ::RegisterWindowMessage(RWM_MOUSE);
   }
-#endif
-
   InitKeyboardLayout(::GetKeyboardLayout(0));
 }
 
@@ -382,7 +376,6 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
 
   *aRetValue = 0;
   switch (msg) {
-#ifdef ENABLE_IME_MOUSE_HANDLING
     case WM_LBUTTONDOWN:
     case WM_MBUTTONDOWN:
     case WM_RBUTTONDOWN: {
@@ -398,7 +391,6 @@ nsIMM32Handler::ProcessMessage(nsWindow* aWindow, UINT msg,
       aEatMessage = PR_FALSE;
       return PR_TRUE;
     }
-#endif // ENABLE_IME_MOUSE_HANDLING
     case WM_INPUTLANGCHANGE:
       return ProcessInputLangChangeMessage(aWindow, wParam, lParam,
                                            aRetValue, aEatMessage);
@@ -2029,9 +2021,6 @@ nsIMM32Handler::ResolveIMECaretPos(nsIWidget* aReferenceWidget,
     aOutRect.MoveBy(-aNewOriginWidget->WidgetToScreenOffset());
 }
 
-
-#ifdef ENABLE_IME_MOUSE_HANDLING
-
 PRBool
 nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
 {
@@ -2078,8 +2067,6 @@ nsIMM32Handler::OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction)
                         MAKELONG(MAKEWORD(aAction, positioning), offset),
                         (LPARAM) IMEContext.get()) == 1;
 }
-
-#endif // ENABLE_IME_MOUSE_HANDLING
 
 /* static */ PRBool
 nsIMM32Handler::OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
