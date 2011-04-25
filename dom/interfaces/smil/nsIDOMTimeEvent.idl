@@ -45,13 +45,13 @@
  * http://www.w3.org/TR/SVG/animate.html#InterfaceTimeEvent
  */
 
-[scriptable, uuid(873785cc-d8be-48af-8b30-5c566e3f4e6e)]
+[scriptable, uuid(0d309c26-ddbb-44cb-9af1-3008972349e3)]
 interface nsIDOMTimeEvent : nsIDOMEvent
 {
   readonly attribute long detail;
-  readonly attribute nsIDOMWindow view;
+  readonly attribute nsIDOMAbstractView view;
   
   void initTimeEvent(in DOMString typeArg,
-                     in nsIDOMWindow viewArg,
+                     in nsIDOMAbstractView viewArg,
                      in long detailArg);
 };

@@ -51,6 +51,8 @@
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
 #include "nsIPresShell.h"
+#include "nsIDOMViewCSS.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
 #include "nsGkAtoms.h"

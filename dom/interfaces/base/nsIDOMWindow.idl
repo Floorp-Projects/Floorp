@@ -47,10 +47,11 @@ interface nsISelection;
  * contain child windows if the document in the window contains a
  * HTML frameset document or if the document contains iframe elements.
  *
- * @see <http://www.whatwg.org/html/#window>
+ * This interface is not officially defined by any standard bodies, it
+ * originates from the defacto DOM Level 0 standard.
  */
 
-[scriptable, uuid(ff7d278f-93db-4078-b89a-058c8e1270b4)]
+[scriptable, uuid(a6cf906b-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMWindow : nsISupports
 {
   /**
@@ -149,10 +150,4 @@ interface nsIDOMWindow : nsISupports
    * Method for sizing this window to the content in the window.
    */
   void                      sizeToContent();
-
-  /**
-   * @see <http://dev.w3.org/csswg/cssom/#dom-window-getcomputedstyle>
-   */
-  nsIDOMCSSStyleDeclaration getComputedStyle(in nsIDOMElement elt, 
-                                             [optional] in DOMString pseudoElt);
 };

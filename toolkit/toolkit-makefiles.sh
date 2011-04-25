@@ -70,6 +70,7 @@ MAKEFILES_dom="
   dom/interfaces/stylesheets/Makefile
   dom/interfaces/threads/Makefile
   dom/interfaces/traversal/Makefile
+  dom/interfaces/views/Makefile
   dom/interfaces/xbl/Makefile
   dom/interfaces/xpath/Makefile
   dom/interfaces/xul/Makefile
