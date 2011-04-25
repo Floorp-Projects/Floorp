@@ -8351,7 +8351,7 @@ nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 #endif
 
   nsINode *item;
-  *aCache = item = collection->GetNodeAt(aIndex, aResult);
+  *aCache = item = collection->GetNodeAt(aIndex);
   return item;
 }
 
@@ -8413,7 +8413,7 @@ nsContentListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
   nsContentList *list = nsContentList::FromSupports(aNative);
 
   nsIContent *item;
-  *aCache = item = list->GetNodeAt(aIndex, aResult);
+  *aCache = item = list->GetNodeAt(aIndex);
   return item;
 }
 
@@ -9491,8 +9491,7 @@ nsHTMLSelectElementSH::NewResolve(nsIXPConnectWrappedNative *wrapper, JSContext 
 
     nsHTMLOptionCollection *options = s->GetOptions();
     if (options) {
-      nsresult rv;
-      nsISupports *node = options->GetNodeAt(n, &rv);
+      nsISupports *node = options->GetNodeAt(n);
       if (node) {
         *objp = obj;
         *_retval = JS_DefineElement(cx, obj, n, JSVAL_VOID, nsnull, nsnull,
@@ -9521,7 +9520,7 @@ nsHTMLSelectElementSH::GetProperty(nsIXPConnectWrappedNative *wrapper,
     nsHTMLOptionCollection *options = s->GetOptions();
 
     if (options) {
-      nsISupports *node = options->GetNodeAt(n, &rv);
+      nsISupports *node = options->GetNodeAt(n);
 
       rv = WrapNative(cx, JS_GetGlobalForScopeChain(cx), node,
                       &NS_GET_IID(nsIDOMNode), PR_TRUE, vp);
