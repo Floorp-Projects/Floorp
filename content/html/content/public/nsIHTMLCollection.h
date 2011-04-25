@@ -45,8 +45,8 @@ class nsWrapperCache;
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
-{ 0xf38b43dc, 0x74d4, 0x4b11, \
- { 0xa6, 0xc9, 0xf8, 0xf4, 0xb5, 0xd3, 0x84, 0xe3 } }
+{ 0xf615e447, 0xbdab, 0x4469, \
+ { 0x92, 0x7c, 0x15, 0xb3, 0xed, 0x07, 0x36, 0x2e } }
 
 /**
  * An internal interface that allows QI-less getting of nodes from HTML
@@ -60,7 +60,7 @@ public:
   /**
    * Get the node at the index.  Returns null if the index is out of bounds.
    */
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult) = 0;
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex) = 0;
 
   /**
    * Get the node for the name.  Returns null if no node exists for the name.

@@ -121,11 +121,9 @@ public:
   // nsIDOMHTMLCollection interface
   NS_DECL_NSIDOMHTMLCOLLECTION
 
-  virtual nsIContent* GetNodeAt(PRUint32 aIndex, nsresult* aResult)
+  virtual nsIContent* GetNodeAt(PRUint32 aIndex)
   {
     FlushPendingNotifications();
-
-    *aResult = NS_OK;
 
     return mElements.SafeElementAt(aIndex, nsnull);
   }
@@ -2306,7 +2304,7 @@ NS_IMETHODIMP
 nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsresult rv;
-  nsISupports* item = GetNodeAt(aIndex, &rv);
+  nsISupports* item = GetNodeAt(aIndex);
   if (!item) {
     *aReturn = nsnull;
 
