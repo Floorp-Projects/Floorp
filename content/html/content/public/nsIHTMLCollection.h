@@ -45,8 +45,8 @@ class nsWrapperCache;
 
 // IID for the nsIHTMLCollection interface
 #define NS_IHTMLCOLLECTION_IID \
-{ 0xf615e447, 0xbdab, 0x4469, \
- { 0x92, 0x7c, 0x15, 0xb3, 0xed, 0x07, 0x36, 0x2e } }
+{ 0x84a68396, 0x518d, 0x4fa8, \
+ { 0x8f, 0x7f, 0xa0, 0x60, 0x55, 0xff, 0xef, 0xba } }
 
 /**
  * An internal interface that allows QI-less getting of nodes from HTML
@@ -66,8 +66,7 @@ public:
    * Get the node for the name.  Returns null if no node exists for the name.
    */
   virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache** aCache,
-                                    nsresult* aResult) = 0;
+                                    nsWrapperCache** aCache) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIHTMLCollection, NS_IHTMLCOLLECTION_IID)

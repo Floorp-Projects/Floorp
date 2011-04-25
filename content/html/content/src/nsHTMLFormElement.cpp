@@ -128,11 +128,8 @@ public:
     return mElements.SafeElementAt(aIndex, nsnull);
   }
   virtual nsISupports* GetNamedItem(const nsAString& aName,
-                                    nsWrapperCache **aCache,
-                                    nsresult* aResult)
+                                    nsWrapperCache **aCache)
   {
-    *aResult = NS_OK;
-
     nsISupports *item = NamedItemInternal(aName, PR_TRUE);
     *aCache = nsnull;
     return item;
