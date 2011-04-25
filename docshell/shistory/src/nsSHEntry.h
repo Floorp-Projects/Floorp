@@ -117,9 +117,9 @@ private:
   nsCOMPtr<nsISupports>           mOwner;
   nsExpirationState               mExpirationState;
   nsAutoPtr<nsDocShellEditorData> mEditorData;
-  nsString                        mStateData;
   PRUint64                        mDocShellID;
   PRUint32                        mLastTouched;
+  nsCOMPtr<nsIStructuredCloneContainer> mStateData;
 };
 
 #endif /* nsSHEntry_h */

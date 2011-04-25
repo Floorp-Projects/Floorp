@@ -87,6 +87,7 @@ XPIDLSRCS =					\
 	nsITabChild.idl				\
 	nsITabParent.idl			\
 	nsIDOMGlobalPropertyInitializer.idl	\
+	nsIStructuredCloneContainer.idl		\
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

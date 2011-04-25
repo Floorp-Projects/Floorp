@@ -1781,8 +1781,9 @@ SessionStoreService.prototype = {
       entry.docIdentifier = aEntry.docIdentifier;
     }
 
-    if (aEntry.stateData) {
-      entry.stateData = aEntry.stateData;
+    if (aEntry.stateData != null) {
+      entry.structuredCloneState = aEntry.stateData.getDataAsBase64();
+      entry.structuredCloneVersion = aEntry.stateData.formatVersion;
     }
 
     if (!(aEntry instanceof Ci.nsISHContainer)) {
@@ -2998,8 +2999,13 @@ SessionStoreService.prototype = {
     if (aEntry.docshellID)
       shEntry.docshellID = aEntry.docshellID;
 
-    if (aEntry.stateData) {
-      shEntry.stateData = aEntry.stateData;
+    if (aEntry.structuredCloneState && aEntry.structuredCloneVersion) {
+      shEntry.stateData =
+        Cc["@mozilla.org/docshell/structured-clone-container;1"].
+        createInstance(Ci.nsIStructuredCloneContainer);
+
+      shEntry.stateData.initFromBase64(aEntry.structuredCloneState,
+                                       aEntry.structuredCloneVersion);
     }
 
     if (aEntry.scroll) {
