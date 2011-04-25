@@ -54,6 +54,9 @@ const CLUSTER_BACKOFF = 5 * 60 * 1000; // 5 minutes
 // How long a key to generate from an old passphrase.
 const PBKDF2_KEY_BYTES = 16;
 
+const CRYPTO_COLLECTION = "crypto";
+const KEYS_WBO = "keys";
+
 const LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -129,7 +132,7 @@ WeaveSvc.prototype = {
 
   get passphrase() ID.get("WeaveCryptoID").keyStr,
   set passphrase(value) ID.get("WeaveCryptoID").keyStr = value,
-  
+
   get syncKeyBundle() ID.get("WeaveCryptoID"),
 
   get serverURL() Svc.Prefs.get("serverURL"),
@@ -228,7 +231,7 @@ WeaveSvc.prototype = {
         this._log.info("Cannot start sync: already syncing?");
       }
     }
-      
+
     return Utils.catch.call(this, func, lockExceptions);
   },
 
@@ -245,7 +248,7 @@ WeaveSvc.prototype = {
     this.infoURL = this.userBaseURL + "info/collections";
     this.storageURL = this.userBaseURL + "storage/";
     this.metaURL = this.storageURL + "meta/global";
-    this.cryptoKeysURL = this.storageURL + "crypto/keys";
+    this.cryptoKeysURL = this.storageURL + CRYPTO_COLLECTION + "/" + KEYS_WBO;
   },
 
   _checkCrypto: function WeaveSvc__checkCrypto() {
@@ -262,61 +265,61 @@ WeaveSvc.prototype = {
 
     return ok;
   },
-  
+
   /**
    * Here is a disgusting yet reasonable way of handling HMAC errors deep in
    * the guts of Sync. The astute reader will note that this is a hacky way of
    * implementing something like continuable conditions.
-   * 
+   *
    * A handler function is glued to each engine. If the engine discovers an
    * HMAC failure, we fetch keys from the server and update our keys, just as
    * we would on startup.
-   * 
+   *
    * If our key collection changed, we signal to the engine (via our return
    * value) that it should retry decryption.
-   * 
+   *
    * If our key collection did not change, it means that we already had the
    * correct keys... and thus a different client has the wrong ones. Reupload
    * the bundle that we fetched, which will bump the modified time on the
    * server and (we hope) prompt a broken client to fix itself.
-   * 
+   *
    * We keep track of the time at which we last applied this reasoning, because
    * thrashing doesn't solve anything. We keep a reasonable interval between
    * these remedial actions.
    */
   lastHMACEvent: 0,
-  
+
   /*
    * Returns whether to try again.
    */
   handleHMACEvent: function handleHMACEvent() {
     let now = Date.now();
-    
+
     // Leave a sizable delay between HMAC recovery attempts. This gives us
     // time for another client to fix themselves if we touch the record.
     if ((now - this.lastHMACEvent) < HMAC_EVENT_INTERVAL)
       return false;
-    
+
     this._log.info("Bad HMAC event detected. Attempting recovery " +
                    "or signaling to other clients.");
-    
+
     // Set the last handled time so that we don't act again.
     this.lastHMACEvent = now;
-    
+
     // Fetch keys.
-    let cryptoKeys = new CryptoWrapper("crypto", "keys");
+    let cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
     try {
       let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
-      
+
       // Save out the ciphertext for when we reupload. If there's a bug in
       // CollectionKeys, this will prevent us from uploading junk.
       let cipherText = cryptoKeys.ciphertext;
-      
+
       if (!cryptoResp.success) {
         this._log.warn("Failed to download keys.");
         return false;
       }
-      
+
       let keysChanged = this.handleFetchedKeys(this.syncKeyBundle,
                                                cryptoKeys, true);
       if (keysChanged) {
@@ -324,37 +327,37 @@ WeaveSvc.prototype = {
         this._log.info("Suggesting retry.");
         return true;              // Try again.
       }
-      
+
       // If not, reupload them and continue the current sync.
       cryptoKeys.ciphertext = cipherText;
       cryptoKeys.cleartext  = null;
-      
+
       let uploadResp = cryptoKeys.upload(this.cryptoKeysURL);
       if (uploadResp.success)
         this._log.info("Successfully re-uploaded keys. Continuing sync.");
       else
         this._log.warn("Got error response re-uploading keys. " +
                        "Continuing sync; let's try again later.");
-      
+
       return false;            // Don't try again: same keys.
-      
+
     } catch (ex) {
       this._log.warn("Got exception \"" + ex + "\" fetching and handling " +
                      "crypto keys. Will try again later.");
       return false;
     }
   },
-  
+
   handleFetchedKeys: function handleFetchedKeys(syncKey, cryptoKeys, skipReset) {
     // Don't want to wipe if we're just starting up!
     // This is largely relevant because we don't persist
     // CollectionKeys yet: Bug 610913.
     let wasBlank = CollectionKeys.isClear;
     let keysChanged = CollectionKeys.updateContents(syncKey, cryptoKeys);
-    
+
     if (keysChanged && !wasBlank) {
       this._log.debug("Keys changed: " + JSON.stringify(keysChanged));
-      
+
       if (!skipReset) {
         this._log.info("Resetting client to reflect key change.");
 
@@ -372,7 +375,7 @@ WeaveSvc.prototype = {
       return true;
     }
     return false;
-  },                
+  },
 
   /**
    * Prepare to initialize the rest of Weave after waiting a little bit
@@ -714,7 +717,7 @@ WeaveSvc.prototype = {
    */
   _fetchInfo: function _fetchInfo(url) {
     let infoURL = url || this.infoURL;
-    
+
     this._log.trace("In _fetchInfo: " + infoURL);
     let info;
     try {
@@ -731,13 +734,13 @@ WeaveSvc.prototype = {
   },
 
   verifyAndFetchSymmetricKeys: function verifyAndFetchSymmetricKeys(infoResponse) {
-    
+
     this._log.debug("Fetching and verifying -- or generating -- symmetric keys.");
-    
+
     // Don't allow empty/missing passphrase.
     // Furthermore, we assume that our sync key is already upgraded,
     // and fail if that assumption is invalidated.
-    
+
     let syncKey = this.syncKeyBundle;
     if (!syncKey) {
       this._log.error("No sync key: cannot fetch symmetric keys.");
@@ -745,7 +748,7 @@ WeaveSvc.prototype = {
       Status.sync = CREDENTIALS_CHANGED;             // For want of a better option.
       return false;
     }
-    
+
     // Not sure this validation is necessary now.
     if (!Utils.isPassphrase(syncKey.keyStr)) {
       this._log.warn("Sync key input is invalid: cannot fetch symmetric keys.");
@@ -757,31 +760,31 @@ WeaveSvc.prototype = {
     try {
       if (!infoResponse)
         infoResponse = this._fetchInfo();    // Will throw an exception on failure.
-      
+
       // This only applies when the server is already at version 4.
       if (infoResponse.status != 200) {
         this._log.warn("info/collections returned non-200 response. Failing key fetch.");
         Status.login = LOGIN_FAILED_SERVER_ERROR;
         return false;
       }
-      
+
       let infoCollections = infoResponse.obj;
-      
+
       this._log.info("Testing info/collections: " + JSON.stringify(infoCollections));
-      
+
       if (CollectionKeys.updateNeeded(infoCollections)) {
         this._log.info("CollectionKeys reports that a key update is needed.");
-        
+
         // Don't always set to CREDENTIALS_CHANGED -- we will probably take care of this.
-            
+
         // Fetch storage/crypto/keys.
         let cryptoKeys;
-        
-        if (infoCollections && ('crypto' in infoCollections)) {
+
+        if (infoCollections && (CRYPTO_COLLECTION in infoCollections)) {
           try {
-            cryptoKeys = new CryptoWrapper("crypto", "keys");
+            cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
             let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
-            
+
             if (cryptoResp.success) {
               let keysChanged = this.handleFetchedKeys(syncKey, cryptoKeys);
               return true;
@@ -802,7 +805,7 @@ WeaveSvc.prototype = {
           catch (ex) {
             this._log.warn("Got exception \"" + ex + "\" fetching cryptoKeys.");
             // TODO: Um, what exceptions might we get here? Should we re-throw any?
-            
+
             // One kind of exception: HMAC failure.
             if (Utils.isHMACMismatch(ex)) {
               Status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
@@ -821,18 +824,16 @@ WeaveSvc.prototype = {
         }
 
         if (!cryptoKeys) {
-          // Must have got a 404, or no reported collection.
-          // Better make some and upload them.
-          // 
-          // Reset the client so we reupload.
-          this.resetClient();
-          
-          // Generate the new keys.
-          this.generateNewSymmetricKeys();
-          
+          this._log.info("No keys! Generating new ones.");
+
+          // Better make some and upload them, and wipe the server to ensure
+          // consistency. This is all achieved via _freshStart.
+          // If _freshStart fails to clear the server or upload keys, it will
+          // throw.
+          this._freshStart();
           return true;
         }
-        
+
         // Last-ditch case.
         return false;
       }
@@ -840,13 +841,13 @@ WeaveSvc.prototype = {
         // No update needed: we're good!
         return true;
       }
-          
+
     } catch (e) {
       // This means no keys are present, or there's a network error.
       return false;
     }
   },
-  
+
   verifyLogin: function verifyLogin()
     this._notify("verify-login", "", function() {
       if (!this.username) {
@@ -878,10 +879,10 @@ WeaveSvc.prototype = {
           Svc.Obs.notify("weave:service:sync:delayed");
           return true;
         }
-        
+
         // Fetch collection info on every startup.
         let test = new Resource(this.infoURL).get();
-        
+
         switch (test.status) {
           case 200:
             // The user is authenticated.
@@ -895,7 +896,7 @@ WeaveSvc.prototype = {
               return false;
             }
 
-            // Go ahead and do remote setup, so that we can determine 
+            // Go ahead and do remote setup, so that we can determine
             // conclusively that our passphrase is correct.
             if (this._remoteSetup()) {
 
@@ -903,7 +904,7 @@ WeaveSvc.prototype = {
             Status.login = LOGIN_SUCCEEDED;
             return true;
             }
-            
+
             this._log.warn("Remote setup failed.");
             // Remote setup must have failed.
             return false;
@@ -956,19 +957,59 @@ WeaveSvc.prototype = {
 
   generateNewSymmetricKeys:
   function WeaveSvc_generateNewSymmetricKeys() {
-    this._log.info("Generating new keys....");
-    CollectionKeys.generateNewKeys();
-    let wbo = CollectionKeys.asWBO("crypto", "keys");
-    this._log.info("Encrypting new key bundle. Modified time is " + wbo.modified);
+    this._log.info("Generating new keys WBO...");
+    let wbo = CollectionKeys.generateNewKeysWBO();
+    this._log.info("Encrypting new key bundle.");
     wbo.encrypt(this.syncKeyBundle);
-    
+
     this._log.info("Uploading...");
     let uploadRes = wbo.upload(this.cryptoKeysURL);
-    if (uploadRes.status >= 400) {
+    if (uploadRes.status != 200) {
       this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
       throw new Error("Unable to upload symmetric keys.");
     }
-    this._log.info("Got status " + uploadRes.status);
+    this._log.info("Got status " + uploadRes.status + " uploading keys.");
+    let serverModified = uploadRes.obj;   // Modified timestamp according to server.
+    this._log.debug("Server reports crypto modified: " + serverModified);
+
+    // Now verify that info/collections shows them!
+    this._log.debug("Verifying server collection records.");
+    let info = this._fetchInfo();
+    this._log.debug("info/collections is: " + info);
+
+    if (info.status != 200) {
+      this._log.warn("Non-200 info/collections response. Aborting.");
+      throw new Error("Unable to upload symmetric keys.");
+    }
+
+    info = info.obj;
+    if (!(CRYPTO_COLLECTION in info)) {
+      this._log.error("Consistency failure: info/collections excludes " + 
+                      "crypto after successful upload.");
+      throw new Error("Symmetric key upload failed.");
+    }
+
+    // Can't check against local modified: clock drift.
+    if (info[CRYPTO_COLLECTION] < serverModified) {
+      this._log.error("Consistency failure: info/collections crypto entry " + 
+                      "is stale after successful upload.");
+      throw new Error("Symmetric key upload failed.");
+    }
+    
+    // Doesn't matter if the timestamp is ahead.
+    
+    // Download and install them.
+    let cryptoKeys = new CryptoWrapper(CRYPTO_COLLECTION, KEYS_WBO);
+    let cryptoResp = cryptoKeys.fetch(this.cryptoKeysURL).response;
+    if (cryptoResp.status != 200) {
+      this._log.warn("Failed to download keys.");
+      throw new Error("Symmetric key download failed.");
+    }
+    let keysChanged = this.handleFetchedKeys(this.syncKeyBundle,
+                                             cryptoKeys, true);
+    if (keysChanged) {
+      this._log.info("Downloaded keys differed, as expected.");
+    }
   },
 
   changePassword: function WeaveSvc_changePassword(newpass)
@@ -1014,29 +1055,34 @@ WeaveSvc.prototype = {
     }))(),
 
   startOver: function() {
-    // Clear client-specific data from the server, including disabled engines.
-    for each (let engine in [Clients].concat(Engines.getAll())) {
-      try {
-        engine.removeClientData();
-      } catch(ex) {
-        this._log.warn("Deleting client data for " + engine.name + " failed:"
-                       + Utils.exceptionStr(ex));
+    // Deletion doesn't make sense if we aren't set up yet!
+    if (this.clusterURL != "") {
+      // Clear client-specific data from the server, including disabled engines.
+      for each (let engine in [Clients].concat(Engines.getAll())) {
+        try {
+          engine.removeClientData();
+        } catch(ex) {
+          this._log.warn("Deleting client data for " + engine.name + " failed:"
+                         + Utils.exceptionStr(ex));
+        }
       }
+    } else {
+      this._log.debug("Skipping client data removal: no cluster URL.");
     }
 
     // Set a username error so the status message shows "set up..."
     Status.login = LOGIN_FAILED_NO_USERNAME;
     this.logout();
-    
+
     // Reset all engines and clear keys.
     this.resetClient();
     CollectionKeys.clear();
-    
+
     // Reset Weave prefs.
     this._ignorePrefObserver = true;
     Svc.Prefs.resetBranch("");
     this._ignorePrefObserver = false;
-    
+
     Svc.Prefs.set("lastversion", WEAVE_VERSION);
     // Find weave logins and remove them.
     this.password = "";
@@ -1064,16 +1110,16 @@ WeaveSvc.prototype = {
       // during sync. Clear our timer, see if we should go ahead and sync, then
       // just return.
       this._log.trace("Autoconnect skipped: master password still locked.");
-      
+
       if (this._autoTimer)
         this._autoTimer.clear();
-      
+
       this._checkSyncStatus();
       Svc.Prefs.set("autoconnect", true);
-      
+
       return;
     }
-    
+
     let reason = this._checkSync([kSyncNotLoggedIn, kFirstSyncChoiceNotMade]);
 
     // Can't autoconnect if we're missing these values.
@@ -1103,7 +1149,7 @@ WeaveSvc.prototype = {
   },
 
   login: function WeaveSvc_login(username, password, passphrase)
-    this._catch(this._lock("service.js: login", 
+    this._catch(this._lock("service.js: login",
           this._notify("login", "", function() {
       this._loggedIn = false;
       if (Svc.IO.offline) {
@@ -1260,30 +1306,30 @@ WeaveSvc.prototype = {
 
     this._log.debug("Fetching global metadata record");
     let meta = Records.get(this.metaURL);
-    
+
     // Checking modified time of the meta record.
     if (infoResponse &&
         (infoResponse.obj.meta != this.metaModified) &&
         (!meta || !meta.isNew)) {
-      
+
       // Delete the cached meta record...
       this._log.debug("Clearing cached meta record. metaModified is " +
           JSON.stringify(this.metaModified) + ", setting to " +
           JSON.stringify(infoResponse.obj.meta));
-      
+
       Records.del(this.metaURL);
-      
+
       // ... fetch the current record from the server, and COPY THE FLAGS.
       let newMeta       = Records.get(this.metaURL);
- 
+
       if (!Records.response.success || !newMeta) {
         this._log.debug("No meta/global record on the server. Creating one.");
         newMeta = new WBORecord("meta", "global");
         newMeta.payload.syncID = this.syncID;
         newMeta.payload.storageVersion = STORAGE_VERSION;
- 
+
         newMeta.isNew = true;
- 
+
         Records.set(this.metaURL, newMeta);
         if (!newMeta.upload(this.metaURL).success) {
           this._log.warn("Unable to upload new meta/global. Failing remote setup.");
@@ -1294,7 +1340,7 @@ WeaveSvc.prototype = {
         newMeta.isNew   = meta.isNew;
         newMeta.changed = meta.changed;
       }
-        
+
       // Switch in the new meta object and record the new time.
       meta              = newMeta;
       this.metaModified = infoResponse.obj.meta;
@@ -1310,7 +1356,7 @@ WeaveSvc.prototype = {
     // we need to convert it to a number as older clients used it as a string.
     if (!meta || !meta.payload.storageVersion || !meta.payload.syncID ||
         STORAGE_VERSION > parseFloat(remoteVersion)) {
-      
+
       this._log.info("One of: no meta, no meta storageVersion, or no meta syncID. Fresh start needed.");
 
       // abort the server wipe if the GET status was anything other than 404 or 200
@@ -1329,7 +1375,7 @@ WeaveSvc.prototype = {
         this._log.warn("No sync id, server wipe needed");
 
       reset = true;
-      
+
       this._log.info("Wiping server data");
       this._freshStart();
 
@@ -1347,7 +1393,7 @@ WeaveSvc.prototype = {
       return false;
     }
     else if (meta.payload.syncID != this.syncID) {
-      
+
       this._log.info("Sync IDs differ. Local is " + this.syncID + ", remote is " + meta.payload.syncID);
       this.resetClient();
       CollectionKeys.clear();
@@ -1358,7 +1404,7 @@ WeaveSvc.prototype = {
         this._log.warn("Failed to upgrade sync key. Failing remote setup.");
         return false;
       }
-      
+
       if (!this.verifyAndFetchSymmetricKeys(infoResponse)) {
         this._log.warn("Failed to fetch symmetric keys. Failing remote setup.");
         return false;
@@ -1390,8 +1436,8 @@ WeaveSvc.prototype = {
 
   /**
    * Return whether we should attempt login at the start of a sync.
-   * 
-   * Note that this function has strong ties to _checkSync: callers 
+   *
+   * Note that this function has strong ties to _checkSync: callers
    * of this function should typically use _checkSync to verify that
    * any necessary login took place.
    */
@@ -1400,10 +1446,10 @@ WeaveSvc.prototype = {
            !Svc.IO.offline &&
            !this.isLoggedIn;
   },
-  
+
   /**
    * Determine if a sync should run.
-   * 
+   *
    * @param ignore [optional]
    *        array of reasons to ignore when checking
    *
@@ -1436,7 +1482,7 @@ WeaveSvc.prototype = {
    */
   _clearSyncTriggers: function _clearSyncTriggers() {
     this._log.debug("Clearing sync triggers.");
-    
+
     // Clear out any scheduled syncs
     if (this._syncTimer)
       this._syncTimer.clear();
@@ -1458,14 +1504,14 @@ WeaveSvc.prototype = {
     // Should we be syncing now, if not, cancel any sync timers and return
     // if we're in backoff, we'll schedule the next sync
     let ignore = [kSyncBackoffNotMet];
-    
-    // We're ready to sync even if we're not logged in... so long as the 
+
+    // We're ready to sync even if we're not logged in... so long as the
     // master password isn't locked.
     if (Utils.mpLocked()) {
       ignore.push(kSyncNotLoggedIn);
       ignore.push(kSyncMasterPasswordLocked);
     }
-    
+
     let skip = this._checkSync(ignore);
     this._log.trace("_checkSync returned \"" + skip + "\".");
     if (skip) {
@@ -1493,7 +1539,7 @@ WeaveSvc.prototype = {
     if (Status.login == MASTER_PASSWORD_LOCKED &&
         Utils.mpLocked()) {
       this._log.debug("Not syncing on idle: Login status is " + Status.login);
-      
+
       // If we're not syncing now, we need to schedule the next one.
       this._scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
       return false;
@@ -1624,7 +1670,7 @@ WeaveSvc.prototype = {
 
     this._scheduleNextSync(interval);
   },
-  
+
   _syncErrors: 0,
   /**
    * Deal with sync errors appropriately
@@ -1641,7 +1687,7 @@ WeaveSvc.prototype = {
       }
       Status.enforceBackoff = true;
     }
-    
+
     this._scheduleAtInterval();
   },
 
@@ -1655,7 +1701,7 @@ WeaveSvc.prototype = {
     return [LOGIN_FAILED_INVALID_PASSPHRASE,
             LOGIN_FAILED_LOGIN_REJECTED].indexOf(Status.login) == -1;
   },
-  
+
   sync: function sync() {
     let dateStr = new Date().toLocaleFormat(LOG_DATE_FORMAT);
     this._log.info("Starting sync at " + dateStr);
@@ -1666,12 +1712,12 @@ WeaveSvc.prototype = {
         if (!this.login()) {
           this._log.debug("Not syncing: login returned false.");
           this._clearSyncTriggers();    // No more pending syncs, please.
-          
+
           // Try again later, just as if we threw an error... only without the
           // error count.
           if (!this._skipScheduledRetry())
             this._scheduleAtInterval(MASTER_PASSWORD_LOCKED_RETRY_INTERVAL);
-    
+
           return;
         }
       }
@@ -1681,12 +1727,12 @@ WeaveSvc.prototype = {
       return this._lockedSync.apply(this, arguments);
     })();
   },
-  
+
   /**
    * Sync up engines with the server.
    */
   _lockedSync: function _lockedSync()
-    this._lock("service.js: sync", 
+    this._lock("service.js: sync",
                this._notify("sync", "", function() {
 
     this._log.info("In sync().");
@@ -1842,7 +1888,7 @@ WeaveSvc.prototype = {
     let meta = Records.get(this.metaURL);
     if (meta.isNew || !meta.payload.engines)
       return;
-    
+
     // If we're the only client, and no engines are marked as enabled,
     // thumb our noses at the server data: it can't be right.
     // Belt-and-suspenders approach to Bug 615926.
@@ -1933,44 +1979,44 @@ WeaveSvc.prototype = {
    */
   syncKeyNeedsUpgrade: function syncKeyNeedsUpgrade() {
     let p = this.passphrase;
-    
+
     // Check whether it's already a key that we generated.
     if (Utils.isPassphrase(p)) {
       this._log.info("Sync key is up-to-date: no need to upgrade.");
       return false;
     }
-    
+
     return true;
   },
-                         
+
   /**
    * If we have a passphrase, rather than a 25-alphadigit sync key,
    * use the provided sync ID to bootstrap it using PBKDF2.
-   * 
+   *
    * Store the new 'passphrase' back into the identity manager.
-   * 
+   *
    * We can check this as often as we want, because once it's done the
    * check will no longer succeed. It only matters that it happens after
    * we decide to bump the server storage version.
    */
   upgradeSyncKey: function upgradeSyncKey(syncID) {
     let p = this.passphrase;
-    
+
     // Check whether it's already a key that we generated.
     if (!this.syncKeyNeedsUpgrade(p))
       return true;
-    
+
     // Otherwise, let's upgrade it.
     // N.B., we persist the sync key without testing it first...
-    
+
     let s = btoa(syncID);        // It's what WeaveCrypto expects. *sigh*
     let k = Utils.derivePresentableKeyFromPassphrase(p, s, PBKDF2_KEY_BYTES);   // Base 32.
-    
+
     if (!k) {
       this._log.error("No key resulted from derivePresentableKeyFromPassphrase. Failing upgrade.");
       return false;
     }
-    
+
     this._log.info("Upgrading sync key...");
     this.passphrase = k;
     this._log.info("Saving upgraded sync key...");
@@ -2001,8 +2047,9 @@ WeaveSvc.prototype = {
       return engine.name;
     });
     this.wipeServer(collections);
-    
-    // Generate and upload new keys. Do this last so we don't wipe them...
+
+    // Generate, upload, and download new keys. Do this last so we don't wipe
+    // them...
     this.generateNewSymmetricKeys();
   },
 
@@ -2066,13 +2113,13 @@ WeaveSvc.prototype = {
    *
    * @param collections [optional]
    *        Array of collections to wipe. If not given, all collections are wiped.
-   *        
+   *
    * @param includeKeys [optional]
    *        If true, keys/pubkey and keys/privkey are deleted from the server.
    *        This is false by default, which will cause the usual upgrade paths
    *        to leave those keys on the server. This is to solve Bug 614737: old
    *        clients check for keys *before* checking storage versions.
-   *        
+   *
    *        Note that this parameter only has an effect if `collections` is not
    *        passed. If you explicitly pass a list of collections, they will be
    *        processed regardless of the value of `includeKeys`.
