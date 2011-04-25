@@ -694,13 +694,17 @@ JS_STATIC_ASSERT(sizeof(JSStaticAtom) == sizeof(JSString));
 JS_ALWAYS_INLINE const jschar *
 JSString::getChars(JSContext *cx)
 {
-    return ensureLinear(cx)->chars();
+    if (JSLinearString *str = ensureLinear(cx))
+        return str->chars();
+    return NULL;
 }
 
 JS_ALWAYS_INLINE const jschar *
 JSString::getCharsZ(JSContext *cx)
 {
-    return ensureFlat(cx)->chars();
+    if (JSFlatString *str = ensureFlat(cx))
+        return str->chars();
+    return NULL;
 }
 
 JS_ALWAYS_INLINE JSLinearString *
