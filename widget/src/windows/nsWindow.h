@@ -409,7 +409,6 @@ protected:
 #endif
   PRBool                  OnHotKey(WPARAM wParam, LPARAM lParam);
   BOOL                    OnInputLangChange(HKL aHKL);
-  void                    OnSettingsChange(WPARAM wParam, LPARAM lParam);
   PRBool                  OnPaint(HDC aDC, PRUint32 aNestingLevel);
   void                    OnWindowPosChanged(WINDOWPOS *wp, PRBool& aResult);
   PRBool                  OnMouseWheel(UINT msg, WPARAM wParam, LPARAM lParam, 
