@@ -45,6 +45,8 @@
 #include "nsCoreUtils.h"
 
 #include "nsIDOMDocument.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIInterfaceRequestorUtils.h"

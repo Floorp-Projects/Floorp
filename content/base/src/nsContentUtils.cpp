@@ -168,6 +168,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIChromeRegistry.h"
 #include "nsIMIMEHeaderParam.h"
 #include "nsIDOMXULCommandEvent.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMDragEvent.h"
 #include "nsDOMDataTransfer.h"
 #include "nsHtml5Module.h"
@@ -5500,8 +5501,9 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
   nsCOMPtr<nsIDOMXULCommandEvent> xulCommand = do_QueryInterface(event);
   nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(xulCommand);
   NS_ENSURE_STATE(pEvent);
+  nsCOMPtr<nsIDOMAbstractView> view = do_QueryInterface(doc->GetWindow());
   nsresult rv = xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"),
-                                             PR_TRUE, PR_TRUE, doc->GetWindow(),
+                                             PR_TRUE, PR_TRUE, view,
                                              0, aCtrl, aAlt, aShift, aMeta,
                                              aSourceEvent);
   NS_ENSURE_SUCCESS(rv, rv);
