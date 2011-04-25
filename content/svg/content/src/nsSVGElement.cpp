@@ -51,8 +51,6 @@
 #include "nsStyleConsts.h"
 #include "nsDOMError.h"
 #include "nsIPresShell.h"
-#include "nsIDOMViewCSS.h"
-#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
 #include "nsGkAtoms.h"
@@ -1169,9 +1167,6 @@ MappedAttrParser::MappedAttrParser(css::Loader* aLoader,
   : mParser(aLoader), mDocURI(aDocURI), mBaseURI(aBaseURI),
     mNodePrincipal(aNodePrincipal), mDecl(nsnull)
 {
-  // mParser should successfully construct, now that we have infallible malloc.
-  NS_ABORT_IF_FALSE(mParser, "parser failed to initialize?");
-
   // SVG and CSS differ slightly in their interpretation of some of
   // the attributes.  SVG allows attributes of the form: font-size="5"
   // (style="font-size: 5" if using a style attribute)

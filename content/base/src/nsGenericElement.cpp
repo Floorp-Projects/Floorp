@@ -66,7 +66,7 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
@@ -92,7 +92,6 @@
 
 #include "nsBindingManager.h"
 #include "nsXBLBinding.h"
-#include "nsIDOMViewCSS.h"
 #include "nsIXBLService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIBoxObject.h"
@@ -110,7 +109,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIDOMEventListener.h"
-#include "nsEventStateManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 
@@ -5379,10 +5377,8 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
                                nsIFocusManager::FLAG_NOSCROLL);
           }
 
-          nsIEventStateManager* esm =
-            aVisitor.mPresContext->EventStateManager();
           nsEventStateManager::SetActiveManager(
-            static_cast<nsEventStateManager*>(esm), this);
+            aVisitor.mPresContext->EventStateManager(), this);
         }
       }
     }
@@ -5469,7 +5465,6 @@ ParseSelectorList(nsINode* aNode,
   NS_ENSURE_STATE(doc);
 
   nsCSSParser parser(doc->CSSLoader());
-  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   nsCSSSelectorList* selectorList;
   nsresult rv = parser.ParseSelectorString(aSelectorString,

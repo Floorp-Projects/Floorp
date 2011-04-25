@@ -595,6 +595,9 @@ add_test(function() {
     gManagerWindow = aWindow;
     gCategoryUtilities = new CategoryUtilities(gManagerWindow);
 
+    // We never restore to the search pane
+    is(gCategoryUtilities.selectedCategory, "discover", "View should have changed to discover");
+
     // Installed add-on is considered local on new search
     gAddonInstalled = true;
 

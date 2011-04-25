@@ -456,14 +456,6 @@ CSS_PROP_DISPLAY(
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 #endif
-CSS_PROP_BACKENDONLY(
-    azimuth,
-    azimuth,
-    Azimuth,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
-    0,
-    kAzimuthKTable)
 CSS_PROP_SHORTHAND(
     background,
     background,
@@ -1332,25 +1324,6 @@ CSS_PROP_CONTENT(
     nsnull,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None) // XXX bug 137285
-CSS_PROP_SHORTHAND(
-    cue,
-    cue,
-    Cue,
-    CSS_PROPERTY_PARSE_FUNCTION)
-CSS_PROP_BACKENDONLY(
-    cue-after,
-    cue_after,
-    CueAfter,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HUO,
-    nsnull)
-CSS_PROP_BACKENDONLY(
-    cue-before,
-    cue_before,
-    CueBefore,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HUO,
-    nsnull)
 CSS_PROP_USERINTERFACE(
     cursor,
     cursor,
@@ -1381,13 +1354,6 @@ CSS_PROP_DISPLAY(
     kDisplayKTable,
     offsetof(nsStyleDisplay, mDisplay),
     eStyleAnimType_EnumU8)
-CSS_PROP_BACKENDONLY(
-    elevation,
-    elevation,
-    Elevation,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HK | VARIANT_ANGLE,
-    kElevationKTable)
 CSS_PROP_TABLEBORDER(
     empty-cells,
     empty_cells,
@@ -2091,39 +2057,6 @@ CSS_PROP_BACKENDONLY(
     CSS_PROPERTY_PARSE_VALUE,
     VARIANT_HK,
     kPageBreakInsideKTable)
-CSS_PROP_SHORTHAND(
-    pause,
-    pause,
-    Pause,
-    CSS_PROPERTY_PARSE_FUNCTION)
-CSS_PROP_BACKENDONLY(
-    pause-after,
-    pause_after,
-    PauseAfter,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HTP,
-    nsnull)
-CSS_PROP_BACKENDONLY(
-    pause-before,
-    pause_before,
-    PauseBefore,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HTP,
-    nsnull)
-CSS_PROP_BACKENDONLY(
-    pitch,
-    pitch,
-    Pitch,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HKF,
-    kPitchKTable)
-CSS_PROP_BACKENDONLY(
-    pitch-range,
-    pitch_range,
-    PitchRange,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HN,
-    nsnull)
 CSS_PROP_VISIBILITY(
     pointer-events,
     pointer_events,
@@ -2160,13 +2093,6 @@ CSS_PROP_DISPLAY(
     kResizeKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_BACKENDONLY(
-    richness,
-    richness,
-    Richness,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HN,
-    nsnull)
 CSS_PROP_POSITION(
     right,
     right,
@@ -2184,48 +2110,6 @@ CSS_PROP_BACKENDONLY(
     CSS_PROPERTY_PARSE_FUNCTION,
     0,
     kPageSizeKTable)
-CSS_PROP_BACKENDONLY(
-    speak,
-    speak,
-    Speak,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HK,
-    kSpeakKTable)
-CSS_PROP_BACKENDONLY(
-    speak-header,
-    speak_header,
-    SpeakHeader,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HK,
-    kSpeakHeaderKTable)
-CSS_PROP_BACKENDONLY(
-    speak-numeral,
-    speak_numeral,
-    SpeakNumeral,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HK,
-    kSpeakNumeralKTable)
-CSS_PROP_BACKENDONLY(
-    speak-punctuation,
-    speak_punctuation,
-    SpeakPunctuation,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HK,
-    kSpeakPunctuationKTable)
-CSS_PROP_BACKENDONLY(
-    speech-rate,
-    speech_rate,
-    SpeechRate,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HN | VARIANT_KEYWORD,
-    kSpeechRateKTable)
-CSS_PROP_BACKENDONLY(
-    stress,
-    stress,
-    Stress,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HN,
-    nsnull)
 CSS_PROP_TABLE(
     table-layout,
     table_layout,
@@ -2246,16 +2130,20 @@ CSS_PROP_TEXT(
     kTextAlignKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
-CSS_PROP_TEXTRESET(
+CSS_PROP_SHORTHAND(
     text-decoration,
     text_decoration,
     TextDecoration,
+    CSS_PROPERTY_PARSE_FUNCTION)
+CSS_PROP_TEXTRESET(
+    -moz-text-blink,
+    text_blink,
+    CSS_PROP_DOMPROP_PREFIXED(TextBlink),
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
-    0,
-    kTextDecorationKTable,
-    offsetof(nsStyleTextReset, mTextDecoration),
+    VARIANT_HK,
+    kTextBlinkKTable,
+    offsetof(nsStyleTextReset, mTextBlink),
     eStyleAnimType_EnumU8)
 CSS_PROP_TEXTRESET(
     -moz-text-decoration-color,
@@ -2268,6 +2156,17 @@ CSS_PROP_TEXTRESET(
     kBorderColorKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_Custom)
+CSS_PROP_TEXTRESET(
+    -moz-text-decoration-line,
+    text_decoration_line,
+    CSS_PROP_DOMPROP_PREFIXED(TextDecorationLine),
+    CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_PARSER_FUNCTION |
+        CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+    0,
+    kTextDecorationLineKTable,
+    offsetof(nsStyleTextReset, mTextDecorationLine),
+    eStyleAnimType_EnumU8)
 CSS_PROP_TEXTRESET(
     -moz-text-decoration-style,
     text_decoration_style,
@@ -2452,21 +2351,6 @@ CSS_PROP_VISIBILITY(
     kVisibilityKTable,
     offsetof(nsStyleVisibility, mVisible),
     eStyleAnimType_EnumU8)  // reflow for collapse
-CSS_PROP_BACKENDONLY(
-    voice-family,
-    voice_family,
-    VoiceFamily,
-    CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_PARSER_FUNCTION,
-    0,
-    nsnull)
-CSS_PROP_BACKENDONLY(
-    volume,
-    volume,
-    Volume,
-    CSS_PROPERTY_PARSE_VALUE,
-    VARIANT_HPN | VARIANT_KEYWORD,
-    kVolumeKTable)
 CSS_PROP_TEXT(
     white-space,
     white_space,

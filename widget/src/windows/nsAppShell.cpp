@@ -52,22 +52,6 @@
 const PRUnichar* kAppShellEventId = L"nsAppShell:EventID";
 const PRUnichar* kTaskbarButtonEventId = L"TaskbarButtonCreated";
 
-#ifdef WINCE
-BOOL WaitMessage(VOID)
-{
-  BOOL retval = TRUE;
-  
-  HANDLE hThread = GetCurrentThread();
-  DWORD waitRes = MsgWaitForMultipleObjectsEx(1, &hThread, INFINITE, QS_ALLEVENTS, 0);
-  if((DWORD)-1 == waitRes)
-  {
-    retval = FALSE;
-  }
-  
-  return retval;
-}
-#endif
-
 static UINT sMsgId;
 
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_WIN7

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  var f = document.getElementById("f");
+  var w = f.contentWindow;
+  f.parentNode.removeChild(f);
+  w.localStorage;
+}
+
+</script>
+</head>
+<body onload="boom();"><iframe id="f" src="data:text/html,1"></iframe></body>
+</html>

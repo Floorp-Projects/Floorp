@@ -49,9 +49,7 @@
 #include <objbase.h>
 #include <initguid.h>
 
-#ifndef WINCE
 #include "nsUXThemeData.h"
-#endif
 
 // unknwn.h is needed to build with WIN32_LEAN_AND_MEAN
 #include <unknwn.h>
@@ -87,9 +85,6 @@ StartAllowingD3D9(nsITimer *aTimer, void *aClosure)
 extern "C" {
 #endif
 
-// Windows CE is created when nsToolkit
-// starts up, not when the dll is loaded.
-#ifndef WINCE
 BOOL APIENTRY DllMain(  HINSTANCE hModule, 
                         DWORD reason, 
                         LPVOID lpReserved )
@@ -113,7 +108,6 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
 
     return TRUE;
 }
-#endif //#ifndef WINCE
 
 #if defined(__GNUC__)
 } // extern "C"
@@ -166,7 +160,7 @@ nsToolkit::nsToolkit()
     mGuiThread  = NULL;
     mDispatchWnd = 0;
 
-#if defined(MOZ_STATIC_COMPONENT_LIBS) || defined (WINCE)
+#if defined(MOZ_STATIC_COMPONENT_LIBS)
     nsToolkit::Startup(GetModuleHandle(NULL));
 #endif
 
@@ -196,7 +190,7 @@ nsToolkit::~nsToolkit()
       gMouseTrailer = nsnull;
     }
 
-#if defined (MOZ_STATIC_COMPONENT_LIBS) || defined(WINCE)
+#if defined (MOZ_STATIC_COMPONENT_LIBS)
     nsToolkit::Shutdown();
 #endif
 }
@@ -232,9 +226,7 @@ nsToolkit::Startup(HMODULE hModule)
     if (setDPIAware)
       setDPIAware();
 
-#ifndef WINCE
     nsUXThemeData::Initialize();
-#endif
 }
 
 
@@ -355,7 +347,6 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
                                        LPARAM lParam)
 {
     switch (msg) {
-#ifndef WINCE
         case WM_SYSCOLORCHANGE:
         {
           // WM_SYSCOLORCHANGE messages are only dispatched to top
@@ -369,7 +360,6 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
           // the current system colors.
           nsWindow::GlobalMsgWindowProc(hWnd, msg, wParam, lParam);
         }
-#endif
     }
 
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
@@ -435,7 +425,6 @@ PRBool nsToolkit::InitVersionInfo()
   {
     isInitialized = PR_TRUE;
 
-#ifndef WINCE
     OSVERSIONINFO osversion;
     osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
@@ -444,7 +433,6 @@ PRBool nsToolkit::InitVersionInfo()
     if (osversion.dwMajorVersion == 5)  { 
       nsToolkit::mIsWinXP = (osversion.dwMinorVersion == 1);
     }
-#endif
   }
 
   return PR_TRUE;
@@ -558,10 +546,8 @@ void MouseTrailer::TimerProc(nsITimer* aTimer, void* aClosure)
     mp.y = GET_Y_LPARAM(pos);
     HWND mouseWnd = ::WindowFromPoint(mp);
     if (mtrailer->mMouseTrailerWindow != mouseWnd) {
-#ifndef WINCE
       // Notify someone that a mouse exit happened.
       PostMessage(mtrailer->mMouseTrailerWindow, WM_MOUSELEAVE, 0, 0);
-#endif
 
       // we are out of this window, destroy timer
       mtrailer->DestroyTimer();

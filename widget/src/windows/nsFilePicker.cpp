@@ -57,9 +57,7 @@
 
 // commdlg.h and cderr.h are needed to build with WIN32_LEAN_AND_MEAN
 #include <commdlg.h>
-#ifndef WINCE
 #include <cderr.h>
-#endif
 
 #include "nsString.h"
 #include "nsToolkit.h"
@@ -100,7 +98,6 @@ nsFilePicker::~nsFilePicker()
 //
 //-------------------------------------------------------------------------
 
-#ifndef WINCE_WINDOWS_MOBILE
 int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
   if (uMsg == BFFM_INITIALIZED)
@@ -113,7 +110,6 @@ int CALLBACK BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpDa
   }
   return 0;
 }
-#endif
 
 NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
 {
@@ -143,8 +139,6 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
   }
 
   mUnicodeFile.Truncate();
-
-#ifndef WINCE_WINDOWS_MOBILE
 
   if (mMode == modeGetFolder) {
     PRUnichar dirBuffer[MAX_PATH+1];
@@ -183,7 +177,6 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     }
   }
   else 
-#endif // WINCE_WINDOWS_MOBILE
   {
 
     OPENFILENAMEW ofn;
@@ -198,12 +191,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     ofn.lpstrTitle   = (LPCWSTR)mTitle.get();
     ofn.lpstrFilter  = (LPCWSTR)filterBuffer.get();
     ofn.nFilterIndex = mSelectedType;
-#ifdef WINCE_WINDOWS_MOBILE
-    // If we're running fullscreen the dialog inherits that, which is bad
-    ofn.hwndOwner    = (HWND) 0;
-#else
     ofn.hwndOwner    = (HWND) (mParentWidget.get() ? mParentWidget->GetNativeData(NS_NATIVE_TMP_WINDOW) : 0); 
-#endif
     ofn.lpstrFile    = fileBuffer;
     ofn.nMaxFile     = FILE_BUFFER_SIZE;
 
@@ -235,9 +223,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
       }
     }
 
-#ifndef WINCE
     MOZ_SEH_TRY {
-#endif
       if (mMode == modeOpen) {
         // FILE MUST EXIST!
         ofn.Flags |= OFN_FILEMUSTEXIST;
@@ -264,9 +250,7 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
         if (!result) {
           // Error, find out what kind.
           if (::GetLastError() == ERROR_INVALID_PARAMETER 
-#ifndef WINCE
               || ::CommDlgExtendedError() == FNERR_INVALIDFILENAME
-#endif
               ) {
             // probably the default file name is too long or contains illegal characters!
             // Try again, without a starting file name.
@@ -275,16 +259,9 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
           }
         }
       } 
-#ifdef WINCE_WINDOWS_MOBILE
-      else if (mMode == modeGetFolder) {
-        ofn.Flags = OFN_PROJECT | OFN_FILEMUSTEXIST;
-        result = ::GetOpenFileNameW(&ofn);
-      }
-#endif
       else {
         NS_ERROR("unsupported mode"); 
       }
-#ifndef WINCE
     }
     MOZ_SEH_EXCEPT(PR_TRUE) {
       MessageBoxW(ofn.hwndOwner,
@@ -293,7 +270,6 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
                   MB_ICONERROR);
       result = PR_FALSE;
     }
-#endif
 
     if (result) {
       // Remember what filter type the user selected

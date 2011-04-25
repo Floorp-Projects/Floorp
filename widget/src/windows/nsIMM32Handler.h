@@ -57,10 +57,6 @@ class nsIWidget;
 class nsWindow;
 struct nsIntRect;
 
-#ifndef WINCE
-#define ENABLE_IME_MOUSE_HANDLING 1
-#endif // WINCE
-
 #define NS_WM_IMEFIRST WM_IME_SETCONTEXT
 #define NS_WM_IMELAST  WM_IME_KEYUP
 
@@ -174,9 +170,7 @@ protected:
 
   // The result of following On*Event methods means "The message was processed,
   // don't process the message in the caller (nsWindow)".
-#ifdef ENABLE_IME_MOUSE_HANDLING
   PRBool OnMouseEvent(nsWindow* aWindow, LPARAM lParam, int aAction);
-#endif // ENABLE_IME_MOUSE_HANDLING
   static PRBool OnKeyDownEvent(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                                PRBool &aEatMessage);
 
@@ -334,10 +328,8 @@ protected:
   static PRPackedBool sIsIME;
   static PRPackedBool sIsIMEOpening;
 
-#ifndef WINCE
   static UINT sCodePage;
   static DWORD sIMEProperty;
-#endif // #ifndef WINCE
 };
 
 #endif // nsIMM32Handler_h__

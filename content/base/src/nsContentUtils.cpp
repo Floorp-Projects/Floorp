@@ -58,7 +58,6 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 #include "nsContentUtils.h"
-#include "nsIContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Element.h"
@@ -169,7 +168,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIChromeRegistry.h"
 #include "nsIMIMEHeaderParam.h"
 #include "nsIDOMXULCommandEvent.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDOMDragEvent.h"
 #include "nsDOMDataTransfer.h"
 #include "nsHtml5Module.h"
@@ -5502,9 +5500,8 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
   nsCOMPtr<nsIDOMXULCommandEvent> xulCommand = do_QueryInterface(event);
   nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(xulCommand);
   NS_ENSURE_STATE(pEvent);
-  nsCOMPtr<nsIDOMAbstractView> view = do_QueryInterface(doc->GetWindow());
   nsresult rv = xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"),
-                                             PR_TRUE, PR_TRUE, view,
+                                             PR_TRUE, PR_TRUE, doc->GetWindow(),
                                              0, aCtrl, aAlt, aShift, aMeta,
                                              aSourceEvent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -6466,23 +6463,9 @@ nsContentUtils::AllowXULXBLForPrincipal(nsIPrincipal* aPrincipal)
           IsSitePermAllow(princURI, "allowXULXBL"));
 }
 
-NS_IMPL_ISUPPORTS1(nsIContentUtils, nsIContentUtils)
-
-PRBool
-nsIContentUtils::IsSafeToRunScript()
-{
-  return nsContentUtils::IsSafeToRunScript();
-}
-
-PRBool
-nsIContentUtils::ParseIntMarginValue(const nsAString& aString, nsIntMargin& result)
-{
-  return nsContentUtils::ParseIntMarginValue(aString, result);
-}
-
 already_AddRefed<nsIDocumentLoaderFactory>
-nsIContentUtils::FindInternalContentViewer(const char* aType,
-                                           ContentViewerType* aLoaderType)
+nsContentUtils::FindInternalContentViewer(const char* aType,
+                                          ContentViewerType* aLoaderType)
 {
   if (aLoaderType) {
     *aLoaderType = TYPE_UNSUPPORTED;
@@ -6506,7 +6489,7 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
         *aLoaderType = TYPE_PLUGIN;
       else
       *aLoaderType = TYPE_UNKNOWN;
-    }   
+    }
     return docFactory.forget();
   }
 
@@ -6543,18 +6526,4 @@ nsIContentUtils::FindInternalContentViewer(const char* aType,
 #endif // MOZ_MEDIA
 
   return NULL;
-}
-
-NS_IMPL_ISUPPORTS1(nsIContentUtils2, nsIContentUtils2)
-
-nsIInterfaceRequestor*
-nsIContentUtils2::GetSameOriginChecker()
-{
-  return nsContentUtils::GetSameOriginChecker();
-}
-
-nsresult
-nsIContentUtils2::CheckSameOrigin(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
-{
-  return nsContentUtils::CheckSameOrigin(aOldChannel, aNewChannel);
 }

@@ -445,32 +445,12 @@ public:
    * possibly making it smaller in the process so the surface does not
    * use excessive memory.
    *
-   * XXXdholbert Putting impl in header file so that imagelib can call this
-   * method.  Once we switch to a libxul-only world, this can go back into
-   * the .cpp file.
-   *
    * @param aSize the desired surface size
    * @param aResultOverflows true if the desired surface size is too big
    * @return the surface size to use
    */
   static gfxIntSize ConvertToSurfaceSize(const gfxSize& aSize,
-                                  PRBool *aResultOverflows)
-  {
-    gfxIntSize surfaceSize(ClampToInt(aSize.width), ClampToInt(aSize.height));
-
-    *aResultOverflows = surfaceSize.width != NS_round(aSize.width) ||
-      surfaceSize.height != NS_round(aSize.height);
-
-    if (!gfxASurface::CheckSurfaceSize(surfaceSize)) {
-      surfaceSize.width = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
-                                 surfaceSize.width);
-      surfaceSize.height = NS_MIN(NS_SVG_OFFSCREEN_MAX_DIMENSION,
-                                  surfaceSize.height);
-      *aResultOverflows = PR_TRUE;
-    }
-
-    return surfaceSize;
-  }
+                                         PRBool *aResultOverflows);
 
   /*
    * Convert a nsIDOMSVGMatrix to a gfxMatrix.

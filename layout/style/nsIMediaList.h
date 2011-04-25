@@ -162,8 +162,9 @@ public:
   nsMediaQuery* Clone() const;
 
   // Does this query apply to the presentation?
+  // If |aKey| is non-null, add cache information to it.
   PRBool Matches(nsPresContext* aPresContext,
-                 nsMediaQueryResultCacheKey& aKey) const;
+                 nsMediaQueryResultCacheKey* aKey) const;
 
 private:
   PRPackedBool mNegated;
@@ -184,8 +185,12 @@ public:
 
   nsresult GetText(nsAString& aMediaText);
   nsresult SetText(const nsAString& aMediaText);
+
+  // Does this query apply to the presentation?
+  // If |aKey| is non-null, add cache information to it.
   PRBool Matches(nsPresContext* aPresContext,
-                 nsMediaQueryResultCacheKey& aKey);
+                 nsMediaQueryResultCacheKey* aKey);
+
   nsresult SetStyleSheet(nsCSSStyleSheet* aSheet);
   nsresult AppendQuery(nsAutoPtr<nsMediaQuery>& aQuery) {
     // Takes ownership of aQuery (if it succeeds)

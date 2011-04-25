@@ -59,7 +59,6 @@
 #include "nsDocument.h"
 #include "nsUnicharUtils.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIEventStateManager.h"
 #include "nsContentList.h"
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
@@ -76,8 +75,6 @@
 #include "nsDOMAttribute.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDOMImplementation.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDOMDocumentXBL.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsGenericElement.h"
@@ -219,19 +216,14 @@ static PRLogModuleInfo* gCspPRLog;
 
 nsIdentifierMapEntry::~nsIdentifierMapEntry()
 {
-  if (mNameContentList && mNameContentList != NAME_NOT_VALID) {
-    NS_RELEASE(mNameContentList);
-  }
 }
 
 void
 nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
 {
-  if (mNameContentList != NAME_NOT_VALID) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
-                                       "mIdentifierMap mNameContentList");
-    aCallback->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(mNameContentList));
-  }
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
+                                     "mIdentifierMap mNameContentList");
+  aCallback->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(mNameContentList));
 
   NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback, "mIdentifierMap mDocAllList");
   aCallback->NoteXPCOMChild(static_cast<nsIDOMNodeList*>(mDocAllList));
@@ -244,32 +236,11 @@ nsIdentifierMapEntry::Traverse(nsCycleCollectionTraversalCallback* aCallback)
   }
 }
 
-void
-nsIdentifierMapEntry::SetInvalidName()
-{
-  mNameContentList = NAME_NOT_VALID;
-}
-
-PRBool
-nsIdentifierMapEntry::IsInvalidName()
-{
-  return mNameContentList == NAME_NOT_VALID;
-}
-
 PRBool
 nsIdentifierMapEntry::IsEmpty()
 {
   return mIdContentList.Count() == 0 && !mNameContentList &&
          !mChangeCallbacks && !mImageElement;
-}
-
-nsresult
-nsIdentifierMapEntry::CreateNameContentList()
-{
-  mNameContentList = new nsBaseContentList();
-  NS_ENSURE_TRUE(mNameContentList, NS_ERROR_OUT_OF_MEMORY);
-  NS_ADDREF(mNameContentList);
-  return NS_OK;
 }
 
 Element*
@@ -451,25 +422,20 @@ nsIdentifierMapEntry::SetImageElement(Element* aElement)
 void
 nsIdentifierMapEntry::AddNameElement(Element* aElement)
 {
-  if (!mNameContentList || mNameContentList == NAME_NOT_VALID)
-    return;
-
-  // NOTE: this indexof is absolutely needed, since we don't flush
-  // content notifications when we do document.foo resolution.  So
-  // aContent may be in our list already and just now getting notified
-  // for!
-  // XXXbz with the HTML5 parser we can stop doing this!
-  if (mNameContentList->IndexOf(aElement, PR_FALSE) < 0) {
-    mNameContentList->AppendElement(aElement);
+  if (!mNameContentList) {
+    mNameContentList = new nsBaseContentList();
   }
+
+  mNameContentList->AppendElement(aElement);
 }
 
 void
 nsIdentifierMapEntry::RemoveNameElement(Element* aElement)
 {
-  if (mNameContentList && mNameContentList != NAME_NOT_VALID) {
-    mNameContentList->RemoveElement(aElement);
-  }
+  NS_ASSERTION(mNameContentList &&
+               mNameContentList->IndexOf(aElement, PR_FALSE) >= 0,
+               "Attmpting to remove named element that doesn't exist");
+  mNameContentList->RemoveElement(aElement);
 }
 
 // Helper structs for the content->subdoc map
@@ -2584,14 +2550,10 @@ nsDocument::GetLastModified(nsAString& aLastModified)
 void
 nsDocument::AddToNameTable(Element *aElement, nsIAtom* aName)
 {
-  if (!mIsRegularHTML)
-    return;
-
   nsIdentifierMapEntry *entry =
-    mIdentifierMap.GetEntry(nsDependentAtomString(aName));
+    mIdentifierMap.PutEntry(nsDependentAtomString(aName));
 
-  // entry is null if we're not tracking the elements with this name
-
+  // Null for out-of-memory
   if (entry) {
     entry->AddNameElement(aElement);
   }
@@ -2601,7 +2563,7 @@ void
 nsDocument::RemoveFromNameTable(Element *aElement, nsIAtom* aName)
 {
   // Speed up document teardown
-  if (!mIsRegularHTML || mIdentifierMap.Count() == 0)
+  if (mIdentifierMap.Count() == 0)
     return;
 
   nsIdentifierMapEntry *entry =
@@ -5105,16 +5067,14 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 
 
 NS_IMETHODIMP
-nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
+nsDocument::GetDefaultView(nsIDOMWindow** aDefaultView)
 {
-  nsPIDOMWindow* win = GetWindow();
-  if (win) {
-    return CallQueryInterface(win, aDefaultView);
-  }
-
   *aDefaultView = nsnull;
-
-  return NS_OK;
+  nsPIDOMWindow* win = GetWindow();
+  if (!win) {
+    return NS_OK;
+  }
+  return CallQueryInterface(win, aDefaultView);
 }
 
 NS_IMETHODIMP
@@ -5917,21 +5877,6 @@ NS_IMETHODIMP
 nsDocument::SetXmlVersion(const nsAString& aXmlVersion)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDocument::GetStrictErrorChecking(PRBool *aStrictErrorChecking)
-{
-  // This attribute is true by default, and we don't really support it being false.
-  *aStrictErrorChecking = PR_TRUE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocument::SetStrictErrorChecking(PRBool aStrictErrorChecking)
-{
-  // We don't really support non-strict error checking, so just no-op for now.
-  return NS_OK;
 }
 
 NS_IMETHODIMP

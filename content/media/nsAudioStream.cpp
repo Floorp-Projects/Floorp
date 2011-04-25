@@ -566,7 +566,7 @@ PRInt64 nsAudioStreamLocal::GetSampleOffset()
 #if defined(XP_WIN)
   positionType = SA_POSITION_WRITE_HARDWARE;
 #endif
-  PRInt64 position = 0;
+  int64_t position = 0;
   if (sa_stream_get_position(static_cast<sa_stream_t*>(mAudioHandle),
                              positionType, &position) == SA_SUCCESS) {
     return position / sizeof(short);
