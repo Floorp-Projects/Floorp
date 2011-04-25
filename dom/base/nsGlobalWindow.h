@@ -62,6 +62,7 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMClientInformation.h"
+#include "nsIDOMViewCSS.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEventTarget.h"
@@ -279,6 +280,7 @@ class nsGlobalWindow : public nsPIDOMWindow,
                        public nsPIDOMEventTarget,
                        public nsIDOM3EventTarget,
                        public nsIDOMNSEventTarget,
+                       public nsIDOMViewCSS,
                        public nsIDOMStorageWindow,
                        public nsIDOMStorageIndexedDB,
                        public nsSupportsWeakReference,
@@ -416,6 +418,12 @@ public:
   virtual NS_HIDDEN_(void) SetHasOrientationEventListener();
   virtual NS_HIDDEN_(void) MaybeUpdateTouchState();
   virtual NS_HIDDEN_(void) UpdateTouchState();
+
+  // nsIDOMViewCSS
+  NS_DECL_NSIDOMVIEWCSS
+
+  // nsIDOMAbstractView
+  NS_DECL_NSIDOMABSTRACTVIEW
 
   // nsIDOMStorageWindow
   NS_DECL_NSIDOMSTORAGEWINDOW

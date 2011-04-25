@@ -40,7 +40,7 @@
 interface nsIDOMOfflineResourceList;
 interface nsIDOMBlob;
 
-[scriptable, uuid(e2796e00-14de-4ce0-acfe-0374bc0e715d)]
+[scriptable, uuid(efff0d88-3b94-4375-bdeb-676a847ecd7d)]
 interface nsIDOMWindow2 : nsIDOMWindow
 {
   /**

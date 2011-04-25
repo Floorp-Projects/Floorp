@@ -43,7 +43,7 @@
  * by providing various information related to the mouse event.
  */
 
-[scriptable, uuid(8418a402-3c9b-431a-80a7-a59b23ed57a0)]
+[scriptable, uuid(f5dd5fbb-f4ff-4277-819c-f31aa1dafc32)]
 interface nsIDOMNSMouseEvent : nsIDOMMouseEvent
 {
   // Finger or touch pressure event value
@@ -63,7 +63,7 @@ interface nsIDOMNSMouseEvent : nsIDOMMouseEvent
   void                initNSMouseEvent(in DOMString typeArg,
                                        in boolean canBubbleArg,
                                        in boolean cancelableArg,
-                                       in nsIDOMWindow viewArg,
+                                       in nsIDOMAbstractView viewArg,
                                        in long detailArg,
                                        in long screenXArg,
                                        in long screenYArg,
