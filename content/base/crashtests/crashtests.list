@@ -86,6 +86,7 @@ load 593302-2.html
 load 610571-1.html
 load 604262-1.html
 load 628599-1.html
-load 642022-1.html
 load 637214-1.svg
 load 637214-2.svg
+load 642022-1.html
+asserts(1) load 646184.html # Bug 651842

@@ -199,12 +199,12 @@ gTests.push({
 
   run: function() {
     BrowserUI.closeAutoComplete(true);
-    this._currentTab = BrowserUI.newTab(testURL_01);
+    this.currentTab = BrowserUI.newTab(testURL_01);
 
     // Need to wait until the page is loaded
     messageManager.addMessageListener("pageshow",
     function(aMessage) {
-      if (gCurrentTest._currentTab.browser.currentURI.spec != "about:blank") {
+      if (gCurrentTest.currentTab.browser.currentURI.spec != "about:blank") {
         messageManager.removeMessageListener(aMessage.name, arguments.callee);
         setTimeout(gCurrentTest.onPageReady, 0);
       }
@@ -281,9 +281,8 @@ gTests.push({
 
     edit.clickSelectsAll = oldClickSelectsAll;
 
-    BrowserUI.closeTab(this._currentTab);
-
     BrowserUI.activePanel = null;
+    Browser.closeTab(gCurrentTest.currentTab, { forceClose: true });
 
     // Ensure the tab is well closed before doing the rest of the code, otherwise
     // this cause some bugs with the composition events

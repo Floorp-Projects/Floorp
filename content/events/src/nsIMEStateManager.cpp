@@ -89,7 +89,7 @@ nsIMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
   nsCOMPtr<nsIWidget> widget = GetWidget(sPresContext);
   if (widget) {
     PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
-    SetIMEState(newState, nsnull, widget);
+    SetIMEState(newState, nsnull, widget, IMEContext::FOCUS_REMOVED);
   }
   sContent = nsnull;
   sPresContext = nsnull;
@@ -114,7 +114,7 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
     if (NS_FAILED(rv))
       widget->ResetInputState();
     PRUint32 newState = GetNewIMEState(sPresContext, nsnull);
-    SetIMEState(newState, nsnull, widget);
+    SetIMEState(newState, nsnull, widget, IMEContext::FOCUS_REMOVED);
   }
 
   sContent = nsnull;
@@ -125,7 +125,8 @@ nsIMEStateManager::OnRemoveContent(nsPresContext* aPresContext,
 
 nsresult
 nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
-                                 nsIContent* aContent)
+                                 nsIContent* aContent,
+                                 PRUint32 aReason)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
 
@@ -191,7 +192,7 @@ nsIMEStateManager::OnChangeFocus(nsPresContext* aPresContext,
 
   if (newState != nsIContent::IME_STATUS_NONE) {
     // Update IME state for new focus widget
-    SetIMEState(newState, aContent, widget);
+    SetIMEState(newState, aContent, widget, aReason);
   }
 
   sPresContext = aPresContext;
@@ -204,7 +205,10 @@ void
 nsIMEStateManager::OnInstalledMenuKeyboardListener(PRBool aInstalling)
 {
   sInstalledMenuKeyboardListener = aInstalling;
-  OnChangeFocus(sPresContext, sContent);
+
+  PRUint32 reason = aInstalling ? IMEContext::FOCUS_MOVED_TO_MENU
+                                : IMEContext::FOCUS_MOVED_FROM_MENU;
+  OnChangeFocus(sPresContext, sContent, reason);
 }
 
 void
@@ -236,7 +240,7 @@ nsIMEStateManager::UpdateIMEState(PRUint32 aNewIMEState, nsIContent* aContent)
   // commit current composition
   widget->ResetInputState();
 
-  SetIMEState(aNewIMEState, aContent, widget);
+  SetIMEState(aNewIMEState, aContent, widget, IMEContext::EDITOR_STATE_MODIFIED);
 }
 
 PRUint32
@@ -289,7 +293,8 @@ private:
 void
 nsIMEStateManager::SetIMEState(PRUint32 aState,
                                nsIContent* aContent,
-                               nsIWidget* aWidget)
+                               nsIWidget* aWidget,
+                               PRUint32 aReason)
 {
   if (aState & nsIContent::IME_STATUS_MASK_ENABLED) {
     if (!aWidget)
@@ -325,6 +330,12 @@ nsIMEStateManager::SetIMEState(PRUint32 aState,
         }
         context.mActionHint.Assign(willSubmit ? NS_LITERAL_STRING("go") : NS_LITERAL_STRING("next"));
       }
+    }
+
+    if (XRE_GetProcessType() == GeckoProcessType_Content) {
+      context.mReason = aReason | IMEContext::FOCUS_FROM_CONTENT_PROCESS;
+    } else {
+      context.mReason = aReason;
     }
 
     aWidget->SetInputMode(context);

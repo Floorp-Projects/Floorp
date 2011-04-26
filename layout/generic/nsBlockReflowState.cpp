@@ -886,7 +886,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
 
   // If the float's dimensions have changed, note the damage in the
   // float manager.
-  if (region != oldRegion) {
+  if (!region.IsEqualEdges(oldRegion)) {
     // XXXwaterson conservative: we could probably get away with noting
     // less damage; e.g., if only height has changed, then only note the
     // area into which the float has grown or from which the float has

@@ -39,8 +39,10 @@ function onLibraryReady() {
   tests.makeHistVisit();
   tests.makeTag();
   tests.focusTag();
-  tests.copyHistNode();
-  tests.waitForClipboard();
+  waitForClipboard(function(aData) !!aData,
+                   tests.copyHistNode,
+                   onClipboardReady,
+                   PlacesUtils.TYPE_X_MOZ_PLACE);
 }
 
 function onClipboardReady() {
@@ -112,24 +114,6 @@ let tests = {
        "historyNode exists: " + this.histNode.uri);
     // copy the history node
     PlacesOrganizer._content.controller.copy();
-  },
-
-  waitForClipboard: function (){
-    try {
-      let xferable = Cc["@mozilla.org/widget/transferable;1"].
-                     createInstance(Ci.nsITransferable);
-      xferable.addDataFlavor(PlacesUtils.TYPE_X_MOZ_PLACE);
-      let clipboard = Cc["@mozilla.org/widget/clipboard;1"].
-                      getService(Ci.nsIClipboard);
-      clipboard.getData(xferable, Ci.nsIClipboard.kGlobalClipboard);
-      let data = { }, type = { };
-      xferable.getAnyTransferData(type, data, { });
-      // Data is in the clipboard
-      onClipboardReady();
-    } catch (ex) {
-      // check again after 100ms.
-      setTimeout(arguments.callee, 100);
-    }
   },
 
   pasteToTag: function (){

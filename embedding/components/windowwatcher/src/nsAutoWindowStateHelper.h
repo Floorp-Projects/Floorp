@@ -62,6 +62,7 @@ protected:
   PRBool DispatchCustomEvent(const char *aEventName);
 
   nsIDOMWindow *mWindow;
+  nsCOMPtr<nsIDOMWindow> mCallerWindow;
   PRBool mDefaultEnabled;
 };
 

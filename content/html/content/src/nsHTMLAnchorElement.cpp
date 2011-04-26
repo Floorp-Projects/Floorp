@@ -47,7 +47,6 @@
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
-#include "nsIEventStateManager.h"
 
 #include "nsHTMLDNSPrefetch.h"
 

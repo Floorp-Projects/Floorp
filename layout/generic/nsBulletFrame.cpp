@@ -42,12 +42,11 @@
 #include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsIFontMetrics.h"
 #include "nsGenericHTMLElement.h"
 #include "nsPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsILoadGroup.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
@@ -234,7 +233,7 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("Bullet", TYPE_BULLET)
 
   virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder)
@@ -244,7 +243,7 @@ public:
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
-                            nsIRenderingContext* aCtx)
+                            nsRenderingContext* aCtx)
 {
   static_cast<nsBulletFrame*>(mFrame)->
     PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect);
@@ -265,7 +264,7 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
+nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                            const nsRect& aDirtyRect)
 {
   const nsStyleList* myList = GetStyleList();
@@ -290,7 +289,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
     }
   }
 
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   aRenderingContext.SetColor(GetVisitedDependentColor(eCSSProperty_color));
 
   mTextIsRTL = PR_FALSE;
@@ -315,9 +314,9 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
 
   case NS_STYLE_LIST_STYLE_SQUARE:
     {
-      nsRect rect(mPadding.TopLeft() + aPt,
-                  nsSize(mRect.width - mPadding.LeftRight(),
-                         mRect.height - mPadding.TopBottom()));
+      nsRect rect(aPt, mRect.Size());
+      rect.Deflate(mPadding);
+
       // Snap the height and the width of the rectangle to device pixels,
       // and then center the result within the original rectangle, so that
       // all square bullets at the same font size have the same visual
@@ -389,8 +388,7 @@ nsBulletFrame::PaintBullet(nsIRenderingContext& aRenderingContext, nsPoint aPt,
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
     GetListItemText(*myList, text);
     aRenderingContext.SetFont(fm);
-    nscoord ascent;
-    fm->GetMaxAscent(ascent);
+    nscoord ascent = fm->MaxAscent();
     aRenderingContext.SetTextRunRTL(mTextIsRTL);
     aRenderingContext.DrawString(text, mPadding.left + aPt.x,
                                  mPadding.top + aPt.y + ascent);
@@ -1311,7 +1309,7 @@ nsBulletFrame::GetListItemText(const nsStyleList& aListStyle,
 
 void
 nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
-                              nsIRenderingContext *aRenderingContext,
+                              nsRenderingContext *aRenderingContext,
                               nsHTMLReflowMetrics& aMetrics)
 {
   // Reset our padding.  If we need it, we'll set it below.
@@ -1348,7 +1346,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
   // match the image size).
   mIntrinsicSize.SizeTo(0, 0);
 
-  nsCOMPtr<nsIFontMetrics> fm;
+  nsRefPtr<nsFontMetrics> fm;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
   nscoord bulletSize;
 
@@ -1362,7 +1360,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_DISC:
     case NS_STYLE_LIST_STYLE_CIRCLE:
     case NS_STYLE_LIST_STYLE_SQUARE:
-      fm->GetMaxAscent(ascent);
+      ascent = fm->MaxAscent();
       bulletSize = NS_MAX(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                           NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
       mPadding.bottom = NSToCoordRound(float(ascent) / 8.0f);
@@ -1423,11 +1421,13 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ER:
     case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME_TI_ET:
       GetListItemText(*myList, text);
-      fm->GetHeight(aMetrics.height);
+      aMetrics.height = fm->MaxHeight();
       aRenderingContext->SetFont(fm);
-      aMetrics.width = nsLayoutUtils::GetStringWidth(this, aRenderingContext, text.get(), text.Length());
+      aMetrics.width =
+        nsLayoutUtils::GetStringWidth(this, aRenderingContext,
+                                      text.get(), text.Length());
       aMetrics.width += mPadding.right;
-      fm->GetMaxAscent(aMetrics.ascent);
+      aMetrics.ascent = fm->MaxAscent();
       break;
   }
 }
@@ -1463,7 +1463,7 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
 }
 
 /* virtual */ nscoord
-nsBulletFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsBulletFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nsHTMLReflowMetrics metrics;
   DISPLAY_MIN_WIDTH(this, metrics.width);
@@ -1472,7 +1472,7 @@ nsBulletFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsBulletFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsBulletFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nsHTMLReflowMetrics metrics;
   DISPLAY_PREF_WIDTH(this, metrics.width);
@@ -1592,7 +1592,7 @@ nsBulletFrame::GetBaseline() const
   if (GetStateBits() & BULLET_FRAME_IMAGE_LOADING) {
     ascent = GetRect().height;
   } else {
-    nsCOMPtr<nsIFontMetrics> fm;
+    nsRefPtr<nsFontMetrics> fm;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fm));
     const nsStyleList* myList = GetStyleList();
     switch (myList->mListStyleType) {
@@ -1602,7 +1602,7 @@ nsBulletFrame::GetBaseline() const
       case NS_STYLE_LIST_STYLE_DISC:
       case NS_STYLE_LIST_STYLE_CIRCLE:
       case NS_STYLE_LIST_STYLE_SQUARE:
-        fm->GetMaxAscent(ascent);
+        ascent = fm->MaxAscent();
         bottomPadding = NSToCoordRound(float(ascent) / 8.0f);
         ascent = NS_MAX(nsPresContext::CSSPixelsToAppUnits(MIN_BULLET_SIZE),
                         NSToCoordRound(0.8f * (float(ascent) / 2.0f)));
@@ -1610,7 +1610,7 @@ nsBulletFrame::GetBaseline() const
         break;
 
       default:
-        fm->GetMaxAscent(ascent);
+        ascent = fm->MaxAscent();
         break;
     }
   }

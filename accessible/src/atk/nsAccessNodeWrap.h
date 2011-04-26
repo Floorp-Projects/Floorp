@@ -53,6 +53,13 @@ public: // construction, destruction
 
     static void InitAccessibility();
     static void ShutdownAccessibility();
+
+    /*
+     * do we have text-remove and text-insert signals if not we need to use
+     * text-changed see nsAccessibleWrap::FireAtkTextChangedEvent() and
+     * bug 619002
+     */
+    static PRBool gHaveNewTextSignals;
 };
 
 #endif

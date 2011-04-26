@@ -44,8 +44,7 @@
 #include "nsISupports.h"
 #include "nsMargin.h"
 #include "nsRect.h"
-// for MOZ_MATHML
-#include "nsIRenderingContext.h" //to get struct nsBoundingMetrics
+#include "nsBoundingMetrics.h" // for MOZ_MATHML
 
 //----------------------------------------------------------------------
 
@@ -112,8 +111,8 @@ public:
   bool operator==(const nsOverflowAreas& aOther) const {
     // Scrollable overflow is a point-set rectangle and visual overflow
     // is a pixel-set rectangle.
-    return VisualOverflow() == aOther.VisualOverflow() &&
-           ScrollableOverflow().IsExactEqual(aOther.ScrollableOverflow());
+    return VisualOverflow().IsEqualInterior(aOther.VisualOverflow()) &&
+           ScrollableOverflow().IsEqualEdges(aOther.ScrollableOverflow());
   }
 
   bool operator!=(const nsOverflowAreas& aOther) const {
@@ -235,6 +234,8 @@ struct nsHTMLReflowMetrics {
   nscoord width, height;    // [OUT] desired width and height (border-box)
   nscoord ascent;           // [OUT] baseline (from top), or ASK_FOR_BASELINE
 
+  PRUint32 mFlags;
+
   enum { ASK_FOR_BASELINE = nscoord_MAX };
 
 #ifdef MOZ_MATHML
@@ -276,39 +277,15 @@ struct nsHTMLReflowMetrics {
   // Union all of mOverflowAreas with (0, 0, width, height).
   void UnionOverflowAreasWithDesiredBounds();
 
-  PRUint32 mFlags;
-
   // XXXldb Should |aFlags| generally be passed from parent to child?
   // Some places do it, and some don't.  |aFlags| should perhaps go away
   // entirely.
-  nsHTMLReflowMetrics(PRUint32 aFlags = 0) {
-    mFlags = aFlags;
-#ifdef MOZ_MATHML
-    mBoundingMetrics.Clear();
-#endif
-
-    // XXX These are OUT parameters and so they shouldn't have to be
-    // initialized, but there are some bad frame classes that aren't
-    // properly setting them when returning from Reflow()...
-    width = height = 0;
-    ascent = ASK_FOR_BASELINE;
-  }
-
-  nsHTMLReflowMetrics& operator=(const nsHTMLReflowMetrics& aOther)
-  {
-    mFlags = aOther.mFlags;
-    mCarriedOutBottomMargin = aOther.mCarriedOutBottomMargin;
-    mOverflowAreas = aOther.mOverflowAreas;
-#ifdef MOZ_MATHML
-    mBoundingMetrics = aOther.mBoundingMetrics;
-#endif
-
-    width = aOther.width;
-    height = aOther.height;
-    ascent = aOther.ascent;
-    return *this;
-  }
-
+  // XXX width/height/ascent are OUT parameters and so they shouldn't
+  // have to be initialized, but there are some bad frame classes that
+  // aren't properly setting them when returning from Reflow()...
+  nsHTMLReflowMetrics(PRUint32 aFlags = 0)
+    : width(0), height(0), ascent(ASK_FOR_BASELINE), mFlags(aFlags)
+  {}
 };
 
 #endif /* nsHTMLReflowMetrics_h___ */

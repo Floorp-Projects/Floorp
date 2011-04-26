@@ -42,6 +42,9 @@
 #define GLCONTEXT_H_
 
 #include <stdio.h>
+#if defined(XP_UNIX)
+#include <stdint.h>
+#endif
 #include <string.h>
 #include <ctype.h>
 
@@ -1028,12 +1031,39 @@ public:
             if (mDebugMode & DebugTrace)
                 printf_stderr("[gl:%p] < %s [0x%04x]\n", this, glFunction, mGLError);
             if (mGLError != LOCAL_GL_NO_ERROR) {
-                printf_stderr("GL ERROR: %s generated GL error 0x%x.", glFunction, mGLError);
+                printf_stderr("GL ERROR: %s generated GL error %s(0x%04x)\n", 
+                              glFunction,
+                              GLErrorToString(mGLError),
+                              mGLError);
                 if (mDebugMode & DebugAbortOnError)
                     NS_ABORT();
             }
         }
     }
+
+    const char* GLErrorToString(GLenum aError)
+    {
+        switch (aError) {
+            case LOCAL_GL_INVALID_ENUM:
+                return "GL_INVALID_ENUM";
+            case LOCAL_GL_INVALID_VALUE:
+                return "GL_INVALID_VALUE";
+            case LOCAL_GL_INVALID_OPERATION:
+                return "GL_INVALID_OPERATION";
+            case LOCAL_GL_STACK_OVERFLOW:
+                return "GL_STACK_OVERFLOW";
+            case LOCAL_GL_STACK_UNDERFLOW:
+                return "GL_STACK_UNDERFLOW";
+            case LOCAL_GL_OUT_OF_MEMORY:
+                return "GL_OUT_OF_MEMORY";
+            case LOCAL_GL_TABLE_TOO_LARGE:
+                return "GL_TABLE_TOO_LARGE";
+            case LOCAL_GL_INVALID_FRAMEBUFFER_OPERATION:
+                return "GL_INVALID_FRAMEBUFFER_OPERATION";
+            default:
+                return "";
+        }
+     }
 
 #define BEFORE_GL_CALL do {                     \
     BeforeGLCall(MOZ_FUNCTION_NAME);            \
@@ -1117,7 +1147,7 @@ public:
 
         nsIntRect thisRect = ScissorRect();
         mScissorStack.TruncateLength(mScissorStack.Length() - 1);
-        if (thisRect != ScissorRect()) {
+        if (!thisRect.IsEqualInterior(ScissorRect())) {
             raw_fScissor(ScissorRect().x, ScissorRect().y,
                               ScissorRect().width, ScissorRect().height);
         }
@@ -1168,7 +1198,7 @@ public:
 
         nsIntRect thisRect = ViewportRect();
         mViewportStack.TruncateLength(mViewportStack.Length() - 1);
-        if (thisRect != ViewportRect()) {
+        if (!thisRect.IsEqualInterior(ViewportRect())) {
             raw_fViewport(ViewportRect().x, ViewportRect().y,
                           ViewportRect().width, ViewportRect().height);
         }

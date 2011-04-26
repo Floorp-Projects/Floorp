@@ -143,14 +143,14 @@ private:
   }
 
   void ReplaceItem(PRUint32 aIndex, const SVGPoint &aPoint) {
-    NS_ASSERTION(aIndex < mItems.Length(),
-                 "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems[aIndex] = aPoint;
   }
 
   void RemoveItem(PRUint32 aIndex) {
-    NS_ASSERTION(aIndex < mItems.Length(),
-                 "DOM wrapper caller should have raised INDEX_SIZE_ERR");
+    NS_ABORT_IF_FALSE(aIndex < mItems.Length(),
+                      "DOM wrapper caller should have raised INDEX_SIZE_ERR");
     mItems.RemoveElementAt(aIndex);
   }
 

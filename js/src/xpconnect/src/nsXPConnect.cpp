@@ -2038,9 +2038,6 @@ NS_IMETHODIMP
 nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
                            nsIXPConnectJSObjectHolder **_retval)
 {
-#ifdef XPCONNECT_STANDALONE
-    return NS_ERROR_NOT_AVAILABLE;
-#else /* XPCONNECT_STANDALONE */
     XPCCallContext ccx(NATIVE_CALLER, cx);
     if(!ccx.IsValid())
         return UnexpectedFailure(NS_ERROR_FAILURE);
@@ -2062,7 +2059,6 @@ nsXPConnect::CreateSandbox(JSContext *cx, nsIPrincipal *principal,
     }
 
     return rv;
-#endif /* XPCONNECT_STANDALONE */
 }
 
 NS_IMETHODIMP
@@ -2070,9 +2066,6 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
                                  nsIXPConnectJSObjectHolder *sandbox,
                                  PRBool returnStringOnly, jsval *rval)
 {
-#ifdef XPCONNECT_STANDALONE
-    return NS_ERROR_NOT_AVAILABLE;
-#else /* XPCONNECT_STANDALONE */
     if (!sandbox)
         return NS_ERROR_INVALID_ARG;
 
@@ -2083,7 +2076,6 @@ nsXPConnect::EvalInSandboxObject(const nsAString& source, JSContext *cx,
     return xpc_EvalInSandbox(cx, obj, source,
                              NS_ConvertUTF16toUTF8(source).get(), 1,
                              JSVERSION_DEFAULT, returnStringOnly, rval);
-#endif /* XPCONNECT_STANDALONE */
 }
 
 /* void GetXPCWrappedNativeJSClassInfo(out JSEqualityOp equality); */
@@ -2436,7 +2428,6 @@ NS_IMETHODIMP
 nsXPConnect::GetBackstagePass(nsIXPCScriptable **bsp)
 {
     if(!mBackstagePass) {
-#ifndef XPCONNECT_STANDALONE
         nsCOMPtr<nsIPrincipal> sysprin;
         nsCOMPtr<nsIScriptSecurityManager> secman =
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID);
@@ -2446,9 +2437,6 @@ nsXPConnect::GetBackstagePass(nsIXPCScriptable **bsp)
             return NS_ERROR_NOT_AVAILABLE;
 
         mBackstagePass = new BackstagePass(sysprin);
-#else
-        mBackstagePass = new BackstagePass();
-#endif
         if(!mBackstagePass)
             return NS_ERROR_OUT_OF_MEMORY;
     }

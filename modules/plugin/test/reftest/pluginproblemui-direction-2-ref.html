@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="reftest-wait">
+<html class="reftest-expect-process-crash reftest-wait">
   <head>
     <title>Plugin Problem UI directionality test</title>
   </head>
@@ -13,7 +13,7 @@
       var plugin = document.getElementById("crashme");
       function checkForCrashUI() {
         if (getComputedStyle(plugin, null).MozBinding != "none") {
-          document.documentElement.removeAttribute("class");
+          document.documentElement.classList.remove("reftest-wait");
           clearInterval(interval);
         }
       }

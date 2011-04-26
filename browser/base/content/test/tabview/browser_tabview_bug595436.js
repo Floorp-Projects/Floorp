@@ -2,66 +2,53 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function test() {
-  waitForExplicitFinish();
-  
-  window.addEventListener('tabviewshown', onTabViewWindowLoaded, false);
-  TabView.toggle();
-}
+  let cw, search, searchButton;
 
-function onTabViewWindowLoaded() {
-  window.removeEventListener('tabviewshown', onTabViewWindowLoaded, false);
-  
-  let contentWindow = document.getElementById('tab-view').contentWindow;
-  let search = contentWindow.document.getElementById('search');
-  let searchButton = contentWindow.document.getElementById('searchbutton');
-  
-  let isSearchEnabled = function () {
-    return 'none' != search.style.display;
-  }
-  
   let assertSearchIsEnabled = function () {
-    ok(isSearchEnabled(), 'search is enabled');
+    isnot(search.style.display, "none", "search is enabled");
   }
-  
+
   let assertSearchIsDisabled = function () {
-    ok(!isSearchEnabled(), 'search is disabled');
+    is(search.style.display, "none", "search is disabled");
   }
-  
+
   let testSearchInitiatedByKeyPress = function () {
-    EventUtils.synthesizeKey('a', {});
+    EventUtils.synthesizeKey("a", {}, cw);
     assertSearchIsEnabled();
-    
-    EventUtils.synthesizeKey('VK_BACK_SPACE', {});
+
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {}, cw);
     assertSearchIsDisabled();
   }
-  
+
   let testSearchInitiatedByMouseClick = function () {
-    EventUtils.sendMouseEvent({type: 'mousedown'}, searchButton, contentWindow);
+    EventUtils.sendMouseEvent({type: "mousedown"}, searchButton, cw);
     assertSearchIsEnabled();
-    
-    EventUtils.synthesizeKey('a', {});
-    EventUtils.synthesizeKey('VK_BACK_SPACE', {});
-    EventUtils.synthesizeKey('VK_BACK_SPACE', {});
+
+    EventUtils.synthesizeKey("a", {}, cw);
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {}, cw);
+    EventUtils.synthesizeKey("VK_BACK_SPACE", {}, cw);
     assertSearchIsEnabled();
-    
-    EventUtils.synthesizeKey('VK_ESCAPE', {});
+
+    EventUtils.synthesizeKey("VK_ESCAPE", {}, cw);
     assertSearchIsDisabled();
   }
-  
-  let finishTest = function () {
-    let onTabViewHidden = function () {
-      window.removeEventListener('tabviewhidden', onTabViewHidden, false);
+
+  waitForExplicitFinish();
+
+  newWindowWithTabView(function (win) {
+    registerCleanupFunction(function () win.close());
+
+    cw = win.TabView.getContentWindow();
+    search = cw.document.getElementById("search");
+    searchButton = cw.document.getElementById("searchbutton");
+
+    SimpleTest.waitForFocus(function () {
+      assertSearchIsDisabled();
+
+      testSearchInitiatedByKeyPress();
+      testSearchInitiatedByMouseClick();
+
       finish();
-    }
-    
-    window.addEventListener('tabviewhidden', onTabViewHidden, false);
-    TabView.hide();
-  }
-  
-  assertSearchIsDisabled();
-  
-  testSearchInitiatedByKeyPress();
-  testSearchInitiatedByMouseClick();
-  
-  finishTest();
+    }, cw);
+  });
 }

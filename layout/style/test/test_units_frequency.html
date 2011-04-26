@@ -30,11 +30,16 @@ var tests = {
 var p = document.getElementById("display");
 
 for (var test in tests) {
+  // We can't test this because we no longer support any properties
+  // with frequency values.
+  todo(false, "no tests to run, for now");
+  /*
   p.setAttribute("style", "pitch: " + test);
   is(p.style.getPropertyValue("pitch"), test,
      test + " serializes to exactly itself");
+  */
   // We can't test any equivalence since we don't have any properties
-  // with angle values that we compute.
+  // with frequency values that we compute.
 /*
   var equiv = tests[test];
   if (equiv) {

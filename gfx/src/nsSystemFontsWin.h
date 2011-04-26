@@ -40,7 +40,8 @@
 #define _NS_SYSTEMFONTSWIN_H_
 
 #include "gfxFont.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
+#include <windows.h> // need HDC and LOGFONTW
 
 class nsSystemFontsWin
 {
@@ -58,4 +59,3 @@ private:
 };
 
 #endif /* _NS_SYSTEMFONTSWIN_H_ */
-
