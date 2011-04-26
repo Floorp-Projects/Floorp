@@ -85,7 +85,7 @@ NS_IMETHODIMP
 nsDOMMozTouchEvent::InitMozTouchEvent(const nsAString& aTypeArg,
                                       PRBool aCanBubbleArg,
                                       PRBool aCancelableArg,
-                                      nsIDOMWindow* aViewArg,
+                                      nsIDOMAbstractView* aViewArg,
                                       PRInt32 aDetailArg,
                                       PRInt32 aScreenX,
                                       PRInt32 aScreenY,
@@ -127,5 +127,8 @@ nsresult NS_NewDOMMozTouchEvent(nsIDOMEvent** aInstancePtrResult,
                                      nsMozTouchEvent *aEvent)
 {
   nsDOMMozTouchEvent *it = new nsDOMMozTouchEvent(aPresContext, aEvent);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
   return CallQueryInterface(it, aInstancePtrResult);
 }

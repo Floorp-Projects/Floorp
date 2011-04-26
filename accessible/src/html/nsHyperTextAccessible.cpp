@@ -47,9 +47,11 @@
 
 #include "nsIClipboard.h"
 #include "nsContentCID.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIDOMDocument.h"
 #include "nsPIDOMWindow.h"        
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMWindowInternal.h"
