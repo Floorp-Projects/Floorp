@@ -4504,6 +4504,23 @@ NSEvent* gLastDragMouseDownEvent = nil;
 }
 
 // NSDraggingSource
+- (void)draggedImage:(NSImage *)anImage movedTo:(NSPoint)aPoint
+{
+  // Get the drag service if it isn't already cached. The drag service
+  // isn't cached when dragging over a different application.
+  nsCOMPtr<nsIDragService> dragService = mDragService;
+  if (!dragService) {
+    dragService = do_GetService(kDragServiceContractID);
+  }
+
+  if (dragService) {
+    NSPoint pnt = [NSEvent mouseLocation];
+    FlipCocoaScreenCoordinate(pnt);
+    dragService->DragMoved(NSToIntRound(pnt.x), NSToIntRound(pnt.y));
+  }
+}
+
+// NSDraggingSource
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;

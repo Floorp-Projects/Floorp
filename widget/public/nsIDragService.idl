@@ -145,6 +145,8 @@ interface nsIDragService : nsISupports
    */
   void suppress();
   void unsuppress();
+
+  [noscript] void dragMoved(in long aX, in long aY);
 };
 
 

@@ -533,6 +533,11 @@ nsWindow::Create(nsIWidget *aParent,
   if (mWindowType == eWindowType_popup) {
     if (!aParent)
       parent = NULL;
+
+    if (aInitData->mIsDragPopup) {
+      // This flag makes the window transparent to mouse events
+      extendedStyle |= WS_EX_TRANSPARENT;
+    }
   } else if (mWindowType == eWindowType_invisible) {
     // Make sure CreateWindowEx succeeds at creating a toplevel window
     style &= ~0x40000000; // WS_CHILDWINDOW
