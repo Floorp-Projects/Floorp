@@ -159,7 +159,7 @@ LOCAL_INCLUDES += \
 		-I$(srcdir)/../../content/base/src \
 		-I$(srcdir)/../../content/html/content/src \
 		-I$(srcdir)/../../dom/base \
-		-I$(srcdir)/../../modules/plugin/base/src \
+		-I$(srcdir)/../../dom/plugins/base \
 		$(MOZ_CAIRO_CFLAGS) \
 		$(NULL)
 
