@@ -275,9 +275,14 @@ let Content = {
       addEventListener("DOMActivate", this, true);
 
     addEventListener("MozApplicationManifest", this, false);
-    addEventListener("command", this, false);
     addEventListener("pagehide", this, false);
     addEventListener("keypress", this, false, false);
+
+    // Attach a listener to watch for "click" events bubbling up from error
+    // pages and other similar page. This lets us fix bugs like 401575 which
+    // require error page UI to do privileged things, without letting error
+    // pages have any privilege themselves.
+    addEventListener("click", this, false);
 
     docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
   },
@@ -327,7 +332,7 @@ let Content = {
         break;
       }
 
-      case "command": {
+      case "click": {
         // Don't trust synthetic events
         if (!aEvent.isTrusted)
           return;
@@ -343,15 +348,38 @@ let Content = {
           if (ot == temp || ot == perm) {
             let action = (ot == perm ? "permanent" : "temporary");
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: action });
-          }
-          else if (ot == errorDoc.getElementById("getMeOutOfHereButton")) {
+          } else if (ot == errorDoc.getElementById("getMeOutOfHereButton")) {
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: "leave" });
           }
-        }
-        else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
+        } else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
           if (ot == errorDoc.getElementById("errorTryAgain")) {
             // Make sure we're online before attempting to load
             Util.forceOnline();
+          }
+        } else if (/^about:blocked/.test(errorDoc.documentURI)) {
+          // The event came from a button on a malware/phishing block page
+          // First check whether it's malware or phishing, so that we can
+          // use the right strings/links
+          let isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
+    
+          if (ot == errorDoc.getElementById("getMeOutButton")) {
+            sendAsyncMessage("Browser:BlockedSite", { url: errorDoc.location.href, action: "leave" });
+          } else if (ot == errorDoc.getElementById("reportButton")) {
+            // This is the "Why is this site blocked" button.  For malware,
+            // we can fetch a site-specific report, for phishing, we redirect
+            // to the generic page describing phishing protection.
+            let action = isMalware ? "report-malware" : "report-phising";
+            sendAsyncMessage("Browser:BlockedSite", { url: errorDoc.location.href, action: action });
+          } else if (ot == errorDoc.getElementById("ignoreWarningButton")) {
+            // Allow users to override and continue through to the site,
+            // but add a notify bar as a reminder, so that they don't lose
+            // track after, e.g., tab switching.
+            let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+            webNav.loadURI(content.location, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER, null, null, null);
+            
+            // TODO: We'll need to impl notifications in the parent process and use the preference code found here:
+            //       http://hg.mozilla.org/mozilla-central/file/855e5cd3c884/browser/base/content/browser.js#l2672
+            //       http://hg.mozilla.org/mozilla-central/file/855e5cd3c884/browser/components/safebrowsing/content/globalstore.js
           }
         }
         break;
