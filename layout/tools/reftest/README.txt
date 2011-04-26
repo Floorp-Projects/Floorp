@@ -441,4 +441,3 @@ IPC process crash, have the test include "reftest-expect-process-crash" as
 one of the root element's classes by the time the test has finished.  This will
 cause any minidump files that are generated while running the test to be removed
 and they won't cause any error messages in the test run output.
-
