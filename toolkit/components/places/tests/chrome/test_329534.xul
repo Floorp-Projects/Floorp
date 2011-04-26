@@ -121,6 +121,7 @@ function runTest1( folderId ) {
     var node = rootNode.getChild( 0 );
     ok( node.uri == firstURL,
         "first livemark item is invalid value "+node.uri);
+    rootNode.containerOpen = false;
 
     /* second folder has no item */
     options = histsvc.getNewQueryOptions();
@@ -131,6 +132,7 @@ function runTest1( folderId ) {
     rootNode.containerOpen = true;
     cc = rootNode.childCount;
     ok( cc == 0, "second livemark is not empty" );
+    rootNode.containerOpen = false;
   }
 }
 
@@ -152,6 +154,7 @@ function runTest2( folderId ) {
     var node = rootNode.getChild( 0 );
     ok( node.uri == secondURL,
         "second livemark item is invalid value "+node.uri);
+    rootNode.containerOpen = false;
 
     /* Check passed 2sec.
        We should check for 3s but are relaxing request to accomplish possible

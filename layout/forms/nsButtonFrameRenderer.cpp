@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsButtonFrameRenderer.h"
-#include "nsIRenderingContext.h"
 #include "nsCSSRendering.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
@@ -45,7 +44,7 @@
 #include "nsDisplayList.h"
 #include "nsITheme.h"
 #include "nsThemeConstants.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 
 #define ACTIVE   "active"
 #define HOVER    "hover"
@@ -106,7 +105,7 @@ public:
 #endif  
   
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("ButtonBoxShadowOuter", TYPE_BUTTON_BOX_SHADOW_OUTER)
 private:
@@ -120,7 +119,7 @@ nsDisplayButtonBoxShadowOuter::GetBounds(nsDisplayListBuilder* aBuilder) {
 
 void
 nsDisplayButtonBoxShadowOuter::Paint(nsDisplayListBuilder* aBuilder,
-                                     nsIRenderingContext* aCtx) {
+                                     nsRenderingContext* aCtx) {
   nsRect frameRect = nsRect(ToReferenceFrame(), mFrame->GetSize());
 
   nsRect buttonRect;
@@ -148,7 +147,7 @@ public:
     aOutFrames->AppendElement(mFrame);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("ButtonBorderBackground", TYPE_BUTTON_BORDER_BACKGROUND)
 private:
   nsButtonFrameRenderer* mBFR;
@@ -168,14 +167,14 @@ public:
 #endif  
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("ButtonForeground", TYPE_BUTTON_FOREGROUND)
 private:
   nsButtonFrameRenderer* mBFR;
 };
 
 void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                            nsIRenderingContext* aCtx)
+                                            nsRenderingContext* aCtx)
 {
   NS_ASSERTION(mFrame, "No frame?");
   nsPresContext* pc = mFrame->PresContext();
@@ -187,7 +186,7 @@ void nsDisplayButtonBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 void nsDisplayButtonForeground::Paint(nsDisplayListBuilder* aBuilder,
-                                      nsIRenderingContext* aCtx)
+                                      nsRenderingContext* aCtx)
 {
   nsPresContext *presContext = mFrame->PresContext();
   const nsStyleDisplay *disp = mFrame->GetStyleDisplay();
@@ -220,7 +219,7 @@ nsButtonFrameRenderer::DisplayButton(nsDisplayListBuilder* aBuilder,
 
 void
 nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsPresContext* aPresContext,
-          nsIRenderingContext& aRenderingContext,
+          nsRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
           const nsRect& aRect)
 {
@@ -255,7 +254,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsPresContext* aPresContext,
 
 void
 nsButtonFrameRenderer::PaintBorderAndBackground(nsPresContext* aPresContext,
-          nsIRenderingContext& aRenderingContext,
+          nsRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
           const nsRect& aRect,
           PRUint32 aBGFlags)

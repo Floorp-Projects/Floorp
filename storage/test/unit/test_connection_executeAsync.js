@@ -307,7 +307,6 @@ function test_double_asyncClose_throws()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let tests =
 [
   test_create_and_add,
   test_transaction_created,
@@ -315,36 +314,10 @@ let tests =
   test_asyncClose_does_not_complete_before_statements,
   test_asyncClose_does_not_throw_no_callback,
   test_double_asyncClose_throws,
-];
-let index = 0;
-
-function run_next_test()
-{
-  function _run_next_test() {
-    if (index < tests.length) {
-      do_test_pending();
-      print("Running the next test: " + tests[index].name);
-
-      // Asynchronous tests means that exceptions don't kill the test.
-      try {
-        tests[index++]();
-      }
-      catch (e) {
-        do_throw(e);
-      }
-    }
-
-    do_test_finished();
-  }
-
-  // For saner stacks, we execute this code RSN.
-  do_execute_soon(_run_next_test);
-}
+].forEach(add_test);
 
 function run_test()
 {
   cleanup();
-
-  do_test_pending();
   run_next_test();
 }

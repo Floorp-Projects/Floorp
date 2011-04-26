@@ -66,7 +66,7 @@ interface nsITransferable;
 interface nsIQueryContentEventResult;
 interface nsIDOMWindow;
 
-[scriptable, uuid(3828e648-af61-47e1-b9bc-89ca51bc19f2)]
+[scriptable, uuid(663e33d7-eca2-42e8-af92-5df6a5e222df)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -881,4 +881,9 @@ interface nsIDOMWindowUtils : nsISupports {
    * the bounds of the window. Always returns true in non-DEBUG builds.
    */
   boolean leafLayersPartitionWindow();
+
+  /**
+   * true if the (current inner) window may have event listeners for touch events.
+   */
+  readonly attribute boolean mayHaveTouchEventListeners;
 };

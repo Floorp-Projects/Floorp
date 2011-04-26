@@ -124,7 +124,6 @@
 #include "nsIMutableArray.h"
 #include "nsArrayUtils.h"
 #include "nsIEffectiveTLDService.h"
-#include "nsIEventStateManager.h"
 
 #include "nsIPrompt.h"
 //AHMED 12-2
@@ -333,7 +332,6 @@ nsHTMLDocument::Init()
   // to match our compat mode.
   CSSLoader()->SetCompatibilityMode(mCompatMode);
 
-  PrePopulateIdentifierMap();
   return NS_OK;
 }
 
@@ -355,8 +353,6 @@ nsHTMLDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup,
   mLoadFlags = nsIRequest::LOAD_NORMAL;
 
   nsDocument::ResetToURI(aURI, aLoadGroup, aPrincipal);
-
-  PrePopulateIdentifierMap();
 
   mImages = nsnull;
   mApplets = nsnull;
@@ -1369,18 +1365,6 @@ nsHTMLDocument::SetXmlVersion(const nsAString& aXmlVersion)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetStrictErrorChecking(PRBool* aStrictErrorChecking)
-{
-  return nsDocument::GetStrictErrorChecking(aStrictErrorChecking);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::SetStrictErrorChecking(PRBool aStrictErrorChecking)
-{
-  return nsDocument::SetStrictErrorChecking(aStrictErrorChecking);
-}
-
-NS_IMETHODIMP
 nsHTMLDocument::GetDocumentURI(nsAString& aDocumentURI)
 {
   return nsDocument::GetDocumentURI(aDocumentURI);
@@ -1399,24 +1383,9 @@ nsHTMLDocument::AdoptNode(nsIDOMNode* aSource, nsIDOMNode** aRetval)
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::GetDomConfig(nsIDOMDOMConfiguration** aDomConfig)
-{
-  return nsDocument::GetDomConfig(aDomConfig);
-}
-
-NS_IMETHODIMP
 nsHTMLDocument::NormalizeDocument()
 {
   return nsDocument::NormalizeDocument();
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::RenameNode(nsIDOMNode* aNode,
-                           const nsAString& aNamespaceURI,
-                           const nsAString& aQualifiedName,
-                           nsIDOMNode** aRetval)
-{
-  return nsDocument::RenameNode(aNode, aNamespaceURI, aQualifiedName, aRetval);
 }
 
 //
@@ -2334,58 +2303,6 @@ nsHTMLDocument::GetNumFormsSynchronous()
   return mNumForms;
 }
 
-nsresult
-nsHTMLDocument::GetBodySize(PRInt32* aWidth,
-                            PRInt32* aHeight)
-{
-  *aWidth = *aHeight = 0;
-
-  FlushPendingNotifications(Flush_Layout);
-
-  // Find the <body> element: this is what we'll want to use for the
-  // document's width and height values.
-  Element* body = GetBodyElement();
-  if (!body) {
-    return NS_OK;
-  }
-
-  // Now grab its frame
-  nsIFrame* frame = body->GetPrimaryFrame();
-  if (!frame)
-    return NS_OK;
-  
-  nsSize size = frame->GetSize();
-
-  *aWidth = nsPresContext::AppUnitsToIntCSSPixels(size.width);
-  *aHeight = nsPresContext::AppUnitsToIntCSSPixels(size.height);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetWidth(PRInt32* aWidth)
-{
-  NS_ENSURE_ARG_POINTER(aWidth);
-  if (!mWarnedWidthHeight) {
-    ReportUseOfDeprecatedMethod(this, "UseOfDocumentWidthWarning");
-    mWarnedWidthHeight = true;
-  }
-  PRInt32 height;
-  return GetBodySize(aWidth, &height);
-}
-
-NS_IMETHODIMP
-nsHTMLDocument::GetHeight(PRInt32* aHeight)
-{
-  NS_ENSURE_ARG_POINTER(aHeight);
-  if (!mWarnedWidthHeight) {
-    ReportUseOfDeprecatedMethod(this, "UseOfDocumentHeightWarning");
-    mWarnedWidthHeight = true;
-  }
-  PRInt32 width;
-  return GetBodySize(&width, aHeight);
-}
-
 NS_IMETHODIMP
 nsHTMLDocument::GetAlinkColor(nsAString& aAlinkColor)
 {
@@ -2603,30 +2520,6 @@ nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
   return GetEmbeds(aPlugins);
 }
 
-static void
-FindNamedItems(nsIAtom* aName, nsIContent *aContent,
-               nsIdentifierMapEntry* aEntry)
-{
-  NS_ASSERTION(aEntry->HasNameContentList(),
-               "Entry w/o content list passed to FindNamedItems()!");
-  NS_ASSERTION(!aEntry->IsInvalidName(),
-               "Entry that should never have a list passed to FindNamedItems()!");
-
-  if (aContent->HasName()) {
-    NS_ASSERTION(nsGenericHTMLElement::FromContent(aContent),
-                 "Only HTML Elements should have a name");
-  
-    nsGenericHTMLElement* elm = static_cast<nsGenericHTMLElement*>(aContent);
-    if (elm->GetParsedAttr(nsGkAtoms::name)->GetAtomValue() == aName) {
-      aEntry->AddNameElement(elm);
-    }
-  }
-
-  for (nsINode::ChildIterator iter(aContent); !iter.IsDone(); iter.Next()) {
-    FindNamedItems(aName, iter, aEntry);
-  }
-}
-
 nsresult
 nsHTMLDocument::ResolveName(const nsAString& aName,
                             nsIDOMHTMLFormElement *aForm,
@@ -2636,47 +2529,16 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   *aResult = nsnull;
   *aCache = nsnull;
 
-  // We have built a table and cache the named items. The table will
-  // be updated as content is added and removed.
-  nsIdentifierMapEntry *entry = mIdentifierMap.PutEntry(aName);
-  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-
-  if (entry->IsInvalidName()) {
-    // There won't be any named items by this name -- it's reserved
+  nsIdentifierMapEntry *entry = mIdentifierMap.GetEntry(aName);
+  if (!entry) {
     return NS_OK;
   }
 
-  // Now we know we _might_ have items.
-
-  if (!entry->HasNameContentList()) {
-#ifdef DEBUG_jst
-    {
-      printf ("nsHTMLDocument name cache miss for name '%s'\n",
-              NS_ConvertUTF16toUTF8(aName).get());
-    }
-#endif
-
-    nsresult rv = entry->CreateNameContentList();
-    if (NS_FAILED(rv))
-      return rv;
-
-    Element* root = GetRootElement();
-    if (root && !aName.IsEmpty()) {
-      // do_GetAtom() can fail on OOM, but it'll only do that if the
-      // atom doesn't already exist, which means the named item
-      // doesn't exist either.
-      nsCOMPtr<nsIAtom> name(do_GetAtom(aName));
-
-      if (name) {
-        FindNamedItems(name, root, entry);
-      }
-    }
-  }
-
+  PRUint32 length = 0;
   nsBaseContentList *list = entry->GetNameContentList();
-
-  PRUint32 length;
-  list->GetLength(&length);
+  if (list) {
+    list->GetLength(&length);
+  }
 
   if (length > 0) {
     if (length == 1) {
@@ -2745,32 +2607,6 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
       NS_ADDREF(*aResult = e);
       *aCache = e;
     }
-  }
-
-  return NS_OK;
-}
-
-// Pre-fill the name hash with names that are likely to be resolved in
-// this document to avoid walking the tree looking for elements with
-// these names.
-
-nsresult
-nsHTMLDocument::PrePopulateIdentifierMap()
-{
-  static const char names[][13] = {
-    "write", "writeln", "open", "close", "forms", "elements",
-    "characterSet", "nodeType", "parentNode", "cookie"
-  };
-
-  for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(names); ++i) {
-    nsCOMPtr<nsIAtom> atom(do_GetAtom(names[i]));
-    NS_ENSURE_TRUE(atom, NS_ERROR_OUT_OF_MEMORY);
-  
-    nsIdentifierMapEntry* entry =
-      mIdentifierMap.PutEntry(nsDependentAtomString(atom));
-    NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
-
-    entry->SetInvalidName();
   }
 
   return NS_OK;
@@ -3287,7 +3123,7 @@ nsHTMLDocument::EditingStateChanged()
   }
 
   PRBool makeWindowEditable = mEditingState == eOff;
-  PRBool updateState;
+  bool updateState = false;
   PRBool spellRecheckAll = PR_FALSE;
   nsCOMPtr<nsIEditor> editor;
 
@@ -3356,7 +3192,7 @@ nsHTMLDocument::EditingStateChanged()
       rv = editSession->DisableJSAndPlugins(window);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      updateState = PR_TRUE;
+      updateState = true;
       spellRecheckAll = oldState == eContentEditable;
     }
     else if (oldState == eDesignMode) {
@@ -3366,11 +3202,7 @@ nsHTMLDocument::EditingStateChanged()
       rv = editSession->RestoreJSAndPlugins(window);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      updateState = PR_TRUE;
-    }
-    else {
-      // contentEditable is being turned on (and designMode is off).
-      updateState = PR_FALSE;
+      updateState = true;
     }
 
     rv = presShell->SetAgentStyleSheets(agentSheets);

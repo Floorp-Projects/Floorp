@@ -108,7 +108,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
                      nsNativeWidget   aNativeParent,
                      const nsIntRect  &aRect,
                      EVENT_CALLBACK   aHandleEventFunction,
-                     nsIDeviceContext *aContext,
+                     nsDeviceContext *aContext,
                      nsIAppShell      *aAppShell,
                      nsIToolkit       *aToolkit,
                      nsWidgetInitData *aInitData)
@@ -148,7 +148,7 @@ PuppetWidget::Create(nsIWidget        *aParent,
 already_AddRefed<nsIWidget>
 PuppetWidget::CreateChild(const nsIntRect  &aRect,
                           EVENT_CALLBACK   aHandleEventFunction,
-                          nsIDeviceContext *aContext,
+                          nsDeviceContext *aContext,
                           nsIAppShell      *aAppShell,
                           nsIToolkit       *aToolkit,
                           nsWidgetInitData *aInitData,
@@ -215,7 +215,7 @@ PuppetWidget::Resize(PRInt32 aWidth,
     InvalidateRegion(this, dirty);
   }
 
-  if (oldBounds != mBounds) {
+  if (!oldBounds.IsEqualEdges(mBounds)) {
     DispatchResizeEvent();
   }
 
@@ -398,7 +398,8 @@ NS_IMETHODIMP
 PuppetWidget::SetInputMode(const IMEContext& aContext)
 {
   if (mTabChild &&
-      mTabChild->SendSetInputMode(aContext.mStatus, aContext.mHTMLInputType, aContext.mActionHint))
+      mTabChild->SendSetInputMode(aContext.mStatus, aContext.mHTMLInputType,
+                                  aContext.mActionHint, aContext.mReason))
     return NS_OK;
   return NS_ERROR_FAILURE;
 }

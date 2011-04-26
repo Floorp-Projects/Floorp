@@ -39,7 +39,6 @@ var PreferencesView = {
   _currentLocale: null,
   _languages: null,
   _msg: null,
-  _restartCount: 0,
 
   _messageActions: function pv__messageActions(aData) {
     if (aData == "prefs-restart-app") {
@@ -78,9 +77,6 @@ var PreferencesView = {
   },
 
   showRestart: function ev_showRestart() {
-    // Increment the count in case the view is not completely initialized
-    this._restartCount++;
-
     if (this._msg) {
       let strings = Strings.browser;
       this.showMessage(strings.GetStringFromName("notificationRestart.normal"), "restart-app",
@@ -89,8 +85,7 @@ var PreferencesView = {
   },
 
   hideRestart: function ev_hideRestart() {
-    this._restartCount--;
-    if (this._restartCount == 0 && this._msg) {
+    if (this._msg) {
       let notification = this._msg.getNotificationWithValue("restart-app");
       if (notification)
         notification.close();
@@ -112,10 +107,10 @@ var PreferencesView = {
     // Query available and selected locales
     let chrome = Cc["@mozilla.org/chrome/chrome-registry;1"].getService(Ci.nsIXULChromeRegistry);
     chrome.QueryInterface(Ci.nsIToolkitChromeRegistry);
-    
+
     let selectedLocale = chrome.getSelectedLocale("browser");
     let availableLocales = chrome.getLocalesForPackage("browser");
-    
+
     let strings = Services.strings.createBundle("chrome://browser/content/languages.properties");
 
     // Render locale menulist by iterating through the query result from getLocalesForPackage()
@@ -142,7 +137,7 @@ var PreferencesView = {
       autoDetect = Services.prefs.getBoolPref("intl.locale.matchOS");
     }
     catch (e) {}
-    
+
     // Highlight current locale (or auto-detect entry)
     if (autoDetect) {
       this._languages.selectedItem = document.getElementById("prefs-languages-auto");
@@ -150,7 +145,7 @@ var PreferencesView = {
     } else {
       this._languages.selectedItem = selectedItem;
     }
-    
+
     // Hide the setting if we only have one locale
     if (localeCount == 1)
       document.getElementById("prefs-uilanguage").hidden = true;

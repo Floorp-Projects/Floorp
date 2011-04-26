@@ -41,7 +41,7 @@
 class TestLargestRegion {
   static PRBool TestSingleRect(nsRect r) {
     nsRegion region(r);
-    if (region.GetLargestRectangle() != r) {
+    if (!region.GetLargestRectangle().IsEqualInterior(r)) {
       fail("largest rect of singleton %d %d %d %d", r.x, r.y, r.width, r.height);
       return PR_FALSE;
     }
@@ -134,7 +134,7 @@ class TestLargestRegion {
   static PRBool TestContainsSpecifiedRect() {
     nsRegion r(nsRect(0, 0, 100, 100));
     r.Or(r, nsRect(0, 300, 50, 50));
-    if (r.GetLargestRectangle(nsRect(0, 300, 10, 10)) != nsRect(0, 300, 50, 50)) {
+    if (!r.GetLargestRectangle(nsRect(0, 300, 10, 10)).IsEqualInterior(nsRect(0, 300, 50, 50))) {
       fail("Chose wrong rectangle");
       return PR_FALSE;
     }
@@ -143,7 +143,7 @@ class TestLargestRegion {
   static PRBool TestContainsSpecifiedOverflowingRect() {
     nsRegion r(nsRect(0, 0, 100, 100));
     r.Or(r, nsRect(0, 300, 50, 50));
-    if (r.GetLargestRectangle(nsRect(0, 290, 10, 20)) != nsRect(0, 300, 50, 50)) {
+    if (!r.GetLargestRectangle(nsRect(0, 290, 10, 20)).IsEqualInterior(nsRect(0, 300, 50, 50))) {
       fail("Chose wrong rectangle");
       return PR_FALSE;
     }

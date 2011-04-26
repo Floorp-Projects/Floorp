@@ -76,8 +76,6 @@
 #include "nsReadableUtils.h"
 
 #include "nsColor.h"
-#include "nsIRenderingContext.h"
-#include "nsIDeviceContext.h"
 #include "nsGfxCIID.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIDocShell.h"
@@ -105,6 +103,7 @@
 
 #include "nsFrameManager.h"
 #include "nsFrameLoader.h"
+#include "nsBidi.h"
 #include "nsBidiPresUtils.h"
 #include "Layers.h"
 #include "CanvasUtils.h"
@@ -1792,8 +1791,7 @@ nsCanvasRenderingContext2D::ShadowInitialize(const gfxRect& extents, gfxAlphaBox
     mThebes->SetMatrix(matrix);
     // outset by the blur radius so that blurs can leak onto the canvas even
     // when the shape is outside the clipping area
-    clipExtents.Outset(blurRadius.height, blurRadius.width,
-                       blurRadius.height, blurRadius.width);
+    clipExtents.Inflate(blurRadius.width, blurRadius.height);
     drawExtents = drawExtents.Intersect(clipExtents - CurrentState().shadowOffset);
 
     gfxContext* ctx = blur.Init(drawExtents, gfxIntSize(0,0), blurRadius, nsnull, nsnull);
@@ -1965,7 +1963,7 @@ nsCanvasRenderingContext2D::ClearRect(float x, float y, float w, float h)
 nsresult
 nsCanvasRenderingContext2D::DrawRect(const gfxRect& rect, Style style)
 {
-    if (!FloatValidate(rect.pos.x, rect.pos.y, rect.size.width, rect.size.height))
+    if (!FloatValidate(rect.X(), rect.Y(), rect.Width(), rect.Height()))
         return NS_OK;
 
     PathAutoSaveRestore pathSR(this);
@@ -2212,7 +2210,6 @@ CreateFontStyleRule(const nsAString& aFont,
     // Pass the CSS Loader object to the parser, to allow parser error reports
     // to include the outer window ID.
     nsCSSParser parser(document->CSSLoader());
-    NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = parser.ParseStyleAttribute(EmptyString(), docURL, baseURL,
                                              principal, getter_AddRefs(rule));
@@ -2656,10 +2653,6 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     nsIDocument* document = presShell->GetDocument();
 
-    nsBidiPresUtils* bidiUtils = presShell->GetPresContext()->GetBidiUtils();
-    if (!bidiUtils)
-        return NS_ERROR_FAILURE;
-
     // replace all the whitespace characters with U+0020 SPACE
     nsAutoString textToDraw(aRawText);
     TextReplaceWhitespaceCharacters(textToDraw);
@@ -2705,15 +2698,17 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     // calls bidi algo twice since it needs the full text width and the
     // bounding boxes before rendering anything
-    rv = bidiUtils->ProcessText(textToDraw.get(),
-                                textToDraw.Length(),
-                                isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                presShell->GetPresContext(),
-                                processor,
-                                nsBidiPresUtils::MODE_MEASURE,
-                                nsnull,
-                                0,
-                                &totalWidth);
+    nsBidi bidiEngine;
+    rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                      textToDraw.Length(),
+                                      isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                      presShell->GetPresContext(),
+                                      processor,
+                                      nsBidiPresUtils::MODE_MEASURE,
+                                      nsnull,
+                                      0,
+                                      &totalWidth,
+                                      &bidiEngine);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2771,7 +2766,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     processor.mPt.y += anchorY;
 
     // correct bounding box to get it to be the correct size/position
-    processor.mBoundingBox.size.width = totalWidth;
+    processor.mBoundingBox.width = totalWidth;
     processor.mBoundingBox.MoveBy(processor.mPt);
 
     processor.mPt.x *= processor.mAppUnitsPerDevPixel;
@@ -2797,7 +2792,7 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
     if (doDrawShadow) {
         // for some reason the box is too tight, probably rounding error
-        processor.mBoundingBox.Outset(2.0);
+        processor.mBoundingBox.Inflate(2.0);
 
         // this is unnecessarily big is max-width scaling is involved, but it
         // will still produce correct output
@@ -2811,15 +2806,16 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
             ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
             processor.mThebes = ctx;
 
-            rv = bidiUtils->ProcessText(textToDraw.get(),
-                                        textToDraw.Length(),
-                                        isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                        presShell->GetPresContext(),
-                                        processor,
-                                        nsBidiPresUtils::MODE_DRAW,
-                                        nsnull,
-                                        0,
-                                        nsnull);
+            rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                              textToDraw.Length(),
+                                              isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                              presShell->GetPresContext(),
+                                              processor,
+                                              nsBidiPresUtils::MODE_DRAW,
+                                              nsnull,
+                                              0,
+                                              nsnull,
+                                              &bidiEngine);
             if (NS_FAILED(rv))
                 return rv;
 
@@ -2848,15 +2844,16 @@ nsCanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
         ApplyStyle(STYLE_FILL);
     }
 
-    rv = bidiUtils->ProcessText(textToDraw.get(),
-                                textToDraw.Length(),
-                                isRTL ? NSBIDI_RTL : NSBIDI_LTR,
-                                presShell->GetPresContext(),
-                                processor,
-                                nsBidiPresUtils::MODE_DRAW,
-                                nsnull,
-                                0,
-                                nsnull);
+    rv = nsBidiPresUtils::ProcessText(textToDraw.get(),
+                                      textToDraw.Length(),
+                                      isRTL ? NSBIDI_RTL : NSBIDI_LTR,
+                                      presShell->GetPresContext(),
+                                      processor,
+                                      nsBidiPresUtils::MODE_DRAW,
+                                      nsnull,
+                                      0,
+                                      nsnull,
+                                      &bidiEngine);
 
     // this needs to be restored before function can return
     if (doUseIntermediateSurface) {
@@ -3682,7 +3679,6 @@ nsCanvasRenderingContext2D::DrawWindow(nsIDOMWindow* aWindow, float aX, float aY
     // Pass the CSS Loader object to the parser, to allow parser error reports
     // to include the outer window ID.
     nsCSSParser parser(elementDoc ? elementDoc->CSSLoader() : nsnull);
-    NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
     nsresult rv = parser.ParseColorString(PromiseFlatString(aBGColor),
                                           nsnull, 0, &bgColor);
     NS_ENSURE_SUCCESS(rv, rv);

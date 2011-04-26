@@ -332,18 +332,17 @@ nsStyledElementNotElementCSSInlineStyle::ParseStyleAttribute(const nsAString& aV
     if (isCSS) {
       css::Loader* cssLoader = doc->CSSLoader();
       nsCSSParser cssParser(cssLoader);
-      if (cssParser) {
-        nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
-        nsRefPtr<css::StyleRule> rule;
-        cssParser.ParseStyleAttribute(aValue, doc->GetDocumentURI(),
-                                      baseURI,
-                                      NodePrincipal(),
-                                      getter_AddRefs(rule));
-        if (rule) {
-          aResult.SetTo(rule, &aValue);
-          return;
-        }
+      nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+
+      nsRefPtr<css::StyleRule> rule;
+      cssParser.ParseStyleAttribute(aValue, doc->GetDocumentURI(),
+                                    baseURI,
+                                    NodePrincipal(),
+                                    getter_AddRefs(rule));
+      if (rule) {
+        aResult.SetTo(rule, &aValue);
+        return;
       }
     }
   }

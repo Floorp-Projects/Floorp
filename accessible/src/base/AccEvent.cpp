@@ -50,7 +50,7 @@
 #include "nsAccEvent.h"
 
 #include "nsIDOMDocument.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIServiceManager.h"
 #ifdef MOZ_XUL
 #include "nsIDOMXULMultSelectCntrlEl.h"
@@ -203,7 +203,7 @@ AccEvent::CaptureIsFromUserInput(EIsFromUserInput aIsFromUserInput)
     return;
   }
 
-  nsIEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
+  nsEventStateManager *esm = presShell->GetPresContext()->EventStateManager();
   if (!esm) {
     NS_NOTREACHED("There should always be an ESM for an event");
     return;

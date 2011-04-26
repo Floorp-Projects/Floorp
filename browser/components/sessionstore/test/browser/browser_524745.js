@@ -52,7 +52,7 @@ function test() {
   let ss = Cc["@mozilla.org/browser/sessionstore;1"].
            getService(Ci.nsISessionStore);
   let uniqKey = "bug524745";
-  let uniqVal = Math.floor(Date.now());
+  let uniqVal = Date.now();
 
   waitForExplicitFinish();
 

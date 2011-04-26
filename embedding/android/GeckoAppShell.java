@@ -474,8 +474,9 @@ public class GeckoAppShell
             if (!mEnable)
                 return;
 
-            if (GeckoApp.surfaceView.mIMEState !=
-                GeckoSurfaceView.IME_STATE_DISABLED)
+            int state = GeckoApp.surfaceView.mIMEState;
+            if (state != GeckoSurfaceView.IME_STATE_DISABLED &&
+                state != GeckoSurfaceView.IME_STATE_PLUGIN)
                 imm.showSoftInput(GeckoApp.surfaceView, 0);
             else
                 imm.hideSoftInputFromWindow(

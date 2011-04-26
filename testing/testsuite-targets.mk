@@ -95,16 +95,16 @@ mochitest-a11y:
 mochitest-ipcplugins:
 ifeq (Darwin,$(OS_ARCH))
 ifeq (i386,$(TARGET_CPU))
-	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.i386.test.plugin=true --test-path=modules/plugin/test
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.i386.test.plugin=false --test-path=modules/plugin/test
 endif
 ifeq (x86_64,$(TARGET_CPU))
-	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.x86_64.test.plugin=true --test-path=modules/plugin/test
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.x86_64.test.plugin=false --test-path=modules/plugin/test
 endif
 ifeq (powerpc,$(TARGET_CPU))
-	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.ppc.test.plugin=true --test-path=modules/plugin/test
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled.ppc.test.plugin=false --test-path=modules/plugin/test
 endif
 else
-	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled=true --test-path=modules/plugin/test
+	$(RUN_MOCHITEST) --setpref=dom.ipc.plugins.enabled=false --test-path=modules/plugin/test
 endif
 	$(CHECK_TEST_ERROR)
 
@@ -240,6 +240,9 @@ stage-mozmill: make-stage-dir
 
 stage-android: make-stage-dir
 	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/sutAgentAndroid.apk $(PKG_STAGE)/bin
+	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/watcher/Watcher.apk $(PKG_STAGE)/bin
+	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/fencp/FenCP.apk $(PKG_STAGE)/bin
+	$(NSINSTALL) $(DEPTH)/build/mobile/sutagent/android/ffxcp/FfxCP.apk $(PKG_STAGE)/bin
 
 stage-jetpack: make-stage-dir
 	$(NSINSTALL) $(topsrcdir)/testing/jetpack/jetpack-location.txt $(PKG_STAGE)/jetpack

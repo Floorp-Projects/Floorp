@@ -82,11 +82,7 @@ else
   ELOG :=
 endif
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
 _VPATH_SRCS = $(abspath $<)
-else
-_VPATH_SRCS = $<
-endif
 
 # Add $(DIST)/lib to VPATH so that -lfoo dependencies are followed
 VPATH += $(DIST)/lib
@@ -246,7 +242,7 @@ ifdef LIB_IS_C_ONLY
 MKSHLIB			= $(MKCSHLIB)
 endif
 
-ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 IMPORT_LIBRARY		:= $(LIB_PREFIX)$(SHARED_LIBRARY_NAME).$(IMPORT_LIB_SUFFIX)
 endif
 
@@ -302,7 +298,7 @@ ifdef JAVA_LIBRARY_NAME
 JAVA_LIBRARY := $(JAVA_LIBRARY_NAME).jar
 endif
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
 
 #
@@ -357,8 +353,13 @@ OS_LDFLAGS += -M $(topsrcdir)/config/solaris_ia32.map
 endif # x86
 endif # Solaris Sun Studio C++
 
-ifeq (,$(filter-out WINNT WINCE,$(HOST_OS_ARCH)))
+ifeq ($(HOST_OS_ARCH),WINNT)
 HOST_PDBFILE=$(basename $(@F)).pdb
+endif
+
+# Don't build SIMPLE_PROGRAMS during the MOZ_PROFILE_GENERATE pass
+ifdef MOZ_PROFILE_GENERATE
+SIMPLE_PROGRAMS :=
 endif
 
 ifndef TARGETS
@@ -661,21 +662,11 @@ OUTOPTION = -Fo# eol
 else
 OUTOPTION = -o # eol
 endif # WINNT && !GNU_CC
-ifneq (,$(filter WINCE,$(OS_ARCH)))
-OUTOPTION = -Fo# eol
-endif
-
-ifeq ($(OS_ARCH), WINCE)
-OUTOPTION = -Fo# eol
-HOST_OUTOPTION = -Fo# eol
-else
 
 ifeq (,$(CROSS_COMPILE))
 HOST_OUTOPTION = $(OUTOPTION)
 else
 HOST_OUTOPTION = -o # eol
-endif
-
 endif
 ################################################################################
 
@@ -860,7 +851,7 @@ ifndef NO_COMPONENTS_MANIFEST
 	@$(PYTHON) $(MOZILLA_DIR)/config/buildlist.py $(FINAL_TARGET)/components/components.manifest "binary-component $(SHARED_LIBRARY)"
 endif
 else # ! IS_COMPONENT
-ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(INSTALL) $(IFLAGS2) $(IMPORT_LIBRARY) $(DIST)/lib
 else
 	$(INSTALL) $(IFLAGS2) $(SHARED_LIBRARY) $(DIST)/lib
@@ -960,9 +951,6 @@ alltags:
 #
 $(PROGRAM): $(PROGOBJS) $(LIBS_DEPS) $(EXTRA_DEPS) $(EXE_DEF_FILE) $(RESFILE) $(GLOBAL_DEPS)
 	@$(RM) $@.manifest
-ifeq (WINCE,$(OS_ARCH))
-	$(EXPAND_LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
-else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(EXPAND_LD) -NOLOGO -OUT:$@ -PDB:$(LINK_PDBFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(PROGOBJS) $(RESFILE) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 ifdef MSMANIFEST_TOOL
@@ -987,11 +975,11 @@ endif
 else # !WINNT || GNU_CC
 ifeq ($(CPP_PROG_LINK),1)
 	$(EXPAND_CCC) -o $@ $(CXXFLAGS) $(WRAP_MALLOC_CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(WRAP_MALLOC_LIB) $(EXE_DEF_FILE)
+	@$(call CHECK_STDCXX,$@)
 else # ! CPP_PROG_LINK
 	$(EXPAND_CC) -o $@ $(CFLAGS) $(PROGOBJS) $(RESFILE) $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(BIN_FLAGS) $(EXE_DEF_FILE)
 endif # CPP_PROG_LINK
 endif # WINNT && !GNU_CC
-endif # WINCE
 
 ifdef ENABLE_STRIP
 	$(STRIP) $@
@@ -1001,9 +989,6 @@ ifdef MOZ_POST_PROGRAM_COMMAND
 endif
 
 $(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
-ifeq (WINCE,$(OS_ARCH))
-	$(HOST_LD) -NOLOGO -OUT:$@ $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
-else
 ifeq (_WINNT,$(GNU_CC)_$(HOST_OS_ARCH))
 	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $(HOST_OBJS) $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 ifdef MSMANIFEST_TOOL
@@ -1027,7 +1012,6 @@ else
 	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 endif # HOST_CPP_PROG_LINK
 endif
-endif
 
 #
 # This is an attempt to support generation of multiple binaries
@@ -1038,9 +1022,6 @@ endif
 # creates Foo.o Bar.o, links with LIBS to create Foo, Bar.
 #
 $(SIMPLE_PROGRAMS): %$(BIN_SUFFIX): %.$(OBJ_SUFFIX) $(LIBS_DEPS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
-ifeq (WINCE,$(OS_ARCH))
-	$(EXPAND_LD) -nologo  -entry:mainACRTStartup -out:$@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
-else
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 	$(EXPAND_LD) -nologo -out:$@ -pdb:$(LINK_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS) $(EXTRA_LIBS) $(OS_LIBS)
 ifdef MSMANIFEST_TOOL
@@ -1052,11 +1033,11 @@ endif	# MSVC with manifest tool
 else
 ifeq ($(CPP_PROG_LINK),1)
 	$(EXPAND_CCC) $(WRAP_MALLOC_CFLAGS) $(CXXFLAGS) -o $@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(BIN_FLAGS)
+	@$(call CHECK_STDCXX,$@)
 else
 	$(EXPAND_CC) $(WRAP_MALLOC_CFLAGS) $(CFLAGS) $(OUTOPTION)$@ $< $(WIN32_EXE_LDFLAGS) $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB) $(BIN_FLAGS)
 endif # CPP_PROG_LINK
 endif # WINNT && !GNU_CC
-endif # WINCE
 
 ifdef ENABLE_STRIP
 	$(STRIP) $@
@@ -1066,9 +1047,6 @@ ifdef MOZ_POST_PROGRAM_COMMAND
 endif
 
 $(HOST_SIMPLE_PROGRAMS): host_%$(HOST_BIN_SUFFIX): host_%.$(OBJ_SUFFIX) $(HOST_LIBS_DEPS) $(HOST_EXTRA_DEPS) $(GLOBAL_DEPS)
-ifeq (WINCE,$(OS_ARCH))
-	$(HOST_LD) -NOLOGO -OUT:$@ $(WIN32_EXE_LDFLAGS) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
-else
 ifeq (WINNT_,$(HOST_OS_ARCH)_$(GNU_CC))
 	$(HOST_LD) -NOLOGO -OUT:$@ -PDB:$(HOST_PDBFILE) $< $(WIN32_EXE_LDFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
@@ -1076,7 +1054,6 @@ ifneq (,$(HOST_CPPSRCS)$(USE_HOST_CXX))
 	$(HOST_CXX) $(HOST_OUTOPTION)$@ $(HOST_CXXFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 else
 	$(HOST_CC) $(HOST_OUTOPTION)$@ $(HOST_CFLAGS) $(INCLUDES) $< $(HOST_LIBS) $(HOST_EXTRA_LIBS)
-endif
 endif
 endif
 
@@ -1117,7 +1094,7 @@ $(filter %.$(LIB_SUFFIX),$(LIBRARY)): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS_DEP
 $(filter-out %.$(LIB_SUFFIX),$(LIBRARY)): $(filter %.$(LIB_SUFFIX),$(LIBRARY)) $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS_DEPS) $(EXTRA_DEPS) $(GLOBAL_DEPS)
 	$(EXPAND_LIBS_GEN) $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) > $@
 
-ifeq (,$(filter-out WINNT WINCE, $(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 $(IMPORT_LIBRARY): $(SHARED_LIBRARY)
 endif
 
@@ -1172,6 +1149,7 @@ endif
 else # ! DTRACE_LIB_DEPENDENT
 	$(EXPAND_MKSHLIB) $(SHLIB_LDSTARTFILE) $(OBJS) $(DTRACE_PROBE_OBJ) $(LOBJS) $(SUB_SHLOBJS) $(RESFILE) $(LDFLAGS) $(SHARED_LIBRARY_LIBS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE) $(SHLIB_LDENDFILE)
 endif # DTRACE_LIB_DEPENDENT
+	@$(call CHECK_STDCXX,$@)
 
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 ifdef MSMANIFEST_TOOL
@@ -1374,7 +1352,7 @@ endif
 ###############################################################################
 # Java rules
 ###############################################################################
-ifneq (,$(filter OS2 WINNT WINCE,$(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SEP := ;
 else
 SEP := :
@@ -1386,7 +1364,7 @@ SPACE := $(EMPTY) $(EMPTY)
 # MSYS has its own special path form, but javac expects the source and class
 # paths to be in the DOS form (i.e. e:/builds/...).  This function does the
 # appropriate conversion on Windows, but is a noop on other systems.
-ifeq (,$(filter-out WINNT WINCE, $(HOST_OS_ARCH)))
+ifeq ($(HOST_OS_ARCH),WINNT)
 #  We use 'pwd -W' to get DOS form of the path.  However, since the given path
 #  could be a file or a non-existent path, we cannot call 'pwd -W' directly
 #  on the path.  Instead, we extract the root path (i.e. "c:/"), call 'pwd -W'
@@ -1570,7 +1548,7 @@ $(XPIDL_GEN_DIR)/%.xpt: %.idl $(XPIDL_COMPILE) $(XPIDL_GEN_DIR)/.done
 
 # no need to link together if XPIDLSRCS contains only XPIDL_MODULE
 ifneq ($(XPIDL_MODULE).idl,$(strip $(XPIDLSRCS)))
-$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS)) $(GLOBAL_DEPS) $(XPIDL_LINK)
+$(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS)) $(GLOBAL_DEPS)
 	$(XPIDL_LINK) $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLSRCS))
 endif # XPIDL_MODULE.xpt != XPIDLSRCS
 
@@ -1701,7 +1679,7 @@ endif
 
 endif # SDK_LIBRARY
 
-ifneq (,$(SDK_BINARY))
+ifneq (,$(strip $(SDK_BINARY)))
 $(SDK_BIN_DIR)::
 	$(NSINSTALL) -D $@
 

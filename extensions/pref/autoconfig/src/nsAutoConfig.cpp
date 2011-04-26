@@ -244,7 +244,6 @@ nsresult nsAutoConfig::downloadAutoConfig()
     nsresult rv;
     nsCAutoString emailAddr;
     nsXPIDLCString urlName;
-    PRBool appendMail = PR_FALSE, offline = PR_FALSE;
     static PRBool firstTime = PR_TRUE;
     
     if (mConfigURL.IsEmpty()) {
@@ -267,7 +266,6 @@ nsresult nsAutoConfig::downloadAutoConfig()
 
     // Get the preferences branch and save it to the member variable
     if (!mPrefBranch) {
-
         nsCOMPtr<nsIPrefService> prefs =
             do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
         if (NS_FAILED(rv)) 
@@ -283,35 +281,30 @@ nsresult nsAutoConfig::downloadAutoConfig()
     if (NS_FAILED(rv)) 
         return rv;
     
+    PRBool offline;
     rv = ios->GetOffline(&offline);
     if (NS_FAILED(rv)) 
         return rv;
     
     if (offline) {
-        
-        PRBool offlineFailover = PR_FALSE;
+        PRBool offlineFailover;
         rv = mPrefBranch->GetBoolPref("autoadmin.offline_failover", 
                                       &offlineFailover);
-        
         // Read the failover.jsc if the network is offline and the pref says so
-        if (offlineFailover) {
+        if (NS_SUCCEEDED(rv) && offlineFailover)
             return readOfflineFile();
-        }
     }
-
 
     /* Append user's identity at the end of the URL if the pref says so.
        First we are checking for the user's email address but if it is not
        available in the case where the client is used without messenger, user's
        profile name will be used as an unique identifier
     */
-    
+    PRBool appendMail;
     rv = mPrefBranch->GetBoolPref("autoadmin.append_emailaddr", &appendMail);
-    
     if (NS_SUCCEEDED(rv) && appendMail) {
         rv = getEmailAddr(emailAddr);
         if (NS_SUCCEEDED(rv) && emailAddr.get()) {
-
             /* Adding the unique identifier at the end of autoconfig URL. 
                In this case the autoconfig URL is a script and 
                emailAddr as passed as an argument 
@@ -338,7 +331,6 @@ nsresult nsAutoConfig::downloadAutoConfig()
     if (NS_FAILED(rv)) 
         return rv;
 
-    
     rv = channel->AsyncOpen(this, nsnull); 
     if (NS_FAILED(rv)) {
         readOfflineFile();
@@ -350,7 +342,6 @@ nsresult nsAutoConfig::downloadAutoConfig()
     // Also We are having the event queue processing only for the startup
     // It is not needed with the repeating timer.
     if (firstTime) {
-
         firstTime = PR_FALSE;
     
         // Getting the current thread. If we start an AsyncOpen, the thread
@@ -370,11 +361,10 @@ nsresult nsAutoConfig::downloadAutoConfig()
         while (!mLoaded)
             NS_ENSURE_STATE(NS_ProcessNextEvent(thread));
         
-        PRInt32 minutes = 0;
+        PRInt32 minutes;
         rv = mPrefBranch->GetIntPref("autoadmin.refresh_interval", 
                                      &minutes);
         if (NS_SUCCEEDED(rv) && minutes > 0) {
-
             // Create a new timer and pass this nsAutoConfig 
             // object as a timer callback. 
             mTimer = do_CreateInstance("@mozilla.org/timer;1",&rv);
@@ -385,20 +375,16 @@ nsresult nsAutoConfig::downloadAutoConfig()
             if (NS_FAILED(rv)) 
                 return rv;
         }
-    
     } //first_time
     
     return NS_OK;
-
 } // nsPref::downloadAutoConfig()
 
 
 
 nsresult nsAutoConfig::readOfflineFile()
 {
-    PRBool failCache = PR_TRUE;
     nsresult rv;
-    PRBool offline;
     
     /* Releasing the lock to allow main thread to start 
        execution. At this point we do not need to stall 
@@ -406,10 +392,9 @@ nsresult nsAutoConfig::readOfflineFile()
     */
     mLoaded = PR_TRUE; 
 
+    PRBool failCache;
     rv = mPrefBranch->GetBoolPref("autoadmin.failover_to_cached", &failCache);
-    
-    if (failCache == PR_FALSE) {
-        
+    if (NS_SUCCEEDED(rv) && !failCache) {
         // disable network connections and return.
         
         nsCOMPtr<nsIIOService> ios =
@@ -417,6 +402,7 @@ nsresult nsAutoConfig::readOfflineFile()
         if (NS_FAILED(rv)) 
             return rv;
         
+        PRBool offline;
         rv = ios->GetOffline(&offline);
         if (NS_FAILED(rv)) 
             return rv;
@@ -432,6 +418,7 @@ nsresult nsAutoConfig::readOfflineFile()
         rv = mPrefBranch->SetBoolPref("network.online", PR_FALSE);
         if (NS_FAILED(rv)) 
             return rv;
+
         mPrefBranch->LockPref("network.online");
         return NS_OK;
     }
@@ -518,7 +505,6 @@ nsresult nsAutoConfig::getEmailAddr(nsACString & emailAddr)
     
     rv = mPrefBranch->GetCharPref("mail.accountmanager.defaultaccount", 
                                   getter_Copies(prefValue));
-    
     if (NS_SUCCEEDED(rv) && !prefValue.IsEmpty()) {
         emailAddr = NS_LITERAL_CSTRING("mail.account.") +
             prefValue + NS_LITERAL_CSTRING(".identities");
@@ -580,4 +566,3 @@ nsresult nsAutoConfig::PromptForEMailAddress(nsACString &emailAddress)
     LossyCopyUTF16toASCII(emailResult, emailAddress);
     return NS_OK;
 }
-

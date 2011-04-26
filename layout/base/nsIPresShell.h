@@ -77,7 +77,7 @@ class nsPresContext;
 class nsStyleSet;
 class nsIViewManager;
 class nsIView;
-class nsIRenderingContext;
+class nsRenderingContext;
 class nsIPageSequenceFrame;
 class nsAString;
 class nsCaret;
@@ -504,7 +504,7 @@ public:
    * be rendered to, but is suitable for measuring text and performing
    * other non-rendering operations.
    */
-  virtual already_AddRefed<nsIRenderingContext> GetReferenceRenderingContext() = 0;
+  virtual already_AddRefed<nsRenderingContext> GetReferenceRenderingContext() = 0;
 
   /**
    * Informs the pres shell that the document is now at the anchor with
@@ -803,9 +803,10 @@ public:
   virtual NS_HIDDEN_(void) DumpReflows() = 0;
   virtual NS_HIDDEN_(void) CountReflows(const char * aName, nsIFrame * aFrame) = 0;
   virtual NS_HIDDEN_(void) PaintCount(const char * aName,
-                                      nsIRenderingContext* aRenderingContext,
+                                      nsRenderingContext* aRenderingContext,
                                       nsPresContext * aPresContext,
                                       nsIFrame * aFrame,
+                                      const nsPoint& aOffset,
                                       PRUint32 aColor) = 0;
   virtual NS_HIDDEN_(void) SetPaintFrameCount(PRBool aOn) = 0;
   virtual PRBool IsPaintingFrameCounts() = 0;

@@ -101,7 +101,7 @@ public:
   {
     mBuffer = nsnull;
     mBufferDims.SizeTo(0, 0);
-    mBufferRect.Empty();
+    mBufferRect.SetEmpty();
   }
 
   /**

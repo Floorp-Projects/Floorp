@@ -66,7 +66,7 @@
 #include "nsStyleConsts.h"
 #include "nsString.h"
 #include "nsUnicharUtils.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsDOMCID.h"
@@ -110,7 +110,6 @@
 
 #include "nsIServiceManager.h"
 #include "nsIDOMEventListener.h"
-#include "nsEventStateManager.h"
 #include "nsIWebNavigation.h"
 #include "nsIBaseWindow.h"
 
@@ -4582,7 +4581,9 @@ nsGenericElement::MaybeCheckSameAttrVal(PRInt32 aNamespaceID, nsIAtom* aName,
         // Need to store the old value
         info.mValue->ToString(*aOldValue);
         valueMatches = aValue.Equals(*aOldValue);
-      } else if (aNotify) {
+      } else {
+        NS_ABORT_IF_FALSE(aNotify,
+                          "Either hasListeners or aNotify should be true.");
         valueMatches = info.mValue->Equals(aValue, eCaseMatters);
       }
       if (valueMatches && aPrefix == info.mName->GetPrefix()) {
@@ -5377,10 +5378,8 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
                                nsIFocusManager::FLAG_NOSCROLL);
           }
 
-          nsIEventStateManager* esm =
-            aVisitor.mPresContext->EventStateManager();
           nsEventStateManager::SetActiveManager(
-            static_cast<nsEventStateManager*>(esm), this);
+            aVisitor.mPresContext->EventStateManager(), this);
         }
       }
     }
@@ -5467,7 +5466,6 @@ ParseSelectorList(nsINode* aNode,
   NS_ENSURE_STATE(doc);
 
   nsCSSParser parser(doc->CSSLoader());
-  NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
   nsCSSSelectorList* selectorList;
   nsresult rv = parser.ParseSelectorString(aSelectorString,

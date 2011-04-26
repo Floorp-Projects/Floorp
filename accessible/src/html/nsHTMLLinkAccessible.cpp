@@ -42,7 +42,7 @@
 #include "States.h"
 #include "nsCoreUtils.h"
 
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLLinkAccessible

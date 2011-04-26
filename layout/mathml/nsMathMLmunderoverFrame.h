@@ -55,7 +55,7 @@ public:
   friend nsIFrame* NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   virtual nsresult
-  Place(nsIRenderingContext& aRenderingContext,
+  Place(nsRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 

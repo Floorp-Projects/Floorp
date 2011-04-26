@@ -105,7 +105,7 @@ function continue_test() {
   is(closedWindowCount, 0, "Correctly set window count");
 
   // Prevent VM timers issues, cache now and increment it manually.
-  let now = Math.floor(Date.now());
+  let now = Date.now();
   const TESTS = [
     { url: "about:config",
       key: "bug 394759 Non-PB",

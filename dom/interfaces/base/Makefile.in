@@ -67,6 +67,7 @@ XPIDLSRCS =					\
 	nsIDOMCrypto.idl			\
 	nsIDOMHistory.idl			\
 	nsIDOMLocation.idl			\
+	nsIDOMMediaQueryList.idl		\
 	nsIDOMMimeType.idl			\
 	nsIDOMMimeTypeArray.idl			\
 	nsIDOMNavigator.idl			\
