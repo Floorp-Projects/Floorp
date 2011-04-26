@@ -1,8 +1,18 @@
 Cu.import("resource://services-sync/engines/prefs.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/ext/Preferences.js");
+Cu.import("resource://gre/modules/LightweightThemeManager.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const PREFS_GUID = Utils.encodeBase64url(Svc.AppInfo.ID);
+
+function makePersona(id) {
+  return {
+    id: id || Math.random().toString(),
+    name: Math.random().toString(),
+    headerURL: "http://localhost:1234/a"
+  };
+}
 
 function run_test() {
   let store = new PrefsEngine()._store;
@@ -72,6 +82,34 @@ function run_test() {
     do_check_eq(prefs.get("testing.deleteme"), undefined);
     do_check_eq(prefs.get("testing.dont.change"), "Please don't change me.");
     do_check_eq(Svc.Prefs.get("prefs.sync.testing.somepref"), true);
+
+    _("Enable persona");
+    // Ensure we don't go to the network to fetch personas and end up leaking
+    // stuff.
+    Services.io.offline = true;
+    do_check_false(!!prefs.get("lightweightThemes.isThemeSelected"));
+    do_check_eq(LightweightThemeManager.currentTheme, null);
+
+    let persona1 = makePersona();
+    let persona2 = makePersona();
+    let usedThemes = JSON.stringify([persona1, persona2]);
+    record.value = {
+      "lightweightThemes.isThemeSelected": true,
+      "lightweightThemes.usedThemes": usedThemes
+    };
+    store.update(record);
+    do_check_true(prefs.get("lightweightThemes.isThemeSelected"));
+    do_check_true(Utils.deepEquals(LightweightThemeManager.currentTheme,
+                  persona1));
+
+    _("Disable persona");
+    record.value = {
+      "lightweightThemes.isThemeSelected": false,
+      "lightweightThemes.usedThemes": usedThemes
+    };
+    store.update(record);
+    do_check_false(prefs.get("lightweightThemes.isThemeSelected"));
+    do_check_eq(LightweightThemeManager.currentTheme, null);
 
     _("Only the current app's preferences are applied.");
     record = new PrefRec("prefs", "some-fake-app");
