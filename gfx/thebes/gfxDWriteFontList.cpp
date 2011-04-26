@@ -1102,6 +1102,17 @@ gfxFontFamily* gfxDWriteFontList::FindFamily(const nsAString& aFamily)
     return gfxPlatformFontList::FindFamily(aFamily);
 }
 
+void
+gfxDWriteFontList::GetFontFamilyList(nsTArray<nsRefPtr<gfxFontFamily> >& aFamilyArray)
+{
+    if (!mInitialized) {
+        mInitialized = PR_TRUE;
+        DelayedInitFontList();
+    }
+
+    return gfxPlatformFontList::GetFontFamilyList(aFamilyArray);
+}
+
 PRBool 
 gfxDWriteFontList::ResolveFontName(const nsAString& aFontName,
                                    nsAString& aResolvedFontName)

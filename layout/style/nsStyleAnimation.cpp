@@ -1807,8 +1807,7 @@ BuildStyleRule(nsCSSProperty aProperty,
 
   // Get a parser, parse the property, and check for CSS parsing errors.
   // If any of these steps fails, we bail out and delete the declaration.
-  if (!parser ||
-      NS_FAILED(parser.ParseProperty(aProperty, aSpecifiedValue,
+  if (NS_FAILED(parser.ParseProperty(aProperty, aSpecifiedValue,
                                      doc->GetDocumentURI(), baseURI,
                                      aTargetElement->NodePrincipal(),
                                      declaration, &changed, PR_FALSE)) ||

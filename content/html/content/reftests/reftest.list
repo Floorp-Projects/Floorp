@@ -21,9 +21,6 @@ include autofocus/reftest.list
 == 596455-2a.html 596455-ref-2.html
 == 596455-2b.html 596455-ref-2.html
 == 610935.html 610935-ref.html
-== 583514-1.html 583514-1-ref.html
-== 583514-2.html 583514-2-ref.html
-== 409604-1.html 409604-1-ref.html
 == hidden-1a.html hidden-1-ref.html
 == hidden-1b.html hidden-1-ref.html
 == hidden-1c.html hidden-1-ref.html

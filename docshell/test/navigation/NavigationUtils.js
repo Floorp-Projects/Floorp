@@ -189,7 +189,7 @@ function xpcWaitForFinishedFrames(callback, numFrames) {
 
     if (finishedFrameCount == numFrames) {
       clearInterval(frameWaitInterval);
-      setTimeout(callback, 1);
+      setTimeout(callback, 0);
       return;
     }
 

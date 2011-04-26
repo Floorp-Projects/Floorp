@@ -1131,7 +1131,8 @@ interface nsINavHistoryQueryOptions : nsISupports
   const unsigned short SORT_BY_TAGS_DESCENDING = 18;
   const unsigned short SORT_BY_ANNOTATION_ASCENDING = 19;
   const unsigned short SORT_BY_ANNOTATION_DESCENDING = 20;
-
+  const unsigned short SORT_BY_FRECENCY_ASCENDING = 21;
+  const unsigned short SORT_BY_FRECENCY_DESCENDING = 22;
 
   /**
    * "URI" results, one for each URI visited in the range. Individual result

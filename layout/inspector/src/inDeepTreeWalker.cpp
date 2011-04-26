@@ -46,6 +46,8 @@
 #include "nsIDOMNodeList.h"
 #include "nsServiceManagerUtils.h"
 #include "inIDOMUtils.h"
+#include "nsIContent.h"
+#include "nsBindingManager.h"
 
 /*****************************************************************************
  * This implementation does not currently operaate according to the W3C spec.

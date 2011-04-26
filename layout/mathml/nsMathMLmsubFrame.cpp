@@ -44,8 +44,6 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
-#include "nsIFontMetrics.h"
 
 #include "nsMathMLmsubFrame.h"
 
@@ -84,7 +82,7 @@ nsMathMLmsubFrame::TransmitAutomaticData()
 }
 
 /* virtual */ nsresult
-nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
+nsMathMLmsubFrame::Place (nsRenderingContext& aRenderingContext,
                           PRBool               aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -116,7 +114,7 @@ nsMathMLmsubFrame::Place (nsIRenderingContext& aRenderingContext,
 // munder uses this when movablelimits is set.
 nsresult
 nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
-                                   nsIRenderingContext& aRenderingContext,
+                                   nsRenderingContext& aRenderingContext,
                                    PRBool               aPlaceOrigin,
                                    nsHTMLReflowMetrics& aDesiredSize,
                                    nsMathMLContainerFrame* aFrame,
@@ -155,10 +153,10 @@ nsMathMLmsubFrame::PlaceSubScript (nsPresContext*      aPresContext,
   // get min subscript shift limit from x-height
   // = h(x) - 4/5 * sigma_5, Rule 18b, App. G, TeXbook
   nscoord xHeight = 0;
-  nsCOMPtr<nsIFontMetrics> fm =
+  nsRefPtr<nsFontMetrics> fm =
     aPresContext->GetMetricsFor(baseFrame->GetStyleFont()->mFont);
 
-  fm->GetXHeight (xHeight);
+  xHeight = fm->XHeight();
   nscoord minShiftFromXHeight = (nscoord) 
     (bmSubScript.ascent - (4.0f/5.0f) * xHeight);
 

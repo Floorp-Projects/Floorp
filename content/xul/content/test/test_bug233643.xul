@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=233643
         }
 
         function do_test() {
-          setTimeout(test_233643, 1000);
+          setTimeout(test_233643, 0);
         }
         addLoadEvent(do_test);
       ]]>

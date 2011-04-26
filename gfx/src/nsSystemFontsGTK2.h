@@ -40,6 +40,8 @@
 #define _NS_SYSTEMFONTSGTK2_H_
 
 #include "gfxFont.h"
+#include "nsDeviceContext.h"
+
 typedef struct _GtkWidget GtkWidget;
 
 class nsSystemFontsGTK2

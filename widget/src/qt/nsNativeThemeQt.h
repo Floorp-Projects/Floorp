@@ -46,7 +46,6 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsNativeTheme.h"
-#include "nsIDeviceContext.h"
 
 class QComboBox;
 class QStyleOptionButton;
@@ -54,6 +53,7 @@ class QStyleOptionFrameV2;
 class QStyleOptionComboBox;
 class QRect;
 class nsIFrame;
+class nsDeviceContext;
 
 class nsNativeThemeQt : private nsNativeTheme,
                         public nsITheme
@@ -62,18 +62,18 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // The nsITheme interface.
-  NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
+  NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aClipRect);
 
-  NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext,
+  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext,
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult);
 
-  NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+  NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntSize* aResult,
                                   PRBool* aIsOverridable);
@@ -89,7 +89,7 @@ public:
 
   PRBool WidgetIsContainer(PRUint8 aWidgetType);
 
-  virtual NS_HIDDEN_(PRBool) GetWidgetPadding(nsIDeviceContext* aContext,
+  virtual NS_HIDDEN_(PRBool) GetWidgetPadding(nsDeviceContext* aContext,
                                               nsIFrame* aFrame,
                                               PRUint8 aWidgetType,
                                               nsIntMargin* aResult);
@@ -105,17 +105,11 @@ public:
 private:
 
   inline nsresult DrawWidgetBackground(QPainter *qPainter,
-                                       nsIRenderingContext* aContext,
+                                       nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        const nsRect& aRect,
                                        const nsRect& aClipRect);
-
-  inline PRInt32 GetAppUnitsPerDevPixel(nsIRenderingContext* aContext){
-    nsCOMPtr<nsIDeviceContext> dctx = nsnull;
-    aContext->GetDeviceContext(*getter_AddRefs(dctx));
-    return dctx->AppUnitsPerDevPixel();
-  }
 
   void InitButtonStyle(PRUint8 widgetType,
                        nsIFrame* aFrame,

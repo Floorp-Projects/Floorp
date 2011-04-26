@@ -261,6 +261,14 @@ BrowserGlue.prototype = {
         else if (data == "force-ui-migration") {
           this._migrateUI();
         }
+        else if (data == "force-distribution-customization") {
+          this._distributionCustomizer.applyPrefDefaults();
+          this._distributionCustomizer.applyCustomizations();
+          // To apply distribution bookmarks use "places-init-complete".
+        }
+        else if (data == "force-places-init") {
+          this._initPlaces();
+        }
         break;
     }
   }, 
@@ -362,7 +370,6 @@ BrowserGlue.prototype = {
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded() {
 #ifdef XP_WIN
-#ifndef WINCE
     // For windows seven, initialize the jump list module.
     const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
     if (WINTASKBAR_CONTRACTID in Cc &&
@@ -372,25 +379,10 @@ BrowserGlue.prototype = {
       temp.WinTaskbarJumpList.startup();
     }
 #endif
-#endif
   },
 
   // profile shutdown handler (contains profile cleanup routines)
   _onProfileShutdown: function BG__onProfileShutdown() {
-#ifdef MOZ_UPDATER
-#ifdef WINCE
-    // If there's a pending update, clear cache to free up disk space.
-    try {
-      let um = Cc["@mozilla.org/updates/update-manager;1"].
-               getService(Ci.nsIUpdateManager);
-      if (um.activeUpdate && um.activeUpdate.state == "pending") {
-        let cacheService = Cc["@mozilla.org/network/cache-service;1"].
-                           getService(Ci.nsICacheService);
-        cacheService.evictEntries(Ci.nsICache.STORE_ANYWHERE);
-      }
-    } catch (e) { }
-#endif
-#endif
     this._shutdownPlaces();
     this._sanitizer.onShutdown();
   },

@@ -51,7 +51,6 @@ _TEST_FILES =\
 		test_aria_globals.html \
 		test_aria_imgmap.html \
 		test_button.xul \
-		test_colorpicker.xul \
 		test_combobox.xul \
 		test_cssoverflow.html \
 		test_dochierarchy.html \
@@ -65,7 +64,6 @@ _TEST_FILES =\
 		test_img.html \
 		test_list.html \
 		test_media.html \
-		test_menu.xul \
 		test_select.html \
 		test_tabbox.xul \
 		test_tabbrowser.xul \

@@ -191,23 +191,16 @@ NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
                       nsIAtom* aEventType,
                       nsXBLEventHandler** aResult)
 {
-  if (aEventType == nsGkAtoms::mousedown ||
-      aEventType == nsGkAtoms::mouseup ||
-      aEventType == nsGkAtoms::click ||
-      aEventType == nsGkAtoms::dblclick ||
-      aEventType == nsGkAtoms::mouseover ||
-      aEventType == nsGkAtoms::mouseout ||
-      aEventType == nsGkAtoms::mousemove ||
-      aEventType == nsGkAtoms::contextmenu ||
-      aEventType == nsGkAtoms::dragenter ||
-      aEventType == nsGkAtoms::dragover ||
-      aEventType == nsGkAtoms::dragdrop ||
-      aEventType == nsGkAtoms::dragexit ||
-      aEventType == nsGkAtoms::draggesture) {
-    *aResult = new nsXBLMouseEventHandler(aHandler);
-  }
-  else {
-    *aResult = new nsXBLEventHandler(aHandler);
+  switch (nsContentUtils::GetEventCategory(nsDependentAtomString(aEventType))) {
+    case NS_DRAG_EVENT:
+    case NS_MOUSE_EVENT:
+    case NS_MOUSE_SCROLL_EVENT:
+    case NS_SIMPLE_GESTURE_EVENT:
+      *aResult = new nsXBLMouseEventHandler(aHandler);
+      break;
+    default:
+      *aResult = new nsXBLEventHandler(aHandler);
+      break;
   }
 
   if (!*aResult)

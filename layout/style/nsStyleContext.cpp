@@ -329,14 +329,16 @@ nsStyleContext::ApplyStyleFixups(nsPresContext* aPresContext)
 {
   // See if we have any text decorations.
   // First see if our parent has text decorations.  If our parent does, then we inherit the bit.
-  if (mParent && mParent->HasTextDecorations())
-    mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
-  else {
+  if (mParent && mParent->HasTextDecorationLines()) {
+    mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
+  } else {
     // We might have defined a decoration.
     const nsStyleTextReset* text = GetStyleTextReset();
-    if (text->mTextDecoration != NS_STYLE_TEXT_DECORATION_NONE &&
-        text->mTextDecoration != NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL)
-      mBits |= NS_STYLE_HAS_TEXT_DECORATIONS;
+    PRUint8 decorationLine = text->mTextDecorationLine;
+    if (decorationLine != NS_STYLE_TEXT_DECORATION_LINE_NONE &&
+        decorationLine != NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL) {
+      mBits |= NS_STYLE_HAS_TEXT_DECORATION_LINES;
+    }
   }
 
   if ((mParent && mParent->HasPseudoElementData()) || mPseudoTag) {
