@@ -240,6 +240,8 @@ public:
   PRBool IsMenu() { return mPopupType == ePopupTypeMenu; }
   PRBool IsOpen() { return mPopupState == ePopupOpen || mPopupState == ePopupOpenAndVisible; }
 
+  PRBool IsDragPopup() { return mIsDragPopup; }
+
   // returns the parent menupopup, if any
   nsMenuFrame* GetParentMenu() {
     nsIFrame* parent = GetParent();
@@ -345,6 +347,9 @@ public:
   // Return the screen coordinates of the popup, or (-1, -1) if anchored.
   nsIntPoint ScreenPosition() const { return nsIntPoint(mScreenXPos, mScreenYPos); }
 
+  NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                              const nsRect&           aDirtyRect,
+                              const nsDisplayListSet& aLists);
 protected:
 
   // returns the popup's level.
@@ -449,6 +454,7 @@ protected:
   PRPackedBool mShouldAutoPosition; // Should SetPopupPosition be allowed to auto position popup?
   PRPackedBool mInContentShell; // True if the popup is in a content shell
   PRPackedBool mIsMenuLocked; // Should events inside this menu be ignored?
+  PRPackedBool mIsDragPopup; // True if this is a popup used for drag feedback
 
   // the flip modes that were used when the popup was opened
   PRPackedBool mHFlip;
