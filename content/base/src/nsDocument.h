@@ -109,6 +109,7 @@
 #include "nsIChannelEventSink.h"
 #include "imgIRequest.h"
 #include "nsIDOMDOMImplementation.h"
+#include "nsIDOMTouchEvent.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
@@ -509,7 +510,8 @@ class nsDocument : public nsIDocument,
                    public nsIScriptObjectPrincipal,
                    public nsIRadioGroupContainer_MOZILLA_2_0_BRANCH,
                    public nsIApplicationCacheContainer,
-                   public nsStubMutationObserver
+                   public nsStubMutationObserver,
+                   public nsIDOMDocumentTouch
 {
 public:
   typedef mozilla::dom::Element Element;
@@ -840,6 +842,9 @@ public:
 
   // nsIApplicationCacheContainer
   NS_DECL_NSIAPPLICATIONCACHECONTAINER
+
+  // nsIDOMDocumentTouch
+  NS_DECL_NSIDOMDOCUMENTTOUCH
 
   virtual nsresult Init();
   
