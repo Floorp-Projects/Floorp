@@ -1550,20 +1550,23 @@ mjit::Compiler::jsop_stricteq(JSOp op)
             return;
         }
         
-        /* Assume NaN is in canonical form. */
+        /* Assume NaN is either in canonical form or has the sign bit set (by jsop_neg). */
         RegisterID result = frame.allocReg(Registers::SingleByteRegs);
-        RegisterID treg = frame.tempRegForType(lhs);
+        RegisterID treg = frame.copyTypeIntoReg(lhs);
 
         Assembler::Condition oppositeCond = (op == JSOP_STRICTEQ) ? Assembler::NotEqual : Assembler::Equal;
 
+        /* Ignore the sign bit. */
+        masm.lshiftPtr(Imm32(1), treg);
 #ifndef JS_CPU_X64
-        static const int CanonicalNaNType = 0x7FF80000;
-        masm.setPtr(oppositeCond, treg, Imm32(CanonicalNaNType), result);
+        static const int ShiftedCanonicalNaNType = 0x7FF80000 << 1;
+        masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType), result);
 #else
-        static const void *CanonicalNaNType = (void *)0x7FF8000000000000; 
-        masm.move(ImmPtr(CanonicalNaNType), Registers::ScratchReg);
+        static const void *ShiftedCanonicalNaNType = (void *)(0x7FF8000000000000 << 1);
+        masm.move(ImmPtr(ShiftedCanonicalNaNType), Registers::ScratchReg);
         masm.setPtr(oppositeCond, treg, Registers::ScratchReg, result);
 #endif
+        frame.freeReg(treg);
 
         frame.popn(2);
         frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, result);
