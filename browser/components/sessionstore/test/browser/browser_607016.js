@@ -148,7 +148,3 @@ function test() {
   ss.setBrowserState(JSON.stringify(state));
 }
 
-// Helper function to create a random value
-function r() {
-  return "" + Math.floor(Date.now()) + Math.random();
-}

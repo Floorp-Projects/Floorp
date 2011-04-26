@@ -1,0 +1,60 @@
+diff --git a/gfx/ots/src/gasp.h b/gfx/ots/src/gasp.h
+--- a/gfx/ots/src/gasp.h
++++ b/gfx/ots/src/gasp.h
+@@ -1,15 +1,16 @@
+ // Copyright (c) 2009 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #ifndef OTS_GASP_H_
+ #define OTS_GASP_H_
+ 
++#include <new>
+ #include <utility>  // std::pair
+ #include <vector>
+ 
+ #include "ots.h"
+ 
+ namespace ots {
+ 
+ struct OpenTypeGASP {
+diff --git a/gfx/ots/src/glyf.h b/gfx/ots/src/glyf.h
+--- a/gfx/ots/src/glyf.h
++++ b/gfx/ots/src/glyf.h
+@@ -1,15 +1,16 @@
+ // Copyright (c) 2009 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #ifndef OTS_GLYF_H_
+ #define OTS_GLYF_H_
+ 
++#include <new>
+ #include <utility>  // std::pair
+ #include <vector>
+ 
+ #include "ots.h"
+ 
+ namespace ots {
+ 
+ struct OpenTypeGLYF {
+diff --git a/gfx/ots/src/metrics.h b/gfx/ots/src/metrics.h
+--- a/gfx/ots/src/metrics.h
++++ b/gfx/ots/src/metrics.h
+@@ -1,15 +1,16 @@
+ // Copyright (c) 2011 The Chromium Authors. All rights reserved.
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+ #ifndef OTS_METRICS_H_
+ #define OTS_METRICS_H_
+ 
++#include <new>
+ #include <utility>  // std::pair
+ #include <vector>
+ 
+ #include "ots.h"
+ 
+ namespace ots {
+ 
+ struct OpenTypeMetricsHeader {

@@ -86,7 +86,7 @@
 #include "nsString.h"
 #include "nsUnicharUtils.h"
 #include "nsGkAtoms.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsDOMCSSDeclaration.h"
@@ -1056,9 +1056,8 @@ nsGenericHTMLElement::CheckHandleEventForAnchorsPreconditions(nsEventChainVisito
   //Need to check if we hit an imagemap area and if so see if we're handling
   //the event on that map or on a link farther up the tree.  If we're on a
   //link farther up, do nothing.
-  nsCOMPtr<nsIContent> target;
-  aVisitor.mPresContext->EventStateManager()->
-    GetEventTargetContent(aVisitor.mEvent, getter_AddRefs(target));
+  nsCOMPtr<nsIContent> target = aVisitor.mPresContext->EventStateManager()->
+    GetEventTargetContent(aVisitor.mEvent);
 
   return !target || !IsArea(target) || IsArea(this);
 }
@@ -1193,7 +1192,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   PRBool accessKey = aName == nsGkAtoms::accesskey && 
                      aNameSpaceID == kNameSpaceID_None;
 
-  PRInt32 change;
+  PRInt32 change = 0;
   if (contentEditable) {
     change = GetContentEditableValue() == eTrue ? -1 : 0;
     SetMayHaveContentEditableAttr();
@@ -1228,7 +1227,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
                                 PRBool aNotify)
 {
   PRBool contentEditable = PR_FALSE;
-  PRInt32 contentEditableChange;
+  PRInt32 contentEditableChange = 0;
 
   // Check for event handlers
   if (aNameSpaceID == kNameSpaceID_None) {
@@ -3353,7 +3352,7 @@ nsGenericHTMLElement::RegUnRegAccessKey(PRBool aDoReg)
   nsPresContext *presContext = GetPresContext();
 
   if (presContext) {
-    nsIEventStateManager *esm = presContext->EventStateManager();
+    nsEventStateManager *esm = presContext->EventStateManager();
 
     // Register or unregister as appropriate.
     if (aDoReg) {

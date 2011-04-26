@@ -79,9 +79,6 @@ class nsDOMWorkerScope : public nsDOMWorkerMessageHandler,
 {
   friend class nsDOMWorker;
 
-  typedef nsresult (NS_STDCALL nsDOMWorkerScope::*SetListenerFunc)
-    (nsIDOMEventListener*);
-
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMEVENTTARGET
@@ -95,6 +92,9 @@ public:
   NS_DECL_NSIWORKERSCOPE
   NS_DECL_NSIXPCSCRIPTABLE
   NS_DECL_NSICLASSINFO
+
+  typedef NS_STDCALL_FUNCPROTO(nsresult, SetListenerFunc, nsDOMWorkerScope,
+                               SetOnmessage, (nsIDOMEventListener*));
 
   nsDOMWorkerScope(nsDOMWorker* aWorker);
 

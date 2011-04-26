@@ -64,7 +64,7 @@ namespace ic {
  * implementation.
  */
 
-#if defined JS_CPU_X64 || defined JS_CPU_ARM
+#if defined JS_CPU_X64 || defined JS_CPU_ARM || defined JS_CPU_SPARC
 # define JS_HAS_IC_LABELS
 #endif
 
@@ -172,7 +172,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
     int getInlineTypeJumpOffset() {
 #if defined JS_CPU_X86 || defined JS_CPU_X64
         return INLINE_TYPE_JUMP;
-#elif defined JS_CPU_ARM
+#elif defined JS_CPU_ARM || defined JS_CPU_SPARC
         return POST_INST_OFFSET(inlineTypeJumpOffset);
 #endif
     }
@@ -180,7 +180,7 @@ struct GetPropLabels : MacroAssemblerTypedefs {
     void setInlineTypeJumpOffset(int offset) {
 #if defined JS_CPU_X86 || defined JS_CPU_X64
         JS_ASSERT(INLINE_TYPE_JUMP == offset);
-#elif defined JS_CPU_ARM
+#elif defined JS_CPU_ARM || defined JS_CPU_SPARC
         inlineTypeJumpOffset = offset;
         JS_ASSERT(offset == inlineTypeJumpOffset);
 #endif
@@ -223,6 +223,11 @@ struct GetPropLabels : MacroAssemblerTypedefs {
     /* Offset from the shape guard start to the shape guard jump. */
     static const int32 INLINE_SHAPE_JUMP = 12;
 
+    /* Offset from the fast path to the type guard jump. */
+    int32 inlineTypeJumpOffset : 8;
+#elif defined JS_CPU_SPARC
+    static const int32 INLINE_SHAPE_JUMP = 48;
+    static const int32 INLINE_TYPE_JUMP = 48;
     /* Offset from the fast path to the type guard jump. */
     int32 inlineTypeJumpOffset : 8;
 #endif

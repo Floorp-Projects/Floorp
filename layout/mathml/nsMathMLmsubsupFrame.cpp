@@ -44,8 +44,7 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
-#include "nsIFontMetrics.h"
+#include "nsRenderingContext.h"
 
 #include "nsMathMLmsubsupFrame.h"
 
@@ -89,7 +88,7 @@ nsMathMLmsubsupFrame::TransmitAutomaticData()
 }
 
 /* virtual */ nsresult
-nsMathMLmsubsupFrame::Place(nsIRenderingContext& aRenderingContext,
+nsMathMLmsubsupFrame::Place(nsRenderingContext& aRenderingContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
@@ -132,7 +131,7 @@ nsMathMLmsubsupFrame::Place(nsIRenderingContext& aRenderingContext,
 // munderover uses this when movablelimits is set.
 nsresult
 nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
-                                        nsIRenderingContext& aRenderingContext,
+                                        nsRenderingContext& aRenderingContext,
                                         PRBool               aPlaceOrigin,
                                         nsHTMLReflowMetrics& aDesiredSize,
                                         nsMathMLContainerFrame* aFrame,
@@ -196,12 +195,10 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsPresContext*      aPresContext,
 
   aRenderingContext.SetFont(baseFrame->GetStyleFont()->mFont,
                             aPresContext->GetUserFontSet());
-  nsCOMPtr<nsIFontMetrics> fm;
-  aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
+  nsFontMetrics* fm = aRenderingContext.FontMetrics();
 
   // get x-height (an ex)
-  nscoord xHeight;
-  fm->GetXHeight (xHeight);
+  nscoord xHeight = fm->XHeight();
 
   nscoord ruleSize;
   GetRuleThickness (aRenderingContext, fm, ruleSize);

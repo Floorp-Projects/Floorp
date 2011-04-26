@@ -50,7 +50,7 @@
 // Classes
 class nsPagePrintTimer;
 class nsIDocShellTreeNode;
-class nsIDeviceContext;
+class nsDeviceContext;
 class nsIDocumentViewerPrint;
 class nsPrintObject;
 class nsIDocShell;
@@ -237,7 +237,7 @@ protected:
                                                    PRInt32&        aCount);
 
   static nsresult FindSelectionBoundsWithList(nsPresContext* aPresContext,
-                                              nsIRenderingContext& aRC,
+                                              nsRenderingContext& aRC,
                                               nsIAtom*        aList,
                                               nsIFrame *      aParentFrame,
                                               nsRect&         aRect,
@@ -247,7 +247,7 @@ protected:
                                               nsRect&         aEndRect);
 
   static nsresult FindSelectionBounds(nsPresContext* aPresContext,
-                                      nsIRenderingContext& aRC,
+                                      nsRenderingContext& aRC,
                                       nsIFrame *      aParentFrame,
                                       nsRect&         aRect,
                                       nsIFrame *&     aStartFrame,
@@ -257,7 +257,7 @@ protected:
 
   static nsresult GetPageRangeForSelection(nsIPresShell *        aPresShell,
                                            nsPresContext*       aPresContext,
-                                           nsIRenderingContext&  aRC,
+                                           nsRenderingContext&  aRC,
                                            nsISelection*         aSelection,
                                            nsIPageSequenceFrame* aPageSeqFrame,
                                            nsIFrame**            aStartFrame,

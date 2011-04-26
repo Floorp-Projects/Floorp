@@ -65,6 +65,8 @@
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
+#include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jsmath.h"
@@ -6605,14 +6607,9 @@ ExecuteTree(JSContext* cx, TraceMonitor* tm, TreeFragment* f, uintN& inlineCallC
     JS_ASSERT_IF(lr->exitType == LOOP_EXIT, !lr->calldepth);
 
     /* Restore interpreter state. */
-#ifdef DEBUG
-    LEAVE_TREE_STATUS lts = 
-#endif
-        LeaveTree(tm, state, lr);
-#ifdef DEBUG
+    DebugOnly<LEAVE_TREE_STATUS> lts = LeaveTree(tm, state, lr);
     JS_ASSERT_IF(lts == NO_DEEP_BAIL,
                  *(uint64*)&tm->storage->global()[globalSlots] == 0xdeadbeefdeadbeefLL);
-#endif
 
     *lrp = state.innermost;
     bool ok = !(state.builtinStatus & BUILTIN_ERROR);
@@ -6925,10 +6922,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
                       calldepth,
                       (unsigned long long int)cycles);
 
-#ifdef DEBUG
-    int slots =
-#endif
-        FlushNativeStackFrame(cx, innermost->calldepth, innermost->stackTypeMap(), stack);
+    DebugOnly<int> slots = FlushNativeStackFrame(cx, innermost->calldepth, innermost->stackTypeMap(), stack);
     JS_ASSERT(unsigned(slots) == innermost->numStackSlots);
 
     /*
@@ -6961,10 +6955,7 @@ LeaveTree(TraceMonitor *tm, TracerState& state, VMSideExit* lr)
         JS_ASSERT(innermost->root()->nGlobalTypes() == ngslots);
         JS_ASSERT(innermost->root()->nGlobalTypes() > innermost->numGlobalSlots);
         typeMap.ensure(ngslots);
-#ifdef DEBUG
-        unsigned check_ngslots =
-#endif
-        BuildGlobalTypeMapFromInnerTree(typeMap, innermost);
+        DebugOnly<unsigned> check_ngslots = BuildGlobalTypeMapFromInnerTree(typeMap, innermost);
         JS_ASSERT(check_ngslots == ngslots);
         globalTypeMap = typeMap.data();
     }
@@ -8133,9 +8124,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
         // Call objects do not yet have shape->isMethod() properties, but they
         // should. See bug 514046, for which this code is future-proof. Remove
         // this comment when that bug is fixed (so, FIXME: 514046).
-#ifdef DEBUG
-        JSBool rv =
-#endif
+        DebugOnly<JSBool> rv =
             js_GetPropertyHelper(cx, obj, shape->id,
                                  (op == JSOP_CALLNAME)
                                  ? JSGET_NO_METHOD_BARRIER

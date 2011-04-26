@@ -1,4 +1,4 @@
-// Copyright 2007 Google Inc. All rights reserved.
+// Copyright 2006-2008 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -30,12 +30,12 @@
 // benchmark from:
 //
 //    http://www.cl.cam.ac.uk/~mr10/Bench.html
-// 
+//
 // The benchmark was originally implemented in BCPL by
 // Martin Richards.
 
 
-var Richards = new BenchmarkSuite('Richards', 34886, [
+var Richards = new BenchmarkSuite('Richards', 35302, [
   new Benchmark("Richards", runRichards)
 ]);
 
@@ -73,7 +73,7 @@ function runRichards() {
     var msg =
         "Error during execution: queueCount = " + scheduler.queueCount +
         ", holdCount = " + scheduler.holdCount + ".";
-    print(msg);
+    throw new Error(msg);
   }
 }
 

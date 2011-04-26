@@ -90,7 +90,7 @@ inLayoutUtils::GetFrameFor(nsIDOMElement* aElement)
   return content->GetPrimaryFrame();
 }
 
-nsIEventStateManager*
+nsEventStateManager*
 inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
 {
   NS_PRECONDITION(aElement, "Passing in a null element is bad");

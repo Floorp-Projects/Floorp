@@ -46,6 +46,7 @@
 #include "jshashtable.h"
 #include "jsobj.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsweakmap.h"
 
 #include "jsgcinlines.h"
@@ -258,7 +259,7 @@ WeakMap::markIteratively(JSTracer *trc)
         for (js::HashMap<JSObject *, Value>::Range r = table->map.all(); !r.empty(); r.popFront()) {
             JSObject *key = r.front().key;
             Value &value = r.front().value;
-            if (value.isGCThing() && !IsAboutToBeFinalized(cx, key)) {
+            if (value.isMarkable() && !IsAboutToBeFinalized(cx, key)) {
                 /* If the key is alive, mark the value if needed. */
                 if (IsAboutToBeFinalized(cx, value.toGCThing())) {
                     js::gc::MarkValue(trc, value, "value");

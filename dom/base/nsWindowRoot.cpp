@@ -47,7 +47,6 @@
 #include "nsPresContext.h"
 #include "nsLayoutCID.h"
 #include "nsContentCID.h"
-#include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsString.h"

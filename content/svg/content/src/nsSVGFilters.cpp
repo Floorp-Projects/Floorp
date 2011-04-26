@@ -563,7 +563,7 @@ BoxBlur(const PRUint8 *aInput, PRUint8 *aOutput,
   }
 
   aOutput += aStrideMinor*aStartMinor;
-  if (aStartMinor + boxSize <= aEndMinor) {
+  if (aStartMinor + PRInt32(boxSize) <= aEndMinor) {
     const PRUint8 *lastInput = aInput + aStartMinor*aStrideMinor;
     const PRUint8 *nextInput = aInput + (aStartMinor + aRightLobe + 1)*aStrideMinor;
 #define OUTPUT(j)     aOutput[j] = (sums[j]*scaledDivisor) >> 24;
@@ -4876,7 +4876,8 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
     L[1] = sin(azimuth * radPerDeg) * cos(elevation * radPerDeg);
     L[2] = sin(elevation * radPerDeg);
   }
-  float lightPos[3], pointsAt[3], specularExponent, cosConeAngle;
+  float lightPos[3], pointsAt[3], specularExponent;
+  float cosConeAngle = 0;
   if (pointLight) {
     static_cast<nsSVGFEPointLightElement*>
       (pointLight.get())->GetAnimatedNumberValues(lightPos,
@@ -4903,8 +4904,6 @@ nsSVGFELightingElement::Filter(nsSVGFilterInstance *instance,
     nsCOMPtr<nsIContent> spot = do_QueryInterface(spotLight);
     if (spot->HasAttr(kNameSpaceID_None, nsGkAtoms::limitingConeAngle)) {
       cosConeAngle = NS_MAX<double>(cos(limitingConeAngle * radPerDeg), 0.0);
-    } else {
-      cosConeAngle = 0;
     }
   }
 

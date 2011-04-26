@@ -156,7 +156,7 @@ nsHTMLCanvasFrame::GetCanvasSize()
 }
 
 /* virtual */ nscoord
-nsHTMLCanvasFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsHTMLCanvasFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -166,7 +166,7 @@ nsHTMLCanvasFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsHTMLCanvasFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsHTMLCanvasFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   // XXX The caller doesn't account for constraints of the height,
   // min-height, and max-height properties.
@@ -184,7 +184,7 @@ nsHTMLCanvasFrame::GetIntrinsicRatio()
 }
 
 /* virtual */ nsSize
-nsHTMLCanvasFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+nsHTMLCanvasFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                nsSize aCBSize, nscoord aAvailableWidth,
                                nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                PRBool aShrinkWrap)
@@ -287,7 +287,7 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   // Transform the canvas into the right place
   gfxMatrix transform;
-  transform.Translate(r.pos);
+  transform.Translate(r.TopLeft());
   transform.Scale(r.Width()/canvasSize.width, r.Height()/canvasSize.height);
   layer->SetTransform(gfx3DMatrix::From2D(transform));
   layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));

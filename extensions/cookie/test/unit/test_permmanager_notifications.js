@@ -22,7 +22,7 @@ function do_run_test() {
 
   let pm = Services.permissions;
   let permURI = NetUtil.newURI("http://example.com");
-  let now = (new Date()).getTime();
+  let now = Number(Date.now());
   let permType = "test/expiration-perm";
 
   let observer = new permission_observer(test_generator, now, permType);

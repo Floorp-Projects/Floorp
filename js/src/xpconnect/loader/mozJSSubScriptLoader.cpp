@@ -40,8 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if !defined(XPCONNECT_STANDALONE) && !defined(NO_SUBSCRIPT_LOADER)
-
 #include "mozJSSubScriptLoader.h"
 
 #include "nsIServiceManager.h"
@@ -412,5 +410,3 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * aURL
     JS_SetPendingException (cx, STRING_TO_JSVAL(errmsg));
     return NS_OK;
 }
-
-#endif /* NO_SUBSCRIPT_LOADER */

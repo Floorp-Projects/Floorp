@@ -251,10 +251,12 @@ private:
                                       nsAutoString& aValue,
                                       nsAString& aResult) const;
 
+public:
   nsCSSProperty OrderValueAt(PRUint32 aValue) const {
     return nsCSSProperty(mOrder.ElementAt(aValue));
   }
 
+private:
   nsAutoTArray<PRUint8, 8> mOrder;
 
   // never null, except while expanded, or before the first call to
