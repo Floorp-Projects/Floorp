@@ -101,6 +101,7 @@
 #include "nsBidiPresUtils.h"
 
 #include "gfxRect.h"
+#include "ImageLayers.h"
 
 // sizes (pixels) for image icon, padding and border frame
 #define ICON_SIZE        (16)
@@ -114,7 +115,6 @@
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
 
-using namespace mozilla;
 using namespace mozilla::layers;
 
 // static icon information

@@ -42,18 +42,13 @@
 #define nsImageFrame_h___
 
 #include "nsSplittableFrame.h"
-#include "nsString.h"
-#include "nsAString.h"
 #include "nsIImageFrame.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 
-#include "imgIRequest.h"
 #include "nsStubImageDecoderObserver.h"
 #include "imgIDecoderObserver.h"
 
-#include "Layers.h"
-#include "ImageLayers.h"
 #include "nsDisplayList.h"
 #include "imgIContainer.h"
 
@@ -69,8 +64,13 @@ class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
 
-using namespace mozilla;
-using namespace mozilla::layers;
+namespace mozilla {
+namespace layers {
+  class ImageContainer;
+  class ImageLayer;
+  class LayerManager;
+}
+}
 
 class nsImageListener : public nsStubImageDecoderObserver
 {
@@ -102,6 +102,10 @@ private:
 
 class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
 public:
+  typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::layers::ImageLayer ImageLayer;
+  typedef mozilla::layers::LayerManager LayerManager;
+
   NS_DECL_FRAMEARENA_HELPERS
 
   nsImageFrame(nsStyleContext* aContext);
@@ -384,6 +388,10 @@ public:
  */
 class nsDisplayImage : public nsDisplayItem {
 public:
+  typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::layers::ImageLayer ImageLayer;
+  typedef mozilla::layers::LayerManager LayerManager;
+
   nsDisplayImage(nsDisplayListBuilder* aBuilder, nsImageFrame* aFrame,
                  imgIContainer* aImage)
     : nsDisplayItem(aBuilder, aFrame), mImage(aImage) {
