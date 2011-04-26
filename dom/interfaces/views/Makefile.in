@@ -43,43 +43,12 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= dom
-XPIDL_MODULE	= dom_css
+XPIDL_MODULE	= dom_views
 GRE_MODULE	= 1
 
-SDK_XPIDLSRCS = 				\
-	nsIDOMCSSPrimitiveValue.idl		\
-	nsIDOMCSSRule.idl			\
-	nsIDOMCSSRuleList.idl			\
-	nsIDOMCSSStyleDeclaration.idl		\
-	nsIDOMCSSStyleSheet.idl			\
-	nsIDOMCSSValue.idl			\
-	nsIDOMCSSValueList.idl			\
-	nsIDOMElementCSSInlineStyle.idl		\
+SDK_XPIDLSRCS =                                 \
+	nsIDOMDocumentView.idl			\
+	nsIDOMAbstractView.idl			\
 	$(NULL)
-
-XPIDLSRCS =					\
-	nsIDOMCSS2Properties.idl		\
-	nsIDOMCSSCharsetRule.idl		\
-	nsIDOMCSSFontFaceRule.idl		\
-	nsIDOMCSSImportRule.idl			\
-	nsIDOMCSSMediaRule.idl			\
-	nsIDOMCSSMozDocumentRule.idl		\
-	nsIDOMCSSPageRule.idl			\
-	nsIDOMCSSStyleRule.idl			\
-	nsIDOMCSSUnknownRule.idl		\
-	nsIDOMCounter.idl			\
-	nsIDOMDocumentCSS.idl			\
-	nsIDOMRGBColor.idl			\
-	nsIDOMRect.idl				\
-	nsIDOMViewCSS.idl			\
-	nsIDOMNSRGBAColor.idl			\
-	$(NULL)
-
-ifdef MOZ_CSS_ANIMATIONS
-XPIDLSRCS +=					\
-	nsIDOMMozCSSKeyframeRule.idl		\
-	nsIDOMMozCSSKeyframesRule.idl		\
-	$(NULL)
-endif
 
 include $(topsrcdir)/config/rules.mk

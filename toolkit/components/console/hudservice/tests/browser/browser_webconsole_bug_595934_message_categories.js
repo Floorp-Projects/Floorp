@@ -128,6 +128,8 @@ let TestObserver = {
       }
     }
     else {
+      ok(false, aSubject.sourceName + ':' + aSubject.lineNumber + '; ' +
+                aSubject.errorMessage);
       executeSoon(finish);
     }
   }

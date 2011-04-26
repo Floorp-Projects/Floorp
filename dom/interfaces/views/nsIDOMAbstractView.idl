@@ -12,14 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla code.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 2000
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Roy Frostig <froystig@cs.stanford.edu>
+ *   Johnny Stenback <jst@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,24 +36,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIDOMUIEvent.idl"
+#include "domstubs.idl"
 
-[scriptable, uuid(b2f49035-4a2f-4e62-8fb0-deb68b0de4d9)]
-interface nsIDOMScrollAreaEvent : nsIDOMUIEvent
+/**
+ * The nsIDOMAbstractView interface is a datatype for a view in the
+ * Document Object Model.
+ *
+ * For more information on this interface please see
+ * http://www.w3.org/TR/DOM-Level-2-Views
+ */
+
+[scriptable, uuid(F51EBADE-8B1A-11D3-AAE7-0010830123B4)]
+interface nsIDOMAbstractView : nsISupports
 {
-  // Scroll area client rect
-  readonly attribute float x;
-  readonly attribute float y;
-  readonly attribute float width;
-  readonly attribute float height;
-
-  void initScrollAreaEvent(in DOMString aEventType,
-                           in boolean aCanBubble,
-                           in boolean aCancelable,
-                           in nsIDOMAbstractView aView,
-                           in long aDetail,
-                           in float x,
-                           in float y,
-                           in float width,
-                           in float height);
+  readonly attribute nsIDOMDocumentView     document;
 };
