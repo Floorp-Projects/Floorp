@@ -41,8 +41,7 @@
 
 #include <windows.h>
 #include "nsNativeThemeWin.h"
-#include "nsIRenderingContext.h"
-#include "nsIDeviceContext.h"
+#include "nsRenderingContext.h"
 #include "nsRect.h"
 #include "nsSize.h"
 #include "nsTransform2D.h"
@@ -52,7 +51,7 @@
 #include "nsIContent.h"
 #include "nsIDocument.h"
 #include "nsIFrame.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "nsINameSpaceManager.h"
 #include "nsILookAndFeel.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -73,48 +72,6 @@
 #include "nsUXThemeConstants.h"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsNativeThemeWin, nsNativeTheme, nsITheme)
-
-#ifdef WINCE
-
-/* These functions might or might not be present; FrameRect probably isn't,
- * but GetViewportOrgEx might be -- so #define them to avoid name collisions.
- */
-
-#define FrameRect moz_FrameRect
-#define GetViewportOrgEx moz_GetViewportOrgEx
-
-static int FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush)
- {
-   HBRUSH oldBrush = (HBRUSH)SelectObject(inDC, inBrush);
-   RECT myRect = *inRect;
-   InflateRect(&myRect, 1, 1); 
-
-   // The width and height of the border are always one
-   // logical unit.
-
-   // move to top-left, and go clockwise.
-   MoveToEx(inDC, myRect.left, myRect.top, (LPPOINT) NULL);
-   // 1 -> 2
-   LineTo(inDC, myRect.right, myRect.top);
-   // 2 -> 3
-   LineTo(inDC, myRect.right, myRect.bottom);
-   // 3 -> 4
-   LineTo(inDC, myRect.left, myRect.bottom);
-   // 4 -> 1
-   LineTo(inDC, myRect.left, myRect.top);
-
-   SelectObject(inDC, oldBrush);
-   return 1;
-}
-
-static BOOL GetViewportOrgEx(HDC hdc, LPPOINT lpPoint)
-{
-  SetViewportOrgEx(hdc, 0, 0, lpPoint);
-  if (lpPoint->x != 0 || lpPoint->y != 0)
-    SetViewportOrgEx(hdc, lpPoint->x, lpPoint->y, NULL);
-  return TRUE;
-}
-#endif
 
 static inline PRBool IsHTMLContent(nsIFrame *frame)
 {
@@ -1197,7 +1154,7 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
+nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
                                        nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        const nsRect& aRect,
@@ -1246,9 +1203,7 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDeviceContext> dc;
-  aContext->GetDeviceContext(*getter_AddRefs(dc));
-  gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
+  gfxFloat p2a = gfxFloat(aContext->AppUnitsPerDevPixel());
   RECT widgetRect;
   RECT clipRect;
   gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
@@ -1261,13 +1216,13 @@ nsNativeThemeWin::DrawWidgetBackground(nsIRenderingContext* aContext,
   if (aWidgetType == NS_THEME_DROPDOWN_BUTTON &&
       part == CBP_DROPMARKER_VISTA && IsHTMLContent(aFrame))
   {
-    tr.pos.y -= 1.0;
-    tr.size.width += 1.0;
-    tr.size.height += 2.0;
+    tr.y -= 1.0;
+    tr.width += 1.0;
+    tr.height += 2.0;
 
-    dr.pos.y -= 1.0;
-    dr.size.width += 1.0;
-    dr.size.height += 2.0;
+    dr.y -= 1.0;
+    dr.width += 1.0;
+    dr.height += 2.0;
   }
 
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();
@@ -1473,7 +1428,6 @@ RENDER_AGAIN:
         ::GetViewportOrgEx(hdc, &vpOrg);
         ::SetBrushOrgEx(hdc, vpOrg.x + widgetRect.left, vpOrg.y + widgetRect.top, NULL);
 
-#ifndef WINCE
         // On vista, choose our own colors and draw an XP style half focus rect
         // for focused checkboxes and a full rect when active.
         if (nsUXThemeData::sIsVistaOrLater && aWidgetType == NS_THEME_CHECKBOX) {
@@ -1500,10 +1454,6 @@ RENDER_AGAIN:
           ::SetTextColor(hdc, 0);
           ::DrawFocusRect(hdc, &widgetRect);
         }
-#else
-        ::SetTextColor(hdc, 0);
-        ::DrawFocusRect(hdc, &widgetRect);
-#endif
         ::RestoreDC(hdc, id);
         if (hPen) {
           ::DeleteObject(hPen);
@@ -1546,12 +1496,12 @@ RENDER_AGAIN:
     // are because we might have drawn something above them (like a background-image).
     ctx->Save();
     ctx->ResetClip();
-    ctx->Translate(dr.pos);
+    ctx->Translate(dr.TopLeft());
 
     // Create a rounded rectangle to follow the buttons' look.
-    gfxRect buttonbox1(0.0, 0.0, dr.size.width, dr.size.height - 2.0);
-    gfxRect buttonbox2(1.0, dr.size.height - 2.0, dr.size.width - 1.0, 1.0);
-    gfxRect buttonbox3(2.0, dr.size.height - 1.0, dr.size.width - 3.0, 1.0);
+    gfxRect buttonbox1(0.0, 0.0, dr.Width(), dr.Height() - 2.0);
+    gfxRect buttonbox2(1.0, dr.Height() - 2.0, dr.Width() - 1.0, 1.0);
+    gfxRect buttonbox3(2.0, dr.Height() - 1.0, dr.Width() - 3.0, 1.0);
 
     gfxContext::GraphicsOperator currentOp = ctx->CurrentOperator();
     ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
@@ -1587,7 +1537,7 @@ RENDER_AGAIN:
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext, 
+nsNativeThemeWin::GetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult)
@@ -1674,7 +1624,7 @@ nsNativeThemeWin::GetWidgetBorder(nsIDeviceContext* aContext,
 }
 
 PRBool
-nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext, 
+nsNativeThemeWin::GetWidgetPadding(nsDeviceContext* aContext, 
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
                                    nsIntMargin* aResult)
@@ -1811,7 +1761,7 @@ nsNativeThemeWin::GetWidgetPadding(nsIDeviceContext* aContext,
 }
 
 PRBool
-nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext, 
+nsNativeThemeWin::GetWidgetOverflow(nsDeviceContext* aContext, 
                                     nsIFrame* aFrame,
                                     PRUint8 aOverflowRect,
                                     nsRect* aResult)
@@ -1848,7 +1798,7 @@ nsNativeThemeWin::GetWidgetOverflow(nsIDeviceContext* aContext,
 }
 
 NS_IMETHODIMP
-nsNativeThemeWin::GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+nsNativeThemeWin::GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        nsIntSize* aResult, PRBool* aIsOverridable)
 {
@@ -2349,7 +2299,7 @@ nsNativeThemeWin::ClassicThemeSupportsWidget(nsPresContext* aPresContext,
 }
 
 nsresult
-nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext, 
+nsNativeThemeWin::ClassicGetWidgetBorder(nsDeviceContext* aContext, 
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult)
@@ -2428,7 +2378,7 @@ nsNativeThemeWin::ClassicGetWidgetBorder(nsIDeviceContext* aContext,
 }
 
 nsresult
-nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                        PRUint8 aWidgetType,
                                        nsIntSize* aResult, PRBool* aIsOverridable)
 {
@@ -2442,13 +2392,8 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
     case NS_THEME_MENUARROW:
-#ifdef WINCE
-      (*aResult).width =  16;
-      (*aResult).height = 16;
-#else
       (*aResult).width = ::GetSystemMetrics(SM_CXMENUCHECK);
       (*aResult).height = ::GetSystemMetrics(SM_CYMENUCHECK);
-#endif
       break;
     case NS_THEME_SCROLLBAR_BUTTON_UP:
     case NS_THEME_SCROLLBAR_BUTTON_DOWN:
@@ -2504,24 +2449,17 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       // no minimum widget size
       break;
     case NS_THEME_RESIZER: {     
-#ifndef WINCE
       NONCLIENTMETRICS nc;
       nc.cbSize = sizeof(nc);
       if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(nc), &nc, 0))
         (*aResult).width = (*aResult).height = abs(nc.lfStatusFont.lfHeight) + 4;
       else
-#endif
         (*aResult).width = (*aResult).height = 15;
       *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
-#ifndef WINCE
       (*aResult).width = ::GetSystemMetrics(SM_CXVSCROLL);
       (*aResult).height = ::GetSystemMetrics(SM_CYVTHUMB);
-#else
-      (*aResult).width = 15;
-      (*aResult).height = 15;
-#endif
       // Without theming, divide the thumb size by two in order to look more
       // native
       if (!GetTheme(aWidgetType))
@@ -2529,13 +2467,8 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
-#ifndef WINCE
       (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB);
       (*aResult).height = ::GetSystemMetrics(SM_CYHSCROLL);
-#else
-      (*aResult).width = 15;
-      (*aResult).height = 15;
-#endif
       // Without theming, divide the thumb size by two in order to look more
       // native
       if (!GetTheme(aWidgetType))
@@ -2543,11 +2476,7 @@ nsNativeThemeWin::ClassicGetMinimumWidgetSize(nsIRenderingContext* aContext, nsI
       *aIsOverridable = PR_FALSE;
       break;
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-#ifndef WINCE
       (*aResult).width = ::GetSystemMetrics(SM_CXHTHUMB) << 1;
-#else
-      (*aResult).width = 10;
-#endif
       break;
     }
     case NS_THEME_MENUSEPARATOR:
@@ -2627,10 +2556,9 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
           const nsStyleUserInterface *uiData = aFrame->GetStyleUserInterface();
           // The down state is flat if the button is focusable
           if (uiData->mUserFocus == NS_STYLE_USER_FOCUS_NORMAL) {
-#ifndef WINCE
             if (!aFrame->GetContent()->IsHTML())
               aState |= DFCS_FLAT;
-#endif
+
             aFocused = PR_TRUE;
           }
         }
@@ -2792,7 +2720,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
         return NS_OK;
       }
 
-#ifndef WINCE
       if (isHTML) {
         nsIComboboxControlFrame* ccf = do_QueryFrame(aFrame);
         isOpen = (ccf && ccf->IsDroppedDown());
@@ -2808,7 +2735,6 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       // Dropdown button active state doesn't need :hover.
       if (eventState.HasState(NS_EVENT_STATE_ACTIVE))
         aState |= DFCS_PUSHED | DFCS_FLAT;
-#endif
 
       return NS_OK;
     }
@@ -2837,10 +2763,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
       if (IsDisabled(aFrame, contentState))
         aState |= DFCS_INACTIVE;
       else {
-#ifndef WINCE
         if (contentState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE))
           aState |= DFCS_PUSHED | DFCS_FLAT;
-#endif
       }
 
       return NS_OK;
@@ -2870,12 +2794,8 @@ nsresult nsNativeThemeWin::ClassicGetThemePartAndState(nsIFrame* aFrame, PRUint8
     }
     case NS_THEME_RESIZER:    
       aPart = DFC_SCROLL;
-#ifndef WINCE
       aState = (IsFrameRTL(aFrame)) ?
                DFCS_SCROLLSIZEGRIPRIGHT : DFCS_SCROLLSIZEGRIP;
-#else
-      aState = 0;
-#endif
       return NS_OK;
     case NS_THEME_MENUSEPARATOR:
       aPart = 0;
@@ -3019,7 +2939,6 @@ static void DrawTab(HDC hdc, const RECT& R, PRInt32 aPosition, PRBool aSelected,
     ::DrawEdge(hdc, &shadeRect, EDGE_RAISED, BF_SOFT | shadeFlag);
 }
 
-#ifndef WINCE
 static void DrawMenuImage(HDC hdc, const RECT& rc, PRInt32 aComponent, PRUint32 aColor)
 {
   // This procedure creates a memory bitmap to contain the check mark, draws
@@ -3066,7 +2985,6 @@ static void DrawMenuImage(HDC hdc, const RECT& rc, PRInt32 aComponent, PRUint32 
     ::DeleteDC(hMemoryDC);
   }
 }
-#endif
 
 void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PRInt32 back,
                                        HBRUSH defaultBack)
@@ -3083,9 +3001,7 @@ void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PR
       COLORREF oldBackColor = ::SetBkColor(hdc, ::GetSysColor(back));
       POINT vpOrg;
 
-#ifndef WINCE
       ::UnrealizeObject(brush);
-#endif
       ::GetViewportOrgEx(hdc, &vpOrg);
       ::SetBrushOrgEx(hdc, vpOrg.x + rc.left, vpOrg.y + rc.top, NULL);
       HBRUSH oldBrush = (HBRUSH) ::SelectObject(hdc, brush);
@@ -3102,7 +3018,7 @@ void nsNativeThemeWin::DrawCheckedRect(HDC hdc, const RECT& rc, PRInt32 fore, PR
   }
 }
 
-nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aContext,
+nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
@@ -3115,9 +3031,7 @@ nsresult nsNativeThemeWin::ClassicDrawWidgetBackground(nsIRenderingContext* aCon
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIDeviceContext> dc;
-  aContext->GetDeviceContext(*getter_AddRefs(dc));
-  gfxFloat p2a = gfxFloat(dc->AppUnitsPerDevPixel());
+  gfxFloat p2a = gfxFloat(aContext->AppUnitsPerDevPixel());
   RECT widgetRect;
   gfxRect tr(aRect.x, aRect.y, aRect.width, aRect.height),
           dr(aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
@@ -3362,7 +3276,6 @@ RENDER_AGAIN:
         }
       }
       break;
-#ifndef WINCE
     case NS_THEME_MENUCHECKBOX:
     case NS_THEME_MENURADIO:
       if (!(state & DFCS_CHECKED))
@@ -3399,7 +3312,6 @@ RENDER_AGAIN:
       ::FillRect(hdc, &widgetRect, (HBRUSH)(COLOR_3DHILIGHT+1));
       break;
     }
-#endif
 
     case NS_THEME_WINDOW_TITLEBAR:
     case NS_THEME_WINDOW_TITLEBAR_MAXIMIZED:

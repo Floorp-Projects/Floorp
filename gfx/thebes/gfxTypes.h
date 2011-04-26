@@ -59,7 +59,7 @@ typedef double gfxFloat;
  * gfx errors
  */
 
-/* nsIDeviceContext.h defines a set of printer errors  */
+/* nsIDeviceContextSpec.h defines a set of printer errors  */
 #define NS_ERROR_GFX_GENERAL_BASE (50) 
 
 /* Font cmap is strangely structured - avoid this font! */

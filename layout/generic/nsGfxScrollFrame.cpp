@@ -51,7 +51,7 @@
 #include "nsGkAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocument.h"
 #include "nsBoxLayoutState.h"
@@ -219,7 +219,7 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
         // can contain content outside the scrollport that may need to be
         // invalidated.
         nsRect thebesLayerDamage = damage + GetScrollPosition() - mInner.mScrollPosAtLastPaint;
-        if (parentDamage == thebesLayerDamage) {
+        if (parentDamage.IsEqualInterior(thebesLayerDamage)) {
           // This single call will take care of both rects
           nsHTMLContainerFrame::InvalidateInternal(parentDamage, 0, 0, aForChild, aFlags);
         } else {
@@ -239,7 +239,7 @@ nsHTMLScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
         }
       }
 
-      if (mInner.mIsRoot && parentDamage != damage) {
+      if (mInner.mIsRoot && !parentDamage.IsEqualInterior(damage)) {
         // Make sure we notify our prescontext about invalidations outside
         // viewport clipping.
         // This is important for things that are snapshotting the viewport,
@@ -719,8 +719,8 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState,
   // Preserve the width or height of empty rects
   nsSize portSize = mInner.mScrollPort.Size();
   nsRect scrolledRect = mInner.GetScrolledRectInternal(aState.mContentsOverflowArea, portSize);
-  scrolledArea.UnionRectIncludeEmpty(scrolledRect,
-                                     nsRect(nsPoint(0,0), portSize));
+  scrolledArea.UnionRectEdges(scrolledRect,
+                              nsRect(nsPoint(0,0), portSize));
 
   // Store the new overflow area. Note that this changes where an outline
   // of the scrolled frame would be painted, but scrolled frames can't have
@@ -748,7 +748,7 @@ nsHTMLScrollFrame::PlaceScrollArea(const ScrollReflowState& aState,
 }
 
 nscoord
-nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsIRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsRenderingContext *aRenderingContext)
 {
   nsGfxScrollFrameInner::ScrollbarStyles ss = GetScrollbarStyles();
   if (ss.mVertical != NS_STYLE_OVERFLOW_SCROLL || !mInner.mVScrollbarBox)
@@ -764,7 +764,7 @@ nsHTMLScrollFrame::GetIntrinsicVScrollbarWidth(nsIRenderingContext *aRenderingCo
 }
 
 /* virtual */ nscoord
-nsHTMLScrollFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = mInner.mScrolledFrame->GetMinWidth(aRenderingContext);
   DISPLAY_MIN_WIDTH(this, result);
@@ -772,7 +772,7 @@ nsHTMLScrollFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsHTMLScrollFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsHTMLScrollFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = mInner.mScrolledFrame->GetPrefWidth(aRenderingContext);
   DISPLAY_PREF_WIDTH(this, result);
@@ -902,8 +902,8 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
       (GetStateBits() & NS_FRAME_IS_DIRTY) ||
       didHaveHScrollbar != state.mShowHScrollbar ||
       didHaveVScrollbar != state.mShowVScrollbar ||
-      oldScrollAreaBounds != newScrollAreaBounds ||
-      oldScrolledAreaBounds != newScrolledAreaBounds) {
+      !oldScrollAreaBounds.IsEqualEdges(newScrollAreaBounds) ||
+      !oldScrolledAreaBounds.IsEqualEdges(newScrolledAreaBounds)) {
     if (!mInner.mSupppressScrollbarUpdate) {
       mInner.mSkippedScrollbarLayout = PR_FALSE;
       mInner.SetScrollbarVisibility(mInner.mHScrollbarBox, state.mShowHScrollbar);
@@ -934,7 +934,7 @@ nsHTMLScrollFrame::Reflow(nsPresContext*           aPresContext,
     mInner.mHadNonInitialReflow = PR_TRUE;
   }
 
-  if (mInner.mIsRoot && oldScrolledAreaBounds != newScrolledAreaBounds) {
+  if (mInner.mIsRoot && !oldScrolledAreaBounds.IsEqualEdges(newScrolledAreaBounds)) {
     mInner.PostScrolledAreaEvent();
   }
 
@@ -1138,7 +1138,7 @@ nsXULScrollFrame::InvalidateInternal(const nsRect& aDamageRect,
       // can contain content outside the scrollport that may need to be
       // invalidated.
       nsRect thebesLayerDamage = damage + GetScrollPosition() - mInner.mScrollPosAtLastPaint;
-      if (parentDamage == thebesLayerDamage) {
+      if (parentDamage.IsEqualInterior(thebesLayerDamage)) {
         // This single call will take care of both rects
         nsBoxFrame::InvalidateInternal(parentDamage, 0, 0, aForChild, aFlags);
       } else {
@@ -1966,8 +1966,6 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsDisplayListCollection set;
 
-  nsPresContext* presContext = mOuter->PresContext();
-
   // Since making new layers is expensive, only use nsDisplayScrollLayer
   // if the area is scrollable.
   //
@@ -1983,6 +1981,8 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
      (XRE_GetProcessType() == GeckoProcessType_Content &&
      (styles.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN ||
       styles.mVertical != NS_STYLE_OVERFLOW_HIDDEN) &&
+     (scrollRange.width > 0 ||
+      scrollRange.height > 0) &&
      (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
 
   if (ShouldBuildLayer()) {
@@ -2200,11 +2200,11 @@ nsGfxScrollFrameInner::GetLineScrollAmount() const
 {
   const nsStyleFont* font = mOuter->GetStyleFont();
   const nsFont& f = font->mFont;
-  nsCOMPtr<nsIFontMetrics> fm = mOuter->PresContext()->GetMetricsFor(f);
+  nsRefPtr<nsFontMetrics> fm = mOuter->PresContext()->GetMetricsFor(f);
   NS_ASSERTION(fm, "FontMetrics is null, assuming fontHeight == 1 appunit");
   nscoord fontHeight = 1;
   if (fm) {
-    fm->GetHeight(fontHeight);
+    fontHeight = fm->MaxHeight();
   }
 
   return nsSize(fontHeight, fontHeight);
@@ -2827,7 +2827,7 @@ nsXULScrollFrame::LayoutScrollArea(nsBoxLayoutState& aState,
     mInner.mScrolledFrame->Invalidate(
       originalVisOverflow + originalRect.TopLeft() - finalRect.TopLeft());
     mInner.mScrolledFrame->Invalidate(finalVisOverflow);
-  } else if (!originalVisOverflow.IsExactEqual(finalVisOverflow)) {
+  } else if (!originalVisOverflow.IsEqualInterior(finalVisOverflow)) {
     // If the overflow rect changed then invalidate the difference between the
     // old and new overflow rects.
     mInner.mScrolledFrame->CheckInvalidateSizeChange(
@@ -3236,7 +3236,7 @@ static void LayoutAndInvalidate(nsBoxLayoutState& aState,
   // to invalidate the scrollbar area here.
   // But we also need to invalidate the scrollbar itself in case it has
   // its own layer; we need to ensure that layer is updated.
-  PRBool rectChanged = aBox->GetRect() != aRect;
+  PRBool rectChanged = !aBox->GetRect().IsEqualInterior(aRect);
   if (rectChanged) {
     if (aScrollbarIsBeingHidden) {
       aBox->GetParent()->Invalidate(aBox->GetVisualOverflowRect() +

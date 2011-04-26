@@ -51,8 +51,8 @@ struct nsIntSize;
 struct nsFont;
 struct nsIntMargin;
 class nsPresContext;
-class nsIRenderingContext;
-class nsIDeviceContext;
+class nsRenderingContext;
+class nsDeviceContext;
 class nsIFrame;
 class nsIContent;
 class nsIAtom;
@@ -95,7 +95,7 @@ public:
    * @param aRect the rectangle defining the area occupied by the widget
    * @param aDirtyRect the rectangle that needs to be drawn
    */
-  NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
+  NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
@@ -111,7 +111,7 @@ public:
   /**
    * Get the computed CSS border for the widget, in pixels.
    */
-  NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
+  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult)=0;
@@ -125,7 +125,7 @@ public:
    * so that we don't let specified padding that has no effect change
    * the computed padding and potentially the size.
    */
-  virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
+  virtual PRBool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult) = 0;
@@ -138,7 +138,7 @@ public:
    * fill in aResult with the desired overflow area, in appunits, relative
    * to the frame origin, and return PR_TRUE.
    */
-  virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext,
+  virtual PRBool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
                                    PRUint8 aWidgetType,
                                    /*INOUT*/ nsRect* aOverflowRect)
@@ -150,7 +150,7 @@ public:
    * minimum size; if false, this size is the only valid size for the
    * widget.
    */
-  NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext,
+  NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntSize* aResult,

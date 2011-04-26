@@ -42,7 +42,6 @@
 #include "nsCSSKeywords.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsIDeviceContext.h"
 #include "nsCSSValue.h"
 #include "nsIDocShell.h"
 #include "nsLayoutUtils.h"
@@ -112,7 +111,7 @@ GetHeight(nsPresContext* aPresContext, const nsMediaFeature*,
     return NS_OK;
 }
 
-inline static nsIDeviceContext*
+inline static nsDeviceContext*
 GetDeviceContextFor(nsPresContext* aPresContext)
 {
   // It would be nice to call
@@ -224,11 +223,11 @@ static nsresult
 GetColor(nsPresContext* aPresContext, const nsMediaFeature*,
          nsCSSValue& aResult)
 {
-    // FIXME:  This implementation is bogus.  nsThebesDeviceContext
+    // FIXME:  This implementation is bogus.  nsDeviceContext
     // doesn't provide reliable information (should be fixed in bug
     // 424386).
     // FIXME: On a monochrome device, return 0!
-    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
+    nsDeviceContext *dx = GetDeviceContextFor(aPresContext);
     PRUint32 depth;
     dx->GetDepth(depth);
     // The spec says to use bits *per color component*, so divide by 3,
@@ -269,7 +268,7 @@ GetResolution(nsPresContext* aPresContext, const nsMediaFeature*,
               nsCSSValue& aResult)
 {
     // Resolution values are in device pixels, not CSS pixels.
-    nsIDeviceContext *dx = GetDeviceContextFor(aPresContext);
+    nsDeviceContext *dx = GetDeviceContextFor(aPresContext);
     float dpi = float(dx->AppUnitsPerPhysicalInch()) / float(dx->AppUnitsPerDevPixel());
     aResult.SetFloatValue(dpi, eCSSUnit_Inch);
     return NS_OK;

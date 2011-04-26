@@ -790,28 +790,20 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult) const
     aResult.AppendInt(GetIntValue(), 10);
   }
   else if (eCSSUnit_Enumerated == unit) {
-    if (eCSSProperty_text_decoration == aProperty) {
+    if (eCSSProperty_text_decoration_line == aProperty) {
       PRInt32 intValue = GetIntValue();
-      if (NS_STYLE_TEXT_DECORATION_NONE == intValue) {
+      if (NS_STYLE_TEXT_DECORATION_LINE_NONE == intValue) {
         AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, intValue),
                            aResult);
       } else {
         // Ignore the "override all" internal value.
         // (It doesn't have a string representation.)
-        intValue &= ~NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL;
+        intValue &= ~NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL;
         nsStyleUtil::AppendBitmaskCSSValue(
           aProperty, intValue,
-          NS_STYLE_TEXT_DECORATION_UNDERLINE,
-          NS_STYLE_TEXT_DECORATION_PREF_ANCHORS,
+          NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+          NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS,
           aResult);
-      }
-    }
-    else if (eCSSProperty_azimuth == aProperty) {
-      PRInt32 intValue = GetIntValue();
-      AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, (intValue & ~NS_STYLE_AZIMUTH_BEHIND)), aResult);
-      if ((NS_STYLE_AZIMUTH_BEHIND & intValue) != 0) {
-        aResult.Append(PRUnichar(' '));
-        AppendASCIItoUTF16(nsCSSProps::LookupPropertyValue(aProperty, NS_STYLE_AZIMUTH_BEHIND), aResult);
       }
     }
     else if (eCSSProperty_marks == aProperty) {

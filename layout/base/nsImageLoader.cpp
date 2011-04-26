@@ -118,6 +118,8 @@ nsresult
 nsImageLoader::Load(imgIRequest *aImage)
 {
   NS_ASSERTION(!mRequest, "can't reuse image loaders");
+  NS_ASSERTION(mFrame, "not initialized");
+  NS_ASSERTION(aImage, "must have non-null image");
 
   if (!mFrame)
     return NS_ERROR_NOT_INITIALIZED;
@@ -204,7 +206,7 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
     return NS_OK;
   }
 
-  nsRect r = (*aDirtyRect == nsIntRect::GetMaxSizedIntRect()) ?
+  nsRect r = aDirtyRect->IsEqualInterior(nsIntRect::GetMaxSizedIntRect()) ?
     nsRect(nsPoint(0, 0), mFrame->GetSize()) :
     aDirtyRect->ToAppUnits(nsPresContext::AppUnitsPerCSSPixel());
 

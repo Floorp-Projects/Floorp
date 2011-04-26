@@ -71,7 +71,6 @@ _TEST_FILES =	\
 		test_bug66619.html \
 		test_bug114649.html \
 		$(warning test_bug369950.html disabled due to random orange; see bug 492575) \
-		test_bug370436.html \
 		test_bug386575.xhtml \
 		test_bug388019.html \
 		test_bug394057.html \
@@ -79,7 +78,6 @@ _TEST_FILES =	\
 		test_bug399951.html \
 		test_bug404209.xhtml \
 		test_bug416896.html \
-		test_bug420499.xul \
 		test_bug423523.html \
 		test_bug445810.html \
 		test_bug449781.html \

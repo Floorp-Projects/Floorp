@@ -40,38 +40,11 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(c75982d6-811b-4321-980d-46490e1a6703)]
+[scriptable, uuid(c893eb89-8650-49d2-aed7-0ef809a2b940)]
 interface nsIPhoneSupport : nsISupports
 {
-  /**
-   * This method attempts to make a telephone call.
-   *
-   * @param telephoneNumber this is the telephone to dial.
-   * @param telephoneDescription this is an optional
-   * description of the telephone number.
-   * @param aPrompt this indicates whether to display the confirm call dialog
-   * before dialing   
-   */
-  void makeCall(in wstring telephoneNumber, in wstring telephoneDescription, in boolean aPrompt);
-  
   /**
    * This method displays a UI to switch to (or launch) a different task
    */
   void switchTask();
-
-  /**
-   * Determines whether or not Fennec is the "Default Browser".
-   * This is simply whether or not Fennec is registered to handle http links.
-   */
-  boolean isDefaultBrowser();
-
-  /**
-   * Registers Fennec as the "Default Browser".
-   */
-  void setDefaultBrowser();
-
-  /**
-   * Restores previous "Default Browser".
-   */
-  void restoreDefaultBrowser();
 };

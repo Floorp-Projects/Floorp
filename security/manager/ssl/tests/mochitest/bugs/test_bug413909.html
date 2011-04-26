@@ -14,7 +14,6 @@ var certOverrideService = Components.classes["@mozilla.org/security/certoverride
   .getService(Components.interfaces.nsICertOverrideService);
 var cert = null;
 var certListener = null;
-var frameLoadTimeout = null;
 
 SimpleTest.waitForExplicitFinish();
 
@@ -101,7 +100,6 @@ function onFrameLoad()
     "bug413909.xn--hxajbheg2az3al.xn--jxalpdlp", -1);
   apiTest(false);
 
-  clearTimeout(frameLoadTimeout);
   SimpleTest.finish();
 }
 
@@ -120,14 +118,6 @@ function onWindowLoad()
   {
     // ignore
   }
-  
-  // There is no error event indicating frame load error,
-  // simulate using timeout.
-  frameLoadTimeout = setTimeout(function() 
-  {
-    ok(false, "Secure page did not load, adding exception failed?");
-    SimpleTest.finish();
-  }, 5000);
 
   window.frame1.location.reload();
 }

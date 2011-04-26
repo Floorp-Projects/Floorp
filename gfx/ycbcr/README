@@ -21,3 +21,5 @@ convert.patch contains the following changes:
   * Bug 619178 - Update CPU detection in yuv_convert to new SSE.h interface.
   * Bug 616778 - Split yuv_convert FilterRows vectorized code into separate files so it can
     be properly guarded with cpuid() calls.
+
+win64.patch: SSE2 optimization for Microsoft Visual C++ x64 version

@@ -47,7 +47,7 @@ XPIDL_MODULE  = shellservice
 
 XPIDLSRCS = nsIShellService.idl
 
-ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 XPIDLSRCS += nsIWindowsShellService.idl
 endif
 

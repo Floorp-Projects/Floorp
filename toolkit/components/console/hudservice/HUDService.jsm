@@ -4963,7 +4963,7 @@ ConsoleUtils = {
    */
   timestamp: function ConsoleUtils_timestamp()
   {
-    return Math.floor(Date.now());
+    return Date.now();
   },
 
   /**

@@ -81,8 +81,8 @@ struct nsCSSValueList;
 #define NS_STYLE_INHERIT_MASK             0x00ffffff
 
 // Additional bits for nsStyleContext's mBits:
-// See nsStyleContext::HasTextDecorations
-#define NS_STYLE_HAS_TEXT_DECORATIONS     0x01000000
+// See nsStyleContext::HasTextDecorationLines
+#define NS_STYLE_HAS_TEXT_DECORATION_LINES 0x01000000
 // See nsStyleContext::HasPseudoElementData.
 #define NS_STYLE_HAS_PSEUDO_ELEMENT_DATA  0x02000000
 // See nsStyleContext::RelevantLinkIsVisited
@@ -802,14 +802,14 @@ struct nsStyleBorder {
   {
     nscoord roundedWidth =
       NS_ROUND_BORDER_TO_PIXELS(aBorderWidth, mTwipsPerPixel);
-    mBorder.side(aSide) = roundedWidth;
+    mBorder.Side(aSide) = roundedWidth;
     if (HasVisibleStyle(aSide))
-      mComputedBorder.side(aSide) = roundedWidth;
+      mComputedBorder.Side(aSide) = roundedWidth;
   }
 
   void SetBorderImageWidthOverride(mozilla::css::Side aSide, nscoord aBorderWidth)
   {
-    mBorderImageWidth.side(aSide) =
+    mBorderImageWidth.Side(aSide) =
       NS_ROUND_BORDER_TO_PIXELS(aBorderWidth, mTwipsPerPixel);
   }
 
@@ -834,7 +834,7 @@ struct nsStyleBorder {
   // value is rounded to the nearest device pixel by NS_ROUND_BORDER_TO_PIXELS.
   nscoord GetActualBorderWidth(mozilla::css::Side aSide) const
   {
-    return GetActualBorder().side(aSide);
+    return GetActualBorder().Side(aSide);
   }
 
   PRUint8 GetBorderStyle(mozilla::css::Side aSide) const
@@ -848,8 +848,8 @@ struct nsStyleBorder {
     NS_ASSERTION(aSide <= NS_SIDE_LEFT, "bad side");
     mBorderStyle[aSide] &= ~BORDER_STYLE_MASK;
     mBorderStyle[aSide] |= (aStyle & BORDER_STYLE_MASK);
-    mComputedBorder.side(aSide) =
-      (HasVisibleStyle(aSide) ? mBorder.side(aSide) : 0);
+    mComputedBorder.Side(aSide) =
+      (HasVisibleStyle(aSide) ? mBorder.Side(aSide) : 0);
   }
 
   // Defined in nsStyleStructInlines.h
@@ -1210,7 +1210,8 @@ struct nsStyleTextReset {
 
   nsStyleCoord  mVerticalAlign;         // [reset] coord, percent, calc, enum (see nsStyleConsts.h)
 
-  PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
+  PRUint8 mTextBlink;                   // [reset] see nsStyleConsts.h
+  PRUint8 mTextDecorationLine;          // [reset] see nsStyleConsts.h
   PRUint8 mUnicodeBidi;                 // [reset] see nsStyleConsts.h
 protected:
   PRUint8 mTextDecorationStyle;         // [reset] see nsStyleConsts.h
@@ -1334,16 +1335,8 @@ struct nsTimingFunction {
   }
 
   nsTimingFunction(const nsTimingFunction& aOther)
-    : mType(aOther.mType)
   {
-    if (mType == Function) {
-      mFunc.mX1 = aOther.mFunc.mX1;
-      mFunc.mY1 = aOther.mFunc.mY1;
-      mFunc.mX2 = aOther.mFunc.mX2;
-      mFunc.mY2 = aOther.mFunc.mY2;
-    } else {
-      mSteps = aOther.mSteps;
-    }
+    *this = aOther;
   }
 
   Type mType;
@@ -1356,6 +1349,26 @@ struct nsTimingFunction {
     } mFunc;
     PRUint32 mSteps;
   };
+
+  nsTimingFunction&
+  operator=(const nsTimingFunction& aOther)
+  {
+    if (&aOther == this)
+      return *this;
+
+    mType = aOther.mType;
+
+    if (mType == Function) {
+      mFunc.mX1 = aOther.mFunc.mX1;
+      mFunc.mY1 = aOther.mFunc.mY1;
+      mFunc.mX2 = aOther.mFunc.mX2;
+      mFunc.mY2 = aOther.mFunc.mY2;
+    } else {
+      mSteps = aOther.mSteps;
+    }
+
+    return *this;
+  }
 
   bool operator==(const nsTimingFunction& aOther) const
   {
@@ -1408,6 +1421,8 @@ struct nsTransition {
       mUnknownProperty = aOther.mUnknownProperty;
     }
 
+  nsTimingFunction& TimingFunctionSlot() { return mTimingFunction; }
+
 private:
   nsTimingFunction mTimingFunction;
   float mDuration;
@@ -1445,6 +1460,8 @@ struct nsAnimation {
   void SetPlayState(PRUint8 aPlayState) { mPlayState = aPlayState; }
   void SetIterationCount(float aIterationCount)
     { mIterationCount = aIterationCount; }
+
+  nsTimingFunction& TimingFunctionSlot() { return mTimingFunction; }
 
 private:
   nsTimingFunction mTimingFunction;

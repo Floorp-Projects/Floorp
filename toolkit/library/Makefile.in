@@ -63,6 +63,8 @@ LIBRARY_NAME=XUL
 MAKE_FRAMEWORK=1
 endif
 
+VPATH += $(topsrcdir)/build/
+CPPSRCS += $(STDCXX_COMPAT)
 
 ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 CPPSRCS += dlldeps-xul.cpp
@@ -231,9 +233,6 @@ OS_LIBS += $(call EXPAND_LIBNAME, ceosutil libcmt comsuppw)
 ifdef WINCE_WINDOWS_MOBILE
 OS_LIBS += $(call EXPAND_LIBNAME, cellcore)
 endif
-ifdef HAS_OGLES
-OS_LIBS += $(call EXPAND_LIBNAME, libGLESv2 libEGL)
-endif
 endif
 
 ifdef MOZ_JPROF
@@ -251,6 +250,11 @@ export:: $(RDF_UTIL_SRC_CPPSRCS) $(INTL_UNICHARUTIL_UTIL_CPPSRCS)
 
 ifdef MOZ_ENABLE_LIBXUL
 include $(srcdir)/libxul-rules.mk
+endif
+
+ifeq ($(OS_ARCH),OpenBSD)
+# Needed by nsAuthGSSAPI
+EXTRA_DSO_LDOPTS += -lkrb5 -lcrypto
 endif
 
 ifdef MOZ_JAVAXPCOM

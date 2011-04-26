@@ -53,7 +53,7 @@ Cu.import("resource://gre/modules/NetUtil.jsm");
 const CB_READY = {};
 const CB_COMPLETE = {};
 const CB_FAIL = {};
-
+const REASON_ERROR = Ci.mozIStorageStatementCallback.REASON_ERROR;
 
 /*
  * Utility functions
@@ -217,7 +217,8 @@ let Utils = {
   // than on every queryAsync invocation.
   _storageCallbackPrototype: {
     results: null,
-    // These are set by queryAsync
+
+    // These are set by queryAsync.
     names: null,
     syncCb: null,
 
@@ -241,6 +242,13 @@ let Utils = {
       this.syncCb.throw(error);
     },
     handleCompletion: function handleCompletion(reason) {
+
+      // If we got an error, handleError will also have been called, so don't
+      // call the callback! We never cancel statements, so we don't need to
+      // address that quandary.
+      if (reason == REASON_ERROR)
+        return;
+
       // If we were called with column names but didn't find any results,
       // the calling code probably still expects an array as a return value.
       if (this.names && !this.results) {

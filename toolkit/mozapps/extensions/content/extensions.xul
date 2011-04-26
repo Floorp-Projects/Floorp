@@ -207,7 +207,7 @@
   <hbox flex="1">
 
     <!-- category list -->
-    <richlistbox id="categories" persist="last-selected">
+    <richlistbox id="categories">
       <richlistitem id="category-search" value="addons://search/"
                     class="category"
                     name="&view.search.label;"
