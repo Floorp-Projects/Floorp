@@ -962,14 +962,13 @@
                 // In full screen mode, only bother making the location bar visible
                 // if the tab is a blank one.
                 oldBrowser._urlbarFocused = (gURLBar && gURLBar.focused);
-                if (newBrowser._urlbarFocused && gURLBar) {
-                  if (!window.fullScreen) {
-                    gURLBar.focus();
-                    break;
-                  } else if (isTabEmpty(this.mCurrentTab)) {
-                    focusAndSelectUrlBar();
-                    break;
-                  }
+                if (newBrowser._urlbarFocused && gURLBar && !window.fullScreen) {
+                  gURLBar.focus();
+                  break;
+                }
+                if (isTabEmpty(this.mCurrentTab)) {
+                  focusAndSelectUrlBar();
+                  break;
                 }
 
                 // If the find bar is focused, keep it focused.
