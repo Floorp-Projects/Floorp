@@ -146,7 +146,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_);
         cx->regs().pc = stop_;
 #else
-        cx->regs->pc = script_->code;
+        cx->regs().pc = script_->code;
         ok = Interpret(cx, cx->fp());
 #endif
         Probes::exitJSFun(cx, fp->fun(), script_);
