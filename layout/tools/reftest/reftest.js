@@ -57,6 +57,10 @@ const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX =
           "@mozilla.org/network/protocol;1?name=";
 const NS_XREAPPINFO_CONTRACTID =
           "@mozilla.org/xre/app-info;1";
+const NS_DIRECTORY_SERVICE_CONTRACTID =
+          "@mozilla.org/file/directory_service;1";
+const NS_OBSERVER_SERVICE_CONTRACTID =
+          "@mozilla.org/observer-service;1";
 
 var gLoadTimeout = 0;
 var gTimeoutHook = null;
@@ -114,6 +118,11 @@ var gSlowestTestTime = 0;
 var gSlowestTestURL;
 
 var gDrawWindowFlags;
+
+var gExpectingProcessCrash = false;
+var gExpectedCrashDumpFiles = [];
+var gUnexpectedCrashDumpFiles = { };
+var gCrashDumpDir;
 
 const TYPE_REFTEST_EQUAL = '==';
 const TYPE_REFTEST_NOTEQUAL = '!=';
@@ -205,6 +214,11 @@ function IDForEventTarget(event)
 
 function OnRefTestLoad()
 {
+    gCrashDumpDir = CC[NS_DIRECTORY_SERVICE_CONTRACTID]
+                    .getService(CI.nsIProperties)
+                    .get("ProfD", CI.nsIFile);
+    gCrashDumpDir.append("minidumps");
+
     var prefs = Components.classes["@mozilla.org/preferences-service;1"].
                 getService(Components.interfaces.nsIPrefBranch2);
     try {
@@ -278,7 +292,9 @@ function InitAndStartRefTests()
 
     gIOService = CC[IO_SERVICE_CONTRACTID].getService(CI.nsIIOService);
     gDebug = CC[DEBUG_CONTRACTID].getService(CI.nsIDebug2);
-    
+
+    RegisterProcessCrashObservers();
+
     if (gRemote) {
       gServer = null;
     } else {
@@ -1141,6 +1157,7 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             // First document has been loaded.
             // Proceed to load the second document.
 
+            CleanUpCrashDumpFiles();
             StartCurrentURI(2);
             break;
         case 2:
@@ -1201,6 +1218,7 @@ function RecordResult(testRunTime, errorMsg, scriptResults)
             UpdateCanvasCache(gURLs[0].url1, gCanvas1);
             UpdateCanvasCache(gURLs[0].url2, gCanvas2);
 
+            CleanUpCrashDumpFiles();
             FinishTestItem();
             break;
         default:
@@ -1215,6 +1233,55 @@ function LoadFailed(why)
          gURLs[0]["url" + gState].spec + " | load failed: " + why + "\n");
     FlushTestLog();
     FinishTestItem();
+}
+
+function RemoveExpectedCrashDumpFiles()
+{
+    if (gExpectingProcessCrash) {
+        for each (let crashFilename in gExpectedCrashDumpFiles) {
+            let file = gCrashDumpDir.clone();
+            file.append(crashFilename);
+            if (file.exists()) {
+                file.remove(false);
+            }
+        }
+    }
+    gExpectedCrashDumpFiles.length = 0;
+}
+
+function FindUnexpectedCrashDumpFiles()
+{
+    if (!gCrashDumpDir.exists()) {
+        return;
+    }
+
+    let entries = gCrashDumpDir.directoryEntries;
+    if (!entries) {
+        return;
+    }
+
+    let foundCrashDumpFile = false;
+    while (entries.hasMoreElements()) {
+        let file = entries.getNext().QueryInterface(CI.nsIFile);
+        let path = String(file.path);
+        if (path.match(/\.(dmp|extra)$/) && !gUnexpectedCrashDumpFiles[path]) {
+            if (!foundCrashDumpFile) {
+                foundCrashDumpFile = true;
+                gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | " + gCurrentURL +
+                         " | This test left crash dumps behind, but we weren't expecting it to!\n");
+            }
+            gDumpLog("REFTEST INFO | Found unexpected crash dump file" + path +
+                     ".\n");
+            gUnexpectedCrashDumpFiles[path] = true;
+        }
+    }
+}
+
+function CleanUpCrashDumpFiles()
+{
+    RemoveExpectedCrashDumpFiles();
+    FindUnexpectedCrashDumpFiles();
+    gExpectingProcessCrash = false;
 }
 
 function FinishTestItem()
@@ -1316,6 +1383,10 @@ function RegisterMessageListenersAndLoadContentScript()
         "reftest:UpdateCanvasForInvalidation",
         function (m) { RecvUpdateCanvasForInvalidation(m.json.rects); }
     );
+    gBrowserMessageManager.addMessageListener(
+        "reftest:ExpectProcessCrash",
+        function (m) { RecvExpectProcessCrash(); }
+    );
 
     gBrowserMessageManager.loadFrameScript("chrome://reftest/content/reftest-content.js", true);
 }
@@ -1374,6 +1445,34 @@ function RecvTestDone(runtimeMs)
 function RecvUpdateCanvasForInvalidation(rects)
 {
     UpdateCurrentCanvasForInvalidation(rects);
+}
+
+function OnProcessCrashed(subject, topic, data)
+{
+    var id;
+    subject = subject.QueryInterface(CI.nsIPropertyBag2);
+    if (topic == "plugin-crashed") {
+        id = subject.getPropertyAsAString("pluginDumpID");
+    } else if (topic == "ipc:content-shutdown") {
+        id = subject.getPropertyAsAString("dumpID");
+    }
+    if (id) {
+        gExpectedCrashDumpFiles.push(id + ".dmp");
+        gExpectedCrashDumpFiles.push(id + ".extra");
+    }
+}
+
+function RegisterProcessCrashObservers()
+{
+    var os = CC[NS_OBSERVER_SERVICE_CONTRACTID]
+             .getService(CI.nsIObserverService);
+    os.addObserver(OnProcessCrashed, "plugin-crashed", false);
+    os.addObserver(OnProcessCrashed, "ipc:content-shutdown", false);
+}
+
+function RecvExpectProcessCrash()
+{
+    gExpectingProcessCrash = true;
 }
 
 function SendClear()
