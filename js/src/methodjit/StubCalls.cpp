@@ -447,11 +447,12 @@ stubs::GetElem(VMFrame &f)
             }
         } else if (obj->isArguments()) {
             uint32 arg = uint32(i);
+            ArgumentsObject *argsobj = obj->asArguments();
 
-            if (arg < obj->getArgsInitialLength()) {
-                copyFrom = obj->addressOfArgsElement(arg);
+            if (arg < argsobj->initialLength()) {
+                copyFrom = argsobj->addressOfElement(arg);
                 if (!copyFrom->isMagic()) {
-                    if (StackFrame *afp = (StackFrame *) obj->getPrivate())
+                    if (StackFrame *afp = (StackFrame *) argsobj->getPrivate())
                         copyFrom = &afp->canonicalActualArg(arg);
                     goto end_getelem;
                 }
@@ -2011,17 +2012,24 @@ stubs::Length(VMFrame &f)
     if (vp->isString()) {
         vp->setInt32(vp->toString()->length());
         return;
-    } else if (vp->isObject()) {
+    }
+
+    if (vp->isObject()) {
         JSObject *obj = &vp->toObject();
         if (obj->isArray()) {
             jsuint length = obj->getArrayLength();
             regs.sp[-1].setNumber(length);
             return;
-        } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
-            uint32 length = obj->getArgsInitialLength();
-            JS_ASSERT(length < INT32_MAX);
-            regs.sp[-1].setInt32(int32_t(length));
-            return;
+        }
+
+        if (obj->isArguments()) {
+            ArgumentsObject *argsobj = obj->asArguments();
+            if (!argsobj->hasOverriddenLength()) {
+                uint32 length = argsobj->initialLength();
+                JS_ASSERT(length < INT32_MAX);
+                regs.sp[-1].setInt32(int32_t(length));
+                return;
+            }
         }
     }
 

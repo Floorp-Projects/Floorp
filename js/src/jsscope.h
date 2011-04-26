@@ -49,6 +49,7 @@
 #endif
 
 #include "jstypes.h"
+
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jshashtable.h"
@@ -57,6 +58,8 @@
 #include "jsprvtd.h"
 #include "jspubtd.h"
 #include "jspropertytree.h"
+
+#include "vm/ArgumentsObject.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -635,7 +638,7 @@ struct EmptyShape : public js::Shape
     }
 
     static EmptyShape *getEmptyArgumentsShape(JSContext *cx) {
-        return ensure(cx, &js_ArgumentsClass, &cx->compartment->emptyArgumentsShape);
+        return ensure(cx, &NormalArgumentsObject::jsClass, &cx->compartment->emptyArgumentsShape);
     }
 
     static EmptyShape *getEmptyBlockShape(JSContext *cx) {
