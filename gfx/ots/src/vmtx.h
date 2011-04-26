@@ -1,19 +1,20 @@
-// Copyright (c) 2009 The Chromium Authors. All rights reserved.
+// Copyright (c) 2011 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-#ifndef OTS_HMTX_H_
-#define OTS_HMTX_H_
+#ifndef OTS_VMTX_H_
+#define OTS_VMTX_H_
 
 #include "metrics.h"
 #include "ots.h"
 
 namespace ots {
 
-struct OpenTypeHMTX {
+struct OpenTypeVMTX {
   OpenTypeMetricsTable metrics;
 };
 
 }  // namespace ots
 
-#endif  // OTS_HMTX_H_
+#endif  // OTS_VMTX_H_
+

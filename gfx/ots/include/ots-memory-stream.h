@@ -18,7 +18,7 @@ class MemoryStream : public OTSStream {
       : ptr_(ptr), length_(length), off_(0) {
   }
 
-  bool WriteRaw(const void *data, size_t length) {
+  virtual bool WriteRaw(const void *data, size_t length) {
     if ((off_ + length > length_) ||
         (length > std::numeric_limits<size_t>::max() - off_)) {
       return false;
@@ -28,14 +28,14 @@ class MemoryStream : public OTSStream {
     return true;
   }
 
-  bool Seek(off_t position) {
+  virtual bool Seek(off_t position) {
     if (position < 0) return false;
     if (static_cast<size_t>(position) > length_) return false;
     off_ = position;
     return true;
   }
 
-  off_t Tell() const {
+  virtual off_t Tell() const {
     return off_;
   }
 
