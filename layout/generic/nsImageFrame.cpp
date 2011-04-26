@@ -182,7 +182,7 @@ nsImageFrame::~nsImageFrame()
 }
 
 NS_QUERYFRAME_HEAD(nsImageFrame)
-  NS_QUERYFRAME_ENTRY(nsIImageFrame)
+  NS_QUERYFRAME_ENTRY(nsImageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(ImageFrameSuper)
 
 #ifdef ACCESSIBILITY
@@ -1444,7 +1444,7 @@ nsImageFrame::ShouldDisplaySelection()
   return true;
 }
 
-NS_IMETHODIMP
+nsresult
 nsImageFrame::GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap)
 {
   nsImageMap *map = GetImageMap(aPresContext);
@@ -1757,7 +1757,7 @@ nsImageFrame::GetSkipSides() const
   return skip;
 }
 
-NS_IMETHODIMP 
+nsresult
 nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
 {
   if (mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&

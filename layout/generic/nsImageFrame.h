@@ -42,7 +42,6 @@
 #define nsImageFrame_h___
 
 #include "nsSplittableFrame.h"
-#include "nsIImageFrame.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 
@@ -63,6 +62,7 @@ class nsDisplayImage;
 class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
+class nsIImageMap;
 
 namespace mozilla {
 namespace layers {
@@ -100,7 +100,7 @@ private:
 
 #define ImageFrameSuper nsSplittableFrame
 
-class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
+class nsImageFrame : public ImageFrameSuper {
 public:
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::ImageLayer ImageLayer;
@@ -110,6 +110,7 @@ public:
 
   nsImageFrame(nsStyleContext* aContext);
 
+  NS_DECL_QUERYFRAME_TARGET(nsImageFrame)
   NS_DECL_QUERYFRAME
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
@@ -158,9 +159,9 @@ public:
 
   virtual PRIntn GetSkipSides() const;
 
-  NS_IMETHOD GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap);
+  nsresult GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap);
 
-  NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
+  nsresult GetIntrinsicImageSize(nsSize& aSize);
 
   static void ReleaseGlobals() {
     if (gIconLoad) {
