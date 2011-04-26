@@ -85,6 +85,7 @@
 #include "nsIScreenManager.h"
 #include "nsIServiceManager.h"
 #include "nsThemeConstants.h"
+#include "nsDisplayList.h"
 #include "mozilla/Preferences.h"
 
 using namespace mozilla;
@@ -124,6 +125,7 @@ nsMenuPopupFrame::nsMenuPopupFrame(nsIPresShell* aShell, nsStyleContext* aContex
   mShouldAutoPosition(PR_TRUE),
   mInContentShell(PR_TRUE),
   mIsMenuLocked(PR_FALSE),
+  mIsDragPopup(PR_FALSE),
   mHFlip(PR_FALSE),
   mVFlip(PR_FALSE)
 {
@@ -174,6 +176,12 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
       else if (tag == nsGkAtoms::tooltip)
         mPopupType = ePopupTypeTooltip;
     }
+  }
+
+  if (mPopupType == ePopupTypePanel &&
+      aContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                            nsGkAtoms::drag, eIgnoreCase)) {
+    mIsDragPopup = PR_TRUE;
   }
 
   nsCOMPtr<nsISupports> cont = PresContext()->GetContainer();
@@ -274,6 +282,7 @@ nsMenuPopupFrame::CreateWidgetForView(nsIView* aView)
   widgetData.clipSiblings = PR_TRUE;
   widgetData.mPopupHint = mPopupType;
   widgetData.mNoAutoHide = IsNoAutoHide();
+  widgetData.mIsDragPopup = mIsDragPopup;
 
   nsAutoString title;
   if (mContent && widgetData.mNoAutoHide) {
@@ -1115,6 +1124,12 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, PRBool aIsMove)
   if (!mShouldAutoPosition)
     return NS_OK;
 
+  // If this is due to a move, return early if the popup hasn't been laid out
+  // yet. On Windows, this can happen when using a drag popup before it opens.
+  if (aIsMove && (mPrefSize.width == -1 || mPrefSize.height == -1)) {
+    return NS_OK;
+  }
+
   nsPresContext* presContext = PresContext();
   nsIFrame* rootFrame = presContext->PresShell()->FrameManager()->GetRootFrame();
   NS_ASSERTION(rootFrame->GetView() && GetView() &&
@@ -1766,6 +1781,19 @@ void
 nsMenuPopupFrame::AttachedDismissalListener()
 {
   mConsumeRollupEvent = nsIPopupBoxObject::ROLLUP_DEFAULT;
+}
+
+nsresult
+nsMenuPopupFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                   const nsRect&           aDirtyRect,
+                                   const nsDisplayListSet& aLists)
+{
+  // don't pass events to drag popups
+  if (aBuilder->IsForEventDelivery() && mIsDragPopup) {
+    return NS_OK;
+  }
+
+  return nsBoxFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
 }
 
 // helpers /////////////////////////////////////////////////////////////
