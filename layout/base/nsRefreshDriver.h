@@ -135,7 +135,7 @@ public:
     NS_ASSERTION(!mStyleFlushObservers.Contains(aShell),
 		 "Double-adding style flush observer");
     PRBool appended = mStyleFlushObservers.AppendElement(aShell) != nsnull;
-    EnsureTimerStarted();
+    EnsureTimerStarted(false);
     return appended;
   }
   void RemoveStyleFlushObserver(nsIPresShell* aShell) {
@@ -145,7 +145,7 @@ public:
     NS_ASSERTION(!IsLayoutFlushObserver(aShell),
 		 "Double-adding layout flush observer");
     PRBool appended = mLayoutFlushObservers.AppendElement(aShell) != nsnull;
-    EnsureTimerStarted();
+    EnsureTimerStarted(false);
     return appended;
   }
   void RemoveLayoutFlushObserver(nsIPresShell* aShell) {
@@ -219,7 +219,7 @@ public:
 private:
   typedef nsTObserverArray<nsARefreshObserver*> ObserverArray;
 
-  void EnsureTimerStarted();
+  void EnsureTimerStarted(bool aAdjustingTimer);
   void StopTimer();
   PRUint32 ObserverCount() const;
   void UpdateMostRecentRefresh();

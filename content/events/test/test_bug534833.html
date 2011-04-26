@@ -10,7 +10,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=534833
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body onload="runTests()">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=534833">Mozilla Bug 534833</a>
 <p id="display"></p>
 <div id="content" style="display: none">
@@ -21,6 +21,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=534833
 
 /** Test for Bug 534833 **/
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
 
 var input1GotClick = 0;
 var input2GotClick = 0;
@@ -59,8 +60,13 @@ function nextTest_() {
 }
 
 function nextTest() {
-  document.getElementById("initialfocus").focus();
-  setTimeout(nextTest_, 100);
+  var el = document.getElementById("initialfocus");
+
+  el.addEventListener("focus", function() {
+    el.removeEventListener("focus", arguments.callee, false);
+    setTimeout(nextTest_, 0);
+  }, false);
+  el.focus();
 }
 
 function runTests() {

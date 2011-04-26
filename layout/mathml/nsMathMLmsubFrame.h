@@ -58,13 +58,13 @@ public:
   TransmitAutomaticData();
 
   virtual nsresult
-  Place(nsIRenderingContext& aRenderingContext,
+  Place(nsRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 
   static nsresult
   PlaceSubScript (nsPresContext*      aPresContext,
-                  nsIRenderingContext& aRenderingContext,
+                  nsRenderingContext& aRenderingContext,
                   PRBool               aPlaceOrigin,
                   nsHTMLReflowMetrics& aDesiredSize,
                   nsMathMLContainerFrame* aForFrame,

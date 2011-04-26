@@ -80,7 +80,7 @@ public:
          nsReflowStatus&          aStatus);
 
   virtual nsresult
-  Place(nsIRenderingContext& aRenderingContext,
+  Place(nsRenderingContext& aRenderingContext,
         PRBool               aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize);
 

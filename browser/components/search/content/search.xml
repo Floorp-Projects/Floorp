@@ -523,11 +523,8 @@
 
       <handler event="DOMMouseScroll"
                phase="capturing"
-#ifdef XP_MACOSX
-               action="if (event.metaKey) this.selectEngine(event, (event.detail > 0));"/>
-#else
-               action="if (event.ctrlKey) this.selectEngine(event, (event.detail > 0));"/>
-#endif
+               modifiers="accel"
+               action="this.selectEngine(event, (event.detail > 0));"/>
     </handlers>
   </binding>
 

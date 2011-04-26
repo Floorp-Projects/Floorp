@@ -88,6 +88,8 @@ XPIDLSRCS =					\
 	nsIDOMPopStateEvent.idl			\
 	nsIDOMCloseEvent.idl			\
 	nsIDOMEventException.idl		\
+	nsIDOMTouchEvent.idl			\
+	nsIDOMHashChangeEvent.idl		\
 	$(NULL)
 
 ifdef MOZ_CSS_ANIMATIONS

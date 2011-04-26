@@ -41,6 +41,7 @@
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jsproxy.h"
 #include "jsscope.h"

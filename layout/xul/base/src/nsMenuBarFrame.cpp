@@ -414,13 +414,13 @@ nsMenuBarFrame::ChangeMenuItem(nsMenuFrame* aMenuItem,
 }
 
 nsMenuFrame*
-nsMenuBarFrame::Enter()
+nsMenuBarFrame::Enter(nsGUIEvent* aEvent)
 {
   if (!mCurrentMenu)
     return nsnull;
 
   if (mCurrentMenu->IsOpen())
-    return mCurrentMenu->Enter();
+    return mCurrentMenu->Enter(aEvent);
 
   return mCurrentMenu;
 }

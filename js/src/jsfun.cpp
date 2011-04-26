@@ -56,6 +56,7 @@
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"
@@ -97,7 +98,7 @@ using namespace js::gc;
 inline JSObject *
 JSObject::getThrowTypeError() const
 {
-    return &getGlobal()->getReservedSlot(JSRESERVED_GLOBAL_THROWTYPEERROR).toObject();
+    return getGlobal()->getThrowTypeError();
 }
 
 JSBool
@@ -2228,7 +2229,7 @@ JSObject::initBoundFunction(JSContext *cx, const Value &thisArg,
             return false;
 
         empty->slotSpan += argslen;
-        map = empty;
+        setMap(empty);
 
         if (!ensureInstanceReservedSlots(cx, argslen))
             return false;
@@ -2692,14 +2693,13 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 
     if (obj->isGlobal()) {
         /* ES5 13.2.3: Construct the unique [[ThrowTypeError]] function object. */
-        JSObject *throwTypeError =
+        JSFunction *throwTypeError =
             js_NewFunction(cx, NULL, reinterpret_cast<Native>(ThrowTypeError), 0,
                            0, obj, NULL);
         if (!throwTypeError)
             return NULL;
 
-        JS_ALWAYS_TRUE(js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_THROWTYPEERROR,
-                                          ObjectValue(*throwTypeError)));
+        obj->asGlobal()->setThrowTypeError(throwTypeError);
     }
 
     return proto;

@@ -246,7 +246,7 @@ nsSVGPathGeometryFrame::GetCoveredRegion()
 NS_IMETHODIMP
 nsSVGPathGeometryFrame::UpdateCoveredRegion()
 {
-  mRect.Empty();
+  mRect.SetEmpty();
 
   nsRefPtr<gfxContext> context =
     new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceSurface());
@@ -275,10 +275,8 @@ nsSVGPathGeometryFrame::UpdateCoveredRegion()
       // GetUserStrokeExtent gets the extents wrong we can still use it
       // to get the device space position of zero length stroked paths.
       extent = context->GetUserStrokeExtent();
-      extent.pos.x += extent.size.width / 2;
-      extent.pos.y += extent.size.height / 2;
-      extent.size.width = 0;
-      extent.size.height = 0;
+      extent += gfxPoint(extent.width, extent.height)/2;
+      extent.SizeTo(gfxSize(0, 0));
     }
     extent = nsSVGUtils::PathExtentsToMaxStrokeExtents(extent, this);
   } else if (GetStyleSVG()->mFill.mType == eStyleSVGPaintType_None) {
@@ -335,23 +333,6 @@ nsSVGPathGeometryFrame::NotifyRedrawUnsuspended()
     nsSVGUtils::UpdateGraphic(this);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSVGPathGeometryFrame::SetMatrixPropagation(PRBool aPropagate)
-{
-  if (aPropagate) {
-    AddStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
-  } else {
-    RemoveStateBits(NS_STATE_SVG_PROPAGATE_TRANSFORM);
-  }
-  return NS_OK;
-}
-
-PRBool
-nsSVGPathGeometryFrame::GetMatrixPropagation()
-{
-  return (GetStateBits() & NS_STATE_SVG_PROPAGATE_TRANSFORM) != 0;
 }
 
 gfxRect
@@ -501,6 +482,12 @@ nsSVGPathGeometryFrame::GeneratePath(gfxContext* aContext,
   }
 
   aContext->Multiply(matrix);
+
+  // Hack to let SVGPathData::ConstructPath know if we have square caps:
+  const nsStyleSVG* style = GetStyleSVG();
+  if (style->mStrokeLinecap == NS_STYLE_STROKE_LINECAP_SQUARE) {
+    aContext->SetLineCap(gfxContext::LINE_CAP_SQUARE);
+  }
 
   aContext->NewPath();
   static_cast<nsSVGPathGeometryElement*>(mContent)->ConstructPath(aContext);

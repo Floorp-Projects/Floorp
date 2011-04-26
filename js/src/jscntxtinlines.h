@@ -51,7 +51,7 @@
 
 namespace js {
 
-static inline JSObject *
+static inline GlobalObject *
 GetGlobalForScopeChain(JSContext *cx)
 {
     /*
@@ -73,7 +73,7 @@ GetGlobalForScopeChain(JSContext *cx)
         return NULL;
     }
     OBJ_TO_INNER_OBJECT(cx, scope);
-    return scope;
+    return scope->asGlobal();
 }
 
 }

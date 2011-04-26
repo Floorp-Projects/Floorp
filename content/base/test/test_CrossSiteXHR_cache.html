@@ -423,7 +423,7 @@ function runTest() {
              "file_CrossSiteXHR_cache_server.sjs?";
   setStateURL = baseURL + "setState=";
 
-  var unique = Math.floor(Date.now());
+  var unique = Date.now();
   for each (test in tests) {
     if (test.newTest) {
       unique++;

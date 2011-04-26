@@ -78,6 +78,8 @@ function test() {
   var rawNode = PlacesUtils.unwrapNodes(serializedNode, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER).shift();
   // confirm serialization
   ok(rawNode.type, "confirm json node");
+  folderANode.containerOpen = false;
+
   var transaction = PlacesUIUtils.makeTransaction(rawNode,
                                                   PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER,
                                                   testRootId,

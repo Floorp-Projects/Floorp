@@ -56,7 +56,6 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsIEventStateManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsISelectionController.h"

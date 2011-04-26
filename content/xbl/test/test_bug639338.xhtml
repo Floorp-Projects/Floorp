@@ -1,0 +1,67 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=403162
+-->
+<head>
+  <title>Test for Bug 639338</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <bindings xmlns="http://www.mozilla.org/xbl">
+    <binding id="test">
+      <handlers>
+        <handler event="DOMMouseScroll" action="window.triggerCount++"/>
+        <handler event="DOMMouseScroll" modifiers="shift" action="window.shiftCount++"/>
+        <handler event="DOMMouseScroll" modifiers="control" action="window.controlCount++"/>
+      </handlers>
+    </binding>
+  </bindings>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=639338">Mozilla Bug 639338</a>
+<p id="display" style="-moz-binding: url(#test)"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+var triggerCount = 0;
+var shiftCount = 0;
+var controlCount = 0;
+
+function dispatchEvent(t, controlKey, shiftKey) {
+  var ev = document.createEvent("MouseScrollEvents");
+  ev.initMouseScrollEvent("DOMMouseScroll", true, true, window, 0, 0, 0, 0, 0, controlKey, false, shiftKey, false, 0, null, 0);
+  t.dispatchEvent(ev);  
+}
+
+/** Test for Bug 403162 **/
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  var t = $("display");
+  is(triggerCount, 0, "Haven't dispatched event");
+
+  dispatchEvent(t, false, false);
+  is(triggerCount, 1, "Dispatched once");
+  is(shiftCount, 0, "Not shift");
+  is(controlCount, 0, "Not control");
+
+  dispatchEvent(t, false, true);
+  is(triggerCount, 2, "Dispatched twice");
+  is(shiftCount, 1, "Shift");
+  is(controlCount, 0, "Not control");
+
+  dispatchEvent(t, true, false);
+  is(triggerCount, 3, "Dispatched thrice");
+  is(shiftCount, 1, "Not shift");
+  is(controlCount, 1, "Control");
+
+  SimpleTest.finish();
+});
+]]>
+</script>
+</pre>
+</body>
+</html>
+

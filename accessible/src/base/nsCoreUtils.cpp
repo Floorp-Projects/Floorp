@@ -60,7 +60,7 @@
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsIScrollableFrame.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsISelection2.h"
 #include "nsISelectionController.h"
 #include "nsPIDOMWindow.h"
@@ -206,7 +206,7 @@ nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
 
   // Accesskeys are registered by @accesskey attribute only. At first check
   // whether it is presented on the given element to avoid the slow
-  // nsIEventStateManager::GetRegisteredAccessKey() method.
+  // nsEventStateManager::GetRegisteredAccessKey() method.
   if (!aContent->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::accesskey))
     return 0;
 
@@ -222,13 +222,11 @@ nsCoreUtils::GetAccessKeyFor(nsIContent *aContent)
   if (!presContext)
     return 0;
 
-  nsIEventStateManager *esm = presContext->EventStateManager();
+  nsEventStateManager *esm = presContext->EventStateManager();
   if (!esm)
     return 0;
 
-  PRUint32 key = 0;
-  esm->GetRegisteredAccessKey(aContent, &key);
-  return key;
+  return esm->GetRegisteredAccessKey(aContent);
 }
 
 nsIContent *
@@ -759,47 +757,6 @@ nsCoreUtils::IsColumnHidden(nsITreeColumn *aColumn)
   nsCOMPtr<nsIContent> content = do_QueryInterface(element);
   return content->AttrValueIs(kNameSpaceID_None, nsAccessibilityAtoms::hidden,
                               nsAccessibilityAtoms::_true, eCaseMatters);
-}
-
-void
-nsCoreUtils::GeneratePopupTree(nsIContent *aContent, PRBool aIsAnon)
-{
-  // Set menugenerated="true" on the menupopup node to generate the sub-menu
-  // items if they have not been generated.
-
-  nsCOMPtr<nsIDOMNodeList> list;
-  if (aIsAnon) {    
-    nsIDocument* document = aContent->GetCurrentDoc();
-    if (document)
-      document->GetXBLChildNodesFor(aContent, getter_AddRefs(list));
-
-  } else {
-    list = aContent->GetChildNodesList();
-  }
-
-  PRUint32 length = 0;
-  if (!list || NS_FAILED(list->GetLength(&length)))
-    return;
-
-  for (PRUint32 idx = 0; idx < length; idx++) {
-    nsCOMPtr<nsIDOMNode> childNode;
-    list->Item(idx, getter_AddRefs(childNode));
-    nsCOMPtr<nsIContent> child(do_QueryInterface(childNode));
-
-    PRBool isPopup = child->NodeInfo()->Equals(nsAccessibilityAtoms::menupopup,
-                                               kNameSpaceID_XUL) ||
-                     child->NodeInfo()->Equals(nsAccessibilityAtoms::panel,
-                                               kNameSpaceID_XUL);
-    if (isPopup && !child->AttrValueIs(kNameSpaceID_None,
-                                       nsAccessibilityAtoms::menugenerated,
-                                       nsAccessibilityAtoms::_true,
-                                       eCaseMatters)) {
-
-      child->SetAttr(kNameSpaceID_None, nsAccessibilityAtoms::menugenerated,
-                     NS_LITERAL_STRING("true"), PR_TRUE);
-      return;
-    }
-  }
 }
 
 

@@ -112,7 +112,7 @@ nsSVGMaskFrame::ComputeMaskAlpha(nsSVGRenderState *aContext,
     new gfxImageSurface(surfaceSize, gfxASurface::ImageFormatARGB32);
   if (!image || image->CairoStatus())
     return nsnull;
-  image->SetDeviceOffset(-clipExtents.pos);
+  image->SetDeviceOffset(-clipExtents.TopLeft());
 
   nsSVGRenderState tmpState(image);
 

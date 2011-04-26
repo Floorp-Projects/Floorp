@@ -166,6 +166,18 @@ function run_test_3(p) {
     do_check_true(p.isActive);
     do_check_eq(p.name, "Test Plug-in");
 
+    run_test_4();
+  });
+}
+
+// Verify that after a restart the test plugin has the same ID
+function run_test_4() {
+  restartManager();
+
+  AddonManager.getAddonByID(gID, function(p) {
+    do_check_neq(p, null);
+    do_check_eq(p.name, "Test Plug-in");
+
     do_test_finished();
   });
 }

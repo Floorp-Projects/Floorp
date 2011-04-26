@@ -43,8 +43,6 @@
 //
 
 #include "nsImageBoxFrame.h"
-#include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
@@ -55,7 +53,6 @@
 #include "nsHTMLParts.h"
 #include "nsString.h"
 #include "nsLeafFrame.h"
-#include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
@@ -66,10 +63,8 @@
 #include "nsILoadGroup.h"
 #include "nsHTMLContainerFrame.h"
 #include "prprf.h"
-#include "nsIFontMetrics.h"
 #include "nsCSSRendering.h"
 #include "nsIDOMHTMLImageElement.h"
-#include "nsIDeviceContext.h"
 #include "nsINameSpaceManager.h"
 #include "nsTextFragment.h"
 #include "nsIDOMHTMLMapElement.h"
@@ -329,12 +324,12 @@ public:
   // Doesn't handle HitTest because nsLeafBoxFrame already creates an
   // event receiver for us
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("XULImage", TYPE_XUL_IMAGE)
 };
 
 void nsDisplayXULImage::Paint(nsDisplayListBuilder* aBuilder,
-                              nsIRenderingContext* aCtx)
+                              nsRenderingContext* aCtx)
 {
   static_cast<nsImageBoxFrame*>(mFrame)->
     PaintImage(*aCtx, mVisibleRect, ToReferenceFrame(),
@@ -366,7 +361,7 @@ nsImageBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsImageBoxFrame::PaintImage(nsIRenderingContext& aRenderingContext,
+nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, nsPoint aPt,
                             PRUint32 aFlags)
 {

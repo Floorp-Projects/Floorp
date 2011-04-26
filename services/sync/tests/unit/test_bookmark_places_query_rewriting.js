@@ -33,7 +33,8 @@ function run_test() {
     if (child.title == "bar")
       tagID = child.itemId;
   }
-      
+  tags.containerOpen = false;
+
   _("Tag ID: " + tagID);
   do_check_eq(tagRecord.bmkUri, uri.replace("499", tagID));
   

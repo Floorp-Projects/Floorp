@@ -320,7 +320,7 @@ public:
   // for the context is created by the context's GetNativeGlobal() method.
   virtual nsresult SetScriptContext(PRUint32 lang, nsIScriptContext *aContext);
   
-  virtual void OnFinalize(PRUint32 aLangID, void *aScriptGlobal);
+  virtual void OnFinalize(JSObject* aObject);
   virtual void SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts);
 
   // nsIScriptObjectPrincipal
@@ -548,7 +548,7 @@ public:
   virtual PRBool TakeFocus(PRBool aFocus, PRUint32 aFocusMethod);
   virtual void SetReadyForFocus();
   virtual void PageHidden();
-  virtual nsresult DispatchAsyncHashchange();
+  virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI);
   virtual nsresult DispatchSyncPopState();
 
   virtual nsresult SetArguments(nsIArray *aArguments, nsIPrincipal *aOrigin);
@@ -588,6 +588,8 @@ private:
   void DisableAccelerationUpdates();
 
 protected:
+  friend class HashchangeCallback;
+
   // Object Management
   virtual ~nsGlobalWindow();
   void CleanUp(PRBool aIgnoreModalDialog);
@@ -716,7 +718,7 @@ protected:
                            const nsAString &aPopupWindowName,
                            const nsAString &aPopupWindowFeatures);
   void FireOfflineStatusEvent();
-  nsresult FireHashchange();
+  nsresult FireHashchange(const nsAString &aOldURL, const nsAString &aNewURL);
 
   void FlushPendingNotifications(mozFlushType aType);
   void EnsureReflowFlushAndPaint();

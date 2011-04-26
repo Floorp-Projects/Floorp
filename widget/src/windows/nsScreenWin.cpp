@@ -47,13 +47,6 @@
 
 #include "nsScreenWin.h"
 
-#ifdef WINCE
-#ifdef WINCE_WINDOWS_MOBILE
-#include "sipapi.h"
-#endif
-#define GetMonitorInfoW GetMonitorInfo
-#endif
-
 
 nsScreenWin :: nsScreenWin ( void* inScreen )
   : mScreen(inScreen)
@@ -117,18 +110,6 @@ NS_IMETHODIMP
 nsScreenWin :: GetAvailRect(PRInt32 *outLeft, PRInt32 *outTop, PRInt32 *outWidth, PRInt32 *outHeight)
 {
   BOOL success = FALSE;
-#ifdef WINCE_WINDOWS_MOBILE
-  SIPINFO sipInfo;
-  memset(&sipInfo, 0, sizeof(SIPINFO));
-  sipInfo.cbSize = sizeof(SIPINFO);
-  if (SipGetInfo(&sipInfo) && !(sipInfo.fdwFlags & SIPF_OFF)) {
-    *outLeft = sipInfo.rcVisibleDesktop.left;
-    *outTop = sipInfo.rcVisibleDesktop.top;
-    *outWidth = sipInfo.rcVisibleDesktop.right - sipInfo.rcVisibleDesktop.left;
-    *outHeight = sipInfo.rcVisibleDesktop.bottom - sipInfo.rcVisibleDesktop.top;
-    return NS_OK;
-  }
-#endif
 
 #if _MSC_VER >= 1200
   if ( mScreen ) {

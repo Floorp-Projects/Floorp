@@ -226,7 +226,7 @@ richlistitem[type="message"]{
   -moz-binding: url("chrome://browser/content/bindings/console.xml#message");
 }
 
-dialog {
+dialog:not(.content-dialog) {
   -moz-binding: url("chrome://browser/content/bindings/dialog.xml#dialog");
 }
 

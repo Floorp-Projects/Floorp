@@ -22,6 +22,7 @@
  *
  * Contributor(s):
  *  Marco Bonardo <mak77@bonardo.net>
+ *  Jonathan Protzenko <jonathan.protzenko@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -44,6 +45,11 @@
 
 function run_test() {
   do_check_true(typeof(this['MODULE_IMPORTED']) == "undefined");
-  Components.utils.import("resource://test/import_module.jsm");
+  do_check_true(typeof(this['MODULE_URI']) == "undefined");
+  let uri = "resource://test/import_module.jsm";
+  Components.utils.import(uri);
+  do_check_true(MODULE_URI == uri);
   do_check_true(MODULE_IMPORTED);
+  do_check_true(SUBMODULE_IMPORTED);
+  do_check_true(same_scope);
 }

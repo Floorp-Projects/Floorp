@@ -609,7 +609,7 @@ public:
         return mUpdateSurface.get();
     }
 
-    virtual PRBool InUpdate() const { return !mInUpdate; }
+    virtual PRBool InUpdate() const { return mInUpdate; }
 
 private:
    TextureImageGLX(GLuint aTexture,

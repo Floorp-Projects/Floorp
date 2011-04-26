@@ -137,7 +137,7 @@ nsFirstLetterFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
 // Needed for non-floating first-letter frames and for the continuations
 // following the first-letter that we also use nsFirstLetterFrame for.
 /* virtual */ void
-nsFirstLetterFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
+nsFirstLetterFrame::AddInlineMinWidth(nsRenderingContext *aRenderingContext,
                                       nsIFrame::InlineMinWidthData *aData)
 {
   DoInlineIntrinsicWidth(aRenderingContext, aData, nsLayoutUtils::MIN_WIDTH);
@@ -146,7 +146,7 @@ nsFirstLetterFrame::AddInlineMinWidth(nsIRenderingContext *aRenderingContext,
 // Needed for non-floating first-letter frames and for the continuations
 // following the first-letter that we also use nsFirstLetterFrame for.
 /* virtual */ void
-nsFirstLetterFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
+nsFirstLetterFrame::AddInlinePrefWidth(nsRenderingContext *aRenderingContext,
                                        nsIFrame::InlinePrefWidthData *aData)
 {
   DoInlineIntrinsicWidth(aRenderingContext, aData, nsLayoutUtils::PREF_WIDTH);
@@ -154,20 +154,20 @@ nsFirstLetterFrame::AddInlinePrefWidth(nsIRenderingContext *aRenderingContext,
 
 // Needed for floating first-letter frames.
 /* virtual */ nscoord
-nsFirstLetterFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsFirstLetterFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   return nsLayoutUtils::MinWidthFromInline(this, aRenderingContext);
 }
 
 // Needed for floating first-letter frames.
 /* virtual */ nscoord
-nsFirstLetterFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsFirstLetterFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   return nsLayoutUtils::PrefWidthFromInline(this, aRenderingContext);
 }
 
 /* virtual */ nsSize
-nsFirstLetterFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+nsFirstLetterFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                 PRBool aShrinkWrap)
@@ -369,8 +369,8 @@ nsFirstLetterFrame::DrainOverflowFrames(nsPresContext* aPresContext)
 
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
-      nsHTMLContainerFrame::ReparentFrameViewList(aPresContext, *overflowFrames,
-                                                  prevInFlow, this);
+      nsContainerFrame::ReparentFrameViewList(aPresContext, *overflowFrames,
+                                              prevInFlow, this);
       mFrames.InsertFrames(this, nsnull, *overflowFrames);
     }
   }

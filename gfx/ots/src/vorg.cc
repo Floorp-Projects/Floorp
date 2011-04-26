@@ -66,7 +66,7 @@ bool ots_vorg_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
 bool ots_vorg_should_serialise(OpenTypeFile *file) {
   if (!file->cff) return false;  // this table is not for fonts with TT glyphs.
-  return file->vorg;
+  return file->vorg != NULL;
 }
 
 bool ots_vorg_serialise(OTSStream *out, OpenTypeFile *file) {

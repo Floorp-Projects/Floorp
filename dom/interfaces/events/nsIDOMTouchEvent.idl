@@ -1,0 +1,109 @@
+/* vim: set shiftwidth=2 tabstop=8 autoindent cindent expandtab: */
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: MPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Mozilla Public License Version
+ * 1.1 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is nsIDOMTouchEvent.
+ *
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (Original Author)
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+#include "nsIDOMUIEvent.idl"
+interface nsIVariant;
+
+/**
+ * @see http://dvcs.w3.org/hg/webevents/raw-file/tip/touchevents.html
+ */
+
+[scriptable, uuid(f9f200ad-228f-4879-bc9e-a13bd6bb82ef)]
+interface nsIDOMTouchPoint : nsISupports {
+  readonly attribute long              identifier;
+  readonly attribute nsIDOMEventTarget target;
+  readonly attribute long              pageX;
+  readonly attribute long              pageY;
+  readonly attribute long              screenX;
+  readonly attribute long              screenY;
+  readonly attribute long              clientX;
+  readonly attribute long              clientY;
+  readonly attribute long              radiusX;
+  readonly attribute long              radiusY;
+  readonly attribute float             rotationAngle;
+  readonly attribute float             force;
+};
+
+[scriptable, uuid(60706eb7-d50d-4379-b01c-e78e6af84213)]
+interface nsIDOMTouchList : nsISupports {
+  readonly attribute unsigned long length;
+  nsIDOMTouchPoint item(in unsigned long index);
+  nsIDOMTouchPoint identifiedPoint(in long identifier);
+};
+
+[scriptable, uuid(df94b20b-7998-4f00-935c-ee2c6b179711)]
+interface nsIDOMTouchEvent : nsIDOMUIEvent {
+  readonly attribute nsIDOMTouchList touches;
+  readonly attribute nsIDOMTouchList targetTouches;
+  readonly attribute nsIDOMTouchList changedTouches;
+  readonly attribute boolean         altKey;
+  readonly attribute boolean         metaKey;
+  readonly attribute boolean         ctrlKey;
+  readonly attribute boolean         shiftKey;
+  void initTouchEvent(in DOMString type,
+                      in boolean canBubble,
+                      in boolean cancelable,
+                      in nsIDOMAbstractView view,
+                      in long detail,
+                      in boolean ctrlKey,
+                      in boolean altKey,
+                      in boolean shiftKey,
+                      in boolean metaKey,
+                      in nsIDOMTouchList touches,
+                      in nsIDOMTouchList targetTouches,
+                      in nsIDOMTouchList changedTouches);
+};
+
+[scriptable, uuid(922e0f11-28b9-4560-9fb8-869fe143845f)]
+interface nsIDOMDocumentTouch : nsISupports {
+  nsIDOMTouchPoint createTouch([optional] in nsIDOMAbstractView view,
+                               [optional] in nsIDOMEventTarget target,
+                               [optional] in long identifier,
+                               [optional] in long pageX,
+                               [optional] in long pageY,
+                               [optional] in long screenX,
+                               [optional] in long screenY,
+                               [optional] in long clientX,
+                               [optional] in long clientY,
+                               [optional] in long radiusX,
+                               [optional] in long radiusY,
+                               [optional] in float rotationAngle,
+                               [optional] in float force);
+  
+
+  nsIDOMTouchList createTouchList([optional] in nsIVariant aPoints);
+};

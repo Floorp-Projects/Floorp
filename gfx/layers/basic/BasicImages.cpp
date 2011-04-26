@@ -163,28 +163,42 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
 
   // 'prescale' is true if the scaling is to be done as part of the
   // YCbCr to RGB conversion rather than on the RGB data when rendered.
-  // We don't prescale if the image has an offset. See bug 639415.
   PRBool prescale = mScaleHint.width > 0 && mScaleHint.height > 0 &&
-                    aData.mPicX == 0 && aData.mPicY == 0;
+                    mScaleHint != aData.mPicSize;
   if (format == gfxASurface::ImageFormatRGB16_565) {
 #if defined(HAVE_YCBCR_TO_RGB565)
-    if (prescale && gfx::IsConvertYCbCrToRGB565Fast(aData.mPicX,
-                                                    aData.mPicY,
-                                                    aData.mPicSize.width,
-                                                    aData.mPicSize.height,
-                                                    type)) {
-      // yuv2rgb16 with scale function not yet available for NEON
+    if (prescale &&
+        !gfx::IsScaleYCbCrToRGB565Fast(aData.mPicX,
+                                       aData.mPicY,
+                                       aData.mPicSize.width,
+                                       aData.mPicSize.height,
+                                       mScaleHint.width,
+                                       mScaleHint.height,
+                                       type,
+                                       gfx::FILTER_BILINEAR) &&
+        gfx::IsConvertYCbCrToRGB565Fast(aData.mPicX,
+                                        aData.mPicY,
+                                        aData.mPicSize.width,
+                                        aData.mPicSize.height,
+                                        type)) {
       prescale = PR_FALSE;
-    } else
-#endif
-    {
-      // yuv2rgb16 function not yet available for non-NEON, and currently
-      // using it requires a number of extra graphics operations, so it's
-      // probably better to fall back to 24-bit RGB.
-      // See https://bugzilla.mozilla.org/show_bug.cgi?id=641196
-      format = gfxASurface::ImageFormatRGB24;
     }
+#else
+    // yuv2rgb16 function not available
+    format = gfxASurface::ImageFormatRGB24;
+#endif
   }
+  else if (format != gfxASurface::ImageFormatRGB24) {
+    // No other formats are currently supported.
+    format = gfxASurface::ImageFormatRGB24;
+  }
+  if (format == gfxASurface::ImageFormatRGB24) {
+    /* ScaleYCbCrToRGB32 does not support a picture offset, nor 4:4:4 data.
+       See bugs 639415 and 640073. */
+    if (aData.mPicX != 0 || aData.mPicY != 0 || type == gfx::YV24)
+      prescale = PR_FALSE;
+  }
+
   gfxIntSize size(prescale ? mScaleHint.width : aData.mPicSize.width,
                   prescale ? mScaleHint.height : aData.mPicSize.height);
 
@@ -197,7 +211,25 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
 
   // Convert from YCbCr to RGB now, scaling the image if needed.
   if (size != aData.mPicSize) {
-    if (format == gfxASurface::ImageFormatRGB24) {
+#if defined(HAVE_YCBCR_TO_RGB565)
+    if (format == gfxASurface::ImageFormatRGB16_565) {
+      gfx::ScaleYCbCrToRGB565(aData.mYChannel,
+                              aData.mCbChannel,
+                              aData.mCrChannel,
+                              mBuffer,
+                              aData.mPicX,
+                              aData.mPicY,
+                              aData.mPicSize.width,
+                              aData.mPicSize.height,
+                              size.width,
+                              size.height,
+                              aData.mYStride,
+                              aData.mCbCrStride,
+                              mStride,
+                              type,
+                              gfx::FILTER_BILINEAR);
+    } else
+#endif
       gfx::ScaleYCbCrToRGB32(aData.mYChannel,
                              aData.mCbChannel,
                              aData.mCrChannel,
@@ -212,9 +244,6 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
                              type,
                              gfx::ROTATE_0,
                              gfx::FILTER_BILINEAR);
-    } else {
-       NS_ERROR("Fail, ScaleYCbCrToRGB format not supported\n");
-    }
   } else { // no prescale
 #if defined(HAVE_YCBCR_TO_RGB565)
     if (format == gfxASurface::ImageFormatRGB16_565) {

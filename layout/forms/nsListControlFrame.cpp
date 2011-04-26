@@ -45,13 +45,12 @@
 #include "nsFormControlFrame.h" // for COMPARE macro
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
-#include "nsIDeviceContext.h" 
 #include "nsIDocument.h"
-#include "nsIDOMHTMLCollection.h" 
-#include "nsIDOMHTMLOptionsCollection.h" 
+#include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
 #include "nsIDOMHTMLSelectElement.h"
-#include "nsIDOMHTMLOptionElement.h" 
+#include "nsIDOMHTMLOptionElement.h"
 #include "nsComboboxControlFrame.h"
 #include "nsIViewManager.h"
 #include "nsIDOMHTMLOptGroupElement.h"
@@ -60,7 +59,7 @@
 #include "nsHTMLParts.h"
 #include "nsIDOMEventTarget.h"
 #include "nsEventDispatcher.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIEventListenerManager.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
@@ -69,7 +68,7 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
 #include "nsILookAndFeel.h"
-#include "nsIFontMetrics.h"
+#include "nsFontMetrics.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMNSEvent.h"
@@ -88,7 +87,6 @@
 #include "nsIDOMKeyListener.h"
 #include "nsLayoutUtils.h"
 #include "nsDisplayList.h"
-#include "nsIEventStateManager.h"
 
 // Constants
 const nscoord kMaxDropDownRows          = 20; // This matches the setting for 4.x browsers
@@ -262,7 +260,7 @@ nsListControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
  * @param aPt the offset of this frame, relative to the rendering reference
  * frame
  */
-void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsPoint aPt)
+void nsListControlFrame::PaintFocus(nsRenderingContext& aRC, nsPoint aPt)
 {
   if (mFocused != this) return;
 
@@ -486,7 +484,7 @@ nsListControlFrame::CalcHeightOfARow()
 }
 
 nscoord
-nsListControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsListControlFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -502,7 +500,7 @@ nsListControlFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
 }
 
 nscoord
-nsListControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsListControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -1878,11 +1876,11 @@ nscoord
 nsListControlFrame::CalcFallbackRowHeight()
 {
   nscoord rowHeight = 0;
-  
-  nsCOMPtr<nsIFontMetrics> fontMet;
+
+  nsRefPtr<nsFontMetrics> fontMet;
   nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
   if (fontMet) {
-    fontMet->GetHeight(rowHeight);
+    rowHeight = fontMet->MaxHeight();
   }
 
   return rowHeight;
@@ -2073,9 +2071,8 @@ nsListControlFrame::GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent,
     }
   }
 
-  nsCOMPtr<nsIContent> content;
-  PresContext()->EventStateManager()->
-    GetEventTargetContent(nsnull, getter_AddRefs(content));
+  nsCOMPtr<nsIContent> content = PresContext()->EventStateManager()->
+    GetEventTargetContent(nsnull);
 
   nsCOMPtr<nsIContent> optionContent = GetOptionFromContent(content);
   if (optionContent) {

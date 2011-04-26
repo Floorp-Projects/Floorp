@@ -47,7 +47,7 @@
 #include "nsMappedAttributes.h"
 #include "nsStyleConsts.h"
 #include "nsIDocument.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsDOMClassInfoID.h"

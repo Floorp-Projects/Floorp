@@ -19,10 +19,6 @@ var urls = [
   ["DATA:TEXT/PLAIN;BASE64,Zm9 vI%20GJ%0Dhc%0Ag==", "text/plain",               "foo bar"]
 ];
 
-function run_next_test() {
-  test_array[test_index++]();
-}
-
 function run_test() {
   dump("*** run_test\n");
 

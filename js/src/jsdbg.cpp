@@ -42,6 +42,7 @@
 #include "jsdbg.h"
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsgcmark.h"
 #include "jsobj.h"
 #include "jswrapper.h"
 #include "jsobjinlines.h"
