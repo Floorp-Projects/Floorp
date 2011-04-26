@@ -80,6 +80,7 @@ DIRS += \
   base \
   src \
   locales \
+  plugins/base \
   plugins/ipc \
   indexedDB \
   system \
