@@ -1039,6 +1039,8 @@ class ScriptAnalysis
     void mergeValue(JSContext *cx, uint32 offset, const SSAValue &v, SlotValue *pv);
     void checkPendingValue(JSContext *cx, const SSAValue &v, uint32 slot,
                            Vector<SlotValue> *pending);
+    void checkBranchTarget(JSContext *cx, uint32 targetOffset, Vector<uint32> &branchTargets,
+                           SSAValue *values, uint32 stackDepth);
     void mergeBranchTarget(JSContext *cx, const SSAValue &value, uint32 slot,
                            const Vector<uint32> &branchTargets);
     void removeBranchTarget(Vector<uint32> &branchTargets, uint32 offset);

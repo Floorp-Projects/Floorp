@@ -1421,45 +1421,80 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
             stack[stackDepth - 1] = code->poppedValues[2];
             break;
 
+          /*
+           * Switch and try blocks preserve the stack between the original op
+           * and all case statements or exception/finally handlers. Even though
+           * we don't track the values of variables in scripts containing such
+           * switch and try blocks, propagate the stack now to all targets as
+           * the values on the stack may be popped by intervening cleanup ops
+           * (e.g. LEAVEBLOCK, ENDITER).
+           */
+
+          case JSOP_TABLESWITCH:
+          case JSOP_TABLESWITCHX: {
+            jsbytecode *pc2 = pc;
+            unsigned jmplen = (op == JSOP_TABLESWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
+            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
+            pc2 += jmplen;
+            jsint low = GET_JUMP_OFFSET(pc2);
+            pc2 += JUMP_OFFSET_LEN;
+            jsint high = GET_JUMP_OFFSET(pc2);
+            pc2 += JUMP_OFFSET_LEN;
+
+            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
+
+            for (jsint i = low; i <= high; i++) {
+                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                if (targetOffset != offset)
+                    checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
+                pc2 += jmplen;
+            }
+            break;
+          }
+
+          case JSOP_LOOKUPSWITCH:
+          case JSOP_LOOKUPSWITCHX: {
+            jsbytecode *pc2 = pc;
+            unsigned jmplen = (op == JSOP_LOOKUPSWITCH) ? JUMP_OFFSET_LEN : JUMPX_OFFSET_LEN;
+            unsigned defaultOffset = offset + GetJumpOffset(pc, pc2);
+            pc2 += jmplen;
+            unsigned npairs = GET_UINT16(pc2);
+            pc2 += UINT16_LEN;
+
+            checkBranchTarget(cx, defaultOffset, branchTargets, values, stackDepth);
+
+            while (npairs) {
+                pc2 += INDEX_LEN;
+                unsigned targetOffset = offset + GetJumpOffset(pc, pc2);
+                checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
+                pc2 += jmplen;
+                npairs--;
+            }
+            break;
+          }
+
+          case JSOP_TRY: { 
+            JSTryNote *tn = script->trynotes()->vector;
+            JSTryNote *tnlimit = tn + script->trynotes()->length;
+            for (; tn < tnlimit; tn++) {
+                unsigned startOffset = script->main - script->code + tn->start;
+                if (startOffset == offset + 1) {
+                    unsigned catchOffset = startOffset + tn->length;
+
+                    if (tn->kind != JSTRY_ITER)
+                        checkBranchTarget(cx, catchOffset, branchTargets, values, stackDepth);
+                }
+            }
+            break;
+          }
+
           default:;
         }
 
         uint32 type = JOF_TYPE(js_CodeSpec[op].format);
         if (type == JOF_JUMP || type == JOF_JUMPX) {
             unsigned targetOffset = FollowBranch(script, offset);
-
-            unsigned targetDepth = getCode(targetOffset).stackDepth;
-            JS_ASSERT(targetDepth <= stackDepth);
-
-            /*
-             * If there is already an active branch to target, make sure its
-             * pending values reflect any changes made since the first branch.
-             * Otherwise, add a new pending branch and determine its pending
-             * values lazily.
-             */
-            Vector<SlotValue> *&pending = getCode(targetOffset).pendingValues;
-            if (pending) {
-                for (unsigned i = 0; i < pending->length(); i++) {
-                    SlotValue &v = (*pending)[i];
-                    mergeValue(cx, targetOffset, values[v.slot], &v);
-                }
-            } else {
-                JS_ASSERT(targetOffset > offset);
-                pending = cx->new_< Vector<SlotValue> >(cx);
-                if (!pending || !branchTargets.append(targetOffset)) {
-                    setOOM(cx);
-                    return;
-                }
-            }
-
-            /*
-             * Make sure there is a pending entry for each value on the stack.
-             * The number of stack entries at join points is usually zero, and
-             * we don't want to look at the active branches while popping and
-             * pushing values in each opcode.
-             */
-            for (unsigned i = 0; i < targetDepth; i++)
-                checkPendingValue(cx, stack[i], StackSlot(script, i), pending);
+            checkBranchTarget(cx, targetOffset, branchTargets, values, stackDepth);
 
             /*
              * If this is a back edge, we're done with the loop and can freeze
@@ -1541,21 +1576,9 @@ inline void
 ScriptAnalysis::mergeValue(JSContext *cx, uint32 offset, const SSAValue &v, SlotValue *pv)
 {
     /* Make sure that v is accounted for in the pending value or phi value at pv. */
+    JS_ASSERT(v.kind() != SSAValue::EMPTY && pv->value.kind() != SSAValue::EMPTY);
 
-    /*
-     * Note: it would be nice to assert that v is also non-empty, but this can
-     * crop up when handling switch and try blocks. We don't track SSA values
-     * for variables in scripts containing these opcodes, and don't propagate
-     * the stack to all targets of the switch or try, under the assumption that
-     * code within the switch/try won't modify the stack. This assumption is
-     * not valid, however, when the script contains return statements within
-     * 'for in' blocks which then pop the stack with an ENDITER and clear out
-     * its contents before we get to the switch/try branch targets. This should
-     * be cleaned up.
-     */
-    JS_ASSERT(pv->value.kind() != SSAValue::EMPTY);
-
-    if (v.equals(pv->value) || v.kind() == SSAValue::EMPTY)
+    if (v.equals(pv->value))
         return;
 
     if (pv->value.kind() != SSAValue::PHI || pv->value.phiOffset() < offset) {
@@ -1580,10 +1603,47 @@ ScriptAnalysis::checkPendingValue(JSContext *cx, const SSAValue &v, uint32 slot,
             return;
     }
 
-    JS_ASSERT(v.kind() != SSAValue::EMPTY);
-
     if (!pending->append(SlotValue(slot, v)))
         setOOM(cx);
+}
+
+void
+ScriptAnalysis::checkBranchTarget(JSContext *cx, uint32 targetOffset,
+                                  Vector<uint32> &branchTargets,
+                                  SSAValue *values, uint32 stackDepth)
+{
+    unsigned targetDepth = getCode(targetOffset).stackDepth;
+    JS_ASSERT(targetDepth <= stackDepth);
+
+    /*
+     * If there is already an active branch to target, make sure its pending
+     * values reflect any changes made since the first branch. Otherwise, add a
+     * new pending branch and determine its pending values lazily.
+     */
+    Vector<SlotValue> *&pending = getCode(targetOffset).pendingValues;
+    if (pending) {
+        for (unsigned i = 0; i < pending->length(); i++) {
+            SlotValue &v = (*pending)[i];
+            mergeValue(cx, targetOffset, values[v.slot], &v);
+        }
+    } else {
+        pending = cx->new_< Vector<SlotValue> >(cx);
+        if (!pending || !branchTargets.append(targetOffset)) {
+            setOOM(cx);
+            return;
+        }
+    }
+
+    /*
+     * Make sure there is a pending entry for each value on the stack.
+     * The number of stack entries at join points is usually zero, and
+     * we don't want to look at the active branches while popping and
+     * pushing values in each opcode.
+     */
+    for (unsigned i = 0; i < targetDepth; i++) {
+        uint32 slot = StackSlot(script, i);
+        checkPendingValue(cx, values[slot], slot, pending);
+    }
 }
 
 void
