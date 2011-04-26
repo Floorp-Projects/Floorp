@@ -17387,7 +17387,7 @@ AbortProfiling(JSContext *cx)
 #else /* JS_METHODJIT */
 
 JS_REQUIRES_STACK MonitorResult
-MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, JSInterpMode interpMode)
+MonitorLoopEdge(JSContext* cx, uintN& inlineCallCount, InterpMode interpMode)
 {
     TraceMonitor *tm = JS_TRACE_MONITOR_FROM_CONTEXT(cx);
     return RecordLoopEdge(cx, tm, inlineCallCount);
