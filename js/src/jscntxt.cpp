@@ -829,7 +829,7 @@ js_ReportOutOfScriptQuota(JSContext *maybecx)
         JS_ReportErrorNumber(maybecx, js_GetErrorMessage, NULL, JSMSG_SCRIPT_STACK_QUOTA);
 }
 
-void
+JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx)
 {
     if (maybecx)

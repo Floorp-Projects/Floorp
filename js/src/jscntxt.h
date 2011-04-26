@@ -2265,7 +2265,8 @@ js_ReportOutOfMemory(JSContext *cx);
 void
 js_ReportOutOfScriptQuota(JSContext *maybecx);
 
-extern void
+/* JS_CHECK_RECURSION is used outside JS, so JS_FRIEND_API. */
+JS_FRIEND_API(void)
 js_ReportOverRecursed(JSContext *maybecx);
 
 extern JS_FRIEND_API(void)
