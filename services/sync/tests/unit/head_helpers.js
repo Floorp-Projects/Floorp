@@ -402,3 +402,20 @@ function encryptPayload(cleartext) {
           hmac: Utils.sha256HMAC(cleartext, Utils.makeHMACKey(""))};
 }
 
+function do_check_throws(aFunc, aResult, aStack)
+{
+  if (!aStack) {
+    try {
+      // We might not have a 'Components' object.
+      aStack = Components.stack.caller;
+    } catch (e) {}
+  }
+
+  try {
+    aFunc();
+  } catch (e) {
+    do_check_eq(e.result, aResult, aStack);
+    return;
+  }
+  do_throw("Expected result " + aResult + ", none thrown.", aStack);
+}
