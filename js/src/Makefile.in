@@ -277,6 +277,7 @@ VPATH		+= \
 EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
+		ArgumentsObject.h \
 		GlobalObject.h			\
 		Stack.h			\
 		StringObject.h \
