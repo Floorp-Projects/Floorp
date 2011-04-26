@@ -47,7 +47,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIFrame.h"
-#include "nsIImageFrame.h"
+#include "nsImageFrame.h"
 #include "nsIImageMap.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +203,7 @@ nsHTMLAreaAccessible::GetBounds(PRInt32 *aX, PRInt32 *aY,
 
   nsIFrame *frame = GetFrame();
   NS_ENSURE_TRUE(frame, NS_ERROR_FAILURE);
-  nsIImageFrame *imageFrame = do_QueryFrame(frame);
+  nsImageFrame *imageFrame = do_QueryFrame(frame);
 
   nsCOMPtr<nsIImageMap> map;
   imageFrame->GetImageMap(presContext, getter_AddRefs(map));
