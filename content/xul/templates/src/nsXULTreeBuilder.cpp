@@ -90,7 +90,8 @@ public:
     // nsINativeTreeView: Untrusted code can use us
     NS_IMETHOD EnsureNative() { return NS_OK; }
 
-    virtual void NodeWillBeDestroyed(const nsINode* aNode);
+    // nsIMutationObserver
+    NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
 
 protected:
     friend nsresult
