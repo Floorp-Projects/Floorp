@@ -246,7 +246,6 @@ ifdef OS_LINUX # {
 CPPSRCS += \
   atomicops_internals_x86_gcc.cc \
   base_paths_linux.cc \
-  data_pack.cc \
   file_util_linux.cc \
   file_version_info_linux.cc \
   idle_timer_none.cc \

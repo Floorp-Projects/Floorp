@@ -49,8 +49,6 @@
 #include "nsPresContext.h"
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
-#include "nsIRenderingContext.h"
-#include "nsIFontMetrics.h"
 
 #include "nsMathMLForeignFrameWrapper.h"
 
@@ -79,7 +77,7 @@ nsMathMLForeignFrameWrapper::Reflow(nsPresContext*          aPresContext,
   mReference.y = aDesiredSize.ascent;
 
   // just make-up a bounding metrics
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   mBoundingMetrics.ascent = aDesiredSize.ascent;
   mBoundingMetrics.descent = aDesiredSize.height - aDesiredSize.ascent;
   mBoundingMetrics.width = aDesiredSize.width;

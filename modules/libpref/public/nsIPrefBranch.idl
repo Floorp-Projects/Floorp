@@ -55,7 +55,7 @@
  * @see nsIPrefService
  */
 
-[scriptable, uuid(56c35506-f14b-11d3-99d3-ddbfac2ccf65)]
+[scriptable, uuid(e0b6e170-691b-11e0-ae3e-0800200c9a66)]
 interface nsIPrefBranch : nsISupports
 {
 
@@ -211,7 +211,6 @@ interface nsIPrefBranch : nsISupports
    * This method does nothing if this object is a default branch.
    *
    * @return NS_OK The user preference was successfully cleared.
-   * @return Other The preference does not exist or have a user set value.
    */
   void clearUserPref(in string aPrefName);
 

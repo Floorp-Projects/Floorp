@@ -65,7 +65,7 @@
             points="10,10 70,70 110,10 160,10 210,10">
     <animate attributeName="points"
              calcMode="discrete"
-             begin="0s" dur="20s"
+             begin="0s" dur="2s"
              to="10,10 70,10 110,10 160,70 210,10"
              fill="freeze"/>
   </polyline>

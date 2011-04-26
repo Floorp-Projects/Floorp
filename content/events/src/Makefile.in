@@ -46,6 +46,10 @@ MODULE		= content
 LIBRARY_NAME	= gkconevents_s
 LIBXUL_LIBRARY  = 1
 
+EXPORTS		= \
+		nsEventStateManager.h \
+		$(NULL)
+		
 CPPSRCS		= \
 		nsEventListenerManager.cpp \
 		nsEventStateManager.cpp \
@@ -85,7 +89,9 @@ CPPSRCS		= \
 		nsDOMScrollAreaEvent.cpp \
 		nsDOMTransitionEvent.cpp \
 		nsDOMPopStateEvent.cpp \
+		nsDOMHashChangeEvent.cpp \
 		nsDOMCloseEvent.cpp \
+		nsDOMTouchEvent.cpp \
 		$(NULL)
 
 ifdef MOZ_CSS_ANIMATIONS

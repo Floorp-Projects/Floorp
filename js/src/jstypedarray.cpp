@@ -52,6 +52,7 @@
 #include "jscntxt.h"
 #include "jsversion.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jslock.h"
 #include "jsnum.h"

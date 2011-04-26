@@ -62,8 +62,7 @@ EXTRA_JS_MODULES = \
 
 include $(topsrcdir)/config/rules.mk
 
-PRE_RELEASE_SUFFIX := $(shell $(PYTHON) $(topsrcdir)/config/printprereleasesuffix.py \
-                        $(shell cat $(srcdir)/../config/version.txt))
+PRE_RELEASE_SUFFIX := ""
 
 DEFINES += \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \
@@ -76,9 +75,7 @@ DEFINES += -DHAVE_SHELL_SERVICE=1
 endif
 
 ifneq (,$(filter windows cocoa gtk2, $(MOZ_WIDGET_TOOLKIT)))
-ifneq ($(OS_ARCH),WINCE)
 DEFINES += -DCONTEXT_COPY_IMAGE_CONTENTS=1
-endif
 endif
 
 ifneq (,$(filter windows, $(MOZ_WIDGET_TOOLKIT)))

@@ -63,11 +63,11 @@
 #include "nsINameSpaceManager.h"
 #include "nsINodeInfo.h"
 #include "nsFormControlFrame.h" //for registering accesskeys
-#include "nsIDeviceContext.h" // to measure fonts
 
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsPresContext.h"
+#include "nsRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsLayoutUtils.h"
 #include "nsIComponentManager.h"
@@ -92,7 +92,6 @@
 #include "nsIDOM3EventTarget.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMNSUIEvent.h"
-#include "nsIEventStateManager.h"
 
 #include "nsIDOMFocusListener.h" //onchange events
 #include "nsIDOMCharacterData.h" //for selection setting helper func
@@ -117,7 +116,6 @@
 #include "nsIJSContextStack.h"
 #include "nsFocusManager.h"
 #include "nsTextEditRules.h"
-#include "nsIFontMetrics.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsPresState.h"
 
@@ -221,7 +219,7 @@ nsTextControlFrame::GetType() const
 }
 
 nsresult
-nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
+nsTextControlFrame::CalcIntrinsicSize(nsRenderingContext* aRenderingContext,
                                       nsSize&              aIntrinsicSize)
 {
   // Get leading and the Average/MaxAdvance char width 
@@ -229,7 +227,7 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
   nscoord charWidth   = 0;
   nscoord charMaxAdvance  = 0;
 
-  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsRefPtr<nsFontMetrics> fontMet;
   nsresult rv =
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -237,8 +235,8 @@ nsTextControlFrame::CalcIntrinsicSize(nsIRenderingContext* aRenderingContext,
 
   lineHeight =
     nsHTMLReflowState::CalcLineHeight(GetStyleContext(), NS_AUTOHEIGHT);
-  fontMet->GetAveCharWidth(charWidth);
-  fontMet->GetMaxAdvance(charMaxAdvance);
+  charWidth = fontMet->AveCharWidth();
+  charMaxAdvance = fontMet->MaxAdvance();
 
   // Set the width equal to the width in characters
   PRInt32 cols = GetCols();
@@ -466,7 +464,7 @@ nsTextControlFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 }
 
 nscoord
-nsTextControlFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
+nsTextControlFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 {
   // Our min width is just our preferred width if we have auto width.
   nscoord result;
@@ -478,7 +476,7 @@ nsTextControlFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
 }
 
 nsSize
-nsTextControlFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+nsTextControlFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                     nsSize aCBSize, nscoord aAvailableWidth,
                                     nsSize aMargin, nsSize aBorder,
                                     nsSize aPadding, PRBool aShrinkWrap)
@@ -591,7 +589,7 @@ nsTextControlFrame::GetBoxAscent(nsBoxLayoutState& aState)
     IsSingleLineTextControl() ? clientRect.height :
     nsHTMLReflowState::CalcLineHeight(GetStyleContext(), NS_AUTOHEIGHT);
 
-  nsCOMPtr<nsIFontMetrics> fontMet;
+  nsRefPtr<nsFontMetrics> fontMet;
   nsresult rv =
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
   NS_ENSURE_SUCCESS(rv, 0);

@@ -65,6 +65,7 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsiter.h"
 #include "jslock.h"
 #include "jsmath.h"
@@ -999,10 +1000,7 @@ js_DestroyContext(JSContext *cx, JSDestroyContextMode mode)
              * JSCONTEXT_DESTROY callback is not allowed to fail and must
              * return true.
              */
-#ifdef DEBUG
-            JSBool callbackStatus =
-#endif
-            cxCallback(cx, JSCONTEXT_DESTROY);
+            DebugOnly<JSBool> callbackStatus = cxCallback(cx, JSCONTEXT_DESTROY);
             JS_ASSERT(callbackStatus);
         }
     }
@@ -1683,6 +1681,13 @@ js_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
     return NULL;
 }
 
+bool
+checkOutOfMemory(JSRuntime *rt)
+{
+    AutoLockGC lock(rt);
+    return rt->gcBytes > rt->gcMaxBytes;
+}
+
 JSBool
 js_InvokeOperationCallback(JSContext *cx)
 {
@@ -1711,16 +1716,24 @@ js_InvokeOperationCallback(JSContext *cx)
          * On trace we can exceed the GC quota, see comments in NewGCArena. So
          * we check the quota and report OOM here when we are off trace.
          */
-        bool delayedOutOfMemory;
-        JS_LOCK_GC(rt);
-        delayedOutOfMemory = rt->gcBytes > rt->gcMaxBytes;
-        JS_UNLOCK_GC(rt);
-        if (delayedOutOfMemory) {
+        if (checkOutOfMemory(rt)) {
+#ifdef JS_THREADSAFE
+            /*
+            * We have to wait until the background thread is done in order
+            * to get a correct answer.
+            */
+            rt->gcHelperThread.waitBackgroundSweepEnd(rt);
+            if (checkOutOfMemory(rt)) {
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+#else
             js_ReportOutOfMemory(cx);
             return false;
+#endif
         }
     }
-    
+
 #ifdef JS_THREADSAFE
     /*
      * We automatically yield the current context every time the operation

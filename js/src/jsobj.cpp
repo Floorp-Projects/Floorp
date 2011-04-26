@@ -61,6 +61,7 @@
 #include "jsemit.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -107,7 +108,7 @@
 using namespace js;
 using namespace js::gc;
 
-JS_FRIEND_DATA(JSObjectMap) JSObjectMap::sharedNonNative(JSObjectMap::SHAPELESS);
+JS_FRIEND_DATA(js::Shape) Shape::sharedNonNative(SHAPELESS);
 
 Class js_ObjectClass = {
     js_Object_str,
@@ -921,35 +922,17 @@ obj_valueOf(JSContext *cx, uintN argc, Value *vp)
 JSBool
 js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeobj)
 {
-    // CSP is static per document, so if our check said yes before, that
-    // answer is still valid.
-    JSObject *global = scopeobj->getGlobal();
-    Value v = global->getReservedSlot(JSRESERVED_GLOBAL_EVAL_ALLOWED);
-    if (v.isUndefined()) {
-        JSSecurityCallbacks *callbacks = JS_GetSecurityCallbacks(cx);
-
-        // if there are callbacks, make sure that the CSP callback is installed and
-        // that it permits eval().
-        v.setBoolean((!callbacks || !callbacks->contentSecurityPolicyAllows) ||
-                     callbacks->contentSecurityPolicyAllows(cx));
-
-        // update the cache in the global object for the result of the security check
-        js_SetReservedSlot(cx, global, JSRESERVED_GLOBAL_EVAL_ALLOWED, v);
-    }
-    return !v.isFalse();
+    return scopeobj->getGlobal()->isEvalAllowed(cx);
 }
 
+/* We should be able to assert this for *any* fp->scopeChain(). */
 static void
-AssertScopeChainValidity(JSContext *cx, JSObject &scopeobj)
+AssertInnerizedScopeChain(JSContext *cx, JSObject &scopeobj)
 {
 #ifdef DEBUG
-    JSObject *inner = &scopeobj;
-    OBJ_TO_INNER_OBJECT(cx, inner);
-    JS_ASSERT(inner && inner == &scopeobj);
-
     for (JSObject *o = &scopeobj; o; o = o->getParent()) {
         if (JSObjectOp op = o->getClass()->ext.innerObject)
-            JS_ASSERT(op(cx, o) == &scopeobj);
+            JS_ASSERT(op(cx, o) == o);
     }
 #endif
 }
@@ -1141,7 +1124,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, JSStackFrame 
            JSObject &scopeobj)
 {
     JS_ASSERT((evalType == INDIRECT_EVAL) == (caller == NULL));
-    AssertScopeChainValidity(cx, scopeobj);
+    AssertInnerizedScopeChain(cx, scopeobj);
 
     /*
      * CSP check: Is eval() allowed at all?
@@ -1321,9 +1304,7 @@ DirectEval(JSContext *cx, const CallArgs &call)
 bool
 IsBuiltinEvalForScope(JSObject *scopeChain, const Value &v)
 {
-    JSObject *global = scopeChain->getGlobal();
-    JS_ASSERT((global->getClass()->flags & JSCLASS_GLOBAL_FLAGS) == JSCLASS_GLOBAL_FLAGS);
-    return global->getReservedSlot(JSRESERVED_GLOBAL_EVAL) == v;
+    return scopeChain->getGlobal()->getOriginalEval() == v;
 }
 
 bool
@@ -3798,10 +3779,8 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
     JSObject *evalobj = js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS);
     if (!evalobj)
         return NULL;
-    if (obj->isGlobal()) {
-        if (!js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_EVAL, ObjectValue(*evalobj)))
-            return NULL;
-    }
+    if (obj->isGlobal())
+        obj->asGlobal()->setOriginalEval(evalobj);
 
     return proto;
 }
@@ -4800,9 +4779,7 @@ js_DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &valu
          * See bug 560998.
          */
         if (obj->shape() == oldShape && obj->branded() && shape->slot != SHAPE_INVALID_SLOT) {
-#ifdef DEBUG
-            const Shape *newshape =
-#endif
+            DebugOnly<const Shape*> newshape =
                 obj->methodWriteBarrier(cx, *shape, valueCopy);
             JS_ASSERT(newshape == shape);
         }
@@ -5156,9 +5133,7 @@ js_FindIdentifierBase(JSContext *cx, JSObject *scopeChain, jsid id)
                 return obj;
             }
             JS_ASSERT_IF(obj->getParent(), pobj->getClass() == obj->getClass());
-#ifdef DEBUG
-            PropertyCacheEntry *entry =
-#endif
+            DebugOnly<PropertyCacheEntry*> entry =
                 JS_PROPERTY_CACHE(cx).fill(cx, scopeChain, scopeIndex, protoIndex, pobj,
                                            (Shape *) prop);
             JS_ASSERT(entry);
@@ -6566,14 +6541,13 @@ js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 slot, const Value &v)
     return true;
 }
 
-JSObject *
+GlobalObject *
 JSObject::getGlobal() const
 {
     JSObject *obj = const_cast<JSObject *>(this);
     while (JSObject *parent = obj->getParent())
         obj = parent;
-    JS_ASSERT(obj->isGlobal());
-    return obj;
+    return obj->asGlobal();
 }
 
 JSBool

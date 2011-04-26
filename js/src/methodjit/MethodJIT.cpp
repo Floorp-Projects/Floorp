@@ -506,6 +506,7 @@ SYMBOL_STRING(JaegerStubVeneer) ":"         "\n"
 "   pop     {ip,pc}"                        "\n"
 );
 
+# elif defined(JS_CPU_SPARC)
 # else
 #  error "Unsupported CPU!"
 # endif

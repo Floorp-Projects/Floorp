@@ -45,12 +45,11 @@
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsILookAndFeel.h"
-#include "nsIDeviceContext.h"
 #include "nsNativeTheme.h"
-
 #include "gfxASurface.h"
 
 @class CellDrawView;
+class nsDeviceContext;
 
 class nsNativeThemeCocoa : private nsNativeTheme,
                            public nsITheme
@@ -62,25 +61,25 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // The nsITheme interface.
-  NS_IMETHOD DrawWidgetBackground(nsIRenderingContext* aContext,
+  NS_IMETHOD DrawWidgetBackground(nsRenderingContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   const nsRect& aRect,
                                   const nsRect& aDirtyRect);
-  NS_IMETHOD GetWidgetBorder(nsIDeviceContext* aContext, 
+  NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              PRUint8 aWidgetType,
                              nsIntMargin* aResult);
 
-  virtual PRBool GetWidgetPadding(nsIDeviceContext* aContext,
+  virtual PRBool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntMargin* aResult);
 
-  virtual PRBool GetWidgetOverflow(nsIDeviceContext* aContext, nsIFrame* aFrame,
+  virtual PRBool GetWidgetOverflow(nsDeviceContext* aContext, nsIFrame* aFrame,
                                    PRUint8 aWidgetType, nsRect* aOverflowRect);
 
-  NS_IMETHOD GetMinimumWidgetSize(nsIRenderingContext* aContext, nsIFrame* aFrame,
+  NS_IMETHOD GetMinimumWidgetSize(nsRenderingContext* aContext, nsIFrame* aFrame,
                                   PRUint8 aWidgetType,
                                   nsIntSize* aResult, PRBool* aIsOverridable);
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType, 
@@ -95,7 +94,6 @@ public:
 protected:  
 
   nsresult GetSystemColor(PRUint8 aWidgetType, nsILookAndFeel::nsColorID& aColorID);
-  nsresult GetSystemFont(PRUint8 aWidgetType, nsSystemFontID& aFont);
   nsIntMargin RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame);
 
   // HITheme drawing routines

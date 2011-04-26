@@ -1068,6 +1068,11 @@ struct JSRuntime {
     volatile bool       gcIsNeeded;
     JSObject           *gcWeakMapList;
 
+    /* Pre-allocated space for the GC mark stacks. Pointer type ensures alignment. */
+    void                *gcMarkStackObjs[js::OBJECT_MARK_STACK_SIZE / sizeof(void *)];
+    void                *gcMarkStackXMLs[js::XML_MARK_STACK_SIZE / sizeof(void *)];
+    void                *gcMarkStackLarges[js::LARGE_MARK_STACK_SIZE / sizeof(void *)];
+
     /*
      * Compartment that triggered GC. If more than one Compatment need GC,
      * gcTriggerCompartment is reset to NULL and a global GC is performed.
@@ -2505,10 +2510,8 @@ class AutoEnumStateRooter : private AutoGCRooter
 
     ~AutoEnumStateRooter() {
         if (!stateValue.isNull()) {
-#ifdef DEBUG
-            JSBool ok =
-#endif
-            obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
+            DebugOnly<JSBool> ok =
+                obj->enumerate(context, JSENUMERATE_DESTROY, &stateValue, 0);
             JS_ASSERT(ok);
         }
     }

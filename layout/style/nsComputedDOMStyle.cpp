@@ -2262,25 +2262,47 @@ nsComputedDOMStyle::DoGetTextAlign()
 }
 
 nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozTextBlink()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  val->SetIdent(
+    nsCSSProps::ValueToKeywordEnum(GetStyleTextReset()->mTextBlink,
+                                   nsCSSProps::kTextBlinkKTable));
+
+  return val;
+}
+
+nsIDOMCSSValue*
 nsComputedDOMStyle::DoGetTextDecoration()
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
 
-  PRInt32 intValue = GetStyleTextReset()->mTextDecoration;
+  PRUint8 line = GetStyleTextReset()->mTextDecorationLine;
+  // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
+  // don't want these to appear in the computed style.
+  line &= ~(NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS |
+            NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
+  PRUint8 blink = GetStyleTextReset()->mTextBlink;
 
-  if (NS_STYLE_TEXT_DECORATION_NONE == intValue) {
+  if (blink == NS_STYLE_TEXT_BLINK_NONE &&
+      line == NS_STYLE_TEXT_DECORATION_LINE_NONE) {
     val->SetIdent(eCSSKeyword_none);
   } else {
-    nsAutoString decorationString;
-    // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
-    // don't want these to appear in the computed style.
-    intValue &= ~(NS_STYLE_TEXT_DECORATION_PREF_ANCHORS |
-                  NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL);
-    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration, intValue,
-                                       NS_STYLE_TEXT_DECORATION_UNDERLINE,
-                                       NS_STYLE_TEXT_DECORATION_BLINK,
-                                       decorationString);
-    val->SetString(decorationString);
+    nsAutoString str;
+    if (line != NS_STYLE_TEXT_DECORATION_LINE_NONE) {
+      nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration_line,
+        line, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+        NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, str);
+    }
+    if (blink != NS_STYLE_TEXT_BLINK_NONE) {
+      if (!str.IsEmpty()) {
+        str.Append(PRUnichar(' '));
+      }
+      nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_blink, blink,
+        NS_STYLE_TEXT_BLINK_BLINK, NS_STYLE_TEXT_BLINK_BLINK, str);
+    }
+    val->SetString(str);
   }
 
   return val;
@@ -2299,6 +2321,30 @@ nsComputedDOMStyle::DoGetMozTextDecorationColor()
   }
 
   SetToRGBAColor(val, color);
+
+  return val;
+}
+
+nsIDOMCSSValue*
+nsComputedDOMStyle::DoGetMozTextDecorationLine()
+{
+  nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
+
+  PRInt32 intValue = GetStyleTextReset()->mTextDecorationLine;
+
+  if (NS_STYLE_TEXT_DECORATION_LINE_NONE == intValue) {
+    val->SetIdent(eCSSKeyword_none);
+  } else {
+    nsAutoString decorationLineString;
+    // Clear the -moz-anchor-decoration bit and the OVERRIDE_ALL bits -- we
+    // don't want these to appear in the computed style.
+    intValue &= ~(NS_STYLE_TEXT_DECORATION_LINE_PREF_ANCHORS |
+                  NS_STYLE_TEXT_DECORATION_LINE_OVERRIDE_ALL);
+    nsStyleUtil::AppendBitmaskCSSValue(eCSSProperty_text_decoration_line,
+      intValue, NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE,
+      NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH, decorationLineString);
+    val->SetString(decorationLineString);
+  }
 
   return val;
 }
@@ -2584,7 +2630,7 @@ nsComputedDOMStyle::DoGetBorderImage()
     NS_FOR_CSS_SIDES(side) {
       nsROCSSPrimitiveValue *borderWidth = GetROCSSPrimitiveValue();
       valueList->AppendCSSValue(borderWidth);
-      nscoord width = GetStyleBorder()->mBorderImageWidth.side(side);
+      nscoord width = GetStyleBorder()->mBorderImageWidth.Side(side);
       borderWidth->SetAppUnits(width);
     }
   }
@@ -3114,7 +3160,7 @@ nsComputedDOMStyle::GetPaddingWidthFor(mozilla::css::Side aSide)
   } else {
     AssertFlushedPendingReflows();
 
-    val->SetAppUnits(mInnerFrame->GetUsedPadding().side(aSide));
+    val->SetAppUnits(mInnerFrame->GetUsedPadding().Side(aSide));
   }
 
   return val;
@@ -3187,7 +3233,7 @@ nsComputedDOMStyle::GetBorderWidthFor(mozilla::css::Side aSide)
   nscoord width;
   if (mInnerFrame) {
     AssertFlushedPendingReflows();
-    width = mInnerFrame->GetUsedBorder().side(aSide);
+    width = mInnerFrame->GetUsedBorder().Side(aSide);
   } else {
     width = GetStyleBorder()->GetActualBorderWidth(aSide);
   }
@@ -3222,7 +3268,7 @@ nsComputedDOMStyle::GetMarginWidthFor(mozilla::css::Side aSide)
   } else {
     AssertFlushedPendingReflows();
 
-    val->SetAppUnits(mInnerFrame->GetUsedMargin().side(aSide));
+    val->SetAppUnits(mInnerFrame->GetUsedMargin().Side(aSide));
   }
 
   return val;
@@ -4140,7 +4186,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
      * Implementations of CSS2 styles *
     \* ****************************** */
 
-    // COMPUTED_STYLE_MAP_ENTRY(azimuth,                    Azimuth),
     //// COMPUTED_STYLE_MAP_ENTRY(background,               Background),
     COMPUTED_STYLE_MAP_ENTRY(background_attachment,         BackgroundAttachment),
     COMPUTED_STYLE_MAP_ENTRY(background_color,              BackgroundColor),
@@ -4177,13 +4222,9 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(content,                       Content),
     COMPUTED_STYLE_MAP_ENTRY(counter_increment,             CounterIncrement),
     COMPUTED_STYLE_MAP_ENTRY(counter_reset,                 CounterReset),
-    //// COMPUTED_STYLE_MAP_ENTRY(cue,                      Cue),
-    // COMPUTED_STYLE_MAP_ENTRY(cue_after,                  CueAfter),
-    // COMPUTED_STYLE_MAP_ENTRY(cue_before,                 CueBefore),
     COMPUTED_STYLE_MAP_ENTRY(cursor,                        Cursor),
     COMPUTED_STYLE_MAP_ENTRY(direction,                     Direction),
     COMPUTED_STYLE_MAP_ENTRY(display,                       Display),
-    // COMPUTED_STYLE_MAP_ENTRY(elevation,                  Elevation),
     COMPUTED_STYLE_MAP_ENTRY(empty_cells,                   EmptyCells),
     COMPUTED_STYLE_MAP_ENTRY(float,                         CssFloat),
     //// COMPUTED_STYLE_MAP_ENTRY(font,                     Font),
@@ -4233,23 +4274,11 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(page_break_after,              PageBreakAfter),
     COMPUTED_STYLE_MAP_ENTRY(page_break_before,             PageBreakBefore),
     // COMPUTED_STYLE_MAP_ENTRY(page_break_inside,          PageBreakInside),
-    //// COMPUTED_STYLE_MAP_ENTRY(pause,                    Pause),
-    // COMPUTED_STYLE_MAP_ENTRY(pause_after,                PauseAfter),
-    // COMPUTED_STYLE_MAP_ENTRY(pause_before,               PauseBefore),
-    // COMPUTED_STYLE_MAP_ENTRY(pitch,                      Pitch),
-    // COMPUTED_STYLE_MAP_ENTRY(pitch_range,                PitchRange),
     COMPUTED_STYLE_MAP_ENTRY(pointer_events,                PointerEvents),
     COMPUTED_STYLE_MAP_ENTRY(position,                      Position),
     COMPUTED_STYLE_MAP_ENTRY(quotes,                        Quotes),
-    // COMPUTED_STYLE_MAP_ENTRY(richness,                   Richness),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(right,                  Right),
     //// COMPUTED_STYLE_MAP_ENTRY(size,                     Size),
-    // COMPUTED_STYLE_MAP_ENTRY(speak,                      Speak),
-    // COMPUTED_STYLE_MAP_ENTRY(speak_header,               SpeakHeader),
-    // COMPUTED_STYLE_MAP_ENTRY(speak_numeral,              SpeakNumeral),
-    // COMPUTED_STYLE_MAP_ENTRY(speak_punctuation,          SpeakPunctuation),
-    // COMPUTED_STYLE_MAP_ENTRY(speech_rate,                SpeechRate),
-    // COMPUTED_STYLE_MAP_ENTRY(stress,                     Stress),
     COMPUTED_STYLE_MAP_ENTRY(table_layout,                  TableLayout),
     COMPUTED_STYLE_MAP_ENTRY(text_align,                    TextAlign),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration,               TextDecoration),
@@ -4260,8 +4289,6 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(unicode_bidi,                  UnicodeBidi),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(vertical_align,         VerticalAlign),
     COMPUTED_STYLE_MAP_ENTRY(visibility,                    Visibility),
-    // COMPUTED_STYLE_MAP_ENTRY(voice_family,               VoiceFamily),
-    // COMPUTED_STYLE_MAP_ENTRY(volume,                     Volume),
     COMPUTED_STYLE_MAP_ENTRY(white_space,                   WhiteSpace),
     // COMPUTED_STYLE_MAP_ENTRY(widows,                     Widows),
     COMPUTED_STYLE_MAP_ENTRY_LAYOUT(width,                  Width),
@@ -4366,7 +4393,9 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(stroke_width,                  StrokeWidth),
     COMPUTED_STYLE_MAP_ENTRY(text_anchor,                   TextAnchor),
     COMPUTED_STYLE_MAP_ENTRY(text_rendering,                TextRendering),
+    COMPUTED_STYLE_MAP_ENTRY(text_blink,                    MozTextBlink),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_color,         MozTextDecorationColor),
+    COMPUTED_STYLE_MAP_ENTRY(text_decoration_line,          MozTextDecorationLine),
     COMPUTED_STYLE_MAP_ENTRY(text_decoration_style,         MozTextDecorationStyle)
 
   };

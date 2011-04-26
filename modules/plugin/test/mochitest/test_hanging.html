@@ -4,12 +4,8 @@
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
 
 <body>
-  <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>
-
   <script class="testbody" type="application/javascript">
   SimpleTest.waitForExplicitFinish();
-
-  var iframe = document.getElementById('iframe1');
 
   window.frameLoaded = function frameLoaded_toCrash() {
     if (!SimpleTest.testPluginIsOOP()) {
@@ -26,6 +22,7 @@
     var timeoutPref = "dom.ipc.plugins.timeoutSecs";
     prefs.setIntPref(timeoutPref, 5);
 
+    var iframe = document.getElementById('iframe1');
     var p = iframe.contentDocument.getElementById('plugin1');
 
     p.setColor("FFFF00FF");
@@ -74,3 +71,4 @@
   }
 
   </script>
+  <iframe id="iframe1" src="crashing_subpage.html" width="600" height="600"></iframe>

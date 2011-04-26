@@ -34,7 +34,7 @@ function setupTwo(win) {
 
   // force all canvases to update, and hook in imageData save detection
   tabItems.forEach(function(tabItem) {
-    contentWindow.TabItems._update(tabItem.tab);
+    contentWindow.TabItems.update(tabItem.tab);
     tabItem.addSubscriber(tabItem, "savedCachedImageData", function(item) {
       item.removeSubscriber(item, "savedCachedImageData");
       --numTabsToSave;
@@ -70,8 +70,7 @@ function setupTwo(win) {
           restoredWin.removeEventListener(
             "tabviewframeinitialized", onTabViewFrameInitialized, false);
 
-          let restoredContentWindow =
-            restoredWin.document.getElementById("tab-view").contentWindow;
+          let restoredContentWindow = restoredWin.TabView.getContentWindow();
           // prevent TabItems._update being called before checking cached images
           restoredContentWindow.TabItems._pauseUpdateForTest = true;
 
@@ -134,8 +133,7 @@ let gTabsProgressListener = {
 
 function updateAndCheck() {
   // force all canvas to update
-  let contentWindow = 
-    restoredWin.document.getElementById("tab-view").contentWindow;
+  let contentWindow = restoredWin.TabView.getContentWindow();
 
   contentWindow.TabItems._pauseUpdateForTest = false;
 

@@ -66,6 +66,7 @@
 #include "jsexn.h"
 #include "jsfun.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsinterp.h"
 #include "jsiter.h"
 #include "jslock.h"
@@ -1522,56 +1523,6 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
         cx->resetCompartment();
 }
 
-JSObject *
-js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
-{
-    JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
-    JSObject *fun_proto, *obj_proto;
-
-    /* If cx has no global object, use obj so prototypes can be found. */
-    if (!cx->globalObject)
-        JS_SetGlobalObject(cx, obj);
-
-    /* Record Function and Object in cx->resolvingList. */
-    JSAtom **classAtoms = cx->runtime->atomState.classAtoms;
-    AutoResolving resolving1(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Function]));
-    AutoResolving resolving2(cx, obj, ATOM_TO_JSID(classAtoms[JSProto_Object]));
-
-    /* Initialize the function class first so constructors can be made. */
-    if (!js_GetClassPrototype(cx, obj, JSProto_Function, &fun_proto))
-        return NULL;
-    if (!fun_proto) {
-        fun_proto = js_InitFunctionClass(cx, obj);
-        if (!fun_proto)
-            return NULL;
-    } else {
-        JSObject *ctor;
-
-        ctor = JS_GetConstructor(cx, fun_proto);
-        if (!ctor)
-            return NULL;
-        if (!obj->defineProperty(cx, ATOM_TO_JSID(CLASS_ATOM(cx, Function)),
-                                 ObjectValue(*ctor), 0, 0, 0)) {
-            return NULL;
-        }
-    }
-
-    /* Initialize the object class next so Object.prototype works. */
-    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
-        return NULL;
-    if (!obj_proto)
-        obj_proto = js_InitObjectClass(cx, obj);
-    if (!obj_proto)
-        return NULL;
-
-    /* Function.prototype and the global object delegate to Object.prototype. */
-    fun_proto->setProto(obj_proto);
-    if (!obj->getProto())
-        obj->setProto(obj_proto);
-
-    return fun_proto;
-}
-
 JS_PUBLIC_API(JSBool)
 JS_InitStandardClasses(JSContext *cx, JSObject *obj)
 {
@@ -1587,36 +1538,7 @@ JS_InitStandardClasses(JSContext *cx, JSObject *obj)
         JS_SetGlobalObject(cx, obj);
     assertSameCompartment(cx, obj);
 
-    /* Define a top-level property 'undefined' with the undefined value. */
-    JSAtom *atom = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
-    if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), UndefinedValue(),
-                             PropertyStub, StrictPropertyStub,
-                             JSPROP_PERMANENT | JSPROP_READONLY)) {
-        return JS_FALSE;
-    }
-
-    /* Function and Object require cooperative bootstrapping magic. */
-    if (!js_InitFunctionAndObjectClasses(cx, obj))
-        return JS_FALSE;
-
-    /* Initialize the rest of the standard objects and functions. */
-    return js_InitArrayClass(cx, obj) &&
-           js_InitBooleanClass(cx, obj) &&
-           js_InitExceptionClasses(cx, obj) &&
-           js_InitMathClass(cx, obj) &&
-           js_InitNumberClass(cx, obj) &&
-           js_InitJSONClass(cx, obj) &&
-           js_InitRegExpClass(cx, obj) &&
-           js_InitStringClass(cx, obj) &&
-           js_InitTypedArrayClasses(cx, obj) &&
-#if JS_HAS_XML_SUPPORT
-           js_InitXMLClasses(cx, obj) &&
-#endif
-#if JS_HAS_GENERATORS
-           js_InitIteratorClasses(cx, obj) &&
-#endif
-           js_InitDateClass(cx, obj) &&
-           js_InitProxyClass(cx, obj);
+    return obj->asGlobal()->initStandardClasses(cx);
 }
 
 #define CLASP(name)                 (&js_##name##Class)
@@ -2798,10 +2720,32 @@ JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer)
 }
 
 JS_PUBLIC_API(JSString *)
-JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type)
+JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length, intN type)
 {
     CHECK_REQUEST(cx);
-    return JSExternalString::new_(cx, chars, length, type);
+    return JSExternalString::new_(cx, chars, length, type, NULL);
+}
+
+extern JS_PUBLIC_API(JSString *)
+JS_NewExternalStringWithClosure(JSContext *cx, const jschar *chars, size_t length,
+                                intN type, void *closure)
+{
+    CHECK_REQUEST(cx);
+    return JSExternalString::new_(cx, chars, length, type, closure);
+}
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsExternalString(JSContext *cx, JSString *str)
+{
+    CHECK_REQUEST(cx);
+    return str->isExternal();
+}
+
+extern JS_PUBLIC_API(void *)
+JS_GetExternalStringClosure(JSContext *cx, JSString *str)
+{
+    CHECK_REQUEST(cx);
+    return str->asExternal().externalClosure();
 }
 
 JS_PUBLIC_API(void)
@@ -2989,7 +2933,7 @@ JS_GetPrototype(JSContext *cx, JSObject *obj)
     proto = obj->getProto();
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
-    return proto && proto->map ? proto : NULL;
+    return proto && !proto->isNewborn() ? proto : NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3007,7 +2951,7 @@ JS_GetParent(JSContext *cx, JSObject *obj)
     JSObject *parent = obj->getParent();
 
     /* Beware ref to dead object (we may be called from obj's finalizer). */
-    return parent && parent->map ? parent : NULL;
+    return parent && !parent->isNewborn() ? parent : NULL;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3055,22 +2999,8 @@ JS_NewGlobalObject(JSContext *cx, JSClass *clasp)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     CHECK_REQUEST(cx);
-    JS_ASSERT(clasp->flags & JSCLASS_IS_GLOBAL);
-    JSObject *obj = NewNonFunction<WithProto::Given>(cx, Valueify(clasp), NULL, NULL);
-    if (!obj)
-        return NULL;
 
-    obj->syncSpecialEquality();
-
-    /* Construct a regexp statics object for this global object. */
-    JSObject *res = regexp_statics_construct(cx, obj);
-    if (!res ||
-        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_REGEXP_STATICS, ObjectValue(*res)) ||
-        !js_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_FLAGS, Int32Value(0))) {
-        return NULL;
-    }
-
-    return obj;
+    return GlobalObject::create(cx, Valueify(clasp));
 }
 
 class AutoHoldCompartment {
@@ -3163,6 +3093,12 @@ JS_PUBLIC_API(JSBool)
 JS_IsExtensible(JSObject *obj)
 {
     return obj->isExtensible();
+}
+
+JS_PUBLIC_API(JSBool)
+JS_IsNative(JSObject *obj)
+{
+    return obj->isNative();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3977,27 +3913,8 @@ JS_ClearScope(JSContext *cx, JSObject *obj)
         js_ClearNative(cx, obj);
 
     /* Clear cached class objects on the global object. */
-    if (obj->isGlobal()) {
-        /* This can return false but that doesn't mean it failed. */
-        obj->unbrand(cx);
-
-        for (int key = JSProto_Null; key < JSProto_LIMIT * 3; key++)
-            JS_SetReservedSlot(cx, obj, key, JSVAL_VOID);
-
-        /* Clear regexp statics. */
-        RegExpStatics::extractFrom(obj)->clear();
-
-        /* Clear the CSP eval-is-allowed cache. */
-        JS_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_EVAL_ALLOWED, JSVAL_VOID);
-
-        /*
-         * Mark global as cleared. If we try to execute any compile-and-go
-         * scripts from here on, we will throw.
-         */
-        int32 flags = obj->getReservedSlot(JSRESERVED_GLOBAL_FLAGS).toInt32();
-        flags |= JSGLOBAL_FLAGS_CLEARED;
-        JS_SetReservedSlot(cx, obj, JSRESERVED_GLOBAL_FLAGS, Jsvalify(Int32Value(flags)));
-    }
+    if (obj->isGlobal())
+        obj->asGlobal()->clear(cx);
 
     js_InitRandom(cx);
 }
@@ -5888,7 +5805,7 @@ JS_NewRegExpObject(JSContext *cx, JSObject *obj, char *bytes, size_t length, uin
     jschar *chars = js_InflateString(cx, bytes, &length);
     if (!chars)
         return NULL;
-    RegExpStatics *res = RegExpStatics::extractFrom(obj);
+    RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
     JSObject *reobj = RegExp::createObject(cx, res, chars, length, flags);
     cx->free_(chars);
     return reobj;
@@ -5898,7 +5815,7 @@ JS_PUBLIC_API(JSObject *)
 JS_NewUCRegExpObject(JSContext *cx, JSObject *obj, jschar *chars, size_t length, uintN flags)
 {
     CHECK_REQUEST(cx);
-    RegExpStatics *res = RegExpStatics::extractFrom(obj);
+    RegExpStatics *res = RegExpStatics::extractFrom(obj->asGlobal());
     return RegExp::createObject(cx, res, chars, length, flags);
 }
 
@@ -5908,7 +5825,7 @@ JS_SetRegExpInput(JSContext *cx, JSObject *obj, JSString *input, JSBool multilin
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, input);
 
-    RegExpStatics::extractFrom(obj)->reset(input, !!multiline);
+    RegExpStatics::extractFrom(obj->asGlobal())->reset(input, !!multiline);
 }
 
 JS_PUBLIC_API(void)
@@ -5917,7 +5834,7 @@ JS_ClearRegExpStatics(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
     JS_ASSERT(obj);
 
-    RegExpStatics::extractFrom(obj)->clear();
+    RegExpStatics::extractFrom(obj->asGlobal())->clear();
 }
 
 JS_PUBLIC_API(JSBool)
@@ -5934,7 +5851,8 @@ JS_ExecuteRegExp(JSContext *cx, JSObject *obj, JSObject *reobj, jschar *chars, s
     if (!str)
         return false;
 
-    return re->execute(cx, RegExpStatics::extractFrom(obj), str, indexp, test, Valueify(rval));
+    return re->execute(cx, RegExpStatics::extractFrom(obj->asGlobal()), str, indexp, test,
+                       Valueify(rval));
 }
 
 JS_PUBLIC_API(JSObject *)

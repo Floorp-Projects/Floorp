@@ -602,8 +602,8 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
             nodeTest =
               new txNameTest(prefix, lName, nspace,
                              axisIdentifier == LocationStep::ATTRIBUTE_AXIS ?
-                             txXPathNodeType::ATTRIBUTE_NODE :
-                             txXPathNodeType::ELEMENT_NODE);
+                             static_cast<PRUint16>(txXPathNodeType::ATTRIBUTE_NODE) :
+                             static_cast<PRUint16>(txXPathNodeType::ELEMENT_NODE));
             NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);
         }
         else {
