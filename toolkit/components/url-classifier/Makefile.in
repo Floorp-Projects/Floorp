@@ -61,7 +61,6 @@ CPPSRCS = \
   nsUrlClassifierDBService.cpp \
   nsUrlClassifierStreamUpdater.cpp \
   nsUrlClassifierUtils.cpp \
-  nsUrlClassifierHashCompleter.cpp \
   $(NULL)
 
 LOCAL_INCLUDES = \
@@ -69,7 +68,10 @@ LOCAL_INCLUDES = \
   $(SQLITE_CFLAGS) \
   $(NULL)
 
-EXTRA_COMPONENTS = nsURLClassifier.manifest
+EXTRA_COMPONENTS = \
+  nsUrlClassifierHashCompleter.js \
+  nsURLClassifier.manifest \
+  $(NULL)
 
 # Same as JS components that are run through the pre-processor.
 EXTRA_PP_COMPONENTS = \
