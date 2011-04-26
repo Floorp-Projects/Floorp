@@ -62,8 +62,10 @@ class OTSStream {
     }
 
     while (length >= 4) {
-      chksum_ += ntohl(*reinterpret_cast<const uint32_t*>(
-          reinterpret_cast<const uint8_t*>(data) + offset));
+      uint32_t tmp;
+      std::memcpy(&tmp, reinterpret_cast<const uint8_t *>(data) + offset,
+        sizeof(uint32_t));
+      chksum_ += ntohl(tmp);
       length -= 4;
       offset += 4;
     }
