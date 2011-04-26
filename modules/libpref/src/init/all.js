@@ -194,11 +194,6 @@ pref("gfx.color_management.rendering_intent", 0);
 pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
-#ifdef XP_MACOSX
-pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", false);
-#else
-pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", true);
-#endif
 
 // see gfx/thebes/gfxUnicodeProperties.h for definitions of script bits
 #ifdef XP_MACOSX
