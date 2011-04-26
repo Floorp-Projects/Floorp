@@ -183,10 +183,6 @@ pref("findhelper.autozoom", true);
 /* autocomplete */
 pref("browser.formfill.enable", true);
 
-/* microsummaries */
-pref("browser.microsummary.enabled", false);
-pref("browser.microsummary.updateGenerators", false);
-
 /* spellcheck */
 pref("layout.spellcheckDefault", 0);
 
