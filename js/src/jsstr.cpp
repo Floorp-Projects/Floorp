@@ -3905,6 +3905,8 @@ js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
 JS_FRIEND_API(JSString *)
 js_ValueToSource(JSContext *cx, const Value &v)
 {
+    JS_CHECK_RECURSION(cx, return NULL);
+
     if (v.isUndefined())
         return cx->runtime->atomState.void0Atom;
     if (v.isString())
