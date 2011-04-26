@@ -1,5 +1,5 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="opener.update()">
 
 <command oncommandupdate="document.removeChild(document.documentElement)" commandupdater="true"/>
 <box command="c"/>
