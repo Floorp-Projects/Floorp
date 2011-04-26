@@ -210,6 +210,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif
+#include "nsDOMTouchEvent.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -725,6 +726,35 @@ nsContentUtils::InitializeEventTable() {
 
   return PR_TRUE;
 }
+
+void
+nsContentUtils::InitializeTouchEventTable()
+{
+  static PRBool sEventTableInitialized = PR_FALSE;
+  if (!sEventTableInitialized && sAtomEventTable && sStringEventTable) {
+    sEventTableInitialized = PR_TRUE;
+    static const EventNameMapping touchEventArray[] = {
+      { nsGkAtoms::ontouchstart, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchend, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchmove, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchenter, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchleave, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchcancel, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT }
+    };
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(touchEventArray); ++i) {
+      if (!sAtomEventTable->Put(touchEventArray[i].mAtom, touchEventArray[i]) ||
+          !sStringEventTable->Put(Substring(nsDependentAtomString(touchEventArray[i].mAtom), 2),
+                                  touchEventArray[i])) {
+        delete sAtomEventTable;
+        sAtomEventTable = nsnull;
+        delete sStringEventTable;
+        sStringEventTable = nsnull;
+        return;
+      }
+    }
+  }
+}
+
 
 /**
  * Access a cached parser service. Don't addref. We need only one
