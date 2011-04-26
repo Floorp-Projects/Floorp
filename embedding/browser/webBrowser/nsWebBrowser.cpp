@@ -76,8 +76,6 @@
 #include "gfxContext.h"
 
 // for painting the background window
-#include "nsIRenderingContext.h"
-#include "nsIDeviceContext.h"
 #include "nsIRegion.h"
 #include "nsILookAndFeel.h"
 

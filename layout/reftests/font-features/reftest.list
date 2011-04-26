@@ -7,13 +7,13 @@
 
 # check that Turkish language causes a change in rendering (no fi ligature)
 # (also works via Pango)
-fails-if(Android) HTTP(..) != font-features-turkish.html font-features-ref.html
+HTTP(..) != font-features-turkish.html font-features-ref.html
 
 # check that disabling ligatures causes a change
-fails-if(Android) HTTP(..) != font-features-noliga.html font-features-ref.html
+HTTP(..) != font-features-noliga.html font-features-ref.html
 
 # check that enabling optional ligatures causes a change
-fails-if(Android) HTTP(..) != font-features-hlig.html font-features-ref.html
+HTTP(..) != font-features-hlig.html font-features-ref.html
 
 # compare Turkish rendering with reference using ZWNJ to break the ligature
 # (also works via Pango)

@@ -49,6 +49,7 @@
 #include "nsIDOMDocument.h"
 #include "nsCOMPtr.h"
 #include "nsEvent.h"
+#include "nsIURI.h"
 
 #define DOM_WINDOW_DESTROYED_TOPIC "dom-window-destroyed"
 
@@ -77,8 +78,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x8d8be7db, 0xffaa, 0x4962, \
-  { 0xa7, 0x27, 0xb7, 0x0f, 0xc9, 0xfa, 0xd3, 0x0e } }
+{ 0xafc4849b, 0x21d3, 0x45ea, \
+  { 0x8b, 0xfd, 0x61, 0xec, 0x12, 0x5d, 0x38, 0x64 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -441,6 +442,11 @@ public:
     MaybeUpdateTouchState();
   }
 
+  PRBool HasTouchEventListeners()
+  {
+    return mMayHaveTouchEventListener;
+  }
+
   /**
    * Call this to check whether some node (this window, its document,
    * or content in that document) has a MozAudioAvailable event listener.
@@ -537,7 +543,8 @@ public:
    * Instructs this window to asynchronously dispatch a hashchange event.  This
    * method must be called on an inner window.
    */
-  virtual nsresult DispatchAsyncHashchange() = 0;
+  virtual nsresult DispatchAsyncHashchange(nsIURI *aOldURI,
+                                           nsIURI *aNewURI) = 0;
 
   /**
    * Instructs this window to synchronously dispatch a popState event.

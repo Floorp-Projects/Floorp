@@ -42,7 +42,7 @@ function testCancelInPhase4() {
             testCancelBeforePhase4();
           }, false);
 
-          xhr2.open("GET", url, false); // note : synch-request
+          xhr2.open("GET", url);
           xhr2.setRequestHeader("X-Request", "1", false);
 
           try { xhr2.send(); }
@@ -87,7 +87,7 @@ function testCancelBeforePhase4() {
             SimpleTest.finish();
           }, false);
 
-          xhr2.open("GET", url, false); // note : synch-request
+          xhr2.open("GET", url);
           xhr2.setRequestHeader("X-Request", "1", false);
 
           try { xhr2.send(); }

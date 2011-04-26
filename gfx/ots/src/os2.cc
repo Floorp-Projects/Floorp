@@ -214,7 +214,7 @@ bool ots_os2_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 }
 
 bool ots_os2_should_serialise(OpenTypeFile *file) {
-  return file->os2;
+  return file->os2 != NULL;
 }
 
 bool ots_os2_serialise(OTSStream *out, OpenTypeFile *file) {

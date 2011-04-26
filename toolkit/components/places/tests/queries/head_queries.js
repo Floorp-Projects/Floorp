@@ -389,7 +389,8 @@ function compareArrayToResult(aArray, aRoot) {
 function isInResult(aQueryData, aRoot) {
   var rv = false;
   var uri;
-  if (!aRoot.containerOpen)
+  var wasOpen = aRoot.containerOpen;
+  if (!wasOpen)
     aRoot.containerOpen = true;
 
   // If we have an array, pluck out the first item. If an object, pluc out the
@@ -406,6 +407,8 @@ function isInResult(aQueryData, aRoot) {
       break;
     }
   }
+  if (!wasOpen)
+    aRoot.containerOpen = false;
   return rv;
 }
 
@@ -416,7 +419,8 @@ function isInResult(aQueryData, aRoot) {
  */
 function displayResultSet(aRoot) {
 
-  if (!aRoot.containerOpen)
+  var wasOpen = aRoot.containerOpen;
+  if (!wasOpen)
     aRoot.containerOpen = true;
 
   if (!aRoot.hasChildren) {
@@ -429,4 +433,6 @@ function displayResultSet(aRoot) {
     LOG("Result Set URI: " + aRoot.getChild(i).uri + "   Title: " +
         aRoot.getChild(i).title + "   Visit Time: " + aRoot.getChild(i).time);
   }
+  if (!wasOpen)
+    aRoot.containerOpen = false;
 }

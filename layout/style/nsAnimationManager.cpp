@@ -47,17 +47,17 @@
 
 using namespace mozilla;
 
-struct AnimationSegmentProperty
-{
-  nsCSSProperty mProperty;
-  nsStyleAnimation::Value mFromValue, mToValue;
-};
-
-struct AnimationSegment
+struct AnimationPropertySegment
 {
   float mFromKey, mToKey;
+  nsStyleAnimation::Value mFromValue, mToValue;
   css::ComputedTimingFunction mTimingFunction;
-  InfallibleTArray<AnimationSegmentProperty> mProperties;
+};
+
+struct AnimationProperty
+{
+  nsCSSProperty mProperty;
+  InfallibleTArray<AnimationPropertySegment> mSegments;
 };
 
 /**
@@ -102,7 +102,7 @@ struct ElementAnimation
   // whose start we last notified on.
   PRUint32 mLastNotification;
 
-  InfallibleTArray<AnimationSegment> mSegments;
+  InfallibleTArray<AnimationProperty> mProperties;
 };
 
 typedef nsAnimationManager::EventArray EventArray;
@@ -181,15 +181,14 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     mStyleRule = nsnull;
 
     // FIXME(spec): assume that properties in higher animations override
-    // those in lower ones (and that our |HasProperty| check in
-    // |BuildSegment| matches the definition of when they should do so.
+    // those in lower ones.
     // Therefore, we iterate from last animation to first.
     nsCSSPropertySet properties;
 
-    for (PRUint32 i = mAnimations.Length(); i-- != 0; ) {
-      ElementAnimation &anim = mAnimations[i];
+    for (PRUint32 animIdx = mAnimations.Length(); animIdx-- != 0; ) {
+      ElementAnimation &anim = mAnimations[animIdx];
 
-      if (anim.mSegments.Length() == 0 ||
+      if (anim.mProperties.Length() == 0 ||
           anim.mIterationDuration.ToMilliseconds() <= 0.0) {
         // No animation data.
         continue;
@@ -278,50 +277,51 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
                           positionInIteration <= 1.0,
                         "position should be in [0-1]");
 
-      NS_ABORT_IF_FALSE(anim.mSegments[0].mFromKey == 0.0,
-                        "incorrect first from key");
-      NS_ABORT_IF_FALSE(anim.mSegments[anim.mSegments.Length() - 1].mToKey
-                          == 1.0,
-                        "incorrect last to key");
+      for (PRUint32 propIdx = 0, propEnd = anim.mProperties.Length();
+           propIdx != propEnd; ++propIdx)
+      {
+        const AnimationProperty &prop = anim.mProperties[propIdx];
 
-      // FIXME: Maybe cache the current segment?
-      const AnimationSegment *segment = anim.mSegments.Elements();
-      while (segment->mToKey < positionInIteration) {
-        NS_ABORT_IF_FALSE(segment->mFromKey < segment->mToKey,
-                          "incorrect keys");
-        ++segment;
-        NS_ABORT_IF_FALSE(segment->mFromKey == (segment-1)->mToKey,
-                          "incorrect keys");
-      }
-      NS_ABORT_IF_FALSE(segment->mFromKey < segment->mToKey,
-                        "incorrect keys");
-      NS_ABORT_IF_FALSE(segment - anim.mSegments.Elements() <
-                          anim.mSegments.Length(),
-                        "ran off end");
+        NS_ABORT_IF_FALSE(prop.mSegments[0].mFromKey == 0.0,
+                          "incorrect first from key");
+        NS_ABORT_IF_FALSE(prop.mSegments[prop.mSegments.Length() - 1].mToKey
+                            == 1.0,
+                          "incorrect last to key");
 
-      if (segment->mProperties.IsEmpty()) {
-        // No animation data.
-        continue;
-      }
-
-      if (!mStyleRule) {
-        // Allocate the style rule now that we know we have animation data.
-        mStyleRule = new css::AnimValuesStyleRule();
-      }
-
-      double positionInSegment = (positionInIteration - segment->mFromKey) /
-                                 (segment->mToKey - segment->mFromKey);
-      double valuePosition =
-        segment->mTimingFunction.GetValue(positionInSegment);
-
-      for (PRUint32 j = 0, j_end = segment->mProperties.Length();
-           j != j_end; ++j) {
-        const AnimationSegmentProperty &prop = segment->mProperties[j];
         if (properties.HasProperty(prop.mProperty)) {
           // A later animation already set this property.
           continue;
         }
         properties.AddProperty(prop.mProperty);
+
+        NS_ABORT_IF_FALSE(prop.mSegments.Length() > 0,
+                          "property should not be in animations if it "
+                          "has no segments");
+
+        // FIXME: Maybe cache the current segment?
+        const AnimationPropertySegment *segment = prop.mSegments.Elements();
+        while (segment->mToKey < positionInIteration) {
+          NS_ABORT_IF_FALSE(segment->mFromKey < segment->mToKey,
+                            "incorrect keys");
+          ++segment;
+          NS_ABORT_IF_FALSE(segment->mFromKey == (segment-1)->mToKey,
+                            "incorrect keys");
+        }
+        NS_ABORT_IF_FALSE(segment->mFromKey < segment->mToKey,
+                          "incorrect keys");
+        NS_ABORT_IF_FALSE(segment - prop.mSegments.Elements() <
+                            prop.mSegments.Length(),
+                          "ran off end");
+
+        if (!mStyleRule) {
+          // Allocate the style rule now that we know we have animation data.
+          mStyleRule = new css::AnimValuesStyleRule();
+        }
+
+        double positionInSegment = (positionInIteration - segment->mFromKey) /
+                                   (segment->mToKey - segment->mFromKey);
+        double valuePosition =
+          segment->mTimingFunction.GetValue(positionInSegment);
 
         nsStyleAnimation::Value *val =
           mStyleRule->AddEmptyValue(prop.mProperty);
@@ -330,7 +330,7 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
         PRBool result =
 #endif
           nsStyleAnimation::Interpolate(prop.mProperty,
-                                        prop.mFromValue, prop.mToValue,
+                                        segment->mFromValue, segment->mToValue,
                                         valuePosition, *val);
         NS_ABORT_IF_FALSE(result, "interpolate must succeed now");
       }
@@ -476,9 +476,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
       // (or potentially optimize BuildAnimations to avoid rebuilding it
       // in the first place).
       if (!ea->mAnimations.IsEmpty()) {
-        for (PRUint32 i = 0, i_end = newAnimations.Length();
-             i != i_end; ++i) {
-          ElementAnimation *newAnim = &newAnimations[i];
+        for (PRUint32 newIdx = 0, newEnd = newAnimations.Length();
+             newIdx != newEnd; ++newIdx) {
+          ElementAnimation *newAnim = &newAnimations[newIdx];
 
           // Find the matching animation with this name in the old list
           // of animations.  Because of this code, they must all have
@@ -489,8 +489,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           // We'll use the last one since it's more likely to be the one
           // doing something.
           const ElementAnimation *oldAnim = nsnull;
-          for (PRUint32 j = ea->mAnimations.Length(); j-- != 0; ) {
-            const ElementAnimation *a = &ea->mAnimations[j];
+          for (PRUint32 oldIdx = ea->mAnimations.Length(); oldIdx-- != 0; ) {
+            const ElementAnimation *a = &ea->mAnimations[oldIdx];
             if (a->mName == newAnim->mName) {
               oldAnim = a;
               break;
@@ -610,7 +610,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
   // whether they are resolved relative to other animations:  I assume
   // that they're not, since that would prevent us from caching a lot of
   // data that we'd really like to cache (in particular, the
-  // nsStyleAnimation::Value values in AnimationSegmentProperty).
+  // nsStyleAnimation::Value values in AnimationPropertySegment).
   nsStyleContext *result = mCache.GetWeak(aKeyframe);
   if (!result) {
     nsCOMArray<nsIStyleRule> rules;
@@ -633,8 +633,9 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
   const nsStyleDisplay *disp = aStyleContext->GetStyleDisplay();
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  for (PRUint32 i = 0, i_end = disp->mAnimations.Length(); i != i_end; ++i) {
-    const nsAnimation& aSrc = disp->mAnimations[i];
+  for (PRUint32 animIdx = 0, animEnd = disp->mAnimations.Length();
+       animIdx != animEnd; ++animIdx) {
+    const nsAnimation& aSrc = disp->mAnimations[animIdx];
     ElementAnimation& aDest = *aAnimations.AppendElement();
 
     aDest.mName = aSrc.GetName();
@@ -663,16 +664,18 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     // earlier ones (no cascading).
     nsDataHashtable<PercentageHashKey, nsCSSKeyframeRule*> keyframes;
     keyframes.Init(16); // FIXME: make infallible!
-    for (PRUint32 j = 0, j_end = rule->StyleRuleCount(); j != j_end; ++j) {
-      nsICSSRule* cssRule = rule->GetStyleRuleAt(j);
+    for (PRUint32 ruleIdx = 0, ruleEnd = rule->StyleRuleCount();
+         ruleIdx != ruleEnd; ++ruleIdx) {
+      nsICSSRule* cssRule = rule->GetStyleRuleAt(ruleIdx);
       NS_ABORT_IF_FALSE(cssRule, "must have rule");
       NS_ABORT_IF_FALSE(cssRule->GetType() == nsICSSRule::KEYFRAME_RULE,
                         "must be keyframe rule");
       nsCSSKeyframeRule *kfRule = static_cast<nsCSSKeyframeRule*>(cssRule);
 
       const nsTArray<float> &keys = kfRule->GetKeys();
-      for (PRUint32 k = 0, k_end = keys.Length(); k != k_end; ++k) {
-        float key = keys[k];
+      for (PRUint32 keyIdx = 0, keyEnd = keys.Length();
+           keyIdx != keyEnd; ++keyIdx) {
+        float key = keys[keyIdx];
         // FIXME (spec):  The spec doesn't say what to do with
         // out-of-range keyframes.  We'll ignore them.
         // (And PercentageHashKey currently assumes we either ignore or
@@ -692,54 +695,111 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
       continue;
     }
 
-    KeyframeData fromKeyframe = sortedKeyframes[0];
-    nsRefPtr<nsStyleContext> fromContext =
-      resolvedStyles.Get(mPresContext, aStyleContext,
-                         fromKeyframe.mRule);
+    // Record the properties that are present in any keyframe rules we
+    // are using.
+    nsCSSPropertySet properties;
 
-    // If there's no rule for 0%, there's implicitly an empty rule.
-    if (fromKeyframe.mKey != 0.0f) {
-      BuildSegment(aDest.mSegments, aSrc,
-                   0.0f, aStyleContext, nsnull,
-                   fromKeyframe.mKey, fromContext,
-                     fromKeyframe.mRule->Declaration());
+    for (PRUint32 kfIdx = 0, kfEnd = sortedKeyframes.Length();
+         kfIdx != kfEnd; ++kfIdx) {
+      css::Declaration *decl = sortedKeyframes[kfIdx].mRule->Declaration();
+      for (PRUint32 propIdx = 0, propEnd = decl->Count();
+           propIdx != propEnd; ++propIdx) {
+        properties.AddProperty(decl->OrderValueAt(propIdx));
+      }
     }
 
-    for (PRUint32 j = 1, j_end = sortedKeyframes.Length(); j != j_end; ++j) {
-      KeyframeData toKeyframe = sortedKeyframes[j];
-      nsRefPtr<nsStyleContext> toContext =
-        resolvedStyles.Get(mPresContext, aStyleContext, toKeyframe.mRule);
+    for (nsCSSProperty prop = nsCSSProperty(0);
+         prop < eCSSProperty_COUNT_no_shorthands;
+         prop = nsCSSProperty(prop + 1)) {
+      if (!properties.HasProperty(prop) ||
+          nsCSSProps::kAnimTypeTable[prop] == eStyleAnimType_None) {
+        continue;
+      }
 
-      BuildSegment(aDest.mSegments, aSrc,
-                   fromKeyframe.mKey, fromContext,
-                   fromKeyframe.mRule->Declaration(),
-                   toKeyframe.mKey, toContext,
-                   toKeyframe.mRule->Declaration());
+      AnimationProperty &propData = *aDest.mProperties.AppendElement();
+      propData.mProperty = prop;
 
-      fromContext = toContext;
-      fromKeyframe = toKeyframe;
-    }
+      KeyframeData *fromKeyframe = nsnull;
+      nsRefPtr<nsStyleContext> fromContext;
+      bool interpolated = true;
+      for (PRUint32 kfIdx = 0, kfEnd = sortedKeyframes.Length();
+           kfIdx != kfEnd; ++kfIdx) {
+        KeyframeData &toKeyframe = sortedKeyframes[kfIdx];
+        if (!toKeyframe.mRule->Declaration()->HasProperty(prop)) {
+          continue;
+        }
 
-    // If there's no rule for 100%, there's implicitly an empty rule.
-    if (fromKeyframe.mKey != 1.0f) {
-      BuildSegment(aDest.mSegments, aSrc,
-                   fromKeyframe.mKey, fromContext,
-                   fromKeyframe.mRule->Declaration(),
-                   1.0f, aStyleContext, nsnull);
+        nsRefPtr<nsStyleContext> toContext =
+          resolvedStyles.Get(mPresContext, aStyleContext, toKeyframe.mRule);
+
+        if (fromKeyframe) {
+          interpolated = interpolated &&
+            BuildSegment(propData.mSegments, prop, aSrc,
+                         fromKeyframe->mKey, fromContext,
+                         fromKeyframe->mRule->Declaration(),
+                         toKeyframe.mKey, toContext);
+        } else {
+          if (toKeyframe.mKey != 0.0f) {
+            // There's no data for this property at 0%, so use the
+            // cascaded value above us.
+            interpolated = interpolated &&
+              BuildSegment(propData.mSegments, prop, aSrc,
+                           0.0f, aStyleContext, nsnull,
+                           toKeyframe.mKey, toContext);
+          }
+        }
+
+        fromContext = toContext;
+        fromKeyframe = &toKeyframe;
+      }
+
+      if (fromKeyframe->mKey != 1.0f) {
+        // There's no data for this property at 100%, so use the
+        // cascaded value above us.
+        interpolated = interpolated &&
+          BuildSegment(propData.mSegments, prop, aSrc,
+                       fromKeyframe->mKey, fromContext,
+                       fromKeyframe->mRule->Declaration(),
+                       1.0f, aStyleContext);
+      }
+
+      // If we failed to build any segments due to inability to
+      // interpolate, remove the property from the animation.  (It's not
+      // clear if this is the right thing to do -- we could run some of
+      // the segments, but it's really not clear whether we should skip
+      // values (which?) or skip segments, so best to skip the whole
+      // thing for now.)
+      if (!interpolated) {
+        aDest.mProperties.RemoveElementAt(aDest.mProperties.Length() - 1);
+      }
     }
   }
 }
 
-void
-nsAnimationManager::BuildSegment(InfallibleTArray<AnimationSegment>& aSegments,
+bool
+nsAnimationManager::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
+                                   aSegments,
+                                 nsCSSProperty aProperty,
                                  const nsAnimation& aAnimation,
                                  float aFromKey, nsStyleContext* aFromContext,
                                  mozilla::css::Declaration* aFromDeclaration,
-                                 float aToKey, nsStyleContext* aToContext,
-                                 mozilla::css::Declaration* aToDeclaration)
+                                 float aToKey, nsStyleContext* aToContext)
 {
-  AnimationSegment &segment = *aSegments.AppendElement();
+  nsStyleAnimation::Value fromValue, toValue, dummyValue;
+  if (!ExtractComputedValueForTransition(aProperty, aFromContext, fromValue) ||
+      !ExtractComputedValueForTransition(aProperty, aToContext, toValue) ||
+      // Check that we can interpolate between these values
+      // (If this is ever a performance problem, we could add a
+      // CanInterpolate method, but it seems fine for now.)
+      !nsStyleAnimation::Interpolate(aProperty, fromValue, toValue,
+                                    0.5, dummyValue)) {
+    return false;
+  }
 
+  AnimationPropertySegment &segment = *aSegments.AppendElement();
+
+  segment.mFromValue = fromValue;
+  segment.mToValue = toValue;
   segment.mFromKey = aFromKey;
   segment.mToKey = aToKey;
   const nsTimingFunction *tf;
@@ -751,33 +811,7 @@ nsAnimationManager::BuildSegment(InfallibleTArray<AnimationSegment>& aSegments,
   }
   segment.mTimingFunction.Init(*tf);
 
-  for (nsCSSProperty prop = nsCSSProperty(0);
-       prop < eCSSProperty_COUNT_no_shorthands;
-       prop = nsCSSProperty(prop + 1)) {
-    if (nsCSSProps::kAnimTypeTable[prop] == eStyleAnimType_None) {
-      continue;
-    }
-
-    if (!(aFromDeclaration && aFromDeclaration->HasProperty(prop)) &&
-        !(aToDeclaration && aToDeclaration->HasProperty(prop))) {
-      // Don't store an animation if neither declaration has the property.
-      continue;
-    }
-
-    nsStyleAnimation::Value fromValue, toValue, dummyValue;
-    if (ExtractComputedValueForTransition(prop, aFromContext, fromValue) &&
-        ExtractComputedValueForTransition(prop, aToContext, toValue) &&
-        // Check that we can interpolate between these values
-        // (If this is ever a performance problem, we could add a
-        // CanInterpolate method, but it seems fine for now.)
-        nsStyleAnimation::Interpolate(prop, fromValue, toValue,
-                                      0.5, dummyValue)) {
-      AnimationSegmentProperty &p = *segment.mProperties.AppendElement();
-      p.mProperty = prop;
-      p.mFromValue = fromValue;
-      p.mToValue = toValue;
-    }
-  }
+  return true;
 }
 
 nsIStyleRule*

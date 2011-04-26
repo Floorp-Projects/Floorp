@@ -1213,22 +1213,89 @@ tests.push({
 });
 
 ////////////////////////////////////////////////////////////////////////////////
+// SORT_BY_FRECENCY_*
 
-function prepare_and_run_next_test(aTest) {
-  aTest.setup();
-  aTest.check();
-  // sorting reversed, usually SORT_BY have ASC and DESC
-  aTest.check_reverse();
-  // Execute cleanup tasks
-  remove_all_bookmarks();
-  waitForClearHistory(runNextTest);
-}
+tests.push({
+  _sortingMode: Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_ASCENDING,
 
-/**
- * run_test is where the magic happens.  This is automatically run by the test
- * harness.  It is where you do the work of creating the query, running it, and
- * playing with the result set.
- */
+  setup: function() {
+    LOG("Sorting test 13: SORT BY FRECENCY ");
+
+    var timeInMicroseconds = Date.now() * 1000;
+    this._unsortedData = [
+      { isVisit: true,
+        isDetails: true,
+        uri: "http://moz.com/",
+        lastVisit: timeInMicroseconds++,
+        title: "I",
+        isInQuery: true },
+
+      { isVisit: true,
+        isDetails: true,
+        uri: "http://moz.com/",
+        lastVisit: timeInMicroseconds++,
+        title: "I",
+        isInQuery: true },
+
+      { isVisit: true,
+        isDetails: true,
+        uri: "http://moz.com/",
+        lastVisit: timeInMicroseconds++,
+        title: "I",
+        isInQuery: true },
+
+      { isVisit: true,
+        isDetails: true,
+        uri: "http://is.com/",
+        lastVisit: timeInMicroseconds++,
+        title: "love",
+        isInQuery: true },
+
+      { isVisit: true,
+        isDetails: true,
+        uri: "http://best.com/",
+        lastVisit: timeInMicroseconds++,
+        title: "moz",
+        isInQuery: true },
+
+      { isVisit: true,
+        isDetails: true,
+        uri: "http://best.com/",
+        lastVisit: timeInMicroseconds++,
+        title: "moz",
+        isInQuery: true },
+    ];
+
+    this._sortedData = [
+      this._unsortedData[2],
+      this._unsortedData[3],
+      this._unsortedData[5],
+    ];
+
+    // This function in head_queries.js creates our database with the above data
+    populateDB(this._unsortedData);                  
+  },
+
+  check: function() {
+    var query = PlacesUtils.history.getNewQuery();
+    var options = PlacesUtils.history.getNewQueryOptions();
+    options.sortingMode = this._sortingMode;
+
+    var root = PlacesUtils.history.executeQuery(query, options).root;
+    root.containerOpen = true;
+    compareArrayToResult(this._sortedData, root);
+    root.containerOpen = false;
+  },
+
+  check_reverse: function() {
+    this._sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING;
+    this._sortedData.reverse();
+    this.check();
+  }
+});
+
+////////////////////////////////////////////////////////////////////////////////
+
 function run_test() {
   do_test_pending();
   runNextTest();
@@ -1237,7 +1304,15 @@ function run_test() {
 function runNextTest() {
   if (tests.length) {
     let test = tests.shift();
-    prepare_and_run_next_test(test);
+    test.setup();
+    waitForAsyncUpdates(function () {
+      test.check();
+      // sorting reversed, usually SORT_BY have ASC and DESC
+      test.check_reverse();
+      // Execute cleanup tasks
+      remove_all_bookmarks();
+      waitForClearHistory(runNextTest);
+    });
   }
   else {
     do_test_finished();

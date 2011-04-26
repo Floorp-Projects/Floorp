@@ -27,6 +27,7 @@
 SimpleTest.waitForExplicitFinish();
 
 var gShowPopup = false;
+var gModifiers = 0;
 
 var iswin = (navigator.platform.indexOf("Win") == 0);
 
@@ -112,7 +113,7 @@ function differentPressed()
 
   list.open = false;
 
-  SimpleTest.finish();
+  checkEnter();
 }
 
 function keyCheck(list, key, index, testname)
@@ -120,6 +121,50 @@ function keyCheck(list, key, index, testname)
   var item = $("i" + index);
   synthesizeKeyExpectEvent(key, { }, item, "command", testname);
   is(list.selectedItem, item, testname + " selectedItem");
+}
+
+function checkModifiers(event)
+{
+  var expectedModifiers = (gModifiers == 1);
+  is(event.shiftKey, expectedModifiers, "shift key pressed");
+  is(event.ctrlKey, expectedModifiers, "ctrl key pressed");
+  is(event.altKey, expectedModifiers, "alt key pressed");
+  is(event.metaKey, expectedModifiers, "meta key pressed");
+  gModifiers++;
+}
+
+function checkEnter()
+{
+  var list = $("list");
+  list.addEventListener("popuphidden", checkEnterWithModifiers, false);
+  list.addEventListener("command", checkModifiers, false);
+  list.open = true;
+  synthesizeKey("VK_ENTER", { });
+}
+
+function checkEnterWithModifiers()
+{
+  is(gModifiers, 1, "modifiers checked when not set");
+
+  var list = $("list");
+  ok(!list.open, "list closed on enter press");
+  list.removeEventListener("popuphidden", checkEnterWithModifiers, false);
+
+  list.addEventListener("popuphidden", done, false);
+  list.open = true;
+
+  synthesizeKey("VK_ENTER", { shiftKey: true, ctrlKey: true, altKey: true, metaKey: true });
+}
+
+function done()
+{
+  is(gModifiers, 2, "modifiers checked when set");
+
+  var list = $("list");
+  ok(!list.open, "list closed on enter press with modifiers");
+  list.removeEventListener("popuphidden", done, false);
+
+  SimpleTest.finish();
 }
 
 SimpleTest.waitForFocus(runTests);

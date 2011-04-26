@@ -50,7 +50,7 @@ USE_STATIC_LIBS = 1
 endif
 
 
-ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 CPPSRCS = nsWindowsShellService.cpp
 else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

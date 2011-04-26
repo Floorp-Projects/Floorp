@@ -57,8 +57,6 @@ function getBrowser() {
   return Browser.selectedBrowser;
 }
 
-const kBrowserFormZoomLevelMin = 0.8;
-const kBrowserFormZoomLevelMax = 2.0;
 const kBrowserViewZoomLevelPrecision = 10000;
 
 const kDefaultBrowserWidth = 800;
@@ -293,6 +291,7 @@ var Browser = {
       }
     }
     window.addEventListener("resize", resizeHandler, false);
+    window.addEventListener("AlertActive", this._alertShown.bind(this), false);
 
     function fullscreenHandler() {
       if (!window.fullScreen)
@@ -357,6 +356,12 @@ var Browser = {
     let event = document.createEvent("Events");
     event.initEvent("UIReady", true, false);
     window.dispatchEvent(event);
+  },
+
+  _alertShown: function _alertShown() {
+    // ensure that the full notification still visible, even if the urlbar is floating
+    if (BrowserUI.isToolbarLocked())
+      Browser.pageScrollboxScroller.scrollTo(0, 0);
   },
 
   _waitingToClose: false,
@@ -1439,8 +1444,8 @@ Browser.WebProgress.prototype = {
       }
 
       aTab.scrolledAreaChanged();
-      if (browser.currentURI.spec != "about:blank")
-        aTab.updateThumbnail();
+      aTab.updateThumbnail();
+
       browser.messageManager.addMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
     });
   }

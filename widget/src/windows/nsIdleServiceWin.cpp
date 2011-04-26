@@ -46,7 +46,6 @@ NS_IMPL_ISUPPORTS2(nsIdleServiceWin, nsIIdleService, nsIdleService)
 bool
 nsIdleServiceWin::PollIdleTime(PRUint32 *aIdleTime)
 {
-#ifndef WINCE
     LASTINPUTINFO inputInfo;
     inputInfo.cbSize = sizeof(inputInfo);
     if (!::GetLastInputInfo(&inputInfo))
@@ -55,19 +54,10 @@ nsIdleServiceWin::PollIdleTime(PRUint32 *aIdleTime)
     *aIdleTime = SAFE_COMPARE_EVEN_WITH_WRAPPING(GetTickCount(), inputInfo.dwTime);
 
     return true;
-#else
-    // On WinCE we don't pull the idle time from the system.
-    return false;
-#endif
 }
 
 bool
 nsIdleServiceWin::UsePollMode()
 {
-#ifndef WINCE
     return true;
-#else
-    // On WinCE we don't pull the idle time from the system.
-    return false;
-#endif
 }

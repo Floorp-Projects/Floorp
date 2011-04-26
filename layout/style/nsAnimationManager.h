@@ -47,7 +47,7 @@
 #include "nsThreadUtils.h"
 
 class nsCSSKeyframesRule;
-struct AnimationSegment;
+struct AnimationPropertySegment;
 struct ElementAnimation;
 struct ElementAnimations;
 
@@ -135,12 +135,11 @@ private:
                                           PRBool aCreateIfNeeded);
   void BuildAnimations(nsStyleContext* aStyleContext,
                        InfallibleTArray<ElementAnimation>& aAnimations);
-  void BuildSegment(InfallibleTArray<AnimationSegment>& aSegments,
-                    const nsAnimation& aAnimation,
+  bool BuildSegment(InfallibleTArray<AnimationPropertySegment>& aSegments,
+                    nsCSSProperty aProperty, const nsAnimation& aAnimation,
                     float aFromKey, nsStyleContext* aFromContext,
                     mozilla::css::Declaration* aFromDeclaration,
-                    float aToKey, nsStyleContext* aToContext,
-                    mozilla::css::Declaration* aToDeclaration);
+                    float aToKey, nsStyleContext* aToContext);
   nsIStyleRule* GetAnimationRule(mozilla::dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
 

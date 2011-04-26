@@ -47,7 +47,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsGUIEvent.h"
-#include "nsIEventStateManager.h"
 #include "nsEventDispatcher.h"
 #include "nsPIDOMWindow.h"
 #include "nsFocusManager.h"

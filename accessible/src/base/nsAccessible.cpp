@@ -99,7 +99,7 @@
 #include "nsWhitespaceTokenizer.h"
 #include "nsAttrName.h"
 #include "nsNetUtil.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 
 #ifdef NS_DEBUG
 #include "nsIDOMCharacterData.h"

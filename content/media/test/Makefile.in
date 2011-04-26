@@ -231,6 +231,7 @@ _TEST_FILES += \
 		r16000_u8_c1_list.wav \
 		wavedata_u8.wav \
 		wavedata_s16.wav \
+		audio.wav \
 		$(NULL)
 
 # Other files

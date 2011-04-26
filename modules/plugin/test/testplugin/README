@@ -225,6 +225,13 @@ getClipRegionRectCount(), this will throw an error. The coordinates are
 the same as for getEdge. See getClipRegionRectCount() above for
 notes on platform plugin limitations.
 
+== Keyboard events ==
+
+* getLastKeyText()
+Returns the text which was inputted by last keyboard events. This is cleared at
+every keydown event.
+NOTE: Currently, this is implemented only on Windows.
+
 == Mouse events ==
 
 The test plugin supports the following scriptable methods:

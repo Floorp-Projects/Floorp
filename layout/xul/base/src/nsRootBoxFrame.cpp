@@ -37,7 +37,6 @@
 
 #include "nsHTMLParts.h"
 #include "nsIDocument.h"
-#include "nsIRenderingContext.h"
 #include "nsGUIEvent.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"

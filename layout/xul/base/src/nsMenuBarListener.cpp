@@ -57,8 +57,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 
-#include "nsIEventStateManager.h"
-
 #include "nsContentUtils.h"
 
 /*

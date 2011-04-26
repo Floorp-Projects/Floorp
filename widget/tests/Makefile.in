@@ -47,13 +47,17 @@ MODULE          = test_widget
 XPCSHELL_TESTS  = unit
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
+
 ifdef NS_ENABLE_TSF
 #Test disabled because it uses the internal string APIs incorrectly (see bug 582863)
 #CPP_UNIT_TESTS += TestWinTSF.cpp  \
 #                  $(NULL)
 endif
-CPP_UNIT_TESTS += TestChromeMargin.cpp  \
-                  $(NULL)
+
+# Test disabled because it requires the internal API.  Re-enabling this test is
+# bug 652123.
+#CPP_UNIT_TESTS += TestChromeMargin.cpp  \
+#                 $(NULL)
 endif
 
 include $(topsrcdir)/config/rules.mk
@@ -108,17 +112,16 @@ _CHROME_FILES += native_menus_window.xul \
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifneq ($(OS_ARCH), WINCE)
 _CHROME_FILES  += taskbar_previews.xul \
 		window_state_windows.xul \
 		taskbar_progress.xul \
 		test_chrome_context_menus_win.xul \
+		test_plugin_input_event.html \
 		chrome_context_menus_win.xul \
 		$(NULL)
 
 _TEST_FILES +=	test_bug565392.html \
 		$(NULL)
-endif
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)

@@ -42,10 +42,8 @@
 #include "nsHTMLParts.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
-#include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsSimplePageSequence.h"
 #include "nsDisplayList.h"
@@ -59,7 +57,7 @@ NS_NewPageContentFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 NS_IMPL_FRAMEARENA_HELPERS(nsPageContentFrame)
 
 /* virtual */ nsSize
-nsPageContentFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+nsPageContentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                 PRBool aShrinkWrap)

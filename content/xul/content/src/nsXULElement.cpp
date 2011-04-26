@@ -83,7 +83,7 @@
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsFocusManager.h"
 #include "nsIFastLoadService.h"
 #include "nsHTMLStyleSheet.h"
@@ -774,8 +774,8 @@ nsScriptEventHandlerOwnerTearoff::CompileEventHandler(
     // XXX sXBL/XBL2 issue! Owner or current document?
     nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mElement->GetOwnerDoc());
 
-    nsIScriptContext *context;
-    nsXULPrototypeElement *elem = mElement->mPrototype;
+    nsIScriptContext* context = NULL;
+    nsXULPrototypeElement* elem = mElement->mPrototype;
     if (elem && xuldoc) {
         // It'll be shared among the instances of the prototype.
 
@@ -2876,7 +2876,6 @@ nsXULPrototypeElement::SetAttrAt(PRUint32 aPos, const nsAString& aValue,
         nsRefPtr<css::StyleRule> rule;
 
         nsCSSParser parser;
-        NS_ENSURE_TRUE(parser, NS_ERROR_OUT_OF_MEMORY);
 
         // XXX Get correct Base URI (need GetBaseURI on *prototype* element)
         parser.ParseStyleAttribute(aValue, aDocumentURI, aDocumentURI,

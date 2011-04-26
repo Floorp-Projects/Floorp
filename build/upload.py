@@ -57,8 +57,7 @@
 
 import sys, os
 from optparse import OptionParser
-from subprocess import Popen, PIPE
-from util import check_call
+from subprocess import PIPE, Popen, check_call
 
 def RequireEnvironmentVariable(v):
     """Return the value of the environment variable named v, or print

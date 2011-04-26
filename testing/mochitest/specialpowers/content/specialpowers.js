@@ -200,6 +200,10 @@ SpecialPowers.prototype = {
   createSystemXHR: function() {
     return Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
              .createInstance(Ci.nsIXMLHttpRequest);
+  },
+
+  gc: function() {
+    this.DOMWindowUtils.garbageCollect();
   }
 };
 

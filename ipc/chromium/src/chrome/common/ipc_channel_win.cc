@@ -175,7 +175,9 @@ bool Channel::ChannelImpl::CreatePipe(const std::wstring& channel_id,
 }
 
 bool Channel::ChannelImpl::Connect() {
+#ifndef CHROMIUM_MOZILLA_BUILD
   DLOG(WARNING) << "Connect called twice";
+#endif
 
   if (!thread_check_.get())
     thread_check_.reset(new NonThreadSafe());

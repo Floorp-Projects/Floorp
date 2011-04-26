@@ -42,8 +42,6 @@
 #include "nsStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsINameSpaceManager.h"
-#include "nsIRenderingContext.h"
-#include "nsIFontMetrics.h"
 
 #include "nsCSSRendering.h"
 #include "prprf.h"         // For PR_snprintf()
@@ -297,7 +295,7 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     nsSize availSize(aReflowState.ComputedWidth(), NS_UNCONSTRAINEDSIZE);
@@ -316,13 +314,13 @@ nsMathMLmactionFrame::Reflow(nsPresContext*          aPresContext,
 
 // Only place the selected child ...
 /* virtual */ nsresult
-nsMathMLmactionFrame::Place(nsIRenderingContext& aRenderingContext,
+nsMathMLmactionFrame::Place(nsRenderingContext& aRenderingContext,
                             PRBool               aPlaceOrigin,
                             nsHTMLReflowMetrics& aDesiredSize)
 {
   aDesiredSize.width = aDesiredSize.height = 0;
   aDesiredSize.ascent = 0;
-  mBoundingMetrics.Clear();
+  mBoundingMetrics = nsBoundingMetrics();
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     GetReflowAndBoundingMetricsFor(childFrame, aDesiredSize, mBoundingMetrics);

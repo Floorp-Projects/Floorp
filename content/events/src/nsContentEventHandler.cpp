@@ -864,7 +864,6 @@ nsContentEventHandler::OnQueryDOMWidgetHittest(nsQueryContentEvent* aEvent)
     }
     if (aEvent->widget == targetWidget)
       aEvent->mReply.mWidgetIsHit = PR_TRUE;
-    nsIWidget* pEventWidget = aEvent->widget.get();
   }
 
   aEvent->mSucceeded = PR_TRUE;

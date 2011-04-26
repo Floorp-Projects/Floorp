@@ -71,7 +71,7 @@ bool ots_maxp_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 }
 
 bool ots_maxp_should_serialise(OpenTypeFile *file) {
-  return file->maxp;
+  return file->maxp != NULL;
 }
 
 bool ots_maxp_serialise(OTSStream *out, OpenTypeFile *file) {

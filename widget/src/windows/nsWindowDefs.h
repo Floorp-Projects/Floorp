@@ -56,6 +56,8 @@
 // A magic APP message that can be sent to quit, sort of like a QUERYENDSESSION/ENDSESSION,
 // but without the query.
 #define MOZ_WM_APP_QUIT                   (WM_APP+0x0300)
+// Used as a "tracer" event to probe event loop latency.
+#define MOZ_WM_TRACE                      (WM_APP+0x0301)
 
 // GetWindowsVersion constants
 #define WIN2K_VERSION                     0x500
@@ -167,24 +169,11 @@
    */
 #endif // #ifndef APPCOMMAND_BROWSER_BACKWARD
 
-#if defined(WINCE)
-#ifndef RDW_NOINTERNALPAINT
-#define RDW_NOINTERNALPAINT     0
-#endif
-#ifndef ERROR
-#define ERROR 0
-#endif
-#endif // defined(WINCE)
-
 //Tablet PC Mouse Input Source
-#if !defined(WINCE)
 #define TABLET_INK_SIGNATURE 0xFFFFFF00
 #define TABLET_INK_CHECK     0xFF515700
 #define TABLET_INK_TOUCH     0x00000080
 #define MOUSE_INPUT_SOURCE() GetMouseInputSource()
-#else
-#define MOUSE_INPUT_SOURCE() nsIDOMNSMouseEvent::MOZ_SOURCE_MOUSE
-#endif
 
 /**************************************************************
  *
@@ -244,6 +233,18 @@ struct nsAlternativeCharCode; // defined in nsGUIEvent.h
 struct nsFakeCharMessage {
   UINT mCharCode;
   UINT mScanCode;
+
+  MSG GetCharMessage(HWND aWnd)
+  {
+    MSG msg;
+    msg.hwnd = aWnd;
+    msg.message = WM_CHAR;
+    msg.wParam = static_cast<WPARAM>(mCharCode);
+    msg.lParam = static_cast<LPARAM>(mScanCode);
+    msg.time = 0;
+    msg.pt.x = msg.pt.y = 0;
+    return msg;
+  }
 };
 
 // Used in char processing

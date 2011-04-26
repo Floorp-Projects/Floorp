@@ -37,173 +37,15 @@
 
 #include "nsRect.h"
 #include "nsString.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 #include "prlog.h"
 #include <limits.h>
 
 // the mozilla::css::Side sequence must match the nsMargin nscoord sequence
 PR_STATIC_ASSERT((NS_SIDE_TOP == 0) && (NS_SIDE_RIGHT == 1) && (NS_SIDE_BOTTOM == 2) && (NS_SIDE_LEFT == 3));
 
-
 /* static */
 const nsIntRect nsIntRect::kMaxSizedIntRect(0, 0, INT_MAX, INT_MAX);
-
-// Containment
-PRBool nsRect::Contains(nscoord aX, nscoord aY) const
-{
-  return (PRBool) ((aX >= x) && (aY >= y) &&
-                   (aX < XMost()) && (aY < YMost()));
-}
-
-//Also Returns true if aRect is Empty
-PRBool nsRect::Contains(const nsRect &aRect) const
-{
-  return aRect.IsEmpty() ||
-          ((PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
-                    (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost())));
-}
-
-// Intersection. Returns TRUE if the receiver overlaps aRect and
-// FALSE otherwise
-PRBool nsRect::Intersects(const nsRect &aRect) const
-{
-  return (PRBool) ((x < aRect.XMost()) && (y < aRect.YMost()) &&
-                   (aRect.x < XMost()) && (aRect.y < YMost()));
-}
-
-// Computes the area in which aRect1 and aRect2 overlap and fills 'this' with
-// the result. Returns FALSE if the rectangles don't intersect.
-PRBool nsRect::IntersectRect(const nsRect &aRect1, const nsRect &aRect2)
-{
-  nscoord  xmost1 = aRect1.XMost();
-  nscoord  ymost1 = aRect1.YMost();
-  nscoord  xmost2 = aRect2.XMost();
-  nscoord  ymost2 = aRect2.YMost();
-  nscoord  temp;
-
-  x = PR_MAX(aRect1.x, aRect2.x);
-  y = PR_MAX(aRect1.y, aRect2.y);
-
-  // Compute the destination width
-  temp = PR_MIN(xmost1, xmost2);
-  if (temp <= x) {
-    width = 0;
-  } else {
-    width = temp - x;
-  }
-
-  // Compute the destination height
-  temp = PR_MIN(ymost1, ymost2);
-  if (temp <= y) {
-    height = 0;
-  } else {
-    height = temp - y;
-  }
-
-  return !IsEmpty();
-}
-
-// Computes the smallest rectangle that contains both aRect1 and aRect2 and
-// fills 'this' with the result. Returns FALSE if both aRect1 and aRect2 are
-// empty and TRUE otherwise
-PRBool nsRect::UnionRect(const nsRect &aRect1, const nsRect &aRect2)
-{
-  PRBool  result = PR_TRUE;
-
-  // Is aRect1 empty?
-  if (aRect1.IsEmpty()) {
-    if (aRect2.IsEmpty()) {
-      // Both rectangles are empty which is an error
-      Empty();
-      result = PR_FALSE;
-    } else {
-      // aRect1 is empty so set the result to aRect2
-      *this = aRect2;
-    }
-  } else if (aRect2.IsEmpty()) {
-    // aRect2 is empty so set the result to aRect1
-    *this = aRect1;
-  } else {
-    UnionRectIncludeEmpty(aRect1, aRect2);
-  }
-
-  return result;
-}
-
-void nsRect::UnionRectIncludeEmpty(const nsRect &aRect1, const nsRect &aRect2)
-{
-  nscoord xmost1 = aRect1.XMost();
-  nscoord xmost2 = aRect2.XMost();
-  nscoord ymost1 = aRect1.YMost();
-  nscoord ymost2 = aRect2.YMost();
-
-  // Compute the origin
-  x = PR_MIN(aRect1.x, aRect2.x);
-  y = PR_MIN(aRect1.y, aRect2.y);
-
-  // Compute the size
-  width = PR_MAX(xmost1, xmost2) - x;
-  height = PR_MAX(ymost1, ymost2) - y;
-}
-
-// Inflate the rect by the specified width and height
-void nsRect::Inflate(nscoord aDx, nscoord aDy)
-{
-  x -= aDx;
-  y -= aDy;
-  width += 2 * aDx;
-  height += 2 * aDy;
-}
-
-// Inflate the rect by the specified margin
-void nsRect::Inflate(const nsMargin &aMargin)
-{
-  x -= aMargin.left;
-  y -= aMargin.top;
-  width += aMargin.left + aMargin.right;
-  height += aMargin.top + aMargin.bottom;
-}
-
-// Deflate the rect by the specified width and height
-void nsRect::Deflate(nscoord aDx, nscoord aDy)
-{
-  x += aDx;
-  y += aDy;
-  width = PR_MAX(0, width - 2 * aDx);
-  height = PR_MAX(0, height - 2 * aDy);
-}
-
-// Deflate the rect by the specified margin
-void nsRect::Deflate(const nsMargin &aMargin)
-{
-  x += aMargin.left;
-  y += aMargin.top;
-  width = PR_MAX(0, width - aMargin.LeftRight());
-  height = PR_MAX(0, height - aMargin.TopBottom());
-}
-
-// Find difference between rects as an nsMargin
-nsMargin nsRect::operator-(const nsRect& aRect) const
-{
-  nsMargin margin;
-  margin.left = aRect.x - x;
-  margin.right = XMost() - aRect.XMost();
-  margin.top = aRect.y - y;
-  margin.bottom = YMost() - aRect.YMost();
-  return margin;
-}
-
-// scale the rect but round to smallest containing rect
-nsRect& nsRect::ScaleRoundOut(float aXScale, float aYScale)
-{
-  nscoord right = NSToCoordCeil(float(XMost()) * aXScale);
-  nscoord bottom = NSToCoordCeil(float(YMost()) * aYScale);
-  x = NSToCoordFloor(float(x) * aXScale);
-  y = NSToCoordFloor(float(y) * aYScale);
-  width = (right - x);
-  height = (bottom - y);
-  return *this;
-}
 
 #ifdef DEBUG
 static bool IsFloatInteger(float aFloat)
@@ -217,7 +59,7 @@ nsRect& nsRect::ExtendForScaling(float aXMult, float aYMult)
   NS_ASSERTION((IsFloatInteger(aXMult) || IsFloatInteger(1/aXMult)) &&
                (IsFloatInteger(aYMult) || IsFloatInteger(1/aYMult)),
                "Multiplication factors must be integers or 1/integer");
-               
+
   // Scale rect by multiplier, snap outwards to integers and then unscale.
   // We round the results to the nearest integer to prevent floating point errors.
   if (aXMult < 1) {
@@ -243,102 +85,19 @@ FILE* operator<<(FILE* out, const nsRect& rect)
   // Output the coordinates in fractional pixels so they're easier to read
   tmp.AppendLiteral("{");
   tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.x,
-                       nsIDeviceContext::AppUnitsPerCSSPixel()));
+                       nsDeviceContext::AppUnitsPerCSSPixel()));
   tmp.AppendLiteral(", ");
   tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.y,
-                       nsIDeviceContext::AppUnitsPerCSSPixel()));
+                       nsDeviceContext::AppUnitsPerCSSPixel()));
   tmp.AppendLiteral(", ");
   tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.width,
-                       nsIDeviceContext::AppUnitsPerCSSPixel()));
+                       nsDeviceContext::AppUnitsPerCSSPixel()));
   tmp.AppendLiteral(", ");
   tmp.AppendFloat(NSAppUnitsToFloatPixels(rect.height,
-                       nsIDeviceContext::AppUnitsPerCSSPixel()));
+                       nsDeviceContext::AppUnitsPerCSSPixel()));
   tmp.AppendLiteral("}");
   fputs(NS_LossyConvertUTF16toASCII(tmp).get(), out);
   return out;
 }
 
 #endif // DEBUG
-
-// Computes the area in which aRect1 and aRect2 overlap and fills 'this' with
-// the result. Returns FALSE if the rectangles don't intersect.
-PRBool nsIntRect::IntersectRect(const nsIntRect &aRect1, const nsIntRect &aRect2)
-{
-  PRInt32  xmost1 = aRect1.XMost();
-  PRInt32  ymost1 = aRect1.YMost();
-  PRInt32  xmost2 = aRect2.XMost();
-  PRInt32  ymost2 = aRect2.YMost();
-  PRInt32  temp;
-
-  x = PR_MAX(aRect1.x, aRect2.x);
-  y = PR_MAX(aRect1.y, aRect2.y);
-
-  // Compute the destination width
-  temp = PR_MIN(xmost1, xmost2);
-  if (temp <= x) {
-    Empty();
-    return PR_FALSE;
-  }
-  width = temp - x;
-
-  // Compute the destination height
-  temp = PR_MIN(ymost1, ymost2);
-  if (temp <= y) {
-    Empty();
-    return PR_FALSE;
-  }
-  height = temp - y;
-
-  return PR_TRUE;
-}
-
-// Computes the smallest rectangle that contains both aRect1 and aRect2 and
-// fills 'this' with the result. Returns FALSE if both aRect1 and aRect2 are
-// empty and TRUE otherwise
-PRBool nsIntRect::UnionRect(const nsIntRect &aRect1, const nsIntRect &aRect2)
-{
-  PRBool  result = PR_TRUE;
-
-  // Is aRect1 empty?
-  if (aRect1.IsEmpty()) {
-    if (aRect2.IsEmpty()) {
-      // Both rectangles are empty which is an error
-      Empty();
-      result = PR_FALSE;
-    } else {
-      // aRect1 is empty so set the result to aRect2
-      *this = aRect2;
-    }
-  } else if (aRect2.IsEmpty()) {
-    // aRect2 is empty so set the result to aRect1
-    *this = aRect1;
-  } else {
-    PRInt32 xmost1 = aRect1.XMost();
-    PRInt32 xmost2 = aRect2.XMost();
-    PRInt32 ymost1 = aRect1.YMost();
-    PRInt32 ymost2 = aRect2.YMost();
-
-    // Compute the origin
-    x = PR_MIN(aRect1.x, aRect2.x);
-    y = PR_MIN(aRect1.y, aRect2.y);
-
-    // Compute the size
-    width = PR_MAX(xmost1, xmost2) - x;
-    height = PR_MAX(ymost1, ymost2) - y;
-  }
-
-  return result;
-}
-
-// scale the rect but round to smallest containing rect
-nsIntRect& nsIntRect::ScaleRoundOut(float aXScale, float aYScale)
-{
-  nscoord right = NSToCoordCeil(float(XMost()) * aXScale);
-  nscoord bottom = NSToCoordCeil(float(YMost()) * aYScale);
-  x = NSToCoordFloor(float(x) * aXScale);
-  y = NSToCoordFloor(float(y) * aYScale);
-  width = (right - x);
-  height = (bottom - y);
-  return *this;
-}
-

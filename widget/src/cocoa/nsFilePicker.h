@@ -74,6 +74,13 @@ public:
   NS_IMETHOD Show(PRInt16 *_retval); 
   NS_IMETHOD AppendFilter(const nsAString& aTitle, const nsAString& aFilter);
 
+  /**
+   * Returns the current filter list in the format used by Cocoa's NSSavePanel
+   * and NSOpenPanel.
+   * Returns nil if no filter currently apply.
+   */
+  NSArray* GetFilterList();
+
 protected:
 
   virtual void InitNative(nsIWidget *aParent, const nsAString& aTitle, PRInt16 aMode);
@@ -82,11 +89,10 @@ protected:
   // aFile is an existing but unspecified file. These functions must specify it.
   //
   // will return |returnCancel| or |returnOK| as result.
-  PRInt16 GetLocalFiles(const nsString& inTitle, const nsString& inDefaultName, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles);
+  PRInt16 GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsCOMArray<nsILocalFile>& outFiles);
   PRInt16 GetLocalFolder(const nsString& inTitle, nsILocalFile** outFile);
   PRInt16 PutLocalFile(const nsString& inTitle, const nsString& inDefaultName, nsILocalFile** outFile);
 
-  NSArray  *GenerateFilterList();
   void     SetDialogTitle(const nsString& inTitle, id aDialog);
   NSString *PanelDefaultDirectory();
   NSView* GetAccessoryView();
