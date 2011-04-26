@@ -147,7 +147,7 @@ MOZ_UNICHARUTIL_LIBS = $(LIBXUL_DIST)/lib/$(LIB_PREFIX)unicharutil_s.$(LIB_SUFFI
 MOZ_WIDGET_SUPPORT_LIBS    = $(DIST)/lib/$(LIB_PREFIX)widgetsupport_s.$(LIB_SUFFIX)
 
 ifdef MOZ_MEMORY
-ifneq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifneq ($(OS_ARCH),WINNT)
 JEMALLOC_LIBS = $(MKSHLIB_FORCE_ALL) $(call EXPAND_MOZLIBNAME,jemalloc) $(MKSHLIB_UNFORCE_ALL)
 # If we are linking jemalloc into a program, we want the jemalloc symbols
 # to be exported
@@ -342,6 +342,11 @@ ifdef SIMPLE_PROGRAMS
 NO_PROFILE_GUIDED_OPTIMIZE = 1
 endif
 
+# No sense in profiling unit tests
+ifdef CPP_UNIT_TESTS
+NO_PROFILE_GUIDED_OPTIMIZE = 1
+endif
+
 # Enable profile-based feedback
 ifndef NO_PROFILE_GUIDED_OPTIMIZE
 ifdef MOZ_PROFILE_GENERATE
@@ -393,7 +398,7 @@ endif
 # Force _all_ exported methods to be |_declspec(dllexport)| when we're
 # building them into the executable.
 
-ifeq (,$(filter-out WINNT WINCE OS2, $(OS_ARCH)))
+ifeq (,$(filter-out WINNT OS2, $(OS_ARCH)))
 ifdef BUILD_STATIC_LIBS
 DEFINES += \
         -D_IMPL_NS_GFX \
@@ -442,11 +447,10 @@ PURIFY = purify $(PURIFYOPTIONS)
 QUANTIFY = quantify $(QUANTIFYOPTIONS)
 ifdef CROSS_COMPILE
 XPIDL_COMPILE = $(LIBXUL_DIST)/host/bin/host_xpidl$(HOST_BIN_SUFFIX)
-XPIDL_LINK = $(LIBXUL_DIST)/host/bin/host_xpt_link$(HOST_BIN_SUFFIX)
 else
 XPIDL_COMPILE = $(LIBXUL_DIST)/bin/xpidl$(BIN_SUFFIX)
-XPIDL_LINK = $(LIBXUL_DIST)/bin/xpt_link$(BIN_SUFFIX)
 endif
+XPIDL_LINK = $(PYTHON) $(LIBXUL_DIST)/sdk/bin/xpt.py link
 
 # Java macros
 JAVA_GEN_DIR  = _javagen
@@ -585,11 +589,9 @@ endif
 # we link statically or dynamic?  Assuming dynamic for now.
 
 ifneq (WINNT_,$(OS_ARCH)_$(GNU_CC))
-ifneq (,$(filter-out WINCE,$(OS_ARCH)))
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 ifdef LIBXUL_SDK
 LIBS_DIR	+= -L$(LIBXUL_SDK)/bin -L$(LIBXUL_SDK)/lib
-endif
 endif
 endif
 
@@ -607,10 +609,6 @@ SDK_BIN_DIR = $(DIST)/sdk/bin
 DEPENDENCIES	= .md
 
 MOZ_COMPONENT_LIBS=$(XPCOM_LIBS) $(MOZ_COMPONENT_NSPR_LIBS)
-
-ifeq (xpconnect, $(findstring xpconnect, $(BUILD_MODULES)))
-DEFINES +=  -DXPCONNECT_STANDALONE
-endif
 
 ifeq ($(OS_ARCH),OS2)
 ELF_DYNSTR_GC	= echo
@@ -805,9 +803,6 @@ MERGE_FILE = $(LOCALE_SRCDIR)/$(1)
 endif
 MERGE_FILES = $(foreach f,$(1),$(call MERGE_FILE,$(f)))
 
-ifdef WINCE
-RUN_TEST_PROGRAM = $(PYTHON) $(topsrcdir)/build/mobile/devicemanager-run-test.py
-else
 ifeq (OS2,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(topsrcdir)/build/os2/test_os2.cmd "$(DIST)"
 else
@@ -815,7 +810,6 @@ ifneq (WINNT,$(OS_ARCH))
 RUN_TEST_PROGRAM = $(DIST)/bin/run-mozilla.sh
 endif # ! WINNT
 endif # ! OS2
-endif # ! WINCE
 
 #
 # Java macros
@@ -845,3 +839,7 @@ EXPAND_CC = $(EXPAND_LIBS_EXEC) --uselist -- $(CC)
 EXPAND_CCC = $(EXPAND_LIBS_EXEC) --uselist -- $(CCC)
 EXPAND_LD = $(EXPAND_LIBS_EXEC) --uselist -- $(LD)
 EXPAND_MKSHLIB = $(EXPAND_LIBS_EXEC) --uselist -- $(MKSHLIB)
+
+ifdef STDCXX_COMPAT
+CHECK_STDCXX = objdump -p $(1) | grep -e 'GLIBCXX_3\.4\.\(9\|[1-9][0-9]\)' && echo "Error: We don't want these libstdc++ symbol versions to be used" && exit 1 || exit 0
+endif

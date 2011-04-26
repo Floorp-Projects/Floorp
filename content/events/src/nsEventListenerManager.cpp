@@ -56,7 +56,6 @@
 #ifdef MOZ_SVG
 #include "nsGkAtoms.h"
 #endif // MOZ_SVG
-#include "nsIEventStateManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIJSEventListener.h"
@@ -508,7 +507,14 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window)
       window->SetHasOrientationEventListener();
-  } else if (aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) {
+  } else if ((aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) ||
+             (aTypeAtom == nsGkAtoms::ontouchstart ||
+              aTypeAtom == nsGkAtoms::ontouchend ||
+              aTypeAtom == nsGkAtoms::ontouchmove ||
+              aTypeAtom == nsGkAtoms::ontouchenter ||
+              aTypeAtom == nsGkAtoms::ontouchleave ||
+              aTypeAtom == nsGkAtoms::ontouchcancel)) {
+    mMayHaveTouchEventListener = PR_TRUE;
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window)
       window->SetHasTouchEventListeners();
@@ -697,8 +703,6 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv;
-
   nsCOMPtr<nsINode> node(do_QueryInterface(aObject));
 
   nsCOMPtr<nsIDocument> doc;
@@ -734,6 +738,7 @@ nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
     return NS_OK;
   }
 
+  nsresult rv = NS_OK;
   // return early preventing the event listener from being added
   // 'doc' is fetched above
   if (doc) {

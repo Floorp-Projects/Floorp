@@ -48,11 +48,9 @@
 #include "nsReadableUtils.h"
 #include "nsTextBoxFrame.h"
 #include "nsCOMPtr.h"
-#include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "nsStyleContext.h"
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
@@ -64,7 +62,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULLabelElement.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsITheme.h"
 #include "nsUnicharUtils.h"
 #include "nsContentUtils.h"
@@ -72,7 +70,6 @@
 #include "nsCSSRendering.h"
 #include "nsIReflowCallback.h"
 #include "nsBoxFrame.h"
-#include "nsIThebesFontMetrics.h"
 
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
@@ -339,7 +336,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   NS_DISPLAY_DECL_NAME("XULTextBox", TYPE_XUL_TEXT_BOX)
 
@@ -352,7 +349,7 @@ public:
 
 void
 nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
-                           nsIRenderingContext* aCtx)
+                           nsRenderingContext* aCtx)
 {
   gfxContextAutoDisableSubpixelAntialiasing disable(aCtx->ThebesContext(),
                                                     mDisableSubpixelAA);
@@ -388,7 +385,7 @@ nsTextBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
+nsTextBoxFrame::PaintTitle(nsRenderingContext& aRenderingContext,
                            const nsRect&        aDirtyRect,
                            nsPoint              aPt)
 {
@@ -415,7 +412,7 @@ nsTextBoxFrame::PaintTitle(nsIRenderingContext& aRenderingContext,
 }
 
 void
-nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
+nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                          const nsRect&        aTextRect,
                          const nscolor*       aOverrideColor)
 {
@@ -429,16 +426,17 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
     PRUint8 underStyle;
     PRUint8 strikeStyle;
     nsStyleContext* context = mStyleContext;
-  
-    PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE; // Begin with no decorations
-    PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | NS_STYLE_TEXT_DECORATION_OVERLINE |
-                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH; // A mask of all possible decorations.
-    PRBool hasDecorations = context->HasTextDecorations();
+
+    // Begin with no decorations
+    PRUint8 decorations = NS_STYLE_TEXT_DECORATION_LINE_NONE;
+    // A mask of all possible decorations.
+    PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_LINE_LINES_MASK;
+    PRBool hasDecorationLines = context->HasTextDecorationLines();
 
     do {  // find decoration colors
       const nsStyleTextReset* styleText = context->GetStyleTextReset();
       
-      if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
+      if (decorMask & styleText->mTextDecorationLine) {  // a decoration defined here
         nscolor color;
         if (aOverrideColor) {
           color = *aOverrideColor;
@@ -451,40 +449,42 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
         }
         PRUint8 style = styleText->GetDecorationStyle();
 
-        if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE & decorMask &
+              styleText->mTextDecorationLine) {
           underColor = color;
           underStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-          decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
+          decorations |= NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE;
         }
-        if (NS_STYLE_TEXT_DECORATION_OVERLINE & decorMask & styleText->mTextDecoration) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_OVERLINE & decorMask &
+              styleText->mTextDecorationLine) {
           overColor = color;
           overStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
-          decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
+          decorations |= NS_STYLE_TEXT_DECORATION_LINE_OVERLINE;
         }
-        if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decorMask & styleText->mTextDecoration) {
+        if (NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH & decorMask &
+              styleText->mTextDecorationLine) {
           strikeColor = color;
           strikeStyle = style;
-          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-          decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
+          decorations |= NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH;
         }
       }
       if (0 != decorMask) {
         context = context->GetParent();
         if (context) {
-          hasDecorations = context->HasTextDecorations();
+          hasDecorationLines = context->HasTextDecorationLines();
         }
       }
-    } while (context && hasDecorations && (0 != decorMask));
+    } while (context && hasDecorationLines && (0 != decorMask));
 
-    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
 
     nscoord offset;
     nscoord size;
-    nscoord ascent;
-    fontMet->GetMaxAscent(ascent);
+    nscoord ascent = fontMet->MaxAscent();
 
     nscoord baseline =
       presContext->RoundAppUnitsToNearestDevPixels(aTextRect.y + ascent);
@@ -504,21 +504,23 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
       fontMet->GetUnderline(offset, size);
       gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
       gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
-      if (decorations & NS_FONT_DECORATION_UNDERLINE) {
+      if ((decorations & NS_FONT_DECORATION_UNDERLINE) &&
+          underStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
         nsCSSRendering::PaintDecorationLine(ctx, underColor,
                           pt, gfxSize(width, sizePixel),
                           ascentPixel, offsetPixel,
-                          NS_STYLE_TEXT_DECORATION_UNDERLINE, underStyle);
+                          NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, underStyle);
       }
-      if (decorations & NS_FONT_DECORATION_OVERLINE) {
+      if ((decorations & NS_FONT_DECORATION_OVERLINE) &&
+          overStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
         nsCSSRendering::PaintDecorationLine(ctx, overColor,
                           pt, gfxSize(width, sizePixel),
                           ascentPixel, ascentPixel,
-                          NS_STYLE_TEXT_DECORATION_OVERLINE, overStyle);
+                          NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, overStyle);
       }
     }
 
-    nsCOMPtr<nsIRenderingContext> refContext =
+    nsRefPtr<nsRenderingContext> refContext =
         PresContext()->PresShell()->GetReferenceRenderingContext();
 
     aRenderingContext.SetFont(fontMet);
@@ -533,32 +535,28 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
 
     if (mState & NS_FRAME_IS_BIDI) {
       presContext->SetBidiEnabled();
-      nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
-
-      if (bidiUtils) {
-        const nsStyleVisibility* vis = GetStyleVisibility();
-        nsBidiDirection direction = (NS_STYLE_DIRECTION_RTL == vis->mDirection) ? NSBIDI_RTL : NSBIDI_LTR;
-        if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
-           // We let the RenderText function calculate the mnemonic's
-           // underline position for us.
-           nsBidiPositionResolve posResolve;
-           posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
-           rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
-                                      presContext, aRenderingContext,
-                                      *refContext,
-                                      aTextRect.x, baseline,
-                                      &posResolve,
-                                      1);
-           mAccessKeyInfo->mBeforeWidth = posResolve.visualLeftTwips;
-           mAccessKeyInfo->mAccessWidth = posResolve.visualWidth;
-        }
-        else
-        {
-           rv = bidiUtils->RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
-                                      presContext, aRenderingContext,
-                                      *refContext,
-                                      aTextRect.x, baseline);
-        }
+      const nsStyleVisibility* vis = GetStyleVisibility();
+      nsBidiDirection direction = (NS_STYLE_DIRECTION_RTL == vis->mDirection) ? NSBIDI_RTL : NSBIDI_LTR;
+      if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
+          // We let the RenderText function calculate the mnemonic's
+          // underline position for us.
+          nsBidiPositionResolve posResolve;
+          posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
+          rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
+                                           presContext, aRenderingContext,
+                                           *refContext,
+                                           aTextRect.x, baseline,
+                                           &posResolve,
+                                           1);
+          mAccessKeyInfo->mBeforeWidth = posResolve.visualLeftTwips;
+          mAccessKeyInfo->mAccessWidth = posResolve.visualWidth;
+      }
+      else
+      {
+          rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), direction,
+                                           presContext, aRenderingContext,
+                                           *refContext,
+                                           aTextRect.x, baseline);
       }
     }
     if (NS_FAILED(rv) )
@@ -571,15 +569,16 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
            // underline position by getting the text metric.
            // XXX are attribute values always two byte?
            if (mAccessKeyInfo->mAccesskeyIndex > 0)
-               refContext->GetWidth(mCroppedTitle.get(), mAccessKeyInfo->mAccesskeyIndex,
-                                    mAccessKeyInfo->mBeforeWidth);
+               mAccessKeyInfo->mBeforeWidth =
+                   refContext->GetWidth(mCroppedTitle.get(),
+                                        mAccessKeyInfo->mAccesskeyIndex);
            else
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
-       nsIThebesFontMetrics* fm = static_cast<nsIThebesFontMetrics*>(fontMet.get());
-       fm->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
-                      aTextRect.x, baseline, &aRenderingContext, refContext.get());
+       fontMet->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
+                           aTextRect.x, baseline, &aRenderingContext,
+                           refContext.get());
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
@@ -591,13 +590,15 @@ nsTextBoxFrame::DrawText(nsIRenderingContext& aRenderingContext,
 
     // Strikeout is drawn on top of the text, per
     // http://www.w3.org/TR/CSS21/zindex.html point 7.2.1.4.1.1.
-    if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
+    if ((decorations & NS_FONT_DECORATION_LINE_THROUGH) &&
+        strikeStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
       fontMet->GetStrikeout(offset, size);
       gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
       gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
       nsCSSRendering::PaintDecorationLine(ctx, strikeColor,
                         pt, gfxSize(width, sizePixel), ascentPixel, offsetPixel,
-                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH, strikeStyle);
+                        NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
+                        strikeStyle);
     }
 }
 
@@ -627,50 +628,46 @@ void nsTextBoxFrame::PaintOneShadow(gfxContext*      aCtx,
   else
     shadowColor = aForegroundColor;
 
-  // Conjure an nsIRenderingContext from a gfxContext for DrawText
-  nsCOMPtr<nsIRenderingContext> renderingContext = nsnull;
-  nsIDeviceContext* devCtx = PresContext()->DeviceContext();
-  devCtx->CreateRenderingContextInstance(*getter_AddRefs(renderingContext));
-  if (!renderingContext)
-    return;
-  renderingContext->Init(devCtx, shadowContext);
+  // Conjure an nsRenderingContext from a gfxContext for DrawText
+  nsRefPtr<nsRenderingContext> renderingContext = new nsRenderingContext();
+  renderingContext->Init(PresContext()->DeviceContext(), shadowContext);
 
   aCtx->Save();
   aCtx->NewPath();
   aCtx->SetColor(gfxRGBA(shadowColor));
 
-  // Draw the text onto our alpha-only surface to capture the alpha values.
-  // Remember that the box blur context has a device offset on it, so we don't need to
-  // translate any coordinates to fit on the surface.
+  // Draw the text onto our alpha-only surface to capture the alpha
+  // values.  Remember that the box blur context has a device offset
+  // on it, so we don't need to translate any coordinates to fit on
+  // the surface.
   DrawText(*renderingContext, shadowRect, &shadowColor);
   contextBoxBlur.DoPaint();
   aCtx->Restore();
 }
 
 void
-nsTextBoxFrame::CalculateUnderline(nsIRenderingContext& aRenderingContext)
+nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext)
 {
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
          // Calculate all fields of mAccessKeyInfo which
          // are the same for both BiDi and non-BiDi frames.
          const PRUnichar *titleString = mCroppedTitle.get();
          aRenderingContext.SetTextRunRTL(PR_FALSE);
-         aRenderingContext.GetWidth(titleString[mAccessKeyInfo->mAccesskeyIndex],
-                                    mAccessKeyInfo->mAccessWidth);
+         mAccessKeyInfo->mAccessWidth =
+             aRenderingContext.GetWidth(titleString[mAccessKeyInfo->
+                                                    mAccesskeyIndex]);
 
          nscoord offset, baseline;
-         nsIFontMetrics *metrics;
-         aRenderingContext.GetFontMetrics(metrics);
+         nsFontMetrics* metrics = aRenderingContext.FontMetrics();
          metrics->GetUnderline(offset, mAccessKeyInfo->mAccessUnderlineSize);
-         metrics->GetMaxAscent(baseline);
-         NS_RELEASE(metrics);
+         baseline = metrics->MaxAscent();
          mAccessKeyInfo->mAccessOffset = baseline - offset;
     }
 }
 
 nscoord
 nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
-                                       nsIRenderingContext& aRenderingContext,
+                                       nsRenderingContext& aRenderingContext,
                                        nscoord              aWidth)
 {
     if (mTitle.IsEmpty())
@@ -699,7 +696,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
     // see if the width is even smaller than the ellipsis
     // if so, clear the text (XXX set as many '.' as we can?).
     aRenderingContext.SetTextRunRTL(PR_FALSE);
-    aRenderingContext.GetWidth(kEllipsis, titleWidth);
+    titleWidth = aRenderingContext.GetWidth(kEllipsis);
 
     if (titleWidth > aWidth) {
         mCroppedTitle.SetLength(0);
@@ -727,7 +724,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             for (i = 0; i < length; ++i) {
                 PRUnichar ch = mTitle.CharAt(i);
                 // still in LTR mode
-                aRenderingContext.GetWidth(ch,cwidth);
+                cwidth = aRenderingContext.GetWidth(ch);
                 if (twidth + cwidth > aWidth)
                     break;
 
@@ -757,7 +754,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             int i;
             for (i=length-1; i >= 0; --i) {
                 PRUnichar ch = mTitle.CharAt(i);
-                aRenderingContext.GetWidth(ch,cwidth);
+                cwidth = aRenderingContext.GetWidth(ch);
                 if (twidth + cwidth > aWidth)
                     break;
 
@@ -801,7 +798,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
             for (leftPos = 0; leftPos <= rightPos;) {
                 // look at the next character on the left end
                 ch = mTitle.CharAt(leftPos);
-                aRenderingContext.GetWidth(ch, charWidth);
+                charWidth = aRenderingContext.GetWidth(ch);
                 totalWidth += charWidth;
                 if (totalWidth > aWidth)
                     // greater than the allowable width
@@ -817,7 +814,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsPresContext*      aPresContext,
                 if (rightPos > leftPos) {
                     // haven't looked at this character yet
                     ch = mTitle.CharAt(rightPos);
-                    aRenderingContext.GetWidth(ch, charWidth);
+                    charWidth = aRenderingContext.GetWidth(ch);
                     totalWidth += charWidth;
                     if (totalWidth > aWidth)
                         // greater than the allowable width
@@ -1002,16 +999,19 @@ nsTextBoxFrame::MarkIntrinsicWidthsDirty()
 }
 
 void
-nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
-                                const nsString& aString, nsSize& aSize, nscoord& aAscent)
+nsTextBoxFrame::GetTextSize(nsPresContext* aPresContext,
+                            nsRenderingContext& aRenderingContext,
+                            const nsString& aString,
+                            nsSize& aSize, nscoord& aAscent)
 {
-    nsCOMPtr<nsIFontMetrics> fontMet;
+    nsRefPtr<nsFontMetrics> fontMet;
     nsLayoutUtils::GetFontMetricsForFrame(this, getter_AddRefs(fontMet));
-    fontMet->GetHeight(aSize.height);
+    aSize.height = fontMet->MaxHeight();
     aRenderingContext.SetFont(fontMet);
     aSize.width =
-      nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aString.get(), aString.Length());
-    fontMet->GetMaxAscent(aAscent);
+      nsLayoutUtils::GetStringWidth(this, &aRenderingContext,
+                                    aString.get(), aString.Length());
+    aAscent = fontMet->MaxAscent();
 }
 
 void
@@ -1021,7 +1021,7 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
     {
         nsSize size;
         nsPresContext* presContext = aBoxLayoutState.PresContext();
-        nsIRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
+        nsRenderingContext* rendContext = aBoxLayoutState.GetRenderingContext();
         if (rendContext) {
             GetTextSize(presContext, *rendContext,
                         mTitle, size, mAscent);
@@ -1032,7 +1032,7 @@ nsTextBoxFrame::CalcTextSize(nsBoxLayoutState& aBoxLayoutState)
 }
 
 void
-nsTextBoxFrame::CalcDrawRect(nsIRenderingContext &aRenderingContext)
+nsTextBoxFrame::CalcDrawRect(nsRenderingContext &aRenderingContext)
 {
     nsRect textRect(nsPoint(0, 0), GetSize());
     nsMargin borderPadding;
@@ -1159,17 +1159,15 @@ nsTextBoxFrame::RegUnregAccessKey(PRBool aDoReg)
     if (accessKey.IsEmpty())
         return NS_OK;
 
-    nsresult rv;
-
     // With a valid PresContext we can get the ESM 
     // and (un)register the access key
-    nsIEventStateManager *esm = PresContext()->EventStateManager();
+    nsEventStateManager *esm = PresContext()->EventStateManager();
 
     PRUint32 key = accessKey.First();
     if (aDoReg)
-        rv = esm->RegisterAccessKey(mContent, key);
+        esm->RegisterAccessKey(mContent, key);
     else
-        rv = esm->UnregisterAccessKey(mContent, key);
+        esm->UnregisterAccessKey(mContent, key);
 
-    return rv;
+    return NS_OK;
 }

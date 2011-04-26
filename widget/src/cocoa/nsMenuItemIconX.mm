@@ -75,7 +75,8 @@ static const PRUint32 kIconBitsPerPixel = kIconBitsPerComponent *
 static const PRUint32 kIconBytesPerRow = kIconWidth * kIconBitsPerPixel / 8;
 static const PRUint32 kIconBytes = kIconBytesPerRow * kIconHeight;
 
-typedef nsresult (nsIDOMRect::*GetRectSideMethod)(nsIDOMCSSPrimitiveValue**);
+typedef NS_STDCALL_FUNCPROTO(nsresult, GetRectSideMethod, nsIDOMRect,
+                             GetBottom, (nsIDOMCSSPrimitiveValue**));
 
 NS_IMPL_ISUPPORTS2(nsMenuItemIconX, imgIContainerObserver, imgIDecoderObserver)
 
@@ -239,7 +240,7 @@ nsMenuItemIconX::GetIconURI(nsIURI** aIconURI)
   // Empty the mImageRegionRect initially as the image region CSS could
   // have been changed and now have an error or have been removed since the
   // last GetIconURI call.
-  mImageRegionRect.Empty();
+  mImageRegionRect.SetEmpty();
 
   // If this menu item shouldn't have an icon, the string will be empty,
   // and NS_NewURI will fail.

@@ -95,6 +95,7 @@ function run_test() {
   do_check_eq(node.itemId, livemarkItem);
   node = rootNode.getChild(1);
   do_check_eq(node.itemId, nonLivemarkItem);
+  rootNode.containerOpen = false;
 
   // exclude livemark items, search for "item", should get one result
   options = histsvc.getNewQueryOptions();
@@ -109,4 +110,5 @@ function run_test() {
   do_check_eq(cc, 1);
   var node = rootNode.getChild(0);
   do_check_eq(node.itemId, nonLivemarkItem);
+  rootNode.containerOpen = false;
 }

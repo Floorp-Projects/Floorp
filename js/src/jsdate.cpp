@@ -1189,16 +1189,10 @@ NowAsMillis()
     return (jsdouble) (PRMJ_Now() / PRMJ_USEC_PER_MSEC);
 }
 
-static inline jsdouble
-NowAsFractionalsMillis()
-{
-    return (jsdouble) (PRMJ_Now() / double(PRMJ_USEC_PER_MSEC));
-}
-
 static JSBool
 date_now(JSContext *cx, uintN argc, Value *vp)
 {
-    vp->setDouble(NowAsFractionalsMillis());
+    vp->setDouble(NowAsMillis());
     return JS_TRUE;
 }
 
@@ -1206,7 +1200,7 @@ date_now(JSContext *cx, uintN argc, Value *vp)
 static jsdouble FASTCALL
 date_now_tn(JSContext*)
 {
-    return NowAsFractionalsMillis();
+    return NowAsMillis();
 }
 #endif
 

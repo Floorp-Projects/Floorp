@@ -40,7 +40,6 @@
 
 #ifdef JS_THREADSAFE
 
-#include <algorithm>
 #include <string.h>
 #include "prthread.h"
 #include "prlock.h"
@@ -117,7 +116,7 @@ class Queue {
 
     T pop() {
         if (front->empty()) {
-            std::reverse(back->begin(), back->end());
+            js::Reverse(back->begin(), back->end());
             Vec *tmp = front;
             front = back;
             back = tmp;

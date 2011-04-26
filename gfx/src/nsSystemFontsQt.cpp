@@ -36,11 +36,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+// Qt headers must be included before anything that might pull in our
+// malloc wrappers.
 #include <QApplication>
 #include <QFont>
-
-#include "nsIDeviceContext.h"
-#include "nsIRenderingContext.h"
 
 #include "nsSystemFontsQt.h"
 #include "gfxQtPlatform.h"
@@ -57,7 +56,7 @@ nsSystemFontsQt::nsSystemFontsQt()
    GetSystemFontInfo("QlineEdit", &mFieldFontName, &mFieldFontStyle);
 
    GetSystemFontInfo("QAction", &mMenuFontName, &mMenuFontStyle);
-  
+
    GetSystemFontInfo("QPushButton", &mButtonFontName, &mButtonFontStyle);
 }
 

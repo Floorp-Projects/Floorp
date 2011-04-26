@@ -38,6 +38,7 @@
 
 #include "nsIMemoryReporter.h"
 #include "nsMemory.h"
+#include "CheckedInt.h"
 
 #include "gfxASurface.h"
 #include "gfxContext.h"
@@ -83,6 +84,8 @@
 #include "nsCOMPtr.h"
 #include "nsIConsoleService.h"
 #include "nsServiceManagerUtils.h"
+
+using mozilla::CheckedInt;
 
 static cairo_user_data_key_t gfxasurface_pointer_key;
 
@@ -290,8 +293,8 @@ void
 gfxASurface::MarkDirty(const gfxRect& r)
 {
     cairo_surface_mark_dirty_rectangle(mSurface,
-                                       (int) r.pos.x, (int) r.pos.y,
-                                       (int) r.size.width, (int) r.size.height);
+                                       (int) r.X(), (int) r.Y(),
+                                       (int) r.Width(), (int) r.Height());
 }
 
 void
@@ -353,32 +356,36 @@ gfxASurface::CheckSurfaceSize(const gfxIntSize& sz, PRInt32 limit)
         return PR_FALSE;
     }
 
+    // reject images with sides bigger than limit
+    if (limit && (sz.width > limit || sz.height > limit)) {
+        NS_WARNING("Surface size too large (exceeds caller's limit)!");
+        return PR_FALSE;
+    }
+
 #if defined(XP_MACOSX)
-    // CoreGraphics is limited to images < 32K in *height*, so clamp all surfaces on the Mac to that height
+    // CoreGraphics is limited to images < 32K in *height*,
+    // so clamp all surfaces on the Mac to that height
     if (sz.height > SHRT_MAX) {
-        NS_WARNING("Surface size too large (would overflow)!");
+        NS_WARNING("Surface size too large (exceeds CoreGraphics limit)!");
         return PR_FALSE;
     }
 #endif
 
-    // check to make sure we don't overflow a 32-bit
-    PRInt32 tmp = sz.width * sz.height;
-    if (tmp && tmp / sz.height != sz.width) {
+    // make sure the surface area doesn't overflow a PRInt32
+    CheckedInt<PRInt32> tmp = sz.width;
+    tmp *= sz.height;
+    if (!tmp.valid()) {
         NS_WARNING("Surface size too large (would overflow)!");
         return PR_FALSE;
     }
 
-    // always assume 4-byte stride
-    tmp = tmp * 4;
-    if (tmp && tmp / 4 != sz.width * sz.height) {
-        NS_WARNING("Surface size too large (would overflow)!");
+    // assuming 4-byte stride, make sure the allocation size
+    // doesn't overflow a PRInt32 either
+    tmp *= 4;
+    if (!tmp.valid()) {
+        NS_WARNING("Allocation too large (would overflow)!");
         return PR_FALSE;
     }
-
-    // reject images with sides bigger than limit
-    if (limit &&
-        (sz.width > limit || sz.height > limit))
-        return PR_FALSE;
 
     return PR_TRUE;
 }

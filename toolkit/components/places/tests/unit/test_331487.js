@@ -102,6 +102,10 @@ function run_test() {
   do_check_eq(sf2Node.childCount, 1);
   do_check_eq(sf2Node.getChild(0).itemId, b3);
 
+  sf2Node.containerOpen = false;
+  sf1Node.containerOpen = false;
+  root.containerOpen = false;
+
   // bookmark query that should result in a flat list
   // because we specified max results
   var options = histsvc.getNewQueryOptions();
@@ -116,6 +120,7 @@ function run_test() {
   do_check_eq(root.getChild(0).itemId, b1);
   do_check_eq(root.getChild(1).itemId, b2);
   do_check_eq(root.getChild(2).itemId, b3);
+  root.containerOpen = false;
 
   // XXX TODO
   // test that if we have: more than one query, 

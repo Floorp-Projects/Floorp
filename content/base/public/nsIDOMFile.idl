@@ -49,14 +49,22 @@ interface nsIDOMBlob : nsISupports
   readonly attribute unsigned long long size;
   readonly attribute DOMString type;
 
-  nsIDOMBlob slice(in unsigned long long start,
-                   in unsigned long long length,
-                   [optional] in DOMString contentType);
+  [noscript] nsIDOMBlob slice(in unsigned long long start,
+                              in unsigned long long length,
+                              [optional] in DOMString contentType);
 
   [noscript] readonly attribute nsIInputStream internalStream;
   // The caller is responsible for releasing the internalUrl from the
   // moz-filedata: protocol handler
   [noscript] DOMString getInternalUrl(in nsIPrincipal principal);
+};
+
+[scriptable, uuid(cb5b4191-a555-4e57-b8d2-88091184b59f)]
+interface nsIDOMBlob_MOZILLA_2_0_BRANCH : nsISupports
+{
+  [optional_argc] nsIDOMBlob mozSlice(in long long start,
+                                      [optional] in long long end,
+                                      [optional] in DOMString contentType);
 };
 
 [scriptable, uuid(ae1405b0-e411-481e-9606-b29ec7982687)]

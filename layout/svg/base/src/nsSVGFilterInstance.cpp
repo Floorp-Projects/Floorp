@@ -140,13 +140,13 @@ nsSVGFilterInstance::ComputeFilterPrimitiveSubregion(PrimitiveInfo* aPrimitive)
   gfxRect region = UserSpaceToFilterSpace(feArea);
 
   if (!fE->HasAttr(kNameSpaceID_None, nsGkAtoms::x))
-    region.pos.x = defaultFilterSubregion.X();
+    region.x = defaultFilterSubregion.X();
   if (!fE->HasAttr(kNameSpaceID_None, nsGkAtoms::y))
-    region.pos.y = defaultFilterSubregion.Y();
+    region.y = defaultFilterSubregion.Y();
   if (!fE->HasAttr(kNameSpaceID_None, nsGkAtoms::width))
-    region.size.width = defaultFilterSubregion.Width();
+    region.width = defaultFilterSubregion.Width();
   if (!fE->HasAttr(kNameSpaceID_None, nsGkAtoms::height))
-    region.size.height = defaultFilterSubregion.Height();
+    region.height = defaultFilterSubregion.Height();
 
   // We currently require filter primitive subregions to be pixel-aligned.
   // Following the spec, any pixel partially in the region is included

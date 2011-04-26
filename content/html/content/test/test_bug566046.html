@@ -13,7 +13,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566046
   <base target='frame2'>
   <base target=''>
 </head>
-<body onload="setTimeout(runTests);">
+<body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=566046">Mozilla Bug 566046</a>
 <p id="display"></p>
 <style>
@@ -82,6 +82,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=566046
 /** Test for Bug 566046 **/
 
 SimpleTest.waitForExplicitFinish();
+addLoadEvent(function() {
+  setTimeout(runTests, 0);
+});
 
 var gTestResults = {
   frame1: "data:text/html,?foo=foo",

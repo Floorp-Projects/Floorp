@@ -122,7 +122,7 @@ bool ots_vdmx_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
 bool ots_vdmx_should_serialise(OpenTypeFile *file) {
   if (!file->glyf) return false;  // this table is not for CFF fonts.
-  return file->vdmx;
+  return file->vdmx != NULL;
 }
 
 bool ots_vdmx_serialise(OTSStream *out, OpenTypeFile *file) {

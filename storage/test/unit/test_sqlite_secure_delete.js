@@ -112,27 +112,12 @@ function test_delete_removes_data()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-var tests =
 [
   test_delete_removes_data,
-];
-let index = 0;
-
-function run_next_test()
-{
-  if (index < tests.length) {
-    do_test_pending();
-    print("Running the next test: " + tests[index].name);
-    tests[index++]();
-  }
-
-  do_test_finished();
-}
+ ].forEach(add_test);
 
 function run_test()
 {
   cleanup();
-
-  do_test_pending();
   run_next_test();
 }

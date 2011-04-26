@@ -36,10 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <Cocoa/Cocoa.h>
-
 #include "nsSystemFontsMac.h"
-
+#include <Cocoa/Cocoa.h>
 
 nsSystemFontsMac::nsSystemFontsMac()
 {

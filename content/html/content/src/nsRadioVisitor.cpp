@@ -38,7 +38,7 @@
 #include "nsRadioVisitor.h"
 #include "nsAutoPtr.h"
 #include "nsHTMLInputElement.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "nsIDocument.h"
 #include "nsIConstraintValidation.h"
 

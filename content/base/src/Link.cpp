@@ -39,7 +39,7 @@
 
 #include "Link.h"
 
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "nsIURL.h"
 
 #include "nsContentUtils.h"

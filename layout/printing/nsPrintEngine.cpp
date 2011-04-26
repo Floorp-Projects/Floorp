@@ -126,10 +126,10 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
-#include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpec.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
+#include "nsRenderingContext.h"
 
 #include "nsIPageSequenceFrame.h"
 #include "nsIURL.h"
@@ -207,7 +207,7 @@ static const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecified
 // Forward Declarations
 static void DumpPrintObjectsListStart(const char * aStr, nsTArray<nsPrintObject*> * aDocList);
 static void DumpPrintObjectsTree(nsPrintObject * aPO, int aLevel= 0, FILE* aFD = nsnull);
-static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsIDeviceContext * aDC, int aLevel= 0, FILE * aFD = nsnull);
+static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,nsDeviceContext * aDC, int aLevel= 0, FILE * aFD = nsnull);
 
 #define DUMP_DOC_LIST(_title) DumpPrintObjectsListStart((_title), mPrt->mPrintDocList);
 #define DUMP_DOC_TREE DumpPrintObjectsTree(mPrt->mPrintObject);
@@ -430,7 +430,7 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
 static void DumpViews(nsIDocShell* aDocShell, FILE* out);
 static void DumpLayoutData(char* aTitleStr, char* aURLStr,
                            nsPresContext* aPresContext,
-                           nsIDeviceContext * aDC, nsIFrame * aRootFrame,
+                           nsDeviceContext * aDC, nsIFrame * aRootFrame,
                            nsIDocShell * aDocShell, FILE* aFD);
 #endif
 
@@ -655,11 +655,10 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
   rv = devspec->Init(nsnull, mPrt->mPrintSettings, aIsPrintPreview);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mPrt->mPrintDC = do_CreateInstance("@mozilla.org/gfx/devicecontext;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mPrt->mPrintDC = new nsDeviceContext();
   rv = mPrt->mPrintDC->InitForPrinting(devspec);
   NS_ENSURE_SUCCESS(rv, rv);
-  
+
   if (aIsPrintPreview) {
     mPrt->mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
 
@@ -730,24 +729,11 @@ nsPrintEngine::DoCommonPrint(PRBool                  aIsPrintPreview,
     }
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    PRUnichar * docTitleStr;
-    PRUnichar * docURLStr;
-
-    GetDisplayTitleAndURL(mPrt->mPrintObject, &docTitleStr, &docURLStr, eDocTitleDefURLDoc); 
-
-    // Nobody ever cared about the file name passed in, as far as I can tell
-    rv = mPrt->mPrintDC->PrepareDocument(docTitleStr, nsnull);
-
-    if (docTitleStr) nsMemory::Free(docTitleStr);
-    if (docURLStr) nsMemory::Free(docURLStr);
-
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRBool doNotify;
     ShowPrintProgress(PR_TRUE, doNotify);
     if (!doNotify) {
       // Print listener setup...
-      mPrt->OnStartPrinting();    
+      mPrt->OnStartPrinting();
       rv = DocumentReadyForPrinting();
       NS_ENSURE_SUCCESS(rv, rv);
     }
@@ -2083,7 +2069,7 @@ nsPrintEngine::ReflowPrintObject(nsPrintObject * aPO)
         fprintf(fd, "Title: %s\n", docStr?docStr:"");
         fprintf(fd, "URL:   %s\n", urlStr?urlStr:"");
         fprintf(fd, "--------------- Frames ----------------\n");
-        nsCOMPtr<nsIRenderingContext> renderingContext;
+        nsRefPtr<nsRenderingContext> renderingContext;
         mPrt->mPrintDocDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
         RootFrameList(aPO->mPresContext, fd, 0);
         //DumpFrames(fd, aPO->mPresContext, renderingContext, theRootFrame, 0);
@@ -2334,8 +2320,8 @@ nsPrintEngine::DoPrint(nsPrintObject * aPO)
 
         poPresContext->SetIsRenderingOnlySelection(PR_TRUE);
         // temporarily creating rendering context
-        // which is needed to dinf the selection frames
-        nsCOMPtr<nsIRenderingContext> rc;
+        // which is needed to find the selection frames
+        nsRefPtr<nsRenderingContext> rc;
         mPrt->mPrintDC->CreateRenderingContext(*getter_AddRefs(rc));
 
         // find the starting and ending page numbers
@@ -2563,7 +2549,7 @@ nsPrintEngine::PrintPage(nsPrintObject*    aPO,
  */
 nsresult 
 nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
-                                           nsIRenderingContext& aRC,
+                                           nsRenderingContext& aRC,
                                            nsIAtom*        aList,
                                            nsIFrame *      aParentFrame,
                                            nsRect&         aRect,
@@ -2607,7 +2593,7 @@ nsPrintEngine::FindSelectionBoundsWithList(nsPresContext* aPresContext,
 // Find the Frame that is XMost
 nsresult 
 nsPrintEngine::FindSelectionBounds(nsPresContext* aPresContext,
-                                   nsIRenderingContext& aRC,
+                                   nsRenderingContext& aRC,
                                    nsIFrame *      aParentFrame,
                                    nsRect&         aRect,
                                    nsIFrame *&     aStartFrame,
@@ -2638,7 +2624,7 @@ nsPrintEngine::FindSelectionBounds(nsPresContext* aPresContext,
 nsresult 
 nsPrintEngine::GetPageRangeForSelection(nsIPresShell *        aPresShell,
                                         nsPresContext*       aPresContext,
-                                        nsIRenderingContext&  aRC,
+                                        nsRenderingContext&  aRC,
                                         nsISelection*         aSelection,
                                         nsIPageSequenceFrame* aPageSeqFrame,
                                         nsIFrame**            aStartFrame,
@@ -3491,7 +3477,7 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aInden
  */
 static void DumpFrames(FILE*                 out,
                        nsPresContext*       aPresContext,
-                       nsIRenderingContext * aRendContext,
+                       nsRenderingContext * aRendContext,
                        nsIFrame *            aFrame,
                        PRInt32               aLevel)
 {
@@ -3568,7 +3554,7 @@ DumpViews(nsIDocShell* aDocShell, FILE* out)
 void DumpLayoutData(char*              aTitleStr,
                     char*              aURLStr,
                     nsPresContext*    aPresContext,
-                    nsIDeviceContext * aDC,
+                    nsDeviceContext * aDC,
                     nsIFrame *         aRootFrame,
                     nsIDocShekk *      aDocShell,
                     FILE*              aFD = nsnull)
@@ -3597,7 +3583,7 @@ void DumpLayoutData(char*              aTitleStr,
     fprintf(fd, "URL:   %s\n", aURLStr?aURLStr:"");
     fprintf(fd, "--------------- Frames ----------------\n");
     fprintf(fd, "--------------- Frames ----------------\n");
-    nsCOMPtr<nsIRenderingContext> renderingContext;
+    nsRefPtr<nsRenderingContext> renderingContext;
     aDC->CreateRenderingContext(*getter_AddRefs(renderingContext));
     RootFrameList(aPresContext, fd, 0);
     //DumpFrames(fd, aPresContext, renderingContext, aRootFrame, 0);
@@ -3702,7 +3688,7 @@ static void GetDocTitleAndURL(nsPrintObject* aPO, char *& aDocStr, char *& aURLS
 
 //-------------------------------------------------------------
 static void DumpPrintObjectsTreeLayout(nsPrintObject * aPO,
-                                       nsIDeviceContext * aDC,
+                                       nsDeviceContext * aDC,
                                        int aLevel, FILE * aFD)
 {
   if (!kPrintingLogMod || kPrintingLogMod->level != DUMP_LAYOUT_LEVEL) return;

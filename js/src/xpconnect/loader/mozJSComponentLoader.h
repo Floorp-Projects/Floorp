@@ -54,9 +54,7 @@
 #include "xpcIJSModuleLoader.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
-#ifndef XPCONNECT_STANDALONE
 #include "nsIPrincipal.h"
-#endif
 #ifdef MOZ_ENABLE_LIBXUL
 #include "mozilla/scache/StartupCache.h"
 
@@ -143,9 +141,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     nsCOMPtr<nsIComponentManager> mCompMgr;
     nsCOMPtr<nsIJSRuntimeService> mRuntimeService;
     nsCOMPtr<nsIThreadJSContextStack> mContextStack;
-#ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIPrincipal> mSystemPrincipal;
-#endif
     JSRuntime *mRuntime;
     JSContext *mContext;
 

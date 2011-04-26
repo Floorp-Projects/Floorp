@@ -98,10 +98,10 @@ function test_guid_on_background()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let gTests = [
+[
   test_guid_invariants,
   test_guid_on_background,
-];
+].forEach(add_test);
 
 function run_test()
 {

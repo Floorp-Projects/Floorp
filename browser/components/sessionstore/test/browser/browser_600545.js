@@ -50,54 +50,6 @@ function testBug600545() {
   // Set the pref to false to cause non-app tabs to be stripped out on a save
   Services.prefs.setBoolPref("browser.sessionstore.resume_from_crash", false);
 
-  // Need to wait for SessionStore's saveState function to be called
-  // so that non-pinned tabs will be stripped from non-active window
-  function waitForSaveState(aSaveStateCallback) {
-    let topic = "sessionstore-state-write";
-    Services.obs.addObserver(function() {
-      Services.obs.removeObserver(arguments.callee, topic, false);
-      executeSoon(aSaveStateCallback);
-    }, topic, false);
-  };
-
-  // Need to wait for all tabs to be restored before reading browser state
-  function waitForBrowserState(aState, aSetStateCallback) {
-    let tabsRestored = 0;
-    let expectedTabs = getStateTabCount(aState);
-
-    // We know that there are only 2 windows total, so just be specific
-    let newWin;
-
-    // Used to determine when tabs have been restored
-    function onTabRestored(aEvent) {
-      if (++tabsRestored == expectedTabs) {
-        gBrowser.tabContainer.removeEventListener("SSTabRestored", onTabRestored, true);
-        newWin.gBrowser.tabContainer.removeEventListener("SSTabRestored", onTabRestored, true);
-        executeSoon(aSetStateCallback);
-      }
-    }
-
-    // We also want to catch the 2nd window, so we need to observe domwindowopened
-    function windowObserver(aSubject, aTopic, aData) {
-      let theWin = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      if (aTopic == "domwindowopened") {
-        theWin.addEventListener("load", function() {
-          theWin.removeEventListener("load", arguments.callee, false);
-
-          // So we can remove the event listener in onTabRestored
-          newWin = theWin;
-
-          Services.ww.unregisterNotification(windowObserver);
-          theWin.gBrowser.tabContainer.addEventListener("SSTabRestored", onTabRestored, true);
-        }, false);
-      }
-    }
-
-    Services.ww.registerNotification(windowObserver);
-    gBrowser.tabContainer.addEventListener("SSTabRestored", onTabRestored, true);
-    ss.setBrowserState(JSON.stringify(aState));
-  }
-
   // This tests the following use case:
   // When multiple windows are open and browser.sessionstore.resume_from_crash
   // preference is false, tab session data for non-active window is stripped for
@@ -124,6 +76,8 @@ function testBug600545() {
   ] };
 
   waitForBrowserState(state, function() {
+    // Need to wait for SessionStore's saveState function to be called
+    // so that non-pinned tabs will be stripped from non-active window
     waitForSaveState(function () {
       let expectedNumberOfTabs = getStateTabCount(state);
       let retrievedState = JSON.parse(ss.getBrowserState());

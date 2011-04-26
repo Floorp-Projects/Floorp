@@ -64,8 +64,7 @@ using mozilla::plugins::PluginInstanceParent;
 #include "gfxWindowsPlatform.h"
 #include "nsGfxCIID.h"
 #include "gfxContext.h"
-#include "nsIRenderingContext.h"
-#include "nsIDeviceContext.h"
+#include "nsRenderingContext.h"
 #include "prmem.h"
 
 #include "LayerManagerOGL.h"
@@ -77,10 +76,8 @@ using mozilla::plugins::PluginInstanceParent;
 #include "LayerManagerD3D10.h"
 #endif
 
-#ifndef WINCE
 #include "nsUXThemeData.h"
 #include "nsUXThemeConstants.h"
-#endif
 
 extern "C" {
 #include "pixman.h"
@@ -106,15 +103,6 @@ using namespace mozilla::layers;
 
 static nsAutoPtr<PRUint8>  sSharedSurfaceData;
 static gfxIntSize          sSharedSurfaceSize;
-
-/**************************************************************
- *
- * SECTION: global variables.
- *
- **************************************************************/
-
-static NS_DEFINE_CID(kRegionCID,                  NS_REGION_CID);
-static NS_DEFINE_IID(kRenderingContextCID,        NS_RENDERING_CONTEXT_CID);
 
 /**************************************************************
  **************************************************************
@@ -172,25 +160,7 @@ nsWindowGfx::ConvertHRGNToRegion(HRGN aRgn)
  **************************************************************
  **************************************************************/
 
-void nsWindowGfx::OnSettingsChangeGfx(WPARAM wParam)
-{
-#if defined(WINCE_WINDOWS_MOBILE)
-  if (wParam == SETTINGCHANGE_RESET) {
-    if (glpDDSecondary) {
-      glpDDSecondary->Release();
-      glpDDSecondary = NULL;
-    }
-
-    if(glpDD)
-      glpDD->RestoreAllSurfaces();
-  }
-#endif
-}
-
 // GetRegionToPaint returns the invalidated region that needs to be painted
-// it's abstracted out because Windows XP/Vista/7 handles this for us, but
-// we need to keep track of it our selves for Windows CE and Windows Mobile
-
 nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
                                        PAINTSTRUCT ps, HDC aDC)
 {
@@ -200,14 +170,9 @@ nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
     return nsIntRegion(nsWindowGfx::ToIntRect(paintRect));
   }
 
-#if defined(WINCE_WINDOWS_MOBILE) || !defined(WINCE)
   HRGN paintRgn = ::CreateRectRgn(0, 0, 0, 0);
   if (paintRgn != NULL) {
-# ifdef WINCE
-    int result = GetUpdateRgn(mWnd, paintRgn, FALSE);
-# else
     int result = GetRandomRgn(aDC, paintRgn, SYSRGN);
-# endif
     if (result == 1) {
       POINT pt = {0,0};
       ::MapWindowPoints(NULL, mWnd, &pt, 1);
@@ -215,12 +180,8 @@ nsIntRegion nsWindow::GetRegionToPaint(PRBool aForceFullRepaint,
     }
     nsIntRegion rgn(nsWindowGfx::ConvertHRGNToRegion(paintRgn));
     ::DeleteObject(paintRgn);
-# ifdef WINCE
-    if (!rgn.IsEmpty())
-# endif
-      return rgn;
+    return rgn;
   }
-#endif
   return nsIntRegion(nsWindowGfx::ToIntRect(ps.rcPaint));
 }
 
@@ -442,15 +403,12 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
             thebesContext->Paint();
             thebesContext->SetOperator(gfxContext::OPERATOR_OVER);
           }
-#ifdef WINCE
-          thebesContext->SetFlag(gfxContext::FLAG_SIMPLIFY_OPERATORS);
-#endif
 
           // don't need to double buffer with anything but GDI
           BasicLayerManager::BufferMode doubleBuffering =
             BasicLayerManager::BUFFER_NONE;
           if (IsRenderMode(gfxWindowsPlatform::RENDER_GDI)) {
-# if defined(MOZ_XUL) && !defined(WINCE)
+#ifdef MOZ_XUL
             switch (mTransparencyMode) {
               case eTransparencyGlass:
               case eTransparencyBorderlessGlass:
@@ -637,7 +595,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
 
   mPaintDC = nsnull;
 
-#if defined(WIDGET_DEBUG_OUTPUT) && !defined(WINCE)
+#if defined(WIDGET_DEBUG_OUTPUT)
   if (debug_WantPaintFlashing())
   {
     // Only flash paint events which have not ignored the paint message.
@@ -652,7 +610,7 @@ PRBool nsWindow::OnPaint(HDC aDC, PRUint32 aNestingLevel)
     ::ReleaseDC(mWnd, debugPaintFlashDC);
     ::DeleteObject(debugPaintFlashRegion);
   }
-#endif // WIDGET_DEBUG_OUTPUT && !WINCE
+#endif // WIDGET_DEBUG_OUTPUT
 
   mPainting = PR_FALSE;
 
@@ -745,9 +703,6 @@ PRUint8* nsWindowGfx::Data32BitTo1Bit(PRUint8* aImageData,
 
 PRBool nsWindowGfx::IsCursorTranslucencySupported()
 {
-#ifdef WINCE
-  return PR_FALSE;
-#else
   static PRBool didCheck = PR_FALSE;
   static PRBool isSupported = PR_FALSE;
   if (!didCheck) {
@@ -757,7 +712,6 @@ PRBool nsWindowGfx::IsCursorTranslucencySupported()
   }
 
   return isSupported;
-#endif
 }
 
 /**
@@ -780,7 +734,6 @@ HBITMAP nsWindowGfx::DataToBitmap(PRUint8* aImageData,
                                   PRUint32 aHeight,
                                   PRUint32 aDepth)
 {
-#ifndef WINCE
   HDC dc = ::GetDC(NULL);
 
   if (aDepth == 32 && IsCursorTranslucencySupported()) {
@@ -841,7 +794,4 @@ HBITMAP nsWindowGfx::DataToBitmap(PRUint8* aImageData,
   HBITMAP bmp = ::CreateDIBitmap(dc, &head, CBM_INIT, aImageData, &bi, DIB_RGB_COLORS);
   ::ReleaseDC(NULL, dc);
   return bmp;
-#else
-  return nsnull;
-#endif
 }
