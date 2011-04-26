@@ -2300,12 +2300,11 @@ nsFormControlList::GetLength(PRUint32* aLength)
 NS_IMETHODIMP
 nsFormControlList::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
-  nsresult rv;
   nsISupports* item = GetNodeAt(aIndex);
   if (!item) {
     *aReturn = nsnull;
 
-    return rv;
+    return NS_OK;
   }
 
   return CallQueryInterface(item, aReturn);

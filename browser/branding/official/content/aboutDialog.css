@@ -1,0 +1,31 @@
+#clientBox {
+  background-color: #F7F7F7;
+  color: #222222;
+}
+
+#leftBox {
+  background-image: url("chrome://branding/content/about-logo.png");
+  background-repeat: no-repeat;
+  /* min-width and min-height create room for the logo */
+  min-width: 210px;
+  min-height: 210px;
+  margin-top:20px;
+  -moz-margin-start: 30px;
+}
+
+#rightBox {
+  margin-left: 30px;
+  margin-right: 30px;
+}
+
+#updateDeck > hbox > label:not([class="text-link"]) {
+  color: #909090;
+}
+
+#trademark {
+  font-size: xx-small;
+  text-align: center;
+  color: #999999;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}

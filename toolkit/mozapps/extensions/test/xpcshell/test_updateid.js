@@ -387,8 +387,7 @@ function check_test_6() {
       do_check_eq(a4, null);
       do_check_neq(a2, null);
 
-      // TODO bug 613294, uninstall methods aren't called in this case at the moment
-      do_check_eq(getInstalledVersion(), 4);
+      do_check_eq(getInstalledVersion(), 0);
       do_check_eq(getActiveVersion(), 0);
 
       end_test();
