@@ -65,22 +65,9 @@
                  accesskey="&editBookmarkOverlay.name.accesskey;"
                  control="editBMPanel_namePicker"
                  observes="paneElementsBroadcaster"/>
-          <menulist id="editBMPanel_namePicker"
-                    flex="1"
-                    editable="true"
-                    droppable="false"
-                    oninput="gEditItemOverlay.onNamePickerInput();"
-                    onblur="gEditItemOverlay.onNamePickerChange();"
-                    oncommand="gEditItemOverlay.onNamePickerChange();"
-                    observes="paneElementsBroadcaster">
-            <menupopup>
-              <menuitem id="editBMPanel_userEnteredName"/>
-              <menuitem disabled="true">
-                <menuseparator flex="1"/>
-                <label value="&editBookmarkOverlay.liveTitlesSeparator.label;"/>
-              </menuitem>
-            </menupopup>
-          </menulist>
+          <textbox id="editBMPanel_namePicker"
+                   onblur="gEditItemOverlay.onNamePickerChange();"
+                   observes="paneElementsBroadcaster"/>
         </row>
 
         <row align="center" id="editBMPanel_locationRow">
