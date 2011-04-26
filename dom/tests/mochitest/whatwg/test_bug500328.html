@@ -52,7 +52,14 @@ function statusMsg(msg) {
 }
 
 function longWait() {
-  setTimeout(function() { gGen.next(); }, 1000);
+  function hitEventLoop(times, func) {
+    if (times > 0) {
+      setTimeout(hitEventLoop, 0, times - 1, func);
+    } else {
+      setTimeout(func, 0);
+    }
+  }
+  hitEventLoop(100, function() { gGen.next(); });
 }
 
 function shortWait() {
@@ -356,7 +363,7 @@ function runTest() {
   while (getColor(ifLink) != unvisitedColor) {
     // Dump so something shows up in the mochitest logs if we spin here.
     dump("ifLink has wrong initial color.  Spinning...\n");
-    setTimeout(function() { gGen.next(); }, 10);
+    setTimeout(function() { gGen.next(); }, 0);
     yield;
   }
 
@@ -373,7 +380,7 @@ function runTest() {
   // Check that the link's color is now visitedColor
   while (getColor(ifLink) != visitedColor) {
     dump("ifLink has wrong color after pushstate.  Spinning...\n");
-    setTimeout(function() { gGen.next(); }, 10);
+    setTimeout(function() { gGen.next(); }, 0);
     yield;
   }
 
@@ -387,7 +394,7 @@ function runTest() {
   // Check that the link's color is back to the unvisited color.
   while (getColor(ifLink) != unvisitedColor) {
     dump("ifLink has wrong color after pushstating out of dir.  Spinning...\n");
-    setTimeout(function() { gGen.next(); }, 10);
+    setTimeout(function() { gGen.next(); }, 0);
     yield;
   }
 
@@ -659,10 +666,6 @@ function runTest() {
   enableChildLoadCallback();
   // navigate to http://mochi.test:8888/[...]/file_bug500328_1.html
   iframeCw.location = innerLoc;
-  yield;
-
-  // Let the load handler finish.
-  longWait();
   yield;
 
   // PushState to a URL which doesn't exist
