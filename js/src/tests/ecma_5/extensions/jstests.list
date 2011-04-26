@@ -23,6 +23,7 @@ script regress-bug629723.js
 script strict-function-statements.js
 script strict-option-redeclared-parameter.js
 script string-literal-getter-setter-decompilation.js
+script toSource-infinite-recursion.js
 script uneval-strict-functions.js
 script watch-array-length.js
 script watch-inherited-property.js
