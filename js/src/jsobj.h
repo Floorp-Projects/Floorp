@@ -1548,6 +1548,13 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
                               Native constructor, uintN nargs,
                               JSPropertySpec *ps, JSFunctionSpec *fs,
                               JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+
+bool
+IsStandardClassResolved(JSObject *obj, js::Class *clasp);
+
+void
+MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp);
+
 }
 
 extern JSObject *

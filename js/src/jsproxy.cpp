@@ -1459,5 +1459,8 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
     }
     if (!JS_DefineFunctions(cx, module, static_methods))
         return NULL;
+
+    MarkStandardClassInitializedNoProto(obj, &js_ProxyClass);
+
     return module;
 }
