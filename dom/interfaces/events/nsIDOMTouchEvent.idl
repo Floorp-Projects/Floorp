@@ -42,8 +42,8 @@ interface nsIVariant;
  * @see http://dvcs.w3.org/hg/webevents/raw-file/tip/touchevents.html
  */
 
-[scriptable, uuid(f9f200ad-228f-4879-bc9e-a13bd6bb82ef)]
-interface nsIDOMTouchPoint : nsISupports {
+[scriptable, uuid(98bc0f7d-5bff-4387-9c42-58af54b48dd5)]
+interface nsIDOMTouch : nsISupports {
   readonly attribute long              identifier;
   readonly attribute nsIDOMEventTarget target;
   readonly attribute long              pageX;
@@ -61,8 +61,8 @@ interface nsIDOMTouchPoint : nsISupports {
 [scriptable, uuid(60706eb7-d50d-4379-b01c-e78e6af84213)]
 interface nsIDOMTouchList : nsISupports {
   readonly attribute unsigned long length;
-  nsIDOMTouchPoint item(in unsigned long index);
-  nsIDOMTouchPoint identifiedPoint(in long identifier);
+  nsIDOMTouch item(in unsigned long index);
+  nsIDOMTouch identifiedTouch(in long identifier);
 };
 
 [scriptable, uuid(df94b20b-7998-4f00-935c-ee2c6b179711)]
@@ -90,19 +90,19 @@ interface nsIDOMTouchEvent : nsIDOMUIEvent {
 
 [scriptable, uuid(922e0f11-28b9-4560-9fb8-869fe143845f)]
 interface nsIDOMDocumentTouch : nsISupports {
-  nsIDOMTouchPoint createTouch([optional] in nsIDOMAbstractView view,
-                               [optional] in nsIDOMEventTarget target,
-                               [optional] in long identifier,
-                               [optional] in long pageX,
-                               [optional] in long pageY,
-                               [optional] in long screenX,
-                               [optional] in long screenY,
-                               [optional] in long clientX,
-                               [optional] in long clientY,
-                               [optional] in long radiusX,
-                               [optional] in long radiusY,
-                               [optional] in float rotationAngle,
-                               [optional] in float force);
+  nsIDOMTouch createTouch([optional] in nsIDOMAbstractView view,
+                          [optional] in nsIDOMEventTarget target,
+                          [optional] in long identifier,
+                          [optional] in long pageX,
+                          [optional] in long pageY,
+                          [optional] in long screenX,
+                          [optional] in long screenY,
+                          [optional] in long clientX,
+                          [optional] in long clientY,
+                          [optional] in long radiusX,
+                          [optional] in long radiusY,
+                          [optional] in float rotationAngle,
+                          [optional] in float force);
   
 
   nsIDOMTouchList createTouchList([optional] in nsIVariant aPoints);
