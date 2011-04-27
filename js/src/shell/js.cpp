@@ -3219,7 +3219,8 @@ ResolveClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
 
     if (!*resolved) {
         if (JSID_IS_ATOM(id, CLASS_ATOM(cx, Reflect))) {
-            if (!js_InitReflectClass(cx, obj))
+            if (!IsStandardClassResolved(obj, &js_ReflectClass) &&
+                !js_InitReflectClass(cx, obj))
                 return JS_FALSE;
             *resolved = JS_TRUE;
         }
