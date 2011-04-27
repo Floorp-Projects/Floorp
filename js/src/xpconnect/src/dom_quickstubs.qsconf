@@ -204,7 +204,7 @@ members = [
     'nsIDOMNSUIEvent.pageY',
     'nsIDOMNSUIEvent.isChar',
 
-    'nsIDOMTouchPoint.*',
+    'nsIDOMTouch.*',
     'nsIDOMTouchList.*',
     'nsIDOMTouchEvent.*',
 
@@ -508,7 +508,7 @@ irregularFilenames = {
 
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
 
-    'nsIDOMTouchPoint': 'nsIDOMTouchEvent',
+    'nsIDOMTouch': 'nsIDOMTouchEvent',
     'nsIDOMTouchList': 'nsIDOMTouchEvent',
     }
 
