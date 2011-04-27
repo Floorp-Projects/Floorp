@@ -91,11 +91,6 @@ JSCompartment::JSCompartment(JSRuntime *rt)
 {
     JS_INIT_CLIST(&scripts);
 
-#ifdef JS_TRACER
-    /* InitJIT expects this area to be zero'd. */
-    PodZero(&traceMonitor);
-#endif
-
     PodArrayZero(scriptsToGC);
 }
 
@@ -103,10 +98,6 @@ JSCompartment::~JSCompartment()
 {
 #if ENABLE_YARR_JIT
     Foreground::delete_(regExpAllocator);
-#endif
-
-#if defined JS_TRACER
-    FinishJIT(&traceMonitor);
 #endif
 
 #ifdef JS_METHODJIT
@@ -143,7 +134,7 @@ JSCompartment::init()
 #endif
 
 #ifdef JS_TRACER
-    if (!InitJIT(&traceMonitor, rt))
+    if (!traceMonitor.init(rt))
         return false;
 #endif
 
