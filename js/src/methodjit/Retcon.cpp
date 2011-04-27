@@ -43,6 +43,7 @@
 #include "Retcon.h"
 #include "MethodJIT.h"
 #include "Compiler.h"
+#include "StubCalls.h"
 #include "jsdbgapi.h"
 #include "jsnum.h"
 #include "assembler/assembler/LinkBuffer.h"
@@ -513,6 +514,20 @@ Recompiler::recompile()
             } else if (fp->script() == script) {
                 if (!normalNatives.append(stealNative(script->jitNormal, fp->pc(cx, NULL))))
                     return false;
+            }
+        } else if (f->scratch == COMPILE_FUNCTION_SCRATCH_VALUE) {
+            if (fp->prev()->script() == script) {
+                PatchableAddress patch;
+                patch.location = addr;
+                patch.callSite.initialize(0, uint32(-1), fp->prev()->pc(cx, NULL) - script->code,
+                                          (size_t) JS_FUNC_TO_DATA_PTR(void *, stubs::UncachedCall));
+                if (fp->prev()->isConstructing()) {
+                    if (!ctorPatches.append(patch))
+                        return false;
+                } else {
+                    if (!normalPatches.append(patch))
+                        return false;
+                }
             }
         } else if (script->jitCtor && script->jitCtor->isValidCode(*addr)) {
             if (!ctorPatches.append(findPatch(script->jitCtor, addr)))
