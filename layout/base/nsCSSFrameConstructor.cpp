@@ -1022,6 +1022,8 @@ nsFrameConstructorState::PushAbsoluteContainingBlock(nsIFrame* aNewAbsoluteConta
    */
   mFixedPosIsAbsPos = (aNewAbsoluteContainingBlock &&
                        aNewAbsoluteContainingBlock->GetStyleDisplay()->HasTransform());
+
+  aNewAbsoluteContainingBlock->MarkAsAbsoluteContainingBlock();
 }
 
 void

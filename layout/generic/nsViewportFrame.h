@@ -118,6 +118,9 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
+private:
+  virtual nsIAtom* GetAbsoluteListName() const { return nsGkAtoms::fixedList; }
+
 protected:
   nsPoint AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const;
 
