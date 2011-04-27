@@ -1721,19 +1721,10 @@ nsCSSKeyframeStyleDeclaration::GetCSSDeclaration(PRBool aAllocate)
   }
 }
 
-/*
- * This is a utility function.  It will only fail if it can't get a
- * parser.  This means it can return NS_OK without aURI or aCSSLoader
- * being initialized.
- */
-nsresult
-nsCSSKeyframeStyleDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
-                                                nsIURI** aBaseURI,
-                                                nsIPrincipal** aSheetPrincipal,
-                                                css::Loader** aCSSLoader)
+void
+nsCSSKeyframeStyleDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
 {
-  return GetCSSParsingEnvironmentForRule(mRule, aSheetURI, aBaseURI,
-                                         aSheetPrincipal, aCSSLoader);
+  GetCSSParsingEnvironmentForRule(mRule, aCSSParseEnv);
 }
 
 NS_IMETHODIMP

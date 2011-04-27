@@ -170,40 +170,22 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(PRBool aAllocate)
   return decl;
 }
 
-/*
- * This is a utility function.  It will only fail if it can't get a
- * parser.  This means it can return NS_OK without aURI or aCSSLoader
- * being initialized.
- */
-nsresult
-nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
-                                                       nsIURI** aBaseURI,
-                                                       nsIPrincipal** aSheetPrincipal,
-                                                       mozilla::css::Loader** aCSSLoader)
+void
+nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv)
 {
   NS_ASSERTION(mElement, "Something is severely broken -- there should be an Element here!");
-  // null out the out params since some of them may not get initialized below
-  *aSheetURI = nsnull;
-  *aBaseURI = nsnull;
-  *aSheetPrincipal = nsnull;
-  *aCSSLoader = nsnull;
 
   nsIDocument* doc = mElement->GetOwnerDoc();
   if (!doc) {
     // document has been destroyed
-    return NS_ERROR_NOT_AVAILABLE;
+    aCSSParseEnv.mPrincipal = nsnull;
+    return;
   }
 
-  nsCOMPtr<nsIURI> baseURI = mElement->GetBaseURI();
-  nsCOMPtr<nsIURI> sheetURI = doc->GetDocumentURI();
-
-  NS_ADDREF(*aCSSLoader = doc->CSSLoader());
-
-  baseURI.swap(*aBaseURI);
-  sheetURI.swap(*aSheetURI);
-  NS_ADDREF(*aSheetPrincipal = mElement->NodePrincipal());
-
-  return NS_OK;
+  aCSSParseEnv.mSheetURI = doc->GetDocumentURI();
+  aCSSParseEnv.mBaseURI = mElement->GetBaseURI();
+  aCSSParseEnv.mPrincipal = mElement->NodePrincipal();
+  aCSSParseEnv.mCSSLoader = doc->CSSLoader();
 }
 
 NS_IMETHODIMP
