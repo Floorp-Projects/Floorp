@@ -42,24 +42,3 @@ script regress-636697.js
 script is-generator.js
 script weakmap.js
 script regress-650753.js
-skip-if(!xulRuntime.shell) script debug-object-01.js
-skip-if(!xulRuntime.shell) script debug-object-02.js
-skip-if(!xulRuntime.shell) script debug-object-03.js
-skip-if(!xulRuntime.shell) script debug-object-04.js
-skip-if(!xulRuntime.shell) script debug-object-05.js
-skip-if(!xulRuntime.shell) script debug-object-06.js
-skip-if(!xulRuntime.shell) script debug-object-07.js
-skip-if(!xulRuntime.shell) script debug-object-08.js
-skip-if(!xulRuntime.shell) script debug-object-09.js
-skip-if(!xulRuntime.shell) script debug-object-10.js
-skip-if(!xulRuntime.shell) script debug-object-11.js
-skip-if(!xulRuntime.shell) script debug-object-12.js
-skip-if(!xulRuntime.shell) script debug-object-13.js
-skip-if(!xulRuntime.shell) script debug-object-14.js
-skip-if(!xulRuntime.shell) script debug-object-15.js
-skip-if(!xulRuntime.shell) script debug-object-16.js
-skip-if(!xulRuntime.shell) script debug-object-17.js
-skip-if(!xulRuntime.shell) script debug-object-18.js
-skip-if(!xulRuntime.shell) script debug-object-19.js
-skip-if(!xulRuntime.shell) script debug-object-20.js
-skip-if(!xulRuntime.shell) script debug-object-21.js

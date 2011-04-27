@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Disabling a Debug object causes events to stop being delivered to it
 // immediately, even if we're in the middle of dispatching.
 
@@ -24,5 +22,3 @@ for (var i = 0; i < 4; i++) {
 log = '';
 g.eval("debugger; debugger;");
 assertEq(log, '0');
-
-reportCompare(0, 0, 'ok');

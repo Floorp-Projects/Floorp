@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Q: But who shall debug the debuggers?  A: jimb
 
 var log = '';
@@ -24,5 +22,3 @@ for (var i = 0; i < 8; i++)  // why have 2 debuggers when you can have 8
     top = addDebug(top, i);
 base.eval("debugger;");
 assertEq(log, '0123456776543210');
-
-reportCompare(0, 0, 'ok');

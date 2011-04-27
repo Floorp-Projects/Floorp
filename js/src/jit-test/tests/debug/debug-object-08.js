@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // When there are multiple debuggers, their hooks are called in order.
 
 var g = newGlobal('new-compartment');
@@ -38,5 +36,3 @@ arr[0].hooks = {
 log = '';
 assertEq(g.eval("debugger; 0;"), 1);
 assertEq(log, 'a');
-
-reportCompare(0, 0, 'ok');

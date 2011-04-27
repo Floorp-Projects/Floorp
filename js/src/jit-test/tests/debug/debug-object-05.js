@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // A debugger statement in a debuggerHandler should not reenter.
 
 var g = newGlobal('new-compartment');
@@ -16,5 +14,3 @@ dbg.hooks = {
 
 assertEq(g.eval("debugger; 7;"), 7);
 assertEq(calls, 1);
-
-reportCompare(0, 0, 'ok');

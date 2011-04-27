@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Simple {return:} resumption.
 
 var g = newGlobal('new-compartment');
@@ -15,5 +13,3 @@ dbg.hooks = {
 assertEq(g.eval("debugger; false;"), 1234);
 g.eval("function f() { debugger; return 'bad'; }");
 assertEq(g.f(), 1234);
-
-reportCompare(0, 0, 'ok');

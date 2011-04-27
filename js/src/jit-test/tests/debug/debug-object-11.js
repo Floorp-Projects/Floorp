@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Debuggers with enabled hooks should not be GC'd even if they are otherwise
 // unreachable.
 
@@ -20,5 +18,3 @@ f();
 gc(); gc(); gc();
 g.eval("debugger;");
 assertEq(actual, expected);
-
-reportCompare(0, 0, 'ok');

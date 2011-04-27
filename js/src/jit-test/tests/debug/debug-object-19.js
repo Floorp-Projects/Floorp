@@ -1,7 +1,7 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // uncaughtExceptionHook returns a resumption value.
+
+load(libdir + "asserts.js");
 
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
@@ -19,16 +19,8 @@ g.eval("debugger");
 // case 2: throw
 rv = {throw: 57};
 var result;
-try {
-    g.eval("debugger");
-    result = 'no exception thrown';
-} catch (exc) {
-    result = 'caught ' + exc;
-}
-assertEq(result, 'caught 57');
+assertThrowsValue(function () { g.eval("debugger"); }, 57);
 
 // case 3: return
 rv = {return: 42};
 assertEq(g.eval("debugger;"), 42);
-
-reportCompare(0, 0, 'ok');

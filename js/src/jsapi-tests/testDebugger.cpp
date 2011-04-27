@@ -103,3 +103,44 @@ BEGIN_TEST(testDebugger_getThisStrict)
     return true;
 }
 END_TEST(testDebugger_getThisStrict)
+
+BEGIN_TEST(testDebugger_debugObjectVsDebugMode)
+{
+    CHECK(JS_DefineDebugObject(cx, global));
+    JSObject *debuggee = JS_NewCompartmentAndGlobalObject(cx, getGlobalClass(), NULL);
+    CHECK(debuggee);
+
+    {
+        JSAutoEnterCompartment ae;
+        CHECK(ae.enter(cx, debuggee));
+        CHECK(JS_SetDebugMode(cx, true));
+        CHECK(JS_InitStandardClasses(cx, debuggee));
+    }
+
+    JSObject *debuggeeWrapper = debuggee;
+    CHECK(JS_WrapObject(cx, &debuggeeWrapper));
+    jsval v = OBJECT_TO_JSVAL(debuggeeWrapper);
+    CHECK(JS_SetProperty(cx, global, "debuggee", &v));
+
+    EVAL("var dbg = new Debug(debuggee);\n"
+         "var hits = 0;\n"
+         "dbg.hooks = {debuggerHandler: function () { hits++; }};\n"
+         "debuggee.eval('debugger;');\n"
+         "hits;\n",
+         &v);
+    CHECK_SAME(v, JSVAL_ONE);
+
+    {
+        JSAutoEnterCompartment ae;
+        CHECK(ae.enter(cx, debuggee));
+        CHECK(JS_SetDebugMode(cx, false));
+    }
+
+    EVAL("debuggee.eval('debugger; debugger; debugger;');\n"
+         "hits;\n",
+         &v);
+    CHECK_SAME(v, JSVAL_ONE);
+    
+    return true;
+}
+END_TEST(testDebugger_debugObjectVsDebugMode)

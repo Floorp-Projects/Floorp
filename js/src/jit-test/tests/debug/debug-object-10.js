@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // If a hook is deleted after setHooks or overwritten with a primitive, it
 // simply isn't called.
 
@@ -21,5 +19,3 @@ assertEq(hit, false);
 dbg.hooks.debuggerHandler = function (stack) { hit = true; };
 g.eval("debugger;");
 assertEq(hit, true);
-
-reportCompare(0, 0, 'ok');

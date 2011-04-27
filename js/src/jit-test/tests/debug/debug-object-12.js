@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Test adding hooks during dispatch. The behavior is deterministic and "nice",
 // but mainly what we are checking here is that we do not crash due to
 // modifying a data structure while we're iterating over it.
@@ -35,5 +33,3 @@ assertEq(hits, 4);
 hits = 0;
 g.eval("debugger;");
 assertEq(hits, 8);
-
-reportCompare(0, 0, 'ok');

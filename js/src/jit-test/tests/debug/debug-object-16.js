@@ -1,5 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
+// |jit-test| debug
 
 var desc = Object.getOwnPropertyDescriptor(Debug.prototype, "enabled");
 assertEq(typeof desc.get, 'function');
@@ -19,5 +18,3 @@ for (var i = 0; i < vals.length; i++) {
     g.eval("debugger;");
     assertEq(hits, vals[i] ? 1 : 0);
 }
-
-reportCompare(0, 0, 'ok');
