@@ -265,7 +265,7 @@ abstract public class GeckoApp
     }
 
     boolean IsUnsupportedDevice() {
-        // We don't currently support devices with less than 256Mb of RAM, warn on first run
+        // We don't currently support devices with less than 512Mb of RAM, warn on first run
         File meminfo = new File("/proc/meminfo");
         try {
             BufferedReader br = new BufferedReader(new FileReader(meminfo));
@@ -277,7 +277,7 @@ abstract public class GeckoApp
             totalMem = st.nextToken();
 
             Log.i("GeckoMemory", "MemTotal: " + Integer.parseInt(totalMem));
-            return Integer.parseInt(totalMem) <= 262144L;
+            return Integer.parseInt(totalMem) <= 524288L;
         } catch (Exception ex) {
             // Will catch  NullPointerException if totalMem isn't found,
             // a NumberFormatException if the token isn't parsible

@@ -5,7 +5,7 @@
 #ifndef OPENTYPE_SANITISER_H_
 #define OPENTYPE_SANITISER_H_
 
-#if defined(_MSC_VER)
+#if defined(_WIN32)
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
 typedef short int16_t;
@@ -14,16 +14,10 @@ typedef int int32_t;
 typedef unsigned int uint32_t;
 typedef __int64 int64_t;
 typedef unsigned __int64 uint64_t;
-#else
-#include <stdint.h>
-#endif
-
-#ifdef _WIN32
 #include <winsock2.h>  // for htons/ntohs
-#undef min
-#undef max
 #else
 #include <arpa/inet.h>
+#include <stdint.h>
 #endif
 
 #include <algorithm>  // for std::min
@@ -104,6 +98,10 @@ class OTSStream {
     return true;
   }
 
+  bool WriteU8(uint8_t v) {
+    return Write(&v, sizeof(v));
+  }
+
   bool WriteU16(uint16_t v) {
     v = htons(v);
     return Write(&v, sizeof(v));
@@ -112,6 +110,11 @@ class OTSStream {
   bool WriteS16(int16_t v) {
     v = htons(v);
     return Write(&v, sizeof(v));
+  }
+
+  bool WriteU24(uint32_t v) {
+    v = htonl(v);
+    return Write(reinterpret_cast<uint8_t*>(&v)+1, 3);
   }
 
   bool WriteU32(uint32_t v) {
@@ -177,11 +180,8 @@ class OTSStream {
 //     partial output may have been written.
 //   input: the OpenType file
 //   length: the size, in bytes, of |input|
-//   preserve_otl_tables: whether to preserve OpenType Layout tables
-//                        (GDEF/GPOS/GSUB) without verification
 // -----------------------------------------------------------------------------
-bool Process(OTSStream *output, const uint8_t *input, size_t length,
-             bool preserve_otl_tables = false);
+bool Process(OTSStream *output, const uint8_t *input, size_t length);
 
 // Force to disable debug output even when the library is compiled with
 // -DOTS_DEBUG.

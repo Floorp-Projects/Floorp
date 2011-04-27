@@ -1,0 +1,27 @@
+
+            ptr = allocp 8
+            j start
+
+success:    zero = immd 0.0
+            retd zero
+
+
+            ; do a store+load so we don't optimize away the test
+start:      a = immd 1.0
+            b = immd 2.0
+            c = addd a b
+            std c ptr 0
+
+            expect = immd 4.0
+            actual = ldd ptr 0
+
+            ; Test is for this code pattern, i386/x64 backend
+            ; could generate bad code for the != case of LIR_jf
+            ; if the branch is backwards. (Note that we compare 3.0
+            ; to 4.0 because we need the test to fail.)
+            cond = eqd expect actual
+            jf cond success
+
+            bad = immd -1.0
+            retd bad
+        

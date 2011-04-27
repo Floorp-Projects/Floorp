@@ -38,9 +38,10 @@
 #include "domstubs.idl"
 #include "nsIDOMMouseEvent.idl"
 
+interface nsIDOMAbstractView;
 interface nsIDOMDataTransfer;
 
-[scriptable, uuid(0f4fef03-c0e9-406c-a754-c01148e431ae)]
+[scriptable, uuid(98351627-62d7-4b07-bbf3-78009b20764b)]
 interface nsIDOMDragEvent : nsIDOMMouseEvent
 {
   readonly attribute nsIDOMDataTransfer dataTransfer;
@@ -48,7 +49,7 @@ interface nsIDOMDragEvent : nsIDOMMouseEvent
   void initDragEvent(in DOMString typeArg,
                      in boolean canBubbleArg,
                      in boolean cancelableArg,
-                     in nsIDOMWindow aView,
+                     in nsIDOMAbstractView aView,
                      in long aDetail,
                      in long aScreenX,
                      in long aScreenY,

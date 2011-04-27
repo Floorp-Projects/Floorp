@@ -763,9 +763,7 @@ JSObject::addPropertyInternal(JSContext *cx, jsid id,
             shape->parent->setTable(NULL);
             shape->setTable(table);
         }
-#ifdef DEBUG
-        LIVE_SCOPE_METER(cx, ++cx->runtime->liveObjectProps);
-#endif
+
         CHECK_SHAPE_CONSISTENCY(this);
         METER(adds);
         return shape;
@@ -1229,7 +1227,6 @@ JSObject::removeProperty(JSContext *cx, jsid id)
     }
 
     CHECK_SHAPE_CONSISTENCY(this);
-    LIVE_SCOPE_METER(cx, --cx->runtime->liveObjectProps);
     METER(removes);
     return true;
 }
@@ -1237,8 +1234,6 @@ JSObject::removeProperty(JSContext *cx, jsid id)
 void
 JSObject::clear(JSContext *cx)
 {
-    LIVE_SCOPE_METER(cx, cx->runtime->liveObjectProps -= propertyCount());
-
     Shape *shape = lastProp;
     JS_ASSERT(inDictionaryMode() == shape->inDictionary());
 
@@ -1306,7 +1301,7 @@ JSObject::methodShapeChange(JSContext *cx, const Shape &shape)
     if (shape.isMethod()) {
 #ifdef DEBUG
         const Value &prev = nativeGetSlot(shape.slot);
-        JS_ASSERT(&shape.methodObject() == &prev.toObject());
+        JS_ASSERT(shape.methodObject() == prev.toObject());
         JS_ASSERT(canHaveMethodBarrier());
         JS_ASSERT(hasMethodBarrier());
         JS_ASSERT(!shape.rawSetter || shape.rawSetter == js_watch_set);
@@ -1376,107 +1371,4 @@ JSObject::globalObjectOwnShapeChange(JSContext *cx)
 {
     generateOwnShape(cx);
     return !js_IsPropertyCacheDisabled(cx);
-}
-
-#ifdef DEBUG
-static void
-PrintPropertyGetterOrSetter(JSTracer *trc, char *buf, size_t bufsize)
-{
-    Shape *shape;
-    jsid id;
-    size_t n;
-    const char *name;
-
-    JS_ASSERT(trc->debugPrinter == PrintPropertyGetterOrSetter);
-    shape = (Shape *)trc->debugPrintArg;
-    id = shape->id;
-    JS_ASSERT(!JSID_IS_VOID(id));
-    name = trc->debugPrintIndex ? js_setter_str : js_getter_str;
-
-    if (JSID_IS_ATOM(id)) {
-        n = PutEscapedString(buf, bufsize, JSID_TO_ATOM(id), 0);
-        if (n < bufsize)
-            JS_snprintf(buf + n, bufsize - n, " %s", name);
-    } else if (JSID_IS_INT(shape->id)) {
-        JS_snprintf(buf, bufsize, "%d %s", JSID_TO_INT(id), name);
-    } else {
-        JS_snprintf(buf, bufsize, "<object> %s", name);
-    }
-}
-
-static void
-PrintPropertyMethod(JSTracer *trc, char *buf, size_t bufsize)
-{
-    Shape *shape;
-    jsid id;
-    size_t n;
-
-    JS_ASSERT(trc->debugPrinter == PrintPropertyMethod);
-    shape = (Shape *)trc->debugPrintArg;
-    id = shape->id;
-    JS_ASSERT(!JSID_IS_VOID(id));
-
-    JS_ASSERT(JSID_IS_ATOM(id));
-    n = PutEscapedString(buf, bufsize, JSID_TO_ATOM(id), 0);
-    if (n < bufsize)
-        JS_snprintf(buf + n, bufsize - n, " method");
-}
-#endif
-
-/*
- * A few notes on shape marking:
- *
- * We want to make sure that we regenerate the shape number exactly once per
- * shape-regenerating GC. Since delayed marking calls MarkChildren many times,
- * we handle regeneration in the PreMark stage.
- *
- * We also want to make sure to mark iteratively up the parent chain, not
- * recursively. So marking is split into markChildren and markChildrenNotParent.
- */
-
-void
-Shape::regenerate(JSTracer *trc) const
-{
-    JSRuntime *rt = trc->context->runtime;
-    if (IS_GC_MARKING_TRACER(trc) && rt->gcRegenShapes)
-        shape = js_RegenerateShapeForGC(rt);
-}
-
-void
-Shape::markChildrenNotParent(JSTracer *trc) const
-{
-    MarkId(trc, id, "id");
-
-    if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        if ((attrs & JSPROP_GETTER) && rawGetter) {
-            JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 0);
-            Mark(trc, getterObject());
-        }
-        if ((attrs & JSPROP_SETTER) && rawSetter) {
-            JS_SET_TRACING_DETAILS(trc, PrintPropertyGetterOrSetter, this, 1);
-            Mark(trc, setterObject());
-        }
-    }
-
-    if (isMethod()) {
-        JS_SET_TRACING_DETAILS(trc, PrintPropertyMethod, this, 0);
-        Mark(trc, &methodObject());
-    }
-}
-
-void
-Shape::markChildren(JSTracer *trc) const
-{
-    markChildrenNotParent(trc);
-
-    for (Shape *shape = parent; shape; shape = shape->parent) {
-        if (IS_GC_MARKING_TRACER(trc)) {
-            GCMarker *gcmarker = static_cast<GCMarker *>(trc);
-            if (!shape->markIfUnmarked(gcmarker->getMarkColor()))
-                break;
-        }
-
-        shape->regenerate(trc);
-        shape->markChildrenNotParent(trc);
-    }
 }

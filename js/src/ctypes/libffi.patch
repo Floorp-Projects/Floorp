@@ -1,9 +1,10 @@
-Patch libffi to fix bug 550602, bug 538216, bug545634, bug 594611, and bug 605421.
+Patch libffi to fix bug 550602, bug 538216, bug545634, bug 594611, bug 605421
+and bug 631928.
 
 diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
 --- a/js/src/ctypes/libffi/Makefile.in
 +++ b/js/src/ctypes/libffi/Makefile.in
-@@ -192,17 +192,17 @@ LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIB
+@@ -199,17 +199,17 @@ LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
  CCLD = $(CC)
  LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
  	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
@@ -22,7 +23,12 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  TEXINFOS = doc/libffi.texi
  TEXI2DVI = texi2dvi
  TEXI2PDF = $(TEXI2DVI) --pdf --batch
-@@ -966,7 +966,7 @@ distclean-compile:
+@@ -986,57 +986,57 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/ffi.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/ffi64.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/freebsd.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/sysv.Plo@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/unix64.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/win32.Plo@am__quote@
  @AMDEP_TRUE@@am__include@ @am__quote@src/x86/$(DEPDIR)/win64.Plo@am__quote@
  
@@ -31,7 +37,7 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  @am__fastdepCCAS_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
  @am__fastdepCCAS_TRUE@	$(CPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
  @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
-@@ -974,7 +974,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
  @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCCAS_FALSE@	$(CPPASCOMPILE) -c -o $@ $<
  
@@ -40,7 +46,7 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  @am__fastdepCCAS_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
  @am__fastdepCCAS_TRUE@	$(CPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
  @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
-@@ -982,7 +982,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
  @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCCAS_FALSE@	$(CPPASCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
  
@@ -49,7 +55,7 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  @am__fastdepCCAS_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
  @am__fastdepCCAS_TRUE@	$(LTCPPASCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
  @am__fastdepCCAS_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
-@@ -990,7 +990,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
  @AMDEP_TRUE@@am__fastdepCCAS_FALSE@	DEPDIR=$(DEPDIR) $(CCASDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCCAS_FALSE@	$(LTCPPASCOMPILE) -c -o $@ $<
  
@@ -58,7 +64,7 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  @am__fastdepCC_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
  @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
  @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
-@@ -998,7 +998,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(COMPILE) -c -o $@ $<
  
@@ -67,7 +73,7 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  @am__fastdepCC_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`;\
  @am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ `$(CYGPATH_W) '$<'` &&\
  @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Po
-@@ -1006,7 +1006,7 @@ distclean-compile:
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
  @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
  @am__fastdepCC_FALSE@	$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
  
@@ -76,7 +82,17 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  @am__fastdepCC_TRUE@	depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`;\
  @am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $$depbase.Tpo -c -o $@ $< &&\
  @am__fastdepCC_TRUE@	$(am__mv) $$depbase.Tpo $$depbase.Plo
-@@ -1108,7 +1108,7 @@ mostlyclean-vti:
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
+ @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+ @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+ 
+ mostlyclean-libtool:
+@@ -1129,17 +1129,17 @@ $(srcdir)/doc/stamp-vti: doc/libffi.texi $(top_srcdir)/configure
+ 	-@rm -f vti.tmp
+ 	@cp $(srcdir)/doc/version.texi $@
+ 
+ mostlyclean-vti:
+ 	-rm -f vti.tmp
  
  maintainer-clean-vti:
  @MAINTAINER_MODE_TRUE@	-rm -f $(srcdir)/doc/stamp-vti $(srcdir)/doc/version.texi
@@ -85,10 +101,15 @@ diff --git a/js/src/ctypes/libffi/Makefile.in b/js/src/ctypes/libffi/Makefile.in
  	TEXINPUTS="$(am__TEXINFO_TEX_DIR)$(PATH_SEPARATOR)$$TEXINPUTS" \
  	$(DVIPS) -o $@ $<
  
+ uninstall-dvi-am:
+ 	@$(NORMAL_UNINSTALL)
+ 	@list='$(DVIS)'; test -n "$(dvidir)" || list=; \
+ 	for p in $$list; do \
+ 	  $(am__strip_dir) \
 diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
 --- a/js/src/ctypes/libffi/configure
 +++ b/js/src/ctypes/libffi/configure
-@@ -9016,17 +9016,17 @@ if test -z "$aix_libpath"; then aix_libp
+@@ -8903,17 +8903,17 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
        # Tell ltmain to make .dll files, not .so files.
        shrext_cmds=".dll"
        # FIXME: Setting linknames here is a bad hack.
@@ -107,7 +128,30 @@ diff --git a/js/src/ctypes/libffi/configure b/js/src/ctypes/libffi/configure
  
    archive_cmds_need_lc=no
    hardcode_direct=no
-
+@@ -12270,20 +12270,20 @@ fi
+ 
+ if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64; then
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking assembler supports pc related relocs" >&5
+ $as_echo_n "checking assembler supports pc related relocs... " >&6; }
+ if test "${libffi_cv_as_x86_pcrel+set}" = set; then :
+   $as_echo_n "(cached) " >&6
+ else
+ 
+-	libffi_cv_as_x86_pcrel=yes
++	libffi_cv_as_x86_pcrel=no
+ 	echo '.text; foo: nop; .data; .long foo-.; .text' > conftest.s
+-	if $CC $CFLAGS -c conftest.s 2>&1 | $EGREP -i 'illegal|warning' > /dev/null; then
+-	    libffi_cv_as_x86_pcrel=no
++	if $CC $CFLAGS -c conftest.s > /dev/null; then
++	    libffi_cv_as_x86_pcrel=yes
+ 	fi
+ 
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $libffi_cv_as_x86_pcrel" >&5
+ $as_echo "$libffi_cv_as_x86_pcrel" >&6; }
+     if test "x$libffi_cv_as_x86_pcrel" = xyes; then
+ 
+ $as_echo "#define HAVE_AS_X86_PCREL 1" >>confdefs.h
 diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86/ffi64.c
 --- a/js/src/ctypes/libffi/src/x86/ffi64.c
 +++ b/js/src/ctypes/libffi/src/x86/ffi64.c
@@ -155,14 +199,14 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
  
  #include <stdlib.h>
  
+-/* ffi_prep_args is called by the assembly routine once stack space
+-   has been allocated for the function's arguments */
 +/* Forward declares. */
 +static int vfp_type_p (ffi_type *);
 +static void layout_vfp_args (ffi_cif *);
-+
- /* ffi_prep_args is called by the assembly routine once stack space
--   has been allocated for the function's arguments */
--
+ 
 -void ffi_prep_args(char *stack, extended_cif *ecif)
++/* ffi_prep_args is called by the assembly routine once stack space
 +   has been allocated for the function's arguments
 +   
 +   The vfp_space parameter is the load area for VFP regs, the return
@@ -181,7 +225,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
  
    if ( ecif->cif->flags == FFI_TYPE_STRUCT ) {
      *(void **) argp = ecif->rvalue;
-@@ -49,16 +57,31 @@ void ffi_prep_args(char *stack, extended
+@@ -49,16 +57,31 @@ void ffi_prep_args(char *stack, extended_cif *ecif)
    p_argv = ecif->avalue;
  
    for (i = ecif->cif->nargs, p_arg = ecif->cif->arg_types;
@@ -213,7 +257,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
        if ((*p_arg)->type == FFI_TYPE_STRUCT)
  	argp = (char *) ALIGN(argp, 4);
  
-@@ -98,23 +121,25 @@ void ffi_prep_args(char *stack, extended
+@@ -98,23 +121,25 @@ void ffi_prep_args(char *stack, extended_cif *ecif)
  	    }
  	  else
  	    {
@@ -241,7 +285,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
    /* Set the return type flag */
    switch (cif->rtype->type)
      {
-@@ -125,137 +150,176 @@ ffi_status ffi_prep_cif_machdep(ffi_cif 
+@@ -125,137 +150,176 @@ ffi_status ffi_prep_cif_machdep(ffi_cif *cif)
        break;
  
      case FFI_TYPE_SINT64:
@@ -410,6 +454,8 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
    for (i = cif->nargs, p_arg = cif->arg_types; (i != 0); i--, p_arg++)
      {
        size_t z;
+-
+-      size_t alignment = (*p_arg)->alignment;
 +      size_t alignment;
 +  
 +      if (cif->abi == FFI_VFP
@@ -418,8 +464,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
 +	  *p_argv++ = (void*)(vfp_stack + cif->vfp_args[vi++]);
 +	  continue;
 +	}
- 
--      size_t alignment = (*p_arg)->alignment;
++
 +      alignment = (*p_arg)->alignment;
        if (alignment < 4)
  	alignment = 4;
@@ -429,7 +474,7 @@ diff --git a/js/src/ctypes/libffi/src/arm/ffi.c b/js/src/ctypes/libffi/src/arm/f
        }
  
        z = (*p_arg)->size;
-@@ -290,20 +354,147 @@ ffi_prep_incoming_args_SYSV(char *stack,
+@@ -290,20 +354,147 @@ ffi_prep_incoming_args_SYSV(char *stack, void **rvalue,
  
  ffi_status
  ffi_prep_closure_loc (ffi_closure* closure,
@@ -983,9 +1028,9 @@ diff --git a/js/src/ctypes/libffi/testsuite/libffi.call/cls_longdouble_va.c b/js
  {
  	char*		format	= *(char**)args[0];
  	long double	ldValue	= *(long double*)args[1];
-diff -r bb9089ae2322 js/src/ctypes/libffi/include/ffi.h.in
---- a/js/src/ctypes/libffi/include/ffi.h.in	Fri Jan 21 15:40:14 2011 -0800
-+++ b/js/src/ctypes/libffi/include/ffi.h.in	Thu Jan 27 19:10:51 2011 +0100
+diff --git a/js/src/ctypes/libffi/include/ffi.h.in b/js/src/ctypes/libffi/include/ffi.h.in
+--- a/js/src/ctypes/libffi/include/ffi.h.in
++++ b/js/src/ctypes/libffi/include/ffi.h.in
 @@ -72,25 +72,37 @@ extern "C" {
  #endif
  
@@ -1074,3 +1119,30 @@ diff -r bb9089ae2322 js/src/ctypes/libffi/include/ffi.h.in
  #  define FFI_SIZEOF_JAVA_RAW FFI_SIZEOF_ARG
  #endif
  
+diff --git a/js/src/ctypes/libffi/configure.ac b/js/src/ctypes/libffi/configure.ac
+--- a/js/src/ctypes/libffi/configure.ac
++++ b/js/src/ctypes/libffi/configure.ac
+@@ -272,20 +272,20 @@ if test x$TARGET = xSPARC; then
+        AC_DEFINE(HAVE_AS_REGISTER_PSEUDO_OP, 1,
+ 	       [Define if your assembler supports .register.])
+     fi
+ fi
+ 
+ if test x$TARGET = xX86 || test x$TARGET = xX86_WIN32 || test x$TARGET = xX86_64; then
+     AC_CACHE_CHECK([assembler supports pc related relocs],
+ 	libffi_cv_as_x86_pcrel, [
+-	libffi_cv_as_x86_pcrel=yes
++	libffi_cv_as_x86_pcrel=no
+ 	echo '.text; foo: nop; .data; .long foo-.; .text' > conftest.s
+-	if $CC $CFLAGS -c conftest.s 2>&1 | $EGREP -i 'illegal|warning' > /dev/null; then
+-	    libffi_cv_as_x86_pcrel=no
++	if $CC $CFLAGS -c conftest.s > /dev/null; then
++	    libffi_cv_as_x86_pcrel=yes
+ 	fi
+ 	])
+     if test "x$libffi_cv_as_x86_pcrel" = xyes; then
+ 	AC_DEFINE(HAVE_AS_X86_PCREL, 1,
+ 		  [Define if your assembler supports PC relative relocs.])
+     fi
+ 
+     AC_CACHE_CHECK([assembler .ascii pseudo-op support],

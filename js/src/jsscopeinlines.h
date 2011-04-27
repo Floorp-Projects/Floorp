@@ -155,7 +155,7 @@ JSObject::initString(JSContext *cx, JSString *str)
               JSObject::JSSLOT_STRING_LENGTH);
 
     setPrimitiveThis(js::StringValue(str));
-    JS_ASSERT(str->length() < JSString::MAX_LENGTH);
+    JS_ASSERT(str->length() <= JSString::MAX_LENGTH);
     setSlot(JSSLOT_STRING_LENGTH, js::Int32Value(int32(str->length())));
     return true;
 }
@@ -165,9 +165,17 @@ namespace js {
 inline
 Shape::Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32 slot, uintN attrs,
              uintN flags, intN shortid, uint32 shape, uint32 slotSpan)
-  : JSObjectMap(shape, slotSpan),
-    numLinearSearches(0), id(id), rawGetter(getter), rawSetter(setter), slot(slot),
-    attrs(uint8(attrs)), flags(uint8(flags)), shortid(int16(shortid)), parent(NULL)
+  : shape(shape),
+    slotSpan(slotSpan),
+    numLinearSearches(0),
+    id(id),
+    rawGetter(getter),
+    rawSetter(setter),
+    slot(slot),
+    attrs(uint8(attrs)),
+    flags(uint8(flags)),
+    shortid(int16(shortid)),
+    parent(NULL)
 {
     JS_ASSERT_IF(slotSpan != SHAPE_INVALID_SLOT, slotSpan < JSObject::NSLOTS_LIMIT);
     JS_ASSERT_IF(getter && (attrs & JSPROP_GETTER), getterObj->isCallable());
@@ -177,10 +185,28 @@ Shape::Shape(jsid id, js::PropertyOp getter, js::StrictPropertyOp setter, uint32
 
 inline
 Shape::Shape(JSCompartment *comp, Class *aclasp)
-  : JSObjectMap(js_GenerateShape(comp->rt), JSSLOT_FREE(aclasp)),
+  : shape(js_GenerateShape(comp->rt)),
+    slotSpan(JSSLOT_FREE(aclasp)),
     numLinearSearches(0),
     id(JSID_EMPTY),
     clasp(aclasp),
+    rawSetter(NULL),
+    slot(SHAPE_INVALID_SLOT),
+    attrs(0),
+    flags(SHARED_EMPTY),
+    shortid(0),
+    parent(NULL)
+{
+    kids.setNull();
+}
+
+inline
+Shape::Shape(uint32 shape)
+  : shape(shape),
+    slotSpan(0),
+    numLinearSearches(0),
+    id(JSID_EMPTY),
+    clasp(NULL),
     rawSetter(NULL),
     slot(SHAPE_INVALID_SLOT),
     attrs(0),
@@ -276,6 +302,50 @@ Shape::set(JSContext* cx, JSObject* obj, bool strict, js::Value* vp) const
     if (obj->getClass() == &js_WithClass)
         obj = js_UnwrapWithObject(cx, obj);
     return js::CallJSPropertyOpSetter(cx, setterOp(), obj, SHAPE_USERID(this), strict, vp);
+}
+
+inline void
+Shape::removeFromDictionary(JSObject *obj) const
+{
+    JS_ASSERT(!frozen());
+    JS_ASSERT(inDictionary());
+    JS_ASSERT(obj->inDictionaryMode());
+    JS_ASSERT(listp);
+    JS_ASSERT(!JSID_IS_VOID(id));
+
+    JS_ASSERT(obj->lastProp->inDictionary());
+    JS_ASSERT(obj->lastProp->listp == &obj->lastProp);
+    JS_ASSERT_IF(obj->lastProp != this, !JSID_IS_VOID(obj->lastProp->id));
+    JS_ASSERT_IF(obj->lastProp->parent, !JSID_IS_VOID(obj->lastProp->parent->id));
+
+    if (parent)
+        parent->listp = listp;
+    *listp = parent;
+    listp = NULL;
+}
+
+inline void
+Shape::insertIntoDictionary(js::Shape **dictp)
+{
+    /*
+     * Don't assert inDictionaryMode() here because we may be called from
+     * JSObject::toDictionaryMode via JSObject::newDictionaryShape.
+     */
+    JS_ASSERT(inDictionary());
+    JS_ASSERT(!listp);
+    JS_ASSERT(!JSID_IS_VOID(id));
+
+    JS_ASSERT_IF(*dictp, !(*dictp)->frozen());
+    JS_ASSERT_IF(*dictp, (*dictp)->inDictionary());
+    JS_ASSERT_IF(*dictp, (*dictp)->listp == dictp);
+    JS_ASSERT_IF(*dictp, !JSID_IS_VOID((*dictp)->id));
+    JS_ASSERT_IF(*dictp, compartment() == (*dictp)->compartment());
+
+    setParent(*dictp);
+    if (parent)
+        parent->listp = &parent;
+    listp = dictp;
+    *dictp = this;
 }
 
 inline

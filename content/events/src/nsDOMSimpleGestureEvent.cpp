@@ -95,7 +95,7 @@ NS_IMETHODIMP
 nsDOMSimpleGestureEvent::InitSimpleGestureEvent(const nsAString& aTypeArg,
                                                 PRBool aCanBubbleArg,
                                                 PRBool aCancelableArg,
-                                                nsIDOMWindow* aViewArg,
+                                                nsIDOMAbstractView* aViewArg,
                                                 PRInt32 aDetailArg,
                                                 PRInt32 aScreenX, 
                                                 PRInt32 aScreenY,

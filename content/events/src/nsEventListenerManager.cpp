@@ -507,7 +507,14 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window)
       window->SetHasOrientationEventListener();
-  } else if (aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) {
+  } else if ((aType >= NS_MOZTOUCH_DOWN && aType <= NS_MOZTOUCH_UP) ||
+             (aTypeAtom == nsGkAtoms::ontouchstart ||
+              aTypeAtom == nsGkAtoms::ontouchend ||
+              aTypeAtom == nsGkAtoms::ontouchmove ||
+              aTypeAtom == nsGkAtoms::ontouchenter ||
+              aTypeAtom == nsGkAtoms::ontouchleave ||
+              aTypeAtom == nsGkAtoms::ontouchcancel)) {
+    mMayHaveTouchEventListener = PR_TRUE;
     nsPIDOMWindow* window = GetInnerWindowForTarget();
     if (window)
       window->SetHasTouchEventListeners();

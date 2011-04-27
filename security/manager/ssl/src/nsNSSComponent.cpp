@@ -398,14 +398,12 @@ nsNSSComponent::~nsNSSComponent()
   {
     mSSLThread->requestExit();
     delete mSSLThread;
-    mSSLThread = nsnull;
   }
   
   if (mCertVerificationThread)
   {
     mCertVerificationThread->requestExit();
     delete mCertVerificationThread;
-    mCertVerificationThread = nsnull;
   }
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsNSSComponent::dtor\n"));
@@ -2534,11 +2532,18 @@ nsNSSComponent::DoProfileBeforeChange(nsISupports* aSubject)
 void
 nsNSSComponent::DoProfileChangeNetRestore()
 {
+  /* XXX this doesn't work well, since nothing expects null pointers */
+  if (mSSLThread) {
+    mSSLThread->requestExit();
   delete mSSLThread;
+  }
   mSSLThread = new nsSSLThread();
   if (mSSLThread)
     mSSLThread->startThread();
+  if (mCertVerificationThread) {
+    mCertVerificationThread->requestExit();
   delete mCertVerificationThread;
+  }
   mCertVerificationThread = new nsCertVerificationThread();
   if (mCertVerificationThread)
     mCertVerificationThread->startThread();

@@ -94,7 +94,7 @@ struct BaseIC : public MacroAssemblerTypedefs {
     // Offset from start of stub to jump target of second shape guard as Nitro
     // asm data location. This is 0 if there is only one shape guard in the
     // last stub.
-    int secondShapeGuard : 11;
+    int32 secondShapeGuard : 11;
 
     // Opcode this was compiled for.
     JSOp op : 9;
@@ -255,9 +255,9 @@ struct GetElementIC : public BasePolyIC {
     // These offsets are used for string-key dependent stubs, such as named
     // property accesses. They are separated from the int-key dependent stubs,
     // in order to guarantee that the id type needs only one guard per type.
-    int atomGuard : 8;          // optional, non-zero if present
-    int firstShapeGuard : 8;    // always set
-    int secondShapeGuard : 8;   // optional, non-zero if present
+    int32 atomGuard : 8;          // optional, non-zero if present
+    int32 firstShapeGuard : 11;    // always set
+    int32 secondShapeGuard : 11;   // optional, non-zero if present
 
     bool hasLastStringStub : 1;
     JITCode lastStringStub;
@@ -336,7 +336,7 @@ struct SetElementIC : public BaseIC {
 
     // A bitmask of registers that are volatile and must be preserved across
     // stub calls inside the IC.
-    uint32 volatileMask : 16;
+    uint32 volatileMask;
 
     // If true, then keyValue contains a constant index value >= 0. Otherwise,
     // keyReg contains a dynamic integer index in any range.

@@ -409,12 +409,10 @@ void
 stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 {
     ucr->init();
-
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
-
     /* Try to do a fast inline call before the general Invoke path. */
-    if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpreted()) {
+    if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpretedConstructor()) {
         ucr->callee = &vp->toObject();
         if (!UncachedInlineCall(f, JSFRAME_CONSTRUCTING, &ucr->codeAddr, &ucr->unjittable, argc))
             THROW();
@@ -444,8 +442,10 @@ stubs::Eval(VMFrame &f, uint32 argc)
     }
 
     JS_ASSERT(f.regs.fp == f.cx->fp());
-    if (!DirectEval(f.cx, argc, vp))
+    if (!DirectEval(f.cx, CallArgsFromVp(argc, vp)))
         THROW();
+
+    f.regs.sp = vp + 1;
 }
 
 void
@@ -684,7 +684,7 @@ AtSafePoint(JSContext *cx)
 {
     JSStackFrame *fp = cx->fp();
     if (fp->hasImacropc())
-        return false;
+        return NULL;
 
     JSScript *script = fp->script();
     return script->maybeNativeCodeForPC(fp->isConstructing(), cx->regs->pc);

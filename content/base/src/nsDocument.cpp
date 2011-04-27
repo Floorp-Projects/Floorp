@@ -75,6 +75,8 @@
 #include "nsDOMAttribute.h"
 #include "nsIDOMDOMStringList.h"
 #include "nsIDOMDOMImplementation.h"
+#include "nsIDOMDocumentView.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIDOMDocumentXBL.h"
 #include "mozilla/FunctionTimer.h"
 #include "nsGenericElement.h"
@@ -201,6 +203,7 @@ static NS_DEFINE_CID(kDOMEventGroupCID, NS_DOMEVENTGROUP_CID);
 #include "mozilla/dom/Link.h"
 #include "nsIHTMLDocument.h"
 #include "nsXULAppAPI.h"
+#include "nsDOMTouchEvent.h"
 
 using namespace mozilla::dom;
 
@@ -1699,6 +1702,7 @@ NS_INTERFACE_TABLE_HEAD(nsDocument)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIRadioGroupContainer_MOZILLA_2_0_BRANCH)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIMutationObserver)
     NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIApplicationCacheContainer)
+    NS_INTERFACE_TABLE_ENTRY(nsDocument, nsIDOMDocumentTouch)
   NS_OFFSET_AND_INTERFACE_TABLE_END
   NS_OFFSET_AND_INTERFACE_TABLE_TO_MAP_SEGUE
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsDocument)
@@ -5067,14 +5071,16 @@ nsDocument::CreateTreeWalker(nsIDOMNode *aRoot,
 
 
 NS_IMETHODIMP
-nsDocument::GetDefaultView(nsIDOMWindow** aDefaultView)
+nsDocument::GetDefaultView(nsIDOMAbstractView** aDefaultView)
 {
-  *aDefaultView = nsnull;
   nsPIDOMWindow* win = GetWindow();
-  if (!win) {
-    return NS_OK;
+  if (win) {
+    return CallQueryInterface(win, aDefaultView);
   }
-  return CallQueryInterface(win, aDefaultView);
+
+  *aDefaultView = nsnull;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -8317,3 +8323,76 @@ nsDocument::SetImagesNeedAnimating(PRBool aAnimating)
   // Update state.
   mAnimatingImages = aAnimating;
 }
+
+NS_IMETHODIMP
+nsDocument::CreateTouch(nsIDOMAbstractView* aView,
+                        nsIDOMEventTarget* aTarget,
+                        PRInt32 aIdentifier,
+                        PRInt32 aPageX,
+                        PRInt32 aPageY,
+                        PRInt32 aScreenX,
+                        PRInt32 aScreenY,
+                        PRInt32 aClientX,
+                        PRInt32 aClientY,
+                        PRInt32 aRadiusX,
+                        PRInt32 aRadiusY,
+                        float aRotationAngle,
+                        float aForce,
+                        nsIDOMTouchPoint** aRetVal)
+{
+  NS_ADDREF(*aRetVal = new nsDOMTouchPoint(aTarget,
+                                           aIdentifier,
+                                           aPageX,
+                                           aPageY,
+                                           aScreenX,
+                                           aScreenY,
+                                           aClientX,
+                                           aClientY,
+                                           aRadiusX,
+                                           aRadiusY,
+                                           aRotationAngle,
+                                           aForce));
+  return NS_OK;;
+}
+
+NS_IMETHODIMP
+nsDocument::CreateTouchList(nsIVariant* aPoints,
+                            nsIDOMTouchList** aRetVal)
+{
+  nsRefPtr<nsDOMTouchList> retval = new nsDOMTouchList();
+  if (aPoints) {
+    PRUint16 type;
+    aPoints->GetDataType(&type);
+    if (type == nsIDataType::VTYPE_INTERFACE ||
+        type == nsIDataType::VTYPE_INTERFACE_IS) {
+      nsCOMPtr<nsISupports> data;
+      aPoints->GetAsISupports(getter_AddRefs(data));
+      nsCOMPtr<nsIDOMTouchPoint> point = do_QueryInterface(data);
+      if (point) {
+        retval->Append(point);
+      }
+    } else if (type == nsIDataType::VTYPE_ARRAY) {
+      PRUint16 valueType;
+      nsIID iid;
+      PRUint32 valueCount;
+      void* rawArray;
+      aPoints->GetAsArray(&valueType, &iid, &valueCount, &rawArray);
+      if (valueType == nsIDataType::VTYPE_INTERFACE ||
+          valueType == nsIDataType::VTYPE_INTERFACE_IS) {
+        nsISupports** values = static_cast<nsISupports**>(rawArray);
+        for (PRUint32 i = 0; i < valueCount; ++i) {
+          nsCOMPtr<nsISupports> supports = dont_AddRef(values[i]);
+          nsCOMPtr<nsIDOMTouchPoint> point = do_QueryInterface(supports);
+          if (point) {
+            retval->Append(point);
+          }
+        }
+      }
+      nsMemory::Free(rawArray);
+    }
+  }
+
+  *aRetVal = retval.forget().get();
+  return NS_OK;
+}
+

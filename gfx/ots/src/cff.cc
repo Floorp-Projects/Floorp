@@ -19,12 +19,12 @@ namespace {
 enum DICT_OPERAND_TYPE {
   DICT_OPERAND_INTEGER,
   DICT_OPERAND_REAL,
-  DICT_OPERATOR
+  DICT_OPERATOR,
 };
 
 enum DICT_DATA_TYPE {
   DICT_DATA_TOPLEVEL,
-  DICT_DATA_FDARRAY
+  DICT_DATA_FDARRAY,
 };
 
 // see Appendix. A
@@ -104,6 +104,8 @@ bool ParseIndex(ots::Buffer *table, ots::CFFIndex *index) {
   }
 
   for (unsigned i = 1; i < index->offsets.size(); ++i) {
+    // We allow consecutive identical offsets here for zero-length strings.
+    // See http://crbug.com/69341 for more details.
     if (index->offsets[i] < index->offsets[i - 1]) {
       return OTS_FAILURE();
     }
@@ -975,7 +977,7 @@ bool ots_cff_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 }
 
 bool ots_cff_should_serialise(OpenTypeFile *file) {
-  return file->cff;
+  return file->cff != NULL;
 }
 
 bool ots_cff_serialise(OTSStream *out, OpenTypeFile *file) {

@@ -39,6 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <sys/types.h>
 #include <sys/mman.h>
 #include <errno.h>
 #include "nanojit.h"
@@ -998,14 +999,14 @@ namespace nanojit
         LDSW32(rs, ds, t);
     }
 
-    NIns* Assembler::asm_branch(bool branchOnFalse, LIns* cond, NIns* targ)
+    Branches Assembler::asm_branch(bool branchOnFalse, LIns* cond, NIns* targ)
     {
         NIns* at = 0;
         LOpcode condop = cond->opcode();
         NanoAssert(cond->isCmp());
         if (isCmpDOpcode(condop))
             {
-                return asm_branchd(branchOnFalse, cond, targ);
+                return Branches(asm_branchd(branchOnFalse, cond, targ));
             }
 
         underrunProtect(32);
@@ -1064,7 +1065,7 @@ namespace nanojit
                     BCC(0, tt);
             }
         asm_cmp(cond);
-        return at;
+        return Branches(at);
     }
 
     NIns* Assembler::asm_branch_ov(LOpcode op, NIns* targ)

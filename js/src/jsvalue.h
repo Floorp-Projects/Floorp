@@ -254,7 +254,7 @@ static JS_ALWAYS_INLINE JSBool
 JSVAL_SAME_TYPE_IMPL(jsval_layout lhs, jsval_layout rhs)
 {
     uint64 lbits = lhs.asBits, rbits = rhs.asBits;
-    return (lbits <= JSVAL_TAG_MAX_DOUBLE && rbits <= JSVAL_TAG_MAX_DOUBLE) ||
+    return (lbits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE && rbits <= JSVAL_SHIFTED_TAG_MAX_DOUBLE) ||
            (((lbits ^ rbits) & 0xFFFF800000000000LL) == 0);
 }
 
@@ -376,8 +376,18 @@ class Value
     }
 
     JS_ALWAYS_INLINE
+    void setString(const JS::Anchor<JSString *> &str) {
+        setString(str.get());
+    }
+
+    JS_ALWAYS_INLINE
     void setObject(JSObject &obj) {
         data = OBJECT_TO_JSVAL_IMPL(&obj);
+    }
+
+    JS_ALWAYS_INLINE
+    void setObject(const JS::Anchor<JSObject *> &obj) {
+        setObject(*obj.get());
     }
 
     JS_ALWAYS_INLINE
@@ -1229,6 +1239,88 @@ Debug_SetValueRangeToCrashOnTouch(Value *vec, size_t len)
 #ifdef DEBUG
     Debug_SetValueRangeToCrashOnTouch(vec, vec + len);
 #endif
+}
+
+/*
+ * Abstracts the layout of the (callee,this) receiver pair that is passed to
+ * natives and scripted functions.
+ */
+class CallReceiver
+{
+#ifdef DEBUG
+    mutable bool usedRval_;
+#endif
+  protected:
+    Value *argv_;
+    CallReceiver() {}
+    CallReceiver(Value *argv) : argv_(argv) {
+#ifdef DEBUG
+        usedRval_ = false;
+#endif
+    }
+
+  public:
+    friend CallReceiver CallReceiverFromVp(Value *);
+    friend CallReceiver CallReceiverFromArgv(Value *);
+    Value *base() const { return argv_ - 2; }
+    JSObject &callee() const { JS_ASSERT(!usedRval_); return argv_[-2].toObject(); }
+    Value &calleev() const { JS_ASSERT(!usedRval_); return argv_[-2]; }
+    Value &thisv() const { return argv_[-1]; }
+
+    Value &rval() const {
+#ifdef DEBUG
+        usedRval_ = true;
+#endif
+        return argv_[-2];
+    }
+
+    void calleeHasBeenReset() const {
+#ifdef DEBUG
+        usedRval_ = false;
+#endif
+    }
+};
+
+JS_ALWAYS_INLINE CallReceiver
+CallReceiverFromVp(Value *vp)
+{
+    return CallReceiver(vp + 2);
+}
+
+JS_ALWAYS_INLINE CallReceiver
+CallReceiverFromArgv(Value *argv)
+{
+    return CallReceiver(argv);
+}
+
+/*
+ * Abstracts the layout of the stack passed to natives from the engine and from
+ * natives to js::Invoke.
+ */
+class CallArgs : public CallReceiver
+{
+    uintN argc_;
+  protected:
+    CallArgs() {}
+    CallArgs(uintN argc, Value *argv) : CallReceiver(argv), argc_(argc) {}
+  public:
+    friend CallArgs CallArgsFromVp(uintN, Value *);
+    friend CallArgs CallArgsFromArgv(uintN, Value *);
+    Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
+    Value *argv() const { return argv_; }
+    uintN argc() const { return argc_; }
+};
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromVp(uintN argc, Value *vp)
+{
+    return CallArgs(argc, vp + 2);
+}
+
+JS_ALWAYS_INLINE CallArgs
+CallArgsFromArgv(uintN argc, Value *argv)
+{
+    return CallArgs(argc, argv);
 }
 
 }      /* namespace js */

@@ -203,23 +203,9 @@ MeterEntryCount(uintN count);
 
 } /* namespace js */
 
-struct JSObjectMap : public js::gc::Cell {
-    mutable uint32 shape;  /* shape identifier */
-    uint32 slotSpan;       /* one more than maximum live slot number */
-
-    static JS_FRIEND_DATA(JSObjectMap) sharedNonNative;
-
-    explicit JSObjectMap(uint32 shape) : shape(shape), slotSpan(0) {}
-    JSObjectMap(uint32 shape, uint32 slotSpan) : shape(shape), slotSpan(slotSpan) {}
-
-    enum { INVALID_SHAPE = 0x8fffffff, SHAPELESS = 0xffffffff };
-
-    bool isNative() const { return this != &sharedNonNative; }
-
-  private:
-    /* No copy or assignment semantics. */
-    JSObjectMap(JSObjectMap &);
-    void operator=(JSObjectMap &);
+enum {
+    INVALID_SHAPE = 0x8fffffff,
+    SHAPELESS = 0xffffffff
 };
 
 /*
@@ -275,6 +261,7 @@ namespace js {
 
 struct NativeIterator;
 class RegExp;
+class GlobalObject;
 
 }
 
@@ -333,23 +320,9 @@ struct JSObject : js::gc::Cell {
 
     /*
      * Private pointer to the last added property and methods to manipulate the
-     * list it links among properties in this scope. The {remove,insert} pair
-     * for DictionaryProperties assert that the scope is in dictionary mode and
-     * any reachable properties are flagged as dictionary properties.
-     *
-     * For native objects, this field is always a Shape. For non-native objects,
-     * it points to the singleton sharedNonNative JSObjectMap, whose shape field
-     * is SHAPELESS.
-     *
-     * NB: these private methods do *not* update this scope's shape to track
-     * lastProp->shape after they finish updating the linked list in the case
-     * where lastProp is updated. It is up to calling code in jsscope.cpp to
-     * call updateShape(cx) after updating lastProp.
+     * list it links among properties in this scope.
      */
-    union {
-        js::Shape       *lastProp;
-        JSObjectMap     *map;
-    };
+    js::Shape           *lastProp;
 
     js::Class           *clasp;
 
@@ -419,7 +392,8 @@ struct JSObject : js::gc::Cell {
     inline js::EmptyShape *getEmptyShape(JSContext *cx, js::Class *aclasp,
                                          /* gc::FinalizeKind */ unsigned kind);
 
-    bool isNative() const       { return map->isNative(); }
+    inline bool isNative() const;
+    inline bool isNewborn() const;
 
     js::Class *getClass() const { return clasp; }
     JSClass *getJSClass() const { return Jsvalify(clasp); }
@@ -432,10 +406,8 @@ struct JSObject : js::gc::Cell {
         return &getClass()->ops;
     }
 
-    inline void trace(JSTracer *trc);
-
     uint32 shape() const {
-        JS_ASSERT(objShape != JSObjectMap::INVALID_SHAPE);
+        JS_ASSERT(objShape != INVALID_SHAPE);
         return objShape;
     }
 
@@ -491,23 +463,17 @@ struct JSObject : js::gc::Cell {
   private:
     void generateOwnShape(JSContext *cx);
 
-    void setOwnShape(uint32 s)  { flags |= OWN_SHAPE; objShape = s; }
-    void clearOwnShape()        { flags &= ~OWN_SHAPE; objShape = map->shape; }
+    inline void setOwnShape(uint32 s);
+    inline void clearOwnShape();
 
   public:
     inline bool nativeEmpty() const;
 
     bool hasOwnShape() const    { return !!(flags & OWN_SHAPE); }
 
-    void setMap(JSObjectMap *amap) {
-        JS_ASSERT(!hasOwnShape());
-        map = amap;
-        objShape = map->shape;
-    }
+    inline void setMap(js::Shape *amap);
 
-    void setSharedNonNativeMap() {
-        setMap(const_cast<JSObjectMap *>(&JSObjectMap::sharedNonNative));
-    }
+    inline void setSharedNonNativeMap();
 
     /* Functions for setting up scope chain object maps and shapes. */
     void initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
@@ -670,42 +636,30 @@ struct JSObject : js::gc::Cell {
 
     inline bool ensureClassReservedSlots(JSContext *cx);
 
-    uint32 slotSpan() const { return map->slotSpan; }
+    inline uint32 slotSpan() const;
 
-    bool containsSlot(uint32 slot) const { return slot < slotSpan(); }
+    inline bool containsSlot(uint32 slot) const;
 
     js::Value& getSlotRef(uintN slot) {
         JS_ASSERT(slot < capacity);
         return slots[slot];
     }
 
-    js::Value &nativeGetSlotRef(uintN slot) {
-        JS_ASSERT(isNative());
-        JS_ASSERT(containsSlot(slot));
-        return getSlotRef(slot);
-    }
+    inline js::Value &nativeGetSlotRef(uintN slot);
 
     const js::Value &getSlot(uintN slot) const {
         JS_ASSERT(slot < capacity);
         return slots[slot];
     }
 
-    const js::Value &nativeGetSlot(uintN slot) const {
-        JS_ASSERT(isNative());
-        JS_ASSERT(containsSlot(slot));
-        return getSlot(slot);
-    }
+    inline const js::Value &nativeGetSlot(uintN slot) const;
 
     void setSlot(uintN slot, const js::Value &value) {
         JS_ASSERT(slot < capacity);
         slots[slot] = value;
     }
 
-    void nativeSetSlot(uintN slot, const js::Value &value) {
-        JS_ASSERT(isNative());
-        JS_ASSERT(containsSlot(slot));
-        return setSlot(slot, value);
-    }
+    inline void nativeSetSlot(uintN slot, const js::Value &value);
 
     inline js::Value getReservedSlot(uintN index) const;
 
@@ -745,11 +699,13 @@ struct JSObject : js::gc::Cell {
         parent = newParent;
     }
 
-    JS_FRIEND_API(JSObject *) getGlobal() const;
+    JS_FRIEND_API(js::GlobalObject *) getGlobal() const;
 
     bool isGlobal() const {
         return !!(getClass()->flags & JSCLASS_IS_GLOBAL);
     }
+
+    inline js::GlobalObject *asGlobal();
 
     void *getPrivate() const {
         JS_ASSERT(getClass()->flags & JSCLASS_HAS_PRIVATE);
@@ -761,6 +717,8 @@ struct JSObject : js::gc::Cell {
         privateData = data;
     }
 
+    /* N.B. Infallible: NULL means 'no principal', not an error. */
+    inline JSPrincipals *principals(JSContext *cx);
 
     /*
      * ES5 meta-object properties and operations.
@@ -1355,6 +1313,7 @@ struct JSObject : js::gc::Cell {
     inline bool isXMLId() const;
     inline bool isNamespace() const;
     inline bool isQName() const;
+    inline bool isWeakMap() const;
 
     inline bool isProxy() const;
     inline bool isObjectProxy() const;
@@ -1368,6 +1327,17 @@ struct JSObject : js::gc::Cell {
 
 /* Check alignment for any fixed slots allocated after the object. */
 JS_STATIC_ASSERT(sizeof(JSObject) % sizeof(js::Value) == 0);
+
+/*
+ * The only sensible way to compare JSObject with == is by identity. We use
+ * const& instead of * as a syntactic way to assert non-null. This leads to an
+ * abundance of address-of operators to identity. Hence this overload.
+ */
+static JS_ALWAYS_INLINE bool
+operator==(const JSObject &lhs, const JSObject &rhs)
+{
+    return &lhs == &rhs;
+}
 
 inline js::Value*
 JSObject::fixedSlots() const {
@@ -1916,7 +1886,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp);
 extern void
 js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize);
 
-extern void
+extern bool
 js_ClearNative(JSContext *cx, JSObject *obj);
 
 extern bool
@@ -1925,18 +1895,9 @@ js_GetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, js::Value *vp);
 extern bool
 js_SetReservedSlot(JSContext *cx, JSObject *obj, uint32 index, const js::Value &v);
 
-extern JSBool
-js_CheckPrincipalsAccess(JSContext *cx, JSObject *scopeobj,
-                         JSPrincipals *principals, JSAtom *caller);
-
 /* For CSP -- checks if eval() and friends are allowed to run. */
 extern JSBool
 js_CheckContentSecurityPolicy(JSContext *cx, JSObject *scopeObj);
-
-/* NB: Infallible. */
-extern const char *
-js_ComputeFilename(JSContext *cx, JSStackFrame *caller,
-                   JSPrincipals *principals, uintN *linenop);
 
 extern JSBool
 js_ReportGetterOnlyAssignment(JSContext *cx);
@@ -1970,21 +1931,13 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
 
-enum EvalType { INDIRECT_EVAL, DIRECT_EVAL };
-
 /*
- * Common code implementing direct and indirect eval.
- *
- * Evaluate vp[2], if it is a string, in the context of the given calling
- * frame, with the provided scope chain, with the semantics of either a direct
- * or indirect eval (see ES5 10.4.2).  If this is an indirect eval, scopeobj
- * must be a global object.
- *
- * On success, store the completion value in *vp and return true.
+ * Performs a direct eval for the given arguments, which must correspond to the
+ * currently-executing stack frame, which must be a script frame. On completion
+ * the result is returned in call.rval.
  */
-extern bool
-EvalKernel(JSContext *cx, uintN argc, js::Value *vp, EvalType evalType, JSStackFrame *caller,
-           JSObject *scopeobj);
+extern JS_REQUIRES_STACK bool
+DirectEval(JSContext *cx, const CallArgs &call);
 
 /*
  * True iff |v| is the built-in eval function for the global object that
@@ -1996,6 +1949,13 @@ IsBuiltinEvalForScope(JSObject *scopeChain, const js::Value &v);
 /* True iff fun is a built-in eval function. */
 extern bool
 IsAnyBuiltinEval(JSFunction *fun);
+
+/* 'call' should be for the eval/Function native invocation. */
+extern JSPrincipals *
+PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx);
+
+extern JSObject *
+NonNullObject(JSContext *cx, const Value &v);
 
 }
 
