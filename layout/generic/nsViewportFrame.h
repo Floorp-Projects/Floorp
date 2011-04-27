@@ -117,6 +117,9 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
+private:
+  virtual mozilla::layout::FrameChildListID GetAbsoluteListName() const { return kFixedList; }
+
 protected:
   nsPoint AdjustReflowStateForScrollbars(nsHTMLReflowState* aReflowState) const;
 
