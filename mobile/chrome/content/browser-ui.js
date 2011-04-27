@@ -880,6 +880,8 @@ var BrowserUI = {
     if (browser.canGoBack) {
       browser.goBack();
     } else if (tab.owner) {
+      // When going back, always return to the owner (not a sibling).
+      Browser.selectedTab = tab.owner;
       this.closeTab(tab);
     }
 #ifdef ANDROID
