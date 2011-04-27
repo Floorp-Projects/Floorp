@@ -2858,6 +2858,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, nsACStrin
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromFile(nsIFile* aFile, nsACString& aContentType)
 {
+  NS_ENSURE_ARG_POINTER(aFile);
   nsresult rv;
   nsCOMPtr<nsIMIMEInfo> info;
 
