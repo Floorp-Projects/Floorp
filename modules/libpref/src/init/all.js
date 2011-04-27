@@ -194,11 +194,6 @@ pref("gfx.color_management.rendering_intent", 0);
 pref("gfx.downloadable_fonts.enabled", true);
 pref("gfx.downloadable_fonts.fallback_delay", 3000);
 pref("gfx.downloadable_fonts.sanitize", true);
-#ifdef XP_MACOSX
-pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", false);
-#else
-pref("gfx.downloadable_fonts.sanitize.preserve_otl_tables", true);
-#endif
 
 // see gfx/thebes/gfxUnicodeProperties.h for definitions of script bits
 #ifdef XP_MACOSX
@@ -610,9 +605,9 @@ pref("javascript.options.relimit",          true);
 pref("javascript.options.tracejit.content",  true);
 pref("javascript.options.tracejit.chrome",   true);
 pref("javascript.options.methodjit.content", true);
-pref("javascript.options.methodjit.chrome",  false);
+pref("javascript.options.methodjit.chrome",  true);
 pref("javascript.options.jitprofiling.content", true);
-pref("javascript.options.jitprofiling.chrome",  false);
+pref("javascript.options.jitprofiling.chrome",  true);
 pref("javascript.options.methodjit_always", false);
 // This preference limits the memory usage of javascript.
 // If you want to change these values for your device,

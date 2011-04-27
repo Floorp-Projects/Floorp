@@ -1449,7 +1449,7 @@ namespace nanojit
         return patch_target;
     }
 
-    NIns *Assembler::asm_branch(bool branchOnFalse, LIns *condition, NIns *target) {
+    Branches Assembler::asm_branch(bool branchOnFalse, LIns *condition, NIns *target) {
         NanoAssert(condition->isCmp());
 
         LOpcode opcode = condition->opcode();
@@ -1459,7 +1459,7 @@ namespace nanojit
 
         asm_cmp(opcode, condition);
 
-        return patch_target;
+        return Branches(patch_target);
     }
 
     void Assembler::nBeginAssembly() {

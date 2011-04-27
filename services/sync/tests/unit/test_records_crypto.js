@@ -92,7 +92,7 @@ function run_test() {
     catch(ex) {
       error = ex;
     }
-    do_check_eq(error, "Record id mismatch: resource,other");
+    do_check_eq(error, "Record id mismatch: resource != other");
 
     log.info("Make sure wrong hmacs cause failures");
     cryptoWrap.encrypt(keyBundle);
@@ -108,7 +108,7 @@ function run_test() {
 
     // Checking per-collection keys and default key handling.
     
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
     let bu = "http://localhost:8080/storage/bookmarks/foo";
     let bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
     bookmarkItem.encrypt();
@@ -119,7 +119,7 @@ function run_test() {
     
     // Per-collection keys.
     // Generate a key for "bookmarks".
-    CollectionKeys.generateNewKeys(["bookmarks"]);
+    generateNewKeys(["bookmarks"]);
     bookmarkItem = prepareCryptoWrap("bookmarks", "foo");
     do_check_eq(bookmarkItem.collection, "bookmarks");
     

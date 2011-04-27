@@ -203,7 +203,7 @@ class SetPropCompiler : public PICStubCompiler
         SetPropLabels &labels = pic.setPropLabels();
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin, pic.u.vr));
         repatcher.repatch(labels.getInlineShapeData(pic.fastPathStart, pic.shapeGuard),
-                          int32(JSObjectMap::INVALID_SHAPE));
+                          int32(INVALID_SHAPE));
         repatcher.relink(labels.getInlineShapeJump(pic.fastPathStart.labelAtOffset(pic.shapeGuard)),
                          pic.slowPathStart);
 
@@ -339,7 +339,7 @@ class SetPropCompiler : public PICStubCompiler
             } else {
                 /* Check capacity. */
                 Address capacity(pic.objReg, offsetof(JSObject, capacity));
-                masm.load32(masm.payloadOf(capacity), pic.shapeReg);
+                masm.load32(capacity, pic.shapeReg);
                 Jump overCapacity = masm.branch32(Assembler::LessThanOrEqual, pic.shapeReg,
                                                   Imm32(shape->slot));
                 if (!slowExits.append(overCapacity))
@@ -738,7 +738,7 @@ class GetPropCompiler : public PICStubCompiler
         GetPropLabels &labels = pic.getPropLabels();
         repatcher.repatchLEAToLoadPtr(labels.getDslotsLoad(pic.fastPathRejoin));
         repatcher.repatch(labels.getInlineShapeData(pic.getFastShapeGuard()),
-                          int32(JSObjectMap::INVALID_SHAPE));
+                          int32(INVALID_SHAPE));
         repatcher.relink(labels.getInlineShapeJump(pic.getFastShapeGuard()), pic.slowPathStart);
 
         if (pic.hasTypeCheck()) {
@@ -1738,7 +1738,6 @@ ic::SetProp(VMFrame &f, ic::PICInfo *pic)
             THROW();
     }
     
-    Value rval = f.regs.sp[-1];
     stub(f, pic);
 }
 

@@ -28,9 +28,16 @@ force_prompt(true);
 /** Test for Bug  **/
 
 var numberOfWindows = 5;  // 20 seems to be the default max popups during the mochitest run
-var totalWindows = numberOfWindows;
+var loadedWindows = 0;
 
 var windows = new Array(numberOfWindows);
+
+addEventListener("message", function() {
+  ++loadedWindows;
+  if (loadedWindows == numberOfWindows) {
+    SimpleTest.executeSoon(closeWindows);
+  }
+}, false);
 
 for(var i = 0; i < numberOfWindows; i++) {
   windows[i] = window.open("geolocation.html", "_blank", "width=700,height=400");
@@ -40,26 +47,18 @@ function closeWindows()
 {
   for(var i = 0; i < numberOfWindows; i++) {
     windows[i].close();
-    totalWindows --;
   }
+  SimpleTest.waitForFocus(done);
 }
 
 SimpleTest.waitForExplicitFinish();
 
-function checkDone()
+function done()
 {
-    if (totalWindows == 0)
-    {
-        ok(navigator.geolocation, "Opened a bunch of windows and didn't crash.");
-        clearInterval(timer);
-        reset_prompt();
-        SimpleTest.finish();
-    }
+  ok(navigator.geolocation, "Opened a bunch of windows and didn't crash.");
+  reset_prompt();
+  SimpleTest.finish();
 }
-
-var timer = setInterval(checkDone, 1000);
-
-setTimeout(closeWindows, 5000);
 
 </script>
 </pre>

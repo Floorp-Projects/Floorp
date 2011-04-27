@@ -45,7 +45,16 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
 
-const ALGORITHM                 = Ci.IWeaveCrypto.AES_256_CBC;
+/**
+ * Shortcuts for some algorithm SEC OIDs.  Full list available here:
+ * http://lxr.mozilla.org/seamonkey/source/security/nss/lib/util/secoidt.h
+ */
+const DES_EDE3_CBC = 156;
+const AES_128_CBC  = 184;
+const AES_192_CBC  = 186;
+const AES_256_CBC  = 188;
+
+const ALGORITHM                 = AES_256_CBC;
 const KEYSIZE_AES_256           = 32;
 const KEY_DERIVATION_ITERATIONS = 4096;   // PKCS#5 recommends at least 1000.
 const INITIAL_BUFFER_SIZE       = 1024;
@@ -55,8 +64,6 @@ function WeaveCrypto() {
 }
 
 WeaveCrypto.prototype = {
-    QueryInterface: XPCOMUtils.generateQI([Ci.IWeaveCrypto]),
-
     prefBranch : null,
     debug      : true,  // services.sync.log.cryptoDebug
     nss        : null,
@@ -378,10 +385,6 @@ WeaveCrypto.prototype = {
                                                             this.nss_t.SECAlgorithmID.ptr, this.nss_t.PRBool);
     },
 
-
-    //
-    // IWeaveCrypto interfaces
-    //
 
     _sharedInputBuffer:      null,
     _sharedInputBufferInts:  null,

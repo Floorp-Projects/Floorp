@@ -565,7 +565,7 @@ public:
    * since this can happen due to content fixup when a form spans table rows or
    * table cells.
    */
-  static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
+  static PRBool BelongsInForm(nsIContent *aForm,
                               nsIContent *aContent);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
@@ -1172,6 +1172,12 @@ public:
     }
   }
 
+  static void DropScriptObject(PRUint32 aLangID, void *aObject,
+                               const char *name, void *aClosure)
+  {
+    DropScriptObject(aLangID, aObject, aClosure);
+  }
+
   /**
    * Unbinds the content from the tree and nulls it out if it's not null.
    */
@@ -1278,7 +1284,7 @@ public:
     if (aCache->PreservingWrapper()) {
       aCallback(nsIProgrammingLanguage::JAVASCRIPT,
                 aCache->GetWrapperPreserveColor(),
-                aClosure);
+                "Preserved wrapper", aClosure);
     }
   }
 
@@ -1771,6 +1777,11 @@ public:
   FindInternalContentViewer(const char* aType,
                             ContentViewerType* aLoaderType = nsnull);
 
+  /**
+   * Calling this adds support for
+   * ontouch* event handler DOM attributes.
+   */
+  static void InitializeTouchEventTable();
 private:
   static PRBool InitializeEventTable();
 

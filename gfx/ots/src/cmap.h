@@ -17,15 +17,42 @@ struct OpenTypeCMAPSubtableRange {
   uint32_t start_glyph_id;
 };
 
+struct OpenTypeCMAPSubtableVSRange {
+  uint32_t unicode_value;
+  uint8_t additional_count;
+};
+
+struct OpenTypeCMAPSubtableVSMapping {
+  uint32_t unicode_value;
+  uint16_t glyph_id;
+};
+
+struct OpenTypeCMAPSubtableVSRecord {
+  uint32_t var_selector;
+  uint32_t default_offset;
+  uint32_t non_default_offset;
+  std::vector<OpenTypeCMAPSubtableVSRange> ranges;
+  std::vector<OpenTypeCMAPSubtableVSMapping> mappings;
+};
+
 struct OpenTypeCMAP {
   OpenTypeCMAP()
-      : subtable_3_0_4_data(NULL),
+      : subtable_0_3_4_data(NULL),
+        subtable_0_3_4_length(0),
+        subtable_0_5_14_length(0),
+        subtable_3_0_4_data(NULL),
         subtable_3_0_4_length(0),
         subtable_3_1_4_data(NULL),
-        subtable_3_1_4_length(0),
-        subtable_0_5_14_data(NULL),
-        subtable_0_5_14_length(0) {
+        subtable_3_1_4_length(0) {
   }
+
+  // Platform 0, Encoding 3, Format 4, Unicode BMP table.
+  const uint8_t *subtable_0_3_4_data;
+  size_t subtable_0_3_4_length;
+
+  // Platform 0, Encoding 5, Format 14, Unicode Variation Sequence table.
+  size_t subtable_0_5_14_length;
+  std::vector<OpenTypeCMAPSubtableVSRecord> subtable_0_5_14;
 
   // Platform 3, Encoding 0, Format 4, MS Symbol table.
   const uint8_t *subtable_3_0_4_data;
@@ -33,9 +60,6 @@ struct OpenTypeCMAP {
   // Platform 3, Encoding 1, Format 4, MS Unicode BMP table.
   const uint8_t *subtable_3_1_4_data;
   size_t subtable_3_1_4_length;
-  // Platform 0, Encoding 5, Format 14, Unicode Variation Sequences table.
-  const uint8_t *subtable_0_5_14_data;
-  size_t subtable_0_5_14_length;
 
   // Platform 3, Encoding 10, Format 12, MS Unicode UCS-4 table.
   std::vector<OpenTypeCMAPSubtableRange> subtable_3_10_12;

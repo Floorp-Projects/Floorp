@@ -98,7 +98,8 @@ struct nsDOMClassInfoData
   PRUint32 mScriptableFlags : 31; // flags must not use more than 31 bits!
   PRUint32 mHasClassInterface : 1;
   PRUint32 mInterfacesBitmap;
-  PRBool mChromeOnly;
+  PRPackedBool mChromeOnly;
+  PRPackedBool mDisabled;
 #ifdef NS_DEBUG
   PRUint32 mDebugID;
 #endif
@@ -359,6 +360,13 @@ public:
   static jsid sKeyPath_id;
   static jsid sAutoIncrement_id;
   static jsid sUnique_id;
+  
+  static jsid sOntouchstart_id;
+  static jsid sOntouchend_id;
+  static jsid sOntouchmove_id;
+  static jsid sOntouchenter_id;
+  static jsid sOntouchleave_id;
+  static jsid sOntouchcancel_id;
 
 protected:
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
@@ -1504,6 +1512,26 @@ public:
   }
 };
 
+class nsDOMTouchListSH : public nsArraySH
+{
+protected:
+  nsDOMTouchListSH(nsDOMClassInfoData* aData) : nsArraySH(aData)
+  {
+  }
+
+  virtual ~nsDOMTouchListSH()
+  {
+  }
+
+  virtual nsISupports* GetItemAt(nsISupports *aNative, PRUint32 aIndex,
+                                 nsWrapperCache **aCache, nsresult *aResult);
+
+public:
+  static nsIClassInfo* doCreate(nsDOMClassInfoData* aData)
+  {
+    return new nsDOMTouchListSH(aData);
+  }
+};
 
 #ifdef MOZ_XUL
 // TreeColumns helper

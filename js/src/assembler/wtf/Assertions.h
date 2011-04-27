@@ -140,14 +140,6 @@ void WTFLogVerbose(const char* file, int line, const char* function, WTFLogChann
 
 /* ASSERT, ASSERT_WITH_MESSAGE, ASSERT_NOT_REACHED */
 
-#if WTF_PLATFORM_WINCE && !WTF_PLATFORM_TORCHMOBILE
-/* FIXME: We include this here only to avoid a conflict with the ASSERT macro. */
-#include "jswin.h"
-#undef min
-#undef max
-#undef ERROR
-#endif
-
 #if WTF_PLATFORM_WIN_OS || WTF_PLATFORM_SYMBIAN
 /* FIXME: Change to use something other than ASSERT to avoid this conflict with the underlying platform */
 #undef ASSERT

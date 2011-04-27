@@ -210,6 +210,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #ifdef MOZ_MEDIA
 #include "nsHTMLMediaElement.h"
 #endif
+#include "nsDOMTouchEvent.h"
 
 using namespace mozilla::dom;
 using namespace mozilla::layers;
@@ -725,6 +726,35 @@ nsContentUtils::InitializeEventTable() {
 
   return PR_TRUE;
 }
+
+void
+nsContentUtils::InitializeTouchEventTable()
+{
+  static PRBool sEventTableInitialized = PR_FALSE;
+  if (!sEventTableInitialized && sAtomEventTable && sStringEventTable) {
+    sEventTableInitialized = PR_TRUE;
+    static const EventNameMapping touchEventArray[] = {
+      { nsGkAtoms::ontouchstart, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchend, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchmove, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchenter, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchleave, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT },
+      { nsGkAtoms::ontouchcancel, NS_USER_DEFINED_EVENT, EventNameType_All, NS_INPUT_EVENT }
+    };
+    for (PRUint32 i = 0; i < NS_ARRAY_LENGTH(touchEventArray); ++i) {
+      if (!sAtomEventTable->Put(touchEventArray[i].mAtom, touchEventArray[i]) ||
+          !sStringEventTable->Put(Substring(nsDependentAtomString(touchEventArray[i].mAtom), 2),
+                                  touchEventArray[i])) {
+        delete sAtomEventTable;
+        sAtomEventTable = nsnull;
+        delete sStringEventTable;
+        sStringEventTable = nsnull;
+        return;
+      }
+    }
+  }
+}
+
 
 /**
  * Access a cached parser service. Don't addref. We need only one
@@ -2183,21 +2213,13 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
 
 // static
 PRBool
-nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
+nsContentUtils::BelongsInForm(nsIContent *aForm,
                               nsIContent *aContent)
 {
   NS_PRECONDITION(aForm, "Must have a form");
   NS_PRECONDITION(aContent, "Must have a content node");
 
-  nsCOMPtr<nsIContent> form(do_QueryInterface(aForm));
-
-  if (!form) {
-    NS_ERROR("This should not happen, form is not an nsIContent!");
-
-    return PR_TRUE;
-  }
-
-  if (form == aContent) {
+  if (aForm == aContent) {
     // A form does not belong inside itself, so we return false here
 
     return PR_FALSE;
@@ -2206,7 +2228,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
   nsIContent* content = aContent->GetParent();
 
   while (content) {
-    if (content == form) {
+    if (content == aForm) {
       // aContent is contained within the form so we return true.
 
       return PR_TRUE;
@@ -2223,7 +2245,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
     content = content->GetParent();
   }
 
-  if (form->GetChildCount() > 0) {
+  if (aForm->GetChildCount() > 0) {
     // The form is a container but aContent wasn't inside the form,
     // return false
 
@@ -2234,7 +2256,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
   // we check whether the content comes after the form.  If it does,
   // return true.  If it does not, then it couldn't have been inside
   // the form in the HTML.
-  if (PositionIsBefore(form, aContent)) {
+  if (PositionIsBefore(aForm, aContent)) {
     // We could be in this form!
     // In the future, we may want to get document.forms, look at the
     // form after aForm, and if aContent is after that form after
@@ -6210,7 +6232,8 @@ private:
 };
 
 static void
-DebugWrapperTraceCallback(PRUint32 langID, void *p, void *closure)
+DebugWrapperTraceCallback(PRUint32 langID, void *p, const char *name,
+                          void *closure)
 {
   DebugWrapperTraversalCallback* callback =
     static_cast<DebugWrapperTraversalCallback*>(closure);

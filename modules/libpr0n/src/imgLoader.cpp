@@ -1171,6 +1171,9 @@ PRBool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
     rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                   aLoadFlags, aExistingRequest, 
                                   reinterpret_cast<imgIRequest **>(aProxyRequest));
+    if (NS_FAILED(rv)) {
+      return PR_FALSE;
+    }
 
     if (*aProxyRequest) {
       imgRequestProxy* proxy = static_cast<imgRequestProxy*>(*aProxyRequest);
@@ -1692,6 +1695,10 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI,
     LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
     rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                   requestFlags, aRequest, _retval);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
     imgRequestProxy *proxy = static_cast<imgRequestProxy *>(*_retval);
 
     // Make sure that OnStatus/OnProgress calls have the right request set, if

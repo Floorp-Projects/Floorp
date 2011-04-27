@@ -44,11 +44,6 @@ VPATH     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE = services-crypto
-XPIDL_MODULE = services-crypto
-
-XPIDLSRCS = \
-  IWeaveCrypto.idl \
-  $(NULL)
 
 libs::
 	$(PYTHON) $(topsrcdir)/config/nsinstall.py $(srcdir)/modules/* $(FINAL_TARGET)/modules/services-crypto

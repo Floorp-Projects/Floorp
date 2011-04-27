@@ -1618,7 +1618,7 @@ namespace nanojit
         return patch;
     }
 
-    NIns* Assembler::asm_branch(bool branchOnFalse, LIns *cond, NIns * const targ)
+    Branches Assembler::asm_branch(bool branchOnFalse, LIns *cond, NIns * const targ)
     {
         NanoAssert(cond->isCmp());
         LOpcode condop = cond->opcode();
@@ -1628,7 +1628,7 @@ namespace nanojit
         Register ra = findRegFor(a, allow);
         Register rb = (b==a) ? ra : findRegFor(b, allow & ~rmask(ra));
 
-        return asm_bxx(branchOnFalse, condop, ra, rb, targ);
+        return Branches(asm_bxx(branchOnFalse, condop, ra, rb, targ));
     }
 
     void Assembler::asm_j(NIns * const targ, bool bdelay)

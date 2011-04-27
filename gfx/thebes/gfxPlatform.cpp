@@ -149,8 +149,6 @@ SRGBOverrideObserver::Observe(nsISupports *aSubject,
 
 #define GFX_DOWNLOADABLE_FONTS_ENABLED "gfx.downloadable_fonts.enabled"
 #define GFX_DOWNLOADABLE_FONTS_SANITIZE "gfx.downloadable_fonts.sanitize"
-#define GFX_DOWNLOADABLE_FONTS_SANITIZE_PRESERVE_OTL \
-            "gfx.downloadable_fonts.sanitize.preserve_otl_tables"
 
 #define GFX_PREF_HARFBUZZ_SCRIPTS "gfx.font_rendering.harfbuzz.scripts"
 #define HARFBUZZ_SCRIPTS_DEFAULT  gfxUnicodeProperties::SHAPING_DEFAULT
@@ -225,7 +223,6 @@ gfxPlatform::gfxPlatform()
     mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
     mAllowDownloadableFonts = UNINITIALIZED_VALUE;
     mDownloadableFontsSanitize = UNINITIALIZED_VALUE;
-    mSanitizePreserveOTLTables = UNINITIALIZED_VALUE;
 }
 
 gfxPlatform*
@@ -444,17 +441,6 @@ gfxPlatform::SanitizeDownloadedFonts()
     }
 
     return mDownloadableFontsSanitize;
-}
-
-PRBool
-gfxPlatform::PreserveOTLTablesWhenSanitizing()
-{
-    if (mSanitizePreserveOTLTables == UNINITIALIZED_VALUE) {
-        mSanitizePreserveOTLTables =
-            GetBoolPref(GFX_DOWNLOADABLE_FONTS_SANITIZE_PRESERVE_OTL, PR_FALSE);
-    }
-
-    return mSanitizePreserveOTLTables;
 }
 
 PRBool
@@ -1253,8 +1239,6 @@ gfxPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref)
         mAllowDownloadableFonts = UNINITIALIZED_VALUE;
     } else if (!strcmp(GFX_DOWNLOADABLE_FONTS_SANITIZE, aPref)) {
         mDownloadableFontsSanitize = UNINITIALIZED_VALUE;
-    } else if (!strcmp(GFX_DOWNLOADABLE_FONTS_SANITIZE_PRESERVE_OTL, aPref)) {
-        mSanitizePreserveOTLTables = UNINITIALIZED_VALUE;
     } else if (!strcmp(GFX_PREF_HARFBUZZ_SCRIPTS, aPref)) {
         mUseHarfBuzzScripts = UNINITIALIZED_VALUE;
         gfxTextRunWordCache::Flush();
