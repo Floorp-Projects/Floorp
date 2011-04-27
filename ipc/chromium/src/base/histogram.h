@@ -45,17 +45,18 @@
 #include <string>
 #include <vector>
 
+#if defined(CHROMIUM_MOZILLA_BUILD)
+#define BASE_API
+#else
 #include "base/base_api.h"
-#include "base/gtest_prod_util.h"
-#include "base/logging.h"
+#endif
+#include "testing/gtest/include/gtest/gtest_prod.h"
 #include "base/time.h"
+#include "base/lock.h"
 
 class Pickle;
 
 namespace base {
-
-class Lock;
-
 //------------------------------------------------------------------------------
 // Provide easy general purpose histogram in a macro, just like stats counters.
 // The first four macros use 50 buckets.
@@ -729,7 +730,7 @@ class BASE_API StatisticsRecorder {
   static HistogramMap* histograms_;
 
   // lock protects access to the above map.
-  static base::Lock* lock_;
+  static Lock* lock_;
 
   // Dump all known histograms to log.
   static bool dump_on_exit_;
