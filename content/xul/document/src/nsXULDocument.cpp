@@ -388,6 +388,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
         tmp->mPendingOverlayLoadNotifications.EnumerateRead(TraverseObservers, &cb);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXULDocument, nsXMLDocument)
+    delete tmp->mTemplateBuilderTable;
+    tmp->mTemplateBuilderTable = nsnull;
+    //XXX We should probably unlink all the objects we traverse.
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
 NS_IMPL_ADDREF_INHERITED(nsXULDocument, nsXMLDocument)
 NS_IMPL_RELEASE_INHERITED(nsXULDocument, nsXMLDocument)
 
@@ -1842,6 +1848,9 @@ nsXULDocument::SetTemplateBuilderFor(nsIContent* aContent,
                                      nsIXULTemplateBuilder* aBuilder)
 {
     if (! mTemplateBuilderTable) {
+        if (!aBuilder) {
+            return NS_OK;
+        }
         mTemplateBuilderTable = new BuilderTable;
         if (! mTemplateBuilderTable || !mTemplateBuilderTable->Init()) {
             mTemplateBuilderTable = nsnull;
