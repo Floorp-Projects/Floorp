@@ -690,14 +690,13 @@ nsHTMLEditor::CheckPositionedElementBGandFG(nsIDOMElement * aElement,
                                          bgColorStr);
     NS_ENSURE_SUCCESS(res, res);
     if (bgColorStr.EqualsLiteral("transparent")) {
-      nsCOMPtr<nsIDOMWindow> window;
-      res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(window));
-      NS_ENSURE_SUCCESS(res, res);
 
+      nsCOMPtr<nsIDOMViewCSS> viewCSS;
+      res = mHTMLCSSUtils->GetDefaultViewCSS(aElement, getter_AddRefs(viewCSS));
+      NS_ENSURE_SUCCESS(res, res);
       nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-      res = window->GetComputedStyle(aElement, EmptyString(), getter_AddRefs(cssDecl));
+      res = viewCSS->GetComputedStyle(aElement, EmptyString(), getter_AddRefs(cssDecl));
       NS_ENSURE_SUCCESS(res, res);
-
       // from these declarations, get the one we want and that one only
       nsCOMPtr<nsIDOMCSSValue> colorCssValue;
       res = cssDecl->GetPropertyCSSValue(NS_LITERAL_STRING("color"), getter_AddRefs(colorCssValue));

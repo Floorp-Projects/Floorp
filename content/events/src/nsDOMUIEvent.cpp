@@ -176,7 +176,7 @@ nsDOMUIEvent::GetClientPoint()
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::GetView(nsIDOMWindow** aView)
+nsDOMUIEvent::GetView(nsIDOMAbstractView** aView)
 {
   *aView = mView;
   NS_IF_ADDREF(*aView);
@@ -191,11 +191,7 @@ nsDOMUIEvent::GetDetail(PRInt32* aDetail)
 }
 
 NS_IMETHODIMP
-nsDOMUIEvent::InitUIEvent(const nsAString& typeArg,
-                          PRBool canBubbleArg,
-                          PRBool cancelableArg,
-                          nsIDOMWindow* viewArg,
-                          PRInt32 detailArg)
+nsDOMUIEvent::InitUIEvent(const nsAString & typeArg, PRBool canBubbleArg, PRBool cancelableArg, nsIDOMAbstractView *viewArg, PRInt32 detailArg)
 {
   nsresult rv = nsDOMEvent::InitEvent(typeArg, canBubbleArg, cancelableArg);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -422,5 +418,9 @@ nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsGUIEvent *aEvent) 
 {
   nsDOMUIEvent* it = new nsDOMUIEvent(aPresContext, aEvent);
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   return CallQueryInterface(it, aInstancePtrResult);
 }

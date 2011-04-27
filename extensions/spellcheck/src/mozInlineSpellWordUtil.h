@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"
+#include "nsIDOMViewCSS.h"
 #include "nsIDocument.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -125,7 +126,7 @@ private:
   // cached stuff for the editor, set by Init
   nsCOMPtr<nsIDOMDocumentRange> mDOMDocumentRange;
   nsCOMPtr<nsIDocument>         mDocument;
-  nsCOMPtr<nsIDOMWindow>        mCSSView;
+  nsCOMPtr<nsIDOMViewCSS>       mCSSView;
   nsCOMPtr<nsIUGenCategory>     mCategories;
 
   // range to check, see SetRange

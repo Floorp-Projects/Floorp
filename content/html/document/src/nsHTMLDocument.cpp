@@ -1388,12 +1388,6 @@ nsHTMLDocument::NormalizeDocument()
   return nsDocument::NormalizeDocument();
 }
 
-NS_IMETHODIMP
-nsHTMLDocument::GetDefaultView(nsIDOMWindow** aWindow)
-{
-  return nsDocument::GetDefaultView(aWindow);
-}
-
 //
 // nsIDOMHTMLDocument interface implementation
 //

@@ -36,11 +36,13 @@ function successCallback(position) {
   if (hasBeenCleared == true) {
     successWasCalledAfterClear = true;
   }
+  SimpleTest.executeSoon(clearWatch);
 }
 
 function clearWatch() {
   navigator.geolocation.clearWatch(watchID);
   hasBeenCleared = true;
+  SimpleTest.executeSoon(testAccepted);
 }
 
 function testAccepted() {
@@ -51,10 +53,6 @@ function testAccepted() {
 
 
 watchID = navigator.geolocation.watchPosition(successCallback, failureCallback, null);
-
-setTimeout(clearWatch, 250);
-
-setTimeout(testAccepted, 2000);
 
 </script>
 </pre>

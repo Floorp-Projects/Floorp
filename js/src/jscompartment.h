@@ -377,8 +377,8 @@ struct JS_FRIEND_API(JSCompartment) {
     js::gc::ArenaList            arenas[js::gc::FINALIZE_LIMIT];
     js::gc::FreeLists            freeLists;
 
-    size_t                       gcBytes;
-    size_t                       gcTriggerBytes;
+    uint32                       gcBytes;
+    uint32                       gcTriggerBytes;
     size_t                       gcLastBytes;
 
     bool                         hold;
@@ -479,12 +479,13 @@ struct JS_FRIEND_API(JSCompartment) {
     void sweep(JSContext *cx, uint32 releaseInterval);
     void purge(JSContext *cx);
     void finishArenaLists();
-    void finalizeObjectArenaLists(JSContext *cx);
-    void finalizeShapeArenaLists(JSContext *cx);
-    void finalizeStringArenaLists(JSContext *cx);
+    void finalizeObjectArenaLists(JSContext *cx, JSGCInvocationKind gckind);
+    void finalizeStringArenaLists(JSContext *cx, JSGCInvocationKind gckind);
+    void finalizeShapeArenaLists(JSContext *cx, JSGCInvocationKind gckind);
     bool arenaListsAreEmpty();
 
     void setGCLastBytes(size_t lastBytes);
+    void reduceGCTriggerBytes(uint32 amount);
 
     js::DtoaCache dtoaCache;
 

@@ -1771,6 +1771,11 @@ public:
   FindInternalContentViewer(const char* aType,
                             ContentViewerType* aLoaderType = nsnull);
 
+  /**
+   * Calling this adds support for
+   * ontouch* event handler DOM attributes.
+   */
+  static void InitializeTouchEventTable();
 private:
   static PRBool InitializeEventTable();
 

@@ -681,6 +681,8 @@ var BrowserUI = {
 
     this.hidePanel();
     this._hidePopup();
+    if (this.activeDialog)
+      this.activeDialog.close();
     this.activePanel = AllPagesList;
   },
 

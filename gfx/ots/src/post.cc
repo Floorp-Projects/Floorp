@@ -120,7 +120,7 @@ bool ots_post_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 }
 
 bool ots_post_should_serialise(OpenTypeFile *file) {
-  return file->post;
+  return file->post != NULL;
 }
 
 bool ots_post_serialise(OTSStream *out, OpenTypeFile *file) {

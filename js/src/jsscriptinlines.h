@@ -41,6 +41,7 @@
 #ifndef jsscriptinlines_h___
 #define jsscriptinlines_h___
 
+#include "jsautooplen.h"
 #include "jscntxt.h"
 #include "jsfun.h"
 #include "jsopcode.h"
@@ -92,6 +93,22 @@ Bindings::lastShape() const
     JS_ASSERT(lastBinding);
     JS_ASSERT_IF(lastBinding->inDictionary(), lastBinding->frozen());
     return lastBinding;
+}
+
+extern const char *
+CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop);
+
+inline const char *
+CurrentScriptFileAndLine(JSContext *cx, uintN *linenop, LineOption opt)
+{
+    if (opt == CALLED_FROM_JSOP_EVAL) {
+        JS_ASSERT(*cx->regs->pc == JSOP_EVAL);
+        JS_ASSERT(*(cx->regs->pc + JSOP_EVAL_LENGTH) == JSOP_LINENO);
+        *linenop = GET_UINT16(cx->regs->pc + JSOP_EVAL_LENGTH);
+        return cx->fp()->script()->filename;
+    }
+
+    return CurrentScriptFileAndLineSlow(cx, linenop);
 }
 
 } // namespace js

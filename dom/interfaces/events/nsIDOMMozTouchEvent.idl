@@ -40,7 +40,7 @@
 #include "nsIDOMMouseEvent.idl"
 
 
-[scriptable, uuid(e9ed248b-1995-482f-8407-33ae7744bb9c)]
+[scriptable, uuid(9b454391-0190-4313-a070-1e26e9bf6f31)]
 interface nsIDOMMozTouchEvent : nsIDOMMouseEvent
 {
   readonly attribute unsigned long streamId;
@@ -48,7 +48,7 @@ interface nsIDOMMozTouchEvent : nsIDOMMouseEvent
   void initMozTouchEvent(in DOMString typeArg,
                          in boolean canBubbleArg,
                          in boolean cancelableArg,
-                         in nsIDOMWindow viewArg,
+                         in nsIDOMAbstractView viewArg,
                          in long detailArg,
                          in long screenXArg,
                          in long screenYArg,

@@ -111,6 +111,7 @@
 #endif
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
+#include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
@@ -1333,6 +1334,8 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageIndexedDB)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -7936,6 +7939,10 @@ nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
   }
 }
 
+//*****************************************************************************
+// nsGlobalWindow::nsIDOMViewCSS
+//*****************************************************************************
+
 NS_IMETHODIMP
 nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
                                  const nsAString& aPseudoElt,
@@ -7970,6 +7977,27 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
   *aReturn = compStyle.forget().get();
 
   return NS_OK;
+}
+
+//*****************************************************************************
+// nsGlobalWindow::nsIDOMAbstractView
+//*****************************************************************************
+
+NS_IMETHODIMP
+nsGlobalWindow::GetDocument(nsIDOMDocumentView ** aDocumentView)
+{
+  NS_ENSURE_ARG_POINTER(aDocumentView);
+
+  nsresult rv = NS_OK;
+
+  if (mDocument) {
+    rv = CallQueryInterface(mDocument, aDocumentView);
+  }
+  else {
+    *aDocumentView = nsnull;
+  }
+
+  return rv;
 }
 
 //*****************************************************************************
@@ -8808,14 +8836,14 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   interval = NS_MAX(aIsInterval ? 1 : 0, interval);
 
   // Make sure we don't proceed with an interval larger than our timer
-  // code can handle.
-  if (interval > PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE)) {
-    interval = PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE);
+  // code can handle. (Note: we already forced |interval| to be non-negative,
+  // so the PRUint32 cast (to avoid compiler warnings) is ok.)
+  PRUint32 maxTimeoutMs = PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE);
+  if (static_cast<PRUint32>(interval) > maxTimeoutMs) {
+    interval = maxTimeoutMs;
   }
 
   nsTimeout *timeout = new nsTimeout();
-  if (!timeout)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // Increment the timeout's reference count to represent this function's hold
   // on the timeout.

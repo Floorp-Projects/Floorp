@@ -589,3 +589,53 @@ pref("image.mem.decodeondraw", true);
 pref("content.image.allow_locking", false);
 pref("image.mem.min_discard_timeout_ms", 20000);
 
+#ifdef MOZ_SAFE_BROWSING
+// Safe browsing does nothing unless this pref is set
+pref("browser.safebrowsing.enabled", true);
+
+// Prevent loading of pages identified as malware
+pref("browser.safebrowsing.malware.enabled", true);
+
+// Non-enhanced mode (local url lists) URL list to check for updates
+pref("browser.safebrowsing.provider.0.updateURL", "http://safebrowsing.clients.google.com/safebrowsing/downloads?client={moz:client}&appver={moz:version}&pver=2.2");
+
+pref("browser.safebrowsing.dataProvider", 0);
+
+// Does the provider name need to be localizable?
+pref("browser.safebrowsing.provider.0.name", "Google");
+pref("browser.safebrowsing.provider.0.keyURL", "https://sb-ssl.google.com/safebrowsing/newkey?client={moz:client}&appver={moz:version}&pver=2.2");
+pref("browser.safebrowsing.provider.0.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/report?");
+pref("browser.safebrowsing.provider.0.gethashURL", "http://safebrowsing.clients.google.com/safebrowsing/gethash?client={moz:client}&appver={moz:version}&pver=2.2");
+
+// HTML report pages
+pref("browser.safebrowsing.provider.0.reportGenericURL", "http://{moz:locale}.phish-generic.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportErrorURL", "http://{moz:locale}.phish-error.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportPhishURL", "http://{moz:locale}.phish-report.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportMalwareURL", "http://{moz:locale}.malware-report.mozilla.com/?hl={moz:locale}");
+pref("browser.safebrowsing.provider.0.reportMalwareErrorURL", "http://{moz:locale}.malware-error.mozilla.com/?hl={moz:locale}");
+
+// FAQ URLs
+pref("browser.safebrowsing.warning.infoURL", "http://www.mozilla.com/%LOCALE%/%APP%/phishing-protection/");
+pref("browser.geolocation.warning.infoURL", "http://www.mozilla.com/%LOCALE%/%APP%/geolocation/");
+
+// Name of the about: page contributed by safebrowsing to handle display of error
+// pages on phishing/malware hits.  (bug 399233)
+pref("urlclassifier.alternate_error_page", "blocked");
+
+// The number of random entries to send with a gethash request.
+pref("urlclassifier.gethashnoise", 4);
+
+// The list of tables that use the gethash request to confirm partial results.
+pref("urlclassifier.gethashtables", "goog-phish-shavar,goog-malware-shavar");
+
+// If an urlclassifier table has not been updated in this number of seconds,
+// a gethash request will be forced to check that the result is still in
+// the database.
+pref("urlclassifier.confirm-age", 2700);
+
+// Maximum size of the sqlite3 cache during an update, in bytes
+pref("urlclassifier.updatecachemax", 4194304);
+
+// URL for checking the reason for a malware warning.
+pref("browser.safebrowsing.malware.reportURL", "http://safebrowsing.clients.google.com/safebrowsing/diagnostic?client=%NAME%&hl=%LOCALE%&site=");
+#endif
