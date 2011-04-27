@@ -1,0 +1,80 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=642338
+-->
+<head>
+  <title>Test for Bug 642338</title>
+  <script type="text/javascript" src="/MochiKit/packed.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=642338">Mozilla Bug 642338</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+/* Test that the following window properties work:
+
+     menubar
+     toolbar
+     locationbar
+     personalbar
+     statusbar
+     scrollbars
+
+*/
+
+var numWindows = 0;
+
+/* Called when our popup loads. */
+function testWindow(w)
+{
+  // w.location.search == '?true' if we expect the bars to be on, and
+  // '?false' otherwise.
+
+  var e = w.location.search == '?true';
+  
+  is(w.menubar.visible, e, "menubar");
+  is(w.toolbar.visible, e, "toolbar");
+  is(w.personalbar.visible, e, "personalbar");
+  is(w.scrollbars.visible, e, "scrollbars");
+
+  // You can't turn these off even if you try, so check that they're true.
+  is(w.locationbar.visible, true, "locationbar");
+  is(w.statusbar.visible, true, "statusbar");
+
+  w.close();
+
+  numWindows++;
+  if (numWindows == 2) {
+    // We're done!
+    SimpleTest.finish();
+  }
+
+}
+
+SimpleTest.waitForExplicitFinish();
+
+// These will call back into testWindow when they open.
+
+var allBarsWindow =
+  window.open('file_window_bar.html?true', 'all-bars',
+              'menubar=yes,toolbar=yes,location=yes,' +
+              'personalbar=yes,status=yes,scrollbars=yes',
+              true);
+
+var noBarsWindow = 
+  window.open('file_window_bar.html?false', 'no-bars',
+              'menubar=no,toolbar=no,location=no,' +
+              'personalbar=no,status=no,scrollbars=no',
+              false);
+
+</script>
+</pre>
+</body>
+</html>
