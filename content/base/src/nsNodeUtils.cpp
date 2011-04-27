@@ -558,6 +558,9 @@ nsNodeUtils::CloneAndAdopt(nsINode *aNode, PRBool aClone, PRBool aDeep,
             window->SetHasAudioAvailableEventListeners();
           }
 #endif
+          if (elm->MayHaveTouchEventListener()) {
+            window->SetHasTouchEventListeners();
+          }
         }
       }
     }

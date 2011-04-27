@@ -166,7 +166,7 @@ PrefStore.prototype = {
       LightweightThemeManager.currentTheme = null;
     } else if (enabledNow && LightweightThemeManager.usedThemes[0] != prevTheme) {
       LightweightThemeManager.currentTheme = null;
-      LightweightThemeManager.currentTheme = ltm.usedThemes[0];
+      LightweightThemeManager.currentTheme = LightweightThemeManager.usedThemes[0];
     }
   },
 

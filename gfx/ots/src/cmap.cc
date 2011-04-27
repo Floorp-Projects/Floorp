@@ -32,7 +32,7 @@ struct Subtable314Range {
   uint32_t id_range_offset_offset;
 };
 
-// The maximum number of groups in format 12 or 13 subtables.
+// The maximum number of groups in format 12, 13 or 14 subtables.
 // Note: 0xFFFF is the maximum number of glyphs in a single font file.
 const unsigned kMaxCMAPGroups = 0xFFFF;
 
@@ -42,12 +42,26 @@ const size_t kFormat0ArraySize = 256;
 // The upper limit of the Unicode code point.
 const uint32_t kUnicodeUpperLimit = 0x10FFFF;
 
-// Parses either 3.0.4 or 3.1.4 tables.
-bool Parse3x4(ots::OpenTypeFile *file, int encoding,
+// The maximum number of UVS records (See below).
+const uint32_t kMaxCMAPSelectorRecords = 259;
+// The range of UVSes are:
+//   0x180B-0x180D (3 code points)
+//   0xFE00-0xFE0F (16 code points)
+//   0xE0100-0xE01EF (240 code points)
+const uint32_t kMongolianVSStart = 0x180B;
+const uint32_t kMongolianVSEnd = 0x180D;
+const uint32_t kVSStart = 0xFE00;
+const uint32_t kVSEnd = 0xFE0F;
+const uint32_t kIVSStart = 0xE0100;
+const uint32_t kIVSEnd = 0xE01EF;
+const uint32_t kUVSUpperLimit = 0xFFFFFF;
+
+// Parses Format 4 tables
+bool ParseFormat4(ots::OpenTypeFile *file, int platform, int encoding,
               const uint8_t *data, size_t length, uint16_t num_glyphs) {
   ots::Buffer subtable(data, length);
 
-  // 3.0.4 or 3.1.4 subtables are complex and, rather than expanding the
+  // 0.3.4, 3.0.4 or 3.1.4 subtables are complex and, rather than expanding the
   // whole thing and recompacting it, we validate it and include it verbatim
   // in the output.
 
@@ -229,12 +243,15 @@ bool Parse3x4(ots::OpenTypeFile *file, int encoding,
 
   // We accept the table.
   // TODO(yusukes): transcode the subtable.
-  if (encoding == 0) {
+  if (platform == 3 && encoding == 0) {
     file->cmap->subtable_3_0_4_data = data;
     file->cmap->subtable_3_0_4_length = length;
-  } else if (encoding == 1) {
+  } else if (platform == 3 && encoding == 1) {
     file->cmap->subtable_3_1_4_data = data;
     file->cmap->subtable_3_1_4_length = length;
+  } else if (platform == 0 && encoding == 3) {
+    file->cmap->subtable_0_3_4_data = data;
+    file->cmap->subtable_0_3_4_length = length;
   } else {
     return OTS_FAILURE();
   }
@@ -389,108 +406,137 @@ bool Parse31013(ots::OpenTypeFile *file,
   return true;
 }
 
-// Parses 0.5.14 tables.
 bool Parse0514(ots::OpenTypeFile *file,
                const uint8_t *data, size_t length, uint16_t num_glyphs) {
+  // Unicode Variation Selector table
   ots::Buffer subtable(data, length);
 
-  // Format 14 subtables are a bit complex, so rather than rebuilding the
-  // entire thing, we validate it and then include it verbatim in the output.
+  // Format 14 tables are simple. We parse these and fully serialise them
+  // later.
 
-  const off_t offset_var_selector_records = 10;
-  const size_t size_of_var_selector_record = 11;
-  const size_t size_of_def_uvs_table = 4;
-  const size_t size_of_non_def_uvs_table = 5;
-
-  if (!subtable.Skip(6)) { // skip format and length
-    return OTS_FAILURE();
-  }
-  uint32_t num_var_selector_records = 0;
-  if (!subtable.ReadU32(&num_var_selector_records)) {
-    return OTS_FAILURE();
-  }
-  if ((length - offset_var_selector_records) / size_of_var_selector_record <
-      num_var_selector_records) {
+  // Skip format (USHORT) and length (ULONG)
+  if (!subtable.Skip(6)) {
     return OTS_FAILURE();
   }
 
-  uint32_t prev_var_selector = 0;
-  for (uint32_t i = 0; i < num_var_selector_records; i++) {
-    uint32_t var_selector, def_uvs_offset, non_def_uvs_offset;
-    if (!subtable.ReadU24(&var_selector) ||
-        !subtable.ReadU32(&def_uvs_offset) ||
-        !subtable.ReadU32(&non_def_uvs_offset)) {
+  uint32_t num_records = 0;
+  if (!subtable.ReadU32(&num_records)) {
+    return OTS_FAILURE();
+  }
+  if (num_records == 0 || num_records > kMaxCMAPSelectorRecords) {
+    return OTS_FAILURE();
+  }
+
+  std::vector<ots::OpenTypeCMAPSubtableVSRecord>& records
+      = file->cmap->subtable_0_5_14;
+  records.resize(num_records);
+
+  for (unsigned i = 0; i < num_records; ++i) {
+    if (!subtable.ReadU24(&records[i].var_selector) ||
+        !subtable.ReadU32(&records[i].default_offset) ||
+        !subtable.ReadU32(&records[i].non_default_offset)) {
       return OTS_FAILURE();
     }
-    if (var_selector <= prev_var_selector ||
-        var_selector > kUnicodeUpperLimit ||
-        def_uvs_offset > length - 4 ||
-        non_def_uvs_offset > length - 4) {
+    // Checks the value of variation selector
+    if (!((records[i].var_selector >= kMongolianVSStart &&
+           records[i].var_selector <= kMongolianVSEnd) ||
+          (records[i].var_selector >= kVSStart &&
+           records[i].var_selector <= kVSEnd) ||
+          (records[i].var_selector >= kIVSStart &&
+           records[i].var_selector <= kIVSEnd))) {
       return OTS_FAILURE();
     }
-    prev_var_selector = var_selector;
+    if (i > 0 &&
+        records[i-1].var_selector >= records[i].var_selector) {
+      return OTS_FAILURE();
+    }
 
-    if (def_uvs_offset) {
-      uint32_t num_unicode_value_ranges;
-      memcpy(&num_unicode_value_ranges, data + def_uvs_offset, 4);
-      num_unicode_value_ranges = ntohl(num_unicode_value_ranges);
-      if ((length - def_uvs_offset) / size_of_def_uvs_table <
-           num_unicode_value_ranges) {
+    // Checks offsets
+    if (!records[i].default_offset && !records[i].non_default_offset) {
+      return OTS_FAILURE();
+    }
+    if (records[i].default_offset &&
+        records[i].default_offset >= length) {
+      return OTS_FAILURE();
+    }
+    if (records[i].non_default_offset &&
+        records[i].non_default_offset >= length) {
+      return OTS_FAILURE();
+    }
+  }
+
+  for (unsigned i = 0; i < num_records; ++i) {
+    // Checks default UVS table
+    if (records[i].default_offset) {
+      subtable.set_offset(records[i].default_offset);
+      uint32_t num_ranges = 0;
+      if (!subtable.ReadU32(&num_ranges)) {
+        return OTS_FAILURE();
+      }
+      if (!num_ranges || num_ranges > kMaxCMAPGroups) {
         return OTS_FAILURE();
       }
 
-      const uint8_t *tables = data + def_uvs_offset + 4;
-      uint32_t prev_end_unicode = 0;
-      for (uint32_t j = 0; j < num_unicode_value_ranges;
-           j++, tables += size_of_def_uvs_table) {
-        uint32_t start_unicode = 0, end_unicode;
-        memcpy(reinterpret_cast<uint8_t*>(&start_unicode) + 1, tables, 3);
-        start_unicode = ntohl(start_unicode);
-        end_unicode = start_unicode + *(tables + 3);
-        if ((j > 0 && start_unicode <= prev_end_unicode) ||
-            end_unicode > kUnicodeUpperLimit) {
+      uint32_t last_unicode_value = 0;
+      std::vector<ots::OpenTypeCMAPSubtableVSRange>& ranges
+          = records[i].ranges;
+      ranges.resize(num_ranges);
+
+      for (unsigned j = 0; j < num_ranges; ++j) {
+        if (!subtable.ReadU24(&ranges[j].unicode_value) ||
+            !subtable.ReadU8(&ranges[j].additional_count)) {
           return OTS_FAILURE();
         }
-        prev_end_unicode = end_unicode;
+        const uint32_t check_value =
+            ranges[j].unicode_value + ranges[i].additional_count;
+        if (ranges[j].unicode_value == 0 ||
+            ranges[j].unicode_value > kUnicodeUpperLimit ||
+            check_value > kUVSUpperLimit ||
+            (last_unicode_value &&
+             ranges[j].unicode_value <= last_unicode_value)) {
+          return OTS_FAILURE();
+        }
+        last_unicode_value = check_value;
       }
     }
 
-    if (non_def_uvs_offset) {
-      uint32_t num_uvs_mappings;
-      memcpy(&num_uvs_mappings, data + non_def_uvs_offset, 4);
-      num_uvs_mappings = ntohl(num_uvs_mappings);
-      if ((length - non_def_uvs_offset) / size_of_non_def_uvs_table <
-          num_uvs_mappings) {
+    // Checks non default UVS table
+    if (records[i].non_default_offset) {
+      subtable.set_offset(records[i].non_default_offset);
+      uint32_t num_mappings = 0;
+      if (!subtable.ReadU32(&num_mappings)) {
+        return OTS_FAILURE();
+      }
+      if (!num_mappings || num_mappings > kMaxCMAPGroups) {
         return OTS_FAILURE();
       }
 
-      const uint8_t *tables = data + non_def_uvs_offset + 4;
-      uint32_t prev_unicode = 0;
-      for (uint32_t j = 0; j < num_uvs_mappings;
-           j++, tables += size_of_non_def_uvs_table) {
-        uint32_t unicode_value = 0;
-        memcpy(reinterpret_cast<uint8_t*>(&unicode_value) + 1, tables, 3);
-        unicode_value = ntohl(unicode_value);
-        if ((j > 0 && unicode_value <= prev_unicode) ||
-            unicode_value > kUnicodeUpperLimit) {
+      uint32_t last_unicode_value = 0;
+      std::vector<ots::OpenTypeCMAPSubtableVSMapping>& mappings
+          = records[i].mappings;
+      mappings.resize(num_mappings);
+
+      for (unsigned j = 0; j < num_mappings; ++j) {
+        if (!subtable.ReadU24(&mappings[j].unicode_value) ||
+            !subtable.ReadU16(&mappings[j].glyph_id)) {
           return OTS_FAILURE();
         }
-        uint16_t glyph;
-        memcpy(&glyph, tables + 3, 2);
-        glyph = ntohs(glyph);
-        if (glyph >= num_glyphs) {
+        if (mappings[j].glyph_id == 0 ||
+            mappings[j].unicode_value == 0 ||
+            mappings[j].unicode_value > kUnicodeUpperLimit ||
+            (last_unicode_value &&
+             mappings[j].unicode_value <= last_unicode_value)) {
           return OTS_FAILURE();
         }
-        prev_unicode = unicode_value;
+        last_unicode_value = mappings[j].unicode_value;
       }
     }
   }
 
-  // We accept the table.
-  // TODO: transcode the subtable.
-  file->cmap->subtable_0_5_14_data = data;
-  file->cmap->subtable_0_5_14_length = length;
-
+  if (subtable.offset() != length) {
+    return OTS_FAILURE();
+  }
+  file->cmap->subtable_0_5_14_length = subtable.offset();
   return true;
 }
 
@@ -685,8 +731,9 @@ bool ots_cmap_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
   // Note:
   //  * 0-0-4 table is (usually) written as a 3-1-4 table. If 3-1-4 table
   //    also exists, the 0-0-4 table is ignored.
-  //  * 0-3-4 table is written as a 3-1-4 table. If 3-1-4 table also exists,
-  //    the 0-3-4 table is ignored.
+  //  * Unlike 0-0-4 table, 0-3-4 table is written as a 0-3-4 table.
+  //    Some fonts which include 0-5-14 table seems to be required 0-3-4
+  //    table. The 0-3-4 table will be wriiten even if 3-1-4 table also exists.
   //  * 0-3-12 table is written as a 3-10-12 table. If 3-10-12 table also
   //    exists, the 0-3-12 table is ignored.
   //
@@ -701,14 +748,14 @@ bool ots_cmap_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
         // table actually points to MS symbol data and thus should be parsed as
         // 3-0-4 table (e.g., marqueem.ttf and quixotic.ttf). This error will be
         // recovered in ots_cmap_serialise().
-        if (!Parse3x4(file, 1, data + subtable_headers[i].offset,
+        if (!ParseFormat4(file, 3, 1, data + subtable_headers[i].offset,
                       subtable_headers[i].length, num_glyphs)) {
           return OTS_FAILURE();
         }
       } else if ((subtable_headers[i].encoding == 3) &&
                  (subtable_headers[i].format == 4)) {
-        // parse and output the 0-3-4 table as 3-1-4 table.
-        if (!Parse3x4(file, 1, data + subtable_headers[i].offset,
+        // parse and output the 0-3-4 table as 0-3-4 table.
+        if (!ParseFormat4(file, 0, 3, data + subtable_headers[i].offset,
                       subtable_headers[i].length, num_glyphs)) {
           return OTS_FAILURE();
         }
@@ -726,7 +773,6 @@ bool ots_cmap_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
           return OTS_FAILURE();
         }
       }
-
     } else if (subtable_headers[i].platform == 1) {
       // Mac platform
 
@@ -738,7 +784,6 @@ bool ots_cmap_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
           return OTS_FAILURE();
         }
       }
-
     } else if (subtable_headers[i].platform == 3) {
       // MS platform
 
@@ -747,7 +792,8 @@ bool ots_cmap_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
         case 1:
           if (subtable_headers[i].format == 4) {
             // parse 3-0-4 or 3-1-4 table.
-            if (!Parse3x4(file, subtable_headers[i].encoding,
+            if (!ParseFormat4(file, subtable_headers[i].platform,
+                          subtable_headers[i].encoding,
                           data + subtable_headers[i].offset,
                           subtable_headers[i].length, num_glyphs)) {
               return OTS_FAILURE();
@@ -777,19 +823,21 @@ bool ots_cmap_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 }
 
 bool ots_cmap_should_serialise(OpenTypeFile *file) {
-  return file->cmap;
+  return file->cmap != NULL;
 }
 
 bool ots_cmap_serialise(OTSStream *out, OpenTypeFile *file) {
-  const bool have_0514 = file->cmap->subtable_0_5_14_data;
-  const bool have_100 = file->cmap->subtable_1_0_0.size();
-  const bool have_304 = file->cmap->subtable_3_0_4_data;
+  const bool have_034 = file->cmap->subtable_0_3_4_data != NULL;
+  const bool have_0514 = file->cmap->subtable_0_5_14.size() != 0;
+  const bool have_100 = file->cmap->subtable_1_0_0.size() != 0;
+  const bool have_304 = file->cmap->subtable_3_0_4_data != NULL;
   // MS Symbol and MS Unicode tables should not co-exist.
   // See the comment above in 0-0-4 parser.
   const bool have_314 = (!have_304) && file->cmap->subtable_3_1_4_data;
-  const bool have_31012 = file->cmap->subtable_3_10_12.size();
-  const bool have_31013 = file->cmap->subtable_3_10_13.size();
-  const unsigned num_subtables = static_cast<unsigned>(have_0514) +
+  const bool have_31012 = file->cmap->subtable_3_10_12.size() != 0;
+  const bool have_31013 = file->cmap->subtable_3_10_13.size() != 0;
+  const unsigned num_subtables = static_cast<unsigned>(have_034) +
+                                 static_cast<unsigned>(have_0514) +
                                  static_cast<unsigned>(have_100) +
                                  static_cast<unsigned>(have_304) +
                                  static_cast<unsigned>(have_314) +
@@ -799,7 +847,7 @@ bool ots_cmap_serialise(OTSStream *out, OpenTypeFile *file) {
 
   // Some fonts don't have 3-0-4 MS Symbol nor 3-1-4 Unicode BMP tables
   // (e.g., old fonts for Mac). We don't support them.
-  if (!have_304 && !have_314) {
+  if (!have_304 && !have_314 && !have_034) {
     return OTS_FAILURE();
   }
 
@@ -811,6 +859,65 @@ bool ots_cmap_serialise(OTSStream *out, OpenTypeFile *file) {
   const off_t record_offset = out->Tell();
   if (!out->Pad(num_subtables * 8)) {
     return OTS_FAILURE();
+  }
+
+  const off_t offset_034 = out->Tell();
+  if (have_034) {
+    if (!out->Write(file->cmap->subtable_0_3_4_data,
+                    file->cmap->subtable_0_3_4_length)) {
+      return OTS_FAILURE();
+    }
+  }
+
+  const off_t offset_0514 = out->Tell();
+  if (have_0514) {
+    const std::vector<ots::OpenTypeCMAPSubtableVSRecord> &records
+        = file->cmap->subtable_0_5_14;
+    const unsigned num_records = records.size();
+    if (!out->WriteU16(14) ||
+        !out->WriteU32(file->cmap->subtable_0_5_14_length) ||
+        !out->WriteU32(num_records)) {
+      return OTS_FAILURE();
+    }
+    for (unsigned i = 0; i < num_records; ++i) {
+      if (!out->WriteU24(records[i].var_selector) ||
+          !out->WriteU32(records[i].default_offset) ||
+          !out->WriteU32(records[i].non_default_offset)) {
+        return OTS_FAILURE();
+      }
+    }
+    for (unsigned i = 0; i < num_records; ++i) {
+      if (records[i].default_offset) {
+        const std::vector<ots::OpenTypeCMAPSubtableVSRange> &ranges
+            = records[i].ranges;
+        const unsigned num_ranges = ranges.size();
+        if (!out->Seek(records[i].default_offset + offset_0514) ||
+            !out->WriteU32(num_ranges)) {
+          return OTS_FAILURE();
+        }
+        for (unsigned j = 0; j < num_ranges; ++j) {
+          if (!out->WriteU24(ranges[j].unicode_value) ||
+              !out->WriteU8(ranges[j].additional_count)) {
+            return OTS_FAILURE();
+          }
+        }
+      }
+      if (records[i].non_default_offset) {
+        const std::vector<ots::OpenTypeCMAPSubtableVSMapping> &mappings
+            = records[i].mappings;
+        const unsigned num_mappings = mappings.size();
+        if (!out->Seek(records[i].non_default_offset + offset_0514) ||
+            !out->WriteU32(num_mappings)) {
+          return OTS_FAILURE();
+        }
+        for (unsigned j = 0; j < num_mappings; ++j) {
+          if (!out->WriteU24(mappings[j].unicode_value) ||
+              !out->WriteU16(mappings[j].glyph_id)) {
+            return OTS_FAILURE();
+          }
+        }
+      }
+    }
   }
 
   const off_t offset_100 = out->Tell();
@@ -885,14 +992,6 @@ bool ots_cmap_serialise(OTSStream *out, OpenTypeFile *file) {
     }
   }
 
-  const off_t offset_0514 = out->Tell();
-  if (have_0514) {
-    if (!out->Write(file->cmap->subtable_0_5_14_data,
-                    file->cmap->subtable_0_5_14_length)) {
-      return OTS_FAILURE();
-    }
-  }
-
   const off_t table_end = out->Tell();
   // We might have hanging bytes from the above's checksum which the OTSStream
   // then merges into the table of offsets.
@@ -902,6 +1001,14 @@ bool ots_cmap_serialise(OTSStream *out, OpenTypeFile *file) {
   // Now seek back and write the table of offsets
   if (!out->Seek(record_offset)) {
     return OTS_FAILURE();
+  }
+
+  if (have_034) {
+    if (!out->WriteU16(0) ||
+        !out->WriteU16(3) ||
+        !out->WriteU32(offset_034 - table_start)) {
+      return OTS_FAILURE();
+    }
   }
 
   if (have_0514) {

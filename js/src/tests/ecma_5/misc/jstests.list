@@ -9,4 +9,5 @@ skip-if(!xulRuntime.shell) script function-definition-evaluate.js # needs evalua
 script future-reserved-words.js
 script builtin-methods-reject-null-undefined-this.js
 script regress-bug632003.js
+script new-with-non-constructor.js
 script error-undefined-message.js

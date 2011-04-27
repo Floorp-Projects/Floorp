@@ -102,13 +102,12 @@ class Buffer {
   }
 
   bool ReadU24(uint32_t *value) {
-    if (offset_ + 4 > length_) {
+    if (offset_ + 3 > length_) {
       return OTS_FAILURE();
     }
-    *value = 0;
-    std::memcpy(reinterpret_cast<uint8_t*>(value) + 1,
-                buffer_ + offset_, 3);
-    *value = ntohl(*value);
+    *value = static_cast<uint32_t>(buffer_[offset_]) << 16 |
+        static_cast<uint32_t>(buffer_[offset_ + 1]) << 8 |
+        static_cast<uint32_t>(buffer_[offset_ + 2]);
     offset_ += 3;
     return true;
   }
@@ -163,7 +162,10 @@ class Buffer {
   F(cvt, CVT) \
   F(fpgm, FPGM) \
   F(gasp, GASP) \
+  F(gdef, GDEF) \
   F(glyf, GLYF) \
+  F(gpos, GPOS) \
+  F(gsub, GSUB) \
   F(hdmx, HDMX) \
   F(head, HEAD) \
   F(hhea, HHEA) \
@@ -177,19 +179,13 @@ class Buffer {
   F(post, POST) \
   F(prep, PREP) \
   F(vdmx, VDMX) \
-  F(vhea, VHEA) \
-  F(vmtx, VMTX) \
   F(vorg, VORG) \
-  F(gdef, GDEF) \
-  F(gpos, GPOS) \
-  F(gsub, GSUB)
+  F(vhea, VHEA) \
+  F(vmtx, VMTX)
 
 #define F(name, capname) struct OpenType##capname;
 FOR_EACH_TABLE_TYPE
 #undef F
-
-#define OpenTypeVHEA OpenTypeHHEA
-#define OpenTypeVMTX OpenTypeHMTX
 
 struct OpenTypeFile {
   OpenTypeFile() {
@@ -204,14 +200,19 @@ struct OpenTypeFile {
   uint16_t entry_selector;
   uint16_t range_shift;
 
-  // This is used to tell the GDEF/GPOS/GSUB parsers whether to preserve the
-  // OpenType Layout tables (**without** any checking).
-  bool preserve_otl;
-
 #define F(name, capname) OpenType##capname *name;
 FOR_EACH_TABLE_TYPE
 #undef F
 };
+
+#define F(name, capname) \
+bool ots_##name##_parse(OpenTypeFile *f, const uint8_t *d, size_t l); \
+bool ots_##name##_should_serialise(OpenTypeFile *f); \
+bool ots_##name##_serialise(OTSStream *s, OpenTypeFile *f); \
+void ots_##name##_free(OpenTypeFile *f);
+// TODO(yusukes): change these function names to follow Chromium coding rule.
+FOR_EACH_TABLE_TYPE
+#undef F
 
 }  // namespace ots
 

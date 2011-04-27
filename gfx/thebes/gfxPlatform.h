@@ -258,11 +258,6 @@ public:
     PRBool SanitizeDownloadedFonts();
 
     /**
-     * Whether to preserve OpenType layout tables when sanitizing
-     */
-    PRBool PreserveOTLTablesWhenSanitizing();
-
-    /**
      * Whether to use the harfbuzz shaper (depending on script complexity).
      *
      * This allows harfbuzz to be enabled selectively via the preferences.
@@ -382,7 +377,6 @@ protected:
                                                
     PRBool  mAllowDownloadableFonts;
     PRBool  mDownloadableFontsSanitize;
-    PRBool  mSanitizePreserveOTLTables;
 
     // which scripts should be shaped with harfbuzz
     PRInt32 mUseHarfBuzzScripts;

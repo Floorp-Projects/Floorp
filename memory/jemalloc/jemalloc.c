@@ -5892,6 +5892,15 @@ RETURN:
 	return (ret);
 }
 
+/* In ELF systems the default visibility allows symbols to be preempted at
+   runtime. This in turn prevents the uses of memalign in this file from
+   being optimized. What we do in here is define two aliasing symbols
+   (they point to the same code): memalign and memalign_internal.
+   The internal version has hidden visibility and is used in every reference
+   from this file.
+   For more information on this technique, see section 2.2.7
+   (Avoid Using Exported Symbols) in
+   http://www.akkadia.org/drepper/dsohowto.pdf */
 #ifdef MOZ_MEMORY_SOLARIS
 #  ifdef __SUNPRO_C
 void *
@@ -5901,10 +5910,19 @@ memalign(size_t alignment, size_t size);
 __attribute__((noinline))
 #  endif
 #else
-inline
+#if (defined(__GNUC__))
+__attribute__((visibility ("hidden")))
 #endif
+#endif
+
+#if (defined(__GNUC__))
+#define MEMALIGN memalign_internal
+#else
+#define MEMALIGN memalign
+#endif
+
 void *
-memalign(size_t alignment, size_t size)
+MEMALIGN(size_t alignment, size_t size)
 {
 	void *ret;
 
@@ -5943,6 +5961,12 @@ RETURN:
 	return (ret);
 }
 
+#if (defined(__GNUC__))
+extern __typeof(memalign_internal)
+        memalign __attribute__((alias ("memalign_internal"),
+				visibility ("default")));
+#endif
+
 ZONE_INLINE
 int
 posix_memalign(void **memptr, size_t alignment, size_t size)
@@ -5967,7 +5991,7 @@ posix_memalign(void **memptr, size_t alignment, size_t size)
 #ifdef MOZ_MEMORY_DARWIN
 	result = moz_memalign(alignment, size);
 #else
-	result = memalign(alignment, size);
+	result = MEMALIGN(alignment, size);
 #endif
 	if (result == NULL)
 		return (ENOMEM);
@@ -5983,7 +6007,7 @@ valloc(size_t size)
 #ifdef MOZ_MEMORY_DARWIN
 	return (moz_memalign(pagesize, size));
 #else
-	return (memalign(pagesize, size));
+	return (MEMALIGN(pagesize, size));
 #endif
 }
 
@@ -6528,7 +6552,7 @@ jemalloc_darwin_init(void)
 void (*__free_hook)(void *ptr) = free;
 void *(*__malloc_hook)(size_t size) = malloc;
 void *(*__realloc_hook)(void *ptr, size_t size) = realloc;
-void *(*__memalign_hook)(size_t alignment, size_t size) = memalign;
+void *(*__memalign_hook)(size_t alignment, size_t size) = MEMALIGN;
 #endif
 
 #elif defined(RTLD_DEEPBIND)

@@ -3069,7 +3069,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck, bool usePropCache)
 
     DataLabel32 inlineShapeLabel;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
-                                    Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                    Imm32(int32(INVALID_SHAPE)),
                                     inlineShapeLabel);
     Label inlineShapeJump = masm.label();
 
@@ -3180,7 +3180,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
 
     DataLabel32 inlineShapeLabel;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
-                           Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                           Imm32(int32(INVALID_SHAPE)),
                            inlineShapeLabel);
     Label inlineShapeJump = masm.label();
 
@@ -3318,7 +3318,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 
     DataLabel32 inlineShapeLabel;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
-                           Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                           Imm32(int32(INVALID_SHAPE)),
                            inlineShapeLabel);
     Label inlineShapeJump = masm.label();
 
@@ -3462,7 +3462,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache)
     pic.shapeGuard = masm.label();
     DataLabel32 inlineShapeData;
     Jump j = masm.branch32WithPatch(Assembler::NotEqual, shapeReg,
-                                    Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                    Imm32(int32(INVALID_SHAPE)),
                                     inlineShapeData);
     Label afterInlineShapeJump = masm.label();
 
@@ -3625,7 +3625,7 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
     masm.loadPtr(Address(JSFrameReg, JSStackFrame::offsetOfScopeChain()), pic.objReg);
 
     pic.shapeGuard = masm.label();
-    Jump inlineJump = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(parent), ImmPtr(0));
+    Jump inlineJump = masm.branchPtr(Assembler::NotEqual, parent, ImmPtr(0));
     {
         RESERVE_OOL_SPACE(stubcc.masm);
         pic.slowPathStart = stubcc.linkExit(inlineJump, Uses(0));
@@ -3694,7 +3694,7 @@ mjit::Compiler::jsop_bindname(JSAtom *atom, bool usePropCache)
 
     Address address(reg, offsetof(JSObject, parent));
 
-    Jump j = masm.branchPtr(Assembler::NotEqual, masm.payloadOf(address), ImmPtr(0));
+    Jump j = masm.branchPtr(Assembler::NotEqual, address, ImmPtr(0));
 
     stubcc.linkExit(j, Uses(0));
     stubcc.leave();
@@ -4346,7 +4346,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
         masm.load32FromImm(&obj->objShape, objReg);
         shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, objReg,
-                                            Imm32(int32(JSObjectMap::INVALID_SHAPE)), ic.shape);
+                                            Imm32(int32(INVALID_SHAPE)), ic.shape);
         masm.move(ImmPtr(obj), objReg);
     } else {
         objReg = frame.ownRegForData(fe);
@@ -4355,7 +4355,7 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
         masm.loadShape(objReg, reg);
         shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, reg,
-                                            Imm32(int32(JSObjectMap::INVALID_SHAPE)), ic.shape);
+                                            Imm32(int32(INVALID_SHAPE)), ic.shape);
         frame.freeReg(reg);
     }
     stubcc.linkExit(shapeGuard, Uses(0));
@@ -4497,7 +4497,7 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache)
 
         masm.load32FromImm(&obj->objShape, ic.shapeReg);
         shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, ic.shapeReg,
-                                            Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                            Imm32(int32(INVALID_SHAPE)),
                                             ic.shape);
         masm.move(ImmPtr(obj), ic.objReg);
     } else {
@@ -4507,7 +4507,7 @@ mjit::Compiler::jsop_setgname(JSAtom *atom, bool usePropertyCache)
 
         masm.loadShape(ic.objReg, ic.shapeReg);
         shapeGuard = masm.branch32WithPatch(Assembler::NotEqual, ic.shapeReg,
-                                            Imm32(int32(JSObjectMap::INVALID_SHAPE)),
+                                            Imm32(int32(INVALID_SHAPE)),
                                             ic.shape);
         frame.freeReg(ic.shapeReg);
     }
@@ -4634,7 +4634,7 @@ mjit::Compiler::jsop_instanceof()
     Label loop = masm.label();
 
     /* Walk prototype chain, break out on NULL or hit. */
-    masm.loadPayload(protoAddr, obj);
+    masm.loadPtr(protoAddr, obj);
     Jump isFalse2 = masm.branchTestPtr(Assembler::Zero, obj, obj);
     Jump isTrue = masm.branchPtr(Assembler::NotEqual, obj, proto);
     isTrue.linkTo(loop, &masm);

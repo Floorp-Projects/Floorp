@@ -88,6 +88,7 @@ public:
     nsContainerFrame_id,
     nsContinuingTextFrame_id,
     nsDeckFrame_id,
+    nsDirectionalFrame_id,
     nsDocElementBoxFrame_id,
     nsFieldSetFrame_id,
     nsFileControlFrame_id,
