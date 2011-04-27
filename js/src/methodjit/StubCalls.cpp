@@ -1168,10 +1168,10 @@ void JS_FASTCALL
 stubs::Debugger(VMFrame &f, jsbytecode *pc)
 {
     JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler;
-    if (handler) {
+    if (handler || !f.cx->compartment->getDebuggers().empty()) {
         JSTrapStatus st = JSTRAP_CONTINUE;
         Value rval;
-        if (JSDebuggerHandler handler = f.cx->debugHooks->debuggerHandler) {
+        if (handler) {
             st = handler(f.cx, f.cx->fp()->script(), pc, Jsvalify(&rval),
                          f.cx->debugHooks->debuggerHandlerData);
         }
