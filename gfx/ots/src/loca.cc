@@ -63,7 +63,7 @@ bool ots_loca_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 }
 
 bool ots_loca_should_serialise(OpenTypeFile *file) {
-  return file->loca;
+  return file->loca != NULL;
 }
 
 bool ots_loca_serialise(OTSStream *out, OpenTypeFile *file) {

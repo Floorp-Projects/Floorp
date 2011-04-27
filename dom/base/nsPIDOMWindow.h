@@ -78,8 +78,8 @@ class nsIArray;
 class nsPIWindowRoot;
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x8d8be7db, 0xffaa, 0x4962, \
-  { 0xa7, 0x27, 0xb7, 0x0f, 0xc9, 0xfa, 0xd3, 0x0e } }
+{ 0xafc4849b, 0x21d3, 0x45ea, \
+  { 0x8b, 0xfd, 0x61, 0xec, 0x12, 0x5d, 0x38, 0x64 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -440,6 +440,11 @@ public:
   {
     mMayHaveTouchEventListener = PR_TRUE;
     MaybeUpdateTouchState();
+  }
+
+  PRBool HasTouchEventListeners()
+  {
+    return mMayHaveTouchEventListener;
   }
 
   /**

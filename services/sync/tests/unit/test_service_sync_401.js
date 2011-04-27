@@ -1,28 +1,30 @@
 Cu.import("resource://services-sync/main.js");
 
-function login_handler(request, response) {
-  // btoa('johndoe:ilovejane') == am9obmRvZTppbG92ZWphbmU=
-  let body;
-  if (request.hasHeader("Authorization") &&
-      request.getHeader("Authorization") == "Basic am9obmRvZTppbG92ZWphbmU=") {
-    body = "{}";
-    response.setStatusLine(request.httpVersion, 200, "OK");
-  } else {
-    body = "Unauthorized";
-    response.setStatusLine(request.httpVersion, 401, "Unauthorized");
-  }
-  response.bodyOutputStream.write(body, body.length);
+function login_handling(handler) {
+  return function (request, response) {
+    if (basic_auth_matches(request, "johndoe", "ilovejane")) {
+      handler(request, response);
+    } else {
+      let body = "Unauthorized";
+      response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+      response.bodyOutputStream.write(body, body.length);
+    }
+  };
 }
 
 function run_test() {
   let logger = Log4Moz.repository.rootLogger;
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());
 
+  let collectionsHelper = track_collections_helper();
+  let upd = collectionsHelper.with_updated_collection;
+  let collections = collectionsHelper.collections;
+
   do_test_pending();
   let server = httpd_setup({
-    "/1.1/johndoe/storage/crypto/keys": new ServerWBO().handler(),
-    "/1.1/johndoe/storage/meta/global": new ServerWBO().handler(),
-    "/1.1/johndoe/info/collections": login_handler
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
+    "/1.1/johndoe/storage/meta/global": upd("meta",   new ServerWBO("global").handler()),
+    "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler)
   });
 
   const GLOBAL_SCORE = 42;

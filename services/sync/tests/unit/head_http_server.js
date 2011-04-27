@@ -1,3 +1,10 @@
+// Use the same method that record.js does, which mirrors the server.
+// The server returns timestamps with 1/100 sec granularity. Note that this is
+// subject to change: see Bug 650435.
+function new_timestamp() {
+  return Math.round(Date.now() / 10) / 100;
+}
+  
 function httpd_setup (handlers) {
   let server = new nsHttpServer();
   for (let path in handlers) {
@@ -15,9 +22,7 @@ function httpd_handler(statusCode, status, body) {
 }
 
 function httpd_basic_auth_handler(body, metadata, response) {
-  // no btoa() in xpcshell.  it's guest:guest
-  if (metadata.hasHeader("Authorization") &&
-      metadata.getHeader("Authorization") == "Basic Z3Vlc3Q6Z3Vlc3Q=") {
+  if (basic_auth_matches(metadata, "guest", "guest")) {
     response.setStatusLine(metadata.httpVersion, 200, "OK, authorized");
     response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
   } else {
@@ -47,6 +52,9 @@ function readBytesFromInputStream(inputStream, count) {
  * Represent a WBO on the server
  */
 function ServerWBO(id, initialPayload) {
+  if (!id) {
+    throw "No ID for ServerWBO!";
+  }
   this.id = id;
   if (!initialPayload) {
     return;
@@ -56,7 +64,7 @@ function ServerWBO(id, initialPayload) {
     initialPayload = JSON.stringify(initialPayload);
   }
   this.payload = initialPayload;
-  this.modified = Date.now() / 1000;
+  this.modified = new_timestamp();
 }
 ServerWBO.prototype = {
 
@@ -65,13 +73,13 @@ ServerWBO.prototype = {
   },
 
   get: function() {
-    return JSON.stringify(this, ['id', 'modified', 'payload']);
+    return JSON.stringify(this, ["id", "modified", "payload"]);
   },
 
   put: function(input) {
     input = JSON.parse(input);
     this.payload = input.payload;
-    this.modified = Date.now() / 1000;
+    this.modified = new_timestamp();
   },
 
   delete: function() {
@@ -79,6 +87,9 @@ ServerWBO.prototype = {
     delete this.modified;
   },
 
+  // This handler sets `newModified` on the response body if the collection
+  // timestamp has changed. This allows wrapper handlers to extract information
+  // that otherwise would exist only in the body stream.
   handler: function() {
     let self = this;
 
@@ -101,14 +112,17 @@ ServerWBO.prototype = {
         case "PUT":
           self.put(readBytesFromInputStream(request.bodyInputStream));
           body = JSON.stringify(self.modified);
+          response.newModified = self.modified;
           break;
 
         case "DELETE":
           self.delete();
-          body = JSON.stringify(Date.now() / 1000);
+          let ts = new_timestamp();
+          body = JSON.stringify(ts);
+          response.newModified = ts;
           break;
       }
-      response.setHeader('X-Weave-Timestamp', ''+Date.now()/1000, false);
+      response.setHeader("X-Weave-Timestamp", "" + new_timestamp(), false);
       response.setStatusLine(request.httpVersion, statusCode, status);
       response.bodyOutputStream.write(body, body.length);
     };
@@ -189,13 +203,13 @@ ServerCollection.prototype = {
       }
       if (wbo) {
         wbo.payload = record.payload;
-        wbo.modified = Date.now() / 1000;
+        wbo.modified = new_timestamp();
         success.push(record.id);
       } else {
         failed[record.id] = "no wbo configured";
       }
     }
-    return {modified: Date.now() / 1000,
+    return {modified: new_timestamp(),
             success: success,
             failed: failed};
   },
@@ -209,6 +223,8 @@ ServerCollection.prototype = {
     }
   },
 
+  // This handler sets `newModified` on the response body if the collection
+  // timestamp has changed.
   handler: function() {
     let self = this;
 
@@ -219,11 +235,11 @@ ServerCollection.prototype = {
 
       // Parse queryString
       let options = {};
-      for each (let chunk in request.queryString.split('&')) {
+      for each (let chunk in request.queryString.split("&")) {
         if (!chunk) {
           continue;
         }
-        chunk = chunk.split('=');
+        chunk = chunk.split("=");
         if (chunk.length == 1) {
           options[chunk[0]] = "";
         } else {
@@ -231,7 +247,7 @@ ServerCollection.prototype = {
         }
       }
       if (options.ids) {
-        options.ids = options.ids.split(',');
+        options.ids = options.ids.split(",");
       }
       if (options.newer) {
         options.newer = parseFloat(options.newer);
@@ -248,14 +264,19 @@ ServerCollection.prototype = {
         case "POST":
           let res = self.post(readBytesFromInputStream(request.bodyInputStream));
           body = JSON.stringify(res);
+          response.newModified = res.modified;
           break;
 
         case "DELETE":
           self.delete(options);
-          body = JSON.stringify(Date.now() / 1000);
+          let ts = new_timestamp();
+          body = JSON.stringify(ts);
+          response.newModified = ts;
           break;
       }
-      response.setHeader('X-Weave-Timestamp', ''+Date.now()/1000, false);
+      response.setHeader("X-Weave-Timestamp",
+                         "" + new_timestamp(),
+                         false);
       response.setStatusLine(request.httpVersion, statusCode, status);
       response.bodyOutputStream.write(body, body.length);
     };
@@ -268,7 +289,7 @@ ServerCollection.prototype = {
  */
 function sync_httpd_setup(handlers) {
   handlers["/1.1/foo/storage/meta/global"]
-      = (new ServerWBO('global', {})).handler();
+      = (new ServerWBO("global", {})).handler();
   return httpd_setup(handlers);
 }
 
@@ -285,8 +306,9 @@ function track_collections_helper() {
   /*
    * Update the timestamp of a collection.
    */
-  function update_collection(coll) {
-    let timestamp = Date.now() / 1000;
+  function update_collection(coll, ts) {
+    _("Updating collection " + coll + " to " + ts);
+    let timestamp = ts || new_timestamp();
     collections[coll] = timestamp;
   }
 
@@ -296,9 +318,13 @@ function track_collections_helper() {
    */
   function with_updated_collection(coll, f) {
     return function(request, response) {
-      if (request.method != "GET")
-        update_collection(coll);
       f.call(this, request, response);
+
+      // Update the collection timestamp to the appropriate modified time.
+      // This is either a value set by the handler, or the current time.
+      if (request.method != "GET") {
+        update_collection(coll, response.newModified)
+      }
     };
   }
 
@@ -315,7 +341,9 @@ function track_collections_helper() {
         throw "Non-GET on info_collections.";
     }
         
-    response.setHeader('X-Weave-Timestamp', ''+Date.now()/1000, false);
+    response.setHeader("X-Weave-Timestamp",
+                       "" + new_timestamp(),
+                       false);
     response.setStatusLine(request.httpVersion, 200, "OK");
     response.bodyOutputStream.write(body, body.length);
   }

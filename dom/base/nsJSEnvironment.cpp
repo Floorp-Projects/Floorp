@@ -3995,7 +3995,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSArgArray)
     for (end = argv + tmp->mArgc; argv < end; ++argv) {
       if (JSVAL_IS_GCTHING(*argv))
         NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(JAVASCRIPT,
-                                                JSVAL_TO_GCTHING(*argv))
+                                                JSVAL_TO_GCTHING(*argv),
+                                                "mArgv[i]")
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END

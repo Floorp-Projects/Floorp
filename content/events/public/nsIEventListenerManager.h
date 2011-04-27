@@ -56,8 +56,8 @@ class nsCxPusher;
  * Event listener manager interface.
  */
 #define NS_IEVENTLISTENERMANAGER_IID \
-{ 0xe86a148b, 0x0563, 0x454f, \
-  { 0x8c, 0xf2, 0xbd, 0xc4, 0x7c, 0xe6, 0xbe, 0x91 } }
+{ 0x8e8667ed, 0x10d3, 0x41e8, \
+  { 0x93, 0xfa, 0xa4, 0xc4, 0xea, 0x16, 0x85, 0xd5 } }
 
 class nsIEventListenerManager : public nsISupports {
 
@@ -69,6 +69,7 @@ public:
     mMayHaveCapturingListeners(PR_FALSE),
     mMayHaveSystemGroupListeners(PR_FALSE),
     mMayHaveAudioAvailableEventListener(PR_FALSE),
+    mMayHaveTouchEventListener(PR_FALSE),
     mNoListenerForEvent(0)
   {}
 
@@ -212,14 +213,19 @@ public:
    */
   PRBool MayHaveAudioAvailableEventListener() { return mMayHaveAudioAvailableEventListener; }
 
-
+  /**
+   * Returns PR_TRUE if there may be a touch event listener registered,
+   * PR_FALSE if there definitely isn't.
+   */
+  PRBool MayHaveTouchEventListener() { return mMayHaveTouchEventListener; }
 protected:
   PRUint32 mMayHavePaintEventListener : 1;
   PRUint32 mMayHaveMutationListeners : 1;
   PRUint32 mMayHaveCapturingListeners : 1;
   PRUint32 mMayHaveSystemGroupListeners : 1;
   PRUint32 mMayHaveAudioAvailableEventListener : 1;
-  PRUint32 mNoListenerForEvent : 27;
+  PRUint32 mMayHaveTouchEventListener : 1;
+  PRUint32 mNoListenerForEvent : 26;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEventListenerManager,

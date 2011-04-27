@@ -276,7 +276,7 @@ function test_processIncoming_createFromServer() {
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
   
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
 
   // Some server records that will be downloaded
   let collection = new ServerCollection();
@@ -1001,7 +1001,7 @@ function test_uploadOutgoing_toEmptyServer() {
       "/1.1/foo/storage/steam/scotsman": collection.wbos.scotsman.handler()
   });
   do_test_pending();
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
 
   let engine = makeSteamEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -1312,7 +1312,7 @@ function test_sync_partialUpload() {
       "/1.1/foo/storage/steam": collection.handler()
   });
   do_test_pending();
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
 
   let engine = makeSteamEngine();
   engine.lastSync = 123; // needs to be non-zero so that tracker is queried
@@ -1414,7 +1414,7 @@ function test_canDecrypt_true() {
   Svc.Prefs.set("username", "foo");
 
   // Set up CollectionKeys, as service.js does.
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
   
   let collection = new ServerCollection();
   collection.wbos.flying = new ServerWBO(
@@ -1444,7 +1444,7 @@ function run_test() {
   if (DISABLE_TESTS_BUG_604565)
     return;
 
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
 
   test_syncStartup_emptyOrOutdatedGlobalsResetsSync();
   test_syncStartup_serverHasNewerVersion();

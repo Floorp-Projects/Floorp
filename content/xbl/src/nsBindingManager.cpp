@@ -93,7 +93,7 @@
 class nsAnonymousContentList : public nsINodeList
 {
 public:
-  nsAnonymousContentList(nsInsertionPointList* aElements);
+  nsAnonymousContentList(nsIContent *aContent, nsInsertionPointList* aElements);
   virtual ~nsAnonymousContentList();
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -104,6 +104,10 @@ public:
   // nsINodeList interface
   virtual nsIContent* GetNodeAt(PRUint32 aIndex);
   virtual PRInt32 IndexOf(nsIContent* aContent);
+  virtual nsINode *GetParentObject()
+  {
+    return mContent;
+  }
 
   PRInt32 GetInsertionPointCount() { return mElements->Length(); }
 
@@ -111,14 +115,17 @@ public:
   void RemoveInsertionPointAt(PRInt32 i) { mElements->RemoveElementAt(i); }
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ANONYMOUS_CONTENT_LIST_IID)
 private:
+  nsCOMPtr<nsIContent> mContent;
   nsInsertionPointList* mElements;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsAnonymousContentList,
                               NS_ANONYMOUS_CONTENT_LIST_IID)
 
-nsAnonymousContentList::nsAnonymousContentList(nsInsertionPointList* aElements)
-  : mElements(aElements)
+nsAnonymousContentList::nsAnonymousContentList(nsIContent *aContent,
+                                               nsInsertionPointList* aElements)
+  : mContent(aContent),
+    mElements(aElements)
 {
   MOZ_COUNT_CTOR(nsAnonymousContentList);
 
@@ -149,10 +156,12 @@ NS_INTERFACE_TABLE_HEAD(nsAnonymousContentList)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsAnonymousContentList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mContent)
   tmp->mElements->Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsAnonymousContentList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mContent)
   {
     PRInt32 i, count = tmp->mElements->Length();
     for (i = 0; i < count; ++i) {
@@ -710,7 +719,7 @@ nsBindingManager::SetContentListFor(nsIContent* aContent,
 
   nsAnonymousContentList* contentList = nsnull;
   if (aList) {
-    contentList = new nsAnonymousContentList(aList);
+    contentList = new nsAnonymousContentList(aContent, aList);
     if (!contentList) {
       delete aList;
       return NS_ERROR_OUT_OF_MEMORY;
@@ -774,7 +783,7 @@ nsBindingManager::SetAnonymousNodesFor(nsIContent* aContent,
 
   nsAnonymousContentList* contentList = nsnull;
   if (aList) {
-    contentList = new nsAnonymousContentList(aList);
+    contentList = new nsAnonymousContentList(aContent, aList);
     if (!contentList) {
       delete aList;
       return NS_ERROR_OUT_OF_MEMORY;

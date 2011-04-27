@@ -42,6 +42,8 @@
 #include <string.h>
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsprvtd.h"
 #include "jsnum.h"
 #include "jsobj.h"
@@ -953,7 +955,7 @@ proxy_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
 {
     // TODO: throwing away strict
     bool deleted;
-    if (!JSProxy::delete_(cx, obj, id, &deleted))
+    if (!JSProxy::delete_(cx, obj, id, &deleted) || !js_SuppressDeletedProperty(cx, obj, id))
         return false;
     rval->setBoolean(deleted);
     return true;
@@ -977,6 +979,19 @@ proxy_TraceFunction(JSTracer *trc, JSObject *obj)
     proxy_TraceObject(trc, obj);
     MarkValue(trc, GetCall(obj), "call");
     MarkValue(trc, GetConstruct(obj), "construct");
+}
+
+static JSBool
+proxy_Fix(JSContext *cx, JSObject *obj, bool *fixed, AutoIdVector *props)
+{
+    JS_ASSERT(obj->isProxy());
+    JSBool isFixed;
+    bool ok = FixProxy(cx, obj, &isFixed);
+    if (ok) {
+        *fixed = isFixed;
+        return GetPropertyNames(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, props);
+    }
+    return false;
 }
 
 static void
@@ -1034,7 +1049,7 @@ JS_FRIEND_API(Class) ObjectProxyClass = {
         proxy_DeleteProperty,
         NULL,             /* enumerate       */
         proxy_TypeOf,
-        NULL,             /* fix             */
+        proxy_Fix,        /* fix             */
         NULL,             /* thisObject      */
         NULL,             /* clear           */
     }
@@ -1157,16 +1172,6 @@ NewProxyObject(JSContext *cx, JSProxyHandler *handler, const Value &priv, JSObje
         }
     }
     return obj;
-}
-
-static JSObject *
-NonNullObject(JSContext *cx, const Value &v)
-{
-    if (v.isPrimitive()) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_NONNULL_OBJECT);
-        return NULL;
-    }
-    return &v.toObject();
 }
 
 static JSBool

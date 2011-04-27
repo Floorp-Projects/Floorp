@@ -771,7 +771,7 @@ mjit::Compiler::jsop_neg()
 #if defined JS_CPU_X86 || defined JS_CPU_X64
         masm.loadDouble(&DoubleNegMask, FPRegisters::Second);
         masm.xorDouble(FPRegisters::Second, fpreg);
-#elif defined JS_CPU_ARM
+#elif defined JS_CPU_ARM || defined JS_CPU_SPARC
         masm.negDouble(fpreg, fpreg);
 #endif
 

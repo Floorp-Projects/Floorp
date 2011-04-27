@@ -90,7 +90,7 @@ enum Type2CharStringOperator {
   kHFlex = (12 << 8) + 34,
   kFlex = (12 << 8) + 35,
   kHFlex1 = (12 << 8) + 36,
-  kFlex1 = (12 << 8) + 37
+  kFlex1 = (12 << 8) + 37,
   // Operators that are obsoleted or undocumented, such as 'blend', will be
   // rejected.
 };
