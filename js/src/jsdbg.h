@@ -110,6 +110,7 @@ class Debug {
     static inline Debug *fromJSObject(JSObject *obj);
 
     inline bool observesCompartment(JSCompartment *c) const;
+    void detachFrom(JSCompartment *c);
 
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
 };

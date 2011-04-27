@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Activity in the debugger compartment should not trigger debug hooks.
 
 var g = newGlobal('new-compartment');
@@ -27,5 +25,3 @@ assertEq(hit, false, "debugger statement in debugger compartment eval code shoul
 var g2 = newGlobal('new-compartment');
 g2.eval("debugger;");
 assertEq(hit, false, "debugger statement in unrelated non-debuggee compartment should not hit");
-
-reportCompare(0, 0, 'ok');

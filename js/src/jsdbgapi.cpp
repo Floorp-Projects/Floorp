@@ -51,6 +51,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsversion.h"
+#include "jsdbg.h"
 #include "jsdbgapi.h"
 #include "jsemit.h"
 #include "jsfun.h"
@@ -193,9 +194,16 @@ JS_SetDebugModeForCompartment(JSContext *cx, JSCompartment *comp, JSBool debug)
     // All scripts compiled from this point on should be in the requested debugMode.
     comp->debugMode = !!debug;
 
+    // Detach any debuggers attached to this compartment.
+    if (debug) {
+        JS_ASSERT(comp->getDebuggers().empty());
+    } else {
+        while (!comp->getDebuggers().empty())
+            comp->getDebuggers().back()->detachFrom(comp);
+    }
+
     // Discard JIT code for any scripts that change debugMode. This function
     // assumes that 'comp' is in the same thread as 'cx'.
-
 #ifdef JS_METHODJIT
     JS::AutoEnterScriptCompartment ac;
 

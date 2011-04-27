@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Uncaught exceptions in the debugger itself are delivered to the
 // uncaughtExceptionHook.
 
@@ -22,5 +20,3 @@ dbg.uncaughtExceptionHook = function (exc) {
 log = '';
 g.eval("debugger");
 assertEq(log, 'x!');
-
-reportCompare(0, 0, 'ok');

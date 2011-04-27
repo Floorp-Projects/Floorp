@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Test removing hooks during dispatch.
 
 var g = newGlobal('new-compartment');
@@ -27,5 +25,3 @@ function addDebug(n) {
 addDebug(10);
 g.eval("debugger;");
 assertEq(log, '0, 1, 2, 3, 4, 5, 6, 7, 8, 9, ');
-
-reportCompare(0, 0, 'ok');
