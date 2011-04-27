@@ -133,6 +133,7 @@ ScriptDebugPrologue(JSContext *cx, JSStackFrame *fp)
 bool
 ScriptDebugEpilogue(JSContext *cx, JSStackFrame *fp, bool okArg)
 {
+    JS_ASSERT(fp == cx->fp());
     JSBool ok = okArg;
 
     Probes::exitJSFun(cx, fp->maybeFun(), fp->script());
@@ -146,6 +147,7 @@ ScriptDebugEpilogue(JSContext *cx, JSStackFrame *fp, bool okArg)
                 hook(cx, fp, false, &ok, hookData);
         }
     }
+    Debug::leaveStackFrame(cx);
 
     return ok;
 }
