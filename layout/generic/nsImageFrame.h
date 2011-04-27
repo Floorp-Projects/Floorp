@@ -62,7 +62,6 @@ class nsDisplayImage;
 class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
-class nsIImageMap;
 
 namespace mozilla {
 namespace layers {
@@ -158,8 +157,6 @@ public:
 #endif
 
   virtual PRIntn GetSkipSides() const;
-
-  nsresult GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap);
 
   nsresult GetIntrinsicImageSize(nsSize& aSize);
 
