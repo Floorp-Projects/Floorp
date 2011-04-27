@@ -61,7 +61,6 @@ EXPORTS		= $(srcdir)/nsJSProtocolHandler.h
 LOCAL_INCLUDES += \
 		-I$(srcdir) \
 		-I$(topsrcdir)/dom/base \
-		-I$(topsrcdir)/netwerk/base/src \
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
