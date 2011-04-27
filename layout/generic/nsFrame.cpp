@@ -128,6 +128,7 @@
 
 #include "gfxContext.h"
 #include "CSSCalc.h"
+#include "nsAbsoluteContainingBlock.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -257,6 +258,34 @@ nsFrame::RootFrameList(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent)
   }
 }
 #endif
+
+static void
+DestroyAbsoluteContainingBlock(void* aPropertyValue)
+{
+  delete static_cast<nsAbsoluteContainingBlock*>(aPropertyValue);
+}
+
+NS_DECLARE_FRAME_PROPERTY(AbsoluteContainingBlockProperty, DestroyAbsoluteContainingBlock)
+
+PRBool
+nsIFrame::HasAbsolutelyPositionedChildren() const {
+  return IsAbsoluteContainer() && GetAbsoluteContainingBlock()->HasAbsoluteFrames();
+}
+
+nsAbsoluteContainingBlock*
+nsIFrame::GetAbsoluteContainingBlock() const {
+  NS_ASSERTION(IsAbsoluteContainer(), "The frame is not marked as an abspos container correctly");
+  nsAbsoluteContainingBlock* absCB = static_cast<nsAbsoluteContainingBlock*>
+    (Properties().Get(AbsoluteContainingBlockProperty()));
+  NS_ASSERTION(absCB, "The frame is marked as an abspos container but doesn't have the property");
+  return absCB;
+}
+
+void
+nsIFrame::MarkAsAbsoluteContainingBlock() {
+  AddStateBits(NS_FRAME_HAS_ABSPOS_CHILDREN);
+  Properties().Set(AbsoluteContainingBlockProperty(), new nsAbsoluteContainingBlock(GetAbsoluteListName()));
+}
 
 void
 NS_MergeReflowStatusInto(nsReflowStatus* aPrimary, nsReflowStatus aSecondary)
