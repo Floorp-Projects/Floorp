@@ -2800,6 +2800,7 @@ NS_IMETHODIMP nsExternalHelperAppService::GetPrimaryExtension(const nsACString& 
 
 NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, nsACString& aContentType) 
 {
+  NS_ENSURE_ARG_POINTER(aURI);
   nsresult rv = NS_ERROR_NOT_AVAILABLE;
   aContentType.Truncate();
 
