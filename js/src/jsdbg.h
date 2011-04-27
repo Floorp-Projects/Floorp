@@ -45,6 +45,7 @@
 #include "jsapi.h"
 #include "jscompartment.h"
 #include "jsgc.h"
+#include "jshashtable.h"
 #include "jswrapper.h"
 #include "jsvalue.h"
 
@@ -63,6 +64,10 @@ class Debug {
     // True if hooksObject had a debuggerHandler property when the hooks
     // property was set.
     bool hasDebuggerHandler;
+
+    typedef HashMap<JSStackFrame *, JSObject *, DefaultHasher<JSStackFrame *>, SystemAllocPolicy>
+        FrameMap;
+    FrameMap frames;
 
     JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
     JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
@@ -83,14 +88,22 @@ class Debug {
 
     inline bool hasAnyLiveHooks() const;
 
+    bool getScriptFrame(JSContext *cx, JSStackFrame *fp, Value *vp);
+    static void slowPathLeaveStackFrame(JSContext *cx);
+
     inline bool observesDebuggerStatement() const;
     static JSTrapStatus dispatchDebuggerStatement(JSContext *cx, Value *vp);
     JSTrapStatus handleDebuggerStatement(JSContext *cx, Value *vp);
 
   public:
     Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment);
+    bool init();
+    inline JSObject *toJSObject() const;
+    static inline Debug *fromJSObject(JSObject *obj);
 
-    // Mark some Debug objects. A Debug object is live if:
+    // Methods for interaction with the GC.
+    //
+    // A Debug object is live if:
     //   * the Debug JSObject is live (Debug::trace handles this case); OR
     //   * it is in the middle of dispatching an event (the event dispatching
     //     code roots it in this case); OR
@@ -100,18 +113,18 @@ class Debug {
     //       - it has a breakpoint set on a live script
     //       - it has a watchpoint set on a live object.
     //
-    // The last case is handled by this method. If it finds any Debug objects
-    // that are definitely live but not yet marked, it marks them and returns
-    // true. If not, it returns false.
+    // The last case is handled by the mark() method. If it finds any Debug
+    // objects that are definitely live but not yet marked, it marks them and
+    // returns true. If not, it returns false.
     //
     static bool mark(GCMarker *trc, JSCompartment *compartment, JSGCInvocationKind gckind);
-
-    inline JSObject *toJSObject() const;
-    static inline Debug *fromJSObject(JSObject *obj);
+    static void sweepAll(JSRuntime *rt);
+    static void sweepCompartment(JSCompartment *compartment);
 
     inline bool observesCompartment(JSCompartment *c) const;
     void detachFrom(JSCompartment *c);
 
+    static inline void leaveStackFrame(JSContext *cx);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
 };
 
@@ -140,6 +153,13 @@ Debug::fromJSObject(JSObject *obj)
 {
     JS_ASSERT(obj->getClass() == &jsclass);
     return (Debug *) obj->getPrivate();
+}
+
+void
+Debug::leaveStackFrame(JSContext *cx)
+{
+    if (!cx->compartment->getDebuggers().empty())
+        slowPathLeaveStackFrame(cx);
 }
 
 bool

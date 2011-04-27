@@ -3827,7 +3827,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
                               JSObject *protoProto, Class *clasp,
                               Native constructor, uintN nargs,
                               JSPropertySpec *ps, JSFunctionSpec *fs,
-                              JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
+                              JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+                              JSObject **ctorp)
 {
     /*
      * Create a prototype object for this class.
@@ -3966,6 +3967,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
     if (key != JSProto_Null && !js_SetClassObject(cx, obj, key, ctor, proto))
         goto bad;
 
+    if (ctorp)
+        *ctorp = ctor;
     return proto;
 
 bad:
@@ -3982,7 +3985,8 @@ JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
              Class *clasp, Native constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+             JSObject **ctorp)
 {
     JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
     if (!atom)
@@ -4008,7 +4012,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
     }
 
     return DefineConstructorAndPrototype(cx, obj, key, atom, protoProto, clasp, constructor, nargs,
-                                         ps, fs, static_ps, static_fs);
+                                         ps, fs, static_ps, static_fs, ctorp);
 }
 
 bool

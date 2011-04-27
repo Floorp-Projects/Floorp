@@ -298,6 +298,12 @@ JSObject::getReservedSlot(uintN index) const
     return (index < numSlots()) ? getSlot(index) : js::UndefinedValue();
 }
 
+inline void
+JSObject::setReservedSlot(uintN index, const js::Value &v)
+{
+    setSlot(index, v);
+}
+
 inline bool
 JSObject::canHaveMethodBarrier() const
 {
