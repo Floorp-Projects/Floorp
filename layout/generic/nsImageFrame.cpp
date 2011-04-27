@@ -1444,13 +1444,6 @@ nsImageFrame::ShouldDisplaySelection()
   return true;
 }
 
-nsresult
-nsImageFrame::GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap)
-{
-  nsImageMap *map = GetImageMap(aPresContext);
-  return CallQueryInterface(map, aImageMap);
-}
-
 nsImageMap*
 nsImageFrame::GetImageMap(nsPresContext* aPresContext)
 {
