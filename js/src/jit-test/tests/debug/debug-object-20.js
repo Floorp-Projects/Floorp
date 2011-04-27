@@ -8,7 +8,7 @@ var log;
 function makeDebug(g, name) {
     var dbg = new Debug(g);
     dbg.hooks = {
-        debuggerHandler: function () {
+        debuggerHandler: function (frame) {
             log += name;
             throw new Error(name);
         }

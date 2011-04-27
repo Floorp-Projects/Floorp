@@ -49,6 +49,17 @@
 
 using namespace js;
 
+// === Forward declarations
+
+extern Class Frame_class;
+
+enum {
+    JSSLOT_FRAME_OWNER,
+    JSSLOT_FRAME_COUNT
+};
+
+// === Utils
+
 static bool
 NotImplemented(JSContext *cx)
 {
@@ -114,10 +125,57 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
 
 // === Debug hook dispatch
 
+enum {
+    JSSLOT_DEBUG_FRAME_PROTO,
+    JSSLOT_DEBUG_COUNT
+};
+
 Debug::Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment)
   : object(dbg), debuggeeCompartment(compartment), hooksObject(hooks),
     uncaughtExceptionHook(NULL), enabled(true), hasDebuggerHandler(false)
 {
+}
+
+bool
+Debug::init()
+{
+    return frames.init();
+}
+
+bool
+Debug::getScriptFrame(JSContext *cx, JSStackFrame *fp, Value *vp)
+{
+    FrameMap::AddPtr p = frames.lookupForAdd(fp);
+    if (!p) {
+        JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
+        JSObject *frameobj = NewNonFunction<WithProto::Given>(cx, &Frame_class, proto, NULL);
+        if (!frameobj || !frameobj->ensureClassReservedSlots(cx))
+            return false;
+        frameobj->setPrivate(fp);
+        frameobj->setReservedSlot(JSSLOT_FRAME_OWNER, ObjectValue(*object));
+        if (!frames.add(p, fp, frameobj)) {
+            js_ReportOutOfMemory(cx);
+            return false;
+        }
+    }
+    vp->setObject(*p->value);
+    return true;
+}
+
+void
+Debug::slowPathLeaveStackFrame(JSContext *cx)
+{
+    JSStackFrame *fp = cx->regs->fp;
+    JSCompartment *compartment = cx->compartment;
+    const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
+    for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
+        Debug *dbg = *p;
+        if (FrameMap::Ptr p = dbg->frames.lookup(fp)) {
+            JSObject *frameobj = p->value;
+            frameobj->setPrivate(NULL);
+            dbg->frames.remove(p);
+        }
+    }
 }
 
 JSTrapStatus
@@ -133,7 +191,7 @@ Debug::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
             if (ExternalInvoke(cx, ObjectValue(*object), fval, 1, &exc, &rv))
                 return parseResumptionValue(ac, true, rv, vp, false);
         }
- 
+
         if (cx->isExceptionPending()) {
             JS_ReportPendingException(cx);
             cx->clearPendingException();
@@ -209,14 +267,20 @@ CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Va
 JSTrapStatus
 Debug::handleDebuggerStatement(JSContext *cx, Value *vp)
 {
+    // Grab cx->regs->fp before pushing a dummy frame.
+    JSStackFrame *fp = cx->regs->fp;
+
     JS_ASSERT(hasDebuggerHandler);
     AutoCompartment ac(cx, hooksObject);
     if (!ac.enter())
         return JSTRAP_ERROR;
 
-    // XXX debuggerHandler should receive a Frame.
+    Value argv[1];
+    if (!getScriptFrame(cx, fp, argv))
+        return JSTRAP_ERROR;
+
     Value rv;
-    bool ok = CallMethodIfPresent(cx, hooksObject, "debuggerHandler", 0, NULL, &rv);
+    bool ok = CallMethodIfPresent(cx, hooksObject, "debuggerHandler", 1, argv, &rv);
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
@@ -251,7 +315,6 @@ Debug::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
     }
     return JSTRAP_CONTINUE;
 }
-
 
 // === Debug JSObjects
 
@@ -299,6 +362,34 @@ Debug::trace(JSTracer *trc, JSObject *obj)
         MarkObject(trc, *dbg->hooksObject, "hooks");
         if (dbg->uncaughtExceptionHook)
             MarkObject(trc, *dbg->uncaughtExceptionHook, "hooks");
+
+        // Mark Debug.Frame objects that are reachable from JS if we look them up
+        // again (because the corresponding JSStackFrame is still on the stack).
+        for (FrameMap::Enum e(dbg->frames); !e.empty(); e.popFront()) {
+            if (e.front().value->getPrivate())
+                MarkObject(trc, *obj, "live Debug.Frame");
+        }
+    }
+}
+
+void
+Debug::sweepAll(JSRuntime *rt)
+{
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); c++)
+        sweepCompartment(*c);
+}
+
+void
+Debug::sweepCompartment(JSCompartment *compartment)
+{
+    // Sweep FrameMap entries for objects being collected.
+    const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
+    for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
+        Debug *dbg = *p;
+        for (FrameMap::Enum e(dbg->frames); !e.empty(); e.popFront()) {
+            if (!e.front().value->isMarked())
+                e.removeFront();
+        }
     }
 }
 
@@ -319,7 +410,7 @@ Debug::detachFrom(JSCompartment *c)
 }
 
 Class Debug::jsclass = {
-    "Debug", JSCLASS_HAS_PRIVATE,
+    "Debug", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUG_COUNT),
     PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
     EnumerateStub, ResolveStub, ConvertStub, Debug::finalize,
     NULL,                 /* reserved0   */
@@ -432,17 +523,20 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     JSObject *proto = &v.toObject();
     JS_ASSERT(proto->getClass() == &Debug::jsclass);
 
-    // Make the new Debug object.
+    // Make the new Debug object. Each one has a reference to
+    // Debug.Frame.prototype in a reserved slot.
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &Debug::jsclass, proto, NULL);
-    if (!obj)
+    if (!obj || !obj->ensureClassReservedSlots(cx))
         return false;
+    obj->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO,
+                         proto->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO));
     JSObject *hooks = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!hooks)
         return false;
     Debug *dbg = cx->new_<Debug>(obj, hooks, debuggeeCompartment);
     if (!dbg)
         return false;
-    if (!debuggeeCompartment->addDebug(dbg)) {
+    if (!dbg->init() || !debuggeeCompartment->addDebug(dbg)) {
         js_ReportOutOfMemory(cx);
         return false;
     }
@@ -460,14 +554,77 @@ JSPropertySpec Debug::properties[] = {
     JS_PS_END
 };
 
+// === Debug.Frame
+
+Class Frame_class = {
+    "Frame", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_FRAME_COUNT),
+    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
+    EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
+};
+
+#define THIS_FRAME(cx, vp, fnname, thisobj, fp)                              \
+    JSObject *thisobj = CheckThisClass(cx, vp, &Frame_class, fnname);        \
+    if (!thisobj)                                                            \
+        return false;                                                        \
+    JSStackFrame *fp = (JSStackFrame *) thisobj->getPrivate()
+
+JSBool
+Frame_getType(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get type", thisobj, fp);
+
+    // Indirect eval frames are both isGlobalFrame() and isEvalFrame(), so the
+    // order of checks here is significant.
+    vp->setString(fp->isEvalFrame()
+                  ? cx->runtime->atomState.evalAtom
+                  : fp->isGlobalFrame()
+                  ? cx->runtime->atomState.globalAtom
+                  : cx->runtime->atomState.callAtom);
+    return true;
+}
+
+JSBool
+Frame_getGenerator(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get generator", thisobj, fp);
+    vp->setBoolean(fp->isGeneratorFrame());
+    return true;
+}
+
+JSBool
+Frame_construct(JSContext *cx, uintN argc, Value *vp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Frame");
+    return false;
+}
+
+JSPropertySpec Frame_properties[] = {
+    JS_PSG("type", Frame_getType, 0),
+    JS_PSG("generator", Frame_getGenerator, 0),
+    JS_PS_END
+};
+
+// === Glue
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineDebugObject(JSContext *cx, JSObject *obj)
 {
     JSObject *objProto;
     if (!js_GetClassPrototype(cx, obj, JSProto_Object, &objProto))
-        return NULL;
+        return false;
 
-    return !!js_InitClass(cx, obj, objProto, &Debug::jsclass, Debug::construct, 1,
-                          Debug::properties, NULL, NULL, NULL);
+    JSObject *debugCtor;
+    JSObject *debugProto = js_InitClass(cx, obj, objProto, &Debug::jsclass, Debug::construct, 1,
+                                        Debug::properties, NULL, NULL, NULL, &debugCtor);
+    if (!debugProto || !debugProto->ensureClassReservedSlots(cx))
+        return false;
+
+    JSObject *frameCtor;
+    JSObject *frameProto = js_InitClass(cx, debugCtor, objProto, &Frame_class, Frame_construct, 0,
+                                        Frame_properties, NULL, NULL, NULL, &frameCtor);
+    if (!frameProto)
+        return false;
+    debugProto->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
+
+    return true;
 }

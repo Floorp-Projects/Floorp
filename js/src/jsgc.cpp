@@ -2527,6 +2527,11 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     /* Finalize watch points associated with unreachable objects. */
     js_SweepWatchPoints(cx);
 
+    if (comp)
+        Debug::sweepCompartment(comp);
+    else
+        Debug::sweepAll(rt);
+
     /*
      * We finalize objects before other GC things to ensure that object's finalizer 
      * can access them even if they will be freed. Sweep the runtime's property trees 

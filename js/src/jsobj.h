@@ -663,6 +663,9 @@ struct JSObject : js::gc::Cell {
 
     inline js::Value getReservedSlot(uintN index) const;
 
+    /* Call this only after the appropriate ensure{Class,Instance}ReservedSlots call. */
+    inline void setReservedSlot(uintN index, const js::Value &v);
+
     /* Defined in jsscopeinlines.h to avoid including implementation dependencies here. */
     inline void updateShape(JSContext *cx);
     inline void updateFlags(const js::Shape *shape, bool isDefinitelyAtom = false);
@@ -1548,14 +1551,16 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
                               JSObject *protoProto, Class *clasp,
                               Native constructor, uintN nargs,
                               JSPropertySpec *ps, JSFunctionSpec *fs,
-                              JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+                              JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+                              JSObject **ctorp = NULL);
 }
 
 extern JSObject *
 js_InitClass(JSContext *cx, JSObject *obj, JSObject *parent_proto,
              js::Class *clasp, js::Native constructor, uintN nargs,
              JSPropertySpec *ps, JSFunctionSpec *fs,
-             JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+             JSPropertySpec *static_ps, JSFunctionSpec *static_fs,
+             JSObject **ctorp = NULL);
 
 /*
  * Select Object.prototype method names shared between jsapi.cpp and jsobj.cpp.
