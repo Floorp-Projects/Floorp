@@ -399,7 +399,7 @@ CPPSRCS += 	checks.cc \
 # END enclude sources for V8 dtoa
 #############################################
 
-ifeq (,$(filter arm %86 x86_64,$(TARGET_CPU)))
+ifeq (,$(filter arm% %86 x86_64,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
