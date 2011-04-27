@@ -52,6 +52,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMNSHTMLElement.h"
+#include "nsIDOMViewCSS.h"
 #include "nsIFrame.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPrefService.h"

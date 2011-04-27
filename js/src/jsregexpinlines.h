@@ -65,7 +65,7 @@ namespace js {
 extern Class regexp_statics_class;
 
 static inline JSObject *
-regexp_statics_construct(JSContext *cx, JSObject *parent)
+regexp_statics_construct(JSContext *cx, GlobalObject *parent)
 {
     JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, parent);
     if (!obj)
@@ -443,16 +443,20 @@ RegExp::createObjectNoStatics(JSContext *cx, const jschar *chars, size_t length,
     JSString *str = js_NewStringCopyN(cx, chars, length);
     if (!str)
         return NULL;
+    /*
+     * NewBuiltinClassInstance can GC before we store re in the private field
+     * of the object. At that point the only reference to the source string
+     * could be from the malloc-allocated GC-invisible re. So we must anchor.
+     */
+    JS::Anchor<JSString *> anchor(str);
     AlreadyIncRefed<RegExp> re = RegExp::create(cx, str, flags);
     if (!re)
         return NULL;
     JSObject *obj = NewBuiltinClassInstance(cx, &js_RegExpClass);
-    if (!obj) {
+    if (!obj || !obj->initRegExp(cx, re.get())) {
         re->decref(cx);
         return NULL;
     }
-    if (!obj->initRegExp(cx, re.get()))
-        return NULL;
     return obj;
 }
 
@@ -593,9 +597,9 @@ RegExp::extractFrom(JSObject *obj)
 /* RegExpStatics inlines. */
 
 inline RegExpStatics *
-RegExpStatics::extractFrom(JSObject *global)
+RegExpStatics::extractFrom(js::GlobalObject *globalObj)
 {
-    Value resVal = global->getReservedSlot(JSRESERVED_GLOBAL_REGEXP_STATICS);
+    Value resVal = globalObj->getRegExpStatics();
     RegExpStatics *res = static_cast<RegExpStatics *>(resVal.toObject().getPrivate());
     return res;
 }

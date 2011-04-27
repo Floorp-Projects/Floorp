@@ -405,12 +405,12 @@
 @BINPATH@/modules/*
 
 ; Safe Browsing
-@BINPATH@/components/nsSafebrowsingApplication.manifest
-@BINPATH@/components/nsSafebrowsingApplication.js
+#ifdef MOZ_SAFE_BROWSING
 @BINPATH@/components/nsURLClassifier.manifest
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
 @BINPATH@/components/url-classifier.xpt
+#endif
 
 ; GNOME hooks
 #ifdef MOZ_ENABLE_GNOME_COMPONENT
@@ -606,6 +606,9 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
+#ifdef MOZ_SAFE_BROWSING
+@BINPATH@/components/SafeBrowsing.js
+#endif
 #ifdef MOZ_UPDATER
 @BINPATH@/components/UpdatePrompt.js
 #endif

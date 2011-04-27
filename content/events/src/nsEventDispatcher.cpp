@@ -52,6 +52,7 @@
 #include "nsDOMPopStateEvent.h"
 #include "nsDOMHashChangeEvent.h"
 #include "nsFrameLoader.h"
+#include "nsDOMTouchEvent.h"
 
 #define NS_TARGET_CHAIN_FORCE_CONTENT_DISPATCH  (1 << 0)
 #define NS_TARGET_CHAIN_WANTS_WILL_HANDLE_EVENT (1 << 1)
@@ -872,6 +873,9 @@ nsEventDispatcher::CreateEvent(nsPresContext* aPresContext,
     return NS_NewDOMAudioAvailableEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("closeevent"))
     return NS_NewDOMCloseEvent(aDOMEvent, aPresContext, nsnull);
+  if (aEventType.LowerCaseEqualsLiteral("touchevent") &&
+      nsDOMTouchEvent::PrefEnabled())
+    return NS_NewDOMTouchEvent(aDOMEvent, aPresContext, nsnull);
   if (aEventType.LowerCaseEqualsLiteral("hashchangeevent"))
     return NS_NewDOMHashChangeEvent(aDOMEvent, aPresContext, nsnull);
 

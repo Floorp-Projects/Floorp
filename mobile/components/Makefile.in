@@ -77,6 +77,10 @@ EXTRA_COMPONENTS = \
         BlocklistPrompt.js \
         $(NULL)
 
+ifdef MOZ_SAFE_BROWSING
+EXTRA_COMPONENTS += SafeBrowsing.js
+endif
+
 ifdef MOZ_UPDATER
 EXTRA_COMPONENTS += UpdatePrompt.js
 endif

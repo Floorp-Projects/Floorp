@@ -1061,7 +1061,7 @@ nsresult nsOggReader::GetSeekRanges(nsTArray<SeekRange>& aRanges)
   nsresult res = mDecoder->GetCurrentStream()->GetCachedRanges(cached);
   NS_ENSURE_SUCCESS(res, res);
 
-  for (PRUint32 index = 0; index < aRanges.Length(); index++) {
+  for (PRUint32 index = 0; index < cached.Length(); index++) {
     nsByteRange& range = cached[index];
     PRInt64 startTime = -1;
     PRInt64 endTime = -1;

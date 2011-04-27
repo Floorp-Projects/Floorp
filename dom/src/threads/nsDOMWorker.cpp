@@ -383,11 +383,6 @@ nsDOMWorkerFunctions::NewXMLHttpRequest(JSContext* aCx,
                                         uintN aArgc,
                                         jsval* aVp)
 {
-  JSObject *obj = JS_THIS_OBJECT(aCx, aVp);
-  if (!obj) {
-    return JS_FALSE;
-  }
-
   nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
@@ -420,7 +415,7 @@ nsDOMWorkerFunctions::NewXMLHttpRequest(JSContext* aCx,
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> xhrWrapped;
   jsval v;
-  rv = nsContentUtils::WrapNative(aCx, obj,
+  rv = nsContentUtils::WrapNative(aCx, JSVAL_TO_OBJECT(JS_CALLEE(aCx, aVp)),
                                   static_cast<nsIXMLHttpRequest*>(xhr), &v,
                                   getter_AddRefs(xhrWrapped));
   if (NS_FAILED(rv)) {
@@ -659,11 +654,8 @@ nsDOMWorkerFunctions::MakeNewWorker(JSContext* aCx,
                                     jsval* aVp,
                                     WorkerPrivilegeModel aPrivilegeModel)
 {
-  JSObject *obj = JS_THIS_OBJECT(aCx, aVp);
-  if (!obj) {
-    return JS_FALSE;
-  }
-
+  JSObject *obj = JSVAL_TO_OBJECT(JS_CALLEE(aCx, aVp));
+    
   nsDOMWorker* worker = static_cast<nsDOMWorker*>(JS_GetContextPrivate(aCx));
   NS_ASSERTION(worker, "This should be set by the DOM thread service!");
 
@@ -703,8 +695,8 @@ nsDOMWorkerFunctions::MakeNewWorker(JSContext* aCx,
 
   nsCOMPtr<nsIXPConnectJSObjectHolder> workerWrapped;
   jsval v;
-  rv = nsContentUtils::WrapNative(aCx, obj, static_cast<nsIWorker*>(newWorker),
-                                  &v, getter_AddRefs(workerWrapped));
+  rv = nsContentUtils::WrapNative(aCx, obj, static_cast<nsIWorker*>(newWorker), &v, 
+                                  getter_AddRefs(workerWrapped));
   if (NS_FAILED(rv)) {
     JS_ReportError(aCx, "Failed to wrap new worker!");
     return JS_FALSE;
@@ -767,7 +759,6 @@ nsDOMWorkerFunctions::CTypesLazyGetter(JSContext* aCx,
          JS_GetPropertyById(aCx, aObj, aId, aVp);
 }
 #endif
-
 JSFunctionSpec gDOMWorkerFunctions[] = {
   { "dump",                nsDOMWorkerFunctions::Dump,                1, 0 },
   { "setTimeout",          nsDOMWorkerFunctions::SetTimeout,          1, 0 },
@@ -775,19 +766,16 @@ JSFunctionSpec gDOMWorkerFunctions[] = {
   { "setInterval",         nsDOMWorkerFunctions::SetInterval,         1, 0 },
   { "clearInterval",       nsDOMWorkerFunctions::KillTimeout,         1, 0 },
   { "importScripts",       nsDOMWorkerFunctions::LoadScripts,         1, 0 },
-  { "XMLHttpRequest",      nsDOMWorkerFunctions::NewXMLHttpRequest,   0, 0 },
-  { "Worker",              nsDOMWorkerFunctions::NewWorker,           1, 0 },
+  { "XMLHttpRequest",      nsDOMWorkerFunctions::NewXMLHttpRequest,   0, JSFUN_CONSTRUCTOR },
+  { "Worker",              nsDOMWorkerFunctions::NewWorker,           1, JSFUN_CONSTRUCTOR },
   { "atob",                nsDOMWorkerFunctions::AtoB,                1, 0 },
   { "btoa",                nsDOMWorkerFunctions::BtoA,                1, 0 },
   { nsnull,                nsnull,                                    0, 0 }
 };
-
 JSFunctionSpec gDOMWorkerChromeFunctions[] = {
-  { "ChromeWorker",        nsDOMWorkerFunctions::NewChromeWorker,     1, 0 },
+  { "ChromeWorker",        nsDOMWorkerFunctions::NewChromeWorker,     1, JSFUN_CONSTRUCTOR },
   { nsnull,                nsnull,                                    0, 0 }
 };
-
-
 enum DOMWorkerStructuredDataType
 {
   // We have a special tag for XPCWrappedNatives that are being passed between

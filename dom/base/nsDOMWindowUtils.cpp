@@ -1861,3 +1861,16 @@ nsDOMWindowUtils::LeafLayersPartitionWindow(PRBool* aResult)
 #endif
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetMayHaveTouchEventListeners(PRBool* aResult)
+{
+  if (!IsUniversalXPConnectCapable()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
+  nsPIDOMWindow* innerWindow = mWindow->GetCurrentInnerWindow();
+  *aResult = innerWindow ? innerWindow->HasTouchEventListeners() : PR_FALSE;
+  return NS_OK;
+}
+

@@ -83,12 +83,6 @@ var aboutBlankWindow = null;
 var aboutBlank2Window = null;
 var dataWindow = null;
 
-var aboutBlankResponseReceived = false;
-var aboutBlank2ResponseReceived = false;
-var dataResponseReceived = false;
-
-var finished = false;
-
 /** Convert a nullable string to a pretty representation */
 function sourceify(v)
 {
@@ -135,7 +129,6 @@ function messageReceiver(evt)
       is(evt.source, aboutBlankWindow, "wrong source");
 
       // ...and onto the next test
-      aboutBlankResponseReceived = true;
       setupBlank2();
     }
     else if (evt.data === "about:blank2-response")
@@ -143,7 +136,6 @@ function messageReceiver(evt)
       is(evt.origin, "http://mochi.test:8888",
          "wrong origin for event from about:blank #2");
       is(evt.source, aboutBlank2Window, "wrong source");
-      aboutBlank2ResponseReceived = true;
 
       setupData();
     }
@@ -157,7 +149,6 @@ function messageReceiver(evt)
          "file)");
       is(evt.source, dataWindow, "wrong source");
 
-      dataResponseReceived = true;
       finish();
     }
     else
@@ -208,14 +199,9 @@ function getContents(description, responseText)
   return contents;
 }
 
-/** Finish the test, but don't finish twice if we timed out. */
 function finish()
 {
-  if (!finished)
-  {
-    finished = true;
-    SimpleTest.finish();
-  }
+  SimpleTest.finish();
 }
 
 var xhtmlns = "http://www.w3.org/1999/xhtml";
@@ -225,8 +211,6 @@ function insert(el)
   var content = $("content");
   content.parentNode.insertBefore(el, content);
 }
-
-var LOAD_TIMEOUT = 5000;
 
 function setupBlank()
 {
@@ -242,20 +226,6 @@ function setupBlank()
 
   // I don't believe anything guarantees sync parsing, so we have to wait for
   // the new window to poke us to actually do the test.  :-\
-
-  // Catch recalcitrant browsers that fail inside the iframe document code.
-  setTimeout(blankFailed, LOAD_TIMEOUT);
-}
-
-function blankFailed()
-{
-  if (!aboutBlankResponseReceived && !finished)
-  {
-    ok(false,
-       "test timed out (postMessage not accessible on window.parent in " +
-       "the first about:blank iframe?)");
-    finish();
-  }
 }
 
 function setupBlank2()
@@ -281,20 +251,6 @@ function setupData()
   dataWindow = dataFrame.contentWindow;
 
   // ...and wait again for the window to load...
-
-  // Catch recalcitrant browsers that fail inside the iframe document code.
-  setTimeout(dataFailed, LOAD_TIMEOUT);
-}
-
-function dataFailed()
-{
-  if (!dataResponseReceived && !finished)
-  {
-    ok(false,
-       "test timed out (postMessage not accessible on window.parent in " +
-       "the data: iframe?)");
-    finish();
-  }
 }
 
 var count = 0;

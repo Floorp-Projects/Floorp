@@ -155,7 +155,7 @@ bool ots_kern_parse(OpenTypeFile *file, const uint8_t *data, size_t length) {
 
 bool ots_kern_should_serialise(OpenTypeFile *file) {
   if (!file->glyf) return false;  // this table is not for CFF fonts.
-  return file->kern;
+  return file->kern != NULL;
 }
 
 bool ots_kern_serialise(OTSStream *out, OpenTypeFile *file) {

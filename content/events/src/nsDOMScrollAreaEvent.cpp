@@ -101,7 +101,7 @@ NS_IMETHODIMP
 nsDOMScrollAreaEvent::InitScrollAreaEvent(const nsAString &aEventType,
                                           PRBool aCanBubble,
                                           PRBool aCancelable,
-                                          nsIDOMWindow *aView,
+                                          nsIDOMAbstractView *aView,
                                           PRInt32 aDetail,
                                           float aX, float aY,
                                           float aWidth, float aHeight)
@@ -155,6 +155,11 @@ NS_NewDOMScrollAreaEvent(nsIDOMEvent **aInstancePtrResult,
                          nsPresContext *aPresContext,
                          nsScrollAreaEvent *aEvent)
 {
-  nsDOMScrollAreaEvent* it = new nsDOMScrollAreaEvent(aPresContext, aEvent);
-  return CallQueryInterface(it, aInstancePtrResult);
+  nsDOMScrollAreaEvent *ev = new nsDOMScrollAreaEvent(aPresContext, aEvent);
+
+  if (!ev) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return CallQueryInterface(ev, aInstancePtrResult);
 }

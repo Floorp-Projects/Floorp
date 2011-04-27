@@ -125,15 +125,15 @@ struct SetGlobalNameIC : public GlobalNameIC
     JSC::JITCode            extraStub;
 
     /* SET only, if we had to generate an out-of-line path. */
-    int inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
-    int extraShapeGuard : 6;    /* Offset into stub for shape guard. */
+    int32 inlineShapeJump : 10;   /* Offset into inline path for shape jump. */
+    int32 extraShapeGuard : 6;    /* Offset into stub for shape guard. */
     bool objConst : 1;          /* True if the object is constant. */
     RegisterID objReg   : 5;    /* Register for object, if objConst is false. */
     RegisterID shapeReg : 5;    /* Register for shape; volatile. */
     bool hasExtraStub : 1;      /* Extra stub is preset. */
 
-    int fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
-    int extraStoreOffset : 16;  /* Offset into store code. */
+    int32 fastRejoinOffset : 16;  /* Offset from fastPathStart to rejoin. */
+    int32 extraStoreOffset : 16;  /* Offset into store code. */
 
     /* SET only. */
     ValueRemat vr;              /* RHS value. */

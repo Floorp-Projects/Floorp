@@ -290,13 +290,16 @@ CastAsPropertyOp(js::Class *clasp)
  */
 #define JSPROP_SHADOWABLE       JSPROP_INDEX
 
-struct Shape : public JSObjectMap
+struct Shape : public js::gc::Cell
 {
     friend struct ::JSObject;
     friend struct ::JSFunction;
     friend class js::PropertyTree;
     friend class js::Bindings;
     friend bool IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape);
+
+    mutable uint32      shape;          /* shape identifier */
+    uint32              slotSpan;       /* one more than maximum live slot number */
 
     /* 
      * numLinearSearches starts at zero and is incremented initially on each
@@ -311,7 +314,6 @@ struct Shape : public JSObjectMap
         mutable js::PropertyTable *table;
     };
 
-  public:
     inline void freeTable(JSContext *cx);
 
     jsid                id;
@@ -429,6 +431,10 @@ struct Shape : public JSObjectMap
     }
 
   public:
+    static JS_FRIEND_DATA(Shape) sharedNonNative;
+
+    bool isNative() const { return this != &sharedNonNative; }
+
     const js::Shape *previous() const {
         return parent;
     }
@@ -484,6 +490,9 @@ struct Shape : public JSObjectMap
 
     /* Used by EmptyShape (see jsscopeinlines.h). */
     Shape(JSCompartment *comp, Class *aclasp);
+
+    /* Used by sharedNonNative. */
+    explicit Shape(uint32 shape);
 
     bool inDictionary() const   { return (flags & IN_DICTIONARY) != 0; }
     bool frozen() const         { return (flags & FROZEN) != 0; }
@@ -547,10 +556,6 @@ struct Shape : public JSObjectMap
     bool set(JSContext* cx, JSObject *obj, bool strict, js::Value* vp) const;
 
     inline bool isSharedPermanent() const;
-
-    void regenerate(JSTracer *trc) const;
-    void markChildrenNotParent(JSTracer *trc) const;
-    void markChildren(JSTracer *trc) const;
 
     bool hasSlot() const { return (attrs & JSPROP_SHARED) == 0; }
 
@@ -674,134 +679,6 @@ struct EmptyShape : public js::Shape
 
 #define SHAPE_STORE_PRESERVING_COLLISION(spp, shape)                          \
     (*(spp) = (js::Shape *) (jsuword(shape) | SHAPE_HAD_COLLISION(*(spp))))
-
-inline js::Shape **
-JSObject::nativeSearch(jsid id, bool adding)
-{
-    return js::Shape::search(compartment()->rt, &lastProp, id, adding);
-}
-
-inline const js::Shape *
-JSObject::nativeLookup(jsid id)
-{
-    JS_ASSERT(isNative());
-    return SHAPE_FETCH(nativeSearch(id));
-}
-
-inline bool
-JSObject::nativeContains(jsid id)
-{
-    return nativeLookup(id) != NULL;
-}
-
-inline bool
-JSObject::nativeContains(const js::Shape &shape)
-{
-    return nativeLookup(shape.id) == &shape;
-}
-
-inline const js::Shape *
-JSObject::lastProperty() const
-{
-    JS_ASSERT(isNative());
-    JS_ASSERT(!JSID_IS_VOID(lastProp->id));
-    return lastProp;
-}
-
-inline bool
-JSObject::nativeEmpty() const
-{
-    return lastProperty()->isEmptyShape();
-}
-
-inline bool
-JSObject::inDictionaryMode() const
-{
-    return lastProperty()->inDictionary();
-}
-
-inline uint32
-JSObject::propertyCount() const
-{
-    return lastProperty()->entryCount();
-}
-
-inline bool
-JSObject::hasPropertyTable() const
-{
-    return lastProperty()->hasTable();
-}
-
-/*
- * FIXME: shape must not be null, should use a reference here and other places.
- */
-inline void
-JSObject::setLastProperty(const js::Shape *shape)
-{
-    JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT(!JSID_IS_VOID(shape->id));
-    JS_ASSERT_IF(lastProp, !JSID_IS_VOID(lastProp->id));
-    JS_ASSERT(shape->compartment() == compartment());
-
-    lastProp = const_cast<js::Shape *>(shape);
-}
-
-inline void
-JSObject::removeLastProperty()
-{
-    JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT(!JSID_IS_VOID(lastProp->parent->id));
-
-    lastProp = lastProp->parent;
-}
-
-namespace js {
-
-inline void
-Shape::removeFromDictionary(JSObject *obj) const
-{
-    JS_ASSERT(!frozen());
-    JS_ASSERT(inDictionary());
-    JS_ASSERT(obj->inDictionaryMode());
-    JS_ASSERT(listp);
-    JS_ASSERT(!JSID_IS_VOID(id));
-
-    JS_ASSERT(obj->lastProp->inDictionary());
-    JS_ASSERT(obj->lastProp->listp == &obj->lastProp);
-    JS_ASSERT_IF(obj->lastProp != this, !JSID_IS_VOID(obj->lastProp->id));
-    JS_ASSERT_IF(obj->lastProp->parent, !JSID_IS_VOID(obj->lastProp->parent->id));
-
-    if (parent)
-        parent->listp = listp;
-    *listp = parent;
-    listp = NULL;
-}
-
-inline void
-Shape::insertIntoDictionary(js::Shape **dictp)
-{
-    /*
-     * Don't assert inDictionaryMode() here because we may be called from
-     * JSObject::toDictionaryMode via JSObject::newDictionaryShape.
-     */
-    JS_ASSERT(inDictionary());
-    JS_ASSERT(!listp);
-    JS_ASSERT(!JSID_IS_VOID(id));
-
-    JS_ASSERT_IF(*dictp, !(*dictp)->frozen());
-    JS_ASSERT_IF(*dictp, (*dictp)->inDictionary());
-    JS_ASSERT_IF(*dictp, (*dictp)->listp == dictp);
-    JS_ASSERT_IF(*dictp, !JSID_IS_VOID((*dictp)->id));
-    JS_ASSERT_IF(*dictp, compartment() == (*dictp)->compartment());
-
-    setParent(*dictp);
-    if (parent)
-        parent->listp = &parent;
-    listp = dictp;
-    *dictp = this;
-}
-
-} /* namespace js */
 
 /*
  * If SHORTID is set in shape->flags, we use shape->shortid rather

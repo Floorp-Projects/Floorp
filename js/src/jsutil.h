@@ -45,6 +45,7 @@
 #define jsutil_h___
 
 #include "jstypes.h"
+#include "mozilla/Util.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -463,6 +464,9 @@ JS_END_EXTERN_C
  * be used, though this is undesirable.
  */
 namespace js {
+/* Import common mfbt declarations into "js". */
+using namespace mozilla;
+
 class OffTheBooks {
 public:
     JS_DECLARE_NEW_METHODS(::js_malloc, JS_ALWAYS_INLINE static)

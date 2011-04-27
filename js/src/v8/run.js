@@ -1,4 +1,4 @@
-// Copyright 2008 Google Inc. All Rights Reserved.
+// Copyright 2008 the V8 project authors. All rights reserved.
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
@@ -32,18 +32,30 @@ load('deltablue.js');
 load('crypto.js');
 load('raytrace.js');
 load('earley-boyer.js');
+load('regexp.js');
+load('splay.js');
 
+var success = true;
 
 function PrintResult(name, result) {
   print(name + ': ' + result);
 }
 
 
+function PrintError(name, error) {
+  PrintResult(name, error);
+  success = false;
+}
+
+
 function PrintScore(score) {
-  print('----');
-  print('Score: ' + score);
+  if (success) {
+    print('----');
+    print('Score (version ' + BenchmarkSuite.version + '): ' + score);
+  }
 }
 
 
 BenchmarkSuite.RunSuites({ NotifyResult: PrintResult,
+                           NotifyError: PrintError,
                            NotifyScore: PrintScore });

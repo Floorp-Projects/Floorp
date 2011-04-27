@@ -49,6 +49,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsgc.h"
+#include "jsgcmark.h"
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsregexp.h"
@@ -453,6 +454,13 @@ js_XDRRegExpObject(JSXDRState *xdr, JSObject **objp)
             return false;
         obj->clearParent();
         obj->clearProto();
+
+        /*
+         * initRegExp can GC before storing re in the private field of the
+         * object. At that point the only reference to the source string could
+         * be from the malloc-allocated GC-invisible re. So we must anchor.
+         */
+        JS::Anchor<JSString *> anchor(source);
         AlreadyIncRefed<RegExp> re = RegExp::create(xdr->cx, source, flagsword);
         if (!re)
             return false;

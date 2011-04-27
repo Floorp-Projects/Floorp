@@ -493,7 +493,8 @@ nsScriptNameSpaceManager::LookupName(const nsAString& aName,
                (PL_DHashTableOperate(&mGlobalNames, &aName,
                                         PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry)) {
+  if (PL_DHASH_ENTRY_IS_BUSY(entry) &&
+      !((&entry->mGlobalName)->mDisabled)) {
     *aNameStruct = &entry->mGlobalName;
     if (aClassName) {
       *aClassName = entry->mKey.get();
@@ -512,6 +513,7 @@ nsresult
 nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
                                             PRInt32 aDOMClassInfoID,
                                             PRBool aPrivileged,
+                                            PRBool aDisabled,
                                             const PRUnichar **aResult)
 {
   if (!nsCRT::IsAscii(aClassName)) {
@@ -539,6 +541,7 @@ nsScriptNameSpaceManager::RegisterClassName(const char *aClassName,
   s->mType = nsGlobalNameStruct::eTypeClassConstructor;
   s->mDOMClassInfoID = aDOMClassInfoID;
   s->mChromeOnly = aPrivileged;
+  s->mDisabled = aDisabled;
 
   return NS_OK;
 }

@@ -43,7 +43,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(1d78da1e-2177-4b8f-9b11-41e78d1e60f7)]
+[scriptable, uuid(f9fa8205-a988-4828-9228-f3332d5475ac)]
 interface nsIDOMXULCommandEvent : nsIDOMUIEvent
 {
   /**
@@ -68,7 +68,7 @@ interface nsIDOMXULCommandEvent : nsIDOMUIEvent
   void initCommandEvent(in DOMString typeArg,
                         in boolean canBubbleArg,
                         in boolean cancelableArg,
-                        in nsIDOMWindow viewArg,
+                        in nsIDOMAbstractView viewArg,
                         in long detailArg,
                         in boolean ctrlKeyArg,
                         in boolean altKeyArg,
