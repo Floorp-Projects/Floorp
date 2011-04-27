@@ -333,8 +333,14 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
         THROWV(NULL);
 
     CompileStatus status = CanMethodJIT(cx, script, fp, CompileRequest_JIT);
-    if (status == Compile_Okay)
-        return script->getJIT(fp->isConstructing())->invokeEntry;
+    if (status == Compile_Okay) {
+        void *entry = script->getJIT(fp->isConstructing())->invokeEntry;
+
+        /* Same constraint on fp as UncachedInlineCall. */
+        f.regs.sp = (Value *) f.regs.fp;
+        f.regs.fp = f.regs.fp->prev();
+        return entry;
+    }
 
     /* Force computation of the previous PC, as Interpret will clear it. */
     fp->prev()->pc(cx, fp);
