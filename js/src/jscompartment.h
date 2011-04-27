@@ -517,7 +517,10 @@ struct JS_FRIEND_API(JSCompartment) {
 
     const DebugVector &getDebuggers() const { return debuggers; }
 
-    bool addDebug(js::Debug *dbg) { return debuggers.append(dbg); }
+    bool addDebug(js::Debug *dbg) {
+        JS_ASSERT(debugMode);
+        return debuggers.append(dbg);
+    }
     void removeDebug(js::Debug *dbg);
 };
 

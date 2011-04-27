@@ -1,6 +1,4 @@
-// Any copyright is dedicated to the Public Domain.
-// http://creativecommons.org/licenses/publicdomain/
-
+// |jit-test| debug
 // Dispatching an event to a debugger must keep enough of it gc-alive to avoid
 // crashing.
 
@@ -35,5 +33,3 @@ addDebug();
 hits = 0;
 g.eval("debugger;");
 assertEq(hits, 1);
-
-reportCompare(0, 0, 'ok');
