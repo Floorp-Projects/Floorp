@@ -3976,6 +3976,37 @@ bad:
     return NULL;
 }
 
+/*
+ * Lazy standard classes need a way to indicate if they have been initialized.
+ * Otherwise, when we delete them, we might accidentally recreate them via a
+ * lazy initialization. We use the presence of a ctor or proto in the
+ * globalObject's slot to indicate that they've been constructed, but this only
+ * works for classes which have a proto and ctor. Classes which don't have one
+ * can call MarkStandardClassInitializedNoProto(), and we can always check
+ * whether a class is initialized by calling IsStandardClassResolved().
+ */
+bool
+IsStandardClassResolved(JSObject *obj, js::Class *clasp)
+{
+    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
+
+    /* If the constructor is undefined, then it hasn't been initialized. */
+    return (obj->getReservedSlot(key) != UndefinedValue());
+}
+
+void
+MarkStandardClassInitializedNoProto(JSObject* obj, js::Class *clasp)
+{
+    JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
+
+    /*
+     * We use True so that it's obvious what we're doing (instead of, say,
+     * Null, which might be miscontrued as an error in setting Undefined).
+     */
+    if (obj->getReservedSlot(key) == UndefinedValue())
+        obj->setSlot(key, BooleanValue(true));
+}
+
 }
 
 JSObject *

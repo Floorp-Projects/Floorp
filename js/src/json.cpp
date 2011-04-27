@@ -1413,5 +1413,7 @@ js_InitJSONClass(JSContext *cx, JSObject *obj)
     if (!JS_DefineFunctions(cx, JSON, json_static_methods))
         return NULL;
 
+    MarkStandardClassInitializedNoProto(obj, &js_JSONClass);
+
     return JSON;
 }
