@@ -17,12 +17,12 @@
  * The Original Code is mozilla.org code.
  *
  * The Initial Developer of the Original Code is
- * Sun Microsystems, Inc.
- * Portions created by the Initial Developer are Copyright (C) 2002
+ * Novell, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bolian Yin (bolian.yin@sun.com)
+ *   Brad Taylor <brad@getcoded.net> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,43 +38,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef __MAI_INTERFACE_COMPONENT_H__
-#define __MAI_INTERFACE_COMPONENT_H__
+#ifndef _AtkSocketAccessible_H_
+#define _AtkSocketAccessible_H_
 
-#include "nsMai.h"
+#include "nsAccessibleWrap.h"
 
-G_BEGIN_DECLS
+// This file gets included by nsAccessibilityService.cpp, which can't include
+// atk.h (or glib.h), so we can't rely on it being included.
+#ifdef __ATK_H__
+typedef void (*AtkSocketEmbedType) (AtkSocket*, gchar*);
+#else
+typedef void (*AtkSocketEmbedType) (void*, void*);
+#endif
 
-/* component interface callbacks */
-void componentInterfaceInitCB(AtkComponentIface* aIface);
-AtkObject* refAccessibleAtPointCB(AtkComponent* aComponent,
-                                  gint aX, gint aY,
-                                  AtkCoordType aCoordType);
-void getExtentsCB(AtkComponent* aComponent,
-                  gint* aX, gint* aY, gint* aWidth, gint* aHeight,
-                  AtkCoordType aCoordType);
-/* the "contains", "get_position", "get_size" can take advantage of
- * "get_extents", there is no need to implement them now.
+/**
+ * Provides a nsAccessibleWrap wrapper around AtkSocket for out-of-process
+ * accessibles.
  */
-gboolean grabFocusCB(AtkComponent* aComponent);
+class AtkSocketAccessible: public nsAccessibleWrap
+{
+public:
 
-/* what are missing now for atk component:
- *
- * add_focus_handler
- * remove_focus_handler
- * set_extents
- * set_position
- * set_size
- * get_layer
- * get_mdi_zorder
- */
+  // Soft references to AtkSocket
+  static AtkSocketEmbedType g_atk_socket_embed;
+#ifdef __ATK_H__
+  static GType g_atk_socket_type;
+#endif
+  static const char* sATKSocketEmbedSymbol;
+  static const char* sATKSocketGetTypeSymbol;
 
-AtkObject* refAccessibleAtPointHelper(nsAccessibleWrap* aAccWrap,
-                                      gint aX, gint aY, AtkCoordType aCoordType);
-void getExtentsHelper(nsAccessibleWrap* aAccWrap,
-                      gint* aX, gint* aY, gint* aWidth, gint* aHeight,
-                      AtkCoordType aCoordType);
+  /*
+   * True if the current Atk version supports AtkSocket and it was correctly
+   * loaded.
+   */
+  static bool gCanEmbed;
 
-G_END_DECLS
+  AtkSocketAccessible(nsIContent* aContent, nsIWeakReference* aShell,
+                      const nsCString& aPlugId);
 
-#endif /* __MAI_INTERFACE_COMPONENT_H__ */
+  // nsAccessNode
+  virtual void Shutdown();
+
+  // nsIAccessible
+  NS_IMETHODIMP GetNativeInterface(void** aOutAccessible);
+};
+
+#endif
