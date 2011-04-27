@@ -8338,21 +8338,21 @@ nsDocument::CreateTouch(nsIDOMAbstractView* aView,
                         PRInt32 aRadiusY,
                         float aRotationAngle,
                         float aForce,
-                        nsIDOMTouchPoint** aRetVal)
+                        nsIDOMTouch** aRetVal)
 {
-  NS_ADDREF(*aRetVal = new nsDOMTouchPoint(aTarget,
-                                           aIdentifier,
-                                           aPageX,
-                                           aPageY,
-                                           aScreenX,
-                                           aScreenY,
-                                           aClientX,
-                                           aClientY,
-                                           aRadiusX,
-                                           aRadiusY,
-                                           aRotationAngle,
-                                           aForce));
-  return NS_OK;;
+  NS_ADDREF(*aRetVal = new nsDOMTouch(aTarget,
+                                      aIdentifier,
+                                      aPageX,
+                                      aPageY,
+                                      aScreenX,
+                                      aScreenY,
+                                      aClientX,
+                                      aClientY,
+                                      aRadiusX,
+                                      aRadiusY,
+                                      aRotationAngle,
+                                      aForce));
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -8367,7 +8367,7 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
         type == nsIDataType::VTYPE_INTERFACE_IS) {
       nsCOMPtr<nsISupports> data;
       aPoints->GetAsISupports(getter_AddRefs(data));
-      nsCOMPtr<nsIDOMTouchPoint> point = do_QueryInterface(data);
+      nsCOMPtr<nsIDOMTouch> point = do_QueryInterface(data);
       if (point) {
         retval->Append(point);
       }
@@ -8382,7 +8382,7 @@ nsDocument::CreateTouchList(nsIVariant* aPoints,
         nsISupports** values = static_cast<nsISupports**>(rawArray);
         for (PRUint32 i = 0; i < valueCount; ++i) {
           nsCOMPtr<nsISupports> supports = dont_AddRef(values[i]);
-          nsCOMPtr<nsIDOMTouchPoint> point = do_QueryInterface(supports);
+          nsCOMPtr<nsIDOMTouch> point = do_QueryInterface(supports);
           if (point) {
             retval->Append(point);
           }
