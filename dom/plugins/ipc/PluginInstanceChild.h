@@ -92,7 +92,9 @@ protected:
     virtual bool
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
                                                     NPError* result);
-
+    virtual bool
+    AnswerNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(nsCString* aPlugId,
+                                                     NPError* aResult);
     virtual bool
     AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result);
 
