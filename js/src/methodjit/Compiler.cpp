@@ -2242,9 +2242,11 @@ mjit::Compiler::generateMethod()
              * doubles. We might forget the type of the variable by the next
              * call to fixDoubleTypes.
              */
-            uint32 slot = analyze::ArgSlot(GET_SLOTNO(PC));
-            if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && fixDoubleSlot(slot))
-                frame.ensureDouble(frame.getArg(GET_SLOTNO(PC)));
+            if (cx->typeInferenceEnabled()) {
+                uint32 slot = analyze::ArgSlot(GET_SLOTNO(PC));
+                if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && fixDoubleSlot(slot))
+                    frame.ensureDouble(frame.getArg(GET_SLOTNO(PC)));
+            }
 
             if (pop) {
                 frame.pop();
@@ -2268,9 +2270,11 @@ mjit::Compiler::generateMethod()
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             frame.storeLocal(GET_SLOTNO(PC), pop, true);
 
-            uint32 slot = analyze::LocalSlot(script, GET_SLOTNO(PC));
-            if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && fixDoubleSlot(slot))
-                frame.ensureDouble(frame.getLocal(GET_SLOTNO(PC)));
+            if (cx->typeInferenceEnabled()) {
+                uint32 slot = analyze::LocalSlot(script, GET_SLOTNO(PC));
+                if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && fixDoubleSlot(slot))
+                    frame.ensureDouble(frame.getLocal(GET_SLOTNO(PC)));
+            }
 
             if (pop) {
                 frame.pop();
