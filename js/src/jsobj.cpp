@@ -3805,7 +3805,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 
         const Shape *shape = obj->nativeLookup(id);
         if (!shape) {
-            uint32 slot = JS_GLOBAL_PROPERTY_SLOT(key);
+            uint32 slot = 2 * JSProto_LIMIT + key;
             if (!js_SetReservedSlot(cx, obj, slot, v))
                 return false;
             if (!obj->addProperty(cx, id, PropertyStub, StrictPropertyStub, slot, attrs, 0, 0))
@@ -3991,7 +3991,7 @@ IsStandardClassResolved(JSObject *obj, js::Class *clasp)
     JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(clasp);
 
     /* If the constructor is undefined, then it hasn't been initialized. */
-    return (!obj->getReservedSlot(JS_GLOBAL_CTOR_SLOT(key)).isUndefined());
+    return (obj->getReservedSlot(key) != UndefinedValue());
 }
 
 void
@@ -4003,7 +4003,7 @@ MarkStandardClassInitializedNoProto(JSObject* obj, js::Class *clasp)
      * We use True so that it's obvious what we're doing (instead of, say,
      * Null, which might be miscontrued as an error in setting Undefined).
      */
-    if (obj->getReservedSlot(JS_GLOBAL_CTOR_SLOT(key)).isUndefined())
+    if (obj->getReservedSlot(key) == UndefinedValue())
         obj->setSlot(key, BooleanValue(true));
 }
 
@@ -4217,7 +4217,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
         return true;
     }
 
-    Value v = obj->getReservedSlot(JS_GLOBAL_CTOR_SLOT(key));
+    Value v = obj->getReservedSlot(key);
     if (v.isObject()) {
         *objp = &v.toObject();
         return true;
@@ -4234,7 +4234,7 @@ js_GetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key,
     if (JSObjectOp init = lazy_prototype_init[key]) {
         if (!init(cx, obj))
             return false;
-        v = obj->getReservedSlot(JS_GLOBAL_CTOR_SLOT(key));
+        v = obj->getReservedSlot(key);
         if (v.isObject())
             cobj = &v.toObject();
     }
@@ -4250,8 +4250,8 @@ js_SetClassObject(JSContext *cx, JSObject *obj, JSProtoKey key, JSObject *cobj, 
     if (!obj->isGlobal())
         return JS_TRUE;
 
-    return js_SetReservedSlot(cx, obj, JS_GLOBAL_CTOR_SLOT(key), ObjectOrNullValue(cobj)) &&
-           js_SetReservedSlot(cx, obj, JS_GLOBAL_PROTO_SLOT(key), ObjectOrNullValue(proto));
+    return js_SetReservedSlot(cx, obj, key, ObjectOrNullValue(cobj)) &&
+           js_SetReservedSlot(cx, obj, JSProto_LIMIT + key, ObjectOrNullValue(proto));
 }
 
 JSBool
@@ -4292,6 +4292,8 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         return JS_FALSE;
 
     if (protoKey != JSProto_Null) {
+        JS_ASSERT(JSProto_Null < protoKey);
+        JS_ASSERT(protoKey < JSProto_LIMIT);
         if (!js_GetClassObject(cx, obj, protoKey, &cobj))
             return JS_FALSE;
         if (cobj) {
@@ -6198,7 +6200,7 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
         }
         scopeobj = scopeobj->getGlobal();
         if (scopeobj->isGlobal()) {
-            const Value &v = scopeobj->getReservedSlot(JS_GLOBAL_PROTO_SLOT(protoKey));
+            const Value &v = scopeobj->getReservedSlot(JSProto_LIMIT + protoKey);
             if (v.isObject()) {
                 *protop = &v.toObject();
                 return true;
