@@ -697,7 +697,7 @@ canvas {
 /* focusable content: anything w/ tabindex >=0 is focusable, but we
    skip drawing a focus outline on a few things that handle it
    themselves. */
-:-moz-focusring:not(input):not(button):not(select):not(textarea):not(iframe):not(frame) {
+:-moz-focusring:not(input):not(button):not(select):not(textarea) {
   /* Don't specify the outline-color, we should always use initial value. */
    outline: 1px dotted;
 }
