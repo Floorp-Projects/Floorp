@@ -2179,10 +2179,19 @@ nsJSContext::GetGlobalObject()
     return nsnull;
   }
 
-  OBJ_TO_INNER_OBJECT(mContext, global);
-  if (!global) {
-    return nsnull;
+  if (mGlobalObjectRef)
+    return mGlobalObjectRef;
+
+#ifdef DEBUG
+  {
+    JSObject *inner = global;
+    OBJ_TO_INNER_OBJECT(mContext, inner);
+
+    // If this assertion hits then it means that we have a window object as
+    // our global, but we never called CreateOuterObject.
+    NS_ASSERTION(inner == global, "Shouldn't be able to innerize here");
   }
+#endif
 
   JSClass *c = JS_GET_CLASS(mContext, global);
 
@@ -2208,11 +2217,7 @@ nsJSContext::GetGlobalObject()
 
   // This'll return a pointer to something we're about to release, but
   // that's ok, the JS object will hold it alive long enough.
-  nsCOMPtr<nsPIDOMWindow> pwin(do_QueryInterface(sgo));
-  if (!pwin)
-    return sgo;
-
-  return static_cast<nsGlobalWindow *>(pwin->GetOuterWindow());
+  return sgo;
 }
 
 void *
