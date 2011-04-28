@@ -432,7 +432,9 @@ Arena<T> *
 Chunk::allocateArena(JSContext *cx, unsigned thingKind)
 {
 #ifdef JS_THREADSAFE
-    Conditionally<AutoLock> lockIf(cx->runtime->gcHelperThread.sweeping, info.chunkLock);
+    LazilyConstructed<AutoLock> maybeLock;
+    if (cx->runtime->gcHelperThread.sweeping)
+        maybeLock.construct(info.chunkLock);
 #endif
     JSCompartment *comp = cx->compartment;
     JS_ASSERT(hasAvailableArenas());
@@ -457,7 +459,9 @@ Chunk::releaseArena(Arena<T> *arena)
 {
     JSRuntime *rt = info.runtime;
 #ifdef JS_THREADSAFE
-    Conditionally<AutoLock> lockIf(rt->gcHelperThread.sweeping, info.chunkLock);
+    LazilyConstructed<AutoLock> maybeLock;
+    if (rt->gcHelperThread.sweeping)
+        maybeLock.construct(info.chunkLock);
 #endif
     JSCompartment *comp = arena->header()->compartment;
     METER(rt->gcStats.afree++);
@@ -1261,9 +1265,9 @@ RunLastDitchGC(JSContext *cx)
     JSRuntime *rt = cx->runtime;
     METER(rt->gcStats.lastditch++);
 #ifdef JS_THREADSAFE
-    Conditionally<AutoUnlockAtomsCompartment>
-        unlockAtomsCompartmenIf(cx->compartment == rt->atomsCompartment &&
-                                  rt->atomsCompartmentIsLocked, cx);
+    LazilyConstructed<AutoUnlockAtomsCompartment> maybeUnlockAtomsCompartment;
+    if (cx->compartment == rt->atomsCompartment && rt->atomsCompartmentIsLocked)
+        maybeUnlockAtomsCompartment.construct(cx);
 #endif
     /* The last ditch GC preserves all atoms. */
     AutoKeepAtoms keep(rt);
