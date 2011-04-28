@@ -155,6 +155,9 @@ protected:
   PR_STATIC_CALLBACK(PLDHashOperator) CompositorTableEntryTraverse(
       nsSMILCompositor* aCompositor, void* aArg);
 
+  // Returns mDocument's refresh driver, if it's got one.
+  nsRefreshDriver* GetRefreshDriver();
+
   // Methods for controlling whether we're sampling
   void StartSampling(nsRefreshDriver* aRefreshDriver);
   void StopSampling(nsRefreshDriver* aRefreshDriver);
