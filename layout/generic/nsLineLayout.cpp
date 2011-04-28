@@ -786,7 +786,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nscoord availableSpaceOnLine = psd->mRightEdge - psd->mX;
 
   // Setup reflow state for reflowing the frame
-  js::LazilyConstructed<nsHTMLReflowState> reflowStateHolder;
+  js::Maybe<nsHTMLReflowState> reflowStateHolder;
   if (!isText) {
     reflowStateHolder.construct(mPresContext, *psd->mReflowState,
                                 aFrame, availSize);

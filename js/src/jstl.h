@@ -270,29 +270,29 @@ struct AlignedStorage2
 
 /*
  * Small utility for lazily constructing objects without using dynamic storage.
- * When a LazilyConstructed<T> is constructed, it is |empty()|, i.e., no value
- * of T has been constructed and no T destructor will be called when the
- * LazilyConstructed<T> is destroyed. Upon calling |construct|, a T object will
- * be constructed with the given arguments and that object will be destroyed
- * when the owning LazilyConstructed<T> is destroyed.
+ * When a Maybe<T> is constructed, it is |empty()|, i.e., no value of T has
+ * been constructed and no T destructor will be called when the Maybe<T> is
+ * destroyed. Upon calling |construct|, a T object will be constructed with the
+ * given arguments and that object will be destroyed when the owning Maybe<T>
+ * is destroyed.
  *
- * N.B. GCC seems to miss some optimizations with LazilyConstructed and may
- * generate extra branches/loads/stores. Use with caution on hot paths.
+ * N.B. GCC seems to miss some optimizations with Maybe and may generate extra
+ * branches/loads/stores. Use with caution on hot paths.
  */
 template <class T>
-class LazilyConstructed
+class Maybe
 {
     AlignedStorage2<T> storage;
     bool constructed;
 
     T &asT() { return *storage.addr(); }
 
-    explicit LazilyConstructed(const LazilyConstructed &other);
-    const LazilyConstructed &operator=(const LazilyConstructed &other);
+    explicit Maybe(const Maybe &other);
+    const Maybe &operator=(const Maybe &other);
 
   public:
-    LazilyConstructed() { constructed = false; }
-    ~LazilyConstructed() { if (constructed) asT().~T(); }
+    Maybe() { constructed = false; }
+    ~Maybe() { if (constructed) asT().~T(); }
 
     bool empty() const { return !constructed; }
 

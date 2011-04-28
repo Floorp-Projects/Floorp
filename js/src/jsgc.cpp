@@ -432,7 +432,7 @@ Arena<T> *
 Chunk::allocateArena(JSContext *cx, unsigned thingKind)
 {
 #ifdef JS_THREADSAFE
-    LazilyConstructed<AutoLock> maybeLock;
+    Maybe<AutoLock> maybeLock;
     if (cx->runtime->gcHelperThread.sweeping)
         maybeLock.construct(info.chunkLock);
 #endif
@@ -459,7 +459,7 @@ Chunk::releaseArena(Arena<T> *arena)
 {
     JSRuntime *rt = info.runtime;
 #ifdef JS_THREADSAFE
-    LazilyConstructed<AutoLock> maybeLock;
+    Maybe<AutoLock> maybeLock;
     if (rt->gcHelperThread.sweeping)
         maybeLock.construct(info.chunkLock);
 #endif
@@ -1265,7 +1265,7 @@ RunLastDitchGC(JSContext *cx)
     JSRuntime *rt = cx->runtime;
     METER(rt->gcStats.lastditch++);
 #ifdef JS_THREADSAFE
-    LazilyConstructed<AutoUnlockAtomsCompartment> maybeUnlockAtomsCompartment;
+    Maybe<AutoUnlockAtomsCompartment> maybeUnlockAtomsCompartment;
     if (cx->compartment == rt->atomsCompartment && rt->atomsCompartmentIsLocked)
         maybeUnlockAtomsCompartment.construct(cx);
 #endif
