@@ -7385,7 +7385,7 @@ JSBool
 js_GetAnyName(JSContext *cx, jsid *idp)
 {
     JSObject *global = cx->running() ? cx->fp()->scopeChain().getGlobal() : cx->globalObject;
-    Value v = global->getReservedSlot(JS_GLOBAL_CTOR_SLOT(JSProto_AnyName));
+    Value v = global->getReservedSlot(JSProto_AnyName);
     if (v.isUndefined()) {
         JSObject *obj = NewNonFunction<WithProto::Given>(cx, &js_AnyNameClass, NULL, global);
         if (!obj)
@@ -7398,7 +7398,7 @@ js_GetAnyName(JSContext *cx, jsid *idp)
         METER(xml_stats.qname);
 
         v.setObject(*obj);
-        if (!js_SetReservedSlot(cx, global, JS_GLOBAL_CTOR_SLOT(JSProto_AnyName), v))
+        if (!js_SetReservedSlot(cx, global, JSProto_AnyName, v))
             return false;
     }
     *idp = OBJECT_TO_JSID(&v.toObject());
