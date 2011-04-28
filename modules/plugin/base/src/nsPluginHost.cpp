@@ -1769,24 +1769,7 @@ static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
     fullPath = aPluginTag->mFullPath;
   }
 
-#if defined(XP_MACOSX) && !defined(__LP64__)
-  short appRefNum = ::CurResFile();
-  nsCOMPtr<nsILocalFile> pluginPath;
-  NS_NewNativeLocalFile(nsDependentCString(fullPath.get()), PR_TRUE,
-                        getter_AddRefs(pluginPath));
-  nsPluginFile pluginFile(pluginPath);
-  short pluginRefNum = pluginFile.OpenPluginResource();
-#endif
-
   rv = nsNPAPIPlugin::CreatePlugin(aPluginTag, aOutNPAPIPlugin);
-
-#if defined(XP_MACOSX) && !defined(__LP64__)
-  if (NS_SUCCEEDED(rv))
-    (*aOutNPAPIPlugin)->SetPluginRefNum(pluginRefNum);
-  else if (pluginRefNum > 0)
-    ::CloseResFile(pluginRefNum);
-  ::UseResFile(appRefNum);
-#endif
 
   return rv;
 }

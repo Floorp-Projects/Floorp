@@ -106,11 +106,6 @@ public:
   static PRBool RunPluginOOP(const nsPluginTag *aPluginTag);
 
 protected:
-
-#if defined(XP_MACOSX) && !defined(__LP64__)
-  short mPluginRefNum;
-#endif
-
   NPPluginFuncs mPluginFuncs;
   PluginLibrary* mLibrary;
 };
