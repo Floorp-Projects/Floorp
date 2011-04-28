@@ -298,7 +298,7 @@ private:
 
   // mGlobalObjectRef ensures that the outer window stays alive as long as the
   // context does. It is eventually collected by the cycle collector.
-  nsCOMPtr<nsISupports> mGlobalObjectRef;
+  nsCOMPtr<nsIScriptGlobalObject> mGlobalObjectRef;
 
   static int JSOptionChangedCallback(const char *pref, void *data);
 
