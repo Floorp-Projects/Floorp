@@ -236,13 +236,28 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::Typ
         return true;
     }
 
+    /*
+     * If this is an operation on which integer overflows can be ignored, treat
+     * the result as an integer even if it has been marked as overflowing by
+     * the interpreter. Doing this changes the values we maintain on the stack
+     * from those the interpreter would maintain; this is OK as values derived
+     * from ignored overflows are not live across points where the interpreter
+     * can join into JIT code (loop heads and safe points).
+     */
+    bool cannotOverflow = loop && loop->cannotIntegerOverflow();
+    bool ignoreOverflow = loop && loop->ignoreIntegerOverflow();
+
+    if (rhs->isType(JSVAL_TYPE_INT32) && lhs->isType(JSVAL_TYPE_INT32) &&
+        op == JSOP_ADD && ignoreOverflow) {
+        type = JSVAL_TYPE_INT32;
+    }
+
     /* Can do int math iff there is no double constant and the op is not division. */
     bool canDoIntMath = op != JSOP_DIV && type != JSVAL_TYPE_DOUBLE &&
-                        !((rhs->isTypeKnown() && rhs->getKnownType() == JSVAL_TYPE_DOUBLE) ||
-                          (lhs->isTypeKnown() && lhs->getKnownType() == JSVAL_TYPE_DOUBLE));
+                        !(rhs->isType(JSVAL_TYPE_DOUBLE) || lhs->isType(JSVAL_TYPE_DOUBLE));
 
     if (canDoIntMath)
-        jsop_binary_full(lhs, rhs, op, stub, type);
+        jsop_binary_full(lhs, rhs, op, stub, type, cannotOverflow, ignoreOverflow);
     else
         jsop_binary_double(lhs, rhs, op, stub, type);
 
@@ -551,7 +566,8 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub, 
  */
 void
 mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
-                                 VoidStub stub, JSValueType type)
+                                 VoidStub stub, JSValueType type,
+                                 bool cannotOverflow, bool ignoreOverflow)
 {
     if (frame.haveSameBacking(lhs, rhs)) {
         jsop_binary_full_simple(lhs, op, stub, type);
@@ -623,29 +639,43 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
     MaybeJump overflow;
     switch (op) {
       case JSOP_ADD:
-        if (reg.isSet())
-            overflow = masm.branchAdd32(Assembler::Overflow, reg.reg(), regs.result);
-        else
-            overflow = masm.branchAdd32(Assembler::Overflow, Imm32(value), regs.result);
+        if (cannotOverflow || ignoreOverflow) {
+            if (reg.isSet())
+                masm.add32(reg.reg(), regs.result);
+            else
+                masm.add32(Imm32(value), regs.result);
+        } else {
+            if (reg.isSet())
+                overflow = masm.branchAdd32(Assembler::Overflow, reg.reg(), regs.result);
+            else
+                overflow = masm.branchAdd32(Assembler::Overflow, Imm32(value), regs.result);
+        }
         break;
 
       case JSOP_SUB:
-        if (reg.isSet())
-            overflow = masm.branchSub32(Assembler::Overflow, reg.reg(), regs.result);
-        else
-            overflow = masm.branchSub32(Assembler::Overflow, Imm32(value), regs.result);
+        if (cannotOverflow) {
+            if (reg.isSet())
+                masm.sub32(reg.reg(), regs.result);
+            else
+                masm.sub32(Imm32(value), regs.result);
+        } else {
+            if (reg.isSet())
+                overflow = masm.branchSub32(Assembler::Overflow, reg.reg(), regs.result);
+            else
+                overflow = masm.branchSub32(Assembler::Overflow, Imm32(value), regs.result);
+        }
         break;
 
 #if !defined(JS_CPU_ARM)
       case JSOP_MUL:
       {
         JS_ASSERT(reg.isSet());
-        
+
         MaybeJump storeNegZero;
-        bool maybeNegZero = true;
+        bool maybeNegZero = !ignoreOverflow;
         bool hasConstant = (lhs->isConstant() || rhs->isConstant());
-        
-        if (hasConstant) {
+
+        if (hasConstant && maybeNegZero) {
             value = (lhs->isConstant() ? lhs : rhs)->getValue().toInt32();
             RegisterID nonConstReg = lhs->isConstant() ? regs.rhsData.reg() : regs.lhsData.reg();
 
@@ -656,7 +686,11 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
             else
                 storeNegZero = masm.branch32(Assembler::LessThan, nonConstReg, Imm32(0));
         }
-        overflow = masm.branchMul32(Assembler::Overflow, reg.reg(), regs.result);
+
+        if (cannotOverflow)
+            masm.mul32(reg.reg(), regs.result);
+        else
+            overflow = masm.branchMul32(Assembler::Overflow, reg.reg(), regs.result);
 
         if (maybeNegZero) {
             if (hasConstant) {
@@ -694,8 +728,6 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
     }
     op = origOp;
     
-    JS_ASSERT(overflow.isSet());
-
     /*
      * Integer overflow path. Restore the original values and make a stub call,
      * which could trigger recompilation.
@@ -703,7 +735,8 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
     MaybeJump overflowDone;
     if (preOverflow.isSet())
         stubcc.linkExitDirect(preOverflow.get(), stubcc.masm.label());
-    stubcc.linkExitDirect(overflow.get(), stubcc.masm.label());
+    if (overflow.isSet())
+        stubcc.linkExitDirect(overflow.get(), stubcc.masm.label());
 
     /* Restore the original operand registers for ADD. */
     if (regs.undoResult) {
