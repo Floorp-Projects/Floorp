@@ -253,6 +253,13 @@ protected:
                                  nsIDOMElement* aListener,
                                  nsIAtom* aAttr);
 
+    nsresult
+    BroadcastAttributeChangeFromOverlay(nsIContent* aNode,
+                                        PRInt32 aNameSpaceID,
+                                        nsIAtom* aAttribute,
+                                        nsIAtom* aPrefix,
+                                        const nsAString& aValue);
+
     already_AddRefed<nsPIWindowRoot> GetWindowRoot();
 
     PRInt32 GetDefaultNamespaceID() const

@@ -61,6 +61,7 @@
 #endif
 #include "nsIServiceManager.h"
 #include "nsDisplayList.h"
+#include "nsRenderingContext.h"
 
 class nsLegendFrame;
 
@@ -74,11 +75,11 @@ public:
                                  nsFrameList&   aChildList);
 
   NS_HIDDEN_(nscoord)
-    GetIntrinsicWidth(nsIRenderingContext* aRenderingContext,
+    GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
                       nsLayoutUtils::IntrinsicWidthType);
-  virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext);
-  virtual nscoord GetPrefWidth(nsIRenderingContext* aRenderingContext);
-  virtual nsSize ComputeSize(nsIRenderingContext *aRenderingContext,
+  virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext);
+  virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext);
+  virtual nsSize ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap);
@@ -93,7 +94,7 @@ public:
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);
 
-  void PaintBorderBackground(nsIRenderingContext& aRenderingContext,
+  void PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect, PRUint32 aBGFlags);
 
   NS_IMETHOD AppendFrames(nsIAtom*       aListName,
@@ -190,7 +191,7 @@ public:
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsIRenderingContext* aCtx);
+                     nsRenderingContext* aCtx);
   NS_DISPLAY_DECL_NAME("FieldSetBorderBackground", TYPE_FIELDSET_BORDER_BACKGROUND)
 };
 
@@ -205,7 +206,7 @@ void nsDisplayFieldSetBorderBackground::HitTest(nsDisplayListBuilder* aBuilder, 
 
 void
 nsDisplayFieldSetBorderBackground::Paint(nsDisplayListBuilder* aBuilder,
-                                         nsIRenderingContext* aCtx)
+                                         nsRenderingContext* aCtx)
 {
   static_cast<nsFieldSetFrame*>(mFrame)->
     PaintBorderBackground(*aCtx, ToReferenceFrame(),
@@ -267,7 +268,7 @@ nsFieldSetFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
+nsFieldSetFrame::PaintBorderBackground(nsRenderingContext& aRenderingContext,
     nsPoint aPt, const nsRect& aDirtyRect, PRUint32 aBGFlags)
 {
   PRIntn skipSides = GetSkipSides();
@@ -307,7 +308,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     clipRect.height = topBorder;
 
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
@@ -321,7 +322,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     clipRect.height = topBorder;
 
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
@@ -334,7 +335,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
     clipRect.height = mRect.height - (yoff + topBorder);
     
     aRenderingContext.PushState();
-    aRenderingContext.SetClipRect(clipRect, nsClipCombine_kIntersect);
+    aRenderingContext.IntersectClip(clipRect);
     nsCSSRendering::PaintBorder(presContext, aRenderingContext, this,
                                 aDirtyRect, rect, mStyleContext, skipSides);
 
@@ -349,7 +350,7 @@ nsFieldSetFrame::PaintBorderBackground(nsIRenderingContext& aRenderingContext,
 }
 
 nscoord
-nsFieldSetFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext,
+nsFieldSetFrame::GetIntrinsicWidth(nsRenderingContext* aRenderingContext,
                                    nsLayoutUtils::IntrinsicWidthType aType)
 {
   nscoord legendWidth = 0;
@@ -371,7 +372,7 @@ nsFieldSetFrame::GetIntrinsicWidth(nsIRenderingContext* aRenderingContext,
 
 
 nscoord
-nsFieldSetFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
+nsFieldSetFrame::GetMinWidth(nsRenderingContext* aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_MIN_WIDTH(this, result);
@@ -381,7 +382,7 @@ nsFieldSetFrame::GetMinWidth(nsIRenderingContext* aRenderingContext)
 }
 
 nscoord
-nsFieldSetFrame::GetPrefWidth(nsIRenderingContext* aRenderingContext)
+nsFieldSetFrame::GetPrefWidth(nsRenderingContext* aRenderingContext)
 {
   nscoord result = 0;
   DISPLAY_PREF_WIDTH(this, result);
@@ -391,7 +392,7 @@ nsFieldSetFrame::GetPrefWidth(nsIRenderingContext* aRenderingContext)
 }
 
 /* virtual */ nsSize
-nsFieldSetFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+nsFieldSetFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                              nsSize aCBSize, nscoord aAvailableWidth,
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              PRBool aShrinkWrap)
@@ -496,7 +497,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     FinishReflowChild(mLegendFrame, aPresContext, &legendReflowState, 
                       legendDesiredSize, 0, 0, NS_FRAME_NO_MOVE_FRAME);    
   } else if (!mLegendFrame) {
-    mLegendRect.Empty();
+    mLegendRect.SetEmpty();
     mLegendSpace = 0;
   } else {
     // mLegendSpace and mLegendRect haven't changed, but we need

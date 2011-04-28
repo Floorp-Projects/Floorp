@@ -740,7 +740,7 @@ static PRInt32 GetMaxBlocks()
   // to the pref are applied.
   // Cache size is in KB
   PRInt32 cacheSize = nsContentUtils::GetIntPref("media.cache_size", 500*1024);
-  PRInt64 maxBlocks = PRInt64(cacheSize)*1024/nsMediaCache::BLOCK_SIZE;
+  PRInt64 maxBlocks = static_cast<PRInt64>(cacheSize)*1024/nsMediaCache::BLOCK_SIZE;
   maxBlocks = PR_MAX(maxBlocks, 1);
   return PRInt32(PR_MIN(maxBlocks, PR_INT32_MAX));
 }
@@ -1032,7 +1032,7 @@ nsMediaCache::PredictNextUse(TimeStamp aNow, PRInt32 aBlock)
     case PLAYED_BLOCK:
       // This block should be managed in LRU mode, and we should impose
       // a "replay delay" to reflect the likelihood of replay happening
-      NS_ASSERTION(PRInt64(bo->mStreamBlock)*BLOCK_SIZE <
+      NS_ASSERTION(static_cast<PRInt64>(bo->mStreamBlock)*BLOCK_SIZE <
                    bo->mStream->mStreamOffset,
                    "Played block after the current stream position?");
       prediction = aNow - bo->mLastUseTime +
@@ -1040,7 +1040,7 @@ nsMediaCache::PredictNextUse(TimeStamp aNow, PRInt32 aBlock)
       break;
     case READAHEAD_BLOCK: {
       PRInt64 bytesAhead =
-        PRInt64(bo->mStreamBlock)*BLOCK_SIZE - bo->mStream->mStreamOffset;
+        static_cast<PRInt64>(bo->mStreamBlock)*BLOCK_SIZE - bo->mStream->mStreamOffset;
       NS_ASSERTION(bytesAhead >= 0,
                    "Readahead block before the current stream position?");
       PRInt64 millisecondsAhead =

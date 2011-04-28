@@ -1,8 +1,8 @@
 
 /* pngpread.c - read a png file in push mode
  *
- * Last changed in libpng 1.4.3 [June 26, 2010]
- * Copyright (c) 1998-2010 Glenn Randers-Pehrson
+ * Last changed in libpng 1.4.6 [March 8, 2011]
+ * Copyright (c) 1998-2011 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -234,9 +234,9 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
       png_check_chunk_name(png_ptr, png_ptr->chunk_name);
       png_ptr->mode |= PNG_HAVE_CHUNK_HEADER;
    }
-   
+
 #ifdef PNG_READ_APNG_SUPPORTED
-   if (png_ptr->num_frames_read > 0 && 
+   if (png_ptr->num_frames_read > 0 &&
        png_ptr->num_frames_read < info_ptr->num_frames)
    {
       if (!png_memcmp(png_ptr->chunk_name, png_IDAT, 4))
@@ -244,7 +244,7 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
          /* Discard trailing IDATs for the first frame */
          if (png_ptr->mode & PNG_HAVE_fcTL || png_ptr->num_frames_read > 1)
             png_error(png_ptr, "out of place IDAT");
-         
+
          if (png_ptr->push_length + 4 > png_ptr->buffer_size)
          {
             png_push_save_buffer(png_ptr);
@@ -262,13 +262,13 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
             return;
          }
          png_ensure_sequence_number(png_ptr, 4);
-         
+
          if (!(png_ptr->mode & PNG_HAVE_fcTL))
          {
             /* Discard trailing fdATs for frames other than the first */
             if (png_ptr->num_frames_read < 2)
                png_error(png_ptr, "out of place fdAT");
-            
+
             if (png_ptr->push_length + 4 > png_ptr->buffer_size)
             {
                png_push_save_buffer(png_ptr);
@@ -284,7 +284,7 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
             png_ptr->idat_size = png_ptr->push_length - 4;
             png_ptr->mode |= PNG_HAVE_IDAT;
             png_ptr->process_mode = PNG_READ_IDAT_MODE;
-            
+
             return;
          }
       }
@@ -295,23 +295,23 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
             png_push_save_buffer(png_ptr);
             return;
          }
-         
+
          png_read_reset(png_ptr);
          png_ptr->mode &= ~PNG_HAVE_fcTL;
-         
+
          png_handle_fcTL(png_ptr, info_ptr, png_ptr->push_length);
-         
+
          if (!(png_ptr->mode & PNG_HAVE_fcTL))
             png_error(png_ptr, "missing required fcTL chunk");
-         
+
          png_read_reinit(png_ptr, info_ptr);
          png_progressive_read_reset(png_ptr);
-         
+
          if (png_ptr->frame_info_fn != NULL)
             (*(png_ptr->frame_info_fn))(png_ptr, png_ptr->num_frames_read);
-         
+
          png_ptr->mode &= ~PNG_HAVE_CHUNK_HEADER;
-         
+
          return;
       }
       else
@@ -327,11 +327,11 @@ png_push_read_chunk(png_structp png_ptr, png_infop info_ptr)
          png_ptr->mode &= ~PNG_HAVE_CHUNK_HEADER;
          return;
       }
-      
+
       return;
    }
 #endif /* PNG_READ_APNG_SUPPORTED */
-   
+
    if (!png_memcmp(png_ptr->chunk_name, png_IDAT, 4))
       if (png_ptr->mode & PNG_AFTER_IDAT)
          png_ptr->mode |= PNG_HAVE_CHUNK_AFTER_IDAT;
@@ -921,7 +921,7 @@ png_push_read_IDAT(png_structp png_ptr)
               return;
           }
       }
-      else 
+      else
 #endif
 #ifdef PNG_READ_APNG_SUPPORTED
       if (png_memcmp(png_ptr->chunk_name, png_IDAT, 4)
@@ -942,7 +942,7 @@ png_push_read_IDAT(png_structp png_ptr)
       }
 
       png_ptr->idat_size = png_ptr->push_length;
-      
+
 #ifdef PNG_READ_APNG_SUPPORTED
       if (png_ptr->num_frames_read > 0)
       {
@@ -1032,7 +1032,7 @@ png_process_IDAT_data(png_structp png_ptr, png_bytep buffer,
     * or the stream marked as finished.
     */
    while (png_ptr->zstream.avail_in > 0 &&
-	  !(png_ptr->flags & PNG_FLAG_ZLIB_FINISHED))
+      !(png_ptr->flags & PNG_FLAG_ZLIB_FINISHED))
    {
       int ret;
 
@@ -1061,49 +1061,49 @@ png_process_IDAT_data(png_structp png_ptr, png_bytep buffer,
       /* Check for any failure before proceeding. */
       if (ret != Z_OK && ret != Z_STREAM_END)
       {
-	 /* Terminate the decompression. */
-	 png_ptr->flags |= PNG_FLAG_ZLIB_FINISHED;
+         /* Terminate the decompression. */
+         png_ptr->flags |= PNG_FLAG_ZLIB_FINISHED;
 
          /* This may be a truncated stream (missing or
-	  * damaged end code).  Treat that as a warning.
-	  */
+          * damaged end code).  Treat that as a warning.
+          */
          if (png_ptr->row_number >= png_ptr->num_rows ||
-	     png_ptr->pass > 6)
-	    png_warning(png_ptr, "Truncated compressed data in IDAT");
-	 else
-	    png_error(png_ptr, "Decompression error in IDAT");
+             png_ptr->pass > 6)
+            png_warning(png_ptr, "Truncated compressed data in IDAT");
+         else
+            png_error(png_ptr, "Decompression error in IDAT");
 
-	 /* Skip the check on unprocessed input */
+         /* Skip the check on unprocessed input */
          return;
       }
 
       /* Did inflate output any data? */
       if (png_ptr->zstream.next_out != png_ptr->row_buf)
       {
-	 /* Is this unexpected data after the last row?
-	  * If it is, artificially terminate the LZ output
-	  * here.
-	  */
+         /* Is this unexpected data after the last row?
+          * If it is, artificially terminate the LZ output
+          * here.
+          */
          if (png_ptr->row_number >= png_ptr->num_rows ||
-	     png_ptr->pass > 6)
+             png_ptr->pass > 6)
          {
-	    /* Extra data. */
-	    png_warning(png_ptr, "Extra compressed data in IDAT");
+            /* Extra data. */
+            png_warning(png_ptr, "Extra compressed data in IDAT");
             png_ptr->flags |= PNG_FLAG_ZLIB_FINISHED;
-	    /* Do no more processing; skip the unprocessed
-	     * input check below.
-	     */
+            /* Do no more processing; skip the unprocessed
+             * input check below.
+             */
             return;
-	 }
+         }
 
-	 /* Do we have a complete row? */
-	 if (png_ptr->zstream.avail_out == 0)
-	    png_push_process_row(png_ptr);
+         /* Do we have a complete row? */
+         if (png_ptr->zstream.avail_out == 0)
+            png_push_process_row(png_ptr);
       }
 
       /* And check for the end of the stream. */
       if (ret == Z_STREAM_END)
-	 png_ptr->flags |= PNG_FLAG_ZLIB_FINISHED;
+         png_ptr->flags |= PNG_FLAG_ZLIB_FINISHED;
    }
 
    /* All the data should have been processed, if anything
@@ -1177,7 +1177,7 @@ png_push_process_row(png_structp png_ptr)
 
             if (png_ptr->pass == 6 && png_ptr->height <= 4)
             {
-                  png_push_have_row(png_ptr, NULL);
+                png_push_have_row(png_ptr, NULL);
                 png_read_push_finish_row(png_ptr);
             }
 
@@ -1217,7 +1217,7 @@ png_push_process_row(png_structp png_ptr)
 
             for (i = 0; i < 4 && png_ptr->pass == 2; i++)
             {
-                  png_push_have_row(png_ptr, NULL);
+               png_push_have_row(png_ptr, NULL);
                png_read_push_finish_row(png_ptr);
             }
 
@@ -1267,13 +1267,13 @@ png_push_process_row(png_structp png_ptr)
 
             for (i = 0; i < 2 && png_ptr->pass == 4; i++)
             {
-                  png_push_have_row(png_ptr, NULL);
+               png_push_have_row(png_ptr, NULL);
                png_read_push_finish_row(png_ptr);
             }
 
             if (png_ptr->pass == 6) /* Pass 5 might be empty */
             {
-                  png_push_have_row(png_ptr, NULL);
+               png_push_have_row(png_ptr, NULL);
                png_read_push_finish_row(png_ptr);
             }
 
@@ -1292,12 +1292,14 @@ png_push_process_row(png_structp png_ptr)
 
             if (png_ptr->pass == 6) /* Skip top generated row */
             {
-                  png_push_have_row(png_ptr, NULL);
+               png_push_have_row(png_ptr, NULL);
                png_read_push_finish_row(png_ptr);
             }
 
             break;
          }
+
+         default:
          case 6:
          {
             png_push_have_row(png_ptr, png_ptr->row_buf + 1);
@@ -1306,7 +1308,7 @@ png_push_process_row(png_structp png_ptr)
             if (png_ptr->pass != 6)
                break;
 
-                  png_push_have_row(png_ptr, NULL);
+            png_push_have_row(png_ptr, NULL);
             png_read_push_finish_row(png_ptr);
          }
       }
@@ -1391,7 +1393,7 @@ png_push_handle_tEXt(png_structp png_ptr, png_infop info_ptr, png_uint_32
    if (!(png_ptr->mode & PNG_HAVE_IHDR) || (png_ptr->mode & PNG_HAVE_IEND))
       {
          png_error(png_ptr, "Out of place tEXt");
-         info_ptr = info_ptr; /* To quiet some compiler warnings */
+         PNG_UNUSED(info_ptr) /* To quiet some compiler warnings */
       }
 
 #ifdef PNG_MAX_MALLOC_64K
@@ -1489,7 +1491,7 @@ png_push_handle_zTXt(png_structp png_ptr, png_infop info_ptr, png_uint_32
    if (!(png_ptr->mode & PNG_HAVE_IHDR) || (png_ptr->mode & PNG_HAVE_IEND))
       {
          png_error(png_ptr, "Out of place zTXt");
-         info_ptr = info_ptr; /* To quiet some compiler warnings */
+         PNG_UNUSED(info_ptr) /* To quiet some compiler warnings */
       }
 
 #ifdef PNG_MAX_MALLOC_64K
@@ -1690,7 +1692,7 @@ png_push_handle_iTXt(png_structp png_ptr, png_infop info_ptr, png_uint_32
    if (!(png_ptr->mode & PNG_HAVE_IHDR) || (png_ptr->mode & PNG_HAVE_IEND))
       {
          png_error(png_ptr, "Out of place iTXt");
-         info_ptr = info_ptr; /* To quiet some compiler warnings */
+         PNG_UNUSED(info_ptr) /* To quiet some compiler warnings */
       }
 
 #ifdef PNG_MAX_MALLOC_64K
@@ -1817,15 +1819,14 @@ png_push_handle_unknown(png_structp png_ptr, png_infop info_ptr, png_uint_32
    {
 #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
       if (png_handle_as_unknown(png_ptr, png_ptr->chunk_name) !=
-          PNG_HANDLE_CHUNK_ALWAYS
+         PNG_HANDLE_CHUNK_ALWAYS
 #ifdef PNG_READ_USER_CHUNKS_SUPPORTED
-          && png_ptr->read_user_chunk_fn == NULL
+         && png_ptr->read_user_chunk_fn == NULL
 #endif
-          )
+         )
 #endif
          png_chunk_error(png_ptr, "unknown critical chunk");
-
-      info_ptr = info_ptr; /* To quiet some compiler warnings */
+         PNG_UNUSED(info_ptr) /* To quiet some compiler warnings */
    }
 
 #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
@@ -1915,7 +1916,7 @@ png_push_have_row(png_structp png_ptr, png_bytep row)
 }
 
 void PNGAPI
-png_progressive_combine_row (png_structp png_ptr,
+png_progressive_combine_row(png_structp png_ptr,
    png_bytep old_row, png_bytep new_row)
 {
    PNG_CONST int FARDATA png_pass_dsp_mask[7] =
@@ -1955,7 +1956,7 @@ png_set_progressive_frame_fn(png_structp png_ptr,
 #endif
 
 png_voidp PNGAPI
-png_get_progressive_ptr(png_structp png_ptr)
+png_get_progressive_ptr(png_const_structp png_ptr)
 {
    if (png_ptr == NULL)
       return (NULL);

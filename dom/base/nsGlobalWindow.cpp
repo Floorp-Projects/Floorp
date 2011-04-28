@@ -63,6 +63,7 @@
 #include "prmem.h"
 #include "jsapi.h"              // for JSAutoRequest
 #include "jsdbgapi.h"           // for JS_ClearWatchPointsForObject
+#include "jsfriendapi.h"        // for JS_GetFrameScopeChainRaw
 #include "nsReadableUtils.h"
 #include "nsDOMClassInfo.h"
 #include "nsJSEnvironment.h"
@@ -86,6 +87,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "nsDOMThreadService.h"
 #include "nsAutoJSValHolder.h"
+#include "nsDOMMediaQueryList.h"
 
 // Interfaces Needed
 #include "nsIFrame.h"
@@ -119,6 +121,7 @@
 #include "nsIDOMMessageEvent.h"
 #include "nsIDOMPopupBlockedEvent.h"
 #include "nsIDOMPopStateEvent.h"
+#include "nsIDOMHashChangeEvent.h"
 #include "nsIDOMOfflineResourceList.h"
 #include "nsIDOMGeoGeolocation.h"
 #include "nsIDOMDesktopNotification.h"
@@ -126,7 +129,7 @@
 #include "nsDOMString.h"
 #include "nsIEmbeddingSiteWindow2.h"
 #include "nsThreadUtils.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsIJSContextStack.h"
 #include "nsIJSRuntimeService.h"
@@ -2760,13 +2763,10 @@ nsGlobalWindow::DispatchDOMEvent(nsEvent* aEvent,
 }
 
 void
-nsGlobalWindow::OnFinalize(PRUint32 aLangID, void *aObject)
+nsGlobalWindow::OnFinalize(JSObject* aObject)
 {
-  NS_ASSERTION(aLangID == nsIProgrammingLanguage::JAVASCRIPT,
-               "We don't support this language ID");
-
   if (aObject == mJSObject) {
-    mJSObject = nsnull;
+    mJSObject = NULL;
   }
 }
 
@@ -3922,6 +3922,32 @@ nsGlobalWindow::GetMozAnimationStartTime(PRInt64 *aTime)
 
   // If all else fails, just be compatible with Date.now()
   *aTime = JS_Now() / PR_USEC_PER_MSEC;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalWindow::MatchMedia(const nsAString& aMediaQueryList,
+                           nsIDOMMediaQueryList** aResult)
+{
+  // FIXME: This whole forward-to-outer and then get a pres
+  // shell/context off the docshell dance is sort of silly; it'd make
+  // more sense to forward to the inner, but it's what everyone else
+  // (GetSelection, GetScrollXY, etc.) does around here.
+  FORWARD_TO_OUTER(MatchMedia, (aMediaQueryList, aResult),
+                   NS_ERROR_NOT_INITIALIZED);
+
+  *aResult = nsnull;
+
+  if (!mDocShell)
+    return NS_OK;
+
+  nsRefPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+
+  if (!presContext)
+    return NS_OK;
+
+  presContext->MatchMedia(aMediaQueryList, aResult);
   return NS_OK;
 }
 
@@ -5122,9 +5148,9 @@ nsGlobalWindow::Print()
         printSettingsService->GetNewPrintSettings(getter_AddRefs(printSettings));
       }
 
-      EnterModalState();
+      nsCOMPtr<nsIDOMWindow> callerWin = EnterModalState();
       webBrowserPrint->Print(printSettings, nsnull);
-      LeaveModalState(nsnull);
+      LeaveModalState(callerWin);
 
       PRBool savePrintSettings =
         nsContentUtils::GetBoolPref("print.save_print_settings", PR_FALSE);
@@ -5826,13 +5852,13 @@ nsGlobalWindow::CallerInnerWindow()
   JSStackFrame *fp = nsnull;
   JS_FrameIterator(cx, &fp);
   if (fp) {
-    while (fp->isDummyFrame()) {
+    while (!JS_IsScriptFrame(cx, fp)) {
       if (!JS_FrameIterator(cx, &fp))
         break;
     }
 
     if (fp)
-      scope = &fp->scopeChain();
+      scope = JS_GetFrameScopeChainRaw(fp);
   }
 
   if (!scope)
@@ -6483,8 +6509,6 @@ nsGlobalWindow::LeaveModalState(nsIDOMWindow *aCallerWin)
     }
   }
 
-  JSContext *cx = nsContentUtils::GetCurrentJSContext();
-
   if (aCallerWin) {
     nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(aCallerWin));
     nsIScriptContext *scx = sgo->GetContext();
@@ -6836,7 +6860,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
 
   options.AppendLiteral(",scrollbars=1,centerscreen=1,resizable=0");
 
-  EnterModalState();
+  nsCOMPtr<nsIDOMWindow> callerWin = EnterModalState();
   nsresult rv = OpenInternal(aURI, EmptyString(), options,
                              PR_FALSE,          // aDialog
                              PR_TRUE,           // aContentModal
@@ -6846,7 +6870,7 @@ nsGlobalWindow::ShowModalDialog(const nsAString& aURI, nsIVariant *aArgs,
                              GetPrincipal(),    // aCalleePrincipal
                              nsnull,            // aJSCallerContext
                              getter_AddRefs(dlgWin));
-  LeaveModalState(nsnull);
+  LeaveModalState(callerWin);
 
   NS_ENSURE_SUCCESS(rv, rv);
   
@@ -7686,19 +7710,59 @@ nsGlobalWindow::PageHidden()
   mNeedsFocus = PR_TRUE;
 }
 
-nsresult
-nsGlobalWindow::DispatchAsyncHashchange()
+class HashchangeCallback : public nsRunnable
 {
-  FORWARD_TO_INNER(DispatchAsyncHashchange, (), NS_OK);
+public:
+  HashchangeCallback(const nsAString &aOldURL,
+                     const nsAString &aNewURL,
+                     nsGlobalWindow* aWindow)
+    : mWindow(aWindow)
+  {
+    mOldURL.Assign(aOldURL);
+    mNewURL.Assign(aNewURL);
+  }
 
-  nsCOMPtr<nsIRunnable> event =
-    NS_NewRunnableMethod(this, &nsGlobalWindow::FireHashchange);
+  NS_IMETHOD Run()
+  {
+    NS_PRECONDITION(NS_IsMainThread(), "Should be called on the main thread.");
+    return mWindow->FireHashchange(mOldURL, mNewURL);
+  }
 
-  return NS_DispatchToCurrentThread(event);
+private:
+  nsString mOldURL;
+  nsString mNewURL;
+  nsRefPtr<nsGlobalWindow> mWindow;
+};
+
+nsresult
+nsGlobalWindow::DispatchAsyncHashchange(nsIURI *aOldURI, nsIURI *aNewURI)
+{
+  FORWARD_TO_INNER(DispatchAsyncHashchange, (aOldURI, aNewURI), NS_OK);
+
+  // Make sure that aOldURI and aNewURI are identical up to the '#', and that
+  // their hashes are different.
+  nsCAutoString oldBeforeHash, oldHash, newBeforeHash, newHash;
+  nsContentUtils::SplitURIAtHash(aOldURI, oldBeforeHash, oldHash);
+  nsContentUtils::SplitURIAtHash(aNewURI, newBeforeHash, newHash);
+
+  NS_ENSURE_STATE(oldBeforeHash.Equals(newBeforeHash));
+  NS_ENSURE_STATE(!oldHash.Equals(newHash));
+
+  nsCAutoString oldSpec, newSpec;
+  aOldURI->GetSpec(oldSpec);
+  aNewURI->GetSpec(newSpec);
+
+  NS_ConvertUTF8toUTF16 oldWideSpec(oldSpec);
+  NS_ConvertUTF8toUTF16 newWideSpec(newSpec);
+
+  nsCOMPtr<nsIRunnable> callback =
+    new HashchangeCallback(oldWideSpec, newWideSpec, this);
+  return NS_DispatchToMainThread(callback);
 }
 
 nsresult
-nsGlobalWindow::FireHashchange()
+nsGlobalWindow::FireHashchange(const nsAString &aOldURL,
+                               const nsAString &aNewURL)
 {
   NS_ENSURE_TRUE(IsInnerWindow(), NS_ERROR_FAILURE);
 
@@ -7706,11 +7770,40 @@ nsGlobalWindow::FireHashchange()
   if (IsFrozen())
     return NS_OK;
 
-  // Dispatch the hashchange event, which doesn't bubble and isn't cancelable,
-  // to the outer window.
-  return nsContentUtils::DispatchTrustedEvent(mDoc, GetOuterWindow(),
-                                              NS_LITERAL_STRING("hashchange"),
-                                              PR_FALSE, PR_FALSE);
+  // Get a presentation shell for use in creating the hashchange event.
+  NS_ENSURE_STATE(mDoc);
+
+  nsIPresShell *shell = mDoc->GetShell();
+  nsRefPtr<nsPresContext> presContext;
+  if (shell) {
+    presContext = shell->GetPresContext();
+  }
+
+  // Create a new hashchange event.
+  nsCOMPtr<nsIDOMEvent> domEvent;
+  nsresult rv =
+    nsEventDispatcher::CreateEvent(presContext, nsnull,
+                                   NS_LITERAL_STRING("hashchangeevent"),
+                                   getter_AddRefs(domEvent));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(domEvent);
+  NS_ENSURE_TRUE(privateEvent, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsIDOMHashChangeEvent> hashchangeEvent = do_QueryInterface(domEvent);
+  NS_ENSURE_TRUE(hashchangeEvent, NS_ERROR_UNEXPECTED);
+
+  // The hashchange event bubbles and isn't cancellable.
+  rv = hashchangeEvent->InitHashChangeEvent(NS_LITERAL_STRING("hashchange"),
+                                            PR_TRUE, PR_FALSE,
+                                            aOldURL, aNewURL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = privateEvent->SetTrusted(PR_TRUE);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool dummy;
+  return DispatchEvent(hashchangeEvent, &dummy);
 }
 
 nsresult
@@ -7952,7 +8045,9 @@ nsGlobalWindow::GetSessionStorage(nsIDOMStorage ** aSessionStorage)
     *aSessionStorage = nsnull;
 
     nsString documentURI;
-    mDocument->GetDocumentURI(documentURI);
+    if (mDocument) {
+      mDocument->GetDocumentURI(documentURI);
+    }
 
     nsresult rv = docShell->GetSessionStorageForPrincipal(principal,
                                                           documentURI,
@@ -8036,7 +8131,9 @@ nsGlobalWindow::GetLocalStorage(nsIDOMStorage ** aLocalStorage)
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsString documentURI;
-    mDocument->GetDocumentURI(documentURI);
+    if (mDocument) {
+      mDocument->GetDocumentURI(documentURI);
+    }
 
     rv = storageManager->GetLocalStorageForPrincipal(principal,
                                                      documentURI,
@@ -8740,14 +8837,14 @@ nsGlobalWindow::SetTimeoutOrInterval(nsIScriptTimeoutHandler *aHandler,
   interval = NS_MAX(aIsInterval ? 1 : 0, interval);
 
   // Make sure we don't proceed with an interval larger than our timer
-  // code can handle.
-  if (interval > PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE)) {
-    interval = PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE);
+  // code can handle. (Note: we already forced |interval| to be non-negative,
+  // so the PRUint32 cast (to avoid compiler warnings) is ok.)
+  PRUint32 maxTimeoutMs = PR_IntervalToMilliseconds(DOM_MAX_TIMEOUT_VALUE);
+  if (static_cast<PRUint32>(interval) > maxTimeoutMs) {
+    interval = maxTimeoutMs;
   }
 
   nsTimeout *timeout = new nsTimeout();
-  if (!timeout)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   // Increment the timeout's reference count to represent this function's hold
   // on the timeout.
@@ -10711,12 +10808,6 @@ nsNavigator::GetProductSub(nsAString& aProductSub)
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsNavigator::GetSecurityPolicy(nsAString& aSecurityPolicy)
-{
-  return NS_OK;
 }
 
 NS_IMETHODIMP

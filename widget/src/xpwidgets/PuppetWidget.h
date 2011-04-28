@@ -74,7 +74,7 @@ public:
                     nsNativeWidget    aNativeParent,
                     const nsIntRect&  aRect,
                     EVENT_CALLBACK    aHandleEventFunction,
-                    nsIDeviceContext* aContext,
+                    nsDeviceContext* aContext,
                     nsIAppShell*      aAppShell = nsnull,
                     nsIToolkit*       aToolkit = nsnull,
                     nsWidgetInitData* aInitData = nsnull);
@@ -82,7 +82,7 @@ public:
   virtual already_AddRefed<nsIWidget>
   CreateChild(const nsIntRect  &aRect,
               EVENT_CALLBACK   aHandleEventFunction,
-              nsIDeviceContext *aContext,
+              nsDeviceContext *aContext,
               nsIAppShell      *aAppShell = nsnull,
               nsIToolkit       *aToolkit = nsnull,
               nsWidgetInitData *aInitData = nsnull,
@@ -166,7 +166,7 @@ public:
 //NS_IMETHOD              CaptureMouse(PRBool aCapture);
   virtual LayerManager*     GetLayerManager(LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                             bool* aAllowRetaining = nsnull);
-//  virtual nsIDeviceContext* GetDeviceContext();
+//  virtual nsDeviceContext* GetDeviceContext();
   virtual gfxASurface*      GetThebesSurface();
 
   NS_IMETHOD ResetInputState();

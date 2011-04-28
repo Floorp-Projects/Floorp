@@ -59,6 +59,7 @@
 /* Headers included for inline implementations used by this header. */
 #include "jsbool.h"
 #include "jscntxt.h"
+#include "GlobalObject.h"
 #include "jsnum.h"
 #include "jsinferinlines.h"
 #include "jsscopeinlines.h"
@@ -156,7 +157,7 @@ inline void
 JSObject::finalize(JSContext *cx)
 {
     /* Cope with stillborn objects that have no map. */
-    if (!map)
+    if (isNewborn())
         return;
 
     /* Finalize obj first, in case it needs map and slots. */
@@ -177,7 +178,7 @@ inline void
 JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent)
 {
     init(cx, &js_CallClass, cx->getTypeEmpty(), parent, NULL, false);
-    map = bindings.lastShape();
+    lastProp = bindings.lastShape();
 
     /*
      * If |bindings| is for a function that has extensible parents, that means
@@ -186,7 +187,7 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
     if (bindings.extensibleParents())
         setOwnShape(js_GenerateShape(cx));
     else
-        objShape = map->shape;
+        objShape = lastProp->shape;
 }
 
 /*
@@ -194,13 +195,13 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
  * shape.
  */
 inline void
-JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, JSStackFrame *frame)
+JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, js::StackFrame *frame)
 {
     init(cx, &js_BlockClass, type, NULL, frame, false);
 
     /* Cloned blocks copy their prototype's map; it had better be shareable. */
     JS_ASSERT(!getProto()->inDictionaryMode() || getProto()->lastProp->frozen());
-    map = getProto()->map;
+    lastProp = getProto()->lastProp;
 
     /*
      * If the prototype has its own shape, that means the clone should, too; see
@@ -209,7 +210,7 @@ JSObject::initClonedBlock(JSContext *cx, js::types::TypeObject *type, JSStackFra
     if (getProto()->hasOwnShape())
         setOwnShape(js_GenerateShape(cx));
     else
-        objShape = map->shape;
+        objShape = lastProp->shape;
 }
 
 /* 
@@ -613,11 +614,11 @@ JSObject::callIsForEval() const
     return getFixedSlot(JSSLOT_CALL_CALLEE).isNull();
 }
 
-inline JSStackFrame *
+inline js::StackFrame *
 JSObject::maybeCallObjStackFrame() const
 {
     JS_ASSERT(isCall());
-    return reinterpret_cast<JSStackFrame *>(getPrivate());
+    return reinterpret_cast<js::StackFrame *>(getPrivate());
 }
 
 inline void
@@ -952,7 +953,7 @@ JSObject::init(JSContext *cx, js::Class *aclasp, js::types::TypeObject *type,
      * or setSharedNonNativeMap after calling init. To defend this requirement
      * we set objShape to a value that obj->shape() is asserted never to return.
      */
-    objShape = JSObjectMap::INVALID_SHAPE;
+    objShape = INVALID_SHAPE;
 #endif
 
     privateData = priv;
@@ -1044,10 +1045,160 @@ JSObject::principals(JSContext *cx)
     return compPrincipals;
 }
 
-inline JSPrincipals *
-JSStackFrame::principals(JSContext *cx) const
+inline uint32
+JSObject::slotSpan() const
 {
-    return scopeChain().principals(cx);
+    return lastProp->slotSpan;
+}
+
+inline bool
+JSObject::containsSlot(uint32 slot) const
+{
+    return slot < slotSpan();
+}
+
+inline void
+JSObject::setMap(js::Shape *amap)
+{
+    JS_ASSERT(!hasOwnShape());
+    lastProp = amap;
+    objShape = lastProp->shape;
+}
+
+inline js::Value &
+JSObject::nativeGetSlotRef(uintN slot)
+{
+    JS_ASSERT(isNative());
+    JS_ASSERT(containsSlot(slot));
+    return getSlotRef(slot);
+}
+
+inline const js::Value &
+JSObject::nativeGetSlot(uintN slot) const
+{
+    JS_ASSERT(isNative());
+    JS_ASSERT(containsSlot(slot));
+    return getSlot(slot);
+}
+
+inline void
+JSObject::nativeSetSlot(uintN slot, const js::Value &value)
+{
+    JS_ASSERT(isNative());
+    JS_ASSERT(containsSlot(slot));
+    return setSlot(slot, value);
+}
+
+inline bool
+JSObject::isNative() const
+{
+    return lastProp->isNative();
+}
+
+inline bool
+JSObject::isNewborn() const
+{
+    return !lastProp;
+}
+
+inline void
+JSObject::clearOwnShape()
+{
+    flags &= ~OWN_SHAPE;
+    objShape = lastProp->shape;
+}
+
+inline void
+JSObject::setOwnShape(uint32 s)
+{
+    flags |= OWN_SHAPE;
+    objShape = s;
+}
+
+inline js::Shape **
+JSObject::nativeSearch(jsid id, bool adding)
+{
+    return js::Shape::search(compartment()->rt, &lastProp, id, adding);
+}
+
+inline const js::Shape *
+JSObject::nativeLookup(jsid id)
+{
+    JS_ASSERT(isNative());
+    return SHAPE_FETCH(nativeSearch(id));
+}
+
+inline bool
+JSObject::nativeContains(jsid id)
+{
+    return nativeLookup(id) != NULL;
+}
+
+inline bool
+JSObject::nativeContains(const js::Shape &shape)
+{
+    return nativeLookup(shape.id) == &shape;
+}
+
+inline const js::Shape *
+JSObject::lastProperty() const
+{
+    JS_ASSERT(isNative());
+    JS_ASSERT(!JSID_IS_VOID(lastProp->id));
+    return lastProp;
+}
+
+inline bool
+JSObject::nativeEmpty() const
+{
+    return lastProperty()->isEmptyShape();
+}
+
+inline bool
+JSObject::inDictionaryMode() const
+{
+    return lastProperty()->inDictionary();
+}
+
+inline uint32
+JSObject::propertyCount() const
+{
+    return lastProperty()->entryCount();
+}
+
+inline bool
+JSObject::hasPropertyTable() const
+{
+    return lastProperty()->hasTable();
+}
+
+/*
+ * FIXME: shape must not be null, should use a reference here and other places.
+ */
+inline void
+JSObject::setLastProperty(const js::Shape *shape)
+{
+    JS_ASSERT(!inDictionaryMode());
+    JS_ASSERT(!JSID_IS_VOID(shape->id));
+    JS_ASSERT_IF(lastProp, !JSID_IS_VOID(lastProp->id));
+    JS_ASSERT(shape->compartment() == compartment());
+
+    lastProp = const_cast<js::Shape *>(shape);
+}
+
+inline void
+JSObject::removeLastProperty()
+{
+    JS_ASSERT(!inDictionaryMode());
+    JS_ASSERT(!JSID_IS_VOID(lastProp->parent->id));
+
+    lastProp = lastProp->parent;
+}
+
+inline void
+JSObject::setSharedNonNativeMap()
+{
+    setMap(&js::Shape::sharedNonNative);
 }
 
 static inline bool
@@ -1151,7 +1302,7 @@ InitScopeForObject(JSContext* cx, JSObject* obj, js::Class *clasp, js::types::Ty
 
   bad:
     /* The GC nulls map initially. It should still be null on error. */
-    JS_ASSERT(!obj->map);
+    JS_ASSERT(obj->isNewborn());
     return false;
 }
 
@@ -1246,7 +1397,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
-    if (!cx->hasfp()) {
+    if (!cx->running()) {
         global = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, global);
         if (!global)

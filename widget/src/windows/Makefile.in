@@ -47,32 +47,33 @@ LIBRARY_NAME	= widget_windows
 LIBXUL_LIBRARY = 1
 
 
-CPPSRCS		= \
-	nsWindow.cpp \
-	nsWindowGfx.cpp \
-	nsWindowDbg.cpp \
-	nsAppShell.cpp \
-	nsToolkit.cpp \
-	nsFilePicker.cpp \
-	nsScreenWin.cpp	\
-	nsScreenManagerWin.cpp \
-	nsLookAndFeel.cpp \
-	nsUXThemeData.cpp \
-	nsNativeThemeWin.cpp \
-	nsWinGesture.cpp \
-	nsIdleServiceWin.cpp \
-	nsSound.cpp \
-	nsIMM32Handler.cpp \
-	WindowHook.cpp \
-	WinTaskbar.cpp \
-	TaskbarPreview.cpp \
-	TaskbarTabPreview.cpp \
-	TaskbarWindowPreview.cpp \
-	TaskbarPreviewButton.cpp \
- 	JumpListBuilder.cpp \
- 	JumpListItem.cpp \
-	GfxInfo.cpp \
-	$(NULL)
+CPPSRCS = \
+  nsWindow.cpp \
+  nsWindowGfx.cpp \
+  nsWindowDbg.cpp \
+  nsAppShell.cpp \
+  nsToolkit.cpp \
+  nsFilePicker.cpp \
+  nsScreenWin.cpp  \
+  nsScreenManagerWin.cpp \
+  nsLookAndFeel.cpp \
+  nsUXThemeData.cpp \
+  nsNativeThemeWin.cpp \
+  nsWinGesture.cpp \
+  nsIdleServiceWin.cpp \
+  nsSound.cpp \
+  nsIMM32Handler.cpp \
+  WindowHook.cpp \
+  WinTaskbar.cpp \
+  TaskbarPreview.cpp \
+  TaskbarTabPreview.cpp \
+  TaskbarWindowPreview.cpp \
+  TaskbarPreviewButton.cpp \
+  JumpListBuilder.cpp \
+  JumpListItem.cpp \
+  GfxInfo.cpp \
+  WidgetTraceEvent.cpp \
+  $(NULL)
 
 ifdef MOZ_CRASHREPORTER
 CPPSRCS += LSPAnnotator.cpp
@@ -86,12 +87,6 @@ CPPSRCS		+= \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH), WINCE)
-CPPSRCS += \
-	nsWindowCE.cpp \
-	nsClipboardCE.cpp \
-	$(NULL)
-else
 CPPSRCS += \
 	KeyboardLayout.cpp \
 	IEnumFE.cpp  \
@@ -106,7 +101,6 @@ CPPSRCS += \
 	$(NULL)
 ifdef NS_ENABLE_TSF
 CPPSRCS		+= nsTextStore.cpp
-endif
 endif
 
 
@@ -136,10 +130,6 @@ LOCAL_INCLUDES	= \
 		$(NULL)
 
 FORCE_STATIC_LIB = 1
-
-ifdef WINCE
-EXTRA_DSO_LDOPTS += ddraw.lib
-endif
 
 include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/ipc/chromium/chromium-config.mk

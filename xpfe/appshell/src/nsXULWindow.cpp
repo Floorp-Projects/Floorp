@@ -92,7 +92,6 @@
 #include "nsReadableUtils.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
-#include "nsIContentUtils.h"
 
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
@@ -1392,10 +1391,8 @@ void nsXULWindow::SyncAttributesToWidget()
 
   // "chromemargin" attribute
   nsIntMargin margins;
-  nsCOMPtr<nsIContentUtils> cutils =
-    do_GetService("@mozilla.org/content/contentutils;1");
   rv = windowElement->GetAttribute(NS_LITERAL_STRING("chromemargin"), attr);
-  if (NS_SUCCEEDED(rv) && cutils && cutils->ParseIntMarginValue(attr, margins)) {
+  if (NS_SUCCEEDED(rv) && nsContentUtils::ParseIntMarginValue(attr, margins)) {
     mWindow->SetNonClientMargins(margins);
   }
 

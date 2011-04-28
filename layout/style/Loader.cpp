@@ -1168,7 +1168,6 @@ Loader::PrepareSheet(nsCSSStyleSheet* aSheet,
     NS_ENSURE_TRUE(mediaList, NS_ERROR_OUT_OF_MEMORY);
 
     nsCSSParser mediumParser(this);
-    NS_ENSURE_TRUE(mediumParser, NS_ERROR_OUT_OF_MEMORY);
 
     // We have aMediaString only when linked from link elements, style
     // elements, or PIs, so pass PR_TRUE.
@@ -1575,11 +1574,6 @@ Loader::ParseSheet(nsIUnicharInputStream* aStream,
   aCompleted = PR_FALSE;
 
   nsCSSParser parser(this, aLoadData->mSheet);
-  if (!parser) {
-    LOG_ERROR(("  Failed to get CSS parser"));
-    SheetComplete(aLoadData, NS_ERROR_OUT_OF_MEMORY);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   // Push our load data on the stack so any kids can pick it up
   mParsingDatas.AppendElement(aLoadData);

@@ -1876,11 +1876,37 @@ JS_RemoveExternalStringFinalizer(JSStringFinalizeOp finalizer);
 
 /*
  * Create a new JSString whose chars member refers to external memory, i.e.,
- * memory requiring spe, type-specific finalization.  The type code must
- * be a nonnegative return value from JS_AddExternalStringFinalizer.
+ * memory requiring type-specific finalization.  The type code must be a
+ * nonnegative return value from JS_AddExternalStringFinalizer.
  */
 extern JS_PUBLIC_API(JSString *)
-JS_NewExternalString(JSContext *cx, jschar *chars, size_t length, intN type);
+JS_NewExternalString(JSContext *cx, const jschar *chars, size_t length, intN type);
+
+/*
+ * Like JS_NewExternalString, except that 'closure' can be retrieved later via
+ * JS_GetExternalStringClosure. This closure data is a black blox to the JS
+ * engine and may be used by the embedding to associate extra data with an
+ * external string. E.g., an embedding may want to associate a pointer to the
+ * object that owns the chars of an external string so that, when this external
+ * string is finalized, the owner object can be deleted.
+ */
+extern JS_PUBLIC_API(JSString *)
+JS_NewExternalStringWithClosure(JSContext *cx, const jschar *chars, size_t length,
+                                intN type, void *closure);
+
+/*
+ * Return whether 'str' was created with JS_NewExternalString or
+ * JS_NewExternalStringWithClosure.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_IsExternalString(JSContext *cx, JSString *str);
+
+/*
+ * Return the 'closure' arg passed to JS_NewExternalStringWithClosure or NULL
+ * if the external string was created via JS_NewExternalString.
+ */
+extern JS_PUBLIC_API(void *)
+JS_GetExternalStringClosure(JSContext *cx, JSString *str);
 
 /*
  * Deprecated. Use JS_SetNativeStackQuoata instead.
@@ -1986,16 +2012,6 @@ struct JSClass {
 #define JSCLASS_FREEZE_PROTO            (1<<(JSCLASS_HIGH_FLAGS_SHIFT+5))
 #define JSCLASS_FREEZE_CTOR             (1<<(JSCLASS_HIGH_FLAGS_SHIFT+6))
 
-/* Additional global reserved slots, beyond those for standard prototypes. */
-#define JSRESERVED_GLOBAL_SLOTS_COUNT     7
-#define JSRESERVED_GLOBAL_THIS            (JSProto_LIMIT * 3)
-#define JSRESERVED_GLOBAL_THROWTYPEERROR  (JSRESERVED_GLOBAL_THIS + 1)
-#define JSRESERVED_GLOBAL_REGEXP_STATICS  (JSRESERVED_GLOBAL_THROWTYPEERROR + 1)
-#define JSRESERVED_GLOBAL_FUNCTION_NS     (JSRESERVED_GLOBAL_REGEXP_STATICS + 1)
-#define JSRESERVED_GLOBAL_EVAL_ALLOWED    (JSRESERVED_GLOBAL_FUNCTION_NS + 1)
-#define JSRESERVED_GLOBAL_EVAL            (JSRESERVED_GLOBAL_EVAL_ALLOWED + 1)
-#define JSRESERVED_GLOBAL_FLAGS           (JSRESERVED_GLOBAL_EVAL + 1)
-
 /* Global flags. */
 #define JSGLOBAL_FLAGS_CLEARED          0x1
 
@@ -2010,9 +2026,9 @@ struct JSClass {
  * with the following flags. Failure to use JSCLASS_GLOBAL_FLAGS was
  * prevously allowed, but is now an ES5 violation and thus unsupported.
  */
+#define JSCLASS_GLOBAL_SLOT_COUNT      (JSProto_LIMIT * 3 + 6)
 #define JSCLASS_GLOBAL_FLAGS                                                  \
-    (JSCLASS_IS_GLOBAL |                                                      \
-     JSCLASS_HAS_RESERVED_SLOTS(JSRESERVED_GLOBAL_THIS + JSRESERVED_GLOBAL_SLOTS_COUNT))
+    (JSCLASS_IS_GLOBAL | JSCLASS_HAS_RESERVED_SLOTS(JSCLASS_GLOBAL_SLOT_COUNT))
 
 /* Fast access to the original value of each standard class's prototype. */
 #define JSCLASS_CACHED_PROTO_SHIFT      (JSCLASS_HIGH_FLAGS_SHIFT + 8)
@@ -2205,6 +2221,9 @@ JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(JSBool)
 JS_IsExtensible(JSObject *obj);
+
+extern JS_PUBLIC_API(JSBool)
+JS_IsNative(JSObject *obj);
 
 /*
  * Unlike JS_NewObject, JS_NewObjectWithGivenProto does not compute a default

@@ -55,8 +55,8 @@ public:
     virtual ~BasicTableLayoutStrategy();
 
     // nsITableLayoutStrategy implementation
-    virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext);
-    virtual nscoord GetPrefWidth(nsIRenderingContext* aRenderingContext,
+    virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext);
+    virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext,
                                  PRBool aComputingSize);
     virtual void MarkIntrinsicWidthsDirty();
     virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState);
@@ -69,7 +69,7 @@ private:
                          BTLS_FINAL_WIDTH };
 
     // Compute intrinsic width member variables on the columns.
-    void ComputeColumnIntrinsicWidths(nsIRenderingContext* aRenderingContext);
+    void ComputeColumnIntrinsicWidths(nsRenderingContext* aRenderingContext);
 
     // Distribute a colspanning cell's percent width (if any) to its columns.
     void DistributePctWidthToColumns(float aSpanPrefPct,
@@ -100,7 +100,7 @@ private:
 
     // Compute the min and pref widths of the table from the width
     // variables on the columns.
-    void ComputeIntrinsicWidths(nsIRenderingContext* aRenderingContext);
+    void ComputeIntrinsicWidths(nsRenderingContext* aRenderingContext);
 
     nsTableFrame *mTableFrame;
     nscoord mMinWidth;

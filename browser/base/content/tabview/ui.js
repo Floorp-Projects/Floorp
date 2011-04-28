@@ -163,11 +163,6 @@ let UI = {
       this._storageSanity(data);
       this._pageBounds = data.pageBounds;
 
-      // ___ hook into the browser
-      gWindow.addEventListener("tabviewshow", function() {
-        self.showTabView(true);
-      }, false);
-
       // ___ currentTab
       this._currentTab = gBrowser.selectedTab;
 
@@ -188,36 +183,41 @@ let UI = {
           });
         }
         if (e.originalTarget.id == "content") {
-          // Create an orphan tab on double click
-          if (Date.now() - self._lastClick <= self.DBLCLICK_INTERVAL && 
-              (self._lastClickPositions.x - self.DBLCLICK_OFFSET) <= e.clientX &&
-              (self._lastClickPositions.x + self.DBLCLICK_OFFSET) >= e.clientX &&
-              (self._lastClickPositions.y - self.DBLCLICK_OFFSET) <= e.clientY &&
-              (self._lastClickPositions.y + self.DBLCLICK_OFFSET) >= e.clientY) {
-            GroupItems.setActiveGroupItem(null);
-            TabItems.creatingNewOrphanTab = true;
-
-            let newTab = 
-              gBrowser.loadOneTab("about:blank", { inBackground: true });
-
-            let box = 
-              new Rect(e.clientX - Math.floor(TabItems.tabWidth/2),
-                       e.clientY - Math.floor(TabItems.tabHeight/2),
-                       TabItems.tabWidth, TabItems.tabHeight);
-            newTab._tabViewTabItem.setBounds(box, true);
-            newTab._tabViewTabItem.pushAway(true);
-            UI.setActiveTab(newTab._tabViewTabItem);
-
-            TabItems.creatingNewOrphanTab = false;
-            newTab._tabViewTabItem.zoomIn(true);
-
+          if (!Utils.isLeftClick(e)) {
             self._lastClick = 0;
             self._lastClickPositions = null;
-            gTabView.firstUseExperienced = true;
           } else {
-            self._lastClick = Date.now();
-            self._lastClickPositions = new Point(e.clientX, e.clientY);
-            self._createGroupItemOnDrag(e);
+            // Create an orphan tab on double click
+            if (Date.now() - self._lastClick <= self.DBLCLICK_INTERVAL && 
+                (self._lastClickPositions.x - self.DBLCLICK_OFFSET) <= e.clientX &&
+                (self._lastClickPositions.x + self.DBLCLICK_OFFSET) >= e.clientX &&
+                (self._lastClickPositions.y - self.DBLCLICK_OFFSET) <= e.clientY &&
+                (self._lastClickPositions.y + self.DBLCLICK_OFFSET) >= e.clientY) {
+              GroupItems.setActiveGroupItem(null);
+              TabItems.creatingNewOrphanTab = true;
+
+              let newTab =
+                gBrowser.loadOneTab("about:blank", { inBackground: true });
+
+              let box =
+                new Rect(e.clientX - Math.floor(TabItems.tabWidth/2),
+                         e.clientY - Math.floor(TabItems.tabHeight/2),
+                         TabItems.tabWidth, TabItems.tabHeight);
+              newTab._tabViewTabItem.setBounds(box, true);
+              newTab._tabViewTabItem.pushAway(true);
+              UI.setActiveTab(newTab._tabViewTabItem);
+
+              TabItems.creatingNewOrphanTab = false;
+              newTab._tabViewTabItem.zoomIn(true);
+
+              self._lastClick = 0;
+              self._lastClickPositions = null;
+              gTabView.firstUseExperienced = true;
+            } else {
+              self._lastClick = Date.now();
+              self._lastClickPositions = new Point(e.clientX, e.clientY);
+              self._createGroupItemOnDrag(e);
+            }
           }
         }
       });
@@ -225,10 +225,6 @@ let UI = {
       iQ(window).bind("unload", function() {
         self.uninit();
       });
-
-      gWindow.addEventListener("tabviewhide", function() {
-        self.exit();
-      }, false);
 
       // ___ setup key handlers
       this._setTabViewFrameKeyHandlers();
@@ -425,7 +421,7 @@ let UI = {
   // Function: isTabViewVisible
   // Returns true if the TabView UI is currently shown.
   isTabViewVisible: function UI_isTabViewVisible() {
-    return gTabViewDeck.selectedIndex == 1;
+    return gTabViewDeck.selectedPanel == gTabViewFrame;
   },
 
   // ---------
@@ -464,7 +460,7 @@ let UI = {
     // Restore the full height when showing TabView
     gTabViewFrame.style.marginTop = "";
 #endif
-    gTabViewDeck.selectedIndex = 1;
+    gTabViewDeck.selectedPanel = gTabViewFrame;
     gWindow.TabsInTitlebar.allowedBy("tabview-open", false);
     gTabViewFrame.contentWindow.focus();
 
@@ -546,7 +542,7 @@ let UI = {
     // as well as avoiding the flash of black as we animate out
     gTabViewFrame.style.marginTop = gBrowser.boxObject.y + "px";
 #endif
-    gTabViewDeck.selectedIndex = 0;
+    gTabViewDeck.selectedPanel = gBrowserPanel;
     gWindow.TabsInTitlebar.allowedBy("tabview-open", true);
     gBrowser.contentWindow.focus();
 

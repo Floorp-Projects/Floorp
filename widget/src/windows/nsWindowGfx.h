@@ -59,7 +59,6 @@ public:
   }
 
   static nsIntRegion ConvertHRGNToRegion(HRGN aRgn);
-  static void OnSettingsChangeGfx(WPARAM wParam);
 
   static nsresult CreateIcon(imgIContainer *aContainer, PRBool aIsCursor, PRUint32 aHotspotX, PRUint32 aHotspotY, HICON *aIcon);
 

@@ -30,7 +30,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#if WTF_COMPILER_MSVC && !WTF_PLATFORM_WINCE
+#if WTF_COMPILER_MSVC
 #ifndef WINVER
 #define WINVER 0x0500
 #endif
@@ -39,10 +39,6 @@
 #endif
 #include "jswin.h"
 #include <crtdbg.h>
-#endif
-
-#if WTF_PLATFORM_WINCE
-#include <winbase.h>
 #endif
 
 extern "C" {
@@ -64,7 +60,7 @@ static void printf_stderr_common(const char* format, ...)
 
 static void printCallSite(const char* file, int line, const char* function)
 {
-#if WTF_COMPILER_MSVC && !WTF_PLATFORM_WINCE && defined _DEBUG
+#if WTF_COMPILER_MSVC && defined _DEBUG
     _CrtDbgReport(_CRT_WARN, file, line, NULL, "%s\n", function);
 #else
     printf_stderr_common("(%s:%d %s)\n", file, line, function);

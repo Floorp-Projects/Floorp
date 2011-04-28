@@ -74,8 +74,8 @@ public:
   NS_IMETHOD  RemoveFrame(nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  virtual nscoord GetMinWidth(nsIRenderingContext *aRenderingContext);  
-  virtual nscoord GetPrefWidth(nsIRenderingContext *aRenderingContext);
+  virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);  
+  virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
 
   virtual nsIFrame* GetContentInsertionFrame() {
     nsIFrame* frame = GetFirstChild(nsnull);
@@ -100,7 +100,7 @@ public:
 
   virtual nsIAtom* GetType() const;
 
-  virtual void PaintColumnRule(nsIRenderingContext* aCtx,
+  virtual void PaintColumnRule(nsRenderingContext* aCtx,
                                const nsRect&        aDirtyRect,
                                const nsPoint&       aPt);
 
@@ -209,14 +209,14 @@ nsColumnSetFrame::GetType() const
 }
 
 static void
-PaintColumnRule(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+PaintColumnRule(nsIFrame* aFrame, nsRenderingContext* aCtx,
                 const nsRect& aDirtyRect, nsPoint aPt)
 {
   static_cast<nsColumnSetFrame*>(aFrame)->PaintColumnRule(aCtx, aDirtyRect, aPt);
 }
 
 void
-nsColumnSetFrame::PaintColumnRule(nsIRenderingContext* aCtx,
+nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
                                   const nsRect& aDirtyRect,
                                   const nsPoint& aPt)
 {
@@ -454,7 +454,7 @@ static void MoveChildTo(nsIFrame* aParent, nsIFrame* aChild, nsPoint aOrigin) {
 }
 
 nscoord
-nsColumnSetFrame::GetMinWidth(nsIRenderingContext *aRenderingContext) {
+nsColumnSetFrame::GetMinWidth(nsRenderingContext *aRenderingContext) {
   nscoord width = 0;
   DISPLAY_MIN_WIDTH(this, width);
   if (mFrames.FirstChild()) {
@@ -485,7 +485,7 @@ nsColumnSetFrame::GetMinWidth(nsIRenderingContext *aRenderingContext) {
 }
 
 nscoord
-nsColumnSetFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext) {
+nsColumnSetFrame::GetPrefWidth(nsRenderingContext *aRenderingContext) {
   // Our preferred width is our desired column width, if specified, otherwise
   // the child's preferred width, times the number of columns, plus the width
   // of any required column gaps
@@ -869,8 +869,8 @@ nsColumnSetFrame::DrainOverflowColumns()
   if (prev) {
     nsAutoPtr<nsFrameList> overflows(prev->StealOverflowFrames());
     if (overflows) {
-      nsHTMLContainerFrame::ReparentFrameViewList(PresContext(), *overflows,
-                                                  prev, this);
+      nsContainerFrame::ReparentFrameViewList(PresContext(), *overflows,
+                                              prev, this);
 
       mFrames.InsertFrames(this, nsnull, *overflows);
     }

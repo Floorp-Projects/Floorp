@@ -227,7 +227,7 @@ inline js::types::TypeObject *
 JSContext::getTypeCallerInitObject(bool isArray)
 {
     if (typeInferenceEnabled()) {
-        JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
+        js::StackFrame *caller = js_GetScriptedCaller(this, NULL);
         if (caller && caller->script()->compartment == compartment) {
             JSScript *script;
             jsbytecode *pc = caller->inlinepc(this, &script);
@@ -252,7 +252,7 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
      * calling the native.
      */
 
-    JSStackFrame *caller = js_GetScriptedCaller(this, NULL);
+    js::StackFrame *caller = js_GetScriptedCaller(this, NULL);
     if (!caller)
         return true;
 

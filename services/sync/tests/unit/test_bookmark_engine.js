@@ -14,7 +14,37 @@ function makeEngine() {
 }
 var syncTesting = new SyncTestingInfrastructure(makeEngine);
 
-function test_ID_caching() {
+add_test(function bad_record_allIDs() {
+  _("Ensure that bad Places queries don't cause an error in getAllIDs.");
+  let engine = new BookmarksEngine();
+  let store = engine._store;
+  let badRecordID = Svc.Bookmark.insertBookmark(
+      Svc.Bookmark.toolbarFolder,
+      Utils.makeURI("place:folder=1138"),
+      Svc.Bookmark.DEFAULT_INDEX,
+      null);
+
+  do_check_true(badRecordID > 0);
+  _("Record is " + badRecordID);
+  _("Type: " + Svc.Bookmark.getItemType(badRecordID));
+
+  _("Fetching children.");
+  store._getChildren("toolbar", {});
+
+  _("Fetching all IDs.");
+  let all = store.getAllIDs();
+  
+  _("All IDs: " + JSON.stringify(all));
+  do_check_true("menu" in all);
+  do_check_true("toolbar" in all);
+  
+  _("Clean up.");
+  Svc.Bookmark.removeItem(badRecordID);
+  run_next_test();
+});
+  
+  
+add_test(function test_ID_caching() {
 
   _("Ensure that Places IDs are not cached.");
   let engine = new BookmarksEngine();
@@ -50,12 +80,12 @@ function test_ID_caching() {
   do_check_eq(newMobileID, store.idForGUID("mobile", false));
 
   do_check_eq(store.GUIDForId(mobileID), "abcdefghijkl");
-}
+  run_next_test();
+});
 
-function test_processIncoming_error_orderChildren() {
+add_test(function test_processIncoming_error_orderChildren() {
   _("Ensure that _orderChildren() is called even when _processIncoming() throws an error.");
 
-  do_test_pending();
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
@@ -126,16 +156,15 @@ function test_processIncoming_error_orderChildren() {
 
   } finally {
     store.wipe();
-    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeEngine);
+    server.stop(run_next_test);
   }
-}
+});
 
-function test_restorePromptsReupload() {
+add_test(function test_restorePromptsReupload() {
   _("Ensure that restoring from a backup will reupload all records.");
-  do_test_pending();
   Svc.Prefs.set("username", "foo");
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
@@ -266,15 +295,15 @@ function test_restorePromptsReupload() {
 
   } finally {
     store.wipe();
-    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeEngine);
+    server.stop(run_next_test);
   }
-}
+});
 
 // Bug 632287.
-function test_mismatched_types() {
+add_test(function test_mismatched_types() {
   _("Ensure that handling a record that changes type causes deletion " +
     "then re-adding.");
 
@@ -309,7 +338,6 @@ function test_mismatched_types() {
     "parentid": "toolbar"
   };
 
-  do_test_pending();
   Svc.Prefs.set("username", "foo");
   Service.serverURL = "http://localhost:8080/";
   Service.clusterURL = "http://localhost:8080/";
@@ -351,12 +379,12 @@ function test_mismatched_types() {
 
   } finally {
     store.wipe();
-    server.stop(do_test_finished);
     Svc.Prefs.resetBranch("");
     Records.clearCache();
     syncTesting = new SyncTestingInfrastructure(makeEngine);
+    server.stop(run_next_test);
   }
-}
+});
 
 function run_test() {
   initTestLogging("Trace");
@@ -364,8 +392,5 @@ function run_test() {
 
   CollectionKeys.generateNewKeys();
 
-  test_processIncoming_error_orderChildren();
-  test_ID_caching();
-  test_mismatched_types();
-  test_restorePromptsReupload();
+  run_next_test();
 }

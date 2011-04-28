@@ -91,7 +91,7 @@
 #include "nsICapturePicker.h"
 #include "nsIFileURL.h"
 #include "nsDOMFile.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 
 namespace dom = mozilla::dom;
 
@@ -499,7 +499,7 @@ nsFileControlFrame::BrowseMouseListener::MouseClick(nsIDOMEvent* aMouseEvent)
 }
 
 nscoord
-nsFileControlFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsFileControlFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);

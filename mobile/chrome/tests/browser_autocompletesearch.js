@@ -45,9 +45,32 @@ function saveMockCache() {
     oldCacheFile.remove(true);
 
   let mockCachePath = gTestPath;
-  let mockCacheFile = getChromeDir(getResolvedURI(mockCachePath));
-  mockCacheFile.append("mock_autocomplete.json");
-  mockCacheFile.copyToFollowingLinks(gProfileDir, "autocomplete.json");
+  info("mock path: " + mockCachePath);
+  let mockCacheURI = getResolvedURI(mockCachePath);
+  info("mock URI: " + mockCacheURI.spec);
+  if (mockCacheURI instanceof Ci.nsIJARURI) {
+    // Android tests are stored in a JAR file, so we need to extract the mock_autocomplete.json file
+    info("jar file: " + mockCacheURI.JARFile.spec);
+    let zReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+    let fileHandler = Cc["@mozilla.org/network/protocol;1?name=file"].getService(Ci.nsIFileProtocolHandler);
+    let fileName = fileHandler.getFileFromURLSpec(mockCacheURI.JARFile.spec);
+    zReader.open(fileName);
+
+    let extract = mockCacheURI.spec.split("!")[1];
+    extract = extract.substring(1, extract.lastIndexOf("/") + 1);
+    extract += "mock_autocomplete.json";
+    info("extract path: " + extract);
+    let target = gProfileDir.clone();
+    target.append("autocomplete.json");
+    info("target path: " + target.path);
+    zReader.extract(extract, target);
+  } else {
+    // Tests are run from a folder, so we can just copy the mock_autocomplete.json file
+    let mockCacheFile = getChromeDir(mockCacheURI);
+    info("mock file: " + mockCacheFile.path);
+    mockCacheFile.append("mock_autocomplete.json");
+    mockCacheFile.copyToFollowingLinks(gProfileDir, "autocomplete.json");
+  }
 
   // Listen for when the mock cache has been loaded
   Services.obs.addObserver(function (aSubject, aTopic, aData) {

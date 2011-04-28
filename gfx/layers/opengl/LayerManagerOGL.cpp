@@ -712,7 +712,7 @@ LayerManagerOGL::WorldTransformRect(nsIntRect& aRect)
 {
   gfxRect grect(aRect.x, aRect.y, aRect.width, aRect.height);
   grect = mWorldMatrix.TransformBounds(grect);
-  aRect.SetRect(grect.pos.x, grect.pos.y, grect.size.width, grect.size.height);
+  aRect.SetRect(grect.X(), grect.Y(), grect.Width(), grect.Height());
 }
 
 void

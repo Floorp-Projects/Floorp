@@ -40,7 +40,7 @@ function firstTab(aEvent) {
   is(inputNode.getAttribute("focused"), "true", "inputNode is still focused");
   isnot(this.value, "doc", "input autocompleted");
 
-  HUD.jsterm.setInputValue("foobarbaz" + Math.floor(Date.now()));
+  HUD.jsterm.setInputValue("foobarbaz" + Date.now());
 
   EventUtils.synthesizeKey("VK_TAB", {});
 

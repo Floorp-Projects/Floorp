@@ -76,7 +76,6 @@
 #include "jsvector.h"
 #include "jsversion.h"
 
-#include "jscntxtinlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
 #include "jsobjinlines.h"
@@ -103,6 +102,14 @@ JSString::isFixed() const
     return isFlat() && !isExtensible();
 }
 #endif
+
+bool
+JSString::isExternal() const
+{
+    bool is_external = arena()->header()->thingKind == FINALIZE_EXTERNAL_STRING;
+    JS_ASSERT_IF(is_external, isFixed());
+    return is_external;
+}
 
 static JS_ALWAYS_INLINE JSString *
 Tag(JSRope *str)
@@ -876,11 +883,8 @@ ValueToIntegerRange(JSContext *cx, const Value &v, int32 *out)
         *out = v.toInt32();
     } else {
         double d;
-
-        if (!ValueToNumber(cx, v, &d))
+        if (!ToInteger(cx, v, &d))
             return false;
-
-        d = js_DoubleToInteger(d);
         if (d > INT32_MAX)
             *out = INT32_MAX;
         else if (d < INT32_MIN)
@@ -1080,14 +1084,9 @@ js_str_charAt(JSContext *cx, uintN argc, Value *vp)
         if (!str)
             return false;
 
-        double d;
-        if (argc == 0) {
-            d = 0.0;
-        } else {
-            if (!ValueToNumber(cx, vp[2], &d))
-                return false;
-            d = js_DoubleToInteger(d);
-        }
+        double d = 0.0;
+        if (argc > 0 && !ToInteger(cx, vp[2], &d))
+            return false;
 
         if (d < 0 || str->length() <= d)
             goto out_of_range;
@@ -1120,14 +1119,9 @@ js_str_charCodeAt(JSContext *cx, uintN argc, Value *vp)
         if (!str)
             return false;
 
-        double d;
-        if (argc == 0) {
-            d = 0.0;
-        } else {
-            if (!ValueToNumber(cx, vp[2], &d))
-                return false;
-            d = js_DoubleToInteger(d);
-        }
+        double d = 0.0;
+        if (argc > 0 && !ToInteger(cx, vp[2], &d))
+            return false;
 
         if (d < 0 || str->length() <= d)
             goto out_of_range;
@@ -1462,9 +1456,8 @@ str_indexOf(JSContext *cx, uintN argc, Value *vp)
             }
         } else {
             jsdouble d;
-            if (!ValueToNumber(cx, vp[3], &d))
-                return JS_FALSE;
-            d = js_DoubleToInteger(d);
+            if (!ToInteger(cx, vp[3], &d))
+                return false;
             if (d <= 0) {
                 start = 0;
             } else if (d > textlen) {
@@ -2447,7 +2440,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
 
     /* lambda(matchStr, matchStart, textstr) */
     static const uint32 lambdaArgc = 3;
-    if (!cx->stack().pushInvokeArgs(cx, lambdaArgc, &rdata.singleShot))
+    if (!cx->stack.pushInvokeArgs(cx, lambdaArgc, &rdata.singleShot))
         return false;
 
     CallArgs &args = rdata.singleShot;
@@ -2459,7 +2452,7 @@ str_replace_flat_lambda(JSContext *cx, uintN argc, Value *vp, ReplaceData &rdata
     sp[1].setInt32(fm.match());
     sp[2].setString(rdata.str);
 
-    if (!Invoke(cx, rdata.singleShot, 0))
+    if (!Invoke(cx, rdata.singleShot))
         return false;
 
     JSString *repstr = js_ValueToString(cx, args.rval());
@@ -3000,9 +2993,8 @@ str_slice(JSContext *cx, uintN argc, Value *vp)
     if (argc != 0) {
         double begin, end, length;
 
-        if (!ValueToNumber(cx, vp[2], &begin))
-            return JS_FALSE;
-        begin = js_DoubleToInteger(begin);
+        if (!ToInteger(cx, vp[2], &begin))
+            return false;
         length = str->length();
         if (begin < 0) {
             begin += length;
@@ -3015,9 +3007,8 @@ str_slice(JSContext *cx, uintN argc, Value *vp)
         if (argc == 1 || vp[3].isUndefined()) {
             end = length;
         } else {
-            if (!ValueToNumber(cx, vp[3], &end))
-                return JS_FALSE;
-            end = js_DoubleToInteger(end);
+            if (!ToInteger(cx, vp[3], &end))
+                return false;
             if (end < 0) {
                 end += length;
                 if (end < 0)
@@ -3319,21 +3310,37 @@ static JSFunctionSpec string_methods[] = {
       offsetof(JSString::Data, inlineStorage)) },                             \
     { {(c), 0x00} } }
 
-#ifdef __SUNPRO_CC
+/*
+ * For all the pragma pack usage in this file, the following logic applies:
+ *          To apply:       To reset:
+ * Sun CC:  pack(#)       / pack(0)
+ * IBM xlC: pack(#)       / pack(pop)
+ * HP aCC:  pack #        / pack
+ * Others:  pack(push, #) / pack(pop)
+ * The -Dlint case is explicitly excluded because GCC will error out when
+ * pack pragmas are used on unsupported platforms. If GCC is being used
+ * simply for error checking, these errors will be avoided.
+ */
+
+#if defined(__SUNPRO_CC) || defined(__xlC__)
 #pragma pack(8)
-#else
+#elif defined(__HP_aCC)
+#pragma pack 8
+#elif !defined(lint)
 #pragma pack(push, 8)
 #endif
 
 const JSString::Data JSAtom::unitStaticTable[]
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__xlC__)
 __attribute__ ((aligned (8)))
 #endif
 = { R8(0) };
 
-#ifdef __SUNPRO_CC
+#if defined(__SUNPRO_CC)
 #pragma pack(0)
-#else
+#elif defined(__HP_aCC)
+#pragma pack
+#elif !defined(lint)
 #pragma pack(pop)
 #endif
 
@@ -3379,21 +3386,25 @@ const jschar JSAtom::fromSmallChar[] = { R6(0) };
       offsetof(JSString::Data, inlineStorage)) },                             \
     { {FROM_SMALL_CHAR((c) >> 6), FROM_SMALL_CHAR((c) & 0x3F), 0x00} } }
 
-#ifdef __SUNPRO_CC
+#if defined(__SUNPRO_CC) || defined(__xlC__)
 #pragma pack(8)
-#else
+#elif defined(__HP_aCC)
+#pragma pack 8
+#elif !defined(lint)
 #pragma pack(push, 8)
 #endif
 
 const JSString::Data JSAtom::length2StaticTable[]
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__xlC__)
 __attribute__ ((aligned (8)))
 #endif
 = { R12(0) };
 
-#ifdef __SUNPRO_CC
+#if defined(__SUNPRO_CC)
 #pragma pack(0)
-#else
+#elif defined(__HP_aCC)
+#pragma pack
+#elif !defined(lint)
 #pragma pack(pop)
 #endif
 
@@ -3415,14 +3426,16 @@ __attribute__ ((aligned (8)))
 
 JS_STATIC_ASSERT(100 + (1 << 7) + (1 << 4) + (1 << 3) + (1 << 2) == 256);
 
-#ifdef __SUNPRO_CC
+#if defined(__SUNPRO_CC) || defined(__xlC__)
 #pragma pack(8)
-#else
+#elif defined(__HP_aCC)
+#pragma pack 8
+#elif !defined(lint)
 #pragma pack(push, 8)
 #endif
 
 const JSString::Data JSAtom::hundredStaticTable[]
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__xlC__)
 __attribute__ ((aligned (8)))
 #endif
 = { R7(100), /* 100 through 227 */
@@ -3443,9 +3456,11 @@ const JSString::Data *const JSAtom::intStaticTable[] = { R8(0) };
 
 #undef R
 
-#ifdef __SUNPRO_CC
+#if defined(__SUNPRO_CC)
 #pragma pack(0)
-#else
+#elif defined(__HP_aCC)
+#pragma pack
+#elif !defined(lint)
 #pragma pack(pop)
 #endif
 
@@ -3929,6 +3944,8 @@ js::ValueToStringBufferSlow(JSContext *cx, const Value &arg, StringBuffer &sb)
 JS_FRIEND_API(JSString *)
 js_ValueToSource(JSContext *cx, const Value &v)
 {
+    JS_CHECK_RECURSION(cx, return NULL);
+
     if (v.isUndefined())
         return cx->runtime->atomState.void0Atom;
     if (v.isString())

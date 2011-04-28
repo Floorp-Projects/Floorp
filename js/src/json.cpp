@@ -68,6 +68,8 @@
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
+#include "vm/Stack-inl.h"
+
 using namespace js;
 using namespace js::gc;
 using namespace js::types;
@@ -183,47 +185,75 @@ js_TryJSON(JSContext *cx, Value *vp)
 }
 
 
-static const char quote = '\"';
-static const char backslash = '\\';
-static const char unicodeEscape[] = "\\u00";
-
-static JSBool
-write_string(JSContext *cx, StringBuffer &sb, const jschar *buf, uint32 len)
+static inline bool IsQuoteSpecialCharacter(jschar c)
 {
-    if (!sb.append(quote))
-        return JS_FALSE;
+    JS_STATIC_ASSERT('\b' < ' ');
+    JS_STATIC_ASSERT('\f' < ' ');
+    JS_STATIC_ASSERT('\n' < ' ');
+    JS_STATIC_ASSERT('\r' < ' ');
+    JS_STATIC_ASSERT('\t' < ' ');
+    return c == '"' || c == '\\' || c < ' ';
+}
 
-    uint32 mark = 0;
-    uint32 i;
-    for (i = 0; i < len; ++i) {
-        if (buf[i] == quote || buf[i] == backslash) {
-            if (!sb.append(&buf[mark], i - mark) || !sb.append(backslash) ||
-                !sb.append(buf[i])) {
-                return JS_FALSE;
-            }
-            mark = i + 1;
-        } else if (buf[i] <= 31 || buf[i] == 127) {
-            if (!sb.append(&buf[mark], i - mark) ||
-                !sb.append(unicodeEscape)) {
-                return JS_FALSE;
-            }
-            char ubuf[3];
-            size_t len = JS_snprintf(ubuf, sizeof(ubuf), "%.2x", buf[i]);
-            JS_ASSERT(len == 2);
-            jschar wbuf[3];
-            size_t wbufSize = JS_ARRAY_LENGTH(wbuf);
-            if (!js_InflateStringToBuffer(cx, ubuf, len, wbuf, &wbufSize) ||
-                !sb.append(wbuf, wbufSize)) {
-                return JS_FALSE;
-            }
-            mark = i + 1;
+/* ES5 15.12.3 Quote. */
+static bool
+Quote(JSContext *cx, StringBuffer &sb, JSString *str)
+{
+    JS::Anchor<JSString *> anchor(str);
+    size_t len = str->length();
+    const jschar *buf = str->getChars(cx);
+    if (!buf)
+        return false;
+
+    /* Step 1. */
+    if (!sb.append('"'))
+        return false;
+
+    /* Step 2. */
+    for (size_t i = 0; i < len; ++i) {
+        /* Batch-append maximal character sequences containing no escapes. */
+        size_t mark = i;
+        do {
+            if (IsQuoteSpecialCharacter(buf[i]))
+                break;
+        } while (++i < len);
+        if (i > mark) {
+            if (!sb.append(&buf[mark], i - mark))
+                return false;
+            if (i == len)
+                break;
+        }
+
+        jschar c = buf[i];
+        if (c == '"' || c == '\\') {
+            if (!sb.append('\\') || !sb.append(c))
+                return false;
+        } else if (c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t') {
+           jschar abbrev = (c == '\b')
+                         ? 'b'
+                         : (c == '\f')
+                         ? 'f'
+                         : (c == '\n')
+                         ? 'n'
+                         : (c == '\r')
+                         ? 'r'
+                         : 't';
+           if (!sb.append('\\') || !sb.append(abbrev))
+               return false;
+           mark = i + 1;
+        } else {
+            JS_ASSERT(c < ' ');
+            if (!sb.append("\\u00"))
+                return false;
+            JS_ASSERT((c >> 4) < 10);
+            uint8 x = c >> 4, y = c % 16;
+            if (!sb.append('0' + x) || !sb.append(y < 10 ? '0' + y : 'a' + (y - 10)))
+                return false;
         }
     }
 
-    if (mark < len && !sb.append(&buf[mark], len - mark))
-        return JS_FALSE;
-
-    return sb.append(quote);
+    /* Steps 3-4. */
+    return sb.append('"');
 }
 
 class StringifyContext
@@ -249,9 +279,8 @@ public:
             if (gap.length() > 10)
                 gap.resize(10);
         } else if (gapValue.value().isNumber()) {
-            jsdouble d = gapValue.value().isInt32()
-                         ? gapValue.value().toInt32()
-                         : js_DoubleToInteger(gapValue.value().toDouble());
+            jsdouble d;
+            JS_ALWAYS_TRUE(ToInteger(cx, gapValue.value(), &d));
             d = JS_MIN(10, d);
             if (d >= 1 && !gap.appendN(' ', uint32(d)))
                 return false;
@@ -340,14 +369,14 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
 
             LeaveTrace(cx);
             InvokeArgsGuard args;
-            if (!cx->stack().pushInvokeArgs(cx, 1, &args))
+            if (!cx->stack.pushInvokeArgs(cx, 1, &args))
                 return false;
 
             args.calleev() = toJSON;
             args.thisv() = *vp;
             args[0] = StringValue(keyStr);
 
-            if (!Invoke(cx, args, 0))
+            if (!Invoke(cx, args))
                 return false;
             *vp = args.rval();
         }
@@ -363,7 +392,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
 
         LeaveTrace(cx);
         InvokeArgsGuard args;
-        if (!cx->stack().pushInvokeArgs(cx, 2, &args))
+        if (!cx->stack.pushInvokeArgs(cx, 2, &args))
             return false;
 
         args.calleev() = ObjectValue(*scx->replacer);
@@ -371,7 +400,7 @@ PreprocessValue(JSContext *cx, JSObject *holder, jsid key, Value *vp, StringifyC
         args[0] = StringValue(keyStr);
         args[1] = *vp;
 
-        if (!Invoke(cx, args, 0))
+        if (!Invoke(cx, args))
             return false;
         *vp = args.rval();
     }
@@ -495,18 +524,11 @@ JO(JSContext *cx, JSObject *obj, StringifyContext *scx)
         if (!WriteIndent(cx, scx, scx->depth))
             return JS_FALSE;
 
-        // Be careful below: this string is weakly rooted!
-        JSString *s = js_ValueToString(cx, IdToValue(id));
+        JSString *s = IdToString(cx, id);
         if (!s)
             return JS_FALSE;
 
-        JS::Anchor<JSString *> anchor(s);
-        size_t length = s->length();
-        const jschar *chars = s->getChars(cx);
-        if (!chars)
-            return JS_FALSE;
-
-        if (!write_string(cx, scx->sb, chars, length) ||
+        if (!Quote(cx, scx->sb, s) ||
             !scx->sb.append(':') ||
             !(scx->gap.empty() || scx->sb.append(' ')) ||
             !Str(cx, outputValue, scx)) {
@@ -615,14 +637,8 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
      */
 
     /* Step 8. */
-    if (v.isString()) {
-        JSString *str = v.toString();
-        size_t length = str->length();
-        const jschar *chars = str->getChars(cx);
-        if (!chars)
-            return false;
-        return write_string(cx, scx->sb, chars, length);
-    }
+    if (v.isString())
+        return Quote(cx, scx->sb, v.toString());
 
     /* Step 5. */
     if (v.isNull())
@@ -1411,6 +1427,8 @@ js_InitJSONClass(JSContext *cx, JSObject *obj)
 
     if (!JS_DefineFunctionsWithPrefix(cx, JSON, json_static_methods, js_JSON_str))
         return NULL;
+
+    MarkStandardClassInitializedNoProto(obj, &js_JSONClass);
 
     return JSON;
 }

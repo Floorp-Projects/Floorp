@@ -53,6 +53,12 @@ class SVGPreserveAspectRatio
   friend class SVGAnimatedPreserveAspectRatio;
 
 public:
+  SVGPreserveAspectRatio()
+    : mAlign(0)
+    , mMeetOrSlice(0)
+    , mDefer(false)
+  {};
+
   nsresult SetAlign(PRUint16 aAlign) {
     if (aAlign < nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE ||
         aAlign > nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX)

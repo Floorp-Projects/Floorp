@@ -48,7 +48,7 @@
 #include "nsIRegion.h"
 #include "nsView.h"
 #include "nsIViewObserver.h"
-#include "nsIDeviceContext.h"
+#include "nsDeviceContext.h"
 
 
 /**
@@ -100,7 +100,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(nsIDeviceContext* aContext);
+  NS_IMETHOD  Init(nsDeviceContext* aContext);
 
   NS_IMETHOD_(nsIView*) CreateView(const nsRect& aBounds,
                                    const nsIView* aParent,
@@ -144,7 +144,7 @@ public:
   NS_IMETHOD  SetViewObserver(nsIViewObserver *aObserver);
   NS_IMETHOD  GetViewObserver(nsIViewObserver *&aObserver);
 
-  NS_IMETHOD  GetDeviceContext(nsIDeviceContext *&aContext);
+  NS_IMETHOD  GetDeviceContext(nsDeviceContext *&aContext);
 
   virtual nsIViewManager* BeginUpdateViewBatch(void);
   NS_IMETHOD  EndUpdateViewBatch(PRUint32 aUpdateFlags);
@@ -275,7 +275,7 @@ public: // NOT in nsIViewManager, so private to the view module
   }
 
 private:
-  nsCOMPtr<nsIDeviceContext> mContext;
+  nsRefPtr<nsDeviceContext> mContext;
   nsIViewObserver   *mObserver;
   // relative to mRootView and set only on the root view manager
   nsPoint           mMouseLocation;

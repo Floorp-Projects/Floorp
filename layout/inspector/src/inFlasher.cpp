@@ -43,6 +43,7 @@
 #include "nsIPresShell.h"
 #include "nsIFrame.h"
 #include "nsReadableUtils.h"
+#include "nsRenderingContext.h"
 
 #include "prprf.h"
 
@@ -141,7 +142,7 @@ inFlasher::RepaintElement(nsIDOMElement* aElement)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 inFlasher::DrawElementOutline(nsIDOMElement* aElement)
 {
   NS_ENSURE_ARG_POINTER(aElement);
@@ -158,20 +159,19 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement)
     nsPoint offset;
     nsIWidget* widget = frame->GetNearestWidget(offset);
     if (widget) {
-      nsCOMPtr<nsIRenderingContext> rcontext;
-      frame->PresContext()->DeviceContext()->
-        CreateRenderingContext(widget, *getter_AddRefs(rcontext));
-      if (rcontext) {
-        nsRect rect(offset, frame->GetSize());
-        if (mInvert) {
-          rcontext->InvertRect(rect);
-        }
+      nsRefPtr<nsRenderingContext> rcontext = new nsRenderingContext();
+      rcontext->Init(frame->PresContext()->DeviceContext(),
+                     widget->GetThebesSurface());
 
-        PRBool isLastFrame = frame->GetNextContinuation() == nsnull;
-        DrawOutline(rect.x, rect.y, rect.width, rect.height, rcontext,
-                    isFirstFrame, isLastFrame);
-        isFirstFrame = PR_FALSE;
+      nsRect rect(offset, frame->GetSize());
+      if (mInvert) {
+        rcontext->InvertRect(rect);
       }
+
+      PRBool isLastFrame = frame->GetNextContinuation() == nsnull;
+      DrawOutline(rect.x, rect.y, rect.width, rect.height, rcontext,
+                  isFirstFrame, isLastFrame);
+      isFirstFrame = PR_FALSE;
     }
     frame = frame->GetNextContinuation();
   }
@@ -207,7 +207,7 @@ inFlasher::ScrollElementIntoView(nsIDOMElement *aElement)
 
 void
 inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
-                       nsIRenderingContext* aRenderContext,
+                       nsRenderingContext* aRenderContext,
                        PRBool aDrawBegin, PRBool aDrawEnd)
 {
   aRenderContext->SetColor(mColor);
@@ -225,7 +225,7 @@ inFlasher::DrawOutline(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
 void
 inFlasher::DrawLine(nscoord aX, nscoord aY, nscoord aLength,
                     PRBool aDir, PRBool aBounds,
-                    nsIRenderingContext* aRenderContext)
+                    nsRenderingContext* aRenderContext)
 {
   nscoord thickTwips = nsPresContext::CSSPixelsToAppUnits(mThickness);
   if (aDir) { // horizontal
