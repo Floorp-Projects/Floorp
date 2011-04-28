@@ -176,7 +176,7 @@ JetpackActorCommon::jsval_to_CompVariant(JSContext* cx, JSType type, jsval from,
   if (type != JSTYPE_OBJECT)
     return false;
 
-  js::LazilyConstructed<OpaqueSeenType> lost;
+  js::Maybe<OpaqueSeenType> lost;
   if (!seen) {
     lost.construct();
     seen = lost.addr();
@@ -337,7 +337,7 @@ JetpackActorCommon::jsval_from_CompVariant(JSContext* cx,
                                            jsval* to,
                                            OpaqueSeenType* seen)
 {
-  js::LazilyConstructed<OpaqueSeenType> lost;
+  js::Maybe<OpaqueSeenType> lost;
   if (!seen) {
     lost.construct();
     seen = lost.addr();
