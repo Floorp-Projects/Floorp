@@ -393,7 +393,6 @@ class PunboxAssembler : public JSC::MacroAssembler
     Jump fastArrayLoadSlot(T address, bool holeCheck,
                            MaybeRegisterID typeReg, RegisterID dataReg)
     {
-        JS_ASSERT_IF(holeCheck, typeReg.isSet());
         Jump notHole;
         if (typeReg.isSet()) {
             loadValueAsComponents(address, typeReg.reg(), dataReg);
@@ -401,6 +400,10 @@ class PunboxAssembler : public JSC::MacroAssembler
                 notHole = branchPtr(Equal, typeReg.reg(), ImmType(JSVAL_TYPE_MAGIC));
         } else {
             loadPayload(address, dataReg);
+            if (holeCheck) {
+                loadTypeTag(address, Registers::ValueReg);
+                notHole = branch32(Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
+            }
         }
         return notHole;
     }

@@ -195,7 +195,7 @@ mjit::Compiler::jsop_bitop(JSOp op)
         rhs->isType(JSVAL_TYPE_INT32) && rhs->getValue().toInt32() == 0 &&
         (op == JSOP_BITOR || op == JSOP_LSH)) {
         ensureInteger(lhs, Uses(2));
-        RegisterID reg = frame.copyDataIntoReg(lhs);
+        RegisterID reg = frame.ownRegForData(lhs);
 
         stubcc.leave();
         OOL_STUBCALL(stub);
@@ -1465,7 +1465,7 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
     RegisterID dataReg = frame.allocReg();
 
     MaybeRegisterID typeReg;
-    if (!isPacked || type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
+    if (type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
         typeReg = frame.allocReg();
 
     // Guard on the array's initialized length.
@@ -1500,12 +1500,8 @@ mjit::Compiler::jsop_getelem_dense(bool isPacked)
         holeCheck = masm.fastArrayLoadSlot(slot, !isPacked, typeReg, dataReg);
     }
 
-    if (!isPacked) {
-        if (!allowUndefined)
-            stubcc.linkExit(holeCheck, Uses(2));
-        if (type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE)
-            frame.freeReg(typeReg.reg());
-    }
+    if (!isPacked && !allowUndefined)
+        stubcc.linkExit(holeCheck, Uses(2));
 
     stubcc.leave();
     OOL_STUBCALL(stubs::GetElem);

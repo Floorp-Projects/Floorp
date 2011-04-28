@@ -84,6 +84,7 @@ namespace analyze {
  */
 
 class SSAValue;
+class SSAUseChain;
 struct LoopAnalysis;
 struct SlotValue;
 
@@ -147,6 +148,9 @@ class Bytecode
 
     /* Generated location of each value popped by this bytecode. */
     SSAValue *poppedValues;
+
+    /* Points where values pushed or written by this bytecode are popped. */
+    SSAUseChain **pushedUses;
 
     union {
         /*
@@ -217,30 +221,28 @@ GetUseCount(JSScript *script, unsigned offset)
 }
 
 /*
- * For opcodes which access local variables or arguments, we track an extra
- * use during SSA analysis for the value of the variable before/after the op.
+ * For opcodes which assign to a local variable or argument, track an extra def
+ * during SSA analysis for the value's use chain and assigned type.
  */
 static inline bool
-ExtendedUse(jsbytecode *pc)
+ExtendedDef(jsbytecode *pc)
 {
     switch ((JSOp)*pc) {
       case JSOP_SETARG:
-      case JSOP_GETARG:
-      case JSOP_CALLARG:
       case JSOP_INCARG:
       case JSOP_DECARG:
       case JSOP_ARGINC:
       case JSOP_ARGDEC:
+      case JSOP_FORARG:
       case JSOP_SETLOCAL:
       case JSOP_SETLOCALPOP:
-      case JSOP_GETLOCAL:
-      case JSOP_CALLLOCAL:
       case JSOP_DEFLOCALFUN:
       case JSOP_DEFLOCALFUN_FC:
       case JSOP_INCLOCAL:
       case JSOP_DECLOCAL:
       case JSOP_LOCALINC:
       case JSOP_LOCALDEC:
+      case JSOP_FORLOCAL:
         return true;
       default:
         return false;
@@ -248,19 +250,19 @@ ExtendedUse(jsbytecode *pc)
 }
 
 /*
- * For opcodes which assign to a local variable or argument but don't push a
- * value with the same type set, we track an extra def during type inference
- * for the value assigned here.
+ * For opcodes which access local variables or arguments, we track an extra
+ * use during SSA analysis for the value of the variable before/after the op.
  */
 static inline bool
-ExtendedDef(jsbytecode *pc)
+ExtendedUse(jsbytecode *pc)
 {
+    if (ExtendedDef(pc))
+        return true;
     switch ((JSOp)*pc) {
-      case JSOP_DEFLOCALFUN:
-      case JSOP_DEFLOCALFUN_FC:
-      case JSOP_SETLOCALPOP:
-      case JSOP_FORARG:
-      case JSOP_FORLOCAL:
+      case JSOP_GETARG:
+      case JSOP_CALLARG:
+      case JSOP_GETLOCAL:
+      case JSOP_CALLLOCAL:
         return true;
       default:
         return false;
@@ -373,7 +375,7 @@ static inline uint32 LocalSlot(JSScript *script, uint32 local) {
     return 2 + (script->fun ? script->fun->nargs : 0) + local;
 }
 static inline uint32 TotalSlots(JSScript *script) {
-    return 2 + (script->fun ? script->fun->nargs : 0) + script->nfixed;
+    return LocalSlot(script, 0) + script->nfixed;
 }
 
 static inline uint32 StackSlot(JSScript *script, uint32 index) {
@@ -538,17 +540,20 @@ struct LifetimeVariable
     }
 
     /*
-     * Get the offset of the first write to the variable in the body of a loop,
-     * -1 if the loop never writes the variable.
+     * Get the offset of the first write to the variable in an inclusive range,
+     * -1 if the variable is not written in the range.
      */
-    uint32 firstWrite(LoopAnalysis *loop) const {
+    uint32 firstWrite(uint32 start, uint32 end) const {
         Lifetime *segment = lifetime ? lifetime : saved;
-        while (segment && segment->start <= loop->backedge) {
-            if (segment->start >= loop->head && segment->write)
+        while (segment && segment->start <= end) {
+            if (segment->start >= start && segment->write)
                 return segment->start;
             segment = segment->next;
         }
         return uint32(-1);
+    }
+    uint32 firstWrite(LoopAnalysis *loop) const {
+        return firstWrite(loop->head, loop->backedge);
     }
 
     /* Return true if the variable cannot decrease during the body of a loop. */
@@ -665,29 +670,16 @@ class SSAValue
         return u.phi.offset;
     }
 
+    SSAPhiNode *phiNode() const {
+        JS_ASSERT(kind() == PHI);
+        return u.phi.node;
+    }
+
+    /* Other accessors. */
+
 #ifdef DEBUG
     void print() const;
 #endif
-
-  private:
-    union {
-        struct {
-            Kind kind : 2;
-            uint32 offset : 30;
-            uint32 index;
-        } pushed;
-        struct {
-            Kind kind : 2;
-            bool initial : 1;
-            uint32 slot : 29;
-            uint32 offset;
-        } var;
-        struct {
-            Kind kind : 2;
-            uint32 offset : 30;
-            SSAPhiNode *node;
-        } phi;
-    } u;
 
     void clear() {
         PodZero(this);
@@ -723,10 +715,25 @@ class SSAValue
         u.phi.node = node;
     }
 
-    SSAPhiNode *phiNode() const {
-        JS_ASSERT(kind() == PHI);
-        return u.phi.node;
-    }
+  private:
+    union {
+        struct {
+            Kind kind : 2;
+            uint32 offset : 30;
+            uint32 index;
+        } pushed;
+        struct {
+            Kind kind : 2;
+            bool initial : 1;
+            uint32 slot : 29;
+            uint32 offset;
+        } var;
+        struct {
+            Kind kind : 2;
+            uint32 offset : 30;
+            SSAPhiNode *node;
+        } phi;
+    } u;
 };
 
 /*
@@ -741,6 +748,7 @@ struct SSAPhiNode
     uint32 slot;
     uint32 length;
     SSAValue *options;
+    SSAUseChain *uses;
     SSAPhiNode() { PodZero(this); }
 };
 
@@ -770,6 +778,19 @@ SSAValue::phiTypes() const
     JS_ASSERT(kind() == PHI);
     return &u.phi.node->types;
 }
+
+struct SSAUseChain
+{
+    bool popped : 1;
+    uint32 offset : 31;
+    union {
+        uint32 which;
+        SSAPhiNode *phi;
+    } u;
+    SSAUseChain *next;
+
+    SSAUseChain() { PodZero(this); }
+};
 
 struct SlotValue
 {
@@ -952,6 +973,20 @@ class ScriptAnalysis
     }
     types::TypeSet *poppedTypes(const jsbytecode *pc, uint32 which) {
         return getValueTypes(poppedValue(pc, which));
+    }
+
+    bool trackUseChain(const SSAValue &v) {
+        return v.kind() != SSAValue::EMPTY &&
+            (v.kind() != SSAValue::VAR || !v.varInitial());
+    }
+
+    SSAUseChain *& useChain(const SSAValue &v) {
+        JS_ASSERT(trackUseChain(v));
+        if (v.kind() == SSAValue::PUSHED)
+            return getCode(v.pushedOffset()).pushedUses[v.pushedIndex()];
+        if (v.kind() == SSAValue::VAR)
+            return getCode(v.varOffset()).pushedUses[GetDefCount(script, v.varOffset())];
+        return v.phiNode()->uses;
     }
 
     mjit::RegisterAllocation *&getAllocation(uint32 offset) {
