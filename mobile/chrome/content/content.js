@@ -270,6 +270,7 @@ let Content = {
     addMessageListener("Browser:SetCharset", this);
     addMessageListener("Browser:ContextCommand", this);
     addMessageListener("Browser:CanUnload", this);
+    addMessageListener("Browser:CanCaptureMouse", this);
 
     if (Util.isParentProcess())
       addEventListener("DOMActivate", this, true);
@@ -591,6 +592,17 @@ let Content = {
 
         let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
         webNav.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+        break;
+      }
+
+      case "Browser:CanCaptureMouse": {
+        let json = {
+          contentCanCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIDOMWindowUtils)
+                                      .mayHaveTouchEventListeners,
+          messageId: aMessage.json.messageId
+        };
+        sendAsyncMessage("Browser:CanCaptureMouse:Return", json);
         break;
       }
     }
@@ -1200,7 +1212,9 @@ var TouchEventHandler = {
   },
 
   receiveMessage: function(aMessage) {
-    if (Util.isParentProcess())
+    if (!content.QueryInterface(Ci.nsIInterfaceRequestor)
+                .getInterface(Ci.nsIDOMWindowUtils)
+                .mayHaveTouchEventListeners || Util.isParentProcess())
       return;
 
     let json = aMessage.json;
@@ -1225,9 +1239,9 @@ var TouchEventHandler = {
         break;
     }
 
-    if (cancelled)
+    if (aMessage.name != "Browser:MouseUp")
       sendAsyncMessage("Browser:CaptureEvents", { messageId: json.messageId,
-                                                  panning: true });
+                                                  panning: cancelled });
   },
 
   sendEvent: function(aName, aData, aElement) {
