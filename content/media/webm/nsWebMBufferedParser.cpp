@@ -44,7 +44,6 @@
 using mozilla::MonitorAutoEnter;
 
 static const double NS_PER_S = 1e9;
-static const double MS_PER_S = 1e3;
 
 static PRUint32
 VIntLength(unsigned char aFirstByte, PRUint32* aMask)

@@ -1048,14 +1048,14 @@ namespace js {
 
 struct Parser : private js::AutoGCRooter
 {
-    JSContext           * const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
+    JSContext           *const context; /* FIXME Bug 551291: use AutoGCRooter::context? */
     JSAtomListElement   *aleFreeList;
     void                *tempFreeList[NUM_TEMP_FREELISTS];
     TokenStream         tokenStream;
     void                *tempPoolMark;  /* initial JSContext.tempPool mark */
     JSPrincipals        *principals;    /* principals associated with source */
-    JSStackFrame *const callerFrame;    /* scripted caller frame for eval and dbgapi */
-    JSObject     *const callerVarObj;   /* callerFrame's varObj */
+    StackFrame          *const callerFrame;  /* scripted caller frame for eval and dbgapi */
+    JSObject            *const callerVarObj; /* callerFrame's varObj */
     JSParseNode         *nodeList;      /* list of recyclable parse-node structs */
     uint32              functionCount;  /* number of functions in current unit */
     JSObjectBox         *traceListHead; /* list of parsed object for GC tracing */
@@ -1064,7 +1064,7 @@ struct Parser : private js::AutoGCRooter
     /* Root atoms and objects allocated for the parsed tree. */
     js::AutoKeepAtoms   keepAtoms;
 
-    Parser(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL);
+    Parser(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
     ~Parser();
 
     friend void js::AutoGCRooter::trace(JSTracer *trc);
@@ -1237,7 +1237,7 @@ struct Compiler
     Parser parser;
     GlobalScope *globalScope;
 
-    Compiler(JSContext *cx, JSPrincipals *prin = NULL, JSStackFrame *cfp = NULL);
+    Compiler(JSContext *cx, JSPrincipals *prin = NULL, StackFrame *cfp = NULL);
 
     /*
      * Initialize a compiler. Parameters are passed on to init parser.
@@ -1254,7 +1254,7 @@ struct Compiler
                         const char *filename, uintN lineno, JSVersion version);
 
     static JSScript *
-    compileScript(JSContext *cx, JSObject *scopeChain, JSStackFrame *callerFrame,
+    compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerFrame,
                   JSPrincipals *principals, uint32 tcflags,
                   const jschar *chars, size_t length,
                   const char *filename, uintN lineno, JSVersion version,

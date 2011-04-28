@@ -27,7 +27,9 @@ function test()
     SimpleTest.finish();
 }
 
-  setTimeout(test, 100);
+  addLoadEvent(function() {
+    setTimeout(test, 0);
+  });
   SimpleTest.waitForExplicitFinish();
 </script>
 </pre>

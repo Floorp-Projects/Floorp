@@ -1,1 +1,1 @@
-new Function.prototype
+try { new Function.prototype } catch (e) {}

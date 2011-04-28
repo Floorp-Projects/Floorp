@@ -360,7 +360,7 @@
     </arrowbox>
 
     <box id="bookmark-container" class="perm-modal-block window-width window-height" hidden="true">
-      <dialog id="bookmark-dialog" flex="1">
+      <dialog id="bookmark-dialog" class="content-dialog" flex="1">
         <hbox id="bookmark-form-title" class="prompt-title">
           <description>&editBookmarkDialog.title;</description>
         </hbox>
@@ -523,7 +523,7 @@
 
 #ifdef MOZ_SERVICES_SYNC
     <box id="syncsetup-container" class="perm-modal-block window-width window-height" hidden="true">
-      <dialog id="syncsetup-dialog" flex="1">
+      <dialog id="syncsetup-dialog" class="content-dialog" flex="1">
         <hbox class="prompt-title">
           <description>&sync.setup.title;</description>
         </hbox>

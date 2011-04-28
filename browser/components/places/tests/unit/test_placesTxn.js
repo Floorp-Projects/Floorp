@@ -100,11 +100,6 @@ bmsvc.addObserver(observer, false);
 var bmStartIndex = 0;
 
 // main
-
-function time() {
-    return (new Date()).getTime();
-}
-
 function run_test() {
   // get bookmarks root index
   var root = bmsvc.bookmarksMenuFolder;
@@ -542,7 +537,7 @@ function run_test() {
                       expires: Ci.nsIAnnotationService.EXPIRE_NEVER };
   var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
            getService(Ci.nsINavHistoryService);
-  hs.addVisit(uri("http://www.mozilla.org/"), time() * 1000, null,
+  hs.addVisit(uri("http://www.mozilla.org/"), Date.now() * 1000, null,
               hs.TRANSITION_TYPED, false, 0);
   var genPageAnnoTxn = ptSvc.setPageAnnotation(uri("http://www.mozilla.org/"), pageAnnoObj);
   genPageAnnoTxn.doTransaction();
@@ -617,7 +612,7 @@ function run_test() {
 
   // Test editing item date added
   var oldAdded = bmsvc.getItemDateAdded(bkmk1Id);
-  var newAdded = time();
+  var newAdded = Date.now();
   var eidaTxn = ptSvc.editItemDateAdded(bkmk1Id, newAdded);
   eidaTxn.doTransaction();
   do_check_eq(newAdded, bmsvc.getItemDateAdded(bkmk1Id));
@@ -626,7 +621,7 @@ function run_test() {
 
   // Test editing item last modified 
   var oldModified = bmsvc.getItemLastModified(bkmk1Id);
-  var newModified = time();
+  var newModified = Date.now();
   var eilmTxn = ptSvc.editItemLastModified(bkmk1Id, newModified);
   eilmTxn.doTransaction();
   do_check_eq(newModified, bmsvc.getItemLastModified(bkmk1Id));
@@ -734,7 +729,7 @@ function run_test() {
 
   // Test creating an item with child transactions.
   var childTxns = [];
-  var newDateAdded = time() - 20000;
+  var newDateAdded = Date.now() - 20000;
   childTxns.push(ptSvc.editItemDateAdded(null, newDateAdded));
   var itemChildAnnoObj = { name: "testAnno/testInt",
                            type: Ci.nsIAnnotationService.TYPE_INT32,

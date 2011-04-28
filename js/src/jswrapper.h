@@ -161,7 +161,7 @@ class AutoCompartment
     JSCompartment * const destination;
   private:
     LazilyConstructed<DummyFrameGuard> frame;
-    JSFrameRegs regs;
+    FrameRegs regs;
     AutoStringRooter input;
     bool entered;
 

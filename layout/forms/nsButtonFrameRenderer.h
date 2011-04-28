@@ -68,12 +68,12 @@ public:
 
 
   void PaintOutlineAndFocusBorders(nsPresContext* aPresContext,
-                                   nsIRenderingContext& aRenderingContext,
+                                   nsRenderingContext& aRenderingContext,
                                    const nsRect& aDirtyRect,
                                    const nsRect& aRect);
 
   void PaintBorderAndBackground(nsPresContext* aPresContext,
-                                nsIRenderingContext& aRenderingContext,
+                                nsRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 const nsRect& aRect,
                                 PRUint32 aBGFlags);

@@ -64,10 +64,10 @@
 #include "jsstaticcheck.h"
 #include "jswrapper.h"
 
-#include "jscntxtinlines.h"
 #include "jsinferinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
+
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -84,9 +84,6 @@ static void
 exn_finalize(JSContext *cx, JSObject *obj);
 
 static JSBool
-exn_enumerate(JSContext *cx, JSObject *obj);
-
-static JSBool
 exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp);
 
@@ -98,7 +95,7 @@ Class js_ErrorClass = {
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
     StrictPropertyStub,   /* setProperty */
-    exn_enumerate,
+    EnumerateStub,
     (JSResolveOp)exn_resolve,
     ConvertStub,
     exn_finalize,
@@ -272,7 +269,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JSErrorReporter older;
     JSExceptionState *state;
     jsid callerid;
-    JSStackFrame *fp, *fpstop;
+    StackFrame *fp, *fpstop;
     size_t stackDepth, valueCount, size;
     JSBool overflow;
     JSExnPrivate *priv;
@@ -437,32 +434,6 @@ exn_finalize(JSContext *cx, JSObject *obj)
 }
 
 static JSBool
-exn_enumerate(JSContext *cx, JSObject *obj)
-{
-    JSAtomState *atomState;
-    uintN i;
-    JSAtom *atom;
-    JSObject *pobj;
-    JSProperty *prop;
-
-    JS_STATIC_ASSERT(sizeof(JSAtomState) <= (size_t)(uint16)-1);
-    static const uint16 offsets[] = {
-        (uint16)offsetof(JSAtomState, messageAtom),
-        (uint16)offsetof(JSAtomState, fileNameAtom),
-        (uint16)offsetof(JSAtomState, lineNumberAtom),
-        (uint16)offsetof(JSAtomState, stackAtom),
-    };
-
-    atomState = &cx->runtime->atomState;
-    for (i = 0; i != JS_ARRAY_LENGTH(offsets); ++i) {
-        atom = *(JSAtom **)((uint8 *)atomState + offsets[i]);
-        if (!js_LookupProperty(cx, obj, ATOM_TO_JSID(atom), &pobj, &prop))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
-static JSBool
 exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             JSObject **objp)
 {
@@ -472,6 +443,7 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
     JSString *stack;
     const char *prop;
     jsval v;
+    uintN attrs;
 
     *objp = NULL;
     priv = GetExnPrivate(cx, obj);
@@ -491,6 +463,7 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
                 return true;
 
             v = STRING_TO_JSVAL(priv->message);
+            attrs = 0;
             goto define;
         }
 
@@ -498,6 +471,7 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (str == atom) {
             prop = js_fileName_str;
             v = STRING_TO_JSVAL(priv->filename);
+            attrs = JSPROP_ENUMERATE;
             goto define;
         }
 
@@ -505,6 +479,7 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
         if (str == atom) {
             prop = js_lineNumber_str;
             v = INT_TO_JSVAL(priv->lineno);
+            attrs = JSPROP_ENUMERATE;
             goto define;
         }
 
@@ -518,13 +493,14 @@ exn_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
             priv->stackDepth = 0;
             prop = js_stack_str;
             v = STRING_TO_JSVAL(stack);
+            attrs = JSPROP_ENUMERATE;
             goto define;
         }
     }
     return true;
 
   define:
-    if (!JS_DefineProperty(cx, obj, prop, v, NULL, NULL, JSPROP_ENUMERATE))
+    if (!JS_DefineProperty(cx, obj, prop, v, NULL, NULL, attrs))
         return false;
     *objp = obj;
     return true;
@@ -719,7 +695,7 @@ static JSBool
 Exception(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *message, *filename;
-    JSStackFrame *fp;
+    StackFrame *fp;
 
 #ifdef JS_METHODJIT
     js::mjit::ExpandInlineFrames(cx, true);
@@ -1075,10 +1051,10 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
         if (!js_DefineNativePropertyWithType(cx, proto, nameId, StringValue(atom),
                                              PropertyStub, StrictPropertyStub,
-                                             JSPROP_ENUMERATE, 0, 0, NULL) ||
+                                             0, 0, 0, NULL) ||
             !js_DefineNativePropertyWithType(cx, proto, messageId, empty,
                                              PropertyStub, StrictPropertyStub,
-                                             JSPROP_ENUMERATE, 0, 0, NULL) ||
+                                             0, 0, 0, NULL) ||
             !js_DefineNativePropertyWithType(cx, proto, fileNameId, empty,
                                              PropertyStub, StrictPropertyStub,
                                              JSPROP_ENUMERATE, 0, 0, NULL) ||

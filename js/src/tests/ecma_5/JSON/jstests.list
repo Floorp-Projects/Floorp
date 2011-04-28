@@ -17,6 +17,7 @@ script stringify-ignore-noncallable-toJSON.js
 script stringify-primitives.js
 script stringify-replacer.js
 script stringify-replacer-with-array-indexes.js
+script stringify-special-escapes.js
 script stringify-toJSON-arguments.js
 script trailing-comma.js
 

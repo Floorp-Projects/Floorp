@@ -2597,6 +2597,7 @@ FrameState::forgetKnownDouble(FrameEntry *fe)
 
     forgetAllRegs(fe);
     fe->resetUnsynced();
+    fe->clear();
 
     regstate(typeReg).associate(fe, RematInfo::TYPE);
     regstate(dataReg).associate(fe, RematInfo::DATA);

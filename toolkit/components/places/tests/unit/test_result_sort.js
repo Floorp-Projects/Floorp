@@ -63,8 +63,9 @@ try {
 
 // adds a test URI visit to the database
 function add_visit(aURI, aTime) {
+  let time = aTime || Date.now() * 1000;
   histsvc.addVisit(aURI,
-                    aTime,
+                    time,
                     null, // no referrer
                     histsvc.TRANSITION_TYPED, // user typed in URL bar
                     false, // not redirect
@@ -73,6 +74,8 @@ function add_visit(aURI, aTime) {
 
 // main
 function run_test() {
+  do_test_pending();
+
   var testRoot = bmsvc.createFolder(bmsvc.placesRoot,
                                     "Result-sort functionality tests root",
                                     bmsvc.DEFAULT_INDEX);
@@ -147,4 +150,16 @@ function run_test() {
   // test live update
   annosvc.setItemAnnotation(id1, "testAnno", "c", 0, 0);
   checkOrder(id1, id3, id2);
+
+  // Add a visit, then check frecency ordering.
+  add_visit(NetUtil.newURI("http://foo.tld/b"));
+  waitForAsyncUpdates(function () {
+    result.sortingMode = NHQO.SORT_BY_FRECENCY_DESCENDING;
+    checkOrder(id2, id3, id1);
+    result.sortingMode = NHQO.SORT_BY_FRECENCY_ASCENDING;
+    checkOrder(id1, id3, id2);
+
+    root.containerOpen = false;
+    do_test_finished();
+  });
 }

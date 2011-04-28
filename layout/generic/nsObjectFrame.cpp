@@ -117,7 +117,7 @@ enum { XKeyPress = KeyPress };
 #include "nsIDOMRange.h"
 #include "nsIPluginWidget.h"
 #include "nsGUIEvent.h"
-#include "nsIRenderingContext.h"
+#include "nsRenderingContext.h"
 #include "npapi.h"
 #include "nsTransform2D.h"
 #include "nsIImageLoadingContent.h"
@@ -224,6 +224,7 @@ using mozilla::DefaultXDisplay;
 #define INCL_PM
 #define INCL_GPI
 #include <os2.h>
+#include "gfxOS2Surface.h"
 #endif
 
 #ifdef CreateEvent // Thank you MS.
@@ -446,8 +447,10 @@ public:
   PRBool SendNativeEvents()
   {
 #ifdef XP_WIN
+    // XXX we should remove the plugin name check
     return mPluginWindow->type == NPWindowTypeDrawable &&
-           MatchPluginName("Shockwave Flash");
+           (MatchPluginName("Shockwave Flash") ||
+            MatchPluginName("Test Plug-in"));
 #elif defined(MOZ_X11) || defined(XP_MACOSX)
     return PR_TRUE;
 #else
@@ -813,7 +816,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
   // XXX is the above comment correct?
   viewMan->SetViewVisibility(view, nsViewVisibility_kHide);
 
-  nsCOMPtr<nsIDeviceContext> dx;
+  nsRefPtr<nsDeviceContext> dx;
   viewMan->GetDeviceContext(*getter_AddRefs(dx));
 
   //this is ugly. it was ripped off from didreflow(). MMP
@@ -840,7 +843,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
     if (!parentWidget)
       return NS_ERROR_FAILURE;
 
-    mInnerView = viewMan->CreateView(GetContentRect() - GetPosition(), view);
+    mInnerView = viewMan->CreateView(GetContentRectRelativeToSelf(), view);
     if (!mInnerView) {
       NS_ERROR("Could not create inner view");
       return NS_ERROR_OUT_OF_MEMORY;
@@ -883,7 +886,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
       // On Mac, we need to invalidate ourselves since even windowed
       // plugins are painted through Thebes and we need to ensure
       // the Thebes layer containing the plugin is updated.
-      Invalidate(GetContentRect() - GetPosition());
+      Invalidate(GetContentRectRelativeToSelf());
 #endif
     }
   }
@@ -935,7 +938,7 @@ nsObjectFrame::CreateWidget(nscoord aWidth,
 #define EMBED_DEF_HEIGHT 200
 
 /* virtual */ nscoord
-nsObjectFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsObjectFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result = 0;
 
@@ -951,7 +954,7 @@ nsObjectFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsObjectFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsObjectFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   return nsObjectFrame::GetMinWidth(aRenderingContext);
 }
@@ -1207,7 +1210,7 @@ nsObjectFrame::CallSetWindow(PRBool aCheckIsHidden)
     return NS_ERROR_FAILURE;
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
-  nsRect bounds = GetContentRect() + GetParent()->GetOffsetToCrossDoc(rootFrame);
+  nsRect bounds = GetContentRectRelativeToSelf() + GetOffsetToCrossDoc(rootFrame);
   nsIntRect intBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
   window->x = intBounds.x;
   window->y = intBounds.y;
@@ -1279,9 +1282,7 @@ nsIntPoint nsObjectFrame::GetWindowOriginInPixels(PRBool aWindowless)
     parentWithView->GetNearestWidget(&offsetToWidget);
     origin += offsetToWidget;
   }
-  // It's OK to use GetUsedBorderAndPadding here (and below) since
-  // GetSkipSides always returns 0; we don't split nsObjectFrames
-  origin += GetUsedBorderAndPadding().TopLeft();
+  origin += GetContentRectRelativeToSelf().TopLeft();
 
   return nsIntPoint(PresContext()->AppUnitsToDevPixels(origin.x),
                     PresContext()->AppUnitsToDevPixels(origin.y));
@@ -1319,11 +1320,11 @@ nsObjectFrame::DidReflow(nsPresContext*            aPresContext,
 }
 
 /* static */ void
-nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsIRenderingContext* aCtx,
+nsObjectFrame::PaintPrintPlugin(nsIFrame* aFrame, nsRenderingContext* aCtx,
                                 const nsRect& aDirtyRect, nsPoint aPt)
 {
-  nsPoint pt = aPt + aFrame->GetUsedBorderAndPadding().TopLeft();
-  nsIRenderingContext::AutoPushTranslation translate(aCtx, pt.x, pt.y);
+  nsPoint pt = aPt + aFrame->GetContentRectRelativeToSelf().TopLeft();
+  nsRenderingContext::AutoPushTranslation translate(aCtx, pt);
   // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
   static_cast<nsObjectFrame*>(aFrame)->PrintPlugin(*aCtx, aDirtyRect);
 }
@@ -1366,8 +1367,7 @@ static nsRect
 GetDisplayItemBounds(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem, nsIFrame* aFrame)
 {
   // XXX For slightly more accurate region computations we should pixel-snap this
-  return aFrame->GetContentRect() - aFrame->GetPosition() +
-    aItem->ToReferenceFrame();
+  return aFrame->GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
 }
 
 nsRect
@@ -1404,7 +1404,7 @@ nsDisplayPlugin::GetBounds(nsDisplayListBuilder* aBuilder)
 
 void
 nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
-                       nsIRenderingContext* aCtx)
+                       nsRenderingContext* aCtx)
 {
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
   f->PaintPlugin(aBuilder, *aCtx, mVisibleRect, GetBounds(aBuilder));
@@ -1461,7 +1461,7 @@ nsDisplayPlugin::GetWidgetConfiguration(nsDisplayListBuilder* aBuilder,
                                         nsTArray<nsIWidget::Configuration>* aConfigurations)
 {
   nsObjectFrame* f = static_cast<nsObjectFrame*>(mFrame);
-  nsPoint pluginOrigin = mFrame->GetUsedBorderAndPadding().TopLeft() +
+  nsPoint pluginOrigin = mFrame->GetContentRectRelativeToSelf().TopLeft() +
     ToReferenceFrame();
   f->ComputeWidgetGeometry(mVisibleRegion, pluginOrigin, aConfigurations);
 }
@@ -1494,7 +1494,7 @@ nsObjectFrame::ComputeWidgetGeometry(const nsRegion& aRegion,
 
   PRInt32 appUnitsPerDevPixel = presContext->AppUnitsPerDevPixel();
   nsIFrame* rootFrame = rootPC->PresShell()->FrameManager()->GetRootFrame();
-  nsRect bounds = GetContentRect() + GetParent()->GetOffsetToCrossDoc(rootFrame);
+  nsRect bounds = GetContentRectRelativeToSelf() + GetOffsetToCrossDoc(rootFrame);
   configuration->mBounds = bounds.ToNearestPixels(appUnitsPerDevPixel);
 
   // This should produce basically the same rectangle (but not relative
@@ -1662,8 +1662,21 @@ nsObjectFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   return NS_OK;
 }
 
+#ifdef XP_OS2
+static void *
+GetPSFromRC(nsRenderingContext& aRenderingContext)
+{
+  nsRefPtr<gfxASurface>
+    surf = aRenderingContext.ThebesContext()->CurrentSurface();
+  if (!surf || surf->CairoStatus())
+    return nsnull;
+  return (void *)(static_cast<gfxOS2Surface*>
+                  (static_cast<gfxASurface*>(surf.get()))->GetPS());
+}
+#endif
+
 void
-nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
+nsObjectFrame::PrintPlugin(nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect)
 {
   nsCOMPtr<nsIObjectLoadingContent> obj(do_QueryInterface(mContent));
@@ -1707,7 +1720,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   
 // platform specific printing code
 #ifdef MAC_CARBON_PLUGINS
-  nsSize contentSize = GetContentRect().Size();
+  nsSize contentSize = GetContentRectRelativeToSelf().Size();
   window.x = 0;
   window.y = 0;
   window.width = presContext->AppUnitsToDevPixels(contentSize.width);
@@ -1736,7 +1749,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
   window.clipRect.bottom = window.height;
   window.type = NPWindowTypeDrawable;
 
-  Rect gwBounds;
+  ::Rect gwBounds;
   ::SetRect(&gwBounds, 0, 0, window.width, window.height);
 
   nsTArray<char> buffer(window.width * window.height * 4);
@@ -1804,7 +1817,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
    */
 
 #elif defined(XP_OS2)
-  void *hps = aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_OS2_PS);
+  void *hps = GetPSFromRC(aRenderingContext);
   if (!hps)
     return;
 
@@ -1830,7 +1843,7 @@ nsObjectFrame::PrintPlugin(nsIRenderingContext& aRenderingContext,
    */
 
   /* we'll already be translated into the right spot by gfxWindowsNativeDrawing */
-  nsSize contentSize = GetContentRect().Size();
+  nsSize contentSize = GetContentRectRelativeToSelf().Size();
   window.x = 0;
   window.y = 0;
   window.width = presContext->AppUnitsToDevPixels(contentSize.width);
@@ -1916,7 +1929,7 @@ nsObjectFrame::GetPaintedRect(nsDisplayPlugin* aItem)
 {
   if (!mInstanceOwner)
     return nsRect();
-  nsRect r = GetContentRect() - GetPosition();
+  nsRect r = GetContentRectRelativeToSelf();
   if (!mInstanceOwner->UseAsyncRendering())
     return r;
 
@@ -1960,6 +1973,7 @@ nsPluginInstanceOwner::NotifyPaintWaiter(nsDisplayListBuilder* aBuilder)
   }
 }
 
+#ifdef XP_MACOSX
 static void DrawPlugin(ImageContainer* aContainer, void* aPluginInstanceOwner)
 {
   nsObjectFrame* frame = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner)->GetOwner();
@@ -1973,6 +1987,7 @@ static void OnDestroyImage(void* aPluginInstanceOwner)
   nsPluginInstanceOwner* owner = static_cast<nsPluginInstanceOwner*>(aPluginInstanceOwner);
   NS_IF_RELEASE(owner);
 }
+#endif // XP_MACOSX
 
 void
 nsObjectFrame::UpdateImageLayer(ImageContainer* aContainer, const gfxRect& aRect)
@@ -2110,7 +2125,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   gfxIntSize size = container->GetCurrentSize();
 
-  nsRect area = GetContentRect() + aBuilder->ToReferenceFrame(GetParent());
+  nsRect area = GetContentRectRelativeToSelf() + aItem->ToReferenceFrame();
   gfxRect r = nsLayoutUtils::RectToGfxRect(area, PresContext()->AppUnitsPerDevPixel());
   // to provide crisper and faster drawing.
   r.Round();
@@ -2172,7 +2187,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   // Set a transform on the layer to draw the plugin in the right place
   gfxMatrix transform;
-  transform.Translate(r.pos);
+  transform.Translate(r.TopLeft());
 
   layer->SetTransform(gfx3DMatrix::From2D(transform));
   layer->SetVisibleRegion(nsIntRect(0, 0, size.width, size.height));
@@ -2181,7 +2196,7 @@ nsObjectFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
 void
 nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
-                           nsIRenderingContext& aRenderingContext,
+                           nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
   // Screen painting code
@@ -2283,8 +2298,8 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       nativeDrawing.EndNativeDrawing();
     } else {
       // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-      nsIRenderingContext::AutoPushTranslation
-        translate(&aRenderingContext, aPluginRect.x, aPluginRect.y);
+      nsRenderingContext::AutoPushTranslation
+        translate(&aRenderingContext, aPluginRect.TopLeft());
 
       // this rect is used only in the CoreGraphics drawing model
       gfxRect tmpRect(0, 0, 0, 0);
@@ -2385,7 +2400,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
         nsIntPoint origin = GetWindowOriginInPixels(PR_TRUE);
         nsIntRect winlessRect = nsIntRect(origin, nsIntSize(window->width, window->height));
 
-        if (mWindowlessRect != winlessRect) {
+        if (!mWindowlessRect.IsEqualEdges(winlessRect)) {
           mWindowlessRect = winlessRect;
 
           WINDOWPOS winpos;
@@ -2423,8 +2438,8 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
 
     if (window->type == NPWindowTypeDrawable) {
       // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-      nsIRenderingContext::AutoPushTranslation
-        translate(&aRenderingContext, aPluginRect.x, aPluginRect.y);
+      nsRenderingContext::AutoPushTranslation
+        translate(&aRenderingContext, aPluginRect.TopLeft());
 
       // check if we need to call SetWindow with updated parameters
       PRBool doupdatewindow = PR_FALSE;
@@ -2470,7 +2485,7 @@ nsObjectFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       }
 
       // check if we need to update the PS
-      HPS hps = (HPS)aRenderingContext.GetNativeGraphicData(nsIRenderingContext::NATIVE_OS2_PS);
+      HPS hps = (HPS)GetPSFromRC(aRenderingContext);
       if (reinterpret_cast<HPS>(window->window) != hps) {
         window->window = reinterpret_cast<void*>(hps);
         doupdatewindow = PR_TRUE;
@@ -2633,10 +2648,10 @@ nsObjectFrame::Instantiate(nsIChannel* aChannel, nsIStreamListener** aStreamList
   mInstanceOwner->SetPluginHost(pluginHost);
 
   // This must be done before instantiating the plugin
-  FixupWindow(GetContentRect().Size());
+  FixupWindow(GetContentRectRelativeToSelf().Size());
 
   // Ensure we redraw when a plugin is instantiated
-  Invalidate(GetContentRect() - GetPosition());
+  Invalidate(GetContentRectRelativeToSelf());
 
   nsWeakFrame weakFrame(this);
 
@@ -2687,10 +2702,10 @@ nsObjectFrame::Instantiate(const char* aMimeType, nsIURI* aURI)
   nsWeakFrame weakFrame(this);
 
   // This must be done before instantiating the plugin
-  FixupWindow(GetContentRect().Size());
+  FixupWindow(GetContentRectRelativeToSelf().Size());
 
   // Ensure we redraw when a plugin is instantiated
-  Invalidate(GetContentRect() - GetPosition());
+  Invalidate(GetContentRectRelativeToSelf());
 
   // get the nsIPluginHost service
   nsCOMPtr<nsIPluginHost> pluginHost(do_GetService(MOZ_PLUGIN_HOST_CONTRACTID, &rv));
@@ -2771,6 +2786,7 @@ private:
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsStopPluginRunnable, nsRunnable, nsITimerCallback)
 
+#if defined(XP_MACOSX) || defined (XP_WIN)
 static const char*
 GetMIMEType(nsIPluginInstance *aPluginInstance)
 {
@@ -2781,6 +2797,7 @@ GetMIMEType(nsIPluginInstance *aPluginInstance)
   }
   return "";
 }
+#endif // XP_MACOSX || XP_WIN
 
 static PRBool
 DoDelayedStop(nsPluginInstanceOwner *aInstanceOwner, PRBool aDelayedStop)
@@ -2941,7 +2958,7 @@ nsObjectFrame::StopPluginInternal(PRBool aDelayedStop)
 
   // Make sure that our windowless rect has been zeroed out, so if we
   // get reinstantiated we'll send the right messages to the plug-in.
-  mWindowlessRect.Empty();
+  mWindowlessRect.SetEmpty();
 
   PRBool oldVal = mPreventInstantiation;
   mPreventInstantiation = PR_TRUE;
@@ -3556,7 +3573,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
       rect.UnionRect(rect, oldRect);
     }
   }
-  rect.MoveBy(mObjectFrame->GetUsedBorderAndPadding().TopLeft());
+  rect.MoveBy(mObjectFrame->GetContentRectRelativeToSelf().TopLeft());
   mObjectFrame->InvalidateLayer(rect, nsDisplayItem::TYPE_PLUGIN);
   return NS_OK;
 }
@@ -4245,7 +4262,7 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
 #ifdef XP_MACOSX
 
 #ifndef NP_NO_CARBON
-static void InitializeEventRecord(EventRecord* event, Point* aMousePosition)
+static void InitializeEventRecord(EventRecord* event, ::Point* aMousePosition)
 {
   memset(event, 0, sizeof(EventRecord));
   if (aMousePosition) {
@@ -4280,7 +4297,7 @@ NPDrawingModel nsPluginInstanceOwner::GetDrawingModel()
 
 PRBool nsPluginInstanceOwner::IsRemoteDrawingCoreAnimation()
 {
-  if (mInstance)
+  if (!mInstance)
     return PR_FALSE;
 
   PRBool coreAnimation;
@@ -4967,7 +4984,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEventX11Composited(const nsGUIEvent&
         const nsPresContext* presContext = mObjectFrame->PresContext();
         nsPoint appPoint =
           nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
-          mObjectFrame->GetUsedBorderAndPadding().TopLeft();
+          mObjectFrame->GetContentRectRelativeToSelf().TopLeft();
         nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
                                presContext->AppUnitsToDevPixels(appPoint.y));
         mLastPoint = pluginPoint;
@@ -5264,13 +5281,13 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
   void* event = anEvent.pluginEvent;
   nsPoint pt =
   nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
-  mObjectFrame->GetUsedBorderAndPadding().TopLeft();
+  mObjectFrame->GetContentRectRelativeToSelf().TopLeft();
   nsPresContext* presContext = mObjectFrame->PresContext();
   nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
                   presContext->AppUnitsToDevPixels(pt.y));
 #ifndef NP_NO_CARBON
   nsIntPoint geckoScreenCoords = mWidget->WidgetToScreenOffset();
-  Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
+  ::Point carbonPt = { ptPx.y + geckoScreenCoords.y, ptPx.x + geckoScreenCoords.x };
   if (eventModel == NPEventModelCarbon) {
     if (event && anEvent.eventStructType == NS_MOUSE_EVENT) {
       static_cast<EventRecord*>(event)->where = carbonPt;
@@ -5467,7 +5484,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
                    "Incorrect event type for coordinate translation");
       nsPoint pt =
         nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
-        mObjectFrame->GetUsedBorderAndPadding().TopLeft();
+        mObjectFrame->GetContentRectRelativeToSelf().TopLeft();
       nsPresContext* presContext = mObjectFrame->PresContext();
       nsIntPoint ptPx(presContext->AppUnitsToDevPixels(pt.x),
                       presContext->AppUnitsToDevPixels(pt.y));
@@ -5528,7 +5545,7 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
         const nsPresContext* presContext = mObjectFrame->PresContext();
         nsPoint appPoint =
           nsLayoutUtils::GetEventCoordinatesRelativeTo(&anEvent, mObjectFrame) -
-          mObjectFrame->GetUsedBorderAndPadding().TopLeft();
+          mObjectFrame->GetContentRectRelativeToSelf().TopLeft();
         nsIntPoint pluginPoint(presContext->AppUnitsToDevPixels(appPoint.x),
                                presContext->AppUnitsToDevPixels(appPoint.y));
         const nsMouseEvent& mouseEvent =
@@ -5987,7 +6004,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   // Round out the dirty rect to plugin pixels to ensure the plugin draws
   // enough pixels for interpolation to device pixels.
-  gfxRect dirtyRect = aDirtyRect + -pluginRect.pos;
+  gfxRect dirtyRect = aDirtyRect - pluginRect.TopLeft();
   dirtyRect.RoundOut();
 
   // Plugins can only draw an integer number of pixels.
@@ -6000,14 +6017,14 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
   // draw a suitable number of pixels for interpolation to device pixels in
   // Renderer::Draw, but such cases are not common enough to warrant the
   // effort now.
-  nsIntSize pluginSize(NS_lround(pluginRect.size.width),
-                       NS_lround(pluginRect.size.height));
+  nsIntSize pluginSize(NS_lround(pluginRect.width),
+                       NS_lround(pluginRect.height));
 
   // Determine what the plugin needs to draw.
-  nsIntRect pluginDirtyRect(PRInt32(dirtyRect.pos.x),
-                            PRInt32(dirtyRect.pos.y),
-                            PRInt32(dirtyRect.size.width),
-                            PRInt32(dirtyRect.size.height));
+  nsIntRect pluginDirtyRect(PRInt32(dirtyRect.x),
+                            PRInt32(dirtyRect.y),
+                            PRInt32(dirtyRect.width),
+                            PRInt32(dirtyRect.height));
   if (!pluginDirtyRect.
       IntersectRect(nsIntRect(0, 0, pluginSize.width, pluginSize.height),
                     pluginDirtyRect))
@@ -6030,7 +6047,7 @@ void nsPluginInstanceOwner::Paint(gfxContext* aContext,
 
   // Renderer::Draw() draws a rectangle with top-left at the aContext origin.
   gfxContextAutoSaveRestore autoSR(aContext);
-  aContext->Translate(pluginRect.pos);
+  aContext->Translate(pluginRect.TopLeft());
 
   Renderer renderer(window, this, pluginSize, pluginDirtyRect);
 #ifdef MOZ_WIDGET_GTK2
@@ -6685,7 +6702,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
 #endif
 
           // Changing to windowless mode changes the NPWindow geometry.
-          mObjectFrame->FixupWindow(mObjectFrame->GetContentRect().Size());
+          mObjectFrame->FixupWindow(mObjectFrame->GetContentRectRelativeToSelf().Size());
         } else if (mWidget) {
           nsIWidget* parent = mWidget->GetParent();
           NS_ASSERTION(parent, "Plugin windows must not be toplevel");

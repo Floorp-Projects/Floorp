@@ -51,7 +51,7 @@ function test() {
   filePath2 = file.path;
   
   let fieldList = {
-    "//input[@name='input']":     Math.floor(Date.now()).toString(),
+    "//input[@name='input']":     Date.now().toString(),
     "//input[@name='spaced 1']":  Math.random().toString(),
     "//input[3]":                 "three",
     "//input[@type='checkbox']":  true,

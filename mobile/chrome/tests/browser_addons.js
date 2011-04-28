@@ -70,6 +70,7 @@ var gCurrentTab = null;
 
 function test() {
   waitForExplicitFinish();
+  requestLongerTimeout(2);
   Services.prefs.setCharPref(PREF_GETADDONS_GETRECOMMENDED,      TESTROOT + "browser_install.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_BROWSERECOMMENDED,   TESTROOT + "browser_install.xml");
   Services.prefs.setCharPref(PREF_GETADDONS_BROWSESEARCHRESULTS, TESTROOT + "browser_install.xml");
@@ -201,7 +202,11 @@ function checkNotification(aTitle, aMessage, aIcon, aCallback) {
     aCallback();
   };
 
-  waitFor(doTest, function() { return AlertsHelper.container.hidden == false; });
+  let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
+  if (sysInfo.get("device"))
+    aCallback();
+  else
+    waitFor(doTest, function() { return AlertsHelper.container.hidden == false; });
 }
 
 function checkAlert(aId, aName, aLabel, aShown, aCallback) {
@@ -367,10 +372,14 @@ function installFromURLBar(aAddon) {
                     is(updateButton.disabled, false, "Update button is enabled");
 
                     ExtensionsView.uninstall(elt);
-                    elt = get_addon_element(aAddon.id);
-                    ok(!elt, "Addon element removed during uninstall");
-                    Browser.closeTab(gCurrentTab);
-                    close_manager(run_next_test);
+                    setTimeout(function() {
+                      elt = get_addon_element(aAddon.id);
+                      ok(!elt || !elt.addon, "Addon element removed during uninstall");
+                      if (elt && !elt.addon)
+                        info("Element is still visible in search area");
+                      Browser.closeTab(gCurrentTab);
+                      close_manager(run_next_test);
+                    }, 0);
                   } else {
                     ok(!elt, "Extension not in list");
                     AddonManager.getAllInstalls(function(aInstalls) {

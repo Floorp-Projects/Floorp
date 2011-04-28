@@ -133,6 +133,22 @@ function testtag_datepicker(dp, type, testid)
   setDateField("value", "2000-a-19", true, 2002, 6, 15);
   setDateField("dateValue", "none", true, 2002, 6, 15);
 
+  // grid and popup types can display a different month than the current one
+  var isGridOrPopup = (type == "grid" || type == "popup");
+  dp.displayedMonth = 3;
+  testtag_comparedate(dp, testid + "set displayedMonth",
+                      2002, isGridOrPopup ? 6 : 3, 15, 3);
+
+  dp.displayedYear = 2009;
+  testtag_comparedate(dp, testid + "set displayedYear",
+                      isGridOrPopup ? 2002 : 2009, isGridOrPopup ? 6 : 3, 15, 3, 2009);
+
+  if (isGridOrPopup) {
+    dp.value = "2008-02-29";
+    dp.displayedYear = 2009;
+    is(dp.displayedMonth, 1, "set displayedYear during leap year");
+  }
+
   is(dp.open, false, testid + "open false");
   if (type != "popup") {
     dp.open = true;
@@ -241,7 +257,56 @@ function testtag_datepicker_UI_grid(dp, type, testid)
   synthesizeKeyExpectEvent("VK_PAGE_UP", { }, ktarget, "monthchange", testid + "key page up");
   is(dp.value, "2003-02-15", testid + "key page up");
 
+  // check handling at the start and end of the month
+  dp.value = "2010-10-01";
+  synthesizeKeyExpectEvent("VK_PAGE_UP", { }, ktarget, "monthchange", testid + "key page up 2010-10-01");
+  is(dp.displayedMonth, 8, testid + "key page up 2010-10-01 displayedMonth");
+  is(dp.displayedYear, 2010, testid + "key page up 2010-10-01 displayedYear");
+
+  dp.value = "2010-10-01";
+  synthesizeKeyExpectEvent("VK_PAGE_DOWN", { }, ktarget, "monthchange", testid + "key page down 2010-10-01");
+  is(dp.displayedMonth, 10, testid + "key page down 2010-10-01 displayedMonth");
+  is(dp.displayedYear, 2010, testid + "key page down 2010-10-01 displayedYear");
+
+  dp.value = "2010-10-31";
+  synthesizeKeyExpectEvent("VK_PAGE_UP", { }, ktarget, "monthchange", testid + "key page up 2010-10-31");
+  is(dp.displayedMonth, 8, testid + "key page up 2010-10-31 displayedMonth");
+  is(dp.displayedYear, 2010, testid + "key page up 2010-10-01 displayedYear");
+  dp.value = "2010-10-31";
+  synthesizeKeyExpectEvent("VK_PAGE_DOWN", { }, ktarget, "monthchange", testid + "key page down 2010-10-31");
+  is(dp.displayedMonth, 10, testid + "key page down 2010-10-31 displayedMonth");
+  is(dp.displayedYear, 2010, testid + "key page up 2010-10-31 displayedYear");
+
+  // check handling at the end of february
+  dp.value = "2010-03-31";
+  synthesizeKeyExpectEvent("VK_PAGE_UP", { }, ktarget, "monthchange", testid + "key page up 2010-03-31");
+  is(dp.displayedMonth, 1, testid + "key page up 2010-03-31 displayedMonth");
+  is(dp.displayedYear, 2010, testid + "key page up 2010-03-31 displayedYear");
+  synthesizeKeyExpectEvent("VK_PAGE_UP", { }, ktarget, "monthchange", testid + "key page up 2010-02-28");
+  is(dp.displayedMonth, 0, testid + "key page up 2010-02-28 displayedMonth");
+  is(dp.displayedYear, 2010, testid + "key page up 2010-02-28 displayedYear");
+
+  dp.value = "2010-01-31";
+  synthesizeKeyExpectEvent("VK_PAGE_DOWN", { }, ktarget, "monthchange", testid + "key page down 2010-01-31");
+  is(dp.displayedMonth, 1, testid + "key page down 2010-01-31 displayedMonth");
+  is(dp.displayedYear, 2010, testid + "key page up 2010-01-31 displayedYear");
+  synthesizeKeyExpectEvent("VK_PAGE_DOWN", { }, ktarget, "monthchange", testid + "key page down 2010-02-28");
+  is(dp.displayedMonth, 2, testid + "key page down 2010-02-28 displayedMonth");
+  is(dp.displayedYear, 2010, testid + "key page up 2010-02-28 displayedYear");
+
+  // check handling at the end of february during a leap year
+  dp.value = "2008-01-31";
+  synthesizeKeyExpectEvent("VK_PAGE_DOWN", { }, ktarget, "monthchange", testid + "key page down 2008-01-31");
+  is(dp.displayedMonth, 1, testid + "key page down 2008-01-31 displayedMonth");
+  is(dp.displayedYear, 2008, testid + "key page up 2008-01-31 displayedYear");
+  dp.value = "2008-03-31";
+  synthesizeKeyExpectEvent("VK_PAGE_UP", { }, ktarget, "monthchange", testid + "key page up 2008-03-31");
+  is(dp.displayedMonth, 1, testid + "key page up 2008-03-31 displayedMonth");
+  is(dp.displayedYear, 2008, testid + "key page up 2008-03-31 displayedYear");
+
   // the value of a read only datepicker cannot be changed
+  dp.value = "2003-02-15";
+
   dp.readOnly = true;
   synthesizeKeyExpectEvent("VK_LEFT", { }, ktarget, "!change", testid + "key left read only");
   is(dp.value, "2003-02-15", testid + "key left read only");
@@ -314,7 +379,7 @@ function testtag_getdatestring(year, month, date)
   return year + "-" + month + "-" + date;
 }
 
-function testtag_comparedate(dp, testid, year, month, date)
+function testtag_comparedate(dp, testid, year, month, date, displayedMonth, displayedYear)
 {
   is(dp.value, testtag_getdatestring(year, month, date), testid + " value");
   if (testid.indexOf("initial") == -1)
@@ -330,6 +395,8 @@ function testtag_comparedate(dp, testid, year, month, date)
 
   is(dp.year, year, testid + " year");
   is(dp.month, month, testid + " month");
+  is(dp.displayedMonth, displayedMonth ? displayedMonth : month, testid + " displayedMonth");
+  is(dp.displayedYear, displayedYear ? displayedYear : year, testid + " displayedYear");
   is(dp.date, date, testid + " date");
 }
 

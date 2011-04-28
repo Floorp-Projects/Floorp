@@ -125,7 +125,8 @@ body[dir="ltr"] .section-box .openall {
 }
 
 .section-box .version {
-  -moz-margin-start: 12px;
+  /* The addon title is not localized, so keep the margin on the left side */
+  margin-left: 12px;
   font-size: 18px;
   color: gray;
 }

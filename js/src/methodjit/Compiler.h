@@ -54,7 +54,7 @@ namespace js {
 namespace mjit {
 
 struct PatchableFrame {
-    JSStackFrame *fp;
+    StackFrame *fp;
     jsbytecode *pc;
     bool scriptedCall;
 };

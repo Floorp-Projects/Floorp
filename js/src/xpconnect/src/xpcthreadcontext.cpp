@@ -207,20 +207,14 @@ SafeGlobalResolve(JSContext *cx, JSObject *obj, jsid id)
 static void
 SafeFinalize(JSContext* cx, JSObject* obj)
 {
-#ifndef XPCONNECT_STANDALONE
     nsIScriptObjectPrincipal* sop =
         static_cast<nsIScriptObjectPrincipal*>(xpc_GetJSPrivate(obj));
     NS_IF_RELEASE(sop);
-#endif
 }
 
 static JSClass global_class = {
     "global_for_XPCJSContextStack_SafeJSContext",
-#ifndef XPCONNECT_STANDALONE
     JSCLASS_HAS_PRIVATE | JSCLASS_PRIVATE_IS_NSISUPPORTS | JSCLASS_GLOBAL_FLAGS,
-#else
-    0,
-#endif
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_StrictPropertyStub,
     JS_EnumerateStub, SafeGlobalResolve, JS_ConvertStub, SafeFinalize,
     JSCLASS_NO_OPTIONAL_MEMBERS
@@ -232,7 +226,6 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
 {
     if(!mSafeJSContext)
     {
-#ifndef XPCONNECT_STANDALONE
         // Start by getting the principal holder and principal for this
         // context.  If we can't manage that, don't bother with the rest.
         nsRefPtr<nsNullPrincipal> principal = new nsNullPrincipal();
@@ -248,7 +241,6 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
             *aSafeJSContext = nsnull;
             return NS_ERROR_FAILURE;
         }        
-#endif /* !XPCONNECT_STANDALONE */
         
         JSRuntime *rt;
         XPCJSRuntime* xpcrt;
@@ -275,7 +267,6 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
                 if(NS_FAILED(rv))
                     glob = nsnull;
 
-#ifndef XPCONNECT_STANDALONE
                 if(glob)
                 {
                     // Make sure the context is associated with a proper compartment
@@ -298,7 +289,6 @@ XPCJSContextStack::GetSafeJSContext(JSContext * *aSafeJSContext)
                 // nsIScriptObjectPrincipal ownership is either handled by the
                 // nsCOMPtr or dealt with, or we'll release in the finalize
                 // hook.
-#endif
                 if(glob && NS_FAILED(xpc->InitClasses(mSafeJSContext, glob)))
                 {
                     glob = nsnull;
@@ -508,7 +498,7 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
 
     if(cx && !sMainJSThread && NS_IsMainThread())
     {
-        sMainJSThread = cx->thread;
+        sMainJSThread = cx->thread();
 
         sMainThreadData = data;
 

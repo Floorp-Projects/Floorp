@@ -62,7 +62,7 @@
 #include "nsPLDOMEvent.h"
 
 #include "nsIPresShell.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "nsGUIEvent.h"
 
 #include "nsIChannel.h"

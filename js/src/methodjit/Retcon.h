@@ -102,8 +102,8 @@ public:
     bool recompile();
 
     static void
-    expandInlineFrames(JSContext *cx, JSStackFrame *fp, mjit::CallSite *inlined,
-                       JSStackFrame *next, VMFrame *f);
+    expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *inlined,
+                       StackFrame *next, VMFrame *f);
 
 private:
     JSContext *cx;
@@ -120,8 +120,8 @@ private:
                    Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
                    Vector<PatchableNative> &natives);
 
-    static JSStackFrame *
-    expandInlineFrameChain(JSContext *cx, JSStackFrame *outer, InlineFrame *inner);
+    static StackFrame *
+    expandInlineFrameChain(JSContext *cx, StackFrame *outer, InlineFrame *inner);
 
     /* Detach jit from any IC callers and save any traps to sites. */
     bool cleanup(JITScript *jit, Vector<CallSite> *sites);

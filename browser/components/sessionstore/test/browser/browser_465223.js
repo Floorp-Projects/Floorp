@@ -54,7 +54,7 @@ function test() {
   
   let uniqueKey1 = "bug 465223.1";
   let uniqueKey2 = "bug 465223.2";
-  let uniqueValue1 = "unik" + Math.floor(Date.now());
+  let uniqueValue1 = "unik" + Date.now();
   let uniqueValue2 = "pi != " + Math.random();
   
   // open a window and set a value on it

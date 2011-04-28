@@ -62,7 +62,7 @@
 #ifdef MOZ_CSS_ANIMATIONS
 #include "nsAnimationManager.h"
 #endif
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla::dom;

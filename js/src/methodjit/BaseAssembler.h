@@ -619,7 +619,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         if (frameDepth >= 0) {
             // sp = fp->slots() + frameDepth
             // regs->sp = sp
-            addPtr(Imm32(sizeof(JSStackFrame) + frameDepth * sizeof(jsval)),
+            addPtr(Imm32(sizeof(StackFrame) + frameDepth * sizeof(jsval)),
                    JSFrameReg,
                    ClobberInCall);
             storePtr(ClobberInCall, FrameAddress(offsetof(VMFrame, regs.sp)));
@@ -636,7 +636,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         setupInfallibleVMFrame(frameDepth);
 
         /* regs->fp = fp */
-        storePtr(JSFrameReg, FrameAddress(offsetof(VMFrame, regs.fp)));
+        storePtr(JSFrameReg, FrameAddress(VMFrame::offsetOfFp));
 
         /* PC -> regs->pc :( */
         storePtr(ImmPtr(pc), FrameAddress(offsetof(VMFrame, regs.pc)));
@@ -644,7 +644,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         if (inlining) {
             /* inlined -> regs->inlined :( */
             DataLabelPtr ptr = storePtrWithPatch(ImmPtr(NULL),
-                                                 FrameAddress(offsetof(VMFrame, regs.inlined)));
+                                                 FrameAddress(VMFrame::offsetOfInlined));
             if (pinlined)
                 *pinlined = ptr;
         }
@@ -682,7 +682,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
         Call call = wrapVMCall(ptr);
 
         // Restore the frame pointer from the VM.
-        loadPtr(FrameAddress(offsetof(VMFrame, regs.fp)), JSFrameReg);
+        loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);
 
         return call;
     }
@@ -880,7 +880,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = Assembler::JSPar
 struct FrameFlagsAddress : JSC::MacroAssembler::Address
 {
     FrameFlagsAddress()
-      : Address(JSFrameReg, JSStackFrame::offsetOfFlags())
+      : Address(JSFrameReg, StackFrame::offsetOfFlags())
     {}
 };
 

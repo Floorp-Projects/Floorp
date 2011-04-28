@@ -37,9 +37,14 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* This tests the margin parsing functionality in nsAttrValue.cpp, which
- * is accessible via nsIContentUtils, and is used in setting chromemargins
+ * is accessible via nsContentUtils, and is used in setting chromemargins
  * to widget windows. It's located here due to linking issues in the
  * content directory.
+ */
+
+/* This test no longer compiles now that we've removed nsIContentUtils (bug
+ * 647273).  We need to be internal code in order to include nsContentUtils.h,
+ * but defining MOZILLA_INTERNAL_API is not enough to make us internal.
  */
 
 #include "TestHarness.h"
@@ -61,7 +66,7 @@ template<class T> class nsReadingIterator;
 #endif
 
 #include "nscore.h"
-#include "nsIContentUtils.h"
+#include "nsContentUtils.h"
 
 #ifndef MOZILLA_INTERNAL_API
 #undef nsString_h___
@@ -115,19 +120,13 @@ const DATA Data[] = {
 
 void DoAttrValueTest()
 {
-  nsCOMPtr<nsIContentUtils> utils =
-   do_GetService("@mozilla.org/content/contentutils;1");
-
-  if (!utils)
-    fail("No nsIContentUtils");
-
   int idx = -1;
   bool didFail = false;
   while (Data[++idx].margins) {
     nsAutoString str;
     str.AssignLiteral(Data[idx].margins);
     nsIntMargin values(99,99,99,99);
-    bool result = utils->ParseIntMarginValue(str, values);
+    bool result = nsContentUtils::ParseIntMarginValue(str, values);
 
     // if the parse fails
     if (!result) {

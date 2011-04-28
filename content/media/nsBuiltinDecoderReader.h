@@ -92,10 +92,6 @@ public:
   // to and displayed at this size.
   nsIntSize mDisplay;
 
-  // The offset of the first non-header page in the file, in bytes.
-  // Used to seek to the start of the media.
-  PRInt64 mDataOffset;
-
   // Indicates the frame layout for single track stereo videos.
   mozilla::layers::StereoMode mStereoMode;
 
@@ -179,8 +175,8 @@ public:
   // chunk ends.
   const PRInt64 mOffset;
 
-  PRInt64 mTime; // Start time of samples in ms.
-  const PRInt64 mDuration; // In ms.
+  PRInt64 mTime; // Start time of samples in usecs.
+  const PRInt64 mDuration; // In usecs.
   const PRUint32 mSamples;
   const PRUint32 mChannels;
   nsAutoArrayPtr<SoundDataValue> mAudioData;
@@ -241,10 +237,10 @@ public:
   // Approximate byte offset of the end of the frame in the media.
   PRInt64 mOffset;
 
-  // Start time of frame in milliseconds.
+  // Start time of frame in microseconds.
   PRInt64 mTime;
 
-  // End time of frame in milliseconds;
+  // End time of frame in microseconds;
   PRInt64 mEndTime;
 
   // Codec specific internal time code. For Ogg based codecs this is the
@@ -387,7 +383,7 @@ template <class T> class MediaQueue : private nsDeque {
     mEndOfStream = PR_TRUE;    
   }
 
-  // Returns the approximate number of milliseconds of samples in the queue.
+  // Returns the approximate number of microseconds of samples in the queue.
   PRInt64 Duration() {
     MonitorAutoEnter mon(mMonitor);
     if (GetSize() < 2) {
@@ -457,9 +453,9 @@ public:
   // This will not read past aEndOffset. Returns -1 on failure. 
   virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
 
-  // Moves the decode head to aTime milliseconds. aStartTime and aEndTime
-  // denote the start and end times of the media in ms, and aCurrentTime
-  // is the current playback position in ms.
+  // Moves the decode head to aTime microseconds. aStartTime and aEndTime
+  // denote the start and end times of the media in usecs, and aCurrentTime
+  // is the current playback position in microseconds.
   virtual nsresult Seek(PRInt64 aTime,
                         PRInt64 aStartTime,
                         PRInt64 aEndTime,
@@ -485,7 +481,7 @@ public:
 protected:
 
   // Pumps the decode until we reach frames/samples required to play at
-  // time aTarget (ms).
+  // time aTarget (usecs).
   nsresult DecodeToTarget(PRInt64 aTarget);
 
   // Reader decode function. Matches DecodeVideoFrame() and
@@ -512,10 +508,6 @@ protected:
   // Reference to the owning decoder object. Do not hold the
   // reader's monitor when accessing this.
   nsBuiltinDecoder* mDecoder;
-
-  // The offset of the start of the first non-header page in the file.
-  // Used to seek to media start time.
-  PRInt64 mDataOffset;
 
   // Stores presentation info required for playback. The reader's monitor
   // must be held when accessing this.

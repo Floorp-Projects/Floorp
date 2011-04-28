@@ -12,7 +12,7 @@
 #include "nsSetDllDirectory.h"
 #endif
 
-#if defined(_MSC_VER) && defined(_M_IX86) && defined(XRE_WANT_DLL_BLOCKLIST)
+#if defined(_MSC_VER) && (defined(_M_IX86) || defined(_M_X64)) && defined(XRE_WANT_DLL_BLOCKLIST)
 #include "nsWindowsDllBlocklist.cpp"
 #else
 #undef XRE_WANT_DLL_BLOCKLIST

@@ -1,0 +1,259 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=542058
+-->
+<head>
+  <title>Test for MediaQueryList (Bug 542058)</title>
+  <script type="application/javascript" src="/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="run()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=542058">Mozilla Bug 542058</a>
+<iframe id="subdoc" src="about:blank"></iframe>
+<div id="content" style="display:none"></div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for MediaQueryList (Bug 542058) **/
+
+SimpleTest.waitForExplicitFinish();
+
+function run() {
+  var iframe = document.getElementById("subdoc");
+  var subdoc = iframe.contentDocument;
+  var subwin = iframe.contentWindow;
+  var subroot = subdoc.documentElement;
+
+  var content_div = document.getElementById("content");
+  content_div.style.font = "-moz-initial";
+  var em_size =
+    getComputedStyle(content_div, "").fontSize.match(/^(\d+)px$/)[1];
+
+  var w = Math.floor(em_size * 9.3);
+  var h = Math.floor(em_size * 4.2);
+  iframe.style.width = w + "px";
+  iframe.style.height = h + "px";
+  subroot.offsetWidth; // flush layout
+
+  function setup_mql(str) {
+    var obj = { str: str, mql: subwin.matchMedia(str), notifyCount: 0 }
+    obj.mql.addListener(function(mql) {
+                          is(mql, obj.mql,
+                             "correct argument to listener: " + obj.str);
+                          ++obj.notifyCount;
+                          // Test the last match result only on odd
+                          // notifications.
+                          if (obj.notifyCount & 1) {
+                            obj.lastOddMatchResult = mql.matches;
+                          }
+                        });
+    return obj;
+  }
+
+  var w_exact_w = setup_mql("(width: " + w + "px)");
+  var w_min_9em = setup_mql("(min-width : 9em)");
+  var w_min_10em = setup_mql("(  min-width: 10em ) ");
+  var w_max_9em = setup_mql("(max-width: 9em)");
+  var w_max_10em = setup_mql("(max-width: 10em)");
+
+  is(w_exact_w.mql.media, "(width: " + w + "px)", "serialization");
+  is(w_min_9em.mql.media, "(min-width: 9em)", "serialization");
+  is(w_min_10em.mql.media, "(min-width: 10em)", "serialization");
+  is(w_max_9em.mql.media, "(max-width: 9em)", "serialization");
+  is(w_max_10em.mql.media, "(max-width: 10em)", "serialization");
+
+  function check_match(obj, expected, desc) {
+    is(obj.mql.matches, expected,
+       obj.str + " media query list .matches " + desc);
+    if (obj.notifyCount & 1) { // odd notifications only
+      is(obj.lastOddMatchResult, expected,
+       obj.str + " media query list last notify result " + desc);
+    }
+  }
+  function check_notify(obj, expected, desc) {
+    is(obj.notifyCount, expected,
+       obj.str + " media query list .notify count " + desc);
+  }
+  check_match(w_exact_w, true, "initially");
+  check_notify(w_exact_w, 0, "initially");
+  check_match(w_min_9em, true, "initially");
+  check_notify(w_min_9em, 0, "initially");
+  check_match(w_min_10em, false, "initially");
+  check_notify(w_min_10em, 0, "initially");
+  check_match(w_max_9em, false, "initially");
+  check_notify(w_max_9em, 0, "initially");
+  check_match(w_max_10em, true, "initially");
+  check_notify(w_max_10em, 0, "initially");
+
+  var w2 = Math.floor(em_size * 10.3);
+  iframe.style.width = w2 + "px";
+  subroot.offsetWidth; // flush layout
+
+  check_match(w_exact_w, false, "after width increase to around 10.3em");
+  check_notify(w_exact_w, 1, "after width increase to around 10.3em");
+  check_match(w_min_9em, true, "after width increase to around 10.3em");
+  check_notify(w_min_9em, 0, "after width increase to around 10.3em");
+  check_match(w_min_10em, true, "after width increase to around 10.3em");
+  check_notify(w_min_10em, 1, "after width increase to around 10.3em");
+  check_match(w_max_9em, false, "after width increase to around 10.3em");
+  check_notify(w_max_9em, 0, "after width increase to around 10.3em");
+  check_match(w_max_10em, false, "after width increase to around 10.3em");
+  check_notify(w_max_10em, 1, "after width increase to around 10.3em");
+
+  var w3 = w * 2;
+  iframe.style.width = w3 + "px";
+  subroot.offsetWidth; // flush layout
+
+  check_match(w_exact_w, false, "after width double from original");
+  check_notify(w_exact_w, 1, "after width double from original");
+  check_match(w_min_9em, true, "after width double from original");
+  check_notify(w_min_9em, 0, "after width double from original");
+  check_match(w_min_10em, true, "after width double from original");
+  check_notify(w_min_10em, 1, "after width double from original");
+  check_match(w_max_9em, false, "after width double from original");
+  check_notify(w_max_9em, 0, "after width double from original");
+  check_match(w_max_10em, false, "after width double from original");
+  check_notify(w_max_10em, 1, "after width double from original");
+
+  SpecialPowers.setFullZoom(subwin, 2.0);
+  subroot.offsetWidth; // flush layout
+
+  check_match(w_exact_w, true, "after zoom");
+  check_notify(w_exact_w, 2, "after zoom");
+  check_match(w_min_9em, true, "after zoom");
+  check_notify(w_min_9em, 0, "after zoom");
+  check_match(w_min_10em, false, "after zoom");
+  check_notify(w_min_10em, 2, "after zoom");
+  check_match(w_max_9em, false, "after zoom");
+  check_notify(w_max_9em, 0, "after zoom");
+  check_match(w_max_10em, true, "after zoom");
+  check_notify(w_max_10em, 2, "after zoom");
+
+  SpecialPowers.setFullZoom(subwin, 1.0);
+
+  // Additional tests of listener mutation.
+  (function() {
+    var received = [];
+    var received_mql = [];
+    function listener1(mql) {
+      received.push(1);
+      received_mql.push(mql);
+    }
+    function listener2(mql) {
+      received.push(2);
+      received_mql.push(mql);
+    }
+
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    var mql = subwin.matchMedia("(min-width: 150px)");
+    mql.addListener(listener1);
+    mql.addListener(listener1);
+    mql.addListener(listener2);
+    is(JSON.stringify(received), "[]", "listeners before notification");
+
+    iframe.style.width = "100px";
+    subroot.offsetWidth; // flush layout
+
+    is(JSON.stringify(received), "[1,2]", "duplicate listeners removed");
+    received = [];
+    mql.removeListener(listener1);
+
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    is(JSON.stringify(received), "[2]", "listener removal");
+    received = [];
+    mql.addListener(listener1);
+
+    iframe.style.width = "100px";
+    subroot.offsetWidth; // flush layout
+
+    is(JSON.stringify(received), "[2,1]", "listeners notified in order");
+    received = [];
+    mql.addListener(listener2);
+
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    is(JSON.stringify(received), "[2,1]", "add of existing listener is no-op");
+    received = [];
+    mql.addListener(listener1);
+
+    iframe.style.width = "100px";
+    subroot.offsetWidth; // flush layout
+
+    is(JSON.stringify(received), "[2,1]", "add of existing listener is no-op");
+    mql.removeListener(listener2);
+    received = [];
+    received_mql = [];
+
+    var mql2 = subwin.matchMedia("(min-width: 160px)");
+    mql2.addListener(listener1);
+    mql.addListener(listener2);
+
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    // mql (1, 2), mql2 (1)
+    is(JSON.stringify(received), "[1,2,1]",
+       "notification of lists in order created");
+    is(received_mql[0], mql,
+       "notification of lists in order created");
+    is(received_mql[1], mql,
+       "notification of lists in order created");
+    is(received_mql[2], mql2,
+       "notification of lists in order created");
+    received = [];
+    received_mql = [];
+
+    function removing_listener(mql) {
+      received.push(3);
+      received_mql.push(mql);
+      mql.removeListener(listener2);
+      mql2.removeListener(listener1);
+    }
+
+    mql.addListener(removing_listener);
+    mql.removeListener(listener2);
+    mql.addListener(listener2); // after removing_listener (3)
+
+    iframe.style.width = "100px";
+    subroot.offsetWidth; // flush layout
+
+    // mql(1, 3, 2) mql2(1)
+    is(JSON.stringify(received), "[1,3,2,1]",
+       "listeners still notified after removed if change was before");
+    is(received_mql[0], mql,
+       "notification order (removal tests)");
+    is(received_mql[1], mql,
+       "notification order (removal tests)");
+    is(received_mql[2], mql,
+       "notification order (removal tests)");
+    is(received_mql[3], mql2,
+       "notification order (removal tests)");
+    received = [];
+    received_mql = [];
+
+    iframe.style.width = "200px";
+    subroot.offsetWidth; // flush layout
+
+    // mql(1, 3)
+    is(JSON.stringify(received), "[1,3]",
+       "listeners not notified for changes after their removal");
+    is(received_mql[0], mql,
+       "notification order (removal tests)");
+    is(received_mql[1], mql,
+       "notification order (removal tests)");
+  })();
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

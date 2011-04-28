@@ -821,7 +821,7 @@ extern JS_FRIEND_API(bool)
 js_GCThingIsMarked(void *thing, uintN color);
 
 extern void
-js_TraceStackFrame(JSTracer *trc, JSStackFrame *fp);
+js_TraceStackFrame(JSTracer *trc, js::StackFrame *fp);
 
 namespace js {
 
@@ -1118,7 +1118,6 @@ struct GCMarker : public JSTracer {
     uint32 color;
 
   public:
-    jsuword stackLimit;
     /* See comments before delayMarkingChildren is jsgc.cpp. */
     js::gc::Arena<js::gc::Cell> *unmarkedArenaStackTop;
 #ifdef DEBUG

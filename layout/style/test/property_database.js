@@ -1006,15 +1006,6 @@ var gCSSProperties = {
 		other_values: [ "none", "menu", "tooltip", "sheet" ],
 		invalid_values: []
 	},
-	"azimuth": {
-		domProp: "azimuth",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "center", "0deg" ],
-		other_values: [ "center behind", "behind far-right", "left-side", "73deg", "90.1deg", "0.1deg" ],
-		invalid_values: [ "0deg behind", "behind 0deg", "90deg behind", "behind 90deg" ]
-	},
 	"background": {
 		domProp: "background",
 		inherited: false,
@@ -1745,34 +1736,6 @@ var gCSSProperties = {
 		other_values: [ "foo 1", "bar", "foo 3 bar baz 2", "\\32  1", "-\\32  1", "-c 1", "\\32 1", "-\\32 1", "\\2  1", "-\\2  1", "-c 1", "\\2 1", "-\\2 1" ],
 		invalid_values: []
 	},
-	"cue": {
-		domProp: "cue",
-		inherited: false,
-		backend_only: true,
-		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "cue-before", "cue-after" ],
-		initial_values: [ "none", "none none" ],
-		other_values: [ "url(404.wav)", "url(404.wav) none", "none url(404.wav)" ],
-		invalid_values: []
-	},
-	"cue-after": {
-		domProp: "cueAfter",
-		inherited: false,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none" ],
-		other_values: [ "url(404.wav)" ],
-		invalid_values: []
-	},
-	"cue-before": {
-		domProp: "cueBefore",
-		inherited: false,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none" ],
-		other_values: [ "url(404.wav)" ],
-		invalid_values: []
-	},
 	"cursor": {
 		domProp: "cursor",
 		inherited: true,
@@ -1797,15 +1760,6 @@ var gCSSProperties = {
 		/* XXX none will really mess with other properties */
 		prerequisites: { "float": "none", "position": "static" },
 		other_values: [ "block", "list-item", "inline-block", "table", "inline-table", "table-row-group", "table-header-group", "table-footer-group", "table-row", "table-column-group", "table-column", "table-cell", "table-caption", "none" ],
-		invalid_values: []
-	},
-	"elevation": {
-		domProp: "elevation",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "level", "0deg" ],
-		other_values: [ "below", "above", "60deg", "higher", "lower", "-79deg", "0.33deg" ],
 		invalid_values: []
 	},
 	"empty-cells": {
@@ -2404,52 +2358,6 @@ var gCSSProperties = {
 		other_values: [ "avoid" ],
 		invalid_values: []
 	},
-	"pause": {
-		domProp: "pause",
-		inherited: false,
-		backend_only: true,
-		type: CSS_TYPE_TRUE_SHORTHAND,
-		subproperties: [ "pause-before", "pause-after" ],
-		initial_values: [ "0s", "0ms", "0s 0ms" ],
-		other_values: [ "1s", "200ms", "-2s", "50%", "-10%", "10% 200ms", "-3s -5%" ],
-		invalid_values: [ "0", "0px", "0 0", "0ms 0" ]
-	},
-	"pause-after": {
-		domProp: "pauseAfter",
-		inherited: false,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "0s", "0ms" ],
-		other_values: [ "1s", "200ms", "-2s", "50%", "-10%" ],
-		invalid_values: [ "0", "0px" ]
-	},
-	"pause-before": {
-		domProp: "pauseBefore",
-		inherited: false,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "0s", "0ms" ],
-		other_values: [ "1s", "200ms", "-2s", "50%", "-10%" ],
-		invalid_values: [ "0", "0px" ]
-	},
-	"pitch": {
-		domProp: "pitch",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "medium" ],
-		other_values: [ "x-low", "low", "high", "x-high" ],
-		invalid_values: []
-	},
-	"pitch-range": {
-		domProp: "pitchRange",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "50", "50.0" ],
-		other_values: [ "0", "100.0", "99.7", "47", "3.2" ],
-		invalid_values: [" -0.01", "100.2", "108", "-3" ]
-	},
 	"pointer-events": {
 		domProp: "pointerEvents",
 		inherited: true,
@@ -2475,15 +2383,6 @@ var gCSSProperties = {
 						  '"\\201C" "\\201D" "\\2018" "\\2019"' ],
 		other_values: [ "none", "'\"' '\"'" ],
 		invalid_values: []
-	},
-	"richness": {
-		domProp: "richness",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "50", "50.0" ],
-		other_values: [ "0", "100.0", "99.7", "47", "3.2" ],
-		invalid_values: [" -0.01", "100.2", "108", "-3" ]
 	},
 	"right": {
 		domProp: "right",
@@ -2516,62 +2415,6 @@ var gCSSProperties = {
 			"100mm 100mm 100mm"
 		]
 	},
-	"speak": {
-		domProp: "speak",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "normal" ],
-		other_values: [ "none", "spell-out" ],
-		invalid_values: []
-	},
-	"speak-header": {
-		domProp: "speakHeader",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "once" ],
-		other_values: [ "always" ],
-		invalid_values: []
-	},
-	"speak-numeral": {
-		domProp: "speakNumeral",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "continuous" ],
-		other_values: [ "digits" ],
-		invalid_values: []
-	},
-	"speak-punctuation": {
-		domProp: "speakPunctuation",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "none" ],
-		other_values: [ "code" ],
-		invalid_values: []
-	},
-	"speech-rate": {
-		domProp: "speechRate",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "medium" ],
-		other_values: [ "x-slow", "slow", "fast", "x-fast", "faster", "slower", "80", "500", "73.2" ],
-		invalid_values: [
-			// "0", "-80" // unclear
-		]
-	},
-	"stress": {
-		domProp: "stress",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "50", "50.0" ],
-		other_values: [ "0", "100.0", "99.7", "47", "3.2" ],
-		invalid_values: [" -0.01", "100.2", "108", "-3" ]
-	},
 	"table-layout": {
 		domProp: "tableLayout",
 		inherited: false,
@@ -2589,13 +2432,23 @@ var gCSSProperties = {
 		other_values: [ "center", "justify", "end" ],
 		invalid_values: []
 	},
-	"text-decoration": {
-		domProp: "textDecoration",
+	"-moz-text-blink": {
+		domProp: "MozTextBlink",
 		inherited: false,
 		type: CSS_TYPE_LONGHAND,
 		initial_values: [ "none" ],
-		other_values: [ "underline", "overline", "line-through", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
-		invalid_values: [ "underline none", "none underline", "line-through blink line-through" ]
+		other_values: [ "blink" ],
+		invalid_values: [ "underline", "overline", "line-through", "none underline", "underline blink", "blink underline" ]
+	},
+	"text-decoration": {
+		domProp: "textDecoration",
+		inherited: false,
+		type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+		subproperties: [ "-moz-text-blink", "-moz-text-decoration-color", "-moz-text-decoration-line", "-moz-text-decoration-style" ],
+		initial_values: [ "none" ],
+		other_values: [ "underline", "overline", "line-through", "blink", "blink line-through underline", "underline overline line-through blink", "-moz-anchor-decoration", "blink -moz-anchor-decoration" ],
+		invalid_values: [ "none none", "underline none", "none underline", "blink none", "none blink", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink",
+		                  "underline red solid", "underline #ff0000", "solid underline", "red underline", "#ff0000 underline" ]
 	},
 	"-moz-text-decoration-color": {
 		domProp: "MozTextDecorationColor",
@@ -2605,6 +2458,14 @@ var gCSSProperties = {
 		initial_values: [ "currentColor", "-moz-use-text-color" ],
 		other_values: [ "green", "rgba(255,128,0,0.5)", "transparent" ],
 		invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000" ]
+	},
+	"-moz-text-decoration-line": {
+		domProp: "MozTextDecorationLine",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "none" ],
+		other_values: [ "underline", "overline", "line-through", "line-through underline", "underline overline line-through", "-moz-anchor-decoration", "-moz-anchor-decoration" ],
+		invalid_values: [ "none none", "underline none", "none underline", "line-through blink line-through", "underline overline line-through blink none", "underline overline line-throuh blink blink" ]
 	},
 	"-moz-text-decoration-style": {
 		domProp: "MozTextDecorationStyle",
@@ -2749,24 +2610,6 @@ var gCSSProperties = {
 		initial_values: [ "visible" ],
 		other_values: [ "hidden", "collapse" ],
 		invalid_values: []
-	},
-	"voice-family": {
-		domProp: "voiceFamily",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "male" ], /* arbitrary guess */
-		other_values: [ "female", "child", "Bob, male", "Jane, Juliet, female" ],
-		invalid_values: []
-	},
-	"volume": {
-		domProp: "volume",
-		inherited: true,
-		backend_only: true,
-		type: CSS_TYPE_LONGHAND,
-		initial_values: [ "50", "50.0", "medium" ],
-		other_values: [ "0", "100.0", "99.7", "47", "3.2", "silent", "x-soft", "soft", "loud", "x-loud" ],
-		invalid_values: [" -0.01", "100.2", "108", "-3" ]
 	},
 	"white-space": {
 		domProp: "whiteSpace",

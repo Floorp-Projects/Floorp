@@ -64,12 +64,6 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
 #include <sys/cachectl.h>
 #endif
 
-#if WTF_PLATFORM_WINCE
-// From pkfuncs.h (private header file from the Platform Builder)
-#define CACHE_SYNC_ALL 0x07F
-extern "C" __declspec(dllimport) void CacheRangeFlush(LPVOID pAddr, DWORD dwLength, DWORD dwFlags);
-#endif
-
 #if ENABLE_ASSEMBLER_WX_EXCLUSIVE
 #define PROTECTION_FLAGS_RW (PROT_READ | PROT_WRITE)
 #define PROTECTION_FLAGS_RX (PROT_READ | PROT_EXEC)
@@ -404,11 +398,6 @@ public:
             :
             : "r" (code), "r" (reinterpret_cast<char*>(code) + size)
             : "r0", "r1", "r2");
-    }
-#elif WTF_PLATFORM_WINCE
-    static void cacheFlush(void* code, size_t size)
-    {
-        CacheRangeFlush(code, size, CACHE_SYNC_ALL);
     }
 #elif WTF_CPU_SPARC
     static void cacheFlush(void* code, size_t size)

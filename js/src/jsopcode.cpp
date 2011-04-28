@@ -72,7 +72,6 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
@@ -311,7 +310,7 @@ js_DumpPC(JSContext *cx)
     void *mark = JS_ARENA_MARK(&cx->tempPool);
     Sprinter sprinter;
     INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
-    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs->pc, &sprinter);
+    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs().pc, &sprinter);
     fprintf(stdout, "%s", sprinter.base);
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
@@ -2049,7 +2048,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
         token = CodeToken[op];
 
         if (pc + oplen == jp->dvgfence) {
-            JSStackFrame *fp;
+            StackFrame *fp;
             uint32 format, mode, type;
 
             /*
@@ -2889,7 +2888,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * object that's not a constructor, causing us to be
                      * called with an intervening frame on the stack.
                      */
-                    JSStackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
+                    StackFrame *fp = js_GetTopStackFrame(cx, FRAME_EXPAND_ALL);
                     if (fp) {
                         while (!fp->isEvalFrame())
                             fp = fp->prev();
@@ -5023,7 +5022,7 @@ char *
 js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
                            JSString *fallback)
 {
-    JSStackFrame *fp;
+    StackFrame *fp;
     JSScript *script;
     jsbytecode *pc;
 
@@ -5033,13 +5032,14 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
               spindex == JSDVG_IGNORE_STACK ||
               spindex == JSDVG_SEARCH_STACK);
 
-    fp = js_GetTopStackFrame(cx, FRAME_EXPAND_TOP);
-
-    if (!cx->regs || !fp || !fp->isScriptFrame())
+    LeaveTrace(cx);
+    
+    if (!cx->running() || !cx->fp()->isScriptFrame())
         goto do_fallback;
 
+    fp = js_GetTopStackFrame(cx, FRAME_EXPAND_TOP);
     script = fp->script();
-    pc = fp->hasImacropc() ? fp->imacropc() : cx->regs->pc;
+    pc = fp->hasImacropc() ? fp->imacropc() : cx->regs().pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     if (pc < script->main)
@@ -5073,7 +5073,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
              * it that caused exception, see bug 328664.
              */
             Value *stackBase = fp->base();
-            Value *sp = cx->regs->sp;
+            Value *sp = cx->regs().sp;
             do {
                 if (sp == stackBase) {
                     pcdepth = -1;
@@ -5101,11 +5101,10 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     }
 
     {
-        jsbytecode* basepc = cx->regs->pc;
+        jsbytecode* basepc = cx->regs().pc;
         jsbytecode* savedImacropc = fp->maybeImacropc();
         if (savedImacropc) {
-            JS_ASSERT(cx->hasfp());
-            cx->regs->pc = savedImacropc;
+            cx->regs().pc = savedImacropc;
             fp->clearImacropc();
         }
 
@@ -5120,8 +5119,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
             name = DecompileExpression(cx, script, fp->maybeFun(), pc);
 
         if (savedImacropc) {
-            JS_ASSERT(cx->hasfp());
-            cx->regs->pc = basepc;
+            cx->regs().pc = basepc;
             fp->setImacropc(savedImacropc);
         }
 
@@ -5401,7 +5399,7 @@ ReconstructImacroPCStack(JSContext *cx, JSScript *script,
      * Begin with a recursive call back to ReconstructPCStack to pick up
      * the state-of-the-world at the *start* of the imacro.
      */
-    JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
+    StackFrame *fp = js_GetScriptedCaller(cx, NULL);
     JS_ASSERT(fp->hasImacropc());
     intN pcdepth = ReconstructPCStack(cx, script, fp->imacropc(), pcstack);
     if (pcdepth < 0)

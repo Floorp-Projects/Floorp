@@ -47,7 +47,7 @@
 #include "nsIDOMNode.h"
 #include "nsIContent.h"
 #include "nsContentUtils.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStateManager.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsIScrollableFrame.h"
@@ -258,7 +258,7 @@ nsDOMUIEvent::GetRangeParent(nsIDOMNode** aRangeParent)
   nsIFrame* targetFrame = nsnull;
 
   if (mPresContext) {
-    mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
+    targetFrame = mPresContext->EventStateManager()->GetEventTarget();
   }
 
   *aRangeParent = nsnull;
@@ -286,7 +286,7 @@ nsDOMUIEvent::GetRangeOffset(PRInt32* aRangeOffset)
   nsIFrame* targetFrame = nsnull;
 
   if (mPresContext) {
-    mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
+    targetFrame = mPresContext->EventStateManager()->GetEventTarget();
   }
 
   if (targetFrame) {
@@ -334,8 +334,7 @@ nsDOMUIEvent::GetLayerPoint()
     return mLayerPoint;
   }
   // XXX I'm not really sure this is correct; it's my best shot, though
-  nsIFrame* targetFrame;
-  mPresContext->EventStateManager()->GetEventTarget(&targetFrame);
+  nsIFrame* targetFrame = mPresContext->EventStateManager()->GetEventTarget();
   if (!targetFrame)
     return mLayerPoint;
   nsIFrame* layer = nsLayoutUtils::GetClosestLayer(targetFrame);

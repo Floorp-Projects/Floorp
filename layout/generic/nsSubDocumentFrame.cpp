@@ -82,7 +82,6 @@ using mozilla::layout::RenderFrameParent;
 #include "nsWeakReference.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
-#include "nsIRenderingContext.h"
 #include "nsIDOMNSHTMLDocument.h"
 #include "nsDisplayList.h"
 #include "nsUnicharUtils.h"
@@ -179,7 +178,7 @@ nsSubDocumentFrame::Init(nsIContent*     aContent,
   // really need it or not, and the inner view will get it as the
   // parent.
   if (!HasView()) {
-    rv = nsHTMLContainerFrame::CreateViewForFrame(this, PR_TRUE);
+    rv = nsContainerFrame::CreateViewForFrame(this, PR_TRUE);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -420,10 +419,17 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       childItems.AppendToTop(layerItem);
     }
 
+    nsDisplayList list;
     // Clip children to the child root frame's rectangle
-    rv = aLists.Content()->AppendNewToTop(
+    rv = list.AppendNewToTop(
         new (aBuilder) nsDisplayClip(aBuilder, this, &childItems,
                                      subdocBoundsInParentUnits));
+
+    if (mIsInline) {
+      WrapReplacedContentForBorderRadius(aBuilder, &list, aLists);
+    } else {
+      aLists.Content()->AppendToTop(&list);
+    }
   }
   // delete childItems in case of OOM
   childItems.DeleteAll();
@@ -485,7 +491,7 @@ nsSubDocumentFrame::GetType() const
 }
 
 /* virtual */ nscoord
-nsSubDocumentFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
+nsSubDocumentFrame::GetMinWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_MIN_WIDTH(this, result);
@@ -501,7 +507,7 @@ nsSubDocumentFrame::GetMinWidth(nsIRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsSubDocumentFrame::GetPrefWidth(nsIRenderingContext *aRenderingContext)
+nsSubDocumentFrame::GetPrefWidth(nsRenderingContext *aRenderingContext)
 {
   nscoord result;
   DISPLAY_PREF_WIDTH(this, result);
@@ -537,7 +543,7 @@ nsSubDocumentFrame::GetIntrinsicRatio()
 }
 
 /* virtual */ nsSize
-nsSubDocumentFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
+nsSubDocumentFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
                                     nsSize aCBSize, nscoord aAvailableWidth,
                                     nsSize aMargin, nsSize aBorder,
                                     nsSize aPadding, PRBool aShrinkWrap)
@@ -555,7 +561,7 @@ nsSubDocumentFrame::ComputeAutoSize(nsIRenderingContext *aRenderingContext,
 
 
 /* virtual */ nsSize
-nsSubDocumentFrame::ComputeSize(nsIRenderingContext *aRenderingContext,
+nsSubDocumentFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                                 nsSize aCBSize, nscoord aAvailableWidth,
                                 nsSize aMargin, nsSize aBorder, nsSize aPadding,
                                 PRBool aShrinkWrap)
@@ -940,7 +946,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
   NS_PRECONDITION(aDocument, "");
 
   // Our docshell and view trees have been updated for the new hierarchy.
-  // Now also update all nsThebesDeviceContext::mWidget to that of the
+  // Now also update all nsDeviceContext::mWidget to that of the
   // container view in the new hierarchy.
   nsCOMPtr<nsISupports> container = aDocument->GetContainer();
   nsCOMPtr<nsIDocShell> ds = do_QueryInterface(container);
@@ -952,7 +958,7 @@ EndSwapDocShellsForDocument(nsIDocument* aDocument, void*)
       if (dv) {
         nsCOMPtr<nsPresContext> pc;
         dv->GetPresContext(getter_AddRefs(pc));
-        nsIDeviceContext* dc = pc ? pc->DeviceContext() : nsnull;
+        nsDeviceContext* dc = pc ? pc->DeviceContext() : nsnull;
         if (dc) {
           nsIView* v = dv->FindContainerView();
           dc->Init(v ? v->GetNearestWidget(nsnull) : nsnull);
