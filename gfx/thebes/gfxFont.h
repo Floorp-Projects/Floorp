@@ -295,11 +295,6 @@ public:
     hb_blob_t *ShareFontTableAndGetBlob(PRUint32 aTag,
                                         FallibleTArray<PRUint8>* aTable);
 
-    // Preload a font table into the cache (used to store layout tables for
-    // harfbuzz, when they will be stripped from the actual sfnt being
-    // passed to platform font APIs for rasterization)
-    void PreloadFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aTable);
-
     nsString         mName;
 
     PRPackedBool     mItalic      : 1;
