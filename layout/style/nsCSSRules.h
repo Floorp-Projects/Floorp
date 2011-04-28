@@ -156,7 +156,8 @@ public:
   enum Function {
     eURL,
     eURLPrefix,
-    eDomain
+    eDomain,
+    eRegExp
   };
 
   struct URL {
