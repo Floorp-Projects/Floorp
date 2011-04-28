@@ -70,9 +70,8 @@ class nsIDocument;
 class nsSMILAnimationController : public nsSMILTimeContainer,
                                   public nsARefreshObserver
 {
-protected:
-  nsSMILAnimationController();
 public:
+  nsSMILAnimationController(nsIDocument* aDoc);
   ~nsSMILAnimationController();
 
   // nsSMILContainer
@@ -148,11 +147,6 @@ protected:
     nsTArray<nsRefPtr<nsISMILAnimationElement> > mElements;
     nsSMILMilestone                              mMilestone;
   };
-
-  // Factory methods
-  friend nsSMILAnimationController*
-  NS_NewSMILAnimationController(nsIDocument* aDoc);
-  nsresult    Init(nsIDocument* aDoc);
 
   // Cycle-collection implementation helpers
   PR_STATIC_CALLBACK(PLDHashOperator) CompositorTableEntryTraverse(
@@ -242,7 +236,5 @@ protected:
   // removed or retargeted)
   nsAutoPtr<nsSMILCompositorTable> mLastCompositorTable;
 };
-
-nsSMILAnimationController* NS_NewSMILAnimationController(nsIDocument *doc);
 
 #endif // NS_SMILANIMATIONCONTROLLER_H_

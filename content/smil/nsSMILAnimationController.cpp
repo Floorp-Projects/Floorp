@@ -71,47 +71,18 @@ GetRefreshDriverForDoc(nsIDocument* aDoc)
 //----------------------------------------------------------------------
 // ctors, dtors, factory methods
 
-nsSMILAnimationController::nsSMILAnimationController()
+nsSMILAnimationController::nsSMILAnimationController(nsIDocument* aDoc)
   : mAvgTimeBetweenSamples(0),
     mResampleNeeded(PR_FALSE),
     mDeferredStartSampling(PR_FALSE),
     mRunningSample(PR_FALSE),
-    mDocument(nsnull)
+    mDocument(aDoc)
 {
+  NS_ABORT_IF_FALSE(aDoc, "need a non-null document");
+
   mAnimationElementTable.Init();
   mChildContainerTable.Init();
-}
 
-nsSMILAnimationController::~nsSMILAnimationController()
-{
-  StopSampling(GetRefreshDriverForDoc(mDocument));
-  NS_ASSERTION(mAnimationElementTable.Count() == 0,
-               "Animation controller shouldn't be tracking any animation"
-               " elements when it dies");
-}
-
-nsSMILAnimationController* NS_NewSMILAnimationController(nsIDocument* aDoc)
-{
-  nsSMILAnimationController* animationController =
-    new nsSMILAnimationController();
-  NS_ENSURE_TRUE(animationController, nsnull);
-
-  nsresult rv = animationController->Init(aDoc);
-  if (NS_FAILED(rv)) {
-    delete animationController;
-    animationController = nsnull;
-  }
-
-  return animationController;
-}
-
-nsresult
-nsSMILAnimationController::Init(nsIDocument* aDoc)
-{
-  NS_ENSURE_ARG_POINTER(aDoc);
-
-  // Keep track of document, so we can traverse its set of animation elements
-  mDocument = aDoc;
   nsRefreshDriver* refreshDriver = GetRefreshDriverForDoc(mDocument);
   if (refreshDriver) {
     mStartTime = refreshDriver->MostRecentRefresh();
@@ -121,8 +92,14 @@ nsSMILAnimationController::Init(nsIDocument* aDoc)
   mCurrentSampleTime = mStartTime;
 
   Begin();
+}
 
-  return NS_OK;
+nsSMILAnimationController::~nsSMILAnimationController()
+{
+  StopSampling(GetRefreshDriverForDoc(mDocument));
+  NS_ASSERTION(mAnimationElementTable.Count() == 0,
+               "Animation controller shouldn't be tracking any animation"
+               " elements when it dies");
 }
 
 //----------------------------------------------------------------------
