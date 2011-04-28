@@ -74,6 +74,9 @@ public:
   nsSMILAnimationController(nsIDocument* aDoc);
   ~nsSMILAnimationController();
 
+  // Clears mDocument pointer. (Called by our nsIDocument when it's going away)
+  void Disconnect();
+
   // nsSMILContainer
   virtual void Pause(PRUint32 aType);
   virtual void Resume(PRUint32 aType);
