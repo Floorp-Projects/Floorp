@@ -1226,7 +1226,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
     }
     JS_ASSERT(global->isGlobal());
 
-    const Value &v = global->getReservedSlot(JSProto_LIMIT + protoKey);
+    const Value &v = global->getReservedSlot(JS_GLOBAL_PROTO_SLOT(protoKey));
     JSObject *proto;
     if (v.isObject()) {
         proto = &v.toObject();
@@ -1477,12 +1477,12 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[key]);
     JS_ASSERT(!global->nativeLookup(id));
 
-    if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0))
+    if (!global->addDataProperty(cx, id, JS_GLOBAL_PROPERTY_SLOT(key), 0))
         return false;
 
-    global->setSlot(key, ObjectValue(*ctor));
-    global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
-    global->setSlot(key + JSProto_LIMIT * 2, ObjectValue(*ctor));
+    global->setSlot(JS_GLOBAL_CTOR_SLOT(key), ObjectValue(*ctor));
+    global->setSlot(JS_GLOBAL_PROTO_SLOT(key), ObjectValue(*proto));
+    global->setSlot(JS_GLOBAL_PROPERTY_SLOT(key), ObjectValue(*ctor));
     return true;
 }
 
