@@ -2861,21 +2861,24 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     queries.AppendObject(query);
   }
 
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  // root node
+  // Create the root node.
   nsRefPtr<nsNavHistoryContainerResultNode> rootNode;
   PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries, options);
   if (folderId) {
-    // In the simple case where we're just querying children of a single bookmark
-    // folder, we can more efficiently generate results.
+    // In the simple case where we're just querying children of a single
+    // bookmark folder, we can more efficiently generate results.
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     nsRefPtr<nsNavHistoryResultNode> tempRootNode;
     rv = bookmarks->ResultNodeForContainer(folderId, options,
                                            getter_AddRefs(tempRootNode));
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Generating a generic empty node for a broken query!");
     if (NS_SUCCEEDED(rv)) {
       rootNode = tempRootNode->GetAsContainer();
+    }
+    else {
+      NS_WARNING("Generating a generic empty node for a broken query!");
+      // This is a perf hack to generate an empty query that skips filtering.
+      options->SetExcludeItems(PR_TRUE);
     }
   }
 
@@ -6147,9 +6150,10 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
       if (includeFolders[queryIndex]->Length() != 0 &&
           resultType != nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
         // Filter out the node if its parent is in the excludeFolders
-        // cache.
-        if (excludeFolders[queryIndex]->Contains(parentId))
+        // cache or it has no parent.
+        if (excludeFolders[queryIndex]->Contains(parentId) || parentId == -1) {
           continue;
+        }
 
         if (!includeFolders[queryIndex]->Contains(parentId)) {
           // If parent is not found in current includeFolders cache, we check
@@ -6533,6 +6537,8 @@ nsNavHistory::QueryRowToResult(PRInt64 itemId, const nsACString& aURI,
     // whole result.  Instead make a generic empty query node.
     *aNode = new nsNavHistoryQueryResultNode(aTitle, aFavicon, aURI);
     (*aNode)->mItemId = itemId;
+    // This is a perf hack to generate an empty query that skips filtering.
+    (*aNode)->GetAsQuery()->Options()->SetExcludeItems(PR_TRUE);
     NS_ADDREF(*aNode);
   }
 
@@ -6916,7 +6922,7 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 
   // Don't care about onlyBookmarked flag, since specifying a bookmark
   // folder is inferring onlyBookmarked.
-  NS_ASSERTION(query->Folders()[0] > 0, "bad folder id");
+
   return query->Folders()[0];
 }
 
