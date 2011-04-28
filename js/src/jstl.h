@@ -351,25 +351,6 @@ class LazilyConstructed
     }
 };
 
-
-/*
- * N.B. GCC seems to miss some optimizations with Conditionally and may
- * generate extra branches/loads/stores. Use with caution on hot paths.
- */
-template <class T>
-class Conditionally {
-    LazilyConstructed<T> t;
-
-  public:
-    Conditionally(bool b) { if (b) t.construct(); }
-
-    template <class T1>
-    Conditionally(bool b, const T1 &t1) { if (b) t.construct(t1); }
-
-    template <class T1, class T2>
-    Conditionally(bool b, const T1 &t1, const T2 &t2) { if (b) t.construct(t1, t2); }
-};
-
 template <class T>
 class AlignedPtrAndFlag
 {
