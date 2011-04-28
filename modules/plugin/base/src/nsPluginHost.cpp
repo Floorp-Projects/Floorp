@@ -1650,27 +1650,24 @@ nsPluginTag*
 nsPluginHost::FindPluginForType(const char* aMimeType,
                                 PRBool aCheckEnabled)
 {
-  nsPluginTag *plugins = nsnull;
-  PRInt32     variants, cnt;
+  if (!aMimeType) {
+    return nsnull;
+  }
 
   LoadPlugins();
 
-  // if we have a mimetype passed in, search the mPlugins
-  // linked list for a match
-  if (aMimeType) {
-    plugins = mPlugins;
-
-    while (plugins) {
-      variants = plugins->mVariants;
-      for (cnt = 0; cnt < variants; cnt++) {
-        if ((!aCheckEnabled || plugins->IsEnabled()) &&
-            plugins->mMimeTypeArray[cnt] &&
-            (0 == PL_strcasecmp(plugins->mMimeTypeArray[cnt], aMimeType))) {
-          return plugins;
+  nsPluginTag *plugin = mPlugins;
+  while (plugin) {
+    if (!aCheckEnabled || plugin->IsEnabled()) {
+      PRInt32 mimeCount = plugin->mVariants;
+      for (PRInt32 i = 0; i < mimeCount; i++) {
+        if (plugin->mMimeTypeArray[i] &&
+            (0 == PL_strcasecmp(plugin->mMimeTypeArray[i], aMimeType))) {
+          return plugin;
         }
       }
-      plugins = plugins->mNext;
     }
+    plugin = plugin->mNext;
   }
 
   return nsnull;
