@@ -59,6 +59,11 @@ using namespace mozilla::dom;
 static nsRefreshDriver*
 GetRefreshDriverForDoc(nsIDocument* aDoc)
 {
+  if (!aDoc) {
+    NS_ERROR("Requesting refresh driver after document has disconnected!");
+    return nsnull;
+  }
+
   nsIPresShell* shell = aDoc->GetShell();
   if (!shell) {
     return nsnull;
@@ -96,10 +101,21 @@ nsSMILAnimationController::nsSMILAnimationController(nsIDocument* aDoc)
 
 nsSMILAnimationController::~nsSMILAnimationController()
 {
-  StopSampling(GetRefreshDriverForDoc(mDocument));
   NS_ASSERTION(mAnimationElementTable.Count() == 0,
                "Animation controller shouldn't be tracking any animation"
                " elements when it dies");
+}
+
+void
+nsSMILAnimationController::Disconnect()
+{
+  NS_ABORT_IF_FALSE(mDocument, "disconnecting when we weren't connected...?");
+  NS_ABORT_IF_FALSE(mRefCnt.get() == 1,
+                    "Expecting to disconnect when doc is sole remaining owner");
+
+  StopSampling(GetRefreshDriverForDoc(mDocument));
+
+  mDocument = nsnull; // (raw pointer)
 }
 
 //----------------------------------------------------------------------
@@ -389,6 +405,11 @@ nsSMILAnimationController::DoSample()
 void
 nsSMILAnimationController::DoSample(PRBool aSkipUnchangedContainers)
 {
+  if (!mDocument) {
+    NS_ERROR("Shouldn't be sampling after document has disconnected");
+    return;
+  }
+
   mResampleNeeded = PR_FALSE;
   // Set running sample flag -- do this before flushing styles so that when we
   // flush styles we don't end up requesting extra samples
