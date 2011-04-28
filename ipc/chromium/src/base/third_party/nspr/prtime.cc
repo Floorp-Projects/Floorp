@@ -143,7 +143,7 @@ PR_ImplodeTime(const PRExplodedTime *exploded)
     // Convert from Windows epoch to NSPR epoch, and 100-nanoseconds units
     // to microsecond units.
     PRTime result =
-        static_cast<PRTime>((uli.QuadPart / 10) - 11644473600000000i64);
+        static_cast<PRTime>((uli.QuadPart / 10) - GG_LONGLONG(11644473600000000));
     // Adjust for time zone and dst.  Convert from seconds to microseconds.
     result -= (exploded->tm_params.tp_gmt_offset +
                exploded->tm_params.tp_dst_offset) * kSecondsToMicroseconds;

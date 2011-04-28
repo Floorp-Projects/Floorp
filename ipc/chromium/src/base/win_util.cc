@@ -283,7 +283,7 @@ bool Subclass(HWND window, WNDPROC subclass_proc) {
       reinterpret_cast<WNDPROC>(GetWindowLongPtr(window, GWLP_WNDPROC));
   if (original_handler != subclass_proc) {
     win_util::SetWindowProc(window, subclass_proc);
-    SetProp(window, kHandlerKey, original_handler);
+    SetProp(window, kHandlerKey, (void*)original_handler);
     return true;
   }
   return false;

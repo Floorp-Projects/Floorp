@@ -251,7 +251,7 @@ class NowSingleton : public base::SystemMonitor::PowerObserver {
     // we keep our last_seen_ stay correctly in sync.
     DWORD now = tick_function();
     if (now < last_seen_)
-      rollover_ += TimeDelta::FromMilliseconds(0x100000000I64);  // ~49.7 days.
+      rollover_ += TimeDelta::FromMilliseconds(GG_LONGLONG(0x100000000));  // ~49.7 days.
     last_seen_ = now;
     return TimeDelta::FromMilliseconds(now) + rollover_;
   }

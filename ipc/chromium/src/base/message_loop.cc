@@ -191,9 +191,9 @@ void MessageLoop::RunHandler() {
 #if defined(OS_WIN)
   if (exception_restoration_) {
     LPTOP_LEVEL_EXCEPTION_FILTER current_filter = GetTopSEHFilter();
-    __try {
+    MOZ_SEH_TRY {
       RunInternal();
-    } __except(SEHFilter(current_filter)) {
+    } MOZ_SEH_EXCEPT(SEHFilter(current_filter)) {
     }
     return;
   }
