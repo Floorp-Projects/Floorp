@@ -359,25 +359,6 @@ gfxFontEntry::ShareFontTableAndGetBlob(PRUint32 aTag,
     return entry->ShareTableAndGetBlob(*aBuffer, &mFontTableCache);
 }
 
-void
-gfxFontEntry::PreloadFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aTable)
-{
-    if (!mFontTableCache.IsInitialized()) {
-        // This is intended for use with downloaded fonts, to cache the layout
-        // tables for harfbuzz, so initialize the cache for 3 entries to allow
-        // for GDEF/GSUB/GPOS.
-        mFontTableCache.Init(3);
-    }
-
-    FontTableHashEntry *entry = mFontTableCache.PutEntry(aTag);
-    if (NS_UNLIKELY(!entry)) { // OOM
-        return;
-    }
-
-    // adopts elements of aTable
-    entry->SaveTable(aTable);
-}
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // class gfxFontFamily
