@@ -292,6 +292,7 @@ VPATH		+= \
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
+		Types.h		\
 		Util.h          \
 		$(NULL)
 
@@ -727,6 +728,11 @@ export::
 	$(MKDIR) -p nanojit
 
 DEFINES		+= -DEXPORT_JS_API
+
+# mfbt is always packed with us, so if we're building a shared object,
+# we need to declare "exported" mfbt symbols on its behalf when we use
+# its headers.
+DEFINES		+= -DIMPL_MFBT
 
 # Some platforms that have stdint.h include it in system headers.  So
 # to reliably get limit macros defined, we'd always have to define the

@@ -51,6 +51,8 @@ class nsIXPConnectJSObjectHolder;
 class nsAutoPoolRelease;
 namespace js {
 class AutoArrayRooter;
+}
+namespace mozilla {
 template <class> class Maybe;
 }
 
@@ -205,8 +207,8 @@ protected:
                                    void *aScope,
                                    PRUint32 *aArgc,
                                    jsval **aArgv,
-                                   js::Maybe<nsAutoPoolRelease> &aPoolRelease,
-                                   js::Maybe<js::AutoArrayRooter> &aRooter);
+                                   mozilla::Maybe<nsAutoPoolRelease> &aPoolRelease,
+                                   mozilla::Maybe<js::AutoArrayRooter> &aRooter);
 
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, jsval *aArgv);
 
