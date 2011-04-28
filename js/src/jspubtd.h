@@ -107,24 +107,6 @@ typedef enum JSProtoKey {
     JSProto_LIMIT
 } JSProtoKey;
 
-static void JS_CHECK_PROTOKEY_RANGE(JSProtoKey key) {
-    JS_ASSERT(key >= JSProto_Null);
-    JS_ASSERT(key < JSProto_LIMIT);
-}
-
-uintN inline JS_GLOBAL_CTOR_SLOT(JSProtoKey key) {
-    JS_CHECK_PROTOKEY_RANGE(key);
-    return key;
-}
-uintN inline JS_GLOBAL_PROTO_SLOT(JSProtoKey key) {
-    JS_CHECK_PROTOKEY_RANGE(key);
-    return key + JSProto_LIMIT;
-}
-uintN inline JS_GLOBAL_PROPERTY_SLOT(JSProtoKey key) {
-    JS_CHECK_PROTOKEY_RANGE(key);
-    return key + JSProto_LIMIT * 2;
-}
-
 /* js_CheckAccess mode enumeration. */
 typedef enum JSAccessMode {
     JSACC_PROTO  = 0,           /* XXXbe redundant w.r.t. id */
