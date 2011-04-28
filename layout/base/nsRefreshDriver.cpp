@@ -96,7 +96,7 @@ nsRefreshDriver::GetRefreshTimerType() const
     return nsITimer::TYPE_ONE_SHOT;
   }
   if (HaveAnimationFrameListeners() || sPrecisePref) {
-    return nsITimer::TYPE_REPEATING_PRECISE;
+    return nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP;
   }
   return nsITimer::TYPE_REPEATING_SLACK;
 }
@@ -197,7 +197,7 @@ nsRefreshDriver::EnsureTimerStarted(bool aAdjustingTimer)
   }
 
   PRInt32 timerType = GetRefreshTimerType();
-  mTimerIsPrecise = (timerType == nsITimer::TYPE_REPEATING_PRECISE);
+  mTimerIsPrecise = (timerType == nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP);
 
   nsresult rv = mTimer->InitWithCallback(this,
                                          GetRefreshTimerInterval(),
@@ -391,7 +391,7 @@ nsRefreshDriver::Notify(nsITimer *aTimer)
 
   if (mThrottled ||
       (mTimerIsPrecise !=
-       (GetRefreshTimerType() == nsITimer::TYPE_REPEATING_PRECISE))) {
+       (GetRefreshTimerType() == nsITimer::TYPE_REPEATING_PRECISE_CAN_SKIP))) {
     // Stop the timer now and restart it here.  Stopping is in the mThrottled
     // case ok because either it's already one-shot, and it just fired, and all
     // we need to do is null it out, or it's repeating and we need to reset it
