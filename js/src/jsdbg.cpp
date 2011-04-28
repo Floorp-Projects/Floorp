@@ -562,8 +562,39 @@ Class Frame_class = {
     EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
 };
 
+JSObject *
+CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
+{
+    if (!vp[1].isObject()) {
+        ReportObjectRequired(cx);
+        return NULL;
+    }
+    JSObject *thisobj = &vp[1].toObject();
+    if (thisobj->getClass() != &Frame_class) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debug.Frame", fnname, thisobj->getClass()->name);
+        return NULL;
+    }
+
+    // Check for e.g. Debug.prototype, which is of the Debug JSClass but isn't
+    // really a Debug object.
+    if (!thisobj->getPrivate()) {
+        if (thisobj->getReservedSlot(JSSLOT_FRAME_OWNER).isUndefined()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                                 "Debug.Frame", fnname, "prototype object");
+            return NULL;
+        }
+        if (checkLive) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_FRAME_NOT_LIVE,
+                                 "Debug.Frame", fnname);
+            return NULL;
+        }
+    }
+    return thisobj;
+}
+
 #define THIS_FRAME(cx, vp, fnname, thisobj, fp)                              \
-    JSObject *thisobj = CheckThisClass(cx, vp, &Frame_class, fnname);        \
+    JSObject *thisobj = CheckThisFrame(cx, vp, fnname, true);                \
     if (!thisobj)                                                            \
         return false;                                                        \
     JSStackFrame *fp = (JSStackFrame *) thisobj->getPrivate()
@@ -592,6 +623,17 @@ Frame_getGenerator(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
+Frame_getLive(JSContext *cx, uintN argc, Value *vp)
+{
+    JSObject *thisobj = CheckThisFrame(cx, vp, "get live", false);
+    if (!thisobj)
+        return false;
+    JSStackFrame *fp = (JSStackFrame *) thisobj->getPrivate();
+    vp->setBoolean(!!fp);
+    return true;
+}
+
+JSBool
 Frame_construct(JSContext *cx, uintN argc, Value *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Frame");
@@ -601,6 +643,7 @@ Frame_construct(JSContext *cx, uintN argc, Value *vp)
 JSPropertySpec Frame_properties[] = {
     JS_PSG("type", Frame_getType, 0),
     JS_PSG("generator", Frame_getGenerator, 0),
+    JS_PSG("live", Frame_getLive, 0),
     JS_PS_END
 };
 
