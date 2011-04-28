@@ -879,8 +879,11 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
 
             if (targetOffset < offset) {
                 /* This is a loop back edge, no lifetime to pull in yet. */
+
+#ifdef DEBUG
                 JSOp nop = JSOp(script->code[targetOffset]);
                 JS_ASSERT(nop == JSOP_TRACE || nop == JSOP_NOTRACE);
+#endif
 
                 /*
                  * If we already have a loop, it is an outer loop and we
@@ -1348,12 +1351,42 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                 else
                     code->poppedValues[nuses].clear();
             }
+
+            if (xuses) {
+                SSAUseChain *useChains = ArenaArray<SSAUseChain>(cx->compartment->pool, xuses);
+                if (!useChains) {
+                    setOOM(cx);
+                    return;
+                }
+                PodZero(useChains, xuses);
+                for (unsigned i = 0; i < xuses; i++) {
+                    const SSAValue &v = code->poppedValues[i];
+                    if (trackUseChain(v)) {
+                        SSAUseChain *&uses = useChain(v);
+                        useChains[i].popped = true;
+                        useChains[i].offset = offset;
+                        useChains[i].u.which = i;
+                        useChains[i].next = uses;
+                        uses = &useChains[i];
+                    }
+                }
+            }
         }
 
         stackDepth -= nuses;
 
         for (unsigned i = 0; i < ndefs; i++)
             stack[stackDepth + i].initPushed(offset, i);
+
+        unsigned xdefs = ExtendedDef(pc) ? ndefs + 1 : ndefs;
+        if (xdefs) {
+            code->pushedUses = ArenaArray<SSAUseChain *>(cx->compartment->pool, xdefs);
+            if (!code->pushedUses) {
+                setOOM(cx);
+                return;
+            }
+            PodZero(code->pushedUses, xdefs);
+        }
 
         stackDepth += ndefs;
 
@@ -1555,6 +1588,22 @@ ScriptAnalysis::insertPhi(JSContext *cx, SSAValue &phi, const SSAValue &v)
         }
     }
 
+    if (trackUseChain(v)) {
+        SSAUseChain *&uses = useChain(v);
+
+        SSAUseChain *use = ArenaNew<SSAUseChain>(cx->compartment->pool);
+        if (!use) {
+            setOOM(cx);
+            return;
+        }
+
+        use->popped = false;
+        use->offset = phi.phiOffset();
+        use->u.phi = node;
+        use->next = uses;
+        uses = use;
+    }
+
     if (node->length < PhiNodeCapacity(node->length)) {
         node->options[node->length++] = v;
         return;
@@ -1598,6 +1647,8 @@ void
 ScriptAnalysis::checkPendingValue(JSContext *cx, const SSAValue &v, uint32 slot,
                                   Vector<SlotValue> *pending)
 {
+    JS_ASSERT(v.kind() != SSAValue::EMPTY);
+
     for (unsigned i = 0; i < pending->length(); i++) {
         if ((*pending)[i].slot == slot)
             return;

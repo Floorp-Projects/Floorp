@@ -841,6 +841,17 @@ FrameState::syncForBranch(jsbytecode *target, Uses uses)
             continue;
         }
 
+        /* Force syncs for locals which are dead at the current PC. */
+        if (isLocal(fe) && !analysis->slotEscapes(indexOfFe(fe))) {
+            Lifetime *lifetime = variableLive(fe, PC);
+            if (!lifetime) {
+                if (!fe->data.synced())
+                    fe->data.sync();
+                if (!fe->type.synced())
+                    fe->type.sync();
+            }
+        }
+
         unsigned index = indexOfFe(fe);
         if (!fe->isCopy() && alloc->hasAnyReg(index)) {
             /* Types are always synced, except for known doubles. */

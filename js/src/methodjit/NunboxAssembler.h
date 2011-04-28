@@ -468,12 +468,13 @@ class NunboxAssembler : public JSC::MacroAssembler
     Jump fastArrayLoadSlot(T address, bool holeCheck,
                            MaybeRegisterID typeReg, RegisterID dataReg)
     {
-        JS_ASSERT_IF(holeCheck, typeReg.isSet());
         Jump notHole;
         if (typeReg.isSet()) {
             loadTypeTag(address, typeReg.reg());
             if (holeCheck)
                 notHole = branch32(Equal, typeReg.reg(), ImmType(JSVAL_TYPE_MAGIC));
+        } else if (holeCheck) {
+            notHole = branch32(Equal, tagOf(address), ImmType(JSVAL_TYPE_MAGIC));
         }
         loadPayload(address, dataReg);
         return notHole;
