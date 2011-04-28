@@ -310,7 +310,7 @@ TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
     *user = NS_StringCloneData(NS_ConvertUTF8toUTF16(buf));
 
     const char *p;
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(ANDROID)
     p = getpass("Enter password: ");
 #else
     printf("Enter password: ");
