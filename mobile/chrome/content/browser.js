@@ -61,6 +61,10 @@ const kBrowserViewZoomLevelPrecision = 10000;
 
 const kDefaultBrowserWidth = 800;
 const kFallbackBrowserWidth = 980;
+
+// allow panning after this timeout on pages with registered touch listeners
+const kTouchTimeout = 300;
+
 const kDefaultMetadata = { autoSize: false, allowZoom: true, autoScale: true };
 
 // Override sizeToContent in the main window. It breaks things (bug 565887)
@@ -430,9 +434,9 @@ var Browser = {
       return true;
 
     // Let everyone know we are closing the last browser window
-    let closingCanceled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    Services.obs.notifyObservers(closingCanceled, "browser-lastwindow-close-requested", null);
-    if (closingCanceled.data)
+    let closingCancelled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+    Services.obs.notifyObservers(closingCancelled, "browser-lastwindow-close-requested", null);
+    if (closingCancelled.data)
       return false;
 
     Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
@@ -1535,6 +1539,7 @@ Browser.WebProgress.prototype = {
       aTab.updateThumbnail();
 
       browser.messageManager.addMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
+      ContentTouchHandler.updateContentCapture();
     });
   }
 };
@@ -1623,6 +1628,7 @@ const ContentTouchHandler = {
   // Use lightweight transactions so that old context menus and tap
   // highlights don't ever see the light of day.
   _messageId: 0,
+  contentCanCaptureMouse: false,
 
   init: function init() {
     document.addEventListener("TapDown", this, true);
@@ -1650,6 +1656,7 @@ const ContentTouchHandler = {
     messageManager.addMessageListener("Browser:ContextMenu", this);
     messageManager.addMessageListener("Browser:Highlight", this);
     messageManager.addMessageListener("Browser:CaptureEvents", this);
+    messageManager.addMessageListener("Browser:CanCaptureMouse:Return", this);
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -1711,6 +1718,11 @@ const ContentTouchHandler = {
     }
   },
 
+  updateContentCapture: function() {
+    this._messageId++;
+    messageManager.sendAsyncMessage("Browser:CanCaptureMouse", { messageId: this._messageId });
+  },
+
   receiveMessage: function receiveMessage(aMessage) {
     if (aMessage.json.messageId != this._messageId)
       return;
@@ -1727,7 +1739,15 @@ const ContentTouchHandler = {
         }
         break;
       case "Browser:CaptureEvents":
+        this.contentCanCaptureMouse = true;
+        if (this.touchTimeout) {
+          clearTimeout(this.touchTimeout);
+          this.touchTimeout = null;
+        }
         Elements.browsers.customDragger.contentMouseCapture = aMessage.json.panning;
+        break;
+      case "Browser:CanCaptureMouse:Return":
+        ContentTouchHandler.contentCanCaptureMouse = aMessage.json.contentCanCaptureMouse;
         break;
     }
   },
@@ -1762,6 +1782,8 @@ const ContentTouchHandler = {
     browser.messageManager.sendAsyncMessage(aName, json);
   },
 
+  touchTimeout: null,
+
   tapDown: function tapDown(aX, aY) {
     // Ensure that the content process has gets an activate event
     let browser = getBrowser();
@@ -1770,7 +1792,20 @@ const ContentTouchHandler = {
     try {
       fl.activateRemoteFrame();
     } catch (e) {}
-    Elements.browsers.customDragger.contentMouseCapture = false;
+
+    // if the page might capture touch events, we give it the option
+    Elements.browsers.customDragger.contentMouseCapture = this.contentCanCaptureMouse;
+    if (this.touchTimeout) {
+      clearTimeout(this.touchTimeout);
+      this.touchTimeout = null;
+    }
+
+    if (this.contentCanCaptureMouse) {
+      this.touchTimeout = setTimeout(function() {
+        Elements.browsers.customDragger.contentMouseCapture = false;
+      }, kTouchTimeout)
+    }
+
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
   },
 
@@ -2857,6 +2892,8 @@ Tab.prototype = {
         let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
         fl.activateRemoteFrame();
       } catch (e) {}
+
+      ContentTouchHandler.updateContentCapture();
     } else {
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });
       browser.setAttribute("type", "content");
