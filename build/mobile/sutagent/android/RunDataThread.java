@@ -20,7 +20,7 @@
  *
  * Contributor(s):
  *  Bob Moss <bmoss@mozilla.com>
- * 
+ *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -46,80 +46,80 @@ import java.util.List;
 import java.util.Timer;
 
 public class RunDataThread extends Thread
-	{
-	Timer heartBeatTimer;
-	
-	private ServerSocket SvrSocket = null;
-	private Socket socket	= null;
-	boolean bListening	= true;
-	List<DataWorkerThread> theWorkers = new ArrayList<DataWorkerThread>();
-	android.app.Service	svc = null;
-	
-	public RunDataThread(ServerSocket socket, android.app.Service service)
-		{
-		super("RunDataThread");
-		this.SvrSocket = socket;
-		this.svc = service;
-		}
-	
-	public void StopListening()
-		{
-		bListening = false;
-		}
-	
-	public void SendToDataChannel(String strToSend)
-		{
-		int nNumWorkers = theWorkers.size();
-		for (int lcv = 0; lcv < nNumWorkers; lcv++)
-			{
-			if (theWorkers.get(lcv).isAlive())
-				{
-				theWorkers.get(lcv).SendString(strToSend);
-				}
-			}
-		return;
-		}
+    {
+    Timer heartBeatTimer;
 
-	public void run() {
-		try {
-			SvrSocket.setSoTimeout(5000);
-			while (bListening)
-				{
-				try 
-					{
-					socket = SvrSocket.accept();
-					DataWorkerThread theWorker = new DataWorkerThread(this, socket);
-					theWorker.start();
-					theWorkers.add(theWorker);
-					}
-				catch (SocketTimeoutException toe)
-					{
-					continue;
-					}
-				}
-			
-			int nNumWorkers = theWorkers.size();
-			for (int lcv = 0; lcv < nNumWorkers; lcv++)
-				{
-				if (theWorkers.get(lcv).isAlive())
-					{
-					theWorkers.get(lcv).StopListening();
-					while(theWorkers.get(lcv).isAlive())
-						;
-					}
-				}
-			
-			theWorkers.clear();
-			
-			SvrSocket.close();
+    private ServerSocket SvrSocket = null;
+    private Socket socket    = null;
+    boolean bListening    = true;
+    List<DataWorkerThread> theWorkers = new ArrayList<DataWorkerThread>();
+    android.app.Service    svc = null;
 
-			svc.stopSelf();
-			}
-		catch (IOException e)
-			{
-//			Toast.makeText(SUTAgentAndroid.me.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-			e.printStackTrace();
-			}
-		return;
-		}
-	}
+    public RunDataThread(ServerSocket socket, android.app.Service service)
+        {
+        super("RunDataThread");
+        this.SvrSocket = socket;
+        this.svc = service;
+        }
+
+    public void StopListening()
+        {
+        bListening = false;
+        }
+
+    public void SendToDataChannel(String strToSend)
+        {
+        int nNumWorkers = theWorkers.size();
+        for (int lcv = 0; lcv < nNumWorkers; lcv++)
+            {
+            if (theWorkers.get(lcv).isAlive())
+                {
+                theWorkers.get(lcv).SendString(strToSend);
+                }
+            }
+        return;
+        }
+
+    public void run() {
+        try {
+            SvrSocket.setSoTimeout(5000);
+            while (bListening)
+                {
+                try
+                    {
+                    socket = SvrSocket.accept();
+                    DataWorkerThread theWorker = new DataWorkerThread(this, socket);
+                    theWorker.start();
+                    theWorkers.add(theWorker);
+                    }
+                catch (SocketTimeoutException toe)
+                    {
+                    continue;
+                    }
+                }
+
+            int nNumWorkers = theWorkers.size();
+            for (int lcv = 0; lcv < nNumWorkers; lcv++)
+                {
+                if (theWorkers.get(lcv).isAlive())
+                    {
+                    theWorkers.get(lcv).StopListening();
+                    while(theWorkers.get(lcv).isAlive())
+                        ;
+                    }
+                }
+
+            theWorkers.clear();
+
+            SvrSocket.close();
+
+            svc.stopSelf();
+            }
+        catch (IOException e)
+            {
+//            Toast.makeText(SUTAgentAndroid.me.getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+            }
+        return;
+        }
+    }

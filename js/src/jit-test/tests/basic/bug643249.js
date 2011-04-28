@@ -9,5 +9,5 @@ for (i = 0; i < 10; i++) {
         } ()
     } () == /a/);
     gc();
-    _someglobal_ = new Function.__lookupSetter__;
+    try { _someglobal_ = new Function.__lookupSetter__ } catch (e) {}
 }

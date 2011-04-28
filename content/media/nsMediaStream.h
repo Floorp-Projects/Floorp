@@ -107,7 +107,7 @@ public:
     *aReliable = seconds >= 1.0;
     if (seconds <= 0.0)
       return 0.0;
-    return double(mAccumulatedBytes)/seconds;
+    return static_cast<double>(mAccumulatedBytes)/seconds;
   }
   double GetRate(TimeStamp aNow, PRPackedBool* aReliable) {
     TimeDuration time = mAccumulatedTime;
@@ -118,7 +118,7 @@ public:
     *aReliable = seconds >= 3.0;
     if (seconds <= 0.0)
       return 0.0;
-    return double(mAccumulatedBytes)/seconds;
+    return static_cast<double>(mAccumulatedBytes)/seconds;
   }
 private:
   PRInt64      mAccumulatedBytes;

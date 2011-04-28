@@ -402,7 +402,7 @@ class PunboxAssembler : public JSC::MacroAssembler
             loadPayload(address, dataReg);
             if (holeCheck) {
                 loadTypeTag(address, Registers::ValueReg);
-                notHole = branch32(Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
+                notHole = branchPtr(Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
             }
         }
         return notHole;

@@ -365,10 +365,10 @@ try {
         return d;
     }
     withLock("callLater", function () {
-        return callLater(0.05, checkCallLater, t);
+        return callLater(0, checkCallLater, t);
     });
     withLock("wait", function () {
-        return wait(0.05, t).addCallback(checkCallLater);
+        return wait(0, t).addCallback(checkCallLater);
     });
     withLock("loadJSONDoc", function () {
         var d = loadJSONDoc("test_MochiKit-Async.json");

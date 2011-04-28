@@ -237,6 +237,7 @@ function test() {
          false, "cannot move a child of a read-only folder");
       is(PlacesControllerDragHelper.canMoveNode(childFolder),
          false, "cannot move a child node of a read-only folder node");
+      readOnlyFolder.containerOpen = false;
     }
   });
 
@@ -246,5 +247,6 @@ function test() {
     aTest.validate();
   });
 
+  rootNode.containerOpen = false;
   PlacesUtils.bookmarks.removeItem(rootId);
 }

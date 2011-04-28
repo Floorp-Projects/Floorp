@@ -410,7 +410,7 @@ add_test(function() {
 
       gCategoryUtilities.openType("extension", function() {
         gCategoryUtilities.openType("discover", function() {
-          is(getURL(browser), "https://example.com/" + RELATIVE_DIR + "releaseNotes.xhtml", "Should have loaded the right url");
+          is(getURL(browser), MAIN_URL, "Should have loaded the right url");
 
           close_manager(gManagerWindow, run_next_test);
         });

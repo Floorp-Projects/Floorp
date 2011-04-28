@@ -53,7 +53,7 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIExternalProtocolHandler.h"
-#include "nsIEventStateManager.h"
+#include "nsEventStates.h"
 #include "nsIObjectFrame.h"
 #include "nsIPluginDocument.h"
 #include "nsIPluginHost.h"
@@ -1076,6 +1076,10 @@ nsObjectLoadingContent::ObjectState() const
           break;
         case ePluginUnsupported:
           state |= NS_EVENT_STATE_TYPE_UNSUPPORTED;
+          break;
+        case ePluginOutdated:
+        case ePluginOtherState:
+          // Do nothing, but avoid a compile warning
           break;
       }
       return state;

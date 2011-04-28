@@ -819,7 +819,7 @@ class FrameState
     void assertValidRegisterState() const;
 #endif
 
-    // Return an address, relative to the JSStackFrame, that represents where
+    // Return an address, relative to the StackFrame, that represents where
     // this FrameEntry is stored in memory. Note that this is its canonical
     // address, not its backing store. There is no guarantee that the memory
     // is coherent.
@@ -829,7 +829,7 @@ class FrameState
         return frameOffset(fe, a) + (a->depth * sizeof(Value));
     }
 
-    // Returns an address, relative to the JSStackFrame, that represents where
+    // Returns an address, relative to the StackFrame, that represents where
     // this FrameEntry is backed in memory. This is not necessarily its
     // canonical address, but the address for which the payload has been synced
     // to memory. The caller guarantees that the payload has been synced.

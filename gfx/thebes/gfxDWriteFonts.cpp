@@ -149,7 +149,10 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
         return;
     }
 
-    if ((anAAOption == gfxFont::kAntialiasDefault && UsingClearType()) ||
+    if ((anAAOption == gfxFont::kAntialiasDefault &&
+         UsingClearType() &&
+         (gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() ==
+          DWRITE_MEASURING_MODE_NATURAL)) ||
         anAAOption == gfxFont::kAntialiasSubpixel)
     {
         mUseSubpixelPositions = PR_TRUE;
@@ -248,16 +251,12 @@ gfxDWriteFont::ComputeMetrics()
     mMetrics = new gfxFont::Metrics;
     ::memset(mMetrics, 0, sizeof(*mMetrics));
 
-    mMetrics->xHeight =
-        ((gfxFloat)fontMetrics.xHeight /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mFUnitsConvFactor = float(mAdjustedSize / fontMetrics.designUnitsPerEm);
 
-    mMetrics->maxAscent = 
-        ceil(((gfxFloat)fontMetrics.ascent /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize);
-    mMetrics->maxDescent = 
-        ceil(((gfxFloat)fontMetrics.descent /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize);
+    mMetrics->xHeight = fontMetrics.xHeight * mFUnitsConvFactor;
+
+    mMetrics->maxAscent = ceil(fontMetrics.ascent * mFUnitsConvFactor);
+    mMetrics->maxDescent = ceil(fontMetrics.descent * mFUnitsConvFactor);
     mMetrics->maxHeight = mMetrics->maxAscent + mMetrics->maxDescent;
 
     mMetrics->emHeight = mAdjustedSize;
@@ -282,87 +281,71 @@ gfxDWriteFont::ComputeMetrics()
         if (exists && len >= sizeof(mozilla::HheaTable)) {
             const mozilla::HheaTable* hhea =
                 reinterpret_cast<const mozilla::HheaTable*>(tableData);
-            mMetrics->maxAdvance = ((gfxFloat)PRUint16(hhea->advanceWidthMax) /
-                       fontMetrics.designUnitsPerEm) * mAdjustedSize;
+            mMetrics->maxAdvance =
+                PRUint16(hhea->advanceWidthMax) * mFUnitsConvFactor;
         }
         mFontFace->ReleaseFontTable(tableContext);
     }
 
     mMetrics->internalLeading = NS_MAX(mMetrics->maxHeight - mMetrics->emHeight, 0.0);
-    mMetrics->externalLeading = 
-        ceil(((gfxFloat)fontMetrics.lineGap /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize);
+    mMetrics->externalLeading = ceil(fontMetrics.lineGap * mFUnitsConvFactor);
 
     UINT16 glyph = (PRUint16)GetSpaceGlyph();
-    DWRITE_GLYPH_METRICS metrics;
-    mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics);
-    mMetrics->spaceWidth = 
-        ((gfxFloat)metrics.advanceWidth /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics->spaceWidth = MeasureGlyphWidth(glyph);
 
     // try to get aveCharWidth from the OS/2 table, fall back to measuring 'x'
-    // if the table is not available
-    mMetrics->aveCharWidth = 0;
-    hr = mFontFace->TryGetFontTable(DWRITE_MAKE_OPENTYPE_TAG('O', 'S', '/', '2'),
-                                    (const void**)&tableData,
-                                    &len,
-                                    &tableContext,
-                                    &exists);
-    if (SUCCEEDED(hr)) {
-        if (exists && len >= 4) {
-            // Not checking against sizeof(mozilla::OS2Table) here because older
-            // versions of the table have different sizes; we only need the first
-            // two 16-bit fields here.
-            const mozilla::OS2Table* os2 =
-                reinterpret_cast<const mozilla::OS2Table*>(tableData);
-            mMetrics->aveCharWidth = ((gfxFloat)PRInt16(os2->xAvgCharWidth) /
-                       fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    // if the table is not available or if using hinted/pixel-snapped widths
+    if (mUseSubpixelPositions) {
+        mMetrics->aveCharWidth = 0;
+        hr = mFontFace->TryGetFontTable(DWRITE_MAKE_OPENTYPE_TAG('O', 'S', '/', '2'),
+                                        (const void**)&tableData,
+                                        &len,
+                                        &tableContext,
+                                        &exists);
+        if (SUCCEEDED(hr)) {
+            if (exists && len >= 4) {
+                // Not checking against sizeof(mozilla::OS2Table) here because older
+                // versions of the table have different sizes; we only need the first
+                // two 16-bit fields here.
+                const mozilla::OS2Table* os2 =
+                    reinterpret_cast<const mozilla::OS2Table*>(tableData);
+                mMetrics->aveCharWidth =
+                    PRInt16(os2->xAvgCharWidth) * mFUnitsConvFactor;
+            }
+            mFontFace->ReleaseFontTable(tableContext);
         }
-        mFontFace->ReleaseFontTable(tableContext);
     }
 
     UINT32 ucs;
     if (mMetrics->aveCharWidth < 1) {
         ucs = L'x';
-        if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
-            SUCCEEDED(mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics))) {    
-            mMetrics->aveCharWidth = 
-                ((gfxFloat)metrics.advanceWidth /
-                           fontMetrics.designUnitsPerEm) * mAdjustedSize;
-        } else {
+        if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph))) {
+            mMetrics->aveCharWidth = MeasureGlyphWidth(glyph);
+        }
+        if (mMetrics->aveCharWidth < 1) {
             // Let's just assume the X is square.
-            mMetrics->aveCharWidth = 
-                ((gfxFloat)fontMetrics.xHeight /
-                           fontMetrics.designUnitsPerEm) * mAdjustedSize;
+            mMetrics->aveCharWidth = fontMetrics.xHeight * mFUnitsConvFactor;
         }
     }
 
     ucs = L'0';
-    if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph)) &&
-        SUCCEEDED(mFontFace->GetDesignGlyphMetrics(&glyph, 1, &metrics))) {
-        mMetrics->zeroOrAveCharWidth = 
-            ((gfxFloat)metrics.advanceWidth /
-                       fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    } else {
+    if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph))) {
+        mMetrics->zeroOrAveCharWidth = MeasureGlyphWidth(glyph);
+    }
+    if (mMetrics->zeroOrAveCharWidth < 1) {
         mMetrics->zeroOrAveCharWidth = mMetrics->aveCharWidth;
     }
 
-    mMetrics->underlineOffset = 
-        ((gfxFloat)fontMetrics.underlinePosition /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+    mMetrics->underlineOffset =
+        fontMetrics.underlinePosition * mFUnitsConvFactor;
     mMetrics->underlineSize = 
-        ((gfxFloat)fontMetrics.underlineThickness /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics->strikeoutOffset = 
-        ((gfxFloat)fontMetrics.strikethroughPosition /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
-    mMetrics->strikeoutSize = 
-        ((gfxFloat)fontMetrics.strikethroughThickness /
-                   fontMetrics.designUnitsPerEm) * mAdjustedSize;
+        fontMetrics.underlineThickness * mFUnitsConvFactor;
+    mMetrics->strikeoutOffset =
+        fontMetrics.strikethroughPosition * mFUnitsConvFactor;
+    mMetrics->strikeoutSize =
+        fontMetrics.strikethroughThickness * mFUnitsConvFactor;
     mMetrics->superscriptOffset = 0;
     mMetrics->subscriptOffset = 0;
-
-    mFUnitsConvFactor = float(mAdjustedSize / fontMetrics.designUnitsPerEm);
 
     SanitizeMetrics(mMetrics, GetFontEntry()->mIsBadUnderlineFont);
 
@@ -697,26 +680,30 @@ gfxDWriteFont::GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID)
         return width;
     }
 
-    DWRITE_GLYPH_METRICS glyphMetrics;
+    width = NS_lround(MeasureGlyphWidth(aGID) * 65536.0);
+    mGlyphWidths.Put(aGID, width);
+    return width;
+}
+
+gfxFloat
+gfxDWriteFont::MeasureGlyphWidth(PRUint16 aGlyph)
+{
+    DWRITE_GLYPH_METRICS metrics;
     HRESULT hr;
     if (mUseSubpixelPositions) {
-        hr = mFontFace->GetDesignGlyphMetrics(
-                  &aGID, 1, &glyphMetrics, FALSE);
+        hr = mFontFace->GetDesignGlyphMetrics(&aGlyph, 1, &metrics, FALSE);
         if (SUCCEEDED(hr)) {
-            width =
-                NS_lround(glyphMetrics.advanceWidth * mFUnitsConvFactor *
-                          65536.0);
+            return metrics.advanceWidth * mFUnitsConvFactor;
         }
     } else {
         hr = mFontFace->GetGdiCompatibleGlyphMetrics(
-                  FLOAT(mAdjustedSize), 1.0f, nsnull, FALSE,
-                  &aGID, 1, &glyphMetrics, FALSE);
+                  FLOAT(mAdjustedSize), 1.0f, nsnull,
+                  gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() ==
+                      DWRITE_MEASURING_MODE_GDI_NATURAL,
+                  &aGlyph, 1, &metrics, FALSE);
         if (SUCCEEDED(hr)) {
-            width =
-                NS_lround(glyphMetrics.advanceWidth * mFUnitsConvFactor) << 16;
+            return NS_lround(metrics.advanceWidth * mFUnitsConvFactor);
         }
     }
-
-    mGlyphWidths.Put(aGID, width);
-    return width;
+    return 0;
 }

@@ -542,7 +542,7 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
     if (obj->type && !obj->type->marked)
         obj->type->trace(gcmarker);
 
-    if (!obj->map)
+    if (obj->isNewborn())
         return;
 
     if (JSObject *parent = obj->getParent())
@@ -624,7 +624,7 @@ MarkChildren(JSTracer *trc, JSObject *obj)
         obj->type->trace(trc);
 
     /* If obj has no map, it must be a newborn. */
-    if (!obj->map)
+    if (obj->isNewborn())
         return;
 
     /* Trace universal (ops-independent) members. */

@@ -852,17 +852,40 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
             break;
           }
 
-          case JSOP_IFEQ:
-          case JSOP_IFEQX:
-          case JSOP_IFNE:
-          case JSOP_IFNEX:
-          case JSOP_OR:
-          case JSOP_ORX:
-          case JSOP_AND:
-          case JSOP_ANDX:
-          case JSOP_GOTO:
-          case JSOP_GOTOX:
-          case JSOP_ENDFILTER: {
+          case JSOP_LOOKUPSWITCH:
+          case JSOP_LOOKUPSWITCHX:
+          case JSOP_TABLESWITCH:
+          case JSOP_TABLESWITCHX:
+          case JSOP_TRY:
+            /* Restore all saved variables. :FIXME: maybe do this precisely. */
+            for (unsigned i = 0; i < savedCount; i++) {
+                LifetimeVariable &var = *saved[i];
+                var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
+                if (!var.lifetime) {
+                    cx->free_(saved);
+                    setOOM(cx);
+                    return;
+                }
+                var.saved = NULL;
+                saved[i--] = saved[--savedCount];
+            }
+            savedCount = 0;
+            break;
+
+          case JSOP_NEW:
+          case JSOP_CALL:
+          case JSOP_EVAL:
+          case JSOP_FUNAPPLY:
+          case JSOP_FUNCALL:
+            if (loop)
+                loop->hasCallsLoops = true;
+            break;
+
+          default:;
+        }
+
+        uint32 type = JOF_TYPE(js_CodeSpec[op].format);
+        if (type == JOF_JUMP || type == JOF_JUMPX) {
             /*
              * Forward jumps need to pull in all variables which are live at
              * their target offset --- the variables live before the jump are
@@ -931,68 +954,35 @@ ScriptAnalysis::analyzeLifetimes(JSContext *cx)
                     /* Do-while loop at the start of the script. */
                     loop->entry = targetOffset;
                 }
-
-                break;
-            }
-            for (unsigned i = 0; i < savedCount; i++) {
-                LifetimeVariable &var = *saved[i];
-                JS_ASSERT(!var.lifetime && var.saved);
-                if (var.live(targetOffset)) {
-                    /*
-                     * Jumping to a place where this variable is live. Make a new
-                     * lifetime segment for the variable.
-                     */
-                    var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
-                    if (!var.lifetime) {
-                        cx->free_(saved);
-                        setOOM(cx);
-                        return;
+            } else {
+                for (unsigned i = 0; i < savedCount; i++) {
+                    LifetimeVariable &var = *saved[i];
+                    JS_ASSERT(!var.lifetime && var.saved);
+                    if (var.live(targetOffset)) {
+                        /*
+                         * Jumping to a place where this variable is live. Make a new
+                         * lifetime segment for the variable.
+                         */
+                        var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
+                        if (!var.lifetime) {
+                            cx->free_(saved);
+                            setOOM(cx);
+                            return;
+                        }
+                        var.saved = NULL;
+                        saved[i--] = saved[--savedCount];
+                    } else if (loop && !var.savedEnd) {
+                        /*
+                         * This jump precedes the basic block which killed the variable,
+                         * remember it and use it for the end of the next lifetime
+                         * segment should the variable become live again. This is needed
+                         * for loops, as if we wrap liveness around the loop the isLive
+                         * test below may have given the wrong answer.
+                         */
+                        var.savedEnd = offset;
                     }
-                    var.saved = NULL;
-                    saved[i--] = saved[--savedCount];
-                } else if (loop && !var.savedEnd) {
-                    /*
-                     * This jump precedes the basic block which killed the variable,
-                     * remember it and use it for the end of the next lifetime
-                     * segment should the variable become live again. This is needed
-                     * for loops, as if we wrap liveness around the loop the isLive
-                     * test below may have given the wrong answer.
-                     */
-                    var.savedEnd = offset;
                 }
             }
-            break;
-          }
-
-          case JSOP_LOOKUPSWITCH:
-          case JSOP_LOOKUPSWITCHX:
-          case JSOP_TABLESWITCH:
-          case JSOP_TABLESWITCHX:
-            /* Restore all saved variables. :FIXME: maybe do this precisely. */
-            for (unsigned i = 0; i < savedCount; i++) {
-                LifetimeVariable &var = *saved[i];
-                var.lifetime = ArenaNew<Lifetime>(pool, offset, var.savedEnd, var.saved);
-                if (!var.lifetime) {
-                    cx->free_(saved);
-                    setOOM(cx);
-                    return;
-                }
-                var.saved = NULL;
-                saved[i--] = saved[--savedCount];
-            }
-            savedCount = 0;
-            break;
-
-          case JSOP_NEW:
-          case JSOP_CALL:
-          case JSOP_EVAL:
-          case JSOP_FUNAPPLY:
-          case JSOP_FUNCALL:
-            if (loop)
-                loop->hasCallsLoops = true;
-            break;
-
-          default:;
         }
 
         offset--;

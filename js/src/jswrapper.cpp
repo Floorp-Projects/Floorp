@@ -408,7 +408,7 @@ AutoCompartment::enter()
         JS_ASSERT(scopeChain->isNative());
 
         frame.construct();
-        if (!context->stack().pushDummyFrame(context, *scopeChain, &frame.ref())) {
+        if (!context->stack.pushDummyFrame(context, *scopeChain, &frame.ref())) {
             context->setCompartment(origin);
             return false;
         }

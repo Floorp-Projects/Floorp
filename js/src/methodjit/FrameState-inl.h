@@ -944,13 +944,13 @@ FrameState::frameOffset(const FrameEntry *fe, ActiveFrame *a) const
     JS_ASSERT(uint32(fe - a->entries) < feLimit(a->script));
 
     if (fe >= a->locals)
-        return JSStackFrame::offsetOfFixed(uint32(fe - a->locals));
+        return StackFrame::offsetOfFixed(uint32(fe - a->locals));
     if (fe >= a->args)
-        return JSStackFrame::offsetOfFormalArg(a->script->fun, uint32(fe - a->args));
+        return StackFrame::offsetOfFormalArg(a->script->fun, uint32(fe - a->args));
     if (fe == a->this_)
-        return JSStackFrame::offsetOfThis(a->script->fun);
+        return StackFrame::offsetOfThis(a->script->fun);
     if (fe == a->callee_)
-        return JSStackFrame::offsetOfCallee(a->script->fun);
+        return StackFrame::offsetOfCallee(a->script->fun);
     JS_NOT_REACHED("Bad fe");
     return 0;
 }

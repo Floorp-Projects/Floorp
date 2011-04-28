@@ -119,6 +119,7 @@ function run_test() {
   do_check_eq(theTag.childCount, 1);
   var node = theTag.getChild(0);
   do_check_eq(node.title, "new title 1");
+  theTag.containerOpen = false;
   root.containerOpen = false;
 
   // Change bookmark 2 title.

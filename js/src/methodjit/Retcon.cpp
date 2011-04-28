@@ -236,10 +236,10 @@ Recompiler::patchNative(JITScript *jit, PatchableNative &native)
     }
 }
 
-JSStackFrame *
-Recompiler::expandInlineFrameChain(JSContext *cx, JSStackFrame *outer, InlineFrame *inner)
+StackFrame *
+Recompiler::expandInlineFrameChain(JSContext *cx, StackFrame *outer, InlineFrame *inner)
 {
-    JSStackFrame *parent;
+    StackFrame *parent;
     if (inner->parent)
         parent = expandInlineFrameChain(cx, outer, inner->parent);
     else
@@ -267,7 +267,7 @@ Recompiler::expandInlineFrameChain(JSContext *cx, JSStackFrame *outer, InlineFra
         }
     }
 
-    JSStackFrame *fp = (JSStackFrame *) ((uint8 *)outer + sizeof(Value) * inner->depth);
+    StackFrame *fp = (StackFrame *) ((uint8 *)outer + sizeof(Value) * inner->depth);
     fp->initInlineFrame(inner->fun, parent, inner->parentpc);
     uint32 pcOffset = inner->parentpc - parent->script()->code;
 
@@ -294,8 +294,8 @@ Recompiler::expandInlineFrameChain(JSContext *cx, JSStackFrame *outer, InlineFra
  * to refer to the new innermost frame.
  */
 void
-Recompiler::expandInlineFrames(JSContext *cx, JSStackFrame *fp, mjit::CallSite *inlined,
-                               JSStackFrame *next, VMFrame *f)
+Recompiler::expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *inlined,
+                               StackFrame *next, VMFrame *f)
 {
     JS_ASSERT_IF(next, next->prev() == fp && next->prevInline() == inlined);
 
@@ -315,14 +315,12 @@ Recompiler::expandInlineFrames(JSContext *cx, JSStackFrame *fp, mjit::CallSite *
     InlineFrame *inner = &fp->jit()->inlineFrames()[inlined->inlineIndex];
     jsbytecode *innerpc = inner->fun->script()->code + inlined->pcOffset;
 
-    JSStackFrame *innerfp = expandInlineFrameChain(cx, fp, inner);
+    StackFrame *innerfp = expandInlineFrameChain(cx, fp, inner);
     JITScript *jit = innerfp->jit();
 
-    if (f->regs.fp == fp) {
-        JS_ASSERT(f->regs.inlined == inlined);
-        f->regs.fp = innerfp;
-        f->regs.pc = innerpc;
-        f->regs.inlined = NULL;
+    if (f->regs.fp() == fp) {
+        JS_ASSERT(f->regs.inlined() == inlined);
+        f->regs.expandInline(innerfp, innerpc);
     }
 
     if (patchFrameReturn) {
@@ -349,8 +347,8 @@ ExpandInlineFrames(JSContext *cx, bool all)
 {
     if (!all) {
         VMFrame *f = cx->compartment->jaegerCompartment->activeFrame();
-        if (f && f->regs.inlined && cx->fp() == f->fp())
-            mjit::Recompiler::expandInlineFrames(cx, f->fp(), f->regs.inlined, NULL, f);
+        if (f && f->regs.inlined() && cx->fp() == f->fp())
+            mjit::Recompiler::expandInlineFrames(cx, f->fp(), f->regs.inlined(), NULL, f);
         return;
     }
 
@@ -358,21 +356,21 @@ ExpandInlineFrames(JSContext *cx, bool all)
          f != NULL;
          f = f->previous) {
 
-        if (f->regs.inlined) {
-            StackSegment *seg = cx->stack().containingSegment(f->fp());
-            JSFrameRegs *regs = seg->getCurrentRegs();
-            if (regs->fp == f->fp()) {
-                JS_ASSERT(regs == &f->regs);
-                mjit::Recompiler::expandInlineFrames(cx, f->fp(), f->regs.inlined, NULL, f);
+        if (f->regs.inlined()) {
+            StackSegment &seg = cx->stack.space().containingSegment(f->fp());
+            FrameRegs &regs = seg.currentRegs();
+            if (regs.fp() == f->fp()) {
+                JS_ASSERT(&regs == &f->regs);
+                mjit::Recompiler::expandInlineFrames(cx, f->fp(), f->regs.inlined(), NULL, f);
             } else {
-                JSStackFrame *nnext = seg->computeNextFrame(f->fp());
-                mjit::Recompiler::expandInlineFrames(cx, f->fp(), f->regs.inlined, nnext, f);
+                StackFrame *nnext = seg.computeNextFrame(f->fp());
+                mjit::Recompiler::expandInlineFrames(cx, f->fp(), f->regs.inlined(), nnext, f);
             }
         }
 
-        JSStackFrame *end = f->entryfp->prev();
-        JSStackFrame *next = NULL;
-        for (JSStackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
+        StackFrame *end = f->entryfp->prev();
+        StackFrame *next = NULL;
+        for (StackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
             mjit::CallSite *inlined;
             fp->pc(cx, next, &inlined);
             if (next && inlined) {
@@ -458,9 +456,9 @@ Recompiler::recompile()
          f = f->previous) {
 
         // Scan all frames owned by this VMFrame.
-        JSStackFrame *end = f->entryfp->prev();
-        JSStackFrame *next = NULL;
-        for (JSStackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
+        StackFrame *end = f->entryfp->prev();
+        StackFrame *next = NULL;
+        for (StackFrame *fp = f->fp(); fp != end; fp = fp->prev()) {
             if (fp->script() != script) {
                 next = fp;
                 continue;
@@ -504,7 +502,7 @@ Recompiler::recompile()
         }
 
         /* Check if the VMFrame returns directly into the recompiled script. */
-        JSStackFrame *fp = f->fp();
+        StackFrame *fp = f->fp();
         void **addr = f->returnAddressLocation();
         if (f->scratch == NATIVE_CALL_SCRATCH_VALUE) {
             // Native call.
@@ -555,7 +553,7 @@ Recompiler::recompile()
      * pushed frame by e.g. the interpreter. :XXX: it would be nice if we could
      * ensure that compiling a script does not then trigger its recompilation.
      */
-    JSStackFrame *top = (cx->regs && cx->fp() && cx->fp()->isScriptFrame()) ? cx->fp() : NULL;
+    StackFrame *top = (cx->running() && cx->fp()->isScriptFrame()) ? cx->fp() : NULL;
     bool keepNormal = !normalFrames.empty() || script->inlineParents ||
         (top && top->script() == script && !top->isConstructing());
     bool keepCtor = !ctorFrames.empty() ||

@@ -76,7 +76,6 @@ XPIDLSRCS =                                     \
 	nsIDOMNSDocument.idl			\
 	nsIDOMXMLDocument.idl			\
 	nsIDOMUserDataHandler.idl		\
-	nsIDOMDOMConfiguration.idl		\
 	nsIDOMNSEditableElement.idl		\
 	nsIDOMNSElement.idl			\
 	nsIDOMNodeSelector.idl			\

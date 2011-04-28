@@ -50,9 +50,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMAttr.h"
-#include "nsIRenderingContext.h"
 #include "nsIDocument.h"
-#include "nsIDeviceContext.h"
 #include "nsITheme.h"
 #include "nsIServiceManager.h"
 #include "nsIBoxLayout.h"
@@ -516,24 +514,17 @@ nsBox::GetFlex(nsBoxLayoutState& aState)
 PRUint32
 nsIFrame::GetOrdinal(nsBoxLayoutState& aState)
 {
-  PRUint32 ordinal = DEFAULT_ORDINAL_GROUP;
+  PRUint32 ordinal = GetStyleXUL()->mBoxOrdinal;
 
+  // When present, attribute value overrides CSS.
   nsIContent* content = GetContent();
-  if (content) {
+  if (content && content->IsXUL()) {
     PRInt32 error;
     nsAutoString value;
 
     content->GetAttr(kNameSpaceID_None, nsGkAtoms::ordinal, value);
     if (!value.IsEmpty()) {
       ordinal = value.ToInteger(&error);
-    }
-    else {
-      // No attribute value.  Check CSS.
-      const nsStyleXUL* boxInfo = GetStyleXUL();
-      if (boxInfo->mBoxOrdinal > 1) {
-        // The ordinal group was defined in CSS.
-        ordinal = (nscoord)boxInfo->mBoxOrdinal;
-      }
     }
   }
 
@@ -759,7 +750,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize,
       nsITheme *theme = aState.PresContext()->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aState.PresContext(), aBox, display->mAppearance)) {
         nsIntSize size;
-        nsIRenderingContext* rendContext = aState.GetRenderingContext();
+        nsRenderingContext* rendContext = aState.GetRenderingContext();
         if (rendContext) {
           theme->GetMinimumWidgetSize(rendContext, aBox,
                                       display->mAppearance, &size, &canOverride);
@@ -821,7 +812,7 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize,
     // calc() with percentage is treated like '0' (unset)
 
     nsIContent* content = aBox->GetContent();
-    if (content) {
+    if (content && content->IsXUL()) {
         nsAutoString value;
         PRInt32 error;
 
@@ -884,7 +875,7 @@ nsIBox::AddCSSMaxSize(nsIBox* aBox, nsSize& aSize, PRBool &aWidthSet, PRBool &aH
     // percentages and calc() with percentages are treated like 'none'
 
     nsIContent* content = aBox->GetContent();
-    if (content) {
+    if (content && content->IsXUL()) {
         nsAutoString value;
         PRInt32 error;
 
@@ -919,8 +910,11 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
     PRBool flexSet = PR_FALSE;
 
     // get the flexibility
+    aFlex = aBox->GetStyleXUL()->mBoxFlex;
+
+    // attribute value overrides CSS
     nsIContent* content = aBox->GetContent();
-    if (content) {
+    if (content && content->IsXUL()) {
         PRInt32 error;
         nsAutoString value;
 
@@ -930,15 +924,6 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
             aFlex = value.ToInteger(&error);
             flexSet = PR_TRUE;
         }
-        else {
-          // No attribute value.  Check CSS.
-          const nsStyleXUL* boxInfo = aBox->GetStyleXUL();
-          if (boxInfo->mBoxFlex > 0.0f) {
-            // The flex was defined in CSS.
-            aFlex = (nscoord)boxInfo->mBoxFlex;
-            flexSet = PR_TRUE;
-          }
-        }
     }
 
     if (aFlex < 0)
@@ -946,7 +931,7 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
     if (aFlex >= nscoord_MAX)
       aFlex = nscoord_MAX - 1;
 
-    return flexSet;
+    return flexSet || aFlex > 0;
 }
 
 void

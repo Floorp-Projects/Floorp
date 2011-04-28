@@ -964,10 +964,8 @@ JSObject::putProperty(JSContext *cx, jsid id,
     if (hadSlot && !shape->hasSlot()) {
         if (oldSlot < shape->slotSpan)
             freeSlot(cx, oldSlot);
-#ifdef DEBUG
         else
             getSlotRef(oldSlot).setUndefined();
-#endif
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     }
 

@@ -1252,7 +1252,7 @@ function test_referrer_sessionId_persists()
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Runner
 
-let gTests = [
+[
   test_interface_exists,
   test_invalid_uri_throws,
   test_invalid_places_throws,
@@ -1283,7 +1283,7 @@ let gTests = [
   test_title_change_notifies,
   test_visit_notifies,
   test_referrer_sessionId_persists,
-];
+].forEach(add_test);
 
 function run_test()
 {

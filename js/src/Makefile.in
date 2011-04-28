@@ -60,7 +60,7 @@ DIRS += shell
 endif
 
 # FIXME: bug 530688 covers getting these working on Android
-ifneq (,$(filter-out ANDROID,$(OS_ARCH)))
+ifneq ($(OS_ARCH),ANDROID)
 ifdef ENABLE_TESTS
 DIRS += jsapi-tests
 endif
@@ -147,6 +147,7 @@ CPPSRCS		= \
 		jsgcmark.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
+		GlobalObject.cpp \
 		jshash.cpp \
 		jsinfer.cpp \
 		jsinterp.cpp \
@@ -181,6 +182,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
+		Stack.cpp \
 		$(NULL)
 
 INSTALLED_HEADERS = \
@@ -213,6 +215,7 @@ INSTALLED_HEADERS = \
 		jsgcchunk.h \
 		jsgcstats.h \
 		jscompartment.h \
+		GlobalObject.h \
 		jshash.h \
 		jsinfer.h \
 		jsinferinlines.h \
@@ -269,13 +272,26 @@ INSTALLED_HEADERS = \
 		$(NULL)
 
 ###############################################
+# BEGIN include sources for the vm subdirectory
+#
+VPATH		+= \
+		$(srcdir)/vm 	\
+		$(NULL)
+
+EXPORTS_NAMESPACES = vm
+
+EXPORTS_vm = \
+		Stack.h			\
+		$(NULL)
+
+###############################################
 # BEGIN include sources for low-level code shared with Gecko
 #
 VPATH		+= \
 		$(srcdir)/../../mfbt \
 		$(NULL)
 
-EXPORTS_NAMESPACES = mozilla
+EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
 		Util.h          \
@@ -402,7 +418,7 @@ CPPSRCS += 	checks.cc \
 # END enclude sources for V8 dtoa
 #############################################
 
-ifeq (,$(filter-out powerpc,$(TARGET_CPU)))
+ifeq (,$(filter arm %86 x86_64,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
@@ -509,7 +525,7 @@ else
 CPPSRCS += pm_stub.cpp
 endif
 
-ifeq (,$(filter-out WINNT,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 INSTALLED_HEADERS += jscpucfg.h
 endif
 
@@ -551,7 +567,7 @@ endif
 default::
 
 ifneq (,$(CROSS_COMPILE)$(filter-out WINNT OS2,$(OS_ARCH)))
-ifneq (,$(filter-out SYMBIAN,$(OS_ARCH)))
+ifneq ($(OS_ARCH),SYMBIAN)
 # nsinstall doesn't get built until we enter config/ in the exports phase,
 # so we'll have to manually ensure it gets built here if we want to use
 # $(EXPORTS)
@@ -658,6 +674,8 @@ check-jit-test-valgrind::
 	$(wildcard $(RUN_TEST_PROGRAM)) $(PYTHON) -u $(srcdir)/jit-test/jit_test.py \
 	        --valgrind --no-slow --no-progress --tinderbox --jitflags=$(JITFLAGS) $(DIST)/bin/js$(BIN_SUFFIX)
 
+check:: check-jit-test
+check-valgrind:: check-jit-test-valgrind
 
 # jstests doesn't have a --jitflags option, so we need to loop, updating the
 # exit code (RC) after each invocation.
@@ -677,10 +695,28 @@ check-jstests:
 		done; \
 	exit $$RC
 
+# FIXME:
+# We want to run check-jstests as part of |make check| on all platforms, on
+# tinderbox. However, some configurations don't work quite right just yet.
+# Rather than risking regressions in major configurations while fixing these
+# secondary configuration, we work around them and fix the bugs later.
+#
+#   Bug 652154: On Windows, SM(!m !t) don't work because of path problems with
+#				their unusual directory layout
+#
+#   Bug 652155: On Mac, SM(d) doesn't work for unknown reasons 
 
-check:: check-jit-test
+ifeq ($(OS_ARCH),WINNT)
+ifdef ENABLE_METHODJIT
+ifdef ENABLE_TRACEJIT
 #check:: check-jstests
-check-valgrind:: check-jit-test-valgrind
+endif
+endif
+else
+ifndef HAVE_DTRACE
+#check:: check-jstests
+endif
+endif
 
 DIST_GARBAGE = config.cache config.log config.status \
    config/autoconf.mk \

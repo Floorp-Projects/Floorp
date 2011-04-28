@@ -56,12 +56,6 @@
 // define this for very verbose dll load debug spew
 #undef DEBUG_very_verbose
 
-// The signature for LdrLoadDll changed at some point, with the second arg
-// becoming a PULONG instead of a ULONG.  This should only matter on 64-bit
-// systems, for which there was no support earlier -- on 32-bit systems,
-// they should be the same size.
-PR_STATIC_ASSERT(sizeof(PULONG) == sizeof(ULONG));
-
 typedef NTSTATUS (NTAPI *LdrLoadDll_func) (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileName, PHANDLE handle);
 
 static LdrLoadDll_func stub_LdrLoadDll = 0;

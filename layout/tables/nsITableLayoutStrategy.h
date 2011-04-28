@@ -47,7 +47,7 @@
 #include "nscore.h"
 #include "nsCoord.h"
 
-class nsIRenderingContext;
+class nsRenderingContext;
 struct nsHTMLReflowState;
 
 class nsITableLayoutStrategy
@@ -56,10 +56,10 @@ public:
     virtual ~nsITableLayoutStrategy() {}
 
     /** Implement nsIFrame::GetMinWidth for the table */
-    virtual nscoord GetMinWidth(nsIRenderingContext* aRenderingContext) = 0;
+    virtual nscoord GetMinWidth(nsRenderingContext* aRenderingContext) = 0;
 
     /** Implement nsIFrame::GetPrefWidth for the table */
-    virtual nscoord GetPrefWidth(nsIRenderingContext* aRenderingContext,
+    virtual nscoord GetPrefWidth(nsRenderingContext* aRenderingContext,
                                  PRBool aComputingSize) = 0;
 
     /** Implement nsIFrame::MarkIntrinsicWidthsDirty for the table */

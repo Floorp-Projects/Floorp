@@ -126,6 +126,9 @@ cairo_dwrite_font_face_create_for_dwrite_fontface(void *dwrite_font, void *dwrit
 void
 cairo_dwrite_scaled_font_allow_manual_show_glyphs(void *dwrite_scaled_font, cairo_bool_t allowed);
 
+void
+cairo_dwrite_set_cleartype_params(FLOAT gamma, FLOAT contrast, FLOAT level, int geometry, int mode);
+
 #endif /* CAIRO_HAS_DWRITE_FONT */
 
 #if CAIRO_HAS_D2D_SURFACE

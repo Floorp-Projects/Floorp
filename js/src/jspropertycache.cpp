@@ -326,7 +326,7 @@ PropertyCache::fullTest(JSContext *cx, jsbytecode *pc, JSObject **objp, JSObject
     JSObject *obj, *pobj, *tmp;
     uint32 vcap;
 
-    JSStackFrame *fp = cx->fp();
+    StackFrame *fp = cx->fp();
 
     JSScript *script;
     fp->inlinepc(cx, &script);

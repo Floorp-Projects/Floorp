@@ -58,8 +58,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 
-#include "nsIFontMetrics.h"
-#include "nsIDeviceContext.h"
+#include "nsFontMetrics.h"
 #include "nsIRegion.h"
 #include "nsIRollupListener.h"
 #include "nsIViewManager.h"
@@ -135,7 +134,6 @@ extern nsISupportsArray *gDraggedTransferables;
 
 ChildView* ChildViewMouseTracker::sLastMouseEventView = nil;
 
-static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 #ifdef INVALIDATE_DEBUGGING
 static void blinkRect(Rect* r);
 static void blinkRgn(RgnHandle rgn);
@@ -536,7 +534,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
                              nsNativeWidget aNativeParent,
                              const nsIntRect &aRect,
                              EVENT_CALLBACK aHandleEventFunction,
-                             nsIDeviceContext *aContext,
+                             nsDeviceContext *aContext,
                              nsIAppShell *aAppShell,
                              nsIToolkit *aToolkit,
                              nsWidgetInitData *aInitData)
@@ -5650,6 +5648,15 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
         else {
           return;
         }
+      }
+
+      // Don't send complex text input to a plugin in Cocoa event mode if
+      // either the Control key or the Command key is pressed -- even if the
+      // plugin has requested it, or we are already in IME composition.  This
+      // conforms to our behavior in 64-bit mode and fixes bug 619217.
+      NSUInteger modifierFlags = [theEvent modifierFlags];
+      if ((modifierFlags & NSControlKeyMask) || (modifierFlags & NSCommandKeyMask)) {
+        return;
       }
     }
 

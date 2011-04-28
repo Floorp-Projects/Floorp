@@ -41,9 +41,8 @@
  * Tests bookmark and history queries with tags.  See bug 399799.
  */
 
-// Add your tests here.  Each is an object with a summary string |desc| and a
-// method run() that's called to run the test.
-var gTests = [
+// Add your tests here.  Each is a function that's called to run the test.
+[
 
   function tags_getter_setter()
   {
@@ -590,7 +589,7 @@ var gTests = [
     cleanDatabase(run_next_test);
   },
 
-];
+].forEach(add_test);
 
 // The tag keys in query URIs, i.e., "place:tag=foo&!tags=1"
 //                                          ---     -----

@@ -210,7 +210,7 @@ nsSystemPref::Observe(nsISupports *aSubject,
     // outside mozilla. We need to read it again.
     else if (!nsCRT::strcmp(aTopic, NS_SYSTEMPREF_PREFCHANGE_TOPIC_ID) &&
              aData) {
-        NS_ASSERTION(mEnabled == PR_TRUE, "Should not listen when disabled");
+        NS_ASSERTION(mEnabled, "Should not listen when disabled");
         SYSPREF_LOG(("====== System Pref Notify topic=%s data=%s\n",
                      aTopic, (char*)aData));
         rv = ReadSystemPref(NS_LossyConvertUTF16toASCII(aData).get());
