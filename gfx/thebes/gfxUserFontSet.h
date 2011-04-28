@@ -236,9 +236,6 @@ protected:
 
     gfxMixedFontFamily *GetFamily(const nsAString& aName) const;
 
-    // remove family
-    void RemoveFamily(const nsAString& aFamilyName);
-
     // font families defined by @font-face rules
     nsRefPtrHashtable<nsStringHashKey, gfxMixedFontFamily> mFontFamilies;
 

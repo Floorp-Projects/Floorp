@@ -723,13 +723,3 @@ gfxUserFontSet::GetFamily(const nsAString& aFamilyName) const
 
     return mFontFamilies.GetWeak(key);
 }
-
-
-void 
-gfxUserFontSet::RemoveFamily(const nsAString& aFamilyName)
-{
-    nsAutoString key(aFamilyName);
-    ToLowerCase(key);
-
-    mFontFamilies.Remove(key);
-}
