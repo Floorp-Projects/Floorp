@@ -469,7 +469,10 @@ void
 AsyncChannel::OnChannelOpened()
 {
     AssertIOThread();
-    mChannelState = ChannelOpening;
+    {
+        MutexAutoLock lock(mMutex);
+        mChannelState = ChannelOpening;
+    }
     /*assert*/mTransport->Connect();
 }
 
