@@ -1890,7 +1890,7 @@ nsFrame::FireDOMEvent(const nsAString& aDOMEventName, nsIContent *aContent)
   if (target) {
     nsRefPtr<nsPLDOMEvent> event =
       new nsPLDOMEvent(target, aDOMEventName, PR_TRUE, PR_FALSE);
-    if (!event || NS_FAILED(event->PostDOMEvent()))
+    if (NS_FAILED(event->PostDOMEvent()))
       NS_WARNING("Failed to dispatch nsPLDOMEvent");
   }
 }
