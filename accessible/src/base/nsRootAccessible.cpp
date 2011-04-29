@@ -193,15 +193,15 @@ nsRootAccessible::NativeState()
 
 #ifdef MOZ_XUL
   PRUint32 chromeFlags = GetChromeFlags();
-  if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE) {
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_WINDOW_RESIZE)
     states |= states::SIZEABLE;
-  }
-  if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR) {
     // If it has a titlebar it's movable
     // XXX unless it's minimized or maximized, but not sure
     //     how to detect that
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_TITLEBAR)
     states |= states::MOVEABLE;
-  }
+  if (chromeFlags & nsIWebBrowserChrome::CHROME_MODAL)
+    states |= states::MODAL;
 #endif
 
   nsCOMPtr<nsIFocusManager> fm = do_GetService(FOCUSMANAGER_CONTRACTID);
@@ -214,12 +214,6 @@ nsRootAccessible::NativeState()
     if (activeWindow == rootWindow)
       states |= states::ACTIVE;
   }
-
-#ifdef MOZ_XUL
-  if (GetChromeFlags() & nsIWebBrowserChrome::CHROME_MODAL) {
-    states |= states::MODAL;
-  }
-#endif
 
   return states;
 }

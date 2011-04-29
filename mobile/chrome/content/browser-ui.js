@@ -681,6 +681,8 @@ var BrowserUI = {
 
     this.hidePanel();
     this._hidePopup();
+    if (this.activeDialog)
+      this.activeDialog.close();
     this.activePanel = AllPagesList;
   },
 
@@ -878,6 +880,8 @@ var BrowserUI = {
     if (browser.canGoBack) {
       browser.goBack();
     } else if (tab.owner) {
+      // When going back, always return to the owner (not a sibling).
+      Browser.selectedTab = tab.owner;
       this.closeTab(tab);
     }
 #ifdef ANDROID

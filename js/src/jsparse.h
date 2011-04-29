@@ -305,7 +305,7 @@ namespace js {
 
 struct GlobalScope {
     GlobalScope(JSContext *cx, JSObject *globalObj, JSCodeGenerator *cg)
-      : globalObj(globalObj), cg(cg), defs(ContextAllocPolicy(cx))
+      : globalObj(globalObj), cg(cg), defs(cx)
     { }
 
     struct GlobalDef {
@@ -334,7 +334,7 @@ struct GlobalScope {
      * A definition may either specify an existing global property, or a new
      * one that must be added after compilation succeeds.
      */
-    Vector<GlobalDef, 16, ContextAllocPolicy> defs;
+    Vector<GlobalDef, 16> defs;
     JSAtomList      names;
 };
 

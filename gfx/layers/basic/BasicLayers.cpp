@@ -56,6 +56,9 @@
 #include "ThebesLayerBuffer.h"
 #include "nsIWidget.h"
 #include "ReadbackProcessor.h"
+#ifdef MOZ_X11
+#include "gfxXlibSurface.h"
+#endif
 
 #include "GLContext.h"
 
@@ -1624,12 +1627,6 @@ public:
     mShadow = aShadow;
   }
 
-  virtual void SetBackBufferImage(gfxSharedImageSurface* aBuffer)
-  {
-    NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
-  }
-
-  virtual PRBool SupportsSurfaceDescriptor() const { return PR_FALSE; }
   virtual void SetBackBuffer(const SurfaceDescriptor& aBuffer)
   {
     NS_RUNTIMEABORT("if this default impl is called, |aBuffer| leaks");
@@ -1735,12 +1732,6 @@ BasicShadowableContainerLayer::RemoveChild(Layer* aChild)
   BasicContainerLayer::RemoveChild(aChild);
 }
 
-static PRBool
-IsSurfaceDescriptorValid(const SurfaceDescriptor& aSurface)
-{
-  return SurfaceDescriptor::T__None != aSurface.type();
-}
-
 class BasicShadowableThebesLayer : public BasicThebesLayer,
                                    public BasicShadowableLayer
 {
@@ -1769,8 +1760,6 @@ public:
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
   virtual bool MustRetainContent() { return HasShadow(); }
-
-  virtual PRBool SupportsSurfaceDescriptor() const { return PR_TRUE; }
 
   void SetBackBufferAndAttrs(const ThebesBuffer& aBuffer,
                              const nsIntRegion& aValidRegion,
@@ -1955,8 +1944,8 @@ public:
   }
   virtual ~BasicShadowableImageLayer()
   {
-    if (mBackSurface) {
-      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackSurface);
+    if (IsSurfaceDescriptorValid(mBackBuffer)) {
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
     }
     MOZ_COUNT_DTOR(BasicShadowableImageLayer);
   }
@@ -1971,14 +1960,14 @@ public:
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
 
-  virtual void SetBackBufferImage(gfxSharedImageSurface* aBuffer)
+  virtual void SetBackBuffer(const SurfaceDescriptor& aBuffer)
   {
-    mBackSurface = aBuffer;
+    mBackBuffer = aBuffer;
   }
 
   virtual void Disconnect()
   {
-    mBackSurface = nsnull;
+    mBackBuffer = SurfaceDescriptor();
     BasicShadowableLayer::Disconnect();
   }
 
@@ -1988,7 +1977,7 @@ private:
     return static_cast<BasicShadowLayerManager*>(mManager);
   }
 
-  nsRefPtr<gfxSharedImageSurface> mBackSurface;
+  SurfaceDescriptor mBackBuffer;
 };
  
 void
@@ -2000,20 +1989,18 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext)
     return;
 
   if (oldSize != mSize) {
-    if (mBackSurface) {
-      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackSurface);
-      mBackSurface = nsnull;
-
+    if (IsSurfaceDescriptorValid(mBackBuffer)) {
       BasicManager()->DestroyedImageBuffer(BasicManager()->Hold(this));
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
     }
 
-    nsRefPtr<gfxSharedImageSurface> tmpFrontSurface;
+    SurfaceDescriptor tmpFrontSurface;
     // XXX error handling?
     if (!BasicManager()->AllocDoubleBuffer(
           mSize,
           (GetContentFlags() & CONTENT_OPAQUE) ?
             gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
-          getter_AddRefs(tmpFrontSurface), getter_AddRefs(mBackSurface)))
+          &tmpFrontSurface, &mBackBuffer))
       NS_RUNTIMEABORT("creating ImageLayer 'front buffer' failed!");
 
     BasicManager()->CreatedImageBuffer(BasicManager()->Hold(this),
@@ -2021,13 +2008,15 @@ BasicShadowableImageLayer::Paint(gfxContext* aContext)
                                        tmpFrontSurface);
   }
 
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackSurface);
+  nsRefPtr<gfxASurface> backSurface =
+    BasicManager()->OpenDescriptor(mBackBuffer);
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(backSurface);
   PaintContext(pat,
                nsIntRegion(nsIntRect(0, 0, mSize.width, mSize.height)),
                nsnull, 1.0, tmpCtx);
 
   BasicManager()->PaintedImage(BasicManager()->Hold(this),
-                               mBackSurface);
+                               mBackBuffer);
 }
 
 
@@ -2070,8 +2059,8 @@ public:
   }
   virtual ~BasicShadowableCanvasLayer()
   {
-    if (mBackBuffer) {
-      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBuffer);
+    if (IsSurfaceDescriptorValid(mBackBuffer)) {
+      BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
     }
     MOZ_COUNT_DTOR(BasicShadowableCanvasLayer);
   }
@@ -2087,14 +2076,14 @@ public:
   virtual Layer* AsLayer() { return this; }
   virtual ShadowableLayer* AsShadowableLayer() { return this; }
 
-  virtual void SetBackBufferImage(gfxSharedImageSurface* aBuffer)
+  virtual void SetBackBuffer(const SurfaceDescriptor& aBuffer)
   {
     mBackBuffer = aBuffer;
   }
- 
+
   virtual void Disconnect()
   {
-    mBackBuffer = nsnull;
+    mBackBuffer = SurfaceDescriptor();
     BasicShadowableLayer::Disconnect();
   }
 
@@ -2104,7 +2093,7 @@ private:
     return static_cast<BasicShadowLayerManager*>(mManager);
   }
 
-  nsRefPtr<gfxSharedImageSurface> mBackBuffer;
+  SurfaceDescriptor mBackBuffer;
 };
 
 void
@@ -2116,20 +2105,20 @@ BasicShadowableCanvasLayer::Initialize(const Data& aData)
 
   // XXX won't get here currently; need to figure out what to do on
   // canvas resizes
-  if (mBackBuffer) {
-    BasicManager()->ShadowLayerForwarder::DestroySharedSurface(mBackBuffer);
-    mBackBuffer = nsnull;
+
+  if (IsSurfaceDescriptorValid(mBackBuffer)) {
+    BasicManager()->ShadowLayerForwarder::DestroySharedSurface(&mBackBuffer);
 
     BasicManager()->DestroyedCanvasBuffer(BasicManager()->Hold(this));
   }
 
-  nsRefPtr<gfxSharedImageSurface> tmpFrontBuffer;
+  SurfaceDescriptor tmpFrontBuffer;
   // XXX error handling?
   if (!BasicManager()->AllocDoubleBuffer(
         gfxIntSize(aData.mSize.width, aData.mSize.height),
         (GetContentFlags() & CONTENT_OPAQUE) ?
           gfxASurface::CONTENT_COLOR : gfxASurface::CONTENT_COLOR_ALPHA,
-        getter_AddRefs(tmpFrontBuffer), getter_AddRefs(mBackBuffer)))
+        &tmpFrontBuffer, &mBackBuffer))
     NS_RUNTIMEABORT("creating CanvasLayer back buffer failed!");
 
   BasicManager()->CreatedCanvasBuffer(BasicManager()->Hold(this),
@@ -2149,7 +2138,9 @@ BasicShadowableCanvasLayer::Paint(gfxContext* aContext)
   // changed areas, much like we do for Thebes layers, as well as
   // do all sorts of magic to swap out the surface underneath the
   // canvas' thebes/cairo context.
-  nsRefPtr<gfxContext> tmpCtx = new gfxContext(mBackBuffer);
+  nsRefPtr<gfxASurface> backSurface =
+    BasicManager()->OpenDescriptor(mBackBuffer);
+  nsRefPtr<gfxContext> tmpCtx = new gfxContext(backSurface);
   tmpCtx->SetOperator(gfxContext::OPERATOR_SOURCE);
 
   // call BasicCanvasLayer::Paint to draw to our tmp context, because
@@ -2442,17 +2433,15 @@ public:
     ShadowImageLayer::Disconnect();
   }
 
-  virtual PRBool Init(gfxSharedImageSurface* front, const nsIntSize& size);
+  virtual PRBool Init(const SurfaceDescriptor& front, const nsIntSize& size);
 
-  virtual already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* newFront);
+  virtual void Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack);
 
   virtual void DestroyFrontBuffer()
   {
-    if (mFrontSurface) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface, mAllocator);
+    if (IsSurfaceDescriptorValid(mFrontBuffer)) {
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(&mFrontBuffer, mAllocator);
     }
-    mFrontSurface = nsnull;
   }
 
   virtual void Paint(gfxContext* aContext);
@@ -2463,36 +2452,36 @@ protected:
     return static_cast<BasicShadowLayerManager*>(mManager);
   }
 
-  // XXX ShmemImage?
-  nsRefPtr<gfxSharedImageSurface> mFrontSurface;
+  SurfaceDescriptor mFrontBuffer;
   gfxIntSize mSize;
 };
 
 PRBool
-BasicShadowImageLayer::Init(gfxSharedImageSurface* front,
+BasicShadowImageLayer::Init(const SurfaceDescriptor& front,
                             const nsIntSize& size)
 {
-  mFrontSurface = front;
+  mFrontBuffer = front;
   mSize = gfxIntSize(size.width, size.height);
   return PR_TRUE;
 }
 
-already_AddRefed<gfxSharedImageSurface>
-BasicShadowImageLayer::Swap(gfxSharedImageSurface* newFront)
+void
+BasicShadowImageLayer::Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack)
 {
-  already_AddRefed<gfxSharedImageSurface> tmp = mFrontSurface.forget();
-  mFrontSurface = newFront;
-  return tmp;
+  *aNewBack = mFrontBuffer;
+  mFrontBuffer = aNewFront;
 }
 
 void
 BasicShadowImageLayer::Paint(gfxContext* aContext)
 {
-  if (!mFrontSurface) {
+  if (!IsSurfaceDescriptorValid(mFrontBuffer)) {
     return;
   }
 
-  nsRefPtr<gfxPattern> pat = new gfxPattern(mFrontSurface);
+  nsRefPtr<gfxASurface> surface =
+    BasicManager()->OpenDescriptor(mFrontBuffer);
+  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
   pat->SetFilter(mFilter);
 
   // The visible region can extend outside the image.  If we're not
@@ -2546,16 +2535,15 @@ public:
   }
 
   virtual void Initialize(const Data& aData);
+  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize);
 
-  virtual already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* newFront);
+  void Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack);
 
   virtual void DestroyFrontBuffer()
   {
-    if (mFrontSurface) {
-      BasicManager()->ShadowLayerManager::DestroySharedSurface(mFrontSurface, mAllocator);
+    if (IsSurfaceDescriptorValid(mFrontSurface)) {
+      BasicManager()->ShadowLayerManager::DestroySharedSurface(&mFrontSurface, mAllocator);
     }
-    mFrontSurface = nsnull;
   }
 
   virtual void Paint(gfxContext* aContext);
@@ -2566,27 +2554,28 @@ private:
     return static_cast<BasicShadowLayerManager*>(mManager);
   }
 
-  nsRefPtr<gfxSharedImageSurface> mFrontSurface;
+  SurfaceDescriptor mFrontSurface;
 };
 
 
 void
 BasicShadowCanvasLayer::Initialize(const Data& aData)
 {
-  NS_ASSERTION(mFrontSurface == nsnull,
-               "BasicCanvasLayer::Initialize called twice!");
-  NS_ASSERTION(aData.mSurface && !aData.mGLContext, "no comprende OpenGL!");
-
-  mFrontSurface = static_cast<gfxSharedImageSurface*>(aData.mSurface);
-  mBounds.SetRect(0, 0, aData.mSize.width, aData.mSize.height);
+  NS_RUNTIMEABORT("Incompatibe surface type");
 }
 
-already_AddRefed<gfxSharedImageSurface>
-BasicShadowCanvasLayer::Swap(gfxSharedImageSurface* newFront)
+void
+BasicShadowCanvasLayer::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize)
 {
-  already_AddRefed<gfxSharedImageSurface> tmp = mFrontSurface.forget();
-  mFrontSurface = newFront;
-  return tmp;
+  mFrontSurface = aNewFront;
+  mBounds.SetRect(0, 0, aSize.width, aSize.height);
+}
+
+void
+BasicShadowCanvasLayer::Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack)
+{
+  *aNewBack = mFrontSurface;
+  mFrontSurface = aNewFront;
 }
 
 void
@@ -2595,11 +2584,13 @@ BasicShadowCanvasLayer::Paint(gfxContext* aContext)
   NS_ASSERTION(BasicManager()->InDrawing(),
                "Can only draw in drawing phase");
 
-  if (!mFrontSurface) {
+  if (!IsSurfaceDescriptorValid(mFrontSurface)) {
     return;
   }
 
-  nsRefPtr<gfxPattern> pat = new gfxPattern(mFrontSurface);
+  nsRefPtr<gfxASurface> surface =
+    BasicManager()->OpenDescriptor(mFrontSurface);
+  nsRefPtr<gfxPattern> pat = new gfxPattern(surface);
 
   pat->SetFilter(mFilter);
   pat->SetExtend(gfxPattern::EXTEND_PAD);
@@ -2830,17 +2821,7 @@ BasicShadowLayerManager::ForwardTransaction()
 
         const OpBufferSwap& obs = reply.get_OpBufferSwap();
         const SurfaceDescriptor& descr = obs.newBackBuffer();
-        BasicShadowableLayer* layer = GetBasicShadowable(obs);
-        if (layer->SupportsSurfaceDescriptor()) {
-          layer->SetBackBuffer(descr);
-        } else {
-          if (SurfaceDescriptor::TShmem != descr.type()) {
-            NS_RUNTIMEABORT("non-Shmem surface sent to a layer that expected one!");
-          }
-          nsRefPtr<gfxASurface> imageSurf = OpenDescriptor(descr);
-          layer->SetBackBufferImage(
-            static_cast<gfxSharedImageSurface*>(imageSurf.get()));
-        }
+        GetBasicShadowable(obs)->SetBackBuffer(descr);
         break;
       }
 

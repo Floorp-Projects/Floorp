@@ -658,8 +658,8 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIRequest *request,
         // Make sure to not allow new streams to be opened here; we've
         // already got a stream for this data; we just need a properly
         // set up plugin instance.
-        rv = pluginHost->DoInstantiateEmbeddedPlugin(aContentType.get(), aURL,
-                                                     mOwner, PR_FALSE);
+        rv = pluginHost->InstantiateEmbeddedPlugin(aContentType.get(), aURL,
+                                                   mOwner, PR_FALSE);
       }
       else {
         rv = pluginHost->SetUpPluginInstance(aContentType.get(), aURL, mOwner);

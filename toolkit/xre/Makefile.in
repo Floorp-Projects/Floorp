@@ -53,7 +53,7 @@ XPIDLSRCS = \
   nsINativeAppSupport.idl \
   $(NULL)
 
-ifneq (,$(filter WINCE WINNT,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 XPIDLSRCS += nsIWinAppHelper.idl
 endif
 
@@ -71,11 +71,7 @@ CPPSRCS += EventTracer.cpp
 endif
 
 ifdef MOZ_SPLASHSCREEN
-ifeq ($(OS_ARCH),WINCE)
-CPPSRCS += nsSplashScreenWin.cpp
-else
 CPPSRCS += nsSplashScreenDummy.cpp
-endif
 endif
 
 DEFINES += -DIMPL_XREAPI -DMOZ_APP_NAME='"$(MOZ_APP_NAME)"'

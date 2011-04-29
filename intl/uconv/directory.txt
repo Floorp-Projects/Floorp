@@ -12,7 +12,7 @@ util       - utility functions used by the converters
 
 The following directories contain different charset converters:
 
-ucvcn    - Simplified Chinese charsets - GB2312, HZ, ISO-2022-CN, CP936
+ucvcn    - Simplified Chinese charsets - GB2312, HZ, ISO-2022-CN, GBK, GB18030
 ucvibm   - IBM charsets - CP850, 852, 855, 857, 862, 864, 869, 1125, 1131
 ucvja    - Japanese charsets - Shift-JIS, ISO-2022-JP, EUC-JP
 ucvko    - Korean charsets - ISO-2022-KR, EUC-KR, CP949

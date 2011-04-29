@@ -1035,12 +1035,12 @@ ic::NativeNew(VMFrame &f, CallICInfo *ic)
         stubs::SlowNew(f, ic->frameSize.staticArgc());
 }
 
-static inline bool
-BumpStack(VMFrame &f, uintN inc)
-{
-    static const unsigned MANY_ARGS = 1024;
-    static const unsigned MIN_SPACE = 500;
+static const unsigned MANY_ARGS = 1024;
+static const unsigned MIN_SPACE = 500;
 
+static bool
+BumpStackFull(VMFrame &f, uintN inc)
+{
     /* If we are not passing many args, treat this as a normal call. */
     if (inc < MANY_ARGS) {
         if (f.regs.sp + inc < f.stackLimit)
@@ -1081,6 +1081,15 @@ BumpStack(VMFrame &f, uintN inc)
     return true;
 }
 
+static JS_ALWAYS_INLINE bool
+BumpStack(VMFrame &f, uintN inc)
+{
+    /* Fast path BumpStackFull. */
+    if (inc < MANY_ARGS && f.regs.sp + inc < f.stackLimit)
+        return true;
+    return BumpStackFull(f, inc);
+}
+
 /*
  * SplatApplyArgs is only called for expressions of the form |f.apply(x, y)|.
  * Additionally, the callee has already been checked to be the native apply.
@@ -1109,29 +1118,46 @@ ic::SplatApplyArgs(VMFrame &f)
         JS_ASSERT(JS_CALLEE(cx, vp).toObject().getFunctionPrivate()->u.n.native == js_fun_apply);
 
         JSStackFrame *fp = f.regs.fp;
-        if (!fp->hasOverriddenArgs() &&
-            (!fp->hasArgsObj() ||
-             (fp->hasArgsObj() && !fp->argsObj().isArgsLengthOverridden() &&
-              !js_PrototypeHasIndexedProperties(cx, &fp->argsObj())))) {
-
-            uintN n = fp->numActualArgs();
-            if (!BumpStack(f, n))
-                THROWV(false);
-            f.regs.sp += n;
-
-            Value *argv = JS_ARGV(cx, vp + 1 /* vp[1]'s argv */);
-            if (fp->hasArgsObj())
-                fp->forEachCanonicalActualArg(CopyNonHoleArgsTo(&fp->argsObj(), argv));
-            else
+        if (!fp->hasOverriddenArgs()) {
+            uintN n;
+            if (!fp->hasArgsObj()) {
+                /* Extract the common/fast path where there is no args obj. */
+                n = fp->numActualArgs();
+                if (!BumpStack(f, n))
+                    THROWV(false);
+                Value *argv = JS_ARGV(cx, vp + 1 /* vp[1]'s argv */);
+                f.regs.sp += n;
                 fp->forEachCanonicalActualArg(CopyTo(argv));
+            } else {
+                /* Simulate the argument-pushing part of js_fun_apply: */
+                JSObject *aobj = &fp->argsObj();
+
+                /* Steps 4-5 */
+                uintN length;
+                if (!js_GetLengthProperty(cx, aobj, &length))
+                    THROWV(false);
+
+                /* Step 6 */
+                JS_ASSERT(length <= JS_ARGS_LENGTH_MAX);
+                n = length;
+
+                if (!BumpStack(f, n))
+                    THROWV(false);
+
+                /* Steps 7-8 */
+                Value *argv = JS_ARGV(cx, &vp[1]);  /* vp[1] is the callee */
+                f.regs.sp += n;  /* GetElements may reenter, so inc early. */
+                if (!GetElements(cx, aobj, n, argv))
+                    THROWV(false);
+            }
 
             f.u.call.dynamicArgc = n;
             return true;
         }
 
         /*
-         * Can't optimize; push the arguments object so that the stack matches
-         * the !lazyArgsObj stack state described above.
+         * Push the arguments value so that the stack matches the !lazyArgsObj
+         * stack state described above.
          */
         f.regs.sp++;
         if (!js_GetArgsValue(cx, fp, &vp[3]))
@@ -1195,17 +1221,17 @@ JITScript::purgeMICs()
     for (uint32 i = 0; i < nGetGlobalNames; i++) {
         ic::GetGlobalNameIC &ic = getGlobalNames_[i];
         JSC::CodeLocationDataLabel32 label = ic.fastPathStart.dataLabel32AtOffset(ic.shapeOffset);
-        repatch.repatch(label, int(JSObjectMap::INVALID_SHAPE));
+        repatch.repatch(label, int(INVALID_SHAPE));
     }
 
     ic::SetGlobalNameIC *setGlobalNames_ = setGlobalNames();
     for (uint32 i = 0; i < nSetGlobalNames; i++) {
         ic::SetGlobalNameIC &ic = setGlobalNames_[i];
-        ic.patchInlineShapeGuard(repatch, int32(JSObjectMap::INVALID_SHAPE));
+        ic.patchInlineShapeGuard(repatch, int32(INVALID_SHAPE));
 
         if (ic.hasExtraStub) {
             Repatcher repatcher(ic.extraStub);
-            ic.patchExtraShapeGuard(repatcher, int32(JSObjectMap::INVALID_SHAPE));
+            ic.patchExtraShapeGuard(repatcher, int32(INVALID_SHAPE));
         }
     }
 }

@@ -69,7 +69,7 @@
 #include "nsEmbedCID.h"
 #include "nsToolkitCompsCID.h"
 
-#if defined(XP_WIN) && !defined(WINCE)
+#ifdef XP_WIN
 #include <shlobj.h>
 #ifdef DOWNLOAD_SCANNER
 #include "nsDownloadScanner.h"
@@ -1139,7 +1139,7 @@ nsDownloadManager::GetDefaultDownloadsDirectory(nsILocalFile **aResult)
                        NS_GET_IID(nsILocalFile),
                        getter_AddRefs(downloadDir));
   NS_ENSURE_SUCCESS(rv, rv);
-#elif defined(XP_WIN) && !defined(WINCE)
+#elif defined(XP_WIN)
   rv = dirService->Get(NS_WIN_DEFAULT_DOWNLOAD_DIR,
                        NS_GET_IID(nsILocalFile),
                        getter_AddRefs(downloadDir));
@@ -2243,7 +2243,7 @@ nsDownload::SetState(DownloadState aState)
         }
       }
 
-#if (defined(XP_WIN) && !defined(WINCE)) || defined(XP_MACOSX) || defined(ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(ANDROID)
       nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget);
       nsCOMPtr<nsIFile> file;
       nsAutoString path;

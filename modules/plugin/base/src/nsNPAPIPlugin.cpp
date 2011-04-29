@@ -237,10 +237,6 @@ NS_IMPL_ISUPPORTS1(nsNPAPIPlugin, nsIPlugin)
 
 nsNPAPIPlugin::nsNPAPIPlugin()
 {
-#if defined(XP_MACOSX) && !defined(__LP64__)
-  mPluginRefNum = -1;
-#endif
-
   memset((void*)&mPluginFuncs, 0, sizeof(mPluginFuncs));
   mPluginFuncs.size = sizeof(mPluginFuncs);
   mPluginFuncs.version = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
@@ -253,14 +249,6 @@ nsNPAPIPlugin::~nsNPAPIPlugin()
   delete mLibrary;
   mLibrary = nsnull;
 }
-
-#if defined(XP_MACOSX) && !defined(__LP64__)
-void
-nsNPAPIPlugin::SetPluginRefNum(short aRefNum)
-{
-  mPluginRefNum = aRefNum;
-}
-#endif
 
 void
 nsNPAPIPlugin::PluginCrashed(const nsAString& pluginDumpID,
@@ -571,10 +559,7 @@ nsNPAPIPlugin::Shutdown()
 
   NPError shutdownError;
   mLibrary->NP_Shutdown(&shutdownError);
-#if defined(XP_MACOSX) && !defined(__LP64__)
-  if (shutdownError == NS_OK && mPluginRefNum > 0)
-    ::CloseResFile(mPluginRefNum);
-#endif
+
   return NS_OK;
 }
 

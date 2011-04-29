@@ -402,6 +402,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
     JSString *str;
     char *buffer;
     size_t size;
+    jschar *uc_buffer;
+    size_t uc_len;
     int lineno;
     int startline;
     FILE *file;
@@ -520,10 +522,19 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
                 hitEOF = JS_TRUE;
                 break;
             }
-        } while (!JS_BufferIsCompilableUnit(cx, obj, buffer, len));
+        } while (!JS_BufferIsCompilableUnit(cx, JS_TRUE, obj, buffer, len));
 
         if (hitEOF && !buffer)
             break;
+
+        if (!JS_DecodeUTF8(cx, buffer, len, NULL, &uc_len)) {
+            JS_ReportError(cx, "Invalid UTF-8 in input");
+            gExitCode = EXITCODE_RUNTIME_ERROR;
+            return;
+        }
+
+        uc_buffer = (jschar*)malloc(uc_len * sizeof(jschar));
+        JS_DecodeUTF8(cx, buffer, len, uc_buffer, &uc_len);
 
         /* Clear any pending exception from previous failed compiles. */
         JS_ClearPendingException(cx);
@@ -532,8 +543,8 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
         oldopts = JS_GetOptions(cx);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts | JSOPTION_COMPILE_N_GO);
-        scriptObj = JS_CompileScript(cx, obj, buffer, len, "typein",
-                                     startline);
+        scriptObj = JS_CompileUCScript(cx, obj, uc_buffer, uc_len, "typein",
+                                       startline);
         if (!compileOnly)
             JS_SetOptions(cx, oldopts);
 
@@ -551,6 +562,7 @@ Process(JSContext *cx, JSObject *obj, char *filename, JSBool forceTTY)
             }
         }
         *buffer = '\0';
+        free(uc_buffer);
     } while (!hitEOF && !gQuitting);
 
     free(buffer);
@@ -575,6 +587,8 @@ usage(void)
                       "  -w            Report strict warnings\n"
                       "  -W            Do not report strict warnings\n"
                       "  -x            Toggle JSOPTION_XML flag\n"
+                      "  -U            Enable UTF-8 C-strings; also affects scripts loaded via\n"
+                      "                run, snarf, read, or entered into the REPL\n"
                       "  -C            Compile-only; do not execute\n"
                       "  -i            Enable interactive read-eval-print loop\n"
                       "  -j            Enable the TraceMonkey tracing JIT\n"
@@ -613,7 +627,7 @@ usage(void)
                       "                Default is %u.\n", DEFAULT_MAX_STACK_SIZE);
 #ifdef DEBUG
     fprintf(gErrFile, "  -A <max>      After <max> memory allocations, act like we're OOM.\n");
-    fprintf(gErrFile, "  -O <max>      At exit, print the number of memory allocations in \n"
+    fprintf(gErrFile, "  -O            At exit, print the number of memory allocations in \n"
                       "                the program.\n");
 #endif
 #ifdef JS_THREADSAFE
@@ -948,6 +962,9 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
 #endif
 
+        case 'U': /* Already handled in main() */
+            break;
+
         default:
             return usage();
         }
@@ -1117,8 +1134,21 @@ FileAsString(JSContext *cx, const char *pathname)
                     JS_ReportError(cx, "can't read %s: %s", pathname,
                                    (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
                 } else {
+                    jschar *ucbuf;
+                    size_t uclen;
+
                     len = (size_t)cc;
-                    str = JS_NewStringCopyN(cx, buf, len);
+
+                    if (!JS_DecodeUTF8(cx, buf, len, NULL, &uclen)) {
+                        JS_ReportError(cx, "Invalid UTF-8 in file '%s'", pathname);
+                        gExitCode = EXITCODE_RUNTIME_ERROR;
+                        return NULL;
+                    }
+
+                    ucbuf = (jschar*)malloc(uclen * sizeof(jschar));
+                    JS_DecodeUTF8(cx, buf, len, ucbuf, &uclen);
+                    str = JS_NewUCStringCopyN(cx, ucbuf, uclen);
+                    free(ucbuf);
                 }
                 JS_free(cx, buf);
             }
@@ -4123,9 +4153,7 @@ WatchdogMain(void *arg)
             PRIntervalTime sleepDuration = gWatchdogHasTimeout
                                            ? gWatchdogTimeout - now
                                            : PR_INTERVAL_NO_TIMEOUT;
-#ifdef DEBUG
-            PRStatus status =
-#endif
+            DebugOnly<PRStatus> status =
                 PR_WaitCondVar(gWatchdogWakeup, sleepDuration);
             JS_ASSERT(status == PR_SUCCESS);
         }
@@ -5909,6 +5937,13 @@ main(int argc, char **argv, char **envp)
 
     argc--;
     argv++;
+
+    int i;
+    for (i = 0; i < argc; i++) {
+        if (argv[i][0] == '-' && argv[i][1] == 'U' && argv[i][2] == '\0') {
+            JS_SetCStringsAreUTF8();
+        }
+    }
 
 #ifdef XP_WIN
     // Set the timer calibration delay count to 0 so we get high

@@ -95,6 +95,11 @@
 #include "nsHTMLWin32ObjectAccessible.h"
 #endif
 
+// For embedding plugin accessibles
+#ifdef MOZ_ACCESSIBILITY_ATK
+#include "AtkSocketAccessible.h"
+#endif
+
 #ifndef DISABLE_XFORMS_HOOKS
 #include "nsXFormsFormControlsAccessible.h"
 #include "nsXFormsWidgetsAccessible.h"
@@ -339,11 +344,12 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
       return CreateOuterDocAccessible(aContent, aPresShell);
   }
 
-#ifdef XP_WIN
+#if defined(XP_WIN) || defined(MOZ_ACCESSIBILITY_ATK)
   // 2) for plugins
-  nsCOMPtr<nsIPluginInstance> pluginInstance ;
-  aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance));
-  if (pluginInstance) {
+  nsCOMPtr<nsIPluginInstance> pluginInstance;
+  if (NS_SUCCEEDED(aFrame->GetPluginInstance(*getter_AddRefs(pluginInstance))) &&
+      pluginInstance) {
+#ifdef XP_WIN
     // Note: pluginPort will be null if windowless.
     HWND pluginPort = nsnull;
     aFrame->GetPluginPort(&pluginPort);
@@ -353,6 +359,22 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame* aFrame,
                                                                     pluginPort);
     NS_IF_ADDREF(accessible);
     return accessible;
+
+#elif MOZ_ACCESSIBILITY_ATK
+    if (!AtkSocketAccessible::gCanEmbed)
+      return nsnull;
+
+    nsCString plugId;
+    nsresult rv = pluginInstance->GetValueFromPlugin(
+      NPPVpluginNativeAccessibleAtkPlugId, &plugId);
+    if (NS_SUCCEEDED(rv) && !plugId.IsVoid()) {
+      AtkSocketAccessible* socketAccessible =
+        new AtkSocketAccessible(aContent, weakShell, plugId);
+
+      NS_IF_ADDREF(socketAccessible);
+      return socketAccessible;
+    }
+#endif
   }
 #endif
 

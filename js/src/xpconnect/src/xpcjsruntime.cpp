@@ -381,13 +381,13 @@ void XPCJSRuntime::TraceJS(JSTracer* trc, void* data)
 }
 
 static void
-TraceJSObject(PRUint32 aLangID, void *aScriptThing, void *aClosure)
+TraceJSObject(PRUint32 aLangID, void *aScriptThing, const char *name,
+              void *aClosure)
 {
     if(aLangID == nsIProgrammingLanguage::JAVASCRIPT)
     {
         JS_CALL_TRACER(static_cast<JSTracer*>(aClosure), aScriptThing,
-                       js_GetGCThingTraceKind(aScriptThing),
-                       "JSObjectHolder");
+                       js_GetGCThingTraceKind(aScriptThing), name);
     }
 }
 
@@ -461,7 +461,8 @@ struct Closure
 };
 
 static void
-CheckParticipatesInCycleCollection(PRUint32 aLangID, void *aThing, void *aClosure)
+CheckParticipatesInCycleCollection(PRUint32 aLangID, void *aThing,
+                                   const char *name, void *aClosure)
 {
     Closure *closure = static_cast<Closure*>(aClosure);
 
