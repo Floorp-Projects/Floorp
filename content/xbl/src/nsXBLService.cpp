@@ -882,7 +882,7 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
 
   nsXBLPrototypeBinding* protoBinding = docInfo->GetPrototypeBinding(ref);
 
-  NS_ASSERTION(protoBinding, "Unable to locate an XBL binding.");
+  NS_WARN_IF_FALSE(protoBinding, "Unable to locate an XBL binding");
   if (!protoBinding)
     return NS_ERROR_FAILURE;
 
