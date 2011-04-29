@@ -46,7 +46,7 @@
 #include "nsThreadUtils.h"
 #include "nsHashtable.h"
 #include "nsAutoPtr.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "nsISocketTransportService.h"
 
 #include "nsIObserver.h"
@@ -228,11 +228,11 @@ private:
     friend class nsHalfOpenSocket;
 
     //-------------------------------------------------------------------------
-    // NOTE: these members may be accessed from any thread (use mMonitor)
+    // NOTE: these members may be accessed from any thread (use mReentrantMonitor)
     //-------------------------------------------------------------------------
 
     PRInt32                      mRef;
-    mozilla::Monitor             mMonitor;
+    mozilla::ReentrantMonitor    mReentrantMonitor;
     nsCOMPtr<nsIEventTarget>     mSocketThreadTarget;
 
     // connection limits

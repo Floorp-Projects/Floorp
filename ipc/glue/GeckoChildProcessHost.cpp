@@ -74,7 +74,7 @@
 #include "APKOpen.h"
 #endif
 
-using mozilla::MonitorAutoEnter;
+using mozilla::ReentrantMonitorAutoEnter;
 using mozilla::ipc::GeckoChildProcessHost;
 
 #ifdef ANDROID
@@ -95,7 +95,7 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
                                              base::WaitableEventWatcher::Delegate* aDelegate)
   : ChildProcessHost(RENDER_PROCESS), // FIXME/cjones: we should own this enum
     mProcessType(aProcessType),
-    mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
+    mReentrantMonitor("mozilla.ipc.GeckChildProcessHost.mReentrantMonitor"),
     mLaunched(false),
     mChannelInitialized(false),
     mDelegate(aDelegate),
@@ -289,7 +289,7 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
                                      aExtraOpts, arch));
   // NB: this uses a different mechanism than the chromium parent
   // class.
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   PRIntervalTime waitStart = PR_IntervalNow();
   PRIntervalTime current;
 
@@ -327,7 +327,7 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 
   // This may look like the sync launch wait, but we only delay as
   // long as it takes to create the channel.
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   while (!mChannelInitialized) {
     mon.Wait();
   }
@@ -340,7 +340,7 @@ GeckoChildProcessHost::InitializeChannel()
 {
   CreateChannel();
 
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   mChannelInitialized = true;
   mon.Notify();
 }
@@ -644,7 +644,7 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 void
 GeckoChildProcessHost::OnChannelConnected(int32 peer_pid)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   mLaunched = true;
 
   if (!base::OpenPrivilegedProcessHandle(peer_pid, &mChildProcessHandle))

@@ -46,13 +46,10 @@
 #include "nsStringGlue.h"
 #include "nsIXULAppInfo.h"
 
-#include "mozilla/Mutex.h"
 #include "mozilla/PaintTracker.h"
 
-using mozilla::ipc::SyncChannel;
-using mozilla::ipc::RPCChannel;
-using mozilla::MutexAutoUnlock;
-
+using namespace mozilla;
+using namespace mozilla::ipc;
 using namespace mozilla::ipc::windows;
 
 /**

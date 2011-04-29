@@ -43,7 +43,7 @@
 #include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 
 #include "nsXULAppAPI.h"        // for GeckoProcessType
 #include "nsString.h"
@@ -54,7 +54,7 @@ namespace ipc {
 class GeckoChildProcessHost : public ChildProcessHost
 {
 protected:
-  typedef mozilla::Monitor Monitor;
+  typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
 public:
   typedef base::ProcessHandle ProcessHandle;
@@ -106,7 +106,7 @@ public:
 
 protected:
   GeckoProcessType mProcessType;
-  Monitor mMonitor;
+  ReentrantMonitor mReentrantMonitor;
   bool mLaunched;
   bool mChannelInitialized;
   FilePath mProcessPath;

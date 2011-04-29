@@ -40,13 +40,13 @@
 #define nsEventQueue_h__
 
 #include <stdlib.h>
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "nsIRunnable.h"
 
 // A threadsafe FIFO event queue...
 class NS_COM nsEventQueue
 {
-  typedef mozilla::Monitor Monitor;
+  typedef mozilla::ReentrantMonitor ReentrantMonitor;
 
 public:
   nsEventQueue();
@@ -82,8 +82,8 @@ public:
   }
 
   // Expose the event queue's monitor for "power users"
-  Monitor& GetMonitor() {
-    return mMonitor;
+  ReentrantMonitor& GetReentrantMonitor() {
+    return mReentrantMonitor;
   }
 
 private:
@@ -109,7 +109,7 @@ private:
     free(p);
   }
 
-  Monitor mMonitor;
+  ReentrantMonitor mReentrantMonitor;
 
   Page *mHead;
   Page *mTail;

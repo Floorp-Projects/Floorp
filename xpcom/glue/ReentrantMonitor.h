@@ -36,8 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef mozilla_Monitor_h
-#define mozilla_Monitor_h
+#ifndef mozilla_ReentrantMonitor_h
+#define mozilla_ReentrantMonitor_h
 
 #include "prmon.h"
 
@@ -46,54 +46,51 @@
 //
 // Provides:
 //
-//  - Monitor, a Java-like monitor
-//  - MonitorAutoEnter, an RAII class for ensuring that Monitors are properly 
-//    entered and exited
+//  - ReentrantMonitor, a Java-like monitor
+//  - ReentrantMonitorAutoEnter, an RAII class for ensuring that
+//    ReentrantMonitors are properly entered and exited
 //
-// Using MonitorAutoEnter is MUCH preferred to making bare calls to 
-// Monitor.Enter and Exit.
+// Using ReentrantMonitorAutoEnter is MUCH preferred to making bare calls to 
+// ReentrantMonitor.Enter and Exit.
 //
 namespace mozilla {
 
 
 /**
- * Monitor
+ * ReentrantMonitor
  * Java-like monitor.
- * When possible, use MonitorAutoEnter to hold this monitor within a
+ * When possible, use ReentrantMonitorAutoEnter to hold this monitor within a
  * scope, instead of calling Enter/Exit directly.
  **/
-class NS_COM_GLUE Monitor : BlockingResourceBase
+class NS_COM_GLUE ReentrantMonitor : BlockingResourceBase
 {
 public:
     /**
-     * Monitor
+     * ReentrantMonitor
      * @param aName A name which can reference this monitor
-     * @returns If failure, nsnull
-     *          If success, a valid Monitor*, which must be destroyed
-     *          by Monitor::DestroyMonitor()
-     **/
-    Monitor(const char* aName) :
-        BlockingResourceBase(aName, eMonitor)
+     */
+    ReentrantMonitor(const char* aName) :
+        BlockingResourceBase(aName, eReentrantMonitor)
 #ifdef DEBUG
         , mEntryCount(0)
 #endif
     {
-        MOZ_COUNT_CTOR(Monitor);
-        mMonitor = PR_NewMonitor();
-        if (!mMonitor)
-            NS_RUNTIMEABORT("Can't allocate mozilla::Monitor");
+        MOZ_COUNT_CTOR(ReentrantMonitor);
+        mReentrantMonitor = PR_NewMonitor();
+        if (!mReentrantMonitor)
+            NS_RUNTIMEABORT("Can't allocate mozilla::ReentrantMonitor");
     }
 
     /**
-     * ~Monitor
+     * ~ReentrantMonitor
      **/
-    ~Monitor()
+    ~ReentrantMonitor()
     {
-        NS_ASSERTION(mMonitor,
-                     "improperly constructed Monitor or double free");
-        PR_DestroyMonitor(mMonitor);
-        mMonitor = 0;
-        MOZ_COUNT_DTOR(Monitor);
+        NS_ASSERTION(mReentrantMonitor,
+                     "improperly constructed ReentrantMonitor or double free");
+        PR_DestroyMonitor(mReentrantMonitor);
+        mReentrantMonitor = 0;
+        MOZ_COUNT_DTOR(ReentrantMonitor);
     }
 
 #ifndef DEBUG
@@ -103,7 +100,7 @@ public:
      **/
     void Enter()
     {
-        PR_EnterMonitor(mMonitor);
+        PR_EnterMonitor(mReentrantMonitor);
     }
 
     /** 
@@ -112,7 +109,7 @@ public:
      **/
     void Exit()
     {
-        PR_ExitMonitor(mMonitor);
+        PR_ExitMonitor(mReentrantMonitor);
     }
 
     /**
@@ -121,7 +118,7 @@ public:
      **/      
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
     {
-        return PR_Wait(mMonitor, interval) == PR_SUCCESS ?
+        return PR_Wait(mReentrantMonitor, interval) == PR_SUCCESS ?
             NS_OK : NS_ERROR_FAILURE;
     }
 
@@ -138,7 +135,7 @@ public:
      **/      
     nsresult Notify()
     {
-        return PR_Notify(mMonitor) == PR_SUCCESS
+        return PR_Notify(mReentrantMonitor) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
     }
 
@@ -148,7 +145,7 @@ public:
      **/      
     nsresult NotifyAll()
     {
-        return PR_NotifyAll(mMonitor) == PR_SUCCESS
+        return PR_NotifyAll(mReentrantMonitor) == PR_SUCCESS
             ? NS_OK : NS_ERROR_FAILURE;
     }
 
@@ -159,7 +156,7 @@ public:
      **/
     void AssertCurrentThreadIn()
     {
-        PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
+        PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mReentrantMonitor);
     }
 
     /**
@@ -182,11 +179,11 @@ public:
 #endif  // ifdef DEBUG
 
 private:
-    Monitor();
-    Monitor(const Monitor&);
-    Monitor& operator =(const Monitor&);
+    ReentrantMonitor();
+    ReentrantMonitor(const ReentrantMonitor&);
+    ReentrantMonitor& operator =(const ReentrantMonitor&);
 
-    PRMonitor* mMonitor;
+    PRMonitor* mReentrantMonitor;
 #ifdef DEBUG
     PRInt32 mEntryCount;
 #endif
@@ -194,13 +191,13 @@ private:
 
 
 /**
- * MonitorAutoEnter
- * Enters the Monitor when it enters scope, and exits it when it leaves 
- * scope.
+ * ReentrantMonitorAutoEnter
+ * Enters the ReentrantMonitor when it enters scope, and exits it when
+ * it leaves scope.
  *
- * MUCH PREFERRED to bare calls to Monitor.Enter and Exit.
+ * MUCH PREFERRED to bare calls to ReentrantMonitor.Enter and Exit.
  */ 
-class NS_COM_GLUE NS_STACK_CLASS MonitorAutoEnter
+class NS_COM_GLUE NS_STACK_CLASS ReentrantMonitorAutoEnter
 {
 public:
     /**
@@ -208,48 +205,47 @@ public:
      * The constructor aquires the given lock.  The destructor
      * releases the lock.
      * 
-     * @param aMonitor A valid mozilla::Monitor* returned by 
-     *                 mozilla::Monitor::NewMonitor. 
+     * @param aReentrantMonitor A valid mozilla::ReentrantMonitor*. 
      **/
-    MonitorAutoEnter(mozilla::Monitor &aMonitor) :
-        mMonitor(&aMonitor)
+    ReentrantMonitorAutoEnter(mozilla::ReentrantMonitor &aReentrantMonitor) :
+        mReentrantMonitor(&aReentrantMonitor)
     {
-        NS_ASSERTION(mMonitor, "null monitor");
-        mMonitor->Enter();
+        NS_ASSERTION(mReentrantMonitor, "null monitor");
+        mReentrantMonitor->Enter();
     }
     
-    ~MonitorAutoEnter(void)
+    ~ReentrantMonitorAutoEnter(void)
     {
-        mMonitor->Exit();
+        mReentrantMonitor->Exit();
     }
  
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
     {
-       return mMonitor->Wait(interval);
+       return mReentrantMonitor->Wait(interval);
     }
 
     nsresult Notify()
     {
-        return mMonitor->Notify();
+        return mReentrantMonitor->Notify();
     }
 
     nsresult NotifyAll()
     {
-        return mMonitor->NotifyAll();
+        return mReentrantMonitor->NotifyAll();
     }
 
 private:
-    MonitorAutoEnter();
-    MonitorAutoEnter(const MonitorAutoEnter&);
-    MonitorAutoEnter& operator =(const MonitorAutoEnter&);
+    ReentrantMonitorAutoEnter();
+    ReentrantMonitorAutoEnter(const ReentrantMonitorAutoEnter&);
+    ReentrantMonitorAutoEnter& operator =(const ReentrantMonitorAutoEnter&);
     static void* operator new(size_t) CPP_THROW_NEW;
     static void operator delete(void*);
 
-    mozilla::Monitor* mMonitor;
+    mozilla::ReentrantMonitor* mReentrantMonitor;
 };
 
 
 } // namespace mozilla
 
 
-#endif // ifndef mozilla_Monitor_h
+#endif // ifndef mozilla_ReentrantMonitor_h
