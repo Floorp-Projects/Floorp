@@ -103,6 +103,10 @@ fails-if(d2d) == img-novb-width-slice-1.html    img-novb-width-all-1-ref.html # 
 == svg-image-recursive-2a.svg  svg-image-recursive-2-ref.svg
 == svg-image-recursive-2b.html svg-image-recursive-2-ref.svg
 
+# test that scripting feature is not supported in images or referenced documents
+== svg-image-script-1.svg lime100x100.svg
+== svg-image-script-2.svg lime100x100.svg
+
 # tests for external resources vs. data URIs in SVG as an image
 == svg-image-datauri-1.html            lime100x100.svg
 HTTP == svg-image-datauri-1.html       lime100x100.svg
