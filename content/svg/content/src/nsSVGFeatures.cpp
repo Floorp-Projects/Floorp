@@ -54,31 +54,11 @@
 #include "nsCharSeparatedTokenizer.h"
 #include "nsStyleUtil.h"
 #include "nsSVGUtils.h"
-#include "nsServiceManagerUtils.h"
-#include "nsIPrefService.h"
 
 /*static*/ PRBool
-nsSVGFeatures::HaveFeature(nsISupports* aObject, const nsAString& aFeature)
+nsSVGFeatures::HaveFeature(const nsAString& aFeature)
 {
-  if (aFeature.EqualsLiteral("http://www.w3.org/TR/SVG11/feature#Script")) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aObject));
-    if (content) {
-      nsIDocument *doc = content->GetCurrentDoc();
-      if (doc && doc->IsResourceDoc()) {
-        // no scripting in SVG images or external resource documents
-        return PR_FALSE;
-      }
-    }
-    nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    if (prefs) {
-      PRBool js;
-      if (NS_SUCCEEDED(prefs->GetBoolPref("javascript.enabled", &js))) {
-        return js;
-      }
-    }
-    return PR_FALSE;
-  }
-#define SVG_SUPPORTED_FEATURE(str) if (aFeature.EqualsLiteral(str)) return PR_TRUE;
+#define SVG_SUPPORTED_FEATURE(str) if (aFeature.Equals(NS_LITERAL_STRING(str).get())) return PR_TRUE;
 #define SVG_UNSUPPORTED_FEATURE(str)
 #include "nsSVGFeaturesList.h"
 #undef SVG_SUPPORTED_FEATURE
@@ -87,11 +67,11 @@ nsSVGFeatures::HaveFeature(nsISupports* aObject, const nsAString& aFeature)
 }
 
 /*static*/ PRBool
-nsSVGFeatures::HaveFeatures(nsISupports* aObject, const nsSubstring& aFeatures)
+nsSVGFeatures::HaveFeatures(const nsSubstring& aFeatures)
 {
   nsWhitespaceTokenizer tokenizer(aFeatures);
   while (tokenizer.hasMoreTokens()) {
-    if (!HaveFeature(aObject, tokenizer.nextToken())) {
+    if (!HaveFeature(tokenizer.nextToken())) {
       return PR_FALSE;
     }
   }
@@ -101,7 +81,7 @@ nsSVGFeatures::HaveFeatures(nsISupports* aObject, const nsSubstring& aFeatures)
 /*static*/ PRBool
 nsSVGFeatures::HaveExtension(const nsAString& aExtension)
 {
-#define SVG_SUPPORTED_EXTENSION(str) if (aExtension.EqualsLiteral(str)) return PR_TRUE;
+#define SVG_SUPPORTED_EXTENSION(str) if (aExtension.Equals(NS_LITERAL_STRING(str).get())) return PR_TRUE;
   SVG_SUPPORTED_EXTENSION("http://www.w3.org/1999/xhtml")
 #ifdef MOZ_MATHML
   SVG_SUPPORTED_EXTENSION("http://www.w3.org/1998/Math/MathML")
@@ -206,7 +186,7 @@ nsSVGFeatures::PassesConditionalProcessingTests(nsIContent *aContent,
   // Required Features
   nsAutoString value;
   if (aContent->GetAttr(kNameSpaceID_None, nsGkAtoms::requiredFeatures, value)) {
-    if (value.IsEmpty() || !HaveFeatures(aContent, value)) {
+    if (value.IsEmpty() || !HaveFeatures(value)) {
       return PR_FALSE;
     }
   }
