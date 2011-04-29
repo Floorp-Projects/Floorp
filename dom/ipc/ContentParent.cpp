@@ -1104,12 +1104,12 @@ ContentParent::RecvScriptError(const nsString& aMessage,
 NS_IMETHODIMP
 ContentParent::OnAccelerationChange(nsIAcceleration *aAcceleration)
 {
-    double x, y, z;
-    aAcceleration->GetX(&x);
-    aAcceleration->GetY(&y);
-    aAcceleration->GetZ(&z);
+    double alpha, beta, gamma;
+    aAcceleration->GetAlpha(&alpha);
+    aAcceleration->GetBeta(&beta);
+    aAcceleration->GetGamma(&gamma);
 
-    unused << SendAccelerationChanged(x, y, z);
+    unused << SendAccelerationChanged(alpha, beta, gamma);
     return NS_OK;
 }
 
