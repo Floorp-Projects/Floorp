@@ -561,7 +561,21 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
         nsHttpConnection *conn = nsnull;
         for (i=0; i<count; ++i) {
             trans = ent->mPendingQ[i];
-            GetConnection(ent, trans, &conn);
+
+            // When this transaction has already established a half-open
+            // connection, we want to prevent any duplicate half-open
+            // connections from being established and bound to this
+            // transaction. Allow only use of an idle persistent connection
+            // (if found) for transactions referred by a half-open connection.
+            PRBool alreadyHalfOpen = PR_FALSE;
+            for (PRInt32 j = 0; j < ((PRInt32) ent->mHalfOpens.Length()); j++) {
+                if (ent->mHalfOpens[j]->Transaction() == trans) {
+                    alreadyHalfOpen = PR_TRUE;
+                    break;
+                }
+            }
+
+            GetConnection(ent, trans, alreadyHalfOpen, &conn);
             if (conn)
                 break;
         }
@@ -647,6 +661,7 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
 void
 nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
                                    nsHttpTransaction *trans,
+                                   PRBool onlyReusedConnection,
                                    nsHttpConnection **result)
 {
     LOG(("nsHttpConnectionMgr::GetConnection [ci=%s caps=%x]\n",
@@ -687,6 +702,12 @@ nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
     }
 
     if (!conn) {
+
+        // If the onlyReusedConnection parameter is TRUE, then GetConnection()
+        // does not create new transports under any circumstances.
+        if (onlyReusedConnection)
+            return;
+        
         // Check if we need to purge an idle connection. Note that we may have
         // removed one above; if so, this will be a no-op. We do this before
         // checking the active connection limit to catch the case where we do
@@ -891,7 +912,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         trans->SetConnection(nsnull);
     }
     else
-        GetConnection(ent, trans, &conn);
+        GetConnection(ent, trans, PR_FALSE, &conn);
 
     nsresult rv;
     if (!conn) {
