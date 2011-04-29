@@ -109,7 +109,6 @@ static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
-using mozilla::MonitorAutoEnter;
 using mozilla::unused; // heh
 using base::KillProcess;
 
@@ -330,8 +329,7 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
 }
 
 ContentParent::ContentParent()
-    : mMonitor("ContentParent::mMonitor")
-    , mGeolocationWatchID(-1)
+    : mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)

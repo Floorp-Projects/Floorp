@@ -47,7 +47,6 @@
 
 #include "nsIObserver.h"
 #include "nsIThreadInternal.h"
-#include "mozilla/Monitor.h"
 #include "nsNetUtil.h"
 #include "nsIPrefService.h"
 #include "nsIPermissionManager.h"
@@ -206,8 +205,6 @@ private:
                                  const PRUint32& aColNumber,
                                  const PRUint32& aFlags,
                                  const nsCString& aCategory);
-
-    mozilla::Monitor mMonitor;
 
     GeckoChildProcessHost* mSubprocess;
 
