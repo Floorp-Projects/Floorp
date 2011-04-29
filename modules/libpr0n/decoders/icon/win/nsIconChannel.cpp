@@ -70,6 +70,7 @@
 #include <windows.h>
 #include <shellapi.h>
 #include <shlobj.h>
+#include <objbase.h>
 #include <wchar.h>
 
 struct ICONFILEHEADER {
@@ -282,14 +283,9 @@ static DWORD GetSpecialFolderIcon(nsIFile* aFile, int aFolder, SHFILEINFOW* aSFI
       aInfoFlags |= (SHGFI_PIDL | SHGFI_SYSICONINDEX);
       shellResult = ::SHGetFileInfoW((LPCWSTR)(LPCITEMIDLIST)idList, 0, aSFI,
                                      sizeof(*aSFI), aInfoFlags);
-      IMalloc* pMalloc;
-      hr = ::SHGetMalloc(&pMalloc);
-      if (SUCCEEDED(hr)) {
-        pMalloc->Free(idList);
-        pMalloc->Release();
-      }
     }
   }
+  CoTaskMemFree(idList);
   return shellResult;
 }
 
