@@ -364,6 +364,11 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   int result;
   nsCocoaUtils::PrepareForNativeAppModalDialog();
   if (nsToolkit::OnSnowLeopardOrLater()) {
+    // [NSURL initWithString:] (below) throws an exception if URLString is nil.
+    if (!theDir) {
+      theDir = @"";
+    }
+
     NSPopUpButtonObserver* observer = [[NSPopUpButtonObserver alloc] init];
 
     NSView* accessoryView = GetAccessoryView();
