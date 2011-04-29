@@ -36,7 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsPSMBackgroundThread.h"
-#include "nsThreadUtils.h"
 
 using namespace mozilla;
 
@@ -50,7 +49,7 @@ nsPSMBackgroundThread::nsPSMBackgroundThread()
 : mThreadHandle(nsnull),
   mMutex("nsPSMBackgroundThread.mMutex"),
   mCond(mMutex, "nsPSMBackgroundThread.mCond"),
-  mExitState(ePSMThreadRunning)
+  mExitRequested(PR_FALSE)
 {
 }
 
@@ -71,13 +70,6 @@ nsPSMBackgroundThread::~nsPSMBackgroundThread()
 {
 }
 
-PRUint32 nsPSMBackgroundThread::GetExitStateThreadSafe()
-{
-  MutexAutoLock threadLock(mMutex);
-
-  return mExitState;
-}
-
 void nsPSMBackgroundThread::requestExit()
 {
   if (!mThreadHandle)
@@ -86,19 +78,11 @@ void nsPSMBackgroundThread::requestExit()
   {
     MutexAutoLock threadLock(mMutex);
 
-    if (mExitState != ePSMThreadRunning)
+    if (mExitRequested)
       return;
 
-    mExitState = ePSMThreadStopRequested;
+    mExitRequested = PR_TRUE;
     mCond.NotifyAll();
-  }
-
-  // We cannot rely on posting/processing events at this point, because the
-  // event loop has already terminated by the time we reach here.
-  while (GetExitStateThreadSafe() < ePSMThreadStopped) {
-    NS_ProcessNextEvent(nsnull, PR_FALSE);
-    if (GetExitStateThreadSafe() < ePSMThreadStopped)
-      PR_Sleep(PR_SecondsToInterval(5));
   }
 
   PR_JoinThread(mThreadHandle);

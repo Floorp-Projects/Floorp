@@ -133,14 +133,13 @@ void nsCertVerificationThread::Run(void)
     {
       MutexAutoLock threadLock(verification_thread_singleton->mMutex);
       
-      while (mExitState == ePSMThreadRunning &&
-             (0 == verification_thread_singleton->mJobQ.GetSize())) {
+      while (!mExitRequested && (0 == verification_thread_singleton->mJobQ.GetSize())) {
         // no work to do ? let's wait a moment
 
         mCond.Wait();
       }
       
-      if (mExitState != ePSMThreadRunning)
+      if (mExitRequested)
         break;
       
       job = static_cast<nsBaseVerificationJob*>(mJobQ.PopFront());
@@ -161,7 +160,6 @@ void nsCertVerificationThread::Run(void)
         static_cast<nsCertVerificationJob*>(mJobQ.PopFront());
       delete job;
     }
-    verification_thread_singleton->mExitState = ePSMThreadStopped;
   }
 }
 

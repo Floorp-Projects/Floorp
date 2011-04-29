@@ -3687,11 +3687,9 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_MAY_NEED_SCROLLFRAME);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_IS_POPUP);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_SKIP_ABSPOS_PUSH);
-  CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_FORCE_VIEW);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR,
                      FCDATA_DISALLOW_GENERATED_CONTENT);
   CHECK_ONLY_ONE_BIT(FCDATA_FUNC_IS_FULL_CTOR, FCDATA_ALLOW_BLOCK_STYLES);
-  CHECK_ONLY_ONE_BIT(FCDATA_MAY_NEED_SCROLLFRAME, FCDATA_FORCE_VIEW);
 #undef CHECK_ONLY_ONE_BIT
   NS_ASSERTION(!(bits & FCDATA_FORCED_NON_SCROLLABLE_BLOCK) ||
                ((bits & FCDATA_FUNC_IS_FULL_CTOR) &&
@@ -3755,8 +3753,7 @@ nsCSSFrameConstructor::ConstructFrameFromItemInternal(FrameConstructionItem& aIt
                                newFrame);
       NS_ASSERTION(NS_SUCCEEDED(rv), "InitAndRestoreFrame failed");
       // See whether we need to create a view
-      nsContainerFrame::CreateViewForFrame(newFrame,
-                                           (bits & FCDATA_FORCE_VIEW) != 0);
+      nsContainerFrame::CreateViewForFrame(newFrame, PR_FALSE);
       frameToAddToList = newFrame;
     }
 
@@ -4797,8 +4794,7 @@ nsCSSFrameConstructor::FindSVGData(Element* aElement,
     // and do the PassesConditionalProcessingTests call in
     // nsSVGOuterSVGFrame::Init.
     static const FrameConstructionData sOuterSVGData =
-      FCDATA_DECL(FCDATA_FORCE_VIEW | FCDATA_SKIP_ABSPOS_PUSH |
-                  FCDATA_DISALLOW_GENERATED_CONTENT,
+      FCDATA_DECL(FCDATA_SKIP_ABSPOS_PUSH | FCDATA_DISALLOW_GENERATED_CONTENT,
                   NS_NewSVGOuterSVGFrame);
     return &sOuterSVGData;
   }
@@ -4943,10 +4939,6 @@ nsCSSFrameConstructor::ConstructSVGForeignObjectFrame(nsFrameConstructorState& a
                       newFrame, newFrame, innerPseudoStyle,
                       &blockFrame, childItems, PR_TRUE,
                       aItem.mPendingBinding);
-
-  // Give the blockFrame a view so that GetOffsetTo works for descendants
-  // of blockFrame with views...
-  nsHTMLContainerFrame::CreateViewForFrame(blockFrame, PR_TRUE);
 
   newFrame->SetInitialChildList(nsnull, childItems);
 

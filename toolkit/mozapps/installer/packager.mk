@@ -47,7 +47,7 @@ ifndef MOZ_PKG_FORMAT
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 MOZ_PKG_FORMAT  = DMG
 else
-ifeq (,$(filter-out OS2 WINNT WINCE, $(OS_ARCH)))
+ifeq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
 MOZ_PKG_FORMAT  = ZIP
 else
 ifeq (,$(filter-out SunOS, $(OS_ARCH)))
@@ -67,7 +67,7 @@ endif
 endif
 endif # MOZ_PKG_FORMAT
 
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 INSTALLER_DIR   = windows
 endif
 
@@ -83,21 +83,7 @@ SDK_SUFFIX    = $(PKG_SUFFIX)
 SDK           = $(SDK_PATH)$(PKG_BASENAME).sdk$(SDK_SUFFIX)
 
 MAKE_PACKAGE	= $(error What is a $(MOZ_PKG_FORMAT) package format?);
-MAKE_CAB	= $(error Don't know how to make a CAB!);
 _ABS_DIST = $(call core_abspath,$(DIST))
-
-ifdef WINCE
-ifndef WINCE_WINDOWS_MOBILE
-CABARGS += -s
-endif
-ifdef MOZ_FASTSTART
-CABARGS += -faststart
-endif
-VSINSTALLDIR ?= $(error VSINSTALLDIR not set, must be set to the Visual Studio install directory)
-MAKE_CAB	= $(PYTHON) $(MOZILLA_DIR)/build/package/wince/make_wince_cab.py \
-	$(CABARGS) "$(VSINSTALLDIR)/SmartDevices/SDK/SDKTools/cabwiz.exe" \
-	"$(MOZ_PKG_DIR)" "$(MOZ_APP_DISPLAYNAME)" "$(PKG_PATH)$(PKG_BASENAME).cab"
-endif
 
 CREATE_FINAL_TAR = $(TAR) -c --owner=0 --group=0 --numeric-owner \
   --mode="go-w" -f
@@ -126,11 +112,6 @@ PKG_SUFFIX	= .zip
 INNER_MAKE_PACKAGE	= $(ZIP) -r9D $(PACKAGE) $(MOZ_PKG_DIR)
 INNER_UNMAKE_PACKAGE	= $(UNZIP) $(UNPACKAGE)
 MAKE_SDK = $(ZIP) -r9D $(SDK) $(MOZ_APP_NAME)-sdk
-endif
-ifeq ($(MOZ_PKG_FORMAT),CAB)
-PKG_SUFFIX	= .cab
-INNER_MAKE_PACKAGE	= $(MAKE_CAB)
-INNER_UNMAKE_PACKAGE	= $(error Unpacking CAB files is not supported)
 endif
 ifeq ($(MOZ_PKG_FORMAT),SFX7Z)
 PKG_SUFFIX	= .exe
@@ -535,7 +516,7 @@ ifeq ($(OS_ARCH),OS2)
 STRIP		= $(MOZILLA_DIR)/toolkit/mozapps/installer/os2/strip.cmd
 endif
 
-ifneq (,$(filter WINNT WINCE OS2,$(OS_ARCH)))
+ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
 PKGCP_OS = dos
 else
 PKGCP_OS = unix
@@ -698,7 +679,7 @@ make-sourcestamp-file::
 # dist/sdk/lib -> prefix/lib/appname-devel-version/lib
 # prefix/lib/appname-devel-version/* symlinks to the above directories
 install:: stage-package
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 	$(error "make install" is not supported on this platform. Use "make package" instead.)
 endif
 ifeq (bundle,$(MOZ_FS_LAYOUT))
@@ -761,9 +742,6 @@ make-sdk:
 
 ifeq ($(OS_TARGET), WINNT)
 INSTALLER_PACKAGE = $(DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
-endif
-ifeq ($(OS_TARGET), WINCE)
-INSTALLER_PACKAGE = $(DIST)/$(PKG_PATH)$(PKG_BASENAME).cab
 endif
 
 # These are necessary because some of our packages/installers contain spaces

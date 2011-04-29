@@ -43,12 +43,6 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/Mutex.h"
 
-enum {
-  ePSMThreadRunning = 0,
-  ePSMThreadStopRequested = 1,
-  ePSMThreadStopped = 2
-};
-
 class nsPSMBackgroundThread
 {
 protected:
@@ -59,7 +53,7 @@ protected:
   PRThread *mThreadHandle;
 
   // Shared mutex used for condition variables,
-  // and to protect access to mExitState.
+  // and to protect access to mExitRequested.
   // Derived classes may use it to protect additional
   // resources.
   mozilla::Mutex mMutex;
@@ -68,7 +62,7 @@ protected:
   mozilla::CondVar mCond;
 
   // Has termination of the SSL thread been requested?
-  PRUint32 mExitState;
+  PRBool mExitRequested;
 
 public:
   nsPSMBackgroundThread();
@@ -76,9 +70,6 @@ public:
 
   nsresult startThread();
   void requestExit();
-
-private:
-  PRUint32 GetExitStateThreadSafe();
 };
 
 

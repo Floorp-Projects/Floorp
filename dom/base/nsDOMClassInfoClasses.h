@@ -513,7 +513,7 @@ DOMCI_CLASS(IDBDatabaseException)
 
 DOMCI_CLASS(EventException)
 
-DOMCI_CLASS(TouchPoint)
+DOMCI_CLASS(Touch)
 DOMCI_CLASS(TouchList)
 DOMCI_CLASS(TouchEvent)
 

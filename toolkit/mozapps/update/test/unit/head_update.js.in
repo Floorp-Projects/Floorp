@@ -51,12 +51,6 @@ const IS_WIN = true;
 const IS_WIN = false;
 #endif
 
-#ifdef WINCE
-const IS_WINCE = true;
-#else
-const IS_WINCE = false;
-#endif
-
 #ifdef XP_OS2
 const IS_OS2 = true;
 #else
@@ -561,7 +555,7 @@ function setupUpdaterTest(aMarFile) {
         writeFile(testFile, aTestFile.originalContents);
       }
 
-      // Skip these tests on Windows (includes WinCE) and OS/2 since their
+      // Skip these tests on Windows and OS/2 since their
       // implementaions of chmod doesn't really set permissions.
       if (!IS_WIN && !IS_OS2 && aTestFile.originalPerms) {
         testFile.permissions = aTestFile.originalPerms;
@@ -661,10 +655,6 @@ function cleanupUpdaterTest() {
  * update log after a successful update.
  */
 function checkUpdateLogContents(aCompareLogFile) {
-  // Skip this test on Windows CE since it doesn't use relative paths.
-  if (IS_WINCE)
-    return;
-
   let updateLog = do_get_file(TEST_ID + UPDATES_DIR_SUFFIX, true);
   updateLog.append(FILE_UPDATE_LOG);
   // Skip the first two lines since they contain absolute paths.
@@ -677,7 +667,6 @@ function checkUpdateLogContents(aCompareLogFile) {
   // The FindFile results when enumerating the filesystem on Windows is not
   // determistic so the results matching the following need to be ignored.
   updateLogContents = updateLogContents.replace(/.* a\/b\/7\/7text.*\n/g, "");
-
 
   let compareLog = do_get_file(aCompareLogFile);
   let compareLogContents = readFileBytes(compareLog);
@@ -704,7 +693,7 @@ function checkFilesAfterUpdateSuccess() {
     if (aTestFile.compareFile || aTestFile.compareContents) {
       do_check_true(testFile.exists());
 
-      // Skip these tests on Windows (includes WinCE) and OS/2 since their
+      // Skip these tests on Windows and OS/2 since their
       // implementaions of chmod doesn't really set permissions.
       if (!IS_WIN && !IS_OS2 && aTestFile.comparePerms) {
         // Check if the permssions as set in the complete mar file are correct.
@@ -788,7 +777,7 @@ function checkFilesAfterUpdateFailure() {
     if (aTestFile.compareFile || aTestFile.compareContents) {
       do_check_true(testFile.exists());
 
-      // Skip these tests on Windows (includes WinCE) and OS/2 since their
+      // Skip these tests on Windows and OS/2 since their
       // implementaions of chmod doesn't really set permissions.
       if (!IS_WIN && !IS_OS2 && aTestFile.comparePerms) {
         // Check the original permssions are retained on the file.

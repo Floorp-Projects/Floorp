@@ -1502,7 +1502,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(EventException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(TouchPoint, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(Touch, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TouchList, nsDOMTouchListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
@@ -4321,9 +4321,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchPoint, nsIDOMTouchPoint,
+  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(Touch, nsIDOMTouch,
                                         !nsDOMTouchEvent::PrefEnabled())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchPoint)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouch)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchList, nsIDOMTouchList,

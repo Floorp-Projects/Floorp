@@ -961,6 +961,23 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
         return NPERR_NO_ERROR;
     }
 
+#ifdef MOZ_ACCESSIBILITY_ATK
+    case NPPVpluginNativeAccessibleAtkPlugId: {
+        nsCString plugId;
+        NPError rv;
+        if (!CallNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(&plugId, &rv)) {
+            return NPERR_GENERIC_ERROR;
+        }
+
+        if (NPERR_NO_ERROR != rv) {
+            return rv;
+        }
+
+        (*(nsCString*)_retval) = plugId;
+        return NPERR_NO_ERROR;
+    }
+#endif
+
     default:
         PR_LOG(gPluginLog, PR_LOG_WARNING,
                ("In PluginInstanceParent::NPP_GetValue: Unhandled NPPVariable %i (%s)",

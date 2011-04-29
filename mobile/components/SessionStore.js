@@ -378,6 +378,10 @@ SessionStore.prototype = {
     if (aBrowser.__SS_restore)
       return;
 
+    // Ignore a transient "about:blank"
+    if (!aBrowser.canGoBack && aBrowser.currentURI.spec == "about:blank")
+      return;
+
     delete aBrowser.__SS_data;
     this._collectTabData(aBrowser);
 
@@ -417,8 +421,7 @@ SessionStore.prototype = {
       if (delay > 0) {
         this._saveTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
         this._saveTimer.init(this, delay, Ci.nsITimer.TYPE_ONE_SHOT);
-      }
-      else {
+      } else {
         this.saveState();
       }
     }

@@ -69,7 +69,7 @@ class nsLayoutStylesheetCache
 
 private:
   nsLayoutStylesheetCache();
-  ~nsLayoutStylesheetCache();
+  ~nsLayoutStylesheetCache() {}
 
   static void EnsureGlobal();
   void InitFromProfile();

@@ -101,9 +101,7 @@ protected:
 private:
   nsWeakPtr                          mObserver;   //! imgIDecoderObserver
   nsRefPtr<SVGDocumentWrapper>       mSVGDocumentWrapper;
-#ifdef MOZ_ENABLE_LIBXUL
   nsRefPtr<SVGRootRenderingObserver> mRenderingObserver;
-#endif // MOZ_ENABLE_LIBXUL
 
   nsIntRect      mRestrictedRegion;       // If we were created by
                                           // ExtractFrame, this is the region
