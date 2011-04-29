@@ -700,19 +700,18 @@ num_toString(JSContext *cx, uintN argc, Value *vp)
     if (!GetPrimitiveThis(cx, vp, &d))
         return false;
 
-    int32_t base = 10;
+    int32 base = 10;
     if (argc != 0 && !vp[2].isUndefined()) {
-        if (!ValueToECMAInt32(cx, vp[2], &base))
-            return JS_FALSE;
+        jsdouble d2;
+        if (!ToInteger(cx, vp[2], &d2))
+            return false;
 
-        if (base < 2 || base > 36) {
-            ToCStringBuf cbuf;
-            char *numStr = IntToCString(&cbuf, base);   /* convert the base itself to a string */
-            JS_ASSERT(numStr);
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
-                                 numStr);
-            return JS_FALSE;
+        if (d2 < 2 || d2 > 36) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX);
+            return false;
         }
+
+        base = int32(d2);
     }
     JSString *str = js_NumberToStringWithBase(cx, d, base);
     if (!str) {
@@ -874,9 +873,8 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
         precision = 0.0;
         oneArgMode = zeroArgMode;
     } else {
-        if (!ValueToNumber(cx, vp[2], &precision))
-            return JS_FALSE;
-        precision = js_DoubleToInteger(precision);
+        if (!ToInteger(cx, vp[2], &precision))
+            return false;
         if (precision < precisionMin || precision > precisionMax) {
             ToCStringBuf cbuf;
             numStr = IntToCString(&cbuf, jsint(precision));

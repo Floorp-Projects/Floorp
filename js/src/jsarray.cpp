@@ -111,6 +111,8 @@
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
+#include "vm/Stack-inl.h"
+
 using namespace js;
 using namespace js::gc;
 
@@ -366,7 +368,7 @@ GetElement(JSContext *cx, JSObject *obj, jsdouble index, JSBool *hole, Value *vp
         index < obj->getArgsInitialLength() &&
         !(*vp = obj->getArgsElement(uint32(index))).isMagic(JS_ARGS_HOLE)) {
         *hole = JS_FALSE;
-        JSStackFrame *fp = (JSStackFrame *)obj->getPrivate();
+        StackFrame *fp = (StackFrame *)obj->getPrivate();
         if (fp != JS_ARGUMENTS_OBJECT_ON_TRACE) {
             if (fp)
                 *vp = fp->canonicalActualArg(index);
@@ -434,7 +436,7 @@ GetElements(JSContext *cx, JSObject *aobj, jsuint length, Value *vp)
          * fast path for deleted properties (MagicValue(JS_ARGS_HOLE) since
          * this requires general-purpose property lookup.
          */
-        if (JSStackFrame *fp = (JSStackFrame *) aobj->getPrivate()) {
+        if (StackFrame *fp = (StackFrame *) aobj->getPrivate()) {
             JS_ASSERT(fp->numActualArgs() <= JS_ARGS_LENGTH_MAX);
             if (!fp->forEachCanonicalActualArg(CopyNonHoleArgsTo(aobj, vp)))
                 goto found_deleted_prop;
@@ -1062,7 +1064,7 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 
     /* Create a native scope. */
     JSObject *arrayProto = getProto();
-    js::gc::FinalizeKind kind = js::gc::FinalizeKind(arena()->header()->thingKind);
+    js::gc::FinalizeKind kind = js::gc::FinalizeKind(arenaHeader()->getThingKind());
     if (!InitScopeForObject(cx, this, &js_SlowArrayClass, arrayProto, kind))
         return false;
 
@@ -1310,8 +1312,6 @@ static JSBool
 array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
                    JSString *sepstr, Value *rval)
 {
-    JS_CHECK_RECURSION(cx, return false);
-
     static const jschar comma = ',';
     const jschar *sep;
     size_t seplen;
@@ -1393,6 +1393,8 @@ array_toString_sub(JSContext *cx, JSObject *obj, JSBool locale,
 static JSBool
 array_toString(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
@@ -1411,14 +1413,14 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
 
     LeaveTrace(cx);
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, 0, &args))
+    if (!cx->stack.pushInvokeArgs(cx, 0, &args))
         return false;
 
     args.calleev() = join;
     args.thisv().setObject(*obj);
 
     /* Do the call. */
-    if (!Invoke(cx, args, 0))
+    if (!Invoke(cx, args))
         return false;
     *vp = args.rval();
     return true;
@@ -1427,6 +1429,8 @@ array_toString(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 array_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
@@ -1524,6 +1528,8 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
 static JSBool
 array_join(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
     JSString *str;
     if (argc == 0 || vp[2].isUndefined()) {
         str = NULL;
@@ -2394,9 +2400,8 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
 
     /* Convert the first argument into a starting index. */
     jsdouble d;
-    if (!ValueToNumber(cx, *argv, &d))
+    if (!ToInteger(cx, *argv, &d))
         return JS_FALSE;
-    d = js_DoubleToInteger(d);
     if (d < 0) {
         d += length;
         if (d < 0)
@@ -2414,9 +2419,8 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
         count = delta;
         end = length;
     } else {
-        if (!ValueToNumber(cx, *argv, &d))
-            return JS_FALSE;
-        d = js_DoubleToInteger(d);
+        if (!ToInteger(cx, *argv, &d))
+            return false;
         if (d < 0)
             d = 0;
         else if (d > delta)
@@ -2638,9 +2642,8 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
 
     if (argc > 0) {
         jsdouble d;
-        if (!ValueToNumber(cx, argv[0], &d))
-            return JS_FALSE;
-        d = js_DoubleToInteger(d);
+        if (!ToInteger(cx, argv[0], &d))
+            return false;
         if (d < 0) {
             d += length;
             if (d < 0)
@@ -2651,9 +2654,8 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
         begin = (jsuint)d;
 
         if (argc > 1 && !argv[1].isUndefined()) {
-            if (!ValueToNumber(cx, argv[1], &d))
-                return JS_FALSE;
-            d = js_DoubleToInteger(d);
+            if (!ToInteger(cx, argv[1], &d))
+                return false;
             if (d < 0) {
                 d += length;
                 if (d < 0)
@@ -2721,9 +2723,8 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
         jsdouble start;
 
         tosearch = vp[2];
-        if (!ValueToNumber(cx, vp[3], &start))
-            return JS_FALSE;
-        start = js_DoubleToInteger(start);
+        if (!ToInteger(cx, vp[3], &start))
+            return false;
         if (start < 0) {
             start += length;
             if (start < 0) {

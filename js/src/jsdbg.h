@@ -65,7 +65,7 @@ class Debug {
     // property was set.
     bool hasDebuggerHandler;
 
-    typedef HashMap<JSStackFrame *, JSObject *, DefaultHasher<JSStackFrame *>, SystemAllocPolicy>
+    typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, SystemAllocPolicy>
         FrameMap;
     FrameMap frames;
 
@@ -88,7 +88,7 @@ class Debug {
 
     inline bool hasAnyLiveHooks() const;
 
-    bool getScriptFrame(JSContext *cx, JSStackFrame *fp, Value *vp);
+    bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
     static void slowPathLeaveStackFrame(JSContext *cx);
 
     inline bool observesDebuggerStatement() const;
