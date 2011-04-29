@@ -77,11 +77,11 @@
              value="&addDevice.showMeHow.label;"
              href="https://services.mozilla.com/sync/help/add-device"/>
     </description>
-    <spacer flex="1"/>
+    <separator class="groove-thin"/>
     <description>
       &addDevice.dialog.enterCode.label;
     </description>
-    <spacer flex="1"/>
+    <separator class="groove-thin"/>
     <vbox align="center">
       <textbox id="pin1"
                class="pin"
@@ -99,7 +99,7 @@
                onfocus="this.select();" 
               />
     </vbox>
-    <spacer flex="1"/>
+    <separator class="groove-thin"/>
     <vbox id="add-device-throbber" align="center" hidden="true">
       <image/>
     </vbox>
