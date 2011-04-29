@@ -143,7 +143,7 @@ Debug::init()
 }
 
 bool
-Debug::getScriptFrame(JSContext *cx, JSStackFrame *fp, Value *vp)
+Debug::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
 {
     FrameMap::AddPtr p = frames.lookupForAdd(fp);
     if (!p) {
@@ -165,7 +165,7 @@ Debug::getScriptFrame(JSContext *cx, JSStackFrame *fp, Value *vp)
 void
 Debug::slowPathLeaveStackFrame(JSContext *cx)
 {
-    JSStackFrame *fp = cx->regs->fp;
+    StackFrame *fp = cx->fp();
     JSCompartment *compartment = cx->compartment;
     const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
     for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
@@ -267,8 +267,8 @@ CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Va
 JSTrapStatus
 Debug::handleDebuggerStatement(JSContext *cx, Value *vp)
 {
-    // Grab cx->regs->fp before pushing a dummy frame.
-    JSStackFrame *fp = cx->regs->fp;
+    // Grab cx->fp() before pushing a dummy frame.
+    StackFrame *fp = cx->fp();
 
     JS_ASSERT(hasDebuggerHandler);
     AutoCompartment ac(cx, hooksObject);
@@ -364,7 +364,7 @@ Debug::trace(JSTracer *trc, JSObject *obj)
             MarkObject(trc, *dbg->uncaughtExceptionHook, "hooks");
 
         // Mark Debug.Frame objects that are reachable from JS if we look them up
-        // again (because the corresponding JSStackFrame is still on the stack).
+        // again (because the corresponding StackFrame is still on the stack).
         for (FrameMap::Enum e(dbg->frames); !e.empty(); e.popFront()) {
             if (e.front().value->getPrivate())
                 MarkObject(trc, *obj, "live Debug.Frame");
@@ -597,7 +597,7 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
     JSObject *thisobj = CheckThisFrame(cx, vp, fnname, true);                \
     if (!thisobj)                                                            \
         return false;                                                        \
-    JSStackFrame *fp = (JSStackFrame *) thisobj->getPrivate()
+    StackFrame *fp = (StackFrame *) thisobj->getPrivate()
 
 JSBool
 Frame_getType(JSContext *cx, uintN argc, Value *vp)
@@ -628,7 +628,7 @@ Frame_getLive(JSContext *cx, uintN argc, Value *vp)
     JSObject *thisobj = CheckThisFrame(cx, vp, "get live", false);
     if (!thisobj)
         return false;
-    JSStackFrame *fp = (JSStackFrame *) thisobj->getPrivate();
+    StackFrame *fp = (StackFrame *) thisobj->getPrivate();
     vp->setBoolean(!!fp);
     return true;
 }

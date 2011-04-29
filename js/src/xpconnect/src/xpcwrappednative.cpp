@@ -2222,7 +2222,7 @@ class CallMethodHelper
     // to be declared as that would make the ctor and dtors run for each
     // CallMethodHelper instantiation, and they're only needed in a
     // fraction of all the calls that come through here.
-    js::LazilyConstructed<nsAutoString> mAutoString;
+    js::Maybe<nsAutoString> mAutoString;
 
     jsval* const mArgv;
     const PRUint32 mArgc;
