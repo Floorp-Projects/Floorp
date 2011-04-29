@@ -212,6 +212,8 @@ private:
         void     SetupBackupTimer();
         void     Abandon();
         
+        nsHttpTransaction *Transaction() { return mTransaction; }
+
     private:
         nsConnectionEntry              *mEnt;
         nsRefPtr<nsHttpTransaction>    mTransaction;
@@ -258,7 +260,7 @@ private:
     PRBool   ProcessPendingQForEntry(nsConnectionEntry *);
     PRBool   AtActiveConnectionLimit(nsConnectionEntry *, PRUint8 caps);
     void     GetConnection(nsConnectionEntry *, nsHttpTransaction *,
-                           nsHttpConnection **);
+                           PRBool, nsHttpConnection **);
     nsresult DispatchTransaction(nsConnectionEntry *, nsAHttpTransaction *,
                                  PRUint8 caps, nsHttpConnection *);
     PRBool   BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
