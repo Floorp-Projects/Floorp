@@ -844,9 +844,8 @@
                     key="key_tabview"
                     label="&viewTabGroups.label;"
                     command="Browser:ToggleTabView"
-                    observes="tabviewGroupsNumber"
-                    keepme="true"/>
-          <menuseparator id="alltabs-popup-separator" keepme="true"/>
+                    observes="tabviewGroupsNumber"/>
+          <menuseparator id="alltabs-popup-separator"/>
         </menupopup>
       </toolbarbutton>
 
