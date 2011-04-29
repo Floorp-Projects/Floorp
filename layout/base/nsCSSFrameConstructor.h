@@ -1451,6 +1451,8 @@ private:
                             nsIFrame* aScrolledFrame);
 
   // InitializeSelectFrame puts scrollFrame in aFrameItems if aBuildCombobox is false
+  // aBuildCombobox indicates if we are building a combobox that has a dropdown
+  // popup widget or not.
   nsresult
   InitializeSelectFrame(nsFrameConstructorState& aState,
                         nsIFrame*                scrollFrame,
