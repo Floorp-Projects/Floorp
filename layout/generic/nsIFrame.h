@@ -593,6 +593,8 @@ public:
    * @param   aListID the child list identifier.
    * @param   aChildList list of child frames. Each of the frames has its
    *            NS_FRAME_IS_DIRTY bit set.  Must not be empty.
+   *            This method cannot handle the child list returned by
+   *            GetAbsoluteListID().
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified
    *            name,
    *          NS_ERROR_UNEXPECTED if the frame is an atomic frame or if the
@@ -2747,6 +2749,8 @@ protected:
 private:
   nsIFrame*        mNextSibling;  // doubly-linked list of frames
   nsIFrame*        mPrevSibling;  // Do not touch outside SetNextSibling!
+
+  void MarkAbsoluteFramesForDisplayList(nsDisplayListBuilder* aBuilder, const nsRect& aDirtyRect);
 
   static void DestroyPaintedPresShellList(void* propertyValue) {
     nsTArray<nsWeakPtr>* list = static_cast<nsTArray<nsWeakPtr>*>(propertyValue);

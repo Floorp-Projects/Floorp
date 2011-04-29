@@ -427,7 +427,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   bool constrainHeight = (aReflowState.availableHeight != NS_UNCONSTRAINEDSIZE)
     && aConstrainHeight
        // Don't split if told not to (e.g. for fixed frames)
-    && (aDelegatingFrame->GetType() != nsGkAtoms::positionedInlineFrame)
+    && (aDelegatingFrame->GetType() != nsGkAtoms::inlineFrame)
        //XXX we don't handle splitting frames for inline absolute containing blocks yet
     && (aKidFrame->GetRect().y <= aReflowState.availableHeight);
        // Don't split things below the fold. (Ideally we shouldn't *have*
