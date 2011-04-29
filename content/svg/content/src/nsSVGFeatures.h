@@ -50,13 +50,11 @@ public:
   /**
    * Check whether we support the given feature string.
    *
-   * @param aObject the object, which should support the feature,
-   *        for example nsIDOMNode or nsIDOMDOMImplementation
    * @param aFeature one of the feature strings specified at
    *    http://www.w3.org/TR/SVG11/feature.html
    */
   static PRBool
-  HaveFeature(nsISupports* aObject, const nsAString& aFeature);
+  HaveFeature(const nsAString& aFeature);
 
   /**
    * Compare the language name(s) in a systemLanguage attribute to the
@@ -99,13 +97,11 @@ private:
   /**
    * Check whether we support the given list of feature strings.
    *
-   * @param aObject the object, which should support the feature,
-   *        for example nsIDOMNode or nsIDOMDOMImplementation
    * @param aFeatures a whitespace separated list containing one or more of the
    *   feature strings specified at http://www.w3.org/TR/SVG11/feature.html
    */
   static PRBool
-  HaveFeatures(nsISupports* aObject, const nsSubstring& aFeatures);
+  HaveFeatures(const nsSubstring& aFeatures);
 
   /**
    * Check whether we support the given extension string.
