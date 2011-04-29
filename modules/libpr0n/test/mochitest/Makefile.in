@@ -74,11 +74,19 @@ _TEST_FILES =   imgutils.js \
                 test_bug553982.html \
                 test_bug601470.html \
                 test_bug614392.html \
-		$(NULL)
+                $(NULL)
 
 # Tests disabled due to intermittent orange
 # test_bug435296.html disabled - See bug 578591
 # test_bug478398.html disabled - See bug 579139
 
+_CHROME_FILES = imgutils.js \
+                lime-anim-100x100.svg \
+                test_animSVGImage.html \
+                $(NULL)
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)
+
+libs:: $(_CHROME_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
