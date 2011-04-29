@@ -56,26 +56,34 @@ class nsIWebBrowserChrome;
 class nsBarProp : public nsIDOMBarProp
 {
 public:
-  nsBarProp();
+  explicit nsBarProp(nsGlobalWindow *aWindow);
   virtual ~nsBarProp();
 
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD SetWebBrowserChrome(nsIWebBrowserChrome* aBrowserChrome);
 
   NS_IMETHOD GetVisibleByFlag(PRBool *aVisible, PRUint32 aChromeFlag);
   NS_IMETHOD SetVisibleByFlag(PRBool aVisible, PRUint32 aChromeFlag);
 
 protected:
-  // Weak Reference
-  nsIWebBrowserChrome* mBrowserChrome;
+  already_AddRefed<nsIWebBrowserChrome> GetBrowserChrome();
+
+  nsGlobalWindow             *mDOMWindow;
+  nsCOMPtr<nsIWeakReference>  mDOMWindowWeakref;
+  /* Note the odd double reference to the owning global window.
+     Since the corresponding DOM window nominally owns this object,
+     but refcounted ownership of this object can be handed off to
+     owners unknown, we need a weak ref back to the DOM window.
+     However we also need access to properties of the DOM Window
+     that aren't available through interfaces. Then it's either
+     a weak ref and some skanky casting, or this funky double ref.
+     Funky beats skanky, so here we are. */
 };
 
 // Script "menubar" object
 class nsMenubarProp : public nsBarProp
 {
 public:
-  nsMenubarProp();
+  explicit nsMenubarProp(nsGlobalWindow *aWindow);
   virtual ~nsMenubarProp();
 
   NS_DECL_NSIDOMBARPROP
@@ -85,7 +93,7 @@ public:
 class nsToolbarProp : public nsBarProp
 {
 public:
-  nsToolbarProp();
+  explicit nsToolbarProp(nsGlobalWindow *aWindow);
   virtual ~nsToolbarProp();
 
   NS_DECL_NSIDOMBARPROP
@@ -95,7 +103,7 @@ public:
 class nsLocationbarProp : public nsBarProp
 {
 public:
-  nsLocationbarProp();
+  explicit nsLocationbarProp(nsGlobalWindow *aWindow);
   virtual ~nsLocationbarProp();
 
   NS_DECL_NSIDOMBARPROP
@@ -105,7 +113,7 @@ public:
 class nsPersonalbarProp : public nsBarProp
 {
 public:
-  nsPersonalbarProp();
+  explicit nsPersonalbarProp(nsGlobalWindow *aWindow);
   virtual ~nsPersonalbarProp();
 
   NS_DECL_NSIDOMBARPROP
@@ -115,31 +123,20 @@ public:
 class nsStatusbarProp : public nsBarProp
 {
 public:
-  nsStatusbarProp();
+  explicit nsStatusbarProp(nsGlobalWindow *aWindow);
   virtual ~nsStatusbarProp();
 
   NS_DECL_NSIDOMBARPROP
 };
 
 // Script "scrollbars" object
-class nsScrollbarsProp : public nsBarProp {
+class nsScrollbarsProp : public nsBarProp
+{
 public:
-  nsScrollbarsProp(nsGlobalWindow *aWindow);
+  explicit nsScrollbarsProp(nsGlobalWindow *aWindow);
   virtual ~nsScrollbarsProp();
 
   NS_DECL_NSIDOMBARPROP
-
-private:
-  nsGlobalWindow           *mDOMWindow;
-  nsCOMPtr<nsIWeakReference>  mDOMWindowWeakref;
-  /* Note the odd double reference to the owning global window.
-     Since the corresponding DOM window nominally owns this object,
-     yet refcounted ownership of this object can be handed off to
-     owners unknown, we need a weak ref to back to the DOM window.
-     However we also need access to properties of the DOM Window
-     that aren't available through interfaces. Then it's either
-     a weak ref and some skanky casting, or this funky double ref.
-     Funky beats skanky, so here we are. */
 };
 
 #endif /* nsBarProps_h___ */

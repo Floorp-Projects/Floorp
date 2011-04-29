@@ -212,8 +212,8 @@ function get_expected_results(aSortBy, aLocalExpected) {
   var expectedOrder = null, unknownOrder = null;
   switch (aSortBy) {
     case "relevancescore":
-      expectedOrder = [ "remote4" , "addon2", "remote1" , "remote2",
-                        "install2", "addon1", "install1", "remote3" ];
+      expectedOrder = [ "addon2"  , "remote1", "install2", "addon1",
+                        "install1", "remote2", "remote3" , "remote4" ];
       unknownOrder = [];
       break;
     case "name":

@@ -555,8 +555,10 @@ function test_radius_transition(prop) {
 
   // FIXME: Test a square for now, since we haven't updated to the spec
   // for vertical components being relative to the height.
-  div.style.setProperty("width", "200px", "");
-  div.style.setProperty("height", "200px", "");
+  // Note: We use powers of two here so the floating-point math comes out
+  // nicely.
+  div.style.setProperty("width", "256px", "");
+  div.style.setProperty("height", "256px", "");
   div.style.setProperty("border", "none", "");
   div.style.setProperty("padding", "0", "");
 
@@ -570,14 +572,14 @@ function test_radius_transition(prop) {
      "radius-valued property " + prop + ": interpolation of radius");
   check_distance(prop, "3px", "6px", "15px");
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "5%", "");
-  is(cs.getPropertyValue(prop), "10px",
+  div.style.setProperty(prop, "12.5%", "");
+  is(cs.getPropertyValue(prop), "32px",
      "radius-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "25%", "");
-  is(cs.getPropertyValue(prop), "20px",
+  is(cs.getPropertyValue(prop), "40px",
      "radius-valued property " + prop + ": interpolation of radius");
-  check_distance(prop, "5%", "10%", "25%");
+  check_distance(prop, "12.5%", "15.625%", "25%");
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "3px 8px", "");
   is(cs.getPropertyValue(prop), "3px 8px",
@@ -588,24 +590,25 @@ function test_radius_transition(prop) {
      "radius-valued property " + prop + ": interpolation of radius");
   check_distance(prop, "3px 8px", "6px 9px", "15px 12px");
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "5% 15%", "");
-  is(cs.getPropertyValue(prop), "10px 30px",
+  div.style.setProperty(prop, "12.5% 6.25%", "");
+  is(cs.getPropertyValue(prop), "32px 16px",
      "radius-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
   div.style.setProperty(prop, "25%", "");
-  is(cs.getPropertyValue(prop), "20px 35px",
+  is(cs.getPropertyValue(prop), "40px 28px",
      "radius-valued property " + prop + ": interpolation of radius");
-  check_distance(prop, "5% 15%", "10% 17.5%", "25%");
+  check_distance(prop, "12.5% 6.25%", "15.625% 10.9375%", "25%");
   div.style.setProperty("-moz-transition-property", "none", "");
-  div.style.setProperty(prop, "8% 12%", "");
-  is(cs.getPropertyValue(prop), "16px 24px",
+  div.style.setProperty(prop, "6.25% 12.5%", "");
+  is(cs.getPropertyValue(prop), "16px 32px",
      "radius-valued property " + prop + ": computed value before transition");
   div.style.setProperty("-moz-transition-property", prop, "");
-  div.style.setProperty(prop, "40px 20px", "");
-  is(cs.getPropertyValue(prop), "22px 23px",
+  div.style.setProperty(prop, "64px 16px", "");
+  is(cs.getPropertyValue(prop), "28px",
      "radius-valued property " + prop + ": interpolation of radius with mixed units");
-  check_distance(prop, "8% 12%", "-moz-calc(6% + 10px) -moz-calc(5px + 9%)",
-                       "40px 20px");
+  check_distance(prop, "6.25% 12.5%",
+                 "-moz-calc(4.6875% + 16px) -moz-calc(9.375% + 4px)",
+                 "64px 16px");
 
   test_length_percent_calc_transition(prop);
 
@@ -914,9 +917,11 @@ function test_transform_transition(prop) {
       expected_uncomputed: 'translateY(-30%)',
       expected: 'matrix(1, 0, 0, 1, 0px, -15px)' },
     { start: 'none', end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',
-      expected_uncomputed: 'rotate(22.5deg) translate(5%, 5%) rotate(-22.5deg)' },
+      expected_uncomputed: 'rotate(22.5deg) translate(5%, 5%) rotate(-22.5deg)',
+      round_error_ok: true },
     { start: 'none', end: 'rotate(-90deg) translate(20%, 20%) rotate(90deg)',
-      expected_uncomputed: 'rotate(-22.5deg) translate(5%, 5%) rotate(22.5deg)' },
+      expected_uncomputed: 'rotate(-22.5deg) translate(5%, 5%) rotate(22.5deg)',
+      round_error_ok: true },
     // test percent translation using matrix decomposition
     { start: 'rotate(45deg) rotate(-45deg)',
       end: 'rotate(90deg) translate(20%, 20%) rotate(-90deg)',

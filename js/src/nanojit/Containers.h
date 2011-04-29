@@ -88,6 +88,7 @@ namespace nanojit
             int w = bitnum2word(i);
             if (w >= cap)
                 grow(w);
+            NanoAssert(w < cap);
             bits[w] |= bitnum2mask(i);
         }
 

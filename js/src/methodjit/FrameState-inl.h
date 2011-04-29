@@ -137,7 +137,7 @@ FrameState::convertInt32ToDouble(Assembler &masm, FrameEntry *fe, FPRegisterID f
     if (fe->data.inRegister())
         masm.convertInt32ToDouble(fe->data.reg(), fpreg);
     else
-        masm.convertInt32ToDouble(addressOf(fe), fpreg);
+        masm.convertInt32ToDouble(masm.payloadOf(addressOf(fe)), fpreg);
 }
 
 inline bool

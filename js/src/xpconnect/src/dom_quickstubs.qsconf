@@ -204,6 +204,10 @@ members = [
     'nsIDOMNSUIEvent.pageY',
     'nsIDOMNSUIEvent.isChar',
 
+    'nsIDOMTouch.*',
+    'nsIDOMTouchList.*',
+    'nsIDOMTouchEvent.*',
+
     # dom/interfaces/geolocation - None.
 
     # dom/interfaces/html
@@ -503,6 +507,9 @@ irregularFilenames = {
     'nsIWebGLUniformLocation': 'nsIDOMWebGLRenderingContext',
 
     'nsIIndexedDatabaseUsageCallback': 'nsIIndexedDatabaseManager',
+
+    'nsIDOMTouch': 'nsIDOMTouchEvent',
+    'nsIDOMTouchList': 'nsIDOMTouchEvent',
     }
 
 customIncludes = [

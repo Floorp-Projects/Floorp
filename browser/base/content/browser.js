@@ -84,6 +84,8 @@ var gLastValidURLStr = "";
 var gInPrintPreviewMode = false;
 var gDownloadMgr = null;
 var gContextMenu = null; // nsContextMenu instance
+var gDelayedStartupTimeoutId;
+var gStartupRan = false;
 
 #ifndef XP_MACOSX
 var gEditUIVisible = true;
@@ -1332,7 +1334,8 @@ function BrowserStartup() {
 
   retrieveToolbarIconsizesFromTheme();
 
-  setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
+  gDelayedStartupTimeoutId = setTimeout(delayedStartup, 0, isLoadingBlank, mustLoadSidebar);
+  gStartupRan = true;
 }
 
 function HandleAppCommandEvent(evt) {
@@ -1452,6 +1455,8 @@ function prepareForStartup() {
 }
 
 function delayedStartup(isLoadingBlank, mustLoadSidebar) {
+  gDelayedStartupTimeoutId = null;
+
   Services.obs.addObserver(gSessionHistoryObserver, "browser:purge-session-history", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-disabled", false);
   Services.obs.addObserver(gXPInstallObserver, "addon-install-started", false);
@@ -1660,16 +1665,16 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
   Services.obs.notifyObservers(window, "browser-delayed-startup-finished", "");
 }
 
-function BrowserShutdown()
-{
-  if (Win7Features)
-    Win7Features.onCloseWindow();
+function BrowserShutdown() {
+  // In certain scenarios it's possible for unload to be fired before onload,
+  // (e.g. if the window is being closed after browser.js loads but before the
+  // load completes). In that case, there's nothing to do here.
+  if (!gStartupRan)
+    return;
 
-  gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
-  gPrefService.removeObserver(allTabs.prefName, allTabs);
-  ctrlTab.uninit();
+  // First clean up services initialized in BrowserStartup (or those whose
+  // uninit methods don't depend on the services having been initialized).
   allTabs.uninit();
-  TabView.uninit();
 
   CombinedStopReload.uninit();
 
@@ -1677,21 +1682,7 @@ function BrowserShutdown()
 
   FullScreen.cleanup();
 
-  try {
-    FullZoom.destroy();
-  }
-  catch(ex) {
-    Components.utils.reportError(ex);
-  }
-
-  Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
-  Services.obs.removeObserver(gXPInstallObserver, "addon-install-disabled");
-  Services.obs.removeObserver(gXPInstallObserver, "addon-install-started");
-  Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
-  Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
-  Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
   Services.obs.removeObserver(gPluginHandler.pluginCrashed, "plugin-crashed");
-  Services.obs.removeObserver(gFormSubmitObserver, "invalidformsubmit");
 
   try {
     gBrowser.removeProgressListener(window.XULBrowserWindow);
@@ -1701,17 +1692,8 @@ function BrowserShutdown()
 
   PlacesStarButton.uninit();
 
-  try {
-    gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
-  } catch (ex) {
-    Components.utils.reportError(ex);
-  }
-
-  BrowserOffline.uninit();
-  OfflineApps.uninit();
   gPrivateBrowsingUI.uninit();
-  IndexedDBPromptHelper.uninit();
-  AddonManager.removeAddonListener(AddonsMgrListener);
+
   TabsInTitlebar.uninit();
 
   var enumerator = Services.wm.getEnumerator(null);
@@ -1723,6 +1705,47 @@ function BrowserShutdown()
     document.persist("sidebar-title", "value");
   }
 
+  // Now either cancel delayedStartup, or clean up the services initialized from
+  // it.
+  if (gDelayedStartupTimeoutId) {
+    clearTimeout(gDelayedStartupTimeoutId);
+  } else {
+    if (Win7Features)
+      Win7Features.onCloseWindow();
+
+    gPrefService.removeObserver(ctrlTab.prefName, ctrlTab);
+    gPrefService.removeObserver(allTabs.prefName, allTabs);
+    ctrlTab.uninit();
+    TabView.uninit();
+
+    try {
+      FullZoom.destroy();
+    }
+    catch(ex) {
+      Components.utils.reportError(ex);
+    }
+
+    Services.obs.removeObserver(gSessionHistoryObserver, "browser:purge-session-history");
+    Services.obs.removeObserver(gXPInstallObserver, "addon-install-disabled");
+    Services.obs.removeObserver(gXPInstallObserver, "addon-install-started");
+    Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
+    Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
+    Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
+    Services.obs.removeObserver(gFormSubmitObserver, "invalidformsubmit");
+
+    try {
+      gPrefService.removeObserver(gHomeButton.prefDomain, gHomeButton);
+    } catch (ex) {
+      Components.utils.reportError(ex);
+    }
+
+    BrowserOffline.uninit();
+    OfflineApps.uninit();
+    IndexedDBPromptHelper.uninit();
+    AddonManager.removeAddonListener(AddonsMgrListener);
+  }
+
+  // Final window teardown, do this last.
   window.XULBrowserWindow.destroy();
   window.XULBrowserWindow = null;
   window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
@@ -1738,8 +1761,7 @@ function BrowserShutdown()
 // nonBrowserWindowStartup(), nonBrowserWindowDelayedStartup(), and
 // nonBrowserWindowShutdown() are used for non-browser windows in
 // macBrowserOverlay
-function nonBrowserWindowStartup()
-{
+function nonBrowserWindowStartup() {
   // Disable inappropriate commands / submenus
   var disabledItems = ['Browser:SavePage',
                        'Browser:SendLink', 'cmd_pageSetup', 'cmd_print', 'cmd_find', 'cmd_findAgain',
@@ -1749,8 +1771,7 @@ function nonBrowserWindowStartup()
                        'View:PageInfo', 'Tasks:InspectPage', 'Browser:ToggleTabView', ];
   var element;
 
-  for (var id in disabledItems)
-  {
+  for (var id in disabledItems) {
     element = document.getElementById(disabledItems[id]);
     if (element)
       element.setAttribute("disabled", "true");
@@ -1758,11 +1779,9 @@ function nonBrowserWindowStartup()
 
   // If no windows are active (i.e. we're the hidden window), disable the close, minimize
   // and zoom menu commands as well
-  if (window.location.href == "chrome://browser/content/hiddenWindow.xul")
-  {
+  if (window.location.href == "chrome://browser/content/hiddenWindow.xul") {
     var hiddenWindowDisabledItems = ['cmd_close', 'minimizeWindow', 'zoomWindow'];
-    for (var id in hiddenWindowDisabledItems)
-    {
+    for (var id in hiddenWindowDisabledItems) {
       element = document.getElementById(hiddenWindowDisabledItems[id]);
       if (element)
         element.setAttribute("disabled", "true");
@@ -1790,12 +1809,12 @@ function nonBrowserWindowStartup()
     }
   }
 
-
-  setTimeout(nonBrowserWindowDelayedStartup, 0);
+  gDelayedStartupTimeoutId = setTimeout(nonBrowserWindowDelayedStartup, 0);
 }
 
-function nonBrowserWindowDelayedStartup()
-{
+function nonBrowserWindowDelayedStartup() {
+  gDelayedStartupTimeoutId = null;
+
   // initialise the offline listener
   BrowserOffline.init();
 
@@ -1809,10 +1828,18 @@ function nonBrowserWindowDelayedStartup()
   // initialize the sync UI
   gSyncUI.init();
 #endif
+
+  gStartupRan = true;
 }
 
-function nonBrowserWindowShutdown()
-{
+function nonBrowserWindowShutdown() {
+  // If nonBrowserWindowDelayedStartup hasn't run yet, we have no work to do -
+  // just cancel the pending timeout and return;
+  if (gDelayedStartupTimeoutId) {
+    clearTimeout(gDelayedStartupTimeoutId);
+    return;
+  }
+
   BrowserOffline.uninit();
 
   gPrivateBrowsingUI.uninit();
@@ -2246,9 +2273,15 @@ function getShortcutOrURI(aURL, aPostDataRef) {
       } catch (e) {}
     }
 
+    // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
+    // escape() works in those cases, but it doesn't uri-encode +, @, and /.
+    // Therefore we need to manually replace these ASCII characters by their
+    // encodeURIComponent result, to match the behavior of nsEscape() with
+    // url_XPAlphas
     var encodedParam = "";
-    if (charset)
-      encodedParam = escape(convertFromUnicode(charset, param));
+    if (charset && charset != "UTF-8")
+      encodedParam = escape(convertFromUnicode(charset, param)).
+                     replace(/[+@\/]+/g, encodeURIComponent);
     else // Default charset is UTF-8
       encodedParam = encodeURIComponent(param);
 

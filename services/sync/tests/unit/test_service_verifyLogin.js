@@ -4,18 +4,16 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/status.js");
 Cu.import("resource://services-sync/util.js");
 
-function login_handler(request, response) {
-  // btoa('johndoe:ilovejane') == am9obmRvZTppbG92ZWphbmU=
-  let body;
-  if (request.hasHeader("Authorization") &&
-      request.getHeader("Authorization") == "Basic am9obmRvZTppbG92ZWphbmU=") {
-    body = "{}";
-    response.setStatusLine(request.httpVersion, 200, "OK");
-  } else {
-    body = "Unauthorized";
-    response.setStatusLine(request.httpVersion, 401, "Unauthorized");
-  }
-  response.bodyOutputStream.write(body, body.length);
+function login_handling(handler) {
+  return function (request, response) {
+    if (basic_auth_matches(request, "johndoe", "ilovejane")) {
+      handler(request, response);
+    } else {
+      let body = "Unauthorized";
+      response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+      response.bodyOutputStream.write(body, body.length);
+    }
+  };
 }
 
 function service_unavailable(request, response) {
@@ -31,13 +29,17 @@ function run_test() {
 
   // This test expects a clean slate -- no saved passphrase.
   Weave.Svc.Login.removeAllLogins();
+  let johnHelper = track_collections_helper();
+  let johnU      = johnHelper.with_updated_collection;
+  let johnColls  = johnHelper.collections;
   
   do_test_pending();
   let server = httpd_setup({
-    "/api/1.1/johndoe/info/collections": login_handler,
+    "/api/1.1/johndoe/info/collections": login_handling(johnHelper.handler),
     "/api/1.1/janedoe/info/collections": service_unavailable,
-    "/api/1.1/johndoe/storage/meta/global": new ServerWBO().handler(),
-    "/api/1.1/johndoe/storage/crypto/keys": new ServerWBO().handler(),
+      
+    "/api/1.1/johndoe/storage/crypto/keys": johnU("crypto", new ServerWBO("keys").handler()),
+    "/api/1.1/johndoe/storage/meta/global": johnU("meta",   new ServerWBO("global").handler()),
     "/user/1.0/johndoe/node/weave": httpd_handler(200, "OK", "http://localhost:8080/api/")
   });
 

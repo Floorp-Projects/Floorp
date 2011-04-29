@@ -15,21 +15,19 @@ basicauth[Utils.encodeUTF8(JAPANESE)] = "Basic am9obmRvZTrjk7/jl7/jm7/jn78=";
 // modified by change_password().
 let server_password;
 
-function info_collections(request, response) {
-  let body, statusCode, status;
-  let basic = basicauth[server_password];
+function login_handling(handler) {
+  return function (request, response) {
+    let basic = basicauth[server_password];
 
-  if (basic && (request.getHeader("Authorization") == basic)) {
-    body = "{}";
-    statusCode = 200;
-    status = "OK";
-  } else {
-    statusCode = 401;
-    body = status = "Unauthorized";
-  }
-  response.setStatusLine(request.httpVersion, statusCode, status);
-  response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
-  response.bodyOutputStream.write(body, body.length);
+    if (basic && (request.getHeader("Authorization") == basic)) {
+      handler(request, response);
+    } else {
+      let body = "Unauthorized";
+      response.setStatusLine(request.httpVersion, 401, "Unauthorized");
+      response.setHeader("WWW-Authenticate", 'Basic realm="secret"', false);
+      response.bodyOutputStream.write(body, body.length);
+    }
+  };
 }
 
 function change_password(request, response) {
@@ -52,13 +50,16 @@ function change_password(request, response) {
 
 function run_test() {
   initTestLogging("Trace");
+  let collectionsHelper = track_collections_helper();
+  let upd = collectionsHelper.with_updated_collection;
+  let collections = collectionsHelper.collections;
   
   do_test_pending();
   let server = httpd_setup({
-    "/1.1/johndoe/info/collections": info_collections,
-    "/1.1/johndoe/storage/meta/global": new ServerWBO().handler(),
-    "/1.1/johndoe/storage/crypto/keys": new ServerWBO().handler(),
-    "/user/1.0/johndoe/password": change_password
+    "/1.1/johndoe/info/collections":    login_handling(collectionsHelper.handler),
+    "/1.1/johndoe/storage/meta/global": upd("meta",   new ServerWBO("global").handler()),
+    "/1.1/johndoe/storage/crypto/keys": upd("crypto", new ServerWBO("keys").handler()),
+    "/user/1.0/johndoe/password":       change_password
   });
 
   Service.username = "johndoe";

@@ -34,6 +34,12 @@ namespace JSC { namespace Yarr {
 
 #include "RegExpJitTables.h"
 
+#if WTF_CPU_SPARC
+#define BASE_FRAME_SIZE 24
+#else
+#define BASE_FRAME_SIZE 0
+#endif
+
 class CharacterClassConstructor {
 public:
     CharacterClassConstructor(bool isCaseInsensitive = false)
@@ -592,7 +598,7 @@ public:
 
     void setupOffsets()
     {
-        setupDisjunctionOffsets(m_pattern.m_body, 0, 0);
+        setupDisjunctionOffsets(m_pattern.m_body, BASE_FRAME_SIZE, 0);
     }
 
     // This optimization identifies sets of parentheses that we will never need to backtrack.

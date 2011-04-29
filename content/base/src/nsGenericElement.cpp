@@ -2283,18 +2283,15 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
         PL_strcmp(v, "3.0") == 0) {
       *aReturn = PR_TRUE;
     }
-  }
-#ifdef MOZ_SVG
-  else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
-           PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
-           nsSVGFeatures::HaveFeature(aFeature)) {
+  } else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
+             PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
+             nsSVGFeatures::HaveFeature(aObject, aFeature)) {
     if (aVersion.IsEmpty() ||
         PL_strcmp(v, "1.0") == 0 ||
         PL_strcmp(v, "1.1") == 0) {
       *aReturn = PR_TRUE;
     }
   }
-#endif /* MOZ_SVG */
 #ifdef MOZ_SMIL
   else if (NS_SMILEnabled() && PL_strcasecmp(f, "TimeControl") == 0) {
     if (aVersion.IsEmpty() || PL_strcmp(v, "1.0") == 0) {
@@ -3079,7 +3076,7 @@ nsGenericElement::UnbindFromTree(PRBool aDeep, PRBool aNullParent)
 already_AddRefed<nsINodeList>
 nsGenericElement::GetChildren(PRUint32 aFilter)
 {
-  nsRefPtr<nsBaseContentList> list = new nsBaseContentList();
+  nsRefPtr<nsSimpleContentList> list = new nsSimpleContentList(this);
   if (!list) {
     return nsnull;
   }
@@ -5528,7 +5525,7 @@ nsGenericElement::doQuerySelectorAll(nsINode* aRoot,
 {
   NS_PRECONDITION(aReturn, "Null out param?");
 
-  nsBaseContentList* contentList = new nsBaseContentList();
+  nsSimpleContentList* contentList = new nsSimpleContentList(aRoot);
   NS_ENSURE_TRUE(contentList, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(*aReturn = contentList);
   

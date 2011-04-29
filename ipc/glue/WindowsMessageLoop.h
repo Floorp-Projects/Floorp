@@ -44,7 +44,7 @@
 #include <windows.h>
 
 #include "base/basictypes.h"
-#include "nsTraceRefCnt.h"
+#include "nsTraceRefcnt.h"
 
 namespace mozilla {
 namespace ipc {

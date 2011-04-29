@@ -58,11 +58,8 @@ ifndef MOZ_NATIVE_ZLIB
 tier_platform_dirs += modules/zlib
 endif
 
-ifndef WINCE
-tier_platform_dirs += modules/libreg
-endif
-
 tier_platform_dirs += \
+		modules/libreg \
 		modules/libpref \
 		intl \
 		netwerk \
@@ -94,10 +91,6 @@ tier_platform_dirs += other-licenses/bsdiff
 endif
 
 tier_platform_dirs	+= gfx/qcms
-
-ifeq ($(OS_ARCH),WINCE)
-tier_platform_dirs += modules/lib7z
-endif
 
 #
 # "gecko" - core components

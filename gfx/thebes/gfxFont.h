@@ -1702,15 +1702,6 @@ public:
     static gfxTextRun *Create(const gfxTextRunFactory::Parameters *aParams,
         const void *aText, PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
-    // Clone this textrun, according to the given parameters. This textrun's
-    // glyph data is copied, so the text and length must be the same as this
-    // textrun's. If there's a problem, return null. Actual linebreaks will
-    // be set as per aParams; there will be no potential linebreaks.
-    // If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
-    // textrun will copy it.
-    virtual gfxTextRun *Clone(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-                              PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
-
     /**
      * This class records the information associated with a character in the
      * input string. It's optimized for the case where there is one glyph

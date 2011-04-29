@@ -587,6 +587,35 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
 }
 
 bool
+PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(
+                                          nsCString* aPlugId,
+                                          NPError* aResult)
+{
+    AssertPluginThread();
+
+#if MOZ_ACCESSIBILITY_ATK
+
+    char* plugId = NULL;
+    NPError result = NPERR_GENERIC_ERROR;
+    if (mPluginIface->getvalue) {
+        result = mPluginIface->getvalue(GetNPP(),
+                                        NPPVpluginNativeAccessibleAtkPlugId,
+                                        &plugId);
+    }
+
+    *aPlugId = nsCString(plugId);
+    *aResult = result;
+    return true;
+
+#else
+
+    NS_RUNTIMEABORT("shouldn't be called on non-ATK platforms");
+    return false;
+
+#endif
+}
+
+bool
 PluginInstanceChild::AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value,
                                                             NPError* result)
 {

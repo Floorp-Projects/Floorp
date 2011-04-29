@@ -134,3 +134,11 @@ XPCOMUtils.defineLazyServiceGetter(Services, "urlFormatter",
 XPCOMUtils.defineLazyServiceGetter(Services, "eTLD",
                                    "@mozilla.org/network/effective-tld-service;1",
                                    "nsIEffectiveTLDService");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "cookies",
+                                   "@mozilla.org/cookiemanager;1",
+                                   "nsICookieManager2");
+
+XPCOMUtils.defineLazyServiceGetter(Services, "logins",
+                                   "@mozilla.org/login-manager;1",
+                                   "nsILoginManager");

@@ -790,38 +790,38 @@ ShadowImageLayerOGL::~ShadowImageLayerOGL()
 {}
 
 PRBool
-ShadowImageLayerOGL::Init(gfxSharedImageSurface* aFront,
+ShadowImageLayerOGL::Init(const SurfaceDescriptor& aFront,
                           const nsIntSize& aSize)
 {
   mDeadweight = aFront;
-  gfxSize sz = mDeadweight->GetSize();
+  nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aFront);
+  gfxSize sz = surf->GetSize();
   mTexImage = gl()->CreateTextureImage(nsIntSize(sz.width, sz.height),
-                                       mDeadweight->GetContentType(),
+                                       surf->GetContentType(),
                                        LOCAL_GL_CLAMP_TO_EDGE);
   return PR_TRUE;
 }
 
-already_AddRefed<gfxSharedImageSurface>
-ShadowImageLayerOGL::Swap(gfxSharedImageSurface* aNewFront)
+void
+ShadowImageLayerOGL::Swap(const SurfaceDescriptor& aNewFront, SurfaceDescriptor* aNewBack)
 {
   if (!mDestroyed && mTexImage) {
+    nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront);
     // XXX this is always just ridiculously slow
-
-    gfxSize sz = aNewFront->GetSize();
+    gfxSize sz = surf->GetSize();
     nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
-    mTexImage->DirectUpdate(aNewFront, updateRegion);
+    mTexImage->DirectUpdate(surf, updateRegion);
   }
 
-  return aNewFront;
+  *aNewBack = aNewFront;
 }
 
 void
 ShadowImageLayerOGL::DestroyFrontBuffer()
 {
   mTexImage = nsnull;
-  if (mDeadweight) {
-    mOGLManager->DestroySharedSurface(mDeadweight, mAllocator);
-    mDeadweight = nsnull;
+  if (IsSurfaceDescriptorValid(mDeadweight)) {
+    mOGLManager->DestroySharedSurface(&mDeadweight, mAllocator);
   }
 }
 

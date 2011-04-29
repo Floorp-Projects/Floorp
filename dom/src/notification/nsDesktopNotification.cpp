@@ -101,11 +101,7 @@ nsDOMDesktopNotification::nsDOMDesktopNotification(const nsAString & title,
                                                    nsIURI* uri)
   : mTitle(title)
   , mDescription(description)
-#ifdef ANDROID
-  , mIconURL((PRUnichar*)L"drawable://desktop_notification")
-#else
   , mIconURL(iconURL)
-#endif
   , mURI(uri)
   , mAllow(PR_FALSE)
   , mShowHasBeenCalled(PR_FALSE)
