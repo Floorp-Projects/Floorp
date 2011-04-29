@@ -2121,7 +2121,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
     }
     gradientPattern = new gfxPattern(lineStart.x, lineStart.y, innerRadius,
                                      lineStart.x, lineStart.y, outerRadius);
-    if (gradientPattern && radiusX != radiusY) {
+    if (radiusX != radiusY) {
       // Stretch the circles into ellipses vertically by setting a transform
       // in the pattern.
       // Recall that this is the transform from user space to pattern space.
@@ -2134,7 +2134,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
       gradientPattern->SetMatrix(matrix);
     }
   }
-  if (!gradientPattern || gradientPattern->CairoStatus())
+  if (gradientPattern->CairoStatus())
     return;
 
   // Now set normalized color stops in pattern.
