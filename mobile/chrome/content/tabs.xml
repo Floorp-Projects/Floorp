@@ -186,9 +186,9 @@
                     aTab.thumbnail.getContext("2d").drawImage(thumbnailImg, 0, 0);
                 };
                 thumbnailImg.src = oldThumbnail;
-              }
-              else
+              } else {
                 this._tabsUndo.appendChild(aTab);
+              }
 
               aTab.setAttribute("reload", "true");
               this._closedTab = aTab;
