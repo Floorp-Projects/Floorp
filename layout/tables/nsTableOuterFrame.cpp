@@ -215,19 +215,17 @@ nsTableOuterFrame::DestroyFrom(nsIFrame* aDestructRoot)
 nsFrameList
 nsTableOuterFrame::GetChildList(ChildListID aListID) const
 {
-  switch (aListID) {
-    case kPrincipalList:
-      return mFrames;
-    case kCaptionList:
-      return mCaptionFrames;
-    default:
-      return nsFrameList::EmptyList();
+  if (aListID == kCaptionList) {
+    return mCaptionFrames;
   }
+
+  return nsHTMLContainerFrame::GetChildList(aListID);
 }
 
 void
 nsTableOuterFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 {
+  nsHTMLContainerFrame::GetChildLists(aLists);
   mFrames.AppendIfNonempty(aLists, kPrincipalList);
   mCaptionFrames.AppendIfNonempty(aLists, kCaptionList);
 }

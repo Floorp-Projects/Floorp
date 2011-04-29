@@ -334,7 +334,6 @@ protected:
     : nsHTMLContainerFrame(aContext)
     , mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
-    , mAbsoluteContainer(kAbsoluteList)
   {
 #ifdef DEBUG
   InitDebugFlags();
@@ -750,10 +749,6 @@ protected:
 
   friend class nsBlockReflowState;
   friend class nsBlockInFlowLineIterator;
-
-private:
-  nsAbsoluteContainingBlock mAbsoluteContainer;
-
 
 #ifdef DEBUG
 public:
