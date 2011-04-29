@@ -545,9 +545,6 @@ nsresult
 NS_NewDocumentViewer(nsIDocumentViewer** aResult)
 {
   *aResult = new DocumentViewerImpl();
-  if (!*aResult) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(*aResult);
 
@@ -800,7 +797,6 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   if (!mSelectionListener) {
     nsDocViewerSelectionListener *selectionListener =
       new nsDocViewerSelectionListener();
-    NS_ENSURE_TRUE(selectionListener, NS_ERROR_OUT_OF_MEMORY);
 
     selectionListener->Init(this);
 
@@ -825,7 +821,6 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
   // now register ourselves as a focus listener, so that we get called
   // when the focus changes in the window
   nsDocViewerFocusListener *focusListener = new nsDocViewerFocusListener();
-  NS_ENSURE_TRUE(focusListener, NS_ERROR_OUT_OF_MEMORY);
 
   focusListener->Init(this);
 
@@ -2180,9 +2175,6 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
   // this should eventually get expanded to allow for creating
   // different sets for different media
   nsStyleSet *styleSet = new nsStyleSet();
-  if (!styleSet) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   styleSet->BeginUpdate();
   
@@ -3684,7 +3676,6 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
 
   if (!mPrintEngine) {
     mPrintEngine = new nsPrintEngine();
-    NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPrintEngine->Initialize(this, mContainer, mDocument, 
                                   float(mDeviceContext->AppUnitsPerCSSInch()) /
@@ -3751,7 +3742,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
   nsPrintEventDispatcher beforeAndAfterPrint(doc);
   if (!mPrintEngine) {
     mPrintEngine = new nsPrintEngine();
-    NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
     rv = mPrintEngine->Initialize(this, mContainer, doc,
                                   float(mDeviceContext->AppUnitsPerCSSInch()) /

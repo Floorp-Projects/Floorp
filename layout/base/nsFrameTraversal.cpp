@@ -151,8 +151,6 @@ nsresult NS_CreateFrameTraversal(nsIFrameTraversal** aResult)
   *aResult = nsnull;
 
   nsCOMPtr<nsIFrameTraversal> t(new nsFrameTraversal());
-  if (!t)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   *aResult = t;
   NS_ADDREF(*aResult);
@@ -179,10 +177,7 @@ NS_NewFrameTraversal(nsIFrameEnumerator **aEnumerator,
     trav = new nsFrameIterator(aPresContext, aStart, aType,
                                aLockInScrollView, aFollowOOFs);
   }
-  if (!trav)
-    return NS_ERROR_OUT_OF_MEMORY;
-  *aEnumerator = trav;
-  NS_ADDREF(trav);
+  trav.forget(aEnumerator);
   return NS_OK;
 }
 

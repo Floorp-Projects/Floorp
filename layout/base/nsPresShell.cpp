@@ -1244,10 +1244,8 @@ protected:
                                 aEvent->widget,
                                 aEvent->reason,
                                 aEvent->context);
-      if (mEvent) {
-        Init(aEvent);
-        static_cast<nsMouseEvent*>(mEvent)->clickCount = aEvent->clickCount;
-      }
+      Init(aEvent);
+      static_cast<nsMouseEvent*>(mEvent)->clickCount = aEvent->clickCount;
     }
 
     virtual ~nsDelayedMouseEvent()
@@ -1264,14 +1262,12 @@ protected:
       mEvent = new nsKeyEvent(NS_IS_TRUSTED_EVENT(aEvent),
                               aEvent->message,
                               aEvent->widget);
-      if (mEvent) {
-        Init(aEvent);
-        static_cast<nsKeyEvent*>(mEvent)->keyCode = aEvent->keyCode;
-        static_cast<nsKeyEvent*>(mEvent)->charCode = aEvent->charCode;
-        static_cast<nsKeyEvent*>(mEvent)->alternativeCharCodes =
-          aEvent->alternativeCharCodes;
-        static_cast<nsKeyEvent*>(mEvent)->isChar = aEvent->isChar;
-      }
+      Init(aEvent);
+      static_cast<nsKeyEvent*>(mEvent)->keyCode = aEvent->keyCode;
+      static_cast<nsKeyEvent*>(mEvent)->charCode = aEvent->charCode;
+      static_cast<nsKeyEvent*>(mEvent)->alternativeCharCodes =
+        aEvent->alternativeCharCodes;
+      static_cast<nsKeyEvent*>(mEvent)->isChar = aEvent->isChar;
     }
 
     virtual ~nsDelayedKeyEvent()
@@ -1664,8 +1660,6 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
     return NS_ERROR_NULL_POINTER;
 
   *aInstancePtrResult = new PresShell();
-  if (!*aInstancePtrResult)
-    return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(*aInstancePtrResult);
   return NS_OK;
@@ -1801,7 +1795,6 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Create our frame constructor.
   mFrameConstructor = new nsCSSFrameConstructor(mDocument, this);
-  NS_ENSURE_TRUE(mFrameConstructor, NS_ERROR_OUT_OF_MEMORY);
 
   // The document viewer owns both view manager and pres shell.
   mViewManager->SetViewObserver(this);
@@ -5486,8 +5479,6 @@ PresShell::CreateRangePaintInfo(nsIDOMRange* aRange,
     return nsnull;
 
   info = new RangePaintInfo(range, ancestorFrame);
-  if (!info)
-    return nsnull;
 
   nsRect ancestorRect = ancestorFrame->GetVisualOverflowRect();
 
@@ -5589,7 +5580,7 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
   gfxImageSurface* surface =
     new gfxImageSurface(gfxIntSize(pixelArea.width, pixelArea.height),
                         gfxImageSurface::ImageFormatARGB32);
-  if (!surface || surface->CairoStatus()) {
+  if (surface->CairoStatus()) {
     delete surface;
     return nsnull;
   }
@@ -6565,7 +6556,7 @@ PresShell::HandleEvent(nsIView         *aView,
     } else if (!mNoDelayedKeyEvents) {
       nsDelayedEvent* event =
         new nsDelayedKeyEvent(static_cast<nsKeyEvent*>(aEvent));
-      if (event && !mDelayedEvents.AppendElement(event)) {
+      if (!mDelayedEvents.AppendElement(event)) {
         delete event;
       }
     }
@@ -8595,7 +8586,6 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   nsRefPtr<gfxImageSurface> imgSurface =
      new gfxImageSurface(gfxIntSize(width, height),
                          gfxImageSurface::ImageFormatARGB32);
-  NS_ENSURE_TRUE(imgSurface, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<gfxContext> imgContext = new gfxContext(imgSurface);
 
@@ -8606,7 +8596,6 @@ DumpToPNG(nsIPresShell* shell, nsAString& name) {
   NS_ENSURE_TRUE(surface, NS_ERROR_OUT_OF_MEMORY);
 
   nsRefPtr<gfxContext> context = new gfxContext(surface);
-  NS_ENSURE_TRUE(context, NS_ERROR_OUT_OF_MEMORY);
 
   shell->RenderDocument(r, 0, NS_RGB(255, 255, 0), context);
 
@@ -8979,7 +8968,6 @@ void ReflowCountMgr::Add(const char * aName, nsIFrame * aFrame)
     ReflowCounter * counter = (ReflowCounter *)PL_HashTableLookup(mCounts, aName);
     if (counter == nsnull) {
       counter = new ReflowCounter(this);
-      NS_ASSERTION(counter != nsnull, "null ptr");
       char * name = NS_strdup(aName);
       NS_ASSERTION(name != nsnull, "null ptr");
       PL_HashTableAdd(mCounts, name, counter);
@@ -8995,7 +8983,6 @@ void ReflowCountMgr::Add(const char * aName, nsIFrame * aFrame)
     IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter == nsnull) {
       counter = new IndiReflowCounter(this);
-      NS_ASSERTION(counter != nsnull, "null ptr");
       counter->mFrame = aFrame;
       counter->mName.AssignASCII(aName);
       PL_HashTableAdd(mIndiFrameCounts, key, counter);
