@@ -222,13 +222,8 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       const OpCreateCanvasBuffer& ocb = edit.get_OpCreateCanvasBuffer();
       ShadowCanvasLayer* canvas = static_cast<ShadowCanvasLayer*>(
         AsShadowLayer(ocb)->AsLayer());
-      nsRefPtr<gfxSharedImageSurface> front =
-        gfxSharedImageSurface::Open(ocb.initialFront());
-      CanvasLayer::Data data;
-      data.mSurface = front;
-      data.mSize = ocb.size();
 
-      canvas->Initialize(data);
+      canvas->Init(ocb.initialFront(), ocb.size());
 
       break;
     }
@@ -239,9 +234,7 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowImageLayer* image = static_cast<ShadowImageLayer*>(
         AsShadowLayer(ocb)->AsLayer());
 
-      nsRefPtr<gfxSharedImageSurface> surf =
-        gfxSharedImageSurface::Open(ocb.initialFront());
-      image->Init(surf, ocb.size());
+      image->Init(ocb.initialFront(), ocb.size());
 
       break;
     }
@@ -416,17 +409,17 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowCanvasLayer* canvas =
         static_cast<ShadowCanvasLayer*>(shadow->AsLayer());
 
-      nsRefPtr<gfxSharedImageSurface> newFront =
-        gfxSharedImageSurface::Open(op.newFrontBuffer());
-      nsRefPtr<gfxSharedImageSurface> newBack = canvas->Swap(newFront);
+      SurfaceDescriptor newFront = op.newFrontBuffer();
+      SurfaceDescriptor newBack;
+      canvas->Swap(op.newFrontBuffer(), &newBack);
       if (newFront == newBack) {
-        newFront.forget();
+        newFront = SurfaceDescriptor();
       }
 
       canvas->Updated();
 
       replyv.push_back(OpBufferSwap(shadow, NULL,
-                                    newBack->GetShmem()));
+                                    newBack));
 
       break;
     }
@@ -438,15 +431,15 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       ShadowImageLayer* image =
         static_cast<ShadowImageLayer*>(shadow->AsLayer());
 
-      nsRefPtr<gfxSharedImageSurface> newFront =
-        gfxSharedImageSurface::Open(op.newFrontBuffer());
-      nsRefPtr<gfxSharedImageSurface> newBack = image->Swap(newFront);
+      SurfaceDescriptor newFront = op.newFrontBuffer();
+      SurfaceDescriptor newBack;
+      image->Swap(op.newFrontBuffer(), &newBack);
       if (newFront == newBack) {
-        newFront.forget();
+        newFront = SurfaceDescriptor();
       }
 
       replyv.push_back(OpBufferSwap(shadow, NULL,
-                                    newBack->GetShmem()));
+                                    newBack));
 
       break;
     }

@@ -211,6 +211,9 @@ class FilePath {
   // separator.
   FilePath StripTrailingSeparators() const;
 
+  // Calls open on given ifstream instance
+  void OpenInputStream(std::ifstream &stream) const;
+
   // Older Chromium code assumes that paths are always wstrings.
   // This function converts a wstring to a FilePath, and is useful to smooth
   // porting that old code to the FilePath API.

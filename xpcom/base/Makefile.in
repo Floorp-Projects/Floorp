@@ -70,6 +70,7 @@ CPPSRCS		= \
 		nsStackWalk.cpp \
 		nsMemoryReporterManager.cpp \
 		FunctionTimer.cpp \
+		nsTelemetry.cpp \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -140,6 +141,7 @@ XPIDLSRCS	= \
 		nsIUUIDGenerator.idl \
 		nsIMutable.idl \
 		nsIMemoryReporter.idl \
+		nsITelemetry.idl \
 		$(NULL)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -152,6 +154,8 @@ FORCE_STATIC_LIB = 1
 # Force use of PIC
 FORCE_USE_PIC	= 1
 
+include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/ipc/chromium/chromium-config.mk
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_COM

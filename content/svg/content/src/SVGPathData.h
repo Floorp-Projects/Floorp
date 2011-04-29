@@ -261,6 +261,14 @@ public:
     return SVGPathData::CopyFrom(rhs);
   }
 
+  PRBool IsIdentity() const {
+    if (!mElement) {
+      NS_ABORT_IF_FALSE(IsEmpty(), "target element propagation failure");
+      return PR_TRUE;
+    }
+    return PR_FALSE;
+  }
+
   /**
    * Exposed so that SVGPathData baseVals can be copied to
    * SVGPathDataAndOwner objects. Note that callers should also call

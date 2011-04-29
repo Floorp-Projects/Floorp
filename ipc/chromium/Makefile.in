@@ -139,7 +139,6 @@ CPPSRCS += \
   base_paths_win.cc \
   cpu.cc \
   condition_variable_win.cc \
-  debug_on_start.cc \
   debug_util_win.cc \
   event_recorder.cc \
   file_util_win.cc \
@@ -172,6 +171,13 @@ CPPSRCS += \
   $(NULL)
 
 endif # } OS_WIN
+
+ifdef _MSC_VER # {
+
+CPPSRCS += \
+  debug_on_start.cc
+
+endif # }
 
 ifdef OS_POSIX # {
 

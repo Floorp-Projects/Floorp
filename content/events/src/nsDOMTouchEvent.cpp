@@ -42,98 +42,98 @@
 #include "nsIXPCScriptable.h"
 #include "nsContentUtils.h"
 
-DOMCI_DATA(TouchPoint, nsDOMTouchPoint)
+DOMCI_DATA(Touch, nsDOMTouch)
 
-NS_IMPL_CYCLE_COLLECTION_1(nsDOMTouchPoint, mTarget)
+NS_IMPL_CYCLE_COLLECTION_1(nsDOMTouch, mTarget)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMTouchPoint)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMTouchPoint)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMTouchPoint)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(TouchPoint)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsDOMTouch)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMTouch)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMTouch)
+  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(Touch)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMTouchPoint)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMTouchPoint)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMTouch)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMTouch)
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetIdentifier(PRInt32* aIdentifier)
+nsDOMTouch::GetIdentifier(PRInt32* aIdentifier)
 {
   *aIdentifier = mIdentifier;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetTarget(nsIDOMEventTarget** aTarget)
+nsDOMTouch::GetTarget(nsIDOMEventTarget** aTarget)
 {
   NS_IF_ADDREF(*aTarget = mTarget);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetScreenX(PRInt32* aScreenX)
+nsDOMTouch::GetScreenX(PRInt32* aScreenX)
 {
   *aScreenX = mScreenX;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetScreenY(PRInt32* aScreenY)
+nsDOMTouch::GetScreenY(PRInt32* aScreenY)
 {
   *aScreenY = mScreenY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetClientX(PRInt32* aClientX)
+nsDOMTouch::GetClientX(PRInt32* aClientX)
 {
   *aClientX = mClientX;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetClientY(PRInt32* aClientY)
+nsDOMTouch::GetClientY(PRInt32* aClientY)
 {
   *aClientY = mClientY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetPageX(PRInt32* aPageX)
+nsDOMTouch::GetPageX(PRInt32* aPageX)
 {
   *aPageX = mPageX;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetPageY(PRInt32* aPageY)
+nsDOMTouch::GetPageY(PRInt32* aPageY)
 {
   *aPageY = mPageY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetRadiusX(PRInt32* aRadiusX)
+nsDOMTouch::GetRadiusX(PRInt32* aRadiusX)
 {
   *aRadiusX = mRadiusX;
   return NS_OK;
 }
                                              
 NS_IMETHODIMP
-nsDOMTouchPoint::GetRadiusY(PRInt32* aRadiusY)
+nsDOMTouch::GetRadiusY(PRInt32* aRadiusY)
 {
   *aRadiusY = mRadiusY;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetRotationAngle(float* aRotationAngle)
+nsDOMTouch::GetRotationAngle(float* aRotationAngle)
 {
   *aRotationAngle = mRotationAngle;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchPoint::GetForce(float* aForce)
+nsDOMTouch::GetForce(float* aForce)
 {
   *aForce = mForce;
   return NS_OK;
@@ -170,17 +170,18 @@ nsDOMTouchList::GetLength(PRUint32* aLength)
 }
 
 NS_IMETHODIMP
-nsDOMTouchList::Item(PRUint32 aIndex, nsIDOMTouchPoint** aRetVal)
+nsDOMTouchList::Item(PRUint32 aIndex, nsIDOMTouch** aRetVal)
 {
   NS_IF_ADDREF(*aRetVal = mPoints.SafeObjectAt(aIndex));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMTouchList::IdentifiedPoint(PRInt32 aIdentifier, nsIDOMTouchPoint** aRetVal)
+nsDOMTouchList::IdentifiedTouch(PRInt32 aIdentifier, nsIDOMTouch** aRetVal)
 {
+  *aRetVal = nsnull;
   for (PRInt32 i = 0; i < mPoints.Count(); ++i) {
-    nsCOMPtr<nsIDOMTouchPoint> point = mPoints[i];
+    nsCOMPtr<nsIDOMTouch> point = mPoints[i];
     PRInt32 identifier;
     if (point && NS_SUCCEEDED(point->GetIdentifier(&identifier)) &&
         aIdentifier == identifier) {

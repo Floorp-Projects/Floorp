@@ -1180,6 +1180,19 @@ is_approx(px_to_num(cs.paddingLeft), 30 + 20 * gTF.ease(0.4), 0.01,
           "multiprop left at 1900ms");
 done_div();
 
+// Test for https://bugzilla.mozilla.org/show_bug.cgi?id=651456 -- make
+// sure that refreshing of animations doesn't break when we get two
+// refreshes with the same timestamp.
+new_div("-moz-animation: anim2 1s linear");
+is(cs.marginRight, "0px", "bug 651456 at 0ms");
+advance_clock(100);
+is(cs.marginRight, "10px", "bug 651456 at 100ms (1)");
+advance_clock(0); // still forces a refresh
+is(cs.marginRight, "10px", "bug 651456 at 100ms (2)");
+advance_clock(100);
+is(cs.marginRight, "20px", "bug 651456 at 200ms");
+done_div();
+
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
 
 </script>

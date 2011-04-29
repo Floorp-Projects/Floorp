@@ -1,4 +1,6 @@
-/* -*- Mode: C++; c-basic-offset: 2; tab-width: 8; indent-tabs-mode: nil; -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
+ */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,15 +14,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Fennec Installer for WinCE.
+ * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is The Mozilla Foundation.
- *
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * The Initial Developer of the Original Code is
+ * Novell, Inc.
+ * Portions created by the Initial Developer are Copyright (C) 2010
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Pakhotin <alexp@mozilla.com> (original author)
+ *   Brad Taylor <brad@getcoded.net> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,16 +38,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#pragma once
-#include "resourceppc.h"
+#ifndef _AtkSocketAccessible_H_
+#define _AtkSocketAccessible_H_
 
-extern nsSetupStrings Strings;
-extern const WCHAR c_sStringsFile[];
+#include "nsAccessibleWrap.h"
 
-extern WCHAR g_sSourcePath[MAX_PATH];
-extern WCHAR g_sExeFileName[MAX_PATH];
-extern WCHAR g_sExeFullFileName[MAX_PATH];
-extern DWORD g_dwExeSize;
+// This file gets included by nsAccessibilityService.cpp, which can't include
+// atk.h (or glib.h), so we can't rely on it being included.
+#ifdef __ATK_H__
+typedef void (*AtkSocketEmbedType) (AtkSocket*, gchar*);
+#else
+typedef void (*AtkSocketEmbedType) (void*, void*);
+#endif
 
-#define ErrorMsg(msg) MessageBoxW(GetForegroundWindow(), msg, L"Setup", MB_OK|MB_ICONERROR)
-bool ConvertToChar(const WCHAR *wstr, char *str);
+/**
+ * Provides a nsAccessibleWrap wrapper around AtkSocket for out-of-process
+ * accessibles.
+ */
+class AtkSocketAccessible: public nsAccessibleWrap
+{
+public:
+
+  // Soft references to AtkSocket
+  static AtkSocketEmbedType g_atk_socket_embed;
+#ifdef __ATK_H__
+  static GType g_atk_socket_type;
+#endif
+  static const char* sATKSocketEmbedSymbol;
+  static const char* sATKSocketGetTypeSymbol;
+
+  /*
+   * True if the current Atk version supports AtkSocket and it was correctly
+   * loaded.
+   */
+  static bool gCanEmbed;
+
+  AtkSocketAccessible(nsIContent* aContent, nsIWeakReference* aShell,
+                      const nsCString& aPlugId);
+
+  // nsAccessNode
+  virtual void Shutdown();
+
+  // nsIAccessible
+  NS_IMETHODIMP GetNativeInterface(void** aOutAccessible);
+};
+
+#endif

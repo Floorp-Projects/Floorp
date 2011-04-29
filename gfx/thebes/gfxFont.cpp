@@ -3084,22 +3084,6 @@ gfxTextRun::~gfxTextRun()
     MOZ_COUNT_DTOR(gfxTextRun);
 }
 
-gfxTextRun *
-gfxTextRun::Clone(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-                  PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags)
-{
-    if (!mCharacterGlyphs)
-        return nsnull;
-
-    nsAutoPtr<gfxTextRun> textRun;
-    textRun = gfxTextRun::Create(aParams, aText, aLength, aFontGroup, aFlags);
-    if (!textRun)
-        return nsnull;
-
-    textRun->CopyGlyphDataFrom(this, 0, mCharacterCount, 0);
-    return textRun.forget();
-}
-
 PRBool
 gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
                                    PRPackedBool *aBreakBefore,

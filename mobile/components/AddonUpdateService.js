@@ -169,9 +169,6 @@ var RecommendedSearchResults = {
     if (!aData)
       return;
 
-    let stateString = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-    stateString.data = aData;
-
     // Initialize the file output stream.
     let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
     ostream.init(aFile, 0x02 | 0x08 | 0x20, 0600, ostream.DEFER_OPEN);

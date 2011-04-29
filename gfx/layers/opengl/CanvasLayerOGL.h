@@ -110,12 +110,14 @@ public:
 
   // CanvasLayer impl
   virtual void Initialize(const Data& aData);
+  virtual void Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize);
+
   // This isn't meaningful for shadow canvas.
   virtual void Updated(const nsIntRect&) {}
 
   // ShadowCanvasLayer impl
-  virtual already_AddRefed<gfxSharedImageSurface>
-  Swap(gfxSharedImageSurface* aNewFront);
+  virtual void Swap(const SurfaceDescriptor& aNewFront,
+                    SurfaceDescriptor* aNewBack);
 
   virtual void DestroyFrontBuffer();
 
@@ -130,11 +132,7 @@ public:
 private:
   nsRefPtr<TextureImage> mTexImage;
 
-
-  // XXX FIXME holding to free
-  nsRefPtr<gfxSharedImageSurface> mDeadweight;
-
-
+  SurfaceDescriptor mDeadweight;
 };
 
 } /* layers */

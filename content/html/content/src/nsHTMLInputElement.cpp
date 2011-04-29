@@ -3813,7 +3813,7 @@ nsHTMLInputElement::HasPatternMismatch() const
     return PR_FALSE;
   }
 
-  return !IsPatternMatching(value, pattern, doc);
+  return !nsContentUtils::IsPatternMatching(value, pattern, doc);
 }
 
 void
@@ -4093,40 +4093,6 @@ nsHTMLInputElement::IsValidEmailAddress(const nsAString& aValue)
   }
 
   return PR_TRUE;
-}
-
-//static
-PRBool
-nsHTMLInputElement::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
-                                      nsIDocument* aDocument)
-{
-  NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
-  NS_ENSURE_TRUE(aDocument->GetScriptGlobalObject(), PR_TRUE);
-
-  JSContext* ctx = (JSContext*) aDocument->GetScriptGlobalObject()->
-                                  GetContext()->GetNativeContext();
-  NS_ENSURE_TRUE(ctx, PR_TRUE);
-
-  JSAutoRequest ar(ctx);
-
-  // The pattern has to match the entire value.
-  aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
-  aPattern.Append(NS_LITERAL_STRING(")$"));
-
-  JSObject* re = JS_NewUCRegExpObjectNoStatics(ctx, reinterpret_cast<jschar*>
-                                                 (aPattern.BeginWriting()),
-                                                aPattern.Length(), 0);
-  NS_ENSURE_TRUE(re, PR_TRUE);
-
-  jsval rval = JSVAL_NULL;
-  size_t idx = 0;
-  JSBool res;
-
-  res = JS_ExecuteRegExpNoStatics(ctx, re, reinterpret_cast<jschar*>
-                                    (aValue.BeginWriting()),
-                                  aValue.Length(), &idx, JS_TRUE, &rval);
-
-  return res == JS_FALSE || rval != JSVAL_NULL;
 }
 
 NS_IMETHODIMP_(PRBool)

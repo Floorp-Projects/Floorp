@@ -63,13 +63,6 @@ PARALLEL_DIRS = \
   themes \
   $(NULL)
 
-ifeq ($(OS_ARCH),WINCE)
-ifdef WINCE_WINDOWS_MOBILE
-DIRS += mozapps/readstrings
-DIRS += mozapps/installer/wince
-endif
-endif
-
 ifneq (,$(filter gtk2 qt,$(MOZ_WIDGET_TOOLKIT)))
 PARALLEL_DIRS += system/unixproxy
 endif

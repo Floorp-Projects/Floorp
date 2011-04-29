@@ -388,63 +388,6 @@ static char* GetNextPluginStringFromHandle(Handle h, short *index)
   return ret;
 }
 
-#ifndef __LP64__
-static char* GetPluginString(short id, short index)
-{
-  Str255 str;
-  ::GetIndString(str, id, index);
-  return p2cstrdup(str);
-}
-
-// Opens the resource fork for the plugin
-// Also checks if the plugin is a CFBundle and opens gets the correct resource
-static short OpenPluginResourceFork(nsIFile *pluginFile)
-{
-  FSSpec spec;
-  nsCOMPtr<nsILocalFileMac> lfm = do_QueryInterface(pluginFile);
-  if (!lfm || NS_FAILED(lfm->GetFSSpec(&spec)))
-    return -1;
-
-  Boolean targetIsFolder, wasAliased;
-  ::ResolveAliasFile(&spec, true, &targetIsFolder, &wasAliased);
-  short refNum = ::FSpOpenResFile(&spec, fsRdPerm);
-  if (refNum < 0) {
-    nsCString path;
-    pluginFile->GetNativePath(path);
-    CFBundleRef bundle = getPluginBundle(path.get());
-    if (bundle) {
-      refNum = CFBundleOpenBundleResourceMap(bundle);
-      ::CFRelease(bundle);
-    }
-  }
-  return refNum;
-}
-
-short nsPluginFile::OpenPluginResource()
-{
-  return OpenPluginResourceFork(mPlugin);
-}
-
-class nsAutoCloseResourceObject {
-public:
-  nsAutoCloseResourceObject(nsIFile *pluginFile)
-  {
-    mRefNum = OpenPluginResourceFork(pluginFile);
-  }
-  ~nsAutoCloseResourceObject()
-  {
-    if (mRefNum > 0)
-      ::CloseResFile(mRefNum);
-  }
-  PRBool ResourceOpened()
-  {
-    return (mRefNum > 0);
-  }
-private:
-  short mRefNum;
-};
-#endif
-
 static PRBool IsCompatibleArch(nsIFile *file)
 {
   CFURLRef pluginURL = NULL;
@@ -499,12 +442,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
   // clear out the info, except for the first field.
   memset(&info, 0, sizeof(info));
 
-#ifndef __LP64__
-  // Try to open a resource fork in case we have to use it.
-  nsAutoCloseResourceObject resourceObject(mPlugin);
-  bool resourceOpened = resourceObject.ResourceOpened();
-#endif
-
   // Try to get a bundle reference.
   nsCAutoString path;
   if (NS_FAILED(rv = mPlugin->GetNativePath(path)))
@@ -520,22 +457,12 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
     return rv;
   info.fFileName = PL_strdup(fileName.get());
 
-  // Get fBundle
-  if (bundle)
-    info.fBundle = PR_TRUE;
-
   // Get fName
   if (bundle) {
     CFTypeRef name = ::CFBundleGetValueForInfoDictionaryKey(bundle, CFSTR("WebPluginName"));
     if (name && ::CFGetTypeID(name) == ::CFStringGetTypeID())
       info.fName = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(name));
   }
-#ifndef __LP64__
-  if (!info.fName && resourceOpened) {
-    // 'STR#', 126, 2 => plugin name.
-    info.fName = GetPluginString(126, 2);
-  }
-#endif
 
   // Get fDescription
   if (bundle) {
@@ -543,12 +470,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
     if (description && ::CFGetTypeID(description) == ::CFStringGetTypeID())
       info.fDescription = CFStringRefToUTF8Buffer(static_cast<CFStringRef>(description));
   }
-#ifndef __LP64__
-  if (!info.fDescription && resourceOpened) {
-    // 'STR#', 126, 1 => plugin description.
-    info.fDescription = GetPluginString(126, 1);
-  }
-#endif
 
   // Get fVersion
   if (bundle) {
@@ -603,27 +524,6 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info, PRLibrary **outLibrary)
         ::HLock(mi.infoStrings);
     }
   }
-
-#ifndef __LP64__
-  // Try to get data from the resource fork
-  if (!info.fVariantCount && resourceObject.ResourceOpened()) {
-    mi.typeStrings = ::Get1Resource('STR#', 128);
-    if (mi.typeStrings) {
-      info.fVariantCount = (**(short**)mi.typeStrings) / 2;
-      ::DetachResource(mi.typeStrings);
-      ::HLock(mi.typeStrings);
-    } else {
-      // Don't add this plugin because no mime types could be found
-      return NS_ERROR_FAILURE;
-    }
-    
-    mi.infoStrings = ::Get1Resource('STR#', 127);
-    if (mi.infoStrings) {
-      ::DetachResource(mi.infoStrings);
-      ::HLock(mi.infoStrings);
-    }
-  }
-#endif
 
   // Fill in the info struct based on the data in the BPSupportedMIMETypes struct
   int variantCount = info.fVariantCount;
