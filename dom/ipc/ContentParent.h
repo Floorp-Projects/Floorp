@@ -157,6 +157,9 @@ private:
     void EnsurePrefService();
 
     virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions);
+
+    virtual bool RecvGetIndexedDBDirectory(nsString* aDirectory);
+
     virtual bool RecvSetClipboardText(const nsString& text, const PRInt32& whichClipboard);
     virtual bool RecvGetClipboardText(const PRInt32& whichClipboard, nsString* text);
     virtual bool RecvEmptyClipboard();

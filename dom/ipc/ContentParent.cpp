@@ -68,6 +68,8 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "IDBFactory.h"
 #if defined(MOZ_SYDNEYAUDIO)
 #include "AudioParent.h"
 #endif
@@ -433,6 +435,24 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
     // Ask for future changes
     permissionManager->ChildRequestPermissions();
 #endif
+
+    return true;
+}
+
+bool
+ContentParent::RecvGetIndexedDBDirectory(nsString* aDirectory)
+{
+    indexedDB::IDBFactory::NoteUsedByProcessType(GeckoProcessType_Content);
+
+    nsCOMPtr<nsIFile> dbDirectory;
+    nsresult rv = indexedDB::IDBFactory::GetDirectory(getter_AddRefs(dbDirectory));
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Failed to get IndexedDB directory");
+        return true;
+    }
+
+    dbDirectory->GetPath(*aDirectory);
 
     return true;
 }
