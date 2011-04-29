@@ -668,7 +668,7 @@ void
 ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    for (PRUint32 i = 0; i < mMemoryReporters.Count(); i++)
+    for (PRInt32 i = 0; i < mMemoryReporters.Count(); i++)
         mgr->UnregisterReporter(mMemoryReporters[i]);
 
     for (PRUint32 i = 0; i < report.Length(); i++) {
