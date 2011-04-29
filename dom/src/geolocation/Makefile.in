@@ -67,11 +67,6 @@ LOCAL_INCLUDES = \
 
 EXPORTS        = nsGeoPosition.h
 
-ifdef WINCE_WINDOWS_MOBILE
-LOCAL_INCLUDES  += -I$(topsrcdir)/dom/system/windows \
-                   $(NULL)
-endif
-
 ifdef MOZ_MAEMO_LIBLOCATION
 LOCAL_INCLUDES  += $(MOZ_PLATFORM_MAEMO_CFLAGS) \
                    -I$(topsrcdir)/dom/system/unix \
