@@ -362,6 +362,10 @@ function installFromURLBar(aAddon) {
   return function() {
     loadUrl(gTestURL, function() {
       loadUrl(aAddon.sourceURL, null, false);
+      let elt = get_addon_element(aAddon.id);
+      ok(!elt, "Addon element is not present before installation");
+      if (elt)
+        info("unexpectedly found element in: " + elt.parentNode.id);
       checkInstallAlert(true, function() {
         checkDownloadNotification(function() {
           checkInstallPopup(aAddon.name, function() {
@@ -369,6 +373,7 @@ function installFromURLBar(aAddon) {
               open_manager(true, function() {
                 isRestartShown(!aAddon.bootstrapped, false, function() {
                   let elt = get_addon_element(aAddon.id);
+                  info("elt.id is " + aAddon.id);
                   if (aAddon.bootstrapped) {
                     checkAddonListing(aAddon, elt, "local");
                     var button = document.getAnonymousElementByAttribute(elt, "anonid", "uninstall-button");
@@ -385,6 +390,7 @@ function installFromURLBar(aAddon) {
                       close_manager(run_next_test);
                     }, function() {
                       let elt = get_addon_element(aAddon.id);
+                      info("Looking for element with id " + aAddon.id + ": " + elt);
                       return !elt;
                     });
                   } else {
