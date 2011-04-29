@@ -1,1 +1,1 @@
-http://hg.mozilla.org/projects/addon-sdk/archive/tip.tar.bz2
+http://hg.mozilla.org/projects/addon-sdk/archive/08c3d033a00b.tar.bz2
