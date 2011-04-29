@@ -335,6 +335,7 @@ MouseModule.prototype = {
       this.dY += dragData.prevPanY - sY;
 
       if (dragData.isPan()) {
+        this.sendMove(aEvent.clientX, aEvent.clientY, aEvent.target);
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
         this._kinetic.addData(sX - dragData.prevPanX, sY - dragData.prevPanY);
         this._dragBy(this.dX, this.dY);
@@ -358,6 +359,14 @@ MouseModule.prototype = {
       if (dragData.isPan())
         this._longClickTimeout.clear();
     }
+  },
+
+  sendMove: function(aX, aY, aTarget) {
+    let event = document.createEvent("Events");
+    event.initEvent("TapMove", true, true);
+    event.clientX = aX;
+    event.clientY = aY;
+    aTarget.dispatchEvent(event);
   },
 
   /**
@@ -1246,4 +1255,3 @@ GestureModule.prototype = {
     return r0.translate(offsetX, offsetY);
   }
 };
-

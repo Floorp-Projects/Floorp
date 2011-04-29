@@ -71,13 +71,6 @@ try {
   do_throw("Could not get favicon service\n");
 } 
 
-// Get microsummary service
-try {
-  var mssvc = Cc["@mozilla.org/microsummary/service;1"].getService(Ci.nsIMicrosummaryService);
-} catch(ex) {
-  do_throw("Could not get microsummary service\n");
-}
-
 // Get io service
 try {
   var iosvc = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
@@ -266,23 +259,6 @@ function testCanonicalBookmarks(aFolder) {
               annosvc.getItemAnnotation(testBookmark1.itemId,
                                         DESCRIPTION_ANNO));
 
-  /*
-  // XXX Bug 380468
-  // test bookmark 2
-  var testBookmark2 = testFolder.getChild(1);
-  // url
-  do_check_eq("http://test/micsum", testBookmark2.uri);
-  // title
-  do_check_eq("test microsummary", testBookmark2.title);
-  // check that it's a microsummary
-  var micsum = mssvc.getMicrosummary(testBookmark2.itemId);
-  if (!micsum)
-    do_throw("Could not import microsummary");
-  // check generator uri
-  var generator = micsum.generator;
-  do_check_eq("urn:source:http://dietrich.ganx4.com/mozilla/test-microsummary.xml", generator.uri.spec);
-  // expiration and generated title can change, so don't test them
-  */
   // clean up
   testFolder.containerOpen = false;
   rootNode.containerOpen = false;

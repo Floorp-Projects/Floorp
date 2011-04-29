@@ -6,7 +6,6 @@
 <!ENTITY editBookmarkOverlay.feedLocation.accesskey          "F">
 <!ENTITY editBookmarkOverlay.siteLocation.label              "Site Location:">
 <!ENTITY editBookmarkOverlay.siteLocation.accesskey          "S">
-<!ENTITY editBookmarkOverlay.liveTitlesSeparator.label       "Live Titles">
 <!ENTITY editBookmarkOverlay.folder.label                    "Folder:">
 <!ENTITY editBookmarkOverlay.foldersExpanderDown.tooltip     "Show all the bookmarks folders">
 <!ENTITY editBookmarkOverlay.expanderUp.tooltip              "Hide">

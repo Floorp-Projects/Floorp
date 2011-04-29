@@ -151,7 +151,7 @@ nsMenuPopupFrame::Init(nsIContent*      aContent,
     GetMetric(nsILookAndFeel::eMetric_MenusCanOverlapOSBar, tempBool);
   mMenuCanOverlapOSBar = tempBool;
 
-  rv = CreateViewForFrame(presContext, this, GetStyleContext(), PR_TRUE, PR_TRUE);
+  rv = CreatePopupViewForFrame();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // XXX Hack. The popup's view should float above all other views,
@@ -1871,4 +1871,50 @@ void
 nsMenuPopupFrame::SetConsumeRollupEvent(PRUint32 aConsumeMode)
 {
   mConsumeRollupEvent = aConsumeMode;
+}
+
+/**
+ * KEEP THIS IN SYNC WITH nsContainerFrame::CreateViewForFrame
+ * as much as possible. Until we get rid of views finally...
+ */
+nsresult
+nsMenuPopupFrame::CreatePopupViewForFrame()
+{
+  if (HasView()) {
+    return NS_OK;
+  }
+
+  nsViewVisibility visibility = nsViewVisibility_kShow;
+  PRInt32 zIndex = 0;
+  PRBool  autoZIndex = PR_FALSE;
+
+  nsIView* parentView;
+  nsIViewManager* viewManager = PresContext()->GetPresShell()->GetViewManager();
+  NS_ASSERTION(nsnull != viewManager, "null view manager");
+
+  // Create a view
+  parentView = viewManager->GetRootView();
+  visibility = nsViewVisibility_kHide;
+  zIndex = PR_INT32_MAX;
+
+  NS_ASSERTION(parentView, "no parent view");
+
+  // Create a view
+  nsIView *view = viewManager->CreateView(GetRect(), parentView, visibility);
+  if (view) {
+    viewManager->SetViewZIndex(view, autoZIndex, zIndex);
+    // XXX put view last in document order until we can do better
+    viewManager->InsertChild(parentView, view, nsnull, PR_TRUE);
+  }
+
+  // Remember our view
+  SetView(view);
+
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+    ("nsMenuPopupFrame::CreatePopupViewForFrame: frame=%p view=%p", this, view));
+
+  if (!view)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }

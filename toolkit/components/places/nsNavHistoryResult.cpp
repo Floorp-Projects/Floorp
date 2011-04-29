@@ -2341,11 +2341,12 @@ nsNavHistoryQueryResultNode::CanExpand()
   if (IsContainersQuery())
     return PR_TRUE;
 
-  // If we are child of an ExcludeItems parent or root, we should not expand.
+  // If ExcludeItems is set on the root or on the node itself, don't expand.
   if ((mResult && mResult->mRootNode->mOptions->ExcludeItems()) ||
-      (mParent && mParent->mOptions->ExcludeItems()))
+      Options()->ExcludeItems())
     return PR_FALSE;
 
+  // Check the ancestor container.
   nsNavHistoryQueryOptions* options = GetGeneratingOptions();
   if (options) {
     if (options->ExcludeItems())
@@ -2353,8 +2354,10 @@ nsNavHistoryQueryResultNode::CanExpand()
     if (options->ExpandQueries())
       return PR_TRUE;
   }
+
   if (mResult && mResult->mRootNode == this)
     return PR_TRUE;
+
   return PR_FALSE;
 }
 

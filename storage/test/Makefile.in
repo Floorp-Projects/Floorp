@@ -59,6 +59,7 @@ CPP_UNIT_TESTS = \
   test_service_init_background_thread.cpp \
   test_AsXXX_helpers.cpp \
   test_StatementCache.cpp \
+  test_async_callbacks_with_spun_event_loops.cpp \
   $(NULL)
 
 ifdef MOZ_DEBUG

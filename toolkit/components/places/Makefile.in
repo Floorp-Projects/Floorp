@@ -64,7 +64,6 @@ XPIDLSRCS += \
   nsIDynamicContainer.idl \
   nsIFaviconService.idl \
   nsILivemarkService.idl \
-  nsIMicrosummaryService.idl \
   nsINavBookmarksService.idl \
   nsIPlacesImportExportService.idl \
   nsITaggingService.idl  \
@@ -120,7 +119,6 @@ EXTRA_COMPONENTS = \
   nsLivemarkService.js \
   nsTaggingService.js \
   nsPlacesExpiration.js \
-  nsMicrosummaryService.js \
   PlacesCategoriesStarter.js \
   $(NULL)
 

@@ -716,9 +716,9 @@ class nsNavHistoryQueryResultNode : public nsNavHistoryContainerResultNode,
                                     public nsINavHistoryQueryResultNode
 {
 public:
-  nsNavHistoryQueryResultNode(const nsACString& aQueryURI,
-                              const nsACString& aTitle,
-                              const nsACString& aIconURI);
+  nsNavHistoryQueryResultNode(const nsACString& aTitle,
+                              const nsACString& aIconURI,
+                              const nsACString& aQueryURI);
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
                               const nsACString& aIconURI,
                               const nsCOMArray<nsNavHistoryQuery>& aQueries,
