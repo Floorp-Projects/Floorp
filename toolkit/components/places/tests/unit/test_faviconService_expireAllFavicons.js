@@ -41,17 +41,6 @@
  * This test ensures favicons are correctly expired by expireAllFavicons API,
  * also when cache is cleared.
  */
-var hs = Cc["@mozilla.org/browser/nav-history-service;1"].
-         getService(Ci.nsINavHistoryService);
-var bh = hs.QueryInterface(Ci.nsIBrowserHistory);
-var bs = Cc["@mozilla.org/browser/nav-bookmarks-service;1"].
-         getService(Ci.nsINavBookmarksService);
-var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-var icons = Cc["@mozilla.org/browser/favicon-service;1"].
-            getService(Ci.nsIFaviconService);
-var cs = Cc["@mozilla.org/network/cache-service;1"].
-         getService(Ci.nsICacheService);
 
 const TEST_URI = "http://test.com/";
 const TEST_ICON_URI = "http://test.com/favicon.ico";
@@ -59,79 +48,60 @@ const TEST_ICON_URI = "http://test.com/favicon.ico";
 const TEST_BOOKMARK_URI = "http://bookmarked.test.com/";
 const TEST_BOOKMARK_ICON_URI = "http://bookmarked.test.com/favicon.ico";
 
-const kExpirationFinished = "places-favicons-expired";
+const TOPIC_ICONS_EXPIRATION_FINISHED = "places-favicons-expired";
 
-// TESTS
-var tests = [
-  function() {
-    dump("\n\nTest that expireAllFavicons works as expected.\n");
-    setup();
-    icons.expireAllFavicons();
-  },
-];
+add_test(function() {
+    do_log_info("Test that expireAllFavicons works as expected.");
 
-function setup() {
+    let bmURI = NetUtil.newURI(TEST_BOOKMARK_URI);
+    let vsURI = NetUtil.newURI(TEST_URI);
 
-  // Cleanup.
-  remove_all_bookmarks();
-  bh.removeAllPages();
+    Services.obs.addObserver(function(aSubject, aTopic, aData) {
+      Services.obs.removeObserver(arguments.callee, aTopic);
 
-  // Add a page with a bookmark.
-  bs.insertBookmark(bs.toolbarFolder, uri(TEST_BOOKMARK_URI),
-                    bs.DEFAULT_INDEX, "visited");
-  // Set a favicon for the page.
-  icons.setFaviconUrlForPage(uri(TEST_BOOKMARK_URI),
-                             uri(TEST_BOOKMARK_ICON_URI));
-  // Sanity check the favicon
-  try {
-    do_check_eq(icons.getFaviconForPage(uri(TEST_BOOKMARK_URI)).spec,
-                TEST_BOOKMARK_ICON_URI);
-  } catch(ex) {
-    do_throw(ex.message);
-  }
-
-  // Add a visited page.
-  let visitId = hs.addVisit(uri(TEST_URI), Date.now() * 1000, null,
-                            hs.TRANSITION_TYPED, false, 0);
-  // Set a favicon for the page.
-  icons.setFaviconUrlForPage(uri(TEST_URI), uri(TEST_ICON_URI));
-  // Sanity check the favicon
-  try {
-    do_check_eq(icons.getFaviconForPage(uri(TEST_URI)).spec, TEST_ICON_URI);
-  } catch(ex) {
-    do_throw(ex.message);
-  }
-}
-
-var observer = {
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic == kExpirationFinished) {
       // Check visited page does not have an icon
       try {
-        icons.getFaviconForPage(uri(TEST_URI));
+        PlacesUtils.favicons.getFaviconForPage(vsURI);
         do_throw("Visited page has still a favicon!");
       } catch (ex) { /* page should not have a favicon */ }
 
       // Check bookmarked page does not have an icon
       try {
-        icons.getFaviconForPage(uri(TEST_BOOKMARK_URI));
+        PlacesUtils.favicons.getFaviconForPage(bmURI);
         do_throw("Bookmarked page has still a favicon!");
       } catch (ex) { /* page should not have a favicon */ }
-    
-      // Move to next test.
-      if (tests.length)
-        (tests.shift())();
-      else {
-        os.removeObserver(this, kExpirationFinished);
-        do_test_finished();
-      }
-    }
-  }
-}
-os.addObserver(observer, kExpirationFinished, false);
 
-function run_test()
-{
-  do_test_pending();
-  (tests.shift())();
+      run_next_test();
+    }, TOPIC_ICONS_EXPIRATION_FINISHED, false);
+
+    // Add a page with a bookmark.
+    PlacesUtils.bookmarks.insertBookmark(
+      PlacesUtils.toolbarFolderId, bmURI,
+      PlacesUtils.bookmarks.DEFAULT_INDEX, "Test bookmark"
+    );
+
+    // Set a favicon for the page.
+    PlacesUtils.favicons.setFaviconUrlForPage(
+      bmURI, NetUtil.newURI(TEST_BOOKMARK_ICON_URI)
+    );
+    do_check_eq(PlacesUtils.favicons.getFaviconForPage(bmURI).spec,
+                TEST_BOOKMARK_ICON_URI);
+
+    // Add a visited page.
+    let visitId = PlacesUtils.history.addVisit(
+      vsURI, Date.now() * 1000, null,
+      PlacesUtils.history.TRANSITION_TYPED, false, 0
+    );
+
+    // Set a favicon for the page.
+    PlacesUtils.favicons
+               .setFaviconUrlForPage(vsURI, NetUtil.newURI(TEST_ICON_URI));
+    do_check_eq(PlacesUtils.favicons.getFaviconForPage(vsURI).spec,
+                TEST_ICON_URI);
+
+    PlacesUtils.favicons.expireAllFavicons();
+});
+
+function run_test() {
+  run_next_test();
 }

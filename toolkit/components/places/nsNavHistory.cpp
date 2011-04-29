@@ -2861,21 +2861,24 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, PRUint32 aQueryCount
     queries.AppendObject(query);
   }
 
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-  // root node
+  // Create the root node.
   nsRefPtr<nsNavHistoryContainerResultNode> rootNode;
   PRInt64 folderId = GetSimpleBookmarksQueryFolder(queries, options);
   if (folderId) {
-    // In the simple case where we're just querying children of a single bookmark
-    // folder, we can more efficiently generate results.
+    // In the simple case where we're just querying children of a single
+    // bookmark folder, we can more efficiently generate results.
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     nsRefPtr<nsNavHistoryResultNode> tempRootNode;
     rv = bookmarks->ResultNodeForContainer(folderId, options,
                                            getter_AddRefs(tempRootNode));
-    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
-                     "Generating a generic empty node for a broken query!");
     if (NS_SUCCEEDED(rv)) {
       rootNode = tempRootNode->GetAsContainer();
+    }
+    else {
+      NS_WARNING("Generating a generic empty node for a broken query!");
+      // This is a perf hack to generate an empty query that skips filtering.
+      options->SetExcludeItems(PR_TRUE);
     }
   }
 
@@ -3270,9 +3273,9 @@ PlacesSQLQueryBuilder::SelectAsDay()
      "FROM (", // TOUTER BEGIN
      resultType,
      sortingMode);
- 
-   nsNavHistory *history = nsNavHistory::GetHistoryService();
-   NS_ENSURE_STATE(history);
+
+  nsNavHistory *history = nsNavHistory::GetHistoryService();
+  NS_ENSURE_STATE(history);
 
   PRInt32 daysOfHistory = history->GetDaysOfHistory();
   for (PRInt32 i = 0; i <= HISTORY_DATE_CONT_NUM(daysOfHistory); i++) {
@@ -3380,12 +3383,15 @@ PlacesSQLQueryBuilder::SelectAsDay()
         // day of each month.  Using LocalTimeParameters would instead force us
         // to apply a DST correction that we don't really need here.
         PR_NormalizeTime(&tm, PR_GMTParameters);
-        // tm_month starts from 0 while GetMonthName expects a 1-based index.
-        history->GetMonthName(tm.tm_month+1, dateName);
-
-        // If the container is for a past year, add the year as suffix.
-        if (tm.tm_year < currentYear)
-          dateName.Append(nsPrintfCString(" %d", tm.tm_year));
+        // If the container is for a past year, add the year to its title,
+        // otherwise just show the month name.
+        // Note that tm_month starts from 0, while we need a 1-based index.
+        if (tm.tm_year < currentYear) {
+          history->GetMonthYear(tm.tm_month + 1, tm.tm_year, dateName);
+        }
+        else {
+          history->GetMonthName(tm.tm_month + 1, dateName);
+        }
 
         // From start of MonthIndex + 1 months ago
         sqlFragmentContainerBeginTime = NS_LITERAL_CSTRING(
@@ -6144,9 +6150,10 @@ nsNavHistory::FilterResultSet(nsNavHistoryQueryResultNode* aQueryNode,
       if (includeFolders[queryIndex]->Length() != 0 &&
           resultType != nsINavHistoryQueryOptions::RESULTS_AS_TAG_CONTENTS) {
         // Filter out the node if its parent is in the excludeFolders
-        // cache.
-        if (excludeFolders[queryIndex]->Contains(parentId))
+        // cache or it has no parent.
+        if (excludeFolders[queryIndex]->Contains(parentId) || parentId == -1) {
           continue;
+        }
 
         if (!includeFolders[queryIndex]->Contains(parentId)) {
           // If parent is not found in current includeFolders cache, we check
@@ -6530,6 +6537,8 @@ nsNavHistory::QueryRowToResult(PRInt64 itemId, const nsACString& aURI,
     // whole result.  Instead make a generic empty query node.
     *aNode = new nsNavHistoryQueryResultNode(aTitle, aFavicon, aURI);
     (*aNode)->mItemId = itemId;
+    // This is a perf hack to generate an empty query that skips filtering.
+    (*aNode)->GetAsQuery()->Options()->SetExcludeItems(PR_TRUE);
     NS_ADDREF(*aNode);
   }
 
@@ -6687,6 +6696,31 @@ nsNavHistory::GetMonthName(PRInt32 aIndex, nsACString& aResult)
     }
   }
   aResult = nsPrintfCString("[%d]", aIndex);
+}
+
+void
+nsNavHistory::GetMonthYear(PRInt32 aMonth, PRInt32 aYear, nsACString& aResult)
+{
+  nsIStringBundle *bundle = GetBundle();
+  if (bundle) {
+    nsCAutoString monthName;
+    GetMonthName(aMonth, monthName);
+    nsAutoString yearString;
+    yearString.AppendInt(aYear);
+    const PRUnichar* strings[2] = {
+      NS_ConvertUTF8toUTF16(monthName).get()
+    , yearString.get()
+    };
+    nsXPIDLString value;
+    if (NS_SUCCEEDED(bundle->FormatStringFromName(
+          NS_LITERAL_STRING("finduri-MonthYear").get(), strings, 2,
+          getter_Copies(value)
+        ))) {
+      CopyUTF16toUTF8(value, aResult);
+      return;
+    }
+  }
+  aResult.AppendLiteral("finduri-MonthYear");
 }
 
 // nsNavHistory::SetPageTitleInternal
@@ -6888,7 +6922,7 @@ GetSimpleBookmarksQueryFolder(const nsCOMArray<nsNavHistoryQuery>& aQueries,
 
   // Don't care about onlyBookmarked flag, since specifying a bookmark
   // folder is inferring onlyBookmarked.
-  NS_ASSERTION(query->Folders()[0] > 0, "bad folder id");
+
   return query->Folders()[0];
 }
 

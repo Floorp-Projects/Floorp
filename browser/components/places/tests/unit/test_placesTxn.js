@@ -40,7 +40,6 @@
 
 var bmsvc = PlacesUtils.bookmarks;
 var lmsvc = PlacesUtils.livemarks;
-var mss = PlacesUtils.microsummaries;
 var ptSvc = PlacesUIUtils.ptm;
 var tagssvc = PlacesUtils.tagging;
 var annosvc = PlacesUtils.annotations;
@@ -579,22 +578,6 @@ function run_test() {
   do_check_eq(0, bmsvc.getItemIndex(b1));
   do_check_eq(1, bmsvc.getItemIndex(b2));
   do_check_eq(2, bmsvc.getItemIndex(b3));
-
-  // editBookmarkMicrosummary
-  var tmpMs = mss.createMicrosummary(uri("http://testmicro.com"), 
-                                     uri("http://dietrich.ganx4.com/mozilla/test-microsummary.xml"));
-  ptSvc.doTransaction(
-  ptSvc.createItem(uri("http://dietrich.ganx4.com/mozilla/test-microsummary-content.php"),
-                   root, -1, "micro test", null, null, null));
-  var bId = (bmsvc.getBookmarkIdsForURI(uri("http://dietrich.ganx4.com/mozilla/test-microsummary-content.php")))[0];
-  do_check_true(!mss.hasMicrosummary(bId));
-  var txn18 = ptSvc.editBookmarkMicrosummary(bId, tmpMs);
-  txn18.doTransaction();
-  do_check_eq(observer._itemChangedId, bId);
-  do_check_true(mss.hasMicrosummary(bId));
-  txn18.undoTransaction();
-  do_check_eq(observer._itemChangedId, bId);
-  do_check_true(!mss.hasMicrosummary(bId));
 
   // Testing edit Post Data
   const POST_DATA_ANNO = "bookmarkProperties/POSTData";

@@ -123,11 +123,9 @@ static PRLogModuleInfo* gJSDiagnostics;
 #endif
 
 // Thank you Microsoft!
-#ifndef WINCE
 #ifdef CompareString
 #undef CompareString
 #endif
-#endif // WINCE
 
 // The amount of time we wait between a request to GC (due to leaving
 // a page) and doing the actual GC.
