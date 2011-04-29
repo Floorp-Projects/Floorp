@@ -211,12 +211,12 @@ fails-if(Android) random-if(gtk2Widget) != text-language-01.xhtml text-language-
 == tspan-dxdy-05.svg tspan-dxdy-ref.svg
 == tspan-dxdy-06.svg tspan-dxdy-ref.svg
 == tspan-dxdy-textPath-01.svg tspan-dxdy-textPath-01-ref.svg
-== tspan-rotate-01.svg tspan-rotate-ref.svg
-== tspan-rotate-02.svg tspan-rotate-ref.svg
-== tspan-rotate-03.svg tspan-rotate-ref.svg
-== tspan-rotate-04.svg tspan-rotate-ref.svg
-== tspan-rotate-05.svg tspan-rotate-ref.svg
-== tspan-rotate-06.svg tspan-rotate-ref.svg
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-01.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-02.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-03.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-04.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-05.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
+random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspan-rotate-ref.svg # Bug 629718 for random failure on WinXP
 == tspan-rotate-textPath-01.svg tspan-rotate-textPath-01-ref.svg
 == tspan-xy-01.svg tspan-xy-ref.svg
 == tspan-xy-02.svg tspan-xy-ref.svg
