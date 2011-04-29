@@ -42,7 +42,6 @@
 
 #include "nsHTMLContainerFrame.h"
 #include "nsIScrollPositionListener.h"
-#include "nsAbsoluteContainingBlock.h"
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 
@@ -64,8 +63,7 @@ public:
   nsCanvasFrame(nsStyleContext* aContext)
   : nsHTMLContainerFrame(aContext),
     mDoPaintFocus(PR_FALSE),
-    mAddedScrollPositionListener(PR_FALSE),
-    mAbsoluteContainer(nsGkAtoms::absoluteList) {}
+    mAddedScrollPositionListener(PR_FALSE) {}
 
   NS_DECL_QUERYFRAME_TARGET(nsCanvasFrame)
   NS_DECL_QUERYFRAME
@@ -83,9 +81,6 @@ public:
                           nsFrameList&    aFrameList);
   NS_IMETHOD RemoveFrame(nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
-
-  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
-  virtual nsFrameList GetChildList(nsIAtom* aListName) const;
 
   virtual nscoord GetMinWidth(nsRenderingContext *aRenderingContext);
   virtual nscoord GetPrefWidth(nsRenderingContext *aRenderingContext);
@@ -152,7 +147,6 @@ protected:
   // Data members
   PRPackedBool              mDoPaintFocus;
   PRPackedBool              mAddedScrollPositionListener;
-  nsAbsoluteContainingBlock mAbsoluteContainer;
 };
 
 /**

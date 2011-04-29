@@ -50,9 +50,7 @@
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_CONTAINER_LIST_COUNT_SANS_OC 1
-  // for frames that don't use overflow containers
-#define NS_CONTAINER_LIST_COUNT_INCL_OC 3
+#define NS_CONTAINER_LIST_COUNT_INCL_OC 4
   // for frames that support overflow containers
 
 // Option flags for ReflowChild() and FinishReflowChild()
