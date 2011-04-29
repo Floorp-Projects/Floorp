@@ -70,10 +70,6 @@ ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)
 CPPSRCS += dlldeps-xul.cpp
 endif
 
-ifeq ($(OS_ARCH),WINCE)
-CPPSRCS += dlldeps-xul.cpp
-endif
-
 ifeq ($(OS_ARCH),OS2)
 CPPSRCS += dlldeps-xul.cpp
 endif
@@ -130,7 +126,7 @@ GARBAGE += \
 endif
 endif
 
-ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 SDK_LIBRARY = $(IMPORT_LIBRARY)
 else
 SDK_LIBRARY = $(SHARED_LIBRARY)
@@ -227,13 +223,6 @@ ifdef MOZ_CRASHREPORTER
 OS_LIBS += $(call EXPAND_LIBNAME,wininet)
 endif
 endif # WINNT
-ifeq ($(OS_ARCH),WINCE)
-OS_LIBS += $(call EXPAND_LIBNAME, aygshell uuid ole32 oleaut32 Ws2 ddraw)
-OS_LIBS += $(call EXPAND_LIBNAME, ceosutil libcmt comsuppw)
-ifdef WINCE_WINDOWS_MOBILE
-OS_LIBS += $(call EXPAND_LIBNAME, cellcore)
-endif
-endif
 
 ifdef MOZ_JPROF
 EXTRA_DSO_LDOPTS += -ljprof
