@@ -1223,7 +1223,7 @@ var TouchEventHandler = {
     switch (aMessage.name) {
       case "Browser:MouseDown":
         let cwu = Util.getWindowUtils(content);
-        this.element = cwu.elementFromPoint(json.x, json.y, false, false);
+        this.element = elementFromPoint(json.x, json.y);
         cancelled = !this.sendEvent("touchstart", json, this.element);
         break;
 
