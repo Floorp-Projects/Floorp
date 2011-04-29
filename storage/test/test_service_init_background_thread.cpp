@@ -39,7 +39,6 @@
 
 #include "storage_test_harness.h"
 
-#include "mozilla/Monitor.h"
 #include "nsThreadUtils.h"
 
 /**

@@ -129,8 +129,8 @@ EXPORTS_mozilla = \
   FileUtils.h \
   GenericFactory.h \
   IntentionalCrash.h \
-  Monitor.h \
   Mutex.h \
+  ReentrantMonitor.h \
   SSE.h \
   arm.h \
   unused.h \

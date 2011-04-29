@@ -50,7 +50,7 @@
 #include "nsMemory.h"
 
 #include "mozilla/CondVar.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "SQLiteMutex.h"
 
 #include "TestHarness.h"
@@ -431,7 +431,7 @@ Sanity3()
 nsresult
 Sanity4_Child()
 {
-    mozilla::Monitor m1("dd.sanity4.m1");
+    mozilla::ReentrantMonitor m1("dd.sanity4.m1");
     TestMutex m2("dd.sanity4.m2");
     m1.Enter();
     m2.Lock();
@@ -443,11 +443,11 @@ nsresult
 Sanity4()
 {
     const char* const tokens[] = {
-        "Re-entering Monitor after acquiring other resources",
+        "Re-entering ReentrantMonitor after acquiring other resources",
         "###!!! ERROR: Potential deadlock detected",
-        "=== Cyclical dependency starts at\n--- Monitor : dd.sanity4.m1",
+        "=== Cyclical dependency starts at\n--- ReentrantMonitor : dd.sanity4.m1",
         "--- Next dependency:\n--- Mutex : dd.sanity4.m2",
-        "=== Cycle completed at\n--- Monitor : dd.sanity4.m1",
+        "=== Cycle completed at\n--- ReentrantMonitor : dd.sanity4.m1",
         "###!!! ASSERTION: Potential deadlock detected",
         0
     };

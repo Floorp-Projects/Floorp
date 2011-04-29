@@ -84,7 +84,7 @@ nsAudioAvailableEventManager::nsAudioAvailableEventManager(nsBuiltinDecoder* aDe
   mSignalBufferLength(mDecoder->GetFrameBufferLength()),
   mNewSignalBufferLength(mSignalBufferLength),
   mSignalBufferPosition(0),
-  mMonitor("media.audioavailableeventmanager")
+  mReentrantMonitor("media.audioavailableeventmanager")
 {
   MOZ_COUNT_CTOR(nsAudioAvailableEventManager);
 }
@@ -102,7 +102,7 @@ void nsAudioAvailableEventManager::Init(PRUint32 aChannels, PRUint32 aRate)
 
 void nsAudioAvailableEventManager::DispatchPendingEvents(PRUint64 aCurrentTime)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   while (mPendingEvents.Length() > 0) {
     nsAudioAvailableEventRunner* e =
@@ -120,7 +120,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
                                                          PRUint32 aAudioDataLength,
                                                          PRUint64 aEndTimeSampleOffset)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   PRUint32 currentBufferSize = mNewSignalBufferLength;
   if (currentBufferSize == 0) {
@@ -202,7 +202,7 @@ void nsAudioAvailableEventManager::QueueWrittenAudioData(SoundDataValue* aAudioD
 
 void nsAudioAvailableEventManager::Clear()
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   mPendingEvents.Clear();
   mSignalBufferPosition = 0;
@@ -210,7 +210,7 @@ void nsAudioAvailableEventManager::Clear()
 
 void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   // Force all pending events to go now.
   for (PRUint32 i = 0; i < mPendingEvents.Length(); ++i) {
@@ -240,7 +240,7 @@ void nsAudioAvailableEventManager::Drain(PRUint64 aEndTime)
 
 void nsAudioAvailableEventManager::SetSignalBufferLength(PRUint32 aLength)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   mNewSignalBufferLength = aLength;
 }
