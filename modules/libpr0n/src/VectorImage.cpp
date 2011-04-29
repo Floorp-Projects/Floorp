@@ -711,9 +711,17 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
 void
 VectorImage::InvalidateObserver()
 {
-  nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
-  if (observer) {
-    observer->FrameChanged(this, &nsIntRect::GetMaxSizedIntRect());
+  if (!mObserver)
+    return;
+
+  nsCOMPtr<imgIContainerObserver> containerObs(do_QueryReferent(mObserver));
+  if (containerObs) {
+    containerObs->FrameChanged(this, &nsIntRect::GetMaxSizedIntRect());
+  }
+
+  nsCOMPtr<imgIDecoderObserver> decoderObs(do_QueryReferent(mObserver));
+  if (decoderObs) {
+    decoderObs->OnStopFrame(nsnull, imgIContainer::FRAME_CURRENT);
   }
 }
 
