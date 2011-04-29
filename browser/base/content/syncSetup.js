@@ -56,6 +56,11 @@ const OPTIONS_PAGE                  = 6;
 const OPTIONS_CONFIRM_PAGE          = 7;
 const SETUP_SUCCESS_PAGE            = 8;
 
+// Broader than we'd like, but after this changed from api-secure.recaptcha.net
+// we had no choice. At least we only do this for the duration of setup.
+// See discussion in Bugs 508112 and 653307.
+const RECAPTCHA_DOMAIN = "https://www.google.com";
+
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -69,13 +74,14 @@ var gSyncSetup = {
   captchaBrowser: null,
   wizard: null,
   _disabledSites: [],
-  _remoteSites: [Weave.Service.serverURL, "https://api-secure.recaptcha.net"],
 
   status: {
     password: false,
     email: false,
     server: false
   },
+
+  get _remoteSites() [Weave.Service.serverURL, RECAPTCHA_DOMAIN],
 
   get _usingMainServers() {
     if (this._settingUpNew)
