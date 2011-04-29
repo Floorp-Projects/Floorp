@@ -600,7 +600,7 @@ static bool fillPluginFunctionTable(NPPluginFuncs* pFuncs)
 {
   // Check the size of the provided structure based on the offset of the
   // last member we need.
-  if (pFuncs->size < (offsetof(NPPluginFuncs, setvalue) + sizeof(void*)))
+  if (pFuncs->size < (offsetof(NPPluginFuncs, getsiteswithdata) + sizeof(void*)))
     return false;
 
   pFuncs->newp = NPP_New;
