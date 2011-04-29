@@ -93,7 +93,8 @@ function test() {
 
   open_manager("addons://list/extension", function(aManager) {
     let addonList = aManager.document.getElementById("addon-list");
-    let lastAddonIndex = -1;
+    let currentAddon;
+    let instantApply = Services.prefs.getBoolPref("browser.preferences.instantApply");
 
     function getAddonByName(aName) {
       for (let i = 0; i < addonList.childNodes.length; i++) {
@@ -105,29 +106,25 @@ function test() {
       return null;
     }
 
-    let winClosedCount = 0;
-    Services.ww.registerNotification(function (aSubject, aTopic, aData) {
+    function observer(aSubject, aTopic, aData) {
       switch (aTopic) {
         case "domwindowclosed":
-          if (++winClosedCount == 2) {
-            Services.ww.unregisterNotification(arguments.callee);
-            // Give the preference window a chance to finish closing before
-            // closing the add-ons manager.
-            waitForFocus(function () {
-              close_manager(aManager, finish);
-            });
-          }
+          // Give the preference window a chance to finish closing before
+          // closing the add-ons manager.
+          waitForFocus(function () {
+            test_next_addon();
+          });
           break;
         case "domwindowopened":
           let win = aSubject.QueryInterface(Ci.nsIDOMEventTarget);
           waitForFocus(function () {
             // If the openDialog privileges are wrong a new browser window
             // will open, let the test proceed (and fail) rather than timeout.
-            if (win.location != ADDONS_LIST[lastAddonIndex].optionsURL &&
+            if (win.location != currentAddon.optionsURL &&
                 win.location != "chrome://browser/content/browser.xul")
               return;
 
-            is(win.location, ADDONS_LIST[lastAddonIndex].optionsURL,
+            is(win.location, currentAddon.optionsURL,
                "The correct addon pref window should have opened");
 
             let chromeFlags = win.QueryInterface(Ci.nsIInterfaceRequestor).
@@ -136,19 +133,25 @@ function test() {
                                   QueryInterface(Ci.nsIInterfaceRequestor).
                                   getInterface(Ci.nsIXULWindow).chromeFlags;
             ok(chromeFlags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_CHROME &&
-               chromeFlags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG,
+               (instantApply || chromeFlags & Ci.nsIWebBrowserChrome.CHROME_OPENAS_DIALOG),
                "Window was open as a chrome dialog.");
 
             win.close();
           }, win);
           break;
       }
-    });
+    }
 
-    ADDONS_LIST.forEach(function (aAddon, aIndex) {
-      lastAddonIndex = aIndex;
-      info("Testing addon " + aIndex);
-      let addonItem = getAddonByName(aAddon.name, addonList);
+    function test_next_addon() {
+      currentAddon = ADDONS_LIST.shift();
+      if (!currentAddon) {
+        Services.ww.unregisterNotification(observer);
+        close_manager(aManager, finish);
+        return;
+      }
+
+      info("Testing " + currentAddon.name);
+      let addonItem = getAddonByName(currentAddon.name, addonList);
       let optionsBtn =
         aManager.document.getAnonymousElementByAttribute(addonItem, "anonid",
                                                          "preferences-btn");
@@ -156,7 +159,10 @@ function test() {
 
       addonList.ensureElementIsVisible(addonItem);
       EventUtils.synthesizeMouseAtCenter(optionsBtn, { }, aManager);
-    });
+    }
+
+    Services.ww.registerNotification(observer);
+    test_next_addon();
   });
 
 }
