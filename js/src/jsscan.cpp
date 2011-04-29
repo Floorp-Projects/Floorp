@@ -197,33 +197,33 @@ TokenStream::init(const jschar *base, size_t length, const char *fn, uintN ln, J
      * initialize them for each TokenStream is trivial.  See bug 639420.
      */
     memset(oneCharTokens, 0, sizeof(oneCharTokens));
-    oneCharTokens[';'] = TOK_SEMI;
-    oneCharTokens[','] = TOK_COMMA;
-    oneCharTokens['?'] = TOK_HOOK;
-    oneCharTokens['['] = TOK_LB;
-    oneCharTokens[']'] = TOK_RB;
-    oneCharTokens['{'] = TOK_LC;
-    oneCharTokens['}'] = TOK_RC;
-    oneCharTokens['('] = TOK_LP;
-    oneCharTokens[')'] = TOK_RP;
+    oneCharTokens[unsigned(';')] = TOK_SEMI;
+    oneCharTokens[unsigned(',')] = TOK_COMMA;
+    oneCharTokens[unsigned('?')] = TOK_HOOK;
+    oneCharTokens[unsigned('[')] = TOK_LB;
+    oneCharTokens[unsigned(']')] = TOK_RB;
+    oneCharTokens[unsigned('{')] = TOK_LC;
+    oneCharTokens[unsigned('}')] = TOK_RC;
+    oneCharTokens[unsigned('(')] = TOK_LP;
+    oneCharTokens[unsigned(')')] = TOK_RP;
 
     /* See getChar() for an explanation of maybeEOL[]. */
     memset(maybeEOL, 0, sizeof(maybeEOL));
-    maybeEOL['\n'] = true;
-    maybeEOL['\r'] = true;
-    maybeEOL[LINE_SEPARATOR & 0xff] = true;
-    maybeEOL[PARA_SEPARATOR & 0xff] = true;
+    maybeEOL[unsigned('\n')] = true;
+    maybeEOL[unsigned('\r')] = true;
+    maybeEOL[unsigned(LINE_SEPARATOR & 0xff)] = true;
+    maybeEOL[unsigned(PARA_SEPARATOR & 0xff)] = true;
 
     /* See getTokenInternal() for an explanation of maybeStrSpecial[]. */
     memset(maybeStrSpecial, 0, sizeof(maybeStrSpecial));
-    maybeStrSpecial['"'] = true;
-    maybeStrSpecial['\''] = true;
-    maybeStrSpecial['\\'] = true;
-    maybeStrSpecial['\n'] = true;
-    maybeStrSpecial['\r'] = true;
-    maybeStrSpecial[LINE_SEPARATOR & 0xff] = true;
-    maybeStrSpecial[PARA_SEPARATOR & 0xff] = true;
-    maybeStrSpecial[EOF & 0xff] = true;
+    maybeStrSpecial[unsigned('"')] = true;
+    maybeStrSpecial[unsigned('\'')] = true;
+    maybeStrSpecial[unsigned('\\')] = true;
+    maybeStrSpecial[unsigned('\n')] = true;
+    maybeStrSpecial[unsigned('\r')] = true;
+    maybeStrSpecial[unsigned(LINE_SEPARATOR & 0xff)] = true;
+    maybeStrSpecial[unsigned(PARA_SEPARATOR & 0xff)] = true;
+    maybeStrSpecial[unsigned(EOF & 0xff)] = true;
     return true;
 }
 

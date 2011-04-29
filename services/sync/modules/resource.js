@@ -483,13 +483,7 @@ Resource.prototype = {
   //
   // Perform an asynchronous HTTP GET for this resource.
   get: function Res_get() {
-    let response = this._request("GET");
-    if (response.status == 0) {
-      // This must be an erroneously cached response. Try again.
-      this._log.debug("Status 0 in Resource.get: retrying once.");
-      response = this._request("GET");
-    }
-    return response;
+    return this._request("GET");
   },
 
   // ** {{{ Resource.put }}} **

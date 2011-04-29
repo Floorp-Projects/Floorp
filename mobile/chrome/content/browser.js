@@ -351,6 +351,7 @@ var Browser = {
     messageManager.addMessageListener("Browser:CanUnload:Return", this);
     messageManager.addMessageListener("scroll", this);
     messageManager.addMessageListener("Browser:CertException", this);
+    messageManager.addMessageListener("Browser:BlockedSite", this);
 
     // broadcast a UIReady message so add-ons know we are finished with startup
     let event = document.createEvent("Events");
@@ -434,6 +435,7 @@ var Browser = {
     messageManager.removeMessageListener("Browser:ZoomToPoint:Return", this);
     messageManager.removeMessageListener("scroll", this);
     messageManager.removeMessageListener("Browser:CertException", this);
+    messageManager.removeMessageListener("Browser:BlockedSite", this);
 
     var os = Services.obs;
     os.removeObserver(XPInstallObserver, "addon-install-blocked");
@@ -715,7 +717,12 @@ var Browser = {
 
     let nextTab = this._selectedTab;
     if (nextTab == aTab) {
-      nextTab = aTab.owner || this.getTabAtIndex(tabIndex + 1) || this.getTabAtIndex(tabIndex - 1);
+      nextTab = this.getTabAtIndex(tabIndex + 1) || this.getTabAtIndex(tabIndex - 1);
+
+      // If the next tab is not a sibling, switch back to the parent.
+      if (aTab.owner && nextTab.owner != aTab.owner)
+        nextTab = aTab.owner;
+
       if (!nextTab)
         return null;
     }
@@ -816,7 +823,7 @@ var Browser = {
   },
 
   /**
-   * Handle cert exception event bubbling up from content.
+   * Handle cert exception message from content.
    */
   _handleCertException: function _handleCertException(aMessage) {
     let json = aMessage.json;
@@ -841,6 +848,43 @@ var Browser = {
 
       // Automatically reload after the exception was added
       aMessage.target.reload();
+    }
+  },
+
+  /**
+   * Handle blocked site message from content.
+   */
+  _handleBlockedSite: function _handleBlockedSite(aMessage) {
+    let formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].getService(Ci.nsIURLFormatter);
+    let json = aMessage.json;
+    switch (json.action) {
+      case "leave": {
+        // Get the start page from the *default* pref branch, not the user's
+        let url = Browser.getHomePage({ useDefault: true });
+        this.loadURI(url);
+        break;
+      }
+      case "report-malware": {
+        // Get the stop badware "why is this blocked" report url, append the current url, and go there.
+        try {
+          let reportURL = formatter.formatURLPref("browser.safebrowsing.malware.reportURL");
+          reportURL += json.url;
+          this.loadURI(reportURL);
+        } catch (e) {
+          Cu.reportError("Couldn't get malware report URL: " + e);
+        }
+        break;
+      }
+      case "report-phishing": {
+        // It's a phishing site, not malware
+        try {
+          let reportURL = formatter.formatURLPref("browser.safebrowsing.warning.infoURL");
+          this.loadURI(reportURL);
+        } catch (e) {
+          Cu.reportError("Couldn't get phishing info URL: " + e);
+        }
+        break;
+      }
     }
   },
 
@@ -1124,6 +1168,9 @@ var Browser = {
         break;
       case "Browser:CertException":
         this._handleCertException(aMessage);
+        break;
+      case "Browser:BlockedSite":
+        this._handleBlockedSite(aMessage);
         break;
     }
   }

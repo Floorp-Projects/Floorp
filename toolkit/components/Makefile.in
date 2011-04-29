@@ -120,10 +120,6 @@ ifdef MOZ_URL_CLASSIFIER
 PARALLEL_DIRS += url-classifier
 endif
 
-ifdef MOZ_FASTSTART
-PARALLEL_DIRS += faststart
-endif
-
 DIRS += \
   build \
   $(NULL)

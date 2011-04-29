@@ -71,26 +71,25 @@ enum JSInterpMode
 enum JSFrameFlags
 {
     /* Primary frame type */
-    JSFRAME_GLOBAL             =     0x1, /* frame pushed for a global script */
-    JSFRAME_FUNCTION           =     0x2, /* frame pushed for a scripted call */
-    JSFRAME_DUMMY              =     0x4, /* frame pushed for bookkeeping */
+    JSFRAME_GLOBAL             =      0x1, /* frame pushed for a global script */
+    JSFRAME_FUNCTION           =      0x2, /* frame pushed for a scripted call */
+    JSFRAME_DUMMY              =      0x4, /* frame pushed for bookkeeping */
 
     /* Frame subtypes */
-    JSFRAME_EVAL               =     0x8, /* frame pushed for eval() or debugger eval */
-    JSFRAME_DEBUGGER           =    0x10, /* frame pushed for debugger eval */
-    JSFRAME_GENERATOR          =    0x20, /* frame is associated with a generator */
-    JSFRAME_FLOATING_GENERATOR =    0x40, /* frame is is in generator obj, not on stack */
-    JSFRAME_CONSTRUCTING       =    0x80, /* frame is for a constructor invocation */
+    JSFRAME_EVAL               =      0x8, /* frame pushed for eval() or debugger eval */
+    JSFRAME_DEBUGGER           =     0x10, /* frame pushed for debugger eval */
+    JSFRAME_GENERATOR          =     0x20, /* frame is associated with a generator */
+    JSFRAME_FLOATING_GENERATOR =     0x40, /* frame is is in generator obj, not on stack */
+    JSFRAME_CONSTRUCTING       =     0x80, /* frame is for a constructor invocation */
 
     /* Temporary frame states */
-    JSFRAME_ASSIGNING          =   0x100, /* not-JOF_ASSIGNING op is assigning */
-    JSFRAME_YIELDING           =   0x200, /* js::Interpret dispatched JSOP_YIELD */
-    JSFRAME_FINISHED_IN_INTERPRETER = 0x400, /* set if frame finished in Interpret() */
+    JSFRAME_YIELDING           =    0x200, /* js::Interpret dispatched JSOP_YIELD */
+    JSFRAME_FINISHED_IN_INTERP =    0x400, /* set if frame finished in Interpret() */
 
     /* Concerning function arguments */
-    JSFRAME_OVERRIDE_ARGS      =  0x1000, /* overridden arguments local variable */
-    JSFRAME_OVERFLOW_ARGS      =  0x2000, /* numActualArgs > numFormalArgs */
-    JSFRAME_UNDERFLOW_ARGS     =  0x4000, /* numActualArgs < numFormalArgs */
+    JSFRAME_OVERRIDE_ARGS      =   0x1000, /* overridden arguments local variable */
+    JSFRAME_OVERFLOW_ARGS      =   0x2000, /* numActualArgs > numFormalArgs */
+    JSFRAME_UNDERFLOW_ARGS     =   0x4000, /* numActualArgs < numFormalArgs */
 
     /* Lazy frame initialization */
     JSFRAME_HAS_IMACRO_PC      =   0x8000, /* frame has imacpc value available */
@@ -396,8 +395,13 @@ struct JSStackFrame
     inline js::Value *actualArgsEnd() const;
 
     inline js::Value &canonicalActualArg(uintN i) const;
-    template <class Op> inline void forEachCanonicalActualArg(Op op);
-    template <class Op> inline void forEachFormalArg(Op op);
+
+    /*
+     * Apply 'op' to each arg of the specified type. Stop if 'op' returns
+     * false. Return 'true' iff all 'op' calls returned true.
+     */
+    template <class Op> inline bool forEachCanonicalActualArg(Op op);
+    template <class Op> inline bool forEachFormalArg(Op op);
 
     inline void clearMissingArgs();
 
@@ -454,8 +458,6 @@ struct JSStackFrame
         return formalArgs()[-1];
     }
 
-    inline bool computeThis(JSContext *cx);
-
     /*
      * Callee
      *
@@ -463,7 +465,7 @@ struct JSStackFrame
      * same caller as its containing function frame.
      */
 
-    js::Value &calleeValue() const {
+    js::Value &calleev() const {
         JS_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((js::Value *)this)[-2];
@@ -472,18 +474,22 @@ struct JSStackFrame
 
     JSObject &callee() const {
         JS_ASSERT(isFunctionFrame());
-        return calleeValue().toObject();
+        return calleev().toObject();
     }
 
     JSObject *maybeCallee() const {
         return isFunctionFrame() ? &callee() : NULL;
     }
 
+    js::CallReceiver callReceiver() const {
+        return js::CallReceiverFromArgv(formalArgs());
+    }
+
     /*
      * getValidCalleeObject is a fallible getter to compute the correct callee
      * function object, which may require deferred cloning due to the JSObject
      * methodReadBarrier. For a non-function frame, return true with *vp set
-     * from calleeValue, which may not be an object (it could be undefined).
+     * from calleev, which may not be an object (it could be undefined).
      */
     bool getValidCalleeObject(JSContext *cx, js::Value *vp);
 
@@ -531,6 +537,20 @@ struct JSStackFrame
     inline void setScopeChainWithOwnCallObj(JSObject &obj);
 
     inline void markActivationObjectsAsPut();
+
+    /*
+     * Frame compartment
+     *
+     * A stack frame's compartment is the frame's containing context's
+     * compartment when the frame was pushed.
+     */
+
+    JSCompartment *compartment() const {
+        JS_ASSERT_IF(isScriptFrame(), scopeChain().compartment() == script()->compartment);
+        return scopeChain().compartment();
+    }
+
+    inline JSPrincipals *principals(JSContext *cx) const;
 
     /*
      * Imacropc
@@ -706,18 +726,6 @@ struct JSStackFrame
         flags_ |= JSFRAME_OVERRIDE_ARGS;
     }
 
-    bool isAssigning() const {
-        return !!(flags_ & JSFRAME_ASSIGNING);
-    }
-
-    void setAssigning() {
-        flags_ |= JSFRAME_ASSIGNING;
-    }
-
-    void clearAssigning() {
-        flags_ &= ~JSFRAME_ASSIGNING;
-    }
-
     bool isYielding() {
         return !!(flags_ & JSFRAME_YIELDING);
     }
@@ -731,11 +739,11 @@ struct JSStackFrame
     }
 
     void setFinishedInInterpreter() {
-        flags_ |= JSFRAME_FINISHED_IN_INTERPRETER;
+        flags_ |= JSFRAME_FINISHED_IN_INTERP;
     }
 
     bool finishedInInterpreter() const {
-        return !!(flags_ & JSFRAME_FINISHED_IN_INTERPRETER);
+        return !!(flags_ & JSFRAME_FINISHED_IN_INTERP);
     }
 
     /*
@@ -917,34 +925,22 @@ extern bool
 ScriptDebugEpilogue(JSContext *cx, JSStackFrame *fp, bool ok);
 
 /*
- * For a call's vp (which necessarily includes callee at vp[0] and the original
- * specified |this| at vp[1]), convert null/undefined |this| into the global
- * object for the callee and replace other primitives with boxed versions. The
- * callee must not be strict mode code.
+ * For a given |call|, convert null/undefined |this| into the global object for
+ * the callee and replace other primitives with boxed versions. This assumes
+ * that call.callee() is not strict mode code. This is the special/slow case of
+ * ComputeThis.
  */
 extern bool
-BoxThisForVp(JSContext *cx, js::Value *vp);
+BoxNonStrictThis(JSContext *cx, const CallReceiver &call);
 
 /*
- * Abstracts the layout of the stack passed to natives from the engine and from
- * natives to js::Invoke.
+ * Ensure that fp->thisValue() is the correct value of |this| for the scripted
+ * call represented by |fp|. ComputeThis is necessary because fp->thisValue()
+ * may be set to 'undefined' when 'this' should really be the global object (as
+ * an optimization to avoid global-this computation).
  */
-struct CallArgs
-{
-    Value *argv_;
-    uintN argc_;
-  protected:
-    CallArgs() {}
-    CallArgs(Value *argv, uintN argc) : argv_(argv), argc_(argc) {}
-  public:
-    Value *base() const { return argv_ - 2; }
-    Value &callee() const { return argv_[-2]; }
-    Value &thisv() const { return argv_[-1]; }
-    Value &operator[](unsigned i) const { JS_ASSERT(i < argc_); return argv_[i]; }
-    Value *argv() const { return argv_; }
-    uintN argc() const { return argc_; }
-    Value &rval() const { return argv_[-2]; }
-};
+inline bool
+ComputeThis(JSContext *cx, JSStackFrame *fp);
 
 /*
  * The js::InvokeArgumentsGuard passed to js_Invoke must come from an
@@ -1036,29 +1032,11 @@ ExternalInvokeConstructor(JSContext *cx, const Value &fval, uintN argc, Value *a
                           Value *rval);
 
 /*
- * Performs a direct eval for the given arguments, which must correspond to the
- * currently-executing stack frame, which must be a script frame. On completion
- * the result is returned in *vp and the JS stack pointer is adjusted.
- */
-extern JS_REQUIRES_STACK bool
-DirectEval(JSContext *cx, uint32 argc, Value *vp);
-
-/*
- * Performs a direct eval for the given arguments, which must correspond to the
- * currently-executing stack frame, which must be a script frame.  evalfun must
- * be the built-in eval function and must correspond to the callee in vp[0].
- * When this function succeeds it returns the result in *vp, adjusts the JS
- * stack pointer, and returns true.
- */
-extern JS_REQUIRES_STACK bool
-DirectEval(JSContext *cx, JSFunction *evalfun, uint32 argc, Value *vp);
-
-/*
  * Executes a script with the given scope chain in the context of the given
  * frame.
  */
 extern JS_FORCES_STACK bool
-Execute(JSContext *cx, JSObject *chain, JSScript *script,
+Execute(JSContext *cx, JSObject &chain, JSScript *script,
         JSStackFrame *prev, uintN flags, Value *result);
 
 /*

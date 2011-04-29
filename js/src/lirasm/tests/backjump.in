@@ -1,0 +1,17 @@
+        ptr = allocp 8
+        zero = immi 0
+        one = immi 1
+        neg_one = immi -1
+        sti one ptr 0
+        sti zero ptr 4
+start:  a = ldi ptr 0
+        x = ldi ptr 4
+        b = muli a neg_one
+        y = addi x one
+        sti y ptr 4
+        sti b ptr 0
+        t = eqi b one
+        jf t start
+end:    reti y
+        
+

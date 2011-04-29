@@ -9,7 +9,7 @@ from tests import TestCase
 
 
 def split_path_into_dirs(path):
-    dirs = []
+    dirs = [path]
     while path != "/":
         path = os.path.dirname(path)
         dirs.append(path)
@@ -43,8 +43,9 @@ class XULInfo:
 
         path = None
         for dir in dirs:
-          path = os.path.join(dir, 'config/autoconf.mk')
-          if os.path.isfile(path):
+          _path = os.path.join(dir, 'config/autoconf.mk')
+          if os.path.isfile(_path):
+              path = _path
               break
 
         if path == None:
