@@ -359,7 +359,7 @@ struct ChunkInfo {
 struct Chunk {
     static const size_t BytesPerArena = ArenaSize +
                                         sizeof(ArenaBitmap) +
-                                        sizeof(sizeof(MarkingDelay));
+                                        sizeof(MarkingDelay);
 
     static const size_t ArenasPerChunk = (GC_CHUNK_SIZE - sizeof(ChunkInfo)) / BytesPerArena;
 
