@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2:
  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -46,22 +46,20 @@
 G_BEGIN_DECLS
 
 /* component interface callbacks */
-void componentInterfaceInitCB(AtkComponentIface *aIface);
-AtkObject *refAccessibleAtPointCB(AtkComponent *aComponent,
-                                  gint aAccX, gint aAccY,
+void componentInterfaceInitCB(AtkComponentIface* aIface);
+AtkObject* refAccessibleAtPointCB(AtkComponent* aComponent,
+                                  gint aX, gint aY,
                                   AtkCoordType aCoordType);
-void getExtentsCB(AtkComponent *aComponent,
-                  gint *aAccX, gint *aAccY,
-                  gint *aAccWidth, gint *aAccHeight,
+void getExtentsCB(AtkComponent* aComponent,
+                  gint* aX, gint* aY, gint* aWidth, gint* aHeight,
                   AtkCoordType aCoordType);
 /* the "contains", "get_position", "get_size" can take advantage of
  * "get_extents", there is no need to implement them now.
  */
-gboolean grabFocusCB(AtkComponent *aComponent);
+gboolean grabFocusCB(AtkComponent* aComponent);
 
-/* what are missing now for atk component */
-
-/* ==================================================
+/* what are missing now for atk component:
+ *
  * add_focus_handler
  * remove_focus_handler
  * set_extents
@@ -69,8 +67,14 @@ gboolean grabFocusCB(AtkComponent *aComponent);
  * set_size
  * get_layer
  * get_mdi_zorder
- * ==================================================
  */
+
+AtkObject* refAccessibleAtPointHelper(nsAccessibleWrap* aAccWrap,
+                                      gint aX, gint aY, AtkCoordType aCoordType);
+void getExtentsHelper(nsAccessibleWrap* aAccWrap,
+                      gint* aX, gint* aY, gint* aWidth, gint* aHeight,
+                      AtkCoordType aCoordType);
+
 G_END_DECLS
 
 #endif /* __MAI_INTERFACE_COMPONENT_H__ */

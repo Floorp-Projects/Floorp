@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:expandtab:shiftwidth=4:tabstop=4:
- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:expandtab:shiftwidth=2:tabstop=2: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -49,6 +48,7 @@
 #include "nsIServiceManager.h"
 #include "nsAutoPtr.h"
 #include "nsAccessibilityService.h"
+#include "AtkSocketAccessible.h"
 
 #include <gtk/gtk.h>
 #include <atk/atk.h>
@@ -722,8 +722,23 @@ nsApplicationAccessibleWrap::PreCreate()
         sATKLib = PR_LoadLibrary(sATKLibName);
         if (sATKLib) {
             AtkGetTypeType pfn_atk_hyperlink_impl_get_type = (AtkGetTypeType) PR_FindFunctionSymbol(sATKLib, sATKHyperlinkImplGetTypeSymbol);
-            if (pfn_atk_hyperlink_impl_get_type) {
+            if (pfn_atk_hyperlink_impl_get_type)
                 g_atk_hyperlink_impl_type = pfn_atk_hyperlink_impl_get_type();
+
+            AtkGetTypeType pfn_atk_socket_get_type;
+            pfn_atk_socket_get_type = (AtkGetTypeType)
+                                      PR_FindFunctionSymbol(sATKLib,
+                                                            AtkSocketAccessible::sATKSocketGetTypeSymbol);
+            if (pfn_atk_socket_get_type) {
+                AtkSocketAccessible::g_atk_socket_type =
+                  pfn_atk_socket_get_type();
+                AtkSocketAccessible::g_atk_socket_embed = (AtkSocketEmbedType)
+                  PR_FindFunctionSymbol(sATKLib,
+                                        AtkSocketAccessible
+                                          ::sATKSocketEmbedSymbol);
+            AtkSocketAccessible::gCanEmbed =
+              AtkSocketAccessible::g_atk_socket_type != G_TYPE_INVALID &&
+              AtkSocketAccessible::g_atk_socket_embed;
             }
         }
         sATKChecked = PR_TRUE;

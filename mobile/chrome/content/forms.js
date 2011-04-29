@@ -580,7 +580,14 @@ FormAssistant.prototype = {
     let isOpaque = (style.getPropertyValue("opacity") != 0);
 
     let rect = aElement.getBoundingClientRect();
-    return isVisible && isOpaque && (rect.height != 0 || rect.width != 0);
+
+    // Since the only way to show a drop-down menu for a select when the form
+    // assistant is enabled is to return true here, a select is allowed to have
+    // an opacity to 0 in order to let web developpers add a custom design on
+    // top of it. This is less important to use the form assistant for the
+    // other types of fields because even if the form assistant won't fired,
+    // the focus will be in and a VKB will popup if needed
+    return isVisible && (isOpaque || this._isSelectElement(aElement)) && (rect.height != 0 || rect.width != 0);
   },
 
   _isSelectElement: function formHelperIsSelectElement(aElement) {

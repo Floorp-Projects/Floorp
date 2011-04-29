@@ -2107,9 +2107,9 @@ ia64*-hpux*)
         esac
         # If we're building with --enable-profiling, we need a frame pointer.
         if test -z "$MOZ_PROFILING"; then
-            MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fomit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
+            MOZ_OPTIMIZE_FLAGS="-O3 -fomit-frame-pointer"
         else
-            MOZ_OPTIMIZE_FLAGS="-Os -freorder-blocks -fno-omit-frame-pointer $MOZ_OPTIMIZE_SIZE_TWEAK"
+            MOZ_OPTIMIZE_FLAGS="-O3 -fno-omit-frame-pointer"
         fi
         MOZ_DEBUG_FLAGS="-g"
     fi

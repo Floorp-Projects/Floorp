@@ -76,10 +76,7 @@ public:
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.
   virtual mozilla::css::Declaration* GetCSSDeclaration(PRBool aAllocate);
-  virtual nsresult GetCSSParsingEnvironment(nsIURI** aSheetURI,
-                                            nsIURI** aBaseURI,
-                                            nsIPrincipal** aSheetPrincipal,
-                                            mozilla::css::Loader** aCSSLoader);
+  virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv);
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent);
 
   virtual nsINode* GetParentObject();
