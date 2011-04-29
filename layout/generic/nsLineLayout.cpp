@@ -664,8 +664,7 @@ IsPercentageAware(const nsIFrame* aFrame)
   }
 
   // Some of these things don't apply to non-replaced inline frames
-  // (that is, fType == nsGkAtoms::inlineFrame || fType ==
-  // nsGkAtoms::positionedInlineFrame), but we won't bother making
+  // (that is, fType == nsGkAtoms::inlineFrame), but we won't bother making
   // things unnecessarily complicated, since they'll probably be set
   // quite rarely.
 
