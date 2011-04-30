@@ -1722,13 +1722,14 @@ const ContentTouchHandler = {
   },
 
   receiveMessage: function receiveMessage(aMessage) {
-    if (aMessage.json.messageId != this._messageId)
+    let json = aMessage.json;
+    if (json.messageId != this._messageId)
       return;
 
     switch (aMessage.name) {
       case "Browser:ContextMenu":
         // Long tap
-        let contextMenu = { name: aMessage.name, json: aMessage.json, target: aMessage.target };
+        let contextMenu = { name: aMessage.name, json: json, target: aMessage.target };
         if (ContextHelper.showPopup(contextMenu)) {
           // Stop all input sequences
           let event = document.createEvent("Events");
@@ -1737,20 +1738,20 @@ const ContentTouchHandler = {
         }
         break;
       case "Browser:CaptureEvents":
-        this.contentMightCaptureMouse = true;
+        this.contentMightCaptureMouse = json.contentMightCaptureMouse;
         if (this.touchTimeout) {
           clearTimeout(this.touchTimeout);
           this.touchTimeout = null;
         }
 
-        if (aMessage.json.click)
+        if (json.click)
           this.clickPrevented = true;
 
         if (this.canCancelPan)
-          Elements.browsers.customDragger.contentMouseCapture = aMessage.json.panning;
+          Elements.browsers.customDragger.contentMouseCapture = json.panning;
         break;
       case "Browser:CanCaptureMouse:Return":
-        ContentTouchHandler.contentMightCaptureMouse = aMessage.json.contentMightCaptureMouse;
+        ContentTouchHandler.contentMightCaptureMouse = json.contentMightCaptureMouse;
         break;
     }
   },
@@ -1850,7 +1851,8 @@ const ContentTouchHandler = {
   },
 
   tapMove: function tapMove(aX, aY) {
-    this._dispatchMouseEvent("Browser:MouseMove", aX, aY);
+    if (this.contentMightCaptureMouse)
+      this._dispatchMouseEvent("Browser:MouseMove", aX, aY);
   },
 
   tapDouble: function tapDouble(aX, aY, aModifiers) {
