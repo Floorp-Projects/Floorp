@@ -1742,6 +1742,10 @@ const ContentTouchHandler = {
           clearTimeout(this.touchTimeout);
           this.touchTimeout = null;
         }
+
+        if (aMessage.json.click)
+          this.clickPrevented = true;
+
         if (this.canCancelPan)
           Elements.browsers.customDragger.contentMouseCapture = aMessage.json.panning;
         break;
@@ -1785,6 +1789,8 @@ const ContentTouchHandler = {
 
   canCancelPan: false,
 
+  clickPrevented: false,
+
   updateCanCancel: function(aX, aY) {
     let dpi = Browser.windowUtils.displayDPI;
 
@@ -1812,6 +1818,7 @@ const ContentTouchHandler = {
 
     // if the page might capture touch events, we give it the option
     this.updateCanCancel(aX, aY);
+    this.clickPrevented = false;
     Elements.browsers.customDragger.contentMouseCapture = this.canCancelPan && this.contentMightCaptureMouse;
     if (this.touchTimeout) {
       clearTimeout(this.touchTimeout);
@@ -1838,7 +1845,7 @@ const ContentTouchHandler = {
 
   tapSingle: function tapSingle(aX, aY, aModifiers) {
     // Cancel the mouse click if we are showing a context menu
-    if (!ContextHelper.popupState)
+    if (!ContextHelper.popupState && !this.clickPrevented)
       this._dispatchMouseEvent("Browser:MouseClick", aX, aY, { modifiers: aModifiers });
   },
 
