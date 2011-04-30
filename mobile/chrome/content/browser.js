@@ -1639,7 +1639,6 @@ const ContentTouchHandler = {
     document.addEventListener("TapLong", this, false);
     document.addEventListener("TapMove", this, false);
 
-    document.addEventListener("PanBegin", this, false);
     document.addEventListener("PopupChanged", this, false);
     document.addEventListener("CancelTouchSequence", this, false);
 
@@ -1665,7 +1664,6 @@ const ContentTouchHandler = {
       return;
 
     switch (aEvent.type) {
-      case "PanBegin":
       case "PopupChanged":
       case "CancelTouchSequence":
         this._clearPendingMessages();
