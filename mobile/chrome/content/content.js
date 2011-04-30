@@ -1214,10 +1214,17 @@ var TouchEventHandler = {
   },
 
   receiveMessage: function(aMessage) {
-    if (!content.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindowUtils)
-                .mayHaveTouchEventListeners || Util.isParentProcess())
+    if (Util.isParentProcess())
       return;
+
+    if (!content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).mayHaveTouchEventListeners) {
+      sendAsyncMessage("Browser:CaptureEvents", {
+        messageId: json.messageId,
+        click: false, panning: false,
+        contentMightCaptureMouse: false
+      });
+      return;
+    }
 
     let json = aMessage.json;
     let cancelled = false;
@@ -1244,6 +1251,7 @@ var TouchEventHandler = {
 
     if (this.isCancellable) {
       sendAsyncMessage("Browser:CaptureEvents", { messageId: json.messageId,
+                                                  contentMightCaptureMouse: true,
                                                   click: cancelled && aMessage.name == "Browser:MouseDown",
                                                   panning: cancelled });
       // Panning can be cancelled only during the "touchstart" event and the
