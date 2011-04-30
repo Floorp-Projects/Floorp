@@ -50,6 +50,7 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 
+#include "jsatominlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -439,7 +440,7 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
     for (jsuint n = 0; n < length; ++n) {
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
-        if (!js_IndexToId(cx, n, idr.addr()))
+        if (!IndexToId(cx, n, idr.addr()))
             return false;
         if (!obj->getProperty(cx, idr.id(), tvr.addr()))
             return false;
