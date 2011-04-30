@@ -815,7 +815,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
 
             for (jsuint i = 0; i < length; i++) {
                 jsid index;
-                if (!js_IndexToId(cx, i, &index))
+                if (!IndexToId(cx, i, &index))
                     return false;
 
                 if (!Walk(cx, index, obj, reviver, propValue.addr()))
@@ -1030,7 +1030,7 @@ PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, const Value &value)
         ok = js_GetLengthProperty(cx, parent, &len);
         if (ok) {
             jsid index;
-            if (!js_IndexToId(cx, len, &index))
+            if (!IndexToId(cx, len, &index))
                 return JS_FALSE;
             ok = parent->defineProperty(cx, index, value, NULL, NULL, JSPROP_ENUMERATE);
         }
