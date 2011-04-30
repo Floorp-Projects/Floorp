@@ -2283,18 +2283,15 @@ nsGenericElement::InternalIsSupported(nsISupports* aObject,
         PL_strcmp(v, "3.0") == 0) {
       *aReturn = PR_TRUE;
     }
-  }
-#ifdef MOZ_SVG
-  else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
-           PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
-           nsSVGFeatures::HaveFeature(aFeature)) {
+  } else if (PL_strcasecmp(f, "SVGEvents") == 0 ||
+             PL_strcasecmp(f, "SVGZoomEvents") == 0 ||
+             nsSVGFeatures::HaveFeature(aObject, aFeature)) {
     if (aVersion.IsEmpty() ||
         PL_strcmp(v, "1.0") == 0 ||
         PL_strcmp(v, "1.1") == 0) {
       *aReturn = PR_TRUE;
     }
   }
-#endif /* MOZ_SVG */
 #ifdef MOZ_SMIL
   else if (NS_SMILEnabled() && PL_strcasecmp(f, "TimeControl") == 0) {
     if (aVersion.IsEmpty() || PL_strcmp(v, "1.0") == 0) {
