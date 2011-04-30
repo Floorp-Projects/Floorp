@@ -892,19 +892,19 @@ obj_toString(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+/* ES5 15.2.4.3. */
 static JSBool
 obj_toLocaleString(JSContext *cx, uintN argc, Value *vp)
 {
+    JS_CHECK_RECURSION(cx, return false);
+
+    /* Step 1. */
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
         return false;
 
-    JSString *str = js_ValueToString(cx, ObjectValue(*obj));
-    if (!str)
-        return JS_FALSE;
-
-    vp->setString(str);
-    return JS_TRUE;
+    /* Steps 2-4. */
+    return obj->callMethod(cx, ATOM_TO_JSID(cx->runtime->atomState.toStringAtom), 0, NULL, vp);
 }
 
 static JSBool
