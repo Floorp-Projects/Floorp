@@ -56,10 +56,13 @@ Features to add:
   <title>Reftest analyzer</title>
   <style type="text/css"><![CDATA[
 
-  html, body { margin: 0; padding: 0 }
+  html, body { margin: 0; }
+  html { padding: 0; }
+  body { padding: 4px; }
 
-  #pixelarea, #itemlist, #images { position: absolute; overflow: auto; }
-  #pixelarea { top: 0; left: 0; width: 320px; height: 84px; }
+  #pixelarea, #itemlist, #images { position: absolute; }
+  #itemlist, #images { overflow: auto; }
+  #pixelarea { top: 0; left: 0; width: 320px; height: 84px; overflow: visible }
   #itemlist { top: 84px; left: 0; width: 320px; bottom: 0; }
   #images { top: 0; bottom: 0; left: 320px; right: 0; }
 
