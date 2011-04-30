@@ -117,9 +117,24 @@ function ID(id) {
   return gIDCache[id];
 }
 
+function hash_parameters() {
+  var result = { };
+  var params = window.location.hash.substr(1).split(/[&;]/);
+  for (var i = 0; i < params.length; i++) {
+    var parts = params[i].split("=");
+    result[parts[0]] = unescape(unescape(parts[1]));
+  }
+  return result;
+}
+
 function load() {
   gPhases = [ ID("entry"), ID("loading"), ID("viewer") ];
   build_mag();
+  var params = hash_parameters();
+  if (params.log) {
+    ID("logentry").value = params.log;
+    log_pasted();
+  }
 }
 
 function build_mag() {
