@@ -380,16 +380,15 @@
                           oncommand="BrowserGoHome(event);"
                           onclick="checkForMiddleClick(this, event);"
                           key="goHome"/>
+                <menuseparator id="historyMenuHomeSeparator"
+                               class="show-only-for-keyboard"/>
                 <menuitem id="menu_showAllHistory"
                           label="&showAllHistoryCmd2.label;"
 #ifndef XP_MACOSX
                           key="showAllHistoryKb"
 #endif
                           command="Browser:ShowAllHistory"/>
-                <menuseparator id="startHistorySeparator"/>
-                <menuseparator id="endHistorySeparator"
-                               class="hide-if-empty-places-result"
-                               builder="end"/>
+                <menuseparator id="showAllHistorySeparator"/>
 #ifdef MOZ_SERVICES_SYNC
                 <menuitem id="sync-tabs-menuitem"
                           label="&syncTabsMenu.label;"
@@ -421,6 +420,8 @@
 #endif
                              onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoWindowSubmenu();"/>
                 </menu>
+                <menuseparator id="startHistorySeparator"
+                               class="hide-if-empty-places-result"/>
               </menupopup>
             </menu>
 
