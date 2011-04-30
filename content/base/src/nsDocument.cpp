@@ -1596,9 +1596,11 @@ nsDocument::~nsDocument()
     mStyleSheetSetList->Disconnect();
   }
 
+#ifdef MOZ_SMIL
   if (mAnimationController) {
     mAnimationController->Disconnect();
   }
+#endif // MOZ_SMIL
 
   mParentDocument = nsnull;
 
