@@ -113,22 +113,28 @@ Class js_JSONClass = {
     ConvertStub
 };
 
+/* ES5 15.12.2. */
 JSBool
 js_json_parse(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *s = NULL;
-    Value *argv = vp + 2;
-    Value reviver = UndefinedValue();
+    /* Step 1. */
+    JSLinearString *linear;
+    if (argc >= 1) {
+        JSString *str = js_ValueToString(cx, vp[2]);
+        if (!str)
+            return false;
+        linear = str->ensureLinear(cx);
+        if (!linear)
+            return false;
+    } else {
+        linear = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
+    }
+    JS::Anchor<JSString *> anchor(linear);
 
-    if (!JS_ConvertArguments(cx, argc, Jsvalify(argv), "S / v", &s, &reviver))
-        return JS_FALSE;
+    Value reviver = (argc >= 2) ? vp[3] : UndefinedValue();
 
-    JSLinearString *linearStr = s->ensureLinear(cx);
-    if (!linearStr)
-        return JS_FALSE;
-    JS::Anchor<JSString *> anchor(linearStr);
-
-    return ParseJSONWithReviver(cx, linearStr->chars(), linearStr->length(), reviver, vp);
+    /* Steps 2-5. */
+    return ParseJSONWithReviver(cx, linear->chars(), linear->length(), reviver, vp);
 }
 
 /* ES5 15.12.3. */
@@ -980,12 +986,15 @@ ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, const Va
     ok &= !!js_FinishJSONParse(cx, jp, reviver);
     return ok;
 #else
+    /* 15.12.2 steps 2-3. */
     JSONSourceParser parser(cx, chars, length,
                             decodingMode == STRICT
                             ? JSONSourceParser::StrictJSON
                             : JSONSourceParser::LegacyJSON);
     if (!parser.parse(vp))
         return false;
+
+    /* 15.12.2 steps 4-5. */
     if (js_IsCallable(reviver))
         return Revive(cx, reviver, vp);
     return true;
