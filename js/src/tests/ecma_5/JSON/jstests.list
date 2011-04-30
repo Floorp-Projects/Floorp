@@ -15,6 +15,7 @@ script stringify-dropping-elements.js
 script stringify-gap.js
 script stringify-ignore-noncallable-toJSON.js
 script stringify-missing-arguments.js
+script stringify-nonarray-noncallable-replacer.js
 script stringify-primitives.js
 script stringify-replacer.js
 script stringify-replacer-array-duplicated-element.js
