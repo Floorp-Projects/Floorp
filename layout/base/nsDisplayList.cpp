@@ -189,7 +189,7 @@ static void UnmarkFrameForDisplay(nsIFrame* aFrame) {
 }
 
 static void RecordFrameMetrics(nsIFrame* aForFrame,
-                               nsIFrame* aScrollFrame,
+                               nsIFrame* aViewportFrame,
                                ContainerLayer* aRoot,
                                nsRect aVisibleRect,
                                nsRect aViewport,
@@ -209,8 +209,8 @@ static void RecordFrameMetrics(nsIFrame* aForFrame,
   }
 
   nsIScrollableFrame* scrollableFrame = nsnull;
-  if (aScrollFrame)
-    scrollableFrame = aScrollFrame->GetScrollTargetFrame();
+  if (aViewportFrame)
+    scrollableFrame = aViewportFrame->GetScrollTargetFrame();
 
   if (scrollableFrame) {
     nsSize contentSize =
@@ -461,16 +461,6 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
     if (belowItem && item->TryMerge(aBuilder, belowItem)) {
       belowItem->~nsDisplayItem();
       elements.ReplaceElementsAt(i - 1, 1, item);
-      continue;
-    }
-
-    nsDisplayList* list = item->GetList();
-    if (list && item->ShouldFlattenAway(aBuilder)) {
-      // The elements on the list >= i no longer serve any use.
-      elements.SetLength(i);
-      list->FlattenTo(&elements);
-      i = elements.Length();
-      item->~nsDisplayItem();
       continue;
     }
 
@@ -1506,11 +1496,6 @@ nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
   mList.AppendToTop(aItem);
 }
 
-nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
-                                     nsIFrame* aFrame)
-  : nsDisplayItem(aBuilder, aFrame) {
-}
-
 nsDisplayWrapList::~nsDisplayWrapList() {
   mList.DeleteAll();
 }
@@ -1776,59 +1761,17 @@ nsDisplayOwnLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
                                            nsDisplayList* aList,
                                            nsIFrame* aForFrame,
-                                           nsIFrame* aScrolledFrame,
-                                           nsIFrame* aScrollFrame)
-  : nsDisplayWrapList(aBuilder, aForFrame, aList)
-  , mScrollFrame(aScrollFrame)
-  , mScrolledFrame(aScrolledFrame)
+                                           nsIFrame* aViewportFrame)
+  : nsDisplayOwnLayer(aBuilder, aForFrame, aList)
+  , mViewportFrame(aViewportFrame)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollLayer);
 #endif
 
-  NS_ASSERTION(mScrolledFrame && mScrolledFrame->GetContent(),
+  NS_ASSERTION(mFrame && mFrame->GetContent(),
                "Need a child frame with content");
 }
-
-nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
-                                           nsDisplayItem* aItem,
-                                           nsIFrame* aForFrame,
-                                           nsIFrame* aScrolledFrame,
-                                           nsIFrame* aScrollFrame)
-  : nsDisplayWrapList(aBuilder, aForFrame, aItem)
-  , mScrollFrame(aScrollFrame)
-  , mScrolledFrame(aScrolledFrame)
-{
-#ifdef NS_BUILD_REFCNT_LOGGING
-  MOZ_COUNT_CTOR(nsDisplayScrollLayer);
-#endif
-
-  NS_ASSERTION(mScrolledFrame && mScrolledFrame->GetContent(),
-               "Need a child frame with content");
-}
-
-nsDisplayScrollLayer::nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
-                                           nsIFrame* aForFrame,
-                                           nsIFrame* aScrolledFrame,
-                                           nsIFrame* aScrollFrame)
-  : nsDisplayWrapList(aBuilder, aForFrame)
-  , mScrollFrame(aScrollFrame)
-  , mScrolledFrame(aScrolledFrame)
-{
-#ifdef NS_BUILD_REFCNT_LOGGING
-  MOZ_COUNT_CTOR(nsDisplayScrollLayer);
-#endif
-
-  NS_ASSERTION(mScrolledFrame && mScrolledFrame->GetContent(),
-               "Need a child frame with content");
-}
-
-#ifdef NS_BUILD_REFCNT_LOGGING
-nsDisplayScrollLayer::~nsDisplayScrollLayer()
-{
-  MOZ_COUNT_DTOR(nsDisplayScrollLayer);
-}
-#endif
 
 already_AddRefed<Layer>
 nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
@@ -1838,19 +1781,19 @@ nsDisplayScrollLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   // Get the already set unique ID for scrolling this content remotely.
   // Or, if not set, generate a new ID.
-  nsIContent* content = mScrolledFrame->GetContent();
+  nsIContent* content = mFrame->GetContent();
   ViewID scrollId = nsLayoutUtils::FindIDFor(content);
 
-  nsRect viewport = mScrollFrame->GetRect() -
-                    mScrollFrame->GetPosition() +
-                    aBuilder->ToReferenceFrame(mScrollFrame);
+  nsRect viewport = mViewportFrame->GetRect() -
+                    mViewportFrame->GetPosition() +
+                    aBuilder->ToReferenceFrame(mViewportFrame);
 
   bool usingDisplayport = false;
   nsRect displayport;
   if (content) {
     usingDisplayport = nsLayoutUtils::GetDisplayPort(content, &displayport);
   }
-  RecordFrameMetrics(mScrolledFrame, mScrollFrame, layer, mVisibleRect, viewport,
+  RecordFrameMetrics(mFrame, mViewportFrame, layer, mVisibleRect, viewport,
                      (usingDisplayport ? &displayport : nsnull), scrollId);
 
   return layer.forget();
@@ -1863,12 +1806,12 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                         PRBool& aContainsRootContentDocBG)
 {
   nsRect displayport;
-  if (nsLayoutUtils::GetDisplayPort(mScrolledFrame->GetContent(), &displayport)) {
+  if (nsLayoutUtils::GetDisplayPort(mFrame->GetContent(), &displayport)) {
     // The visible region for the children may be much bigger than the hole we
     // are viewing the children from, so that the compositor process has enough
     // content to asynchronously pan while content is being refreshed.
 
-    nsRegion childVisibleRegion = displayport + aBuilder->ToReferenceFrame(mScrollFrame);
+    nsRegion childVisibleRegion = displayport + aBuilder->ToReferenceFrame(mViewportFrame);
 
     nsRect boundedRect;
     boundedRect.IntersectRect(childVisibleRegion.GetBounds(), mList.GetBounds(aBuilder));
@@ -1881,82 +1824,25 @@ nsDisplayScrollLayer::ComputeVisibility(nsDisplayListBuilder* aBuilder,
     return visible;
 
   } else {
-    return nsDisplayWrapList::ComputeVisibility(aBuilder, aVisibleRegion,
+    return nsDisplayOwnLayer::ComputeVisibility(aBuilder, aVisibleRegion,
                                                 aAllowVisibleRegionExpansion,
                                                 aContainsRootContentDocBG);
   }
 }
 
-LayerState
-nsDisplayScrollLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                    LayerManager* aManager)
+#ifdef NS_BUILD_REFCNT_LOGGING
+nsDisplayScrollLayer::~nsDisplayScrollLayer()
 {
-  // Force this as a layer so we can scroll asynchronously.
-  // This causes incorrect rendering for rounded clips!
-  return LAYER_ACTIVE_FORCE;
+  MOZ_COUNT_DTOR(nsDisplayScrollLayer);
 }
-
-PRBool
-nsDisplayScrollLayer::TryMerge(nsDisplayListBuilder* aBuilder,
-                               nsDisplayItem* aItem)
-{
-  if (aItem->GetType() != TYPE_SCROLL_LAYER) {
-    return PR_FALSE;
-  }
-
-  nsDisplayScrollLayer* other = static_cast<nsDisplayScrollLayer*>(aItem);
-  if (other->mScrolledFrame != this->mScrolledFrame) {
-    return PR_FALSE;
-  }
-
-  FrameProperties props = mScrolledFrame->Properties();
-  props.Set(nsIFrame::ScrollLayerCount(),
-    reinterpret_cast<void*>(GetScrollLayerCount() - 1));
-
-  mList.AppendToBottom(&other->mList);
-  return PR_TRUE;
-}
-
-PRBool
-nsDisplayScrollLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
-{
-  return GetScrollLayerCount() > 1;
-}
-
-PRWord
-nsDisplayScrollLayer::GetScrollLayerCount()
-{
-  FrameProperties props = mScrolledFrame->Properties();
-#ifdef DEBUG
-  PRBool hasCount = PR_FALSE;
-  PRWord result = reinterpret_cast<PRWord>(
-    props.Get(nsIFrame::ScrollLayerCount(), &hasCount));
-  // If this aborts, then the property was either not added before scroll
-  // layers were created or the property was deleted to early. If the latter,
-  // make sure that nsDisplayScrollInfoLayer is on the bottom of the list so
-  // that it is processed last.
-  NS_ABORT_IF_FALSE(hasCount, "nsDisplayScrollLayer should always be defined");
-  return result;
-#else
-  return reinterpret_cast<PRWord>(props.Get(nsIFrame::ScrollLayerCount()));
 #endif
-}
-
-PRWord
-nsDisplayScrollLayer::RemoveScrollLayerCount()
-{
-  PRWord result = GetScrollLayerCount();
-  FrameProperties props = mScrolledFrame->Properties();
-  props.Remove(nsIFrame::ScrollLayerCount());
-  return result;
-}
-
 
 nsDisplayScrollInfoLayer::nsDisplayScrollInfoLayer(
   nsDisplayListBuilder* aBuilder,
-  nsIFrame* aScrolledFrame,
-  nsIFrame* aScrollFrame)
-  : nsDisplayScrollLayer(aBuilder, aScrolledFrame, aScrolledFrame, aScrollFrame)
+  nsDisplayList* aList,
+  nsIFrame* aForFrame,
+  nsIFrame* aViewportFrame)
+  : nsDisplayScrollLayer(aBuilder, aList, aForFrame, aViewportFrame)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_CTOR(nsDisplayScrollInfoLayer);
@@ -1969,30 +1855,6 @@ nsDisplayScrollInfoLayer::~nsDisplayScrollInfoLayer()
   MOZ_COUNT_DTOR(nsDisplayScrollInfoLayer);
 }
 #endif
-
-LayerState
-nsDisplayScrollInfoLayer::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                        LayerManager* aManager)
-{
-  return LAYER_ACTIVE_EMPTY;
-}
-
-PRBool
-nsDisplayScrollInfoLayer::TryMerge(nsDisplayListBuilder* aBuilder,
-                                   nsDisplayItem* aItem)
-{
-  return PR_FALSE;
-}
-
-PRBool
-nsDisplayScrollInfoLayer::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
-{
-  // Layer metadata for a particular scroll frame needs to be unique. Only
-  // one nsDisplayScrollLayer (with rendered content) or one
-  // nsDisplayScrollInfoLayer (with only the metadata) should survive the
-  // visibility computation. 
-  return RemoveScrollLayerCount() == 1;
-}
 
 nsDisplayClip::nsDisplayClip(nsDisplayListBuilder* aBuilder,
                              nsIFrame* aFrame, nsDisplayItem* aItem,
