@@ -49,10 +49,7 @@ function run() {
   }
 
   function getZoomRatio() {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
-    return utils.screenPixelsPerCSSPixel;
+    return SpecialPowers.DOMWindowUtils.screenPixelsPerCSSPixel;
   }
 
   var screenPixelsPerCSSPixel = getZoomRatio();
