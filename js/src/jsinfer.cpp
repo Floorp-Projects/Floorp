@@ -2580,6 +2580,11 @@ TypeObject::splicePrototype(JSContext *cx, JSObject *proto)
 
     AutoEnterTypeInference enter(cx);
 
+    if (proto->getType()->unknownProperties()) {
+        markUnknown(cx);
+        return;
+    }
+
     /*
      * Note: we require (but do not assert) that any property in the prototype
      * or its own prototypes must not share a name with a property already
