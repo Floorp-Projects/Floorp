@@ -4289,7 +4289,7 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript)
              * Generate an object with the appropriate final shape.
              */
             baseobj = NewReshapedObject(cx, type, baseobj->getParent(), kind,
-                                        (const js::Shape *) baseobj->lastProperty());
+                                        baseobj->lastProperty());
             if (!baseobj)
                 return;
 
@@ -4298,7 +4298,7 @@ JSObject::makeNewType(JSContext *cx, JSScript *newScript)
 
             type->newScript = newScript;
             type->newScriptFinalizeKind = unsigned(kind);
-            type->newScriptShape = (js::Shape *) baseobj->lastProperty();
+            type->newScriptShape = baseobj->lastProperty();
         }
     }
 

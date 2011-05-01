@@ -2997,7 +2997,7 @@ js_CreateThisForFunctionWithProto(JSContext *cx, JSObject *callee, JSObject *pro
             gc::FinalizeKind kind = gc::FinalizeKind(type->newScriptFinalizeKind);
             JSObject *res = NewObjectWithType(cx, type, callee->getParent(), kind);
             if (res)
-                res->setMap(type->newScriptShape);
+                res->setMap((Shape *) type->newScriptShape);
             return res;
         }
     }
@@ -3037,7 +3037,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
         types::AutoTypeRooter root(cx, type);
 
         obj = NewReshapedObject(cx, type, obj->getParent(), gc::FinalizeKind(obj->finalizeKind()),
-                                (const Shape *) obj->lastProperty());
+                                obj->lastProperty());
         if (!obj)
             return NULL;
         if (!callee->getFunctionPrivate()->script()->typeSetThis(cx, (types::jstype) type))
@@ -4370,6 +4370,31 @@ JSObject::allocSlots(JSContext *cx, size_t newcap)
     uint32 oldcap = numSlots();
 
     JS_ASSERT(newcap >= oldcap && !hasSlotsArray());
+
+    /*
+     * If we are allocating slots for an object whose type is always created
+     * by calling 'new' on a particular script, bump the GC kind for that
+     * script to give these objects a larger number of fixed slots.
+     */
+    if (type->newScript) {
+        unsigned newScriptSlots = gc::GetGCKindSlots(gc::FinalizeKind(type->newScriptFinalizeKind));
+        if (newScriptSlots == numFixedSlots()) {
+            /*
+             * Bump by two to keep BACKGROUND consistent.
+             * :XXX: this FINALIZE_*_BACKGROUND stuff needs an abstraction.
+             */
+            unsigned newKind = type->newScriptFinalizeKind + 2;
+            if (newKind <= gc::FINALIZE_OBJECT_LAST) {
+                JSObject *obj = NewReshapedObject(cx, type, getParent(),
+                                                  gc::FinalizeKind(newKind), type->newScriptShape);
+                if (!obj)
+                    return false;
+
+                type->newScriptFinalizeKind = newKind;
+                type->newScriptShape = obj->lastProperty();
+            }
+        }
+    }
 
     if (newcap > NSLOTS_LIMIT) {
         if (!JS_ON_TRACE(cx))
