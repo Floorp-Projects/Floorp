@@ -119,6 +119,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
         return NULL;
     if (clasp->ext.equality && !cx->markTypeObjectHasSpecialEquality(type))
         return NULL;
+    type->singleton = obj;
 
     GlobalObject *globalObj = obj->asGlobal();
 

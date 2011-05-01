@@ -134,7 +134,7 @@ XPCWrappedNativeProto::Init(
     mJSProtoObject =
         xpc_NewSystemInheritingJSObject(ccx, js::Jsvalify(jsclazz),
                                         mScope->GetPrototypeJSObject(),
-                                        parent);
+                                        true, parent);
 
     JSBool ok = mJSProtoObject && JS_SetPrivate(ccx, mJSProtoObject, this);
 
