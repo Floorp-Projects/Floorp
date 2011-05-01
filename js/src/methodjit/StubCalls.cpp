@@ -1833,6 +1833,9 @@ stubs::ElemInc(VMFrame &f)
     if (!ObjIncOp<1, true, strict, true>(f, obj, id))
         THROW();
     f.regs.sp[-3] = f.regs.sp[-1];
+
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(f.cx, f.pc()))
+        THROW();
 }
 
 template void JS_FASTCALL stubs::ElemInc<true>(VMFrame &f);
@@ -1851,6 +1854,9 @@ stubs::ElemDec(VMFrame &f)
     if (!ObjIncOp<-1, true, strict, true>(f, obj, id))
         THROW();
     f.regs.sp[-3] = f.regs.sp[-1];
+
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(f.cx, f.pc()))
+        THROW();
 }
 
 template void JS_FASTCALL stubs::ElemDec<true>(VMFrame &f);
@@ -1869,6 +1875,9 @@ stubs::IncElem(VMFrame &f)
     if (!ObjIncOp<1, false, strict, true>(f, obj, id))
         THROW();
     f.regs.sp[-3] = f.regs.sp[-1];
+
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(f.cx, f.pc()))
+        THROW();
 }
 
 template void JS_FASTCALL stubs::IncElem<true>(VMFrame &f);
@@ -1887,6 +1896,9 @@ stubs::DecElem(VMFrame &f)
     if (!ObjIncOp<-1, false, strict, true>(f, obj, id))
         THROW();
     f.regs.sp[-3] = f.regs.sp[-1];
+
+    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(f.cx, f.pc()))
+        THROW();
 }
 
 template void JS_FASTCALL stubs::DecElem<true>(VMFrame &f);
