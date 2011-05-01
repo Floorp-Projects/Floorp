@@ -122,12 +122,6 @@ nsPlatformCharset::Init()
   return NS_OK;
 }
 
-nsresult 
-nsPlatformCharset::MapToCharset(short script, short region, nsACString& outCharset)
-{
-  return NS_OK;
-}
-
 nsresult
 nsPlatformCharset::InitGetCharset(nsACString &oString)
 {
