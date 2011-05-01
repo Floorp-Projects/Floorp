@@ -3074,3 +3074,26 @@ FrameState::clearTemporaries()
 
     temporariesTop = temporaries;
 }
+
+Vector<TemporaryCopy> *
+FrameState::getTemporaryCopies()
+{
+    Vector<TemporaryCopy> *res = NULL;
+
+    for (FrameEntry *fe = temporaries; fe < temporariesTop; fe++) {
+        if (!fe->isTracked())
+            continue;
+        if (fe->isCopied()) {
+            for (uint32 i = fe->trackerIndex() + 1; i < a->tracker.nentries; i++) {
+                FrameEntry *nfe = a->tracker[i];
+                if (!deadEntry(nfe) && nfe->isCopy() && nfe->copyOf() == fe) {
+                    if (!res)
+                        res = cx->new_< Vector<TemporaryCopy> >(cx);
+                    res->append(TemporaryCopy(addressOf(nfe), addressOf(fe)));  /* :XXX: handle OOM */
+                }
+            }
+        }
+    }
+
+    return res;
+}

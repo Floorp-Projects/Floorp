@@ -65,6 +65,14 @@ struct Changes {
     uint32 nchanges;
 };
 
+struct TemporaryCopy {
+    TemporaryCopy(JSC::MacroAssembler::Address copy, JSC::MacroAssembler::Address temporary)
+        : copy(copy), temporary(temporary)
+    {}
+    JSC::MacroAssembler::Address copy;
+    JSC::MacroAssembler::Address temporary;
+};
+
 class StubCompiler;
 class LoopState;
 
@@ -903,6 +911,9 @@ class FrameState
     uint32 allocTemporary();  /* -1 if limit reached. */
     void clearTemporaries();
     inline FrameEntry *getTemporary(uint32 which);
+
+    /* Return NULL or a new vector with all current copies of temporaries. */
+    Vector<TemporaryCopy> *getTemporaryCopies();
 
   private:
     inline AnyRegisterID allocAndLoadReg(FrameEntry *fe, bool fp, RematInfo::RematType type);

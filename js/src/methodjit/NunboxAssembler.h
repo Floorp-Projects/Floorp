@@ -431,6 +431,13 @@ class NunboxAssembler : public JSC::MacroAssembler
         return branch32(cond, tagOf(address), ImmTag(JSVAL_TAG_STRING));
     }
 
+    void compareValue(Address one, Address two, RegisterID T0, RegisterID T1,
+                      Vector<Jump> *mismatches) {
+        loadValueAsComponents(one, T0, T1);
+        mismatches->append(branch32(NotEqual, T0, tagOf(two)));
+        mismatches->append(branch32(NotEqual, T1, payloadOf(two)));
+    }
+
 #ifdef JS_CPU_X86
     void fastLoadDouble(RegisterID lo, RegisterID hi, FPRegisterID fpReg) {
         if (MacroAssemblerX86Common::getSSEState() >= HasSSE4_1) {
