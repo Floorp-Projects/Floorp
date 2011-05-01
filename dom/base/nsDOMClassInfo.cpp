@@ -5387,7 +5387,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
 
   JSAutoRequest ar(cx);
 
-  JSObject *gsp = ::JS_NewObject(cx, &sGlobalScopePolluterClass, nsnull, obj);
+  JSObject *gsp = ::JS_NewObjectWithUniqueType(cx, &sGlobalScopePolluterClass, nsnull, obj);
   if (!gsp) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -5400,9 +5400,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
   while ((proto = ::JS_GetPrototype(cx, o))) {
     if (JS_GET_CLASS(cx, proto) == sObjectClass) {
       // Set the global scope polluters prototype to Object.prototype
-      if (!::JS_SetPrototype(cx, gsp, proto)) {
-        return NS_ERROR_UNEXPECTED;
-      }
+      ::JS_SplicePrototype(cx, gsp, proto);
 
       break;
     }
