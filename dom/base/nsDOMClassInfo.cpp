@@ -5240,9 +5240,6 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
   // catch and fix these mistakes.
   PrintWarningOnConsole(cx, "GlobalScopeElementReference");
 
-  // Update the object's type information with this property.
-  JS_AddTypePropertyId(cx, obj, id, *vp);
-
   return JS_TRUE;
 }
 

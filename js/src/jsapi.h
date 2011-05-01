@@ -2338,9 +2338,6 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                             JSPropertyOp getter, JSStrictPropertyOp setter,
                             uintN attrs);
 
-JS_PUBLIC_API(void)
-JS_AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, jsval value);
-
 extern JS_PUBLIC_API(JSBool)
 JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,
                  const char *alias);

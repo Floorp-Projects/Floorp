@@ -3473,12 +3473,6 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name, int8
                           Valueify(setter), attrs, Shape::HAS_SHORTID, tinyid);
 }
 
-JS_PUBLIC_API(void)
-JS_AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, jsval value)
-{
-    cx->addTypePropertyId(obj->getType(), id, Valueify(value));
-}
-
 static JSBool
 DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namelen,
                  const Value &value, PropertyOp getter, StrictPropertyOp setter, uintN attrs,
