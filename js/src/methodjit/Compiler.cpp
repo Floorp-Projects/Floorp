@@ -4377,6 +4377,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
         if (loop && loop->generatingInvariants()) {
             FrameEntry *fe = loop->invariantLength(top, frame.extra(top).types);
             if (fe) {
+                frame.learnType(fe, JSVAL_TYPE_INT32, false);
                 frame.pop();
                 frame.pushTemporary(fe);
                 return true;
@@ -4403,6 +4404,17 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             frame.push(Address(reg, offsetof(JSObject, privateData)), JSVAL_TYPE_INT32);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
+            return true;
+        }
+    }
+
+    /* Check if this is a property access we can make a loop invariant entry for. */
+    if (loop && loop->generatingInvariants()) {
+        FrameEntry *fe = loop->invariantProperty(top, frame.extra(top).types, ATOM_TO_JSID(atom));
+        if (fe) {
+            frame.learnType(fe, knownType, false);
+            frame.pop();
+            frame.pushTemporary(fe);
             return true;
         }
     }

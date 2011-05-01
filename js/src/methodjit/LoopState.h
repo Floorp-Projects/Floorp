@@ -85,6 +85,8 @@ namespace mjit {
  * after the call finishes.
  */
 
+struct TemporaryCopy;
+
 class LoopState : public MacroAssemblerTypedefs
 {
     JSContext *cx;
@@ -139,6 +141,9 @@ class LoopState : public MacroAssemblerTypedefs
         /* Index into Compiler's callSites or rejoinSites */
         unsigned patchIndex;
         bool patchCall;
+
+        /* Any copies of temporaries on the stack */
+        Vector<TemporaryCopy> *temporaryCopies;
     };
     Vector<RestoreInvariantCall> restoreInvariantCalls;
 
@@ -162,7 +167,9 @@ class LoopState : public MacroAssemblerTypedefs
             RANGE_CHECK,
 
             INVARIANT_SLOTS,
-            INVARIANT_LENGTH
+            INVARIANT_LENGTH,
+
+            INVARIANT_PROPERTY
         } kind;
         union {
             struct {
@@ -175,6 +182,12 @@ class LoopState : public MacroAssemblerTypedefs
                 uint32 arraySlot;
                 uint32 temporary;
             } array;
+            struct {
+                uint32 objectSlot;
+                uint32 propertySlot;
+                uint32 temporary;
+                jsid id;
+            } property;
         } u;
         InvariantEntry() { PodZero(this); }
         bool isCheck() const {
@@ -194,7 +207,8 @@ class LoopState : public MacroAssemblerTypedefs
     bool hasTestLinearRelationship(uint32 slot);
 
     bool hasInvariants() { return !invariantEntries.empty(); }
-    void restoreInvariants(jsbytecode *pc, Assembler &masm, Vector<Jump> *jumps);
+    void restoreInvariants(jsbytecode *pc, Assembler &masm,
+                           Vector<TemporaryCopy> *temporaryCopies, Vector<Jump> *jumps);
 
   public:
 
@@ -252,6 +266,7 @@ class LoopState : public MacroAssemblerTypedefs
                                unsigned indexPopped);
     FrameEntry *invariantSlots(const FrameEntry *obj);
     FrameEntry *invariantLength(const FrameEntry *obj, types::TypeSet *objTypes);
+    FrameEntry *invariantProperty(const FrameEntry *obj, types::TypeSet *objTypes, jsid id);
 
     /* Whether the current PC's binary op cannot overflow. */
     bool cannotIntegerOverflow();
