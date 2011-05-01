@@ -369,6 +369,12 @@ class PunboxAssembler : public JSC::MacroAssembler
         return testString(cond, Registers::ValueReg);
     }
 
+    void compareValue(Address one, Address two, RegisterID T0, RegisterID T1,
+                      Vector<Jump> *mismatches) {
+        loadValue(one, T0);
+        mismatches->append(branchPtr(NotEqual, T0, two));
+    }
+
     void breakDouble(FPRegisterID srcDest, RegisterID typeReg, RegisterID dataReg) {
         m_assembler.movq_rr(srcDest, typeReg);
         move(Registers::PayloadMaskReg, dataReg);

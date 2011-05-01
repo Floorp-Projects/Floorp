@@ -195,6 +195,8 @@ LoopState::addInvariantCall(Jump jump, Label label, bool ool, unsigned patchInde
     call.ool = ool;
     call.patchIndex = patchIndex;
     call.patchCall = patchCall;
+    call.temporaryCopies = frame.getTemporaryCopies();
+
     restoreInvariantCalls.append(call);
 }
 
@@ -224,11 +226,11 @@ LoopState::flushLoop(StubCompiler &stubcc)
 
             if (call.ool) {
                 call.jump.linkTo(masm.label(), &masm);
-                restoreInvariants(pc, masm, &failureJumps);
+                restoreInvariants(pc, masm, call.temporaryCopies, &failureJumps);
                 masm.jump().linkTo(call.label, &masm);
             } else {
                 stubcc.linkExitDirect(call.jump, masm.label());
-                restoreInvariants(pc, masm, &failureJumps);
+                restoreInvariants(pc, masm, call.temporaryCopies, &failureJumps);
                 stubcc.crossJump(masm.jump(), call.label);
             }
 
@@ -680,9 +682,7 @@ LoopState::invariantLength(const FrameEntry *obj, types::TypeSet *objTypes)
         InvariantEntry &entry = invariantEntries[i];
         if (entry.kind == InvariantEntry::INVARIANT_LENGTH &&
             entry.u.array.arraySlot == slot) {
-            FrameEntry *fe = frame.getTemporary(entry.u.array.temporary);
-            frame.learnType(fe, JSVAL_TYPE_INT32, false);
-            return fe;
+            return frame.getTemporary(entry.u.array.temporary);
         }
     }
 
@@ -699,7 +699,9 @@ LoopState::invariantLength(const FrameEntry *obj, types::TypeSet *objTypes)
     /*
      * Don't make 'length' loop invariant if the loop might directly write
      * to the elements of any of the accessed arrays. This could invoke an
-     * inline path which updates the length.
+     * inline path which updates the length. There is no need to check the
+     * modset for direct 'length' writes, as we don't generate inline paths
+     * updating array lengths.
      */
     for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
         types::TypeObject *object = objTypes->getObject(i);
@@ -714,7 +716,6 @@ LoopState::invariantLength(const FrameEntry *obj, types::TypeSet *objTypes)
     if (which == uint32(-1))
         return NULL;
     FrameEntry *fe = frame.getTemporary(which);
-    frame.learnType(fe, JSVAL_TYPE_INT32, false);
 
     JaegerSpew(JSpew_Analysis, "Using %s for loop invariant length of %s\n",
                frame.entryName(fe), frame.entryName(slot));
@@ -723,6 +724,67 @@ LoopState::invariantLength(const FrameEntry *obj, types::TypeSet *objTypes)
     entry.kind = InvariantEntry::INVARIANT_LENGTH;
     entry.u.array.arraySlot = slot;
     entry.u.array.temporary = which;
+    invariantEntries.append(entry);
+
+    return fe;
+}
+
+FrameEntry *
+LoopState::invariantProperty(const FrameEntry *obj, types::TypeSet *objTypes, jsid id)
+{
+    if (skipAnalysis || script->failedBoundsCheck)
+        return NULL;
+
+    if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
+        return NULL;
+
+    obj = obj->backing();
+    uint32 slot = frame.indexOfFe(obj);
+
+    for (unsigned i = 0; i < invariantEntries.length(); i++) {
+        InvariantEntry &entry = invariantEntries[i];
+        if (entry.kind == InvariantEntry::INVARIANT_PROPERTY &&
+            entry.u.property.objectSlot == slot &&
+            entry.u.property.id == id) {
+            FrameEntry *fe = frame.getTemporary(entry.u.property.temporary);
+            frame.learnType(fe, JSVAL_TYPE_INT32, false);
+            return fe;
+        }
+    }
+
+    if (!objTypes)
+        return NULL;
+
+    if (!loopInvariantEntry(frame.indexOfFe(obj)))
+        return NULL;
+
+    /* Check that the property is definite and not written anywhere in the loop. */
+    if (objTypes->getObjectCount() != 1)
+        return NULL;
+    types::TypeObject *object = objTypes->getObject(0);
+    if (object->unknownProperties() || hasModifiedProperty(object, id))
+        return NULL;
+    types::TypeSet *propertyTypes = object->getProperty(cx, id, false);
+    if (!propertyTypes)
+        return NULL;
+    if (!propertyTypes->isDefiniteProperty() || propertyTypes->isOwnProperty(cx, true))
+        return NULL;
+    objTypes->addFreeze(cx);
+
+    uint32 which = frame.allocTemporary();
+    if (which == uint32(-1))
+        return NULL;
+    FrameEntry *fe = frame.getTemporary(which);
+
+    JaegerSpew(JSpew_Analysis, "Using %s for loop invariant property of %s\n",
+               frame.entryName(fe), frame.entryName(slot));
+
+    InvariantEntry entry;
+    entry.kind = InvariantEntry::INVARIANT_PROPERTY;
+    entry.u.property.objectSlot = slot;
+    entry.u.property.propertySlot = propertyTypes->definiteSlot();
+    entry.u.property.temporary = which;
+    entry.u.property.id = id;
     invariantEntries.append(entry);
 
     return fe;
@@ -893,7 +955,7 @@ LoopState::cannotIntegerOverflow()
 bool
 LoopState::ignoreIntegerOverflow()
 {
-    if (skipAnalysis || script->failedBoundsCheck || !constrainedLoop)
+    if (skipAnalysis || script->failedBoundsCheck || unknownModset || !constrainedLoop)
         return false;
 
     /*
@@ -1040,7 +1102,8 @@ LoopState::valueFlowsToBitops(const analyze::SSAValue &v)
 }
 
 void
-LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm, Vector<Jump> *jumps)
+LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
+                             Vector<TemporaryCopy> *temporaryCopies, Vector<Jump> *jumps)
 {
     /*
      * Restore all invariants in memory when entering the loop or after any
@@ -1136,8 +1199,25 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm, Vector<Jump> *jump
                 ? JSObject::offsetOfSlots()
                 : offsetof(JSObject, privateData);
 
+            Address address = frame.addressOf(frame.getTemporary(entry.u.array.temporary));
+
             masm.loadPtr(Address(T0, offset), T0);
-            masm.storePtr(T0, frame.addressOf(frame.getTemporary(entry.u.array.temporary)));
+            if (entry.kind == InvariantEntry::INVARIANT_LENGTH)
+                masm.storeValueFromComponents(ImmType(JSVAL_TYPE_INT32), T0, address);
+            else
+                masm.storePtr(T0, address);
+            break;
+          }
+
+          case InvariantEntry::INVARIANT_PROPERTY: {
+            uint32 object = entry.u.property.objectSlot;
+            Jump notObject = masm.testObject(Assembler::NotEqual, frame.addressOf(object));
+            jumps->append(notObject);
+            masm.loadPayload(frame.addressOf(object), T0);
+
+            masm.loadInlineSlot(T0, entry.u.property.propertySlot, T1, T0);
+            masm.storeValueFromComponents(T1, T0,
+                frame.addressOf(frame.getTemporary(entry.u.property.temporary)));
             break;
           }
 
@@ -1145,6 +1225,22 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm, Vector<Jump> *jump
             JS_NOT_REACHED("Bad invariant kind");
         }
     }
+
+    /*
+     * If there were any copies of temporaries on the stack, make sure the
+     * value we just reconstructed matches the stored value of that temporary.
+     * We sync the entire stack before calls, so the copy's slot holds the old
+     * value, but in future code we will assume the copy is valid and use the
+     * changed value of the invariant.
+     */
+
+    for (unsigned i = 0; temporaryCopies && i < temporaryCopies->length(); i++) {
+        const TemporaryCopy &copy = (*temporaryCopies)[i];
+        masm.compareValue(copy.copy, copy.temporary, T0, T1, jumps);
+    }
+
+    if (temporaryCopies)
+        cx->delete_(temporaryCopies);
 }
 
 /* Loop analysis methods. */
@@ -1439,8 +1535,6 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
 void
 LoopState::analyzeLoopBody()
 {
-    /* :XXX: Currently only computing the modset for arrays modified in the loop. */
-
     unsigned offset = lifetime->head;
     while (offset < lifetime->backedge) {
         jsbytecode *pc = script->code + offset;
@@ -1496,6 +1590,44 @@ LoopState::analyzeLoopBody()
                 constrainedLoop = false;
             break;
           }
+
+          case JSOP_SETPROP:
+          case JSOP_SETMETHOD: {
+            JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
+            jsid id = types::MakeTypeId(cx, ATOM_TO_JSID(atom));
+
+            types::TypeSet *objTypes = analysis->poppedTypes(pc, 1);
+            if (objTypes->unknown()) {
+                unknownModset = true;
+                return;
+            }
+
+            objTypes->addFreeze(cx);
+            for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
+                types::TypeObject *object = objTypes->getObject(i);
+                if (!object)
+                    continue;
+                if (!addModifiedProperty(object, id))
+                    continue;
+            }
+
+            constrainedLoop = false;
+            break;
+          }
+
+          case JSOP_INCELEM:
+          case JSOP_DECELEM:
+          case JSOP_ELEMINC:
+          case JSOP_ELEMDEC:
+          case JSOP_ENUMELEM:
+          case JSOP_ENUMCONSTELEM:
+          case JSOP_INCPROP:
+          case JSOP_DECPROP:
+          case JSOP_PROPINC:
+          case JSOP_PROPDEC:
+          case JSOP_FORPROP:
+            unknownModset = true;
+            return;
 
           case JSOP_TRACE:
           case JSOP_NOTRACE:
