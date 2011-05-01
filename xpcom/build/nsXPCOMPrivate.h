@@ -244,7 +244,7 @@ void LogTerm();
  * GRE_CONF_NAME          - Name of the GRE Configuration file
  */
 
-#if defined(XP_WIN32) || defined(XP_OS2) || defined(WINCE)
+#if defined(XP_WIN32) || defined(XP_OS2)
 
 #define XPCOM_SEARCH_KEY  "PATH"
 #define GRE_CONF_NAME     "gre.config"
