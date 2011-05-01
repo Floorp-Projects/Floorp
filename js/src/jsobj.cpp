@@ -5628,7 +5628,9 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
         pobj->nativeSetSlot(slot, *vp);
     }
 
-    JS_ASSERT(TypeHasProperty(cx, obj->getType(), shape->id, *vp));
+    if (!cx->addTypePropertyId(obj->getType(), shape->id, *vp))
+        return false;
+
     return true;
 }
 
