@@ -504,7 +504,7 @@ struct TypeObject
      */
     JSScript *newScript;
     /* gc::FinalizeKind */ unsigned newScriptFinalizeKind;
-    Shape *newScriptShape;
+    const Shape *newScriptShape;
 
     /*
      * Whether this is an Object or Array keyed to an offset in the script containing

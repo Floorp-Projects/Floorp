@@ -344,7 +344,7 @@ class Compiler : public BaseCompiler
         InternalCallSite(uint32 returnOffset,
                          uint32 inlineIndex, jsbytecode *inlinepc, size_t id,
                          bool ool, bool needsRejoin)
-          : returnOffset(returnOffset), inlinePatch(inlinePatch),
+          : returnOffset(returnOffset),
             inlineIndex(inlineIndex), inlinepc(inlinepc), id(id),
             ool(ool), needsRejoin(needsRejoin)
         { }
