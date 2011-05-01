@@ -1254,8 +1254,7 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
                 gobj = JS_NewGlobalObject(cx, &global_class);
                 if (!gobj)
                     return JS_FALSE;
-                if (!JS_SetPrototype(cx, gobj, obj))
-                    return JS_FALSE;
+                JS_SplicePrototype(cx, gobj, obj);
                 JS_SetParent(cx, gobj, NULL);
                 JS_SetGlobalObject(cx, gobj);
                 obj = gobj;

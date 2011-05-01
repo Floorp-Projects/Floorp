@@ -4087,6 +4087,7 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
                                               clasp == &js_FunctionClass);
     if (!protoType || !proto->setTypeAndUniqueShape(cx, protoType))
         return NULL;
+    protoType->singleton = proto;
 
     if (clasp == &js_ArrayClass && !proto->makeDenseArraySlow(cx))
         return NULL;

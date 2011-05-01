@@ -342,7 +342,7 @@ XPCWrappedNativeScope::GetPrototypeNoHelper(XPCCallContext& ccx)
             xpc_NewSystemInheritingJSObject(ccx,
                                             js::Jsvalify(&XPC_WN_NoHelper_Proto_JSClass),
                                             mPrototypeJSObject,
-                                            mGlobalJSObject);
+                                            false, mGlobalJSObject);
 
         NS_ASSERTION(mPrototypeNoHelper,
                      "Failed to create prototype for wrappers w/o a helper");

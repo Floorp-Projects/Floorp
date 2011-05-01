@@ -2192,6 +2192,9 @@ JS_GetPrototype(JSContext *cx, JSObject *obj);
 extern JS_PUBLIC_API(JSBool)
 JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto);
 
+extern JS_PUBLIC_API(void)
+JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto);
+
 extern JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj);
 
@@ -2217,6 +2220,9 @@ JS_NewCompartmentAndGlobalObject(JSContext *cx, JSClass *clasp, JSPrincipals *pr
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
+
+extern JS_PUBLIC_API(JSObject *)
+JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 /* Queries the [[Extensible]] property of the object. */
 extern JS_PUBLIC_API(JSBool)
@@ -2331,6 +2337,9 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name,
                             int8 tinyid, jsval value,
                             JSPropertyOp getter, JSStrictPropertyOp setter,
                             uintN attrs);
+
+JS_PUBLIC_API(void)
+JS_AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, jsval value);
 
 extern JS_PUBLIC_API(JSBool)
 JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name,

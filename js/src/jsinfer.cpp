@@ -2549,7 +2549,21 @@ TypeObject::getFromPrototypes(JSContext *cx, Property *base)
 void
 TypeObject::splicePrototype(JSContext *cx, JSObject *proto)
 {
-    JS_ASSERT(!this->proto);
+    /*
+     * For singleton types representing only a single JSObject, the proto
+     * can be rearranged as needed without destroying type information for
+     * the old or new types. Note that type constraints propagating properties
+     * from the old prototype are not removed.
+     */
+    JS_ASSERT(singleton);
+
+    if (this->proto) {
+        /* Unlink from existing proto. */
+        TypeObject **plist = &this->proto->getType()->instanceList;
+        while (*plist != this)
+            plist = &(*plist)->instanceNext;
+        *plist = this->instanceNext;
+    }
 
     /*
      * Make sure this is not the shared 'empty' type object. :TODO: once we
