@@ -2948,6 +2948,18 @@ JS_SetPrototype(JSContext *cx, JSObject *obj, JSObject *proto)
     return SetProto(cx, obj, proto, JS_FALSE);
 }
 
+JS_PUBLIC_API(void)
+JS_SplicePrototype(JSContext *cx, JSObject *obj, JSObject *proto)
+{
+    /*
+     * Change the prototype of an object which hasn't been used anywhere
+     * and does not share its type with another object. Unlike JS_SetPrototype,
+     * does not nuke type information for the object.
+     */
+    CHECK_REQUEST(cx);
+    obj->getType()->splicePrototype(cx, proto);
+}
+
 JS_PUBLIC_API(JSObject *)
 JS_GetParent(JSContext *cx, JSObject *obj)
 {
@@ -3058,12 +3070,31 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
 
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
     if (obj) {
+        if (clasp->ext.equality && !cx->markTypeObjectHasSpecialEquality(obj->getType()))
+            return NULL;
         obj->syncSpecialEquality();
         if (!cx->markTypeObjectUnknownProperties(obj->getType()))
             return NULL;
     }
 
     JS_ASSERT_IF(obj, obj->getParent());
+    return obj;
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent)
+{
+    JSObject *obj = JS_NewObject(cx, clasp, proto, parent);
+    if (!obj)
+        return NULL;
+
+    types::TypeObject *type = cx->newTypeObject("Unique", proto);
+    if (obj->hasSpecialEquality() && !cx->markTypeObjectHasSpecialEquality(type))
+        return NULL;
+    if (!type || !obj->setTypeAndUniqueShape(cx, type))
+        return NULL;
+    type->singleton = obj;
+
     return obj;
 }
 
@@ -3440,6 +3471,12 @@ JS_DefinePropertyWithTinyId(JSContext *cx, JSObject *obj, const char *name, int8
 {
     return DefineProperty(cx, obj, name, Valueify(value), Valueify(getter),
                           Valueify(setter), attrs, Shape::HAS_SHORTID, tinyid);
+}
+
+JS_PUBLIC_API(void)
+JS_AddTypePropertyId(JSContext *cx, JSObject *obj, jsid id, jsval value)
+{
+    cx->addTypePropertyId(obj->getType(), id, Valueify(value));
 }
 
 static JSBool

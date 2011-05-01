@@ -5240,6 +5240,9 @@ nsWindowSH::GlobalScopePolluterGetProperty(JSContext *cx, JSObject *obj,
   // catch and fix these mistakes.
   PrintWarningOnConsole(cx, "GlobalScopeElementReference");
 
+  // Update the object's type information with this property.
+  JS_AddTypePropertyId(cx, obj, id, *vp);
+
   return JS_TRUE;
 }
 
@@ -5362,7 +5365,7 @@ nsWindowSH::InvalidateGlobalScopePolluter(JSContext *cx, JSObject *obj)
 
       // Pull the global scope polluter out of the prototype chain so
       // that it can be freed.
-      ::JS_SetPrototype(cx, obj, ::JS_GetPrototype(cx, proto));
+      ::JS_SplicePrototype(cx, obj, ::JS_GetPrototype(cx, proto));
 
       break;
     }
@@ -5409,9 +5412,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
 
   // And then set the prototype of the object whose prototype was
   // Object.prototype to be the global scope polluter.
-  if (!::JS_SetPrototype(cx, o, gsp)) {
-    return NS_ERROR_UNEXPECTED;
-  }
+  ::JS_SplicePrototype(cx, o, gsp);
 
   if (!::JS_SetPrivate(cx, gsp, doc)) {
     return NS_ERROR_UNEXPECTED;
