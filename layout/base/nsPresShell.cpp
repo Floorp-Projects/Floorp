@@ -1055,7 +1055,7 @@ protected:
 
   PRBool mCaretEnabled;
 #ifdef NS_DEBUG
-  nsresult CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult);
+  nsStyleSet* CloneStyleSet(nsStyleSet* aSet);
   PRBool VerifyIncrementalReflow();
   PRBool mInVerifyReflow;
   void ShowEventTargetDebug();
@@ -8547,13 +8547,10 @@ FindTopFrame(nsIFrame* aRoot)
 
 #ifdef DEBUG
 
-nsresult
-PresShell::CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult)
+nsStyleSet*
+PresShell::CloneStyleSet(nsStyleSet* aSet)
 {
   nsStyleSet *clone = new nsStyleSet();
-  if (!clone) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   PRInt32 i, n = aSet->SheetCount(nsStyleSet::eOverrideSheet);
   for (i = 0; i < n; i++) {
@@ -8585,8 +8582,7 @@ PresShell::CloneStyleSet(nsStyleSet* aSet, nsStyleSet** aResult)
     if (ss)
       clone->AppendStyleSheet(nsStyleSet::eAgentSheet, ss);
   }
-  *aResult = clone;
-  return NS_OK;
+  return clone;
 }
 
 #ifdef DEBUG_Eli
@@ -8698,9 +8694,7 @@ PresShell::VerifyIncrementalReflow()
 
   // Create a new presentation shell to view the document. Use the
   // exact same style information that this document has.
-  nsAutoPtr<nsStyleSet> newSet;
-  rv = CloneStyleSet(mStyleSet, getter_Transfers(newSet));
-  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  nsAutoPtr<nsStyleSet> newSet(CloneStyleSet(mStyleSet));
   nsCOMPtr<nsIPresShell> sh;
   rv = mDocument->CreateShell(cx, vm, newSet, getter_AddRefs(sh));
   NS_ENSURE_SUCCESS(rv, PR_FALSE);
