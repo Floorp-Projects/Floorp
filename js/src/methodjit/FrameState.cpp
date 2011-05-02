@@ -1354,10 +1354,12 @@ FrameState::assertValidRegisterState() const
         if (fe->type.inRegister()) {
             checkedFreeRegs.takeReg(fe->type.reg());
             JS_ASSERT(regstate(fe->type.reg()).fe() == fe);
+            JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
         }
         if (fe->data.inRegister()) {
             checkedFreeRegs.takeReg(fe->data.reg());
             JS_ASSERT(regstate(fe->data.reg()).fe() == fe);
+            JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
         }
         if (fe->data.inFPRegister()) {
             JS_ASSERT(fe->isType(JSVAL_TYPE_DOUBLE));
