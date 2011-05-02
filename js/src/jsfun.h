@@ -489,7 +489,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, js::Native native,
  * fact that JSINVOKE_CONSTRUCT (aka JSFRAME_CONSTRUCTING) is 1, and test that
  * with #if/#error in jsfun.c.
  */
-#define JSV2F_CONSTRUCT         JSINVOKE_CONSTRUCT
+#define JSV2F_CONSTRUCT         ((uintN)js::INVOKE_CONSTRUCTOR)
 #define JSV2F_SEARCH_STACK      0x10000
 
 extern JSFunction *
@@ -508,19 +508,19 @@ extern JSObject * JS_FASTCALL
 js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain);
 
 extern void
-js_PutCallObject(JSContext *cx, JSStackFrame *fp);
+js_PutCallObject(js::StackFrame *fp);
 
 extern JSBool JS_FASTCALL
-js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs,
-                        js::Value *argv, uint32 nvars, js::Value *slots);
+js_PutCallObjectOnTrace(JSObject *scopeChain, uint32 nargs, js::Value *argv,
+                        uint32 nvars, js::Value *slots);
 
 namespace js {
 
 JSObject *
-CreateFunCallObject(JSContext *cx, JSStackFrame *fp);
+CreateFunCallObject(JSContext *cx, StackFrame *fp);
 
 JSObject *
-CreateEvalCallObject(JSContext *cx, JSStackFrame *fp);
+CreateEvalCallObject(JSContext *cx, StackFrame *fp);
 
 extern JSBool
 GetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
@@ -550,10 +550,10 @@ SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp
 } // namespace js
 
 extern JSBool
-js_GetArgsValue(JSContext *cx, JSStackFrame *fp, js::Value *vp);
+js_GetArgsValue(JSContext *cx, js::StackFrame *fp, js::Value *vp);
 
 extern JSBool
-js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, js::Value *vp);
+js_GetArgsProperty(JSContext *cx, js::StackFrame *fp, jsid id, js::Value *vp);
 
 /*
  * Get the arguments object for the given frame.  If the frame is strict mode
@@ -566,10 +566,10 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, js::Value *vp);
  *     function.
  */
 extern JSObject *
-js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
+js_GetArgsObject(JSContext *cx, js::StackFrame *fp);
 
 extern void
-js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
+js_PutArgsObject(js::StackFrame *fp);
 
 inline bool
 js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->atom; }

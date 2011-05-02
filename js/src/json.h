@@ -52,8 +52,8 @@ extern JSObject *
 js_InitJSONClass(JSContext *cx, JSObject *obj);
 
 extern JSBool
-js_Stringify(JSContext *cx, js::Value *vp, JSObject *replacer,
-             const js::Value &space, js::StringBuffer &sb);
+js_Stringify(JSContext *cx, js::Value *vp, JSObject *replacer, js::Value space,
+             js::StringBuffer &sb);
 
 extern JSBool js_TryJSON(JSContext *cx, js::Value *vp);
 

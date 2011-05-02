@@ -63,7 +63,7 @@ struct Registers {
     static const RegisterID ScratchReg = JSC::X86Registers::r11;
 #endif
 
-    // Register that homes the current JSStackFrame.
+    // Register that homes the current StackFrame.
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     static const RegisterID JSFrameReg = JSC::X86Registers::ebx;
 #elif defined(JS_CPU_ARM)
