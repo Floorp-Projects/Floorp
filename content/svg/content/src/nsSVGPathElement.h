@@ -55,7 +55,6 @@ class nsSVGPathElement : public nsSVGPathElementBase,
                          public nsIDOMSVGAnimatedPathData
 {
 friend class nsSVGPathFrame;
-friend class nsSVGTextPathFrame;
 
 protected:
   friend nsresult NS_NewSVGPathElement(nsIContent **aResult,
@@ -98,6 +97,8 @@ public:
   virtual nsIAtom* GetPathDataAttrName() const {
     return nsGkAtoms::d;
   }
+
+  gfxFloat GetScale();
 
 protected:
 

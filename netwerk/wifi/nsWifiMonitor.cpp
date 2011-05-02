@@ -65,7 +65,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsWifiMonitor,
 
 nsWifiMonitor::nsWifiMonitor()
 : mKeepGoing(PR_TRUE)
-, mMonitor("nsWifiMonitor.mMonitor")
+, mReentrantMonitor("nsWifiMonitor.mReentrantMonitor")
 {
 #if defined(PR_LOGGING)
   gWifiMonitorLog = PR_NewLogModule("WifiMonitor");
@@ -90,7 +90,7 @@ nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
     LOG(("Shutting down\n"));
     mKeepGoing = PR_FALSE;
 
-    MonitorAutoEnter mon(mMonitor);
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mon.Notify();
   }
   return NS_OK;
@@ -109,7 +109,7 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener)
       return rv;
   }
 
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   mKeepGoing = PR_TRUE;
 
@@ -127,7 +127,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
 
   LOG(("removing listener\n"));
 
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   for (PRUint32 i = 0; i < mListeners.Length(); i++) {
 

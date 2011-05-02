@@ -57,6 +57,11 @@
 #include "mozIStorageCompletionCallback.h"
 #include "mozIStorageBindingParams.h"
 
+#include "prlog.h"
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* gStorageLog;
+#endif
+
 namespace mozilla {
 namespace storage {
 
@@ -324,6 +329,21 @@ prepareStmt(sqlite3* aDatabase,
     srv = WaitForUnlockNotify(aDatabase);
     if (srv != SQLITE_OK)
       break;
+  }
+
+  if (srv != SQLITE_OK) {
+    nsCString warnMsg;
+    warnMsg.AppendLiteral("The SQL statement '");
+    warnMsg.Append(aSQL);
+    warnMsg.AppendLiteral("' could not be compiled due to an error: ");
+    warnMsg.Append(::sqlite3_errmsg(aDatabase));
+
+#ifdef DEBUG
+    NS_WARNING(warnMsg.get());
+#endif
+#ifdef PR_LOGGING
+    PR_LOG(gStorageLog, PR_LOG_ERROR, ("%s", warnMsg.get()));
+#endif
   }
 
   (void)::sqlite3_extended_result_codes(aDatabase, 0);

@@ -156,7 +156,7 @@ ImageContainerD3D9::CreateImage(const Image::Format *aFormats,
 void
 ImageContainerD3D9::SetCurrentImage(Image *aImage)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   mActiveImage = aImage;
   CurrentImageChanged();
@@ -165,7 +165,7 @@ ImageContainerD3D9::SetCurrentImage(Image *aImage)
 already_AddRefed<Image>
 ImageContainerD3D9::GetCurrentImage()
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   nsRefPtr<Image> retval = mActiveImage;
   return retval.forget();
@@ -174,7 +174,7 @@ ImageContainerD3D9::GetCurrentImage()
 already_AddRefed<gfxASurface>
 ImageContainerD3D9::GetCurrentAsSurface(gfxIntSize *aSize)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (!mActiveImage) {
     return nsnull;
   }
@@ -197,7 +197,7 @@ ImageContainerD3D9::GetCurrentAsSurface(gfxIntSize *aSize)
 gfxIntSize
 ImageContainerD3D9::GetCurrentSize()
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   if (!mActiveImage) {
     return gfxIntSize(0,0);
   }

@@ -750,7 +750,17 @@ public:
   virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
     return PR_FALSE;
   }
-  
+
+  /**
+   * During the visibility computation and after TryMerge, display lists may
+   * return PR_TRUE here to flatten themselves away, removing them. This
+   * flattening is distinctly different from FlattenTo, which occurs before
+   * items are merged together.
+   */
+  virtual PRBool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) {
+    return PR_FALSE;
+  }
+
   /**
    * If this is a leaf item we return null, otherwise we return the wrapped
    * list.
@@ -1656,6 +1666,7 @@ public:
                     nsDisplayList* aList);
   nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                     nsDisplayItem* aItem);
+  nsDisplayWrapList(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame);
   virtual ~nsDisplayWrapList();
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames);
@@ -1788,9 +1799,9 @@ public:
 };
 
 /**
- * This creates a layer for the given list of items, whose visibility is
- * determined by the displayport for the given frame instead of what is
- * passed in to ComputeVisibility.
+ * This potentially creates a layer for the given list of items, whose
+ * visibility is determined by the displayport for the given frame instead of
+ * what is passed in to ComputeVisibility.
  *
  * Here in content, we can use this to render more content than is actually
  * visible. Then, the compositing process can manipulate the generated layer
@@ -1799,17 +1810,34 @@ public:
  * Note that setting the displayport will not change any hit testing! The
  * content process will know nothing about what the user is actually seeing,
  * so it can only do hit testing for what is supposed to be the visible region.
+ *
+ * It is possible for scroll boxes to have content that can be both above and
+ * below content outside of the scroll box. We cannot create layers for these
+ * cases. This is accomplished by wrapping display items with
+ * nsDisplayScrollLayers. nsDisplayScrollLayers with the same scroll frame will
+ * be merged together. If more than one nsDisplayScrollLayer exists after
+ * merging, all nsDisplayScrollLayers will be flattened out so that no new
+ * layer is created at all.
  */
-class nsDisplayScrollLayer : public nsDisplayOwnLayer
+class nsDisplayScrollLayer : public nsDisplayWrapList
 {
 public:
   /**
-   * @param aForFrame This will determine what the displayport is. It should be
-   *                  the root content frame of the scrolled area.
-   * @param aViewportFrame The viewport frame you see this content through.
+   * @param aScrolledFrame This will determine what the displayport is. It should be
+   *                       the root content frame of the scrolled area. Note
+   *                       that nsDisplayScrollLayer will expect for
+   *                       ScrollLayerCount to be defined on aScrolledFrame.
+   * @param aScrollFrame The viewport frame you see this content through.
    */
   nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
-                       nsIFrame* aForFrame, nsIFrame* aViewportFrame);
+                       nsIFrame* aForFrame, nsIFrame* aScrolledFrame,
+                       nsIFrame* aScrollFrame);
+  nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
+                       nsIFrame* aForFrame, nsIFrame* aScrolledFrame,
+                       nsIFrame* aScrollFrame);
+  nsDisplayScrollLayer(nsDisplayListBuilder* aBuilder,
+                       nsIFrame* aForFrame, nsIFrame* aScrolledFrame,
+                       nsIFrame* aScrollFrame);
   NS_DISPLAY_DECL_NAME("ScrollLayer", TYPE_SCROLL_LAYER)
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1825,26 +1853,40 @@ public:
                                    PRBool& aContainsRootContentDocBG);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
-  {
-    // Force this as a layer so we can scroll asynchronously.
-    // This causes incorrect rendering for rounded clips!
-    return mozilla::LAYER_ACTIVE_FORCE;
-  }
+                                   LayerManager* aManager);
+
+  virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder,
+                          nsDisplayItem* aItem);
+
+  virtual PRBool ShouldFlattenAway(nsDisplayListBuilder* aBuilder);
+
+  // Get the number of nsDisplayScrollLayers for a scroll frame. Note that this
+  // number does not include nsDisplayScrollInfoLayers. If this number is not 1
+  // after merging, all the nsDisplayScrollLayers should flatten away.
+  PRWord GetScrollLayerCount();
+  PRWord RemoveScrollLayerCount();
+
 private:
-  nsIFrame* mViewportFrame;
+  nsIFrame* mScrollFrame;
+  nsIFrame* mScrolledFrame;
 };
 
 /**
  * Like nsDisplayScrollLayer, but only has metadata on the scroll frame. This
  * creates a layer that has no Thebes child layer, but still allows the
  * compositor process to know of the scroll frame's existence.
+ *
+ * After visibility computation, nsDisplayScrollInfoLayers should only exist if
+ * nsDisplayScrollLayers were all flattened away.
+ *
+ * Important!! Add info layers to the bottom of the list so they are only
+ * considered after the others have flattened out!
  */
 class nsDisplayScrollInfoLayer : public nsDisplayScrollLayer
 {
 public:
-  nsDisplayScrollInfoLayer(nsDisplayListBuilder* aBuilder, nsDisplayList* aList,
-                           nsIFrame* aForFrame, nsIFrame* aViewportFrame);
+  nsDisplayScrollInfoLayer(nsDisplayListBuilder* aBuilder,
+                           nsIFrame* aScrolledFrame, nsIFrame* aScrollFrame);
   NS_DISPLAY_DECL_NAME("ScrollInfoLayer", TYPE_SCROLL_INFO_LAYER)
 
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1852,11 +1894,12 @@ public:
 #endif
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
-                                   LayerManager* aManager)
-  {
-    return mozilla::LAYER_ACTIVE_EMPTY;
-  }
+                                   LayerManager* aManager);
 
+  virtual PRBool TryMerge(nsDisplayListBuilder* aBuilder,
+                          nsDisplayItem* aItem);
+
+  virtual PRBool ShouldFlattenAway(nsDisplayListBuilder* aBuilder);
 };
 
 /**

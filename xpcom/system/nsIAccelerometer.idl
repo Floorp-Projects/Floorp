@@ -38,12 +38,12 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(1B406E32-CF42-471E-A470-6FD600BF4C7B)]
+[scriptable, uuid(0ec7ed95-dc9e-4d20-a5e2-8fc6a03bce67)]
 interface nsIAcceleration : nsISupports
 {
-  readonly attribute double x;
-  readonly attribute double y;
-  readonly attribute double z;
+  readonly attribute double alpha;
+  readonly attribute double beta;
+  readonly attribute double gamma;
 };
 
 [scriptable, uuid(3386BED8-7393-4704-8FFC-1EB2C35432FF)]
@@ -70,5 +70,5 @@ interface nsIAccelerometer : nsISupports
 interface nsIAccelerometerUpdate : nsIAccelerometer
 {
   /* must be called on the main thread or else */
-  void accelerationChanged(in double x, in double y, in double z);
+  void accelerationChanged(in double alpha, in double beta, in double gamma);
 };

@@ -1905,6 +1905,43 @@ nsGfxScrollFrameInner::ShouldBuildLayer() const
   return mShouldBuildLayer;
 }
 
+class ScrollLayerWrapper : public nsDisplayWrapper
+{
+public:
+  ScrollLayerWrapper(nsIFrame* aScrollFrame, nsIFrame* aScrolledFrame)
+    : mCount(0)
+    , mProps(aScrolledFrame->Properties())
+    , mScrollFrame(aScrollFrame)
+    , mScrolledFrame(aScrolledFrame)
+  {
+    SetCount(0);
+  }
+
+  virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
+                                  nsIFrame* aFrame,
+                                  nsDisplayList* aList) {
+    SetCount(++mCount);
+    return new (aBuilder) nsDisplayScrollLayer(aBuilder, aList, mScrolledFrame, mScrolledFrame, mScrollFrame);
+  }
+
+  virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
+                                  nsDisplayItem* aItem) {
+
+    SetCount(++mCount);
+    return new (aBuilder) nsDisplayScrollLayer(aBuilder, aItem, aItem->GetUnderlyingFrame(), mScrolledFrame, mScrollFrame);
+  }
+
+protected:
+  void SetCount(PRWord aCount) {
+    mProps.Set(nsIFrame::ScrollLayerCount(), reinterpret_cast<void*>(aCount));
+  }
+
+  PRWord mCount;
+  FrameProperties mProps;
+  nsIFrame* mScrollFrame;
+  nsIFrame* mScrolledFrame;
+};
+
 nsresult
 nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                         const nsRect&           aDirtyRect,
@@ -1965,16 +2002,11 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &dirtyRect);
 
   nsDisplayListCollection set;
+  rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Since making new layers is expensive, only use nsDisplayScrollLayer
   // if the area is scrollable.
-  //
-  // Scroll frames can be generated with a scroll range that is 0, 0.
-  // Furthermore, it is not worth the memory tradeoff to allow asynchronous
-  // scrolling of small scroll frames. We use an arbitrary minimum scroll
-  // range of 20 pixels to eliminate many gfx scroll frames from becoming a
-  // layer.
-  //
   nsRect scrollRange = GetScrollRange();
   ScrollbarStyles styles = GetScrollbarStylesFromFrame();
   mShouldBuildLayer =
@@ -1986,37 +2018,25 @@ nsGfxScrollFrameInner::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
      (!mIsRoot || !mOuter->PresContext()->IsRootContentDocument()));
 
   if (ShouldBuildLayer()) {
-    nsDisplayList list;
+    // ScrollLayerWrapper must always be created because it initializes the
+    // scroll layer count. The display lists depend on this.
+    ScrollLayerWrapper wrapper(mOuter, mScrolledFrame);
+
     if (usingDisplayport) {
       // Once a displayport is set, assume that scrolling needs to be fast
       // so create a layer with all the content inside. The compositor
       // process will be able to scroll the content asynchronously.
-      //
-      // Note that using StackingContext breaks z order, so the resulting
-      // rendering can be incorrect for weird edge cases!
-
-      rv = mScrolledFrame->BuildDisplayListForStackingContext(
-        aBuilder, dirtyRect + mOuter->GetOffsetTo(mScrolledFrame), &list);
-
-      nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollLayer(
-        aBuilder, &list, mScrolledFrame, mOuter);
-      set.Content()->AppendNewToTop(layerItem);
-    } else {
-      // If there is no displayport set, there is no reason here to force a
-      // layer that needs a memory-expensive allocation, but the compositor
-      // process would still like to know that it exists.
-
-      nsDisplayScrollLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
-        aBuilder, &list, mScrolledFrame, mOuter);
-      set.Content()->AppendNewToTop(layerItem);
-
-      rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+      wrapper.WrapListsInPlace(aBuilder, mOuter, set);
     }
-  } else {
-    rv = mOuter->BuildDisplayListForChild(aBuilder, mScrolledFrame, dirtyRect, set);
+
+    // In case we are not using displayport or the nsDisplayScrollLayers are
+    // flattened during visibility computation, we still need to export the
+    // metadata about this scroll box to the compositor process.
+    nsDisplayScrollInfoLayer* layerItem = new (aBuilder) nsDisplayScrollInfoLayer(
+      aBuilder, mScrolledFrame, mOuter);
+    set.Content()->AppendNewToBottom(layerItem);
   }
 
-  NS_ENSURE_SUCCESS(rv, rv);
   nsRect clip;
   clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
 

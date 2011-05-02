@@ -50,8 +50,8 @@ namespace mozilla {
 /**
  * CondVar
  * Vanilla condition variable.  Please don't use this unless you have a 
- * compelling reason --- Monitor provides a better API.
- **/
+ * compelling reason --- Monitor provides a simpler API.
+ */
 class NS_COM_GLUE CondVar : BlockingResourceBase
 {
 public:

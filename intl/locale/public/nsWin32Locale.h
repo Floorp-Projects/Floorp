@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,11 +16,10 @@
  *
  * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2000
+ * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Johnny Stenback <jst@netscape.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -35,15 +34,31 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsWin32Locale_h__
+#define nsWin32Locale_h__
 
-#include "nsIDOMAbstractView.idl"
+#include "nscore.h"
+#include "nsString.h"
+#include <windows.h>
 
-[scriptable, uuid(0b9341f3-95d4-4fa4-adcd-e119e0db2889)]
-interface nsIDOMViewCSS : nsIDOMAbstractView
-{
-  /**
-   * @see <http://dev.w3.org/csswg/cssom/#dom-window-getcomputedstyle>
-   */
-  nsIDOMCSSStyleDeclaration getComputedStyle(in nsIDOMElement elt, 
-                                             [optional] in DOMString pseudoElt);
+
+class nsWin32Locale {
+public: 
+  static nsresult    GetPlatformLocale(const nsAString& locale, LCID* winLCID); 
+  static void        GetXPLocale(LCID winLCID, nsAString& locale);
+
+private:
+  // Static class - Don't allow instantiation.
+  nsWin32Locale(void) {}
+
+  typedef LCID (WINAPI*LocaleNameToLCIDPtr)(LPCWSTR lpName, DWORD dwFlags);
+  typedef int (WINAPI*LCIDToLocaleNamePtr)(LCID Locale, LPWSTR lpName,
+                                           int cchName, DWORD dwFlags);
+
+  static LocaleNameToLCIDPtr localeNameToLCID;
+  static LCIDToLocaleNamePtr lcidToLocaleName;
+
+  static void initFunctionPointers ();
 };
+
+#endif

@@ -61,6 +61,10 @@ const kBrowserViewZoomLevelPrecision = 10000;
 
 const kDefaultBrowserWidth = 800;
 const kFallbackBrowserWidth = 980;
+
+// allow panning after this timeout on pages with registered touch listeners
+const kTouchTimeout = 300;
+
 const kDefaultMetadata = { autoSize: false, allowZoom: true, autoScale: true };
 
 // Override sizeToContent in the main window. It breaks things (bug 565887)
@@ -335,6 +339,19 @@ var Browser = {
     // Should we restore the previous session (crash or some other event)
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
     if (ss.shouldRestore()) {
+      // Initial window resizes call functions that assume a tab is in the tab list
+      // and restored tabs are added too late. We add a dummy to to satisfy the resize
+      // code and then remove the dummy after the session has been restored.
+      let dummy = this.addTab("about:blank");
+      let dummyCleanup = {
+        observe: function() {
+          Services.obs.removeObserver(dummyCleanup, "sessionstore-windows-restored");
+          dummy.chromeTab.ignoreUndo = true;
+          Browser.closeTab(dummy, { forceClose: true });
+        }
+      };
+      Services.obs.addObserver(dummyCleanup, "sessionstore-windows-restored", false);
+
       ss.restoreLastSession();
 
       // Also open any commandline URLs, except the homepage
@@ -417,9 +434,9 @@ var Browser = {
       return true;
 
     // Let everyone know we are closing the last browser window
-    let closingCanceled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
-    Services.obs.notifyObservers(closingCanceled, "browser-lastwindow-close-requested", null);
-    if (closingCanceled.data)
+    let closingCancelled = Cc["@mozilla.org/supports-PRBool;1"].createInstance(Ci.nsISupportsPRBool);
+    Services.obs.notifyObservers(closingCancelled, "browser-lastwindow-close-requested", null);
+    if (closingCancelled.data)
       return false;
 
     Services.obs.notifyObservers(null, "browser-lastwindow-close-granted", null);
@@ -679,7 +696,7 @@ var Browser = {
     tab.browser.messageManager.sendAsyncMessage("Browser:CanUnload", {});
   },
 
-  _doCloseTab: function _docloseTab(aTab) {
+  _doCloseTab: function _doCloseTab(aTab) {
     let nextTab = this._getNextTab(aTab);
     if (!nextTab)
        return;
@@ -1184,6 +1201,10 @@ Browser.MainDragger = function MainDragger() {
 
   Elements.browsers.addEventListener("PanBegin", this, false);
   Elements.browsers.addEventListener("PanFinished", this, false);
+
+  // allow pages to to override panning, but should
+  // still allow the sidebars to be panned out of view
+  this.contentMouseCapture = false;
 };
 
 Browser.MainDragger.prototype = {
@@ -1214,48 +1235,42 @@ Browser.MainDragger.prototype = {
   dragMove: function dragMove(dx, dy, scroller, aIsKinetic) {
     let doffset = new Point(dx, dy);
 
-    // First calculate any panning to take sidebars out of view
-    let panOffset = this._panControlsAwayOffset(doffset);
+    // If the sidebars are showing, we pan them out of the way before panning the content.
+    // The panning distance that should be used for the sidebars in is stored in sidebarOffset,
+    // and subtracted from doffset
+    let sidebarOffset = this._getSidebarOffset(doffset);
 
-    // If we started at one sidebar, stop when we get to the other.
-    if (panOffset.x != 0 && !this._stopAtSidebar) {
-      this._stopAtSidebar = panOffset.x; // negative: stop at left; positive: stop at right
+    // If we started with one sidebar open, stop when we get to the other.
+    if (sidebarOffset.x != 0)
+      this._blockSidebars(sidebarOffset);
+
+    if (!this.contentMouseCapture)
+      this._panContent(doffset);
+
+    if (this._hitSidebar && aIsKinetic)
+      return false; // No kinetic panning after we've stopped at the sidebar.
+
+    // allow panning the sidebars if the page hasn't prevented it, or if any of the sidebars are showing
+    // (i.e. we always allow panning sidebars off screen but not necessarily panning them back on)
+    if (!this.contentMouseCapture || sidebarOffset.x != 0 || sidebarOffset.y > 0)
+      this._panChrome(doffset, sidebarOffset);
+
+    this._updateScrollbars();
+
+    return !doffset.equals(dx, dy);
+  },
+
+  _blockSidebars: function md_blockSidebars(aSidebarOffset) {
+    // only call this code once
+    if (!this._stopAtSidebar) {
+      this._stopAtSidebar = aSidebarOffset.x; // negative: stop at left; positive: stop at right
+
+      // after a timeout, we allow showing the sidebar, to give the appearance of some "friction" at the edge
       this._sidebarTimeout = setTimeout(function(self) {
         self._stopAtSidebar = 0;
         self._sidebarTimeout = null;
       }, 350, this);
     }
-
-    if (this._contentView && !this._contentView.isRoot()) {
-      this._panContentView(this._contentView, doffset);
-      // XXX we may need to have "escape borders" for iframe panning
-      // XXX does not deal with scrollables within scrollables
-    }
-
-    // Do content panning
-    this._panContentView(getBrowser().getRootView(), doffset);
-
-    if (this._hitSidebar && aIsKinetic)
-      return; // No kinetic panning after we've stopped at the sidebar.
-
-    // Any leftover panning in doffset would bring controls into view. Add to sidebar
-    // away panning for the total scroll offset.
-    let offsetX = doffset.x;
-    if ((this._stopAtSidebar > 0 && offsetX > 0) ||
-        (this._stopAtSidebar < 0 && offsetX < 0)) {
-      if (offsetX != panOffset.x)
-        this._hitSidebar = true;
-      doffset.x = panOffset.x;
-    } else {
-      doffset.add(panOffset);
-    }
-
-    Browser.tryFloatToolbar(doffset.x, 0);
-    this._panScroller(Browser.controlsScrollboxScroller, doffset);
-    this._panScroller(Browser.pageScrollboxScroller, doffset);
-    this._updateScrollbars();
-
-    return !doffset.equals(dx, dy);
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -1286,8 +1301,38 @@ Browser.MainDragger.prototype = {
     }
   },
 
+  _panContent: function md_panContent(aOffset) {
+    if (this._contentView && !this._contentView.isRoot()) {
+      this._panContentView(this._contentView, aOffset);
+      // XXX we may need to have "escape borders" for iframe panning
+      // XXX does not deal with scrollables within scrollables
+    }
+    // Do content panning
+    this._panContentView(getBrowser().getRootView(), aOffset);
+  },
+
+  _panChrome: function md_panSidebars(aOffset, aSidebarOffset) {
+    // Any panning aOffset would bring controls into view. Add to aSidebarOffset
+    let offsetX = aOffset.x;
+    if ((this._stopAtSidebar > 0 && offsetX > 0) ||
+        (this._stopAtSidebar < 0 && offsetX < 0)) {
+      if (offsetX != aSidebarOffset.x)
+        this._hitSidebar = true;
+      aOffset.x = aSidebarOffset.x;
+    } else {
+      aOffset.add(aSidebarOffset);
+    }
+
+    Browser.tryFloatToolbar(aOffset.x, 0);
+
+    // pan the sidebars
+    this._panScroller(Browser.controlsScrollboxScroller, aOffset);
+    // pan the urlbar
+    this._panScroller(Browser.pageScrollboxScroller, aOffset);
+  },
+
   /** Return offset that pans controls away from screen. Updates doffset with leftovers. */
-  _panControlsAwayOffset: function(doffset) {
+  _getSidebarOffset: function(doffset) {
     let x = 0, y = 0, rect;
 
     rect = Rect.fromRect(Browser.pageScrollbox.getBoundingClientRect()).map(Math.round);
@@ -1494,6 +1539,7 @@ Browser.WebProgress.prototype = {
       aTab.updateThumbnail();
 
       browser.messageManager.addMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
+      ContentTouchHandler.updateContentCapture();
     });
   }
 };
@@ -1582,6 +1628,7 @@ const ContentTouchHandler = {
   // Use lightweight transactions so that old context menus and tap
   // highlights don't ever see the light of day.
   _messageId: 0,
+  contentMightCaptureMouse: false,
 
   init: function init() {
     document.addEventListener("TapDown", this, true);
@@ -1590,8 +1637,8 @@ const ContentTouchHandler = {
     document.addEventListener("TapSingle", this, false);
     document.addEventListener("TapDouble", this, false);
     document.addEventListener("TapLong", this, false);
+    document.addEventListener("TapMove", this, false);
 
-    document.addEventListener("PanBegin", this, false);
     document.addEventListener("PopupChanged", this, false);
     document.addEventListener("CancelTouchSequence", this, false);
 
@@ -1606,8 +1653,9 @@ const ContentTouchHandler = {
     //     a long tap, without waiting for child process.
     //
     messageManager.addMessageListener("Browser:ContextMenu", this);
-
     messageManager.addMessageListener("Browser:Highlight", this);
+    messageManager.addMessageListener("Browser:CaptureEvents", this);
+    messageManager.addMessageListener("Browser:CanCaptureMouse:Return", this);
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -1616,7 +1664,6 @@ const ContentTouchHandler = {
       return;
 
     switch (aEvent.type) {
-      case "PanBegin":
       case "PopupChanged":
       case "CancelTouchSequence":
         this._clearPendingMessages();
@@ -1648,12 +1695,12 @@ const ContentTouchHandler = {
                 this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
                 aEvent.preventDefault();
               }
-            } else {
-              this.tapUp(aEvent.clientX, aEvent.clientY);
             }
+            this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
             break;
           case "TapSingle":
             this.tapSingle(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
+            this._dispatchMouseEvent("Browser:MouseUp", aEvent.clientX, aEvent.clientY);
             break;
           case "TapDouble":
             this.tapDouble(aEvent.clientX, aEvent.clientY, aEvent.modifiers);
@@ -1661,25 +1708,50 @@ const ContentTouchHandler = {
           case "TapLong":
             this.tapLong(aEvent.clientX, aEvent.clientY);
             break;
+          case "TapMove":
+            this.tapMove(aEvent.clientX, aEvent.clientY);
+            break;
         }
       }
     }
   },
 
+  updateContentCapture: function() {
+    this._messageId++;
+    messageManager.sendAsyncMessage("Browser:CanCaptureMouse", { messageId: this._messageId });
+  },
+
   receiveMessage: function receiveMessage(aMessage) {
-    if (aMessage.json.messageId != this._messageId)
+    let json = aMessage.json;
+    if (json.messageId != this._messageId)
       return;
 
     switch (aMessage.name) {
       case "Browser:ContextMenu":
         // Long tap
-        let contextMenu = { name: aMessage.name, json: aMessage.json, target: aMessage.target };
+        let contextMenu = { name: aMessage.name, json: json, target: aMessage.target };
         if (ContextHelper.showPopup(contextMenu)) {
           // Stop all input sequences
           let event = document.createEvent("Events");
           event.initEvent("CancelTouchSequence", true, false);
           document.dispatchEvent(event);
         }
+        break;
+      case "Browser:CaptureEvents":
+        this.contentMightCaptureMouse = json.contentMightCaptureMouse;
+        if (this.touchTimeout) {
+          clearTimeout(this.touchTimeout);
+          this.touchTimeout = null;
+        }
+
+        if (json.click)
+          this.clickPrevented = true;
+
+        if (this.canCancelPan)
+          Elements.browsers.customDragger.contentMouseCapture = json.panning;
+        break;
+      case "Browser:CanCaptureMouse:Return":
+        ContentTouchHandler.contentMightCaptureMouse = json.contentMightCaptureMouse;
         break;
     }
   },
@@ -1714,6 +1786,28 @@ const ContentTouchHandler = {
     browser.messageManager.sendAsyncMessage(aName, json);
   },
 
+  touchTimeout: null,
+
+  canCancelPan: false,
+
+  clickPrevented: false,
+
+  updateCanCancel: function(aX, aY) {
+    let dpi = Browser.windowUtils.displayDPI;
+
+    const kSafetyX = Services.prefs.getIntPref("dom.w3c_touch_events.safetyX") / 240 * dpi;
+    const kSafetyY = Services.prefs.getIntPref("dom.w3c_touch_events.safetyY") / 240 * dpi;
+    let browser = getBrowser();
+    let bcr = browser.getBoundingClientRect();
+    let rect = new Rect(0, 0, window.innerWidth, window.innerHeight);
+    rect.restrictTo(Rect.fromRect(bcr));
+
+    // Check if the user touched near to one of the edges of the browser area
+    // or if the urlbar is showing
+    this.canCancelPan = (aX >= rect.left + kSafetyX) && (aX <= rect.right - kSafetyX) &&
+                        (aY >= rect.top  + kSafetyY) && bcr.top == 0;
+  },
+
   tapDown: function tapDown(aX, aY) {
     // Ensure that the content process has gets an activate event
     let browser = getBrowser();
@@ -1722,6 +1816,22 @@ const ContentTouchHandler = {
     try {
       fl.activateRemoteFrame();
     } catch (e) {}
+
+    // if the page might capture touch events, we give it the option
+    this.updateCanCancel(aX, aY);
+    this.clickPrevented = false;
+    Elements.browsers.customDragger.contentMouseCapture = this.canCancelPan && this.contentMightCaptureMouse;
+    if (this.touchTimeout) {
+      clearTimeout(this.touchTimeout);
+      this.touchTimeout = null;
+    }
+
+    if (this.contentMightCaptureMouse) {
+      this.touchTimeout = setTimeout(function() {
+        Elements.browsers.customDragger.contentMouseCapture = false;
+      }, kTouchTimeout)
+    }
+
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
   },
 
@@ -1736,8 +1846,13 @@ const ContentTouchHandler = {
 
   tapSingle: function tapSingle(aX, aY, aModifiers) {
     // Cancel the mouse click if we are showing a context menu
-    if (!ContextHelper.popupState)
-      this._dispatchMouseEvent("Browser:MouseUp", aX, aY, { modifiers: aModifiers });
+    if (!ContextHelper.popupState && !this.clickPrevented)
+      this._dispatchMouseEvent("Browser:MouseClick", aX, aY, { modifiers: aModifiers });
+  },
+
+  tapMove: function tapMove(aX, aY) {
+    if (this.contentMightCaptureMouse)
+      this._dispatchMouseEvent("Browser:MouseMove", aX, aY);
   },
 
   tapDouble: function tapDouble(aX, aY, aModifiers) {
@@ -2720,7 +2835,7 @@ Tab.prototype = {
         // If the scale level has not changed we want to be sure the content
         // render correctly since the page refresh process could have been
         // stalled during page load. In this case if the page has the exact
-        // same width (like the same page, so by doing 'refresh') and the 
+        // same width (like the same page, so by doing 'refresh') and the
         // page was scrolled the content is just checkerboard at this point
         // and this call ensure we render it correctly.
         browser.getRootView()._updateCacheViewport();
@@ -2804,6 +2919,8 @@ Tab.prototype = {
         let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
         fl.activateRemoteFrame();
       } catch (e) {}
+
+      ContentTouchHandler.updateContentCapture();
     } else {
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });
       browser.setAttribute("type", "content");

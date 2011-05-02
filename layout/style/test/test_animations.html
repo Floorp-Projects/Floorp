@@ -83,6 +83,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435442
       -moz-animation-timing-function: ease-in;
     }
   }
+
+  @-moz-keyframes uaoverride {
+    0%, 100% { line-height: 3; margin-top: 20px }
+    50% { margin-top: 120px }
+  }
   </style>
 </head>
 <body>
@@ -103,13 +108,16 @@ var div = null;
 var cs = null;
 var events_received = [];
 function new_div(style) {
+  return new_element("div", style);
+}
+function new_element(tagname, style) {
   if (div != null || cs != null) {
     ok(false, "test author forgot to call done_div");
   }
   if (typeof(style) != "string") {
     ok(false, "test author forgot to pass argument");
   }
-  div = document.createElement("div");
+  div = document.createElement(tagname);
   div.setAttribute("style", style);
   display.appendChild(div);
   cs = getComputedStyle(div, "");
@@ -1191,6 +1199,25 @@ advance_clock(0); // still forces a refresh
 is(cs.marginRight, "10px", "bug 651456 at 100ms (2)");
 advance_clock(100);
 is(cs.marginRight, "20px", "bug 651456 at 200ms");
+done_div();
+
+// Test that UA !important rules override animations.
+// This test depends on forms.css having a rule
+//   input { line-height: !important }
+// If that rule changes, we should rewrite it to depend on a different rule.
+new_element("input", "");
+var default_line_height = cs.lineHeight;
+done_div();
+new_element("input", "-moz-animation: uaoverride 2s linear infinite");
+is(cs.lineHeight, default_line_height,
+   "animations should not override UA !important at 0ms");
+is(cs.marginTop, "20px",
+   "rest of animation should still work when UA !important present at 0ms");
+advance_clock(200);
+is(cs.lineHeight, default_line_height,
+   "animations should not override UA !important at 200ms");
+is(cs.marginTop, "40px",
+   "rest of animation should still work when UA !important present at 200ms");
 done_div();
 
 SpecialPowers.DOMWindowUtils.restoreNormalRefresh();

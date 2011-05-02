@@ -131,22 +131,7 @@ nsUUIDGenerator::GenerateUUIDInPlace(nsID* id)
     // across the whole method.
     MutexAutoLock lock(mLock);
 
-#if defined(WINCE)
-    // WINCE only has CoCreateGuid if DCOM support is compiled into the BSP;
-    // there's usually very little reason for DCOM to be present!
-
-    if (!CeGenRandom(sizeof(nsID), (BYTE*) id))
-        return NS_ERROR_FAILURE;
-
-    /* Put in the version */
-    id->m2 &= 0x0fff;
-    id->m2 |= 0x4000;
-
-    /* Put in the variant */
-    id->m3[0] &= 0x3f;
-    id->m3[0] |= 0x80;
-
-#elif defined(XP_WIN)
+#if defined(XP_WIN)
     HRESULT hr = CoCreateGuid((GUID*)id);
     if (NS_FAILED(hr))
         return NS_ERROR_FAILURE;
