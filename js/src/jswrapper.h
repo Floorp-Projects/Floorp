@@ -156,6 +156,21 @@ class JS_FRIEND_API(JSCrossCompartmentWrapper) : public JSWrapper {
 
 namespace js {
 
+// A hacky class that lets a friend force a fake frame. We must already be
+// in the compartment of |target| when we enter the forced frame.
+class JS_FRIEND_API(ForceFrame)
+{
+  public:
+    JSContext * const context;
+    JSObject * const target;
+  private:
+    DummyFrameGuard frame;
+
+  public:
+    ForceFrame(JSContext *cx, JSObject *target);
+    bool enter();
+};
+
 class AutoCompartment
 {
   public:
@@ -165,8 +180,6 @@ class AutoCompartment
     JSCompartment * const destination;
   private:
     Maybe<DummyFrameGuard> frame;
-    FrameRegs regs;
-    AutoStringRooter input;
     bool entered;
 
   public:
