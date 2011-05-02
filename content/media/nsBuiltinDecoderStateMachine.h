@@ -118,7 +118,7 @@ not yet time to display the next frame.
 #include "nsBuiltinDecoderReader.h"
 #include "nsAudioAvailableEventManager.h"
 #include "nsHTMLMediaElement.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 
 /*
   The playback state machine class. This manages the decoding in the
@@ -140,7 +140,7 @@ not yet time to display the next frame.
 class nsBuiltinDecoderStateMachine : public nsDecoderStateMachine
 {
 public:
-  typedef mozilla::Monitor Monitor;
+  typedef mozilla::ReentrantMonitor ReentrantMonitor;
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
@@ -151,7 +151,7 @@ public:
   virtual nsresult Init(nsDecoderStateMachine* aCloneDonor);
   State GetState()
   { 
-    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mState; 
   }
   virtual void SetVolume(double aVolume);
@@ -183,14 +183,14 @@ public:
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
   PRBool HasAudio() const {
-    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mInfo.mHasAudio;
   }
 
   // This is called on the state machine thread and audio thread.
   // The decoder monitor must be obtained before calling this.
   PRBool HasVideo() const {
-    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mInfo.mHasVideo;
   }
 
@@ -199,14 +199,14 @@ public:
 
   // Must be called with the decode monitor held.
   PRBool IsBuffering() const {
-    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
     return mState == nsBuiltinDecoderStateMachine::DECODER_STATE_BUFFERING;
   }
 
   // Must be called with the decode monitor held.
   PRBool IsSeeking() const {
-    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
     return mState == nsBuiltinDecoderStateMachine::DECODER_STATE_SEEKING;
   }
@@ -243,7 +243,7 @@ public:
   }
 
   PRInt64 GetEndMediaTime() const {
-    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mEndTime;
   }
 
@@ -278,7 +278,7 @@ protected:
   // Returns PR_TRUE if we recently exited "quick buffering" mode.
   PRBool JustExitedQuickBuffering();
 
-  // Waits on the decoder Monitor for aUsecs microseconds. If the decoder
+  // Waits on the decoder ReentrantMonitor for aUsecs microseconds. If the decoder
   // monitor is awoken by a Notify() call, we'll continue waiting, unless
   // we've moved into shutdown state. This enables us to ensure that we
   // wait for a specified time, and that the myriad of Notify()s we do an
@@ -389,7 +389,7 @@ protected:
   // not start at 0. Note this is different to the value returned
   // by GetCurrentTime(), which is in the range [0,duration].
   PRInt64 GetMediaTime() const {
-    mDecoder->GetMonitor().AssertCurrentThreadIn();
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
     return mStartTime + mCurrentFrameTime;
   }
 
@@ -402,11 +402,11 @@ protected:
   // must be held when calling this. Called on the decoder thread.
   PRInt64 GetDecodedAudioDuration();
 
-  // Monitor on mAudioStream. This monitor must be held in order to delete
-  // or use the audio stream. This stops us destroying the audio stream
-  // while it's being used on another thread (typically when it's being
-  // written to on the audio thread).
-  Monitor mAudioMonitor;
+  // ReentrantMonitor on mAudioStream. This monitor must be held in
+  // order to delete or use the audio stream. This stops us destroying
+  // the audio stream while it's being used on another thread
+  // (typically when it's being written to on the audio thread).
+  ReentrantMonitor mAudioReentrantMonitor;
 
   // The size of the decoded YCbCr frame.
   // Accessed on state machine thread.
@@ -454,9 +454,9 @@ protected:
   // this value. Accessed on main and state machine thread.
   PRInt64 mSeekTime;
 
-  // The audio stream resource. Used on the state machine, audio, and main
-  // threads. You must hold the mAudioMonitor, and must NOT hold the decoder
-  // monitor when using the audio stream!
+  // The audio stream resource. Used on the state machine, audio, and
+  // main threads. You must hold the mAudioReentrantMonitor, and must
+  // NOT hold the decoder monitor when using the audio stream!
   nsRefPtr<nsAudioStream> mAudioStream;
 
   // The reader, don't call its methods with the decoder monitor held.

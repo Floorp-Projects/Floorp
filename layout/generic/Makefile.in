@@ -61,7 +61,6 @@ EXPORTS		= \
 		nsIAnonymousContentCreator.h \
 		nsIFrame.h \
 		nsIFrameUtil.h \
-		nsIImageFrame.h \
 		nsILineIterator.h \
 		nsIObjectFrame.h \
 		nsIPageSequenceFrame.h \

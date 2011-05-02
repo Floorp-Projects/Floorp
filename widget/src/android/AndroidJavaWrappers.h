@@ -392,9 +392,9 @@ public:
     int64_t Time() { return mTime; }
     const nsIntPoint& P0() { return mP0; }
     const nsIntPoint& P1() { return mP1; }
-    float X() { return mX; }
-    float Y() { return mY; }
-    float Z() { return mZ; }
+    double Alpha() { return mAlpha; }
+    double Beta() { return mBeta; }
+    double Gamma() { return mGamma; }
     const nsIntRect& Rect() { return mRect; }
     nsAString& Characters() { return mCharacters; }
     int KeyCode() { return mKeyCode; }
@@ -422,7 +422,7 @@ protected:
     int mOffset, mCount;
     int mRangeType, mRangeStyles;
     int mRangeForeColor, mRangeBackColor;
-    float mX, mY, mZ;
+    double mAlpha, mBeta, mGamma;
     nsString mCharacters;
     nsRefPtr<nsGeoPosition> mGeoPosition;
     nsRefPtr<nsGeoPositionAddress> mGeoAddress;
@@ -438,9 +438,9 @@ protected:
     static jfieldID jTimeField;
     static jfieldID jP0Field;
     static jfieldID jP1Field;
-    static jfieldID jXField;
-    static jfieldID jYField;
-    static jfieldID jZField;
+    static jfieldID jAlphaField;
+    static jfieldID jBetaField;
+    static jfieldID jGammaField;
     static jfieldID jRectField;
     static jfieldID jNativeWindowField;
 

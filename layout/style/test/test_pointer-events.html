@@ -70,12 +70,8 @@ function synthesizeMouseEvent(type,                // string
                               modifiers,           // long
                               ignoreWindowBounds)  // boolean
 {
-  netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                     getInterface(Components.interfaces.nsIDOMWindowUtils);
-
-  utils.sendMouseEvent(type, x, y, button, clickCount, modifiers, ignoreWindowBounds);
+  SpecialPowers.DOMWindowUtils.sendMouseEvent(type, x, y, button, clickCount,
+                                              modifiers, ignoreWindowBounds);
 }
 
 function run_test()

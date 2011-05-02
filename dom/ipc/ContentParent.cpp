@@ -68,6 +68,8 @@
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
 #include "nsConsoleMessage.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "IDBFactory.h"
 #if defined(MOZ_SYDNEYAUDIO)
 #include "AudioParent.h"
 #endif
@@ -109,7 +111,6 @@ static const char* sClipboardTextFlavors[] = { kUnicodeMime };
 using namespace mozilla::ipc;
 using namespace mozilla::net;
 using namespace mozilla::places;
-using mozilla::MonitorAutoEnter;
 using mozilla::unused; // heh
 using base::KillProcess;
 
@@ -330,8 +331,7 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
 }
 
 ContentParent::ContentParent()
-    : mMonitor("ContentParent::mMonitor")
-    , mGeolocationWatchID(-1)
+    : mGeolocationWatchID(-1)
     , mRunToCompletionDepth(0)
     , mShouldCallUnblockChild(false)
     , mIsAlive(true)
@@ -435,6 +435,24 @@ ContentParent::RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissio
     // Ask for future changes
     permissionManager->ChildRequestPermissions();
 #endif
+
+    return true;
+}
+
+bool
+ContentParent::RecvGetIndexedDBDirectory(nsString* aDirectory)
+{
+    indexedDB::IDBFactory::NoteUsedByProcessType(GeckoProcessType_Content);
+
+    nsCOMPtr<nsIFile> dbDirectory;
+    nsresult rv = indexedDB::IDBFactory::GetDirectory(getter_AddRefs(dbDirectory));
+
+    if (NS_FAILED(rv)) {
+        NS_ERROR("Failed to get IndexedDB directory");
+        return true;
+    }
+
+    dbDirectory->GetPath(*aDirectory);
 
     return true;
 }
@@ -650,7 +668,7 @@ void
 ContentParent::SetChildMemoryReporters(const InfallibleTArray<MemoryReport>& report)
 {
     nsCOMPtr<nsIMemoryReporterManager> mgr = do_GetService("@mozilla.org/memory-reporter-manager;1");
-    for (PRUint32 i = 0; i < mMemoryReporters.Count(); i++)
+    for (PRInt32 i = 0; i < mMemoryReporters.Count(); i++)
         mgr->UnregisterReporter(mMemoryReporters[i]);
 
     for (PRUint32 i = 0; i < report.Length(); i++) {
@@ -1086,12 +1104,12 @@ ContentParent::RecvScriptError(const nsString& aMessage,
 NS_IMETHODIMP
 ContentParent::OnAccelerationChange(nsIAcceleration *aAcceleration)
 {
-    double x, y, z;
-    aAcceleration->GetX(&x);
-    aAcceleration->GetY(&y);
-    aAcceleration->GetZ(&z);
+    double alpha, beta, gamma;
+    aAcceleration->GetAlpha(&alpha);
+    aAcceleration->GetBeta(&beta);
+    aAcceleration->GetGamma(&gamma);
 
-    unused << SendAccelerationChanged(x, y, z);
+    unused << SendAccelerationChanged(alpha, beta, gamma);
     return NS_OK;
 }
 

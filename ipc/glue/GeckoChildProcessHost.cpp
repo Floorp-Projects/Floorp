@@ -74,7 +74,7 @@
 #include "APKOpen.h"
 #endif
 
-using mozilla::MonitorAutoEnter;
+using mozilla::MonitorAutoLock;
 using mozilla::ipc::GeckoChildProcessHost;
 
 #ifdef ANDROID
@@ -289,14 +289,14 @@ GeckoChildProcessHost::SyncLaunch(std::vector<std::string> aExtraOpts, int aTime
                                      aExtraOpts, arch));
   // NB: this uses a different mechanism than the chromium parent
   // class.
-  MonitorAutoEnter mon(mMonitor);
+  MonitorAutoLock lock(mMonitor);
   PRIntervalTime waitStart = PR_IntervalNow();
   PRIntervalTime current;
 
   // We'll receive several notifications, we need to exit when we
   // have either successfully launched or have timed out.
   while (!mLaunched) {
-    mon.Wait(timeoutTicks);
+    lock.Wait(timeoutTicks);
 
     if (timeoutTicks != PR_INTERVAL_NO_TIMEOUT) {
       current = PR_IntervalNow();
@@ -327,9 +327,9 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts)
 
   // This may look like the sync launch wait, but we only delay as
   // long as it takes to create the channel.
-  MonitorAutoEnter mon(mMonitor);
+  MonitorAutoLock lock(mMonitor);
   while (!mChannelInitialized) {
-    mon.Wait();
+    lock.Wait();
   }
 
   return true;
@@ -340,9 +340,9 @@ GeckoChildProcessHost::InitializeChannel()
 {
   CreateChannel();
 
-  MonitorAutoEnter mon(mMonitor);
+  MonitorAutoLock lock(mMonitor);
   mChannelInitialized = true;
-  mon.Notify();
+  lock.Notify();
 }
 
 PRInt32 GeckoChildProcessHost::mChildCounter = 0;
@@ -644,13 +644,13 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
 void
 GeckoChildProcessHost::OnChannelConnected(int32 peer_pid)
 {
-  MonitorAutoEnter mon(mMonitor);
+  MonitorAutoLock lock(mMonitor);
   mLaunched = true;
 
   if (!base::OpenPrivilegedProcessHandle(peer_pid, &mChildProcessHandle))
       NS_RUNTIMEABORT("can't open handle to child process");
 
-  mon.Notify();
+  lock.Notify();
 }
 
 // XXX/cjones: these next two methods should basically never be called.

@@ -1628,7 +1628,7 @@ const ContentTouchHandler = {
   // Use lightweight transactions so that old context menus and tap
   // highlights don't ever see the light of day.
   _messageId: 0,
-  contentCanCaptureMouse: false,
+  contentMightCaptureMouse: false,
 
   init: function init() {
     document.addEventListener("TapDown", this, true);
@@ -1639,7 +1639,6 @@ const ContentTouchHandler = {
     document.addEventListener("TapLong", this, false);
     document.addEventListener("TapMove", this, false);
 
-    document.addEventListener("PanBegin", this, false);
     document.addEventListener("PopupChanged", this, false);
     document.addEventListener("CancelTouchSequence", this, false);
 
@@ -1665,7 +1664,6 @@ const ContentTouchHandler = {
       return;
 
     switch (aEvent.type) {
-      case "PanBegin":
       case "PopupChanged":
       case "CancelTouchSequence":
         this._clearPendingMessages();
@@ -1724,13 +1722,14 @@ const ContentTouchHandler = {
   },
 
   receiveMessage: function receiveMessage(aMessage) {
-    if (aMessage.json.messageId != this._messageId)
+    let json = aMessage.json;
+    if (json.messageId != this._messageId)
       return;
 
     switch (aMessage.name) {
       case "Browser:ContextMenu":
         // Long tap
-        let contextMenu = { name: aMessage.name, json: aMessage.json, target: aMessage.target };
+        let contextMenu = { name: aMessage.name, json: json, target: aMessage.target };
         if (ContextHelper.showPopup(contextMenu)) {
           // Stop all input sequences
           let event = document.createEvent("Events");
@@ -1739,15 +1738,20 @@ const ContentTouchHandler = {
         }
         break;
       case "Browser:CaptureEvents":
-        this.contentCanCaptureMouse = true;
+        this.contentMightCaptureMouse = json.contentMightCaptureMouse;
         if (this.touchTimeout) {
           clearTimeout(this.touchTimeout);
           this.touchTimeout = null;
         }
-        Elements.browsers.customDragger.contentMouseCapture = aMessage.json.panning;
+
+        if (json.click)
+          this.clickPrevented = true;
+
+        if (this.canCancelPan)
+          Elements.browsers.customDragger.contentMouseCapture = json.panning;
         break;
       case "Browser:CanCaptureMouse:Return":
-        ContentTouchHandler.contentCanCaptureMouse = aMessage.json.contentCanCaptureMouse;
+        ContentTouchHandler.contentMightCaptureMouse = json.contentMightCaptureMouse;
         break;
     }
   },
@@ -1784,6 +1788,26 @@ const ContentTouchHandler = {
 
   touchTimeout: null,
 
+  canCancelPan: false,
+
+  clickPrevented: false,
+
+  updateCanCancel: function(aX, aY) {
+    let dpi = Browser.windowUtils.displayDPI;
+
+    const kSafetyX = Services.prefs.getIntPref("dom.w3c_touch_events.safetyX") / 240 * dpi;
+    const kSafetyY = Services.prefs.getIntPref("dom.w3c_touch_events.safetyY") / 240 * dpi;
+    let browser = getBrowser();
+    let bcr = browser.getBoundingClientRect();
+    let rect = new Rect(0, 0, window.innerWidth, window.innerHeight);
+    rect.restrictTo(Rect.fromRect(bcr));
+
+    // Check if the user touched near to one of the edges of the browser area
+    // or if the urlbar is showing
+    this.canCancelPan = (aX >= rect.left + kSafetyX) && (aX <= rect.right - kSafetyX) &&
+                        (aY >= rect.top  + kSafetyY) && bcr.top == 0;
+  },
+
   tapDown: function tapDown(aX, aY) {
     // Ensure that the content process has gets an activate event
     let browser = getBrowser();
@@ -1794,13 +1818,15 @@ const ContentTouchHandler = {
     } catch (e) {}
 
     // if the page might capture touch events, we give it the option
-    Elements.browsers.customDragger.contentMouseCapture = this.contentCanCaptureMouse;
+    this.updateCanCancel(aX, aY);
+    this.clickPrevented = false;
+    Elements.browsers.customDragger.contentMouseCapture = this.canCancelPan && this.contentMightCaptureMouse;
     if (this.touchTimeout) {
       clearTimeout(this.touchTimeout);
       this.touchTimeout = null;
     }
 
-    if (this.contentCanCaptureMouse) {
+    if (this.contentMightCaptureMouse) {
       this.touchTimeout = setTimeout(function() {
         Elements.browsers.customDragger.contentMouseCapture = false;
       }, kTouchTimeout)
@@ -1820,12 +1846,13 @@ const ContentTouchHandler = {
 
   tapSingle: function tapSingle(aX, aY, aModifiers) {
     // Cancel the mouse click if we are showing a context menu
-    if (!ContextHelper.popupState)
+    if (!ContextHelper.popupState && !this.clickPrevented)
       this._dispatchMouseEvent("Browser:MouseClick", aX, aY, { modifiers: aModifiers });
   },
 
   tapMove: function tapMove(aX, aY) {
-    this._dispatchMouseEvent("Browser:MouseMove", aX, aY);
+    if (this.contentMightCaptureMouse)
+      this._dispatchMouseEvent("Browser:MouseMove", aX, aY);
   },
 
   tapDouble: function tapDouble(aX, aY, aModifiers) {

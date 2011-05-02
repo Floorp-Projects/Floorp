@@ -118,10 +118,6 @@ static const mozilla::Module::CategoryEntry kImageCategories[] = {
 static nsresult
 imglib_Initialize()
 {
-  // We need the gfx module to be initialized because we use gfxPlatform
-  // in imgFrame. It should have happened by now, but make sure.
-  nsCOMPtr<nsISupports> dummy = do_GetService("@mozilla.org/gfx/init;1");
-
   imgLoader::InitCache();
   return NS_OK;
 }
