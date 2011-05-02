@@ -75,6 +75,8 @@
 #include "jsvector.h"
 #include "jslibmath.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsatominlines.h"
 #include "jsinferinlines.h"
 #include "jsinterpinlines.h"
@@ -1099,39 +1101,52 @@ FinishRuntimeNumberState(JSRuntime *rt)
 JSObject *
 js_InitNumberClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto, *ctor;
-    JSRuntime *rt;
+    JS_ASSERT(obj->isNative());
 
     /* XXX must do at least once per new thread, so do it per JSContext... */
     FIX_FPU();
 
-    proto = js_InitClass(cx, obj, NULL, &NumberClass, Number, 1,
-                         NULL, number_methods, NULL, NULL);
-    if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
-        return NULL;
-    proto->setPrimitiveThis(Int32Value(0));
+    GlobalObject *global = obj->asGlobal();
 
-    if (!JS_DefineFunctions(cx, obj, number_functions))
+    JSObject *numberProto = global->createBlankPrototype(cx, &NumberClass);
+    if (!numberProto)
+        return NULL;
+    numberProto->setPrimitiveThis(Int32Value(0));
+
+    JSFunction *ctor = global->createConstructor(cx, Number, &NumberClass,
+                                                 CLASS_ATOM(cx, Number), 1);
+    if (!ctor)
         return NULL;
 
+    if (!LinkConstructorAndPrototype(cx, ctor, numberProto))
+        return NULL;
+
+    /* Add numeric constants (MAX_VALUE, NaN, &c.) to the Number constructor. */
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
         return NULL;
 
-    /* ECMA 15.1.1.1 */
-    rt = cx->runtime;
-    if (!JS_DefineProperty(cx, obj, js_NaN_str, rt->NaNValue,
-                           JS_PropertyStub, JS_StrictPropertyStub,
-                           JSPROP_PERMANENT | JSPROP_READONLY)) {
+    if (!DefinePropertiesAndBrand(cx, numberProto, NULL, number_methods))
+        return NULL;
+
+    if (!JS_DefineFunctions(cx, global, number_functions))
+        return NULL;
+
+    /* ES5 15.1.1.1, 15.1.1.2 */
+    if (!DefineNativeProperty(cx, global, ATOM_TO_JSID(cx->runtime->atomState.NaNAtom),
+                              cx->runtime->NaNValue, JS_PropertyStub, JS_StrictPropertyStub,
+                              JSPROP_PERMANENT | JSPROP_READONLY, 0, 0) ||
+        !DefineNativeProperty(cx, global, ATOM_TO_JSID(cx->runtime->atomState.InfinityAtom),
+                              cx->runtime->positiveInfinityValue,
+                              JS_PropertyStub, JS_StrictPropertyStub,
+                              JSPROP_PERMANENT | JSPROP_READONLY, 0, 0))
+    {
         return NULL;
     }
 
-    /* ECMA 15.1.1.2 */
-    if (!JS_DefineProperty(cx, obj, js_Infinity_str, rt->positiveInfinityValue,
-                           JS_PropertyStub, JS_StrictPropertyStub,
-                           JSPROP_PERMANENT | JSPROP_READONLY)) {
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_Number, ctor, numberProto))
         return NULL;
-    }
-    return proto;
+
+    return numberProto;
 }
 
 namespace v8 {
