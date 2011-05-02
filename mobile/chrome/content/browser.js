@@ -1746,9 +1746,12 @@ const ContentTouchHandler = {
 
         if (json.click)
           this.clickPrevented = true;
+        if (json.panning)
+          this.panningPrevented = true;
 
-        if (this.canCancelPan)
-          Elements.browsers.customDragger.contentMouseCapture = json.panning;
+        // We don't know if panning is allowed until the first touchmove event is processed.
+        if (this.canCancelPan && json.type == "touchmove")
+          Elements.browsers.customDragger.contentMouseCapture = this.panningPrevented;
         break;
       }
       case "Browser:CanCaptureMouse:Return": {
@@ -1790,10 +1793,9 @@ const ContentTouchHandler = {
   },
 
   touchTimeout: null,
-
   canCancelPan: false,
-
   clickPrevented: false,
+  panningPrevented: false,
 
   updateCanCancel: function(aX, aY) {
     let dpi = Browser.windowUtils.displayDPI;
@@ -1823,6 +1825,7 @@ const ContentTouchHandler = {
     // if the page might capture touch events, we give it the option
     this.updateCanCancel(aX, aY);
     this.clickPrevented = false;
+    this.panningPrevented = false;
 
     let dragger = Elements.browsers.customDragger;
     dragger.contentMouseCapture = this.canCancelPan && Browser.selectedTab.contentMightCaptureMouse;
