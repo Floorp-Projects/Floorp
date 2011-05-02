@@ -597,7 +597,7 @@ let Content = {
 
       case "Browser:CanCaptureMouse": {
         let json = {
-          contentCanCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor)
+          contentMightCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor)
                                       .getInterface(Ci.nsIDOMWindowUtils)
                                       .mayHaveTouchEventListeners,
           messageId: aMessage.json.messageId
@@ -1214,6 +1214,7 @@ var TouchEventHandler = {
   },
 
   receiveMessage: function(aMessage) {
+    let json = aMessage.json;
     if (Util.isParentProcess())
       return;
 
@@ -1226,7 +1227,6 @@ var TouchEventHandler = {
       return;
     }
 
-    let json = aMessage.json;
     let cancelled = false;
 
     switch (aMessage.name) {
