@@ -186,7 +186,7 @@ ADDITIONAL_TEST_DIRS = [
 }];
 
 function run_test() {
-  if (!IS_WIN || IS_WINCE) {
+  if (!IS_WIN) {
     logTestInfo("this test is only applicable to Windows... returning early");
     return;
   }

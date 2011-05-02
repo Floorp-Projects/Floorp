@@ -1,11 +1,12 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
  * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * the License. You may obtain a copy of the License at:
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -13,18 +14,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla Code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ *   The Mozilla Foundation
+ * Portions created by the Initial Developer are Copyrigght (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Chris Jones <jones.chris.g@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -39,188 +41,93 @@
 #ifndef mozilla_Monitor_h
 #define mozilla_Monitor_h
 
-#include "prmon.h"
+#include "mozilla/CondVar.h"
+#include "mozilla/Mutex.h"
 
-#include "mozilla/BlockingResourceBase.h"
-
-//
-// Provides:
-//
-//  - Monitor, a Java-like monitor
-//  - MonitorAutoEnter, an RAII class for ensuring that Monitors are properly 
-//    entered and exited
-//
-// Using MonitorAutoEnter is MUCH preferred to making bare calls to 
-// Monitor.Enter and Exit.
-//
 namespace mozilla {
 
-
 /**
- * Monitor
- * Java-like monitor.
- * When possible, use MonitorAutoEnter to hold this monitor within a
- * scope, instead of calling Enter/Exit directly.
- **/
-class NS_COM_GLUE Monitor : BlockingResourceBase
+ * Monitor provides a *non*-reentrant monitor: *not* a Java-style
+ * monitor.  If your code needs support for reentrancy, use
+ * ReentrantMonitor instead.  (Rarely should reentrancy be needed.)
+ *
+ * Instead of directly calling Monitor methods, it's safer and simpler
+ * to instead use the RAII wrappers MonitorAutoLock and
+ * MonitorAutoUnlock.
+ */
+class NS_COM_GLUE Monitor
 {
 public:
-    /**
-     * Monitor
-     * @param aName A name which can reference this monitor
-     * @returns If failure, nsnull
-     *          If success, a valid Monitor*, which must be destroyed
-     *          by Monitor::DestroyMonitor()
-     **/
     Monitor(const char* aName) :
-        BlockingResourceBase(aName, eMonitor)
-#ifdef DEBUG
-        , mEntryCount(0)
-#endif
+        mMutex(aName),
+        mCondVar(mMutex, "[Monitor.mCondVar]")
+    {}
+
+    ~Monitor() {}
+
+    void Lock()
     {
-        MOZ_COUNT_CTOR(Monitor);
-        mMonitor = PR_NewMonitor();
-        if (!mMonitor)
-            NS_RUNTIMEABORT("Can't allocate mozilla::Monitor");
+        mMutex.Lock();
     }
 
-    /**
-     * ~Monitor
-     **/
-    ~Monitor()
+    void Unlock()
     {
-        NS_ASSERTION(mMonitor,
-                     "improperly constructed Monitor or double free");
-        PR_DestroyMonitor(mMonitor);
-        mMonitor = 0;
-        MOZ_COUNT_DTOR(Monitor);
+        mMutex.Unlock();
     }
 
-#ifndef DEBUG
-    /** 
-     * Enter
-     * @see prmon.h 
-     **/
-    void Enter()
-    {
-        PR_EnterMonitor(mMonitor);
-    }
-
-    /** 
-     * Exit
-     * @see prmon.h 
-     **/
-    void Exit()
-    {
-        PR_ExitMonitor(mMonitor);
-    }
-
-    /**
-     * Wait
-     * @see prmon.h
-     **/      
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
     {
-        return PR_Wait(mMonitor, interval) == PR_SUCCESS ?
-            NS_OK : NS_ERROR_FAILURE;
+        return mCondVar.Wait(interval);
     }
 
-#else
-    void Enter();
-    void Exit();
-    nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT);
-
-#endif  // ifndef DEBUG
-
-    /** 
-     * Notify
-     * @see prmon.h 
-     **/      
     nsresult Notify()
     {
-        return PR_Notify(mMonitor) == PR_SUCCESS
-            ? NS_OK : NS_ERROR_FAILURE;
+        return mCondVar.Notify();
     }
 
-    /** 
-     * NotifyAll
-     * @see prmon.h 
-     **/      
     nsresult NotifyAll()
     {
-        return PR_NotifyAll(mMonitor) == PR_SUCCESS
-            ? NS_OK : NS_ERROR_FAILURE;
+        return mCondVar.NotifyAll();
     }
 
-#ifdef DEBUG
-    /**
-     * AssertCurrentThreadIn
-     * @see prmon.h
-     **/
-    void AssertCurrentThreadIn()
+    void AssertCurrentThreadOwns() const
     {
-        PR_ASSERT_CURRENT_THREAD_IN_MONITOR(mMonitor);
+        mMutex.AssertCurrentThreadOwns();
     }
 
-    /**
-     * AssertNotCurrentThreadIn
-     * @see prmon.h
-     **/
-    void AssertNotCurrentThreadIn()
+    void AssertNotCurrentThreadOwns() const
     {
-        // FIXME bug 476536
+        mMutex.AssertNotCurrentThreadOwns();
     }
-
-#else
-    void AssertCurrentThreadIn()
-    {
-    }
-    void AssertNotCurrentThreadIn()
-    {
-    }
-
-#endif  // ifdef DEBUG
 
 private:
     Monitor();
     Monitor(const Monitor&);
     Monitor& operator =(const Monitor&);
 
-    PRMonitor* mMonitor;
-#ifdef DEBUG
-    PRInt32 mEntryCount;
-#endif
+    Mutex mMutex;
+    CondVar mCondVar;
 };
 
-
 /**
- * MonitorAutoEnter
- * Enters the Monitor when it enters scope, and exits it when it leaves 
- * scope.
+ * Lock the monitor for the lexical scope instances of this class are
+ * bound to (except for MonitorAutoUnlock in nested scopes).
  *
- * MUCH PREFERRED to bare calls to Monitor.Enter and Exit.
- */ 
-class NS_COM_GLUE NS_STACK_CLASS MonitorAutoEnter
+ * The monitor must be unlocked when instances of this class are
+ * created.
+ */
+class NS_COM_GLUE NS_STACK_CLASS MonitorAutoLock
 {
 public:
-    /**
-     * Constructor
-     * The constructor aquires the given lock.  The destructor
-     * releases the lock.
-     * 
-     * @param aMonitor A valid mozilla::Monitor* returned by 
-     *                 mozilla::Monitor::NewMonitor. 
-     **/
-    MonitorAutoEnter(mozilla::Monitor &aMonitor) :
+    MonitorAutoLock(Monitor& aMonitor) :
         mMonitor(&aMonitor)
     {
-        NS_ASSERTION(mMonitor, "null monitor");
-        mMonitor->Enter();
+        mMonitor->Lock();
     }
     
-    ~MonitorAutoEnter(void)
+    ~MonitorAutoLock()
     {
-        mMonitor->Exit();
+        mMonitor->Unlock();
     }
  
     nsresult Wait(PRIntervalTime interval = PR_INTERVAL_NO_TIMEOUT)
@@ -239,17 +146,46 @@ public:
     }
 
 private:
-    MonitorAutoEnter();
-    MonitorAutoEnter(const MonitorAutoEnter&);
-    MonitorAutoEnter& operator =(const MonitorAutoEnter&);
+    MonitorAutoLock();
+    MonitorAutoLock(const MonitorAutoLock&);
+    MonitorAutoLock& operator =(const MonitorAutoLock&);
     static void* operator new(size_t) CPP_THROW_NEW;
     static void operator delete(void*);
 
-    mozilla::Monitor* mMonitor;
+    Monitor* mMonitor;
 };
 
+/**
+ * Unlock the monitor for the lexical scope instances of this class
+ * are bound to (except for MonitorAutoLock in nested scopes).
+ *
+ * The monitor must be locked by the current thread when instances of
+ * this class are created.
+ */
+class NS_COM_GLUE NS_STACK_CLASS MonitorAutoUnlock
+{
+public:
+    MonitorAutoUnlock(Monitor& aMonitor) :
+        mMonitor(&aMonitor)
+    {
+        mMonitor->Unlock();
+    }
+    
+    ~MonitorAutoUnlock()
+    {
+        mMonitor->Lock();
+    }
+ 
+private:
+    MonitorAutoUnlock();
+    MonitorAutoUnlock(const MonitorAutoUnlock&);
+    MonitorAutoUnlock& operator =(const MonitorAutoUnlock&);
+    static void* operator new(size_t) CPP_THROW_NEW;
+    static void operator delete(void*);
+
+    Monitor* mMonitor;
+};
 
 } // namespace mozilla
 
-
-#endif // ifndef mozilla_Monitor_h
+#endif // mozilla_Monitor_h

@@ -159,6 +159,7 @@ MacOSFontEntry::MacOSFontEntry(const nsAString& aPostscriptName, ATSFontRef aFon
       mATSFontRef(aFontRef),
       mATSFontRefInitialized(PR_TRUE),
       mRequiresAAT(PR_FALSE),
+      mIsCFF(PR_FALSE),
       mIsCFFInitialized(PR_FALSE)
 {
     // xxx - stretch is basically ignored for now

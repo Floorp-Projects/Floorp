@@ -87,6 +87,7 @@ function run()
     test_document_rule("regexp('.*ochi')", false);
     test_document_rule("regexp('http:.*ochi.*')", true);
     test_document_rule("regexp('http:.*ochi')", false);
+    test_document_rule("regexp('http:.*oCHi.*')", false); // case sensitive
 
     SimpleTest.finish();
 }

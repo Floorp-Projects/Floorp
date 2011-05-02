@@ -1143,8 +1143,14 @@ let TabItems = {
   _checkHeartbeat: function TabItems__checkHeartbeat() {
     this._heartbeat = null;
 
-    if (this.isPaintingPaused() || !UI.isIdle)
+    if (this.isPaintingPaused())
       return;
+
+    // restart the heartbeat to update all waiting tabs once the UI becomes idle
+    if (!UI.isIdle()) {
+      this.startHeartbeat();
+      return;
+    }
 
     let accumTime = 0;
     let items = this._tabsWaitingForUpdate.getItems();

@@ -166,10 +166,8 @@ using mozilla::dom::ContentParent;
 #endif
 
 #ifdef XP_WIN
-#ifndef WINCE
 #include <process.h>
 #include <shlobj.h>
-#endif
 #include "nsThreadUtils.h"
 #endif
 
@@ -217,33 +215,6 @@ using mozilla::dom::ContentParent;
 
 #ifdef ANDROID
 #include "AndroidBridge.h"
-#endif
-
-#ifdef WINCE
-class WindowsMutex {
-public:
-  WindowsMutex(const wchar_t *name) {
-    mHandle = CreateMutexW(0, FALSE, name);
-  }
-
-  ~WindowsMutex() {
-    Unlock();
-    CloseHandle(mHandle);
-  }
-
-  PRBool Lock(DWORD timeout = INFINITE) {
-    DWORD state = WaitForSingleObject(mHandle, timeout);
-    return state == WAIT_OBJECT_0;
-  }
-  
-  void Unlock() {
-    if (mHandle)
-      ReleaseMutex(mHandle);
-  }
-
-protected:
-  HANDLE mHandle;
-};
 #endif
 
 extern PRUint32 gRestartMode;
@@ -846,10 +817,6 @@ typedef enum
 NS_IMETHODIMP
 nsXULAppInfo::GetUserCanElevate(PRBool *aUserCanElevate)
 {
-#ifdef WINCE
-  *aUserCanElevate = PR_FALSE;
-  return NS_OK;
-#else
   HANDLE hToken;
 
   VISTA_TOKEN_ELEVATION_TYPE elevationType;
@@ -877,7 +844,6 @@ nsXULAppInfo::GetUserCanElevate(PRBool *aUserCanElevate)
     CloseHandle(hToken);
 
   return NS_OK;
-#endif // WINCE
 }
 #endif
 
@@ -2891,55 +2857,11 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   isNoSplash |= (PR_GetEnv("NO_SPLASH") != 0);
   PRBool isNoRemote = (CheckArg("no-remote", PR_FALSE, NULL, PR_FALSE) == ARG_FOUND);
 
-#ifdef WINCE
-  // synchronize startup; if it looks like we're going to have to
-  // wait, then open up a splash screen
-  WindowsMutex winStartupMutex(L"FirefoxStartupMutex");
-
-  // try to lock the mutex, but only wait 100ms to do so
-  PRBool needsMutexLock = ! winStartupMutex.Lock(100);
-
-  // If we failed to lock the mutex quickly, then we'll want
-  // a splash screen for sure.
-  //
-  // If we did manage to lock it, then we'll only want one
-  // a splash screen if there is no existing message window;
-  // that is, if we are the first instance of the app.
-  if (!needsMutexLock && !isNoRemote) {
-    // check to see if there's a remote firefox up
-    static PRUnichar classNameBuffer[128];
-    _snwprintf(classNameBuffer, sizeof(classNameBuffer) / sizeof(PRUnichar),
-               L"%S%s",
-               gAppData->name, L"MessageWindow");
-    HANDLE h = FindWindowW(classNameBuffer, 0);
-    if (h) {
-      // Someone else has the window, and we were able to grab the mutex,
-      // meaning the other instance ahs presumably already finished starting
-      // up by now.  So no need for a splash screen.
-      wantsSplash = PR_FALSE;
-      CloseHandle(h);
-    } else {
-      // We couldn't find another window, and we were able to lock the mutex;
-      // we're likely the first instance starting up, so make sure a splash
-      // screen gets thrown up.
-      wantsSplash = PR_TRUE;
-    }
-  }
-#endif //WINCE
-
   if (wantsSplash && !isNoSplash)
     splashScreen = nsSplashScreen::GetOrCreate();
 
   if (splashScreen)
     splashScreen->Open();
-
-#ifdef WINCE
-  // Now that the splash screen is open, wait indefinitely
-  // for the startup mutex on this thread if we need to.
-  if (needsMutexLock)
-    winStartupMutex.Lock();
-#endif //WINCE
-
 #endif //MOZ_SPLASHSCREEN
 
 
@@ -3405,11 +3327,6 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
     rv = dirProvider.SetProfile(profD, profLD);
     NS_ENSURE_SUCCESS(rv, 1);
-
-#if defined(WINCE) && defined(MOZ_SPLASHSCREEN)
-    // give up the mutex, let other app startups happen
-    winStartupMutex.Unlock();
-#endif
 
     //////////////////////// NOW WE HAVE A PROFILE ////////////////////////
 
@@ -3947,7 +3864,7 @@ SetupErrorHandling(const char* progname)
     _SetProcessDEPPolicy(PROCESS_DEP_ENABLE);
 #endif
 
-#if defined (XP_WIN32) && !defined (WINCE)
+#ifdef XP_WIN32
   // Suppress the "DLL Foo could not be found" dialog, such that if dependent
   // libraries (such as GDI+) are not preset, we gracefully fail to load those
   // XPCOM components, instead of being ungraceful.
@@ -3968,10 +3885,8 @@ SetupErrorHandling(const char* progname)
   InstallSignalHandlers(progname);
 #endif
 
-#ifndef WINCE
   // Unbuffer stdout, needed for tinderbox tests.
   setbuf(stdout, 0);
-#endif
 
 #if defined(FREEBSD)
   // Disable all SIGFPE's on FreeBSD, as it has non-IEEE-conformant fp

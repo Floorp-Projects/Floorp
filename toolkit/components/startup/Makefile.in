@@ -55,7 +55,7 @@ CPPSRCS = \
 ifeq (os2,$(MOZ_WIDGET_TOOLKIT))
 CPPSRCS += nsUserInfoOS2.cpp
 else
-ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 CPPSRCS += nsUserInfoWin.cpp
 else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

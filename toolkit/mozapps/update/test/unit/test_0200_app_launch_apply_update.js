@@ -112,11 +112,6 @@ function run_test() {
     return;
   }
 
-  if (IS_WINCE) {
-    logTestInfo("this test is not applicable to Windows CE... returning early");
-    return;
-  }
-
   do_test_pending();
   do_register_cleanup(end_test);
 
