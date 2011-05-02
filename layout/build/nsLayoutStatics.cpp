@@ -265,11 +265,7 @@ nsLayoutStatics::Initialize()
 
   nsCORSListenerProxy::Startup();
 
-  rv = nsFrameList::Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize nsFrameList");
-    return rv;
-  }
+  nsFrameList::Init();
 
   NS_SealStaticAtomTable();
 
