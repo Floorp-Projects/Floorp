@@ -1628,7 +1628,6 @@ const ContentTouchHandler = {
   // Use lightweight transactions so that old context menus and tap
   // highlights don't ever see the light of day.
   _messageId: 0,
-  contentMightCaptureMouse: false,
 
   init: function init() {
     document.addEventListener("TapDown", this, true);
@@ -1737,8 +1736,9 @@ const ContentTouchHandler = {
           document.dispatchEvent(event);
         }
         break;
-      case "Browser:CaptureEvents":
-        this.contentMightCaptureMouse = json.contentMightCaptureMouse;
+      case "Browser:CaptureEvents": {
+        let tab = Browser.getTabForBrowser(aMessage.target);
+        tab.contentMightCaptureMouse = json.contentMightCaptureMouse;
         if (this.touchTimeout) {
           clearTimeout(this.touchTimeout);
           this.touchTimeout = null;
@@ -1750,9 +1750,12 @@ const ContentTouchHandler = {
         if (this.canCancelPan)
           Elements.browsers.customDragger.contentMouseCapture = json.panning;
         break;
-      case "Browser:CanCaptureMouse:Return":
-        this.contentMightCaptureMouse = json.contentMightCaptureMouse;
+      }
+      case "Browser:CanCaptureMouse:Return": {
+        let tab = Browser.getTabForBrowser(aMessage.target);
+        tab.contentMightCaptureMouse = json.contentMightCaptureMouse;
         break;
+      }
     }
   },
 
@@ -1820,17 +1823,16 @@ const ContentTouchHandler = {
     // if the page might capture touch events, we give it the option
     this.updateCanCancel(aX, aY);
     this.clickPrevented = false;
-    Elements.browsers.customDragger.contentMouseCapture = this.canCancelPan && this.contentMightCaptureMouse;
+
+    let dragger = Elements.browsers.customDragger;
+    dragger.contentMouseCapture = this.canCancelPan && Browser.selectedTab.contentMightCaptureMouse;
     if (this.touchTimeout) {
       clearTimeout(this.touchTimeout);
       this.touchTimeout = null;
     }
 
-    if (this.contentMightCaptureMouse) {
-      this.touchTimeout = setTimeout(function() {
-        Elements.browsers.customDragger.contentMouseCapture = false;
-      }, kTouchTimeout)
-    }
+    if (dragger.contentMouseCapture)
+      this.touchTimeout = setTimeout(function() dragger.contentMouseCapture = false, kTouchTimeout);
 
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
   },
@@ -1851,7 +1853,7 @@ const ContentTouchHandler = {
   },
 
   tapMove: function tapMove(aX, aY) {
-    if (this.contentMightCaptureMouse)
+    if (Browser.selectedTab.contentMightCaptureMouse)
       this._dispatchMouseEvent("Browser:MouseMove", aX, aY);
   },
 
@@ -2549,6 +2551,7 @@ function Tab(aURI, aParams) {
   this._chromeTab = null;
   this._metadata = null;
 
+  this.contentMightCaptureMouse = false;
   this.useFallbackWidth = false;
   this.owner = null;
 
@@ -2919,8 +2922,6 @@ Tab.prototype = {
         let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
         fl.activateRemoteFrame();
       } catch (e) {}
-
-      ContentTouchHandler.updateContentCapture();
     } else {
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });
       browser.setAttribute("type", "content");
