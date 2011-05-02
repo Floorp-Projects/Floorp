@@ -18,7 +18,7 @@ assertThrowsInstanceOf(function () { new Debug("bad"); }, TypeError);
 assertThrowsInstanceOf(function () { new Debug(function () {}); }, TypeError);
 assertThrowsInstanceOf(function () { new Debug(this); }, TypeError);
 
-// Very basic tests of Debug creation.
+// From the main compartment, creating a Debug on a sandbox compartment.
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 assertEq(dbg instanceof Debug, true);
