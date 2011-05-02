@@ -115,12 +115,28 @@ function HandlerService() {
   this._init();
 }
 
+const HandlerServiceFactory = {
+  _instance: null,
+  createInstance: function (outer, iid) {
+    if (this._instance)
+      return this._instance;
+
+    let processType = Cc["@mozilla.org/xre/runtime;1"].
+      getService(Ci.nsIXULRuntime).processType;
+    if (processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT)
+      return Cr.NS_ERROR_NOT_IMPLEMENTED;
+
+    return (this._instance = new HandlerService());
+  }
+};
+
 HandlerService.prototype = {
   //**************************************************************************//
   // XPCOM Plumbing
 
   classID:          Components.ID("{32314cc8-22f7-4f7f-a645-1a45453ba6a6}"),
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIHandlerService]),
+  _xpcom_factory: HandlerServiceFactory,
 
   //**************************************************************************//
   // Initialization & Destruction
