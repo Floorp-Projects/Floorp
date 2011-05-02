@@ -1198,6 +1198,13 @@ nsRuleNode::nsRuleNode(nsPresContext* aContext, nsRuleNode* aParent,
     mParent->AddRef();
     aContext->StyleSet()->RuleNodeUnused();
   }
+
+  // nsStyleSet::GetContext depends on there being only one animation
+  // rule.
+  NS_ABORT_IF_FALSE(IsRoot() || GetLevel() != nsStyleSet::eAnimationSheet ||
+                    mParent->IsRoot() ||
+                    mParent->GetLevel() != nsStyleSet::eAnimationSheet,
+                    "must be only one rule at animation level");
 }
 
 nsRuleNode::~nsRuleNode()

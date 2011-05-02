@@ -278,10 +278,8 @@ div.style.removeProperty("-moz-transition");
 
 function get_distance(prop, v1, v2)
 {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                      .getInterface(Components.interfaces.nsIDOMWindowUtils);
-  return utils.computeAnimationDistance(div, prop, v1, v2);
+  return SpecialPowers.DOMWindowUtils
+           .computeAnimationDistance(div, prop, v1, v2);
 }
 
 function check_distance(prop, start, quarter, end)

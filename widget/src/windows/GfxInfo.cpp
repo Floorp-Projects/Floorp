@@ -102,7 +102,7 @@ GfxInfo::GetDWriteEnabled(PRBool *aEnabled)
 NS_IMETHODIMP
 GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
 {
-  gfxWindowsPlatform::GetPlatform()->GetDLLVersion(L"dwrite.dll", aDwriteVersion);
+  gfxWindowsPlatform::GetDLLVersion(L"dwrite.dll", aDwriteVersion);
   return NS_OK;
 }
 
@@ -354,21 +354,21 @@ GfxInfo::Init()
   mHasDriverVersionMismatch = PR_FALSE;
   if (mAdapterVendorID == vendorIntel) {
     // we've had big crashers (bugs 590373 and 595364) apparently correlated
-    // with bad Intel driver installations where the DriverVersion reported by the registry was
-    // not the version of the DLL.
+    // with bad Intel driver installations where the DriverVersion reported
+    // by the registry was not the version of the DLL.
     PRBool is64bitApp = sizeof(void*) == 8;
     const PRUnichar *dllFileName = is64bitApp
                                  ? L"igd10umd64.dll"
                                  : L"igd10umd32.dll";
     nsString dllVersion;
-    // if GetDLLVersion fails, it gives "0.0.0.0"
-    gfxWindowsPlatform::GetPlatform()->GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
+    gfxWindowsPlatform::GetDLLVersion((PRUnichar*)dllFileName, dllVersion);
 
     PRUint64 dllNumericVersion = 0, driverNumericVersion = 0;
-    // so if GetDLLVersion failed, we get dllNumericVersion = 0
     ParseDriverVersion(dllVersion, &dllNumericVersion);
     ParseDriverVersion(mDriverVersion, &driverNumericVersion);
 
+    // if GetDLLVersion fails, it gives "0.0.0.0"
+    // so if GetDLLVersion failed, we get dllNumericVersion = 0
     // so this test implicitly handles the case where GetDLLVersion failed
     if (dllNumericVersion != driverNumericVersion)
       mHasDriverVersionMismatch = PR_TRUE;

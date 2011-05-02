@@ -130,7 +130,6 @@ static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 #define LOAD_IN_SIDEBAR_ANNO NS_LITERAL_CSTRING("bookmarkProperties/loadInSidebar")
 #define DESCRIPTION_ANNO NS_LITERAL_CSTRING("bookmarkProperties/description")
 #define POST_DATA_ANNO NS_LITERAL_CSTRING("bookmarkProperties/POSTData")
-#define STATIC_TITLE_ANNO NS_LITERAL_CSTRING("bookmarks/staticTitle")
 
 #define BOOKMARKS_MENU_ICON_URI "chrome://browser/skin/places/bookmarksMenu.png"
 
@@ -224,13 +223,6 @@ public:
   // contains the URL of the previous livemark, so that when the link ends,
   // and the livemark title is known, we can create it.
   nsCOMPtr<nsIURI> mPreviousFeed;
-
-  // contains the text content of the previous microsummary, so that when the
-  // link ends, we can replace the bookmark's title with it and store the user's
-  // title in the staticTitle annotation.
-  nsString mPreviousMicrosummaryText;
-
-  nsCOMPtr<nsIMicrosummary> mPreviousMicrosummary;
 
   void ConsumeHeading(nsAString* aHeading, ContainerType* aContainerType)
   {
@@ -343,8 +335,6 @@ nsPlacesImportExportService::Init()
   NS_ENSURE_TRUE(mBookmarksService, NS_ERROR_OUT_OF_MEMORY);
   mLivemarkService = do_GetService(NS_LIVEMARKSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(mLivemarkService, NS_ERROR_OUT_OF_MEMORY);
-  mMicrosummaryService = do_GetService("@mozilla.org/microsummary/service;1");
-  NS_ENSURE_TRUE(mMicrosummaryService, NS_ERROR_OUT_OF_MEMORY);
   return NS_OK;
 }
 
@@ -394,7 +384,6 @@ protected:
   nsCOMPtr<nsINavHistoryService> mHistoryService;
   nsCOMPtr<nsIAnnotationService> mAnnotationService;
   nsCOMPtr<nsILivemarkService> mLivemarkService;
-  nsCOMPtr<nsIMicrosummaryService> mMicrosummaryService;
 
   // If set, we will move root items to from their existing position
   // in the hierarchy, to where we find them in the bookmarks file
@@ -477,8 +466,6 @@ BookmarkContentSink::Init(PRBool aAllowRootChanges,
   NS_ENSURE_TRUE(mAnnotationService, NS_ERROR_OUT_OF_MEMORY);
   mLivemarkService = do_GetService(NS_LIVEMARKSERVICE_CONTRACTID);
   NS_ENSURE_TRUE(mLivemarkService, NS_ERROR_OUT_OF_MEMORY);
-  mMicrosummaryService = do_GetService("@mozilla.org/microsummary/service;1");
-  NS_ENSURE_TRUE(mMicrosummaryService, NS_ERROR_OUT_OF_MEMORY);
 
   mAllowRootChanges = aAllowRootChanges;
   mIsImportDefaults = aIsImportDefaults;
@@ -827,9 +814,6 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
   frame.mPreviousId = 0;
   // mPreviousText will hold link text, clear it.
   frame.mPreviousText.Truncate();
-  // Empty microsummary items from previous frames.
-  frame.mPreviousMicrosummary = nsnull;
-  frame.mPreviousMicrosummaryText.Truncate();
 
   // Get the attributes we care about.
   nsAutoString href;
@@ -979,19 +963,6 @@ BookmarkContentSink::HandleLinkBegin(const nsIParserNode& node)
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetItemAnnotationInt32 failed");
   }
 
-  // Import microsummary.
-  if (!micsumGenURI.IsEmpty()) {
-    nsCOMPtr<nsIURI> micsumGenURIObject;
-    rv = NS_NewURI(getter_AddRefs(micsumGenURIObject), micsumGenURI);
-    if (NS_SUCCEEDED(rv)) {
-      rv = mMicrosummaryService->CreateMicrosummary(frame.mPreviousLink,
-                                                    micsumGenURIObject,
-                                                    getter_AddRefs(frame.mPreviousMicrosummary));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "CreateMicrosummary failed");
-      frame.mPreviousMicrosummaryText = generatedTitle;
-    }
-  }
-
   // Import last charset.
   if (!lastCharset.IsEmpty()) {
     rv = mHistoryService->SetCharsetForURI(frame.mPreviousLink,lastCharset);
@@ -1049,25 +1020,9 @@ BookmarkContentSink::HandleLinkEnd()
     printf("Created bookmark '%s' %lld\n",
            NS_ConvertUTF16toUTF8(frame.mPreviousText).get(), frame.mPreviousId);
 #endif
-    if (frame.mPreviousMicrosummary) {
-      // This bookmark has a microsummary.
-      rv = mAnnotationService->SetItemAnnotationString(frame.mPreviousId,
-                                                       STATIC_TITLE_ANNO,
-                                                       frame.mPreviousText, 0,
-                                                       nsIAnnotationService::EXPIRE_NEVER);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not store user's static bookmark title!");
-      rv = mBookmarksService->SetItemTitle(frame.mPreviousId,
-                                           NS_ConvertUTF16toUTF8(frame.mPreviousMicrosummaryText));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetItemTitle failed");
-      rv = mMicrosummaryService->SetMicrosummary(frame.mPreviousId,
-                                                frame.mPreviousMicrosummary);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetMicrosummary failed");
-    }
-    else {
-      rv = mBookmarksService->SetItemTitle(frame.mPreviousId,
-                                           NS_ConvertUTF16toUTF8(frame.mPreviousText));
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetItemTitle failed");
-    }
+    rv = mBookmarksService->SetItemTitle(frame.mPreviousId,
+                                         NS_ConvertUTF16toUTF8(frame.mPreviousText));
+    NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetItemTitle failed");
   }
 
   // Set last modified date as the last change.
@@ -1833,30 +1788,6 @@ nsPlacesImportExportService::WriteItem(nsINavHistoryResultNode* aItem,
   NS_ENSURE_SUCCESS(rv, rv);
   if (loadInSidebar)
     aOutput->Write(kWebPanelAttribute, sizeof(kWebPanelAttribute)-1, &dummy);
-
-  // microsummary
-  nsCOMPtr<nsIMicrosummary> microsummary;
-  rv = mMicrosummaryService->GetMicrosummary(itemId, getter_AddRefs(microsummary));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (microsummary) {
-    nsCOMPtr<nsIMicrosummaryGenerator> generator;
-    rv = microsummary->GetGenerator(getter_AddRefs(generator));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCOMPtr<nsIURI> genURI;
-    rv = generator->GetUri(getter_AddRefs(genURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-    nsCAutoString spec;
-    rv = genURI->GetSpec(spec);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    // write out generator URI
-    rv = aOutput->Write(kMicsumGenURIAttribute, sizeof(kMicsumGenURIAttribute)-1, &dummy);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = WriteEscapedUrl(spec, aOutput);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = aOutput->Write(kQuoteStr, sizeof(kQuoteStr)-1, &dummy);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
 
   // last charset
   nsAutoString lastCharset;

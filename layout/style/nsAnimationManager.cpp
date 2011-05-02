@@ -159,6 +159,10 @@ ElementAnimationsPropertyDtor(void           *aObject,
                               void           *aData)
 {
   ElementAnimations *ea = static_cast<ElementAnimations*>(aPropertyValue);
+#ifdef DEBUG
+  NS_ABORT_IF_FALSE(!ea->mCalledPropertyDtor, "can't call dtor twice");
+  ea->mCalledPropertyDtor = true;
+#endif
   delete ea;
 }
 

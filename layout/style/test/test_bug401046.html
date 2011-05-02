@@ -57,54 +57,42 @@ function fs(idx) {
   return getComputedStyle(elts[idx], "").marginBottom;
 }
 
-netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-var CC = Components.classes;
-var CI = Components.interfaces;
-var prefs =
-  CC["@mozilla.org/preferences-service;1"].getService(CI.nsIPrefBranch);
-
-prefs.clearUserPref('font.minimum-size.x-western');
+SpecialPowers.clearUserPref('font.minimum-size.x-western');
 
 // preference change is async (although one setTimeout might be enough?)
 setTimeout(setTimeout, 0, step1, 0);
 
 function step1() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
     is(fs(0), "0px", "at min font size 0, 0px should compute to 0px");
     is(fs(1), "4px", "at min font size 0, 4px should compute to 4px");
     is(fs(2), "12px", "at min font size 0, 12px should compute to 12px");
     is(fs(3), "28px", "at min font size 0, 28px should compute to 28px");
 
-    prefs.setIntPref('font.minimum-size.x-western', 7);
+    SpecialPowers.setIntPref('font.minimum-size.x-western', 7);
 
     // preference change is async (although one setTimeout might be enough?)
     setTimeout(setTimeout, 0, step2, 0);
 }
 
 function step2() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
     is(fs(0), "0px", "at min font size 7, 0px should compute to 0px");
     is(fs(1), "7px", "at min font size 7, 4px should compute to 7px");
     is(fs(2), "12px", "at min font size 7, 12px should compute to 12px");
     is(fs(3), "28px", "at min font size 7, 28px should compute to 28px");
 
-    prefs.setIntPref('font.minimum-size.x-western', 18);
+    SpecialPowers.setIntPref('font.minimum-size.x-western', 18);
 
     // preference change is async (although one setTimeout might be enough?)
     setTimeout(setTimeout, 0, step3, 0);
 }
 
 function step3() {
-    netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
-
     is(fs(0), "0px", "at min font size 18, 0px should compute to 0px");
     is(fs(1), "18px", "at min font size 18, 4px should compute to 18px");
     is(fs(2), "18px", "at min font size 18, 12px should compute to 18px");
     is(fs(3), "28px", "at min font size 18, 28px should compute to 28px");
 
-    prefs.clearUserPref('font.minimum-size.x-western');
+    SpecialPowers.clearUserPref('font.minimum-size.x-western');
 
     SimpleTest.finish();
 }

@@ -87,7 +87,7 @@ nsStringBundle::nsStringBundle(const char* aURLSpec,
                                nsIStringBundleOverride* aOverrideStrings) :
   mPropertiesURL(aURLSpec),
   mOverrideStrings(aOverrideStrings),
-  mMonitor("nsStringBundle.mMonitor"),
+  mReentrantMonitor("nsStringBundle.mReentrantMonitor"),
   mAttemptedLoad(PR_FALSE),
   mLoaded(PR_FALSE)
 {
@@ -148,7 +148,7 @@ nsStringBundle::LoadProperties()
 nsresult
 nsStringBundle::GetStringFromID(PRInt32 aID, nsAString& aResult)
 {  
-  MonitorAutoEnter automon(mMonitor);
+  ReentrantMonitorAutoEnter automon(mReentrantMonitor);
   nsCAutoString name;
   name.AppendInt(aID, 10);
 
@@ -269,7 +269,7 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   rv = LoadProperties();
   if (NS_FAILED(rv)) return rv;
 
-  MonitorAutoEnter automon(mMonitor);
+  ReentrantMonitorAutoEnter automon(mReentrantMonitor);
   *aResult = nsnull;
   nsAutoString tmpstr;
   rv = GetStringFromName(nsDependentString(aName), tmpstr);
