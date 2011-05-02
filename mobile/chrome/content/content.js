@@ -262,7 +262,7 @@ let Content = {
     addMessageListener("Browser:MouseOver", this);
     addMessageListener("Browser:MouseLong", this);
     addMessageListener("Browser:MouseDown", this);
-    addMessageListener("Browser:MouseUp", this);
+    addMessageListener("Browser:MouseClick", this);
     addMessageListener("Browser:MouseCancel", this);
     addMessageListener("Browser:SaveAs", this);
     addMessageListener("Browser:ZoomToPoint", this);
@@ -270,6 +270,7 @@ let Content = {
     addMessageListener("Browser:SetCharset", this);
     addMessageListener("Browser:ContextCommand", this);
     addMessageListener("Browser:CanUnload", this);
+    addMessageListener("Browser:CanCaptureMouse", this);
 
     if (Util.isParentProcess())
       addEventListener("DOMActivate", this, true);
@@ -474,15 +475,17 @@ let Content = {
 
         ContextHandler.messageId = json.messageId;
 
-        let event = content.document.createEvent("PopupEvents");
-        event.initEvent("contextmenu", true, true);
+        let event = content.document.createEvent("MouseEvent");
+        event.initMouseEvent("contextmenu", true, true, content,
+                             0, x, y, x, y, false, false, false, false,
+                             0, null);
         event.x = x;
         event.y = y;
         element.dispatchEvent(event);
         break;
       }
 
-      case "Browser:MouseUp": {
+      case "Browser:MouseClick": {
         this._formAssistant.focusSync = true;
         let element = elementFromPoint(x, y);
         if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
@@ -589,6 +592,17 @@ let Content = {
 
         let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
         webNav.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+        break;
+      }
+
+      case "Browser:CanCaptureMouse": {
+        let json = {
+          contentCanCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor)
+                                      .getInterface(Ci.nsIDOMWindowUtils)
+                                      .mayHaveTouchEventListeners,
+          messageId: aMessage.json.messageId
+        };
+        sendAsyncMessage("Browser:CanCaptureMouse:Return", json);
         break;
       }
     }
@@ -1188,3 +1202,83 @@ var ConsoleAPIObserver = {
 };
 
 ConsoleAPIObserver.init();
+
+var TouchEventHandler = {
+  element: null,
+  isCancellable: true,
+
+  init: function() {
+    addMessageListener("Browser:MouseUp", this);
+    addMessageListener("Browser:MouseDown", this);
+    addMessageListener("Browser:MouseMove", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    if (Util.isParentProcess())
+      return;
+
+    if (!content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).mayHaveTouchEventListeners) {
+      sendAsyncMessage("Browser:CaptureEvents", {
+        messageId: json.messageId,
+        click: false, panning: false,
+        contentMightCaptureMouse: false
+      });
+      return;
+    }
+
+    let json = aMessage.json;
+    let cancelled = false;
+
+    switch (aMessage.name) {
+      case "Browser:MouseDown":
+        this.isCancellable = true;
+        this.element = elementFromPoint(json.x, json.y);
+        cancelled = !this.sendEvent("touchstart", json, this.element);
+        break;
+
+      case "Browser:MouseUp":
+        this.isCancellable = false;
+        if (this.element)
+          this.sendEvent("touchend", json, this.element);
+        this.element = null;
+        break;
+
+      case "Browser:MouseMove":
+        if (this.element)
+          cancelled = !this.sendEvent("touchmove", json, this.element);
+        break;
+    }
+
+    if (this.isCancellable) {
+      sendAsyncMessage("Browser:CaptureEvents", { messageId: json.messageId,
+                                                  contentMightCaptureMouse: true,
+                                                  click: cancelled && aMessage.name == "Browser:MouseDown",
+                                                  panning: cancelled });
+      // Panning can be cancelled only during the "touchstart" event and the
+      // first "touchmove" event.  After it's cancelled, it stays cancelled
+      // until the next touchstart event.
+      if (cancelled || aMessage.name == "Browser:MouseMove")
+        this.isCancellable = false;
+    }
+  },
+
+  sendEvent: function(aName, aData, aElement) {
+    if (!Services.prefs.getBoolPref("dom.w3c_touch_events.enabled"))
+      return true;
+
+    let evt = content.document.createEvent("touchevent");
+    let point = content.document.createTouch(content, aElement, 0,
+                                             aData.x, aData.y, aData.x, aData.y, aData.x, aData.y,
+                                             1, 1, 0, 0);
+    let touches = content.document.createTouchList(point);
+    if (aName == "touchend") {
+      let empty = content.document.createTouchList();
+      evt.initTouchEvent(aName, true, true, content, 0, true, true, true, true, empty, empty, touches);      
+    } else {
+      evt.initTouchEvent(aName, true, true, content, 0, true, true, true, true, touches, touches, touches);
+    }
+    return aElement.dispatchEvent(evt);
+  }
+}
+
+TouchEventHandler.init();

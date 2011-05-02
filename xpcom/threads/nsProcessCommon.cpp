@@ -74,15 +74,6 @@
 #include <signal.h>
 #endif
 
-#ifdef WINCE
-#include <windows.h> // for MultiByteToWideChar
-#include "prmem.h"
-#define SHELLEXECUTEINFOW SHELLEXECUTEINFO
-#define SEE_MASK_FLAG_DDEWAIT 0
-#define SEE_MASK_NO_CONSOLE 0
-#define ShellExecuteExW ShellExecuteEx
-#endif
-
 using namespace mozilla;
 
 #ifdef XP_MACOSX
@@ -544,13 +535,11 @@ nsProcess::RunProcess(PRBool blocking, char **my_argv, nsIObserver* observer,
     mProcess = PR_CreateProcess(my_argv[0], my_argv, NULL, NULL);
     if (!mProcess)
         return NS_ERROR_FAILURE;
-#if !defined WINCE
     struct MYProcess {
         PRUint32 pid;
     };
     MYProcess* ptrProc = (MYProcess *) mProcess;
     mPid = ptrProc->pid;
-#endif
 #endif
 
     NS_ADDREF_THIS();

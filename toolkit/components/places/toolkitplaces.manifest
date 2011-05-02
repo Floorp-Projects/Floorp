@@ -13,12 +13,6 @@ component {705a423f-2f69-42f3-b9fe-1517e0dee56f} nsPlacesExpiration.js
 contract @mozilla.org/places/expiration;1 {705a423f-2f69-42f3-b9fe-1517e0dee56f}
 category history-observers nsPlacesExpiration @mozilla.org/places/expiration;1
 
-# nsMicrosummaryService.js
-component {460a9792-b154-4f26-a922-0f653e2c8f91} nsMicrosummaryService.js
-contract @mozilla.org/microsummary/service;1 {460a9792-b154-4f26-a922-0f653e2c8f91}
-# How often to check for generator updates, in seconds 7 * 86400 == 1 week
-category update-timer nsMicrosummaryService @mozilla.org/microsummary/service;1,getService,microsummary-generator-update-timer,browser.microsummary.generatorUpdateInterval,604800
-
 # PlacesCategoriesStarter.js
 component {803938d5-e26d-4453-bf46-ad4b26e41114} PlacesCategoriesStarter.js
 contract @mozilla.org/places/categoriesStarter;1 {803938d5-e26d-4453-bf46-ad4b26e41114}

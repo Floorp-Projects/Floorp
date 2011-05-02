@@ -92,7 +92,6 @@ NS_DEFINE_NAMED_CID(NS_LANGUAGEATOMSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_CHARSETALIAS_CID);
 NS_DEFINE_NAMED_CID(NS_PLATFORMCHARSET_CID);
 #ifdef XP_WIN
-NS_DEFINE_NAMED_CID(NS_WIN32LOCALE_CID);
 NS_DEFINE_NAMED_CID(NS_COLLATION_CID);
 NS_DEFINE_NAMED_CID(NS_DATETIMEFORMAT_CID);
 #endif
@@ -130,7 +129,6 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kNS_CHARSETALIAS_CID, false, NULL, nsCharsetAlias2Constructor },
     { &kNS_PLATFORMCHARSET_CID, false, NULL, nsPlatformCharsetConstructor },
 #ifdef XP_WIN
-    { &kNS_WIN32LOCALE_CID, false, NULL, nsIWin32LocaleImplConstructor },
     { &kNS_COLLATION_CID, false, NULL, nsCollationWinConstructor },
     { &kNS_DATETIMEFORMAT_CID, false, NULL, nsDateTimeFormatWinConstructor },
 #endif
@@ -170,7 +168,6 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { NS_CHARSETALIAS_CONTRACTID, &kNS_CHARSETALIAS_CID },
     { NS_PLATFORMCHARSET_CONTRACTID, &kNS_PLATFORMCHARSET_CID },
 #ifdef XP_WIN
-    { NS_WIN32LOCALE_CONTRACTID, &kNS_WIN32LOCALE_CID },
     { NS_COLLATION_CONTRACTID, &kNS_COLLATION_CID },
     { NS_DATETIMEFORMAT_CONTRACTID, &kNS_DATETIMEFORMAT_CID },
 #endif

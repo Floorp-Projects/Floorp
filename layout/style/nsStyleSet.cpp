@@ -422,6 +422,68 @@ EnumRulesMatching(nsIStyleRuleProcessor* aProcessor, void* aData)
   return PR_TRUE;
 }
 
+static inline bool
+IsMoreSpecificThanAnimation(nsRuleNode *aRuleNode)
+{
+  return !aRuleNode->IsRoot() &&
+         (aRuleNode->GetLevel() == nsStyleSet::eTransitionSheet ||
+          (aRuleNode->IsImportantRule() &&
+           (aRuleNode->GetLevel() == nsStyleSet::eAgentSheet ||
+            aRuleNode->GetLevel() == nsStyleSet::eUserSheet)));
+}
+
+static nsIStyleRule*
+GetAnimationRule(nsRuleNode *aRuleNode)
+{
+  nsRuleNode *n = aRuleNode;
+  while (IsMoreSpecificThanAnimation(n)) {
+    n = n->GetParent();
+  }
+
+  if (n->IsRoot() || n->GetLevel() != nsStyleSet::eAnimationSheet) {
+    return nsnull;
+  }
+
+  return n->GetRule();
+}
+
+static nsRuleNode*
+ReplaceAnimationRule(nsRuleNode *aOldRuleNode,
+                     nsIStyleRule *aOldAnimRule,
+                     nsIStyleRule *aNewAnimRule)
+{
+  nsTArray<nsRuleNode*> moreSpecificNodes;
+
+  nsRuleNode *n = aOldRuleNode;
+  while (IsMoreSpecificThanAnimation(n)) {
+    moreSpecificNodes.AppendElement(n);
+    n = n->GetParent();
+  }
+
+  if (aOldAnimRule) {
+    NS_ABORT_IF_FALSE(n->GetRule() == aOldAnimRule, "wrong rule");
+    NS_ABORT_IF_FALSE(n->GetLevel() == nsStyleSet::eAnimationSheet,
+                      "wrong level");
+    n = n->GetParent();
+  }
+
+  NS_ABORT_IF_FALSE(!IsMoreSpecificThanAnimation(n) &&
+                    n->GetLevel() != nsStyleSet::eAnimationSheet,
+                    "wrong level");
+
+  if (aNewAnimRule) {
+    n = n->Transition(aNewAnimRule, nsStyleSet::eAnimationSheet, PR_FALSE);
+  }
+
+  for (PRUint32 i = moreSpecificNodes.Length(); i-- != 0; ) {
+    nsRuleNode *oldNode = moreSpecificNodes[i];
+    n = n->Transition(oldNode->GetRule(), oldNode->GetLevel(),
+                      oldNode->IsImportantRule());
+  }
+
+  return n;
+}
+
 /**
  * |GetContext| implements sharing of style contexts (not just the data
  * on the rule nodes) between siblings and cousins of the same
@@ -531,9 +593,9 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
     // style rule.  However, if the animation-name just changed, it
     // might have been wrong.  So ask it to double-check based on the
     // resulting style context.
+    nsIStyleRule *oldAnimRule = GetAnimationRule(aRuleNode);
     nsIStyleRule *animRule = PresContext()->AnimationManager()->
       CheckAnimationRule(result, aElementForAnimation);
-    bool rerun;
     NS_ABORT_IF_FALSE(result->GetRuleNode() == aRuleNode,
                       "unexpected rule node");
     NS_ABORT_IF_FALSE(!result->GetStyleIfVisited() == !aVisitedRuleNode,
@@ -542,29 +604,12 @@ nsStyleSet::GetContext(nsStyleContext* aParentContext,
                       result->GetStyleIfVisited()->GetRuleNode() ==
                         aVisitedRuleNode,
                       "unexpected visited rule node");
-    if (animRule) {
-      rerun = aRuleNode->GetRule() != animRule;
-    } else {
-      rerun = !aRuleNode->IsRoot() && aRuleNode->GetLevel() == eAnimationSheet;
-    }
-    if (rerun) {
-      nsRuleNode *ruleNode = (aRuleNode->GetLevel() == eAnimationSheet)
-                               ? aRuleNode->GetParent() : aRuleNode;
-      if (animRule) {
-        ruleNode = ruleNode->Transition(animRule, eAnimationSheet, PR_FALSE);
-      }
-
-      nsRuleNode *visitedRuleNode;
-      if (aVisitedRuleNode) {
-        visitedRuleNode = (aVisitedRuleNode->GetLevel() == eAnimationSheet)
-                            ? aVisitedRuleNode->GetParent() : aVisitedRuleNode;
-        if (animRule) {
-          ruleNode = visitedRuleNode->Transition(animRule, eAnimationSheet,
-                                                 PR_FALSE);
-        }
-      } else {
-        visitedRuleNode = nsnull;
-      }
+    if (oldAnimRule != animRule) {
+      nsRuleNode *ruleNode =
+        ReplaceAnimationRule(aRuleNode, oldAnimRule, animRule);
+      nsRuleNode *visitedRuleNode = aVisitedRuleNode
+        ? ReplaceAnimationRule(aVisitedRuleNode, oldAnimRule, animRule)
+        : nsnull;
       result = GetContext(aParentContext, ruleNode, visitedRuleNode,
                           aIsLink, aIsVisitedLink,
                           aPseudoTag, aPseudoType, PR_FALSE, nsnull);
@@ -649,8 +694,10 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   //  5. Override normal rules              = Override     normal
   //  6. Author !important rules            = Document     !important
   //  7. Override !important rules          = Override     !important
+  //  -. animation rules                    = Animation    normal
   //  8. User !important rules              = User         !important
   //  9. UA !important rules                = Agent        !important
+  //  -. transition rules                   = Transition   normal
   // [most important]
 
   aRuleWalker->SetLevel(eAgentSheet, PR_FALSE, PR_TRUE);
@@ -716,6 +763,12 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
   }
 #endif
 
+#ifdef MOZ_CSS_ANIMATIONS
+  // This needs to match IsMoreSpecificThanAnimation() above.
+  aRuleWalker->SetLevel(eAnimationSheet, PR_FALSE, PR_FALSE);
+  (*aCollectorFunc)(mRuleProcessors[eAnimationSheet], aData);
+#endif
+
 #ifdef DEBUG
   AssertNoCSSRules(lastPresHintRN, lastUserRN);
   AssertNoImportantRules(lastPresHintRN, lastUserRN); // preshints
@@ -746,11 +799,6 @@ nsStyleSet::FileRules(nsIStyleRuleProcessor::EnumFunc aCollectorFunc,
 #endif
   aRuleWalker->SetLevel(eTransitionSheet, PR_FALSE, PR_FALSE);
   (*aCollectorFunc)(mRuleProcessors[eTransitionSheet], aData);
-#ifdef MOZ_CSS_ANIMATIONS
-  // GetContext() depends on the animation rules being *last*
-  aRuleWalker->SetLevel(eAnimationSheet, PR_FALSE, PR_FALSE);
-  (*aCollectorFunc)(mRuleProcessors[eAnimationSheet], aData);
-#endif
 #ifdef DEBUG
   AssertNoCSSRules(aRuleWalker->CurrentNode(), lastImportantRN);
   AssertNoImportantRules(aRuleWalker->CurrentNode(), lastImportantRN);
@@ -791,11 +839,10 @@ nsStyleSet::WalkRuleProcessors(nsIStyleRuleProcessor::EnumFunc aFunc,
     (*aFunc)(mRuleProcessors[eStyleAttrSheet], aData);
   if (mRuleProcessors[eOverrideSheet])
     (*aFunc)(mRuleProcessors[eOverrideSheet], aData);
-  (*aFunc)(mRuleProcessors[eTransitionSheet], aData);
 #ifdef MOZ_CSS_ANIMATIONS
-  // GetContext depends on the animation rule being *last*
   (*aFunc)(mRuleProcessors[eAnimationSheet], aData);
 #endif
+  (*aFunc)(mRuleProcessors[eTransitionSheet], aData);
 }
 
 PRBool nsStyleSet::BuildDefaultStyleData(nsPresContext* aPresContext)

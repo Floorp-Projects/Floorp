@@ -243,10 +243,10 @@ class nsStyleSet
     eDocSheet, // CSS
     eStyleAttrSheet,
     eOverrideSheet, // CSS
-    eTransitionSheet,
 #ifdef MOZ_CSS_ANIMATIONS
     eAnimationSheet,
 #endif
+    eTransitionSheet,
     eSheetTypeCount
     // be sure to keep the number of bits in |mDirty| below and in
     // NS_RULE_NODE_LEVEL_MASK updated when changing the number of sheet

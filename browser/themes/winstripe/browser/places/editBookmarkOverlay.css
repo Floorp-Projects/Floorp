@@ -82,35 +82,6 @@
   margin-bottom: 2px;
 }
 
-/**** name picker ****/
-
-/* Make the microsummary picker look like a regular textbox instead of 
- * an editable menulist when no microsummaries are available.
- */
-#editBMPanel_namePicker[droppable="false"] {
-  /* These rules come from the textbox element in textbox.css. */
-  -moz-appearance: textfield; /* Normal editable menulists set this to "menulist". */
-  cursor: text;
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
-  padding: 2px 2px 3px;
-  -moz-padding-start: 4px;
-  background-color: -moz-Field;
-  color: -moz-FieldText;
-}
-
-#editBMPanel_namePicker[droppable="false"] > .menulist-editable-box {
-  padding: 0;
-}
-
-#editBMPanel_namePicker[droppable="false"] > .menulist-dropmarker,
-#editBMPanel_namePicker[droppable="false"] > menupopup {
-  display: none;
-}
-
 /* Hide the value column of the tag autocomplete popup
  * leaving only the comment column visible. This is
  * so that only the tag being edited is shown in the

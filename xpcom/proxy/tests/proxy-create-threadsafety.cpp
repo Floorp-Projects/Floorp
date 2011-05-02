@@ -51,7 +51,7 @@
 #include "nsITestProxy.h"
 #include "nsISupportsPrimitives.h"
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Mutex.h"
 #include "nsIRunnable.h"
 #include "nsIProxyObjectManager.h"
@@ -100,7 +100,7 @@ class ProxyTest : public nsIRunnable,
 public:
     ProxyTest()
         : mCounterLock("ProxyTest.mCounterLock")
-        , mEvilMonitor("ProxyTest.mEvilMonitor")
+        , mEvilReentrantMonitor("ProxyTest.mEvilReentrantMonitor")
         , mCounter(0)
     {}
 
@@ -181,8 +181,8 @@ public:
                     {
                         /* be evil here and hang */
                         MutexAutoUnlock counterUnlock(mCounterLock);
-                        MonitorAutoEnter evilMonitor(mEvilMonitor);
-                        nsresult rv = evilMonitor.Wait();
+                        ReentrantMonitorAutoEnter evilReentrantMonitor(mEvilReentrantMonitor);
+                        nsresult rv = evilReentrantMonitor.Wait();
                         NS_ENSURE_SUCCESS(rv, rv);
                         break;
                     }
@@ -191,8 +191,8 @@ public:
                     {
                         /* okay, we had our fun, un-hang */
                         MutexAutoUnlock counterUnlock(mCounterLock);
-                        MonitorAutoEnter evilMonitor(mEvilMonitor);
-                        nsresult rv = evilMonitor.Notify();
+                        ReentrantMonitorAutoEnter evilReentrantMonitor(mEvilReentrantMonitor);
+                        nsresult rv = evilReentrantMonitor.Notify();
                         NS_ENSURE_SUCCESS(rv, rv);
                         break;
                     }
@@ -228,7 +228,7 @@ protected:
 
 private:
     Mutex mCounterLock;
-    Monitor mEvilMonitor;
+    ReentrantMonitor mEvilReentrantMonitor;
     PRInt32 mCounter;
     nsCOMPtr<nsIThread> mThreadOne;
     nsCOMPtr<nsIThread> mThreadTwo;

@@ -172,20 +172,6 @@ MakeCommandLine(int argc, PRUnichar **argv)
   for (i = 0; i < argc; ++i)
     len += ArgStrLen(argv[i]) + 1;
 
-#ifdef WINCE
-  wchar_t *env = mozce_GetEnvironmentCL();
-  // XXX There's a buffer overrun here somewhere that causes a heap
-  // check to fail in the final free of the results of this function
-  // in WinLaunchChild.  I can't honestly figure out where it is,
-  // because I'm pretty sure with the + 1 above and the wcslen here,
-  // we have enough room for a trailing NULL.  But, adding a little
-  // bit more slop (the +10) seems to fix the problem.
-  //
-  // Supposedly CreateProcessW can modify its arguments, so maybe it's
-  // doing some scribbling?
-  len += (wcslen(env)) + 10;
-#endif
-
   // Protect against callers that pass 0 arguments
   if (len == 0)
     len = 1;
@@ -205,11 +191,6 @@ MakeCommandLine(int argc, PRUnichar **argv)
 
   *c = '\0';
 
-#ifdef WINCE
-  wcscat(s, env);
-  if (env)
-    free(env);
-#endif
   return s;
 }
 
@@ -276,18 +257,6 @@ WinLaunchChild(const PRUnichar *exePath, int argc, PRUnichar **argv)
 {
   PRUnichar *cl;
   BOOL ok;
-
-#ifdef WINCE
-  // Windows Mobile Issue: 
-  // When passing both an image name and a command line to
-  // CreateProcessW, you need to make sure that the image name
-  // identially matches the first argument of the command line.  If
-  // they do not match, Windows Mobile will send two "argv[0]" values.
-  // To avoid this problem, we will strip off the argv here, and
-  // depend only on the exePath.
-  argv = argv + 1;
-  argc--;
-#endif
 
   cl = MakeCommandLine(argc, argv);
   if (!cl)

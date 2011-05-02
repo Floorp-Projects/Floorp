@@ -1,4 +1,4 @@
-                     /* vim: set shiftwidth=2 tabstop=8 autoindent cindent expandtab: */
+/* vim: set shiftwidth=2 tabstop=8 autoindent cindent expandtab: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -244,7 +244,7 @@ NS_IMETHODIMP
 nsDOMTouchEvent::InitTouchEvent(const nsAString& aType,
                                 PRBool aCanBubble,
                                 PRBool aCancelable,
-                                nsIDOMAbstractView* aView,
+                                nsIDOMWindow* aView,
                                 PRInt32 aDetail,
                                 PRBool aCtrlKey,
                                 PRBool aAltKey,

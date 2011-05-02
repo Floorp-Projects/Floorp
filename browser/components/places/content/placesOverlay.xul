@@ -101,8 +101,6 @@
              observes="placesCmd_show:info"/>
     <command id="placesCmd_reload"
              oncommand="goDoPlacesCommand('placesCmd_reload');"/>
-    <command id="placesCmd_reloadMicrosummary"
-             oncommand="goDoPlacesCommand('placesCmd_reloadMicrosummary');"/>
     <command id="placesCmd_sortBy:name"
              oncommand="goDoPlacesCommand('placesCmd_sortBy:name');"/>
     <command id="placesCmd_moveBookmarks"
@@ -239,12 +237,6 @@
               accesskey="&cmd.reloadLivebookmark.accesskey;"
               closemenu="single"
               selection="livemark/feedURI"/>
-    <menuitem id="placesContext_reloadMicrosummary"
-              command="placesCmd_reloadMicrosummary"
-              label="&cmd.reloadMicrosummary.label;"
-              accesskey="&cmd.reloadMicrosummary.accesskey;"
-              closemenu="single"
-              selection="microsummary"/>
     <menuitem id="placesContext_sortBy:name"
               command="placesCmd_sortBy:name"
               label="&cmd.sortby_name.label;"

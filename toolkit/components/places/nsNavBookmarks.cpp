@@ -2989,17 +2989,14 @@ nsNavBookmarks::OnBeforeDeleteURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteURI(nsIURI* aURI)
 {
-  // If the page is bookmarked, notify observers for each associated bookmark.
-  ItemChangeData changeData;
-  changeData.uri = aURI;
-  changeData.property = NS_LITERAL_CSTRING("cleartime");
-  changeData.isAnnotation = PR_FALSE;
-  changeData.lastModified = 0;
-  changeData.itemType = TYPE_BOOKMARK;
-
-  nsRefPtr< AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData> > notifier =
-    new AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>(this, &nsNavBookmarks::NotifyItemChanged, changeData);
-  notifier->Init();
+#ifdef DEBUG
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  PRInt64 placeId;
+  NS_ABORT_IF_FALSE(
+    history && NS_SUCCEEDED(history->GetUrlIdFor(aURI, &placeId, PR_FALSE)) && !placeId,
+    "OnDeleteURI was notified for a page that still exists?"
+  );
+#endif
   return NS_OK;
 }
 
@@ -3070,7 +3067,20 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI, PRUint32 aWhat,
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime)
 {
-  // pages that are bookmarks shouldn't expire, so we don't need to handle it
+  // Notify "cleartime" only if all visits to the page have been removed.
+  if (!aVisitTime) {
+    // If the page is bookmarked, notify observers for each associated bookmark.
+    ItemChangeData changeData;
+    changeData.uri = aURI;
+    changeData.property = NS_LITERAL_CSTRING("cleartime");
+    changeData.isAnnotation = PR_FALSE;
+    changeData.lastModified = 0;
+    changeData.itemType = TYPE_BOOKMARK;
+
+    nsRefPtr< AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData> > notifier =
+      new AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>(this, &nsNavBookmarks::NotifyItemChanged, changeData);
+    notifier->Init();
+  }
   return NS_OK;
 }
 

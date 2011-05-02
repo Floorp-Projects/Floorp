@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
- * ***** BEGIN LICENSE BLOCK *****
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -24,6 +23,7 @@
  *   Chris Saari <saari@netscape.com>
  *   Conrad Carlen <ccarlen@netscape.com>
  *   Pierre Chanial <p_ch@verizon.net>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,9 +51,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMHTMLLinkElement.h"
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMAbstractView.h"
-#include "nsIDOMViewCSS.h"
+#include "nsIDOMWindow.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSValue.h"
 #include "nsIDOMCSSPrimitiveValue.h"
@@ -293,13 +291,11 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
 
   nsCOMPtr<nsIDOMDocument> document;
   domNode->GetOwnerDocument(getter_AddRefs(document));
-  nsCOMPtr<nsIDOMDocumentView> docView(do_QueryInterface(document));
-  NS_ENSURE_TRUE(docView, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(document, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIDOMAbstractView> defaultView;
-  docView->GetDefaultView(getter_AddRefs(defaultView));
-  nsCOMPtr<nsIDOMViewCSS> defaultCSSView(do_QueryInterface(defaultView));
-  NS_ENSURE_TRUE(defaultCSSView, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIDOMWindow> window;
+  document->GetDefaultView(getter_AddRefs(window));
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMCSSPrimitiveValue> primitiveValue;
   nsAutoString bgStringValue;
@@ -327,8 +323,8 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
       break;
     
     nsCOMPtr<nsIDOMCSSStyleDeclaration> computedStyle;
-    defaultCSSView->GetComputedStyle(domElement, EmptyString(),
-                                     getter_AddRefs(computedStyle));
+    window->GetComputedStyle(domElement, EmptyString(),
+                             getter_AddRefs(computedStyle));
     if (computedStyle) {
       nsCOMPtr<nsIDOMCSSValue> cssValue;
       computedStyle->GetPropertyCSSValue(NS_LITERAL_STRING("background-image"),

@@ -40,7 +40,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const EXPORTED_SYMBOLS = ['BookmarksEngine', "PlacesItem", "Bookmark",
-                          "BookmarkFolder", "BookmarkMicsum", "BookmarkQuery",
+                          "BookmarkFolder", "BookmarkQuery",
                           "Livemark", "BookmarkSeparator"];
 
 const Cc = Components.classes;
@@ -50,17 +50,15 @@ const Cu = Components.utils;
 const ALLBOOKMARKS_ANNO    = "AllBookmarks";
 const DESCRIPTION_ANNO     = "bookmarkProperties/description";
 const SIDEBAR_ANNO         = "bookmarkProperties/loadInSidebar";
-const STATICTITLE_ANNO     = "bookmarks/staticTitle";
 const FEEDURI_ANNO         = "livemark/feedURI";
 const SITEURI_ANNO         = "livemark/siteURI";
-const GENERATORURI_ANNO    = "microsummary/generatorURI";
 const MOBILEROOT_ANNO      = "mobile/bookmarksRoot";
 const MOBILE_ANNO          = "MobileBookmarks";
 const EXCLUDEBACKUP_ANNO   = "places/excludeFromBackup";
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 const PARENT_ANNO          = "sync/parent";
-const ANNOS_TO_TRACK = [DESCRIPTION_ANNO, SIDEBAR_ANNO, STATICTITLE_ANNO,
-                        FEEDURI_ANNO, SITEURI_ANNO, GENERATORURI_ANNO];
+const ANNOS_TO_TRACK = [DESCRIPTION_ANNO, SIDEBAR_ANNO,
+                        FEEDURI_ANNO, SITEURI_ANNO];
 
 const SERVICE_NOT_SUPPORTED = "Service not supported on this platform";
 const FOLDER_SORTINDEX = 1000000;
@@ -92,9 +90,8 @@ PlacesItem.prototype = {
   getTypeObject: function PlacesItem_getTypeObject(type) {
     switch (type) {
       case "bookmark":
-        return Bookmark;
       case "microsummary":
-        return BookmarkMicsum;
+        return Bookmark;
       case "query":
         return BookmarkQuery;
       case "folder":
@@ -126,16 +123,6 @@ Bookmark.prototype = {
 
 Utils.deferGetSet(Bookmark, "cleartext", ["title", "bmkUri", "description",
   "loadInSidebar", "tags", "keyword"]);
-
-function BookmarkMicsum(collection, id) {
-  Bookmark.call(this, collection, id, "microsummary");
-}
-BookmarkMicsum.prototype = {
-  __proto__: Bookmark.prototype,
-  _logName: "Record.BookmarkMicsum",
-};
-
-Utils.deferGetSet(BookmarkMicsum, "cleartext", ["generatorUri", "staticTitle"]);
 
 function BookmarkQuery(collection, id) {
   Bookmark.call(this, collection, id, "query");
@@ -431,7 +418,6 @@ function BookmarksStore(name) {
     this.__bms = null;
     this.__hsvc = null;
     this.__ls = null;
-    this.__ms = null;
     this.__ts = null;
     for each ([query, stmt] in Iterator(this._stmts))
       stmt.finalize();
@@ -463,22 +449,6 @@ BookmarksStore.prototype = {
       this.__ls = Cc["@mozilla.org/browser/livemark-service;2"].
                   getService(Ci.nsILivemarkService);
     return this.__ls;
-  },
-
-  __ms: null,
-  get _ms() {
-    if (!this.__ms) {
-      try {
-        this.__ms = Cc["@mozilla.org/microsummary/service;1"].
-                    getService(Ci.nsIMicrosummaryService);
-      } catch (e) {
-        this._log.warn("Could not load microsummary service");
-        this._log.debug(e);
-        // Redefine our getter so we won't keep trying to get the service
-        this.__defineGetter__("_ms", function() null);
-      }
-    }
-    return this.__ms;
   },
 
   __ts: null,
@@ -661,8 +631,6 @@ BookmarksStore.prototype = {
         return "folder";
 
       case bms.TYPE_BOOKMARK:
-        if (this._ms && this._ms.hasMicrosummary(itemId))
-          return "microsummary";
         let bmkUri = bms.getBookmarkURI(itemId).spec;
         if (bmkUri.search(/^place:/) == 0)
           return "query";
@@ -720,22 +688,6 @@ BookmarksStore.prototype = {
                                     Svc.Annos.EXPIRE_NEVER);
       }
 
-      if (record.type == "microsummary") {
-        this._log.debug("   \-> is a microsummary");
-        Svc.Annos.setItemAnnotation(newId, STATICTITLE_ANNO,
-                                    record.staticTitle || "", 0,
-                                    Svc.Annos.EXPIRE_NEVER);
-        let genURI = Utils.makeURI(record.generatorUri);
-        if (this._ms) {
-          try {
-            let micsum = this._ms.createMicrosummary(uri, genURI);
-            this._ms.setMicrosummary(newId, micsum);
-          }
-          catch(ex) { /* ignore "missing local generator" exceptions */ }
-        }
-        else
-          this._log.warn("Can't create microsummary -- not supported.");
-      }
     } break;
     case "folder":
       newId = this._bms.createFolder(record._parent, record.title,
@@ -890,20 +842,6 @@ BookmarksStore.prototype = {
           Svc.Annos.removeItemAnnotation(itemId, SIDEBAR_ANNO);
         }
         break;
-      case "generatorUri": {
-        try {
-          let micsumURI = this._bms.getBookmarkURI(itemId);
-          let genURI = Utils.makeURI(val);
-          if (this._ms == SERVICE_NOT_SUPPORTED)
-            this._log.warn("Can't create microsummary -- not supported.");
-          else {
-            let micsum = this._ms.createMicrosummary(micsumURI, genURI);
-            this._ms.setMicrosummary(itemId, micsum);
-          }
-        } catch (e) {
-          this._log.debug("Could not set microsummary generator URI: " + e);
-        }
-      } break;
       case "queryId":
         Svc.Annos.setItemAnnotation(itemId, SMART_BOOKMARKS_ANNO, val, 0,
                                     Svc.Annos.EXPIRE_NEVER);
@@ -984,14 +922,6 @@ BookmarksStore.prototype = {
     return Svc.Annos.itemHasAnnotation(id, SIDEBAR_ANNO);
   },
 
-  _getStaticTitle: function BStore__getStaticTitle(id) {
-    try {
-      return Svc.Annos.getItemAnnotation(id, STATICTITLE_ANNO);
-    } catch (e) {
-      return "";
-    }
-  },
-
   get _childGUIDsStm() {
     return this._getStmt(
       "SELECT id AS item_id, guid " +
@@ -1028,43 +958,36 @@ BookmarksStore.prototype = {
     switch (this._bms.getItemType(placeId)) {
     case this._bms.TYPE_BOOKMARK:
       let bmkUri = this._bms.getBookmarkURI(placeId).spec;
-      if (this._ms && this._ms.hasMicrosummary(placeId)) {
-        record = new BookmarkMicsum(collection, id);
-        let micsum = this._ms.getMicrosummary(placeId);
-        record.generatorUri = micsum.generator.uri.spec; // breaks local generators
-        record.staticTitle = this._getStaticTitle(placeId);
+      if (bmkUri.search(/^place:/) == 0) {
+        record = new BookmarkQuery(collection, id);
+
+        // Get the actual tag name instead of the local itemId
+        let folder = bmkUri.match(/[:&]folder=(\d+)/);
+        try {
+          // There might not be the tag yet when creating on a new client
+          if (folder != null) {
+            folder = folder[1];
+            record.folderName = this._bms.getItemTitle(folder);
+            this._log.trace("query id: " + folder + " = " + record.folderName);
+          }
+        }
+        catch(ex) {}
+        
+        // Persist the Smart Bookmark anno, if found.
+        try {
+          let anno = Svc.Annos.getItemAnnotation(placeId, SMART_BOOKMARKS_ANNO);
+          if (anno != null) {
+            this._log.trace("query anno: " + SMART_BOOKMARKS_ANNO +
+                            " = " + anno);
+            record.queryId = anno;
+          }
+        }
+        catch(ex) {}
       }
       else {
-        if (bmkUri.search(/^place:/) == 0) {
-          record = new BookmarkQuery(collection, id);
-
-          // Get the actual tag name instead of the local itemId
-          let folder = bmkUri.match(/[:&]folder=(\d+)/);
-          try {
-            // There might not be the tag yet when creating on a new client
-            if (folder != null) {
-              folder = folder[1];
-              record.folderName = this._bms.getItemTitle(folder);
-              this._log.trace("query id: " + folder + " = " + record.folderName);
-            }
-          }
-          catch(ex) {}
-          
-          // Persist the Smart Bookmark anno, if found.
-          try {
-            let anno = Svc.Annos.getItemAnnotation(placeId, SMART_BOOKMARKS_ANNO);
-            if (anno != null) {
-              this._log.trace("query anno: " + SMART_BOOKMARKS_ANNO +
-                              " = " + anno);
-              record.queryId = anno;
-            }
-          }
-          catch(ex) {}
-        }
-        else
-          record = new Bookmark(collection, id);
-        record.title = this._bms.getItemTitle(placeId);
+        record = new Bookmark(collection, id);
       }
+      record.title = this._bms.getItemTitle(placeId);
 
       record.parentName = Svc.Bookmark.getItemTitle(parent);
       record.bmkUri = bmkUri;

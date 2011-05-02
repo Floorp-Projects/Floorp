@@ -101,6 +101,7 @@ LOCAL_INCLUDES += \
 	-I$(srcdir)/../src/base \
 	-I$(srcdir)/../src/storage \
 	-I$(srcdir)/../../xpcom/base \
+	-I$(srcdir)/../indexedDB \
 	-I$(topsrcdir)/extensions/cookie \
 	$(NULL)
 
