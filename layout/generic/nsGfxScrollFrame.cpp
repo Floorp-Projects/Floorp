@@ -1921,7 +1921,7 @@ public:
                                   nsIFrame* aFrame,
                                   nsDisplayList* aList) {
     SetCount(++mCount);
-    return new (aBuilder) nsDisplayScrollLayer(aBuilder, aList, nsnull, mScrolledFrame, mScrollFrame);
+    return new (aBuilder) nsDisplayScrollLayer(aBuilder, aList, mScrolledFrame, mScrolledFrame, mScrollFrame);
   }
 
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
