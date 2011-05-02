@@ -656,7 +656,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
     JSScript *script = fun->script();
     if (JS_UNLIKELY(script->isEmpty())) {
         if (option == INVOKE_CONSTRUCTOR) {
-            bool newType = cx->typeInferenceEnabled() &&
+            bool newType = cx->typeInferenceEnabled() && cx->fp()->isScriptFrame() &&
                 UseNewType(cx, cx->fp()->script(), cx->regs().pc);
             JSObject *obj = js_CreateThisForFunction(cx, &callee, newType);
             if (!obj)
