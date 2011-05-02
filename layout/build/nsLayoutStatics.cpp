@@ -183,11 +183,7 @@ nsLayoutStatics::Initialize()
 
   nsCSSRendering::Init();
 
-  rv = nsTextFrameTextRunCache::Init();
-  if (NS_FAILED(rv)) {
-    NS_ERROR("Could not initialize textframe textrun cache");
-    return rv;
-  }
+  nsTextFrameTextRunCache::Init();
 
   rv = nsHTMLDNSPrefetch::Initialize();
   if (NS_FAILED(rv)) {
