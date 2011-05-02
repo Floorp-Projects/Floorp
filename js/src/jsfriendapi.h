@@ -54,6 +54,9 @@ JS_FindCompilationScope(JSContext *cx, JSObject *obj);
 extern JS_FRIEND_API(JSObject *)
 JS_UnwrapObject(JSObject *obj);
 
+extern JS_FRIEND_API(JSObject *)
+JS_GetFrameScopeChainRaw(JSStackFrame *fp);
+
 JS_END_EXTERN_C
 
 #endif /* jsfriendapi_h___ */

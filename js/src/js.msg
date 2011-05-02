@@ -112,7 +112,7 @@ MSG_DEF(JSMSG_BAD_SHARP_DEF,           29, 1, JSEXN_ERR, "invalid sharp variable
 MSG_DEF(JSMSG_BAD_SHARP_USE,           30, 1, JSEXN_ERR, "invalid sharp variable use #{0}#")
 MSG_DEF(JSMSG_BAD_INSTANCEOF_RHS,      31, 1, JSEXN_TYPEERR, "invalid 'instanceof' operand {0}")
 MSG_DEF(JSMSG_BAD_BYTECODE,            32, 1, JSEXN_INTERNALERR, "unimplemented JavaScript bytecode {0}")
-MSG_DEF(JSMSG_BAD_RADIX,               33, 1, JSEXN_ERR, "illegal radix {0}")
+MSG_DEF(JSMSG_BAD_RADIX,               33, 0, JSEXN_RANGEERR, "radix must be an integer at least 2 and no greater than 36")
 MSG_DEF(JSMSG_PAREN_BEFORE_LET,        34, 0, JSEXN_SYNTAXERR, "missing ( before let head")
 MSG_DEF(JSMSG_CANT_CONVERT,            35, 1, JSEXN_ERR, "can't convert {0} to an integer")
 MSG_DEF(JSMSG_CYCLIC_VALUE,            36, 1, JSEXN_TYPEERR, "cyclic {0} value")

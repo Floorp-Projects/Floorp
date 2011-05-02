@@ -370,17 +370,17 @@ void ValidateWriter::checkAccSet(LOpcode op, LIns *base, int32_t disp, AccSet ac
 
       case ACCSET_FRAMEREGS:
         // base = ldp.cx ...[offsetof(JSContext, regs)]
-        // ins  = ldp.regs base[<disp within JSFrameRegs>]
+        // ins  = ldp.regs base[<disp within FrameRegs>]
         ok = op == LIR_ldp &&
-             dispWithin(JSFrameRegs) && 
-             match(base, LIR_ldp, ACCSET_CX, offsetof(JSContext, regs));
+             dispWithin(FrameRegs) && 
+             match(base, LIR_ldp, ACCSET_CX, offsetof(JSContext, stack) + ContextStack::offsetOfRegs());
         break;
 
       case ACCSET_STACKFRAME:
-        // base = ldp.regs ...[offsetof(JSFrameRegs, fp)]
-        // ins  = {ld,st}X.sf base[<disp within JSStackFrame>]
-        ok = dispWithin(JSStackFrame) && 
-             match(base, LIR_ldp, ACCSET_FRAMEREGS, offsetof(JSFrameRegs, fp));
+        // base = ldp.regs ...[offsetof(FrameRegs, fp)]
+        // ins  = {ld,st}X.sf base[<disp within StackFrame>]
+        ok = dispWithin(StackFrame) && 
+             match(base, LIR_ldp, ACCSET_FRAMEREGS, FrameRegs::offsetOfFp);
         break;
 
       case ACCSET_RUNTIME:

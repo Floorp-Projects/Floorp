@@ -43,7 +43,7 @@ extern PopActiveVMFrame:PROC
 
 .CODE
 
-; JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
+; JSBool JaegerTrampoline(JSContext *cx, StackFrame *fp, void *code,
 ;                         Value *stackLimit, void *safePoint);
 JaegerTrampoline PROC FRAME
     push    rbp

@@ -164,8 +164,8 @@ class AutoCompartment
     JSObject * const target;
     JSCompartment * const destination;
   private:
-    LazilyConstructed<DummyFrameGuard> frame;
-    JSFrameRegs regs;
+    Maybe<DummyFrameGuard> frame;
+    FrameRegs regs;
     AutoStringRooter input;
     bool entered;
 

@@ -181,19 +181,19 @@ typedef enum JSGeneratorState {
 struct JSGenerator {
     JSObject            *obj;
     JSGeneratorState    state;
-    JSFrameRegs         regs;
+    js::FrameRegs       regs;
     JSObject            *enumerators;
-    JSStackFrame        *floating;
+    js::StackFrame      *floating;
     js::Value           floatingStack[1];
 
-    JSStackFrame *floatingFrame() {
+    js::StackFrame *floatingFrame() {
         return floating;
     }
 
-    JSStackFrame *liveFrame() {
+    js::StackFrame *liveFrame() {
         JS_ASSERT((state == JSGEN_RUNNING || state == JSGEN_CLOSING) ==
-                  (regs.fp != floatingFrame()));
-        return regs.fp;
+                  (regs.fp() != floatingFrame()));
+        return regs.fp();
     }
 };
 
@@ -211,10 +211,10 @@ js_NewGenerator(JSContext *cx);
  * Block and With objects must "normalize" to and from the floating/live frames
  * in the case of generators using the following functions.
  */
-inline JSStackFrame *
-js_FloatingFrameIfGenerator(JSContext *cx, JSStackFrame *fp)
+inline js::StackFrame *
+js_FloatingFrameIfGenerator(JSContext *cx, js::StackFrame *fp)
 {
-    JS_ASSERT(cx->stack().contains(fp));
+    JS_ASSERT(cx->stack.contains(fp));
     if (JS_UNLIKELY(fp->isGeneratorFrame()))
         return cx->generatorFor(fp)->floatingFrame();
     return fp;
@@ -222,10 +222,10 @@ js_FloatingFrameIfGenerator(JSContext *cx, JSStackFrame *fp)
 
 /* Given a floating frame, given the JSGenerator containing it. */
 extern JSGenerator *
-js_FloatingFrameToGenerator(JSStackFrame *fp);
+js_FloatingFrameToGenerator(js::StackFrame *fp);
 
-inline JSStackFrame *
-js_LiveFrameIfGenerator(JSStackFrame *fp)
+inline js::StackFrame *
+js_LiveFrameIfGenerator(js::StackFrame *fp)
 {
     return fp->isGeneratorFrame() ? js_FloatingFrameToGenerator(fp)->liveFrame() : fp;
 }

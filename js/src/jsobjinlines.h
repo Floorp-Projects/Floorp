@@ -169,7 +169,7 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
  * shape.
  */
 inline void
-JSObject::initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *frame)
+JSObject::initClonedBlock(JSContext *cx, JSObject *proto, js::StackFrame *frame)
 {
     init(cx, &js_BlockClass, proto, NULL, frame, false);
 
@@ -327,7 +327,7 @@ JSObject::setPrimitiveThis(const js::Value &pthis)
 inline /* gc::FinalizeKind */ unsigned
 JSObject::finalizeKind() const
 {
-    return js::gc::FinalizeKind(arena()->header()->thingKind);
+    return js::gc::FinalizeKind(arenaHeader()->getThingKind());
 }
 
 inline size_t
@@ -509,11 +509,11 @@ JSObject::callIsForEval() const
     return getSlot(JSSLOT_CALL_CALLEE).isNull();
 }
 
-inline JSStackFrame *
+inline js::StackFrame *
 JSObject::maybeCallObjStackFrame() const
 {
     JS_ASSERT(isCall());
-    return reinterpret_cast<JSStackFrame *>(getPrivate());
+    return reinterpret_cast<js::StackFrame *>(getPrivate());
 }
 
 inline void
@@ -881,12 +881,6 @@ JSObject::principals(JSContext *cx)
     return compPrincipals;
 }
 
-inline JSPrincipals *
-JSStackFrame::principals(JSContext *cx) const
-{
-    return scopeChain().principals(cx);
-}
-
 inline uint32
 JSObject::slotSpan() const
 {
@@ -1222,7 +1216,7 @@ NewBuiltinClassInstance(JSContext *cx, Class *clasp, gc::FinalizeKind kind)
 
     /* NB: inline-expanded and specialized version of js_GetClassPrototype. */
     JSObject *global;
-    if (!cx->hasfp()) {
+    if (!cx->running()) {
         global = cx->globalObject;
         OBJ_TO_INNER_OBJECT(cx, global);
         if (!global)
@@ -1427,6 +1421,25 @@ NewObjectGCKind(JSContext *cx, js::Class *clasp)
     if (clasp == &js_FunctionClass)
         return gc::FINALIZE_OBJECT2;
     return gc::FINALIZE_OBJECT4;
+}
+
+static JS_ALWAYS_INLINE JSObject*
+NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
+                        /*gc::FinalizeKind*/ unsigned _kind)
+{
+    JS_ASSERT(clasp->isNative());
+    gc::FinalizeKind kind = gc::FinalizeKind(_kind);
+
+    if (CanBeFinalizedInBackground(kind, clasp))
+        kind = (gc::FinalizeKind)(kind + 1);
+
+    JSObject* obj = js_NewGCObject(cx, kind);
+    if (!obj)
+        return NULL;
+
+    if (!obj->initSharingEmptyShape(cx, clasp, proto, proto->getParent(), NULL, kind))
+        return NULL;
+    return obj;
 }
 
 /* Make an object with pregenerated shape from a NEWOBJECT bytecode. */

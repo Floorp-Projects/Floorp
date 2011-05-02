@@ -90,7 +90,7 @@ script regress-624199.js
 script regress-624547.js
 script regress-624968.js
 script regress-626436.js
-fails-if(xulRuntime.shell) script regress-633741.js
+script regress-633741.js
 script regress-634210-1.js
 script regress-634210-2.js
 script regress-634210-3.js
