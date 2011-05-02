@@ -155,7 +155,7 @@ bool ParseLigCaretListTable(ots::OpenTypeFile *file, const uint8_t *data,
     std::vector<uint16_t> caret_values;
     caret_values.resize(caret_count);
     uint16_t last_offset_caret = 0;
-    unsigned caret_values_end = static_cast<unsigned>(2) * 2*caret_count;
+    unsigned caret_values_end = static_cast<unsigned>(2) + 2*caret_count;
     for (unsigned j = 0; j < caret_count; ++j) {
       if (!subtable.ReadU16(&caret_values[j])) {
         return OTS_FAILURE();

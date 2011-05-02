@@ -39,7 +39,7 @@
 #include "nsUConvPropertySearch.h"
 #include "pratom.h"
 #include <windows.h>
-#include "nsIWin32Locale.h"
+#include "nsWin32Locale.h"
 #include "nsCOMPtr.h"
 #include "nsReadableUtils.h"
 #include "nsLocaleCID.h"
@@ -94,7 +94,6 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
 NS_IMETHODIMP
 nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString& oResult)
 {
-  nsCOMPtr<nsIWin32Locale>  winLocale;
   LCID                      localeAsLCID;
 
   //
@@ -103,10 +102,7 @@ nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACS
   nsresult rv;
   oResult.Truncate();
 
-  winLocale = do_GetService(NS_WIN32LOCALE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) { return rv; }
-
-  rv = winLocale->GetPlatformLocale(localeName, &localeAsLCID);
+  rv = nsWin32Locale::GetPlatformLocale(localeName, &localeAsLCID);
   if (NS_FAILED(rv)) { return rv; }
 
   PRUnichar acp_name[6];

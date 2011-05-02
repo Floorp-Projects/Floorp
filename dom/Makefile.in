@@ -50,7 +50,6 @@ DIRS = \
   interfaces/html \
   interfaces/events \
   interfaces/stylesheets \
-  interfaces/views \
   interfaces/sidebar \
   interfaces/css \
   interfaces/traversal \

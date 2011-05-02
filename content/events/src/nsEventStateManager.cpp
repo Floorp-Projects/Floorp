@@ -118,7 +118,6 @@
 #include "nsIDOMMouseScrollEvent.h"
 #include "nsIDOMDragEvent.h"
 #include "nsIDOMEventTarget.h"
-#include "nsIDOMDocumentView.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsDOMDragEvent.h"
 #include "nsIDOMNSEditableElement.h"
