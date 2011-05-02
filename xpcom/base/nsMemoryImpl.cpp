@@ -164,17 +164,6 @@ nsMemoryImpl::RunFlushers(const PRUnichar* aReason)
         }
     }
 
-    // Run built-in system flushers
-#ifdef WINCE_WINDOWS_MOBILE
-
-    // This function tries to free up memory for an application.
-    // If necessary, the shell closes down other applications by
-    // sending WM_CLOSE messages.  We ask for 4MB.
-
-    SHCloseApps(1024 * 1024 * 4);
-
-#endif
-
     sIsFlushing = 0;
     return NS_OK;
 }

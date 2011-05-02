@@ -86,21 +86,7 @@ function populateDB(aArray) {
                                                        referrer, qdata.transType,
                                                        qdata.isRedirect, qdata.sessionID);
             if (qdata.title && !qdata.isDetails) {
-              // Set the page title synchronously, otherwise setPageTitle is LAZY.
-              let stmt = DBConn().createStatement(
-                "UPDATE moz_places SET title = :title WHERE url = :url"
-              );
-              stmt.params.title = qdata.title;
-              stmt.params.url = qdata.uri;
-              try {
-                stmt.execute();
-              }
-              catch (ex) {
-                print("Error while setting title.");
-              }
-              finally {
-                stmt.finalize();
-              }
+              PlacesUtils.history.setPageTitle(uri(qdata.uri), qdata.title);
             }
             if (qdata.visitCount && !qdata.isDetails) {
               // Set a fake visit_count, this is not a real count but can be used

@@ -127,6 +127,7 @@ nsSVGNumber2::SetBaseValueString(const nsAString &aValueAsString,
   }
 
   mBaseVal = val;
+  mIsBaseSet = PR_TRUE;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }
@@ -155,6 +156,7 @@ nsSVGNumber2::SetBaseValue(float aValue,
                            PRBool aDoSetAttr)
 {
   mBaseVal = aValue;
+  mIsBaseSet = PR_TRUE;
   if (!mIsAnimated) {
     mAnimVal = mBaseVal;
   }

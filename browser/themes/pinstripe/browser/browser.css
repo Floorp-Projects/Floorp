@@ -1367,10 +1367,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   list-style-image: url("chrome://browser/skin/hud-style-expander-closed.png");
 }
 
-/**** name picker ****/
-
-#editBMPanel_tagsField,
-#editBMPanel_namePicker[droppable="false"] > .menulist-editable-box {
+#editBMPanel_tagsField {
   -moz-appearance: none !important;
   -moz-padding-start: 3px !important;
   margin: 2px !important;
@@ -1383,23 +1380,14 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
   min-height: 20px;
 }
 
-#editBMPanel_namePicker[droppable="false"] > .menulist-editable-box > html|*.menulist-editable-input {
-  color: inherit;
-}
-
 #editBMPanel_tagsField > .autocomplete-textbox-container > .textbox-input-box > html|*.textbox-input:-moz-placeholder {
   color: #bbb;
 }
 
-#editBMPanel_tagsField[focused="true"],
-#editBMPanel_namePicker[droppable="false"][focused="true"] > .menulist-editable-box {
+#editBMPanel_tagsField[focused="true"] {
   @hudButtonFocused@
   background-color: #eee !important;
   color: #000 !important;
-}
-
-#editBMPanel_namePicker[droppable="false"][disabled="true"] > .menulist-editable-box {
-  color: #fff !important;
 }
 
 .editBMPanel_rowLabel {

@@ -55,11 +55,4 @@ CPPSRCS     = \
         nsAccelerometerSystem.cpp \
         $(NULL)
 
-ifdef WINCE_WINDOWS_MOBILE
-CPPSRCS         += WinMobileLocationProvider.cpp 
-
-LOCAL_INCLUDES  += -I$(topsrcdir)/dom/src/geolocation \
-                   $(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk

@@ -111,7 +111,6 @@
 #endif
 #include "nsIDOMDocument.h"
 #include "nsIDOMNSDocument.h"
-#include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEvent.h"
@@ -1334,8 +1333,6 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsGlobalWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOM3EventTarget)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSEventTarget)
   NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageWindow)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStorageIndexedDB)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -7888,10 +7885,6 @@ nsGlobalWindow::UpdateCanvasFocus(PRBool aFocusChanged, nsIContent* aNewContent)
   }
 }
 
-//*****************************************************************************
-// nsGlobalWindow::nsIDOMViewCSS
-//*****************************************************************************
-
 NS_IMETHODIMP
 nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
                                  const nsAString& aPseudoElt,
@@ -7926,27 +7919,6 @@ nsGlobalWindow::GetComputedStyle(nsIDOMElement* aElt,
   *aReturn = compStyle.forget().get();
 
   return NS_OK;
-}
-
-//*****************************************************************************
-// nsGlobalWindow::nsIDOMAbstractView
-//*****************************************************************************
-
-NS_IMETHODIMP
-nsGlobalWindow::GetDocument(nsIDOMDocumentView ** aDocumentView)
-{
-  NS_ENSURE_ARG_POINTER(aDocumentView);
-
-  nsresult rv = NS_OK;
-
-  if (mDocument) {
-    rv = CallQueryInterface(mDocument, aDocumentView);
-  }
-  else {
-    *aDocumentView = nsnull;
-  }
-
-  return rv;
 }
 
 //*****************************************************************************

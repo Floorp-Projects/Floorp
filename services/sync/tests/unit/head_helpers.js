@@ -412,3 +412,21 @@ function basic_auth_matches(req, user, password) {
   return req.hasHeader("Authorization") &&
          (req.getHeader("Authorization") == basic_auth_header(user, password));
 }
+
+function do_check_throws(aFunc, aResult, aStack)
+{
+  if (!aStack) {
+    try {
+      // We might not have a 'Components' object.
+      aStack = Components.stack.caller;
+    } catch (e) {}
+  }
+
+  try {
+    aFunc();
+  } catch (e) {
+    do_check_eq(e.result, aResult, aStack);
+    return;
+  }
+  do_throw("Expected result " + aResult + ", none thrown.", aStack);
+}

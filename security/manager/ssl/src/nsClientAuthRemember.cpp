@@ -110,7 +110,7 @@ nsClientAuthRememberService::Observe(nsISupports     *aSubject,
     // The profile is about to change,
     // or is going away because the application is shutting down.
 
-    MonitorAutoEnter lock(monitor);
+    ReentrantMonitorAutoEnter lock(monitor);
     RemoveAllFromMemory();
   }
 
@@ -119,7 +119,7 @@ nsClientAuthRememberService::Observe(nsISupports     *aSubject,
 
 void nsClientAuthRememberService::ClearRememberedDecisions()
 {
-  MonitorAutoEnter lock(monitor);
+  ReentrantMonitorAutoEnter lock(monitor);
   RemoveAllFromMemory();
 }
 
@@ -165,7 +165,7 @@ nsClientAuthRememberService::RememberDecision(const nsACString & aHostName,
     return rv;
 
   {
-    MonitorAutoEnter lock(monitor);
+    ReentrantMonitorAutoEnter lock(monitor);
     if (aClientCert) {
       nsNSSCertificate pipCert(aClientCert);
       char *dbkey = NULL;
@@ -211,7 +211,7 @@ nsClientAuthRememberService::HasRememberedDecision(const nsACString & aHostName,
   nsClientAuthRemember settings;
 
   {
-    MonitorAutoEnter lock(monitor);
+    ReentrantMonitorAutoEnter lock(monitor);
     nsClientAuthRememberEntry *entry = mSettingsTable.GetEntry(hostCert.get());
     if (!entry)
       return NS_OK;
@@ -233,7 +233,7 @@ nsClientAuthRememberService::AddEntryToList(const nsACString &aHostName,
   GetHostWithCert(aHostName, fingerprint, hostCert);
 
   {
-    MonitorAutoEnter lock(monitor);
+    ReentrantMonitorAutoEnter lock(monitor);
     nsClientAuthRememberEntry *entry = mSettingsTable.PutEntry(hostCert.get());
 
     if (!entry) {

@@ -400,6 +400,10 @@ protected:
       : GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
   }
 
+  // Create a popup view for this frame. The view is added a child of the root
+  // view, and is initially hidden.
+  nsresult CreatePopupViewForFrame();
+
   nsString     mIncrementalString;  // for incremental typing navigation
 
   // the content that the popup is anchored to, if any, which may be in a

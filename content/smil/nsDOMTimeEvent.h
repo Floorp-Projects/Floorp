@@ -58,8 +58,8 @@ public:
   NS_FORWARD_TO_NSDOMEVENT
 
 private:
-  nsCOMPtr<nsIDOMAbstractView> mView;
-  PRInt32                      mDetail;
+  nsCOMPtr<nsIDOMWindow> mView;
+  PRInt32 mDetail;
 };
 
 #endif // NS_DOMTIMEEVENT_H_
