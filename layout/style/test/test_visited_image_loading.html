@@ -33,10 +33,8 @@ function run()
 }
 
 function visitedDependentComputedStyle(win, elem, property) {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var utils = win.QueryInterface(Components.interfaces.nsIInterfaceRequestor).
-                getInterface(Components.interfaces.nsIDOMWindowUtils);
-  return utils.getVisitedDependentComputedStyle(elem, "", property);
+  return SpecialPowers.DOMWindowUtils
+           .getVisitedDependentComputedStyle(elem, "", property);
 }
 
 function check_link_styled()

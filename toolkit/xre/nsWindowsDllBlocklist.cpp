@@ -212,7 +212,7 @@ SetupDllBlocklist()
 {
   NtDllIntercept.Init("ntdll.dll");
 
-  bool ok = NtDllIntercept.AddHook("LdrLoadDll", patched_LdrLoadDll, (void**) &stub_LdrLoadDll);
+  bool ok = NtDllIntercept.AddHook("LdrLoadDll", reinterpret_cast<intptr_t>(patched_LdrLoadDll), (void**) &stub_LdrLoadDll);
 
 #ifdef DEBUG
   if (!ok)

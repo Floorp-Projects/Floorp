@@ -2,7 +2,7 @@
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
-dump("!! remote browser loaded\n")
+dump("!! remote browser loaded\n");
 
 let WebProgressListener = {
   _lastLocation: null,
@@ -453,3 +453,80 @@ let ContentActive =  {
 };
 
 ContentActive.init();
+
+/**
+ * Helper class for IndexedDB, child part. Listens using
+ * the observer service for events regarding IndexedDB
+ * prompts, and sends messages to the parent to actually
+ * show the prompts.
+ */
+let IndexedDB = {
+  _permissionsPrompt: "indexedDB-permissions-prompt",
+  _permissionsResponse: "indexedDB-permissions-response",
+
+  _quotaPrompt: "indexedDB-quota-prompt",
+  _quotaResponse: "indexedDB-quota-response",
+  _quotaCancel: "indexedDB-quota-cancel",
+
+  waitingObservers: [],
+
+  init: function IndexedDBPromptHelper_init() {
+    let os = Services.obs;
+    os.addObserver(this, this._permissionsPrompt, false);
+    os.addObserver(this, this._quotaPrompt, false);
+    os.addObserver(this, this._quotaCancel, false);
+    addMessageListener("IndexedDB:Response", this);
+  },
+
+  observe: function IndexedDBPromptHelper_observe(aSubject, aTopic, aData) {
+    if (aTopic != this._permissionsPrompt && aTopic != this._quotaPrompt && aTopic != this._quotaCancel) {
+      throw new Error("Unexpected topic!");
+    }
+
+    let requestor = aSubject.QueryInterface(Ci.nsIInterfaceRequestor);
+    let observer = requestor.getInterface(Ci.nsIObserver);
+
+    let contentWindow = requestor.getInterface(Ci.nsIDOMWindow);
+    let contentDocument = contentWindow.document;
+
+    if (aTopic == this._quotaCancel) {
+      observer.observe(null, this._quotaResponse, Ci.nsIPermissionManager.UNKNOWN_ACTION);
+      return;
+    }
+
+    // Remote to parent
+    sendAsyncMessage("IndexedDB:Prompt", {
+      topic: aTopic,
+      host: contentDocument.documentURIObject.asciiHost,
+      location: contentDocument.location.toString(),
+      data: aData,
+      observerId: this.addWaitingObserver(observer),
+    });
+  },
+
+  receiveMessage: function(aMessage) {
+    let payload = aMessage.json;
+    switch (aMessage.name) {
+      case "IndexedDB:Response":
+        let observer = this.getAndRemoveWaitingObserver(payload.observerId);
+        observer.observe(null, payload.responseTopic, payload.permission);
+    }
+  },
+
+  addWaitingObserver: function(aObserver) {
+    let observerId = 0;
+    while (observerId in this.waitingObservers)
+      observerId++;
+    this.waitingObservers[observerId] = aObserver;
+    return observerId;
+  },
+
+  getAndRemoveWaitingObserver: function(aObserverId) {
+    let observer = this.waitingObservers[aObserverId];
+    delete this.waitingObservers[aObserverId];
+    return observer;
+  },
+};
+
+IndexedDB.init();
+

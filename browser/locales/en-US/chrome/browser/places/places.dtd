@@ -76,8 +76,6 @@
 
 <!ENTITY cmd.reloadLivebookmark.label      "Reload Live Bookmark">
 <!ENTITY cmd.reloadLivebookmark.accesskey  "R">
-<!ENTITY cmd.reloadMicrosummary.label      "Reload Live Title">
-<!ENTITY cmd.reloadMicrosummary.accesskey  "R">
 
 <!ENTITY cmd.moveBookmarks.label                  "Move…">
 <!ENTITY cmd.moveBookmarks.accesskey              "M">

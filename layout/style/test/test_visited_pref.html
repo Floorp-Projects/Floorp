@@ -32,21 +32,14 @@ function reinsert_node(e) {
   par.insertBefore(e, sib);
 }
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefService = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefService);
-var dispBranch = prefService.getBranch("layout.css.");
-
 function get_pref()
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return dispBranch.getBoolPref("visited_links_enabled");
+    return SpecialPowers.getBoolPref("layout.css.visited_links_enabled");
 }
 
 function set_pref(val)
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    dispBranch.setBoolPref("visited_links_enabled", val);
+    SpecialPowers.setBoolPref("layout.css.visited_links_enabled", val);
 }
 
 function snapshotsEqual(snap1, snap2)

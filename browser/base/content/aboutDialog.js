@@ -597,6 +597,8 @@ var gChannelSelector = {
   selectChannel: function(aSelectedItem) {
     document.getElementById("channelDescriptionDeck").selectedPanel =
       document.getElementById(aSelectedItem.value + "Description");
+    document.getElementById("channelMenulist").setAttribute("aria-describedby",
+      aSelectedItem.value + "Description");
   },
 
   cancel: function() {

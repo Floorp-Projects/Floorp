@@ -121,14 +121,14 @@ function onTabViewWindowLoaded(win) {
       let stackCenter = children[0].getBounds().center();
       ok(stackCenter.y < expanderBounds.center().y, "The expander is below the stack.");
 
-      is(group.topChild, children[1], "The top child in the stack is the second tab item");
+      is(group.getTopChild(), children[1], "The top child in the stack is the second tab item");
       let topChildzIndex = children[1].zIndex;
       // the second tab item should have the largest z-index.
       // only check the first 6 tabs as the stack only contains 6 tab items.
       for (let i = 0; i < 6; i++) {
         if (i != 1)
           ok(children[i].zIndex < topChildzIndex,
-            "The child[" + i + "] has smaller zIndex than second dhild");
+            "The child[" + i + "] has smaller zIndex than second child");
       }
 
       // okay, expand this group one last time
@@ -160,7 +160,7 @@ function onTabViewWindowLoaded(win) {
       let stackCenter = children[0].getBounds().center();
       ok(stackCenter.y < expanderBounds.center().y, "The expander is below the stack.");
 
-      is(group.topChild, children[1], 
+      is(group.getTopChild(), children[1], 
          "The top child in the stack is still the second tab item");
       let topChildzIndex = children[1].zIndex;
       // the second tab item should have the largest z-index.

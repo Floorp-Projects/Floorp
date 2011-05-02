@@ -372,91 +372,6 @@ SanitizeOpenTypeData(const PRUint8* aData, PRUint32 aLength,
     }
 }
 
-// Find the GDEF, GSUB, GPOS tables in aFontData (if present)
-// and cache copies in the given font entry.
-// The sfnt table directory has already been accepted by the OTS
-// sanitizer before this is called, so we can assume entries are valid.
-//
-// This is a temporary workaround until OTS has full support for the
-// G*** tables, so that they can safely be left in the main font.
-// When http://code.google.com/p/chromium/issues/detail?id=27131 gets fixed,
-// we should remove this hack.
-static void
-CacheLayoutTablesFromSFNT(const PRUint8* aFontData, PRUint32 aLength,
-                          gfxFontEntry* aFontEntry)
-{
-    const SFNTHeader *sfntHeader = reinterpret_cast<const SFNTHeader*>(aFontData);
-    PRUint16 numTables = sfntHeader->numTables;
-    
-    // table directory entries begin immediately following SFNT header
-    const TableDirEntry *dirEntry = 
-        reinterpret_cast<const TableDirEntry*>(aFontData + sizeof(SFNTHeader));
-
-    while (numTables-- > 0) {
-        switch (dirEntry->tag) {
-        case TRUETYPE_TAG('G','D','E','F'):
-        case TRUETYPE_TAG('G','P','O','S'):
-        case TRUETYPE_TAG('G','S','U','B'): {
-                FallibleTArray<PRUint8> buffer;
-                if (!buffer.AppendElements(aFontData + dirEntry->offset,
-                                           dirEntry->length)) {
-                    NS_WARNING("failed to cache font table - out of memory?");
-                    break;
-                }
-                aFontEntry->PreloadFontTable(dirEntry->tag, buffer);
-            }
-            break;
-
-        default:
-            if (dirEntry->tag > TRUETYPE_TAG('G','S','U','B')) {
-                // directory entries are required to be sorted,
-                // so we can terminate as soon as we find a tag > 'GSUB'
-                numTables = 0;
-            }
-            break;
-        }
-        ++dirEntry;
-    }
-}
-
-// OTS drops the OT Layout tables when decoding a WOFF file, so retrieve them
-// separately and cache them (unchecked) in the font entry; harfbuzz will
-// sanitize them when it needs to use them.
-static void
-PreloadTableFromWOFF(const PRUint8* aFontData, PRUint32 aLength,
-                     PRUint32 aTableTag, gfxFontEntry* aFontEntry)
-{
-    PRUint32 status = eWOFF_ok;
-    PRUint32 len = woffGetTableSize(aFontData, aLength, aTableTag, &status);
-    if (WOFF_SUCCESS(status) && len > 0) {
-        FallibleTArray<PRUint8> buffer;
-        if (!buffer.AppendElements(len)) {
-            NS_WARNING("failed to cache font table - out of memory?");
-            return;
-        }
-        woffGetTableToBuffer(aFontData, aLength, aTableTag,
-                             buffer.Elements(), buffer.Length(),
-                             &len, &status);
-        if (WOFF_FAILURE(status)) {
-            NS_WARNING("failed to cache font table - WOFF decoding error?");
-            return;
-        }
-        aFontEntry->PreloadFontTable(aTableTag, buffer);
-    }
-}
-
-static void
-CacheLayoutTablesFromWOFF(const PRUint8* aFontData, PRUint32 aLength,
-                          gfxFontEntry* aFontEntry)
-{
-    PreloadTableFromWOFF(aFontData, aLength, TRUETYPE_TAG('G','D','E','F'),
-                         aFontEntry);
-    PreloadTableFromWOFF(aFontData, aLength, TRUETYPE_TAG('G','P','O','S'),
-                         aFontEntry);
-    PreloadTableFromWOFF(aFontData, aLength, TRUETYPE_TAG('G','S','U','B'),
-                         aFontEntry);
-}
-
 // This is called when a font download finishes.
 // Ownership of aFontData passes in here, and the font set must
 // ensure that it is eventually deleted via NS_Free().
@@ -496,24 +411,7 @@ gfxUserFontSet::OnLoadComplete(gfxProxyFontEntry *aProxy,
                 fe = gfxPlatform::GetPlatform()->MakePlatformFont(aProxy,
                                                                   saneData,
                                                                   saneLen);
-                if (fe) {
-                    // if aFontData includes OpenType layout tables, we need to
-                    // cache them in the font entry for harfbuzz to use,
-                    // as they will have been dropped from the sanitized sfnt
-                    // (temporary hack, see CacheLayoutTablesFromSFNT)
-                    switch (fontType) {
-                    case GFX_USERFONT_OPENTYPE:
-                        CacheLayoutTablesFromSFNT(aFontData, aLength, fe);
-                        break;
-
-                    case GFX_USERFONT_WOFF:
-                        CacheLayoutTablesFromWOFF(aFontData, aLength, fe);
-                        break;
-
-                    default:
-                        break;
-                    }
-                } else {
+                if (!fe) {
                     NS_WARNING("failed to make platform font from download");
                 }
             }

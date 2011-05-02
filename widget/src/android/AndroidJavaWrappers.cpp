@@ -46,9 +46,9 @@ jfieldID AndroidGeckoEvent::jTypeField = 0;
 jfieldID AndroidGeckoEvent::jTimeField = 0;
 jfieldID AndroidGeckoEvent::jP0Field = 0;
 jfieldID AndroidGeckoEvent::jP1Field = 0;
-jfieldID AndroidGeckoEvent::jXField = 0;
-jfieldID AndroidGeckoEvent::jYField = 0;
-jfieldID AndroidGeckoEvent::jZField = 0;
+jfieldID AndroidGeckoEvent::jAlphaField = 0;
+jfieldID AndroidGeckoEvent::jBetaField = 0;
+jfieldID AndroidGeckoEvent::jGammaField = 0;
 jfieldID AndroidGeckoEvent::jRectField = 0;
 jfieldID AndroidGeckoEvent::jNativeWindowField = 0;
 
@@ -142,9 +142,9 @@ AndroidGeckoEvent::InitGeckoEventClass(JNIEnv *jEnv)
     jTimeField = getField("mTime", "J");
     jP0Field = getField("mP0", "Landroid/graphics/Point;");
     jP1Field = getField("mP1", "Landroid/graphics/Point;");
-    jXField = getField("mX", "F");
-    jYField = getField("mY", "F");
-    jZField = getField("mZ", "F");
+    jAlphaField = getField("mAlpha", "D");
+    jBetaField = getField("mBeta", "D");
+    jGammaField = getField("mGamma", "D");
     jRectField = getField("mRect", "Landroid/graphics/Rect;");
 
     jCharactersField = getField("mCharacters", "Ljava/lang/String;");
@@ -399,9 +399,9 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
 
         case SENSOR_EVENT:
-            mX = jenv->GetFloatField(jobj, jXField);
-            mY = jenv->GetFloatField(jobj, jYField);
-            mZ = jenv->GetFloatField(jobj, jZField);
+            mAlpha = jenv->GetDoubleField(jobj, jAlphaField);
+            mBeta = jenv->GetDoubleField(jobj, jBetaField);
+            mGamma = jenv->GetDoubleField(jobj, jGammaField);
             break;
 
         case LOCATION_EVENT: {
