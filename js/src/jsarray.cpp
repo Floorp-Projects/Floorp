@@ -919,9 +919,7 @@ array_fix(JSContext *cx, JSObject *obj, bool *success, AutoIdVector *props)
 
 Class js_ArrayClass = {
     "Array",
-    Class::NON_NATIVE |
-    JSCLASS_HAS_PRIVATE |
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
+    Class::NON_NATIVE | JSCLASS_HAS_PRIVATE | JSCLASS_HAS_CACHED_PROTO(JSProto_Array),
     PropertyStub,         /* addProperty */
     PropertyStub,         /* delProperty */
     PropertyStub,         /* getProperty */
@@ -3026,19 +3024,33 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
 JSObject *
 js_InitArrayClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &js_ArrayClass, js_Array, 1,
-                                   NULL, array_methods, NULL, array_static_methods);
-    if (!proto)
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *arrayProto = global->createBlankPrototype(cx, &js_SlowArrayClass);
+    if (!arrayProto || !AddLengthProperty(cx, arrayProto))
+        return NULL;
+    arrayProto->setArrayLength(0);
+
+    JSFunction *ctor = global->createConstructor(cx, js_Array, &js_ArrayClass,
+                                                 CLASS_ATOM(cx, Array), 1);
+    if (!ctor)
         return NULL;
 
-    /*
-     * Assert that js_InitClass used the correct (slow array, not dense array)
-     * class for proto's emptyShape class.
-     */
-    JS_ASSERT(proto->emptyShapes && proto->emptyShapes[0]->getClass() == proto->getClass());
+    if (!LinkConstructorAndPrototype(cx, ctor, arrayProto))
+        return NULL;
 
-    proto->setArrayLength(0);
-    return proto;
+    if (!DefinePropertiesAndBrand(cx, arrayProto, NULL, array_methods) ||
+        !DefinePropertiesAndBrand(cx, ctor, NULL, array_static_methods))
+    {
+        return NULL;
+    }
+
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_Array, ctor, arrayProto))
+        return NULL;
+
+    return arrayProto;
 }
 
 /*
