@@ -35,7 +35,7 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -43,7 +43,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= plugin
-XPIDL_MODULE	= layout
 LIBRARY_NAME	= gkplugin
 EXPORT_LIBRARY = 1
 IS_COMPONENT    = 1
@@ -52,6 +51,32 @@ GRE_MODULE	= 1
 LIBXUL_LIBRARY = 1
 
 EXPORTS_NAMESPACES = mozilla
+
+XPIDLSRCS = \
+  nsIHTTPHeaderListener.idl \
+  nsIPlugin.idl \
+  nsIPluginDocument.idl \
+  nsIPluginHost.idl \
+  nsIPluginInputStream.idl \
+  nsIPluginInstance.idl \
+  nsIPluginInstanceOwner.idl \
+  nsIPluginStreamInfo.idl \
+  nsIPluginStreamListener.idl \
+  nsIPluginTag.idl \
+  nsIPluginTagInfo.idl \
+  nspluginroot.idl \
+  $(NULL)
+
+EXPORTS = \
+  npapi.h \
+  npfunctions.h \
+  nptypes.h \
+  npruntime.h \
+  nsPluginLogging.h \
+  nsPluginError.h \
+  nsPluginNativeWindow.h \
+  nsPluginsCID.h \
+  $(NULL)
 
 EXPORTS_mozilla = \
   PluginPRLibrary.h \

@@ -359,25 +359,6 @@ gfxFontEntry::ShareFontTableAndGetBlob(PRUint32 aTag,
     return entry->ShareTableAndGetBlob(*aBuffer, &mFontTableCache);
 }
 
-void
-gfxFontEntry::PreloadFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aTable)
-{
-    if (!mFontTableCache.IsInitialized()) {
-        // This is intended for use with downloaded fonts, to cache the layout
-        // tables for harfbuzz, so initialize the cache for 3 entries to allow
-        // for GDEF/GSUB/GPOS.
-        mFontTableCache.Init(3);
-    }
-
-    FontTableHashEntry *entry = mFontTableCache.PutEntry(aTag);
-    if (NS_UNLIKELY(!entry)) { // OOM
-        return;
-    }
-
-    // adopts elements of aTable
-    entry->SaveTable(aTable);
-}
-
 //////////////////////////////////////////////////////////////////////////////
 //
 // class gfxFontFamily
@@ -1836,6 +1817,29 @@ gfxFont::SanitizeMetrics(gfxFont::Metrics *aMetrics, PRBool aIsBadUnderlineFont)
     }
 }
 
+gfxFloat
+gfxFont::SynthesizeSpaceWidth(PRUint32 aCh)
+{
+    // return an appropriate width for various Unicode space characters
+    // that we "fake" if they're not actually present in the font;
+    // returns negative value if the char is not a known space.
+    switch (aCh) {
+    case 0x2000:                                 // en quad
+    case 0x2002: return GetAdjustedSize() / 2;   // en space
+    case 0x2001:                                 // em quad
+    case 0x2003: return GetAdjustedSize();       // em space
+    case 0x2004: return GetAdjustedSize() / 3;   // three-per-em space
+    case 0x2005: return GetAdjustedSize() / 4;   // four-per-em space
+    case 0x2006: return GetAdjustedSize() / 6;   // six-per-em space
+    case 0x2007: return GetMetrics().zeroOrAveCharWidth; // figure space
+    case 0x2008: return GetMetrics().spaceWidth; // punctuation space 
+    case 0x2009: return GetAdjustedSize() / 5;   // thin space
+    case 0x200a: return GetAdjustedSize() / 10;  // hair space
+    case 0x202f: return GetAdjustedSize() / 5;   // narrow no-break space
+    default: return -1.0;
+    }
+}
+
 gfxGlyphExtents::~gfxGlyphExtents()
 {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
@@ -2492,7 +2496,8 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
         if (!matchedFont) {
             for (PRUint32 index = runStart; index < runStart + matchedLength; index++) {
                 // Record the char code so we can draw a box with the Unicode value
-                if (NS_IS_HIGH_SURROGATE(aString[index]) &&
+                PRUint32 ch = aString[index];
+                if (NS_IS_HIGH_SURROGATE(ch) &&
                     index + 1 < aScriptRunEnd &&
                     NS_IS_LOW_SURROGATE(aString[index+1])) {
                     aTextRun->SetMissingGlyph(index,
@@ -2500,7 +2505,27 @@ gfxFontGroup::InitScriptRun(gfxContext *aContext,
                                                                 aString[index+1]));
                     index++;
                 } else {
-                    aTextRun->SetMissingGlyph(index, aString[index]);
+                    gfxFloat wid = mainFont->SynthesizeSpaceWidth(ch);
+                    if (wid >= 0.0) {
+                        nscoord advance =
+                            aTextRun->GetAppUnitsPerDevUnit() * NS_floor(wid + 0.5);
+                        gfxTextRun::CompressedGlyph g;
+                        if (gfxTextRun::CompressedGlyph::IsSimpleAdvance(advance)) {
+                            aTextRun->SetSimpleGlyph(index,
+                                                     g.SetSimpleGlyph(advance,
+                                                         mainFont->GetSpaceGlyph()));
+                        } else {
+                            gfxTextRun::DetailedGlyph detailedGlyph;
+                            detailedGlyph.mGlyphID = mainFont->GetSpaceGlyph();
+                            detailedGlyph.mAdvance = advance;
+                            detailedGlyph.mXOffset = detailedGlyph.mYOffset = 0;
+                            g.SetComplex(PR_TRUE, PR_TRUE, 1);
+                            aTextRun->SetGlyphs(index,
+                                                g, &detailedGlyph);
+                        }
+                    } else {
+                        aTextRun->SetMissingGlyph(index, ch);
+                    }
                 }
             }
         }
@@ -2565,6 +2590,15 @@ gfxFontGroup::FindFontForChar(PRUint32 aCh, PRUint32 aPrevCh,
     if (!selectedFont && aPrevMatchedFont && aPrevMatchedFont->HasCharacter(aCh)) {
         selectedFont = aPrevMatchedFont;
         return selectedFont.forget();
+    }
+
+    // for known "space" characters, don't do a full system-fallback search;
+    // we'll synthesize appropriate-width spaces instead of missing-glyph boxes
+    if (gfxUnicodeProperties::GetGeneralCategory(aCh) ==
+            HB_CATEGORY_SPACE_SEPARATOR &&
+        GetFontAt(0)->SynthesizeSpaceWidth(aCh) >= 0.0)
+    {
+        return nsnull;
     }
 
     // -- otherwise look for other stuff

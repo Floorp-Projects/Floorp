@@ -56,6 +56,7 @@ public:
     mAnimVal = mBaseVal = aValue;
     mAttrEnum = aAttrEnum;
     mIsAnimated = PR_FALSE;
+    mIsBaseSet = PR_FALSE;
   }
 
   nsresult SetBaseValueString(const nsAString& aValue,
@@ -70,6 +71,14 @@ public:
   float GetAnimValue() const
     { return mAnimVal; }
 
+  // Returns PR_TRUE if the animated value of this number has been explicitly
+  // set (either by animation, or by taking on the base value which has been
+  // explicitly set by markup or a DOM call), PR_FALSE otherwise.
+  // If this returns PR_FALSE, the animated value is still valid, that is,
+  // useable, and represents the default base value of the attribute.
+  PRBool IsExplicitlySet() const
+    { return mIsAnimated || mIsBaseSet; }
+
   nsresult ToDOMAnimatedNumber(nsIDOMSVGAnimatedNumber **aResult,
                                nsSVGElement* aSVGElement);
 #ifdef MOZ_SMIL
@@ -83,6 +92,7 @@ private:
   float mBaseVal;
   PRUint8 mAttrEnum; // element specified tracking for attribute
   PRPackedBool mIsAnimated;
+  PRPackedBool mIsBaseSet;
 
 public:
   struct DOMAnimatedNumber : public nsIDOMSVGAnimatedNumber

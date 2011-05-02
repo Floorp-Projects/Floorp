@@ -436,8 +436,14 @@ nsUserFontSet::StartLoad(gfxProxyFontEntry *aProxy,
 PRBool
 nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
 {
+  PRBool modified = PR_FALSE;
+
   // destroy any current loaders, as the entries they refer to
   // may be about to get replaced
+  if (mLoaders.Count() > 0) {
+    modified = PR_TRUE; // trigger reflow so that any necessary downloads
+                        // will be reinitiated
+  }
   mLoaders.EnumerateEntries(DestroyIterator, nsnull);
 
   nsTArray<FontFaceRuleRecord> oldRules;
@@ -447,8 +453,6 @@ nsUserFontSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   // because we might end up with faces in a different order,
   // even if they're the same font entries as before
   mFontFamilies.Clear();
-
-  PRBool modified = PR_FALSE;
 
   for (PRUint32 i = 0, i_end = aRules.Length(); i < i_end; ++i) {
     // insert each rule into our list, migrating old font entries if possible

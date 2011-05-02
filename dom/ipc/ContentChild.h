@@ -149,6 +149,10 @@ public:
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif
 
+    // Get the directory for IndexedDB files. We query the parent for this and
+    // cache the value
+    nsString &GetIndexedDBPath();
+
 private:
     NS_OVERRIDE
     virtual void ActorDestroy(ActorDestroyReason why);
