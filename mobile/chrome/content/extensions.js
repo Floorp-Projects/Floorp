@@ -374,6 +374,7 @@ var ExtensionsView = {
   },
 
   addItem : function ev_addItem(aItem, aPosition) {
+    AddonLogger.log("Adding item: " + aItem.id);
     if (aPosition == "repo")
       return this._list.appendChild(aItem);
     else if (aPosition == "local")
