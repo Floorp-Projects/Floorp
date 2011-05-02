@@ -49,8 +49,8 @@
             DebugAbort(__FILE__, __LINE__, #_cond,## __VA_ARGS__);  \
     } while (0)
 
-using mozilla::MutexAutoLock;
-using mozilla::MutexAutoUnlock;
+using mozilla::MonitorAutoLock;
+using mozilla::MonitorAutoUnlock;
 
 template<>
 struct RunnableMethodTraits<mozilla::ipc::RPCChannel>
@@ -124,7 +124,7 @@ bool
 RPCChannel::EventOccurred() const
 {
     AssertWorkerThread();
-    mMutex.AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
     RPC_ASSERT(StackDepth() > 0, "not in wait loop");
 
     return (!Connected() ||
@@ -154,7 +154,7 @@ bool
 RPCChannel::Call(Message* msg, Message* reply)
 {
     AssertWorkerThread();
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
     RPC_ASSERT(!ProcessingSyncMessage(),
                "violation of sync handler invariant");
     RPC_ASSERT(msg->is_rpc(), "can only Call() RPC messages here");
@@ -166,7 +166,7 @@ RPCChannel::Call(Message* msg, Message* reply)
     Message copy = *msg;
     CxxStackFrame f(*this, OUT_MESSAGE, &copy);
 
-    MutexAutoLock lock(mMutex);
+    MonitorAutoLock lock(mMonitor);
 
     if (!Connected()) {
         ReportConnectionError("RPCChannel");
@@ -238,7 +238,7 @@ RPCChannel::Call(Message* msg, Message* reply)
         }
 
         if (!recvd.is_sync() && !recvd.is_rpc()) {
-            MutexAutoUnlock unlock(mMutex);
+            MonitorAutoUnlock unlock(mMonitor);
 
             CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             AsyncChannel::OnDispatchMessage(recvd);
@@ -249,7 +249,7 @@ RPCChannel::Call(Message* msg, Message* reply)
         if (recvd.is_sync()) {
             RPC_ASSERT(mPending.empty(),
                        "other side should have been blocked");
-            MutexAutoUnlock unlock(mMutex);
+            MonitorAutoUnlock unlock(mMonitor);
 
             CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             SyncChannel::OnDispatchMessage(recvd);
@@ -301,10 +301,10 @@ RPCChannel::Call(Message* msg, Message* reply)
 
         // in-call.  process in a new stack frame.
 
-        // "snapshot" the current stack depth while we own the Mutex
+        // "snapshot" the current stack depth while we own the Monitor
         size_t stackDepth = StackDepth();
         {
-            MutexAutoUnlock unlock(mMutex);
+            MonitorAutoUnlock unlock(mMonitor);
             // someone called in to us from the other side.  handle the call
             CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             Incall(recvd, stackDepth);
@@ -319,7 +319,7 @@ void
 RPCChannel::MaybeUndeferIncall()
 {
     AssertWorkerThread();
-    mMutex.AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
 
     if (mDeferred.empty())
         return;
@@ -348,7 +348,7 @@ void
 RPCChannel::EnqueuePendingMessages()
 {
     AssertWorkerThread();
-    mMutex.AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
 
     MaybeUndeferIncall();
 
@@ -370,10 +370,10 @@ void
 RPCChannel::FlushPendingRPCQueue()
 {
     AssertWorkerThread();
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
 
     {
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
 
         if (mDeferred.empty()) {
             if (mPending.empty())
@@ -395,11 +395,11 @@ RPCChannel::OnMaybeDequeueOne()
     // messages here
 
     AssertWorkerThread();
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
 
     Message recvd;
     {
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
 
         if (!Connected()) {
             ReportConnectionError("RPCChannel");
@@ -439,7 +439,7 @@ void
 RPCChannel::Incall(const Message& call, size_t stackDepth)
 {
     AssertWorkerThread();
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
     RPC_ASSERT(call.is_rpc() && !call.is_reply(), "wrong message type");
 
     // Race detection: see the long comment near
@@ -502,7 +502,7 @@ void
 RPCChannel::DispatchIncall(const Message& call)
 {
     AssertWorkerThread();
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
     RPC_ASSERT(call.is_rpc() && !call.is_reply(),
                "wrong message type");
 
@@ -523,7 +523,7 @@ RPCChannel::DispatchIncall(const Message& call)
     reply->set_seqno(call.seqno());
 
     {
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
         if (ChannelConnected == mChannelState)
             SendThroughTransport(reply);
     }
@@ -578,7 +578,7 @@ RPCChannel::BlockOnParent()
     if (!mChild)
         NS_RUNTIMEABORT("child tried to block parent");
 
-    MutexAutoLock lock(mMutex);
+    MonitorAutoLock lock(mMonitor);
 
     if (mBlockedOnParent || AwaitingSyncReply() || 0 < StackDepth())
         NS_RUNTIMEABORT("attempt to block child when it's already blocked");
@@ -602,7 +602,7 @@ RPCChannel::BlockOnParent()
             Message recvd = mPending.front();
             mPending.pop();
 
-            MutexAutoUnlock unlock(mMutex);
+            MonitorAutoUnlock unlock(mMonitor);
 
             CxxStackFrame f(*this, IN_MESSAGE, &recvd);
             if (recvd.is_rpc()) {
@@ -628,7 +628,7 @@ RPCChannel::UnblockFromParent()
 
     if (!mChild)
         NS_RUNTIMEABORT("child tried to block parent");
-    MutexAutoLock lock(mMutex);
+    MonitorAutoLock lock(mMonitor);
     mBlockedOnParent = false;
 }
 
@@ -637,7 +637,7 @@ RPCChannel::ExitedCxxStack()
 {
     Listener()->OnExitedCxxStack();
     if (mSawRPCOutMsg) {
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
         // see long comment in OnMaybeDequeueOne()
         EnqueuePendingMessages();
         mSawRPCOutMsg = false;
@@ -710,7 +710,7 @@ void
 RPCChannel::OnMessageReceived(const Message& msg)
 {
     AssertIOThread();
-    MutexAutoLock lock(mMutex);
+    MonitorAutoLock lock(mMonitor);
 
     if (MaybeInterceptSpecialIOMessage(msg))
         return;
@@ -740,7 +740,7 @@ RPCChannel::OnChannelError()
 {
     AssertIOThread();
 
-    MutexAutoLock lock(mMutex);
+    MonitorAutoLock lock(mMonitor);
 
     if (ChannelClosing != mChannelState)
         mChannelState = ChannelError;

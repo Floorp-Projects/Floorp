@@ -29,6 +29,7 @@ chrome.jar:
   content/BookmarkHelper.js            (content/BookmarkHelper.js)
   content/BookmarkPopup.js             (content/BookmarkPopup.js)
 * content/ContextCommands.js           (content/ContextCommands.js)
+  content/IndexedDB.js                 (content/IndexedDB.js)
   content/MenuListHelperUI.js          (content/MenuListHelperUI.js)
   content/OfflineApps.js               (content/OfflineApps.js)
   content/SelectHelperUI.js            (content/SelectHelperUI.js)

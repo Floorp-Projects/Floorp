@@ -104,7 +104,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMUIEvent)
 
 NS_IMETHODIMP
 nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBool aCancelable,
-                                nsIDOMAbstractView *aView, PRInt32 aDetail, PRInt32 aScreenX, 
+                                nsIDOMWindow* aView, PRInt32 aDetail, PRInt32 aScreenX, 
                                 PRInt32 aScreenY, PRInt32 aClientX, PRInt32 aClientY, 
                                 PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey, 
                                 PRBool aMetaKey, PRUint16 aButton, nsIDOMEventTarget *aRelatedTarget)
@@ -147,7 +147,7 @@ nsDOMMouseEvent::InitMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBo
 
 NS_IMETHODIMP
 nsDOMMouseEvent::InitNSMouseEvent(const nsAString & aType, PRBool aCanBubble, PRBool aCancelable,
-                                  nsIDOMAbstractView *aView, PRInt32 aDetail, PRInt32 aScreenX,
+                                  nsIDOMWindow *aView, PRInt32 aDetail, PRInt32 aScreenX,
                                   PRInt32 aScreenY, PRInt32 aClientX, PRInt32 aClientY,
                                   PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey,
                                   PRBool aMetaKey, PRUint16 aButton, nsIDOMEventTarget *aRelatedTarget,
@@ -313,9 +313,5 @@ nsresult NS_NewDOMMouseEvent(nsIDOMEvent** aInstancePtrResult,
                              nsInputEvent *aEvent) 
 {
   nsDOMMouseEvent* it = new nsDOMMouseEvent(aPresContext, aEvent);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
   return CallQueryInterface(it, aInstancePtrResult);
 }

@@ -41,7 +41,7 @@
 #ifndef __NSCERTOVERRIDESERVICE_H__
 #define __NSCERTOVERRIDESERVICE_H__
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "nsICertOverrideService.h"
 #include "nsTHashtable.h"
 #include "nsIObserver.h"
@@ -190,7 +190,7 @@ public:
     static void GetHostWithPort(const nsACString & aHostName, PRInt32 aPort, nsACString& _retval);
 
 protected:
-    mozilla::Monitor monitor;
+    mozilla::ReentrantMonitor monitor;
     nsCOMPtr<nsIFile> mSettingsFile;
     nsTHashtable<nsCertOverrideEntry> mSettingsTable;
 

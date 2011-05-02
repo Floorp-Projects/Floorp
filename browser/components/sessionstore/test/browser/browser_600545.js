@@ -97,6 +97,15 @@ function done() {
     Services.prefs.clearUserPref("browser.sessionstore.resume_from_crash");
   } catch (e) {}
 
+  // Enumerate windows and close everything but our primary window. We can't
+  // use waitForFocus() because apparently it's buggy. See bug 599253.
+  let windowsEnum = Services.wm.getEnumerator("navigator:browser");
+  while (windowsEnum.hasMoreElements()) {
+    let currentWindow = windowsEnum.getNext();
+    if (currentWindow != window)
+      currentWindow.close();
+  }
+
   ss.setBrowserState(stateBackup);
   executeSoon(finish);
 }

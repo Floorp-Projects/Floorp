@@ -43,21 +43,14 @@
 
 SimpleTest.waitForExplicitFinish();
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefService = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefService);
-var dispBranch = prefService.getBranch("browser.display.");
-
 function get_pref()
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    return dispBranch.getBoolPref("use_document_colors");
+    return SpecialPowers.getBoolPref("browser.display.use_document_colors");
 }
 
 function set_pref(val)
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    dispBranch.setBoolPref("use_document_colors", val);
+    SpecialPowers.setBoolPref("browser.display.use_document_colors", val);
 }
 
 var cs1 = getComputedStyle(document.getElementById("one"), "");

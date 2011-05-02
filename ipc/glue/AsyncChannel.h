@@ -44,8 +44,7 @@
 #include "base/message_loop.h"
 #include "chrome/common/ipc_channel.h"
 
-#include "mozilla/CondVar.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/Monitor.h"
 
 
 //-----------------------------------------------------------------------------
@@ -70,8 +69,7 @@ struct HasResultCodes
 class AsyncChannel : public IPC::Channel::Listener, protected HasResultCodes
 {
 protected:
-    typedef mozilla::CondVar CondVar;
-    typedef mozilla::Mutex Mutex;
+    typedef mozilla::Monitor Monitor;
 
     enum ChannelState {
         ChannelClosed,
@@ -145,7 +143,7 @@ protected:
     }
 
     bool Connected() const {
-        mMutex.AssertCurrentThreadOwns();
+        mMonitor.AssertCurrentThreadOwns();
         return ChannelConnected == mChannelState;
     }
 
@@ -187,8 +185,7 @@ protected:
     Transport* mTransport;
     AsyncListener* mListener;
     ChannelState mChannelState;
-    Mutex mMutex;
-    CondVar mCvar;
+    Monitor mMonitor;
     MessageLoop* mIOLoop;       // thread where IO happens
     MessageLoop* mWorkerLoop;   // thread where work is done
     bool mChild;                // am I the child or parent?

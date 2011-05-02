@@ -45,6 +45,8 @@
 #include <setjmp.h>
 #include "jerror.h"
 
+using namespace mozilla;
+
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsJPEGEncoder, imgIEncoder, nsIInputStream, nsIAsyncInputStream)
 
 // used to pass error info through the JPEG library
@@ -58,7 +60,7 @@ nsJPEGEncoder::nsJPEGEncoder() : mFinished(PR_FALSE),
                                  mImageBufferUsed(0), mImageBufferReadPoint(0),
                                  mCallback(nsnull),
                                  mCallbackTarget(nsnull), mNotifyThreshold(0),
-                                 mMonitor("JPEG Encoder Monitor")
+                                 mReentrantMonitor("nsJPEGEncoder.mReentrantMonitor")
 {
 }
 
@@ -268,7 +270,7 @@ NS_IMETHODIMP nsJPEGEncoder::Read(char * aBuf, PRUint32 aCount,
 NS_IMETHODIMP nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter, void *aClosure, PRUint32 aCount, PRUint32 *_retval)
 {
   // Avoid another thread reallocing the buffer underneath us
-  mozilla::MonitorAutoEnter autoEnter(mMonitor);
+  ReentrantMonitorAutoEnter autoEnter(mReentrantMonitor);
 
   PRUint32 maxCount = mImageBufferUsed - mImageBufferReadPoint;
   if (maxCount == 0) {
@@ -415,7 +417,7 @@ nsJPEGEncoder::emptyOutputBuffer(jpeg_compress_struct* cinfo)
 
   // When we're reallocing the buffer we need to take the lock to ensure
   // that nobody is trying to read from the buffer we are destroying
-  mozilla::MonitorAutoEnter autoEnter(that->mMonitor);
+  ReentrantMonitorAutoEnter autoEnter(that->mReentrantMonitor);
 
   that->mImageBufferUsed = that->mImageBufferSize;
 
@@ -494,7 +496,7 @@ nsJPEGEncoder::NotifyListener()
   // AsyncWait and any that do encoding) so we lock to avoid notifying the
   // listener twice about the same data (which generally leads to a truncated
   // image).
-  mozilla::MonitorAutoEnter autoEnter(mMonitor);
+  ReentrantMonitorAutoEnter autoEnter(mReentrantMonitor);
 
   if (mCallback &&
       (mImageBufferUsed - mImageBufferReadPoint >= mNotifyThreshold ||

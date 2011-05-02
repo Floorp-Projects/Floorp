@@ -1280,15 +1280,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, nsITreeColumn* aCol, const n
     textRect.height += bp.top + bp.bottom;
 
     rc->SetFont(fm);
-    nscoord width =
-      nsLayoutUtils::GetStringWidth(this, rc, cellText.get(), cellText.Length());
-
-    nscoord totalTextWidth = width + bp.left + bp.right;
-    if (totalTextWidth < remainWidth) {
-      // If the text is not cropped, the text is smaller than the available 
-      // space and we set the text rect to be that width. 
-      textRect.width = totalTextWidth;
-    }
+    AdjustForCellText(cellText, aRow, currCol, *rc, textRect);
 
     theRect = textRect;
   }
@@ -1469,22 +1461,22 @@ nsTreeBodyFrame::AdjustForCellText(nsAutoString& aText,
         break;
       }
     }
-  }
-  else {
-    switch (aColumn->GetTextAlignment()) {
-      case NS_STYLE_TEXT_ALIGN_RIGHT: {
-        aTextRect.x += aTextRect.width - width;
-      }
-      break;
-      case NS_STYLE_TEXT_ALIGN_CENTER: {
-        aTextRect.x += (aTextRect.width - width) / 2;
-      }
-      break;
-    }
+
+    width = nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aText.get(), aText.Length());
   }
 
-  aTextRect.width =
-    nsLayoutUtils::GetStringWidth(this, &aRenderingContext, aText.get(), aText.Length());
+  switch (aColumn->GetTextAlignment()) {
+    case NS_STYLE_TEXT_ALIGN_RIGHT: {
+      aTextRect.x += aTextRect.width - width;
+    }
+    break;
+    case NS_STYLE_TEXT_ALIGN_CENTER: {
+      aTextRect.x += (aTextRect.width - width) / 2;
+    }
+    break;
+  }
+
+  aTextRect.width = width;
 }
 
 nsIAtom*
@@ -1628,8 +1620,6 @@ nsTreeBodyFrame::GetItemWithinCellAt(nscoord aX, const nsRect& aCellRect,
   nsLayoutUtils::SetFontFromStyle(rc, textContext);
 
   AdjustForCellText(cellText, aRowIndex, aColumn, *rc, textRect);
-  if (isRTL)
-    textRect.x = currX + remainingWidth - textRect.width;
 
   if (aX >= textRect.x && aX < textRect.x + textRect.width)
     return nsCSSAnonBoxes::moztreecelltext;
@@ -3583,20 +3573,16 @@ nsTreeBodyFrame::PaintText(PRInt32              aRowIndex,
   aRenderingContext.SetFont(fontMet);
 
   AdjustForCellText(text, aRowIndex, aColumn, aRenderingContext, textRect);
+  textRect.Inflate(bp);
 
   // Subtract out the remaining width.
-  nsRect copyRect(textRect);
-  copyRect.Inflate(textMargin);
   if (!isRTL)
-    aCurrX += copyRect.width;
+    aCurrX += textRect.width + textMargin.LeftRight();
 
-  textRect.Inflate(bp);
   PaintBackgroundLayer(textContext, aPresContext, aRenderingContext, textRect, aDirtyRect);
 
   // Time to paint our text.
   textRect.Deflate(bp);
-  if (isRTL)
-    textRect.x = rightEdge - textRect.width;
 
   // Set our color.
   aRenderingContext.SetColor(textContext->GetStyleColor()->mColor);

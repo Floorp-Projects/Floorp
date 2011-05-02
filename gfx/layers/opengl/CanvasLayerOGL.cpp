@@ -52,6 +52,10 @@
 #include <OpenGL/OpenGL.h>
 #endif
 
+#ifdef MOZ_X11
+#include "gfxXlibSurface.h"
+#endif
+
 using namespace mozilla;
 using namespace mozilla::layers;
 using namespace mozilla::gl;
@@ -293,34 +297,40 @@ ShadowCanvasLayerOGL::~ShadowCanvasLayerOGL()
 void
 ShadowCanvasLayerOGL::Initialize(const Data& aData)
 {
-  mDeadweight = static_cast<gfxSharedImageSurface*>(aData.mSurface);
-  gfxSize sz = mDeadweight->GetSize();
-  mTexImage = gl()->CreateTextureImage(nsIntSize(sz.width, sz.height),
-                                       mDeadweight->GetContentType(),
+  NS_RUNTIMEABORT("Incompatibe surface type");
+}
+
+void
+ShadowCanvasLayerOGL::Init(const SurfaceDescriptor& aNewFront, const nsIntSize& aSize)
+{
+  mDeadweight = aNewFront;
+  nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(mDeadweight);
+
+  mTexImage = gl()->CreateTextureImage(nsIntSize(aSize.width, aSize.height),
+                                       surf->GetContentType(),
                                        LOCAL_GL_CLAMP_TO_EDGE);
 }
 
-already_AddRefed<gfxSharedImageSurface>
-ShadowCanvasLayerOGL::Swap(gfxSharedImageSurface* aNewFront)
+void
+ShadowCanvasLayerOGL::Swap(const SurfaceDescriptor& aNewFront,
+                           SurfaceDescriptor* aNewBack)
 {
   if (!mDestroyed && mTexImage) {
-    // XXX this is always just ridiculously slow
-
-    gfxSize sz = aNewFront->GetSize();
+    nsRefPtr<gfxASurface> surf = ShadowLayerForwarder::OpenDescriptor(aNewFront);
+    gfxSize sz = surf->GetSize();
     nsIntRegion updateRegion(nsIntRect(0, 0, sz.width, sz.height));
-    mTexImage->DirectUpdate(aNewFront, updateRegion);
+    mTexImage->DirectUpdate(surf, updateRegion);
   }
 
-  return aNewFront;
+  *aNewBack = aNewFront;
 }
 
 void
 ShadowCanvasLayerOGL::DestroyFrontBuffer()
 {
   mTexImage = nsnull;
-  if (mDeadweight) {
-    mOGLManager->DestroySharedSurface(mDeadweight, mAllocator);
-    mDeadweight = nsnull;
+  if (IsSurfaceDescriptorValid(mDeadweight)) {
+    mOGLManager->DestroySharedSurface(&mDeadweight, mAllocator);
   }
 }
 
