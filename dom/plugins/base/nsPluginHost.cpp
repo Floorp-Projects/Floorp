@@ -1698,24 +1698,6 @@ nsPluginHost::FindPluginEnabledForExtension(const char* aExtension,
   return nsnull;
 }
 
-static nsresult ConvertToNative(nsIUnicodeEncoder *aEncoder,
-                                const nsACString& aUTF8String,
-                                nsACString& aNativeString)
-{
-  NS_ConvertUTF8toUTF16 utf16(aUTF8String);
-  PRInt32 len = utf16.Length();
-  PRInt32 outLen;
-  nsresult rv = aEncoder->GetMaxLength(utf16.get(), len, &outLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!EnsureStringLength(aNativeString, outLen))
-    return NS_ERROR_OUT_OF_MEMORY;
-  rv = aEncoder->Convert(utf16.get(), &len,
-                         aNativeString.BeginWriting(), &outLen);
-  NS_ENSURE_SUCCESS(rv, rv);
-  aNativeString.SetLength(outLen);
-  return NS_OK;
-}
-
 static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
                                   nsNPAPIPlugin **aOutNPAPIPlugin)
 {
@@ -1735,28 +1717,6 @@ static nsresult CreateNPAPIPlugin(nsPluginTag *aPluginTag,
   }
 
   nsresult rv;
-  nsCOMPtr <nsIPlatformCharset> pcs =
-    do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString charset;
-  rv = pcs->GetCharset(kPlatformCharsetSel_FileName, charset);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString fullPath;
-  if (!charset.LowerCaseEqualsLiteral("utf-8")) {
-    nsCOMPtr<nsIUnicodeEncoder> encoder;
-    nsCOMPtr<nsICharsetConverterManager> ccm =
-      do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = ccm->GetUnicodeEncoderRaw(charset.get(), getter_AddRefs(encoder));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = ConvertToNative(encoder, aPluginTag->mFullPath, fullPath);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    fullPath = aPluginTag->mFullPath;
-  }
-
   rv = nsNPAPIPlugin::CreatePlugin(aPluginTag, aOutNPAPIPlugin);
 
   return rv;
