@@ -42,18 +42,12 @@
 #define nsImageFrame_h___
 
 #include "nsSplittableFrame.h"
-#include "nsString.h"
-#include "nsAString.h"
-#include "nsIImageFrame.h"
 #include "nsIIOService.h"
 #include "nsIObserver.h"
 
-#include "imgIRequest.h"
 #include "nsStubImageDecoderObserver.h"
 #include "imgIDecoderObserver.h"
 
-#include "Layers.h"
-#include "ImageLayers.h"
 #include "nsDisplayList.h"
 #include "imgIContainer.h"
 
@@ -69,8 +63,13 @@ class nsPresContext;
 class nsImageFrame;
 class nsTransform2D;
 
-using namespace mozilla;
-using namespace mozilla::layers;
+namespace mozilla {
+namespace layers {
+  class ImageContainer;
+  class ImageLayer;
+  class LayerManager;
+}
+}
 
 class nsImageListener : public nsStubImageDecoderObserver
 {
@@ -100,12 +99,17 @@ private:
 
 #define ImageFrameSuper nsSplittableFrame
 
-class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
+class nsImageFrame : public ImageFrameSuper {
 public:
+  typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::layers::ImageLayer ImageLayer;
+  typedef mozilla::layers::LayerManager LayerManager;
+
   NS_DECL_FRAMEARENA_HELPERS
 
   nsImageFrame(nsStyleContext* aContext);
 
+  NS_DECL_QUERYFRAME_TARGET(nsImageFrame)
   NS_DECL_QUERYFRAME
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
@@ -154,9 +158,7 @@ public:
 
   virtual PRIntn GetSkipSides() const;
 
-  NS_IMETHOD GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap);
-
-  NS_IMETHOD GetIntrinsicImageSize(nsSize& aSize);
+  nsresult GetIntrinsicImageSize(nsSize& aSize);
 
   static void ReleaseGlobals() {
     if (gIconLoad) {
@@ -384,6 +386,10 @@ public:
  */
 class nsDisplayImage : public nsDisplayItem {
 public:
+  typedef mozilla::layers::ImageContainer ImageContainer;
+  typedef mozilla::layers::ImageLayer ImageLayer;
+  typedef mozilla::layers::LayerManager LayerManager;
+
   nsDisplayImage(nsDisplayListBuilder* aBuilder, nsImageFrame* aFrame,
                  imgIContainer* aImage)
     : nsDisplayItem(aBuilder, aFrame), mImage(aImage) {

@@ -37,8 +37,6 @@
 
 #include "inLayoutUtils.h"
 
-#include "nsIDOMDocumentView.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIContentViewer.h"
@@ -60,15 +58,14 @@ inLayoutUtils::GetWindowFor(nsIDOMNode* aNode)
 nsIDOMWindowInternal*
 inLayoutUtils::GetWindowFor(nsIDOMDocument* aDoc)
 {
-  nsCOMPtr<nsIDOMDocumentView> doc = do_QueryInterface(aDoc);
-  if (!doc) return nsnull;
+  nsCOMPtr<nsIDOMWindow> window;
+  aDoc->GetDefaultView(getter_AddRefs(window));
+  if (!window) {
+    return nsnull;
+  }
   
-  nsCOMPtr<nsIDOMAbstractView> view;
-  doc->GetDefaultView(getter_AddRefs(view));
-  if (!view) return nsnull;
-  
-  nsCOMPtr<nsIDOMWindowInternal> window = do_QueryInterface(view);
-  return window;
+  nsCOMPtr<nsIDOMWindowInternal> windowInternal = do_QueryInterface(window);
+  return windowInternal;
 }
 
 nsIPresShell* 

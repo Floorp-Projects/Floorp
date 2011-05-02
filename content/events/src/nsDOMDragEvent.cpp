@@ -80,7 +80,7 @@ NS_INTERFACE_MAP_END_INHERITING(nsDOMMouseEvent)
 NS_IMETHODIMP
 nsDOMDragEvent::InitDragEvent(const nsAString & aType,
                               PRBool aCanBubble, PRBool aCancelable,
-                              nsIDOMAbstractView* aView, PRInt32 aDetail,
+                              nsIDOMWindow* aView, PRInt32 aDetail,
                               PRInt32 aScreenX, PRInt32 aScreenY,
                               PRInt32 aClientX, PRInt32 aClientY, 
                               PRBool aCtrlKey, PRBool aAltKey, PRBool aShiftKey,
@@ -132,7 +132,5 @@ nsresult NS_NewDOMDragEvent(nsIDOMEvent** aInstancePtrResult,
                             nsDragEvent *aEvent) 
 {
   nsDOMDragEvent* event = new nsDOMDragEvent(aPresContext, aEvent);
-  NS_ENSURE_TRUE(event, NS_ERROR_OUT_OF_MEMORY);
-
   return CallQueryInterface(event, aInstancePtrResult);
 }

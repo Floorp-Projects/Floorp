@@ -404,7 +404,7 @@ NS_InitXPCOM2(nsIServiceManager* *result,
     rv = nsTimerImpl::Startup();
     NS_ENSURE_SUCCESS(rv, rv);
 
-#if !defined(WINCE) && !defined(ANDROID)
+#ifndef ANDROID
     NS_TIME_FUNCTION_MARK("Next: setlocale");
 
     // If the locale hasn't already been setup by our embedder,

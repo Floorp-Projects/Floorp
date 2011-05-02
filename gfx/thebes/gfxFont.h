@@ -295,11 +295,6 @@ public:
     hb_blob_t *ShareFontTableAndGetBlob(PRUint32 aTag,
                                         FallibleTArray<PRUint8>* aTable);
 
-    // Preload a font table into the cache (used to store layout tables for
-    // harfbuzz, when they will be stripped from the actual sfnt being
-    // passed to platform font APIs for rasterization)
-    void PreloadFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aTable);
-
     nsString         mName;
 
     PRPackedBool     mItalic      : 1;
@@ -1028,6 +1023,8 @@ public:
     virtual PRInt32 GetGlyphWidth(gfxContext *aCtx, PRUint16 aGID) {
         return -1;
     }
+
+    gfxFloat SynthesizeSpaceWidth(PRUint32 aCh);
 
     // Font metrics
     struct Metrics {

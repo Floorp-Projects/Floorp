@@ -21,11 +21,7 @@
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefService = Components.classes["@mozilla.org/preferences-service;1"].
-                    getService(Components.interfaces.nsIPrefService);
-var branch = prefService.getBranch("layout.");
-var oldDPI = branch.getIntPref("css.dpi");
+var oldDPI = SpecialPowers.getIntPref("layout.css.dpi");
 var dpi = oldDPI;
 
 function check(id, val) {
@@ -46,7 +42,7 @@ function checkPixelRelativeUnits() {
 
 checkPixelRelativeUnits();
 
-branch.setIntPref("css.dpi", dpi = 96);
+SpecialPowers.setIntPref("layout.css.dpi", dpi = 96);
 
 var mozmm = document.getElementById("mozmm");
 var mozmmSize = mozmm.getBoundingClientRect().width;
@@ -55,7 +51,7 @@ is(Math.round(mozmmSize), Math.round(mozmm.getBoundingClientRect().height),
 
 checkPixelRelativeUnits();
 
-branch.setIntPref("css.dpi", dpi = 192);
+SpecialPowers.setIntPref("layout.css.dpi", dpi = 192);
 
 // At 192 dpi, a one-inch box should be twice the number of device pixels,
 // and since we haven't changed the device-pixels-per-CSS-pixel ratio, the
@@ -63,7 +59,7 @@ branch.setIntPref("css.dpi", dpi = 192);
 check("mozmm", mozmmSize*2);
 checkPixelRelativeUnits();
 
-branch.setIntPref("css.dpi", oldDPI);
+SpecialPowers.setIntPref("layout.css.dpi", oldDPI);
 
 </script>
 </pre>

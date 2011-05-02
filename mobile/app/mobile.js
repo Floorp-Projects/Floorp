@@ -567,7 +567,8 @@ pref("notification.feature.enabled", true);
 
 // prevent tooltips from showing up
 pref("browser.chrome.toolbar_tips", false);
-pref("indexedDB.feature.enabled", false);
+pref("indexedDB.feature.enabled", true);
+pref("dom.indexedDB.warningQuota", 5);
 
 // prevent video elements from preloading too much data
 pref("media.preload.default", 1); // default to preload none
@@ -586,6 +587,8 @@ pref("image.mem.min_discard_timeout_ms", 20000);
 
 // enable touch events interfaces
 pref("dom.w3c_touch_events.enabled", true);
+pref("dom.w3c_touch_events.safetyX", 0); // escape borders in units of 1/240"
+pref("dom.w3c_touch_events.safetyY", 120); // escape borders in units of 1/240"
 
 #ifdef MOZ_SAFE_BROWSING
 // Safe browsing does nothing unless this pref is set
