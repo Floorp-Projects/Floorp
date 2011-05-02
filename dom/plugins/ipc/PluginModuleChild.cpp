@@ -1838,7 +1838,7 @@ PluginModuleChild::AllocPPluginInstance(const nsCString& aMimeType,
 #ifdef XP_WIN
     if (mQuirks & QUIRK_FLASH_HOOK_GETWINDOWINFO) {
         sUser32Intercept.Init("user32.dll");
-        sUser32Intercept.AddHook("GetWindowInfo", PMCGetWindowInfoHook,
+        sUser32Intercept.AddHook("GetWindowInfo", reinterpret_cast<intptr_t>(PMCGetWindowInfoHook),
                                  (void**) &sGetWindowInfoPtrStub);
     }
 #endif
