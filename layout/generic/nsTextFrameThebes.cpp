@@ -309,6 +309,7 @@ public:
                             nscolor* aBackColor);
   void GetHighlightColors(nscolor* aForeColor,
                           nscolor* aBackColor);
+  void GetURLSecondaryColor(nscolor* aForeColor);
   void GetIMESelectionColors(PRInt32  aIndex,
                              nscolor* aForeColor,
                              nscolor* aBackColor);
@@ -3262,6 +3263,17 @@ nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
 }
 
 void
+nsTextPaintStyle::GetURLSecondaryColor(nscolor* aForeColor)
+{
+  NS_ASSERTION(aForeColor, "aForeColor is null");
+
+  nsILookAndFeel* look = mPresContext->LookAndFeel();
+  nscolor foreColor;
+  look->GetColor(nsILookAndFeel::eColor_graytext, foreColor);
+  *aForeColor = foreColor;
+}
+
+void
 nsTextPaintStyle::GetIMESelectionColors(PRInt32  aIndex,
                                         nscolor* aForeColor,
                                         nscolor* aBackColor)
@@ -4571,6 +4583,10 @@ static PRBool GetSelectionTextColors(SelectionType aType,
       return aTextPaintStyle.GetSelectionColors(aForeground, aBackground);
     case nsISelectionController::SELECTION_FIND:
       aTextPaintStyle.GetHighlightColors(aForeground, aBackground);
+      return PR_TRUE;
+    case nsISelectionController::SELECTION_URLSECONDARY:
+      aTextPaintStyle.GetURLSecondaryColor(aForeground);
+      *aBackground = NS_RGBA(0,0,0,0);
       return PR_TRUE;
     case nsISelectionController::SELECTION_IME_RAWINPUT:
     case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
