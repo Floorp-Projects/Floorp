@@ -284,6 +284,13 @@ void * JS_FASTCALL
 stubs::CompileFunction(VMFrame &f, uint32 nactual)
 {
     /*
+     * Write the scratch field of the VMFrame to indicate this is a call to
+     * CompileFunction from an IC (the recompiler cannot detect calls made from
+     * ICs automatically). This needs to be cleared out on all return paths.
+     */
+    f.scratch = COMPILE_FUNCTION_SCRATCH_VALUE;
+
+    /*
      * We have a partially constructed frame. That's not really good enough to
      * compile though because we could throw, so get a full, adjusted frame.
      */
@@ -306,13 +313,17 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
 
     if (nactual != fp->numFormalArgs()) {
         fp = (StackFrame *)FixupArity(f, nactual);
-        if (!fp)
+        if (!fp) {
+            f.scratch = NULL;
             return NULL;
+        }
     }
 
     CallArgs args = CallArgsFromArgv(fp->numFormalArgs(), fp->formalArgs());
-    if (!cx->typeMonitorCall(args, fp->isConstructing()))
+    if (!cx->typeMonitorCall(args, fp->isConstructing())) {
+        f.scratch = NULL;
         return NULL;
+    }
 
     /* Finish frame initialization. */
     fp->initCallFrameLatePrologue();
@@ -320,8 +331,10 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     /* These would have been initialized by the prologue. */
     f.regs.prepareToRun(fp, script);
 
-    if (fun->isHeavyweight() && !js::CreateFunCallObject(cx, fp))
+    if (fun->isHeavyweight() && !js::CreateFunCallObject(cx, fp)) {
+        f.scratch = NULL;
         THROWV(NULL);
+    }
 
     CompileStatus status = CanMethodJIT(cx, script, fp, CompileRequest_JIT);
     if (status == Compile_Okay) {
@@ -329,6 +342,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
 
         /* Same constraint on fp as UncachedInlineCall. */
         f.regs.popFrame((Value *) f.regs.fp());
+        f.scratch = NULL;
         return entry;
     }
 
@@ -338,6 +352,8 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     /* Function did not compile... interpret it. */
     JSBool ok = Interpret(cx, fp);
     InlineReturn(f);
+
+    f.scratch = NULL;
 
     if (!ok)
         THROWV(NULL);
