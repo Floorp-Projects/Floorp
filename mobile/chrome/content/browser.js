@@ -1751,7 +1751,7 @@ const ContentTouchHandler = {
           Elements.browsers.customDragger.contentMouseCapture = json.panning;
         break;
       case "Browser:CanCaptureMouse:Return":
-        ContentTouchHandler.contentMightCaptureMouse = json.contentMightCaptureMouse;
+        this.contentMightCaptureMouse = json.contentMightCaptureMouse;
         break;
     }
   },
