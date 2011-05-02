@@ -596,13 +596,10 @@ let Content = {
       }
 
       case "Browser:CanCaptureMouse": {
-        let json = {
-          contentMightCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor)
-                                      .getInterface(Ci.nsIDOMWindowUtils)
-                                      .mayHaveTouchEventListeners,
-          messageId: aMessage.json.messageId
-        };
-        sendAsyncMessage("Browser:CanCaptureMouse:Return", json);
+        sendAsyncMessage("Browser:CanCaptureMouse:Return", {
+          contentMightCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).mayHaveTouchEventListeners,
+          messageId: json.messageId
+        });
         break;
       }
     }
