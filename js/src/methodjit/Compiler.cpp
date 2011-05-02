@@ -7129,14 +7129,24 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
                 continue;
             }
             if (newv->slot < analyze::TotalSlots(script)) {
+                types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
                 VarType &vt = a->varTypes[newv->slot];
-                if (vt.type == JSVAL_TYPE_INT32) {
-                    types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
-                    if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE &&
-                        fixDoubleSlot(newv->slot)) {
+                if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE &&
+                    fixDoubleSlot(newv->slot)) {
+                    FrameEntry *fe = frame.getOrTrack(newv->slot);
+                    if (vt.type == JSVAL_TYPE_INT32) {
                         fixedDoubleEntries.append(newv->slot);
-                        FrameEntry *fe = frame.getOrTrack(newv->slot);
                         frame.ensureDouble(fe);
+                    } else if (vt.type == JSVAL_TYPE_UNKNOWN) {
+                        /*
+                         * Unknown here but a double at the target. The type
+                         * set for the existing value must be empty, so this
+                         * code is doomed and we can just mark the value as
+                         * a double.
+                         */
+                        frame.ensureDouble(fe);
+                    } else {
+                        JS_ASSERT(vt.type == JSVAL_TYPE_DOUBLE);
                     }
                 }
             }
