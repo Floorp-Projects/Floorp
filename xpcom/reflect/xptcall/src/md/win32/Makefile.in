@@ -88,15 +88,6 @@ ASFILES		:= xptcinvoke_asm_x86_64_gnu.s
 endif #!GNU_CXX
 endif
 
-ifeq ($(OS_ARCH),WINCE)
-ifeq ($(TARGET_CPU),arm)
-CPPSRCS 	= xptcinvokece.cpp xptcstubsce.cpp 
-ASFILES		= xptcstubs_asm_ce.asm xptcinvoke_asm_ce.asm
-ASFLAGS		+= -I ../../../public
-AS_DASH_C_FLAG = 
-endif
-endif
-
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1
 

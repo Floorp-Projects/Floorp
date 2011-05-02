@@ -131,6 +131,7 @@ EXPORTS_mozilla = \
   IntentionalCrash.h \
   Monitor.h \
   Mutex.h \
+  ReentrantMonitor.h \
   SSE.h \
   arm.h \
   unused.h \

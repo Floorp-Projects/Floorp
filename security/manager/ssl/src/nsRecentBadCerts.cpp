@@ -99,7 +99,7 @@ nsRecentBadCertsService::GetRecentBadCert(const nsAString & aHostNameWithPort,
   PRBool isUntrusted = PR_FALSE;
 
   {
-    MonitorAutoEnter lock(monitor);
+    ReentrantMonitorAutoEnter lock(monitor);
     for (size_t i=0; i<const_recently_seen_list_size; ++i) {
       if (mCerts[i].mHostWithPort.Equals(aHostNameWithPort)) {
         SECStatus srv = SECITEM_CopyItem(nsnull, &foundDER, &mCerts[i].mDERCert);
@@ -172,7 +172,7 @@ nsRecentBadCertsService::AddBadCert(const nsAString &hostWithPort,
   NS_ENSURE_SUCCESS(rv, rv);
 
   {
-    MonitorAutoEnter lock(monitor);
+    ReentrantMonitorAutoEnter lock(monitor);
     RecentBadCert &updatedEntry = mCerts[mNextStorePosition];
 
     ++mNextStorePosition;

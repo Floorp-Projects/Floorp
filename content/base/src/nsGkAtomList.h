@@ -1698,7 +1698,7 @@ GK_ATOM(onMozTouchMove, "onMozTouchMove")
 GK_ATOM(onMozTouchUp, "onMozTouchUp")
 
 // orientation support
-GK_ATOM(onMozOrientation, "onMozOrientation")
+GK_ATOM(ondeviceorientation, "ondeviceorientation")
 
 //---------------------------------------------------------------------------
 // Special atoms
