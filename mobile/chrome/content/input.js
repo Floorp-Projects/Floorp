@@ -126,6 +126,13 @@ function MouseModule() {
 
 
 MouseModule.prototype = {
+  _initMouseEventFromEvent: function _initMouseEventFromEvent(aDestEvent, aSrcEvent, aType, aCanBubble, aCancellable) {
+    aDestEvent.initMouseEvent(aType, aCanBubble, aCancellable, window, aSrcEvent.detail,
+                              aSrcEvent.screenX, aSrcEvent.screenY, aSrcEvent.clientX, aSrcEvent.clientY,
+                              aSrcEvent.ctrlKey, aSrcEvent.altKey, aSrcEvent.shiftKey, aSrcEvent.metaKey,
+                              aSrcEvent.button, aSrcEvent.relatedTarget);
+  },
+
   handleEvent: function handleEvent(aEvent) {
     switch (aEvent.type) {
       case "contextmenu":
@@ -213,10 +220,8 @@ MouseModule.prototype = {
 
     // Do tap
     if (!this._kinetic.isActive()) {
-      let event = document.createEvent("Events");
-      event.initEvent("TapDown", true, true);
-      event.clientX = aEvent.clientX;
-      event.clientY = aEvent.clientY;
+      let event = document.createEvent("MouseEvent");
+      this._initMouseEventFromEvent(event, aEvent, "TapDown", true, true);
       let success = aEvent.target.dispatchEvent(event);
       if (success) {
         this._recordEvent(aEvent);
@@ -268,10 +273,8 @@ MouseModule.prototype = {
     if (this._target) {
       let isClick = dragData.isClick();
 
-      let event = document.createEvent("Events");
-      event.initEvent("TapUp", true, true);
-      event.clientX = aEvent.clientX
-      event.clientY = aEvent.clientY;
+      let event = document.createEvent("MouseEvents");
+      this._initMouseEventFromEvent(event, aEvent, "TapUp", true, true);
       event.isClick = isClick;
 
       let success = aEvent.target.dispatchEvent(event);
@@ -335,11 +338,13 @@ MouseModule.prototype = {
       this.dY += dragData.prevPanY - sY;
 
       if (dragData.isPan()) {
-        this.sendMove(aEvent.clientX, aEvent.clientY, aEvent.target);
+        this.sendMove(aEvent);
+
         // Only pan when mouse event isn't part of a click. Prevent jittering on tap.
         this._kinetic.addData(sX - dragData.prevPanX, sY - dragData.prevPanY);
+
+        // dragBy will reset dX and dY values to 0
         this._dragBy(this.dX, this.dY);
-        // dragBy will reset dX and dY values to 0.
 
         // Let everyone know when mousemove begins a pan
         if (!oldIsPan && dragData.isPan()) {
@@ -361,12 +366,10 @@ MouseModule.prototype = {
     }
   },
 
-  sendMove: function(aX, aY, aTarget) {
-    let event = document.createEvent("Events");
-    event.initEvent("TapMove", true, true);
-    event.clientX = aX;
-    event.clientY = aY;
-    aTarget.dispatchEvent(event);
+  sendMove: function(aEvent) {
+    let event = document.createEvent("MouseEvents");
+    this._initMouseEventFromEvent(event, aEvent, "TapMove", true, true);
+    aEvent.target.dispatchEvent(event);
   },
 
   /**
