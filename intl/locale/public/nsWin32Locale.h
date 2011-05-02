@@ -34,39 +34,31 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsWin32Locale_h__
+#define nsWin32Locale_h__
 
-#ifndef nsIWin32LocaleImpl_h__
-#define nsIWin32LocaleImpl_h__
-
-
-#include "nsISupports.h"
 #include "nscore.h"
 #include "nsString.h"
-#include "nsIWin32Locale.h"
 #include <windows.h>
 
-class nsIWin32LocaleImpl: public nsIWin32Locale
-{
 
-	NS_DECL_ISUPPORTS
-
-public:
-
-	nsIWin32LocaleImpl(void);
-	~nsIWin32LocaleImpl(void);
-
-	NS_IMETHOD GetPlatformLocale(const nsAString& locale, LCID* winLCID);
-	NS_IMETHOD GetXPLocale(LCID winLCID, nsAString& locale);
-
-	typedef LCID (WINAPI*LocaleNameToLCIDPtr)(LPCWSTR lpName, DWORD dwFlags);
-	typedef int (WINAPI*LCIDToLocaleNamePtr)(LCID Locale, LPWSTR lpName,
-	                                         int cchName, DWORD dwFlags);
-
-	static LocaleNameToLCIDPtr localeNameToLCID;
-	static LCIDToLocaleNamePtr lcidToLocaleName;
+class nsWin32Locale {
+public: 
+  static nsresult    GetPlatformLocale(const nsAString& locale, LCID* winLCID); 
+  static void        GetXPLocale(LCID winLCID, nsAString& locale);
 
 private:
-	static HMODULE sKernelDLL;
+  // Static class - Don't allow instantiation.
+  nsWin32Locale(void) {}
+
+  typedef LCID (WINAPI*LocaleNameToLCIDPtr)(LPCWSTR lpName, DWORD dwFlags);
+  typedef int (WINAPI*LCIDToLocaleNamePtr)(LCID Locale, LPWSTR lpName,
+                                           int cchName, DWORD dwFlags);
+
+  static LocaleNameToLCIDPtr localeNameToLCID;
+  static LCIDToLocaleNamePtr lcidToLocaleName;
+
+  static void initFunctionPointers ();
 };
 
 #endif
