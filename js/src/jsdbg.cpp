@@ -51,11 +51,11 @@ using namespace js;
 
 // === Forward declarations
 
-extern Class Frame_class;
+extern Class DebugFrame_class;
 
 enum {
-    JSSLOT_FRAME_OWNER,
-    JSSLOT_FRAME_COUNT
+    JSSLOT_DEBUGFRAME_OWNER,
+    JSSLOT_DEBUGFRAME_COUNT
 };
 
 // === Utils
@@ -148,11 +148,11 @@ Debug::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
     FrameMap::AddPtr p = frames.lookupForAdd(fp);
     if (!p) {
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
-        JSObject *frameobj = NewNonFunction<WithProto::Given>(cx, &Frame_class, proto, NULL);
+        JSObject *frameobj = NewNonFunction<WithProto::Given>(cx, &DebugFrame_class, proto, NULL);
         if (!frameobj || !frameobj->ensureClassReservedSlots(cx))
             return false;
         frameobj->setPrivate(fp);
-        frameobj->setReservedSlot(JSSLOT_FRAME_OWNER, ObjectValue(*object));
+        frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
         if (!frames.add(p, fp, frameobj)) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -556,8 +556,8 @@ JSPropertySpec Debug::properties[] = {
 
 // === Debug.Frame
 
-Class Frame_class = {
-    "Frame", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_FRAME_COUNT),
+Class DebugFrame_class = {
+    "Frame", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT),
     PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
     EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
 };
@@ -570,7 +570,7 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
         return NULL;
     }
     JSObject *thisobj = &vp[1].toObject();
-    if (thisobj->getClass() != &Frame_class) {
+    if (thisobj->getClass() != &DebugFrame_class) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                              "Debug.Frame", fnname, thisobj->getClass()->name);
         return NULL;
@@ -579,7 +579,7 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
     // Check for e.g. Debug.prototype, which is of the Debug JSClass but isn't
     // really a Debug object.
     if (!thisobj->getPrivate()) {
-        if (thisobj->getReservedSlot(JSSLOT_FRAME_OWNER).isUndefined()) {
+        if (thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
                                  "Debug.Frame", fnname, "prototype object");
             return NULL;
@@ -600,7 +600,7 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
     StackFrame *fp = (StackFrame *) thisobj->getPrivate()
 
 JSBool
-Frame_getType(JSContext *cx, uintN argc, Value *vp)
+DebugFrame_getType(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get type", thisobj, fp);
 
@@ -615,7 +615,7 @@ Frame_getType(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-Frame_getGenerator(JSContext *cx, uintN argc, Value *vp)
+DebugFrame_getGenerator(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get generator", thisobj, fp);
     vp->setBoolean(fp->isGeneratorFrame());
@@ -623,7 +623,7 @@ Frame_getGenerator(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-Frame_getLive(JSContext *cx, uintN argc, Value *vp)
+DebugFrame_getLive(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = CheckThisFrame(cx, vp, "get live", false);
     if (!thisobj)
@@ -634,16 +634,16 @@ Frame_getLive(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
-Frame_construct(JSContext *cx, uintN argc, Value *vp)
+DebugFrame_construct(JSContext *cx, uintN argc, Value *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Frame");
     return false;
 }
 
-JSPropertySpec Frame_properties[] = {
-    JS_PSG("type", Frame_getType, 0),
-    JS_PSG("generator", Frame_getGenerator, 0),
-    JS_PSG("live", Frame_getLive, 0),
+JSPropertySpec DebugFrame_properties[] = {
+    JS_PSG("type", DebugFrame_getType, 0),
+    JS_PSG("generator", DebugFrame_getGenerator, 0),
+    JS_PSG("live", DebugFrame_getLive, 0),
     JS_PS_END
 };
 
@@ -663,8 +663,9 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
         return false;
 
     JSObject *frameCtor;
-    JSObject *frameProto = js_InitClass(cx, debugCtor, objProto, &Frame_class, Frame_construct, 0,
-                                        Frame_properties, NULL, NULL, NULL, &frameCtor);
+    JSObject *frameProto = js_InitClass(cx, debugCtor, objProto, &DebugFrame_class,
+                                        DebugFrame_construct, 0,
+                                        DebugFrame_properties, NULL, NULL, NULL, &frameCtor);
     if (!frameProto)
         return false;
     debugProto->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
