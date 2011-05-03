@@ -2416,10 +2416,11 @@ var ContentCrashObserver = {
 
     // Spin through the open tabs and resurrect the out-of-process tabs. Resurrection
     // does not auto-reload the content. We delay load the content as needed.
+    let URLs = []
     Browser.tabs.forEach(function(aTab) {
       if (aTab.browser.getAttribute("remote") == "true")
-        aTab.resurrect();
-    })
+        URLs.push(aTab.resurrect().data.entries[0].url);
+    });
 
     let dumpID = aSubject.hasKey("dumpID") ? aSubject.getProperty("dumpID") : null;
 
@@ -2463,8 +2464,24 @@ var ContentCrashObserver = {
       }
 
       // Submit the report, if we have one and the user wants to submit it
-      if (submit.value && dumpID)
+      if (submit.value && dumpID) {
+        let directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+        let extra = directoryService.get("UAppData", Ci.nsIFile);
+        extra.append("Crash Reports");
+        extra.append("pending");
+        extra.append(dumpID + ".extra");
+        let foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+        try {
+          // use 0x02 | 0x10 to open file for appending.
+          foStream.init(extra, 0x02 |  0x10, 0666, 0); 
+          let data = "URL=" + URLs.join(" ") + "\n";
+          foStream.write(data, data.length);
+          foStream.close();
+        } catch (x) {
+          dump (x);
+        }
         self.CrashSubmit.submit(dumpID, Elements.stack, null, null);
+      }
     }, 0, this);
   }
 };
@@ -2741,6 +2758,8 @@ Tab.prototype = {
     browser.__SS_data = session.data;
     browser.__SS_extdata = session.extra;
     browser.__SS_restore = true;
+
+    return session;
   },
 
   _createBrowser: function _createBrowser(aURI, aInsertBefore) {
