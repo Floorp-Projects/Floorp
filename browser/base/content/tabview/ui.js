@@ -265,6 +265,7 @@ let UI = {
         if (self.isTabViewVisible())
           GroupItems.removeHiddenGroups();
 
+        Storage.saveActiveGroupName(gWindow);
         TabItems.saveAll(true);
         self._save();
       }, false);
