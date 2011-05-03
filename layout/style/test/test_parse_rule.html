@@ -48,7 +48,7 @@ base + "#a {color: rgb\n(255, 0, 0)}",
 "@threedee maroon url('asdf\n) ra('asdf\n); " + base,
 "@threedee {maroon url('asdf\n) ra('asdf\n);} " + base,
 "div[title='zxcv weeqweqeweasd\\D\\A a']{color:green}",
-"div[title~='weeqweqeweasd\\D\\A a']{color:green}",
+"div[title~='weeqweqeweasd']{color:green}",
 base + "#a\\\n{color:red}",
 base + "#a\v{color:red}",
 
@@ -129,10 +129,7 @@ base + "#a {color: rgb(255.0, 0, 0)}",
 "#a {color: rgb(0, 128, 0)}",
 "#a {color: rgb(0%, 50%, 0%)}",
 "#a {color: rgb(0%, 49.999999999999%, 0%)}",
-], prop: "color", pseudo: "",
-todo: {
-       "div[title~='weeqweqeweasd\\D\\A a']{color:green}" : 1
-      }
+], prop: "color", pseudo: ""
 },
 
 // Border tests
