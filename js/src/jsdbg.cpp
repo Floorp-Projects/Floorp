@@ -46,6 +46,7 @@
 #include "jsobj.h"
 #include "jswrapper.h"
 #include "jsobjinlines.h"
+#include "vm/Stack-inl.h"
 
 using namespace js;
 
@@ -55,7 +56,16 @@ extern Class DebugFrame_class;
 
 enum {
     JSSLOT_DEBUGFRAME_OWNER,
+    JSSLOT_DEBUGFRAME_ARGUMENTS,
     JSSLOT_DEBUGFRAME_COUNT
+};
+
+extern Class DebugObject_class;
+
+enum {
+    JSSLOT_DEBUGOBJECT_OWNER,
+    JSSLOT_DEBUGOBJECT_CCW,  // cross-compartment wrapper
+    JSSLOT_DEBUGOBJECT_COUNT
 };
 
 // === Utils
@@ -127,6 +137,7 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
 
 enum {
     JSSLOT_DEBUG_FRAME_PROTO,
+    JSSLOT_DEBUG_OBJECT_PROTO,
     JSSLOT_DEBUG_COUNT
 };
 
@@ -139,7 +150,7 @@ Debug::Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment)
 bool
 Debug::init()
 {
-    return frames.init();
+    return frames.init() && objects.init();
 }
 
 bool
@@ -147,12 +158,34 @@ Debug::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
 {
     FrameMap::AddPtr p = frames.lookupForAdd(fp);
     if (!p) {
+        // Create script frame. First copy the arguments.
+        JSObject *argsobj;
+        if (fp->hasArgs()) {
+            uintN argc = fp->numActualArgs();
+            JS_ASSERT(uint(argc) == argc);
+            argsobj = NewDenseAllocatedArray(cx, uint(argc), NULL);
+            Value *argv = fp->actualArgs();
+            for (uintN i = 0; i < argc; i++) {
+                Value v = argv[i];
+                if (!wrapDebuggeeValue(cx, &v))
+                    return false;
+                argsobj->setDenseArrayElement(i, v);
+            }
+            if (!argsobj)
+                return false;
+        } else {
+            argsobj = NULL;
+        }
+
+        // Now create and populate the Debug.Frame object.
         JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO).toObject();
         JSObject *frameobj = NewNonFunction<WithProto::Given>(cx, &DebugFrame_class, proto, NULL);
         if (!frameobj || !frameobj->ensureClassReservedSlots(cx))
             return false;
         frameobj->setPrivate(fp);
         frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_OWNER, ObjectValue(*object));
+        frameobj->setReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS, ObjectOrNullValue(argsobj));
+
         if (!frames.add(p, fp, frameobj)) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -176,6 +209,61 @@ Debug::slowPathLeaveStackFrame(JSContext *cx)
             dbg->frames.remove(p);
         }
     }
+}
+
+bool
+Debug::wrapDebuggeeValue(JSContext *cx, Value *vp)
+{
+    assertSameCompartment(cx, object);
+
+    // FIXME This is not quite what we want. Ideally we would get a transparent
+    // wrapper no matter what sort of object *vp is. Oh well!
+    if (!cx->compartment->wrap(cx, vp)) {
+        vp->setUndefined();
+        return false;
+    }
+
+    if (vp->isObject()) {
+        JSObject *ccwobj = &vp->toObject();
+        ObjectMap::AddPtr p = objects.lookupForAdd(ccwobj);
+        if (p) {
+            vp->setObject(*p->value);
+        } else {
+            // Create a new Debug.Object for ccwobj.
+            JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
+            JSObject *dobj = NewNonFunction<WithProto::Given>(cx, &DebugObject_class, proto, NULL);
+            if (!dobj || !dobj->ensureClassReservedSlots(cx))
+                return false;
+            dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
+            dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_CCW, ObjectValue(*ccwobj));
+            if (!objects.relookupOrAdd(p, ccwobj, dobj)) {
+                js_ReportOutOfMemory(cx);
+                return false;
+            }
+            vp->setObject(*dobj);
+        }
+    }
+    return true;
+}
+
+bool
+Debug::unwrapDebuggeeValue(JSContext *cx, Value *vp)
+{
+    if (vp->isObject()) {
+        JSObject *dobj = &vp->toObject();
+        if (dobj->clasp != &DebugObject_class) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
+                                 "Debug", "Debug.Object", dobj->clasp->name);
+            return false;
+        }
+        *vp = dobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW);
+    }
+
+    if (!cx->compartment->wrap(cx, vp)) {
+        vp->setUndefined();
+        return false;
+    }
+    return true;
 }
 
 JSTrapStatus
@@ -340,14 +428,35 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
 
                 // We only need to examine obj if it's in a compartment
                 // being GC'd and it isn't already marked.
-                if ((!comp || obj->compartment() == comp) &&
-                    !obj->isMarked() &&
-                    dbg->hasAnyLiveHooks())
-                {
-                    // obj is reachable only via its live, enabled debugger
-                    // hooks, which may yet be called.
-                    MarkObject(trc, *obj, "enabled Debug");
-                    markedAny = true;
+                if ((!comp || obj->compartment() == comp) && !obj->isMarked()) {
+                    if (dbg->hasAnyLiveHooks()) {
+                        // obj could be reachable only via its live, enabled
+                        // debugger hooks, which may yet be called.
+                        MarkObject(trc, *obj, "enabled Debug");
+                        markedAny = true;
+                    }
+                }
+
+                // Handling Debug.Objects:
+                //
+                // If comp is the debuggee's compartment, do nothing. No
+                // referent objects will be collected, since we have a wrapper
+                // of each one.
+                //
+                // If comp is the debugger's compartment, mark all
+                // Debug.Objects, since the referents might be alive and
+                // therefore the table entries must remain.
+                //
+                // If comp is null, then for each key (referent-wrapper) that
+                // is marked, mark the corresponding value.
+                //
+                if (!comp || obj->compartment() == comp) {
+                    for (ObjectMap::Range r = dbg->objects.all(); !r.empty(); r.popFront()) {
+                        if (!r.front().value->isMarked() && (comp || r.front().key->isMarked())) {
+                            MarkObject(trc, *r.front().key, "Debug.Object with live referent");
+                            markedAny = true;
+                        }
+                    }
                 }
             }
         }
@@ -382,11 +491,19 @@ Debug::sweepAll(JSRuntime *rt)
 void
 Debug::sweepCompartment(JSCompartment *compartment)
 {
-    // Sweep FrameMap entries for objects being collected.
     const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
     for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
         Debug *dbg = *p;
+
+        // Sweep FrameMap entries for objects being collected.
         for (FrameMap::Enum e(dbg->frames); !e.empty(); e.popFront()) {
+            if (!e.front().value->isMarked())
+                e.removeFront();
+        }
+
+        // Sweep ObjectMap entries for objects being collected.
+        for (ObjectMap::Enum e(dbg->objects); !e.empty(); e.popFront()) {
+            JS_ASSERT(e.front().key->isMarked() == e.front().value->isMarked());
             if (!e.front().value->isMarked())
                 e.removeFront();
         }
@@ -524,15 +641,17 @@ Debug::construct(JSContext *cx, uintN argc, Value *vp)
     JS_ASSERT(proto->getClass() == &Debug::jsclass);
 
     // Make the new Debug object. Each one has a reference to
-    // Debug.Frame.prototype in a reserved slot.
+    // Debug.{Frame,Object}.prototype in reserved slots.
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, &Debug::jsclass, proto, NULL);
     if (!obj || !obj->ensureClassReservedSlots(cx))
         return false;
-    obj->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO,
-                         proto->getReservedSlot(JSSLOT_DEBUG_FRAME_PROTO));
+    for (uintN slot = JSSLOT_DEBUG_FRAME_PROTO; slot < JSSLOT_DEBUG_COUNT; slot++)
+        obj->setReservedSlot(slot, proto->getReservedSlot(slot));
+
     JSObject *hooks = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!hooks)
         return false;
+
     Debug *dbg = cx->new_<Debug>(obj, hooks, debuggeeCompartment);
     if (!dbg)
         return false;
@@ -623,6 +742,23 @@ DebugFrame_getGenerator(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
+DebugFrame_getThis(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get this", thisobj, fp);
+    *vp = fp->thisValue();
+    return true;
+}
+
+JSBool
+DebugFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get arguments", thisobj, fp);
+    (void) fp;  // quell warning that fp is unused
+    *vp = thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_ARGUMENTS);
+    return true;
+}
+
+JSBool
 DebugFrame_getLive(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = CheckThisFrame(cx, vp, "get live", false);
@@ -643,9 +779,26 @@ DebugFrame_construct(JSContext *cx, uintN argc, Value *vp)
 JSPropertySpec DebugFrame_properties[] = {
     JS_PSG("type", DebugFrame_getType, 0),
     JS_PSG("generator", DebugFrame_getGenerator, 0),
+    JS_PSG("this", DebugFrame_getThis, 0),
+    JS_PSG("arguments", DebugFrame_getArguments, 0),
     JS_PSG("live", DebugFrame_getLive, 0),
     JS_PS_END
 };
+
+// === Debug.Object
+
+Class DebugObject_class = {
+    "Object", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT),
+    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
+    EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
+};
+
+JSBool
+DebugObject_construct(JSContext *cx, uintN argc, Value *vp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Object");
+    return false;
+}
 
 // === Glue
 
@@ -668,7 +821,13 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
                                         DebugFrame_properties, NULL, NULL, NULL, &frameCtor);
     if (!frameProto)
         return false;
-    debugProto->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
 
+    JSObject *objectProto = js_InitClass(cx, debugCtor, objProto, &DebugObject_class,
+                                         DebugObject_construct, 0, NULL, NULL, NULL, NULL);
+    if (!objectProto)
+        return false;
+
+    debugProto->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
+    debugProto->setReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO, ObjectValue(*objectProto));
     return true;
 }

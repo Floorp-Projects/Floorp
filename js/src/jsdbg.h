@@ -69,6 +69,10 @@ class Debug {
         FrameMap;
     FrameMap frames;
 
+    typedef HashMap<JSObject *, JSObject *, DefaultHasher<JSObject *>, SystemAllocPolicy>
+        ObjectMap;
+    ObjectMap objects;
+
     JSTrapStatus handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook);
     JSTrapStatus parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value *vp,
                                       bool callHook = true);
@@ -90,6 +94,26 @@ class Debug {
 
     bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
     static void slowPathLeaveStackFrame(JSContext *cx);
+
+    // Precondition: *vp is a value from a debuggee compartment and cx is in
+    // the debugger's compartment.
+    //
+    // Wrap *vp for the debugger compartment, wrap it in a Debug.Object if it's
+    // an object, store the result in *vp, and return true.
+    //
+    bool wrapDebuggeeValue(JSContext *cx, Value *vp);
+
+    // Inverse of wrapDebuggeeValue.
+    //
+    // Precondition: cx is in a debuggee compartment.
+    //
+    // If *vp is a Debug.Object, store the referent in *vp, appropriately
+    // rewrapped for the debuggee's compartment, regardless of what compartment
+    // the actual referent inhabits. Otherwise, if *vp is an object, throw a
+    // TypeError, because it is not a debuggee value. Otherwise *vp is a
+    // primitive, so copy it to the debuggee's compartment.
+    //
+    bool unwrapDebuggeeValue(JSContext *cx, Value *vp);
 
     inline bool observesDebuggerStatement() const;
     static JSTrapStatus dispatchDebuggerStatement(JSContext *cx, Value *vp);
