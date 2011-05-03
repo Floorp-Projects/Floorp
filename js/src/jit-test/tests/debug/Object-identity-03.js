@@ -13,6 +13,10 @@ for (var i = 0; i < N; i++)
     g.eval("f({});");
 assertEq(wrappers.length, N);
 
+for (var i = 0; i < N; i++)
+    for (var j = i + 1; j < N; j++)
+        assertEq(wrappers[i] === wrappers[j], false);
+
 gc();
 
 dbg.hooks = {debuggerHandler: function (frame) { assertEq(frame.arguments[0], wrappers.pop()); }};

@@ -45,6 +45,7 @@
 #include "jsgcmark.h"
 #include "jsobj.h"
 #include "jswrapper.h"
+#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "vm/Stack-inl.h"
 
@@ -681,7 +682,7 @@ Class DebugFrame_class = {
     EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
 };
 
-JSObject *
+static JSObject *
 CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
 {
     if (!vp[1].isObject()) {
@@ -695,8 +696,8 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
         return NULL;
     }
 
-    // Check for e.g. Debug.prototype, which is of the Debug JSClass but isn't
-    // really a Debug object.
+    // Check for Debug.Frame.prototype, which is of class DebugFrame_class but
+    // isn't really a working Debug.Frame object.
     if (!thisobj->getPrivate()) {
         if (thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).isUndefined()) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
@@ -718,7 +719,7 @@ CheckThisFrame(JSContext *cx, Value *vp, const char *fnname, bool checkLive)
         return false;                                                        \
     StackFrame *fp = (StackFrame *) thisobj->getPrivate()
 
-JSBool
+static JSBool
 DebugFrame_getType(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get type", thisobj, fp);
@@ -733,7 +734,7 @@ DebugFrame_getType(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-JSBool
+static JSBool
 DebugFrame_getGenerator(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get generator", thisobj, fp);
@@ -741,11 +742,24 @@ DebugFrame_getGenerator(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-JSBool
+static JSBool
 DebugFrame_getThis(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get this", thisobj, fp);
-    *vp = fp->thisValue();
+    Value thisv;
+    {
+        AutoCompartment ac(cx, &fp->scopeChain());
+        if (!ac.enter())
+            return false;
+        if (!ComputeThis(cx, fp))
+            return false;
+        thisv = fp->thisValue();
+        ac.leave();
+    }
+    Debug *dbg = Debug::fromJSObject(&thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).toObject());
+    if (!dbg->wrapDebuggeeValue(cx, &thisv))
+        return false;
+    *vp = thisv;
     return true;
 }
 
@@ -758,7 +772,7 @@ DebugFrame_getArguments(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-JSBool
+static JSBool
 DebugFrame_getLive(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *thisobj = CheckThisFrame(cx, vp, "get live", false);
@@ -769,14 +783,14 @@ DebugFrame_getLive(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-JSBool
+static JSBool
 DebugFrame_construct(JSContext *cx, uintN argc, Value *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Frame");
     return false;
 }
 
-JSPropertySpec DebugFrame_properties[] = {
+static JSPropertySpec DebugFrame_properties[] = {
     JS_PSG("type", DebugFrame_getType, 0),
     JS_PSG("generator", DebugFrame_getGenerator, 0),
     JS_PSG("this", DebugFrame_getThis, 0),
@@ -793,12 +807,67 @@ Class DebugObject_class = {
     EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
 };
 
-JSBool
+static JSObject *
+DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
+{
+    if (!vp[1].isObject()) {
+        ReportObjectRequired(cx);
+        return NULL;
+    }
+    JSObject *thisobj = &vp[1].toObject();
+    if (thisobj->getClass() != &DebugObject_class) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debug.Object", fnname, thisobj->getClass()->name);
+        return NULL;
+    }
+
+    // Check for Debug.Object.prototype, which is of class DebugObject_class
+    // but isn't really a working Debug.Object.
+    if (thisobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).isUndefined()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debug.Object", fnname, "prototype object");
+        return NULL;
+    }
+    return thisobj;
+}
+
+#define THIS_DEBUGOBJECT_CCW(cx, vp, fnname, ccwobj)                         \
+    JSObject *ccwobj = DebugObject_checkThis(cx, vp, fnname);                \
+    if (!ccwobj)                                                             \
+        return false;                                                        \
+    ccwobj = &ccwobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).toObject()
+
+#define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, refobj)                    \
+    THIS_DEBUGOBJECT_CCW(cx, vp, fnname, refobj);                            \
+    if (refobj->isWrapper()) /* XXX TODO would love to assert instead */     \
+        refobj = JSWrapper::wrappedObject(refobj);                           \
+    else if (!(cx)->compartment->wrap(cx, &refobj))                          \
+        return false
+
+static JSBool
 DebugObject_construct(JSContext *cx, uintN argc, Value *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Object");
     return false;
 }
+
+static JSBool
+DebugObject_getClass(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, vp, "getClass", refobj);
+    const char *s = refobj->clasp->name;
+    JSAtom *str = js_Atomize(cx, s, strlen(s), 0);
+    if (!str)
+        return false;
+    vp->setString(str);
+    return true;
+}
+
+static JSFunctionSpec DebugObject_methods[] = {
+    JS_FN("getClass", DebugObject_getClass, 0, 0),
+    JS_FS_END
+};
+
 
 // === Glue
 
@@ -823,7 +892,8 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
         return false;
 
     JSObject *objectProto = js_InitClass(cx, debugCtor, objProto, &DebugObject_class,
-                                         DebugObject_construct, 0, NULL, NULL, NULL, NULL);
+                                         DebugObject_construct, 0,
+                                         NULL, DebugObject_methods, NULL, NULL);
     if (!objectProto)
         return false;
 
