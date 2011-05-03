@@ -409,6 +409,9 @@ var Browser = {
                       (prompt.BUTTON_TITLE_CANCEL * prompt.BUTTON_POS_1);
 
         this._waitingToClose = true;
+#ifdef MOZ_PLATFORM_MAEMO
+        window.QueryInterface(Ci.nsIDOMChromeWindow).restore();
+#endif
         let pressed = prompt.confirmEx(window, title, message, buttons, closeText, null, null, checkText, warnOnClose);
         this._waitingToClose = false;
 
