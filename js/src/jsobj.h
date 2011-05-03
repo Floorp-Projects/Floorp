@@ -262,6 +262,7 @@ namespace js {
 struct NativeIterator;
 class RegExp;
 class GlobalObject;
+class StringObject;
 
 }
 
@@ -329,6 +330,9 @@ struct JSObject : js::gc::Cell {
   private:
     inline void setLastProperty(const js::Shape *shape);
     inline void removeLastProperty();
+
+    /* For setLastProperty() only. */
+    friend class js::StringObject;
 
 #ifdef DEBUG
     void checkShapeConsistency();
@@ -477,7 +481,7 @@ struct JSObject : js::gc::Cell {
 
     /* Functions for setting up scope chain object maps and shapes. */
     void initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent);
-    void initClonedBlock(JSContext *cx, JSObject *proto, JSStackFrame *priv);
+    void initClonedBlock(JSContext *cx, JSObject *proto, js::StackFrame *priv);
     void setBlockOwnShape(JSContext *cx);
 
     void deletingShapeChange(JSContext *cx, const js::Shape &shape);
@@ -755,23 +759,8 @@ struct JSObject : js::gc::Cell {
     inline const js::Value &getPrimitiveThis() const;
     inline void setPrimitiveThis(const js::Value &pthis);
 
-  private:
-    /* 0 is JSSLOT_PRIMITIVE_THIS */
-    static const uint32 JSSLOT_STRING_LENGTH = 1;
-
-    /*
-     * Compute the initial shape to associate with fresh String objects,
-     * encoding the initial length property. Return the shape after changing
-     * this String object's last property to it.
-     */
-    const js::Shape *assignInitialStringShape(JSContext *cx);
-
   public:
-    static const uint32 STRING_RESERVED_SLOTS = 2;
-
-    inline size_t getStringLength() const;
-
-    inline bool initString(JSContext *cx, JSString *str);
+    inline js::StringObject *asString();
 
     /*
      * Array-specific getters and setters (for both dense and slow arrays).
@@ -916,7 +905,7 @@ struct JSObject : js::gc::Cell {
     inline bool callIsForEval() const;
 
     /* The stack frame for this Call object, if the frame is still active. */
-    inline JSStackFrame *maybeCallObjStackFrame() const;
+    inline js::StackFrame *maybeCallObjStackFrame() const;
 
     /*
      * The callee function if this Call object was created for a function
@@ -1416,7 +1405,7 @@ inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
 /*
  * Block scope object macros.  The slots reserved by js_BlockClass are:
  *
- *   private              JSStackFrame *    active frame pointer or null
+ *   private              StackFrame *      active frame pointer or null
  *   JSSLOT_BLOCK_DEPTH   int               depth of block slots in frame
  *
  * After JSSLOT_BLOCK_DEPTH come one or more slots for the block locals.
@@ -1424,7 +1413,7 @@ inline bool JSObject::isBlock() const  { return getClass() == &js_BlockClass; }
  * A With object is like a Block object, in that both have one reserved slot
  * telling the stack depth of the relevant slots (the slot whose value is the
  * object named in the with statement, the slots containing the block's local
- * variables); and both have a private slot referring to the JSStackFrame in
+ * variables); and both have a private slot referring to the StackFrame in
  * whose activation they were created (or null if the with or block object
  * outlives the frame).
  */
@@ -1480,7 +1469,7 @@ extern JSObject *
 js_NewBlockObject(JSContext *cx);
 
 extern JSObject *
-js_CloneBlockObject(JSContext *cx, JSObject *proto, JSStackFrame *fp);
+js_CloneBlockObject(JSContext *cx, JSObject *proto, js::StackFrame *fp);
 
 extern JS_REQUIRES_STACK JSBool
 js_PutBlockObject(JSContext *cx, JSBool normalUnwind);
@@ -1548,6 +1537,13 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
                               Native constructor, uintN nargs,
                               JSPropertySpec *ps, JSFunctionSpec *fs,
                               JSPropertySpec *static_ps, JSFunctionSpec *static_fs);
+
+bool
+IsStandardClassResolved(JSObject *obj, js::Class *clasp);
+
+void
+MarkStandardClassInitializedNoProto(JSObject *obj, js::Class *clasp);
+
 }
 
 extern JSObject *
@@ -1912,7 +1908,7 @@ JS_FRIEND_API(void) js_DumpAtom(JSAtom *atom);
 JS_FRIEND_API(void) js_DumpObject(JSObject *obj);
 JS_FRIEND_API(void) js_DumpValue(const js::Value &val);
 JS_FRIEND_API(void) js_DumpId(jsid id);
-JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, JSStackFrame *start = NULL);
+JS_FRIEND_API(void) js_DumpStackFrame(JSContext *cx, js::StackFrame *start = NULL);
 #endif
 
 extern uintN
@@ -1921,7 +1917,6 @@ js_InferFlags(JSContext *cx, uintN defaultFlags);
 /* Object constructor native. Exposed only so the JIT can know its address. */
 JSBool
 js_Object(JSContext *cx, uintN argc, js::Value *vp);
-
 
 namespace js {
 

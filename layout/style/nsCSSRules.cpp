@@ -544,6 +544,7 @@ GroupRule::GroupRule(const GroupRule& aCopy)
 
 GroupRule::~GroupRule()
 {
+  NS_ABORT_IF_FALSE(!mSheet, "SetStyleSheet should have been called");
   mRules.EnumerateForwards(SetParentRuleReference, nsnull);
   if (mRuleCollection) {
     mRuleCollection->DropReference();
@@ -1908,7 +1909,9 @@ nsCSSKeyframeRule::SetKeyText(const nsAString& aKeyText)
     // for now, we don't do anything if the parse fails
   }
 
-  mSheet->SetModifiedByChildRule();
+  if (mSheet) {
+    mSheet->SetModifiedByChildRule();
+  }
 
   return NS_OK;
 }
@@ -1928,7 +1931,9 @@ nsCSSKeyframeRule::ChangeDeclaration(mozilla::css::Declaration* aDeclaration)
 {
   mDeclaration = aDeclaration;
 
-  mSheet->SetModifiedByChildRule();
+  if (mSheet) {
+    mSheet->SetModifiedByChildRule();
+  }
 }
 
 // -------------------------------------------
@@ -2043,7 +2048,9 @@ nsCSSKeyframesRule::SetName(const nsAString& aName)
 {
   mName = aName;
 
-  mSheet->SetModifiedByChildRule();
+  if (mSheet) {
+    mSheet->SetModifiedByChildRule();
+  }
 
   return NS_OK;
 }
@@ -2068,7 +2075,9 @@ nsCSSKeyframesRule::InsertRule(const nsAString& aRule)
     parser.ParseKeyframeRule(aRule, nsnull, 0);
   if (rule) {
     mRules.AppendObject(rule);
-    mSheet->SetModifiedByChildRule();
+    if (mSheet) {
+      mSheet->SetModifiedByChildRule();
+    }
   }
 
   return NS_OK;
@@ -2105,7 +2114,9 @@ nsCSSKeyframesRule::DeleteRule(const nsAString& aKey)
   PRUint32 index = FindRuleIndexForKey(aKey);
   if (index != RULE_NOT_FOUND) {
     mRules.RemoveObjectAt(index);
-    mSheet->SetModifiedByChildRule();
+    if (mSheet) {
+      mSheet->SetModifiedByChildRule();
+    }
   }
   return NS_OK;
 }

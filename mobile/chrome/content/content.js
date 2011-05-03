@@ -1224,30 +1224,33 @@ var TouchEventHandler = {
       return;
     }
 
-    let cancelled = false;
-
+    let type;
     switch (aMessage.name) {
       case "Browser:MouseDown":
         this.isCancellable = true;
         this.element = elementFromPoint(json.x, json.y);
-        cancelled = !this.sendEvent("touchstart", json, this.element);
+        type = "touchstart";
         break;
 
       case "Browser:MouseUp":
         this.isCancellable = false;
-        if (this.element)
-          this.sendEvent("touchend", json, this.element);
-        this.element = null;
+        type = "touchend";
         break;
 
       case "Browser:MouseMove":
-        if (this.element)
-          cancelled = !this.sendEvent("touchmove", json, this.element);
+        type = "touchmove";
         break;
     }
 
+    if (!this.element)
+      return;
+    let cancelled = !this.sendEvent(type, json, this.element);
+    if (type == "touchend")
+      this.element = null;
+
     if (this.isCancellable) {
       sendAsyncMessage("Browser:CaptureEvents", { messageId: json.messageId,
+                                                  type: type,
                                                   contentMightCaptureMouse: true,
                                                   click: cancelled && aMessage.name == "Browser:MouseDown",
                                                   panning: cancelled });
