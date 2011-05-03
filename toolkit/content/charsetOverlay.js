@@ -1,55 +1,76 @@
-function MultiplexHandler(event)
+function MultiplexHandler(aEvent)
 {
-    var node = event.target;
-    var name = node.getAttribute('name');
-
-    if (name == 'detectorGroup') {
-        SetForcedDetector(true);
-        SelectDetector(event, false);
-    } else if (name == 'charsetGroup') {
-        var charset = node.getAttribute('id');
-        charset = charset.substring('charset.'.length, charset.length)
-        SetForcedCharset(charset);
-    } else if (name == 'charsetCustomize') {
-        //do nothing - please remove this else statement, once the charset prefs moves to the pref window
-    } else {
-        SetForcedCharset(node.getAttribute('id'));
-    }
+    MultiplexHandlerEx(
+        aEvent,
+        function Browser_SelectDetector(event) {
+            BrowserSetForcedDetector(true/*Reload from history*/);
+            /* window.content.location.reload() will re-download everything */
+            SelectDetector(event, null);
+        },
+        function Browser_SetForcedCharset(charset, isPredefined) {
+            BrowserSetForcedCharacterSet(charset);
+        }
+    );
 }
 
-function MailMultiplexHandler(event)
+function MailMultiplexHandler(aEvent)
 {
-    var node = event.target;
-    var name = node.getAttribute('name');
-
-    if (name == 'detectorGroup') {
-        SelectDetector(event, true);
-    } else if (name == 'charsetGroup') {
-        var charset = node.getAttribute('id');
-        charset = charset.substring('charset.'.length, charset.length)
-        MessengerSetForcedCharacterSet(charset);
-    } else if (name == 'charsetCustomize') {
-        //do nothing - please remove this else statement, once the charset prefs moves to the pref window
-    } else {
-        MessengerSetForcedCharacterSet(node.getAttribute('id'));
-    }
+    MultiplexHandlerEx(
+        aEvent,
+        function Mail_SelectDetector(event) {
+            SelectDetector(
+                event,
+                function Mail_Reload() {
+                    messenger.setDocumentCharset(msgWindow.mailCharacterSet);
+                }
+            );
+        },
+        function Mail_SetForcedCharset(charset, isPredefined) {
+            MessengerSetForcedCharacterSet(charset);
+        }
+    );
 }
 
-function ComposerMultiplexHandler(event)
+function ComposerMultiplexHandler(aEvent)
 {
-    var node = event.target;
-    var name = node.getAttribute('name');
+    MultiplexHandlerEx(
+        aEvent,
+        function Composer_SelectDetector(event) {
+            SelectDetector(
+                event,
+                function Composer_Reload() {
+                    EditorLoadUrl(GetDocumentUrl());
+                }
+            );
+        },
+        function Composer_SetForcedCharset(charset, isPredefined) {
+            if ((!isPredefined) && charset.length > 0) {
+                gCharsetMenu.SetCurrentComposerCharset(charset);
+            }
+            EditorSetDocumentCharacterSet(charset);
+        }
+    );
+}
 
-    if (name == 'detectorGroup') {
-        ComposerSelectDetector(event, true);
-    } else if (name == 'charsetGroup') {
-        var charset = node.getAttribute('id');
-        charset = charset.substring('charset.'.length, charset.length)
-        EditorSetDocumentCharacterSet(charset);
-    } else if (name == 'charsetCustomize') {
-        //do nothing - please remove this else statement, once the charset prefs moves to the pref window
-    } else {
-        SetForcedEditorCharset(node.getAttribute('id'));
+function MultiplexHandlerEx(aEvent, aSelectDetector, aSetForcedCharset)
+{
+    try {
+        var node = aEvent.target;
+        var name = node.getAttribute('name');
+
+        if (name == 'detectorGroup') {
+            aSelectDetector(aEvent);
+        } else if (name == 'charsetGroup') {
+            var charset = node.getAttribute('id');
+            charset = charset.substring('charset.'.length, charset.length)
+            aSetForcedCharset(charset, true);
+        } else if (name == 'charsetCustomize') {
+            //do nothing - please remove this else statement, once the charset prefs moves to the pref window
+        } else {
+            aSetForcedCharset(node.getAttribute('id'), false);
+        }
+    } catch(ex) {
+        alert(ex);
     }
 }
 
@@ -72,47 +93,11 @@ function SelectDetector(event, doReload)
         str.data = prefvalue;
         pref.setComplexValue("intl.charset.detector",
                              Components.interfaces.nsISupportsString, str);
-        if (doReload) window.content.location.reload();
+        if (typeof doReload == "function") doReload();
     }
     catch (ex) {
         dump("Failed to set the intl.charset.detector preference.\n");
     }
-}
-
-function ComposerSelectDetector(event)
-{
-    //dump("Charset Detector menu item pressed: " + event.target.getAttribute('id') + "\n");
-
-    var uri =  event.target.getAttribute("id");
-    var prefvalue = uri.substring('chardet.'.length, uri.length);
-    if ("off" == prefvalue) { // "off" is special value to turn off the detectors
-        prefvalue = "";
-    }
-
-    try {
-        var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                             .getService(Components.interfaces.nsIPrefBranch);
-        var str =  Components.classes["@mozilla.org/supports-string;1"]
-                             .createInstance(Components.interfaces.nsISupportsString);
-
-        str.data = prefvalue;
-        pref.setComplexValue("intl.charset.detector",
-                             Components.interfaces.nsISupportsString, str);
-        EditorLoadUrl(GetDocumentUrl());    
-    }
-    catch (ex) {
-        dump("Failed to set the intl.charset.detector preference.\n");
-    }
-}
-
-function SetForcedDetector(doReload)
-{
-    BrowserSetForcedDetector(doReload);
-}
-
-function SetForcedCharset(charset)
-{
-    BrowserSetForcedCharacterSet(charset);
 }
 
 var gPrevCharset = null;
