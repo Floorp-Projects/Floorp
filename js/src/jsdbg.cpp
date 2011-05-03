@@ -72,13 +72,6 @@ enum {
 
 // === Utils
 
-static bool
-NotImplemented(JSContext *cx)
-{
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NEED_DIET, "API");
-    return false;
-}
-
 bool
 ReportMoreArgsNeeded(JSContext *cx, const char *name, uintN required)
 {
@@ -228,6 +221,7 @@ Debug::wrapDebuggeeValue(JSContext *cx, Value *vp)
 
     if (vp->isObject()) {
         JSObject *ccwobj = &vp->toObject();
+        vp->setUndefined();
 
         JSObject *refobj = ccwobj;
         if (refobj->isWrapper())  // XXX TODO assert instead
@@ -336,19 +330,10 @@ Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value
     if (!js_NativeGet(cx, obj, obj, shape, 0, vp))
         return handleUncaughtException(ac, vp, callHook);
 
-    // Throwing or returning objects is not yet supported. It requires
-    // unwrapping.
-    if (vp->isObject()) {
-        vp->setUndefined();
-        NotImplemented(cx);
-        return handleUncaughtException(ac, vp, callHook);
-    }
-
     ac.leave();
-    if (!ac.origin->wrap(cx, vp)) {
+    if (!unwrapDebuggeeValue(cx, vp)) {
         // Swallow this exception rather than report it in the debuggee's
         // compartment.  But return JSTRAP_ERROR to terminate the debuggee.
-        vp->setUndefined();
         cx->clearPendingException();
         return JSTRAP_ERROR;
     }
