@@ -281,6 +281,8 @@
             val = this.onBeforeValueSet(val);
 
           this.inputField.value = val;
+          if (typeof this.formatValue == "function")
+            this.formatValue();
           this.mIgnoreInput = false;
           var event = document.createEvent('Events');
           event.initEvent('ValueChange', true, true);

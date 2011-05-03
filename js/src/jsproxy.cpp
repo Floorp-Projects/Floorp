@@ -1406,7 +1406,7 @@ FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
      * Make a blank object from the recipe fix provided to us.  This must have
      * number of fixed slots as the proxy so that we can swap their contents.
      */
-    gc::FinalizeKind kind = gc::FinalizeKind(proxy->arena()->header()->thingKind);
+    gc::FinalizeKind kind = gc::FinalizeKind(proxy->arenaHeader()->getThingKind());
     JSObject *newborn = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent, kind);
     if (!newborn)
         return false;
@@ -1459,5 +1459,8 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
     }
     if (!JS_DefineFunctions(cx, module, static_methods))
         return NULL;
+
+    MarkStandardClassInitializedNoProto(obj, &js_ProxyClass);
+
     return module;
 }

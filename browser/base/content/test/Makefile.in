@@ -222,6 +222,7 @@ _BROWSER_FILES = \
                  browser_tabfocus.js \
                  browser_tabs_isActive.js \
                  browser_tabs_owner.js \
+                 browser_urlHighlight.js \
                  browser_visibleFindSelection.js \
                  browser_visibleTabs.js \
                  browser_visibleTabs_contextMenu.js \
