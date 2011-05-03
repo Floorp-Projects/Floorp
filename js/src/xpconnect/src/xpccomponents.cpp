@@ -3831,6 +3831,106 @@ nsXPCComponents_Utils::GetGlobalForObject()
   return NS_OK;
 }
 
+/* jsval createObjectIn(in jsval vobj); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::CreateObjectIn(const jsval &vobj, JSContext *cx, jsval *rval)
+{
+    if (!cx)
+        return NS_ERROR_FAILURE;
+
+    // first argument must be an object
+    if(JSVAL_IS_PRIMITIVE(vobj))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    JSObject *scope = JSVAL_TO_OBJECT(vobj)->unwrap();
+    JSObject *obj;
+    {
+        JSAutoEnterCompartment ac;
+        if(!ac.enter(cx, scope))
+            return NS_ERROR_FAILURE;
+
+        obj = JS_NewObject(cx, nsnull, nsnull, scope);
+        if (!obj)
+            return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_WrapObject(cx, &obj))
+        return NS_ERROR_FAILURE;
+    *rval = OBJECT_TO_JSVAL(obj);
+    return NS_OK;
+}
+
+JSBool
+FunctionWrapper(JSContext *cx, uintN argc, jsval *vp)
+{
+    jsval v;
+    if (!JS_GetReservedSlot(cx, JSVAL_TO_OBJECT(JS_CALLEE(cx, vp)), 0, &v))
+        return JS_FALSE;
+    NS_ASSERTION(JSVAL_IS_OBJECT(v), "weird function");
+
+    return JS_CallFunctionValue(cx, JS_THIS_OBJECT(cx, vp), v,
+                                argc, JS_ARGV(cx, vp), vp);
+}
+
+JSBool
+WrapCallable(JSContext *cx, JSObject *obj, jsid id, JSObject *propobj, jsval *vp)
+{
+    JSFunction *fun = JS_NewFunctionById(cx, FunctionWrapper, 0, 0,
+                                         JS_GetGlobalForObject(cx, obj), id);
+    if (!fun)
+        return JS_FALSE;
+
+    JSObject *funobj = JS_GetFunctionObject(fun);
+    if (!JS_SetReservedSlot(cx, funobj, 0, OBJECT_TO_JSVAL(propobj)))
+        return JS_FALSE;
+    *vp = OBJECT_TO_JSVAL(funobj);
+    return JS_TRUE;
+}
+
+/* void makeObjectPropsNormal(jsval vobj); */
+NS_IMETHODIMP
+nsXPCComponents_Utils::MakeObjectPropsNormal(const jsval &vobj, JSContext *cx)
+{
+    if (!cx)
+        return NS_ERROR_FAILURE;
+
+    // first argument must be an object
+    if(JSVAL_IS_PRIMITIVE(vobj))
+        return NS_ERROR_XPC_BAD_CONVERT_JS;
+
+    JSObject *obj = JSVAL_TO_OBJECT(vobj)->unwrap();
+
+    JSAutoEnterCompartment ac;
+    if (!ac.enter(cx, obj))
+        return NS_ERROR_FAILURE;
+
+    js::AutoIdArray ida(cx, JS_Enumerate(cx, obj));
+    if (!ida)
+        return NS_ERROR_FAILURE;
+
+    for (size_t i = 0; i < ida.length(); ++i) {
+        jsid id = ida[i];
+        jsval v;
+
+        if (!JS_GetPropertyById(cx, obj, id, &v))
+            return NS_ERROR_FAILURE;
+
+        if (JSVAL_IS_PRIMITIVE(v))
+            continue;
+
+        JSObject *propobj = JSVAL_TO_OBJECT(v);
+        // TODO Deal with non-functions.
+        if (!propobj->isWrapper() || !propobj->isCallable())
+            continue;
+
+        if (!WrapCallable(cx, obj, id, propobj, &v) ||
+            !JS_SetPropertyById(cx, obj, id, &v))
+            return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
 /* string canCreateWrapper (in nsIIDPtr iid); */
 NS_IMETHODIMP
 nsXPCComponents_Utils::CanCreateWrapper(const nsIID * iid, char **_retval)
