@@ -3560,21 +3560,24 @@ PlacesSQLQueryBuilder::Where()
   nsCAutoString additionalPlacesConditions;
 
   if (mRedirectsMode == nsINavHistoryQueryOptions::REDIRECTS_MODE_SOURCE) {
+    // At least one visit that is not a redirect target should exist.
     additionalVisitsConditions += NS_LITERAL_CSTRING(
       "AND visit_type NOT IN ") +
       nsPrintfCString("(%d,%d) ", nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
                                   nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY);
   }
   else if (mRedirectsMode == nsINavHistoryQueryOptions::REDIRECTS_MODE_TARGET) {
-    additionalPlacesConditions += NS_LITERAL_CSTRING(
-      "AND NOT EXISTS ( "
-        "SELECT 1 FROM moz_historyvisits v1 "
-        "JOIN moz_historyvisits v2 ON v2.from_visit = v1.id "
-        "WHERE v1.place_id = h.id "
-        "AND v2.visit_type IN ") +
-        nsPrintfCString("(%d,%d) ", nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
-                                    nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY) +
-      NS_LITERAL_CSTRING(") ");
+    // At least one visit that is not a redirect source should exist.
+    additionalPlacesConditions += nsPrintfCString(1024,
+      "AND EXISTS ( "
+        "SELECT id "
+        "FROM moz_historyvisits v "
+        "WHERE place_id = h.id "
+          "AND NOT EXISTS(SELECT id FROM moz_historyvisits "
+                         "WHERE from_visit = v.id AND visit_type IN (%d,%d)) "
+      ") ",
+      nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
+      nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY);
   }
 
   if (!mIncludeHidden) {
@@ -3817,22 +3820,26 @@ nsNavHistory::ConstructQueryString(
     nsCAutoString additionalQueryOptions;
     if (aOptions->RedirectsMode() ==
           nsINavHistoryQueryOptions::REDIRECTS_MODE_SOURCE) {
+      // At least one visit that is not a redirect target should exist.
       additionalQueryOptions +=  nsPrintfCString(256,
-        "AND NOT EXISTS ( "
-          "SELECT id FROM moz_historyvisits WHERE place_id = h.id "
-                                             "AND visit_type IN (%d,%d)"
+        "AND EXISTS ( "
+          "SELECT id "
+          "FROM moz_historyvisits "
+          "WHERE place_id = h.id "
+            "AND visit_type NOT IN (%d,%d)"
         ") ",
         TRANSITION_REDIRECT_PERMANENT,
         TRANSITION_REDIRECT_TEMPORARY);
     }
     else if (aOptions->RedirectsMode() ==
               nsINavHistoryQueryOptions::REDIRECTS_MODE_TARGET) {
+      // At least one visit that is not a redirect source should exist.
       additionalQueryOptions += nsPrintfCString(1024,
-        "AND NOT EXISTS ( "
+        "AND EXISTS ( "
           "SELECT id "
           "FROM moz_historyvisits v "
           "WHERE place_id = h.id "
-            "AND EXISTS(SELECT id FROM moz_historyvisits "
+            "AND NOT EXISTS(SELECT id FROM moz_historyvisits "
                            "WHERE from_visit = v.id AND visit_type IN (%d,%d)) "
         ") ",
         TRANSITION_REDIRECT_PERMANENT,
