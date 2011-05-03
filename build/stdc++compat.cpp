@@ -54,10 +54,19 @@ namespace std {
 #if (__GNUC__ == 4) && (__GNUC_MINOR__ >= 5)
     /* Instantiate these templates to avoid GLIBCXX_3.4.14 symbol versions
      * in debug builds */
-    template char *basic_string<char, char_traits<char>, allocator<char> >::_S_construct_aux_2(size_type, char, allocator<char> const&);
-    template wchar_t *basic_string<wchar_t, char_traits<wchar_t>, allocator<wchar_t> >::_S_construct_aux_2(size_type, wchar_t, allocator<wchar_t> const&);
-#endif
-#endif
+    template char *string::_S_construct_aux_2(size_type, char, allocator<char> const&);
+#ifdef _GLIBCXX_USE_WCHAR_T
+    template wchar_t *wstring::_S_construct_aux_2(size_type, wchar_t, allocator<wchar_t> const&);
+#endif /* _GLIBCXX_USE_WCHAR_T */
+#ifdef __GXX_EXPERIMENTAL_CXX0X__
+    template string::basic_string(string&&);
+    template string& string::operator=(string&&);
+    template wstring::basic_string(wstring&&);
+    template wstring& wstring::operator=(wstring&&);
+    template wstring& wstring::assign(wstring&&);
+#endif /* __GXX_EXPERIMENTAL_CXX0X__ */
+#endif /* (__GNUC__ == 4) && (__GNUC_MINOR__ >= 5) */
+#endif /* DEBUG */
 }
 
 namespace std __attribute__((visibility("default"))) {
