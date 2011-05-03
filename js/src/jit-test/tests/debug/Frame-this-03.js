@@ -1,5 +1,9 @@
 // |jit-test| debug
-// Frame.prototype.this in strict-mode functions, with primitive values
+// Frame.prototype.this in non-strict-mode functions, with primitive values
+
+function classOf(obj) {
+    return Object.prototype.toString.call(obj).match(/^\[object (.*)\]$/)[1];
+}
 
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
@@ -7,11 +11,12 @@ var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
         hits++;
-        assertEq(frame.this, g.v);
+        assertEq(typeof frame.this, 'object');
+        assertEq(frame.this.getClass(), g.v == null ? classOf(g) : classOf(Object(g.v)));
     }
 };
 
-g.eval("function f() { 'use strict'; debugger; }");
+g.eval("function f() { debugger; }");
 
 g.eval("Boolean.prototype.f = f; v = true; v.f();");
 g.eval("f.call(v);");

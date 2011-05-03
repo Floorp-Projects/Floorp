@@ -4,7 +4,6 @@
 var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 var hits = 0;
-var v;
 dbg.hooks = {
     debuggerHandler: function (frame) {
         hits++;
