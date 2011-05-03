@@ -1174,12 +1174,10 @@ var Browser = {
 
       case "scroll":
         if (browser == this.selectedBrowser) {
-          let view = browser.getRootView();
-          let position = view.getPosition();
-          if (position.x != 0)
+          if (json.x != 0)
             this.hideSidebars();
 
-          if (position.y != 0)
+          if (json.y != 0)
             this.hideTitlebar();
         }
         break;
@@ -1532,7 +1530,8 @@ Browser.WebProgress.prototype = {
         let json = aMessage.json;
         browser.getRootView().scrollTo(Math.floor(json.x * browser.scale),
                                        Math.floor(json.y * browser.scale));
-        Browser.pageScrollboxScroller.scrollTo(0, 0);
+        if (json.x == 0 && json.y == 0)
+          Browser.pageScrollboxScroller.scrollTo(0, 0);
       }
 
       aTab.scrolledAreaChanged();
