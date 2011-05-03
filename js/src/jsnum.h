@@ -696,6 +696,26 @@ StringToNumberType(JSContext *cx, JSString *str, T *result)
     *result = NumberTraits<T>::toSelfType(d);
     return true;
 }
+
+/* ES5 9.4 ToInteger. */
+static inline bool
+ToInteger(JSContext *cx, const js::Value &v, jsdouble *dp)
+{
+    if (v.isInt32()) {
+        *dp = v.toInt32();
+        return true;
+    }
+    if (v.isDouble()) {
+        *dp = v.toDouble();
+    } else {
+        extern bool ValueToNumberSlow(JSContext *cx, js::Value v, double *dp);
+        if (!ValueToNumberSlow(cx, v, dp))
+            return false;
+    }
+    *dp = js_DoubleToInteger(*dp);
+    return true;
 }
+
+} /* namespace js */
 
 #endif /* jsnum_h___ */

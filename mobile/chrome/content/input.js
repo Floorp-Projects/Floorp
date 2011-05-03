@@ -64,7 +64,8 @@ const kStateActive = 0x00000001;
 // a pan in 300 milliseconds.
 const kStopKineticPanOnDragTimeout = 300;
 
-// Max velocity of a pan. This is in pixels/millisecond.
+// Min/max velocity of kinetic panning. This is in pixels/millisecond.
+const kMinVelocity = 0.4;
 const kMaxVelocity = 6;
 
 /**
@@ -994,8 +995,13 @@ KineticController.prototype = {
       currentVelocityY = 0;
 
     let swipeTime = Math.min(swipeLength, lastTime - mb[0].t);
-    this._velocity.x = clampFromZero((distanceX / swipeTime) + currentVelocityX, Math.abs(currentVelocityX), 6);
-    this._velocity.y = clampFromZero((distanceY / swipeTime) + currentVelocityY, Math.abs(currentVelocityY), 6);
+    this._velocity.x = clampFromZero((distanceX / swipeTime) + currentVelocityX, Math.abs(currentVelocityX), kMaxVelocity);
+    this._velocity.y = clampFromZero((distanceY / swipeTime) + currentVelocityY, Math.abs(currentVelocityY), kMaxVelocity);
+
+    if (Math.abs(this._velocity.x) < kMinVelocity)
+      this._velocity.x = 0;
+    if (Math.abs(this._velocity.y) < kMinVelocity)
+      this._velocity.y = 0;
 
     // Set acceleration vector to opposite signs of velocity
     this._acceleration.set(this._velocity.clone().map(sign).scale(-this._polynomialC));

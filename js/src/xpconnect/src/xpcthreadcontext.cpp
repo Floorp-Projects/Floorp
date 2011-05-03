@@ -498,7 +498,7 @@ XPCPerThreadData::GetDataImpl(JSContext *cx)
 
     if(cx && !sMainJSThread && NS_IsMainThread())
     {
-        sMainJSThread = cx->thread;
+        sMainJSThread = cx->thread();
 
         sMainThreadData = data;
 

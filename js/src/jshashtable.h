@@ -796,6 +796,8 @@ struct PointerHasher
 template <class T>
 struct DefaultHasher<T *>: PointerHasher<T *, tl::FloorLog2<sizeof(void *)>::result> { };
 
+/* Looking for a hasher for jsid?  Try the DefaultHasher<jsid> in jsatom.h. */
+
 /*
  * JS-friendly, STL-like container providing a hash-based map from keys to
  * values. In particular, HashMap calls constructors and destructors of all
