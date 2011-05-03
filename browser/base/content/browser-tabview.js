@@ -44,7 +44,9 @@ let TabView = {
   _browserKeyHandlerInitialized: false,
   _isFrameLoading: false,
   _initFrameCallbacks: [],
+  _lastSessionGroupName: null,
   VISIBILITY_IDENTIFIER: "tabview-visibility",
+  LAST_SESSION_GROUP_NAME_IDENTIFIER: "tabview-last-session-group-name",
 
   // ----------
   get windowTitle() {
@@ -98,6 +100,10 @@ let TabView = {
         };
         gBrowser.tabContainer.addEventListener(
           "TabShow", this._tabShowEventListener, true);
+
+       // grab the last used group title
+       this._lastSessionGroupName = sessionstore.getWindowValue(window,
+         this.LAST_SESSION_GROUP_NAME_IDENTIFIER);
       }
     }
   },
@@ -216,18 +222,28 @@ let TabView = {
   },
   
   getActiveGroupName: function TabView_getActiveGroupName() {
+    if (!this._window)
+      return this._lastSessionGroupName;
+
     // We get the active group this way, instead of querying
     // GroupItems.getActiveGroupItem() because the tabSelect event
     // will not have happened by the time the browser tries to
     // update the title.
+    let groupItem = null;
     let activeTab = window.gBrowser.selectedTab;
-    if (activeTab._tabViewTabItem && activeTab._tabViewTabItem.parent){
-      let groupName = activeTab._tabViewTabItem.parent.getTitle();
-      if (groupName)
-        return groupName;
+    let activeTabItem = activeTab._tabViewTabItem;
+
+    if (activeTab.pinned) {
+      // It's an app tab, so it won't have a .tabItem. However, its .parent
+      // will already be set as the active group. 
+      groupItem = this._window.GroupItems.getActiveGroupItem();
+    } else if (activeTabItem) {
+      groupItem = activeTabItem.parent;
     }
-    return null;
-  },  
+
+    // groupItem may still be null, if the active tab is an orphan.
+    return groupItem ? groupItem.getTitle() : "";
+  },
 
   // ----------
   updateContextMenu: function(tab, popup) {
