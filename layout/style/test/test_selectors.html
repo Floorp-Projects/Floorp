@@ -915,6 +915,9 @@ function run() {
     test_balanced_unparseable("p #, p");
     test_balanced_unparseable("p # , p");
 
+    // Test that a backslash alone is not treated as an escape.
+    test_unparseable_via_api("#\\");
+
     run_deferred_tests();
 }
 
