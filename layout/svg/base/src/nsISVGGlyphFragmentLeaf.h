@@ -87,6 +87,10 @@ public:
                                        nsTArray<float> &aRotate)=0;
   NS_IMETHOD_(PRUint16) GetTextAnchor()=0;
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned()=0;
+  NS_IMETHOD_(void) SetTrimLeadingWhitespace(PRBool aTrimLeadingWhitespace)=0;
+  NS_IMETHOD_(void) SetTrimTrailingWhitespace(PRBool aTrimTrailingWhitespace)=0;
+  NS_IMETHOD_(PRBool) EndsWithWhitespace() const=0;
+  NS_IMETHOD_(PRBool) IsAllWhitespace() const=0;
 };
 
 #endif // __NS_ISVGGLYPHFRAGMENTLEAF_H__

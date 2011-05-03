@@ -66,7 +66,9 @@ protected:
     : nsSVGGlyphFrameBase(aContext),
       mTextRun(nsnull),
       mStartIndex(0),
-      mWhitespaceHandling(COMPRESS_WHITESPACE),
+      mCompressWhitespace(PR_TRUE),
+      mTrimLeadingWhitespace(PR_FALSE),
+      mTrimTrailingWhitespace(PR_FALSE),
       mPropagateTransform(PR_TRUE)
       {}
   ~nsSVGGlyphFrame()
@@ -160,6 +162,14 @@ public:
                                        nsTArray<float> &aRotate);
   NS_IMETHOD_(PRUint16) GetTextAnchor();
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned();
+  NS_IMETHOD_(void) SetTrimLeadingWhitespace(PRBool aTrimLeadingWhitespace) {
+    mTrimLeadingWhitespace = aTrimLeadingWhitespace;
+  }
+  NS_IMETHOD_(void) SetTrimTrailingWhitespace(PRBool aTrimTrailingWhitespace) {
+    mTrimTrailingWhitespace = aTrimTrailingWhitespace;
+  }
+  NS_IMETHOD_(PRBool) EndsWithWhitespace() const;
+  NS_IMETHOD_(PRBool) IsAllWhitespace() const;
 
   // nsISVGGlyphFragmentNode interface:
   // These do not use the global transform if NS_STATE_NONDISPLAY_CHILD
@@ -169,8 +179,9 @@ public:
   virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point);
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
-  NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling);
-  NS_IMETHOD_(PRBool) IsAllWhitespace();
+  NS_IMETHOD_(void) SetWhitespaceCompression(PRBool aCompressWhitespace) {
+    mCompressWhitespace = aCompressWhitespace;
+  }
 
 protected:
   friend class CharacterIterator;
@@ -227,7 +238,9 @@ protected:
   gfxPoint mPosition;
   // The start index into the position and rotation data
   PRUint32 mStartIndex;
-  PRUint8 mWhitespaceHandling;
+  PRPackedBool mCompressWhitespace;
+  PRPackedBool mTrimLeadingWhitespace;
+  PRPackedBool mTrimTrailingWhitespace;
   PRPackedBool mPropagateTransform;
 };
 
