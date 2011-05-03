@@ -155,9 +155,7 @@ class StartRequestEvent : public ChannelEvent
                     const PRBool& cacheEntryAvailable,
                     const PRUint32& cacheExpirationTime,
                     const nsCString& cachedCharset,
-                    const nsCString& securityInfoSerialization,
-                    const PRNetAddr& selfAddr,
-                    const PRNetAddr& peerAddr)
+                    const nsCString& securityInfoSerialization)
   : mChild(child)
   , mResponseHead(responseHead)
   , mRequestHeaders(requestHeaders)
@@ -167,8 +165,6 @@ class StartRequestEvent : public ChannelEvent
   , mCacheExpirationTime(cacheExpirationTime)
   , mCachedCharset(cachedCharset)
   , mSecurityInfoSerialization(securityInfoSerialization)
-  , mSelfAddr(selfAddr)
-  , mPeerAddr(peerAddr)
   {}
 
   void Run() 
@@ -176,7 +172,7 @@ class StartRequestEvent : public ChannelEvent
     mChild->OnStartRequest(mResponseHead, mUseResponseHead, mRequestHeaders,
                            mIsFromCache, mCacheEntryAvailable,
                            mCacheExpirationTime, mCachedCharset,
-                           mSecurityInfoSerialization, mSelfAddr, mPeerAddr);
+                           mSecurityInfoSerialization);
   }
  private:
   HttpChannelChild* mChild;
@@ -188,8 +184,6 @@ class StartRequestEvent : public ChannelEvent
   PRUint32 mCacheExpirationTime;
   nsCString mCachedCharset;
   nsCString mSecurityInfoSerialization;
-  PRNetAddr mSelfAddr;
-  PRNetAddr mPeerAddr;
 };
 
 bool
@@ -215,21 +209,18 @@ HttpChannelChild::RecvOnStartRequest(const nsHttpResponseHead& responseHead,
                                      const PRBool& cacheEntryAvailable,
                                      const PRUint32& cacheExpirationTime,
                                      const nsCString& cachedCharset,
-                                     const nsCString& securityInfoSerialization,
-                                     const PRNetAddr& selfAddr,
-                                     const PRNetAddr& peerAddr)
+                                     const nsCString& securityInfoSerialization)
 {
   if (ShouldEnqueue()) {
     EnqueueEvent(new StartRequestEvent(this, responseHead, useResponseHead,
                                        requestHeaders,
                                        isFromCache, cacheEntryAvailable,
                                        cacheExpirationTime, cachedCharset,
-                                       securityInfoSerialization, selfAddr,
-                                       peerAddr));
+                                       securityInfoSerialization));
   } else {
     OnStartRequest(responseHead, useResponseHead, requestHeaders, isFromCache,
                    cacheEntryAvailable, cacheExpirationTime, cachedCharset,
-                   securityInfoSerialization, selfAddr, peerAddr);
+                   securityInfoSerialization);
   }
   return true;
 }
@@ -242,9 +233,7 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
                                  const PRBool& cacheEntryAvailable,
                                  const PRUint32& cacheExpirationTime,
                                  const nsCString& cachedCharset,
-                                 const nsCString& securityInfoSerialization,
-                                 const PRNetAddr& selfAddr,
-                                 const PRNetAddr& peerAddr)
+                                 const nsCString& securityInfoSerialization)
 {
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%x]\n", this));
 
@@ -282,9 +271,6 @@ HttpChannelChild::OnStartRequest(const nsHttpResponseHead& responseHead,
   rv = ApplyContentConversions();
   if (NS_FAILED(rv))
     Cancel(rv);
-
-  mSelfAddr = selfAddr;
-  mPeerAddr = peerAddr;
 }
 
 class TransportAndDataEvent : public ChannelEvent

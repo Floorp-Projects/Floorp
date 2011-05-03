@@ -137,6 +137,10 @@ public:
     NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext);
     // nsIHttpChannelInternal
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey);
+    NS_IMETHOD GetLocalAddress(nsACString& addr);
+    NS_IMETHOD GetLocalPort(PRInt32* port);
+    NS_IMETHOD GetRemoteAddress(nsACString& addr);
+    NS_IMETHOD GetRemotePort(PRInt32* port);
     // nsISupportsPriority
     NS_IMETHOD SetPriority(PRInt32 value);
     // nsIResumableChannel
@@ -346,6 +350,9 @@ private:
     // True if mRequestTime has been set. In such a case it is safe to update
     // the cache entry's expiration time. Otherwise, it is not(see bug 567360).
     PRUint32                          mRequestTimeInitialized : 1;
+
+    PRNetAddr                         mSelfAddr;
+    PRNetAddr                         mPeerAddr;
 
     nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
