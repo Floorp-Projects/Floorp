@@ -2963,6 +2963,11 @@ fi
 
 AC_LANG_CPLUSPLUS
 
+if test "$GNU_CXX"; then
+    _SAVE_CXXFLAGS=$CXXFLAGS
+    CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+fi
+
 dnl Check for usable char16_t (2 bytes, unsigned)
 dnl (we might not need the unsignedness check anymore)
 AC_CACHE_CHECK(for usable char16_t (2 bytes, unsigned),
@@ -2978,6 +2983,8 @@ AC_CACHE_CHECK(for usable char16_t (2 bytes, unsigned),
 if test "$ac_cv_have_usable_char16_t" = "yes"; then
     AC_DEFINE(HAVE_CPP_CHAR16_T)
     HAVE_CPP_CHAR16_T=1
+else
+    CXXFLAGS="$_SAVE_CXXFLAGS"
 fi
 
 dnl Check for usable wchar_t (2 bytes, unsigned)
