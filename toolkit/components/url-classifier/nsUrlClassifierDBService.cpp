@@ -54,6 +54,7 @@
 #include "nsIDirectoryService.h"
 #include "nsIKeyModule.h"
 #include "nsIObserverService.h"
+#include "nsIPermissionManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranch2.h"
 #include "nsIPrefService.h"
@@ -4024,6 +4025,17 @@ nsUrlClassifierDBService::LookupURI(nsIURI* uri,
     PRBool clean;
     rv = mWorker->CheckCleanHost(key, &clean);
     NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!clean) {
+      nsCOMPtr<nsIPermissionManager> permissionManager =
+        do_GetService(NS_PERMISSIONMANAGER_CONTRACTID);
+
+      if (permissionManager) {
+        PRUint32 perm;
+        permissionManager->TestPermission(uri, "safe-browsing", &perm);
+        clean |= (perm == nsIPermissionManager::ALLOW_ACTION);
+      }
+    }
 
     *didLookup = !clean;
     if (clean) {
