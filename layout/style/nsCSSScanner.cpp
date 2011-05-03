@@ -971,7 +971,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
     ch = Read();
     if (ch < 0) break;
     if (ch == CSS_ESCAPE) {
-      ParseAndAppendEscape(ident);
+      ParseAndAppendEscape(ident, PR_FALSE);
     } else if (IsWhitespace(ch)) {
       // Whitespace is allowed at the end of the URL
       EatWhiteSpace();
@@ -1003,7 +1003,7 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
 
 
 void
-nsCSSScanner::ParseAndAppendEscape(nsString& aOutput)
+nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, PRBool aInString)
 {
   PRInt32 ch = Peek();
   if (ch < 0) {
@@ -1076,7 +1076,7 @@ PRBool
 nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
 {
   if (aChar == CSS_ESCAPE) {
-    ParseAndAppendEscape(aIdent);
+    ParseAndAppendEscape(aIdent, PR_FALSE);
   }
   else if (0 < aChar) {
     aIdent.Append(aChar);
@@ -1103,7 +1103,7 @@ nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
     aChar = Read();
     if (aChar < 0) break;
     if (aChar == CSS_ESCAPE) {
-      ParseAndAppendEscape(aIdent);
+      ParseAndAppendEscape(aIdent, PR_FALSE);
     } else if (IsIdent(aChar)) {
       aIdent.Append(PRUnichar(aChar));
     } else {
@@ -1367,7 +1367,7 @@ nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)
       break;
     }
     if (ch == CSS_ESCAPE) {
-      ParseAndAppendEscape(aToken.mIdent);
+      ParseAndAppendEscape(aToken.mIdent, PR_TRUE);
     } else {
       aToken.mIdent.Append(ch);
     }
