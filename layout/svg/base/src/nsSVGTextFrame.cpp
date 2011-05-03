@@ -295,17 +295,39 @@ nsSVGTextFrame::NotifyGlyphMetricsChange()
 }
 
 void
+nsSVGTextFrame::SetWhitespaceHandling(
+  nsISVGGlyphFragmentLeaf *fragment)
+{
+  SetWhitespaceCompression();
+
+  PRBool trimLeadingWhitespace = PR_TRUE;
+  nsISVGGlyphFragmentLeaf* lastNonWhitespaceFragment = fragment;
+
+  while (fragment) {
+    if (!fragment->IsAllWhitespace()) {
+      lastNonWhitespaceFragment = fragment;
+    }
+
+    fragment->SetTrimLeadingWhitespace(trimLeadingWhitespace);
+    trimLeadingWhitespace = fragment->EndsWithWhitespace();
+
+    fragment = fragment->GetNextGlyphFragment();
+  }
+
+  lastNonWhitespaceFragment->SetTrimTrailingWhitespace(PR_TRUE);
+}
+
+void
 nsSVGTextFrame::UpdateGlyphPositioning(PRBool aForceGlobalTransform)
 {
   if (mMetricsState == suspended || !mPositioningDirty)
     return;
 
-  SetWhitespaceHandling();
+  mPositioningDirty = PR_FALSE;
 
   nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-  if (!node) return;
-
-  mPositioningDirty = PR_FALSE;
+  if (!node)
+    return;
 
   nsISVGGlyphFragmentLeaf *fragment, *firstFragment;
 
@@ -313,6 +335,8 @@ nsSVGTextFrame::UpdateGlyphPositioning(PRBool aForceGlobalTransform)
   if (!firstFragment) {
     return;
   }
+
+  SetWhitespaceHandling(firstFragment);
 
   BuildPositionList(0, 0);
 
