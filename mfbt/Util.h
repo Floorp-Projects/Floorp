@@ -74,7 +74,7 @@ MOZ_END_EXTERN_C
 
 # define MOZ_ASSERT(expr_) ((void)0)
 
-#endif  // DEBUG
+#endif  /* DEBUG */
 
 #ifdef __cplusplus
 
