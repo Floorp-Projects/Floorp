@@ -71,7 +71,7 @@ function onTabViewWindowLoaded(win) {
     afterAllTabItemsUpdated(function() {
       check(datatext, "datatext", false);
       check(datahtml, "datahtml", false);
-      check(mozilla, "about:mozilla", false);
+      check(mozilla, "about:mozilla", true);
       check(html, "html", true);
       check(png, "png", false);
       check(svg, "svg", true);

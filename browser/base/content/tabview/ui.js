@@ -1562,6 +1562,30 @@ let UI = {
     this._save();
     GroupItems.saveAll();
     TabItems.saveAll();
+  },
+
+  // ----------
+  // Function: shouldLoadFavIcon
+  // Takes a xul:browser and checks whether we should display a favicon for it.
+  shouldLoadFavIcon: function UI_shouldLoadFavIcon(browser) {
+    return !(browser.contentDocument instanceof window.ImageDocument) &&
+            (browser.currentURI.schemeIs("about") ||
+             gBrowser.shouldLoadFavIcon(browser.contentDocument.documentURIObject));
+  },
+
+  // ----------
+  // Function: getFavIconUrlForTab
+  // Gets fav icon url for the given xul:tab.
+  getFavIconUrlForTab: function UI_getFavIconUrlForTab(tab) {
+    let url;
+
+    // use the tab image if it doesn't start with http e.g. data:image/png, chrome://
+    if (tab.image && !(/^https?:/.test(tab.image)))
+      url = tab.image;
+    else
+      url = gFavIconService.getFaviconImageForPage(tab.linkedBrowser.currentURI).spec;
+
+    return url;
   }
 };
 
