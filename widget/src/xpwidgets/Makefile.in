@@ -75,11 +75,6 @@ CPPSRCS		= \
 		nsFilePickerProxy.cpp \
 		$(NULL)
 
-ifdef MOZ_X11
-CPPSRCS		+= \
-		GfxInfoX11.cpp
-endif
-
 ifneq (,$(filter os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseClipboard.cpp
 endif
