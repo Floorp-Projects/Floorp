@@ -62,6 +62,7 @@ enum {
 };
 
 extern Class DebugObject_class;
+extern Class DebugFunction_class;
 
 enum {
     JSSLOT_DEBUGOBJECT_OWNER,
@@ -139,6 +140,7 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
 enum {
     JSSLOT_DEBUG_FRAME_PROTO,
     JSSLOT_DEBUG_OBJECT_PROTO,
+    JSSLOT_DEBUG_FUNCTION_PROTO,
     JSSLOT_DEBUG_COUNT
 };
 
@@ -226,13 +228,26 @@ Debug::wrapDebuggeeValue(JSContext *cx, Value *vp)
 
     if (vp->isObject()) {
         JSObject *ccwobj = &vp->toObject();
+
+        JSObject *refobj = ccwobj;
+        if (refobj->isWrapper())  // XXX TODO assert instead
+            refobj = JSWrapper::wrappedObject(refobj);
+        else if (!(cx)->compartment->wrap(cx, &refobj))
+            return false;
+
         ObjectMap::AddPtr p = objects.lookupForAdd(ccwobj);
         if (p) {
             vp->setObject(*p->value);
         } else {
             // Create a new Debug.Object for ccwobj.
-            JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
-            JSObject *dobj = NewNonFunction<WithProto::Given>(cx, &DebugObject_class, proto, NULL);
+            bool fun = refobj->isFunction();
+            uintN slot = fun ? JSSLOT_DEBUG_FUNCTION_PROTO : JSSLOT_DEBUG_OBJECT_PROTO;
+            JSObject *proto = &object->getReservedSlot(slot).toObject();
+            JSObject *dobj =
+                NewNonFunction<WithProto::Given>(cx,
+                                                 fun ? &DebugFunction_class : &DebugObject_class,
+                                                 proto,
+                                                 NULL);
             if (!dobj || !dobj->ensureClassReservedSlots(cx))
                 return false;
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
@@ -252,7 +267,7 @@ Debug::unwrapDebuggeeValue(JSContext *cx, Value *vp)
 {
     if (vp->isObject()) {
         JSObject *dobj = &vp->toObject();
-        if (dobj->clasp != &DebugObject_class) {
+        if (dobj->clasp != &DebugObject_class && dobj->clasp != &DebugFunction_class) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
                                  "Debug", "Debug.Object", dobj->clasp->name);
             return false;
@@ -735,6 +750,26 @@ DebugFrame_getType(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
+DebugFrame_wrapDebuggeeValue(JSContext *cx, JSObject *frameobj, Value *vp)
+{
+    JSObject *dbgobj = &frameobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).toObject();
+    Debug *dbg = Debug::fromJSObject(dbgobj);
+    if (!dbg->wrapDebuggeeValue(cx, vp)) {
+        vp->setUndefined();
+        return false;
+    }
+    return true;
+}
+
+static JSBool
+DebugFrame_getCallee(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get callee", thisobj, fp);
+    *vp = (fp->isFunctionFrame() && !fp->isEvalFrame()) ? fp->calleev() : NullValue();
+    return DebugFrame_wrapDebuggeeValue(cx, thisobj, vp);
+}
+
+static JSBool
 DebugFrame_getGenerator(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get generator", thisobj, fp);
@@ -746,21 +781,16 @@ static JSBool
 DebugFrame_getThis(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get this", thisobj, fp);
-    Value thisv;
     {
         AutoCompartment ac(cx, &fp->scopeChain());
         if (!ac.enter())
             return false;
         if (!ComputeThis(cx, fp))
             return false;
-        thisv = fp->thisValue();
+        *vp = fp->thisValue();
         ac.leave();
     }
-    Debug *dbg = Debug::fromJSObject(&thisobj->getReservedSlot(JSSLOT_DEBUGFRAME_OWNER).toObject());
-    if (!dbg->wrapDebuggeeValue(cx, &thisv))
-        return false;
-    *vp = thisv;
-    return true;
+    return DebugFrame_wrapDebuggeeValue(cx, thisobj, vp);
 }
 
 JSBool
@@ -792,6 +822,7 @@ DebugFrame_construct(JSContext *cx, uintN argc, Value *vp)
 
 static JSPropertySpec DebugFrame_properties[] = {
     JS_PSG("type", DebugFrame_getType, 0),
+    JS_PSG("callee", DebugFrame_getCallee, 0),
     JS_PSG("generator", DebugFrame_getGenerator, 0),
     JS_PSG("this", DebugFrame_getThis, 0),
     JS_PSG("arguments", DebugFrame_getArguments, 0),
@@ -868,6 +899,20 @@ static JSFunctionSpec DebugObject_methods[] = {
     JS_FS_END
 };
 
+// === Debug.Function
+
+Class DebugFunction_class = {
+    "Function", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGFRAME_COUNT),
+    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
+    EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
+};
+
+static JSBool
+DebugFunction_construct(JSContext *cx, uintN argc, Value *vp)
+{
+    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Function");
+    return false;
+}
 
 // === Glue
 
@@ -897,7 +942,14 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
     if (!objectProto)
         return false;
 
+    JSObject *functionProto = js_InitClass(cx, debugCtor, objectProto, &DebugFunction_class,
+                                           DebugFunction_construct, 0,
+                                           NULL, NULL, NULL, NULL);
+    if (!functionProto)
+        return false;
+
     debugProto->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
     debugProto->setReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO, ObjectValue(*objectProto));
+    debugProto->setReservedSlot(JSSLOT_DEBUG_FUNCTION_PROTO, ObjectValue(*functionProto));
     return true;
 }
