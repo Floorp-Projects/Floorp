@@ -1071,6 +1071,10 @@ nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, PRBool aInString)
  * will be aIdent with all of the identifier characters appended
  * until the first non-identifier character is seen. The termination
  * character is unread for the future re-reading.
+ *
+ * Returns failure when the character sequence does not form an ident at
+ * all, in which case the caller is responsible for pushing back or
+ * otherwise handling aChar.  (This occurs only when aChar is '\'.)
  */
 PRBool
 nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
@@ -1117,19 +1121,24 @@ nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
 PRBool
 nsCSSScanner::ParseRef(PRInt32 aChar, nsCSSToken& aToken)
 {
-  aToken.mIdent.SetLength(0);
-  aToken.mType = eCSSToken_Ref;
+  // Fall back for when we don't have name characters following:
+  aToken.mType = eCSSToken_Symbol;
+  aToken.mSymbol = aChar;
+
   PRInt32 ch = Read();
   if (ch < 0) {
-    return PR_FALSE;
+    return PR_TRUE;
   }
   if (IsIdent(ch) || ch == CSS_ESCAPE) {
     // First char after the '#' is a valid ident char (or an escape),
     // so it makes sense to keep going
-    if (StartsIdent(ch, Peek())) {
-      aToken.mType = eCSSToken_ID;
+    nsCSSTokenType type =
+      StartsIdent(ch, Peek()) ? eCSSToken_ID : eCSSToken_Ref;
+    aToken.mIdent.SetLength(0);
+    if (GatherIdent(ch, aToken.mIdent)) {
+      aToken.mType = type;
+      return PR_TRUE;
     }
-    return GatherIdent(ch, aToken.mIdent);
   }
 
   // No ident chars after the '#'.  Just unread |ch| and get out of here.
@@ -1143,7 +1152,9 @@ nsCSSScanner::ParseIdent(PRInt32 aChar, nsCSSToken& aToken)
   nsString& ident = aToken.mIdent;
   ident.SetLength(0);
   if (!GatherIdent(aChar, ident)) {
-    return PR_FALSE;
+    aToken.mType = eCSSToken_Symbol;
+    aToken.mSymbol = aChar;
+    return PR_TRUE;
   }
 
   nsCSSTokenType tokenType = eCSSToken_Ident;
@@ -1167,7 +1178,11 @@ nsCSSScanner::ParseAtKeyword(PRInt32 aChar, nsCSSToken& aToken)
 {
   aToken.mIdent.SetLength(0);
   aToken.mType = eCSSToken_AtKeyword;
-  return GatherIdent(0, aToken.mIdent);
+  if (!GatherIdent(0, aToken.mIdent)) {
+    aToken.mType = eCSSToken_Symbol;
+    aToken.mSymbol = PRUnichar('@');
+  }
+  return PR_TRUE;
 }
 
 PRBool
@@ -1287,10 +1302,9 @@ nsCSSScanner::ParseNumber(PRInt32 c, nsCSSToken& aToken)
   // Look at character that terminated the number
   if (c >= 0) {
     if (StartsIdent(c, Peek())) {
-      if (!GatherIdent(c, ident)) {
-        return PR_FALSE;
+      if (GatherIdent(c, ident)) {
+        type = eCSSToken_Dimension;
       }
-      type = eCSSToken_Dimension;
     } else if ('%' == c) {
       type = eCSSToken_Percentage;
       value = value / 100.0f;

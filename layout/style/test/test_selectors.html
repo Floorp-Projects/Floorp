@@ -233,6 +233,18 @@ function run() {
         });
     }
 
+    function test_unparseable_via_api(selector)
+    {
+        try {
+          // Test that it is also unparseable when followed by EOF.
+          ifdoc.body.mozMatchesSelector(selector);
+          ok(false, "selector '" + selector + "' plus EOF is parse error");
+        } catch(ex) {
+          is(ex.code, DOMException.SYNTAX_ERR,
+             "selector '" + selector + "' plus EOF is parse error");
+        }
+    }
+
     function test_balanced_unparseable(selector)
     {
         var zi1 = ++gCounter;
@@ -248,6 +260,7 @@ function run() {
            "selector " + selector + " error was recovered from");
         ifdoc.body.innerHTML = "";
         style_text.data = "";
+        test_unparseable_via_api(selector);
     }
 
     function test_unbalanced_unparseable(selector)
@@ -263,6 +276,7 @@ function run() {
            "sheet should have no rules since " + selector + " is parse error");
         ifdoc.body.innerHTML = "";
         style_text.data = "";
+        test_unparseable_via_api(selector);
     }
 
 
@@ -890,6 +904,16 @@ function run() {
                           "<table border='3pt'></table>",
                           bodychildset([2, 3, 8]),
                           bodychildset([0, 1, 4, 5, 6, 7]));
+
+    // Test that we don't tokenize an empty HASH.
+    test_balanced_unparseable("#");
+    test_balanced_unparseable("# ");
+    test_balanced_unparseable("#, p");
+    test_balanced_unparseable("# , p");
+    test_balanced_unparseable("p #");
+    test_balanced_unparseable("p # ");
+    test_balanced_unparseable("p #, p");
+    test_balanced_unparseable("p # , p");
 
     run_deferred_tests();
 }
