@@ -430,15 +430,13 @@ HttpChannelParent::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
     tuple->mMerge  = false;
   }
 
-  nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
   if (mIPCClosed || 
       !SendOnStartRequest(responseHead ? *responseHead : nsHttpResponseHead(), 
                           !!responseHead,
                           headers,
                           isFromCache,
                           mCacheDescriptor ? PR_TRUE : PR_FALSE,
-                          expirationTime, cachedCharset, secInfoSerialization,
-                          httpChan->GetSelfAddr(), httpChan->GetPeerAddr())) 
+                          expirationTime, cachedCharset, secInfoSerialization)) 
   {
     return NS_ERROR_UNEXPECTED; 
   }
