@@ -80,7 +80,7 @@ var BrowserSearch = {
       button.setAttribute("label", aEngine.name);
       button.setAttribute("crop", "end");
       button.setAttribute("pack", "start");
-      button.setAttribute("image", aEngine.iconURI ? aEngine.iconURI.spec : null);
+      button.setAttribute("image", aEngine.iconURI ? aEngine.iconURI.spec : "");
       list.appendChild(button);
     });
 
