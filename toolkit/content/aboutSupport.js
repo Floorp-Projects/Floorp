@@ -166,6 +166,23 @@ function populateGraphicsSection() {
     return elem;
   }
 
+  function pushInfoRow(table, name, value)
+  {
+    if(value) {
+      table.push(createParentElement("tr", [
+        createHeader(bundle.GetStringFromName(name)),
+        createElement("td", value),
+      ]));
+    }
+  }
+
+  function hexValueToString(value)
+  {
+    return value
+           ? String('0000' + value.toString(16)).slice(-4)
+           : null;
+  }
+
   let bundle = Services.strings.createBundle("chrome://global/locale/aboutSupport.properties");
   let graphics_tbody = document.getElementById("graphics-tbody");
 
@@ -177,36 +194,13 @@ function populateGraphicsSection() {
 
   if (gfxInfo) {
     let trGraphics = [];
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterDescription")),
-      createElement("td", gfxInfo.adapterDescription),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterVendorID")),
-      // pad with zeros. (printf would be nicer)
-      createElement("td", String('0000'+gfxInfo.adapterVendorID.toString(16)).slice(-4)),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterDeviceID")),
-      // pad with zeros. (printf would be nicer)
-      createElement("td", String('0000'+gfxInfo.adapterDeviceID.toString(16)).slice(-4)),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterRAM")),
-      createElement("td", gfxInfo.adapterRAM),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterDrivers")),
-      createElement("td", gfxInfo.adapterDriver),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("driverVersion")),
-      createElement("td", gfxInfo.adapterDriverVersion),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("driverDate")),
-      createElement("td", gfxInfo.adapterDriverDate),
-    ]));
+    pushInfoRow(trGraphics, "adapterDescription", gfxInfo.adapterDescription);
+    pushInfoRow(trGraphics, "adapterVendorID", hexValueToString(gfxInfo.adapterVendorID));
+    pushInfoRow(trGraphics, "adapterDeviceID", hexValueToString(gfxInfo.adapterDeviceID));
+    pushInfoRow(trGraphics, "adapterRAM", gfxInfo.adapterRAM);
+    pushInfoRow(trGraphics, "adapterDrivers", gfxInfo.adapterDriver);
+    pushInfoRow(trGraphics, "driverVersion", gfxInfo.adapterDriverVersion);
+    pushInfoRow(trGraphics, "driverDate", gfxInfo.adapterDriverDate);
 
     var d2dEnabled = false;
     try {
