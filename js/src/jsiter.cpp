@@ -1470,6 +1470,8 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     }
 #endif
 
+    MarkStandardClassInitializedNoProto(obj, &js_StopIterationClass);
+
     return js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0,
                         NULL, NULL, NULL, NULL);
 }
