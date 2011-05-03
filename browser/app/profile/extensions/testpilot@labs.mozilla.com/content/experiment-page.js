@@ -405,15 +405,9 @@ var stringBundle;
 
   function onStatusPageLoad() {
     setStrings(PAGE_TYPE_STATUS);
-    /* If an experiment ID (eid) is provided in the url params, show status
-     * for that experiment.  If not, show the main menu with status for all
-     * installed experiments. */
-    let eidString = getUrlParam("eid");
-    if (eidString == "") {
-      showStatusMenuPage();
-    } else {
-      loadExperimentPage();
-    }
+    /* An experiment ID (eid) must be provided in the url params. Show status
+     * for that experiment.*/
+    loadExperimentPage();
   }
 
   function setStrings(pageType) {
