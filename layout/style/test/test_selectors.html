@@ -918,6 +918,13 @@ function run() {
     // Test that a backslash alone is not treated as an escape.
     test_unparseable_via_api("#\\");
 
+    // Test that newline escapes are only supported in strings.
+    test_balanced_unparseable("di\\\nv");
+    test_balanced_unparseable("div \\\n p");
+    test_balanced_unparseable("div\\\n p");
+    test_balanced_unparseable("div \\\np");
+    test_balanced_unparseable("div\\\np");
+
     run_deferred_tests();
 }
 

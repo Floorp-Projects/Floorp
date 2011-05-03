@@ -1013,13 +1013,14 @@ nsCSSScanner::NextURL(nsCSSToken& aToken)
 PRBool
 nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, PRBool aInString)
 {
-  PRInt32 ch = Peek();
+  PRInt32 ch = Read();
   if (ch < 0) {
     return PR_FALSE;
   }
   if (IsHexDigit(ch)) {
     PRInt32 rv = 0;
     int i;
+    Pushback(ch);
     for (i = 0; i < 6; i++) { // up to six digits
       ch = Read();
       if (ch < 0) {
@@ -1066,8 +1067,17 @@ nsCSSScanner::ParseAndAppendEscape(nsString& aOutput, PRBool aInString)
   // "Any character except a hexidecimal digit can be escaped to
   // remove its special meaning by putting a backslash in front"
   // -- CSS1 spec section 7.1
-  ch = Read();  // Consume the escaped character
-  if ((ch > 0) && (ch != '\n')) {
+  if (ch == '\n') {
+    if (!aInString) {
+      // Outside of strings (which includes url() that contains a
+      // string), escaped newlines aren't special, and just tokenize as
+      // eCSSToken_Symbol (DELIM).
+      Pushback(ch);
+      return PR_FALSE;
+    }
+    // In strings (and in url() containing a string), escaped newlines
+    // are just dropped to allow splitting over multiple lines.
+  } else {
     aOutput.Append(ch);
   }
 
