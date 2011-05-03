@@ -41,8 +41,14 @@ const kBrowserFormZoomLevelMax = 2.0;
 
 var BrowserSearch = {
   get _popup() {
+    let popup = document.getElementById("search-engines-popup");
+    popup.addEventListener("TapSingle", function(aEvent) {
+      popup.hidden = true;
+      BrowserUI.doOpenSearch(aEvent.target.getAttribute("label"));
+    }, false);
+
     delete this._popup;
-    return this._popup = document.getElementById("search-engines-popup");
+    return this._popup = popup;
   },
 
   get _list() {
@@ -75,10 +81,6 @@ var BrowserSearch = {
       button.setAttribute("crop", "end");
       button.setAttribute("pack", "start");
       button.setAttribute("image", aEngine.iconURI ? aEngine.iconURI.spec : null);
-      button.onclick = function() {
-        popup.hidden = true;
-        BrowserUI.doOpenSearch(aEngine.name);
-      }
       list.appendChild(button);
     });
 
