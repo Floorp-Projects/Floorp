@@ -923,8 +923,6 @@ var Browser = {
     if (!dy) dy = 0;
 
     let [leftSidebar, rightSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
-    if (leftSidebar.left > rightSidebar.left)
-      [rightSidebar, leftSidebar] = [leftSidebar, rightSidebar]; // switch in RTL case
 
     let visibleRect = new Rect(0, 0, window.innerWidth, 1);
     let leftRect = new Rect(Math.round(leftSidebar.left) - Math.round(dx), 0, Math.round(leftSidebar.width), 1);
@@ -959,18 +957,23 @@ var Browser = {
 
     let snappedX = 0;
 
+    // determine browser dir first to know which direction to snap to
+    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                      getService(Ci.nsIXULChromeRegistry);
+    let dirVal = chromeReg.isLocaleRTL("global") ? -1 : 1;
+
     if (leftvis != 0 && leftvis != 1) {
       if (leftvis >= 0.6666) {
-        snappedX = -((1 - leftvis) * leftw);
+        snappedX = -((1 - leftvis) * leftw) * dirVal;
       } else {
-        snappedX = leftvis * leftw;
+        snappedX = leftvis * leftw * dirVal;
       }
     }
     else if (ritevis != 0 && ritevis != 1) {
       if (ritevis >= 0.6666) {
-        snappedX = (1 - ritevis) * ritew;
+        snappedX = (1 - ritevis) * ritew * dirVal;
       } else {
-        snappedX = -ritevis * ritew;
+        snappedX = -ritevis * ritew * dirVal;
       }
     }
 
