@@ -2407,6 +2407,15 @@ CSS_PROP_TEXT(
     kWordwrapKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
+CSS_PROP_TEXT(
+    -moz-hyphens,
+    hyphens,
+    CSS_PROP_DOMPROP_PREFIXED(Hyphens),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kHyphensKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     z-index,
     z_index,

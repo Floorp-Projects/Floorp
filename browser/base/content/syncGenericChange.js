@@ -111,7 +111,7 @@ let Change = {
              pp = Weave.Utils.hyphenatePassphrase(pp);
           this._passphraseBox.value = pp;
           this._passphraseBox.focus();
-          document.title = this._str("change.synckey.title");
+          document.title = this._str("change.synckey2.title");
           introText.textContent = this._str("change.synckey.introText2");
           warningText.textContent = this._str("change.synckey2.warningText");
           this._dialog.getButton("finish").label
