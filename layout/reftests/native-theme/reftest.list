@@ -65,5 +65,8 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 
 == checkbox-dynamic-1.html checkbox-dynamic-1-ref.html
 
-== progress-overflow.html progress-overflow-ref.html
-fails-if(cocoaWidget) != progress-overflow-small.html progress-nobar.html
+# These tests have been written to test the overflow of the window widget
+# (bug 568825) but we can't test it on Windows and Cocoa because they have
+# animated progress bars.
+skip-if(cocoaWidget) skip-if(winWidget) == progress-overflow.html progress-overflow-ref.html
+skip-if(cocoaWidget) skip-if(winWidget) != progress-overflow-small.html progress-nobar.html
