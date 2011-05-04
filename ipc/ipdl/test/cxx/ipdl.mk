@@ -23,6 +23,7 @@ IPDLSRCS =					\
   PTestRaceDeferral.ipdl			\
   PTestRacyReentry.ipdl				\
   PTestRacyRPCReplies.ipdl			\
+  PTestRacyUndefer.ipdl				\
   PTestRPCErrorCleanup.ipdl			\
   PTestRPCRaces.ipdl				\
   PTestRPCShutdownRace.ipdl			\
