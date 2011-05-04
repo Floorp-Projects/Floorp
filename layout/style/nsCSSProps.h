@@ -425,6 +425,7 @@ public:
   static const PRInt32 kWidthKTable[]; // also min-width, max-width
   static const PRInt32 kWindowShadowKTable[];
   static const PRInt32 kWordwrapKTable[];
+  static const PRInt32 kHyphensKTable[];
 };
 
 #endif /* nsCSSProps_h___ */
