@@ -36,7 +36,6 @@
 @BINPATH@/update.locale
 @BINPATH@/updater.ini
 @BINPATH@/dictionaries/*
-@BINPATH@/hyphenation/*
 #ifdef XP_WIN32
 @BINPATH@/uninstall/helper.exe
 #endif
