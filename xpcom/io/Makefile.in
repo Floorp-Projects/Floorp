@@ -51,7 +51,7 @@ MOZILLA_INTERNAL_API = 1
 # work around bug 408258
 ifdef GNU_CC 
 ifneq ($(OS_ARCH), Darwin)
-MODULE_OPTIMIZE_FLAGS = -O3 -fno-strict-aliasing
+MODULE_OPTIMIZE_FLAGS = -Os -fno-strict-aliasing $(MOZ_OPTIMIZE_SIZE_TWEAK)
 endif
 endif
 
