@@ -263,13 +263,16 @@ struct TraceMonitor {
     /* Fields needed for fragment/guard profiling. */
     nanojit::Seq<nanojit::Fragment*>* branches;
     uint32                  lastFragID;
-    /*
-     * profAlloc has a lifetime which spans exactly from InitJIT to
-     * FinishJIT.
-     */
     VMAllocator*            profAlloc;
     FragStatsMap*           profTab;
+
+    void logFragProfile();
 #endif
+
+    TraceMonitor();
+    ~TraceMonitor();
+
+    bool init(JSRuntime* rt);
 
     bool ontrace() const {
         return !!tracecx;

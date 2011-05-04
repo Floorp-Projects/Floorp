@@ -405,7 +405,6 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 
 #menu_reload,
 #placesContext_reload,
-#placesContext_reloadMicrosummary,
 #context-reload,
 #context-reloadframe {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");

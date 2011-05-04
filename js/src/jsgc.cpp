@@ -146,12 +146,12 @@ JS_STATIC_ASSERT(JS_ARRAY_LENGTH(slotsToThingKind) == SLOTS_TO_THING_KIND_LIMIT)
 const uint8 GCThingSizeMap[] = {
     sizeof(JSObject),           /* FINALIZE_OBJECT0             */
     sizeof(JSObject),           /* FINALIZE_OBJECT0_BACKGROUND  */
-    sizeof(JSObject_Slots2),    /* FINALIZE_OBJECT2             */ 
-    sizeof(JSObject_Slots2),    /* FINALIZE_OBJECT2_BACKGROUND  */ 
-    sizeof(JSObject_Slots4),    /* FINALIZE_OBJECT4             */ 
-    sizeof(JSObject_Slots4),    /* FINALIZE_OBJECT4_BACKGROUND  */ 
-    sizeof(JSObject_Slots8),    /* FINALIZE_OBJECT8             */ 
-    sizeof(JSObject_Slots8),    /* FINALIZE_OBJECT8_BACKGROUND  */ 
+    sizeof(JSObject_Slots2),    /* FINALIZE_OBJECT2             */
+    sizeof(JSObject_Slots2),    /* FINALIZE_OBJECT2_BACKGROUND  */
+    sizeof(JSObject_Slots4),    /* FINALIZE_OBJECT4             */
+    sizeof(JSObject_Slots4),    /* FINALIZE_OBJECT4_BACKGROUND  */
+    sizeof(JSObject_Slots8),    /* FINALIZE_OBJECT8             */
+    sizeof(JSObject_Slots8),    /* FINALIZE_OBJECT8_BACKGROUND  */
     sizeof(JSObject_Slots12),   /* FINALIZE_OBJECT12            */
     sizeof(JSObject_Slots12),   /* FINALIZE_OBJECT12_BACKGROUND */
     sizeof(JSObject_Slots16),   /* FINALIZE_OBJECT16            */
@@ -197,7 +197,7 @@ Arena<T>::finalize(JSContext *cx)
 {
     JS_ASSERT(aheader.compartment);
     JS_ASSERT(!aheader.getMarkingDelay()->link);
-    
+
     FreeCell *nextFree = aheader.freeList;
     FreeCell *freeList = NULL;
     FreeCell **tailp = &freeList;
@@ -286,12 +286,6 @@ JSCompartment::finishArenaLists()
 {
     for (unsigned i = 0; i < FINALIZE_LIMIT; i++)
         arenas[i].releaseAll(i);
-}
-
-void
-Chunk::clearMarkBitmap()
-{
-    PodZero(&bitmaps[0], ArenasPerChunk);
 }
 
 bool
@@ -1789,7 +1783,7 @@ TriggerCompartmentGC(JSCompartment *comp)
         TriggerGC(rt);
         return;
     }
-    
+
     if (rt->gcIsNeeded) {
         /* If we need to GC more than one compartment, run a full GC. */
         if (rt->gcTriggerCompartment != comp)
@@ -2336,7 +2330,7 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
     cx->gcBackgroundFree->setContext(cx);
 #endif
     for (GCChunkSet::Range r(rt->gcChunkSet.all()); !r.empty(); r.popFront())
-         r.front()->clearMarkBitmap();
+         r.front()->bitmap.clear();
 
     if (comp) {
         for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
@@ -2405,8 +2399,8 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         Debug::sweepAll(rt);
 
     /*
-     * We finalize objects before other GC things to ensure that object's finalizer 
-     * can access them even if they will be freed. Sweep the runtime's property trees 
+     * We finalize objects before other GC things to ensure that object's finalizer
+     * can access them even if they will be freed. Sweep the runtime's property trees
      * after finalizing objects, in case any had watchpoints referencing tree nodes.
      * Do this before sweeping compartments, so that we sweep all shapes in
      * unreachable compartments.

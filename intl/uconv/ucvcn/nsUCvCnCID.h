@@ -79,16 +79,6 @@
 #define NS_UNICODETOHZ_CID \
   { 0xba61519d, 0x1dfa, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
 
-// Class ID for our CP936ToUnicode charset converter
-// {9416BFC0-1F93-11d3-B3BF-00805F8A6670}
-#define NS_CP936TOUNICODE_CID \
-  { 0x9416bfc0, 0x1f93, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
-// Class ID for our UnicodeToCP936 charset converter
-// {9416BFC1-1F93-11d3-B3BF-00805F8A6670}
-#define NS_UNICODETOCP936_CID \
-  { 0x9416bfc1, 0x1f93, 0x11d3, {0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70}}
-
 // Class ID for our UnicodeToGB18030 charset converter
 // {A59DA932-4091-11d5-A145-005004832142}
 #define NS_UNICODETOGB18030_CID \

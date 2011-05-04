@@ -565,7 +565,7 @@ public:
    * since this can happen due to content fixup when a form spans table rows or
    * table cells.
    */
-  static PRBool BelongsInForm(nsIDOMHTMLFormElement *aForm,
+  static PRBool BelongsInForm(nsIContent *aForm,
                               nsIContent *aContent);
 
   static nsresult CheckQName(const nsAString& aQualifiedName,
@@ -1172,6 +1172,12 @@ public:
     }
   }
 
+  static void DropScriptObject(PRUint32 aLangID, void *aObject,
+                               const char *name, void *aClosure)
+  {
+    DropScriptObject(aLangID, aObject, aClosure);
+  }
+
   /**
    * Unbinds the content from the tree and nulls it out if it's not null.
    */
@@ -1278,7 +1284,7 @@ public:
     if (aCache->PreservingWrapper()) {
       aCallback(nsIProgrammingLanguage::JAVASCRIPT,
                 aCache->GetWrapperPreserveColor(),
-                aClosure);
+                "Preserved wrapper", aClosure);
     }
   }
 
@@ -1770,6 +1776,25 @@ public:
   static already_AddRefed<nsIDocumentLoaderFactory>
   FindInternalContentViewer(const char* aType,
                             ContentViewerType* aLoaderType = nsnull);
+
+  /**
+   * This helper method returns true if the aPattern pattern matches aValue.
+   * aPattern should not contain leading and trailing slashes (/).
+   * The pattern has to match the entire value not just a subset.
+   * aDocument must be a valid pointer (not null).
+   *
+   * This is following the HTML5 specification:
+   * http://dev.w3.org/html5/spec/forms.html#attr-input-pattern
+   *
+   * WARNING: This method mutates aPattern and aValue!
+   *
+   * @param aValue    the string to check.
+   * @param aPattern  the string defining the pattern.
+   * @param aDocument the owner document of the element.
+   * @result          whether the given string is matches the pattern.
+   */
+  static PRBool IsPatternMatching(nsAString& aValue, nsAString& aPattern,
+                                  nsIDocument* aDocument);
 
   /**
    * Calling this adds support for

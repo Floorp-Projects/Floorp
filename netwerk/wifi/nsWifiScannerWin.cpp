@@ -154,7 +154,7 @@ nsWifiMonitor::DoScan()
       nsCOMArray<nsIWifiListener> currentListeners;
 
       {
-        MonitorAutoEnter mon(mMonitor);
+        ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
         for (PRUint32 i = 0; i < mListeners.Length(); i++) {
           if (!mListeners[i].mHasSentData || accessPointsChanged) {
@@ -202,7 +202,7 @@ nsWifiMonitor::DoScan()
       // wait for some reasonable amount of time.  pref?
       LOG(("waiting on monitor\n"));
 
-      MonitorAutoEnter mon(mMonitor);
+      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
       mon.Wait(PR_SecondsToInterval(60));
     }
     while (mKeepGoing);

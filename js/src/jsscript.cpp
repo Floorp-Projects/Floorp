@@ -1766,14 +1766,11 @@ js_GetScriptLineExtent(JSScript *script)
 const char *
 js::CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
 {
-    if (!cx->running()) {
+    StackFrame *fp = js_GetScriptedCaller(cx, NULL);
+    if (!fp) {
         *linenop = 0;
         return NULL;
     }
-
-    StackFrame *fp = cx->fp();
-    while (fp->isDummyFrame())
-        fp = fp->prev();
 
     *linenop = js_FramePCToLineNumber(cx, fp);
     return fp->script()->filename;

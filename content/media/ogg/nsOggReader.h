@@ -80,13 +80,13 @@ public:
 
   virtual PRBool HasAudio()
   {
-    mozilla::MonitorAutoEnter mon(mMonitor);
+    mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mVorbisState != 0 && mVorbisState->mActive;
   }
 
   virtual PRBool HasVideo()
   {
-    mozilla::MonitorAutoEnter mon(mMonitor);
+    mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mTheoraState != 0 && mTheoraState->mActive;
   }
 
@@ -98,7 +98,7 @@ private:
 
   PRBool HasSkeleton()
   {
-    MonitorAutoEnter mon(mMonitor);
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mSkeletonState != 0 && mSkeletonState->mActive;
   }
 

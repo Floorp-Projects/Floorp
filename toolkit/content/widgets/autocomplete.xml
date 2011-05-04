@@ -727,6 +727,10 @@
             var width = (rect.right - rect.left) * docViewer.fullZoom;
             this.setAttribute("width", width > 100 ? width : 100);
 
+            // Adjust the direction of the autocomplete popup list based on the textbox direction, bug 649840
+            var popupDirection = aElement.ownerDocument.defaultView.getComputedStyle(aElement).direction;
+            this.style.direction = popupDirection;
+
             // setConsumeRollupEvent() before we call openPopup()
             var nsIPopupBO = Components.interfaces.nsIPopupBoxObject;
             this.popupBoxObject.setConsumeRollupEvent(

@@ -72,7 +72,7 @@ CPPSRCS		= \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
-ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 CPPSRCS += dlldeps.cpp
 endif
 endif
@@ -196,10 +196,6 @@ ifndef MOZ_ENABLE_LIBXUL
 OS_LIBS += $(call EXPAND_LIBNAME,psapi)
 endif
 endif # WINNT
-
-ifeq ($(OS_ARCH),WINCE)
-OS_LIBS += $(call EXPAND_LIBNAME,ole32 aygshell)
-endif # WINCE
 
 export:: $(XPCOM_GLUE_SRC_CSRCS) $(XPCOM_GLUE_SRC_CPPSRCS) $(XPCOM_GLUENS_SRC_CPPSRCS)
 	$(INSTALL) $^ .

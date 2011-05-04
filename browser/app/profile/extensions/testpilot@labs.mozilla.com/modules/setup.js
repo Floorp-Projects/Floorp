@@ -55,6 +55,7 @@ const POPUP_SHOW_ON_RESULTS = "extensions.testpilot.popup.showOnNewResults";
 const POPUP_CHECK_INTERVAL = "extensions.testpilot.popup.delayAfterStartup";
 const POPUP_REMINDER_INTERVAL = "extensions.testpilot.popup.timeBetweenChecks";
 const ALWAYS_SUBMIT_DATA = "extensions.testpilot.alwaysSubmitData";
+const UPDATE_CHANNEL_PREF = "app.update.channel";
 const LOG_FILE_NAME = "TestPilotErrorLog.log";
 const RANDOM_DEPLOY_PREFIX = "extensions.testpilot.deploymentRandomizer";
 

@@ -37,7 +37,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[scriptable, uuid(b2f49035-4a2f-4e62-8fb0-deb68b0de4d9)]
+[scriptable, uuid(911c3352-6690-421c-9bbe-6bd34f1600dc)]
 interface nsIDOMScrollAreaEvent : nsIDOMUIEvent
 {
   // Scroll area client rect
@@ -49,7 +49,7 @@ interface nsIDOMScrollAreaEvent : nsIDOMUIEvent
   void initScrollAreaEvent(in DOMString aEventType,
                            in boolean aCanBubble,
                            in boolean aCancelable,
-                           in nsIDOMAbstractView aView,
+                           in nsIDOMWindow aView,
                            in long aDetail,
                            in float x,
                            in float y,

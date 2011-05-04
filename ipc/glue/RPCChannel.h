@@ -311,7 +311,7 @@ protected:
 
     // Called from both threads
     size_t StackDepth() const {
-        mMutex.AssertCurrentThreadOwns();
+        mMonitor.AssertCurrentThreadOwns();
         return mStack.size();
     }
 
@@ -425,7 +425,7 @@ protected:
     //  !mCxxStackFrames.empty() => RPCChannel code on C++ stack
     //
     // This member is only accessed on the worker thread, and so is
-    // not protected by mMutex.  It is managed exclusively by the
+    // not protected by mMonitor.  It is managed exclusively by the
     // helper |class CxxStackFrame|.
     std::vector<RPCFrame> mCxxStackFrames;
 

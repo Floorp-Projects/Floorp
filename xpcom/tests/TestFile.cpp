@@ -194,7 +194,6 @@ static PRBool TestCreateUnique(nsIFile* aBase, const char* aName, PRInt32 aType,
 static PRBool TestDeleteOnClose(nsIFile* aBase, const char* aName, PRInt32 aFlags, PRInt32 aPerm)
 {
     gFunction = "TestDeleteOnClose";
-#ifndef WINCE  // Windows CE doesn't have the concept of delete on close, punt
     nsCOMPtr<nsILocalFile> file = NewFile(aBase);
     if (!file)
         return PR_FALSE;
@@ -230,7 +229,7 @@ static PRBool TestDeleteOnClose(nsIFile* aBase, const char* aName, PRInt32 aFlag
         fail("%s File %s was not removed on close!", gFunction, name.get());
         return PR_FALSE;
     }
-#endif
+
     return PR_TRUE;
 }
 

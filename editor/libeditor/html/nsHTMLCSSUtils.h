@@ -42,7 +42,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsIDOMViewCSS.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIHTMLEditor.h"
@@ -54,6 +53,7 @@
 #define COMPUTED_STYLE_TYPE     2
 
 class nsHTMLEditor;
+class nsIDOMWindow;
 
 typedef void (*nsProcessValueFunc)(const nsAString * aInputString, nsAString & aOutputString,
                                    const char * aDefaultValueString,
@@ -312,12 +312,13 @@ public:
     */
   nsresult GetElementContainerOrSelf(nsIDOMNode * aNode, nsIDOMElement ** aElement);
 
-  /** Gets the default DOMView for a given node
+  /**
+   * Gets the default Window for a given node.
    *
-   * @param aNode               the node we want the default DOMView for
-   * @param aViewCSS            [OUT] the default DOMViewCSS
+   * @param aNode    the node we want the default Window for
+   * @param aWindow  [OUT] the default Window
    */
-  nsresult        GetDefaultViewCSS(nsIDOMNode * aNode, nsIDOMViewCSS ** aViewCSS);
+  nsresult        GetDefaultViewCSS(nsIDOMNode* aNode, nsIDOMWindow** aWindow);
 
 
 private:
@@ -383,17 +384,17 @@ private:
                                    PRBool aRemoveProperty);
 
   /** back-end for GetSpecifiedProperty and GetComputedProperty
-    *
-    * @param aNode               [IN] a DOM node
-    * @param aProperty           [IN] a CSS property
-    * @param aValue              [OUT] the retrieved value for this property
-    * @param aViewCSS            [IN] the ViewCSS we need in case we query computed styles
-    * @param aStyleType          [IN] SPECIFIED_STYLE_TYPE to query the specified style values
-                                      COMPUTED_STYLE_TYPE  to query the computed style values
-    */
+   *
+   * @param aNode               [IN] a DOM node
+   * @param aProperty           [IN] a CSS property
+   * @param aValue              [OUT] the retrieved value for this property
+   * @param aWindow             [IN] the window we need in case we query computed styles
+   * @param aStyleType          [IN] SPECIFIED_STYLE_TYPE to query the specified style values
+   *                                 COMPUTED_STYLE_TYPE  to query the computed style values
+   */
   nsresult    GetCSSInlinePropertyBase(nsIDOMNode * aNode, nsIAtom * aProperty,
                                        nsAString & aValue,
-                                       nsIDOMViewCSS * aViewCSS,
+                                       nsIDOMWindow* aWindow,
                                        PRUint8 aStyleType);
 
 

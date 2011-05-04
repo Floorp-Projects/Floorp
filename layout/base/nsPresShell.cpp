@@ -1410,6 +1410,15 @@ public:
     return PL_DHASH_NEXT;
   }
 
+  static PLDHashOperator LiveShellBidiSizeEnumerator(PresShellPtrKey *aEntry,
+                                                     void *userArg)
+  {
+    PresShell *aShell = static_cast<PresShell*>(aEntry->GetKey());
+    PRUint32 *val = (PRUint32*)userArg;
+    *val += aShell->mPresContext->GetBidiMemoryUsed();
+    return PL_DHASH_NEXT;
+  }
+
   static PRUint32
   EstimateShellsMemory(nsTHashtable<PresShellPtrKey>::Enumerator aEnumerator)
   {
@@ -1421,6 +1430,10 @@ public:
                                   
   static PRInt64 SizeOfLayoutMemoryReporter(void *) {
     return EstimateShellsMemory(LiveShellSizeEnumerator);
+  }
+
+  static PRInt64 SizeOfBidiMemoryReporter(void *) {
+    return EstimateShellsMemory(LiveShellBidiSizeEnumerator);
   }
 
 protected:
@@ -1638,6 +1651,12 @@ NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
                              PresShell::SizeOfLayoutMemoryReporter,
                              nsnull)
 
+NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
+                             "layout/bidi",
+                             "Memory in use by layout Bidi processor.",
+                             PresShell::SizeOfBidiMemoryReporter,
+                             nsnull)
+
 PresShell::PresShell()
 {
   mSelection = nsnull;
@@ -1665,6 +1684,7 @@ PresShell::PresShell()
   static bool registeredReporter = false;
   if (!registeredReporter) {
     NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutPresShell));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(LayoutBidi));
     registeredReporter = true;
   }
 
@@ -7341,6 +7361,10 @@ PresShell::WillPaint(PRBool aWillSendDidPaint)
 NS_IMETHODIMP_(void)
 PresShell::DidPaint()
 {
+  if (mPaintingSuppressed || !mIsActive) {
+    return;
+  }
+
   nsRootPresContext* rootPresContext = mPresContext->GetRootPresContext();
   if (!rootPresContext) {
     return;
@@ -8806,7 +8830,7 @@ void ReflowCountMgr::PaintCount(const char*     aName,
       nscoord x = 0, y = fm->MaxAscent();
       nscoord width, height = fm->MaxHeight();
       aRenderingContext->SetTextRunRTL(PR_FALSE);
-      aRenderingContext->GetWidth((char*)buf, width);
+      width = aRenderingContext->GetWidth(buf);
 
       PRUint32 color;
       PRUint32 color2;
