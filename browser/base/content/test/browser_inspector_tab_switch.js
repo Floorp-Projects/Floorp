@@ -157,6 +157,7 @@ function inspectorTabUnload1(evt)
   ok(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
   is(InspectorStore.length, 1, "InspectorStore.length = 1");
 
+  InspectorUI.closeInspectorUI();
   gBrowser.removeCurrentTab();
   finish();
 }
