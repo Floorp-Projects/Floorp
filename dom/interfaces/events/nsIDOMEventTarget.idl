@@ -101,7 +101,7 @@ interface nsIDOMEventTarget : nsISupports
    */
   void                     removeEventListener(in DOMString type,
                                                in nsIDOMEventListener listener,
-                                               in boolean useCapture);
+                                               [optional] in boolean useCapture);
 
   /**
    * This method allows the dispatch of events into the implementations 

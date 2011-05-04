@@ -110,7 +110,8 @@ let gSyncPane = {
   startOver: function (showDialog) {
     if (showDialog) {
       let flags = Services.prompt.BUTTON_POS_0 * Services.prompt.BUTTON_TITLE_IS_STRING +
-                  Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL;
+                  Services.prompt.BUTTON_POS_1 * Services.prompt.BUTTON_TITLE_CANCEL + 
+                  Services.prompt.BUTTON_POS_1_DEFAULT;
       let buttonChoice =
         Services.prompt.confirmEx(window,
                                   this._stringBundle.GetStringFromName("stopUsingAccount.title"),

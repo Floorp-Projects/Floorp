@@ -50,7 +50,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Style
  */
 
-[scriptable, uuid(35c15ba1-932d-4a95-8f08-ddcdd50c041a)]
+[scriptable, uuid(249755DF-EEFE-4AF4-8127-BE3D6BDAED2D)]
 interface nsIDOMCSS2Properties : nsISupports
 {
            attribute DOMString        background;
@@ -663,6 +663,9 @@ interface nsIDOMCSS2Properties : nsISupports
                                         // raises(DOMException) on setting
 
            attribute DOMString        wordWrap;
+                                        // raises(DOMException) on setting
+
+           attribute DOMString        MozHyphens;
                                         // raises(DOMException) on setting
 
            attribute DOMString        MozTransform;

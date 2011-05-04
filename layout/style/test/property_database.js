@@ -2717,6 +2717,14 @@ var gCSSProperties = {
 		other_values: [ "break-word" ],
 		invalid_values: []
 	},
+	"-moz-hyphens": {
+		domProp: "MozHyphens",
+		inherited: true,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "manual" ],
+		other_values: [ "none", "auto", "all" ],
+		invalid_values: []
+	},
 	"z-index": {
 		domProp: "zIndex",
 		inherited: false,

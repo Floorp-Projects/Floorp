@@ -254,7 +254,7 @@ nsDOMWorkerMessageHandler::AddEventListener(const nsAString& aType,
                                             nsIDOMEventListener* aListener,
                                             PRBool aUseCapture)
 {
-  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 0);
+  return AddEventListener(aType, aListener, aUseCapture, PR_FALSE, 1);
 }
 
 /**
@@ -347,7 +347,7 @@ nsDOMWorkerMessageHandler::AddEventListener(const nsAString& aType,
                                             PRUint8 optional_argc)
 {
   // We don't support aWantsUntrusted yet.
-  NS_ENSURE_TRUE(optional_argc == 0, NS_ERROR_NOT_IMPLEMENTED);
+  NS_ENSURE_TRUE(optional_argc < 2, NS_ERROR_NOT_IMPLEMENTED);
 
   ListenerCollection* collection =
     const_cast<ListenerCollection*>(GetListenerCollection(aType));

@@ -923,8 +923,6 @@ var Browser = {
     if (!dy) dy = 0;
 
     let [leftSidebar, rightSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
-    if (leftSidebar.left > rightSidebar.left)
-      [rightSidebar, leftSidebar] = [leftSidebar, rightSidebar]; // switch in RTL case
 
     let visibleRect = new Rect(0, 0, window.innerWidth, 1);
     let leftRect = new Rect(Math.round(leftSidebar.left) - Math.round(dx), 0, Math.round(leftSidebar.width), 1);
@@ -959,18 +957,23 @@ var Browser = {
 
     let snappedX = 0;
 
+    // determine browser dir first to know which direction to snap to
+    let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"].
+                      getService(Ci.nsIXULChromeRegistry);
+    let dirVal = chromeReg.isLocaleRTL("global") ? -1 : 1;
+
     if (leftvis != 0 && leftvis != 1) {
       if (leftvis >= 0.6666) {
-        snappedX = -((1 - leftvis) * leftw);
+        snappedX = -((1 - leftvis) * leftw) * dirVal;
       } else {
-        snappedX = leftvis * leftw;
+        snappedX = leftvis * leftw * dirVal;
       }
     }
     else if (ritevis != 0 && ritevis != 1) {
       if (ritevis >= 0.6666) {
-        snappedX = (1 - ritevis) * ritew;
+        snappedX = (1 - ritevis) * ritew * dirVal;
       } else {
-        snappedX = -ritevis * ritew;
+        snappedX = -ritevis * ritew * dirVal;
       }
     }
 
@@ -1174,12 +1177,10 @@ var Browser = {
 
       case "scroll":
         if (browser == this.selectedBrowser) {
-          let view = browser.getRootView();
-          let position = view.getPosition();
-          if (position.x != 0)
+          if (json.x != 0)
             this.hideSidebars();
 
-          if (position.y != 0)
+          if (json.y != 0)
             this.hideTitlebar();
         }
         break;
@@ -1532,7 +1533,8 @@ Browser.WebProgress.prototype = {
         let json = aMessage.json;
         browser.getRootView().scrollTo(Math.floor(json.x * browser.scale),
                                        Math.floor(json.y * browser.scale));
-        Browser.pageScrollboxScroller.scrollTo(0, 0);
+        if (json.x == 0 && json.y == 0)
+          Browser.pageScrollboxScroller.scrollTo(0, 0);
       }
 
       aTab.scrolledAreaChanged();
@@ -1628,7 +1630,6 @@ const ContentTouchHandler = {
   // Use lightweight transactions so that old context menus and tap
   // highlights don't ever see the light of day.
   _messageId: 0,
-  contentMightCaptureMouse: false,
 
   init: function init() {
     document.addEventListener("TapDown", this, true);
@@ -1737,8 +1738,9 @@ const ContentTouchHandler = {
           document.dispatchEvent(event);
         }
         break;
-      case "Browser:CaptureEvents":
-        this.contentMightCaptureMouse = json.contentMightCaptureMouse;
+      case "Browser:CaptureEvents": {
+        let tab = Browser.getTabForBrowser(aMessage.target);
+        tab.contentMightCaptureMouse = json.contentMightCaptureMouse;
         if (this.touchTimeout) {
           clearTimeout(this.touchTimeout);
           this.touchTimeout = null;
@@ -1746,13 +1748,19 @@ const ContentTouchHandler = {
 
         if (json.click)
           this.clickPrevented = true;
+        if (json.panning)
+          this.panningPrevented = true;
 
-        if (this.canCancelPan)
-          Elements.browsers.customDragger.contentMouseCapture = json.panning;
+        // We don't know if panning is allowed until the first touchmove event is processed.
+        if (this.canCancelPan && json.type == "touchmove")
+          Elements.browsers.customDragger.contentMouseCapture = this.panningPrevented;
         break;
-      case "Browser:CanCaptureMouse:Return":
-        ContentTouchHandler.contentMightCaptureMouse = json.contentMightCaptureMouse;
+      }
+      case "Browser:CanCaptureMouse:Return": {
+        let tab = Browser.getTabForBrowser(aMessage.target);
+        tab.contentMightCaptureMouse = json.contentMightCaptureMouse;
         break;
+      }
     }
   },
 
@@ -1787,10 +1795,9 @@ const ContentTouchHandler = {
   },
 
   touchTimeout: null,
-
   canCancelPan: false,
-
   clickPrevented: false,
+  panningPrevented: false,
 
   updateCanCancel: function(aX, aY) {
     let dpi = Browser.windowUtils.displayDPI;
@@ -1820,17 +1827,17 @@ const ContentTouchHandler = {
     // if the page might capture touch events, we give it the option
     this.updateCanCancel(aX, aY);
     this.clickPrevented = false;
-    Elements.browsers.customDragger.contentMouseCapture = this.canCancelPan && this.contentMightCaptureMouse;
+    this.panningPrevented = false;
+
+    let dragger = Elements.browsers.customDragger;
+    dragger.contentMouseCapture = this.canCancelPan && Browser.selectedTab.contentMightCaptureMouse;
     if (this.touchTimeout) {
       clearTimeout(this.touchTimeout);
       this.touchTimeout = null;
     }
 
-    if (this.contentMightCaptureMouse) {
-      this.touchTimeout = setTimeout(function() {
-        Elements.browsers.customDragger.contentMouseCapture = false;
-      }, kTouchTimeout)
-    }
+    if (dragger.contentMouseCapture)
+      this.touchTimeout = setTimeout(function() dragger.contentMouseCapture = false, kTouchTimeout);
 
     this._dispatchMouseEvent("Browser:MouseDown", aX, aY);
   },
@@ -1851,7 +1858,7 @@ const ContentTouchHandler = {
   },
 
   tapMove: function tapMove(aX, aY) {
-    if (this.contentMightCaptureMouse)
+    if (Browser.selectedTab.contentMightCaptureMouse)
       this._dispatchMouseEvent("Browser:MouseMove", aX, aY);
   },
 
@@ -2414,9 +2421,10 @@ var ContentCrashObserver = {
     Browser.tabs.forEach(function(aTab) {
       if (aTab.browser.getAttribute("remote") == "true")
         aTab.resurrect();
-    })
+    });
 
     let dumpID = aSubject.hasKey("dumpID") ? aSubject.getProperty("dumpID") : null;
+    let crashedURL = Browser.selectedTab.browser.__SS_data.entries[0].url;
 
     // Execute the UI prompt after the notification has had a chance to return and close the child process
     setTimeout(function(self) {
@@ -2458,8 +2466,24 @@ var ContentCrashObserver = {
       }
 
       // Submit the report, if we have one and the user wants to submit it
-      if (submit.value && dumpID)
+      if (submit.value && dumpID) {
+        let directoryService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
+        let extra = directoryService.get("UAppData", Ci.nsIFile);
+        extra.append("Crash Reports");
+        extra.append("pending");
+        extra.append(dumpID + ".extra");
+        let foStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
+        try {
+          // use 0x02 | 0x10 to open file for appending.
+          foStream.init(extra, 0x02 |  0x10, 0666, 0); 
+          let data = "URL=" + crashedURL + "\n";
+          foStream.write(data, data.length);
+          foStream.close();
+        } catch (x) {
+          dump (x);
+        }
         self.CrashSubmit.submit(dumpID, Elements.stack, null, null);
+      }
     }, 0, this);
   }
 };
@@ -2549,6 +2573,7 @@ function Tab(aURI, aParams) {
   this._chromeTab = null;
   this._metadata = null;
 
+  this.contentMightCaptureMouse = false;
   this.useFallbackWidth = false;
   this.owner = null;
 
@@ -2919,8 +2944,6 @@ Tab.prototype = {
         let fl = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
         fl.activateRemoteFrame();
       } catch (e) {}
-
-      ContentTouchHandler.updateContentCapture();
     } else {
       browser.messageManager.sendAsyncMessage("Browser:Blur", { });
       browser.setAttribute("type", "content");

@@ -129,6 +129,8 @@
 #include "nsRefreshDriver.h"
 #include "CanvasImageCache.h"
 
+#include "nsHyphenationManager.h"
+
 extern void NS_ShutdownChainItemPool();
 
 using namespace mozilla;
@@ -382,4 +384,6 @@ nsLayoutStatics::Shutdown()
   nsHTMLInputElement::DestroyUploadLastDir();
 
   nsLayoutUtils::Shutdown();
+
+  nsHyphenationManager::Shutdown();
 }
