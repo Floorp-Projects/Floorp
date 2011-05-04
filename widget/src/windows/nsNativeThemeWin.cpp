@@ -362,11 +362,13 @@ static const PRInt32 kProgressVistaOverlayWidth = 120;
 // The width of the overlay used to for indeterminate progress bars on XP.
 static const PRInt32 kProgressXPOverlayWidth = 55;
 // Speed (px per ms) of the animation for determined Vista and later progress bars.
-static const double kProgressDeterminedVistaSpeed = 0.3;
+static const double kProgressDeterminedVistaSpeed = 0.225;
 // Speed (px per ms) of the animation for indeterminate progress bars.
 static const double kProgressIndeterminateSpeed = 0.175;
-// Delay between two indeterminate progress bar cycle (in ms).
+// Delay (in ms) between two indeterminate progress bar cycles.
 static const PRInt32 kProgressIndeterminateDelay = 500;
+// Delay (in ms) between two determinate progress bar animation on Vista/7.
+static const PRInt32 kProgressDeterminedVistaDelay = 1000;
 
 // Adds "hot" caption button padding to minimum widget size.
 static void AddPaddingRect(nsIntSize* aSize, CaptionButton button) {
@@ -1587,14 +1589,12 @@ RENDER_AGAIN:
       const double pixelsPerMillisecond = indeterminate
                                             ? kProgressIndeterminateSpeed
                                             : kProgressDeterminedVistaSpeed;
+      const PRInt32 delay = indeterminate ? kProgressIndeterminateDelay
+                                          : kProgressDeterminedVistaDelay;
 
       const PRInt32 frameWidth = widgetRect.right - widgetRect.left;
-      PRInt32 animationWidth = frameWidth + overlayWidth;
-      // When indeterminated, we add a delay of one second between two cycles.
-      if (indeterminate) {
-        animationWidth += static_cast<PRInt32>(pixelsPerMillisecond *
-                          kProgressIndeterminateDelay);
-      }
+      const PRInt32 animationWidth = frameWidth + overlayWidth +
+                                     static_cast<PRInt32>(pixelsPerMillisecond * delay);
       const double interval = animationWidth / pixelsPerMillisecond;
       // We have to pass a double* to modf and we can't pass NULL.
       double tempValue;
