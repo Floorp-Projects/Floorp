@@ -1433,8 +1433,15 @@ static bool
 InitGeneratorClass(JSContext *cx, GlobalObject *global)
 {
 #if JS_HAS_GENERATORS
-    return js_InitClass(cx, global, NULL, &js_GeneratorClass, NULL, 0,
-                        NULL, generator_methods, NULL, NULL);
+    JSObject *proto = global->createBlankPrototype(cx, &js_GeneratorClass);
+    if (!proto)
+        return false;
+
+    if (!DefinePropertiesAndBrand(cx, proto, NULL, generator_methods))
+        return false;
+
+    /* This should use a non-JSProtoKey'd slot, but this is easier for now. */
+    return DefineConstructorAndPrototype(cx, global, JSProto_Generator, proto, proto);
 #else
     return true;
 #endif
