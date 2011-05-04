@@ -865,7 +865,7 @@ public:
                 mChangedBreaks(PR_FALSE), mExistingTextRun(aExistingTextRun) {}
 
     virtual void SetBreaks(PRUint32 aOffset, PRUint32 aLength,
-                           PRPackedBool* aBreakBefore) {
+                           PRUint8* aBreakBefore) {
       if (mTextRun->SetPotentialLineBreaks(aOffset + mOffsetIntoTextRun, aLength,
                                            aBreakBefore, mContext)) {
         mChangedBreaks = PR_TRUE;
@@ -1145,6 +1145,7 @@ BuildTextRuns(gfxContext* aContext, nsTextFrame* aForFrame,
   }
 
   nsPresContext* presContext = aLineContainer->PresContext();
+  nsStyleContext* sc = aForFrame->GetStyleContext();
   BuildTextRunsScanner scanner(presContext, aContext, aLineContainer);
 
   nsBlockFrame* block = nsLayoutUtils::GetAsBlock(aLineContainer);
@@ -2037,6 +2038,9 @@ BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     if (textStyle->mTextTransform == NS_STYLE_TEXT_TRANSFORM_CAPITALIZE) {
       flags |= nsLineBreaker::BREAK_NEED_CAPITALIZATION;
     }
+    if (textStyle->mHyphens == NS_STYLE_HYPHENS_AUTO) {
+      flags |= nsLineBreaker::BREAK_USE_AUTO_HYPHENATION;
+    }
 
     if (HasCompressedLeadingWhitespace(startFrame, textStyle,
                                        mappedFlow->GetContentEnd(), iter)) {
@@ -2456,6 +2460,9 @@ public:
   virtual gfxFloat GetHyphenWidth();
   virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
                                     PRPackedBool* aBreakBefore);
+  virtual PRInt8 GetHyphensOption() {
+    return mTextStyle->mHyphens;
+  }
 
   void GetSpacingInternal(PRUint32 aStart, PRUint32 aLength, Spacing* aSpacing,
                           PRBool aIgnoreTabs);
@@ -2825,7 +2832,9 @@ PropertyProvider::GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
   NS_PRECONDITION(IsInBounds(mStart, mLength, aStart, aLength), "Range out of bounds");
   NS_PRECONDITION(mLength != PR_INT32_MAX, "Can't call this with undefined length");
 
-  if (!mTextStyle->WhiteSpaceCanWrap()) {
+  if (!mTextStyle->WhiteSpaceCanWrap() ||
+      mTextStyle->mHyphens == NS_STYLE_HYPHENS_NONE)
+  {
     memset(aBreakBefore, PR_FALSE, aLength);
     return;
   }
@@ -2859,6 +2868,14 @@ PropertyProvider::GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
           (!(mFrame->GetStateBits() & TEXT_START_OF_LINE) ||
            run.GetSkippedOffset() > mStart.GetSkippedOffset());
       allowHyphenBreakBeforeNextChar = PR_FALSE;
+    }
+  }
+
+  if (mTextStyle->mHyphens == NS_STYLE_HYPHENS_AUTO) {
+    for (PRUint32 i = 0; i < aLength; ++i) {
+      if (mTextRun->CanHyphenateBefore(aStart + i)) {
+        aBreakBefore[i] = PR_TRUE;
+      }
     }
   }
 }
@@ -6053,7 +6070,9 @@ nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
   // otherwise we can just pass PR_INT32_MAX to mean "all the text"
   PRInt32 len = PR_INT32_MAX;
   PRBool hyphenating = frag->GetLength() > 0 &&
-    (mTextRun->GetFlags() & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0;
+    (textStyle->mHyphens == NS_STYLE_HYPHENS_AUTO ||
+     (textStyle->mHyphens == NS_STYLE_HYPHENS_MANUAL &&
+      (mTextRun->GetFlags() & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0));
   if (hyphenating) {
     gfxSkipCharsIterator tmp(iter);
     len = PR_MIN(GetContentOffset() + GetInFlowContentLength(),
@@ -6136,7 +6155,7 @@ nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
         aData->ForceBreak(aRenderingContext);
       } else if (hyphBreakBefore && hyphBreakBefore[i - start]) {
         aData->OptionallyBreak(aRenderingContext, provider.GetHyphenWidth());
-      } else {
+      } {
         aData->OptionallyBreak(aRenderingContext);
       }
       wordStart = i;
@@ -6360,6 +6379,10 @@ static PRBool
 HasSoftHyphenBefore(const nsTextFragment* aFrag, gfxTextRun* aTextRun,
                     PRInt32 aStartOffset, const gfxSkipCharsIterator& aIter)
 {
+  if (aIter.GetSkippedOffset() < aTextRun->GetLength() &&
+      aTextRun->CanHyphenateBefore(aIter.GetSkippedOffset())) {
+    return PR_TRUE;
+  }
   if (!(aTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_SHY))
     return PR_FALSE;
   gfxSkipCharsIterator iter = aIter;
@@ -6934,6 +6957,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
     AddStateBits(TEXT_HAS_NONCOLLAPSED_CHARACTERS);
   }
   if (charsFit > 0 && charsFit == length &&
+      textStyle->mHyphens != NS_STYLE_HYPHENS_NONE &&
       HasSoftHyphenBefore(frag, mTextRun, offset, end)) {
     // Record a potential break after final soft hyphen
     aLineLayout.NotifyOptionalBreakPosition(mContent, offset + length,
@@ -6966,7 +6990,7 @@ nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   aStatus = contentLength == maxContentLength
     ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
 
-  if (charsFit == 0 && length > 0) {
+  if (charsFit == 0 && length > 0 && !usedHyphenation) {
     // Couldn't place any text
     aStatus = NS_INLINE_LINE_BREAK_BEFORE();
   } else if (contentLength > 0 && mContentOffset + contentLength - 1 == newLineOffset) {
