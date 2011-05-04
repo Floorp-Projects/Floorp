@@ -2461,6 +2461,34 @@ TraceMonitor::outOfMemory() const
            traceAlloc->outOfMemory();
 }
 
+void
+TraceMonitor::getCodeAllocStats(size_t &total, size_t &frag_size, size_t &free_size) const
+{
+    if (codeAlloc) {
+        codeAlloc->getStats(total, frag_size, free_size);
+    } else {
+        total = 0;
+        frag_size = 0;
+        free_size = 0;
+    }
+}
+
+size_t
+TraceMonitor::getVMAllocatorsMainSize() const
+{
+    return dataAlloc->getBytesAllocated() +
+           traceAlloc->getBytesAllocated() +
+           tempAlloc->getBytesAllocated();
+}
+
+size_t
+TraceMonitor::getVMAllocatorsReserveSize() const
+{
+    return dataAlloc->mReserveSize +
+           traceAlloc->mReserveSize +
+           tempAlloc->mReserveSize;
+}
+
 /*
  * This function destroys the recorder after a successful recording, possibly
  * starting a suspended outer recorder.

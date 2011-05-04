@@ -242,9 +242,9 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mSerializingOutput(PR_FALSE),
     mPersistFlags(kDefaultPersistFlags),
     mPersistResult(NS_OK),
-    mWrapColumn(72),
     mTotalCurrentProgress(0),
     mTotalMaxProgress(0),
+    mWrapColumn(72),
     mEncodingFlags(0)
 {
 }
