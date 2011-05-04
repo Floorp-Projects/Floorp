@@ -343,6 +343,8 @@ protected:
   // shouldn't be performing any more content model notifications,
   // since we're not longer updating our child counts.
   PRUint8 mIsDocumentObserver : 1;
+  // True if this is a fragment parser
+  PRUint8 mFragmentMode : 1;
   
   //
   // -- Can interrupt parsing members --
