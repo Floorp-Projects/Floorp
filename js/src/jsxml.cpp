@@ -70,6 +70,8 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsatominlines.h"
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
@@ -207,7 +209,6 @@ namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 
 JS_FRIEND_DATA(Class) js_NamespaceClass = {
     "Namespace",
-    JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::NAMESPACE_CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
     PropertyStub,         /* addProperty */
@@ -7108,8 +7109,35 @@ js_GetXMLObject(JSContext *cx, JSXML *xml)
 JSObject *
 js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_NamespaceClass, Namespace, 2,
-                        NULL, namespace_methods, NULL, NULL);
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *namespaceProto = global->createBlankPrototype(cx, &js_NamespaceClass);
+    if (!namespaceProto)
+        return NULL;
+    JSFlatString *empty = cx->runtime->emptyString;
+    namespaceProto->setNamePrefix(empty);
+    namespaceProto->setNameURI(empty);
+    namespaceProto->syncSpecialEquality();
+
+    const uintN NAMESPACE_CTOR_LENGTH = 2;
+    JSFunction *ctor = global->createConstructor(cx, Namespace, &js_NamespaceClass,
+                                                 CLASS_ATOM(cx, Namespace),
+                                                 NAMESPACE_CTOR_LENGTH);
+    if (!ctor)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, namespaceProto))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, namespaceProto, namespace_props, namespace_methods))
+        return NULL;
+
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_Namespace, ctor, namespaceProto))
+        return NULL;
+
+    return namespaceProto;
 }
 
 JSObject *
