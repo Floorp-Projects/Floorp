@@ -509,6 +509,8 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
             for (CodeList* b = hb->lower; b != 0; b = b->lower) {
                 NanoAssert(b->higher->lower == b);
             }
+            bool b = checkChunkMark(firstBlock(hb), bytesPerAlloc, hb->isExec);
+            NanoAssertMsg(b, "Chunk access mode differs from that expected");
         }
         for (CodeList* avail = this->availblocks; avail; avail = avail->next) {
             NanoAssert(avail->isFree && avail->size() >= minAllocSize);
@@ -565,6 +567,7 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
             term->isExec = true;
             markCodeChunkExec(firstBlock(term), bytesPerAlloc);
         }
+        debug_only(sanity_check();)
     }
 }
 #endif // FEATURE_NANOJIT
