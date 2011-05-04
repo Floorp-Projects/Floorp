@@ -271,7 +271,7 @@ struct CallICInfo {
         releasePool(Pool_ClosureStub);
         releasePool(Pool_NativeStub);
         if (argTypes) {
-            js_free(argTypes);
+            UnwantedForeground::free_(argTypes);
             argTypes = NULL;
         }
     }

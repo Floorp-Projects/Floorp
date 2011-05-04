@@ -985,7 +985,7 @@ HashSetInsertTry(JSContext *cx, U **&values, unsigned &count, T key, bool pool)
     }
 
     if (values && !pool)
-        ::js_free(values);
+        Foreground::free_(values);
     values = newValues;
 
     insertpos = HashKey<T,KEY>(key) & (newCapacity - 1);
@@ -1084,11 +1084,11 @@ TypeSet::destroy(JSContext *cx)
 {
     JS_ASSERT(!(typeFlags & TYPE_FLAG_INTERMEDIATE_SET));
     if (objectCount >= 2)
-        ::js_free(objectSet);
+        Foreground::free_(objectSet);
     while (constraintList) {
         TypeConstraint *next = constraintList->next;
         if (constraintList->condensed() || constraintList->persistentObject())
-            ::js_free(constraintList);
+            Foreground::free_(constraintList);
         constraintList = next;
     }
 }
@@ -1353,10 +1353,10 @@ SweepClonedTypes(ClonedTypeSet *types)
         }
         if (types->objectCount == 1) {
             TypeObject *obj = types->objectSet[0];
-            ::js_free(types->objectSet);
+            Foreground::free_(types->objectSet);
             types->objectSet = (TypeObject **) obj;
         } else if (types->objectCount == 0) {
-            ::js_free(types->objectSet);
+            Foreground::free_(types->objectSet);
             types->objectSet = NULL;
         }
     } else if (types->objectCount == 1) {
