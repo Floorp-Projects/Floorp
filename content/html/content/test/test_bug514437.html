@@ -2,15 +2,18 @@
 <html>
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=514437
+https://bugzilla.mozilla.org/show_bug.cgi?id=633913
 -->
 <head>
-  <title>Test for Bug 514437</title>
+  <title>Test for Bug 514437 and Bug 633913</title>
   <script type="application/javascript" src="/MochiKit/packed.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=514437">Mozilla Bug 514437</a>
+and
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=633913">Mozilla Bug 633913</a>
 <p id="display"></p>
 <iframe name="submit_frame" onload="onFormSubmission();" style="visibility: hidden;"></iframe>
 <div id="content" style="visibility: hidden;">
@@ -21,7 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=514437
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 514437 **/
+/** Test for Bug 514437 and Bug 633913 **/
 
 function checkFormIDLAttribute(aElement)
 {
@@ -178,6 +181,47 @@ function checkPositionAttribute()
   }
 }
 
+function checkIndeterminatePseudoClass()
+{
+  function checkIndeterminate(aElement, aValue, aMax, aIndeterminate) {
+    if (aValue != null) {
+      aElement.setAttribute('value', aValue);
+    } else {
+      aElement.removeAttribute('value');
+    }
+
+    if (aMax != null) {
+      aElement.setAttribute('max', aMax);
+    } else {
+      aElement.removeAttribute('max');
+    }
+
+    is(aElement.mozMatchesSelector("progress:indeterminate"), aIndeterminate,
+       "<progress> indeterminate state should be " + aIndeterminate);
+  }
+
+  var tests = [
+    // Indeterminate state: (value is undefined, or not a float)
+    // value has to be defined (indeterminate state).
+    [ null, null, true ],
+    [ null,  1.0, true ],
+    [ 'foo', 1.0, true ],
+    // Determined state:
+    [ -1.0,  1.0, false ],
+    [  2.0,  1.0, false ],
+    [ 1.0,  null, false ],
+    [ 1.0, 'foo', false ],
+    [ 1.0,  -1.0, false ],
+    [ 0.0,   1.0, false ],
+  ];
+
+  var element = document.createElement('progress');
+
+  for each(var test in tests) {
+    checkIndeterminate(element, test[0], test[1], test[2]);
+  }
+}
+
 function checkFormListedElement(aElement)
 {
   is(document.forms[0].elements.length, 0, "the form should have no element");
@@ -264,6 +308,8 @@ checkValueAttribute();
 checkMaxAttribute();
 
 checkPositionAttribute();
+
+checkIndeterminatePseudoClass();
 
 checkFormListedElement(p);
 
