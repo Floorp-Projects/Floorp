@@ -173,8 +173,9 @@ static PRInt64 GetCanvasMemoryUsed(void *) {
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(CanvasMemory,
-                             "content/canvas/2d_pixel_bytes",
-                             "Total memory used by 2D canvas (width * height * 4)",
+                             "heap-used/content/canvas/2d-pixel-bytes",
+                             "Memory used by 2D canvases. Each canvas "
+                             "requires (width * height * 4) bytes.",
                              GetCanvasMemoryUsed,
                              NULL)
 
