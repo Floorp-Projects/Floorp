@@ -38,6 +38,7 @@
 #include "nsIDOMHTMLProgressElement.h"
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValue.h"
+#include "nsEventStateManager.h"
 
 
 class nsHTMLProgressElement : public nsGenericHTMLFormElement,
@@ -66,6 +67,8 @@ public:
   NS_IMETHOD_(PRUint32) GetType() const { return NS_FORM_PROGRESS; }
   NS_IMETHOD Reset();
   NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission);
+
+  nsEventStates IntrinsicState() const;
 
   nsresult Clone(nsINodeInfo* aNodeInfo, nsINode** aResult) const;
 
@@ -132,6 +135,18 @@ nsHTMLProgressElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 {
   // The progress element is not submittable.
   return NS_OK;
+}
+
+nsEventStates
+nsHTMLProgressElement::IntrinsicState() const
+{
+  nsEventStates state = nsGenericHTMLFormElement::IntrinsicState();
+
+  if (IsIndeterminate()) {
+    state |= NS_EVENT_STATE_INDETERMINATE;
+  }
+
+  return state;
 }
 
 PRBool
