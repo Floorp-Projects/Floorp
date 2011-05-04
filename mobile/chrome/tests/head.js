@@ -34,6 +34,14 @@ function waitForAndContinue(callback, test, timeout) {
   setTimeout(waitForAndContinue, 50, callback, test, timeout);
 };
 
+// Listen for the specified message once, then remove the listener.
+function onMessageOnce(aMessageManager, aName, aCallback) {
+  aMessageManager.addMessageListener(aName, function onMessage(aMessage) {
+    aMessageManager.removeMessageListener(aName, onMessage);
+    aCallback(aMessage);
+  });
+}
+
 function makeURI(spec) {
   return Services.io.newURI(spec, null, null);
 };

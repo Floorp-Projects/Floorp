@@ -497,6 +497,8 @@ nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
   nsIURI* uri = doc->GetDocumentURI();
   NS_ENSURE_TRUE(uri, NS_ERROR_NOT_AVAILABLE);
 
+  mExecutor->EnableFragmentMode(aPreventScriptExecution);
+
   Initialize(doc, uri, nsnull, nsnull);
 
   mExecutor->SetParser(this);
@@ -516,8 +518,6 @@ nsHtml5Parser::ParseHtml5Fragment(const nsAString& aSourceBuffer,
   }
 #endif
 
-  mExecutor->EnableFragmentMode(aPreventScriptExecution);
-  
   NS_PRECONDITION(!mExecutor->HasStarted(),
                   "Tried to start parse without initializing the parser.");
   mTreeBuilder->setScriptingEnabled(mExecutor->IsScriptEnabled());

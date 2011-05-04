@@ -1183,6 +1183,10 @@ pageaction:not([image]) > hbox >.pageaction-image {
   height: 32px;
 }
 
+#search-engines-list > .action-button[image=""] > .button-box > .button-icon {
+  list-style-image: url("chrome://browser/skin/images/favicon-default-32.png");
+}
+
 /* Preferences window   ---------------------------------------------------- */
 .setting {
   padding-left: @padding_xnormal@;

@@ -20,7 +20,20 @@
 
   function reloadAllExperiments() {
     Components.utils.import("resource://testpilot/modules/setup.js");
-    TestPilotSetup.reloadRemoteExperiments();
+    TestPilotSetup.reloadRemoteExperiments(function(success) {
+      let errors = TestPilotSetup._remoteExperimentLoader.getLoadErrors();
+      let str;
+      if (errors.length > 0) {
+        str = "<ul>";
+        for each (let errStr in errors) {
+          str += "<li>" + errStr + "</li>";          
+        }
+        str += "</ul>";
+      } else {
+        str = "All experiments reloaded, no errors.";
+      }
+      document.getElementById("debug").innerHTML = str;
+    });
   }
 
   function runUnitTests() {
@@ -81,8 +94,7 @@
     var path = codeStore.resolveModule(null, filename);
     var textArea = document.getElementById("experiment-code-area");
     codeStore.setLocalOverride(path, textArea.value);
-    reloadAllExperiments(function(success) {
-      document.getElementById("debug").innerHTML = "Success? " + success;});
+    reloadAllExperiments();
   }
 
   function showMetaData() {

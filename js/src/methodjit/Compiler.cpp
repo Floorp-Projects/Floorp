@@ -404,24 +404,24 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
     JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %u, Slow code (stubcc) size = %u.\n", masm.size(), stubcc.size());
 
-    size_t totalSize = masm.size() +
-                       stubcc.size() +
-                       doubleList.length() * sizeof(double) +
-                       jumpTableOffsets.length() * sizeof(void *);
+    size_t codeSize = masm.size() +
+                      stubcc.size() +
+                      doubleList.length() * sizeof(double) +
+                      jumpTableOffsets.length() * sizeof(void *);
 
     JSC::ExecutablePool *execPool;
     uint8 *result =
-        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(totalSize, &execPool);
+        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(codeSize, &execPool);
     if (!result) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
     JS_ASSERT(execPool);
-    JSC::ExecutableAllocator::makeWritable(result, totalSize);
+    JSC::ExecutableAllocator::makeWritable(result, codeSize);
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
     
-    JSC::LinkBuffer fullCode(result, totalSize);
+    JSC::LinkBuffer fullCode(result, codeSize);
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 
     size_t nNmapLive = 0;
@@ -432,23 +432,23 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     }
 
     /* Please keep in sync with JITScript::scriptDataSize! */
-    size_t totalBytes = sizeof(JITScript) +
-                        sizeof(NativeMapEntry) * nNmapLive +
+    size_t dataSize = sizeof(JITScript) +
+                      sizeof(NativeMapEntry) * nNmapLive +
 #if defined JS_MONOIC
-                        sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
-                        sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
-                        sizeof(ic::CallICInfo) * callICs.length() +
-                        sizeof(ic::EqualityICInfo) * equalityICs.length() +
-                        sizeof(ic::TraceICInfo) * traceICs.length() +
+                      sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
+                      sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
+                      sizeof(ic::CallICInfo) * callICs.length() +
+                      sizeof(ic::EqualityICInfo) * equalityICs.length() +
+                      sizeof(ic::TraceICInfo) * traceICs.length() +
 #endif
 #if defined JS_POLYIC
-                        sizeof(ic::PICInfo) * pics.length() +
-                        sizeof(ic::GetElementIC) * getElemICs.length() +
-                        sizeof(ic::SetElementIC) * setElemICs.length() +
+                       sizeof(ic::PICInfo) * pics.length() +
+                       sizeof(ic::GetElementIC) * getElemICs.length() +
+                       sizeof(ic::SetElementIC) * setElemICs.length() +
 #endif
-                        sizeof(CallSite) * callSites.length();
+                       sizeof(CallSite) * callSites.length();
 
-    uint8 *cursor = (uint8 *)cx->calloc_(totalBytes);
+    uint8 *cursor = (uint8 *)cx->calloc_(dataSize);
     if (!cursor) {
         execPool->release();
         js_ReportOutOfMemory(cx);
@@ -808,12 +808,12 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         to.initialize(codeOffset, from.pc - script->code, from.id);
     }
 
-    JS_ASSERT(size_t(cursor - (uint8*)jit) == totalBytes);
+    JS_ASSERT(size_t(cursor - (uint8*)jit) == dataSize);
 
     *jitp = jit;
 
     /* We tolerate a race in the stats. */
-    cx->runtime->mjitMemoryUsed += totalSize + totalBytes;
+    cx->runtime->mjitDataSize += dataSize;
 
     return Compile_Okay;
 }

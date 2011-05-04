@@ -259,13 +259,13 @@ let TestPilotSetup = {
 
         if (currVersion != self.version) {
           if(!self._isBetaChannel()) {
+            // Don't show first run page in ffx4 beta version.
             self._prefs.setValue(VERSION_PREF, self.version);
             let browser = self._getFrontBrowserWindow().getBrowser();
             let url = self._prefs.getValue(FIRST_RUN_PREF, "");
             let tab = browser.addTab(url);
             browser.selectedTab = tab;
           }
-          // Don't show first run page in ffx4 beta version.
         }
 
         // Install tasks. (This requires knowing the version, so it is
