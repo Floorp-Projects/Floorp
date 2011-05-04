@@ -116,6 +116,7 @@
 #define PP_BARVERT         2
 #define PP_CHUNK           3
 #define PP_CHUNKVERT       4
+#define PP_FILL            5
 
 // Tab constants
 #define TABP_TAB             4
