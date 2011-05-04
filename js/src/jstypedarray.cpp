@@ -676,16 +676,6 @@ template<> inline const bool TypeIsFloatingPoint<double>() { return true; }
 
 template<typename NativeType> class TypedArrayTemplate;
 
-typedef TypedArrayTemplate<int8> Int8Array;
-typedef TypedArrayTemplate<uint8> Uint8Array;
-typedef TypedArrayTemplate<int16> Int16Array;
-typedef TypedArrayTemplate<uint16> Uint16Array;
-typedef TypedArrayTemplate<int32> Int32Array;
-typedef TypedArrayTemplate<uint32> Uint32Array;
-typedef TypedArrayTemplate<float> Float32Array;
-typedef TypedArrayTemplate<double> Float64Array;
-typedef TypedArrayTemplate<uint8_clamped> Uint8ClampedArray;
-
 template<typename NativeType>
 class TypedArrayTemplate
   : public TypedArray
@@ -696,8 +686,6 @@ class TypedArrayTemplate
     static const int ArrayTypeID() { return TypeIDOfType<NativeType>(); }
     static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static const bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
-
-    static JSFunctionSpec jsfuncs[];
 
     static inline Class *slowClass()
     {
@@ -1523,6 +1511,52 @@ class TypedArrayTemplate
     }
 };
 
+class Int8Array : public TypedArrayTemplate<int8> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_INT8 };
+    static JSFunctionSpec jsfuncs[];
+};
+class Uint8Array : public TypedArrayTemplate<uint8> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_UINT8 };
+    static JSFunctionSpec jsfuncs[];
+};
+class Int16Array : public TypedArrayTemplate<int16> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_INT16 };
+    static JSFunctionSpec jsfuncs[];
+};
+class Uint16Array : public TypedArrayTemplate<uint16> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_UINT16 };
+    static JSFunctionSpec jsfuncs[];
+};
+class Int32Array : public TypedArrayTemplate<int32> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_INT32 };
+    static JSFunctionSpec jsfuncs[];
+};
+class Uint32Array : public TypedArrayTemplate<uint32> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_UINT32 };
+    static JSFunctionSpec jsfuncs[];
+};
+class Float32Array : public TypedArrayTemplate<float> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_FLOAT32 };
+    static JSFunctionSpec jsfuncs[];
+};
+class Float64Array : public TypedArrayTemplate<double> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_FLOAT64 };
+    static JSFunctionSpec jsfuncs[];
+};
+class Uint8ClampedArray : public TypedArrayTemplate<uint8_clamped> {
+  public:
+    enum { ACTUAL_TYPE = TYPE_UINT8_CLAMPED };
+    static JSFunctionSpec jsfuncs[];
+};
+
 // this default implementation is only valid for integer types
 // less than 32-bits in size.
 template<typename NativeType>
@@ -1742,30 +1776,33 @@ template<> JSFunctionSpec _typedArray::jsfuncs[] = {                           \
     }                                                                          \
 }
 
-#define INIT_TYPED_ARRAY_CLASS(_typedArray,_type)                              \
-do {                                                                           \
-    proto = js_InitClass(cx, obj, NULL,                                        \
-                         &TypedArray::slowClasses[TypedArray::_type],          \
-                         _typedArray::class_constructor, 3,                    \
-                         _typedArray::jsprops,                                 \
-                         _typedArray::jsfuncs,                                 \
-                         NULL, NULL);                                          \
-    if (!proto)                                                                \
-        return NULL;                                                           \
-    JSObject *ctor = JS_GetConstructor(cx, proto);                             \
-    if (!ctor ||                                                               \
-        !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \
-                           INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
-                           JS_PropertyStub, JS_StrictPropertyStub,             \
-                           JSPROP_PERMANENT | JSPROP_READONLY) ||              \
-        !JS_DefineProperty(cx, proto, "BYTES_PER_ELEMENT",                     \
-                           INT_TO_JSVAL(sizeof(_typedArray::ThisType)),        \
-                           JS_PropertyStub, JS_StrictPropertyStub,             \
-                           JSPROP_PERMANENT | JSPROP_READONLY))                \
-    {                                                                          \
-        return NULL;                                                           \
-    }                                                                          \
-} while (0)
+template<class ArrayType>
+static inline JSObject *
+InitTypedArrayClass(JSContext *cx, GlobalObject *global)
+{
+    JSObject *proto = js_InitClass(cx, global, NULL,
+                                   &ArrayType::slowClasses[ArrayType::ACTUAL_TYPE],
+                                   ArrayType::class_constructor, 3,
+                                   ArrayType::jsprops,
+                                   ArrayType::jsfuncs,
+                                   NULL, NULL);
+    if (!proto)
+        return NULL;
+    JSObject *ctor = JS_GetConstructor(cx, proto);
+    if (!ctor ||
+        !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",
+                           INT_TO_JSVAL(sizeof(typename ArrayType::ThisType)),
+                           JS_PropertyStub, JS_StrictPropertyStub,
+                           JSPROP_PERMANENT | JSPROP_READONLY) ||
+        !JS_DefineProperty(cx, proto, "BYTES_PER_ELEMENT",
+                           INT_TO_JSVAL(sizeof(typename ArrayType::ThisType)),
+                           JS_PropertyStub, JS_StrictPropertyStub,
+                           JSPROP_PERMANENT | JSPROP_READONLY))
+    {
+        return NULL;
+    }
+    return proto;
+}
 
 IMPL_TYPED_ARRAY_STATICS(Int8Array);
 IMPL_TYPED_ARRAY_STATICS(Uint8Array);
@@ -1804,28 +1841,33 @@ Class TypedArray::slowClasses[TYPE_MAX] = {
 JS_FRIEND_API(JSObject *)
 js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
 {
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
     /* Idempotency required: we initialize several things, possibly lazily. */
     JSObject *stop;
-    if (!js_GetClassObject(cx, obj, JSProto_ArrayBuffer, &stop))
+    if (!js_GetClassObject(cx, global, JSProto_ArrayBuffer, &stop))
         return NULL;
     if (stop)
         return stop;
 
-    JSObject *proto;
+    if (!InitTypedArrayClass<Int8Array>(cx, global) ||
+        !InitTypedArrayClass<Uint8Array>(cx, global) ||
+        !InitTypedArrayClass<Int16Array>(cx, global) ||
+        !InitTypedArrayClass<Uint16Array>(cx, global) ||
+        !InitTypedArrayClass<Int32Array>(cx, global) ||
+        !InitTypedArrayClass<Uint32Array>(cx, global) ||
+        !InitTypedArrayClass<Float32Array>(cx, global) ||
+        !InitTypedArrayClass<Float64Array>(cx, global) ||
+        !InitTypedArrayClass<Uint8ClampedArray>(cx, global))
+    {
+        return NULL;
+    }
 
-    INIT_TYPED_ARRAY_CLASS(Int8Array,TYPE_INT8);
-    INIT_TYPED_ARRAY_CLASS(Uint8Array,TYPE_UINT8);
-    INIT_TYPED_ARRAY_CLASS(Int16Array,TYPE_INT16);
-    INIT_TYPED_ARRAY_CLASS(Uint16Array,TYPE_UINT16);
-    INIT_TYPED_ARRAY_CLASS(Int32Array,TYPE_INT32);
-    INIT_TYPED_ARRAY_CLASS(Uint32Array,TYPE_UINT32);
-    INIT_TYPED_ARRAY_CLASS(Float32Array,TYPE_FLOAT32);
-    INIT_TYPED_ARRAY_CLASS(Float64Array,TYPE_FLOAT64);
-    INIT_TYPED_ARRAY_CLASS(Uint8ClampedArray,TYPE_UINT8_CLAMPED);
-
-    proto = js_InitClass(cx, obj, NULL, &ArrayBuffer::slowClass,
-                         ArrayBuffer::class_constructor, 1,
-                         ArrayBuffer::jsprops, NULL, NULL, NULL);
+    JSObject *proto = js_InitClass(cx, global, NULL, &ArrayBuffer::slowClass,
+                                   ArrayBuffer::class_constructor, 1,
+                                   ArrayBuffer::jsprops, NULL, NULL, NULL);
     if (!proto)
         return NULL;
 
