@@ -49,6 +49,8 @@
 #include "jsgcmark.h"
 #include "jsweakmap.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
@@ -290,12 +292,27 @@ static JSFunctionSpec weak_map_methods[] = {
 JSObject *
 js_InitWeakMapClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto = js_InitClass(cx, obj, NULL, &WeakMapClass, WeakMap_construct, 0,
-                                   NULL, weak_map_methods, NULL, NULL);
-    if (!proto)
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *weakMapProto = global->createBlankPrototype(cx, &WeakMapClass);
+    if (!weakMapProto)
+        return NULL;
+    weakMapProto->setPrivate(NULL);
+
+    JSFunction *ctor = global->createConstructor(cx, WeakMap_construct, &WeakMapClass,
+                                                 CLASS_ATOM(cx, WeakMap), 0);
+    if (!ctor)
         return NULL;
 
-    proto->setPrivate(NULL);
+    if (!LinkConstructorAndPrototype(cx, ctor, weakMapProto))
+        return NULL;
 
-    return proto;
+    if (!DefinePropertiesAndBrand(cx, weakMapProto, NULL, weak_map_methods))
+        return NULL;
+
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_WeakMap, ctor, weakMapProto))
+        return NULL;
+    return weakMapProto;
 }
