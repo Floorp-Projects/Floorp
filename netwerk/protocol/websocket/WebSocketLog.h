@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
-
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,19 +13,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.
  *
  * The Initial Developer of the Original Code is
- *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Josh Matthews <josh@joshmatthews.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -38,42 +37,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PContent;
-include protocol PHttpChannel;
-include protocol PCookieService;
-include protocol PBrowser;
-include protocol PWyciwygChannel;
-include protocol PFTPChannel;
-include protocol PWebSocket;
+#ifndef WebSocketLog_h
+#define WebSocketLog_h
 
-namespace mozilla {
-namespace net {
+#ifdef MOZ_LOGGING
+#define FORCE_PR_LOG
+#endif
 
+#if defined(PR_LOG)
+#error "This file must be #included before any IPDL-generated files or other files that #include prlog.h"
+#endif
 
-//-------------------------------------------------------------------
-sync protocol PNecko
-{
-  manager PContent;
-  manages PHttpChannel;
-  manages PCookieService;
-  manages PWyciwygChannel;
-  manages PFTPChannel;
-  manages PWebSocket;
+#include "base/basictypes.h"
+#include "prlog.h"
+#include "mozilla/net/NeckoChild.h"
 
-parent:
-  __delete__();
+#ifdef PR_LOGGING
+extern PRLogModuleInfo* webSocketLog;
+#endif
 
-  PCookieService();
-  PWyciwygChannel();
-  PFTPChannel();
-  PWebSocket(PBrowser browser);
+#undef LOG
+#define LOG(args) PR_LOG(webSocketLog, PR_LOG_DEBUG, args)
 
-  HTMLDNSPrefetch(nsString hostname, PRUint16 flags);
-
-both:
-  PHttpChannel(nullable PBrowser browser);
-};
-
-
-} // namespace net
-} // namespace mozilla
+#endif

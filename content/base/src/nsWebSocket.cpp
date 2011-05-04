@@ -1244,7 +1244,7 @@ nsWebSocket::Send(const nsAString& aData, PRBool *aRet)
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  // We need to check if there isn't unpaired surrogates.
+  // Check for unpaired surrogates.
   PRUint32 i, length = aData.Length();
   for (i = 0; i < length; ++i) {
     if (NS_IS_LOW_SURROGATE(aData[i])) {
