@@ -483,12 +483,24 @@ SECMOD_DeleteInternalModule(const char *name)
 				NULL, SECMOD_FIPS_FLAGS);
 	}
 	if (newModule) {
+	    PK11SlotInfo *slot;
 	    newModule->libraryParams = 
 	     PORT_ArenaStrdup(newModule->arena,mlp->module->libraryParams);
+	    /* if an explicit internal key slot has been set, reset it */
+	    slot = pk11_SwapInternalKeySlot(NULL);
+	    if (slot) {
+		secmod_SetInternalKeySlotFlag(newModule, PR_TRUE);
+	    }
 	    rv = SECMOD_AddModule(newModule);
 	    if (rv != SECSuccess) {
+		/* load failed, restore the internal key slot */
+		pk11_SetInternalKeySlot(slot);
 		SECMOD_DestroyModule(newModule);
 		newModule = NULL;
+	    }
+	    /* free the old explicit internal key slot, we now have a new one */
+	    if (slot) {
+		PK11_FreeSlot(slot);
 	    }
 	}
 	if (newModule == NULL) {

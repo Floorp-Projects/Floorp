@@ -38,7 +38,7 @@
 /*
  * CMS miscellaneous utility functions.
  *
- * $Id: cmsutil.c,v 1.15 2008/03/10 00:01:27 wtc%google.com Exp $
+ * $Id: cmsutil.c,v 1.15.54.1 2011/01/28 23:08:27 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -243,8 +243,7 @@ NSS_CMSUtil_GetTemplateByTypeTag(SECOidTag type)
 	template = NSSCMSDigestedDataTemplate;
 	break;
     default:
-    case SEC_OID_PKCS7_DATA:
-	template = NULL;
+	template = NSS_CMSType_GetTemplate(type);
 	break;
     }
     return template;
@@ -269,8 +268,7 @@ NSS_CMSUtil_GetSizeByTypeTag(SECOidTag type)
 	size = sizeof(NSSCMSDigestedData);
 	break;
     default:
-    case SEC_OID_PKCS7_DATA:
-	size = 0;
+	size = NSS_CMSType_GetContentSize(type);
 	break;
     }
     return size;
@@ -300,6 +298,9 @@ NSS_CMSContent_GetContentInfo(void *msg, SECOidTag type)
 	break;
     default:
 	cinfo = NULL;
+	if (NSS_CMSType_IsWrapper(type)) {
+	    cinfo = &(c.genericData->contentInfo);
+	}
     }
     return cinfo;
 }

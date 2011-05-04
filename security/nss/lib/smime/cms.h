@@ -37,7 +37,7 @@
 /*
  * Interfaces of the CMS implementation.
  *
- * $Id: cms.h,v 1.23 2010/04/25 23:37:38 nelson%bolyard.com Exp $
+ * $Id: cms.h,v 1.23.2.3 2011/02/11 16:44:02 emaldona%redhat.com Exp $
  */
 
 #ifndef _CMS_H_
@@ -301,6 +301,14 @@ NSS_CMSContentInfo_SetContent_DigestedData(NSSCMSMessage *cmsg, NSSCMSContentInf
 
 extern SECStatus
 NSS_CMSContentInfo_SetContent_EncryptedData(NSSCMSMessage *cmsg, NSSCMSContentInfo *cinfo, NSSCMSEncryptedData *encd);
+
+/*
+ * turn off streaming for this content type.
+ * This could fail with SEC_ERROR_NO_MEMORY in memory constrained conditions.
+ */
+extern SECStatus
+NSS_CMSContentInfo_SetDontStream(NSSCMSContentInfo *cinfo, PRBool dontStream);
+
 
 /*
  * NSS_CMSContentInfo_GetContent - get pointer to inner content
@@ -1127,6 +1135,51 @@ extern SECStatus
 NSS_CMSDEREncode(NSSCMSMessage *cmsg, SECItem *input, SECItem *derOut, 
                  PLArenaPool *arena);
 
+
+/************************************************************************
+ * 
+ ************************************************************************/
+
+/*
+ *  define new S/MIME content type entries
+ *
+ *  S/MIME uses the builtin PKCS7 oid types for encoding and decoding the
+ *  various S/MIME content. Some applications have their own content type
+ *  which is different from the standard content type defined by S/MIME.
+ *
+ *  This function allows you to register new content types. There are basically
+ *  Two different types of content, Wrappping content, and Data.
+ *
+ *  For data types, All the functions below can be zero or NULL excext 
+ *  type and is isData, which should be your oid tag and PR_FALSE respectively
+ *
+ *  For wrapping types, everything must be provided, or you will get encoder
+ *  failures.
+ *
+ *  If NSS doesn't already define the OID that you need, you can register 
+ *  your own with SECOID_AddEntry.
+ * 
+ *  Once you have defined your new content type, you can pass your new content
+ *  type to NSS_CMSContentInfo_SetContent().
+ * 
+ *  If you are using a wrapping type you can pass your own data structure in 
+ *  the ptr field, but it must contain and embedded NSSCMSGenericWrappingData 
+ *  structure as the first element. The size you pass to 
+ *  NSS_CMSType_RegisterContentType is the total size of your self defined 
+ *  data structure. NSS_CMSContentInfo_GetContent will return that data 
+ *  structure from the content info. Your ASN1Template will be evaluated 
+ *  against that data structure.
+ */
+SECStatus NSS_CMSType_RegisterContentType(SECOidTag type,
+                          SEC_ASN1Template *asn1Template, size_t size,
+                          NSSCMSGenericWrapperDataDestroy  destroy,
+                          NSSCMSGenericWrapperDataCallback decode_before,
+                          NSSCMSGenericWrapperDataCallback decode_after,
+                          NSSCMSGenericWrapperDataCallback decode_end,
+                          NSSCMSGenericWrapperDataCallback encode_start,
+                          NSSCMSGenericWrapperDataCallback encode_before,
+                          NSSCMSGenericWrapperDataCallback encode_after,
+                          PRBool isData);
 
 /************************************************************************/
 SEC_END_PROTOS
