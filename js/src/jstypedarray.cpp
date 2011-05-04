@@ -63,6 +63,8 @@
 #include "jstypedarray.h"
 #include "jsutil.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsobjinlines.h"
 #include "jstypedarrayinlines.h"
 
@@ -686,6 +688,8 @@ class TypedArrayTemplate
     static const int ArrayTypeID() { return TypeIDOfType<NativeType>(); }
     static const bool ArrayTypeIsUnsigned() { return TypeIsUnsigned<NativeType>(); }
     static const bool ArrayTypeIsFloatingPoint() { return TypeIsFloatingPoint<NativeType>(); }
+
+    static const size_t BYTES_PER_ELEMENT = sizeof(ThisType);
 
     static inline Class *slowClass()
     {
@@ -1514,46 +1518,55 @@ class TypedArrayTemplate
 class Int8Array : public TypedArrayTemplate<int8> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT8 };
+    static const JSProtoKey key = JSProto_Int8Array;
     static JSFunctionSpec jsfuncs[];
 };
 class Uint8Array : public TypedArrayTemplate<uint8> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT8 };
+    static const JSProtoKey key = JSProto_Uint8Array;
     static JSFunctionSpec jsfuncs[];
 };
 class Int16Array : public TypedArrayTemplate<int16> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT16 };
+    static const JSProtoKey key = JSProto_Int16Array;
     static JSFunctionSpec jsfuncs[];
 };
 class Uint16Array : public TypedArrayTemplate<uint16> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT16 };
+    static const JSProtoKey key = JSProto_Uint16Array;
     static JSFunctionSpec jsfuncs[];
 };
 class Int32Array : public TypedArrayTemplate<int32> {
   public:
     enum { ACTUAL_TYPE = TYPE_INT32 };
+    static const JSProtoKey key = JSProto_Int32Array;
     static JSFunctionSpec jsfuncs[];
 };
 class Uint32Array : public TypedArrayTemplate<uint32> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT32 };
+    static const JSProtoKey key = JSProto_Uint32Array;
     static JSFunctionSpec jsfuncs[];
 };
 class Float32Array : public TypedArrayTemplate<float> {
   public:
     enum { ACTUAL_TYPE = TYPE_FLOAT32 };
+    static const JSProtoKey key = JSProto_Float32Array;
     static JSFunctionSpec jsfuncs[];
 };
 class Float64Array : public TypedArrayTemplate<double> {
   public:
     enum { ACTUAL_TYPE = TYPE_FLOAT64 };
+    static const JSProtoKey key = JSProto_Float64Array;
     static JSFunctionSpec jsfuncs[];
 };
 class Uint8ClampedArray : public TypedArrayTemplate<uint8_clamped> {
   public:
     enum { ACTUAL_TYPE = TYPE_UINT8_CLAMPED };
+    static const JSProtoKey key = JSProto_Uint8ClampedArray;
     static JSFunctionSpec jsfuncs[];
 };
 
@@ -1780,27 +1793,37 @@ template<class ArrayType>
 static inline JSObject *
 InitTypedArrayClass(JSContext *cx, GlobalObject *global)
 {
-    JSObject *proto = js_InitClass(cx, global, NULL,
-                                   &ArrayType::slowClasses[ArrayType::ACTUAL_TYPE],
-                                   ArrayType::class_constructor, 3,
-                                   ArrayType::jsprops,
-                                   ArrayType::jsfuncs,
-                                   NULL, NULL);
+    JSObject *proto = global->createBlankPrototype(cx, ArrayType::slowClass());
     if (!proto)
         return NULL;
-    JSObject *ctor = JS_GetConstructor(cx, proto);
-    if (!ctor ||
-        !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",
-                           INT_TO_JSVAL(sizeof(typename ArrayType::ThisType)),
-                           JS_PropertyStub, JS_StrictPropertyStub,
-                           JSPROP_PERMANENT | JSPROP_READONLY) ||
-        !JS_DefineProperty(cx, proto, "BYTES_PER_ELEMENT",
-                           INT_TO_JSVAL(sizeof(typename ArrayType::ThisType)),
-                           JS_PropertyStub, JS_StrictPropertyStub,
-                           JSPROP_PERMANENT | JSPROP_READONLY))
+
+    JSFunction *ctor =
+        global->createConstructor(cx, ArrayType::class_constructor, ArrayType::fastClass(),
+                                  cx->runtime->atomState.classAtoms[ArrayType::key], 3);
+    if (!ctor)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, proto))
+        return NULL;
+
+    if (!ctor->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.BYTES_PER_ELEMENTAtom),
+                              Int32Value(ArrayType::BYTES_PER_ELEMENT),
+                              PropertyStub, StrictPropertyStub,
+                              JSPROP_PERMANENT | JSPROP_READONLY) ||
+        !proto->defineProperty(cx, ATOM_TO_JSID(cx->runtime->atomState.BYTES_PER_ELEMENTAtom),
+                               Int32Value(ArrayType::BYTES_PER_ELEMENT),
+                               PropertyStub, StrictPropertyStub,
+                               JSPROP_PERMANENT | JSPROP_READONLY))
     {
         return NULL;
     }
+
+    if (!DefinePropertiesAndBrand(cx, proto, ArrayType::jsprops, ArrayType::jsfuncs))
+        return NULL;
+
+    if (!DefineConstructorAndPrototype(cx, global, ArrayType::key, ctor, proto))
+        return NULL;
+
     return proto;
 }
 
@@ -1890,6 +1913,17 @@ js_IsArrayBuffer(JSObject *obj)
     return obj->getClass() == &ArrayBuffer::fastClass;
 }
 
+namespace js {
+
+bool
+IsFastTypedArrayClass(const Class *clasp)
+{
+    return &TypedArray::fastClasses[0] <= clasp &&
+           clasp < &TypedArray::fastClasses[TypedArray::TYPE_MAX];
+}
+
+} // namespace js
+
 JSUint32
 JS_GetArrayBufferByteLength(JSObject *obj)
 {
@@ -1907,8 +1941,7 @@ js_IsTypedArray(JSObject *obj)
 {
     JS_ASSERT(obj);
     Class *clasp = obj->getClass();
-    return clasp >= &TypedArray::fastClasses[0] &&
-           clasp <  &TypedArray::fastClasses[TypedArray::TYPE_MAX];
+    return IsFastTypedArrayClass(clasp);
 }
 
 JS_FRIEND_API(JSObject *)
