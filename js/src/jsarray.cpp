@@ -1205,12 +1205,6 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 
     clearSlotRange(next, capacity - next);
 
-    /*
-     * Finally, update class. If |this| is Array.prototype, then js_InitClass
-     * will create an emptyShape whose class is &SlowArrayClass, to ensure
-     * that delegating instances can share shapes in the tree rooted at the
-     * proto's empty shape.
-     */
     return true;
 }
 
