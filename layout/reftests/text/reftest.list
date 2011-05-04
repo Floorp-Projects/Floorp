@@ -86,13 +86,3 @@ random-if(!cocoaWidget) == 577380.html 577380-ref.html
 HTTP(..) == arabic-shaping-1.html arabic-shaping-1-ref.html
 # check ligature in Arial Bold on Windows, for bug 644184; may fail on other platforms depending on fonts
 random-if(!winWidget) == arial-bold-lam-alef-1.html arial-bold-lam-alef-1-ref.html
-# Tests for hyphenation with -moz-hyphens
-== auto-hyphenation-1.html auto-hyphenation-1-ref.html
-!= auto-hyphenation-1.html auto-hyphenation-1-notref.html
-== auto-hyphenation-1a.html auto-hyphenation-1-ref.html
-== auto-hyphenation-2.html auto-hyphenation-2-ref.html
-== auto-hyphenation-3.html auto-hyphenation-3-ref.html
-== auto-hyphenation-4.html auto-hyphenation-4-ref.html
-== auto-hyphenation-5.html auto-hyphenation-5-ref.html
-== auto-hyphenation-6.html auto-hyphenation-6-ref.html
-== auto-hyphenation-7.html auto-hyphenation-7-ref.html
