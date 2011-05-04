@@ -3002,7 +3002,7 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
 
   // Get the name
   nsAutoString name;
-  PRBool nameThere = GetNameIfExists(name);
+  GetAttr(kNameSpaceID_None, nsGkAtoms::name, name);
 
   // Submit .x, .y for input type=image
   if (mType == NS_FORM_INPUT_IMAGE) {
@@ -3040,7 +3040,7 @@ nsHTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
   //
 
   // If name not there, don't submit
-  if (!nameThere) {
+  if (name.IsEmpty()) {
     return NS_OK;
   }
 
