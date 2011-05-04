@@ -46,6 +46,9 @@
 #include "jsvector.h"
 
 extern JSObject *
+js_InitObjectClass(JSContext *cx, JSObject *obj);
+
+extern JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj);
 
 namespace js {
