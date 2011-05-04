@@ -2456,6 +2456,11 @@
           this.mTabListeners[0] = tabListener;
           this.mTabFilters[0] = filter;
           this.init();
+
+          this.style.backgroundColor =
+            Services.prefs.getBoolPref("browser.display.use_system_colors") ?
+              "-moz-default-background-color" :
+              Services.prefs.getCharPref("browser.display.background_color");
         ]]>
       </constructor>
 
