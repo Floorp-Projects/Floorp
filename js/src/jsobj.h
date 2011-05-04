@@ -1754,13 +1754,19 @@ js_HasOwnProperty(JSContext *cx, js::LookupPropOp lookup, JSObject *obj, jsid id
 extern JSBool
 js_PropertyIsEnumerable(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
 
+#if JS_HAS_OBJ_PROTO_PROP
+extern JSPropertySpec object_props[];
+#else
+#define object_props NULL
+#endif
+
+extern JSFunctionSpec object_methods[];
+extern JSFunctionSpec object_static_methods[];
+
 #ifdef OLD_GETTER_SETTER_METHODS
 JS_FRIEND_API(JSBool) js_obj_defineGetter(JSContext *cx, uintN argc, js::Value *vp);
 JS_FRIEND_API(JSBool) js_obj_defineSetter(JSContext *cx, uintN argc, js::Value *vp);
 #endif
-
-extern JSObject *
-js_InitObjectClass(JSContext *cx, JSObject *obj);
 
 namespace js {
 
@@ -2173,6 +2179,9 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles);
 
 extern JSString *
 obj_toStringHelper(JSContext *cx, JSObject *obj);
+
+extern JSBool
+eval(JSContext *cx, uintN argc, Value *vp);
 
 /*
  * Performs a direct eval for the given arguments, which must correspond to the
