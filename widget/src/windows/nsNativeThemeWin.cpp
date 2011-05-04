@@ -60,6 +60,7 @@
 #include <malloc.h>
 #include "nsWindow.h"
 #include "nsIComboboxControlFrame.h"
+#include "prinrval.h"
 
 #include "gfxPlatform.h"
 #include "gfxContext.h"
@@ -345,12 +346,18 @@ static CaptionButtonPadding buttonData[3] = {
 
 /**
  * Progress bar related constants.
+ * These values are found by experimenting and comparing against native widgets
+ * used by the system. They are very unlikely exact but try to not be too wrong.
  */
 // PP_CHUNK is overflowing on the bottom for no appearant reasons.
 // This is a fix around this issue.
 static const PRInt32 kProgressDeterminedXPOverflow = 11;
 // Same thing but for PP_FILL.
 static const PRInt32 kProgressDeterminedVistaOverflow = 4;
+// The width of the overlay used to animate the progress bar (Vista and later).
+static const PRInt32 kProgressVistaOverlayWidth = 120;
+// Speed of the animation for determined Vista and later progress bars.
+static const double kProgressDeterminedVistaSpeed = 0.3;
 
 // Adds "hot" caption button padding to minimum widget size.
 static void AddPaddingRect(nsIntSize* aSize, CaptionButton button) {
@@ -1536,6 +1543,30 @@ RENDER_AGAIN:
 
     ctx->Restore();
     ctx->SetOperator(currentOp);
+  } else if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK &&
+             nsUXThemeData::sIsVistaOrLater) {
+    if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 60)) {
+      NS_WARNING("unable to animate progress widget!");
+    }
+
+    // Add the animated glow.
+    const PRInt32 frameWidth = widgetRect.right - widgetRect.left;
+    static const PRInt32 overlayWidth = kProgressVistaOverlayWidth;
+    static const double pixelsPerMillisecond = kProgressDeterminedVistaSpeed;
+
+    PRInt32 animationWidth = frameWidth + overlayWidth;
+    double interval = animationWidth / pixelsPerMillisecond;
+    // We have to pass a double* to modf and we can't pass NULL.
+    double tempValue;
+    double ratio = modf(PR_IntervalToMilliseconds(PR_IntervalNow())/interval,
+                        &tempValue);
+    PRInt32 dx = static_cast<PRInt32>(animationWidth * ratio) - overlayWidth;
+
+    RECT overlayRect = widgetRect;
+    overlayRect.left += dx;
+    overlayRect.right = overlayRect.left + overlayWidth;
+    nsUXThemeData::drawThemeBG(theme, hdc, PP_MOVEOVERLAY, state, &overlayRect,
+                               &clipRect);
   }
 
 
