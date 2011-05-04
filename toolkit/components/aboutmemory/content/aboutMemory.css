@@ -13,13 +13,13 @@
  *
  * The Original Code is about:memory.
  *
- * The Initial Developer of the Original Code is
- *   Mozilla Corporation
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
  * Portions created by the Initial Developer are Copyright (C) 2009
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
  *   Vladimir Vukicevic <vladimir@pobox.com>
+ *   Nicholas Nethercote <nnethercote@mozilla.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,46 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-html {
-  background: -moz-Dialog;
-  color: -moz-DialogText;
+.mrValue {
+  font-weight: bold;
+  color: #400;
 }
 
-body {
-  margin: 0;
-  padding: 0 1em;
-  font: message-box;
+.mrPerc {
 }
 
-h1 {
-    font-weight: bold;
-    font-size: x-large;
+.mrName {
+  font-style: italic;
+  color: #004;
 }
 
-label {
-    -moz-user-select: text;
+.treeLine {
+  color: #888;
 }
 
-h2 {
-    margin-top: 0;
-    font-weight: bold;
-    font-size: large;
-}
-
-.memBox {
-    max-width: 30em;
-    background: -moz-Field;
-    color: -moz-FieldText;
-    margin-top: 25px;
-    padding: 5px;
-    border: 1px solid -moz-FieldText;
-    border-radius: 10px 10px;
-}
-
-.memValue {
-    text-align: right;
-}
-
-.memOverview table {
-    font-size: 120%;
+.option {
+  font-size: 80%;
+  -moz-user-select: none;  /* no need to include this when cutting+pasting */
 }

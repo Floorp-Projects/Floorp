@@ -21,6 +21,7 @@
    -
    - Contributor(s):
    -   Vladimir Vukicevic <vladimir@pobox.com>
+   -   Nicholas Nethercote <nnethercote@mozilla.com>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,45 +40,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <title>about:memory</title>
-
-    <link rel="stylesheet" href="chrome://global/skin/aboutMemory.css"
-          type="text/css"/>
-
-    <script type="text/javascript"
-            src="chrome://global/content/aboutMemory.js"/>
+    <link rel="stylesheet" href="chrome://global/skin/aboutMemory.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css"/>
+    <script type="text/javascript" src="chrome://global/content/aboutMemory.js"/>
   </head>
 
-  <body onload="doLoad()" onunload="doUnload()">
-    <h1>Memory Usage</h1>
-
-    <div id="memOverview" class="memOverview memBox">
-      <h2>Overview</h2>
-      <table border="0">
-	<tbody>
-	  <tr>
-            <td width="100%">Memory mapped:</td>
-            <td id="memMappedValue" class="memValue"></td>
-          </tr>
-	  <tr>
-            <td>Memory in use:</td>
-            <td id="memInUseValue" class="memValue"></td>
-          </tr>
-	</tbody>
-      </table>
-    </div>
-
-    <div id="memOther" class="memOther memBox">
-      <h2>Other Information</h2>
-      <table border="0">
-	<thead>
-	  <tr>
-            <th style="text-align: left" width="100%">Description</th>
-            <th>Value</th>
-          </tr>
-	</thead>
-	<tbody id="memOtherRows">
-	</tbody>
-      </table>
-    </div>
-  </body>
+  <!-- No newline before the div element!  This avoids extraneous spaces when
+       pasting the entire output after selecting it with Ctrl-a. -->
+  <body onload="onLoad()" onunload="onUnload()"><div id="content"></div></body>
 </html>
