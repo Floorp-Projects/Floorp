@@ -1,6 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
-
+/* vim: set sw=2 ts=8 et tw=80 : */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -14,19 +13,19 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is Mozilla.
  *
  * The Initial Developer of the Original Code is
- *  The Mozilla Foundation
- * Portions created by the Initial Developer are Copyright (C) 2009
+ * Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Jason Duell <jduell.mcbugs@gmail.com>
+ *   Josh Matthews <josh@joshmatthews.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or
- * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -38,42 +37,49 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-include protocol PContent;
-include protocol PHttpChannel;
-include protocol PCookieService;
-include protocol PBrowser;
-include protocol PWyciwygChannel;
-include protocol PFTPChannel;
-include protocol PWebSocket;
+#ifndef mozilla_net_WebSocketChannelParent_h
+#define mozilla_net_WebSocketChannelParent_h
+
+#include "mozilla/net/PWebSocketParent.h"
+#include "mozilla/net/nsWebSocketHandler.h"
+#include "nsCOMPtr.h"
+#include "nsString.h"
+
+class nsIAuthPromptProvider;
 
 namespace mozilla {
 namespace net {
 
-
-//-------------------------------------------------------------------
-sync protocol PNecko
+class WebSocketChannelParent : public PWebSocketParent,
+                               public nsIWebSocketListener,
+                               public nsIInterfaceRequestor
 {
-  manager PContent;
-  manages PHttpChannel;
-  manages PCookieService;
-  manages PWyciwygChannel;
-  manages PFTPChannel;
-  manages PWebSocket;
+ public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWEBSOCKETLISTENER
+  NS_DECL_NSIINTERFACEREQUESTOR
 
-parent:
-  __delete__();
+  WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvider);
 
-  PCookieService();
-  PWyciwygChannel();
-  PFTPChannel();
-  PWebSocket(PBrowser browser);
+ private:
+  bool RecvAsyncOpen(const IPC::URI& aURI,
+                     const nsCString& aOrigin,
+                     const nsCString& aProtocol,
+                     const bool& aSecure);
+  bool RecvClose();
+  bool RecvSendMsg(const nsCString& aMsg);
+  bool RecvSendBinaryMsg(const nsCString& aMsg);
+  bool RecvDeleteSelf();
+  bool CancelEarly();
 
-  HTMLDNSPrefetch(nsString hostname, PRUint16 flags);
+  void ActorDestroy(ActorDestroyReason why);
 
-both:
-  PHttpChannel(nullable PBrowser browser);
+  nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;
+  nsCOMPtr<nsIWebSocketProtocol> mChannel;
+  bool mIPCOpen;
 };
-
 
 } // namespace net
 } // namespace mozilla
+
+#endif // mozilla_net_WebSocketChannelParent_h

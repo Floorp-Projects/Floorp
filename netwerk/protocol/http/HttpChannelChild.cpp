@@ -66,7 +66,7 @@ HttpChannelChild::HttpChannelChild()
   , mSendResumeAt(false)
   , mIPCOpen(false)
   , mKeptAlive(false)
-  , mEventQ(this)
+  , mEventQ(static_cast<nsIHttpChannel*>(this))
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
 }

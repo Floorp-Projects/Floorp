@@ -64,6 +64,7 @@
 #include "nsNetStrings.h"
 #include "nsDNSPrefetch.h"
 #include "nsAboutProtocolHandler.h"
+#include "nsXULAppAPI.h"
 
 #include "nsNetCID.h"
 
@@ -283,10 +284,47 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWyciwygProtocolHandler)
 
 #ifdef NECKO_PROTOCOL_websocket
 #include "nsWebSocketHandler.h"
+#include "WebSocketChannelChild.h"
 namespace mozilla {
 namespace net {
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocketHandler)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebSocketSSLHandler)
+static BaseWebSocketChannel*
+WebSocketHandlerConstructor(bool aSecure)
+{
+  if (IsNeckoChild()) {
+    return new WebSocketChannelChild(aSecure);
+  }
+
+  if (aSecure) {
+    return new nsWebSocketSSLHandler;
+  } else {
+    return new nsWebSocketHandler;
+  }
+}
+
+#define WEB_SOCKET_HANDLER_CONSTRUCTOR(type, secure)  \
+static nsresult                                       \
+type##Constructor(nsISupports *aOuter, REFNSIID aIID, \
+                  void **aResult)                     \
+{                                                     \
+  nsresult rv;                                        \
+                                                      \
+  BaseWebSocketChannel * inst;                        \
+                                                      \
+  *aResult = NULL;                                    \
+  if (NULL != aOuter) {                               \
+    rv = NS_ERROR_NO_AGGREGATION;                     \
+    return rv;                                        \
+  }                                                   \
+  inst = WebSocketHandlerConstructor(secure);         \
+  NS_ADDREF(inst);                                    \
+  rv = inst->QueryInterface(aIID, aResult);           \
+  NS_RELEASE(inst);                                   \
+  return rv;                                          \
+}
+
+WEB_SOCKET_HANDLER_CONSTRUCTOR(nsWebSocketHandler, false)
+WEB_SOCKET_HANDLER_CONSTRUCTOR(nsWebSocketSSLHandler, true)
+#undef WEB_SOCKET_HANDLER_CONSTRUCTOR
 } // namespace mozilla::net
 } // namespace mozilla
 #endif

@@ -37,6 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef mozilla_net_nsWebSocketHandler_h
+#define mozilla_net_nsWebSocketHandler_h
 
 #include "nsIWebSocketProtocol.h"
 #include "nsIURI.h"
@@ -57,6 +59,7 @@
 #include "nsIStringStream.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsIRandomGenerator.h"
+#include "BaseWebSocketChannel.h"
 
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -68,10 +71,9 @@ class nsPostMessage;
 class nsWSAdmissionManager;
 class nsWSCompression;
 
-class nsWebSocketHandler : public nsIWebSocketProtocol,
+class nsWebSocketHandler : public BaseWebSocketChannel,
                            public nsIHttpUpgradeListener,
                            public nsIStreamListener,
-                           public nsIProtocolHandler,
                            public nsIInputStreamCallback,
                            public nsIOutputStreamCallback,
                            public nsITimerCallback,
@@ -81,17 +83,26 @@ class nsWebSocketHandler : public nsIWebSocketProtocol,
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEBSOCKETPROTOCOL
   NS_DECL_NSIHTTPUPGRADELISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSIPROTOCOLHANDLER
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIOUTPUTSTREAMCALLBACK
   NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIDNSLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSICHANNELEVENTSINK
+
+  // nsIWebSocketProtocol methods BaseWebSocketChannel didn't implement for us
+  //
+  NS_IMETHOD AsyncOpen(nsIURI *aURI,
+                       const nsACString &aOrigin,
+                       nsIWebSocketListener *aListener,
+                       nsISupports *aContext);
+  NS_IMETHOD Close();
+  NS_IMETHOD SendMsg(const nsACString &aMsg);
+  NS_IMETHOD SendBinaryMsg(const nsACString &aMsg);
+  NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo);
 
   nsWebSocketHandler();
   static void Shutdown();
@@ -109,8 +120,6 @@ public:
   };
   
   const static PRUint32 kControlFrameMask = 0x8;
-  const static PRInt32 kDefaultWSPort     = 80;
-  const static PRInt32 kDefaultWSSPort    = 443;
   const static PRUint8 kMaskBit           = 0x80;
   const static PRUint8 kFinalFragBit      = 0x80;
 
@@ -125,8 +134,7 @@ public:
 
 protected:
   virtual ~nsWebSocketHandler();
-  PRBool  mEncrypted;
-  
+
 private:
   friend class nsPostMessage;
   friend class nsWSAdmissionManager;
@@ -196,11 +204,6 @@ private:
       PRInt32    mBinaryLen;
   };
   
-  nsCOMPtr<nsIURI>                         mOriginalURI;
-  nsCOMPtr<nsIURI>                         mURI;
-  nsCOMPtr<nsIWebSocketListener>           mListener;
-  nsCOMPtr<nsISupports>                    mContext;
-  nsCOMPtr<nsIInterfaceRequestor>          mCallbacks;
   nsCOMPtr<nsIEventTarget>                 mSocketThread;
   nsCOMPtr<nsIHttpChannelInternal>         mChannel;
   nsCOMPtr<nsIHttpChannel>                 mHttpChannel;
@@ -209,8 +212,6 @@ private:
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIRandomGenerator>             mRandomGenerator;
   
-  nsCString                       mProtocol;
-  nsCString                       mOrigin;
   nsCString                       mHashedSecret;
   nsCString                       mAddress;
 
@@ -280,9 +281,11 @@ private:
 class nsWebSocketSSLHandler : public nsWebSocketHandler
 {
 public:
-    nsWebSocketSSLHandler() {nsWebSocketHandler::mEncrypted = PR_TRUE;}
+    nsWebSocketSSLHandler() { BaseWebSocketChannel::mEncrypted = PR_TRUE; }
 protected:
     virtual ~nsWebSocketSSLHandler() {}
 };
 
 }} // namespace mozilla::net
+
+#endif // mozilla_net_nsWebSocketHandler_h

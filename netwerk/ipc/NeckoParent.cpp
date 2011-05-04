@@ -44,8 +44,12 @@
 #include "mozilla/net/CookieServiceParent.h"
 #include "mozilla/net/WyciwygChannelParent.h"
 #include "mozilla/net/FTPChannelParent.h"
+#include "mozilla/net/WebSocketChannelParent.h"
+#include "mozilla/dom/TabParent.h"
 
 #include "nsHTMLDNSPrefetch.h"
+
+using mozilla::dom::TabParent;
 
 namespace mozilla {
 namespace net {
@@ -116,6 +120,23 @@ bool
 NeckoParent::DeallocPWyciwygChannel(PWyciwygChannelParent* channel)
 {
   WyciwygChannelParent *p = static_cast<WyciwygChannelParent *>(channel);
+  p->Release();
+  return true;
+}
+
+PWebSocketParent*
+NeckoParent::AllocPWebSocket(PBrowserParent* browser)
+{
+  TabParent* tabParent = static_cast<TabParent*>(browser);
+  WebSocketChannelParent* p = new WebSocketChannelParent(tabParent);
+  p->AddRef();
+  return p;
+}
+
+bool
+NeckoParent::DeallocPWebSocket(PWebSocketParent* actor)
+{
+  WebSocketChannelParent* p = static_cast<WebSocketChannelParent*>(actor);
   p->Release();
   return true;
 }

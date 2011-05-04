@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "WebSocketLog.h"
 #include "nsWebSocketHandler.h"
 
 #include "nsISocketTransportService.h"
@@ -69,7 +70,6 @@
 #include "prmem.h"
 #include "prnetdb.h"
 #include "prbit.h"
-#include "prlog.h"
 #include "zlib.h"
 
 extern PRThread *gSocketThread;
@@ -89,11 +89,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS11(nsWebSocketHandler,
                                nsIDNSListener,
                                nsIInterfaceRequestor,
                                nsIChannelEventSink)
-
-#if defined(PR_LOGGING)
-static PRLogModuleInfo *webSocketLog = nsnull;
-#endif
-#define LOG(args) PR_LOG(webSocketLog, PR_LOG_DEBUG, args)
 
 // Use this fake ptr so the Fin message stays in sequence in the
 // main transmit queue
@@ -490,7 +485,6 @@ static nsWSAdmissionManager *sWebSocketAdmissions = nsnull;
 // nsWebSocketHandler
 
 nsWebSocketHandler::nsWebSocketHandler() :
-    mEncrypted(PR_FALSE),
     mCloseTimeout(20000),
     mOpenTimeout(20000),
     mPingTimeout(0),
@@ -522,10 +516,6 @@ nsWebSocketHandler::nsWebSocketHandler() :
     mDynamicOutput(nsnull)
 {
     NS_ABORT_IF_FALSE(NS_IsMainThread(), "not main thread");
-#if defined(PR_LOGGING)
-    if (!webSocketLog)
-        webSocketLog = PR_NewLogModule("nsWebSocket");
-#endif
 
     LOG(("WebSocketHandler::nsWebSocketHandler() %p\n", this));
     
@@ -1894,50 +1884,6 @@ nsWebSocketHandler::Notify(nsITimer *timer)
     return NS_OK;
 }
 
-// nsIWebSocketProtocol
-
-NS_IMETHODIMP
-nsWebSocketHandler::GetOriginalURI(nsIURI **aOriginalURI)
-{
-    LOG(("WebSocketHandler::GetOriginalURI() %p\n", this));
-
-    if (!mOriginalURI)
-        return NS_ERROR_NOT_INITIALIZED;
-    NS_ADDREF(*aOriginalURI = mOriginalURI);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::GetURI(nsIURI **aURI)
-{
-    LOG(("WebSocketHandler::GetURI() %p\n", this));
-
-    if (!mOriginalURI)
-        return NS_ERROR_NOT_INITIALIZED;
-    if (mURI)
-        NS_ADDREF(*aURI = mURI);
-    else
-        NS_ADDREF(*aURI = mOriginalURI);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::
-GetNotificationCallbacks(nsIInterfaceRequestor **aNotificationCallbacks)
-{
-    LOG(("WebSocketHandler::GetNotificationCallbacks() %p\n", this));
-    NS_IF_ADDREF(*aNotificationCallbacks = mCallbacks);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::
-SetNotificationCallbacks(nsIInterfaceRequestor *aNotificationCallbacks)
-{
-    LOG(("WebSocketHandler::SetNotificationCallbacks() %p\n", this));
-    mCallbacks = aNotificationCallbacks;
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsWebSocketHandler::GetSecurityInfo(nsISupports **aSecurityInfo)
@@ -1952,37 +1898,6 @@ nsWebSocketHandler::GetSecurityInfo(nsISupports **aSecurityInfo)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebSocketHandler::GetLoadGroup(nsILoadGroup **aLoadGroup)
-{
-    LOG(("WebSocketHandler::GetLoadGroup() %p\n", this));
-    NS_IF_ADDREF(*aLoadGroup = mLoadGroup);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::SetLoadGroup(nsILoadGroup *aLoadGroup)
-{
-    LOG(("WebSocketHandler::SetLoadGroup() %p\n", this));
-    mLoadGroup = aLoadGroup;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::GetProtocol(nsACString &aProtocol)
-{
-    LOG(("WebSocketHandler::GetProtocol() %p\n", this));
-    aProtocol = mProtocol;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::SetProtocol(const nsACString &aProtocol)
-{
-    LOG(("WebSocketHandler::SetProtocol() %p\n", this));
-    mProtocol = aProtocol;                        /* the sub protocol */
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsWebSocketHandler::AsyncOpen(nsIURI *aURI,
@@ -2661,80 +2576,6 @@ nsWebSocketHandler::OnDataAvailable(nsIRequest *aRequest,
     LOG(("WebSocketHandler::OnDataAvailable HTTP data unexpected len>=%u\n",
          aCount));
 
-    return NS_OK;
-}
-
-// nsIProtocolHandler
-
-NS_IMETHODIMP
-nsWebSocketHandler::GetScheme(nsACString &aScheme)
-{
-    LOG(("WebSocketHandler::GetScheme() %p\n", this));
-
-    if (mEncrypted)
-        aScheme.AssignLiteral("wss");
-    else
-        aScheme.AssignLiteral("ws");
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::GetDefaultPort(PRInt32 *aDefaultPort)
-{
-    LOG(("WebSocketHandler::GetDefaultPort() %p\n", this));
-
-    if (mEncrypted)
-        *aDefaultPort = kDefaultWSSPort;
-    else
-        *aDefaultPort = kDefaultWSPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::GetProtocolFlags(PRUint32 *aProtocolFlags)
-{
-    LOG(("WebSocketHandler::GetProtocolFlags() %p\n", this));
-
-    *aProtocolFlags = URI_NORELATIVE | URI_NON_PERSISTABLE | ALLOWS_PROXY | 
-        ALLOWS_PROXY_HTTP | URI_DOES_NOT_RETURN_DATA | URI_DANGEROUS_TO_LOAD;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::NewURI(const nsACString & aSpec, const char *aOriginCharset,
-                           nsIURI *aBaseURI, nsIURI **_retval NS_OUTPARAM)
-{
-    LOG(("WebSocketHandler::NewURI() %p\n", this));
-
-    PRInt32 port;
-    nsresult rv = GetDefaultPort(&port);
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsRefPtr<nsStandardURL> url = new nsStandardURL();
-    rv = url->Init(nsIStandardURL::URLTYPE_AUTHORITY, port, aSpec,
-                   aOriginCharset, aBaseURI);
-    if (NS_FAILED(rv))
-        return rv;
-    NS_ADDREF(*_retval = url);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::NewChannel(nsIURI *aURI, nsIChannel **_retval NS_OUTPARAM)
-{
-    LOG(("WebSocketHandler::NewChannel() %p\n", this));
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsWebSocketHandler::AllowPort(PRInt32 port, const char *scheme,
-                              PRBool *_retval NS_OUTPARAM)
-{
-    LOG(("WebSocketHandler::AllowPort() %p\n", this));
-
-    // do not override any blacklisted ports
-    *_retval = PR_FALSE;
     return NS_OK;
 }
 
