@@ -209,6 +209,9 @@ struct JS_FRIEND_API(TypedArray) {
     }
 };
 
+extern bool
+IsFastTypedArrayClass(const Class *clasp);
+
 } // namespace js
 
 /* Friend API methods */
