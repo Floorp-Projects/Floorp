@@ -325,7 +325,6 @@ qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
 
 JS_FRIEND_DATA(Class) js_QNameClass = {
     "QName",
-    JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
     PropertyStub,         /* addProperty */
@@ -7143,8 +7142,34 @@ js_InitNamespaceClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitQNameClass(JSContext *cx, JSObject *obj)
 {
-    return js_InitClass(cx, obj, NULL, &js_QNameClass, QName, 2,
-                        NULL, qname_methods, NULL, NULL);
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *qnameProto = global->createBlankPrototype(cx, &js_QNameClass);
+    if (!qnameProto)
+        return NULL;
+    JSFlatString *empty = cx->runtime->emptyString;
+    if (!InitXMLQName(cx, qnameProto, empty, empty, empty))
+        return NULL;
+    qnameProto->syncSpecialEquality();
+
+    const uintN QNAME_CTOR_LENGTH = 2;
+    JSFunction *ctor = global->createConstructor(cx, QName, &js_QNameClass,
+                                                 CLASS_ATOM(cx, QName), QNAME_CTOR_LENGTH);
+    if (!ctor)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, qnameProto))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, qnameProto, NULL, qname_methods))
+        return NULL;
+
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_QName, ctor, qnameProto))
+        return NULL;
+
+    return qnameProto;
 }
 
 JSObject *
