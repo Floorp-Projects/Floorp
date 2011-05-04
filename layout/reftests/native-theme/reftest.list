@@ -64,3 +64,6 @@ skip-if(!winWidget) == scroll-thumb-minimum-size-notheme.html scroll-thumb-minim
 == border-radius.html border-radius-ref.html
 
 == checkbox-dynamic-1.html checkbox-dynamic-1-ref.html
+
+== progress-overflow.html progress-overflow-ref.html
+fails-if(cocoaWidget) != progress-overflow-small.html progress-nobar.html

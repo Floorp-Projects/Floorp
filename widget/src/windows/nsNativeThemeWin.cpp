@@ -343,6 +343,13 @@ static CaptionButtonPadding buttonData[3] = {
   }
 };
 
+/**
+ * Progress bar related constants.
+ */
+// PP_CHUNK is overflowing on the bottom for no appearant reasons.
+// This is a fix around this issue.
+static const PRInt32 kProgressDeterminedXPOverflow = 11;
+
 // Adds "hot" caption button padding to minimum widget size.
 static void AddPaddingRect(nsIntSize* aSize, CaptionButton button) {
   if (!aSize)
@@ -1289,6 +1296,8 @@ RENDER_AGAIN:
   }
   else if (aWidgetType == NS_THEME_WINDOW_BUTTON_CLOSE) {
     OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_CLOSE);
+  } else if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK) {
+    widgetRect.bottom -= kProgressDeterminedXPOverflow;
   }
 
   // widgetRect is the bounding box for a widget, yet the scale track is only
