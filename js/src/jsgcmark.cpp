@@ -523,10 +523,13 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
 
     Class *clasp = obj->getClass();
     if (clasp->trace) {
-        if (obj->isDenseArray() && obj->getDenseArrayCapacity() > LARGE_OBJECT_CHUNK_SIZE)
-            gcmarker->largeStack.push(LargeMarkItem(obj));
-        else
+        if (obj->isDenseArray() && obj->getDenseArrayCapacity() > LARGE_OBJECT_CHUNK_SIZE) {
+            if (!gcmarker->largeStack.push(LargeMarkItem(obj))) {
+                clasp->trace(gcmarker, obj);
+            }
+        } else {
             clasp->trace(gcmarker, obj);
+        }
     }
 
     if (obj->emptyShapes) {
@@ -558,7 +561,10 @@ ScanObject(GCMarker *gcmarker, JSObject *obj)
         uint32 nslots = obj->slotSpan();
         JS_ASSERT(obj->slotSpan() <= obj->numSlots());
         if (nslots > LARGE_OBJECT_CHUNK_SIZE) {
-            gcmarker->largeStack.push(LargeMarkItem(obj));
+            if (!gcmarker->largeStack.push(LargeMarkItem(obj))) {
+                for (uint32 i = nslots; i > 0; i--)
+                    ScanValue(gcmarker, obj->getSlot(i-1));
+            }
         } else {
             for (uint32 i = nslots; i > 0; i--) {
                 ScanValue(gcmarker, obj->getSlot(i-1));
