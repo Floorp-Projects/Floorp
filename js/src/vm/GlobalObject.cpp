@@ -51,6 +51,28 @@
 using namespace js;
 
 JSObject *
+js_InitObjectClass(JSContext *cx, JSObject *obj)
+{
+    JSObject *proto = js_InitClass(cx, obj, NULL, &ObjectClass, js_Object, 1,
+                                   object_props, object_methods, NULL, object_static_methods);
+    if (!proto)
+        return NULL;
+
+    /* The default 'new' object for Object.prototype has unknown properties. */
+    proto->getNewType(cx, NULL, /* markUnknown = */ true);
+
+    /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
+    jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
+    JSObject *evalobj = js_DefineFunction(cx, obj, id, eval, 1, JSFUN_STUB_GSOPS);
+    if (!evalobj)
+        return NULL;
+    if (obj->isGlobal())
+        obj->asGlobal()->setOriginalEval(evalobj);
+
+    return proto;
+}
+
+JSObject *
 js_InitFunctionAndObjectClasses(JSContext *cx, JSObject *obj)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
