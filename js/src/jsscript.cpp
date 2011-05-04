@@ -206,10 +206,10 @@ Bindings::getLocalNameArray(JSContext *cx, JSArenaPool *pool)
         }
 
         JSAtom *atom;
-        if (JSID_IS_ATOM(shape.id)) {
-            atom = JSID_TO_ATOM(shape.id);
+        if (JSID_IS_ATOM(shape.propid)) {
+            atom = JSID_TO_ATOM(shape.propid);
         } else {
-            JS_ASSERT(JSID_IS_INT(shape.id));
+            JS_ASSERT(JSID_IS_INT(shape.propid));
             JS_ASSERT(shape.getter() == GetCallArg);
             atom = NULL;
         }

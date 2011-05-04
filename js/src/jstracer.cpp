@@ -8152,7 +8152,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
         // should. See bug 514046, for which this code is future-proof. Remove
         // this comment when that bug is fixed (so, FIXME: 514046).
         DebugOnly<JSBool> rv =
-            js_GetPropertyHelper(cx, obj, shape->id,
+            js_GetPropertyHelper(cx, obj, shape->propid,
                                  (op == JSOP_CALLNAME)
                                  ? JSGET_NO_METHOD_BARRIER
                                  : JSGET_METHOD_BARRIER,
@@ -12692,7 +12692,7 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
 #ifdef DEBUG
     JSProperty* prop;
     JSObject* pobj;
-    JS_ASSERT(obj->lookupProperty(cx, shape->id, &pobj, &prop));
+    JS_ASSERT(obj->lookupProperty(cx, shape->propid, &pobj, &prop));
     JS_ASSERT(prop == (JSProperty*) shape);
 #endif
 
