@@ -128,6 +128,7 @@ var TestPilotMenuUtils;
       let menuPopup = document.getElementById("pilot-menu-popup");
       let menuButton = document.getElementById(attachPointId);
 
+      // TODO failing here with "menuPopup is null" for Tracy
       if (menuPopup.parentNode != menuButton)
         menuButton.appendChild(menuPopup);
 
