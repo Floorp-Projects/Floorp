@@ -149,9 +149,22 @@ Debug::init()
     return frames.init() && objects.init();
 }
 
+JS_STATIC_ASSERT(uintN(JSSLOT_DEBUGFRAME_OWNER) == uintN(JSSLOT_DEBUGOBJECT_OWNER));
+
+Debug *
+Debug::fromChildJSObject(JSObject *obj)
+{
+    JS_ASSERT(obj->clasp == &DebugFrame_class ||
+              obj->clasp == &DebugObject_class ||
+              obj->clasp == &DebugFunction_class);
+    JSObject *dbgobj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
+    return fromJSObject(dbgobj);
+}
+
 bool
 Debug::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
 {
+    JS_ASSERT(fp->isScriptFrame());
     FrameMap::AddPtr p = frames.lookupForAdd(fp);
     if (!p) {
         // Create script frame. First copy the arguments.
@@ -734,28 +747,12 @@ DebugFrame_getType(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-JS_STATIC_ASSERT(uintN(JSSLOT_DEBUGFRAME_OWNER) == uintN(JSSLOT_DEBUGOBJECT_OWNER));
-
-static JSBool
-DebugChild_wrapDebuggeeValue(JSContext *cx, JSObject *frameobj, Value *vp)
-{
-    // This uses JSSLOT_DEBUGOBJECT_OWNER, but it will work for any object that
-    // has a pointer to the owning Debug object in reserved slot 0.
-    JSObject *dbgobj = &frameobj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
-    Debug *dbg = Debug::fromJSObject(dbgobj);
-    if (!dbg->wrapDebuggeeValue(cx, vp)) {
-        vp->setUndefined();
-        return false;
-    }
-    return true;
-}
-
 static JSBool
 DebugFrame_getCallee(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get callee", thisobj, fp);
     *vp = (fp->isFunctionFrame() && !fp->isEvalFrame()) ? fp->calleev() : NullValue();
-    return DebugChild_wrapDebuggeeValue(cx, thisobj, vp);
+    return Debug::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
 }
 
 static JSBool
@@ -779,7 +776,19 @@ DebugFrame_getThis(JSContext *cx, uintN argc, Value *vp)
         *vp = fp->thisValue();
         ac.leave();
     }
-    return DebugChild_wrapDebuggeeValue(cx, thisobj, vp);
+    return Debug::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
+}
+
+static JSBool
+DebugFrame_getOlder(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_FRAME(cx, vp, "get this", thisobj, thisfp);
+    for (StackFrame *fp = thisfp->prev(); fp; fp = fp->prev()) {
+        if (!fp->isDummyFrame())
+            return Debug::fromChildJSObject(thisobj)->getScriptFrame(cx, fp, vp);
+    }
+    vp->setNull();
+    return true;
 }
 
 JSBool
@@ -811,11 +820,12 @@ DebugFrame_construct(JSContext *cx, uintN argc, Value *vp)
 
 static JSPropertySpec DebugFrame_properties[] = {
     JS_PSG("type", DebugFrame_getType, 0),
+    JS_PSG("this", DebugFrame_getThis, 0),
+    JS_PSG("older", DebugFrame_getOlder, 0),
+    JS_PSG("live", DebugFrame_getLive, 0),
     JS_PSG("callee", DebugFrame_getCallee, 0),
     JS_PSG("generator", DebugFrame_getGenerator, 0),
-    JS_PSG("this", DebugFrame_getThis, 0),
     JS_PSG("arguments", DebugFrame_getArguments, 0),
-    JS_PSG("live", DebugFrame_getLive, 0),
     JS_PS_END
 };
 
@@ -922,7 +932,7 @@ DebugFunction_getName(JSContext *cx, uintN argc, Value *vp)
     THIS_DEBUGFUNCTION_REFERENT(cx, vp, "get name", funobj);
     if (JSString *name = funobj->getFunctionPrivate()->atom) {
         vp->setString(name);
-        return DebugChild_wrapDebuggeeValue(cx, &vp[1].toObject(), vp);
+        return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
     }
     vp->setNull();
     return true;

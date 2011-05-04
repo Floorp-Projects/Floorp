@@ -92,7 +92,6 @@ class Debug {
 
     inline bool hasAnyLiveHooks() const;
 
-    bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
     static void slowPathLeaveStackFrame(JSContext *cx);
 
     inline bool observesDebuggerStatement() const;
@@ -104,8 +103,10 @@ class Debug {
     bool init();
     inline JSObject *toJSObject() const;
     static inline Debug *fromJSObject(JSObject *obj);
+    static Debug *fromChildJSObject(JSObject *obj);
 
-    // Methods for interaction with the GC.
+    /*********************************** Methods for interaction with the GC. */
+
     //
     // A Debug object is live if:
     //   * the Debug JSObject is live (Debug::trace handles this case); OR
@@ -131,6 +132,8 @@ class Debug {
     static inline void leaveStackFrame(JSContext *cx);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
 
+    /**************************************** Functions for use by jsdbg.cpp. */
+
     // Precondition: *vp is a value from a debuggee compartment and cx is in
     // the debugger's compartment.
     //
@@ -151,6 +154,8 @@ class Debug {
     //
     bool unwrapDebuggeeValue(JSContext *cx, Value *vp);
 
+    // Store the Debug.Frame object for the frame fp in *vp.
+    bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
 };
 
 bool
