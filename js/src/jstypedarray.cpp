@@ -1861,6 +1861,36 @@ Class TypedArray::slowClasses[TYPE_MAX] = {
     IMPL_TYPED_ARRAY_SLOW_CLASS(Uint8ClampedArray)
 };
 
+static JSObject *
+InitArrayBufferClass(JSContext *cx, GlobalObject *global)
+{
+    JSObject *arrayBufferProto = global->createBlankPrototype(cx, &ArrayBuffer::slowClass);
+    if (!arrayBufferProto)
+        return NULL;
+    arrayBufferProto->setPrivate(NULL);
+
+    /* Ensure ArrayBuffer.prototype is correctly empty. */
+    if (!AllocateArrayBufferSlots(cx, arrayBufferProto, 0))
+        return NULL;
+
+    JSFunction *ctor =
+        global->createConstructor(cx, ArrayBuffer::class_constructor, &ArrayBuffer::fastClass,
+                                  CLASS_ATOM(cx, ArrayBuffer), 1);
+    if (!ctor)
+        return NULL;
+
+    if (!LinkConstructorAndPrototype(cx, ctor, arrayBufferProto))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, arrayBufferProto, ArrayBuffer::jsprops, NULL))
+        return NULL;
+
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_ArrayBuffer, ctor, arrayBufferProto))
+        return NULL;
+
+    return arrayBufferProto;
+}
+
 JS_FRIEND_API(JSObject *)
 js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
 {
@@ -1888,22 +1918,7 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    JSObject *proto = js_InitClass(cx, global, NULL, &ArrayBuffer::slowClass,
-                                   ArrayBuffer::class_constructor, 1,
-                                   ArrayBuffer::jsprops, NULL, NULL, NULL);
-    if (!proto)
-        return NULL;
-
-    proto->setPrivate(NULL);
-
-    /*
-     * Initialize the slots to hold the length as 0
-     * This is required otherwise the length of a
-     * ArrayBuffer's prototype is undefined.
-     */
-    if (!AllocateArrayBufferSlots(cx, proto, 0))
-        return NULL;
-    return proto;
+    return InitArrayBufferClass(cx, global);
 }
 
 JS_FRIEND_API(JSBool)
