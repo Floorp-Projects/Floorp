@@ -37,7 +37,7 @@
 /*
  * CMS decoding.
  *
- * $Id: cmsdecode.c,v 1.9.66.4 2011/03/15 17:51:01 emaldona%redhat.com Exp $
+ * $Id: cmsdecode.c,v 1.9.66.1 2010/12/23 18:03:41 kaie%kuix.de Exp $
  */
 
 #include "cmslocal.h"
@@ -120,7 +120,8 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
 #endif
 
     /* so what are we working on right now? */
-    if (p7dcx->type == SEC_OID_UNKNOWN) {
+    switch (p7dcx->type) {
+    case SEC_OID_UNKNOWN:
 	/*
 	 * right now, we are still decoding the OUTER (root) cinfo
 	 * As soon as we know the inner content type, set up the info,
@@ -135,7 +136,8 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
 	    /* is this ready already ? need to alloc? */
 	    /* XXX yes we need to alloc -- continue here */
 	}
-    } else if (NSS_CMSType_IsData(p7dcx->type)) {
+	break;
+    case SEC_OID_PKCS7_DATA:
 	/* this can only happen if the outermost cinfo has DATA in it */
 	/* otherwise, we handle this type implicitely in the inner decoders */
 
@@ -148,71 +150,86 @@ nss_cms_decoder_notify(void *arg, PRBool before, void *dest, int depth)
 					  nss_cms_decoder_update_filter,
 					  p7dcx,
 					  (PRBool)(p7dcx->cb != NULL));
-	} else if (after && dest == &(rootcinfo->content.data)) {
+	    break;
+	}
+
+	if (after && dest == &(rootcinfo->content.data)) {
 	    /* remove the filter */
 	    SEC_ASN1DecoderClearFilterProc(p7dcx->dcx);
 	}
-    } else if (NSS_CMSType_IsWrapper(p7dcx->type)) {
-	if (!before || dest != &(rootcinfo->content)) {
+	break;
 
-	    if (p7dcx->content.pointer == NULL)
-		p7dcx->content = rootcinfo->content;
+    case SEC_OID_PKCS7_SIGNED_DATA:
+    case SEC_OID_PKCS7_ENVELOPED_DATA:
+    case SEC_OID_PKCS7_DIGESTED_DATA:
+    case SEC_OID_PKCS7_ENCRYPTED_DATA:
 
-	    /* get this data type's inner contentInfo */
-	    cinfo = NSS_CMSContent_GetContentInfo(p7dcx->content.pointer, 
+	if (before && dest == &(rootcinfo->content))
+	    break;     /* we're not there yet */
+
+	if (p7dcx->content.pointer == NULL)
+	    p7dcx->content = rootcinfo->content;
+
+	/* get this data type's inner contentInfo */
+	cinfo = NSS_CMSContent_GetContentInfo(p7dcx->content.pointer, 
 	                                      p7dcx->type);
 
-	    if (before && dest == &(cinfo->contentType)) {
-	        /* at this point, set up the &%$&$ back pointer */
-	        /* we cannot do it later, because the content itself 
-		 * is optional! */
-		switch (p7dcx->type) {
-		case SEC_OID_PKCS7_SIGNED_DATA:
-		    p7dcx->content.signedData->cmsg = p7dcx->cmsg;
-		    break;
-		case SEC_OID_PKCS7_DIGESTED_DATA:
-		    p7dcx->content.digestedData->cmsg = p7dcx->cmsg;
-		    break;
-		case SEC_OID_PKCS7_ENVELOPED_DATA:
-		    p7dcx->content.envelopedData->cmsg = p7dcx->cmsg;
-		    break;
-		case SEC_OID_PKCS7_ENCRYPTED_DATA:
-		    p7dcx->content.encryptedData->cmsg = p7dcx->cmsg;
-		    break;
-		default:
-		    p7dcx->content.genericData->cmsg = p7dcx->cmsg;
-		    break;
-		}
+	if (before && dest == &(cinfo->contentType)) {
+	    /* at this point, set up the &%$&$ back pointer */
+	    /* we cannot do it later, because the content itself is optional! */
+	    /* please give me C++ */
+	    switch (p7dcx->type) {
+	    case SEC_OID_PKCS7_SIGNED_DATA:
+		p7dcx->content.signedData->cmsg = p7dcx->cmsg;
+		break;
+	    case SEC_OID_PKCS7_DIGESTED_DATA:
+		p7dcx->content.digestedData->cmsg = p7dcx->cmsg;
+		break;
+	    case SEC_OID_PKCS7_ENVELOPED_DATA:
+		p7dcx->content.envelopedData->cmsg = p7dcx->cmsg;
+		break;
+	    case SEC_OID_PKCS7_ENCRYPTED_DATA:
+		p7dcx->content.encryptedData->cmsg = p7dcx->cmsg;
+		break;
+	    default:
+		PORT_Assert(0);
+		break;
 	    }
+	}
 
-	    if (before && dest == &(cinfo->rawContent)) {
-		/* we want the ASN.1 decoder to deliver the decoded bytes to us 
-		 ** from now on 
-		 */
-		SEC_ASN1DecoderSetFilterProc(p7dcx->dcx, 
+	if (before && dest == &(cinfo->rawContent)) {
+	    /* we want the ASN.1 decoder to deliver the decoded bytes to us 
+	    ** from now on 
+	    */
+	    SEC_ASN1DecoderSetFilterProc(p7dcx->dcx, 
 	                                 nss_cms_decoder_update_filter, 
 					 p7dcx, (PRBool)(p7dcx->cb != NULL));
 
 
-		/* we're right in front of the data */
-		if (nss_cms_before_data(p7dcx) != SECSuccess) {
-		    SEC_ASN1DecoderClearFilterProc(p7dcx->dcx);	
-		    /* stop all processing */
-		    p7dcx->error = PORT_GetError();
-		}
-	    }
-	    if (after && dest == &(cinfo->rawContent)) {
-		/* we're right after of the data */
-		if (nss_cms_after_data(p7dcx) != SECSuccess)
-		    p7dcx->error = PORT_GetError();
-
-		/* we don't need to see the contents anymore */
-		SEC_ASN1DecoderClearFilterProc(p7dcx->dcx);
+	    /* we're right in front of the data */
+	    if (nss_cms_before_data(p7dcx) != SECSuccess) {
+		SEC_ASN1DecoderClearFilterProc(p7dcx->dcx);	
+		/* stop all processing */
+		p7dcx->error = PORT_GetError();
 	    }
 	}
-    } else {
+	if (after && dest == &(cinfo->rawContent)) {
+	    /* we're right after of the data */
+	    if (nss_cms_after_data(p7dcx) != SECSuccess)
+		p7dcx->error = PORT_GetError();
+
+	    /* we don't need to see the contents anymore */
+	    SEC_ASN1DecoderClearFilterProc(p7dcx->dcx);
+	}
+	break;
+
+#if 0 /* NIH */
+    case SEC_OID_PKCS7_AUTHENTICATED_DATA:
+#endif
+    default:
 	/* unsupported or unknown message type - fail  gracefully */
 	p7dcx->error = SEC_ERROR_UNSUPPORTED_MESSAGE_TYPE;
+	break;
     }
 }
 
@@ -252,8 +269,7 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
 	                             p7dcx->content.encryptedData);
 	break;
     default:
-	rv = NSS_CMSGenericWrapperData_Decode_BeforeData(p7dcx->type,
-				p7dcx->content.genericData);
+	return SECFailure;
     }
     if (rv != SECSuccess)
 	return SECFailure;
@@ -264,7 +280,7 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
     cinfo = NSS_CMSContent_GetContentInfo(p7dcx->content.pointer, p7dcx->type);
     childtype = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
 
-    if (NSS_CMSType_IsData(childtype)) {
+    if (childtype == SEC_OID_PKCS7_DATA) {
 	cinfo->content.pointer = (void *) nss_cms_create_decoder_data(poolp);
 	if (cinfo->content.pointer == NULL)
 	    /* set memory error */
@@ -290,9 +306,6 @@ nss_cms_before_data(NSSCMSDecoderContext *p7dcx)
     childp7dcx->content.pointer = (void *)PORT_ArenaZAlloc(poolp, size);
     if (childp7dcx->content.pointer == NULL)
 	goto loser;
-
-    /* give the parent a copy of the pointer so that it doesn't get lost */
-    cinfo->content.pointer = childp7dcx->content.pointer;
 
     /* start the child decoder */
     childp7dcx->dcx = SEC_ASN1DecoderStart(poolp, childp7dcx->content.pointer, 
@@ -382,8 +395,7 @@ nss_cms_after_data(NSSCMSDecoderContext *p7dcx)
 	/* do nothing */
 	break;
     default:
-	rv = NSS_CMSGenericWrapperData_Decode_AfterData(p7dcx->type,
-	                            p7dcx->content.genericData);
+	rv = SECFailure;
 	break;
     }
 done:
@@ -418,8 +430,7 @@ nss_cms_after_end(NSSCMSDecoderContext *p7dcx)
     case SEC_OID_PKCS7_DATA:
 	break;
     default:
-	rv = NSS_CMSGenericWrapperData_Decode_AfterEnd(p7dcx->type,
-	                               p7dcx->content.genericData);
+	rv = SECFailure;	/* we should not have got that far... */
 	break;
     }
     return rv;
@@ -458,7 +469,7 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
 	goto loser;
     }
 
-    if (cinfo->privateInfo && cinfo->privateInfo->ciphcx != NULL) {
+    if (cinfo->ciphcx != NULL) {
 	/*
 	 * we are decrypting.
 	 * 
@@ -472,7 +483,7 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
 	unsigned int buflen;		/* length available for decrypted data */
 
 	/* find out about the length of decrypted data */
-	buflen = NSS_CMSCipherContext_DecryptLength(cinfo->privateInfo->ciphcx, len, final);
+	buflen = NSS_CMSCipherContext_DecryptLength(cinfo->ciphcx, len, final);
 
 	/*
 	 * it might happen that we did not provide enough data for a full
@@ -503,7 +514,7 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
 	 * any output (see above), but we still need to call NSS_CMSCipherContext_Decrypt to
 	 * keep track of incoming data
 	 */
-	rv = NSS_CMSCipherContext_Decrypt(cinfo->privateInfo->ciphcx, buf, &outlen, buflen,
+	rv = NSS_CMSCipherContext_Decrypt(cinfo->ciphcx, buf, &outlen, buflen,
 			       data, len, final);
 	if (rv != SECSuccess) {
 	    p7dcx->error = PORT_GetError();
@@ -523,8 +534,8 @@ nss_cms_decoder_work_data(NSSCMSDecoderContext *p7dcx,
     /*
      * Update the running digests with plaintext bytes (if we need to).
      */
-    if (cinfo->privateInfo && cinfo->privateInfo->digcx)
-	NSS_CMSDigestContext_Update(cinfo->privateInfo->digcx, data, len);
+    if (cinfo->digcx)
+	NSS_CMSDigestContext_Update(cinfo->digcx, data, len);
 
     /* at this point, we have the plain decoded & decrypted data 
     ** which is either more encoded DER (which we need to hand to the child 

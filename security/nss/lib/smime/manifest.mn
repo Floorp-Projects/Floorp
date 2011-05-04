@@ -69,7 +69,6 @@ CSRCS = \
 	cmsreclist.c \
 	cmssigdata.c \
 	cmssiginfo.c \
-	cmsudf.c \
 	cmsutil.c \
 	smimemessage.c \
 	smimeutil.c \

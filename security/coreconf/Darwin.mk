@@ -54,15 +54,13 @@ ifdef USE_64
 CC              += -arch x86_64
 else
 OS_REL_CFLAGS	= -Di386
-CC              += -arch i386
 endif
 else
 OS_REL_CFLAGS	= -Dppc
-CC              += -arch ppc
 endif
 
 ifneq (,$(MACOS_SDK_DIR))
-    GCC_VERSION_FULL := $(shell $(CC) -dumpversion)
+    GCC_VERSION_FULL := $(shell $(CC) -v 2>&1 | grep "gcc version" | sed -e "s/^.*gcc version[  ]*//" | awk '{ print $$1 }')
     GCC_VERSION_MAJOR := $(shell echo $(GCC_VERSION_FULL) | awk -F. '{ print $$1 }')
     GCC_VERSION_MINOR := $(shell echo $(GCC_VERSION_FULL) | awk -F. '{ print $$2 }')
     GCC_VERSION = $(GCC_VERSION_MAJOR).$(GCC_VERSION_MINOR)

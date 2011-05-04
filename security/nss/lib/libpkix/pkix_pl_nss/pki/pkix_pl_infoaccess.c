@@ -573,8 +573,10 @@ pkix_pl_InfoAccess_ParseTokens(
         char terminator,
         void *plContext)
 {
+        PKIX_UInt32 len = 0;
         PKIX_UInt32 numFilters = 0;
         char *endPos = NULL;
+        char *p = NULL;
         char **filterP = NULL;
 
         PKIX_ENTER(INFOACCESS, "pkix_pl_InfoAccess_ParseTokens");
@@ -595,8 +597,8 @@ pkix_pl_InfoAccess_ParseTokens(
                 PKIX_ERROR(PKIX_LOCATIONSTRINGNOTPROPERLYTERMINATED);
         }
 
-        /* Last component doesn't need a separator, although we allow it */
-        if (endPos > *startPos && *(endPos-1) != separator) {
+        /* Last one doesn't have a "," as separator, although we allow it */
+        if (*(endPos-1) != ',') {
                 numFilters++;
         }
 
@@ -617,23 +619,36 @@ pkix_pl_InfoAccess_ParseTokens(
 
         while (numFilters) {
             if (*endPos == separator || *endPos == terminator) {
-                    PKIX_UInt32 len = endPos - *startPos;
-                    char *p = PORT_ArenaZAlloc(arena, len+1);
+                    len = endPos - *startPos;
+                    p = PORT_ArenaZAlloc(arena, len+1);
                     if (p == NULL) {
                         PKIX_ERROR(PKIX_PORTARENAALLOCFAILED);
                     }
 
-                    PORT_Memcpy(p, *startPos, len);
-                    p[len] = '\0';
-
                     *filterP = p;
+
+                    while (len) {
+                            if (**startPos == '%' &&
+                                strncmp(*startPos, "%20", 3) == 0) {
+                            /* replace %20 by blank */
+                                *p = ' ';
+                                *startPos += 3;
+                                len -= 3;
+                            } else {
+                                *p = **startPos;
+                                (*startPos)++;
+                                len--;
+                            }
+                            p++;
+                    }
+
+                    *p = '\0';
                     filterP++;
                     numFilters--;
 
                     separator = terminator;
 
                     if (endPos == '\0') {
-                        *startPos = endPos;
                         break;
                     } else {
                         endPos++;
@@ -649,44 +664,6 @@ pkix_pl_InfoAccess_ParseTokens(
 cleanup:
 
         PKIX_RETURN(INFOACCESS);
-}
-
-static int
-pkix_pl_HexDigitToInt(
-        int ch)
-{
-        if (isdigit(ch)) {
-                ch = ch - '0';
-        } else if (isupper(ch)) {
-                ch = ch - 'A' + 10;
-        } else {
-                ch = ch - 'a' + 10;
-        }
-        return ch;
-}
-
-/*
- * Convert the "%" hex hex escape sequences in the URL 'location' in place.
- */
-static void
-pkix_pl_UnescapeURL(
-        char *location)
-{
-        const char *src;
-        char *dst;
-
-        for (src = dst = location; *src != '\0'; src++, dst++) {
-                if (*src == '%' && isxdigit((unsigned char)*(src+1)) &&
-                    isxdigit((unsigned char)*(src+2))) {
-                        *dst = pkix_pl_HexDigitToInt((unsigned char)*(src+1));
-                        *dst *= 16;
-                        *dst += pkix_pl_HexDigitToInt((unsigned char)*(src+2));
-                        src += 2;
-                } else {
-                        *dst = *src;
-                }
-        }
-        *dst = *src;  /* the terminating null */
 }
 
 /*
@@ -765,7 +742,11 @@ pkix_pl_InfoAccess_ParseLocation(
                 plContext),
                 PKIX_STRINGGETENCODEDFAILED);
 
-        pkix_pl_UnescapeURL(locationAscii);
+#if 0
+        /* For testing inside the firewall... */
+        locationAscii = "ldap://nss.red.iplanet.com:1389/cn=Good%20CA,o="
+                "Test%20Certificates,c=US?caCertificate;binary";
+#endif
 
         /* Skip "ldap:" */
         endPos = locationAscii;

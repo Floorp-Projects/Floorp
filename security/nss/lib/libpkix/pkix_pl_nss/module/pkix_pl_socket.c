@@ -1143,13 +1143,13 @@ pkix_pl_Socket_Poll(
 
         if ((pBytesWritten) &&
             ((sock->status == SOCKET_SENDPENDING) ||
-            (sock->status == SOCKET_SENDRCVPENDING))) {
+            (sock->status = SOCKET_SENDRCVPENDING))) {
                 pollDesc.in_flags = PR_POLL_WRITE;
         }
 
         if ((pBytesRead) &&
-            ((sock->status == SOCKET_RCVPENDING) ||
-            (sock->status == SOCKET_SENDRCVPENDING))) {
+            ((sock->status = SOCKET_RCVPENDING) ||
+            (sock->status = SOCKET_SENDRCVPENDING))) {
                 pollDesc.in_flags |= PR_POLL_READ;
         }
 

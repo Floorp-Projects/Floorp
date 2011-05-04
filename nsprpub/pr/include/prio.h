@@ -142,9 +142,6 @@ typedef enum PRTransmitFileFlags {
 #define PR_AF_INET6 100
 #endif
 
-#define PR_AF_INET_SDP 101
-#define PR_AF_INET6_SDP 102
-
 #ifndef PR_AF_UNSPEC
 #define PR_AF_UNSPEC 0
 #endif
