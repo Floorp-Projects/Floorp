@@ -1144,10 +1144,12 @@ case "$target" in
                 CC="$CC -arch x86_64"
             else        
                 CPU_ARCH=i386
+                CC="$CC -arch i386"
             fi
             ;;
         *)
             CPU_ARCH=ppc
+            CC="$CC -arch ppc"
             ;;
     esac
     DSO_CFLAGS=-fPIC
