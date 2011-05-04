@@ -7142,25 +7142,17 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 JSObject *
 js_InitXMLClass(JSContext *cx, JSObject *obj)
 {
-    JSObject *proto, *pobj;
-    JSFunction *fun;
-    JSXML *xml;
-    JSProperty *prop;
-    Shape *shape;
-    jsval cval, vp[3];
-
     /* Define the isXMLName function. */
     if (!JS_DefineFunction(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0))
         return NULL;
 
     /* Define the XML class constructor and prototype. */
-    proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
-                         NULL, xml_methods,
-                         xml_static_props, xml_static_methods);
+    JSObject *proto = js_InitClass(cx, obj, NULL, &js_XMLClass, XML, 1,
+                                   NULL, xml_methods, xml_static_props, xml_static_methods);
     if (!proto)
         return NULL;
 
-    xml = js_NewXML(cx, JSXML_CLASS_TEXT);
+    JSXML *xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)
         return NULL;
     proto->setPrivate(xml);
@@ -7173,17 +7165,20 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
      * JSObject::getProperty, which is xml_getProperty, which creates a new
      * XMLList every time!  We must instead call js_LookupProperty directly.
      */
+    JSObject *pobj;
+    JSProperty *prop;
     if (!js_LookupProperty(cx, proto,
                            ATOM_TO_JSID(cx->runtime->atomState.constructorAtom),
                            &pobj, &prop)) {
         return NULL;
     }
     JS_ASSERT(prop);
-    shape = (Shape *) prop;
-    cval = Jsvalify(pobj->nativeGetSlot(shape->slot));
+    Shape *shape = (Shape *) prop;
+    jsval cval = Jsvalify(pobj->nativeGetSlot(shape->slot));
     JS_ASSERT(VALUE_IS_FUNCTION(cx, cval));
 
     /* Set default settings. */
+    jsval vp[3];
     vp[0] = JSVAL_NULL;
     vp[1] = cval;
     vp[2] = JSVAL_VOID;
@@ -7191,7 +7186,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
         return NULL;
 
     /* Define the XMLList function and give it the same prototype as XML. */
-    fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
+    JSFunction *fun = JS_DefineFunction(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR);
     if (!fun)
         return NULL;
     if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), proto,
