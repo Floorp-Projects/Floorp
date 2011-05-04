@@ -43,6 +43,7 @@
 #include "nsILineBreaker.h"
 
 class nsIAtom;
+class nsHyphenator;
 
 /**
  * A receiver of line break data.
@@ -55,8 +56,12 @@ public:
    * will cover the entire text chunk. Substrings may overlap (i.e., we may
    * set the break-before state of a character more than once).
    * @param aBreakBefore the break-before states for the characters in the substring.
+   * These are enum values from gfxTextRun::CompressedGlyph:
+   *    FLAG_BREAK_TYPE_NONE     - no linebreak is allowed here
+   *    FLAG_BREAK_TYPE_NORMAL   - a normal (whitespace) linebreak
+   *    FLAG_BREAK_TYPE_HYPHEN   - a hyphenation point
    */
-  virtual void SetBreaks(PRUint32 aStart, PRUint32 aLength, PRPackedBool* aBreakBefore) = 0;
+  virtual void SetBreaks(PRUint32 aStart, PRUint32 aLength, PRUint8* aBreakBefore) = 0;
   
   /**
    * Indicates which characters should be capitalized. Only called if
@@ -153,7 +158,12 @@ public:
      * We need to be notified of characters that should be capitalized
      * (as in text-transform:capitalize) in this chunk of text.
      */
-    BREAK_NEED_CAPITALIZATION = 0x08
+    BREAK_NEED_CAPITALIZATION = 0x08,
+    /**
+     * Auto-hyphenation is enabled, so we need to get a hyphenator
+     * (if available) and use it to find breakpoints.
+     */
+    BREAK_USE_AUTO_HYPHENATION = 0x10
   };
 
   /**
@@ -214,9 +224,18 @@ private:
   // appropriate sink(s). Then we clear the current word state.
   nsresult FlushCurrentWord();
 
+  void UpdateCurrentWordLangGroup(nsIAtom *aLangGroup);
+
+  void FindHyphenationPoints(nsHyphenator *aHyphenator,
+                             const PRUnichar *aTextStart,
+                             const PRUnichar *aTextLimit,
+                             PRPackedBool *aBreakState);
+
   nsAutoTArray<PRUnichar,100> mCurrentWord;
   // All the items that contribute to mCurrentWord
   nsAutoTArray<TextItem,2>    mTextItems;
+  nsIAtom*                    mCurrentWordLangGroup;
+  PRPackedBool                mCurrentWordContainsMixedLang;
   PRPackedBool                mCurrentWordContainsComplexChar;
 
   // True if the previous character was breakable whitespace
