@@ -1048,6 +1048,11 @@ pref("intl.uidirection.ar", "rtl");
 pref("intl.uidirection.he", "rtl");
 pref("intl.uidirection.fa", "rtl");
 
+// use en-US hyphenation by default for content tagged with plain lang="en"
+pref("intl.hyphenation-alias.en", "en-us");
+// and for other subtags of en-*, if no specific patterns are available
+pref("intl.hyphenation-alias.en-*", "en-us");
+
 pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Standard Symbols L, DejaVu Sans, Cambria Math");
 
 // Some CJK fonts have bad underline offset, their CJK character glyphs are overlapped (or adjoined)  to its underline.
