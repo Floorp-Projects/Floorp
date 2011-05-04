@@ -3315,7 +3315,11 @@ nsCSSRendering::DrawTableBorderSegment(nsRenderingContext&     aContext,
     }
     break;
   case NS_STYLE_BORDER_STYLE_DOUBLE:
-    if ((aBorder.width > 2) && (aBorder.height > 2)) {
+    // We can only do "double" borders if the thickness of the border
+    // is more than 2px.  Otherwise, we fall through to painting a
+    // solid border.
+    if ((aBorder.width > 2*twipsPerPixel || horizontal) &&
+        (aBorder.height > 2*twipsPerPixel || !horizontal)) {
       nscoord startBevel = (aStartBevelOffset > 0)
                             ? RoundFloatToPixel(0.333333f * (float)aStartBevelOffset, twipsPerPixel) : 0;
       nscoord endBevel =   (aEndBevelOffset > 0)
