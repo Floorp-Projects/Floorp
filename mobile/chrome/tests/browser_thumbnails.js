@@ -37,7 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-let baseURI = "http://mochi.test:8888/browser/mobile/chrome/";
 let testURL_blank = baseURI + "browser_blank_01.html";
 
 const DEFAULT_WIDTH = 800;
