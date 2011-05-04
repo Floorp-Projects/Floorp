@@ -156,7 +156,6 @@ DOMCI_CLASS(MediaList)
 DOMCI_CLASS(StyleSheetList)
 DOMCI_CLASS(CSSStyleSheet)
 DOMCI_CLASS(CSSStyleDeclaration)
-DOMCI_CLASS(ComputedCSSStyleDeclaration)
 DOMCI_CLASS(ROCSSPrimitiveValue)
 
 // Range classes
