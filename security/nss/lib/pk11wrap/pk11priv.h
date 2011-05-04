@@ -115,6 +115,8 @@ void PK11_InitSlot(SECMODModule *mod,CK_SLOT_ID slotID,PK11SlotInfo *slot);
 PRBool PK11_NeedPWInitForSlot(PK11SlotInfo *slot);
 SECStatus PK11_ReadSlotCerts(PK11SlotInfo *slot);
 void pk11_SetInternalKeySlot(PK11SlotInfo *slot);
+PK11SlotInfo *pk11_SwapInternalKeySlot(PK11SlotInfo *slot);
+void pk11_SetInternalKeySlotIfFirst(PK11SlotInfo *slot);
 
 /*********************************************************************
  *       Mechanism Mapping functions

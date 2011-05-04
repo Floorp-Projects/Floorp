@@ -218,6 +218,20 @@ static PRBool _pr_ipv6_v6only_on_by_default;
 #error "Cannot determine architecture"
 #endif
 
+#if defined(SOLARIS)            
+#ifndef PROTO_SDP
+/* on solaris, SDP is a new type of protocol */
+#define PROTO_SDP   257
+#endif 
+#define _PR_HAVE_SDP
+#elif defined(LINUX)
+#ifndef AF_INET_SDP
+/* on linux, SDP is a new type of address family */
+#define AF_INET_SDP 27
+#endif
+#define _PR_HAVE_SDP
+#endif /* LINUX */
+
 static PRFileDesc *pt_SetMethods(
     PRIntn osfd, PRDescType type, PRBool isAcceptedSocket, PRBool imported);
 
@@ -3462,6 +3476,12 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 
     if (PF_INET != domain
         && PR_AF_INET6 != domain
+#if defined(_PR_HAVE_SDP)
+        && PR_AF_INET_SDP != domain
+#if defined(SOLARIS)
+        && PR_AF_INET6_SDP != domain
+#endif /* SOLARIS */
+#endif /* _PR_HAVE_SDP */
         && PF_UNIX != domain)
     {
         PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, 0);
@@ -3474,6 +3494,20 @@ PR_IMPLEMENT(PRFileDesc*) PR_Socket(PRInt32 domain, PRInt32 type, PRInt32 proto)
 		(void)PR_SetError(PR_ADDRESS_NOT_SUPPORTED_ERROR, 0);
 		return fd;
 	}
+#if defined(_PR_HAVE_SDP)
+#if defined(LINUX)
+    if (PR_AF_INET_SDP == domain)
+        domain = AF_INET_SDP;
+#elif defined(SOLARIS)
+    if (PR_AF_INET_SDP == domain) {
+        domain = AF_INET;
+        proto = PROTO_SDP;
+    } else if(PR_AF_INET6_SDP == domain) {
+        domain = AF_INET6;
+        proto = PROTO_SDP;
+    }
+#endif /* SOLARIS */
+#endif /* _PR_HAVE_SDP */
 #if defined(_PR_INET6_PROBE)
 	if (PR_AF_INET6 == domain)
 		domain = _pr_ipv6_is_present() ? AF_INET6 : AF_INET;

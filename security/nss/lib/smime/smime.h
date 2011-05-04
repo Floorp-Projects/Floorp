@@ -38,7 +38,7 @@
  * Header file for routines specific to S/MIME.  Keep things that are pure
  * pkcs7 out of here; this is for S/MIME policy, S/MIME interoperability, etc.
  *
- * $Id: smime.h,v 1.8 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: smime.h,v 1.8.192.1 2011/02/11 03:57:50 emaldona%redhat.com Exp $
  */
 
 #ifndef _SECMIME_H_
@@ -83,7 +83,7 @@ extern SECStatus NSS_SMIMEUtil_EnableCipher(long which, int on);
  * Initialize the local recording of the S/MIME policy.
  * This function is called to allow/disallow a particular cipher.
  *
- * XXX This is for a the current module, I think, so local, static storage
+ * XXX This is for the current module, I think, so local, static storage
  * XXX is okay.  Is that correct, or could multiple uses of the same
  * XXX library expect to operate under different policies?
  *

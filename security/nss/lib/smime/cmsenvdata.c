@@ -37,7 +37,7 @@
 /*
  * CMS envelopedData methods.
  *
- * $Id: cmsenvdata.c,v 1.11 2005/10/03 22:01:57 relyea%netscape.com Exp $
+ * $Id: cmsenvdata.c,v 1.11.142.2 2011/02/11 03:57:50 emaldona%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -270,6 +270,7 @@ NSS_CMSEnvelopedData_Encode_BeforeData(NSSCMSEnvelopedData *envd)
     NSSCMSContentInfo *cinfo;
     PK11SymKey *bulkkey;
     SECAlgorithmID *algid;
+    SECStatus rv;
 
     cinfo = &(envd->contentInfo);
 
@@ -281,12 +282,16 @@ NSS_CMSEnvelopedData_Encode_BeforeData(NSSCMSEnvelopedData *envd)
     if (algid == NULL)
 	return SECFailure;
 
+    rv = NSS_CMSContentInfo_Private_Init(cinfo);
+    if (rv != SECSuccess) {
+	return SECFailure;
+    }
     /* this may modify algid (with IVs generated in a token).
      * it is essential that algid is a pointer to the contentEncAlg data, not a
      * pointer to a copy! */
-    cinfo->ciphcx = NSS_CMSCipherContext_StartEncrypt(envd->cmsg->poolp, bulkkey, algid);
+    cinfo->privateInfo->ciphcx = NSS_CMSCipherContext_StartEncrypt(envd->cmsg->poolp, bulkkey, algid);
     PK11_FreeSymKey(bulkkey);
-    if (cinfo->ciphcx == NULL)
+    if (cinfo->privateInfo->ciphcx == NULL)
 	return SECFailure;
 
     return SECSuccess;
@@ -298,9 +303,9 @@ NSS_CMSEnvelopedData_Encode_BeforeData(NSSCMSEnvelopedData *envd)
 SECStatus
 NSS_CMSEnvelopedData_Encode_AfterData(NSSCMSEnvelopedData *envd)
 {
-    if (envd->contentInfo.ciphcx) {
-	NSS_CMSCipherContext_Destroy(envd->contentInfo.ciphcx);
-	envd->contentInfo.ciphcx = NULL;
+    if (envd->contentInfo.privateInfo && envd->contentInfo.privateInfo->ciphcx) {
+	NSS_CMSCipherContext_Destroy(envd->contentInfo.privateInfo->ciphcx);
+	envd->contentInfo.privateInfo->ciphcx = NULL;
     }
 
     /* nothing else to do after data */
@@ -380,8 +385,13 @@ NSS_CMSEnvelopedData_Decode_BeforeData(NSSCMSEnvelopedData *envd)
 
     bulkalg = NSS_CMSContentInfo_GetContentEncAlg(cinfo);
 
-    cinfo->ciphcx = NSS_CMSCipherContext_StartDecrypt(bulkkey, bulkalg);
-    if (cinfo->ciphcx == NULL)
+    rv = NSS_CMSContentInfo_Private_Init(cinfo);
+    if (rv != SECSuccess) {
+	goto loser;
+    }
+    rv = SECFailure;
+    cinfo->privateInfo->ciphcx = NSS_CMSCipherContext_StartDecrypt(bulkkey, bulkalg);
+    if (cinfo->privateInfo->ciphcx == NULL)
 	goto loser;		/* error has been set by NSS_CMSCipherContext_StartDecrypt */
 
 
@@ -401,9 +411,9 @@ loser:
 SECStatus
 NSS_CMSEnvelopedData_Decode_AfterData(NSSCMSEnvelopedData *envd)
 {
-    if (envd && envd->contentInfo.ciphcx) {
-	NSS_CMSCipherContext_Destroy(envd->contentInfo.ciphcx);
-	envd->contentInfo.ciphcx = NULL;
+    if (envd && envd->contentInfo.privateInfo && envd->contentInfo.privateInfo->ciphcx) {
+	NSS_CMSCipherContext_Destroy(envd->contentInfo.privateInfo->ciphcx);
+	envd->contentInfo.privateInfo->ciphcx = NULL;
     }
 
     return SECSuccess;

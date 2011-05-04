@@ -1986,6 +1986,63 @@ CERT_GetPKIXVerifyNistRevocationPolicy()
     return &certRev_PKIX_Verify_Nist_Policy;
 }
 
+CERTRevocationFlags *
+CERT_AllocCERTRevocationFlags(
+    PRUint32 number_leaf_methods, PRUint32 number_leaf_pref_methods,
+    PRUint32 number_chain_methods, PRUint32 number_chain_pref_methods)
+{
+    CERTRevocationFlags *flags;
+    
+    flags = PORT_New(CERTRevocationFlags);
+    if (!flags)
+        return(NULL);
+    
+    flags->leafTests.number_of_defined_methods = number_leaf_methods;
+    flags->leafTests.cert_rev_flags_per_method = 
+        PORT_NewArray(PRUint64, number_leaf_methods);
+
+    flags->leafTests.number_of_preferred_methods = number_leaf_pref_methods;
+    flags->leafTests.preferred_methods = 
+        PORT_NewArray(CERTRevocationMethodIndex, number_leaf_pref_methods);
+
+    flags->chainTests.number_of_defined_methods = number_chain_methods;
+    flags->chainTests.cert_rev_flags_per_method = 
+        PORT_NewArray(PRUint64, number_chain_methods);
+
+    flags->chainTests.number_of_preferred_methods = number_chain_pref_methods;
+    flags->chainTests.preferred_methods = 
+        PORT_NewArray(CERTRevocationMethodIndex, number_chain_pref_methods);
+    
+    if (!flags->leafTests.cert_rev_flags_per_method
+        || !flags->leafTests.preferred_methods
+        || !flags->chainTests.cert_rev_flags_per_method
+        || !flags->chainTests.preferred_methods) {
+        CERT_DestroyCERTRevocationFlags(flags);
+        return (NULL);
+    }
+    
+    return flags;
+}
+
+void CERT_DestroyCERTRevocationFlags(CERTRevocationFlags *flags)
+{
+    if (!flags)
+	return;
+  
+    if (flags->leafTests.cert_rev_flags_per_method)
+        PORT_Free(flags->leafTests.cert_rev_flags_per_method);
+
+    if (flags->leafTests.preferred_methods)
+        PORT_Free(flags->leafTests.preferred_methods);
+    
+    if (flags->chainTests.cert_rev_flags_per_method)
+        PORT_Free(flags->chainTests.cert_rev_flags_per_method);
+
+    if (flags->chainTests.preferred_methods)
+        PORT_Free(flags->chainTests.preferred_methods);
+
+     PORT_Free(flags);
+}
 
 /*
  * CERT_PKIXVerifyCert
