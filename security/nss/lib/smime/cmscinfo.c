@@ -37,7 +37,7 @@
 /*
  * CMS contentInfo methods.
  *
- * $Id: cmscinfo.c,v 1.7.192.3 2011/02/11 03:57:50 emaldona%redhat.com Exp $
+ * $Id: cmscinfo.c,v 1.7 2004/04/25 15:03:16 gerv%gerv.net Exp $
  */
 
 #include "cmslocal.h"
@@ -47,37 +47,11 @@
 #include "secoid.h"
 #include "secerr.h"
 
-
 /*
  * NSS_CMSContentInfo_Create - create a content info
  *
  * version is set in the _Finalize procedures for each content type
  */
-SECStatus
-NSS_CMSContentInfo_Private_Init(NSSCMSContentInfo *cinfo)
-{
-    if (cinfo->privateInfo) {
-	return SECSuccess;
-    }
-    cinfo->privateInfo = PORT_ZNew(NSSCMSContentInfoPrivate);
-    return (cinfo->privateInfo) ? SECSuccess : SECFailure;
-}
-
-
-static void
-nss_cmsContentInfo_private_destroy(NSSCMSContentInfoPrivate *privateInfo)
-{
-    if (privateInfo->digcx) {
-	/* must destroy digest objects */
-	NSS_CMSDigestContext_Cancel(privateInfo->digcx);
-	privateInfo->digcx = NULL;
-    }
-    if (privateInfo->ciphcx) {
-	NSS_CMSCipherContext_Destroy(privateInfo->ciphcx);
-	privateInfo->ciphcx = NULL;
-    }
-    PORT_Free(privateInfo);
-}
 
 /*
  * NSS_CMSContentInfo_Destroy - destroy a CMS contentInfo and all of its sub-pieces.
@@ -102,17 +76,23 @@ NSS_CMSContentInfo_Destroy(NSSCMSContentInfo *cinfo)
 	NSS_CMSDigestedData_Destroy(cinfo->content.digestedData);
 	break;
       default:
-	NSS_CMSGenericWrapperData_Destroy(kind, cinfo->content.genericData);
 	/* XXX Anything else that needs to be "manually" freed/destroyed? */
 	break;
     }
-    if (cinfo->privateInfo) {
-	nss_cmsContentInfo_private_destroy(cinfo->privateInfo);
-	cinfo->privateInfo = NULL;
+    if (cinfo->digcx) {
+	/* must destroy digest objects */
+	NSS_CMSDigestContext_Cancel(cinfo->digcx);
+	cinfo->digcx = NULL;
     }
-    if (cinfo->bulkkey) {
+    if (cinfo->bulkkey)
 	PK11_FreeSymKey(cinfo->bulkkey);
+
+    if (cinfo->ciphcx) {
+	NSS_CMSCipherContext_Destroy(cinfo->ciphcx);
+	cinfo->ciphcx = NULL;
     }
+    
+    /* we live in a pool, so no need to worry about storage */
 }
 
 /*
@@ -121,56 +101,31 @@ NSS_CMSContentInfo_Destroy(NSSCMSContentInfo *cinfo)
 NSSCMSContentInfo *
 NSS_CMSContentInfo_GetChildContentInfo(NSSCMSContentInfo *cinfo)
 {
+    void * ptr                  = NULL;
     NSSCMSContentInfo * ccinfo  = NULL;
     SECOidTag tag = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
     switch (tag) {
     case SEC_OID_PKCS7_SIGNED_DATA:
-	if (cinfo->content.signedData != NULL) {
-	    ccinfo = &(cinfo->content.signedData->contentInfo);
-	}
+	ptr    = (void *)cinfo->content.signedData;
+	ccinfo = &(cinfo->content.signedData->contentInfo);
 	break;
     case SEC_OID_PKCS7_ENVELOPED_DATA:
-	if (cinfo->content.envelopedData != NULL) {
-	    ccinfo = &(cinfo->content.envelopedData->contentInfo);
-	}
+	ptr    = (void *)cinfo->content.envelopedData;
+	ccinfo = &(cinfo->content.envelopedData->contentInfo);
 	break;
     case SEC_OID_PKCS7_DIGESTED_DATA:
-	if (cinfo->content.digestedData != NULL) {
-	    ccinfo = &(cinfo->content.digestedData->contentInfo);
-	}
+	ptr    = (void *)cinfo->content.digestedData;
+	ccinfo = &(cinfo->content.digestedData->contentInfo);
 	break;
     case SEC_OID_PKCS7_ENCRYPTED_DATA:
-	if (cinfo->content.encryptedData != NULL) {
-	    ccinfo = &(cinfo->content.encryptedData->contentInfo);
-	}
+	ptr    = (void *)cinfo->content.encryptedData;
+	ccinfo = &(cinfo->content.encryptedData->contentInfo);
 	break;
     case SEC_OID_PKCS7_DATA:
     default:
-	if (NSS_CMSType_IsWrapper(tag)) {
-	    if (cinfo->content.genericData != NULL) {
-	       ccinfo = &(cinfo->content.genericData->contentInfo);
-	    }
-	}
 	break;
     }
-    if (ccinfo && !ccinfo->privateInfo) {
-	NSS_CMSContentInfo_Private_Init(ccinfo);
-    }
-    return ccinfo;
-}
-
-SECStatus
-NSS_CMSContentInfo_SetDontStream(NSSCMSContentInfo *cinfo, PRBool dontStream)
-{
-   SECStatus rv;
-
-   rv = NSS_CMSContentInfo_Private_Init(cinfo);
-   if (rv != SECSuccess) {
-	/* default is streaming, failure to get ccinfo will not effect this */
-	return dontStream ? SECFailure :  SECSuccess ;
-   }
-   cinfo->privateInfo->dontStream = dontStream;
-   return SECSuccess;
+    return (ptr ? ccinfo : NULL);
 }
 
 /*
@@ -192,9 +147,7 @@ NSS_CMSContentInfo_SetContent(NSSCMSMessage *cmsg, NSSCMSContentInfo *cinfo, SEC
 
     cinfo->content.pointer = ptr;
 
-    if (NSS_CMSType_IsData(type) && ptr) {
-	cinfo->rawContent = ptr;
-    } else {
+    if (type != SEC_OID_PKCS7_DATA) {
 	/* as we always have some inner data,
 	 * we need to set it to something, just to fool the encoder enough to work on it
 	 * and get us into nss_cms_encoder_notify at that point */
@@ -221,10 +174,9 @@ NSS_CMSContentInfo_SetContent_Data(NSSCMSMessage *cmsg, NSSCMSContentInfo *cinfo
 {
     if (NSS_CMSContentInfo_SetContent(cmsg, cinfo, SEC_OID_PKCS7_DATA, (void *)data) != SECSuccess)
 	return SECFailure;
-    if (detached) {
-        cinfo->rawContent = NULL;
-    }
-	
+    cinfo->rawContent = (detached) ? 
+			    NULL : (data) ? 
+				data : SECITEM_AllocItem(cmsg->poolp, NULL, 1);
     return SECSuccess;
 }
 
@@ -252,7 +204,6 @@ NSS_CMSContentInfo_SetContent_EncryptedData(NSSCMSMessage *cmsg, NSSCMSContentIn
     return NSS_CMSContentInfo_SetContent(cmsg, cinfo, SEC_OID_PKCS7_ENCRYPTED_DATA, (void *)encd);
 }
 
-
 /*
  * NSS_CMSContentInfo_GetContent - get pointer to inner content
  *
@@ -272,7 +223,7 @@ NSS_CMSContentInfo_GetContent(NSSCMSContentInfo *cinfo)
     case SEC_OID_PKCS7_ENCRYPTED_DATA:
 	return cinfo->content.pointer;
     default:
-	return NSS_CMSType_IsWrapper(tag) ? cinfo->content.pointer : (NSS_CMSType_IsData(tag) ? cinfo->rawContent : NULL);
+	return NULL;
     }
 }
 
@@ -281,7 +232,6 @@ NSS_CMSContentInfo_GetContent(NSSCMSContentInfo *cinfo)
  *
  * this is typically only called by NSS_CMSMessage_GetContent()
  */
-
 SECItem *
 NSS_CMSContentInfo_GetInnerContent(NSSCMSContentInfo *cinfo)
 {
@@ -290,20 +240,25 @@ NSS_CMSContentInfo_GetInnerContent(NSSCMSContentInfo *cinfo)
     SECItem           *pItem = NULL;
 
     tag = NSS_CMSContentInfo_GetContentTypeTag(cinfo);
-    if (NSS_CMSType_IsData(tag)) {
+    switch (tag) {
+    case SEC_OID_PKCS7_DATA:
+	/* end of recursion - every message has to have a data cinfo */
 	pItem = cinfo->content.data; 
-    } else if (NSS_CMSType_IsWrapper(tag)) {
+	break;
+    case SEC_OID_PKCS7_DIGESTED_DATA:
+    case SEC_OID_PKCS7_ENCRYPTED_DATA:
+    case SEC_OID_PKCS7_ENVELOPED_DATA:
+    case SEC_OID_PKCS7_SIGNED_DATA:
 	ccinfo = NSS_CMSContentInfo_GetChildContentInfo(cinfo);
-	if (ccinfo != NULL) {
+	if (ccinfo != NULL)
 	    pItem = NSS_CMSContentInfo_GetContent(ccinfo);
-	}
-    } else {
+	break;
+    default:
 	PORT_Assert(0);
+	break;
     }
-
     return pItem;
 }
-
 
 /*
  * NSS_CMSContentInfo_GetContentType{Tag,OID} - find out (saving pointer to lookup result

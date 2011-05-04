@@ -78,8 +78,6 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 export:: private_export
 
-$(OBJDIR)/pk11load$(OBJ_SUFFIX): debug_module.c
-
 # On AIX 4.3, IBM xlC_r compiler (version 3.6.6) cannot compile
 # pk11slot.c in 64-bit mode for unknown reasons.  A workaround is
 # to compile it with optimizations turned on.  (Bugzilla bug #63815)

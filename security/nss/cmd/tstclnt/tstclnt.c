@@ -538,7 +538,6 @@ int main(int argc, char **argv)
     PLOptState *optstate;
     PLOptStatus optstatus;
     PRStatus prStatus;
-    PRUint16           socketDomain;
 
     progName = strrchr(argv[0], '/');
     if (!progName)
@@ -700,17 +699,11 @@ int main(int argc, char **argv)
 
     printHostNameAndAddr(host, &addr);
 
-    /* check if SDP is going to be used */
-    if (!PR_GetEnv("NSS_USE_SDP")) {
-        socketDomain = addr.raw.family;
-    } else {
-        socketDomain = PR_AF_INET_SDP;
-    }
     if (pingServerFirst) {
 	int iter = 0;
 	PRErrorCode err;
 	do {
-	    s = PR_OpenTCPSocket(socketDomain);
+	    s = PR_OpenTCPSocket(addr.raw.family);
 	    if (s == NULL) {
 		SECU_PrintError(progName, "Failed to create a TCP socket");
 	    }
@@ -748,7 +741,7 @@ int main(int argc, char **argv)
     }
 
     /* Create socket */
-    s = PR_OpenTCPSocket(socketDomain);
+    s = PR_OpenTCPSocket(addr.raw.family);
     if (s == NULL) {
 	SECU_PrintError(progName, "error creating socket");
 	return 1;

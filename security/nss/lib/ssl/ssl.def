@@ -152,9 +152,3 @@ SSL_SNISocketConfigHook;
 ;+    local:
 ;+*;
 ;+};
-;+NSS_3.12.10 {      # NSS 3.12.10 release
-;+    global:
-SSL_ConfigSecureServerWithCertChain;
-;+    local:
-;+*;
-;+};
