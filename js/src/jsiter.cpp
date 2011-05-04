@@ -1450,10 +1450,16 @@ InitGeneratorClass(JSContext *cx, GlobalObject *global)
 static JSObject *
 InitStopIterationClass(JSContext *cx, GlobalObject *global)
 {
-    JSObject *proto = js_InitClass(cx, global, NULL, &js_StopIterationClass, NULL, 0,
-                                   NULL, NULL, NULL, NULL);
-    if (proto)
-        MarkStandardClassInitializedNoProto(global, &js_StopIterationClass);
+    JSObject *proto = global->createBlankPrototype(cx, &js_StopIterationClass);
+    if (!proto || !proto->freeze(cx))
+        return NULL;
+
+    /* This should use a non-JSProtoKey'd slot, but this is easier for now. */
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_StopIteration, proto, proto))
+        return NULL;
+
+    MarkStandardClassInitializedNoProto(global, &js_StopIterationClass);
+
     return proto;
 }
 
