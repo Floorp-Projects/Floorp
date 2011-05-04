@@ -388,16 +388,6 @@ protected:
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
 
   /**
-   * Get the name if it exists and return whether it did exist
-   * @param aName the name returned [OUT]
-   * @param true if the name is empty, false otherwise
-   */
-  PRBool GetNameIfExists(nsAString& aName) {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::name, aName);
-    return !aName.IsEmpty();
-  }
-
-  /**
    * Called when an attribute is about to be changed
    */
   virtual nsresult BeforeSetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
