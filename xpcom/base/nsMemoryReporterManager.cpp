@@ -162,7 +162,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(MallocDefaultAllocated,
 
 #endif
 
-#if defined(XP_WIN) && !defined(WINCE)
+#ifdef XP_WIN
 #include <windows.h>
 #include <psapi.h>
 
@@ -239,7 +239,7 @@ nsMemoryReporterManager::Init()
 #endif
 #endif
 
-#if defined(XP_WIN) && !defined(WINCE)
+#ifdef XP_WIN
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
     REGISTER(Win32PrivateBytes);
 #endif

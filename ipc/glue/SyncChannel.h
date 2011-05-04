@@ -171,7 +171,7 @@ protected:
 
     // On both
     bool AwaitingSyncReply() const {
-        mMutex.AssertCurrentThreadOwns();
+        mMonitor.AssertCurrentThreadOwns();
         return mPendingReply != 0;
     }
 

@@ -198,7 +198,6 @@ menuitem[command="placesCmd_show:info"] {
   list-style-image: url("moz-icon://stock/gtk-properties?size=menu");
 }
 
-#placesContext_reload,
-#placesContext_reloadMicrosummary {
+#placesContext_reload {
   list-style-image: url("moz-icon://stock/gtk-refresh?size=menu");
 }

@@ -14,7 +14,7 @@ function run_test() {
   let keyBundle = ID.set("WeaveCryptoID", new SyncKeyBundle(null, "john@example.com"));
   keyBundle.keyStr = "abcdeabcdeabcdeabcdeabcdea";
   
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
   
   let log = Log4Moz.repository.getLogger("Test");
   Log4Moz.repository.rootLogger.addAppender(new Log4Moz.DumpAppender());

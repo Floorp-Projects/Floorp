@@ -102,14 +102,14 @@ struct OpDestroyThebesFrontBuffer { PLayer layer; };
 struct OpCreateCanvasBuffer {
   PLayer layer;
   nsIntSize size;
-  Shmem initialFront;
+  SurfaceDescriptor initialFront;
 };
 struct OpDestroyCanvasFrontBuffer { PLayer layer; };
 
 struct OpCreateImageBuffer {
   PLayer layer;
   nsIntSize size;
-  Shmem initialFront;
+  SurfaceDescriptor initialFront;
 };
 struct OpDestroyImageFrontBuffer { PLayer layer; };
 
@@ -173,12 +173,12 @@ struct OpPaintThebesBuffer {
 
 struct OpPaintCanvas  {
   PLayer layer;
-  Shmem newFrontBuffer;
+  SurfaceDescriptor newFrontBuffer;
 };
 
 struct OpPaintImage  {
   PLayer layer;
-  Shmem newFrontBuffer;
+  SurfaceDescriptor newFrontBuffer;
 };
 
 

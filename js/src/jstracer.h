@@ -1695,11 +1695,11 @@ MonitorTracePoint(JSContext*, uintN& inlineCallCount, bool* blacklist,
 extern JS_REQUIRES_STACK TraceRecorder::AbortResult
 AbortRecording(JSContext* cx, const char* reason);
 
-extern bool
-InitJIT(TraceMonitor *tm, JSRuntime *rt);
+extern void
+InitJIT();
 
 extern void
-FinishJIT(TraceMonitor *tm);
+FinishJIT();
 
 extern void
 PurgeScriptFragments(TraceMonitor* tm, JSScript* script);

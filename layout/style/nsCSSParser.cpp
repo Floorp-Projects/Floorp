@@ -2116,7 +2116,8 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
         !(eCSSToken_URL == mToken.mType ||
           (eCSSToken_Function == mToken.mType &&
            (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix") ||
-            mToken.mIdent.LowerCaseEqualsLiteral("domain"))))) {
+            mToken.mIdent.LowerCaseEqualsLiteral("domain") ||
+            mToken.mIdent.LowerCaseEqualsLiteral("regexp"))))) {
       REPORT_UNEXPECTED_TOKEN(PEMozDocRuleBadFunc);
       delete urls;
       return PR_FALSE;
@@ -2126,6 +2127,21 @@ CSSParserImpl::ParseMozDocumentRule(RuleAppendFunc aAppendFunc, void* aData)
     if (mToken.mType == eCSSToken_URL) {
       cur->func = css::DocumentRule::eURL;
       CopyUTF16toUTF8(mToken.mIdent, cur->url);
+    } else if (mToken.mIdent.LowerCaseEqualsLiteral("regexp")) {
+      // regexp() is different from url-prefix() and domain() (but
+      // probably the way they *should* have been* in that it requires a
+      // string argument, and doesn't try to behave like url().
+      cur->func = css::DocumentRule::eRegExp;
+      GetToken(PR_TRUE);
+      // copy before we know it's valid (but before ExpectSymbol changes
+      // mToken.mIdent)
+      CopyUTF16toUTF8(mToken.mIdent, cur->url);
+      if (eCSSToken_String != mToken.mType || !ExpectSymbol(')', PR_TRUE)) {
+        REPORT_UNEXPECTED_TOKEN(PEMozDocRuleNotString);
+        SkipUntil(')');
+        delete urls;
+        return PR_FALSE;
+      }
     } else {
       if (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix")) {
         cur->func = css::DocumentRule::eURLPrefix;

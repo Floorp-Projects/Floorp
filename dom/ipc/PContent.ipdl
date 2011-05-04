@@ -183,6 +183,8 @@ parent:
     // nsIPermissionManager messages
     sync ReadPermissions() returns (Permission[] permissions);
 
+    sync GetIndexedDBDirectory() returns (nsString directory);
+
     // These clipboard methods are only really used on Android since
     // the clipboard is not available in the content process.
     SetClipboardText(nsString text, PRInt32 whichClipboard);

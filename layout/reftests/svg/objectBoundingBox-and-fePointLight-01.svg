@@ -18,7 +18,7 @@
     </filter>
   </defs>
 
-  <rect x="20" y="20" width="40" height="20" filter="url(#light)" fill="black" />
+  <rect x="20" y="20" width="40" height="20" filter="url(#light)" fill="black" stroke="none" />
 
 </svg>
 

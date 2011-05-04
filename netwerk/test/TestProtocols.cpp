@@ -310,7 +310,7 @@ TestAuthPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
     *user = NS_StringCloneData(NS_ConvertUTF8toUTF16(buf));
 
     const char *p;
-#ifdef XP_UNIX
+#if defined(XP_UNIX) && !defined(ANDROID)
     p = getpass("Enter password: ");
 #else
     printf("Enter password: ");
@@ -538,7 +538,7 @@ InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
      }
     LOG(("\tTime to connect: %.3f seconds\n", connectTime));
     LOG(("\tTime to read: %.3f seconds.\n", readTime));
-    LOG(("\tRead: %lld bytes.\n", info->mBytesRead.mValue));
+    LOG(("\tRead: %lld bytes.\n", info->mBytesRead));
     if (info->mBytesRead == PRInt64(0)) {
     } else if (readTime > 0.0) {
       LOG(("\tThroughput: %.0f bps.\n", (PRFloat64)(info->mBytesRead*PRInt64(8))/readTime));

@@ -582,7 +582,7 @@ PluginInstanceParent::AsyncSetWindow(NPWindow* aWindow)
 {
     NPRemoteWindow window;
     mWindowType = aWindow->type;
-    window.window = reinterpret_cast<unsigned long>(aWindow->window);
+    window.window = reinterpret_cast<uintptr_t>(aWindow->window);
     window.x = aWindow->x;
     window.y = aWindow->y;
     window.width = aWindow->width;
@@ -849,7 +849,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
     else {
         SubclassPluginWindow(reinterpret_cast<HWND>(aWindow->window));
 
-        window.window = reinterpret_cast<unsigned long>(aWindow->window);
+        window.window = reinterpret_cast<uintptr_t>(aWindow->window);
         window.x = aWindow->x;
         window.y = aWindow->y;
         window.width = aWindow->width;
@@ -960,6 +960,23 @@ PluginInstanceParent::NPP_GetValue(NPPVariable aVariable,
         (*(NPObject**)_retval) = npn->retainobject(object);
         return NPERR_NO_ERROR;
     }
+
+#ifdef MOZ_ACCESSIBILITY_ATK
+    case NPPVpluginNativeAccessibleAtkPlugId: {
+        nsCString plugId;
+        NPError rv;
+        if (!CallNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(&plugId, &rv)) {
+            return NPERR_GENERIC_ERROR;
+        }
+
+        if (NPERR_NO_ERROR != rv) {
+            return rv;
+        }
+
+        (*(nsCString*)_retval) = plugId;
+        return NPERR_NO_ERROR;
+    }
+#endif
 
     default:
         PR_LOG(gPluginLog, PR_LOG_WARNING,

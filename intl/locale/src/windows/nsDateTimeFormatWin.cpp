@@ -41,7 +41,7 @@
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
-#include "nsIWin32Locale.h"
+#include "nsWin32Locale.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -102,11 +102,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
   // Get LCID and charset name from locale, if available
   if (NS_SUCCEEDED(res) && !localeStr.IsEmpty()) {
     mLocale.Assign(localeStr); // cache locale name
-
-    nsCOMPtr <nsIWin32Locale> win32Locale = do_GetService(NS_WIN32LOCALE_CONTRACTID);
-    if (win32Locale) {
-      res = win32Locale->GetPlatformLocale(mLocale, (LCID *) &mLCID);
-    }
+    res = nsWin32Locale::GetPlatformLocale(mLocale, (LCID *) &mLCID);
   }
 
   return res;

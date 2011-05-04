@@ -2798,15 +2798,19 @@ nsLayoutUtils::DrawString(const nsIFrame*      aFrame,
   nsresult rv = NS_ERROR_FAILURE;
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
-      aDirection = aFrame->GetStyleVisibility()->mDirection;
+    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+
+    if (bidiUtils) {
+      if (aDirection == NS_STYLE_DIRECTION_INHERIT) {
+        aDirection = aFrame->GetStyleVisibility()->mDirection;
+      }
+      nsBidiDirection direction =
+        (NS_STYLE_DIRECTION_RTL == aDirection) ?
+        NSBIDI_RTL : NSBIDI_LTR;
+      rv = bidiUtils->RenderText(aString, aLength, direction,
+                                 presContext, *aContext, *aContext,
+                                 aPoint.x, aPoint.y);
     }
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == aDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
-    rv = nsBidiPresUtils::RenderText(aString, aLength, direction,
-                                     presContext, *aContext, *aContext,
-                                     aPoint.x, aPoint.y);
   }
   if (NS_FAILED(rv))
 #endif // IBMBIDI
@@ -2825,12 +2829,16 @@ nsLayoutUtils::GetStringWidth(const nsIFrame*      aFrame,
 #ifdef IBMBIDI
   nsPresContext* presContext = aFrame->PresContext();
   if (presContext->BidiEnabled()) {
-    const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
-    nsBidiDirection direction =
-      (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
-      NSBIDI_RTL : NSBIDI_LTR;
-    return nsBidiPresUtils::MeasureTextWidth(aString, aLength,
-                                             direction, presContext, *aContext);
+    nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+
+    if (bidiUtils) {
+      const nsStyleVisibility* vis = aFrame->GetStyleVisibility();
+      nsBidiDirection direction =
+        (NS_STYLE_DIRECTION_RTL == vis->mDirection) ?
+        NSBIDI_RTL : NSBIDI_LTR;
+      return bidiUtils->MeasureTextWidth(aString, aLength,
+                                         direction, presContext, *aContext);
+    }
   }
 #endif // IBMBIDI
   aContext->SetTextRunRTL(PR_FALSE);

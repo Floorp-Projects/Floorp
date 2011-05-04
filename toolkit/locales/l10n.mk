@@ -155,10 +155,6 @@ endif
 	$(NSINSTALL) -D $(DIST)/l10n-stage/$(PKG_PATH)
 	cd $(DIST)/l10n-stage; \
 	  $(MAKE_PACKAGE)
-ifeq (WINCE,$(OS_ARCH))
-	cd $(DIST)/l10n-stage; \
-	  $(MAKE_CAB)
-endif
 ifdef MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
@@ -177,9 +173,6 @@ endif
 	$(MAKE) clobber-zip AB_CD=$(AB_CD)
 	$(NSINSTALL) -D $(DIST)/$(PKG_PATH)
 	mv -f "$(DIST)/l10n-stage/$(PACKAGE)" "$(ZIP_OUT)"
-ifeq (WINCE,$(OS_ARCH))
-	mv -f "$(DIST)/l10n-stage/$(PKG_BASENAME).cab" "$(DIST)/$(PKG_PATH)$(PKG_BASENAME).cab"
-endif
 
 repackage-zip-%: $(STAGEDIST)
 	@$(MAKE) repackage-zip AB_CD=$* ZIP_IN="$(ZIP_IN)"

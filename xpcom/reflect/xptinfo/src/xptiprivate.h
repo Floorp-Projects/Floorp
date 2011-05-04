@@ -62,7 +62,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWeakReference.h"
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "mozilla/Mutex.h"
 
 #include "nsCRT.h"
@@ -184,7 +184,7 @@ public:
     //  * any read from or write to mIIDTable or mNameTable
     //  * any writing to the links between an xptiInterfaceEntry
     //    and its xptiInterfaceInfo (mEntry/mInfo)
-    mozilla::Monitor mTableMonitor;
+    mozilla::ReentrantMonitor mTableReentrantMonitor;
     nsDataHashtable<nsIDHashKey, xptiInterfaceEntry*> mIIDTable;
     nsDataHashtable<nsDepCharHashKey, xptiInterfaceEntry*> mNameTable;
 };
@@ -429,7 +429,7 @@ class xptiInterfaceInfoManager
     NS_DECL_NSIINTERFACEINFOMANAGER
     NS_DECL_NSIINTERFACEINFOSUPERMANAGER
 
-    typedef mozilla::Monitor Monitor;
+    typedef mozilla::ReentrantMonitor ReentrantMonitor;
     typedef mozilla::Mutex Mutex;
 
 public:

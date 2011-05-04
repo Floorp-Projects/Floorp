@@ -21,6 +21,7 @@
  * Contributor(s):
  *   Brett Wilson <brettw@gmail.com> (original author)
  *   Robert O'Callahan <rocallahan@novell.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,7 +42,6 @@
 #include "nsIAtom.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMDocumentView.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMRange.h"
@@ -102,14 +102,13 @@ mozInlineSpellWordUtil::Init(nsWeakPtr aWeakEditor)
   mDOMDocumentRange = do_QueryInterface(domDoc, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // view
-  nsCOMPtr<nsIDOMDocumentView> docView = do_QueryInterface(domDoc, &rv);
+  // Window
+  nsCOMPtr<nsIDOMWindow> window;
+  rv = domDoc->GetDefaultView(getter_AddRefs(window));
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIDOMAbstractView> abstractView;
-  rv = docView->GetDefaultView(getter_AddRefs(abstractView));
-  NS_ENSURE_SUCCESS(rv, rv);
-  mCSSView = do_QueryInterface(abstractView, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+
+  mCSSView = window;
+  NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
 
   // Find the root node for the editor. For contenteditable we'll need something
   // cleverer here.
@@ -498,7 +497,7 @@ ContainsDOMWordSeparator(nsIDOMNode* aNode, PRInt32 aBeforeOffset,
 }
 
 static PRBool
-IsBreakElement(nsIDOMViewCSS* aDocView, nsIDOMNode* aNode)
+IsBreakElement(nsIDOMWindow* aDocView, nsIDOMNode* aNode)
 {
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
   if (!element)
@@ -537,8 +536,8 @@ IsBreakElement(nsIDOMViewCSS* aDocView, nsIDOMNode* aNode)
 }
 
 struct CheckLeavingBreakElementClosure {
-  nsIDOMViewCSS* mDocView;
-  PRPackedBool   mLeftBreakElement;
+  nsIDOMWindow* mDocView;
+  PRPackedBool  mLeftBreakElement;
 };
 
 static void

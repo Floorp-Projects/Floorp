@@ -1121,6 +1121,38 @@ public:
   }
 
   /**
+   * Get the previous nsIContent in the pre-order tree traversal of the DOM.  If
+   * aRoot is non-null, then it must be an ancestor of |this|
+   * (possibly equal to |this|) and only nsIContents that are descendants of
+   * aRoot, including aRoot itself, will be returned.  Returns
+   * null if there are no more nsIContents to traverse.
+   */
+  nsIContent* GetPreviousContent(const nsINode* aRoot = nsnull) const
+  {
+      // Can't use nsContentUtils::ContentIsDescendantOf here, since we
+      // can't include it here.
+#ifdef DEBUG
+      if (aRoot) {
+        const nsINode* cur = this;
+        for (; cur; cur = cur->GetNodeParent())
+          if (cur == aRoot) break;
+        NS_ASSERTION(cur, "aRoot not an ancestor of |this|?");
+      }
+#endif
+
+    if (this == aRoot) {
+      return nsnull;
+    }
+    nsIContent* cur = this->GetParent();
+    nsIContent* iter = this->GetPreviousSibling();
+    while (iter) {
+      cur = iter;
+      iter = reinterpret_cast<nsINode*>(iter)->GetLastChild();
+    }
+    return cur;
+  }
+
+  /**
    * Boolean flags
    */
 private:

@@ -61,9 +61,9 @@ public:
 
   virtual ~nsAccelerometer();
 
-  double mLastX;
-  double mLastY;
-  double mLastZ;
+  double mLastAlpha;
+  double mLastBeta;
+  double mLastGamma;
 
 private:
   nsCOMArray<nsIAccelerationListener> mListeners;

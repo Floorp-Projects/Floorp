@@ -587,6 +587,35 @@ PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginScriptableNPObject(
 }
 
 bool
+PluginInstanceChild::AnswerNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(
+                                          nsCString* aPlugId,
+                                          NPError* aResult)
+{
+    AssertPluginThread();
+
+#if MOZ_ACCESSIBILITY_ATK
+
+    char* plugId = NULL;
+    NPError result = NPERR_GENERIC_ERROR;
+    if (mPluginIface->getvalue) {
+        result = mPluginIface->getvalue(GetNPP(),
+                                        NPPVpluginNativeAccessibleAtkPlugId,
+                                        &plugId);
+    }
+
+    *aPlugId = nsCString(plugId);
+    *aResult = result;
+    return true;
+
+#else
+
+    NS_RUNTIMEABORT("shouldn't be called on non-ATK platforms");
+    return false;
+
+#endif
+}
+
+bool
 PluginInstanceChild::AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value,
                                                             NPError* result)
 {
@@ -1415,14 +1444,14 @@ PluginInstanceChild::HookSetWindowLongPtr()
 
     sUser32Intercept.Init("user32.dll");
 #ifdef _WIN64
-    sUser32Intercept.AddHook("SetWindowLongPtrA", SetWindowLongPtrAHook,
+    sUser32Intercept.AddHook("SetWindowLongPtrA", reinterpret_cast<intptr_t>(SetWindowLongPtrAHook),
                              (void**) &sUser32SetWindowLongAHookStub);
-    sUser32Intercept.AddHook("SetWindowLongPtrW", SetWindowLongPtrWHook,
+    sUser32Intercept.AddHook("SetWindowLongPtrW", reinterpret_cast<intptr_t>(SetWindowLongPtrWHook),
                              (void**) &sUser32SetWindowLongWHookStub);
 #else
-    sUser32Intercept.AddHook("SetWindowLongA", SetWindowLongAHook,
+    sUser32Intercept.AddHook("SetWindowLongA", reinterpret_cast<intptr_t>(SetWindowLongAHook),
                              (void**) &sUser32SetWindowLongAHookStub);
-    sUser32Intercept.AddHook("SetWindowLongW", SetWindowLongWHook,
+    sUser32Intercept.AddHook("SetWindowLongW", reinterpret_cast<intptr_t>(SetWindowLongWHook),
                              (void**) &sUser32SetWindowLongWHookStub);
 #endif
 }
@@ -1502,7 +1531,7 @@ PluginInstanceChild::InitPopupMenuHook()
     // lifetime. Additional instances are needed if other modules need
     // to be hooked.
     sUser32Intercept.Init("user32.dll");
-    sUser32Intercept.AddHook("TrackPopupMenu", TrackPopupHookProc,
+    sUser32Intercept.AddHook("TrackPopupMenu", reinterpret_cast<intptr_t>(TrackPopupHookProc),
                              (void**) &sUser32TrackPopupMenuStub);
 }
 

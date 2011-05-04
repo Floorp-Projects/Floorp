@@ -2,6 +2,7 @@
   Common Helpers functions
 =============================================================================*/
 
+const kDefaultWait = 2000;
 // Wait for a condition and call a supplied callback if condition is met within
 // alloted time. If condition is not met, cause a hard failure, stopping the test.
 function waitFor(callback, test, timeout) {
@@ -11,7 +12,7 @@ function waitFor(callback, test, timeout) {
   }
 
   timeout = timeout || Date.now();
-  if (Date.now() - timeout > 1000)
+  if (Date.now() - timeout > kDefaultWait)
     throw "waitFor timeout";
   setTimeout(waitFor, 50, callback, test, timeout);
 };
@@ -26,7 +27,7 @@ function waitForAndContinue(callback, test, timeout) {
   }
 
   timeout = timeout || Date.now();
-  if (Date.now() - timeout > 1000) {
+  if (Date.now() - timeout > kDefaultWait) {
     callback();
     return;
   }

@@ -19,7 +19,7 @@
          'Subject implements nsIPropertyBag2.');
       
       if ('nsICrashReporter' in Components.interfaces) {
-        ok(subject.getPropertyAsAString('dumpID'), "dumpID is present");
+        ok(subject.getPropertyAsAString('dumpID'), "dumpID is present and not an empty string");
       }
 
       Services.obs.removeObserver(crashObserver, 'ipc:content-shutdown');
