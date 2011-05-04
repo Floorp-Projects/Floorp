@@ -7,7 +7,7 @@ Components.utils.import("resource://gre/modules/AddonUpdateChecker.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
-const RELATIVE_DIR = "browser/mobile/chrome/";
+const RELATIVE_DIR = "browser/mobile/chrome/tests/";
 const TESTROOT     = "http://example.com/" + RELATIVE_DIR;
 const TESTROOT2    = "http://example.org/" + RELATIVE_DIR;
 const PREF_LOGGING_ENABLED            = "extensions.logging.enabled";
