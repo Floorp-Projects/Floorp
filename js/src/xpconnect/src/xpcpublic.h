@@ -144,14 +144,23 @@ xpc_FastGetCachedWrapper(nsWrapperCache *cache, JSObject *scope)
     return xpc_FastGetCachedWrapper(cache, scope, &dummy);
 }
 
-// The JS GC marks objects gray that are held alive directly or indirectly
-// by an XPConnect root. The cycle collector explores only this subset
-// of the JS heap.
+// The JS GC marks objects gray that are held alive directly or
+// indirectly by an XPConnect root. The cycle collector explores only
+// this subset of the JS heap.  JSStaticAtoms cause this to crash,
+// because they are statically allocated in the data segment and thus
+// are not really GCThings.
 inline JSBool
 xpc_IsGrayGCThing(void *thing)
 {
     return js_GCThingIsMarked(thing, XPC_GC_COLOR_GRAY);
 }
+
+// The cycle collector only cares about JS objects and XML objects that
+// are held alive directly or indirectly by an XPConnect root.  This
+// version is preferred to xpc_IsGrayGCThing when it isn't known if thing
+// is a JSString or not. Implemented in nsXPConnect.cpp.
+extern JSBool
+xpc_GCThingIsGrayCCThing(void *thing);
 
 // Implemented in nsXPConnect.cpp.
 extern void
