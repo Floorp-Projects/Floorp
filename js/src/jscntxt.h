@@ -702,9 +702,10 @@ struct JSRuntime {
     JSPreWrapCallback    preWrapObjectCallback;
 
 #ifdef JS_METHODJIT
-    uint32               mjitMemoryUsed;
+    /* This measures the size of JITScripts, native maps and IC structs. */
+    size_t               mjitDataSize;
 #endif
-    uint32               stringMemoryUsed;
+    size_t               stringMemoryUsed;
 
     JSRuntime();
     ~JSRuntime();

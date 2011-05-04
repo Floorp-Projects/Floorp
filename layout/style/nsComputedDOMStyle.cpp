@@ -161,19 +161,11 @@ nsComputedDOMStyle::Shutdown()
 
 NS_IMPL_CYCLE_COLLECTION_1(nsComputedDOMStyle, mContent)
 
-DOMCI_DATA(ComputedCSSStyleDeclaration, nsComputedDOMStyle)
-
 // QueryInterface implementation for nsComputedDOMStyle
-NS_INTERFACE_TABLE_HEAD(nsComputedDOMStyle)
-  NS_INTERFACE_TABLE3(nsComputedDOMStyle,
-                      nsICSSDeclaration,
-                      nsIDOMCSSStyleDeclaration,
-                      nsIDOMCSS2Properties)
-  NS_INTERFACE_TABLE_TO_MAP_SEGUE
+NS_INTERFACE_MAP_BEGIN(nsComputedDOMStyle)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRIES_CYCLE_COLLECTION(nsComputedDOMStyle)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(ComputedCSSStyleDeclaration)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMCSSDeclaration)
 
 
 static void doDestroyComputedDOMStyle(nsComputedDOMStyle *aComputedStyle)

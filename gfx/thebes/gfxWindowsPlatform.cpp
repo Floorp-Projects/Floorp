@@ -96,12 +96,12 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD GetPath(char **memoryPath) {
-        *memoryPath = strdup("gfx/d2d/surfacecache");
+        *memoryPath = strdup("gfx-d2d-surfacecache");
         return NS_OK;
     }
 
     NS_IMETHOD GetDescription(char **desc) {
-        *desc = strdup("Memory used by Direct2D internal surface cache.");
+        *desc = strdup("Memory used by the Direct2D internal surface cache.");
         return NS_OK;
     }
 
@@ -123,7 +123,7 @@ public:
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD GetPath(char **memoryPath) {
-        *memoryPath = strdup("gfx/d2d/surfacevram");
+        *memoryPath = strdup("gfx-d2d-surfacevram");
         return NS_OK;
     }
 

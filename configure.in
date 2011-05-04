@@ -2983,7 +2983,7 @@ AC_CACHE_CHECK(for usable char16_t (2 bytes, unsigned),
 if test "$ac_cv_have_usable_char16_t" = "yes"; then
     AC_DEFINE(HAVE_CPP_CHAR16_T)
     HAVE_CPP_CHAR16_T=1
-else
+elif test "$GNU_CXX"; then
     CXXFLAGS="$_SAVE_CXXFLAGS"
 fi
 

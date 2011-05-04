@@ -88,4 +88,4 @@
 #define MOZ_BEGIN_EXTERN_C     JS_BEGIN_EXTERN_C
 #define MOZ_END_EXTERN_C       JS_END_EXTERN_C
 
-#endif  // mozilla_Types_h_
+#endif  /* mozilla_Types_h_ */
