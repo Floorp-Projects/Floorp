@@ -125,18 +125,10 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult result;
-  nsRefPtr<css::Loader> cssLoader;
-  nsCOMPtr<nsIURI> baseURI, sheetURI;
-  nsCOMPtr<nsIPrincipal> sheetPrincipal;
-
-  result = GetCSSParsingEnvironment(getter_AddRefs(sheetURI),
-                                    getter_AddRefs(baseURI),
-                                    getter_AddRefs(sheetPrincipal),
-                                    getter_AddRefs(cssLoader));
-
-  if (NS_FAILED(result)) {
-    return result;
+  CSSParsingEnvironment env;
+  GetCSSParsingEnvironment(env);
+  if (!env.mPrincipal) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
@@ -148,10 +140,11 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 
   nsAutoPtr<css::Declaration> decl(new css::Declaration());
   decl->InitializeEmpty();
-  nsCSSParser cssParser(cssLoader);
+  nsCSSParser cssParser(env.mCSSLoader);
   PRBool changed;
-  result = cssParser.ParseDeclarations(aCssText, sheetURI, baseURI,
-                                       sheetPrincipal, decl, &changed);
+  nsresult result = cssParser.ParseDeclarations(aCssText, env.mSheetURI,
+                                                env.mBaseURI,
+                                                env.mPrincipal, decl, &changed);
   if (NS_FAILED(result) || !changed) {
     return result;
   }
@@ -271,43 +264,22 @@ nsDOMCSSDeclaration::RemoveProperty(const nsAString& aPropertyName,
   return RemoveProperty(propID);
 }
 
-/* static */ nsresult
-nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(
-                         nsICSSRule* aRule, nsIURI** aSheetURI,
-                         nsIURI** aBaseURI, nsIPrincipal** aSheetPrincipal,
-                         mozilla::css::Loader** aCSSLoader)
+/* static */ void
+nsDOMCSSDeclaration::GetCSSParsingEnvironmentForRule(nsICSSRule* aRule,
+                                                     CSSParsingEnvironment& aCSSParseEnv)
 {
-  // null out the out params since some of them may not get initialized below
-  *aSheetURI = nsnull;
-  *aBaseURI = nsnull;
-  *aSheetPrincipal = nsnull;
-  *aCSSLoader = nsnull;
-
-  if (aRule) {
-    nsIStyleSheet* sheet = aRule->GetStyleSheet();
-    if (sheet) {
-      NS_IF_ADDREF(*aSheetURI = sheet->GetSheetURI());
-      NS_IF_ADDREF(*aBaseURI = sheet->GetBaseURI());
-
-      nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
-      if (cssSheet) {
-        NS_ADDREF(*aSheetPrincipal = cssSheet->Principal());
-      }
-
-      nsIDocument* document = sheet->GetOwningDocument();
-      if (document) {
-        NS_ADDREF(*aCSSLoader = document->CSSLoader());
-      }
-    }
+  nsIStyleSheet* sheet = aRule ? aRule->GetStyleSheet() : nsnull;
+  nsRefPtr<nsCSSStyleSheet> cssSheet(do_QueryObject(sheet));
+  if (!cssSheet) {
+    aCSSParseEnv.mPrincipal = nsnull;
+    return;
   }
 
-  nsresult result = NS_OK;
-  if (!*aSheetPrincipal) {
-    result = CallCreateInstance("@mozilla.org/nullprincipal;1",
-                                aSheetPrincipal);
-  }
-
-  return result;
+  nsIDocument* document = sheet->GetOwningDocument();
+  aCSSParseEnv.mSheetURI = sheet->GetSheetURI();
+  aCSSParseEnv.mBaseURI = sheet->GetBaseURI();
+  aCSSParseEnv.mPrincipal = cssSheet->Principal();
+  aCSSParseEnv.mCSSLoader = document ? document->CSSLoader() : nsnull;
 }
 
 nsresult
@@ -320,17 +292,10 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult result;
-  nsRefPtr<css::Loader> cssLoader;
-  nsCOMPtr<nsIURI> baseURI, sheetURI;
-  nsCOMPtr<nsIPrincipal> sheetPrincipal;
-
-  result = GetCSSParsingEnvironment(getter_AddRefs(sheetURI),
-                                    getter_AddRefs(baseURI),
-                                    getter_AddRefs(sheetPrincipal),
-                                    getter_AddRefs(cssLoader));
-  if (NS_FAILED(result)) {
-    return result;
+  CSSParsingEnvironment env;
+  GetCSSParsingEnvironment(env);
+  if (!env.mPrincipal) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   // For nsDOMCSSAttributeDeclaration, SetCSSDeclaration will lead to
@@ -341,11 +306,11 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), PR_TRUE);
   css::Declaration* decl = olddecl->EnsureMutable();
 
-  nsCSSParser cssParser(cssLoader);
+  nsCSSParser cssParser(env.mCSSLoader);
   PRBool changed;
-  result = cssParser.ParseProperty(aPropID, aPropValue, sheetURI, baseURI,
-                                   sheetPrincipal, decl, &changed,
-                                   aIsImportant);
+  nsresult result = cssParser.ParseProperty(aPropID, aPropValue, env.mSheetURI,
+                                            env.mBaseURI, env.mPrincipal, decl,
+                                            &changed, aIsImportant);
   if (NS_FAILED(result) || !changed) {
     if (decl != olddecl) {
       delete decl;

@@ -55,8 +55,8 @@ class Element;
 } // namespace mozilla
 
 #define NS_IHTMLDOCUMENT_IID \
-{ 0xe43a4bfd, 0xff5a, 0x40b0, \
-  { 0x8c, 0x31, 0x24, 0xac, 0xe8, 0x15, 0xda, 0xf2 } }
+{ 0x8cc90664, 0xb0fe, 0x4cdb, \
+ { 0xa2, 0xdd, 0x25, 0xcd, 0x8c, 0x2b, 0xfd, 0x08 } }
 
 
 /**
@@ -75,7 +75,7 @@ public:
   virtual void SetCompatibilityMode(nsCompatibility aMode) = 0;
 
   virtual nsresult ResolveName(const nsAString& aName,
-                               nsIDOMHTMLFormElement *aForm,
+                               nsIContent *aForm,
                                nsISupports **aResult,
                                nsWrapperCache **aCache) = 0;
 

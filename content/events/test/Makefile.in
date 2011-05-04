@@ -101,6 +101,7 @@ _TEST_FILES = \
 		test_bug624127.html \
 		test_bug641477.html \
 		test_bug648573.html \
+		test_bug615597.html \
 		$(NULL)
 
 #bug 585630

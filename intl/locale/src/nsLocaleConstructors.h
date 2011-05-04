@@ -59,7 +59,6 @@
 #endif
 
 #ifdef XP_WIN
-#include "nsIwin32LocaleImpl.h"
 #include "nsCollationWin.h"
 #include "nsDateTimeFormatWin.h"
 #endif
@@ -107,7 +106,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsCharsetAlias2)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPlatformCharset, Init)
 
 #ifdef XP_WIN
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsIWin32LocaleImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatWin)
 #endif

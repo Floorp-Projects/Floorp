@@ -2057,7 +2057,7 @@ nsWindow::UpdateGetWindowInfoCaptionStatus(PRBool aActiveCaption)
 
   if (!sGetWindowInfoPtrStub) {
     sUser32Intercept.Init("user32.dll");
-    if (!sUser32Intercept.AddHook("GetWindowInfo", (void*)GetWindowInfoHook,
+    if (!sUser32Intercept.AddHook("GetWindowInfo", reinterpret_cast<intptr_t>(GetWindowInfoHook),
                                   (void**) &sGetWindowInfoPtrStub))
       return;
   }

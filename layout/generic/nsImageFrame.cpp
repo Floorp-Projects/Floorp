@@ -101,6 +101,7 @@
 #include "nsBidiPresUtils.h"
 
 #include "gfxRect.h"
+#include "ImageLayers.h"
 
 // sizes (pixels) for image icon, padding and border frame
 #define ICON_SIZE        (16)
@@ -114,7 +115,6 @@
 // Default alignment value (so we can tell an unset value from a set value)
 #define ALIGN_UNSET PRUint8(-1)
 
-using namespace mozilla;
 using namespace mozilla::layers;
 
 // static icon information
@@ -182,7 +182,7 @@ nsImageFrame::~nsImageFrame()
 }
 
 NS_QUERYFRAME_HEAD(nsImageFrame)
-  NS_QUERYFRAME_ENTRY(nsIImageFrame)
+  NS_QUERYFRAME_ENTRY(nsImageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(ImageFrameSuper)
 
 #ifdef ACCESSIBILITY
@@ -1001,17 +1001,21 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
     nsresult rv = NS_ERROR_FAILURE;
 
     if (aPresContext->BidiEnabled()) {
-      const nsStyleVisibility* vis = GetStyleVisibility();
-      if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
-        rv = nsBidiPresUtils::RenderText(str, maxFit, NSBIDI_RTL,
-                                         aPresContext, aRenderingContext,
-                                         aRenderingContext,
-                                         aRect.XMost() - strWidth, y + maxAscent);
-      else
-        rv = nsBidiPresUtils::RenderText(str, maxFit, NSBIDI_LTR,
-                                         aPresContext, aRenderingContext,
-                                         aRenderingContext,
-                                         aRect.x, y + maxAscent);
+      nsBidiPresUtils* bidiUtils =  aPresContext->GetBidiUtils();
+      
+      if (bidiUtils) {
+        const nsStyleVisibility* vis = GetStyleVisibility();
+        if (vis->mDirection == NS_STYLE_DIRECTION_RTL)
+          rv = bidiUtils->RenderText(str, maxFit, NSBIDI_RTL,
+                                     aPresContext, aRenderingContext,
+                                     aRenderingContext,
+                                     aRect.XMost() - strWidth, y + maxAscent);
+        else
+          rv = bidiUtils->RenderText(str, maxFit, NSBIDI_LTR,
+                                     aPresContext, aRenderingContext,
+                                     aRenderingContext,
+                                     aRect.x, y + maxAscent);
+      }
     }
     if (NS_FAILED(rv))
       aRenderingContext.DrawString(str, maxFit, aRect.x, y + maxAscent);
@@ -1440,13 +1444,6 @@ nsImageFrame::ShouldDisplaySelection()
   return true;
 }
 
-NS_IMETHODIMP
-nsImageFrame::GetImageMap(nsPresContext *aPresContext, nsIImageMap **aImageMap)
-{
-  nsImageMap *map = GetImageMap(aPresContext);
-  return CallQueryInterface(map, aImageMap);
-}
-
 nsImageMap*
 nsImageFrame::GetImageMap(nsPresContext* aPresContext)
 {
@@ -1753,7 +1750,7 @@ nsImageFrame::GetSkipSides() const
   return skip;
 }
 
-NS_IMETHODIMP 
+nsresult
 nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
 {
   if (mIntrinsicSize.width.GetUnit() == eStyleUnit_Coord &&

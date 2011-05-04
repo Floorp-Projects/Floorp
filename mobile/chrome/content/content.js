@@ -262,7 +262,7 @@ let Content = {
     addMessageListener("Browser:MouseOver", this);
     addMessageListener("Browser:MouseLong", this);
     addMessageListener("Browser:MouseDown", this);
-    addMessageListener("Browser:MouseUp", this);
+    addMessageListener("Browser:MouseClick", this);
     addMessageListener("Browser:MouseCancel", this);
     addMessageListener("Browser:SaveAs", this);
     addMessageListener("Browser:ZoomToPoint", this);
@@ -270,14 +270,20 @@ let Content = {
     addMessageListener("Browser:SetCharset", this);
     addMessageListener("Browser:ContextCommand", this);
     addMessageListener("Browser:CanUnload", this);
+    addMessageListener("Browser:CanCaptureMouse", this);
 
     if (Util.isParentProcess())
       addEventListener("DOMActivate", this, true);
 
     addEventListener("MozApplicationManifest", this, false);
-    addEventListener("command", this, false);
     addEventListener("pagehide", this, false);
     addEventListener("keypress", this, false, false);
+
+    // Attach a listener to watch for "click" events bubbling up from error
+    // pages and other similar page. This lets us fix bugs like 401575 which
+    // require error page UI to do privileged things, without letting error
+    // pages have any privilege themselves.
+    addEventListener("click", this, false);
 
     docShell.QueryInterface(Ci.nsIDocShellHistory).useGlobalHistory = true;
   },
@@ -327,7 +333,7 @@ let Content = {
         break;
       }
 
-      case "command": {
+      case "click": {
         // Don't trust synthetic events
         if (!aEvent.isTrusted)
           return;
@@ -343,15 +349,38 @@ let Content = {
           if (ot == temp || ot == perm) {
             let action = (ot == perm ? "permanent" : "temporary");
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: action });
-          }
-          else if (ot == errorDoc.getElementById("getMeOutOfHereButton")) {
+          } else if (ot == errorDoc.getElementById("getMeOutOfHereButton")) {
             sendAsyncMessage("Browser:CertException", { url: errorDoc.location.href, action: "leave" });
           }
-        }
-        else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
+        } else if (/^about:neterror\?e=netOffline/.test(errorDoc.documentURI)) {
           if (ot == errorDoc.getElementById("errorTryAgain")) {
             // Make sure we're online before attempting to load
             Util.forceOnline();
+          }
+        } else if (/^about:blocked/.test(errorDoc.documentURI)) {
+          // The event came from a button on a malware/phishing block page
+          // First check whether it's malware or phishing, so that we can
+          // use the right strings/links
+          let isMalware = /e=malwareBlocked/.test(errorDoc.documentURI);
+    
+          if (ot == errorDoc.getElementById("getMeOutButton")) {
+            sendAsyncMessage("Browser:BlockedSite", { url: errorDoc.location.href, action: "leave" });
+          } else if (ot == errorDoc.getElementById("reportButton")) {
+            // This is the "Why is this site blocked" button.  For malware,
+            // we can fetch a site-specific report, for phishing, we redirect
+            // to the generic page describing phishing protection.
+            let action = isMalware ? "report-malware" : "report-phising";
+            sendAsyncMessage("Browser:BlockedSite", { url: errorDoc.location.href, action: action });
+          } else if (ot == errorDoc.getElementById("ignoreWarningButton")) {
+            // Allow users to override and continue through to the site,
+            // but add a notify bar as a reminder, so that they don't lose
+            // track after, e.g., tab switching.
+            let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+            webNav.loadURI(content.location, Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER, null, null, null);
+            
+            // TODO: We'll need to impl notifications in the parent process and use the preference code found here:
+            //       http://hg.mozilla.org/mozilla-central/file/855e5cd3c884/browser/base/content/browser.js#l2672
+            //       http://hg.mozilla.org/mozilla-central/file/855e5cd3c884/browser/components/safebrowsing/content/globalstore.js
           }
         }
         break;
@@ -446,15 +475,17 @@ let Content = {
 
         ContextHandler.messageId = json.messageId;
 
-        let event = content.document.createEvent("PopupEvents");
-        event.initEvent("contextmenu", true, true);
+        let event = content.document.createEvent("MouseEvent");
+        event.initMouseEvent("contextmenu", true, true, content,
+                             0, x, y, x, y, false, false, false, false,
+                             0, null);
         event.x = x;
         event.y = y;
         element.dispatchEvent(event);
         break;
       }
 
-      case "Browser:MouseUp": {
+      case "Browser:MouseClick": {
         this._formAssistant.focusSync = true;
         let element = elementFromPoint(x, y);
         if (modifiers == Ci.nsIDOMNSEvent.CONTROL_MASK) {
@@ -561,6 +592,14 @@ let Content = {
 
         let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
         webNav.reload(Ci.nsIWebNavigation.LOAD_FLAGS_CHARSET_CHANGE);
+        break;
+      }
+
+      case "Browser:CanCaptureMouse": {
+        sendAsyncMessage("Browser:CanCaptureMouse:Return", {
+          contentMightCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).mayHaveTouchEventListeners,
+          messageId: json.messageId
+        });
         break;
       }
     }
@@ -1160,3 +1199,86 @@ var ConsoleAPIObserver = {
 };
 
 ConsoleAPIObserver.init();
+
+var TouchEventHandler = {
+  element: null,
+  isCancellable: true,
+
+  init: function() {
+    addMessageListener("Browser:MouseUp", this);
+    addMessageListener("Browser:MouseDown", this);
+    addMessageListener("Browser:MouseMove", this);
+  },
+
+  receiveMessage: function(aMessage) {
+    let json = aMessage.json;
+    if (Util.isParentProcess())
+      return;
+
+    if (!content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).mayHaveTouchEventListeners) {
+      sendAsyncMessage("Browser:CaptureEvents", {
+        messageId: json.messageId,
+        click: false, panning: false,
+        contentMightCaptureMouse: false
+      });
+      return;
+    }
+
+    let type;
+    switch (aMessage.name) {
+      case "Browser:MouseDown":
+        this.isCancellable = true;
+        this.element = elementFromPoint(json.x, json.y);
+        type = "touchstart";
+        break;
+
+      case "Browser:MouseUp":
+        this.isCancellable = false;
+        type = "touchend";
+        break;
+
+      case "Browser:MouseMove":
+        type = "touchmove";
+        break;
+    }
+
+    if (!this.element)
+      return;
+    let cancelled = !this.sendEvent(type, json, this.element);
+    if (type == "touchend")
+      this.element = null;
+
+    if (this.isCancellable) {
+      sendAsyncMessage("Browser:CaptureEvents", { messageId: json.messageId,
+                                                  type: type,
+                                                  contentMightCaptureMouse: true,
+                                                  click: cancelled && aMessage.name == "Browser:MouseDown",
+                                                  panning: cancelled });
+      // Panning can be cancelled only during the "touchstart" event and the
+      // first "touchmove" event.  After it's cancelled, it stays cancelled
+      // until the next touchstart event.
+      if (cancelled || aMessage.name == "Browser:MouseMove")
+        this.isCancellable = false;
+    }
+  },
+
+  sendEvent: function(aName, aData, aElement) {
+    if (!Services.prefs.getBoolPref("dom.w3c_touch_events.enabled"))
+      return true;
+
+    let evt = content.document.createEvent("touchevent");
+    let point = content.document.createTouch(content, aElement, 0,
+                                             aData.x, aData.y, aData.x, aData.y, aData.x, aData.y,
+                                             1, 1, 0, 0);
+    let touches = content.document.createTouchList(point);
+    if (aName == "touchend") {
+      let empty = content.document.createTouchList();
+      evt.initTouchEvent(aName, true, true, content, 0, true, true, true, true, empty, empty, touches);      
+    } else {
+      evt.initTouchEvent(aName, true, true, content, 0, true, true, true, true, touches, touches, touches);
+    }
+    return aElement.dispatchEvent(evt);
+  }
+}
+
+TouchEventHandler.init();

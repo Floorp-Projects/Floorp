@@ -45,7 +45,7 @@
 #include "nsTraceRefcnt.h"
 #include "nsXULAppAPI.h"
 
-using mozilla::MutexAutoLock;
+using mozilla::MonitorAutoLock;
 
 template<>
 struct RunnableMethodTraits<mozilla::ipc::AsyncChannel>
@@ -106,8 +106,7 @@ AsyncChannel::AsyncChannel(AsyncListener* aListener)
   : mTransport(0),
     mListener(aListener),
     mChannelState(ChannelClosed),
-    mMutex("mozilla.ipc.AsyncChannel.mMutex"),
-    mCvar(mMutex, "mozilla.ipc.AsyncChannel.mCvar"),
+    mMonitor("mozilla.ipc.AsyncChannel.mMonitor"),
     mIOLoop(),
     mWorkerLoop(),
     mChild(false),
@@ -155,7 +154,7 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
     NS_ASSERTION(mWorkerLoop, "need a worker loop");
 
     if (needOpen) {             // child process
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
 
         mIOLoop->PostTask(FROM_HERE, 
                           NewRunnableMethod(this,
@@ -163,7 +162,7 @@ AsyncChannel::Open(Transport* aTransport, MessageLoop* aIOLoop)
 
         // FIXME/cjones: handle errors
         while (mChannelState != ChannelConnected) {
-            mCvar.Wait();
+            mMonitor.Wait();
         }
     }
 
@@ -176,7 +175,7 @@ AsyncChannel::Close()
     AssertWorkerThread();
 
     {
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
 
         if (ChannelError == mChannelState ||
             ChannelTimeout == mChannelState) {
@@ -186,7 +185,7 @@ AsyncChannel::Close()
             // also be deleted and the listener will never be notified
             // of the channel error.
             if (mListener) {
-                MutexAutoUnlock unlock(mMutex);
+                MonitorAutoUnlock unlock(mMonitor);
                 NotifyMaybeChannelError();
             }
             return;
@@ -212,24 +211,24 @@ void
 AsyncChannel::SynchronouslyClose()
 {
     AssertWorkerThread();
-    mMutex.AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
 
     mIOLoop->PostTask(
         FROM_HERE, NewRunnableMethod(this, &AsyncChannel::OnCloseChannel));
 
     while (ChannelClosed != mChannelState)
-        mCvar.Wait();
+        mMonitor.Wait();
 }
 
 bool
 AsyncChannel::Send(Message* msg)
 {
     AssertWorkerThread();
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
     NS_ABORT_IF_FALSE(MSG_ROUTING_NONE != msg->routing_id(), "need a route");
 
     {
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
 
         if (!Connected()) {
             ReportConnectionError("AsyncChannel");
@@ -289,14 +288,14 @@ void
 AsyncChannel::OnNotifyMaybeChannelError()
 {
     AssertWorkerThread();
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
 
-    // OnChannelError holds mMutex when it posts this task and this
+    // OnChannelError holds mMonitor when it posts this task and this
     // task cannot be allowed to run until OnChannelError has
     // exited. We enforce that order by grabbing the mutex here which
     // should only continue once OnChannelError has completed.
     {
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
         // nothing to do here
     }
 
@@ -314,7 +313,7 @@ AsyncChannel::OnNotifyMaybeChannelError()
 void
 AsyncChannel::NotifyChannelClosed()
 {
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
 
     if (ChannelClosed != mChannelState)
         NS_RUNTIMEABORT("channel should have been closed!");
@@ -329,7 +328,7 @@ AsyncChannel::NotifyChannelClosed()
 void
 AsyncChannel::NotifyMaybeChannelError()
 {
-    mMutex.AssertNotCurrentThreadOwns();
+    mMonitor.AssertNotCurrentThreadOwns();
 
     // TODO sort out Close() on this side racing with Close() on the
     // other side
@@ -456,7 +455,7 @@ AsyncChannel::OnMessageReceived(const Message& msg)
     AssertIOThread();
     NS_ASSERTION(mChannelState != ChannelError, "Shouldn't get here!");
 
-    MutexAutoLock lock(mMutex);
+    MonitorAutoLock lock(mMonitor);
 
     if (!MaybeInterceptSpecialIOMessage(msg))
         // wake up the worker, there's work to do
@@ -469,7 +468,10 @@ void
 AsyncChannel::OnChannelOpened()
 {
     AssertIOThread();
-    mChannelState = ChannelOpening;
+    {
+        MonitorAutoLock lock(mMonitor);
+        mChannelState = ChannelOpening;
+    }
     /*assert*/mTransport->Connect();
 }
 
@@ -487,9 +489,9 @@ AsyncChannel::OnChannelConnected(int32 peer_pid)
     AssertIOThread();
 
     {
-        MutexAutoLock lock(mMutex);
+        MonitorAutoLock lock(mMonitor);
         mChannelState = ChannelConnected;
-        mCvar.Notify();
+        mMonitor.Notify();
     }
 
     if(mExistingListener)
@@ -505,7 +507,7 @@ AsyncChannel::OnChannelError()
 {
     AssertIOThread();
 
-    MutexAutoLock lock(mMutex);
+    MonitorAutoLock lock(mMonitor);
 
     if (ChannelClosing != mChannelState)
         mChannelState = ChannelError;
@@ -517,7 +519,7 @@ void
 AsyncChannel::PostErrorNotifyTask()
 {
     AssertIOThread();
-    mMutex.AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
 
     NS_ASSERTION(!mChannelErrorTask, "OnChannelError called twice?");
 
@@ -534,16 +536,16 @@ AsyncChannel::OnCloseChannel()
 
     mTransport->Close();
 
-    MutexAutoLock lock(mMutex);
+    MonitorAutoLock lock(mMonitor);
     mChannelState = ChannelClosed;
-    mCvar.Notify();
+    mMonitor.Notify();
 }
 
 bool
 AsyncChannel::MaybeInterceptSpecialIOMessage(const Message& msg)
 {
     AssertIOThread();
-    mMutex.AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
 
     if (MSG_ROUTING_NONE == msg.routing_id()
         && GOODBYE_MESSAGE_TYPE == msg.type()) {
@@ -557,7 +559,7 @@ void
 AsyncChannel::ProcessGoodbyeMessage()
 {
     AssertIOThread();
-    mMutex.AssertCurrentThreadOwns();
+    mMonitor.AssertCurrentThreadOwns();
 
     // TODO sort out Close() on this side racing with Close() on the
     // other side

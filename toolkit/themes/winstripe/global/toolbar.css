@@ -47,10 +47,8 @@
 toolbox {
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;
-%ifndef WINCE
   border-top: 2px solid;
   -moz-border-top-colors: ThreeDShadow ThreeDHighlight;
-%endif
 }
 
 /* ::::: toolbar & menubar ::::: */

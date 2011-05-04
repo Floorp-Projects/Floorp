@@ -90,6 +90,7 @@ DOMCI_DATA(NodeList, nsBaseContentList)
 
 // QueryInterface implementation for nsBaseContentList
 NS_INTERFACE_TABLE_HEAD(nsBaseContentList)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsBaseContentList)
     NS_CONTENT_LIST_INTERFACES(nsBaseContentList)
   NS_OFFSET_AND_INTERFACE_TABLE_END
@@ -160,17 +161,34 @@ void nsBaseContentList::InsertElementAt(nsIContent* aContent, PRInt32 aIndex)
   mElements.InsertObjectAt(aContent, aIndex);
 }
 
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(nsSimpleContentList)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsSimpleContentList,
+                                                  nsBaseContentList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mRoot)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsSimpleContentList,
+                                                nsBaseContentList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK_NSCOMPTR(mRoot)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsSimpleContentList)
+NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
+
+
+NS_IMPL_ADDREF_INHERITED(nsSimpleContentList, nsBaseContentList)
+NS_IMPL_RELEASE_INHERITED(nsSimpleContentList, nsBaseContentList)
+
 // nsFormContentList
 
-nsFormContentList::nsFormContentList(nsIDOMHTMLFormElement *aForm,
+nsFormContentList::nsFormContentList(nsIContent *aForm,
                                      nsBaseContentList& aContentList)
-  : nsBaseContentList()
+  : nsSimpleContentList(aForm)
 {
 
   // move elements that belong to mForm into this content list
 
   PRUint32 i, length = 0;
-
   aContentList.GetLength(&length);
 
   for (i = 0; i < length; i++) {
@@ -475,7 +493,6 @@ DOMCI_DATA(ContentList, nsContentList)
 
 // QueryInterface implementation for nsContentList
 NS_INTERFACE_TABLE_HEAD(nsContentList)
-  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_NODELIST_OFFSET_AND_INTERFACE_TABLE_BEGIN(nsContentList)
     NS_CONTENT_LIST_INTERFACES(nsContentList)
     NS_INTERFACE_TABLE_ENTRY(nsContentList, nsIHTMLCollection)

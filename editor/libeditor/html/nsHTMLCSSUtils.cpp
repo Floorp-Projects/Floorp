@@ -47,7 +47,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMDocumentView.h"
 #include "nsIContent.h"
 #include "nsIAtom.h"
 #include "nsTextEditUtils.h"
@@ -538,35 +537,36 @@ nsresult
 nsHTMLCSSUtils::GetComputedProperty(nsIDOMNode *aNode, nsIAtom *aProperty,
                                     nsAString & aValue)
 {
-  nsCOMPtr<nsIDOMViewCSS> viewCSS = nsnull;
-  nsresult res = GetDefaultViewCSS(aNode, getter_AddRefs(viewCSS));
+  nsCOMPtr<nsIDOMWindow> window;
+  nsresult res = GetDefaultViewCSS(aNode, getter_AddRefs(window));
   NS_ENSURE_SUCCESS(res, res);
 
-  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, viewCSS, COMPUTED_STYLE_TYPE);
+  return GetCSSInlinePropertyBase(aNode, aProperty, aValue, window, COMPUTED_STYLE_TYPE);
 }
 
 nsresult
 nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
-                                        nsAString &aValue,
-                                        nsIDOMViewCSS *aViewCSS,
-                                        PRUint8 aStyleType)
+                                         nsAString& aValue,
+                                         nsIDOMWindow* aWindow,
+                                         PRUint8 aStyleType)
 {
   aValue.Truncate();
   NS_ENSURE_TRUE(aProperty, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIDOMElement>element;
+  nsCOMPtr<nsIDOMElement> element;
   nsresult res = GetElementContainerOrSelf(aNode, getter_AddRefs(element));
   NS_ENSURE_SUCCESS(res, res);
 
   switch (aStyleType) {
     case COMPUTED_STYLE_TYPE:
-      if (element && aViewCSS) {
+      if (element && aWindow) {
         nsAutoString value, propString;
         nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
         aProperty->ToString(propString);
         // Get the all the computed css styles attached to the element node
-        res = aViewCSS->GetComputedStyle(element, EmptyString(), getter_AddRefs(cssDecl));
-        if (NS_FAILED(res) || !cssDecl) return res;
+        res = aWindow->GetComputedStyle(element, EmptyString(), getter_AddRefs(cssDecl));
+        if (NS_FAILED(res) || !cssDecl)
+          return res;
         // from these declarations, get the one we want and that one only
         res = cssDecl->GetPropertyValue(propString, value);
         NS_ENSURE_SUCCESS(res, res);
@@ -591,33 +591,29 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsIDOMNode *aNode, nsIAtom *aProperty,
 }
 
 nsresult
-nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMViewCSS **aViewCSS)
+nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMWindow **aViewCSS)
 {
-  nsCOMPtr<nsIDOMElement>element;
+  nsCOMPtr<nsIDOMElement> element;
   nsresult res = GetElementContainerOrSelf(aNode, getter_AddRefs(element));
   NS_ENSURE_SUCCESS(res, res);
 
-  // if we have an element node
-  if (element) {
-    // find the owner document
-    nsCOMPtr<nsIDOMDocument> doc;
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
-    res = node->GetOwnerDocument(getter_AddRefs(doc));
-    NS_ENSURE_SUCCESS(res, res);
-    if (doc) {
-      nsCOMPtr<nsIDOMDocumentView> documentView = do_QueryInterface(doc);
-      nsCOMPtr<nsIDOMAbstractView> abstractView;
-      // from the document, get the abtractView
-      res = documentView->GetDefaultView(getter_AddRefs(abstractView));
-      NS_ENSURE_SUCCESS(res, res);
-      if (abstractView) {
-        // from the abstractView, get the CSS view
-        CallQueryInterface(abstractView, aViewCSS);
-        return NS_OK;
-      }
-    }
-  }
+  // TODO: move this initialization to the top of the function
   *aViewCSS = nsnull;
+  if (!element) {
+    return NS_OK;
+  }
+  // find the owner document
+  nsCOMPtr<nsIDOMDocument> doc;
+  nsCOMPtr<nsIDOMNode> node = do_QueryInterface(element);
+  res = node->GetOwnerDocument(getter_AddRefs(doc));
+  NS_ENSURE_SUCCESS(res, res);
+  if (!doc) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIDOMWindow> window;
+  res = doc->GetDefaultView(getter_AddRefs(window));
+  NS_ENSURE_SUCCESS(res, res);
+  window.forget(aViewCSS);
   return NS_OK;
 }
 
@@ -1087,9 +1083,9 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
   if (theElement && IsCSSEditableProperty(theElement, aHTMLProperty, aAttribute)) {
     // Yes, the requested HTML style has a CSS equivalence in this implementation
     // Retrieve the default ViewCSS if we are asked for computed styles
-    nsCOMPtr<nsIDOMViewCSS> viewCSS = nsnull;
+    nsCOMPtr<nsIDOMWindow> window;
     if (COMPUTED_STYLE_TYPE == aStyleType) {
-      res = GetDefaultViewCSS(theElement, getter_AddRefs(viewCSS));
+      res = GetDefaultViewCSS(theElement, getter_AddRefs(window));
       NS_ENSURE_SUCCESS(res, res);
     }
     nsTArray<nsIAtom*> cssPropertyArray;
@@ -1104,7 +1100,7 @@ nsHTMLCSSUtils::GetCSSEquivalentToHTMLInlineStyleSet(nsIDOMNode * aNode,
       nsAutoString valueString;
       // retrieve the specified/computed value of the property
       res = GetCSSInlinePropertyBase(theElement, cssPropertyArray[index],
-                                     valueString, viewCSS, aStyleType);
+                                     valueString, window, aStyleType);
       NS_ENSURE_SUCCESS(res, res);
       // append the value to aValueString (possibly with a leading whitespace)
       if (index) aValueString.Append(PRUnichar(' '));

@@ -38,7 +38,7 @@
 #ifndef nsStringBundle_h__
 #define nsStringBundle_h__
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "nsIStringBundle.h"
 #include "nsCOMPtr.h"
 #include "nsIPersistentProperties2.h"
@@ -71,7 +71,7 @@ protected:
 private:
     nsCString              mPropertiesURL;
     nsCOMPtr<nsIStringBundleOverride> mOverrideStrings;
-    mozilla::Monitor             mMonitor;
+    mozilla::ReentrantMonitor    mReentrantMonitor;
     PRPackedBool                 mAttemptedLoad;
     PRPackedBool                 mLoaded;
     

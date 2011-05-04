@@ -101,7 +101,7 @@ function test_locally_changed_keys() {
     _("New meta/global: " + JSON.stringify(meta_global));
     
     // Upload keys.
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Weave.Service.syncKeyBundle);
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
@@ -118,7 +118,7 @@ function test_locally_changed_keys() {
     do_check_true(!!collections.tabs);
     do_check_true(collections.tabs > 0);
     
-    let coll_modified = CollectionKeys._lastModified;
+    let coll_modified = CollectionKeys.lastModified;
     
     // Let's create some server side history records.
     let liveKeys = CollectionKeys.keyForCollection("history");

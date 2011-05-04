@@ -159,6 +159,10 @@ ElementAnimationsPropertyDtor(void           *aObject,
                               void           *aData)
 {
   ElementAnimations *ea = static_cast<ElementAnimations*>(aPropertyValue);
+#ifdef DEBUG
+  NS_ABORT_IF_FALSE(!ea->mCalledPropertyDtor, "can't call dtor twice");
+  ea->mCalledPropertyDtor = true;
+#endif
   delete ea;
 }
 
@@ -172,13 +176,13 @@ ElementAnimations::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     return;
   }
 
-  mNeedsRefreshes = false;
-
   // mStyleRule may be null and valid, if we have no style to apply.
   if (mStyleRuleRefreshTime.IsNull() ||
       mStyleRuleRefreshTime != aRefreshTime) {
     mStyleRuleRefreshTime = aRefreshTime;
     mStyleRule = nsnull;
+    // We'll set mNeedsRefreshes to true below in all cases where we need them.
+    mNeedsRefreshes = false;
 
     // FIXME(spec): assume that properties in higher animations override
     // those in lower ones.
