@@ -161,7 +161,7 @@ JSObject::initCall(JSContext *cx, const js::Bindings &bindings, JSObject *parent
     if (bindings.extensibleParents())
         setOwnShape(js_GenerateShape(cx));
     else
-        objShape = lastProp->shape;
+        objShape = lastProp->shapeid;
 }
 
 /*
@@ -184,7 +184,7 @@ JSObject::initClonedBlock(JSContext *cx, JSObject *proto, js::StackFrame *frame)
     if (proto->hasOwnShape())
         setOwnShape(js_GenerateShape(cx));
     else
-        objShape = lastProp->shape;
+        objShape = lastProp->shapeid;
 }
 
 /* 
@@ -898,7 +898,7 @@ JSObject::setMap(js::Shape *amap)
 {
     JS_ASSERT(!hasOwnShape());
     lastProp = amap;
-    objShape = lastProp->shape;
+    objShape = lastProp->shapeid;
 }
 
 inline js::Value &
@@ -941,7 +941,7 @@ inline void
 JSObject::clearOwnShape()
 {
     flags &= ~OWN_SHAPE;
-    objShape = lastProp->shape;
+    objShape = lastProp->shapeid;
 }
 
 inline void
@@ -973,14 +973,14 @@ JSObject::nativeContains(jsid id)
 inline bool
 JSObject::nativeContains(const js::Shape &shape)
 {
-    return nativeLookup(shape.id) == &shape;
+    return nativeLookup(shape.propid) == &shape;
 }
 
 inline const js::Shape *
 JSObject::lastProperty() const
 {
     JS_ASSERT(isNative());
-    JS_ASSERT(!JSID_IS_VOID(lastProp->id));
+    JS_ASSERT(!JSID_IS_VOID(lastProp->propid));
     return lastProp;
 }
 
@@ -1015,8 +1015,8 @@ inline void
 JSObject::setLastProperty(const js::Shape *shape)
 {
     JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT(!JSID_IS_VOID(shape->id));
-    JS_ASSERT_IF(lastProp, !JSID_IS_VOID(lastProp->id));
+    JS_ASSERT(!JSID_IS_VOID(shape->propid));
+    JS_ASSERT_IF(lastProp, !JSID_IS_VOID(lastProp->propid));
     JS_ASSERT(shape->compartment() == compartment());
 
     lastProp = const_cast<js::Shape *>(shape);
@@ -1026,7 +1026,7 @@ inline void
 JSObject::removeLastProperty()
 {
     JS_ASSERT(!inDictionaryMode());
-    JS_ASSERT(!JSID_IS_VOID(lastProp->parent->id));
+    JS_ASSERT(!JSID_IS_VOID(lastProp->parent->propid));
 
     lastProp = lastProp->parent;
 }
