@@ -4042,11 +4042,11 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             shape = shape->previous();
 
         if (!shape->previous()) {
-            JS_ASSERT(JSID_IS_EMPTY(shape->id));
+            JS_ASSERT(JSID_IS_EMPTY(shape->propid));
             *idp = JSID_VOID;
         } else {
             iterobj->setPrivate(const_cast<Shape *>(shape->previous()));
-            *idp = shape->id;
+            *idp = shape->propid;
         }
     } else {
         /* Non-native case: use the ida enumerated when iterobj was created. */
@@ -4272,7 +4272,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
             obj = obj->getParent();
         }
 
-        if (!obj->getProperty(cx, r.front().id, clone->getFlatClosureUpvars() + i))
+        if (!obj->getProperty(cx, r.front().propid, clone->getFlatClosureUpvars() + i))
             return NULL;
     }
 
