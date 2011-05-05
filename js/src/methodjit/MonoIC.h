@@ -294,8 +294,8 @@ struct CallICInfo {
 
 void * JS_FASTCALL New(VMFrame &f, ic::CallICInfo *ic);
 void * JS_FASTCALL Call(VMFrame &f, ic::CallICInfo *ic);
-void JS_FASTCALL NativeNew(VMFrame &f, ic::CallICInfo *ic);
-void JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
+void * JS_FASTCALL NativeNew(VMFrame &f, ic::CallICInfo *ic);
+void * JS_FASTCALL NativeCall(VMFrame &f, ic::CallICInfo *ic);
 JSBool JS_FASTCALL SplatApplyArgs(VMFrame &f);
 
 void GenerateArgumentCheckStub(VMFrame &f);
