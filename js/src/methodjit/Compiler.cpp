@@ -2416,9 +2416,11 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_IN)
           {
-            REJOIN_SITE_ANY();
             prepareStubCall(Uses(2));
-            INLINE_STUBCALL(stubs::In);
+            {
+                REJOIN_SITE_ANY();
+                INLINE_STUBCALL(stubs::In);
+            }
             frame.popn(2);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_BOOLEAN, Registers::ReturnReg);
@@ -2521,13 +2523,15 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
           {
-            REJOIN_SITE_ANY();
             updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
             prepareStubCall(Uses(frame.frameSlots()));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::DefLocalFun_FC);
+            {
+                REJOIN_SITE_ANY();
+                INLINE_STUBCALL(stubs::DefLocalFun_FC);
+            }
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
             frame.storeLocal(slot, JSVAL_TYPE_OBJECT, true);
@@ -2624,13 +2628,15 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
-            REJOIN_SITE_ANY();
             updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
             prepareStubCall(Uses(0));
             masm.move(ImmPtr(fun), Registers::ArgReg1);
-            INLINE_STUBCALL(stubs::DefLocalFun);
+            {
+                REJOIN_SITE_ANY();
+                INLINE_STUBCALL(stubs::DefLocalFun);
+            }
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
             frame.storeLocal(slot, JSVAL_TYPE_OBJECT, true);
