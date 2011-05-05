@@ -614,20 +614,20 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
       continue;
     }
 
-if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-    if (CERT_VerifyCert(certdb, node->cert,
-        PR_TRUE, certusage, now, ctx, NULL) != SECSuccess) {
-      alert_and_skip = true;
+    if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+      if (CERT_VerifyCert(certdb, node->cert,
+          PR_TRUE, certusage, now, ctx, NULL) != SECSuccess) {
+        alert_and_skip = true;
+      }
     }
-}
-else {
-    if (CERT_PKIXVerifyCert(node->cert, certificateusage,
-                            survivingParams->GetRawPointerForNSS(),
-                            cvout, ctx)
-        != SECSuccess) {
-      alert_and_skip = true;
+    else {
+      if (CERT_PKIXVerifyCert(node->cert, certificateusage,
+                              survivingParams->GetRawPointerForNSS(),
+                              cvout, ctx)
+          != SECSuccess) {
+        alert_and_skip = true;
+      }
     }
-}
 
     CERTCertificateList *certChain = nsnull;
     CERTCertificateListCleaner chainCleaner(certChain);
@@ -825,20 +825,20 @@ nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfac
 
     bool alert_and_skip = false;
 
-if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-    if (CERT_VerifyCert(CERT_GetDefaultCertDB(), node->cert, 
-        PR_TRUE, certUsageVerifyCA, PR_Now(), ctx, NULL) != SECSuccess) {
-      alert_and_skip = true;
+    if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+      if (CERT_VerifyCert(CERT_GetDefaultCertDB(), node->cert, 
+          PR_TRUE, certUsageVerifyCA, PR_Now(), ctx, NULL) != SECSuccess) {
+        alert_and_skip = true;
+      }
     }
-}
-else {
-    if (CERT_PKIXVerifyCert(node->cert, certificateUsageVerifyCA,
-                            survivingParams->GetRawPointerForNSS(),
-                            cvout, ctx)
-        != SECSuccess) {
-      alert_and_skip = true;
+    else {
+      if (CERT_PKIXVerifyCert(node->cert, certificateUsageVerifyCA,
+                              survivingParams->GetRawPointerForNSS(),
+                              cvout, ctx)
+          != SECSuccess) {
+        alert_and_skip = true;
+      }
     }
-}
 
     CERTCertificateList *certChain = nsnull;
     CERTCertificateListCleaner chainCleaner(certChain);
