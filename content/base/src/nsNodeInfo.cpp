@@ -192,21 +192,6 @@ NS_INTERFACE_MAP_END
 
 // nsINodeInfo
 
-void
-nsNodeInfo::GetLocalName(nsAString& aLocalName) const
-{
-#ifdef STRICT_DOM_LEVEL2_LOCALNAME
-  if (mInner.mNamespaceID > 0) {
-    mInner.mName->ToString(aLocalName);
-  } else {
-    SetDOMStringToNull(aLocalName);
-  }
-#else
-  mInner.mName->ToString(aLocalName);
-#endif
-}
-
-
 nsresult
 nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 {
