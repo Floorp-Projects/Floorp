@@ -237,7 +237,7 @@ asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
-    "or   %rdx, %rcx"                    "\n"
+    "or   %rdi, %rsi"                    "\n"
     "movq %rcx, 0x30(%rbx)"              "\n"
     "movq %rsp, %rdi"                    "\n"
     "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
@@ -323,8 +323,8 @@ asm (
 ".text\n"
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
-    "movl  %edx, 0x18(%ebp)"             "\n"
-    "movl  %ecx, 0x1C(%ebp)"             "\n"
+    "movl  %esi, 0x18(%ebp)"             "\n"
+    "movl  %edi, 0x1C(%ebp)"             "\n"
     "movl  %esp, %ebp"                   "\n"
     "addl  $0x38, %ebp"                  "\n" /* Restore stack at STACK_BASE_DIFFERENCE */
     "movl  %esp, %ecx"                   "\n"
@@ -456,8 +456,8 @@ asm (
 FUNCTION_HEADER_EXTRA
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn)   "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":"         "\n"
-"   str r1, [r11, #24]"                    "\n" /* fp->rval data */
-"   str r2, [r11, #28]"                    "\n" /* fp->rval type */
+"   str r5, [r11, #24]"                    "\n" /* fp->rval data */
+"   str r4, [r11, #28]"                    "\n" /* fp->rval type */
 
     /* Tidy up. */
 "   mov     r0, sp"                             "\n"
@@ -564,8 +564,8 @@ extern "C" {
     __declspec(naked) void JaegerTrampolineReturn()
     {
         __asm {
-            mov [ebp + 0x18], edx;
-            mov [ebp + 0x1C], ecx;
+            mov [ebp + 0x18], esi;
+            mov [ebp + 0x1C], edi;
             mov  ebp, esp;
             add  ebp, 0x38; /* Restore stack at STACK_BASE_DIFFERENCE */
             mov  ecx, esp;

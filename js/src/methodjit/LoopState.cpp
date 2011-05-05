@@ -78,17 +78,19 @@ SafeMul(int32 one, int32 two, int32 *res)
     return false;
 }
 
-LoopState::LoopState(JSContext *cx, JSScript *script,
+LoopState::LoopState(JSContext *cx, analyze::CrossScriptSSA *ssa,
                      mjit::Compiler *cc, FrameState *frame)
-    : cx(cx), script(script), analysis(script->analysis(cx)), cc(*cc), frame(*frame),
-      lifetime(NULL), alloc(NULL), loopRegs(0), skipAnalysis(false),
+    : cx(cx), ssa(ssa),
+      outerScript(ssa->outerScript()), outerAnalysis(outerScript->analysis(cx)),
+      cc(*cc), frame(*frame),
+      lifetime(NULL), alloc(NULL), reachedEntryPoint(false), loopRegs(0), skipAnalysis(false),
       loopJoins(CompilerAllocPolicy(cx, *cc)),
       loopPatches(CompilerAllocPolicy(cx, *cc)),
       restoreInvariantCalls(CompilerAllocPolicy(cx, *cc)),
       invariantEntries(CompilerAllocPolicy(cx, *cc)),
-      outer(NULL), PC(NULL),
+      outer(NULL), temporariesStart(0),
       testLHS(UNASSIGNED), testRHS(UNASSIGNED),
-      testConstant(0), testLessEqual(false), testLength(false),
+      testConstant(0), testLessEqual(false),
       increments(CompilerAllocPolicy(cx, *cc)), unknownModset(false),
       growArrays(CompilerAllocPolicy(cx, *cc)),
       modifiedProperties(CompilerAllocPolicy(cx, *cc)),
@@ -100,22 +102,35 @@ LoopState::LoopState(JSContext *cx, JSScript *script,
 bool
 LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
 {
-    this->lifetime = analysis->getLoop(head);
+    this->lifetime = outerAnalysis->getLoop(head);
     JS_ASSERT(lifetime &&
-              lifetime->head == uint32(head - script->code) &&
-              lifetime->entry == uint32(entryTarget - script->code));
+              lifetime->head == uint32(head - outerScript->code) &&
+              lifetime->entry == uint32(entryTarget - outerScript->code));
 
     this->entry = entry;
 
     analyzeLoopTest();
     analyzeLoopIncrements();
-    analyzeLoopBody();
+    for (unsigned i = 0; i < ssa->numFrames(); i++) {
+        /* Only analyze this frame if it is nested within the loop itself. */
+        uint32 index = ssa->iterFrame(i).index;
+        if (index != CrossScriptSSA::OUTER_FRAME) {
+            unsigned pframe = index;
+            while (ssa->getFrame(pframe).parent != CrossScriptSSA::OUTER_FRAME)
+                pframe = ssa->getFrame(pframe).parent;
+            uint32 offset = ssa->getFrame(pframe).parentpc - outerScript->code;
+            JS_ASSERT(offset < outerScript->length);
+            if (offset < lifetime->head || offset > lifetime->backedge)
+                continue;
+        }
+        if (!analyzeLoopBody(index))
+            return false;
+    }
 
     if (testLHS != UNASSIGNED) {
-        JaegerSpew(JSpew_Analysis, "loop test at %u: %s %s%s %s + %d\n", lifetime->head,
+        JaegerSpew(JSpew_Analysis, "loop test at %u: %s %s %s + %d\n", lifetime->head,
                    frame.entryName(testLHS),
                    testLessEqual ? "<=" : ">=",
-                   testLength ? " length" : "",
                    (testRHS == UNASSIGNED) ? "" : frame.entryName(testRHS),
                    testConstant);
     }
@@ -137,7 +152,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
                    types::TypeIdString(modifiedProperties[i].id));
     }
 
-    RegisterAllocation *&alloc = analysis->getAllocation(head);
+    RegisterAllocation *&alloc = outerAnalysis->getAllocation(head);
     JS_ASSERT(!alloc);
 
     alloc = ArenaNew<RegisterAllocation>(cx->compartment->pool, true);
@@ -146,14 +161,13 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
 
     this->alloc = alloc;
     this->loopRegs = Registers::AvailAnyRegs;
-    this->PC = head;
 
     /*
      * Don't hoist bounds checks or loop invariant code in scripts that have
      * had indirect modification of their arguments.
      */
-    if (script->fun) {
-        types::ObjectKind kind = types::TypeSet::GetObjectKind(cx, script->fun->getType());
+    if (outerScript->fun) {
+        types::ObjectKind kind = types::TypeSet::GetObjectKind(cx, outerScript->fun->getType());
         if (kind != types::OBJECT_INLINEABLE_FUNCTION && kind != types::OBJECT_SCRIPTED_FUNCTION)
             this->skipAnalysis = true;
     }
@@ -165,13 +179,6 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
      * invariant terms.
      */
     if (lifetime->hasSafePoints)
-        this->skipAnalysis = true;
-
-    /*
-     * Don't do hoisting in loops with inner loops or calls. This is way too
-     * pessimistic and needs to get fixed.
-     */
-    if (lifetime->hasCallsLoops)
         this->skipAnalysis = true;
 
     return true;
@@ -187,12 +194,13 @@ LoopState::addJoin(unsigned index, bool script)
 }
 
 void
-LoopState::addInvariantCall(Jump jump, Label label, bool ool, unsigned patchIndex, bool patchCall)
+LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex, bool patchCall)
 {
     RestoreInvariantCall call;
     call.jump = jump;
     call.label = label;
     call.ool = ool;
+    call.entry = entry;
     call.patchIndex = patchIndex;
     call.patchCall = patchCall;
     call.temporaryCopies = frame.getTemporaryCopies();
@@ -248,8 +256,14 @@ LoopState::flushLoop(StubCompiler &stubcc)
                                                           FrameAddress(offsetof(VMFrame, scratch)));
                 JS_STATIC_ASSERT(Registers::ReturnReg != Registers::ArgReg1);
                 masm.move(Registers::ReturnReg, Registers::ArgReg1);
-                masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::InvariantFailure),
-                                    pc, NULL, 0);
+
+                if (call.entry) {
+                    masm.fallibleVMCall(true, JS_FUNC_TO_DATA_PTR(void *, stubs::InvariantFailure),
+                                        pc, NULL, 0);
+                } else {
+                    /* f.regs are already coherent, don't write new values to them. */
+                    masm.infallibleVMCall(JS_FUNC_TO_DATA_PTR(void *, stubs::InvariantFailure), -1);
+                }
             }
         }
     } else {
@@ -272,9 +286,13 @@ LoopState::clearLoopRegisters()
 bool
 LoopState::loopInvariantEntry(uint32 slot)
 {
-    if (slot == analyze::CalleeSlot() || analysis->slotEscapes(slot))
+    /* Watch for loop temporaries. :XXX: this is really gross. */
+    if (slot - analyze::LocalSlot(outerScript, 0) >= outerScript->nslots)
+        return true;
+
+    if (slot == analyze::CalleeSlot() || outerAnalysis->slotEscapes(slot))
         return false;
-    return analysis->liveness(slot).firstWrite(lifetime) == uint32(-1);
+    return outerAnalysis->liveness(slot).firstWrite(lifetime) == uint32(-1);
 }
 
 inline bool
@@ -447,7 +465,7 @@ LoopState::setLoopReg(AnyRegisterID reg, FrameEntry *fe)
     JS_ASSERT(alloc->loop(reg));
     loopRegs.takeReg(reg);
 
-    uint32 slot = frame.indexOfFe(fe);
+    uint32 slot = frame.outerSlot(fe);
     JaegerSpew(JSpew_Regalloc, "allocating loop register %s for %s\n",
                reg.name(), frame.entryName(fe));
 
@@ -465,31 +483,33 @@ LoopState::setLoopReg(AnyRegisterID reg, FrameEntry *fe)
         loopPatches.append(p);
     }
 
-    if (lifetime->entry != lifetime->head && PC >= script->code + lifetime->entry) {
+    if (reachedEntryPoint) {
         /*
          * We've advanced past the entry point of the loop (we're analyzing the condition),
          * so need to update the register state at that entry point so that the right
          * things get loaded when we enter the loop.
          */
-        RegisterAllocation *entry = analysis->getAllocation(lifetime->entry);
-        JS_ASSERT(entry && !entry->assigned(reg));
-        entry->set(reg, slot, true);
+        RegisterAllocation *alloc = outerAnalysis->getAllocation(lifetime->entry);
+        JS_ASSERT(alloc && !alloc->assigned(reg));
+        alloc->set(reg, slot, true);
     }
 }
 
 bool
-LoopState::hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes,
-                                 unsigned indexPopped)
+LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &index)
 {
-    if (skipAnalysis || script->failedBoundsCheck)
+    if (skipAnalysis)
         return false;
 
-    obj = obj->backing();
+    uint32 objSlot;
+    int32 objConstant;
+    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0)
+        return false;
 
     JaegerSpew(JSpew_Analysis, "Trying to hoist bounds check on %s\n",
-               frame.entryName(obj));
+               frame.entryName(objSlot));
 
-    if (!loopInvariantEntry(frame.indexOfFe(obj))) {
+    if (!loopInvariantEntry(objSlot)) {
         JaegerSpew(JSpew_Analysis, "Object is not loop invariant\n");
         return false;
     }
@@ -500,7 +520,7 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes
      * but it actually can, we will probably recompile after the hoisted
      * bounds check fails.
      */
-    JS_ASSERT(objTypes && !objTypes->unknown());
+    types::TypeSet *objTypes = ssa->getValueTypes(obj);
     if (!growArrays.empty()) {
         unsigned count = objTypes->getObjectCount();
         for (unsigned i = 0; i < count; i++) {
@@ -520,21 +540,21 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes
      * Get an expression for the index 'index + indexConstant', where index
      * is the value of a slot at loop entry.
      */
-    uint32 index;
+    uint32 indexSlot;
     int32 indexConstant;
-    if (!getEntryValue(analysis->poppedValue(PC - script->code, indexPopped), &index, &indexConstant)) {
+    if (!getEntryValue(index, &indexSlot, &indexConstant)) {
         JaegerSpew(JSpew_Analysis, "Could not compute index in terms of loop entry state\n");
         return false;
     }
 
-    if (index == UNASSIGNED) {
+    if (indexSlot == UNASSIGNED) {
         /* Hoist checks on x[n] accesses for constant n. */
-        return addHoistedCheck(frame.indexOfFe(obj), UNASSIGNED, UNASSIGNED, indexConstant);
+        return addHoistedCheck(objSlot, UNASSIGNED, UNASSIGNED, indexConstant);
     }
 
-    if (loopInvariantEntry(index)) {
+    if (loopInvariantEntry(indexSlot)) {
         /* Hoist checks on x[y] accesses when y is loop invariant. */
-        return addHoistedCheck(frame.indexOfFe(obj), index, UNASSIGNED, indexConstant);
+        return addHoistedCheck(objSlot, indexSlot, UNASSIGNED, indexConstant);
     }
 
     /*
@@ -542,7 +562,7 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes
      * underflow the array. We currently only hoist bounds checks for loops
      * which walk arrays going forward.
      */
-    if (!analysis->liveness(index).nonDecreasing(script, lifetime)) {
+    if (!outerAnalysis->liveness(indexSlot).nonDecreasing(outerScript, lifetime)) {
         JaegerSpew(JSpew_Analysis, "Index may decrease in future iterations\n");
         return false;
     }
@@ -556,22 +576,7 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes
      * z + b < initlen(x) - a
      * z + b + a < initlen(x)
      */
-    if (index == testLHS && testLessEqual) {
-        uint32 rhs = testRHS;
-
-        if (testLength) {
-            FrameEntry *rhsFE = frame.getOrTrack(rhs);
-            FrameEntry *lengthEntry = invariantLength(rhsFE, NULL);
-
-            /*
-             * An entry for the length should have been constructed while
-             * processing the test.
-             */
-            JS_ASSERT(lengthEntry);
-
-            rhs = frame.indexOfFe(lengthEntry);
-        }
-
+    if (indexSlot == testLHS && testLessEqual) {
         int32 constant;
         if (!SafeAdd(testConstant, indexConstant, &constant))
             return false;
@@ -583,9 +588,9 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes
          * the test and the start of the next iteration, as we've ensured the
          * LHS is nondecreasing within the body of the loop.
          */
-        addNegativeCheck(index, indexConstant);
+        addNegativeCheck(indexSlot, indexConstant);
 
-        return addHoistedCheck(frame.indexOfFe(obj), rhs, UNASSIGNED, constant);
+        return addHoistedCheck(objSlot, testRHS, UNASSIGNED, constant);
     }
 
     /*
@@ -599,13 +604,13 @@ LoopState::hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes
      * y + z < initlen(x) + b - a
      * y + z + a - b < initlen(x)
      */
-    if (hasTestLinearRelationship(index)) {
+    if (hasTestLinearRelationship(indexSlot)) {
         int32 constant;
         if (!SafeSub(indexConstant, testConstant, &constant))
             return false;
 
-        addNegativeCheck(index, indexConstant);
-        return addHoistedCheck(frame.indexOfFe(obj), index, testLHS, constant);
+        addNegativeCheck(indexSlot, indexConstant);
+        return addHoistedCheck(objSlot, indexSlot, testLHS, constant);
     }
 
     JaegerSpew(JSpew_Analysis, "No match found\n");
@@ -621,7 +626,7 @@ LoopState::hasTestLinearRelationship(uint32 slot)
      * the head of the loop.
      */
 
-    if (testLHS == UNASSIGNED || testRHS != UNASSIGNED || testLessEqual || testLength)
+    if (testLHS == UNASSIGNED || testRHS != UNASSIGNED || testLessEqual)
         return false;
 
     uint32 incrementOffset = getIncrement(slot);
@@ -638,7 +643,7 @@ LoopState::hasTestLinearRelationship(uint32 slot)
     if (decrementOffset == uint32(-1))
         return false;
 
-    JSOp op = JSOp(script->code[decrementOffset]);
+    JSOp op = JSOp(outerScript->code[decrementOffset]);
     switch (op) {
       case JSOP_DECLOCAL:
       case JSOP_LOCALDEC:
@@ -651,15 +656,19 @@ LoopState::hasTestLinearRelationship(uint32 slot)
 }
 
 FrameEntry *
-LoopState::invariantSlots(const FrameEntry *obj)
+LoopState::invariantSlots(const CrossSSAValue &obj)
 {
-    obj = obj->backing();
-    uint32 slot = frame.indexOfFe(obj);
+    uint32 objSlot;
+    int32 objConstant;
+    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0) {
+        JS_NOT_REACHED("Bad value");
+        return NULL;
+    }
 
     for (unsigned i = 0; i < invariantEntries.length(); i++) {
         InvariantEntry &entry = invariantEntries[i];
         if (entry.kind == InvariantEntry::INVARIANT_SLOTS &&
-            entry.u.array.arraySlot == slot) {
+            entry.u.array.arraySlot == objSlot) {
             return frame.getTemporary(entry.u.array.temporary);
         }
     }
@@ -670,28 +679,28 @@ LoopState::invariantSlots(const FrameEntry *obj)
 }
 
 FrameEntry *
-LoopState::invariantLength(const FrameEntry *obj, types::TypeSet *objTypes)
+LoopState::invariantLength(const CrossSSAValue &obj)
 {
-    if (skipAnalysis || script->failedBoundsCheck)
+    if (skipAnalysis)
         return NULL;
 
-    obj = obj->backing();
-    uint32 slot = frame.indexOfFe(obj);
+    uint32 objSlot;
+    int32 objConstant;
+    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0)
+        return NULL;
 
     for (unsigned i = 0; i < invariantEntries.length(); i++) {
         InvariantEntry &entry = invariantEntries[i];
         if (entry.kind == InvariantEntry::INVARIANT_LENGTH &&
-            entry.u.array.arraySlot == slot) {
+            entry.u.array.arraySlot == objSlot) {
             return frame.getTemporary(entry.u.array.temporary);
         }
     }
 
-    if (!objTypes)
+    if (!loopInvariantEntry(objSlot))
         return NULL;
 
-    if (!loopInvariantEntry(frame.indexOfFe(obj)))
-        return NULL;
-
+    types::TypeSet *objTypes = ssa->getValueTypes(obj);
     types::ObjectKind kind = objTypes->getKnownObjectKind(cx);
     if (kind != types::OBJECT_DENSE_ARRAY && kind != types::OBJECT_PACKED_ARRAY)
         return NULL;
@@ -718,11 +727,11 @@ LoopState::invariantLength(const FrameEntry *obj, types::TypeSet *objTypes)
     FrameEntry *fe = frame.getTemporary(which);
 
     JaegerSpew(JSpew_Analysis, "Using %s for loop invariant length of %s\n",
-               frame.entryName(fe), frame.entryName(slot));
+               frame.entryName(fe), frame.entryName(objSlot));
 
     InvariantEntry entry;
     entry.kind = InvariantEntry::INVARIANT_LENGTH;
-    entry.u.array.arraySlot = slot;
+    entry.u.array.arraySlot = objSlot;
     entry.u.array.temporary = which;
     invariantEntries.append(entry);
 
@@ -730,36 +739,34 @@ LoopState::invariantLength(const FrameEntry *obj, types::TypeSet *objTypes)
 }
 
 FrameEntry *
-LoopState::invariantProperty(const FrameEntry *obj, types::TypeSet *objTypes, jsid id)
+LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
 {
-    if (skipAnalysis || script->failedBoundsCheck)
+    if (skipAnalysis)
         return NULL;
 
     if (id == ATOM_TO_JSID(cx->runtime->atomState.lengthAtom))
         return NULL;
 
-    obj = obj->backing();
-    uint32 slot = frame.indexOfFe(obj);
+    uint32 objSlot;
+    int32 objConstant;
+    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0)
+        return NULL;
 
     for (unsigned i = 0; i < invariantEntries.length(); i++) {
         InvariantEntry &entry = invariantEntries[i];
         if (entry.kind == InvariantEntry::INVARIANT_PROPERTY &&
-            entry.u.property.objectSlot == slot &&
+            entry.u.property.objectSlot == objSlot &&
             entry.u.property.id == id) {
-            FrameEntry *fe = frame.getTemporary(entry.u.property.temporary);
-            frame.learnType(fe, JSVAL_TYPE_INT32, false);
-            return fe;
+            return frame.getTemporary(entry.u.property.temporary);
         }
     }
 
-    if (!objTypes)
-        return NULL;
-
-    if (!loopInvariantEntry(frame.indexOfFe(obj)))
+    if (!loopInvariantEntry(objSlot))
         return NULL;
 
     /* Check that the property is definite and not written anywhere in the loop. */
-    if (objTypes->getObjectCount() != 1)
+    types::TypeSet *objTypes = ssa->getValueTypes(obj);
+    if (objTypes->unknown() || objTypes->getObjectCount() != 1)
         return NULL;
     types::TypeObject *object = objTypes->getObject(0);
     if (object->unknownProperties() || hasModifiedProperty(object, id))
@@ -777,11 +784,11 @@ LoopState::invariantProperty(const FrameEntry *obj, types::TypeSet *objTypes, js
     FrameEntry *fe = frame.getTemporary(which);
 
     JaegerSpew(JSpew_Analysis, "Using %s for loop invariant property of %s\n",
-               frame.entryName(fe), frame.entryName(slot));
+               frame.entryName(fe), frame.entryName(objSlot));
 
     InvariantEntry entry;
     entry.kind = InvariantEntry::INVARIANT_PROPERTY;
-    entry.u.property.objectSlot = slot;
+    entry.u.property.objectSlot = objSlot;
     entry.u.property.propertySlot = propertyTypes->definiteSlot();
     entry.u.property.temporary = which;
     entry.u.property.id = id;
@@ -791,14 +798,10 @@ LoopState::invariantProperty(const FrameEntry *obj, types::TypeSet *objTypes, js
 }
 
 bool
-LoopState::cannotIntegerOverflow()
+LoopState::cannotIntegerOverflow(const CrossSSAValue &pushed)
 {
-    if (skipAnalysis || script->failedBoundsCheck)
+    if (skipAnalysis)
         return false;
-
-    /* If the result of the operation fits in an integer, it can't overflow. */
-    SSAValue pushed;
-    pushed.initPushed(PC - script->code, 0);
 
     int32 min, max;
     if (computeInterval(pushed, &min, &max)) {
@@ -811,6 +814,10 @@ LoopState::cannotIntegerOverflow()
      * 'slot + constant', where slot is expressed in terms of its value at
      * the head of the loop.
      */
+    JS_ASSERT(pushed.v.kind() == SSAValue::PUSHED);
+    jsbytecode *PC = ssa->getFrame(pushed.frame).script->code + pushed.v.pushedOffset();
+    ScriptAnalysis *analysis = ssa->getFrame(pushed.frame).script->analysis(cx);
+
     uint32 baseSlot = UNASSIGNED;
     int32 baseConstant = 0;
     JSOp op = JSOp(*PC);
@@ -819,30 +826,36 @@ LoopState::cannotIntegerOverflow()
       case JSOP_INCLOCAL:
       case JSOP_LOCALINC:
       case JSOP_INCARG:
-      case JSOP_ARGINC:
-        if (!getEntryValue(analysis->poppedValue(PC - script->code, 0), &baseSlot, &baseConstant))
+      case JSOP_ARGINC: {
+        CrossSSAValue cv(pushed.frame, analysis->poppedValue(PC, 0));
+        if (!getEntryValue(cv, &baseSlot, &baseConstant))
             return false;
         if (!SafeAdd(baseConstant, 1, &baseConstant))
             return false;
         break;
+      }
 
       case JSOP_DECLOCAL:
       case JSOP_LOCALDEC:
       case JSOP_DECARG:
-      case JSOP_ARGDEC:
-          if (!getEntryValue(analysis->poppedValue(PC - script->code, 0), &baseSlot, &baseConstant))
+      case JSOP_ARGDEC: {
+        CrossSSAValue cv(pushed.frame, analysis->poppedValue(PC, 0));
+        if (!getEntryValue(cv, &baseSlot, &baseConstant))
             return false;
         if (!SafeSub(baseConstant, 1, &baseConstant))
             return false;
         break;
+      }
 
       case JSOP_ADD:
       case JSOP_SUB: {
         uint32 lhs = UNASSIGNED, rhs = UNASSIGNED;
         int32 lhsconstant = 0, rhsconstant = 0;
-        if (!getEntryValue(analysis->poppedValue(PC - script->code, 1), &lhs, &lhsconstant))
+        CrossSSAValue lcv(pushed.frame, analysis->poppedValue(PC, 1));
+        CrossSSAValue rcv(pushed.frame, analysis->poppedValue(PC, 0));
+        if (!getEntryValue(lcv, &lhs, &lhsconstant))
             return false;
-        if (!getEntryValue(analysis->poppedValue(PC - script->code, 0), &rhs, &rhsconstant))
+        if (!getEntryValue(rcv, &rhs, &rhsconstant))
             return false;
         if (op == JSOP_ADD) {
             if (!SafeAdd(lhsconstant, rhsconstant, &baseConstant))
@@ -883,7 +896,7 @@ LoopState::cannotIntegerOverflow()
          * y + a >= INT_MIN
          * b + a >= INT_MIN
          */
-        if (baseSlot == testLHS && !testLessEqual && !testLength && testRHS == UNASSIGNED) {
+        if (baseSlot == testLHS && !testLessEqual && testRHS == UNASSIGNED) {
             int32 constant;
             if (!SafeAdd(testConstant, baseConstant, &constant))
                 return false;
@@ -905,7 +918,7 @@ LoopState::cannotIntegerOverflow()
      * z + b <= INT_MAX - a
      * z <= INT_MAX - (a + b)
      */
-    if (baseSlot == testLHS && testLessEqual && !testLength) {
+    if (baseSlot == testLHS && testLessEqual) {
         int32 constant;
         if (!SafeAdd(testConstant, baseConstant, &constant))
             return false;
@@ -953,9 +966,9 @@ LoopState::cannotIntegerOverflow()
 }
 
 bool
-LoopState::ignoreIntegerOverflow()
+LoopState::ignoreIntegerOverflow(const CrossSSAValue &pushed)
 {
-    if (skipAnalysis || script->failedBoundsCheck || unknownModset || !constrainedLoop)
+    if (skipAnalysis || unknownModset || !constrainedLoop)
         return false;
 
     /*
@@ -982,13 +995,17 @@ LoopState::ignoreIntegerOverflow()
      * from known dense arrays which can only produce ints and doubles.
      */
 
+    /* This value must be in the outer loop: loops with inline calls are not constrained. */
+    JS_ASSERT(pushed.frame == CrossScriptSSA::OUTER_FRAME);
+
+    JS_ASSERT(pushed.v.kind() == SSAValue::PUSHED);
+    jsbytecode *PC = outerScript->code + pushed.v.pushedOffset();
+
     JSOp op = JSOp(*PC);
     if (op != JSOP_MUL && op != JSOP_ADD)
         return false;
 
-    SSAValue v;
-    v.initPushed(PC - script->code, 0);
-    if (valueFlowsToBitops(v)) {
+    if (valueFlowsToBitops(pushed.v)) {
         JaegerSpew(JSpew_Analysis, "Integer result flows to bitops\n");
         return true;
     }
@@ -999,11 +1016,11 @@ LoopState::ignoreIntegerOverflow()
          * be ignored as long as the other operand in the addition cannot be
          * negative zero.
          */
-        if (!analysis->trackUseChain(v))
+        if (!outerAnalysis->trackUseChain(pushed.v))
             return false;
 
-        SSAUseChain *use = analysis->useChain(v);
-        if (!use || use->next || !use->popped || script->code[use->offset] != JSOP_ADD)
+        SSAUseChain *use = outerAnalysis->useChain(pushed.v);
+        if (!use || use->next || !use->popped || outerScript->code[use->offset] != JSOP_ADD)
             return false;
 
         if (use->u.which == 1) {
@@ -1016,7 +1033,7 @@ LoopState::ignoreIntegerOverflow()
             return false;
         }
 
-        types::TypeSet *lhsTypes = analysis->poppedTypes(use->offset, 1);
+        types::TypeSet *lhsTypes = outerAnalysis->poppedTypes(use->offset, 1);
         if (lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
             return false;
 
@@ -1035,10 +1052,10 @@ LoopState::valueFlowsToBitops(const analyze::SSAValue &v)
      * iteration of this loop, or in additions whose result is also only
      * used in such a bitop.
      */
-    if (!analysis->trackUseChain(v))
+    if (!outerAnalysis->trackUseChain(v))
         return false;
 
-    SSAUseChain *use = analysis->useChain(v);
+    SSAUseChain *use = outerAnalysis->useChain(v);
     while (use) {
         if (!use->popped) {
             /*
@@ -1047,7 +1064,7 @@ LoopState::valueFlowsToBitops(const analyze::SSAValue &v)
              * or complex control flow.
              */
             if (v.kind() == SSAValue::VAR) {
-                analyze::Lifetime *lifetime = analysis->liveness(v.varSlot()).live(use->offset);
+                analyze::Lifetime *lifetime = outerAnalysis->liveness(v.varSlot()).live(use->offset);
                 if (!lifetime) {
                     use = use->next;
                     continue;
@@ -1059,7 +1076,7 @@ LoopState::valueFlowsToBitops(const analyze::SSAValue &v)
         if (use->offset > lifetime->backedge)
             return false;
 
-        jsbytecode *pc = script->code + use->offset;
+        jsbytecode *pc = outerScript->code + use->offset;
         JSOp op = JSOp(*pc);
         switch (op) {
           case JSOP_ADD:
@@ -1072,8 +1089,8 @@ LoopState::valueFlowsToBitops(const analyze::SSAValue &v)
           }
 
           case JSOP_SETLOCAL: {
-            uint32 slot = GetBytecodeSlot(script, pc);
-            if (!analysis->trackSlot(slot))
+            uint32 slot = GetBytecodeSlot(outerScript, pc);
+            if (!outerAnalysis->trackSlot(slot))
                 return false;
             SSAValue writev;
             writev.initWritten(slot, use->offset);
@@ -1114,6 +1131,8 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
 
     Registers regs(Registers::TempRegs);
     regs.takeReg(Registers::ReturnReg);
+    JS_ASSERT(!regs.hasReg(JSReturnReg_Data));
+    JS_ASSERT(!regs.hasReg(JSReturnReg_Type));
 
     RegisterID T0 = regs.takeAnyReg().reg();
     RegisterID T1 = regs.takeAnyReg().reg();
@@ -1269,16 +1288,16 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
             slot = v.varSlot();
             offset = v.varInitial() ? 0 : v.varOffset();
         }
-        if (analysis->slotEscapes(slot))
+        if (outerAnalysis->slotEscapes(slot))
             return false;
-        if (analysis->liveness(slot).firstWrite(offset + 1, lifetime->backedge) != uint32(-1))
+        if (outerAnalysis->liveness(slot).firstWrite(offset + 1, lifetime->backedge) != uint32(-1))
             return false;
         *pslot = slot;
         *pconstant = 0;
         return true;
     }
 
-    jsbytecode *pc = script->code + v.pushedOffset();
+    jsbytecode *pc = outerScript->code + v.pushedOffset();
 
     JSOp op = JSOp(*pc);
     const JSCodeSpec *cs = &js_CodeSpec[op];
@@ -1302,12 +1321,12 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
       case JSOP_DECARG:
       case JSOP_ARGINC:
       case JSOP_ARGDEC: {
-        uint32 slot = GetBytecodeSlot(script, pc);
-        if (analysis->slotEscapes(slot))
+        uint32 slot = GetBytecodeSlot(outerScript, pc);
+        if (outerAnalysis->slotEscapes(slot))
             return false;
 
         /* Only consider tests on known integers. */
-        types::TypeSet *types = analysis->pushedTypes(pc, 0);
+        types::TypeSet *types = outerAnalysis->pushedTypes(pc, 0);
         if (types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
             return false;
 
@@ -1347,13 +1366,13 @@ LoopState::analyzeLoopTest()
         return;
 
     /* Get the test performed before branching. */
-    jsbytecode *backedge = script->code + lifetime->backedge;
+    jsbytecode *backedge = outerScript->code + lifetime->backedge;
     if (JSOp(*backedge) != JSOP_IFNE)
         return;
-    const SSAValue &test = analysis->poppedValue(backedge, 0);
+    const SSAValue &test = outerAnalysis->poppedValue(backedge, 0);
     if (test.kind() != SSAValue::PUSHED)
         return;
-    JSOp cmpop = JSOp(script->code[test.pushedOffset()]);
+    JSOp cmpop = JSOp(outerScript->code[test.pushedOffset()]);
     switch (cmpop) {
       case JSOP_GT:
       case JSOP_GE:
@@ -1364,14 +1383,14 @@ LoopState::analyzeLoopTest()
         return;
     }
 
-    SSAValue one = analysis->poppedValue(test.pushedOffset(), 1);
-    SSAValue two = analysis->poppedValue(test.pushedOffset(), 0);
+    SSAValue one = outerAnalysis->poppedValue(test.pushedOffset(), 1);
+    SSAValue two = outerAnalysis->poppedValue(test.pushedOffset(), 0);
 
     /* Reverse the condition if the RHS is modified by the loop. */
     uint32 swapRHS;
     int32 swapConstant;
     if (getLoopTestAccess(two, &swapRHS, &swapConstant)) {
-        if (swapRHS != UNASSIGNED && analysis->liveness(swapRHS).firstWrite(lifetime) != uint32(-1)) {
+        if (swapRHS != UNASSIGNED && outerAnalysis->liveness(swapRHS).firstWrite(lifetime) != uint32(-1)) {
             SSAValue tmp = one;
             one = two;
             two = tmp;
@@ -1386,28 +1405,11 @@ LoopState::analyzeLoopTest()
 
     uint32 rhs = UNASSIGNED;
     int32 rhsConstant = 0;
-    bool rhsLength = false;
-
-    if (two.kind() == SSAValue::PUSHED &&
-        JSOp(script->code[two.pushedOffset()] == JSOP_LENGTH)) {
-        /* Handle 'this.length' or 'x.length' for loop invariant 'x'. */
-        const SSAValue &array = analysis->poppedValue(two.pushedOffset(), 0);
-        if (!getLoopTestAccess(array, &rhs, &rhsConstant))
-            return;
-        if (rhsConstant != 0 || analysis->liveness(rhs).firstWrite(lifetime) != uint32(-1)) {
-            return;
-        }
-        if (!invariantLength(frame.getOrTrack(rhs), analysis->getValueTypes(array)))
-            return;
-        rhsLength = true;
-    } else {
-        if (!getLoopTestAccess(two, &rhs, &rhsConstant))
-            return;
-
-        /* Don't handle comparisons where both the LHS and RHS are modified in the loop. */
-        if (rhs != UNASSIGNED && analysis->liveness(rhs).firstWrite(lifetime) != uint32(-1))
-            return;
-    }
+    CrossSSAValue rhsv(CrossScriptSSA::OUTER_FRAME, two);
+    if (!getEntryValue(rhsv, &rhs, &rhsConstant))
+        return;
+    if (!loopInvariantEntry(rhs))
+        return;
 
     if (lhs == UNASSIGNED)
         return;
@@ -1429,7 +1431,6 @@ LoopState::analyzeLoopTest()
     this->testLHS = lhs;
     this->testRHS = rhs;
     this->testConstant = constant;
-    this->testLength = rhsLength;
     this->testLessEqual = (cmpop == JSOP_LT || cmpop == JSOP_LE);
 }
 
@@ -1442,18 +1443,18 @@ LoopState::analyzeLoopIncrements()
      * also handle the first basic block).
      */
 
-    for (uint32 slot = ArgSlot(0); slot < LocalSlot(script, script->nfixed); slot++) {
-        if (analysis->slotEscapes(slot))
+    for (uint32 slot = ArgSlot(0); slot < LocalSlot(outerScript, outerScript->nfixed); slot++) {
+        if (outerAnalysis->slotEscapes(slot))
             continue;
 
-        uint32 offset = analysis->liveness(slot).onlyWrite(lifetime);
+        uint32 offset = outerAnalysis->liveness(slot).onlyWrite(lifetime);
         if (offset == uint32(-1) || offset < lifetime->lastBlock)
             continue;
 
-        JSOp op = JSOp(script->code[offset]);
+        JSOp op = JSOp(outerScript->code[offset]);
         const JSCodeSpec *cs = &js_CodeSpec[op];
         if (cs->format & (JOF_INC | JOF_DEC)) {
-            types::TypeSet *types = analysis->pushedTypes(offset);
+            types::TypeSet *types = outerAnalysis->pushedTypes(offset);
             if (types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
                 continue;
 
@@ -1481,8 +1482,8 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
      * other value by which the overflow could be observed.
      */
 
-    types::TypeSet *objTypes = analysis->getValueTypes(obj);
-    types::TypeSet *elemTypes = analysis->getValueTypes(index);
+    types::TypeSet *objTypes = outerAnalysis->getValueTypes(obj);
+    types::TypeSet *elemTypes = outerAnalysis->getValueTypes(index);
 
     if (objTypes->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT ||
         elemTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32) {
@@ -1498,14 +1499,15 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
 
     uint32 objSlot;
     int32 objConstant;
-    if (!getEntryValue(obj, &objSlot, &objConstant) || objConstant != 0)
+    CrossSSAValue objv(CrossScriptSSA::OUTER_FRAME, obj);
+    if (!getEntryValue(objv, &objSlot, &objConstant) || objConstant != 0)
         return false;
     if (!loopInvariantEntry(objSlot))
         return false;
 
     /* Bitops must produce integers. */
     if (index.kind() == SSAValue::PUSHED) {
-        JSOp op = JSOp(script->code[index.pushedOffset()]);
+        JSOp op = JSOp(outerScript->code[index.pushedOffset()]);
         switch (op) {
           case JSOP_BITAND:
           case JSOP_BITOR:
@@ -1521,7 +1523,8 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
 
     uint32 indexSlot;
     int32 indexConstant;
-    if (!getEntryValue(index, &indexSlot, &indexConstant))
+    CrossSSAValue indexv(CrossScriptSSA::OUTER_FRAME, index);
+    if (!getEntryValue(indexv, &indexSlot, &indexConstant))
         return false;
 
     /*
@@ -1532,11 +1535,31 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
     return true;
 }
 
-void
-LoopState::analyzeLoopBody()
+bool
+LoopState::analyzeLoopBody(unsigned frame)
 {
-    unsigned offset = lifetime->head;
-    while (offset < lifetime->backedge) {
+    JSScript *script = ssa->getFrame(frame).script;
+    analyze::ScriptAnalysis *analysis = script->analysis(cx);
+    JS_ASSERT(analysis && !analysis->failed() && analysis->ranInference());
+
+    /*
+     * The temporaries need to be positioned after all values in the deepest
+     * inlined frame plus another stack frame pushed by, e.g. ic::Call.
+     * This new frame will have been partially initialized by the call, and
+     * we don't want to scribble on that frame when restoring invariants.
+     */
+    temporariesStart = Max((unsigned long) temporariesStart,
+                           ssa->getFrame(frame).depth + VALUES_PER_STACK_FRAME * 2 + script->nslots);
+
+    if (script->failedBoundsCheck)
+        skipAnalysis = true;
+
+    /* Analyze the entire script for frames inlined in the loop body. */
+    unsigned start = (frame == CrossScriptSSA::OUTER_FRAME) ? lifetime->head + JSOP_TRACE_LENGTH : 0;
+    unsigned end = (frame == CrossScriptSSA::OUTER_FRAME) ? lifetime->backedge : script->length;
+
+    unsigned offset = start;
+    while (offset < end) {
         jsbytecode *pc = script->code + offset;
         uint32 successorOffset = offset + GetBytecodeLength(pc);
 
@@ -1546,8 +1569,34 @@ LoopState::analyzeLoopBody()
             continue;
         }
 
+        /* Don't do any hoisting for outer loops in case of nesting. */
+        if (opinfo->loopHead)
+            skipAnalysis = true;
+
         JSOp op = JSOp(*pc);
         switch (op) {
+
+          case JSOP_CALL: {
+            /*
+             * Don't hoist within this loop unless calls at this site are inlined.
+             * :XXX: also recognize native calls which will be inlined.
+             */
+            bool foundInline = false;
+            for (unsigned i = 0; !foundInline && i < ssa->numFrames(); i++) {
+                if (ssa->iterFrame(i).parent == frame && ssa->iterFrame(i).parentpc == pc)
+                    foundInline = true;
+            }
+            if (!foundInline)
+                skipAnalysis = true;
+            break;
+          }
+
+          case JSOP_EVAL:
+          case JSOP_FUNCALL:
+          case JSOP_FUNAPPLY:
+          case JSOP_NEW:
+            skipAnalysis = true;
+            break;
 
           case JSOP_SETHOLE:
           case JSOP_SETELEM: {
@@ -1563,7 +1612,7 @@ LoopState::analyzeLoopBody()
              */
             if (objTypes->unknown() || elemTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32) {
                 unknownModset = true;
-                return;
+                break;
             }
 
             objTypes->addFreeze(cx);
@@ -1572,9 +1621,9 @@ LoopState::analyzeLoopBody()
                 if (!object)
                     continue;
                 if (!addModifiedProperty(object, JSID_VOID))
-                    return;
+                    return false;
                 if (op == JSOP_SETHOLE && !addGrowArray(object))
-                    return;
+                    return false;
             }
 
             if (constrainedLoop && !definiteArrayAccess(objValue, elemValue))
@@ -1599,7 +1648,7 @@ LoopState::analyzeLoopBody()
             types::TypeSet *objTypes = analysis->poppedTypes(pc, 1);
             if (objTypes->unknown()) {
                 unknownModset = true;
-                return;
+                break;
             }
 
             objTypes->addFreeze(cx);
@@ -1627,7 +1676,7 @@ LoopState::analyzeLoopBody()
           case JSOP_PROPDEC:
           case JSOP_FORPROP:
             unknownModset = true;
-            return;
+            break;
 
           case JSOP_TRACE:
           case JSOP_NOTRACE:
@@ -1707,6 +1756,8 @@ LoopState::analyzeLoopBody()
 
         offset = successorOffset;
     }
+
+    return true;
 }
 
 bool
@@ -1764,6 +1815,7 @@ LoopState::hasModifiedProperty(types::TypeObject *object, jsid id)
 {
     if (unknownModset)
         return true;
+    id = types::MakeTypeId(cx, id);
     for (unsigned i = 0; i < modifiedProperties.length(); i++) {
         if (modifiedProperties[i].object == object && modifiedProperties[i].id == id)
             return true;
@@ -1802,10 +1854,10 @@ LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32 slot)
      * integer overflow, which will disable hoisted conditions involving the
      * variable anyways.
      */
-    if (offset == uint32(-1) || offset < uint32(pc - script->code))
+    if (offset == uint32(-1) || offset < uint32(pc - outerScript->code))
         return 0;
 
-    switch (JSOp(script->code[offset])) {
+    switch (JSOp(outerScript->code[offset])) {
       case JSOP_INCLOCAL:
       case JSOP_LOCALINC:
       case JSOP_INCARG:
@@ -1823,17 +1875,27 @@ LoopState::adjustConstantForIncrement(jsbytecode *pc, uint32 slot)
 }
 
 bool
-LoopState::getEntryValue(const SSAValue &v, uint32 *pslot, int32 *pconstant)
+LoopState::getEntryValue(const CrossSSAValue &iv, uint32 *pslot, int32 *pconstant)
 {
+    CrossSSAValue cv = ssa->foldValue(iv);
+
+    JSScript *script = ssa->getFrame(cv.frame).script;
+    ScriptAnalysis *analysis = script->analysis(cx);
+    const SSAValue &v = cv.v;
+
     /*
      * For a stack value popped by the bytecode at offset, try to get an
      * expression 'slot + constant' with the same value as the stack value
      * and expressed in terms of the state at loop entry.
      */
 
-    if (v.kind() == SSAValue::PHI && v.phiSlot() < TotalSlots(script)) {
+    if (v.kind() == SSAValue::PHI) {
+        if (cv.frame != CrossScriptSSA::OUTER_FRAME)
+            return false;
+        if (v.phiSlot() >= TotalSlots(script))
+            return false;
         if (v.phiOffset() > lifetime->head &&
-            analysis->liveness(v.phiSlot()).firstWrite(lifetime) < v.phiOffset()) {
+            outerAnalysis->liveness(v.phiSlot()).firstWrite(lifetime) < v.phiOffset()) {
             return false;
         }
         *pslot = v.phiSlot();
@@ -1842,6 +1904,8 @@ LoopState::getEntryValue(const SSAValue &v, uint32 *pslot, int32 *pconstant)
     }
 
     if (v.kind() == SSAValue::VAR) {
+        if (cv.frame != CrossScriptSSA::OUTER_FRAME)
+            return false;
         if (v.varInitial() || v.varOffset() < lifetime->head) {
             *pslot = v.varSlot();
             *pconstant = 0;
@@ -1863,10 +1927,12 @@ LoopState::getEntryValue(const SSAValue &v, uint32 *pslot, int32 *pconstant)
       case JSOP_GETARG:
       case JSOP_ARGINC:
       case JSOP_INCARG: {
-        uint32 slot = GetBytecodeSlot(script, pc);
-        if (analysis->slotEscapes(slot))
+        if (cv.frame != CrossScriptSSA::OUTER_FRAME)
             return false;
-        uint32 write = analysis->liveness(slot).firstWrite(lifetime);
+        uint32 slot = GetBytecodeSlot(outerScript, pc);
+        if (outerAnalysis->slotEscapes(slot))
+            return false;
+        uint32 write = outerAnalysis->liveness(slot).firstWrite(lifetime);
         if (write != uint32(-1) && write < v.pushedOffset()) {
             /* Variable has been modified since the start of the loop. */
             return false;
@@ -1875,6 +1941,13 @@ LoopState::getEntryValue(const SSAValue &v, uint32 *pslot, int32 *pconstant)
         *pconstant = (op == JSOP_INCLOCAL || op == JSOP_INCARG) ? 1 : 0;
         return true;
       }
+
+      case JSOP_THIS:
+        if (cv.frame != CrossScriptSSA::OUTER_FRAME)
+            return false;
+        *pslot = ThisSlot();
+        *pconstant = 0;
+        return true;
 
       case JSOP_ZERO:
       case JSOP_ONE:
@@ -1886,20 +1959,48 @@ LoopState::getEntryValue(const SSAValue &v, uint32 *pslot, int32 *pconstant)
         *pconstant = GetBytecodeInteger(pc);
         return true;
 
+      case JSOP_LENGTH: {
+        CrossSSAValue lengthcv(cv.frame, analysis->poppedValue(v.pushedOffset(), 0));
+        FrameEntry *tmp = invariantLength(lengthcv);
+        if (!tmp)
+            return false;
+        *pslot = frame.outerSlot(tmp);
+        *pconstant = 0;
+        return true;
+      }
+
+      case JSOP_GETPROP: {
+        JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
+        jsid id = ATOM_TO_JSID(atom);
+        CrossSSAValue objcv(cv.frame, analysis->poppedValue(v.pushedOffset(), 0));
+        FrameEntry *tmp = invariantProperty(objcv, id);
+        if (!tmp)
+            return false;
+        *pslot = frame.outerSlot(tmp);
+        *pconstant = 0;
+        return true;
+      }
+
       default:
         return false;
     }
 }
 
 bool
-LoopState::computeInterval(const analyze::SSAValue &v, int32 *pmin, int32 *pmax)
+LoopState::computeInterval(const CrossSSAValue &cv, int32 *pmin, int32 *pmax)
 {
+    JSScript *script = ssa->getFrame(cv.frame).script;
+    ScriptAnalysis *analysis = script->analysis(cx);
+    const SSAValue &v = cv.v;
+
     if (v.kind() == SSAValue::VAR && !v.varInitial()) {
         jsbytecode *pc = script->code + v.varOffset();
         switch (JSOp(*pc)) {
           case JSOP_SETLOCAL:
-          case JSOP_SETARG:
-            return computeInterval(analysis->poppedValue(pc, 0), pmin, pmax);
+          case JSOP_SETARG: {
+            CrossSSAValue ncv(cv.frame, analysis->poppedValue(pc, 0));
+            return computeInterval(ncv, pmin, pmax);
+          }
 
           default:
             return false;
@@ -1929,8 +2030,10 @@ LoopState::computeInterval(const analyze::SSAValue &v, int32 *pmin, int32 *pmax)
 
       case JSOP_BITAND: {
         int32 lhsmin, lhsmax, rhsmin, rhsmax;
-        bool haslhs = computeInterval(analysis->poppedValue(pc, 1), &lhsmin, &lhsmax);
-        bool hasrhs = computeInterval(analysis->poppedValue(pc, 0), &rhsmin, &rhsmax);
+        CrossSSAValue lhsv(cv.frame, analysis->poppedValue(pc, 1));
+        CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
+        bool haslhs = computeInterval(lhsv, &lhsmin, &lhsmax);
+        bool hasrhs = computeInterval(rhsv, &rhsmin, &rhsmax);
 
         /* Only handle bitand with a constant operand. */
         haslhs = haslhs && lhsmin == lhsmax && lhsmin >= 0;
@@ -1953,7 +2056,8 @@ LoopState::computeInterval(const analyze::SSAValue &v, int32 *pmin, int32 *pmax)
 
       case JSOP_RSH: {
         int32 rhsmin, rhsmax;
-        if (!computeInterval(analysis->poppedValue(pc, 0), &rhsmin, &rhsmax) || rhsmin != rhsmax)
+        CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
+        if (!computeInterval(rhsv, &rhsmin, &rhsmax) || rhsmin != rhsmax)
             return false;
 
         /* Only use the bottom 5 bits. */
@@ -1965,7 +2069,8 @@ LoopState::computeInterval(const analyze::SSAValue &v, int32 *pmin, int32 *pmax)
 
       case JSOP_URSH: {
         int32 rhsmin, rhsmax;
-        if (!computeInterval(analysis->poppedValue(pc, 0), &rhsmin, &rhsmax) || rhsmin != rhsmax)
+        CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
+        if (!computeInterval(rhsv, &rhsmin, &rhsmax) || rhsmin != rhsmax)
             return false;
 
         /* Only use the bottom 5 bits. */
@@ -1979,7 +2084,8 @@ LoopState::computeInterval(const analyze::SSAValue &v, int32 *pmin, int32 *pmax)
 
       case JSOP_MOD: {
         int32 rhsmin, rhsmax;
-        if (!computeInterval(analysis->poppedValue(pc, 0), &rhsmin, &rhsmax) || rhsmin != rhsmax)
+        CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
+        if (!computeInterval(rhsv, &rhsmin, &rhsmax) || rhsmin != rhsmax)
             return false;
 
         int32 rhs = abs(rhsmax);
@@ -1990,28 +2096,28 @@ LoopState::computeInterval(const analyze::SSAValue &v, int32 *pmin, int32 *pmax)
 
       case JSOP_ADD: {
         int32 lhsmin, lhsmax, rhsmin, rhsmax;
-        if (!computeInterval(analysis->poppedValue(pc, 1), &lhsmin, &lhsmax) ||
-            !computeInterval(analysis->poppedValue(pc, 0), &rhsmin, &rhsmax)) {
+        CrossSSAValue lhsv(cv.frame, analysis->poppedValue(pc, 1));
+        CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
+        if (!computeInterval(lhsv, &lhsmin, &lhsmax) || !computeInterval(rhsv, &rhsmin, &rhsmax))
             return false;
-        }
         return SafeAdd(lhsmin, rhsmin, pmin) && SafeAdd(lhsmax, rhsmax, pmax);
       }
 
       case JSOP_SUB: {
         int32 lhsmin, lhsmax, rhsmin, rhsmax;
-        if (!computeInterval(analysis->poppedValue(pc, 1), &lhsmin, &lhsmax) ||
-            !computeInterval(analysis->poppedValue(pc, 0), &rhsmin, &rhsmax)) {
+        CrossSSAValue lhsv(cv.frame, analysis->poppedValue(pc, 1));
+        CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
+        if (!computeInterval(lhsv, &lhsmin, &lhsmax) || !computeInterval(rhsv, &rhsmin, &rhsmax))
             return false;
-        }
         return SafeSub(lhsmin, rhsmax, pmin) && SafeSub(lhsmax, rhsmin, pmax);
       }
 
       case JSOP_MUL: {
         int32 lhsmin, lhsmax, rhsmin, rhsmax;
-        if (!computeInterval(analysis->poppedValue(pc, 1), &lhsmin, &lhsmax) ||
-            !computeInterval(analysis->poppedValue(pc, 0), &rhsmin, &rhsmax)) {
+        CrossSSAValue lhsv(cv.frame, analysis->poppedValue(pc, 1));
+        CrossSSAValue rhsv(cv.frame, analysis->poppedValue(pc, 0));
+        if (!computeInterval(lhsv, &lhsmin, &lhsmax) || !computeInterval(rhsv, &rhsmin, &rhsmax))
             return false;
-        }
         int32 nlhs = Max(abs(lhsmin), abs(lhsmax));
         int32 nrhs = Max(abs(rhsmin), abs(rhsmax));
 

@@ -74,8 +74,8 @@ JaegerTrampoline:
 .global JaegerTrampolineReturn
 .type   JaegerTrampolineReturn, @function
 JaegerTrampolineReturn:
-    movl  %edx, 0x18(%ebp)
-    movl  %ecx, 0x1C(%ebp)
+    movl  %esi, 0x18(%ebp)
+    movl  %edi, 0x1C(%ebp)
     movl  %esp, %ebp
     addl  $0x38, %ebp
     pushl %esp

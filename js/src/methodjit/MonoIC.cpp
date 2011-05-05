@@ -1115,7 +1115,11 @@ BumpStackFull(VMFrame &f, uintN inc)
      * this sequence will quickly reach the end of the stack and OOM.
      */
     StackSpace &space = f.cx->stack.space();
-    return space.bumpLimit(f.cx, f.entryfp, f.regs.sp, inc, &f.stackLimit);
+    if (!space.bumpLimit(f.cx, f.entryfp, f.regs.sp, inc, &f.stackLimit)) {
+        js_ReportOutOfScriptQuota(f.cx);
+        return false;
+    }
+    return true;
 }
 
 static JS_ALWAYS_INLINE bool

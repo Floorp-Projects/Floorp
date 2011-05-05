@@ -1194,6 +1194,7 @@ TypeSet::setOwnProperty(JSContext *cx, bool configured)
 inline unsigned
 TypeSet::getObjectCount()
 {
+    JS_ASSERT(!unknown());
     if (objectCount > SET_ARRAY_SIZE)
         return HashSetCapacity(objectCount);
     return objectCount;

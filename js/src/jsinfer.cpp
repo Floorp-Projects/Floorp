@@ -1031,6 +1031,10 @@ TypeConstraintArith::newType(JSContext *cx, TypeSet *source, jstype type)
          *   double x {int,bool,double} -> double
          *   string x any -> string
          */
+        if (other->unknown()) {
+            target->addType(cx, TYPE_UNKNOWN);
+            return;
+        }
         switch (type) {
           case TYPE_DOUBLE:
             if (other->hasAnyFlag(TYPE_FLAG_UNDEFINED | TYPE_FLAG_NULL |
@@ -1464,6 +1468,9 @@ ObjectKind
 TypeSet::getKnownObjectKind(JSContext *cx)
 {
     ObjectKind kind = OBJECT_NONE;
+
+    if (unknown())
+        return OBJECT_UNKNOWN;
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
@@ -3926,6 +3933,8 @@ AnalyzeScriptProperties(JSContext *cx, JSScript *script)
           case JSOP_HOLE:
           case JSOP_INITPROP:
           case JSOP_INITMETHOD:
+          case JSOP_CALL:
+          case JSOP_NEW:
             break;
 
           default:
@@ -3965,6 +3974,11 @@ analyze::ScriptAnalysis::printTypes(JSContext *cx)
         for (unsigned i = 0; i < defCount; i++) {
             TypeSet *types = pushedTypes(offset, i);
 
+            if (types->unknown()) {
+                compartment->typeCountOver++;
+                continue;
+            }
+
             unsigned typeCount = types->getObjectCount() ? 1 : 0;
             for (jstype type = TYPE_UNDEFINED; type <= TYPE_STRING; type++) {
                 if (types->hasAnyFlag(1 << type))
@@ -3981,7 +3995,7 @@ analyze::ScriptAnalysis::printTypes(JSContext *cx)
                 typeCount--;
             }
 
-            if (types->unknown() || typeCount > TypeCompartment::TYPE_COUNT_LIMIT) {
+            if (typeCount > TypeCompartment::TYPE_COUNT_LIMIT) {
                 compartment->typeCountOver++;
             } else if (typeCount == 0) {
                 /* Ignore values without types, this may be unreached code. */

@@ -693,6 +693,12 @@ class SSAValue
         u.pushed.index = index;
     }
 
+    static SSAValue PushedValue(uint32 offset, uint32 index) {
+        SSAValue v;
+        v.initPushed(offset, index);
+        return v;
+    }
+
     void initInitial(uint32 slot) {
         clear();
         u.var.kind = VAR;
@@ -829,6 +835,7 @@ class ScriptAnalysis
     bool hasCalls;
     bool canTrackVars;
     bool isInlineable;
+    uint32 numReturnSites_;
 
     /* Offsets at which each local becomes unconditionally defined, or a value below. */
     uint32 *definedLocals;
@@ -869,6 +876,7 @@ class ScriptAnalysis
 
     bool usesThisValue() const { return usesThis; }
     bool hasFunctionCalls() const { return hasCalls; }
+    uint32 numReturnSites() const { return numReturnSites_; }
 
     /* Accessors for bytecode information. */
 
@@ -1111,6 +1119,76 @@ struct AutoEnterAnalysis
     {
         cx->compartment->activeAnalysis = oldActiveAnalysis;
     }
+};
+
+/* SSA value as used by CrossScriptSSA, identifies the frame it came from. */
+struct CrossSSAValue
+{
+    unsigned frame;
+    SSAValue v;
+    CrossSSAValue(unsigned frame, const SSAValue &v) : frame(frame), v(v) {}
+};
+
+/*
+ * Analysis for managing SSA values from multiple call stack frames. These are
+ * created by the backend compiler when inlining functions, and allow for
+ * values to be tracked as they flow into or out of the inlined frames.
+ */
+class CrossScriptSSA
+{
+  public:
+
+    static const uint32 OUTER_FRAME = uint32(-1);
+    static const unsigned INVALID_FRAME = uint32(-2);
+
+    struct Frame {
+        uint32 index;
+        JSScript *script;
+        uint32 depth;  /* Distance from outer frame to this frame, in sizeof(Value) */
+        uint32 parent;
+        jsbytecode *parentpc;
+
+        Frame(uint32 index, JSScript *script, uint32 depth, uint32 parent, jsbytecode *parentpc)
+            : index(index), script(script), depth(depth), parent(parent), parentpc(parentpc)
+        {}
+    };
+
+    const Frame &getFrame(uint32 index) {
+        if (index == OUTER_FRAME)
+            return outerFrame;
+        return inlineFrames[index];
+    }
+
+    unsigned numFrames() { return 1 + inlineFrames.length(); }
+    const Frame &iterFrame(unsigned i) {
+        if (i == 0)
+            return outerFrame;
+        return inlineFrames[i - 1];
+    }
+
+    JSScript *outerScript() { return outerFrame.script; }
+
+    types::TypeSet *getValueTypes(const CrossSSAValue &cv) {
+        return getFrame(cv.frame).script->analysis(cx)->getValueTypes(cv.v);
+    }
+
+    bool addInlineFrame(JSScript *script, uint32 depth, uint32 parent, jsbytecode *parentpc)
+    {
+        uint32 index = inlineFrames.length();
+        return inlineFrames.append(Frame(index, script, depth, parent, parentpc));
+    }
+
+    CrossScriptSSA(JSContext *cx, JSScript *outer)
+        : cx(cx), outerFrame(OUTER_FRAME, outer, 0, INVALID_FRAME, NULL), inlineFrames(cx)
+    {}
+
+    CrossSSAValue foldValue(const CrossSSAValue &cv);
+
+  private:
+    JSContext *cx;
+
+    Frame outerFrame;
+    Vector<Frame> inlineFrames;
 };
 
 #ifdef DEBUG

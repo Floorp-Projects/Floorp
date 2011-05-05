@@ -68,6 +68,7 @@ using namespace js::mjit;
 #if defined(JS_POLYIC) || defined(JS_MONOIC)
 using namespace js::mjit::ic;
 #endif
+using namespace js::analyze;
 
 #define RETURN_IF_OOM(retval)                                   \
     JS_BEGIN_MACRO                                              \
@@ -94,6 +95,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
   : BaseCompiler(cx),
     outerScript(outerScript),
     isConstructing(isConstructing),
+    ssa(cx, outerScript),
     globalObj(outerScript->global),
     globalSlots((globalObj && globalObj->isGlobal()) ? globalObj->getRawSlots() : NULL),
     patchFrames(patchFrames),
@@ -129,7 +131,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
 #else
     addTraceHints(false),
 #endif
-    inlining(false),
+    inlining_(false),
     hasGlobalReallocation(false),
     oomInVector(false),
     applyTricks(NoApplyTricks)
@@ -146,9 +148,10 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
      * with inline calls. :FIXME: should remove compartment->incBackEdgeCount
      * and do the same when deciding to initially compile.
      */
-    if (outerScript->callCount() >= CALLS_BACKEDGES_BEFORE_INLINING ||
-        cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS)) {
-        inlining = true;
+    if (!debugMode() && cx->typeInferenceEnabled() &&
+        (outerScript->callCount() >= CALLS_BACKEDGES_BEFORE_INLINING ||
+         cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
+        inlining_ = true;
     }
 }
 
@@ -182,6 +185,207 @@ mjit::Compiler::compile()
 }
 
 CompileStatus
+mjit::Compiler::checkAnalysis(JSScript *script)
+{
+    ScriptAnalysis *analysis = script->analysis(cx);
+
+    if (!analysis)
+        return Compile_Error;
+    if (!analysis->failed() && !analysis->ranBytecode())
+        analysis->analyzeBytecode(cx);
+
+    if (analysis->OOM())
+        return Compile_Error;
+    if (analysis->failed()) {
+        JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
+        return Compile_Abort;
+    }
+
+    if (cx->typeInferenceEnabled()) {
+        if (!analysis->ranSSA())
+            analysis->analyzeSSA(cx);
+        if (!analysis->failed() && !analysis->ranLifetimes())
+            analysis->analyzeLifetimes(cx);
+        if (!analysis->failed() && !analysis->ranInference())
+            analysis->analyzeTypes(cx);
+        if (analysis->failed()) {
+            js_ReportOutOfMemory(cx);
+            return Compile_Error;
+        }
+    }
+
+    return Compile_Okay;
+}
+
+CompileStatus
+mjit::Compiler::addInlineFrame(JSScript *script, uint32 depth,
+                               uint32 parent, jsbytecode *parentpc)
+{
+    JS_ASSERT(inlining());
+
+    CompileStatus status = checkAnalysis(script);
+    if (status != Compile_Okay)
+        return status;
+
+    if (!ssa.addInlineFrame(script, depth, parent, parentpc))
+        return Compile_Error;
+
+    uint32 index = ssa.iterFrame(ssa.numFrames() - 1).index;
+    return scanInlineCalls(index, depth);
+}
+
+CompileStatus
+mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
+{
+    /* Maximum number of calls we will inline at the same site. */
+    static const uint32 INLINE_SITE_LIMIT = 5;
+
+    JS_ASSERT(inlining());
+
+    /* Not inlining yet from 'new' scripts. */
+    if (isConstructing)
+        return Compile_Okay;
+
+    JSScript *script = ssa.getFrame(index).script;
+    ScriptAnalysis *analysis = script->analysis(cx);
+
+    /* Don't inline from functions which could have a non-global scope object. */
+    if (!script->compileAndGo ||
+        (script->fun && script->fun->getParent() != globalObj) ||
+        (script->fun && script->fun->isHeavyweight()) ||
+        script->isActiveEval) {
+        return Compile_Okay;
+    }
+
+    uint32 nextOffset = 0;
+    while (nextOffset < script->length) {
+        uint32 offset = nextOffset;
+        jsbytecode *pc = script->code + offset;
+        nextOffset = offset + GetBytecodeLength(pc);
+
+        Bytecode *code = analysis->maybeCode(pc);
+        if (!code)
+            continue;
+
+        /* :XXX: Not yet inlining 'new' calls. */
+        if (JSOp(*pc) != JSOP_CALL)
+            continue;
+
+        uint32 argc = GET_ARGC(pc);
+        types::TypeSet *calleeTypes = analysis->poppedTypes(pc, argc + 1);
+
+        if (calleeTypes->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT)
+            continue;
+
+        /*
+         * Make sure no callees have had their .arguments accessed, and trigger
+         * recompilation if they ever are accessed.
+         */
+        types::ObjectKind kind = calleeTypes->getKnownObjectKind(cx);
+        if (kind != types::OBJECT_INLINEABLE_FUNCTION)
+            continue;
+
+        if (calleeTypes->getObjectCount() >= INLINE_SITE_LIMIT)
+            continue;
+
+        /*
+         * Compute the maximum height we can grow the stack for inlined frames.
+         * We always reserve space for loop temporaries and for an extra stack
+         * frame pushed when making a call from the deepest inlined frame.
+         */
+        uint32 stackLimit = outerScript->nslots + StackSpace::STACK_EXTRA
+            - VALUES_PER_STACK_FRAME - FrameState::TEMPORARY_LIMIT;
+
+        /* Compute the depth of any frames inlined at this site. */
+        uint32 nextDepth = depth + VALUES_PER_STACK_FRAME + script->nfixed + code->stackDepth;
+
+        /*
+         * Scan each of the possible callees for other conditions precluding
+         * inlining. We only inline at a call site if all callees are inlineable.
+         */
+        unsigned count = calleeTypes->getObjectCount();
+        bool okay = true;
+        for (unsigned i = 0; i < count; i++) {
+            types::TypeObject *object = calleeTypes->getObject(i);
+            if (!object)
+                continue;
+
+            if (!object->singleton || !object->singleton->isFunction()) {
+                okay = false;
+                break;
+            }
+
+            JSFunction *fun = object->singleton->getFunctionPrivate();
+            if (!fun->isInterpreted()) {
+                okay = false;
+                break;
+            }
+            JSScript *script = fun->script();
+
+            /*
+             * The outer and inner scripts must have the same scope. This only
+             * allows us to inline calls between non-inner functions. Also
+             * check for consistent strictness between the functions.
+             */
+            if (!script->compileAndGo ||
+                fun->getParent() != globalObj ||
+                outerScript->strictModeCode != script->strictModeCode) {
+                okay = false;
+                break;
+            }
+
+            /* We can't cope with inlining recursive functions yet. */
+            uint32 nindex = index;
+            while (nindex != CrossScriptSSA::INVALID_FRAME) {
+                if (ssa.getFrame(nindex).script == script)
+                    okay = false;
+                nindex = ssa.getFrame(nindex).parent;
+            }
+            if (!okay)
+                break;
+
+            /* Watch for excessively deep nesting of inlined frames. */
+            if (nextDepth + script->nslots >= stackLimit) {
+                okay = false;
+                break;
+            }
+
+            CompileStatus status = checkAnalysis(script);
+            if (status != Compile_Okay)
+                return status;
+
+            if (!script->analysis(cx)->inlineable(argc)) {
+                okay = false;
+                break;
+            }
+        }
+        if (!okay)
+            continue;
+
+        calleeTypes->addFreeze(cx);
+
+        /*
+         * Add the inline frames to the cross script SSA. We will pick these
+         * back up when compiling the call site.
+         */
+        for (unsigned i = 0; i < count; i++) {
+            types::TypeObject *object = calleeTypes->getObject(i);
+            if (!object)
+                continue;
+
+            JSFunction *fun = object->singleton->getFunctionPrivate();
+            JSScript *script = fun->script();
+
+            CompileStatus status = addInlineFrame(script, nextDepth, index, pc);
+            if (status != Compile_Okay)
+                return status;
+        }
+    }
+
+    return Compile_Okay;
+}
+
+CompileStatus
 mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
 {
     ActiveFrame *newa = cx->new_<ActiveFrame>(cx);
@@ -197,46 +401,25 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
         newa->inlineIndex = uint32(inlineFrames.length());
         inlineFrames.append(newa);
     } else {
-        newa->inlineIndex = uint32(-1);
+        newa->inlineIndex = CrossScriptSSA::OUTER_FRAME;
         outer = newa;
     }
+    JS_ASSERT(ssa.getFrame(newa->inlineIndex).script == script);
 
-    analyze::ScriptAnalysis *newAnalysis = script->analysis(cx);
-    if (!newAnalysis)
-        return Compile_Error;
-    if (!newAnalysis->failed() && !newAnalysis->ranBytecode())
-        newAnalysis->analyzeBytecode(cx);
-
-    if (newAnalysis->OOM())
-        return Compile_Error;
-    if (newAnalysis->failed()) {
-        JaegerSpew(JSpew_Abort, "couldn't analyze bytecode; probably switchX or OOM\n");
-        return Compile_Abort;
-    }
-
-    if (cx->typeInferenceEnabled()) {
-        if (!newAnalysis->ranSSA())
-            newAnalysis->analyzeSSA(cx);
-        if (!newAnalysis->failed() && !newAnalysis->ranLifetimes())
-            newAnalysis->analyzeLifetimes(cx);
-        if (newAnalysis->failed()) {
-            js_ReportOutOfMemory(cx);
-            return Compile_Error;
-        }
-    }
+    ScriptAnalysis *newAnalysis = script->analysis(cx);
 
 #ifdef JS_METHODJIT_SPEW
     if (cx->typeInferenceEnabled() && IsJaegerSpewChannelActive(JSpew_Regalloc)) {
         unsigned nargs = script->fun ? script->fun->nargs : 0;
         for (unsigned i = 0; i < nargs; i++) {
-            uint32 slot = analyze::ArgSlot(i);
+            uint32 slot = ArgSlot(i);
             if (!newAnalysis->slotEscapes(slot)) {
                 JaegerSpew(JSpew_Regalloc, "Argument %u:", i);
                 newAnalysis->liveness(slot).print();
             }
         }
         for (unsigned i = 0; i < script->nfixed; i++) {
-            uint32 slot = analyze::LocalSlot(script, i);
+            uint32 slot = LocalSlot(script, i);
             if (!newAnalysis->slotEscapes(slot)) {
                 JaegerSpew(JSpew_Regalloc, "Local %u:", i);
                 newAnalysis->liveness(slot).print();
@@ -244,9 +427,6 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
         }
     }
 #endif
-
-    if (a)
-        frame.getUnsyncedEntries(&newa->depth, &newa->unsyncedEntries);
 
     if (!frame.pushActiveFrame(script, argc)) {
         js_ReportOutOfMemory(cx);
@@ -307,7 +487,7 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     JaegerSpew(JSpew_Scripts, "compiling script (file \"%s\") (line \"%d\") (length \"%d\")\n",
                outerScript->filename, outerScript->lineno, outerScript->length);
 
-    if (inlining) {
+    if (inlining()) {
         JaegerSpew(JSpew_Inlining, "inlining calls in script (file \"%s\") (line \"%d\")\n",
                    outerScript->filename, outerScript->lineno);
     }
@@ -326,6 +506,9 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     {
         types::AutoEnterCompilation enter(cx, outerScript);
 
+        CHECK_STATUS(checkAnalysis(outerScript));
+        if (inlining())
+            CHECK_STATUS(scanInlineCalls(CrossScriptSSA::OUTER_FRAME, 0));
         CHECK_STATUS(pushActiveFrame(outerScript, 0));
         CHECK_STATUS(generatePrologue());
         CHECK_STATUS(generateMethod());
@@ -388,11 +571,10 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 #undef CHECK_STATUS
 
 mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
-    : parent(NULL), parentPC(NULL), script(NULL), inlineIndex(uint32(-1)),
-      jumpMap(NULL), unsyncedEntries(cx),
-      needReturnValue(false), syncReturnValue(false),
-      returnValueDouble(false), returnSet(false), returnParentRegs(0),
-      temporaryParentRegs(0), returnJumps(NULL)
+    : parent(NULL), parentPC(NULL), script(NULL), jumpMap(NULL),
+      inlineIndex(uint32(-1)), needReturnValue(false), syncReturnValue(false),
+      returnValueDouble(false), returnSet(false), returnEntry(NULL),
+      returnJumps(NULL), exitState(NULL)
 {}
 
 mjit::Compiler::ActiveFrame::~ActiveFrame()
@@ -413,14 +595,6 @@ mjit::Compiler::~Compiler()
 CompileStatus
 mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
 {
-    /* Analyze the script if we have not already done so. */
-    analyze::ScriptAnalysis *analysis = script->analysis(cx);
-    if (!analysis->ranInference()) {
-        analysis->analyzeTypes(cx);
-        if (!analysis->ranInference())
-            return Compile_Error;
-    }
-
     /*
      * During our walk of the script, we need to preserve the invariant that at
      * join points the in memory type tag is always in sync with the known type
@@ -445,11 +619,11 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
      */
 
     a->varTypes = (VarType *)
-        cx->calloc_(analyze::TotalSlots(script) * sizeof(VarType));
+        cx->calloc_(TotalSlots(script) * sizeof(VarType));
     if (!a->varTypes)
         return Compile_Error;
 
-    for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
+    for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
         VarType &vt = a->varTypes[slot];
         vt.types = script->slotTypes(slot);
         vt.type = vt.types->getKnownTypeTag(cx);
@@ -637,7 +811,7 @@ mjit::Compiler::generatePrologue()
     if (cx->typeInferenceEnabled()) {
         /* Convert integer arguments which were inferred as (int|double) to doubles. */
         for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
-            uint32 slot = analyze::ArgSlot(i);
+            uint32 slot = ArgSlot(i);
             if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
                 frame.ensureDouble(frame.getArg(i));
         }
@@ -700,17 +874,13 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     size_t nNmapLive = loopEntries.length();
     for (size_t i = 0; i < script->length; i++) {
-        analyze::Bytecode *opinfo = analysis->maybeCode(i);
+        Bytecode *opinfo = analysis->maybeCode(i);
         if (opinfo && opinfo->safePoint) {
             /* loopEntries cover any safe points which are at loop heads. */
             if (!cx->typeInferenceEnabled() || !opinfo->loopHead)
                 nNmapLive++;
         }
     }
-
-    size_t nUnsyncedEntries = 0;
-    for (size_t i = 0; i < inlineFrames.length(); i++)
-        nUnsyncedEntries += inlineFrames[i]->unsyncedEntries.length();
 
     /* Please keep in sync with JITScript::scriptDataSize! */
     size_t totalBytes = sizeof(JITScript) +
@@ -730,7 +900,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
                         sizeof(ic::GetElementIC) * getElemICs.length() +
                         sizeof(ic::SetElementIC) * setElemICs.length() +
 #endif
-                        sizeof(UnsyncedEntry) * nUnsyncedEntries;
+                        0;
 
     uint8 *cursor = (uint8 *)cx->calloc_(totalBytes);
     if (!cursor) {
@@ -769,7 +939,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     size_t ix = 0;
     if (jit->nNmapPairs > 0) {
         for (size_t i = 0; i < script->length; i++) {
-            analyze::Bytecode *opinfo = analysis->maybeCode(i);
+            Bytecode *opinfo = analysis->maybeCode(i);
             if (opinfo && opinfo->safePoint) {
                 Label L = jumpMap[i];
                 JS_ASSERT(L.isValid());
@@ -808,7 +978,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             to.parent = NULL;
         to.parentpc = from->parentPC;
         to.fun = from->script->fun;
-        to.depth = from->depth;
+        to.depth = ssa.getFrame(from->inlineIndex).depth;
     }
 
     /* Build the table of call sites. */
@@ -1168,16 +1338,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     }
 #endif
 
-    for (size_t i = 0; i < jit->nInlineFrames; i++) {
-        InlineFrame &to = jitInlineFrames[i];
-        ActiveFrame *from = inlineFrames[i];
-        to.nUnsyncedEntries = from->unsyncedEntries.length();
-        to.unsyncedEntries = (UnsyncedEntry *) cursor;
-        cursor += sizeof(UnsyncedEntry) * to.nUnsyncedEntries;
-        for (size_t j = 0; j < to.nUnsyncedEntries; j++)
-            to.unsyncedEntries[j] = from->unsyncedEntries[j];
-    }
-
     JS_ASSERT(size_t(cursor - (uint8*)jit) == totalBytes);
 
     /* Link fast and slow paths together. */
@@ -1298,7 +1458,7 @@ mjit::Compiler::generateMethod()
             trap |= stubs::JSTRAP_SINGLESTEP;
         variadicRejoin = false;
 
-        analyze::Bytecode *opinfo = analysis->maybeCode(PC);
+        Bytecode *opinfo = analysis->maybeCode(PC);
 
         if (!opinfo) {
             if (op == JSOP_STOP)
@@ -1310,8 +1470,8 @@ mjit::Compiler::generateMethod()
             continue;
         }
 
-        if (loop)
-            loop->PC = PC;
+        if (loop && !a->parent)
+            loop->setOuterPC(PC);
 
         frame.setPC(PC);
         frame.setInTryBlock(opinfo->inTryBlock);
@@ -1322,12 +1482,11 @@ mjit::Compiler::generateMethod()
              * any entries into doubles for a branch at that previous op,
              * revert those entries into integers. Maintain an invariant that
              * for any variables inferred to be integers, the compiler
-             * maintains them as integers slots, both for faster code inside
+             * maintains them as integers, both for faster code inside
              * basic blocks and for fewer conversions needed when branching.
-             * :XXX: this code is hacky and slow, but doesn't run that much.
              */
             for (unsigned i = 0; i < fixedDoubleEntries.length(); i++) {
-                FrameEntry *fe = frame.getOrTrack(fixedDoubleEntries[i]);
+                FrameEntry *fe = frame.getSlotEntry(fixedDoubleEntries[i]);
                 frame.ensureInteger(fe);
             }
         }
@@ -1335,9 +1494,9 @@ mjit::Compiler::generateMethod()
 
 #ifdef DEBUG
         if (fallthrough && cx->typeInferenceEnabled()) {
-            for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
+            for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
                 if (a->varTypes[slot].type == JSVAL_TYPE_INT32) {
-                    FrameEntry *fe = frame.getOrTrack(slot);
+                    FrameEntry *fe = frame.getSlotEntry(slot);
                     JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
                 }
             }
@@ -1367,7 +1526,7 @@ mjit::Compiler::generateMethod()
                 }
             }
 
-            if (!frame.discardForJoin(PC, opinfo->stackDepth))
+            if (!frame.discardForJoin(analysis->getAllocation(PC), opinfo->stackDepth))
                 return Compile_Error;
             restoreAnalysisTypes();
             fallthrough = true;
@@ -1469,7 +1628,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_GOTO)
           BEGIN_CASE(JSOP_DEFAULT)
           {
-            unsigned targetOffset = analyze::FollowBranch(script, PC - script->code);
+            unsigned targetOffset = FollowBranch(script, PC - script->code);
             jsbytecode *target = script->code + targetOffset;
 
             fixDoubleTypes(target);
@@ -1983,7 +2142,7 @@ mjit::Compiler::generateMethod()
                 else if (status != Compile_InlineAbort)
                     return status;
             }
-            if (!done && inlining) {
+            if (!done && inlining()) {
                 CompileStatus status = inlineScriptedFunction(GET_ARGC(PC), callingNew);
                 if (status == Compile_Okay) {
                     done = true;
@@ -2243,7 +2402,7 @@ mjit::Compiler::generateMethod()
              * call to fixDoubleTypes.
              */
             if (cx->typeInferenceEnabled()) {
-                uint32 slot = analyze::ArgSlot(GET_SLOTNO(PC));
+                uint32 slot = ArgSlot(GET_SLOTNO(PC));
                 if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && fixDoubleSlot(slot))
                     frame.ensureDouble(frame.getArg(GET_SLOTNO(PC)));
             }
@@ -2271,7 +2430,7 @@ mjit::Compiler::generateMethod()
             frame.storeLocal(GET_SLOTNO(PC), pop, true);
 
             if (cx->typeInferenceEnabled()) {
-                uint32 slot = analyze::LocalSlot(script, GET_SLOTNO(PC));
+                uint32 slot = LocalSlot(script, GET_SLOTNO(PC));
                 if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && fixDoubleSlot(slot))
                     frame.ensureDouble(frame.getLocal(GET_SLOTNO(PC)));
             }
@@ -2815,14 +2974,14 @@ mjit::Compiler::generateMethod()
      *  END COMPILER OPS  *
      **********************/ 
 
-        if (cx->typeInferenceEnabled() && PC == oldPC + analyze::GetBytecodeLength(oldPC)) {
+        if (cx->typeInferenceEnabled() && PC == oldPC + GetBytecodeLength(oldPC)) {
             /*
              * Inform the frame of the type sets for values just pushed. Skip
              * this if we did any opcode fusions, we don't keep track of the
              * associated type sets in such cases.
              */
-            unsigned nuses = analyze::GetUseCount(script, oldPC - script->code);
-            unsigned ndefs = analyze::GetDefCount(script, oldPC - script->code);
+            unsigned nuses = GetUseCount(script, oldPC - script->code);
+            unsigned ndefs = GetDefCount(script, oldPC - script->code);
             for (unsigned i = 0; i < ndefs; i++) {
                 FrameEntry *fe = frame.getStack(opinfo->stackDepth - nuses + i);
                 if (fe) {
@@ -3054,6 +3213,16 @@ mjit::Compiler::emitInlineReturnValue(FrameEntry *fe)
         return;
     }
 
+    /*
+     * For inlined functions that simply return an entry present in the outer
+     * script (e.g. a loop invariant term), mark the copy and propagate it
+     * after popping the frame.
+     */
+    if (!a->exitState && fe && fe->isCopy() && frame.isOuterSlot(fe->backing())) {
+        a->returnEntry = fe->backing();
+        return;
+    }
+
     if (a->returnValueDouble) {
         JS_ASSERT(fe);
         frame.ensureDouble(fe);
@@ -3063,6 +3232,8 @@ mjit::Compiler::emitInlineReturnValue(FrameEntry *fe)
         FPRegisterID fpreg;
         if (!fe->isConstant()) {
             fpreg = frame.tempRegInMaskForData(fe, mask.freeMask).fpreg();
+            frame.syncAndForgetFe(fe, true);
+            frame.takeReg(fpreg);
         } else {
             fpreg = frame.allocReg(mask.freeMask).fpreg();
             masm.slowLoadConstantDouble(fe->getValue().toDouble(), fpreg);
@@ -3076,6 +3247,8 @@ mjit::Compiler::emitInlineReturnValue(FrameEntry *fe)
         RegisterID reg;
         if (fe && !fe->isConstant()) {
             reg = frame.tempRegInMaskForData(fe, mask.freeMask).reg();
+            frame.syncAndForgetFe(fe, true);
+            frame.takeReg(reg);
         } else {
             reg = frame.allocReg(mask.freeMask).reg();
             Value val = fe ? fe->getValue() : UndefinedValue();
@@ -3084,6 +3257,10 @@ mjit::Compiler::emitInlineReturnValue(FrameEntry *fe)
         JS_ASSERT_IF(a->returnSet, reg == a->returnRegister.reg());
         a->returnRegister = reg;
     }
+
+    a->returnSet = true;
+    if (a->exitState)
+        a->exitState->setUnassigned(a->returnRegister);
 }
 
 void
@@ -3110,23 +3287,14 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
         if (a->needReturnValue)
             emitInlineReturnValue(fe);
 
-        /* Make sure the parent entries still in registers are consistent between return sites. */
-        if (!a->returnSet) {
-            a->returnParentRegs = frame.getParentRegs().freeMask & ~a->temporaryParentRegs.freeMask;
-            if (a->needReturnValue && !a->syncReturnValue &&
-                a->returnParentRegs.hasReg(a->returnRegister)) {
-                a->returnParentRegs.takeReg(a->returnRegister);
-            }
+        if (a->exitState) {
+            /*
+             * Restore the register state to reflect that at the original call,
+             * modulo entries which will be popped once the call finishes and any
+             * entry which will be clobbered by the return value register.
+             */
+            frame.syncForAllocation(a->exitState, true, Uses(0));
         }
-
-        frame.discardLocalRegisters();
-        frame.syncParentRegistersInMask(masm,
-            frame.getParentRegs().freeMask & ~a->returnParentRegs.freeMask &
-            ~a->temporaryParentRegs.freeMask, true);
-        frame.restoreParentRegistersInMask(masm,
-            a->returnParentRegs.freeMask & ~frame.getParentRegs().freeMask, true);
-
-        a->returnSet = true;
 
         /*
          * Simple tests to see if we are at the end of the script and will
@@ -3140,7 +3308,8 @@ mjit::Compiler::emitReturn(FrameEntry *fe)
         if (!endOfScript)
             a->returnJumps->append(masm.jump());
 
-        frame.discardFrame();
+        if (a->returnSet)
+            frame.freeReg(a->returnRegister);
         return;
     }
 
@@ -3243,10 +3412,8 @@ mjit::Compiler::recompileCheckHelper()
 {
     REJOIN_SITE(stubs::RecompileForInline);
 
-    if (!analysis->hasFunctionCalls() || !cx->typeInferenceEnabled() ||
-        script->callCount() >= CALLS_BACKEDGES_BEFORE_INLINING) {
+    if (inlining() || debugMode() || !analysis->hasFunctionCalls() || !cx->typeInferenceEnabled())
         return;
-    }
 
     size_t *addr = script->addressOfCallCount();
     masm.add32(Imm32(1), AbsoluteAddress(addr));
@@ -3863,136 +4030,55 @@ static const uint32 INLINE_SITE_LIMIT = 5;
 CompileStatus
 mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
 {
-    JS_ASSERT(inlining);
+    JS_ASSERT(inlining());
 
-    if (!cx->typeInferenceEnabled())
-        return Compile_InlineAbort;
-
-    /* :XXX: Not doing inlining yet when calling 'new' or calling from 'new'. */
-    if (isConstructing || callingNew)
-        return Compile_InlineAbort;
-
-    if (applyTricks == LazyArgsObj)
-        return Compile_InlineAbort;
-
-    /* Don't inline from functions which could have a non-global scope object. */
-    if (!outerScript->compileAndGo ||
-        (outerScript->fun && outerScript->fun->getParent() != globalObj) ||
-        (outerScript->fun && outerScript->fun->isHeavyweight()) ||
-        outerScript->isActiveEval) {
-        return Compile_InlineAbort;
+    /* We already know which frames we are inlining at each PC, so scan the list of inline frames. */
+    bool calleeMultipleReturns = false;
+    Vector<JSScript *> inlineCallees(CompilerAllocPolicy(cx, *this));
+    for (unsigned i = 0; i < ssa.numFrames(); i++) {
+        if (ssa.iterFrame(i).parent == a->inlineIndex && ssa.iterFrame(i).parentpc == PC) {
+            JSScript *script = ssa.iterFrame(i).script;
+            inlineCallees.append(script);
+            if (script->analysis(cx)->numReturnSites() > 1)
+                calleeMultipleReturns = true;
+        }
     }
 
-    FrameEntry *origCallee = frame.peek(-((int)argc + 2));
-    FrameEntry *origThis = frame.peek(-((int)argc + 1));
-
-    types::TypeSet *types = frame.extra(origCallee).types;
-    if (!types || types->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT)
+    if (inlineCallees.empty())
         return Compile_InlineAbort;
 
     /*
-     * Make sure no callees have had their .arguments accessed, and trigger
-     * recompilation if they ever are accessed.
+     * Remove all dead entries from the frame's tracker. We will not recognize
+     * them as dead after pushing the new frame.
      */
-    types::ObjectKind kind = types->getKnownObjectKind(cx);
-    if (kind != types::OBJECT_INLINEABLE_FUNCTION)
-        return Compile_InlineAbort;
+    frame.pruneDeadEntries();
 
-    if (types->getObjectCount() >= INLINE_SITE_LIMIT)
-        return Compile_InlineAbort;
-
-    /*
-     * Compute the maximum height we can grow the stack for inlined frames.
-     * We always reserve space for an extra stack frame pushed when making
-     * a call from the deepest inlined frame.
-     */
-    uint32 stackLimit = outerScript->nslots + StackSpace::STACK_EXTRA - VALUES_PER_STACK_FRAME;
-
-    /*
-     * Scan each of the possible callees for other conditions precluding
-     * inlining. We only inline at a call site if all callees are inlineable.
-     */
-    unsigned count = types->getObjectCount();
-    for (unsigned i = 0; i < count; i++) {
-        types::TypeObject *object = types->getObject(i);
-        if (!object)
-            continue;
-
-        if (!object->singleton || !object->singleton->isFunction())
-            return Compile_InlineAbort;
-
-        JSFunction *fun = object->singleton->getFunctionPrivate();
-        if (!fun->isInterpreted())
-            return Compile_InlineAbort;
-        JSScript *script = fun->script();
-
+    RegisterAllocation *exitState = NULL;
+    if (inlineCallees.length() > 1 || calleeMultipleReturns) {
         /*
-         * The outer and inner scripts must have the same scope. This only
-         * allows us to inline calls between non-inner functions. Also check
-         * for consistent strictness between the functions.
+         * Multiple paths through the callees, get a register allocation for
+         * the various incoming edges.
          */
-        if (!script->compileAndGo ||
-            fun->getParent() != globalObj ||
-            outerScript->strictModeCode != script->strictModeCode) {
-            return Compile_InlineAbort;
-        }
-
-        /* We can't cope with inlining recursive functions yet. */
-        ActiveFrame *checka = a;
-        while (checka) {
-            if (checka->script == script)
-                return Compile_InlineAbort;
-            checka = checka->parent;
-        }
-
-        /* Watch for excessively deep nesting of inlined frames. */
-        if (frame.totalDepth() + VALUES_PER_STACK_FRAME + fun->script()->nslots >= stackLimit)
-            return Compile_InlineAbort;
-
-        analyze::ScriptAnalysis *analysis = script->analysis(cx);
-        if (analysis && !analysis->failed() && !analysis->ranBytecode())
-            analysis->analyzeBytecode(cx);
-        if (!analysis || analysis->OOM())
-            return Compile_Error;
-        if (analysis->failed())
-            return Compile_Abort;
-
-        if (!analysis->inlineable(argc))
-            return Compile_InlineAbort;
-
-        if (analysis->usesThisValue() && origThis->isNotType(JSVAL_TYPE_OBJECT))
-            return Compile_InlineAbort;
+        exitState = frame.computeAllocation(PC + JSOP_CALL_LENGTH);
     }
-
-    types->addFreeze(cx);
-
-    /*
-     * For 'this' and arguments which are copies of other entries still in
-     * memory, try to get registers now. This will let us carry these entries
-     * around loops if possible. (Entries first accessed within the inlined
-     * call can't be loop carried).
-     */
-    frame.tryCopyRegister(origThis, origCallee);
-    for (unsigned i = 0; i < argc; i++)
-        frame.tryCopyRegister(frame.peek(-((int)i + 1)), origCallee);
 
     /*
      * If this is a polymorphic callsite, get a register for the callee too.
      * After this, do not touch the register state in the current frame until
      * stubs for all callees have been generated.
      */
+    FrameEntry *origCallee = frame.peek(-((int)argc + 2));
+    FrameEntry *entrySnapshot = NULL;
     MaybeRegisterID calleeReg;
-    if (count > 1) {
+    if (inlineCallees.length() > 1) {
         frame.forgetMismatchedObject(origCallee);
         calleeReg = frame.tempRegForData(origCallee);
+
+        entrySnapshot = frame.snapshotState();
+        if (!entrySnapshot)
+            return Compile_Error;
     }
     MaybeJump calleePrevious;
-
-    /*
-     * Registers for entries which will be popped after the call finishes do
-     * not need to be preserved by the inline frames.
-     */
-    Registers temporaryParentRegs = frame.getTemporaryCallRegisters(origCallee);
 
     JSValueType returnType = knownPushedType(0);
 
@@ -4002,22 +4088,22 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     /* Track register state after the call. */
     bool returnSet = false;
     AnyRegisterID returnRegister;
-    Registers returnParentRegs = 0;
+    const FrameEntry *returnEntry = NULL;
 
     Vector<Jump, 4, CompilerAllocPolicy> returnJumps(CompilerAllocPolicy(cx, *this));
 
-    for (unsigned i = 0; i < count; i++) {
-        types::TypeObject *object = types->getObject(i);
-        if (!object)
-            continue;
+    for (unsigned i = 0; i < inlineCallees.length(); i++) {
+        if (entrySnapshot)
+            frame.restoreFromSnapshot(entrySnapshot);
 
-        JSFunction *fun = object->singleton->getFunctionPrivate();
-
+        JSScript *script = inlineCallees[i];
         CompileStatus status;
 
-        status = pushActiveFrame(fun->script(), argc);
+        status = pushActiveFrame(script, argc);
         if (status != Compile_Okay)
             return status;
+
+        a->exitState = exitState;
 
         JaegerSpew(JSpew_Inlining, "inlining call to script (file \"%s\") (line \"%d\")\n",
                    script->filename, script->lineno);
@@ -4027,10 +4113,10 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
             calleePrevious = MaybeJump();
         }
 
-        if (i + 1 != count) {
+        if (i + 1 != inlineCallees.length()) {
             /* Guard on the callee, except when this object must be the callee. */
             JS_ASSERT(calleeReg.isSet());
-            calleePrevious = masm.branchPtr(Assembler::NotEqual, calleeReg.reg(), ImmPtr(fun));
+            calleePrevious = masm.branchPtr(Assembler::NotEqual, calleeReg.reg(), ImmPtr(script->fun));
         }
 
         a->returnJumps = &returnJumps;
@@ -4040,48 +4126,54 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
         if (returnSet) {
             a->returnSet = true;
             a->returnRegister = returnRegister;
-            a->returnParentRegs = returnParentRegs;
         }
-        a->temporaryParentRegs = temporaryParentRegs;
 
         status = generateMethod();
         if (status != Compile_Okay) {
             popActiveFrame();
             if (status == Compile_Abort) {
                 /* The callee is uncompileable, mark it as uninlineable and retry. */
-                if (!cx->markTypeFunctionUninlineable(fun->getType()))
+                if (!cx->markTypeFunctionUninlineable(script->fun->getType()))
                     return Compile_Error;
                 return Compile_Retry;
             }
             return status;
         }
 
-        if (!returnSet) {
-            JS_ASSERT(a->returnSet);
-            returnSet = true;
-            returnRegister = a->returnRegister;
-            returnParentRegs = a->returnParentRegs;
+        if (needReturnValue && !returnSet) {
+            if (a->returnSet) {
+                returnSet = true;
+                returnRegister = a->returnRegister;
+            } else {
+                returnEntry = a->returnEntry;
+            }
         }
 
         popActiveFrame();
 
-        if (i + 1 != count)
+        if (i + 1 != inlineCallees.length())
             returnJumps.append(masm.jump());
     }
 
     for (unsigned i = 0; i < returnJumps.length(); i++)
         returnJumps[i].linkTo(masm.label(), &masm);
 
-    Registers evictedRegisters = Registers(Registers::AvailAnyRegs & ~returnParentRegs.freeMask);
-    frame.evictInlineModifiedRegisters(evictedRegisters);
-
     frame.popn(argc + 2);
-    if (needReturnValue && !syncReturnValue) {
+
+    if (entrySnapshot)
+        cx->array_delete(entrySnapshot);
+
+    if (exitState)
+        frame.discardForJoin(exitState, analysis->getCode(PC).stackDepth - (argc + 2));
+
+    if (returnSet) {
         frame.takeReg(returnRegister);
         if (returnRegister.isReg())
             frame.pushTypedPayload(returnType, returnRegister.reg());
         else
             frame.pushDouble(returnRegister.fpreg());
+    } else if (returnEntry) {
+        frame.pushCopyOf((FrameEntry *) returnEntry);
     } else {
         frame.pushSynced(JSVAL_TYPE_UNKNOWN);
     }
@@ -4114,7 +4206,7 @@ mjit::Compiler::inlineStubCall(void *stub, bool needsRejoin)
     if (loop && loop->generatingInvariants()) {
         Jump j = masm.jump();
         Label l = masm.label();
-        loop->addInvariantCall(j, l, false, callSites.length(), true);
+        loop->addInvariantCall(j, l, false, false, callSites.length(), true);
     }
     addCallSite(site);
 }
@@ -4172,7 +4264,7 @@ mjit::Compiler::addRejoinSite(void *stub, bool ool, Label oolLabel)
     if (loop && loop->generatingInvariants()) {
         Jump j = stubcc.masm.jump();
         Label l = stubcc.masm.label();
-        loop->addInvariantCall(j, l, true, rejoinSites.length() - 1, false);
+        loop->addInvariantCall(j, l, true, false, rejoinSites.length() - 1, false);
     }
 
     if (ool) {
@@ -4375,11 +4467,12 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
          * This will fail for objects which are not definitely dense arrays.
          */
         if (loop && loop->generatingInvariants()) {
-            FrameEntry *fe = loop->invariantLength(top, frame.extra(top).types);
+            CrossSSAValue topv(a->inlineIndex, analysis->poppedValue(PC, 0));
+            FrameEntry *fe = loop->invariantLength(topv);
             if (fe) {
                 frame.learnType(fe, JSVAL_TYPE_INT32, false);
                 frame.pop();
-                frame.pushTemporary(fe);
+                frame.pushCopyOf(fe);
                 return true;
             }
         }
@@ -4410,11 +4503,13 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
 
     /* Check if this is a property access we can make a loop invariant entry for. */
     if (loop && loop->generatingInvariants()) {
-        FrameEntry *fe = loop->invariantProperty(top, frame.extra(top).types, ATOM_TO_JSID(atom));
+        CrossSSAValue topv(a->inlineIndex, analysis->poppedValue(PC, 0));
+        FrameEntry *fe = loop->invariantProperty(topv, ATOM_TO_JSID(atom));
         if (fe) {
-            frame.learnType(fe, knownType, false);
+            if (knownType != JSVAL_TYPE_UNKNOWN && knownType != JSVAL_TYPE_DOUBLE)
+                frame.learnType(fe, knownType, false);
             frame.pop();
-            frame.pushTemporary(fe);
+            frame.pushCopyOf(fe);
             return true;
         }
     }
@@ -5394,12 +5489,14 @@ mjit::Compiler::jsop_this()
      */
     if (script->fun && !script->strictModeCode) {
         FrameEntry *thisFe = frame.peek(-1);
-        if (!thisFe->isTypeKnown()) {
+        if (!thisFe->isType(JSVAL_TYPE_OBJECT)) {
             JSValueType type = cx->typeInferenceEnabled()
                 ? script->thisTypes()->getKnownTypeTag(cx)
                 : JSVAL_TYPE_UNKNOWN;
             if (type != JSVAL_TYPE_OBJECT) {
-                Jump notObj = frame.testObject(Assembler::NotEqual, thisFe);
+                Jump notObj = thisFe->isTypeKnown()
+                    ? masm.jump()
+                    : frame.testObject(Assembler::NotEqual, thisFe);
                 stubcc.linkExit(notObj, Uses(1));
                 stubcc.leave();
                 OOL_STUBCALL(stubs::This);
@@ -6536,7 +6633,7 @@ mjit::Compiler::startLoop(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
         loop->clearLoopRegisters();
     }
 
-    LoopState *nloop = cx->new_<LoopState>(cx, script, this, &frame);
+    LoopState *nloop = cx->new_<LoopState>(cx, &ssa, this, &frame);
     if (!nloop || !nloop->init(head, entry, entryTarget))
         return false;
 
@@ -6632,9 +6729,9 @@ mjit::Compiler::finishLoop(jsbytecode *head)
          * from, i.e. from switch and try blocks, as we don't assume double
          * variables are coherent in such cases.
          */
-        for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
+        for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
             if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE) {
-                FrameEntry *fe = frame.getOrTrack(slot);
+                FrameEntry *fe = frame.getSlotEntry(slot);
                 stubcc.masm.ensureInMemoryDouble(frame.addressOf(fe));
             }
         }
@@ -7102,7 +7199,7 @@ mjit::Compiler::fixDoubleSlot(uint32 slot)
      * Don't preserve double arguments in inline calls across branches, as we
      * can't mutate them when inlining. :XXX: could be more precise here.
      */
-    if (slot < analyze::LocalSlot(script, 0) && a->parent)
+    if (slot < LocalSlot(script, 0) && a->parent)
         return false;
 
     return true;
@@ -7120,20 +7217,20 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
      * target state consists of the current state plus any phi nodes or other
      * new values introduced at the target.
      */
-    const analyze::SlotValue *newv = analysis->newValues(target);
+    const SlotValue *newv = analysis->newValues(target);
     if (newv) {
         while (newv->slot) {
-            if (newv->value.kind() != analyze::SSAValue::PHI ||
+            if (newv->value.kind() != SSAValue::PHI ||
                 newv->value.phiOffset() != uint32(target - script->code)) {
                 newv++;
                 continue;
             }
-            if (newv->slot < analyze::TotalSlots(script)) {
+            if (newv->slot < TotalSlots(script)) {
                 types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
                 VarType &vt = a->varTypes[newv->slot];
                 if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE &&
                     fixDoubleSlot(newv->slot)) {
-                    FrameEntry *fe = frame.getOrTrack(newv->slot);
+                    FrameEntry *fe = frame.getSlotEntry(newv->slot);
                     if (vt.type == JSVAL_TYPE_INT32) {
                         fixedDoubleEntries.append(newv->slot);
                         frame.ensureDouble(fe);
@@ -7162,10 +7259,10 @@ mjit::Compiler::restoreAnalysisTypes()
         return;
 
     /* Update variable types for all new values at this bytecode. */
-    const analyze::SlotValue *newv = analysis->newValues(PC);
+    const SlotValue *newv = analysis->newValues(PC);
     if (newv) {
         while (newv->slot) {
-            if (newv->slot < analyze::TotalSlots(script)) {
+            if (newv->slot < TotalSlots(script)) {
                 VarType &vt = a->varTypes[newv->slot];
                 vt.types = analysis->getValueTypes(newv->value);
                 vt.type = vt.types->getKnownTypeTag(cx);
@@ -7175,10 +7272,10 @@ mjit::Compiler::restoreAnalysisTypes()
     }
 
     /* Restore known types of locals/args. */
-    for (uint32 slot = analyze::ArgSlot(0); slot < analyze::TotalSlots(script); slot++) {
+    for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
         JSValueType type = a->varTypes[slot].type;
         if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || fixDoubleSlot(slot))) {
-            FrameEntry *fe = frame.getOrTrack(slot);
+            FrameEntry *fe = frame.getSlotEntry(slot);
             JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(type));
             if (!fe->isTypeKnown())
                 frame.learnType(fe, type, false);
@@ -7234,7 +7331,7 @@ mjit::Compiler::updateVarType()
         JS_NOT_REACHED("Bad op");
     }
 
-    uint32 slot = analyze::GetBytecodeSlot(script, PC);
+    uint32 slot = GetBytecodeSlot(script, PC);
 
     if (analysis->trackSlot(slot)) {
         VarType &vt = a->varTypes[slot];
