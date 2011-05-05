@@ -1355,18 +1355,18 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
   }
 
   SECStatus verify_result;
-if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-  CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
-  verify_result = CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE, 
-					    nss_usage, NULL, NULL);
-}
-else {
-  CERTValOutParam cvout[1];
-  cvout[0].type = cert_po_end;
-  verify_result = CERT_PKIXVerifyCert(mCert, nss_usage,
-				      survivingParams->GetRawPointerForNSS(),
-				      cvout, NULL);
-}
+  if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+    CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
+    verify_result = CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE, 
+                                              nss_usage, NULL, NULL);
+  }
+  else {
+    CERTValOutParam cvout[1];
+    cvout[0].type = cert_po_end;
+    verify_result = CERT_PKIXVerifyCert(mCert, nss_usage,
+                                        survivingParams->GetRawPointerForNSS(),
+                                        cvout, NULL);
+  }
   
   if (verify_result == SECSuccess)
   {

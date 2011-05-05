@@ -295,36 +295,36 @@ nsresult nsCMSMessage::CommonVerifySignature(unsigned char* aDigestData, PRUint3
   // See bug 324474. We want to make sure the signing cert is 
   // still valid at the current time.
 
-if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-  if (CERT_VerifyCertificateNow(CERT_GetDefaultCertDB(), si->cert, PR_TRUE, 
-                                certificateUsageEmailSigner,
-                                si->cmsg->pwfn_arg, NULL) != SECSuccess) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
-    rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
-    goto loser;
+  if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+    if (CERT_VerifyCertificateNow(CERT_GetDefaultCertDB(), si->cert, PR_TRUE, 
+                                  certificateUsageEmailSigner,
+                                  si->cmsg->pwfn_arg, NULL) != SECSuccess) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
+      rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
+      goto loser;
+    }
   }
-}
-else {
-  CERTValOutParam cvout[1];
-  cvout[0].type = cert_po_end;
+  else {
+    CERTValOutParam cvout[1];
+    cvout[0].type = cert_po_end;
 
-  inss = do_GetService(kNSSComponentCID, &rv);
-  if (!inss) {
-    goto loser;
-  }
+    inss = do_GetService(kNSSComponentCID, &rv);
+    if (!inss) {
+      goto loser;
+    }
 
-  if (NS_FAILED(inss->GetDefaultCERTValInParam(survivingParams))) {
-    goto loser;
+    if (NS_FAILED(inss->GetDefaultCERTValInParam(survivingParams))) {
+      goto loser;
+    }
+    rv = CERT_PKIXVerifyCert(si->cert, certificateUsageEmailSigner,
+			    survivingParams->GetRawPointerForNSS(),
+			    cvout, si->cmsg->pwfn_arg);
+    if (rv != SECSuccess) {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
+      rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
+      goto loser;
+    }
   }
-  rv = CERT_PKIXVerifyCert(si->cert, certificateUsageEmailSigner,
-                           survivingParams->GetRawPointerForNSS(),
-                           cvout, si->cmsg->pwfn_arg);
-  if (rv != SECSuccess) {
-    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSMessage::CommonVerifySignature - signing cert not trusted now\n"));
-    rv = NS_ERROR_CMS_VERIFY_UNTRUSTED;
-    goto loser;
-  }
-}
 
   // We verify the first signer info,  only //
   if (NSS_CMSSignedData_VerifySignerInfo(sigd, 0, CERT_GetDefaultCertDB(), certUsageEmailSigner) != SECSuccess) {

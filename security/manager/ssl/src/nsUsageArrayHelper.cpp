@@ -217,8 +217,8 @@ else {
   
   verifyResult =
   CERT_PKIXVerifyCert(mCert, certificateUsageCheckAllUsages,
-		      survivingParams->GetRawPointerForNSS(),
-		      cvout, NULL);
+                      survivingParams->GetRawPointerForNSS(),
+                      cvout, NULL);
 
   usages = cvout[0].value.scalar.usages;
 }

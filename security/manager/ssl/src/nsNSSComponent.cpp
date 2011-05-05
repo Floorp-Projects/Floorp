@@ -1855,10 +1855,10 @@ nsNSSComponent::InitializeNSS(PRBool showWarningBox)
           nsCERTValInParamWrapper::ocsp_off,
           nsCERTValInParamWrapper::ocsp_relaxed,
           nsCERTValInParamWrapper::any_revo_relaxed,
-	  "ocsp");
+          FIRST_REVO_METHOD_DEFAULT);
       if (NS_FAILED(rv)) {
-	nsPSMInitPanic::SetPanic();
-	return rv;
+        nsPSMInitPanic::SetPanic();
+        return rv;
       }
       
       RegisterMyOCSPAIAInfoCallback();
@@ -2368,7 +2368,7 @@ nsNSSComponent::Observe(nsISupports *aSubject, const char *aTopic,
                || prefName.Equals("security.CRL_download.enabled")
                || prefName.Equals("security.fresh_revocation_info.require")
                || prefName.Equals("security.missing_cert_download.enabled")
-	       || prefName.Equals("security.first_network_revocation_method")
+               || prefName.Equals("security.first_network_revocation_method")
                || prefName.Equals("security.OCSP.require")) {
       MutexAutoLock lock(mutex);
       setValidationOptions(mPrefBranch);
