@@ -209,49 +209,6 @@ nsNodeInfo::GetNamespaceURI(nsAString& aNameSpaceURI) const
 
 
 PRBool
-nsNodeInfo::Equals(const nsAString& aName) const
-{
-  return mInner.mName->Equals(aName);
-}
-
-
-PRBool
-nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix) const
-{
-  if (!mInner.mName->Equals(aName)) {
-    return PR_FALSE;
-  }
-
-  if (!mInner.mPrefix) {
-    return aPrefix.IsEmpty();
-  }
-
-  return mInner.mPrefix->Equals(aPrefix);
-}
-
-
-PRBool
-nsNodeInfo::Equals(const nsAString& aName, PRInt32 aNamespaceID) const
-{
-  return mInner.mNamespaceID == aNamespaceID &&
-    mInner.mName->Equals(aName);
-}
-
-
-PRBool
-nsNodeInfo::Equals(const nsAString& aName, const nsAString& aPrefix,
-                   PRInt32 aNamespaceID) const
-{
-  if (!mInner.mNamespaceID == aNamespaceID ||
-      !mInner.mName->Equals(aName))
-    return PR_FALSE;
-
-  return mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) :
-    aPrefix.IsEmpty();
-}
-
-
-PRBool
 nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
 {
   PRInt32 nsid =

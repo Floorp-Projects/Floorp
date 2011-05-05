@@ -72,8 +72,8 @@ class nsIPrincipal;
 
 // IID for the nsINodeInfo interface
 #define NS_INODEINFO_IID      \
-{ 0xdfb15226, 0x79ad, 0x4c7c, \
- { 0x9d, 0x73, 0x3d, 0xbc, 0x13, 0x17, 0x02, 0x74 } }
+{ 0xc5188ea1, 0x0a9c, 0x43e6, \
+ { 0x95, 0x90, 0xcc, 0x43, 0x6b, 0xe9, 0xcf, 0xa0 } }
 
 class nsINodeInfo : public nsISupports
 {
@@ -254,13 +254,30 @@ public:
     return mInner.mNamespaceID == aNamespaceID;
   }
 
-  virtual PRBool Equals(const nsAString& aName) const = 0;
-  virtual PRBool Equals(const nsAString& aName,
-                        const nsAString& aPrefix) const = 0;
-  virtual PRBool Equals(const nsAString& aName,
-                        PRInt32 aNamespaceID) const = 0;
-  virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
-                        PRInt32 aNamespaceID) const = 0;
+  PRBool Equals(const nsAString& aName) const
+  {
+    return mInner.mName->Equals(aName);
+  }
+
+  PRBool Equals(const nsAString& aName, const nsAString& aPrefix) const
+  {
+    return mInner.mName->Equals(aName) &&
+      (mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) : aPrefix.IsEmpty());
+  }
+
+  PRBool Equals(const nsAString& aName, PRInt32 aNamespaceID) const
+  {
+    return mInner.mNamespaceID == aNamespaceID &&
+      mInner.mName->Equals(aName);
+  }
+
+  PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
+                PRInt32 aNamespaceID) const
+  {
+    return mInner.mName->Equals(aName) && mInner.mNamespaceID == aNamespaceID &&
+      (mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) : aPrefix.IsEmpty());
+  }
+
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
 
   PRBool QualifiedNameEquals(nsIAtom* aNameAtom) const
