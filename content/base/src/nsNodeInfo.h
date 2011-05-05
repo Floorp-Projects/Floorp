@@ -60,12 +60,6 @@ public:
 
   // nsINodeInfo
   virtual nsresult GetNamespaceURI(nsAString& aNameSpaceURI) const;
-  virtual PRBool Equals(const nsAString& aName) const;
-  virtual PRBool Equals(const nsAString& aName,
-                        const nsAString& aPrefix) const;
-  virtual PRBool Equals(const nsAString& aName, PRInt32 aNamespaceID) const;
-  virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
-                        PRInt32 aNamespaceID) const;
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const;
 
   // nsNodeInfo
