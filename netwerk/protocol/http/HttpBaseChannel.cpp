@@ -54,6 +54,8 @@
 #include "nsEscape.h"
 #include "nsPrintfCString.h"
 
+#include "prnetdb.h"
+
 namespace mozilla {
 namespace net {
 
@@ -1174,6 +1176,66 @@ NS_IMETHODIMP
 HttpBaseChannel::SetCacheKeysRedirectChain(nsTArray<nsCString> *cacheKeys)
 {
   mRedirectedCachekeys = cacheKeys;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetLocalAddress(nsACString& addr)
+{
+  if (mSelfAddr.raw.family == PR_AF_UNSPEC)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  addr.SetCapacity(64);
+  PR_NetAddrToString(&mSelfAddr, addr.BeginWriting(), 64);
+  addr.SetLength(strlen(addr.BeginReading()));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetLocalPort(PRInt32* port)
+{
+  NS_ENSURE_ARG_POINTER(port);
+
+  if (mSelfAddr.raw.family == PR_AF_INET) {
+    *port = (PRInt32)PR_ntohs(mSelfAddr.inet.port);
+  }
+  else if (mSelfAddr.raw.family == PR_AF_INET6) {
+    *port = (PRInt32)PR_ntohs(mSelfAddr.ipv6.port);
+  }
+  else
+    return NS_ERROR_NOT_AVAILABLE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetRemoteAddress(nsACString& addr)
+{
+  if (mPeerAddr.raw.family == PR_AF_UNSPEC)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  addr.SetCapacity(64);
+  PR_NetAddrToString(&mPeerAddr, addr.BeginWriting(), 64);
+  addr.SetLength(strlen(addr.BeginReading()));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetRemotePort(PRInt32* port)
+{
+  NS_ENSURE_ARG_POINTER(port);
+
+  if (mPeerAddr.raw.family == PR_AF_INET) {
+    *port = (PRInt32)PR_ntohs(mPeerAddr.inet.port);
+  }
+  else if (mPeerAddr.raw.family == PR_AF_INET6) {
+    *port = (PRInt32)PR_ntohs(mPeerAddr.ipv6.port);
+  }
+  else
+    return NS_ERROR_NOT_AVAILABLE;
+
   return NS_OK;
 }
 
