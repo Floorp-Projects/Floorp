@@ -167,7 +167,7 @@ Debug::getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp)
     JS_ASSERT(fp->isScriptFrame());
     FrameMap::AddPtr p = frames.lookupForAdd(fp);
     if (!p) {
-        // Create script frame. First copy the arguments.
+        // Create script Debug.Frame. First copy the arguments.
         JSObject *argsobj;
         if (fp->hasArgs()) {
             uintN argc = fp->numActualArgs();
@@ -272,6 +272,7 @@ Debug::wrapDebuggeeValue(JSContext *cx, Value *vp)
 bool
 Debug::unwrapDebuggeeValue(JSContext *cx, Value *vp)
 {
+    assertSameCompartment(cx, object, *vp);
     if (vp->isObject()) {
         JSObject *dobj = &vp->toObject();
         if (dobj->clasp != &DebugObject_class && dobj->clasp != &DebugFunction_class) {
@@ -280,11 +281,6 @@ Debug::unwrapDebuggeeValue(JSContext *cx, Value *vp)
             return false;
         }
         *vp = dobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW);
-    }
-
-    if (!cx->compartment->wrap(cx, vp)) {
-        vp->setUndefined();
-        return false;
     }
     return true;
 }
@@ -309,6 +305,39 @@ Debug::handleUncaughtException(AutoCompartment &ac, Value *vp, bool callHook)
         }
     }
     return JSTRAP_ERROR;
+}
+
+bool
+Debug::newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
+{
+    JS_ASSERT_IF(ok, !ac.context->isExceptionPending());
+
+    JSContext *cx = ac.context;
+    jsid key;
+    if (ok) {
+        ac.leave();
+        key = ATOM_TO_JSID(cx->runtime->atomState.returnAtom);
+    } else if (cx->isExceptionPending()) {
+        key = ATOM_TO_JSID(cx->runtime->atomState.throwAtom);
+        val = cx->getPendingException();
+        cx->clearPendingException();
+        ac.leave();
+    } else {
+        ac.leave();
+        vp->setNull();
+        return true;
+    }
+
+    JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
+    if (!obj ||
+        !wrapDebuggeeValue(cx, &val) ||
+        !js_DefineNativeProperty(cx, obj, key, val, PropertyStub, StrictPropertyStub,
+                                 JSPROP_ENUMERATE, 0, 0, NULL))
+    {
+        return false;
+    }
+    vp->setObject(*obj);
+    return true;
 }
 
 JSTrapStatus
@@ -340,14 +369,12 @@ Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value
         return handleUncaughtException(ac, vp, callHook);
     }
 
-    if (!js_NativeGet(cx, obj, obj, shape, 0, vp))
+    if (!js_NativeGet(cx, obj, obj, shape, 0, vp) || !unwrapDebuggeeValue(cx, vp))
         return handleUncaughtException(ac, vp, callHook);
 
     ac.leave();
-    if (!unwrapDebuggeeValue(cx, vp)) {
-        // Swallow this exception rather than report it in the debuggee's
-        // compartment.  But return JSTRAP_ERROR to terminate the debuggee.
-        cx->clearPendingException();
+    if (!cx->compartment->wrap(cx, vp)) {
+        vp->setUndefined();
         return JSTRAP_ERROR;
     }
     return shape->id == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
@@ -774,7 +801,6 @@ DebugFrame_getThis(JSContext *cx, uintN argc, Value *vp)
         if (!ComputeThis(cx, fp))
             return false;
         *vp = fp->thisValue();
-        ac.leave();
     }
     return Debug::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, vp);
 }
@@ -938,9 +964,72 @@ DebugFunction_getName(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
+static JSBool
+DebugFunction_apply(JSContext *cx, uintN argc, Value *vp)
+{
+    // Don't require a Debug.Function. Any Debug.Object might be callable.
+    // Check callability using JSObject::isCallable below.
+    THIS_DEBUGOBJECT_REFERENT(cx, vp, "apply", obj);
+    Debug *dbg = Debug::fromChildJSObject(&vp[1].toObject());
+
+    // Any JS exceptions thrown must be in the debugger compartment, so do
+    // sanity checks and fallible conversions before entering the debuggee.
+    if (!obj->isCallable()) {
+        ReportIncompatibleMethod(cx, vp, &DebugFunction_class);
+        return false;
+    }
+
+    // Unwrap Debug.Objects. This happens in the debugger's compartment since
+    // that is where any exceptions must be reported.
+    Value calleev = vp[1];
+    Value thisv = argc > 0 ? vp[2] : UndefinedValue();
+    AutoValueVector argv(cx);
+    if (!dbg->unwrapDebuggeeValue(cx, &calleev) || !dbg->unwrapDebuggeeValue(cx, &thisv))
+        return false;
+    if (argc >= 2 && !vp[3].isNullOrUndefined()) {
+        if (!vp[3].isObject()) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_APPLY_ARGS, js_apply_str);
+            return false;
+        }
+        JSObject *argsobj = &vp[3].toObject();
+        uintN length;
+        if (!js_GetLengthProperty(cx, argsobj, &length))
+            return false;
+        length = uintN(JS_MIN(length, JS_ARGS_LENGTH_MAX));
+
+        if (!argv.growBy(length) || !GetElements(cx, argsobj, length, argv.begin()))
+            return false;
+        for (uintN i = 0; i < length; i++) {
+            if (!dbg->unwrapDebuggeeValue(cx, &argv[i]))
+                return false;
+        }
+    }
+
+    // Enter the debuggee compartment and rewrap all input value for that compartment.
+    // (Rewrapping always takes place in the destination compartment.)
+    AutoCompartment ac(cx, obj);
+    if (!ac.enter() || !cx->compartment->wrap(cx, &calleev) || !cx->compartment->wrap(cx, &thisv))
+        return false;
+    for (Value *p = argv.begin(); p != argv.end(); ++p) {
+        if (!cx->compartment->wrap(cx, p))
+            return false;
+    }
+
+    // Call the function. Use newCompletionValue to return to the debugger
+    // compartment and populate *vp.
+    Value rval;
+    bool ok = ExternalInvoke(cx, thisv, calleev, argv.length(), argv.begin(), &rval);
+    return dbg->newCompletionValue(ac, ok, rval, vp);
+}
+
 static JSPropertySpec DebugFunction_properties[] = {
     JS_PSG("name", DebugFunction_getName, 0),
     JS_PS_END
+};
+
+static JSFunctionSpec DebugFunction_methods[] = {
+    JS_FN("apply", DebugFunction_apply, 0, 0),
+    JS_FS_END
 };
 
 // === Glue
@@ -973,7 +1062,8 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
 
     JSObject *functionProto = js_InitClass(cx, debugCtor, objectProto, &DebugFunction_class,
                                            DebugFunction_construct, 0,
-                                           DebugFunction_properties, NULL, NULL, NULL);
+                                           DebugFunction_properties, DebugFunction_methods,
+                                           NULL, NULL);
     if (!functionProto)
         return false;
 
