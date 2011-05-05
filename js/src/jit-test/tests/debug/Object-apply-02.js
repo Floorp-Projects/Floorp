@@ -1,5 +1,5 @@
 // |jit-test| debug
-// tests calling native functions via Debug.Function.prototype.apply
+// tests calling native functions via Debug.Object.prototype.apply
 
 load(libdir + "asserts.js");
 
