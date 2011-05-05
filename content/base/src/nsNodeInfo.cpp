@@ -118,6 +118,26 @@ nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 
   mOwnerManager = aOwnerManager;
   NS_ADDREF(mOwnerManager);
+
+  // Now compute our cached members.
+
+  // Qualified name.  If we have no prefix, use ToString on
+  // mInner.mName so that we get to share its buffer.
+  if (aPrefix) {
+    aPrefix->ToString(mQualifiedName);
+    mQualifiedName.Append(PRUnichar(':'));
+    mQualifiedName.Append(nsDependentAtomString(mInner.mName));
+  } else {
+    mInner.mName->ToString(mQualifiedName);
+  }
+
+  // Qualified name in corrected case
+  if (aNamespaceID == kNameSpaceID_XHTML && GetDocument() &&
+      GetDocument()->IsHTML()) {
+    nsContentUtils::ASCIIToUpper(mQualifiedName, mQualifiedNameCorrectedCase);
+  } else {
+    mQualifiedNameCorrectedCase = mQualifiedName;
+  }
 }
 
 
@@ -171,24 +191,6 @@ NS_INTERFACE_TABLE_HEAD(nsNodeInfo)
 NS_INTERFACE_MAP_END
 
 // nsINodeInfo
-
-void
-nsNodeInfo::GetQualifiedName(nsAString& aQualifiedName) const
-{
-  if (mInner.mPrefix) {
-    mInner.mPrefix->ToString(aQualifiedName);
-
-    aQualifiedName.Append(PRUnichar(':'));
-  } else {
-    aQualifiedName.Truncate();
-  }
-
-  nsAutoString name;
-  mInner.mName->ToString(name);
-
-  aQualifiedName.Append(name);
-}
-
 
 void
 nsNodeInfo::GetLocalName(nsAString& aLocalName) const
@@ -271,44 +273,6 @@ nsNodeInfo::NamespaceEquals(const nsAString& aNamespaceURI) const
     nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNamespaceURI);
 
   return nsINodeInfo::NamespaceEquals(nsid);
-}
-
-PRBool
-nsNodeInfo::QualifiedNameEqualsInternal(const nsAString& aQualifiedName) const
-{
-  NS_PRECONDITION(mInner.mPrefix, "Must have prefix");
-  
-  nsAString::const_iterator start;
-  aQualifiedName.BeginReading(start);
-
-  nsAString::const_iterator colon(start);
-
-  nsDependentAtomString prefix(mInner.mPrefix);
-
-  if (prefix.Length() >= aQualifiedName.Length()) {
-    return PR_FALSE;
-  }
-
-  colon.advance(prefix.Length());
-
-  // If the character at the prefix length index is not a colon,
-  // aQualifiedName is not equal to this string.
-  if (*colon != ':') {
-    return PR_FALSE;
-  }
-
-  // Compare the prefix to the string from the start to the colon
-  if (!prefix.Equals(Substring(start, colon)))
-    return PR_FALSE;
-
-  ++colon; // Skip the ':'
-
-  nsAString::const_iterator end;
-  aQualifiedName.EndReading(end);
-
-  // Compare the local name to the string between the colon and the
-  // end of aQualifiedName
-  return mInner.mName->Equals(Substring(colon, end));
 }
 
 // static
