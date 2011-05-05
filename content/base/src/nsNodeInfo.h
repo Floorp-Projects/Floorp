@@ -59,7 +59,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsNodeInfo)
 
   // nsINodeInfo
-  virtual void GetQualifiedName(nsAString &aQualifiedName) const;
   virtual void GetLocalName(nsAString& aLocalName) const;
   virtual nsresult GetNamespaceURI(nsAString& aNameSpaceURI) const;
   virtual PRBool Equals(const nsAString& aName) const;
@@ -69,8 +68,6 @@ public:
   virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
                         PRInt32 aNamespaceID) const;
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const;
-  virtual PRBool
-    QualifiedNameEqualsInternal(const nsAString& aQualifiedName) const;
 
   // nsNodeInfo
   // Create objects with Create

@@ -71,10 +71,10 @@ class nsIURI;
 class nsIPrincipal;
 
 // IID for the nsINodeInfo interface
-// 35e53115-b884-4cfc-aa95-bdf0aa5152cf
+// 4aa7526e-37d3-49e3-a566-f251b2ef2a21
 #define NS_INODEINFO_IID      \
-{ 0x35e53115, 0xb884, 0x4cfc, \
- { 0xaa, 0x95, 0xbd, 0xf0, 0xaa, 0x51, 0x52, 0xcf } }
+{ 0x4aa7526e, 0x37d3, 0x49e3, \
+ { 0xa5, 0x66, 0xf2, 0x51, 0xb2, 0xef, 0x2a, 0x21 } }
 
 class nsINodeInfo : public nsISupports
 {
@@ -117,7 +117,18 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "html:body".
    */
-  virtual void GetQualifiedName(nsAString& aQualifiedName) const = 0;
+  void GetQualifiedName(nsAString& aQualifiedName) const {
+    aQualifiedName = mQualifiedName;
+  }
+
+  /*
+   * As above, but return the qualified name in corrected case as
+   * needed.  For example, for HTML elements in HTML documents, this
+   * will return an ASCII-uppercased version of the qualified name.
+   */
+  void GetQualifiedNameCorrectedCase(nsAString& aQualifiedName) const {
+    aQualifiedName = mQualifiedNameCorrectedCase;
+  }
 
   /*
    * Get the local name from this node as a string, GetLocalName() gets the
@@ -270,15 +281,12 @@ public:
     if (!GetPrefixAtom())
       return Equals(aNameAtom);
 
-    return QualifiedNameEqualsInternal(nsDependentAtomString(aNameAtom));
+    return aNameAtom->Equals(mQualifiedName);
   }
 
   PRBool QualifiedNameEquals(const nsAString& aQualifiedName) const
   {
-    if (!GetPrefixAtom())
-      return mInner.mName->Equals(aQualifiedName);
-
-    return QualifiedNameEqualsInternal(aQualifiedName);    
+    return mQualifiedName == aQualifiedName;
   }
 
   /*
@@ -290,9 +298,6 @@ public:
   }
 
 protected:
-  virtual PRBool
-    QualifiedNameEqualsInternal(const nsAString& aQualifiedName) const = 0;
-
   /*
    * nsNodeInfoInner is used for two things:
    *
@@ -339,6 +344,18 @@ protected:
 
   nsCOMPtr<nsIAtom> mIDAttributeAtom;
   nsNodeInfoManager* mOwnerManager; // Strong reference!
+
+  /*
+   * Members for various functions of mName+mPrefix that we can be
+   * asked to compute.
+   */
+
+  // Qualified name
+  nsString mQualifiedName;
+
+  // Qualified name in "corrected case"; this will depend on our
+  // document and on mNamespaceID.
+  nsString mQualifiedNameCorrectedCase;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINodeInfo, NS_INODEINFO_IID)
