@@ -2961,43 +2961,11 @@ else
     AC_MSG_RESULT(no)
 fi
 
-dnl ========================================================
-dnl C++ rtti
-dnl Should be smarter and check that the compiler does indeed have rtti
-dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(cpp-rtti,
-[  --enable-cpp-rtti       Enable C++ RTTI ],
-[ _MOZ_USE_RTTI=1 ],
-[ _MOZ_USE_RTTI= ])
-
-if test "$_MOZ_USE_RTTI"; then
-   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_ON
-else
-   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_OFF
-fi
-
-AC_SUBST(_MOZ_RTTI_FLAGS_ON)
-
-dnl Check whether we can use gcc's c++0x mode
 AC_LANG_CPLUSPLUS
 
 if test "$GNU_CXX"; then
     _SAVE_CXXFLAGS=$CXXFLAGS
     CXXFLAGS="$CXXFLAGS -std=gnu++0x"
-
-    if test -z "$_MOZ_USE_RTTI"; then
-        CXXFLAGS="$CXXFLAGS $_MOZ_RTTI_FLAGS"
-        AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
-            ac_cv_cxx0x_headers_bug,
-            [AC_TRY_COMPILE([#include <memory>], [],
-                            ac_cv_cxx0x_headers_bug="no",
-                            ac_cv_cxx0x_headers_bug="yes")])
-        CXXFLAGS="$_SAVE_CXXFLAGS"
-        if test "$ac_cv_cxx0x_headers_bug" = "no"; then
-            CXXFLAGS="$CXXFLAGS -std=gnu++0x"
-        fi
-    fi
 fi
 
 dnl Check for usable char16_t (2 bytes, unsigned)
@@ -7960,6 +7928,24 @@ if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
 fi
 fi # SKIP_COMPILER_CHECKS
+
+dnl ========================================================
+dnl C++ rtti
+dnl Should be smarter and check that the compiler does indeed have rtti
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(cpp-rtti,
+[  --enable-cpp-rtti       Enable C++ RTTI ],
+[ _MOZ_USE_RTTI=1 ],
+[ _MOZ_USE_RTTI= ])
+
+if test "$_MOZ_USE_RTTI"; then
+   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_ON
+else
+   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_OFF
+fi
+
+AC_SUBST(_MOZ_RTTI_FLAGS_ON)
 
 dnl ========================================================
 dnl C++ exceptions (g++/VC/irix6/Sun only - for now)
