@@ -142,20 +142,35 @@ class Debug {
     //
     bool wrapDebuggeeValue(JSContext *cx, Value *vp);
 
-    // Inverse of wrapDebuggeeValue.
+    // NOT the inverse of wrapDebuggeeValue.
     //
-    // Precondition: cx is in a debuggee compartment.
+    // Precondition: cx is in the debugger compartment. *vp is a value in that
+    // compartment. (*vp is a "debuggee value", meaning it is the debugger's
+    // reflection of a value in the debuggee.)
     //
-    // If *vp is a Debug.Object, store the referent in *vp, appropriately
-    // rewrapped for the debuggee's compartment, regardless of what compartment
-    // the actual referent inhabits. Otherwise, if *vp is an object, throw a
-    // TypeError, because it is not a debuggee value. Otherwise *vp is a
-    // primitive, so copy it to the debuggee's compartment.
+    // If *vp is a Debug.Object, store the referent in *vp. Otherwise, if *vp
+    // is an object, throw a TypeError, because it is not a debuggee
+    // value. Otherwise *vp is a primitive, so leave it alone.
+    //
+    // The value is not rewrapped for any debuggee compartment.
     //
     bool unwrapDebuggeeValue(JSContext *cx, Value *vp);
 
     // Store the Debug.Frame object for the frame fp in *vp.
     bool getScriptFrame(JSContext *cx, StackFrame *fp, Value *vp);
+
+    // Precondition: we are in the debuggee compartment (ac is entered) and ok
+    // is true if the operation in the debuggee compartment succeeded, false on
+    // error or exception.
+    //
+    // Postcondition: we are in the debugger compartment (ac is not entered)
+    // whether creating the new completion value succeeded or not.
+    //
+    // On success, a completion value is in vp and ac.context does not have a
+    // pending exception. (This ordinarily returns true even if the ok argument
+    // is false.)
+    //
+    bool newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp);
 };
 
 bool
