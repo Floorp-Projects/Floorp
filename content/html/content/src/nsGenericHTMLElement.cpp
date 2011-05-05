@@ -136,7 +136,7 @@ static nsHashtable sGEUS_ElementCounts;
 void GEUS_ElementCreated(nsINodeInfo *aNodeInfo)
 {
   nsAutoString name;
-  aNodeInfo->GetLocalName(name);
+  aNodeInfo->GetName(name);
 
   nsStringKey key(name);
 

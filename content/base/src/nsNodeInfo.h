@@ -59,7 +59,6 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsNodeInfo)
 
   // nsINodeInfo
-  virtual void GetLocalName(nsAString& aLocalName) const;
   virtual nsresult GetNamespaceURI(nsAString& aNameSpaceURI) const;
   virtual PRBool Equals(const nsAString& aName) const;
   virtual PRBool Equals(const nsAString& aName,

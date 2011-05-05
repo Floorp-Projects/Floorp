@@ -470,7 +470,7 @@ nsDOMAttribute::GetPrefix(nsAString& aPrefix)
 NS_IMETHODIMP
 nsDOMAttribute::GetLocalName(nsAString& aLocalName)
 {
-  mNodeInfo->GetLocalName(aLocalName);
+  mNodeInfo->GetName(aLocalName);
   return NS_OK;
 }
 
