@@ -1,5 +1,5 @@
 // |jit-test| debug
-// Debug.Function.prototype.name
+// Debug.Object.prototype.name
 
 var g = newGlobal('new-compartment');
 var dbg = Debug(g);

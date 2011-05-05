@@ -62,7 +62,6 @@ enum {
 };
 
 extern Class DebugObject_class;
-extern Class DebugFunction_class;
 
 enum {
     JSSLOT_DEBUGOBJECT_OWNER,
@@ -133,7 +132,6 @@ CheckThisClass(JSContext *cx, Value *vp, Class *clasp, const char *fnname)
 enum {
     JSSLOT_DEBUG_FRAME_PROTO,
     JSSLOT_DEBUG_OBJECT_PROTO,
-    JSSLOT_DEBUG_FUNCTION_PROTO,
     JSSLOT_DEBUG_COUNT
 };
 
@@ -154,9 +152,7 @@ JS_STATIC_ASSERT(uintN(JSSLOT_DEBUGFRAME_OWNER) == uintN(JSSLOT_DEBUGOBJECT_OWNE
 Debug *
 Debug::fromChildJSObject(JSObject *obj)
 {
-    JS_ASSERT(obj->clasp == &DebugFrame_class ||
-              obj->clasp == &DebugObject_class ||
-              obj->clasp == &DebugFunction_class);
+    JS_ASSERT(obj->clasp == &DebugFrame_class || obj->clasp == &DebugObject_class);
     JSObject *dbgobj = &obj->getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER).toObject();
     return fromJSObject(dbgobj);
 }
@@ -247,14 +243,8 @@ Debug::wrapDebuggeeValue(JSContext *cx, Value *vp)
             vp->setObject(*p->value);
         } else {
             // Create a new Debug.Object for ccwobj.
-            bool fun = refobj->isFunction();
-            uintN slot = fun ? JSSLOT_DEBUG_FUNCTION_PROTO : JSSLOT_DEBUG_OBJECT_PROTO;
-            JSObject *proto = &object->getReservedSlot(slot).toObject();
-            JSObject *dobj =
-                NewNonFunction<WithProto::Given>(cx,
-                                                 fun ? &DebugFunction_class : &DebugObject_class,
-                                                 proto,
-                                                 NULL);
+            JSObject *proto = &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject();
+            JSObject *dobj = NewNonFunction<WithProto::Given>(cx, &DebugObject_class, proto, NULL);
             if (!dobj || !dobj->ensureClassReservedSlots(cx))
                 return false;
             dobj->setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*object));
@@ -275,7 +265,7 @@ Debug::unwrapDebuggeeValue(JSContext *cx, Value *vp)
     assertSameCompartment(cx, object, *vp);
     if (vp->isObject()) {
         JSObject *dobj = &vp->toObject();
-        if (dobj->clasp != &DebugObject_class && dobj->clasp != &DebugFunction_class) {
+        if (dobj->clasp != &DebugObject_class) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
                                  "Debug", "Debug.Object", dobj->clasp->name);
             return false;
@@ -864,51 +854,41 @@ Class DebugObject_class = {
 };
 
 static JSObject *
-DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname, bool funflag)
+DebugObject_checkThis(JSContext *cx, Value *vp, const char *fnname)
 {
     if (!vp[1].isObject()) {
         ReportObjectRequired(cx);
         return NULL;
     }
     JSObject *thisobj = &vp[1].toObject();
-    if (thisobj->clasp != &DebugFunction_class &&
-        (funflag || thisobj->clasp != &DebugObject_class))
-    {
+    if (thisobj->clasp != &DebugObject_class) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                             funflag ? "Debug.Function" : "Debug.Object", fnname,
-                             thisobj->getClass()->name);
+                             "Debug.Object", fnname, thisobj->getClass()->name);
         return NULL;
     }
 
-    // Check for Debug.Object.prototype and Debug.Function.prototype, which are
-    // of class Debug{Object,Function}_class but aren't real Debug.Objects.
+    // Check for Debug.Object.prototype, which is of class DebugObject_class
+    // but isn't a real working Debug.Object.
     if (thisobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).isUndefined()) {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                             funflag ? "Debug.Function" : "Debug.Object", fnname,
-                             "prototype object");
+                             "Debug.Object", fnname, "prototype object");
         return NULL;
     }
     return thisobj;
 }
 
-#define THIS_DEBUGOBJECT_CCW_FUNFLAG(cx, vp, fnname, ccwobj, funflag)        \
-    JSObject *ccwobj = DebugObject_checkThis(cx, vp, fnname, funflag);       \
+#define THIS_DEBUGOBJECT_CCW(cx, vp, fnname, ccwobj)                         \
+    JSObject *ccwobj = DebugObject_checkThis(cx, vp, fnname);                \
     if (!ccwobj)                                                             \
         return false;                                                        \
     ccwobj = &ccwobj->getReservedSlot(JSSLOT_DEBUGOBJECT_CCW).toObject()
 
-#define THIS_DEBUGOBJECT_CCW(cx, vp, fnname, ccwobj)                         \
-    THIS_DEBUGOBJECT_CCW_FUNFLAG(cx, vp, fnname, ccwobj, false)
-
-#define THIS_DEBUGOBJECT_REFERENT_FUNFLAG(cx, vp, fnname, refobj, funflag)   \
-    THIS_DEBUGOBJECT_CCW_FUNFLAG(cx, vp, fnname, refobj, funflag);           \
+#define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, refobj)                    \
+    THIS_DEBUGOBJECT_CCW(cx, vp, fnname, refobj);                            \
     if (refobj->isWrapper()) /* XXX TODO would love to assert instead */     \
         refobj = JSWrapper::wrappedObject(refobj);                           \
     else if (!(cx)->compartment->wrap(cx, &refobj))                          \
         return false
-
-#define THIS_DEBUGOBJECT_REFERENT(cx, vp, fnname, refobj)                    \
-    THIS_DEBUGOBJECT_REFERENT_FUNFLAG(cx, vp, fnname, refobj, false)
 
 static JSBool
 DebugObject_construct(JSContext *cx, uintN argc, Value *vp)
@@ -929,53 +909,31 @@ DebugObject_getClass(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static JSFunctionSpec DebugObject_methods[] = {
-    JS_FN("getClass", DebugObject_getClass, 0, 0),
-    JS_FS_END
-};
-
-// === Debug.Function
-
-Class DebugFunction_class = {
-    "Function", JSCLASS_HAS_PRIVATE | JSCLASS_HAS_RESERVED_SLOTS(JSSLOT_DEBUGOBJECT_COUNT),
-    PropertyStub, PropertyStub, PropertyStub, StrictPropertyStub,
-    EnumerateStub, ResolveStub, ConvertStub, FinalizeStub,
-};
-
-#define THIS_DEBUGFUNCTION_REFERENT(cx, vp, fnname, refobj)                  \
-    THIS_DEBUGOBJECT_REFERENT_FUNFLAG(cx, vp, fnname, refobj, true)
-
 static JSBool
-DebugFunction_construct(JSContext *cx, uintN argc, Value *vp)
+DebugObject_getName(JSContext *cx, uintN argc, Value *vp)
 {
-    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Function");
-    return false;
-}
-
-static JSBool
-DebugFunction_getName(JSContext *cx, uintN argc, Value *vp)
-{
-    THIS_DEBUGFUNCTION_REFERENT(cx, vp, "get name", funobj);
-    if (JSString *name = funobj->getFunctionPrivate()->atom) {
-        vp->setString(name);
-        return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
+    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get name", obj);
+    if (obj->isFunction()) {
+        if (JSString *name = obj->getFunctionPrivate()->atom) {
+            vp->setString(name);
+            return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
+        }
     }
     vp->setNull();
     return true;
 }
 
 static JSBool
-DebugFunction_apply(JSContext *cx, uintN argc, Value *vp)
+DebugObject_apply(JSContext *cx, uintN argc, Value *vp)
 {
-    // Don't require a Debug.Function. Any Debug.Object might be callable.
-    // Check callability using JSObject::isCallable below.
     THIS_DEBUGOBJECT_REFERENT(cx, vp, "apply", obj);
     Debug *dbg = Debug::fromChildJSObject(&vp[1].toObject());
 
     // Any JS exceptions thrown must be in the debugger compartment, so do
     // sanity checks and fallible conversions before entering the debuggee.
     if (!obj->isCallable()) {
-        ReportIncompatibleMethod(cx, vp, &DebugFunction_class);
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
+                             "Debug.Object", "apply", obj->getClass()->name);
         return false;
     }
 
@@ -1022,13 +980,14 @@ DebugFunction_apply(JSContext *cx, uintN argc, Value *vp)
     return dbg->newCompletionValue(ac, ok, rval, vp);
 }
 
-static JSPropertySpec DebugFunction_properties[] = {
-    JS_PSG("name", DebugFunction_getName, 0),
+static JSPropertySpec DebugObject_properties[] = {
+    JS_PSG("name", DebugObject_getName, 0),
     JS_PS_END
 };
 
-static JSFunctionSpec DebugFunction_methods[] = {
-    JS_FN("apply", DebugFunction_apply, 0, 0),
+static JSFunctionSpec DebugObject_methods[] = {
+    JS_FN("getClass", DebugObject_getClass, 0, 0),
+    JS_FN("apply", DebugObject_apply, 0, 0),
     JS_FS_END
 };
 
@@ -1056,19 +1015,11 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
 
     JSObject *objectProto = js_InitClass(cx, debugCtor, objProto, &DebugObject_class,
                                          DebugObject_construct, 0,
-                                         NULL, DebugObject_methods, NULL, NULL);
+                                         DebugObject_properties, DebugObject_methods, NULL, NULL);
     if (!objectProto)
-        return false;
-
-    JSObject *functionProto = js_InitClass(cx, debugCtor, objectProto, &DebugFunction_class,
-                                           DebugFunction_construct, 0,
-                                           DebugFunction_properties, DebugFunction_methods,
-                                           NULL, NULL);
-    if (!functionProto)
         return false;
 
     debugProto->setReservedSlot(JSSLOT_DEBUG_FRAME_PROTO, ObjectValue(*frameProto));
     debugProto->setReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO, ObjectValue(*objectProto));
-    debugProto->setReservedSlot(JSSLOT_DEBUG_FUNCTION_PROTO, ObjectValue(*functionProto));
     return true;
 }

@@ -1,5 +1,5 @@
 // |jit-test| debug
-// tests calling script functions via Debug.Function.prototype.apply
+// tests calling script functions via Debug.Object.prototype.apply
 
 load(libdir + "asserts.js");
 
