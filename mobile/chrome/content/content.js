@@ -597,7 +597,8 @@ let Content = {
 
       case "Browser:CanCaptureMouse": {
         sendAsyncMessage("Browser:CanCaptureMouse:Return", {
-          contentMightCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).mayHaveTouchEventListeners
+          contentMightCaptureMouse: content.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils).mayHaveTouchEventListeners,
+          messageId: json.messageId
         });
         break;
       }
