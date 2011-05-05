@@ -46,11 +46,11 @@ interface nsIDOMDocument;
 interface nsIDOMCSSStyleRule;
 interface nsIDOMNode;
 
-[scriptable, uuid(aa6562de-2628-44fa-90a8-13d6aee404d6)]
+[scriptable, uuid(e01c9987-1ba2-44f0-a6a7-3148b55b7e6d)]
 interface inIDOMUtils : nsISupports
 {
   // CSS utilities
-  nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement);
+  nsISupportsArray getCSSStyleRules(in nsIDOMElement aElement, [optional] in DOMString aPseudo);
   unsigned long getRuleLine(in nsIDOMCSSStyleRule aRule);
 
   // DOM Node utilities
