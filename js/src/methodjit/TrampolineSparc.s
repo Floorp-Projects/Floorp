@@ -62,8 +62,8 @@ JaegerTrampoline:
 .global JaegerTrampolineReturn
 .type   JaegerTrampolineReturn, #function
 JaegerTrampolineReturn:
-    st      %i0, [%l0 + 0x18]                        /* fp->rval type */
-    st      %i1, [%l0 + 0x1c]                        /* fp->rval data */
+    st      %l3, [%l0 + 0x18]                        /* fp->rval data */
+    st      %l2, [%l0 + 0x1c]                        /* fp->rval type */
     call    PopActiveVMFrame
     mov     %sp, %o0
     ld      [%fp - 12], %i7         ! return address

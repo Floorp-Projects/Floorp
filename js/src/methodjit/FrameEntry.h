@@ -158,7 +158,7 @@ class FrameEntry
 
   private:
     void setType(JSValueType type_) {
-        JS_ASSERT(!isCopy());
+        JS_ASSERT(!isCopy() && type_ != JSVAL_TYPE_UNKNOWN);
         type.setConstant();
 #if defined JS_NUNBOX32
         v_.s.tag = JSVAL_TYPE_TO_TAG(type_);
@@ -272,7 +272,6 @@ class FrameEntry
     FrameEntry *copy;
     bool       copied;
     bool       tracked;
-    bool       inlined;
     bool       temporary;
 
     /*

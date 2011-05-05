@@ -146,7 +146,7 @@ inline ImmutableSync::SyncEntry &
 ImmutableSync::entryFor(FrameEntry *fe)
 {
     JS_ASSERT(fe <= top || frame->isTemporary(fe));
-    SyncEntry &e = entries[frame->indexOfFe(fe)];
+    SyncEntry &e = entries[fe - frame->entries];
     if (e.generation != generation)
         e.reset(generation);
     return e;

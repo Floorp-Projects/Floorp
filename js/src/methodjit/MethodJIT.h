@@ -537,22 +537,6 @@ ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal);
 void
 ExpandInlineFrames(JSContext *cx, bool all);
 
-// Information about an unsynced slot within a frame.
-struct UnsyncedEntry
-{
-    // Slot being updated, in bytes from the start of the outer JSStackFrame.
-    int32 offset;
-
-    bool copy : 1;
-    bool constant : 1;
-    bool knownType : 1;
-    union {
-        int32 copiedOffset;
-        Value value;
-        JSValueType type;
-    } u;
-};
-
 // Information about a frame inlined during compilation.
 struct InlineFrame
 {
@@ -563,16 +547,6 @@ struct InlineFrame
     // Total distance between the start of the outer JSStackFrame and the start
     // of this frame, in multiples of sizeof(Value).
     uint32 depth;
-
-    // When making a call from an inline frame, only the slots owned by that
-    // frame are guaranteed to be synced. Slots owned by parents (including the
-    // this/callee/args of the call) may not be synced, and if they are
-    // unsynced the entries here describe how to remat them in case of
-    // recompilation. Note that since the arguments cannot be modified within
-    // the call without triggering recompilation, the contents of these parent
-    // slots are invariant within the call.
-    uint32 nUnsyncedEntries;
-    UnsyncedEntry *unsyncedEntries;
 };
 
 struct CallSite

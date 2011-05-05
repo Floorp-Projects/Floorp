@@ -104,7 +104,7 @@ JaegerTrampoline ENDP
 ; void JaegerTrampolineReturn();
 JaegerTrampolineReturn PROC FRAME
     .ENDPROLOG
-    or      rcx, rdx
+    or      rsi, rdi
     mov     qword ptr [rbx + 30h], rcx
     sub     rsp, 20h
     lea     rcx, [rsp+20h]

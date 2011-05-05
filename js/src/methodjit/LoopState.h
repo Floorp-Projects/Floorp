@@ -90,8 +90,10 @@ struct TemporaryCopy;
 class LoopState : public MacroAssemblerTypedefs
 {
     JSContext *cx;
-    JSScript *script;
-    analyze::ScriptAnalysis *analysis;
+    analyze::CrossScriptSSA *ssa;
+    JSScript *outerScript;
+    analyze::ScriptAnalysis *outerAnalysis;
+
     Compiler &cc;
     FrameState &frame;
 
@@ -100,6 +102,12 @@ class LoopState : public MacroAssemblerTypedefs
 
     /* Allocation at the head of the loop, has all loop carried variables. */
     RegisterAllocation *alloc;
+
+    /*
+     * Set if this is not a do-while loop and the compiler has advanced past
+     * the loop's entry point.
+     */
+    bool reachedEntryPoint;
 
     /*
      * Jump which initially enters the loop. The state is synced when this jump
@@ -137,6 +145,7 @@ class LoopState : public MacroAssemblerTypedefs
         Jump jump;
         Label label;
         bool ool;
+        bool entry;
 
         /* Index into Compiler's callSites or rejoinSites */
         unsigned patchIndex;
@@ -215,17 +224,23 @@ class LoopState : public MacroAssemblerTypedefs
     /* Outer loop to this one, in case of loop nesting. */
     LoopState *outer;
 
-    /* Current bytecode for compilation. */
-    jsbytecode *PC;
+    /* Offset from the outermost frame at which temporaries should be allocated. */
+    uint32 temporariesStart;
 
-    LoopState(JSContext *cx, JSScript *script,
+    LoopState(JSContext *cx, analyze::CrossScriptSSA *ssa,
               Compiler *cc, FrameState *frame);
     bool init(jsbytecode *head, Jump entry, jsbytecode *entryTarget);
+
+    void setOuterPC(jsbytecode *pc)
+    {
+        if (uint32(pc - outerScript->code) == lifetime->entry && lifetime->entry != lifetime->head)
+            reachedEntryPoint = true;
+    }
 
     bool generatingInvariants() { return !skipAnalysis; }
 
     /* Add a call with trailing jump/label, after which invariants need to be restored. */
-    void addInvariantCall(Jump jump, Label label, bool ool, unsigned patchIndex, bool patchCall);
+    void addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex, bool patchCall);
 
     uint32 headOffset() { return lifetime->head; }
     uint32 getLoopRegs() { return loopRegs.freeMask; }
@@ -235,7 +250,7 @@ class LoopState : public MacroAssemblerTypedefs
     uint32 backedgeOffset() { return lifetime->backedge; }
 
     /* Whether the payload of slot is carried around the loop in a register. */
-    bool carriesLoopReg(FrameEntry *fe) { return alloc->hasAnyReg(frame.indexOfFe(fe)); }
+    bool carriesLoopReg(FrameEntry *fe) { return alloc->hasAnyReg(frame.entrySlot(fe)); }
 
     void setLoopReg(AnyRegisterID reg, FrameEntry *fe);
 
@@ -262,20 +277,20 @@ class LoopState : public MacroAssemblerTypedefs
      * These should only be used for entries which are known to be dense arrays
      * (if they are objects at all).
      */
-    bool hoistArrayLengthCheck(const FrameEntry *obj, types::TypeSet *objTypes,
-                               unsigned indexPopped);
-    FrameEntry *invariantSlots(const FrameEntry *obj);
-    FrameEntry *invariantLength(const FrameEntry *obj, types::TypeSet *objTypes);
-    FrameEntry *invariantProperty(const FrameEntry *obj, types::TypeSet *objTypes, jsid id);
+    bool hoistArrayLengthCheck(const analyze::CrossSSAValue &obj,
+                               const analyze::CrossSSAValue &index);
+    FrameEntry *invariantSlots(const analyze::CrossSSAValue &obj);
+    FrameEntry *invariantLength(const analyze::CrossSSAValue &obj);
+    FrameEntry *invariantProperty(const analyze::CrossSSAValue &obj, jsid id);
 
-    /* Whether the current PC's binary op cannot overflow. */
-    bool cannotIntegerOverflow();
+    /* Whether a binary or inc/dec op's result cannot overflow. */
+    bool cannotIntegerOverflow(const analyze::CrossSSAValue &pushed);
 
     /*
      * Whether integer overflow in addition or negative zeros in multiplication
-     * at the current PC can be safely ignored.
+     * at a binary op can be safely ignored.
      */
-    bool ignoreIntegerOverflow();
+    bool ignoreIntegerOverflow(const analyze::CrossSSAValue &pushed);
 
   private:
     /* Analysis information for the loop. */
@@ -292,13 +307,6 @@ class LoopState : public MacroAssemblerTypedefs
     uint32 testRHS;
     int32 testConstant;
     bool testLessEqual;
-
-    /*
-     * The rhs in the test is testRHS.length; for the test to be valid, the
-     * length must not be directly modified within the loop.
-     */
-    bool testLength;
-    bool testLengthKnownObject;
 
     /*
      * A variable which will be incremented or decremented exactly once in each
@@ -336,10 +344,9 @@ class LoopState : public MacroAssemblerTypedefs
 
     void analyzeLoopTest();
     void analyzeLoopIncrements();
-    void analyzeLoopBody();
-    bool definiteArrayAccess(const analyze::SSAValue &obj, const analyze::SSAValue &index);
-    void markBitwiseOperand(const analyze::SSAValue &v);
+    bool analyzeLoopBody(unsigned frame);
 
+    bool definiteArrayAccess(const analyze::SSAValue &obj, const analyze::SSAValue &index);
     bool getLoopTestAccess(const analyze::SSAValue &v, uint32 *pslot, int32 *pconstant);
 
     bool addGrowArray(types::TypeObject *object);
@@ -351,8 +358,8 @@ class LoopState : public MacroAssemblerTypedefs
     uint32 getIncrement(uint32 slot);
     int32 adjustConstantForIncrement(jsbytecode *pc, uint32 slot);
 
-    bool getEntryValue(const analyze::SSAValue &v, uint32 *pslot, int32 *pconstant);
-    bool computeInterval(const analyze::SSAValue &v, int32 *pmin, int32 *pmax);
+    bool getEntryValue(const analyze::CrossSSAValue &v, uint32 *pslot, int32 *pconstant);
+    bool computeInterval(const analyze::CrossSSAValue &v, int32 *pmin, int32 *pmax);
     bool valueFlowsToBitops(const analyze::SSAValue &v);
 };
 
