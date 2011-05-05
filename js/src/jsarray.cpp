@@ -873,9 +873,7 @@ js_PrototypeHasIndexedProperties(JSContext *cx, JSObject *obj)
     return JS_FALSE;
 }
 
-namespace js {
-
-JSBool
+static JSBool
 array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
                      PropertyOp getter, StrictPropertyOp setter, uintN attrs)
 {
@@ -910,8 +908,6 @@ array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
     return js_DefineProperty(cx, obj, id, value, getter, setter, attrs);
 }
 
-} // namespace js
-
 static JSBool
 array_getAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
 {
@@ -928,9 +924,7 @@ array_setAttributes(JSContext *cx, JSObject *obj, jsid id, uintN *attrsp)
     return JS_FALSE;
 }
 
-namespace js {
-
-JSBool
+static JSBool
 array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict)
 {
     uint32 i;
@@ -952,8 +946,6 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
     rval->setBoolean(true);
     return JS_TRUE;
 }
-
-} // namespace js
 
 static void
 array_trace(JSTracer *trc, JSObject *obj)
