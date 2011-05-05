@@ -996,7 +996,7 @@ PSM_SSL_PKIX_AuthCertificate(PRFileDesc *fd, CERTCertificate *peerCert, PRBool c
                                 cvout, pinarg);
     }
 
-    if ( rv == SECSuccess && isServer ) {
+    if ( rv == SECSuccess && !isServer ) {
         /* cert is OK.  This is the client side of an SSL connection.
         * Now check the name field in the cert against the desired hostname.
         * NB: This is our only defense against Man-In-The-Middle (MITM) attacks!
