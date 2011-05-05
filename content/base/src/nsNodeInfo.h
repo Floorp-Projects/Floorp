@@ -75,23 +75,21 @@ public:
   // nsNodeInfo
   // Create objects with Create
 public:
-  static nsNodeInfo *Create();
+  /*
+   * aName and aOwnerManager may not be null.
+   */
+  static nsNodeInfo *Create(nsIAtom *aName, nsIAtom *aPrefix,
+                            PRInt32 aNamespaceID,
+                            nsNodeInfoManager *aOwnerManager);
 private:
-  nsNodeInfo();
+  nsNodeInfo(); // Unimplemented
+  nsNodeInfo(const nsNodeInfo& aOther); // Unimplemented
+  nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+             nsNodeInfoManager *aOwnerManager);
 protected:
   virtual ~nsNodeInfo();
 
 public:
-  /*
-   * Note! Init() must be called exactly once on every nsNodeInfo before
-   * the object is used, if Init() returns an error code the nsNodeInfo
-   * should not be used.
-   *
-   * aName and aOwnerManager may not be null.
-   */
-  nsresult Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
-                nsNodeInfoManager *aOwnerManager);
-
   /**
    * Call before shutdown to clear the cache and free memory for this class.
    */

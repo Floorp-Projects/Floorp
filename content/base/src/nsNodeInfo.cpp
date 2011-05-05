@@ -68,7 +68,8 @@ nsFixedSizeAllocator* nsNodeInfo::sNodeInfoPool = nsnull;
 
 // static
 nsNodeInfo*
-nsNodeInfo::Create()
+nsNodeInfo::Create(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+                   nsNodeInfoManager *aOwnerManager)
 {
   if (!sNodeInfoPool) {
     sNodeInfoPool = new nsFixedSizeAllocator();
@@ -86,33 +87,26 @@ nsNodeInfo::Create()
 
   // Create a new one
   void* place = sNodeInfoPool->Alloc(sizeof(nsNodeInfo));
-  return place ? new (place) nsNodeInfo() : nsnull;
-}
-
-nsNodeInfo::nsNodeInfo()
-{
+  return place ?
+    new (place) nsNodeInfo(aName, aPrefix, aNamespaceID, aOwnerManager) :
+    nsnull;
 }
 
 nsNodeInfo::~nsNodeInfo()
 {
-  if (mOwnerManager) {
-    mOwnerManager->RemoveNodeInfo(this);
-    NS_RELEASE(mOwnerManager);
-  }
+  mOwnerManager->RemoveNodeInfo(this);
+  NS_RELEASE(mOwnerManager);
 
-  NS_IF_RELEASE(mInner.mName);
+  NS_RELEASE(mInner.mName);
   NS_IF_RELEASE(mInner.mPrefix);
 }
 
 
-nsresult
-nsNodeInfo::Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
-                 nsNodeInfoManager *aOwnerManager)
+nsNodeInfo::nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+                       nsNodeInfoManager *aOwnerManager)
 {
-  NS_ENSURE_TRUE(!mInner.mName && !mInner.mPrefix && !mOwnerManager,
-                 NS_ERROR_ALREADY_INITIALIZED);
-  NS_ENSURE_ARG_POINTER(aName);
-  NS_ENSURE_ARG_POINTER(aOwnerManager);
+  NS_ABORT_IF_FALSE(aName, "Must have a name");
+  NS_ABORT_IF_FALSE(aOwnerManager, "Must have an owner manager");
 
   mInner.mName = aName;
   NS_ADDREF(mInner.mName);
@@ -124,8 +118,6 @@ nsNodeInfo::Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
 
   mOwnerManager = aOwnerManager;
   NS_ADDREF(mOwnerManager);
-
-  return NS_OK;
 }
 
 
