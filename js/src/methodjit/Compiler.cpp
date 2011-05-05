@@ -4419,7 +4419,8 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     if (loop && loop->generatingInvariants()) {
         FrameEntry *fe = loop->invariantProperty(top, frame.extra(top).types, ATOM_TO_JSID(atom));
         if (fe) {
-            frame.learnType(fe, knownType, false);
+            if (knownType != JSVAL_TYPE_UNKNOWN)
+                frame.learnType(fe, knownType, false);
             frame.pop();
             frame.pushTemporary(fe);
             return true;
