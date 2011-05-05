@@ -452,6 +452,9 @@ class Compiler : public BaseCompiler
     JSScript *outerScript;
     bool isConstructing;
 
+    /* SSA information for the outer script and all frames we will be inlining. */
+    analyze::CrossScriptSSA ssa;
+
     JSObject *globalObj;
     Value *globalSlots;
 
@@ -463,35 +466,39 @@ class Compiler : public BaseCompiler
     FrameState frame;
 
     /*
-     * State for the current stack frame.
-     *
-     * When inlining function calls, we keep track of the state of each inline
-     * frame. The state of parent frames is not modified while analyzing an
-     * inner frame, though registers used by those parents can be spilled in
-     * the frame (reflected by the frame's active register state).
+     * State for the current stack frame, and links to its parents going up to
+     * the outermost script.
      */
 
     struct ActiveFrame {
         ActiveFrame *parent;
         jsbytecode *parentPC;
         JSScript *script;
-        uint32 inlineIndex;
         Label *jumpMap;
-        uint32 depth;
-        Vector<UnsyncedEntry> unsyncedEntries; // :XXX: handle OOM
+
+        /*
+         * Index into inlineFrames or OUTER_FRAME, matches this frame's index
+         * in the cross script SSA.
+         */
+        uint32 inlineIndex;
 
         /* Current types for non-escaping vars in the script. */
         VarType *varTypes;
 
         /* State for managing return from inlined frames. */
-        bool needReturnValue;
-        bool syncReturnValue;
-        bool returnValueDouble;
-        bool returnSet;
-        AnyRegisterID returnRegister;
-        Registers returnParentRegs;
-        Registers temporaryParentRegs;
+        bool needReturnValue;          /* Return value will be used. */
+        bool syncReturnValue;          /* Return value should be fully synced. */
+        bool returnValueDouble;        /* Return value should be a double. */
+        bool returnSet;                /* Whether returnRegister is valid. */
+        AnyRegisterID returnRegister;  /* Register holding return value. */
+        const FrameEntry *returnEntry; /* Entry copied by return value. */
         Vector<Jump, 4, CompilerAllocPolicy> *returnJumps;
+
+        /*
+         * Snapshot of the heap state to use after the call, in case
+         * there are multiple return paths the inlined frame could take.
+         */
+        RegisterAllocation *exitState;
 
         ActiveFrame(JSContext *cx);
         ~ActiveFrame();
@@ -540,7 +547,7 @@ class Compiler : public BaseCompiler
 #endif
     bool debugMode_;
     bool addTraceHints;
-    bool inlining;
+    bool inlining_;
     bool hasGlobalReallocation;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
@@ -564,6 +571,7 @@ class Compiler : public BaseCompiler
     bool loadOldTraps(const Vector<CallSite> &site);
 
     bool debugMode() { return debugMode_; }
+    bool inlining() { return inlining_; }
 
 #ifdef DEBUG
     void checkRejoinSite(uint32 nCallSites, uint32 nRejoinSites, void *stub);
@@ -611,6 +619,16 @@ class Compiler : public BaseCompiler
 
     bool arrayPrototypeHasIndexedProperty();
 
+    bool activeFrameHasMultipleExits() {
+        ActiveFrame *na = a;
+        while (na->parent) {
+            if (na->exitState)
+                return true;
+            na = na->parent;
+        }
+        return false;
+    }
+
   private:
     CompileStatus performCompilation(JITScript **jitp);
     CompileStatus generatePrologue();
@@ -633,6 +651,9 @@ class Compiler : public BaseCompiler
     bool monitored(jsbytecode *pc);
     bool testSingletonProperty(JSObject *obj, jsid id);
     bool testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testObject);
+    CompileStatus addInlineFrame(JSScript *script, uint32 depth, uint32 parent, jsbytecode *parentpc);
+    CompileStatus scanInlineCalls(uint32 index, uint32 depth);
+    CompileStatus checkAnalysis(JSScript *script);
 
     /* Non-emitting helpers. */
     void pushSyncedEntry(uint32 pushed);

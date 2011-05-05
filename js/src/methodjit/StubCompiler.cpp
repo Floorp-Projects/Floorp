@@ -195,7 +195,10 @@ StubCompiler::emitStubCall(void *ptr, bool needsRejoin, int32 slots)
         site.loopJumpLabel = masm.label();
         Jump j = masm.jump();
         Label l = masm.label();
-        cc.loop->addInvariantCall(j, l, true, cc.callSites.length(), true);
+        /* MissedBoundsCheck* are not actually called, so f.regs need to be written before InvariantFailure. */
+        bool entry = (ptr == JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckEntry))
+                  || (ptr == JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckHead));
+        cc.loop->addInvariantCall(j, l, true, entry, cc.callSites.length(), true);
     }
 
     cc.addCallSite(site);

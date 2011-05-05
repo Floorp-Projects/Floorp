@@ -84,7 +84,7 @@ Recompiler::findPatch(JITScript *jit, void **location)
     CallSite *callSites_ = jit->callSites();
     for (uint32 i = 0; i < jit->nCallSites; i++) {
         if (callSites_[i].codeOffset + codeStart == *location) {
-            JS_ASSERT(callSites_[i].inlineIndex == uint32(-1));
+            JS_ASSERT(callSites_[i].inlineIndex == analyze::CrossScriptSSA::OUTER_FRAME);
             PatchableAddress result;
             result.location = location;
             result.callSite = callSites_[i];
@@ -245,27 +245,7 @@ Recompiler::expandInlineFrameChain(JSContext *cx, StackFrame *outer, InlineFrame
     else
         parent = outer;
 
-    JaegerSpew(JSpew_Recompile, "Expanding inline frame, %u unsynced entries\n",
-               inner->nUnsyncedEntries);
-
-    /*
-     * Remat any slots in the parent frame which may not be fully synced.
-     * Note that we need to do this *after* fixing the slots in parent frames,
-     * as the parent's own parents may need to be coherent for, e.g. copies
-     * of arguments to get the correct value.
-     */
-    for (unsigned i = 0; i < inner->nUnsyncedEntries; i++) {
-        const UnsyncedEntry &e = inner->unsyncedEntries[i];
-        Value *slot = (Value *) ((uint8 *)outer + e.offset);
-        if (e.copy) {
-            Value *copied = (Value *) ((uint8 *)outer + e.u.copiedOffset);
-            *slot = *copied;
-        } else if (e.constant) {
-            *slot = e.u.value;
-        } else if (e.knownType) {
-            slot->boxNonDoubleFrom(e.u.type, (uint64 *) slot);
-        }
-    }
+    JaegerSpew(JSpew_Recompile, "Expanding inline frame\n");
 
     StackFrame *fp = (StackFrame *) ((uint8 *)outer + sizeof(Value) * inner->depth);
     fp->initInlineFrame(inner->fun, parent, inner->parentpc);

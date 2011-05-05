@@ -48,6 +48,7 @@
 
 using namespace js;
 using namespace js::mjit;
+using namespace js::analyze;
 using namespace JSC;
 
 typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
@@ -244,8 +245,9 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::Typ
      * from ignored overflows are not live across points where the interpreter
      * can join into JIT code (loop heads and safe points).
      */
-    bool cannotOverflow = loop && loop->cannotIntegerOverflow();
-    bool ignoreOverflow = loop && loop->ignoreIntegerOverflow();
+    CrossSSAValue pushv(a->inlineIndex, SSAValue::PushedValue(PC - script->code, 0));
+    bool cannotOverflow = loop && loop->cannotIntegerOverflow(pushv);
+    bool ignoreOverflow = loop && loop->ignoreIntegerOverflow(pushv);
 
     if (rhs->isType(JSVAL_TYPE_INT32) && lhs->isType(JSVAL_TYPE_INT32) &&
         op == JSOP_ADD && ignoreOverflow) {
@@ -1513,7 +1515,7 @@ mjit::Compiler::jsop_relational_int(JSOp op, AutoRejoinSite &autoRejoin, jsbytec
         FrameEntry *tmp = lhs;
         lhs = rhs;
         rhs = tmp;
-        op = analyze::ReverseCompareOp(op);
+        op = ReverseCompareOp(op);
     }
 
     JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
@@ -1604,7 +1606,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, AutoRejoinSite &rej
     } else {
         cmpReg = regs.rhsData.reg();
         value = lhs->getValue().toInt32();
-        cmpOp = analyze::ReverseCompareOp(op);
+        cmpOp = ReverseCompareOp(op);
     }
 
     /*

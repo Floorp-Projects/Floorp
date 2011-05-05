@@ -436,6 +436,11 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
 
         switch (op) {
 
+          case JSOP_RETURN:
+          case JSOP_STOP:
+            numReturnSites_++;
+            break;
+
           case JSOP_SETRVAL:
           case JSOP_POPV:
             usesRval = true;
@@ -1408,9 +1413,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
           }
 
           case JSOP_GETARG:
-          case JSOP_CALLARG:
-          case JSOP_GETLOCAL:
-          case JSOP_CALLLOCAL: {
+          case JSOP_GETLOCAL: {
             uint32 slot = GetBytecodeSlot(script, pc);
             if (trackSlot(slot)) {
                 /*
@@ -1419,6 +1422,14 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
                  */
                 stack[stackDepth - 1] = code->poppedValues[0] = values[slot];
             }
+            break;
+          }
+
+          case JSOP_CALLARG:
+          case JSOP_CALLLOCAL: {
+            uint32 slot = GetBytecodeSlot(script, pc);
+            if (trackSlot(slot))
+                stack[stackDepth - 2] = code->poppedValues[0] = values[slot];
             break;
           }
 
@@ -1431,6 +1442,7 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
           case JSOP_FORNAME:
           case JSOP_FORGNAME:
+          case JSOP_CALLPROP:
             stack[stackDepth - 1] = code->poppedValues[0];
             break;
 
@@ -1751,6 +1763,74 @@ ScriptAnalysis::freezeNewValues(JSContext *cx, uint32 offset)
     code.newValues[count].value.clear();
 
     cx->delete_(pending);
+}
+
+CrossSSAValue
+CrossScriptSSA::foldValue(const CrossSSAValue &cv)
+{
+    const Frame &frame = getFrame(cv.frame);
+    const SSAValue &v = cv.v;
+
+    JSScript *parentScript = NULL;
+    ScriptAnalysis *parentAnalysis = NULL;
+    if (frame.parent != INVALID_FRAME) {
+        parentScript = getFrame(frame.parent).script;
+        parentAnalysis = parentScript->analysis(cx);
+    }
+
+    if (v.kind() == SSAValue::VAR && v.varInitial() && parentScript) {
+        uint32 slot = v.varSlot();
+        if (slot >= ArgSlot(0) && slot < LocalSlot(frame.script, 0)) {
+            uint32 argc = GET_ARGC(frame.parentpc);
+            SSAValue argv = parentAnalysis->poppedValue(frame.parentpc, argc - 1 - (slot - ArgSlot(0)));
+            return foldValue(CrossSSAValue(frame.parent, argv));
+        }
+    }
+
+    if (v.kind() == SSAValue::PUSHED) {
+        jsbytecode *pc = frame.script->code + v.pushedOffset();
+        switch (JSOp(*pc)) {
+          case JSOP_THIS:
+            if (parentScript) {
+                uint32 argc = GET_ARGC(frame.parentpc);
+                SSAValue thisv = parentAnalysis->poppedValue(frame.parentpc, argc);
+                return foldValue(CrossSSAValue(frame.parent, thisv));
+            }
+            break;
+
+          case JSOP_CALL: {
+            /*
+             * If there is a single inline callee with a single return site,
+             * propagate back to that.
+             */
+            JSScript *callee = NULL;
+            uint32 calleeFrame = INVALID_FRAME;
+            for (unsigned i = 0; i < numFrames(); i++) {
+                if (iterFrame(i).parent == cv.frame && iterFrame(i).parentpc == pc) {
+                    if (callee)
+                        return cv;  /* Multiple callees */
+                    callee = iterFrame(i).script;
+                    calleeFrame = iterFrame(i).index;
+                }
+            }
+            if (callee && callee->analysis(cx)->numReturnSites() == 1) {
+                ScriptAnalysis *analysis = callee->analysis(cx);
+                uint32 offset = 0;
+                while (offset < callee->length) {
+                    jsbytecode *pc = callee->code + offset;
+                    if (analysis->maybeCode(pc) && JSOp(*pc) == JSOP_RETURN)
+                        return foldValue(CrossSSAValue(calleeFrame, analysis->poppedValue(pc, 0)));
+                    offset += GetBytecodeLength(pc);
+                }
+            }
+            break;
+          }
+
+          default:;
+        }
+    }
+
+    return cv;
 }
 
 #ifdef DEBUG

@@ -89,7 +89,7 @@ JaegerTrampoline:
 .global JaegerTrampolineReturn
 .type   JaegerTrampolineReturn, @function
 JaegerTrampolineReturn:
-    or   %rdx, %rcx
+    or   %rsi, %rdi
     movq %rcx, 0x30(%rbx)
     movq %rsp, %rdi
     call PopActiveVMFrame
