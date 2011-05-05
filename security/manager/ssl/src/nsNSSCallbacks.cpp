@@ -975,26 +975,26 @@ PSM_SSL_PKIX_AuthCertificate(PRFileDesc *fd, CERTCertificate *peerCert, PRBool c
     certUsage = isServer ? certUsageSSLClient : certUsageSSLServer;
     certificateusage = isServer ? certificateUsageSSLClient : certificateUsageSSLServer;
 
-if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
-    rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), peerCert, checksig, certUsage,
-                            pinarg);
-}
-else {
-    nsresult nsrv;
-    nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
-    if (!inss)
-      return SECFailure;
-    nsRefPtr<nsCERTValInParamWrapper> survivingParams;
-    if (NS_FAILED(inss->GetDefaultCERTValInParam(survivingParams)))
-      return SECFailure;
+    if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+        rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), peerCert, checksig, certUsage,
+                                pinarg);
+    }
+    else {
+        nsresult nsrv;
+        nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
+        if (!inss)
+          return SECFailure;
+        nsRefPtr<nsCERTValInParamWrapper> survivingParams;
+        if (NS_FAILED(inss->GetDefaultCERTValInParam(survivingParams)))
+          return SECFailure;
 
-    CERTValOutParam cvout[1];
-    cvout[0].type = cert_po_end;
+        CERTValOutParam cvout[1];
+        cvout[0].type = cert_po_end;
 
-    rv = CERT_PKIXVerifyCert(peerCert, certificateusage,
-                             survivingParams->GetRawPointerForNSS(),
-                             cvout, pinarg);
-}
+        rv = CERT_PKIXVerifyCert(peerCert, certificateusage,
+                                survivingParams->GetRawPointerForNSS(),
+                                cvout, pinarg);
+    }
 
     if ( rv == SECSuccess && isServer ) {
         /* cert is OK.  This is the client side of an SSL connection.
