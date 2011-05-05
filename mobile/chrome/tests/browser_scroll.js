@@ -4,7 +4,8 @@
 var gTab;
 registerCleanupFunction(function() Browser.closeTab(gTab));
 
-const TEST_URL = baseURI + "browser_scroll.html";
+const BASE_URL = "http://mochi.test:8888/browser/mobile/chrome/";
+const TEST_URL = BASE_URL + "browser_scroll.html";
 
 function test() {
   waitForExplicitFinish();

@@ -1,3 +1,4 @@
+let baseURI = "http://mochi.test:8888/browser/mobile/chrome/";
 let testURL_01 = baseURI + "browser_scrollbar.sjs?";
 
 let gCurrentTest = null;

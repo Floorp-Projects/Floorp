@@ -39,7 +39,7 @@ DEPTH     = ../../..
 topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
-relativesrcdir  = mobile/chrome/tests
+relativesrcdir  = mobile/chrome
 TESTXPI  = $(CURDIR)/$(DEPTH)/_tests/testing/mochitest/browser/$(relativesrcdir)/addons
 ADDONSRC = $(srcdir)/addons
 

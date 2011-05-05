@@ -6,7 +6,7 @@
   <Description about="urn:mozilla:install-manifest">
     <em:id>addon1@tests.mozilla.org</em:id>
     <em:version>1.0</em:version>
-    <em:updateURL>http://example.com/browser/mobile/chrome/tests/browser_upgrade.rdf</em:updateURL>
+    <em:updateURL>http://example.com/browser/mobile/chrome/browser_upgrade.rdf</em:updateURL>
     <em:bootstrap>true</em:bootstrap>
 
     <em:targetApplication>

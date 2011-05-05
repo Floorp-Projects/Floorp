@@ -56,7 +56,7 @@ DIRS += installer/windows
 endif
 endif
 
-ifeq ($(OS_ARCH),WINNT)
+ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
 PARALLEL_DIRS += tools/redit
 endif
 

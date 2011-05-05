@@ -55,10 +55,10 @@ function handleRequest(request, response) {
       response.write("<script>window.addEventListener('load', function() { window.removeEventListener('load', arguments.callee, false); document.title = 'This is not a french title'; }, false);</script>");
       break;
     case "redirect":
-      response.write("<meta http-equiv='refresh' content='1;url=http://mochi.test:8888/browser/mobile/chrome/tests/browser_title.sjs?no_title'></meta>");
+      response.write("<meta http-equiv='refresh' content='1;url=http://mochi.test:8888/browser/mobile/chrome/browser_title.sjs?no_title'></meta>");
       break;
     case "location":
-      response.write("<script>window.addEventListener('load', function() { window.removeEventListener('load', arguments.callee, false); document.location = 'http://mochi.test:8888/browser/mobile/chrome/tests/browser_title.sjs?no_title' ; }, false);</script>");
+      response.write("<script>window.addEventListener('load', function() { window.removeEventListener('load', arguments.callee, false); document.location = 'http://mochi.test:8888/browser/mobile/chrome/browser_title.sjs?no_title' ; }, false);</script>");
       break;
     default:
       break;

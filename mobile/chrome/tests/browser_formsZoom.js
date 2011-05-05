@@ -1,4 +1,6 @@
 let testURL_01 = chromeRoot + "browser_formsZoom.html";
+
+let baseURI = "http://mochi.test:8888/browser/mobile/chrome/";
 let testURL_02 = baseURI + "browser_formsZoom.html";
 messageManager.loadFrameScript(baseURI + "remote_formsZoom.js", true);
 
