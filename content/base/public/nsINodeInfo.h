@@ -117,8 +117,8 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "html:body".
    */
-  void GetQualifiedName(nsAString& aQualifiedName) const {
-    aQualifiedName = mQualifiedName;
+  const nsString& QualifiedName() const {
+    return mQualifiedName;
   }
 
   /*
@@ -126,8 +126,8 @@ public:
    * needed.  For example, for HTML elements in HTML documents, this
    * will return an ASCII-uppercased version of the qualified name.
    */
-  void GetQualifiedNameCorrectedCase(nsAString& aQualifiedName) const {
-    aQualifiedName = mQualifiedNameCorrectedCase;
+  const nsString& QualifiedNameCorrectedCase() const {
+    return mQualifiedNameCorrectedCase;
   }
 
   /*

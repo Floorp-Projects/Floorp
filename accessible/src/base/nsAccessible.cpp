@@ -197,10 +197,10 @@ nsAccessible::nsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
             (void*)shell.get());
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
     if (content) {
+      printf(" Con: %s@%p",
+             NS_ConvertUTF16toUTF8(content->NodeInfo()->QualifiedName()).get(),
+             (void *)content.get());
       nsAutoString buf;
-      if (content->NodeInfo())
-        content->NodeInfo()->GetQualifiedName(buf);
-      printf(" Con: %s@%p", NS_ConvertUTF16toUTF8(buf).get(), (void *)content.get());
       if (NS_SUCCEEDED(GetName(buf))) {
         printf(" Name:[%s]", NS_ConvertUTF16toUTF8(buf).get());
        }
