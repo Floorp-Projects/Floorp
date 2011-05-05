@@ -128,14 +128,7 @@ static int mar_concat_file(FILE *fp, const char *path) {
 int mar_create(const char *dest, int num_files, char **files) {
   struct MarItemStack stack;
   PRUint32 offset_to_index = 0, size_of_index;
-#ifdef WINCE
-  WIN32_FIND_DATAW file_data;
-  PRUnichar wide_path[MAX_PATH];
-  size_t size;
-  PRInt32 flags;
-#else
   struct stat st;
-#endif
   FILE *fp;
   int i, rv = -1;
 
@@ -155,27 +148,12 @@ int mar_create(const char *dest, int num_files, char **files) {
   stack.last_offset = MAR_ID_SIZE + sizeof(PRUint32);
 
   for (i = 0; i < num_files; ++i) {
-#ifdef WINCE
-    HANDLE handle;
-    MultiByteToWideChar(CP_ACP, 0, files[i], -1, wide_path, MAX_PATH);
-    handle = FindFirstFile(wide_path, &file_data);
-    if (handle == INVALID_HANDLE_VALUE) {
-#else
     if (stat(files[i], &st)) {
-#endif
       fprintf(stderr, "ERROR: file not found: %s\n", files[i]);
       goto failure;
     }
-#ifdef WINCE
-    flags = (file_data.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ?
-      0444 : 0666;
-    size = (file_data.nFileSizeHigh * (MAXDWORD + 1)) + file_data.nFileSizeLow;
-    FindClose(handle);
-    if (mar_push(&stack, size, flags, files[i]))
-#else
 
     if (mar_push(&stack, st.st_size, st.st_mode & 0777, files[i]))
-#endif
       goto failure;
 
     /* concatenate input file to archive */
@@ -203,13 +181,6 @@ failure:
     free(stack.head);
   fclose(fp);
   if (rv)
-#ifdef WINCE
-    {
-      MultiByteToWideChar(CP_ACP, 0, dest, -1, wide_path, MAX_PATH);
-      DeleteFileW(wide_path);
-    }
-#else
     remove(dest);
-#endif
   return rv;
 }
