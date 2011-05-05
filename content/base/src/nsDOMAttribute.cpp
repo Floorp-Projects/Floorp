@@ -203,7 +203,7 @@ nsDOMAttribute::SetOwnerDocument(nsIDocument* aDocument)
 NS_IMETHODIMP
 nsDOMAttribute::GetName(nsAString& aName)
 {
-  mNodeInfo->GetQualifiedName(aName);
+  aName = mNodeInfo->QualifiedName();
   return NS_OK;
 }
 
