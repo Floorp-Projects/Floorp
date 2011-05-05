@@ -430,7 +430,7 @@ txXPathNodeUtils::getLocalName(const txXPathNode& aNode, nsAString& aLocalName)
     if (aNode.isContent()) {
         if (aNode.mNode->IsElement()) {
             nsINodeInfo* nodeInfo = aNode.Content()->NodeInfo();
-            nodeInfo->GetLocalName(aLocalName);
+            nodeInfo->GetName(aLocalName);
             return;
         }
 

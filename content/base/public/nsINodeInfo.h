@@ -71,10 +71,9 @@ class nsIURI;
 class nsIPrincipal;
 
 // IID for the nsINodeInfo interface
-// 4aa7526e-37d3-49e3-a566-f251b2ef2a21
 #define NS_INODEINFO_IID      \
-{ 0x4aa7526e, 0x37d3, 0x49e3, \
- { 0xa5, 0x66, 0xf2, 0x51, 0xb2, 0xef, 0x2a, 0x21 } }
+{ 0xdfb15226, 0x79ad, 0x4c7c, \
+ { 0x9d, 0x73, 0x3d, 0xbc, 0x13, 0x17, 0x02, 0x74 } }
 
 class nsINodeInfo : public nsISupports
 {
@@ -129,17 +128,6 @@ public:
   const nsString& QualifiedNameCorrectedCase() const {
     return mQualifiedNameCorrectedCase;
   }
-
-  /*
-   * Get the local name from this node as a string, GetLocalName() gets the
-   * same string as GetName() but only if the node has a prefix and/or a
-   * namespace URI. If the node has neither a prefix nor a namespace URI the
-   * local name is a null string.
-   *
-   * For the HTML element "<body>" in a HTML document this will return a null
-   * string and for the XML element "<html:body>" this will return "body".
-   */
-  virtual void GetLocalName(nsAString& aLocalName) const = 0;
 
 #ifdef MOZILLA_INTERNAL_API
   /*

@@ -2176,7 +2176,7 @@ nsGenericElement::GetNodeName(nsAString& aNodeName)
 NS_IMETHODIMP
 nsGenericElement::GetLocalName(nsAString& aLocalName)
 {
-  mNodeInfo->GetLocalName(aLocalName);
+  mNodeInfo->GetName(aLocalName);
   return NS_OK;
 }
 
