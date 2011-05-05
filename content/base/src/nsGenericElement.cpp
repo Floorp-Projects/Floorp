@@ -2169,7 +2169,7 @@ nsGenericElement::~nsGenericElement()
 NS_IMETHODIMP
 nsGenericElement::GetNodeName(nsAString& aNodeName)
 {
-  mNodeInfo->GetQualifiedName(aNodeName);
+  mNodeInfo->GetQualifiedNameCorrectedCase(aNodeName);
   return NS_OK;
 }
 
@@ -2376,7 +2376,7 @@ nsGenericElement::HasChildNodes(PRBool* aReturn)
 NS_IMETHODIMP
 nsGenericElement::GetTagName(nsAString& aTagName)
 {
-  mNodeInfo->GetQualifiedName(aTagName);
+  mNodeInfo->GetQualifiedNameCorrectedCase(aTagName);
   return NS_OK;
 }
 
