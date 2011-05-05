@@ -2169,7 +2169,7 @@ nsGenericElement::~nsGenericElement()
 NS_IMETHODIMP
 nsGenericElement::GetNodeName(nsAString& aNodeName)
 {
-  mNodeInfo->GetQualifiedNameCorrectedCase(aNodeName);
+  aNodeName = mNodeInfo->QualifiedNameCorrectedCase();
   return NS_OK;
 }
 
@@ -2376,7 +2376,7 @@ nsGenericElement::HasChildNodes(PRBool* aReturn)
 NS_IMETHODIMP
 nsGenericElement::GetTagName(nsAString& aTagName)
 {
-  mNodeInfo->GetQualifiedNameCorrectedCase(aTagName);
+  aTagName = mNodeInfo->QualifiedNameCorrectedCase();
   return NS_OK;
 }
 
@@ -5111,9 +5111,7 @@ nsGenericElement::List(FILE* out, PRInt32 aIndent,
 
   fputs(aPrefix.get(), out);
 
-  nsAutoString buf;
-  mNodeInfo->GetQualifiedName(buf);
-  fputs(NS_LossyConvertUTF16toASCII(buf).get(), out);
+  fputs(NS_LossyConvertUTF16toASCII(mNodeInfo->QualifiedName()).get(), out);
 
   fprintf(out, "@%p", (void *)this);
 
@@ -5201,8 +5199,7 @@ nsGenericElement::DumpContent(FILE* out, PRInt32 aIndent,
   PRInt32 indent;
   for (indent = aIndent; --indent >= 0; ) fputs("  ", out);
 
-  nsAutoString buf;
-  mNodeInfo->GetQualifiedName(buf);
+  const nsString& buf = mNodeInfo->QualifiedName();
   fputs("<", out);
   fputs(NS_LossyConvertUTF16toASCII(buf).get(), out);
 
