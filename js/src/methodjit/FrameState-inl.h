@@ -905,6 +905,7 @@ inline void
 FrameState::learnType(FrameEntry *fe, JSValueType type, bool unsync)
 {
     JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
+    JS_ASSERT(type != JSVAL_TYPE_UNKNOWN);
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
     fe->setType(type);
@@ -917,6 +918,7 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, RegisterID data)
 {
     /* The copied bit may be set on an entry, but there should not be any actual copies. */
     JS_ASSERT_IF(fe->isCopied(), !isEntryCopied(fe));
+    JS_ASSERT(type != JSVAL_TYPE_UNKNOWN);
 
     forgetAllRegs(fe);
     fe->clear();
