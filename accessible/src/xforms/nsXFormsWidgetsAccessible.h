@@ -91,9 +91,9 @@ public:
 
   // nsIAccessible
   NS_IMETHOD GetValue(nsAString& aValue);
-  NS_IMETHOD GetDescription(nsAString& aDescription);
 
   // nsAccessible
+  virtual void Description(nsString& aDescription);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();

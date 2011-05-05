@@ -1981,6 +1981,18 @@ cleanup:
         PKIX_RETURN(BUILD);
 }
 
+/* Prepare 'state' for the AIA round. */
+static void
+pkix_PrepareForwardBuilderStateForAIA(
+        PKIX_ForwardBuilderState *state)
+{
+        PORT_Assert(state->useOnlyLocal == PKIX_TRUE);
+        state->useOnlyLocal = PKIX_FALSE;
+        state->certStoreIndex = 0;
+        state->numFanout = state->buildConstants.maxFanout;
+        state->status = BUILD_TRYAIA;
+}
+
 /*
  * FUNCTION: pkix_BuildForwardDepthFirstSearch
  * DESCRIPTION:
@@ -2101,6 +2113,7 @@ pkix_BuildForwardDepthFirstSearch(
         PKIX_Error *verifyError = NULL;
         PKIX_Error *finalError = NULL;
         void *nbio = NULL;
+        PKIX_UInt32 numIterations = 0;
 
         PKIX_ENTER(BUILD, "pkix_BuildForwardDepthFirstSearch");
         PKIX_NULLCHECK_THREE(pNBIOContext, state, pValResult);
@@ -2117,6 +2130,13 @@ pkix_BuildForwardDepthFirstSearch(
          * of this "while" clause our search has failed.
          */
         while (outOfOptions == PKIX_FALSE) {
+            /*
+             * The maximum number of iterations works around a bug that
+             * causes this while loop to never exit when AIA and cross
+             * certificates are involved.  See bug xxxxx.
+             */
+            if (numIterations++ > 250)
+                    PKIX_ERROR(PKIX_TIMECONSUMEDEXCEEDSRESOURCELIMITS);
 
             if (state->buildConstants.maxTime != 0) {
                     PKIX_DECREF(currTime);
@@ -2728,7 +2748,6 @@ pkix_BuildForwardDepthFirstSearch(
                      * chain, delete it and go to the certStores.
                      */
                     if (state->usingHintCerts == PKIX_TRUE) {
-
                             PKIX_DECREF(state->candidateCerts);
                             PKIX_CHECK(PKIX_List_Create
                                 (&state->candidateCerts, plContext),
@@ -2738,9 +2757,7 @@ pkix_BuildForwardDepthFirstSearch(
                             state->usingHintCerts = PKIX_FALSE;
                             state->status = BUILD_TRYAIA;
                             continue;
-
                     } else if (++(state->certIndex) < (state->numCerts)) {
-
                             if ((state->buildConstants.maxFanout != 0) &&
                                 (--(state->numFanout) == 0)) {
 
@@ -2775,16 +2792,12 @@ pkix_BuildForwardDepthFirstSearch(
              * parent cert, and see if there are any more to try.
              */
             if (state->useOnlyLocal == PKIX_TRUE) {
-                state->useOnlyLocal = PKIX_FALSE;
-                state->certStoreIndex = 0;
-                state->numFanout = state->buildConstants.maxFanout;
-                state->status = BUILD_TRYAIA;
+                pkix_PrepareForwardBuilderStateForAIA(state);
             } else do {
                 if (state->parentState == NULL) {
                         /* We are at the top level, and can't back up! */
                         outOfOptions = PKIX_TRUE;
                 } else {
-
                         /*
                          * Try the next cert, if any, for this parent.
                          * Otherwise keep backing up until we reach a
@@ -2848,10 +2861,7 @@ pkix_BuildForwardDepthFirstSearch(
                         }
                         if (state->useOnlyLocal == PKIX_TRUE) {
                             /* Clean up and go for AIA round. */
-                            state->useOnlyLocal = PKIX_FALSE;
-                            state->certStoreIndex = 0;
-                            state->numFanout = state->buildConstants.maxFanout;
-                            state->status = BUILD_TRYAIA;
+                            pkix_PrepareForwardBuilderStateForAIA(state);
                             break;
                         }
                 }

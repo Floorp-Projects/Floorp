@@ -4315,7 +4315,7 @@ sftk_expandSearchList(SFTKSearchResults *search, int count)
 
 static CK_RV
 sftk_searchDatabase(SFTKDBHandle *handle, SFTKSearchResults *search,
-                        const CK_ATTRIBUTE *pTemplate, CK_LONG ulCount)
+                        const CK_ATTRIBUTE *pTemplate, CK_ULONG ulCount)
 {
     CK_RV crv;
     int objectListSize = search->array_size-search->size;
@@ -4349,7 +4349,7 @@ sftk_searchDatabase(SFTKDBHandle *handle, SFTKSearchResults *search,
  */
 CK_RV
 sftk_emailhack(SFTKSlot *slot, SFTKDBHandle *handle, 
-    SFTKSearchResults *search, CK_ATTRIBUTE *pTemplate, CK_LONG ulCount)
+    SFTKSearchResults *search, CK_ATTRIBUTE *pTemplate, CK_ULONG ulCount)
 {
     PRBool isCert = PR_FALSE;
     int emailIndex = -1;
@@ -4438,22 +4438,47 @@ loser:
     return crv;
 }
 	
+static void
+sftk_pruneSearch(CK_ATTRIBUTE *pTemplate, CK_ULONG ulCount,
+			PRBool *searchCertDB, PRBool *searchKeyDB) {
+    CK_ULONG i;
+
+    *searchCertDB = PR_TRUE;
+    *searchKeyDB = PR_TRUE;
+    for (i = 0; i < ulCount; i++) {
+	if (pTemplate[i].type == CKA_CLASS && pTemplate[i].pValue != NULL) {
+	    CK_OBJECT_CLASS class = *((CK_OBJECT_CLASS*)pTemplate[i].pValue);
+	    if (class == CKO_PRIVATE_KEY || class == CKO_SECRET_KEY) {
+		*searchCertDB = PR_FALSE;
+	    } else {
+		*searchKeyDB = PR_FALSE;
+	    }
+	    break;
+	}
+    }
+}
 
 static CK_RV
 sftk_searchTokenList(SFTKSlot *slot, SFTKSearchResults *search,
-                        CK_ATTRIBUTE *pTemplate, CK_LONG ulCount,
+                        CK_ATTRIBUTE *pTemplate, CK_ULONG ulCount,
                         PRBool *tokenOnly, PRBool isLoggedIn)
 {
-    CK_RV crv;
+    CK_RV crv = CKR_OK;
     CK_RV crv2;
-    SFTKDBHandle *certHandle = sftk_getCertDB(slot);
+    PRBool searchCertDB;
+    PRBool searchKeyDB;
+    
+    sftk_pruneSearch(pTemplate, ulCount, &searchCertDB, &searchKeyDB);
 
-    crv = sftk_searchDatabase(certHandle, search, pTemplate, ulCount);
-    crv2 = sftk_emailhack(slot, certHandle, search, pTemplate, ulCount);
-    if (crv == CKR_OK) crv2 = crv;
-    sftk_freeDB(certHandle);
+    if (searchCertDB) {
+	SFTKDBHandle *certHandle = sftk_getCertDB(slot);
+	crv = sftk_searchDatabase(certHandle, search, pTemplate, ulCount);
+	crv2 = sftk_emailhack(slot, certHandle, search, pTemplate, ulCount);
+	if (crv == CKR_OK) crv = crv2;
+	sftk_freeDB(certHandle);
+    }
 
-    if (crv == CKR_OK && isLoggedIn) {
+    if (crv == CKR_OK && isLoggedIn && searchKeyDB) {
 	SFTKDBHandle *keyHandle = sftk_getKeyDB(slot);
     	crv = sftk_searchDatabase(keyHandle, search, pTemplate, ulCount);
     	sftk_freeDB(keyHandle);

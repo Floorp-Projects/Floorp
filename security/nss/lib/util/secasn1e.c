@@ -38,7 +38,7 @@
  * Support for ENcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1e.c,v 1.21 2006/04/07 11:41:18 kaie%kuix.de Exp $
+ * $Id: secasn1e.c,v 1.21.66.1 2011/01/13 00:26:57 wtc%google.com Exp $
  */
 
 #include "secasn1.h"
@@ -1587,7 +1587,7 @@ SEC_ASN1EncodeItem (PRArenaPool *poolp, SECItem *dest, const void *src,
 
 static SECItem *
 sec_asn1e_integer(PRArenaPool *poolp, SECItem *dest, unsigned long value,
-		  PRBool make_unsigned)
+		  PRBool is_unsigned)
 {
     unsigned long copy;
     unsigned char sign;
@@ -1604,11 +1604,11 @@ sec_asn1e_integer(PRArenaPool *poolp, SECItem *dest, unsigned long value,
     } while (copy);
 
     /*
-     * If this is an unsigned encoding, and the high bit of the last
+     * If 'value' is non-negative, and the high bit of the last
      * byte we counted was set, we need to add one to the length so
      * we put a high-order zero byte in the encoding.
      */
-    if (sign && make_unsigned)
+    if (sign && (is_unsigned || (long)value >= 0))
 	len++;
 
     /*
