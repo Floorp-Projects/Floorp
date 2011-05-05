@@ -362,6 +362,7 @@ var Browser = {
     }
 
     messageManager.addMessageListener("Browser:ViewportMetadata", this);
+    messageManager.addMessageListener("Browser:CanCaptureMouse:Return", this);
     messageManager.addMessageListener("Browser:FormSubmit", this);
     messageManager.addMessageListener("Browser:KeyPress", this);
     messageManager.addMessageListener("Browser:ZoomToPoint:Return", this);
@@ -1133,14 +1134,19 @@ var Browser = {
     let browser = aMessage.target;
 
     switch (aMessage.name) {
-      case "Browser:ViewportMetadata":
+      case "Browser:ViewportMetadata": {
         let tab = this.getTabForBrowser(browser);
         // Some browser such as iframes loaded dynamically into the chrome UI
         // does not have any assigned tab
         if (tab)
           tab.updateViewportMetadata(json);
         break;
-
+      }
+      case "Browser:CanCaptureMouse:Return": {
+        let tab = this.getTabForBrowser(browser);
+        tab.contentMightCaptureMouse = json.contentMightCaptureMouse;
+        break;
+      }
       case "Browser:FormSubmit":
         browser.lastLocation = null;
         break;
@@ -1541,7 +1547,7 @@ Browser.WebProgress.prototype = {
       aTab.updateThumbnail();
 
       browser.messageManager.addMessageListener("MozScrolledAreaChanged", aTab.scrolledAreaChanged);
-      ContentTouchHandler.updateContentCapture();
+      aTab.updateContentCapture();
     });
   }
 };
@@ -1657,7 +1663,6 @@ const ContentTouchHandler = {
     messageManager.addMessageListener("Browser:ContextMenu", this);
     messageManager.addMessageListener("Browser:Highlight", this);
     messageManager.addMessageListener("Browser:CaptureEvents", this);
-    messageManager.addMessageListener("Browser:CanCaptureMouse:Return", this);
   },
 
   handleEvent: function handleEvent(aEvent) {
@@ -1721,11 +1726,6 @@ const ContentTouchHandler = {
     }
   },
 
-  updateContentCapture: function() {
-    this._messageId++;
-    messageManager.sendAsyncMessage("Browser:CanCaptureMouse", { messageId: this._messageId });
-  },
-
   receiveMessage: function receiveMessage(aMessage) {
     let json = aMessage.json;
     if (json.messageId != this._messageId)
@@ -1758,11 +1758,6 @@ const ContentTouchHandler = {
         // We don't know if panning is allowed until the first touchmove event is processed.
         if (this.canCancelPan && json.type == "touchmove")
           Elements.browsers.customDragger.contentMouseCapture = this.panningPrevented;
-        break;
-      }
-      case "Browser:CanCaptureMouse:Return": {
-        let tab = Browser.getTabForBrowser(aMessage.target);
-        tab.contentMightCaptureMouse = json.contentMightCaptureMouse;
         break;
       }
     }
@@ -2959,6 +2954,10 @@ Tab.prototype = {
     if (!this._browser)
       return false;
     return this._browser.getAttribute("type") == "content-primary";
+  },
+
+  updateContentCapture: function() {
+    this._browser.messageManager.sendAsyncMessage("Browser:CanCaptureMouse", {});
   },
 
   toString: function() {
