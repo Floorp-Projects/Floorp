@@ -1971,6 +1971,7 @@ mjit::Compiler::generateMethod()
 
             AutoRejoinSite autoRejoinCall(this,
                 JS_FUNC_TO_DATA_PTR(void *, callingNew ? ic::New : ic::Call),
+                JS_FUNC_TO_DATA_PTR(void *, callingNew ? ic::NativeNew : ic::NativeCall),
                 JS_FUNC_TO_DATA_PTR(void *, callingNew ? stubs::UncachedNew : stubs::UncachedCall));
             AutoRejoinSite autoRejoinNcode(this, (void *) CallSite::NCODE_RETURN_ID);
 
