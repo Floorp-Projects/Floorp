@@ -162,7 +162,7 @@ public:
                                        nsTArray<float> &aRotate);
   NS_IMETHOD_(PRUint16) GetTextAnchor();
   NS_IMETHOD_(PRBool) IsAbsolutelyPositioned();
-  NS_IMETHOD_(PRBool) IsEmpty() const {
+  NS_IMETHOD_(PRBool) IsTextEmpty() const {
     return mContent->GetText()->GetLength() == 0;
   }
   NS_IMETHOD_(void) SetTrimLeadingWhitespace(PRBool aTrimLeadingWhitespace) {

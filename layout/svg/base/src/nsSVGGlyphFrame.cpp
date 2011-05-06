@@ -1420,7 +1420,7 @@ NS_IMETHODIMP_(nsISVGGlyphFragmentLeaf *)
 nsSVGGlyphFrame::GetFirstGlyphFragment()
 {
   nsISVGGlyphFragmentLeaf *leaf = this;
-  while (leaf && leaf->IsEmpty()) {
+  while (leaf && leaf->IsTextEmpty()) {
     leaf = leaf->GetNextGlyphFragment();
   }
   return leaf;
