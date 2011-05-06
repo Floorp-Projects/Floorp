@@ -691,6 +691,7 @@ progress {
 
   -moz-appearance: progresschunk;
   height: 100%;
+  width: 100%;
 
   /* Default style in case of there is -moz-appearance: none; */
   background-color: ThreeDShadow;
