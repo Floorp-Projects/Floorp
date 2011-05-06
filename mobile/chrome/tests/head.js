@@ -80,6 +80,23 @@ let AsyncTests = {
   }
 };
 
+let gCurrentTest = null;
+let gTests = [];
+
+// Iterating tests by shifting test out one by one as runNextTest is called.
+function runNextTest() {
+  // Run the next test until all tests completed
+  if (gTests.length > 0) {
+    gCurrentTest = gTests.shift();
+    info(gCurrentTest.desc);
+    gCurrentTest.run();
+  }
+  else {
+    finish();
+  }
+}
+
+let serverRoot = "http://example.com/browser/mobile/chrome/tests/";
 let chromeRoot = getRootDirectory(gTestPath);
 // For some security reasons (which?), loading remote_head using chromeRoot
 // instead of baseURI make the browser_formsZoom.js test fails.
