@@ -44,8 +44,6 @@
 
 #include "mozilla/layers/ShadowLayers.h"
 
-#include "mozilla/TimeStamp.h"
-
 #ifdef XP_WIN
 #include <windows.h>
 #endif
@@ -388,8 +386,6 @@ public:
   gfxMatrix& GetWorldTransform(void);
   void WorldTransformRect(nsIntRect& aRect);
 
-  void SetRenderFPS(bool aRenderFPS) { mRenderFPS = aRenderFPS; };
-
 private:
   /** Widget associated with this layer manager */
   nsIWidget *mWidget;
@@ -468,25 +464,6 @@ private:
   DrawThebesLayerCallback mThebesLayerCallback;
   void *mThebesLayerCallbackData;
   gfxMatrix mWorldMatrix;
-
-  struct FPSState
-  {
-      GLuint texture;
-      int fps;
-      bool initialized;
-      int fcount;
-      TimeStamp last;
-
-      FPSState()
-        : texture(0)
-        , fps(0)
-        , initialized(false)
-        , fcount(0)
-      {}
-      void DrawFPS(GLContext*, CopyProgram*);
-  } mFPS;
-
-  bool mRenderFPS;
 };
 
 /**
