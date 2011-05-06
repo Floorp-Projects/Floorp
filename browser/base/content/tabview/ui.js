@@ -258,7 +258,6 @@ let UI = {
       function domWinClosedObserver(subject, topic, data) {
         if (topic == "domwindowclosed" && subject == gWindow) {
           self.isDOMWindowClosing = true;
-          Storage.saveActiveGroupName(gWindow);
           if (self.isTabViewVisible())
             GroupItems.removeHiddenGroups();
           TabItems.saveAll(true);
