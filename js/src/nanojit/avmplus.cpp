@@ -180,3 +180,7 @@ void
 nanojit::CodeAlloc::markCodeChunkExec(void*, size_t)
 {}
 
+bool
+nanojit::CodeAlloc::checkChunkMark(void* /*addr*/, size_t /*nbytes*/, bool /*isExec*/) { 
+    return true; // always correct 
+}
