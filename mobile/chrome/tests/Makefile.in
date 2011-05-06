@@ -67,6 +67,7 @@ _BROWSER_FILES = \
   browser_click_content.html \
   browser_click_content.js \
   browser_contacts.js \
+  browser_dragger.js \
   browser_find.js \
   browser_forms.html \
   $(warning browser_forms.js disabled due to failures) \
