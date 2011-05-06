@@ -368,13 +368,14 @@ namespace nanojit
 
     void CfgLister::printEdges(FILE* f, LInsPrinter* printer, InsSet* makeProxyNodesFor)
     {
-        uint32_t pseudoId = ~0; // ids for proxy nodes
+        uint32_t pseudoId = (uint32_t)~0; // ids for proxy nodes
+        LIns*  src = NULL;
         InsBuf str;
         HashMap<LIns*, InsList*>::Iter ite(_edges);
         while(ite.next())
         {
             LIns* origSrc = ite.key();
-            LIns* src = _alt.containsKey(origSrc) ? _alt.get(origSrc) : src;
+            src = _alt.containsKey(origSrc) ? _alt.get(origSrc) : src;
             uint32_t sid = node2id(src);
             Seq<LIns*>* l = ite.value()->get();
             while (l)
