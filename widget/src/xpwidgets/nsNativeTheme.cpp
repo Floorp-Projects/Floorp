@@ -51,6 +51,7 @@
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
 #include "nsPIDOMWindow.h"
+#include "nsProgressFrame.h"
 
 nsNativeTheme::nsNativeTheme()
 : mAnimatedContentTimeout(PR_UINT32_MAX)
@@ -248,6 +249,19 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
         return IsWidgetStyled(aPresContext, parentFrame,
                               parentFrame->GetStyleDisplay()->mAppearance);
       }
+    }
+  }
+
+  /**
+   * Progress bar appearance should be the same for the bar and the container
+   * frame. nsProgressFrame owns the logic and will tell us what we should do.
+   */
+  if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
+      aWidgetType == NS_THEME_PROGRESSBAR) {
+    nsProgressFrame* progressFrame = do_QueryFrame(aWidgetType == NS_THEME_PROGRESSBAR_CHUNK
+                                       ? aFrame->GetParent() : aFrame);
+    if (progressFrame) {
+      return !progressFrame->ShouldUseNativeStyle();
     }
   }
 
