@@ -41,6 +41,7 @@ import time
 import hashlib
 import socket
 import os
+import re
 
 class FileError(Exception):
   " Signifies an error which occurs while doing a file operation."
