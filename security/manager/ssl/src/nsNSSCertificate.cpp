@@ -1289,6 +1289,15 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
 
   NS_ENSURE_ARG(verificationResult);
 
+  nsresult nsrv;
+  nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
+  if (!inss)
+    return nsrv;
+  nsRefPtr<nsCERTValInParamWrapper> survivingParams;
+  nsrv = inss->GetDefaultCERTValInParam(survivingParams);
+  if (NS_FAILED(nsrv))
+    return nsrv;
+  
   SECCertificateUsage nss_usage;
   
   switch (usage)
@@ -1345,10 +1354,21 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
       return NS_ERROR_FAILURE;
   }
 
-  CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
-
-  if (CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE, 
-                         nss_usage, NULL, NULL) == SECSuccess)
+  SECStatus verify_result;
+  if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+    CERTCertDBHandle *defaultcertdb = CERT_GetDefaultCertDB();
+    verify_result = CERT_VerifyCertificateNow(defaultcertdb, mCert, PR_TRUE, 
+                                              nss_usage, NULL, NULL);
+  }
+  else {
+    CERTValOutParam cvout[1];
+    cvout[0].type = cert_po_end;
+    verify_result = CERT_PKIXVerifyCert(mCert, nss_usage,
+                                        survivingParams->GetRawPointerForNSS(),
+                                        cvout, NULL);
+  }
+  
+  if (verify_result == SECSuccess)
   {
     *verificationResult = VERIFIED_OK;
   }
@@ -1401,7 +1421,7 @@ nsNSSCertificate::VerifyForUsage(PRUint32 usage, PRUint32 *verificationResult)
 
 
 NS_IMETHODIMP
-nsNSSCertificate::GetUsagesArray(PRBool ignoreOcsp,
+nsNSSCertificate::GetUsagesArray(PRBool localOnly,
                                  PRUint32 *_verified,
                                  PRUint32 *_count,
                                  PRUnichar ***_usages)
@@ -1416,7 +1436,7 @@ nsNSSCertificate::GetUsagesArray(PRBool ignoreOcsp,
   const char *suffix = "";
   PRUint32 tmpCount;
   nsUsageArrayHelper uah(mCert);
-  rv = uah.GetUsagesArray(suffix, ignoreOcsp, max_usages, _verified, &tmpCount, tmpUsages);
+  rv = uah.GetUsagesArray(suffix, localOnly, max_usages, _verified, &tmpCount, tmpUsages);
   NS_ENSURE_SUCCESS(rv,rv);
   if (tmpCount > 0) {
     *_usages = (PRUnichar **)nsMemory::Alloc(sizeof(PRUnichar *) * tmpCount);
@@ -1456,7 +1476,7 @@ nsNSSCertificate::RequestUsagesArrayAsync(nsICertVerificationListener *aResultLi
 }
 
 NS_IMETHODIMP
-nsNSSCertificate::GetUsagesString(PRBool ignoreOcsp,
+nsNSSCertificate::GetUsagesString(PRBool localOnly,
                                   PRUint32   *_verified,
                                   nsAString &_usages)
 {
@@ -1470,7 +1490,7 @@ nsNSSCertificate::GetUsagesString(PRBool ignoreOcsp,
   const char *suffix = "_p";
   PRUint32 tmpCount;
   nsUsageArrayHelper uah(mCert);
-  rv = uah.GetUsagesArray(suffix, ignoreOcsp, max_usages, _verified, &tmpCount, tmpUsages);
+  rv = uah.GetUsagesArray(suffix, localOnly, max_usages, _verified, &tmpCount, tmpUsages);
   NS_ENSURE_SUCCESS(rv,rv);
   _usages.Truncate();
   for (PRUint32 i=0; i<tmpCount; i++) {

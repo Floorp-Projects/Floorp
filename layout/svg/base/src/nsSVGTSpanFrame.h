@@ -92,8 +92,7 @@ public:
   virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point);
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment();
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment();
-  NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling);
-  NS_IMETHOD_(PRBool) IsAllWhitespace();
+  NS_IMETHOD_(void) SetWhitespaceCompression(PRBool aCompressWhitespace);
 };
 
 #endif

@@ -45,16 +45,16 @@ class nsSVGTextFrame;
 
 class nsSVGTextContainerFrame : public nsSVGDisplayContainerFrame
 {
-public:
+protected:
   nsSVGTextContainerFrame(nsStyleContext* aContext) :
     nsSVGDisplayContainerFrame(aContext) {}
 
+public:
   void NotifyGlyphMetricsChange();
   virtual void GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY);
   virtual void GetDxDy(SVGUserUnitList *aDx, SVGUserUnitList *aDy);
   virtual const SVGNumberList *GetRotate();
   
-public:
   NS_DECL_QUERYFRAME_TARGET(nsSVGTextContainerFrame)
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
@@ -106,11 +106,6 @@ protected:
   nsISVGGlyphFragmentNode *
   GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode *node);
 
-  /*
-   * Set Whitespace handling
-   */
-  void SetWhitespaceHandling();
-  PRBool IsAllWhitespace();
   void CopyPositionList(nsTArray<float> *parentList,
                         SVGUserUnitList *selfList,
                         nsTArray<float> &dstList,
@@ -121,6 +116,7 @@ protected:
                       PRUint32 aOffset);
   PRUint32 BuildPositionList(PRUint32 aOffset, PRUint32 aDepth);
 
+  void SetWhitespaceCompression();
 private:
   /*
    * Returns the glyph fragment containing a particular character

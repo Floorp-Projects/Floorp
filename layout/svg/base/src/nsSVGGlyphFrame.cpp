@@ -669,12 +669,9 @@ nsSVGGlyphFrame::GetCharacterData(nsAString & aCharacterData)
   nsAutoString characterData;
   mContent->AppendTextTo(characterData);
 
-  if (mWhitespaceHandling & COMPRESS_WHITESPACE) {
-    PRBool trimLeadingWhitespace, trimTrailingWhitespace;
-    trimLeadingWhitespace = ((mWhitespaceHandling & TRIM_LEADING_WHITESPACE) != 0);
-    trimTrailingWhitespace = ((mWhitespaceHandling & TRIM_TRAILING_WHITESPACE) != 0);
-    characterData.CompressWhitespace(trimLeadingWhitespace, 
-                                     trimTrailingWhitespace);
+  if (mCompressWhitespace) {
+    characterData.CompressWhitespace(mTrimLeadingWhitespace,
+                                     mTrimTrailingWhitespace);
   } else {
     nsAString::iterator start, end;
     characterData.BeginWriting(start);
@@ -1340,12 +1337,13 @@ nsSVGGlyphFrame::IsAbsolutelyPositioned()
 PRUint32
 nsSVGGlyphFrame::GetNumberOfChars()
 {
-  if (mWhitespaceHandling == PRESERVE_WHITESPACE)
-    return mContent->TextLength();
+  if (mCompressWhitespace) {
+    nsAutoString text;
+    GetCharacterData(text);
+    return text.Length();
+  }
 
-  nsAutoString text;
-  GetCharacterData(text);
-  return text.Length();
+  return mContent->TextLength();
 }
 
 float
@@ -1442,14 +1440,15 @@ nsSVGGlyphFrame::GetNextGlyphFragment()
   return node ? node->GetNextGlyphFragment() : nsnull;
 }
 
-NS_IMETHODIMP_(void)
-nsSVGGlyphFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
+NS_IMETHODIMP_(PRBool)
+nsSVGGlyphFrame::EndsWithWhitespace() const
 {
-  mWhitespaceHandling = aWhitespaceHandling;
+  const nsTextFragment* text = mContent->GetText();
+  return NS_IsAsciiWhitespace(text->CharAt(text->GetLength() - 1));
 }
 
 NS_IMETHODIMP_(PRBool)
-nsSVGGlyphFrame::IsAllWhitespace()
+nsSVGGlyphFrame::IsAllWhitespace() const
 {
   const nsTextFragment* text = mContent->GetText();
 

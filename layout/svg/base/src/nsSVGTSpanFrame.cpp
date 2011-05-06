@@ -190,13 +190,7 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
 }
 
 NS_IMETHODIMP_(void)
-nsSVGTSpanFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
+nsSVGTSpanFrame::SetWhitespaceCompression(PRBool)
 {
-  nsSVGTSpanFrameBase::SetWhitespaceHandling();
-}
-
-NS_IMETHODIMP_(PRBool)
-nsSVGTSpanFrame::IsAllWhitespace()
-{
-  return nsSVGTSpanFrameBase::IsAllWhitespace();
+  nsSVGTSpanFrameBase::SetWhitespaceCompression();
 }

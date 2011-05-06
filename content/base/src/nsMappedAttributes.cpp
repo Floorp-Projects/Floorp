@@ -215,12 +215,7 @@ nsMappedAttributes::List(FILE* out, PRInt32 aIndent) const
     for (indent = aIndent; indent > 0; --indent)
       fputs("  ", out);
 
-    if (Attrs()[i].mName.IsAtom()) {
-      Attrs()[i].mName.Atom()->ToString(buffer);
-    }
-    else {
-      Attrs()[i].mName.NodeInfo()->GetQualifiedName(buffer);
-    }
+    Attrs()[i].mName.GetQualifiedName(buffer);
     fputs(NS_LossyConvertUTF16toASCII(buffer).get(), out);
 
     Attrs()[i].mValue.ToString(buffer);

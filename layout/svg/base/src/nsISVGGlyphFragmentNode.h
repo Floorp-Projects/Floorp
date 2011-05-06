@@ -45,11 +45,6 @@
 class nsISVGGlyphFragmentLeaf;
 class nsIDOMSVGPoint;
 
-#define PRESERVE_WHITESPACE       0x00
-#define COMPRESS_WHITESPACE       0x01
-#define TRIM_LEADING_WHITESPACE   0x02
-#define TRIM_TRAILING_WHITESPACE  0x04
-
 class nsISVGGlyphFragmentNode : public nsQueryFrame
 {
 public:
@@ -61,8 +56,7 @@ public:
   virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point)=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment()=0;
   NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment()=0;
-  NS_IMETHOD_(void) SetWhitespaceHandling(PRUint8 aWhitespaceHandling)=0;
-  NS_IMETHOD_(PRBool) IsAllWhitespace()=0;
+  NS_IMETHOD_(void) SetWhitespaceCompression(PRBool aCompressWhitespace)=0;
 };
 
 #endif // __NS_ISVGGLYPHFRAGMENTNODE_H__

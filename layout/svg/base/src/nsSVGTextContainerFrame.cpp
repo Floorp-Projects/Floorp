@@ -319,70 +319,6 @@ nsSVGTextContainerFrame::GetNextGlyphFragmentChildNode(nsISVGGlyphFragmentNode *
   return retval;
 }
 
-void
-nsSVGTextContainerFrame::SetWhitespaceHandling()
-{
-  PRUint8 whitespaceHandling = COMPRESS_WHITESPACE | TRIM_LEADING_WHITESPACE;
-
-  for (nsIFrame *frame = this; frame != nsnull; frame = frame->GetParent()) {
-    nsIContent *content = frame->GetContent();
-    static nsIContent::AttrValuesArray strings[] =
-      {&nsGkAtoms::preserve, &nsGkAtoms::_default, nsnull};
-
-    PRInt32 index = content->FindAttrValueIn(kNameSpaceID_XML,
-                                             nsGkAtoms::space,
-                                             strings, eCaseMatters);
-    if (index == 0) {
-      whitespaceHandling = PRESERVE_WHITESPACE;
-      break;
-    }
-    if (index != nsIContent::ATTR_MISSING ||
-        (frame->GetStateBits() & NS_STATE_IS_OUTER_SVG))
-      break;
-  }
-
-  nsISVGGlyphFragmentNode* firstNode = GetFirstGlyphFragmentChildNode();
-  nsISVGGlyphFragmentNode* lastNonWhitespaceNode = nsnull;
-  nsISVGGlyphFragmentNode* node;
-
-  if (whitespaceHandling != PRESERVE_WHITESPACE) {
-    lastNonWhitespaceNode = node = firstNode;
-    while (node) {
-      if (!node->IsAllWhitespace()) {
-        lastNonWhitespaceNode = node;
-      }
-      node = GetNextGlyphFragmentChildNode(node);
-    }
-  }
-
-  node = firstNode;
-  while (node) {
-    if (node == lastNonWhitespaceNode) {
-      whitespaceHandling |= TRIM_TRAILING_WHITESPACE;
-    }
-    node->SetWhitespaceHandling(whitespaceHandling);
-    if ((whitespaceHandling & TRIM_LEADING_WHITESPACE) &&
-        !node->IsAllWhitespace()) {
-      whitespaceHandling &= ~TRIM_LEADING_WHITESPACE;
-    }
-    node = GetNextGlyphFragmentChildNode(node);
-  }
-}
-
-PRBool
-nsSVGTextContainerFrame::IsAllWhitespace()
-{
-  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
-
-  while (node) {
-    if (!node->IsAllWhitespace()) {
-      return PR_FALSE;
-    }
-    node = GetNextGlyphFragmentChildNode(node);
-  }
-  return PR_TRUE;
-}
-
 // -------------------------------------------------------------------------
 // Private functions
 // -------------------------------------------------------------------------
@@ -546,4 +482,34 @@ void
 nsSVGTextContainerFrame::GetEffectiveRotate(nsTArray<float> &aRotate)
 {
   aRotate.AppendElements(mRotate);
+}
+
+void
+nsSVGTextContainerFrame::SetWhitespaceCompression()
+{
+  PRBool compressWhitespace = PR_TRUE;
+
+  for (const nsIFrame *frame = this; frame != nsnull; frame = frame->GetParent()) {
+    static const nsIContent::AttrValuesArray strings[] =
+      {&nsGkAtoms::preserve, &nsGkAtoms::_default, nsnull};
+
+    PRInt32 index = frame->GetContent()->FindAttrValueIn(
+                                           kNameSpaceID_XML,
+                                           nsGkAtoms::space,
+                                           strings, eCaseMatters);
+    if (index == 0) {
+      compressWhitespace = PR_FALSE;
+      break;
+    }
+    if (index != nsIContent::ATTR_MISSING ||
+        (frame->GetStateBits() & NS_STATE_IS_OUTER_SVG))
+      break;
+  }
+
+  nsISVGGlyphFragmentNode* node = GetFirstGlyphFragmentChildNode();
+
+  while (node) {
+    node->SetWhitespaceCompression(compressWhitespace);
+    node = GetNextGlyphFragmentChildNode(node);
+  }
 }
