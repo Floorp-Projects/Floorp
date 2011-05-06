@@ -1957,6 +1957,8 @@ PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx);
 extern JSObject *
 NonNullObject(JSContext *cx, const Value &v);
 
+extern const char *
+InformalValueTypeName(const Value &v);
 }
 
 #endif /* jsobj_h___ */

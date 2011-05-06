@@ -833,6 +833,32 @@ DebugFrame_getLive(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
+DebugFrame_eval(JSContext *cx, uintN argc, Value *vp)
+{
+    REQUIRE_ARGC("Debug.Frame.eval", 1);
+    THIS_FRAME(cx, vp, "eval", thisobj, fp);
+    Debug *dbg = Debug::fromChildJSObject(&vp[1].toObject());
+
+    if (!vp[2].isString()) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NOT_EXPECTED_TYPE,
+                             "Debug.Frame.eval", "string", InformalValueTypeName(vp[2]));
+        return false;
+    }
+    JSLinearString *linearStr = vp[2].toString()->ensureLinear(cx);
+    if (!linearStr)
+        return false;
+    JS::Anchor<JSString *> anchor(linearStr);
+
+    AutoCompartment ac(cx, &fp->scopeChain());
+    if (!ac.enter())
+        return false;
+    Value rval;
+    bool ok = JS_EvaluateUCInStackFrame(cx, Jsvalify(fp), linearStr->chars(), linearStr->length(),
+                                        "debugger eval code", 1, Jsvalify(&rval));
+    return dbg->newCompletionValue(ac, ok, rval, vp);
+}
+
+static JSBool
 DebugFrame_construct(JSContext *cx, uintN argc, Value *vp)
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NO_CONSTRUCTOR, "Debug.Frame");
@@ -848,6 +874,11 @@ static JSPropertySpec DebugFrame_properties[] = {
     JS_PSG("generator", DebugFrame_getGenerator, 0),
     JS_PSG("arguments", DebugFrame_getArguments, 0),
     JS_PS_END
+};
+
+static JSFunctionSpec DebugFrame_methods[] = {
+    JS_FN("eval", DebugFrame_eval, 1, 0),
+    JS_FS_END
 };
 
 // === Debug.Object
@@ -1023,7 +1054,8 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
     JSObject *frameCtor;
     JSObject *frameProto = js_InitClass(cx, debugCtor, objProto, &DebugFrame_class,
                                         DebugFrame_construct, 0,
-                                        DebugFrame_properties, NULL, NULL, NULL, &frameCtor);
+                                        DebugFrame_properties, DebugFrame_methods, NULL, NULL,
+                                        &frameCtor);
     if (!frameProto)
         return false;
 
