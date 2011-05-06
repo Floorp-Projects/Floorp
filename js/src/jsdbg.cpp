@@ -903,6 +903,14 @@ DebugObject_construct(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
+DebugObject_getPrototype(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, vp, "getClass", refobj);
+    vp->setObjectOrNull(refobj->getProto());
+    return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
+}
+
+static JSBool
 DebugObject_getClass(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, vp, "getClass", refobj);
@@ -991,6 +999,7 @@ static JSPropertySpec DebugObject_properties[] = {
 };
 
 static JSFunctionSpec DebugObject_methods[] = {
+    JS_FN("getPrototype", DebugObject_getPrototype, 0, 0),
     JS_FN("getClass", DebugObject_getClass, 0, 0),
     JS_FN("apply", DebugObject_apply, 0, 0),
     JS_FS_END
