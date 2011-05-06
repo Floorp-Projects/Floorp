@@ -17,6 +17,11 @@ div.progress-element {
 div.progress-bar {
   -moz-appearance: progresschunk;
   height: 100%;
+  /*
+   * We can't apply the following style to the reference because it will have
+   * underisable effectes:
+   * width: 100%;
+   */
 
   /* Default style in case of there is -moz-appearance: none; */
   background-color: ThreeDShadow;
