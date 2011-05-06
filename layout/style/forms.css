@@ -673,9 +673,6 @@ progress {
   display: inline-block;
   vertical-align: -0.2em;
 
-  /* TODO: this is a workaround for bug 568825 */
-  overflow: hidden;
-
   /* Default style in case of there is -moz-appearance: none; */
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
@@ -685,7 +682,13 @@ progress {
   background-color: -moz-Dialog;
 }
 
-progress > div {
+::-moz-progress-bar {
+  /* Block styles that would change the type of frame we construct. */
+  display: inline-block ! important;
+  float: none ! important;
+  position: static ! important;
+  overflow: visible ! important;
+
   -moz-appearance: progresschunk;
   height: 100%;
 

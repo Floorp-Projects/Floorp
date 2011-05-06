@@ -5,9 +5,6 @@ div.progress-element {
   width: 10em;
   vertical-align: -0.2em;
 
-  /* TODO: this is a workaround for bug 568825 */
-  overflow: hidden;
-
   /* Default style in case of there is -moz-appearance: none; */
   border: 2px solid;
   -moz-border-top-colors: ThreeDShadow -moz-Dialog;
@@ -23,4 +20,8 @@ div.progress-bar {
 
   /* Default style in case of there is -moz-appearance: none; */
   background-color: ThreeDShadow;
+}
+
+progress, progress::-moz-progress-bar, div.progress-element, div.progress-bar {
+  -moz-appearance: none;
 }
