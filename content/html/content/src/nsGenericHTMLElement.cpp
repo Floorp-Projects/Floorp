@@ -136,7 +136,7 @@ static nsHashtable sGEUS_ElementCounts;
 void GEUS_ElementCreated(nsINodeInfo *aNodeInfo)
 {
   nsAutoString name;
-  aNodeInfo->GetLocalName(name);
+  aNodeInfo->GetName(name);
 
   nsStringKey key(name);
 
@@ -336,12 +336,6 @@ nsGenericHTMLElement::CopyInnerTo(nsGenericElement* aDst) const
   return NS_OK;
 }
 
-nsresult
-nsGenericHTMLElement::GetTagName(nsAString& aTagName)
-{
-  return GetNodeName(aTagName);
-}
-
 NS_IMETHODIMP
 nsGenericHTMLElement::SetAttribute(const nsAString& aName,
                                    const nsAString& aValue)
@@ -368,17 +362,6 @@ nsGenericHTMLElement::SetAttribute(const nsAString& aName,
 
   return SetAttr(name->NamespaceID(), name->LocalName(), name->GetPrefix(),
                  aValue, PR_TRUE);
-}
-
-nsresult
-nsGenericHTMLElement::GetNodeName(nsAString& aNodeName)
-{
-  mNodeInfo->GetQualifiedName(aNodeName);
-
-  if (IsInHTMLDocument())
-    nsContentUtils::ASCIIToUpper(aNodeName);
-
-  return NS_OK;
 }
 
 // Implementation for nsIDOMHTMLElement

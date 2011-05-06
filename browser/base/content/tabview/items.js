@@ -152,7 +152,7 @@ Item.prototype = {
       cancelClass: 'close stackExpander',
       start: function(e, ui) {
         if (this.isAGroupItem) {
-          GroupItems.setActiveGroupItem(this);
+          UI.setActive(this);
           this._unfreezeItemSize();
         }
         // if we start dragging a tab within a group, start with dropSpace on.
@@ -202,7 +202,7 @@ Item.prototype = {
       minHeight: 90,
       start: function(e,ui) {
         if (this.isAGroupItem)
-          GroupItems.setActiveGroupItem(this);
+          UI.setActive(this);
         resize.info = new Drag(this, e);
       },
       resize: function(e,ui) {

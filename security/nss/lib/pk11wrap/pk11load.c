@@ -178,8 +178,8 @@ secmod_handleReload(SECMODModule *oldModule, SECMODModule *newModule)
 	char *oldModuleSpec;
 
 	if (secmod_IsInternalKeySlot(newModule)) {
-	    pk11_SetInternalKeySlot(slot);
-	}
+	    pk11_SetInternalKeySlotIfFirst(slot);
+	} 
 	newID = slot->slotID;
 	PK11_FreeSlot(slot);
 	for (thisChild=children, thisID=ids; thisChild && *thisChild; 
@@ -550,6 +550,11 @@ secmod_LoadPKCS11Module(SECMODModule *mod, SECMODModule **oldModule) {
 	    /* look down the slot info table */
 	    PK11_LoadSlotList(mod->slots[i],mod->slotInfo,mod->slotInfoCount);
 	    SECMOD_SetRootCerts(mod->slots[i],mod);
+	    /* explicitly mark the internal slot as such if IsInternalKeySlot()
+	     * is set */
+	    if (secmod_IsInternalKeySlot(mod) && (i == (mod->isFIPS ? 0 : 1))) {
+		pk11_SetInternalKeySlotIfFirst(mod->slots[i]);
+	    } 
 	}
 	mod->slotCount = slotCount;
 	mod->slotInfoCount = 0;

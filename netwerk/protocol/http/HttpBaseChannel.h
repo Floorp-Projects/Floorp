@@ -155,6 +155,10 @@ public:
   NS_IMETHOD GetChannelIsForDownload(PRBool *aChannelIsForDownload);
   NS_IMETHOD SetChannelIsForDownload(PRBool aChannelIsForDownload);
   NS_IMETHOD SetCacheKeysRedirectChain(nsTArray<nsCString> *cacheKeys);
+  NS_IMETHOD GetLocalAddress(nsACString& addr);
+  NS_IMETHOD GetLocalPort(PRInt32* port);
+  NS_IMETHOD GetRemoteAddress(nsACString& addr);
+  NS_IMETHOD GetRemotePort(PRInt32* port);
   inline void CleanRedirectCacheChainIfNecessary()
   {
       if (mRedirectedCachekeys) {
@@ -197,6 +201,9 @@ public:
     nsHttpResponseHead * GetResponseHead() const { return mResponseHead; }
     nsHttpRequestHead * GetRequestHead() { return &mRequestHead; }
 
+    const PRNetAddr& GetSelfAddr() { return mSelfAddr; }
+    const PRNetAddr& GetPeerAddr() { return mPeerAddr; }
+
 protected:
   nsresult ApplyContentConversions();
 
@@ -235,6 +242,9 @@ protected:
   nsCString                         mContentTypeHint;
   nsCString                         mContentCharsetHint;
   nsCString                         mUserSetCookieHeader;
+
+  PRNetAddr                         mSelfAddr;
+  PRNetAddr                         mPeerAddr;
 
   // Resumable channel specific data
   nsCString                         mEntityID;

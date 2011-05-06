@@ -315,7 +315,7 @@ public:
 
   /**
    * nsresult Loader::StopLoadingSheet(nsIURI* aURL), which notifies the
-   * nsICSSLoaderObserver with NS_BINDING_ABORTED, was removed in Bug 556446. 
+   * nsICSSLoaderObserver with NS_BINDING_ABORTED, was removed in Bug 556446.
    * It can be found in revision 2c44a32052ad.
    */
 

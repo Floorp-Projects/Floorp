@@ -20,7 +20,7 @@ function onTabViewWindowLoaded() {
   let box1 = new contentWindow.Rect(310, 10, 300, 300);
   let group1 = new contentWindow.GroupItem([], { bounds: box1 });
   ok(group1.isEmpty(), "This group is empty");
-  contentWindow.GroupItems.setActiveGroupItem(group1);
+  contentWindow.UI.setActive(group1);
   let tab1 = gBrowser.loadOneTab("about:blank#1", {inBackground: true});
   let tab1Item = tab1._tabViewTabItem;
   ok(group1.getChildren().some(function(child) child == tab1Item), "The tab was made in our new group");

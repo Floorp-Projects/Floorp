@@ -180,62 +180,24 @@ GLXLibrary::EnsureInitialized()
     }
 
     Display *display = DefaultXDisplay();
-    PRBool ignoreBlacklist = PR_GetEnv("MOZ_GLX_IGNORE_BLACKLIST") != nsnull;
-    if (!ignoreBlacklist) {
-        // ATI's libGL (at least the one provided with 11.2 drivers) segfaults
-        // when querying server info if the server does not have the
-        // ATIFGLEXTENSION extension.
-        const char *clientVendor = xGetClientString(display, GLX_VENDOR);
-        if (clientVendor && strcmp(clientVendor, "ATI") == 0) {
-            printf("[GLX] The ATI proprietary libGL.so.1 is currently "
-                   "blacklisted to avoid crashes that happen in some "
-                   "situations. If you would like to bypass this, set the "
-                   "MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
-            return PR_FALSE;
-        }
-    }
 
     int screen = DefaultScreen(display);
     const char *serverVendor = NULL;
     const char *serverVersionStr = NULL;
     const char *extensionsStr = NULL;
 
-    // This scope is covered by a ScopedXErrorHandler to catch X errors in GLX
-    // calls.  See bug 632867 comment 3: Mesa versions up to 7.10 cause a
-    // BadLength error during the first GLX call that communicates with the
-    // server when the server GLX version < 1.3.
-    {
-        ScopedXErrorHandler xErrorHandler;
-
-        if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
-            gGLXMajorVersion = 0;
-            gGLXMinorVersion = 0;
-            return PR_FALSE;
-        }
-
-        serverVendor = xQueryServerString(display, screen, GLX_VENDOR);
-        serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
-
-        PRBool IsDriverBlacklisted = !serverVendor ||   // it's been reported that a VNC X server was returning serverVendor=null
-                                     !serverVersionStr ||
-                                     strcmp(serverVendor, "NVIDIA Corporation");
-
-        if (IsDriverBlacklisted && !ignoreBlacklist)
-        {
-          printf("[GLX] your GL driver is currently blocked. If you would like to bypass this, "
-                  "define the MOZ_GLX_IGNORE_BLACKLIST environment variable.\n");
-          return PR_FALSE;
-        }
-
-        if (!GLXVersionCheck(1, 1))
-            // Not possible to query for extensions.
-            return PR_FALSE;
-
-        extensionsStr = xQueryExtensionsString(display, screen);
-
-        if (xErrorHandler.GetError())
-          return PR_FALSE;
+    if (!xQueryVersion(display, &gGLXMajorVersion, &gGLXMinorVersion)) {
+        gGLXMajorVersion = 0;
+        gGLXMinorVersion = 0;
+        return PR_FALSE;
     }
+
+    serverVendor = xQueryServerString(display, screen, GLX_VENDOR);
+    serverVersionStr = xQueryServerString(display, screen, GLX_VERSION);
+
+    if (!GLXVersionCheck(1, 1))
+        // Not possible to query for extensions.
+        return PR_FALSE;
 
     LibrarySymbolLoader::SymLoadStruct *sym13;
     if (!GLXVersionCheck(1, 3)) {

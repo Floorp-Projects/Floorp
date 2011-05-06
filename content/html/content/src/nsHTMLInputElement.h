@@ -225,11 +225,6 @@ public:
   }
   void AddedToRadioGroup();
   void WillRemoveFromRadioGroup();
-  /**
-   * Get the radio group container for this button (form or document)
-   * @return the radio group container (or null if no form or document)
-   */
-  virtual already_AddRefed<nsIRadioGroupContainer> GetRadioGroupContainer();
 
  /**
    * Helper function returning the currently selected button in the radio group.
@@ -391,16 +386,6 @@ protected:
                                     PRBool aShouldInvalidate);
 
   nsresult GetSelectionRange(PRInt32* aSelectionStart, PRInt32* aSelectionEnd);
-
-  /**
-   * Get the name if it exists and return whether it did exist
-   * @param aName the name returned [OUT]
-   * @param true if the name is empty, false otherwise
-   */
-  PRBool GetNameIfExists(nsAString& aName) {
-    GetAttr(kNameSpaceID_None, nsGkAtoms::name, aName);
-    return !aName.IsEmpty();
-  }
 
   /**
    * Called when an attribute is about to be changed
@@ -576,6 +561,14 @@ protected:
         return false;
     }
   }
+
+  /**
+   * Returns the radio group container if the element has one, null otherwise.
+   * The radio group container will be the form owner if there is one.
+   * The current document otherwise.
+   * @return the radio group container if the element has one, null otherwise.
+   */
+  nsIRadioGroupContainer* GetRadioGroupContainer() const;
 
   nsCOMPtr<nsIControllers> mControllers;
 

@@ -70,6 +70,10 @@
 #include "nsFilePickerProxy.h"
 #include "nsXULAppAPI.h"
 
+#if defined(MOZ_X11)
+#include "GfxInfoX11.h"
+#endif
+
 // from nsWindow.cpp
 extern PRBool gDisableNativeTheme;
 
@@ -114,6 +118,16 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorQt)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintSession, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPrintDialogServiceQt, Init)
 #endif
+
+#if defined(MOZ_X11)
+namespace mozilla {
+namespace widget {
+// This constructor should really be shared with all platforms.
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(GfxInfo, Init)
+}
+}
+#endif
+
 
 static nsresult
 nsNativeThemeQtConstructor(nsISupports *aOuter, REFNSIID aIID,
@@ -163,7 +177,11 @@ NS_DEFINE_NAMED_CID(NS_PRINTER_ENUMERATOR_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTSESSION_CID);
 NS_DEFINE_NAMED_CID(NS_DEVICE_CONTEXT_SPEC_CID);
 NS_DEFINE_NAMED_CID(NS_PRINTDIALOGSERVICE_CID);
-#endif 
+#endif
+
+#if defined(MOZ_X11)
+NS_DEFINE_NAMED_CID(NS_GFXINFO_CID);
+#endif
 
 static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_WINDOW_CID, false, NULL, nsWindowConstructor },
@@ -189,7 +207,10 @@ static const mozilla::Module::CIDEntry kWidgetCIDs[] = {
     { &kNS_PRINTSESSION_CID, false, NULL, nsPrintSessionConstructor },
     { &kNS_DEVICE_CONTEXT_SPEC_CID, false, NULL, nsDeviceContextSpecQtConstructor },
     { &kNS_PRINTDIALOGSERVICE_CID, false, NULL, nsPrintDialogServiceQtConstructor },
-#endif 
+#endif
+#if defined(MOZ_X11)
+    { &kNS_GFXINFO_CID, false, NULL, mozilla::widget::GfxInfoConstructor },
+#endif
     { NULL }
 };
 
@@ -217,7 +238,10 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
     { "@mozilla.org/gfx/printsession;1", &kNS_PRINTSESSION_CID },
     { "@mozilla.org/gfx/devicecontextspec;1", &kNS_DEVICE_CONTEXT_SPEC_CID },
     { NS_PRINTDIALOGSERVICE_CONTRACTID, &kNS_PRINTDIALOGSERVICE_CID },
-#endif 
+#endif
+#if defined(MOZ_X11)
+    { "@mozilla.org/gfx/info;1", &kNS_GFXINFO_CID },
+#endif
     { NULL }
 };
 

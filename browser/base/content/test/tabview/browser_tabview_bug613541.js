@@ -12,7 +12,7 @@ function test() {
   let createGroupItem = function (numTabs) {
     let bounds = new cw.Rect(20, 20, 200, 200);
     let groupItem = new cw.GroupItem([], {bounds: bounds, immediately: true});
-    cw.GroupItems.setActiveGroupItem(groupItem);
+    cw.UI.setActive(groupItem);
 
     for (let i=0; i<numTabs || 0; i++)
       gBrowser.loadOneTab('about:blank', {inBackground: true});

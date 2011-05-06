@@ -2699,6 +2699,11 @@ function BrowserOnClick(event) {
         gBrowser.loadURIWithFlags(content.location.href,
                                   nsIWebNavigation.LOAD_FLAGS_BYPASS_CLASSIFIER,
                                   null, null, null);
+
+        Services.perms.add(makeURI(content.location.href), "safe-browsing",
+                           Ci.nsIPermissionManager.ALLOW_ACTION,
+                           Ci.nsIPermissionManager.EXPIRE_SESSION);
+
         let buttons = [{
           label: gNavigatorBundle.getString("safebrowsing.getMeOutOfHereButton.label"),
           accessKey: gNavigatorBundle.getString("safebrowsing.getMeOutOfHereButton.accessKey"),

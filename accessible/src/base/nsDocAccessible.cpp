@@ -273,21 +273,16 @@ nsDocAccessible::SetRoleMapEntry(nsRoleMapEntry* aRoleMapEntry)
   }
 }
 
-NS_IMETHODIMP 
-nsDocAccessible::GetDescription(nsAString& aDescription)
+void
+nsDocAccessible::Description(nsString& aDescription)
 {
   if (mParent)
-    mParent->GetDescription(aDescription);
+    mParent->Description(aDescription);
 
-  if (aDescription.IsEmpty()) {
-    nsAutoString description;
+  if (aDescription.IsEmpty())
     nsTextEquivUtils::
       GetTextEquivFromIDRefs(this, nsAccessibilityAtoms::aria_describedby,
-                             description);
-    aDescription = description;
-  }
-
-  return NS_OK;
+                             aDescription);
 }
 
 // nsAccessible public method

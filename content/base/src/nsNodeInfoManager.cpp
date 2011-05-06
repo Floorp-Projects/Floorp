@@ -223,16 +223,16 @@ nsNodeInfoManager::GetNodeInfo(nsIAtom *aName, nsIAtom *aPrefix,
     return nodeInfo;
   }
 
-  nsRefPtr<nsNodeInfo> newNodeInfo = nsNodeInfo::Create();
+  nsRefPtr<nsNodeInfo> newNodeInfo =
+    nsNodeInfo::Create(aName, aPrefix, aNamespaceID, this);
   NS_ENSURE_TRUE(newNodeInfo, nsnull);
   
-  nsresult rv = newNodeInfo->Init(aName, aPrefix, aNamespaceID, this);
-  NS_ENSURE_SUCCESS(rv, nsnull);
-
   PLHashEntry *he;
   he = PL_HashTableAdd(mNodeInfoHash, &newNodeInfo->mInner, newNodeInfo);
   NS_ENSURE_TRUE(he, nsnull);
 
+  // Have to do the swap thing, because already_AddRefed<nsNodeInfo>
+  // doesn't cast to already_AddRefed<nsINodeInfo>
   nsNodeInfo *nodeInfo = nsnull;
   newNodeInfo.swap(nodeInfo);
 
@@ -259,12 +259,13 @@ nsNodeInfoManager::GetNodeInfo(const nsAString& aName, nsIAtom *aPrefix,
     return NS_OK;
   }
 
-  nsRefPtr<nsNodeInfo> newNodeInfo = nsNodeInfo::Create();
-  NS_ENSURE_TRUE(newNodeInfo, nsnull);
   
   nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aName);
-  nsresult rv = newNodeInfo->Init(nameAtom, aPrefix, aNamespaceID, this);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
+
+  nsRefPtr<nsNodeInfo> newNodeInfo =
+      nsNodeInfo::Create(nameAtom, aPrefix, aNamespaceID, this);
+  NS_ENSURE_TRUE(newNodeInfo, NS_ERROR_OUT_OF_MEMORY);
 
   PLHashEntry *he;
   he = PL_HashTableAdd(mNodeInfoHash, &newNodeInfo->mInner, newNodeInfo);

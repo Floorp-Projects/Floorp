@@ -38,6 +38,5 @@
 TIERS += nspr
 
 ifndef MOZ_NATIVE_NSPR
-tier_nspr_staticdirs += nsprpub
 tier_nspr_dirs += config/nspr
 endif

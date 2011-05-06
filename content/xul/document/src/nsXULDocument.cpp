@@ -3682,14 +3682,9 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
 
 #ifdef PR_LOGGING
     if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
-        nsAutoString tagstr;
-        aPrototype->mNodeInfo->GetQualifiedName(tagstr);
-
-        nsCAutoString tagstrC;
-        tagstrC.AssignWithConversion(tagstr);
         PR_LOG(gXULLog, PR_LOG_NOTICE,
                ("xul: creating <%s> from prototype",
-                tagstrC.get()));
+                NS_ConvertUTF16toUTF8(aPrototype->mNodeInfo->QualifiedName()).get()));
     }
 #endif
 

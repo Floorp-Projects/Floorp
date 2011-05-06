@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.54 2010/07/05 19:31:56 alexei.volkov.bugs%sun.com Exp $ */
+/* $Id: sslsnce.c,v 1.54.2.1 2011/03/16 18:49:45 alexei.volkov.bugs%sun.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -1863,17 +1863,25 @@ WrapTicketKey(SECKEYPublicKey *svrPubKey, PK11SymKey *symKey,
 }
 
 static PRBool
-GenerateAndWrapTicketKeys(SECKEYPublicKey *svrPubKey, void *pwArg,
-                          unsigned char *keyName, PK11SymKey **aesKey,
-                          PK11SymKey **macKey)
+GenerateTicketKeys(void *pwArg, unsigned char *keyName, PK11SymKey **aesKey,
+                   PK11SymKey **macKey)
 {
     PK11SlotInfo *slot;
     CK_MECHANISM_TYPE mechanismArray[2];
     PK11SymKey *aesKeyTmp = NULL;
     PK11SymKey *macKeyTmp = NULL;
     cacheDesc *cache = &globalCache;
+    uint8 ticketKeyNameSuffixLocal[SESS_TICKET_KEY_VAR_NAME_LEN];
+    uint8 *ticketKeyNameSuffix;
 
-    if (PK11_GenerateRandom(cache->ticketKeyNameSuffix,
+    if (!cache->cacheMem) {
+        /* cache is not initalized. Use stack buffer */
+        ticketKeyNameSuffix = ticketKeyNameSuffixLocal;
+    } else {
+        ticketKeyNameSuffix = cache->ticketKeyNameSuffix;
+    }
+
+    if (PK11_GenerateRandom(ticketKeyNameSuffix,
 	    SESS_TICKET_KEY_VAR_NAME_LEN) != SECSuccess) {
 	SSL_DBG(("%d: SSL[%s]: Unable to generate random key name bytes.",
 		    SSL_GETPID(), "unknown"));
@@ -1885,9 +1893,10 @@ GenerateAndWrapTicketKeys(SECKEYPublicKey *svrPubKey, void *pwArg,
 
     slot = PK11_GetBestSlotMultiple(mechanismArray, 2, pwArg);
     if (slot) {
-	aesKeyTmp = PK11_KeyGen(slot, mechanismArray[0], NULL, 32, pwArg);
-	macKeyTmp = PK11_KeyGen(slot, mechanismArray[1], NULL, SHA256_LENGTH,
-				pwArg);
+	aesKeyTmp = PK11_KeyGen(slot, mechanismArray[0], NULL,
+                                AES_256_KEY_LENGTH, pwArg);
+	macKeyTmp = PK11_KeyGen(slot, mechanismArray[1], NULL,
+                                SHA256_LENGTH, pwArg);
 	PK11_FreeSlot(slot);
     }
 
@@ -1896,15 +1905,39 @@ GenerateAndWrapTicketKeys(SECKEYPublicKey *svrPubKey, void *pwArg,
 		    SSL_GETPID(), "unknown"));
 	goto loser;
     }
+    PORT_Memcpy(keyName, ticketKeyNameSuffix, SESS_TICKET_KEY_VAR_NAME_LEN);
+    *aesKey = aesKeyTmp;
+    *macKey = macKeyTmp;
+    return PR_TRUE;
 
-    /* Export the keys to the shared cache in wrapped form. */
-    if (!WrapTicketKey(svrPubKey, aesKeyTmp, "enc key", cache->ticketEncKey))
-	goto loser;
-    if (!WrapTicketKey(svrPubKey, macKeyTmp, "mac key", cache->ticketMacKey))
-	goto loser;
+loser:
+    if (aesKeyTmp)
+	PK11_FreeSymKey(aesKeyTmp);
+    if (macKeyTmp)
+	PK11_FreeSymKey(macKeyTmp);
+    return PR_FALSE;
+}
 
-    PORT_Memcpy(keyName, cache->ticketKeyNameSuffix,
-	SESS_TICKET_KEY_VAR_NAME_LEN);
+static PRBool
+GenerateAndWrapTicketKeys(SECKEYPublicKey *svrPubKey, void *pwArg,
+                          unsigned char *keyName, PK11SymKey **aesKey,
+                          PK11SymKey **macKey)
+{
+    PK11SymKey *aesKeyTmp = NULL;
+    PK11SymKey *macKeyTmp = NULL;
+    cacheDesc *cache = &globalCache;
+
+    if (!GenerateTicketKeys(pwArg, keyName, &aesKeyTmp, &macKeyTmp)) {
+        goto loser;
+    }
+
+    if (cache->cacheMem) {
+        /* Export the keys to the shared cache in wrapped form. */
+        if (!WrapTicketKey(svrPubKey, aesKeyTmp, "enc key", cache->ticketEncKey))
+            goto loser;
+        if (!WrapTicketKey(svrPubKey, macKeyTmp, "mac key", cache->ticketMacKey))
+            goto loser;
+    }
     *aesKey = aesKeyTmp;
     *macKey = macKeyTmp;
     return PR_TRUE;
@@ -1971,6 +2004,12 @@ ssl_GetSessionTicketKeysPKCS11(SECKEYPrivateKey *svrPrivKey,
     PRBool keysGenerated = PR_FALSE;
     cacheDesc *cache = &globalCache;
 
+    if (!cache->cacheMem) {
+        /* cache is uninitialized. Generate keys and return them
+         * without caching. */
+        return GenerateTicketKeys(pwArg, keyName, aesKey, macKey);
+    }
+
     now = LockSidCacheLock(cache->keyCacheLock, now);
     if (!now)
 	return rv;
@@ -2000,33 +2039,58 @@ ssl_GetSessionTicketKeys(unsigned char *keyName, unsigned char *encKey,
     PRBool rv = PR_FALSE;
     PRUint32 now = 0;
     cacheDesc *cache = &globalCache;
+    uint8 ticketMacKey[AES_256_KEY_LENGTH], ticketEncKey[SHA256_LENGTH];
+    uint8 ticketKeyNameSuffixLocal[SESS_TICKET_KEY_VAR_NAME_LEN];
+    uint8 *ticketMacKeyPtr, *ticketEncKeyPtr, *ticketKeyNameSuffix;
+    PRBool cacheIsEnabled = PR_TRUE;
 
-    /* Grab lock. */
-    now = LockSidCacheLock(cache->keyCacheLock, now);
-    if (!now)
-	return rv;
+    if (!cache->cacheMem) { /* cache is uninitialized */
+        cacheIsEnabled = PR_FALSE;
+        ticketKeyNameSuffix = ticketKeyNameSuffixLocal;
+        ticketEncKeyPtr = ticketEncKey;
+        ticketMacKeyPtr = ticketMacKey;
+    } else {
+        /* these values have constant memory locations in the cache.
+         * Ok to reference them without holding the lock. */
+        ticketKeyNameSuffix = cache->ticketKeyNameSuffix;
+        ticketEncKeyPtr = cache->ticketEncKey->bytes;
+        ticketMacKeyPtr = cache->ticketMacKey->bytes;
+    }
 
-    if (!*(cache->ticketKeysValid)) {
-	if (PK11_GenerateRandom(cache->ticketKeyNameSuffix,
+    if (cacheIsEnabled) {
+        /* Grab lock if initialized. */
+        now = LockSidCacheLock(cache->keyCacheLock, now);
+        if (!now)
+            return rv;
+    }
+    /* Going to regenerate keys on every call if cache was not
+     * initialized. */
+    if (!cacheIsEnabled || !*(cache->ticketKeysValid)) {
+	if (PK11_GenerateRandom(ticketKeyNameSuffix,
 		SESS_TICKET_KEY_VAR_NAME_LEN) != SECSuccess)
 	    goto loser;
-	if (PK11_GenerateRandom(cache->ticketEncKey->bytes, 32) != SECSuccess)
+	if (PK11_GenerateRandom(ticketEncKeyPtr,
+                                AES_256_KEY_LENGTH) != SECSuccess)
 	    goto loser;
-	if (PK11_GenerateRandom(cache->ticketMacKey->bytes,
-		SHA256_LENGTH) != SECSuccess)
+	if (PK11_GenerateRandom(ticketMacKeyPtr,
+                                SHA256_LENGTH) != SECSuccess)
 	    goto loser;
-	*(cache->ticketKeysValid) = 1;
+        if (cacheIsEnabled) {
+            *(cache->ticketKeysValid) = 1;
+        }
     }
 
     rv = PR_TRUE;
 
  loser:
-    UnlockSidCacheLock(cache->keyCacheLock);
+    if (cacheIsEnabled) {
+        UnlockSidCacheLock(cache->keyCacheLock);
+    }
     if (rv) {
-	PORT_Memcpy(keyName, cache->ticketKeyNameSuffix,
-	    SESS_TICKET_KEY_VAR_NAME_LEN);
-	PORT_Memcpy(encKey, cache->ticketEncKey->bytes, 32);
-	PORT_Memcpy(macKey, cache->ticketMacKey->bytes, SHA256_LENGTH);
+	PORT_Memcpy(keyName, ticketKeyNameSuffix,
+                    SESS_TICKET_KEY_VAR_NAME_LEN);
+	PORT_Memcpy(encKey, ticketEncKeyPtr, AES_256_KEY_LENGTH);
+	PORT_Memcpy(macKey, ticketMacKeyPtr, SHA256_LENGTH);
     }
     return rv;
 }

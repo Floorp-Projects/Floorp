@@ -933,7 +933,7 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
 
   nsAutoString tagPrefix, tagLocalName, tagNamespaceURI;
   aElement->NodeInfo()->GetPrefix(tagPrefix);
-  aElement->NodeInfo()->GetLocalName(tagLocalName);
+  aElement->NodeInfo()->GetName(tagLocalName);
   aElement->NodeInfo()->GetNamespaceURI(tagNamespaceURI);
 
   PRUint32 skipAttr = ScanNamespaceDeclarations(content,
@@ -1044,7 +1044,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
   nsAutoString tagPrefix, tagLocalName, tagNamespaceURI;
   
   aElement->NodeInfo()->GetPrefix(tagPrefix);
-  aElement->NodeInfo()->GetLocalName(tagLocalName);
+  aElement->NodeInfo()->GetName(tagLocalName);
   aElement->NodeInfo()->GetNamespaceURI(tagNamespaceURI);
 
 #ifdef DEBUG

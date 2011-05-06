@@ -6292,7 +6292,7 @@ nsDocument::AddEventListener(const nsAString& aType,
                              PRBool aUseCapture, PRBool aWantsUntrusted,
                              PRUint8 optional_argc)
 {
-  NS_ASSERTION(!aWantsUntrusted || optional_argc > 0,
+  NS_ASSERTION(!aWantsUntrusted || optional_argc > 1,
                "Won't check if this is chrome, you want to set "
                "aWantsUntrusted to PR_FALSE or make the aWantsUntrusted "
                "explicit by making optional_argc non-zero.");
@@ -6303,7 +6303,7 @@ nsDocument::AddEventListener(const nsAString& aType,
   PRInt32 flags = aUseCapture ? NS_EVENT_FLAG_CAPTURE : NS_EVENT_FLAG_BUBBLE;
 
   if (aWantsUntrusted ||
-      (optional_argc == 0 && !nsContentUtils::IsChromeDoc(this))) {
+      (optional_argc < 2 && !nsContentUtils::IsChromeDoc(this))) {
     flags |= NS_PRIV_EVENT_UNTRUSTED_PERMITTED;
   }
 

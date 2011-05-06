@@ -52,12 +52,4 @@ SDK_BINARY =  \
 	$(NULL)
 endif
 
-ifeq ($(OS_ARCH),WINCE)
-HOST_CPPSRCS = redit.cpp
-HOST_PROGRAM = redit$(BIN_SUFFIX)
-SDK_BINARY   =  \
-	$(HOST_PROGRAM) \
-	$(NULL)
-endif
-
 include $(topsrcdir)/config/rules.mk

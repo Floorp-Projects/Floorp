@@ -65,6 +65,7 @@
 #include "nsBidiUtils.h"
 #include "nsUnicodeRange.h"
 #include "nsCompressedCharMap.h"
+#include "nsStyleConsts.h"
 
 #include "cairo.h"
 #include "gfxFontTest.h"
@@ -3120,7 +3121,7 @@ gfxTextRun::~gfxTextRun()
 
 PRBool
 gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                   PRPackedBool *aBreakBefore,
+                                   PRUint8 *aBreakBefore,
                                    gfxContext *aRefContext)
 {
     NS_ASSERTION(aStart + aLength <= mCharacterCount, "Overflow");
@@ -3130,12 +3131,12 @@ gfxTextRun::SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
     PRUint32 changed = 0;
     PRUint32 i;
     for (i = 0; i < aLength; ++i) {
-        PRBool canBreak = aBreakBefore[i];
+        PRUint8 canBreak = aBreakBefore[i];
         if (canBreak && !mCharacterGlyphs[aStart + i].IsClusterStart()) {
             // This can happen ... there is no guarantee that our linebreaking rules
             // align with the platform's idea of what constitutes a cluster.
             NS_WARNING("Break suggested inside cluster!");
-            canBreak = PR_FALSE;
+            canBreak = CompressedGlyph::FLAG_BREAK_TYPE_NONE;
         }
         changed |= mCharacterGlyphs[aStart + i].SetCanBreakBefore(canBreak);
     }
@@ -3722,7 +3723,9 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
     }
     PRPackedBool hyphenBuffer[MEASUREMENT_BUFFER_SIZE];
     PRBool haveHyphenation = aProvider &&
-                             (mFlags & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0;
+        (aProvider->GetHyphensOption() == NS_STYLE_HYPHENS_AUTO ||
+         (aProvider->GetHyphensOption() == NS_STYLE_HYPHENS_MANUAL &&
+          (mFlags & gfxTextRunFactory::TEXT_ENABLE_HYPHEN_BREAKS) != 0));
     if (haveHyphenation) {
         aProvider->GetHyphenationBreaks(bufferStart, bufferLength,
                                         hyphenBuffer);
@@ -3766,7 +3769,7 @@ gfxTextRun::BreakAndMeasureText(PRUint32 aStart, PRUint32 aMaxLength,
         // could be the first and last break opportunity on the line, and that
         // would trigger an infinite loop.
         if (!aSuppressInitialBreak || i > aStart) {
-            PRBool lineBreakHere = mCharacterGlyphs[i].CanBreakBefore();
+            PRBool lineBreakHere = mCharacterGlyphs[i].CanBreakBefore() == 1;
             PRBool hyphenation = haveHyphenation && hyphenBuffer[i - bufferStart];
             PRBool wordWrapping = aCanWordWrap && *aBreakPriority <= eWordWrapBreak;
 
