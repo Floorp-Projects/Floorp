@@ -70,7 +70,7 @@
       <p>&firstrun.heading2;</p>
     </div>
 
-    <div id="content">
+    <div id="content" hidden="true">
       <h2></h2>
       <ul id="recommended">
         <li id="sync"><a href="javascript:loadSync();"><b>&firstrun.sync2.title;</b> <span>&firstrun.sync2.description;</span></a></li>
@@ -116,6 +116,26 @@
 
         function init() {
           setupLinks();
+          startDiscovery();
+        }
+        
+        function startDiscovery() {
+          let doc = getChromeWin().document;
+          let broadcaster = doc.getElementById("bcast_uidiscovery");
+
+          doc.addEventListener("animationend", endDiscovery, false);
+          doc.addEventListener("PanBegin", endDiscovery, false);
+          broadcaster.setAttribute("mode", "discovery");
+        }
+
+        function endDiscovery() {
+          let doc = getChromeWin().document;
+          let broadcaster = doc.getElementById("bcast_uidiscovery");
+
+          broadcaster.removeAttribute("mode");
+          doc.removeEventListener("animationend", endDiscovery, false);
+          doc.removeEventListener("PanBegin", endDiscovery, false);
+          document.getElementById("content").removeAttribute("hidden");
         }
 
         function setupLinks() {
