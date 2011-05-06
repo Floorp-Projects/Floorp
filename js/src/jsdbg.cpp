@@ -483,8 +483,13 @@ Debug::mark(GCMarker *trc, JSCompartment *comp, JSGCInvocationKind gckind)
                 //
                 if (!comp || obj->compartment() == comp) {
                     for (ObjectMap::Range r = dbg->objects.all(); !r.empty(); r.popFront()) {
-                        if (!r.front().value->isMarked() && (comp || r.front().key->isMarked())) {
-                            MarkObject(trc, *r.front().key, "Debug.Object with live referent");
+                        // The unwrap() call below has the following effect: we
+                        // mark the Debug.Object if the *referent* is alive,
+                        // even if the CCW of the referent seems unreachable.
+                        if (!r.front().value->isMarked() &&
+                            (comp || r.front().key->unwrap()->isMarked()))
+                        {
+                            MarkObject(trc, *r.front().value, "Debug.Object with live referent");
                             markedAny = true;
                         }
                     }
