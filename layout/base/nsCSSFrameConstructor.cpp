@@ -3851,7 +3851,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                                              PendingBinding*          aPendingBinding,
                                              nsFrameItems&            aChildItems)
 {
-  nsAutoTArray<nsIContent*, 4> newAnonymousItems;
+  nsAutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> newAnonymousItems;
   nsresult rv = GetAnonymousContent(aParent, aParentFrame, newAnonymousItems);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -3868,8 +3868,9 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
                "How can that happen if we have nodes to construct frames for?");
 
   for (PRUint32 i=0; i < count; i++) {
-    nsIContent* content = newAnonymousItems[i];
+    nsIContent* content = newAnonymousItems[i].mContent;
     NS_ASSERTION(content, "null anonymous content?");
+    NS_ASSERTION(!newAnonymousItems[i].mStyleContext, "Unexpected style context");
 
     nsIFrame* newFrame = creator->CreateFrameFor(content);
     if (newFrame) {
@@ -3889,7 +3890,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsFrameConstructorState& aState,
 nsresult
 nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
                                            nsIFrame* aParentFrame,
-                                           nsTArray<nsIContent*>& aContent)
+                                           nsTArray<nsIAnonymousContentCreator::ContentInfo>& aContent)
 {
   nsIAnonymousContentCreator* creator = do_QueryFrame(aParentFrame);
   if (!creator)
@@ -3901,7 +3902,7 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
   PRUint32 count = aContent.Length();
   for (PRUint32 i=0; i < count; i++) {
     // get our child's content and set its parent to our content
-    nsIContent* content = aContent[i];
+    nsIContent* content = aContent[i].mContent;
     NS_ASSERTION(content, "null anonymous content?");
 
     // least-surprise CSS binding until we do the SVG specified
@@ -9534,18 +9535,19 @@ nsCSSFrameConstructor::ProcessChildren(nsFrameConstructorState& aState,
   // Create any anonymous frames we need here.  This must happen before the
   // non-anonymous children are processed to ensure that popups are never
   // constructed before the popupset.
-  nsAutoTArray<nsIContent*, 4> anonymousItems;
+  nsAutoTArray<nsIAnonymousContentCreator::ContentInfo, 4> anonymousItems;
   GetAnonymousContent(aContent, aFrame, anonymousItems);
   for (PRUint32 i = 0; i < anonymousItems.Length(); ++i) {
 #ifdef DEBUG
     nsIAnonymousContentCreator* creator = do_QueryFrame(aFrame);
-    NS_ASSERTION(!creator || !creator->CreateFrameFor(anonymousItems[i]),
+    NS_ASSERTION(!creator ||
+                 !creator->CreateFrameFor(anonymousItems[i].mContent),
                  "If you need to use CreateFrameFor, you need to call "
                  "CreateAnonymousFrames manually and not follow the standard "
                  "ProcessChildren() codepath for this frame");
 #endif
-    AddFrameConstructionItems(aState, anonymousItems[i], PR_TRUE, aFrame,
-                              itemsToConstruct);
+    AddFrameConstructionItems(aState, anonymousItems[i].mContent, PR_TRUE,
+                              aFrame, itemsToConstruct);
   }
 
   if (!aFrame->IsLeaf()) {

@@ -81,7 +81,8 @@ public:
   // We need this if a scrollbar frame is recreated.
   void ReloadChildFrames();
 
-  nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  nsresult CreateAnonymousContent(
+    nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements);
   void AppendAnonymousContentTo(nsBaseContentList& aElements, PRUint32 aFilter);
   nsresult FireScrollPortEvent();
   void PostOverflowEvent();
@@ -424,7 +425,7 @@ public:
   }
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
                                         PRUint32 aFilter);
 
@@ -624,7 +625,7 @@ public:
   }
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
                                         PRUint32 aFilter);
 
