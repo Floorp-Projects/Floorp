@@ -37,7 +37,6 @@
 import devicemanager
 import sys
 import os
-import devicemanagerSUT
 
 def copy(dm, gre_path):
     file = sys.argv[2]
