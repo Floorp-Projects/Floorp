@@ -1,7 +1,9 @@
-# For the moment, none of these tests will work on MacOS X.
-skip-if(cocoaWidget) == values.html values-ref.html
-skip-if(cocoaWidget) == values-rtl.html values-rtl-ref.html
-skip-if(cocoaWidget) == margin-padding.html margin-padding-ref.html
+== values.html values-ref.html
+== values-rtl.html values-rtl-ref.html
+== margin-padding.html margin-padding-ref.html
+== margin-padding-rtl.html margin-padding-rtl-ref.html
+== bar-pseudo-element.html bar-pseudo-element-ref.html
+== bar-pseudo-element-rtl.html bar-pseudo-element-rtl-ref.html
 
 # The following test is disabled but kept in the repository because the
 # transformations will not behave exactly the same for <progress> and two divs.
