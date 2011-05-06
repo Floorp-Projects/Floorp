@@ -415,21 +415,23 @@ GCTimer::finish(bool lastGC) {
             if (!gcFile) {
                 gcFile = fopen("gcTimer.dat", "a");
 
-                fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj,");
-                fprintf(gcFile, " FinStr, SwShapes, Destroy, +Chunks, -Chunks\n");
+                fprintf(gcFile, "     AppTime,  Total,   Wait,   Mark,  Sweep, FinObj,");
+                fprintf(gcFile, " FinStr, SwShapes, Destroy,    End, +Chu, -Chu\n");
             }
             JS_ASSERT(gcFile);
-            /*               App   , Tot  , Mar  , Swe  , FiO  , FiS  , SwS  , Des */
-            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, ",
+            /*               App   , Tot  , Wai  , Mar  , Swe  , FiO  , FiS  , SwS  , Des   , End */
+            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, %6.1f, ",
                     TIMEDIFF(getFirstEnter(), enter),
                     TIMEDIFF(enter, end),
+                    TIMEDIFF(enter, startMark),
                     TIMEDIFF(startMark, startSweep),
                     TIMEDIFF(startSweep, sweepDestroyEnd),
                     TIMEDIFF(startSweep, sweepObjectEnd),
                     TIMEDIFF(sweepObjectEnd, sweepStringEnd),
                     TIMEDIFF(sweepStringEnd, sweepShapeEnd),
-                    TIMEDIFF(sweepShapeEnd, sweepDestroyEnd));
-            fprintf(gcFile, "%7d, %7d\n", newChunkCount, destroyChunkCount);
+                    TIMEDIFF(sweepShapeEnd, sweepDestroyEnd),
+                    TIMEDIFF(sweepDestroyEnd, end));
+            fprintf(gcFile, "%4d, %4d\n", newChunkCount, destroyChunkCount);
             fflush(gcFile);
 
             if (lastGC) {
