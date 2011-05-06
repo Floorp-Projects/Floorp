@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.100 $ $Date: 2010/05/18 19:38:40 $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.100.2.1 $ $Date: 2011/03/26 16:55:01 $";
 #endif /* DEBUG */
 
 /*
@@ -1212,6 +1212,98 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     }
 done:
     (void)nssTrust_Destroy(nssTrust);
+    return nssrv;
+}
+
+/*
+** Delete trust objects matching the given slot.
+** Returns error if a device fails to delete.
+**
+** This function has the side effect of moving the
+** surviving entries to the front of the object list
+** and nullifying the rest.
+*/
+static PRStatus
+DeleteCertTrustMatchingSlot(PK11SlotInfo *pk11slot, nssPKIObject *tObject)
+{
+    int numNotDestroyed = 0;     /* the ones skipped plus the failures */
+    int failureCount = 0;        /* actual deletion failures by devices */
+    int index;
+
+    nssPKIObject_Lock(tObject);
+    /* Keep going even if a module fails to delete. */
+    for (index = 0; index < tObject->numInstances; index++) {
+	nssCryptokiObject *instance = tObject->instances[index];
+	if (!instance) {
+	    continue;
+	}
+
+	/* ReadOnly and not matched treated the same */
+	if (PK11_IsReadOnly(instance->token->pk11slot) ||
+	    pk11slot != instance->token->pk11slot) {
+	    tObject->instances[numNotDestroyed++] = instance;
+	    continue;
+	}
+
+	/* Here we have found a matching one */
+	tObject->instances[index] = NULL;
+	if (nssToken_DeleteStoredObject(instance) == PR_SUCCESS) {
+	    nssCryptokiObject_Destroy(instance);
+	} else {
+	    tObject->instances[numNotDestroyed++] = instance;
+	    failureCount++;
+	}
+
+    }
+    if (numNotDestroyed == 0) {
+    	nss_ZFreeIf(tObject->instances);
+    	tObject->numInstances = 0;
+    } else {
+    	tObject->numInstances = numNotDestroyed;
+    }
+
+    nssPKIObject_Unlock(tObject);
+
+    return failureCount == 0 ? PR_SUCCESS : PR_FAILURE;
+}
+
+/*
+** Delete trust objects matching the slot of the given certificate.
+** Returns an error if any device fails to delete. 
+*/
+NSS_EXTERN PRStatus
+STAN_DeleteCertTrustMatchingSlot(NSSCertificate *c)
+{
+    PRStatus nssrv = PR_SUCCESS;
+
+    NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
+    NSSTrust *nssTrust = nssTrustDomain_FindTrustForCertificate(td, c);
+    /* caller made sure nssTrust isn't NULL */
+    nssPKIObject *tobject = &nssTrust->object;
+    nssPKIObject *cobject = &c->object;
+    int i;
+
+    /* Iterate through the cert and trust object instances looking for
+     * those with matching pk11 slots to delete. Even if some device
+     * can't delete we keep going. Keeping a status variable for the
+     * loop so that once it's failed the other gets set.
+     */
+    NSSRWLock_LockRead(td->tokensLock);
+    nssPKIObject_Lock(cobject);
+    for (i = 0; i < cobject->numInstances; i++) {
+	nssCryptokiObject *cInstance = cobject->instances[i];
+	if (cInstance && !PK11_IsReadOnly(cInstance->token->pk11slot)) {
+		PRStatus status;
+	    if (!tobject->numInstances || !tobject->instances) continue;
+	    status = DeleteCertTrustMatchingSlot(cInstance->token->pk11slot, tobject);
+	    if (status == PR_FAILURE) {
+	    	/* set the outer one but keep going */
+	    	nssrv = PR_FAILURE;
+	    }
+	}
+    }
+    nssPKIObject_Unlock(cobject);
+    NSSRWLock_UnlockRead(td->tokensLock);
     return nssrv;
 }
 

@@ -25,7 +25,7 @@ function createGroupItemWithTabs(win, width, height, padding, urls, animate) {
   is(contentWindow.GroupItems.groupItems.length, ++groupItemCount,
      "The number of groups is increased by 1");
   // add blank items
-  contentWindow.GroupItems.setActiveGroupItem(groupItem);
+  contentWindow.UI.setActive(groupItem);
   let t = 0;
   urls.forEach( function(url) {
     let newItem = win.gBrowser.loadOneTab(url)._tabViewTabItem;

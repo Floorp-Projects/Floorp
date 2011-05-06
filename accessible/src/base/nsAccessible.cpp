@@ -197,10 +197,10 @@ nsAccessible::nsAccessible(nsIContent *aContent, nsIWeakReference *aShell) :
             (void*)shell.get());
     nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
     if (content) {
+      printf(" Con: %s@%p",
+             NS_ConvertUTF16toUTF8(content->NodeInfo()->QualifiedName()).get(),
+             (void *)content.get());
       nsAutoString buf;
-      if (content->NodeInfo())
-        content->NodeInfo()->GetQualifiedName(buf);
-      printf(" Con: %s@%p", NS_ConvertUTF16toUTF8(buf).get(), (void *)content.get());
       if (NS_SUCCEEDED(GetName(buf))) {
         printf(" Name:[%s]", NS_ConvertUTF16toUTF8(buf).get());
        }
@@ -272,54 +272,60 @@ nsAccessible::GetName(nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAccessible::GetDescription(nsAString& aDescription)
+NS_IMETHODIMP
+nsAccessible::GetDescription(nsAString& aDescription)
 {
   if (IsDefunct())
     return NS_ERROR_FAILURE;
 
+  nsAutoString desc;
+  Description(desc);
+  aDescription.Assign(desc);
+
+  return NS_OK;
+}
+
+void
+nsAccessible::Description(nsString& aDescription)
+{
   // There are 4 conditions that make an accessible have no accDescription:
   // 1. it's a text node; or
   // 2. It has no DHTML describedby property
   // 3. it doesn't have an accName; or
   // 4. its title attribute already equals to its accName nsAutoString name; 
 
-  if (!mContent->IsNodeOfType(nsINode::eTEXT)) {
-    nsAutoString description;
-    nsresult rv = nsTextEquivUtils::
-      GetTextEquivFromIDRefs(this, nsAccessibilityAtoms::aria_describedby,
-                             description);
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (mContent->IsNodeOfType(nsINode::eTEXT))
+    return;
 
-    if (description.IsEmpty()) {
-      PRBool isXUL = mContent->IsXUL();
-      if (isXUL) {
-        // Try XUL <description control="[id]">description text</description>
-        XULDescriptionIterator iter(GetDocAccessible(), mContent);
-        nsAccessible* descr = nsnull;
-        while ((descr = iter.Next())) {
-          nsTextEquivUtils::
-            AppendTextEquivFromContent(this, descr->GetContent(), &description);
-        }
+  nsTextEquivUtils::
+    GetTextEquivFromIDRefs(this, nsAccessibilityAtoms::aria_describedby,
+                           aDescription);
+
+  if (aDescription.IsEmpty()) {
+    PRBool isXUL = mContent->IsXUL();
+    if (isXUL) {
+      // Try XUL <description control="[id]">description text</description>
+      XULDescriptionIterator iter(GetDocAccessible(), mContent);
+      nsAccessible* descr = nsnull;
+      while ((descr = iter.Next()))
+        nsTextEquivUtils::AppendTextEquivFromContent(this, descr->GetContent(),
+                                                     &aDescription);
       }
-      if (description.IsEmpty()) {
+
+      if (aDescription.IsEmpty()) {
         nsIAtom *descAtom = isXUL ? nsAccessibilityAtoms::tooltiptext :
                                     nsAccessibilityAtoms::title;
-        if (mContent->GetAttr(kNameSpaceID_None, descAtom, description)) {
+        if (mContent->GetAttr(kNameSpaceID_None, descAtom, aDescription)) {
           nsAutoString name;
           GetName(name);
-          if (name.IsEmpty() || description == name) {
+          if (name.IsEmpty() || aDescription == name)
             // Don't use tooltip for a description if this object
             // has no name or the tooltip is the same as the name
-            description.Truncate();
-          }
+            aDescription.Truncate();
         }
       }
     }
-    description.CompressWhitespace();
-    aDescription = description;
-  }
-
-  return NS_OK;
+    aDescription.CompressWhitespace();
 }
 
 // mask values for ui.key.chromeAccess and ui.key.contentAccess

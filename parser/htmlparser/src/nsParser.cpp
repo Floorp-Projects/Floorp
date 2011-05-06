@@ -88,10 +88,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
-//-------------------------------------------------------------------
-
-nsCOMArray<nsIUnicharStreamListener> *nsParser::sParserDataListeners;
-
 //-------------- Begin ParseContinue Event Definition ------------------------
 /*
 The parser can be explicitly interrupted by passing a return value of
@@ -672,47 +668,6 @@ nsresult
 nsParser::Init()
 {
   nsresult rv;
-  nsCOMPtr<nsICategoryManager> cm =
-    do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISimpleEnumerator> e;
-  rv = cm->EnumerateCategory("Parser data listener", getter_AddRefs(e));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCAutoString categoryEntry;
-  nsXPIDLCString contractId;
-  nsCOMPtr<nsISupports> entry;
-
-  while (NS_SUCCEEDED(e->GetNext(getter_AddRefs(entry)))) {
-    nsCOMPtr<nsISupportsCString> category(do_QueryInterface(entry));
-
-    if (!category) {
-      NS_WARNING("Category entry not an nsISupportsCString!");
-      continue;
-    }
-
-    rv = category->GetData(categoryEntry);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = cm->GetCategoryEntry("Parser data listener", categoryEntry.get(),
-                              getter_Copies(contractId));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    nsCOMPtr<nsIUnicharStreamListener> listener =
-      do_CreateInstance(contractId.get());
-
-    if (listener) {
-      if (!sParserDataListeners) {
-        sParserDataListeners = new nsCOMArray<nsIUnicharStreamListener>();
-
-        if (!sParserDataListeners)
-          return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-      sParserDataListeners->AppendObject(listener);
-    }
-  }
 
   nsCOMPtr<nsICharsetAlias> charsetAlias =
     do_GetService(NS_CHARSETALIAS_CONTRACTID, &rv);
@@ -750,9 +705,6 @@ nsParser::Init()
 // static
 void nsParser::Shutdown()
 {
-  delete sParserDataListeners;
-  sParserDataListeners = nsnull;
-
   NS_IF_RELEASE(sCharsetAliasService);
   NS_IF_RELEASE(sCharsetConverterManager);
   if (sSpeculativeThreadPool) {
@@ -1847,35 +1799,6 @@ void nsParser::HandleParserContinueEvent(nsParserContinueEvent *ev)
   ContinueInterruptedParsing();
 }
 
-nsresult
-nsParser::DataAdded(const nsSubstring& aData, nsIRequest *aRequest)
-{
-  NS_ASSERTION(sParserDataListeners,
-               "Don't call this with no parser data listeners!");
-
-  if (!mSink || !aRequest) {
-    return NS_OK;
-  }
-
-  nsISupports *ctx = mSink->GetTarget();
-  PRInt32 count = sParserDataListeners->Count();
-  nsresult rv = NS_OK;
-  PRBool canceled = PR_FALSE;
-
-  while (count--) {
-    rv |= sParserDataListeners->ObjectAt(count)->
-      OnUnicharDataAvailable(aRequest, ctx, aData);
-
-    if (NS_FAILED(rv) && !canceled) {
-      aRequest->Cancel(rv);
-
-      canceled = PR_TRUE;
-    }
-  }
-
-  return rv;
-}
-
 PRBool
 nsParser::CanInterrupt()
 {
@@ -1956,12 +1879,6 @@ nsParser::Parse(nsIURI* aURL,
       pc->mContextType = CParserContext::eCTURL;
       pc->mDTDMode = aMode;
       PushContext(*pc);
-
-      // Here, and only here, hand this parser off to the scanner. We
-      // only want to do that here since the only reason the scanner
-      // needs the parser is to call DataAdded() on it, and that's
-      // only ever wanted when parsing from an URI.
-      theScanner->SetParser(this);
 
       result = NS_OK;
     } else {
@@ -2446,16 +2363,6 @@ nsParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
   }
 
   rv = NS_OK;
-
-  if (sParserDataListeners && mSink) {
-    nsISupports *ctx = mSink->GetTarget();
-    PRInt32 count = sParserDataListeners->Count();
-
-    while (count--) {
-      rv |= sParserDataListeners->ObjectAt(count)->
-              OnStartRequest(request, ctx);
-    }
-  }
 
   return rv;
 }
@@ -2954,16 +2861,6 @@ nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
   // parser isn't yet enabled?
   if (mObserver) {
     mObserver->OnStopRequest(request, aContext, status);
-  }
-
-  if (sParserDataListeners && mSink) {
-    nsISupports *ctx = mSink->GetTarget();
-    PRInt32 count = sParserDataListeners->Count();
-
-    while (count--) {
-      rv |= sParserDataListeners->ObjectAt(count)->OnStopRequest(request, ctx,
-                                                                 status);
-    }
   }
 
   return rv;

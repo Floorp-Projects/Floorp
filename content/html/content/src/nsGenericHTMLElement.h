@@ -102,13 +102,9 @@ public:
   // From nsGenericElement
   nsresult CopyInnerTo(nsGenericElement* aDest) const;
 
-  // Implementation for nsIDOMNode
-  NS_METHOD GetNodeName(nsAString& aNodeName);
-
   // Implementation for nsIDOMElement
   NS_METHOD SetAttribute(const nsAString& aName,
                          const nsAString& aValue);
-  NS_METHOD GetTagName(nsAString& aTagName);
 
   // nsIDOMHTMLElement methods. Note that these are non-virtual
   // methods, implementations are expected to forward calls to these

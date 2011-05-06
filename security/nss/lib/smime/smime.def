@@ -273,3 +273,23 @@ SEC_PKCS12AddCertOrChainAndKey;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.12.10 {   # NSS 3.12.10 release
+;+    global:
+NSS_CMSType_RegisterContentType;
+NSS_CMSContentInfo_SetDontStream;
+NSS_SMIMEUtil_CreateMSSMIMEEncKeyPrefs;
+;+#
+;+# Data objects
+;+#
+;+# Don't export these DATA symbols on Windows because they don't work right.
+;+# Use the SEC_ASN1_GET / SEC_ASN1_SUB / SEC_ASN1_XTRN macros to access them.
+;+#
+;+# See nssutil for other examples.
+;+#
+;;NSSCMSGenericWrapperDataTemplate DATA ;
+;;NSS_PointerToCMSGenericWrapperDataTemplate DATA ;
+NSS_Get_NSSCMSGenericWrapperDataTemplate;
+NSS_Get_NSS_PointerToCMSGenericWrapperDataTemplate;
+;+    local:
+;+       *;
+;+};

@@ -74,7 +74,7 @@ static void Output(PRBool isError, const char *fmt, ... )
   va_list ap;
   va_start(ap, fmt);
 
-#if (defined(XP_WIN) && !MOZ_WINCONSOLE) || defined(WINCE)
+#if (defined(XP_WIN) && !MOZ_WINCONSOLE)
   char *msg = PR_vsmprintf(fmt, ap);
   if (msg)
   {

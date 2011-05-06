@@ -50,8 +50,8 @@ _TEST_FILES = \
 		test_doc.html \
 		test_hypertext.html \
 		test_passwords.html \
-		test_singleline.html \
-		test_whitespaces.html \
+	$(warning test_singleline.html disabled due to bug 652459) \
+	$(warning test_whitespaces.html disabled due to bug 652459) \
 		test_words.html \
 		$(NULL)
 

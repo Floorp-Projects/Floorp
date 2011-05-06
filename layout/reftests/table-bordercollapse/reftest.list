@@ -93,3 +93,4 @@ fails-if(cocoaWidget) == bc_borderoffset2.html bc_borderoffset2_ref.html # bug 4
 == bordercolor-3.html bordercolor-3-ref.html
 == bordercolor-4.html bordercolor-4-ref.html
 == empty-toprow.html empty-toprow-ref.html
+== double_borders.html double_borders_ref.html

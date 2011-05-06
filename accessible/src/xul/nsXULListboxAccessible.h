@@ -123,9 +123,9 @@ public:
   // nsIAccessible
   NS_IMETHOD GetActionName(PRUint8 index, nsAString& aName);
   // Don't use XUL menuitems's description attribute
-  NS_IMETHOD GetDescription(nsAString& aDesc) { return nsAccessibleWrap::GetDescription(aDesc); }
 
   // nsAccessible
+  virtual void Description(nsString& aDesc);
   virtual nsresult GetNameInternal(nsAString& aName);
   virtual PRUint32 NativeRole();
   virtual PRUint64 NativeState();

@@ -168,8 +168,8 @@ nsHTMLAreaAccessible::GetNameInternal(nsAString & aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHTMLAreaAccessible::GetDescription(nsAString& aDescription)
+void
+nsHTMLAreaAccessible::Description(nsString& aDescription)
 {
   aDescription.Truncate();
 
@@ -177,8 +177,6 @@ nsHTMLAreaAccessible::GetDescription(nsAString& aDescription)
   nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(mContent));
   if (area) 
     area->GetShape(aDescription);
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP

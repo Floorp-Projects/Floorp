@@ -37,7 +37,7 @@
 /*
  * CMS message methods.
  *
- * $Id: cmsmessage.c,v 1.6 2004/04/25 15:03:16 gerv%gerv.net Exp $
+ * $Id: cmsmessage.c,v 1.6.192.1 2011/01/28 23:08:27 rrelyea%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -81,6 +81,7 @@ NSS_CMSMessage_Create(PLArenaPool *poolp)
 	    PORT_FreeArena(poolp, PR_FALSE);
 	return NULL;
     }
+    NSS_CMSContentInfo_Private_Init(&(cmsg->contentInfo));
 
     cmsg->poolp = poolp;
     cmsg->poolp_is_ours = poolp_is_ours;
@@ -234,11 +235,12 @@ NSS_CMSMessage_ContainsCertsOrCrls(NSSCMSMessage *cmsg)
 
     /* descend into CMS message */
     for (cinfo = &(cmsg->contentInfo); cinfo != NULL; cinfo = NSS_CMSContentInfo_GetChildContentInfo(cinfo)) {
-	if (NSS_CMSContentInfo_GetContentTypeTag(cinfo) != SEC_OID_PKCS7_SIGNED_DATA)
+	if (!NSS_CMSType_IsData(NSS_CMSContentInfo_GetContentTypeTag(cinfo)))
 	    continue;	/* next level */
 	
 	if (NSS_CMSSignedData_ContainsCertsOrCrls(cinfo->content.signedData))
 	    return PR_TRUE;
+	/* callback here for generic wrappers? */
     }
     return PR_FALSE;
 }
@@ -259,6 +261,7 @@ NSS_CMSMessage_IsEncrypted(NSSCMSMessage *cmsg)
 	case SEC_OID_PKCS7_ENCRYPTED_DATA:
 	    return PR_TRUE;
 	default:
+	    /* callback here for generic wrappers? */
 	    break;
 	}
     }
@@ -289,6 +292,7 @@ NSS_CMSMessage_IsSigned(NSSCMSMessage *cmsg)
 		return PR_TRUE;
 	    break;
 	default:
+	    /* callback here for generic wrappers? */
 	    break;
 	}
     }

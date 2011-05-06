@@ -39,7 +39,7 @@ function test() {
 
     // close the group => orphan the tab
     originalGroupItem.close();
-    contentWindow.GroupItems.setActiveGroupItem(originalGroupItem);
+    contentWindow.UI.setActive(originalGroupItem);
     is(contentWindow.GroupItems.groupItems.length, 0, "There are not any groups now.");
 
     ok(TabView.isVisible(), "Tab View is still shown.");

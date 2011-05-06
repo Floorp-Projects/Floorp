@@ -214,12 +214,13 @@ interface nsIX509Cert : nsISupports {
    *  Obtain an array of human readable strings describing
    *  the certificate's certified usages.
    *
-   *  @param ignoreOcsp Do not use OCSP even if it is currently activated.
+   *  @param localOnly Do not hit the network, even if revocation information
+   *                   downloading is currently activated.
    *  @param verified The certificate verification result, see constants.
    *  @param count The number of human readable usages returned.
    *  @param usages The array of human readable usages.
    */
-  void getUsagesArray(in boolean ignoreOcsp,
+  void getUsagesArray(in boolean localOnly,
                       out PRUint32 verified,
                       out PRUint32 count, 
                       [array, size_is(count)] out wstring usages);
@@ -228,11 +229,12 @@ interface nsIX509Cert : nsISupports {
    *  Obtain a single comma separated human readable string describing
    *  the certificate's certified usages.
    *
-   *  @param ignoreOcsp Do not use OCSP even if it is currently activated.
+   *  @param localOnly Do not hit the network, even if revocation information
+   *                   downloading is currently activated.
    *  @param verified The certificate verification result, see constants.
    *  @param purposes The string listing the usages.
    */
-  void getUsagesString(in boolean ignoreOcsp, out PRUint32 verified, out AString usages);
+  void getUsagesString(in boolean localOnly, out PRUint32 verified, out AString usages);
 
   /**
    *  Verify the certificate for a particular usage.

@@ -71,10 +71,9 @@ class nsIURI;
 class nsIPrincipal;
 
 // IID for the nsINodeInfo interface
-// 35e53115-b884-4cfc-aa95-bdf0aa5152cf
 #define NS_INODEINFO_IID      \
-{ 0x35e53115, 0xb884, 0x4cfc, \
- { 0xaa, 0x95, 0xbd, 0xf0, 0xaa, 0x51, 0x52, 0xcf } }
+{ 0xc5188ea1, 0x0a9c, 0x43e6, \
+ { 0x95, 0x90, 0xcc, 0x43, 0x6b, 0xe9, 0xcf, 0xa0 } }
 
 class nsINodeInfo : public nsISupports
 {
@@ -117,18 +116,18 @@ public:
    * For the HTML element "<body>" this will return "body" and for the XML
    * element "<html:body>" this will return "html:body".
    */
-  virtual void GetQualifiedName(nsAString& aQualifiedName) const = 0;
+  const nsString& QualifiedName() const {
+    return mQualifiedName;
+  }
 
   /*
-   * Get the local name from this node as a string, GetLocalName() gets the
-   * same string as GetName() but only if the node has a prefix and/or a
-   * namespace URI. If the node has neither a prefix nor a namespace URI the
-   * local name is a null string.
-   *
-   * For the HTML element "<body>" in a HTML document this will return a null
-   * string and for the XML element "<html:body>" this will return "body".
+   * As above, but return the qualified name in corrected case as
+   * needed.  For example, for HTML elements in HTML documents, this
+   * will return an ASCII-uppercased version of the qualified name.
    */
-  virtual void GetLocalName(nsAString& aLocalName) const = 0;
+  const nsString& QualifiedNameCorrectedCase() const {
+    return mQualifiedNameCorrectedCase;
+  }
 
 #ifdef MOZILLA_INTERNAL_API
   /*
@@ -255,13 +254,30 @@ public:
     return mInner.mNamespaceID == aNamespaceID;
   }
 
-  virtual PRBool Equals(const nsAString& aName) const = 0;
-  virtual PRBool Equals(const nsAString& aName,
-                        const nsAString& aPrefix) const = 0;
-  virtual PRBool Equals(const nsAString& aName,
-                        PRInt32 aNamespaceID) const = 0;
-  virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
-                        PRInt32 aNamespaceID) const = 0;
+  PRBool Equals(const nsAString& aName) const
+  {
+    return mInner.mName->Equals(aName);
+  }
+
+  PRBool Equals(const nsAString& aName, const nsAString& aPrefix) const
+  {
+    return mInner.mName->Equals(aName) &&
+      (mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) : aPrefix.IsEmpty());
+  }
+
+  PRBool Equals(const nsAString& aName, PRInt32 aNamespaceID) const
+  {
+    return mInner.mNamespaceID == aNamespaceID &&
+      mInner.mName->Equals(aName);
+  }
+
+  PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
+                PRInt32 aNamespaceID) const
+  {
+    return mInner.mName->Equals(aName) && mInner.mNamespaceID == aNamespaceID &&
+      (mInner.mPrefix ? mInner.mPrefix->Equals(aPrefix) : aPrefix.IsEmpty());
+  }
+
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const = 0;
 
   PRBool QualifiedNameEquals(nsIAtom* aNameAtom) const
@@ -270,15 +286,12 @@ public:
     if (!GetPrefixAtom())
       return Equals(aNameAtom);
 
-    return QualifiedNameEqualsInternal(nsDependentAtomString(aNameAtom));
+    return aNameAtom->Equals(mQualifiedName);
   }
 
   PRBool QualifiedNameEquals(const nsAString& aQualifiedName) const
   {
-    if (!GetPrefixAtom())
-      return mInner.mName->Equals(aQualifiedName);
-
-    return QualifiedNameEqualsInternal(aQualifiedName);    
+    return mQualifiedName == aQualifiedName;
   }
 
   /*
@@ -290,9 +303,6 @@ public:
   }
 
 protected:
-  virtual PRBool
-    QualifiedNameEqualsInternal(const nsAString& aQualifiedName) const = 0;
-
   /*
    * nsNodeInfoInner is used for two things:
    *
@@ -339,6 +349,18 @@ protected:
 
   nsCOMPtr<nsIAtom> mIDAttributeAtom;
   nsNodeInfoManager* mOwnerManager; // Strong reference!
+
+  /*
+   * Members for various functions of mName+mPrefix that we can be
+   * asked to compute.
+   */
+
+  // Qualified name
+  nsString mQualifiedName;
+
+  // Qualified name in "corrected case"; this will depend on our
+  // document and on mNamespaceID.
+  nsString mQualifiedNameCorrectedCase;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINodeInfo, NS_INODEINFO_IID)

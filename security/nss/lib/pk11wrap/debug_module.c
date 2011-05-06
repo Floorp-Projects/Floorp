@@ -92,6 +92,7 @@ STRING fmt_fwVersion[]            = "  firmware version: %d.%d";
 STRING fmt_hwVersion[]            = "  hardware version: %d.%d";
 STRING fmt_s_qsq_d[]              = "    %s = \"%s\" [%d]";
 STRING fmt_s_s_d[]                = "    %s = %s [%d]";
+STRING fmt_s_lu[]                 = "    %s = %lu";
 STRING fmt_invalid_handle[]       = " (CK_INVALID_HANDLE)";
 
 
@@ -110,6 +111,7 @@ static void get_attr_type_str(CK_ATTRIBUTE_TYPE atype, char *str, int len)
     CASE(CKA_VALUE);
     CASE(CKA_OBJECT_ID);
     CASE(CKA_CERTIFICATE_TYPE);
+    CASE(CKA_CERTIFICATE_CATEGORY);
     CASE(CKA_ISSUER);
     CASE(CKA_SERIAL_NUMBER);
     CASE(CKA_AC_ISSUER);
@@ -144,7 +146,7 @@ static void get_attr_type_str(CK_ATTRIBUTE_TYPE atype, char *str, int len)
     CASE(CKA_SUBPRIME);
     CASE(CKA_BASE);
     CASE(CKA_PRIME_BITS);
-    CASE(CKA_SUB_PRIME_BITS);
+    CASE(CKA_SUBPRIME_BITS);
     CASE(CKA_VALUE_BITS);
     CASE(CKA_VALUE_LEN);
     CASE(CKA_EXTRACTABLE);
@@ -666,6 +668,25 @@ static void print_attr_value(CK_ATTRIBUTE_PTR attr)
 	           atype, valstr, attr->ulValueLen));
 	    break;
 	}
+    case CKA_PIXEL_X:
+    case CKA_PIXEL_Y:
+    case CKA_RESOLUTION:
+    case CKA_CHAR_ROWS:
+    case CKA_CHAR_COLUMNS:
+    case CKA_BITS_PER_PIXEL:
+    case CKA_CERTIFICATE_CATEGORY:  /* should print as enum/string */
+    case CKA_JAVA_MIDP_SECURITY_DOMAIN:  /* should print as enum/string */
+    case CKA_MODULUS_BITS:
+    case CKA_PRIME_BITS:
+    case CKA_SUBPRIME_BITS:
+    case CKA_VALUE_BITS:
+    case CKA_VALUE_LEN:
+	if (attr->ulValueLen > 0 && attr->pValue) {
+	    CK_ULONG valueLen = *((CK_ULONG *)attr->pValue);
+	    /* XXX check for the special value CK_UNAVAILABLE_INFORMATION */
+	    PR_LOG(modlog, 4, (fmt_s_lu, atype, (PRUint32)valueLen));
+	    break;
+	}
     case CKA_LABEL:
     case CKA_NETSCAPE_EMAIL:
     case CKA_NETSCAPE_URL:
@@ -691,7 +712,8 @@ static void print_attr_value(CK_ATTRIBUTE_PTR attr)
 	    	PORT_Free(asciiName);
 		break;
 	    }
-	    /* else fall through and treat like a binary buffer */
+	    /* else treat like a binary buffer */
+	    goto binary_buffer;
 	}
     case CKA_ID:
 	if (attr->ulValueLen > 0 && attr->pValue) {
@@ -713,6 +735,7 @@ static void print_attr_value(CK_ATTRIBUTE_PTR attr)
 	    }
 	    /* else fall through and treat like a binary buffer */
 	}
+binary_buffer:
     case CKA_SERIAL_NUMBER:
     default:
 	if (attr->ulValueLen > 0 && attr->pValue) {

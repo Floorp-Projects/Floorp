@@ -258,6 +258,19 @@ secmod_IsInternalKeySlot(SECMODModule *mod)
    return (flags & SECMOD_FLAG_INTERNAL_KEY_SLOT) ? PR_TRUE : PR_FALSE;
 }
 
+void
+secmod_SetInternalKeySlotFlag(SECMODModule *mod, PRBool val)
+{
+   char flags = (char) mod->internal;
+
+   if (val)  {
+	flags |= SECMOD_FLAG_INTERNAL_KEY_SLOT;
+   } else {
+	flags &= ~SECMOD_FLAG_INTERNAL_KEY_SLOT;
+   }
+   mod->internal = flags;
+}
+
 /* forward declarations */
 static int secmod_escapeSize(const char *string, char quote);
 static char *secmod_addEscape(const char *string, char quote);
