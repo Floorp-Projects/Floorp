@@ -60,9 +60,4 @@ LIBS = \
 	$(NSS_LIBS) \
 	$(NULL)
 
-# WINCE needs libcmt. See Bug 487694.
-ifeq ($(OS_ARCH),WINCE)
-EXTRA_LIBS += libcmt.lib
-endif
-
 include $(topsrcdir)/config/rules.mk
