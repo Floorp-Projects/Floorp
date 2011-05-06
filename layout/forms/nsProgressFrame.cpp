@@ -210,11 +210,20 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
     xoffset += aReflowState.ComputedWidth() - width;
   }
 
-  // We want the frame to take all the available size.
-  width -= reflowState.mComputedMargin.LeftRight() +
-           reflowState.mComputedBorderPadding.LeftRight();
-  width = NS_MAX(width, 0);
-  reflowState.SetComputedWidth(width);
+  // The bar width is fixed in these cases:
+  // - the progress position is determined: the bar width is fixed according
+  //   to it's value.
+  // - the progress position is indeterminate and the bar appearance is the
+  //   native one ('progresschunk'): the bar width is forced to 100%.
+  // Otherwise (when the progress is indeterminate and the bar appearance isn't
+  // native), the bar width isn't fixed and can be set by the author.
+  if (position != -1 ||
+      aBarFrame->GetStyleDisplay()->mAppearance == NS_THEME_PROGRESSBAR_CHUNK) {
+    width -= reflowState.mComputedMargin.LeftRight() +
+             reflowState.mComputedBorderPadding.LeftRight();
+    width = NS_MAX(width, 0);
+    reflowState.SetComputedWidth(width);
+  }
 
   xoffset += reflowState.mComputedMargin.left;
   yoffset += reflowState.mComputedMargin.top;
