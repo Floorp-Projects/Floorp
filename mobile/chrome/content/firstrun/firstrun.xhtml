@@ -106,7 +106,9 @@
 
         function loadSync() {
           let win = getChromeWin();
-          win.WeaveGlue.open();
+          // If Sync is not setup, we'll open the setup dialog. Otherwise,
+          // we show the remote tabs view
+          win.BrowserUI.doCommand("cmd_remoteTabs");
         }
 
         function loadAddons() {
