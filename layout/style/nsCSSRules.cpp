@@ -720,8 +720,8 @@ MediaRule::~MediaRule()
   }
 }
 
-NS_IMPL_ADDREF_INHERITED(MediaRule, Rule)
-NS_IMPL_RELEASE_INHERITED(MediaRule, Rule)
+NS_IMPL_ADDREF_INHERITED(MediaRule, GroupRule)
+NS_IMPL_RELEASE_INHERITED(MediaRule, GroupRule)
 
 // QueryInterface implementation for MediaRule
 NS_INTERFACE_MAP_BEGIN(MediaRule)
@@ -887,8 +887,8 @@ DocumentRule::~DocumentRule()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(DocumentRule, Rule)
-NS_IMPL_RELEASE_INHERITED(DocumentRule, Rule)
+NS_IMPL_ADDREF_INHERITED(DocumentRule, GroupRule)
+NS_IMPL_RELEASE_INHERITED(DocumentRule, GroupRule)
 
 // QueryInterface implementation for DocumentRule
 NS_INTERFACE_MAP_BEGIN(DocumentRule)
@@ -1746,8 +1746,8 @@ nsCSSKeyframeRule::Clone() const
   return clone.forget();
 }
 
-NS_IMPL_ADDREF(nsCSSKeyframeRule)
-NS_IMPL_RELEASE(nsCSSKeyframeRule)
+NS_IMPL_ADDREF_INHERITED(nsCSSKeyframeRule, Rule)
+NS_IMPL_RELEASE_INHERITED(nsCSSKeyframeRule, Rule)
 
 DOMCI_DATA(MozCSSKeyframeRule, nsCSSKeyframeRule)
 
