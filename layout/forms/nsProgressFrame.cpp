@@ -137,6 +137,7 @@ nsProgressFrame::AppendAnonymousContentTo(nsBaseContentList& aElements,
 }
 
 NS_QUERYFRAME_HEAD(nsProgressFrame)
+  NS_QUERYFRAME_ENTRY(nsProgressFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
@@ -213,12 +214,11 @@ nsProgressFrame::ReflowBarFrame(nsIFrame*                aBarFrame,
   // The bar width is fixed in these cases:
   // - the progress position is determined: the bar width is fixed according
   //   to it's value.
-  // - the progress position is indeterminate and the bar appearance is the
-  //   native one ('progresschunk'): the bar width is forced to 100%.
+  // - the progress position is indeterminate and the bar appearance should be
+  //   shown as native: the bar width is forced to 100%.
   // Otherwise (when the progress is indeterminate and the bar appearance isn't
   // native), the bar width isn't fixed and can be set by the author.
-  if (position != -1 ||
-      aBarFrame->GetStyleDisplay()->mAppearance == NS_THEME_PROGRESSBAR_CHUNK) {
+  if (position != -1 || ShouldUseNativeStyle()) {
     width -= reflowState.mComputedMargin.LeftRight() +
              reflowState.mComputedBorderPadding.LeftRight();
     width = NS_MAX(width, 0);
@@ -270,5 +270,20 @@ nsProgressFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
   autoSize.width *= 10; // 10em
 
   return autoSize;
+}
+
+bool
+nsProgressFrame::ShouldUseNativeStyle() const
+{
+  // Use the native style if these conditions are satisfied:
+  // - both frames use the native appearance;
+  // - neither frame has author specified rules setting the border or the
+  //   background.
+  return GetStyleDisplay()->mAppearance == NS_THEME_PROGRESSBAR &&
+         mBarDiv->GetPrimaryFrame()->GetStyleDisplay()->mAppearance == NS_THEME_PROGRESSBAR_CHUNK &&
+         !PresContext()->HasAuthorSpecifiedRules(const_cast<nsProgressFrame*>(this),
+                                                 NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND) &&
+         !PresContext()->HasAuthorSpecifiedRules(mBarDiv->GetPrimaryFrame(),
+                                                 NS_AUTHOR_SPECIFIED_BORDER | NS_AUTHOR_SPECIFIED_BACKGROUND);
 }
 

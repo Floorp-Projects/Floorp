@@ -92,6 +92,11 @@ public:
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
+  /**
+   * Returns whether the frame and its child should use the native style.
+   */
+  bool ShouldUseNativeStyle() const;
+
 protected:
   // Helper function which reflow the anonymous div frame.
   void ReflowBarFrame(nsIFrame*                aBarFrame,
