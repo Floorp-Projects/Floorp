@@ -391,7 +391,7 @@ nsTextControlFrame::EnsureEditorInitialized()
 }
 
 nsresult
-nsTextControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
+nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   NS_ASSERTION(mContent, "We should have a content!");
 

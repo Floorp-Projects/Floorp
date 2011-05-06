@@ -45,6 +45,7 @@
 
 #include "nsQueryFrame.h"
 #include "nsIContent.h"
+#include "nsStyleContext.h"
 
 class nsIFrame;
 template <class T, class A> class nsTArray;
@@ -60,6 +61,19 @@ class nsIAnonymousContentCreator
 public:
   NS_DECL_QUERYFRAME_TARGET(nsIAnonymousContentCreator)
 
+  struct ContentInfo {
+    ContentInfo(nsIContent* aContent) :
+      mContent(aContent)
+    {}
+
+    ContentInfo(nsIContent* aContent, nsStyleContext* aStyleContext) :
+      mContent(aContent), mStyleContext(aStyleContext)
+    {}
+
+    nsIContent* mContent;
+    nsRefPtr<nsStyleContext> mStyleContext;
+  };
+
   /**
    * Creates "native" anonymous content and adds the created content to
    * the aElements array. None of the returned elements can be nsnull.
@@ -69,7 +83,7 @@ public:
    *       from CreateAnonymousContent when appropriate (i.e. before releasing
    *       them).
    */
-  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements)=0;
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements)=0;
 
   /**
    * Appends "native" anonymous children created by CreateAnonymousContent()
