@@ -859,6 +859,18 @@ NonNullObject(JSContext *cx, const Value &v)
     return &v.toObject();
 }
 
+const char *
+InformalValueTypeName(const Value &v)
+{
+    return v.isObject() ? v.toObject().getClass()->name :
+           v.isString() ? "string" :
+           v.isNumber() ? "number" :
+           v.isBoolean() ? "boolean" :
+           v.isNull() ? "null" :
+           v.isUndefined() ? "undefined" :
+           "value";
+}
+
 }
 
 /* ES5 15.2.4.2.  Note steps 1 and 2 are errata. */
