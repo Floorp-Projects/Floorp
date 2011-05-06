@@ -71,6 +71,30 @@ nsProgressFrame::~nsProgressFrame()
 {
 }
 
+NS_IMETHODIMP
+nsProgressFrame::SetInitialChildList(nsIAtom*     aListName,
+                                     nsFrameList& aChildList)
+{
+  NS_ASSERTION(mBarDiv, "Progress bar div must exist!");
+
+  nsresult rv = nsHTMLContainerFrame::SetInitialChildList(aListName,
+                                                          aChildList);
+
+  nsIFrame* barFrame = mBarDiv->GetPrimaryFrame();
+  nsCSSPseudoElements::Type pseudoType = nsCSSPseudoElements::ePseudo_mozProgressBar;
+  nsRefPtr<nsStyleContext> newStyleContext;
+
+  newStyleContext = barFrame->PresContext()->StyleSet()->
+    ResolvePseudoElementStyle(mContent->AsElement(), pseudoType,
+                              barFrame->GetParent()->GetStyleContext());
+
+  if (newStyleContext) {
+    barFrame->SetStyleContext(newStyleContext);
+  }
+
+  return rv;
+}
+
 void
 nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
