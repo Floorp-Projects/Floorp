@@ -406,23 +406,10 @@ ReportIncompatibleMethod(JSContext *cx, Value *vp, Class *clasp)
 #endif
 
     if (JSFunction *fun = js_ValueToFunction(cx, &vp[0], 0)) {
-        const char *name = thisv.isObject()
-                           ? thisv.toObject().getClass()->name
-                           : thisv.isString()
-                           ? "string"
-                           : thisv.isNumber()
-                           ? "number"
-                           : thisv.isBoolean()
-                           ? "boolean"
-                           : thisv.isNull()
-                           ? js_null_str
-                           : thisv.isUndefined()
-                           ? js_undefined_str
-                           : "value";
         JSAutoByteString funNameBytes;
         if (const char *funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_INCOMPATIBLE_PROTO,
-                                 clasp->name, funName, name);
+                                 clasp->name, funName, InformalValueTypeName(thisv));
         }
     }
 }
