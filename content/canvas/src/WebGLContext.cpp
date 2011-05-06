@@ -356,7 +356,7 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         HTMLCanvasElement()->InvalidateCanvas();
     }
 
-    if (mWidth == width && mHeight == height)
+    if (gl && mWidth == width && mHeight == height)
         return NS_OK;
 
     // If we already have a gl context, then we just need to resize
