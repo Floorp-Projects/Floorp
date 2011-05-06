@@ -78,6 +78,8 @@ _BROWSER_FILES = \
   browser_preferences_text.js \
   browser_rect.js \
   browser_rememberPassword.js \
+  browser_scroll.js \
+  browser_scroll.html \
   browser_scrollbar.js \
   browser_select.html \
   browser_select.js \
