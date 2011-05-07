@@ -1014,7 +1014,8 @@ GroupItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         if (typeof item.setResizable == 'function')
           item.setResizable(false, options.immediately);
 
-        if (item == UI.getActiveTab() || !this._activeTab)
+        // if it is visually active, set it as the active tab.
+        if (iQ(item.container).hasClass("focus"))
           this.setActiveTab(item);
 
         // if it matches the selected tab or no active tab and the browser

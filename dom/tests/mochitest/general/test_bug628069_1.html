@@ -41,6 +41,7 @@ function childLoad() {
 function childHashchange(e) {
   is(e.oldURL, gOrigURL, 'event.oldURL');
   is(e.newURL, gOrigURL + '#hash', 'event.newURL');
+  is(e.isTrusted, true, 'Hashchange event should be trusted.');
   popup.close();
   SimpleTest.finish();
 }

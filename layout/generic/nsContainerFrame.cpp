@@ -319,12 +319,12 @@ nsContainerFrame::GetChildList(nsIAtom* aListName) const
     return list ? *list : nsFrameList::EmptyList();
   }
 
-  return nsFrameList::EmptyList();
+  return nsSplittableFrame::GetChildList(aListName);
 }
 
-#define NS_CONTAINER_FRAME_OVERFLOW_LIST_INDEX                   0
-#define NS_CONTAINER_FRAME_OVERFLOW_CONTAINERS_LIST_INDEX        1
-#define NS_CONTAINER_FRAME_EXCESS_OVERFLOW_CONTAINERS_LIST_INDEX 2
+#define NS_CONTAINER_FRAME_OVERFLOW_LIST_INDEX                   1
+#define NS_CONTAINER_FRAME_OVERFLOW_CONTAINERS_LIST_INDEX        2
+#define NS_CONTAINER_FRAME_EXCESS_OVERFLOW_CONTAINERS_LIST_INDEX 3
 // If adding/removing lists, don't forget to update count in .h file
 
 
@@ -339,7 +339,7 @@ nsContainerFrame::GetAdditionalChildListName(PRInt32 aIndex) const
     else if (NS_CONTAINER_FRAME_EXCESS_OVERFLOW_CONTAINERS_LIST_INDEX == aIndex)
       return nsGkAtoms::excessOverflowContainersList;
   }
-  return nsnull;
+  return nsSplittableFrame::GetAdditionalChildListName(aIndex);
 }
 
 /////////////////////////////////////////////////////////////////////////////
