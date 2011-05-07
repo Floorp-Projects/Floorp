@@ -8141,7 +8141,7 @@ fi
 AC_SUBST(JS_SHARED_LIBRARY)
 
 if test -n "$MOZ_STATIC_BUILD_UNSUPPORTED" -a -n "$BUILD_STATIC_LIBS"; then
-  AC_MSG_ERROR([--enable-static is not supported for building $MOZ_APP_NAME.])
+  AC_MSG_ERROR([--enable-static is not supported for building $MOZ_BUILD_APP.])
 fi
 
 if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
@@ -8844,8 +8844,33 @@ AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
 
+# The following variables are available to branding and application
+# configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):
+# - MOZ_APP_VENDOR: Used for application.ini's "Vendor" field, which also
+# impacts profile location and user-visible fields.
+# - MOZ_APP_BASENAME: Typically stays consistent for multiple branded
+# versions of a given application (e.g. Aurora and Firefox both use
+# "Firefox"), but may vary for full rebrandings (e.g. Iceweasel). Used
+# for application.ini's "Name" field, which controls profile location in
+# the absence of a "Profile" field (see below), and various system
+# integration hooks (Unix remoting, Windows MessageWindow name, etc.)
+# - MOZ_APP_DISPLAYNAME: Used in user-visible fields (DLL properties,
+# Mac Bundle name, Updater, Installer), it is typically used for nightly
+# builds (e.g. Aurora for Firefox).
+# - MOZ_APP_NAME: Used for e.g. the binary program file name. If not set,
+# defaults to a lowercase form of MOZ_APP_BASENAME.
+# - MOZ_APP_PROFILE: When set, used for application.ini's
+# "Profile" field, which controls profile location.
+
+if test -z "$MOZ_APP_NAME"; then
+   MOZ_APP_NAME=`echo $MOZ_APP_BASENAME | tr A-Z a-z`
+fi
+
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
+AC_SUBST(MOZ_APP_BASENAME)
+AC_SUBST(MOZ_APP_VENDOR)
+AC_SUBST(MOZ_APP_PROFILE)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_NAME, "$MOZ_APP_UA_NAME")
 AC_SUBST(MOZ_APP_UA_NAME)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_VERSION, "$MOZ_APP_VERSION")
