@@ -31,6 +31,12 @@ function runTests()
   for (var i = 0; i < 3; i++) {
     doTest(i);
   }
+
+  // Re-test left clicking when the input element has some text. 
+  gClickCount = 0;
+  input.value = "Long text Long text Long text Long text Long text Long text";
+  doTest(0);
+
   input.style.display = "none";
   SimpleTest.finish();
 }
