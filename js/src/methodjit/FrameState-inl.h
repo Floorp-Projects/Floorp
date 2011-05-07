@@ -563,6 +563,8 @@ FrameState::tempFPRegForData(FrameEntry *fe)
     if (fe->isCopy())
         fe = fe->copyOf();
 
+    JS_ASSERT(!fe->data.inRegister());
+
     if (fe->data.inFPRegister())
         return fe->data.fpreg();
 
@@ -621,6 +623,8 @@ FrameState::tempRegForData(FrameEntry *fe, RegisterID reg, Assembler &masm) cons
 
     if (fe->isCopy())
         fe = fe->copyOf();
+
+    JS_ASSERT(!fe->data.inFPRegister());
 
     if (fe->data.inRegister()) {
         JS_ASSERT(fe->data.reg() != reg);
@@ -906,6 +910,12 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, bool unsync)
 {
     JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
     JS_ASSERT(type != JSVAL_TYPE_UNKNOWN);
+
+    if (type == JSVAL_TYPE_DOUBLE)
+        JS_ASSERT(!fe->data.inRegister());
+    else
+        JS_ASSERT(!fe->data.inFPRegister());
+
     if (fe->type.inRegister())
         forgetReg(fe->type.reg());
     fe->setType(type);
@@ -918,7 +928,7 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, RegisterID data)
 {
     /* The copied bit may be set on an entry, but there should not be any actual copies. */
     JS_ASSERT_IF(fe->isCopied(), !isEntryCopied(fe));
-    JS_ASSERT(type != JSVAL_TYPE_UNKNOWN);
+    JS_ASSERT(type != JSVAL_TYPE_UNKNOWN && type != JSVAL_TYPE_DOUBLE);
 
     forgetAllRegs(fe);
     fe->clear();

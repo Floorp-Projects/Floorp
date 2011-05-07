@@ -1377,7 +1377,7 @@ mjit::Compiler::generateMethod()
                 opinfo->safePoint = true;
             }
         }
-
+        frame.assertValidRegisterState();
         a->jumpMap[uint32(PC - script->code)] = masm.label();
 
         SPEW_OPCODE();
@@ -2839,9 +2839,7 @@ mjit::Compiler::generateMethod()
             }
         }
 
-#ifdef DEBUG
         frame.assertValidRegisterState();
-#endif
     }
 
   done:
