@@ -3964,21 +3964,22 @@ nsEventStateManager::UpdateDragDataTransfer(nsDragEvent* dragEvent)
   }
 }
 
-nsIContent* GetParentContentForMouseTarget(nsIContent* aContent)
-{
-  return aContent && (aContent->IsInNativeAnonymousSubtree() ||
-                      aContent->IsNodeOfType(nsINode::eTEXT)) ?
-           aContent->GetParent() : nsnull;
-}
-
 nsresult
 nsEventStateManager::SetClickCount(nsPresContext* aPresContext,
                                    nsMouseEvent *aEvent,
                                    nsEventStatus* aStatus)
 {
   nsCOMPtr<nsIContent> mouseContent;
+  nsIContent* mouseContentParent = nsnull;
   mCurrentTarget->GetContentForEvent(aPresContext, aEvent, getter_AddRefs(mouseContent));
-  nsIContent* mouseContentParent = GetParentContentForMouseTarget(mouseContent);
+  if (mouseContent) {
+    if (mouseContent->IsNodeOfType(nsINode::eTEXT)) {
+      mouseContent = mouseContent->GetParent();
+    }
+    if (mouseContent && mouseContent->IsRootOfNativeAnonymousSubtree()) {
+      mouseContentParent = mouseContent->GetParent();
+    }
+  }
 
   switch (aEvent->button) {
   case nsMouseEvent::eLeftButton:
