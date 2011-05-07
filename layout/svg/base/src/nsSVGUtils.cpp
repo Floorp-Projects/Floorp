@@ -49,7 +49,6 @@
 #include "nsIURI.h"
 #include "nsStyleStruct.h"
 #include "nsIPresShell.h"
-#include "nsISVGGlyphFragmentLeaf.h"
 #include "nsNetUtil.h"
 #include "nsFrameList.h"
 #include "nsISVGChildFrame.h"
