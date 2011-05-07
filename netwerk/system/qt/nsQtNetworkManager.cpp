@@ -48,6 +48,27 @@
 #include <QHostAddress>
 #include <QTime>
 
+nsQtNetworkManager* nsQtNetworkManager::gQtNetworkManager = nsnull;
+
+void nsQtNetworkManager::create()
+{
+    if (!gQtNetworkManager) {
+        gQtNetworkManager = new nsQtNetworkManager();
+        connect(gQtNetworkManager, SIGNAL(openConnectionSignal()),
+                gQtNetworkManager, SLOT(openSession()),
+                Qt::BlockingQueuedConnection);
+        connect(&gQtNetworkManager->networkConfigurationManager,
+                SIGNAL(onlineStateChanged(bool)), gQtNetworkManager,
+                SLOT(onlineStateChanged(bool)));
+    }
+}
+
+void nsQtNetworkManager::destroy()
+{
+    delete gQtNetworkManager;
+    gQtNetworkManager = nsnull;
+}
+
 nsQtNetworkManager::nsQtNetworkManager(QObject* parent)
   : QObject(parent), networkSession(0)
 {
@@ -141,7 +162,7 @@ nsQtNetworkManager::openSession()
     // this only means we did not shutdown before...
     // renew Session every time
     // fix/workaround for prestart bug
-    if (!networkSession) {
+    if (networkSession) {
         networkSession->close();
         networkSession->deleteLater();
     }
@@ -168,7 +189,7 @@ nsQtNetworkManager::openSession()
 void
 nsQtNetworkManager::closeSession()
 {
-    if (!networkSession) {
+    if (networkSession) {
         networkSession->close();
     }
 }
