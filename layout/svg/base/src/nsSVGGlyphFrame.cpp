@@ -228,7 +228,6 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSVGGlyphFrame)
 // nsQueryFrame methods
 
 NS_QUERYFRAME_HEAD(nsSVGGlyphFrame)
-  NS_QUERYFRAME_ENTRY(nsISVGGlyphFragmentLeaf)
   NS_QUERYFRAME_ENTRY(nsISVGGlyphFragmentNode)
   NS_QUERYFRAME_ENTRY(nsISVGChildFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGGlyphFrameBase)
@@ -1033,9 +1032,9 @@ nsSVGGlyphFrame::GetHighlight(PRUint32 *charnum, PRUint32 *nchars,
 
 
 //----------------------------------------------------------------------
-// nsISVGGlyphFragmentLeaf interface:
+// Internal methods
 
-NS_IMETHODIMP_(void)
+void
 nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransform)
 {
   float drawScale, metricsScale;
@@ -1102,7 +1101,7 @@ nsSVGGlyphFrame::SetGlyphPosition(gfxPoint *aPosition, PRBool aForceGlobalTransf
   }
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGGlyphFrame::GetStartPositionOfChar(PRUint32 charnum,
                                         nsIDOMSVGPoint **_retval)
 {
@@ -1116,7 +1115,7 @@ nsSVGGlyphFrame::GetStartPositionOfChar(PRUint32 charnum,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGGlyphFrame::GetEndPositionOfChar(PRUint32 charnum,
                                       nsIDOMSVGPoint **_retval)
 {
@@ -1134,7 +1133,7 @@ nsSVGGlyphFrame::GetEndPositionOfChar(PRUint32 charnum,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
@@ -1167,7 +1166,7 @@ nsSVGGlyphFrame::GetExtentOfChar(PRUint32 charnum, nsIDOMSVGRect **_retval)
   return NS_NewSVGRect(_retval, tmpCtx->GetUserPathExtent());
 }
 
-NS_IMETHODIMP
+nsresult
 nsSVGGlyphFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
 {
   CharacterIterator iter(this, PR_FALSE);
@@ -1183,7 +1182,7 @@ nsSVGGlyphFrame::GetRotationOfChar(PRUint32 charnum, float *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(float)
+float
 nsSVGGlyphFrame::GetAdvance(PRBool aForceGlobalTransform)
 {
   float drawScale, metricsScale;
@@ -1193,7 +1192,7 @@ nsSVGGlyphFrame::GetAdvance(PRBool aForceGlobalTransform)
   return GetSubStringAdvance(0, mTextRun->GetLength(), metricsScale);
 }
 
-NS_IMETHODIMP_(nsSVGTextPathFrame*) 
+nsSVGTextPathFrame*
 nsSVGGlyphFrame::FindTextPathParent()
 {
   /* check if we're the child of a textPath */
@@ -1209,7 +1208,7 @@ nsSVGGlyphFrame::FindTextPathParent()
   return nsnull;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsSVGGlyphFrame::IsStartOfChunk()
 {
   // this fragment is a chunk if it has a corresponding absolute
@@ -1219,19 +1218,19 @@ nsSVGGlyphFrame::IsStartOfChunk()
   return PR_FALSE;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsSVGGlyphFrame::GetXY(SVGUserUnitList *aX, SVGUserUnitList *aY)
 {
   static_cast<nsSVGTextContainerFrame *>(mParent)->GetXY(aX, aY);
 }
 
-NS_IMETHODIMP_(void)
+void
 nsSVGGlyphFrame::SetStartIndex(PRUint32 aStartIndex)
 {
   mStartIndex = aStartIndex;
 }
 
-NS_IMETHODIMP_(void)
+void
 nsSVGGlyphFrame::GetEffectiveXY(PRInt32 strLength, nsTArray<float> &aX, nsTArray<float> &aY)
 {
   nsTArray<float> x, y;
@@ -1293,13 +1292,13 @@ nsSVGGlyphFrame::GetEffectiveRotate(PRInt32 strLength, nsTArray<float> &aRotate)
   }
 }
 
-NS_IMETHODIMP_(PRUint16)
+PRUint16
 nsSVGGlyphFrame::GetTextAnchor()
 {
   return GetStyleSVG()->mTextAnchor;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsSVGGlyphFrame::IsAbsolutelyPositioned()
 {
   PRBool hasTextPathAncestor = PR_FALSE;
@@ -1416,24 +1415,24 @@ nsSVGGlyphFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
   return last;
 }
 
-NS_IMETHODIMP_(nsISVGGlyphFragmentLeaf *)
-nsSVGGlyphFrame::GetFirstGlyphFragment()
+NS_IMETHODIMP_(nsSVGGlyphFrame *)
+nsSVGGlyphFrame::GetFirstGlyphFrame()
 {
-  nsISVGGlyphFragmentLeaf *leaf = this;
-  while (leaf && leaf->IsTextEmpty()) {
-    leaf = leaf->GetNextGlyphFragment();
+  nsSVGGlyphFrame *frame = this;
+  while (frame && frame->IsTextEmpty()) {
+    frame = frame->GetNextGlyphFrame();
   }
-  return leaf;
+  return frame;
 }
 
-NS_IMETHODIMP_(nsISVGGlyphFragmentLeaf *)
-nsSVGGlyphFrame::GetNextGlyphFragment()
+NS_IMETHODIMP_(nsSVGGlyphFrame *)
+nsSVGGlyphFrame::GetNextGlyphFrame()
 {
   nsIFrame* sibling = GetNextSibling();
   while (sibling) {
     nsISVGGlyphFragmentNode *node = do_QueryFrame(sibling);
     if (node)
-      return node->GetFirstGlyphFragment();
+      return node->GetFirstGlyphFrame();
     sibling = sibling->GetNextSibling();
   }
 
@@ -1441,10 +1440,10 @@ nsSVGGlyphFrame::GetNextGlyphFragment()
   
   NS_ASSERTION(GetParent(), "null parent");
   nsISVGGlyphFragmentNode *node = do_QueryFrame(GetParent());
-  return node ? node->GetNextGlyphFragment() : nsnull;
+  return node ? node->GetNextGlyphFrame() : nsnull;
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsSVGGlyphFrame::EndsWithWhitespace() const
 {
   const nsTextFragment* text = mContent->GetText();
@@ -1453,7 +1452,7 @@ nsSVGGlyphFrame::EndsWithWhitespace() const
   return NS_IsAsciiWhitespace(text->CharAt(text->GetLength() - 1));
 }
 
-NS_IMETHODIMP_(PRBool)
+PRBool
 nsSVGGlyphFrame::IsAllWhitespace() const
 {
   const nsTextFragment* text = mContent->GetText();
