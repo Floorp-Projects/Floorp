@@ -161,6 +161,7 @@ private:
 
     nsTArray<PRInt32>                    mRestrictedPortList;
 
+    PRPackedBool                         mAutoDialEnabled;
 public:
     // Necko buffer cache. Used for all default buffer sizes that necko
     // allocates.
