@@ -12,3 +12,6 @@ assertEq(Boolean.prototype.hasOwnProperty('toJSON'), false);
 
 Object.prototype.toJSON = function() { return 2; };
 assertEq(JSON.stringify(new Boolean(true)), "2");
+
+if (typeof reportCompare === 'function')
+    reportCompare(true, true);
