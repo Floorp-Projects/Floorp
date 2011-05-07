@@ -1,0 +1,9 @@
+# For the moment, none of these tests will work on MacOS X.
+skip-if(cocoaWidget) == values.html values-ref.html
+skip-if(cocoaWidget) == values-rtl.html values-rtl-ref.html
+skip-if(cocoaWidget) == margin-padding.html margin-padding-ref.html
+
+# The following test is disabled but kept in the repository because the
+# transformations will not behave exactly the same for <progress> and two divs.
+# However, it would be possible to manually check those.
+# == transformations.html transformations-ref.html
