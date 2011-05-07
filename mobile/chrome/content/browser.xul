@@ -85,6 +85,7 @@
   <broadcasterset id="broadcasterset">
     <broadcaster id="bcast_contentShowing" disabled="false"/>
     <broadcaster id="bcast_urlbarState" mode="view"/>
+    <broadcaster id="bcast_uidiscovery"/>
   </broadcasterset>
 
   <observerset id="observerset">
@@ -196,7 +197,7 @@
 
   <stack flex="1" id="stack">
     <scrollbox id="controls-scrollbox" style="overflow: hidden; -moz-box-orient: horizontal; position: relative;" flex="1">
-      <vbox class="panel-dark">
+      <vbox id="tabs-sidebar" class="sidebar" observes="bcast_uidiscovery">
         <spacer class="toolbar-height"/>
         <!-- Left toolbar -->
         <vbox id="tabs-container" class="panel-dark" flex="1">
@@ -217,7 +218,7 @@
           <vbox>
             <!-- Main Toolbar -->
             <box id="toolbar-container" class="panel-dark toolbar-height">
-              <box id="toolbar-moveable-container">
+              <box id="toolbar-moveable-container" observes="bcast_uidiscovery">
                 <toolbar id="toolbar-main" class="panel-dark window-width">
 #ifdef MOZ_PLATFORM_MAEMO
 #if MOZ_PLATFORM_MAEMO != 6
@@ -286,7 +287,7 @@
       </stack>
 
       <!-- Right toolbar -->
-      <vbox class="panel-dark">
+      <vbox id="controls-sidebar" class="sidebar" observes="bcast_uidiscovery">
         <!-- Because of the stack + fixed position of the urlbar when it is in
              locked mode the event on the top-right part of the urlbar are
              swallow by this spacer, but not with the mousethrough attribute

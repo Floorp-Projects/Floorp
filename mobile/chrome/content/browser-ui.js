@@ -1102,8 +1102,13 @@ var BrowserUI = {
   },
 
   isCommandEnabled : function(cmd) {
+    // disable all commands during the first-run sidebar discovery
+    let broadcaster = document.getElementById("bcast_uidiscovery");
+    if (broadcaster && broadcaster.getAttribute("mode") == "discovery")
+      return false;
+
     let elem = document.getElementById(cmd);
-    if (elem && (elem.getAttribute("disabled") == "true"))
+    if (elem && elem.getAttribute("disabled") == "true")
       return false;
     return true;
   },

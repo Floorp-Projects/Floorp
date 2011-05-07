@@ -62,11 +62,9 @@ SHARED_LIBRARY_LIBS = \
 
 ifdef MOZ_XUL
 ifdef NS_PRINTING
-ifndef WINCE
 SHARED_LIBRARY_LIBS += \
 	../printingui/src/$(LIB_PREFIX)printingui_s.$(LIB_SUFFIX) \
 	$(NULL)
-endif
 endif
 endif
 
@@ -88,9 +86,7 @@ endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/win 
-ifneq ($(OS_ARCH), WINCE)
 OS_LIBS	+= $(call EXPAND_LIBNAME,winspool comdlg32)
-endif
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))

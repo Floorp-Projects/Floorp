@@ -560,26 +560,7 @@ CreateControl(const CLSID &clsid, PluginInstanceData *pData, PropertyList &pl, L
     PRBool hostSafeControlsOnly;
     PRBool downloadControlsIfMissing;
 #if defined(MOZ_ACTIVEX_PLUGIN_XPCONNECT) && defined(XPC_IDISPATCH_SUPPORT)
-#ifdef MOZ_FLASH_ACTIVEX_PATCH
-    GUID flashGUID;
-    ::CLSIDFromString(_T("{D27CDB6E-AE6D-11CF-96B8-444553540000}"), &flashGUID);
-
-    // HACK: Allow anything but downloading for the wrapped Flash control.
-    PRUint32 hostingFlags;
-    if (clsid == flashGUID)
-    {
-      hostingFlags = (nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_SAFE_OBJECTS |
-                      nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_SAFE_OBJECTS |
-                      nsIActiveXSecurityPolicy::HOSTING_FLAGS_SCRIPT_ALL_OBJECTS |
-                      nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_ALL_OBJECTS);
-    }
-    else
-    {
-      hostingFlags = MozAxPlugin::PrefGetHostingFlags();
-    }
-#else
     PRUint32 hostingFlags = MozAxPlugin::PrefGetHostingFlags();
-#endif
     if (hostingFlags & nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_SAFE_OBJECTS &&
         !(hostingFlags & nsIActiveXSecurityPolicy::HOSTING_FLAGS_HOST_ALL_OBJECTS))
     {

@@ -116,6 +116,8 @@ NSSCleanupAutoPtrClass(char, PL_strfree)
 NSSCleanupAutoPtrClass(void, PR_FREEIF)
 NSSCleanupAutoPtrClass_WithParam(PRArenaPool, PORT_FreeArena, FalseParam, PR_FALSE)
 
+static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
+
 /* SSM_UserCertChoice: enum for cert choice info */
 typedef enum {ASK, AUTO} SSM_UserCertChoice;
 
@@ -3377,6 +3379,14 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   PRErrorCode errorCodeMismatch = SECSuccess;
   PRErrorCode errorCodeExpired = SECSuccess;
 
+  nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
+  if (!inss)
+    return cancel_and_failure(infoObject);
+  nsRefPtr<nsCERTValInParamWrapper> survivingParams;
+  nsrv = inss->GetDefaultCERTValInParam(survivingParams);
+  if (NS_FAILED(nsrv))
+    return cancel_and_failure(infoObject);
+  
   char *hostname = SSL_RevealURL(sslSocket);
   if (!hostname)
     return cancel_and_failure(infoObject);
@@ -3415,10 +3425,22 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
 
     verify_log->arena = log_arena;
 
-    srv = CERT_VerifyCertificate(CERT_GetDefaultCertDB(), peerCert,
-                                 PR_TRUE, certificateUsageSSLServer,
-                                 PR_Now(), (void*)infoObject, 
-                                 verify_log, NULL);
+    if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+      srv = CERT_VerifyCertificate(CERT_GetDefaultCertDB(), peerCert,
+                                  PR_TRUE, certificateUsageSSLServer,
+                                  PR_Now(), (void*)infoObject, 
+                                  verify_log, NULL);
+    }
+    else {
+      CERTValOutParam cvout[2];
+      cvout[0].type = cert_po_errorLog;
+      cvout[0].value.pointer.log = verify_log;
+      cvout[1].type = cert_po_end;
+
+      srv = CERT_PKIXVerifyCert(peerCert, certificateUsageSSLServer,
+                                survivingParams->GetRawPointerForNSS(),
+                                cvout, (void*)infoObject);
+    }
 
     // We ignore the result code of the cert verification.
     // Either it is a failure, which is expected, and we'll process the
