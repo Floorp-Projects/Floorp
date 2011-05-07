@@ -2278,7 +2278,7 @@ nsHTMLEditor::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   NS_ENSURE_TRUE(aMixed, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  nsHTMLEditRules* htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
   NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
   
   return htmlRules->GetParagraphState(aMixed, outFormat);
@@ -2480,7 +2480,7 @@ nsHTMLEditor::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *aDL
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   NS_ENSURE_TRUE(aMixed && aOL && aUL && aDL, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  nsHTMLEditRules* htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
   NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
   
   return htmlRules->GetListState(aMixed, aOL, aUL, aDL);
@@ -2492,7 +2492,7 @@ nsHTMLEditor::GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBool 
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   NS_ENSURE_TRUE(aMixed && aLI && aDT && aDD, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  nsHTMLEditRules* htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
   NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
   
   return htmlRules->GetListItemState(aMixed, aLI, aDT, aDD);
@@ -2503,7 +2503,7 @@ nsHTMLEditor::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 {
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   NS_ENSURE_TRUE(aMixed && aAlign, NS_ERROR_NULL_POINTER);
-  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  nsHTMLEditRules* htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
   NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
   
   return htmlRules->GetAlignment(aMixed, aAlign);
@@ -2516,7 +2516,7 @@ nsHTMLEditor::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
   if (!mRules) { return NS_ERROR_NOT_INITIALIZED; }
   NS_ENSURE_TRUE(aCanIndent && aCanOutdent, NS_ERROR_NULL_POINTER);
 
-  nsCOMPtr<nsIHTMLEditRules> htmlRules = do_QueryInterface(mRules);
+  nsHTMLEditRules* htmlRules = static_cast<nsHTMLEditRules*>(mRules.get());
   NS_ENSURE_TRUE(htmlRules, NS_ERROR_FAILURE);
   
   return htmlRules->GetIndentState(aCanIndent, aCanOutdent);
