@@ -700,13 +700,11 @@ nsHttpHandler::InitUserAgentComponents()
     else if (os2ver == 45)
         mOscpu.AssignLiteral("Warp 4.5");
 
-#elif defined(WINCE) || defined(XP_WIN)
+#elif defined(XP_WIN)
     OSVERSIONINFO info = { sizeof(OSVERSIONINFO) };
     if (GetVersionEx(&info)) {
         const char *format;
-#ifdef WINCE
-        format = "WindowsCE %ld.%ld";
-#elif defined _M_IA64
+#if defined _M_IA64
         format = WNT_BASE W64_PREFIX "; IA64";
 #elif defined _M_X64 || defined _M_AMD64
         format = WNT_BASE W64_PREFIX "; x64";
