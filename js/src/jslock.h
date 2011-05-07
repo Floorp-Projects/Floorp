@@ -57,6 +57,7 @@
     (defined(__i386) && (defined(__GNUC__) || defined(__SUNPRO_CC))) ||       \
     (defined(__x86_64) && (defined(__GNUC__) || defined(__SUNPRO_CC))) ||     \
     (defined(__sparc) && (defined(__GNUC__) || defined(__SUNPRO_CC))) ||      \
+    (defined(__arm__) && defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)) ||      \
     defined(AIX) ||                                                           \
     defined(USE_ARM_KUSER)
 # define JS_HAS_NATIVE_COMPARE_AND_SWAP 1
