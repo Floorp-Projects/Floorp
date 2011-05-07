@@ -1224,7 +1224,6 @@ Browser.MainDragger.prototype = {
     let bcr = browser.getBoundingClientRect();
     this._contentView = browser.getViewAt(clientX - bcr.left, clientY - bcr.top);
     this._stopAtSidebar = 0;
-    this._hitSidebar = false;
     if (this._sidebarTimeout) {
       clearTimeout(this._sidebarTimeout);
       this._sidebarTimeout = null;
@@ -1244,7 +1243,7 @@ Browser.MainDragger.prototype = {
 
     // If the sidebars are showing, we pan them out of the way before panning the content.
     // The panning distance that should be used for the sidebars in is stored in sidebarOffset,
-    // and subtracted from doffset
+    // and subtracted from doffset.
     let sidebarOffset = this._getSidebarOffset(doffset);
 
     // If we started with one sidebar open, stop when we get to the other.
@@ -1254,13 +1253,10 @@ Browser.MainDragger.prototype = {
     if (!this.contentMouseCapture)
       this._panContent(doffset);
 
-    if (this._hitSidebar && aIsKinetic)
-      return false; // No kinetic panning after we've stopped at the sidebar.
+    if (aIsKinetic && doffset.x != 0)
+      return false;
 
-    // allow panning the sidebars if the page hasn't prevented it, or if any of the sidebars are showing
-    // (i.e. we always allow panning sidebars off screen but not necessarily panning them back on)
-    if (!this.contentMouseCapture || sidebarOffset.x != 0 || sidebarOffset.y > 0)
-      this._panChrome(doffset, sidebarOffset);
+    this._panChrome(doffset, sidebarOffset);
 
     this._updateScrollbars();
 
@@ -1318,17 +1314,21 @@ Browser.MainDragger.prototype = {
     this._panContentView(getBrowser().getRootView(), aOffset);
   },
 
-  _panChrome: function md_panSidebars(aOffset, aSidebarOffset) {
-    // Any panning aOffset would bring controls into view. Add to aSidebarOffset
+  _panChrome: function md_panChrome(aOffset, aSidebarOffset) {
+    // In order to prevent users from hiding one sidebar and followed by immediately bringing
+    // out the other one, we absorb sidebar pans here for a fixed time.
+    //
+    // Also, if users are panning a website then we allow them to pan away sidebars, but
+    // nothing more.
+    //
     let offsetX = aOffset.x;
-    if ((this._stopAtSidebar > 0 && offsetX > 0) ||
-        (this._stopAtSidebar < 0 && offsetX < 0)) {
-      if (offsetX != aSidebarOffset.x)
-        this._hitSidebar = true;
+    if (this.contentMouseCapture)
+      aOffset.set(aSidebarOffset);
+    else if ((this._stopAtSidebar > 0 && offsetX > 0) ||
+             (this._stopAtSidebar < 0 && offsetX < 0))
       aOffset.x = aSidebarOffset.x;
-    } else {
+    else
       aOffset.add(aSidebarOffset);
-    }
 
     Browser.tryFloatToolbar(aOffset.x, 0);
 

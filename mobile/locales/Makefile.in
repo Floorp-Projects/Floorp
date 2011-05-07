@@ -103,6 +103,7 @@ clobber-zip:
 	  $(STAGEDIST)/chrome/$(AB_CD).manifest \
 	  $(STAGEDIST)/defaults/preferences/mobile-l10n.js
 	$(RM) -r $(STAGEDIST)/dictionaries \
+	  $(STAGEDIST)/hyphenation \
 	  $(STAGEDIST)/defaults/profile \
 	  $(STAGEDIST)/chrome/$(AB_CD)
 
@@ -110,6 +111,7 @@ libs-%:
 	$(NSINSTALL) -D $(DIST)/install
 	@$(MAKE) -C ../../toolkit/locales libs-$* BOTH_MANIFESTS=1
 	@$(MAKE) -C ../../services/sync/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
+	@$(MAKE) -C ../../intl/locales AB_CD=$* XPI_NAME=locale-$* BOTH_MANIFESTS=1
 	@$(MAKE) -B bookmarks.json AB_CD=$*
 	@$(MAKE) -B searchplugins AB_CD=$* XPI_NAME=locale-$*
 	@$(MAKE) libs AB_CD=$* XPI_NAME=locale-$* PREF_DIR=defaults/preferences BOTH_MANIFESTS=1

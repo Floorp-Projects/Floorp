@@ -218,39 +218,43 @@ TabMatcher.prototype = {
   
   // ---------
   // Function: _getTabsForOtherWindows
-  // Returns an array of <TabItem>s and <xul:tabs>s representing tabs
-  // from all windows but the current window. <TabItem>s will be returned
-  // for windows in which Panorama has been activated at least once, while
-  // <xul:tab>s will be returned for windows in which Panorama has never
-  // been activated.
-  _getTabsForOtherWindows: function TabMatcher__getTabsForOtherWindows() {
-    var enumerator = Services.wm.getEnumerator("navigator:browser");
-    var allTabs = [];
-
+  // Returns an array of <TabItem>s and <xul:tabs>s representing that
+  // tabs from all windows but the currently focused window. <TabItem>s
+  // will be returned for windows in which Panorama has been activated at
+  // least once, while <xul:tab>s will be return for windows in which
+  // Panorama has never been activated.
+  _getTabsForOtherWindows: function TabMatcher__getTabsForOtherWindows(){
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var enumerator = wm.getEnumerator("navigator:browser");    
+    var currentWindow = wm.getMostRecentWindow("navigator:browser");
+    
+    var allTabs = [];    
     while (enumerator.hasMoreElements()) {
       var win = enumerator.getNext();
-      // This function gets tabs from other windows, not from the current window
-      if (win != gWindow) {
+      // This function gets tabs from other windows: not the one you currently
+      // have focused.
+      if (win != currentWindow) {
         // If TabView is around iterate over all tabs, else get the currently
         // shown tabs...
+        
         let tvWindow = win.TabView.getContentWindow();
         if (tvWindow)
-          allTabs = allTabs.concat(tvWindow.TabItems.getItems());
+          allTabs = allTabs.concat( tvWindow.TabItems.getItems() );
         else
           // win.gBrowser.tabs isn't a proper array, so we can't use concat
-          for (let i = 0; i < win.gBrowser.tabs.length; i++)
-            allTabs.push(win.gBrowser.tabs[i]);
-      }
+          for (var i=0; i<win.gBrowser.tabs.length; i++) allTabs.push( win.gBrowser.tabs[i] );
+      } 
     }
-    return allTabs;
+    return allTabs;    
   },
   
   // ----------
   // Function: matchedTabsFromOtherWindows
   // Returns an array of <TabItem>s and <xul:tab>s that match the search term
-  // from all windows but the current window. <TabItem>s will be returned for
-  // windows in which Panorama has been activated at least once, while
-  // <xul:tab>s will be returned for windows in which Panorama has never
+  // from all windows but the currently focused window. <TabItem>s will be
+  // returned for windows in which Panorama has been activated at least once,
+  // while <xul:tab>s will be return for windows in which Panorama has never
   // been activated.
   // (new TabMatcher("app")).matchedTabsFromOtherWindows();
   matchedTabsFromOtherWindows: function TabMatcher_matchedTabsFromOtherWindows(){
