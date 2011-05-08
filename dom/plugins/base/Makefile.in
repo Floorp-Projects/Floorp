@@ -94,7 +94,7 @@ CPPSRCS		= \
 		PluginPRLibrary.cpp \
 		$(NULL)
 
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 	CPPSRCS += nsPluginsDirWin.cpp
 	CPPSRCS += nsPluginNativeWindowWin.cpp
 	CPPSRCS += nsPluginDirServiceProvider.cpp
