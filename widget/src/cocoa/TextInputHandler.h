@@ -218,38 +218,55 @@ protected:
 class TextInputHandlerBase
 {
 public:
-  /**
-   * Init must be called when aOwner is initializing and finished attaching
-   * an NSView.
-   *
-   * @param aOwner                An owner nsChildView of the instance.
-   */
-  virtual void Init(nsChildView* aOwner);
+  nsrefcnt AddRef()
+  {
+    NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "mRefCnt is negative");
+    ++mRefCnt;
+    NS_LOG_ADDREF(this, mRefCnt, "TextInputHandlerBase", sizeof(*this));
+    return mRefCnt;
+  }
+  nsrefcnt Release()
+  {
+    NS_PRECONDITION(mRefCnt != 0, "mRefCnt is alrady zero");
+    --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "TextInputHandlerBase");
+    if (mRefCnt == 0) {
+        mRefCnt = 1; /* stabilize */
+        delete this;
+        return 0;
+    }
+    return mRefCnt;
+  }
 
-  /**
-   * OnDestroyView must be called when mOwnerWidget is destroying and detaching
-   * mView.
+protected:
+  nsAutoRefCnt mRefCnt;
+
+public:
+   /**
+   * mWidget must not be destroyed without OnDestroyWidget being called.
    *
-   * @param aDestroyingView       Destroying view.  This might not be mView.
+   * @param aDestroyingWidget     Destroying widget.  This might not be mWidget.
    * @return                      This result doesn't have any meaning for
-   *                              callers.  When the aDstroyingView isn't same
-   *                              as mView, FALSE.  Then, inherited methods in
+   *                              callers.  When aDstroyingWidget isn't the same
+   *                              as mWidget, FALSE.  Then, inherited methods in
    *                              sub classes should return from this method
    *                              without cleaning up.
    */
-  virtual PRBool OnDestroyView(NSView<mozView> *aDestroyingView);
+  virtual PRBool OnDestroyWidget(nsChildView* aDestroyingWidget);
 
 protected:
-  // The owner of this instance.  The result of mOwnerWidget->TextInputHandler
-  // returns this instance.  This must not be null after initialized.
-  nsChildView* mOwnerWidget;
+  // The creater of this instance and client.
+  // This must not be null after initialized until OnDestroyWidget() is called.
+  nsChildView* mWidget; // [WEAK]
 
-  // The native focused view, this is the native NSView of mOwnerWidget.
+  // The native view for mWidget.
   // This view handles the actual text inputting.
-  NSView<mozView>* mView;
+  NSView<mozView>* mView; // [STRONG]
 
-  TextInputHandlerBase();
+  TextInputHandlerBase(nsChildView* aWidget, NSView<mozView> *aNativeView);
   virtual ~TextInputHandlerBase();
+
+  PRBool Destroyed() { return !mWidget; }
 };
 
 /**
@@ -259,7 +276,7 @@ protected:
 class PluginTextInputHandler : public TextInputHandlerBase
 {
 protected:
-  PluginTextInputHandler();
+  PluginTextInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
   ~PluginTextInputHandler();
 };
 
@@ -279,12 +296,12 @@ protected:
 class IMEInputHandler : public PluginTextInputHandler
 {
 public:
-  virtual PRBool OnDestroyView(NSView<mozView> *aDestroyingView);
+  virtual PRBool OnDestroyWidget(nsChildView* aDestroyingWidget);
 
   virtual void OnFocusChangeInGecko(PRBool aFocus);
 
   /**
-   * DispatchTextEvent() dispatches a text event on mOwnerWidget.
+   * DispatchTextEvent() dispatches a text event on mWidget.
    *
    * @param aText                 User text input.
    * @param aAttrString           An NSAttributedString instance which indicates
@@ -436,7 +453,7 @@ protected:
   };
   PRUint32 mPendingMethods;
 
-  IMEInputHandler();
+  IMEInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
   virtual ~IMEInputHandler();
 
   PRBool IsFocused();
@@ -560,7 +577,7 @@ public:
   static CFArrayRef CreateAllKeyboardLayoutList();
   static void DebugPrintAllKeyboardLayouts(PRLogModuleInfo* aLogModuleInfo);
 
-  TextInputHandler();
+  TextInputHandler(nsChildView* aWidget, NSView<mozView> *aNativeView);
   virtual ~TextInputHandler();
 };
 
