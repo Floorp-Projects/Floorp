@@ -129,11 +129,9 @@ NS_IMETHODIMP nsCollationWin::CompareString(PRInt32 strength,
   nsresult res;
   DWORD dwMapFlags = 0;
 
-#ifndef WINCE // NORM_IGNORECASE is not supported on WINCE
   if (strength == kCollationCaseInSensitive)
     dwMapFlags |= NORM_IGNORECASE;
 
-#endif
   retval = ::CompareStringW(mLCID, 
                             dwMapFlags,
                             (LPCWSTR) PromiseFlatString(string1).get(), 
