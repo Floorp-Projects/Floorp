@@ -444,14 +444,9 @@ public:
   virtual nsresult ReadMetadata(nsVideoInfo* aInfo) = 0;
 
   // Stores the presentation time of the first frame/sample we'd be
-  // able to play if we started playback at aOffset, and returns the
-  // first video sample, if we have video.
-  virtual VideoData* FindStartTime(PRInt64 aOffset,
-                                   PRInt64& aOutStartTime);
-
-  // Returns the end time of the last page which occurs before aEndOffset.
-  // This will not read past aEndOffset. Returns -1 on failure. 
-  virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
+  // able to play if we started playback at the current position. Returns
+  // the first video sample, if we have video.
+  VideoData* FindStartTime(PRInt64& aOutStartTime);
 
   // Moves the decode head to aTime microseconds. aStartTime and aEndTime
   // denote the start and end times of the media in usecs, and aCurrentTime

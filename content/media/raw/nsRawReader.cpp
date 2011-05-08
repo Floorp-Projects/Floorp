@@ -305,11 +305,6 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
   return NS_OK;
 }
 
-PRInt64 nsRawReader::FindEndTime(PRInt64 aEndTime)
-{
-  return -1;
-}
-
 nsresult nsRawReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
 {
   return NS_OK;

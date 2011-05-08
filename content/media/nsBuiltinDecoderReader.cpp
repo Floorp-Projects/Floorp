@@ -229,14 +229,9 @@ nsresult nsBuiltinDecoderReader::ResetDecode()
   return res;
 }
 
-VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64 aOffset,
-                                                 PRInt64& aOutStartTime)
+VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64& aOutStartTime)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
-
-  if (NS_FAILED(ResetDecode())) {
-    return nsnull;
-  }
 
   // Extract the start times of the bitstreams in order to calculate
   // the duration.
@@ -265,11 +260,6 @@ VideoData* nsBuiltinDecoderReader::FindStartTime(PRInt64 aOffset,
   }
 
   return videoData;
-}
-
-PRInt64 nsBuiltinDecoderReader::FindEndTime(PRInt64 aEndOffset)
-{
-  return -1;
 }
 
 template<class Data>
