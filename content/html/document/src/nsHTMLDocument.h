@@ -122,7 +122,7 @@ public:
   virtual NS_HIDDEN_(nsContentList*) GetFormControls();
  
   // nsIDOMDocument interface
-  NS_DECL_NSIDOMDOCUMENT
+  NS_FORWARD_NSIDOMDOCUMENT(nsDocument::)
 
   // nsIDOMNode interface
   NS_FORWARD_NSIDOMNODE(nsDocument::)
