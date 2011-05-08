@@ -122,7 +122,6 @@ static NS_DEFINE_CID(kSocketProviderServiceCID, NS_SOCKETPROVIDERSERVICE_CID);
 
 #define HTTP_PREF_PREFIX        "network.http."
 #define INTL_ACCEPT_LANGUAGES   "intl.accept_languages"
-#define INTL_ACCEPT_CHARSET     "intl.charset.default"
 #define NETWORK_ENABLEIDN       "network.enableIDN"
 #define BROWSER_PREF_PREFIX     "browser.cache."
 #define DONOTTRACK_HEADER_ENABLED "privacy.donottrackheader.enabled"
@@ -255,7 +254,6 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(HTTP_PREF_PREFIX, this, PR_TRUE);
         prefBranch->AddObserver(UA_PREF_PREFIX, this, PR_TRUE);
         prefBranch->AddObserver(INTL_ACCEPT_LANGUAGES, this, PR_TRUE); 
-        prefBranch->AddObserver(INTL_ACCEPT_CHARSET, this, PR_TRUE);
         prefBranch->AddObserver(NETWORK_ENABLEIDN, this, PR_TRUE);
         prefBranch->AddObserver(BROWSER_PREF("disk_cache_ssl"), this, PR_TRUE);
         prefBranch->AddObserver(DONOTTRACK_HEADER_ENABLED, this, PR_TRUE);
@@ -374,10 +372,6 @@ nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request,
 
     // Add the "Accept-Encoding" header
     rv = request->SetHeader(nsHttp::Accept_Encoding, mAcceptEncodings);
-    if (NS_FAILED(rv)) return rv;
-
-    // Add the "Accept-Charset" header
-    rv = request->SetHeader(nsHttp::Accept_Charset, mAcceptCharsets);
     if (NS_FAILED(rv)) return rv;
 
     // RFC2616 section 19.6.2 states that the "Connection: keep-alive"
@@ -1083,19 +1077,6 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         } 
     }
 
-    if (PREF_CHANGED(INTL_ACCEPT_CHARSET)) {
-        nsCOMPtr<nsIPrefLocalizedString> pls;
-        prefs->GetComplexValue(INTL_ACCEPT_CHARSET,
-                                NS_GET_IID(nsIPrefLocalizedString),
-                                getter_AddRefs(pls));
-        if (pls) {
-            nsXPIDLString uval;
-            pls->ToString(getter_Copies(uval));
-            if (uval)
-                SetAcceptCharsets(NS_ConvertUTF16toUTF8(uval).get());
-        } 
-    }
-
     //
     // IDN options
     //
@@ -1212,136 +1193,6 @@ nsHttpHandler::SetAcceptLanguages(const char *aAcceptLanguages)
     nsresult rv = PrepareAcceptLanguages(aAcceptLanguages, buf);
     if (NS_SUCCEEDED(rv))
         mAcceptLanguages.Assign(buf);
-    return rv;
-}
-
-/**
- *  Allocates a C string into that contains a character set/encoding list
- *  notated with HTTP "q" values for output with a HTTP Accept-Charset
- *  header. If the UTF-8 character set is not present, it will be added.
- *  If a wildcard catch-all is not present, it will be added. If more than
- *  one charset is set (as of 2001-02-07, only one is used), they will be
- *  comma delimited and with q values set for each charset in decending order.
- *
- *  Ex: passing: "euc-jp"
- *      returns: "euc-jp,utf-8;q=0.6,*;q=0.6"
- *
- *      passing: "UTF-8"
- *      returns: "UTF-8, *"
- */
-static nsresult
-PrepareAcceptCharsets(const char *i_AcceptCharset, nsACString &o_AcceptCharset)
-{
-    PRUint32 n, size, wrote, u;
-    PRInt32 available;
-    double q, dec;
-    char *p, *p2, *token, *q_Accept, *o_Accept;
-    const char *acceptable, *comma;
-    PRBool add_utf = PR_FALSE;
-    PRBool add_asterisk = PR_FALSE;
-
-    if (!i_AcceptCharset)
-        acceptable = "";
-    else
-        acceptable = i_AcceptCharset;
-    o_Accept = nsCRT::strdup(acceptable);
-    if (nsnull == o_Accept)
-        return NS_ERROR_OUT_OF_MEMORY;
-    for (p = o_Accept, n = size = 0; '\0' != *p; p++) {
-        if (*p == ',') n++;
-            size++;
-    }
-
-    // only add "utf-8" and "*" to the list if they aren't
-    // already specified.
-
-    if (PL_strcasestr(acceptable, "utf-8") == NULL) {
-        n++;
-        add_utf = PR_TRUE;
-    }
-    if (PL_strchr(acceptable, '*') == NULL) {
-        n++;
-        add_asterisk = PR_TRUE;
-    }
-
-    available = size + ++n * 11 + 1;
-    q_Accept = new char[available];
-    if ((char *) 0 == q_Accept)
-        return NS_ERROR_OUT_OF_MEMORY;
-    *q_Accept = '\0';
-    q = 1.0;
-    dec = q / (double) n;
-    n = 0;
-    p2 = q_Accept;
-    for (token = nsCRT::strtok(o_Accept, ",", &p);
-         token != (char *) 0;
-         token = nsCRT::strtok(p, ",", &p)) {
-        token = net_FindCharNotInSet(token, HTTP_LWS);
-        char* trim;
-        trim = net_FindCharInSet(token, ";" HTTP_LWS);
-        if (trim != (char*)0)  // remove "; q=..." if present
-            *trim = '\0';
-
-        if (*token != '\0') {
-            comma = n++ != 0 ? "," : ""; // delimiter if not first item
-            u = QVAL_TO_UINT(q);
-            if (u < 10)
-                wrote = PR_snprintf(p2, available, "%s%s;q=0.%u", comma, token, u);
-            else
-                wrote = PR_snprintf(p2, available, "%s%s", comma, token);
-            q -= dec;
-            p2 += wrote;
-            available -= wrote;
-            NS_ASSERTION(available > 0, "allocated string not long enough");
-        }
-    }
-    if (add_utf) {
-        comma = n++ != 0 ? "," : ""; // delimiter if not first item
-        u = QVAL_TO_UINT(q);
-        if (u < 10)
-            wrote = PR_snprintf(p2, available, "%sutf-8;q=0.%u", comma, u);
-        else
-            wrote = PR_snprintf(p2, available, "%sutf-8", comma);
-        q -= dec;
-        p2 += wrote;
-        available -= wrote;
-        NS_ASSERTION(available > 0, "allocated string not long enough");
-    }
-    if (add_asterisk) {
-        comma = n++ != 0 ? "," : ""; // delimiter if not first item
-
-        // keep q of "*" equal to the lowest q value
-        // in the event of a tie between the q of "*" and a non-wildcard
-        // the non-wildcard always receives preference.
-
-        q += dec;
-        u = QVAL_TO_UINT(q);
-        if (u < 10)
-            wrote = PR_snprintf(p2, available, "%s*;q=0.%u", comma, u);
-        else
-            wrote = PR_snprintf(p2, available, "%s*", comma);
-        available -= wrote;
-        p2 += wrote;
-        NS_ASSERTION(available > 0, "allocated string not long enough");
-    }
-    nsCRT::free(o_Accept);
-
-    // change alloc from C++ new/delete to nsCRT::strdup's way
-    o_AcceptCharset.Assign(q_Accept);
-#if defined DEBUG_havill
-    printf("Accept-Charset: %s\n", q_Accept);
-#endif
-    delete [] q_Accept;
-    return NS_OK;
-}
-
-nsresult
-nsHttpHandler::SetAcceptCharsets(const char *aAcceptCharsets) 
-{
-    nsCString buf;
-    nsresult rv = PrepareAcceptCharsets(aAcceptCharsets, buf);
-    if (NS_SUCCEEDED(rv))
-        mAcceptCharsets.Assign(buf);
     return rv;
 }
 
