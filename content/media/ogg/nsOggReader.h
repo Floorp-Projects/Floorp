@@ -71,13 +71,6 @@ public:
   virtual PRBool DecodeVideoFrame(PRBool &aKeyframeSkip,
                                   PRInt64 aTimeThreshold);
 
-  virtual VideoData* FindStartTime(PRInt64 aOffset,
-                                   PRInt64& aOutStartTime);
-
-  // Get the end time of aEndOffset. This is the playback position we'd reach
-  // after playback finished at aEndOffset.
-  virtual PRInt64 FindEndTime(PRInt64 aEndOffset);
-
   virtual PRBool HasAudio()
   {
     mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
@@ -177,17 +170,25 @@ private:
                             PRInt64 aEndTime,
                             const nsTArray<SeekRange>& aRanges);
 
+  // Get the end time of aEndOffset. This is the playback position we'd reach
+  // after playback finished at aEndOffset.
+  PRInt64 RangeEndTime(PRInt64 aEndOffset);
+
   // Get the end time of aEndOffset, without reading before aStartOffset.
   // This is the playback position we'd reach after playback finished at
   // aEndOffset. If PRBool aCachedDataOnly is PR_TRUE, then we'll only read
   // from data which is cached in the media cached, otherwise we'll do
   // regular blocking reads from the media stream. If PRBool aCachedDataOnly
-  // is PR_TRUE, and aState is not mOggState, this can safely be called on
-  // the main thread, otherwise it must be called on the state machine thread.
-  PRInt64 FindEndTime(PRInt64 aStartOffset,
-                      PRInt64 aEndOffset,
-                      PRBool aCachedDataOnly,
-                      ogg_sync_state* aState);
+  // is PR_TRUE, this can safely be called on the main thread, otherwise it
+  // must be called on the state machine thread.
+  PRInt64 RangeEndTime(PRInt64 aStartOffset,
+                       PRInt64 aEndOffset,
+                       PRBool aCachedDataOnly);
+
+  // Get the start time of the range beginning at aOffset. This is the start
+  // time of the first frame and or audio sample we'd be able to play if we
+  // started playback at aOffset.
+  PRInt64 RangeStartTime(PRInt64 aOffset);
 
   // Performs a seek bisection to move the media stream's read cursor to the
   // last ogg page boundary which has end time before aTarget usecs on both the

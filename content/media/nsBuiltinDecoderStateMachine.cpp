@@ -817,12 +817,24 @@ void nsBuiltinDecoderStateMachine::SetDuration(PRInt64 aDuration)
     "Should be on main or state machine thread.");
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
 
+  if (aDuration == -1) {
+    return;
+  }
+
   if (mStartTime != -1) {
     mEndTime = mStartTime + aDuration;
   } else {
     mStartTime = 0;
     mEndTime = aDuration;
   }
+}
+
+void nsBuiltinDecoderStateMachine::SetEndTime(PRInt64 aEndTime)
+{
+  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread");
+  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+
+  mEndTime = aEndTime;
 }
 
 void nsBuiltinDecoderStateMachine::SetSeekable(PRBool aSeekable)
@@ -1559,7 +1571,7 @@ VideoData* nsBuiltinDecoderStateMachine::FindStartTime()
   VideoData* v = nsnull;
   {
     ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    v = mReader->FindStartTime(0, startTime);
+    v = mReader->FindStartTime(startTime);
   }
   if (startTime != 0) {
     mStartTime = startTime;
@@ -1578,30 +1590,6 @@ VideoData* nsBuiltinDecoderStateMachine::FindStartTime()
   mAudioStartTime = mStartTime;
   LOG(PR_LOG_DEBUG, ("%p Media start time is %lld", mDecoder, mStartTime));
   return v;
-}
-
-void nsBuiltinDecoderStateMachine::FindEndTime() 
-{
-  NS_ASSERTION(OnStateMachineThread(), "Should be on state machine thread.");
-  mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-
-  nsMediaStream* stream = mDecoder->GetCurrentStream();
-
-  // Seek to the end of file to find the length and duration.
-  PRInt64 length = stream->GetLength();
-  NS_ASSERTION(length > 0, "Must have a content length to get end time");
-
-  mEndTime = 0;
-  PRInt64 endTime = 0;
-  {
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    endTime = mReader->FindEndTime(length);
-  }
-  if (endTime != -1) {
-    mEndTime = endTime;
-  }
-
-  LOG(PR_LOG_DEBUG, ("%p Media end time is %lld", mDecoder, mEndTime));   
 }
 
 void nsBuiltinDecoderStateMachine::UpdateReadyState() {
