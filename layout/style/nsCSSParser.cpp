@@ -6869,14 +6869,20 @@ CSSParserImpl::ParseRect(nsCSSProperty aPropID)
   } else if (mToken.mType == eCSSToken_Function &&
              mToken.mIdent.LowerCaseEqualsLiteral("rect")) {
     nsCSSRect& rect = val.SetRectValue();
+    PRBool useCommas;
     NS_FOR_CSS_SIDES(side) {
       if (! ParseVariant(rect.*(nsCSSRect::sides[side]),
                          VARIANT_AL, nsnull)) {
         return PR_FALSE;
       }
-      if (side < 3) {
-        // skip optional commas between elements
-        (void)ExpectSymbol(',', PR_TRUE);
+      if (side == 0) {
+        useCommas = ExpectSymbol(',', PR_TRUE);
+      } else if (useCommas && side < 3) {
+        // Skip optional commas between elements, but only if the first
+        // separator was a comma.
+        if (!ExpectSymbol(',', PR_TRUE)) {
+          return PR_FALSE;
+        }
       }
     }
     if (!ExpectSymbol(')', PR_TRUE)) {

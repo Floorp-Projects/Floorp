@@ -967,6 +967,7 @@ skip-if(cocoaWidget) == 413292-1.html 413292-1-ref.html # disabling due to failu
 == 413840-bullet-first-line.html 413840-bullet-first-line-ref.html
 == 413982.html 413982-ref.html
 == 414123.xhtml 414123-ref.xhtml
+== 414638.html 414638-ref.html
 == 414851-1.html 414851-1-ref.html
 == 416106-1.xhtml 416106-1-ref.xhtml
 == 416752-1.html 416752-1-ref.html
