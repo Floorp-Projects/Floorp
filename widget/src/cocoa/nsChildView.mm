@@ -96,6 +96,8 @@
 
 using namespace mozilla::layers;
 using namespace mozilla::gl;
+using namespace mozilla::widget;
+
 #undef DEBUG_IME
 #undef DEBUG_UPDATE
 #undef INVALIDATE_DEBUGGING  // flash areas as they are invalidated
@@ -340,8 +342,8 @@ InitNPCocoaEvent(NPCocoaEvent* event)
 
 static void DebugPrintAllKeyboardLayouts()
 {
-  nsCocoaTextInputHandler::DebugPrintAllKeyboardLayouts(sCocoaLog);
-  nsCocoaIMEHandler::DebugPrintAllIMEModes(sCocoaLog);
+  TextInputHandler::DebugPrintAllKeyboardLayouts(sCocoaLog);
+  IMEInputHandler::DebugPrintAllIMEModes(sCocoaLog);
 }
 
 #endif // defined(DEBUG) && defined(PR_LOGGING)
@@ -4398,7 +4400,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
   static const UCKeyboardLayout* sUSLayout = nsnull;
   if (!sUSLayout) {
-    nsTISInputSource tis("com.apple.keylayout.US");
+    TISInputSourceWrapper tis("com.apple.keylayout.US");
     sUSLayout = tis.GetUCKeyboardLayout();
     NS_ENSURE_TRUE(sUSLayout, 0);
   }
@@ -4449,7 +4451,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
       PRBool isRomanKeyboardLayout;
 
-      nsTISInputSource tis;
+      TISInputSourceWrapper tis;
       if (gOverrideKeyboardLayout.mOverrideEnabled) {
         tis.InitByLayoutID(gOverrideKeyboardLayout.mKeyboardLayout);
       } else {
