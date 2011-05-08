@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsCocoaTextInputHandler_h_
-#define nsCocoaTextInputHandler_h_
+#ifndef TextInputHandler_h_
+#define TextInputHandler_h_
 
 #include "nsCocoaUtils.h"
 
@@ -56,44 +56,47 @@ struct PRLogModuleInfo;
 class nsChildView;
 struct nsTextRange;
 
+namespace mozilla {
+namespace widget {
+
 /**
- * nsTISInputSource is a wrapper for the TISInputSourceRef.  If we get the
+ * TISInputSourceWrapper is a wrapper for the TISInputSourceRef.  If we get the
  * TISInputSourceRef from InputSourceID, we need to release the CFArray instance
  * which is returned by TISCreateInputSourceList.  However, when we release the
  * list, we cannot access the TISInputSourceRef.  So, it's not usable, and it
  * may cause the memory leak bugs.  nsTISInputSource automatically releases the
  * list when the instance is destroyed.
  */
-class nsTISInputSource
+class TISInputSourceWrapper
 {
 public:
-  static nsTISInputSource& CurrentKeyboardLayout();
+  static TISInputSourceWrapper& CurrentKeyboardLayout();
 
-  nsTISInputSource()
+  TISInputSourceWrapper()
   {
     mInputSourceList = nsnull;
     Clear();
   }
 
-  nsTISInputSource(const char* aID)
+  TISInputSourceWrapper(const char* aID)
   {
     mInputSourceList = nsnull;
     InitByInputSourceID(aID);
   }
 
-  nsTISInputSource(SInt32 aLayoutID)
+  TISInputSourceWrapper(SInt32 aLayoutID)
   {
     mInputSourceList = nsnull;
     InitByLayoutID(aLayoutID);
   }
 
-  nsTISInputSource(TISInputSourceRef aInputSource)
+  TISInputSourceWrapper(TISInputSourceRef aInputSource)
   {
     mInputSourceList = nsnull;
     InitByTISInputSourceRef(aInputSource);
   }
 
-  ~nsTISInputSource() { Clear(); }
+  ~TISInputSourceWrapper() { Clear(); }
 
   void InitByInputSourceID(const char* aID);
   void InitByInputSourceID(const nsAFlatString &aID);
@@ -207,7 +210,61 @@ protected:
 };
 
 /**
- * nsCocoaIMEHandler manages:
+ * TextInputHandlerBase is a base class of PluginTextInputHandler,
+ * IMEInputHandler and TextInputHandler.  Utility methods should be implemented
+ * this level.
+ */
+
+class TextInputHandlerBase
+{
+public:
+  /**
+   * Init must be called when aOwner is initializing and finished attaching
+   * an NSView.
+   *
+   * @param aOwner                An owner nsChildView of the instance.
+   */
+  virtual void Init(nsChildView* aOwner);
+
+  /**
+   * OnDestroyView must be called when mOwnerWidget is destroying and detaching
+   * mView.
+   *
+   * @param aDestroyingView       Destroying view.  This might not be mView.
+   * @return                      This result doesn't have any meaning for
+   *                              callers.  When the aDstroyingView isn't same
+   *                              as mView, FALSE.  Then, inherited methods in
+   *                              sub classes should return from this method
+   *                              without cleaning up.
+   */
+  virtual PRBool OnDestroyView(NSView<mozView> *aDestroyingView);
+
+protected:
+  // The owner of this instance.  The result of mOwnerWidget->TextInputHandler
+  // returns this instance.  This must not be null after initialized.
+  nsChildView* mOwnerWidget;
+
+  // The native focused view, this is the native NSView of mOwnerWidget.
+  // This view handles the actual text inputting.
+  NSView<mozView>* mView;
+
+  TextInputHandlerBase();
+  virtual ~TextInputHandlerBase();
+};
+
+/**
+ * PluginTextInputHandler handles text input events for plugins.
+ */
+
+class PluginTextInputHandler : public TextInputHandlerBase
+{
+protected:
+  PluginTextInputHandler();
+  ~PluginTextInputHandler();
+};
+
+/**
+ * IMEInputHandler manages:
  *   1. The IME/keyboard layout statement of nsChildView.
  *   2. The IME composition statement of nsChildView.
  * And also provides the methods which controls the current IME transaction of
@@ -217,22 +274,14 @@ protected:
  * a text editor on XUL panel element, the input events handled on the parent
  * (or its ancestor) widget handles it (the native focus is set to it).  The
  * actual focused view is notified by OnFocusChangeInGecko.
- *
- * NOTE: This class must not be used directly.  The purpose of this class is
- *       to protect the IME related code from non-IME using developers.
- *       Use nsCocoaTextInputHandler class which inherits this class.
  */
 
-class nsCocoaIMEHandler
+class IMEInputHandler : public PluginTextInputHandler
 {
 public:
-  nsCocoaIMEHandler();
-  virtual ~nsCocoaIMEHandler();
-
-  virtual void Init(nsChildView* aOwner);
+  virtual PRBool OnDestroyView(NSView<mozView> *aDestroyingView);
 
   virtual void OnFocusChangeInGecko(PRBool aFocus);
-  virtual void OnDestroyView(NSView<mozView> *aDestroyingView);
 
   /**
    * DispatchTextEvent() dispatches a text event on mOwnerWidget.
@@ -376,14 +425,6 @@ public:
   static TSMDocumentID GetCurrentTSMDocumentID();
 
 protected:
-  // The owner of this instance.  The result of mOwnerWidget->TextInputHandler
-  // returns this instance.  This must not be null after initialized.
-  nsChildView* mOwnerWidget;
-
-  // The native focused view, this is the native NSView of mOwnerWidget.
-  // This view handling the actual text inputting.
-  NSView<mozView>* mView;
-
   // We cannot do some jobs in the given stack by some reasons.
   // Following flags and the timer provide the execution pending mechanism,
   // See the comment in nsCocoaTextInputHandler.mm.
@@ -394,6 +435,9 @@ protected:
     kSyncASCIICapableOnly    = 4
   };
   PRUint32 mPendingMethods;
+
+  IMEInputHandler();
+  virtual ~IMEInputHandler();
 
   PRBool IsFocused();
   void ResetTimer();
@@ -504,20 +548,23 @@ private:
   // must have the actual focused handle.
   // We cannot access to the NSInputManager during we aren't active, so, the
   // focused handler can have an IME transaction even if we are deactive.
-  static nsCocoaIMEHandler* sFocusedIMEHandler;
+  static IMEInputHandler* sFocusedIMEHandler;
 };
 
 /**
- * nsCocoaTextInputHandler is going to implement the NSTextInput protocol.
+ * TextInputHandler implements the NSTextInput protocol.
  */
-class nsCocoaTextInputHandler : public nsCocoaIMEHandler
+class TextInputHandler : public IMEInputHandler
 {
 public:
   static CFArrayRef CreateAllKeyboardLayoutList();
   static void DebugPrintAllKeyboardLayouts(PRLogModuleInfo* aLogModuleInfo);
 
-  nsCocoaTextInputHandler();
-  virtual ~nsCocoaTextInputHandler();
+  TextInputHandler();
+  virtual ~TextInputHandler();
 };
 
-#endif // nsCocoaTextInputHandler_h_
+} // namespace widget
+} // namespace mozilla
+
+#endif // TextInputHandler_h_

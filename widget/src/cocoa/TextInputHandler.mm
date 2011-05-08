@@ -37,7 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCocoaTextInputHandler.h"
+#include "TextInputHandler.h"
 
 #include "nsChildView.h"
 #include "nsObjCExceptions.h"
@@ -47,6 +47,8 @@
 #define FORCE_PR_LOG
 #endif
 #include "prlog.h"
+
+using namespace mozilla::widget;
 
 #undef DEBUG_IME_HANDLER
 #undef DEBUG_TEXT_INPUT_HANDLER
@@ -95,9 +97,9 @@ TrueOrFalse(PRBool aBool)
 }
 
 static void
-DebugPrintPointer(nsCocoaIMEHandler* aHandler)
+DebugPrintPointer(IMEInputHandler* aHandler)
 {
-  static nsCocoaIMEHandler* sLastHandler = nsnull;
+  static IMEInputHandler* sLastHandler = nsnull;
   if (aHandler == sLastHandler)
     return;
   sLastHandler = aHandler;
@@ -158,7 +160,7 @@ GetWindowLevelName(NSInteger aWindowLevel)
 #endif // DEBUG_IME_HANDLER
 
 static PRUint32 gHandlerInstanceCount = 0;
-static nsTISInputSource gCurrentKeyboardLayout;
+static TISInputSourceWrapper gCurrentKeyboardLayout;
 
 static void
 InitCurrentKeyboardLayout()
@@ -181,13 +183,13 @@ FinalizeCurrentKeyboardLayout()
 
 /******************************************************************************
  *
- *  nsTISInputSource implementation
+ *  TISInputSourceWrapper implementation
  *
  ******************************************************************************/
 
 // static
-nsTISInputSource&
-nsTISInputSource::CurrentKeyboardLayout()
+TISInputSourceWrapper&
+TISInputSourceWrapper::CurrentKeyboardLayout()
 {
   InitCurrentKeyboardLayout();
   return gCurrentKeyboardLayout;
@@ -195,12 +197,13 @@ nsTISInputSource::CurrentKeyboardLayout()
 
 // static
 PRBool
-nsTISInputSource::UCKeyTranslateToString(const UCKeyboardLayout* aHandle,
-                                         UInt32 aKeyCode, UInt32 aModifiers,
-                                         UInt32 aKbType, nsAString &aStr)
+TISInputSourceWrapper::UCKeyTranslateToString(
+                         const UCKeyboardLayout* aHandle,
+                         UInt32 aKeyCode, UInt32 aModifiers,
+                         UInt32 aKbType, nsAString &aStr)
 {
 #ifdef DEBUG_TEXT_INPUT_HANDLER
-  NSLog(@"**** nsTISInputSource::UCKeyTranslateToString: aHandle: %p, aKeyCode: %X, aModifiers: %X, aKbType: %X",
+  NSLog(@"**** TISInputSourceWrapper::UCKeyTranslateToString: aHandle: %p, aKeyCode: %X, aModifiers: %X, aKbType: %X",
         aHandle, aKeyCode, aModifiers, aKbType);
   PRBool isShift = aModifiers & shiftKey;
   PRBool isCtrl = aModifiers & controlKey;
@@ -241,7 +244,7 @@ nsTISInputSource::UCKeyTranslateToString(const UCKeyboardLayout* aHandle,
 }
 
 void
-nsTISInputSource::InitByInputSourceID(const char* aID)
+TISInputSourceWrapper::InitByInputSourceID(const char* aID)
 {
   Clear();
   if (!aID)
@@ -254,7 +257,7 @@ nsTISInputSource::InitByInputSourceID(const char* aID)
 }
 
 void
-nsTISInputSource::InitByInputSourceID(const nsAFlatString &aID)
+TISInputSourceWrapper::InitByInputSourceID(const nsAFlatString &aID)
 {
   Clear();
   if (aID.IsEmpty())
@@ -266,7 +269,7 @@ nsTISInputSource::InitByInputSourceID(const nsAFlatString &aID)
 }
 
 void
-nsTISInputSource::InitByInputSourceID(const CFStringRef aID)
+TISInputSourceWrapper::InitByInputSourceID(const CFStringRef aID)
 {
   Clear();
   if (!aID)
@@ -285,7 +288,7 @@ nsTISInputSource::InitByInputSourceID(const CFStringRef aID)
 }
 
 void
-nsTISInputSource::InitByLayoutID(SInt32 aLayoutID)
+TISInputSourceWrapper::InitByLayoutID(SInt32 aLayoutID)
 {
   Clear();
   // XXX On TIS, the LayoutID is abolished completely.  Therefore, the numbers
@@ -309,49 +312,49 @@ nsTISInputSource::InitByLayoutID(SInt32 aLayoutID)
 }
 
 void
-nsTISInputSource::InitByCurrentInputSource()
+TISInputSourceWrapper::InitByCurrentInputSource()
 {
   Clear();
   mInputSource = ::TISCopyCurrentKeyboardInputSource();
 }
 
 void
-nsTISInputSource::InitByCurrentKeyboardLayout()
+TISInputSourceWrapper::InitByCurrentKeyboardLayout()
 {
   Clear();
   mInputSource = ::TISCopyCurrentKeyboardLayoutInputSource();
 }
 
 void
-nsTISInputSource::InitByCurrentASCIICapableInputSource()
+TISInputSourceWrapper::InitByCurrentASCIICapableInputSource()
 {
   Clear();
   mInputSource = ::TISCopyCurrentASCIICapableKeyboardInputSource();
 }
 
 void
-nsTISInputSource::InitByCurrentASCIICapableKeyboardLayout()
+TISInputSourceWrapper::InitByCurrentASCIICapableKeyboardLayout()
 {
   Clear();
   mInputSource = ::TISCopyCurrentASCIICapableKeyboardLayoutInputSource();
 }
 
 void
-nsTISInputSource::InitByTISInputSourceRef(TISInputSourceRef aInputSource)
+TISInputSourceWrapper::InitByTISInputSourceRef(TISInputSourceRef aInputSource)
 {
   Clear();
   mInputSource = aInputSource;
 }
 
 void
-nsTISInputSource::InitByLanguage(CFStringRef aLanguage)
+TISInputSourceWrapper::InitByLanguage(CFStringRef aLanguage)
 {
   Clear();
   mInputSource = ::TISCopyInputSourceForLanguage(aLanguage);
 }
 
 const UCKeyboardLayout*
-nsTISInputSource::GetUCKeyboardLayout()
+TISInputSourceWrapper::GetUCKeyboardLayout()
 {
   NS_ENSURE_TRUE(mInputSource, nsnull);
   if (mUCKeyboardLayout) {
@@ -369,7 +372,7 @@ nsTISInputSource::GetUCKeyboardLayout()
 }
 
 PRBool
-nsTISInputSource::GetBoolProperty(const CFStringRef aKey)
+TISInputSourceWrapper::GetBoolProperty(const CFStringRef aKey)
 {
   CFBooleanRef ret = static_cast<CFBooleanRef>(
     ::TISGetInputSourceProperty(mInputSource, aKey));
@@ -377,7 +380,8 @@ nsTISInputSource::GetBoolProperty(const CFStringRef aKey)
 }
 
 PRBool
-nsTISInputSource::GetStringProperty(const CFStringRef aKey, CFStringRef &aStr)
+TISInputSourceWrapper::GetStringProperty(const CFStringRef aKey,
+                                         CFStringRef &aStr)
 {
   aStr = static_cast<CFStringRef>(
     ::TISGetInputSourceProperty(mInputSource, aKey));
@@ -385,7 +389,8 @@ nsTISInputSource::GetStringProperty(const CFStringRef aKey, CFStringRef &aStr)
 }
 
 PRBool
-nsTISInputSource::GetStringProperty(const CFStringRef aKey, nsAString &aStr)
+TISInputSourceWrapper::GetStringProperty(const CFStringRef aKey,
+                                         nsAString &aStr)
 {
   CFStringRef str;
   GetStringProperty(aKey, str);
@@ -394,7 +399,7 @@ nsTISInputSource::GetStringProperty(const CFStringRef aKey, nsAString &aStr)
 }
 
 PRBool
-nsTISInputSource::IsOpenedIMEMode()
+TISInputSourceWrapper::IsOpenedIMEMode()
 {
   NS_ENSURE_TRUE(mInputSource, PR_FALSE);
   if (!IsIMEMode())
@@ -403,7 +408,7 @@ nsTISInputSource::IsOpenedIMEMode()
 }
 
 PRBool
-nsTISInputSource::IsIMEMode()
+TISInputSourceWrapper::IsIMEMode()
 {
   NS_ENSURE_TRUE(mInputSource, PR_FALSE);
   CFStringRef str;
@@ -414,7 +419,7 @@ nsTISInputSource::IsIMEMode()
 }
 
 PRBool
-nsTISInputSource::GetLanguageList(CFArrayRef &aLanguageList)
+TISInputSourceWrapper::GetLanguageList(CFArrayRef &aLanguageList)
 {
   NS_ENSURE_TRUE(mInputSource, PR_FALSE);
   aLanguageList = static_cast<CFArrayRef>(
@@ -424,7 +429,7 @@ nsTISInputSource::GetLanguageList(CFArrayRef &aLanguageList)
 }
 
 PRBool
-nsTISInputSource::GetPrimaryLanguage(CFStringRef &aPrimaryLanguage)
+TISInputSourceWrapper::GetPrimaryLanguage(CFStringRef &aPrimaryLanguage)
 {
   NS_ENSURE_TRUE(mInputSource, PR_FALSE);
   CFArrayRef langList;
@@ -437,7 +442,7 @@ nsTISInputSource::GetPrimaryLanguage(CFStringRef &aPrimaryLanguage)
 }
 
 PRBool
-nsTISInputSource::GetPrimaryLanguage(nsAString &aPrimaryLanguage)
+TISInputSourceWrapper::GetPrimaryLanguage(nsAString &aPrimaryLanguage)
 {
   NS_ENSURE_TRUE(mInputSource, PR_FALSE);
   CFStringRef primaryLanguage;
@@ -447,7 +452,7 @@ nsTISInputSource::GetPrimaryLanguage(nsAString &aPrimaryLanguage)
 }
 
 PRBool
-nsTISInputSource::IsForRTLLanguage()
+TISInputSourceWrapper::IsForRTLLanguage()
 {
   if (mIsRTL < 0) {
     // Get the input character of the 'A' key of ANSI keyboard layout.
@@ -461,14 +466,14 @@ nsTISInputSource::IsForRTLLanguage()
 }
 
 PRBool
-nsTISInputSource::IsInitializedByCurrentKeyboardLayout()
+TISInputSourceWrapper::IsInitializedByCurrentKeyboardLayout()
 {
   return mInputSource == ::TISCopyCurrentKeyboardLayoutInputSource();
 }
 
 PRBool
-nsTISInputSource::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
-                                    UInt32 aKbdType, nsAString &aStr)
+TISInputSourceWrapper::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
+                                         UInt32 aKbdType, nsAString &aStr)
 {
   aStr.Truncate();
   const UCKeyboardLayout* UCKey = GetUCKeyboardLayout();
@@ -477,7 +482,7 @@ nsTISInputSource::TranslateToString(UInt32 aKeyCode, UInt32 aModifiers,
 }
 
 void
-nsTISInputSource::Select()
+TISInputSourceWrapper::Select()
 {
   if (!mInputSource)
     return;
@@ -485,7 +490,7 @@ nsTISInputSource::Select()
 }
 
 void
-nsTISInputSource::Clear()
+TISInputSourceWrapper::Clear()
 {
   if (mInputSourceList) {
     ::CFRelease(mInputSourceList);
@@ -502,13 +507,13 @@ nsTISInputSource::Clear()
 
 /******************************************************************************
  *
- *  nsCocoaTextInputHandler implementation (static methods)
+ *  TextInputHandler implementation (static methods)
  *
  ******************************************************************************/
 
 // static
 CFArrayRef
-nsCocoaTextInputHandler::CreateAllKeyboardLayoutList()
+TextInputHandler::CreateAllKeyboardLayoutList()
 {
   const void* keys[] = { kTISPropertyInputSourceType };
   const void* values[] = { kTISTypeKeyboardLayout };
@@ -522,13 +527,12 @@ nsCocoaTextInputHandler::CreateAllKeyboardLayoutList()
 
 // static
 void
-nsCocoaTextInputHandler::DebugPrintAllKeyboardLayouts(
-                           PRLogModuleInfo* aLogModuleInfo)
+TextInputHandler::DebugPrintAllKeyboardLayouts(PRLogModuleInfo* aLogModuleInfo)
 {
   CFArrayRef list = CreateAllKeyboardLayoutList();
   PR_LOG(aLogModuleInfo, PR_LOG_ALWAYS, ("Keyboard layout configuration:"));
   CFIndex idx = ::CFArrayGetCount(list);
-  nsTISInputSource tis;
+  TISInputSourceWrapper tis;
   for (CFIndex i = 0; i < idx; ++i) {
     TISInputSourceRef inputSource = static_cast<TISInputSourceRef>(
       const_cast<void *>(::CFArrayGetValueAtIndex(list, i)));
@@ -552,16 +556,16 @@ nsCocoaTextInputHandler::DebugPrintAllKeyboardLayouts(
 
 /******************************************************************************
  *
- *  nsCocoaTextInputHandler implementation
+ *  TextInputHandler implementation
  *
  ******************************************************************************/
 
-nsCocoaTextInputHandler::nsCocoaTextInputHandler() :
-  nsCocoaIMEHandler()
+TextInputHandler::TextInputHandler() :
+  IMEInputHandler()
 {
 }
 
-nsCocoaTextInputHandler::~nsCocoaTextInputHandler()
+TextInputHandler::~TextInputHandler()
 {
 }
 
@@ -571,17 +575,17 @@ nsCocoaTextInputHandler::~nsCocoaTextInputHandler()
 
 /******************************************************************************
  *
- *  nsCocoaIMEHandler implementation (static methods)
+ *  IMEInputHandler implementation (static methods)
  *
  ******************************************************************************/
 
-PRBool nsCocoaIMEHandler::sStaticMembersInitialized = PR_FALSE;
-CFStringRef nsCocoaIMEHandler::sLatestIMEOpenedModeInputSourceID = nsnull;
-nsCocoaIMEHandler* nsCocoaIMEHandler::sFocusedIMEHandler = nsnull;
+PRBool IMEInputHandler::sStaticMembersInitialized = PR_FALSE;
+CFStringRef IMEInputHandler::sLatestIMEOpenedModeInputSourceID = nsnull;
+IMEInputHandler* IMEInputHandler::sFocusedIMEHandler = nsnull;
 
 // static
 void
-nsCocoaIMEHandler::InitStaticMembers()
+IMEInputHandler::InitStaticMembers()
 {
   if (sStaticMembersInitialized)
     return;
@@ -603,15 +607,14 @@ nsCocoaIMEHandler::InitStaticMembers()
 
 // static
 void
-nsCocoaIMEHandler::OnCurrentTextInputSourceChange(
-                     CFNotificationCenterRef aCenter,
-                     void* aObserver,
-                     CFStringRef aName,
-                     const void* aObject,
-                     CFDictionaryRef aUserInfo)
+IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
+                                                void* aObserver,
+                                                CFStringRef aName,
+                                                const void* aObject,
+                                                CFDictionaryRef aUserInfo)
 {
   // Cache the latest IME opened mode to sLatestIMEOpenedModeInputSourceID.
-  nsTISInputSource tis;
+  TISInputSourceWrapper tis;
   tis.InitByCurrentInputSource();
   if (tis.IsOpenedIMEMode()) {
     tis.GetInputSourceID(sLatestIMEOpenedModeInputSourceID);
@@ -623,7 +626,7 @@ nsCocoaIMEHandler::OnCurrentTextInputSourceChange(
   tis.GetInputSourceID(newTIS);
   if (!sLastTIS ||
       ::CFStringCompare(sLastTIS, newTIS, 0) != kCFCompareEqualTo) {
-    nsTISInputSource tis1, tis2, tis3;
+    TISInputSourceWrapper tis1, tis2, tis3;
     tis1.InitByCurrentKeyboardLayout();
     tis2.InitByCurrentASCIICapableInputSource();
     tis3.InitByCurrentASCIICapableKeyboardLayout();
@@ -654,15 +657,15 @@ nsCocoaIMEHandler::OnCurrentTextInputSourceChange(
 
 // static
 void
-nsCocoaIMEHandler::FlushPendingMethods(nsITimer* aTimer, void* aClosure)
+IMEInputHandler::FlushPendingMethods(nsITimer* aTimer, void* aClosure)
 {
   NS_ASSERTION(aClosure, "aClosure is null");
-  static_cast<nsCocoaIMEHandler*>(aClosure)->ExecutePendingMethods();
+  static_cast<IMEInputHandler*>(aClosure)->ExecutePendingMethods();
 }
 
 // static
 CFArrayRef
-nsCocoaIMEHandler::CreateAllIMEModeList()
+IMEInputHandler::CreateAllIMEModeList()
 {
   const void* keys[] = { kTISPropertyInputSourceType };
   const void* values[] = { kTISTypeKeyboardInputMode };
@@ -676,12 +679,12 @@ nsCocoaIMEHandler::CreateAllIMEModeList()
 
 // static
 void
-nsCocoaIMEHandler::DebugPrintAllIMEModes(PRLogModuleInfo* aLogModuleInfo)
+IMEInputHandler::DebugPrintAllIMEModes(PRLogModuleInfo* aLogModuleInfo)
 {
   CFArrayRef list = CreateAllIMEModeList();
   PR_LOG(aLogModuleInfo, PR_LOG_ALWAYS, ("IME mode configuration:"));
   CFIndex idx = ::CFArrayGetCount(list);
-  nsTISInputSource tis;
+  TISInputSourceWrapper tis;
   for (CFIndex i = 0; i < idx; ++i) {
     TISInputSourceRef inputSource = static_cast<TISInputSourceRef>(
       const_cast<void *>(::CFArrayGetValueAtIndex(list, i)));
@@ -701,7 +704,7 @@ nsCocoaIMEHandler::DebugPrintAllIMEModes(PRLogModuleInfo* aLogModuleInfo)
 
 //static
 TSMDocumentID
-nsCocoaIMEHandler::GetCurrentTSMDocumentID()
+IMEInputHandler::GetCurrentTSMDocumentID()
 {
   // On OS X 10.6.x at least, ::TSMGetActiveDocument() has a bug that prevents
   // it from returning accurate results unless
@@ -716,7 +719,7 @@ nsCocoaIMEHandler::GetCurrentTSMDocumentID()
 
 /******************************************************************************
  *
- *  nsCocoaIMEHandler implementation #1
+ *  IMEInputHandler implementation #1
  *    The methods are releated to the pending methods.  Some jobs should be
  *    run after the stack is finished, e.g, some methods cannot run the jobs
  *    during processing the focus event.  And also some other jobs should be
@@ -727,13 +730,13 @@ nsCocoaIMEHandler::GetCurrentTSMDocumentID()
  ******************************************************************************/
 
 void
-nsCocoaIMEHandler::ResetIMEWindowLevel()
+IMEInputHandler::ResetIMEWindowLevel()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::ResetIMEWindowLevel");
+  NSLog(@"IMEInputHandler::ResetIMEWindowLevel");
   NSLog(@"  IsFocused:%s GetCurrentTSMDocumentID():%p",
         TrueOrFalse(IsFocused()), GetCurrentTSMDocumentID());
 #endif // DEBUG_IME_HANDLER
@@ -788,13 +791,13 @@ nsCocoaIMEHandler::ResetIMEWindowLevel()
 }
 
 void
-nsCocoaIMEHandler::DiscardIMEComposition()
+IMEInputHandler::DiscardIMEComposition()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::DiscardIMEComposition");
+  NSLog(@"IMEInputHandler::DiscardIMEComposition");
   NSLog(@"  currentInputManager:%p", [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
 
@@ -824,13 +827,13 @@ nsCocoaIMEHandler::DiscardIMEComposition()
 }
 
 void
-nsCocoaIMEHandler::SyncASCIICapableOnly()
+IMEInputHandler::SyncASCIICapableOnly()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::SyncASCIICapableOnly");
+  NSLog(@"IMEInputHandler::SyncASCIICapableOnly");
   NSLog(@"  IsFocused:%s GetCurrentTSMDocumentID():%p",
         TrueOrFalse(IsFocused()), GetCurrentTSMDocumentID());
 #endif
@@ -869,7 +872,7 @@ nsCocoaIMEHandler::SyncASCIICapableOnly()
 }
 
 void
-nsCocoaIMEHandler::ResetTimer()
+IMEInputHandler::ResetTimer()
 {
   NS_ASSERTION(mPendingMethods != 0,
                "There are not pending methods, why this is called?");
@@ -884,7 +887,7 @@ nsCocoaIMEHandler::ResetTimer()
 }
 
 void
-nsCocoaIMEHandler::ExecutePendingMethods()
+IMEInputHandler::ExecutePendingMethods()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -921,13 +924,13 @@ nsCocoaIMEHandler::ExecutePendingMethods()
 
 /******************************************************************************
  *
- * nsCocoaIMEHandler implementation (native event handlers)
+ * IMEInputHandler implementation (native event handlers)
  *
  ******************************************************************************/
 
 PRUint32
-nsCocoaIMEHandler::ConvertToTextRangeType(PRUint32 aUnderlineStyle,
-                                          NSRange& aSelectedRange)
+IMEInputHandler::ConvertToTextRangeType(PRUint32 aUnderlineStyle,
+                                        NSRange& aSelectedRange)
 {
 #ifdef DEBUG_IME_HANDLER
   NSLog(@"****in ConvertToTextRangeType = %d", aUnderlineStyle);
@@ -960,7 +963,7 @@ nsCocoaIMEHandler::ConvertToTextRangeType(PRUint32 aUnderlineStyle,
 }
 
 PRUint32
-nsCocoaIMEHandler::GetRangeCount(NSAttributedString *aAttrString)
+IMEInputHandler::GetRangeCount(NSAttributedString *aAttrString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -985,9 +988,9 @@ nsCocoaIMEHandler::GetRangeCount(NSAttributedString *aAttrString)
 }
 
 void
-nsCocoaIMEHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
-                                    NSAttributedString *aAttrString,
-                                    NSRange& aSelectedRange)
+IMEInputHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
+                                  NSAttributedString *aAttrString,
+                                  NSRange& aSelectedRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1027,10 +1030,10 @@ nsCocoaIMEHandler::SetTextRangeList(nsTArray<nsTextRange>& aTextRangeList,
 }
 
 PRBool
-nsCocoaIMEHandler::DispatchTextEvent(const nsString& aText,
-                                     NSAttributedString* aAttrString,
-                                     NSRange& aSelectedRange,
-                                     PRBool aDoCommit)
+IMEInputHandler::DispatchTextEvent(const nsString& aText,
+                                   NSAttributedString* aAttrString,
+                                   NSRange& aSelectedRange,
+                                   PRBool aDoCommit)
 {
 #ifdef DEBUG_IME_HANDLER
   NSLog(@"****in DispatchTextEvent; string = '%@'", aAttrString);
@@ -1052,14 +1055,14 @@ nsCocoaIMEHandler::DispatchTextEvent(const nsString& aText,
 }
 
 void
-nsCocoaIMEHandler::InitCompositionEvent(nsCompositionEvent& aCompositionEvent)
+IMEInputHandler::InitCompositionEvent(nsCompositionEvent& aCompositionEvent)
 {
   aCompositionEvent.time = PR_IntervalNow();
 }
 
 void
-nsCocoaIMEHandler::InsertTextAsCommittingComposition(
-                     NSAttributedString* aAttrString)
+IMEInputHandler::InsertTextAsCommittingComposition(
+                   NSAttributedString* aAttrString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1114,8 +1117,8 @@ nsCocoaIMEHandler::InsertTextAsCommittingComposition(
 }
 
 void
-nsCocoaIMEHandler::SetMarkedText(NSAttributedString* aAttrString,
-                                 NSRange& aSelectedRange)
+IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
+                               NSRange& aSelectedRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1178,7 +1181,7 @@ nsCocoaIMEHandler::SetMarkedText(NSAttributedString* aAttrString,
 }
 
 NSInteger
-nsCocoaIMEHandler::ConversationIdentifier()
+IMEInputHandler::ConversationIdentifier()
 {
   // NOTE: The size of NSInteger is same as pointer size.
   nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mOwnerWidget);
@@ -1193,7 +1196,7 @@ nsCocoaIMEHandler::ConversationIdentifier()
 }
 
 NSAttributedString*
-nsCocoaIMEHandler::GetAttributedSubstringFromRange(NSRange& aRange)
+IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -1225,7 +1228,7 @@ nsCocoaIMEHandler::GetAttributedSubstringFromRange(NSRange& aRange)
 }
 
 NSRange
-nsCocoaIMEHandler::SelectedRange()
+IMEInputHandler::SelectedRange()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -1249,7 +1252,7 @@ nsCocoaIMEHandler::SelectedRange()
 }
 
 NSRect
-nsCocoaIMEHandler::FirstRectForCharacterRange(NSRange& aRange)
+IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
@@ -1311,7 +1314,7 @@ nsCocoaIMEHandler::FirstRectForCharacterRange(NSRange& aRange)
 }
 
 NSUInteger
-nsCocoaIMEHandler::CharacterIndexForPoint(NSPoint& aPoint)
+IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint)
 {
 #if DEBUG_IME
   NSLog(@"****in CharacterIndexForPoint");
@@ -1322,7 +1325,7 @@ nsCocoaIMEHandler::CharacterIndexForPoint(NSPoint& aPoint)
 }
 
 NSArray*
-nsCocoaIMEHandler::GetValidAttributesForMarkedText()
+IMEInputHandler::GetValidAttributesForMarkedText()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
@@ -1346,25 +1349,24 @@ nsCocoaIMEHandler::GetValidAttributesForMarkedText()
 
 /******************************************************************************
  *
- *  nsCocoaIMEHandler implementation #2
+ *  IMEInputHandler implementation #2
  *
  ******************************************************************************/
 
-nsCocoaIMEHandler::nsCocoaIMEHandler() :
-  mOwnerWidget(nsnull), mView(nsnull),
+IMEInputHandler::IMEInputHandler() :
+  PluginTextInputHandler(),
   mPendingMethods(0), mIMECompositionString(nsnull),
   mIsIMEComposing(PR_FALSE), mIsIMEEnabled(PR_TRUE),
   mIsASCIICapableOnly(PR_FALSE), mIgnoreIMECommit(PR_FALSE),
   mIsInFocusProcessing(PR_FALSE)
 {
-  gHandlerInstanceCount++;
   InitStaticMembers();
 
   mMarkedRange.location = NSNotFound;
   mMarkedRange.length = 0;
 }
 
-nsCocoaIMEHandler::~nsCocoaIMEHandler()
+IMEInputHandler::~IMEInputHandler()
 {
   if (mTimer) {
     mTimer->Cancel();
@@ -1373,25 +1375,14 @@ nsCocoaIMEHandler::~nsCocoaIMEHandler()
   if (sFocusedIMEHandler == this) {
     sFocusedIMEHandler = nsnull;
   }
-  if (--gHandlerInstanceCount == 0) {
-    FinalizeCurrentKeyboardLayout();
-  }
 }
 
 void
-nsCocoaIMEHandler::Init(nsChildView* aOwner)
-{
-  mOwnerWidget = aOwner;
-  mView =
-    static_cast<NSView<mozView>*>(aOwner->GetNativeData(NS_NATIVE_WIDGET));
-}
-
-void
-nsCocoaIMEHandler::OnFocusChangeInGecko(PRBool aFocus)
+IMEInputHandler::OnFocusChangeInGecko(PRBool aFocus)
 {
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::OnFocusChangeInGecko");
+  NSLog(@"IMEInputHandler::OnFocusChangeInGecko");
   NSLog(@"  aFocus:%s sFocusedIMEHandler:%p",
         TrueOrFalse(aFocus), sFocusedIMEHandler);
 #endif // DEBUG_IME_HANDLER
@@ -1416,8 +1407,8 @@ nsCocoaIMEHandler::OnFocusChangeInGecko(PRBool aFocus)
   ResetTimer();
 }
 
-void
-nsCocoaIMEHandler::OnDestroyView(NSView<mozView> *aDestroyingView)
+PRBool
+IMEInputHandler::OnDestroyView(NSView<mozView> *aDestroyingView)
 {
   // If we're not focused, the destroying view might be composing with it in
   // another instance.
@@ -1425,8 +1416,8 @@ nsCocoaIMEHandler::OnDestroyView(NSView<mozView> *aDestroyingView)
     sFocusedIMEHandler->OnDestroyView(aDestroyingView);
   }
 
-  if (aDestroyingView != mView) {
-    return;
+  if (!PluginTextInputHandler::OnDestroyView(aDestroyingView)) {
+    return PR_FALSE;
   }
 
   if (IsIMEComposing()) {
@@ -1436,17 +1427,17 @@ nsCocoaIMEHandler::OnDestroyView(NSView<mozView> *aDestroyingView)
     OnEndIMEComposition();
   }
 
-  mView = nsnull;
+  return PR_TRUE;
 }
 
 void
-nsCocoaIMEHandler::OnStartIMEComposition()
+IMEInputHandler::OnStartIMEComposition()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::OnStartIMEComposition");
+  NSLog(@"IMEInputHandler::OnStartIMEComposition");
   NSLog(@"  mView=%p, currentInputManager:%p",
         mView, [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
@@ -1458,13 +1449,13 @@ nsCocoaIMEHandler::OnStartIMEComposition()
 }
 
 void
-nsCocoaIMEHandler::OnUpdateIMEComposition(NSString* aIMECompositionString)
+IMEInputHandler::OnUpdateIMEComposition(NSString* aIMECompositionString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::OnUpdateIMEComposition");
+  NSLog(@"IMEInputHandler::OnUpdateIMEComposition");
   NSLog(@"  aIMECompositionString:%@ currentInputManager:%p",
         aIMECompositionString, [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
@@ -1479,13 +1470,13 @@ nsCocoaIMEHandler::OnUpdateIMEComposition(NSString* aIMECompositionString)
 }
 
 void
-nsCocoaIMEHandler::OnEndIMEComposition()
+IMEInputHandler::OnEndIMEComposition()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::OnEndIMEComposition");
+  NSLog(@"IMEInputHandler::OnEndIMEComposition");
   NSLog(@"  mIMECompositionString:%@ currentInputManager:%p",
         mIMECompositionString, [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
@@ -1503,7 +1494,7 @@ nsCocoaIMEHandler::OnEndIMEComposition()
 }
 
 void
-nsCocoaIMEHandler::SendCommittedText(NSString *aString)
+IMEInputHandler::SendCommittedText(NSString *aString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1518,13 +1509,13 @@ nsCocoaIMEHandler::SendCommittedText(NSString *aString)
 }
 
 void
-nsCocoaIMEHandler::KillIMEComposition()
+IMEInputHandler::KillIMEComposition()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::KillIMEComposition");
+  NSLog(@"IMEInputHandler::KillIMEComposition");
   NSLog(@"  currentInputManager:%p", [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
 
@@ -1538,7 +1529,7 @@ nsCocoaIMEHandler::KillIMEComposition()
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"Pending nsCocoaIMEHandler::KillIMEComposition...");
+  NSLog(@"Pending IMEInputHandler::KillIMEComposition...");
 #endif // DEBUG_IME_HANDLER
 
   // Commit the composition internally.
@@ -1551,7 +1542,7 @@ nsCocoaIMEHandler::KillIMEComposition()
 }
 
 void
-nsCocoaIMEHandler::CommitIMEComposition()
+IMEInputHandler::CommitIMEComposition()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1560,7 +1551,7 @@ nsCocoaIMEHandler::CommitIMEComposition()
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::CommitIMEComposition");
+  NSLog(@"IMEInputHandler::CommitIMEComposition");
   NSLog(@"  mIMECompositionString:%@ currentInputManager:%p",
         mIMECompositionString, [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
@@ -1578,7 +1569,7 @@ nsCocoaIMEHandler::CommitIMEComposition()
 }
 
 void
-nsCocoaIMEHandler::CancelIMEComposition()
+IMEInputHandler::CancelIMEComposition()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1587,7 +1578,7 @@ nsCocoaIMEHandler::CancelIMEComposition()
 
 #ifdef DEBUG_IME_HANDLER
   DebugPrintPointer(this);
-  NSLog(@"nsCocoaIMEHandler::CancelIMEComposition");
+  NSLog(@"IMEInputHandler::CancelIMEComposition");
   NSLog(@"  mIMECompositionString:%@ currentInputManager:%p",
         mIMECompositionString, [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
@@ -1609,7 +1600,7 @@ nsCocoaIMEHandler::CancelIMEComposition()
 }
 
 PRBool
-nsCocoaIMEHandler::IsFocused()
+IMEInputHandler::IsFocused()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -1624,15 +1615,15 @@ nsCocoaIMEHandler::IsFocused()
 }
 
 PRBool
-nsCocoaIMEHandler::IsIMEOpened()
+IMEInputHandler::IsIMEOpened()
 {
-  nsTISInputSource tis;
+  TISInputSourceWrapper tis;
   tis.InitByCurrentInputSource();
   return tis.IsOpenedIMEMode();
 }
 
 void
-nsCocoaIMEHandler::SetASCIICapableOnly(PRBool aASCIICapableOnly)
+IMEInputHandler::SetASCIICapableOnly(PRBool aASCIICapableOnly)
 {
   if (aASCIICapableOnly == mIsASCIICapableOnly)
     return;
@@ -1643,7 +1634,7 @@ nsCocoaIMEHandler::SetASCIICapableOnly(PRBool aASCIICapableOnly)
 }
 
 void
-nsCocoaIMEHandler::EnableIME(PRBool aEnableIME)
+IMEInputHandler::EnableIME(PRBool aEnableIME)
 {
   if (aEnableIME == mIsIMEEnabled)
     return;
@@ -1653,13 +1644,13 @@ nsCocoaIMEHandler::EnableIME(PRBool aEnableIME)
 }
 
 void
-nsCocoaIMEHandler::SetIMEOpenState(PRBool aOpenIME)
+IMEInputHandler::SetIMEOpenState(PRBool aOpenIME)
 {
   if (!IsFocused() || IsIMEOpened() == aOpenIME)
     return;
 
   if (!aOpenIME) {
-    nsTISInputSource tis;
+    TISInputSourceWrapper tis;
     tis.InitByCurrentASCIICapableInputSource();
     tis.Select();
     return;
@@ -1667,7 +1658,7 @@ nsCocoaIMEHandler::SetIMEOpenState(PRBool aOpenIME)
 
   // If we know the latest IME opened mode, we should select it.
   if (sLatestIMEOpenedModeInputSourceID) {
-    nsTISInputSource tis;
+    TISInputSourceWrapper tis;
     tis.InitByInputSourceID(sLatestIMEOpenedModeInputSourceID);
     tis.Select();
     return;
@@ -1687,7 +1678,7 @@ nsCocoaIMEHandler::SetIMEOpenState(PRBool aOpenIME)
 }
 
 void
-nsCocoaIMEHandler::OpenSystemPreferredLanguageIME()
+IMEInputHandler::OpenSystemPreferredLanguageIME()
 {
   CFArrayRef langList = ::CFLocaleCopyPreferredLanguages();
   if (!langList) {
@@ -1707,13 +1698,13 @@ nsCocoaIMEHandler::OpenSystemPreferredLanguageIME()
       ::CFLocaleGetValue(locale, kCFLocaleLanguageCode));
     NS_ASSERTION(lang, "lang is null");
     if (lang) {
-      nsTISInputSource tis;
+      TISInputSourceWrapper tis;
       tis.InitByLanguage(lang);
       if (tis.IsOpenedIMEMode()) {
 #ifdef DEBUG_IME_HANDLER
         CFStringRef foundTIS;
         tis.GetInputSourceID(foundTIS);
-        NSLog(@"nsCocoaIMEHandler::OpenSystemPreferredLanguageIME");
+        NSLog(@"IMEInputHandler::OpenSystemPreferredLanguageIME");
         NSLog(@"  found Input Source: %@ by %@",
               (const NSString*)foundTIS, lang);
 #endif // DEBUG_IME_HANDLER
@@ -1727,4 +1718,66 @@ nsCocoaIMEHandler::OpenSystemPreferredLanguageIME()
     }
   }
   ::CFRelease(langList);
+}
+
+
+#pragma mark -
+
+
+/******************************************************************************
+ *
+ *  PluginTextInputHandler implementation
+ *
+ ******************************************************************************/
+
+PluginTextInputHandler::PluginTextInputHandler() :
+  TextInputHandlerBase()
+{
+}
+
+PluginTextInputHandler::~PluginTextInputHandler()
+{
+}
+
+
+#pragma mark -
+
+
+/******************************************************************************
+ *
+ *  TextInputHandlerBase implementation
+ *
+ ******************************************************************************/
+
+TextInputHandlerBase::TextInputHandlerBase() :
+  mOwnerWidget(nsnull), mView(nsnull)
+{
+  gHandlerInstanceCount++;
+}
+
+TextInputHandlerBase::~TextInputHandlerBase()
+{
+  if (--gHandlerInstanceCount == 0) {
+    FinalizeCurrentKeyboardLayout();
+  }
+}
+
+void
+TextInputHandlerBase::Init(nsChildView* aOwner)
+{
+  mOwnerWidget = aOwner;
+  mView =
+    static_cast<NSView<mozView>*>(aOwner->GetNativeData(NS_NATIVE_WIDGET));
+}
+
+PRBool
+TextInputHandlerBase::OnDestroyView(NSView<mozView> *aDestroyingView)
+{
+  if (aDestroyingView != mView) {
+    return PR_FALSE;
+  }
+
+  mView = nsnull;
+
+  return PR_TRUE;
 }
