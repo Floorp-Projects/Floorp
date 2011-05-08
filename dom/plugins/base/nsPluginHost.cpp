@@ -1328,7 +1328,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
   nsCOMPtr<nsIPluginInstance> instance;
   if (plugin) {
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
     static BOOL firstJavaPlugin = FALSE;
     BOOL restoreOrigDir = FALSE;
     WCHAR origDir[_MAX_PATH];
@@ -1349,7 +1349,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
     rv = plugin->CreatePluginInstance(getter_AddRefs(instance));
 
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
     if (!firstJavaPlugin && restoreOrigDir) {
       BOOL bCheck = SetCurrentDirectoryW(origDir);
       NS_ASSERTION(bCheck, "Error restoring directory");
