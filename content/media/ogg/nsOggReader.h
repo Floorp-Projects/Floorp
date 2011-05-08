@@ -189,24 +189,6 @@ private:
                       PRBool aCachedDataOnly,
                       ogg_sync_state* aState);
 
-  // Decodes one packet of Vorbis data, storing the resulting chunks of
-  // PCM samples in aChunks.
-  nsresult DecodeVorbis(nsTArray<nsAutoPtr<SoundData> >& aChunks,
-                        ogg_packet* aPacket);
-
-  // May return NS_ERROR_OUT_OF_MEMORY. Caller must have obtained the
-  // reader's monitor.
-  nsresult DecodeTheora(nsTArray<nsAutoPtr<VideoData> >& aFrames,
-                        ogg_packet* aPacket);
-
-  // Read a page of data from the Ogg file. Returns the offset of the start
-  // of the page, or -1 if the page read failed.
-  PRInt64 ReadOggPage(ogg_page* aPage);
-
-  // Read a packet for an Ogg bitstream/codec state. Returns PR_TRUE on
-  // success, or PR_FALSE if the read failed.
-  PRBool ReadOggPacket(nsOggCodecState* aCodecState, ogg_packet* aPacket);
-
   // Performs a seek bisection to move the media stream's read cursor to the
   // last ogg page boundary which has end time before aTarget usecs on both the
   // Theora and Vorbis bitstreams. Limits its search to data inside aRange;
@@ -241,6 +223,31 @@ private:
                             PRInt64 aEndTime,
                             PRBool aExact);
 private:
+
+  // Decodes a packet of Vorbis data, and inserts its samples into the 
+  // audio queue.
+  nsresult DecodeVorbis(ogg_packet* aPacket);
+
+  // Decodes a packet of Theora data, and inserts its frame into the
+  // video queue. May return NS_ERROR_OUT_OF_MEMORY. Caller must have obtained
+  // the reader's monitor.
+  nsresult DecodeTheora(ogg_packet* aPacket);
+
+  // Read a page of data from the Ogg file. Returns the offset of the start
+  // of the page, or -1 if the page read failed.
+  PRInt64 ReadOggPage(ogg_page* aPage);
+
+  // Reads and decodes header packets for aState, until either header decode
+  // fails, or is complete. Initializes the codec state before returning.
+  // Returns PR_TRUE if reading headers and initializtion of the stream
+  // succeeds.
+  PRBool ReadHeaders(nsOggCodecState* aState);
+
+  // Returns the next Ogg packet for an bitstream/codec state. Returns a
+  // pointer to an ogg_packet on success, or nsnull if the read failed.
+  // The caller is responsible for deleting the packet and its |packet| field.
+  ogg_packet* NextOggPacket(nsOggCodecState* aCodecState);
+
   // Maps Ogg serialnos to nsOggStreams.
   nsClassHashtable<nsUint32HashKey, nsOggCodecState> mCodecStates;
 
@@ -276,17 +283,6 @@ private:
   // The offset of the end of the last page we've read, or the start of
   // the page we're about to read.
   PRInt64 mPageOffset;
-
-  // The granulepos of the last decoded Theora frame.
-  PRInt64 mTheoraGranulepos;
-
-  // The granulepos of the last decoded Vorbis sample.
-  PRInt64 mVorbisGranulepos;
-
-  // The offset of the first non-header page in the file, in bytes.
-  // Used to seek to the start of the media, and to prevent us trying to
-  // decode pages before this offset (the header pages) as content pages.
-  PRInt64 mDataOffset;
 };
 
 #endif
