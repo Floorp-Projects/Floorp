@@ -40,8 +40,8 @@
 #include "nsSVGContainerFrame.h"
 
 class nsISVGGlyphFragmentNode;
-class nsISVGGlyphFragmentLeaf;
 class nsSVGTextFrame;
+class nsSVGGlyphFrame;
 
 class nsSVGTextContainerFrame : public nsSVGDisplayContainerFrame
 {
@@ -119,12 +119,12 @@ protected:
   void SetWhitespaceCompression();
 private:
   /*
-   * Returns the glyph fragment containing a particular character
+   * Returns the glyph frame containing a particular character
    */
-  static nsISVGGlyphFragmentLeaf *
-  GetGlyphFragmentAtCharNum(nsISVGGlyphFragmentNode* node,
-                            PRUint32 charnum,
-                            PRUint32 *offset);
+  static nsSVGGlyphFrame *
+  GetGlyphFrameAtCharNum(nsISVGGlyphFragmentNode* node,
+                         PRUint32 charnum,
+                         PRUint32 *offset);
 
   /*
    * Returns the text frame ancestor of this frame (or the frame itself
