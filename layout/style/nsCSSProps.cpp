@@ -1332,7 +1332,6 @@ const PRInt32 nsCSSProps::kHyphensKTable[] = {
   eCSSKeyword_none, NS_STYLE_HYPHENS_NONE,
   eCSSKeyword_manual, NS_STYLE_HYPHENS_MANUAL,
   eCSSKeyword_auto, NS_STYLE_HYPHENS_AUTO,
-  eCSSKeyword_all, NS_STYLE_HYPHENS_ALL,
   eCSSKeyword_UNKNOWN,-1
 };
 

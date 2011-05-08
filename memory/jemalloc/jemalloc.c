@@ -195,27 +195,20 @@
 #endif
 #endif
 
-#ifndef MOZ_MEMORY_WINCE
 #include <sys/types.h>
 
 #include <errno.h>
 #include <stdlib.h>
-#endif
 #include <limits.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
 #ifdef MOZ_MEMORY_WINDOWS
-#ifndef MOZ_MEMORY_WINCE
+
 #include <cruntime.h>
 #include <internal.h>
 #include <io.h>
-#else
-#include <cmnintrin.h>
-#include <crtdefs.h>
-#define SIZE_MAX UINT_MAX
-#endif
 #include <windows.h>
 
 #pragma warning( disable: 4267 4996 4146 )
@@ -234,14 +227,9 @@ static unsigned long tlsIndex = 0xffffffff;
 #endif 
 
 #define	__thread
-#ifdef MOZ_MEMORY_WINCE
-#define	_pthread_self() GetCurrentThreadId()
-#else
 #define	_pthread_self() __threadid()
-#endif
 #define	issetugid() 0
 
-#ifndef MOZ_MEMORY_WINCE
 /* use MSVC intrinsics */
 #pragma intrinsic(_BitScanForward)
 static __forceinline int
@@ -269,19 +257,6 @@ getenv(const char *name)
 
 	return (NULL);
 }
-
-#else /* WIN CE */
-
-#define ENOMEM          12
-#define EINVAL          22
-
-static __forceinline int
-ffs(int x)
-{
-
-	return 32 - _CountLeadingZeros((-x) & x);
-}
-#endif
 
 typedef unsigned char uint8_t;
 typedef unsigned uint32_t;
@@ -433,10 +408,6 @@ static const bool __isthreaded = true;
 #define JEMALLOC_USES_MAP_ALIGN	 /* Required on Solaris 10. Might improve performance elsewhere. */
 #endif
 
-#if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
-#define JEMALLOC_USES_MAP_ALIGN	 /* Required for Windows CE < 6 */
-#endif
-
 #define __DECONST(type, var) ((type)(uintptr_t)(const void *)(var))
 
 #ifdef MOZ_MEMORY_WINDOWS
@@ -534,11 +505,7 @@ static const bool __isthreaded = true;
  * Size and alignment of memory chunks that are allocated by the OS's virtual
  * memory system.
  */
-#if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
-#define	CHUNK_2POW_DEFAULT	21
-#else
 #define	CHUNK_2POW_DEFAULT	20
-#endif
 /* Maximum number of dirty pages per arena. */
 #define	DIRTY_MAX_DEFAULT	(1U << 10)
 
@@ -1334,17 +1301,6 @@ umax2s(uintmax_t x, char *s)
 static void
 wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 {
-#ifdef MOZ_MEMORY_WINCE
-       wchar_t buf[1024];
-#define WRT_PRINT(s) \
-       MultiByteToWideChar(CP_ACP, 0, s, -1, buf, 1024); \
-       OutputDebugStringW(buf)
-
-       WRT_PRINT(p1);
-       WRT_PRINT(p2);
-       WRT_PRINT(p3);
-       WRT_PRINT(p4);
-#else
 #if defined(MOZ_MEMORY) && !defined(MOZ_MEMORY_WINDOWS)
 #define	_write	write
 #endif
@@ -1352,8 +1308,6 @@ wrtmessage(const char *p1, const char *p2, const char *p3, const char *p4)
 	_write(STDERR_FILENO, p2, (unsigned int) strlen(p2));
 	_write(STDERR_FILENO, p3, (unsigned int) strlen(p3));
 	_write(STDERR_FILENO, p4, (unsigned int) strlen(p4));
-#endif
-
 }
 
 #define _malloc_message malloc_message
@@ -1385,9 +1339,7 @@ void	(*_malloc_message)(const char *p1, const char *p2, const char *p3,
 static bool
 malloc_mutex_init(malloc_mutex_t *mutex)
 {
-#if defined(MOZ_MEMORY_WINCE)
-	InitializeCriticalSection(mutex);
-#elif defined(MOZ_MEMORY_WINDOWS)
+#if defined(MOZ_MEMORY_WINDOWS)
 	if (__isthreaded)
 		if (! __crtInitCritSecAndSpinCount(mutex, _CRT_SPINCOUNT))
 			return (true);
@@ -1449,9 +1401,7 @@ malloc_mutex_unlock(malloc_mutex_t *mutex)
 static bool
 malloc_spin_init(malloc_spinlock_t *lock)
 {
-#if defined(MOZ_MEMORY_WINCE)
-	InitializeCriticalSection(lock);
-#elif defined(MOZ_MEMORY_WINDOWS)
+#if defined(MOZ_MEMORY_WINDOWS)
 	if (__isthreaded)
 		if (! __crtInitCritSecAndSpinCount(lock, _CRT_SPINCOUNT))
 			return (true);
@@ -1732,7 +1682,6 @@ _getprogname(void)
 static void
 malloc_printf(const char *format, ...)
 {
-#ifndef WINCE
 	char buf[4096];
 	va_list ap;
 
@@ -1740,7 +1689,6 @@ malloc_printf(const char *format, ...)
 	vsnprintf(buf, sizeof(buf), format, ap);
 	va_end(ap);
 	_malloc_message(buf, "", "", "");
-#endif
 }
 #endif
 
@@ -2094,64 +2042,13 @@ rb_wrap(static, extent_tree_ad_, extent_tree_t, extent_node_t, link_ad,
  */
 
 #ifdef MOZ_MEMORY_WINDOWS
-#ifdef MOZ_MEMORY_WINCE
-#define ALIGN_ADDR2OFFSET(al, ad) \
-	((uintptr_t)ad & (al - 1))
-static void *
-pages_map_align(size_t size, int pfd, size_t alignment)
-{
-	
-	void *ret; 
-	int offset;
-	if (size % alignment)
-		size += (alignment - (size % alignment));
-	assert(size >= alignment);
-	ret = pages_map(NULL, size, pfd);
-	offset = ALIGN_ADDR2OFFSET(alignment, ret);
-	if (offset) {  
-		/* try to over allocate by the ammount we're offset */
-		void *tmp;
-		pages_unmap(ret, size);
-		tmp = VirtualAlloc(NULL, size + alignment - offset, 
-					 MEM_RESERVE, PAGE_NOACCESS);
-		if (offset == ALIGN_ADDR2OFFSET(alignment, tmp))
-			ret = VirtualAlloc((void*)((intptr_t)tmp + alignment 
-						   - offset), size, MEM_COMMIT,
-					   PAGE_READWRITE);
-		else 
-			VirtualFree(tmp, 0, MEM_RELEASE);
-		offset = ALIGN_ADDR2OFFSET(alignment, ret);
-		
-	
-		if (offset) {  
-			/* over allocate to ensure we have an aligned region */
-			ret = VirtualAlloc(NULL, size + alignment, MEM_RESERVE, 
-					   PAGE_NOACCESS);
-			offset = ALIGN_ADDR2OFFSET(alignment, ret);
-			ret = VirtualAlloc((void*)((intptr_t)ret + 
-						   alignment - offset),
-					   size, MEM_COMMIT, PAGE_READWRITE);
-		}
-	}
-	return (ret);
-}
-#endif
 
 static void *
 pages_map(void *addr, size_t size, int pfd)
 {
 	void *ret = NULL;
-#if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
-	void *va_ret;
-	assert(addr == NULL);
-	va_ret = VirtualAlloc(addr, size, MEM_RESERVE, PAGE_NOACCESS);
-	if (va_ret)
-		ret = VirtualAlloc(va_ret, size, MEM_COMMIT, PAGE_READWRITE);
-	assert(va_ret == ret);
-#else
 	ret = VirtualAlloc(addr, size, MEM_COMMIT | MEM_RESERVE,
 	    PAGE_READWRITE);
-#endif
 	return (ret);
 }
 
@@ -2159,14 +2056,6 @@ static void
 pages_unmap(void *addr, size_t size)
 {
 	if (VirtualFree(addr, 0, MEM_RELEASE) == 0) {
-#if defined(MOZ_MEMORY_WINCE) && !defined(MOZ_MEMORY_WINCE6)
-		if (GetLastError() == ERROR_INVALID_PARAMETER) {
-			MEMORY_BASIC_INFORMATION info;
-			VirtualQuery(addr, &info, sizeof(info));
-			if (VirtualFree(info.AllocationBase, 0, MEM_RELEASE))
-				return;
-		}
-#endif
 		_malloc_message(_getprogname(),
 		    ": (malloc) Error in VirtualFree()\n", "", "");
 		if (opt_abort)
@@ -5231,7 +5120,7 @@ malloc_print_stats(void)
  * implementation has to take pains to avoid infinite recursion during
  * initialization.
  */
-#if (defined(MOZ_MEMORY_WINDOWS) || defined(MOZ_MEMORY_DARWIN)) && !defined(MOZ_MEMORY_WINCE)
+#if (defined(MOZ_MEMORY_WINDOWS) || defined(MOZ_MEMORY_DARWIN))
 #define	malloc_init() false
 #else
 static inline bool
@@ -5245,7 +5134,7 @@ malloc_init(void)
 }
 #endif
 
-#if !defined(MOZ_MEMORY_WINDOWS) || defined(MOZ_MEMORY_WINCE) 
+#if !defined(MOZ_MEMORY_WINDOWS)
 static
 #endif
 bool

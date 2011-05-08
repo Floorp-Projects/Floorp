@@ -256,6 +256,14 @@ protected:
     static gfxASurface* GetSurfaceWrapper(cairo_surface_t *csurf);
     static void SetSurfaceWrapper(cairo_surface_t *csurf, gfxASurface *asurf);
 
+    /**
+     * An implementation of MovePixels that assumes the backend can
+     * internally handle this operation and doesn't allocate any
+     * temporary surfaces.
+     */
+    void FastMovePixels(const nsIntRect& aSourceRect,
+                        const nsIntPoint& aDestTopLeft);
+
     // NB: Init() *must* be called from within subclass's
     // constructors.  It's unsafe to call it after the ctor finishes;
     // leaks and use-after-frees are possible.
