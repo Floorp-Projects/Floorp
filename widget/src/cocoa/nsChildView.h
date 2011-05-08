@@ -52,7 +52,7 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsIPluginWidget.h"
 #include "nsWeakPtr.h"
-#include "nsCocoaTextInputHandler.h"
+#include "TextInputHandler.h"
 #include "nsCocoaUtils.h"
 
 #include "nsIAppShell.h"
@@ -418,7 +418,11 @@ public:
   static PRUint32 GetCurrentInputEventCount();
   static void UpdateCurrentInputEventCount();
 
-  nsCocoaTextInputHandler* TextInputHandler() { return &mTextInputHandler; }
+  mozilla::widget::TextInputHandler* TextInputHandler()
+  {
+    return &mTextInputHandler;
+  }
+
   NSView<mozView>* GetEditorView();
 
   PRBool IsPluginView() { return (mWindowType == eWindowType_plugin); }
@@ -450,7 +454,7 @@ protected:
 protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
-  nsCocoaTextInputHandler mTextInputHandler;
+  mozilla::widget::TextInputHandler mTextInputHandler;
   IMEContext            mIMEContext;
 
   NSView<mozView>*      mParentView;
