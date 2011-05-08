@@ -560,13 +560,16 @@ TextInputHandler::DebugPrintAllKeyboardLayouts(PRLogModuleInfo* aLogModuleInfo)
  *
  ******************************************************************************/
 
-TextInputHandler::TextInputHandler() :
-  IMEInputHandler()
+TextInputHandler::TextInputHandler(nsChildView* aWidget,
+                                   NSView<mozView> *aNativeView) :
+  IMEInputHandler(aWidget, aNativeView)
 {
+  [mView installTextInputHandler:this];
 }
 
 TextInputHandler::~TextInputHandler()
 {
+  [mView uninstallTextInputHandler];
 }
 
 
@@ -741,8 +744,9 @@ IMEInputHandler::ResetIMEWindowLevel()
         TrueOrFalse(IsFocused()), GetCurrentTSMDocumentID());
 #endif // DEBUG_IME_HANDLER
 
-  if (!mView)
+  if (Destroyed()) {
     return;
+  }
 
   if (!IsFocused()) {
     // retry at next focus event
@@ -763,7 +767,7 @@ IMEInputHandler::ResetIMEWindowLevel()
   // focused view is the panel's parent view (mView). But the editor is
   // displayed on the popuped widget's view (editorView).  So, their window
   // level may be different.
-  NSView<mozView>* editorView = mOwnerWidget->GetEditorView();
+  NSView<mozView>* editorView = mWidget->GetEditorView();
   if (!editorView) {
     NS_ERROR("editorView is null");
     return;
@@ -801,8 +805,9 @@ IMEInputHandler::DiscardIMEComposition()
   NSLog(@"  currentInputManager:%p", [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
 
-  if (!mView)
+  if (Destroyed()) {
     return;
+  }
 
   if (!IsFocused()) {
     // retry at next focus event
@@ -838,8 +843,9 @@ IMEInputHandler::SyncASCIICapableOnly()
         TrueOrFalse(IsFocused()), GetCurrentTSMDocumentID());
 #endif
 
-  if (!mView)
+  if (Destroyed()) {
     return;
+  }
 
   if (!IsFocused()) {
     // retry at next focus event
@@ -1041,7 +1047,11 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
         aSelectedRange.location, aSelectedRange.length);
 #endif
 
-  nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mOwnerWidget);
+  NS_ENSURE_TRUE(!Destroyed(), PR_FALSE);
+
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
+
+  nsTextEvent textEvent(PR_TRUE, NS_TEXT_TEXT, mWidget);
   textEvent.time = PR_IntervalNow();
   textEvent.theText = aText;
   nsAutoTArray<nsTextRange, 4> textRanges;
@@ -1051,7 +1061,7 @@ IMEInputHandler::DispatchTextEvent(const nsString& aText,
   textEvent.rangeArray = textRanges.Elements();
   textEvent.rangeCount = textRanges.Length();
 
-  return mOwnerWidget->DispatchWindowEvent(textEvent);
+  return mWidget->DispatchWindowEvent(textEvent);
 }
 
 void
@@ -1071,7 +1081,11 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   NSLog(@" mMarkedRange = %d, %d", mMarkedRange.location, mMarkedRange.length);
 #endif
 
-  nsRefPtr<nsChildView> kungFuDeathGrip(mOwnerWidget);
+  if (Destroyed()) {
+    return;
+  }
+
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsString str;
   GetStringForNSString([aAttrString string], str);
@@ -1079,12 +1093,12 @@ IMEInputHandler::InsertTextAsCommittingComposition(
   if (!IsIMEComposing()) {
     // XXXmnakano Probably, we shouldn't emulate composition in this case.
     // I think that we should just fire DOM3 textInput event if we implement it.
-    nsCompositionEvent compStart(PR_TRUE, NS_COMPOSITION_START, mOwnerWidget);
+    nsCompositionEvent compStart(PR_TRUE, NS_COMPOSITION_START, mWidget);
     InitCompositionEvent(compStart);
 
-    mOwnerWidget->DispatchWindowEvent(compStart);
-    if (!mView) {
-      return; // we're destroyed
+    mWidget->DispatchWindowEvent(compStart);
+    if (Destroyed()) {
+      return;
     }
 
     OnStartIMEComposition();
@@ -1096,17 +1110,17 @@ IMEInputHandler::InsertTextAsCommittingComposition(
 
   NSRange range = NSMakeRange(0, str.Length());
   DispatchTextEvent(str, aAttrString, range, PR_TRUE);
-  if (!mView) {
-    return; // we're destroyed
+  if (Destroyed()) {
+    return;
   }
 
   OnUpdateIMEComposition([aAttrString string]);
 
-  nsCompositionEvent compEnd(PR_TRUE, NS_COMPOSITION_END, mOwnerWidget);
+  nsCompositionEvent compEnd(PR_TRUE, NS_COMPOSITION_END, mWidget);
   InitCompositionEvent(compEnd);
-  mOwnerWidget->DispatchWindowEvent(compEnd);
-  if (!mView) {
-    return; // we're destroyed
+  mWidget->DispatchWindowEvent(compEnd);
+  if (Destroyed()) {
+    return;
   }
 
   OnEndIMEComposition();
@@ -1129,11 +1143,11 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   NSLog(@" aAttrString = '%@'", aAttrString);
 #endif
 
-  if (IgnoreIMEComposition()) {
+  if (Destroyed() || IgnoreIMEComposition()) {
     return;
   }
 
-  nsRefPtr<nsChildView> kungFuDeathGrip(mOwnerWidget);
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsString str;
   GetStringForNSString([aAttrString string], str);
@@ -1142,16 +1156,16 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
   if (!IsIMEComposing() && !str.IsEmpty()) {
     nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT,
-                                  mOwnerWidget);
-    mOwnerWidget->DispatchWindowEvent(selection);
+                                  mWidget);
+    mWidget->DispatchWindowEvent(selection);
     mMarkedRange.location = selection.mSucceeded ? selection.mReply.mOffset : 0;
 
-    nsCompositionEvent compStart(PR_TRUE, NS_COMPOSITION_START, mOwnerWidget);
+    nsCompositionEvent compStart(PR_TRUE, NS_COMPOSITION_START, mWidget);
     InitCompositionEvent(compStart);
 
-    mOwnerWidget->DispatchWindowEvent(compStart);
-    if (!mView) {
-      return; // we're destroyed
+    mWidget->DispatchWindowEvent(compStart);
+    if (Destroyed()) {
+      return;
     }
 
     OnStartIMEComposition();
@@ -1162,16 +1176,16 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 
     PRBool doCommit = str.IsEmpty();
     DispatchTextEvent(str, aAttrString, aSelectedRange, doCommit);
-    if (!mView) {
-      return; // we're destroyed
+    if (Destroyed()) {
+      return;
     }
 
     if (doCommit) {
-      nsCompositionEvent compEnd(PR_TRUE, NS_COMPOSITION_END, mOwnerWidget);
+      nsCompositionEvent compEnd(PR_TRUE, NS_COMPOSITION_END, mWidget);
       InitCompositionEvent(compEnd);
-      mOwnerWidget->DispatchWindowEvent(compEnd);
-      if (!mView) {
-        return; // we're destroyed
+      mWidget->DispatchWindowEvent(compEnd);
+      if (Destroyed()) {
+        return;
       }
       OnEndIMEComposition();
     }
@@ -1183,10 +1197,16 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
 NSInteger
 IMEInputHandler::ConversationIdentifier()
 {
+  if (Destroyed()) {
+    return reinterpret_cast<NSInteger>(mView);
+  }
+
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
+
   // NOTE: The size of NSInteger is same as pointer size.
-  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mOwnerWidget);
+  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mWidget);
   textContent.InitForQueryTextContent(0, 0);
-  mOwnerWidget->DispatchWindowEvent(textContent);
+  mWidget->DispatchWindowEvent(textContent);
   if (!textContent.mSucceeded) {
     return reinterpret_cast<NSInteger>(mView);
   }
@@ -1205,14 +1225,16 @@ IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange)
   NSLog(@" aRange      = %d, %d", aRange.location, aRange.length);
 #endif
 
-  if (aRange.location == NSNotFound || aRange.length == 0) {
+  if (Destroyed() || aRange.location == NSNotFound || aRange.length == 0) {
     return nil;
   }
 
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
+
   nsAutoString str;
-  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mOwnerWidget);
+  nsQueryContentEvent textContent(PR_TRUE, NS_QUERY_TEXT_CONTENT, mWidget);
   textContent.InitForQueryTextContent(aRange.location, aRange.length);
-  mOwnerWidget->DispatchWindowEvent(textContent);
+  mWidget->DispatchWindowEvent(textContent);
 
   if (!textContent.mSucceeded || textContent.mReply.mString.IsEmpty()) {
     return nil;
@@ -1235,10 +1257,18 @@ IMEInputHandler::SelectedRange()
 #if DEBUG_IME_HANDLER
   NSLog(@"****in SelectedRange");
 #endif
-  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mOwnerWidget);
-  mOwnerWidget->DispatchWindowEvent(selection);
+
+  NSRange range = NSMakeRange(NSNotFound, 0);
+  if (Destroyed()) {
+    return range;
+  }
+
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
+
+  nsQueryContentEvent selection(PR_TRUE, NS_QUERY_SELECTED_TEXT, mWidget);
+  mWidget->DispatchWindowEvent(selection);
   if (!selection.mSucceeded) {
-    return NSMakeRange(NSNotFound, 0);
+    return range;
   }
 
 #if DEBUG_IME_HANDLER
@@ -1260,21 +1290,24 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
   NSLog(@"****in FirstRectForCharacterRange");
   NSLog(@" aRange      = %d, %d", aRange.location, aRange.length);
 #endif
+
   // XXX this returns first character rect or caret rect, it is limitation of
   // now. We need more work for returns first line rect. But current
   // implementation is enough for IMEs.
 
   NSRect rect;
-  if (aRange.location == NSNotFound) {
+  if (Destroyed() || aRange.location == NSNotFound) {
     return rect;
   }
+
+  nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   nsIntRect r;
   PRBool useCaretRect = (aRange.length == 0);
   if (!useCaretRect) {
-    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, mOwnerWidget);
+    nsQueryContentEvent charRect(PR_TRUE, NS_QUERY_TEXT_RECT, mWidget);
     charRect.InitForQueryTextRect(aRange.location, 1);
-    mOwnerWidget->DispatchWindowEvent(charRect);
+    mWidget->DispatchWindowEvent(charRect);
     if (charRect.mSucceeded) {
       r = charRect.mReply.mRect;
     } else {
@@ -1283,9 +1316,9 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
   }
 
   if (useCaretRect) {
-    nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, mOwnerWidget);
+    nsQueryContentEvent caretRect(PR_TRUE, NS_QUERY_CARET_RECT, mWidget);
     caretRect.InitForQueryCaretRect(aRange.location);
-    mOwnerWidget->DispatchWindowEvent(caretRect);
+    mWidget->DispatchWindowEvent(caretRect);
     if (!caretRect.mSucceeded) {
       return rect;
     }
@@ -1293,7 +1326,7 @@ IMEInputHandler::FirstRectForCharacterRange(NSRange& aRange)
     r.width = 0;
   }
 
-  nsIWidget* rootWidget = mOwnerWidget->GetTopLevelWidget();
+  nsIWidget* rootWidget = mWidget->GetTopLevelWidget();
   NSWindow* rootWindow =
     static_cast<NSWindow*>(rootWidget->GetNativeData(NS_NATIVE_WINDOW));
   NSView* rootView =
@@ -1319,6 +1352,9 @@ IMEInputHandler::CharacterIndexForPoint(NSPoint& aPoint)
 #if DEBUG_IME
   NSLog(@"****in CharacterIndexForPoint");
 #endif
+
+  //nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
+
   // To implement this, we'd have to grovel in text frames looking at text
   // offsets.
   return 0;
@@ -1332,6 +1368,8 @@ IMEInputHandler::GetValidAttributesForMarkedText()
 #if DEBUG_IME
   NSLog(@"****in GetValidAttributesForMarkedText");
 #endif
+
+  //nsRefPtr<IMEInputHandler> kungFuDeathGrip(this);
 
   //return [NSArray arrayWithObjects:NSUnderlineStyleAttributeName,
   //                                 NSMarkedClauseSegmentAttributeName,
@@ -1353,8 +1391,9 @@ IMEInputHandler::GetValidAttributesForMarkedText()
  *
  ******************************************************************************/
 
-IMEInputHandler::IMEInputHandler() :
-  PluginTextInputHandler(),
+IMEInputHandler::IMEInputHandler(nsChildView* aWidget,
+                                 NSView<mozView> *aNativeView) :
+  PluginTextInputHandler(aWidget, aNativeView),
   mPendingMethods(0), mIMECompositionString(nsnull),
   mIsIMEComposing(PR_FALSE), mIsIMEEnabled(PR_TRUE),
   mIsASCIICapableOnly(PR_FALSE), mIgnoreIMECommit(PR_FALSE),
@@ -1408,21 +1447,20 @@ IMEInputHandler::OnFocusChangeInGecko(PRBool aFocus)
 }
 
 PRBool
-IMEInputHandler::OnDestroyView(NSView<mozView> *aDestroyingView)
+IMEInputHandler::OnDestroyWidget(nsChildView* aDestroyingWidget)
 {
-  // If we're not focused, the destroying view might be composing with it in
-  // another instance.
+  // If we're not focused, the focused IMEInputHandler may have been
+  // created by another widget/nsChildView.
   if (sFocusedIMEHandler && sFocusedIMEHandler != this) {
-    sFocusedIMEHandler->OnDestroyView(aDestroyingView);
+    sFocusedIMEHandler->OnDestroyWidget(aDestroyingWidget);
   }
 
-  if (!PluginTextInputHandler::OnDestroyView(aDestroyingView)) {
+  if (!PluginTextInputHandler::OnDestroyWidget(aDestroyingWidget)) {
     return PR_FALSE;
   }
 
   if (IsIMEComposing()) {
     // If our view is in the composition, we should clean up it.
-    // XXX Might CancelIMEComposition() fail because mView is being destroyed?
     CancelIMEComposition();
     OnEndIMEComposition();
   }
@@ -1498,7 +1536,11 @@ IMEInputHandler::SendCommittedText(NSString *aString)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ASSERTION(mView, "mView is null");
+  NS_ENSURE_TRUE(mWidget, );
+  // XXX We should send the string without mView.
+  if (!mView) {
+    return;
+  }
 
   NSAttributedString* attrStr =
     [[NSAttributedString alloc] initWithString:aString];
@@ -1519,8 +1561,9 @@ IMEInputHandler::KillIMEComposition()
   NSLog(@"  currentInputManager:%p", [NSInputManager currentInputManager]);
 #endif // DEBUG_IME_HANDLER
 
-  if (!mView)
+  if (Destroyed()) {
     return;
+  }
 
   if (IsFocused()) {
     [[NSInputManager currentInputManager] markedTextAbandoned: mView];
@@ -1604,7 +1647,7 @@ IMEInputHandler::IsFocused()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ENSURE_TRUE(mView, PR_FALSE);
+  NS_ENSURE_TRUE(!Destroyed(), PR_FALSE);
   NSWindow* window = [mView window];
   NS_ENSURE_TRUE(window, PR_FALSE);
   return [window firstResponder] == mView &&
@@ -1730,8 +1773,9 @@ IMEInputHandler::OpenSystemPreferredLanguageIME()
  *
  ******************************************************************************/
 
-PluginTextInputHandler::PluginTextInputHandler() :
-  TextInputHandlerBase()
+PluginTextInputHandler::PluginTextInputHandler(nsChildView* aWidget,
+                                               NSView<mozView> *aNativeView) :
+  TextInputHandlerBase(aWidget, aNativeView)
 {
 }
 
@@ -1749,35 +1793,29 @@ PluginTextInputHandler::~PluginTextInputHandler()
  *
  ******************************************************************************/
 
-TextInputHandlerBase::TextInputHandlerBase() :
-  mOwnerWidget(nsnull), mView(nsnull)
+TextInputHandlerBase::TextInputHandlerBase(nsChildView* aWidget,
+                                           NSView<mozView> *aNativeView) :
+  mWidget(aWidget)
 {
   gHandlerInstanceCount++;
+  mView = [aNativeView retain];
 }
 
 TextInputHandlerBase::~TextInputHandlerBase()
 {
+  [mView release];
   if (--gHandlerInstanceCount == 0) {
     FinalizeCurrentKeyboardLayout();
   }
 }
 
-void
-TextInputHandlerBase::Init(nsChildView* aOwner)
-{
-  mOwnerWidget = aOwner;
-  mView =
-    static_cast<NSView<mozView>*>(aOwner->GetNativeData(NS_NATIVE_WIDGET));
-}
-
 PRBool
-TextInputHandlerBase::OnDestroyView(NSView<mozView> *aDestroyingView)
+TextInputHandlerBase::OnDestroyWidget(nsChildView* aDestroyingWidget)
 {
-  if (aDestroyingView != mView) {
+  if (aDestroyingWidget != mWidget) {
     return PR_FALSE;
   }
 
-  mView = nsnull;
-
+  mWidget = nsnull;
   return PR_TRUE;
 }
