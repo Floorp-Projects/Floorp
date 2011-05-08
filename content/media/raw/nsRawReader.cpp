@@ -104,7 +104,6 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
     return NS_ERROR_FAILURE; // Invalid data
   mInfo.mPixelAspectRatio = static_cast<float>(mMetadata.aspectNumerator) / 
                             mMetadata.aspectDenominator;
-  mInfo.mDataOffset = sizeof(nsRawVideoHeader) + 1;
   mInfo.mHasAudio = PR_FALSE;
 
   mFrameRate = static_cast<float>(mMetadata.framerateNumerator) /
