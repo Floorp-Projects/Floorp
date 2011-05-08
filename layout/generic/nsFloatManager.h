@@ -100,8 +100,7 @@ public:
    * as a delta against the mRect, so repositioning the frame will
    * also reposition the float region.
    */
-  static nsresult StoreRegionFor(nsIFrame* aFloat,
-                                 nsRect&   aRegion);
+  static void StoreRegionFor(nsIFrame* aFloat, nsRect& aRegion);
 
   // Structure that stores the current state of a frame manager for
   // Save/Restore purposes.
