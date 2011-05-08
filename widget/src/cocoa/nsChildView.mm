@@ -491,7 +491,8 @@ nsresult nsChildView::Create(nsIWidget *aParent,
   if ([mView isKindOfClass:[ChildView class]])
     [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:[mView window]];
 
-  mTextInputHandler.Init(this);
+  NS_ASSERTION(!mTextInputHandler, "mTextInputHandler has already existed");
+  mTextInputHandler = new TextInputHandler(this, mView);
 
   return NS_OK;
 
@@ -1654,7 +1655,8 @@ NS_IMETHODIMP nsChildView::DispatchEvent(nsGUIEvent* event, nsEventStatus& aStat
   debug_DumpEvent(stdout, event->widget, event, nsCAutoString("something"), 0);
 #endif
 
-  NS_ASSERTION(!(mTextInputHandler.IsIMEComposing() && NS_IS_KEY_EVENT(event)),
+  NS_ASSERTION(!(mTextInputHandler && mTextInputHandler->IsIMEComposing() &&
+                 NS_IS_KEY_EVENT(event)),
     "Any key events should not be fired during IME composing");
 
   aStatus = nsEventStatus_eIgnore;
@@ -1832,7 +1834,8 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   NSLog(@"**** ResetInputState");
 #endif
 
-  mTextInputHandler.CommitIMEComposition();
+  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+  mTextInputHandler->CommitIMEComposition();
   return NS_OK;
 }
 
@@ -1843,7 +1846,8 @@ NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
   NSLog(@"**** SetIMEOpenState aState = %d", aState);
 #endif
 
-  mTextInputHandler.SetIMEOpenState(aState);
+  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+  mTextInputHandler->SetIMEOpenState(aState);
   return NS_OK;
 }
 
@@ -1854,7 +1858,8 @@ NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
   NSLog(@"**** GetIMEOpenState");
 #endif
 
-  *aState = mTextInputHandler.IsIMEOpened();
+  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+  *aState = mTextInputHandler->IsIMEOpened();
   return NS_OK;
 }
 
@@ -1864,20 +1869,21 @@ NS_IMETHODIMP nsChildView::SetInputMode(const IMEContext& aContext)
   NSLog(@"**** SetInputMode mStatus = %d", aContext.mStatus);
 #endif
 
+  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
   mIMEContext = aContext;
   switch (aContext.mStatus) {
     case nsIWidget::IME_STATUS_ENABLED:
     case nsIWidget::IME_STATUS_PLUGIN:
-      mTextInputHandler.SetASCIICapableOnly(PR_FALSE);
-      mTextInputHandler.EnableIME(PR_TRUE);
+      mTextInputHandler->SetASCIICapableOnly(PR_FALSE);
+      mTextInputHandler->EnableIME(PR_TRUE);
       break;
     case nsIWidget::IME_STATUS_DISABLED:
-      mTextInputHandler.SetASCIICapableOnly(PR_FALSE);
-      mTextInputHandler.EnableIME(PR_FALSE);
+      mTextInputHandler->SetASCIICapableOnly(PR_FALSE);
+      mTextInputHandler->EnableIME(PR_FALSE);
       break;
     case nsIWidget::IME_STATUS_PASSWORD:
-      mTextInputHandler.SetASCIICapableOnly(PR_TRUE);
-      mTextInputHandler.EnableIME(PR_FALSE);
+      mTextInputHandler->SetASCIICapableOnly(PR_TRUE);
+      mTextInputHandler->EnableIME(PR_FALSE);
       break;
     default:
       NS_ERROR("not implemented!");
@@ -1902,7 +1908,8 @@ NS_IMETHODIMP nsChildView::CancelIMEComposition()
   NSLog(@"**** CancelIMEComposition");
 #endif
 
-  mTextInputHandler.CancelIMEComposition();
+  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+  mTextInputHandler->CancelIMEComposition();
   return NS_OK;
 }
 
@@ -1936,7 +1943,8 @@ NS_IMETHODIMP nsChildView::GetToggledKeyState(PRUint32 aKeyCode,
 
 NS_IMETHODIMP nsChildView::OnIMEFocusChange(PRBool aFocus)
 {
-  mTextInputHandler.OnFocusChangeInGecko(aFocus);
+  NS_ENSURE_TRUE(mTextInputHandler, NS_ERROR_NOT_AVAILABLE);
+  mTextInputHandler->OnFocusChangeInGecko(aFocus);
   // XXX Return NS_ERROR_NOT_IMPLEMENTED, see bug 496360.
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -2267,6 +2275,16 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+- (void)installTextInputHandler:(TextInputHandler*)aHandler
+{
+  mTextInputHandler = aHandler;
+}
+
+- (void)uninstallTextInputHandler
+{
+  mTextInputHandler = nsnull;
+}
+
 // Work around bug 603134.
 // OS X has a bug that causes new OpenGL windows to only paint once or twice,
 // then stop painting altogether. By clearing the drawable from the GL context,
@@ -2354,7 +2372,10 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 - (void)widgetDestroyed
 {
-  mGeckoChild->TextInputHandler()->OnDestroyView(self);
+  if (mTextInputHandler) {
+    mTextInputHandler->OnDestroyWidget(mGeckoChild);
+    mTextInputHandler = nsnull;
+  }
   mGeckoChild = nsnull;
 
   // Just in case we're destroyed abruptly and missed the draggingExited
@@ -4750,10 +4771,10 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 #if DEBUG_IME
   NSLog(@"****in insertText: '%@'", insertString);
 #endif
-  if (!mGeckoChild)
+  if (!mGeckoChild || !mTextInputHandler)
     return;
 
-  if (mGeckoChild->TextInputHandler()->IgnoreIMEComposition())
+  if (mTextInputHandler->IgnoreIMEComposition())
     return;
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
@@ -4763,14 +4784,14 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 
   NSString *tmpStr = [insertString string];
   unsigned int len = [tmpStr length];
-  if (!mGeckoChild->TextInputHandler()->IsIMEComposing() && len == 0)
+  if (!mTextInputHandler->IsIMEComposing() && len == 0)
     return; // nothing to do
   PRUnichar buffer[MAX_BUFFER_SIZE];
   PRUnichar *bufPtr = (len >= MAX_BUFFER_SIZE) ? new PRUnichar[len + 1] : buffer;
   [tmpStr getCharacters:bufPtr];
   bufPtr[len] = PRUnichar('\0');
 
-  if (len == 1 && !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
+  if (len == 1 && !mTextInputHandler->IsIMEComposing()) {
     // don't let the same event be fired twice when hitting
     // enter/return! (Bug 420502)
     if (mKeyPressSent)
@@ -4831,7 +4852,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
   else {
     NSAttributedString* attrStr =
       static_cast<NSAttributedString*>(insertString);
-    mGeckoChild->TextInputHandler()->InsertTextAsCommittingComposition(attrStr);
+    mTextInputHandler->InsertTextAsCommittingComposition(attrStr);
   }
 
   if (bufPtr != buffer)
@@ -4863,7 +4884,7 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NS_ENSURE_TRUE(mGeckoChild, );
+  NS_ENSURE_TRUE(mTextInputHandler, );
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
@@ -4874,42 +4895,41 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
     attrStr = [[[NSAttributedString alloc] initWithString:aString] autorelease];
   }
 
-  mGeckoChild->TextInputHandler()->SetMarkedText(attrStr, selRange);
+  mTextInputHandler->SetMarkedText(attrStr, selRange);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
 - (void) unmarkText
 {
-  NS_ENSURE_TRUE(mGeckoChild, );
-  mGeckoChild->TextInputHandler()->CommitIMEComposition();
+  NS_ENSURE_TRUE(mTextInputHandler, );
+  mTextInputHandler->CommitIMEComposition();
 }
 
 - (BOOL) hasMarkedText
 {
-  NS_ENSURE_TRUE(mGeckoChild, NO);
-  return mGeckoChild->TextInputHandler()->HasMarkedText();
+  NS_ENSURE_TRUE(mTextInputHandler, NO);
+  return mTextInputHandler->HasMarkedText();
 }
 
 - (NSInteger) conversationIdentifier
 {
-  NS_ENSURE_TRUE(mGeckoChild, reinterpret_cast<NSInteger>(self));
-  return mGeckoChild->TextInputHandler()->ConversationIdentifier();
+  NS_ENSURE_TRUE(mTextInputHandler, reinterpret_cast<NSInteger>(self));
+  return mTextInputHandler->ConversationIdentifier();
 }
 
 - (NSAttributedString *) attributedSubstringFromRange:(NSRange)theRange
 {
-  NS_ENSURE_TRUE(mGeckoChild, nil);
-  return mGeckoChild->TextInputHandler()->
-    GetAttributedSubstringFromRange(theRange);
+  NS_ENSURE_TRUE(mTextInputHandler, nil);
+  return mTextInputHandler->GetAttributedSubstringFromRange(theRange);
 }
 
 - (NSRange) markedRange
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NS_ENSURE_TRUE(mGeckoChild, NSMakeRange(NSNotFound, 0));
-  return mGeckoChild->TextInputHandler()->MarkedRange();
+  NS_ENSURE_TRUE(mTextInputHandler, NSMakeRange(NSNotFound, 0));
+  return mTextInputHandler->MarkedRange();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRange(0, 0));
 }
@@ -4918,8 +4938,8 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  NS_ENSURE_TRUE(mGeckoChild, NSMakeRange(NSNotFound, 0));
-  return mGeckoChild->TextInputHandler()->SelectedRange();
+  NS_ENSURE_TRUE(mTextInputHandler, NSMakeRange(NSNotFound, 0));
+  return mTextInputHandler->SelectedRange();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NSMakeRange(0, 0));
 }
@@ -4927,22 +4947,22 @@ GetUSLayoutCharFromKeyTranslate(UInt32 aKeyCode, UInt32 aModifiers)
 - (NSRect) firstRectForCharacterRange:(NSRange)theRange
 {
   NSRect rect;
-  NS_ENSURE_TRUE(mGeckoChild, rect);
-  return mGeckoChild->TextInputHandler()->FirstRectForCharacterRange(theRange);
+  NS_ENSURE_TRUE(mTextInputHandler, rect);
+  return mTextInputHandler->FirstRectForCharacterRange(theRange);
 }
 
 - (NSUInteger)characterIndexForPoint:(NSPoint)thePoint
 {
-  NS_ENSURE_TRUE(mGeckoChild, 0);
-  return mGeckoChild->TextInputHandler()->CharacterIndexForPoint(thePoint);
+  NS_ENSURE_TRUE(mTextInputHandler, 0);
+  return mTextInputHandler->CharacterIndexForPoint(thePoint);
 }
 
 - (NSArray*) validAttributesForMarkedText
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
 
-  NS_ENSURE_TRUE(mGeckoChild, [NSArray array]);
-  return mGeckoChild->TextInputHandler()->GetValidAttributesForMarkedText();
+  NS_ENSURE_TRUE(mTextInputHandler, [NSArray array]);
+  return mTextInputHandler->GetValidAttributesForMarkedText();
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -4991,7 +5011,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  if (!mGeckoChild)
+  if (!mGeckoChild || !mTextInputHandler)
     return NO;
 
 #ifdef PR_LOGGING
@@ -5009,7 +5029,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   mCurKeyEvent = theEvent;
 
   BOOL nonDeadKeyPress = [[theEvent characters] length] > 0;
-  if (nonDeadKeyPress && !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
+  if (nonDeadKeyPress && !mTextInputHandler->IsIMEComposing()) {
     NSResponder* firstResponder = [[self window] firstResponder];
 
     nsKeyEvent geckoKeydown(PR_TRUE, NS_KEY_DOWN, nsnull);
@@ -5059,7 +5079,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
     // control-letter combinations etc before Cocoa tries to use
     // them for keybindings.
     if ((!geckoKeypress.isChar || geckoKeypress.isControl) &&
-        !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
+        !mTextInputHandler->IsIMEComposing()) {
       if (mKeyDownHandled)
         geckoKeypress.flags |= NS_EVENT_FLAG_NO_DEFAULT;
       mKeyPressHandled = mGeckoChild->DispatchWindowEvent(geckoKeypress);
@@ -5070,10 +5090,10 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   }
 
   // Let Cocoa interpret the key events, caching IsIMEComposing first.
-  PRBool wasComposing = mGeckoChild->TextInputHandler()->IsIMEComposing();
+  PRBool wasComposing = mTextInputHandler->IsIMEComposing();
   PRBool interpretKeyEventsCalled = PR_FALSE;
-  if (mGeckoChild->TextInputHandler()->IsIMEEnabled() ||
-      mGeckoChild->TextInputHandler()->IsASCIICapableOnly()) {
+  if (mTextInputHandler->IsIMEEnabled() ||
+      mTextInputHandler->IsASCIICapableOnly()) {
     [super interpretKeyEvents:[NSArray arrayWithObject:theEvent]];
     interpretKeyEventsCalled = PR_TRUE;
   }
@@ -5083,7 +5103,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
   }
 
   if (!mKeyPressSent && nonDeadKeyPress && !wasComposing &&
-      !mGeckoChild->TextInputHandler()->IsIMEComposing()) {
+      !mTextInputHandler->IsIMEComposing()) {
     nsKeyEvent geckoKeypress(PR_TRUE, NS_KEY_PRESS, nsnull);
     [self convertCocoaKeyEvent:theEvent toGeckoEvent:&geckoKeypress];
 
@@ -5327,7 +5347,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
           ToEscapedString([theEvent characters], str1),
           ToEscapedString([theEvent charactersIgnoringModifiers], str2)));
 
-  if (!mGeckoChild)
+  if (!mGeckoChild || !mTextInputHandler)
     return;
 
   if (mIgnoreNextKeyUpEvent) {
@@ -5388,7 +5408,7 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 
   // if we don't have any characters we can't generate a keyUp event
   if ([[theEvent characters] length] == 0 ||
-      mGeckoChild->TextInputHandler()->IsIMEComposing()) {
+      mTextInputHandler->IsIMEComposing()) {
     return;
   }
 
@@ -5474,8 +5494,8 @@ static const char* ToEscapedString(NSString* aString, nsCAutoString& aBuf)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!mGeckoChild || [theEvent type] != NSFlagsChanged ||
-      mGeckoChild->TextInputHandler()->IsIMEComposing()) {
+  if (!mGeckoChild || !mTextInputHandler || [theEvent type] != NSFlagsChanged ||
+      mTextInputHandler->IsIMEComposing()) {
     return;
   }
 
