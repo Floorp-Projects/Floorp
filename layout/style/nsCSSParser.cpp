@@ -579,9 +579,9 @@ protected:
   PRBool ParseNonNegativeVariant(nsCSSValue& aValue,
                                  PRInt32 aVariantMask,
                                  const PRInt32 aKeywordTable[]);
-  PRBool ParsePositiveNonZeroVariant(nsCSSValue& aValue,
-                                     PRInt32 aVariantMask,
-                                     const PRInt32 aKeywordTable[]);
+  PRBool ParseOneOrLargerVariant(nsCSSValue& aValue,
+                                 PRInt32 aVariantMask,
+                                 const PRInt32 aKeywordTable[]);
   PRBool ParseCounter(nsCSSValue& aValue);
   PRBool ParseAttr(nsCSSValue& aValue);
   PRBool SetValueToURL(nsCSSValue& aValue, const nsString& aURL);
@@ -4470,19 +4470,25 @@ CSSParserImpl::ParseNonNegativeVariant(nsCSSValue& aValue,
 // computes the calc will be required to clamp the resulting value to an
 // appropriate range.
 PRBool
-CSSParserImpl::ParsePositiveNonZeroVariant(nsCSSValue& aValue,
-                                           PRInt32 aVariantMask,
-                                           const PRInt32 aKeywordTable[])
+CSSParserImpl::ParseOneOrLargerVariant(nsCSSValue& aValue,
+                                       PRInt32 aVariantMask,
+                                       const PRInt32 aKeywordTable[])
 {
   // The variant mask must only contain non-numeric variants or the ones
   // that we specifically handle.
   NS_ABORT_IF_FALSE((aVariantMask & ~(VARIANT_ALL_NONNUMERIC |
+                                      VARIANT_NUMBER |
                                       VARIANT_INTEGER)) == 0,
                     "need to update code below to handle additional variants");
 
   if (ParseVariant(aValue, aVariantMask, aKeywordTable)) {
     if (aValue.GetUnit() == eCSSUnit_Integer) {
-      if (aValue.GetIntValue() <= 0) {
+      if (aValue.GetIntValue() < 1) {
+        UngetToken();
+        return PR_FALSE;
+      }
+    } else if (eCSSUnit_Number == aValue.GetUnit()) {
+      if (aValue.GetFloatValue() < 1.0f) {
         UngetToken();
         return PR_FALSE;
       }
@@ -5675,17 +5681,8 @@ CSSParserImpl::ParseSingleValueProperty(nsCSSValue& aValue,
       return ParseVariant(aValue, variant, kwtable);
     case CSS_PROPERTY_VALUE_NONNEGATIVE:
       return ParseNonNegativeVariant(aValue, variant, kwtable);
-    case CSS_PROPERTY_VALUE_POSITIVE_NONZERO:
-      return ParsePositiveNonZeroVariant(aValue, variant, kwtable);
     case CSS_PROPERTY_VALUE_AT_LEAST_ONE:
-      NS_ABORT_IF_FALSE((variant &
-                         ~(VARIANT_ALL_NONNUMERIC | VARIANT_NUMBER)) == 0,
-                        "need to update code to handle additional variants");
-      if (!ParseVariant(aValue, variant, kwtable))
-        return PR_FALSE;
-      // Enforce the restriction that the value is greater than 1.
-      return aValue.GetUnit() != eCSSUnit_Number || 
-             aValue.GetFloatValue() >= 1.0f;
+      return ParseOneOrLargerVariant(aValue, variant, kwtable);
   }
 }
 
@@ -8198,7 +8195,7 @@ CSSParserImpl::ParseTransitionStepTimingFunctionValues(nsCSSValue& aValue)
 
   nsRefPtr<nsCSSValue::Array> val = nsCSSValue::Array::Create(2);
 
-  if (!ParsePositiveNonZeroVariant(val->Item(0), VARIANT_INTEGER, nsnull)) {
+  if (!ParseOneOrLargerVariant(val->Item(0), VARIANT_INTEGER, nsnull)) {
     return PR_FALSE;
   }
 
