@@ -86,7 +86,7 @@ class Recompiler {
 public:
     Recompiler(JSContext *cx, JSScript *script);
 
-    void recompile();
+    void recompile(bool resetUses = true);
 
     static void
     expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *inlined,

@@ -421,9 +421,11 @@ struct JSScript {
     uint32          length;     /* length of code vector */
 
   private:
-    uint16          version;    /* JS version under which script was compiled */
+    size_t          useCount_;  /* Number of times the script has been called
+                                 * or has had backedges taken. Reset if the
+                                 * script's JIT code is forcibly discarded. */
 
-    size_t          callCount_; /* Number of times the script has been called. */
+    uint16          version;    /* JS version under which script was compiled */
 
   public:
     uint16          nfixed;     /* number of slots besides stack operands in
@@ -633,9 +635,10 @@ struct JSScript {
         return constructing ? jitCtor : jitNormal;
     }
 
-    size_t callCount() const  { return callCount_; }
-    size_t incCallCount() { return ++callCount_; }
-    size_t *addressOfCallCount() { return &callCount_; }
+    size_t useCount() const  { return useCount_; }
+    size_t incUseCount() { return ++useCount_; }
+    size_t *addressOfUseCount() { return &useCount_; }
+    void resetUseCount() { useCount_ = 0; }
 
     JITScriptStatus getJITStatus(bool constructing) {
         void *addr = constructing ? jitArityCheckCtor : jitArityCheckNormal;

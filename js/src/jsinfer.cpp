@@ -1968,34 +1968,6 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
      */
     if (script->fun && !script->fun->getType()->unknownProperties())
         ObjectStateChange(cx, script->fun->getType(), false);
-
-    /*
-     * If we unexpectedly read a hole out of an array, mark all array reads in
-     * the script as undefined. :FIXME: bug 650163 remove hack.
-     */
-    if (script->hasAnalysis() && script->analysis(cx)->ranInference() &&
-        JSOp(*pc) == JSOP_GETELEM && type == TYPE_UNDEFINED) {
-        analyze::ScriptAnalysis *analysis = script->analysis(cx);
-        unsigned offset = 0;
-        while (offset < script->length) {
-            if (JSOp(script->code[offset]) == JSOP_GETELEM && analysis->maybeCode(offset)) {
-                TypeSet *pushed = analysis->pushedTypes(offset, 0);
-                if (!pushed->hasType(TYPE_UNDEFINED)) {
-                    pushed->addType(cx, TYPE_UNDEFINED);
-                    TypeResult *result = (TypeResult *) cx->calloc_(sizeof(TypeResult));
-                    if (!result) {
-                        setPendingNukeTypes(cx);
-                        return;
-                    }
-                    result->offset = offset;
-                    result->type = TYPE_UNDEFINED;
-                    result->next = script->typeResults;
-                    script->typeResults = result;
-                }
-            }
-            offset += analyze::GetBytecodeLength(pc);
-        }
-    }
 }
 
 void

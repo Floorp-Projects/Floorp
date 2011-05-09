@@ -718,6 +718,9 @@ extern "C" {
         }
     }
 
+    extern "C" void *
+    js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VMFrame &f);
+
     __declspec(naked) void JaegerInterpoline() {
         __asm {
             /* Align the stack to 16 bytes. */
