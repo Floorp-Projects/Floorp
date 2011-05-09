@@ -56,6 +56,21 @@ function checkScrollbars(aHorizontalVisible, aVerticalVisible, aHorizontalPositi
   EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mouseup" });
 }
 
+function checkScrollbarsPosition(aX) {
+  let browser = getBrowser();
+  let width = browser.getBoundingClientRect().width;
+  let height = browser.getBoundingClientRect().height;
+  EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mousedown" });
+  EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mousemove" });
+
+  let verticalRect = verticalScrollbar.getBoundingClientRect();
+  let margin = parseInt(verticalScrollbar.getAttribute("end"));
+  let expectedPosition = window.innerWidth - aX - margin;
+  is(verticalRect.right, expectedPosition, "The vertical scrollbar should be position to " + expectedPosition + " (got " + verticalRect.right + ")");
+
+  EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mouseup" });
+}
+
 gTests.push({
   desc: "Testing visibility of scrollbars",
 
@@ -91,6 +106,41 @@ gTests.push({
 
   checkBothScrollable: function() {
     checkScrollbars(true, true);
+    Elements.browsers.addEventListener("PanFinished", function(aEvent) {
+      Elements.browsers.removeEventListener("PanFinished", arguments.callee, false);
+      setTimeout(function() {
+        Browser.hideSidebars();
+      }, 0);
+      runNextTest();
+    }, false);
+  }
+});
+
+gTests.push({
+  desc: "Testing position of scrollbars",
+
+  run: function() {
+    waitForPageShow(testURL_01 + "vertical", gCurrentTest.checkScrollbarsPosition);
+    gOpenedTabs.push(Browser.addTab(testURL_01 + "vertical", true));
+  },
+
+  checkScrollbarsPosition: function() {
+    let [,, tabsWidth, controlsWidth] = Browser.computeSidebarVisibility();
+
+    checkScrollbarsPosition(0);
+
+    // Show the left sidebar and ensure scrollbar is visible
+    Browser.controlsScrollboxScroller.scrollTo(0, 0);
+    checkScrollbarsPosition(-tabsWidth);
+
+    // Show the right sidebar and ensure scrollbar is visible
+    Browser.controlsScrollboxScroller.scrollTo(tabsWidth + controlsWidth, 0);
+    checkScrollbarsPosition(controlsWidth);
+
+    gCurrentTest.finish();
+  },
+
+  finish: function() {
     Elements.browsers.addEventListener("PanFinished", function(aEvent) {
       Elements.browsers.removeEventListener("PanFinished", arguments.callee, false);
       setTimeout(function() {
