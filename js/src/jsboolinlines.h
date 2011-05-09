@@ -13,15 +13,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * The Original Code is SpiderMonkey code.
  *
  * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Jeff Walden <jwalden+code@mit.edu>  (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -37,32 +37,25 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jsbool_h___
-#define jsbool_h___
-/*
- * JS boolean interface.
- */
+#ifndef jsboolinlines_h___
+#define jsboolinlines_h___
 
-#include "jsapi.h"
-#include "jsobj.h"
-
-extern JSObject *
-js_InitBooleanClass(JSContext *cx, JSObject *obj);
-
-extern JSString *
-js_BooleanToString(JSContext *cx, JSBool b);
+#include "jsobjinlines.h"
 
 namespace js {
 
-extern bool
-BooleanToStringBuffer(JSContext *cx, JSBool b, StringBuffer &sb);
-
 inline bool
-BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp);
+BooleanGetPrimitiveValue(JSContext *cx, JSObject &obj, Value *vp)
+{
+    if (obj.isBoolean()) {
+        *vp = obj.getPrimitiveThis();
+        return true;
+    }
+
+    extern bool BooleanGetPrimitiveValueSlow(JSContext *, JSObject &, Value *);
+    return BooleanGetPrimitiveValueSlow(cx, obj, vp);
+}
 
 } /* namespace js */
 
-extern JSBool
-js_ValueToBoolean(const js::Value &v);
-
-#endif /* jsbool_h___ */
+#endif /* jsboolinlines_h___ */
