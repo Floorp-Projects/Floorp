@@ -50,11 +50,11 @@ enum CompileRequest
     CompileRequest_JIT
 };
 
-/* Number of times a script must be called before we run it in the methodjit. */
-static const size_t CALLS_BEFORE_COMPILE = 16;
-
-/* Number of loop back-edges we execute in the interpreter before methodjitting. */
-static const size_t BACKEDGES_BEFORE_COMPILE = 16;
+/*
+ * Number of times a script must be called or have back edges taken before we
+ * run it in the methodjit.
+ */
+static const size_t USES_BEFORE_COMPILE = 16;
 
 static inline CompileStatus
 CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest request)
@@ -67,7 +67,7 @@ CanMethodJIT(JSContext *cx, JSScript *script, StackFrame *fp, CompileRequest req
     if (request == CompileRequest_Interpreter &&
         status == JITScript_None &&
         !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
-        script->incCallCount() <= CALLS_BEFORE_COMPILE)
+        script->incUseCount() <= USES_BEFORE_COMPILE)
     {
         return Compile_Skipped;
     }
@@ -90,7 +90,7 @@ CanMethodJITAtBranch(JSContext *cx, JSScript *script, StackFrame *fp, jsbytecode
         return Compile_Abort;
     if (status == JITScript_None &&
         !cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS) &&
-        cx->compartment->incBackEdgeCount(pc) <= BACKEDGES_BEFORE_COMPILE)
+        script->incUseCount() <= USES_BEFORE_COMPILE)
     {
         return Compile_Skipped;
     }

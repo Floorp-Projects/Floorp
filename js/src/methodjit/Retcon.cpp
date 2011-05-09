@@ -52,6 +52,8 @@
 #include "jscntxtinlines.h"
 #include "jsinterpinlines.h"
 
+#include "MethodJIT-inl.h"
+
 using namespace js;
 using namespace js::mjit;
 
@@ -325,7 +327,7 @@ Recompiler::Recompiler(JSContext *cx, JSScript *script)
  *   redirect that entryncode to the interpoline.
  */
 void
-Recompiler::recompile()
+Recompiler::recompile(bool resetUses)
 {
     JS_ASSERT(script->hasJITCode());
 
@@ -416,6 +418,14 @@ Recompiler::recompile()
     if (script->jitCtor) {
         cleanup(script->jitCtor);
         ReleaseScriptCode(cx, script, false);
+    }
+
+    if (resetUses) {
+        /*
+         * Wait for the script to get warm again before doing another compile,
+         * unless we are recompiling *because* the script got hot.
+         */
+        script->resetUseCount();
     }
 
     cx->compartment->types.recompilations++;
