@@ -1651,7 +1651,6 @@ mjit::Compiler::generateMethod()
                             result = !result;
 
                         if (result) {
-                            fixDoubleTypes(target);
                             if (!frame.syncForBranch(target, Uses(0)))
                                 return Compile_Error;
                             Jump j = masm.jump();
@@ -2044,8 +2043,12 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_OR)
           BEGIN_CASE(JSOP_AND)
-            if (!jsop_andor(op, PC + GET_JUMP_OFFSET(PC)))
+          {
+            jsbytecode *target = PC + GET_JUMP_OFFSET(PC);
+            fixDoubleTypes(target);
+            if (!jsop_andor(op, target))
                 return Compile_Error;
+          }
           END_CASE(JSOP_AND)
 
           BEGIN_CASE(JSOP_TABLESWITCH)
@@ -2115,9 +2118,17 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_MOREITER)
           {
             /* At the byte level, this is always fused with IFNE or IFNEX. */
-            if (!iterMore())
+            jsbytecode *target = &PC[JSOP_MOREITER_LENGTH];
+            JSOp next = JSOp(*target);
+            JS_ASSERT(next == JSOP_IFNE || next == JSOP_IFNEX);
+
+            target += (next == JSOP_IFNE)
+                      ? GET_JUMP_OFFSET(target)
+                      : GET_JUMPX_OFFSET(target);
+
+            fixDoubleTypes(target);
+            if (!iterMore(target))
                 return Compile_Error;
-            JSOp next = JSOp(PC[JSOP_MOREITER_LENGTH]);
             PC += JSOP_MOREITER_LENGTH;
             PC += js_CodeSpec[next].length;
             break;
@@ -3972,12 +3983,10 @@ mjit::Compiler::compareTwoValues(JSContext *cx, JSOp op, const Value &lhs, const
 bool
 mjit::Compiler::emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused)
 {
-    if (target) {
-        fixDoubleTypes(target);
+    if (target)
         frame.syncAndKillEverything();
-    } else {
+    else
         frame.syncAndKill(Uses(2));
-    }
 
     prepareStubCall(Uses(2));
     INLINE_STUBCALL(stub, target ? REJOIN_BRANCH : REJOIN_PUSH_BOOLEAN);
@@ -5482,17 +5491,8 @@ mjit::Compiler::iterNext()
 }
 
 bool
-mjit::Compiler::iterMore()
+mjit::Compiler::iterMore(jsbytecode *target)
 {
-    jsbytecode *target = &PC[JSOP_MOREITER_LENGTH];
-    JSOp next = JSOp(*target);
-    JS_ASSERT(next == JSOP_IFNE || next == JSOP_IFNEX);
-
-    target += (next == JSOP_IFNE)
-              ? GET_JUMP_OFFSET(target)
-              : GET_JUMPX_OFFSET(target);
-
-    fixDoubleTypes(target);
     if (!frame.syncForBranch(target, Uses(1)))
         return false;
 
@@ -6722,6 +6722,7 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
      * target state consists of the current state plus any phi nodes or other
      * new values introduced at the target.
      */
+    JS_ASSERT(fixedDoubleEntries.empty());
     const SlotValue *newv = analysis->newValues(target);
     if (newv) {
         while (newv->slot) {
