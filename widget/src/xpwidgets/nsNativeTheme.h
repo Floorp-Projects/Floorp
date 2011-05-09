@@ -160,15 +160,7 @@ class nsNativeTheme : public nsITimerCallback
   PRBool IsHorizontal(nsIFrame* aFrame);
 
   // progressbar:
-  PRBool IsIndeterminateProgress(nsIFrame* aFrame);
-
-  PRInt32 GetProgressValue(nsIFrame* aFrame) {
-    return CheckIntAttr(aFrame, nsWidgetAtoms::value, 0);
-  }
-  
-  PRInt32 GetProgressMaxValue(nsIFrame* aFrame) {
-    return PR_MAX(CheckIntAttr(aFrame, nsWidgetAtoms::max, 100), 1);
-  }
+  PRBool IsIndeterminateProgress(nsIFrame* aFrame, nsEventStates aEventStates);
 
   // textfield:
   PRBool IsReadOnly(nsIFrame* aFrame) {

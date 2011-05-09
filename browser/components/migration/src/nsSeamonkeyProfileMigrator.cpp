@@ -393,7 +393,6 @@ nsSeamonkeyProfileMigrator::PrefTransform gTransforms[] = {
   MAKESAMETYPEPREFTRANSFORM("browser.display.use_document_fonts",       Bool),
   MAKESAMETYPEPREFTRANSFORM("intl.charset.default",                     String),
   MAKESAMETYPEPREFTRANSFORM("intl.accept_languages",                    String),
-  MAKESAMETYPEPREFTRANSFORM("intl.accept_charsets",                     String),
 
   MAKEPREFTRANSFORM("network.image.imageBehavior",      0, Int, Image),
   MAKEPREFTRANSFORM("network.cookie.cookieBehavior",    0, Int, Cookie),

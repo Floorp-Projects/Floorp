@@ -46,7 +46,6 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 
-class nsICSSRule;
 class nsCSSStyleSheet;
 class nsIPrincipal;
 class nsIURI;
@@ -59,6 +58,7 @@ class nsCSSKeyframeRule;
 
 namespace mozilla {
 namespace css {
+class Rule;
 class Declaration;
 class Loader;
 class StyleRule;
@@ -145,7 +145,7 @@ public:
                      nsIURI*                 aSheetURL,
                      nsIURI*                 aBaseURL,
                      nsIPrincipal*           aSheetPrincipal,
-                     nsCOMArray<nsICSSRule>& aResult);
+                     nsCOMArray<mozilla::css::Rule>& aResult);
 
   nsresult ParseProperty(const nsCSSProperty aPropID,
                          const nsAString&    aPropValue,

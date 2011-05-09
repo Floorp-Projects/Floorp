@@ -48,10 +48,6 @@ ifeq ($(OS_ARCH),WINNT)
     DIRS += win32
 endif
 
-ifeq ($(OS_ARCH),WINCE)
-    DIRS += wince
-endif
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
     DIRS += mac
 endif

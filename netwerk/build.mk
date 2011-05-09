@@ -62,10 +62,8 @@ endif
 
 # these are only in the necko tier because libpref needs it
 
-ifndef WINCE
 ifneq (,$(MOZ_XPINSTALL))
 tier_necko_dirs += modules/libreg
-endif
 endif
 
 tier_necko_dirs += \

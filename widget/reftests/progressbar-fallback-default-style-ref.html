@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <style>
+    div.progress-element {
+      /**
+       * The purpose of this test is to not show the native style.
+       * -moz-appearance: progressbar;
+       */
+      display: inline-block;
+      height: 1em;
+      width: 10em;
+      vertical-align: -0.2em;
+
+      /* Default style in case of there is -moz-appearance: none; */
+      border: 2px solid;
+      -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+      -moz-border-right-colors: ThreeDHighlight -moz-Dialog;
+      -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
+      -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+      background-color: -moz-Dialog;
+    }
+
+    div.progress-bar {
+      /**
+       * The purpose of this test is to not show the native style.
+       * -moz-appearance: progresschunk;
+       */
+
+      height: 100%;
+      width: 100%;
+
+      /* Default style in case of there is -moz-appearance: none; */
+      background-color: ThreeDShadow;
+    }
+
+    div.progress-element { padding: 5px; }
+    body > div:nth-child(1)  { -moz-appearance: none; }
+    body > div:nth-child(2) > .progress-bar { -moz-appearance: none; }
+    body > div:nth-child(3)  { background-color: red; }
+    body > div:nth-child(4) > .progress-bar { background-color: red; }
+    body > div:nth-child(5)  { border: 2px solid red; }
+    body > div:nth-child(6) > .progress-bar { border: 5px solid red; }
+  </style>
+  <body>
+    <div class="progress-element">
+      <div class="progress-bar"></div>
+    </div>
+    <div class="progress-element">
+      <div class="progress-bar"></div>
+    </div>
+    <div class="progress-element">
+      <div class="progress-bar"></div>
+    </div>
+    <div class="progress-element">
+      <div class="progress-bar"></div>
+    </div>
+    <div class="progress-element">
+      <div class="progress-bar"></div>
+    </div>
+    <div class="progress-element">
+      <div class="progress-bar"></div>
+    </div>
+  </body>
+</html>

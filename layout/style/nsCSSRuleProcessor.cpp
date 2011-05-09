@@ -2822,12 +2822,12 @@ struct CascadeEnumData {
  *  (3) add any @keyframes rules, in order, into data->mKeyframesRules.
  */
 static PRBool
-CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
+CascadeRuleEnumFunc(css::Rule* aRule, void* aData)
 {
   CascadeEnumData* data = (CascadeEnumData*)aData;
   PRInt32 type = aRule->GetType();
 
-  if (nsICSSRule::STYLE_RULE == type) {
+  if (css::Rule::STYLE_RULE == type) {
     css::StyleRule* styleRule = static_cast<css::StyleRule*>(aRule);
 
     for (nsCSSSelectorList *sel = styleRule->Selector();
@@ -2844,14 +2844,14 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
                                                         sel->mSelectors));
     }
   }
-  else if (nsICSSRule::MEDIA_RULE == type ||
-           nsICSSRule::DOCUMENT_RULE == type) {
+  else if (css::Rule::MEDIA_RULE == type ||
+           css::Rule::DOCUMENT_RULE == type) {
     css::GroupRule* groupRule = static_cast<css::GroupRule*>(aRule);
     if (groupRule->UseForPresentation(data->mPresContext, data->mCacheKey))
       if (!groupRule->EnumerateRulesForwards(CascadeRuleEnumFunc, aData))
         return PR_FALSE;
   }
-  else if (nsICSSRule::FONT_FACE_RULE == type) {
+  else if (css::Rule::FONT_FACE_RULE == type) {
     nsCSSFontFaceRule *fontFaceRule = static_cast<nsCSSFontFaceRule*>(aRule);
     nsFontFaceRuleContainer *ptr = data->mFontFaceRules.AppendElement();
     if (!ptr)
@@ -2860,7 +2860,7 @@ CascadeRuleEnumFunc(nsICSSRule* aRule, void* aData)
     ptr->mSheetType = data->mSheetType;
   }
 #ifdef MOZ_CSS_ANIMATIONS
-  else if (nsICSSRule::KEYFRAMES_RULE == type) {
+  else if (css::Rule::KEYFRAMES_RULE == type) {
     nsCSSKeyframesRule *keyframesRule =
       static_cast<nsCSSKeyframesRule*>(aRule);
     if (!data->mKeyframesRules.AppendElement(keyframesRule)) {

@@ -148,11 +148,12 @@ CSSRuleListImpl::GetItemAt(PRUint32 aIndex, nsresult* aResult)
     // ensure rules have correct parent
     if (mStyleSheet->EnsureUniqueInner() !=
           nsCSSStyleSheet::eUniqueInner_CloneFailed) {
-      nsCOMPtr<nsICSSRule> rule;
+      nsRefPtr<css::Rule> rule;
 
       result = mStyleSheet->GetStyleRuleAt(aIndex, *getter_AddRefs(rule));
       if (rule) {
-        return rule->GetDOMRuleWeak(aResult);
+        *aResult = NS_OK;
+        return rule->GetDOMRule();
       }
       if (result == NS_ERROR_ILLEGAL_VALUE) {
         result = NS_OK; // per spec: "Return Value ... null if ... not a valid index."
@@ -805,7 +806,7 @@ nsCSSStyleSheetInner::nsCSSStyleSheetInner(nsCSSStyleSheet* aPrimarySheet)
   mPrincipal = do_CreateInstance("@mozilla.org/nullprincipal;1");
 }
 
-static PRBool SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
+static PRBool SetStyleSheetReference(css::Rule* aRule, void* aSheet)
 {
   if (aRule) {
     aRule->SetStyleSheet(static_cast<nsCSSStyleSheet*>(aSheet));
@@ -814,10 +815,10 @@ static PRBool SetStyleSheetReference(nsICSSRule* aRule, void* aSheet)
 }
 
 static PRBool
-CloneRuleInto(nsICSSRule* aRule, void* aArray)
+CloneRuleInto(css::Rule* aRule, void* aArray)
 {
-  nsCOMPtr<nsICSSRule> clone = aRule->Clone();
-  static_cast<nsCOMArray<nsICSSRule>*>(aArray)->AppendObject(clone);
+  nsRefPtr<css::Rule> clone = aRule->Clone();
+  static_cast<nsCOMArray<css::Rule>*>(aArray)->AppendObject(clone);
   return PR_TRUE;
 }
 
@@ -841,15 +842,15 @@ struct ChildSheetListBuilder {
 };
   
 PRBool
-nsCSSStyleSheet::RebuildChildList(nsICSSRule* aRule, void* aBuilder)
+nsCSSStyleSheet::RebuildChildList(css::Rule* aRule, void* aBuilder)
 {
   PRInt32 type = aRule->GetType();
-  if (type < nsICSSRule::IMPORT_RULE) {
+  if (type < css::Rule::IMPORT_RULE) {
     // Keep going till we get to the import rules.
     return PR_TRUE;
   }
 
-  if (type != nsICSSRule::IMPORT_RULE) {
+  if (type != css::Rule::IMPORT_RULE) {
     // We're past all the import rules; stop the enumeration.
     return PR_FALSE;
   }
@@ -942,9 +943,9 @@ nsCSSStyleSheetInner::RemoveSheet(nsCSSStyleSheet* aSheet)
 }
 
 static void
-AddNamespaceRuleToMap(nsICSSRule* aRule, nsXMLNameSpaceMap* aMap)
+AddNamespaceRuleToMap(css::Rule* aRule, nsXMLNameSpaceMap* aMap)
 {
-  NS_ASSERTION(aRule->GetType() == nsICSSRule::NAMESPACE_RULE, "Bogus rule type");
+  NS_ASSERTION(aRule->GetType() == css::Rule::NAMESPACE_RULE, "Bogus rule type");
 
   nsRefPtr<css::NameSpaceRule> nameSpaceRule = do_QueryObject(aRule);
 
@@ -955,17 +956,17 @@ AddNamespaceRuleToMap(nsICSSRule* aRule, nsXMLNameSpaceMap* aMap)
 }
 
 static PRBool
-CreateNameSpace(nsICSSRule* aRule, void* aNameSpacePtr)
+CreateNameSpace(css::Rule* aRule, void* aNameSpacePtr)
 {
   PRInt32 type = aRule->GetType();
-  if (nsICSSRule::NAMESPACE_RULE == type) {
+  if (css::Rule::NAMESPACE_RULE == type) {
     AddNamespaceRuleToMap(aRule,
                           static_cast<nsXMLNameSpaceMap*>(aNameSpacePtr));
     return PR_TRUE;
   }
   // stop if not namespace, import or charset because namespace can't follow
   // anything else
-  return (nsICSSRule::CHARSET_RULE == type || nsICSSRule::IMPORT_RULE == type);
+  return (css::Rule::CHARSET_RULE == type || css::Rule::IMPORT_RULE == type);
 }
 
 void 
@@ -1329,7 +1330,7 @@ nsCSSStyleSheet::InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex)
 }
 
 void
-nsCSSStyleSheet::PrependStyleRule(nsICSSRule* aRule)
+nsCSSStyleSheet::PrependStyleRule(css::Rule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
 
@@ -1338,7 +1339,7 @@ nsCSSStyleSheet::PrependStyleRule(nsICSSRule* aRule)
     aRule->SetStyleSheet(this);
     DidDirty();
 
-    if (nsICSSRule::NAMESPACE_RULE == aRule->GetType()) {
+    if (css::Rule::NAMESPACE_RULE == aRule->GetType()) {
       // no api to prepend a namespace (ugh), release old ones and re-create them all
       mInner->RebuildNameSpaces();
     }
@@ -1346,7 +1347,7 @@ nsCSSStyleSheet::PrependStyleRule(nsICSSRule* aRule)
 }
 
 void
-nsCSSStyleSheet::AppendStyleRule(nsICSSRule* aRule)
+nsCSSStyleSheet::AppendStyleRule(css::Rule* aRule)
 {
   NS_PRECONDITION(nsnull != aRule, "null arg");
 
@@ -1355,7 +1356,7 @@ nsCSSStyleSheet::AppendStyleRule(nsICSSRule* aRule)
     aRule->SetStyleSheet(this);
     DidDirty();
 
-    if (nsICSSRule::NAMESPACE_RULE == aRule->GetType()) {
+    if (css::Rule::NAMESPACE_RULE == aRule->GetType()) {
 #ifdef DEBUG
       nsresult rv =
 #endif
@@ -1367,7 +1368,7 @@ nsCSSStyleSheet::AppendStyleRule(nsICSSRule* aRule)
 }
 
 void
-nsCSSStyleSheet::ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew)
+nsCSSStyleSheet::ReplaceStyleRule(css::Rule* aOld, css::Rule* aNew)
 {
   NS_PRECONDITION(mInner->mOrderedRules.Count() != 0, "can't have old rule");
   NS_PRECONDITION(mInner->mComplete, "No replacing in an incomplete sheet!");
@@ -1383,8 +1384,8 @@ nsCSSStyleSheet::ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew)
     aNew->SetStyleSheet(this);
     aOld->SetStyleSheet(nsnull);
     DidDirty();
-    NS_ASSERTION(nsICSSRule::NAMESPACE_RULE != aNew->GetType(), "not yet implemented");
-    NS_ASSERTION(nsICSSRule::NAMESPACE_RULE != aOld->GetType(), "not yet implemented");
+    NS_ASSERTION(css::Rule::NAMESPACE_RULE != aNew->GetType(), "not yet implemented");
+    NS_ASSERTION(css::Rule::NAMESPACE_RULE != aOld->GetType(), "not yet implemented");
   }
 }
 
@@ -1395,7 +1396,7 @@ nsCSSStyleSheet::StyleRuleCount() const
 }
 
 nsresult
-nsCSSStyleSheet::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
+nsCSSStyleSheet::GetStyleRuleAt(PRInt32 aIndex, css::Rule*& aRule) const
 {
   // Important: If this function is ever made scriptable, we must add
   // a security check here. See GetCssRules below for an example.
@@ -1477,7 +1478,7 @@ nsCSSStyleSheet::Clone(nsCSSStyleSheet* aCloneParent,
 
 #ifdef DEBUG
 static void
-ListRules(const nsCOMArray<nsICSSRule>& aRules, FILE* aOut, PRInt32 aIndent)
+ListRules(const nsCOMArray<css::Rule>& aRules, FILE* aOut, PRInt32 aIndent)
 {
   for (PRInt32 index = aRules.Count() - 1; index >= 0; --index) {
     aRules.ObjectAt(index)->List(aOut, aIndent);
@@ -1597,7 +1598,7 @@ nsCSSStyleSheet::SubjectSubsumesInnerPrincipal() const
 }
 
 nsresult
-nsCSSStyleSheet::RegisterNamespaceRule(nsICSSRule* aRule)
+nsCSSStyleSheet::RegisterNamespaceRule(css::Rule* aRule)
 {
   if (!mInner->mNameSpaceMap) {
     nsresult rv = mInner->CreateNamespaceMap();
@@ -1699,11 +1700,11 @@ NS_IMETHODIMP
 nsCSSStyleSheet::GetOwnerRule(nsIDOMCSSRule** aOwnerRule)
 {
   if (mOwnerRule) {
-    return mOwnerRule->GetDOMRule(aOwnerRule);
+    NS_IF_ADDREF(*aOwnerRule = mOwnerRule->GetDOMRule());
+  } else {
+    *aOwnerRule = nsnull;
   }
-
-  *aOwnerRule = nsnull;
-  return NS_OK;    
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1785,7 +1786,7 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
 
   mozAutoDocUpdate updateBatch(mDocument, UPDATE_STYLE, PR_TRUE);
 
-  nsCOMArray<nsICSSRule> rules;
+  nsCOMArray<css::Rule> rules;
   result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
                          mInner->mPrincipal, rules);
   if (NS_FAILED(result))
@@ -1800,52 +1801,52 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   // Hierarchy checking.  Just check the first and last rule in the list.
   
   // check that we're not inserting before a charset rule
-  nsICSSRule* nextRule = mInner->mOrderedRules.SafeObjectAt(aIndex);
+  css::Rule* nextRule = mInner->mOrderedRules.SafeObjectAt(aIndex);
   if (nextRule) {
     PRInt32 nextType = nextRule->GetType();
-    if (nextType == nsICSSRule::CHARSET_RULE) {
+    if (nextType == css::Rule::CHARSET_RULE) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
 
     // check last rule in list
-    nsICSSRule* lastRule = rules.ObjectAt(rulecount - 1);
+    css::Rule* lastRule = rules.ObjectAt(rulecount - 1);
     PRInt32 lastType = lastRule->GetType();
 
-    if (nextType == nsICSSRule::IMPORT_RULE &&
-        lastType != nsICSSRule::CHARSET_RULE &&
-        lastType != nsICSSRule::IMPORT_RULE) {
+    if (nextType == css::Rule::IMPORT_RULE &&
+        lastType != css::Rule::CHARSET_RULE &&
+        lastType != css::Rule::IMPORT_RULE) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
     
-    if (nextType == nsICSSRule::NAMESPACE_RULE &&
-        lastType != nsICSSRule::CHARSET_RULE &&
-        lastType != nsICSSRule::IMPORT_RULE &&
-        lastType != nsICSSRule::NAMESPACE_RULE) {
+    if (nextType == css::Rule::NAMESPACE_RULE &&
+        lastType != css::Rule::CHARSET_RULE &&
+        lastType != css::Rule::IMPORT_RULE &&
+        lastType != css::Rule::NAMESPACE_RULE) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     } 
   }
   
   // check first rule in list
-  nsICSSRule* firstRule = rules.ObjectAt(0);
+  css::Rule* firstRule = rules.ObjectAt(0);
   PRInt32 firstType = firstRule->GetType();
   if (aIndex != 0) {
-    if (firstType == nsICSSRule::CHARSET_RULE) { // no inserting charset at nonzero position
+    if (firstType == css::Rule::CHARSET_RULE) { // no inserting charset at nonzero position
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   
-    nsICSSRule* prevRule = mInner->mOrderedRules.SafeObjectAt(aIndex - 1);
+    css::Rule* prevRule = mInner->mOrderedRules.SafeObjectAt(aIndex - 1);
     PRInt32 prevType = prevRule->GetType();
 
-    if (firstType == nsICSSRule::IMPORT_RULE &&
-        prevType != nsICSSRule::CHARSET_RULE &&
-        prevType != nsICSSRule::IMPORT_RULE) {
+    if (firstType == css::Rule::IMPORT_RULE &&
+        prevType != css::Rule::CHARSET_RULE &&
+        prevType != css::Rule::IMPORT_RULE) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
 
-    if (firstType == nsICSSRule::NAMESPACE_RULE &&
-        prevType != nsICSSRule::CHARSET_RULE &&
-        prevType != nsICSSRule::IMPORT_RULE &&
-        prevType != nsICSSRule::NAMESPACE_RULE) {
+    if (firstType == css::Rule::NAMESPACE_RULE &&
+        prevType != css::Rule::CHARSET_RULE &&
+        prevType != css::Rule::IMPORT_RULE &&
+        prevType != css::Rule::NAMESPACE_RULE) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   }
@@ -1855,11 +1856,11 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
   DidDirty();
 
   for (PRInt32 counter = 0; counter < rulecount; counter++) {
-    nsICSSRule* cssRule = rules.ObjectAt(counter);
+    css::Rule* cssRule = rules.ObjectAt(counter);
     cssRule->SetStyleSheet(this);
 
     PRInt32 type = cssRule->GetType();
-    if (type == nsICSSRule::NAMESPACE_RULE) {
+    if (type == css::Rule::NAMESPACE_RULE) {
       // XXXbz does this screw up when inserting a namespace rule before
       // another namespace rule that binds the same prefix to a different
       // namespace?
@@ -1870,7 +1871,7 @@ nsCSSStyleSheet::InsertRuleInternal(const nsAString& aRule,
     // We don't notify immediately for @import rules, but rather when
     // the sheet the rule is importing is loaded
     PRBool notify = PR_TRUE;
-    if (type == nsICSSRule::IMPORT_RULE) {
+    if (type == css::Rule::IMPORT_RULE) {
       nsCOMPtr<nsIDOMCSSImportRule> importRule(do_QueryInterface(cssRule));
       NS_ASSERTION(importRule, "Rule which has type IMPORT_RULE and does not implement nsIDOMCSSImportRule!");
       nsCOMPtr<nsIDOMCSSStyleSheet> childSheet;
@@ -1915,7 +1916,7 @@ nsCSSStyleSheet::DeleteRule(PRUint32 aIndex)
                  "Too many style rules!");
 
     // Hold a strong ref to the rule so it doesn't die when we RemoveObjectAt
-    nsCOMPtr<nsICSSRule> rule = mInner->mOrderedRules.ObjectAt(aIndex);
+    nsRefPtr<css::Rule> rule = mInner->mOrderedRules.ObjectAt(aIndex);
     if (rule) {
       mInner->mOrderedRules.RemoveObjectAt(aIndex);
       rule->SetStyleSheet(nsnull);
@@ -1936,7 +1937,7 @@ nsCSSStyleSheet::DeleteRuleFromGroup(css::GroupRule* aGroup, PRUint32 aIndex)
   NS_ENSURE_ARG_POINTER(aGroup);
   NS_ASSERTION(mInner->mComplete, "No deleting from an incomplete sheet!");
   nsresult result;
-  nsCOMPtr<nsICSSRule> rule = aGroup->GetStyleRuleAt(aIndex);
+  nsRefPtr<css::Rule> rule = aGroup->GetStyleRuleAt(aIndex);
   NS_ENSURE_TRUE(rule, NS_ERROR_ILLEGAL_VALUE);
 
   // check that the rule actually belongs to this sheet!
@@ -1997,7 +1998,7 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   result = WillDirty();
   NS_ENSURE_SUCCESS(result, result);
 
-  nsCOMArray<nsICSSRule> rules;
+  nsCOMArray<css::Rule> rules;
   result = css.ParseRule(aRule, mInner->mSheetURI, mInner->mBaseURI,
                          mInner->mPrincipal, rules);
   NS_ENSURE_SUCCESS(result, result);
@@ -2009,11 +2010,11 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
   }
 
   PRInt32 counter;
-  nsICSSRule* rule;
+  css::Rule* rule;
   for (counter = 0; counter < rulecount; counter++) {
     // Only rulesets are allowed in a group as of CSS2
     rule = rules.ObjectAt(counter);
-    if (rule->GetType() != nsICSSRule::STYLE_RULE) {
+    if (rule->GetType() != css::Rule::STYLE_RULE) {
       return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
     }
   }
@@ -2035,7 +2036,7 @@ nsCSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
 
 nsresult
 nsCSSStyleSheet::ReplaceRuleInGroup(css::GroupRule* aGroup,
-                                    nsICSSRule* aOld, nsICSSRule* aNew)
+                                    css::Rule* aOld, css::Rule* aNew)
 {
   nsresult result;
   NS_PRECONDITION(mInner->mComplete, "No replacing in an incomplete sheet!");

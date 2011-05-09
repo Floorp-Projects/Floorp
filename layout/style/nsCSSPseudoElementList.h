@@ -86,3 +86,6 @@ CSS_PSEUDO_ELEMENT(mozMathStretchy, ":-moz-math-stretchy", 0)
 CSS_PSEUDO_ELEMENT(mozMathAnonymous, ":-moz-math-anonymous", 0)
 #endif
 
+// HTML5 Forms pseudo elements
+CSS_PSEUDO_ELEMENT(mozProgressBar, ":-moz-progress-bar", 0)
+

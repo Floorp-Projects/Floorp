@@ -15,12 +15,6 @@
         </targetApplication>
       </versionRange>
     </emItem>
-    <emItem id="krupa.raj+545@gmail.com">
-      <versionRange severity="2"/>
-    </emItem>
-    <emItem id="krups@krup12s.com">
-      <versionRange severity="3"/>
-    </emItem>
     <emItem id="langpack-vi-VN@firefox.mozilla.org">
       <versionRange minVersion="2.0" maxVersion="2.0"/>
     </emItem>
@@ -42,9 +36,6 @@
     <emItem id="msntoolbar@msn.com">
       <versionRange minVersion=" " maxVersion="6.*"/>
     </emItem>
-    <emItem id="near799@wdios.com" os="Android">
-      <versionRange minVersion="0.8" maxVersion="1.0" severity="3"/>
-    </emItem>
     <emItem id="personas@christopher.beard">
       <versionRange minVersion="1.6" maxVersion="1.6">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
@@ -54,9 +45,6 @@
     </emItem>
     <emItem id="ShopperReports@ShopperReports.com">
       <versionRange minVersion="3.1.22.0" maxVersion="3.1.22.0"/>
-    </emItem>
-    <emItem id="sidecar-test-addon20110103118@amazon.com" os="MACOSX, Windows, Linux">
-      <versionRange severity="3"/>
     </emItem>
     <emItem id="support@daemon-tools.cc">
       <versionRange minVersion=" " maxVersion="1.0.0.5"/>
@@ -193,39 +181,6 @@
     <vendor>0x10de</vendor>
     <feature>DIRECT3D_9_LAYERS</feature>
     <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>
-    <driverVersion>7.0.0.0</driverVersion>
-    <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>
-  </gfxBlacklistEntry>
-  <gfxBlacklistEntry>
-    <os>MAC OS X 10.5.8</os>
-    <vendor>0x10de</vendor>
-    <feature>DIRECT3D_9_LAYERS</feature>
-    <driverVersion>7.0.0.0</driverVersion>
-    <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>
-  </gfxBlacklistEntry>
-  <gfxBlacklistEntry>
-    <os>MAC OS X 10.5.8</os>
-    <vendor>0x10de</vendor>
-    <feature>DIRECT3D_9_LAYERS</feature>
-    <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>
-    <driverVersion>7.0.0.0</driverVersion>
-    <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>
-  </gfxBlacklistEntry>
-  <gfxBlacklistEntry>
-    <os>MAC OS X 10.6</os>
-    <vendor>0x10de</vendor>
-    <devices>
-      <device>0x0a6c</device>
-    </devices>
-    <feature>DIRECT3D_9_LAYERS</feature>
-    <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>
-    <driverVersion>8.17.12.5896</driverVersion>
-    <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>
-  </gfxBlacklistEntry>
-  <gfxBlacklistEntry>
-    <os>MAC OS X 10.6</os>
-    <vendor>0x10de</vendor>
-    <feature>DIRECT3D_9_LAYERS</feature>
     <driverVersion>7.0.0.0</driverVersion>
     <driverVersionComparator>GREATER_THAN_OR_EQUAL</driverVersionComparator>
   </gfxBlacklistEntry>

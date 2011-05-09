@@ -65,30 +65,6 @@
 #pragma conform(forScope, push, atlhack, off)
 #endif
 
-#ifdef WINCE
-/* atlbase.h on WINCE has a bug, in that it tries to use
- * GetProcAddress with a wide string, when that is explicitly not
- * supported.  So we use C++ to overload that here, and implement
- * something that works.
- */
-#include <windows.h>
-static FARPROC GetProcAddressA(HMODULE hMod, wchar_t *procName) {
-  FARPROC ret = NULL;
-  int len = wcslen(procName);
-  char *s = new char[len + 1];
-
-  for (int i = 0; i < len; i++) {
-    s[i] = (char) procName[i];
-  }
-  s[len-1] = 0;
-
-  ret = ::GetProcAddress(hMod, s);
-  delete [] s;
-
-  return ret;
-}
-#endif
-
 #include <atlbase.h>
 //You may derive a class from CComModule and use it if you want to override
 //something, but do not change the name of _Module

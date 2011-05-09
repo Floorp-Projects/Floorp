@@ -1974,7 +1974,9 @@ void nsHTMLMediaElement::ResourceLoaded()
   mBegun = PR_FALSE;
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
   AddRemoveSelfReference();
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA) {
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+  }
   // Ensure a progress event is dispatched at the end of download.
   DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
   // The download has stopped.

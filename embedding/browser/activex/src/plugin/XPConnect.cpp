@@ -124,11 +124,6 @@ nsScriptablePeer::QueryInterface(const nsIID & aIID, void **aInstancePtr)
     return (*aInstancePtr) ? NS_OK : NS_NOINTERFACE;
 }
 
-#ifdef WINCE
-typedef _com_ptr_t<_com_IIID<IUnknown, &__uuidof(IUnknown)> > IUnknownPtr;
-typedef _com_ptr_t<_com_IIID<IDispatch, &__uuidof(IDispatch)> > IDispatchPtr;
-#endif
-
 HRESULT
 nsScriptablePeer::GetIDispatch(IDispatch **pdisp)
 {
@@ -995,21 +990,6 @@ CLSID MozAxPlugin::GetCLSIDForType(const char *mimeType)
     {
         return CLSID_NULL;
     }
-
-#ifdef MOZ_FLASH_ACTIVEX_PATCH
-    // If the Flash activex control doesn't advertise the supported
-    // mimetypes correctly, we map Shockwave Flash manually to the
-    // appropriate CLSID of the ActiveX control here.
-    if (!strcmp(mimeType, "application/x-shockwave-flash"))
-    {
-        GUID guidValue;
-
-        // The Flash CLSID
-        ::CLSIDFromString(_T("{D27CDB6E-AE6D-11CF-96B8-444553540000}"), &guidValue);
-
-        return guidValue;
-    }
-#endif
 
     // Read the registry to see if there is a CLSID for an object to be associated with
     // this MIME type.

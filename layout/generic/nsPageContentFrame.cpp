@@ -137,13 +137,10 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
     NS_ASSERTION(aPresContext->IsDynamic() || !NS_FRAME_IS_FULLY_COMPLETE(aStatus) ||
                   !frame->GetNextInFlow(), "bad child flow list");
   }
-  // Reflow our fixed frames 
+
+  // Reflow our fixed frames
   nsReflowStatus fixedStatus = NS_FRAME_COMPLETE;
-  mFixedContainer.Reflow(this, aPresContext, aReflowState, fixedStatus,
-                         aReflowState.availableWidth,
-                         aReflowState.availableHeight,
-                         PR_FALSE, PR_TRUE, PR_TRUE, // XXX could be optimized
-                         nsnull /* ignore overflow */);
+  ReflowAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, fixedStatus);
   NS_ASSERTION(NS_FRAME_IS_COMPLETE(fixedStatus), "fixed frames can be truncated, but not incomplete");
 
   // Return our desired size

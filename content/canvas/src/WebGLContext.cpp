@@ -352,13 +352,11 @@ WebGLContext::SetContextOptions(nsIPropertyBag *aOptions)
 NS_IMETHODIMP
 WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
 {
-    ScopedGfxFeatureReporter reporter("WebGL");
-
     if (mCanvasElement) {
         HTMLCanvasElement()->InvalidateCanvas();
     }
 
-    if (mWidth == width && mHeight == height)
+    if (gl && mWidth == width && mHeight == height)
         return NS_OK;
 
     // If we already have a gl context, then we just need to resize
@@ -372,6 +370,8 @@ WebGLContext::SetDimensions(PRInt32 width, PRInt32 height)
         mResetLayer = PR_TRUE;
         return NS_OK;
     }
+
+    ScopedGfxFeatureReporter reporter("WebGL");
 
     // We're going to create an entirely new context.  If our
     // generation is not 0 right now (that is, if this isn't the first

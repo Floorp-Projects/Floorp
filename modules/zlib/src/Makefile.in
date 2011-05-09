@@ -50,7 +50,7 @@ LIBXUL_LIBRARY = 1
 DIST_INSTALL = 1
 
 ifndef MOZ_ENABLE_LIBXUL
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
 MAPFILE	= $(LIBRARY_NAME).map
 DEFFILE	= $(win_srcdir)/zlib.def
@@ -58,7 +58,7 @@ endif
 endif
 endif
 
-ifeq (,$(filter-out WINNT WINCE OS2,$(OS_ARCH)))
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 DEFINES	+= -DZLIB_DLL=1
 endif
 

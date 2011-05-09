@@ -588,6 +588,9 @@ nsWindow::SetSizeMode(PRInt32 aMode)
     nsresult rv;
 
     LOG(("nsWindow::SetSizeMode [%p] %d\n", (void *)this, aMode));
+    if (aMode != nsSizeMode_Minimized) {
+        GetViewWidget()->activateWindow();
+    }
 
     // Save the requested state.
     rv = nsBaseWidget::SetSizeMode(aMode);

@@ -178,7 +178,8 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
-OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32 delayimp)
+LDFLAGS += -delayload:xul.dll -delayload:xpcom.dll -delayload:plc4.dll -delayload:nspr4.dll -delayload:mozalloc.dll
 endif
 
 ifeq ($(OS_ARCH),WINNT)

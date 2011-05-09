@@ -42,11 +42,23 @@
 #import <Cocoa/Cocoa.h>
 class nsIWidget;
 
+namespace mozilla {
+namespace widget{
+class TextInputHandler;
+} // namespace widget
+} // namespace mozilla
+
 // A protocol listing all the methods that an object which wants
 // to live in gecko's widget hierarchy must implement. |nsChildView|
 // makes assumptions that any NSView with which it comes in contact will
 // implement this protocol.
 @protocol mozView
+
+  // aHandler is Gecko's default text input handler:  It implements the
+  // NSTextInput protocol to handle key events.  Don't make aHandler a
+  // strong reference -- that causes a memory leak.
+- (void)installTextInputHandler:(mozilla::widget::TextInputHandler*)aHandler;
+- (void)uninstallTextInputHandler;
 
   // access the nsIWidget associated with this view. DOES NOT ADDREF.
 - (nsIWidget*)widget;

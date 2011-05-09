@@ -45,10 +45,6 @@ class nsOggDecoderStateMachine : public nsBuiltinDecoderStateMachine
 {
 public:
   nsOggDecoderStateMachine(nsBuiltinDecoder* aDecoder);
-
-  // Overload LoadMetadata to seek to the end of the file and get the
-  // duration.
-  virtual void LoadMetadata();
 };
 
 #endif

@@ -1,7 +1,6 @@
 var testURL_01 = chromeRoot + "browser_blank_01.html";
 var testURL_02 = chromeRoot + "browser_blank_02.html";
 
-let baseURI = "http://mochi.test:8888/browser/mobile/chrome/";
 var titleURL = baseURI + "browser_title.sjs?";
 var pngURL = "data:image/gif;base64,R0lGODlhCwALAIAAAAAA3pn/ZiH5BAEAAAEALAAAAAALAAsAAAIUhA+hkcuO4lmNVindo7qyrIXiGBYAOw==";
 

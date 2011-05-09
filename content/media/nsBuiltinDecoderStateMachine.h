@@ -158,6 +158,7 @@ public:
   virtual void Shutdown();
   virtual PRInt64 GetDuration();
   virtual void SetDuration(PRInt64 aDuration);
+  void SetEndTime(PRInt64 aEndTime);
   virtual PRBool OnDecodeThread() const {
     return IsCurrentThread(mDecodeThread);
   }
@@ -247,6 +248,11 @@ public:
     return mEndTime;
   }
 
+  PRBool GetSeekable() {
+    mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
+    return mSeekable;
+  }
+
   // Sets the current frame buffer length for the MozAudioAvailable event.
   // Accessed on the main and state machine threads.
   virtual void SetFrameBufferLength(PRUint32 aLength);
@@ -302,11 +308,6 @@ protected:
   // monitor must be held with exactly one lock count. Called on the state
   // machine thread.
   VideoData* FindStartTime();
-
-  // Finds the end time of the last frame of data in the file, storing the value
-  // in mEndTime if successful. The decoder must be held with exactly one lock
-  // count. Called on the state machine thread.
-  void FindEndTime();
 
   // Update only the state machine's current playback position (and duration,
   // if unknown).  Does not update the playback position on the decoder or
