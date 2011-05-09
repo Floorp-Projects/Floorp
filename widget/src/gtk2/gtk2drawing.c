@@ -48,7 +48,6 @@
 #include <string.h>
 #include "gtkdrawing.h"
 #include "nsDebug.h"
-#include "prinrval.h"
 
 #include <math.h>
 
@@ -2236,8 +2235,7 @@ moz_gtk_progressbar_paint(GdkDrawable* drawable, GdkRectangle* rect,
 
 static gint
 moz_gtk_progress_chunk_paint(GdkDrawable* drawable, GdkRectangle* rect,
-                             GdkRectangle* cliprect, GtkTextDirection direction,
-                             GtkThemeWidgetType widget)
+                             GdkRectangle* cliprect, GtkTextDirection direction)
 {
     GtkStyle* style;
 
@@ -2247,31 +2245,6 @@ moz_gtk_progress_chunk_paint(GdkDrawable* drawable, GdkRectangle* rect,
     style = gProgressWidget->style;
 
     TSOffsetStyleGCs(style, rect->x, rect->y);
-
-    if (widget == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE) {
-      /**
-       * The bar's width and the bar speed are set depending of the progress
-       * bar size. These could also be constant for all progress bars easily.
-       */
-
-      /* The bar is using a fifth of the element size, based on GtkProgressBar
-       * activity-blocks property. */
-      const gint barWidth = MAX(1, rect->width / 5);
-
-      /* Represents the travel that has to be done for a complete cycle. */
-      const gint travel = 2 * (rect->width - barWidth);
-
-      /* period equals to travel / pixelsPerMillisecond
-       * where pixelsPerMillisecond equals rect->width / 1000.0.
-       * This is equivalent to 1600. */
-      const guint period = 1600;
-      const gint t = PR_IntervalToMilliseconds(PR_IntervalNow()) % period;
-      const gint dx = travel * t / period;
-
-      rect->x += (dx < travel / 2) ? dx : travel - dx;
-      rect->width = barWidth;
-    }
-
     gtk_paint_box(style, drawable, GTK_STATE_PRELIGHT, GTK_SHADOW_OUT,
                   cliprect, gProgressWidget, "bar", rect->x, rect->y,
                   rect->width, rect->height);
@@ -2985,7 +2958,6 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_SCALE_THUMB_VERTICAL:
     case MOZ_GTK_GRIPPER:
     case MOZ_GTK_PROGRESS_CHUNK:
-    case MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE:
     case MOZ_GTK_EXPANDER:
     case MOZ_GTK_TREEVIEW_EXPANDER:
     case MOZ_GTK_TOOLBAR_SEPARATOR:
@@ -3332,9 +3304,8 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
         return moz_gtk_progressbar_paint(drawable, rect, cliprect, direction);
         break;
     case MOZ_GTK_PROGRESS_CHUNK:
-    case MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE:
         return moz_gtk_progress_chunk_paint(drawable, rect, cliprect,
-                                            direction, widget);
+                                            direction);
         break;
     case MOZ_GTK_TAB:
         return moz_gtk_tab_paint(drawable, rect, cliprect, state,
