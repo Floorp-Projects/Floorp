@@ -211,7 +211,7 @@ void nsWebMReader::Cleanup()
 nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
 {
   NS_ASSERTION(mDecoder->OnStateMachineThread(), "Should be on state machine thread.");
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
   nestegg_io io;
   io.read = webm_read;
@@ -226,8 +226,8 @@ nsresult nsWebMReader::ReadMetadata(nsVideoInfo* aInfo)
   uint64_t duration = 0;
   r = nestegg_duration(mContext, &duration);
   if (r == 0) {
-    MonitorAutoExit exitReaderMon(mMonitor);
-    MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
+    ReentrantMonitorAutoExit exitReaderMon(mReentrantMonitor);
+    ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
     mDecoder->GetStateMachine()->SetDuration(duration / NS_PER_USEC);
   }
 
@@ -413,7 +413,7 @@ ogg_packet nsWebMReader::InitOggPacket(unsigned char* aData,
  
 PRBool nsWebMReader::DecodeAudioPacket(nestegg_packet* aPacket, PRInt64 aOffset)
 {
-  mMonitor.AssertCurrentThreadIn();
+  mReentrantMonitor.AssertCurrentThreadIn();
 
   int r = 0;
   unsigned int count = 0;
@@ -591,7 +591,7 @@ nsReturnRef<NesteggPacketHolder> nsWebMReader::NextPacket(TrackType aTrackType)
 
 PRBool nsWebMReader::DecodeAudioData()
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
     "Should be on state machine thread or decode thread.");
   nsAutoRef<NesteggPacketHolder> holder(NextPacket(AUDIO));
@@ -606,7 +606,7 @@ PRBool nsWebMReader::DecodeAudioData()
 PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
                                       PRInt64 aTimeThreshold)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
                "Should be on state machine or decode thread.");
 
@@ -654,8 +654,8 @@ PRBool nsWebMReader::DecodeVideoFrame(PRBool &aKeyframeSkip,
       }
       mVideoPackets.PushFront(next_holder.disown());
     } else {
-      MonitorAutoExit exitMon(mMonitor);
-      MonitorAutoEnter decoderMon(mDecoder->GetMonitor());
+      ReentrantMonitorAutoExit exitMon(mReentrantMonitor);
+      ReentrantMonitorAutoEnter decoderMon(mDecoder->GetReentrantMonitor());
       nsBuiltinDecoderStateMachine* s =
         static_cast<nsBuiltinDecoderStateMachine*>(mDecoder->GetStateMachine());
       PRInt64 endTime = s->GetEndMediaTime();
@@ -756,7 +756,7 @@ PRBool nsWebMReader::CanDecodeToTarget(PRInt64 aTarget,
 nsresult nsWebMReader::Seek(PRInt64 aTarget, PRInt64 aStartTime, PRInt64 aEndTime,
                             PRInt64 aCurrentTime)
 {
-  MonitorAutoEnter mon(mMonitor);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
   NS_ASSERTION(mDecoder->OnStateMachineThread(),
                "Should be on state machine thread.");
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lldms", mDecoder, aTarget));

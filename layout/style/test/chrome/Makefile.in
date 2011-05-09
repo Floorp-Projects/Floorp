@@ -49,8 +49,16 @@ _CHROME_FILES = \
     bug535806-html.html \
     bug535806-xul.xul \
     test_hover.html \
+    test_moz_document_rules.html \
     hover_helper.html \
+    $(NULL)
+
+_TEST_FILES = \
+    moz_document_helper.html \
     $(NULL)
 
 libs:: $(_CHROME_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)
+
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/tests/$(relativesrcdir)

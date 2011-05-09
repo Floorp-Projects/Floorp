@@ -224,9 +224,9 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
     for (Shape::Range r = pobj->lastProperty()->all(); !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
 
-        if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.id) &&
+        if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid) &&
             !shape.isAlias() &&
-            !Enumerate(cx, obj, pobj, shape.id, shape.enumerable(),
+            !Enumerate(cx, obj, pobj, shape.propid, shape.enumerable(),
                        shape.isSharedPermanent(), flags, ht, props))
         {
             return false;
@@ -1489,12 +1489,11 @@ js_InitIteratorClasses(JSContext *cx, JSObject *obj)
     }
 #endif
 
+    MarkStandardClassInitializedNoProto(obj, &js_StopIterationClass);
+
     proto = js_InitClass(cx, obj, NULL, &js_StopIterationClass, NULL, 0, NULL,
                          NULL, NULL, NULL, NULL);
-    if (!proto)
-        return NULL;
-
-    cx->addTypeProperty(obj->getType(), js_StopIteration_str, ObjectValue(*proto));
-
+    if (proto)
+        cx->addTypeProperty(obj->getType(), js_StopIteration_str, ObjectValue(*proto));
     return proto;
 }

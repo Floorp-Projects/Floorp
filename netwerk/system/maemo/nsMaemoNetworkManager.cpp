@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsMaemoNetworkManager.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 
 #include <dbus/dbus.h>
 #include <dbus/dbus-glib-lowlevel.h>
@@ -70,7 +70,7 @@ static PRBool gConnectionCallbackInvoked = PR_FALSE;
 
 using namespace mozilla;
 
-static Monitor* gMonitor = nsnull;
+static ReentrantMonitor* gReentrantMonitor = nsnull;
 
 static void NotifyNetworkLinkObservers()
 {
@@ -88,7 +88,7 @@ connection_event_callback(ConIcConnection *aConnection,
 {
   ConIcConnectionStatus status = con_ic_connection_event_get_status(aEvent);
   {
-    MonitorAutoEnter mon(*gMonitor);
+    ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
     // When we are not connected, we are always disconnected.
     gInternalState = (CON_IC_STATUS_CONNECTED == status ?
@@ -110,7 +110,7 @@ nsMaemoNetworkManager::OpenConnectionSync()
   // protect gInternalState.  This also allows us
   // to block and wait in this method on this thread
   // until our callback on the main thread.
-  MonitorAutoEnter mon(*gMonitor);
+  ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
 
   gConnectionCallbackInvoked = PR_FALSE;
 
@@ -153,8 +153,8 @@ nsMaemoNetworkManager::Startup()
   if (gConnection)
     return PR_TRUE;
 
-  gMonitor = new Monitor("MaemoAutodialer");
-  if (!gMonitor)
+  gReentrantMonitor = new ReentrantMonitor("MaemoAutodialer");
+  if (!gReentrantMonitor)
     return PR_FALSE;
 
   DBusError error;
@@ -169,8 +169,8 @@ nsMaemoNetworkManager::Startup()
   gConnection = con_ic_connection_new();
   NS_ASSERTION(gConnection, "Error when creating connection");
   if (!gConnection) {
-    delete gMonitor;
-    gMonitor = nsnull;
+    delete gReentrantMonitor;
+    gReentrantMonitor = nsnull;
     return PR_FALSE;
   }
 
@@ -191,14 +191,14 @@ nsMaemoNetworkManager::Shutdown()
 {
   gConnection = nsnull;
 
-  if (gMonitor) {
+  if (gReentrantMonitor) {
     // notify anyone waiting
-    MonitorAutoEnter mon(*gMonitor);
+    ReentrantMonitorAutoEnter mon(*gReentrantMonitor);
     gInternalState = InternalState_Invalid;    
     mon.Notify();
   }
   
-  // We are leaking the gMonitor because a race condition could occur. We need
+  // We are leaking the gReentrantMonitor because a race condition could occur. We need
   // a notification after xpcom-shutdown-threads so we can safely delete the monitor
 }
 

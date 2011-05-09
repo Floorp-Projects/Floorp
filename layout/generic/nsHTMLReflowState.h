@@ -247,10 +247,9 @@ struct nsHTMLReflowState : public nsCSSOffsetState {
   const nsHTMLReflowState *mCBReflowState;
 
   // the available width in which to reflow the frame. The space
-  // represents the amount of room for the frame's border, padding,
-  // and content area (not the margin area. The parent frame deals
-  // with the child frame's margins). The frame size you choose should
-  // fit within the available width.
+  // represents the amount of room for the frame's margin, border,
+  // padding, and content area. The frame size you choose should fit
+  // within the available width.
   nscoord              availableWidth;
 
   // A value of NS_UNCONSTRAINEDSIZE for the available height means

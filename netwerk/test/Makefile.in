@@ -68,6 +68,7 @@ SIMPLE_PROGRAMS	= \
 		TestCookie$(BIN_SUFFIX) \
 		TestServ$(BIN_SUFFIX) \
 		ReadNTLM$(BIN_SUFFIX) \
+		TestProtocols$(BIN_SUFFIX) \
 		$(NULL)
 
 ifndef MOZ_ENABLE_LIBXUL
@@ -78,7 +79,6 @@ SIMPLE_PROGRAMS += \
 		TestStreamTransport$(BIN_SUFFIX) \
 		TestStreamChannel$(BIN_SUFFIX) \
 		TestStreamPump$(BIN_SUFFIX) \
-		TestProtocols$(BIN_SUFFIX) \
 		TestIOThreads$(BIN_SUFFIX) \
 		TestUDPSocketProvider$(BIN_SUFFIX) \
 		$(NULL)

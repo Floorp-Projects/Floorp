@@ -106,6 +106,7 @@ endif
 RES_LAYOUT = \
   res/layout/notification_progress.xml \
   res/layout/notification_progress_text.xml \
+  res/layout/notification_icon_text.xml \
   $(NULL)
 
 RES_VALUES = res/values/colors.xml res/values/themes.xml

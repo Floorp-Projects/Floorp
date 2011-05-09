@@ -97,8 +97,8 @@ PropertyTree::insertChild(JSContext *cx, Shape *parent, Shape *child)
     JS_ASSERT(!parent->inDictionary());
     JS_ASSERT(!child->parent);
     JS_ASSERT(!child->inDictionary());
-    JS_ASSERT(!JSID_IS_VOID(parent->id));
-    JS_ASSERT(!JSID_IS_VOID(child->id));
+    JS_ASSERT(!JSID_IS_VOID(parent->propid));
+    JS_ASSERT(!JSID_IS_VOID(child->propid));
     JS_ASSERT(cx->compartment == compartment);
     JS_ASSERT(child->compartment() == parent->compartment());
 
@@ -138,7 +138,7 @@ void
 Shape::removeChild(Shape *child)
 {
     JS_ASSERT(!child->inDictionary());
-    JS_ASSERT(!JSID_IS_VOID(id));
+    JS_ASSERT(!JSID_IS_VOID(propid));
 
     KidsPointer *kidp = &kids;
     if (kidp->isShape()) {
@@ -156,7 +156,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
     Shape *shape;
 
     JS_ASSERT(parent);
-    JS_ASSERT(!JSID_IS_VOID(parent->id));
+    JS_ASSERT(!JSID_IS_VOID(parent->propid));
 
     /*
      * The property tree has extremely low fan-out below its root in
@@ -183,7 +183,7 @@ PropertyTree::getChild(JSContext *cx, Shape *parent, const Shape &child)
     if (!shape)
         return NULL;
 
-    new (shape) Shape(child.id, child.rawGetter, child.rawSetter, child.slot, child.attrs,
+    new (shape) Shape(child.propid, child.rawGetter, child.rawSetter, child.slot, child.attrs,
                       child.flags, child.shortid, js_GenerateShape(cx));
 
     if (!insertChild(cx, parent, shape))
@@ -210,19 +210,19 @@ KidsPointer::checkConsistency(const Shape *aKid) const
 void
 Shape::dump(JSContext *cx, FILE *fp) const
 {
-    JS_ASSERT(!JSID_IS_VOID(id));
+    JS_ASSERT(!JSID_IS_VOID(propid));
 
-    if (JSID_IS_INT(id)) {
-        fprintf(fp, "[%ld]", (long) JSID_TO_INT(id));
-    } else if (JSID_IS_DEFAULT_XML_NAMESPACE(id)) {
+    if (JSID_IS_INT(propid)) {
+        fprintf(fp, "[%ld]", (long) JSID_TO_INT(propid));
+    } else if (JSID_IS_DEFAULT_XML_NAMESPACE(propid)) {
         fprintf(fp, "<default XML namespace>");
     } else {
         JSLinearString *str;
-        if (JSID_IS_ATOM(id)) {
-            str = JSID_TO_ATOM(id);
+        if (JSID_IS_ATOM(propid)) {
+            str = JSID_TO_ATOM(propid);
         } else {
-            JS_ASSERT(JSID_IS_OBJECT(id));
-            JSString *s = js_ValueToString(cx, IdToValue(id));
+            JS_ASSERT(JSID_IS_OBJECT(propid));
+            JSString *s = js_ValueToString(cx, IdToValue(propid));
             fputs("object ", fp);
             str = s ? s->ensureLinear(cx) : NULL;
         }
@@ -298,8 +298,8 @@ Shape::dumpSubtree(JSContext *cx, int level, FILE *fp) const
 {
     if (!parent) {
         JS_ASSERT(level == 0);
-        JS_ASSERT(JSID_IS_EMPTY(id));
-        fprintf(fp, "class %s emptyShape %u\n", clasp->name, shape);
+        JS_ASSERT(JSID_IS_EMPTY(propid));
+        fprintf(fp, "class %s emptyShape %u\n", clasp->name, shapeid);
     } else {
         fprintf(fp, "%*sid ", level, "");
         dump(cx, fp);
@@ -463,10 +463,10 @@ js::PropertyTree::dumpShapeStats()
 #endif /* DEBUG */
 }
 
+#ifdef DEBUG
 void
 js::PropertyTree::dumpShapes(JSContext *cx)
 {
-#ifdef DEBUG
     JSRuntime *rt = cx->runtime;
 
     if (const char *filename = rt->propTreeDumpFilename) {
@@ -494,5 +494,5 @@ js::PropertyTree::dumpShapes(JSContext *cx)
             fclose(dumpfp);
         }
     }
-#endif
 }
+#endif

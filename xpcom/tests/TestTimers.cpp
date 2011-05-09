@@ -47,7 +47,7 @@
 #include "prinrval.h"
 #include "prmon.h"
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 using namespace mozilla;
 
 typedef nsresult(*TestFuncPtr)();
@@ -80,26 +80,26 @@ private:
   nsCOMPtr<nsIThread> mThread;
 };
 
-class AutoCreateAndDestroyMonitor
+class AutoCreateAndDestroyReentrantMonitor
 {
 public:
-  AutoCreateAndDestroyMonitor() {
-    mMonitor = new Monitor("TestTimers::AutoMon");
-    NS_ASSERTION(mMonitor, "Out of memory!");
+  AutoCreateAndDestroyReentrantMonitor() {
+    mReentrantMonitor = new ReentrantMonitor("TestTimers::AutoMon");
+    NS_ASSERTION(mReentrantMonitor, "Out of memory!");
   }
 
-  ~AutoCreateAndDestroyMonitor() {
-    if (mMonitor) {
-      delete mMonitor;
+  ~AutoCreateAndDestroyReentrantMonitor() {
+    if (mReentrantMonitor) {
+      delete mReentrantMonitor;
     }
   }
 
-  operator Monitor* () {
-    return mMonitor;
+  operator ReentrantMonitor* () {
+    return mReentrantMonitor;
   }
 
 private:
-  Monitor* mMonitor;
+  ReentrantMonitor* mReentrantMonitor;
 };
 
 class TimerCallback : public nsITimerCallback
@@ -107,13 +107,13 @@ class TimerCallback : public nsITimerCallback
 public:
   NS_DECL_ISUPPORTS
 
-  TimerCallback(nsIThread** aThreadPtr, Monitor* aMonitor)
-  : mThreadPtr(aThreadPtr), mMonitor(aMonitor) { }
+  TimerCallback(nsIThread** aThreadPtr, ReentrantMonitor* aReentrantMonitor)
+  : mThreadPtr(aThreadPtr), mReentrantMonitor(aReentrantMonitor) { }
 
   NS_IMETHOD Notify(nsITimer* aTimer) {
     nsCOMPtr<nsIThread> current(do_GetCurrentThread());
 
-    MonitorAutoEnter mon(*mMonitor);
+    ReentrantMonitorAutoEnter mon(*mReentrantMonitor);
 
     NS_ASSERTION(!*mThreadPtr, "Timer called back more than once!");
     *mThreadPtr = current;
@@ -124,7 +124,7 @@ public:
   }
 private:
   nsIThread** mThreadPtr;
-  Monitor* mMonitor;
+  ReentrantMonitor* mReentrantMonitor;
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(TimerCallback, nsITimerCallback)
@@ -132,7 +132,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(TimerCallback, nsITimerCallback)
 nsresult
 TestTargetedTimers()
 {
-  AutoCreateAndDestroyMonitor newMon;
+  AutoCreateAndDestroyReentrantMonitor newMon;
   NS_ENSURE_TRUE(newMon, NS_ERROR_OUT_OF_MEMORY);
 
   AutoTestThread testThread;
@@ -157,7 +157,7 @@ TestTargetedTimers()
                                nsITimer::TYPE_ONE_SHOT);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  MonitorAutoEnter mon(*newMon);
+  ReentrantMonitorAutoEnter mon(*newMon);
   while (!notifiedThread) {
     mon.Wait();
   }

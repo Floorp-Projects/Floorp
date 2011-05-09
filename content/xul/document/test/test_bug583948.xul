@@ -18,24 +18,22 @@ SimpleTest.waitForExplicitFinish();
 var attempts = 0;
 
 function update() {
-  setTimeout(function() {
-    if (otherWindow.location)
-      otherWindow.location.reload()
-    }, 1);
-  otherWindow.document.commandDispatcher.updateCommands('');
   // without the crash fix, this usually crashes after 2 to 4 reloads
   if (++attempts == 6) {
     ok(true, "didn't crash after 6 attempts");
     otherWindow.close();
-    SimpleTest.finish();
-  }
-  else {
-    setTimeout(update, 100);
+    SimpleTest.waitForFocus(function() {
+      SimpleTest.finish();
+    });
+  } else {
+    otherWindow.document.commandDispatcher.updateCommands('');
+    setTimeout(function() {
+      otherWindow.location.reload()
+    }, 0);
   }
 }
 
 var otherWindow = window.open("window_bug583948.xul", "_new", "chrome");
-setTimeout(update, 100);
 </script>
 
 </window>

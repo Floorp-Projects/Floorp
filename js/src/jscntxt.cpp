@@ -691,7 +691,9 @@ js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
 {
     JSContext *cx = *iterp;
 
-    Conditionally<AutoLockGC> lockIf(!!unlocked, rt);
+    Maybe<AutoLockGC> lockIf;
+    if (unlocked) 
+        lockIf.construct(rt);
     cx = js_ContextFromLinkField(cx ? cx->link.next : rt->contextList.next);
     if (&cx->link == &rt->contextList)
         cx = NULL;

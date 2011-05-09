@@ -43,8 +43,8 @@
 #include "jsatom.h"
 #include "jsstr.h"
 
-#include "jsgcinlines.h"
 #include "jscntxtinlines.h"
+#include "jsgcinlines.h"
 
 namespace js {
 
@@ -551,10 +551,10 @@ inline void
 JSAtom::finalize(JSRuntime *rt)
 {
     JS_ASSERT(isAtom());
-    if (arena()->header()->thingKind == js::gc::FINALIZE_STRING)
+    if (arenaHeader()->getThingKind() == js::gc::FINALIZE_STRING)
         asFlat().finalize(rt);
     else
-        JS_ASSERT(arena()->header()->thingKind == js::gc::FINALIZE_SHORT_STRING);
+        JS_ASSERT(arenaHeader()->getThingKind() == js::gc::FINALIZE_SHORT_STRING);
 }
 
 inline void

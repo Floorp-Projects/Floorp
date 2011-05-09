@@ -231,31 +231,6 @@ function (aSearchURL)
   return 0;
 }
 
-nsSidebar.prototype.addMicrosummaryGenerator =
-function (generatorURL)
-{
-    debug("addMicrosummaryGenerator(" + generatorURL + ")");
-
-    if (!/^https?:/i.test(generatorURL))
-      return;
-
-    var stringBundle = srGetStrBundle("chrome://browser/locale/sidebar/sidebar.properties");
-    var titleMessage = stringBundle.GetStringFromName("addMicsumGenConfirmTitle");
-    var dialogMessage = stringBundle.formatStringFromName("addMicsumGenConfirmText", [generatorURL], 1);
-      
-    if (!this.promptService.confirm(null, titleMessage, dialogMessage))
-        return;
-
-    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
-                    getService(Components.interfaces.nsIIOService);
-    var generatorURI = ioService.newURI(generatorURL, null, null);
-
-    var microsummaryService = Components.classes["@mozilla.org/microsummary/service;1"].
-                              getService(Components.interfaces.nsIMicrosummaryService);
-    if (microsummaryService)
-      microsummaryService.addGenerator(generatorURI);
-}
-
 // property of nsIClassInfo
 nsSidebar.prototype.flags = nsIClassInfo.DOM_OBJECT;
 

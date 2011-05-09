@@ -295,11 +295,6 @@ public:
     hb_blob_t *ShareFontTableAndGetBlob(PRUint32 aTag,
                                         FallibleTArray<PRUint8>* aTable);
 
-    // Preload a font table into the cache (used to store layout tables for
-    // harfbuzz, when they will be stripped from the actual sfnt being
-    // passed to platform font APIs for rasterization)
-    void PreloadFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aTable);
-
     nsString         mName;
 
     PRPackedBool     mItalic      : 1;
@@ -1029,6 +1024,8 @@ public:
         return -1;
     }
 
+    gfxFloat SynthesizeSpaceWidth(PRUint32 aCh);
+
     // Font metrics
     struct Metrics {
         gfxFloat xHeight;
@@ -1701,15 +1698,6 @@ public:
     // allocation and initialization
     static gfxTextRun *Create(const gfxTextRunFactory::Parameters *aParams,
         const void *aText, PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
-
-    // Clone this textrun, according to the given parameters. This textrun's
-    // glyph data is copied, so the text and length must be the same as this
-    // textrun's. If there's a problem, return null. Actual linebreaks will
-    // be set as per aParams; there will be no potential linebreaks.
-    // If aText is not persistent (aFlags & TEXT_IS_PERSISTENT), the
-    // textrun will copy it.
-    virtual gfxTextRun *Clone(const gfxTextRunFactory::Parameters *aParams, const void *aText,
-                              PRUint32 aLength, gfxFontGroup *aFontGroup, PRUint32 aFlags);
 
     /**
      * This class records the information associated with a character in the

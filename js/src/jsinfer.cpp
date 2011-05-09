@@ -2345,7 +2345,7 @@ struct types::ObjectTableKey
     typedef JSObject * Lookup;
 
     static inline uint32 hash(JSObject *obj) {
-        return (uint32) (JSID_BITS(obj->lastProperty()->id) ^
+        return (uint32) (JSID_BITS(obj->lastProperty()->propid) ^
                          obj->slotSpan() ^ obj->numFixedSlots() ^
                          ((uint32)(size_t)obj->getProto() >> 2));
     }
@@ -2357,8 +2357,8 @@ struct types::ObjectTableKey
             return false;
         }
         const Shape *shape = obj->lastProperty();
-        while (!JSID_IS_EMPTY(shape->id)) {
-            if (shape->id != v.ids[shape->slot])
+        while (!JSID_IS_EMPTY(shape->propid)) {
+            if (shape->propid != v.ids[shape->slot])
                 return false;
             shape = shape->previous();
         }
@@ -2411,9 +2411,9 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
                     if (types[i] == TYPE_INT32) {
                         types[i] = TYPE_DOUBLE;
                         const Shape *shape = baseShape;
-                        while (!JSID_IS_EMPTY(shape->id)) {
+                        while (!JSID_IS_EMPTY(shape->propid)) {
                             if (shape->slot == i) {
-                                cx->addTypePropertyId(p->value.object, shape->id, TYPE_DOUBLE);
+                                cx->addTypePropertyId(p->value.object, shape->propid, TYPE_DOUBLE);
                                 break;
                             }
                             shape = shape->previous();
@@ -2464,10 +2464,10 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         }
 
         const Shape *shape = baseShape;
-        while (!JSID_IS_EMPTY(shape->id)) {
-            ids[shape->slot] = shape->id;
+        while (!JSID_IS_EMPTY(shape->propid)) {
+            ids[shape->slot] = shape->propid;
             types[shape->slot] = GetValueType(cx, obj->getSlot(shape->slot));
-            cx->addTypePropertyId(objType, shape->id, types[shape->slot]);
+            cx->addTypePropertyId(objType, shape->propid, types[shape->slot]);
             shape = shape->previous();
         }
 
@@ -2633,8 +2633,8 @@ TypeObject::addDefiniteProperties(JSContext *cx, JSObject *obj, bool clearUnknow
     AutoEnterTypeInference enter(cx);
 
     const Shape *shape = obj->lastProperty();
-    while (!JSID_IS_EMPTY(shape->id)) {
-        jsid id = MakeTypeId(cx, shape->id);
+    while (!JSID_IS_EMPTY(shape->propid)) {
+        jsid id = MakeTypeId(cx, shape->propid);
         if (!JSID_IS_VOID(id) && obj->isFixedSlot(shape->slot) &&
             shape->slot <= (TYPE_FLAG_DEFINITE_MASK >> TYPE_FLAG_DEFINITE_SHIFT)) {
             TypeSet *types = getProperty(cx, id, true);

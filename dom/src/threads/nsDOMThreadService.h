@@ -47,7 +47,7 @@
 
 // Other includes
 #include "jsapi.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
@@ -183,22 +183,22 @@ private:
   // Maps nsIScriptGlobalObject* to nsDOMWorkerPool.
   nsRefPtrHashtable<nsVoidPtrHashKey, nsDOMWorkerPool> mPools;
 
-  // mMonitor protects all access to mWorkersInProgress and
+  // mReentrantMonitor protects all access to mWorkersInProgress and
   // mCreationsInProgress.
-  mozilla::Monitor mMonitor;
+  mozilla::ReentrantMonitor mReentrantMonitor;
 
   // A map from nsDOMWorkerThread to nsDOMWorkerRunnable.
   nsRefPtrHashtable<nsVoidPtrHashKey, nsDOMWorkerRunnable> mWorkersInProgress;
 
   // A list of active JSContexts that we've created. Always protected with
-  // mMonitor.
+  // mReentrantMonitor.
   nsTArray<JSContext*> mJSContexts;
 
   // A list of worker runnables that were never started because the worker was
-  // suspended. Always protected with mMonitor.
+  // suspended. Always protected with mReentrantMonitor.
   nsTArray<nsDOMWorkerRunnable*> mSuspendedWorkers;
 
-  // Always protected with mMonitor.
+  // Always protected with mReentrantMonitor.
   nsDataHashtable<nsCStringHashKey, PRBool> mThreadsafeContractIDs;
 
   nsString mAppName;

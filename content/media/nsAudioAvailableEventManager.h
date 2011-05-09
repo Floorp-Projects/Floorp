@@ -105,8 +105,9 @@ private:
   // between the state machine and audio threads.
   nsTArray< nsCOMPtr<nsIRunnable> > mPendingEvents;
 
-  // Monitor for shared access to mPendingEvents queue or buffer length.
-  Monitor mMonitor;
+  // ReentrantMonitor for shared access to mPendingEvents queue or
+  // buffer length.
+  ReentrantMonitor mReentrantMonitor;
 };
 
 #endif

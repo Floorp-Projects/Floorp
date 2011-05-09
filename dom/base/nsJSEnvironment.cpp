@@ -116,6 +116,8 @@
 
 #include "mozilla/FunctionTimer.h"
 
+using namespace mozilla;
+
 const size_t gStackSize = 8192;
 
 #ifdef PR_LOGGING
@@ -123,11 +125,9 @@ static PRLogModuleInfo* gJSDiagnostics;
 #endif
 
 // Thank you Microsoft!
-#ifndef WINCE
 #ifdef CompareString
 #undef CompareString
 #endif
-#endif // WINCE
 
 // The amount of time we wait between a request to GC (due to leaving
 // a page) and doing the actual GC.
@@ -1894,8 +1894,8 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
       return NS_ERROR_FAILURE;
     }
 
-    js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
-    js::LazilyConstructed<js::AutoArrayRooter> tvr;
+    Maybe<nsAutoPoolRelease> poolRelease;
+    Maybe<js::AutoArrayRooter> tvr;
 
     // Use |target| as the scope for wrapping the arguments, since aScope is
     // the safe scope in many cases, which isn't very useful.  Wrapping aTarget
@@ -2383,8 +2383,8 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 
   JSAutoRequest ar(mContext);
 
-  js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
-  js::LazilyConstructed<js::AutoArrayRooter> tvr;
+  Maybe<nsAutoPoolRelease> poolRelease;
+  Maybe<js::AutoArrayRooter> tvr;
 
   nsresult rv;
   rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc,
@@ -2424,8 +2424,8 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                                      void *aScope,
                                      PRUint32 *aArgc,
                                      jsval **aArgv,
-                                     js::LazilyConstructed<nsAutoPoolRelease> &aPoolRelease,
-                                     js::LazilyConstructed<js::AutoArrayRooter> &aRooter)
+                                     Maybe<nsAutoPoolRelease> &aPoolRelease,
+                                     Maybe<js::AutoArrayRooter> &aRooter)
 {
   nsresult rv = NS_OK;
 
@@ -4003,7 +4003,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSArgArray)
     for (end = argv + tmp->mArgc; argv < end; ++argv) {
       if (JSVAL_IS_GCTHING(*argv))
         NS_IMPL_CYCLE_COLLECTION_TRACE_CALLBACK(JAVASCRIPT,
-                                                JSVAL_TO_GCTHING(*argv))
+                                                JSVAL_TO_GCTHING(*argv),
+                                                "mArgv[i]")
     }
   }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END

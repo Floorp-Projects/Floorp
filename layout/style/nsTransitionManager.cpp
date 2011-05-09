@@ -170,6 +170,10 @@ ElementTransitionsPropertyDtor(void           *aObject,
                                void           *aData)
 {
   ElementTransitions *et = static_cast<ElementTransitions*>(aPropertyValue);
+#ifdef DEBUG
+  NS_ABORT_IF_FALSE(!et->mCalledPropertyDtor, "can't call dtor twice");
+  et->mCalledPropertyDtor = true;
+#endif
   delete et;
 }
 

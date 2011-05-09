@@ -1948,11 +1948,11 @@ var gSearchView = {
     var elements = [];
 
     function createSearchResults(aObjsList, aIsInstall, aIsRemote) {
-      aObjsList.forEach(function(aObj) {
-        let score = 0;
-        if (aQuery.length > 0) {
+      aObjsList.forEach(function(aObj, aIndex) {
+        let score = aObjsList.length - aIndex;
+        if (!aIsRemote && aQuery.length > 0) {
           score = self.getMatchScore(aObj, aQuery);
-          if (score == 0 && !aIsRemote)
+          if (score == 0)
             return;
         }
 
