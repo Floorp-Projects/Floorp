@@ -61,7 +61,6 @@
 #include "nsCocoaWindow.h"
 #include "nsNativeThemeColors.h"
 #include "nsIScrollableFrame.h"
-#include "nsIDOMHTMLProgressElement.h"
 
 #include "gfxContext.h"
 #include "gfxQuartzSurface.h"
@@ -107,108 +106,6 @@ extern "C" {
 - (NSText*)currentEditor
 {
   return nil;
-}
-
-@end
-
-/**
- * NSProgressBarCell is used to draw progress bars of any size.
- */
-@interface NSProgressBarCell : NSCell
-{
-    /*All instance variables are private*/
-    double mValue;
-    double mMax;
-    bool   mIsIndeterminate;
-    bool   mIsHorizontal;
-}
-
-- (void)setValue:(double)value;
-- (double)value;
-- (void)setMax:(double)max;
-- (double)max;
-- (void)setIndeterminate:(bool)aIndeterminate;
-- (bool)isIndeterminate;
-- (void)setHorizontal:(bool)aIsHorizontal;
-- (bool)isHorizontal;
-- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView;
-@end
-
-@implementation NSProgressBarCell
-
-- (void)setMax:(double)aMax
-{
-  mMax = aMax;
-}
-
-- (double)max
-{
-  return mMax;
-}
-
-- (void)setValue:(double)aValue
-{
-  mValue = aValue;
-}
-
-- (double)value
-{
-  return mValue;
-}
-
-- (void)setIndeterminate:(bool)aIndeterminate
-{
-  mIsIndeterminate = aIndeterminate;
-}
-
-- (bool)isIndeterminate
-{
-  return mIsIndeterminate;
-}
-
-- (void)setHorizontal:(bool)aIsHorizontal
-{
-  mIsHorizontal = aIsHorizontal;
-}
-
-- (bool)isHorizontal
-{
-  return mIsHorizontal;
-}
-
-- (void)drawWithFrame:(NSRect)cellFrame inView:(NSView *)controlView
-{
-  CGContext* cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-
-  HIThemeTrackDrawInfo tdi;
-
-  tdi.version = 0;
-  tdi.min = 0;
-
-  tdi.value = PR_INT32_MAX * (mValue / mMax);
-  tdi.max = PR_INT32_MAX;
-  tdi.bounds = NSRectToCGRect(cellFrame);
-  tdi.attributes = mIsHorizontal ? kThemeTrackHorizontal : 0;
-  tdi.enableState = [self controlTint] == NSClearControlTint ? kThemeTrackInactive
-                                                             : kThemeTrackActive;
-
-  NSControlSize size = [self controlSize];
-  if (size == NSRegularControlSize) {
-    tdi.kind = mIsIndeterminate ? kThemeLargeIndeterminateBar
-                                : kThemeLargeProgressBar;
-  } else {
-    NS_ASSERTION(size == NSSmallControlSize,
-                 "We shouldn't have another size than small and regular for the moment");
-    tdi.kind = mIsIndeterminate ? kThemeMediumIndeterminateBar
-                                : kThemeMediumProgressBar;
-  }
-
-  PRInt32 stepsPerSecond = mIsIndeterminate ? 60 : 30;
-  PRInt32 milliSecondsPerStep = 1000 / stepsPerSecond;
-  tdi.trackInfo.progress.phase = PR_IntervalToMilliseconds(PR_IntervalNow()) /
-                                 milliSecondsPerStep % 32;
-
-  HIThemeDrawTrack(&tdi, NULL, cgContext, kHIThemeOrientationNormal);
 }
 
 @end
@@ -368,8 +265,6 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   [mComboBoxCell setEditable:YES];
   [mComboBoxCell setFocusRingType:NSFocusRingTypeExterior];
 
-  mProgressBarCell = [[NSProgressBarCell alloc] init];
-
   mCellDrawView = [[CellDrawView alloc] init];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -379,7 +274,6 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  [mProgressBarCell release];
   [mPushButtonCell release];
   [mRadioButtonCell release];
   [mCheckboxCell release];
@@ -1137,66 +1031,40 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static const CellRenderSettings progressSettings[2] = {
-  // Determined settings.
-  {
-    {
-      NSZeroSize, // mini
-      NSMakeSize(0, 10), // small
-      NSMakeSize(0, 16)  // regular
-    },
-    {
-      NSZeroSize, NSZeroSize, NSZeroSize
-    },
-    {
-      { // Leopard
-        {0, 0, 0, 0},     // mini
-        {1, 1, 1, 1},     // small
-        {1, 1, 1, 1}      // regular
-      }
-    }
-  },
-  // There is no horizontal margin in regular undetermined size.
-  {
-    {
-      NSZeroSize, // mini
-      NSMakeSize(0, 10), // small
-      NSMakeSize(0, 16)  // regular
-    },
-    {
-      NSZeroSize, NSZeroSize, NSZeroSize
-    },
-    {
-      { // Leopard
-        {0, 0, 0, 0},     // mini
-        {1, 1, 1, 1},     // small
-        {0, 1, 0, 1}      // regular
-      }
-    }
-  }
-};
+static void
+RenderProgress(CGContextRef cgContext, const HIRect& aRenderRect, void* aData)
+{
+  HIThemeTrackDrawInfo* tdi = (HIThemeTrackDrawInfo*)aData;
+  tdi->bounds = aRenderRect;
+  HIThemeDrawTrack(tdi, NULL, cgContext, kHIThemeOrientationNormal);
+}
 
 void
 nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect,
                                  PRBool inIsIndeterminate, PRBool inIsHorizontal,
-                                 double inValue, double inMaxValue,
+                                 PRInt32 inValue, PRInt32 inMaxValue,
                                  nsIFrame* aFrame)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  NSProgressBarCell* cell = mProgressBarCell;
+  HIThemeTrackDrawInfo tdi;
 
-  [cell setValue:inValue];
-  [cell setMax:inMaxValue];
-  [cell setIndeterminate:inIsIndeterminate];
-  [cell setHorizontal:inIsHorizontal];
-  [cell setControlTint:(FrameIsInActiveWindow(aFrame) ? [NSColor currentControlTint]
-                                                      : NSClearControlTint)];
+  PRInt32 stepsPerSecond = inIsIndeterminate ? 60 : 30;
+  PRInt32 milliSecondsPerStep = 1000 / stepsPerSecond;
 
-  DrawCellWithSnapping(cell, cgContext, inBoxRect,
-                       progressSettings[inIsIndeterminate],
-                       VerticalAlignFactor(aFrame), mCellDrawView,
-                       IsFrameRTL(aFrame));
+  tdi.version = 0;
+  tdi.kind = inIsIndeterminate ? kThemeMediumIndeterminateBar: kThemeMediumProgressBar;
+  tdi.bounds = inBoxRect;
+  tdi.min = 0;
+  tdi.max = inMaxValue;
+  tdi.value = inValue;
+  tdi.attributes = inIsHorizontal ? kThemeTrackHorizontal : 0;
+  tdi.enableState = FrameIsInActiveWindow(aFrame) ? kThemeTrackActive : kThemeTrackInactive;
+  tdi.trackInfo.progress.phase = PR_IntervalToMilliseconds(PR_IntervalNow()) /
+                                 milliSecondsPerStep % 16;
+
+  RenderTransformedHIThemeControl(cgContext, inBoxRect, RenderProgress, &tdi,
+                                  IsFrameRTL(aFrame));
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -1891,13 +1759,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
       if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
         NS_WARNING("Unable to animate progressbar!");
       }
-      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame, eventState),
+      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame),
                    PR_TRUE, GetProgressValue(aFrame),
                    GetProgressMaxValue(aFrame), aFrame);
       break;
 
     case NS_THEME_PROGRESSBAR_VERTICAL:
-      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame, eventState),
+      DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame),
                    PR_FALSE, GetProgressValue(aFrame),
                    GetProgressMaxValue(aFrame), aFrame);
       break;
@@ -2658,40 +2526,4 @@ nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFrame, PRUint8 aWidgetType)
   default:
     return eUnknownTransparency;
   }
-}
-
-double
-nsNativeThemeCocoa::GetProgressValue(nsIFrame* aFrame)
-{
-  // When we are using the HTML progress element,
-  // we can get the value from the IDL property.
-  if (aFrame) {
-    nsCOMPtr<nsIDOMHTMLProgressElement> progress =
-      do_QueryInterface(aFrame->GetContent());
-    if (progress) {
-      double value;
-      progress->GetValue(&value);
-      return value;
-    }
-  }
-
-  return (double)CheckIntAttr(aFrame, nsWidgetAtoms::value, 0);
-}
-
-double
-nsNativeThemeCocoa::GetProgressMaxValue(nsIFrame* aFrame)
-{
-  // When we are using the HTML progress element,
-  // we can get the max from the IDL property.
-  if (aFrame) {
-    nsCOMPtr<nsIDOMHTMLProgressElement> progress =
-      do_QueryInterface(aFrame->GetContent());
-    if (progress) {
-      double max;
-      progress->GetMax(&max);
-      return max;
-    }
-  }
-
-  return (double)PR_MAX(CheckIntAttr(aFrame, nsWidgetAtoms::max, 100), 1);
 }

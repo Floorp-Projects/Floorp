@@ -1,2 +1,1 @@
 skip-if(!cocoaWidget) != 507947.html about:blank
-== progressbar-fallback-default-style.html progressbar-fallback-default-style-ref.html
