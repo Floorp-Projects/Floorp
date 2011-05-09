@@ -166,6 +166,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIOfflineCacheUpdate.h"
 #include "nsCPrefetchService.h"
 #include "nsIChromeRegistry.h"
+#include "nsEventDispatcher.h"
 #include "nsIMIMEHeaderParam.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMDragEvent.h"
@@ -3649,12 +3650,6 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
     return PR_FALSE;
   }
 
-  NS_ASSERTION((aNode->IsNodeOfType(nsINode::eCONTENT) &&
-                static_cast<nsIContent*>(aNode)->
-                  IsInNativeAnonymousSubtree()) ||
-               sScriptBlockerCount == sRemovableScriptBlockerCount,
-               "Want to fire mutation events, but it's not safe");
-
   // global object will be null for documents that don't have windows.
   nsPIDOMWindow* window = doc->GetInnerWindow();
   // This relies on nsEventListenerManager::AddEventListener, which sets
@@ -3711,6 +3706,50 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   }
 
   return PR_FALSE;
+}
+
+/* static */
+PRBool
+nsContentUtils::HasMutationListeners(nsIDocument* aDocument,
+                                     PRUint32 aType)
+{
+  nsPIDOMWindow* window = aDocument ?
+    aDocument->GetInnerWindow() : nsnull;
+
+  // This relies on nsEventListenerManager::AddEventListener, which sets
+  // all mutation bits when there is a listener for DOMSubtreeModified event.
+  return !window || window->HasMutationListeners(aType);
+}
+
+void
+nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
+                                     nsIDocument* aOwnerDoc)
+{
+  NS_PRECONDITION(aChild, "Missing child");
+  NS_PRECONDITION(aChild->GetNodeParent() == aParent, "Wrong parent");
+  NS_PRECONDITION(aChild->GetOwnerDoc() == aOwnerDoc, "Wrong owner-doc");
+
+  NS_ASSERTION(aChild->IsNodeOfType(nsINode::eCONTENT) &&
+               static_cast<nsIContent*>(aChild)->
+                 IsInNativeAnonymousSubtree() ||
+               IsSafeToRunScript(),
+               "Want to fire DOMNodeRemoved event, but it's not safe");
+
+  // Having an explicit check here since it's an easy mistake to fall into,
+  // and there might be existing code with problems. We'd rather be safe
+  // than fire DOMNodeRemoved in all corner cases.
+  if (!IsSafeToRunScript()) {
+    return;
+  }
+
+  if (HasMutationListeners(aChild,
+        NS_EVENT_BITS_MUTATION_NODEREMOVED, aParent)) {
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
+    mutation.mRelatedNode = do_QueryInterface(aParent);
+
+    mozAutoSubtreeModified subtree(aOwnerDoc, aParent);
+    nsEventDispatcher::Dispatch(aChild, nsnull, &mutation);
+  }
 }
 
 /* static */
@@ -4084,6 +4123,37 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
                                    const nsAString& aValue,
                                    PRBool aTryReuse)
 {
+  // Fire DOMNodeRemoved mutation events before we do anything else.
+  nsCOMPtr<nsIContent> owningContent;
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(nsnull, nsnull);
+
+  // Scope firing mutation events so that we don't carry any state that
+  // might be stale
+  {
+    // We're relying on mozAutoSubtreeModified to keep a strong reference if
+    // needed.
+    nsIDocument* doc = aContent->GetOwnerDoc();
+
+    // Optimize the common case of there being no observers
+    if (HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+      subtree.UpdateTarget(doc, nsnull);
+      owningContent = aContent;
+      nsCOMPtr<nsINode> child;
+      bool skipFirst = aTryReuse;
+      for (child = aContent->GetFirstChild();
+           child && child->GetNodeParent() == aContent;
+           child = child->GetNextSibling()) {
+        if (skipFirst && child->IsNodeOfType(nsINode::eTEXT)) {
+          skipFirst = false;
+          continue;
+        }
+        nsContentUtils::MaybeFireNodeRemoved(child, aContent, doc);
+      }
+    }
+  }
+
   // Might as well stick a batch around this since we're performing several
   // mutations.
   mozAutoDocUpdate updateBatch(aContent->GetCurrentDoc(),
@@ -4107,7 +4177,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
         aContent->RemoveChildAt(removeIndex, PR_TRUE);
       }
     }
-    
+
     if (removeIndex == 1) {
       return NS_OK;
     }

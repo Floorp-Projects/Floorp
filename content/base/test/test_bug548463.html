@@ -48,7 +48,7 @@ function testAdoptFromDOMNodeRemoved(nodeToAppend, nodeRemoved, nodeToAdopt)
     thrown = true;
   }
 
-  ok(thrown, "adoptNode while appending should throw");
+  ok(!thrown, "adoptNode while appending should not throw");
 }
 
 var frag = document.createDocumentFragment();

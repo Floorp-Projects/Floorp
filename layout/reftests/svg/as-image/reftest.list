@@ -52,8 +52,7 @@ fails-if(d2d) == img-simple-7.html  img-simple-7-ref.html # bug 633072
 
 # Test with mix of <html:img> and <svg:image> referring to the same images,
 # with a variety of preserveAspectRatio values in play.
-# NOTE: The reference cases in this test triggers 72 assertions (bug 563481)
-fails-if(Android) asserts(72) == img-and-image-1.html img-and-image-1-ref.svg
+fails-if(Android) == img-and-image-1.html img-and-image-1-ref.svg
 
 # More complex <img> tests
 == img-content-outside-viewBox-1.html img-content-outside-viewBox-1-ref.html
