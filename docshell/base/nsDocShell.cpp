@@ -9651,6 +9651,11 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         NS_ENSURE_SUCCESS(newSHEntry->SetDocIdentifier(ourDocIdent),
                           NS_ERROR_FAILURE);
 
+        // Set the new SHEntry's title (bug 655273).
+        nsString title;
+        mOSHE->GetTitle(getter_Copies(title));
+        newSHEntry->SetTitle(title);
+
         // AddToSessionHistory may not modify mOSHE.  In case it doesn't,
         // we'll just set mOSHE here.
         mOSHE = newSHEntry;
