@@ -52,7 +52,6 @@
 #include "nsICSSLoaderObserver.h"
 #include "nsCOMArray.h"
 
-class nsICSSRule;
 class nsXMLNameSpaceMap;
 class nsCSSRuleProcessor;
 class nsMediaList;
@@ -66,6 +65,7 @@ template<class E, class A> class nsTArray;
 
 namespace mozilla {
 namespace css {
+class Rule;
 class GroupRule;
 class ImportRule;
 }
@@ -100,7 +100,7 @@ private:
   nsCOMPtr<nsIURI>       mOriginalSheetURI;  // for GetHref.  Can be null.
   nsCOMPtr<nsIURI>       mBaseURI; // for resolving relative URIs
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  nsCOMArray<nsICSSRule> mOrderedRules;
+  nsCOMArray<mozilla::css::Rule> mOrderedRules;
   nsAutoPtr<nsXMLNameSpaceMap> mNameSpaceMap;
   // Linked list of child sheets.  This is al fundamentally broken, because
   // each of the child sheets has a unique parent... We can only hope (and
@@ -165,16 +165,16 @@ public:
   void InsertStyleSheetAt(nsCSSStyleSheet* aSheet, PRInt32 aIndex);
 
   // XXX do these belong here or are they generic?
-  void PrependStyleRule(nsICSSRule* aRule);
-  void AppendStyleRule(nsICSSRule* aRule);
-  void ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew);
+  void PrependStyleRule(mozilla::css::Rule* aRule);
+  void AppendStyleRule(mozilla::css::Rule* aRule);
+  void ReplaceStyleRule(mozilla::css::Rule* aOld, mozilla::css::Rule* aNew);
 
   PRInt32 StyleRuleCount() const;
-  nsresult GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const;
+  nsresult GetStyleRuleAt(PRInt32 aIndex, mozilla::css::Rule*& aRule) const;
 
   nsresult DeleteRuleFromGroup(mozilla::css::GroupRule* aGroup, PRUint32 aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule, mozilla::css::GroupRule* aGroup, PRUint32 aIndex, PRUint32* _retval);
-  nsresult ReplaceRuleInGroup(mozilla::css::GroupRule* aGroup, nsICSSRule* aOld, nsICSSRule* aNew);
+  nsresult ReplaceRuleInGroup(mozilla::css::GroupRule* aGroup, mozilla::css::Rule* aOld, mozilla::css::Rule* aNew);
 
   PRInt32 StyleSheetCount() const;
 
@@ -260,7 +260,7 @@ public:
 
   // Function used as a callback to rebuild our inner's child sheet
   // list after we clone a unique inner for ourselves.
-  static PRBool RebuildChildList(nsICSSRule* aRule, void* aBuilder);
+  static PRBool RebuildChildList(mozilla::css::Rule* aRule, void* aBuilder);
 
 private:
   nsCSSStyleSheet(const nsCSSStyleSheet& aCopy,
@@ -287,7 +287,7 @@ protected:
   nsresult SubjectSubsumesInnerPrincipal() const;
 
   // Add the namespace mapping from this @namespace rule to our namespace map
-  nsresult RegisterNamespaceRule(nsICSSRule* aRule);
+  nsresult RegisterNamespaceRule(mozilla::css::Rule* aRule);
 
 protected:
   nsString              mTitle;

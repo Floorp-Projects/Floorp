@@ -169,20 +169,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 #if defined(OS_WIN)
     InitPopupMenuHook();
 #endif // OS_WIN
-#ifdef MOZ_X11
-    // Maemo flash can render plugin with any provided rectangle and not require this quirk.
-#ifndef MOZ_PLATFORM_MAEMO
-    const char *description = NULL;
-    mPluginIface->getvalue(GetNPP(), NPPVpluginDescriptionString,
-                           &description);
-    if (description) {
-        NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
-        if (StringBeginsWith(nsDependentCString(description), flash10Head)) {
-          PluginModuleChild::current()->AddQuirk(PluginModuleChild::QUIRK_FLASH_EXPOSE_COORD_TRANSLATION);
-        }
-    }
-#endif
-#endif
 }
 
 PluginInstanceChild::~PluginInstanceChild()

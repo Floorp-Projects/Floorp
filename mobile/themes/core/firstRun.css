@@ -87,6 +87,16 @@ img {
   clear: both;
 }
 
+#content {
+  opacity: 1;
+  -moz-transition: opacity 1s linear;
+}
+
+#content[hidden] {
+  display: block;
+  opacity: 0;
+}
+
 #head p {
   font-size: xx-large;
 }

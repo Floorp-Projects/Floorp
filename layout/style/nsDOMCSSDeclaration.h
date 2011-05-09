@@ -48,12 +48,12 @@ class nsCSSParser;
 class nsIURI;
 class nsIPrincipal;
 class nsIDocument;
-class nsICSSRule;
 
 namespace mozilla {
 namespace css {
 class Declaration;
 class Loader;
+class Rule;
 }
 }
 
@@ -120,8 +120,8 @@ protected:
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) = 0;
 
   // An implementation for GetCSSParsingEnvironment for callers wrapping
-  // an nsICSSRule.
-  static void GetCSSParsingEnvironmentForRule(nsICSSRule* aRule,
+  // an css::Rule.
+  static void GetCSSParsingEnvironmentForRule(mozilla::css::Rule* aRule,
                                               CSSParsingEnvironment& aCSSParseEnv);
 
   nsresult ParsePropertyValue(const nsCSSProperty aPropID,

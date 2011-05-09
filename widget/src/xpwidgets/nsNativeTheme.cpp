@@ -51,6 +51,7 @@
 #include "nsThemeConstants.h"
 #include "nsIComponentManager.h"
 #include "nsPIDOMWindow.h"
+#include "nsProgressFrame.h"
 
 nsNativeTheme::nsNativeTheme()
 : mAnimatedContentTimeout(PR_UINT32_MAX)
@@ -251,6 +252,19 @@ nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext, nsIFrame* aFrame,
     }
   }
 
+  /**
+   * Progress bar appearance should be the same for the bar and the container
+   * frame. nsProgressFrame owns the logic and will tell us what we should do.
+   */
+  if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
+      aWidgetType == NS_THEME_PROGRESSBAR) {
+    nsProgressFrame* progressFrame = do_QueryFrame(aWidgetType == NS_THEME_PROGRESSBAR_CHUNK
+                                       ? aFrame->GetParent() : aFrame);
+    if (progressFrame) {
+      return !progressFrame->ShouldUseNativeStyle();
+    }
+  }
+
   return (aWidgetType == NS_THEME_BUTTON ||
           aWidgetType == NS_THEME_TEXTFIELD ||
           aWidgetType == NS_THEME_TEXTFIELD_MULTILINE ||
@@ -443,10 +457,15 @@ nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, PRInt32 aOffset)
 
 // progressbar:
 PRBool
-nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame)
+nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
+                                       nsEventStates aEventStates)
 {
   if (!aFrame)
     return PR_FALSE;
+
+  if (aFrame->GetContent()->IsHTML(nsWidgetAtoms::progress)) {
+    return aEventStates.HasState(NS_EVENT_STATE_INDETERMINATE);
+  }
 
   return aFrame->GetContent()->AttrValueIs(kNameSpaceID_None, nsWidgetAtoms::mode,
                                            NS_LITERAL_STRING("undetermined"),

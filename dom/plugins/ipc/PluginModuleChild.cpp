@@ -185,22 +185,37 @@ PluginModuleChild::Init(const std::string& aPluginFilename,
         return false;
 
     mPluginFilename = aPluginFilename.c_str();
-    nsCOMPtr<nsILocalFile> pluginFile;
+    nsCOMPtr<nsILocalFile> localFile;
     NS_NewLocalFile(NS_ConvertUTF8toUTF16(mPluginFilename),
                     PR_TRUE,
-                    getter_AddRefs(pluginFile));
+                    getter_AddRefs(localFile));
 
     PRBool exists;
-    pluginFile->Exists(&exists);
+    localFile->Exists(&exists);
     NS_ASSERTION(exists, "plugin file ain't there");
 
-    nsCOMPtr<nsIFile> pluginIfile;
-    pluginIfile = do_QueryInterface(pluginFile);
+    nsPluginFile pluginFile(localFile);
 
-    nsPluginFile lib(pluginIfile);
+    nsresult rv;
+    // Maemo flash can render with any provided rectangle and so does not
+    // require this quirk.
+#if defined(MOZ_X11) && !defined(MOZ_PLATFORM_MAEMO)
+    nsPluginInfo info = nsPluginInfo();
+    rv = pluginFile.GetPluginInfo(info, &mLibrary);
+    if (NS_FAILED(rv))
+        return false;
 
-    nsresult rv = lib.LoadPlugin(&mLibrary);
-    NS_ASSERTION(NS_OK == rv, "trouble with mPluginFile");
+    NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
+    if (StringBeginsWith(nsDependentCString(info.fDescription), flash10Head)) {
+        AddQuirk(QUIRK_FLASH_EXPOSE_COORD_TRANSLATION);
+    }
+
+    if (!mLibrary)
+#endif
+    {
+        rv = pluginFile.LoadPlugin(&mLibrary);
+        NS_ASSERTION(NS_OK == rv, "trouble with mPluginFile");
+    }
     NS_ASSERTION(mLibrary, "couldn't open shared object");
 
     if (!Open(aChannel, aParentProcessHandle, aIOLoop))

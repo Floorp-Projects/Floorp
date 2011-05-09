@@ -187,7 +187,7 @@ nsIsIndexFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 nsresult
-nsIsIndexFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
+nsIsIndexFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   // Get the node info manager (used to create hr's and input's)
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();

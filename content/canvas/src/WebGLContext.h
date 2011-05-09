@@ -1309,7 +1309,8 @@ public:
 
     void DetachShaders() {
         for (PRUint32 i = 0; i < mAttachedShaders.Length(); ++i) {
-            mAttachedShaders[i]->DecrementAttachCount();
+            if (mAttachedShaders[i])
+                mAttachedShaders[i]->DecrementAttachCount();
         }
         mAttachedShaders.Clear();
     }
@@ -1320,7 +1321,7 @@ public:
     PRBool HasDeletePending() { return mDeletePending; }
 
     WebGLuint GLName() { return mName; }
-    const nsTArray<WebGLShader*>& AttachedShaders() const { return mAttachedShaders; }
+    const nsTArray<nsRefPtr<WebGLShader> >& AttachedShaders() const { return mAttachedShaders; }
     PRBool LinkStatus() { return mLinkStatus; }
     PRUint32 Generation() const { return mGeneration.value(); }
     void SetLinkStatus(PRBool val) { mLinkStatus = val; }
@@ -1349,7 +1350,7 @@ public:
 
     PRBool HasAttachedShaderOfType(GLenum shaderType) {
         for (PRUint32 i = 0; i < mAttachedShaders.Length(); ++i) {
-            if (mAttachedShaders[i]->ShaderType() == shaderType) {
+            if (mAttachedShaders[i] && mAttachedShaders[i]->ShaderType() == shaderType) {
                 return PR_TRUE;
             }
         }
@@ -1392,7 +1393,7 @@ protected:
     PRPackedBool mDeletePending;
     PRPackedBool mLinkStatus;
     // attached shaders of the program object
-    nsTArray<WebGLShader*> mAttachedShaders;
+    nsTArray<nsRefPtr<WebGLShader> > mAttachedShaders;
     CheckedUint32 mGeneration;
 
     // post-link data

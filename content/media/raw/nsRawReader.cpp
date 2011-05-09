@@ -104,7 +104,6 @@ nsresult nsRawReader::ReadMetadata(nsVideoInfo* aInfo)
     return NS_ERROR_FAILURE; // Invalid data
   mInfo.mPixelAspectRatio = static_cast<float>(mMetadata.aspectNumerator) / 
                             mMetadata.aspectDenominator;
-  mInfo.mDataOffset = sizeof(nsRawVideoHeader) + 1;
   mInfo.mHasAudio = PR_FALSE;
 
   mFrameRate = static_cast<float>(mMetadata.framerateNumerator) /
@@ -304,11 +303,6 @@ nsresult nsRawReader::Seek(PRInt64 aTime, PRInt64 aStartTime, PRInt64 aEndTime, 
   }
 
   return NS_OK;
-}
-
-PRInt64 nsRawReader::FindEndTime(PRInt64 aEndTime)
-{
-  return -1;
 }
 
 nsresult nsRawReader::GetBuffered(nsTimeRanges* aBuffered, PRInt64 aStartTime)
