@@ -1055,7 +1055,39 @@ InitErrorClass(JSContext *cx, GlobalObject *global)
     if (!DefineConstructorAndPrototype(cx, global, JSProto_Error, ctor, errorProto))
         return NULL;
 
+    JS_ASSERT(!errorProto->getPrivate());
+
     return errorProto;
+}
+
+static bool
+InitSpecialErrorClass(JSContext *cx, GlobalObject *global, intN type, JSObject &errorProto)
+{
+    JSProtoKey key = GetExceptionProtoKey(type);
+    JSAtom *atom = cx->runtime->atomState.classAtoms[key];
+    JSObject *ctor;
+    JSObject *proto =
+        DefineConstructorAndPrototype(cx, global, key, atom, &errorProto, &js_ErrorClass,
+                                      Exception, 1, NULL, NULL, NULL, NULL, &ctor);
+    if (!proto)
+        return false;
+    JS_ASSERT(proto->getPrivate() == NULL);
+    ctor->setReservedSlot(JSSLOT_ERROR_EXNTYPE, Int32Value(int32(type)));
+
+    /* Add properties to the prototype. */
+    Value empty = StringValue(cx->runtime->emptyString);
+    jsid nameId = ATOM_TO_JSID(cx->runtime->atomState.nameAtom);
+    jsid messageId = ATOM_TO_JSID(cx->runtime->atomState.messageAtom);
+    jsid fileNameId = ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom);
+    jsid lineNumberId = ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom);
+    return DefineNativeProperty(cx, proto, nameId, StringValue(atom),
+                                PropertyStub, StrictPropertyStub, 0, 0, 0) &&
+           DefineNativeProperty(cx, proto, messageId, empty,
+                                PropertyStub, StrictPropertyStub, 0, 0, 0) &&
+           DefineNativeProperty(cx, proto, fileNameId, empty,
+                                PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0) &&
+           DefineNativeProperty(cx, proto, lineNumberId, Int32Value(0),
+                                PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0);
 }
 
 JSObject *
@@ -1070,37 +1102,10 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     if (!errorProto)
         return NULL;
 
-    /* Define all error constructors. */
-    Value empty = StringValue(cx->runtime->emptyString);
-    jsid nameId = ATOM_TO_JSID(cx->runtime->atomState.nameAtom);
-    jsid messageId = ATOM_TO_JSID(cx->runtime->atomState.messageAtom);
-    jsid fileNameId = ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom);
-    jsid lineNumberId = ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom);
+    /* Define all remaining *Error constructors. */
     for (intN i = JSEXN_ERR + 1; i < JSEXN_LIMIT; i++) {
-        JSProtoKey protoKey = GetExceptionProtoKey(i);
-        JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];
-        JSObject *ctor;
-        JSObject *proto =
-            DefineConstructorAndPrototype(cx, global, protoKey, atom, errorProto, &js_ErrorClass,
-                                          Exception, 1, NULL, NULL, NULL, NULL, &ctor);
-        if (!proto)
+        if (!InitSpecialErrorClass(cx, global, i, *errorProto))
             return NULL;
-        JS_ASSERT(proto->getPrivate() == NULL);
-
-        ctor->setReservedSlot(JSSLOT_ERROR_EXNTYPE, Int32Value(int32(i)));
-
-        /* Add properties to the prototype. */
-        JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
-        if (!DefineNativeProperty(cx, proto, nameId, StringValue(atom),
-                                  PropertyStub, StrictPropertyStub, 0, 0, 0) ||
-            !DefineNativeProperty(cx, proto, messageId, empty,
-                                  PropertyStub, StrictPropertyStub, 0, 0, 0) ||
-            !DefineNativeProperty(cx, proto, fileNameId, empty,
-                                  PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0) ||
-            !DefineNativeProperty(cx, proto, lineNumberId, Valueify(JSVAL_ZERO),
-                                  PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0)) {
-            return NULL;
-        }
     }
 
     return errorProto;
