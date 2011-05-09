@@ -60,16 +60,25 @@
 /* static */ PRBool
 nsGNOMERegistry::HandlerExists(const char *aProtocolScheme)
 {
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
-  if (!gconf)
-    return PR_FALSE;
+  if (giovfs) {
+    nsCOMPtr<nsIGIOMimeApp> app;
+    if (NS_FAILED(giovfs->GetAppForURIScheme(nsDependentCString(aProtocolScheme),
+                                             getter_AddRefs(app))))
+      return PR_FALSE;
+    else
+      return PR_TRUE;
+  } else if (gconf) {
+    PRBool isEnabled;
+    nsCAutoString handler;
+    if (NS_FAILED(gconf->GetAppForProtocol(nsDependentCString(aProtocolScheme), &isEnabled, handler)))
+      return PR_FALSE;
 
-  PRBool isEnabled;
-  nsCAutoString handler;
-  if (NS_FAILED(gconf->GetAppForProtocol(nsDependentCString(aProtocolScheme), &isEnabled, handler)))
-    return PR_FALSE;
+    return isEnabled;
+  }
 
-  return isEnabled;
+  return PR_FALSE;
 }
 
 // XXX Check HandlerExists() before calling LoadURL.
@@ -99,27 +108,36 @@ nsGNOMERegistry::GetAppDescForScheme(const nsACString& aScheme,
                                      nsAString& aDesc)
 {
   nsCOMPtr<nsIGConfService> gconf = do_GetService(NS_GCONFSERVICE_CONTRACTID);
-  if (!gconf)
+  nsCOMPtr<nsIGIOService> giovfs = do_GetService(NS_GIOSERVICE_CONTRACTID);
+  if (!gconf && !giovfs)
     return;
 
-  PRBool isEnabled;
-  nsCAutoString app;
-  if (NS_FAILED(gconf->GetAppForProtocol(aScheme, &isEnabled, app)))
-    return;
+  nsCAutoString name;
+  if (giovfs) {
+    nsCOMPtr<nsIGIOMimeApp> app;
+    if (NS_FAILED(giovfs->GetAppForURIScheme(aScheme, getter_AddRefs(app))))
+      return;
 
-  if (!app.IsEmpty()) {
-    // Try to only provide the executable name, as it is much simpler than with the path and arguments
-    PRInt32 firstSpace = app.FindChar(' ');
-    if (firstSpace != kNotFound) {
-      app.Truncate(firstSpace);
-      PRInt32 lastSlash = app.RFindChar('/');
-      if (lastSlash != kNotFound) {
-        app.Cut(0, lastSlash + 1);
+    app->GetName(name);
+  } else {
+    PRBool isEnabled;
+    if (NS_FAILED(gconf->GetAppForProtocol(aScheme, &isEnabled, name)))
+      return;
+
+    if (!name.IsEmpty()) {
+      // Try to only provide the executable name, as it is much simpler than with the path and arguments
+      PRInt32 firstSpace = name.FindChar(' ');
+      if (firstSpace != kNotFound) {
+        name.Truncate(firstSpace);
+        PRInt32 lastSlash = name.RFindChar('/');
+        if (lastSlash != kNotFound) {
+          name.Cut(0, lastSlash + 1);
+        }
       }
     }
-
-    CopyUTF8toUTF16(app, aDesc);
   }
+
+  CopyUTF8toUTF16(name, aDesc);
 }
 
 

@@ -11,7 +11,7 @@ new file mode 100644
 +
 +extern "C" {
 +
-+// x64 compiler does'nt support MMX and inline assembler.  Use SSE2 intrin.
++// x64 compiler doesn't support MMX and inline assembler.  Use SSE2 intrinsics.
 +
 +#define kCoefficientsRgbU (reinterpret_cast<uint8*>(kCoefficientsRgbY) + 2048)
 +#define kCoefficientsRgbV (reinterpret_cast<uint8*>(kCoefficientsRgbY) + 4096)

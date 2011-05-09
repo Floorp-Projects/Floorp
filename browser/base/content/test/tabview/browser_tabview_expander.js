@@ -24,7 +24,7 @@ function onTabViewWindowLoaded(win) {
   ok("length" in expander && expander.length == 1, "The group has an expander.");
 
   // procreate!
-  contentWindow.GroupItems.setActiveGroupItem(group);
+  contentWindow.UI.setActive(group);
   for (var i=0; i<7; i++) {
     win.gBrowser.loadOneTab('about:blank#' + i, {inBackground: true});
   }
@@ -173,7 +173,7 @@ function onTabViewWindowLoaded(win) {
 
       // In preparation for Stage 4, find that original tab and make it the active tab.
       let originalTabItem = originalTab._tabViewTabItem;
-      contentWindow.UI.setActiveTab(originalTabItem);
+      contentWindow.UI.setActive(originalTabItem);
 
       // now, try opening it up again.
       group.addSubscriber("test stage 4", "expanded", stage4expanded);

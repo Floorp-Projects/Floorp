@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: derive.c,v 1.12 2008/06/06 01:16:31 wtc%google.com Exp $ */
+/* $Id: derive.c,v 1.12.40.1 2011/03/24 01:39:01 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "ssl.h" 	/* prereq to sslimpl.h */
 #include "certt.h"	/* prereq to sslimpl.h */
@@ -604,6 +604,9 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     PRBool	      testrsa_export = PR_FALSE;
     PRBool	      testecdh = PR_FALSE;
     PRBool	      testecdhe = PR_FALSE;
+#ifdef NSS_ENABLE_ECC
+    SECKEYECParams ecParams = { siBuffer, NULL, 0 };
+#endif
 
     if (!cert || !srvPrivkey || !ciphersuites || !pcanbypass) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -703,10 +706,15 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 	    /* now wrap it */
 	    enc_pms.len  = SECKEY_PublicKeyStrength(srvPubkey);
 	    enc_pms.data = (unsigned char*)PORT_Alloc(enc_pms.len);
+	    if (enc_pms.data == NULL) {
+	        PORT_SetError(PR_OUT_OF_MEMORY_ERROR);
+	        break;
+	    }
 	    irv = PK11_PubWrapSymKey(CKM_RSA_PKCS, srvPubkey, pms, &enc_pms);
 	    if (irv != SECSuccess) 
 		break;
 	    PK11_FreeSymKey(pms);
+	    pms = NULL;
 	    /* now do the server side--check the triple bypass first */
 	    rv = PK11_PrivDecryptPKCS1(srvPrivkey, rsaPmsBuf, &outLen,
 				       sizeof rsaPmsBuf,
@@ -727,6 +735,16 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 		goto done;
 	    break;
 	}
+
+	/* Check for NULL to avoid double free. 
+	 * SECItem_FreeItem sets data NULL in secitem.c#265 
+	 */
+	if (enc_pms.data != NULL) {
+	    SECITEM_FreeItem(&enc_pms, PR_FALSE);
+        }
+	if (pms) {
+	    PK11_FreeSymKey(pms);
+        }
 #ifdef NSS_ENABLE_ECC
 	for (; (privKeytype == ecKey && ( testecdh || testecdhe)) ||
 	       (privKeytype == rsaKey && testecdhe); ) {
@@ -735,8 +753,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 	    SECKEYPrivateKey *keapriv;
 	    SECKEYPublicKey  *cpub = NULL; /* client's ephemeral ECDH keys */
 	    SECKEYPrivateKey *cpriv = NULL;
-	    SECKEYECParams    ecParams = { siBuffer, NULL, 0 },
-			      *pecParams;
+	    SECKEYECParams   *pecParams = NULL;
 
 	    if (privKeytype == ecKey && testecdhe) {
 		/* TLS_ECDHE_ECDSA */
@@ -821,12 +838,15 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
 	    if (testecdhe) {
 		SECKEY_DestroyPrivateKey(keapriv);
 		SECKEY_DestroyPublicKey(keapub);
-		if (privKeytype == rsaKey)
-		    PORT_Free(ecParams.data);
 	    }
 	    if (rv == SECSuccess && *pcanbypass == PR_FALSE)
 		goto done;
 	    break;
+	}
+	/* Check for NULL to avoid double free. */
+	if (ecParams.data != NULL) {
+	    PORT_Free(ecParams.data);
+	    ecParams.data = NULL;
 	}
 #endif /* NSS_ENABLE_ECC */
 	if (pms)
@@ -840,7 +860,18 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
     if (pms)
 	PK11_FreeSymKey(pms);
 
-    SECITEM_FreeItem(&enc_pms, PR_FALSE);
+    /* Check for NULL to avoid double free. 
+     * SECItem_FreeItem sets data NULL in secitem.c#265 
+     */
+    if (enc_pms.data != NULL) {
+    	SECITEM_FreeItem(&enc_pms, PR_FALSE);
+    }
+#ifdef NSS_ENABLE_ECC
+    if (ecParams.data != NULL) {
+        PORT_Free(ecParams.data);
+        ecParams.data = NULL;
+    }
+#endif /* NSS_ENABLE_ECC */
 
     if (srvPubkey) {
     	SECKEY_DestroyPublicKey(srvPubkey);
