@@ -9,11 +9,11 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 
-// Reference to the Workspace chrome window object.
-let gWorkspaceWindow;
+// Reference to the Scratchpad chrome window object.
+let gScratchpadWindow;
 
-// Reference to the Workspace object.
-let gWorkspace;
+// Reference to the Scratchpad object.
+let gScratchpad;
 
 // Reference to the temporary nsIFile we will work with.
 let gFile;
@@ -29,18 +29,18 @@ function test()
   gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
-    gWorkspaceWindow = Workspace.openWorkspace();
-    gWorkspaceWindow.addEventListener("load", runTests, false);
+    gScratchpadWindow = Scratchpad.openScratchpad();
+    gScratchpadWindow.addEventListener("load", runTests, false);
   }, true);
 
-  content.location = "data:text/html,<p>test file open and save in Workspace";
+  content.location = "data:text/html,<p>test file open and save in Scratchpad";
 }
 
 function runTests()
 {
-  gWorkspaceWindow.removeEventListener("load", arguments.callee, false);
+  gScratchpadWindow.removeEventListener("load", arguments.callee, false);
 
-  gWorkspace = gWorkspaceWindow.Workspace;
+  gScratchpad = gScratchpadWindow.Scratchpad;
 
   // Create a temporary file.
   gFile = FileUtils.getFile("TmpD", ["fileForBug636725.tmp"]);
@@ -65,52 +65,52 @@ function tempFileSaved(aStatus)
   ok(Components.isSuccessCode(aStatus),
      "the temporary file was saved successfully");
 
-  // Import the file into Workspace.
-  gWorkspace.importFromFile(gFile.QueryInterface(Ci.nsILocalFile),  true,
+  // Import the file into Scratchpad.
+  gScratchpad.importFromFile(gFile.QueryInterface(Ci.nsILocalFile),  true,
                             fileImported);
 }
 
 function fileImported(aStatus, aFileContent)
 {
   ok(Components.isSuccessCode(aStatus),
-     "the temporary file was imported successfully with Workspace");
+     "the temporary file was imported successfully with Scratchpad");
 
   is(aFileContent, gFileContent,
      "received data is correct");
 
-  is(gWorkspace.textbox.value, gFileContent,
+  is(gScratchpad.textbox.value, gFileContent,
      "the textbox.value is correct");
 
   // Save the file after changes.
   gFileContent += "// omg, saved!";
-  gWorkspace.textbox.value = gFileContent;
+  gScratchpad.textbox.value = gFileContent;
 
-  gWorkspace.exportToFile(gFile.QueryInterface(Ci.nsILocalFile), true, true,
+  gScratchpad.exportToFile(gFile.QueryInterface(Ci.nsILocalFile), true, true,
                           fileExported);
 }
 
 function fileExported(aStatus)
 {
   ok(Components.isSuccessCode(aStatus),
-     "the temporary file was exported successfully with Workspace");
+     "the temporary file was exported successfully with Scratchpad");
 
   let oldContent = gFileContent;
 
   // Attempt another file save, with confirmation which returns false.
   gFileContent += "// omg, saved twice!";
-  gWorkspace.textbox.value = gFileContent;
+  gScratchpad.textbox.value = gFileContent;
 
-  let oldConfirm = gWorkspaceWindow.confirm;
+  let oldConfirm = gScratchpadWindow.confirm;
   let askedConfirmation = false;
-  gWorkspaceWindow.confirm = function() {
+  gScratchpadWindow.confirm = function() {
     askedConfirmation = true;
     return false;
   };
 
-  gWorkspace.exportToFile(gFile.QueryInterface(Ci.nsILocalFile), false, true,
+  gScratchpad.exportToFile(gFile.QueryInterface(Ci.nsILocalFile), false, true,
                           fileExported2);
 
-  gWorkspaceWindow.confirm = oldConfirm;
+  gScratchpadWindow.confirm = oldConfirm;
 
   ok(askedConfirmation, "exportToFile() asked for overwrite confirmation");
 
@@ -141,9 +141,9 @@ function fileRead(aInputStream, aStatus)
   // Done!
   gFile.remove(false);
   gFile = null;
-  gWorkspace = null;
-  gWorkspaceWindow.close();
-  gWorkspaceWindow = null;
+  gScratchpad = null;
+  gScratchpadWindow.close();
+  gScratchpadWindow = null;
   gBrowser.removeCurrentTab();
   finish();
 }

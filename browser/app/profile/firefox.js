@@ -992,8 +992,8 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 pref("devtools.errorconsole.enabled", false);
 pref("devtools.inspector.enabled", false);
 
-// Enable the Workspace tool.
-pref("devtools.workspace.enabled", true);
+// Enable the Scratchpad tool.
+pref("devtools.scratchpad.enabled", true);
 
 // Enable tools for Chrome development.
 pref("devtools.chrome.enabled", false);

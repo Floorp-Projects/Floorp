@@ -192,13 +192,13 @@ _BROWSER_FILES = \
                  browser_inspector_treePanel_output.js \
                  browser_inspector_treePanel_input.html \
                  browser_inspector_treePanel_result.html \
-                 browser_workspace_initialization.js \
-                 browser_workspace_contexts.js \
-                 browser_workspace_execute_print.js \
-                 browser_workspace_inspect.js \
-                 browser_workspace_files.js \
-                 browser_workspace_ui.js \
-                 browser_workspace_bug_646070_chrome_context_pref.js \
+                 browser_scratchpad_initialization.js \
+                 browser_scratchpad_contexts.js \
+                 browser_scratchpad_execute_print.js \
+                 browser_scratchpad_inspect.js \
+                 browser_scratchpad_files.js \
+                 browser_scratchpad_ui.js \
+                 browser_scratchpad_bug_646070_chrome_context_pref.js \
                  browser_overflowScroll.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
