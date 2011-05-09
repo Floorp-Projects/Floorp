@@ -408,7 +408,6 @@ FrameState::pushNumber(RegisterID payload, bool asInt32)
     JS_ASSERT(!freeRegs.hasReg(payload));
 
     FrameEntry *fe = rawPush();
-    fe->clear();
 
     if (asInt32) {
         if (!fe->type.synced())
@@ -427,7 +426,6 @@ inline void
 FrameState::pushInt32(RegisterID payload)
 {
     FrameEntry *fe = rawPush();
-    fe->clear();
 
     masm.storeTypeTag(ImmType(JSVAL_TYPE_INT32), addressOf(fe));
     fe->type.setMemory();
@@ -444,8 +442,6 @@ FrameState::pushUntypedPayload(JSValueType type, RegisterID payload)
 
     FrameEntry *fe = rawPush();
 
-    fe->clear();
-
     masm.storeTypeTag(ImmType(type), addressOf(fe));
 
     /* The forceful type sync will assert otherwise. */
@@ -454,8 +450,6 @@ FrameState::pushUntypedPayload(JSValueType type, RegisterID payload)
 #endif
     fe->type.setMemory();
     fe->data.unsync();
-    fe->setNotCopied();
-    fe->setCopyOf(NULL);
     fe->data.setRegister(payload);
     regstate(payload).associate(fe, RematInfo::DATA);
 }
@@ -464,8 +458,6 @@ inline void
 FrameState::pushUntypedValue(const Value &v)
 {
     FrameEntry *fe = rawPush();
-
-    fe->clear();
 
     masm.storeValue(v, addressOf(fe));
 
@@ -476,8 +468,6 @@ FrameState::pushUntypedValue(const Value &v)
     fe->type.setMemory();
     fe->data.unsync();
     fe->data.setMemory();
-    fe->setNotCopied();
-    fe->setCopyOf(NULL);
 }
 
 inline JSC::MacroAssembler::RegisterID
@@ -919,8 +909,7 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, bool unsync)
 inline void
 FrameState::learnType(FrameEntry *fe, JSValueType type, RegisterID data)
 {
-    /* The copied bit may be set on an entry, but there should not be any actual copies. */
-    JS_ASSERT_IF(fe->isCopied(), !isEntryCopied(fe));
+    JS_ASSERT(!fe->isCopied());
 
     forgetAllRegs(fe);
     fe->clear();
@@ -1292,10 +1281,7 @@ inline void
 FrameState::eviscerate(FrameEntry *fe)
 {
     forgetAllRegs(fe);
-    fe->type.invalidate();
-    fe->data.invalidate();
-    fe->setNotCopied();
-    fe->setCopyOf(NULL);
+    fe->resetUnsynced();
 }
 
 inline StateRemat

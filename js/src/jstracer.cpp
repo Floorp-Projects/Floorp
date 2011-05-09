@@ -499,10 +499,6 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         JSAtom* str = JSID_TO_ATOM(id);
         if (StringEqualsAscii(str, "HOTLOOP")) {
             *vp = INT_TO_JSVAL(HOTLOOP);
-
-            if (!cx->addTypePropertyId(obj->getType(), id, Valueify(*vp)))
-                return JS_FALSE;
-
             return JS_TRUE;
         }
 
@@ -514,10 +510,6 @@ jitstats_getProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 #else
             *vp = BOOLEAN_TO_JSVAL(false);
 #endif
-
-            if (!cx->addTypePropertyId(obj->getType(), id, Valueify(*vp)))
-                return JS_FALSE;
-
             return JS_TRUE;
         }
     }

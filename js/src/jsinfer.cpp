@@ -1814,7 +1814,7 @@ TypeCompartment::growPendingArray(JSContext *cx)
     pendingCapacity = newCapacity;
 }
 
-bool
+void
 TypeCompartment::dynamicCall(JSContext *cx, JSObject *callee,
                              const js::CallArgs &args, bool constructing)
 {
@@ -1825,8 +1825,7 @@ TypeCompartment::dynamicCall(JSContext *cx, JSObject *callee,
         script->typeSetNewCalled(cx);
     } else {
         jstype type = GetValueType(cx, args.thisv());
-        if (!script->typeSetThis(cx, type))
-            return false;
+        script->typeSetThis(cx, type);
     }
 
     /*
@@ -1835,21 +1834,15 @@ TypeCompartment::dynamicCall(JSContext *cx, JSObject *callee,
      * accessed through the arguments object, which is monitored.
      */
     unsigned arg = 0;
-    for (; arg < args.argc() && arg < nargs; arg++) {
-        if (!script->typeSetArgument(cx, arg, args[arg]))
-            return false;
-    }
+    for (; arg < args.argc() && arg < nargs; arg++)
+        script->typeSetArgument(cx, arg, args[arg]);
 
     /* Watch for fewer actuals than formals to the call. */
-    for (; arg < nargs; arg++) {
-        if (!script->typeSetArgument(cx, arg, UndefinedValue()))
-            return false;
-    }
-
-    return true;
+    for (; arg < nargs; arg++)
+        script->typeSetArgument(cx, arg, UndefinedValue());
 }
 
-bool
+void
 TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jstype type)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
@@ -1917,7 +1910,7 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
          */
         TypeSet *pushed = script->analysis(cx)->pushedTypes(offset, 0);
         if (pushed->hasType(type))
-            return true;
+            return;
     } else {
         /* Scan all TypeResults on the script to check for a duplicate. */
         TypeResult *result, **presult = &script->typeResults;
@@ -1930,7 +1923,7 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
                     result->next = script->typeResults;
                     script->typeResults = result;
                 }
-                return true;
+                return;
             }
             presult = &result->next;
         }
@@ -1942,7 +1935,7 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
     TypeResult *result = (TypeResult *) cx->calloc_(sizeof(TypeResult));
     if (!result) {
         setPendingNukeTypes(cx);
-        return false;
+        return;
     }
 
     result->offset = offset;
@@ -1958,7 +1951,7 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
         analyze::ScriptAnalysis *analysis = script->analysis(cx);
         if (!analysis) {
             setPendingNukeTypes(cx);
-            return false;
+            return;
         }
         analysis->analyzeTypes(cx);
     }
@@ -1990,7 +1983,7 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
                     TypeResult *result = (TypeResult *) cx->calloc_(sizeof(TypeResult));
                     if (!result) {
                         setPendingNukeTypes(cx);
-                        return false;
+                        return;
                     }
                     result->offset = offset;
                     result->type = TYPE_UNDEFINED;
@@ -2001,11 +1994,9 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
             offset += analyze::GetBytecodeLength(pc);
         }
     }
-
-    return true;
 }
 
-bool
+void
 TypeCompartment::processPendingRecompiles(JSContext *cx)
 {
     /* Steal the list of scripts to recompile, else we will try to recursively recompile them. */
@@ -2021,17 +2012,13 @@ TypeCompartment::processPendingRecompiles(JSContext *cx)
     for (unsigned i = 0; i < pending->length(); i++) {
         JSScript *script = (*pending)[i];
         mjit::Recompiler recompiler(cx, script);
-        if (script->hasJITCode() && !recompiler.recompile()) {
-            pendingNukeTypes = true;
-            cx->delete_(pending);
-            return nukeTypes(cx);
-        }
+        if (script->hasJITCode())
+            recompiler.recompile();
     }
 
 #endif /* JS_METHODJIT */
 
     cx->delete_(pending);
-    return true;
 }
 
 void
@@ -2043,7 +2030,7 @@ TypeCompartment::setPendingNukeTypes(JSContext *cx)
     }
 }
 
-bool
+void
 TypeCompartment::nukeTypes(JSContext *cx)
 {
     /*
@@ -2065,8 +2052,6 @@ TypeCompartment::nukeTypes(JSContext *cx)
 
     /* :FIXME: Implement this function. */
     *((int*)0) = 0;
-
-    return true;
 }
 
 void
@@ -2096,7 +2081,7 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
     }
 }
 
-bool
+void
 TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval)
 {
     if (obj->isWith())
@@ -2106,7 +2091,7 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
     TypeObject *object = obj->getType();
 
     if (object->unknownProperties())
-        return true;
+        return;
 
     id = MakeTypeId(cx, id);
 
@@ -2117,20 +2102,20 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
      * :FIXME: this is too aggressive for things like prototype library initialization.
      */
     JSOp op = JSOp(*cx->regs().pc);
-    if (id == id___proto__(cx) || (op == JSOP_SETELEM && !JSID_IS_VOID(id)))
-        return cx->markTypeObjectUnknownProperties(object);
+    if (id == id___proto__(cx) || (op == JSOP_SETELEM && !JSID_IS_VOID(id))) {
+        cx->markTypeObjectUnknownProperties(object);
+        return;
+    }
 
     AutoEnterTypeInference enter(cx);
 
     TypeSet *assignTypes = object->getProperty(cx, id, true);
     if (!assignTypes || assignTypes->hasType(rvtype))
-        return true;
+        return;
 
     InferSpew(ISpewOps, "externalType: monitorAssign %s %s: %s",
               object->name(), TypeIdString(id), TypeString(rvtype));
     assignTypes->addType(cx, rvtype);
-
-    return true;
 }
 
 void
@@ -2278,15 +2263,17 @@ struct types::ArrayTableKey
     }
 };
 
-bool
+void
 TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
 {
+    AutoEnterTypeInference enter(cx);
+
     if (!arrayTypeTable) {
         arrayTypeTable = cx->new_<ArrayTypeTable>();
         if (!arrayTypeTable || !arrayTypeTable->init()) {
             arrayTypeTable = NULL;
-            js_ReportOutOfMemory(cx);
-            return false;
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
         }
     }
 
@@ -2300,7 +2287,7 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
 
     unsigned len = obj->getDenseArrayInitializedLength();
     if (len == 0)
-        return true;
+        return;
 
     jstype type = GetValueType(cx, obj->getDenseArrayElement(0));
 
@@ -2310,7 +2297,7 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
             if (NumberTypes(type, ntype))
                 type = TYPE_DOUBLE;
             else
-                return true;
+                return;
         }
     }
 
@@ -2328,21 +2315,18 @@ TypeCompartment::fixArrayType(JSContext *cx, JSObject *obj)
 
         TypeObject *objType = newTypeObject(cx, NULL, name, false, true, obj->getProto());
         if (!objType) {
-            js_ReportOutOfMemory(cx);
-            return false;
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
         }
         obj->setType(objType);
 
-        if (!cx->addTypePropertyId(objType, JSID_VOID, type))
-            return false;
+        cx->addTypePropertyId(objType, JSID_VOID, type);
 
         if (!arrayTypeTable->relookupOrAdd(p, key, objType)) {
-            js_ReportOutOfMemory(cx);
-            return false;
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
         }
     }
-
-    return true;
 }
 
 /*
@@ -2389,15 +2373,17 @@ struct types::ObjectTableEntry
     jstype *types;
 };
 
-bool
+void
 TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 {
+    AutoEnterTypeInference enter(cx);
+
     if (!objectTypeTable) {
         objectTypeTable = cx->new_<ObjectTypeTable>();
         if (!objectTypeTable || !objectTypeTable->init()) {
             objectTypeTable = NULL;
-            js_ReportOutOfMemory(cx);
-            return false;
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
         }
     }
 
@@ -2410,7 +2396,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
     JS_ASSERT(obj->isObject());
 
     if (obj->slotSpan() == 0 || obj->inDictionaryMode())
-        return true;
+        return;
 
     ObjectTypeTable::AddPtr p = objectTypeTable->lookupForAdd(obj);
     const Shape *baseShape = obj->lastProperty();
@@ -2427,15 +2413,14 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
                         const Shape *shape = baseShape;
                         while (!JSID_IS_EMPTY(shape->id)) {
                             if (shape->slot == i) {
-                                if (!cx->addTypePropertyId(p->value.object, shape->id, TYPE_DOUBLE))
-                                    return false;
+                                cx->addTypePropertyId(p->value.object, shape->id, TYPE_DOUBLE);
                                 break;
                             }
                             shape = shape->previous();
                         }
                     }
                 } else {
-                    return true;
+                    return;
                 }
             }
         }
@@ -2450,8 +2435,8 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         JSObject *xobj = NewBuiltinClassInstance(cx, &js_ObjectClass,
                                                  (gc::FinalizeKind) obj->finalizeKind());
         if (!xobj) {
-            js_ReportOutOfMemory(cx);
-            return false;
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
         }
         AutoObjectRooter xvr(cx, xobj);
 
@@ -2461,25 +2446,28 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 
         TypeObject *objType = newTypeObject(cx, NULL, name, false, false, obj->getProto());
         if (!objType) {
-            js_ReportOutOfMemory(cx);
-            return false;
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
         }
         xobj->setType(objType);
 
         jsid *ids = (jsid *) cx->calloc_(obj->slotSpan() * sizeof(jsid));
-        if (!ids)
-            return false;
+        if (!ids) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
+        }
 
         jstype *types = (jstype *) cx->calloc_(obj->slotSpan() * sizeof(jstype));
-        if (!types)
-            return false;
+        if (!types) {
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
+        }
 
         const Shape *shape = baseShape;
         while (!JSID_IS_EMPTY(shape->id)) {
             ids[shape->slot] = shape->id;
             types[shape->slot] = GetValueType(cx, obj->getSlot(shape->slot));
-            if (!cx->addTypePropertyId(objType, shape->id, types[shape->slot]))
-                return false;
+            cx->addTypePropertyId(objType, shape->id, types[shape->slot]);
             shape = shape->previous();
         }
 
@@ -2487,14 +2475,15 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         for (unsigned i = 0; i < obj->slotSpan(); i++) {
             if (!js_DefineNativeProperty(cx, xobj, ids[i], UndefinedValue(), NULL, NULL,
                                          JSPROP_ENUMERATE, 0, 0, NULL, 0)) {
-                return false;
+                cx->compartment->types.setPendingNukeTypes(cx);
+                return;
             }
         }
         JS_ASSERT(!xobj->inDictionaryMode());
         const Shape *newShape = xobj->lastProperty();
 
         if (!objType->addDefiniteProperties(cx, xobj, false))
-            return false;
+            return;
 
         ObjectTableKey key;
         key.ids = ids;
@@ -2510,14 +2499,12 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 
         p = objectTypeTable->lookupForAdd(obj);
         if (!objectTypeTable->add(p, key, entry)) {
-            js_ReportOutOfMemory(cx);
-            return false;
+            cx->compartment->types.setPendingNukeTypes(cx);
+            return;
         }
 
         obj->setTypeAndShape(objType, newShape);
     }
-
-    return true;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -4098,9 +4085,9 @@ JSContext::newTypeObject(const char *base, const char *postfix, JSObject *proto,
  * pushed by the specified bytecode.
  */
 static inline bool
-IgnorePushed(JSOp op, unsigned index)
+IgnorePushed(const jsbytecode *pc, unsigned index)
 {
-    switch (op) {
+    switch (JSOp(*pc)) {
       /* We keep track of the scopes pushed by BINDNAME separately. */
       case JSOP_BINDNAME:
       case JSOP_BINDGNAME:
@@ -4156,6 +4143,15 @@ IgnorePushed(JSOp op, unsigned index)
       case JSOP_FINALLY:
         return true;
 
+      /*
+       * We don't treat GETLOCAL immediately followed by a pop as a use-before-def,
+       * and while the type will have been inferred correctly the method JIT
+       * may not have written the local's initial undefined value to the stack,
+       * leaving a stale value.
+       */
+      case JSOP_GETLOCAL:
+        return JSOp(pc[JSOP_GETLOCAL_LENGTH]) == JSOP_POP;
+
       default:
         return false;
     }
@@ -4166,11 +4162,15 @@ JSScript::makeVarTypes(JSContext *cx)
 {
     JS_ASSERT(!varTypes);
 
+    AutoEnterTypeInference enter(cx);
+
     unsigned nargs = fun ? fun->nargs : 0;
     unsigned count = 2 + nargs + nfixed + bindings.countUpvars();
     varTypes = (TypeSet *) cx->calloc_(sizeof(TypeSet) * count);
-    if (!varTypes)
+    if (!varTypes) {
+        compartment->types.setPendingNukeTypes(cx);
         return false;
+    }
 
 #ifdef DEBUG
     InferSpew(ISpewOps, "typeSet: T%p return #%u", returnTypes(), id());
@@ -4226,7 +4226,7 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
     for (int i = 0; i < defCount; i++) {
         const js::Value &val = sp[-defCount + i];
         TypeSet *types = analysis_->pushedTypes(pc, i);
-        if (IgnorePushed(JSOp(*pc), i))
+        if (IgnorePushed(pc, i))
             continue;
 
         jstype type = GetValueType(cx, val);

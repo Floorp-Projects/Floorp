@@ -237,11 +237,11 @@ JSContext::getTypeCallerInitObject(bool isArray)
     return getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
 }
 
-inline bool
+inline void
 JSContext::markTypeCallerUnexpected(js::types::jstype type)
 {
     if (!typeInferenceEnabled())
-        return true;
+        return;
 
     /*
      * Check that we are actually at a scripted callsite. This function is
@@ -254,14 +254,14 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
 
     js::StackFrame *caller = js_GetScriptedCaller(this, NULL);
     if (!caller)
-        return true;
+        return;
 
     /*
      * Watch out if the caller is in a different compartment from this one.
      * This must have gone through a cross-compartment wrapper.
      */
     if (caller->script()->compartment != compartment)
-        return true;
+        return;
 
     JSScript *script;
     jsbytecode *pc = caller->inlinepc(this, &script);
@@ -277,55 +277,55 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
         /* This is also used for handling custom iterators. */
         break;
       default:
-        return true;
+        return;
     }
 
-    return script->typeMonitorResult(this, pc, type);
+    script->typeMonitorResult(this, pc, type);
 }
 
-inline bool
+inline void
 JSContext::markTypeCallerUnexpected(const js::Value &value)
 {
-    if (!typeInferenceEnabled())
-        return true;
-    return markTypeCallerUnexpected(js::types::GetValueType(this, value));
+    if (typeInferenceEnabled())
+        markTypeCallerUnexpected(js::types::GetValueType(this, value));
 }
 
-inline bool
+inline void
 JSContext::markTypeCallerOverflow()
 {
-    return markTypeCallerUnexpected(js::types::TYPE_DOUBLE);
+    markTypeCallerUnexpected(js::types::TYPE_DOUBLE);
 }
 
-inline bool
+inline void
 JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type)
 {
     if (typeInferenceEnabled() && !obj->unknownProperties()) {
         jsid id = JSID_VOID;
         if (name) {
             JSAtom *atom = js_Atomize(this, name, strlen(name), 0);
-            if (!atom)
-                return false;
+            if (!atom) {
+                js::types::AutoEnterTypeInference enter(this);
+                compartment->types.setPendingNukeTypes(this);
+                return;
+            }
             id = ATOM_TO_JSID(atom);
         }
-        return addTypePropertyId(obj, id, type);
+        addTypePropertyId(obj, id, type);
     }
-    return true;
 }
 
-inline bool
+inline void
 JSContext::addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value)
 {
     if (typeInferenceEnabled() && !obj->unknownProperties())
-        return addTypeProperty(obj, name, js::types::GetValueType(this, value));
-    return true;
+        addTypeProperty(obj, name, js::types::GetValueType(this, value));
 }
 
-inline bool
+inline void
 JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type)
 {
     if (!typeInferenceEnabled() || obj->unknownProperties())
-        return true;
+        return;
 
     /* Convert string index properties into the common index property. */
     id = js::types::MakeTypeId(this, id);
@@ -334,42 +334,37 @@ JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jst
 
     js::types::TypeSet *types = obj->getProperty(this, id, true);
     if (!types || types->hasType(type))
-        return true;
+        return;
 
     js::types::InferSpew(js::types::ISpewOps, "externalType: property %s %s: %s",
                          obj->name(), js::types::TypeIdString(id),
                          js::types::TypeString(type));
     types->addType(this, type);
-
-    return true;
 }
 
-inline bool
+inline void
 JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value)
 {
     if (typeInferenceEnabled() && !obj->unknownProperties())
-        return addTypePropertyId(obj, id, js::types::GetValueType(this, value));
-    return true;
+        addTypePropertyId(obj, id, js::types::GetValueType(this, value));
 }
 
-inline bool
+inline void
 JSContext::addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::ClonedTypeSet *set)
 {
     if (obj->unknownProperties())
-        return true;
+        return;
     id = js::types::MakeTypeId(this, id);
 
     js::types::AutoEnterTypeInference enter(this);
 
     js::types::TypeSet *types = obj->getProperty(this, id, true);
     if (!types)
-        return true;
+        return;
 
     js::types::InferSpew(js::types::ISpewOps, "externalType: property %s %s",
                          obj->name(), js::types::TypeIdString(id));
     types->addTypeSet(this, set);
-
-    return true;
 }
 
 inline js::types::TypeObject *
@@ -378,11 +373,11 @@ JSContext::getTypeEmpty()
     return &compartment->types.typeEmpty;
 }
 
-inline bool
+inline void
 JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second)
 {
     if (!typeInferenceEnabled() || obj->unknownProperties())
-        return true;
+        return;
 
     js::types::AutoEnterTypeInference enter(this);
 
@@ -392,72 +387,61 @@ JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid seco
     js::types::TypeSet *firstTypes = obj->getProperty(this, first, true);
     js::types::TypeSet *secondTypes = obj->getProperty(this, second, true);
     if (!firstTypes || !secondTypes)
-        return false;
+        return;
 
     firstTypes->addBaseSubset(this, obj, secondTypes);
     secondTypes->addBaseSubset(this, obj, firstTypes);
-
-    return true;
 }
 
-inline bool
+inline void
 JSContext::addTypeFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags)
 {
     if (!typeInferenceEnabled() || obj->hasFlags(flags))
-        return true;
+        return;
 
     js::types::AutoEnterTypeInference enter(this);
     obj->setFlags(this, flags);
-    return true;
 }
 
-inline bool
+inline void
 JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
 {
-    return addTypeFlags(obj, js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
-                        (notDense ? js::types::OBJECT_FLAG_NON_DENSE_ARRAY : 0));
+    addTypeFlags(obj, js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
+                 (notDense ? js::types::OBJECT_FLAG_NON_DENSE_ARRAY : 0));
 }
 
-inline bool
+inline void
 JSContext::markTypeFunctionUninlineable(js::types::TypeObject *obj)
 {
-    return addTypeFlags(obj, js::types::OBJECT_FLAG_UNINLINEABLE);
+    addTypeFlags(obj, js::types::OBJECT_FLAG_UNINLINEABLE);
 }
 
-inline bool
+inline void
 JSContext::markTypeObjectHasSpecialEquality(js::types::TypeObject *obj)
 {
-    return addTypeFlags(obj, js::types::OBJECT_FLAG_SPECIAL_EQUALITY);
+    addTypeFlags(obj, js::types::OBJECT_FLAG_SPECIAL_EQUALITY);
 }
 
-inline bool
+inline void
 JSContext::markTypePropertyConfigured(js::types::TypeObject *obj, jsid id)
 {
-    if (!typeInferenceEnabled())
-        return true;
-
-    if (obj->unknownProperties())
-        return true;
+    if (!typeInferenceEnabled() || obj->unknownProperties())
+        return;
     id = js::types::MakeTypeId(this, id);
 
     js::types::AutoEnterTypeInference enter(this);
     js::types::TypeSet *types = obj->getProperty(this, id, true);
     if (types)
         types->setOwnProperty(this, true);
-
-    return true;
 }
 
-inline bool
+inline void
 JSContext::markGlobalReallocation(JSObject *obj)
 {
     JS_ASSERT(obj->isGlobal());
 
-    if (!typeInferenceEnabled())
-        return true;
-
-    if (obj->getType()->unknownProperties())
-        return true;
+    if (!typeInferenceEnabled() || obj->getType()->unknownProperties())
+        return;
 
     js::types::AutoEnterTypeInference enter(this);
     js::types::TypeSet *types = obj->getType()->getProperty(this, JSID_VOID, false);
@@ -468,52 +452,50 @@ JSContext::markGlobalReallocation(JSObject *obj)
             constraint = constraint->next;
         }
     }
-
-    return true;
 }
 
-inline bool
+inline void
 JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
 {
     if (!typeInferenceEnabled() || obj->unknownProperties())
-        return true;
+        return;
 
     js::types::AutoEnterTypeInference enter(this);
     obj->markUnknown(this);
-    return true;
 }
 
-inline bool
+inline void
 JSContext::typeMonitorAssign(JSObject *obj, jsid id, const js::Value &rval)
 {
     if (typeInferenceEnabled())
-        return compartment->types.dynamicAssign(this, obj, id, rval);
-    return true;
+        compartment->types.dynamicAssign(this, obj, id, rval);
 }
 
-inline bool
+inline void
 JSContext::typeMonitorCall(const js::CallArgs &args, bool constructing)
 {
     if (!typeInferenceEnabled())
-        return true;
+        return;
 
     JSObject *callee = &args.callee();
     if (!callee->isFunction() || !callee->getFunctionPrivate()->isInterpreted())
-        return true;
+        return;
 
-    return compartment->types.dynamicCall(this, callee, args, constructing);
+    compartment->types.dynamicCall(this, callee, args, constructing);
 }
 
-inline bool
+inline void
 JSContext::fixArrayType(JSObject *obj)
 {
-    return !typeInferenceEnabled() || compartment->types.fixArrayType(this, obj);
+    if (typeInferenceEnabled())
+        compartment->types.fixArrayType(this, obj);
 }
 
-inline bool
+inline void
 JSContext::fixObjectType(JSObject *obj)
 {
-    return !typeInferenceEnabled() || compartment->types.fixObjectType(this, obj);
+    if (typeInferenceEnabled())
+        compartment->types.fixObjectType(this, obj);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -625,53 +607,51 @@ JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
     return cx->compartment->types.newInitializerTypeObject(cx, this, offset, isArray);
 }
 
-inline bool
+inline void
 JSScript::typeMonitorResult(JSContext *cx, const jsbytecode *pc,
                             js::types::jstype type)
 {
     if (cx->typeInferenceEnabled())
-        return cx->compartment->types.dynamicPush(cx, this, pc - code, type);
-    return true;
+        cx->compartment->types.dynamicPush(cx, this, pc - code, type);
 }
 
-inline bool
+inline void
 JSScript::typeMonitorResult(JSContext *cx, const jsbytecode *pc, const js::Value &rval)
 {
     if (cx->typeInferenceEnabled())
-        return typeMonitorResult(cx, pc, js::types::GetValueType(cx, rval));
-    return true;
+        typeMonitorResult(cx, pc, js::types::GetValueType(cx, rval));
 }
 
-inline bool
+inline void
 JSScript::typeMonitorOverflow(JSContext *cx, const jsbytecode *pc)
 {
-    return typeMonitorResult(cx, pc, js::types::TYPE_DOUBLE);
+    typeMonitorResult(cx, pc, js::types::TYPE_DOUBLE);
 }
 
-inline bool
+inline void
 JSScript::typeMonitorUndefined(JSContext *cx, const jsbytecode *pc)
 {
-    return typeMonitorResult(cx, pc, js::types::TYPE_UNDEFINED);
+    typeMonitorResult(cx, pc, js::types::TYPE_UNDEFINED);
 }
 
-inline bool
+inline void
 JSScript::typeMonitorString(JSContext *cx, const jsbytecode *pc)
 {
-    return typeMonitorResult(cx, pc, js::types::TYPE_STRING);
+    typeMonitorResult(cx, pc, js::types::TYPE_STRING);
 }
 
-inline bool
+inline void
 JSScript::typeMonitorUnknown(JSContext *cx, const jsbytecode *pc)
 {
-    return typeMonitorResult(cx, pc, js::types::TYPE_UNKNOWN);
+    typeMonitorResult(cx, pc, js::types::TYPE_UNKNOWN);
 }
 
-inline bool
+inline void
 JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
     if (!ensureVarTypes(cx))
-        return false;
+        return;
 
     /* Analyze the script regardless if -a was used. */
     bool analyze = !(analysis_ && analysis_->ranInference()) &&
@@ -687,42 +667,36 @@ JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
         if (analyze && !(analysis_ && analysis_->ranInference())) {
             js::analyze::ScriptAnalysis *analysis = this->analysis(cx);
             if (!analysis)
-                return false;
+                return;
             analysis->analyzeTypes(cx);
         }
-
-        return true;
     }
-
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetThis(JSContext *cx, const js::Value &value)
 {
     if (cx->typeInferenceEnabled())
-        return typeSetThis(cx, js::types::GetValueType(cx, value));
-    return true;
+        typeSetThis(cx, js::types::GetValueType(cx, value));
 }
 
-inline bool
+inline void
 JSScript::typeSetThis(JSContext *cx, js::types::ClonedTypeSet *set)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     if (!ensureVarTypes(cx))
-        return false;
+        return;
     js::types::AutoEnterTypeInference enter(cx);
 
     js::types::InferSpew(js::types::ISpewOps, "externalType: setThis #%u", id());
     thisTypes()->addTypeSet(cx, set);
-
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetNewCalled(JSContext *cx)
 {
     if (!cx->typeInferenceEnabled() || calledWithNew)
-        return true;
+        return;
     calledWithNew = true;
 
     /*
@@ -737,103 +711,86 @@ JSScript::typeSetNewCalled(JSContext *cx)
         js::types::AutoEnterTypeInference enter(cx);
         js::analyze::ScriptAnalysis *analysis = this->analysis(cx);
         if (!analysis)
-            return false;
+            return;
         analysis->analyzeTypesNew(cx);
     }
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type)
 {
-    if (!cx->typeInferenceEnabled())
-        return true;
-    if (!ensureVarTypes(cx))
-        return false;
+    if (!cx->typeInferenceEnabled() || !ensureVarTypes(cx))
+        return;
     if (!localTypes(local)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
 
         js::types::InferSpew(js::types::ISpewOps, "externalType: setLocal #%u %u: %s",
                              id(), local, js::types::TypeString(type));
         localTypes(local)->addType(cx, type);
-
-        return true;
     }
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetLocal(JSContext *cx, unsigned local, const js::Value &value)
 {
     if (cx->typeInferenceEnabled()) {
         js::types::jstype type = js::types::GetValueType(cx, value);
-        return typeSetLocal(cx, local, type);
+        typeSetLocal(cx, local, type);
     }
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *set)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     if (!ensureVarTypes(cx))
-        return false;
+        return;
     js::types::AutoEnterTypeInference enter(cx);
 
     js::types::InferSpew(js::types::ISpewOps, "externalType: setLocal #%u %u", id(), local);
     localTypes(local)->addTypeSet(cx, set);
-
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type)
 {
-    if (!cx->typeInferenceEnabled())
-        return true;
-    if (!ensureVarTypes(cx))
-        return false;
+    if (!cx->typeInferenceEnabled() || !ensureVarTypes(cx))
+        return;
     if (!argTypes(arg)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
 
         js::types::InferSpew(js::types::ISpewOps, "externalType: setArg #%u %u: %s",
                              id(), arg, js::types::TypeString(type));
         argTypes(arg)->addType(cx, type);
-
-        return true;
     }
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value)
 {
     if (cx->typeInferenceEnabled()) {
         js::types::jstype type = js::types::GetValueType(cx, value);
-        return typeSetArgument(cx, arg, type);
+        typeSetArgument(cx, arg, type);
     }
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet *set)
 {
+    JS_ASSERT(cx->typeInferenceEnabled());
     if (!ensureVarTypes(cx))
-        return false;
+        return;
     js::types::AutoEnterTypeInference enter(cx);
 
     js::types::InferSpew(js::types::ISpewOps, "externalType: setArg #%u %u", id(), arg);
     argTypes(arg)->addTypeSet(cx, set);
-
-    return true;
 }
 
-inline bool
+inline void
 JSScript::typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value)
 {
-    if (!cx->typeInferenceEnabled())
-        return true;
-    if (!ensureVarTypes(cx))
-        return false;
+    if (!cx->typeInferenceEnabled() || !ensureVarTypes(cx))
+        return;
     js::types::jstype type = js::types::GetValueType(cx, value);
     if (!upvarTypes(upvar)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
@@ -841,10 +798,7 @@ JSScript::typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value)
         js::types::InferSpew(js::types::ISpewOps, "externalType: setUpvar #%u %u: %s",
                              id(), upvar, js::types::TypeString(type));
         upvarTypes(upvar)->addType(cx, type);
-
-        return true;
     }
-    return true;
 }
 
 namespace js {

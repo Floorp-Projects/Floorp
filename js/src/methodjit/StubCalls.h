@@ -256,5 +256,8 @@ inline FuncPtr FunctionTemplateConditional(bool cond, FuncPtr a, FuncPtr b) {
 extern "C" void *
 js_InternalThrow(js::VMFrame &f);
 
+extern "C" void *
+js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VMFrame &f);
+
 #endif /* jslogic_h__ */
 

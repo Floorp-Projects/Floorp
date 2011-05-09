@@ -53,12 +53,6 @@
 namespace js {
 namespace mjit {
 
-struct PatchableFrame {
-    StackFrame *fp;
-    jsbytecode *pc;
-    bool scriptedCall;
-};
-
 /*
  * Patch for storing call site and rejoin site return addresses at, for
  * redirecting the return address in InvariantFailure.
@@ -333,92 +327,18 @@ class Compiler : public BaseCompiler
         DataLabelPtr inlinePatch;
         uint32 inlineIndex;
         jsbytecode *inlinepc;
-        size_t id;
+        RejoinState rejoin;
         bool ool;
         Label loopJumpLabel;
         InvariantCodePatch loopPatch;
 
-        // An AutoRejoinSite needs to capture this call site.
-        bool needsRejoin;
-
         InternalCallSite(uint32 returnOffset,
-                         uint32 inlineIndex, jsbytecode *inlinepc, size_t id,
-                         bool ool, bool needsRejoin)
+                         uint32 inlineIndex, jsbytecode *inlinepc,
+                         RejoinState rejoin, bool ool)
           : returnOffset(returnOffset),
-            inlineIndex(inlineIndex), inlinepc(inlinepc), id(id),
-            ool(ool), needsRejoin(needsRejoin)
+            inlineIndex(inlineIndex), inlinepc(inlinepc),
+            rejoin(rejoin), ool(ool)
         { }
-    };
-
-    struct InternalRejoinSite {
-        Label label;
-        jsbytecode *pc;
-        size_t id;
-        InvariantCodePatch loopPatch;
-
-        InternalRejoinSite(Label label, jsbytecode *pc, size_t id)
-            : label(label), pc(pc), id(id)
-        { }
-    };
-
-    struct AutoRejoinSite {
-        Compiler *cc;
-        jsbytecode *pc;
-
-        bool force;
-        bool ool;
-        Label oolLabel;
-
-        // number of call/rejoin sites when this AutoRejoinSite was created.
-        uint32 startSites;
-        uint32 rejoinSites;
-
-        void *stub1;
-        void *stub2;
-        void *stub3;
-
-        AutoRejoinSite(Compiler *cc, void *stub1, void *stub2 = NULL, void *stub3 = NULL)
-            : cc(cc), pc(cc->PC), force(false), ool(false),
-              startSites(cc->callSites.length()),
-              rejoinSites(cc->rejoinSites.length()),
-              stub1(stub1), stub2(stub2), stub3(stub3)
-        {}
-
-        void forceGeneration()
-        {
-            force = true;
-        }
-
-        /*
-         * Rejoin a particular slow path label in a synced state, rather than
-         * the current point of the fast path when the AutoRejoinSite finishes.
-         */
-        void oolRejoin(Label label)
-        {
-            ool = true;
-            oolLabel = label;
-        }
-
-        ~AutoRejoinSite()
-        {
-            if (cc->a != cc->outer)
-                return;
-#ifdef DEBUG
-            JS_ASSERT(pc == cc->PC);
-            cc->checkRejoinSite(startSites, rejoinSites, stub1);
-            if (stub2)
-                cc->checkRejoinSite(startSites, rejoinSites, stub2);
-            if (stub3)
-                cc->checkRejoinSite(startSites, rejoinSites, stub3);
-#endif
-            if (force || cc->needRejoins(pc)) {
-                cc->addRejoinSite(stub1, ool, oolLabel);
-                if (stub2)
-                    cc->addRejoinSite(stub2, ool, oolLabel);
-                if (stub3)
-                    cc->addRejoinSite(stub3, ool, oolLabel);
-            }
-        }
     };
 
     struct DoublePatch {
@@ -458,10 +378,6 @@ class Compiler : public BaseCompiler
     JSObject *globalObj;
     Value *globalSlots;
 
-    /* Existing frames on the stack whose slots may need to be updated. */
-    const Vector<PatchableFrame> *patchFrames;
-
-    bool *savedTraps;
     Assembler masm;
     FrameState frame;
 
@@ -531,7 +447,6 @@ class Compiler : public BaseCompiler
 #endif
     js::Vector<CallPatchInfo, 64, CompilerAllocPolicy> callPatches;
     js::Vector<InternalCallSite, 64, CompilerAllocPolicy> callSites;
-    js::Vector<InternalRejoinSite, 64, CompilerAllocPolicy> rejoinSites;
     js::Vector<DoublePatch, 16, CompilerAllocPolicy> doubleList;
     js::Vector<uint32, 4, CompilerAllocPolicy> fixedDoubleEntries;
     js::Vector<JumpTable, 16> jumpTables;
@@ -556,8 +471,7 @@ class Compiler : public BaseCompiler
 
     friend class CompilerAllocPolicy;
   public:
-    Compiler(JSContext *cx, JSScript *outerScript, bool isConstructing,
-             const Vector<PatchableFrame> *patchFrames);
+    Compiler(JSContext *cx, JSScript *outerScript, bool isConstructing);
     ~Compiler();
 
     CompileStatus compile();
@@ -567,34 +481,10 @@ class Compiler : public BaseCompiler
     Label labelOf(jsbytecode *target, uint32 inlineIndex);
     void addCallSite(const InternalCallSite &callSite);
     void addReturnSite(bool ool);
-    void inlineStubCall(void *stub, bool needsRejoin);
-    bool loadOldTraps(const Vector<CallSite> &site);
+    void inlineStubCall(void *stub, RejoinState rejoin);
 
     bool debugMode() { return debugMode_; }
     bool inlining() { return inlining_; }
-
-#ifdef DEBUG
-    void checkRejoinSite(uint32 nCallSites, uint32 nRejoinSites, void *stub);
-#endif
-    void addRejoinSite(void *stub, bool ool, Label oolLabel);
-
-    bool needRejoins(jsbytecode *pc)
-    {
-        // We'll never rejoin into an inlined frame.
-        if (a != outer)
-            return false;
-
-        // We need all rejoin points if we might expand an inline frame.
-        if (outerScript->inlineParents)
-            return true;
-
-        // Otherwise, only add rejoin points where there are active frames on stack.
-        for (unsigned i = 0; patchFrames && i < patchFrames->length(); i++) {
-            if ((*patchFrames)[i].pc == pc)
-                return true;
-        }
-        return false;
-    }
 
     jsbytecode *outerPC() {
         if (a == outer)
@@ -610,11 +500,11 @@ class Compiler : public BaseCompiler
 
     Assembler &getAssembler(bool ool) { return ool ? stubcc.masm : masm; }
 
-    InvariantCodePatch *getInvariantPatch(unsigned index, bool call) {
-        return call ? &callSites[index].loopPatch : &rejoinSites[index].loopPatch;
+    InvariantCodePatch *getInvariantPatch(unsigned index) {
+        return &callSites[index].loopPatch;
     }
-    jsbytecode *getInvariantPC(unsigned index, bool call) {
-        return call ? callSites[index].inlinepc : rejoinSites[index].pc;
+    jsbytecode *getInvariantPC(unsigned index) {
+        return callSites[index].inlinepc;
     }
 
     bool arrayPrototypeHasIndexedProperty();
@@ -663,7 +553,7 @@ class Compiler : public BaseCompiler
     bool canUseApplyTricks();
 
     /* Emitting helpers. */
-    bool emitStubCmpOp(BoolStub stub, AutoRejoinSite &rejoin, jsbytecode *target, JSOp fused);
+    bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     bool iter(uintN flags);
     void iterNext();
     bool iterMore();
@@ -763,10 +653,10 @@ class Compiler : public BaseCompiler
                              MaybeRegisterID &mreg);
     void maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry *fe,
                               MaybeRegisterID &mreg);
-    bool jsop_relational(JSOp op, BoolStub stub, AutoRejoinSite &rejoin, jsbytecode *target, JSOp fused);
-    bool jsop_relational_full(JSOp op, BoolStub stub, AutoRejoinSite &rejoin, jsbytecode *target, JSOp fused);
-    bool jsop_relational_double(JSOp op, BoolStub stub, AutoRejoinSite &rejoin, jsbytecode *target, JSOp fused);
-    bool jsop_relational_int(JSOp op, AutoRejoinSite &rejoin, jsbytecode *target, JSOp fused);
+    bool jsop_relational(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused);
 
     void emitLeftDoublePath(FrameEntry *lhs, FrameEntry *rhs, FrameState::BinaryAlloc &regs,
                             MaybeJump &lhsNotDouble, MaybeJump &rhsNotNumber,
@@ -786,8 +676,8 @@ class Compiler : public BaseCompiler
     bool booleanJumpScript(JSOp op, jsbytecode *target);
     bool jsop_ifneq(JSOp op, jsbytecode *target);
     bool jsop_andor(JSOp op, jsbytecode *target);
-    bool jsop_arginc(JSOp op, uint32 slot, bool popped);
-    bool jsop_localinc(JSOp op, uint32 slot, bool popped);
+    bool jsop_arginc(JSOp op, uint32 slot);
+    bool jsop_localinc(JSOp op, uint32 slot);
     bool jsop_newinit();
     void jsop_initmethod();
     void jsop_initprop();
@@ -798,8 +688,8 @@ class Compiler : public BaseCompiler
     void jsop_getelem_dense(bool isPacked);
     bool isCacheableBaseAndIndex(FrameEntry *obj, FrameEntry *id);
     void jsop_stricteq(JSOp op);
-    bool jsop_equality(JSOp op, BoolStub stub, AutoRejoinSite &autoRejoin, jsbytecode *target, JSOp fused);
-    bool jsop_equality_int_string(JSOp op, BoolStub stub, AutoRejoinSite &autoRejoin, jsbytecode *target, JSOp fused);
+    bool jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
+    bool jsop_equality_int_string(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused);
     void jsop_pos();
 
     static inline Assembler::Condition
@@ -851,49 +741,19 @@ class Compiler : public BaseCompiler
     Call emitStubCall(void *ptr, DataLabelPtr *pinline);
 };
 
-// Given a stub call, emits the call into the inline assembly path. If
-// debug mode is on, adds the appropriate instrumentation for recompilation.
-#define INLINE_STUBCALL(stub)                                               \
-    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), true)
+// Given a stub call, emits the call into the inline assembly path. rejoin
+// indicates how to rejoin should this call trigger expansion/discarding.
+#define INLINE_STUBCALL(stub, rejoin)                                       \
+    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin)
 
-// Same as INLINE_STUBCALL, but cannot trigger recompilation.
-#define INLINE_STUBCALL_NO_REJOIN(stub)                                     \
-    inlineStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), false)
-
-// Given a stub call, emits the call into the out-of-line assembly path. If
-// debug mode is on, adds the appropriate instrumentation for recompilation.
+// Given a stub call, emits the call into the out-of-line assembly path.
 // Unlike the INLINE_STUBCALL variant, this returns the Call offset.
-#define OOL_STUBCALL(stub)                                                  \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), true)
+#define OOL_STUBCALL(stub, rejoin)                                          \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin)
 
 // Same as OOL_STUBCALL, but specifies a slot depth.
-#define OOL_STUBCALL_LOCAL_SLOTS(stub, slots)                               \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), true, (slots))
-
-// Same as OOL_STUBCALL, but cannot trigger recompilation.
-#define OOL_STUBCALL_NO_REJOIN(stub)                                        \
-    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), false)
-
-// Define rejoin sites at a PC. For every stub or scripted call emitted, there
-// must be a rejoin site which captures it. These are scope based, so the
-// rejoin site must be declared before the stub call and finish its scope after
-// the call has been emitted. If it is emitted, the rejoin site will rejoin
-// the inline code once the scope is finished.
-
-#define REJOIN_SITE(stub)                                                   \
-    AutoRejoinSite autoRejoin(this, JS_FUNC_TO_DATA_PTR(void *, (stub)))
-
-#define REJOIN_SITE_2(stub1, stub2)                                         \
-    AutoRejoinSite autoRejoin(this, JS_FUNC_TO_DATA_PTR(void *, (stub1)),   \
-                              JS_FUNC_TO_DATA_PTR(void *, (stub2)))
-
-#define REJOIN_SITE_3(stub1, stub2, stub3)                                  \
-    AutoRejoinSite autoRejoin(this, JS_FUNC_TO_DATA_PTR(void *, (stub1)),   \
-                              JS_FUNC_TO_DATA_PTR(void *, (stub2)),         \
-                              JS_FUNC_TO_DATA_PTR(void *, (stub3)))
-
-#define REJOIN_SITE_ANY()                                                   \
-    AutoRejoinSite autoRejoin(this, (void *) RejoinSite::VARIADIC_ID)
+#define OOL_STUBCALL_LOCAL_SLOTS(stub, rejoin, slots)                       \
+    stubcc.emitStubCall(JS_FUNC_TO_DATA_PTR(void *, (stub)), rejoin, (slots))
 
 } /* namespace js */
 } /* namespace mjit */

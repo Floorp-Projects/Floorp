@@ -866,7 +866,7 @@ struct JSObject : js::gc::Cell {
 
     /* Packed information for this array. May be incorrect if !cx->typeInferenceEnabled(). */
     inline bool isPackedDenseArray();
-    inline bool setDenseArrayNotPacked(JSContext *cx);
+    inline void setDenseArrayNotPacked(JSContext *cx);
 
     /*
      * ensureDenseArrayElements ensures that the dense array can hold at least
@@ -1777,8 +1777,8 @@ js_DefineNativePropertyWithType(JSContext *cx, JSObject *obj, jsid id, const js:
                                 uintN flags, intN shortid, JSProperty **propp,
                                 uintN defineHow = 0)
 {
-    return JS_AddTypePropertyById(cx, obj, id, Jsvalify(value)) &&
-           js_DefineNativeProperty(cx, obj, id, value, getter, setter,
+    JS_AddTypePropertyById(cx, obj, id, Jsvalify(value));
+    return js_DefineNativeProperty(cx, obj, id, value, getter, setter,
                                    attrs, flags, shortid, propp, defineHow);
 }
 

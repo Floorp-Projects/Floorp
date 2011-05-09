@@ -616,7 +616,7 @@ class FrameState
     /* Stores the top stack slot back to a local or slot. */
     void storeLocal(uint32 n, bool popGuaranteed = false, bool fixedType = false);
     void storeArg(uint32 n, bool popGuaranteed = false);
-    void storeTop(FrameEntry *target, bool popGuaranteed);
+    void storeTop(FrameEntry *target);
 
     /*
      * Restores state from a slow path.
@@ -875,6 +875,9 @@ class FrameState
      */
     void shift(int32 n);
 
+    /* Swaps the top two items on the stack. Requires two temp slots. */
+    void swap();
+
     inline void setInTryBlock(bool inTryBlock) {
         this->inTryBlock = inTryBlock;
     }
@@ -972,9 +975,6 @@ class FrameState
 
     /* Whether fe is the only copy of backing. */
     bool hasOnlyCopy(FrameEntry *backing, FrameEntry *fe);
-
-    /* Tests whether fe actually has any copies on the stack or in variables. */
-    bool isEntryCopied(FrameEntry *fe) const;
 
     /*
      * All registers in the FE are forgotten. If it is copied, it is uncopied

@@ -158,8 +158,7 @@ js_json_stringify(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         vp->setString(str);
     } else {
-        if (!cx->markTypeCallerUnexpected(types::TYPE_UNDEFINED))
-            return JS_FALSE;
+        cx->markTypeCallerUnexpected(types::TYPE_UNDEFINED);
         vp->setUndefined();
     }
 
@@ -1030,8 +1029,10 @@ CloseObject(JSContext *cx, JSONParser *jp)
         return JS_FALSE;
 
     JSObject *obj = &p.toObject();
-    if (obj->isArray() ? !cx->fixArrayType(obj) : !cx->fixObjectType(obj))
-        return JS_FALSE;
+    if (obj->isArray())
+        cx->fixArrayType(obj);
+    else
+        cx->fixObjectType(obj);
 
     if (!js_SetLengthProperty(cx, jp->objectStack, len - 1))
         return JS_FALSE;

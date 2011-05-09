@@ -587,8 +587,8 @@ ArgSetter(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
             if (fp) {
                 JSScript *script = fp->functionScript();
                 if (script->usesArguments) {
-                    if (arg < fp->numFormalArgs() && !script->typeSetArgument(cx, arg, *vp))
-                        return false;
+                    if (arg < fp->numFormalArgs())
+                        script->typeSetArgument(cx, arg, *vp);
                     fp->canonicalActualArg(arg) = *vp;
                 }
                 return true;
@@ -1238,8 +1238,7 @@ SetCallArg(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
         argp = &obj->callObjArg(i);
 
     JSScript *script = obj->getCallObjCalleeFunction()->script();
-    if (!script->typeSetArgument(cx, i, *vp))
-        return false;
+    script->typeSetArgument(cx, i, *vp);
 
     GC_POKE(cx, *argp);
     *argp = *vp;
@@ -1322,8 +1321,7 @@ SetCallVar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
         varp = &obj->callObjVar(i);
 
     JSScript *script = obj->getCallObjCalleeFunction()->script();
-    if (!script->typeSetLocal(cx, i, *vp))
-        return false;
+    script->typeSetLocal(cx, i, *vp);
 
     GC_POKE(cx, *varp);
     *varp = *vp;
@@ -1606,8 +1604,8 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
          * Mark the function's script as uninlineable, to expand any of its
          * frames on the stack before we go looking for them.
          */
-        if (fun->isInterpreted() && !cx->markTypeFunctionUninlineable(fun->getType()))
-            return false;
+        if (fun->isInterpreted())
+            cx->markTypeFunctionUninlineable(fun->getType());
     }
 
     /* Find fun's top-most activation record. */
@@ -1625,8 +1623,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         fp->prev()->pc(cx, fp, &inlined);
         if (inlined) {
             JSFunction *fun = fp->prev()->jit()->inlineFrames()[inlined->inlineIndex].fun;
-            if (!cx->markTypeFunctionUninlineable(fun->getType()))
-                return false;
+            cx->markTypeFunctionUninlineable(fun->getType());
         }
     }
 #endif
@@ -1695,8 +1692,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         JS_NOT_REACHED("fun_getProperty");
     }
 
-    jsid nameid = atom ? ATOM_TO_JSID(atom) : JSID_VOID;
-    return cx->addTypePropertyId(obj->getType(), nameid, *vp);
+    return true;
 }
 
 struct LazyFunctionDataProp {
@@ -1840,8 +1836,8 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
-        if (!cx->addTypePropertyId(obj->getType(), id, types::TYPE_INT32) ||
-            !js_DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
+        cx->addTypePropertyId(obj->getType(), id, types::TYPE_INT32);
+        if (!js_DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
                                      PropertyStub, StrictPropertyStub,
                                      JSPROP_PERMANENT | JSPROP_READONLY, 0, 0, NULL)) {
             return false;
@@ -2756,8 +2752,9 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
      * This will be used for generic scripted functions, e.g. from non-compileAndGo code.
      */
     TypeObject *newType = proto->getNewType(cx);
-    if (!newType || !cx->markTypeObjectUnknownProperties(newType))
+    if (!newType)
         return NULL;
+    cx->markTypeObjectUnknownProperties(newType);
 
     JSFunction *fun = js_NewFunction(cx, proto, NULL, 0, JSFUN_INTERPRETED, obj, NULL, NULL, NULL);
     if (!fun)
@@ -2923,12 +2920,10 @@ js_CloneFunctionObject(JSContext *cx, JSFunction *fun, JSObject *parent,
             TypeFunction *type = cx->newTypeFunction("ClonedFunction", clone->getProto());
             if (!type || !clone->setTypeAndUniqueShape(cx, type))
                 return NULL;
-            if (fun->getType()->unknownProperties()) {
-                if (!cx->markTypeObjectUnknownProperties(type))
-                    return NULL;
-            } else {
+            if (fun->getType()->unknownProperties())
+                cx->markTypeObjectUnknownProperties(type);
+            else
                 type->handler = fun->getType()->asFunction()->handler;
-            }
         }
     }
     return clone;
@@ -2995,13 +2990,10 @@ js_NewFlatClosure(JSContext *cx, JSFunction *fun, JSOp op, size_t oplen)
     uintN level = fun->u.i.script->staticLevel;
     JSUpvarArray *uva = fun->script()->upvars();
 
-    bool ok = true;
     for (uint32 i = 0, n = uva->length; i < n; i++) {
         upvars[i] = GetUpvar(cx, level, uva->vector[i]);
-        ok &= fun->script()->typeSetUpvar(cx, i, upvars[i]);
+        fun->script()->typeSetUpvar(cx, i, upvars[i]);
     }
-    if (!ok)
-        return NULL;
 
     return closure;
 }
@@ -3100,9 +3092,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     if (!wasDelegate && obj->isDelegate())
         obj->clearDelegate();
 
-    if (!cx->addTypePropertyId(obj->getType(), id, ObjectValue(*fun)))
-        return NULL;
-
+    cx->addTypePropertyId(obj->getType(), id, ObjectValue(*fun));
     if (!obj->defineProperty(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 

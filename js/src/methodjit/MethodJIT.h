@@ -112,17 +112,12 @@ struct VMFrame
     JSContext    *cx;
     Value        *stackLimit;
     StackFrame   *entryfp;
+    void         *entryncode;
+    JSRejoinState stubRejoin;  /* How to rejoin if inside a call from an IC stub. */
 
-/*
- * Value stored in the 'scratch' field when making a native call. This is used
- * by the recompiler and this value must not be written in other cases
- * (i.e. scratch must be used to store a pointer, not an integer.
- * :XXX: remove horrible hack.
- */
-#define NATIVE_CALL_SCRATCH_VALUE (void *) 0x1
-
-/* Scratch value to aid in rejoining from CompileFunction calls made from ICs. */
-#define COMPILE_FUNCTION_SCRATCH_VALUE (void *) 0x2
+#if JS_BITS_PER_WORD == 32
+    void         *unused0, *unused1;  /* For 16 byte alignment */
+#endif
 
 #if defined(JS_CPU_X86)
     void *savedEBX;
@@ -222,14 +217,98 @@ extern "C" void JaegerStubVeneer(void);
 
 namespace mjit {
 
+/*
+ * For a C++ or scripted call made from JIT code, indicates properties of the
+ * register and stack state after the call finishes, which RejoinInterpreter
+ * must use to construct a coherent state for rejoining into the interpreter.
+ */
+enum RejoinState {
+    /*
+     * Return value of call at this bytecode is held in ReturnReg_{Data,Type}
+     * and needs to be restored before starting the next bytecode. f.regs.pc
+     * is *not* intact when rejoining from a scripted call (unlike all other
+     * rejoin states). The pc's offset into the script is stored in the upper
+     * 31 bits of the rejoin state, and the remaining values for RejoinState
+     * are shifted left by one in stack frames to leave the lower bit set only
+     * for scripted calls.
+     */
+    REJOIN_SCRIPTED = 1,
+
+    /* Recompilations and frame expansion are impossible for this call. */
+    REJOIN_NONE,
+
+    /* State is coherent for the start of the current bytecode. */
+    REJOIN_RESUME,
+
+    /*
+     * State is coherent for the start of the current bytecode, which is a TRAP
+     * that has already been invoked and should not be invoked again.
+     */
+    REJOIN_TRAP,
+
+    /* State is coherent for the start of the next (fallthrough) bytecode. */
+    REJOIN_FALLTHROUGH,
+
+    /*
+     * As for REJOIN_FALLTHROUGH, but holds a reference on the compartment's
+     * orphaned native pools which needs to be reclaimed by InternalInterpret.
+     * The return value needs to be adjusted if REJOIN_NATIVE_LOWERED.
+     */
+    REJOIN_NATIVE,
+    REJOIN_NATIVE_LOWERED,
+
+    /* Call returns a payload, which should be pushed before starting next bytecode. */
+    REJOIN_PUSH_BOOLEAN,
+    REJOIN_PUSH_OBJECT,
+
+    /* Call returns an object, which should be assigned to a local per the current bytecode. */
+    REJOIN_DEFLOCALFUN,
+
+    /*
+     * During the prologue of constructing scripts, after the function's
+     * .prototype property has been fetched.
+     */
+    REJOIN_THIS_PROTOTYPE,
+
+    /*
+     * Type check on arguments failed during prologue, need stack check and
+     * call object creation before script can execute.
+     */
+    REJOIN_CHECK_ARGUMENTS,
+
+    /*
+     * State after calling a stub which returns a JIT code pointer for a call
+     * or NULL for an already-completed call.
+     */
+    REJOIN_CALL_PROLOGUE,
+    REJOIN_CALL_PROLOGUE_LOWERED_CALL,
+    REJOIN_CALL_PROLOGUE_LOWERED_APPLY,
+
+    /* Triggered a recompilation while placing the arguments to an apply on the stack. */
+    REJOIN_CALL_SPLAT,
+
+    /* FALLTHROUGH ops which can be implemented as part of an IncOp. */
+    REJOIN_BINDNAME,
+    REJOIN_GETTER,
+    REJOIN_POS,
+    REJOIN_BINARY,
+
+    /*
+     * For an opcode fused with IFEQ/IFNE, call returns a boolean indicating
+     * the result of the comparison and whether to take or not take the branch.
+     */
+    REJOIN_BRANCH
+};
+
 /* Helper to watch for recompilation and frame expansion activity on a compartment. */
 struct RecompilationMonitor
 {
     JSContext *cx;
 
     /*
-     * If either a recompilation or expansion occurs, then ICs and stubs should
-     * not depend on the frame or JITs being intact. The two are separated for logging.
+     * If either inline frame expansion or recompilation occurs, then ICs and
+     * stubs should not depend on the frame or JITs being intact. The two are
+     * separated for logging.
      */
     unsigned recompilations;
     unsigned frameExpansions;
@@ -278,6 +357,7 @@ class JaegerCompartment {
   public:
     bool Initialize();
 
+    JaegerCompartment();
     ~JaegerCompartment() { Finish(); }
 
     JSC::ExecutableAllocator *execAlloc() {
@@ -310,6 +390,14 @@ class JaegerCompartment {
         return JS_FUNC_TO_DATA_PTR(void *, trampolines.forceReturn);
 #endif
     }
+
+    /*
+     * References held on pools created for native ICs, where the IC was
+     * destroyed and we are waiting for the pool to finish use and jump
+     * into the interpoline.
+     */
+    size_t orphanedNativeCount;
+    Vector<JSC::ExecutablePool *, 8, SystemAllocPolicy> orphanedNativePools;
 };
 
 /*
@@ -393,7 +481,6 @@ namespace mjit {
 
 struct InlineFrame;
 struct CallSite;
-struct RejoinSite;
 
 struct NativeMapEntry {
     size_t          bcOff;  /* bytecode offset in script */
@@ -418,14 +505,11 @@ struct JITScript {
      * Therefore, do not change the section ordering in finishThisUp() without
      * changing nMICs() et al as well.
      */
-    uint32          nNmapPairs:30;      /* The NativeMapEntrys are sorted by .bcOff.
+    uint32          nNmapPairs:31;      /* The NativeMapEntrys are sorted by .bcOff.
                                            .ncode values may not be NULL. */
     bool            singleStepMode:1;   /* compiled in "single step mode" */
-    bool            rejoinPoints:1;     /* compiled with all rejoin points for
-                                           inline frame expansions */
     uint32          nInlineFrames;
     uint32          nCallSites;
-    uint32          nRejoinSites;
 #ifdef JS_MONOIC
     uint32          nGetGlobalNames;
     uint32          nSetGlobalNames;
@@ -460,7 +544,6 @@ struct JITScript {
     NativeMapEntry *nmap() const;
     js::mjit::InlineFrame *inlineFrames() const;
     js::mjit::CallSite *callSites() const;
-    js::mjit::RejoinSite *rejoinSites() const;
 #ifdef JS_MONOIC
     ic::GetGlobalNameIC *getGlobalNames() const;
     ic::SetGlobalNameIC *setGlobalNames() const;
@@ -554,55 +637,17 @@ struct CallSite
     uint32 codeOffset;
     uint32 inlineIndex;
     uint32 pcOffset;
-    size_t id;
+    RejoinState rejoin;
 
-    // The identifier is either the address of the stub function being called,
-    // or one of the below magic identifiers. Each of these can appear at most
-    // once per opcode.
-
-    // Identifier for traps. Since traps can be removed, we make sure they carry over
-    // from each compilation, and identify them with a single, canonical
-    // ID. Hopefully a SpiderMonkey file won't have two billion source lines.
-    static const size_t MAGIC_TRAP_ID = 0;
-
-    // Identifier for the return site from a scripted call.
-    static const size_t NCODE_RETURN_ID = 1;
-
-    void initialize(uint32 codeOffset, uint32 inlineIndex, uint32 pcOffset, size_t id) {
+    void initialize(uint32 codeOffset, uint32 inlineIndex, uint32 pcOffset, RejoinState rejoin) {
         this->codeOffset = codeOffset;
         this->inlineIndex = inlineIndex;
         this->pcOffset = pcOffset;
-        this->id = id;
+        this->rejoin = rejoin;
     }
 
     bool isTrap() const {
-        return id == MAGIC_TRAP_ID;
-    }
-};
-
-struct RejoinSite
-{
-    // When doing on stack recompilation, we take a frame that made a call at
-    // some CallSite in the original JIT and redirect it to a corresponding
-    // RejoinSite in the new JIT. The rejoin sites are similar to call sites,
-    // with the exception that they do additional checking and coercions from
-    // int to double to ensure the stack types are consistent with what the new
-    // JIT expects.
-
-    // Note: we don't rejoin at sites within inline calls, such inline frames
-    // are expanded first.
-    uint32 codeOffset;
-    uint32 pcOffset;
-    size_t id;
-
-    // Identifier which can match any callsite ID in the original script for
-    // this PC. This should appear after all other rejoin sites at the PC.
-    static const size_t VARIADIC_ID = 2;
-
-    void initialize(uint32 codeOffset, uint32 pcOffset, size_t id) {
-        this->codeOffset = codeOffset;
-        this->pcOffset = pcOffset;
-        this->id = id;
+        return rejoin == REJOIN_TRAP;
     }
 };
 
@@ -678,6 +723,8 @@ JSScript::nativeCodeForPC(bool constructing, jsbytecode *pc)
 }
 
 extern "C" void JaegerTrampolineReturn();
+extern "C" void JaegerInterpoline();
+extern "C" void JaegerInterpolineScripted();
 
 #if defined(_MSC_VER) || defined(_WIN64)
 extern "C" void *JaegerThrowpoline(js::VMFrame *vmFrame);

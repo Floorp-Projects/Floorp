@@ -555,8 +555,7 @@ DeleteArrayElement(JSContext *cx, JSObject *obj, jsdouble index, bool strict)
         if (index <= jsuint(-1)) {
             jsuint idx = jsuint(index);
             if (idx < obj->getDenseArrayInitializedLength()) {
-                if (!obj->setDenseArrayNotPacked(cx))
-                    return -1;
+                obj->setDenseArrayNotPacked(cx);
                 obj->setDenseArrayElement(idx, MagicValue(JS_ARRAY_HOLE));
                 if (!js_SuppressDeletedIndexProperties(cx, obj, idx, idx+1))
                     return -1;
@@ -606,8 +605,8 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
      * Arrays are already known to have lengths (if the length overflows, it will
      * be caught by setArrayLength).
      */
-    if (!obj->isArray() && !cx->addTypePropertyId(obj->getType(), id, v))
-        return false;
+    if (!obj->isArray())
+        cx->addTypePropertyId(obj->getType(), id, v);
 
     /* We don't support read-only array length yet. */
     return obj->setProperty(cx, id, &v, false);
@@ -974,8 +973,7 @@ array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool 
     }
 
     if (js_IdIsIndex(id, &i) && i < obj->getDenseArrayInitializedLength()) {
-        if (!obj->setDenseArrayNotPacked(cx))
-            return false;
+        obj->setDenseArrayNotPacked(cx);
         obj->setDenseArrayElement(i, MagicValue(JS_ARRAY_HOLE));
     }
 
@@ -1080,9 +1078,8 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 {
     JS_ASSERT(isDenseArray());
 
-    if (!cx->markTypeArrayNotPacked(getType(), true))
-        return false;
-    JS_ALWAYS_TRUE(setDenseArrayNotPacked(cx));
+    cx->markTypeArrayNotPacked(getType(), true);
+    setDenseArrayNotPacked(cx);
 
     /*
      * Save old map now, before calling InitScopeForObject. We'll have to undo
@@ -1611,8 +1608,8 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, const Value *vector
         obj->setDenseArrayElement(i, vector[i]);
         hole |= vector[i].isMagic(JS_ARRAY_HOLE);
     }
-    if (hole && !obj->setDenseArrayNotPacked(cx))
-        return false;
+    if (hole)
+        obj->setDenseArrayNotPacked(cx);
 
     return true;
 }
@@ -1683,9 +1680,8 @@ array_reverse(JSContext *cx, uintN argc, Value *vp)
         jsuint initlen = obj->getDenseArrayInitializedLength();
         if (len > initlen) {
             JS_ASSERT(cx->typeInferenceEnabled());
-            if (!obj->setDenseArrayNotPacked(cx))
-                return false;
             ClearValueRange(obj->getDenseArrayElements() + initlen, len - initlen, true);
+            obj->setDenseArrayNotPacked(cx);
             obj->setDenseArrayInitializedLength(len);
         }
 
@@ -2208,8 +2204,8 @@ array_push_slowly(JSContext *cx, JSObject *obj, uintN argc, Value *argv, Value *
     rval->setNumber(newlength);
 
     /* watch for length overflowing to a double. */
-    if (!rval->isInt32() && !cx->markTypeCallerOverflow())
-        return false;
+    if (!rval->isInt32())
+        cx->markTypeCallerOverflow();
 
     return js_SetLengthProperty(cx, obj, newlength);
 }
@@ -2227,8 +2223,7 @@ array_push1_dense(JSContext* cx, JSObject* obj, const Value &v, Value *rval)
             break;
         }
 
-        if (cx->typeInferenceEnabled() && !cx->addTypePropertyId(obj->getType(), JSID_VOID, v))
-            return false;
+        cx->addTypePropertyId(obj->getType(), JSID_VOID, v);
 
         obj->setDenseArrayLength(length + 1);
         obj->setDenseArrayElement(length, v);
@@ -2327,16 +2322,15 @@ array_pop_slowly(JSContext *cx, JSObject* obj, Value *vp)
         return JS_FALSE;
     if (index == 0) {
         vp->setUndefined();
-        if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
-            return JS_FALSE;
+        cx->markTypeCallerUnexpected(TYPE_UNDEFINED);
     } else {
         index--;
 
         /* Get the to-be-deleted property's value into vp. */
         if (!GetElement(cx, obj, index, &hole, vp))
             return JS_FALSE;
-        if (hole && !cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
-            return JS_FALSE;
+        if (hole)
+            cx->markTypeCallerUnexpected(TYPE_UNDEFINED);
         if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
             return JS_FALSE;
     }
@@ -2352,15 +2346,14 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
     index = obj->getArrayLength();
     if (index == 0) {
         vp->setUndefined();
-        if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
-            return JS_FALSE;
+        cx->markTypeCallerUnexpected(TYPE_UNDEFINED);
         return JS_TRUE;
     }
     index--;
     if (!GetElement(cx, obj, index, &hole, vp))
         return JS_FALSE;
-    if (hole && !cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
-        return JS_FALSE;
+    if (hole)
+        cx->markTypeCallerUnexpected(TYPE_UNDEFINED);
     if (!hole && DeleteArrayElement(cx, obj, index, true) < 0)
         return JS_FALSE;
 
@@ -2394,8 +2387,7 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
 
     if (length == 0) {
         vp->setUndefined();
-        if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
-            return JS_FALSE;
+        cx->markTypeCallerUnexpected(TYPE_UNDEFINED);
     } else {
         length--;
 
@@ -2405,8 +2397,7 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
             *vp = obj->getDenseArrayElement(0);
             if (vp->isMagic(JS_ARRAY_HOLE)) {
                 vp->setUndefined();
-                if (!cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
-                    return JS_FALSE;
+                cx->markTypeCallerUnexpected(TYPE_UNDEFINED);
             }
             Value *elems = obj->getDenseArrayElements();
             memmove(elems, elems + 1, length * sizeof(jsval));
@@ -2425,8 +2416,8 @@ array_shift(JSContext *cx, uintN argc, Value *vp)
         if (!GetElement(cx, obj, 0, &hole, vp))
             return JS_FALSE;
 
-        if (hole && !cx->markTypeCallerUnexpected(TYPE_UNDEFINED))
-            return JS_FALSE;
+        if (hole)
+            cx->markTypeCallerUnexpected(TYPE_UNDEFINED);
 
         /* Slide down the array above the first element. */
         AutoValueRooter tvr(cx);
@@ -2512,8 +2503,8 @@ array_unshift(JSContext *cx, uintN argc, Value *vp)
     vp->setNumber(newlen);
 
     /* watch for length overflowing to a double. */
-    if (!vp->isInt32() && !cx->markTypeCallerOverflow())
-        return false;
+    if (!vp->isInt32())
+        cx->markTypeCallerOverflow();
 
     return JS_TRUE;
 }
@@ -2543,8 +2534,9 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
          * result of the call so mark it at the callsite.
          */
         type = cx->getTypeNewObject(JSProto_Array);
-        if (!type || !cx->markTypeCallerUnexpected((jstype) type))
+        if (!type)
             return false;
+        cx->markTypeCallerUnexpected((jstype) type);
     }
 
     /* Create a new array value to return. */
@@ -2610,10 +2602,8 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
                     return JS_FALSE;
                 }
 
-                if (!cx->addTypePropertyId(obj2->getType(), JSID_VOID, tvr.value()))
-                    return JS_FALSE;
-
                 /* Copy tvr.value() to the new array unless it's a hole. */
+                cx->addTypePropertyId(obj2->getType(), JSID_VOID, tvr.value());
                 if (!hole && !SetArrayElement(cx, obj2, last - begin, tvr.value()))
                     return JS_FALSE;
             }
@@ -2726,13 +2716,13 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
             return JS_FALSE;
         if (nobj->getProto() == aobj->getProto())
             nobj->setType(aobj->getType());
-        else if (!cx->markTypeCallerUnexpected(TYPE_UNKNOWN))
-            return JS_FALSE;
+        else
+            cx->markTypeCallerUnexpected(TYPE_UNKNOWN);
         nobj->setType(aobj->getType());
         if (!nobj->setArrayLength(cx, length))
             return JS_FALSE;
-        if (!aobj->isPackedDenseArray() && !nobj->setDenseArrayNotPacked(cx))
-            return JS_FALSE;
+        if (!aobj->isPackedDenseArray())
+            nobj->setDenseArrayNotPacked(cx);
         vp->setObject(*nobj);
         if (argc == 0)
             return JS_TRUE;
@@ -2742,8 +2732,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
         nobj = NewDenseEmptyArray(cx);
         if (!nobj)
             return JS_FALSE;
-        if (!cx->markTypeCallerUnexpected(TYPE_UNKNOWN))
-            return JS_FALSE;
+        cx->markTypeCallerUnexpected(TYPE_UNKNOWN);
         vp->setObject(*nobj);
         length = 0;
     }
@@ -2772,8 +2761,8 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
                         return false;
                     }
 
-                    if (!hole && !cx->addTypePropertyId(nobj->getType(), JSID_VOID, tvr.value()))
-                        return false;
+                    if (!hole)
+                        cx->addTypePropertyId(nobj->getType(), JSID_VOID, tvr.value());
 
                     /*
                      * Per ECMA 262, 15.4.4.4, step 9, ignore nonexistent
@@ -2789,9 +2778,7 @@ array_concat(JSContext *cx, uintN argc, Value *vp)
             }
         }
 
-        if (!cx->addTypePropertyId(nobj->getType(), JSID_VOID, v))
-            return false;
-
+        cx->addTypePropertyId(nobj->getType(), JSID_VOID, v);
         if (!SetArrayElement(cx, nobj, length, v))
             return false;
         length++;
@@ -2860,8 +2847,9 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
          * result of the call so mark it at the callsite.
          */
         type = cx->getTypeNewObject(JSProto_Array);
-        if (!type || !cx->markTypeCallerUnexpected((jstype) type))
+        if (!type)
             return false;
+        cx->markTypeCallerUnexpected((jstype) type);
     }
 
     if (obj->isDenseArray() && end <= obj->getDenseArrayInitializedLength() &&
@@ -2870,8 +2858,8 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
         if (!nobj)
             return JS_FALSE;
         nobj->setType(type);
-        if (!obj->isPackedDenseArray() && !nobj->setDenseArrayNotPacked(cx))
-            return JS_FALSE;
+        if (!obj->isPackedDenseArray())
+            nobj->setDenseArrayNotPacked(cx);
         vp->setObject(*nobj);
         return JS_TRUE;
     }
@@ -2960,8 +2948,8 @@ array_indexOfHelper(JSContext *cx, JSBool isLast, uintN argc, Value *vp)
                 return JS_FALSE;
             if (equal) {
                 vp->setNumber(i);
-                if (!vp->isInt32() && !cx->markTypeCallerOverflow())
-                    return false;
+                if (!vp->isInt32())
+                    cx->markTypeCallerOverflow();
                 return JS_TRUE;
             }
         }
@@ -3150,7 +3138,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             *vp = rval;
             break;
           case MAP:
-            ok = cx->addTypePropertyId(newarr->getType(), JSID_VOID, rval);
+            cx->addTypePropertyId(newarr->getType(), JSID_VOID, rval);
             if (!ok)
                 goto out;
             ok = SetArrayElement(cx, newarr, i, rval);
@@ -3161,7 +3149,7 @@ array_extra(JSContext *cx, ArrayExtraMode mode, uintN argc, Value *vp)
             if (!cond)
                 break;
             /* The element passed the filter, so push it onto our result. */
-            ok = cx->addTypePropertyId(newarr->getType(), JSID_VOID, tvr.value());
+            cx->addTypePropertyId(newarr->getType(), JSID_VOID, tvr.value());
             if (!ok)
                 goto out;
             ok = SetArrayElement(cx, newarr, newlen++, tvr.value());
@@ -3493,8 +3481,7 @@ js_Array(JSContext *cx, uintN argc, Value *vp)
             return false;
         obj = NewDenseCopiedArray(cx, argc, vp + 2);
     } else if (!vp[2].isNumber()) {
-        if (!cx->addTypeProperty(type, NULL, vp[2]))
-            return false;
+        cx->addTypeProperty(type, NULL, vp[2]);
         obj = NewDenseCopiedArray(cx, 1, vp + 2);
     } else {
         jsuint length;
@@ -3563,14 +3550,14 @@ js_InitArrayClass(JSContext *cx, JSObject *obj)
     if (!proto)
         return NULL;
 
-    if (!JS_AddTypeProperty(cx, proto, "length", INT_TO_JSVAL(0)))
-        return NULL;
+    JS_AddTypeProperty(cx, proto, "length", INT_TO_JSVAL(0));
     JS_ALWAYS_TRUE(proto->setArrayLength(cx, 0));
 
     /* The default 'new' object for Array.prototype has unknown properties. */
     TypeObject *newType = proto->getNewType(cx);
-    if (!newType || !cx->markTypeObjectUnknownProperties(newType))
+    if (!newType)
         return NULL;
+    cx->markTypeObjectUnknownProperties(newType);
 
     return proto;
 }
@@ -3844,8 +3831,8 @@ js_CloneDensePrimitiveArray(JSContext *cx, JSObject *obj, JSObject **clone)
     if (!*clone)
         return JS_FALSE;
 
-    if (!obj->isPackedDenseArray() && !(*clone)->setDenseArrayNotPacked(cx))
-        return JS_FALSE;
+    if (!obj->isPackedDenseArray())
+        (*clone)->setDenseArrayNotPacked(cx);
 
     /* The length will be set to the initlen, above, but length might be larger. */
     return (*clone)->setArrayLength(cx, length);
