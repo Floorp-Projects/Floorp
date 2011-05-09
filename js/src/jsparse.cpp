@@ -1090,8 +1090,13 @@ Compiler::compileScript(JSContext *cx, JSObject *scopeChain, StackFrame *callerF
             if ((cs->format & JOF_SHARPSLOT) ||
                 JOF_TYPE(cs->format) == JOF_LOCAL ||
                 (JOF_TYPE(cs->format) == JOF_SLOTATOM)) {
+                /*
+                 * JSOP_GETARGPROP also has JOF_SLOTATOM type, but it may be
+                 * emitted only for a function.
+                 */
                 JS_ASSERT_IF(!(cs->format & JOF_SHARPSLOT),
-                             JOF_TYPE(cs->format) != JOF_SLOTATOM);
+                             (JOF_TYPE(cs->format) == JOF_SLOTATOM) ==
+                             (op == JSOP_GETLOCALPROP));
                 slot = GET_SLOTNO(code);
                 if (!(cs->format & JOF_SHARPSLOT))
                     slot += cg.sharpSlots();
