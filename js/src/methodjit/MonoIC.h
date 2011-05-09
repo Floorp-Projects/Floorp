@@ -236,10 +236,16 @@ struct CallICInfo {
     /* Inline to OOL jump, redirected by stubs. */
     JSC::CodeLocationJump funJump;
 
-    /* Native stub info patched up when stealing during recompilation. */
-    JSC::CodeLocationLabel nativeStart;
-    JSC::CodeLocationJump nativeFunGuard;
+    /*
+     * Native stub fallthrough jump which may be patched during recompilation.
+     * On x64 this is an indirect jump to avoid issues with far jumps on
+     * relative branches.
+     */
+#ifdef JS_CPU_X64
+    JSC::CodeLocationDataLabelPtr nativeJump;
+#else
     JSC::CodeLocationJump nativeJump;
+#endif
 
     /* Offset to inline scripted call, from funGuard. */
     uint32 hotJumpOffset   : 16;
