@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=655273
+-->
+<head>
+  <title>Test for Bug 655273</title>
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"></script>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=655273">Mozilla Bug 655273</a>
+
+<script type="application/javascript;version=1.7">
+
+/** Test for Bug 655273 **/
+
+// Call pushState and make sure that the resulting SHEntry has the same title
+// as our old SHEntry.
+
+history.pushState('', '', '');
+
+const Ci = Components.interfaces;
+const Cc = Components.classes;
+
+let shistory = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .sessionHistory;
+
+is(shistory.getEntryAtIndex(shistory.index, false).title,
+   document.title,
+   'SHEntry title');
+
+</script>
+
+</body>
+</html>
