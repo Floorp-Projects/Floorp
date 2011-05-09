@@ -21,4 +21,3 @@ load 582138-1.xhtml
 load 612565-1.html
 asserts(6) load 615015-1.html # Bug 439258
 load 615450-1.html
-load 643786-1.html

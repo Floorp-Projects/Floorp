@@ -1172,7 +1172,7 @@ RemoveNode(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   nsCOMPtr<nsINode> parent = node->GetNodeParent();
-  return parent ? parent->RemoveChildAt(parent->IndexOf(node), PR_TRUE) : NS_OK;
+  return parent ? parent->RemoveChild(node) : NS_OK;
 }
 
 /**
