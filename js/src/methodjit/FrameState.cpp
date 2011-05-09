@@ -2117,11 +2117,17 @@ FrameState::storeTop(FrameEntry *target)
     /*
      * If this is overwriting a known non-double type with another value of the
      * same type, then make sure we keep the type marked as synced after doing
-     * the copy.
+     * the copy. Skip this for variables with undefined type --- for locals
+     * with no use-before-def, the initial undefined type is not synced but is
+     * marked as synced. If the local is then written with a known-undefined
+     * value, we need to make sure the in-memory type gets updated.
      */
     bool wasSynced = target->type.synced();
     JSValueType oldType = target->isTypeKnown() ? target->getKnownType() : JSVAL_TYPE_UNKNOWN;
-    bool trySyncType = wasSynced && oldType != JSVAL_TYPE_UNKNOWN && oldType != JSVAL_TYPE_DOUBLE;
+    bool trySyncType = wasSynced &&
+        oldType != JSVAL_TYPE_UNKNOWN &&
+        oldType != JSVAL_TYPE_DOUBLE &&
+        oldType != JSVAL_TYPE_UNDEFINED;
 
     /* Completely invalidate the local variable. */
     forgetEntry(target);
