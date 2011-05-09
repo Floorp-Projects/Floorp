@@ -37,6 +37,7 @@
 #include "prtime.h"
 
 #include "cert.h"
+#include "certi.h"
 #include "certdb.h"
 #include "secitem.h"
 #include "secder.h"
@@ -86,10 +87,24 @@ SEC_DeletePermCertificate(CERTCertificate *cert)
     PRStatus nssrv;
     NSSTrustDomain *td = STAN_GetDefaultTrustDomain();
     NSSCertificate *c = STAN_GetNSSCertificate(cert);
+    CERTCertTrust *certTrust;
 
     if (c == NULL) {
         /* error code is set */
         return SECFailure;
+    }
+
+    certTrust = nssTrust_GetCERTCertTrustForCert(c, cert);
+    if (certTrust) {
+	NSSTrust *nssTrust = nssTrustDomain_FindTrustForCertificate(td, c);
+	if (nssTrust) {
+	    nssrv = STAN_DeleteCertTrustMatchingSlot(c);
+	    if (nssrv != PR_SUCCESS) {
+    		CERT_MapStanError();
+    	    }
+	    /* This call always returns PR_SUCCESS! */
+	    (void) nssTrust_Destroy(nssTrust);
+	}
     }
 
     /* get rid of the token instances */

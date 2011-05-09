@@ -45,24 +45,3 @@ nsOggDecoderStateMachine::nsOggDecoderStateMachine(nsBuiltinDecoder* aDecoder) :
   nsBuiltinDecoderStateMachine(aDecoder, new nsOggReader(aDecoder))
 {
 }
-
-void nsOggDecoderStateMachine::LoadMetadata()
-{
-  nsBuiltinDecoderStateMachine::LoadMetadata();
-
-  // Get the duration from the media file. We only do this if the
-  // content length of the resource is known as we need to seek
-  // to the end of the file to get the last time field. We also
-  // only do this if the resource is seekable and if we haven't
-  // already obtained the duration via an HTTP header.
-
-  if (mState != DECODER_STATE_SHUTDOWN &&
-      mDecoder->GetCurrentStream()->GetLength() >= 0 &&
-      mSeekable &&
-      mEndTime == -1)
-  {
-    mDecoder->StopProgressUpdates();
-    FindEndTime();
-    mDecoder->StartProgressUpdates();
-  }
-}

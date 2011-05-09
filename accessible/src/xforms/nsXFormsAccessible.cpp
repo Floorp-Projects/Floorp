@@ -197,21 +197,15 @@ nsXFormsAccessible::GetNameInternal(nsAString& aName)
   return GetBoundChildElementValue(NS_LITERAL_STRING("label"), aName);
 }
 
-NS_IMETHODIMP
-nsXFormsAccessible::GetDescription(nsAString& aDescription)
+void
+nsXFormsAccessible::Description(nsString& aDescription)
 {
-  nsAutoString description;
-  nsresult rv = nsTextEquivUtils::
+  nsTextEquivUtils::
     GetTextEquivFromIDRefs(this, nsAccessibilityAtoms::aria_describedby,
-                           description);
+                           aDescription);
 
-  if (NS_SUCCEEDED(rv) && !description.IsEmpty()) {
-    aDescription = description;
-    return NS_OK;
-  }
-
-  // search the xforms:hint element
-  return GetBoundChildElementValue(NS_LITERAL_STRING("hint"), aDescription);
+  if (aDescription.IsEmpty())
+    GetBoundChildElementValue(NS_LITERAL_STRING("hint"), aDescription);
 }
 
 PRBool

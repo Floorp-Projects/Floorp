@@ -151,14 +151,20 @@ GetStorageSQLiteOtherMemoryUsed(void *)
 }
 
 NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLitePageCacheMemoryUsed,
-                             "storage/sqlite/pagecache",
-                             "Memory in use by SQLite for the page cache",
+                             "heap-used/storage/sqlite/pagecache",
+                             "Memory used by SQLite for the page cache. "
+                             "This overlaps with the per-connection cache-used "
+                             "figure, thus over-counting some bytes.  Bug "
+                             "653630 has the details.",
                              GetStorageSQLitePageCacheMemoryUsed,
                              nsnull)
 
 NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteOtherMemoryUsed,
-                             "storage/sqlite/other",
-                             "Memory in use by SQLite for other various reasons",
+                             "heap-used/storage/sqlite/other",
+                             "Memory used by SQLite for other various reasons."
+                             "This overlaps with the per-connection stmt-used "
+                             "and schema-used figures, thus over-counting some "
+                             "bytes.  Bug 653630 has the details.",
                              GetStorageSQLiteOtherMemoryUsed,
                              nsnull)
 

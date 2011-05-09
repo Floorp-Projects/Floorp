@@ -43,12 +43,14 @@ include protocol PNecko;
 
 include "mozilla/net/PHttpChannelParams.h";
 include "mozilla/net/NeckoMessageUtils.h";
+include "prio.h";
 
 using RequestHeaderTuples;
 using nsHttpResponseHead;
 using nsHttpAtom;
 using IPC::URI;
 using IPC::InputStream;
+using PRNetAddr;
 
 namespace mozilla {
 namespace net {
@@ -131,7 +133,9 @@ child:
                  PRBool              cacheEntryAvailable,
                  PRUint32            cacheExpirationTime,
                  nsCString           cachedCharset,
-                 nsCString           securityInfoSerialization);
+                 nsCString           securityInfoSerialization,
+                 PRNetAddr           selfAddr,
+                 PRNetAddr           peerAddr);
 
   // Combines a single OnDataAvailable and its associated OnProgress &
   // OnStatus calls into one IPDL message

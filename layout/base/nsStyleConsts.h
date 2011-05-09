@@ -706,6 +706,11 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_WORDWRAP_BREAK_WORD            1
 
 // See nsStyleText
+#define NS_STYLE_HYPHENS_NONE                   0
+#define NS_STYLE_HYPHENS_MANUAL                 1
+#define NS_STYLE_HYPHENS_AUTO                   2
+
+// See nsStyleText
 #define NS_STYLE_LINE_HEIGHT_BLOCK_HEIGHT       0
 
 // See nsStyleText

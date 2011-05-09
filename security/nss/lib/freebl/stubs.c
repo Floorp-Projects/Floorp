@@ -63,6 +63,7 @@
 #include <prsystem.h>
 #include <prinrval.h>
 #include <prtime.h>
+#include <prcvar.h>
 #include <secasn1.h>
 #include <secoid.h>
 #include <secdig.h>
@@ -150,11 +151,15 @@ STUB_DECLARE(void,PR_Assert,(const char *s, const char *file, PRIntn ln));
 STUB_DECLARE(PRStatus,PR_CallOnce,(PRCallOnceType *once, PRCallOnceFN func));
 STUB_DECLARE(PRStatus,PR_Close,(PRFileDesc *fd));
 STUB_DECLARE(void,PR_DestroyLock,(PRLock *lock));
+STUB_DECLARE(void,PR_DestroyCondVar,(PRCondVar *cvar));
 STUB_DECLARE(void,PR_Free,(void *ptr));
 STUB_DECLARE(char * ,PR_GetLibraryFilePathname,(const char *name,
 			PRFuncPtr addr));
 STUB_DECLARE(void,PR_Lock,(PRLock *lock));
+STUB_DECLARE(PRCondVar *,PR_NewCondVar,(PRLock *lock));
 STUB_DECLARE(PRLock *,PR_NewLock,(void));
+STUB_DECLARE(PRStatus,PR_NotifyCondVar,(PRCondVar *cvar));
+STUB_DECLARE(PRStatus,PR_NotifyAllCondVar,(PRCondVar *cvar));
 STUB_DECLARE(PRFileDesc *,PR_Open,(const char *name, PRIntn flags,
 			 PRIntn mode));
 STUB_DECLARE(PRInt32,PR_Read,(PRFileDesc *fd, void *buf, PRInt32 amount));
@@ -162,6 +167,8 @@ STUB_DECLARE(PROffset32,PR_Seek,(PRFileDesc *fd, PROffset32 offset,
 			PRSeekWhence whence));
 STUB_DECLARE(PRStatus,PR_Sleep,(PRIntervalTime ticks));
 STUB_DECLARE(PRStatus,PR_Unlock,(PRLock *lock));
+STUB_DECLARE(PRStatus,PR_WaitCondVar,(PRCondVar *cvar,
+			PRIntervalTime timeout));
 
 STUB_DECLARE(SECItem *,SECITEM_AllocItem_Util,(PRArenaPool *arena, 
 			SECItem *item,unsigned int len));
@@ -430,6 +437,48 @@ PR_DestroyLock_stub(PRLock *lock)
     return;
 }
 
+extern PRCondVar *
+PR_NewCondVar_stub(PRLock *lock)
+{
+    STUB_SAFE_CALL1(PR_NewCondVar, lock);
+    abort();
+    return NULL;
+}
+
+extern PRStatus
+PR_NotifyCondVar_stub(PRCondVar *cvar)
+{
+    STUB_SAFE_CALL1(PR_NotifyCondVar, cvar);
+    abort();
+    return PR_FAILURE;
+}
+
+extern PRStatus
+PR_NotifyAllCondVar_stub(PRCondVar *cvar)
+{
+    STUB_SAFE_CALL1(PR_NotifyAllCondVar, cvar);
+    abort();
+    return PR_FAILURE;
+}
+
+extern PRStatus
+PR_WaitCondVar_stub(PRCondVar *cvar, PRIntervalTime timeout)
+{
+    STUB_SAFE_CALL2(PR_WaitCondVar, cvar, timeout);
+    abort();
+    return PR_FAILURE;
+}
+
+
+
+extern void
+PR_DestroyCondVar_stub(PRCondVar *cvar)
+{
+    STUB_SAFE_CALL1(PR_DestroyCondVar, cvar);
+    abort();
+    return;
+}
+
 /*
  * NOTE: this presupposes GCC 4.1
  */
@@ -507,6 +556,11 @@ freebl_InitNSPR(void *lib)
     STUB_FETCH_FUNCTION(PR_Assert);
     STUB_FETCH_FUNCTION(PR_Sleep);
     STUB_FETCH_FUNCTION(PR_CallOnce);
+    STUB_FETCH_FUNCTION(PR_NewCondVar);
+    STUB_FETCH_FUNCTION(PR_NotifyCondVar);
+    STUB_FETCH_FUNCTION(PR_NotifyAllCondVar);
+    STUB_FETCH_FUNCTION(PR_WaitCondVar);
+    STUB_FETCH_FUNCTION(PR_DestroyCondVar);
     STUB_FETCH_FUNCTION(PR_NewLock);
     STUB_FETCH_FUNCTION(PR_Unlock);
     STUB_FETCH_FUNCTION(PR_Lock);

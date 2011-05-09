@@ -39,14 +39,14 @@ size_t ExecutableAllocator::determinePageSize()
     return system_info.dwPageSize;
 }
 
-ExecutablePool::Allocation ExecutablePool::systemAlloc(size_t n)
+ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
     void *allocation = VirtualAlloc(0, n, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
     ExecutablePool::Allocation alloc = {reinterpret_cast<char*>(allocation), n};
     return alloc;
 }
 
-void ExecutablePool::systemRelease(const ExecutablePool::Allocation& alloc)
+void ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
 { 
     VirtualFree(alloc.pages, 0, MEM_RELEASE); 
 }

@@ -49,20 +49,27 @@ function any_unit_to_num(str)
     return Number(String(str).match(/^([\d.]+)/)[1]);
 }
 
+var FUNC_NEGATIVE = "cubic-bezier(0.25, -2, 0.75, 1)";
+
 var supported_properties = {
     "border-bottom-left-radius": [ test_radius_transition ],
     "border-bottom-right-radius": [ test_radius_transition ],
     "border-top-left-radius": [ test_radius_transition ],
     "border-top-right-radius": [ test_radius_transition ],
     "-moz-box-flex": [ test_float_zeroToOne_transition,
-                       test_float_aboveOne_transition ],
+                       test_float_aboveOne_transition,
+                       test_float_zeroToOne_clamped ],
     "box-shadow": [ test_shadow_transition ],
-    "-moz-column-count": [ test_pos_integer_or_auto_transition ],
-    "-moz-column-gap": [ test_length_transition ],
+    "-moz-column-count": [ test_pos_integer_or_auto_transition,
+                           test_integer_at_least_one_clamping ],
+    "-moz-column-gap": [ test_length_transition,
+                         test_length_clamped ],
     "-moz-column-rule-color": [ test_color_transition,
                                 test_border_color_transition ],
-    "-moz-column-rule-width": [ test_length_transition ],
-    "-moz-column-width": [ test_length_transition ],
+    "-moz-column-rule-width": [ test_length_transition,
+                                test_length_clamped ],
+    "-moz-column-width": [ test_length_transition,
+                           test_length_clamped ],
     "-moz-image-region": [ test_rect_transition ],
     "-moz-outline-radius-bottomleft": [ test_radius_transition ],
     "-moz-outline-radius-bottomright": [ test_radius_transition ],
@@ -72,100 +79,157 @@ var supported_properties = {
                                     test_border_color_transition ],
     "-moz-transform": [ test_transform_transition ],
     "-moz-transform-origin": [ test_length_pair_transition,
-                               test_length_percent_pair_transition ],
+                               test_length_percent_pair_transition,
+                               test_length_percent_pair_unclamped ],
     "background-color": [ test_color_transition ],
-    "background-position": [ test_background_position_transition ],
-    "background-size": [ test_background_size_transition ],
+    "background-position": [ test_background_position_transition,
+                             // FIXME: We don't currently test clamping,
+                             // since background-position uses calc() as
+                             // an intermediate form.
+                             /* test_length_percent_pair_unclamped */ ],
+    "background-size": [ test_background_size_transition,
+                         // FIXME: We don't currently test clamping,
+                         // since background-size uses calc() as an
+                         // intermediate form.
+                         /* test_length_percent_pair_clamped */ ],
     "border-bottom-color": [ test_color_transition,
                              test_border_color_transition ],
-    "border-bottom-width": [ test_length_transition ],
+    "border-bottom-width": [ test_length_transition,
+                             test_length_clamped ],
     "border-left-color": [ test_color_transition,
                            test_border_color_transition ],
-    "border-left-width": [ test_length_transition ],
+    "border-left-width": [ test_length_transition,
+                           test_length_clamped ],
     "border-right-color": [ test_color_transition,
                             test_border_color_transition ],
-    "border-right-width": [ test_length_transition ],
-    "border-spacing": [ test_length_pair_transition ],
+    "border-right-width": [ test_length_transition,
+                            test_length_clamped ],
+    "border-spacing": [ test_length_pair_transition,
+                        test_length_pair_transition_clamped ],
     "border-top-color": [ test_color_transition,
                           test_border_color_transition ],
-    "border-top-width": [ test_length_transition ],
+    "border-top-width": [ test_length_transition,
+                           test_length_clamped ],
     "bottom": [ test_length_transition, test_percent_transition,
-                test_length_percent_calc_transition ],
+                test_length_percent_calc_transition,
+                test_length_unclamped, test_percent_unclamped ],
     "clip": [ test_rect_transition ],
     "color": [ test_color_transition ],
     "fill": [ test_color_transition ],
-    "fill-opacity" : [ test_float_zeroToOne_transition ],
+    "fill-opacity" : [ test_float_zeroToOne_transition,
+                       // opacity is clamped in computed style
+                       // (not parsing/interpolation)
+                       test_float_zeroToOne_clamped ],
     "flood-color": [ test_color_transition ],
-    "flood-opacity" : [ test_float_zeroToOne_transition ],
+    "flood-opacity" : [ test_float_zeroToOne_transition,
+                        // opacity is clamped in computed style
+                        // (not parsing/interpolation)
+                        test_float_zeroToOne_clamped ],
     "font-size": [ test_length_transition, test_percent_transition,
-                   test_length_percent_calc_transition ],
+                   test_length_percent_calc_transition,
+                   test_length_clamped, test_percent_clamped ],
     "font-size-adjust": [ test_float_zeroToOne_transition,
-                          test_float_aboveOne_transition ],
+                          test_float_aboveOne_transition,
+                          /* FIXME: font-size-adjust treats zero specially */
+                          /* test_float_zeroToOne_clamped */ ],
     "font-stretch": [ test_font_stretch ],
     "font-weight": [ test_font_weight ],
     "height": [ test_length_transition, test_percent_transition,
-                test_length_percent_calc_transition ],
+                test_length_percent_calc_transition,
+                test_length_clamped, test_percent_clamped ],
     "left": [ test_length_transition, test_percent_transition,
-              test_length_percent_calc_transition ],
-    "letter-spacing": [ test_length_transition ],
+              test_length_percent_calc_transition,
+              test_length_unclamped, test_percent_unclamped ],
+    "letter-spacing": [ test_length_transition, test_length_unclamped ],
     "lighting-color": [ test_color_transition ],
     // NOTE: when calc() is supported on 'line-height', we should add
     // test_length_percent_calc_transition.
-    "line-height": [ test_length_transition, test_percent_transition ],
+    "line-height": [ test_length_transition, test_percent_transition,
+                     test_length_clamped, test_percent_clamped ],
     "margin-bottom": [ test_length_transition, test_percent_transition,
-                       test_length_percent_calc_transition ],
+                       test_length_percent_calc_transition,
+                       test_length_unclamped, test_percent_unclamped ],
     "margin-left": [ test_length_transition, test_percent_transition,
-                     test_length_percent_calc_transition ],
+                     test_length_percent_calc_transition,
+                     test_length_unclamped, test_percent_unclamped ],
     "margin-right": [ test_length_transition, test_percent_transition,
-                      test_length_percent_calc_transition ],
+                      test_length_percent_calc_transition,
+                      test_length_unclamped, test_percent_unclamped ],
     "margin-top": [ test_length_transition, test_percent_transition,
-                    test_length_percent_calc_transition ],
-    "marker-offset": [ test_length_transition ],
+                    test_length_percent_calc_transition,
+                    test_length_unclamped, test_percent_unclamped ],
+    "marker-offset": [ test_length_transition,
+                       test_length_unclamped ],
     "max-height": [ test_length_transition, test_percent_transition,
-                    test_length_percent_calc_transition ],
+                    test_length_percent_calc_transition,
+                    test_length_clamped, test_percent_clamped ],
     "max-width": [ test_length_transition, test_percent_transition,
-                   test_length_percent_calc_transition ],
+                   test_length_percent_calc_transition,
+                   test_length_clamped, test_percent_clamped ],
     "min-height": [ test_length_transition, test_percent_transition,
-                    test_length_percent_calc_transition ],
+                    test_length_percent_calc_transition,
+                    test_length_clamped, test_percent_clamped ],
     "min-width": [ test_length_transition, test_percent_transition,
-                   test_length_percent_calc_transition ],
-    "opacity" : [ test_float_zeroToOne_transition ],
+                   test_length_percent_calc_transition,
+                   test_length_clamped, test_percent_clamped ],
+    "opacity" : [ test_float_zeroToOne_transition,
+                  // opacity is clamped in computed style
+                  // (not parsing/interpolation)
+                  test_float_zeroToOne_clamped ],
     "outline-color": [ test_color_transition ],
-    "outline-offset": [ test_length_transition ],
-    "outline-width": [ test_length_transition ],
+    "outline-offset": [ test_length_transition, test_length_unclamped ],
+    "outline-width": [ test_length_transition, test_length_clamped ],
     "padding-bottom": [ test_length_transition, test_percent_transition,
-                        test_length_percent_calc_transition ],
+                        test_length_percent_calc_transition,
+                        test_length_clamped, test_percent_clamped ],
     "padding-left": [ test_length_transition, test_percent_transition,
-                      test_length_percent_calc_transition ],
+                      test_length_percent_calc_transition,
+                      test_length_clamped, test_percent_clamped ],
     "padding-right": [ test_length_transition, test_percent_transition,
-                       test_length_percent_calc_transition ],
+                       test_length_percent_calc_transition,
+                       test_length_clamped, test_percent_clamped ],
     "padding-top": [ test_length_transition, test_percent_transition,
-                     test_length_percent_calc_transition ],
+                     test_length_percent_calc_transition,
+                     test_length_clamped, test_percent_clamped ],
     "right": [ test_length_transition, test_percent_transition,
-               test_length_percent_calc_transition ],
+               test_length_percent_calc_transition,
+               test_length_unclamped, test_percent_unclamped ],
     "stop-color": [ test_color_transition ],
-    "stop-opacity" : [ test_float_zeroToOne_transition ],
+    "stop-opacity" : [ test_float_zeroToOne_transition,
+                       // opacity is clamped in computed style
+                       // (not parsing/interpolation)
+                       test_float_zeroToOne_clamped ],
     "stroke": [ test_color_transition ],
     "stroke-dasharray": [ test_dasharray_transition ],
     // NOTE: when calc() is supported on 'stroke-dashoffset', we should
     // add test_length_percent_calc_transition.
-    "stroke-dashoffset": [ test_length_transition, test_percent_transition ],
-    "stroke-miterlimit": [ test_float_aboveOne_transition ],
-    "stroke-opacity" : [ test_float_zeroToOne_transition ],
+    "stroke-dashoffset": [ test_length_transition, test_percent_transition,
+                           test_length_unclamped, test_percent_unclamped ],
+    "stroke-miterlimit": [ test_float_aboveOne_transition,
+                           test_float_aboveOne_clamped ],
+    "stroke-opacity" : [ test_float_zeroToOne_transition,
+                         // opacity is clamped in computed style
+                         // (not parsing/interpolation)
+                         test_float_zeroToOne_clamped ],
     // NOTE: when calc() is supported on 'stroke-width', we should add
     // test_length_percent_calc_transition.
-    "stroke-width": [ test_length_transition, test_percent_transition ],
+    "stroke-width": [ test_length_transition, test_percent_transition,
+                      test_length_clamped, test_percent_clamped ],
     "text-indent": [ test_length_transition, test_percent_transition,
-                     test_length_percent_calc_transition ],
+                     test_length_percent_calc_transition,
+                     test_length_unclamped, test_percent_unclamped ],
     "text-shadow": [ test_shadow_transition ],
     "top": [ test_length_transition, test_percent_transition,
-             test_length_percent_calc_transition ],
+             test_length_percent_calc_transition,
+             test_length_unclamped, test_percent_unclamped ],
     "vertical-align": [ test_length_transition, test_percent_transition,
-                        test_length_percent_calc_transition ],
+                        test_length_percent_calc_transition,
+                        test_length_unclamped, test_percent_unclamped ],
     "visibility": [ test_visibility_transition ],
     "width": [ test_length_transition, test_percent_transition,
-               test_length_percent_calc_transition ],
-    "word-spacing": [ test_length_transition ],
+               test_length_percent_calc_transition,
+               test_length_clamped, test_percent_clamped ],
+    "word-spacing": [ test_length_transition, test_length_unclamped ],
     "z-index": [ test_zindex_transition, test_pos_integer_or_auto_transition ],
 };
 
@@ -304,6 +368,27 @@ function test_length_transition(prop) {
   check_distance(prop, "4px", "6px", "12px");
 }
 
+function test_length_clamped(prop) {
+  test_length_clamped_or_unclamped(prop, true);
+}
+
+function test_length_unclamped(prop) {
+  test_length_clamped_or_unclamped(prop, false);
+}
+
+function test_length_clamped_or_unclamped(prop, is_clamped) {
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0px", "");
+  is(cs.getPropertyValue(prop), "0px",
+     "length-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "100px", "");
+  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), "0px",
+     "length-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
+}
+
 // Test using float values in the range [0, 1] (e.g. opacity)
 function test_float_zeroToOne_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
@@ -317,6 +402,26 @@ function test_float_zeroToOne_transition(prop) {
   check_distance(prop, "0.3", "0.425", "0.8");
 }
 
+function test_float_zeroToOne_clamped(prop) {
+  test_float_zeroToOne_clamped_or_unclamped(prop, true);
+}
+function test_float_zeroToOne_unclamped(prop) {
+  test_float_zeroToOne_clamped_or_unclamped(prop, false);
+}
+
+function test_float_zeroToOne_clamped_or_unclamped(prop, is_clamped) {
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0", "");
+  is(cs.getPropertyValue(prop), "0",
+     "float-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "1", "");
+  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), "0",
+     "float-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
+}
+
 // Test using float values in the range [1, infinity) (e.g. stroke-miterlimit)
 function test_float_aboveOne_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
@@ -328,6 +433,19 @@ function test_float_aboveOne_transition(prop) {
   is(cs.getPropertyValue(prop), "1.275",
      "float-valued property " + prop + ": interpolation of floats");
   check_distance(prop, "1", "1.275", "2.1");
+}
+
+function test_float_aboveOne_clamped(prop) {
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "1", "");
+  is(cs.getPropertyValue(prop), "1",
+     "float-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "5", "");
+  is(cs.getPropertyValue(prop), "1",
+     "float-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_percent_transition(prop) {
@@ -349,6 +467,26 @@ function test_percent_transition(prop) {
   ok(has_num(res),
      "percent-valued property " + prop + ": percent computes to number");
   check_distance(prop, "25%", "37.5%", "75%");
+}
+
+function test_percent_clamped(prop) {
+  test_percent_clamped_or_unclamped(prop, true);
+}
+
+function test_percent_unclamped(prop) {
+  test_percent_clamped_or_unclamped(prop, false);
+}
+
+function test_percent_clamped_or_unclamped(prop, is_clamped) {
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0%", "");
+  var zero_val = cs.getPropertyValue(prop); // flushes too
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "150%", "");
+  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), zero_val,
+     "percent-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_length_percent_calc_transition(prop) {
@@ -435,6 +573,32 @@ function test_color_transition(prop) {
   check_distance(prop, "rgb(128, 64, 0)", "rgb(96, 48, 32)", "currentColor");
 
   (prop == "color" ? div.parentNode : div).style.removeProperty("color");
+
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "rgb(0, 255, 0)", "");
+  var vals = cs.getPropertyValue(prop).match(/rgb\(([^, ]*), ([^, ]*), ([^, ]*)\)/);
+  is(vals.length, 4,
+     "color-valued property " + prop + ": flush before clamping test (length)");
+  is(vals[1], "0",
+     "color-valued property " + prop + ": flush before clamping test (red)");
+  is(vals[2], "255",
+     "color-valued property " + prop + ": flush before clamping test (green)");
+  is(vals[3], "0",
+     "color-valued property " + prop + ": flush before clamping test (blue)");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "rgb(255, 0, 128)", "");
+  // FIXME: Once we support non-sRGB colors, these tests will need fixing.
+  vals = cs.getPropertyValue(prop).match(/rgb\(([^, ]*), ([^, ]*), ([^, ]*)\)/);
+  is(vals.length, 4,
+     "color-valued property " + prop + ": clamping of negatives (length)");
+  is(vals[1], "0",
+     "color-valued property " + prop + ": clamping of negatives (red)");
+  is(vals[2], "255",
+     "color-valued property " + prop + ": clamping of above-range (green)");
+  is(vals[3], "0",
+     "color-valued property " + prop + ": clamping of negatives (blue)");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_border_color_transition(prop) {
@@ -503,6 +667,45 @@ function test_shadow_transition(prop) {
   is(cs.getPropertyValue(prop), defaultColor + "3px 5px 4px" + spreadStr,
      "shadow-valued property " + prop + ": interpolation without color");
   check_distance(prop, "2px 2px 2px", "3px 5px 4px", "6px 14px 10px");
+
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0px 0px 0px black", "");
+  is(cs.getPropertyValue(prop), "rgb(0, 0, 0) 0px 0px 0px" + spreadStr,
+     "shadow-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "10px 10px 10px black", "");
+  var vals = cs.getPropertyValue(prop).split(" ");
+  is(vals.length, 6 + (prop == "box-shadow"), "unexpected number of values");
+  is(vals.slice(0, 3).join(" "), "rgb(0, 0, 0)",
+     "shadow-valued property " + prop + " (color): clamping of negatives");
+  isnot(vals[3], "0px",
+        "shadow-valued property " + prop + " (x): clamping of negatives");
+  isnot(vals[4], "0px",
+        "shadow-valued property " + prop + " (y): clamping of negatives");
+  is(vals[5], "0px",
+     "shadow-valued property " + prop + " (radius): clamping of negatives");
+  if (prop == "box-shadow") {
+    div.style.setProperty("-moz-transition-property", "none", "");
+    div.style.setProperty(prop, "0px 0px 0px 0px black", "");
+    is(cs.getPropertyValue(prop), "rgb(0, 0, 0) 0px 0px 0px 0px",
+       "shadow-valued property " + prop + ": flush before clamping test");
+    div.style.setProperty("-moz-transition-property", prop, "");
+    div.style.setProperty(prop, "10px 10px 10px 10px black", "");
+    var vals = cs.getPropertyValue(prop).split(" ");
+    is(vals.length, 7, "unexpected number of values");
+    is(vals.slice(0, 3).join(" "), "rgb(0, 0, 0)",
+       "shadow-valued property " + prop + " (color): clamping of negatives");
+    isnot(vals[3], "0px",
+          "shadow-valued property " + prop + " (x): clamping of negatives");
+    isnot(vals[4], "0px",
+          "shadow-valued property " + prop + " (y): clamping of negatives");
+    is(vals[5], "0px",
+       "shadow-valued property " + prop + " (radius): clamping of negatives");
+    isnot(vals[6], "0px",
+          "shadow-valued property " + prop + " (spread): clamping of negatives");
+  }
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_dasharray_transition(prop) {
@@ -546,6 +749,17 @@ function test_dasharray_transition(prop) {
   is(cs.getPropertyValue(prop), "3, 45%, 5, 8",
      "dasharray-valued property " + prop + ": interpolation of dasharray");
   check_distance(prop, "2,50%,6,10", "3, 45%, 5, 8", "6,30%,2,2");
+
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0,0%", "");
+  is(cs.getPropertyValue(prop), "0, 0%",
+     "dasharray-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "5, 25%", "");
+  is(cs.getPropertyValue(prop), "0, 0%",
+     "dasharray-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_radius_transition(prop) {
@@ -608,6 +822,17 @@ function test_radius_transition(prop) {
                  "-moz-calc(4.6875% + 16px) -moz-calc(9.375% + 4px)",
                  "64px 16px");
 
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0px 0px", "");
+  is(cs.getPropertyValue(prop), "0px",
+     "radius-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "10px 20px", "");
+  is(cs.getPropertyValue(prop), "0px",
+     "radius-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
+
   test_length_percent_calc_transition(prop);
 
   div.style.removeProperty("width");
@@ -636,6 +861,17 @@ function test_zindex_transition(prop) {
   is(cs.getPropertyValue(prop), "-1",
      "integer-valued property " + prop + ": interpolation of lengths");
   check_distance(prop, "-4", "-1", "8");
+
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0", "");
+  is(cs.getPropertyValue(prop), "0",
+     "integer-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "100", "");
+  isnot(cs.getPropertyValue(prop), "0",
+        "integer-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_font_stretch(prop) {
@@ -659,6 +895,25 @@ function test_font_stretch(prop) {
   is(cs.getPropertyValue(prop), "normal",
      "font-stretch property " + prop + ": interpolation of font-stretches");
   check_distance(prop, "expanded", "semi-expanded", "condensed");
+
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "ultra-condensed", "");
+  is(cs.getPropertyValue(prop), "ultra-condensed",
+     "font-stretch property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "ultra-expanded", "");
+  is(cs.getPropertyValue(prop), "ultra-condensed",
+     "font-stretch property " + prop + ": clamping of values");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "ultra-expanded", "");
+  is(cs.getPropertyValue(prop), "ultra-expanded",
+     "font-stretch property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "ultra-condensed", "");
+  is(cs.getPropertyValue(prop), "ultra-expanded",
+     "font-stretch property " + prop + ": clamping of values");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_font_weight(prop) {
@@ -683,6 +938,25 @@ function test_font_weight(prop) {
   is(cs.getPropertyValue(prop), "700",
      "font-weight property " + prop + ": interpolation of font-weights");
   check_distance(prop, "900", "700", "100");
+
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "100", "");
+  is(cs.getPropertyValue(prop), "100",
+     "font-weight property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "900", "");
+  is(cs.getPropertyValue(prop), "100",
+     "font-weight property " + prop + ": clamping of values");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "900", "");
+  is(cs.getPropertyValue(prop), "900",
+     "font-weight property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "100", "");
+  is(cs.getPropertyValue(prop), "900",
+     "font-weight property " + prop + ": clamping of values");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_pos_integer_or_auto_transition(prop) {
@@ -707,6 +981,19 @@ function test_pos_integer_or_auto_transition(prop) {
   check_distance(prop, "8", "7", "4");
 }
 
+function test_integer_at_least_one_clamping(prop) {
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "1", "");
+  is(cs.getPropertyValue(prop), "1",
+     "integer-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "5", "");
+  is(cs.getPropertyValue(prop), "1",
+     "integer-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
+}
+
 function test_length_pair_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "4px 6px", "");
@@ -719,6 +1006,19 @@ function test_length_pair_transition(prop) {
   check_distance(prop, "4px 6px", "6px 7px", "12px 10px");
 }
 
+function test_length_pair_transition_clamped(prop) {
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0px 0px", "");
+  is(cs.getPropertyValue(prop), "0px 0px",
+     "length-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "30px 50px", "");
+  is(cs.getPropertyValue(prop), "0px 0px",
+     "length-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
+}
+
 function test_length_percent_pair_transition(prop) {
   div.style.setProperty("-moz-transition-property", "none", "");
   div.style.setProperty(prop, "4px 50%", "");
@@ -729,6 +1029,27 @@ function test_length_percent_pair_transition(prop) {
   is(cs.getPropertyValue(prop), "6px 55%",
      "length-valued property " + prop + ": interpolation of lengths");
   check_distance(prop, "4px 50%", "6px 55%", "12px 70%");
+}
+
+function test_length_percent_pair_clamped(prop) {
+  test_length_percent_pair_clamped_or_unclamped(prop, true);
+}
+
+function test_length_percent_pair_unclamped(prop) {
+  test_length_percent_pair_clamped_or_unclamped(prop, false);
+}
+
+function test_length_percent_pair_clamped_or_unclamped(prop, is_clamped) {
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "0px 0%", "");
+  is(cs.getPropertyValue(prop), "0px 0%",
+     "length+percent-valued property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "30px 25%", "");
+  (is_clamped ? is : isnot)(cs.getPropertyValue(prop), "0px 0%",
+     "length+percent-valued property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_rect_transition(prop) {
@@ -752,6 +1073,35 @@ function test_rect_transition(prop) {
   div.style.setProperty(prop, "auto", "");
   is(cs.getPropertyValue(prop), "auto",
      "rect-valued property " + prop + ": can't interpolate auto components");
+
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "rect(-10px, 30px, 0px, 0px)", "");
+  var vals = cs.getPropertyValue(prop).match(/rect\(([^, ]*), ([^, ]*), ([^, ]*), ([^, ]*)\)/);
+  is(vals.length, 5,
+     "rect-valued property " + prop + ": flush before clamping test (length)");
+  is(vals[1], "-10px",
+     "rect-valued property " + prop + ": flush before clamping test (top)");
+  is(vals[2], "30px",
+     "rect-valued property " + prop + ": flush before clamping test (right)");
+  is(vals[3], "0px",
+     "rect-valued property " + prop + ": flush before clamping test (bottom)");
+  is(vals[4], "0px",
+     "rect-valued property " + prop + ": flush before clamping test (left)");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "rect(0px, 40px, 10px, 10px)", "");
+  vals = cs.getPropertyValue(prop).match(/rect\(([^, ]*), ([^, ]*), ([^, ]*), ([^, ]*)\)/);
+  is(vals.length, 5,
+     "rect-valued property " + prop + ": clamping of negatives (length)");
+  isnot(vals[1], "-10px",
+     "rect-valued property " + prop + ": clamping of negatives (top)");
+  isnot(vals[2], "30px",
+     "rect-valued property " + prop + ": clamping of negatives (right)");
+  isnot(vals[3], "0px",
+     "rect-valued property " + prop + ": clamping of negatives (bottom)");
+  isnot(vals[4], "0px",
+     "rect-valued property " + prop + ": clamping of negatives (left)");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_visibility_transition(prop) {
@@ -769,6 +1119,25 @@ function test_visibility_transition(prop) {
      "distance between visible and visible should not be zero");
   is(get_distance(prop, "hidden", "hidden"), 0,
      "distance between hidden and hidden should not be zero");
+
+  div.style.setProperty("-moz-transition-timing-function", FUNC_NEGATIVE, "");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "visible", "");
+  is(cs.getPropertyValue(prop), "visible",
+     "visibility property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "hidden", "");
+  is(cs.getPropertyValue(prop), "visible",
+     "visibility property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-property", "none", "");
+  div.style.setProperty(prop, "hidden", "");
+  is(cs.getPropertyValue(prop), "hidden",
+     "visibility property " + prop + ": flush before clamping test");
+  div.style.setProperty("-moz-transition-property", prop, "");
+  div.style.setProperty(prop, "visible", "");
+  is(cs.getPropertyValue(prop), "hidden",
+     "visibility property " + prop + ": clamping of negatives");
+  div.style.setProperty("-moz-transition-timing-function", "linear", "");
 }
 
 function test_background_size_transition(prop) {
@@ -1146,6 +1515,8 @@ function test_transform_transition(prop) {
       check_distance(prop, test.start, test.expected_uncomputed, test.end);
     }
   }
+
+  // FIXME: should perhaps test that no clamping occurs
 }
 
 </script>
