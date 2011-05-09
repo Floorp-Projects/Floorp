@@ -5984,6 +5984,30 @@ BlastSubtreeToPieces(nsINode *aNode)
   }
 }
 
+
+class nsUserDataCaller : public nsRunnable
+{
+public:
+  nsUserDataCaller(nsCOMArray<nsINode>& aNodesWithProperties,
+                   nsIDocument* aOwnerDoc)
+    : mNodesWithProperties(aNodesWithProperties),
+      mOwnerDoc(aOwnerDoc)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsNodeUtils::CallUserDataHandlers(mNodesWithProperties, mOwnerDoc,
+                                      nsIDOMUserDataHandler::NODE_ADOPTED,
+                                      PR_FALSE);
+    return NS_OK;
+  }
+
+private:
+  nsCOMArray<nsINode> mNodesWithProperties;
+  nsCOMPtr<nsIDocument> mOwnerDoc;
+};
+
 NS_IMETHODIMP
 nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 {
@@ -5994,15 +6018,28 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aAdoptedNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsINode> adoptedNode;
+  nsCOMPtr<nsINode> adoptedNode = do_QueryInterface(aAdoptedNode);
+  
+  // Scope firing mutation events so that we don't carry any state that
+  // might be stale
+  {
+    nsINode* parent = adoptedNode->GetNodeParent();
+    if (parent) {
+      nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent,
+                                           adoptedNode->GetOwnerDoc());
+    }
+  }
+
+  nsAutoScriptBlocker scriptBlocker;
+
   PRUint16 nodeType;
   aAdoptedNode->GetNodeType(&nodeType);
   switch (nodeType) {
     case nsIDOMNode::ATTRIBUTE_NODE:
     {
       // Remove from ownerElement.
-      nsCOMPtr<nsIDOMAttr> adoptedAttr = do_QueryInterface(aAdoptedNode, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIDOMAttr> adoptedAttr = do_QueryInterface(aAdoptedNode);
+      NS_ASSERTION(adoptedAttr, "Attribute not implementing nsIDOMAttr");
 
       nsCOMPtr<nsIDOMElement> ownerElement;
       rv = adoptedAttr->GetOwnerElement(getter_AddRefs(ownerElement));
@@ -6017,8 +6054,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
         newAttr.swap(adoptedAttr);
       }
 
-      adoptedNode = do_QueryInterface(adoptedAttr, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
       break;
     }
     case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
@@ -6028,9 +6063,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     case nsIDOMNode::CDATA_SECTION_NODE:
     case nsIDOMNode::COMMENT_NODE:
     {
-      adoptedNode = do_QueryInterface(aAdoptedNode, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       // We don't want to adopt an element into its own contentDocument or into
       // a descendant contentDocument, so we check if the frameElement of this
       // document or any of its parents is the adopted node or one of its
@@ -6049,13 +6081,9 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
       } while ((doc = doc->GetParentDocument()));
 
       // Remove from parent.
-      nsCOMPtr<nsIDOMNode> parent;
-      aAdoptedNode->GetParentNode(getter_AddRefs(parent));
-      NS_ENSURE_SUCCESS(rv, rv);
-
+      nsINode* parent = adoptedNode->GetNodeParent();
       if (parent) {
-        nsCOMPtr<nsIDOMNode> newChild;
-        rv = parent->RemoveChild(aAdoptedNode, getter_AddRefs(newChild));
+        rv = parent->RemoveChildAt(parent->IndexOf(adoptedNode), PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -6135,14 +6163,13 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     }
   }
 
-  rv = nsNodeUtils::CallUserDataHandlers(nodesWithProperties, this,
-                                         nsIDOMUserDataHandler::NODE_ADOPTED,
-                                         PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (adoptedNode->GetOwnerDoc() != this) {
-    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+  if (nodesWithProperties.Count()) {
+    nsContentUtils::AddScriptRunner(new nsUserDataCaller(nodesWithProperties,
+                                                         this));
   }
+
+  NS_ASSERTION(adoptedNode->GetOwnerDoc() == this,
+               "Should still be in the document we just got adopted into");
 
   return CallQueryInterface(adoptedNode, aResult);
 }
