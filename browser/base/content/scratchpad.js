@@ -39,6 +39,15 @@
  *
  * ***** END LICENSE BLOCK *****/
 
+/*
+ * Original version history can be found here:
+ * https://github.com/mozilla/workspace
+ *
+ * Copied and relicensed from the Public Domain.
+ * See bug 653934 for details.
+ * https://bugzilla.mozilla.org/show_bug.cgi?id=653934
+ */
+
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
