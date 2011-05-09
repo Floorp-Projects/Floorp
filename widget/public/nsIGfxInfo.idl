@@ -40,7 +40,7 @@
 
 /* NOTE: this interface is completely undesigned, not stable and likely to change */
 
-[scriptable, uuid(a67c77af-2952-4028-93ab-e7bc3b43cf81)]
+[scriptable, uuid(5c5de1e7-f7f4-46b4-9ced-03ab1f869eaf)]
 interface nsIGfxInfo : nsISupports
 {
   /*
@@ -49,7 +49,6 @@ interface nsIGfxInfo : nsISupports
   readonly attribute boolean D2DEnabled;
   readonly attribute boolean DWriteEnabled;
   readonly attribute DOMString DWriteVersion;
-  readonly attribute DOMString cleartypeParameters;
   
   /**
    * The name of the display adapter.
