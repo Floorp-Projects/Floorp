@@ -1080,17 +1080,17 @@ TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, jstype type
         return;
     }
 
-    if (!script->compileAndGo) {
+    /*
+     * Note: if |this| is null or undefined, the pushed value is the outer window. We
+     * can't use script->getGlobalType() here because it refers to the inner window.
+     */
+    if (!script->compileAndGo || type == TYPE_NULL || type == TYPE_UNDEFINED) {
         target->addType(cx, TYPE_UNKNOWN);
         return;
     }
 
     TypeObject *object = NULL;
     switch (type) {
-      case TYPE_NULL:
-      case TYPE_UNDEFINED:
-        object = script->getGlobalType();
-        break;
       case TYPE_INT32:
       case TYPE_DOUBLE:
         object = script->getTypeNewObject(cx, JSProto_Number);
