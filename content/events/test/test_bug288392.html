@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=288392
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 288392 **/
-var subtreeModifiedCount = 0;
+var subtreeModifiedCount;
 
 function subtreeModified(e)
 {
@@ -31,51 +31,59 @@ function doTest() {
   var targetNode = document.getElementById("mutationTarget");
   targetNode.addEventListener("DOMSubtreeModified", subtreeModified, false);
 
+  subtreeModifiedCount = 0;
   var temp = document.createElement("DIV");
   targetNode.appendChild(temp);
-  ok(subtreeModifiedCount == 1,
+  is(subtreeModifiedCount, 1,
      "Appending a child node should have dispatched a DOMSubtreeModified event");
 
+  subtreeModifiedCount = 0;
   temp.setAttribute("foo", "bar");
-  ok(subtreeModifiedCount == 2,
+  is(subtreeModifiedCount, 1,
      "Setting an attribute should have dispatched a DOMSubtreeModified event");
 
+  subtreeModifiedCount = 0;
   targetNode.removeChild(temp);
-  ok(subtreeModifiedCount == 3,
+  is(subtreeModifiedCount, 1,
      "Removing a child node should have dispatched a DOMSubtreeModified event");
 
   // Testing events in a subtree, which is not in the document.
   var subtree = document.createElement("div");
   var s = "<e1 attr1='value1'>Something1</e1><e2 attr2='value2'>Something2</e2>";
-
   subtree.innerHTML = s;
   subtree.addEventListener("DOMSubtreeModified", subtreeModified, false);
 
+  subtreeModifiedCount = 0;
   subtree.firstChild.firstChild.data = "foo";
-  ok(subtreeModifiedCount == 4,
+  is(subtreeModifiedCount, 1,
      "Editing character data should have dispatched a DOMSubtreeModified event");
 
+  subtreeModifiedCount = 0;
   subtree.firstChild.removeChild(subtree.firstChild.firstChild);
-  ok(subtreeModifiedCount == 5,
+  is(subtreeModifiedCount, 1,
      "Removing a child node should have dispatched a DOMSubtreeModified event");
 
+  subtreeModifiedCount = 0;
   subtree.firstChild.setAttribute("foo", "bar");
-  ok(subtreeModifiedCount == 6,
+  is(subtreeModifiedCount, 1,
      "Setting an attribute should have dispatched a DOMSubtreeModified event");
 
+  subtreeModifiedCount = 0;
   subtree.textContent = "foobar";
-  ok(subtreeModifiedCount == 7,
+  is(subtreeModifiedCount, 1,
      "Setting .textContent should have dispatched a DOMSubtreeModified event");
 
+  subtreeModifiedCount = 0;
   subtree.innerHTML = s;
-  ok(subtreeModifiedCount == 8,
+  is(subtreeModifiedCount, 1,
      "Setting .innerHTML should have dispatched a DOMSubtreeModified event");
 
+  subtreeModifiedCount = 0;
   subtree.removeEventListener("DOMSubtreeModified", subtreeModified, false);
   subtree.appendChild(document.createTextNode(""));
   subtree.addEventListener("DOMSubtreeModified", subtreeModified, false);
   subtree.normalize();
-  ok(subtreeModifiedCount == 9,
+  is(subtreeModifiedCount, 1,
      "Calling normalize() should have dispatched a DOMSubtreeModified event");
 }
 
