@@ -23,13 +23,6 @@
 		 android:icon="@drawable/icon"
 		 android:debuggable="true">
 
-        <!-- for network link status -->
-        <receiver android:name="org.mozilla.gecko.GeckoConnectivityReceiver">
-            <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
-            </intent-filter>
-        </receiver>
-
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc"
