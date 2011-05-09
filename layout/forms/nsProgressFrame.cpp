@@ -107,7 +107,7 @@ nsProgressFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 nsresult
-nsProgressFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
+nsProgressFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   // Get the NodeInfoManager and tag necessary to create the progress bar div.
   nsCOMPtr<nsIDocument> doc = mContent->GetDocument();
