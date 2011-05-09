@@ -1394,13 +1394,12 @@ Browser.MainDragger.prototype = {
       // the 'solution' for now is to reposition it if needed
       let x = 0;
       if (Browser.floatedWhileDragging) {
+        let [tabsVis, controlsVis, tabsW, controlsW] = Browser.computeSidebarVisibility();
+        let [tabsSidebar, controlsSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
+
         // Check if the sidebars are inverted (rtl)
-        let [leftVis, rightVis, leftW, rightW] = Browser.computeSidebarVisibility();
-        let [leftSidebar, rightSidebar] = [Elements.tabs.getBoundingClientRect(), Elements.controls.getBoundingClientRect()];
-        if (leftSidebar.left > rightSidebar.left)
-          x = Math.round(Math.max(0, rightW * rightVis));
-        else
-          x = Math.round(Math.max(0, leftW * leftVis)) * -1.0;
+        let direction = (tabsSidebar.left > controlsSidebar.left) ? 1 : -1;
+        x = Math.round(tabsW * tabsVis) * direction
       }
 
       this._verticalScrollbar.style.MozTransform = "translate(" + x + "px," + y + "px)";
