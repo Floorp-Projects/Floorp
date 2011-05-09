@@ -554,7 +554,7 @@ JSScript::upvarTypes(unsigned i)
 inline js::types::TypeSet *
 JSScript::slotTypes(unsigned slot)
 {
-    JS_ASSERT(slot < js::analyze::TotalSlots(this));
+    JS_ASSERT(varTypes && slot < js::analyze::TotalSlots(this));
     return &varTypes[slot];
 }
 
