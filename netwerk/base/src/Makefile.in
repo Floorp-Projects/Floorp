@@ -99,11 +99,7 @@ else
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
 	CPPSRCS += nsURLHelperWin.cpp
 	CPPSRCS += nsNativeConnectionHelper.cpp
-ifneq ($(OS_ARCH), WINCE)
 	CPPSRCS += nsAutodialWin.cpp
-else
-	CPPSRCS += nsAutodialWinCE.cpp
-endif
 else
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	CPPSRCS += nsURLHelperOSX.cpp

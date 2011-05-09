@@ -56,7 +56,7 @@ function runInspectorTests()
   ok(InspectorUI.isTreePanelOpen, "Inspector Tree Panel is open");
   ok(InspectorUI.isStylePanelOpen, "Inspector Style Panel is open");
   ok(InspectorUI.isDOMPanelOpen, "Inspector DOM Panel is open");
-  InspectorUI.closeInspectorUI(true);
+  InspectorUI.closeInspectorUI();
 }
 
 function finishInspectorTests()

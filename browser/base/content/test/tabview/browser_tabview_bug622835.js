@@ -28,7 +28,7 @@ function onTabViewShown(win) {
     bounds: {left: 20, top: 20, width: 100, height: 100}
   });
 
-  contentWindow.GroupItems.setActiveGroupItem(groupItem);
+  contentWindow.UI.setActive(groupItem);
 
   // we need seven tabs at least to reproduce this
   for (var i=0; i<7; i++)

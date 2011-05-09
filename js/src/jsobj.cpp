@@ -507,13 +507,13 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
         ok = JS_FALSE;
         goto out;
     }
-    if (IS_SHARP(he)) {
+    if (!ida) {
         /*
          * We didn't enter -- obj is already "sharp", meaning we've visited it
          * already in our depth first search, and therefore chars contains a
          * string of the form "#n#".
          */
-        JS_ASSERT(!ida);
+        JS_ASSERT(IS_SHARP(he));
 #if JS_HAS_SHARP_VARS
         nchars = js_strlen(chars);
 #else
@@ -524,7 +524,7 @@ obj_toSource(JSContext *cx, uintN argc, Value *vp)
 #endif
         goto make_string;
     }
-    JS_ASSERT(ida);
+    JS_ASSERT(!IS_SHARP(he));
     ok = JS_TRUE;
 
     if (!chars) {

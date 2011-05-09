@@ -453,24 +453,7 @@ public:
   {
     return InsertBefore(aNewChild, nsnull, aReturn);
   }
-  nsresult RemoveChild(nsINode *aOldChild)
-  {
-    if (!aOldChild) {
-      return NS_ERROR_NULL_POINTER;
-    }
-
-    if (IsNodeOfType(eDATA_NODE)) {
-      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-    }
-
-    PRInt32 index = IndexOf(aOldChild);
-    if (index == -1) {
-      // aOldChild isn't one of our children.
-      return NS_ERROR_DOM_NOT_FOUND_ERR;
-    }
-
-    return RemoveChildAt(index, PR_TRUE);
-  }
+  nsresult RemoveChild(nsINode *aOldChild);
 
   /**
    * Insert a content node at a particular index.  This method handles calling

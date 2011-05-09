@@ -23,6 +23,11 @@ XPCOMUtils.defineLazyGetter(this, "gPrivateBrowsing", function() {
            getService(Ci.nsIPrivateBrowsingService);
 });
 
+XPCOMUtils.defineLazyGetter(this, "gFavIconService", function() {
+  return Cc["@mozilla.org/browser/favicon-service;1"].
+           getService(Ci.nsIFaviconService);
+});
+
 XPCOMUtils.defineLazyGetter(this, "gNetUtil", function() {
   var obj = {};
   Cu.import("resource://gre/modules/NetUtil.jsm", obj);

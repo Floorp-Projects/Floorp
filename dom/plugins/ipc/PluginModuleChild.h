@@ -256,13 +256,13 @@ public:
     };
 
     int GetQuirks() { return mQuirks; }
+
+private:
     void AddQuirk(PluginQuirks quirk) {
       if (mQuirks == QUIRKS_NOT_INITIALIZED)
         mQuirks = 0;
       mQuirks |= quirk;
     }
-
-private:
     void InitQuirksModes(const nsCString& aMimeType);
     bool InitGraphics();
     void DeinitGraphics();

@@ -75,6 +75,11 @@ CPPSRCS		= \
 		nsFilePickerProxy.cpp \
 		$(NULL)
 
+ifdef MOZ_X11
+CPPSRCS		+= \
+		GfxInfoX11.cpp
+endif
+
 ifneq (,$(filter os2 cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseClipboard.cpp
 endif
@@ -95,6 +100,9 @@ endif
 LOCAL_INCLUDES	+= \
 		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
 		-I$(srcdir)/../shared \
+		-I$(topsrcdir)/layout/forms \
+		-I$(topsrcdir)/layout/generic \
+		-I$(topsrcdir)/layout/xul/base/src \
 		-I$(srcdir) \
 		$(NULL)
 

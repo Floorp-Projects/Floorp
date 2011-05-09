@@ -92,7 +92,6 @@ public:
   NS_IMETHOD GetPreviousSibling(nsIAccessible **aPreviousSibling);
   NS_IMETHOD GetName(nsAString &aName);
   NS_IMETHOD GetValue(nsAString &aValue);
-  NS_IMETHOD GetDescription(nsAString &aDescription);
   NS_IMETHOD GetKeyboardShortcut(nsAString &aKeyboardShortcut);
   NS_IMETHOD GetAttributes(nsIPersistentProperties **aAttributes);
   NS_IMETHOD GroupPosition(PRInt32 *aGroupLevel, PRInt32 *aSimilarItemsInGroup,
@@ -123,6 +122,7 @@ public:
 
   // nsAccessible
   virtual void ApplyARIAState(PRUint64* aState);
+  virtual void Description(nsString& aDescription);
   virtual PRUint32 NativeRole();
   virtual PRUint64 State();
   virtual PRUint64 NativeState();

@@ -40,8 +40,6 @@
 
 #if defined(MOZ_PLATFORM_MAEMO)
 #include "nsAutodialMaemo.h"
-#elif defined(WINCE)
-#include "nsAutodialWinCE.h"
 #else
 #include "nsAutodialWin.h"
 #endif
@@ -59,7 +57,7 @@ nsNativeConnectionHelper::OnConnectionFailed(const PRUnichar* hostName)
   // should ask the dialer directly.  This allows the dialer to update
   // link status more forcefully rather than passively watching link
   // status changes.
-#if !defined(MOZ_PLATFORM_MAEMO) && !defined(WINCE_WINDOWS_MOBILE)
+#if !defined(MOZ_PLATFORM_MAEMO)
     if (gIOService->IsLinkUp())
         return PR_FALSE;
 #endif
