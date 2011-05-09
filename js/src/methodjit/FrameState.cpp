@@ -1790,6 +1790,7 @@ FrameState::ensureInteger(FrameEntry *fe)
     }
 
     JS_ASSERT(!fe->isCopy() && !fe->isCopied());
+    JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(JSVAL_TYPE_DOUBLE));
 
     if (!fe->isType(JSVAL_TYPE_DOUBLE)) {
         /*

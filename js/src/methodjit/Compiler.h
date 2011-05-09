@@ -556,7 +556,7 @@ class Compiler : public BaseCompiler
     bool emitStubCmpOp(BoolStub stub, jsbytecode *target, JSOp fused);
     bool iter(uintN flags);
     void iterNext();
-    bool iterMore();
+    bool iterMore(jsbytecode *target);
     void iterEnd();
     MaybeJump loadDouble(FrameEntry *fe, FPRegisterID *fpReg, bool *allocated);
 #ifdef JS_POLYIC
