@@ -2512,6 +2512,8 @@ CSS_PROP_FONT(
     script_level,
     ScriptLevel,
     // REVIEW: no range restriction?
+    // NOTE: CSSParserImpl::ParseSingleValueProperty only accepts this
+    // property when mUnsafeRulesEnabled is set.
     CSS_PROPERTY_PARSE_VALUE,
     // script-level can take Integer or Number values, but only Integer
     // ("relative") values can be specified in a style sheet.
@@ -2524,7 +2526,7 @@ CSS_PROP_FONT(
     script_size_multiplier,
     ScriptSizeMultiplier,
     // REVIEW: no range restriction?
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
     0,
     nsnull,
     CSS_PROP_NO_OFFSET,
@@ -2534,7 +2536,7 @@ CSS_PROP_FONT(
     script_min_size,
     ScriptMinSize,
     // REVIEW: no range restriction?
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
     0,
     nsnull,
     CSS_PROP_NO_OFFSET,
