@@ -48,10 +48,13 @@ LIBRARY_NAME	= shistory_s
 FORCE_STATIC_LIB = 1
 LIBXUL_LIBRARY	= 1
 
+EXPORTS		= nsSHEntryShared.h \
+		  $(NULL)
 
 CPPSRCS		= nsSHEntry.cpp        \
             nsSHTransaction.cpp   \
             nsSHistory.cpp \
+	    nsSHEntryShared.cpp \
             $(NULL)
 
 include $(topsrcdir)/config/rules.mk

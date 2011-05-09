@@ -36,10 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifdef DEBUG_bryner
-#define DEBUG_PAGE_CACHE
-#endif
-
 // Local Includes
 #include "nsSHEntry.h"
 #include "nsXPIDLString.h"
@@ -48,103 +44,44 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsAutoPtr.h"
-#include "nsThreadUtils.h"
-#include "nsIWebNavigation.h"
 #include "nsISHistory.h"
 #include "nsISHistoryInternal.h"
 #include "nsDocShellEditorData.h"
-#include "nsIDocShell.h"
+#include "nsSHEntryShared.h"
+#include "nsILayoutHistoryState.h"
+#include "nsIContentViewer.h"
+#include "nsISupportsArray.h"
 
 namespace dom = mozilla::dom;
 
-// Hardcode this to time out unused content viewers after 30 minutes
-#define CONTENT_VIEWER_TIMEOUT_SECONDS 30*60
-
-typedef nsExpirationTracker<nsSHEntry,3> HistoryTrackerBase;
-class HistoryTracker : public HistoryTrackerBase {
-public:
-  // Expire cached contentviewers after 20-30 minutes in the cache.
-  HistoryTracker() : HistoryTrackerBase((CONTENT_VIEWER_TIMEOUT_SECONDS/2)*1000) {}
-  
-protected:
-  virtual void NotifyExpired(nsSHEntry* aObj) {
-    RemoveObject(aObj);
-    aObj->Expire();
-  }
-};
-
-static HistoryTracker *gHistoryTracker = nsnull;
 static PRUint32 gEntryID = 0;
-static PRUint64 gEntryDocIdentifier = 0;
-
-nsresult nsSHEntry::Startup()
-{
-  gHistoryTracker = new HistoryTracker();
-  return gHistoryTracker ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-}
-
-void nsSHEntry::Shutdown()
-{
-  delete gHistoryTracker;
-  gHistoryTracker = nsnull;
-}
-
-static void StopTrackingEntry(nsSHEntry *aEntry)
-{
-  if (aEntry->GetExpirationState()->IsTracked()) {
-    gHistoryTracker->RemoveObject(aEntry);
-  }
-}
 
 //*****************************************************************************
 //***    nsSHEntry: Object Management
 //*****************************************************************************
 
 
-nsSHEntry::nsSHEntry() 
+nsSHEntry::nsSHEntry()
   : mLoadType(0)
   , mID(gEntryID++)
-  , mDocIdentifier(gEntryDocIdentifier++)
   , mScrollPositionX(0)
   , mScrollPositionY(0)
   , mURIWasModified(PR_FALSE)
-  , mIsFrameNavigation(PR_FALSE)
-  , mSaveLayoutState(PR_TRUE)
-  , mExpired(PR_FALSE)
-  , mSticky(PR_TRUE)
-  , mDynamicallyCreated(PR_FALSE)
-  , mParent(nsnull)
-  , mViewerBounds(0, 0, 0, 0)
-  , mDocShellID(0)
-  , mLastTouched(0)
 {
+  mShared = new nsSHEntryShared();
 }
 
 nsSHEntry::nsSHEntry(const nsSHEntry &other)
-  : mURI(other.mURI)
+  : mShared(other.mShared)
+  , mURI(other.mURI)
   , mReferrerURI(other.mReferrerURI)
-  // XXX why not copy mDocument?
   , mTitle(other.mTitle)
   , mPostData(other.mPostData)
-  , mLayoutHistoryState(other.mLayoutHistoryState)
   , mLoadType(0)         // XXX why not copy?
   , mID(other.mID)
-  , mDocIdentifier(other.mDocIdentifier)
   , mScrollPositionX(0)  // XXX why not copy?
   , mScrollPositionY(0)  // XXX why not copy?
   , mURIWasModified(other.mURIWasModified)
-  , mIsFrameNavigation(other.mIsFrameNavigation)
-  , mSaveLayoutState(other.mSaveLayoutState)
-  , mExpired(other.mExpired)
-  , mSticky(PR_TRUE)
-  , mDynamicallyCreated(other.mDynamicallyCreated)
-  // XXX why not copy mContentType?
-  , mCacheKey(other.mCacheKey)
-  , mParent(other.mParent)
-  , mViewerBounds(0, 0, 0, 0)
-  , mOwner(other.mOwner)
-  , mDocShellID(other.mDocShellID)
   , mStateData(other.mStateData)
 {
 }
@@ -160,37 +97,16 @@ ClearParentPtr(nsISHEntry* aEntry, void* /* aData */)
 
 nsSHEntry::~nsSHEntry()
 {
-  StopTrackingEntry(this);
-
-  // Since we never really remove kids from SHEntrys, we need to null
-  // out the mParent pointers on all our kids.
+  // Null out the mParent pointers on all our kids.
   mChildren.EnumerateForwards(ClearParentPtr, nsnull);
-  mChildren.Clear();
-
-  if (mContentViewer) {
-    // RemoveFromBFCacheSync is virtual, so call the nsSHEntry version
-    // explicitly
-    nsSHEntry::RemoveFromBFCacheSync();
-  }
-
-  mEditorData = nsnull;
-
-#ifdef DEBUG
-  // This is not happening as far as I can tell from breakpad as of early November 2007
-  nsExpirationTracker<nsSHEntry,3>::Iterator iterator(gHistoryTracker);
-  nsSHEntry* elem;
-  while ((elem = iterator.Next()) != nsnull) {
-    NS_ASSERTION(elem != this, "Found dead entry still in the tracker!");
-  }
-#endif
 }
 
 //*****************************************************************************
 //    nsSHEntry: nsISupports
 //*****************************************************************************
 
-NS_IMPL_ISUPPORTS5(nsSHEntry, nsISHContainer, nsISHEntry, nsIHistoryEntry,
-                   nsIMutationObserver, nsISHEntryInternal)
+NS_IMPL_ISUPPORTS4(nsSHEntry, nsISHContainer, nsISHEntry, nsIHistoryEntry,
+                   nsISHEntryInternal)
 
 //*****************************************************************************
 //    nsSHEntry: nsISHEntry
@@ -251,35 +167,13 @@ NS_IMETHODIMP nsSHEntry::SetReferrerURI(nsIURI *aReferrerURI)
 NS_IMETHODIMP
 nsSHEntry::SetContentViewer(nsIContentViewer *aViewer)
 {
-  NS_PRECONDITION(!aViewer || !mContentViewer, "SHEntry already contains viewer");
-
-  if (mContentViewer || !aViewer) {
-    DropPresentationState();
-  }
-
-  mContentViewer = aViewer;
-
-  if (mContentViewer) {
-    gHistoryTracker->AddObject(this);
-
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    mContentViewer->GetDOMDocument(getter_AddRefs(domDoc));
-    // Store observed document in strong pointer in case it is removed from
-    // the contentviewer
-    mDocument = do_QueryInterface(domDoc);
-    if (mDocument) {
-      mDocument->SetBFCacheEntry(this);
-      mDocument->AddMutationObserver(this);
-    }
-  }
-
-  return NS_OK;
+  return mShared->SetContentViewer(aViewer);
 }
 
 NS_IMETHODIMP
 nsSHEntry::GetContentViewer(nsIContentViewer **aResult)
 {
-  *aResult = mContentViewer;
+  *aResult = mShared->mContentViewer;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
@@ -319,14 +213,14 @@ nsSHEntry::GetAnyContentViewer(nsISHEntry **aOwnerEntry,
 NS_IMETHODIMP
 nsSHEntry::SetSticky(PRBool aSticky)
 {
-  mSticky = aSticky;
+  mShared->mSticky = aSticky;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::GetSticky(PRBool *aSticky)
 {
-  *aSticky = mSticky;
+  *aSticky = mShared->mSticky;
   return NS_OK;
 }
 
@@ -365,16 +259,18 @@ NS_IMETHODIMP nsSHEntry::SetPostData(nsIInputStream* aPostData)
 
 NS_IMETHODIMP nsSHEntry::GetLayoutHistoryState(nsILayoutHistoryState** aResult)
 {
-  *aResult = mLayoutHistoryState;
+  *aResult = mShared->mLayoutHistoryState;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::SetLayoutHistoryState(nsILayoutHistoryState* aState)
 {
-  mLayoutHistoryState = aState;
-  if (mLayoutHistoryState)
-    mLayoutHistoryState->SetScrollPositionOnly(!mSaveLayoutState);
+  mShared->mLayoutHistoryState = aState;
+  if (mShared->mLayoutHistoryState) {
+    mShared->mLayoutHistoryState->
+      SetScrollPositionOnly(!mShared->mSaveLayoutState);
+  }
 
   return NS_OK;
 }
@@ -403,91 +299,73 @@ NS_IMETHODIMP nsSHEntry::SetID(PRUint32  aID)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsSHEntry::GetDocIdentifier(PRUint64 * aResult)
+nsSHEntryShared* nsSHEntry::GetSharedState()
 {
-  *aResult = mDocIdentifier;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::SetDocIdentifier(PRUint64 aDocIdentifier)
-{
-  // This ensures that after a session restore, gEntryDocIdentifier is greater
-  // than all SHEntries' docIdentifiers, which ensures that we'll never repeat
-  // a doc identifier.
-  if (aDocIdentifier >= gEntryDocIdentifier)
-    gEntryDocIdentifier = aDocIdentifier + 1;
-
-  mDocIdentifier = aDocIdentifier;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsSHEntry::SetUniqueDocIdentifier()
-{
-  mDocIdentifier = gEntryDocIdentifier++;
-  return NS_OK;
+  return mShared;
 }
 
 NS_IMETHODIMP nsSHEntry::GetIsSubFrame(PRBool * aFlag)
 {
-  *aFlag = mIsFrameNavigation;
+  *aFlag = mShared->mIsFrameNavigation;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::SetIsSubFrame(PRBool  aFlag)
 {
-  mIsFrameNavigation = aFlag;
+  mShared->mIsFrameNavigation = aFlag;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::GetCacheKey(nsISupports** aResult)
 {
-  *aResult = mCacheKey;
+  *aResult = mShared->mCacheKey;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::SetCacheKey(nsISupports* aCacheKey)
 {
-  mCacheKey = aCacheKey;
+  mShared->mCacheKey = aCacheKey;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::GetSaveLayoutStateFlag(PRBool * aFlag)
 {
-  *aFlag = mSaveLayoutState;
+  *aFlag = mShared->mSaveLayoutState;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::SetSaveLayoutStateFlag(PRBool  aFlag)
 {
-  mSaveLayoutState = aFlag;
-  if (mLayoutHistoryState)
-    mLayoutHistoryState->SetScrollPositionOnly(!aFlag);
+  mShared->mSaveLayoutState = aFlag;
+  if (mShared->mLayoutHistoryState) {
+    mShared->mLayoutHistoryState->SetScrollPositionOnly(!aFlag);
+  }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::GetExpirationStatus(PRBool * aFlag)
 {
-  *aFlag = mExpired;
+  *aFlag = mShared->mExpired;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::SetExpirationStatus(PRBool  aFlag)
 {
-  mExpired = aFlag;
+  mShared->mExpired = aFlag;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::GetContentType(nsACString& aContentType)
 {
-  aContentType = mContentType;
+  aContentType = mShared->mContentType;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsSHEntry::SetContentType(const nsACString& aContentType)
 {
-  mContentType = aContentType;
+  mShared->mContentType = aContentType;
   return NS_OK;
 }
 
@@ -502,26 +380,27 @@ nsSHEntry::Create(nsIURI * aURI, const nsAString &aTitle,
   mURI = aURI;
   mTitle = aTitle;
   mPostData = aInputStream;
-  mCacheKey = aCacheKey;
-  mContentType = aContentType;
-  mOwner = aOwner;
-  mDocShellID = aDocShellID;
-  mDynamicallyCreated = aDynamicCreation;
 
   // Set the LoadType by default to loadHistory during creation
   mLoadType = (PRUint32) nsIDocShellLoadInfo::loadHistory;
 
+  mShared->mCacheKey = aCacheKey;
+  mShared->mContentType = aContentType;
+  mShared->mOwner = aOwner;
+  mShared->mDocShellID = aDocShellID;
+  mShared->mDynamicallyCreated = aDynamicCreation;
+
   // By default all entries are set false for subframe flag. 
   // nsDocShell::CloneAndReplace() which creates entries for
   // all subframe navigations, sets the flag to true.
-  mIsFrameNavigation = PR_FALSE;
+  mShared->mIsFrameNavigation = PR_FALSE;
 
   // By default we save LayoutHistoryState
-  mSaveLayoutState = PR_TRUE;
-  mLayoutHistoryState = aLayoutHistoryState;
+  mShared->mSaveLayoutState = PR_TRUE;
+  mShared->mLayoutHistoryState = aLayoutHistoryState;
 
   //By default the page is not expired
-  mExpired = PR_FALSE;
+  mShared->mExpired = PR_FALSE;
 
   return NS_OK;
 }
@@ -530,8 +409,6 @@ NS_IMETHODIMP
 nsSHEntry::Clone(nsISHEntry ** aResult)
 {
   *aResult = new nsSHEntry(*this);
-  if (!*aResult)
-    return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);
   return NS_OK;
 }
@@ -540,7 +417,7 @@ NS_IMETHODIMP
 nsSHEntry::GetParent(nsISHEntry ** aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = mParent;
+  *aResult = mShared->mParent;
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
@@ -553,49 +430,95 @@ nsSHEntry::SetParent(nsISHEntry * aParent)
    *
    * XXX this method should not be scriptable if this is the case!!
    */
-  mParent = aParent;
+  mShared->mParent = aParent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetWindowState(nsISupports *aState)
 {
-  mWindowState = aState;
+  mShared->mWindowState = aState;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::GetWindowState(nsISupports **aState)
 {
-  NS_IF_ADDREF(*aState = mWindowState);
+  NS_IF_ADDREF(*aState = mShared->mWindowState);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetViewerBounds(const nsIntRect &aBounds)
 {
-  mViewerBounds = aBounds;
+  mShared->mViewerBounds = aBounds;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::GetViewerBounds(nsIntRect &aBounds)
 {
-  aBounds = mViewerBounds;
+  aBounds = mShared->mViewerBounds;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::GetOwner(nsISupports **aOwner)
 {
-  NS_IF_ADDREF(*aOwner = mOwner);
+  NS_IF_ADDREF(*aOwner = mShared->mOwner);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetOwner(nsISupports *aOwner)
 {
-  mOwner = aOwner;
+  mShared->mOwner = aOwner;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::GetBFCacheEntry(nsIBFCacheEntry **aEntry)
+{
+  NS_ENSURE_ARG_POINTER(aEntry);
+  NS_IF_ADDREF(*aEntry = mShared);
+  return NS_OK;
+}
+
+PRBool
+nsSHEntry::HasBFCacheEntry(nsIBFCacheEntry *aEntry)
+{
+  return static_cast<nsIBFCacheEntry*>(mShared) == aEntry;
+}
+
+NS_IMETHODIMP
+nsSHEntry::AdoptBFCacheEntry(nsISHEntry *aEntry)
+{
+  nsCOMPtr<nsISHEntryInternal> shEntry = do_QueryInterface(aEntry);
+  NS_ENSURE_STATE(shEntry);
+
+  nsSHEntryShared *shared = shEntry->GetSharedState();
+  NS_ENSURE_STATE(shared);
+
+  mShared = shared;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::SharesDocumentWith(nsISHEntry *aEntry, PRBool *aOut)
+{
+  NS_ENSURE_ARG_POINTER(aOut);
+
+  nsCOMPtr<nsISHEntryInternal> internal = do_QueryInterface(aEntry); 
+  NS_ENSURE_STATE(internal);
+
+  *aOut = mShared == internal->GetSharedState();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSHEntry::AbandonBFCacheEntry()
+{
+  mShared = nsSHEntryShared::Duplicate(mShared);
   return NS_OK;
 }
 
@@ -753,256 +676,77 @@ NS_IMETHODIMP
 nsSHEntry::AddChildShell(nsIDocShellTreeItem *aShell)
 {
   NS_ASSERTION(aShell, "Null child shell added to history entry");
-  mChildShells.AppendObject(aShell);
+  mShared->mChildShells.AppendObject(aShell);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::ChildShellAt(PRInt32 aIndex, nsIDocShellTreeItem **aShell)
 {
-  NS_IF_ADDREF(*aShell = mChildShells.SafeObjectAt(aIndex));
+  NS_IF_ADDREF(*aShell = mShared->mChildShells.SafeObjectAt(aIndex));
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::ClearChildShells()
 {
-  mChildShells.Clear();
+  mShared->mChildShells.Clear();
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::GetRefreshURIList(nsISupportsArray **aList)
 {
-  NS_IF_ADDREF(*aList = mRefreshURIList);
+  NS_IF_ADDREF(*aList = mShared->mRefreshURIList);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetRefreshURIList(nsISupportsArray *aList)
 {
-  mRefreshURIList = aList;
+  mShared->mRefreshURIList = aList;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SyncPresentationState()
 {
-  if (mContentViewer && mWindowState) {
-    // If we have a content viewer and a window state, we should be ok.
-    return NS_OK;
-  }
-
-  DropPresentationState();
-
-  return NS_OK;
+  return mShared->SyncPresentationState();
 }
-
-void
-nsSHEntry::DropPresentationState()
-{
-  nsRefPtr<nsSHEntry> kungFuDeathGrip = this;
-
-  if (mDocument) {
-    mDocument->SetBFCacheEntry(nsnull);
-    mDocument->RemoveMutationObserver(this);
-    mDocument = nsnull;
-  }
-  if (mContentViewer)
-    mContentViewer->ClearHistoryEntry();
-
-  StopTrackingEntry(this);
-  mContentViewer = nsnull;
-  mSticky = PR_TRUE;
-  mWindowState = nsnull;
-  mViewerBounds.SetRect(0, 0, 0, 0);
-  mChildShells.Clear();
-  mRefreshURIList = nsnull;
-  mEditorData = nsnull;
-}
-
-void
-nsSHEntry::Expire()
-{
-  // This entry has timed out. If we still have a content viewer, we need to
-  // get it evicted.
-  if (!mContentViewer)
-    return;
-  nsCOMPtr<nsISupports> container;
-  mContentViewer->GetContainer(getter_AddRefs(container));
-  nsCOMPtr<nsIDocShellTreeItem> treeItem = do_QueryInterface(container);
-  if (!treeItem)
-    return;
-  // We need to find the root DocShell since only that object has an
-  // SHistory and we need the SHistory to evict content viewers
-  nsCOMPtr<nsIDocShellTreeItem> root;
-  treeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
-  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(root);
-  nsCOMPtr<nsISHistory> history;
-  webNav->GetSessionHistory(getter_AddRefs(history));
-  nsCOMPtr<nsISHistoryInternal> historyInt = do_QueryInterface(history);
-  if (!historyInt)
-    return;
-  historyInt->EvictExpiredContentViewerForEntry(this);
-}
-
-//*****************************************************************************
-//    nsSHEntry: nsIMutationObserver
-//*****************************************************************************
-
-void
-nsSHEntry::NodeWillBeDestroyed(const nsINode* aNode)
-{
-  NS_NOTREACHED("Document destroyed while we're holding a strong ref to it");
-}
-
-void
-nsSHEntry::CharacterDataWillChange(nsIDocument* aDocument,
-                                   nsIContent* aContent,
-                                   CharacterDataChangeInfo* aInfo)
-{
-}
-
-void
-nsSHEntry::CharacterDataChanged(nsIDocument* aDocument,
-                                nsIContent* aContent,
-                                CharacterDataChangeInfo* aInfo)
-{
-  RemoveFromBFCacheAsync();
-}
-
-void
-nsSHEntry::AttributeWillChange(nsIDocument* aDocument,
-                               dom::Element* aContent,
-                               PRInt32 aNameSpaceID,
-                               nsIAtom* aAttribute,
-                               PRInt32 aModType)
-{
-}
-
-void
-nsSHEntry::AttributeChanged(nsIDocument* aDocument,
-                            dom::Element* aElement,
-                            PRInt32 aNameSpaceID,
-                            nsIAtom* aAttribute,
-                            PRInt32 aModType)
-{
-  RemoveFromBFCacheAsync();
-}
-
-void
-nsSHEntry::ContentAppended(nsIDocument* aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aFirstNewContent,
-                           PRInt32 /* unused */)
-{
-  RemoveFromBFCacheAsync();
-}
-
-void
-nsSHEntry::ContentInserted(nsIDocument* aDocument,
-                           nsIContent* aContainer,
-                           nsIContent* aChild,
-                           PRInt32 /* unused */)
-{
-  RemoveFromBFCacheAsync();
-}
-
-void
-nsSHEntry::ContentRemoved(nsIDocument* aDocument,
-                          nsIContent* aContainer,
-                          nsIContent* aChild,
-                          PRInt32 aIndexInContainer,
-                          nsIContent* aPreviousSibling)
-{
-  RemoveFromBFCacheAsync();
-}
-
-void
-nsSHEntry::ParentChainChanged(nsIContent *aContent)
-{
-}
-
-class DestroyViewerEvent : public nsRunnable
-{
-public:
-  DestroyViewerEvent(nsIContentViewer* aViewer, nsIDocument* aDocument)
-    : mViewer(aViewer),
-      mDocument(aDocument)
-  {}
-
-  NS_IMETHOD Run()
-  {
-    if (mViewer)
-      mViewer->Destroy();
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIContentViewer> mViewer;
-  nsCOMPtr<nsIDocument> mDocument;
-};
 
 void
 nsSHEntry::RemoveFromBFCacheSync()
 {
-  NS_ASSERTION(mContentViewer && mDocument,
-               "we're not in the bfcache!");
-
-  nsCOMPtr<nsIContentViewer> viewer = mContentViewer;
-  DropPresentationState();
-
-  // Warning! The call to DropPresentationState could have dropped the last
-  // reference to this nsSHEntry, so no accessing members beyond here.
-
-  if (viewer) {
-    viewer->Destroy();
-  }
+  mShared->RemoveFromBFCacheSync();
 }
 
 void
 nsSHEntry::RemoveFromBFCacheAsync()
 {
-  NS_ASSERTION(mContentViewer && mDocument,
-               "we're not in the bfcache!");
-
-  // Release the reference to the contentviewer asynchronously so that the
-  // document doesn't get nuked mid-mutation.
-
-  nsCOMPtr<nsIRunnable> evt =
-      new DestroyViewerEvent(mContentViewer, mDocument);
-  nsresult rv = NS_DispatchToCurrentThread(evt);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("failed to dispatch DestroyViewerEvent");
-  }
-  else {
-    // Drop presentation. Also ensures that we don't post more then one
-    // PLEvent. Only do this if we succeeded in posting the event since
-    // otherwise the document could be torn down mid mutation causing crashes.
-    DropPresentationState();
-  }
-  // Warning! The call to DropPresentationState could have dropped the last
-  // reference to this nsSHEntry, so no accessing members beyond here.
+  mShared->RemoveFromBFCacheAsync();
 }
 
 nsDocShellEditorData*
 nsSHEntry::ForgetEditorData()
 {
-  return mEditorData.forget();
+  // XXX jlebar Check how this is used.
+  return mShared->mEditorData.forget();
 }
 
 void
 nsSHEntry::SetEditorData(nsDocShellEditorData* aData)
 {
-  NS_ASSERTION(!(aData && mEditorData),
+  NS_ASSERTION(!(aData && mShared->mEditorData),
                "We're going to overwrite an owning ref!");
-  if (mEditorData != aData)
-    mEditorData = aData;
+  if (mShared->mEditorData != aData) {
+    mShared->mEditorData = aData;
+  }
 }
 
 PRBool
 nsSHEntry::HasDetachedEditor()
 {
-  return mEditorData != nsnull;
+  return mShared->mEditorData != nsnull;
 }
 
 NS_IMETHODIMP
@@ -1023,7 +767,7 @@ nsSHEntry::SetStateData(nsIStructuredCloneContainer *aContainer)
 NS_IMETHODIMP
 nsSHEntry::IsDynamicallyAdded(PRBool* aAdded)
 {
-  *aAdded = mDynamicallyCreated;
+  *aAdded = mShared->mDynamicallyCreated;
   return NS_OK;
 }
 
@@ -1046,14 +790,14 @@ nsSHEntry::HasDynamicallyAddedChild(PRBool* aAdded)
 NS_IMETHODIMP
 nsSHEntry::GetDocshellID(PRUint64* aID)
 {
-  *aID = mDocShellID;
+  *aID = mShared->mDocShellID;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetDocshellID(PRUint64 aID)
 {
-  mDocShellID = aID;
+  mShared->mDocShellID = aID;
   return NS_OK;
 }
 
@@ -1061,14 +805,13 @@ nsSHEntry::SetDocshellID(PRUint64 aID)
 NS_IMETHODIMP
 nsSHEntry::GetLastTouched(PRUint32 *aLastTouched)
 {
-  *aLastTouched = mLastTouched;
+  *aLastTouched = mShared->mLastTouched;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSHEntry::SetLastTouched(PRUint32 aLastTouched)
 {
-  mLastTouched = aLastTouched;
+  mShared->mLastTouched = aLastTouched;
   return NS_OK;
 }
-
