@@ -70,6 +70,7 @@ CPPSRCS = \
   testOps.cpp \
   testParseJSON.cpp \
   testPropCache.cpp \
+  testRegExp.cpp \
   testResolveRecursion.cpp \
   testSameValue.cpp \
   testScriptObject.cpp \
