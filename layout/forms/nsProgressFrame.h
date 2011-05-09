@@ -54,9 +54,6 @@ public:
   nsProgressFrame(nsStyleContext* aContext);
   virtual ~nsProgressFrame();
 
-  NS_IMETHOD SetInitialChildList(nsIAtom*     aListName,
-                                 nsFrameList& aChildList);
-
   virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD Reflow(nsPresContext*           aCX,
