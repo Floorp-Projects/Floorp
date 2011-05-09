@@ -1580,8 +1580,8 @@ StdNameToAtom(JSContext *cx, JSStdName *stdn)
  * If you add a "standard" class, remember to update this table.
  */
 static JSStdName standard_class_atoms[] = {
-    {js_InitFunctionAndObjectClasses,   EAGER_ATOM_AND_CLASP(Function)},
-    {js_InitFunctionAndObjectClasses,   EAGER_ATOM_AND_CLASP(Object)},
+    {js_InitFunctionClass,              EAGER_ATOM_AND_CLASP(Function)},
+    {js_InitObjectClass,                EAGER_ATOM_AND_CLASP(Object)},
     {js_InitArrayClass,                 EAGER_ATOM_AND_CLASP(Array)},
     {js_InitBooleanClass,               EAGER_ATOM_AND_CLASP(Boolean)},
     {js_InitDateClass,                  EAGER_ATOM_AND_CLASP(Date)},
