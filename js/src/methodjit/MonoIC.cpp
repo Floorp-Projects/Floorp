@@ -972,9 +972,14 @@ class CallCompiler : public BaseCompiler
 
         Jump hasException = masm.branchTest32(Assembler::Zero, Registers::ReturnReg,
                                               Registers::ReturnReg);
-        
 
+#ifdef JS_CPU_X64
+        void *slowJoin = ic.slowPathStart.labelAtOffset(ic.slowJoinOffset).executableAddress();
+        DataLabelPtr done = masm.moveWithPatch(ImmPtr(slowJoin), Registers::ValueReg);
+        masm.jump(Registers::ValueReg);
+#else
         Jump done = masm.jump();
+#endif
 
         /* Move JaegerThrowpoline into register for very far jump on x64. */
         hasException.linkTo(masm.label(), &masm);
@@ -992,18 +997,20 @@ class CallCompiler : public BaseCompiler
             return true;
         }
 
-        ic.nativeFunGuard = linker.locationOf(funGuard);
         ic.nativeJump = linker.locationOf(done);
 
+#ifndef JS_CPU_X64
         linker.link(done, ic.slowPathStart.labelAtOffset(ic.slowJoinOffset));
+#endif
+
         linker.link(funGuard, ic.slowPathStart);
-        ic.nativeStart = linker.finalize();
+        JSC::CodeLocationLabel start = linker.finalize();
 
         JaegerSpew(JSpew_PICs, "generated native CALL stub %p (%d bytes)\n",
-                   ic.nativeStart.executableAddress(), masm.size());
+                   start.executableAddress(), masm.size());
 
         Repatcher repatch(jit);
-        repatch.relink(ic.funJump, ic.nativeStart);
+        repatch.relink(ic.funJump, start);
 
         return true;
     }
