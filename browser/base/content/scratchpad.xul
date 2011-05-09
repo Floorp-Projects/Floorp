@@ -13,7 +13,7 @@
    - for the specific language governing rights and limitations under the
    - License.
    -
-   - The Original Code is Workspace.
+   - The Original Code is Scratchpad.
    -
    - The Initial Developer of the Original Code is
    - The Mozilla Foundation.
@@ -40,8 +40,8 @@
    - ***** END LICENSE BLOCK ***** -->
 #endif
 <!DOCTYPE window [
-<!ENTITY % workspaceDTD SYSTEM "chrome://browser/locale/workspace.dtd" >
- %workspaceDTD;
+<!ENTITY % scratchpadDTD SYSTEM "chrome://browser/locale/scratchpad.dtd" >
+ %scratchpadDTD;
 ]>
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
@@ -49,59 +49,59 @@
 <window id="main-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&window.title;"
-        windowtype="devtools:workspace"
+        windowtype="devtools:scratchpad"
         screenX="4" screenY="4"
         width="640" height="480"
         persist="screenX screenY width height sizemode">
 
 <script type="application/javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/javascript" src="chrome://browser/content/workspace.js"/>
+<script type="application/javascript" src="chrome://browser/content/scratchpad.js"/>
 
 <commandset id="editMenuCommands"/>
 
-<commandset id="ws-commandset">
-  <command id="ws-cmd-newWindow" oncommand="Workspace.openWorkspace();"/>
-  <command id="ws-cmd-openFile" oncommand="Workspace.openFile();"/>
-  <command id="ws-cmd-save" oncommand="Workspace.saveFile();"/>
-  <command id="ws-cmd-saveas" oncommand="Workspace.saveFileAs();"/>
+<commandset id="sp-commandset">
+  <command id="sp-cmd-newWindow" oncommand="Scratchpad.openScratchpad();"/>
+  <command id="sp-cmd-openFile" oncommand="Scratchpad.openFile();"/>
+  <command id="sp-cmd-save" oncommand="Scratchpad.saveFile();"/>
+  <command id="sp-cmd-saveas" oncommand="Scratchpad.saveFileAs();"/>
 
   <!-- TODO: bug 650340 - implement printFile()
-  <command id="ws-cmd-printFile" oncommand="Workspace.printFile();" disabled="true"/>
+  <command id="sp-cmd-printFile" oncommand="Scratchpad.printFile();" disabled="true"/>
  -->
 
-  <command id="ws-cmd-close" oncommand="window.close();"/>
-  <command id="ws-cmd-execute" oncommand="Workspace.execute();"/>
-  <command id="ws-cmd-inspect" oncommand="Workspace.inspect();"/>
-  <command id="ws-cmd-print" oncommand="Workspace.print();"/>
-  <command id="ws-cmd-contentContext" oncommand="Workspace.setContentContext();"/>
-  <command id="ws-cmd-chromeContext" oncommand="Workspace.setChromeContext();" disabled="true"/>
-  <command id="ws-cmd-resetContext" oncommand="Workspace.resetContext();"/>
-  <command id="ws-cmd-errorConsole" oncommand="Workspace.openErrorConsole();" disabled="true"/>
-  <command id="ws-cmd-webConsole" oncommand="Workspace.openWebConsole();"/>
+  <command id="sp-cmd-close" oncommand="window.close();"/>
+  <command id="sp-cmd-execute" oncommand="Scratchpad.execute();"/>
+  <command id="sp-cmd-inspect" oncommand="Scratchpad.inspect();"/>
+  <command id="sp-cmd-print" oncommand="Scratchpad.print();"/>
+  <command id="sp-cmd-contentContext" oncommand="Scratchpad.setContentContext();"/>
+  <command id="sp-cmd-chromeContext" oncommand="Scratchpad.setChromeContext();" disabled="true"/>
+  <command id="sp-cmd-resetContext" oncommand="Scratchpad.resetContext();"/>
+  <command id="sp-cmd-errorConsole" oncommand="Scratchpad.openErrorConsole();" disabled="true"/>
+  <command id="sp-cmd-webConsole" oncommand="Scratchpad.openWebConsole();"/>
 </commandset>
 
-<keyset id="ws-keyset">
-  <key id="ws-key-window"
+<keyset id="sp-keyset">
+  <key id="sp-key-window"
        key="&newWindowCmd.commandkey;"
-       command="ws-cmd-newWindow"
+       command="sp-cmd-newWindow"
        modifiers="accel"/>
-  <key id="ws-key-open"
+  <key id="sp-key-open"
        key="&openFileCmd.commandkey;"
-       command="ws-cmd-openFile"
+       command="sp-cmd-openFile"
        modifiers="accel"/>
-  <key id="ws-key-save"
+  <key id="sp-key-save"
        key="&saveFileCmd.commandkey;"
-       command="ws-cmd-save"
+       command="sp-cmd-save"
        modifiers="accel"/>
-  <key id="ws-key-close"
+  <key id="sp-key-close"
        key="&closeCmd.key;"
-       command="ws-cmd-close"
+       command="sp-cmd-close"
        modifiers="accel"/>
 
   <!-- TODO: bug 650340 - implement printFile
-  <key id="ws-key-printFile"
+  <key id="sp-key-printFile"
        key="&printCmd.commandkey;"
-       command="ws-cmd-printFile"
+       command="sp-cmd-printFile"
        modifiers="accel"/>
   -->
 
@@ -118,104 +118,104 @@
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
   <key id="key_undo" key="&undoCmd.key;" modifiers="accel"/>
   <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift"/>
-  <key id="ws-key-execute"
+  <key id="sp-key-execute"
        key="&execute.key;"
-       command="ws-cmd-execute"
+       command="sp-cmd-execute"
        modifiers="accel"/>
-  <key id="ws-key-inspect"
+  <key id="sp-key-inspect"
        key="&inspect.key;"
-       command="ws-cmd-inspect"
+       command="sp-cmd-inspect"
        modifiers="accel"/>
-  <key id="ws-key-print"
+  <key id="sp-key-print"
        key="&print.key;"
-       command="ws-cmd-print"
+       command="sp-cmd-print"
        modifiers="accel"/>
-  <key id="ws-key-errorConsole"
+  <key id="sp-key-errorConsole"
        key="&errorConsoleCmd.commandkey;"
-       command="ws-cmd-errorConsole"
+       command="sp-cmd-errorConsole"
        modifiers="accel,shift"/>
-  <key id="ws-key-webConsole"
+  <key id="sp-key-webConsole"
        key="&webConsoleCmd.commandkey;"
-       command="ws-cmd-webConsole"
+       command="sp-cmd-webConsole"
        modifiers="accel,shift"/>
 </keyset>
 
 
-<menubar id="ws-menubar">
-  <menu id="ws-file-menu" label="&fileMenu.label;"
+<menubar id="sp-menubar">
+  <menu id="sp-file-menu" label="&fileMenu.label;"
         accesskey="&fileMenu.accesskey;">
-    <menupopup id="ws-menu-filepopup">
-      <menuitem id="ws-menu-newworkspace"
+    <menupopup id="sp-menu-filepopup">
+      <menuitem id="sp-menu-newscratchpad"
                 label="&newWindowCmd.label;"
                 accesskey="&newWindowCmd.accesskey;"
-                key="ws-key-window"
-                command="ws-cmd-newWindow"/>
+                key="sp-key-window"
+                command="sp-cmd-newWindow"/>
       <menuseparator/>
-      <menuitem id="ws-menu-open"
+      <menuitem id="sp-menu-open"
                 label="&openFileCmd.label;"
-                command="ws-cmd-openFile"
-                key="ws-key-open"
+                command="sp-cmd-openFile"
+                key="sp-key-open"
                 accesskey="&openFileCmd.accesskey;"/>
-      <menuitem id="ws-menu-save"
+      <menuitem id="sp-menu-save"
                 label="&saveFileCmd.label;"
                 accesskey="&saveFileCmd.accesskey;"
-                key="ws-key-save"
-                command="ws-cmd-save"/>
-      <menuitem id="ws-menu-saveas"
+                key="sp-key-save"
+                command="sp-cmd-save"/>
+      <menuitem id="sp-menu-saveas"
                 label="&saveFileAsCmd.label;"
                 accesskey="&saveFileAsCmd.accesskey;"
-                command="ws-cmd-saveas"/>
+                command="sp-cmd-saveas"/>
       <menuseparator/>
 
       <!-- TODO: bug 650340 - implement printFile
-      <menuitem id="ws-menu-print"
+      <menuitem id="sp-menu-print"
                 label="&printCmd.label;"
                 accesskey="&printCmd.accesskey;"
-                command="ws-cmd-printFile"/>
+                command="sp-cmd-printFile"/>
       <menuseparator/>
       -->
 
-      <menuitem id="ws-menu-close"
+      <menuitem id="sp-menu-close"
                 label="&closeCmd.label;"
-                key="ws-key-close"
+                key="sp-key-close"
                 accesskey="&closeCmd.accesskey;"
-                command="ws-cmd-close"/>
+                command="sp-cmd-close"/>
     </menupopup>
   </menu>
 
-  <menu id="ws-edit-menu" label="&editMenu.label;"
+  <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
-    <menupopup id="ws-menu_editpopup">
-      <menuitem id="ws-menu_undo"
+    <menupopup id="sp-menu_editpopup">
+      <menuitem id="sp-menu_undo"
                 label="&undoCmd.label;"
                 key="key_undo"
                 accesskey="&undoCmd.accesskey;"
                 disabled="true"
                 oncommand="cmd_undo"/>
-      <menuitem id="ws-menu-redo"
+      <menuitem id="sp-menu-redo"
                 label="&redoCmd.label;"
                 key="key_redo"
                 disabled="true"
                 accesskey="&redoCmd.accesskey;"
                 command="cmd_redo"/>
       <menuseparator/>
-      <menuitem id="ws-menu-cut"
+      <menuitem id="sp-menu-cut"
                 label="&cutCmd.label;"
                 key="key_cut"
                 accesskey="&cutCmd.accesskey;"
                 command="cmd_cut"/>
-      <menuitem id="ws-menu-copy"
+      <menuitem id="sp-menu-copy"
                 label="&copyCmd.label;"
                 key="key_copy"
                 accesskey="&copyCmd.accesskey;"
                 command="cmd_copy"/>
-      <menuitem id="ws-menu-paste"
+      <menuitem id="sp-menu-paste"
                 label="&pasteCmd.label;"
                 key="key_paste"
                 accesskey="&pasteCmd.accesskey;"
                 command="cmd_paste"/>
       <menuseparator/>
-      <menuitem id="ws-menu-selectAll"
+      <menuitem id="sp-menu-selectAll"
                 label="&selectAllCmd.label;"
                 key="key_selectAll"
                 accesskey="&selectAllCmd.accesskey;"
@@ -223,82 +223,82 @@
       <menuseparator/>
 
       <!-- TODO: bug 650345 - implement search and replace
-      <menuitem id="ws-menu-find"
+      <menuitem id="sp-menu-find"
                 label="&findOnCmd.label;"
                 accesskey="&findOnCmd.accesskey;"
                 key="key_find"
                 disabled="true"
                 command="cmd_find"/>
-      <menuitem id="ws-menu-findAgain"
+      <menuitem id="sp-menu-findAgain"
                 label="&findAgainCmd.label;"
                 accesskey="&findAgainCmd.accesskey;"
                 key="key_findAgain"
                 disabled="true"
                 command="cmd_findAgain"/>
-      <menuseparator id="ws-execute-separator"/>
+      <menuseparator id="sp-execute-separator"/>
       -->
 
-      <menuitem id="ws-text-execute"
+      <menuitem id="sp-text-execute"
                 label="&execute.label;"
                 accesskey="&execute.accesskey;"
-                key="ws-key-execute"
-                command="ws-cmd-execute"/>
-      <menuitem id="ws-text-inspect"
+                key="sp-key-execute"
+                command="sp-cmd-execute"/>
+      <menuitem id="sp-text-inspect"
                 label="&inspect.label;"
                 accesskey="&inspect.accesskey;"
-                key="ws-key-inspect"
-                command="ws-cmd-inspect"/>
-      <menuitem id="ws-text-print"
+                key="sp-key-inspect"
+                command="sp-cmd-inspect"/>
+      <menuitem id="sp-text-print"
                 label="&print.label;"
                 accesskey="&print.accesskey;"
-                key="ws-key-print"
-                command="ws-cmd-print"/>
+                key="sp-key-print"
+                command="sp-cmd-print"/>
     </menupopup>
   </menu>
 
-  <menu id="ws-context-menu"
+  <menu id="sp-context-menu"
         label="&contextMenu.label;"
         accesskey="&contextMenu.accesskey;">
-    <menupopup id="ws-menu-context">
-      <menuitem id="ws-menu-content"
+    <menupopup id="sp-menu-context">
+      <menuitem id="sp-menu-content"
                 label="&contentContext.label;"
                 accesskey="&contentContext.accesskey;"
-                command="ws-cmd-contentContext"
+                command="sp-cmd-contentContext"
                 checked="true"
                 type="radio"/>
-      <menuitem id="ws-menu-chrome" hidden="true"
-                command="ws-cmd-chromeContext"
+      <menuitem id="sp-menu-chrome" hidden="true"
+                command="sp-cmd-chromeContext"
                 label="&chromeContext.label;"
                 accesskey="&chromeContext.accesskey;"
                 type="radio"/>
       <menuseparator/>
-      <menuitem id="ws-menu-resetContext"
-                command="ws-cmd-resetContext"
+      <menuitem id="sp-menu-resetContext"
+                command="sp-cmd-resetContext"
                 label="&resetContext.label;"
                 accesskey="&resetContext.accesskey;"/>
     </menupopup>
   </menu>
 
-  <menu id="ws-tools-menu"
+  <menu id="sp-tools-menu"
         label="&toolsMenu.label;"
         accesskey="&toolsMenu.accesskey;">
-    <menupopup id="ws-menu-tools">
-      <menuitem id="ws-menu-errorConsole" hidden="true"
+    <menupopup id="sp-menu-tools">
+      <menuitem id="sp-menu-errorConsole" hidden="true"
                 label="&errorConsoleCmd.label;"
                 accesskey="&errorConsoleCmd.accesskey;"
-                key="ws-key-errorConsole"
-                command="ws-cmd-errorConsole"/>
-      <menuitem id="ws-menu-webConsole"
+                key="sp-key-errorConsole"
+                command="sp-cmd-errorConsole"/>
+      <menuitem id="sp-menu-webConsole"
                 label="&webConsoleCmd.label;"
                 accesskey="&webConsoleCmd.accesskey;"
-                key="ws-key-webConsole"
-                command="ws-cmd-webConsole"/>
+                key="sp-key-webConsole"
+                command="sp-cmd-webConsole"/>
     </menupopup>
   </menu>
 </menubar>
 
-<popupset id="workspace-popups">
-  <menupopup id="workspace-text-popup">
+<popupset id="scratchpad-popups">
+  <menupopup id="scratchpad-text-popup">
     <menuitem id="menu_cut"/>
     <menuitem id="menu_copy"/>
     <menuitem id="menu_paste"/>
@@ -306,31 +306,31 @@
     <menuseparator/>
     <menuitem id="menu_selectAll"/>
     <menuseparator/>
-    <menuitem id="ws-text-execute"
+    <menuitem id="sp-text-execute"
               label="&execute.label;"
               accesskey="&execute.accesskey;"
-              key="ws-key-execute"
-              command="ws-cmd-execute"/>
-    <menuitem id="ws-text-inspect"
+              key="sp-key-execute"
+              command="sp-cmd-execute"/>
+    <menuitem id="sp-text-inspect"
               label="&inspect.label;"
               accesskey="&inspect.accesskey;"
-              key="ws-key-inspect"
-              command="ws-cmd-inspect"/>
-    <menuitem id="ws-text-print"
+              key="sp-key-inspect"
+              command="sp-cmd-inspect"/>
+    <menuitem id="sp-text-print"
               label="&print.label;"
               accesskey="&print.accesskey;"
-              key="ws-key-print"
-              command="ws-cmd-print"/>
+              key="sp-key-print"
+              command="sp-cmd-print"/>
   </menupopup>
 </popupset>
 
-<textbox id="workspace-textbox"
+<textbox id="scratchpad-textbox"
          multiline="true"
          flex="1"
-         context="workspace-text-popup"
+         context="scratchpad-text-popup"
          placeholder="&textbox.placeholder;" />
-<statusbar id="workspace-statusbar" align="end">
-  <statusbarpanel id="workspace-status"
+<statusbar id="scratchpad-statusbar" align="end">
+  <statusbarpanel id="scratchpad-status"
                   label="&contentContext.label;"
                   class="statusbarpanel-iconic-text"/>
   <spacer flex="1"/>

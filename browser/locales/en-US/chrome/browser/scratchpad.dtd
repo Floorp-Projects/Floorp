@@ -1,7 +1,16 @@
-<!-- LOCALIZATION NOTE : FILE This file contains the Workspace window strings -->
+<!-- LOCALIZATION NOTE : FILE This file contains the Scratchpad window strings -->
 <!-- LOCALIZATION NOTE : FILE Do not translate commandkeys -->
 
-<!ENTITY window.title                 "Workspace">
+<!-- LOCALIZATION NOTE (scratchpad.title):
+  -  The Scratchpad is intended to provide a simple text editor for creating
+  -  and evaluating bits of JavaScript code for the purposes of function
+  -  prototyping, experimentation and convenient scripting.
+  -
+  -  It's quite possible that you won't have a good analogue for the word
+  -  "Scratchpad" in your locale. You should feel free to find a close
+  -  approximation to it or choose a word (or words) that means
+  -  "simple discardable text editor". -->
+<!ENTITY window.title                 "Scratchpad">
 
 <!ENTITY fileMenu.label               "File">
 <!ENTITY fileMenu.accesskey           "F">

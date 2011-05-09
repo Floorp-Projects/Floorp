@@ -2,8 +2,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Reference to the Workspace chrome window object.
-let gWorkspaceWindow;
+// Reference to the Scratchpad chrome window object.
+let gScratchpadWindow;
 
 let gOldPref;
 let DEVTOOLS_CHROME_ENABLED = "devtools.chrome.enabled";
@@ -19,50 +19,50 @@ function test()
   gBrowser.selectedBrowser.addEventListener("load", function() {
     gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
 
-    ok(Workspace, "Workspace variable exists");
+    ok(Scratchpad, "Scratchpad variable exists");
 
-    gWorkspaceWindow = Workspace.openWorkspace();
-    gWorkspaceWindow.addEventListener("load", runTests, false);
+    gScratchpadWindow = Scratchpad.openScratchpad();
+    gScratchpadWindow.addEventListener("load", runTests, false);
   }, true);
 
-  content.location = "data:text/html,Workspace test for bug 646070 - chrome context preference";
+  content.location = "data:text/html,Scratchpad test for bug 646070 - chrome context preference";
 }
 
 function runTests()
 {
-  gWorkspaceWindow.removeEventListener("load", arguments.callee, false);
+  gScratchpadWindow.removeEventListener("load", arguments.callee, false);
 
-  let ws = gWorkspaceWindow.Workspace;
-  ok(ws, "Workspace object exists in new window");
+  let sp = gScratchpadWindow.Scratchpad;
+  ok(sp, "Scratchpad object exists in new window");
 
-  let chromeContextMenu = gWorkspaceWindow.document.
-                          getElementById("ws-menu-chrome");
+  let chromeContextMenu = gScratchpadWindow.document.
+                          getElementById("sp-menu-chrome");
   ok(chromeContextMenu, "Chrome context menuitem element exists");
   ok(!chromeContextMenu.hasAttribute("hidden"),
      "Chrome context menuitem is visible");
 
-  let errorConsoleCommand = gWorkspaceWindow.document.
-                            getElementById("ws-cmd-errorConsole");
+  let errorConsoleCommand = gScratchpadWindow.document.
+                            getElementById("sp-cmd-errorConsole");
   ok(errorConsoleCommand, "Error console command element exists");
   ok(!errorConsoleCommand.hasAttribute("disabled"),
      "Error console command is enabled");
 
-  let errorConsoleMenu = gWorkspaceWindow.document.
-                         getElementById("ws-menu-errorConsole");
+  let errorConsoleMenu = gScratchpadWindow.document.
+                         getElementById("sp-menu-errorConsole");
   ok(errorConsoleMenu, "Error console menu element exists");
   ok(!errorConsoleMenu.hasAttribute("hidden"),
      "Error console menuitem is visible");
 
-  let chromeContextCommand = gWorkspaceWindow.document.
-                            getElementById("ws-cmd-chromeContext");
+  let chromeContextCommand = gScratchpadWindow.document.
+                            getElementById("sp-cmd-chromeContext");
   ok(chromeContextCommand, "Chrome context command element exists");
   ok(!chromeContextCommand.hasAttribute("disabled"),
      "Chrome context command is disabled");
 
   Services.prefs.setBoolPref(DEVTOOLS_CHROME_ENABLED, gOldPref);
 
-  gWorkspaceWindow.close();
-  gWorkspaceWindow = null;
+  gScratchpadWindow.close();
+  gScratchpadWindow = null;
   gBrowser.removeCurrentTab();
   finish();
 }
