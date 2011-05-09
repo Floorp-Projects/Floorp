@@ -88,7 +88,7 @@
     background: transparent;
   }
 
-  #main-window[chromemargin^="0,"][sizemode="normal"]:not([inFullscreen="true"]) #navigator-toolbox {
+  #main-window[chromemargin^="0,"][sizemode=normal] #navigator-toolbox {
     margin-top: -7px;
   }
 
@@ -114,7 +114,7 @@
     margin-bottom: -1px; /* compensate white outer border */
   }
 
-  #main-window:not(:-moz-lwtheme)[inFullscreen="true"] {
+  #main-window[sizemode=fullscreen]:not(:-moz-lwtheme) {
     -moz-appearance: none;
     background-color: #556;
   }
@@ -131,9 +131,9 @@
   }
 
   /* Vertical toolbar border */
-  #main-window[sizemode=normal] #navigator-toolbox:not([inFullscreen])::after,
-  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not([inFullscreen]),
-  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(#nav-bar):not([inFullScreen]) {
+  #main-window[sizemode=normal] #navigator-toolbox::after,
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=true] > toolbar:not(#toolbar-menubar):not(#TabsToolbar),
+  #main-window[sizemode=normal] #navigator-toolbox[tabsontop=false] > toolbar:not(#toolbar-menubar):not(#nav-bar) {
     border-left: 1px solid @toolbarShadowColor@;
     border-right: 1px solid @toolbarShadowColor@;
     background-clip: padding-box;
@@ -141,8 +141,8 @@
   #main-window[sizemode=normal] #navigator-toolbox > toolbar:-moz-lwtheme {
     border-color: transparent !important;
   }
-  #main-window[sizemode=normal]:not([inFullscreen]) #browser-border-start,
-  #main-window[sizemode=normal]:not([inFullscreen]) #browser-border-end {
+  #main-window[sizemode=normal] #browser-border-start,
+  #main-window[sizemode=normal] #browser-border-end {
     display: -moz-box;
     background-color: @toolbarShadowColor@;
     width: 1px;
@@ -159,10 +159,8 @@
 
   /* Toolbar shadow behind tabs */
   /* This code is only needed for restored windows (i.e. sizemode=normal)
-     because of the border radius on the toolbar below the tab bar.
-     :not([inFullscreen=true]) is added to ease the transition to and from
-     fullscreen mode, as the sizemode attribute isn't updated immediately. */
-  #main-window[sizemode=normal]:not([inFullscreen=true])[tabsontop=true] #nav-bar:not(:-moz-lwtheme),
+     because of the border radius on the toolbar below the tab bar. */
+  #main-window[sizemode=normal][tabsontop=true] #nav-bar:not(:-moz-lwtheme),
   #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + toolbar:not(:-moz-lwtheme),
   #main-window[sizemode=normal][tabsontop=true] > #nav-bar[collapsed=true]:not([customizing]) + #customToolbars + #PersonalToolbar:not(:-moz-lwtheme) {
     border-top: 1px solid @toolbarShadowColor@;
@@ -170,11 +168,11 @@
     border-top-right-radius: 3.5px;
     background-clip: padding-box;
   }
-  #main-window[sizemode=normal]:not([inFullscreen]):not([disablechrome]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
+  #main-window[sizemode=normal]:not([disablechrome]) #TabsToolbar[tabsontop=true]:not(:-moz-lwtheme) {
     margin-bottom: -1px;
     background-image: none !important;
   }
-  #main-window[sizemode=normal]:not([inFullscreen]):not([disablechrome]) #tabbrowser-tabs[tabsontop=true] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme) {
+  #main-window[sizemode=normal]:not([disablechrome]) #tabbrowser-tabs[tabsontop=true] > .tabbrowser-arrowscrollbox > .arrowscrollbox-scrollbox > .scrollbox-innerbox:not(:-moz-lwtheme) {
     position: relative;
   }
 
@@ -187,12 +185,12 @@
     background-image: -moz-linear-gradient(@toolbarHighlight@, rgba(255,255,255,0));
   }
 
-  #main-window[sizemode=normal] #TabsToolbar[tabsontop=true]:not([inFullscreen]) {
+  #main-window[sizemode=normal] #TabsToolbar[tabsontop=true] {
     padding-left: 4px;
     padding-right: 4px;
   }
 
-  #main-window[sizemode=normal] #TabsToolbar[tabsontop=false]:not([inFullscreen]) {
+  #main-window[sizemode=normal] #TabsToolbar[tabsontop=false] {
     padding-left: 2px;
     padding-right: 2px;
   }
@@ -258,7 +256,7 @@
     text-shadow: none;
   }
 
-  #main-window[sizemode=normal]:not([inFullscreen=true]) .statuspanel-inner {
+  #main-window[sizemode=normal] .statuspanel-inner {
     /* align with the browser's side borders */
     padding-left: 1px;
     padding-right: 1px;

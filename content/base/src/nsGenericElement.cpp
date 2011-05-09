@@ -134,6 +134,7 @@
 #include "mozilla/css/StyleRule.h" /* For nsCSSSelectorList */
 #include "nsCSSRuleProcessor.h"
 #include "nsRuleProcessorData.h"
+#include "nsPLDOMEvent.h"
 
 #ifdef MOZ_XUL
 #include "nsIXULDocument.h"
@@ -521,6 +522,30 @@ nsINode::GetOwnerDocument(nsIDOMDocument** aOwnerDocument)
   nsIDocument *ownerDoc = GetOwnerDocument();
 
   return ownerDoc ? CallQueryInterface(ownerDoc, aOwnerDocument) : NS_OK;
+}
+
+nsresult
+nsINode::RemoveChild(nsINode *aOldChild)
+{
+  if (!aOldChild) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
+  if (IsNodeOfType(eDATA_NODE)) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  if (aOldChild && aOldChild->GetNodeParent() == this) {
+    nsContentUtils::MaybeFireNodeRemoved(aOldChild, this, GetOwnerDoc());
+  }
+
+  PRInt32 index = IndexOf(aOldChild);
+  if (index == -1) {
+    // aOldChild isn't one of our children.
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
+
+  return RemoveChildAt(index, PR_TRUE);
 }
 
 nsresult
@@ -2714,8 +2739,14 @@ nsGenericElement::JoinTextNodes(nsIContent* aFirst,
 nsresult
 nsGenericElement::Normalize()
 {
+  // We're relying on mozAutoSubtreeModified to keep the doc alive here.
+  nsIDocument* doc = GetOwnerDoc();
+
   // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
+  mozAutoSubtreeModified subtree(doc, nsnull);
+
+  bool hasRemoveListeners = nsContentUtils::
+    HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED);
 
   nsresult result = NS_OK;
   PRUint32 index, count = GetChildCount();
@@ -2733,6 +2764,9 @@ nsGenericElement::Normalize()
 
           // ensure that if the text node is empty, it is removed
           if (0 == child->TextLength()) {
+            if (hasRemoveListeners) {
+              nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
+            }
             result = RemoveChildAt(index, PR_TRUE);
             if (NS_FAILED(result)) {
               return result;
@@ -2747,7 +2781,7 @@ nsGenericElement::Normalize()
             // Get the sibling. If it's also a text node, then
             // remove it from the tree and join the two text
             // nodes.
-            nsIContent *sibling = GetChildAt(index + 1);
+            nsCOMPtr<nsIContent> sibling = GetChildAt(index + 1);
 
             nsCOMPtr<nsIDOMNode> siblingNode = do_QueryInterface(sibling);
 
@@ -2756,6 +2790,9 @@ nsGenericElement::Normalize()
               siblingNode->GetNodeType(&siblingNodeType);
 
               if (siblingNodeType == nsIDOMNode::TEXT_NODE) {
+                if (hasRemoveListeners) {
+                  nsContentUtils::MaybeFireNodeRemoved(sibling, this, doc);
+                }
                 result = RemoveChildAt(index+1, PR_TRUE);
                 if (NS_FAILED(result)) {
                   return result;
@@ -3517,6 +3554,9 @@ nsGenericElement::InsertChildAt(nsIContent* aKid,
 static nsresult
 AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
 {
+  NS_ASSERTION(!aNode->GetNodeParent(),
+               "Should have removed from parent already");
+
   nsIDocument *doc = aParent->GetOwnerDoc();
 
   nsresult rv;
@@ -3530,10 +3570,8 @@ AdoptNodeIntoOwnerDoc(nsINode *aParent, nsINode *aNode)
   rv = domDoc->AdoptNode(node, getter_AddRefs(adoptedNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (doc != aParent->GetOwnerDoc()) {
-    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
-  }
-
+  NS_ASSERTION(aParent->GetOwnerDoc() == doc,
+               "ownerDoc chainged while adopting");
   NS_ASSERTION(adoptedNode == node, "Uh, adopt node changed nodes?");
   NS_ASSERTION(aParent->HasSameOwnerDoc(aNode),
                "ownerDocument changed again after adopting!");
@@ -3545,12 +3583,22 @@ nsresult
 nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
                          PRBool aNotify, nsAttrAndChildArray& aChildArray)
 {
+  NS_PRECONDITION(!aKid->GetNodeParent(),
+                  "Inserting node that already has parent");
   nsresult rv;
+
+  // The id-handling code, and in the future possibly other code, need to
+  // react to unexpected attribute changes.
+  nsMutationGuard::DidMutate();
+
+  // Do this before checking the child-count since this could cause mutations
+  nsIDocument* doc = GetCurrentDoc();
+  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
   if (!HasSameOwnerDoc(aKid)) {
     nsCOMPtr<nsIDOMNode> kid = do_QueryInterface(aKid, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
- 
+
     PRUint16 nodeType = 0;
     rv = kid->GetNodeType(&nodeType);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3564,14 +3612,6 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
-
-  // The id-handling code, and in the future possibly other code, need to
-  // react to unexpected attribute changes.
-  nsMutationGuard::DidMutate();
-
-  // Do this before checking the child-count since this could cause mutations
-  nsIDocument* doc = GetCurrentDoc();
-  mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
   PRUint32 childCount = aChildArray.ChildCount();
   NS_ENSURE_TRUE(aIndex <= childCount, NS_ERROR_ILLEGAL_VALUE);
@@ -3610,13 +3650,11 @@ nsINode::doInsertChildAt(nsIContent* aKid, PRUint32 aIndex,
 
     if (nsContentUtils::HasMutationListeners(aKid,
           NS_EVENT_BITS_MUTATION_NODEINSERTED, this)) {
-      mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
-      
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(this);
 
       mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-      nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
+      (new nsPLDOMEvent(aKid, mutation))->RunDOMEventWhenSafe();
     }
   }
 
@@ -3642,40 +3680,15 @@ nsINode::doRemoveChildAt(PRUint32 aIndex, PRBool aNotify,
                          nsIContent* aKid, nsAttrAndChildArray& aChildArray,
                          PRBool aMutationEvent)
 {
-  nsIDocument* doc = GetCurrentDoc();
-
-  nsMutationGuard::DidMutate();
-
   NS_PRECONDITION(aKid && aKid->GetNodeParent() == this &&
                   aKid == GetChildAt(aIndex) &&
                   IndexOf(aKid) == (PRInt32)aIndex, "Bogus aKid");
 
+  nsMutationGuard::DidMutate();
+
+  nsIDocument* doc = GetCurrentDoc();
+
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
-
-  nsMutationGuard guard;
-
-  mozAutoSubtreeModified subtree(nsnull, nsnull);
-  if (aNotify &&
-      aMutationEvent &&
-      nsContentUtils::HasMutationListeners(aKid,
-        NS_EVENT_BITS_MUTATION_NODEREMOVED, this)) {
-    mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
-
-    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
-    mutation.mRelatedNode = do_QueryInterface(this);
-
-    subtree.UpdateTarget(GetOwnerDoc(), this);
-    nsEventDispatcher::Dispatch(aKid, nsnull, &mutation);
-  }
-
-  // Someone may have removed the kid or any of its siblings while that event
-  // was processing.
-  if (guard.Mutated(0)) {
-    aIndex = IndexOf(aKid);
-    if (static_cast<PRInt32>(aIndex) < 0) {
-      return NS_OK;
-    }
-  }
 
   nsIContent* previousSibling = aKid->GetPreviousSibling();
 
@@ -3985,13 +3998,11 @@ nsGenericElement::FireNodeInserted(nsIDocument* aDoc,
 
     if (nsContentUtils::HasMutationListeners(childContent,
           NS_EVENT_BITS_MUTATION_NODEINSERTED, aParent)) {
-      mozAutoRemovableBlockerRemover blockerRemover(aDoc);
-
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEINSERTED);
       mutation.mRelatedNode = do_QueryInterface(aParent);
 
       mozAutoSubtreeModified subtree(aDoc, aParent);
-      nsEventDispatcher::Dispatch(childContent, nsnull, &mutation);
+      (new nsPLDOMEvent(childContent, mutation))->RunDOMEventWhenSafe();
     }
   }
 }
@@ -4004,17 +4015,58 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     return NS_ERROR_NULL_POINTER;
   }
 
-  if (!IsNodeOfType(eDOCUMENT) &&
-      !IsNodeOfType(eDOCUMENT_FRAGMENT) &&
-      !IsElement()) {
+  if ((!IsNodeOfType(eDOCUMENT) &&
+       !IsNodeOfType(eDOCUMENT_FRAGMENT) &&
+       !IsElement()) ||
+      !aNewChild->IsNodeOfType(eCONTENT)){
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  PRUint16 nodeType = 0;
+  nsresult res = aNewChild->GetNodeType(&nodeType);
+  NS_ENSURE_SUCCESS(res, res);
+
+  // Before we do anything else, fire all DOMNodeRemoved mutation events
+  // We do this up front as to avoid having to deal with script running
+  // at random places further down.
+  // Scope firing mutation events so that we don't carry any state that
+  // might be stale
+  {
+    // This check happens again further down (though then using IndexOf).
+    // We're only checking this here to avoid firing mutation events when
+    // none should be fired.
+    // It's ok that we do the check twice in the case when firing mutation
+    // events as we need to recheck after running script anyway.
+    if (aRefChild && aRefChild->GetNodeParent() != this) {
+      return NS_ERROR_DOM_NOT_FOUND_ERR;
+    }
+
+    // If we're replacing, fire for node-to-be-replaced
+    if (aReplace) {
+      nsContentUtils::MaybeFireNodeRemoved(aRefChild, this, GetOwnerDoc());
+    }
+
+    // If the new node already has a parent, fire for removing from old
+    // parent
+    nsINode* oldParent = aNewChild->GetNodeParent();
+    if (oldParent) {
+      nsContentUtils::MaybeFireNodeRemoved(aNewChild, oldParent,
+                                           aNewChild->GetOwnerDoc());
+    }
+
+    // If we're inserting a fragment, fire for all the children of the
+    // fragment
+    if (nodeType == nsIDOMNode::DOCUMENT_FRAGMENT_NODE) {
+      static_cast<nsGenericElement*>(aNewChild)->FireNodeRemovedForChildren();
+    }
+  }
+
+  nsIDocument* doc = GetOwnerDoc();
+  nsIContent* newContent = static_cast<nsIContent*>(aNewChild);
   nsIContent* refContent;
-  nsresult res = NS_OK;
   PRInt32 insPos;
 
-  mozAutoDocConditionalContentUpdateBatch batch(GetCurrentDoc(), PR_TRUE);
+  mozAutoDocUpdate batch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, PR_TRUE);
 
   // Figure out which index to insert at
   if (aRefChild) {
@@ -4037,21 +4089,51 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     refContent = nsnull;
   }
 
-  if (!aNewChild->IsNodeOfType(eCONTENT)) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  nsIContent* newContent = static_cast<nsIContent*>(aNewChild);
-
-  PRUint16 nodeType = 0;
-  res = aNewChild->GetNodeType(&nodeType);
-  NS_ENSURE_SUCCESS(res, res);
-
   // Make sure that the inserted node is allowed as a child of its new parent.
   if (!IsAllowedAsChild(newContent, nodeType, this, aReplace, refContent)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  // If we're replacing
+  if (aReplace) {
+    refContent = GetChildAt(insPos + 1);
+
+    res = RemoveChildAt(insPos, PR_TRUE);
+    NS_ENSURE_SUCCESS(res, res);
+  }
+
+  if (newContent->IsRootOfAnonymousSubtree()) {
+    // This is anonymous content.  Don't allow its insertion
+    // anywhere, since it might have UnbindFromTree calls coming
+    // its way.
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  // Remove the new child from the old parent if one exists
+  nsINode* oldParent = newContent->GetNodeParent();
+  if (oldParent) {
+    PRInt32 removeIndex = oldParent->IndexOf(newContent);
+    if (removeIndex < 0) {
+      // newContent is anonymous.  We can't deal with this, so just bail
+      NS_ERROR("How come our flags didn't catch this?");
+      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+    }
+    
+    NS_ASSERTION(!(oldParent == this && removeIndex == insPos),
+                 "invalid removeIndex");
+
+    res = oldParent->RemoveChildAt(removeIndex, PR_TRUE);
+    NS_ENSURE_SUCCESS(res, res);
+
+    // Adjust insert index if the node we ripped out was a sibling
+    // of the node we're inserting before
+    if (oldParent == this && removeIndex < insPos) {
+      --insPos;
+    }
+  }
+
+  // Move new child over to our document if needed. Do this after removing
+  // it from its parent so that AdoptNode doesn't fire DOMNodeRemoved
   // DocumentType nodes are the only nodes that can have a null
   // ownerDocument according to the DOM spec, and we need to allow
   // inserting them w/o calling AdoptNode().
@@ -4061,31 +4143,6 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     res = AdoptNodeIntoOwnerDoc(this, aNewChild);
     NS_ENSURE_SUCCESS(res, res);
   }
-
-  // If we're replacing
-  if (aReplace) {
-    refContent = GetChildAt(insPos + 1);
-
-    nsMutationGuard guard;
-
-    res = RemoveChildAt(insPos, PR_TRUE);
-    NS_ENSURE_SUCCESS(res, res);
-
-    if (guard.Mutated(1)) {
-      insPos = refContent ? IndexOf(refContent) : GetChildCount();
-      if (insPos < 0) {
-        return NS_ERROR_DOM_NOT_FOUND_ERR;
-      }
-
-      // Passing PR_FALSE for aIsReplace since we now have removed the node
-      // to be replaced.
-      if (!IsAllowedAsChild(newContent, nodeType, this, PR_FALSE, refContent)) {
-        return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-      }
-    }
-  }
-
-  nsIDocument *doc = GetOwnerDoc();
 
   /*
    * Check if we're inserting a document fragment. If we are, we need
@@ -4189,74 +4246,18 @@ nsINode::ReplaceOrInsertBefore(PRBool aReplace, nsINode* aNewChild,
     }
 
     // Fire mutation events. Optimize for the case when there are no listeners
-    nsPIDOMWindow* window = nsnull;
-    if (doc &&
-        (((window = doc->GetInnerWindow()) &&
-          window->HasMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTED)) ||
-         !window)) {
+    if (nsContentUtils::
+          HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsGenericElement::FireNodeInserted(doc, this, fragChildren);
     }
   }
   else {
     // Not inserting a fragment but rather a single node.
 
-    if (newContent->IsRootOfAnonymousSubtree()) {
-      // This is anonymous content.  Don't allow its insertion
-      // anywhere, since it might have UnbindFromTree calls coming
-      // its way.
-      return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-    }
-
-    // Remove the element from the old parent if one exists
-    nsINode* oldParent = newContent->GetNodeParent();
-
-    if (oldParent) {
-      PRInt32 removeIndex = oldParent->IndexOf(newContent);
-
-      if (removeIndex < 0) {
-        // newContent is anonymous.  We can't deal with this, so just bail
-        NS_ERROR("How come our flags didn't catch this?");
-        return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
-      }
-      
-      NS_ASSERTION(!(oldParent == this && removeIndex == insPos),
-                   "invalid removeIndex");
-
-      nsMutationGuard guard;
-
-      res = oldParent->RemoveChildAt(removeIndex, PR_TRUE);
-      NS_ENSURE_SUCCESS(res, res);
-
-      // Adjust insert index if the node we ripped out was a sibling
-      // of the node we're inserting before
-      if (oldParent == this && removeIndex < insPos) {
-        --insPos;
-      }
-
-      if (guard.Mutated(1)) {
-        if (doc != newContent->GetOwnerDoc()) {
-          return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
-        }
-
-        insPos = refContent ? IndexOf(refContent) : GetChildCount();
-        if (insPos < 0) {
-          // Someone seriously messed up the childlist. We have no idea
-          // where to insert the new child, so just bail.
-          return NS_ERROR_DOM_NOT_FOUND_ERR;
-        }
-
-        if (newContent->GetNodeParent() ||
-            !IsAllowedAsChild(newContent, nodeType, this, PR_FALSE,
-                              refContent)) {
-          return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-        }
-      }
-    }
-
     // FIXME https://bugzilla.mozilla.org/show_bug.cgi?id=544654
     //       We need to reparent here for nodes for which the parent of their
     //       wrapper is not the wrapper for their ownerDocument (XUL elements,
-    //       form controls, ...).
+    //       form controls, ...). Also applies in the fragment code above.
 
     res = InsertChildAt(newContent, insPos, PR_TRUE);
     NS_ENSURE_SUCCESS(res, res);
@@ -4751,8 +4752,6 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
   }
 
   if (aFireMutation) {
-    mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
-    
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
     nsCOMPtr<nsIDOMAttr> attrNode;
@@ -4774,7 +4773,7 @@ nsGenericElement::SetAttrAndNotify(PRInt32 aNamespaceID,
     mutation.mAttrChange = aModType;
 
     mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+    (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
   }
 
   return NS_OK;
@@ -4993,8 +4992,6 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (hasMutationListeners) {
-    mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
-
     nsCOMPtr<nsIDOMEventTarget> node =
       do_QueryInterface(static_cast<nsIContent *>(this));
     nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
@@ -5009,7 +5006,7 @@ nsGenericElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
     mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
     mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-    nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+    (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
   }
 
   return NS_OK;
@@ -5437,6 +5434,26 @@ nsGenericElement::PostHandleEventForLinks(nsEventChainPostVisitor& aVisitor)
   }
 
   return rv;
+}
+
+void
+nsGenericElement::FireNodeRemovedForChildren()
+{
+  nsIDocument* doc = GetOwnerDoc();
+  // Optimize the common case
+  if (!nsContentUtils::
+        HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+    return;
+  }
+
+  nsCOMPtr<nsIDocument> owningDoc = doc;
+
+  nsCOMPtr<nsINode> child;
+  for (child = GetFirstChild();
+       child && child->GetNodeParent() == this;
+       child = child->GetNextSibling()) {
+    nsContentUtils::MaybeFireNodeRemoved(child, this, doc);
+  }
 }
 
 void

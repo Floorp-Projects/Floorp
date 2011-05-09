@@ -1808,7 +1808,7 @@ static const char* kNSURIs[] = {
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   if (NS_UNLIKELY(cb.WantDebugInfo())) {
-    char name[72];
+    char name[512];
     PRUint32 nsid = tmp->GetDefaultNamespaceID();
     nsCAutoString uri;
     if (tmp->mDocumentURI)
@@ -1881,7 +1881,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mDOMImplementation)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mOriginalDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCachedEncoder)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mCurrentStateObjectCached)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMPTR(mStateObjectCached)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_NSCOMARRAY(mStyleSheets)
@@ -5984,6 +5984,30 @@ BlastSubtreeToPieces(nsINode *aNode)
   }
 }
 
+
+class nsUserDataCaller : public nsRunnable
+{
+public:
+  nsUserDataCaller(nsCOMArray<nsINode>& aNodesWithProperties,
+                   nsIDocument* aOwnerDoc)
+    : mNodesWithProperties(aNodesWithProperties),
+      mOwnerDoc(aOwnerDoc)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    nsNodeUtils::CallUserDataHandlers(mNodesWithProperties, mOwnerDoc,
+                                      nsIDOMUserDataHandler::NODE_ADOPTED,
+                                      PR_FALSE);
+    return NS_OK;
+  }
+
+private:
+  nsCOMArray<nsINode> mNodesWithProperties;
+  nsCOMPtr<nsIDocument> mOwnerDoc;
+};
+
 NS_IMETHODIMP
 nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
 {
@@ -5994,15 +6018,28 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aAdoptedNode);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsINode> adoptedNode;
+  nsCOMPtr<nsINode> adoptedNode = do_QueryInterface(aAdoptedNode);
+  
+  // Scope firing mutation events so that we don't carry any state that
+  // might be stale
+  {
+    nsINode* parent = adoptedNode->GetNodeParent();
+    if (parent) {
+      nsContentUtils::MaybeFireNodeRemoved(adoptedNode, parent,
+                                           adoptedNode->GetOwnerDoc());
+    }
+  }
+
+  nsAutoScriptBlocker scriptBlocker;
+
   PRUint16 nodeType;
   aAdoptedNode->GetNodeType(&nodeType);
   switch (nodeType) {
     case nsIDOMNode::ATTRIBUTE_NODE:
     {
       // Remove from ownerElement.
-      nsCOMPtr<nsIDOMAttr> adoptedAttr = do_QueryInterface(aAdoptedNode, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
+      nsCOMPtr<nsIDOMAttr> adoptedAttr = do_QueryInterface(aAdoptedNode);
+      NS_ASSERTION(adoptedAttr, "Attribute not implementing nsIDOMAttr");
 
       nsCOMPtr<nsIDOMElement> ownerElement;
       rv = adoptedAttr->GetOwnerElement(getter_AddRefs(ownerElement));
@@ -6017,8 +6054,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
         newAttr.swap(adoptedAttr);
       }
 
-      adoptedNode = do_QueryInterface(adoptedAttr, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
       break;
     }
     case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
@@ -6028,9 +6063,6 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     case nsIDOMNode::CDATA_SECTION_NODE:
     case nsIDOMNode::COMMENT_NODE:
     {
-      adoptedNode = do_QueryInterface(aAdoptedNode, &rv);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       // We don't want to adopt an element into its own contentDocument or into
       // a descendant contentDocument, so we check if the frameElement of this
       // document or any of its parents is the adopted node or one of its
@@ -6049,13 +6081,9 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
       } while ((doc = doc->GetParentDocument()));
 
       // Remove from parent.
-      nsCOMPtr<nsIDOMNode> parent;
-      aAdoptedNode->GetParentNode(getter_AddRefs(parent));
-      NS_ENSURE_SUCCESS(rv, rv);
-
+      nsINode* parent = adoptedNode->GetNodeParent();
       if (parent) {
-        nsCOMPtr<nsIDOMNode> newChild;
-        rv = parent->RemoveChild(aAdoptedNode, getter_AddRefs(newChild));
+        rv = parent->RemoveChildAt(parent->IndexOf(adoptedNode), PR_TRUE);
         NS_ENSURE_SUCCESS(rv, rv);
       }
 
@@ -6135,14 +6163,13 @@ nsDocument::AdoptNode(nsIDOMNode *aAdoptedNode, nsIDOMNode **aResult)
     }
   }
 
-  rv = nsNodeUtils::CallUserDataHandlers(nodesWithProperties, this,
-                                         nsIDOMUserDataHandler::NODE_ADOPTED,
-                                         PR_FALSE);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (adoptedNode->GetOwnerDoc() != this) {
-    return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
+  if (nodesWithProperties.Count()) {
+    nsContentUtils::AddScriptRunner(new nsUserDataCaller(nodesWithProperties,
+                                                         this));
   }
+
+  NS_ASSERTION(adoptedNode->GetOwnerDoc() == this,
+               "Should still be in the document we just got adopted into");
 
   return CallQueryInterface(adoptedNode, aResult);
 }
@@ -7562,10 +7589,8 @@ nsDocument::MutationEventDispatched(nsINode* aTarget)
 
     PRInt32 realTargetCount = realTargets.Count();
     for (PRInt32 k = 0; k < realTargetCount; ++k) {
-      mozAutoRemovableBlockerRemover blockerRemover(this);
-
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_SUBTREEMODIFIED);
-      nsEventDispatcher::Dispatch(realTargets[k], nsnull, &mutation);
+      (new nsPLDOMEvent(realTargets[k], mutation))->RunDOMEventWhenSafe();
     }
   }
 }
@@ -8153,47 +8178,22 @@ nsIDocument::ScheduleBeforePaintEvent(nsIAnimationFrameListener* aListener)
 }
 
 nsresult
-nsDocument::GetMozCurrentStateObject(nsIVariant** aState)
+nsDocument::GetStateObject(nsIVariant** aState)
 {
-  // Get the document's current state object. This is the object returned form
-  // both document.mozCurrentStateObject as well as popStateEvent.state
+  // Get the document's current state object. This is the object backing both
+  // history.state and popStateEvent.state.
+  //
+  // mStateObjectContainer may be null; this just means that there's no
+  // current state object.
 
   nsCOMPtr<nsIVariant> stateObj;
-  // Parse the JSON, if there's any to parse.
-  if (!mCurrentStateObjectCached && !mCurrentStateObject.IsEmpty()) {
-    // Get the JSContext associated with this document. We need this for
-    // deserialization.
-    nsIScriptGlobalObject *sgo = GetScopeObject();
-    NS_ENSURE_TRUE(sgo, NS_ERROR_FAILURE);
-
-    nsIScriptContext *scx = sgo->GetContext();
-    NS_ENSURE_TRUE(scx, NS_ERROR_FAILURE);
-
-    JSContext *cx = (JSContext*) scx->GetNativeContext();
-
-    // Make sure we in the request while we have jsval on the native stack.
-    JSAutoRequest ar(cx);
-
-    // If our json call triggers a JS-to-C++ call, we want that call to use cx
-    // as the context.  So we push cx onto the context stack.
-    nsCxPusher cxPusher;
-
-    jsval jsStateObj = JSVAL_NULL;
-
-    // Deserialize the state object into an nsIVariant.
-    nsCOMPtr<nsIJSON> json = do_GetService("@mozilla.org/dom/json;1");
-    NS_ENSURE_TRUE(cxPusher.Push(cx), NS_ERROR_FAILURE);
-    nsresult rv = json->DecodeToJSVal(mCurrentStateObject, cx, &jsStateObj);
-    NS_ENSURE_SUCCESS(rv, rv);
-    cxPusher.Pop();
-
-    nsCOMPtr<nsIXPConnect> xpconnect = do_GetService(nsIXPConnect::GetCID());
-    NS_ENSURE_TRUE(xpconnect, NS_ERROR_FAILURE);
-    rv = xpconnect->JSValToVariant(cx, &jsStateObj, getter_AddRefs(mCurrentStateObjectCached));
-    NS_ENSURE_SUCCESS(rv, rv);
+  if (!mStateObjectCached && mStateObjectContainer) {
+    JSContext *cx = nsContentUtils::GetContextFromDocument(this);
+    mStateObjectContainer->
+      DeserializeToVariant(cx, getter_AddRefs(mStateObjectCached));
   }
 
-  NS_IF_ADDREF(*aState = mCurrentStateObjectCached);
+  NS_IF_ADDREF(*aState = mStateObjectCached);
   
   return NS_OK;
 }
