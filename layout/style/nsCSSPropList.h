@@ -1248,7 +1248,7 @@ CSS_PROP_COLUMN(
     CSS_PROPERTY_PARSE_VALUE |
         // Need to reject 0 in addition to negatives.  If we accept 0, we
         // need to change NS_STYLE_COLUMN_COUNT_AUTO to something else.
-        CSS_PROPERTY_VALUE_POSITIVE_NONZERO,
+        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
     VARIANT_AHI,
     nsnull,
     offsetof(nsStyleColumn, mColumnCount),
@@ -1818,7 +1818,7 @@ CSS_PROP_BACKENDONLY(
     orphans,
     Orphans,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_POSITIVE_NONZERO,
+        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
     VARIANT_HI,
     nsnull)
 CSS_PROP_SHORTHAND(
@@ -2379,7 +2379,7 @@ CSS_PROP_BACKENDONLY(
     widows,
     Widows,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_POSITIVE_NONZERO,
+        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
     VARIANT_HI,
     nsnull)
 CSS_PROP_POSITION(
@@ -2490,7 +2490,7 @@ CSS_PROP_XUL(
     box_ordinal_group,
     CSS_PROP_DOMPROP_PREFIXED(BoxOrdinalGroup),
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_POSITIVE_NONZERO,
+        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
     VARIANT_HI,
     nsnull,
     CSS_PROP_NO_OFFSET,
