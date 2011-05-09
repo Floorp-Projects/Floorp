@@ -241,7 +241,7 @@ function run_test() {
   initTestLogging("Trace");
   Log4Moz.repository.getLogger("Engine.Bookmarks").level = Log4Moz.Level.Trace;
 
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
 
   test_annotation_uploaded();
   test_smart_bookmarks_duped();

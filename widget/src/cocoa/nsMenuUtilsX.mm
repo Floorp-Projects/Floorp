@@ -51,7 +51,6 @@
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsPIDOMWindow.h"
-#include "nsIDOMAbstractView.h"
 
 void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
 {
@@ -66,13 +65,13 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent)
                           getter_AddRefs(event));
     nsCOMPtr<nsIDOMXULCommandEvent> command = do_QueryInterface(event);
     nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(command);
-    nsCOMPtr<nsIDOMAbstractView> view = do_QueryInterface(doc->GetWindow());
 
     // FIXME: Should probably figure out how to init this with the actual
     // pressed keys, but this is a big old edge case anyway. -dwh
     if (pEvent &&
         NS_SUCCEEDED(command->InitCommandEvent(NS_LITERAL_STRING("command"),
-                                               PR_TRUE, PR_TRUE, view, 0,
+                                               PR_TRUE, PR_TRUE,
+                                               doc->GetWindow(), 0,
                                                PR_FALSE, PR_FALSE, PR_FALSE,
                                                PR_FALSE, nsnull))) {
       pEvent->SetTrusted(PR_TRUE);

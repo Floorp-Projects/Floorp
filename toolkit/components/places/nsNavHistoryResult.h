@@ -378,6 +378,7 @@ public:
   nsCString mURI; // not necessarily valid for containers, call GetUri
   nsCString mTitle;
   nsString mTags;
+  bool mAreTagsSorted;
   PRUint32 mAccessCount;
   PRInt64 mTime;
   nsCString mFaviconURI;
@@ -716,9 +717,9 @@ class nsNavHistoryQueryResultNode : public nsNavHistoryContainerResultNode,
                                     public nsINavHistoryQueryResultNode
 {
 public:
-  nsNavHistoryQueryResultNode(const nsACString& aQueryURI,
-                              const nsACString& aTitle,
-                              const nsACString& aIconURI);
+  nsNavHistoryQueryResultNode(const nsACString& aTitle,
+                              const nsACString& aIconURI,
+                              const nsACString& aQueryURI);
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
                               const nsACString& aIconURI,
                               const nsCOMArray<nsNavHistoryQuery>& aQueries,
@@ -777,6 +778,9 @@ public:
   virtual void GetSortingAnnotation(nsACString& aSortingAnnotation);
   virtual void RecursiveSort(const char* aData,
                              SortComparator aComparator);
+
+  nsCOMPtr<nsIURI> mRemovingURI;
+  nsresult NotifyIfTagsChanged(nsIURI* aURI);
 };
 
 

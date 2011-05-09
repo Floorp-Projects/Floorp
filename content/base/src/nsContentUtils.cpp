@@ -168,7 +168,6 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIChromeRegistry.h"
 #include "nsIMIMEHeaderParam.h"
 #include "nsIDOMXULCommandEvent.h"
-#include "nsIDOMAbstractView.h"
 #include "nsIDOMDragEvent.h"
 #include "nsDOMDataTransfer.h"
 #include "nsHtml5Module.h"
@@ -2213,21 +2212,13 @@ nsContentUtils::NewURIWithDocumentCharset(nsIURI** aResult,
 
 // static
 PRBool
-nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
+nsContentUtils::BelongsInForm(nsIContent *aForm,
                               nsIContent *aContent)
 {
   NS_PRECONDITION(aForm, "Must have a form");
   NS_PRECONDITION(aContent, "Must have a content node");
 
-  nsCOMPtr<nsIContent> form(do_QueryInterface(aForm));
-
-  if (!form) {
-    NS_ERROR("This should not happen, form is not an nsIContent!");
-
-    return PR_TRUE;
-  }
-
-  if (form == aContent) {
+  if (aForm == aContent) {
     // A form does not belong inside itself, so we return false here
 
     return PR_FALSE;
@@ -2236,7 +2227,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
   nsIContent* content = aContent->GetParent();
 
   while (content) {
-    if (content == form) {
+    if (content == aForm) {
       // aContent is contained within the form so we return true.
 
       return PR_TRUE;
@@ -2253,7 +2244,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
     content = content->GetParent();
   }
 
-  if (form->GetChildCount() > 0) {
+  if (aForm->GetChildCount() > 0) {
     // The form is a container but aContent wasn't inside the form,
     // return false
 
@@ -2264,7 +2255,7 @@ nsContentUtils::BelongsInForm(nsIDOMHTMLFormElement *aForm,
   // we check whether the content comes after the form.  If it does,
   // return true.  If it does not, then it couldn't have been inside
   // the form in the HTML.
-  if (PositionIsBefore(form, aContent)) {
+  if (PositionIsBefore(aForm, aContent)) {
     // We could be in this form!
     // In the future, we may want to get document.forms, look at the
     // form after aForm, and if aContent is after that form after
@@ -5531,9 +5522,8 @@ nsContentUtils::DispatchXULCommand(nsIContent* aTarget,
   nsCOMPtr<nsIDOMXULCommandEvent> xulCommand = do_QueryInterface(event);
   nsCOMPtr<nsIPrivateDOMEvent> pEvent = do_QueryInterface(xulCommand);
   NS_ENSURE_STATE(pEvent);
-  nsCOMPtr<nsIDOMAbstractView> view = do_QueryInterface(doc->GetWindow());
   nsresult rv = xulCommand->InitCommandEvent(NS_LITERAL_STRING("command"),
-                                             PR_TRUE, PR_TRUE, view,
+                                             PR_TRUE, PR_TRUE, doc->GetWindow(),
                                              0, aCtrl, aAlt, aShift, aMeta,
                                              aSourceEvent);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -6240,7 +6230,8 @@ private:
 };
 
 static void
-DebugWrapperTraceCallback(PRUint32 langID, void *p, void *closure)
+DebugWrapperTraceCallback(PRUint32 langID, void *p, const char *name,
+                          void *closure)
 {
   DebugWrapperTraversalCallback* callback =
     static_cast<DebugWrapperTraversalCallback*>(closure);
@@ -6558,4 +6549,38 @@ nsContentUtils::FindInternalContentViewer(const char* aType,
 #endif // MOZ_MEDIA
 
   return NULL;
+}
+
+// static
+PRBool
+nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
+                                  nsIDocument* aDocument)
+{
+  NS_ASSERTION(aDocument, "aDocument should be a valid pointer (not null)");
+  NS_ENSURE_TRUE(aDocument->GetScriptGlobalObject(), PR_TRUE);
+
+  JSContext* ctx = (JSContext*) aDocument->GetScriptGlobalObject()->
+                                  GetContext()->GetNativeContext();
+  NS_ENSURE_TRUE(ctx, PR_TRUE);
+
+  JSAutoRequest ar(ctx);
+
+  // The pattern has to match the entire value.
+  aPattern.Insert(NS_LITERAL_STRING("^(?:"), 0);
+  aPattern.Append(NS_LITERAL_STRING(")$"));
+
+  JSObject* re = JS_NewUCRegExpObjectNoStatics(ctx, reinterpret_cast<jschar*>
+                                                 (aPattern.BeginWriting()),
+                                                aPattern.Length(), 0);
+  NS_ENSURE_TRUE(re, PR_TRUE);
+
+  jsval rval = JSVAL_NULL;
+  size_t idx = 0;
+  JSBool res;
+
+  res = JS_ExecuteRegExpNoStatics(ctx, re, reinterpret_cast<jschar*>
+                                    (aValue.BeginWriting()),
+                                  aValue.Length(), &idx, JS_TRUE, &rval);
+
+  return res == JS_FALSE || rval != JSVAL_NULL;
 }

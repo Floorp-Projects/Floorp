@@ -48,7 +48,7 @@ add_test(function test_bad_hmac() {
     Service.clusterURL = "http://localhost:8080/";
     Service.login("foo", "ilovejane", passphrase);
 
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
 
     _("First sync, client record is uploaded");
     do_check_eq(0, clientsColl.count());
@@ -62,7 +62,7 @@ add_test(function test_bad_hmac() {
     _("Change our keys and our client ID, reupload keys.");
     Clients.localID = Utils.makeGUID();
     Clients.resetClient();
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
     let serverKeys = CollectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Weave.Service.syncKeyBundle);
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
@@ -81,7 +81,7 @@ add_test(function test_bad_hmac() {
     Service.lastHMACEvent = 0;
     Clients.localID = Utils.makeGUID();
     Clients.resetClient();
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
     deleted = false;
     do_check_eq(1, clientsColl.count());
     Clients.sync();
@@ -101,7 +101,7 @@ add_test(function test_bad_hmac() {
     do_check_eq(0, clientsColl.count());
 
     // Create and upload keys.
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
     serverKeys = CollectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Weave.Service.syncKeyBundle);
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
@@ -111,7 +111,7 @@ add_test(function test_bad_hmac() {
     do_check_eq(1, clientsColl.count());
 
     // Generate and upload new keys, so the old client record is wrong.
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
     serverKeys = CollectionKeys.asWBO("crypto", "keys");
     serverKeys.encrypt(Weave.Service.syncKeyBundle);
     do_check_true(serverKeys.upload(Weave.Service.cryptoKeysURL).success);
@@ -121,7 +121,7 @@ add_test(function test_bad_hmac() {
     // the bad client record.
     Clients.localID = Utils.makeGUID();
     Clients.resetClient();
-    CollectionKeys.generateNewKeys();
+    generateNewKeys();
     let oldKey = CollectionKeys.keyForCollection();
 
     do_check_false(deleted);
@@ -158,7 +158,7 @@ add_test(function test_sync() {
   Svc.Prefs.set("clusterURL", "http://localhost:8080/");
   Svc.Prefs.set("username", "foo");
 
-  CollectionKeys.generateNewKeys();
+  generateNewKeys();
 
   let global = new ServerWBO('global',
                              {engines: {clients: {version: Clients.version,

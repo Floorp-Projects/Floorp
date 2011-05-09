@@ -148,12 +148,17 @@ struct CommonElementAnimationData : public PRCList
     : mElement(aElement)
     , mElementProperty(aElementProperty)
     , mManager(aManager)
+#ifdef DEBUG
+    , mCalledPropertyDtor(false)
+#endif
   {
     MOZ_COUNT_CTOR(CommonElementAnimationData);
     PR_INIT_CLIST(this);
   }
   ~CommonElementAnimationData()
   {
+    NS_ABORT_IF_FALSE(mCalledPropertyDtor,
+                      "must call destructor through element property dtor");
     MOZ_COUNT_DTOR(CommonElementAnimationData);
     PR_REMOVE_LINK(this);
     mManager->ElementDataRemoved();
@@ -172,6 +177,10 @@ struct CommonElementAnimationData : public PRCList
   nsIAtom *mElementProperty;
 
   CommonAnimationManager *mManager;
+
+#ifdef DEBUG
+  bool mCalledPropertyDtor;
+#endif
 };
 
 }

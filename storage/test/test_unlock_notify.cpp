@@ -39,7 +39,7 @@
 
 #include "storage_test_harness.h"
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 #include "nsThreadUtils.h"
 #include "mozIStorageStatement.h"
 
@@ -78,7 +78,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    mozilla::MonitorAutoEnter lock(monitor);
+    mozilla::ReentrantMonitorAutoEnter lock(monitor);
 
     nsCOMPtr<mozIStorageConnection> db(getDatabase());
 
@@ -110,7 +110,7 @@ public:
     do_check_success(monitor.Notify());
   }
 
-  mozilla::Monitor monitor;
+  mozilla::ReentrantMonitor monitor;
 
 protected:
   nsCOMPtr<nsIThread> mThread;
@@ -130,7 +130,7 @@ public:
 
   NS_IMETHOD Run()
   {
-    mozilla::MonitorAutoEnter lock(monitor);
+    mozilla::ReentrantMonitorAutoEnter lock(monitor);
     WaitFor(READ_LOCK);
 
     nsCString sql(mSQL);
@@ -199,7 +199,7 @@ test_step_locked_does_not_block_main_thread()
 
   nsRefPtr<DatabaseLocker> locker(new DatabaseLocker("SELECT * FROM test"));
   do_check_true(locker);
-  mozilla::MonitorAutoEnter lock(locker->monitor);
+  mozilla::ReentrantMonitorAutoEnter lock(locker->monitor);
   locker->RunInBackground();
 
   // Wait for the locker to notify us that it has locked the database properly.
@@ -228,7 +228,7 @@ test_drop_index_does_not_loop()
   nsRefPtr<DatabaseTester> tester =
     new DatabaseTester(db, "DROP INDEX unique_data");
   do_check_true(tester);
-  mozilla::MonitorAutoEnter lock(tester->monitor);
+  mozilla::ReentrantMonitorAutoEnter lock(tester->monitor);
   tester->RunInBackground();
 
   // Hold a read lock on the database, and then let the tester try to execute.
@@ -257,7 +257,7 @@ test_drop_table_does_not_loop()
 
   nsRefPtr<DatabaseTester> tester(new DatabaseTester(db, "DROP TABLE test"));
   do_check_true(tester);
-  mozilla::MonitorAutoEnter lock(tester->monitor);
+  mozilla::ReentrantMonitorAutoEnter lock(tester->monitor);
   tester->RunInBackground();
 
   // Hold a read lock on the database, and then let the tester try to execute.

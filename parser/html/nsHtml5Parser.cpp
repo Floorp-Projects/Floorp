@@ -398,6 +398,8 @@ nsHtml5Parser::Parse(const nsAString& aSourceBuffer,
         // Lazily initialize if uninitialized
         mDocWriteSpeculativeTreeBuilder =
             new nsHtml5TreeBuilder(nsnull, mExecutor->GetStage());
+        mDocWriteSpeculativeTreeBuilder->setScriptingEnabled(
+            mTreeBuilder->isScriptingEnabled());
         mDocWriteSpeculativeTokenizer =
             new nsHtml5Tokenizer(mDocWriteSpeculativeTreeBuilder);
         mDocWriteSpeculativeTokenizer->setInterner(&mAtomTable);

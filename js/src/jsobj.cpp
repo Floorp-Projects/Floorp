@@ -87,6 +87,8 @@
 #include "jsscriptinlines.h"
 #include "jsobjinlines.h"
 
+#include "vm/StringObject-inl.h"
+
 #if JS_HAS_GENERATORS
 #include "jsiter.h"
 #endif
@@ -2924,7 +2926,7 @@ js::NewReshapedObject(JSContext *cx, TypeObject *type, JSObject *parent,
     if (!res)
         return NULL;
 
-    if (JSID_IS_EMPTY(shape->id))
+    if (JSID_IS_EMPTY(shape->propid))
         return res;
 
     /* Get all the ids in the object, in order. */
@@ -2934,8 +2936,8 @@ js::NewReshapedObject(JSContext *cx, TypeObject *type, JSObject *parent,
             return NULL;
     }
     const js::Shape *nshape = shape;
-    while (!JSID_IS_EMPTY(nshape->id)) {
-        ids[nshape->slot] = nshape->id;
+    while (!JSID_IS_EMPTY(nshape->propid)) {
+        ids[nshape->slot] = nshape->propid;
         nshape = nshape->previous();
     }
 
@@ -3039,29 +3041,6 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
 
 #ifdef JS_TRACER
 
-static JS_ALWAYS_INLINE JSObject*
-NewObjectWithClassProto(JSContext *cx, Class *clasp, JSObject *proto,
-                        /*gc::FinalizeKind*/ unsigned _kind)
-{
-    JS_ASSERT(clasp->isNative());
-    gc::FinalizeKind kind = gc::FinalizeKind(_kind);
-
-    TypeObject *type = proto->getNewType(cx);
-    if (!type)
-        return NULL;
-
-    if (CanBeFinalizedInBackground(kind, clasp))
-        kind = (gc::FinalizeKind)(kind + 1);
-
-    JSObject* obj = js_NewGCObject(cx, kind);
-    if (!obj)
-        return NULL;
-
-    if (!obj->initSharingEmptyShape(cx, clasp, type, proto->getParent(), NULL, kind))
-        return NULL;
-    return obj;
-}
-
 JSObject* FASTCALL
 js_Object_tn(JSContext* cx, JSObject* proto)
 {
@@ -3096,11 +3075,8 @@ JSObject* FASTCALL
 js_String_tn(JSContext* cx, JSObject* proto, JSString* str)
 {
     JS_ASSERT(JS_ON_TRACE(cx));
-    JS_ASSERT(FINALIZE_OBJECT2 == gc::GetGCObjectKind(JSCLASS_RESERVED_SLOTS(&js_StringClass)));
-    JSObject *obj = NewObjectWithClassProto(cx, &js_StringClass, proto, FINALIZE_OBJECT2);
-    if (!obj || !obj->initString(cx, str))
-        return NULL;
-    return obj;
+    JS_ASSERT(proto);
+    return StringObject::createWithProto(cx, str, *proto);
 }
 JS_DEFINE_CALLINFO_3(extern, OBJECT, js_String_tn, CONTEXT, CALLEE_PROTOTYPE, STRING, 0,
                      nanojit::ACCSET_STORE_ANY)
@@ -3562,7 +3538,7 @@ JSObject::copyPropertiesFrom(JSContext *cx, JSObject *obj)
         Value v = shape->hasSlot() ? obj->getSlot(shape->slot) : UndefinedValue();
         if (!cx->compartment->wrap(cx, &v))
             return false;
-        if (!defineProperty(cx, shape->id, v, getter, setter, attrs))
+        if (!defineProperty(cx, shape->propid, v, getter, setter, attrs))
             return false;
     }
     return true;
@@ -3903,7 +3879,7 @@ js_XDRBlockObject(JSXDRState *xdr, JSObject **objp)
             shape = shapes[i];
             JS_ASSERT(shape->getter() == block_getProperty);
 
-            jsid propid = shape->id;
+            jsid propid = shape->propid;
             JS_ASSERT(JSID_IS_ATOM(propid));
             JSAtom *atom = JSID_TO_ATOM(propid);
 
@@ -5025,7 +5001,7 @@ CallAddPropertyHook(JSContext *cx, Class *clasp, JSObject *obj, const Shape *sha
     if (clasp->addProperty != PropertyStub) {
         Value nominal = *vp;
 
-        if (!CallJSPropertyOp(cx, clasp->addProperty, obj, shape->id, vp))
+        if (!CallJSPropertyOp(cx, clasp->addProperty, obj, shape->propid, vp))
             return false;
         if (*vp != nominal) {
             if (obj->containsSlot(shape->slot))
@@ -5614,7 +5590,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
         pobj->nativeSetSlot(slot, *vp);
     }
 
-    cx->addTypePropertyId(obj->getType(), shape->id, *vp);
+    cx->addTypePropertyId(obj->getType(), shape->propid, *vp);
 
     return true;
 }
@@ -5631,7 +5607,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
-    JS_ASSERT(TypeHasProperty(cx, obj->getType(), shape->id, *vp));
+    JS_ASSERT(TypeHasProperty(cx, obj->getType(), shape->propid, *vp));
 
     uint32 slot;
     int32 sample;
@@ -6616,12 +6592,8 @@ js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs
 JSObject *
 PrimitiveToObject(JSContext *cx, const Value &v)
 {
-    if (v.isString()) {
-        JSObject *obj = NewBuiltinClassInstance(cx, &js_StringClass);
-        if (!obj || !obj->initString(cx, v.toString()))
-            return NULL;
-        return obj;
-    }
+    if (v.isString())
+        return StringObject::create(cx, v.toString());
 
     JS_ASSERT(v.isNumber() || v.isBoolean());
     Class *clasp = v.isNumber() ? &js_NumberClass : &js_BooleanClass;
@@ -6872,11 +6844,11 @@ js_PrintObjectSlotName(JSTracer *trc, char *buf, size_t bufsize)
         else
             JS_snprintf(buf, bufsize, "**UNKNOWN SLOT %ld**", (long)slot);
     } else {
-        jsid id = shape->id;
-        if (JSID_IS_INT(id)) {
-            JS_snprintf(buf, bufsize, "%ld", (long)JSID_TO_INT(id));
-        } else if (JSID_IS_ATOM(id)) {
-            PutEscapedString(buf, bufsize, JSID_TO_ATOM(id), 0);
+        jsid propid = shape->propid;
+        if (JSID_IS_INT(propid)) {
+            JS_snprintf(buf, bufsize, "%ld", (long)JSID_TO_INT(propid));
+        } else if (JSID_IS_ATOM(propid)) {
+            PutEscapedString(buf, bufsize, JSID_TO_ATOM(propid), 0);
         } else {
             JS_snprintf(buf, bufsize, "**FINALIZED ATOM KEY**");
         }
@@ -6900,7 +6872,7 @@ js_ClearNative(JSContext *cx, JSObject *obj)
 {
     /* Remove all configurable properties from obj. */
     while (const Shape *shape = LastConfigurableShape(obj)) {
-        if (!obj->removeProperty(cx, shape->id))
+        if (!obj->removeProperty(cx, shape->propid))
             return false;
     }
 
@@ -7124,7 +7096,7 @@ js_DumpId(jsid id)
 static void
 DumpProperty(JSObject *obj, const Shape &shape)
 {
-    jsid id = shape.id;
+    jsid id = shape.propid;
     uint8 attrs = shape.attributes();
 
     fprintf(stderr, "    ((Shape *) %p) ", (void *) &shape);

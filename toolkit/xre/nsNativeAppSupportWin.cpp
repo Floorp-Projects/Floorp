@@ -76,9 +76,7 @@
 
 #include <windows.h>
 #include <shellapi.h>
-#ifndef WINCE
 #include <ddeml.h>
-#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <io.h>
@@ -107,12 +105,10 @@ activateWindow( nsIDOMWindowInternal *win ) {
     // Try to get native window handle.
     HWND hwnd = hwndForDOMWindow( win );
     if ( hwnd ) {
-#ifndef WINCE  // Can't iconify windows on windows ce
         // Restore the window if it is minimized.
         if ( ::IsIconic( hwnd ) ) {
             ::ShowWindow( hwnd, SW_RESTORE );
         }
-#endif
         // Use the OS call, if possible.
         ::SetForegroundWindow( hwnd );
     } else {
@@ -313,10 +309,8 @@ public:
     NS_IMETHOD Stop( PRBool *aResult );
     NS_IMETHOD Quit();
     NS_IMETHOD Enable();
-#ifndef WINCE
     // The "old" Start method (renamed).
     NS_IMETHOD StartDDE();
-#endif
     // Utility function to handle a Win32-specific command line
     // option: "-console", which dynamically creates a Windows
     // console.
@@ -324,7 +318,6 @@ public:
 
 private:
     static void HandleCommandLine(const char* aCmdLineString, nsIFile* aWorkingDir, PRUint32 aState);
-#ifndef WINCE
     static HDDEDATA CALLBACK HandleDDENotification( UINT     uType,
                                                     UINT     uFmt,
                                                     HCONV    hconv,
@@ -339,7 +332,6 @@ private:
     static HDDEDATA CreateDDEData( LPBYTE value, DWORD len );
     static PRBool   InitTopicStrings();
     static int      FindTopic( HSZ topic );
-#endif
     static void ActivateLastWindow();
     static nsresult OpenWindow( const char *urlstr, const char *args );
     static nsresult OpenBrowserWindow();
@@ -358,9 +350,7 @@ private:
         // Note: Insert new values above this line!!!!!
         topicCount // Count of the number of real topics
     };
-#ifndef WINCE
     static HSZ   mApplication, mTopics[ topicCount ];
-#endif
     static DWORD mInstance;
     static PRBool mCanHandleRequests;
     static PRUnichar mMutexName[];
@@ -382,7 +372,6 @@ nsNativeAppSupportWin::CheckConsole() {
              strcmp( "/console", gArgv[i] ) == 0 ) {
             // Users wants to make sure we have a console.
             // Try to allocate one.
-#ifndef WINCE
             BOOL rc = ::AllocConsole();
             if ( rc ) {
                 // Console allocated.  Fix it up so that output works in
@@ -429,7 +418,6 @@ nsNativeAppSupportWin::CheckConsole() {
                 // Failed.  Probably because there already is one.
                 // There's little we can do, in any case.
             }
-#endif
             // Remove the console argument from the command line.
             do {
                 gArgv[i] = gArgv[i + 1];
@@ -481,10 +469,8 @@ const char * const topicNames[] = { "WWW_OpenURL",
 
 // Static member definitions.
 int   nsNativeAppSupportWin::mConversations = 0;
-#ifndef WINCE
 HSZ   nsNativeAppSupportWin::mApplication   = 0;
 HSZ   nsNativeAppSupportWin::mTopics[nsNativeAppSupportWin::topicCount] = { 0 };
-#endif
 DWORD nsNativeAppSupportWin::mInstance      = 0;
 PRBool nsNativeAppSupportWin::mCanHandleRequests   = PR_FALSE;
 
@@ -579,14 +565,7 @@ struct MessageWindow {
         _wgetcwd(cwd, MAX_PATH);
 
         // Construct a narrow UTF8 buffer <commandline>\0<workingdir>\0
-#ifdef WINCE
-        // For WinCE, we're stuck with providing our own argv[0] for the remote
-        // command-line.
-        NS_ConvertUTF16toUTF8 utf8buffer(L"dummy ");
-        AppendUTF16toUTF8(cmd, utf8buffer);
-#else
         NS_ConvertUTF16toUTF8 utf8buffer(cmd);
-#endif
         utf8buffer.Append('\0');
         AppendUTF16toUTF8(cwd, utf8buffer);
         utf8buffer.Append('\0');
@@ -600,13 +579,7 @@ struct MessageWindow {
         };
         // Bring the already running Mozilla process to the foreground.
         // nsWindow will restore the window (if minimized) and raise it.
-#ifdef WINCE
-        // for activating the existing window on wince we need "| 0x01"
-        // see http://msdn.microsoft.com/en-us/library/ms940024.aspx for details
-        ::SetForegroundWindow( (HWND)(((ULONG) mHandle) | 0x01) );
-#else
         ::SetForegroundWindow( mHandle );
-#endif
         ::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
         return NS_OK;
     }
@@ -702,10 +675,8 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
         // We will be server.
         rv = msgWindow.Create();
         if ( NS_SUCCEEDED( rv ) ) {
-#ifndef WINCE
             // Start up DDE server.
             this->StartDDE();
-#endif
             // Tell caller to spin message loop.
             *aResult = PR_TRUE;
         }
@@ -715,7 +686,7 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
 
     return rv;
 }
-#ifndef WINCE
+
 PRBool
 nsNativeAppSupportWin::InitTopicStrings() {
     for ( int i = 0; i < topicCount; i++ ) {
@@ -771,7 +742,7 @@ nsNativeAppSupportWin::StartDDE() {
 
     return NS_OK;
 }
-#endif /* WINCE */
+
 // If no DDE conversations are pending, terminate DDE.
 NS_IMETHODIMP
 nsNativeAppSupportWin::Stop( PRBool *aResult ) {
@@ -833,7 +804,6 @@ nsNativeAppSupportWin::Quit() {
 
     if ( mInstance ) {
         // Unregister application name.
-#ifndef WINCE
         DdeNameService( mInstance, mApplication, 0, DNS_UNREGISTER );
         // Clean up strings.
         if ( mApplication ) {
@@ -847,7 +817,6 @@ nsNativeAppSupportWin::Quit() {
             }
         }
         DdeUninitialize( mInstance );
-#endif
         mInstance = 0;
 #if MOZ_DEBUG_DDE
     printf( "DDE server stopped\n" );
@@ -913,7 +882,7 @@ static nsCString hszValue( DWORD instance, HSZ hsz ) {
     result += "]";
     return result;
 }
-#elif !defined(WINCE)
+#else
 // These are purely a safety measure to avoid the infamous "won't
 // build non-debug" type Tinderbox flames.
 static nsCString uTypeDesc( UINT ) {
@@ -944,7 +913,6 @@ static void escapeQuotes( nsAString &aString ) {
     return;
 }
 
-#ifndef WINCE
 HDDEDATA CALLBACK
 nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction type
                                               UINT uFmt,        // clipboard data format
@@ -1195,7 +1163,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
 #endif
     return result;
 }
-#endif /* WINCE */
+
 // Utility function to advance to end of quoted string.
 // p+offset must point to the comma preceding the arg on entry.
 // On return, p+result points to the closing '"' (or end of the string
@@ -1217,7 +1185,6 @@ static PRInt32 advanceToEndOfQuotedArg( const WCHAR *p, PRInt32 offset, PRInt32 
     return offset;
 }
 
-#ifndef WINCE
 void nsNativeAppSupportWin::ParseDDEArg( const WCHAR* args, int index, nsString& aString) {
     if ( args ) {
         nsDependentString temp(args);
@@ -1286,7 +1253,6 @@ HDDEDATA nsNativeAppSupportWin::CreateDDEData( LPBYTE value, DWORD len ) {
                                            0 );
     return result;
 }
-#endif /* WINCE */
 
 void nsNativeAppSupportWin::ActivateLastWindow() {
     nsCOMPtr<nsIDOMWindowInternal> navWin;

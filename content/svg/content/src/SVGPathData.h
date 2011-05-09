@@ -40,6 +40,7 @@
 #include "SVGPathSegUtils.h"
 #include "nsTArray.h"
 #include "nsSVGElement.h"
+#include "nsIWeakReferenceUtils.h"
 
 class gfxContext;
 struct gfxMatrix;
@@ -245,20 +246,29 @@ class SVGPathDataAndOwner : public SVGPathData
 {
 public:
   SVGPathDataAndOwner(nsSVGElement *aElement = nsnull)
-    : mElement(aElement)
+    : mElement(do_GetWeakReference(static_cast<nsINode*>(aElement)))
   {}
 
   void SetElement(nsSVGElement *aElement) {
-    mElement = aElement;
+    mElement = do_GetWeakReference(static_cast<nsINode*>(aElement));
   }
 
   nsSVGElement* Element() const {
-    return mElement;
+    nsCOMPtr<nsIContent> e = do_QueryReferent(mElement);
+    return static_cast<nsSVGElement*>(e.get());
   }
 
   nsresult CopyFrom(const SVGPathDataAndOwner& rhs) {
     mElement = rhs.mElement;
     return SVGPathData::CopyFrom(rhs);
+  }
+
+  PRBool IsIdentity() const {
+    if (!mElement) {
+      NS_ABORT_IF_FALSE(IsEmpty(), "target element propagation failure");
+      return PR_TRUE;
+    }
+    return PR_FALSE;
   }
 
   /**
@@ -276,10 +286,11 @@ public:
   using SVGPathData::end;
 
 private:
-  // We must keep a strong reference to our element because we may belong to a
+  // We must keep a weak reference to our element because we may belong to a
   // cached baseVal nsSMILValue. See the comments starting at:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=515116#c15
-  nsRefPtr<nsSVGElement> mElement;
+  // See also https://bugzilla.mozilla.org/show_bug.cgi?id=653497
+  nsWeakPtr mElement;
 };
 
 } // namespace mozilla

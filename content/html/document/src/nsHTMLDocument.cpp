@@ -1388,6 +1388,12 @@ nsHTMLDocument::NormalizeDocument()
   return nsDocument::NormalizeDocument();
 }
 
+NS_IMETHODIMP
+nsHTMLDocument::GetDefaultView(nsIDOMWindow** aWindow)
+{
+  return nsDocument::GetDefaultView(aWindow);
+}
+
 //
 // nsIDOMHTMLDocument interface implementation
 //
@@ -2522,7 +2528,7 @@ nsHTMLDocument::GetPlugins(nsIDOMHTMLCollection** aPlugins)
 
 nsresult
 nsHTMLDocument::ResolveName(const nsAString& aName,
-                            nsIDOMHTMLFormElement *aForm,
+                            nsIContent *aForm,
                             nsISupports **aResult,
                             nsWrapperCache **aCache)
 {

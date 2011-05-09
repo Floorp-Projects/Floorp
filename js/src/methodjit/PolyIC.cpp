@@ -608,7 +608,7 @@ class SetPropCompiler : public PICStubCompiler
 
             if (pic.typeMonitored) {
                 RecompilationMonitor monitor(cx);
-                cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes);
+                cx->addTypePropertyId(obj->getType(), shape->propid, pic.rhsTypes);
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
@@ -627,7 +627,7 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("invalid slot");
             if (pic.typeMonitored) {
                 RecompilationMonitor monitor(cx);
-                cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes);
+                cx->addTypePropertyId(obj->getType(), shape->propid, pic.rhsTypes);
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
@@ -889,7 +889,6 @@ class GetPropCompiler : public PICStubCompiler
         Assembler masm;
 
         Jump notStringObj = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
-
 
         masm.loadPayload(Address(pic.objReg, JSObject::getPrimitiveThisOffset()), pic.objReg);
         masm.loadPtr(Address(pic.objReg, JSString::offsetOfLengthAndFlags()), pic.objReg);
@@ -1552,7 +1551,7 @@ class ScopeNameCompiler : public PICStubCompiler
                 f.script()->typeMonitorResult(cx, f.pc(), types::TYPE_UNKNOWN);
                 return true;
             }
-            types = getprop.obj->getType()->getProperty(cx, shape->id, false);
+            types = getprop.obj->getType()->getProperty(cx, shape->propid, false);
             if (!types)
                 return false;
         }

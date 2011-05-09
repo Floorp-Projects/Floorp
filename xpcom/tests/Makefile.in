@@ -128,7 +128,7 @@ endif
 ifdef MOZ_DEBUG
 # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
 # FIXME bug 523378: also fails on OS X
-ifneq (,$(filter-out WINNT WINCE Darwin,$(OS_ARCH)))
+ifneq (,$(filter-out WINNT Darwin,$(OS_ARCH)))
 CPP_UNIT_TESTS += \
                   TestDeadlockDetector.cpp \
                   TestDeadlockDetectorScalability.cpp \
@@ -158,10 +158,6 @@ MOZ_DEBUG_SYMBOLS = 1
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),WINCE)
-EXTRA_LIBS += libcmt.lib
-endif
-
 LOCAL_INCLUDES	= \
                 -I$(srcdir)/../ds \
 		-I$(srcdir)/services \
@@ -182,7 +178,7 @@ export::
 install::
 	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/test.properties $(DESTDIR)$(mozappdir)/res
 
-ifeq (,$(filter-out WINNT WINCE os2-emx, $(HOST_OS_ARCH)))
+ifeq (,$(filter-out WINNT os2-emx, $(HOST_OS_ARCH)))
 swapslashes = $(shell echo $(1) | sed -e 's|/|\\|g')
 getnativepath = $(call swapslashes,$(call normalizepath,$(1)))
 else
@@ -191,19 +187,11 @@ endif
 
 abs_srcdir = $(shell cd $(srcdir) && pwd)
 
-ifdef WINCE
-DM_RM = $(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py delete
-DM_CP = $(PYTHON) $(topsrcdir)/build/mobile/devicemanager-utils.py copy
-
-RM_DIST = $(DM_RM)
-regOrderDir=\\tests\\regorder; # This is WinCe specific, adjust for other platforms
-DOCOPY=$(DM_CP)  $(srcdir)/regorder $(regOrderDir)
-else
 DIST_PATH = $(DIST)/bin/
 RM_DIST = rm -f
 regOrderDir="$(call getnativepath,$(abs_srcdir)/regorder)";
 DOCOPY=
-endif
+
 check::
 	@echo "Running XPIDL tests"
 	$(XPIDL_COMPILE) -m header $(srcdir)/TestScriptable.idl

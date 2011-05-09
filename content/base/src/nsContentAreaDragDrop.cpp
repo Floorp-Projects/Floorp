@@ -54,7 +54,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMNSEvent.h"
 #include "nsIDOMDragEvent.h"
-#include "nsIDOMAbstractView.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentRange.h"

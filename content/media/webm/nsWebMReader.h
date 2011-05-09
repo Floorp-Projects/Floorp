@@ -143,13 +143,13 @@ public:
 
   virtual PRBool HasAudio()
   {
-    mozilla::MonitorAutoEnter mon(mMonitor);
+    mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mHasAudio;
   }
 
   virtual PRBool HasVideo()
   {
-    mozilla::MonitorAutoEnter mon(mMonitor);
+    mozilla::ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return mHasVideo;
   }
 

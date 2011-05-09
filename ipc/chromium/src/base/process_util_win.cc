@@ -321,6 +321,7 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
     return false;
   }
 
+#ifndef CHROMIUM_MOZILLA_BUILD
   // All other exit codes indicate crashes.
 
   // TODO(jar): Remove histogramming code when UMA stats are consistent with
@@ -349,7 +350,7 @@ bool DidProcessCrash(bool* child_exited, ProcessHandle handle) {
   mid_significant_histogram.SetFlags(kUmaTargetedHistogramFlag |
                                       LinearHistogram::kHexRangePrintingFlag);
   mid_significant_histogram.Add((exitcode >> 12) & 0xFF);
-
+#endif
   return true;
 }
 

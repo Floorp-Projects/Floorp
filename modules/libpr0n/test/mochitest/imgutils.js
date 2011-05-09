@@ -1,3 +1,4 @@
+/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // Helper file for shared image functionality
 // 
 // Note that this is use by tests elsewhere in the source tree. When in doubt,
@@ -118,4 +119,17 @@ function getImagePref(pref)
   }
   else
     return null;
+}
+
+// JS implementation of imgIDecoderObserver with stubs for all of its methods.
+function ImageDecoderObserverStub()
+{
+  this.onStartRequest = function onStartRequest(aRequest)                 {}
+  this.onStartDecode = function onStartDecode(aRequest)                   {}
+  this.onStartContainer = function onStartContainer(aRequest, aContainer) {}
+  this.onStartFrame = function onStartFrame(aRequest, aFrame)             {}
+  this.onStopFrame = function onStopFrame(aRequest, aFrame)               {}
+  this.onStopContainer = function onStopContainer(aRequest, aContainer)   {}
+  this.onStopDecode = function onStopDecode(aRequest, status, statusArg)  {}
+  this.onStopRequest = function onStopRequest(aRequest, aIsLastPart)      {}
 }

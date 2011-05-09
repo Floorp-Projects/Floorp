@@ -2392,7 +2392,7 @@ nsDOMWorker::FireCloseRunnable(PRIntervalTime aTimeoutInterval,
   }
 
   if (wakeUp) {
-    MonitorAutoEnter mon(mPool->GetMonitor());
+    ReentrantMonitorAutoEnter mon(mPool->GetReentrantMonitor());
     mon.NotifyAll();
   }
 

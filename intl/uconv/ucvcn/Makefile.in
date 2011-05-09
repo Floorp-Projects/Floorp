@@ -57,8 +57,6 @@ CPPSRCS		= \
 		nsUnicodeToISO2022CN.cpp \
 		nsHZToUnicode.cpp \
 		nsUnicodeToHZ.cpp \
-		nsCP936ToUnicode.cpp \
-		nsUnicodeToCP936.cpp \
 		nsGBKConvUtil.cpp \
 		$(NULL)
 

@@ -41,7 +41,7 @@
 #define mozilla_dom_AudioChild_h
 
 #include "mozilla/dom/PAudioChild.h"
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 
 namespace mozilla {
 namespace dom {
@@ -67,7 +67,7 @@ class AudioChild : public PAudioChild
     nsAutoRefCnt mRefCnt;
     NS_DECL_OWNINGTHREAD
     PRInt64 mLastSampleOffset, mLastSampleOffsetTime;
-    mozilla::Monitor mAudioMonitor;
+    mozilla::ReentrantMonitor mAudioReentrantMonitor;
     PRPackedBool mIPCOpen;
     PRPackedBool mDrained;
 };

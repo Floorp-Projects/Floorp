@@ -43,7 +43,7 @@
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
 #include "nsIPlatformCharset.h"
-#include "nsIWin32Locale.h"
+#include "nsWin32Locale.h"
 #include "nsCOMPtr.h"
 #include "prmem.h"
 #include "plstr.h"
@@ -100,14 +100,10 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   }
 
   // Get LCID and charset name from locale, if available
-  nsCOMPtr <nsIWin32Locale> win32Locale = 
-      do_GetService(NS_WIN32LOCALE_CONTRACTID);
-  if (win32Locale) {
-    LCID lcid;
-    res = win32Locale->GetPlatformLocale(localeStr, &lcid);
-    if (NS_SUCCEEDED(res)) {
-      mLCID = lcid;
-    }
+  LCID lcid;
+  res = nsWin32Locale::GetPlatformLocale(localeStr, &lcid);
+  if (NS_SUCCEEDED(res)) {
+    mLCID = lcid;
   }
 
   nsCOMPtr <nsIPlatformCharset> platformCharset = 

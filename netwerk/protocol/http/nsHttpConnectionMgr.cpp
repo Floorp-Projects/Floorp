@@ -81,7 +81,7 @@ InsertTransactionSorted(nsTArray<nsHttpTransaction*> &pendingQ, nsHttpTransactio
 
 nsHttpConnectionMgr::nsHttpConnectionMgr()
     : mRef(0)
-    , mMonitor("nsHttpConnectionMgr.mMonitor")
+    , mReentrantMonitor("nsHttpConnectionMgr.mReentrantMonitor")
     , mMaxConns(0)
     , mMaxConnsPerHost(0)
     , mMaxConnsPerProxy(0)
@@ -115,7 +115,7 @@ nsHttpConnectionMgr::EnsureSocketThreadTargetIfOnline()
         }
     }
 
-    MonitorAutoEnter mon(mMonitor);
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
     // do nothing if already initialized or if we've shut down
     if (mSocketThreadTarget || mIsShuttingDown)
@@ -138,7 +138,7 @@ nsHttpConnectionMgr::Init(PRUint16 maxConns,
     LOG(("nsHttpConnectionMgr::Init\n"));
 
     {
-        MonitorAutoEnter mon(mMonitor);
+        ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
         mMaxConns = maxConns;
         mMaxConnsPerHost = maxConnsPerHost;
@@ -159,7 +159,7 @@ nsHttpConnectionMgr::Shutdown()
 {
     LOG(("nsHttpConnectionMgr::Shutdown\n"));
 
-    MonitorAutoEnter mon(mMonitor);
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
     // do nothing if already shutdown
     if (!mSocketThreadTarget)
@@ -192,7 +192,7 @@ nsHttpConnectionMgr::PostEvent(nsConnEventHandler handler, PRInt32 iparam, void 
     // care of initializing the socket thread target if that's the case.
     EnsureSocketThreadTargetIfOnline();
 
-    MonitorAutoEnter mon(mMonitor);
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
     nsresult rv;
     if (!mSocketThreadTarget) {
@@ -317,7 +317,7 @@ nsHttpConnectionMgr::GetSocketThreadTarget(nsIEventTarget **target)
     // care of initializing the socket thread target if that's the case.
     EnsureSocketThreadTargetIfOnline();
 
-    MonitorAutoEnter mon(mMonitor);
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     NS_IF_ADDREF(*target = mSocketThreadTarget);
     return NS_OK;
 }
@@ -561,7 +561,21 @@ nsHttpConnectionMgr::ProcessPendingQForEntry(nsConnectionEntry *ent)
         nsHttpConnection *conn = nsnull;
         for (i=0; i<count; ++i) {
             trans = ent->mPendingQ[i];
-            GetConnection(ent, trans, &conn);
+
+            // When this transaction has already established a half-open
+            // connection, we want to prevent any duplicate half-open
+            // connections from being established and bound to this
+            // transaction. Allow only use of an idle persistent connection
+            // (if found) for transactions referred by a half-open connection.
+            PRBool alreadyHalfOpen = PR_FALSE;
+            for (PRInt32 j = 0; j < ((PRInt32) ent->mHalfOpens.Length()); j++) {
+                if (ent->mHalfOpens[j]->Transaction() == trans) {
+                    alreadyHalfOpen = PR_TRUE;
+                    break;
+                }
+            }
+
+            GetConnection(ent, trans, alreadyHalfOpen, &conn);
             if (conn)
                 break;
         }
@@ -647,6 +661,7 @@ nsHttpConnectionMgr::AtActiveConnectionLimit(nsConnectionEntry *ent, PRUint8 cap
 void
 nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
                                    nsHttpTransaction *trans,
+                                   PRBool onlyReusedConnection,
                                    nsHttpConnection **result)
 {
     LOG(("nsHttpConnectionMgr::GetConnection [ci=%s caps=%x]\n",
@@ -687,6 +702,12 @@ nsHttpConnectionMgr::GetConnection(nsConnectionEntry *ent,
     }
 
     if (!conn) {
+
+        // If the onlyReusedConnection parameter is TRUE, then GetConnection()
+        // does not create new transports under any circumstances.
+        if (onlyReusedConnection)
+            return;
+        
         // Check if we need to purge an idle connection. Note that we may have
         // removed one above; if so, this will be a no-op. We do this before
         // checking the active connection limit to catch the case where we do
@@ -891,7 +912,7 @@ nsHttpConnectionMgr::ProcessNewTransaction(nsHttpTransaction *trans)
         trans->SetConnection(nsnull);
     }
     else
-        GetConnection(ent, trans, &conn);
+        GetConnection(ent, trans, PR_FALSE, &conn);
 
     nsresult rv;
     if (!conn) {
@@ -920,7 +941,7 @@ nsHttpConnectionMgr::OnMsgShutdown(PRInt32, void *)
     mCT.Reset(ShutdownPassCB, this);
 
     // signal shutdown complete
-    MonitorAutoEnter mon(mMonitor);
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     mon.Notify();
 }
 
@@ -1221,9 +1242,10 @@ nsHttpConnectionMgr::nsHalfOpenSocket::~nsHalfOpenSocket()
     LOG(("Destroying nsHalfOpenSocket [this=%p]\n", this));
     
     if (mEnt) {
-        PRInt32 index = mEnt->mHalfOpens.IndexOf(this);
-        NS_ABORT_IF_FALSE(index != -1, "half open complete but no item");
-        mEnt->mHalfOpens.RemoveElementAt(index);
+        // A failure to create the transport object at all
+        // will result in this not being present in the halfopen table
+        // so ignore failures of RemoveElement()
+        mEnt->mHalfOpens.RemoveElement(this);
     }
 }
 

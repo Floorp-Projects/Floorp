@@ -121,7 +121,8 @@ function test_collections_manager() {
   // Check the individual contents.
   do_check_eq(wbo.collection, "crypto");
   do_check_eq(wbo.id, "keys");
-  do_check_eq(storage_keys.modified, wbo.modified);
+  do_check_eq(undefined, wbo.modified);
+  do_check_eq(CollectionKeys.lastModified, storage_keys.modified);
   do_check_true(!!wbo.cleartext.default);
   do_check_keypair_eq(payload.default, wbo.cleartext.default);
   do_check_keypair_eq(payload.collections.bookmarks, wbo.cleartext.collections.bookmarks);
@@ -165,7 +166,7 @@ function test_collections_manager() {
   info_collections["crypto"] = 1 + (Date.now()/1000);              // Add one in case computers are fast!
   do_check_true(CollectionKeys.updateNeeded(info_collections));
   
-  CollectionKeys._lastModified = null;
+  CollectionKeys.lastModified = null;
   do_check_true(CollectionKeys.updateNeeded({}));
   
   /*

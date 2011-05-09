@@ -3040,6 +3040,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     clearance = 0;
     nscoord topMargin = 0;
     PRBool mayNeedRetry = PR_FALSE;
+    PRBool clearedFloats = PR_FALSE;
     if (applyTopMargin) {
       // Precompute the blocks top margin value so that we can get the
       // correct available space (there might be a float that's
@@ -3114,7 +3115,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         nscoord currentY = aState.mY;
         // advance mY to the clear position.
         aState.mY = aState.ClearFloats(aState.mY, breakType, replacedBlock);
-        
+
+        clearedFloats = aState.mY != currentY;
+
         // Compute clearance. It's the amount we need to add to the top
         // border-edge of the frame, after applying collapsed margins
         // from the frame and its children, to get it to line up with
@@ -3146,21 +3149,38 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     nsRect availSpace;
     aState.ComputeBlockAvailSpace(frame, display, floatAvailableSpace,
                                   replacedBlock != nsnull, availSpace);
-    
+
+    // The check for
+    //   (!aState.mReflowState.mFlags.mIsTopOfPage || clearedFloats)
+    // is to some degree out of paranoia:  if we reliably eat up top
+    // margins at the top of the page as we ought to, it wouldn't be
+    // needed.
+    if ((!aState.mReflowState.mFlags.mIsTopOfPage || clearedFloats) &&
+        availSpace.height < 0) {
+      // We know already that this child block won't fit on this
+      // page/column due to the top margin or the clearance.  So we need
+      // to get out of here now.  (If we don't, most blocks will handle
+      // things fine, and report break-before, but zero-height blocks
+      // won't, and will thus make their parent overly-large and force
+      // *it* to be pushed in its entirety.)
+      // Doing this means that we also don't need to worry about the
+      // |availSpace.height += topMargin| below interacting with pushed
+      // floats (which force nscoord_MAX clearance) to cause a
+      // constrained height to turn into an unconstrained one.
+      aState.mY = startingY;
+      aState.mPrevBottomMargin = incomingMargin;
+      PushLines(aState, aLine.prev());
+      NS_FRAME_SET_INCOMPLETE(aState.mReflowStatus);
+      *aKeepReflowGoing = PR_FALSE;
+      return NS_OK;
+    }
+
     // Now put the Y coordinate back to the top of the top-margin +
     // clearance, and flow the block.
     aState.mY -= topMargin;
     availSpace.y -= topMargin;
     if (NS_UNCONSTRAINEDSIZE != availSpace.height) {
       availSpace.height += topMargin;
-
-      // When there is a pushed float, clearance could equal
-      // NS_UNCONSTRAINEDSIZE (FIXME: is that really a good idea?), but
-      // we don't want that to change a constrained height to an
-      // unconstrained one.
-      if (NS_UNCONSTRAINEDSIZE == availSpace.height) {
-        --availSpace.height;
-      }
     }
     
     // Reflow the block into the available space
@@ -4239,7 +4259,11 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   if (aState.mPresContext->BidiEnabled()) {
     if (!aState.mPresContext->IsVisualMode() ||
         GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-      nsBidiPresUtils::ReorderFrames(aLine->mFirstChild, aLine->GetChildCount());
+      nsBidiPresUtils* bidiUtils = aState.mPresContext->GetBidiUtils();
+
+      if (bidiUtils && bidiUtils->IsSuccessful() ) {
+        bidiUtils->ReorderFrames(aLine->mFirstChild, aLine->GetChildCount());
+      } // bidiUtils
     } // not visual mode
   } // bidi enabled
 #endif // IBMBIDI
@@ -7175,7 +7199,11 @@ nsBlockFrame::ResolveBidi()
     return NS_OK;
   }
 
-  return nsBidiPresUtils::Resolve(this);
+  nsBidiPresUtils* bidiUtils = presContext->GetBidiUtils();
+  if (!bidiUtils)
+    return NS_ERROR_NULL_POINTER;
+
+  return bidiUtils->Resolve(this);
 }
 #endif
 

@@ -198,7 +198,7 @@ SafeInstallOperation.prototype = {
             " to " + aTargetDirectory.path, e);
       throw e;
     }
-    this._installedFiles.push({ oldFile: null, newFile: newFile });
+    this._installedFiles.push({ oldFile: oldFile, newFile: newFile });
   },
 
   _installDirectory: function(aDirectory, aTargetDirectory, aCopy) {

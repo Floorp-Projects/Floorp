@@ -94,9 +94,7 @@ const KEY_APPDIR          = "XCurProcD";
 const KEY_GRED            = "GreD";
 
 #ifdef XP_WIN
-#ifndef WINCE
 #define USE_UPDROOT
-#endif
 #elifdef ANDROID
 #define USE_UPDROOT
 #endif
@@ -214,7 +212,6 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
     updateTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
     updateTestFile.remove(false);
 #ifdef XP_WIN
-#ifndef WINCE
     var sysInfo = Cc["@mozilla.org/system-info;1"].
                   getService(Ci.nsIPropertyBag2);
 
@@ -285,7 +282,6 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
       appDirTestFile.create(NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
       appDirTestFile.remove(false);
     }
-#endif //WINCE
 #endif //XP_WIN
   }
   catch (e) {

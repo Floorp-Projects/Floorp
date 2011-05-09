@@ -653,7 +653,7 @@ DropWatchPointAndUnlock(JSContext *cx, JSWatchPoint *wp, uintN flag, bool sweepi
      */
     if (!sweeping) {
         const Shape *shape = wp->shape;
-        const Shape *wprop = wp->object->nativeLookup(shape->id);
+        const Shape *wprop = wp->object->nativeLookup(shape->propid);
         if (wprop &&
             wprop->hasSetterValue() == shape->hasSetterValue() &&
             IsWatchedProperty(cx, wprop)) {
@@ -742,14 +742,14 @@ js_SweepWatchPoints(JSContext *cx)
  * NB: LockedFindWatchPoint must be called with rt->debuggerLock acquired.
  */
 static JSWatchPoint *
-LockedFindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
+LockedFindWatchPoint(JSRuntime *rt, JSObject *obj, jsid propid)
 {
     JSWatchPoint *wp;
 
     for (wp = (JSWatchPoint *)rt->watchPointList.next;
          &wp->links != &rt->watchPointList;
          wp = (JSWatchPoint *)wp->links.next) {
-        if (wp->object == obj && wp->shape->id == id)
+        if (wp->object == obj && wp->shape->propid == propid)
             return wp;
     }
     return NULL;
@@ -785,7 +785,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
             wp->flags |= JSWP_HELD;
             DBG_UNLOCK(rt);
 
-            jsid propid = shape->id;
+            jsid propid = shape->propid;
             shape = obj->nativeLookup(propid);
             if (!shape) {
                 /*
@@ -841,7 +841,9 @@ js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
             }
 
             {
-                Conditionally<AutoShapeRooter> tvr(needMethodSlotWrite, cx, needMethodSlotWrite);
+                Maybe<AutoShapeRooter> tvr;
+                if (needMethodSlotWrite)
+                    tvr.construct(cx, needMethodSlotWrite);
 
                 /*
                  * Call the handler. This invalidates shape, so re-lookup the shape.
@@ -970,12 +972,12 @@ WrapWatchedSetter(JSContext *cx, jsid id, uintN attrs, StrictPropertyOp setter)
 static const Shape *
 UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
 {
-    JS_ASSERT_IF(wp->shape, wp->shape->id == newShape->id);
+    JS_ASSERT_IF(wp->shape, wp->shape->propid == newShape->propid);
     JS_ASSERT(!IsWatchedProperty(cx, newShape));
 
     /* Create a watching setter we can substitute for the new shape's setter. */
     StrictPropertyOp watchingSetter =
-        WrapWatchedSetter(cx, newShape->id, newShape->attributes(), newShape->setter());
+        WrapWatchedSetter(cx, newShape->propid, newShape->attributes(), newShape->setter());
     if (!watchingSetter)
         return NULL;
 
@@ -985,7 +987,7 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
      */
     StrictPropertyOp originalSetter = newShape->setter();
 
-    cx->addTypePropertyId(wp->object->getType(), newShape->id, types::TYPE_UNKNOWN);
+    cx->addTypePropertyId(wp->object->getType(), newShape->propid, types::TYPE_UNKNOWN);
 
     /*
      * Drop the watching setter into the object, in place of newShape. Note that a single
@@ -1021,7 +1023,7 @@ js_SlowPathUpdateWatchpointsForShape(JSContext *cx, JSObject *obj, const Shape *
     if (IsWatchedProperty(cx, newShape))
         return newShape;
 
-    JSWatchPoint *wp = FindWatchPoint(cx->runtime, obj, newShape->id);
+    JSWatchPoint *wp = FindWatchPoint(cx->runtime, obj, newShape->propid);
     if (!wp)
         return newShape;
 
@@ -1042,7 +1044,7 @@ UnwrapSetter(JSContext *cx, JSObject *obj, const Shape *shape)
         return shape->setter();
 
     /* Look up the watchpoint, from which we can retrieve the underlying setter. */
-    JSWatchPoint *wp = FindWatchPoint(cx->runtime, obj, shape->id);
+    JSWatchPoint *wp = FindWatchPoint(cx->runtime, obj, shape->propid);
 
     /* 
      * Since we know |shape| is watched, we *must* find a watchpoint: we should never
@@ -1688,7 +1690,7 @@ JS_PropertyIterator(JSObject *obj, JSScopeProperty **iteratorp)
     } else {
         shape = shape->previous();
         if (!shape->previous()) {
-            JS_ASSERT(JSID_IS_EMPTY(shape->id));
+            JS_ASSERT(JSID_IS_EMPTY(shape->propid));
             shape = NULL;
         }
     }
@@ -1702,7 +1704,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
 {
     assertSameCompartment(cx, obj);
     Shape *shape = (Shape *) sprop;
-    pd->id = IdToJsval(shape->id);
+    pd->id = IdToJsval(shape->propid);
 
     JSBool wasThrowing = cx->isExceptionPending();
     Value lastException = UndefinedValue();
@@ -1710,7 +1712,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
         lastException = cx->getPendingException();
     cx->clearPendingException();
 
-    if (!js_GetProperty(cx, obj, shape->id, Valueify(&pd->value))) {
+    if (!js_GetProperty(cx, obj, shape->propid, Valueify(&pd->value))) {
         if (!cx->isExceptionPending()) {
             pd->flags = JSPD_ERROR;
             pd->value = JSVAL_VOID;
@@ -1744,7 +1746,7 @@ JS_GetPropertyDesc(JSContext *cx, JSObject *obj, JSScopeProperty *sprop,
         for (Shape::Range r = obj->lastProperty()->all(); !r.empty(); r.popFront()) {
             const Shape &aprop = r.front();
             if (&aprop != shape && aprop.slot == shape->slot) {
-                pd->alias = IdToJsval(aprop.id);
+                pd->alias = IdToJsval(aprop.propid);
                 break;
             }
         }

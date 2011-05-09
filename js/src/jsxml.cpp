@@ -3501,26 +3501,6 @@ Insert(JSContext *cx, JSXML *xml, uint32 i, jsval v)
     return JS_TRUE;
 }
 
-static JSBool
-IndexToId(JSContext *cx, uint32 index, jsid *idp)
-{
-    JSAtom *atom;
-    JSString *str;
-
-    if (index <= JSID_INT_MAX) {
-        *idp = INT_TO_JSID(index);
-    } else {
-        str = js_NumberToString(cx, (jsdouble) index);
-        if (!str)
-            return JS_FALSE;
-        atom = js_AtomizeString(cx, str, 0);
-        if (!atom)
-            return JS_FALSE;
-        *idp = ATOM_TO_JSID(atom);
-    }
-    return JS_TRUE;
-}
-
 /* ECMA-357 9.1.1.12 XML [[Replace]]. */
 static JSBool
 Replace(JSContext *cx, JSXML *xml, uint32 i, jsval v)
