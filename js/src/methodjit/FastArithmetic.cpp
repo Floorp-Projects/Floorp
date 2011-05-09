@@ -1145,7 +1145,6 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub,
          * Sync everything except the top two entries.
          * We will handle the lhs/rhs in the stub call path.
          */
-        fixDoubleTypes(target);
         frame.syncAndKill(Registers(Registers::AvailRegs), Uses(frame.frameSlots()), Uses(2));
 
         RegisterID tempReg = frame.allocReg();
@@ -1418,9 +1417,6 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
-    if (target)
-        fixDoubleTypes(target);
-
     JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
 
     FPRegisterID fpLeft, fpRight;
@@ -1516,7 +1512,6 @@ mjit::Compiler::jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused)
     Assembler::Condition cond = GetCompareCondition(op, fused);
 
     if (target) {
-        fixDoubleTypes(target);
         if (!frame.syncForBranch(target, Uses(2)))
             return false;
 
@@ -1562,9 +1557,6 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target,
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
-
-    if (target)
-        fixDoubleTypes(target);
 
     /* Allocate all registers up-front. */
     FrameState::BinaryAlloc regs;

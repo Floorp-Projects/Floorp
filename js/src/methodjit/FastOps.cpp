@@ -426,7 +426,6 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
          */
 
         if (target) {
-            fixDoubleTypes(target);
             frame.syncAndKillEverything();
             frame.freeReg(reg);
 
@@ -493,7 +492,6 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
             frame.forgetMismatchedObject(rhs);
             Assembler::Condition cond = GetCompareCondition(op, fused);
             if (target) {
-                fixDoubleTypes(target);
                 Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
                                                    Registers::ReturnReg, Registers::ReturnReg);
                 if (!frame.syncForBranch(target, Uses(2)))
@@ -865,7 +863,6 @@ mjit::Compiler::booleanJumpScript(JSOp op, jsbytecode *target)
 bool
 mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
 {
-    fixDoubleTypes(target);
     FrameEntry *fe = frame.peek(-1);
 
     if (fe->isConstant()) {
@@ -893,7 +890,6 @@ mjit::Compiler::jsop_ifneq(JSOp op, jsbytecode *target)
 bool
 mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
 {
-    fixDoubleTypes(target);
     FrameEntry *fe = frame.peek(-1);
 
     if (fe->isConstant()) {
