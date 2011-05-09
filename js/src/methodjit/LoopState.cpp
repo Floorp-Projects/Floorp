@@ -1555,8 +1555,9 @@ LoopState::analyzeLoopBody(unsigned frame)
      * This new frame will have been partially initialized by the call, and
      * we don't want to scribble on that frame when restoring invariants.
      */
-    temporariesStart = Max((unsigned long) temporariesStart,
-                           ssa->getFrame(frame).depth + VALUES_PER_STACK_FRAME * 2 + script->nslots);
+    temporariesStart =
+        Max<uint32>(temporariesStart,
+                    ssa->getFrame(frame).depth + VALUES_PER_STACK_FRAME * 2 + script->nslots);
 
     if (script->failedBoundsCheck)
         skipAnalysis = true;

@@ -48,7 +48,7 @@
 #include "jsvalue.h"
 
 namespace js {
-    struct CallArgs;
+    class CallArgs;
 }
 
 namespace js {
