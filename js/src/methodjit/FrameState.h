@@ -834,6 +834,8 @@ class FrameState
 
 #ifdef DEBUG
     void assertValidRegisterState() const;
+#else
+    inline void assertValidRegisterState() const {};
 #endif
 
     // Return an address, relative to the StackFrame, that represents where

@@ -508,7 +508,7 @@ void
 TypeSet::addCondensed(JSContext *cx, JSScript *script)
 {
     /* Condensed constraints are added during GC, so we need off-the-books allocation. */
-    TypeConstraintCondensed *constraint = js::OffTheBooks::new_<TypeConstraintCondensed>(script);
+    TypeConstraintCondensed *constraint = OffTheBooks::new_<TypeConstraintCondensed>(script);
 
     if (!constraint) {
         script->compartment->types.setPendingNukeTypes(cx);

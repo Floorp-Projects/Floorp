@@ -1440,7 +1440,7 @@ mjit::Compiler::generateMethod()
                 opinfo->safePoint = true;
             }
         }
-
+        frame.assertValidRegisterState();
         a->jumpMap[uint32(PC - script->code)] = masm.label();
 
         SPEW_OPCODE();
@@ -2703,9 +2703,7 @@ mjit::Compiler::generateMethod()
             }
         }
 
-#ifdef DEBUG
         frame.assertValidRegisterState();
-#endif
     }
 
   done:
@@ -3434,7 +3432,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
     if (callIC.typeMonitored && callIC.frameSize.isStatic()) {
         unsigned argc = callIC.frameSize.staticArgc();
         callIC.argTypes = (types::ClonedTypeSet *)
-            js_calloc((1 + argc) * sizeof(types::ClonedTypeSet));
+            cx->calloc_((1 + argc) * sizeof(types::ClonedTypeSet));
         if (!callIC.argTypes) {
             js_ReportOutOfMemory(cx);
             return false;
@@ -4744,7 +4742,7 @@ mjit::Compiler::jsop_setprop(JSAtom *atom, bool usePropCache, bool popGuaranteed
     if (monitored(PC)) {
         types::TypeSet *types = frame.extra(rhs).types;
         pic.typeMonitored = true;
-        pic.rhsTypes = (types::ClonedTypeSet *) ::js_calloc(sizeof(types::ClonedTypeSet));
+        pic.rhsTypes = (types::ClonedTypeSet *) cx->calloc_(sizeof(types::ClonedTypeSet));
         if (!pic.rhsTypes) {
             js_ReportOutOfMemory(cx);
             return false;

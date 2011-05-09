@@ -352,7 +352,11 @@ LoopState::checkRedundantEntry(const InvariantEntry &entry)
      * out any existing entries which entry implies.
      */
     JS_ASSERT(entry.isCheck());
-    for (unsigned i = 0; i < invariantEntries.length(); i++) {
+
+    /* Maintain this separately, GCC miscompiles if the loop test is invariantEntries.length(). */
+    unsigned length = invariantEntries.length();
+
+    for (unsigned i = 0; i < length; i++) {
         InvariantEntry &baseEntry = invariantEntries[i];
         if (!baseEntry.isCheck())
             continue;
@@ -361,8 +365,10 @@ LoopState::checkRedundantEntry(const InvariantEntry &entry)
         if (entryRedundant(baseEntry, entry)) {
             invariantEntries[i--] = invariantEntries.back();
             invariantEntries.popBack();
+            length--;
         }
     }
+
     return false;
 }
 
