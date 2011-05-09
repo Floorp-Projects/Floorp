@@ -119,6 +119,7 @@ _TEST_FILES = \
 		test_bug669671.html \
 		file_bug669671.sjs \
 		test_bug675587.html \
+		test_bfcache_plus_hash.html \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
