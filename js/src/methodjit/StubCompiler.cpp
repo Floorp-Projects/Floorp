@@ -170,13 +170,13 @@ typedef JSC::MacroAssembler::Imm32 Imm32;
 typedef JSC::MacroAssembler::DataLabelPtr DataLabelPtr;
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr, bool needsRejoin)
+StubCompiler::emitStubCall(void *ptr, RejoinState rejoin)
 {
-    return emitStubCall(ptr, needsRejoin, frame.totalDepth());
+    return emitStubCall(ptr, rejoin, frame.totalDepth());
 }
 
 JSC::MacroAssembler::Call
-StubCompiler::emitStubCall(void *ptr, bool needsRejoin, int32 slots)
+StubCompiler::emitStubCall(void *ptr, RejoinState rejoin, int32 slots)
 {
     JaegerSpew(JSpew_Insns, " ---- BEGIN SLOW CALL CODE ---- \n");
     DataLabelPtr inlinePatch;
@@ -187,7 +187,7 @@ StubCompiler::emitStubCall(void *ptr, bool needsRejoin, int32 slots)
     /* Add the call site for debugging and recompilation. */
     Compiler::InternalCallSite site(masm.callReturnOffset(cl),
                                     cc.inlineIndex(), cc.inlinePC(),
-                                    (size_t)ptr, true, needsRejoin);
+                                    rejoin, true);
     site.inlinePatch = inlinePatch;
 
     /* Add a hook for restoring loop invariants if necessary. */
@@ -198,7 +198,7 @@ StubCompiler::emitStubCall(void *ptr, bool needsRejoin, int32 slots)
         /* MissedBoundsCheck* are not actually called, so f.regs need to be written before InvariantFailure. */
         bool entry = (ptr == JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckEntry))
                   || (ptr == JS_FUNC_TO_DATA_PTR(void *, stubs::MissedBoundsCheckHead));
-        cc.loop->addInvariantCall(j, l, true, entry, cc.callSites.length(), true);
+        cc.loop->addInvariantCall(j, l, true, entry, cc.callSites.length());
     }
 
     cc.addCallSite(site);

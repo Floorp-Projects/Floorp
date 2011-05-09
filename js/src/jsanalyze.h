@@ -211,6 +211,31 @@ GetBytecodeLength(jsbytecode *pc)
 }
 
 static inline unsigned
+GetDefCount(JSScript *script, unsigned offset)
+{
+    JS_ASSERT(offset < script->length);
+    jsbytecode *pc = script->code + offset;
+    if (js_CodeSpec[*pc].ndefs == -1)
+        return js_GetEnterBlockStackDefs(NULL, script, pc);
+
+    /*
+     * Add an extra pushed value for OR/AND opcodes, so that they are included
+     * in the pushed array of stack values for type inference.
+     */
+    switch (JSOp(*pc)) {
+      case JSOP_OR:
+      case JSOP_ORX:
+      case JSOP_AND:
+      case JSOP_ANDX:
+        return 1;
+      case JSOP_FILTER:
+        return 2;
+      default:
+        return js_CodeSpec[*pc].ndefs;
+    }
+}
+
+static inline unsigned
 GetUseCount(JSScript *script, unsigned offset)
 {
     JS_ASSERT(offset < script->length);
@@ -266,31 +291,6 @@ ExtendedUse(jsbytecode *pc)
         return true;
       default:
         return false;
-    }
-}
-
-static inline unsigned
-GetDefCount(JSScript *script, unsigned offset)
-{
-    JS_ASSERT(offset < script->length);
-    jsbytecode *pc = script->code + offset;
-    if (js_CodeSpec[*pc].ndefs == -1)
-        return js_GetEnterBlockStackDefs(NULL, script, pc);
-
-    /*
-     * Add an extra pushed value for OR/AND opcodes, so that they are included
-     * in the pushed array of stack values for type inference.
-     */
-    switch (JSOp(*pc)) {
-      case JSOP_OR:
-      case JSOP_ORX:
-      case JSOP_AND:
-      case JSOP_ANDX:
-        return 1;
-      case JSOP_FILTER:
-        return 2;
-      default:
-        return js_CodeSpec[*pc].ndefs;
     }
 }
 
@@ -352,6 +352,14 @@ struct UntrapOpcode
     {
         if (trap)
             *pc = JS_GetTrapOpcode(cx, script, pc);
+    }
+
+    void retrap()
+    {
+        if (trap) {
+            *pc = JSOP_TRAP;
+            trap = false;
+        }
     }
 
     ~UntrapOpcode()
@@ -900,6 +908,16 @@ class ScriptAnalysis
         return codeArray[offset] && codeArray[offset]->jumpTarget;
     }
     bool jumpTarget(const jsbytecode *pc) { return jumpTarget(pc - script->code); }
+
+    bool popGuaranteed(jsbytecode *pc) {
+        jsbytecode *next = pc + GetBytecodeLength(pc);
+        return JSOp(*next) == JSOP_POP && !jumpTarget(next);
+    }
+
+    bool incrementInitialValueObserved(jsbytecode *pc) {
+        const JSCodeSpec *cs = &js_CodeSpec[*pc];
+        return (cs->format & JOF_POST) && !popGuaranteed(pc);
+    }
 
     const SSAValue &poppedValue(uint32 offset, uint32 which) {
         JS_ASSERT(offset < script->length);

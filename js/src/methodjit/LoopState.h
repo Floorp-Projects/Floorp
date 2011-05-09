@@ -146,10 +146,7 @@ class LoopState : public MacroAssemblerTypedefs
         Label label;
         bool ool;
         bool entry;
-
-        /* Index into Compiler's callSites or rejoinSites */
-        unsigned patchIndex;
-        bool patchCall;
+        unsigned patchIndex;  /* Index into Compiler's callSites. */
 
         /* Any copies of temporaries on the stack */
         Vector<TemporaryCopy> *temporaryCopies;
@@ -240,7 +237,7 @@ class LoopState : public MacroAssemblerTypedefs
     bool generatingInvariants() { return !skipAnalysis; }
 
     /* Add a call with trailing jump/label, after which invariants need to be restored. */
-    void addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex, bool patchCall);
+    void addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex);
 
     uint32 headOffset() { return lifetime->head; }
     uint32 getLoopRegs() { return loopRegs.freeMask; }

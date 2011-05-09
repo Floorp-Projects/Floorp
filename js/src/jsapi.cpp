@@ -3070,11 +3070,10 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
 
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
     if (obj) {
-        if (clasp->ext.equality && !cx->markTypeObjectHasSpecialEquality(obj->getType()))
-            return NULL;
+        if (clasp->ext.equality)
+            cx->markTypeObjectHasSpecialEquality(obj->getType());
         obj->syncSpecialEquality();
-        if (!cx->markTypeObjectUnknownProperties(obj->getType()))
-            return NULL;
+        cx->markTypeObjectUnknownProperties(obj->getType());
     }
 
     JS_ASSERT_IF(obj, obj->getParent());
@@ -3089,9 +3088,11 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
         return NULL;
 
     types::TypeObject *type = cx->newTypeObject("Unique", proto);
-    if (obj->hasSpecialEquality() && !cx->markTypeObjectHasSpecialEquality(type))
+    if (!type)
         return NULL;
-    if (!type || !obj->setTypeAndUniqueShape(cx, type))
+    if (obj->hasSpecialEquality())
+        cx->markTypeObjectHasSpecialEquality(type);
+    if (!obj->setTypeAndUniqueShape(cx, type))
         return NULL;
     type->singleton = obj;
 
@@ -3115,8 +3116,7 @@ JS_NewObjectWithGivenProto(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSO
     JSObject *obj = NewNonFunction<WithProto::Given>(cx, clasp, proto, parent);
     if (obj) {
         obj->syncSpecialEquality();
-        if (!cx->markTypeObjectUnknownProperties(obj->getType()))
-            return NULL;
+        cx->markTypeObjectUnknownProperties(obj->getType());
     }
     return obj;
 }
@@ -3199,16 +3199,16 @@ JS_ConstructObjectWithArguments(JSContext *cx, JSClass *jsclasp, JSObject *proto
     return js_ConstructObject(cx, clasp, proto, parent, argc, Valueify(argv));
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(void)
 JS_AddTypeProperty(JSContext *cx, JSObject *obj, const char *name, jsval value)
 {
-    return cx->addTypeProperty(obj->getType(), name, Valueify(value));
+    cx->addTypeProperty(obj->getType(), name, Valueify(value));
 }
 
-JS_PUBLIC_API(JSBool)
+JS_PUBLIC_API(void)
 JS_AddTypePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value)
 {
-    return cx->addTypePropertyId(obj->getType(), id, Valueify(value));
+    cx->addTypePropertyId(obj->getType(), id, Valueify(value));
 }
 
 static JSBool
@@ -3479,8 +3479,9 @@ DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namele
                  uintN flags, intN tinyid)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom || !cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), value))
+    if (!atom)
         return false;
+    cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), value);
     return DefinePropertyById(cx, obj, ATOM_TO_JSID(atom), value, getter, setter, attrs,
                               flags, tinyid);
 }
@@ -3525,8 +3526,7 @@ JS_DefineObject(JSContext *cx, JSObject *obj, const char *name, JSClass *jsclasp
     if (!nobj)
         return NULL;
 
-    if (!cx->addTypeProperty(obj->getType(), name, ObjectValue(*nobj)))
-        return NULL;
+    cx->addTypeProperty(obj->getType(), name, ObjectValue(*nobj));
     nobj->syncSpecialEquality();
 
     if (!DefineProperty(cx, obj, name, ObjectValue(*nobj), NULL, NULL, attrs, 0, 0))
@@ -3543,8 +3543,7 @@ JS_DefineConstDoubles(JSContext *cx, JSObject *obj, JSConstDoubleSpec *cds)
 
     CHECK_REQUEST(cx);
     for (ok = JS_TRUE; cds->name; cds++) {
-        if (!cx->addTypeProperty(obj->getType(), cds->name, TYPE_DOUBLE))
-            return false;
+        cx->addTypeProperty(obj->getType(), cds->name, TYPE_DOUBLE);
         Value value = DoubleValue(cds->dval);
         attrs = cds->flags;
         if (!attrs)
@@ -3574,9 +3573,7 @@ JS_DefineProperties(JSContext *cx, JSObject *obj, JSPropertySpec *ps)
                 type = TYPE_STRING;
             JS_ASSERT(type);
 
-            ok = cx->addTypeProperty(obj->getType(), ps->name, type);
-            if (!ok)
-                break;
+            cx->addTypeProperty(obj->getType(), ps->name, type);
         }
 
         ok = DefineProperty(cx, obj, ps->name, UndefinedValue(),
@@ -3619,8 +3616,7 @@ JS_AliasProperty(JSContext *cx, JSObject *obj, const char *name, const char *ali
         ok = JS_FALSE;
     } else {
         /* Alias the properties within the type information for the object. */
-        if (!cx->aliasTypeProperties(obj->getType(), ATOM_TO_JSID(nameAtom), ATOM_TO_JSID(aliasAtom)))
-            return JS_FALSE;
+        cx->aliasTypeProperties(obj->getType(), ATOM_TO_JSID(nameAtom), ATOM_TO_JSID(aliasAtom));
 
         shape = (Shape *)prop;
         ok = (js_AddNativeProperty(cx, obj, ATOM_TO_JSID(aliasAtom),
@@ -3894,8 +3890,7 @@ JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
 
-    if (!cx->addTypePropertyId(obj->getType(), id, Valueify(*vp)))
-        return false;
+    cx->addTypePropertyId(obj->getType(), id, Valueify(*vp));
     return obj->setProperty(cx, id, Valueify(vp), false);
 }
 
@@ -4379,8 +4374,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
         Value v;
         if (!obj->getProperty(cx, r.front().id, &v))
             return NULL;
-        if (!fun->script()->typeSetUpvar(cx, i, v))
-            return NULL;
+        fun->script()->typeSetUpvar(cx, i, v);
         clone->getFlatClosureUpvars()[i] = v;
     }
 

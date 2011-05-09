@@ -405,11 +405,11 @@ class PunboxAssembler : public JSC::MacroAssembler
             if (holeCheck)
                 notHole = branchPtr(Equal, typeReg.reg(), ImmType(JSVAL_TYPE_MAGIC));
         } else {
-            loadPayload(address, dataReg);
             if (holeCheck) {
                 loadTypeTag(address, Registers::ValueReg);
                 notHole = branchPtr(Equal, Registers::ValueReg, ImmType(JSVAL_TYPE_MAGIC));
             }
+            loadPayload(address, dataReg);
         }
         return notHole;
     }

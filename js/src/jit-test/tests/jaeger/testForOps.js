@@ -13,7 +13,7 @@ function assertObjectsEqual(obj1, obj2) {
 }
 
 function forName(obj) {
-    assertJit();
+    // assertJit();  // :XXX: assertJit is a CALLNAME here which can cause a recompilation.
     eval('');
     var r = { };
     for (x in obj)

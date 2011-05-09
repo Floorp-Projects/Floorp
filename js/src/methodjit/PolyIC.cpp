@@ -608,8 +608,7 @@ class SetPropCompiler : public PICStubCompiler
 
             if (pic.typeMonitored) {
                 RecompilationMonitor monitor(cx);
-                if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes))
-                    return error();
+                cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes);
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
@@ -628,8 +627,7 @@ class SetPropCompiler : public PICStubCompiler
                 return disable("invalid slot");
             if (pic.typeMonitored) {
                 RecompilationMonitor monitor(cx);
-                if (!cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes))
-                    return error();
+                cx->addTypePropertyId(obj->getType(), shape->id, pic.rhsTypes);
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
@@ -646,13 +644,10 @@ class SetPropCompiler : public PICStubCompiler
                 uint16 slot = uint16(shape->shortid);
                 if (!script->ensureVarTypes(cx))
                     return error();
-                if (shape->setterOp() == SetCallArg) {
-                    if (!script->typeSetArgument(cx, slot, pic.rhsTypes))
-                        return error();
-                } else {
-                    if (!script->typeSetLocal(cx, slot, pic.rhsTypes))
-                        return error();
-                }
+                if (shape->setterOp() == SetCallArg)
+                    script->typeSetArgument(cx, slot, pic.rhsTypes);
+                else
+                    script->typeSetLocal(cx, slot, pic.rhsTypes);
                 if (monitor.recompiled())
                     return Lookup_Uncacheable;
             }
@@ -1786,8 +1781,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
      * :FIXME: looking under the usePropCache abstraction, which is only unset for
      * reads of the prototype.
      */
-    if (v.isUndefined() && usePropCache && !f.script()->typeMonitorUndefined(f.cx, f.pc()))
-        THROW();
+    if (v.isUndefined() && usePropCache)
+        f.script()->typeMonitorUndefined(f.cx, f.pc());
 
     f.regs.sp[-1] = v;
 }
@@ -1954,8 +1949,8 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 #endif
 
-    if (regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, f.pc()))
-        THROW();
+    if (regs.sp[-2].isUndefined())
+        f.script()->typeMonitorUndefined(cx, f.pc());
 
     if (monitor.recompiled())
         return;
@@ -2007,8 +2002,8 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[-1] = rval;
 
-    if (rval.isUndefined() && !f.script()->typeMonitorUndefined(f.cx, f.pc()))
-        THROW();
+    if (rval.isUndefined())
+        f.script()->typeMonitorUndefined(f.cx, f.pc());
 }
 
 void JS_FASTCALL
@@ -2029,8 +2024,7 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
 
     if (status == Lookup_Cacheable && !cc.updateTypes())
         THROW();
-    if (!f.script()->typeMonitorResult(f.cx, f.pc(), rval))
-        THROW();
+    f.script()->typeMonitorResult(f.cx, f.pc(), rval);
 }
 
 static void JS_FASTCALL
@@ -2487,8 +2481,8 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
             f.regs.sp[-1].setObject(*thisObj);
-            if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
-                THROW();
+            if (!JSID_IS_INT(id))
+                f.script()->typeMonitorUnknown(cx, f.pc());
             return;
         }
     }
@@ -2508,10 +2502,10 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     {
         f.regs.sp[-1] = thisv;
     }
-    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
-        THROW();
-    if (f.regs.sp[-2].isUndefined() && !f.script()->typeMonitorUndefined(cx, f.pc()))
-        THROW();
+    if (!JSID_IS_INT(id))
+        f.script()->typeMonitorUnknown(cx, f.pc());
+    if (f.regs.sp[-2].isUndefined())
+        f.script()->typeMonitorUndefined(cx, f.pc());
 }
 
 void JS_FASTCALL
@@ -2553,20 +2547,18 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
 
             // If the result can be cached, the value was already retrieved.
             JS_ASSERT(!f.regs.sp[-2].isMagic());
-            if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
-                THROW();
+            if (!JSID_IS_INT(id))
+                f.script()->typeMonitorUnknown(cx, f.pc());
             return;
         }
     }
 
     if (!obj->getProperty(cx, id, &f.regs.sp[-2]))
         THROW();
-    if (!JSID_IS_INT(id) && !f.script()->typeMonitorUnknown(cx, f.pc()))
-        THROW();
-    if (f.regs.sp[-2].isUndefined()) {
-        if (!f.script()->typeMonitorUndefined(cx, f.pc()))
-            THROW();
-    }
+    if (!JSID_IS_INT(id))
+        f.script()->typeMonitorUnknown(cx, f.pc());
+    if (f.regs.sp[-2].isUndefined())
+        f.script()->typeMonitorUndefined(cx, f.pc());
 }
 
 #define APPLY_STRICTNESS(f, s)                          \

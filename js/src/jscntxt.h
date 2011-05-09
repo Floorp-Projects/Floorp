@@ -1377,60 +1377,60 @@ struct JSContext
     getTypeCallerInitObject(bool isArray);
 
     /* Mark the immediate allocation site as having produced an unexpected value. */
-    inline bool markTypeCallerUnexpected(js::types::jstype type);
-    inline bool markTypeCallerUnexpected(const js::Value &value);
-    inline bool markTypeCallerOverflow();
+    inline void markTypeCallerUnexpected(js::types::jstype type);
+    inline void markTypeCallerUnexpected(const js::Value &value);
+    inline void markTypeCallerOverflow();
 
     /*
      * Monitor a javascript call, either on entry to the interpreter or made
      * from within the interpreter.
      */
-    inline bool typeMonitorCall(const js::CallArgs &args, bool constructing);
+    inline void typeMonitorCall(const js::CallArgs &args, bool constructing);
 
     /* Monitor an assignment made to a property by a script. */
-    inline bool typeMonitorAssign(JSObject *obj, jsid id, const js::Value &value);
+    inline void typeMonitorAssign(JSObject *obj, jsid id, const js::Value &value);
 
     /* Add a possible value for the named property of obj. */
-    inline bool addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);
-    inline bool addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
-    inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
-    inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
-    inline bool addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::ClonedTypeSet *types);
+    inline void addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);
+    inline void addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);
+    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::jstype type);
+    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, const js::Value &value);
+    inline void addTypePropertyId(js::types::TypeObject *obj, jsid id, js::types::ClonedTypeSet *types);
 
     /* Get the type to use for objects with no prototype. */
     inline js::types::TypeObject *getTypeEmpty();
 
     /* Alias two properties in the type information for obj. */
-    inline bool aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
+    inline void aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
 
     /* Mark an array type as being not packed and, possibly, not dense. */
-    inline bool markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
+    inline void markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
 
     /* Mark a function as being uninlineable (its .arguments property has been accessed). */
-    inline bool markTypeFunctionUninlineable(js::types::TypeObject *obj);
+    inline void markTypeFunctionUninlineable(js::types::TypeObject *obj);
 
     /* Monitor all properties of a type object as unknown. */
-    inline bool markTypeObjectUnknownProperties(js::types::TypeObject *obj);
+    inline void markTypeObjectUnknownProperties(js::types::TypeObject *obj);
 
     /* Mark a type as possibly having special equality hooks. */
-    inline bool markTypeObjectHasSpecialEquality(js::types::TypeObject *obj);
+    inline void markTypeObjectHasSpecialEquality(js::types::TypeObject *obj);
 
     /* Mark any property which has been deleted or reconfigured. */
-    inline bool markTypePropertyConfigured(js::types::TypeObject *obj, jsid id);
+    inline void markTypePropertyConfigured(js::types::TypeObject *obj, jsid id);
 
     /* Mark a global object as having had its slots reallocated. */
-    inline bool markGlobalReallocation(JSObject *obj);
+    inline void markGlobalReallocation(JSObject *obj);
 
     /*
      * For an array or object which has not yet escaped and been referenced elsewhere,
      * pick a new type based on the object's current contents.
      */
-    inline bool fixArrayType(JSObject *obj);
-    inline bool fixObjectType(JSObject *obj);
+    inline void fixArrayType(JSObject *obj);
+    inline void fixObjectType(JSObject *obj);
 
   private:
 
-    inline bool addTypeFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags);
+    inline void addTypeFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags);
 
 }; /* struct JSContext */
 

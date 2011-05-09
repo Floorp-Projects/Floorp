@@ -167,17 +167,12 @@ FrameState::popActiveFrame()
     a->analysis->clearAllocations();
 
     if (a->parent) {
-        /* Free registers associated with local variables. */
-        Registers regs(Registers::AvailAnyRegs);
-        while (!regs.empty()) {
-            AnyRegisterID reg = regs.takeAnyReg();
-            if (!freeRegs.hasReg(reg)) {
-                FrameEntry *fe = regstate(reg).usedBy();
-                if (fe >= a->locals && !isTemporary(fe)) {
-                    syncAndForgetFe(fe);
-                    fe->clear();
-                }
-            }
+        /* Clear registers and copies used by local variables and stack slots. */
+        for (FrameEntry *fe = a->sp - 1; fe >= a->locals; fe--) {
+            if (!fe->isTracked())
+                continue;
+            forgetAllRegs(fe);
+            fe->clear();
         }
     }
 
@@ -263,24 +258,6 @@ FrameState::variableLive(FrameEntry *fe, jsbytecode *pc) const
     return a->analysis->liveness(entrySlot(fe)).live(offset);
 }
 
-bool
-FrameState::isEntryCopied(FrameEntry *fe) const
-{
-    /*
-     * :TODO: It would be better for fe->isCopied() to mean 'is actually copied'
-     * rather than 'might have copies', removing the need for this walk.
-     */
-    JS_ASSERT(fe->isCopied());
-
-    for (uint32 i = fe->trackerIndex() + 1; i < tracker.nentries; i++) {
-        FrameEntry *nfe = tracker[i];
-        if (!deadEntry(nfe) && nfe->isCopy() && nfe->copyOf() == fe)
-            return true;
-    }
-
-    return false;
-}
-
 AnyRegisterID
 FrameState::bestEvictReg(uint32 mask, bool includePinned) const
 {
@@ -332,7 +309,7 @@ FrameState::bestEvictReg(uint32 mask, bool includePinned) const
          * for correctness with eviction of dead variables below, as testing
          * variableLive does not consider any copies of the variable.
          */
-        if (fe->isCopied() && isEntryCopied(fe)) {
+        if (fe->isCopied()) {
             if (!fallback.isSet()) {
                 fallback = reg;
                 fallbackOffset = 0;
@@ -341,7 +318,7 @@ FrameState::bestEvictReg(uint32 mask, bool includePinned) const
             continue;
         }
 
-        if (isTemporary(fe) || fe < a->callee_) {
+        if (isTemporary(fe) || (a->parent && fe < a->locals)) {
             /*
              * All temporaries we currently generate are for loop invariants,
              * which we treat as being live everywhere within the loop.
@@ -353,7 +330,7 @@ FrameState::bestEvictReg(uint32 mask, bool includePinned) const
                 fallback = reg;
                 fallbackOffset = offset;
             }
-            JaegerSpew(JSpew_Regalloc, "    %s is a loop temporary\n", reg.name());
+            JaegerSpew(JSpew_Regalloc, "    %s is a LICM or inline parent entry\n", reg.name());
             continue;
         }
 
@@ -1139,6 +1116,9 @@ FrameState::assertValidRegisterState() const
 {
     Registers checkedFreeRegs(Registers::AvailAnyRegs);
 
+    /* Check that copied and copy info balance out. */
+    int32 copyCount = 0;
+
     for (uint32 i = 0; i < tracker.nentries; i++) {
         FrameEntry *fe = tracker[i];
         if (deadEntry(fe))
@@ -1151,8 +1131,12 @@ FrameState::assertValidRegisterState() const
             JS_ASSERT(fe->trackerIndex() > fe->copyOf()->trackerIndex());
             JS_ASSERT(!deadEntry(fe->copyOf()));
             JS_ASSERT(fe->copyOf()->isCopied());
+            JS_ASSERT(!fe->isCopied());
+            copyCount--;
             continue;
         }
+
+        copyCount += fe->copied;
 
         if (fe->type.inRegister()) {
             checkedFreeRegs.takeReg(fe->type.reg());
@@ -1171,6 +1155,7 @@ FrameState::assertValidRegisterState() const
         }
     }
 
+    JS_ASSERT(copyCount == 0);
     JS_ASSERT(checkedFreeRegs == freeRegs);
 
     for (uint32 i = 0; i < Registers::TotalRegisters; i++) {
@@ -1694,13 +1679,8 @@ FrameState::ownRegForData(FrameEntry *fe)
         return reg;
     }
 
-    if (fe->isCopied()) {
-        FrameEntry *copy = uncopy(fe);
-        if (fe->isCopied()) {
-            fe->resetSynced();
-            return copyDataIntoReg(copy);
-        }
-    }
+    if (fe->isCopied())
+        uncopy(fe);
 
     if (fe->data.inRegister()) {
         reg = fe->data.reg();
@@ -1851,15 +1831,9 @@ FrameState::pushCopyOf(FrameEntry *backing)
     if (backing->isConstant()) {
         fe->setConstant(Jsvalify(backing->getValue()));
     } else {
-        fe->type.invalidate();
-        fe->data.invalidate();
-        if (backing->isCopy()) {
+        if (backing->isCopy())
             backing = backing->copyOf();
-            fe->setCopyOf(backing);
-        } else {
-            fe->setCopyOf(backing);
-            backing->setCopied();
-        }
+        fe->setCopyOf(backing);
 
         /* Maintain tracker ordering guarantees for copies. */
         JS_ASSERT(backing->isCopied());
@@ -1905,7 +1879,6 @@ FrameState::walkTrackerForUncopy(FrameEntry *original)
     /* Mark all extra copies as copies of the new backing index. */
     bestFe->setCopyOf(NULL);
     if (ncopies > 1) {
-        bestFe->setCopied();
         for (uint32 i = firstCopy; i < tracker.nentries; i++) {
             FrameEntry *other = tracker[i];
             if (deadEntry(other) || other == bestFe)
@@ -1929,8 +1902,6 @@ FrameState::walkTrackerForUncopy(FrameEntry *original)
             if (other->trackerIndex() < bestFe->trackerIndex())
                 swapInTracker(bestFe, other);
         }
-    } else {
-        bestFe->setNotCopied();
     }
 
     return bestFe;
@@ -1963,9 +1934,6 @@ FrameState::walkFrameForUncopy(FrameEntry *original)
             ncopies++;
         }
     }
-
-    if (ncopies)
-        bestFe->setCopied();
 
     return bestFe;
 }
@@ -2003,10 +1971,7 @@ FrameState::uncopy(FrameEntry *original)
         fe = walkFrameForUncopy(original);
     else
         fe = walkTrackerForUncopy(original);
-    if (!fe) {
-        original->setNotCopied();
-        return NULL;
-    }
+    JS_ASSERT(fe);
 
     /*
      * Switch the new backing store to the old backing store. During
@@ -2084,7 +2049,7 @@ FrameState::storeLocal(uint32 n, bool popGuaranteed, bool fixedType)
         return;
     }
 
-    storeTop(local, popGuaranteed);
+    storeTop(local);
 
     if (loop)
         local->lastLoop = loop->headOffset();
@@ -2106,7 +2071,7 @@ FrameState::storeArg(uint32 n, bool popGuaranteed)
         return;
     }
 
-    storeTop(arg, popGuaranteed);
+    storeTop(arg);
 
     if (loop)
         arg->lastLoop = loop->headOffset();
@@ -2119,8 +2084,7 @@ FrameState::forgetEntry(FrameEntry *fe)
 {
     if (fe->isCopied()) {
         uncopy(fe);
-        if (!fe->isCopied())
-            forgetAllRegs(fe);
+        fe->resetUnsynced();
     } else {
         forgetAllRegs(fe);
     }
@@ -2129,7 +2093,7 @@ FrameState::forgetEntry(FrameEntry *fe)
 }
 
 void
-FrameState::storeTop(FrameEntry *target, bool popGuaranteed)
+FrameState::storeTop(FrameEntry *target)
 {
     JS_ASSERT(!isTemporary(target));
 
@@ -2155,8 +2119,7 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed)
 
     /* Constants are easy to propagate. */
     if (top->isConstant()) {
-        target->setCopyOf(NULL);
-        target->setNotCopied();
+        target->clear();
         target->setConstant(Jsvalify(top->getValue()));
         if (trySyncType && target->isType(oldType))
             target->type.sync();
@@ -2186,7 +2149,6 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed)
             /* local.idx < backing.idx means local cannot be a copy yet */
             if (target->trackerIndex() < backing->trackerIndex())
                 swapInTracker(backing, target);
-            target->setNotCopied();
             target->setCopyOf(backing);
             if (trySyncType && target->isType(oldType))
                 target->type.sync();
@@ -2221,7 +2183,6 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed)
             }
         }
     }
-    backing->setNotCopied();
     
     /*
      * This is valid from the top->isCopy() path because we're guaranteed a
@@ -2267,18 +2228,6 @@ FrameState::storeTop(FrameEntry *target, bool popGuaranteed)
 
     if (trySyncType && target->isType(oldType))
         target->type.sync();
-
-    /*
-     * Right now, |backing| is a copy of |target| (note the reversal), but
-     * |target| is not marked as copied. This is an optimization so uncopy()
-     * may avoid frame traversal.
-     *
-     * There are two cases where we must set the copy bit, however:
-     *  - The fixup phase redirected more copies to |target|.
-     *  - An immediate pop is not guaranteed.
-     */
-    if (copied || !popGuaranteed)
-        target->setCopied();
 }
 
 void
@@ -2286,7 +2235,7 @@ FrameState::shimmy(uint32 n)
 {
     JS_ASSERT(a->sp - n >= a->spBase);
     int32 depth = 0 - int32(n);
-    storeTop(peek(depth - 1), true);
+    storeTop(peek(depth - 1));
     popn(n);
 }
 
@@ -2295,8 +2244,26 @@ FrameState::shift(int32 n)
 {
     JS_ASSERT(n < 0);
     JS_ASSERT(a->sp + n - 1 >= a->spBase);
-    storeTop(peek(n - 1), true);
+    storeTop(peek(n - 1));
     pop();
+}
+
+void
+FrameState::swap()
+{
+    // A B
+
+    dupAt(-2);
+    // A B A
+
+    dupAt(-2);
+    // A B A B
+
+    shift(-3);
+    // B B A
+
+    shimmy(1);
+    // B A
 }
 
 void
@@ -2505,8 +2472,12 @@ FrameState::binaryEntryLive(FrameEntry *fe) const
 
     JS_ASSERT(fe != a->callee_);
 
+    /* Arguments are always treated as live within inline frames, see bestEvictReg. */
+    if (a->parent && fe < a->locals)
+        return true;
+
     /* Caller must check that no copies are invalidated by rewriting the entry. */
-    return fe >= a->spBase || fe < a->callee_ || variableLive(fe, a->PC);
+    return fe >= a->spBase || variableLive(fe, a->PC);
 }
 
 void

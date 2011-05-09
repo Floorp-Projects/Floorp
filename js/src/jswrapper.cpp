@@ -142,13 +142,10 @@ bool
 JSWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                           PropertyDescriptor *desc)
 {
-    if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-        if (!cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, types::TYPE_UNKNOWN))
-            return false;
-    } else {
-        if (!cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, desc->value))
-            return false;
-    }
+    if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER))
+        cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, types::TYPE_UNKNOWN);
+    else
+        cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, desc->value);
 
     SET(JS_DefinePropertyById(cx, wrappedObject(wrapper), id, Jsvalify(desc->value),
                               Jsvalify(desc->getter), Jsvalify(desc->setter), desc->attrs));
@@ -230,8 +227,7 @@ bool
 JSWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
                Value *vp)
 {
-    if (!cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, *vp))
-        return false;
+    cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, *vp);
 
     // FIXME (bug 596351): Need deal with strict mode.
     SET(wrappedObject(wrapper)->setProperty(cx, id, vp, false));
@@ -629,8 +625,8 @@ Reify(JSContext *cx, JSCompartment *origin, Value *vp)
 bool
 JSCrossCompartmentWrapper::iterate(JSContext *cx, JSObject *wrapper, uintN flags, Value *vp)
 {
-    if (!(flags & JSITER_OWNONLY) && !cx->markTypeCallerUnexpected(types::TYPE_UNKNOWN))
-        return false;
+    if (!(flags & JSITER_OWNONLY))
+        cx->markTypeCallerUnexpected(types::TYPE_UNKNOWN);
 
     PIERCE(cx, wrapper, GET,
            NOTHING,

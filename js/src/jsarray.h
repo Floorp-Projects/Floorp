@@ -74,15 +74,14 @@ JSObject::isPackedDenseArray()
     return flags & PACKED_ARRAY;
 }
 
-inline bool
+inline void
 JSObject::setDenseArrayNotPacked(JSContext *cx)
 {
     JS_ASSERT(isDenseArray());
     if (flags & PACKED_ARRAY) {
         flags ^= PACKED_ARRAY;
-        return cx->markTypeArrayNotPacked(getType(), false);
+        cx->markTypeArrayNotPacked(getType(), false);
     }
-    return true;
 }
 
 inline JSObject::EnsureDenseResult
@@ -107,8 +106,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
         if (index < currentCapacity) {
             JS_ASSERT(cx->typeInferenceEnabled());
             if (index > initLength) {
-                if (!setDenseArrayNotPacked(cx))
-                    return ED_FAILED;
+                setDenseArrayNotPacked(cx);
                 ClearValueRange(getDenseArrayElements() + initLength,
                                 index - initLength, true);
             }
@@ -133,8 +131,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
             if (index > initLength) {
                 ClearValueRange(getDenseArrayElements() + initLength,
                                 index - initLength, true);
-                if (!setDenseArrayNotPacked(cx))
-                    return ED_FAILED;
+                setDenseArrayNotPacked(cx);
             }
             setDenseArrayInitializedLength(requiredCapacity);
             return ED_OK;
@@ -154,8 +151,7 @@ JSObject::ensureDenseArrayElements(JSContext *cx, uintN index, uintN extra)
 
     if (cx->typeInferenceEnabled()) {
         if (index > initLength) {
-            if (!setDenseArrayNotPacked(cx))
-                return ED_FAILED;
+            setDenseArrayNotPacked(cx);
             ClearValueRange(getDenseArrayElements() + initLength,
                             index - initLength, true);
         }

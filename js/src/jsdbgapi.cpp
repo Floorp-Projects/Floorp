@@ -248,10 +248,7 @@ js_SetSingleStepMode(JSContext *cx, JSScript *script, JSBool singleStep)
     js::mjit::JITScript *jit = script->jitNormal ? script->jitNormal : script->jitCtor;
     if (jit && script->singleStepMode != jit->singleStepMode) {
         js::mjit::Recompiler recompiler(cx, script);
-        if (!recompiler.recompile()) {
-            script->singleStepMode = !singleStep;
-            return JS_FALSE;
-        }
+        recompiler.recompile();
     }
 #endif
     return JS_TRUE;
@@ -390,8 +387,7 @@ JS_SetTrap(JSContext *cx, JSScript *script, jsbytecode *pc,
 #ifdef JS_METHODJIT
     if (script->hasJITCode()) {
         js::mjit::Recompiler recompiler(cx, script);
-        if (!recompiler.recompile())
-            return JS_FALSE;
+        recompiler.recompile();
     }
 #endif
 
@@ -989,8 +985,7 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
      */
     StrictPropertyOp originalSetter = newShape->setter();
 
-    if (!cx->addTypePropertyId(wp->object->getType(), newShape->id, types::TYPE_UNKNOWN))
-        return NULL;
+    cx->addTypePropertyId(wp->object->getType(), newShape->id, types::TYPE_UNKNOWN);
 
     /*
      * Drop the watching setter into the object, in place of newShape. Note that a single
@@ -1097,8 +1092,7 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsid id,
         return false;
     }
 
-    if (!cx->markTypePropertyConfigured(obj->getType(), propid))
-        return false;
+    cx->markTypePropertyConfigured(obj->getType(), propid);
 
     JSObject *pobj;
     JSProperty *prop;

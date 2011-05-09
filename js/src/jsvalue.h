@@ -654,6 +654,11 @@ class Value
         return data.asBits;
     }
 
+    JS_ALWAYS_INLINE
+    void setRawBits(uint64 bits) {
+        data.asBits = bits;
+    }
+
     /*
      * In the extract/box/unbox functions below, "NonDouble" means this
      * functions must not be called on a value that is a double. This allows

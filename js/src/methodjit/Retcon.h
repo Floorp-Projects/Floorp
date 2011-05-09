@@ -75,31 +75,18 @@ class AutoScriptRetrapper
 };
 
 /*
- * This class is responsible for sanely re-JITing a script and fixing up
- * the world. If you ever change the code associated with a JSScript, or
- * otherwise would cause existing JITed code to be incorrect, you /must/ use
- * this to invalidate and potentially re-compile the existing JITed code,
- * fixing up the stack in the process.
+ * This class is responsible for sanely destroying a JITed script while frames
+ * for it are still on the stack, removing all references in the world to it
+ * and patching up those existing frames to go into the interpreter. If you
+ * ever change the code associated with a JSScript, or otherwise would cause
+ * existing JITed code to be incorrect, you /must/ use this to invalidate the
+ * JITed code, fixing up the stack in the process.
  */
 class Recompiler {
-    struct PatchableAddress {
-        void **location;
-        CallSite callSite;
-    };
-
-    struct PatchableNative {
-        jsbytecode *pc;
-        JSObject *guardedNative;
-        JSC::ExecutablePool *pool;
-        JSC::CodeLocationLabel nativeStart;
-        JSC::CodeLocationJump nativeFunGuard;
-        JSC::CodeLocationJump nativeJump;
-    };
-
 public:
     Recompiler(JSContext *cx, JSScript *script);
-    
-    bool recompile();
+
+    void recompile();
 
     static void
     expandInlineFrames(JSContext *cx, StackFrame *fp, mjit::CallSite *inlined,
@@ -109,22 +96,15 @@ private:
     JSContext *cx;
     JSScript *script;
 
-    static PatchableAddress findPatch(JITScript *jit, void **location);
-    static void * findRejoin(JITScript *jit, const CallSite &callSite);
-
-    static void applyPatch(JITScript *jit, PatchableAddress& toPatch);
-    PatchableNative stealNative(JITScript *jit, jsbytecode *pc);
-    void patchNative(JITScript *jit, PatchableNative &native);
-    bool recompile(JSScript *script, bool isConstructing,
-                   Vector<PatchableFrame> &frames,
-                   Vector<PatchableAddress> &patches, Vector<CallSite> &sites,
-                   Vector<PatchableNative> &natives);
+    static void patchCall(JITScript *jit, StackFrame *fp, void **location);
+    static void patchNative(JSContext *cx, JITScript *jit, StackFrame *fp, jsbytecode *pc,
+                            RejoinState rejoin);
 
     static StackFrame *
     expandInlineFrameChain(JSContext *cx, StackFrame *outer, InlineFrame *inner);
 
-    /* Detach jit from any IC callers and save any traps to sites. */
-    bool cleanup(JITScript *jit, Vector<CallSite> *sites);
+    /* Detach jit from any IC callers. */
+    static void cleanup(JITScript *jit);
 };
 
 } /* namespace mjit */

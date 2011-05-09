@@ -4427,8 +4427,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
         }
         JS_ASSERT(idx == pn_count);
 
-        if (!cx->fixArrayType(obj))
-            return false;
+        cx->fixArrayType(obj);
         vp->setObject(*obj);
         return true;
       }
@@ -4468,8 +4467,7 @@ JSParseNode::getConstantValue(JSContext *cx, bool strictChecks, Value *vp)
             }
         }
 
-        if (!cx->fixObjectType(obj))
-            return false;
+        cx->fixObjectType(obj);
         vp->setObject(*obj);
         return true;
       }

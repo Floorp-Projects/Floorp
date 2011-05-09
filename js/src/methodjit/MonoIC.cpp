@@ -626,6 +626,12 @@ class CallCompiler : public BaseCompiler
 
     bool generateFullCallStub(JITScript *from, JSScript *script, uint32 flags)
     {
+        /* We don't support calling CompileFunction from IC stubs in inlined frames. */
+        if (f.regs.inlined()) {
+            disable(from);
+            return true;
+        }
+
         /*
          * Create a stub that works with arity mismatches. Like the fast-path,
          * this allocates a frame on the caller side, but also performs extra
@@ -654,6 +660,16 @@ class CallCompiler : public BaseCompiler
                         : offsetof(JSScript, jitArityCheckNormal);
         masm.loadPtr(Address(t0, offset), t0);
         Jump hasCode = masm.branchPtr(Assembler::Above, t0, ImmPtr(JS_UNJITTABLE_SCRIPT));
+
+        if (cx->typeInferenceEnabled()) {
+            /*
+             * Write the rejoin state to indicate this is a compilation call
+             * made from an IC (the recompiler cannot detect calls made from
+             * ICs automatically).
+             */
+            masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.regs.pc, false)),
+                          FrameAddress(offsetof(VMFrame, stubRejoin)));
+        }
 
         /* Try and compile. On success we get back the nmap pointer. */
         void *compilePtr = JS_FUNC_TO_DATA_PTR(void *, stubs::CompileFunction);
@@ -841,6 +857,17 @@ class CallCompiler : public BaseCompiler
         /* Guard on the function object identity, for now. */
         Jump funGuard = masm.branchPtr(Assembler::NotEqual, ic.funObjReg, ImmPtr(obj));
 
+        if (cx->typeInferenceEnabled()) {
+            /*
+             * Write the rejoin state for the recompiler to use if this call
+             * triggers recompilation. Natives use a different stack address to
+             * store the return value than FASTCALLs, and without additional
+             * information we cannot tell which one is active on a VMFrame.
+             */
+            masm.storePtr(ImmPtr((void *) ic.frameSize.rejoinState(f.regs.pc, true)),
+                          FrameAddress(offsetof(VMFrame, stubRejoin)));
+        }
+
         /* N.B. After this call, the frame will have a dynamic frame size. */
         if (ic.frameSize.isDynamic()) {
             masm.fallibleVMCall(cx->typeInferenceEnabled(),
@@ -915,18 +942,6 @@ class CallCompiler : public BaseCompiler
             masm.storeValue(v, Address(vpReg, sizeof(Value)));
         }
 
-        if (cx->typeInferenceEnabled()) {
-            /*
-             * Write the NATIVE_SCRATCH_VALUE to the 'scratch' field of the
-             * VMFrame, so the recompiler can tell this was a native call.
-             * Natives use a different stack address to store the return
-             * value than FASTCALLs, and without additional information we
-             * cannot tell which one is active on a VMFrame.
-             */
-            masm.storePtr(ImmPtr(NATIVE_CALL_SCRATCH_VALUE),
-                          FrameAddress(offsetof(VMFrame, scratch)));
-        }
-
         masm.restoreStackBase();
         masm.setupABICall(Registers::NormalCall, 3);
         masm.storeArg(2, vpReg);
@@ -950,7 +965,7 @@ class CallCompiler : public BaseCompiler
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, native), false);
 
         if (cx->typeInferenceEnabled())
-            masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, scratch)));
+            masm.storePtr(ImmPtr(NULL), FrameAddress(offsetof(VMFrame, stubRejoin)));
 
         /* Reload fp, which may have been clobbered by restoreStackBase(). */
         masm.loadPtr(FrameAddress(VMFrame::offsetOfFp), JSFrameReg);

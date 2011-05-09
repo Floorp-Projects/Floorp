@@ -6862,7 +6862,8 @@ CopyXMLSettings(JSContext *cx, JSObject *from, JSObject *to)
             if (!JSVAL_IS_BOOLEAN(v))
                 continue;
         }
-        if (!JS_AddTypeProperty(cx, to, name, v) || !JS_SetProperty(cx, to, name, &v))
+        JS_AddTypeProperty(cx, to, name, v);
+        if (!JS_SetProperty(cx, to, name, &v))
             return false;
     }
 
@@ -7155,11 +7156,10 @@ js_InitQNameClass(JSContext *cx, JSObject *obj)
 
     /* Properties of QName objects are not modeled by type inference. */
     TypeObject *type = proto->getNewType(cx);
-    if (!type ||
-        !cx->markTypeObjectUnknownProperties(type) ||
-        !cx->markTypeObjectUnknownProperties(proto->getType())) {
+    if (!type)
         return NULL;
-    }
+    cx->markTypeObjectUnknownProperties(type);
+    cx->markTypeObjectUnknownProperties(proto->getType());
 
     return proto;
 }
@@ -7188,11 +7188,10 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 
     /* Properties of XML objects are not modeled by type inference. */
     TypeObject *type = proto->getNewType(cx);
-    if (!type ||
-        !cx->markTypeObjectUnknownProperties(type) ||
-        !cx->markTypeObjectUnknownProperties(proto->getType())) {
+    if (!type)
         return NULL;
-    }
+    cx->markTypeObjectUnknownProperties(type);
+    cx->markTypeObjectUnknownProperties(proto->getType());
 
     xml = js_NewXML(cx, JSXML_CLASS_TEXT);
     if (!xml)
@@ -7317,8 +7316,7 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         obj = tmp;
     }
 
-    if (!cx->addTypePropertyId(obj->getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN))
-        return JS_FALSE;
+    cx->addTypePropertyId(obj->getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN);
 
     ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, obj, 0, NULL);
     if (!ns)
@@ -7344,8 +7342,7 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
 
     JSObject &varobj = cx->stack.currentVarObj();
 
-    if (!cx->addTypePropertyId(varobj.getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN))
-        return JS_FALSE;
+    cx->addTypePropertyId(varobj.getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN);
     if (!varobj.defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, ObjectValue(*ns),
                                PropertyStub, StrictPropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;

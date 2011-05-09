@@ -127,8 +127,7 @@ JSObject::unbrand(JSContext *cx)
 inline JSBool
 JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
 {
-    if (!cx->markTypePropertyConfigured(getType(), id))
-        return false;
+    cx->markTypePropertyConfigured(getType(), id);
     js::AttributesOp op = getOps()->setAttributes;
     return (op ? op : js_SetAttributes)(cx, this, id, attrsp);
 }
@@ -136,10 +135,8 @@ JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
 inline JSBool
 JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
 {
-    if (!cx->addTypePropertyId(getType(), id, js::types::TYPE_UNDEFINED))
-        return false;
-    if (!cx->markTypePropertyConfigured(getType(), id))
-        return false;
+    cx->addTypePropertyId(getType(), id, js::types::TYPE_UNDEFINED);
+    cx->markTypePropertyConfigured(getType(), id);
     js::DeleteIdOp op = getOps()->deleteProperty;
     return (op ? op : js_DeleteProperty)(cx, this, id, rval, strict);
 }
@@ -435,11 +432,9 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
          * Mark the type of this object as possibly not a dense array, per the
          * requirements of OBJECT_FLAG_NON_DENSE_ARRAY.
          */
-        if (!cx->markTypeArrayNotPacked(getType(), true))
-            return false;
+        cx->markTypeArrayNotPacked(getType(), true);
         jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-        if (!cx->addTypePropertyId(getType(), lengthId, js::types::TYPE_DOUBLE))
-            return false;
+        cx->addTypePropertyId(getType(), lengthId, js::types::TYPE_DOUBLE);
     }
 
     setPrivate((void*) length);
@@ -1701,8 +1696,8 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *global,
     global->setSlot(key, ObjectValue(*ctor));
     global->setSlot(key + JSProto_LIMIT, ObjectValue(*proto));
 
-    if (!cx->addTypePropertyId(global->getType(), id, ObjectValue(*ctor)) ||
-        !global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0)) {
+    cx->addTypePropertyId(global->getType(), id, ObjectValue(*ctor));
+    if (!global->addDataProperty(cx, id, key + JSProto_LIMIT * 2, 0)) {
         global->setSlot(key, UndefinedValue());
         global->setSlot(key + JSProto_LIMIT, UndefinedValue());
         return false;
