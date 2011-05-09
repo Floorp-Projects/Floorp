@@ -1832,7 +1832,8 @@ EmitAtomOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg)
     JS_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
     if (op == JSOP_GETPROP &&
         pn->pn_atom == cx->runtime->atomState.lengthAtom) {
-        return js_Emit1(cx, cg, JSOP_LENGTH) >= 0;
+        /* Specialize length accesses for the interpreter. */
+        op = JSOP_LENGTH;
     }
     ale = cg->atomList.add(cg->parser, pn->pn_atom);
     if (!ale)
@@ -2794,45 +2795,13 @@ EmitPropOp(JSContext *cx, JSParseNode *pn, JSOp op, JSCodeGenerator *cg,
         JS_ASSERT(op == JSOP_GETPROP);
         op = JSOP_CALLPROP;
     } else if (op == JSOP_GETPROP && pn->pn_type == TOK_DOT) {
-        if (pn2->pn_op == JSOP_THIS) {
-            if (pn->pn_atom != cx->runtime->atomState.lengthAtom) {
-                /* Fast path for gets of |this.foo|. */
-                return EmitAtomOp(cx, pn, JSOP_GETTHISPROP, cg);
-            }
-        } else if (pn2->pn_type == TOK_NAME) {
-            /*
-             * Try to optimize:
-             *  - arguments.length into JSOP_ARGCNT
-             *  - argname.prop into JSOP_GETARGPROP
-             *  - localname.prop into JSOP_GETLOCALPROP
-             * but don't do this if the property is 'length' -- prefer to emit
-             * JSOP_GETARG, etc., and then JSOP_LENGTH.
-             */
+        if (pn2->pn_type == TOK_NAME) {
+            /* * Try to optimize arguments.length into JSOP_ARGCNT */
             if (!BindNameToSlot(cx, cg, pn2))
                 return JS_FALSE;
             if (pn->pn_atom == cx->runtime->atomState.lengthAtom) {
                 if (pn2->pn_op == JSOP_ARGUMENTS)
                     return js_Emit1(cx, cg, JSOP_ARGCNT) >= 0;
-            } else {
-                switch (pn2->pn_op) {
-                  case JSOP_GETARG:
-                    op = JSOP_GETARGPROP;
-                    goto do_indexconst;
-                  case JSOP_GETLOCAL:
-                    op = JSOP_GETLOCALPROP;
-                  do_indexconst: {
-                        JSAtomListElement *ale;
-                        jsatomid atomIndex;
-
-                        ale = cg->atomList.add(cg->parser, pn->pn_atom);
-                        if (!ale)
-                            return JS_FALSE;
-                        atomIndex = ALE_INDEX(ale);
-                        return EmitSlotIndexOp(cx, op, pn2->pn_cookie.asInteger(), atomIndex, cg);
-                    }
-
-                  default:;
-                }
             }
         }
     }
@@ -6146,16 +6115,14 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
               case TOK_DOT:
                 if (js_Emit1(cx, cg, JSOP_DUP) < 0)
                     return JS_FALSE;
-                if (pn2->pn_atom == cx->runtime->atomState.lengthAtom) {
-                    if (js_Emit1(cx, cg, JSOP_LENGTH) < 0)
-                        return JS_FALSE;
-                } else if (pn2->pn_atom == cx->runtime->atomState.protoAtom) {
+                if (pn2->pn_atom == cx->runtime->atomState.protoAtom) {
                     if (!EmitIndexOp(cx, JSOP_QNAMEPART, atomIndex, cg))
                         return JS_FALSE;
                     if (js_Emit1(cx, cg, JSOP_GETELEM) < 0)
                         return JS_FALSE;
                 } else {
-                    EMIT_INDEX_OP(JSOP_GETPROP, atomIndex);
+                    bool isLength = (pn2->pn_atom == cx->runtime->atomState.lengthAtom);
+                    EMIT_INDEX_OP(isLength ? JSOP_LENGTH : JSOP_GETPROP, atomIndex);
                 }
                 break;
               case TOK_LB:

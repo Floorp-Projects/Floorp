@@ -1335,35 +1335,11 @@ mjit::Compiler::generateMethod()
             jsop_eleminc(op, STRICT_VARIANT(stubs::ElemDec));
           END_CASE(JSOP_ELEMDEC)
 
-          BEGIN_CASE(JSOP_GETTHISPROP)
-            /* Push thisv onto stack. */
-            jsop_this();
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(PC))))
-                return Compile_Error;
-          END_CASE(JSOP_GETTHISPROP);
-
-          BEGIN_CASE(JSOP_GETARGPROP)
-            /* Push arg onto stack. */
-            frame.pushArg(GET_SLOTNO(PC));
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[ARGNO_LEN]))))
-                return Compile_Error;
-          END_CASE(JSOP_GETARGPROP)
-
-          BEGIN_CASE(JSOP_GETLOCALPROP)
-            frame.pushLocal(GET_SLOTNO(PC));
-            if (!jsop_getprop(script->getAtom(fullAtomIndex(&PC[SLOTNO_LEN]))))
-                return Compile_Error;
-          END_CASE(JSOP_GETLOCALPROP)
-
           BEGIN_CASE(JSOP_GETPROP)
+          BEGIN_CASE(JSOP_LENGTH)
             if (!jsop_getprop(script->getAtom(fullAtomIndex(PC))))
                 return Compile_Error;
           END_CASE(JSOP_GETPROP)
-
-          BEGIN_CASE(JSOP_LENGTH)
-            if (!jsop_length())
-                return Compile_Error;
-          END_CASE(JSOP_LENGTH)
 
           BEGIN_CASE(JSOP_GETELEM)
             if (!jsop_getelem(false))
@@ -2959,39 +2935,6 @@ mjit::Compiler::jsop_callprop_slow(JSAtom *atom)
     return true;
 }
 
-bool
-mjit::Compiler::jsop_length()
-{
-    FrameEntry *top = frame.peek(-1);
-
-    if (top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_STRING) {
-        if (top->isConstant()) {
-            JSString *str = top->getValue().toString();
-            Value v;
-            v.setNumber(uint32(str->length()));
-            frame.pop();
-            frame.push(v);
-        } else {
-            RegisterID str = frame.ownRegForData(top);
-            masm.loadPtr(Address(str, JSString::offsetOfLengthAndFlags()), str);
-            masm.urshift32(Imm32(JSString::LENGTH_SHIFT), str);
-            frame.pop();
-            frame.pushTypedPayload(JSVAL_TYPE_INT32, str);
-        }
-        return true;
-    }
-
-#if defined JS_POLYIC
-    return jsop_getprop(cx->runtime->atomState.lengthAtom);
-#else
-    prepareStubCall(Uses(1));
-    INLINE_STUBCALL(stubs::Length);
-    frame.pop();
-    frame.pushSynced();
-    return true;
-#endif
-}
-
 #ifdef JS_MONOIC
 void
 mjit::Compiler::passMICAddress(GlobalNameICInfo &ic)
@@ -3013,9 +2956,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, bool doTypeCheck, bool usePropCache)
     FrameEntry *top = frame.peek(-1);
 
     /* If the incoming type will never PIC, take slow path. */
-    if (top->isTypeKnown() && top->getKnownType() != JSVAL_TYPE_OBJECT) {
-        JS_ASSERT_IF(atom == cx->runtime->atomState.lengthAtom,
-                     top->getKnownType() != JSVAL_TYPE_STRING);
+    if (top->isNotType(JSVAL_TYPE_OBJECT)) {
         jsop_getprop_slow(atom, usePropCache);
         return true;
     }
