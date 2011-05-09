@@ -224,8 +224,6 @@ static LPSTR
 StrW32Error(DWORD errcode)
 {
   LPSTR errmsg;
-
-#ifndef WINCE
   FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                  FORMAT_MESSAGE_FROM_SYSTEM |
                  FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -236,14 +234,6 @@ StrW32Error(DWORD errcode)
   size_t n = strlen(errmsg)-1;
   while (errmsg[n] == '\r' || errmsg[n] == '\n') n--;
   errmsg[n+1] = '\0';
-#else
-  // CE doesn't have FormatMessageA so we just stringify the error code.
-  // Use LocalAlloc for consistency with the regular Windows code path.
-  // "code \0" is 6 bytes, and a 32-bit number might need 10 more.
-  errmsg = (LPSTR)LocalAlloc(LMEM_FIXED, 16);
-  _snprintf(errmsg, 16, "code %u", errcode);
-#endif
-
   return errmsg;
 }
 #define LastErrMsg() (StrW32Error(GetLastError()))
