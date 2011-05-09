@@ -56,8 +56,8 @@
  * wrapping the inclusion with JS_BEGIN_EXTERN_C and JS_END_EXTERN_C.
  */
 JS_PROTO(Null,                   0,     js_InitNullClass)
-JS_PROTO(Object,                 1,     js_InitFunctionAndObjectClasses)
-JS_PROTO(Function,               2,     js_InitFunctionAndObjectClasses)
+JS_PROTO(Object,                 1,     js_InitObjectClass)
+JS_PROTO(Function,               2,     js_InitFunctionClass)
 JS_PROTO(Array,                  3,     js_InitArrayClass)
 JS_PROTO(Boolean,                4,     js_InitBooleanClass)
 JS_PROTO(JSON,                   5,     js_InitJSONClass)
