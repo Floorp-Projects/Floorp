@@ -1892,6 +1892,8 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
              */
             uint32 slot = analyze::GetBytecodeSlot(script, pc);
             if (slot < analyze::TotalSlots(script)) {
+                if (!script->ensureVarTypes(cx))
+                    return;
                 TypeSet *types = script->slotTypes(slot);
                 types->addType(cx, type);
             }
