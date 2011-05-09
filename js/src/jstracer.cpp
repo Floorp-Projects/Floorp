@@ -12659,7 +12659,9 @@ TraceRecorder::getPropertyById(LIns* obj_ins, Value* outp)
     JSAtom* atom;
     jsbytecode* pc = cx->regs().pc;
     const JSCodeSpec& cs = js_CodeSpec[*pc];
-    if (JOF_TYPE(cs.format) == JOF_ATOM) {
+    if (*pc == JSOP_LENGTH) {
+        atom = cx->runtime->atomState.lengthAtom;
+    } else if (JOF_TYPE(cs.format) == JOF_ATOM) {
         atom = atoms[GET_INDEX(pc)];
     } else {
         JS_ASSERT(JOF_TYPE(cs.format) == JOF_SLOTATOM);
@@ -12755,6 +12757,16 @@ TraceRecorder::getPropertyWithScriptGetter(JSObject *obj, LIns* obj_ins, const S
         sp[-1] = sp[-3];
         set(&sp[-1], get(&sp[-3]));
         return callImacroInfallibly(callprop_imacros.scriptgetter);
+
+      case JSOP_GETTHISPROP:
+      case JSOP_GETARGPROP:
+      case JSOP_GETLOCALPROP:
+        sp += 2;
+        sp[-2] = getter;
+        set(&sp[-2], w.immpObjGC(&getter.toObject()));
+        sp[-1] = ObjectValue(*obj);
+        set(&sp[-1], obj_ins);
+        return callImacroInfallibly(getthisprop_imacros.scriptgetter);
 
       default:
         RETURN_STOP("cannot trace script getter for this opcode");
@@ -16207,6 +16219,37 @@ TraceRecorder::record_JSOP_LEAVEBLOCKEXPR()
 }
 
 JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GETTHISPROP()
+{
+    LIns* this_ins;
+
+    CHECK_STATUS_A(getThis(this_ins));
+
+    /*
+     * It's safe to just use cx->fp->thisValue() here because getThis() returns
+     * ARECORD_STOP or ARECORD_ERROR if thisv is not available.
+     */
+    const Value &thisv = cx->fp()->thisValue();
+    if (!thisv.isObject())
+        RETURN_STOP_A("primitive this for GETTHISPROP");
+
+    CHECK_STATUS_A(getProp(&thisv.toObject(), this_ins));
+    return ARECORD_CONTINUE;
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GETARGPROP()
+{
+    return getProp(argval(GET_ARGNO(cx->regs().pc)));
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
+TraceRecorder::record_JSOP_GETLOCALPROP()
+{
+    return getProp(varval(GET_SLOTNO(cx->regs().pc)));
+}
+
+JS_REQUIRES_STACK AbortableRecordingStatus
 TraceRecorder::record_JSOP_INDEXBASE1()
 {
     atoms += 1 << 16;
@@ -17037,13 +17080,22 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
             increment(OP_ARRAY_READ);
     }
 
-    if (op == JSOP_GETPROP || op == JSOP_CALLPROP)
+    if (op == JSOP_GETPROP || op == JSOP_CALLPROP ||
+        op == JSOP_GETARGPROP || op == JSOP_GETLOCALPROP)
     {
         /* Try to see if it's a scripted getter, which is faster in the tracer. */
         Value v = UndefinedValue();
         if (op == JSOP_GETPROP || op == JSOP_CALLPROP) {
             v = cx->regs().sp[-1];
-       } else {
+        } else if (op == JSOP_GETARGPROP) {
+            uint32 slot = GET_ARGNO(pc);
+            JS_ASSERT(slot < fp->numFormalArgs());
+            v = fp->formalArg(slot);
+        } else if (op == JSOP_GETLOCALPROP) {
+            uint32 slot = GET_SLOTNO(pc);
+            JS_ASSERT(slot < script->nslots);
+            v = fp->slots()[slot];
+        } else {
             JS_NOT_REACHED("no else");
         }
 

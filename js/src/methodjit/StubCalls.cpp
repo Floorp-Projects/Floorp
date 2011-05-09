@@ -1832,42 +1832,19 @@ stubs::DecGlobalName(VMFrame &f, JSAtom *atom)
 template void JS_FASTCALL stubs::DecGlobalName<true>(VMFrame &f, JSAtom *atom);
 template void JS_FASTCALL stubs::DecGlobalName<false>(VMFrame &f, JSAtom *atom);
 
-void JS_FASTCALL
-stubs::GetProp(VMFrame &f)
+static bool JS_FASTCALL
+InlineGetProp(VMFrame &f)
 {
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
 
     Value *vp = &f.regs.sp[-1];
+    JSObject *obj = ValueToObject(f.cx, vp);
+    if (!obj)
+        return false;
 
     Value rval;
     do {
-        if (JSOp(*f.regs.pc) == JSOP_LENGTH) {
-            /* Optimize length accesses on strings, arrays, and arguments. */
-            if (vp->isString()) {
-                rval = Int32Value(vp->toString()->length());
-                break;
-            }
-            if (vp->isObject()) {
-                JSObject *obj = &vp->toObject();
-                if (obj->isArray()) {
-                    jsuint length = obj->getArrayLength();
-                    rval = NumberValue(length);
-                    break;
-                }
-                if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
-                    uint32 length = obj->getArgsInitialLength();
-                    JS_ASSERT(length < INT32_MAX);
-                    rval = Int32Value(int32_t(length));
-                    break;
-                }
-            }
-        }
-
-        JSObject *obj = ValueToObject(f.cx, vp);
-        if (!obj)
-            THROW();
-
         /*
          * We do not impose the method read barrier if in an imacro,
          * assuming any property gets it does (e.g., for 'toString'
@@ -1890,7 +1867,7 @@ stubs::GetProp(VMFrame &f)
                 const Shape *shape = entry->vword.toShape();
                 NATIVE_GET(cx, obj, obj2, shape,
                         f.fp()->hasImacropc() ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                        &rval, THROW());
+                        &rval, return false);
             }
             break;
         }
@@ -1903,11 +1880,19 @@ stubs::GetProp(VMFrame &f)
                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                     &rval)
                 : !obj->getProperty(cx, id, &rval)) {
-            THROW();
+            return false;
         }
     } while(0);
 
     regs.sp[-1] = rval;
+    return true;
+}
+
+void JS_FASTCALL
+stubs::GetProp(VMFrame &f)
+{
+    if (!InlineGetProp(f))
+        THROW();
 }
 
 void JS_FASTCALL
@@ -2015,6 +2000,33 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
             THROW();
     }
 #endif
+}
+
+void JS_FASTCALL
+stubs::Length(VMFrame &f)
+{
+    FrameRegs &regs = f.regs;
+    Value *vp = &regs.sp[-1];
+
+    if (vp->isString()) {
+        vp->setInt32(vp->toString()->length());
+        return;
+    } else if (vp->isObject()) {
+        JSObject *obj = &vp->toObject();
+        if (obj->isArray()) {
+            jsuint length = obj->getArrayLength();
+            regs.sp[-1].setNumber(length);
+            return;
+        } else if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
+            uint32 length = obj->getArgsInitialLength();
+            JS_ASSERT(length < INT32_MAX);
+            regs.sp[-1].setInt32(int32_t(length));
+            return;
+        }
+    }
+
+    if (!InlineGetProp(f))
+        THROW();
 }
 
 void JS_FASTCALL
