@@ -19,11 +19,9 @@
 == image-zoom-02.svg          image-zoom-02-ref.svg
 
 # Tests for <image> with preserveAspectRatio
-# NOTE: The reference cases in the following tests trigger 20+ assertions each
-# (1 per <symbol> element), due to bug 563481.
-asserts(20) == image-preserveAspectRatio-01-raster.svg image-preserveAspectRatio-01-ref.svg
-asserts(20) == image-preserveAspectRatio-01-svg.svg    image-preserveAspectRatio-01-ref.svg
-asserts(20) == image-preserveAspectRatio-02-raster.svg image-preserveAspectRatio-02-ref.svg
-asserts(20) == image-preserveAspectRatio-02-svg.svg    image-preserveAspectRatio-02-ref.svg
-asserts(21) == image-preserveAspectRatio-03.svg        image-preserveAspectRatio-03-ref.svg
-asserts(21) == image-preserveAspectRatio-04.svg        image-preserveAspectRatio-04-ref.svg
+== image-preserveAspectRatio-01-raster.svg image-preserveAspectRatio-01-ref.svg
+== image-preserveAspectRatio-01-svg.svg    image-preserveAspectRatio-01-ref.svg
+== image-preserveAspectRatio-02-raster.svg image-preserveAspectRatio-02-ref.svg
+== image-preserveAspectRatio-02-svg.svg    image-preserveAspectRatio-02-ref.svg
+== image-preserveAspectRatio-03.svg        image-preserveAspectRatio-03-ref.svg
+== image-preserveAspectRatio-04.svg        image-preserveAspectRatio-04-ref.svg
