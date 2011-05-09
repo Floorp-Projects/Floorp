@@ -1,4 +1,3 @@
-let baseURI = "http://mochi.test:8888/browser/mobile/chrome/";
 let testURL_01 = baseURI + "browser_scrollbar.sjs?";
 
 let gCurrentTest = null;
@@ -57,6 +56,21 @@ function checkScrollbars(aHorizontalVisible, aVerticalVisible, aHorizontalPositi
   EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mouseup" });
 }
 
+function checkScrollbarsPosition(aX) {
+  let browser = getBrowser();
+  let width = browser.getBoundingClientRect().width;
+  let height = browser.getBoundingClientRect().height;
+  EventUtils.synthesizeMouse(browser, width / 2, height / 4, { type: "mousedown" });
+  EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mousemove" });
+
+  let verticalRect = verticalScrollbar.getBoundingClientRect();
+  let margin = parseInt(verticalScrollbar.getAttribute("end"));
+  let expectedPosition = window.innerWidth - aX - margin;
+  is(verticalRect.right, expectedPosition, "The vertical scrollbar should be position to " + expectedPosition + " (got " + verticalRect.right + ")");
+
+  EventUtils.synthesizeMouse(browser, width / 2, height * 3 / 4, { type: "mouseup" });
+}
+
 gTests.push({
   desc: "Testing visibility of scrollbars",
 
@@ -73,11 +87,7 @@ gTests.push({
   },
 
   checkHorizontalScrollable: function() {
-    checkScrollbars(true, true);
-    // TODO: current code forces the height to grow so we always have visible document when
-    // zooming out to see the wide document
-    //checkScrollbars(true, false);
-    todo(false, "Don't cause the height to grow beyond the window height if it doesn't need to");
+    checkScrollbars(true, false);
 
     waitForPageShow(testURL_01 + "vertical", gCurrentTest.checkVerticalScrollable);
     gOpenedTabs.push(Browser.addTab(testURL_01 + "vertical", true));
@@ -92,6 +102,41 @@ gTests.push({
 
   checkBothScrollable: function() {
     checkScrollbars(true, true);
+    Elements.browsers.addEventListener("PanFinished", function(aEvent) {
+      Elements.browsers.removeEventListener("PanFinished", arguments.callee, false);
+      setTimeout(function() {
+        Browser.hideSidebars();
+      }, 0);
+      runNextTest();
+    }, false);
+  }
+});
+
+gTests.push({
+  desc: "Testing position of scrollbars",
+
+  run: function() {
+    waitForPageShow(testURL_01 + "vertical", gCurrentTest.checkScrollbarsPosition);
+    gOpenedTabs.push(Browser.addTab(testURL_01 + "vertical", true));
+  },
+
+  checkScrollbarsPosition: function() {
+    let [,, tabsWidth, controlsWidth] = Browser.computeSidebarVisibility();
+
+    checkScrollbarsPosition(0);
+
+    // Show the left sidebar and ensure scrollbar is visible
+    Browser.controlsScrollboxScroller.scrollTo(0, 0);
+    checkScrollbarsPosition(-tabsWidth);
+
+    // Show the right sidebar and ensure scrollbar is visible
+    Browser.controlsScrollboxScroller.scrollTo(tabsWidth + controlsWidth, 0);
+    checkScrollbarsPosition(controlsWidth);
+
+    gCurrentTest.finish();
+  },
+
+  finish: function() {
     Elements.browsers.addEventListener("PanFinished", function(aEvent) {
       Elements.browsers.removeEventListener("PanFinished", arguments.callee, false);
       setTimeout(function() {

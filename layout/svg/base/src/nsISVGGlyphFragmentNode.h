@@ -42,7 +42,6 @@
 
 #include "nsQueryFrame.h"
 
-class nsISVGGlyphFragmentLeaf;
 class nsIDOMSVGPoint;
 
 class nsISVGGlyphFragmentNode : public nsQueryFrame
@@ -54,8 +53,8 @@ public:
   virtual float GetComputedTextLength()=0;
   virtual float GetSubStringLength(PRUint32 charnum, PRUint32 fragmentChars)=0;
   virtual PRInt32 GetCharNumAtPosition(nsIDOMSVGPoint *point)=0;
-  NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetFirstGlyphFragment()=0;
-  NS_IMETHOD_(nsISVGGlyphFragmentLeaf *) GetNextGlyphFragment()=0;
+  NS_IMETHOD_(nsSVGGlyphFrame *) GetFirstGlyphFrame()=0;
+  NS_IMETHOD_(nsSVGGlyphFrame *) GetNextGlyphFrame()=0;
   NS_IMETHOD_(void) SetWhitespaceCompression(PRBool aCompressWhitespace)=0;
 };
 

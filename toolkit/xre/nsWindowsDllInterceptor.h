@@ -185,12 +185,12 @@ protected:
       }
     }
 #elif defined(_M_X64)
-    int pJmp32 = 0;
+    int pJmp32 = -1;
 
     while (nBytes < 13) {
 
       // if found JMP 32bit offset, next bytes must be NOP 
-      if (pJmp32) {
+      if (pJmp32 >= 0) {
         if (origBytes[nBytes++] != 0x90)
           return 0;
 
@@ -311,7 +311,7 @@ protected:
     *((intptr_t*)(tramp+nBytes+1)) = (intptr_t)trampDest - (intptr_t)(tramp+nBytes+5); // target displacement
 #elif defined(_M_X64)
     // If JMP32 opcode found, we don't insert to trampoline jump 
-    if (pJmp32) {
+    if (pJmp32 >= 0) {
       // convert JMP 32bit offset to JMP 64bit direct
       byteptr_t directJmpAddr = origBytes + pJmp32 + 5 + (*((LONG*)(origBytes+pJmp32+1)));
       // mov r11, address

@@ -4466,8 +4466,13 @@ nsDocument::CreateCDATASection(const nsAString& aData,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  if (FindInReadable(NS_LITERAL_STRING("]]>"), aData))
+  if (IsHTML()) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
+  if (FindInReadable(NS_LITERAL_STRING("]]>"), aData)) {
     return NS_ERROR_DOM_INVALID_CHARACTER_ERR;
+  }
 
   nsCOMPtr<nsIContent> content;
   nsresult rv = NS_NewXMLCDATASection(getter_AddRefs(content),
@@ -4489,6 +4494,11 @@ nsDocument::CreateProcessingInstruction(const nsAString& aTarget,
                                         nsIDOMProcessingInstruction** aReturn)
 {
   *aReturn = nsnull;
+
+  // There are no PIs for HTML
+  if (IsHTML()) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   nsresult rv = nsContentUtils::CheckQName(aTarget, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -4559,8 +4569,12 @@ nsDocument::CreateEntityReference(const nsAString& aName,
                                   nsIDOMEntityReference** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-
   *aReturn = nsnull;
+
+  if (IsHTML()) {
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
+
   return NS_OK;
 }
 
@@ -5841,7 +5855,8 @@ nsDocument::GetInputEncoding(nsAString& aInputEncoding)
 NS_IMETHODIMP
 nsDocument::GetXmlEncoding(nsAString& aXmlEncoding)
 {
-  if (mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
+  if (!IsHTML() &&
+      mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
       mXMLDeclarationBits & XML_DECLARATION_BITS_ENCODING_EXISTS) {
     // XXX We don't store the encoding given in the xml declaration.
     // For now, just output the inputEncoding which we do store.
@@ -5857,6 +5872,7 @@ NS_IMETHODIMP
 nsDocument::GetXmlStandalone(PRBool *aXmlStandalone)
 {
   *aXmlStandalone = 
+    !IsHTML() &&
     mXMLDeclarationBits & XML_DECLARATION_BITS_DECLARATION_EXISTS &&
     mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_EXISTS &&
     mXMLDeclarationBits & XML_DECLARATION_BITS_STANDALONE_YES;
@@ -5867,12 +5883,17 @@ nsDocument::GetXmlStandalone(PRBool *aXmlStandalone)
 NS_IMETHODIMP
 nsDocument::SetXmlStandalone(PRBool aXmlStandalone)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return IsHTML() ? NS_ERROR_DOM_NOT_SUPPORTED_ERR : NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
 nsDocument::GetXmlVersion(nsAString& aXmlVersion)
 {
+  if (IsHTML()) {
+    SetDOMStringToNull(aXmlVersion);
+    return NS_OK;
+  }
+
   // If there is no declaration, the value is "1.0".
 
   // XXX We only support "1.0", so always output "1.0" until that changes.
@@ -5884,7 +5905,7 @@ nsDocument::GetXmlVersion(nsAString& aXmlVersion)
 NS_IMETHODIMP
 nsDocument::SetXmlVersion(const nsAString& aXmlVersion)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return IsHTML() ? NS_ERROR_DOM_NOT_SUPPORTED_ERR : NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP

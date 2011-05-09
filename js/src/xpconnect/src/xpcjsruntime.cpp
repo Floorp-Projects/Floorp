@@ -1481,11 +1481,15 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStringData));
+#ifdef JS_METHODJIT
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitCode));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitData));
+#endif
+#ifdef JS_TRACER
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSTjitCode));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSTjitDataAllocatorsMain));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSTjitDataAllocatorsReserve));
+#endif
     }
 
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
