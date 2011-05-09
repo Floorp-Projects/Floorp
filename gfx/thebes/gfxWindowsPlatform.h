@@ -114,19 +114,6 @@ struct DCFromContext {
     PRBool needsRelease;
 };
 
-// ClearType parameters set by running ClearType tuner
-struct ClearTypeParameterInfo {
-    ClearTypeParameterInfo() :
-        gamma(-1), pixelStructure(-1), clearTypeLevel(-1), enhancedContrast(-1)
-    { }
-
-    nsString    displayName;  // typically just 'DISPLAY1'
-    PRInt32     gamma;
-    PRInt32     pixelStructure;
-    PRInt32     clearTypeLevel;
-    PRInt32     enhancedContrast;
-};
-
 class THEBES_API gfxWindowsPlatform : public gfxPlatform {
 public:
     gfxWindowsPlatform();
@@ -248,9 +235,6 @@ public:
     static PRInt32 WindowsOSVersion(PRInt32 *aBuildNum = nsnull);
 
     static void GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion);
-
-    // returns ClearType tuning information for each display
-    static void GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams);
 
     virtual void FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref);
 

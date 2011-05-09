@@ -114,13 +114,6 @@ GfxInfo::GetDWriteVersion(nsAString & aDwriteVersion)
   return NS_ERROR_FAILURE;
 }
 
-/* readonly attribute DOMString cleartypeParameters; */
-NS_IMETHODIMP
-GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
-{
-  return NS_ERROR_FAILURE;
-}
-
 /* readonly attribute DOMString adapterDescription; */
 NS_IMETHODIMP
 GfxInfo::GetAdapterDescription(nsAString & aAdapterDescription)
