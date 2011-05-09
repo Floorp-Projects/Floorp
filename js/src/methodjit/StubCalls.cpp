@@ -1302,7 +1302,7 @@ stubs::RecompileForInline(VMFrame &f)
 {
     ExpandInlineFrames(f.cx, true);
     Recompiler recompiler(f.cx, f.script());
-    recompiler.recompile();
+    recompiler.recompile(/* resetUses */ false);
 }
 
 void JS_FASTCALL

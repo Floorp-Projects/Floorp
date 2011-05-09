@@ -88,7 +88,7 @@ static const char *OpcodeNames[] = {
  * Number of times a script must be called or had a backedge before we try to
  * inline its calls.
  */
-static const size_t CALLS_BACKEDGES_BEFORE_INLINING = 10000;
+static const size_t USES_BEFORE_INLINING = 10000;
 
 mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructing)
   : BaseCompiler(cx),
@@ -138,14 +138,9 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     if (cx->typeInferenceEnabled())
         addTraceHints = false;
 
-    /*
-     * Note: we use callCount_ to count both calls and backedges in scripts
-     * after they have been compiled and we are checking to recompile a version
-     * with inline calls. :FIXME: should remove compartment->incBackEdgeCount
-     * and do the same when deciding to initially compile.
-     */
+    /* Once a script starts getting really hot we will inline calls in it. */
     if (!debugMode() && cx->typeInferenceEnabled() &&
-        (outerScript->callCount() >= CALLS_BACKEDGES_BEFORE_INLINING ||
+        (outerScript->useCount() >= USES_BEFORE_INLINING ||
          cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
         inlining_ = true;
     }
@@ -1121,9 +1116,8 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             jitTraceICs[i].slowTraceHint = stubCode.locationOf(traceICs[i].slowTraceHint.get());
 #ifdef JS_TRACER
         uint32 hotloop = GetHotloop(cx);
-        uint32 prevCount = cx->compartment->backEdgeCount(traceICs[i].jumpTarget);
         jitTraceICs[i].loopCounterStart = hotloop;
-        jitTraceICs[i].loopCounter = hotloop < prevCount ? 1 : hotloop - prevCount;
+        jitTraceICs[i].loopCounter = hotloop;
 #endif
         
         stubCode.patch(traceICs[i].addrLabel, &jitTraceICs[i]);
@@ -3129,17 +3123,17 @@ mjit::Compiler::recompileCheckHelper()
     if (inlining() || debugMode() || !analysis->hasFunctionCalls() || !cx->typeInferenceEnabled())
         return;
 
-    size_t *addr = script->addressOfCallCount();
+    size_t *addr = script->addressOfUseCount();
     masm.add32(Imm32(1), AbsoluteAddress(addr));
 #if defined(JS_CPU_X86) || defined(JS_CPU_ARM)
     Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, AbsoluteAddress(addr),
-                              Imm32(CALLS_BACKEDGES_BEFORE_INLINING));
+                              Imm32(USES_BEFORE_INLINING));
 #else
     /* Handle processors that can't load from absolute addresses. */
     RegisterID reg = frame.allocReg();
     masm.move(ImmPtr(addr), reg);
     Jump jump = masm.branch32(Assembler::GreaterThanOrEqual, Address(reg, 0),
-                              Imm32(CALLS_BACKEDGES_BEFORE_INLINING));
+                              Imm32(USES_BEFORE_INLINING));
     frame.freeReg(reg);
 #endif
     stubcc.linkExit(jump, Uses(0));
