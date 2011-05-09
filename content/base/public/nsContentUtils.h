@@ -936,6 +936,34 @@ public:
                                      nsINode* aTargetForSubtreeModified);
 
   /**
+   * Quick helper to determine whether there are any mutation listeners
+   * of a given type that apply to any content in this document. It is valid
+   * to pass null for aDocument here, in which case this function always
+   * returns PR_TRUE.
+   *
+   * @param aDocument The document to search for listeners
+   * @param aType     The type of listener (NS_EVENT_BITS_MUTATION_*)
+   *
+   * @return true if there are mutation listeners of the specified type
+   */
+  static PRBool HasMutationListeners(nsIDocument* aDocument,
+                                     PRUint32 aType);
+  /**
+   * Synchronously fire DOMNodeRemoved on aChild. Only fires the event if
+   * there really are listeners by checking using the HasMutationListeners
+   * function above. The function makes sure to hold the relevant objects alive
+   * for the duration of the event firing. However there are no guarantees
+   * that any of the objects are alive by the time the function returns.
+   * If you depend on that you need to hold references yourself.
+   *
+   * @param aChild    The node to fire DOMNodeRemoved at.
+   * @param aParent   The parent of aChild.
+   * @param aOwnerDoc The ownerDocument of aChild.
+   */
+  static void MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
+                                   nsIDocument* aOwnerDoc);
+
+  /**
    * This method creates and dispatches a trusted event.
    * Works only with events which can be created by calling
    * nsIDOMDocumentEvent::CreateEvent() with parameter "Events".
