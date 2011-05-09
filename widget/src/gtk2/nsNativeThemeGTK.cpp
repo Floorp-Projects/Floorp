@@ -566,14 +566,7 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_PROGRESSBAR_CHUNK:
   case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
-    {
-      nsIFrame* stateFrame = aFrame->GetParent();
-      nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
-
-      aGtkWidgetType = IsIndeterminateProgress(stateFrame, eventStates)
-                         ? MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE
-                         : MOZ_GTK_PROGRESS_CHUNK;
-    }
+    aGtkWidgetType = MOZ_GTK_PROGRESS_CHUNK;
     break;
   case NS_THEME_TAB_SCROLLARROW_BACK:
   case NS_THEME_TAB_SCROLLARROW_FORWARD:
@@ -877,13 +870,6 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
       RefreshWidgetWindow(aFrame);
     } else {
       SetWidgetStateSafe(mSafeWidgetStates, aWidgetType, &state);
-    }
-  }
-
-  // Indeterminate progress bar are animated.
-  if (gtkWidgetType == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE) {
-    if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
-      NS_WARNING("unable to animate widget!");
     }
   }
 

@@ -3548,8 +3548,7 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     SIMPLE_TAG_CREATE(video, NS_NewHTMLVideoFrame),
     SIMPLE_TAG_CREATE(audio, NS_NewHTMLVideoFrame),
 #endif
-    SIMPLE_TAG_CREATE(isindex, NS_NewIsIndexFrame),
-    SIMPLE_TAG_CREATE(progress, NS_NewProgressFrame)
+    SIMPLE_TAG_CREATE(isindex, NS_NewIsIndexFrame)
   };
 
   return FindDataByTag(aTag, aElement, aStyleContext, sHTMLData,

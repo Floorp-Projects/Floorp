@@ -668,35 +668,6 @@ output:-moz-ui-invalid {
   input[type="file"] { height: 2em; }
 }
 
-progress {
-  -moz-appearance: progressbar;
-  display: inline-block;
-  vertical-align: -0.2em;
-
-  /* Default style in case of there is -moz-appearance: none; */
-  border: 2px solid;
-  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
-  -moz-border-right-colors: ThreeDHighlight -moz-Dialog;
-  -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
-  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
-  background-color: -moz-Dialog;
-}
-
-::-moz-progress-bar {
-  /* Block styles that would change the type of frame we construct. */
-  display: inline-block ! important;
-  float: none ! important;
-  position: static ! important;
-  overflow: visible ! important;
-
-  -moz-appearance: progresschunk;
-  height: 100%;
-  width: 100%;
-
-  /* Default style in case of there is -moz-appearance: none; */
-  background-color: ThreeDShadow;
-}
-
 %if OSARCH==OS2
 input {
   font: medium serif; font-family: inherit
