@@ -73,7 +73,7 @@ public:
   virtual PRBool IsLeaf() const { return PR_TRUE; }
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
                                         PRUint32 aFilter);
 
