@@ -557,12 +557,12 @@
                         accesskey="&webConsoleCmd.accesskey;"
                         key="key_webConsole"
                         oncommand="HUDConsoleUI.toggleHUD();"/>
-              <menuitem id="menu_workspace"
+              <menuitem id="menu_scratchpad"
                         hidden="true"
-                        label="&workspace.label;"
-                        accesskey="&workspace.accesskey;"
-                        key="key_workspace"
-                        command="Tools:Workspace"/>
+                        label="&scratchpad.label;"
+                        accesskey="&scratchpad.accesskey;"
+                        key="key_scratchpad"
+                        command="Tools:Scratchpad"/>
               <menuitem id="menu_pageInfo"
                         accesskey="&pageInfoCmd.accesskey;"
                         label="&pageInfoCmd.label;"

@@ -1654,13 +1654,13 @@ function delayedStartup(isLoadingBlank, mustLoadSidebar) {
 #endif
   }
 
-  // Enable Workspace in the UI, if the preference allows this.
-  let workspaceEnabled = gPrefService.getBoolPref(Workspace.prefEnabledName);
-  if (workspaceEnabled) {
-    document.getElementById("menu_workspace").hidden = false;
-    document.getElementById("Tools:Workspace").removeAttribute("disabled");
+  // Enable Scratchpad in the UI, if the preference allows this.
+  let scratchpadEnabled = gPrefService.getBoolPref(Scratchpad.prefEnabledName);
+  if (scratchpadEnabled) {
+    document.getElementById("menu_scratchpad").hidden = false;
+    document.getElementById("Tools:Scratchpad").removeAttribute("disabled");
 #ifdef MENUBAR_CAN_AUTOHIDE
-    document.getElementById("appmenu_workspace").hidden = false;
+    document.getElementById("appmenu_scratchpad").hidden = false;
 #endif
   }
 
@@ -8642,15 +8642,15 @@ function toggleAddonBar() {
   setToolbarVisibility(addonBar, addonBar.collapsed);
 }
 
-var Workspace = {
-  prefEnabledName: "devtools.workspace.enabled",
+var Scratchpad = {
+  prefEnabledName: "devtools.scratchpad.enabled",
 
-  openWorkspace: function WS_openWorkspace() {
-    const WORKSPACE_WINDOW_URL = "chrome://browser/content/workspace.xul";
-    const WORKSPACE_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
+  openScratchpad: function SP_openScratchpad() {
+    const SCRATCHPAD_WINDOW_URL = "chrome://browser/content/scratchpad.xul";
+    const SCRATCHPAD_WINDOW_FEATURES = "chrome,titlebar,toolbar,centerscreen,resizable,dialog=no";
 
-    return Services.ww.openWindow(null, WORKSPACE_WINDOW_URL, "_blank",
-                                  WORKSPACE_WINDOW_FEATURES, null);
+    return Services.ww.openWindow(null, SCRATCHPAD_WINDOW_URL, "_blank",
+                                  SCRATCHPAD_WINDOW_FEATURES, null);
   },
 };
 
