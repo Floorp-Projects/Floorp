@@ -785,6 +785,97 @@ gfxWindowsPlatform::GetDLLVersion(const PRUnichar *aDLLPath, nsAString& aVersion
     aVersion.Assign(NS_ConvertUTF8toUTF16(buf));
 }
 
+void 
+gfxWindowsPlatform::GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams)
+{
+    HKEY  hKey, subKey;
+    DWORD i, rv, size, type;
+    WCHAR displayName[256], subkeyName[256];
+
+    aParams.Clear();
+
+    // construct subkeys based on HKLM subkeys, assume they are same for HKCU
+    rv = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                       L"Software\\Microsoft\\Avalon.Graphics",
+                       0, KEY_READ, &hKey);
+
+    if (rv != ERROR_SUCCESS) {
+        return;
+    }
+
+    // enumerate over subkeys
+    for (i = 0, rv = ERROR_SUCCESS; rv != ERROR_NO_MORE_ITEMS; i++) {
+        size = NS_ARRAY_LENGTH(displayName);
+        rv = RegEnumKeyExW(hKey, i, displayName, &size, NULL, NULL, NULL, NULL);
+        if (rv != ERROR_SUCCESS) {
+            continue;
+        }
+
+        ClearTypeParameterInfo ctinfo;
+        ctinfo.displayName.Assign(displayName);
+
+        DWORD subrv, value;
+        bool foundData = false;
+
+        swprintf_s(subkeyName, NS_ARRAY_LENGTH(subkeyName),
+                   L"Software\\Microsoft\\Avalon.Graphics\\%s", displayName);
+
+        // subkey for gamma, pixel structure
+        subrv = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                              subkeyName, 0, KEY_QUERY_VALUE, &subKey);
+
+        if (subrv == ERROR_SUCCESS) {
+            size = sizeof(value);
+            subrv = RegQueryValueExW(subKey, L"GammaLevel", NULL, &type,
+                                     (LPBYTE)&value, &size);
+            if (subrv == ERROR_SUCCESS && type == REG_DWORD) {
+                foundData = true;
+                ctinfo.gamma = value;
+            }
+
+            size = sizeof(value);
+            subrv = RegQueryValueExW(subKey, L"PixelStructure", NULL, &type,
+                                     (LPBYTE)&value, &size);
+            if (subrv == ERROR_SUCCESS && type == REG_DWORD) {
+                foundData = true;
+                ctinfo.pixelStructure = value;
+            }
+
+            RegCloseKey(subKey);
+        }
+
+        // subkey for cleartype level, enhanced contrast
+        subrv = RegOpenKeyExW(HKEY_CURRENT_USER,
+                              subkeyName, 0, KEY_QUERY_VALUE, &subKey);
+
+        if (subrv == ERROR_SUCCESS) {
+            size = sizeof(value);
+            subrv = RegQueryValueExW(subKey, L"ClearTypeLevel", NULL, &type,
+                                     (LPBYTE)&value, &size);
+            if (subrv == ERROR_SUCCESS && type == REG_DWORD) {
+                foundData = true;
+                ctinfo.clearTypeLevel = value;
+            }
+      
+            size = sizeof(value);
+            subrv = RegQueryValueExW(subKey, L"EnhancedContrastLevel",
+                                     NULL, &type, (LPBYTE)&value, &size);
+            if (subrv == ERROR_SUCCESS && type == REG_DWORD) {
+                foundData = true;
+                ctinfo.enhancedContrast = value;
+            }
+
+            RegCloseKey(subKey);
+        }
+
+        if (foundData) {
+            aParams.AppendElement(ctinfo);
+        }
+    }
+
+    RegCloseKey(hKey);
+}
+
 void
 gfxWindowsPlatform::FontsPrefsChanged(nsIPrefBranch *aPrefBranch, const char *aPref)
 {
@@ -830,19 +921,19 @@ gfxWindowsPlatform::SetupClearTypeParams(nsIPrefBranch *aPrefBranch)
         if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_GAMMA,
                                                  &value))) {
             if (value >= 1000 && value <= 2200) {
-                gamma = (FLOAT)value / 1000.0;
+                gamma = FLOAT(value / 1000.0);
             }
         }
         if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_CONTRAST,
                                                  &value))) {
             if (value >= 0 && value <= 1000) {
-                contrast = (FLOAT)value / 100.0;
+                contrast = FLOAT(value / 100.0);
             }
         }
         if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_LEVEL,
                                                  &value))) {
             if (value >= 0 && value <= 100) {
-                level = (FLOAT)value / 100.0;
+                level = FLOAT(value / 100.0);
             }
         }
         if (NS_SUCCEEDED(aPrefBranch->GetIntPref(GFX_CLEARTYPE_PARAMS_STRUCTURE,
