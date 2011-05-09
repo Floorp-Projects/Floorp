@@ -303,6 +303,9 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
 static inline JSAtom *
 GetAtomFromBytecode(JSContext *cx, jsbytecode *pc, JSOp op, const JSCodeSpec &cs)
 {
+    if (op == JSOP_LENGTH)
+        return cx->runtime->atomState.lengthAtom;
+
     // The method JIT's implementation of instanceof contains an internal lookup
     // of the prototype property.
     if (op == JSOP_INSTANCEOF)
