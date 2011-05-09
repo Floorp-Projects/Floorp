@@ -5892,6 +5892,24 @@ JS_ObjectIsRegExp(JSContext *cx, JSObject *obj)
     return obj->isRegExp();
 }
 
+JS_PUBLIC_API(uintN)
+JS_GetRegExpFlags(JSContext *cx, JSObject *obj)
+{
+    CHECK_REQUEST(cx);
+
+    RegExp *re = RegExp::extractFrom(obj);
+    return re->getFlags();
+}
+
+JS_PUBLIC_API(JSString *)
+JS_GetRegExpSource(JSContext *cx, JSObject *obj)
+{
+    CHECK_REQUEST(cx);
+
+    RegExp *re = RegExp::extractFrom(obj);
+    return re->getSource();
+}
+
 /************************************************************************/
 
 JS_PUBLIC_API(void)

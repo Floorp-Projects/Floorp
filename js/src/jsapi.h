@@ -3692,6 +3692,12 @@ JS_ExecuteRegExpNoStatics(JSContext *cx, JSObject *reobj, jschar *chars, size_t 
 extern JS_PUBLIC_API(JSBool)
 JS_ObjectIsRegExp(JSContext *cx, JSObject *obj);
 
+extern JS_PUBLIC_API(uintN)
+JS_GetRegExpFlags(JSContext *cx, JSObject *obj);
+
+extern JS_PUBLIC_API(JSString *)
+JS_GetRegExpSource(JSContext *cx, JSObject *obj);
+
 /************************************************************************/
 
 extern JS_PUBLIC_API(JSBool)
