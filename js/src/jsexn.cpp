@@ -64,6 +64,8 @@
 #include "jsstaticcheck.h"
 #include "jswrapper.h"
 
+#include "vm/GlobalObject.h"
+
 #include "jsobjinlines.h"
 
 #include "vm/Stack-inl.h"
@@ -1010,21 +1012,62 @@ GetExceptionProtoKey(intN exn)
     return (JSProtoKey) (JSProto_Error + exn);
 }
 
+static JSObject *
+InitErrorClass(JSContext *cx, GlobalObject *global)
+{
+    /* Create Error.prototype. */
+    JSObject *errorProto = global->createBlankPrototype(cx, &js_ErrorClass);
+    if (!errorProto)
+        return NULL;
+
+    /* Now create the Error function. */
+    JSAtom *name = CLASS_ATOM(cx, Error);
+    JSFunction *ctor = global->createConstructor(cx, Exception, &js_ErrorClass, name, 1);
+    if (!ctor)
+        return NULL;
+    ctor->setReservedSlot(JSSLOT_ERROR_EXNTYPE, Int32Value(int32(JSEXN_ERR)));
+
+    /* Add properties to Error.prototype. */
+    Value empty = StringValue(cx->runtime->emptyString);
+    jsid nameId = ATOM_TO_JSID(cx->runtime->atomState.nameAtom);
+    jsid messageId = ATOM_TO_JSID(cx->runtime->atomState.messageAtom);
+    jsid fileNameId = ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom);
+    jsid lineNumberId = ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom);
+    if (!DefineNativeProperty(cx, errorProto, nameId, StringValue(name),
+                              PropertyStub, StrictPropertyStub, 0, 0, 0) ||
+        !DefineNativeProperty(cx, errorProto, messageId, empty,
+                              PropertyStub, StrictPropertyStub, 0, 0, 0) ||
+        !DefineNativeProperty(cx, errorProto, fileNameId, empty,
+                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0) ||
+        !DefineNativeProperty(cx, errorProto, lineNumberId, Int32Value(0),
+                              PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
+    {
+        return NULL;
+    }
+
+    if (!LinkConstructorAndPrototype(cx, ctor, errorProto))
+        return NULL;
+
+    if (!DefinePropertiesAndBrand(cx, errorProto, NULL, exception_methods))
+        return NULL;
+
+    /* Install the fully-constructed Error and Error.prototype. */
+    if (!DefineConstructorAndPrototype(cx, global, JSProto_Error, ctor, errorProto))
+        return NULL;
+
+    return errorProto;
+}
+
 JSObject *
 js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 {
-    /*
-     * If lazy class initialization occurs for any Error subclass, then all
-     * classes are initialized, starting with Error.  To avoid reentry and
-     * redundant initialization, we must not pass a null proto parameter to
-     * NewNonFunction below, when called for the Error superclass.  We need to
-     * ensure that Object.prototype is the proto of Error.prototype.
-     *
-     * See the equivalent code to ensure that parent_proto is non-null when
-     * js_InitClass calls NewObject, in jsobj.cpp.
-     */
-    JSObject *obj_proto;
-    if (!js_GetClassPrototype(cx, obj, JSProto_Object, &obj_proto))
+    JS_ASSERT(obj->isGlobal());
+    JS_ASSERT(obj->isNative());
+
+    GlobalObject *global = obj->asGlobal();
+
+    JSObject *errorProto = InitErrorClass(cx, global);
+    if (!errorProto)
         return NULL;
 
     /* Define all error constructors. */
@@ -1033,27 +1076,17 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
     jsid messageId = ATOM_TO_JSID(cx->runtime->atomState.messageAtom);
     jsid fileNameId = ATOM_TO_JSID(cx->runtime->atomState.fileNameAtom);
     jsid lineNumberId = ATOM_TO_JSID(cx->runtime->atomState.lineNumberAtom);
-    JSObject *error_proto = NULL;
-    for (intN i = JSEXN_ERR; i != JSEXN_LIMIT; i++) {
+    for (intN i = JSEXN_ERR + 1; i < JSEXN_LIMIT; i++) {
         JSProtoKey protoKey = GetExceptionProtoKey(i);
         JSAtom *atom = cx->runtime->atomState.classAtoms[protoKey];
         JSObject *ctor;
         JSObject *proto =
-            DefineConstructorAndPrototype(cx, obj, protoKey, atom,
-                                          (i == JSEXN_ERR) ? obj_proto : error_proto,
-                                          &js_ErrorClass, Exception, 1,
-                                          NULL, (i == JSEXN_ERR) ? exception_methods : NULL,
-                                          NULL, NULL, &ctor);
+            DefineConstructorAndPrototype(cx, global, protoKey, atom, errorProto, &js_ErrorClass,
+                                          Exception, 1, NULL, NULL, NULL, NULL, &ctor);
         if (!proto)
             return NULL;
         JS_ASSERT(proto->getPrivate() == NULL);
 
-        if (i == JSEXN_ERR)
-            error_proto = proto;
-
-        /* Save the exception type in a reserved slot. */
-        if (!ctor->ensureClassReservedSlots(cx))
-            return NULL;
         ctor->setReservedSlot(JSSLOT_ERROR_EXNTYPE, Int32Value(int32(i)));
 
         /* Add properties to the prototype. */
@@ -1070,7 +1103,7 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
         }
     }
 
-    return error_proto;
+    return errorProto;
 }
 
 const JSErrorFormatString*
