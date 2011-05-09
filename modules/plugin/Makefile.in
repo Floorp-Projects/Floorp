@@ -44,11 +44,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = plugin
 
-DIRS = \
-  base/public \
-  base/src \
-  $(NULL)
-
 # These subdirs rely on GTK libraries and header files, it is not
 #  buildable on other non-GTK unix builds
 

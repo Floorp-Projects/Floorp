@@ -57,7 +57,6 @@ const EXPORTED_SYMBOLS = [
 , "PlacesEditBookmarkPostDataTransaction"
 , "PlacesEditLivemarkSiteURITransaction"
 , "PlacesEditLivemarkFeedURITransaction"
-, "PlacesEditBookmarkMicrosummaryTransaction"
 , "PlacesEditItemDateAddedTransaction"
 , "PlacesEditItemLastModifiedTransaction"
 , "PlacesSortFolderByNameTransaction"
@@ -2174,10 +2173,6 @@ XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "livemarks",
                                    "@mozilla.org/browser/livemark-service;2",
                                    "nsILivemarkService");
 
-XPCOMUtils.defineLazyServiceGetter(PlacesUtils, "microsummaries",
-                                   "@mozilla.org/microsummary/service;1",
-                                   "nsIMicrosummaryService");
-
 XPCOMUtils.defineLazyGetter(PlacesUtils, "transactionManager", function() {
   let tm = Cc["@mozilla.org/transactionmanager;1"].
            getService(Ci.nsITransactionManager);
@@ -3118,47 +3113,6 @@ PlacesEditLivemarkFeedURITransaction.prototype = {
   {
     PlacesUtils.livemarks.setFeedURI(this._folderId, this._oldURI);
     PlacesUtils.livemarks.reloadLivemarkFolder(this._folderId);
-  }
-};
-
-
-/**
- * Transaction for editing a bookmark's microsummary.
- *
- * @param aBookmarkId
- *        id of the bookmark to edit
- * @param aNewMicrosummary
- *        new microsummary for the bookmark
- * @returns nsITransaction object
- */
-
-function PlacesEditBookmarkMicrosummaryTransaction(aItemId, newMicrosummary)
-{
-  this.id = aItemId;
-  this._mss = Cc["@mozilla.org/microsummary/service;1"].
-              getService(Ci.nsIMicrosummaryService);
-  this._newMicrosummary = newMicrosummary;
-  this._oldMicrosummary = null;
-}
-
-PlacesEditBookmarkMicrosummaryTransaction.prototype = {
-  __proto__: BaseTransaction.prototype,
-
-  doTransaction: function EBMTXN_doTransaction()
-  {
-    this._oldMicrosummary = this._mss.getMicrosummary(this.id);
-    if (this._newMicrosummary)
-      this._mss.setMicrosummary(this.id, this._newMicrosummary);
-    else
-      this._mss.removeMicrosummary(this.id);
-  },
-
-  undoTransaction: function EBMTXN_undoTransaction()
-  {
-    if (this._oldMicrosummary)
-      this._mss.setMicrosummary(this.id, this._oldMicrosummary);
-    else
-      this._mss.removeMicrosummary(this.id);
   }
 };
 

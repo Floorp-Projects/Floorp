@@ -257,9 +257,6 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length);
 extern JSBool
 js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
-extern JSBool JS_FASTCALL
-js_IndexToId(JSContext *cx, jsuint index, jsid *idp);
-
 namespace js {
 
 /*

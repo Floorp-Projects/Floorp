@@ -53,12 +53,6 @@
 #include <string.h>
 #include <direct.h>
 
-#ifdef WINCE
-// CSIDL_LOCAL_APPDATA is not defined on WinCE:
-// fall back to CSIDL_APPDATA.
-#define CSIDL_LOCAL_APPDATA CSIDL_APPDATA
-#endif
-
 #elif defined(XP_OS2)
 
 #define MAX_PATH _MAX_PATH
@@ -162,15 +156,6 @@ static nsresult GetKnownFolder(GUID* guid, nsILocalFile** aFile)
 static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
 //----------------------------------------------------------------------------------------
 {
-#ifdef WINCE
-#define SHGetSpecialFolderPathW SHGetSpecialFolderPath
-
-#ifndef WINCE_WINDOWS_MOBILE
-    if (folder == CSIDL_APPDATA || folder == CSIDL_LOCAL_APPDATA)
-        folder = CSIDL_PROFILE;
-#endif
-#endif
-
     WCHAR path_orig[MAX_PATH + 3];
     WCHAR *path = path_orig+1;
     HRESULT result = SHGetSpecialFolderPathW(NULL, path, folder, true);
@@ -186,19 +171,9 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
         path[++len] = L'\0';
     }
 
-#if defined(WINCE) && !defined(WINCE_WINDOWS_MOBILE)
-    // sometimes CSIDL_PROFILE shows up without a root slash
-    if (folder == CSIDL_PROFILE && path[0] != '\\') {
-        path_orig[0] = '\\';
-        path = path_orig;
-        len++;
-    }
-#endif
-
     return NS_NewLocalFile(nsDependentString(path, len), PR_TRUE, aFile);
 }
 
-#ifndef WINCE
 /**
  * Provides a fallback for getting the path to APPDATA or LOCALAPPDATA by
  * querying the registry when the call to SHGetSpecialFolderPathW is unable to
@@ -234,7 +209,6 @@ static nsresult GetRegWindowsAppDataFolder(PRBool aLocal, nsILocalFile** aFile)
 
     return NS_NewLocalFile(nsDependentString(path, len), PR_TRUE, aFile);
 }
-#endif
 
 #endif // XP_WIN
 
@@ -531,13 +505,7 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #endif
 
         case OS_DriveDirectory:
-#if defined (WINCE)
-        {
-            return NS_NewLocalFile(nsDependentString(L"\\"),
-                                   PR_TRUE,
-                                   aFile);
-        }
-#elif defined (XP_WIN)
+#if defined (XP_WIN)
         {
             PRInt32 len = ::GetWindowsDirectoryW(path, MAX_PATH);
             if (len == 0)
@@ -625,15 +593,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
 #if defined (XP_WIN)
         case Win_SystemDirectory:
         {
-#ifdef WINCE
-            PRUnichar winDirBuf[MAX_PATH];
-            nsAutoString winDir;
-            if (SHGetSpecialFolderPath(NULL, winDirBuf, CSIDL_WINDOWS, PR_TRUE))
-                winDir.Assign(winDirBuf);
-            else
-                winDir.Assign(L"\\Windows");
-            return NS_NewLocalFile(winDir, PR_TRUE, aFile);
-#else
             PRInt32 len = ::GetSystemDirectoryW(path, MAX_PATH);
 
             // Need enough space to add the trailing backslash
@@ -645,20 +604,10 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewLocalFile(nsDependentString(path, len),
                                    PR_TRUE,
                                    aFile);
-#endif
         }
 
         case Win_WindowsDirectory:
         {
-#ifdef WINCE
-            PRUnichar winDirBuf[MAX_PATH];
-            nsAutoString winDir;
-            if (SHGetSpecialFolderPath(NULL, winDirBuf, CSIDL_WINDOWS, PR_TRUE))
-                winDir.Assign(winDirBuf);
-            else
-                winDir.Assign(L"\\Windows");
-            return NS_NewLocalFile(winDir, PR_TRUE, aFile);
-#else
             PRInt32 len = ::GetWindowsDirectoryW(path, MAX_PATH);
 
             // Need enough space to add the trailing backslash
@@ -671,7 +620,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
             return NS_NewLocalFile(nsDependentString(path, len),
                                    PR_TRUE,
                                    aFile);
-#endif
         }
 
         case Win_ProgramFiles:
@@ -808,7 +756,6 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             return GetWindowsFolder(CSIDL_TEMPLATES, aFile);
         }
-#ifndef WINCE
         case Win_Common_Startmenu:
         {
             return GetWindowsFolder(CSIDL_COMMON_STARTMENU, aFile);
@@ -833,24 +780,18 @@ GetSpecialSystemDirectory(SystemDirectories aSystemSystemDirectory,
         {
             return GetWindowsFolder(CSIDL_COOKIES, aFile);
         }
-#endif
         case Win_Appdata:
         {
             nsresult rv = GetWindowsFolder(CSIDL_APPDATA, aFile);
-#ifndef WINCE
             if (NS_FAILED(rv))
                 rv = GetRegWindowsAppDataFolder(PR_FALSE, aFile);
-#endif
             return rv;
         }
-
         case Win_LocalAppdata:
         {
             nsresult rv = GetWindowsFolder(CSIDL_LOCAL_APPDATA, aFile);
-#ifndef WINCE
             if (NS_FAILED(rv))
                 rv = GetRegWindowsAppDataFolder(PR_TRUE, aFile);
-#endif
             return rv;
         }
 #endif  // XP_WIN

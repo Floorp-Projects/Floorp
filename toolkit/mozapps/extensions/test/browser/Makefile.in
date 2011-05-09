@@ -84,6 +84,7 @@ _MAIN_TEST_FILES = \
   browser_eula.js \
   browser_updateid.js \
   browser_purchase.js \
+  browser_openDialog.js \
   $(NULL)
 
 _TEST_FILES = \

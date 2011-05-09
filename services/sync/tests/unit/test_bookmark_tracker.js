@@ -247,7 +247,7 @@ function test_tracking() {
 
 function test_onItemChanged() {
   // Anno that's in ANNOS_TO_TRACK.
-  const GENERATOR_ANNO = "microsummary/generatorURI";
+  const DESCRIPTION_ANNO = "bookmarkProperties/description";
 
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
@@ -268,7 +268,7 @@ function test_onItemChanged() {
     _("GUID: " + bGUID);
 
     Svc.Obs.notify("weave:engine:start-tracking");
-    Svc.Annos.setItemAnnotation(b, GENERATOR_ANNO, "http://foo.bar/", 0,
+    Svc.Annos.setItemAnnotation(b, DESCRIPTION_ANNO, "A test description", 0,
                                 Svc.Annos.EXPIRE_NEVER);
     do_check_true(tracker.changedIDs[bGUID] > 0);
 

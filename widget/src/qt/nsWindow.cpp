@@ -266,17 +266,6 @@ nsWindow::nsWindow()
         gSwipeGestureId = QGestureRecognizer::registerRecognizer(swipeRecognizer);
     }
 #endif
-#ifdef MOZ_ENABLE_QTMOBILITY
-    if (!gOrientation) {
-        gOrientation = new QOrientationSensor();
-        gOrientation->addFilter(&gOrientationFilter);
-        gOrientation->start();
-        if (!gOrientation->isActive()) {
-            qWarning("Orientationsensor didn't start!");
-        }
-        gOrientationFilter.filter(gOrientation->reading());
-    }
-#endif
 }
 
 static inline gfxASurface::gfxImageFormat
@@ -2638,10 +2627,6 @@ nsWindow::createQWidget(MozQWidget *parent, nsWidgetInitData *aInitData)
             newView->viewport()->setAttribute(Qt::WA_PaintOnScreen, true);
             newView->viewport()->setAttribute(Qt::WA_NoSystemBackground, true);
         }
-#ifdef MOZ_ENABLE_QTMOBILITY
-        QObject::connect((QObject*) &gOrientationFilter, SIGNAL(orientationChanged()),
-                         widget, SLOT(orientationChanged()));
-#endif
         // Enable gestures:
 #if (QT_VERSION >= QT_VERSION_CHECK(4, 6, 0))
         newView->viewport()->grabGesture(Qt::PinchGesture);
@@ -2847,6 +2832,27 @@ nsWindow::Show(PRBool aState)
     LOG(("nsWindow::Show [%p] state %d\n", (void *)this, aState));
 
     mIsShown = aState;
+
+#ifdef MOZ_ENABLE_QTMOBILITY
+    if (mWidget &&
+        (mWindowType == eWindowType_toplevel ||
+         mWindowType == eWindowType_dialog ||
+         mWindowType == eWindowType_popup))
+    {
+        if (!gOrientation) {
+            gOrientation = new QOrientationSensor();
+            gOrientation->addFilter(&gOrientationFilter);
+            gOrientation->start();
+            if (!gOrientation->isActive()) {
+                qWarning("Orientationsensor didn't start!");
+            }
+            gOrientationFilter.filter(gOrientation->reading());
+
+            QObject::connect((QObject*) &gOrientationFilter, SIGNAL(orientationChanged()),
+                             mWidget, SLOT(orientationChanged()));
+        }
+    }
+#endif
 
     if ((aState && !AreBoundsSane()) || !mWidget) {
         LOG(("\tbounds are insane or window hasn't been created yet\n"));

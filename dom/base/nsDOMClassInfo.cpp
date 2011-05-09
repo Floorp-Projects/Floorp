@@ -192,7 +192,6 @@
 #include "nsBindingManager.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
-#include "nsIDOMViewCSS.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsStyleSet.h"
@@ -253,7 +252,6 @@
 #include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMDocumentXBL.h"
-#include "nsIDOMDocumentView.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIDOMLinkStyle.h"
 #include "nsIDOMHTMLDocument.h"
@@ -338,7 +336,7 @@
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsDOMCSSValueList.h"
-#include "nsIDOMOrientationEvent.h"
+#include "nsIDOMDeviceOrientationEvent.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMNSRange.h"
 #include "nsIDOMRangeException.h"
@@ -748,7 +746,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(PopupBlockedEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(OrientationEvent, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(DeviceOrientationEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
   // Misc HTML classes
@@ -1502,7 +1500,7 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(EventException, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 
-  NS_DEFINE_CLASSINFO_DATA(TouchPoint, nsDOMGenericSH,
+  NS_DEFINE_CLASSINFO_DATA(Touch, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(TouchList, nsDOMTouchListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
@@ -2303,7 +2301,6 @@ nsDOMClassInfo::RegisterExternalClasses()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentEvent)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentStyle)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSDocumentStyle)                            \
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentView)                               \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentRange)                              \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentTraversal)                          \
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMDocumentXBL)                                \
@@ -2380,8 +2377,6 @@ nsDOMClassInfo::Init()
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
@@ -2393,8 +2388,6 @@ nsDOMClassInfo::Init()
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
-      DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
       DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindow_2_0_BRANCH)
     DOM_CLASSINFO_MAP_END
@@ -2574,8 +2567,8 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN(OrientationEvent, nsIDOMOrientationEvent)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMOrientationEvent)
+  DOM_CLASSINFO_MAP_BEGIN(DeviceOrientationEvent, nsIDOMDeviceOrientationEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMDeviceOrientationEvent)
     DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
@@ -3128,8 +3121,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN(RangeException, nsIDOMRangeException)
@@ -4023,8 +4014,6 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMWindowInternal)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMNSEventTarget)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMViewCSS)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMAbstractView)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageWindow)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMStorageIndexedDB)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMModalContentWindow)
@@ -4321,9 +4310,9 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
   DOM_CLASSINFO_MAP_END
 
-  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchPoint, nsIDOMTouchPoint,
+  DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(Touch, nsIDOMTouch,
                                         !nsDOMTouchEvent::PrefEnabled())
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouchPoint)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMTouch)
   DOM_CLASSINFO_MAP_END
 
   DOM_CLASSINFO_MAP_BEGIN_MAYBE_DISABLE(TouchList, nsIDOMTouchList,
@@ -8218,19 +8207,19 @@ nsresult
 nsNodeListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
                         JSObject *globalObj, JSObject **parentObj)
 {
-  nsWrapperCache* cache = nsnull;
-  CallQueryInterface(nativeObj, &cache);
-  if (!cache) {
-    return nsDOMClassInfo::PreCreate(nativeObj, cx, globalObj, parentObj);
-  }
+  nsINodeList* list = static_cast<nsINodeList*>(nativeObj);
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsINodeList> list_qi = do_QueryInterface(nativeObj);
 
-  // nsChildContentList is the only class that uses nsNodeListSH and has a
-  // cached wrapper.
-  nsChildContentList *list = nsChildContentList::FromSupports(nativeObj);
-  nsINode *native_parent = list->GetParentObject();
-  if (!native_parent) {
-    return NS_ERROR_FAILURE;
+    // If this assertion fires the QI implementation for the object in
+    // question doesn't use the nsINodeList pointer as the nsISupports
+    // pointer. That must be fixed, or we'll crash...
+    NS_ASSERTION(list_qi == list, "Uh, fix QI!");
   }
+#endif
+
+  nsINode* native_parent = list->GetParentObject();
 
   nsresult rv =
     WrapNativeParent(cx, globalObj, native_parent, native_parent, parentObj);
@@ -9422,13 +9411,12 @@ nsHTMLFormElementSH::FindNamedItem(nsIForm *aForm, jsid id,
 
   if (!*aResult) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aForm));
-    nsCOMPtr<nsIDOMHTMLFormElement> form_element(do_QueryInterface(aForm));
 
     nsCOMPtr<nsIHTMLDocument> html_doc =
       do_QueryInterface(content->GetDocument());
 
-    if (html_doc && form_element) {
-      html_doc->ResolveName(name, form_element, aResult, aCache);
+    if (html_doc && content) {
+      html_doc->ResolveName(name, content, aResult, aCache);
     }
   }
 

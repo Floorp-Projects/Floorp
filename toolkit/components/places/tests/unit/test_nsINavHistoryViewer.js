@@ -186,6 +186,10 @@ function check_history_query() {
   do_check_eq(resultObserver.sortingMode, options.SORT_BY_TITLE_ASCENDING);
   do_check_eq(resultObserver.invalidatedContainer, result.root);
 
+  // nsINavHistoryResultObserver.invalidateContainer
+  bhist.removeAllPages();
+  do_check_eq(root.uri, resultObserver.invalidatedContainer.uri);
+
   // nsINavHistoryResultObserver.batching
   do_check_false(resultObserver.inBatchMode);
   histsvc.runInBatchMode({

@@ -487,6 +487,11 @@ var BrowserUI = {
       }, 0);
     });
 
+    // Only load IndexedDB.js when we actually need it. A general fix will happen in bug 647079.
+    messageManager.addMessageListener("IndexedDB:Prompt", function(aMessage) {
+      return IndexedDB.receiveMessage(aMessage);
+    });
+
     // Delay the panel UI and Sync initialization.
     window.addEventListener("UIReadyDelayed", function(aEvent) {
       window.removeEventListener(aEvent.type, arguments.callee, false);
@@ -681,6 +686,8 @@ var BrowserUI = {
 
     this.hidePanel();
     this._hidePopup();
+    if (this.activeDialog)
+      this.activeDialog.close();
     this.activePanel = AllPagesList;
   },
 
@@ -878,6 +885,8 @@ var BrowserUI = {
     if (browser.canGoBack) {
       browser.goBack();
     } else if (tab.owner) {
+      // When going back, always return to the owner (not a sibling).
+      Browser.selectedTab = tab.owner;
       this.closeTab(tab);
     }
 #ifdef ANDROID

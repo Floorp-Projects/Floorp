@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 20; indent-tabs-mode: nil; -*-
+/* -*- Mode: Java; c-basic-offset: 4; tab-width: 4; indent-tabs-mode: nil; -*-
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -40,7 +40,11 @@ package org.mozilla.gecko;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.graphics.*;
+import android.net.Uri;
+import android.util.Log;
 import android.widget.RemoteViews;
+import java.net.*;
 import java.text.NumberFormat;
 
 public class AlertNotification
@@ -56,6 +60,7 @@ public class AlertNotification
     double mPrevPercent  = -1;
     String mPrevAlertText = "";
     static final double UPDATE_THRESHOLD = .01;
+    Uri mIconUri = null;
 
     public AlertNotification(Context aContext, int aNotificationId, int aIcon,
                              String aTitle, String aText, long aWhen) {
@@ -80,10 +85,31 @@ public class AlertNotification
         mNotificationManager.notify(mId, this);
     }
 
+    public void setCustomIcon(Uri aIconUri) {
+        mIconUri = aIconUri;
+        // Custom view
+        int layout = R.layout.notification_icon_text;
+        RemoteViews view = new RemoteViews(GeckoApp.mAppContext.getPackageName(), layout);
+        try {
+            URL url = new URL(aIconUri.toString());
+            Bitmap bm = BitmapFactory.decodeStream(url.openStream());
+            view.setImageViewBitmap(R.id.notificationImage, bm);
+            view.setTextViewText(R.id.notificationTitle, mTitle);
+            if (mText.length() > 0) {
+                view.setTextViewText(R.id.notificationText, mText);
+            }
+            contentView = view;
+            mNotificationManager.notify(mId, this); 
+        } catch(Exception ex) {
+            Log.e("GeckoAlert", "failed to create bitmap", ex);
+        }
+
+    }
+
     public void updateProgress(String aAlertText, long aProgress, long aProgressMax) {
         if (!mProgressStyle) {
             // Custom view
-            int layout = aAlertText.length() > 0 ? R.layout.notification_progress_text : R.layout.notification_progress;
+            int layout =  aAlertText.length() > 0 ? R.layout.notification_progress_text : R.layout.notification_progress;
 
             RemoteViews view = new RemoteViews(GeckoApp.mAppContext.getPackageName(), layout);
             view.setImageViewResource(R.id.notificationImage, mIcon);

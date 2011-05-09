@@ -292,7 +292,6 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
-@BINPATH@/components/nsMicrosummaryService.js
 @BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/nsPrivateBrowsingService.manifest
 @BINPATH@/components/nsPrivateBrowsingService.js
@@ -405,9 +404,8 @@
 @BINPATH@/modules/*
 
 ; Safe Browsing
-@BINPATH@/components/nsSafebrowsingApplication.manifest
-@BINPATH@/components/nsSafebrowsingApplication.js
 @BINPATH@/components/nsURLClassifier.manifest
+@BINPATH@/components/nsUrlClassifierHashCompleter.js
 @BINPATH@/components/nsUrlClassifierListManager.js
 @BINPATH@/components/nsUrlClassifierLib.js
 @BINPATH@/components/url-classifier.xpt
@@ -606,6 +604,9 @@ bin/components/@DLL_PREFIX@nkgnomevfs@DLL_SUFFIX@
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
+#ifdef MOZ_SAFE_BROWSING
+@BINPATH@/components/SafeBrowsing.js
+#endif
 #ifdef MOZ_UPDATER
 @BINPATH@/components/UpdatePrompt.js
 #endif

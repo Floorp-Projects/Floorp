@@ -39,10 +39,12 @@
 #include "nsCOMPtr.h"
 
 static void
-NoteChild(PRUint32 aLangID, void *aScriptThing, void *aClosure)
+NoteChild(PRUint32 aLangID, void *aScriptThing, const char *name,
+          void *aClosure)
 {
   nsCycleCollectionTraversalCallback *cb =
     static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
+  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, name);
   cb->NoteScriptChild(aLangID, aScriptThing);
 }
 

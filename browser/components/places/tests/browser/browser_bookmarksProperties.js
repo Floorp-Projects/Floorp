@@ -313,7 +313,6 @@ gTests.push({
     this._itemId = this.window.gEditItemOverlay._itemId;
     // Change folder name
     var namePicker = this.window.document.getElementById("editBMPanel_namePicker");
-    var userEnteredName = this.window.document.getElementById("editBMPanel_userEnteredName");
     var self = this;
 
     this.window.addEventListener("unload", function(event) {
@@ -324,7 +323,6 @@ gTests.push({
     }, false);
 
     namePicker.value = "n";
-    userEnteredName.label = "n";
     info("About to focus the namePicker field");
     namePicker.focus();
     EventUtils.synthesizeKey("VK_RETURN", {}, this.window);

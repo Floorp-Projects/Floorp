@@ -38,7 +38,7 @@
 
 #include "imgIEncoder.h"
 
-#include "mozilla/Monitor.h"
+#include "mozilla/ReentrantMonitor.h"
 
 #include "nsCOMPtr.h"
 
@@ -62,7 +62,7 @@ extern "C" {
 
 class nsJPEGEncoder : public imgIEncoder
 {
-  typedef mozilla::Monitor Monitor;
+  typedef mozilla::ReentrantMonitor ReentrantMonitor;
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGIENCODER
@@ -107,5 +107,5 @@ protected:
     we read from it (that it is not realloced) and to ensure that only one thread
     dispatches a callback for each call to AsyncWait.
    */
-  Monitor mMonitor;
+  ReentrantMonitor mReentrantMonitor;
 };

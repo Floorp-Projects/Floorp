@@ -147,7 +147,6 @@ CPPSRCS		= \
 		jsgcmark.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
-		GlobalObject.cpp \
 		jshash.cpp \
 		jsinfer.cpp \
 		jsinterp.cpp \
@@ -182,6 +181,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
+		GlobalObject.cpp \
 		Stack.cpp \
 		$(NULL)
 
@@ -215,7 +215,6 @@ INSTALLED_HEADERS = \
 		jsgcchunk.h \
 		jsgcstats.h \
 		jscompartment.h \
-		GlobalObject.h \
 		jshash.h \
 		jsinfer.h \
 		jsinferinlines.h \
@@ -281,7 +280,9 @@ VPATH		+= \
 EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
+		GlobalObject.h			\
 		Stack.h			\
+		StringObject.h \
 		$(NULL)
 
 ###############################################
@@ -294,6 +295,7 @@ VPATH		+= \
 EXPORTS_NAMESPACES += mozilla
 
 EXPORTS_mozilla = \
+		Types.h		\
 		Util.h          \
 		$(NULL)
 
@@ -418,7 +420,7 @@ CPPSRCS += 	checks.cc \
 # END enclude sources for V8 dtoa
 #############################################
 
-ifeq (,$(filter arm %86 x86_64,$(TARGET_CPU)))
+ifeq (,$(filter arm% %86 x86_64,$(TARGET_CPU)))
 
 VPATH +=	$(srcdir)/assembler \
 		$(srcdir)/assembler/wtf \
@@ -731,6 +733,11 @@ export::
 	$(MKDIR) -p nanojit
 
 DEFINES		+= -DEXPORT_JS_API
+
+# mfbt is always packed with us, so if we're building a shared object,
+# we need to declare "exported" mfbt symbols on its behalf when we use
+# its headers.
+DEFINES		+= -DIMPL_MFBT
 
 # Some platforms that have stdint.h include it in system headers.  So
 # to reliably get limit macros defined, we'd always have to define the

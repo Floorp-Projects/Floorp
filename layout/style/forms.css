@@ -97,6 +97,12 @@ input {
   color: -moz-FieldText;
   font: -moz-field;
   text-rendering: optimizeLegibility;
+  /*
+   * Note that the "UA !important" tests in
+   * layout/style/test/test_animations.html depend on this rule, because
+   * they need some UA !important rule to test.  If this changes, use a
+   * different one there.
+   */
   line-height: normal !important;
   text-align: start;
   text-transform: none;

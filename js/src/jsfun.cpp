@@ -2115,7 +2115,7 @@ fun_toStringHelper(JSContext *cx, JSObject *obj, uintN indent)
         return NULL;
 
     if (!indent) {
-        LazilyConstructed<ToSourceCache> &lazy = cx->compartment->toSourceCache;
+        Maybe<ToSourceCache> &lazy = cx->compartment->toSourceCache;
 
         if (lazy.empty()) {
             lazy.construct();

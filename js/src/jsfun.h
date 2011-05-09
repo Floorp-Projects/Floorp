@@ -296,7 +296,7 @@ JSObject::isArguments() const
 
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
 extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
-extern js::Class js_DeclEnvClass;
+extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
 
 inline bool
 JSObject::isCall() const

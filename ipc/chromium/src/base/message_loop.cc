@@ -191,9 +191,9 @@ void MessageLoop::RunHandler() {
 #if defined(OS_WIN)
   if (exception_restoration_) {
     LPTOP_LEVEL_EXCEPTION_FILTER current_filter = GetTopSEHFilter();
-    __try {
+    MOZ_SEH_TRY {
       RunInternal();
-    } __except(SEHFilter(current_filter)) {
+    } MOZ_SEH_EXCEPT(SEHFilter(current_filter)) {
     }
     return;
   }
@@ -206,16 +206,15 @@ void MessageLoop::RunHandler() {
 
 void MessageLoop::RunInternal() {
   DCHECK(this == current());
-
+#if !defined(CHROMIUM_MOZILLA_BUILD)
   StartHistogrammer();
-
-#if defined(OS_WIN) && !defined(CHROMIUM_MOZILLA_BUILD)
+#if defined(OS_WIN)
   if (state_->dispatcher) {
     pump_win()->RunWithDispatcher(this, state_->dispatcher);
     return;
   }
 #endif
-
+#endif
   pump_->Run(this);
 }
 
@@ -535,31 +534,40 @@ bool MessageLoop::PendingTask::operator<(const PendingTask& other) const {
 // Method and data for histogramming events and actions taken by each instance
 // on each thread.
 
+#if !defined(CHROMIUM_MOZILLA_BUILD)
 // static
 bool MessageLoop::enable_histogrammer_ = false;
+#endif
 
 // static
 void MessageLoop::EnableHistogrammer(bool enable) {
+#if !defined(CHROMIUM_MOZILLA_BUILD)
   enable_histogrammer_ = enable;
+#endif
 }
 
 void MessageLoop::StartHistogrammer() {
+#if !defined(CHROMIUM_MOZILLA_BUILD)
   if (enable_histogrammer_ && !message_histogram_.get()
-      && StatisticsRecorder::WasStarted()) {
+      && base::StatisticsRecorder::IsActive()) {
     DCHECK(!thread_name_.empty());
-    message_histogram_.reset(
-        new LinearHistogram(("MsgLoop:" + thread_name_).c_str(),
-                            kLeastNonZeroMessageId,
-                            kMaxMessageId,
-                            kNumberOfDistinctMessagesDisplayed));
+    message_histogram_.reset(static_cast<base::LinearHistogram*>(
+                             base::LinearHistogram::FactoryGet(("MsgLoop:" + thread_name_).c_str(),
+                                                               kLeastNonZeroMessageId,
+                                                               kMaxMessageId,
+                                                               kNumberOfDistinctMessagesDisplayed,
+                                                               base::Histogram::kNoFlags)));
     message_histogram_->SetFlags(message_histogram_->kHexRangePrintingFlag);
     message_histogram_->SetRangeDescriptions(event_descriptions_);
   }
+#endif
 }
 
 void MessageLoop::HistogramEvent(int event) {
+#if !defined(CHROMIUM_MOZILLA_BUILD)
   if (message_histogram_.get())
     message_histogram_->Add(event);
+#endif
 }
 
 // Provide a macro that takes an expression (such as a constant, or macro
@@ -578,8 +586,9 @@ void MessageLoop::HistogramEvent(int event) {
 // in the pair (i.e., the quoted string) when printing out a histogram.
 #define VALUE_TO_NUMBER_AND_NAME(name) {name, #name},
 
+#if !defined(CHROMIUM_MOZILLA_BUILD)
 // static
-const LinearHistogram::DescriptionPair MessageLoop::event_descriptions_[] = {
+const base::LinearHistogram::DescriptionPair MessageLoop::event_descriptions_[] = {
   // Provide some pretty print capability in our histogram for our internal
   // messages.
 
@@ -589,6 +598,7 @@ const LinearHistogram::DescriptionPair MessageLoop::event_descriptions_[] = {
 
   {-1, NULL}  // The list must be null terminated, per API to histogram.
 };
+#endif
 
 //------------------------------------------------------------------------------
 // MessageLoopForUI
