@@ -1791,8 +1791,18 @@ FrameState::ensureInteger(FrameEntry *fe)
 
     JS_ASSERT(!fe->isCopy() && !fe->isCopied());
 
-    if (!fe->isType(JSVAL_TYPE_DOUBLE))
+    if (!fe->isType(JSVAL_TYPE_DOUBLE)) {
+        /*
+         * A normal register may have been allocated after calling
+         * syncAndForgetEverything.
+         */
+        if (fe->data.inRegister()) {
+            syncFe(fe);
+            forgetReg(fe->data.reg());
+            fe->data.setMemory();
+        }
         learnType(fe, JSVAL_TYPE_DOUBLE, false);
+    }
 
     RegisterID reg = allocReg();
     FPRegisterID fpreg = tempFPRegForData(fe);

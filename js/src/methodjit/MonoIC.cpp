@@ -1088,20 +1088,22 @@ ic::New(VMFrame &f, CallICInfo *ic)
     return cc.update();
 }
 
-void JS_FASTCALL
+void * JS_FASTCALL
 ic::NativeCall(VMFrame &f, CallICInfo *ic)
 {
     CallCompiler cc(f, *ic, false);
     if (!cc.generateNativeStub())
         stubs::SlowCall(f, ic->frameSize.getArgc(f));
+    return NULL;
 }
 
-void JS_FASTCALL
+void * JS_FASTCALL
 ic::NativeNew(VMFrame &f, CallICInfo *ic)
 {
     CallCompiler cc(f, *ic, true);
     if (!cc.generateNativeStub())
         stubs::SlowNew(f, ic->frameSize.staticArgc());
+    return NULL;
 }
 
 static const unsigned MANY_ARGS = 1024;
