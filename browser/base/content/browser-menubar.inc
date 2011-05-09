@@ -315,11 +315,6 @@
                 </menu>
 #include browser-charsetmenu.inc
                 <menuseparator/>
-                <menuitem id="menu_pageSource"
-                          accesskey="&pageSourceCmd.accesskey;"
-                          label="&pageSourceCmd.label;"
-                          key="key_viewSource"
-                          command="View:PageSource"/>
                 <menuitem id="fullScreenItem"
                           accesskey="&fullScreenCmd.accesskey;"
                           label="&fullScreenCmd.label;"
@@ -539,30 +534,41 @@
                         oncommand="gSyncUI.doSync(event);"/>
 #endif
               <menuseparator id="devToolsSeparator"/>
-              <menuitem id="menu_pageinspect"
-                        type="checkbox"
-                        hidden="true"
-                        label="&inspectMenu.label;"
-                        accesskey="&inspectMenu.accesskey;"
-                        key="key_inspect"
-                        command="Tools:Inspect"/>
-              <menuitem id="javascriptConsole"
-                        hidden="true"
-                        label="&errorConsoleCmd.label;"
-                        accesskey="&errorConsoleCmd.accesskey;"
-                        key="key_errorConsole"
-                        oncommand="toJavaScriptConsole();"/>
-              <menuitem id="webConsole"
-                        label="&webConsoleCmd.label;"
-                        accesskey="&webConsoleCmd.accesskey;"
-                        key="key_webConsole"
-                        oncommand="HUDConsoleUI.toggleHUD();"/>
-              <menuitem id="menu_scratchpad"
-                        hidden="true"
-                        label="&scratchpad.label;"
-                        accesskey="&scratchpad.accesskey;"
-                        key="key_scratchpad"
-                        command="Tools:Scratchpad"/>
+              <menu id="webDeveloperMenu"
+                    label="&webDeveloperMenu.label;"
+                    accesskey="webDeveloperMenu.accesskey;">
+                <menupopup id="menuWebDeveloperPopup">
+                  <menuitem id="webConsole"
+                            label="&webConsoleCmd.label;"
+                            accesskey="&webConsoleCmd.accesskey;"
+                            key="key_webConsole"
+                            oncommand="HUDConsoleUI.toggleHUD();"/>
+                  <menuitem id="menu_pageinspect"
+                            type="checkbox"
+                            hidden="true"
+                            label="&inspectMenu.label;"
+                            accesskey="&inspectMenu.accesskey;"
+                            key="key_inspect"
+                            command="Tools:Inspect"/>
+                  <menuitem id="menu_scratchpad"
+                            hidden="true"
+                            label="&scratchpad.label;"
+                            accesskey="&scratchpad.accesskey;"
+                            key="key_scratchpad"
+                            command="Tools:Scratchpad"/>
+                  <menuitem id="menu_pageSource"
+                            accesskey="&pageSourceCmd.accesskey;"
+                            label="&pageSourceCmd.label;"
+                            key="key_viewSource"
+                            command="View:PageSource"/>
+                  <menuitem id="javascriptConsole"
+                            hidden="true"
+                            label="&errorConsoleCmd.label;"
+                            accesskey="&errorConsoleCmd.accesskey;"
+                            key="key_errorConsole"
+                            oncommand="toJavaScriptConsole();"/>
+                </menupopup>
+              </menu>
               <menuitem id="menu_pageInfo"
                         accesskey="&pageInfoCmd.accesskey;"
                         label="&pageInfoCmd.label;"
