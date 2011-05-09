@@ -192,8 +192,8 @@ ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 {
     JS_ASSERT(argc <= StackSpace::ARGS_LENGTH_MAX);
 
-    JSObject *proto;
-    if (!js_GetClassPrototype(cx, callee.getGlobal(), JSProto_Object, &proto))
+    JSObject *proto = callee.getGlobal()->getOrCreateObjectPrototype(cx);
+    if (!proto)
         return NULL;
 
     TypeObject *type = proto->getNewType(cx);

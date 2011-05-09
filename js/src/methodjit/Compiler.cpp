@@ -4710,14 +4710,9 @@ mjit::Compiler::jsop_callprop_str(JSAtom *atom)
         return true;
     }
 
-    /*
-     * Bake in String.prototype. This is safe because of compileAndGo.
-     * We must pass an explicit scope chain only because JSD calls into
-     * here via the recompiler with a dummy context, and we need to use
-     * the global object for the script we are now compiling.
-     */
-    JSObject *obj;
-    if (!js_GetClassPrototype(cx, globalObj, JSProto_String, &obj))
+    /* Bake in String.prototype. This is safe because of compileAndGo. */
+    JSObject *obj = globalObj->getOrCreateStringPrototype(cx);
+    if (!obj)
         return false;
 
     /*

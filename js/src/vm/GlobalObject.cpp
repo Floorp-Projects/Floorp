@@ -58,13 +58,7 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
-    if (!global->functionObjectClassesInitialized()) {
-        if (!global->initFunctionAndObjectClasses(cx))
-            return NULL;
-    }
-
-    return global->getObjectPrototype();
+    return obj->asGlobal()->getOrCreateObjectPrototype(cx);
 }
 
 JSObject *
@@ -72,10 +66,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
 {
     JS_ASSERT(obj->isNative());
 
-    GlobalObject *global = obj->asGlobal();
-    return global->functionObjectClassesInitialized()
-           ? global->getFunctionPrototype()
-           : global->initFunctionAndObjectClasses(cx);
+    return obj->asGlobal()->getOrCreateFunctionPrototype(cx);
 }
 
 static JSBool
@@ -400,8 +391,8 @@ CreateBlankProto(JSContext *cx, Class *clasp, JSObject &proto, GlobalObject &glo
 JSObject *
 GlobalObject::createBlankPrototype(JSContext *cx, Class *clasp)
 {
-    JSObject *objectProto;
-    if (!js_GetClassPrototype(cx, this, JSProto_Object, &objectProto))
+    JSObject *objectProto = getOrCreateObjectPrototype(cx);
+    if (!objectProto)
         return NULL;
 
     return CreateBlankProto(cx, clasp, *objectProto, *this);
