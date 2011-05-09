@@ -5177,6 +5177,15 @@ its_bindMethod(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
     }
 
+    if (method->getFunctionPrivate()->isInterpreted() &&
+        method->getFunctionPrivate()->script()->compileAndGo) {
+        /* Can't reparent compileAndGo scripts. */
+        JSAutoByteString nameBytes(cx, name);
+        if (!!nameBytes)
+            JS_ReportError(cx, "can't bind method %s to compileAndGo script", nameBytes.ptr());
+        return JS_FALSE;
+    }
+
     jsid id;
     if (!JS_ValueToId(cx, STRING_TO_JSVAL(name), &id))
         return JS_FALSE;

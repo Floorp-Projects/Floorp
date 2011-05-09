@@ -285,6 +285,9 @@ LoopState::clearLoopRegisters()
 bool
 LoopState::loopInvariantEntry(uint32 slot)
 {
+    if (slot == UNASSIGNED)
+        return true;
+
     /* Watch for loop temporaries. :XXX: this is really gross. */
     if (slot - analyze::LocalSlot(outerScript, 0) >= outerScript->nslots)
         return true;
