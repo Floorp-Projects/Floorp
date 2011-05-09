@@ -130,6 +130,7 @@ class nsIMIMEHeaderParam;
 class nsIObserver;
 class nsPresContext;
 class nsIChannel;
+class nsAutoScriptBlockerSuppressNodeRemoved;
 struct nsIntMargin;
 class nsPIDOMWindow;
 class nsIDocumentLoaderFactory;
@@ -184,6 +185,7 @@ struct nsShortcutCandidate {
 
 class nsContentUtils
 {
+  friend class nsAutoScriptBlockerSuppressNodeRemoved;
   typedef mozilla::dom::Element Element;
 
 public:
@@ -1913,6 +1915,9 @@ private:
   static PRBool sInitialized;
   static PRUint32 sScriptBlockerCount;
   static PRUint32 sRemovableScriptBlockerCount;
+#ifdef DEBUG
+  static PRUint32 sDOMNodeRemovedSuppressCount;
+#endif
   static nsCOMArray<nsIRunnable>* sBlockedScriptRunners;
   static PRUint32 sRunnersCountAtFirstBlocker;
   static PRUint32 sScriptBlockerCountWhereRunnersPrevented;
@@ -2002,6 +2007,21 @@ private:
   nsCOMPtr<nsIDocument> mDocument;
   nsCOMPtr<nsIDocumentObserver> mObserver;
   MOZILLA_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class NS_STACK_CLASS nsAutoScriptBlockerSuppressNodeRemoved :
+                          public nsAutoScriptBlocker {
+public:
+  nsAutoScriptBlockerSuppressNodeRemoved() {
+#ifdef DEBUG
+    ++nsContentUtils::sDOMNodeRemovedSuppressCount;
+#endif
+  }
+  ~nsAutoScriptBlockerSuppressNodeRemoved() {
+#ifdef DEBUG
+    --nsContentUtils::sDOMNodeRemovedSuppressCount;
+#endif
+  }
 };
 
 #define NS_INTERFACE_MAP_ENTRY_TEAROFF(_interface, _allocator)                \
