@@ -1492,7 +1492,8 @@ proxy_createFunction(JSContext *cx, uintN argc, Value *vp)
         return false;
     JSObject *proto, *parent;
     parent = vp[0].toObject().getParent();
-    if (!js_GetClassPrototype(cx, parent, JSProto_Function, &proto))
+    proto = parent->getGlobal()->getOrCreateFunctionPrototype(cx);
+    if (!proto)
         return false;
     parent = proto->getParent();
 
@@ -1605,7 +1606,8 @@ callable_Construct(JSContext *cx, uintN argc, Value *vp)
         if (protov.isObject()) {
             proto = &protov.toObject();
         } else {
-            if (!js_GetClassPrototype(cx, NULL, JSProto_Object, &proto))
+            proto = callable->getGlobal()->getOrCreateObjectPrototype(cx);
+            if (!proto)
                 return false;
         }
 

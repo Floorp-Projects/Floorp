@@ -3126,7 +3126,8 @@ js_CreateThisFromTrace(JSContext *cx, JSObject *ctor, uintN protoSlot)
          * GetInterpretedFunctionPrototype found that ctor.prototype is
          * primitive. Use Object.prototype for proto, per ES5 13.2.2 step 7.
          */
-        if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+        proto = parent->getGlobal()->getOrCreateObjectPrototype(cx);
+        if (!proto)
             return NULL;
     }
 

@@ -4594,17 +4594,15 @@ HasFunctionProperty(JSContext *cx, JSObject *obj, jsid funid, JSBool *found)
     if (!prop) {
         xml = (JSXML *) obj->getPrivate();
         if (HasSimpleContent(xml)) {
-            AutoObjectRooter tvr(cx);
-
             /*
              * Search in String.prototype to set found whenever
              * GetXMLFunction returns existing function.
              */
-            if (!js_GetClassPrototype(cx, NULL, JSProto_String, tvr.addr()))
+            JSObject *proto = obj->getGlobal()->getOrCreateStringPrototype(cx);
+            if (!proto)
                 return false;
 
-            JS_ASSERT(tvr.object());
-            if (!js_LookupProperty(cx, tvr.object(), funid, &pobj, &prop))
+            if (!js_LookupProperty(cx, proto, funid, &pobj, &prop))
                 return false;
         }
     }
@@ -7732,7 +7730,6 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
      * chain lookup.
      */
     JSObject *target = obj;
-    AutoObjectRooter tvr(cx);
     for (;;) {
         if (!js_GetProperty(cx, target, id, vp))
             return false;
@@ -7741,7 +7738,6 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         target = target->getProto();
         if (target == NULL || !target->isNative())
             break;
-        tvr.setObject(target);
     }
 
     JSXML *xml = (JSXML *) obj->getPrivate();
@@ -7749,11 +7745,11 @@ GetXMLFunction(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         return true;
 
     /* Search in String.prototype to implement 11.2.2.1 Step 3(f). */
-    if (!js_GetClassPrototype(cx, NULL, JSProto_String, tvr.addr()))
+    JSObject *proto = obj->getGlobal()->getOrCreateStringPrototype(cx);
+    if (!proto)
         return false;
 
-    JS_ASSERT(tvr.object());
-    return tvr.object()->getGeneric(cx, id, vp);
+    return proto->getGeneric(cx, id, vp);
 }
 
 static JSXML *
