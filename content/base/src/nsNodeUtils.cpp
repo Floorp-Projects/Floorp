@@ -364,6 +364,16 @@ nsNodeUtils::CallUserDataHandlers(nsCOMArray<nsINode> &aNodesWithProperties,
                   "Expected aNodesWithProperties to contain original and "
                   "cloned nodes.");
 
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    if (nsContentUtils::IsChromeDoc(aOwnerDocument)) {
+      NS_WARNING("Fix the caller! Userdata callback disabled.");
+    } else {
+      NS_ERROR("This is unsafe! Fix the caller! Userdata callback disabled.");
+    }
+
+    return NS_OK;
+  }
+
   nsPropertyTable *table = aOwnerDocument->PropertyTable(DOM_USER_DATA_HANDLER);
 
   // Keep the document alive, just in case one of the handlers causes it to go
