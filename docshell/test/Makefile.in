@@ -101,6 +101,8 @@ _TEST_FILES = \
 		test_bug640387_1.html \
 		test_bug640387_2.html \
 		file_bug640387.html \
+		test_bug653741.html \
+		file_bug653741.html \
 		test_framedhistoryframes.html \
 		test_windowedhistoryframes.html \
 		historyframes.html \
