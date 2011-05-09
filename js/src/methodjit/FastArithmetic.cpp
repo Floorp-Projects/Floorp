@@ -192,8 +192,6 @@ mjit::Compiler::maybeJumpIfNotDouble(Assembler &masm, MaybeJump &mj, FrameEntry 
 bool
 mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::TypeSet *typeSet)
 {
-    REJOIN_SITE(stub);
-
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
@@ -231,7 +229,7 @@ mjit::Compiler::jsop_binary(JSOp op, VoidStub stub, JSValueType type, types::Typ
         JS_ASSERT_IF(isStringResult && type != JSVAL_TYPE_UNKNOWN, type == JSVAL_TYPE_STRING);
 
         prepareStubCall(Uses(2));
-        INLINE_STUBCALL(stub);
+        INLINE_STUBCALL(stub, REJOIN_BINARY);
         frame.popn(2);
         frame.pushSynced(isStringResult ? JSVAL_TYPE_STRING : type);
         return true;
@@ -411,7 +409,7 @@ mjit::Compiler::jsop_binary_double(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
         done.getJump().linkTo(masm.label(), &masm);
 
     stubcc.leave();
-    OOL_STUBCALL(stub);
+    OOL_STUBCALL(stub, REJOIN_BINARY);
 
     if (allocateRight)
         frame.freeReg(fpRight);
@@ -511,7 +509,7 @@ mjit::Compiler::jsop_binary_full_simple(FrameEntry *fe, JSOp op, VoidStub stub, 
     /* Slow call - use frame.sync to avoid erroneous jump repatching in stubcc. */
     frame.sync(stubcc.masm, Uses(2));
     stubcc.leave();
-    OOL_STUBCALL(stub);
+    OOL_STUBCALL(stub, REJOIN_BINARY);
 
     /* Finish up stack operations. */
     frame.popn(2);
@@ -773,7 +771,7 @@ mjit::Compiler::jsop_binary_full(FrameEntry *lhs, FrameEntry *rhs, JSOp op,
     /* Slow call - use frame.sync to avoid erroneous jump repatching in stubcc. */
     frame.sync(stubcc.masm, Uses(2));
     stubcc.leave();
-    OOL_STUBCALL(stub);
+    OOL_STUBCALL(stub, REJOIN_BINARY);
 
     /* Finish up stack operations. */
     frame.popn(2);
@@ -809,7 +807,7 @@ mjit::Compiler::jsop_neg()
 
     if (fe->isTypeKnown() && fe->getKnownType() > JSVAL_UPPER_INCL_TYPE_OF_NUMBER_SET) {
         prepareStubCall(Uses(1));
-        INLINE_STUBCALL(stubs::Neg);
+        INLINE_STUBCALL(stubs::Neg, REJOIN_FALLTHROUGH);
         frame.pop();
         frame.pushSynced(type);
         return;
@@ -852,7 +850,7 @@ mjit::Compiler::jsop_neg()
         masm.neg32(reg);
 
         stubcc.leave();
-        OOL_STUBCALL(stubs::Neg);
+        OOL_STUBCALL(stubs::Neg, REJOIN_FALLTHROUGH);
 
         frame.pop();
         frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
@@ -918,7 +916,7 @@ mjit::Compiler::jsop_neg()
         frame.unpinReg(feTypeReg.reg());
 
     stubcc.leave();
-    OOL_STUBCALL(stubs::Neg);
+    OOL_STUBCALL(stubs::Neg, REJOIN_FALLTHROUGH);
 
     frame.pop();
     frame.pushSynced(type);
@@ -940,8 +938,6 @@ mjit::Compiler::jsop_neg()
 bool
 mjit::Compiler::jsop_mod()
 {
-    REJOIN_SITE_ANY();
-
 #if defined(JS_CPU_X86)
     JSValueType type = knownPushedType(0);
 
@@ -967,7 +963,7 @@ mjit::Compiler::jsop_mod()
 #endif
     {
         prepareStubCall(Uses(2));
-        INLINE_STUBCALL(stubs::Mod);
+        INLINE_STUBCALL(stubs::Mod, REJOIN_FALLTHROUGH);
         frame.popn(2);
         frame.pushSynced(knownPushedType(0));
         return true;
@@ -1074,7 +1070,7 @@ mjit::Compiler::jsop_mod()
 
     if (slowPath) {
         stubcc.leave();
-        OOL_STUBCALL(stubs::Mod);
+        OOL_STUBCALL(stubs::Mod, REJOIN_FALLTHROUGH);
     }
 
     frame.popn(2);
@@ -1090,7 +1086,7 @@ mjit::Compiler::jsop_mod()
     if (gotNegZero.isSet()) {
         stubcc.linkExit(gotNegZero.getJump(), Uses(2));
         stubcc.leave();
-        OOL_STUBCALL(stubs::NegZeroHelper);
+        OOL_STUBCALL(stubs::NegZeroHelper, REJOIN_FALLTHROUGH);
         stubcc.rejoin(Changes(1));
     }
 #endif
@@ -1099,7 +1095,7 @@ mjit::Compiler::jsop_mod()
 }
 
 bool
-mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, AutoRejoinSite &autoRejoin,
+mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub,
                                          jsbytecode *target, JSOp fused)
 {
     FrameEntry *rhs = frame.peek(-1);
@@ -1189,20 +1185,19 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, AutoRejoinSite 
         if (useIC) {
             /* Adjust for the two values just pushed. */
             ic.addrLabel = stubcc.masm.moveWithPatch(ImmPtr(NULL), Registers::ArgReg1);
-            ic.stubCall = OOL_STUBCALL_LOCAL_SLOTS(ic::Equality,
+            ic.stubCall = OOL_STUBCALL_LOCAL_SLOTS(ic::Equality, REJOIN_BRANCH,
                                                    frame.totalDepth() + 2);
             needStub = false;
         }
 #endif
 
         if (needStub)
-            OOL_STUBCALL_LOCAL_SLOTS(stub, frame.totalDepth() + 2);
+            OOL_STUBCALL_LOCAL_SLOTS(stub, REJOIN_BRANCH, frame.totalDepth() + 2);
 
         /*
          * The stub call has no need to rejoin, since state is synced.
          * Instead, we can just test the return value.
          */
-        autoRejoin.oolRejoin(stubcc.masm.label());
         Jump stubBranch = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
                                                    Registers::ReturnReg, Registers::ReturnReg);
         Jump stubFallthrough = stubcc.masm.jump();
@@ -1288,7 +1283,7 @@ mjit::Compiler::jsop_equality_int_string(JSOp op, BoolStub stub, AutoRejoinSite 
         }
 
         stubcc.leave();
-        OOL_STUBCALL(stub);
+        OOL_STUBCALL(stub, REJOIN_FALLTHROUGH);
 
         RegisterID reg = frame.ownRegForData(lhs);
 
@@ -1418,7 +1413,7 @@ DoubleCondForOp(JSOp op, JSOp fused)
 }
 
 bool
-mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, AutoRejoinSite &autoRejoin, jsbytecode *target, JSOp fused)
+mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
@@ -1447,7 +1442,7 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, AutoRejoinSite &a
         if (rhsNotNumber.isSet())
             stubcc.linkExitForBranch(rhsNotNumber.get());
         stubcc.leave();
-        OOL_STUBCALL(stub);
+        OOL_STUBCALL(stub, REJOIN_BRANCH);
 
         frame.syncAndKillEverything();
         Jump j = masm.branchDouble(dblCond, fpLeft, fpRight);
@@ -1459,7 +1454,6 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, AutoRejoinSite &a
 
         frame.popn(2);
 
-        autoRejoin.oolRejoin(stubcc.masm.label());
         Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
                                            Registers::ReturnReg, Registers::ReturnReg);
 
@@ -1478,7 +1472,7 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, AutoRejoinSite &a
         if (rhsNotNumber.isSet())
             stubcc.linkExit(rhsNotNumber.get(), Uses(2));
         stubcc.leave();
-        OOL_STUBCALL(stub);
+        OOL_STUBCALL(stub, REJOIN_FALLTHROUGH);
 
         frame.popn(2);
 
@@ -1504,7 +1498,7 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, AutoRejoinSite &a
 }
 
 bool
-mjit::Compiler::jsop_relational_int(JSOp op, AutoRejoinSite &autoRejoin, jsbytecode *target, JSOp fused)
+mjit::Compiler::jsop_relational_int(JSOp op, jsbytecode *target, JSOp fused)
 {
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
@@ -1538,7 +1532,6 @@ mjit::Compiler::jsop_relational_int(JSOp op, AutoRejoinSite &autoRejoin, jsbytec
         }
         frame.popn(2);
 
-        autoRejoin.oolRejoin(stubcc.masm.label());
         Jump sj = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
                                            Registers::ReturnReg, Registers::ReturnReg);
 
@@ -1565,10 +1558,8 @@ mjit::Compiler::jsop_relational_int(JSOp op, AutoRejoinSite &autoRejoin, jsbytec
 
 /* See jsop_binary_full() for more information on how this works. */
 bool
-mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, AutoRejoinSite &rejoin, jsbytecode *target, JSOp fused)
+mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, jsbytecode *target, JSOp fused)
 {
-    AutoRejoinSite autoRejoin(this, JS_FUNC_TO_DATA_PTR(void *, stub));
-
     FrameEntry *rhs = frame.peek(-1);
     FrameEntry *lhs = frame.peek(-2);
 
@@ -1647,8 +1638,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, AutoRejoinSite &rej
              */
             frame.sync(stubcc.masm, Uses(frame.frameSlots()));
             stubcc.leave();
-            OOL_STUBCALL(stub);
-            autoRejoin.oolRejoin(stubcc.masm.label());
+            OOL_STUBCALL(stub, REJOIN_BRANCH);
         }
 
         /* Forget the world, preserving data. */
@@ -1679,7 +1669,6 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, AutoRejoinSite &rej
          * The stub call has no need to rejoin since state is synced. Instead,
          * we can just test the return value.
          */
-        autoRejoin.oolRejoin(stubcc.masm.label());
         Jump j = stubcc.masm.branchTest32(GetStubCompareCondition(fused),
                                           Registers::ReturnReg, Registers::ReturnReg);
 
@@ -1735,7 +1724,7 @@ mjit::Compiler::jsop_relational_full(JSOp op, BoolStub stub, AutoRejoinSite &rej
             /* Emit the slow path - note full frame syncage. */
             frame.sync(stubcc.masm, Uses(2));
             stubcc.leave();
-            OOL_STUBCALL(stub);
+            OOL_STUBCALL(stub, REJOIN_FALLTHROUGH);
         }
 
         /* Get an integer comparison condition. */

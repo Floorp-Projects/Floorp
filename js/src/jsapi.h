@@ -2287,10 +2287,10 @@ JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JS
 
 /* Add properties to the type information for obj. */
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(void)
 JS_AddTypeProperty(JSContext *cx, JSObject *obj, const char *name, jsval value);
 
-extern JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(void)
 JS_AddTypePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value);
 
 /*

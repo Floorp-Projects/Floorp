@@ -194,7 +194,7 @@ LoopState::addJoin(unsigned index, bool script)
 }
 
 void
-LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex, bool patchCall)
+LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsigned patchIndex)
 {
     RestoreInvariantCall call;
     call.jump = jump;
@@ -202,7 +202,6 @@ LoopState::addInvariantCall(Jump jump, Label label, bool ool, bool entry, unsign
     call.ool = ool;
     call.entry = entry;
     call.patchIndex = patchIndex;
-    call.patchCall = patchCall;
     call.temporaryCopies = frame.getTemporaryCopies();
 
     restoreInvariantCalls.append(call);
@@ -230,7 +229,7 @@ LoopState::flushLoop(StubCompiler &stubcc)
             Assembler &masm = cc.getAssembler(true);
             Vector<Jump> failureJumps(cx);
 
-            jsbytecode *pc = cc.getInvariantPC(call.patchIndex, call.patchCall);
+            jsbytecode *pc = cc.getInvariantPC(call.patchIndex);
 
             if (call.ool) {
                 call.jump.linkTo(masm.label(), &masm);
@@ -250,7 +249,7 @@ LoopState::flushLoop(StubCompiler &stubcc)
                  * Call InvariantFailure, setting up the return address to
                  * patch and any value for the call to return.
                  */
-                InvariantCodePatch *patch = cc.getInvariantPatch(call.patchIndex, call.patchCall);
+                InvariantCodePatch *patch = cc.getInvariantPatch(call.patchIndex);
                 patch->hasPatch = true;
                 patch->codePatch = masm.storePtrWithPatch(ImmPtr(NULL),
                                                           FrameAddress(offsetof(VMFrame, scratch)));
@@ -1131,8 +1130,10 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
 
     Registers regs(Registers::TempRegs);
     regs.takeReg(Registers::ReturnReg);
-    JS_ASSERT(!regs.hasReg(JSReturnReg_Data));
-    JS_ASSERT(!regs.hasReg(JSReturnReg_Type));
+    if (regs.hasReg(JSReturnReg_Data))
+        regs.takeReg(JSReturnReg_Data);
+    if (regs.hasReg(JSReturnReg_Type))
+        regs.takeReg(JSReturnReg_Type);
 
     RegisterID T0 = regs.takeAnyReg().reg();
     RegisterID T1 = regs.takeAnyReg().reg();

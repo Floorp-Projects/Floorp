@@ -464,7 +464,6 @@ struct JSScript {
 #ifdef JS_METHODJIT
     bool            debugMode:1;      /* script was compiled in debug mode */
     bool            singleStepMode:1; /* compile script in single-step mode */
-    bool            inlineParents:1;  /* script may be inlined in other frames */
     bool            failedBoundsCheck:1; /* script has had hoisted bounds checks fail */
 #endif
 
@@ -584,25 +583,25 @@ struct JSScript {
     getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray);
 
     /* Monitor a bytecode pushing an unexpected value. */
-    inline bool typeMonitorResult(JSContext *cx, const jsbytecode *pc, js::types::jstype type);
-    inline bool typeMonitorResult(JSContext *cx, const jsbytecode *pc, const js::Value &val);
-    inline bool typeMonitorUndefined(JSContext *cx, const jsbytecode *pc);
-    inline bool typeMonitorOverflow(JSContext *cx, const jsbytecode *pc);
-    inline bool typeMonitorString(JSContext *cx, const jsbytecode *pc);
-    inline bool typeMonitorUnknown(JSContext *cx, const jsbytecode *pc);
+    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, js::types::jstype type);
+    inline void typeMonitorResult(JSContext *cx, const jsbytecode *pc, const js::Value &val);
+    inline void typeMonitorUndefined(JSContext *cx, const jsbytecode *pc);
+    inline void typeMonitorOverflow(JSContext *cx, const jsbytecode *pc);
+    inline void typeMonitorString(JSContext *cx, const jsbytecode *pc);
+    inline void typeMonitorUnknown(JSContext *cx, const jsbytecode *pc);
 
     /* Add a type for a variable in this script. */
-    inline bool typeSetThis(JSContext *cx, js::types::jstype type);
-    inline bool typeSetThis(JSContext *cx, const js::Value &value);
-    inline bool typeSetThis(JSContext *cx, js::types::ClonedTypeSet *types);
-    inline bool typeSetNewCalled(JSContext *cx);
-    inline bool typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type);
-    inline bool typeSetLocal(JSContext *cx, unsigned local, const js::Value &value);
-    inline bool typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *types);
-    inline bool typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type);
-    inline bool typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
-    inline bool typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet *types);
-    inline bool typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
+    inline void typeSetThis(JSContext *cx, js::types::jstype type);
+    inline void typeSetThis(JSContext *cx, const js::Value &value);
+    inline void typeSetThis(JSContext *cx, js::types::ClonedTypeSet *types);
+    inline void typeSetNewCalled(JSContext *cx);
+    inline void typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type);
+    inline void typeSetLocal(JSContext *cx, unsigned local, const js::Value &value);
+    inline void typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *types);
+    inline void typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type);
+    inline void typeSetArgument(JSContext *cx, unsigned arg, const js::Value &value);
+    inline void typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet *types);
+    inline void typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value);
 
     /*
      * Associates this script with a specific function, constructing a new type

@@ -88,6 +88,20 @@ class FrameSize
     uint32 getArgc(VMFrame &f) const {
         return isStatic() ? staticArgc() : f.u.call.dynamicArgc;
     }
+
+    bool lowered(jsbytecode *pc) const {
+        return isDynamic() || staticArgc() != GET_ARGC(pc);
+    }
+
+    RejoinState rejoinState(jsbytecode *pc, bool native) {
+        if (isStatic()) {
+            if (staticArgc() == GET_ARGC(pc))
+                return native ? REJOIN_NATIVE : REJOIN_CALL_PROLOGUE;
+            JS_ASSERT(staticArgc() == GET_ARGC(pc) - 1);
+            return native ? REJOIN_NATIVE_LOWERED : REJOIN_CALL_PROLOGUE_LOWERED_CALL;
+        }
+        return native ? REJOIN_NATIVE_LOWERED : REJOIN_CALL_PROLOGUE_LOWERED_APPLY;
+    }
 };
 
 namespace ic {

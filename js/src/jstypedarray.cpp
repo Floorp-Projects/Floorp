@@ -1542,16 +1542,11 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
-    if (!cx->addTypeProperty(proto->getType(), NULL, types::TYPE_INT32))       \
-        return NULL;                                                           \
-    if (_typedArray::ArrayElementTypeMayBeDouble() &&                          \
-        !cx->addTypeProperty(proto->getType(), NULL, types::TYPE_DOUBLE)) {    \
-        return NULL;                                                           \
-    }                                                                          \
-    if (!cx->addTypeProperty(proto->getType(), "buffer",                       \
-                             (types::jstype) bufferType)) {                    \
-        return NULL;                                                           \
-    }                                                                          \
+    cx->addTypeProperty(proto->getType(), NULL, types::TYPE_INT32);            \
+    if (_typedArray::ArrayElementTypeMayBeDouble())                            \
+        cx->addTypeProperty(proto->getType(), NULL, types::TYPE_DOUBLE);       \
+    cx->addTypeProperty(proto->getType(), "buffer",                            \
+                        (types::jstype) bufferType);                           \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \

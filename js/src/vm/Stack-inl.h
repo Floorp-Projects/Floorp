@@ -831,21 +831,33 @@ struct LimitCheck
 {
     StackFrame *base;
     Value **limit;
+    void *topncode;
 
-    LimitCheck(StackFrame *base, Value **limit) : base(base), limit(limit) {}
+    LimitCheck(StackFrame *base, Value **limit, void *topncode)
+        : base(base), limit(limit), topncode(topncode)
+    {}
 
     JS_ALWAYS_INLINE bool
     operator()(JSContext *cx, StackSpace &space, Value *from, uintN nvals)
     {
         /*
-         * Include an extra sizeof(StackFrame) to satisfy the method-jit
-         * stackLimit invariant.
+         * Include extra space for a new stack frame, inlined frames and loop
+         * temporaries to satisfy the method-jit stackLimit invariant.
          */
-        nvals += VALUES_PER_STACK_FRAME;
+        nvals += StackSpace::STACK_EXTRA + VALUES_PER_STACK_FRAME;
 
         JS_ASSERT(from < *limit);
         if (*limit - from >= ptrdiff_t(nvals))
             return true;
+
+        if (topncode) {
+            /*
+             * The current regs.pc may not be intact, set it in case bumping
+             * the limit fails.
+             */
+            cx->regs().pc = mjit::NativeToPC(cx->fp()->jit(), topncode);
+        }
+
         return space.bumpLimitWithinQuota(cx, base, from, nvals, limit);
     }
 };
@@ -907,12 +919,12 @@ ContextStack::getInlineFrame(JSContext *cx, Value *sp, uintN nactual,
 JS_ALWAYS_INLINE StackFrame *
 ContextStack::getInlineFrameWithinLimit(JSContext *cx, Value *sp, uintN nactual,
                                         JSFunction *fun, JSScript *script, uint32 *flags,
-                                        StackFrame *fp, Value **limit) const
+                                        StackFrame *fp, Value **limit, void *topncode) const
 {
     JS_ASSERT(isCurrentAndActive());
     JS_ASSERT(cx->regs().sp == sp);
 
-    return getCallFrame(cx, sp, nactual, fun, script, flags, detail::LimitCheck(fp, limit));
+    return getCallFrame(cx, sp, nactual, fun, script, flags, detail::LimitCheck(fp, limit, topncode));
 }
 
 JS_ALWAYS_INLINE void

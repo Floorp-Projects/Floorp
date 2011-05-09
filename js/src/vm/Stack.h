@@ -58,7 +58,11 @@ class ExecuteFrameGuard;
 class DummyFrameGuard;
 class GeneratorFrameGuard;
 
-namespace mjit { struct JITScript; struct CallSite; }
+namespace mjit {
+    struct JITScript;
+    struct CallSite;
+    jsbytecode *NativeToPC(JITScript *jit, void *ncode);
+}
 namespace detail { struct OOMCheck; }
 
 #ifdef JS_METHODJIT
@@ -66,6 +70,8 @@ typedef js::mjit::CallSite JSInlinedSite;
 #else
 struct JSInlinedSite {};
 #endif
+
+typedef /* js::mjit::RejoinState */ size_t JSRejoinState;
 
 /*
  * VM stack layout
@@ -280,10 +286,8 @@ class StackFrame
     jsbytecode          *imacropc_;     /* pc of macro caller */
     void                *hookData_;     /* closure returned by call hook */
     void                *annotation_;   /* perhaps remove with bug 546848 */
-
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
+    JSRejoinState       rejoin_;        /* If rejoining into the interpreter
+                                         * from JIT code, state at rejoin. */
 
     static void staticAsserts() {
         JS_STATIC_ASSERT(offsetof(StackFrame, rval_) % sizeof(js::Value) == 0);
@@ -770,6 +774,16 @@ class StackFrame
         annotation_ = annot;
     }
 
+    /* JIT rejoin state */
+
+    JSRejoinState rejoin() const {
+        return rejoin_;
+    }
+
+    void setRejoin(JSRejoinState state) {
+        rejoin_ = state;
+    }
+
     /* Debugger hook data */
 
     bool hasHookData() const {
@@ -1037,6 +1051,11 @@ class FrameRegs
         sp = newsp;
         fp_ = fp_->prev();
         inlined_ = NULL;
+    }
+
+    /* For InternalInterpret: */
+    void restorePartialFrame(Value *newfp) {
+        fp_ = (StackFrame *) newfp;
     }
 
     /* For stubs::CompileFunction, ContextStack: */
@@ -1371,7 +1390,7 @@ class ContextStack
     inline StackFrame *
     getInlineFrameWithinLimit(JSContext *cx, Value *sp, uintN nactual,
                               JSFunction *fun, JSScript *script, uint32 *flags,
-                              StackFrame *base, Value **limit) const;
+                              StackFrame *base, Value **limit, void *topncode) const;
     inline void pushInlineFrame(JSScript *script, StackFrame *fp, FrameRegs &regs);
     inline void popInlineFrame();
 

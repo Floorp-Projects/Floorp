@@ -1648,10 +1648,8 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
 
-    if (!cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN))
-        return JS_FALSE;
-    if (!cx->markTypePropertyConfigured(obj->getType(), id))
-        return false;
+    cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
+    cx->markTypePropertyConfigured(obj->getType(), id);
 
     call.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, StrictPropertyStub,
@@ -1688,10 +1686,8 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
 
-    if (!cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN))
-        return JS_FALSE;
-    if (!cx->markTypePropertyConfigured(obj->getType(), id))
-        return false;
+    cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
+    cx->markTypePropertyConfigured(obj->getType(), id);
 
     call.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
@@ -2481,16 +2477,12 @@ static JSBool
 DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &desc, bool throwError,
                bool *rval)
 {
-    if (!cx->addTypePropertyId(obj->getType(), id, desc.value))
-        return false;
+    cx->addTypePropertyId(obj->getType(), id, desc.value);
     if (!desc.get.isUndefined() || !desc.set.isUndefined()) {
-        if (!cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN))
-            return false;
-        if (!cx->markTypePropertyConfigured(obj->getType(), id))
-            return false;
+        cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
+        cx->markTypePropertyConfigured(obj->getType(), id);
     } else if (!desc.configurable() || !desc.enumerable() || !desc.writable()) {
-        if (!cx->markTypePropertyConfigured(obj->getType(), id))
-            return false;
+        cx->markTypePropertyConfigured(obj->getType(), id);
     }
 
     if (obj->isArray())
@@ -2634,8 +2626,7 @@ obj_create(JSContext *cx, uintN argc, Value *vp)
     vp->setObject(*obj); /* Root and prepare for eventual return. */
 
     /* Don't track types or array-ness for objects created here. */
-    if (!cx->markTypeObjectUnknownProperties(obj->getType()))
-        return false;
+    cx->markTypeObjectUnknownProperties(obj->getType());
 
     /* 15.2.3.5 step 4. */
     if (argc > 1 && !vp[3].isUndefined()) {
@@ -3040,8 +3031,7 @@ js_CreateThisForFunction(JSContext *cx, JSObject *callee, bool newType)
                                 obj->lastProperty());
         if (!obj)
             return NULL;
-        if (!callee->getFunctionPrivate()->script()->typeSetThis(cx, (types::jstype) type))
-            return NULL;
+        callee->getFunctionPrivate()->script()->typeSetThis(cx, (types::jstype) type);
     }
 
     return obj;
@@ -3972,8 +3962,9 @@ js_InitObjectClass(JSContext *cx, JSObject *obj)
 
     /* The default 'new' object for Object.prototype has unknown properties. */
     TypeObject *newType = proto->getNewType(cx);
-    if (!newType || !cx->markTypeObjectUnknownProperties(newType))
+    if (!newType)
         return NULL;
+    cx->markTypeObjectUnknownProperties(newType);
 
     /* ECMA (15.1.2.1) says 'eval' is a property of the global object. */
     jsid id = ATOM_TO_JSID(cx->runtime->atomState.evalAtom);
@@ -3994,8 +3985,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 {
     jsid id = ATOM_TO_JSID(atom);
 
-    if (!cx->addTypePropertyId(obj->getType(), id, v))
-        return false;
+    cx->addTypePropertyId(obj->getType(), id, v);
 
     if (key != JSProto_Null) {
         /*
@@ -4097,10 +4087,9 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
         return NULL;
 
     /* Mark types with a special equality hook as having unknown properties. */
-    if (clasp->ext.equality &&
-        (!cx->markTypeObjectUnknownProperties(type) ||
-         !cx->markTypeObjectUnknownProperties(proto->getType()))) {
-        return NULL;
+    if (clasp->ext.equality) {
+        cx->markTypeObjectUnknownProperties(type);
+        cx->markTypeObjectUnknownProperties(proto->getType());
     }
 
     proto->syncSpecialEquality();
@@ -4585,10 +4574,8 @@ SetProto(JSContext *cx, JSObject *obj, JSObject *proto, bool checkForCycles)
      * new type of the object, which is OK since we treat objects in type sets with
      * unknown properties as interchangeable.
      */
-    if (!cx->markTypeObjectUnknownProperties(obj->getType()) ||
-        !cx->markTypeObjectUnknownProperties(type)) {
-        return false;
-    }
+    cx->markTypeObjectUnknownProperties(obj->getType());
+    cx->markTypeObjectUnknownProperties(type);
 
     if (!proto || !checkForCycles) {
         obj->setType(type);
@@ -4750,8 +4737,7 @@ js_ConstructObject(JSContext *cx, Class *clasp, JSObject *proto, JSObject *paren
         return NULL;
 
     obj->syncSpecialEquality();
-    if (!cx->markTypeObjectUnknownProperties(obj->getType()))
-        return NULL;
+    cx->markTypeObjectUnknownProperties(obj->getType());
 
     Value rval;
     if (!InvokeConstructorWithGivenThis(cx, obj, cval, argc, argv, &rval))
@@ -5628,8 +5614,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
         pobj->nativeSetSlot(slot, *vp);
     }
 
-    if (!cx->addTypePropertyId(obj->getType(), shape->id, *vp))
-        return false;
+    cx->addTypePropertyId(obj->getType(), shape->id, *vp);
 
     return true;
 }
@@ -6606,10 +6591,8 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
 JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs)
 {
-    if (!cx->addTypePropertyId(ctor->getType(), ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                               ObjectOrNullValue(proto))) {
-        return JS_FALSE;
-    }
+    cx->addTypePropertyId(ctor->getType(), ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
+                          ObjectOrNullValue(proto));
 
     /*
      * Use the given attributes for the prototype property of the constructor,

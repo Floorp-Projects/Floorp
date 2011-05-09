@@ -830,8 +830,7 @@ regexp_construct(JSContext *cx, uintN argc, Value *vp)
              * regexps for any associated compileAndGo RegExp global, not new
              * regexps with different prototypes or RegExp.prototype itself.
              */
-            if (!cx->markTypeCallerUnexpected(*vp))
-                return false;
+            cx->markTypeCallerUnexpected(*vp);
             return true;
         }
     }
@@ -940,14 +939,12 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
     if (!type->getEmptyShape(cx, &js_RegExpClass, FINALIZE_OBJECT0))
         return NULL;
 
-    if (!cx->addTypeProperty(protoType, "source", TYPE_STRING) ||
-        !cx->addTypeProperty(protoType, "global", TYPE_BOOLEAN) ||
-        !cx->addTypeProperty(protoType, "ignoreCase", TYPE_BOOLEAN) ||
-        !cx->addTypeProperty(protoType, "multiline", TYPE_BOOLEAN) ||
-        !cx->addTypeProperty(protoType, "sticky", TYPE_BOOLEAN) ||
-        !cx->addTypeProperty(protoType, "lastIndex", TYPE_INT32)) {
-        return NULL;
-    }
+    cx->addTypeProperty(protoType, "source", TYPE_STRING);
+    cx->addTypeProperty(protoType, "global", TYPE_BOOLEAN);
+    cx->addTypeProperty(protoType, "ignoreCase", TYPE_BOOLEAN);
+    cx->addTypeProperty(protoType, "multiline", TYPE_BOOLEAN);
+    cx->addTypeProperty(protoType, "sticky", TYPE_BOOLEAN);
+    cx->addTypeProperty(protoType, "lastIndex", TYPE_INT32);
 
     /* Install the fully-constructed RegExp and RegExp.prototype in global. */
     if (!DefineConstructorAndPrototype(cx, global, JSProto_RegExp, ctor, proto))

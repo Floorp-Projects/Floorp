@@ -86,7 +86,8 @@ StackFrame::methodjitStaticAsserts()
  *
  * JaegerTrampoline  - Executes a method JIT-compiled JSFunction. This function
  *    creates a VMFrame on the machine stack and jumps into JIT'd code. The JIT'd
- *    code will eventually jump back to the VMFrame.
+ *    code will eventually jump back to JaegerTrampolineReturn, clean up the
+ *    VMFrame and return into C++.
  *
  *  - Called from C++ function EnterMethodJIT.
  *  - Parameters: cx, fp, code, stackLimit
@@ -107,7 +108,19 @@ StackFrame::methodjitStaticAsserts()
  *    at. Because the jit-code ABI conditions are satisfied, we can just jump to
  *    that point.
  *
- *  - Used by RunTracer()
+ * JaegerInterpoline - After returning from a stub or scripted call made by JIT'd
+ *    code, calls into Interpret and has it finish execution of the JIT'd script.
+ *    If we have to throw away the JIT code for a script for some reason (either
+ *    a new trap is added for debug code, or assumptions made by the JIT code
+ *    have broken and forced its invalidation), the call returns into the
+ *    Interpoline which calls Interpret to finish the JIT frame. The Interpret
+ *    call may eventually recompile the script, in which case it will join into
+ *    that code with a new VMFrame activation and JaegerTrampoline.
+ *
+ *  - Returned into from stub calls originally made from JIT code.
+ *  - An alternate version, JaegerInterpolineScripted, returns from scripted
+ *    calls originally made from JIT code, and fixes up state to match the
+ *    stub call ABI.
  */
 
 #ifdef JS_METHODJIT_PROFILE_STUBS
@@ -119,7 +132,8 @@ extern "C" void JS_FASTCALL
 PushActiveVMFrame(VMFrame &f)
 {
     f.entryfp->script()->compartment->jaegerCompartment->pushActiveFrame(&f);
-    f.regs.fp()->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
+    f.entryncode = f.entryfp->nativeReturnAddress();
+    f.entryfp->setNativeReturnAddress(JS_FUNC_TO_DATA_PTR(void*, JaegerTrampolineReturn));
     f.regs.clearInlined();
 }
 
@@ -127,6 +141,7 @@ extern "C" void JS_FASTCALL
 PopActiveVMFrame(VMFrame &f)
 {
     f.entryfp->script()->compartment->jaegerCompartment->popActiveFrame();
+    f.entryfp->setNativeReturnAddress(f.entryncode);
 }
 
 extern "C" void JS_FASTCALL
@@ -180,7 +195,8 @@ JS_STATIC_ASSERT(sizeof(VMFrame) % 16 == 0);
  * If these assertions break, update the constants below.
  *    *** DANGER ***
  */
-JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x58);
+JS_STATIC_ASSERT(offsetof(VMFrame, savedRBX) == 0x68);
+JS_STATIC_ASSERT(offsetof(VMFrame, scratch) == 0x18);
 JS_STATIC_ASSERT(VMFrame::offsetOfFp == 0x38);
 
 JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
@@ -210,6 +226,8 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
      * rcx = inlineCallCount
      * fp must go into rbx
      */
+    "pushq $0x0"                         "\n" /* stubRejoin */
+    "pushq %rsi"                         "\n" /* entryncode */
     "pushq %rsi"                         "\n" /* entryfp */
     "pushq %rcx"                         "\n" /* inlineCallCount */
     "pushq %rdi"                         "\n" /* cx */
@@ -238,11 +256,11 @@ asm (
 ".globl " SYMBOL_STRING(JaegerTrampolineReturn) "\n"
 SYMBOL_STRING(JaegerTrampolineReturn) ":"       "\n"
     "or   %rdi, %rsi"                    "\n"
-    "movq %rcx, 0x30(%rbx)"              "\n"
+    "movq %rsi, 0x30(%rbx)"              "\n"
     "movq %rsp, %rdi"                    "\n"
     "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 
-    "addq $0x58, %rsp"                   "\n"
+    "addq $0x68, %rsp"                   "\n"
     "popq %rbx"                          "\n"
     "popq %r15"                          "\n"
     "popq %r14"                          "\n"
@@ -265,7 +283,7 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
   "throwpoline_exit:"                       "\n"
     "movq %rsp, %rdi"                       "\n"
     "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
-    "addq $0x58, %rsp"                      "\n"
+    "addq $0x68, %rsp"                      "\n"
     "popq %rbx"                             "\n"
     "popq %r15"                             "\n"
     "popq %r14"                             "\n"
@@ -274,6 +292,45 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
     "popq %rbp"                             "\n"
     "xorq %rax,%rax"                        "\n"
     "ret"                                   "\n"
+);
+
+asm (
+".text\n"
+".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
+SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
+    "movq %rsp, %rcx"                       "\n"
+    "movq %rax, %rdx"                       "\n"
+    "call " SYMBOL_STRING_RELOC(js_InternalInterpret) "\n"
+    "movq 0x38(%rsp), %rbx"                 "\n" /* Load frame */
+    "movq 0x30(%rbx), %rsi"                 "\n" /* Load rval payload */
+    "and %r14, %rsi"                        "\n" /* Mask rval payload */
+    "movq 0x30(%rbx), %rdi"                 "\n" /* Load rval type */
+    "and %r13, %rdi"                        "\n" /* Mask rval type */
+    "movq 0x18(%rsp), %rcx"                 "\n" /* Load scratch -> argc */
+    "testq %rax, %rax"                      "\n"
+    "je   interpoline_exit"                 "\n"
+    "jmp  *%rax"                            "\n"
+  "interpoline_exit:"                       "\n"
+    "movq %rsp, %rdi"                       "\n"
+    "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
+    "addq $0x68, %rsp"                      "\n"
+    "popq %rbx"                             "\n"
+    "popq %r15"                             "\n"
+    "popq %r14"                             "\n"
+    "popq %r13"                             "\n"
+    "popq %r12"                             "\n"
+    "popq %rbp"                             "\n"
+    "xorq %rax,%rax"                        "\n"
+    "ret"                                   "\n"
+);
+
+asm (
+".text\n"
+".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
+SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
+    "movq 0x20(%rbx), %rbx"                         "\n" /* load prev */
+    "movq %rbx, 0x38(%rsp)"                         "\n"
+    "jmp " SYMBOL_STRING_RELOC(JaegerInterpoline)   "\n"
 );
 
 # elif defined(JS_CPU_X86)
@@ -285,8 +342,9 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
  * up the argument.
  *    *** DANGER ***
  */
-JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x2c);
-JS_STATIC_ASSERT((VMFrame::offsetOfFp) == 0x1C);
+JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x3C);
+JS_STATIC_ASSERT(offsetof(VMFrame, scratch) == 0xC);
+JS_STATIC_ASSERT(VMFrame::offsetOfFp == 0x1C);
 
 asm (
 ".text\n"
@@ -303,6 +361,10 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     /* Build the JIT frame. Push fields in order, 
      * then align the stack to form esp == VMFrame. */
     "movl  12(%ebp), %ebx"               "\n"   /* load fp */
+    "pushl %ebx"                         "\n"   /* unused1 */
+    "pushl %ebx"                         "\n"   /* unused0 */
+    "pushl $0x0"                         "\n"   /* stubRejoin */
+    "pushl %ebx"                         "\n"   /* entryncode */
     "pushl %ebx"                         "\n"   /* entryfp */
     "pushl 20(%ebp)"                     "\n"   /* stackLimit */
     "pushl 8(%ebp)"                      "\n"   /* cx */
@@ -316,7 +378,7 @@ SYMBOL_STRING(JaegerTrampoline) ":"       "\n"
     "call " SYMBOL_STRING_VMFRAME(PushActiveVMFrame) "\n"
 
     "movl 28(%esp), %ebp"                "\n"   /* load fp for JIT code */
-    "jmp *72(%esp)"                      "\n"
+    "jmp *88(%esp)"                      "\n"
 );
 
 asm (
@@ -326,11 +388,11 @@ SYMBOL_STRING(JaegerTrampolineReturn) ":" "\n"
     "movl  %esi, 0x18(%ebp)"             "\n"
     "movl  %edi, 0x1C(%ebp)"             "\n"
     "movl  %esp, %ebp"                   "\n"
-    "addl  $0x38, %ebp"                  "\n" /* Restore stack at STACK_BASE_DIFFERENCE */
+    "addl  $0x48, %ebp"                  "\n" /* Restore stack at STACK_BASE_DIFFERENCE */
     "movl  %esp, %ecx"                   "\n"
     "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 
-    "addl $0x2C, %esp"                   "\n"
+    "addl $0x3C, %esp"                   "\n"
     "popl %ebx"                          "\n"
     "popl %edi"                          "\n"
     "popl %esi"                          "\n"
@@ -359,13 +421,52 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
   "throwpoline_exit:"                    "\n"
     "movl %esp, %ecx"                    "\n"
     "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
-    "addl $0x2c, %esp"                   "\n"
+    "addl $0x3c, %esp"                   "\n"
     "popl %ebx"                          "\n"
     "popl %edi"                          "\n"
     "popl %esi"                          "\n"
     "popl %ebp"                          "\n"
     "xorl %eax, %eax"                    "\n"
     "ret"                                "\n"
+);
+
+asm (
+".text\n"
+".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
+SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
+    /* Align the stack to 16 bytes. */
+    "pushl %esp"                         "\n"
+    "pushl %eax"                         "\n"
+    "pushl %edi"                         "\n"
+    "pushl %esi"                         "\n"
+    "call " SYMBOL_STRING_RELOC(js_InternalInterpret) "\n"
+    "addl $0x10, %esp"                   "\n"
+    "movl 0x1C(%esp), %ebp"              "\n" /* Load frame */
+    "movl 0x18(%ebp), %esi"              "\n" /* Load rval payload */
+    "movl 0x1C(%ebp), %edi"              "\n" /* Load rval type */
+    "movl 0xC(%esp), %ecx"               "\n" /* Load scratch -> argc, for any scripted call */
+    "testl %eax, %eax"                   "\n"
+    "je   interpoline_exit"              "\n"
+    "jmp  *%eax"                         "\n"
+  "interpoline_exit:"                    "\n"
+    "movl %esp, %ecx"                    "\n"
+    "call " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
+    "addl $0x3c, %esp"                   "\n"
+    "popl %ebx"                          "\n"
+    "popl %edi"                          "\n"
+    "popl %esi"                          "\n"
+    "popl %ebp"                          "\n"
+    "xorl %eax, %eax"                    "\n"
+    "ret"                                "\n"
+);
+
+asm (
+".text\n"
+".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
+SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
+    "movl 0x10(%ebp), %ebp"                         "\n" /* load prev. :XXX: STATIC_ASSERT this */
+    "movl  %ebp, 0x1C(%esp)"                        "\n"
+    "jmp " SYMBOL_STRING_RELOC(JaegerInterpoline)   "\n"
 );
 
 # elif defined(JS_CPU_ARM)
@@ -524,7 +625,8 @@ SYMBOL_STRING(JaegerStubVeneer) ":"         "\n"
  * up the argument.
  *    *** DANGER ***
  */
-JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x2c);
+JS_STATIC_ASSERT(offsetof(VMFrame, savedEBX) == 0x3C);
+JS_STATIC_ASSERT(offsetof(VMFrame, scratch) == 0xC);
 JS_STATIC_ASSERT(VMFrame::offsetOfFp == 0x1C);
 
 extern "C" {
@@ -545,6 +647,10 @@ extern "C" {
              * then align the stack to form esp == VMFrame. */
             mov  ebx, [ebp + 12];
             push ebx;
+            push ebx;
+            push 0x0;
+            push ebx;
+            push ebx;
             push [ebp + 20];
             push [ebp + 8];
             push ebx;
@@ -557,7 +663,7 @@ extern "C" {
             call PushActiveVMFrame;
 
             mov ebp, [esp + 28];  /* load fp for JIT code */
-            jmp dword ptr [esp + 72];
+            jmp dword ptr [esp + 88];
         }
     }
 
@@ -567,11 +673,11 @@ extern "C" {
             mov [ebp + 0x18], esi;
             mov [ebp + 0x1C], edi;
             mov  ebp, esp;
-            add  ebp, 0x38; /* Restore stack at STACK_BASE_DIFFERENCE */
+            add  ebp, 0x48; /* Restore stack at STACK_BASE_DIFFERENCE */
             mov  ecx, esp;
             call PopActiveVMFrame;
 
-            add esp, 0x2C;
+            add esp, 0x3C;
 
             pop ebx;
             pop edi;
@@ -602,7 +708,7 @@ extern "C" {
         throwpoline_exit:
             mov ecx, esp;
             call PopActiveVMFrame;
-            add esp, 0x2c;
+            add esp, 0x3c;
             pop ebx;
             pop edi;
             pop esi;
@@ -610,6 +716,41 @@ extern "C" {
             xor eax, eax
             ret;
         }
+    }
+
+    __declspec(naked) void *JaegerInterpoline() {
+        __asm {
+            /* Align the stack to 16 bytes. */
+            push esp;
+            push eax;
+            push edi;
+            push esi;
+            call js_InternalInterpret;
+            add esp, 0x10;
+            mov [esp + 0x1C], ebp;  /* Load frame */
+            mov [ebp + 0x18], esi;  /* Load rval payload */
+            mov [ebp + 0x1C], edi;  /* Load rval type */
+            mov [esp + 0xC], ecx;   /* Load scratch -> argc */
+            test eax, eax;
+            je interpoline_exit;
+            jmp eax;
+        interpoline_exit:
+            mov ecx, esp;
+            call PopActiveVMFrame;
+            add esp, 0x3c;
+            pop ebx;
+            pop edi;
+            pop esi;
+            pop ebp;
+            xor eax, eax
+            ret;
+        }
+    }
+
+    __declspec(naked) void *JaegerInterpolineScripted() {
+        mov [ebp + 0x10], ebp;  /* Load prev */
+        mov ebp, [esp + 0x1C];  /* fp -> regs.fp */
+        jmp JaegerInterpoline;
     }
 }
 
@@ -628,6 +769,10 @@ JS_STATIC_ASSERT(JSVAL_TAG_MASK == 0xFFFF800000000000LL);
 JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 
 #endif                   /* _WIN64 */
+
+JaegerCompartment::JaegerCompartment()
+    : orphanedNativeCount(0), orphanedNativePools(SystemAllocPolicy())
+{}
 
 bool
 JaegerCompartment::Initialize()
@@ -767,16 +912,10 @@ JITScript::callSites() const
     return (js::mjit::CallSite *)((char *)inlineFrames() + sizeof(js::mjit::InlineFrame) * nInlineFrames);
 }
 
-js::mjit::RejoinSite *
-JITScript::rejoinSites() const
-{
-    return (js::mjit::RejoinSite *)((char *)callSites() + sizeof(js::mjit::CallSite) * nCallSites);
-}
-
 char *
 JITScript::commonSectionLimit() const
 {
-    return (char *)rejoinSites() + sizeof(js::mjit::RejoinSite) * nRejoinSites;
+    return ((char *)callSites() + sizeof(js::mjit::CallSite) * nCallSites);
 }
 
 #ifdef JS_MONOIC
@@ -1052,6 +1191,15 @@ JITScript::nativeToPC(void *returnAddress, CallSite **pinline) const
     if (pinline)
         *pinline = NULL;
     return script->code + ic.call->pcOffset;
+}
+
+jsbytecode *
+mjit::NativeToPC(JITScript *jit, void *ncode)
+{
+    CallSite *inline_;
+    jsbytecode *pc = jit->nativeToPC(ncode, &inline_);
+    JS_ASSERT(!inline_);
+    return pc;
 }
 
 void

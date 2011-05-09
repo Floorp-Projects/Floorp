@@ -146,7 +146,7 @@ class FrameEntry
     /* Accessors for entries which are copies of other mutable entries. */
 
     bool isCopy() const { return !!copy; }
-    bool isCopied() const { return copied; }
+    bool isCopied() const { return copied != 0; }
 
     const FrameEntry *backing() const {
         return isCopy() ? copyOf() : this;
@@ -170,14 +170,19 @@ class FrameEntry
     }
 
     void track(uint32 index) {
-        clear();
+        copied = 0;
+        copy = NULL;
         index_ = index;
         tracked = true;
     }
 
     void clear() {
-        copied = false;
-        copy = NULL;
+        JS_ASSERT(copied == 0);
+        if (copy) {
+            JS_ASSERT(copy->copied != 0);
+            copy->copied--;
+            copy = NULL;
+        }
     }
 
     uint32 trackerIndex() {
@@ -221,30 +226,22 @@ class FrameEntry
             knownType = cv.extractNonDoubleType();
     }
 
-    void setCopied() {
-        JS_ASSERT(!isCopy());
-        copied = true;
-    }
-
     FrameEntry *copyOf() const {
         JS_ASSERT(isCopy());
         JS_ASSERT_IF(!copy->temporary, copy < this);
         return copy;
     }
 
-    void setNotCopied() {
-        copied = false;
-    }
-
     /*
      * Set copy index.
      */
     void setCopyOf(FrameEntry *fe) {
-        JS_ASSERT(!isCopied());
+        clear();
         copy = fe;
         if (fe) {
             type.invalidate();
             data.invalidate();
+            fe->copied++;
         }
     }
 
@@ -270,19 +267,17 @@ class FrameEntry
     RematInfo  data;
     uint32     index_;
     FrameEntry *copy;
-    bool       copied;
     bool       tracked;
     bool       temporary;
+
+    /* Number of copies of this entry. */
+    uint32     copied;
 
     /*
      * Offset of the last loop in which this entry was written or had a loop
      * register assigned.
      */
     uint32     lastLoop;
-
-#if JS_BITS_PER_WORD == 32
-    void *padding;
-#endif
 };
 
 } /* namespace mjit */

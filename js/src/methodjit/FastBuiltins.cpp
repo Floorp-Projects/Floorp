@@ -74,7 +74,7 @@ mjit::Compiler::compileMathAbsInt(FrameEntry *arg)
 
     stubcc.leave();
     stubcc.masm.move(Imm32(1), Registers::ArgReg1);
-    OOL_STUBCALL(stubs::SlowCall);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
 
     frame.popn(3);
     frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
@@ -146,7 +146,7 @@ mjit::Compiler::compileRound(FrameEntry *arg, RoundingMode mode)
 
     stubcc.leave();
     stubcc.masm.move(Imm32(1), Registers::ArgReg1);
-    OOL_STUBCALL(stubs::SlowCall);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
 
     frame.popn(3);
     frame.pushTypedPayload(JSVAL_TYPE_INT32, reg);
@@ -218,7 +218,7 @@ mjit::Compiler::compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2)
 
     stubcc.leave();
     stubcc.masm.move(Imm32(2), Registers::ArgReg1);
-    OOL_STUBCALL(stubs::SlowCall);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
 
     frame.popn(4);
     frame.pushDouble(fpResultReg);
@@ -297,7 +297,7 @@ mjit::Compiler::compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMo
 
     stubcc.leave();
     stubcc.masm.move(Imm32(1), Registers::ArgReg1);
-    OOL_STUBCALL(stubs::SlowCall);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
 
     frame.popn(3);
     switch(mode) {

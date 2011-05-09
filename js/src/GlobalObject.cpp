@@ -117,8 +117,8 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     types::TypeObject *type = cx->newTypeObject("Global", NULL);
     if (!type || !obj->setTypeAndUniqueShape(cx, type))
         return NULL;
-    if (clasp->ext.equality && !cx->markTypeObjectHasSpecialEquality(type))
-        return NULL;
+    if (clasp->ext.equality)
+        cx->markTypeObjectHasSpecialEquality(type);
     type->singleton = obj;
 
     GlobalObject *globalObj = obj->asGlobal();
@@ -132,9 +132,7 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     globalObj->setSlot(REGEXP_STATICS, ObjectValue(*res));
     globalObj->setFlags(0);
 
-    if (!cx->addTypeProperty(type, js_undefined_str, UndefinedValue()))
-        return NULL;
-
+    cx->addTypeProperty(type, js_undefined_str, UndefinedValue());
     return globalObj;
 }
 
