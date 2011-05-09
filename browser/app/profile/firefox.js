@@ -992,6 +992,12 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 pref("devtools.errorconsole.enabled", false);
 pref("devtools.inspector.enabled", false);
 
+// Enable the Scratchpad tool.
+pref("devtools.scratchpad.enabled", true);
+
+// Enable tools for Chrome development.
+pref("devtools.chrome.enabled", false);
+
 // The last Web Console height. This is initially 0 which means that the Web
 // Console will use the default height next time it shows.
 // Change to -1 if you do not want the Web Console to remember its last height.
