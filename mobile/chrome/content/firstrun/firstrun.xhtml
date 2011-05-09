@@ -122,7 +122,14 @@
         }
         
         function startDiscovery() {
-          let doc = getChromeWin().document;
+          let win = getChromeWin();
+          let [leftWidth, rightWidth] = win.Browser.computeSidebarVisibility();
+          if (leftWidth > 0 || rightWidth > 0) {
+            endDiscovery();
+            return;
+          }
+
+          let doc = win.document;
           let broadcaster = doc.getElementById("bcast_uidiscovery");
 
           doc.addEventListener("animationend", endDiscovery, false);
