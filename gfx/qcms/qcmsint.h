@@ -113,7 +113,7 @@ struct tag_value {
 			} XYZNumber;
 		} XYZType;
 	};
-}; /* I guess we need to pack this? */
+}; // I guess we need to pack this?
 #endif
 
 #define RGB_SIGNATURE  0x52474220
