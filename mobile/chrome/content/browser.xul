@@ -269,7 +269,7 @@
             <vbox id="content-viewport" class="window-width window-height">
               <!-- Content viewport -->
               <stack>
-                <deck id="browsers" flex="1"/>
+                <deck id="browsers" flex="1" observes="bcast_uidiscovery"/>
                 <!-- vertical scrollbar -->
                 <box id="vertical-scroller" class="scroller" orient="vertical" end="2" top="0"/>
               </stack>
