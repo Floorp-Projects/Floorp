@@ -12,7 +12,7 @@ dbg.hooks = {
         assertEq(frame.eval("c").return, 4);
         var exc = frame.eval("d").throw;
         assertEq(exc instanceof Debug.Object, true);
-        assertEq(exc.getPrototype(), frame.eval("ReferenceError.prototype").return);
+        assertEq(exc.prototype, frame.eval("ReferenceError.prototype").return);
         hits++;
     }
 };

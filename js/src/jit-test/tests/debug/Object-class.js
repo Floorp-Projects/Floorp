@@ -6,11 +6,11 @@ var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
         var arr = frame.arguments;
-        assertEq(arr[0].getClass(), "Object");
-        assertEq(arr[1].getClass(), "Array");
-        assertEq(arr[2].getClass(), "Function");
-        assertEq(arr[3].getClass(), "Date");
-        assertEq(arr[4].getClass(), "Proxy");
+        assertEq(arr[0].class, "Object");
+        assertEq(arr[1].class, "Array");
+        assertEq(arr[2].class, "Function");
+        assertEq(arr[3].class, "Date");
+        assertEq(arr[4].class, "Proxy");
         hits++;
     }
 };

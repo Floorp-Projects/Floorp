@@ -13,11 +13,11 @@ var dbgeval = function () {
     }();
 
 var Op = dbgeval("Object.prototype");
-assertEq(Op.getPrototype(), null);
-assertEq(dbgeval("({})").getPrototype(), Op);
+assertEq(Op.prototype, null);
+assertEq(dbgeval("({})").prototype, Op);
 
-var Ap = dbgeval("[]").getPrototype();
+var Ap = dbgeval("[]").prototype;
 assertEq(Ap, dbgeval("Array.prototype"));
-assertEq(Ap.getPrototype(), Op);
+assertEq(Ap.prototype, Op);
 
-assertEq(dbgeval("Object").getPrototype(), dbgeval("Function.prototype"));
+assertEq(dbgeval("Object").prototype, dbgeval("Function.prototype"));

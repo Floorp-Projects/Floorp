@@ -11,8 +11,8 @@ var hits = 0;
 dbg.hooks = {
     debuggerHandler: function (frame) {
         hits++;
-        assertEq(typeof frame.this, 'object');
-        assertEq(frame.this.getClass(), classOf(Object(g.v)));
+        assertEq(frame.this instanceof Debug.Object, true);
+        assertEq(frame.this.class, classOf(Object(g.v)));
     }
 };
 
