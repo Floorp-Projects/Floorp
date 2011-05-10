@@ -83,15 +83,7 @@ include $(topsrcdir)/ipc/chromium/chromium-config.mk
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
-ifdef WINCE
-WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
-else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
-endif
-endif
-
-ifdef WINCE
-EXTRA_DSO_LDOPTS += $(call EXPAND_LIBNAME,corelibc)
 endif
 
 ifeq ($(OS_ARCH),WINNT)
