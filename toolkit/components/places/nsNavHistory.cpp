@@ -82,12 +82,14 @@
 #include "History.h"
 
 #include "mozilla/FunctionTimer.h"
+#include "mozilla/Util.h"
 
 #ifdef MOZ_XUL
 #include "nsIAutoCompleteInput.h"
 #include "nsIAutoCompletePopup.h"
 #endif
 
+using namespace mozilla;
 using namespace mozilla::places;
 
 // The maximum number of things that we will store in the recent events list
@@ -333,7 +335,7 @@ AsyncStatementCallbackNotifier::HandleCompletion(PRUint16 aReason)
   if (aReason != mozIStorageStatementCallback::REASON_FINISHED)
     return NS_ERROR_UNEXPECTED;
 
-  nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
   if (obs) {
     (void)obs->NotifyObservers(nsnull, mTopic, nsnull);
   }
@@ -4012,7 +4014,7 @@ nsNavHistory::EndUpdateBatch()
 {
   if (--mBatchLevel == 0) {
     if (mBatchDBTransaction) {
-      nsresult rv = mBatchDBTransaction->Commit();
+      DebugOnly<nsresult> rv = mBatchDBTransaction->Commit();
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Batch failed to commit transaction");
       delete mBatchDBTransaction;
       mBatchDBTransaction = nsnull;
@@ -5436,7 +5438,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
   NS_ASSERTION(NS_IsMainThread(), "This can only be called on the main thread");
 
   if (strcmp(aTopic, TOPIC_PROFILE_TEARDOWN) == 0) {
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (!os) {
       NS_WARNING("Unable to shutdown Places: Observer Service unavailable.");
       return NS_OK;
@@ -5471,7 +5473,7 @@ nsNavHistory::Observe(nsISupports *aSubject, const char *aTopic,
 
   else if (strcmp(aTopic, TOPIC_PROFILE_CHANGE) == 0) {
     // Fire internal shutdown notifications.
-    nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
+    nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
       (void)os->RemoveObserver(this, TOPIC_PROFILE_CHANGE);
       // Double notification allows to correctly enqueue tasks without the need
@@ -7209,7 +7211,7 @@ nsNavHistory::GetBundle()
 {
   if (!mBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService =
-      mozilla::services::GetStringBundleService();
+      services::GetStringBundleService();
     NS_ENSURE_TRUE(bundleService, nsnull);
     nsresult rv = bundleService->CreateBundle(
         "chrome://places/locale/places.properties",
@@ -7224,7 +7226,7 @@ nsNavHistory::GetDateFormatBundle()
 {
   if (!mDateFormatBundle) {
     nsCOMPtr<nsIStringBundleService> bundleService =
-      mozilla::services::GetStringBundleService();
+      services::GetStringBundleService();
     NS_ENSURE_TRUE(bundleService, nsnull);
     nsresult rv = bundleService->CreateBundle(
         "chrome://global/locale/dateFormat.properties",
