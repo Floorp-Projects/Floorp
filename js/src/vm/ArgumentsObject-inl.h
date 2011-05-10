@@ -50,7 +50,7 @@ ArgumentsObject::setInitialLength(uint32 length)
 {
     JS_ASSERT(getSlot(INITIAL_LENGTH_SLOT).isUndefined());
     setSlot(INITIAL_LENGTH_SLOT, Int32Value(length << PACKED_BITS_COUNT));
-    JS_ASSERT((getSlot(INITIAL_LENGTH_SLOT).toInt32() >> PACKED_BITS_COUNT) == length);
+    JS_ASSERT((getSlot(INITIAL_LENGTH_SLOT).toInt32() >> PACKED_BITS_COUNT) == int32(length));
     JS_ASSERT(!hasOverriddenLength());
 }
 
