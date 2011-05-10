@@ -307,6 +307,7 @@ CSS_PROP_OUTLINE(
     _moz_outline_radius_topLeft,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusTopleft),
     CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     nsnull,
@@ -317,6 +318,7 @@ CSS_PROP_OUTLINE(
     _moz_outline_radius_topRight,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusTopright),
     CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     nsnull,
@@ -327,6 +329,7 @@ CSS_PROP_OUTLINE(
     _moz_outline_radius_bottomRight,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusBottomright),
     CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     nsnull,
@@ -337,6 +340,7 @@ CSS_PROP_OUTLINE(
     _moz_outline_radius_bottomLeft,
     CSS_PROP_DOMPROP_PREFIXED(OutlineRadiusBottomleft),
     CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     nsnull,
@@ -558,6 +562,7 @@ CSS_PROP_BACKGROUND(
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     kBackgroundSizeKTable,
@@ -992,7 +997,8 @@ CSS_PROP_TABLEBORDER(
     border-spacing,
     border_spacing,
     BorderSpacing,
-    CSS_PROPERTY_PARSE_FUNCTION,
+    CSS_PROPERTY_PARSE_FUNCTION |
+        CSS_PROPERTY_VALUE_NONNEGATIVE,
     0,
     nsnull,
     CSS_PROP_NO_OFFSET,
@@ -1123,6 +1129,7 @@ CSS_PROP_BORDER(
     BorderTopLeftRadius,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     nsnull,
@@ -1134,6 +1141,7 @@ CSS_PROP_BORDER(
     BorderTopRightRadius,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     nsnull,
@@ -1145,6 +1153,7 @@ CSS_PROP_BORDER(
     BorderBottomRightRadius,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     nsnull,
@@ -1156,6 +1165,7 @@ CSS_PROP_BORDER(
     BorderBottomLeftRadius,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_STORES_CALC,
     0,
     nsnull,
@@ -1179,6 +1189,7 @@ CSS_PROP_BORDER(
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+        // NOTE: some components must be nonnegative
     0,
     kBoxShadowTypeKTable,
     offsetof(nsStyleBorder, mBoxShadow),
@@ -1237,7 +1248,7 @@ CSS_PROP_COLUMN(
     CSS_PROPERTY_PARSE_VALUE |
         // Need to reject 0 in addition to negatives.  If we accept 0, we
         // need to change NS_STYLE_COLUMN_COUNT_AUTO to something else.
-        CSS_PROPERTY_VALUE_POSITIVE_NONZERO,
+        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
     VARIANT_AHI,
     nsnull,
     offsetof(nsStyleColumn, mColumnCount),
@@ -1436,6 +1447,7 @@ CSS_PROP_FONT(
     font_size_adjust,
     FontSizeAdjust,
     CSS_PROPERTY_PARSE_VALUE |
+        CSS_PROPERTY_VALUE_NONNEGATIVE |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
     VARIANT_HON | VARIANT_SYSFONT,
     nsnull,
@@ -1478,6 +1490,7 @@ CSS_PROP_FONT(
     CSS_PROPERTY_PARSE_VALUE |
         CSS_PROPERTY_VALUE_PARSER_FUNCTION |
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE,
+        // NOTE: This property has range restrictions on interpolation!
     0,
     kFontWeightKTable,
     offsetof(nsStyleFont, mFont.weight),
@@ -1805,7 +1818,7 @@ CSS_PROP_BACKENDONLY(
     orphans,
     Orphans,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_POSITIVE_NONZERO,
+        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
     VARIANT_HI,
     nsnull)
 CSS_PROP_SHORTHAND(
@@ -2195,6 +2208,7 @@ CSS_PROP_TEXT(
         CSS_PROPERTY_APPLIES_TO_FIRST_LETTER_AND_FIRST_LINE |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS |
         CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED,
+        // NOTE: some components must be nonnegative
     0,
     nsnull,
     offsetof(nsStyleText, mTextShadow),
@@ -2365,7 +2379,7 @@ CSS_PROP_BACKENDONLY(
     widows,
     Widows,
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_POSITIVE_NONZERO,
+        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
     VARIANT_HI,
     nsnull)
 CSS_PROP_POSITION(
@@ -2405,6 +2419,15 @@ CSS_PROP_TEXT(
     CSS_PROPERTY_PARSE_VALUE,
     VARIANT_HK,
     kWordwrapKTable,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_TEXT(
+    -moz-hyphens,
+    hyphens,
+    CSS_PROP_DOMPROP_PREFIXED(Hyphens),
+    CSS_PROPERTY_PARSE_VALUE,
+    VARIANT_HK,
+    kHyphensKTable,
     CSS_PROP_NO_OFFSET,
     eStyleAnimType_None)
 CSS_PROP_POSITION(
@@ -2467,7 +2490,7 @@ CSS_PROP_XUL(
     box_ordinal_group,
     CSS_PROP_DOMPROP_PREFIXED(BoxOrdinalGroup),
     CSS_PROPERTY_PARSE_VALUE |
-        CSS_PROPERTY_VALUE_POSITIVE_NONZERO,
+        CSS_PROPERTY_VALUE_AT_LEAST_ONE,
     VARIANT_HI,
     nsnull,
     CSS_PROP_NO_OFFSET,
@@ -2488,6 +2511,9 @@ CSS_PROP_FONT(
     -moz-script-level,
     script_level,
     ScriptLevel,
+    // REVIEW: no range restriction?
+    // NOTE: CSSParserImpl::ParseSingleValueProperty only accepts this
+    // property when mUnsafeRulesEnabled is set.
     CSS_PROPERTY_PARSE_VALUE,
     // script-level can take Integer or Number values, but only Integer
     // ("relative") values can be specified in a style sheet.
@@ -2499,7 +2525,8 @@ CSS_PROP_FONT(
     -moz-script-size-multiplier,
     script_size_multiplier,
     ScriptSizeMultiplier,
-    CSS_PROPERTY_PARSE_VALUE,
+    // REVIEW: no range restriction?
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
     0,
     nsnull,
     CSS_PROP_NO_OFFSET,
@@ -2508,7 +2535,8 @@ CSS_PROP_FONT(
     -moz-script-min-size,
     script_min_size,
     ScriptMinSize,
-    CSS_PROPERTY_PARSE_VALUE,
+    // REVIEW: no range restriction?
+    CSS_PROPERTY_PARSE_INACCESSIBLE,
     0,
     nsnull,
     CSS_PROP_NO_OFFSET,
@@ -2716,6 +2744,7 @@ CSS_PROP_SVG(
     StrokeDasharray,
     CSS_PROPERTY_PARSE_FUNCTION |
         CSS_PROPERTY_VALUE_LIST_USES_COMMAS,
+        // NOTE: Internal values have range restrictions.
     0,
     nsnull,
     CSS_PROP_NO_OFFSET, /* property stored in 2 separate members */

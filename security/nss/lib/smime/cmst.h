@@ -37,7 +37,7 @@
 /*
  * Header for CMS types.
  *
- * $Id: cmst.h,v 1.10 2005/06/27 22:21:19 julien.pierre.bugs%sun.com Exp $
+ * $Id: cmst.h,v 1.10.142.3 2011/02/11 03:57:50 emaldona%redhat.com Exp $
  */
 
 #ifndef _CMST_H_
@@ -98,6 +98,8 @@ typedef struct NSSCMSRecipientInfoStr NSSCMSRecipientInfo;
 typedef struct NSSCMSDigestedDataStr NSSCMSDigestedData;
 typedef struct NSSCMSEncryptedDataStr NSSCMSEncryptedData;
 
+typedef struct NSSCMSGenericWrapperDataStr NSSCMSGenericWrapperData;
+
 typedef struct NSSCMSSMIMEKEAParametersStr NSSCMSSMIMEKEAParameters;
 
 typedef struct NSSCMSAttributeStr NSSCMSAttribute;
@@ -107,6 +109,21 @@ typedef struct NSSCMSEncoderContextStr NSSCMSEncoderContext;
 
 typedef struct NSSCMSCipherContextStr NSSCMSCipherContext;
 typedef struct NSSCMSDigestContextStr NSSCMSDigestContext;
+
+typedef struct NSSCMSContentInfoPrivateStr NSSCMSContentInfoPrivate;
+
+typedef SECStatus (*NSSCMSGenericWrapperDataCallback)
+						(NSSCMSGenericWrapperData *);
+typedef   void    (*NSSCMSGenericWrapperDataDestroy) 
+						(NSSCMSGenericWrapperData *);
+
+extern const SEC_ASN1Template NSSCMSGenericWrapperDataTemplate[];
+extern const SEC_ASN1Template NSS_PointerToCMSGenericWrapperDataTemplate[];
+
+SEC_ASN1_CHOOSER_DECLARE(NSS_PointerToCMSGenericWrapperDataTemplate)
+SEC_ASN1_CHOOSER_DECLARE(NSSCMSGenericWrapperDataTemplate)
+
+
 
 /*
  * Type of function passed to NSSCMSDecode or NSSCMSDecoderStart.
@@ -142,6 +159,7 @@ union NSSCMSContentUnion {
     NSSCMSEncryptedData	*	encryptedData;
     NSSCMSEnvelopedData	*	envelopedData;
     NSSCMSSignedData *		signedData;
+    NSSCMSGenericWrapperData *	genericData;
     /* or anonymous pointer to something */
     void *			pointer;
 };
@@ -164,8 +182,8 @@ struct NSSCMSContentInfoStr {
 							 * (only used by creation code) */
     SECOidTag			contentEncAlgTag;	/* oid tag of encryption algorithm
 							 * (only used by creation code) */
-    NSSCMSCipherContext		*ciphcx;		/* context for en/decryption going on */
-    NSSCMSDigestContext		*digcx;			/* context for digesting going on */
+    NSSCMSContentInfoPrivate	*privateInfo;		/* place for NSS private info */
+    void		*reserved;			/* keep binary compatibility */
 };
 
 /* =============================================================================
@@ -184,6 +202,18 @@ struct NSSCMSMessageStr {
     void *		pwfn_arg;
     NSSCMSGetDecryptKeyCallback decrypt_key_cb;
     void *		decrypt_key_cb_arg;
+};
+
+/* ============================================================================
+ * GENERIC WRAPPER
+ * 
+ * used for user defined types.
+ */
+struct NSSCMSGenericWrapperDataStr {
+    NSSCMSContentInfo	contentInfo;
+    /* ---- local; not part of encoding ------ */
+    NSSCMSMessage *	cmsg;
+    /* wrapperspecific data starts here */
 };
 
 /* =============================================================================

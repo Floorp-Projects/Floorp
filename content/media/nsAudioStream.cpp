@@ -140,6 +140,7 @@ class nsAudioStreamRemote : public nsAudioStream
   PRBool IsPaused();
   PRInt32 GetMinWriteSamples();
 
+private:
   nsRefPtr<AudioChild> mAudioChild;
 
   SampleFormat mFormat;

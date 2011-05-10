@@ -70,10 +70,11 @@ abstract public class GeckoApp
     public static GeckoSurfaceView surfaceView;
     public static GeckoApp mAppContext;
     public static boolean mFullscreen = false;
-    public static boolean mStartedEarly = false;
     public static File sGREDir = null;
     static Thread mLibLoadThread = null;
     public Handler mMainHandler;
+    private IntentFilter mConnectivityFilter;
+    private BroadcastReceiver mConnectivityReceiver;
 
     enum LaunchState {PreLaunch, Launching, WaitButton,
                       Launched, GeckoRunning, GeckoExiting};
@@ -161,9 +162,6 @@ abstract public class GeckoApp
 
                 // and then fire us up
                 String env = i.getStringExtra("env0");
-                if (GeckoApp.mStartedEarly) {
-                    GeckoAppShell.putenv("MOZ_APP_RESTART=" + startup_time);
-                }
                 GeckoAppShell.runGecko(getApplication().getPackageResourcePath(),
                                        i.getStringExtra("args"),
                                        i.getDataString());
@@ -257,6 +255,10 @@ abstract public class GeckoApp
                                    })
                 .show();
         }
+
+        mConnectivityFilter = new IntentFilter();
+        mConnectivityFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        mConnectivityReceiver = new GeckoConnectivityReceiver();
     }
 
     boolean IsNewInstall() {
@@ -349,6 +351,8 @@ abstract public class GeckoApp
 
         // onPause will be followed by either onResume or onStop.
         super.onPause();
+
+        unregisterReceiver(mConnectivityReceiver);
     }
 
     @Override
@@ -365,6 +369,8 @@ abstract public class GeckoApp
         if (checkLaunchState(LaunchState.PreLaunch) ||
             checkLaunchState(LaunchState.Launching))
             onNewIntent(getIntent());
+
+        registerReceiver(mConnectivityReceiver, mConnectivityFilter);
     }
 
     @Override
@@ -462,6 +468,16 @@ abstract public class GeckoApp
           ZipEntry entry = zipEntries.nextElement();
           if (entry.getName().startsWith("extensions/") && entry.getName().endsWith(".xpi")) {
             Log.i("GeckoAppJava", "installing extension : " + entry.getName());
+            unpackFile(zip, buf, entry, entry.getName());
+          }
+        }
+
+        // copy any hyphenation dictionaries file into a hyphenation/ directory
+        Enumeration<? extends ZipEntry> hyphenEntries = zip.entries();
+        while (hyphenEntries.hasMoreElements()) {
+          ZipEntry entry = hyphenEntries.nextElement();
+          if (entry.getName().startsWith("hyphenation/")) {
+            Log.i("GeckoAppJava", "installing hyphenation : " + entry.getName());
             unpackFile(zip, buf, entry, entry.getName());
           }
         }

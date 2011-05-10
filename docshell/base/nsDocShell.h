@@ -335,9 +335,9 @@ protected:
     nsresult ScrollToAnchor(nsACString & curHash, nsACString & newHash,
                             PRUint32 aLoadType);
 
-    // Tries to stringify a given variant by converting it to JSON.  This only
+    // Tries to serialize a given variant using structured clone.  This only
     // works if the variant is backed by a JSVal.
-    nsresult StringifyJSValVariant(JSContext *aCx, nsIVariant *aData,
+    nsresult SerializeJSValVariant(JSContext *aCx, nsIVariant *aData,
                                    nsAString &aResult);
 
     // Returns PR_TRUE if would have called FireOnLocationChange,

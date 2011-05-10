@@ -274,6 +274,7 @@ function runTest() {
 
   statusMsg("Awake after going back to page 1.");
   popstateExpected("Going back to page 1 should trigger a popstate.");
+  is(gLastPopStateEvent.isTrusted, true, 'Popstate event should be trusted.');
   is(JSON.stringify(gLastPopStateEvent.state), JSON.stringify(testObj1),
      "Wrong state object popped after going back to page 1.");
   ok(gLastPopStateEvent.state === iframeCw.history.state,

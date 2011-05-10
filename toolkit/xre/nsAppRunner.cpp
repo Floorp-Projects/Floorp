@@ -2727,6 +2727,12 @@ static DWORD InitDwriteBG(LPVOID lpdwThreadParam)
 
 PRTime gXRE_mainTimestamp = 0;
 
+#ifdef MOZ_X11
+#ifndef MOZ_PLATFORM_MAEMO
+void fire_glxtest_process();
+#endif
+#endif
+
 int
 XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 {
@@ -2745,6 +2751,16 @@ XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #ifdef DEBUG
   if (PR_GetEnv("XRE_MAIN_BREAK"))
     NS_BREAK();
+#endif
+
+  // see bug 639842
+  // it's very important to fire this process BEFORE we set up error handling.
+  // indeed, this process is expected to be crashy, and we don't want the user to see its crashes.
+  // That's the whole reason for doing this in a separate process.
+#ifdef MOZ_X11
+#ifndef MOZ_PLATFORM_MAEMO
+  fire_glxtest_process();
+#endif
 #endif
 
   SetupErrorHandling(argv[0]);

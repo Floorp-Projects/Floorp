@@ -90,6 +90,8 @@ namespace nanojit
             return p;
         }
 
+        size_t getBytesAllocated();
+
     protected:
         void* allocSlow(size_t nbytes, bool fallible = false);
         bool fill(size_t minbytes, bool fallible);
@@ -97,6 +99,7 @@ namespace nanojit
         class Chunk {
         public:
             Chunk* prev;
+            size_t size;
             int64_t data[1]; // int64_t forces 8-byte alignment.
         };
 

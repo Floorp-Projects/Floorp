@@ -497,9 +497,9 @@ nsContextMenu.prototype = {
       }
       else if (this.target instanceof HTMLInputElement ) {
         this.onTextInput = this.isTargetATextBox(this.target);
-        // allow spellchecking UI on all writable text boxes except passwords
+        // Allow spellchecking UI on all text and search inputs.
         if (this.onTextInput && ! this.target.readOnly &&
-            this.target.type != "password") {
+            (this.target.type == "text" || this.target.type == "search")) {
           this.onEditableArea = true;
           InlineSpellCheckerUI.init(this.target.QueryInterface(Ci.nsIDOMNSEditableElement).editor);
           InlineSpellCheckerUI.initFromEvent(aRangeParent, aRangeOffset);

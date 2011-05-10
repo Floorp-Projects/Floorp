@@ -46,7 +46,7 @@
 #define mozilla_css_StyleRule_h__
 
 //#include <stdio.h>
-#include "Rule.h"
+#include "mozilla/css/Rule.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
@@ -341,16 +341,14 @@ public:
   // hooks for DOM rule
   void GetCssText(nsAString& aCssText);
   void SetCssText(const nsAString& aCssText);
-  nsCSSStyleSheet* GetParentStyleSheet() { return mSheet; }
-  GroupRule* GetParentRule() { return mParentRule; }
   void GetSelectorText(nsAString& aSelectorText);
   void SetSelectorText(const nsAString& aSelectorText);
 
   virtual PRInt32 GetType() const;
 
-  virtual already_AddRefed<nsICSSRule> Clone() const;
+  virtual already_AddRefed<Rule> Clone() const;
 
-  nsIDOMCSSRule* GetDOMRuleWeak(nsresult* aResult);
+  virtual nsIDOMCSSRule* GetDOMRule();
 
   // The new mapping function.
   virtual void MapRuleInfoInto(nsRuleData* aRuleData);

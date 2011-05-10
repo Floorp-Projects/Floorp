@@ -154,31 +154,31 @@ nsSVGTSpanFrame::GetCharNumAtPosition(nsIDOMSVGPoint *point)
   return nsSVGTSpanFrameBase::GetCharNumAtPosition(point);
 }
 
-NS_IMETHODIMP_(nsISVGGlyphFragmentLeaf *)
-nsSVGTSpanFrame::GetFirstGlyphFragment()
+NS_IMETHODIMP_(nsSVGGlyphFrame *)
+nsSVGTSpanFrame::GetFirstGlyphFrame()
 {
   // try children first:
   nsIFrame* kid = mFrames.FirstChild();
   while (kid) {
     nsISVGGlyphFragmentNode *node = do_QueryFrame(kid);
     if (node)
-      return node->GetFirstGlyphFragment();
+      return node->GetFirstGlyphFrame();
     kid = kid->GetNextSibling();
   }
 
   // nope. try siblings:
-  return GetNextGlyphFragment();
+  return GetNextGlyphFrame();
 
 }
 
-NS_IMETHODIMP_(nsISVGGlyphFragmentLeaf *)
-nsSVGTSpanFrame::GetNextGlyphFragment()
+NS_IMETHODIMP_(nsSVGGlyphFrame *)
+nsSVGTSpanFrame::GetNextGlyphFrame()
 {
   nsIFrame* sibling = GetNextSibling();
   while (sibling) {
     nsISVGGlyphFragmentNode *node = do_QueryFrame(sibling);
     if (node)
-      return node->GetFirstGlyphFragment();
+      return node->GetFirstGlyphFrame();
     sibling = sibling->GetNextSibling();
   }
 
@@ -186,17 +186,11 @@ nsSVGTSpanFrame::GetNextGlyphFragment()
   
   NS_ASSERTION(GetParent(), "null parent");
   nsISVGGlyphFragmentNode *node = do_QueryFrame(GetParent());
-  return node ? node->GetNextGlyphFragment() : nsnull;
+  return node ? node->GetNextGlyphFrame() : nsnull;
 }
 
 NS_IMETHODIMP_(void)
-nsSVGTSpanFrame::SetWhitespaceHandling(PRUint8 aWhitespaceHandling)
+nsSVGTSpanFrame::SetWhitespaceCompression(PRBool)
 {
-  nsSVGTSpanFrameBase::SetWhitespaceHandling();
-}
-
-NS_IMETHODIMP_(PRBool)
-nsSVGTSpanFrame::IsAllWhitespace()
-{
-  return nsSVGTSpanFrameBase::IsAllWhitespace();
+  nsSVGTSpanFrameBase::SetWhitespaceCompression();
 }
