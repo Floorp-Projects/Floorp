@@ -518,22 +518,25 @@ nsHTMLReflowState::InitFrameType()
 
   // just assume what the style says, because we might not have had a
   // useful float/absolute containing block
-  nsIFrame* frameToTest =
-    frame->GetType() == nsGkAtoms::tableFrame ? frame->GetParent() : frame;
 
-  DISPLAY_INIT_TYPE(frameToTest, this);
+  DISPLAY_INIT_TYPE(frame, this);
 
-  NS_ASSERTION(frameToTest->GetStyleDisplay()->IsAbsolutelyPositioned() ==
+  if (frame->GetType() == nsGkAtoms::tableFrame) {
+    mFrameType = NS_CSS_FRAME_TYPE_BLOCK;
+    return;
+  }
+
+  NS_ASSERTION(frame->GetStyleDisplay()->IsAbsolutelyPositioned() ==
                  disp->IsAbsolutelyPositioned(),
                "Unexpected position style");
-  NS_ASSERTION(frameToTest->GetStyleDisplay()->IsFloating() ==
+  NS_ASSERTION(frame->GetStyleDisplay()->IsFloating() ==
                  disp->IsFloating(), "Unexpected float style");
-  if (frameToTest->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
+  if (frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) {
     if (disp->IsAbsolutelyPositioned()) {
       frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
       //XXXfr hack for making frames behave properly when in overflow container lists
       //      see bug 154892; need to revisit later
-      if (frameToTest->GetPrevInFlow())
+      if (frame->GetPrevInFlow())
         frameType = NS_CSS_FRAME_TYPE_BLOCK;
     }
     else if (disp->IsFloating()) {
@@ -1132,15 +1135,15 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   NS_PRECONDITION(containingBlockHeight != NS_AUTOHEIGHT,
                   "containing block height must be constrained");
 
-  nsIFrame* outOfFlow = 
-    frame->GetType() == nsGkAtoms::tableFrame ? frame->GetParent() : frame;
-  NS_ASSERTION(outOfFlow->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
+  NS_ASSERTION(frame->GetType() != nsGkAtoms::tableFrame,
+               "InitAbsoluteConstraints should not be called on table frames");
+  NS_ASSERTION(frame->GetStateBits() & NS_FRAME_OUT_OF_FLOW,
                "Why are we here?");
 
   // Get the placeholder frame
   nsIFrame*     placeholderFrame;
 
-  placeholderFrame = aPresContext->PresShell()->GetPlaceholderFrameFor(outOfFlow);
+  placeholderFrame = aPresContext->PresShell()->GetPlaceholderFrameFor(frame);
   NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
 
   // If both 'left' and 'right' are 'auto' or both 'top' and 'bottom' are
