@@ -1454,11 +1454,9 @@ public:
   {
     if (!aTag)
       return;
-    CopyUTF8toUTF16(aTag->mMimeDescriptionArray[aMimeTypeIndex], mDescription);
-    if (aTag->mExtensionsArray)
-      CopyUTF8toUTF16(aTag->mExtensionsArray[aMimeTypeIndex], mSuffixes);
-    if (aTag->mMimeTypeArray)
-      CopyUTF8toUTF16(aTag->mMimeTypeArray[aMimeTypeIndex], mType);
+    CopyUTF8toUTF16(aTag->mMimeDescriptions[aMimeTypeIndex], mDescription);
+    CopyUTF8toUTF16(aTag->mExtensions[aMimeTypeIndex], mSuffixes);
+    CopyUTF8toUTF16(aTag->mMimeTypes[aMimeTypeIndex], mType);
   }
 
   virtual ~DOMMimeTypeImpl() {
@@ -1543,7 +1541,7 @@ public:
 
   NS_METHOD GetLength(PRUint32* aLength)
   {
-    *aLength = mPluginTag.mVariants;
+    *aLength = mPluginTag.mMimeTypes.Length();
     return NS_OK;
   }
 
@@ -1557,8 +1555,8 @@ public:
 
   NS_METHOD NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
   {
-    for (int i = mPluginTag.mVariants - 1; i >= 0; --i) {
-      if (aName.Equals(NS_ConvertUTF8toUTF16(mPluginTag.mMimeTypeArray[i])))
+    for (int i = mPluginTag.mMimeTypes.Length() - 1; i >= 0; --i) {
+      if (aName.Equals(NS_ConvertUTF8toUTF16(mPluginTag.mMimeTypes[i])))
         return Item(i, aReturn);
     }
     return NS_OK;
@@ -1650,10 +1648,9 @@ nsPluginHost::FindPluginForType(const char* aMimeType,
   nsPluginTag *plugin = mPlugins;
   while (plugin) {
     if (!aCheckEnabled || plugin->IsEnabled()) {
-      PRInt32 mimeCount = plugin->mVariants;
+      PRInt32 mimeCount = plugin->mMimeTypes.Length();
       for (PRInt32 i = 0; i < mimeCount; i++) {
-        if (plugin->mMimeTypeArray[i] &&
-            (0 == PL_strcasecmp(plugin->mMimeTypeArray[i], aMimeType))) {
+        if (0 == PL_strcasecmp(plugin->mMimeTypes[i].get(), aMimeType)) {
           return plugin;
         }
       }
@@ -1668,31 +1665,25 @@ nsPluginTag*
 nsPluginHost::FindPluginEnabledForExtension(const char* aExtension,
                                             const char*& aMimeType)
 {
-  nsPluginTag *plugins = nsnull;
-  PRInt32     variants, cnt;
+  if (!aExtension) {
+    return nsnull;
+  }
 
   LoadPlugins();
 
-  // if we have a mimetype passed in, search the mPlugins linked
-  // list for a match
-  if (aExtension) {
-    plugins = mPlugins;
-    while (plugins) {
-      variants = plugins->mVariants;
-      if (plugins->mExtensionsArray) {
-        for (cnt = 0; cnt < variants; cnt++) {
-          // mExtensionsArray[cnt] is a list of extensions separated
-          // by commas
-          if (plugins->IsEnabled() &&
-              0 == CompareExtensions(plugins->mExtensionsArray[cnt], aExtension)) {
-            aMimeType = plugins->mMimeTypeArray[cnt];
-            return plugins;
-          }
+  nsPluginTag *plugin = mPlugins;
+  while (plugin) {
+    if (plugin->IsEnabled()) {
+      PRInt32 variants = plugin->mExtensions.Length();
+      for (PRInt32 i = 0; i < variants; i++) {
+        // mExtensionsArray[cnt] is a list of extensions separated by commas
+        if (0 == CompareExtensions(plugin->mExtensions[i].get(), aExtension)) {
+          aMimeType = plugin->mMimeTypes[i].get();
+          return plugin;
         }
       }
-
-      plugins = plugins->mNext;
     }
+    plugin = plugin->mNext;
   }
 
   return nsnull;
@@ -2679,13 +2670,13 @@ nsPluginHost::WritePluginInfo()
       // filename & fullpath are on separate line
       // because they can contain field delimiter char
       PR_fprintf(fd, "%s%c%c\n%s%c%c\n%s%c%c\n",
-        (!tag->mFileName.IsEmpty() ? tag->mFileName.get() : ""),
+        (tag->mFileName.get()),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER,
-        (!tag->mFullPath.IsEmpty() ? tag->mFullPath.get() : ""),
+        (tag->mFullPath.get()),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER,
-        (!tag->mVersion.IsEmpty() ? tag->mVersion.get() : ""),
+        (tag->mVersion.get()),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER);
 
@@ -2701,30 +2692,30 @@ nsPluginHost::WritePluginInfo()
 
       //description, name & mtypecount are on separate line
       PR_fprintf(fd, "%s%c%c\n%s%c%c\n%d\n",
-        (!tag->mDescription.IsEmpty() ? tag->mDescription.get() : ""),
+        (tag->mDescription.get()),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER,
-        (!tag->mName.IsEmpty() ? tag->mName.get() : ""),
+        (tag->mName.get()),
         PLUGIN_REGISTRY_FIELD_DELIMITER,
         PLUGIN_REGISTRY_END_OF_LINE_MARKER,
-        tag->mVariants + (tag->mIsNPRuntimeEnabledJavaPlugin ? 1 : 0));
+        tag->mMimeTypes.Length() + (tag->mIsNPRuntimeEnabledJavaPlugin ? 1 : 0));
 
       // Add in each mimetype this plugin supports
-      for (int i=0; i<tag->mVariants; i++) {
+      for (PRUint32 i = 0; i < tag->mMimeTypes.Length(); i++) {
         PR_fprintf(fd, "%d%c%s%c%s%c%s%c%c\n",
           i,PLUGIN_REGISTRY_FIELD_DELIMITER,
-          (tag->mMimeTypeArray && tag->mMimeTypeArray[i] ? tag->mMimeTypeArray[i] : ""),
+          (tag->mMimeTypes[i].get()),
           PLUGIN_REGISTRY_FIELD_DELIMITER,
-          (!tag->mMimeDescriptionArray[i].IsEmpty() ? tag->mMimeDescriptionArray[i].get() : ""),
+          (tag->mMimeDescriptions[i].get()),
           PLUGIN_REGISTRY_FIELD_DELIMITER,
-          (tag->mExtensionsArray && tag->mExtensionsArray[i] ? tag->mExtensionsArray[i] : ""),
+          (tag->mExtensions[i].get()),
           PLUGIN_REGISTRY_FIELD_DELIMITER,
           PLUGIN_REGISTRY_END_OF_LINE_MARKER);
       }
 
       if (tag->mIsNPRuntimeEnabledJavaPlugin) {
         PR_fprintf(fd, "%d%c%s%c%s%c%s%c%c\n",
-          tag->mVariants, PLUGIN_REGISTRY_FIELD_DELIMITER,
+          tag->mMimeTypes.Length(), PLUGIN_REGISTRY_FIELD_DELIMITER,
           "application/x-java-vm-npruntime",
           PLUGIN_REGISTRY_FIELD_DELIMITER,
           "",
