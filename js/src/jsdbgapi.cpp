@@ -2765,3 +2765,33 @@ JS_GetFunctionCallback(JSContext *cx)
 
 #endif /* MOZ_TRACE_JSCALLS */
 
+JS_PUBLIC_API(void)
+JS_DumpProfile(JSContext *cx, JSScript *script)
+{
+    JS_ASSERT(!cx->runtime->gcRunning);
+
+#if defined(DEBUG)
+    if (script->pcCounters) {
+        // Display hit counts for every JS code line
+        AutoArenaAllocator mark(&cx->tempPool);
+        Sprinter sprinter;
+        INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+
+        fprintf(stdout, "--- PC COUNTS %s:%d ---\n", script->filename, script->lineno);
+        js_Disassemble(cx, script, true, &sprinter);
+        fprintf(stdout, "%s\n", sprinter.base);
+        fprintf(stdout, "--- END PC COUNTS %s:%d ---\n", script->filename, script->lineno);
+    }
+#endif
+}
+
+JS_PUBLIC_API(void)
+JS_DumpAllProfiles(JSContext *cx)
+{
+    for (JSScript *script = (JSScript *) JS_LIST_HEAD(&cx->compartment->scripts);
+         script != (JSScript *) &cx->compartment->scripts;
+         script = (JSScript *) JS_NEXT_LINK((JSCList *)script))
+    {
+        JS_DumpProfile(cx, script);
+    }
+}
