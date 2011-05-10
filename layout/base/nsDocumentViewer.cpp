@@ -3634,7 +3634,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
   }
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
-  NS_ASSERTION(docShell, "This has to be a docshell");
+  NS_ENSURE_STATE(docShell);
 
   // Check to see if this document is still busy
   // If it is busy and we aren't already "queued" up to print then
@@ -3682,7 +3682,7 @@ DocumentViewerImpl::Print(nsIPrintSettings*       aPrintSettings,
     mPrintEngine = new nsPrintEngine();
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = mPrintEngine->Initialize(this, docShell, mDocument, 
+    rv = mPrintEngine->Initialize(this, mContainer, mDocument, 
                                   float(mDeviceContext->AppUnitsPerCSSInch()) /
                                   float(mDeviceContext->AppUnitsPerDevPixel()) /
                                   mPageZoom,
@@ -3734,7 +3734,6 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
 #endif
 
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
-  NS_ASSERTION(docShell, "This has to be a docshell");
   if (!docShell || !mDeviceContext) {
     PR_PL(("Can't Print Preview without device context and docshell"));
     return NS_ERROR_FAILURE;
@@ -3749,7 +3748,7 @@ DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings,
     mPrintEngine = new nsPrintEngine();
     NS_ENSURE_TRUE(mPrintEngine, NS_ERROR_OUT_OF_MEMORY);
 
-    rv = mPrintEngine->Initialize(this, docShell, doc,
+    rv = mPrintEngine->Initialize(this, mContainer, doc,
                                   float(mDeviceContext->AppUnitsPerCSSInch()) /
                                   float(mDeviceContext->AppUnitsPerDevPixel()) /
                                   mPageZoom,
