@@ -657,19 +657,25 @@ FrameState::syncForAllocation(RegisterAllocation *alloc, bool inlineReturn, Uses
      * call returns.
      */
 
-    FrameEntry *topEntry;
+    FrameEntry *topEntry = NULL;
     if (inlineReturn)
         topEntry = a->parent->sp - (GET_ARGC(a->parent->PC) + 2);
-    else
-        topEntry = a->sp - uses.nuses;
 
     for (uint32 i = tracker.nentries - 1; i < tracker.nentries; i--) {
         FrameEntry *fe = tracker[i];
 
-        if (deadEntry(fe))
+        if (deadEntry(fe, uses.nuses))
             continue;
-        if (!isTemporary(fe) && fe >= topEntry) {
-            /* No need to sync, this will get popped before branching. */
+        if (topEntry && fe >= topEntry && !isTemporary(fe)) {
+            /*
+             * The return value has already been stored, so there is no need to
+             * keep any of the entries for this frame or for values popped once
+             * the call returns intact. Forcibly evict any registers for these,
+             * so that we don't emit sync code for them if we need a register
+             * in syncFe below.
+             */
+            forgetAllRegs(fe);
+            fe->resetSynced();
             continue;
         }
 
