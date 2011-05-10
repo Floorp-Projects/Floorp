@@ -256,7 +256,7 @@ pref("accessibility.typeaheadfind.startlinksonly", false);
 pref("accessibility.typeaheadfind.timeout", 4000);
 pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "beep");
-pref("accessibility.typeaheadfind.enablesound", true);
+pref("accessibility.typeaheadfind.enablesound", false);
 pref("accessibility.typeaheadfind.prefillwithselection", true);
 
 // use Mac OS X Appearance panel text smoothing setting when rendering text, disabled by default
