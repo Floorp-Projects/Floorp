@@ -141,7 +141,7 @@ protected:
   nsresult GetResponseText(nsAString& _retval);
   nsresult GetStatusText(nsACString& _retval);
   nsresult GetStatus(nsresult* _retval);
-  nsresult GetReadyState(PRInt32* _retval);
+  nsresult GetReadyState(PRUint16* _retval);
   nsresult SetRequestHeader(const nsACString& aHeader,
                             const nsACString& aValue);
   nsresult OverrideMimeType(const nsACString& aMimetype);
