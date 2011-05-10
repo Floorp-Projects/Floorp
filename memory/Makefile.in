@@ -47,11 +47,6 @@ ifdef MOZ_MEMORY
 DIRS += jemalloc
 endif
 
-ifdef WINCE
-# mozalloc depends on the shunt
-DIRS += $(DEPTH)/build/wince/shunt
-endif
-
 DIRS += mozalloc
 
 include $(topsrcdir)/config/rules.mk

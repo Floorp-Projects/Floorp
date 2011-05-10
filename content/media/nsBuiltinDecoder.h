@@ -260,6 +260,11 @@ public:
   // aDuration is in microseconds.
   virtual void SetDuration(PRInt64 aDuration) = 0;
 
+  // Called while decoding metadata to set the end time of the media
+  // resource. The decoder monitor must be obtained before calling this.
+  // aEndTime is in microseconds.
+  virtual void SetEndTime(PRInt64 aEndTime) = 0;
+
   // Functions used by assertions to ensure we're calling things
   // on the appropriate threads.
   virtual PRBool OnDecodeThread() const = 0;
@@ -285,8 +290,14 @@ public:
   virtual void ClearPositionChangeFlag() = 0;
 
   // Called from the main thread to set whether the media resource can
-  // be seeked. The decoder monitor must be obtained before calling this.
+  // seek into unbuffered ranges. The decoder monitor must be obtained
+  // before calling this.
   virtual void SetSeekable(PRBool aSeekable) = 0;
+
+  // Returns PR_TRUE if the media resource can seek into unbuffered ranges,
+  // as set by SetSeekable(). The decoder monitor must be obtained before
+  // calling this.
+  virtual PRBool GetSeekable() = 0;
 
   // Update the playback position. This can result in a timeupdate event
   // and an invalidate of the frame being dispatched asynchronously if

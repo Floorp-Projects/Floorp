@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: rsawrapr.c,v 1.11 2006/10/23 21:24:38 wtchang%redhat.com Exp $ */
+/* $Id: rsawrapr.c,v 1.11.70.1 2011/04/07 22:54:48 wtc%google.com Exp $ */
 
 #include "blapi.h"
 #include "softoken.h"
@@ -193,7 +193,7 @@ rsa_FormatOneBlock(unsigned modulusLen, RSA_BlockType blockType,
     unsigned char *block;
     unsigned char *bp;
     int padLen;
-    int i;
+    int i, j;
     SECStatus rv;
 
     block = (unsigned char *) PORT_Alloc(modulusLen);
@@ -246,28 +246,53 @@ rsa_FormatOneBlock(unsigned modulusLen, RSA_BlockType blockType,
 	 * 0x00 || BT || Pad || 0x00 || ActualData
 	 *   1      1   padLen    1      data->len
 	 * Pad is all non-zero random bytes.
+	 *
+	 * Build the block left to right.
+	 * Fill the entire block from Pad to the end with random bytes.
+	 * Use the bytes after Pad as a supply of extra random bytes from 
+	 * which to find replacements for the zero bytes in Pad.
+	 * If we need more than that, refill the bytes after Pad with 
+	 * new random bytes as necessary.
 	 */
-	padLen = modulusLen - data->len - 3;
+	padLen = modulusLen - (data->len + 3);
 	PORT_Assert (padLen >= RSA_BLOCK_MIN_PAD_LEN);
 	if (padLen < RSA_BLOCK_MIN_PAD_LEN) {
 	    PORT_Free (block);
 	    return NULL;
 	}
-	for (i = 0; i < padLen; i++) {
-	    /* Pad with non-zero random data. */
-	    do {
-		rv = RNG_GenerateGlobalRandomBytes(bp + i, 1);
-	    } while (rv == SECSuccess && bp[i] == RSA_BLOCK_AFTER_PAD_OCTET);
-	    if (rv != SECSuccess) {
-		sftk_fatalError = PR_TRUE;
-		PORT_Free (block);
-		return NULL;
+	j = modulusLen - 2;
+	rv = RNG_GenerateGlobalRandomBytes(bp, j);
+	if (rv == SECSuccess) {
+	    for (i = 0; i < padLen; ) {
+		unsigned char repl;
+		/* Pad with non-zero random data. */
+		if (bp[i] != RSA_BLOCK_AFTER_PAD_OCTET) {
+		    ++i;
+		    continue;
+		}
+		if (j <= padLen) {
+		    rv = RNG_GenerateGlobalRandomBytes(bp + padLen,
+					  modulusLen - (2 + padLen));
+		    if (rv != SECSuccess)
+		    	break;
+		    j = modulusLen - 2;
+		}
+		do {
+		    repl = bp[--j];
+		} while (repl == RSA_BLOCK_AFTER_PAD_OCTET && j > padLen);
+		if (repl != RSA_BLOCK_AFTER_PAD_OCTET) {
+		    bp[i++] = repl;
+		}
 	    }
+	}
+	if (rv != SECSuccess) {
+	    sftk_fatalError = PR_TRUE;
+	    PORT_Free (block);
+	    return NULL;
 	}
 	bp += padLen;
 	*bp++ = RSA_BLOCK_AFTER_PAD_OCTET;
 	PORT_Memcpy (bp, data->data, data->len);
-
 	break;
 
       /*

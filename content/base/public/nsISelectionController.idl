@@ -51,7 +51,7 @@ interface nsIDOMNode;
 interface nsISelection;
 interface nsISelectionDisplay;
 
-[scriptable, uuid(ff11fa25-788f-444f-8f69-dcdf14348fb3)]
+[scriptable, uuid(e0dd9365-470b-4ee8-b644-54add1c4c73f)]
 interface nsISelectionController : nsISelectionDisplay
 {
    const short SELECTION_NONE=0;
@@ -63,7 +63,8 @@ interface nsISelectionController : nsISelectionDisplay
    const short SELECTION_IME_SELECTEDCONVERTEDTEXT=32;
    const short SELECTION_ACCESSIBILITY=64; // For accessibility API usage
    const short SELECTION_FIND=128;
-   const short NUM_SELECTIONTYPES=9;
+   const short SELECTION_URLSECONDARY=256;
+   const short NUM_SELECTIONTYPES=10;
 
    const short SELECTION_ANCHOR_REGION = 0;
    const short SELECTION_FOCUS_REGION = 1;

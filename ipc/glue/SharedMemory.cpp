@@ -52,13 +52,15 @@ static PRInt64 GetShmemAllocated(void*) { return gShmemAllocated; }
 static PRInt64 GetShmemMapped(void*) { return gShmemMapped; }
 
 NS_MEMORY_REPORTER_IMPLEMENT(ShmemAllocated,
-                             "shmem/allocated",
-                             "Shmem bytes accessible (not necessarily mapped)",
+                             "shmem-allocated",
+                             "Memory shared with other processes that is "
+                             "accessible (but not necessarily mapped).",
                              GetShmemAllocated,
                              nsnull)
 NS_MEMORY_REPORTER_IMPLEMENT(ShmemMapped,
-                             "shmem/mapped",
-                             "Shmem bytes mapped into address space",
+                             "shmem-mapped",
+                             "Memory shared with other processes that is "
+                             "mapped into the address space.",
                              GetShmemMapped,
                              nsnull)
 

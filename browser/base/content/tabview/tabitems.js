@@ -361,7 +361,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
           // tab is hidden, the active group item would be set.
           if (self.tab == gBrowser.selectedTab ||
               (!GroupItems.getActiveGroupItem() && !self.tab.hidden))
-            GroupItems.setActiveGroupItem(self.parent);
+            UI.setActive(self.parent);
         }
       } else {
         // When duplicating a non-blank orphaned tab, create a group including both of them.
@@ -643,9 +643,7 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
     let $tabEl = this.$container;
     let $canvas = this.$canvas;
 
-    UI.setActiveTab(this);
-    GroupItems.setActiveGroupItem(this.parent);
-
+    UI.setActive(this);
     TabItems._update(this.tab, {force: true});
 
     // Zoom in!
@@ -714,15 +712,10 @@ TabItem.prototype = Utils.extend(new Item(), new Subscribable(), {
         complete();
     };
 
-    UI.setActiveTab(this);
+    UI.setActive(this);
     TabItems._update(this.tab, {force: true});
 
     $tab.addClass("front");
-
-    // If we're in a stacked group, make sure we become the
-    // topChild now so that we show the zoom animation correctly.
-    if (this.parent && this.parent.isStacked())
-      this.parent.setTopChild(this);
 
     let animateZoom = gPrefBranch.getBoolPref("animate_zoom");
     if (animateZoom) {
@@ -990,12 +983,10 @@ let TabItems = {
       // Even if the page hasn't loaded, display the favicon and title
 
       // ___ icon
-      if (this.shouldLoadFavIcon(tab.linkedBrowser)) {
-        let iconUrl = tab.image;
-        if (!iconUrl)
-          iconUrl = Utils.defaultFaviconURL;
+      if (UI.shouldLoadFavIcon(tab.linkedBrowser)) {
+        let iconUrl = UI.getFavIconUrlForTab(tab);
 
-        if (iconUrl != tabItem.$favImage[0].src)
+        if (tabItem.$favImage[0].src != iconUrl)
           tabItem.$favImage[0].src = iconUrl;
 
         iQ(tabItem.$fav[0]).show();
@@ -1058,14 +1049,6 @@ let TabItems = {
   },
 
   // ----------
-  // Function: shouldLoadFavIcon
-  // Takes a xul:browser and checks whether we should display a favicon for it.
-  shouldLoadFavIcon: function TabItems_shouldLoadFavIcon(browser) {
-    return !(browser.contentDocument instanceof window.ImageDocument) &&
-           gBrowser.shouldLoadFavIcon(browser.contentDocument.documentURIObject);
-  },
-
-  // ----------
   // Function: link
   // Takes in a xul:tab, creates a TabItem for it and adds it to the scene. 
   link: function TabItems_link(tab, options) {
@@ -1089,7 +1072,7 @@ let TabItems = {
       // note that it's ok to unlink an app tab; see .handleTabUnpin
 
       if (tab._tabViewTabItem == UI.getActiveOrphanTab())
-        UI.setActiveTab(null);
+        UI.setActive(null, { onlyRemoveActiveTab: true });
 
       this.unregister(tab._tabViewTabItem);
       tab._tabViewTabItem._sendToSubscribers("close");

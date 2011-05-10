@@ -40,6 +40,42 @@
 #ifndef mozilla_Util_h_
 #define mozilla_Util_h_
 
+#include "mozilla/Types.h"
+
+/*
+ * XXX: we're cheating here in order to avoid creating object files
+ * for mfbt /just/ to provide a function like FatalError() to be used
+ * by MOZ_ASSERT().  (It'll happen eventually, but for just ASSERT()
+ * it isn't worth the pain.)  JS_Assert(), although unfortunately
+ * named, is part of SpiderMonkey's stable, external API, so this
+ * isn't quite as bad as it seems.
+ *
+ * Once mfbt needs object files, this unholy union with JS_Assert()
+ * will be broken.
+ */
+MOZ_BEGIN_EXTERN_C
+
+extern MFBT_API(void)
+JS_Assert(const char *s, const char *file, JSIntn ln);
+
+MOZ_END_EXTERN_C
+
+/*
+ * MOZ_ASSERT() is a "strong" assertion of state, like libc's
+ * assert().  If a MOZ_ASSERT() fails in a debug build, the process in
+ * which it fails will stop running in a loud and dramatic way.
+ */
+#ifdef DEBUG
+
+# define MOZ_ASSERT(expr_)                                      \
+    ((expr_) ? (void)0 : JS_Assert(#expr_, __FILE__, __LINE__))
+
+#else
+
+# define MOZ_ASSERT(expr_) ((void)0)
+
+#endif  /* DEBUG */
+
 #ifdef __cplusplus
 
 namespace mozilla {
@@ -89,6 +125,124 @@ struct DebugOnly
      * to avoid!
      */
     ~DebugOnly() {}
+};
+
+
+/*
+ * This utility pales in comparison to Boost's aligned_storage. The utility
+ * simply assumes that JSUint64 is enough alignment for anyone. This may need
+ * to be extended one day...
+ *
+ * As an important side effect, pulling the storage into this template is
+ * enough obfuscation to confuse gcc's strict-aliasing analysis into not giving
+ * false negatives when we cast from the char buffer to whatever type we've
+ * constructed using the bytes.
+ */
+template <size_t nbytes>
+struct AlignedStorage
+{
+    union U {
+        char bytes[nbytes];
+        uint64 _;
+    } u;
+
+    const void *addr() const { return u.bytes; }
+    void *addr() { return u.bytes; }
+};
+
+template <class T>
+struct AlignedStorage2
+{
+    union U {
+        char bytes[sizeof(T)];
+        uint64 _;
+    } u;
+
+    const T *addr() const { return (const T *)u.bytes; }
+    T *addr() { return (T *)u.bytes; }
+};
+
+/*
+ * Small utility for lazily constructing objects without using dynamic storage.
+ * When a Maybe<T> is constructed, it is |empty()|, i.e., no value of T has
+ * been constructed and no T destructor will be called when the Maybe<T> is
+ * destroyed. Upon calling |construct|, a T object will be constructed with the
+ * given arguments and that object will be destroyed when the owning Maybe<T>
+ * is destroyed.
+ *
+ * N.B. GCC seems to miss some optimizations with Maybe and may generate extra
+ * branches/loads/stores. Use with caution on hot paths.
+ */
+template <class T>
+class Maybe
+{
+    AlignedStorage2<T> storage;
+    bool constructed;
+
+    T &asT() { return *storage.addr(); }
+
+    explicit Maybe(const Maybe &other);
+    const Maybe &operator=(const Maybe &other);
+
+  public:
+    Maybe() { constructed = false; }
+    ~Maybe() { if (constructed) asT().~T(); }
+
+    bool empty() const { return !constructed; }
+
+    void construct() {
+        MOZ_ASSERT(!constructed);
+        new(storage.addr()) T();
+        constructed = true;
+    }
+
+    template <class T1>
+    void construct(const T1 &t1) {
+        MOZ_ASSERT(!constructed);
+        new(storage.addr()) T(t1);
+        constructed = true;
+    }
+
+    template <class T1, class T2>
+    void construct(const T1 &t1, const T2 &t2) {
+        MOZ_ASSERT(!constructed);
+        new(storage.addr()) T(t1, t2);
+        constructed = true;
+    }
+
+    template <class T1, class T2, class T3>
+    void construct(const T1 &t1, const T2 &t2, const T3 &t3) {
+        MOZ_ASSERT(!constructed);
+        new(storage.addr()) T(t1, t2, t3);
+        constructed = true;
+    }
+
+    template <class T1, class T2, class T3, class T4>
+    void construct(const T1 &t1, const T2 &t2, const T3 &t3, const T4 &t4) {
+        MOZ_ASSERT(!constructed);
+        new(storage.addr()) T(t1, t2, t3, t4);
+        constructed = true;
+    }
+
+    T *addr() {
+        MOZ_ASSERT(constructed);
+        return &asT();
+    }
+
+    T &ref() {
+        MOZ_ASSERT(constructed);
+        return asT();
+    }
+
+    void destroy() {
+        ref().~T();
+        constructed = false;
+    }
+
+    void destroyIfConstructed() {
+        if (!empty())
+            destroy();
+    }
 };
 
 } /* namespace mozilla */
