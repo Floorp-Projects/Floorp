@@ -985,7 +985,7 @@ ListModules(void)
 }
 
 static void 
-Usage(char *progName)
+PrintSyntax(char *progName)
 {
 #define FPS fprintf(stderr, 
     FPS "Type %s -H for more detailed descriptions\n", progName);
@@ -1055,22 +1055,57 @@ Usage(char *progName)
     exit(1);
 }
 
-static void LongUsage(char *progName)
-{
+enum usage_level {
+    usage_all = 0, usage_selected = 1
+};
 
+static void luCommonDetailsAE();
+
+static void luA(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "A"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Add a certificate to the database        (create if needed)\n",
-	"-A");
+        "-A");
+    if (ul == usage_selected && !is_my_command)
+        return;
+    if (ul == usage_all) {
     FPS "%-20s\n", "   All options under -E apply");
+    }
+    else {
+        luCommonDetailsAE();
+    }
+}
+
+static void luB(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "B"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Run a series of certutil commands from a batch file\n", "-B");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Specify the batch file\n", "   -i batch-file");
+}
+
+static void luE(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "E"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Add an Email certificate to the database (create if needed)\n",
-	"-E");
+        "-E");
+    if (ul == usage_selected && !is_my_command)
+        return;
+    luCommonDetailsAE();
+}
+
+static void luCommonDetailsAE()
+{
     FPS "%-20s Specify the nickname of the certificate to add\n",
-	"   -n cert-name");
+        "   -n cert-name");
     FPS "%-20s Set the certificate trust attributes:\n",
-	"   -t trustargs");
+        "   -t trustargs");
     FPS "%-25s trustargs is of the form x,y,z where x is for SSL, y is for S/MIME,\n", "");
-    FPS "%-25s and z is for code signing\n", "");
+    FPS "%-25s and z is for code signing. Use ,, for no explicit trust.\n", "");
     FPS "%-25s p \t valid peer\n", "");
     FPS "%-25s P \t trusted peer (implies p)\n", "");
     FPS "%-25s c \t valid CA\n", "");
@@ -1080,39 +1115,46 @@ static void LongUsage(char *progName)
     FPS "%-25s w \t send warning\n", "");
     FPS "%-25s g \t make step-up cert\n", "");
     FPS "%-20s Specify the password file\n",
-	"   -f pwfile");
+        "   -f pwfile");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s The input certificate is encoded in ASCII (RFC1113)\n",
-	"   -a");
+        "   -a");
     FPS "%-20s Specify the certificate file (default is stdin)\n",
-	"   -i input");
+        "   -i input");
     FPS "\n");
+}
 
+static void luC(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "C"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Create a new binary certificate from a BINARY cert request\n",
-	"-C");
+        "-C");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s The nickname of the issuer cert\n",
-	"   -c issuer-name");
+        "   -c issuer-name");
     FPS "%-20s The BINARY certificate request file\n",
-	"   -i cert-request ");
+        "   -i cert-request ");
     FPS "%-20s Output binary cert to this file (default is stdout)\n",
-	"   -o output-cert");
+        "   -o output-cert");
     FPS "%-20s Self sign\n",
-	"   -x");
+        "   -x");
     FPS "%-20s Cert serial number\n",
-	"   -m serial-number");
+        "   -m serial-number");
     FPS "%-20s Time Warp\n",
-	"   -w warp-months");
+        "   -w warp-months");
     FPS "%-20s Months valid (default is 3)\n",
         "   -v months-valid");
     FPS "%-20s Specify the password file\n",
-	"   -f pwfile");
+        "   -f pwfile");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s \n"
               "%-20s Create key usage extension. Possible keywords:\n"
               "%-20s \"digitalSignature\", \"nonRepudiation\", \"keyEncipherment\",\n"
@@ -1120,11 +1162,11 @@ static void LongUsage(char *progName)
               "%-20s \"crlSigning\", \"critical\"\n",
         "   -1 | --keyUsage keyword,keyword,...", "", "", "", "");
     FPS "%-20s Create basic constraint extension\n",
-	"   -2 ");
+        "   -2 ");
     FPS "%-20s Create authority key ID extension\n",
-	"   -3 ");
+        "   -3 ");
     FPS "%-20s Create crl distribution point extension\n",
-	"   -4 ");
+        "   -4 ");
     FPS "%-20s \n"
               "%-20s Create netscape cert type extension. Possible keywords:\n"
               "%-20s \"sslClient\", \"sslServer\", \"smime\", \"objectSigning\",\n"
@@ -1135,41 +1177,48 @@ static void LongUsage(char *progName)
               "%-20s \"serverAuth\", \"clientAuth\",\"codeSigning\",\n"
               "%-20s \"emailProtection\", \"timeStamp\",\"ocspResponder\",\n"
               "%-20s \"stepUp\", \"critical\"\n",
-	"   -6 | --extKeyUsage keyword,keyword,...", "", "", "", "");
+        "   -6 | --extKeyUsage keyword,keyword,...", "", "", "", "");
     FPS "%-20s Create an email subject alt name extension\n",
-	"   -7 emailAddrs");
+        "   -7 emailAddrs");
     FPS "%-20s Create an dns subject alt name extension\n",
-	"   -8 dnsNames");
+        "   -8 dnsNames");
     FPS "%-20s The input certificate request is encoded in ASCII (RFC1113)\n",
-	"   -a");
+        "   -a");
     FPS "\n");
+}
 
+static void luG(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "G"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Generate a new key pair\n",
-	"-G");
+        "-G");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Name of token in which to generate key (default is internal)\n",
-	"   -h token-name");
+        "   -h token-name");
 #ifdef NSS_ENABLE_ECC
     FPS "%-20s Type of key pair to generate (\"dsa\", \"ec\", \"rsa\" (default))\n",
-	"   -k key-type");
+        "   -k key-type");
     FPS "%-20s Key size in bits, (min %d, max %d, default %d) (not for ec)\n",
-	"   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
+        "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
 #else
     FPS "%-20s Type of key pair to generate (\"dsa\", \"rsa\" (default))\n",
-	"   -k key-type");
+        "   -k key-type");
     FPS "%-20s Key size in bits, (min %d, max %d, default %d)\n",
-	"   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
+        "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
 #endif /* NSS_ENABLE_ECC */
     FPS "%-20s Set the public exponent value (3, 17, 65537) (rsa only)\n",
-	"   -y exp");
+        "   -y exp");
     FPS "%-20s Specify the password file\n",
         "   -f password-file");
     FPS "%-20s Specify the noise file to be used\n",
-	"   -z noisefile");
+        "   -z noisefile");
     FPS "%-20s read PQG value from pqgfile (dsa only)\n",
-	"   -q pqgfile");
+        "   -q pqgfile");
 #ifdef NSS_ENABLE_ECC
     FPS "%-20s Elliptic curve name (ec only)\n",
-	"   -q curve-name");
+        "   -q curve-name");
     FPS "%-20s One of nistp256, nistp384, nistp521\n", "");
 #ifdef NSS_ECC_MORE_THAN_SUITE_B
     FPS "%-20s sect163k1, nistk163, sect163r1, sect163r2,\n", "");
@@ -1192,167 +1241,239 @@ static void LongUsage(char *progName)
 #endif /* NSS_ECC_MORE_THAN_SUITE_B */
 #endif
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
-	"   -d keydir");
+        "   -d keydir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "\n");
+}
 
+static void luD(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "D"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Delete a certificate from the database\n",
-	"-D");
+        "-D");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s The nickname of the cert to delete\n",
-	"   -n cert-name");
+        "   -n cert-name");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "\n");
 
+}
+
+static void luU(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "U"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s List all modules\n", /*, or print out a single named module\n",*/
         "-U");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Module database directory (default is '~/.netscape')\n",
         "   -d moddir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s force the database to open R/W\n",
-	"   -X");
+        "   -X");
     FPS "\n");
 
+}
+
+static void luK(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "K"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s List all private keys\n",
         "-K");
-          FPS "%-20s Name of token to search (\"all\" for all tokens)\n",
-	"   -h token-name ");
+    if (ul == usage_selected && !is_my_command)
+        return;
+    FPS "%-20s Name of token to search (\"all\" for all tokens)\n",
+        "   -h token-name ");
 
     FPS "%-20s Key type (\"all\" (default), \"dsa\","
 #ifdef NSS_ENABLE_ECC
                                                     " \"ec\","
 #endif
-                                                             " \"rsa\")\n",
-	"   -k key-type");
+                                                    " \"rsa\")\n",
+        "   -k key-type");
     FPS "%-20s The nickname of the key or associated certificate\n",
-	"   -n name");
+        "   -n name");
     FPS "%-20s Specify the password file\n",
         "   -f password-file");
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
-	"   -d keydir");
+        "   -d keydir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s force the database to open R/W\n",
-	"   -X");
+        "   -X");
     FPS "\n");
+}
 
+static void luL(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "L"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s List all certs, or print out a single named cert\n",
-	"-L");
+        "-L");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Pretty print named cert (list all if unspecified)\n",
-	"   -n cert-name");
+        "   -n cert-name");
     FPS "%-20s \n"
               "%-20s Pretty print cert with email address (list all if unspecified)\n",
-	"   --email email-address", "");
+        "   --email email-address", "");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s force the database to open R/W\n",
-	"   -X");
+        "   -X");
     FPS "%-20s For single cert, print binary DER encoding\n",
-	"   -r");
+        "   -r");
     FPS "%-20s For single cert, print ASCII encoding (RFC1113)\n",
-	"   -a");
+        "   -a");
     FPS "\n");
+}
 
+static void luM(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "M"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Modify trust attributes of certificate\n",
-	"-M");
+        "-M");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s The nickname of the cert to modify\n",
-	"   -n cert-name");
+        "   -n cert-name");
     FPS "%-20s Set the certificate trust attributes (see -A above)\n",
-	"   -t trustargs");
+        "   -t trustargs");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "\n");
+}
 
+static void luN(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "N"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Create a new certificate database\n",
-	"-N");
+        "-N");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "\n");
+}
+
+static void luT(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "T"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Reset the Key database or token\n",
-	"-T");
+        "-T");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s Token to reset (default is internal)\n",
-	"   -h token-name");
+        "   -h token-name");
     FPS "%-20s Set token's Site Security Officer password\n",
-	"   -0 SSO-password");
+        "   -0 SSO-password");
     FPS "\n");
+}
 
-    FPS "\n");
+static void luO(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "O"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Print the chain of a certificate\n",
-	"-O");
+        "-O");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s The nickname of the cert to modify\n",
-	"   -n cert-name");
+        "   -n cert-name");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Input the certificate in ASCII (RFC1113); default is binary\n",
-	"   -a");
+        "   -a");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s force the database to open R/W\n",
-	"   -X");
+        "   -X");
     FPS "\n");
+}
 
+static void luR(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "R"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Generate a certificate request (stdout)\n",
-	"-R");
+        "-R");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Specify the subject name (using RFC1485)\n",
-	"   -s subject");
+        "   -s subject");
     FPS "%-20s Output the cert request to this file\n",
-	"   -o output-req");
+        "   -o output-req");
 #ifdef NSS_ENABLE_ECC
     FPS "%-20s Type of key pair to generate (\"dsa\", \"ec\", \"rsa\" (default))\n",
 #else
     FPS "%-20s Type of key pair to generate (\"dsa\", \"rsa\" (default))\n",
 #endif /* NSS_ENABLE_ECC */
-	"   -k key-type-or-id");
+        "   -k key-type-or-id");
     FPS "%-20s or nickname of the cert key to use \n",
-	"");
+        "");
     FPS "%-20s Name of token in which to generate key (default is internal)\n",
-	"   -h token-name");
+        "   -h token-name");
     FPS "%-20s Key size in bits, RSA keys only (min %d, max %d, default %d)\n",
-	"   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
+        "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
     FPS "%-20s Name of file containing PQG parameters (dsa only)\n",
-	"   -q pqgfile");
+        "   -q pqgfile");
 #ifdef NSS_ENABLE_ECC
     FPS "%-20s Elliptic curve name (ec only)\n",
-	"   -q curve-name");
+        "   -q curve-name");
     FPS "%-20s See the \"-G\" option for a full list of supported names.\n",
-	"");
+        "");
 #endif /* NSS_ENABLE_ECC */
     FPS "%-20s Specify the password file\n",
-	"   -f pwfile");
+        "   -f pwfile");
     FPS "%-20s Key database directory (default is ~/.netscape)\n",
-	"   -d keydir");
+        "   -d keydir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s Specify the contact phone number (\"123-456-7890\")\n",
-	"   -p phone");
+        "   -p phone");
     FPS "%-20s Output the cert request in ASCII (RFC1113); default is binary\n",
-	"   -a");
+        "   -a");
     FPS "%-20s \n",
-	"   See -S for available extension options");
+        "   See -S for available extension options");
     FPS "\n");
+}
 
+static void luV(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "V"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Validate a certificate\n",
-	"-V");
+        "-V");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s The nickname of the cert to Validate\n",
-	"   -n cert-name");
+        "   -n cert-name");
     FPS "%-20s validity time (\"YYMMDDHHMMSS[+HHMM|-HHMM|Z]\")\n",
-	"   -b time");
+        "   -b time");
     FPS "%-20s Check certificate signature \n",
-	"   -e ");   
+        "   -e ");   
     FPS "%-20s Specify certificate usage:\n", "   -u certusage");
     FPS "%-25s C \t SSL Client\n", "");
     FPS "%-25s V \t SSL Server\n", "");
@@ -1361,140 +1482,205 @@ static void LongUsage(char *progName)
     FPS "%-25s O \t OCSP status responder\n", "");   
     FPS "%-25s J \t Object signer\n", "");   
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Input the certificate in ASCII (RFC1113); default is binary\n",
-	"   -a");
+        "   -a");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s force the database to open R/W\n",
-	"   -X");
+        "   -X");
     FPS "\n");
+}
 
+static void luW(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "W"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Change the key database password\n",
-	"-W");
+        "-W");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s cert and key database directory\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Specify a file with the current password\n",
-	"   -f pwfile");
+        "   -f pwfile");
     FPS "%-20s Specify a file with the new password in two lines\n",
-	"   -@ newpwfile");
+        "   -@ newpwfile");
+    FPS "\n");
+}
 
+static void luUpgradeMerge(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "upgrade-merge"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Upgrade an old database and merge it into a new one\n",
-	"--upgrade-merge");
+        "--upgrade-merge");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Cert database directory to merge into (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix of the target database\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s Specify the password file for the target database\n",
-	"   -f pwfile");
+        "   -f pwfile");
     FPS "%-20s \n%-20s Cert database directory to upgrade from\n",
-	"   --source-dir certdir", "");
+        "   --source-dir certdir", "");
     FPS "%-20s \n%-20s Cert & Key database prefix of the upgrade database\n",
-	"   --soruce-prefix dbprefix", "");
+        "   --soruce-prefix dbprefix", "");
     FPS "%-20s \n%-20s Unique identifier for the upgrade database\n",
-	"   --upgrade-id uniqueID", "");
+        "   --upgrade-id uniqueID", "");
     FPS "%-20s \n%-20s Name of the token while it is in upgrade state\n",
-	"   --upgrade-token-name name", "");
+        "   --upgrade-token-name name", "");
     FPS "%-20s Specify the password file for the upgrade database\n",
-	"   -@ pwfile");
+        "   -@ pwfile");
     FPS "\n");
+}
 
+static void luMerge(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "merge"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Merge source database into the target database\n",
-	"--merge");
+        "--merge");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Cert database directory of target (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix of the target database\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s Specify the password file for the target database\n",
-	"   -f pwfile");
+        "   -f pwfile");
     FPS "%-20s \n%-20s Cert database directory of the source database\n",
-	"   --source-dir certdir", "");
+        "   --source-dir certdir", "");
     FPS "%-20s \n%-20s Cert & Key database prefix of the source database\n",
-	"   --source-prefix dbprefix", "");
+        "   --source-prefix dbprefix", "");
     FPS "%-20s Specify the password file for the source database\n",
-	"   -@ pwfile");
+        "   -@ pwfile");
     FPS "\n");
+}
 
+static void luS(enum usage_level ul, const char *command)
+{
+    int is_my_command = (command && 0 == strcmp(command, "S"));
+    if (ul == usage_all || !command || is_my_command)
     FPS "%-15s Make a certificate and add to database\n",
         "-S");
+    if (ul == usage_selected && !is_my_command)
+        return;
     FPS "%-20s Specify the nickname of the cert\n",
         "   -n key-name");
     FPS "%-20s Specify the subject name (using RFC1485)\n",
         "   -s subject");
     FPS "%-20s The nickname of the issuer cert\n",
-	"   -c issuer-name");
+        "   -c issuer-name");
     FPS "%-20s Set the certificate trust attributes (see -A above)\n",
-	"   -t trustargs");
+        "   -t trustargs");
 #ifdef NSS_ENABLE_ECC
     FPS "%-20s Type of key pair to generate (\"dsa\", \"ec\", \"rsa\" (default))\n",
 #else
     FPS "%-20s Type of key pair to generate (\"dsa\", \"rsa\" (default))\n",
 #endif /* NSS_ENABLE_ECC */
-	"   -k key-type-or-id");
+        "   -k key-type-or-id");
     FPS "%-20s Name of token in which to generate key (default is internal)\n",
-	"   -h token-name");
+        "   -h token-name");
     FPS "%-20s Key size in bits, RSA keys only (min %d, max %d, default %d)\n",
-	"   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
+        "   -g key-size", MIN_KEY_BITS, MAX_KEY_BITS, DEFAULT_KEY_BITS);
     FPS "%-20s Name of file containing PQG parameters (dsa only)\n",
-	"   -q pqgfile");
+        "   -q pqgfile");
 #ifdef NSS_ENABLE_ECC
     FPS "%-20s Elliptic curve name (ec only)\n",
-	"   -q curve-name");
+        "   -q curve-name");
     FPS "%-20s See the \"-G\" option for a full list of supported names.\n",
-	"");
+        "");
 #endif /* NSS_ENABLE_ECC */
     FPS "%-20s Self sign\n",
-	"   -x");
+        "   -x");
     FPS "%-20s Cert serial number\n",
-	"   -m serial-number");
+        "   -m serial-number");
     FPS "%-20s Time Warp\n",
-	"   -w warp-months");
+        "   -w warp-months");
     FPS "%-20s Months valid (default is 3)\n",
         "   -v months-valid");
     FPS "%-20s Specify the password file\n",
-	"   -f pwfile");
+        "   -f pwfile");
     FPS "%-20s Cert database directory (default is ~/.netscape)\n",
-	"   -d certdir");
+        "   -d certdir");
     FPS "%-20s Cert & Key database prefix\n",
-	"   -P dbprefix");
+        "   -P dbprefix");
     FPS "%-20s Specify the contact phone number (\"123-456-7890\")\n",
-	"   -p phone");
+        "   -p phone");
     FPS "%-20s Create key usage extension\n",
-	"   -1 ");
+        "   -1 ");
     FPS "%-20s Create basic constraint extension\n",
-	"   -2 ");
+        "   -2 ");
     FPS "%-20s Create authority key ID extension\n",
-	"   -3 ");
+        "   -3 ");
     FPS "%-20s Create crl distribution point extension\n",
-	"   -4 ");
+        "   -4 ");
     FPS "%-20s Create netscape cert type extension\n",
-	"   -5 ");
+        "   -5 ");
     FPS "%-20s Create extended key usage extension\n",
-	"   -6 ");
+        "   -6 ");
     FPS "%-20s Create an email subject alt name extension\n",
-	"   -7 emailAddrs ");
+        "   -7 emailAddrs ");
     FPS "%-20s Create a DNS subject alt name extension\n",
-	"   -8 DNS-names");
+        "   -8 DNS-names");
     FPS "%-20s Create an Authority Information Access extension\n",
-	"   --extAIA ");
+        "   --extAIA ");
     FPS "%-20s Create a Subject Information Access extension\n",
-	"   --extSIA ");
+        "   --extSIA ");
     FPS "%-20s Create a Certificate Policies extension\n",
-	"   --extCP ");
+        "   --extCP ");
     FPS "%-20s Create a Policy Mappings extension\n",
-	"   --extPM ");
+        "   --extPM ");
     FPS "%-20s Create a Policy Constraints extension\n",
-	"   --extPC ");
+        "   --extPC ");
     FPS "%-20s Create an Inhibit Any Policy extension\n",
-	"   --extIA ");
+        "   --extIA ");
     FPS "%-20s Create a subject key ID extension\n",
-	"   --extSKID ");
+        "   --extSKID ");
     FPS "\n");
+}
 
-    exit(1);
+static void LongUsage(char *progName, enum usage_level ul, const char *command)
+{
+    luA(ul, command);
+    luB(ul, command);
+    luE(ul, command);
+    luC(ul, command);
+    luG(ul, command);
+    luD(ul, command);
+    luU(ul, command);
+    luK(ul, command);
+    luL(ul, command);
+    luM(ul, command);
+    luN(ul, command);
+    luT(ul, command);
+    luO(ul, command);
+    luR(ul, command);
+    luV(ul, command);
+    luW(ul, command);
+    luUpgradeMerge(ul, command);
+    luMerge(ul, command);
+    luS(ul, command);
 #undef FPS
 }
 
+static void
+Usage(char *progName)
+{
+    PR_fprintf(PR_STDERR,
+        "%s - Utility to manipulate NSS certificate databases\n\n"
+        "Usage:  %s <command> -d <database-directory> <options>\n\n"
+        "Valid commands:\n", progName, progName);
+    LongUsage(progName, usage_selected, NULL);
+    PR_fprintf(PR_STDERR, "\n"
+        "%s -H <command> : Print available options for the given command\n"
+        "%s -H : Print complete help output of all commands and options\n"
+        "%s --syntax : Print a short summary of all commands and options\n",
+        progName, progName, progName);
+    exit(1);
+}
 
 static CERTCertificate *
 MakeV1Cert(	CERTCertDBHandle *	handle, 
@@ -1829,6 +2015,7 @@ enum {
     cmd_DeleteKey,
     cmd_GenKeyPair,
     cmd_PrintHelp,
+    cmd_PrintSyntax,
     cmd_ListKeys,
     cmd_ListCerts,
     cmd_ModifyCertTrust,
@@ -1843,7 +2030,8 @@ enum {
     cmd_Version,
     cmd_Batch,
     cmd_Merge,
-    cmd_UpgradeMerge /* test only */
+    cmd_UpgradeMerge, /* test only */
+    max_cmd
 };
 
 /*  Certutil options */
@@ -1901,7 +2089,8 @@ enum certutilOpts {
     opt_SourceDir,
     opt_SourcePrefix,
     opt_UpgradeID,
-    opt_UpgradeTokenName
+    opt_UpgradeTokenName,
+    opt_Help
 };
 
 static const
@@ -1913,7 +2102,9 @@ secuCommandFlag commands_init[] =
 	{ /* cmd_AddEmailCert        */  'E', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_DeleteKey           */  'F', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_GenKeyPair          */  'G', PR_FALSE, 0, PR_FALSE },
-	{ /* cmd_PrintHelp           */  'H', PR_FALSE, 0, PR_FALSE },
+	{ /* cmd_PrintHelp           */  'H', PR_FALSE, 0, PR_FALSE, "help" },
+        { /* cmd_PrintSyntax         */   0,  PR_FALSE, 0, PR_FALSE,
+                                                   "syntax" },
 	{ /* cmd_ListKeys            */  'K', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_ListCerts           */  'L', PR_FALSE, 0, PR_FALSE },
 	{ /* cmd_ModifyCertTrust     */  'M', PR_FALSE, 0, PR_FALSE },
@@ -2063,8 +2254,32 @@ certutil_main(int argc, char **argv, PRBool initialize)
     if (rv != SECSuccess)
 	Usage(progName);
 
-    if (certutil.commands[cmd_PrintHelp].activated)
-	LongUsage(progName);
+    if (certutil.commands[cmd_PrintSyntax].activated) {
+        PrintSyntax(progName);
+    }
+
+    if (certutil.commands[cmd_PrintHelp].activated) {
+        int i;
+        char buf[2];
+        const char *command = NULL;
+        for (i = 0; i < max_cmd; i++) {
+            if (i == cmd_PrintHelp)
+                continue;
+            if (certutil.commands[i].activated) {
+                if (certutil.commands[i].flag) {
+                    buf[0] = certutil.commands[i].flag;
+                    buf[1] = 0;
+                    command = buf;
+                }
+                else {
+                    command = certutil.commands[i].longform;
+                }
+                break;
+            }
+        }
+	LongUsage(progName, (command ? usage_selected : usage_all), command);
+        exit(1);
+    }
 
     if (certutil.options[opt_PasswordFile].arg) {
 	pwdata.source = PW_FROMFILE;
@@ -2247,7 +2462,6 @@ certutil_main(int argc, char **argv, PRBool initialize)
 	return 255;
     }
     if (commandsEntered == 0) {
-	PR_fprintf(PR_STDERR, "%s: you must enter a command!\n", progName);
 	Usage(progName);
     }
 

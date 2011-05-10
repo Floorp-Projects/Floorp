@@ -37,7 +37,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.29 2005/06/27 22:21:18 julien.pierre.bugs%sun.com Exp $
+ * $Id: cmssigdata.c,v 1.29.142.2 2011/02/11 03:57:50 emaldona%redhat.com Exp $
  */
 
 #include "cmslocal.h"
@@ -217,17 +217,22 @@ loser:
 SECStatus
 NSS_CMSSignedData_Encode_BeforeData(NSSCMSSignedData *sigd)
 {
+    SECStatus rv;
     if (!sigd) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
+    rv = NSS_CMSContentInfo_Private_Init(&sigd->contentInfo);
+    if (rv != SECSuccess) {
+	return SECFailure;
+    }
     /* set up the digests */
     if (sigd->digests && sigd->digests[0]) {
-	sigd->contentInfo.digcx = NULL; /* don't attempt to make new ones. */
+	sigd->contentInfo.privateInfo->digcx = NULL; /* don't attempt to make new ones. */
     } else if (sigd->digestAlgorithms != NULL) {
-	sigd->contentInfo.digcx = 
+	sigd->contentInfo.privateInfo->digcx =
 	        NSS_CMSDigestContext_StartMultiple(sigd->digestAlgorithms);
-	if (sigd->contentInfo.digcx == NULL)
+	if (sigd->contentInfo.privateInfo->digcx == NULL)
 	    return SECFailure;
     }
     return SECSuccess;
@@ -267,11 +272,11 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
     cinfo = &(sigd->contentInfo);
 
     /* did we have digest calculation going on? */
-    if (cinfo->digcx) {
-	rv = NSS_CMSDigestContext_FinishMultiple(cinfo->digcx, poolp, 
+    if (cinfo->privateInfo && cinfo->privateInfo->digcx) {
+	rv = NSS_CMSDigestContext_FinishMultiple(cinfo->privateInfo->digcx, poolp,
 	                                         &(sigd->digests));
 	/* error has been set by NSS_CMSDigestContext_FinishMultiple */
-	cinfo->digcx = NULL;
+	cinfo->privateInfo->digcx = NULL;
 	if (rv != SECSuccess)
 	    goto loser;		
     }
@@ -392,15 +397,20 @@ loser:
 SECStatus
 NSS_CMSSignedData_Decode_BeforeData(NSSCMSSignedData *sigd)
 {
+    SECStatus rv;
     if (!sigd) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
+    rv = NSS_CMSContentInfo_Private_Init(&sigd->contentInfo);
+    if (rv != SECSuccess) {
+	return SECFailure;
+    }
     /* set up the digests */
     if (sigd->digestAlgorithms != NULL && sigd->digests == NULL) {
 	/* if digests are already there, do nothing */
-	sigd->contentInfo.digcx = NSS_CMSDigestContext_StartMultiple(sigd->digestAlgorithms);
-	if (sigd->contentInfo.digcx == NULL)
+	sigd->contentInfo.privateInfo->digcx = NSS_CMSDigestContext_StartMultiple(sigd->digestAlgorithms);
+	if (sigd->contentInfo.privateInfo->digcx == NULL)
 	    return SECFailure;
     }
     return SECSuccess;
@@ -421,11 +431,11 @@ NSS_CMSSignedData_Decode_AfterData(NSSCMSSignedData *sigd)
     }
 
     /* did we have digest calculation going on? */
-    if (sigd->contentInfo.digcx) {
-	rv = NSS_CMSDigestContext_FinishMultiple(sigd->contentInfo.digcx, 
+    if (sigd->contentInfo.privateInfo && sigd->contentInfo.privateInfo->digcx) {
+	rv = NSS_CMSDigestContext_FinishMultiple(sigd->contentInfo.privateInfo->digcx,
 				       sigd->cmsg->poolp, &(sigd->digests));
 	/* error set by NSS_CMSDigestContext_FinishMultiple */
-	sigd->contentInfo.digcx = NULL;
+	sigd->contentInfo.privateInfo->digcx = NULL;
     }
     return rv;
 }

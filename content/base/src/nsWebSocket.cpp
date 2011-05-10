@@ -2960,6 +2960,7 @@ nsWebSocket::Initialize(nsISupports* aOwner,
     return NS_ERROR_DOM_SYNTAX_ERR;
   }
 
+  JS::Anchor<JSString *> deleteProtector(jsstr);
   size_t length;
   const jschar *chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
   if (!chars) {
@@ -2967,6 +2968,7 @@ nsWebSocket::Initialize(nsISupports* aOwner,
   }
 
   urlParam.Assign(chars, length);
+  deleteProtector.clear();
 
   if (aArgc == 2) {
     jsstr = JS_ValueToString(aContext, aArgv[1]);
@@ -2974,6 +2976,7 @@ nsWebSocket::Initialize(nsISupports* aOwner,
       return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
+    deleteProtector.set(jsstr);
     chars = JS_GetStringCharsAndLength(aContext, jsstr, &length);
     if (!chars) {
       return NS_ERROR_OUT_OF_MEMORY;

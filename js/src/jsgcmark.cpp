@@ -77,14 +77,17 @@ Mark(JSTracer *trc, T *thing)
     JS_ASSERT(JS_IS_VALID_TRACE_KIND(GetGCThingTraceKind(thing)));
     JS_ASSERT(trc->debugPrinter || trc->debugPrintArg);
 
-    /* Per-Compartment GC only with GCMarker and no custom JSTracer */
-    JS_ASSERT_IF(trc->context->runtime->gcCurrentCompartment, IS_GC_MARKING_TRACER(trc));
+    JS_ASSERT(!JSAtom::isStatic(thing));
+    JS_ASSERT(thing->asFreeCell()->isAligned());
 
     JSRuntime *rt = trc->context->runtime;
-    JS_ASSERT(thing->arena()->header()->compartment);
-    JS_ASSERT(thing->arena()->header()->compartment->rt == rt);
+    JS_ASSERT(thing->arenaHeader()->compartment);
+    JS_ASSERT(thing->arenaHeader()->compartment->rt == rt);
 
-    /* Don't mark things outside a compartment if we are in a per-compartment GC */
+    /*
+     * Don't mark things outside a compartment if we are in a per-compartment
+     * GC.
+     */
     if (!rt->gcCurrentCompartment || thing->compartment() == rt->gcCurrentCompartment) {
         if (IS_GC_MARKING_TRACER(trc))
             PushMarkStack(static_cast<GCMarker *>(trc), thing);
@@ -104,7 +107,6 @@ MarkString(JSTracer *trc, JSString *str)
     JS_ASSERT(str);
     if (str->isStaticAtom())
         return;
-    JS_ASSERT(GetArena<JSString>((Cell *)str)->assureThingIsAligned((JSString *)str));
     Mark(trc, str);
 }
 
@@ -122,13 +124,6 @@ MarkObject(JSTracer *trc, JSObject &obj, const char *name)
     JS_ASSERT(trc);
     JS_ASSERT(&obj);
     JS_SET_TRACING_NAME(trc, name);
-    JS_ASSERT(GetArena<JSObject>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots2>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots4>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots8>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots12>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots16>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSFunction>((Cell *)&obj)->assureThingIsAligned(&obj));
     Mark(trc, &obj);
 }
 
@@ -139,13 +134,6 @@ MarkObjectWithPrinter(JSTracer *trc, JSObject &obj, JSTraceNamePrinter printer,
     JS_ASSERT(trc);
     JS_ASSERT(&obj);
     JS_SET_TRACING_DETAILS(trc, printer, arg, index);
-    JS_ASSERT(GetArena<JSObject>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots2>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots4>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots8>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots12>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSObject_Slots16>((Cell *)&obj)->assureThingIsAligned(&obj) ||
-              GetArena<JSFunction>((Cell *)&obj)->assureThingIsAligned(&obj));
     Mark(trc, &obj);
 }
 
@@ -155,19 +143,19 @@ MarkShape(JSTracer *trc, const Shape *shape, const char *name)
     JS_ASSERT(trc);
     JS_ASSERT(shape);
     JS_SET_TRACING_NAME(trc, name);
-    JS_ASSERT(GetArena<Shape>((Cell *)shape)->assureThingIsAligned((void *)shape));
     Mark(trc, shape);
 }
 
+#if JS_HAS_XML_SUPPORT
 void
 MarkXML(JSTracer *trc, JSXML *xml, const char *name)
 {
     JS_ASSERT(trc);
     JS_ASSERT(xml);
     JS_SET_TRACING_NAME(trc, name);
-    JS_ASSERT(GetArena<JSXML>(xml)->assureThingIsAligned(xml));
     Mark(trc, xml);
 }
+#endif
 
 void
 PushMarkStack(GCMarker *gcmarker, JSXML *thing)

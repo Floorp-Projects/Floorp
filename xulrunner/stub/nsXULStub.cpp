@@ -86,7 +86,7 @@ static void Output(PRBool isError, const char *fmt, ... )
   va_list ap;
   va_start(ap, fmt);
 
-#if (defined(XP_WIN) && !MOZ_WINCONSOLE) || defined(WINCE)
+#if (defined(XP_WIN) && !MOZ_WINCONSOLE)
   char msg[2048];
 
   vsnprintf(msg, sizeof(msg), fmt, ap);
@@ -190,43 +190,6 @@ private:
 XRE_CreateAppDataType XRE_CreateAppData;
 XRE_FreeAppDataType XRE_FreeAppData;
 XRE_mainType XRE_main;
-
-
-#ifdef WINCE
-void
-ForwardToWindow(HWND wnd) {
-  // For WinCE, we're stuck with providing our own argv[0] for the remote
-  // command-line.
-  WCHAR wPath[MAX_PATH] = L"dummy ";
-  WCHAR *wCmd = ::GetCommandLineW();
-  WCHAR wCwd[MAX_PATH];
-  _wgetcwd(wCwd, MAX_PATH);
-
-  // Construct a narrow UTF8 buffer <path> <commandline>\0<workingdir>\0
-  size_t len = wcslen(wPath) + wcslen(wCmd) + wcslen(wCwd) + 2;
-  WCHAR *wMsg = (WCHAR *)malloc(len * sizeof(*wMsg));
-  wcscpy(wMsg, wPath);
-  wcscpy(wMsg + wcslen(wPath), wCmd);                // The command line
-  wcscpy(wMsg + wcslen(wPath) + wcslen(wCmd) + 1, wCwd); // Working dir
-
-  // Then convert to UTF-8, assuming worst-case explosion of characters
-  char *msg = (char *)malloc(len * 4);
-  WideCharToMultiByte(CP_UTF8, 0, wMsg, len, msg, len * 4, NULL, NULL);
-
-  // We used to set dwData to zero, when we didn't send the working dir.
-  // Now we're using it as a version number.
-  COPYDATASTRUCT cds = { 1, len, (void *)msg };
-
-  // Bring the already running Mozilla process to the foreground.
-  // nsWindow will restore the window (if minimized) and raise it.
-  // for activating the existing window on wince we need "| 0x01"
-  // see http://msdn.microsoft.com/en-us/library/ms940024.aspx for details
-  ::SetForegroundWindow((HWND)(((ULONG) wnd) | 0x01));
-  ::SendMessage(wnd, WM_COPYDATA, 0, (LPARAM)&cds);
-  free(wMsg);
-  free(msg);
-}
-#endif
 
 int
 main(int argc, char **argv)
@@ -399,41 +362,6 @@ main(int argc, char **argv)
     return 1;
   }
 
-#ifdef WINCE
-  // On Windows Mobile and WinCE, we can save a lot of time by not
-  // waiting for XUL and XPCOM to load up.  Let's see if we can find
-  // an existing app window to forward our command-line to now.
-
-  // Shouldn't attempt this if the -no-remote parameter has been provided.
-  bool noRemote = false;
-  for (int i = 1; i < argc; i++) {
-    if (IsArg(argv[i], "no-remote")) {
-      noRemote = true;
-      break;
-    }
-  }
-
-  if (!noRemote) {
-    char windowName[512];  // Is there a const for appname like VERSION_MAXLEN?
-    rv = parser.GetString("App", "Name", windowName, sizeof(windowName));
-    if (NS_FAILED(rv)) {
-      fprintf(stderr, "Couldn't figure out the application name\n");
-      return 1;
-    }
-
-    // Lookup the hidden message window created by nsNativeAppSupport
-    strncat(windowName, "MessageWindow", sizeof(windowName) - strlen(windowName));
-    WCHAR wWindowName[512];
-    MultiByteToWideChar(CP_UTF8, 0, windowName, -1, wWindowName, sizeof(wWindowName));
-    HWND wnd = ::FindWindowW(wWindowName, NULL);
-    if (wnd) {
-      // Forward the command-line and bail out
-      ForwardToWindow(wnd);
-      return 0;
-    }
-  }
-#endif
-
   if (!greFound) {
     Output(PR_FALSE,
            "Could not find the Mozilla runtime.\n");
@@ -483,8 +411,7 @@ main(int argc, char **argv)
   { // Scope COMPtr and AutoAppData
     nsCOMPtr<nsILocalFile> iniFile;
 #ifdef XP_WIN
-    // On Windows and Windows CE, iniPath is UTF-8 encoded,
-    // so we need to convert it.
+    // On Windows iniPath is UTF-8 encoded so we need to convert it.
     rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(iniPath), PR_FALSE,
                          getter_AddRefs(iniFile));
 #else

@@ -51,37 +51,50 @@
 #include <nsClassHashtable.h>
 #include "VideoUtils.h"
 
-class OggPageDeallocator : public nsDequeFunctor {
-  virtual void* operator() (void* aPage) {
-    ogg_page* p = static_cast<ogg_page*>(aPage);
-    delete [] p->header;
+// Uncomment the following to validate that we're predicting the number
+// of Vorbis samples in each packet correctly.
+#define VALIDATE_VORBIS_SAMPLE_CALCULATION
+#ifdef  VALIDATE_VORBIS_SAMPLE_CALCULATION
+#include <map>
+#endif
+
+// Deallocates a packet, used in nsPacketQueue below.
+class OggPacketDeallocator : public nsDequeFunctor {
+  virtual void* operator() (void* aPacket) {
+    ogg_packet* p = static_cast<ogg_packet*>(aPacket);
+    delete [] p->packet;
     delete p;
     return nsnull;
   }
 };
 
-// A queue of ogg_pages. When we read a page, and it's not from the bitstream
-// which we're looking for a page for, we buffer the page in the nsOggCodecState,
-// rather than pushing it immediately into the ogg_stream_state object. This
-// is because if we're skipping up to the next keyframe in very large frame
-// sized videos, there may be several megabytes of data between keyframes,
-// and the ogg_stream_state would end up resizing its buffer every time we
-// added a new 4K page to the bitstream, which kills performance on Windows.
-class nsPageQueue : private nsDeque {
+// A queue of ogg_packets. When we read a page, we extract the page's packets
+// and buffer them in the owning stream's nsOggCodecState. This is because
+// if we're skipping up to the next keyframe in very large frame sized videos,
+// there may be several megabytes of data between keyframes, and the
+// ogg_stream_state would end up resizing its buffer every time we added a
+// new 4KB page to the bitstream, which kills performance on Windows. This
+// also gives us the option to timestamp packets rather than decoded
+// frames/samples, reducing the amount of frames/samples we must decode to
+// determine start-time at a particular offset, and gives us finer control
+// over memory usage.
+class nsPacketQueue : private nsDeque {
 public:
-  nsPageQueue() : nsDeque(new OggPageDeallocator()) {}
-  ~nsPageQueue() { Erase(); }
+  nsPacketQueue() : nsDeque(new OggPacketDeallocator()) {}
+  ~nsPacketQueue() { Erase(); }
   PRBool IsEmpty() { return nsDeque::GetSize() == 0; }
-  void Append(ogg_page* aPage);
-  ogg_page* PopFront() { return static_cast<ogg_page*>(nsDeque::PopFront()); }
-  ogg_page* PeekFront() { return static_cast<ogg_page*>(nsDeque::PeekFront()); }
+  void Append(ogg_packet* aPacket);
+  ogg_packet* PopFront() { return static_cast<ogg_packet*>(nsDeque::PopFront()); }
+  ogg_packet* PeekFront() { return static_cast<ogg_packet*>(nsDeque::PeekFront()); }
+  void PushFront(ogg_packet* aPacket) { nsDeque::PushFront(aPacket); }
+  void PushBack(ogg_packet* aPacket) { nsDeque::PushFront(aPacket); }
   void Erase() { nsDeque::Erase(); }
 };
 
 // Encapsulates the data required for decoding an ogg bitstream and for
 // converting granulepos to timestamps.
 class nsOggCodecState {
- public:
+public:
   // Ogg types we know about
   enum CodecType {
     TYPE_VORBIS=0,
@@ -90,11 +103,10 @@ class nsOggCodecState {
     TYPE_UNKNOWN=3
   };
 
- public:
-  nsOggCodecState(ogg_page* aBosPage);
   virtual ~nsOggCodecState();
   
-  // Factory for creating nsCodecStates.
+  // Factory for creating nsCodecStates. Use instead of constructor.
+  // aPage should be a beginning-of-stream page.
   static nsOggCodecState* Create(ogg_page* aPage);
   
   virtual CodecType GetType() { return TYPE_UNKNOWN; }
@@ -119,19 +131,41 @@ class nsOggCodecState {
 
   // Deactivates the bitstream. Only the primary video and audio bitstreams
   // should be active.
-  void Deactivate() { mActive = PR_FALSE; }
+  void Deactivate() {
+    mActive = PR_FALSE;
+    mDoneReadingHeaders = PR_TRUE;
+    Reset();
+  }
 
   // Resets decoding state.
   virtual nsresult Reset();
 
-  // Clones a page and adds it to our buffer of pages which we'll insert to
-  // the bitstream at a later time (using PageInFromBuffer()). Memory stored in
-  // cloned pages is freed when Reset() or PageInFromBuffer() are called.
-  inline void AddToBuffer(ogg_page* aPage) { mBuffer.Append(aPage); }
+  // Returns PR_TRUE if the nsOggCodecState thinks this packet is a header
+  // packet. Note this does not verify the validity of the header packet,
+  // it just guarantees that the packet is marked as a header packet (i.e.
+  // it is definintely not a data packet). Do not use this to identify
+  // streams, use it to filter header packets from data packets while
+  // decoding.
+  virtual PRBool IsHeader(ogg_packet* aPacket) { return PR_FALSE; }
 
-  // Returns PR_TRUE if we had a buffered page and we successfully inserted it
-  // into the bitstream.
-  PRBool PageInFromBuffer();
+  // Returns the next packet in the stream, or nsnull if there are no more
+  // packets buffered in the packet queue. More packets can be buffered by
+  // inserting one or more pages into the stream by calling PageIn(). The
+  // caller is responsible for deleting returned packet's using
+  // nsOggCodecState::ReleasePacket(). The packet will have a valid granulepos.
+  ogg_packet* PacketOut();
+
+  // Releases the memory used by a cloned packet. Every packet returned by
+  // PacketOut() must be free'd using this function.
+  static void ReleasePacket(ogg_packet* aPacket);
+
+  // Extracts all packets from the page, and inserts them into the packet
+  // queue. They can be extracted by calling PacketOut(). Packets from an
+  // inactive stream are not buffered, i.e. this call has no effect for
+  // inactive streams. Multiple pages may need to be inserted before
+  // PacketOut() starts to return packets, as granulepos may need to be
+  // captured.
+  virtual nsresult PageIn(ogg_page* aPage);
 
   // Number of packets read.  
   PRUint64 mPacketCount;
@@ -142,14 +176,37 @@ class nsOggCodecState {
   // Ogg specific state.
   ogg_stream_state mState;
 
-  // Buffer of pages which we've not yet inserted into the ogg_stream_state.
-  nsPageQueue mBuffer;
+  // Queue of as yet undecoded packets. Packets are guaranteed to have
+  // a valid granulepos.
+  nsPacketQueue mPackets;
 
   // Is the bitstream active; whether we're decoding and playing this bitstream.
   PRPackedBool mActive;
   
   // PR_TRUE when all headers packets have been read.
   PRPackedBool mDoneReadingHeaders;
+
+protected:
+  // Constructs a new nsOggCodecState. aActive denotes whether the stream is
+  // active. For streams of unsupported or unknown types, aActive should be
+  // PR_FALSE.
+  nsOggCodecState(ogg_page* aBosPage, PRBool aActive);
+
+  // Deallocates all packets stored in mUnstamped, and clears the array.
+  void ClearUnstamped();
+
+  // Extracts packets out of mState until a data packet with a non -1
+  // granulepos is encountered, or no more packets are readable. Header
+  // packets are pushed into the packet queue immediately, and data packets
+  // are buffered in mUnstamped. Once a non -1 granulepos packet is read
+  // the granulepos of the packets in mUnstamped can be inferred, and they
+  // can be pushed over to mPackets. Used by PageIn() implementations in
+  // subclasses.
+  PRBool PacketOutUntilGranulepos();
+
+  // Temporary buffer in which to store packets while we're reading packets
+  // in order to capture granulepos.
+  nsTArray<ogg_packet*> mUnstamped;
 };
 
 class nsVorbisState : public nsOggCodecState {
@@ -157,31 +214,83 @@ public:
   nsVorbisState(ogg_page* aBosPage);
   virtual ~nsVorbisState();
 
-  virtual CodecType GetType() { return TYPE_VORBIS; }
-  virtual PRBool DecodeHeader(ogg_packet* aPacket);
-  virtual PRInt64 Time(PRInt64 granulepos);
-  virtual PRBool Init();
-  virtual nsresult Reset();
+  CodecType GetType() { return TYPE_VORBIS; }
+  PRBool DecodeHeader(ogg_packet* aPacket);
+  PRInt64 Time(PRInt64 granulepos);
+  PRBool Init();
+  nsresult Reset();
+  PRBool IsHeader(ogg_packet* aPacket);
+  nsresult PageIn(ogg_page* aPage); 
 
   // Returns the end time that a granulepos represents.
   static PRInt64 Time(vorbis_info* aInfo, PRInt64 aGranulePos); 
- 
+
   vorbis_info mInfo;
   vorbis_comment mComment;
   vorbis_dsp_state mDsp;
   vorbis_block mBlock;
+
+private:
+
+  // Reconstructs the granulepos of Vorbis packets stored in the mUnstamped
+  // array.
+  nsresult ReconstructVorbisGranulepos();
+
+  // The "block size" of the previously decoded Vorbis packet, or 0 if we've
+  // not yet decoded anything. This is used to calculate the number of samples
+  // in a Vorbis packet, since each Vorbis packet depends on the previous
+  // packet while being decoded.
+  long mPrevVorbisBlockSize;
+
+  // Granulepos (end sample) of the last decoded Vorbis packet. This is used
+  // to calculate the Vorbis granulepos when we don't find a granulepos to
+  // back-propagate from.
+  PRInt64 mGranulepos;
+
+#ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
+  // When validating that we've correctly predicted Vorbis packets' number
+  // of samples, we store each packet's predicted number of samples in this
+  // map, and verify we decode the predicted number of samples.
+  std::map<ogg_packet*, long> mVorbisPacketSamples;
+#endif
+
+  // Records that aPacket is predicted to have aSamples samples.
+  // This function has no effect if VALIDATE_VORBIS_SAMPLE_CALCULATION
+  // is not defined.
+  void RecordVorbisPacketSamples(ogg_packet* aPacket, long aSamples);
+
+  // Verifies that aPacket has had its number of samples predicted.
+  // This function has no effect if VALIDATE_VORBIS_SAMPLE_CALCULATION
+  // is not defined.
+  void AssertHasRecordedPacketSamples(ogg_packet* aPacket);
+
+public:
+  // Asserts that the number of samples predicted for aPacket is aSamples.
+  // This function has no effect if VALIDATE_VORBIS_SAMPLE_CALCULATION
+  // is not defined.
+  void ValidateVorbisPacketSamples(ogg_packet* aPacket, long aSamples);
+
 };
+
+// Returns 1 if the Theora info struct is decoding a media of Theora
+// verion (maj,min,sub) or later, otherwise returns 0.
+int TheoraVersion(th_info* info,
+                  unsigned char maj,
+                  unsigned char min,
+                  unsigned char sub);
 
 class nsTheoraState : public nsOggCodecState {
 public:
   nsTheoraState(ogg_page* aBosPage);
   virtual ~nsTheoraState();
 
-  virtual CodecType GetType() { return TYPE_THEORA; }
-  virtual PRBool DecodeHeader(ogg_packet* aPacket);
-  virtual PRInt64 Time(PRInt64 granulepos);
-  virtual PRInt64 StartTime(PRInt64 granulepos);
-  virtual PRBool Init();
+  CodecType GetType() { return TYPE_THEORA; }
+  PRBool DecodeHeader(ogg_packet* aPacket);
+  PRInt64 Time(PRInt64 granulepos);
+  PRInt64 StartTime(PRInt64 granulepos);
+  PRBool Init();
+  PRBool IsHeader(ogg_packet* aPacket);
+  nsresult PageIn(ogg_page* aPage); 
 
   // Returns the maximum number of microseconds which a keyframe can be offset
   // from any given interframe.
@@ -189,13 +298,23 @@ public:
 
   // Returns the end time that a granulepos represents.
   static PRInt64 Time(th_info* aInfo, PRInt64 aGranulePos); 
-  
+
   th_info mInfo;
   th_comment mComment;
   th_setup_info *mSetup;
   th_dec_ctx* mCtx;
 
   float mPixelAspectRatio;
+
+private:
+
+  // Reconstructs the granulepos of Theora packets stored in the
+  // mUnstamped array. mUnstamped must be filled with consecutive packets from
+  // the stream, with the last packet having a known granulepos. Using this
+  // known granulepos, and the known frame numbers, we recover the granulepos
+  // of all frames in the array. This enables us to determine their timestamps.
+  void ReconstructTheoraGranulepos();
+
 };
 
 // Constructs a 32bit version number out of two 16 bit major,minor
@@ -205,11 +324,12 @@ public:
 class nsSkeletonState : public nsOggCodecState {
 public:
   nsSkeletonState(ogg_page* aBosPage);
-  virtual ~nsSkeletonState();
-  virtual CodecType GetType() { return TYPE_SKELETON; }
-  virtual PRBool DecodeHeader(ogg_packet* aPacket);
-  virtual PRInt64 Time(PRInt64 granulepos) { return -1; }
-  virtual PRBool Init() { return PR_TRUE; }
+  ~nsSkeletonState();
+  CodecType GetType() { return TYPE_SKELETON; }
+  PRBool DecodeHeader(ogg_packet* aPacket);
+  PRInt64 Time(PRInt64 granulepos) { return -1; }
+  PRBool Init() { return PR_TRUE; }
+  PRBool IsHeader(ogg_packet* aPacket) { return PR_TRUE; }
 
   // Return PR_TRUE if the given time (in milliseconds) is within
   // the presentation time defined in the skeleton track.

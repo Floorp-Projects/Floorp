@@ -71,6 +71,7 @@
 
 #include "nsNSSHelper.h"
 #include "nsClientAuthRemember.h"
+#include "nsCERTValInParamWrapper.h"
 
 #define NS_NSSCOMPONENT_CID \
 {0xa277189c, 0x1dd1, 0x11b2, {0xa8, 0xc9, 0xe4, 0xe8, 0xbf, 0xb1, 0x33, 0x8e}}
@@ -141,6 +142,8 @@ protected:
   nsresult handleContentDownloadError(nsresult errCode);
 };
 
+class nsNSSComponent;
+
 class NS_NO_VTABLE nsINSSComponent : public nsISupports {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
@@ -190,6 +193,9 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
   NS_IMETHOD EnsureIdentityInfoLoaded() = 0;
 
   NS_IMETHOD IsNSSInitialized(PRBool *initialized) = 0;
+
+  NS_IMETHOD GetDefaultCERTValInParam(nsRefPtr<nsCERTValInParamWrapper> &out) = 0;
+  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(nsRefPtr<nsCERTValInParamWrapper> &out) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsINSSComponent, NS_INSSCOMPONENT_IID)
@@ -287,6 +293,8 @@ public:
   NS_IMETHOD EnsureIdentityInfoLoaded();
   NS_IMETHOD IsNSSInitialized(PRBool *initialized);
 
+  NS_IMETHOD GetDefaultCERTValInParam(nsRefPtr<nsCERTValInParamWrapper> &out);
+  NS_IMETHOD GetDefaultCERTValInParamLocalOnly(nsRefPtr<nsCERTValInParamWrapper> &out);
 private:
 
   nsresult InitializeNSS(PRBool showWarningBox);
@@ -309,6 +317,7 @@ private:
   void LaunchSmartCardThreads();
   void ShutdownSmartCardThreads();
   void CleanupIdentityInfo();
+  void setValidationOptions(nsIPrefBranch * pref);
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterPSMContentListener();
@@ -352,9 +361,14 @@ private:
   nsCertVerificationThread *mCertVerificationThread;
   nsNSSHttpInterface mHttpForNSS;
   nsRefPtr<nsClientAuthRememberService> mClientAuthRememberService;
+  nsRefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParam;
+  nsRefPtr<nsCERTValInParamWrapper> mDefaultCERTValInParamLocalOnly;
 
   static PRStatus PR_CALLBACK IdentityInfoInit(void);
   PRCallOnceType mIdentityInfoCallOnce;
+
+public:
+  static PRBool globalConstFlagUsePKIXVerification;
 };
 
 class PSMContentListener : public nsIURIContentListener,

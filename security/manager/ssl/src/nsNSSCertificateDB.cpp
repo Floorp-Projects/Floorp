@@ -533,9 +533,18 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
   CERTCertListNode *node;
   PRTime now;
   SECCertUsage certusage;
+  SECCertificateUsage certificateusage;
   SECItem **rawArray;
   int numcerts;
   int i;
+  
+  nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
+  if (!inss)
+    return nsrv;
+  nsRefPtr<nsCERTValInParamWrapper> survivingParams;
+  nsrv = inss->GetDefaultCERTValInParam(survivingParams);
+  if (NS_FAILED(nsrv))
+    return nsrv;
  
   PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
   if (!arena)
@@ -549,6 +558,7 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
 
   certdb = CERT_GetDefaultCertDB();
   certusage = certUsageEmailRecipient;
+  certificateusage = certificateUsageEmailRecipient;
 
   numcerts = certCollection->numcerts;
 
@@ -591,6 +601,9 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
    * valid chains, then import them.
    */
   now = PR_Now();
+  CERTValOutParam cvout[1];
+  cvout[0].type = cert_po_end;
+
   for (node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node,certList);
        node = CERT_LIST_NEXT(node)) {
@@ -601,9 +614,19 @@ nsNSSCertificateDB::ImportEmailCertificate(PRUint8 * data, PRUint32 length,
       continue;
     }
 
-    if (CERT_VerifyCert(certdb, node->cert, 
-        PR_TRUE, certusage, now, ctx, NULL) != SECSuccess) {
-      alert_and_skip = true;
+    if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+      if (CERT_VerifyCert(certdb, node->cert,
+          PR_TRUE, certusage, now, ctx, NULL) != SECSuccess) {
+        alert_and_skip = true;
+      }
+    }
+    else {
+      if (CERT_PKIXVerifyCert(node->cert, certificateusage,
+                              survivingParams->GetRawPointerForNSS(),
+                              cvout, ctx)
+          != SECSuccess) {
+        alert_and_skip = true;
+      }
     }
 
     CERTCertificateList *certChain = nsnull;
@@ -774,6 +797,14 @@ nsresult
 nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfaceRequestor *ctx)
 {
   SECItem **rawArray;
+  nsresult nsrv;
+  nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
+  if (!inss)
+    return nsrv;
+  nsRefPtr<nsCERTValInParamWrapper> survivingParams;
+  nsrv = inss->GetDefaultCERTValInParam(survivingParams);
+  if (NS_FAILED(nsrv))
+    return nsrv;
 
   /* filter out the certs we don't want */
   SECStatus srv = CERT_FilterCertListByUsage(certList, certUsageAnyCA, PR_TRUE);
@@ -784,17 +815,29 @@ nsNSSCertificateDB::ImportValidCACertsInList(CERTCertList *certList, nsIInterfac
   /* go down the remaining list of certs and verify that they have
    * valid chains, if yes, then import.
    */
-  PRTime now = PR_Now();
   CERTCertListNode *node;
+  CERTValOutParam cvout[1];
+  cvout[0].type = cert_po_end;
+
   for (node = CERT_LIST_HEAD(certList);
        !CERT_LIST_END(node,certList);
        node = CERT_LIST_NEXT(node)) {
 
     bool alert_and_skip = false;
 
-    if (CERT_VerifyCert(CERT_GetDefaultCertDB(), node->cert, 
-        PR_TRUE, certUsageVerifyCA, now, ctx, NULL) != SECSuccess) {
-      alert_and_skip = true;
+    if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+      if (CERT_VerifyCert(CERT_GetDefaultCertDB(), node->cert, 
+          PR_TRUE, certUsageVerifyCA, PR_Now(), ctx, NULL) != SECSuccess) {
+        alert_and_skip = true;
+      }
+    }
+    else {
+      if (CERT_PKIXVerifyCert(node->cert, certificateUsageVerifyCA,
+                              survivingParams->GetRawPointerForNSS(),
+                              cvout, ctx)
+          != SECSuccess) {
+        alert_and_skip = true;
+      }
     }
 
     CERTCertificateList *certChain = nsnull;

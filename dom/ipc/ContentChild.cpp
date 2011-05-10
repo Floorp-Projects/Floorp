@@ -319,7 +319,9 @@ ContentChild::RecvPMemoryReportRequestConstructor(PMemoryReportRequestChild* chi
       report->GetDescription(getter_Copies(desc));
       report->GetMemoryUsed(&memoryUsed);
 
-      MemoryReport memreport(nsPrintfCString("Content Process - %d - ", getpid()),
+      static const int maxLength = 31;   // big enough; pid is only a few chars
+      MemoryReport memreport(nsPrintfCString(maxLength, "Content (%d)",
+                                             getpid()),
                              path,
                              desc,
                              memoryUsed);

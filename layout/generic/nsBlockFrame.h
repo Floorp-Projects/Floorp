@@ -84,7 +84,7 @@ class nsIntervalSet;
  * Child list name indices
  * @see #GetAdditionalChildListName()
  */
-#define NS_BLOCK_LIST_COUNT  (NS_CONTAINER_LIST_COUNT_INCL_OC + 5)
+#define NS_BLOCK_LIST_COUNT  (NS_CONTAINER_LIST_COUNT_INCL_OC + 4)
 
 /**
  * Some invariants:
@@ -341,7 +341,6 @@ protected:
     : nsHTMLContainerFrame(aContext)
     , mMinWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
     , mPrefWidth(NS_INTRINSIC_WIDTH_UNKNOWN)
-    , mAbsoluteContainer(nsGkAtoms::absoluteList)
   {
 #ifdef DEBUG
   InitDebugFlags();
@@ -775,10 +774,6 @@ protected:
 
   friend class nsBlockReflowState;
   friend class nsBlockInFlowLineIterator;
-
-private:
-  nsAbsoluteContainingBlock mAbsoluteContainer;
-
 
 #ifdef DEBUG
 public:

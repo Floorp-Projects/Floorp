@@ -124,8 +124,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
 
     PRBool                        mCallContinueInterruptedParsingIfEnabled;
 
-    PRBool                        mFragmentMode;
-
     PRBool                        mPreventScriptExecution;
 
   public:
@@ -241,8 +239,6 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      */
     void EnableFragmentMode(PRBool aPreventScriptExecution) {
       mFragmentMode = PR_TRUE;
-      mCanInterruptParser = PR_FALSE; // prevent DropParserAndPerfHint
-                                      // from unblocking onload
       mPreventScriptExecution = aPreventScriptExecution;
     }
     

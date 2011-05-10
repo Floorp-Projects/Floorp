@@ -1800,7 +1800,7 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
     uintN intarg;
     JSScript *script;
 
-    *scriptp = JS_GetScriptedCaller(cx, NULL)->script();
+    *scriptp = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
     *ip = 0;
     if (argc != 0) {
         v = argv[0];
@@ -1823,11 +1823,12 @@ GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
 }
 
 static JSTrapStatus
-TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
+TrapHandler(JSContext *cx, JSScript *, jsbytecode *pc, jsval *rval,
             jsval closure)
 {
     JSString *str = JSVAL_TO_STRING(closure);
     JSStackFrame *caller = JS_GetScriptedCaller(cx, NULL);
+    JSScript *script = JS_GetFrameScript(cx, caller);
 
     size_t length;
     const jschar *chars = JS_GetStringCharsAndLength(cx, str, &length);
@@ -1835,8 +1836,8 @@ TrapHandler(JSContext *cx, JSScript *script, jsbytecode *pc, jsval *rval,
         return JSTRAP_ERROR;
 
     if (!JS_EvaluateUCInStackFrame(cx, caller, chars, length,
-                                   caller->script()->filename,
-                                   caller->script()->lineno,
+                                   script->filename,
+                                   script->lineno,
                                    rval)) {
         return JSTRAP_ERROR;
     }
@@ -1938,7 +1939,7 @@ LineToPC(JSContext *cx, uintN argc, jsval *vp)
         JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL, JSSMSG_LINE2PC_USAGE);
         return JS_FALSE;
     }
-    script = JS_GetScriptedCaller(cx, NULL)->script();
+    script = JS_GetFrameScript(cx, JS_GetScriptedCaller(cx, NULL));
     if (!GetTrapArgs(cx, argc, JS_ARGV(cx, vp), &script, &i))
         return JS_FALSE;
     lineno = (i == 0) ? script->lineno : (uintN)i;
@@ -3218,7 +3219,8 @@ ResolveClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
 
     if (!*resolved) {
         if (JSID_IS_ATOM(id, CLASS_ATOM(cx, Reflect))) {
-            if (!js_InitReflectClass(cx, obj))
+            if (!IsStandardClassResolved(obj, &js_ReflectClass) &&
+                !js_InitReflectClass(cx, obj))
                 return JS_FALSE;
             *resolved = JS_TRUE;
         }
@@ -3573,6 +3575,8 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
         return true;
 
     JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+    JSScript *script = JS_GetFrameScript(cx, fp);
+    jsbytecode *pc = JS_GetFramePC(cx, fp);
     {
         JSAutoEnterCompartment ac;
         uintN flags;
@@ -3591,8 +3595,8 @@ EvalInContext(JSContext *cx, uintN argc, jsval *vp)
             return false;
         }
         if (!JS_EvaluateUCScript(cx, sobj, src, srclen,
-                                 fp->script()->filename,
-                                 JS_PCToLineNumber(cx, fp->script(), fp->pc(cx)),
+                                 script->filename,
+                                 JS_PCToLineNumber(cx, script, pc),
                                  vp)) {
             return false;
         }
@@ -3618,7 +3622,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
                         ? !!(JSVAL_TO_BOOLEAN(argv[2]))
                         : false;
 
-    JS_ASSERT(cx->hasfp());
+    JS_ASSERT(cx->running());
 
     FrameRegsIter fi(cx);
     for (uint32 i = 0; i < upCount; ++i, ++fi) {
@@ -3626,8 +3630,8 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
             break;
     }
 
-    JSStackFrame *const fp = fi.fp();
-    if (!JS_IsScriptFrame(cx, fp)) {
+    StackFrame *const fp = fi.fp();
+    if (!fp->isScriptFrame()) {
         JS_ReportError(cx, "cannot eval in non-script frame");
         return JS_FALSE;
     }
@@ -3641,7 +3645,7 @@ EvalInFrame(JSContext *cx, uintN argc, jsval *vp)
     if (!chars)
         return JS_FALSE;
 
-    JSBool ok = JS_EvaluateUCInStackFrame(cx, fp, chars, length,
+    JSBool ok = JS_EvaluateUCInStackFrame(cx, Jsvalify(fp), chars, length,
                                           fp->script()->filename,
                                           JS_PCToLineNumber(cx, fp->script(),
                                                             fi.pc()),
@@ -4463,7 +4467,6 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
 {
     JSString *str;
     const char *pathname;
-    JSStackFrame *fp;
 
     if (!argc)
         return JS_FALSE;
@@ -4476,10 +4479,11 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
         return JS_FALSE;
 
     /* Get the currently executing script's name. */
-    fp = JS_GetScriptedCaller(cx, NULL);
-    JS_ASSERT(fp && fp->script()->filename);
+    JSStackFrame *fp = JS_GetScriptedCaller(cx, NULL);
+    JSScript *script = JS_GetFrameScript(cx, fp);
+    JS_ASSERT(fp && script->filename);
 #ifdef XP_UNIX
-    pathname = MakeAbsolutePathname(cx, fp->script()->filename, filename.ptr());
+    pathname = MakeAbsolutePathname(cx, script->filename, filename.ptr());
     if (!pathname)
         return JS_FALSE;
 #else
@@ -4566,10 +4570,26 @@ Deserialize(JSContext *cx, uintN argc, jsval *vp)
 }
 
 JSBool
-MJitStats(JSContext *cx, uintN argc, jsval *vp)
+MJitCodeStats(JSContext *cx, uintN argc, jsval *vp)
 {
 #ifdef JS_METHODJIT
-     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(cx->runtime->mjitMemoryUsed));
+    JSRuntime *rt = cx->runtime;
+    AutoLockGC lock(rt);
+    size_t n = 0;
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+        n += (*c)->getMjitCodeSize();
+    JS_SET_RVAL(cx, vp, INT_TO_JSVAL(n));
+#else
+    JS_SET_RVAL(cx, vp, JSVAL_VOID);
+#endif
+    return true;
+}
+
+JSBool
+MJitDataStats(JSContext *cx, uintN argc, jsval *vp)
+{
+#ifdef JS_METHODJIT
+     JS_SET_RVAL(cx, vp, INT_TO_JSVAL(cx->runtime->mjitDataSize));
 #else
     JS_SET_RVAL(cx, vp, JSVAL_VOID);
 #endif
@@ -4729,7 +4749,8 @@ static JSFunctionSpec shell_functions[] = {
     JS_FN("serialize",      Serialize,      1,0),
     JS_FN("deserialize",    Deserialize,    1,0),
 #ifdef JS_METHODJIT
-    JS_FN("mjitstats",      MJitStats,      0,0),
+    JS_FN("mjitcodestats",  MJitCodeStats,  0,0),
+    JS_FN("mjitdatastats",  MJitDataStats,  0,0),
 #endif
     JS_FN("stringstats",    StringStats,    0,0),
     JS_FN("newGlobal",      NewGlobal,      1,0),
@@ -4863,7 +4884,8 @@ static const char *const shell_help_messages[] = {
 "serialize(sd)            Serialize sd using JS_WriteStructuredClone. Returns a TypedArray.",
 "deserialize(a)           Deserialize data generated by serialize.",
 #ifdef JS_METHODJIT
-"mjitstats()              Return stats on mjit memory usage.",
+"mjitcodestats()          Return stats on mjit code memory usage.",
+"mjitdatastats()          Return stats on mjit data memory usage.",
 #endif
 "stringstats()            Return stats on string memory usage.",
 "newGlobal(kind)          Return a new global object, in the current\n"
