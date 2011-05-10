@@ -1754,7 +1754,6 @@ IsTableRelated(nsIAtom* aParentType)
 {
   return
     nsGkAtoms::tableOuterFrame    == aParentType ||
-    nsGkAtoms::tableFrame         == aParentType ||
     nsGkAtoms::tableRowGroupFrame == aParentType ||
     nsGkAtoms::tableRowFrame      == aParentType ||
     nsGkAtoms::tableCaptionFrame  == aParentType ||
@@ -1944,6 +1943,15 @@ nsCSSFrameConstructor::ConstructTable(nsFrameConstructorState& aState,
   }
 
   nsFrameItems childItems;
+
+  // Process children
+  nsFrameConstructorSaveState absoluteSaveState;
+  const nsStyleDisplay* display = outerStyleContext->GetStyleDisplay();
+
+  // Mark the table frame as an absolute container if needed
+  if (display->IsPositioned()) {
+    aState.PushAbsoluteContainingBlock(newFrame, absoluteSaveState);
+  }
   if (aItem.mFCData->mBits & FCDATA_USE_CHILD_ITEMS) {
     rv = ConstructFramesFromItemList(aState, aItem.mChildItems,
                                      innerFrame, childItems);
@@ -5534,7 +5542,15 @@ nsCSSFrameConstructor::GetAbsoluteContainingBlock(nsIFrame* aFrame)
     // positioned child frames.
     const nsStyleDisplay* disp = frame->GetStyleDisplay();
 
-    if (disp->IsPositioned() && !IsTableRelated(frame->GetType())) {
+    if (disp->IsPositioned()) {
+      // For tables, return the outer frame table
+      if (frame->GetType() == nsGkAtoms::tableFrame) {
+        containingBlock = frame->GetParent();
+        break;
+      } else if (IsTableRelated(frame->GetType())) {
+        continue;
+      }
+
       // Find the outermost wrapped block under this frame
       for (nsIFrame* wrappedFrame = aFrame; wrappedFrame != frame->GetParent();
            wrappedFrame = wrappedFrame->GetParent()) {
