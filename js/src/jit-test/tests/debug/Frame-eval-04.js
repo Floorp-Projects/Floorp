@@ -11,4 +11,4 @@ dbg.hooks = {
     }
 };
 g.eval("debugger;");
-assertEq(exc.getPrototype(), SEp);
+assertEq(exc.prototype, SEp);
