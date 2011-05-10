@@ -1489,10 +1489,14 @@ class TraceRecorder
                                                  unsigned *depthp);
     JS_REQUIRES_STACK nanojit::LIns* guardArgsLengthNotAssigned(nanojit::LIns* argsobj_ins);
     JS_REQUIRES_STACK void guardNotHole(nanojit::LIns* argsobj_ins, nanojit::LIns* ids_ins);
+
     JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSObject* ctor,
                                                           nanojit::LIns*& proto_ins);
-    JS_REQUIRES_STACK RecordingStatus getClassPrototype(JSProtoKey key,
-                                                          nanojit::LIns*& proto_ins);
+    JS_REQUIRES_STACK RecordingStatus getObjectPrototype(nanojit::LIns*& proto_ins);
+    JS_REQUIRES_STACK RecordingStatus getFunctionPrototype(nanojit::LIns*& proto_ins);
+    JS_REQUIRES_STACK RecordingStatus getArrayPrototype(nanojit::LIns*& proto_ins);
+    JS_REQUIRES_STACK RecordingStatus getRegExpPrototype(nanojit::LIns*& proto_ins);
+
     JS_REQUIRES_STACK RecordingStatus newArray(JSObject* ctor, uint32 argc, Value* argv,
                                                  Value* rval);
     JS_REQUIRES_STACK RecordingStatus newString(JSObject* ctor, uint32 argc, Value* argv,

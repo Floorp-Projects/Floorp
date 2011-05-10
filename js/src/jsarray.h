@@ -58,14 +58,6 @@ JSObject::getDenseArrayInitializedLength()
     return initializedLength;
 }
 
-inline void
-JSObject::setDenseArrayInitializedLength(uint32 length)
-{
-    JS_ASSERT(isDenseArray());
-    JS_ASSERT(length <= getDenseArrayCapacity());
-    initializedLength = length;
-}
-
 inline bool
 JSObject::isPackedDenseArray()
 {

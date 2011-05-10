@@ -10909,30 +10909,74 @@ TraceRecorder::getClassPrototype(JSObject* ctor, LIns*& proto_ins)
     return RECORD_CONTINUE;
 }
 
-RecordingStatus
-TraceRecorder::getClassPrototype(JSProtoKey key, LIns*& proto_ins)
+static inline void
+AssertValidPrototype(JSObject *proto, JSProtoKey key, DebugOnly<TraceMonitor *> localtm,
+                     JSContext *cx)
 {
 #ifdef DEBUG
-    TraceMonitor &localtm = *traceMonitor;
+    /* This shouldn't have reentered. */
+    JS_ASSERT(localtm->recorder);
+
+    /* Double-check for a matching emptyShape. */
+    JS_ASSERT(proto->isNative());
+    JS_ASSERT(proto->getNewType(cx)->emptyShapes);
+    EmptyShape *empty = proto->getNewType(cx)->emptyShapes[0];
+    JS_ASSERT(empty);
+    JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(empty->getClass()) == key);
 #endif
+}
 
-    JSObject* proto;
-    if (!js_GetClassPrototype(cx, globalObj, key, &proto))
-        RETURN_ERROR("error in js_GetClassPrototype");
+RecordingStatus
+TraceRecorder::getObjectPrototype(LIns*& proto_ins)
+{
+    DebugOnly<TraceMonitor *> localtm = traceMonitor;
 
-    // This should not have reentered.
-    JS_ASSERT(localtm.recorder);
+    JSObject *proto = globalObj->asGlobal()->getOrCreateObjectPrototype(cx);
+    if (!proto)
+        RETURN_ERROR("error getting Object.prototype");
+    AssertValidPrototype(proto, JSProto_Object, localtm, cx);
 
-#ifdef DEBUG
-    /* Double-check that a native proto has a matching emptyShape. */
-    if (key != JSProto_Array) {
-        JS_ASSERT(proto->isNative());
-        JS_ASSERT(proto->getNewType(cx)->emptyShapes);
-        EmptyShape *empty = proto->getNewType(cx)->emptyShapes[0];
-        JS_ASSERT(empty);
-        JS_ASSERT(JSCLASS_CACHED_PROTO_KEY(empty->getClass()) == key);
-    }
-#endif
+    proto_ins = w.immpObjGC(proto);
+    return RECORD_CONTINUE;
+}
+
+RecordingStatus
+TraceRecorder::getFunctionPrototype(LIns*& proto_ins)
+{
+    DebugOnly<TraceMonitor *> localtm = traceMonitor;
+
+    JSObject *proto = globalObj->asGlobal()->getOrCreateFunctionPrototype(cx);
+    if (!proto)
+        RETURN_ERROR("error getting Function.prototype");
+    AssertValidPrototype(proto, JSProto_Function, localtm, cx);
+
+    proto_ins = w.immpObjGC(proto);
+    return RECORD_CONTINUE;
+}
+
+RecordingStatus
+TraceRecorder::getArrayPrototype(LIns*& proto_ins)
+{
+    DebugOnly<TraceMonitor *> localtm = traceMonitor;
+
+    JSObject *proto = globalObj->asGlobal()->getOrCreateArrayPrototype(cx);
+    if (!proto)
+        RETURN_ERROR("error getting Array.prototype");
+    AssertValidPrototype(proto, JSProto_Array, localtm, cx);
+
+    proto_ins = w.immpObjGC(proto);
+    return RECORD_CONTINUE;
+}
+
+RecordingStatus
+TraceRecorder::getRegExpPrototype(LIns*& proto_ins)
+{
+    DebugOnly<TraceMonitor *> localtm = traceMonitor;
+
+    JSObject *proto = globalObj->asGlobal()->getOrCreateRegExpPrototype(cx);
+    if (!proto)
+        RETURN_ERROR("error getting RegExp.prototype");
+    AssertValidPrototype(proto, JSProto_RegExp, localtm, cx);
 
     proto_ins = w.immpObjGC(proto);
     return RECORD_CONTINUE;
@@ -14334,15 +14378,16 @@ TraceRecorder::record_JSOP_NEWINIT()
     hadNewInit = true;
 
     JSProtoKey key = JSProtoKey(cx->regs().pc[1]);
+    JS_ASSERT(key == JSProto_Array || key == JSProto_Object);
 
     LIns* proto_ins;
-    CHECK_STATUS_A(getClassPrototype(key, proto_ins));
-
     LIns *v_ins;
     if (key == JSProto_Array) {
+        CHECK_STATUS_A(getArrayPrototype(proto_ins));
         LIns *args[] = { proto_ins, cx_ins };
         v_ins = w.call(&NewDenseEmptyArray_ci, args);
     } else {
+        CHECK_STATUS_A(getObjectPrototype(proto_ins));
         LIns *args[] = { w.immpNull(), proto_ins, cx_ins };
         v_ins = w.call(&js_InitializerObject_ci, args);
     }
@@ -14357,7 +14402,7 @@ TraceRecorder::record_JSOP_NEWARRAY()
     initDepth++;
 
     LIns* proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_Array, proto_ins));
+    CHECK_STATUS_A(getArrayPrototype(proto_ins));
 
     unsigned count = GET_UINT24(cx->regs().pc);
     LIns *args[] = { proto_ins, w.immi(count), cx_ins };
@@ -14374,7 +14419,7 @@ TraceRecorder::record_JSOP_NEWOBJECT()
     initDepth++;
 
     LIns* proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_Object, proto_ins));
+    CHECK_STATUS_A(getObjectPrototype(proto_ins));
 
     JSObject* baseobj = cx->fp()->script()->getObject(getFullIndex(0));
 
@@ -15280,7 +15325,7 @@ TraceRecorder::record_JSOP_LAMBDA()
         }
 
         LIns *proto_ins;
-        CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
+        CHECK_STATUS_A(getFunctionPrototype(proto_ins));
 
         LIns* args[] = { w.immpObjGC(globalObj), proto_ins, w.immpFunGC(fun), cx_ins };
         LIns* x = w.call(&js_NewNullClosure_ci, args);
@@ -15295,7 +15340,7 @@ TraceRecorder::record_JSOP_LAMBDA()
         RETURN_STOP_A("Unable to trace creating lambda in let");
 
     LIns *proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
+    CHECK_STATUS_A(getFunctionPrototype(proto_ins));
     LIns* scopeChain_ins = scopeChain();
     JS_ASSERT(scopeChain_ins);
     LIns* args[] = { proto_ins, scopeChain_ins, w.nameImmpNonGC(fun), cx_ins };
@@ -15466,7 +15511,7 @@ TraceRecorder::record_DefLocalFunSetSlot(uint32 slot, JSObject* obj)
 
     if (fun->isNullClosure() && fun->getParent() == globalObj) {
         LIns *proto_ins;
-        CHECK_STATUS_A(getClassPrototype(JSProto_Function, proto_ins));
+        CHECK_STATUS_A(getFunctionPrototype(proto_ins));
 
         LIns* args[] = { w.immpObjGC(globalObj), proto_ins, w.immpFunGC(fun), cx_ins };
         LIns* x = w.call(&js_NewNullClosure_ci, args);
@@ -15589,7 +15634,7 @@ TraceRecorder::record_JSOP_REGEXP()
     unsigned index = atoms - script->atoms + GET_INDEX(cx->regs().pc);
 
     LIns* proto_ins;
-    CHECK_STATUS_A(getClassPrototype(JSProto_RegExp, proto_ins));
+    CHECK_STATUS_A(getRegExpPrototype(proto_ins));
 
     LIns* args[] = {
         proto_ins,
