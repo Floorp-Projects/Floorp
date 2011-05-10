@@ -63,11 +63,7 @@ LIBS = \
 include $(topsrcdir)/config/config.mk
 
 ifdef _MSC_VER
-ifdef WINCE
-WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
-else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
-endif
 endif
 
 include $(topsrcdir)/ipc/chromium/chromium-config.mk
