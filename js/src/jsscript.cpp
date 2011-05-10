@@ -745,6 +745,18 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
 
 #endif /* JS_HAS_XDR */
 
+bool
+JSPCCounters::init(JSContext *cx, size_t numBytecodes)
+{
+    this->numBytecodes = numBytecodes;
+    size_t nbytes = sizeof(*counts) * numBytecodes * JSRUNMODE_COUNT;
+    counts = (int*) cx->malloc_(nbytes);
+    if (!counts)
+        return false;
+    memset(counts, 0, nbytes);
+    return true;
+}
+
 static void
 script_finalize(JSContext *cx, JSObject *obj)
 {
@@ -1092,6 +1104,9 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
     script->length = length;
     script->version = version;
     new (&script->bindings) Bindings(cx, emptyCallShape);
+
+    if (cx->hasRunOption(JSOPTION_PCCOUNT))
+        (void) script->pcCounters.init(cx, length);
 
     uint8 *scriptEnd = reinterpret_cast<uint8 *>(script + 1);
 
@@ -1479,7 +1494,7 @@ DestroyScript(JSContext *cx, JSScript *script)
     PurgeScriptFragments(&script->compartment->traceMonitor, script);
 #endif
 
-#if defined(JS_METHODJIT)
+#ifdef JS_METHODJIT
     mjit::ReleaseScriptCode(cx, script);
 #endif
     JS_REMOVE_LINK(&script->links);

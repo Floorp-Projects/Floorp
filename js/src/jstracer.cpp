@@ -7303,9 +7303,19 @@ TraceRecorder::monitorRecording(JSOp op)
      */
 
     AbortableRecordingStatus status;
-#ifdef DEBUG
     bool wasInImacro = (cx->fp()->hasImacropc());
-#endif
+    if (!wasInImacro && cx->hasRunOption(JSOPTION_PCCOUNT)) {
+        JSScript *script = cx->fp()->script();
+        if (script->pcCounters) {
+            int offset = cx->regs().pc - script->code;
+            LIns *pcCounter_addr_ins = w.nameImmpNonGC(&script->pcCounters.get(JSRUNMODE_TRACEJIT, offset));
+            AnyAddress pcCounter_addr(pcCounter_addr_ins);
+            LIns *ins = w.ldi(pcCounter_addr);
+            ins = w.addi(ins, w.name(w.immi(1), "pctick"));
+            w.st(ins, pcCounter_addr);
+        }
+    }
+
     switch (op) {
       default:
           AbortRecording(cx, "unsupported opcode");
