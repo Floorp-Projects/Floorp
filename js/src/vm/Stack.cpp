@@ -359,7 +359,8 @@ StackSpace::bumpLimit(JSContext *cx, StackFrame *fp, Value *sp,
      * script is passing a obscene number of args to 'apply' and we are just
      * trying to keep the stack limit heuristic from breaking the script.
      */
-    Value *quota = (Value *)fp + STACK_QUOTA;
+    Value *quota = Max(*limit, (Value *)fp + STACK_QUOTA);
+    JS_ASSERT(quota >= sp);
     uintN remain = quota - sp;
     uintN inc = nvals + remain;
     if (!ensureSpace(NULL, sp, inc))
