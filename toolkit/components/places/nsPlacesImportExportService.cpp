@@ -106,6 +106,9 @@
 #include "nsIObserverService.h"
 #include "nsISupportsPrimitives.h"
 #include "nsPlacesMacros.h"
+#include "mozilla/Util.h"
+
+using namespace mozilla;
 
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 
@@ -671,9 +674,8 @@ BookmarkContentSink::HandleContainerEnd()
     // the addition of items will override the imported field.
     BookmarkImportFrame& prevFrame = PreviousFrame();
     if (prevFrame.mPreviousLastModifiedDate > 0) {
-      nsresult rv = mBookmarksService->SetItemLastModified(frame.mContainerID,
-                                                           prevFrame.mPreviousLastModifiedDate);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "SetItemLastModified failed");
+      (void)mBookmarksService->SetItemLastModified(frame.mContainerID,
+                                                   prevFrame.mPreviousLastModifiedDate);
     }
     PopFrame();
   }
@@ -699,8 +701,8 @@ BookmarkContentSink::HandleHead1Begin(const nsIParserNode& node)
       }
 
       PRInt64 placesRoot;
-      nsresult rv = mBookmarksService->GetPlacesRoot(&placesRoot);
-      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "could not get placesRoot");
+      DebugOnly<nsresult> rv = mBookmarksService->GetPlacesRoot(&placesRoot);
+      NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "could not get placesRoot");
       CurFrame().mContainerID = placesRoot;
       break;
     }

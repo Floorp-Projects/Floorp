@@ -55,6 +55,7 @@
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
 #include "nsIXPConnect.h"
+#include "mozilla/Util.h"
 
 // Initial size for the cache holding visited status observers.
 #define VISIT_OBSERVERS_INITIAL_CACHE_SIZE 128
@@ -469,7 +470,8 @@ public:
     nsCOMPtr<nsIObserverService> obsService =
       mozilla::services::GetObserverService();
     if (obsService) {
-      nsresult rv = obsService->NotifyObservers(uri, URI_VISIT_SAVED, nsnull);
+      DebugOnly<nsresult> rv =
+        obsService->NotifyObservers(uri, URI_VISIT_SAVED, nsnull);
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Could not notify observers");
     }
 
