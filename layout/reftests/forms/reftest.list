@@ -59,3 +59,6 @@ include input/reftest.list
 
 # output element
 include output/reftest.list
+
+# progress element
+include progress/reftest.list

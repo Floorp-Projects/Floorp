@@ -1,0 +1,26 @@
+div.progress-element {
+  -moz-appearance: progressbar;
+  display: inline-block;
+  height: 1em;
+  width: 10em;
+  vertical-align: -0.2em;
+
+  /* TODO: this is a workaround for bug 568825 */
+  overflow: hidden;
+
+  /* Default style in case of there is -moz-appearance: none; */
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-bottom-colors: ThreeDHighlight -moz-Dialog;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  background-color: -moz-Dialog;
+}
+
+div.progress-bar {
+  -moz-appearance: progresschunk;
+  height: 100%;
+
+  /* Default style in case of there is -moz-appearance: none; */
+  background-color: ThreeDShadow;
+}
