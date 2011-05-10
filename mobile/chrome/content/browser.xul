@@ -373,135 +373,137 @@
       </dialog>
     </box>
 
-    <vbox id="panel-container" class="panel-dark window-width window-height" style="-moz-stack-sizing: ignore" left="10000" hidden="true">
-      <hbox id="panel-controls" class="panel-row-header" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
-        <toolbarbutton id="tool-preferences" class="panel-row-button" type="radio" group="1" checked="true" linkedpanel="prefs-container"/>
-        <toolbarbutton id="tool-downloads" class="panel-row-button" type="radio" group="1" linkedpanel="downloads-container"/>
-        <toolbarbutton id="tool-addons" class="panel-row-button" type="radio" group="1" linkedpanel="addons-container"/>
-        <toolbarbutton id="tool-console" class="panel-row-button" type="radio" group="1" hidden="true" linkedpanel="console-container"/>
+    <box id="panel-container" hidden="true" class="window-width window-height panel-dark"
+         style="-moz-stack-sizing: ignore" left="10000">
+      <box id="panel-container-inner" flex="1" class="panel-dark">
+        <box id="panel-controls" class="panel-row-header" oncommand="BrowserUI.switchPane(event.target.getAttribute('linkedpanel'));">
+          <toolbarbutton id="tool-preferences" label="&prefsHeader.label;" class="panel-row-button" type="radio" group="1" checked="true" linkedpanel="prefs-container"/>
+          <toolbarbutton id="tool-downloads" label="&downloadsHeader.label;" class="panel-row-button" type="radio" group="1" linkedpanel="downloads-container"/>
+          <toolbarbutton id="tool-addons" label="&addonsHeader.label;" class="panel-row-button" type="radio" group="1" linkedpanel="addons-container"/>
+          <toolbarbutton id="tool-console" label="&consoleHeader.label;" class="panel-row-button" type="radio" group="1" hidden="true" linkedpanel="console-container"/>
 #ifndef ANDROID
-        <spacer flex="1"/>
-        <toolbarbutton id="tool-panel-close" class="panel-close" command="cmd_panel"/>
+          <spacer flex="1"/>
+          <toolbarbutton id="tool-panel-close" class="panel-close" command="cmd_panel"/>
 #endif
-      </hbox>
-      <vbox flex="1">
-        <deck id="panel-items" selectedIndex="2" flex="1">
-          <vbox id="addons-container" flex="1">
-            <notificationbox id="addons-messages" flex="1">
-              <richlistbox id="addons-list" flex="1" onselect="ExtensionsView.hideOnSelect(event)">
-                <label id="addons-list-header" class="panel-header" value="&addonsHeader.label;"/>
-                <richlistitem id="addons-local" class="section-header" align="center" nohighlight="true">
-                  <label value="&addonsLocal.label;" flex="1"/>
-                  <spacer flex="1"/>
-                  <button id="addons-update-all" label="&addonsUpdate.label;" hidden="true"
-                          oncommand="ExtensionsView.updateAll();"/>
-                </richlistitem>
-                <richlistitem id="addons-repo" class="section-header" nohighlight="true">
-                  <label value="&addonsRepo.label;" flex="1"/>
-                  <textbox id="addons-search-text" flex="1" class="search-bar" placeholder="&addonsSearch2.emptytext;" type="search" searchbutton="false"
-                           oncommand="ExtensionsView.getAddonsFromRepo(this.value);" onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.blur();"/>
-                </richlistitem>
+        </box>
+        <vbox flex="1">
+          <deck id="panel-items" selectedIndex="2" flex="1">
+            <vbox id="addons-container" flex="1">
+              <notificationbox id="addons-messages" flex="1">
+                <richlistbox id="addons-list" class="panel-list" flex="1" onselect="ExtensionsView.hideOnSelect(event)">
+                  <label id="addons-list-header" class="panel-header" value="&addonsHeader.label;"/>
+                  <richlistitem id="addons-local" class="section-header" align="center" nohighlight="true">
+                    <label value="&addonsLocal.label;" flex="1"/>
+                    <spacer flex="1"/>
+                    <button id="addons-update-all" label="&addonsUpdate.label;" hidden="true"
+                            oncommand="ExtensionsView.updateAll();"/>
+                  </richlistitem>
+                  <richlistitem id="addons-repo" class="section-header" nohighlight="true">
+                    <label value="&addonsRepo.label;" flex="1"/>
+                    <textbox id="addons-search-text" flex="1" class="search-bar" placeholder="&addonsSearch2.emptytext;" type="search" searchbutton="false"
+                             oncommand="ExtensionsView.getAddonsFromRepo(this.value);" onkeypress="if (event.keyCode == event.DOM_VK_RETURN) this.blur();"/>
+                  </richlistitem>
+                </richlistbox>
+              </notificationbox>
+            </vbox>
+
+            <vbox id="downloads-container" flex="1">
+              <richlistbox id="downloads-list" class="panel-list" flex="1" onselect="this.ensureSelectedElementIsVisible()">
+                <label id="downloads-list-header" class="panel-header" value="&downloadsHeader.label;"/>
               </richlistbox>
-            </notificationbox>
-          </vbox>
+            </vbox>
 
-          <vbox id="downloads-container" flex="1">
-            <richlistbox id="downloads-list" flex="1" onselect="this.ensureSelectedElementIsVisible()">
-              <label id="downloads-list-header" class="panel-header" value="&downloadsHeader.label;"/>
-            </richlistbox>
-          </vbox>
-
-          <vbox id="prefs-container" flex="1">
-            <notificationbox id="prefs-messages" flex="1">
-              <richlistbox id="prefs-list" seltype="single" flex="1" onselect="this.ensureSelectedElementIsVisible()">
-                <label id="prefs-list-header" class="panel-header" value="&prefsHeader.label;"/>
-                <setting title="&about.title;" type="control">
-                  <button id="prefs-about-button" label="&about.button;"
+            <vbox id="prefs-container" flex="1">
+              <notificationbox id="prefs-messages" flex="1">
+                <richlistbox id="prefs-list" class="panel-list" seltype="single" flex="1" onselect="this.ensureSelectedElementIsVisible()">
+                  <label id="prefs-list-header" class="panel-header" value="&prefsHeader.label;"/>
+                  <setting title="&about.title;" type="control">
+                    <button id="prefs-about-button" label="&about.button;"
 #ifdef MOZ_OFFICIAL_BRANDING
 # these two point to the same page, this just matters for what shows up in the
 # URL bar
-                          oncommand="BrowserUI.newTab('about:firefox', Browser.selectedTab);"/>
+                            oncommand="BrowserUI.newTab('about:firefox', Browser.selectedTab);"/>
 #else
-                          oncommand="BrowserUI.newTab('about:fennec', Browser.selectedTab);"/>
+                            oncommand="BrowserUI.newTab('about:fennec', Browser.selectedTab);"/>
 #endif
-                </setting>
-                <setting id="prefs-uilanguage" title="&language.title;" type="control">
-                  <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
-                    <menupopup>
-                      <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
-                    </menupopup>
-                  </menulist>
-                </setting>
-                <setting id="prefs-homepage" title="&homepage.title;" type="control">
-                  <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
-                    <menupopup onpopupshowing="PreferencesView.updateHomePageList();">
-                      <menuitem id="prefs-homepage-default" label="&homepage.default;" value="default"/>
-                      <menuitem id="prefs-homepage-none" label="&homepage.none;" value="none"/>
-                      <menuitem id="prefs-homepage-currentpage" label="&homepage.currentpage;" value="currentpage"/>
-                    </menupopup>
-                  </menulist>
-                </setting>
+                  </setting>
+                  <setting id="prefs-uilanguage" title="&language.title;" type="control">
+                    <menulist id="prefs-languages" oncommand="PreferencesView.updateLocale();">
+                      <menupopup>
+                        <menuitem id="prefs-languages-auto" label="&language.auto;" value="auto"/>
+                      </menupopup>
+                    </menulist>
+                  </setting>
+                  <setting id="prefs-homepage" title="&homepage.title;" type="control">
+                    <menulist id="prefs-homepage-options" oncommand="PreferencesView.updateHomePage();">
+                      <menupopup onpopupshowing="PreferencesView.updateHomePageList();">
+                        <menuitem id="prefs-homepage-default" label="&homepage.default;" value="default"/>
+                        <menuitem id="prefs-homepage-none" label="&homepage.none;" value="none"/>
+                        <menuitem id="prefs-homepage-currentpage" label="&homepage.currentpage;" value="currentpage"/>
+                      </menupopup>
+                    </menulist>
+                  </setting>
 #ifdef MOZ_SERVICES_SYNC
-                <settings id="prefs-sync" label="&sync.title;">
-                  <setting id="sync-autosync" pref="browser.sync.enabled" type="bool" title="&sync.synchronize;" oninputchanged="WeaveGlue.toggleSyncEnabled();"/>
-                  <setting id="sync-connect" title="&sync.notconnected;" type="control" collapsed="true">
-                    <button label="&sync.connect;" oncommand="WeaveGlue.open();" />
-                  </setting>
-                  <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
-                    <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="false" checked="false" oncommand="WeaveGlue.showDetails();" />
-                  </setting>
-                  <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
-                    <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();"/>
-                  </setting>
-                  <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
-                  <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
-                    <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
-                  </setting>
-                </settings>
+                  <settings id="prefs-sync" label="&sync.title;">
+                    <setting id="sync-autosync" pref="browser.sync.enabled" type="bool" title="&sync.synchronize;" oninputchanged="WeaveGlue.toggleSyncEnabled();"/>
+                    <setting id="sync-connect" title="&sync.notconnected;" type="control" collapsed="true">
+                      <button label="&sync.connect;" oncommand="WeaveGlue.open();" />
+                    </setting>
+                    <setting id="sync-connected" class="setting-group" title="&sync.connected;" type="control" collapsed="true">
+                      <button id="sync-details" label="&sync.details;" type="checkbox" autocheck="false" checked="false" oncommand="WeaveGlue.showDetails();" />
+                    </setting>
+                    <setting id="sync-sync" class="setting-subgroup" type="control" collapsed="true">
+                      <button id="sync-syncButton" label="&sync.syncNow;" oncommand="WeaveGlue.sync();"/>
+                    </setting>
+                    <setting id="sync-device" class="setting-subgroup" type="string" title="&sync.deviceName;" onchange="WeaveGlue.changeName(this);" collapsed="true"/>
+                    <setting id="sync-disconnect" class="setting-subgroup" type="control" collapsed="true">
+                      <button label="&sync.disconnect;" oncommand="WeaveGlue.disconnect();" />
+                    </setting>
+                  </settings>
 #endif
-                <settings id="prefs-privacy" label="&privacy.title;">
-                  <setting pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2"/>
-                  <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
-                  <setting pref="privacy.donottrackheader.enabled" title="&doNotTrack.title;" type="bool"/>
-                  <setting title="&clearPrivateData2.title;" type="control">
-                    <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
-                  </setting>
-                </settings>
-                <settings id="prefs-content" label="&content.title;">
-                  <setting pref="browser.ui.zoom.reflow" title="&reflowZoom.title;" type="bool"/>
-                  <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
-                  <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
-                  <setting pref="browser.menu.showCharacterEncoding" type="bool" localized="true" title="&showCharset.title;"/>
-                </settings>
-              </richlistbox>
-            </notificationbox>
-          </vbox>
-
-          <vbox id="console-container" flex="1">
-            <vbox id="console-header">
-              <label class="panel-header" value="&consoleHeader.label;"/>
-              <hbox align="center">
-                <label value="&consoleCodeEval.label;" control="console-eval-textbox"/>
-                <textbox id="console-eval-textbox" class="toolbar search-bar" value="" onkeypress="ConsoleView.onEvalKeyPress(event)" flex="1"/>
-                <button id="console-button-eval" class="show-text" label="&consoleEvaluate.label;" oncommand="ConsoleView.evaluateTypein()"/>
-              </hbox>
-              <hbox align="center" pack="end">
-                <radiogroup id="console-filter" oncommand="ConsoleView.changeMode();">
-                  <radio id="console-filter-all" label="&consoleAll.label;" value="all" selected="true"/>
-                  <radio id="console-filter-messages" label="&consoleMessages.label;" value="message"/>
-                  <radio id="console-filter-warnings" label="&consoleWarnings.label;" value="warning"/>
-                  <radio id="console-filter-errors" label="&consoleErrors.label;" value="error"/>
-                </radiogroup>
-                <button id="console-clear" class="show-text" oncommand="ConsoleView.clearConsole();" label="&consoleClear.label;"/>
-              </hbox>
+                  <settings id="prefs-privacy" label="&privacy.title;">
+                    <setting pref="network.cookie.cookieBehavior" title="&allowCookies.title;" type="boolint" on="0" off="2"/>
+                    <setting pref="signon.rememberSignons" title="&rememberPasswords.title;" type="bool"/>
+                    <setting pref="privacy.donottrackheader.enabled" title="&doNotTrack.title;" type="bool"/>
+                    <setting title="&clearPrivateData2.title;" type="control">
+                      <button id="prefs-clear-data" label="&clearPrivateData.button;" command="cmd_sanitize"/>
+                    </setting>
+                  </settings>
+                  <settings id="prefs-content" label="&content.title;">
+                    <setting pref="browser.ui.zoom.reflow" title="&reflowZoom.title;" type="bool"/>
+                    <setting pref="permissions.default.image" title="&showImages.title;" type="boolint" on="1" off="2"/>
+                    <setting pref="javascript.enabled" type="bool" title="&enableJavaScript.title;"/>
+                    <setting pref="browser.menu.showCharacterEncoding" type="bool" localized="true" title="&showCharset.title;"/>
+                  </settings>
+                </richlistbox>
+              </notificationbox>
             </vbox>
 
-            <richlistbox id="console-box" class="console-box" flex="1" onkeypress="ConsoleView.onConsoleBoxKeyPress(event)" oncontextmenu="ConsoleView.onContextMenu(event);"/>
-          </vbox>
-        </deck>
-      </vbox>
-    </vbox>
+            <vbox id="console-container" flex="1">
+              <vbox id="console-header" class="panel-list">
+                <label class="panel-header" value="&consoleHeader.label;"/>
+                <hbox align="center">
+                  <label value="&consoleCodeEval.label;" control="console-eval-textbox"/>
+                  <textbox id="console-eval-textbox" class="toolbar search-bar" value="" onkeypress="ConsoleView.onEvalKeyPress(event)" flex="1"/>
+                  <button id="console-button-eval" class="show-text" label="&consoleEvaluate.label;" oncommand="ConsoleView.evaluateTypein()"/>
+                </hbox>
+                <hbox align="center" pack="end">
+                  <radiogroup id="console-filter" oncommand="ConsoleView.changeMode();">
+                    <radio id="console-filter-all" label="&consoleAll.label;" value="all" selected="true"/>
+                    <radio id="console-filter-messages" label="&consoleMessages.label;" value="message"/>
+                    <radio id="console-filter-warnings" label="&consoleWarnings.label;" value="warning"/>
+                    <radio id="console-filter-errors" label="&consoleErrors.label;" value="error"/>
+                  </radiogroup>
+                  <button id="console-clear" class="show-text" oncommand="ConsoleView.clearConsole();" label="&consoleClear.label;"/>
+                </hbox>
+              </vbox>
 
+              <richlistbox id="console-box" class="panel-list console-box" flex="1" onkeypress="ConsoleView.onConsoleBoxKeyPress(event)" oncontextmenu="ConsoleView.onContextMenu(event);"/>
+            </vbox>
+          </deck>
+        </vbox>
+      </box>
+    </box>
     <vbox id="awesome-panels" hidden="true">
       <!-- Awesome header row -->
       <hbox id="awesome-header" class="panel-row-header">
