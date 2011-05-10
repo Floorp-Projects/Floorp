@@ -152,6 +152,7 @@ static volatile bool gCanceled = false;
 static bool enableTraceJit = false;
 static bool enableMethodJit = false;
 static bool enableProfiling = false;
+static bool enableDisassemblyDumps = false;
 
 static bool printTiming = false;
 
@@ -960,6 +961,11 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
         case 'd':
             JS_SetRuntimeDebugMode(JS_GetRuntime(cx), JS_TRUE);
             JS_SetDebugMode(cx, JS_TRUE);
+            break;
+
+        case 'D':
+            enableDisassemblyDumps = true;
+            JS_ToggleOptions(cx, JSOPTION_PCCOUNT);
             break;
 
         case 'z':
@@ -6077,6 +6083,9 @@ Shell(JSContext *cx, int argc, char **argv, char **envp)
     }
 #endif  /* JSDEBUGGER */
 
+    if (enableDisassemblyDumps)
+        JS_DumpAllProfiles(cx);
+ 
     return result;
 }
 
