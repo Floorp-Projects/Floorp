@@ -58,9 +58,6 @@
 /******************************************************************************
  *  nsDiskCacheInputStream
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark nsDiskCacheInputStream
-#endif
 class nsDiskCacheInputStream : public nsIInputStream {
 
 public:
@@ -193,10 +190,6 @@ nsDiskCacheInputStream::IsNonBlocking(PRBool * nonBlocking)
 /******************************************************************************
  *  nsDiskCacheOutputStream
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark nsDiskCacheOutputStream
-#endif
 class nsDiskCacheOutputStream : public nsIOutputStream
                               , public nsIDiskCacheStreamInternal
 {
@@ -305,11 +298,6 @@ nsDiskCacheOutputStream::IsNonBlocking(PRBool * nonBlocking)
 /******************************************************************************
  *  nsDiskCacheStreamIO
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark nsDiskCacheStreamIO
-#endif
-
 NS_IMPL_THREADSAFE_ISUPPORTS0(nsDiskCacheStreamIO)
 
 // we pick 16k as the max buffer size because that is the threshold above which

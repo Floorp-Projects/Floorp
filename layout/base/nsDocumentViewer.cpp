@@ -227,10 +227,6 @@ class DocumentViewerImpl;
 
 // a small delegate class used to avoid circular references
 
-#ifdef XP_MAC
-#pragma mark ** nsDocViewerSelectionListener **
-#endif
-
 class nsDocViewerSelectionListener : public nsISelectionListener
 {
 public:
@@ -288,11 +284,6 @@ private:
     DocumentViewerImpl*  mDocViewer;
 };
 
-
-
-#ifdef XP_MAC
-#pragma mark ** DocumentViewerImpl **
-#endif
 
 //-------------------------------------------------------------
 class DocumentViewerImpl : public nsIDocumentViewer,
@@ -2593,9 +2584,6 @@ NS_IMETHODIMP DocumentViewerImpl::GetCanGetContents(PRBool *aCanGetContents)
   return NS_OK;
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 /* ========================================================================================
  * nsIContentViewerFile
