@@ -2161,6 +2161,14 @@ var gCSSProperties = {
 		other_values: [ "0", "0.4", "0.0000", "-3" ],
 		invalid_values: [ "0px", "1px" ]
 	},
+	"-moz-orient": {
+		domProp: "MozOrient",
+		inherited: false,
+		type: CSS_TYPE_LONGHAND,
+		initial_values: [ "horizontal" ],
+		other_values: [ "vertical" ],
+		invalid_values: [ "auto", "none" ]
+	},
 	"orphans": {
 		domProp: "orphans",
 		inherited: true,
