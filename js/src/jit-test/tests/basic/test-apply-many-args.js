@@ -5,7 +5,7 @@ function f(x) {
     f.apply(null, arguments);
 }
 
-a = [100];
+a = [10];
 for (var i = 0; i < 2000; ++i)
   a.push(i);
 f.apply(null, a);
