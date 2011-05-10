@@ -59,8 +59,6 @@
 #include "jspubtd.h"
 #include "jspropertytree.h"
 
-#include "vm/ArgumentsObject.h"
-
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable:4800)
@@ -637,9 +635,7 @@ struct EmptyShape : public js::Shape
         return shape;
     }
 
-    static EmptyShape *getEmptyArgumentsShape(JSContext *cx) {
-        return ensure(cx, &NormalArgumentsObject::jsClass, &cx->compartment->emptyArgumentsShape);
-    }
+    static inline EmptyShape *getEmptyArgumentsShape(JSContext *cx);
 
     static EmptyShape *getEmptyBlockShape(JSContext *cx) {
         return ensure(cx, &js_BlockClass, &cx->compartment->emptyBlockShape);
