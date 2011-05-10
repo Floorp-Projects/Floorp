@@ -341,7 +341,7 @@ class LoopState : public MacroAssemblerTypedefs
 
     void analyzeLoopTest();
     void analyzeLoopIncrements();
-    bool analyzeLoopBody(unsigned frame);
+    void analyzeLoopBody(unsigned frame);
 
     bool definiteArrayAccess(const analyze::SSAValue &obj, const analyze::SSAValue &index);
     bool getLoopTestAccess(const analyze::SSAValue &v, uint32 *pslot, int32 *pconstant);

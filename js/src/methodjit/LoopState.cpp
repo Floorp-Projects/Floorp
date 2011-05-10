@@ -123,8 +123,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
             if (offset < lifetime->head || offset > lifetime->backedge)
                 continue;
         }
-        if (!analyzeLoopBody(index))
-            return false;
+        analyzeLoopBody(index);
     }
 
     if (testLHS != UNASSIGNED) {
@@ -1545,7 +1544,7 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
     return true;
 }
 
-bool
+void
 LoopState::analyzeLoopBody(unsigned frame)
 {
     JSScript *script = ssa->getFrame(frame).script;
@@ -1632,9 +1631,9 @@ LoopState::analyzeLoopBody(unsigned frame)
                 if (!object)
                     continue;
                 if (!addModifiedProperty(object, JSID_VOID))
-                    return false;
+                    return;
                 if (op == JSOP_SETHOLE && !addGrowArray(object))
-                    return false;
+                    return;
             }
 
             if (constrainedLoop && !definiteArrayAccess(objValue, elemValue))
@@ -1767,8 +1766,6 @@ LoopState::analyzeLoopBody(unsigned frame)
 
         offset = successorOffset;
     }
-
-    return true;
 }
 
 bool
