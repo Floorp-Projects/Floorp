@@ -4118,7 +4118,7 @@ var XULBrowserWindow = {
   startTime: 0,
   statusText: "",
   isBusy: false,
-  inContentWhitelist: ["about:addons"],
+  inContentWhitelist: ["about:addons", "about:permissions"],
 
   QueryInterface: function (aIID) {
     if (aIID.equals(Ci.nsIWebProgressListener) ||
