@@ -1442,7 +1442,6 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
 
           case JSOP_FORNAME:
           case JSOP_FORGNAME:
-          case JSOP_CALLPROP:
             stack[stackDepth - 1] = code->poppedValues[0];
             break;
 
@@ -1822,6 +1821,21 @@ CrossScriptSSA::foldValue(const CrossSSAValue &cv)
                         return foldValue(CrossSSAValue(calleeFrame, analysis->poppedValue(pc, 0)));
                     offset += GetBytecodeLength(pc);
                 }
+            }
+            break;
+          }
+
+          case JSOP_CALLPROP: {
+            /*
+             * The second value pushed by CALLPROP is the same as its popped
+             * value. We don't do this folding during the SSA analysis itself
+             * as we still need to distinguish the two values during type
+             * inference --- any popped null or undefined value will throw an
+             * exception, and not actually end up in the pushed set.
+             */
+            if (v.pushedIndex() == 1) {
+                ScriptAnalysis *analysis = frame.script->analysis(cx);
+                return foldValue(CrossSSAValue(cv.frame, analysis->poppedValue(pc, 0)));
             }
             break;
           }
