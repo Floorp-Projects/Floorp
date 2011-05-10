@@ -104,24 +104,28 @@ class ArgumentsObject : public ::JSObject
     static const uint32 LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32 PACKED_BITS_COUNT = 1;
 
-    /* Needs access to LENGTH_SLOT. */
+#ifdef JS_TRACER
+    /* Needs access to INITIAL_LENGTH_SLOT. */
     friend ::nanojit::LIns*
     tjit::Writer::getArgsLength(::nanojit::LIns*) const;
-
-    /*
-     * Need access to DATA_SLOT, LENGTH_SLOT, LENGTH_OVERRIDDEN_BIT, and
-     * PACKED_BIT_COUNT.
-     */
-    friend class TraceRecorder;
-#ifdef JS_POLYIC
-    friend class ::GetPropCompiler;
-#endif
 
     /*
      * Needs access to DATA_SLOT -- technically just checkAccSet needs it, but
      * that's private, and exposing turns into a mess.
      */
     friend class ::nanojit::ValidateWriter;
+#endif
+
+    /*
+     * Need access to DATA_SLOT, INITIAL_LENGTH_SLOT, LENGTH_OVERRIDDEN_BIT, and
+     * PACKED_BIT_COUNT.
+     */
+#ifdef JS_TRACER
+    friend class TraceRecorder;
+#endif
+#ifdef JS_POLYIC
+    friend class ::GetPropCompiler;
+#endif
 
     void setInitialLength(uint32 length);
 
