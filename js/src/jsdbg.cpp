@@ -936,7 +936,7 @@ DebugObject_construct(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebugObject_getPrototype(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, vp, "getClass", refobj);
+    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get prototype", refobj);
     vp->setObjectOrNull(refobj->getProto());
     return Debug::fromChildJSObject(&vp[1].toObject())->wrapDebuggeeValue(cx, vp);
 }
@@ -944,7 +944,7 @@ DebugObject_getPrototype(JSContext *cx, uintN argc, Value *vp)
 static JSBool
 DebugObject_getClass(JSContext *cx, uintN argc, Value *vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, vp, "getClass", refobj);
+    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get class", refobj);
     const char *s = refobj->clasp->name;
     JSAtom *str = js_Atomize(cx, s, strlen(s), 0);
     if (!str)
@@ -1025,13 +1025,13 @@ DebugObject_apply(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSPropertySpec DebugObject_properties[] = {
+    JS_PSG("prototype", DebugObject_getPrototype, 0),
+    JS_PSG("class", DebugObject_getClass, 0),
     JS_PSG("name", DebugObject_getName, 0),
     JS_PS_END
 };
 
 static JSFunctionSpec DebugObject_methods[] = {
-    JS_FN("getPrototype", DebugObject_getPrototype, 0, 0),
-    JS_FN("getClass", DebugObject_getClass, 0, 0),
     JS_FN("apply", DebugObject_apply, 0, 0),
     JS_FS_END
 };
