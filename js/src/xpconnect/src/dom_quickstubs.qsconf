@@ -286,7 +286,6 @@ members = [
     'nsIDOMHTMLOptionElement.disabled',
     'nsIDOMHTMLOptionsCollection.item',
     'nsIDOMHTMLOptionsCollection.length',
-    'nsIDOMHTMLProgressElement.*',
     'nsIDOMHTMLSelectElement.name',
     'nsIDOMHTMLSelectElement.form',
     'nsIDOMHTMLSelectElement.add',

@@ -94,7 +94,6 @@ CPPSRCS		= \
 		nsHTMLOutputElement.cpp \
 		nsHTMLParagraphElement.cpp \
 		nsHTMLPreElement.cpp \
-		nsHTMLProgressElement.cpp \
 		nsHTMLScriptElement.cpp \
 		nsHTMLSelectElement.cpp \
 		nsHTMLSharedElement.cpp \
