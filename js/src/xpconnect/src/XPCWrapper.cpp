@@ -73,7 +73,8 @@ UnwrapNW(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
   }
 
-  if (xpc::WrapperFactory::IsXrayWrapper(obj)) {
+  if (xpc::WrapperFactory::IsXrayWrapper(obj) &&
+      !xpc::WrapperFactory::IsPartiallyTransparent(obj)) {
     return JS_GetProperty(cx, obj, "wrappedJSObject", vp);
   }
 

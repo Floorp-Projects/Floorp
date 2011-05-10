@@ -28,7 +28,7 @@
 
     // Run the test in a separate window so we get a clean browser window.
     window.open("data:text/html,<html style='overflow:scroll'><script>opener.doTest(window);</script>",
-                "", "scrollbars=yes,toolbar,menubar,width=500,height=500");
+                "", "scrollbars=yes,toolbar,menubar,width=500,height=500,chrome");
 
     function doTest(win) {
       var initialCount = win.mozPaintCount;
