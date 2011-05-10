@@ -153,22 +153,6 @@
 #define PR_STATIC_CALLBACK(__x) __x PR_CALLBACK
 #endif /* _WINDLL */
 
-#elif defined(XP_MAC)
-
-#define PR_EXPORT(__type) extern __declspec(export) __type
-#define PR_EXPORT_DATA(__type) extern __declspec(export) __type
-#define PR_IMPORT(__type) extern __declspec(export) __type
-#define PR_IMPORT_DATA(__type) extern __declspec(export) __type
-
-#define PR_EXTERN(__type) extern __declspec(export) __type
-#define PR_IMPLEMENT(__type) __declspec(export) __type
-#define PR_EXTERN_DATA(__type) extern __declspec(export) __type
-#define PR_IMPLEMENT_DATA(__type) __declspec(export) __type
-
-#define PR_CALLBACK
-#define PR_CALLBACK_DECL
-#define PR_STATIC_CALLBACK(__x) static __x
-
 #elif defined(XP_OS2) && defined(__declspec)
 
 #define PR_EXPORT(__type) extern __declspec(dllexport) __type
@@ -500,7 +484,7 @@ typedef enum { PR_FAILURE = -1, PR_SUCCESS = 0 } PRStatus;
 
 #ifndef __PRUNICHAR__
 #define __PRUNICHAR__
-#if defined(WIN32) || defined(XP_MAC)
+#if defined(WIN32)
 typedef wchar_t PRUnichar;
 #else
 typedef PRUint16 PRUnichar;

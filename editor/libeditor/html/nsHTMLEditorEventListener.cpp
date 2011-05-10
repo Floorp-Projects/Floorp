@@ -136,7 +136,7 @@ nsHTMLEditorEventListener::MouseDown(nsIDOMEvent* aMouseEvent)
 
   PRBool isContextClick;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
   // Ctrl+Click for context menu
   res = mouseEvent->GetCtrlKey(&isContextClick);
   NS_ENSURE_SUCCESS(res, res);
