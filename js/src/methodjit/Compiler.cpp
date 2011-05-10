@@ -349,6 +349,18 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
                 okay = false;
                 break;
             }
+
+            /*
+             * Don't inline scripts which use 'this' if it is possible they
+             * could be called with a 'this' value requiring wrapping. During
+             * inlining we do not want to modify frame entries belonging to the
+             * caller.
+             */
+            if (script->analysis(cx)->usesThisValue() &&
+                script->thisTypes()->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT) {
+                okay = false;
+                break;
+            }
         }
         if (!okay)
             continue;
@@ -5116,14 +5128,19 @@ mjit::Compiler::jsop_this()
      */
     if (script->fun && !script->strictModeCode) {
         FrameEntry *thisFe = frame.peek(-1);
+
+        /*
+         * We don't inline calls to scripts which use 'this' but might require
+         * 'this' to be wrapped.
+         */
+        JS_ASSERT(!thisFe->isNotType(JSVAL_TYPE_OBJECT));
+
         if (!thisFe->isType(JSVAL_TYPE_OBJECT)) {
             JSValueType type = cx->typeInferenceEnabled()
                 ? script->thisTypes()->getKnownTypeTag(cx)
                 : JSVAL_TYPE_UNKNOWN;
             if (type != JSVAL_TYPE_OBJECT) {
-                Jump notObj = thisFe->isTypeKnown()
-                    ? masm.jump()
-                    : frame.testObject(Assembler::NotEqual, thisFe);
+                Jump notObj = frame.testObject(Assembler::NotEqual, thisFe);
                 stubcc.linkExit(notObj, Uses(1));
                 stubcc.leave();
                 OOL_STUBCALL(stubs::This, REJOIN_FALLTHROUGH);
