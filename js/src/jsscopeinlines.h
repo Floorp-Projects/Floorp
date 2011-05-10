@@ -49,6 +49,7 @@
 #include "jsscope.h"
 #include "jsgc.h"
 
+#include "vm/ArgumentsObject.h"
 #include "vm/StringObject.h"
 
 #include "jscntxtinlines.h"
@@ -354,6 +355,13 @@ EmptyShape::EmptyShape(JSCompartment *comp, js::Class *aclasp)
         comp->emptyShapes.put(this);
 #endif
 }
+
+/* static */ inline EmptyShape *
+EmptyShape::getEmptyArgumentsShape(JSContext *cx)
+{
+    return ensure(cx, &NormalArgumentsObject::jsClass, &cx->compartment->emptyArgumentsShape);
+}
+
 
 } /* namespace js */
 

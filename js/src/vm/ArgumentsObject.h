@@ -43,7 +43,6 @@
 
 #include "jsfun.h"
 #include "jstracer.h"
-#include "Writer.h"
 
 #ifdef JS_POLYIC
 class GetPropCompiler;
@@ -58,6 +57,11 @@ struct VMFrame;
 namespace mjit {
 namespace ic {
 struct PICInfo;
+
+/* Aargh, Windows. */
+#ifdef GetProp
+#undef GetProp
+#endif
 extern void GetProp(VMFrame &f, PICInfo *pic);
 }
 }
