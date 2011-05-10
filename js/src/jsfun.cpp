@@ -2436,36 +2436,27 @@ Function(JSContext *cx, uintN argc, Value *vp)
 {
     CallArgs call = CallArgsFromVp(argc, vp);
 
-    JS::Anchor<JSObject *> obj(NewFunction(cx, NULL));
+    /* Block this call if security callbacks forbid it. */
+    GlobalObject *global = call.callee().getGlobal();
+    if (!global->isEvalAllowed(cx)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
+        return false;
+    }
+
+    JS::Anchor<JSObject *> obj(NewFunction(cx, *global));
     if (!obj.get())
         return false;
-
-    JSObject &calleeParent = *call.callee().getParent();
 
     /*
      * NB: (new Function) is not lexically closed by its caller, it's just an
      * anonymous function in the top-level scope that its constructor inhabits.
      * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
      * and so would a call to f from another top-level's script or function.
-     *
-     * In older versions, before call objects, a new Function was adopted by
-     * its running context's globalObject, which might be different from the
-     * top-level reachable from scopeChain (in HTML frames, e.g.).
      */
     JSFunction *fun = js_NewFunction(cx, obj.get(), NULL, 0, JSFUN_LAMBDA | JSFUN_INTERPRETED,
-                                     &calleeParent, cx->runtime->atomState.anonymousAtom);
+                                     global, cx->runtime->atomState.anonymousAtom);
     if (!fun)
         return false;
-
-    /*
-     * CSP check: whether new Function() is allowed at all.
-     * Report errors via CSP is done in the script security manager.
-     * js_CheckContentSecurityPolicy is defined in jsobj.cpp
-     */
-    if (!js_CheckContentSecurityPolicy(cx, &calleeParent)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_CSP_BLOCKED_FUNCTION);
-        return false;
-    }
 
     EmptyShape *emptyCallShape = EmptyShape::getEmptyCallShape(cx);
     if (!emptyCallShape)
