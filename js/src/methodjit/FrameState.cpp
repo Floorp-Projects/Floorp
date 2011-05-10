@@ -533,8 +533,12 @@ FrameState::computeAllocation(jsbytecode *target)
     }
 
     /*
-     * The allocation to use at the target consists of all parent and non-stack
-     * entries currently in registers which are live at the target.
+     * The allocation to use at the target consists of all parent, temporary
+     * and non-stack entries currently in registers which are live at the
+     * target. For entries currently in floating point registers, we need to
+     * check they are known to be doubles at the target. We don't need to do
+     * this for entries in normal registers, as fixDoubleTypes must have been
+     * called to convert them to floats.
      */
     Registers regs = Registers::AvailAnyRegs;
     while (!regs.empty()) {
@@ -545,6 +549,22 @@ FrameState::computeAllocation(jsbytecode *target)
         if (fe < a->callee_ ||
             (fe > a->callee_ && fe < a->spBase && variableLive(fe, target)) ||
             (isTemporary(fe) && (a->parent || uint32(target - a->script->code) <= loop->backedgeOffset()))) {
+            if (!reg.isReg()) {
+                bool nonDoubleTarget = false;
+                const SlotValue *newv = a->analysis->newValues(target);
+                while (newv && newv->slot) {
+                    if (newv->value.kind() == SSAValue::PHI &&
+                        newv->value.phiOffset() == uint32(target - a->script->code) &&
+                        newv->slot == entrySlot(fe)) {
+                        types::TypeSet *types = a->analysis->getValueTypes(newv->value);
+                        if (types->getKnownTypeTag(cx) != JSVAL_TYPE_DOUBLE)
+                            nonDoubleTarget = true;
+                    }
+                    newv++;
+                }
+                if (nonDoubleTarget)
+                    continue;
+            }
             alloc->set(reg, fe - entries, fe->data.synced());
         }
     }
