@@ -62,7 +62,7 @@ struct PICInfo;
 #ifdef GetProp
 #undef GetProp
 #endif
-extern void GetProp(VMFrame &f, PICInfo *pic);
+void JS_FASTCALL GetProp(VMFrame &f, ic::PICInfo *pic);
 }
 }
 #endif
