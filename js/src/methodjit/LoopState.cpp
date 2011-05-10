@@ -289,7 +289,7 @@ LoopState::loopInvariantEntry(uint32 slot)
         return true;
 
     /* Watch for loop temporaries. :XXX: this is really gross. */
-    if (slot - analyze::LocalSlot(outerScript, 0) >= outerScript->nslots)
+    if (slot >= analyze::LocalSlot(outerScript, outerScript->nslots))
         return true;
 
     if (slot == analyze::CalleeSlot() || outerAnalysis->slotEscapes(slot))
