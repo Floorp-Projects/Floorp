@@ -3142,11 +3142,14 @@
       <method name="_handleNewTab">
         <parameter name="tab"/>
         <body><![CDATA[
-          if (tab.parentNode != this || tab._fullyOpen)
+          if (tab.parentNode != this)
             return;
-          tab._fullyOpen = true;
 
           this.adjustTabstrip();
+
+          if (tab._fullyOpen)
+            return;
+          tab._fullyOpen = true;
 
           if (tab.getAttribute("selected") == "true") {
             this._fillTrailingGap();
