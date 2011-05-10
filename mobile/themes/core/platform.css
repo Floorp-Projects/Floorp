@@ -248,7 +248,7 @@ toolbarbutton {
 }
 
 toolbarbutton:not(.show-text) .toolbarbutton-text {
-  display: none !important;
+  display: none;
 }
 
 .toolbarbutton-icon[label]:not([label=""]),
@@ -712,4 +712,46 @@ dialog {
 .panel-row-button[checked="true"],
 .panel-row-button[disabled="true"] {
   pointer-events: none;
+}
+
+#panel-container-inner {
+  -moz-box-orient: vertical;
+}
+
+#panel-controls {
+  -moz-box-orient: horizontal;
+}
+
+@media (min-width: @tablet_panel_minwidth@) {
+  #panel-container-inner {
+    -moz-box-orient: horizontal;
+    -moz-box-pack: center;
+  }
+
+  #panel-items {
+    max-width: @tablet_panel_minwidth@;
+    min-width: 0px !important;
+  }
+  
+  /* This will affect the prefs screen, but not the awesome screen */
+  #panel-controls {
+    -moz-box-orient: vertical !important;
+    -moz-box-align: start;
+  }
+  
+  .panel-row-button {
+    -moz-box-orient: horizontal;
+    -moz-box-flex: 0;
+    min-width: @tablet_panel_controls@ !important;
+  }
+
+  #panel-controls .toolbarbutton-text {
+    display: -moz-box !important;
+    -moz-box-flex: 1;
+  }
+  
+  #panel-container {
+    -moz-box-pack: center;
+    padding: @padding_xlarge@ 0px;
+  }
 }

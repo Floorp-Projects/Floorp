@@ -1,6 +1,14 @@
 var BookmarkHelper = {
   _editor: null,
 
+  logging: false,
+
+  log: function(msg) {
+    if (this.logging) {
+      Services.console.logStringMessage(msg);
+    }
+  },
+
   get box() {
     delete this.box;
     this.box = document.getElementById("bookmark-container");
@@ -53,6 +61,7 @@ var BookmarkHelper = {
   },
 
   close: function BH_close() {
+    this.log("Bookmark helper: closing");
     BrowserUI.updateStar();
 
     // Note: the _editor will have already saved the data, if needed, by the time
