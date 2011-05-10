@@ -41,6 +41,15 @@
 #define jsarrayinlines_h___
 
 #include "jsinferinlines.h"
+#include "jsobjinlines.h"
+
+inline void
+JSObject::setDenseArrayInitializedLength(uint32 length)
+{
+    JS_ASSERT(isDenseArray());
+    JS_ASSERT(length <= getDenseArrayCapacity());
+    initializedLength = length;
+}
 
 inline void
 JSObject::markDenseArrayNotPacked(JSContext *cx)

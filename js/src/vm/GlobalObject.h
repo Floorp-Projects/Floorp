@@ -41,6 +41,7 @@
 #ifndef GlobalObject_h___
 #define GlobalObject_h___
 
+#include "jsarray.h"
 #include "jsbool.h"
 #include "jsfun.h"
 #include "jsiter.h"
@@ -186,6 +187,10 @@ class GlobalObject : public ::JSObject {
         return inited;
     }
 
+    bool arrayClassInitialized() const {
+        return classIsInitialized(JSProto_Array);
+    }
+
     bool booleanClassInitialized() const {
         return classIsInitialized(JSProto_Boolean);
     }
@@ -242,6 +247,14 @@ class GlobalObject : public ::JSObject {
                 return NULL;
         }
         return &getPrototype(JSProto_Function).toObject();
+    }
+
+    JSObject *getOrCreateArrayPrototype(JSContext *cx) {
+        if (!arrayClassInitialized()) {
+            if (!js_InitArrayClass(cx, this))
+                return NULL;
+        }
+        return &getPrototype(JSProto_Array).toObject();
     }
 
     JSObject *getOrCreateBooleanPrototype(JSContext *cx) {
