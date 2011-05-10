@@ -6077,10 +6077,6 @@ Shell(JSContext *cx, int argc, char **argv, char **envp)
     }
 #endif  /* JSDEBUGGER */
 
-#ifdef JS_METHODJIT
-    mjit::DumpAllProfiles(cx);
-#endif
-
     return result;
 }
 
