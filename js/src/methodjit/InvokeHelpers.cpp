@@ -390,10 +390,6 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
         cx->typeMonitorCall(args, flags & StackFrame::CONSTRUCTING);
     }
 
-    /* Preserve f.regs.fp while pushing the new frame. */
-    FrameRegs regs = f.regs;
-    PreserveRegsGuard regsGuard(cx, regs);
-
     /* Get pointer to new frame/slots, prepare arguments. */
     StackFrame *newfp = cx->stack.getInlineFrameWithinLimit(cx, f.regs.sp, argc,
                                                             newfun, newscript, &flags,
@@ -404,6 +400,13 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     /* Initialize frame, locals. */
     newfp->initCallFrame(cx, callee, newfun, argc, flags);
     SetValueRangeToUndefined(newfp->slots(), newscript->nfixed);
+
+    /*
+     * Preserve f.regs.fp while pushing the new frame, for the invariant that
+     * f.regs reflects the state when we entered the stub call.
+     */
+    FrameRegs regs = f.regs;
+    PreserveRegsGuard regsGuard(cx, regs);
 
     /* Officially push the frame. */
     cx->stack.pushInlineFrame(newscript, newfp, regs);
