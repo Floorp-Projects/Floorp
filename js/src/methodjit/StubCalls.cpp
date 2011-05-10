@@ -1074,7 +1074,7 @@ MonitorArithmeticOverflow(VMFrame &f, const Value &v)
       case JSOP_DECPROP:
       case JSOP_PROPINC:
       case JSOP_PROPDEC:
-        ov = f.regs.sp[-4];
+        ov = f.regs.sp[-3];
         break;
 
       default:
