@@ -88,6 +88,15 @@ extern JS_PUBLIC_DATA(jsval) JSVAL_VOID;
 
 #endif
 
+/*
+ * Different "run modes" used for execution accounting (JSOPTION_PCCOUNT)
+ */
+
+#define JSRUNMODE_INTERP    0
+#define JSRUNMODE_TRACEJIT  1
+#define JSRUNMODE_METHODJIT 2
+#define JSRUNMODE_COUNT     3
+
 /************************************************************************/
 
 static JS_ALWAYS_INLINE JSBool
@@ -981,11 +990,12 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_METHODJIT_ALWAYS \
                                 JS_BIT(16)      /* Always whole-method JIT,
                                                    don't tune at run-time. */
+#define JSOPTION_PCCOUNT        JS_BIT(17)      /* Collect per-op execution counts */
 
 /* Options which reflect compile-time properties of scripts. */
 #define JSCOMPILEOPTION_MASK    (JSOPTION_XML | JSOPTION_ANONFUNFIX)
 
-#define JSRUNOPTION_MASK        (JS_BITMASK(17) & ~JSCOMPILEOPTION_MASK)
+#define JSRUNOPTION_MASK        (JS_BITMASK(18) & ~JSCOMPILEOPTION_MASK)
 #define JSALLOPTION_MASK        (JSCOMPILEOPTION_MASK | JSRUNOPTION_MASK)
 
 extern JS_PUBLIC_API(uint32)
