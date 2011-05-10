@@ -4482,6 +4482,12 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     NS_ASSERTION(result, "Malformed -moz-transform-origin parse!");
   }
 
+  // orient: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForOrient(),
+              display->mOrient, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentDisplay->mOrient,
+              NS_STYLE_ORIENT_HORIZONTAL, 0, 0, 0, 0);
+
   COMPUTE_END_RESET(Display, display)
 }
 
