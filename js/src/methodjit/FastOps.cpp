@@ -99,6 +99,7 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
         frame.freeReg(fptemp);
         frame.learnType(fe, JSVAL_TYPE_INT32, data);
     } else if (!fe->isType(JSVAL_TYPE_INT32)) {
+        FPRegisterID fptemp = frame.allocFPReg();
         RegisterID typeReg = frame.tempRegForType(fe);
         frame.pinReg(typeReg);
         RegisterID dataReg = frame.copyDataIntoReg(fe);
@@ -113,11 +114,12 @@ mjit::Compiler::ensureInteger(FrameEntry *fe, Uses uses)
         Jump doubleGuard = stubcc.masm.testDouble(Assembler::NotEqual, typeReg);
         doubleGuard.linkTo(syncPath, &stubcc.masm);
 
-        frame.loadDouble(fe, Registers::FPConversionTemp, stubcc.masm);
-        Jump truncateGuard = stubcc.masm.branchTruncateDoubleToInt32(Registers::FPConversionTemp, dataReg);
+        frame.loadDouble(fe, fptemp, stubcc.masm);
+        Jump truncateGuard = stubcc.masm.branchTruncateDoubleToInt32(fptemp, dataReg);
         truncateGuard.linkTo(syncPath, &stubcc.masm);
         stubcc.crossJump(stubcc.masm.jump(), masm.label());
 
+        frame.freeReg(fptemp);
         frame.learnType(fe, JSVAL_TYPE_INT32, dataReg);
     }
 }
