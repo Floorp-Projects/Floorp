@@ -46,6 +46,8 @@ const Cu = Components.utils;
 // non-standard URL.
 var gVerbose = (location.href.split(/[\?,]/).indexOf("verbose") !== -1);
 
+var gAddedObserver = false;
+
 function onLoad()
 {
   var os = Cc["@mozilla.org/observer-service;1"].
@@ -53,15 +55,21 @@ function onLoad()
   os.notifyObservers(null, "child-memory-reporter-request", null);
 
   os.addObserver(ChildMemoryListener, "child-memory-reporter-update", false);
+  gAddedObserver = true;
 
   update();
 }
 
 function onUnload()
 {
-  var os = Cc["@mozilla.org/observer-service;1"].
-      getService(Ci.nsIObserverService);
-  os.removeObserver(ChildMemoryListener, "child-memory-reporter-update");
+  // We need to check if the observer has been added before removing; in some
+  // circumstances (eg. reloading the page quickly) it might not have because
+  // onLoad might not fire.
+  if (gAddedObserver) {
+    var os = Cc["@mozilla.org/observer-service;1"].
+        getService(Ci.nsIObserverService);
+    os.removeObserver(ChildMemoryListener, "child-memory-reporter-update");
+  }
 }
 
 function ChildMemoryListener(aSubject, aTopic, aData)
