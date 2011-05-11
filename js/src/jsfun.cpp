@@ -184,12 +184,12 @@ js_GetArgsProperty(JSContext *cx, StackFrame *fp, jsid id, Value *vp)
 }
 
 js::ArgumentsObject *
-ArgumentsObject::create(JSContext *cx, JSObject *parent, uint32 argc, JSObject &callee)
+ArgumentsObject::create(JSContext *cx, uint32 argc, JSObject &callee)
 {
     JS_ASSERT(argc <= JS_ARGS_LENGTH_MAX);
 
     JSObject *proto;
-    if (!js_GetClassPrototype(cx, parent, JSProto_Object, &proto))
+    if (!js_GetClassPrototype(cx, callee.getGlobal(), JSProto_Object, &proto))
         return NULL;
 
     JS_STATIC_ASSERT(NormalArgumentsObject::RESERVED_SLOTS == 2);
@@ -213,7 +213,7 @@ ArgumentsObject::create(JSContext *cx, JSObject *parent, uint32 argc, JSObject &
     obj->init(cx, callee.getFunctionPrivate()->inStrictMode()
               ? &StrictArgumentsObject::jsClass
               : &NormalArgumentsObject::jsClass,
-              proto, parent, NULL, false);
+              proto, proto->getParent(), NULL, false);
     obj->setMap(emptyArgumentsShape);
 
     ArgumentsObject *argsobj = obj->asArguments();
@@ -254,10 +254,8 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
     if (fp->hasArgsObj())
         return &fp->argsObj();
 
-    /* Compute the arguments object's parent slot from fp's scope chain. */
-    JSObject *global = fp->scopeChain().getGlobal();
     ArgumentsObject *argsobj =
-        ArgumentsObject::create(cx, global, fp->numActualArgs(), fp->callee());
+        ArgumentsObject::create(cx, fp->numActualArgs(), fp->callee());
     if (!argsobj)
         return argsobj;
 
@@ -298,9 +296,9 @@ js_PutArgsObject(StackFrame *fp)
  * Traced versions of js_GetArgsObject and js_PutArgsObject.
  */
 JSObject * JS_FASTCALL
-js_NewArgumentsOnTrace(JSContext *cx, JSObject *parent, uint32 argc, JSObject *callee)
+js_NewArgumentsOnTrace(JSContext *cx, uint32 argc, JSObject *callee)
 {
-    ArgumentsObject *argsobj = ArgumentsObject::create(cx, parent, argc, *callee);
+    ArgumentsObject *argsobj = ArgumentsObject::create(cx, argc, *callee);
     if (!argsobj)
         return NULL;
 
@@ -316,7 +314,7 @@ js_NewArgumentsOnTrace(JSContext *cx, JSObject *parent, uint32 argc, JSObject *c
 
     return argsobj;
 }
-JS_DEFINE_CALLINFO_4(extern, OBJECT, js_NewArgumentsOnTrace, CONTEXT, OBJECT, UINT32, OBJECT,
+JS_DEFINE_CALLINFO_3(extern, OBJECT, js_NewArgumentsOnTrace, CONTEXT, UINT32, OBJECT,
                      0, nanojit::ACCSET_STORE_ANY)
 
 /* FIXME change the return type to void. */
