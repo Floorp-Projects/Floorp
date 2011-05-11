@@ -705,7 +705,6 @@ struct JSRuntime {
     /* This measures the size of JITScripts, native maps and IC structs. */
     size_t               mjitDataSize;
 #endif
-    size_t               stringMemoryUsed;
 
     JSRuntime();
     ~JSRuntime();
