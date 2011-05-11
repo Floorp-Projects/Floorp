@@ -1624,16 +1624,18 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                                 : cx->runtime->emptyString);
         break;
 
-      case FUN_CALLER:
+      case FUN_CALLER: {
         vp->setNull();
-        if (fp && fp->prev() && !fp->prev()->getValidCalleeObject(cx, vp))
+
+        StackFrame *callerframe = (fp && fp->prev()) ? js_GetScriptedCaller(cx, fp->prev()) : NULL;
+        if (callerframe && !callerframe->getValidCalleeObject(cx, vp))
             return false;
 
         if (vp->isObject()) {
             JSObject &caller = vp->toObject();
 
             /* Censor the caller if it is from another compartment. */
-            if (caller.getCompartment() != cx->compartment) {
+            if (caller.compartment() != cx->compartment) {
                 vp->setNull();
             } else if (caller.isFunction()) {
                 JSFunction *callerFun = caller.getFunctionPrivate();
@@ -1645,6 +1647,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
             }
         }
         break;
+      }
 
       default:
         JS_NOT_REACHED("fun_getProperty");
