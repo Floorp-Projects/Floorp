@@ -4342,26 +4342,34 @@ DisplaySystemMenu(HWND hWnd, nsSizeMode sizeMode, PRBool isRtl, PRInt32 x, PRInt
 {
   HMENU hMenu = GetSystemMenu(hWnd, FALSE);
   if (hMenu) {
+    MENUITEMINFO mii;
+    mii.cbSize = sizeof(MENUITEMINFO);
+    mii.fMask = MIIM_STATE;
+    mii.fType = 0;
+
     // update the options
-    EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_ENABLED);
-    EnableMenuItem(hMenu, SC_SIZE, MF_BYCOMMAND | MF_ENABLED);
-    EnableMenuItem(hMenu, SC_MOVE, MF_BYCOMMAND | MF_ENABLED);
-    EnableMenuItem(hMenu, SC_MAXIMIZE, MF_BYCOMMAND | MF_ENABLED);
-    EnableMenuItem(hMenu, SC_MINIMIZE, MF_BYCOMMAND | MF_ENABLED);
+    mii.fState = MF_ENABLED;
+    SetMenuItemInfo(hMenu, SC_RESTORE, FALSE, &mii);
+    SetMenuItemInfo(hMenu, SC_SIZE, FALSE, &mii);
+    SetMenuItemInfo(hMenu, SC_MOVE, FALSE, &mii);
+    SetMenuItemInfo(hMenu, SC_MAXIMIZE, FALSE, &mii);
+    SetMenuItemInfo(hMenu, SC_MINIMIZE, FALSE, &mii);
+
+    mii.fState = MF_GRAYED;
     switch(sizeMode) {
       case nsSizeMode_Fullscreen:
-        EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_GRAYED);
+        SetMenuItemInfo(hMenu, SC_RESTORE, FALSE, &mii);
         // intentional fall through
       case nsSizeMode_Maximized:
-        EnableMenuItem(hMenu, SC_SIZE, MF_BYCOMMAND | MF_GRAYED);
-        EnableMenuItem(hMenu, SC_MOVE, MF_BYCOMMAND | MF_GRAYED);
-        EnableMenuItem(hMenu, SC_MAXIMIZE, MF_BYCOMMAND | MF_GRAYED);
+        SetMenuItemInfo(hMenu, SC_SIZE, FALSE, &mii);
+        SetMenuItemInfo(hMenu, SC_MOVE, FALSE, &mii);
+        SetMenuItemInfo(hMenu, SC_MAXIMIZE, FALSE, &mii);
         break;
       case nsSizeMode_Minimized:
-        EnableMenuItem(hMenu, SC_MINIMIZE, MF_BYCOMMAND | MF_GRAYED);
+        SetMenuItemInfo(hMenu, SC_MINIMIZE, FALSE, &mii);
         break;
       case nsSizeMode_Normal:
-        EnableMenuItem(hMenu, SC_RESTORE, MF_BYCOMMAND | MF_GRAYED);
+        SetMenuItemInfo(hMenu, SC_RESTORE, FALSE, &mii);
         break;
     }
     LPARAM cmd =
