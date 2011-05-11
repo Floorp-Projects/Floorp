@@ -96,6 +96,14 @@ function go_back(aManager) {
   }
 }
 
+function go_back_backspace(aManager) {
+    EventUtils.synthesizeKey("VK_BACK_SPACE",{});
+}
+
+function go_forward_backspace(aManager) {
+    EventUtils.synthesizeKey("VK_BACK_SPACE",{shiftKey: true});
+}
+
 function go_forward(aManager) {
   if (gUseInContentUI) {
     gBrowser.goForward();
@@ -279,6 +287,68 @@ add_test(function() {
     });
   }, false);
 });
+
+// Tests simple forward and back navigation and that the right heading and
+// category is selected -- Keyboard navigation [Bug 565359]
+// Only add the test if the backspace key navigates back and addon-manager
+// loaded in a tab
+add_test(function() {
+
+  if (!gUseInContentUI || (Services.prefs.getIntPref("browser.backspace_action") != 0)) {
+    run_next_test();
+    return;
+  }
+
+  open_manager("addons://list/extension", function(aManager) {
+    info("Part 1");
+    is_in_list(aManager, "addons://list/extension", false, false);
+
+    EventUtils.synthesizeMouseAtCenter(aManager.document.getElementById("category-plugins"), { }, aManager);
+
+    wait_for_view_load(aManager, function(aManager) {
+      info("Part 2");
+      is_in_list(aManager, "addons://list/plugin", true, false);
+
+      go_back_backspace(aManager);
+
+      wait_for_view_load(aManager, function(aManager) {
+        info("Part 3");
+        is_in_list(aManager, "addons://list/extension", false, true);
+
+        go_forward_backspace(aManager);
+
+        wait_for_view_load(aManager, function(aManager) {
+          info("Part 4");
+          is_in_list(aManager, "addons://list/plugin", true, false);
+
+          go_back_backspace(aManager);
+
+          wait_for_view_load(aManager, function(aManager) {
+            info("Part 5");
+            is_in_list(aManager, "addons://list/extension", false, true);
+
+            double_click_addon_element(aManager, "test1@tests.mozilla.org");
+
+            wait_for_view_load(aManager, function(aManager) {
+              info("Part 6");
+              is_in_detail(aManager, "addons://list/extension", true, false);
+
+              go_back_backspace(aManager);
+
+              wait_for_view_load(aManager, function(aManager) {
+                info("Part 7");
+                is_in_list(aManager, "addons://list/extension", false, true);
+
+                close_manager(aManager, run_next_test);
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+});
+
 
 // Tests that opening a custom first view only stores a single history entry
 add_test(function() {
