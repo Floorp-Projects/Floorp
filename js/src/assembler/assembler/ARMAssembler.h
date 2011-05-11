@@ -190,6 +190,7 @@ namespace JSC {
             FCPYD = 0x0eb00b40,
             FADDD = 0x0e300b00,
             FNEGD = 0x0eb10b40,
+            FABSD = 0x0eb00bc0,
             FDIVD = 0x0e800b00,
             FSUBD = 0x0e300b40,
             FMULD = 0x0e200b00,
@@ -546,6 +547,13 @@ namespace JSC {
             js::JaegerSpew(js::JSpew_Insns,
                     IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fnegd", nameFpRegD(dd), nameFpRegD(dm));
             m_buffer.putInt(static_cast<ARMWord>(cc) | FNEGD | DD(dd) | DM(dm));
+        }
+
+        void fabsd_r(int dd, int dm, Condition cc = AL)
+        {
+            js::JaegerSpew(js::JSpew_Insns,
+                    IPFX   "%-15s %s, %s, %s, %s\n", MAYBE_PAD, "fabsd", nameFpRegD(dd), nameFpRegD(dm));
+            m_buffer.putInt(static_cast<ARMWord>(cc) | FABSD | DD(dd) | DM(dm));
         }
 
         void fdivd_r(int dd, int dn, int dm, Condition cc = AL)
