@@ -439,6 +439,7 @@
             aEvent.preventDefault();
             this.value = url;
             SetPageProxyState("invalid");
+            this.focus();
             try {
               urlSecurityCheck(this.value,
                                gBrowser.contentPrincipal,
