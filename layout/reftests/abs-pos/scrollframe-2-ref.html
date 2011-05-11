@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <body onload="loaded()">
+    <div style="position: relative; top: 100px; overflow: scroll; width: 100px; height: 100px;">
+      <div style="height: 200px"></div></div>
+    <div style="position: absolute; top: 100px;" id="abs">abs</div>
+    <script>
+      function loaded() {
+        var insPoint = document.querySelector("div");
+        insPoint.scrollTop = 50;
+        var abs = document.getElementById("abs");
+        abs.style.top = insPoint.offsetTop + "px";
+      }
+    </script>
+  </body>
+</html>
