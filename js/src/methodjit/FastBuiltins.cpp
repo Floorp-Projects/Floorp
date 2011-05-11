@@ -317,6 +317,10 @@ mjit::Compiler::compileArrayPush(FrameEntry *thisValue, FrameEntry *arg)
 {
     /* This behaves like an assignment this[this.length] = arg; */
 
+    /* Filter out silly cases. */
+    if (frame.haveSameBacking(thisValue, arg) || thisValue->isConstant())
+        return Compile_InlineAbort;
+
     /* Allocate registers. */
     ValueRemat vr;
     frame.pinEntry(arg, vr);
@@ -367,6 +371,10 @@ mjit::Compiler::compileArrayPush(FrameEntry *thisValue, FrameEntry *arg)
 CompileStatus
 mjit::Compiler::compileArrayPop(FrameEntry *thisValue, bool isPacked)
 {
+    /* Filter out silly cases. */
+    if (thisValue->isConstant())
+        return Compile_InlineAbort;
+
     RegisterID objReg = frame.tempRegForData(thisValue);
     frame.pinReg(objReg);
 
