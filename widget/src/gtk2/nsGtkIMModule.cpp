@@ -233,14 +233,14 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
     if (mContext) {
         PrepareToDestroyContext(mContext);
         gtk_im_context_set_client_window(mContext, nsnull);
-        g_object_unref(G_OBJECT(mContext));
+        g_object_unref(mContext);
         mContext = nsnull;
     }
 
 #ifndef NS_IME_ENABLED_ON_PASSWORD_FIELD
     if (mSimpleContext) {
         gtk_im_context_set_client_window(mSimpleContext, nsnull);
-        g_object_unref(G_OBJECT(mSimpleContext));
+        g_object_unref(mSimpleContext);
         mSimpleContext = nsnull;
     }
 #endif // NS_IME_ENABLED_ON_PASSWORD_FIELD
@@ -249,7 +249,7 @@ nsGtkIMModule::OnDestroyWindow(nsWindow* aWindow)
         // mContext and mDummyContext have the same slaveType and signal_data
         // so no need for another workaround_gtk_im_display_closed.
         gtk_im_context_set_client_window(mDummyContext, nsnull);
-        g_object_unref(G_OBJECT(mDummyContext));
+        g_object_unref(mDummyContext);
         mDummyContext = nsnull;
     }
 
@@ -609,7 +609,7 @@ nsGtkIMModule::SetInputMode(nsWindow* aCaller, const IMEContext* aContext)
             // user previous entered passwds, so lets make completions invisible
             // in these cases.
             int mode;
-            g_object_get(G_OBJECT(im), "hildon-input-mode", &mode, NULL);
+            g_object_get(im, "hildon-input-mode", &mode, NULL);
 
             if (mIMEContext.mStatus == nsIWidget::IME_STATUS_ENABLED ||
                 mIMEContext.mStatus == nsIWidget::IME_STATUS_PLUGIN) {
@@ -624,7 +624,7 @@ nsGtkIMModule::SetInputMode(nsWindow* aCaller, const IMEContext* aContext)
             // Turn off predictive dictionaries for editboxes
             mode &= ~HILDON_GTK_INPUT_MODE_DICTIONARY;
 
-            g_object_set(G_OBJECT(im), "hildon-input-mode",
+            g_object_set(im, "hildon-input-mode",
                          (HildonGtkInputMode)mode, NULL);
             gIsVirtualKeyboardOpened = PR_TRUE;
             hildon_gtk_im_context_show(im);
