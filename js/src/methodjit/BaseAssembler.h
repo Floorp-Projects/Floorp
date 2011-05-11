@@ -228,6 +228,7 @@ static const JSC::MacroAssembler::RegisterID JSParamReg_Argc  = JSC::SparcRegist
     }
 
     void fastLoadDouble(RegisterID lo, RegisterID hi, FPRegisterID fpReg) {
+        JS_ASSERT(fpReg != Registers::FPConversionTemp);
         if (MacroAssemblerX86Common::getSSEState() >= HasSSE4_1) {
             m_assembler.movd_rr(lo, fpReg);
             m_assembler.pinsrd_rr(hi, fpReg);
