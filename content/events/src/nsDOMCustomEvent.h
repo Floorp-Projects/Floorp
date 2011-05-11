@@ -2,9 +2,9 @@
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
- * The contents of this file are subject to the Mozilla Public License Version
- * 1.1 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * The contents of this file are subject to the Mozilla Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
  * http://www.mozilla.org/MPL/
  *
  * Software distributed under the License is distributed on an "AS IS" basis,
@@ -14,16 +14,16 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2011
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Olli Pettay <Olli.Pettay@helsinki.fi> (Original Author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,30 +34,33 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsMacLocale_h__
-#define nsMacLocale_h__
 
+#ifndef nsDOMCustomEvent_h__
+#define nsDOMCustomEvent_h__
 
-#include "nsISupports.h"
-#include "nscore.h"
-#include "nsString.h"
-#include "nsIMacLocale.h"
+#include "nsIDOMCustomEvent.h"
+#include "nsDOMEvent.h"
+#include "nsCycleCollectionParticipant.h"
 
-
-
-class nsMacLocale : public nsIMacLocale {
-
-  NS_DECL_ISUPPORTS
-
+class nsDOMCustomEvent : public nsDOMEvent,
+                         public nsIDOMCustomEvent
+{
 public:
-  
-  nsMacLocale();
-  virtual ~nsMacLocale();
+  nsDOMCustomEvent(nsPresContext* aPresContext, nsEvent* aEvent)
+    : nsDOMEvent(aPresContext, aEvent)
+  {
+  }
+                     
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsDOMCustomEvent, nsDOMEvent)
 
-  NS_IMETHOD GetPlatformLocale(const nsAString& locale,short* scriptCode, short* langCode, short* regionCode);
-  NS_IMETHOD GetXPLocale(short scriptCode, short langCode, short regionCode, nsAString& locale);
-  
+  NS_DECL_NSIDOMCUSTOMEVENT
+
+  // Forward to base class
+  NS_FORWARD_TO_NSDOMEVENT
+
+private:
+  nsCOMPtr<nsIVariant> mDetail;
 };
 
-
-#endif
+#endif // nsDOMCustomEvent_h__
