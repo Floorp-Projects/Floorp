@@ -595,10 +595,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
      */
     rt->gcMaxBytes = maxbytes;
     rt->setGCMaxMallocBytes(maxbytes);
-
     rt->gcEmptyArenaPoolLifespan = 30000;
-
-    rt->gcTriggerFactor = uint32(100.0f * GC_HEAP_GROWTH_FACTOR);
 
     /*
      * The assigned value prevents GC from running when GC memory is too low
@@ -1066,28 +1063,11 @@ js_MapGCRoots(JSRuntime *rt, JSGCRootMapFun map, void *data)
 }
 
 void
-JSRuntime::setGCTriggerFactor(uint32 factor)
-{
-    JS_ASSERT(factor >= 100);
-
-    gcTriggerFactor = factor;
-    setGCLastBytes(gcLastBytes);
-
-    for (JSCompartment **c = compartments.begin(); c != compartments.end(); ++c)
-        (*c)->setGCLastBytes(gcLastBytes);
-}
-
-void
 JSRuntime::setGCLastBytes(size_t lastBytes)
 {
     gcLastBytes = lastBytes;
-
-    /* FIXME bug 603916 - we should unify the triggers here. */
-    float trigger1 = float(lastBytes) * float(gcTriggerFactor) / 100.0f;
-    float trigger2 = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) *
-                     GC_HEAP_GROWTH_FACTOR;
-    float maxtrigger = Max(trigger1, trigger2);
-    gcTriggerBytes = (float(gcMaxBytes) < maxtrigger) ? gcMaxBytes : size_t(maxtrigger);
+    float trigger = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) * GC_HEAP_GROWTH_FACTOR;
+    gcTriggerBytes = size_t(Min(float(gcMaxBytes), trigger));
 }
 
 void
@@ -1103,13 +1083,8 @@ void
 JSCompartment::setGCLastBytes(size_t lastBytes)
 {
     gcLastBytes = lastBytes;
-
-    /* FIXME bug 603916 - we should unify the triggers here. */
-    float trigger1 = float(lastBytes) * float(rt->gcTriggerFactor) / 100.0f;
-    float trigger2 = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) *
-                     GC_HEAP_GROWTH_FACTOR;
-    float maxtrigger = Max(trigger1, trigger2);
-    gcTriggerBytes = (float(rt->gcMaxBytes) < maxtrigger) ? rt->gcMaxBytes : size_t(maxtrigger);
+    float trigger = float(Max(lastBytes, GC_ARENA_ALLOCATION_TRIGGER)) * GC_HEAP_GROWTH_FACTOR;
+    gcTriggerBytes = size_t(Min(float(rt->gcMaxBytes), trigger));
 }
 
 void
