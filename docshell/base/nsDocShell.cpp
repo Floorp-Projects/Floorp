@@ -8007,8 +8007,19 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             NS_SUCCEEDED(URIInheritsSecurityContext(aURI, &inherits)) &&
             inherits) {
 
-            // Don't allow loads that would inherit our security context
-            // if this document came from an unsafe channel.
+            owner = GetInheritedPrincipal(PR_TRUE);
+        }
+    }
+
+    // Don't allow loads that would inherit our security context
+    // if this document came from an unsafe channel.
+    {
+        PRBool willInherit;
+        // This condition needs to match the one in DoChannelLoad.
+        // Except we reverse the rv check to be safe in case
+        // URIInheritsSecurityContext fails here and succeeds there.
+        rv = URIInheritsSecurityContext(aURI, &willInherit);
+        if (NS_FAILED(rv) || willInherit || IsAboutBlank(aURI)) {
             nsCOMPtr<nsIDocShellTreeItem> treeItem = this;
             do {
                 nsCOMPtr<nsIDocShell> itemDocShell =
@@ -8024,11 +8035,9 @@ nsDocShell::InternalLoad(nsIURI * aURI,
                 treeItem->GetSameTypeParent(getter_AddRefs(parent));
                 parent.swap(treeItem);
             } while (treeItem);
-
-            owner = GetInheritedPrincipal(PR_TRUE);
         }
     }
-
+    
     //
     // Resolve the window target before going any further...
     // If the load has been targeted to another DocShell, then transfer the
@@ -8837,6 +8846,8 @@ nsDocShell::DoURILoad(nsIURI * aURI,
     PRBool inherit;
     // We expect URIInheritsSecurityContext to return success for an
     // about:blank URI, so don't call IsAboutBlank() if this call fails.
+    // This condition needs to match the one in InternalLoad where
+    // we're checking for things that will use the owner.
     rv = URIInheritsSecurityContext(aURI, &inherit);
     if (NS_SUCCEEDED(rv) && (inherit || IsAboutBlank(aURI))) {
         channel->SetOwner(aOwner);
