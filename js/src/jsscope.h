@@ -298,7 +298,7 @@ struct Shape : public js::gc::Cell
     friend class js::Bindings;
     friend bool IsShapeAboutToBeFinalized(JSContext *cx, const js::Shape *shape);
 
-    mutable uint32      shape;          /* shape identifier */
+    mutable uint32      shapeid;        /* shape identifier */
     uint32              slotSpan;       /* one more than maximum live slot number */
 
     /* 
@@ -316,7 +316,7 @@ struct Shape : public js::gc::Cell
 
     inline void freeTable(JSContext *cx);
 
-    jsid                id;
+    jsid                propid;
 
   protected:
     union {
@@ -450,7 +450,7 @@ struct Shape : public js::gc::Cell
         Range(const Shape *shape) : cursor(shape) { }
 
         bool empty() const {
-            JS_ASSERT_IF(!cursor->parent, JSID_IS_EMPTY(cursor->id));
+            JS_ASSERT_IF(!cursor->parent, JSID_IS_EMPTY(cursor->propid));
             return !cursor->parent;
         }
 
@@ -498,7 +498,7 @@ struct Shape : public js::gc::Cell
     bool frozen() const         { return (flags & FROZEN) != 0; }
     void setFrozen()            { flags |= FROZEN; }
 
-    bool isEmptyShape() const   { JS_ASSERT_IF(!parent, JSID_IS_EMPTY(id)); return !parent; }
+    bool isEmptyShape() const   { JS_ASSERT_IF(!parent, JSID_IS_EMPTY(propid)); return !parent; }
 
   public:
     /* Public bits stored in shape->flags. */
@@ -686,7 +686,7 @@ struct EmptyShape : public js::Shape
  */
 #define SHAPE_USERID(shape)                                                   \
     ((shape)->hasShortID() ? INT_TO_JSID((shape)->shortid)                    \
-                           : (shape)->id)
+                           : (shape)->propid)
 
 extern uint32
 js_GenerateShape(JSRuntime *rt);
@@ -764,7 +764,7 @@ Shape::search(JSRuntime *rt, js::Shape **startp, jsid id, bool adding)
      */
     js::Shape **spp;
     for (spp = startp; js::Shape *shape = *spp; spp = &shape->parent) {
-        if (shape->id == id) {
+        if (shape->propid == id) {
             METER(hits);
             return spp;
         }

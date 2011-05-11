@@ -50,10 +50,6 @@
 
 #include <errno.h>
 #include <string.h>
-#ifdef XP_MAC
-#include "macstdlibextras.h"  /* For strcasecmp and strncasecmp */
-#include <extras.h>
-#endif
 
 #else
 
@@ -64,14 +60,10 @@
 
 #endif /* STANDALONE_REGISTRY*/
 
-#ifdef XP_MAC
-#include <stat.h>
-#else
 #if ( defined(BSDI) && !defined(BSDI_2) ) || defined(XP_OS2)
 #include <sys/types.h>
 #endif
 #include <sys/stat.h>
-#endif
 
 #ifndef FALSE
 #define FALSE 0
@@ -285,17 +277,9 @@ typedef int XP_Bool;
 typedef struct stat    XP_StatStruct;
 #define  XP_Stat(file,data)     stat((file),(data))
 
-#if defined(XP_MAC)
- extern int nr_RenameFile(char *from, char *to);
-#else
-    XP_BEGIN_PROTOS
-    #define nr_RenameFile(from, to)    rename((from), (to))
-    XP_END_PROTOS
-#endif
-
-
-
 XP_BEGIN_PROTOS
+
+#define nr_RenameFile(from, to)    rename((from), (to))
 
 extern char* globalRegName;
 extern char* verRegName;

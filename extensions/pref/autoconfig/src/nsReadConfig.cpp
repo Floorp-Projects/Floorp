@@ -280,10 +280,7 @@ nsresult nsReadConfig::openAndEvaluateJSFile(const char *aFileName, PRInt32 obsc
                                     getter_AddRefs(jsFile));
         if (NS_FAILED(rv)) 
             return rv;
-        
-#ifdef XP_MAC
-        jsFile->AppendNative(NS_LITERAL_CSTRING("Essential Files"));
-#endif
+
         rv = jsFile->AppendNative(nsDependentCString(aFileName));
         if (NS_FAILED(rv)) 
             return rv;

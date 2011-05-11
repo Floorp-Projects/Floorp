@@ -240,7 +240,7 @@
            noautohide="true"
            titlebar="normal"
            close="true"
-           onpopuphiding="InspectorUI.closeInspectorUI(true);"
+           onpopuphiding="InspectorUI.closeInspectorUI();"
            label="&inspectPanelTitle.label;">
       <toolbar id="inspector-toolbar"
                nowindowdrag="true">

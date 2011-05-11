@@ -1022,6 +1022,12 @@ var FormHelperUI = {
     // The sidebars scroll needs to be taken into account, otherwise the arrows
     // can be misplaced if the sidebars are open
     let topOffset = (BrowserUI.toolbarH - Browser.getScrollboxPosition(Browser.pageScrollboxScroller).y);
+
+    // Notifications take height _before_ the browser if there any
+    let notification = Browser.getNotificationBox().currentNotification;
+    if (notification)
+      topOffset += notification.getBoundingClientRect().height;
+
     let virtualContentRect = {
       width: rect.width,
       height: rect.height,

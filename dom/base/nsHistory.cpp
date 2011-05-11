@@ -354,7 +354,7 @@ nsHistory::GetState(nsIVariant **aState)
   if (!doc)
     return NS_ERROR_NOT_AVAILABLE;
 
-  return doc->GetMozCurrentStateObject(aState);
+  return doc->GetStateObject(aState);
 }
 
 NS_IMETHODIMP

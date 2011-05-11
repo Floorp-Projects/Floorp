@@ -569,6 +569,13 @@ nsXPConnect::Unroot(void *p)
     return NS_OK;
 }
 
+JSBool
+xpc_GCThingIsGrayCCThing(void *thing)
+{
+    uint32 kind = js_GetGCThingTraceKind(thing);
+    return ADD_TO_CC(kind) && xpc_IsGrayGCThing(thing);
+}
+
 static void
 UnmarkGrayChildren(JSTracer *trc, void *thing, uint32 kind)
 {
