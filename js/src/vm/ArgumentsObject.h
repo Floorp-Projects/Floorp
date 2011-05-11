@@ -42,13 +42,18 @@
 #define ArgumentsObject_h___
 
 #include "jsfun.h"
-#include "jstracer.h"
 
 #ifdef JS_POLYIC
 class GetPropCompiler;
 #endif
 
 #define JS_ARGUMENTS_OBJECT_ON_TRACE ((void *)0xa126)
+
+#ifdef JS_TRACER
+namespace nanojit {
+class ValidateWriter;
+}
+#endif
 
 namespace js {
 
@@ -64,6 +69,12 @@ struct PICInfo;
 #endif
 void JS_FASTCALL GetProp(VMFrame &f, ic::PICInfo *pic);
 }
+}
+#endif
+
+#ifdef JS_TRACER
+namespace tjit {
+class Writer;
 }
 #endif
 
@@ -105,9 +116,11 @@ class ArgumentsObject : public ::JSObject
     static const uint32 PACKED_BITS_COUNT = 1;
 
 #ifdef JS_TRACER
-    /* Needs access to INITIAL_LENGTH_SLOT. */
-    friend ::nanojit::LIns*
-    tjit::Writer::getArgsLength(::nanojit::LIns*) const;
+    /*
+     * Needs access to INITIAL_LENGTH_SLOT -- technically just getArgsLength,
+     * but nanojit's including windows.h makes that difficult.
+     */
+    friend class tjit::Writer;
 
     /*
      * Needs access to DATA_SLOT -- technically just checkAccSet needs it, but
