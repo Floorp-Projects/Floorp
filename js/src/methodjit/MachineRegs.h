@@ -523,7 +523,7 @@ AnyRegisterID::name()
 #if defined(JS_CPU_X86) || defined(JS_CPU_X64)
     return isReg() ? JSC::X86Registers::nameIReg(reg()) : JSC::X86Registers::nameFPReg(fpreg());
 #elif defined(JS_CPU_ARM)
-    return isReg() ? JSC::ARMAssembler::nameGpReg(reg()) : JSC::ARMAssembler::nameFpReg(fpreg());
+    return isReg() ? JSC::ARMAssembler::nameGpReg(reg()) : JSC::ARMAssembler::nameFpRegD(fpreg());
 #else
     return "???";
 #endif
