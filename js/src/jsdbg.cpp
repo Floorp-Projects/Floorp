@@ -954,6 +954,14 @@ DebugObject_getClass(JSContext *cx, uintN argc, Value *vp)
 }
 
 static JSBool
+DebugObject_getCallable(JSContext *cx, uintN argc, Value *vp)
+{
+    THIS_DEBUGOBJECT_REFERENT(cx, vp, "get callable", refobj);
+    vp->setBoolean(refobj->isCallable());
+    return true;
+}
+
+static JSBool
 DebugObject_getName(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_DEBUGOBJECT_REFERENT(cx, vp, "get name", obj);
@@ -1027,6 +1035,7 @@ DebugObject_apply(JSContext *cx, uintN argc, Value *vp)
 static JSPropertySpec DebugObject_properties[] = {
     JS_PSG("proto", DebugObject_getProto, 0),
     JS_PSG("class", DebugObject_getClass, 0),
+    JS_PSG("callable", DebugObject_getCallable, 0),
     JS_PSG("name", DebugObject_getName, 0),
     JS_PS_END
 };
