@@ -478,14 +478,10 @@ mjit::Compiler::jsop_equality(JSOp op, BoolStub stub, jsbytecode *target, JSOp f
          * special equality operator on either object, if that passes then
          * this is a pointer comparison.
          */
-        types::TypeSet *lhsTypes = frame.extra(lhs).types;
-        types::TypeSet *rhsTypes = frame.extra(rhs).types;
-        types::ObjectKind lhsKind =
-            lhsTypes ? lhsTypes->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
-        types::ObjectKind rhsKind =
-            rhsTypes ? rhsTypes->getKnownObjectKind(cx) : types::OBJECT_UNKNOWN;
-
-        if (lhsKind != types::OBJECT_UNKNOWN && rhsKind != types::OBJECT_UNKNOWN) {
+        types::TypeSet *lhsTypes = analysis->poppedTypes(PC, 1);
+        types::TypeSet *rhsTypes = analysis->poppedTypes(PC, 0);
+        if (!lhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY) &&
+            !rhsTypes->hasObjectFlags(cx, types::OBJECT_FLAG_SPECIAL_EQUALITY)) {
             /* :TODO: Merge with jsop_relational_int? */
             JS_ASSERT_IF(!target, fused != JSOP_IFEQ);
             frame.forgetMismatchedObject(lhs);
@@ -1195,12 +1191,9 @@ mjit::Compiler::jsop_setelem(bool popGuaranteed)
     frame.forgetMismatchedObject(obj);
 
     if (cx->typeInferenceEnabled()) {
-        types::TypeSet *types = frame.extra(obj).types;
-        types::ObjectKind kind = types
-            ? types->getKnownObjectKind(cx)
-            : types::OBJECT_UNKNOWN;
+        types::TypeSet *types = analysis->poppedTypes(PC, 2);
         if (id->mightBeType(JSVAL_TYPE_INT32) &&
-            (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
             !arrayPrototypeHasIndexedProperty()) {
             // This is definitely a dense array, generate code directly without
             // using an inline cache.
@@ -1524,16 +1517,14 @@ mjit::Compiler::jsop_getelem(bool isCall)
     frame.forgetMismatchedObject(obj);
 
     if (cx->typeInferenceEnabled()) {
-        types::TypeSet *types = frame.extra(obj).types;
-        types::ObjectKind kind = types
-            ? types->getKnownObjectKind(cx)
-            : types::OBJECT_UNKNOWN;
+        types::TypeSet *types = analysis->poppedTypes(PC, 1);
         if (!isCall && id->mightBeType(JSVAL_TYPE_INT32) &&
-            (kind == types::OBJECT_DENSE_ARRAY || kind == types::OBJECT_PACKED_ARRAY) &&
+            !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
             !arrayPrototypeHasIndexedProperty()) {
             // this is definitely a dense array, generate code directly without
             // using an inline cache.
-            jsop_getelem_dense(kind == types::OBJECT_PACKED_ARRAY);
+            bool packed = !types->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+            jsop_getelem_dense(packed);
             return true;
         }
     }

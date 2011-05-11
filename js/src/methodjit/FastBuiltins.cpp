@@ -315,6 +315,122 @@ mjit::Compiler::compileGetChar(FrameEntry *thisValue, FrameEntry *arg, GetCharMo
     return Compile_Okay;
 }
 
+CompileStatus
+mjit::Compiler::compileArrayPush(FrameEntry *thisValue, FrameEntry *arg)
+{
+    /* This behaves like an assignment this[this.length] = arg; */
+
+    /* Allocate registers. */
+    ValueRemat vr;
+    frame.pinEntry(arg, vr);
+
+    RegisterID objReg = frame.tempRegForData(thisValue);
+    frame.pinReg(objReg);
+
+    RegisterID slotsReg = frame.allocReg();
+
+    RegisterID lengthReg = frame.allocReg();
+    masm.load32(Address(objReg, offsetof(JSObject, privateData)), lengthReg);
+
+    frame.unpinReg(objReg);
+
+    Int32Key key = Int32Key::FromRegister(lengthReg);
+
+    /* Test for 'length == initializedLength' */
+    Jump initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
+                                              objReg, key, Assembler::NotEqual);
+    stubcc.linkExit(initlenGuard, Uses(3));
+
+    /* Test for 'length < capacity' */
+    Jump capacityGuard = masm.guardArrayExtent(offsetof(JSObject, capacity),
+                                               objReg, key, Assembler::BelowOrEqual);
+    stubcc.linkExit(capacityGuard, Uses(3));
+
+    masm.loadPtr(Address(objReg, JSObject::offsetOfSlots()), slotsReg);
+    masm.storeValue(vr, BaseIndex(slotsReg, lengthReg, masm.JSVAL_SCALE));
+
+    masm.bumpKey(key, 1);
+    masm.store32(lengthReg, Address(objReg, offsetof(JSObject, privateData)));
+    masm.store32(lengthReg, Address(objReg, offsetof(JSObject, initializedLength)));
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(1), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
+
+    frame.unpinEntry(vr);
+    frame.freeReg(slotsReg);
+    frame.popn(3);
+
+    frame.pushTypedPayload(JSVAL_TYPE_INT32, lengthReg);
+
+    stubcc.rejoin(Changes(1));
+    return Compile_Okay;
+}
+
+CompileStatus
+mjit::Compiler::compileArrayPop(FrameEntry *thisValue, bool isPacked)
+{
+    RegisterID objReg = frame.tempRegForData(thisValue);
+    frame.pinReg(objReg);
+
+    RegisterID lengthReg = frame.allocReg();
+    masm.load32(Address(objReg, offsetof(JSObject, privateData)), lengthReg);
+
+    JSValueType type = knownPushedType(0);
+
+    MaybeRegisterID slotsReg, dataReg, typeReg;
+    if (!analysis->popGuaranteed(PC)) {
+        slotsReg = frame.allocReg();
+        dataReg = frame.allocReg();
+        if (type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
+            typeReg = frame.allocReg();
+    }
+
+    frame.unpinReg(objReg);
+
+    /* Test for 'length == initializedLength' */
+    Int32Key key = Int32Key::FromRegister(lengthReg);
+    Jump initlenGuard = masm.guardArrayExtent(offsetof(JSObject, initializedLength),
+                                              objReg, key, Assembler::NotEqual);
+    stubcc.linkExit(initlenGuard, Uses(3));
+
+    /* Test for length != 0 */
+    Jump emptyGuard = masm.branch32(Assembler::Equal, lengthReg, Imm32(0));
+    stubcc.linkExit(emptyGuard, Uses(3));
+
+    masm.bumpKey(key, -1);
+
+    if (dataReg.isSet()) {
+        masm.loadPtr(Address(objReg, offsetof(JSObject, slots)), slotsReg.reg());
+        BaseIndex slot(slotsReg.reg(), lengthReg, masm.JSVAL_SCALE);
+        Jump holeCheck = masm.fastArrayLoadSlot(slot, !isPacked, typeReg, dataReg.reg());
+        if (!isPacked)
+            stubcc.linkExit(holeCheck, Uses(3));
+        frame.freeReg(slotsReg.reg());
+    }
+
+    masm.store32(lengthReg, Address(objReg, offsetof(JSObject, privateData)));
+    masm.store32(lengthReg, Address(objReg, offsetof(JSObject, initializedLength)));
+
+    stubcc.leave();
+    stubcc.masm.move(Imm32(0), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::SlowCall, REJOIN_FALLTHROUGH);
+
+    frame.freeReg(lengthReg);
+    frame.popn(2);
+
+    if (dataReg.isSet()) {
+        if (type == JSVAL_TYPE_UNKNOWN || type == JSVAL_TYPE_DOUBLE)
+            frame.pushRegs(typeReg.reg(), dataReg.reg(), type);
+        else
+            frame.pushTypedPayload(type, dataReg.reg());
+    } else {
+        frame.push(UndefinedValue());
+    }
+
+    stubcc.rejoin(Changes(1));
+    return Compile_Okay;
+}
 
 CompileStatus
 mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
@@ -329,6 +445,7 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
 
     FrameEntry *origCallee = frame.peek(-((int)argc + 2));
     FrameEntry *thisValue = frame.peek(-((int)argc + 1));
+    types::TypeSet *thisTypes = analysis->poppedTypes(PC, argc);
 
     if (!origCallee->isConstant() || !origCallee->isType(JSVAL_TYPE_OBJECT))
         return Compile_InlineAbort;
@@ -348,17 +465,23 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
                            ? thisValue->getKnownType()
                            : JSVAL_TYPE_UNKNOWN;
 
-    /* All argument types must be known. */
-    for (unsigned i=0; i<argc; i++) {
-        FrameEntry * arg = frame.peek(-((int)i+1));
-
-        if (!arg->isTypeKnown())
-            return Compile_InlineAbort;
-    }
-
-    if (argc == 1) {
+    if (argc == 0) {
+        if (native == js::array_pop && thisType == JSVAL_TYPE_OBJECT) {
+            /*
+             * Only inline pop() on dense arrays which have never been used in
+             * an iterator --- when popping elements we don't account for
+             * suppressing deleted properties in active iterators.
+             */
+            if (!thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY |
+                                           types::OBJECT_FLAG_ITERATED) &&
+                !arrayPrototypeHasIndexedProperty()) {
+                bool packed = !thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_PACKED_ARRAY);
+                return compileArrayPop(thisValue, packed);
+            }
+        }
+    } else if (argc == 1) {
         FrameEntry *arg = frame.peek(-1);
-        JSValueType argType = arg->getKnownType();
+        JSValueType argType = arg->isTypeKnown() ? arg->getKnownType() : JSVAL_TYPE_UNKNOWN;
 
         if (native == js_math_abs) {
             if (argType == JSVAL_TYPE_INT32 && type == JSVAL_TYPE_INT32)
@@ -387,12 +510,18 @@ mjit::Compiler::inlineNativeFunction(uint32 argc, bool callingNew)
             thisType == JSVAL_TYPE_STRING && type == JSVAL_TYPE_STRING) {
             return compileGetChar(thisValue, arg, GetChar);
         }
+        if (native == js::array_push && thisType == JSVAL_TYPE_OBJECT) {
+            if (!thisTypes->hasObjectFlags(cx, types::OBJECT_FLAG_NON_DENSE_ARRAY) &&
+                !arrayPrototypeHasIndexedProperty()) {
+                return compileArrayPush(thisValue, arg);
+            }
+        }
     } else if (argc == 2) {
         FrameEntry *arg1 = frame.peek(-2);
         FrameEntry *arg2 = frame.peek(-1);
 
-        JSValueType arg1Type = arg1->getKnownType();
-        JSValueType arg2Type = arg2->getKnownType();
+        JSValueType arg1Type = arg1->isTypeKnown() ? arg1->getKnownType() : JSVAL_TYPE_UNKNOWN;
+        JSValueType arg2Type = arg2->isTypeKnown() ? arg2->getKnownType() : JSVAL_TYPE_UNKNOWN;
 
         if (native == js_math_pow && type == JSVAL_TYPE_DOUBLE &&
             (arg1Type == JSVAL_TYPE_DOUBLE || arg1Type == JSVAL_TYPE_INT32) &&

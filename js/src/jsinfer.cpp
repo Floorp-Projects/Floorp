@@ -1327,188 +1327,121 @@ TypeSet::getKnownTypeTag(JSContext *cx)
     return type;
 }
 
-static inline bool
-ObjectKindPair(ObjectKind v0, ObjectKind v1, ObjectKind cmp0, ObjectKind cmp1)
-{
-    JS_ASSERT(v0 != v1);
-    return (v0 == cmp0 && v1 == cmp1) || (v0 == cmp1 && v1 == cmp0);
-}
-
-/* Compute the meet of kind with the kind of object, per the ObjectKind lattice. */
-static inline ObjectKind
-CombineObjectKind(TypeObject *object, ObjectKind kind)
-{
-    /*
-     * All type objects with unknown properties are considered interchangeable
-     * with one another, as they can be freely exchanged in type sets to handle
-     * objects whose __proto__ has been changed.
-     */
-    if (object->unknownProperties() || kind == OBJECT_UNKNOWN ||
-        object->hasFlags(OBJECT_FLAG_SPECIAL_EQUALITY)) {
-        return OBJECT_UNKNOWN;
-    }
-
-    bool inlineable = !object->hasFlags(OBJECT_FLAG_UNINLINEABLE);
-    bool packed = !object->hasFlags(OBJECT_FLAG_NON_PACKED_ARRAY);
-    bool dense = !object->hasFlags(OBJECT_FLAG_NON_DENSE_ARRAY);
-
-    JS_ASSERT_IF(packed, dense);
-
-    ObjectKind nkind;
-    if (object->isFunction && object->asFunction()->script && inlineable)
-        nkind = OBJECT_INLINEABLE_FUNCTION;
-    else if (object->isFunction && object->asFunction()->script)
-        nkind = OBJECT_SCRIPTED_FUNCTION;
-    else if (packed)
-        nkind = OBJECT_PACKED_ARRAY;
-    else if (dense)
-        nkind = OBJECT_DENSE_ARRAY;
-    else
-        nkind = OBJECT_NO_SPECIAL_EQUALITY;
-
-    if (kind == nkind || kind == OBJECT_NONE)
-        return nkind;
-
-    if (ObjectKindPair(kind, nkind, OBJECT_INLINEABLE_FUNCTION, OBJECT_SCRIPTED_FUNCTION))
-        return OBJECT_SCRIPTED_FUNCTION;
-
-    if (ObjectKindPair(kind, nkind, OBJECT_PACKED_ARRAY, OBJECT_DENSE_ARRAY))
-        return OBJECT_DENSE_ARRAY;
-
-    return OBJECT_NO_SPECIAL_EQUALITY;
-}
-
-/* Constraint which triggers recompilation if an object changes state. */
-class TypeConstraintFreezeObjectKind : public TypeConstraint
+/* Constraint which triggers recompilation if an object acquires particular flags. */
+class TypeConstraintFreezeObjectFlags : public TypeConstraint
 {
 public:
-    /*
-     * Kind being specialized by the parent FreezeObjectConstraint. This may
-     * have already changed since this constraint was created.
-     */
-    ObjectKind *pkind;
-    ObjectKind localKind;
+    /* Flags we are watching for on this object. */
+    TypeObjectFlags flags;
 
-    TypeConstraintFreezeObjectKind(ObjectKind *pkind, JSScript *script)
-        : TypeConstraint("freezeObjectKind", script), pkind(pkind)
+    /* Whether the object has already been marked as having one of the flags. */
+    bool *pmarked;
+    bool localMarked;
+
+    TypeConstraintFreezeObjectFlags(JSScript *script, TypeObjectFlags flags, bool *pmarked)
+        : TypeConstraint("freezeObjectFlags", script), flags(flags),
+          pmarked(pmarked), localMarked(false)
     {}
 
-    TypeConstraintFreezeObjectKind(ObjectKind localKind, JSScript *script)
-        : TypeConstraint("freezeObjectKind", script), pkind(&this->localKind),
-          localKind(localKind)
+    TypeConstraintFreezeObjectFlags(JSScript *script, TypeObjectFlags flags)
+        : TypeConstraint("freezeObjectFlags", script), flags(flags),
+          pmarked(&localMarked), localMarked(false)
     {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type) {}
 
     void newObjectState(JSContext *cx, TypeObject *object)
     {
-        ObjectKind nkind = CombineObjectKind(object, *pkind);
-        if (nkind != *pkind) {
-            *pkind = nkind;
+        if (object->hasAnyFlags(flags) && !*pmarked) {
+            *pmarked = true;
             cx->compartment->types.addPendingRecompile(cx, script);
         }
     }
 };
 
 /*
- * Constraint which triggers recompilation if objects of a different kind are
- * added to a type set.
+ * Constraint which triggers recompilation if any object in a type set acquire
+ * particular flags.
  */
-class TypeConstraintFreezeObjectKindSet : public TypeConstraint
+class TypeConstraintFreezeObjectFlagsSet : public TypeConstraint
 {
 public:
-    ObjectKind kind;
+    TypeObjectFlags flags;
+    bool marked;
 
-    TypeConstraintFreezeObjectKindSet(ObjectKind kind, JSScript *script)
-        : TypeConstraint("freezeObjectKindSet", script), kind(kind)
-    {
-        JS_ASSERT(kind != OBJECT_NONE);
-    }
+    TypeConstraintFreezeObjectFlagsSet(JSScript *script, TypeObjectFlags flags)
+        : TypeConstraint("freezeObjectKindSet", script), flags(flags), marked(false)
+    {}
 
     void newType(JSContext *cx, TypeSet *source, jstype type)
     {
-        if (kind == OBJECT_UNKNOWN) {
+        if (marked) {
             /* Despecialized the kind we were interested in due to recompilation. */
             return;
         }
 
         if (type == TYPE_UNKNOWN) {
-            kind = OBJECT_UNKNOWN;
+            /* Fallthrough and recompile. */
         } else if (TypeIsObject(type)) {
             TypeObject *object = (TypeObject *) type;
-            ObjectKind nkind = CombineObjectKind(object, kind);
-
-            if (nkind != OBJECT_UNKNOWN) {
+            if (!object->hasAnyFlags(flags)) {
                 /*
                  * Add a constraint on the element type of the object to pick up
-                 * changes in the object's array-ness or any unknown properties.
+                 * changes in the object's properties.
                  */
                 TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
                 if (!elementTypes)
                     return;
                 elementTypes->add(cx,
-                    ArenaNew<TypeConstraintFreezeObjectKind>(cx->compartment->pool,
-                                                             &kind, script), false);
-            }
-
-            if (nkind == kind) {
-                /* New object with the same kind we are interested in. */
+                    ArenaNew<TypeConstraintFreezeObjectFlags>(cx->compartment->pool,
+                                                              script, flags, &marked), false);
                 return;
             }
-            kind = nkind;
         } else {
             return;
         }
 
+        marked = true;
         cx->compartment->types.addPendingRecompile(cx, script);
     }
 };
 
-ObjectKind
-TypeSet::getKnownObjectKind(JSContext *cx)
+bool
+TypeSet::hasObjectFlags(JSContext *cx, TypeObjectFlags flags)
 {
-    ObjectKind kind = OBJECT_NONE;
-
     if (unknown())
-        return OBJECT_UNKNOWN;
+        return true;
 
     unsigned count = getObjectCount();
     for (unsigned i = 0; i < count; i++) {
         TypeObject *object = getObject(i);
-        if (object)
-            kind = CombineObjectKind(object, kind);
+        if (object && object->hasAnyFlags(flags))
+            return true;
     }
 
-    if (kind == OBJECT_NONE)
-        kind = OBJECT_UNKNOWN;
+    /*
+     * Watch for new objects of different kind, and re-traverse existing types
+     * in this set to add any needed FreezeArray constraints.
+     */
+    add(cx, ArenaNew<TypeConstraintFreezeObjectFlagsSet>(cx->compartment->pool,
+                                                         cx->compartment->types.compiledScript, flags));
 
-    if (kind != OBJECT_UNKNOWN) {
-        /*
-         * Watch for new objects of different kind, and re-traverse existing types
-         * in this set to add any needed FreezeArray constraints.
-         */
-        add(cx, ArenaNew<TypeConstraintFreezeObjectKindSet>(cx->compartment->pool, kind,
-                                                            cx->compartment->types.compiledScript));
-    }
-
-    return kind;
+    return false;
 }
 
-ObjectKind
-TypeSet::GetObjectKind(JSContext *cx, TypeObject *object)
+bool
+TypeSet::HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags flags)
 {
-    ObjectKind kind = CombineObjectKind(object, OBJECT_NONE);
+    if (object->hasAnyFlags(flags))
+        return true;
 
-    if (kind != OBJECT_UNKNOWN) {
-        TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
-        if (!elementTypes)
-            return OBJECT_UNKNOWN;
-        elementTypes->add(cx,
-            ArenaNew<TypeConstraintFreezeObjectKind>(cx->compartment->pool,
-                                                     kind, cx->compartment->types.compiledScript), false);
-    }
-
-    return kind;
+    TypeSet *elementTypes = object->getProperty(cx, JSID_VOID, false);
+    if (!elementTypes)
+        return true;
+    elementTypes->add(cx,
+        ArenaNew<TypeConstraintFreezeObjectFlags>(cx->compartment->pool,
+                                                  cx->compartment->types.compiledScript, flags), false);
+    return false;
 }
 
 static inline void
@@ -2729,14 +2662,16 @@ TypeObject::print(JSContext *cx)
     if (unknownProperties()) {
         printf(" unknown");
     } else {
-        if (!hasFlags(OBJECT_FLAG_NON_PACKED_ARRAY))
+        if (!hasAnyFlags(OBJECT_FLAG_NON_PACKED_ARRAY))
             printf(" packed");
-        if (!hasFlags(OBJECT_FLAG_NON_DENSE_ARRAY))
+        if (!hasAnyFlags(OBJECT_FLAG_NON_DENSE_ARRAY))
             printf(" dense");
-        if (hasFlags(OBJECT_FLAG_UNINLINEABLE))
+        if (hasAnyFlags(OBJECT_FLAG_UNINLINEABLE))
             printf(" uninlineable");
-        if (hasFlags(OBJECT_FLAG_SPECIAL_EQUALITY))
+        if (hasAnyFlags(OBJECT_FLAG_SPECIAL_EQUALITY))
             printf(" specialEquality");
+        if (hasAnyFlags(OBJECT_FLAG_ITERATED))
+            printf(" iterated");
     }
 
     if (propertyCount == 0) {
@@ -3420,7 +3355,7 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
                 if (state.hasGetSet)
                     types->addType(cx, TYPE_UNKNOWN);
                 else if (state.hasHole)
-                    cx->markTypeArrayNotPacked(initializer, false);
+                    cx->markTypeObjectFlags(initializer, js::types::OBJECT_FLAG_NON_PACKED_ARRAY);
                 else
                     poppedTypes(pc, 0)->addSubset(cx, script, types);
             }
@@ -4220,8 +4155,8 @@ JSScript::typeCheckBytecode(JSContext *cx, const jsbytecode *pc, const js::Value
                 continue;
 
             /* Make sure information about the array status of this object is right. */
-            bool dense = !object->hasFlags(OBJECT_FLAG_NON_DENSE_ARRAY);
-            bool packed = !object->hasFlags(OBJECT_FLAG_NON_PACKED_ARRAY);
+            bool dense = !object->hasAnyFlags(OBJECT_FLAG_NON_DENSE_ARRAY);
+            bool packed = !object->hasAnyFlags(OBJECT_FLAG_NON_PACKED_ARRAY);
             JS_ASSERT_IF(packed, dense);
             if (dense) {
                 if (!obj->isDenseArray() || (packed && !obj->isPackedDenseArray())) {

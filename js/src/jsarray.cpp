@@ -1063,7 +1063,9 @@ JSObject::makeDenseArraySlow(JSContext *cx)
 {
     JS_ASSERT(isDenseArray());
 
-    cx->markTypeArrayNotPacked(getType(), true);
+    cx->markTypeObjectFlags(getType(),
+                            js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
+                            js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
     setDenseArrayNotPacked(cx);
 
     /*
@@ -2283,8 +2285,8 @@ JS_DEFINE_CALLINFO_3(extern, BOOL_FAIL, js_ArrayCompPush_tn, CONTEXT, OBJECT,
                      VALUE, 0, nanojit::ACCSET_STORE_ANY)
 #endif
 
-static JSBool
-array_push(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::array_push(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)
@@ -2348,8 +2350,8 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
     return JS_TRUE;
 }
 
-static JSBool
-array_pop(JSContext *cx, uintN argc, Value *vp)
+JSBool
+js::array_pop(JSContext *cx, uintN argc, Value *vp)
 {
     JSObject *obj = ToObject(cx, &vp[1]);
     if (!obj)

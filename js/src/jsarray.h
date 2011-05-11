@@ -80,7 +80,7 @@ JSObject::setDenseArrayNotPacked(JSContext *cx)
     JS_ASSERT(isDenseArray());
     if (flags & PACKED_ARRAY) {
         flags ^= PACKED_ARRAY;
-        cx->markTypeArrayNotPacked(getType(), false);
+        cx->markTypeObjectFlags(getType(), js::types::OBJECT_FLAG_NON_PACKED_ARRAY);
     }
 }
 
@@ -293,14 +293,19 @@ extern bool
 js_MergeSort(void *vec, size_t nel, size_t elsize, JSComparator cmp,
              void *arg, void *tmp, JSMergeSortElemType elemType);
 
-/*
- * The Array.prototype.sort fast-native entry point is exported for joined
- * function optimization in js{interp,tracer}.cpp.
- */
+/* Natives exposed for optimization by the interpreter and JITs. */
 namespace js {
+
 extern JSBool
 array_sort(JSContext *cx, uintN argc, js::Value *vp);
-}
+
+extern JSBool
+array_push(JSContext *cx, uintN argc, js::Value *vp);
+
+extern JSBool
+array_pop(JSContext *cx, uintN argc, js::Value *vp);
+
+} /* namespace js */
 
 #ifdef DEBUG
 extern JSBool

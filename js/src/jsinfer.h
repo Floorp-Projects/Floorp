@@ -202,31 +202,6 @@ public:
     virtual TypeObject * persistentObject() { return NULL; }
 };
 
-/*
- * Coarse kinds of a set of objects. These form the following lattice:
- *
- *            NONE
- *       ____/    \_____
- *      /               \
- * PACKED_ARRAY  INLINEABLE_FUNCTION
- *     |                 |
- * DENSE_ARRAY    SCRIPTED_FUNCTION
- *      \____      _____/
- *           \    /
- *     NO_SPECIAL_EQUALITY
- *              |
- *           UNKNOWN
- */
-enum ObjectKind {
-    OBJECT_NONE,
-    OBJECT_UNKNOWN,
-    OBJECT_PACKED_ARRAY,
-    OBJECT_DENSE_ARRAY,
-    OBJECT_INLINEABLE_FUNCTION,
-    OBJECT_SCRIPTED_FUNCTION,
-    OBJECT_NO_SPECIAL_EQUALITY
-};
-
 /* Coarse flags for the contents of a type set. */
 enum {
     TYPE_FLAG_UNDEFINED = 1 << TYPE_UNDEFINED,
@@ -267,9 +242,38 @@ enum {
     /* Mask of non-type flags on a type set. */
     TYPE_FLAG_BASE_MASK           = 0xffffff00
 };
-
-/* Vector of the above flags. */
 typedef uint32 TypeFlags;
+
+/* Bitmask for possible dynamic properties of the JSObjects with some type. */
+enum {
+    /*
+     * Whether all the properties of this object are unknown. When this object
+     * appears in a type set, nothing can be assumed about its contents,
+     * including whether the .proto field is correct. This is needed to handle
+     * mutable __proto__, which requires us to unify all type objects with
+     * unknown properties in type sets (see SetProto).
+     */
+    OBJECT_FLAG_UNKNOWN_MASK = uint32(-1),
+
+    /*
+     * Whether any objects this represents are not dense arrays. This also
+     * includes dense arrays whose length property does not fit in an int32.
+     */
+    OBJECT_FLAG_NON_DENSE_ARRAY = 1 << 0,
+
+    /* Whether any objects this represents are not packed arrays. */
+    OBJECT_FLAG_NON_PACKED_ARRAY = 1 << 1,
+
+    /* Whether any objects this represents have had their .arguments accessed. */
+    OBJECT_FLAG_UNINLINEABLE = 1 << 2,
+
+    /* Whether any objects this represents have an equality hook. */
+    OBJECT_FLAG_SPECIAL_EQUALITY = 1 << 3,
+
+    /* Whether any objects this represents have been iterated over. */
+    OBJECT_FLAG_ITERATED = 1 << 4
+};
+typedef uint32 TypeObjectFlags;
 
 /* Information about the set of types associated with an lvalue. */
 class TypeSet
@@ -377,11 +381,9 @@ class TypeSet
     /* Get any type tag which all values in this set must have. */
     JSValueType getKnownTypeTag(JSContext *cx);
 
-    /* Get information about the kinds of objects in this type set. */
-    ObjectKind getKnownObjectKind(JSContext *cx);
-
-    /* Get the fixed kind of a particular object. */
-    static ObjectKind GetObjectKind(JSContext *cx, TypeObject *object);
+    /* Whether the type set or a particular object has any of a set of flags. */
+    bool hasObjectFlags(JSContext *cx, TypeObjectFlags flags);
+    static bool HasObjectFlags(JSContext *cx, TypeObject *object, TypeObjectFlags flags);
 
     /* Watch for slot reallocations on a particular object. */
     static void WatchObjectReallocation(JSContext *cx, JSObject *object);
@@ -445,34 +447,6 @@ struct Property
     static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
     static jsid getKey(Property *p) { return p->id; }
 };
-
-/* Bitmask for possible dynamic properties of the JSObjects with some type. */
-enum {
-    /*
-     * Whether all the properties of this object are unknown. When this object
-     * appears in a type set, nothing can be assumed about its contents,
-     * including whether the .proto field is correct. This is needed to handle
-     * mutable __proto__, which requires us to unify all type objects with
-     * unknown properties in type sets (see SetProto).
-     */
-    OBJECT_FLAG_UNKNOWN_MASK = uint32(-1),
-
-    /*
-     * Whether any objects this represents are not dense arrays. This also
-     * includes dense arrays whose length property does not fit in an int32.
-     */
-    OBJECT_FLAG_NON_DENSE_ARRAY = 1 << 0,
-
-    /* Whether any objects this represents are not packed arrays. */
-    OBJECT_FLAG_NON_PACKED_ARRAY = 1 << 1,
-
-    /* Whether any objects this represents have had their .arguments accessed. */
-    OBJECT_FLAG_UNINLINEABLE = 1 << 2,
-
-    /* Whether any objects this represents have an equality hook. */
-    OBJECT_FLAG_SPECIAL_EQUALITY = 1 << 3
-};
-typedef uint32 TypeObjectFlags;
 
 /* Type information about an object accessed by a script. */
 struct TypeObject
@@ -561,7 +535,8 @@ struct TypeObject
     }
 
     bool unknownProperties() { return flags == OBJECT_FLAG_UNKNOWN_MASK; }
-    bool hasFlags(TypeObjectFlags flags) { return (this->flags & flags) == flags; }
+    bool hasAnyFlags(TypeObjectFlags flags) { return (this->flags & flags) != 0; }
+    bool hasAllFlags(TypeObjectFlags flags) { return (this->flags & flags) == flags; }
 
     /*
      * Return an immutable, shareable, empty shape with the same clasp as this

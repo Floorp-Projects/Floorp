@@ -3079,7 +3079,7 @@ JS_NewObject(JSContext *cx, JSClass *jsclasp, JSObject *proto, JSObject *parent)
     JSObject *obj = NewNonFunction<WithProto::Class>(cx, clasp, proto, parent);
     if (obj) {
         if (clasp->ext.equality)
-            cx->markTypeObjectHasSpecialEquality(obj->getType());
+            cx->markTypeObjectFlags(obj->getType(), OBJECT_FLAG_SPECIAL_EQUALITY);
         obj->syncSpecialEquality();
         cx->markTypeObjectUnknownProperties(obj->getType());
     }
@@ -3099,7 +3099,7 @@ JS_NewObjectWithUniqueType(JSContext *cx, JSClass *clasp, JSObject *proto, JSObj
     if (!type)
         return NULL;
     if (obj->hasSpecialEquality())
-        cx->markTypeObjectHasSpecialEquality(type);
+        cx->markTypeObjectFlags(type, OBJECT_FLAG_SPECIAL_EQUALITY);
     if (!obj->setTypeAndUniqueShape(cx, type))
         return NULL;
     type->singleton = obj;

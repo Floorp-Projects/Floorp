@@ -730,6 +730,8 @@ class Compiler : public BaseCompiler
     CompileStatus compileMathAbsDouble(FrameEntry *arg);
     CompileStatus compileMathSqrt(FrameEntry *arg);
     CompileStatus compileMathPowSimple(FrameEntry *arg1, FrameEntry *arg2);
+    CompileStatus compileArrayPush(FrameEntry *thisv, FrameEntry *arg);
+    CompileStatus compileArrayPop(FrameEntry *thisv, bool isPacked);
 
     enum RoundingMode { Floor, Round };
     CompileStatus compileRound(FrameEntry *arg, RoundingMode mode);
