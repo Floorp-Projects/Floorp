@@ -289,4 +289,11 @@
                   CoXz50r3rYPcYz4WS+7/+lvrUqsuWd9Wj+q0NeCPiNaaro6/AolE2Qf5JFRL3lxY
                   lsKWAnVO</em:signature>
   </RDF:Description>
+
+  <!-- There should be no information present for test_bug378216_14 -->
+
+  <!-- Invalid update RDF -->
+  <RDF:Description about="urn:mozilla:extension:test_bug378216_15@tests.mozilla.org">
+    <em:updates>Foo</em:updates>
+  </RDF:Description>
 </RDF>

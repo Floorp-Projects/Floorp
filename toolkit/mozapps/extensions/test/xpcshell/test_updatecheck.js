@@ -192,11 +192,41 @@ function run_test_9() {
       do_check_eq(updates.length, 1);
       do_check_eq(updates[0].version, "2.0");
       do_check_true("updateURL" in updates[0]);
-      end_test();
+      run_test_10();
     },
 
     onUpdateCheckError: function(status) {
       do_throw("Update check failed with status " + status);
+    }
+  });
+}
+
+function run_test_10() {
+  AddonUpdateChecker.checkForUpdates("test_bug378216_14@tests.mozilla.org",
+                                     "extension", null,
+                                     "http://localhost:4444/data/test_updatecheck.rdf", {
+    onUpdateCheckComplete: function(updates) {
+      do_check_eq(updates.length, 0);
+      run_test_11();
+    },
+
+    onUpdateCheckError: function(status) {
+      do_throw("Update check failed with status " + status);
+    }
+  });
+}
+
+function run_test_11() {
+  AddonUpdateChecker.checkForUpdates("test_bug378216_15@tests.mozilla.org",
+                                     "extension", null,
+                                     "http://localhost:4444/data/test_updatecheck.rdf", {
+    onUpdateCheckComplete: function(updates) {
+      do_throw("Update check should have failed");
+    },
+
+    onUpdateCheckError: function(status) {
+      do_check_eq(status, AddonUpdateChecker.ERROR_PARSE_ERROR);
+      end_test();
     }
   });
 }
