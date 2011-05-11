@@ -46,6 +46,7 @@ interface nsIURI;
 interface nsIVariant;
 interface nsPIDOMWindow;
 interface nsIInputStream;
+interface nsIDOMBlob;
 
 %{C++
 // for jsval
@@ -109,7 +110,7 @@ interface nsIXMLHttpRequestUpload : nsIXMLHttpRequestEventTarget {
  * you're aware of all the security implications.  And then think twice about
  * it.
  */
-[scriptable, uuid(af62a870-820c-4981-96a3-28ab17b779e1)]
+[scriptable, uuid(a05a6424-a644-461a-a1ff-c7bbe96ea9e2)]
 interface nsIXMLHttpRequest : nsISupports
 {
   /**
@@ -141,11 +142,20 @@ interface nsIXMLHttpRequest : nsISupports
   readonly attribute AString responseText;
 
   /**
-   * The response to the request as a typed array ArrayBuffer.
+   * Determine a response format which response attribute returns.
+   * empty string (initial value) or "text": as text.
+   * "arraybuffer": as a typed array ArrayBuffer.
+   * "blob": as a File API Blob.
+   * "document": as a DOM Document object.
+   */
+  attribute AString mozResponseType;
+
+  /**
+   * The response to the request as a specified format by responseType.
    * NULL if the request is unsuccessful or
    * has not yet been sent.
    */
-  readonly attribute jsval /*ArrayBuffer*/ mozResponseArrayBuffer;
+  [implicit_jscontext] readonly attribute jsval /* any */ mozResponse;
 
   /**
    * The status of the response to the request for HTTP requests.
@@ -272,13 +282,19 @@ interface nsIXMLHttpRequest : nsISupports
    * The state of the request.
    *
    * Possible values:
-   *   0 UNINITIALIZED open() has not been called yet.
-   *   1 LOADING       send() has not been called yet.
-   *   2 LOADED        send() has been called, headers and status are available.
-   *   3 INTERACTIVE   Downloading, responseText holds the partial data.
-   *   4 COMPLETED     Finished with all operations.
+   *   0 UNSENT   open() has not been called yet.
+   *   1 OPENED   send() has not been called yet.
+   *   2 HEADERS_RECEIVED
+   *              send() has been called, headers and status are available.
+   *   3 LOADING  Downloading, responseText holds the partial data.
+   *   4 DONE     Finished with all operations.
    */
-  readonly attribute long readyState;
+  const unsigned short UNSENT = 0;
+  const unsigned short OPENED = 1;
+  const unsigned short HEADERS_RECEIVED = 2;
+  const unsigned short LOADING = 3;
+  const unsigned short DONE = 4;
+  readonly attribute unsigned short readyState;
 
   /**
    * Override the mime type returned by the server (if any). This may

@@ -62,6 +62,7 @@
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/XShm.h>
+#include <X11/extensions/shape.h>
 
 #ifdef AIX
 #include <X11/keysym.h>
@@ -2136,6 +2137,11 @@ nsWindow::OnExposeEvent(GtkWidget *aWidget, GdkEventExpose *aEvent)
         nsPaintEvent willPaintEvent(PR_TRUE, NS_WILL_PAINT, this);
         willPaintEvent.willSendDidPaint = PR_TRUE;
         DispatchEvent(&willPaintEvent, status);
+
+        // If the window has been destroyed during WILL_PAINT, there is
+        // nothing left to do.
+        if (!mGdkWindow)
+            return TRUE;
     }
 
     nsPaintEvent event(PR_TRUE, NS_PAINT, this);
@@ -4794,6 +4800,22 @@ void UpdateMaskBits(gchar* aMaskBits, PRInt32 aMaskWidth, PRInt32 aMaskHeight,
 void
 nsWindow::ApplyTransparencyBitmap()
 {
+#ifdef MOZ_X11
+    // We use X11 calls where possible, because GDK handles expose events
+    // for shaped windows in a way that's incompatible with us (Bug 635903).
+    // It doesn't occur when the shapes are set through X.
+    Display* xDisplay = GDK_WINDOW_XDISPLAY(mShell->window);
+    Window xDrawable = GDK_WINDOW_XID(mShell->window);
+    Pixmap maskPixmap = XCreateBitmapFromData(xDisplay,
+                                              xDrawable,
+                                              mTransparencyBitmap,
+                                              mTransparencyBitmapWidth,
+                                              mTransparencyBitmapHeight);
+    XShapeCombineMask(xDisplay, xDrawable,
+                      ShapeBounding, 0, 0,
+                      maskPixmap, ShapeSet);
+    XFreePixmap(xDisplay, maskPixmap);
+#else
     gtk_widget_reset_shapes(mShell);
     GdkBitmap* maskBitmap = gdk_bitmap_create_from_data(mShell->window,
             mTransparencyBitmap,
@@ -4803,6 +4825,7 @@ nsWindow::ApplyTransparencyBitmap()
 
     gtk_widget_shape_combine_mask(mShell, maskBitmap, 0, 0);
     g_object_unref(maskBitmap);
+#endif
 }
 
 nsresult

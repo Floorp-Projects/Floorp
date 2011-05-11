@@ -702,15 +702,20 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   nsresult rv = NS_OK;
 
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(doc, nsnull);
+
+  FireNodeRemovedForChildren();
+
   // This BeginUpdate/EndUpdate pair is important to make us reenable the
   // scriptloader before the last EndUpdate call.
   mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, PR_TRUE);
 
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(doc, nsnull);
-
-  // Remove childnodes
-  nsContentUtils::SetNodeTextContent(this, EmptyString(), PR_FALSE);
+  // Remove childnodes.
+  // i is unsigned, so i >= is always true
+  for (PRUint32 i = GetChildCount(); i-- != 0; ) {
+    RemoveChildAt(i, PR_TRUE);
+  }
 
   nsCOMPtr<nsIDOMDocumentFragment> df;
 
@@ -742,12 +747,9 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
     // HTML5 parser has notified, but not fired mutation events.
     // Fire mutation events. Optimize for the case when there are no listeners
-    nsPIDOMWindow* window = nsnull;
     PRInt32 newChildCount = GetChildCount();
-    if (newChildCount &&
-        (((window = doc->GetInnerWindow()) &&
-          window->HasMutationListeners(NS_EVENT_BITS_MUTATION_NODEINSERTED)) ||
-         !window)) {
+    if (newChildCount && nsContentUtils::
+          HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEINSERTED)) {
       nsCOMArray<nsIContent> childNodes;
       NS_ASSERTION(newChildCount - oldChildCount >= 0,
                    "What, some unexpected dom mutation has happened?");
@@ -2732,7 +2734,8 @@ nsGenericHTMLFormElement::CanBeDisabled() const
   return
     type != NS_FORM_LABEL &&
     type != NS_FORM_OBJECT &&
-    type != NS_FORM_OUTPUT;
+    type != NS_FORM_OUTPUT &&
+    type != NS_FORM_PROGRESS;
 }
 
 PRBool

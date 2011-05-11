@@ -125,7 +125,6 @@ static JSFunctionSpec boolean_methods[] = {
 #endif
     JS_FN(js_toString_str,  bool_toString,  0, 0),
     JS_FN(js_valueOf_str,   bool_valueOf,   0, 0),
-    JS_FN(js_toJSON_str,    bool_valueOf,   0, 0),
     JS_FS_END
 };
 

@@ -124,6 +124,7 @@
 #include "nsContentUtils.h"
 #include "nsContentList.h"
 #include "nsMutationEvent.h"
+#include "nsPLDOMEvent.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMAttributeMap.h"
@@ -1478,8 +1479,6 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
     }
 
     if (hasMutationListeners) {
-        mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
-
         nsMutationEvent mutation(PR_TRUE, NS_MUTATION_ATTRMODIFIED);
 
         mutation.mRelatedNode = attrNode;
@@ -1490,8 +1489,7 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify)
         mutation.mAttrChange = nsIDOMMutationEvent::REMOVAL;
 
         mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-        nsEventDispatcher::Dispatch(static_cast<nsIContent*>(this),
-                                    nsnull, &mutation);
+        (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
     }
 
     return NS_OK;

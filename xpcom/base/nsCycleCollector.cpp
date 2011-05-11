@@ -1675,10 +1675,9 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     }
 
     // skip over non-grey JS children
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-        JSObject *obj = static_cast<JSObject*>(child);
-        if (!xpc_IsGrayGCThing(obj) && !WantAllTraces())
-            return;
+    if (langID == nsIProgrammingLanguage::JAVASCRIPT &&
+        !xpc_GCThingIsGrayCCThing(child) && !WantAllTraces()) {
+        return;
     }
 
     nsCycleCollectionParticipant *cp = mRuntimes[langID]->ToParticipant(child);

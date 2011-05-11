@@ -1,0 +1,87 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<!--
+  Test for fullscreen sizemode in chrome
+  -->
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        persist="sizemode"
+        sizemode="normal"
+        onload="nextStep()">
+
+<script type="text/javascript;version=1.8">
+let tests = [
+  function test1() {
+    checkAndContinue("normal");
+  },
+
+  function test2() {
+    listen("fullscreen", function() checkAndContinue("fullscreen"));
+    window.fullScreen = true;
+  },
+
+  function test3() {
+    listen("fullscreen", function() checkAndContinue("normal"));
+    window.fullScreen = false;
+  },
+
+  function test4() {
+    listen("resize", function() checkAndContinue("maximized"));
+    window.maximize();
+  },
+
+  function test5() {
+    listen("fullscreen", function() checkAndContinue("fullscreen"));
+    window.fullScreen = true;
+  },
+
+  function test6() {
+    listen("fullscreen", function() checkAndContinue("maximized"));
+    window.fullScreen = false;
+  },
+
+  function test7() {
+    listen("resize", function() checkAndContinue("normal"));
+    window.restore();
+  },
+
+  function test8() {
+    window.opener.wrappedJSObject.done();
+  }
+];
+
+function nextStep() {
+  tests.shift()();
+}
+
+function listen(event, fn) {
+  window.addEventListener(event, function listener() {
+    window.removeEventListener(event, listener, false);
+    fn();
+  }, false);
+}
+
+function checkAndContinue(sizemode) {
+
+  let windowStates = {
+    "fullscreen": window.STATE_FULLSCREEN,
+    "normal": window.STATE_NORMAL,
+    "maximized": window.STATE_MAXIMIZED
+  };
+
+  setTimeout(function() {
+    is(window.document.documentElement.getAttribute("sizemode"), sizemode, "sizemode attribute should match actual window state");
+    is(window.fullScreen, sizemode == "fullscreen", "window.fullScreen should match actual window state");
+    is(window.windowState, windowStates[sizemode], "window.sizeMode should match actual window state");
+    nextStep();
+  }, 0);
+}
+
+let is = window.opener.wrappedJSObject.is;
+
+</script>
+
+<body xmlns="http://www.w3.org/1999/xhtml">
+
+</body>
+</window>

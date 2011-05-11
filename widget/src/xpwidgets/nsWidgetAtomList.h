@@ -104,6 +104,7 @@ WIDGET_ATOM(open, "open") // Whether or not a menu, tree, etc. is open
 WIDGET_ATOM(orient, "orient")
 WIDGET_ATOM(pageincrement, "pageincrement")
 WIDGET_ATOM(parentfocused, "parentfocused")
+WIDGET_ATOM(progress, "progress")
 WIDGET_ATOM(radio, "radio")
 WIDGET_ATOM(readonly, "readonly")
 WIDGET_ATOM(Reload, "Reload")

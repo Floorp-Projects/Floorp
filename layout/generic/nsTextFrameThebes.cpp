@@ -2862,7 +2862,7 @@ PropertyProvider::GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
         mFrag->CharAt(run.GetOriginalOffset() + run.GetRunLength() - 1) == CH_SHY;
     } else {
       PRInt32 runOffsetInSubstring = run.GetSkippedOffset() - aStart;
-      memset(aBreakBefore + runOffsetInSubstring, 0, run.GetRunLength());
+      memset(aBreakBefore + runOffsetInSubstring, PR_FALSE, run.GetRunLength());
       // Don't allow hyphen breaks at the start of the line
       aBreakBefore[runOffsetInSubstring] = allowHyphenBreakBeforeNextChar &&
           (!(mFrame->GetStateBits() & TEXT_START_OF_LINE) ||
@@ -6153,7 +6153,9 @@ nsTextFrame::AddInlineMinWidthForFlow(nsRenderingContext *aRenderingContext,
          (mTextRun->GetFlags() & nsTextFrameUtils::TEXT_HAS_TRAILING_BREAK))) {
       if (preformattedNewline) {
         aData->ForceBreak(aRenderingContext);
-      } else if (hyphBreakBefore && hyphBreakBefore[i - start]) {
+      } else if (i < flowEndInTextRun && hyphBreakBefore &&
+                 hyphBreakBefore[i - start])
+      {
         aData->OptionallyBreak(aRenderingContext, provider.GetHyphenWidth());
       } {
         aData->OptionallyBreak(aRenderingContext);
