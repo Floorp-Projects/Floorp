@@ -98,9 +98,15 @@ GARBAGE_DIRS += classes res
 ifeq ($(MOZ_APP_NAME),fennec)
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_48x48.png
 ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/fennec_72x72.png
+ifeq (,$(MOZ_OFFICIAL_BRANDING))
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.fennec.sharedID"
+else
+DEFINES += -DMOZ_ANDROID_SHARED_ID="org.mozilla.firefox.sharedID"
+endif
 else
 ICON_PATH = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon48.png
 ICON_PATH_HDPI = $(topsrcdir)/$(MOZ_BRANDING_DIRECTORY)/content/icon64.png
+DEFINES += -DMOZ_ANDROID_SHARED_ID="$(ANDROID_PACKAGE_NAME).sharedID"
 endif
 
 RES_LAYOUT = \
