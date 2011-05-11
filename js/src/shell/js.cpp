@@ -1120,11 +1120,11 @@ FileAsString(JSContext *cx, const char *pathname)
         return NULL;
     }
 
-    if (fseek(file, 0, SEEK_END) == EOF) {
+    if (fseek(file, 0, SEEK_END) != 0) {
         JS_ReportError(cx, "can't seek end of %s", pathname);
     } else {
         len = ftell(file);
-        if (fseek(file, 0, SEEK_SET) == EOF) {
+        if (fseek(file, 0, SEEK_SET) != 0) {
             JS_ReportError(cx, "can't seek start of %s", pathname);
         } else {
             buf = (char*) JS_malloc(cx, len + 1);
@@ -1157,6 +1157,39 @@ FileAsString(JSContext *cx, const char *pathname)
     fclose(file);
 
     return str;
+}
+
+static JSObject *
+FileAsTypedArray(JSContext *cx, const char *pathname)
+{
+    FILE *file = fopen(pathname, "rb");
+    if (!file) {
+        JS_ReportError(cx, "can't open %s: %s", pathname, strerror(errno));
+        return NULL;
+    }
+
+    JSObject *obj = NULL;
+    if (fseek(file, 0, SEEK_END) != 0) {
+        JS_ReportError(cx, "can't seek end of %s", pathname);
+    } else {
+        size_t len = ftell(file);
+        if (fseek(file, 0, SEEK_SET) != 0) {
+            JS_ReportError(cx, "can't seek start of %s", pathname);
+        } else {
+            obj = js_CreateTypedArray(cx, TypedArray::TYPE_UINT8, len);
+            if (!obj)
+                return NULL;
+            char *buf = (char *) TypedArray::fromJSObject(obj)->data;
+            size_t cc = fread(buf, 1, len, file);
+            if (cc != len) {
+                JS_ReportError(cx, "can't read %s: %s", pathname,
+                               (ptrdiff_t(cc) < 0) ? strerror(errno) : "short read");
+                obj = NULL;
+            }
+        }
+    }
+    fclose(file);
+    return obj;
 }
 
 /*
@@ -4462,6 +4495,21 @@ Parse(JSContext *cx, uintN argc, jsval *vp)
     return JS_TRUE;
 }
 
+struct FreeOnReturn {
+    JSContext *cx;
+    const char *ptr;
+    JS_DECL_USE_GUARD_OBJECT_NOTIFIER
+
+    FreeOnReturn(JSContext *cx, const char *ptr JS_GUARD_OBJECT_NOTIFIER_PARAM)
+      : cx(cx), ptr(ptr) {
+        JS_GUARD_OBJECT_NOTIFIER_INIT;
+    }
+
+    ~FreeOnReturn() {
+        JS_free(cx, (void*)ptr);
+    }
+};
+
 static JSBool
 Snarf(JSContext *cx, uintN argc, jsval *vp)
 {
@@ -4486,17 +4534,29 @@ Snarf(JSContext *cx, uintN argc, jsval *vp)
     pathname = MakeAbsolutePathname(cx, script->filename, filename.ptr());
     if (!pathname)
         return JS_FALSE;
+    FreeOnReturn pnGuard(cx, pathname);
 #else
     pathname = filename.ptr();
 #endif
 
-    str = FileAsString(cx, pathname);
-#ifdef XP_UNIX
-    JS_free(cx, (void*)pathname);
-#endif
-    if (!str)
-        return JS_FALSE;
+    if (argc > 1) {
+        JSString *opt = JS_ValueToString(cx, JS_ARGV(cx, vp)[1]);
+        if (!opt)
+            return JS_FALSE;
+        JSBool match;
+        if (!JS_StringEqualsAscii(cx, opt, "binary", &match))
+            return JS_FALSE;
+        if (match) {
+            JSObject *obj;
+            if (!(obj = FileAsTypedArray(cx, pathname)))
+                return JS_FALSE;
+            *vp = OBJECT_TO_JSVAL(obj);
+            return JS_TRUE;
+        }
+    }
 
+    if (!(str = FileAsString(cx, pathname)))
+        return JS_FALSE;
     *vp = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }

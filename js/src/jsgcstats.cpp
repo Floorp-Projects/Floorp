@@ -81,28 +81,21 @@ ConservativeGCStats::dump(FILE *fp)
 
 #ifdef JS_GCMETER
 void
-UpdateCompartmentStats(JSCompartment *comp, unsigned thingKind, uint32 nlivearenas,
-                       uint32 nkilledArenas, uint32 nthings)
+UpdateCompartmentGCStats(JSCompartment *comp, unsigned thingKind)
 {
-    size_t narenas = 0;
-    JSGCArenaStats *compSt = &comp->compartmentStats[thingKind];
+    JSGCArenaStats *compSt = &comp->arenas[thingKind].stats;
     JSGCArenaStats *globSt = &comp->rt->globalArenaStats[thingKind];
-    narenas = nlivearenas + nkilledArenas;
-    JS_ASSERT(narenas >= compSt->livearenas);
+    JS_ASSERT(compSt->narenas >= compSt->livearenas);
+    compSt->newarenas     = compSt->narenas - compSt->livearenas;
+    if (compSt->maxarenas < compSt->narenas)
+        compSt->maxarenas = compSt->narenas;
+    compSt->totalarenas  += compSt->narenas;
 
-    compSt->newarenas     = narenas - compSt->livearenas;
-    compSt->narenas       = narenas;
-    compSt->livearenas    = nlivearenas;
-    if (compSt->maxarenas < narenas)
-        compSt->maxarenas = narenas;
-    compSt->totalarenas  += narenas;
-
-    compSt->nthings       = nthings;
-    if (compSt->maxthings < nthings)
-        compSt->maxthings = nthings;
-    compSt->totalthings  += nthings;
+    if (compSt->maxthings < compSt->nthings)
+        compSt->maxthings = compSt->nthings;
+    compSt->totalthings  += compSt->nthings;
     globSt->newarenas    += compSt->newarenas;
-    globSt->narenas      += narenas;
+    globSt->narenas      += compSt->narenas;
     globSt->livearenas   += compSt->livearenas;
     globSt->totalarenas  += compSt->totalarenas;
     globSt->nthings      += compSt->nthings;
@@ -111,6 +104,23 @@ UpdateCompartmentStats(JSCompartment *comp, unsigned thingKind, uint32 nlivearen
         globSt->maxarenas = compSt->maxarenas;
     if (globSt->maxthings < compSt->maxthings)
         globSt->maxthings = compSt->maxthings;
+}
+
+void
+UpdateAllCompartmentGCStats(JSCompartment *comp)
+{
+    /*
+     * The stats for the list arenas scheduled for the background finalization
+     * are updated after that finishes.
+     */
+    JS_ASSERT(comp->rt->gcRunning);
+    for (unsigned i = 0; i != JS_ARRAY_LENGTH(comp->arenas); ++i) {
+#ifdef JS_THREADSAFE
+        if (comp->arenas[i].willBeFinalizedLater())
+            continue;
+#endif
+        UpdateCompartmentGCStats(comp, i);
+    }
 }
 
 static const char *const GC_ARENA_NAMES[] = {
@@ -262,7 +272,8 @@ DumpCompartmentStats(JSCompartment *comp, FILE *fp)
     else
         fprintf(fp, "\n**** Compartment Allocation Statistics: %p ****\n\n", (void *) comp);
 
-    DumpArenaStats(&comp->compartmentStats[0], fp);
+    for (unsigned i = 0; i != FINALIZE_LIMIT; ++i)
+        DumpArenaStats(&comp->arenas[i].stats, fp);
 }
 
 #endif
@@ -288,7 +299,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 #ifdef DEBUG
         fprintf(fp, "      max trace later count: %lu\n", ULSTAT(maxunmarked));
 #endif
-        fprintf(fp, "potentially useful GC calls: %lu\n", ULSTAT(poke));
         fprintf(fp, "  thing arenas freed so far: %lu\n\n", ULSTAT(afree));
     }
 
@@ -405,21 +415,23 @@ GCTimer::finish(bool lastGC) {
             if (!gcFile) {
                 gcFile = fopen("gcTimer.dat", "a");
 
-                fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj,");
-                fprintf(gcFile, " FinStr, SwShapes, Destroy, +Chunks, -Chunks\n");
+                fprintf(gcFile, "     AppTime,  Total,   Wait,   Mark,  Sweep, FinObj,");
+                fprintf(gcFile, " FinStr, SwShapes, Destroy,    End, +Chu, -Chu\n");
             }
             JS_ASSERT(gcFile);
-            /*               App   , Tot  , Mar  , Swe  , FiO  , FiS  , SwS  , Des */
-            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, ",
+            /*               App   , Tot  , Wai  , Mar  , Swe  , FiO  , FiS  , SwS  , Des   , End */
+            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, %6.1f, ",
                     TIMEDIFF(getFirstEnter(), enter),
                     TIMEDIFF(enter, end),
+                    TIMEDIFF(enter, startMark),
                     TIMEDIFF(startMark, startSweep),
                     TIMEDIFF(startSweep, sweepDestroyEnd),
                     TIMEDIFF(startSweep, sweepObjectEnd),
                     TIMEDIFF(sweepObjectEnd, sweepStringEnd),
                     TIMEDIFF(sweepStringEnd, sweepShapeEnd),
-                    TIMEDIFF(sweepShapeEnd, sweepDestroyEnd));
-            fprintf(gcFile, "%7d, %7d\n", newChunkCount, destroyChunkCount);
+                    TIMEDIFF(sweepShapeEnd, sweepDestroyEnd),
+                    TIMEDIFF(sweepDestroyEnd, end));
+            fprintf(gcFile, "%4d, %4d\n", newChunkCount, destroyChunkCount);
             fflush(gcFile);
 
             if (lastGC) {

@@ -36,13 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include <CoreFoundation/CoreFoundation.h>
 #include "nsIServiceManager.h"
 #include "nsDateTimeFormatMac.h"
 #include <CoreFoundation/CFDateFormatter.h>
 #include "nsIComponentManager.h"
 #include "nsLocaleCID.h"
 #include "nsILocaleService.h"
-#include "nsIMacLocale.h"
 #include "nsCRT.h"
 #include "plstr.h"
 #include "prmem.h"
