@@ -1401,19 +1401,6 @@ NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSTjitDataAllocatorsReserve,
                              NULL)
 #endif  // JS_TRACER
 
-static PRInt64
-GetJSStringData(void *data)
-{
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    return rt->stringMemoryUsed;
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSStringData,
-                             "heap-used/js/string-data",
-                             "Memory allocated for JavaScript string data.",
-                             GetJSStringData,
-                             NULL)
-
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
    mJSRuntime(nsnull),
@@ -1480,7 +1467,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
         mJSRuntime->setCustomGCChunkAllocator(&gXPCJSChunkAllocator);
 
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
-        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStringData));
 #ifdef JS_METHODJIT
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitCode));
         NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitData));
