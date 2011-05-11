@@ -60,10 +60,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#ifdef POLL_WITH_XCONNECTIONNUMBER
-#include <poll.h>
-#endif
-
 // Callback when someone asks us for the data
 void
 clipboard_get_cb(GtkClipboard *aGtkClipboard,
@@ -915,18 +911,12 @@ wait_for_retrieval(GtkClipboard *clipboard, retrieval_context *r_context)
 
     int select_result;
 
-#ifdef POLL_WITH_XCONNECTIONNUMBER
-    struct pollfd fds[1];
-    fds[0].fd = XConnectionNumber(xDisplay);
-    fds[0].events = POLLIN;
-#else
     int cnumber = ConnectionNumber(xDisplay);
     fd_set select_set;
     FD_ZERO(&select_set);
     FD_SET(cnumber, &select_set);
     ++cnumber;
     struct timeval tv;
-#endif
 
     do {
         XEvent xevent;
@@ -943,13 +933,10 @@ wait_for_retrieval(GtkClipboard *clipboard, retrieval_context *r_context)
                 return PR_TRUE;
         }
 
-#ifdef POLL_WITH_XCONNECTIONNUMBER
-        select_result = poll(fds, 1, kClipboardTimeout / 1000);
-#else
         tv.tv_sec = 0;
         tv.tv_usec = kClipboardTimeout;
         select_result = select(cnumber, &select_set, NULL, NULL, &tv);
-#endif
+
     } while (select_result == 1);
 
 #ifdef DEBUG_CLIPBOARD
