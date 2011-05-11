@@ -206,10 +206,10 @@ Bindings::getLocalNameArray(JSContext *cx, JSArenaPool *pool)
         }
 
         JSAtom *atom;
-        if (JSID_IS_ATOM(shape.id)) {
-            atom = JSID_TO_ATOM(shape.id);
+        if (JSID_IS_ATOM(shape.propid)) {
+            atom = JSID_TO_ATOM(shape.propid);
         } else {
-            JS_ASSERT(JSID_IS_INT(shape.id));
+            JS_ASSERT(JSID_IS_INT(shape.propid));
             JS_ASSERT(shape.getter() == GetCallArg);
             atom = NULL;
         }
@@ -1766,14 +1766,11 @@ js_GetScriptLineExtent(JSScript *script)
 const char *
 js::CurrentScriptFileAndLineSlow(JSContext *cx, uintN *linenop)
 {
-    if (!cx->running()) {
+    StackFrame *fp = js_GetScriptedCaller(cx, NULL);
+    if (!fp) {
         *linenop = 0;
         return NULL;
     }
-
-    StackFrame *fp = cx->fp();
-    while (fp->isDummyFrame())
-        fp = fp->prev();
 
     *linenop = js_FramePCToLineNumber(cx, fp);
     return fp->script()->filename;

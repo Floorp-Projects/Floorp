@@ -57,9 +57,51 @@
 
 #include "qcms.h"
 
+#include <dlfcn.h>
+
+// cribbed from CTFontManager.h
+enum {
+   kAutoActivationDisabled = 1
+};
+typedef uint32_t AutoActivationSetting;
+
+// bug 567552 - disable auto-activation of fonts
+
+static void 
+DisableFontActivation()
+{
+    // get the main bundle identifier
+    CFBundleRef mainBundle = ::CFBundleGetMainBundle();
+    CFStringRef mainBundleID = NULL;
+
+    if (mainBundle) {
+        mainBundleID = ::CFBundleGetIdentifier(mainBundle);
+    }
+
+    // if possible, fetch CTFontManagerSetAutoActivationSetting
+    void (*CTFontManagerSetAutoActivationSettingPtr)
+            (CFStringRef, AutoActivationSetting);
+    CTFontManagerSetAutoActivationSettingPtr =
+        (void (*)(CFStringRef, AutoActivationSetting))
+        dlsym(RTLD_DEFAULT, "CTFontManagerSetAutoActivationSetting");
+
+    // bug 567552 - disable auto-activation of fonts
+    if (CTFontManagerSetAutoActivationSettingPtr) {
+        CTFontManagerSetAutoActivationSettingPtr(mainBundleID,
+                                                 kAutoActivationDisabled);
+    }
+
+    ::CFRelease(mainBundleID);
+    ::CFRelease(mainBundle);
+}
+
 gfxPlatformMac::gfxPlatformMac()
 {
     mOSXVersion = 0;
+    OSXVersion();
+    if (mOSXVersion >= MAC_OS_X_VERSION_10_6_HEX) {
+        DisableFontActivation();
+    }
     mFontAntiAliasingThreshold = ReadAntiAliasingThreshold();
 }
 

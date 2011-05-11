@@ -50,11 +50,6 @@
  *  static hash table callback functions
  *
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark HASHTABLE CALLBACKS
-#endif
-
 struct HashTableEntry : PLDHashEntryHdr {
     nsDiskCacheBinding *  mBinding;
 };
@@ -96,11 +91,6 @@ ClearEntry(PLDHashTable *      /* table */,
 /******************************************************************************
  *  Utility Functions
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark DISK CACHE BINDERY
-#endif
-
 nsDiskCacheBinding *
 GetCacheEntryBinding(nsCacheEntry * entry)
 {
