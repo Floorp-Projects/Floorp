@@ -534,11 +534,7 @@ FrameState::computeAllocation(jsbytecode *target)
 
     /*
      * The allocation to use at the target consists of all parent, temporary
-     * and non-stack entries currently in registers which are live at the
-     * target. For entries currently in floating point registers, we need to
-     * check they are known to be doubles at the target. We don't need to do
-     * this for entries in normal registers, as fixDoubleTypes must have been
-     * called to convert them to floats.
+     * and non-stack entries currently in registers which are live at target.
      */
     Registers regs = Registers::AvailAnyRegs;
     while (!regs.empty()) {
@@ -549,7 +545,15 @@ FrameState::computeAllocation(jsbytecode *target)
         if (fe < a->callee_ ||
             (fe > a->callee_ && fe < a->spBase && variableLive(fe, target)) ||
             (isTemporary(fe) && (a->parent || uint32(target - a->script->code) <= loop->backedgeOffset()))) {
+            /*
+             * For entries currently in floating point registers, check they
+             * are known to be doubles at the target. We don't need to do this
+             * for entries in normal registers, as fixDoubleTypes must have been
+             * called to convert them to floats.
+             */
             if (!reg.isReg() && !isTemporary(fe) && fe >= a->callee_ && fe < a->spBase) {
+                if (!a->analysis->trackSlot(entrySlot(fe)))
+                    continue;
                 bool nonDoubleTarget = false;
                 const SlotValue *newv = a->analysis->newValues(target);
                 while (newv && newv->slot) {
