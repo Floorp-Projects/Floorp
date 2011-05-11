@@ -42,6 +42,11 @@ VPATH          = @srcdir@
 relativesrcdir = content/html/content/test
 
 include $(DEPTH)/config/autoconf.mk
+
+ifdef ENABLE_TESTS
+DIRS		+= bug649134
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 _TEST_FILES = \
@@ -263,6 +268,7 @@ _TEST_FILES = \
 		test_bug643051.html \
 		test_bug583514.html \
 		test_bug514437.html \
+		test_bug649134.html \
 		$(NULL)
 
 libs:: $(_TEST_FILES)
