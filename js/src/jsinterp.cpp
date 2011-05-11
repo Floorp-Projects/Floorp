@@ -4102,7 +4102,8 @@ BEGIN_CASE(JSOP_LENGTH)
             if (obj->isArray()) {
                 jsuint length = obj->getArrayLength();
                 regs.sp[-1].setNumber(length);
-                DO_NEXT_OP(JSOP_LENGTH_LENGTH);
+                len = JSOP_LENGTH_LENGTH;
+                DO_NEXT_OP(len);
             }
 
             if (obj->isArguments()) {
@@ -4111,7 +4112,8 @@ BEGIN_CASE(JSOP_LENGTH)
                     uint32 length = argsobj->initialLength();
                     JS_ASSERT(length < INT32_MAX);
                     regs.sp[-1].setInt32(int32_t(length));
-                    DO_NEXT_OP(JSOP_LENGTH_LENGTH);
+                    len = JSOP_LENGTH_LENGTH;
+                    DO_NEXT_OP(len);
                 }
             }
         }
