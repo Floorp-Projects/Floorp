@@ -164,18 +164,21 @@ function update()
  */
 function genProcessText(aProcess, aTmrs)
 {
+  // First, duplicate the "mapped/heap/used" reporter as "heap-used";  this
+  // value shows up in both the "mapped" and the "heap-used" trees.
+  var mappedHeapUsedTmr = aTmrs["mapped/heap/used"];
+  aTmrs["heap-used"] = {
+    _tpath:       "heap-used",
+    _description: mappedHeapUsedTmr._description,
+    _memoryUsed:  mappedHeapUsedTmr._memoryUsed
+  };
+
   /**
    * From a list of memory reporters, builds a tree that mirrors the tree
    * structure that will be shown as output.
    *
    * @param aTreeName
    *        The name of the tree;  either "mapped" or "heap-used"
-   * @param aTreeRootTpath
-   *        The tpath of the top node in the tree
-   * @param aTreeRootDesc
-   *        The description of the top node in the tree
-   * @param aOtherDescTail
-   *        Extra description for the end of the "aTreeName/other" entry
    * @param aOmitThresholdPerc
    *        The threshold percentage;  entries that account for less than
    *        this fraction are aggregated
@@ -185,10 +188,10 @@ function genProcessText(aProcess, aTmrs)
    *           _description: string;
    *           _memoryUsed: number;
    *           _kids: [Node];
+   *           _hasReporter: boolean;   (might not be defined)
    *         }
    */
-  function buildTree(aTreeName, aTreeRootTpath, aTreeRootDesc, aOtherDescTail,
-                     aOmitThresholdPerc)
+  function buildTree(aTreeName, aOmitThresholdPerc)
   {
     function findKid(aName, aKids)
     {
@@ -201,12 +204,13 @@ function genProcessText(aProcess, aTmrs)
     }
 
     // We want to process all reporters that begin with 'aTreeName'.
-    // First we build the tree but only filling in '_name' and '_kids'.
-    var t = { _name:aTreeName, _kids:[] };
-    for (var _tpath in aTmrs) {
-      var tmr = aTmrs[_tpath];
-      if (tmr._tpath.slice(0, aTreeName.length + 1) === aTreeName + "/") {
-        var names = tmr._tpath.slice(aTreeName.length + 1).split('/');
+    // First we build the tree but only filling in '_name', '_kids' and
+    // maybe '._hasReporter'.  This is done top-down from the reporters.
+    var t = { _name: "falseRoot", _kids: [] };
+    for (var tpath in aTmrs) {
+      var tmr = aTmrs[tpath];
+      if (tmr._tpath.slice(0, aTreeName.length) === aTreeName) {
+        var names = tmr._tpath.split('/');
         var u = t;
         for (var i = 0; i < names.length; i++) {
           var name = names[i];
@@ -214,60 +218,66 @@ function genProcessText(aProcess, aTmrs)
           if (uMatch) {
             u = uMatch;
           } else {
-            var v = { _name:name, _kids:[] };
+            var v = { _name: name, _kids: [] };
             u._kids.push(v);
             u = v;
           }
         }
+        u._hasReporter = true;
       }
     }
+    // Using falseRoot makes the above code simpler.  Now discard it, leaving
+    // aTreeName at the root.
+    t = t._kids[0];
 
-    // Next, fill in '_description' and '_memoryUsed' for each node.  For
-    // interior nodes, '_memoryUsed' is computed by summing child nodes.
+    // Next, fill in '_description' and '_memoryUsed' for each node.  This is
+    // done bottom-up because for most non-leaf nodes '_memoryUsed' and
+    // '_description' are determined from the child nodes.
     function fillInTree(aT, aPretpath)
     {
       var tpath = aPretpath ? aPretpath + '/' + aT._name : aT._name;
       if (aT._kids.length === 0) {
+        // Leaf node.  Must have a reporter.
         aT._memoryUsed = getBytes(aTmrs, tpath);
         aT._description = getDescription(aTmrs, tpath);
       } else {
-        var bytes = 0;
+        // Non-leaf node.  Get the size of the children.
+        var childrenBytes = 0;
         for (var i = 0; i < aT._kids.length; i++) {
           // Allow for -1 (ie. "unknown"), treat it like 0.
           var b = fillInTree(aT._kids[i], tpath);
-          bytes += (b === -1 ? 0 : b);
+          childrenBytes += (b === -1 ? 0 : b);
         }
-        aT._memoryUsed = bytes;
-        aT._description = "The sum of all entries below " + tpath + ".";
+        if (aT._hasReporter === true) {
+          // Non-leaf node with its own reporter.  Use the reporter and add an
+          // "other" child node (unless the byte count is -1, ie. unknown).
+          aT._memoryUsed = getBytes(aTmrs, tpath);
+          aT._description = getDescription(aTmrs, tpath);
+          if (aT._memoryUsed !== -1) {
+            var other = {
+              _name: "other",
+              _description: "All unclassified " + aT._name + " memory.",
+              _memoryUsed: aT._memoryUsed - childrenBytes,
+              _kids: []
+            };
+            aT._kids.push(other);
+          }
+        } else {
+          // Non-leaf node without its own reporter.  Derive its size and
+          // description entirely from its children.
+          aT._memoryUsed = childrenBytes;
+          aT._description = "The sum of all entries below " + aT._name + ".";
+        }
       }
       return aT._memoryUsed;
     }
     fillInTree(t, "");
 
-    // Add the "aTreeName/other" node, which is derived from existing
-    // nodes, then update the root node accordingly.  (But don't do this
-    // if the root node byte count is -1, ie. unknown).
-    var nonOtherBytes = t._memoryUsed;
-    var treeBytes = getBytes(aTmrs, aTreeRootTpath);
-    if (treeBytes !== -1) {
-      var otherBytes = treeBytes - nonOtherBytes;
-      var other = {
-        _name:"other",
-        _description:"All unclassified " + aTreeName + " memory." +
-                     aOtherDescTail,
-        _memoryUsed:otherBytes,
-        _kids:[]
-      };
-      t._kids.push(other);
-    }
-    t._memoryUsed = treeBytes;
-    t._description = aTreeRootDesc;
-
     function shouldOmit(aBytes)
     {
       return !gVerbose &&
-             treeBytes !== -1 &&
-             (100 * aBytes / treeBytes) < aOmitThresholdPerc;
+             t._memoryUsed !== -1 &&
+             (100 * aBytes / t._memoryUsed) < aOmitThresholdPerc;
     }
 
     /**
@@ -300,7 +310,7 @@ function genProcessText(aProcess, aTmrs)
             _name: "(" + n + " omitted)",
             _description: "Omitted sub-trees: " + aggNames.join(", ") + ".",
             _memoryUsed: aggBytes,
-            _kids:[]
+            _kids: []
           };
           aT._kids[i0] = tmrSub;
           break;
@@ -313,19 +323,11 @@ function genProcessText(aProcess, aTmrs)
     return t;
   }
 
-  var mappedOtherDescTail =
-      " This includes code and data segments, and thread stacks."
-  var mappedRootDesc = getDescription(aTmrs, "mapped");
-  // The threshold used here is much lower than the one for the heap-used
-  // tree, because the "mapped" total size is so much bigger relative to
-  // the interesting entries in the "mapped" tree.
-  var mappedTree = buildTree("mapped", "mapped", mappedRootDesc,
-                             mappedOtherDescTail, 0.01);
-
-  var heapUsedOtherDescTail = "";
-  var heapUsedRootDesc = "See mapped/heap/used above.";
-  var heapUsedTree = buildTree("heap-used", "mapped/heap/used",
-                               heapUsedRootDesc, heapUsedOtherDescTail, 0.1);
+  // The threshold used for the "mapped" tree is lower than the one for the
+  // "heap-used" tree, because the "mapped" total size is dominated (especially
+  // on Mac) by memory usage that isn't covered by more specific reporters.
+  var mappedTree   = buildTree("mapped",    0.01);
+  var heapUsedTree = buildTree("heap-used", 0.1);
 
   // Nb: the newlines give nice spacing if we cut+paste into a text buffer.
   var text = "";
@@ -535,7 +537,9 @@ function genTreeText(aT, aTreeName)
     // Generate the percentage.
     var perc = "";
     if (treeBytes !== -1) {
-      if (aT._memoryUsed === treeBytes) {
+      if (aT._memoryUsed === -1) {
+        perc = "??.??";
+      } else if (aT._memoryUsed === treeBytes) {
         perc = "100.0";
       } else {
         perc = (100 * aT._memoryUsed / treeBytes).toFixed(2);
@@ -549,7 +553,7 @@ function genTreeText(aT, aTreeName)
 
     for (var i = 0; i < aT._kids.length; i++) {
       // 3 is the standard depth, the callee adjusts it if necessary.
-      aIndentGuide.push({ _isLastKid:(i === aT._kids.length - 1), _depth:3 });
+      aIndentGuide.push({ _isLastKid: (i === aT._kids.length - 1), _depth: 3 });
       text += genTreeText2(aT._kids[i], aIndentGuide, tBytesLength);
       aIndentGuide.pop();
     }
