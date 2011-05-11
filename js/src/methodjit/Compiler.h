@@ -530,7 +530,6 @@ class Compiler : public BaseCompiler
 
     /* Analysis helpers. */
     CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);
-    inline bool fixDoubleSlot(uint32 slot);
     void fixDoubleTypes(jsbytecode *target);
     void restoreAnalysisTypes();
     void watchGlobalReallocation();
