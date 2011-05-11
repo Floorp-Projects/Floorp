@@ -115,7 +115,7 @@ struct VMFrame
     void         *entryncode;
     JSRejoinState stubRejoin;  /* How to rejoin if inside a call from an IC stub. */
 
-#if JS_BITS_PER_WORD == 32
+#if defined(JS_CPU_X86)
     void         *unused0, *unused1;  /* For 16 byte alignment */
 #endif
 
