@@ -1538,6 +1538,12 @@ JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
     return Valueify(fp)->isDebuggerFrame();
 }
 
+JS_PUBLIC_API(JSBool)
+JS_IsGlobalFrame(JSContext *cx, JSStackFrame *fp)
+{
+    return Valueify(fp)->isGlobalFrame();
+}
+
 JS_PUBLIC_API(jsval)
 JS_GetFrameReturnValue(JSContext *cx, JSStackFrame *fp)
 {
