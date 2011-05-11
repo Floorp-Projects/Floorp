@@ -113,22 +113,28 @@ Class js_JSONClass = {
     ConvertStub
 };
 
+/* ES5 15.12.2. */
 JSBool
 js_json_parse(JSContext *cx, uintN argc, Value *vp)
 {
-    JSString *s = NULL;
-    Value *argv = vp + 2;
-    Value reviver = UndefinedValue();
+    /* Step 1. */
+    JSLinearString *linear;
+    if (argc >= 1) {
+        JSString *str = js_ValueToString(cx, vp[2]);
+        if (!str)
+            return false;
+        linear = str->ensureLinear(cx);
+        if (!linear)
+            return false;
+    } else {
+        linear = cx->runtime->atomState.typeAtoms[JSTYPE_VOID];
+    }
+    JS::Anchor<JSString *> anchor(linear);
 
-    if (!JS_ConvertArguments(cx, argc, Jsvalify(argv), "S / v", &s, &reviver))
-        return JS_FALSE;
+    Value reviver = (argc >= 2) ? vp[3] : UndefinedValue();
 
-    JSLinearString *linearStr = s->ensureLinear(cx);
-    if (!linearStr)
-        return JS_FALSE;
-    JS::Anchor<JSString *> anchor(linearStr);
-
-    return ParseJSONWithReviver(cx, linearStr->chars(), linearStr->length(), reviver, vp);
+    /* Steps 2-5. */
+    return ParseJSONWithReviver(cx, linear->chars(), linear->length(), reviver, vp);
 }
 
 /* ES5 15.12.3. */
@@ -439,16 +445,17 @@ JO(JSContext *cx, JSObject *obj, StringifyContext *scx)
         return JS_FALSE;
 
     /* Steps 5-7. */
-    AutoIdVector ids(cx);
+    Maybe<AutoIdVector> ids;
     const AutoIdVector *props;
     if (scx->replacer && !scx->replacer->isCallable()) {
         JS_ASSERT(JS_IsArrayObject(cx, scx->replacer));
         props = &scx->propertyList;
     } else {
         JS_ASSERT_IF(scx->replacer, scx->propertyList.length() == 0);
-        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &ids))
+        ids.construct(cx);
+        if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, ids.addr()))
             return false;
-        props = &ids;
+        props = ids.addr();
     }
 
     /* My kingdom for not-quite-initialized-from-the-start references. */
@@ -635,86 +642,92 @@ Str(JSContext *cx, const Value &v, StringifyContext *scx)
 JSBool
 js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBuffer &sb)
 {
-    /*
-     * Step 4.
-     *
-     * The spec algorithm is unhelpfully vague in 15.12.3 step 4b about the
-     * exact steps taken when the replacer is an array, regarding the exact
-     * sequence of [[Get]] calls for the array's elements, when its overall
-     * length is calculated, whether own or own plus inherited properties are
-     * considered, and so on.  A rewrite of the step was proposed in
-     * <https://mail.mozilla.org/pipermail/es5-discuss/2011-April/003976.html>,
-     * whose steps are copied below, and which are implemented here.
-     *
-     * i.   Let PropertyList be an empty internal List.
-     * ii.  Let len be the result of calling the [[Get]] internal method of
-     *      replacer with the argument "length".
-     * iii. Let i be 0.
-     * iv.  While i < len:
-     *      1. Let item be undefined.
-     *      2. Let v be the result of calling the [[Get]] internal method of
-     *         replacer with the argument ToString(i).
-     *      3. If Type(v) is String then let item be v.
-     *      4. Else if Type(v) is Number then let item be ToString(v).
-     *      5. Else if Type(v) is Object then
-     *         a. If the [[Class]] internal property of v is "String" or
-     *            "Number" then let item be ToString(v).
-     *      6. If item is not undefined and item is not currently an element of
-     *         PropertyList then,
-     *         a. Append item to the end of PropertyList.
-     *      7. Let i be i + 1.
-     */
+    /* Step 4. */
     AutoIdVector propertyList(cx);
-    if (replacer && JS_IsArrayObject(cx, replacer)) {
-        /* Step 4b(ii). */
-        jsuint len;
-        JS_ALWAYS_TRUE(js_GetLengthProperty(cx, replacer, &len));
-        if (replacer->isDenseArray())
-            len = JS_MIN(len, replacer->getDenseArrayCapacity());
+    if (replacer) {
+        if (replacer->isCallable()) {
+            /* Step 4a(i): use replacer to transform values.  */
+        } else if (JS_IsArrayObject(cx, replacer)) {
+            /*
+             * Step 4b: The spec algorithm is unhelpfully vague about the exact
+             * steps taken when the replacer is an array, regarding the exact
+             * sequence of [[Get]] calls for the array's elements, when its
+             * overall length is calculated, whether own or own plus inherited
+             * properties are considered, and so on.  A rewrite was proposed in
+             * <https://mail.mozilla.org/pipermail/es5-discuss/2011-April/003976.html>,
+             * whose steps are copied below, and which are implemented here.
+             *
+             * i.   Let PropertyList be an empty internal List.
+             * ii.  Let len be the result of calling the [[Get]] internal
+             *      method of replacer with the argument "length".
+             * iii. Let i be 0.
+             * iv.  While i < len:
+             *      1. Let item be undefined.
+             *      2. Let v be the result of calling the [[Get]] internal
+             *         method of replacer with the argument ToString(i).
+             *      3. If Type(v) is String then let item be v.
+             *      4. Else if Type(v) is Number then let item be ToString(v).
+             *      5. Else if Type(v) is Object then
+             *         a. If the [[Class]] internal property of v is "String"
+             *            or "Number" then let item be ToString(v).
+             *      6. If item is not undefined and item is not currently an
+             *         element of PropertyList then,
+             *         a. Append item to the end of PropertyList.
+             *      7. Let i be i + 1.
+             */
 
-        HashSet<jsid> idSet(cx);
-        if (!idSet.init(len))
-            return false;
+            /* Step 4b(ii). */
+            jsuint len;
+            JS_ALWAYS_TRUE(js_GetLengthProperty(cx, replacer, &len));
+            if (replacer->isDenseArray())
+                len = JS_MIN(len, replacer->getDenseArrayCapacity());
 
-        /* Step 4b(iii). */
-        jsuint i = 0;
-
-        /* Step 4b(iv). */
-        for (; i < len; i++) {
-            /* Step 4b(iv)(2). */
-            Value v;
-            if (!replacer->getProperty(cx, INT_TO_JSID(i), &v))
+            HashSet<jsid> idSet(cx);
+            if (!idSet.init(len))
                 return false;
 
-            jsid id;
-            if (v.isNumber()) {
-                /* Step 4b(iv)(4). */
-                int32_t n;
-                if (v.isNumber() && ValueFitsInInt32(v, &n) && INT_FITS_IN_JSID(n)) {
-                    id = INT_TO_JSID(n);
-                } else {
+            /* Step 4b(iii). */
+            jsuint i = 0;
+
+            /* Step 4b(iv). */
+            for (; i < len; i++) {
+                /* Step 4b(iv)(2). */
+                Value v;
+                if (!replacer->getProperty(cx, INT_TO_JSID(i), &v))
+                    return false;
+
+                jsid id;
+                if (v.isNumber()) {
+                    /* Step 4b(iv)(4). */
+                    int32_t n;
+                    if (v.isNumber() && ValueFitsInInt32(v, &n) && INT_FITS_IN_JSID(n)) {
+                        id = INT_TO_JSID(n);
+                    } else {
+                        if (!js_ValueToStringId(cx, v, &id))
+                            return false;
+                        id = js_CheckForStringIndex(id);
+                    }
+                } else if (v.isString() ||
+                           (v.isObject() && (v.toObject().isString() || v.toObject().isNumber())))
+                {
+                    /* Step 4b(iv)(3), 4b(iv)(5). */
                     if (!js_ValueToStringId(cx, v, &id))
                         return false;
                     id = js_CheckForStringIndex(id);
+                } else {
+                    continue;
                 }
-            } else if (v.isString() ||
-                       (v.isObject() && (v.toObject().isString() || v.toObject().isNumber())))
-            {
-                /* Step 4b(iv)(3), 4b(iv)(5). */
-                if (!js_ValueToStringId(cx, v, &id))
-                    return false;
-                id = js_CheckForStringIndex(id);
-            } else {
-                continue;
-            }
 
-            /* Step 4b(iv)(6). */
-            HashSet<jsid>::AddPtr p = idSet.lookupForAdd(id);
-            if (!p) {
-                /* Step 4b(iv)(6)(a). */
-                if (!idSet.add(p, id) || !propertyList.append(id))
-                    return false;
+                /* Step 4b(iv)(6). */
+                HashSet<jsid>::AddPtr p = idSet.lookupForAdd(id);
+                if (!p) {
+                    /* Step 4b(iv)(6)(a). */
+                    if (!idSet.add(p, id) || !propertyList.append(id))
+                        return false;
+                }
             }
+        } else {
+            replacer = NULL;
         }
     }
 
@@ -815,7 +828,7 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
 
             for (jsuint i = 0; i < length; i++) {
                 jsid index;
-                if (!js_IndexToId(cx, i, &index))
+                if (!IndexToId(cx, i, &index))
                     return false;
 
                 if (!Walk(cx, index, obj, reviver, propValue.addr()))
@@ -973,12 +986,15 @@ ParseJSONWithReviver(JSContext *cx, const jschar *chars, size_t length, const Va
     ok &= !!js_FinishJSONParse(cx, jp, reviver);
     return ok;
 #else
+    /* 15.12.2 steps 2-3. */
     JSONSourceParser parser(cx, chars, length,
                             decodingMode == STRICT
                             ? JSONSourceParser::StrictJSON
                             : JSONSourceParser::LegacyJSON);
     if (!parser.parse(vp))
         return false;
+
+    /* 15.12.2 steps 4-5. */
     if (js_IsCallable(reviver))
         return Revive(cx, reviver, vp);
     return true;
@@ -1030,7 +1046,7 @@ PushValue(JSContext *cx, JSONParser *jp, JSObject *parent, const Value &value)
         ok = js_GetLengthProperty(cx, parent, &len);
         if (ok) {
             jsid index;
-            if (!js_IndexToId(cx, len, &index))
+            if (!IndexToId(cx, len, &index))
                 return JS_FALSE;
             ok = parent->defineProperty(cx, index, value, NULL, NULL, JSPROP_ENUMERATE);
         }

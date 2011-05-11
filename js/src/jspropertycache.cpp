@@ -211,7 +211,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
             /* Best we can do is to cache shape (still a nice speedup). */
             vword.setShape(shape);
             if (adding &&
-                pobj->shape() == shape->shape) {
+                pobj->shape() == shape->shapeid) {
                 /*
                  * Our caller added a new property. We also know that a setter
                  * that js_NativeSet might have run has not mutated pobj, so
@@ -242,7 +242,7 @@ PropertyCache::fill(JSContext *cx, JSObject *obj, uintN scopeIndex, uintN protoI
                 JS_ASSERT(shape == pobj->lastProperty());
                 JS_ASSERT(!pobj->nativeEmpty());
 
-                kshape = shape->previous()->shape;
+                kshape = shape->previous()->shapeid;
 
                 /*
                  * When adding we predict no prototype object will later gain a

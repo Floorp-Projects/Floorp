@@ -13,6 +13,7 @@
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
 
 var path = "/tests/content/base/test/";
 
@@ -28,16 +29,19 @@ var failFiles = [['//example.com' + path + 'file_XHR_pass1.xml', 'GET'],
 
 for (i = 0; i < passFiles.length; ++i) {
   xhr = new XMLHttpRequest();
+  is(xhr.mozResponseType, "", "wrong initial responseType");
   xhr.open(passFiles[i][1], passFiles[i][0], false); 
   xhr.send(null);
   is(xhr.status, 200, "wrong status");
   if (xhr.responseXML) {
     is((new XMLSerializer()).serializeToString(xhr.responseXML.documentElement),
        "<res>hello</res>",
-       "wrong response");
+       "wrong responseXML");
+    is(xhr.mozResponse, "<res>hello</res>\n", "wrong response");
   }
   else {
-    is(xhr.responseText, "hello pass\n", "wrong response");
+    is(xhr.responseText, "hello pass\n", "wrong responseText");
+    is(xhr.mozResponse, "hello pass\n", "wrong response");
   }
 }
 
@@ -60,35 +64,127 @@ for (i = 0; i < failFiles.length; ++i) {
   }
 }
 
-// test mozResponseArrayBuffer
+// test response (responseType='document')
+function checkResponseTextAccessThrows(xhr) {
+  var didthrow = false;
+  try { xhr.responseText } catch (e) { didthrow = true; }
+  ok(didthrow, "should have thrown when accessing responseText");
+}
+function checkResponseXMLAccessThrows(xhr) {
+  var didthrow = false;
+  try { xhr.responseXML } catch (e) { didthrow = true; }
+  ok(didthrow, "should have thrown when accessing responseXML");
+}
+function checkSetResponseTypeThrows(xhr) {
+  var didthrow = false;
+  try { xhr.mozResponseType = 'document'; } catch (e) { didthrow = true; }
+  ok(didthrow, "should have thrown when accessing responseType");
+}
+
+xhr = new XMLHttpRequest();
+checkSetResponseTypeThrows(xhr);
+xhr.open("GET", 'file_XHR_pass1.xml', false); 
+xhr.mozResponseType = 'document';
+xhr.send(null);
+checkSetResponseTypeThrows(xhr);
+is(xhr.status, 200, "wrong status");
+checkResponseTextAccessThrows(xhr);
+is((new XMLSerializer()).serializeToString(xhr.mozResponse.documentElement),
+   "<res>hello</res>",
+   "wrong response");
+
+// test response (responseType='text')
+xhr = new XMLHttpRequest();
+xhr.open("GET", 'file_XHR_pass2.txt', false); 
+xhr.mozResponseType = 'text';
+xhr.send(null);
+is(xhr.status, 200, "wrong status");
+checkResponseXMLAccessThrows(xhr);
+is(xhr.mozResponse, "hello pass\n", "wrong response");
+
+// test response (responseType='arraybuffer')
+function arraybuffer_equals_to(ab, s) {
+  is(ab.byteLength, s.length, "wrong arraybuffer byteLength");
+
+  u8v = new Uint8Array(ab);
+  is(String.fromCharCode.apply(String, u8v), s, "wrong values");
+}
 
 // with a simple text file
 xhr = new XMLHttpRequest();
 xhr.open("GET", 'file_XHR_pass2.txt', false); 
+xhr.mozResponseType = 'arraybuffer';
 xhr.send(null);
 is(xhr.status, 200, "wrong status");
-ab = xhr.mozResponseArrayBuffer;
+checkResponseTextAccessThrows(xhr);
+checkResponseXMLAccessThrows(xhr);
+ab = xhr.mozResponse;
 ok(ab != null, "should have a non-null arraybuffer");
-is(ab.byteLength, "hello pass\n".length, "wrong arraybuffer byteLength");
-
-u8v = new Uint8Array(ab);
-ok(String.fromCharCode([u8v[0], u8v[1], u8v[2], u8v[3], u8v[4]]), "hello", "wrong values");
+arraybuffer_equals_to(ab, "hello pass\n");
 
 // with a binary file
 xhr = new XMLHttpRequest();
 xhr.open("GET", 'file_XHR_binary1.bin', false); 
+xhr.mozResponseType = 'arraybuffer';
 xhr.send(null)
 is(xhr.status, 200, "wrong status");
-ab = xhr.mozResponseArrayBuffer;
+checkResponseTextAccessThrows(xhr);
+checkResponseXMLAccessThrows(xhr);
+ab = xhr.mozResponse;
 ok(ab != null, "should have a non-null arraybuffer");
-is(ab.byteLength, 12, "wrong arraybuffer byteLength");
+arraybuffer_equals_to(ab, "\xaa\xee\0\x03\xff\xff\xff\xff\xbb\xbb\xbb\xbb");
 
-u8v = new Uint8Array(ab);
-i32v = new Int32Array(ab);
-u32v = new Uint32Array(ab, 8);
-ok(u8v[0] == 0xaa && u8v[1] == 0xee && u8v[2] == 0x00 && u8v[3] == 0x03, "wrong initial 4 bytes");
-is(i32v[1], -1, "wrong value, expected -1 (0xffffffff)");
-is(u32v[0], 0xbbbbbbbb, "wrong value, expected 0xbbbbbbbb");
+// test response (responseType='blob')
+var onloadCount = 0;
+function checkOnloadCount() {
+  if (++onloadCount >= 2) SimpleTest.finish();
+};
+
+// with a simple text file
+xhr = new XMLHttpRequest();
+xhr.open("GET", 'file_XHR_pass2.txt', false); 
+xhr.mozResponseType = 'blob';
+xhr.send(null);
+is(xhr.status, 200, "wrong status");
+checkResponseTextAccessThrows(xhr);
+checkResponseXMLAccessThrows(xhr);
+b = xhr.mozResponse;
+ok(b, "should have a non-null blob");
+is(b.size, "hello pass\n".length, "wrong blob size");
+
+fr = new FileReader();
+fr.onload = function() {
+  ok(fr.result, "hello pass\n", "wrong values");
+  checkOnloadCount();
+};
+fr.readAsBinaryString(b);
+
+// with a binary file
+xhr = new XMLHttpRequest();
+xhr.onreadystatechange = function() {
+  switch (xhr.readyState) {
+  case 2:
+    is(xhr.status, 200, "wrong status");
+    xhr.mozResponseType = 'blob';
+    break;
+  case 4:
+    b = xhr.mozResponse;
+    ok(b != null, "should have a non-null blob");
+    is(b.size, 12, "wrong blob size");
+
+    fr = new FileReader();
+    fr.onload = function() {
+      is(fr.result, "\xaa\xee\0\x03\xff\xff\xff\xff\xbb\xbb\xbb\xbb", "wrong values");
+      checkOnloadCount();
+    };
+    xhr = null; // kill the XHR object
+    SpecialPowers.gc();
+    fr.readAsBinaryString(b);
+    break;
+  }
+};
+xhr.open("GET", 'file_XHR_binary1.bin', true);
+xhr.send(null);
 
 var client = new XMLHttpRequest();
 client.onreadystatechange = function() {
@@ -96,6 +192,7 @@ client.onreadystatechange = function() {
       try {
         is(client.responseXML, null, "responseXML should be null.");
         is(client.responseText, "", "responseText should be empty string.");
+        is(client.mozResponse, "", "response should be empty string.");
         is(client.status, 0, "status should be 0.");
         is(client.statusText, "", "statusText should be empty string.");
         is(client.getAllResponseHeaders(), "",

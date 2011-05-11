@@ -147,7 +147,6 @@ CPPSRCS		= \
 		jsgcmark.cpp \
 		jsgcchunk.cpp \
 		jsgcstats.cpp \
-		GlobalObject.cpp \
 		jshash.cpp \
 		jsinterp.cpp \
 		jsinvoke.cpp \
@@ -181,6 +180,7 @@ CPPSRCS		= \
 		jsxml.cpp \
 		prmjtime.cpp \
 		sharkctl.cpp \
+		GlobalObject.cpp \
 		Stack.cpp \
 		$(NULL)
 
@@ -214,7 +214,6 @@ INSTALLED_HEADERS = \
 		jsgcchunk.h \
 		jsgcstats.h \
 		jscompartment.h \
-		GlobalObject.h \
 		jshash.h \
 		jsinterp.h \
 		jsinttypes.h \
@@ -278,6 +277,7 @@ VPATH		+= \
 EXPORTS_NAMESPACES = vm
 
 EXPORTS_vm = \
+		GlobalObject.h			\
 		Stack.h			\
 		StringObject.h \
 		$(NULL)
