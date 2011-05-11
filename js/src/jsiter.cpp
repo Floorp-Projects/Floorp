@@ -496,6 +496,9 @@ VectorToKeyIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &key
 {
     JS_ASSERT(!(flags & JSITER_FOREACH));
 
+    if (obj)
+        cx->markTypeObjectFlags(obj->getType(), types::OBJECT_FLAG_ITERATED);
+
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)
         return false;
@@ -542,6 +545,9 @@ VectorToValueIterator(JSContext *cx, JSObject *obj, uintN flags, AutoIdVector &k
                       Value *vp)
 {
     JS_ASSERT(flags & JSITER_FOREACH);
+
+    if (obj)
+        cx->markTypeObjectFlags(obj->getType(), types::OBJECT_FLAG_ITERATED);
 
     JSObject *iterobj = NewIteratorObject(cx, flags);
     if (!iterobj)

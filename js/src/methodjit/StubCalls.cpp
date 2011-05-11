@@ -1359,7 +1359,7 @@ stubs::This(VMFrame &f)
      */
     if (f.regs.inlined()) {
         JSFunction *fun = f.jit()->inlineFrames()[f.regs.inlined()->inlineIndex].fun;
-        f.cx->markTypeFunctionUninlineable(fun->getType());
+        f.cx->markTypeObjectFlags(fun->getType(), OBJECT_FLAG_UNINLINEABLE);
     }
 
     if (!ComputeThis(f.cx, f.fp()))

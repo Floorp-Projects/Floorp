@@ -549,7 +549,7 @@ FrameState::computeAllocation(jsbytecode *target)
         if (fe < a->callee_ ||
             (fe > a->callee_ && fe < a->spBase && variableLive(fe, target)) ||
             (isTemporary(fe) && (a->parent || uint32(target - a->script->code) <= loop->backedgeOffset()))) {
-            if (!reg.isReg()) {
+            if (!reg.isReg() && !isTemporary(fe) && fe >= a->callee_ && fe < a->spBase) {
                 bool nonDoubleTarget = false;
                 const SlotValue *newv = a->analysis->newValues(target);
                 while (newv && newv->slot) {

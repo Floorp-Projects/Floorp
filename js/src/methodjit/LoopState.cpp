@@ -44,6 +44,7 @@
 using namespace js;
 using namespace js::mjit;
 using namespace js::analyze;
+using namespace js::types;
 
 inline bool
 SafeAdd(int32 one, int32 two, int32 *res)
@@ -148,7 +149,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
     for (unsigned i = 0; i < modifiedProperties.length(); i++) {
         JaegerSpew(JSpew_Analysis, "loop modified property at %u: %s %s\n", lifetime->head,
                    modifiedProperties[i].object->name(),
-                   types::TypeIdString(modifiedProperties[i].id));
+                   TypeIdString(modifiedProperties[i].id));
     }
 
     RegisterAllocation *&alloc = outerAnalysis->getAllocation(head);
@@ -166,8 +167,7 @@ LoopState::init(jsbytecode *head, Jump entry, jsbytecode *entryTarget)
      * had indirect modification of their arguments.
      */
     if (outerScript->fun) {
-        types::ObjectKind kind = types::TypeSet::GetObjectKind(cx, outerScript->fun->getType());
-        if (kind != types::OBJECT_INLINEABLE_FUNCTION && kind != types::OBJECT_SCRIPTED_FUNCTION)
+        if (TypeSet::HasObjectFlags(cx, outerScript->fun->getType(), OBJECT_FLAG_UNINLINEABLE))
             this->skipAnalysis = true;
     }
 
@@ -527,11 +527,11 @@ LoopState::hoistArrayLengthCheck(const CrossSSAValue &obj, const CrossSSAValue &
      * but it actually can, we will probably recompile after the hoisted
      * bounds check fails.
      */
-    types::TypeSet *objTypes = ssa->getValueTypes(obj);
+    TypeSet *objTypes = ssa->getValueTypes(obj);
     if (!growArrays.empty()) {
         unsigned count = objTypes->getObjectCount();
         for (unsigned i = 0; i < count; i++) {
-            types::TypeObject *object = objTypes->getObject(i);
+            TypeObject *object = objTypes->getObject(i);
             if (object) {
                 for (unsigned j = 0; j < growArrays.length(); j++) {
                     if (object == growArrays[j]) {
@@ -707,9 +707,8 @@ LoopState::invariantLength(const CrossSSAValue &obj)
     if (!loopInvariantEntry(objSlot))
         return NULL;
 
-    types::TypeSet *objTypes = ssa->getValueTypes(obj);
-    types::ObjectKind kind = objTypes->getKnownObjectKind(cx);
-    if (kind != types::OBJECT_DENSE_ARRAY && kind != types::OBJECT_PACKED_ARRAY)
+    TypeSet *objTypes = ssa->getValueTypes(obj);
+    if (objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY))
         return NULL;
 
     /*
@@ -720,7 +719,7 @@ LoopState::invariantLength(const CrossSSAValue &obj)
      * updating array lengths.
      */
     for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
-        types::TypeObject *object = objTypes->getObject(i);
+        TypeObject *object = objTypes->getObject(i);
         if (!object)
             continue;
         if (object->unknownProperties() || hasModifiedProperty(object, JSID_VOID))
@@ -772,13 +771,13 @@ LoopState::invariantProperty(const CrossSSAValue &obj, jsid id)
         return NULL;
 
     /* Check that the property is definite and not written anywhere in the loop. */
-    types::TypeSet *objTypes = ssa->getValueTypes(obj);
+    TypeSet *objTypes = ssa->getValueTypes(obj);
     if (objTypes->unknown() || objTypes->getObjectCount() != 1)
         return NULL;
-    types::TypeObject *object = objTypes->getObject(0);
+    TypeObject *object = objTypes->getObject(0);
     if (object->unknownProperties() || hasModifiedProperty(object, id))
         return NULL;
-    types::TypeSet *propertyTypes = object->getProperty(cx, id, false);
+    TypeSet *propertyTypes = object->getProperty(cx, id, false);
     if (!propertyTypes)
         return NULL;
     if (!propertyTypes->isDefiniteProperty() || propertyTypes->isOwnProperty(cx, true))
@@ -1040,7 +1039,7 @@ LoopState::ignoreIntegerOverflow(const CrossSSAValue &pushed)
             return false;
         }
 
-        types::TypeSet *lhsTypes = outerAnalysis->poppedTypes(use->offset, 1);
+        TypeSet *lhsTypes = outerAnalysis->poppedTypes(use->offset, 1);
         if (lhsTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
             return false;
 
@@ -1335,7 +1334,7 @@ LoopState::getLoopTestAccess(const SSAValue &v, uint32 *pslot, int32 *pconstant)
             return false;
 
         /* Only consider tests on known integers. */
-        types::TypeSet *types = outerAnalysis->pushedTypes(pc, 0);
+        TypeSet *types = outerAnalysis->pushedTypes(pc, 0);
         if (types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
             return false;
 
@@ -1463,7 +1462,7 @@ LoopState::analyzeLoopIncrements()
         JSOp op = JSOp(outerScript->code[offset]);
         const JSCodeSpec *cs = &js_CodeSpec[op];
         if (cs->format & (JOF_INC | JOF_DEC)) {
-            types::TypeSet *types = outerAnalysis->pushedTypes(offset);
+            TypeSet *types = outerAnalysis->pushedTypes(offset);
             if (types->getKnownTypeTag(cx) != JSVAL_TYPE_INT32)
                 continue;
 
@@ -1491,16 +1490,15 @@ LoopState::definiteArrayAccess(const SSAValue &obj, const SSAValue &index)
      * other value by which the overflow could be observed.
      */
 
-    types::TypeSet *objTypes = outerAnalysis->getValueTypes(obj);
-    types::TypeSet *elemTypes = outerAnalysis->getValueTypes(index);
+    TypeSet *objTypes = outerAnalysis->getValueTypes(obj);
+    TypeSet *elemTypes = outerAnalysis->getValueTypes(index);
 
     if (objTypes->getKnownTypeTag(cx) != JSVAL_TYPE_OBJECT ||
         elemTypes->getKnownTypeTag(cx) != JSVAL_TYPE_INT32) {
         return false;
     }
 
-    types::ObjectKind kind = objTypes->getKnownObjectKind(cx);
-    if (kind != types::OBJECT_DENSE_ARRAY && kind != types::OBJECT_PACKED_ARRAY)
+    if (objTypes->hasObjectFlags(cx, OBJECT_FLAG_NON_DENSE_ARRAY))
         return false;
 
     if (cc.arrayPrototypeHasIndexedProperty())
@@ -1613,8 +1611,8 @@ LoopState::analyzeLoopBody(unsigned frame)
             SSAValue objValue = analysis->poppedValue(pc, 2);
             SSAValue elemValue = analysis->poppedValue(pc, 1);
 
-            types::TypeSet *objTypes = analysis->getValueTypes(objValue);
-            types::TypeSet *elemTypes = analysis->getValueTypes(elemValue);
+            TypeSet *objTypes = analysis->getValueTypes(objValue);
+            TypeSet *elemTypes = analysis->getValueTypes(elemValue);
 
             /*
              * Mark the modset as unknown if the index might be non-integer,
@@ -1627,7 +1625,7 @@ LoopState::analyzeLoopBody(unsigned frame)
 
             objTypes->addFreeze(cx);
             for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
-                types::TypeObject *object = objTypes->getObject(i);
+                TypeObject *object = objTypes->getObject(i);
                 if (!object)
                     continue;
                 if (!addModifiedProperty(object, JSID_VOID))
@@ -1653,9 +1651,9 @@ LoopState::analyzeLoopBody(unsigned frame)
           case JSOP_SETPROP:
           case JSOP_SETMETHOD: {
             JSAtom *atom = script->getAtom(js_GetIndexFromBytecode(cx, script, pc, 0));
-            jsid id = types::MakeTypeId(cx, ATOM_TO_JSID(atom));
+            jsid id = MakeTypeId(cx, ATOM_TO_JSID(atom));
 
-            types::TypeSet *objTypes = analysis->poppedTypes(pc, 1);
+            TypeSet *objTypes = analysis->poppedTypes(pc, 1);
             if (objTypes->unknown()) {
                 unknownModset = true;
                 break;
@@ -1663,7 +1661,7 @@ LoopState::analyzeLoopBody(unsigned frame)
 
             objTypes->addFreeze(cx);
             for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
-                types::TypeObject *object = objTypes->getObject(i);
+                TypeObject *object = objTypes->getObject(i);
                 if (!object)
                     continue;
                 if (!addModifiedProperty(object, id))
@@ -1769,7 +1767,7 @@ LoopState::analyzeLoopBody(unsigned frame)
 }
 
 bool
-LoopState::addGrowArray(types::TypeObject *object)
+LoopState::addGrowArray(TypeObject *object)
 {
     static const uint32 MAX_SIZE = 10;
     for (unsigned i = 0; i < growArrays.length(); i++) {
@@ -1786,7 +1784,7 @@ LoopState::addGrowArray(types::TypeObject *object)
 }
 
 bool
-LoopState::addModifiedProperty(types::TypeObject *object, jsid id)
+LoopState::addModifiedProperty(TypeObject *object, jsid id)
 {
     static const uint32 MAX_SIZE = 20;
     for (unsigned i = 0; i < modifiedProperties.length(); i++) {
@@ -1807,7 +1805,7 @@ LoopState::addModifiedProperty(types::TypeObject *object, jsid id)
 }
 
 bool
-LoopState::hasGrowArray(types::TypeObject *object)
+LoopState::hasGrowArray(TypeObject *object)
 {
     if (unknownModset)
         return true;
@@ -1819,11 +1817,11 @@ LoopState::hasGrowArray(types::TypeObject *object)
 }
 
 bool
-LoopState::hasModifiedProperty(types::TypeObject *object, jsid id)
+LoopState::hasModifiedProperty(TypeObject *object, jsid id)
 {
     if (unknownModset)
         return true;
-    id = types::MakeTypeId(cx, id);
+    id = MakeTypeId(cx, id);
     for (unsigned i = 0; i < modifiedProperties.length(); i++) {
         if (modifiedProperties[i].object == object && modifiedProperties[i].id == id)
             return true;

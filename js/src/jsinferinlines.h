@@ -394,32 +394,13 @@ JSContext::aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid seco
 }
 
 inline void
-JSContext::addTypeFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags)
+JSContext::markTypeObjectFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags)
 {
-    if (!typeInferenceEnabled() || obj->hasFlags(flags))
+    if (!typeInferenceEnabled() || obj->hasAllFlags(flags))
         return;
 
     js::types::AutoEnterTypeInference enter(this);
     obj->setFlags(this, flags);
-}
-
-inline void
-JSContext::markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense)
-{
-    addTypeFlags(obj, js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
-                 (notDense ? js::types::OBJECT_FLAG_NON_DENSE_ARRAY : 0));
-}
-
-inline void
-JSContext::markTypeFunctionUninlineable(js::types::TypeObject *obj)
-{
-    addTypeFlags(obj, js::types::OBJECT_FLAG_UNINLINEABLE);
-}
-
-inline void
-JSContext::markTypeObjectHasSpecialEquality(js::types::TypeObject *obj)
-{
-    addTypeFlags(obj, js::types::OBJECT_FLAG_SPECIAL_EQUALITY);
 }
 
 inline void

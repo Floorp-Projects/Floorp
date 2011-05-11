@@ -1403,17 +1403,11 @@ struct JSContext
     /* Alias two properties in the type information for obj. */
     inline void aliasTypeProperties(js::types::TypeObject *obj, jsid first, jsid second);
 
-    /* Mark an array type as being not packed and, possibly, not dense. */
-    inline void markTypeArrayNotPacked(js::types::TypeObject *obj, bool notDense);
+    /* Set one or more dynamic flags on a type object. */
+    inline void markTypeObjectFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags);
 
-    /* Mark a function as being uninlineable (its .arguments property has been accessed). */
-    inline void markTypeFunctionUninlineable(js::types::TypeObject *obj);
-
-    /* Monitor all properties of a type object as unknown. */
+    /* Mark all properties of a type object as unknown. */
     inline void markTypeObjectUnknownProperties(js::types::TypeObject *obj);
-
-    /* Mark a type as possibly having special equality hooks. */
-    inline void markTypeObjectHasSpecialEquality(js::types::TypeObject *obj);
 
     /* Mark any property which has been deleted or reconfigured. */
     inline void markTypePropertyConfigured(js::types::TypeObject *obj, jsid id);
@@ -1427,10 +1421,6 @@ struct JSContext
      */
     inline void fixArrayType(JSObject *obj);
     inline void fixObjectType(JSObject *obj);
-
-  private:
-
-    inline void addTypeFlags(js::types::TypeObject *obj, js::types::TypeObjectFlags flags);
 
 }; /* struct JSContext */
 
