@@ -152,7 +152,7 @@ b = xhr.mozResponse;
 ok(b, "should have a non-null blob");
 is(b.size, "hello pass\n".length, "wrong blob size");
 
-fr = new FileReader();
+var fr = new FileReader();
 fr.onload = function() {
   ok(fr.result, "hello pass\n", "wrong values");
   checkOnloadCount();
@@ -172,7 +172,7 @@ xhr.onreadystatechange = function() {
     ok(b != null, "should have a non-null blob");
     is(b.size, 12, "wrong blob size");
 
-    fr = new FileReader();
+    var fr = new FileReader();
     fr.onload = function() {
       is(fr.result, "\xaa\xee\0\x03\xff\xff\xff\xff\xbb\xbb\xbb\xbb", "wrong values");
       checkOnloadCount();
