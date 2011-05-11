@@ -706,6 +706,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
     if (endCh == kCommaCh) {
       // hit a comma, process what we've got so far
 
+      href.Trim(" \t\n\r\f"); // trim HTML5 whitespace
       if (!href.IsEmpty() && !rel.IsEmpty()) {
         rv = ProcessLink(aElement, href, rel, title, type, media);
       }
@@ -720,6 +721,7 @@ nsContentSink::ProcessLinkHeader(nsIContent* aElement,
     start = ++end;
   }
 
+  href.Trim(" \t\n\r\f"); // trim HTML5 whitespace
   if (!href.IsEmpty() && !rel.IsEmpty()) {
     rv = ProcessLink(aElement, href, rel, title, type, media);
   }
