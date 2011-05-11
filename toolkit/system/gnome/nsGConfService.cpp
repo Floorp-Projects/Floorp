@@ -214,8 +214,7 @@ nsGConfService::GetAppForProtocol(const nsACString &aScheme, PRBool *aEnabled,
   }
 
   aHandler.Assign(command);
-  if (command)
-    g_free(command);
+  g_free(command);
 
   if (err) {
     g_error_free(err);
