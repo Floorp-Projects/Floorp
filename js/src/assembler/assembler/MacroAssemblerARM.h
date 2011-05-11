@@ -1037,6 +1037,11 @@ public:
         m_assembler.fnegd_r(dest, src);
     }
 
+    void absDouble(FPRegisterID src, FPRegisterID dest)
+    {
+        m_assembler.fabsd_r(dest, src);
+    }
+
     void sqrtDouble(FPRegisterID src, FPRegisterID dest)
     {
         m_assembler.fsqrtd_r(dest, src);
