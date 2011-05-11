@@ -8023,7 +8023,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri = bindingURL->mURI;
+  nsCOMPtr<nsIURI> uri = bindingURL->GetURI();
   nsCOMPtr<nsIPrincipal> principal = bindingURL->mOriginPrincipal;
 
   // We have a binding that must be installed.
