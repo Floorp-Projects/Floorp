@@ -1360,9 +1360,9 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
     switch (rejoin) {
       case REJOIN_SCRIPTED: {
 #ifdef JS_NUNBOX32
-        uint64 rvalBits = (uint64)returnData | ((uint64)returnType << 32);
+        uint64 rvalBits = ((uint64)returnType << 32) | (uint32)returnData;
 #elif JS_PUNBOX64
-        uint64 rvalBits = (uint64)returnData | (uint64)returnType;
+        uint64 rvalBits = (uint64)returnType | (uint64)returnData;
 #else
 #error "Unknown boxing format"
 #endif
