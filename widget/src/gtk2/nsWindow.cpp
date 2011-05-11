@@ -776,7 +776,7 @@ nsWindow::Destroy(void)
 #endif /* MOZ_X11 */
 
     if (mWindowGroup) {
-        g_object_unref(G_OBJECT(mWindowGroup));
+        g_object_unref(mWindowGroup);
         mWindowGroup = nsnull;
     }
 
@@ -946,14 +946,14 @@ nsWindow::ReparentNativeWidget(nsIWidget* aNewParent)
       gtk_window_set_transient_for(GTK_WINDOW(mShell), topLevelParent);
       mTransientParent = topLevelParent;
       if (mWindowGroup) {
-          g_object_unref(G_OBJECT(mWindowGroup));
+          g_object_unref(mWindowGroup);
           mWindowGroup = NULL;
       }
       if (mTransientParent->group) {
           gtk_window_group_add_window(mTransientParent->group,
                                       GTK_WINDOW(mShell));
           mWindowGroup = mTransientParent->group;
-          g_object_ref(G_OBJECT(mWindowGroup));
+          g_object_ref(mWindowGroup);
       }
       else if (GTK_WINDOW(mShell)->group) {
           gtk_window_group_remove_window(GTK_WINDOW(mShell)->group,
@@ -3931,7 +3931,7 @@ nsWindow::Create(nsIWidget        *aParent,
                                                 GTK_WINDOW(mShell));
                     // store this in case any children are created
                     mWindowGroup = parentnsWindow->mWindowGroup;
-                    g_object_ref(G_OBJECT(mWindowGroup));
+                    g_object_ref(mWindowGroup);
                     LOG(("adding window %p to group %p\n",
                          (void *)mShell, (void *)mWindowGroup));
                 }
@@ -4000,7 +4000,7 @@ nsWindow::Create(nsIWidget        *aParent,
                     gtk_window_group_add_window(topLevelParent->group,
                                             GTK_WINDOW(mShell));
                     mWindowGroup = topLevelParent->group;
-                    g_object_ref(G_OBJECT(mWindowGroup));
+                    g_object_ref(mWindowGroup);
                 }
             }
         }
@@ -4101,11 +4101,11 @@ nsWindow::Create(nsIWidget        *aParent,
 
     // attach listeners for events
     if (mShell) {
-        g_signal_connect(G_OBJECT(mShell), "configure_event",
+        g_signal_connect(mShell, "configure_event",
                          G_CALLBACK(configure_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mShell), "delete_event",
+        g_signal_connect(mShell, "delete_event",
                          G_CALLBACK(delete_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mShell), "window_state_event",
+        g_signal_connect(mShell, "window_state_event",
                          G_CALLBACK(window_state_event_cb), NULL);
 
         GtkSettings* default_settings = gtk_settings_get_default();
@@ -4137,35 +4137,35 @@ nsWindow::Create(nsIWidget        *aParent,
     }
 
     if (mContainer) {
-        g_signal_connect(G_OBJECT(mContainer), "unrealize",
+        g_signal_connect(mContainer, "unrealize",
                          G_CALLBACK(container_unrealize_cb), NULL);
-        g_signal_connect_after(G_OBJECT(mContainer), "size_allocate",
+        g_signal_connect_after(mContainer, "size_allocate",
                                G_CALLBACK(size_allocate_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "expose_event",
+        g_signal_connect(mContainer, "expose_event",
                          G_CALLBACK(expose_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "enter_notify_event",
+        g_signal_connect(mContainer, "enter_notify_event",
                          G_CALLBACK(enter_notify_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "leave_notify_event",
+        g_signal_connect(mContainer, "leave_notify_event",
                          G_CALLBACK(leave_notify_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "motion_notify_event",
+        g_signal_connect(mContainer, "motion_notify_event",
                          G_CALLBACK(motion_notify_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "button_press_event",
+        g_signal_connect(mContainer, "button_press_event",
                          G_CALLBACK(button_press_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "button_release_event",
+        g_signal_connect(mContainer, "button_release_event",
                          G_CALLBACK(button_release_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "focus_in_event",
+        g_signal_connect(mContainer, "focus_in_event",
                          G_CALLBACK(focus_in_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "focus_out_event",
+        g_signal_connect(mContainer, "focus_out_event",
                          G_CALLBACK(focus_out_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "key_press_event",
+        g_signal_connect(mContainer, "key_press_event",
                          G_CALLBACK(key_press_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "key_release_event",
+        g_signal_connect(mContainer, "key_release_event",
                          G_CALLBACK(key_release_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "scroll_event",
+        g_signal_connect(mContainer, "scroll_event",
                          G_CALLBACK(scroll_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "visibility_notify_event",
+        g_signal_connect(mContainer, "visibility_notify_event",
                          G_CALLBACK(visibility_notify_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "hierarchy_changed",
+        g_signal_connect(mContainer, "hierarchy_changed",
                          G_CALLBACK(hierarchy_changed_cb), NULL);
         // Initialize mHasMappedToplevel.
         hierarchy_changed_cb(GTK_WIDGET(mContainer), NULL);
@@ -4176,13 +4176,13 @@ nsWindow::Create(nsIWidget        *aParent,
                           0,
                           (GdkDragAction)0);
 
-        g_signal_connect(G_OBJECT(mContainer), "drag_motion",
+        g_signal_connect(mContainer, "drag_motion",
                          G_CALLBACK(drag_motion_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "drag_leave",
+        g_signal_connect(mContainer, "drag_leave",
                          G_CALLBACK(drag_leave_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "drag_drop",
+        g_signal_connect(mContainer, "drag_drop",
                          G_CALLBACK(drag_drop_event_cb), NULL);
-        g_signal_connect(G_OBJECT(mContainer), "drag_data_received",
+        g_signal_connect(mContainer, "drag_data_received",
                          G_CALLBACK(drag_data_received_event_cb), NULL);
 
         // We create input contexts for all containers, except for

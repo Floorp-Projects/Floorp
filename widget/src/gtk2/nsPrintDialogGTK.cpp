@@ -272,7 +272,7 @@ nsPrintDialogWidgetGTK::nsPrintDialogWidgetGTK(nsIDOMWindow *aParent, nsIPrintSe
   if (gtk_major_version > 2 ||
       (gtk_major_version == 2 && gtk_minor_version >= 18)) {
     useNativeSelection = PR_TRUE;
-    g_object_set(G_OBJECT(dialog),
+    g_object_set(dialog,
                  "support-selection", TRUE,
                  "has-selection", canSelectText,
                  "embed-page-setup", TRUE,
