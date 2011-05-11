@@ -112,7 +112,12 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
         if (macString && ([macString length] == 17)) {
           for (NSUInteger i = 0; i < 6; ++i) {
             NSString* part = [macString substringWithRange:NSMakeRange(i * 3, 2)];
-            macData[i] = (unsigned char) [part integerValue];
+            NSScanner* scanner = [NSScanner scannerWithString:part];
+            unsigned int data = 0;
+            if (![scanner scanHexInt:&data]) {
+              data = 0;
+            }
+            macData[i] = (unsigned char) data;
           }
         }
       }
