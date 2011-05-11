@@ -6227,21 +6227,19 @@ get_inner_gdk_window (GdkWindow *aWindow,
                       gint *retx, gint *rety)
 {
     gint cx, cy, cw, ch, cd;
-    GList * children = gdk_window_peek_children(aWindow);
-    guint num = g_list_length(children);
-    for (int i = 0; i < (int)num; i++) {
-        GList * child = g_list_nth(children, num - i - 1) ;
-        if (child) {
-            GdkWindow * childWindow = (GdkWindow *) child->data;
-            if (get_window_for_gdk_window(childWindow)) {
-                gdk_window_get_geometry (childWindow, &cx, &cy, &cw, &ch, &cd);
-                if ((cx < x) && (x < (cx + cw)) &&
-                    (cy < y) && (y < (cy + ch)) &&
-                    gdk_window_is_visible (childWindow)) {
-                    return get_inner_gdk_window (childWindow,
-                                                 x - cx, y - cy,
-                                                 retx, rety);
-                }
+    GList *children = gdk_window_peek_children(aWindow);
+    for (GList *child = g_list_last(children);
+         child;
+         child = g_list_previous(child)) {
+        GdkWindow *childWindow = (GdkWindow *) child->data;
+        if (get_window_for_gdk_window(childWindow)) {
+            gdk_window_get_geometry(childWindow, &cx, &cy, &cw, &ch, &cd);
+            if ((cx < x) && (x < (cx + cw)) &&
+                (cy < y) && (y < (cy + ch)) &&
+                gdk_window_is_visible(childWindow)) {
+                return get_inner_gdk_window(childWindow,
+                                            x - cx, y - cy,
+                                            retx, rety);
             }
         }
     }
