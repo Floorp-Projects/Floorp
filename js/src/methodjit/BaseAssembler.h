@@ -177,8 +177,8 @@ static const JSC::MacroAssembler::RegisterID JSReturnReg_Type  = JSC::X86Registe
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::X86Registers::esi;
 static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::X86Registers::ecx;
 #elif defined(JS_CPU_ARM)
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Type  = JSC::ARMRegisters::r4;
-static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::ARMRegisters::r5;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Type  = JSC::ARMRegisters::r5;
+static const JSC::MacroAssembler::RegisterID JSReturnReg_Data  = JSC::ARMRegisters::r4;
 static const JSC::MacroAssembler::RegisterID JSParamReg_Argc   = JSC::ARMRegisters::r1;
 #elif defined(JS_CPU_SPARC)
 static const JSC::MacroAssembler::RegisterID JSReturnReg_Type = JSC::SparcRegisters::l2;
