@@ -639,6 +639,15 @@ public:
         m_assembler.andpd_rr(src, dest);
     }
 
+    void absDouble(FPRegisterID src, FPRegisterID dest)
+    {
+        ASSERT(isSSE2Present());
+        /* Compile abs(x) as x & -x. */
+        zeroDouble(dest);
+        subDouble(src, dest);
+        andDouble(src, dest);
+    }
+
     void convertInt32ToDouble(RegisterID src, FPRegisterID dest)
     {
         ASSERT(isSSE2Present());
