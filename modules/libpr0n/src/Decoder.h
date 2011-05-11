@@ -121,6 +121,7 @@ public:
   bool HasDataError() { return mDataError; };
   bool HasDecoderError() { return NS_FAILED(mFailCode); };
   nsresult GetDecoderError() { return mFailCode; };
+  void PostResizeError() { PostDataError(); }
 
   // flags.  Keep these in sync with imgIContainer.idl.
   // SetDecodeFlags must be called before Init(), otherwise
