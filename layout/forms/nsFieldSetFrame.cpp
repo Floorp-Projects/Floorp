@@ -84,6 +84,7 @@ public:
                              nsSize aMargin, nsSize aBorder, nsSize aPadding,
                              bool aShrinkWrap);
   virtual nscoord GetBaseline() const;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot);
 
   NS_IMETHOD Reflow(nsPresContext*           aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -142,6 +143,13 @@ nsFieldSetFrame::nsFieldSetFrame(nsStyleContext* aContext)
   mContentFrame = nsnull;
   mLegendFrame  = nsnull;
   mLegendSpace  = 0;
+}
+
+void
+nsFieldSetFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  DestroyAbsoluteFrames(aDestructRoot);
+  nsHTMLContainerFrame::DestroyFrom(aDestructRoot);
 }
 
 nsIAtom*
@@ -596,7 +604,7 @@ nsFieldSetFrame::Reflow(nsPresContext*           aPresContext,
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mLegendFrame);
   if (mContentFrame)
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, mContentFrame);
-  FinishAndStoreOverflow(&aDesiredSize);
+  FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize, aReflowState, aStatus);
 
   Invalidate(aDesiredSize.VisualOverflow());
 
