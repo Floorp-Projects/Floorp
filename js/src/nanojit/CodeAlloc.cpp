@@ -98,10 +98,10 @@ namespace nanojit
         return (int)((x + 512) >> 10);
     }
 
-    void CodeAlloc::logStats() {
-        size_t total = 0;
-        size_t frag_size = 0;
-        size_t free_size = 0;
+    void CodeAlloc::getStats(size_t& total, size_t& frag_size, size_t& free_size) {
+        total = 0;
+        frag_size = 0;
+        free_size = 0;
         int free_count = 0;
         for (CodeList* hb = heapblocks; hb != 0; hb = hb->next) {
             total += bytesPerAlloc;
@@ -114,6 +114,11 @@ namespace nanojit
                 }
             }
         }
+    }
+
+    void CodeAlloc::logStats() {
+        size_t total, frag_size, free_size;
+        getStats(total, frag_size, free_size);
         avmplus::AvmLog("code-heap: %dk free %dk fragmented %d\n",
             round(total), round(free_size), frag_size);
     }

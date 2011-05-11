@@ -228,6 +228,9 @@ namespace nanojit
         /** return the total number of bytes held by this CodeAlloc. */
         size_t size();
 
+        /** get stats about heap usage */
+        void getStats(size_t& total, size_t& frag_size, size_t& free_size);
+
         /** print out stats about heap usage */
         void logStats();
 
