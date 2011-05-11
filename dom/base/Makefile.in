@@ -84,6 +84,7 @@ EXPORTS = \
   nsFocusManager.h \
   nsWrapperCache.h \
   nsContentPermissionHelper.h \
+  nsStructuredCloneContainer.h \
   $(NULL)
 
 CPPSRCS =			\
@@ -108,6 +109,7 @@ CPPSRCS =			\
 	nsDOMScriptObjectFactory.cpp \
 	nsQueryContentEventResult.cpp \
 	nsContentPermissionHelper.cpp \
+	nsStructuredCloneContainer.cpp \
 	$(NULL)
 
 include $(topsrcdir)/dom/dom-config.mk

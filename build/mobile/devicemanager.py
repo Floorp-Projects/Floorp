@@ -934,6 +934,10 @@ class DeviceManager:
       return 'org.mozilla.fennec'
     elif (self.dirExists('/data/data/org.mozilla.firefox')):
       return 'org.mozilla.firefox'
+    elif (self.dirExists('/data/data/org.mozilla.fennec_aurora')):
+      return 'org.mozilla.fennec_aurora'
+    elif (self.dirExists('/data/data/org.mozilla.firefox_beta')):
+      return 'org.mozilla.firefox_beta'
 
     # Failure (either not installed or not a recognized platform)
     return None

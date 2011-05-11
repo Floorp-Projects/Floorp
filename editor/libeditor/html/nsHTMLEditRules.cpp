@@ -40,11 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* build on macs with low memory */
-#if defined(XP_MAC) && defined(MOZ_MAC_LOWMEM)
-#pragma optimization_level 1
-#endif
-
 #include "nsHTMLEditRules.h"
 
 #include "nsEditor.h"
@@ -8401,12 +8396,6 @@ nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
   return res;
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  nsIEditActionListener methods 
-#pragma mark -
-#endif
-
 NS_IMETHODIMP 
 nsHTMLEditRules::WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
 {
@@ -9203,7 +9192,7 @@ nsHTMLEditRules::DocumentModifiedWorker()
   }
 
   // DeleteNode below may cause a flush, which could destroy the editor
-  nsAutoRemovableScriptBlocker scriptBlocker;
+  nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
   nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(mHTMLEditor);
   nsCOMPtr<nsISelection> selection;

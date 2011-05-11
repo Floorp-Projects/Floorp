@@ -44,7 +44,7 @@ addLoadEvent(function() {
     thrown = true;
   }
 
-  ok(thrown, "changing ownerDocument during adoptNode should throw");
+  ok(!thrown, "changing ownerDocument during adoptNode should not throw");
 
   SimpleTest.finish();
 });

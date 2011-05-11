@@ -566,7 +566,14 @@ nsNativeThemeGTK::GetGtkWidgetAndState(PRUint8 aWidgetType, nsIFrame* aFrame,
     break;
   case NS_THEME_PROGRESSBAR_CHUNK:
   case NS_THEME_PROGRESSBAR_CHUNK_VERTICAL:
-    aGtkWidgetType = MOZ_GTK_PROGRESS_CHUNK;
+    {
+      nsIFrame* stateFrame = aFrame->GetParent();
+      nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
+
+      aGtkWidgetType = IsIndeterminateProgress(stateFrame, eventStates)
+                         ? MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE
+                         : MOZ_GTK_PROGRESS_CHUNK;
+    }
     break;
   case NS_THEME_TAB_SCROLLARROW_BACK:
   case NS_THEME_TAB_SCROLLARROW_FORWARD:
@@ -873,6 +880,13 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
     }
   }
 
+  // Indeterminate progress bar are animated.
+  if (gtkWidgetType == MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE) {
+    if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
+      NS_WARNING("unable to animate widget!");
+    }
+  }
+
   return NS_OK;
 }
 
@@ -1020,6 +1034,23 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
         aResult->width = 0;
         aResult->height = metrics;
       }
+      *aIsOverridable = PR_FALSE;
+    }
+    break;
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    {
+      MozGtkScrollbarMetrics metrics;
+      moz_gtk_get_scrollbar_metrics(&metrics);
+
+      if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL) {
+        aResult->width = metrics.slider_width;
+        aResult->height = metrics.min_slider_size;
+      } else {
+        aResult->height = metrics.slider_width;
+        aResult->width = metrics.min_slider_size;
+      }
+
       *aIsOverridable = PR_FALSE;
     }
     break;

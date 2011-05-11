@@ -127,6 +127,7 @@ DOMCI_CLASS(HTMLOutputElement)
 DOMCI_CLASS(HTMLParagraphElement)
 DOMCI_CLASS(HTMLParamElement)
 DOMCI_CLASS(HTMLPreElement)
+DOMCI_CLASS(HTMLProgressElement)
 DOMCI_CLASS(HTMLQuoteElement)
 DOMCI_CLASS(HTMLScriptElement)
 DOMCI_CLASS(HTMLSelectElement)
@@ -522,3 +523,4 @@ DOMCI_CLASS(MozCSSKeyframesRule)
 #endif
 
 DOMCI_CLASS(MediaQueryList)
+DOMCI_CLASS(CustomEvent)

@@ -3548,7 +3548,8 @@ nsCSSFrameConstructor::FindHTMLData(Element* aElement,
     SIMPLE_TAG_CREATE(video, NS_NewHTMLVideoFrame),
     SIMPLE_TAG_CREATE(audio, NS_NewHTMLVideoFrame),
 #endif
-    SIMPLE_TAG_CREATE(isindex, NS_NewIsIndexFrame)
+    SIMPLE_TAG_CREATE(isindex, NS_NewIsIndexFrame),
+    SIMPLE_TAG_CREATE(progress, NS_NewProgressFrame)
   };
 
   return FindDataByTag(aTag, aElement, aStyleContext, sHTMLData,
@@ -8283,10 +8284,8 @@ nsCSSFrameConstructor::EndUpdate()
     RecalcQuotesAndCounters();
     NS_ASSERTION(mUpdateCount == 1, "Odd update count");
   }
-  // Negative update counts don't make sense
-  if (mUpdateCount > 0) {
-    --mUpdateCount;
-  }
+  NS_ASSERTION(mUpdateCount, "Negative mUpdateCount!");
+  --mUpdateCount;
 }
 
 void

@@ -1090,7 +1090,7 @@ nsDOMWorkerXHRProxy::GetStatus(nsresult* _retval)
 }
 
 nsresult
-nsDOMWorkerXHRProxy::GetReadyState(PRInt32* _retval)
+nsDOMWorkerXHRProxy::GetReadyState(PRUint16* _retval)
 {
   NS_ASSERTION(_retval, "Null pointer!");
 

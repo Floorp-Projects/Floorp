@@ -235,21 +235,6 @@ js_GetLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp)
     return ValueToECMAUint32(cx, tvr.value(), (uint32_t *)lengthp);
 }
 
-JSBool JS_FASTCALL
-js_IndexToId(JSContext *cx, jsuint index, jsid *idp)
-{
-    JSString *str;
-
-    if (index <= JSID_INT_MAX) {
-        *idp = INT_TO_JSID(index);
-        return JS_TRUE;
-    }
-    str = js_NumberToString(cx, index);
-    if (!str)
-        return JS_FALSE;
-    return js_ValueToStringId(cx, StringValue(str), idp);
-}
-
 static JSBool
 BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
              jsid *idp)
@@ -2138,7 +2123,7 @@ ArrayCompPushImpl(JSContext *cx, JSObject *obj, const Value &v)
     if (obj->isSlowArray()) {
         /* This can happen in one evil case. See bug 630377. */
         jsid id;
-        return js_IndexToId(cx, length, &id) &&
+        return IndexToId(cx, length, &id) &&
                js_DefineProperty(cx, obj, id, &v, NULL, NULL, JSPROP_ENUMERATE);
     }
 
