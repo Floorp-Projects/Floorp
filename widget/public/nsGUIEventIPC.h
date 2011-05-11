@@ -305,6 +305,24 @@ struct ParamTraits<nsIMEUpdatePreference>
   }
 };
 
+template<>
+struct ParamTraits<nsPluginEvent>
+{
+  typedef nsPluginEvent paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<nsGUIEvent>(aParam));
+    WriteParam(aMsg, aParam.retargetToFocusedDocument);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    return ReadParam(aMsg, aIter, static_cast<nsGUIEvent*>(aResult)) &&
+           ReadParam(aMsg, aIter, &aResult->retargetToFocusedDocument);
+  }
+};
+
 } // namespace IPC
 
 #endif // nsGUIEventIPC_h__

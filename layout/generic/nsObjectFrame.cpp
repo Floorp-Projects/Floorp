@@ -2549,7 +2549,7 @@ nsObjectFrame::HandleEvent(nsPresContext* aPresContext,
   }
 
   if (mInstanceOwner->SendNativeEvents() &&
-      (NS_IS_PLUGIN_EVENT(anEvent) || NS_IS_NON_RETARGETED_PLUGIN_EVENT(anEvent))) {
+      NS_IS_PLUGIN_EVENT(anEvent)) {
     *anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
     return rv;
   }
@@ -6894,7 +6894,7 @@ void* nsPluginInstanceOwner::FixUpPluginWindow(PRInt32 inPaintState)
     // Set this before calling ProcessEvent to avoid endless recursion.
     mSentInitialTopLevelWindowEvent = PR_TRUE;
 
-    nsGUIEvent pluginEvent(PR_TRUE, NS_NON_RETARGETED_PLUGIN_EVENT, nsnull);
+    nsPluginEvent pluginEvent(PR_TRUE, NS_PLUGIN_FOCUS_EVENT, nsnull);
     NPCocoaEvent cocoaEvent;
     InitializeNPCocoaEvent(&cocoaEvent);
     cocoaEvent.type = NPCocoaEventWindowFocusChanged;
