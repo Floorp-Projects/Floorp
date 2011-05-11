@@ -3777,7 +3777,7 @@ PRBool nsWindow::DispatchPluginEvent(const MSG &aMsg)
   if (!PluginHasFocus())
     return PR_FALSE;
 
-  nsGUIEvent event(PR_TRUE, NS_PLUGIN_EVENT, this);
+  nsPluginEvent event(PR_TRUE, NS_PLUGIN_INPUT_EVENT, this);
   nsIntPoint point(0, 0);
   InitEvent(event, &point);
   NPEvent pluginEvent;
@@ -3785,6 +3785,7 @@ PRBool nsWindow::DispatchPluginEvent(const MSG &aMsg)
   pluginEvent.wParam = aMsg.wParam;
   pluginEvent.lParam = aMsg.lParam;
   event.pluginEvent = (void *)&pluginEvent;
+  event.retargetToFocusedDocument = PR_TRUE;
   return DispatchWindowEvent(&event);
 }
 
