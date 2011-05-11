@@ -275,7 +275,8 @@ nscoord nsCSSValue::GetFixedLength(nsPresContext* aPresContext) const
                     "not a fixed length unit");
 
   float inches = mValue.mFloat / MM_PER_INCH_FLOAT;
-  return inches * aPresContext->DeviceContext()->AppUnitsPerPhysicalInch();
+  return NSToCoordFloorClamped(inches *
+    float(aPresContext->DeviceContext()->AppUnitsPerPhysicalInch()));
 }
 
 nscoord nsCSSValue::GetPixelLength() const
