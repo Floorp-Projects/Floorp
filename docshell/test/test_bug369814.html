@@ -15,8 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369814
 
 <p>
 
-<iframe id="testFrame"></iframe>
-
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -36,7 +34,7 @@ var gTargetWindow;
 var gNumPokes;
 var gPrefValue;
 
-var gTestFrame = document.getElementById('testFrame');
+var gTestFrame;
 
 /**
  * Called by documents loaded from jar files to indicate that they can access
@@ -176,6 +174,14 @@ function runNextTest()
     gNumPokes = 0;
 
     prefs.setBoolPref("network.jar.open-unsafe-types", gCurrentTest['pref']);
+
+    // Create a new frame each time, so our restictions on loads in a
+    // jar:-loaded iframe don't interfere with the test.
+    if (gTestFrame) {
+      document.body.removeChild(gTestFrame);
+    }
+    gTestFrame = document.createElement("iframe");
+    document.body.insertBefore(gTestFrame, $("test"));
 
     gCurrentTest['func'](gCurrentTest);
   } else {
