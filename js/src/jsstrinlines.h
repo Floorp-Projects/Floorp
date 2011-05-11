@@ -406,7 +406,7 @@ JSExternalString::new_(JSContext *cx, const jschar *chars, size_t length, intN t
     JS_ASSERT(uintN(type) < JSExternalString::TYPE_LIMIT);
     JS_ASSERT(chars[length] == 0);
 
-    JSExternalString *str = (JSExternalString *)js_NewGCExternalString(cx, type);
+    JSExternalString *str = js_NewGCExternalString(cx);
     if (!str)
         return NULL;
     str->init(chars, length, type, closure);
