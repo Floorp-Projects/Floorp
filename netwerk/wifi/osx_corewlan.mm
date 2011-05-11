@@ -97,9 +97,37 @@ GetAccessPointsFromWLAN(nsCOMArray<nsWifiAccessPoint> &accessPoints)
         [pool release];
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      NSData* data = [anObject bssidData];
-      ap->setMac((unsigned char*)[data bytes]);
-      ap->setSignal([[anObject rssi] intValue]);
+
+      // [CWInterface bssidData] is deprecated on OS X 10.7 and up.  Which is
+      // is a pain, so we'll use it for as long as it's available.
+      unsigned char macData[6] = {0};
+      if ([anObject respondsToSelector:@selector(bssidData)]) {
+        NSData* data = [anObject bssidData];
+        if (data) {
+          memcpy(macData, [data bytes], 6);
+        }
+      } else {
+        // [CWInterface bssid] returns a string formatted "00:00:00:00:00:00".
+        NSString* macString = [anObject bssid];
+        if (macString && ([macString length] == 17)) {
+          for (NSUInteger i = 0; i < 6; ++i) {
+            NSString* part = [macString substringWithRange:NSMakeRange(i * 3, 2)];
+            macData[i] = (unsigned char) [part integerValue];
+          }
+        }
+      }
+
+      // [CWInterface rssiValue] is available on OS X 10.7 and up (and
+      // [CWInterface rssi] is deprecated).
+      int signal = 0;
+      if ([anObject respondsToSelector:@selector(rssiValue)]) {
+        signal = (int) ((NSInteger) [anObject rssiValue]);
+      } else {
+        signal = [[anObject rssi] intValue];
+      }
+
+      ap->setMac(macData);
+      ap->setSignal(signal);
       ap->setSSID([[anObject ssid] UTF8String], 32);
 
       accessPoints.AppendObject(ap);

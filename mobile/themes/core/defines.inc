@@ -84,6 +84,9 @@
 
 %define appmenu_portrait_height 21.17mozmm
 %define appmenu_button_height  10.48mozmm
+
+%define tablet_panel_controls  40mozmm
+%define tablet_panel_minwidth  124mozmm
 %else
 %define font_xlarge 48px
 %define font_xnormal 26px
@@ -168,6 +171,9 @@
 
 %define appmenu_portrait_height 200px
 %define appmenu_button_height 99px
+
+%define tablet_panel_controls  270px
+%define tablet_panel_minwidth  801px
 %endif
 
 %ifdef MOZ_PLATFORM_MAEMO

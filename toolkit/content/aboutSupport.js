@@ -259,11 +259,17 @@ function populateGraphicsSection() {
       try {
         dwEnabled = gfxInfo.DWriteEnabled + " (" + gfxInfo.DWriteVersion + ")";
       } catch(e) {}
-      trGraphics.push(createParentElement("tr", [
-        createHeader(bundle.GetStringFromName("directWriteEnabled")),
-        createElement("td", dwEnabled),
-      ]));
+      pushInfoRow(trGraphics, "directWriteEnabled", dwEnabled);  
+
+      var cleartypeParams = "";
+      try {
+        cleartypeParams = gfxInfo.cleartypeParameters;
+      } catch(e) {
+        cleartypeParams = bundle.GetStringFromName("clearTypeParametersNotFound");
+      }
+      pushInfoRow(trGraphics, "clearTypeParameters", cleartypeParams);  
     }
+
 #endif
 
     var webglrenderer;

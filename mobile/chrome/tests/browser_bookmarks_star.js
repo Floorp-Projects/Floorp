@@ -7,13 +7,9 @@
 let testURL_01 = chromeRoot + "browser_blank_01.html";
 let testURL_02 = chromeRoot + "browser_blank_02.html";
 
-// A queue to order the tests and a handle for each test
-let gTests = [];
-let gCurrentTest = null;
-
-//------------------------------------------------------------------------------
-// Entry point (must be named "test")
 function test() {
+  BookmarkHelper.logging = true;
+
   // The "runNextTest" approach is async, so we need to call "waitForExplicitFinish()"
   // We call "finish()" when the tests are finished
   waitForExplicitFinish();
@@ -22,26 +18,10 @@ function test() {
   runNextTest();
 }
 
-//------------------------------------------------------------------------------
-// Iterating tests by shifting test out one by one as runNextTest is called.
-function runNextTest() {
-  // Run the next test until all tests completed
-  if (gTests.length > 0) {
-    gCurrentTest = gTests.shift();
-    info(gCurrentTest.desc);
-    gCurrentTest.run();
-  }
-  else {
-    // Cleanup. All tests are completed at this point
-    try {
-      PlacesUtils.bookmarks.removeFolderChildren(BookmarkList.panel.mobileRoot);
-    }
-    finally {
-      // We must finialize the tests
-      finish();
-    }
-  }
-}
+registerCleanupFunction(function() {
+  BookmarkHelper.logging = false;
+  PlacesUtils.bookmarks.removeFolderChildren(BookmarkList.panel.mobileRoot);
+});
 
 //------------------------------------------------------------------------------
 // Case: Test appearance and behavior of the bookmark popup

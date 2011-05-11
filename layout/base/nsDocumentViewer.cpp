@@ -227,10 +227,6 @@ class DocumentViewerImpl;
 
 // a small delegate class used to avoid circular references
 
-#ifdef XP_MAC
-#pragma mark ** nsDocViewerSelectionListener **
-#endif
-
 class nsDocViewerSelectionListener : public nsISelectionListener
 {
 public:
@@ -288,11 +284,6 @@ private:
     DocumentViewerImpl*  mDocViewer;
 };
 
-
-
-#ifdef XP_MAC
-#pragma mark ** DocumentViewerImpl **
-#endif
 
 //-------------------------------------------------------------
 class DocumentViewerImpl : public nsIDocumentViewer,
@@ -2593,9 +2584,6 @@ NS_IMETHODIMP DocumentViewerImpl::GetCanGetContents(PRBool *aCanGetContents)
   return NS_OK;
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 /* ========================================================================================
  * nsIContentViewerFile
@@ -3197,27 +3185,6 @@ NS_IMETHODIMP DocumentViewerImpl::GetBidiSupport(PRUint8* aSupport)
   if (aSupport) {
     GetBidiOptions(&bidiOptions);
     *aSupport = GET_BIDI_OPTION_SUPPORT(bidiOptions);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP DocumentViewerImpl::SetBidiCharacterSet(PRUint8 aCharacterSet)
-{
-  PRUint32 bidiOptions;
-
-  GetBidiOptions(&bidiOptions);
-  SET_BIDI_OPTION_CHARACTERSET(bidiOptions, aCharacterSet);
-  SetBidiOptions(bidiOptions);
-  return NS_OK;
-}
-
-NS_IMETHODIMP DocumentViewerImpl::GetBidiCharacterSet(PRUint8* aCharacterSet)
-{
-  PRUint32 bidiOptions;
-
-  if (aCharacterSet) {
-    GetBidiOptions(&bidiOptions);
-    *aCharacterSet = GET_BIDI_OPTION_CHARACTERSET(bidiOptions);
   }
   return NS_OK;
 }

@@ -50,6 +50,7 @@
 #include "jsproxy.h"
 #include "jsscope.h"
 
+#include "jsatominlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -439,7 +440,7 @@ ArrayToIdVector(JSContext *cx, const Value &array, AutoIdVector &props)
     for (jsuint n = 0; n < length; ++n) {
         if (!JS_CHECK_OPERATION_LIMIT(cx))
             return false;
-        if (!js_IndexToId(cx, n, idr.addr()))
+        if (!IndexToId(cx, n, idr.addr()))
             return false;
         if (!obj->getProperty(cx, idr.id(), tvr.addr()))
             return false;
@@ -1381,17 +1382,17 @@ Class CallableObjectClass = {
 JS_FRIEND_API(JSBool)
 FixProxy(JSContext *cx, JSObject *proxy, JSBool *bp)
 {
+    if (OperationInProgress(cx, proxy)) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROXY_FIX);
+        return false;
+    }
+
     AutoValueRooter tvr(cx);
     if (!JSProxy::fix(cx, proxy, tvr.addr()))
         return false;
     if (tvr.value().isUndefined()) {
         *bp = false;
         return true;
-    }
-
-    if (OperationInProgress(cx, proxy)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_PROXY_FIX);
-        return false;
     }
 
     JSObject *props = NonNullObject(cx, tvr.value());
