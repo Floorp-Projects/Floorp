@@ -1895,7 +1895,7 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         INLINE_STUBCALL(stubs::StrictNe, REJOIN_NONE);
 
     frame.popn(2);
-    frame.pushSyncedType(JSVAL_TYPE_BOOLEAN);
+    frame.pushSynced(JSVAL_TYPE_BOOLEAN);
     return;
 #endif
 }
