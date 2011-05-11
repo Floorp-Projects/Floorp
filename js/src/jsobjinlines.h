@@ -147,7 +147,7 @@ JSObject::syncSpecialEquality()
 {
     if (clasp->ext.equality) {
         flags |= JSObject::HAS_EQUALITY;
-        JS_ASSERT(getType()->hasFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
+        JS_ASSERT(getType()->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     }
 }
 
@@ -433,7 +433,9 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
          * Mark the type of this object as possibly not a dense array, per the
          * requirements of OBJECT_FLAG_NON_DENSE_ARRAY.
          */
-        cx->markTypeArrayNotPacked(getType(), true);
+        cx->markTypeObjectFlags(getType(),
+                                js::types::OBJECT_FLAG_NON_PACKED_ARRAY |
+                                js::types::OBJECT_FLAG_NON_DENSE_ARRAY);
         jsid lengthId = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
         cx->addTypePropertyId(getType(), lengthId, js::types::TYPE_DOUBLE);
     }
@@ -893,7 +895,7 @@ JSObject::setType(js::types::TypeObject *newType)
     for (JSObject *obj = newType->proto; obj; obj = obj->getProto())
         JS_ASSERT(obj != this);
 #endif
-    JS_ASSERT_IF(hasSpecialEquality(), newType->hasFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
+    JS_ASSERT_IF(hasSpecialEquality(), newType->hasAnyFlags(js::types::OBJECT_FLAG_SPECIAL_EQUALITY));
     type = newType;
 }
 
