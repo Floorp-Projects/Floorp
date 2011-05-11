@@ -30,7 +30,7 @@ typedef PRUptrdiff uintptr_t;
 #endif
 #endif
 
-#else /* MOZ_QCMS */
+#else // MOZ_QCMS
 
 #if BYTE_ORDER == LITTLE_ENDIAN
 #define IS_LITTLE_ENDIAN

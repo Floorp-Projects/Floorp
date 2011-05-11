@@ -344,7 +344,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             while (!r.empty()) {
                 const Shape &shape = r.front();
                 JSAutoByteString bytes;
-                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.id), &bytes))
+                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.propid), &bytes))
                     return false;
 
                 r.popFront();
@@ -1394,9 +1394,9 @@ GetLocal(SprintStack *ss, jsint i)
                     const Shape &shape = r.front();
 
                     if (shape.shortid == slot) {
-                        LOCAL_ASSERT(JSID_IS_ATOM(shape.id));
+                        LOCAL_ASSERT(JSID_IS_ATOM(shape.propid));
 
-                        JSAtom *atom = JSID_TO_ATOM(shape.id);
+                        JSAtom *atom = JSID_TO_ATOM(shape.propid);
                         const char *rval = QuoteString(&ss->sprinter, atom, 0);
                         if (!rval)
                             return NULL;
@@ -2714,7 +2714,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     if (!shape.hasShortID())
                         continue;
                     LOCAL_ASSERT_OUT(shape.shortid < argc);
-                    atomv[shape.shortid] = JSID_TO_ATOM(shape.id);
+                    atomv[shape.shortid] = JSID_TO_ATOM(shape.propid);
                 }
                 ok = JS_TRUE;
                 for (i = 0; i < argc; i++) {
