@@ -511,6 +511,7 @@
 #include "nsIDOMMediaQueryList.h"
 
 #include "nsDOMTouchEvent.h"
+#include "nsIDOMCustomEvent.h"
 
 using namespace mozilla::dom;
 
@@ -1515,6 +1516,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 #endif
 
   NS_DEFINE_CLASSINFO_DATA(MediaQueryList, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CustomEvent, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
@@ -4335,6 +4338,11 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(MediaQueryList, nsIDOMMediaQueryList)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMediaQueryList)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(CustomEvent, nsIDOMCustomEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCustomEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
