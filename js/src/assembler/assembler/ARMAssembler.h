@@ -1208,7 +1208,6 @@ namespace JSC {
             return AL | B | (offset & BRANCH_MASK);
         }
 
-    private:
         static char const * nameGpReg(int reg)
         {
             ASSERT(reg <= 16);
@@ -1259,6 +1258,7 @@ namespace JSC {
             return names[ccIndex];
         }
 
+    private:
         // Decodes operand 2 immediate values (for debug output and assertions).
         inline uint32_t decOp2Imm(uint32_t op2)
         {
