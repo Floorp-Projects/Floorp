@@ -45,6 +45,8 @@ function waitForBrowserState(aState, aSetStateCallback) {
   let expectedTabsRestored = 0;
   let expectedWindows = aState.windows.length;
   let windowsOpen = 1;
+  let listening = false;
+  let windowObserving = false;
 
   aState.windows.forEach(function(winState) expectedTabsRestored += winState.tabs.length);
 
@@ -54,6 +56,7 @@ function waitForBrowserState(aState, aSetStateCallback) {
       windows.forEach(function(win) {
         win.gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, true);
       });
+      listening = false;
       info("running " + aSetStateCallback.name);
       executeSoon(aSetStateCallback);
     }
@@ -67,8 +70,10 @@ function waitForBrowserState(aState, aSetStateCallback) {
       newWindow.addEventListener("load", function() {
         newWindow.removeEventListener("load", arguments.callee, false);
 
-        if (++windowsOpen == expectedWindows)
+        if (++windowsOpen == expectedWindows) {
           Services.ww.unregisterNotification(windowObserver);
+          windowObserving = false;
+        }
 
         // Track this window so we can remove the progress listener later
         windows.push(newWindow);
@@ -79,10 +84,25 @@ function waitForBrowserState(aState, aSetStateCallback) {
   }
 
   // We only want to register the notification if we expect more than 1 window
-  if (expectedWindows > 1)
+  if (expectedWindows > 1) {
+    registerCleanupFunction(function() {
+      if (windowObserving) {
+        Services.ww.unregisterNotification(windowObserver);
+      }
+    });
+    windowObserving = true;
     Services.ww.registerNotification(windowObserver);
+  }
 
+  registerCleanupFunction(function() {
+    if (listening) {
+      windows.forEach(function(win) {
+        win.gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, true);
+      });
+    }
+  });
   // Add the event listener for this window as well.
+  listening = true;
   gBrowser.tabContainer.addEventListener("SSTabRestored", onSSTabRestored, true);
 
   // Finally, call setBrowserState
@@ -93,10 +113,19 @@ function waitForBrowserState(aState, aSetStateCallback) {
 // turn dirty.
 function waitForSaveState(aSaveStateCallback) {
   let topic = "sessionstore-state-write";
-  Services.obs.addObserver(function() {
-    Services.obs.removeObserver(arguments.callee, topic, false);
+  let observing = false;
+  function observer(aSubject, aTopic, aData) {
+    Services.obs.removeObserver(observer, topic, false);
+    observing = false;
     executeSoon(aSaveStateCallback);
-  }, topic, false);
+  }
+  registerCleanupFunction(function() {
+    if (observing) {
+      Services.obs.removeObserver(observer, topic, false);
+    }
+  });
+  observing = true;
+  Services.obs.addObserver(observer, topic, false);
 };
 
 var gUniqueCounter = 0;
