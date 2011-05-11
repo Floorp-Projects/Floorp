@@ -472,6 +472,7 @@ SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
 # elif defined(JS_CPU_ARM)
 
 JS_STATIC_ASSERT(sizeof(VMFrame) == 88);
+JS_STATIC_ASSERT(sizeof(VMFrame)%8 == 0);   /* We need 8-byte stack alignment for EABI. */
 JS_STATIC_ASSERT(offsetof(VMFrame, savedLR) ==          (4*21));
 JS_STATIC_ASSERT(offsetof(VMFrame, entryfp) ==          (4*10));
 JS_STATIC_ASSERT(offsetof(VMFrame, stackLimit) ==       (4*9));
@@ -594,6 +595,39 @@ SYMBOL_STRING(JaegerThrowpoline) ":"        "\n"
 "   bxne    r0"                             "\n"
 
     /* Tidy up, then return '0' to represent an unhandled exception. */
+"   mov     r0, sp"                         "\n"
+"   blx  " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
+"   add     sp, sp, #(4*7 + 4*6)"           "\n"
+"   mov     r0, #0"                         "\n"
+"   pop     {r4-r11,pc}"                    "\n"
+);
+
+asm (
+".text\n"
+FUNCTION_HEADER_EXTRA
+".globl " SYMBOL_STRING(JaegerInterpolineScripted)  "\n"
+SYMBOL_STRING(JaegerInterpolineScripted) ":"        "\n"
+    /* The only difference between JaegerInterpoline and JaegerInpolineScripted is that the
+     * scripted variant has to walk up to the previous StackFrame first. */
+"   ldr     r11, [r11, #(4*4)]"             "\n"    /* Load f->prev_ */
+"   str     r11, [sp, #(4*7)]"              "\n"    /* Update f->regs->fp_ */
+    /* Fall through into JaegerInterpoline. */
+
+FUNCTION_HEADER_EXTRA
+".globl " SYMBOL_STRING(JaegerInterpoline)  "\n"
+SYMBOL_STRING(JaegerInterpoline) ":"        "\n"
+"   mov     r3, sp"                         "\n"    /* f */
+"   mov     r2, r0"                         "\n"    /* returnReg */
+"   mov     r1, r5"                         "\n"    /* returnType */
+"   mov     r0, r4"                         "\n"    /* returnData */
+"   blx  " SYMBOL_STRING_RELOC(js_InternalInterpret) "\n"
+"   cmp     r0, #0"                         "\n"
+"   ldr     ip, [sp, #(4*7)]"               "\n"    /* Load (StackFrame*)f->regs->fp_ */
+"   ldrd    r4, r5, [ip, #(4*6)]"           "\n"    /* Load rval payload and type. */
+"   ldr     r1, [sp, #(4*3)]"               "\n"    /* Load scratch. */
+"   it      ne"                             "\n"
+"   bxne    r0"                             "\n"
+    /* Tidy up, then return 0. */
 "   mov     r0, sp"                         "\n"
 "   blx  " SYMBOL_STRING_VMFRAME(PopActiveVMFrame) "\n"
 "   add     sp, sp, #(4*7 + 4*6)"           "\n"
