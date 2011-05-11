@@ -2193,7 +2193,7 @@ mjit::Compiler::generateMethod()
              */
             if (cx->typeInferenceEnabled()) {
                 uint32 slot = ArgSlot(GET_SLOTNO(PC));
-                if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && fixDoubleSlot(slot))
+                if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
                     frame.ensureDouble(frame.getArg(GET_SLOTNO(PC)));
             }
 
@@ -2221,7 +2221,7 @@ mjit::Compiler::generateMethod()
 
             if (cx->typeInferenceEnabled()) {
                 uint32 slot = LocalSlot(script, GET_SLOTNO(PC));
-                if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && fixDoubleSlot(slot))
+                if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
                     frame.ensureDouble(frame.getLocal(GET_SLOTNO(PC)));
             }
 
@@ -6703,31 +6703,16 @@ mjit::Compiler::jsop_forgname(JSAtom *atom)
 
 /*
  * For any locals or args which we know to be integers but are treated as
- * doubles by the type inference, convert to double.  These will be assumed to be
- * doubles at control flow join points.  This function must be called before branching
- * to another opcode.
+ * doubles by the type inference, convert to double. These will be assumed to be
+ * doubles at control flow join points. This function must be called before
+ * branching to another opcode.
+ *
+ * We can only carry entries as doubles when we can track all incoming edges to
+ * a join point (no try blocks etc.) and when we can track all writes to the
+ * local/arg (the slot does not escape) and ensure the Compiler representation
+ * matches the inferred type for the variable's SSA value. These properties are
+ * both ensured by analysis->trackSlot.
  */
-
-/*
- * Whether to ensure that locals/args known to be ints or doubles should be
- * preserved as doubles across control flow edges.
- */
-inline bool
-mjit::Compiler::fixDoubleSlot(uint32 slot)
-{
-    if (!analysis->trackSlot(slot))
-        return false;
-
-    /*
-     * Don't preserve double arguments in inline calls across branches, as we
-     * can't mutate them when inlining. :XXX: could be more precise here.
-     */
-    if (slot < LocalSlot(script, 0) && a->parent)
-        return false;
-
-    return true;
-}
-
 void
 mjit::Compiler::fixDoubleTypes(jsbytecode *target)
 {
@@ -6753,7 +6738,7 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
                 types::TypeSet *targetTypes = analysis->getValueTypes(newv->value);
                 VarType &vt = a->varTypes[newv->slot];
                 if (targetTypes->getKnownTypeTag(cx) == JSVAL_TYPE_DOUBLE &&
-                    fixDoubleSlot(newv->slot)) {
+                    analysis->trackSlot(newv->slot)) {
                     FrameEntry *fe = frame.getSlotEntry(newv->slot);
                     if (vt.type == JSVAL_TYPE_INT32) {
                         fixedDoubleEntries.append(newv->slot);
@@ -6798,7 +6783,8 @@ mjit::Compiler::restoreAnalysisTypes()
     /* Restore known types of locals/args. */
     for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
         JSValueType type = a->varTypes[slot].type;
-        if (type != JSVAL_TYPE_UNKNOWN && (type != JSVAL_TYPE_DOUBLE || fixDoubleSlot(slot))) {
+        if (type != JSVAL_TYPE_UNKNOWN &&
+            (type != JSVAL_TYPE_DOUBLE || analysis->trackSlot(slot))) {
             FrameEntry *fe = frame.getSlotEntry(slot);
             JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(type));
             if (!fe->isTypeKnown())
