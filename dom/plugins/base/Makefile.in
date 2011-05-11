@@ -54,7 +54,6 @@ EXPORTS_NAMESPACES = mozilla
 
 XPIDLSRCS = \
   nsIHTTPHeaderListener.idl \
-  nsIPlugin.idl \
   nsIPluginDocument.idl \
   nsIPluginHost.idl \
   nsIPluginInputStream.idl \
