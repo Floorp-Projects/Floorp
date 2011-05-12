@@ -8678,6 +8678,12 @@ var Scratchpad = {
   },
 };
 
+var Devtools = {
+  getMoreLink: function Devtools_getMoreLink() {
+    switchToTabHavingURI("https://addons.mozilla.org/en-US/firefox/collections/mozilla/webdeveloper/", true);
+  },
+};
+
 
 XPCOMUtils.defineLazyGetter(window, "gShowPageResizers", function () {
 #ifdef XP_WIN

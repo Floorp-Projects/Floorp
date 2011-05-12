@@ -201,6 +201,9 @@
                     label="&errorConsoleCmd.label;"
                     key="key_errorConsole"
                     oncommand="toJavaScriptConsole();"/>
+          <menuitem id="appmenu_getMoreDevtools"
+                    label="&getMoreDevtoolsCmd.label;"
+                    oncommand="Devtools.getMoreLink();"/>
           <menuseparator/>
 #define ID_PREFIX appmenu_developer_
 #define OMIT_ACCESSKEYS
