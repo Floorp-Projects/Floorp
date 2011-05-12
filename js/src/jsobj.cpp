@@ -1337,7 +1337,7 @@ PrincipalsForCompiledCode(const CallArgs &call, JSContext *cx)
      * fp->script()->compartment() != fp->compartment().
      */
 
-    JSPrincipals *calleePrincipals = call.callee().compartment()->principals;
+    JSPrincipals *calleePrincipals = call.callee().principals(cx);
 
 #ifdef DEBUG
     if (calleePrincipals) {
