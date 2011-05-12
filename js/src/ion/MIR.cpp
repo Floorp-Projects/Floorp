@@ -43,13 +43,14 @@
 using namespace js;
 using namespace js::ion;
 
-MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun)
+MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun,
+                           MIRGraph &graph)
   : cx(cx),
+    script(script),
     pc(NULL),
     temp_(temp),
-    script_(script),
     fun_(fun),
-    blocks_(TempAllocPolicy(cx))
+    graph(graph)
 {
     nslots_ = script->nslots + (fun ? fun->nargs + 2 : 0);
 }
