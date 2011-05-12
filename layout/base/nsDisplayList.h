@@ -1457,7 +1457,8 @@ public:
                       const nsRect& aBounds, nscolor aColor,
                       PRBool aIsRootContentDocBackground = PR_FALSE)
     : nsDisplayItem(aBuilder, aFrame), mBounds(aBounds), mColor(aColor),
-      mIsRootContentDocBackground(aIsRootContentDocBackground) {
+      mIsRootContentDocBackground(aIsRootContentDocBackground),
+      mSnappingEnabled(aBuilder->IsSnappingEnabled() && !aBuilder->IsInTransform()) {
     NS_ASSERTION(NS_GET_A(aColor) > 0, "Don't create invisible nsDisplaySolidColors!");
     MOZ_COUNT_CTOR(nsDisplaySolidColor);
   }
@@ -1467,7 +1468,7 @@ public:
   }
 #endif
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder) { return mBounds; }
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
 
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    PRBool* aOutTransparentBackground = nsnull) {
@@ -1504,6 +1505,7 @@ private:
   nsRect  mBounds;
   nscolor mColor;
   PRPackedBool mIsRootContentDocBackground;
+  PRPackedBool mSnappingEnabled;
 };
 
 /**
