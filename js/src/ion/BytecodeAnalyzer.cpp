@@ -40,7 +40,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "BytecodeAnalyzer.h"
+#include "MIRGraph.h"
 #include "Ion.h"
+#include "IonSpew.h"
 #include "jsemit.h"
 #include "jsscriptinlines.h"
 
@@ -53,16 +55,23 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
     TempAllocator temp(&cx->tempPool);
 
     JSFunction *fun = fp->isFunctionFrame() ? fp->fun() : NULL;
-    BytecodeAnalyzer analyzer(cx, script, fun, temp);
+
+    MIRGraph graph(cx);
+    C1Spewer spew(graph, script);
+    BytecodeAnalyzer analyzer(cx, script, fun, temp, graph);
+    spew.enable("/tmp/ion.cfg");
 
     if (!analyzer.analyze())
         return false;
 
+    spew.spew("Building SSA");
+
     return false;
 }
 
-BytecodeAnalyzer::BytecodeAnalyzer(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp)
-  : MIRGenerator(cx, temp, script, fun),
+BytecodeAnalyzer::BytecodeAnalyzer(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
+                                   MIRGraph &graph)
+  : MIRGenerator(cx, temp, script, fun, graph),
     cfgStack_(TempAllocPolicy(cx))
 {
     pc = script->code;
@@ -124,9 +133,7 @@ BytecodeAnalyzer::analyze()
     if (!traverseBytecode())
         return false;
 
-    c1spew(stdout, "Built SSA");
-
-    return false;
+    return true;
 }
 
 // We try to build a control-flow graph in the order that it would be built as
@@ -160,7 +167,7 @@ bool
 BytecodeAnalyzer::traverseBytecode()
 {
     for (;;) {
-        JS_ASSERT(pc < script()->code + script()->length);
+        JS_ASSERT(pc < script->code + script->length);
 
         // Check if we've hit an expected join point or edge in the bytecode.
         if (!cfgStack_.empty() && cfgStack_.back().stopAt == pc) {
@@ -210,7 +217,7 @@ BytecodeAnalyzer::snoopControlFlow(JSOp op)
       case JSOP_GOTO:
       case JSOP_GOTOX:
       {
-        jssrcnote *sn = js_GetSrcNote(script(), pc);
+        jssrcnote *sn = js_GetSrcNote(script, pc);
         switch (sn ? SN_TYPE(sn) : SRC_NULL) {
           case SRC_BREAK:
           case SRC_BREAK2LABEL:
@@ -477,7 +484,7 @@ BytecodeAnalyzer::processDoWhileEnd(CFGState &state)
 uint32
 BytecodeAnalyzer::readIndex(jsbytecode *pc)
 {
-    return (atoms - script()->atomMap.vector) + GET_INDEX(pc);
+    return (atoms - script->atomMap.vector) + GET_INDEX(pc);
 }
 
 bool
@@ -485,7 +492,7 @@ BytecodeAnalyzer::inspectOpcode(JSOp op)
 {
     switch (op) {
       case JSOP_NOP:
-        return maybeLoop(op, js_GetSrcNote(script(), pc));
+        return maybeLoop(op, js_GetSrcNote(script, pc));
 
       case JSOP_PUSH:
         return pushConstant(UndefinedValue());
@@ -497,7 +504,7 @@ BytecodeAnalyzer::inspectOpcode(JSOp op)
         return jsop_binary(op);
 
       case JSOP_DOUBLE:
-        return pushConstant(script()->getConst(readIndex(pc)));
+        return pushConstant(script->getConst(readIndex(pc)));
 
       case JSOP_STRING:
         return pushConstant(StringValue(atoms[GET_INDEX(pc)]));
@@ -519,7 +526,7 @@ BytecodeAnalyzer::inspectOpcode(JSOp op)
 
       case JSOP_POP:
         current->pop();
-        return maybeLoop(op, js_GetSrcNote(script(), pc));
+        return maybeLoop(op, js_GetSrcNote(script, pc));
 
       case JSOP_GETARG:
         current->pushArg(GET_SLOTNO(pc));
@@ -599,7 +606,7 @@ void
 BytecodeAnalyzer::assertValidTraceOp(JSOp op)
 {
 #ifdef DEBUG
-    jssrcnote *sn = js_GetSrcNote(script(), pc);
+    jssrcnote *sn = js_GetSrcNote(script, pc);
     jsbytecode *ifne = pc + js_GetSrcNoteOffset(sn, 0);
     CFGState &state = cfgStack_.back();
 
@@ -662,7 +669,7 @@ BytecodeAnalyzer::jsop_ifeq(JSOp op)
     JS_ASSERT(falseStart > pc);
 
     // We only handle cases that emit source notes.
-    jssrcnote *sn = js_GetSrcNote(script(), pc);
+    jssrcnote *sn = js_GetSrcNote(script, pc);
     if (!sn) {
         // :FIXME: log this.
         return false;
@@ -710,7 +717,7 @@ BytecodeAnalyzer::jsop_ifeq(JSOp op)
         JS_ASSERT(trueEnd > pc);
         JS_ASSERT(trueEnd < falseStart);
         JS_ASSERT(JSOp(*trueEnd) == JSOP_GOTO || JSOp(*trueEnd) == JSOP_GOTOX);
-        JS_ASSERT(!js_GetSrcNote(script(), trueEnd));
+        JS_ASSERT(!js_GetSrcNote(script, trueEnd));
 
         jsbytecode *falseEnd = trueEnd + GetJumpOffset(trueEnd);
         JS_ASSERT(falseEnd > trueEnd);
@@ -785,20 +792,11 @@ BytecodeAnalyzer::jsop_binary(JSOp op)
     return true;
 }
 
-bool
-BytecodeAnalyzer::addBlock(MBasicBlock *block)
-{
-    if (!block)
-        return false;
-    block->setId(blocks_.length());
-    return blocks_.append(block);
-}
-
 MBasicBlock *
 BytecodeAnalyzer::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::New(this, predecessor, pc);
-    if (!addBlock(block))
+    if (!graph.addBlock(block))
         return NULL;
     return block;
 }
@@ -807,424 +805,8 @@ MBasicBlock *
 BytecodeAnalyzer::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::NewLoopHeader(this, predecessor, pc);
-    if (!addBlock(block))
+    if (!graph.addBlock(block))
         return NULL;
     return block;
-}
-
-MBasicBlock *
-MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
-{
-    MBasicBlock *block = new (gen->temp()) MBasicBlock(gen, entryPc);
-    if (!block || !block->init())
-        return NULL;
-
-    if (pred && !block->inherit(pred))
-        return NULL;
-
-    return block;
-}
-
-MBasicBlock *
-MBasicBlock::NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
-{
-    MBasicBlock *block = MBasicBlock::New(gen, pred, entryPc);
-    if (!block || !block->initLoopHeader())
-        return NULL;
-    return block;
-}
-
-MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
-  : gen(gen),
-    instructions_(TempAllocPolicy(gen->cx)),
-    predecessors_(TempAllocPolicy(gen->cx)),
-    phis_(TempAllocPolicy(gen->cx)),
-    stackPosition_(gen->firstStackSlot()),
-    lastIns_(NULL),
-    pc_(pc),
-    header_(NULL)
-{
-}
-
-bool
-MBasicBlock::init()
-{
-    slots_ = gen->allocate<StackSlot>(gen->nslots());
-    if (!slots_)
-        return false;
-    return true;
-}
-
-bool
-MBasicBlock::initLoopHeader()
-{
-    // Copy the initial definitions so we can place phi nodes at the back edge.
-    header_ = gen->allocate<StackSlot>(stackPosition_);
-    if (!header_)
-        return false;
-    for (uint32 i = 0; i < stackPosition_; i++)
-        header_[i] = slots_[i];
-    return true;
-}
-
-bool
-MBasicBlock::inherit(MBasicBlock *pred)
-{
-    stackPosition_ = pred->stackPosition_;
-
-    for (uint32 i = 0; i < stackPosition_; i++)
-        slots_[i] = pred->slots_[i];
-
-    if (!predecessors_.append(pred))
-        return false;
-
-    return true;
-}
-
-MInstruction *
-MBasicBlock::getSlot(uint32 index)
-{
-    JS_ASSERT(index < stackPosition_);
-    return slots_[index].ins;
-}
-
-void
-MBasicBlock::initSlot(uint32 slot, MInstruction *ins)
-{
-    slots_[slot].set(ins);
-}
-
-void
-MBasicBlock::setSlot(uint32 slot, MInstruction *ins)
-{
-    StackSlot &var = slots_[slot];
-
-    // If |var| is copied, we must fix any of its copies so that they point to
-    // a usable value.
-    if (var.isCopied()) {
-        // Find the lowest copy on the stack, to preserve the invariant that
-        // the copy list starts near the top of the stack and proceeds
-        // toward the bottom.
-        uint32 lowest = var.firstCopy;
-        uint32 prev = NotACopy;
-        do {
-            uint32 next = slots_[lowest].nextCopy;
-            if (next == NotACopy)
-                break;
-            JS_ASSERT(next < lowest);
-            prev = lowest;
-            lowest = next;
-        } while (true);
-
-        // Rewrite every copy.
-        for (uint32 copy = var.firstCopy; copy != lowest; copy = slots_[copy].nextCopy)
-            slots_[copy].copyOf = lowest;
-
-        // Make the lowest the new store.
-        slots_[lowest].copyOf = NotACopy;
-        slots_[lowest].firstCopy = prev;
-    }
-
-    var.set(ins);
-}
-
-// We must avoid losing copies when inserting phis. For example, the code
-// on the left must not be naively rewritten as shown.
-//   t = 1           ||   0: const(#1)   ||   0: const(#1)
-//   i = t           \|   do {           \|   do {
-//   do {             ->    2: add(0, 0)  ->   1: phi(0, 1)
-//      i = i + t    /|                  /|    2: add(1, 1)
-//   } ...           ||   } ...          ||   } ...
-//
-// Which is not correct. To solve this, we create a new SSA name at the point
-// where |t| is assigned to |i|, like so:
-//   t = 1          ||   0: const(#1)    ||   0: const(#1)
-//   t' = copy(t)   ||   1: copy(0)      ||   1: copy(0)
-//   i = t'         \|   do {            \|   do {
-//   do {            ->    3: add(0, 1)   ->    2: phi(1, 3)
-//      i = i + t   /|   } ...           /|     3: add(0, 2)
-//   } ...          ||                   ||   } ...
-//                  ||                   ||
-// 
-// We assume that the only way such copies can be created is via simple
-// assignment, like (x = y), which will be reflected in the bytecode via
-// a GET[LOCAL,ARG] that propagates into a SET[LOCAL,ARG]. Normal calls
-// to push() will be compiler-created temporaries. So to minimize creation of
-// new SSA names, we lazily create them when applying a setVariable() whose
-// stack top was pushed by a pushVariable(). That also means we do not create
-// "copies" for calls to push().
-bool
-MBasicBlock::setVariable(uint32 index)
-{
-    JS_ASSERT(stackPosition_ > gen->firstStackSlot());
-    StackSlot &top = slots_[stackPosition_ - 1];
-
-    MInstruction *ins = top.ins;
-    if (top.isCopy()) {
-        // Set the local variable to be a copy of |ins|. Note that unlike
-        // JaegerMonkey, no complicated logic is needed to figure out how to
-        // make |top| a copy of |var|. There is no need, because we only care
-        // about (1) popping being fast, thus the backwarding ordering of
-        // copies, and (2) knowing when a GET flows into a SET.
-        ins = MCopy::New(gen, ins);
-        if (!add(ins))
-            return false;
-    }
-
-    setSlot(index, ins);
-
-    if (!top.isCopy()) {
-        // If the top is not a copy, we make it one anyway, in case the
-        // bytecode ever emits something like:
-        //    GETELEM
-        //    SETLOCAL 0
-        //    SETLOCAL 1
-        //
-        // In this case, we want the second assignment to act as though there
-        // was an intervening POP; GETLOCAL. Note that |ins| is already
-        // correct, because we only created a new instruction if |top.isCopy()|
-        // was true.
-        top.copyOf = index;
-        top.nextCopy = slots_[index].firstCopy;
-        slots_[index].firstCopy = stackPosition_ - 1;
-    }
-
-    return true;
-}
-
-bool
-MBasicBlock::setArg(uint32 arg)
-{
-    // :TODO:  assert not closed
-    return setVariable(gen->argSlot(arg));
-}
-
-bool
-MBasicBlock::setLocal(uint32 local)
-{
-    // :TODO:  assert not closed
-    return setVariable(gen->localSlot(local));
-}
-
-void
-MBasicBlock::push(MInstruction *ins)
-{
-    JS_ASSERT(stackPosition_ < gen->nslots());
-    slots_[stackPosition_].set(ins);
-    stackPosition_++;
-}
-
-void
-MBasicBlock::pushVariable(uint32 slot)
-{
-    if (slots_[slot].isCopy())
-        slot = slots_[slot].copyOf;
-
-    JS_ASSERT(stackPosition_ < gen->nslots());
-    StackSlot &to = slots_[stackPosition_];
-    StackSlot &from = slots_[slot];
-
-    to.ins = from.ins;
-    to.copyOf = slot;
-    to.nextCopy = from.firstCopy;
-    from.firstCopy = stackPosition_;
-
-    stackPosition_++;
-}
-
-void
-MBasicBlock::pushArg(uint32 arg)
-{
-    // :TODO:  assert not closed
-    pushVariable(gen->argSlot(arg));
-}
-
-void
-MBasicBlock::pushLocal(uint32 local)
-{
-    // :TODO:  assert not closed
-    pushVariable(gen->localSlot(local));
-}
-
-MInstruction *
-MBasicBlock::pop()
-{
-    JS_ASSERT(stackPosition_ > gen->firstStackSlot());
-
-    StackSlot &slot = slots_[--stackPosition_];
-    if (slot.isCopy()) {
-        // The latest copy is at the top of the stack, and is the first copy
-        // in the linked list. We only remove copies from the head of the list.
-        StackSlot &backing = slots_[slot.copyOf];
-        JS_ASSERT(backing.isCopied());
-        JS_ASSERT(backing.firstCopy == stackPosition_);
-
-        backing.firstCopy = slot.nextCopy;
-    }
-
-    // The slot cannot have live copies if it is being removed.
-    JS_ASSERT(!slot.isCopied());
-
-    return slot.ins;
-}
-
-MInstruction *
-MBasicBlock::peek(int32 depth)
-{
-    JS_ASSERT(depth < 0);
-    JS_ASSERT(stackPosition_ + depth >= gen->firstStackSlot());
-    return getSlot(stackPosition_ + depth);
-}
-
-bool
-MBasicBlock::add(MInstruction *ins)
-{
-    JS_ASSERT(!lastIns_);
-    if (!ins)
-        return false;
-    ins->setBlock(this);
-    return instructions_.append(ins);
-}
-
-bool
-MBasicBlock::end(MControlInstruction *ins)
-{
-    if (!add(ins))
-        return false;
-    lastIns_ = ins;
-    return true;
-}
-
-bool
-MBasicBlock::addPhi(MPhi *phi)
-{
-    if (!phi || !phis_.append(phi))
-        return false;
-    phi->setBlock(this);
-    return true;
-}
-
-bool
-MBasicBlock::addPredecessor(MBasicBlock *pred)
-{
-    // Predecessors must be finished, and at the correct stack depth.
-    JS_ASSERT(pred->lastIns_);
-    JS_ASSERT(pred->stackPosition_ == stackPosition_);
-
-    for (uint32 i = 0; i < stackPosition_; i++) {
-        MInstruction *mine = getSlot(i);
-        MInstruction *other = pred->getSlot(i);
-
-        if (mine != other) {
-            MPhi *phi;
-
-            // If our tracked value for this slot is the same as our initial
-            // predecessor's entry for that slot, then we have not yet created
-            // a phi node. Otherwise, we definitely have.
-            if (predecessors_[0]->getSlot(i) != mine) {
-                // We already created a phi node.
-                phi = mine->toPhi();
-            } else {
-                // Otherwise, create a new phi node.
-                phi = MPhi::New(gen);
-                if (!addPhi(phi) || !phi->addInput(gen, mine))
-                    return false;
-
-#ifdef DEBUG
-                // Assert that each previous predecessor has the same value
-                // for this slot, so we only have to add one input.
-                for (size_t j = 0; j < predecessors_.length(); j++)
-                    JS_ASSERT(predecessors_[j]->getSlot(i) == mine);
-#endif
-
-                setSlot(i, phi);
-            }
-
-            if (!phi->addInput(gen, other))
-                return false;
-        }
-    }
-
-    return predecessors_.append(pred);
-}
-
-void
-MBasicBlock::assertUsesAreNotWithin(MOperand *use)
-{
-#ifdef DEBUG
-    for (; use; use = use->next())
-        JS_ASSERT(use->owner()->block()->id() < id());
-#endif
-}
-
-bool
-MBasicBlock::addBackedge(MBasicBlock *pred, MBasicBlock *successor)
-{
-    // Predecessors must be finished, and at the correct stack depth.
-    JS_ASSERT(lastIns_);
-    JS_ASSERT(pred->lastIns_);
-    JS_ASSERT(pred->stackPosition_ == stackPosition_);
-
-    // Place minimal phi nodes by comparing the set of defintions at loop entry
-    // with the loop exit. For each mismatching slot, we create a phi node, and
-    // rewrite all uses of the entry definition to use the phi node instead.
-    //
-    // This algorithm would break in the face of copies, so we take care to
-    // give every assignment its own unique SSA name. See
-    // MBasicBlock::setVariable for more information.
-    for (uint32 i = 0; i < stackPosition_; i++) {
-        MInstruction *entryDef = header_[i].ins;
-        MInstruction *exitDef = pred->slots_[i].ins;
-
-        // If the entry definition and exit definition do not differ, then
-        // no phi placement is necessary.
-        if (entryDef == exitDef)
-            continue;
-
-        // Create a new phi. Do not add inputs yet, as we don't want to
-        // accidentally rewrite the phi's operands.
-        MPhi *phi = MPhi::New(gen);
-        if (!addPhi(phi))
-            return false;
-
-        MOperand *use = entryDef->uses();
-        MOperand *prev = NULL;
-        while (use) {
-            JS_ASSERT(use->ins() == entryDef);
-
-            // Uses are initially sorted, with the head of the list being the
-            // most recently inserted. This ordering is maintained while
-            // placing phis.
-            if (use->owner()->block()->id() < id()) {
-                assertUsesAreNotWithin(use);
-                break;
-            }
-
-            // Replace the instruction's use with the phi. Note that |prev|
-            // does not change, and is really NULL since we always remove
-            // from the head of the list,
-            MOperand *next = use->next();
-            use->owner()->replaceOperand(prev, use, phi); 
-            use = next;
-        }
-
-#ifdef DEBUG
-        // Assert that no slot after this one has the same entryDef. This would
-        // imply that the SSA building process has accidentally allowed the
-        // same SSA name to occupy two slots. Note, this is actually allowed
-        // when the expression stack is non-empty, for example, (a + a) will
-        // push two stack slots with the same SSA name as |a|. However, at loop
-        // edges, the expression stack is empty, and thus we expect there to be
-        // no copies.
-        for (uint32 j = i + 1; j < stackPosition_; j++)
-            JS_ASSERT(slots_[j].ins != entryDef);
-#endif
-
-        if (!phi->addInput(gen, entryDef) || !phi->addInput(gen, exitDef))
-            return false;
-        successor->setSlot(i, phi);
-    }
-
-    return predecessors_.append(pred);
 }
 

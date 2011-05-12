@@ -41,25 +41,60 @@
 
 #include "BytecodeAnalyzer.h"
 #include "Ion.h"
+#include "IonSpew.h"
+#include "MIRGraph.h"
 #include "jsscriptinlines.h"
 
 using namespace js;
 using namespace js::ion;
 
+C1Spewer::C1Spewer(MIRGraph &graph, JSScript *script)
+  : graph(graph),
+    script(script),
+    spewout_(NULL)
+{
+}
+
+C1Spewer::~C1Spewer()
+{
+    fclose(spewout_);
+}
+
 void
-MIRGenerator::c1spew(FILE *fp, const char *pass)
+C1Spewer::enable(const char *path)
+{
+    spewout_ = fopen(path, "w");
+    if (!spewout_)
+        return;
+
+    fprintf(spewout_, "begin_compilation\n");
+    fprintf(spewout_, "  name \"%s:%d\"\n", script->filename, script->lineno);
+    fprintf(spewout_, "  method \"%s:%d\"\n", script->filename, script->lineno);
+    fprintf(spewout_, "  date %d\n", (int)time(NULL));
+    fprintf(spewout_, "end_compilation\n");
+}
+
+void
+C1Spewer::spew(const char *pass)
+{
+    if (spewout_)
+        spew(spewout_, pass);
+}
+
+void
+C1Spewer::spew(FILE *fp, const char *pass)
 {
     fprintf(fp, "begin_cfg\n");
     fprintf(fp, "  name \"%s\"\n", pass);
 
-    for (size_t i = 0; i < blocks_.length(); i++)
-        c1spew(fp, blocks_[i]);
+    for (size_t i = 0; i < graph.numBlocks(); i++)
+        spew(fp, graph.getBlock(i));
 
     fprintf(fp, "end_cfg\n");
 }
 
 void
-MIRGenerator::c1spew(FILE *fp, MBasicBlock *block)
+C1Spewer::spew(FILE *fp, MBasicBlock *block)
 {
     fprintf(fp, "  begin_block\n");
     fprintf(fp, "    name \"B%d\"\n", block->id());
@@ -80,6 +115,17 @@ MIRGenerator::c1spew(FILE *fp, MBasicBlock *block)
         fprintf(fp, " \"B%d\"", successor->id());
     }
     fprintf(fp, "\n");
+
+    fprintf(fp, "    xhandlers\n");
+    fprintf(fp, "    flags\n");
+    fprintf(fp, "    begin_states\n");
+    fprintf(fp, "      begin_locals\n");
+    fprintf(fp, "        size 0\n");
+    fprintf(fp, "        method \"None\"\n");
+    fprintf(fp, "      end_locals\n");
+    fprintf(fp, "    end_states\n");
+    fprintf(fp, "    begin_HIR\n");
+    fprintf(fp, "    end_HIR\n");
 
     fprintf(fp, "  end_block\n");
 }

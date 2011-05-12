@@ -117,19 +117,18 @@ MIRType MIRTypeFromValue(const js::Value &vp)
 class MInstruction;
 class MBasicBlock;
 class MOperand;
+class MIRGraph;
 
 class MIRGenerator
 {
   public:
-    MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun);
+    MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script, JSFunction *fun,
+                 MIRGraph &graph);
 
     TempAllocator &temp() {
         return temp_;
     }
 
-    JSScript *script() const {
-        return script_;
-    }
     JSFunction *fun() const {
         return fun_;
     }
@@ -140,7 +139,7 @@ class MIRGenerator
         return fun()->nargs;
     }
     uint32 nlocals() const {
-        return script()->nfixed;
+        return script->nfixed;
     }
     uint32 calleeSlot() const {
         JS_ASSERT(fun());
@@ -176,21 +175,16 @@ class MIRGenerator
         return reinterpret_cast<T *>(temp().allocate(sizeof(T) * count));
     }
 
-    void c1spew(FILE *fp, const char *pass);
-
-  private:
-    void c1spew(FILE *fp, MBasicBlock *block);
-
   public:
     JSContext *cx;
+    JSScript *script;
 
   protected:
     jsbytecode *pc;
     TempAllocator &temp_;
-    JSScript *script_;
     JSFunction *fun_;
     uint32 nslots_;
-    Vector<MBasicBlock *, 8, TempAllocPolicy> blocks_;
+    MIRGraph &graph;
 };
 
 // Represents a use of a definition.
