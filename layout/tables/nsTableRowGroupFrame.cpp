@@ -69,12 +69,6 @@ NS_QUERYFRAME_HEAD(nsTableRowGroupFrame)
   NS_QUERYFRAME_ENTRY(nsTableRowGroupFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsHTMLContainerFrame)
 
-/* virtual */ bool
-nsTableRowGroupFrame::IsContainingBlock() const
-{
-  return PR_TRUE;
-}
-
 PRInt32
 nsTableRowGroupFrame::GetRowCount()
 {

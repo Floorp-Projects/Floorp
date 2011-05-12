@@ -2108,10 +2108,7 @@ GetPercentHeight(const nsStyleCoord& aStyle,
   if (eStyleUnit_Percent != aStyle.GetUnit())
     return PR_FALSE;
 
-  nsIFrame *f;
-  for (f = aFrame->GetParent(); f && !f->IsContainingBlock();
-       f = f->GetParent())
-    ;
+  nsIFrame *f = aFrame->GetContainingBlock();
   if (!f) {
     NS_NOTREACHED("top of frame tree not a containing block");
     return PR_FALSE;

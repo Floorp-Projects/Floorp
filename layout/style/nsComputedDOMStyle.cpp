@@ -131,7 +131,7 @@ GetContainingBlockFor(nsIFrame* aFrame) {
   if (!aFrame) {
     return nsnull;
   }
-  return nsHTMLReflowState::GetContainingBlockFor(aFrame);
+  return aFrame->GetContainingBlock();
 }
 
 nsComputedDOMStyle::nsComputedDOMStyle()
@@ -3332,7 +3332,7 @@ nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord)
     if (!mInnerFrame)
       return PR_FALSE;
 
-    if (mInnerFrame->IsContainingBlock()) {
+    if (nsLayoutUtils::IsNonWrapperBlock(mInnerFrame)) {
       blockHeight = mInnerFrame->GetContentRect().height;
     } else {
       GetCBContentHeight(blockHeight);

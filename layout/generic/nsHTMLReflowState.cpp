@@ -299,31 +299,17 @@ void nsHTMLReflowState::InitCBReflowState()
     return;
   }
 
-  // If outer tables ever become containing blocks, we need to make sure to use
-  // their mCBReflowState in the non-absolutely-positioned case for inner
-  // tables.
-  NS_ASSERTION(frame->GetType() != nsGkAtoms::tableFrame ||
-               !frame->GetParent()->IsContainingBlock(),
-               "Outer table should not be containing block");
-
-  if (parentReflowState->frame->IsContainingBlock() ||
-      // Absolutely positioned frames should always be kids of the frames that
-      // determine their containing block....
-      (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE)) {
-    // an absolutely positioned inner table needs to use the parent of
-    // the outer table.  So the above comment about absolutely
-    // positioned frames is sort of a lie.
-    if (parentReflowState->parentReflowState &&
-        frame->GetType() == nsGkAtoms::tableFrame) {
-      mCBReflowState = parentReflowState->parentReflowState;
+  if (parentReflowState->frame == frame->GetContainingBlock()) {
+    // Inner table frames need to use the containing block of the outer
+    // table frame.
+    if (frame->GetType() == nsGkAtoms::tableFrame) {
+      mCBReflowState = parentReflowState->mCBReflowState;
     } else {
       mCBReflowState = parentReflowState;
     }
-      
-    return;
+  } else {
+    mCBReflowState = parentReflowState->mCBReflowState;
   }
-  
-  mCBReflowState = parentReflowState->mCBReflowState;
 }
 
 /* Check whether CalcQuirkContainingBlockHeight would stop on the
@@ -373,7 +359,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
     // mCBReflowState->mFlags.mVResize is set correctly below when
     // reflowing descendant.
     mFlags.mVResize = PR_TRUE;
-  } else if (mCBReflowState && !frame->IsContainingBlock()) {
+  } else if (mCBReflowState && !nsLayoutUtils::IsNonWrapperBlock(frame)) {
     // XXX Is this problematic for relatively positioned inlines acting
     // as containing block for absolutely positioned elements?
     // Possibly; in that case we should at least be checking
@@ -415,7 +401,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext)
     // line-height depends on block height
     frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_HEIGHT);
     // but only on containing blocks if this frame is not a suitable block
-    dependsOnCBHeight |= !frame->IsContainingBlock();
+    dependsOnCBHeight |= !nsLayoutUtils::IsNonWrapperBlock(frame);
   }
 
   // If we're the descendant of a table cell that performs special height
@@ -486,23 +472,6 @@ nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aRefl
   if (!rs)
     return 0;
   return rs->mComputedWidth;
-}
-
-/* static */
-nsIFrame*
-nsHTMLReflowState::GetContainingBlockFor(const nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame, "Must have frame to work with");
-  nsIFrame* container = aFrame->GetParent();
-  if (aFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
-    // Absolutely positioned frames are just kids of their containing
-    // blocks (which may happen to be inlines).
-    return container;
-  }
-  while (container && !container->IsContainingBlock()) {
-    container = container->GetParent();
-  }
-  return container;
 }
 
 void
@@ -701,22 +670,12 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   }
 }
 
-static nsIFrame*
-GetNearestContainingBlock(nsIFrame *aFrame)
-{
-  nsIFrame *cb = aFrame;
-  do {
-    cb = cb->GetParent();
-  } while (!cb->IsContainingBlock());
-  return cb;
-}
-
 nsIFrame*
 nsHTMLReflowState::GetHypotheticalBoxContainer(nsIFrame* aFrame,
                                                nscoord& aCBLeftEdge,
                                                nscoord& aCBWidth)
 {
-  aFrame = GetNearestContainingBlock(aFrame);
+  aFrame = aFrame->GetContainingBlock();
   NS_ASSERTION(aFrame != frame, "How did that happen?");
 
   /* Now aFrame is the containing block we want */
@@ -1190,7 +1149,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
   if (leftIsAuto && rightIsAuto) {
     // Use the direction of the original ("static-position") containing block
     // to dictate whether 'left' or 'right' is treated like 'static-position'.
-    if (NS_STYLE_DIRECTION_LTR == GetNearestContainingBlock(placeholderFrame)
+    if (NS_STYLE_DIRECTION_LTR == placeholderFrame->GetContainingBlock()
                                     ->GetStyleVisibility()->mDirection) {
       NS_ASSERTION(hypotheticalBox.mLeftIsExact, "should always have "
                    "exact value on containing block's start side");
@@ -1570,8 +1529,13 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsPresContext*          aPres
   // formed by the content edge of the nearest block-level ancestor
   aContainingBlockWidth = aContainingBlockRS->mComputedWidth;
   aContainingBlockHeight = aContainingBlockRS->mComputedHeight;
-  
-  if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
+
+  // mFrameType for abs-pos tables is NS_CSS_FRAME_TYPE_BLOCK, so we need to
+  // special case them here.
+  if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE ||
+      (frame->GetType() == nsGkAtoms::tableFrame &&
+       frame->GetStyleDisplay()->IsAbsolutelyPositioned() &&
+       (frame->GetParent()->GetStateBits() & NS_FRAME_OUT_OF_FLOW))) {
     // See if the ancestor is block-level or inline-level
     if (NS_FRAME_GET_TYPE(aContainingBlockRS->mFrameType) == NS_CSS_FRAME_TYPE_INLINE) {
       // Base our size on the actual size of the frame.  In cases when this is
@@ -2168,7 +2132,7 @@ nscoord
 nsHTMLReflowState::CalcLineHeight() const
 {
   nscoord blockHeight =
-    frame->IsContainingBlock() ? mComputedHeight :
+    nsLayoutUtils::IsNonWrapperBlock(frame) ? mComputedHeight :
     (mCBReflowState ? mCBReflowState->mComputedHeight : NS_AUTOHEIGHT);
 
   return CalcLineHeight(frame->GetStyleContext(), blockHeight);

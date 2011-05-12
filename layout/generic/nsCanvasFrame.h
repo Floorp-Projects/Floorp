@@ -88,7 +88,6 @@ public:
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  virtual bool IsContainingBlock() const { return true; }
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return nsHTMLContainerFrame::IsFrameOfType(aFlags &

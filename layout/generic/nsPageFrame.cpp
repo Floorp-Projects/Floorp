@@ -175,12 +175,6 @@ nsPageFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-/* virtual */ bool
-nsPageFrame::IsContainingBlock() const
-{
-  return PR_TRUE;
-}
-
 void 
 nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
 {

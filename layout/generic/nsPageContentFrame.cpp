@@ -168,9 +168,3 @@ nsPageContentFrame::GetFrameName(nsAString& aResult) const
   return MakeFrameName(NS_LITERAL_STRING("PageContent"), aResult);
 }
 #endif
-
-/* virtual */ bool
-nsPageContentFrame::IsContainingBlock() const
-{
-  return PR_TRUE;
-}

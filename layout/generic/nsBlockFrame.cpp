@@ -630,22 +630,6 @@ nsBlockFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 }
 
 /* virtual */ bool
-nsBlockFrame::IsContainingBlock() const
-{
-  // The block wrappers we use to wrap blocks inside inlines aren't
-  // described in the CSS spec.  We need to make them not be containing
-  // blocks for the cases where we care about the 'direction' property
-  // of an element's containing block.
-  // Since the parent of such a block is either a normal block or
-  // another such pseudo, this shouldn't cause anything bad to happen.
-  // Also the anonymous blocks inside table cells are not containing blocks.
-  nsIAtom *pseudoType = GetStyleContext()->GetPseudo();
-  return pseudoType != nsCSSAnonBoxes::mozAnonymousBlock &&
-         pseudoType != nsCSSAnonBoxes::mozAnonymousPositionedBlock &&
-         pseudoType != nsCSSAnonBoxes::cellContent;
-}
-
-/* virtual */ bool
 nsBlockFrame::IsFloatContainingBlock() const
 {
   return PR_TRUE;

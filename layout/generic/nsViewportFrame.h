@@ -100,8 +100,6 @@ public:
    * @see nsGkAtoms::viewportFrame
    */
   virtual nsIAtom* GetType() const;
-  
-  virtual bool IsContainingBlock() const;
 
   virtual void InvalidateInternal(const nsRect& aDamageRect,
                                   nscoord aX, nscoord aY, nsIFrame* aForChild,
