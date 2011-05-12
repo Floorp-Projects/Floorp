@@ -131,7 +131,6 @@ def parse(filename, xul_tester, reldir = ''):
             expect = True
             random = False
             slow = False
-            debugMode = False
 
             pos = 0
             while pos < len(parts):
@@ -163,25 +162,6 @@ def parse(filename, xul_tester, reldir = ''):
                     if xul_tester.test(cond):
                         random = True
                     pos += 1
-                elif parts[pos].startswith('require-or'):
-                    cond = parts[pos][len('require-or('):-1]
-                    (preconditions, fallback_action) = re.split(",", cond)
-                    for precondition in re.split("&&", preconditions):
-                        if precondition == 'debugMode':
-                            debugMode = True
-                        elif precondition == 'true':
-                            pass
-                        else:
-                            if fallback_action == "skip":
-                                expect = enable = False
-                            elif fallback_action == "fail":
-                                expect = False
-                            elif fallback_action == "random":
-                                random = True
-                            else:
-                                raise Exception("Invalid precondition '%s' or fallback action '%s'" % (precondition, fallback_action))
-                            break
-                    pos += 1
                 elif parts[pos] == 'script':
                     script = parts[pos+1]
                     pos += 2
@@ -198,6 +178,6 @@ def parse(filename, xul_tester, reldir = ''):
                     pos += 1
 
             assert script is not None
-            ans.append(TestCase(os.path.join(reldir, script),
-                                enable, expect, random, slow, debugMode))
+            ans.append(TestCase(os.path.join(reldir, script), 
+                                enable, expect, random, slow))
     return ans

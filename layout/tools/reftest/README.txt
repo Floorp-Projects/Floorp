@@ -106,13 +106,6 @@ must be one of the following:
                          fast on a 32-bit system but inordinately slow on a
                          64-bit system).
 
-      require-or(cond1&&cond2&&...,fallback)
-          Require some particular setup be performed or environmental
-          condition(s) made true (eg setting debug mode) before the test
-          is run. If any condition is unknown, unimplemented, or fails,
-          revert to the fallback failure-type.
-          Example: require-or(debugMode,skip)
-
       asserts(count)
           Loading the test and reference is known to assert exactly
           count times.

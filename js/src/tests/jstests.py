@@ -358,7 +358,6 @@ if __name__ == '__main__':
         call(cmd)
         sys.exit()
 
-    results = None
     if not test_list:
         print 'no tests selected'
     else:
@@ -375,5 +374,5 @@ if __name__ == '__main__':
     if output_file != sys.stdout:
         output_file.close()
 
-    if results is None or not results.all_passed():
+    if not results.all_passed():
         sys.exit(1)
