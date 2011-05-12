@@ -261,9 +261,7 @@ void GeckoChildProcessHost::InitWindowsGroupID()
     taskbarInfo->GetAvailable(&isSupported);
     nsAutoString appId;
     if (isSupported && NS_SUCCEEDED(taskbarInfo->GetDefaultGroupId(appId))) {
-      mGroupId.Assign(PRUnichar('\"'));
       mGroupId.Append(appId);
-      mGroupId.Append(PRUnichar('\"'));
     } else {
       mGroupId.AssignLiteral("-");
     }
