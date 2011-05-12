@@ -53,16 +53,7 @@
 fieldset > legend {
   padding-left: 2px;
   padding-right: 2px;
-  border: none;
-  position: static;
-  float: none;
   width: -moz-fit-content;
-  min-width: 0;
-  max-width: none;
-  height: auto;
-  min-height: 0;
-  max-height: none;
-  white-space: nowrap;
 }
 
 legend {

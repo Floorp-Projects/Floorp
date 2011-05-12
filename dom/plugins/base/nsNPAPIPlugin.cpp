@@ -233,7 +233,7 @@ static void CheckClassInitialized()
   NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN callbacks initialized\n"));
 }
 
-NS_IMPL_ISUPPORTS1(nsNPAPIPlugin, nsIPlugin)
+NS_IMPL_ISUPPORTS0(nsNPAPIPlugin)
 
 nsNPAPIPlugin::nsNPAPIPlugin()
 {
@@ -534,7 +534,7 @@ nsNPAPIPlugin::PluginFuncs()
   return &mPluginFuncs;
 }
 
-NS_IMETHODIMP
+nsresult
 nsNPAPIPlugin::CreatePluginInstance(nsIPluginInstance **aResult)
 {
   if (!aResult)

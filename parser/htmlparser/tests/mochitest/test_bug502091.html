@@ -21,12 +21,6 @@ Adding a <meta> element by writing to innerHTML should work correctly.
 <script class="testbody" type="text/javascript">
   function $(id) { return document.getElementById(id); }
 
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch);
-  var gOriginalHtml5Pref = prefs.getBoolPref("html5.parser.enable");
-  prefs.setBoolPref("html5.parser.enable", true);
-
   var iframe=document.createElement("iframe");
   iframe.setAttribute("id", "iframe");
   iframe.src = "bug_502091_iframe.html";
@@ -34,11 +28,6 @@ Adding a <meta> element by writing to innerHTML should work correctly.
     var div = $("iframe").contentDocument.getElementById("testdiv");
     var meta = div.getElementsByTagName("meta");
     is(meta.length, 1, "meta element not added to div");
-
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-              .getService(Components.interfaces.nsIPrefBranch);
-    prefs.setBoolPref("html5.parser.enable", gOriginalHtml5Pref);
   };
   $("test").appendChild(iframe);
 

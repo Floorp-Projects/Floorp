@@ -4201,7 +4201,7 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
     nsCSSValue::URL* url = bindingValue->GetURLStructValue();
     NS_ASSERTION(url, "What's going on here?");
 
-    if (NS_LIKELY(url->mURI)) {
+    if (NS_LIKELY(url->GetURI())) {
       display->mBinding = url;
     } else {
       display->mBinding = nsnull;

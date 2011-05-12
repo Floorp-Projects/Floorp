@@ -546,52 +546,31 @@ GenericProtocolHandler.prototype = {
   },
   
   newURI: function GPH_newURI(spec, originalCharset, baseURI) {
-    // See bug 408599 - feed URIs can be either standard URLs of the form
-    // feed://example.com, in which case the real protocol is http, or nested
-    // URIs of the form feed:realscheme:. When realscheme is either http or
-    // https, we deal with the way that creates a standard URL with the
-    // realscheme as the host by unmangling in newChannel; for others, we fail
-    // rather than let it wind up loading something like www.realscheme.com//foo
+    // Feed URIs can be either nested URIs of the form feed:realURI (in which
+    // case we create a nested URI for the realURI) or feed://example.com, in
+    // which case we create a nested URI for the real protocol which is http.
 
-    const feedSlashes = "feed://";
-    const feedHttpSlashes = "feed:http://";
-    const feedHttpsSlashes = "feed:https://";
-    const NS_ERROR_MALFORMED_URI = 0x804B000A;
+    var scheme = this._scheme + ":";
+    if (spec.substr(0, scheme.length) != scheme)
+      throw Components.results.NS_ERROR_MALFORMED_URI;
 
-    if (spec.substr(0, feedSlashes.length) != feedSlashes &&
-        spec.substr(0, feedHttpSlashes.length) != feedHttpSlashes &&
-        spec.substr(0, feedHttpsSlashes.length) != feedHttpsSlashes)
-      throw NS_ERROR_MALFORMED_URI;
-
-    var uri = 
-        Cc["@mozilla.org/network/standard-url;1"].
-        createInstance(Ci.nsIStandardURL);
-    uri.init(Ci.nsIStandardURL.URLTYPE_STANDARD, 80, spec, originalCharset,
-             baseURI);
+    var prefix = spec.substr(scheme.length, 2) == "//" ? "http:" : "";
+    var inner = Cc["@mozilla.org/network/io-service;1"].
+                getService(Ci.nsIIOService).newURI(spec.replace(scheme, prefix),
+                                                   originalCharset, baseURI);
+    var uri = Cc["@mozilla.org/network/util;1"].
+              getService(Ci.nsINetUtil).newSimpleNestedURI(inner);
+    uri.spec = inner.spec.replace(prefix, scheme);
     return uri;
   },
   
   newChannel: function GPH_newChannel(aUri) {
-    var ios = 
-        Cc["@mozilla.org/network/io-service;1"].
-        getService(Ci.nsIIOService);
-    // feed: URIs either start feed://, in which case the real scheme is http:
-    // or feed:http(s)://, (which by now we've changed to feed://realscheme//)
-    var feedSpec = aUri.spec;
-    const httpsChunk = "feed://https//";
-    const httpChunk = "feed://http//";
-    if (feedSpec.substr(0, httpsChunk.length) == httpsChunk)
-      feedSpec = "https://" + feedSpec.substr(httpsChunk.length);
-    else if (feedSpec.substr(0, httpChunk.length) == httpChunk)
-      feedSpec = "http://" + feedSpec.substr(httpChunk.length);
-    else
-      feedSpec = feedSpec.replace(/^feed/, "http");
-
-    var uri = ios.newURI(feedSpec, aUri.originCharset, null);
-    var channel =
-      ios.newChannelFromURI(uri, null).QueryInterface(Ci.nsIHttpChannel);
-    // Set this so we know this is supposed to be a feed
-    channel.setRequestHeader("X-Moz-Is-Feed", "1", false);
+    var inner = aUri.QueryInterface(Ci.nsINestedURI).innerURI;
+    var channel = Cc["@mozilla.org/network/io-service;1"].
+                  getService(Ci.nsIIOService).newChannelFromURI(inner, null);
+    if (channel instanceof Components.interfaces.nsIHttpChannel)
+      // Set this so we know this is supposed to be a feed
+      channel.setRequestHeader("X-Moz-Is-Feed", "1", false);
     channel.originalURI = aUri;
     return channel;
   },
