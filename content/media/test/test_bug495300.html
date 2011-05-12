@@ -15,25 +15,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=495300
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=495300">Mozilla Bug 495300</a>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-var testsWaiting = 0;
+
+var manager = new MediaTestManager;
+
+function filename(uri) {
+  return uri.substr(uri.lastIndexOf("/")+1);
+}
 
 function mediaEnded(event) {
-  ok(true, "Got expected 'ended' event: " + event.target.currentSrc);
+  ok(true, "Got expected 'ended' event: " + filename(event.target.currentSrc));
 
   if (event.target._expectedDuration)
     ok(Math.abs(event.target.currentTime - event.target._expectedDuration) < 0.1,
-       "currentTime equals duration: " + event.target.currentSrc);
+       "currentTime equals duration: " + filename(event.target.currentSrc));
 
-  if (--testsWaiting == 0)
-    SimpleTest.finish();
+  manager.finished(event.target.token);
 }
 
-for (var i = 0; i < gSeekTests.length; ++i) {
-  var test = gSeekTests[i];
+function startTest(test, token) {
   var elemType = /^audio/.test(test.type) ? "audio" : "video";
   var v1 = document.createElement(elemType);
-  if (!v1.canPlayType(test.type))
-    continue;
 
   v1.src = test.name;
   if (test.duration) {
@@ -45,14 +46,12 @@ for (var i = 0; i < gSeekTests.length; ++i) {
   v1.addEventListener("ended", mediaEnded, false);
   v1.load();
 
-  ++testsWaiting;
+  v1.token = token;
+  manager.started(token);
 }
 
-if (testsWaiting == 0) {
-  todo(false, "Can't play anything");
-} else {
-  SimpleTest.waitForExplicitFinish();
-}
+manager.runTests(gSeekTests, startTest);
+
 </script>
 </pre>
 </body>
