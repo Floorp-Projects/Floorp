@@ -215,6 +215,11 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_FORCE_ALLOW_COOKIES = 0x20000;
 
   /**
+   * Prevent the owner principal from being inherited for this load.
+   */
+  const unsigned long LOAD_FLAGS_DISALLOW_INHERIT_OWNER = 0x40000;
+
+  /**
    * Loads a given URI.  This will give priority to loading the requested URI
    * in the object implementing	this interface.  If it can't be loaded here
    * however, the URI dispatcher will go through its normal process of content

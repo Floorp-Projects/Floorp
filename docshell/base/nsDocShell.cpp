@@ -1391,7 +1391,7 @@ nsDocShell::LoadURI(nsIURI * aURI,
 
     PRUint32 flags = 0;
 
-    if (inheritOwner)
+    if (inheritOwner && !(aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_OWNER))
         flags |= INTERNAL_LOAD_FLAGS_INHERIT_OWNER;
 
     if (!sendReferrer)
