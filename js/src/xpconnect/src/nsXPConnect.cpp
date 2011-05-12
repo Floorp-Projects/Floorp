@@ -735,8 +735,7 @@ nsXPConnect::Traverse(void *p, nsCycleCollectionTraversalCallback &cb)
 #endif
     {
         // Normal codepath (matches non-DEBUG_CC codepath).
-        NS_ASSERTION(xpc_IsGrayGCThing(p), "Tried to traverse a non-gray object.");
-        type = markJSObject ? GCMarked : GCUnmarked;
+        type = !markJSObject && xpc_IsGrayGCThing(p) ? GCUnmarked : GCMarked;
     }
 
     if (cb.WantDebugInfo()) {

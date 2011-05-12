@@ -49,9 +49,7 @@ DIRS = windowwatcher appstartup find webbrowserpersist commandhandler
 
 ifdef MOZ_XUL
 ifdef NS_PRINTING
-ifndef WINCE
 DIRS += printingui
-endif
 endif
 endif
 

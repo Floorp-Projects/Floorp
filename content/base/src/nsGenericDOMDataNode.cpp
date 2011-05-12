@@ -63,6 +63,7 @@
 #include "nsBindingManager.h"
 #include "nsCCUncollectableMarker.h"
 #include "mozAutoDocUpdate.h"
+#include "nsPLDOMEvent.h"
 
 #include "pldhash.h"
 #include "prprf.h"
@@ -391,8 +392,6 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
     nsNodeUtils::CharacterDataChanged(this, &info);
 
     if (haveMutationListeners) {
-      mozAutoRemovableBlockerRemover blockerRemover(GetOwnerDoc());
-
       nsMutationEvent mutation(PR_TRUE, NS_MUTATION_CHARACTERDATAMODIFIED);
 
       mutation.mPrevAttrValue = oldValue;
@@ -403,7 +402,7 @@ nsGenericDOMDataNode::SetTextInternal(PRUint32 aOffset, PRUint32 aCount,
       }
 
       mozAutoSubtreeModified subtree(GetOwnerDoc(), this);
-      nsEventDispatcher::Dispatch(this, nsnull, &mutation);
+      (new nsPLDOMEvent(this, mutation))->RunDOMEventWhenSafe();
     }
   }
 
@@ -956,21 +955,22 @@ nsGenericTextNode::ReplaceWholeText(const nsAFlatString& aContent,
 {
   *aResult = NS_OK;
 
-  // Batch possible DOMSubtreeModified events.
-  mozAutoSubtreeModified subtree(GetOwnerDoc(), nsnull);
-  mozAutoDocUpdate updateBatch(GetCurrentDoc(), UPDATE_CONTENT_MODEL, PR_TRUE);
-
-  nsCOMPtr<nsIContent> parent = GetParent();
-
   // Handle parent-less nodes
+  nsCOMPtr<nsIContent> parent = GetParent();
   if (!parent) {
     if (aContent.IsEmpty()) {
       return nsnull;
     }
 
-    SetText(aContent.get(), aContent.Length(), PR_TRUE);
+    SetNodeValue(aContent);
     return this;
   }
+
+  // We're relying on mozAutoSubtreeModified to keep the doc alive here.
+  nsIDocument* doc = GetOwnerDoc();
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(doc, nsnull);
 
   PRInt32 index = parent->IndexOf(this);
   if (index < 0) {
@@ -987,6 +987,25 @@ nsGenericTextNode::ReplaceWholeText(const nsAFlatString& aContent,
     FirstLogicallyAdjacentTextNode(parent, index);
   PRInt32 last =
     LastLogicallyAdjacentTextNode(parent, index, parent->GetChildCount());
+
+  // Fire mutation events. Optimize the common case of there being no
+  // listeners
+  if (nsContentUtils::
+        HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+    for (PRInt32 i = first; i <= last; ++i) {
+      nsCOMPtr<nsIContent> child = parent->GetChildAt((PRUint32)i);
+      if (child &&
+          (i != index || aContent.IsEmpty())) {
+        nsContentUtils::MaybeFireNodeRemoved(child, parent, doc);
+      }
+    }
+  }
+
+  // Remove the needed nodes
+  // Don't want to use 'doc' here since it might no longer be the correct
+  // document.
+  mozAutoDocUpdate updateBatch(parent->GetCurrentDoc(), UPDATE_CONTENT_MODEL,
+                               PR_TRUE);
 
   do {
     if (last == index && !aContent.IsEmpty())

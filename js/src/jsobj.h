@@ -260,7 +260,11 @@ namespace js {
 
 struct NativeIterator;
 class RegExp;
+
 class GlobalObject;
+class ArgumentsObject;
+class NormalArgumentsObject;
+class StrictArgumentsObject;
 class StringObject;
 
 }
@@ -875,98 +879,10 @@ struct JSObject : js::gc::Cell {
 
     JSBool makeDenseArraySlow(JSContext *cx);
 
-    /*
-     * Arguments-specific getters and setters.
-     */
-
-  private:
-    /*
-     * We represent arguments objects using js_ArgumentsClass and
-     * js::StrictArgumentsClass. The two are structured similarly, and methods
-     * valid on arguments objects of one class are also generally valid on
-     * arguments objects of the other.
-     *
-     * Arguments objects of either class store arguments length in a slot:
-     *
-     * JSSLOT_ARGS_LENGTH   - the number of actual arguments and a flag
-     *                        indicating whether arguments.length was
-     *                        overwritten. This slot is not used to represent
-     *                        arguments.length after that property has been
-     *                        assigned, even if the new value is integral: it's
-     *                        always the original length.
-     *
-     * Both arguments classes use a slot for storing arguments data:
-     *
-     * JSSLOT_ARGS_DATA     - pointer to an ArgumentsData structure
-     *
-     * ArgumentsData for normal arguments stores the value of arguments.callee,
-     * as long as that property has not been overwritten. If arguments.callee
-     * is overwritten, the corresponding value in ArgumentsData is set to
-     * MagicValue(JS_ARGS_HOLE). Strict arguments do not store this value
-     * because arguments.callee is a poison pill for strict mode arguments.
-     *
-     * The ArgumentsData structure also stores argument values. For normal
-     * arguments this occurs after the corresponding function has returned, and
-     * for strict arguments this occurs when the arguments object is created,
-     * or sometimes shortly after (but not observably so). arguments[i] is
-     * stored in ArgumentsData.slots[i], accessible via getArgsElement() and
-     * setArgsElement(). Deletion of arguments[i] overwrites that slot with
-     * MagicValue(JS_ARGS_HOLE); subsequent redefinition of arguments[i] will
-     * use a normal property to store the value, ignoring the slot.
-     *
-     * Non-strict arguments have a private:
-     *
-     * private              - the function's stack frame until the function
-     *                        returns, when it is replaced with null; also,
-     *                        JS_ARGUMENTS_OBJECT_ON_TRACE while on trace, if
-     *                        arguments was created on trace
-     *
-     * Technically strict arguments have a private, but it's always null.
-     * Conceptually it would be better to remove this oddity, but preserving it
-     * allows us to work with arguments objects of either kind more abstractly,
-     * so we keep it for now.
-     */
-    static const uint32 JSSLOT_ARGS_DATA = 1;
-
   public:
-    /* Number of extra fixed arguments object slots besides JSSLOT_PRIVATE. */
-    static const uint32 JSSLOT_ARGS_LENGTH = 0;
-    static const uint32 ARGS_CLASS_RESERVED_SLOTS = 2;
-    static const uint32 ARGS_FIRST_FREE_SLOT = ARGS_CLASS_RESERVED_SLOTS + 1;
-
-    /* Lower-order bit stolen from the length slot. */
-    static const uint32 ARGS_LENGTH_OVERRIDDEN_BIT = 0x1;
-    static const uint32 ARGS_PACKED_BITS_COUNT = 1;
-
-    static size_t getArgumentsLengthOffset() {
-        /* All arguments objects have their length in a fixed slot. */
-        return getFixedSlotOffset(JSSLOT_ARGS_LENGTH);
-    }
-
-    /*
-     * Set the initial length of the arguments, and mark it as not overridden.
-     */
-    inline void setArgsLength(uint32 argc);
-
-    /*
-     * Return the initial length of the arguments.  This may differ from the
-     * current value of arguments.length!
-     */
-    inline uint32 getArgsInitialLength() const;
-
-    inline void setArgsLengthOverridden();
-    inline bool isArgsLengthOverridden() const;
-
-    inline js::ArgumentsData *getArgsData() const;
-    inline void setArgsData(js::ArgumentsData *data);
-
-    inline const js::Value &getArgsCallee() const;
-    inline void setArgsCallee(const js::Value &callee);
-
-    inline const js::Value &getArgsElement(uint32 i) const;
-    inline js::Value *getArgsElements() const;
-    inline js::Value *addressOfArgsElement(uint32 i);
-    inline void setArgsElement(uint32 i, const js::Value &v);
+    inline js::ArgumentsObject *asArguments();
+    inline js::NormalArgumentsObject *asNormalArguments();
+    inline js::StrictArgumentsObject *asStrictArguments();
 
   private:
     /*

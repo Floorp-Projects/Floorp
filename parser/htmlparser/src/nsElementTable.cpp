@@ -1010,6 +1010,15 @@ const nsHTMLElement gHTMLElements[] = {
     /*special parents,kids*/            0,&gPreKids,
   },
   {
+    /*tag*/                             eHTMLTag_progress,
+    /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
+    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,
+    /*autoclose starttags and endtags*/ 0,0,0,0,
+    /*parent,incl,exclgroups*/          kFormControl, kFlowEntity, kNone,
+    /*special props, prop-range*/       0,kDefaultPropRange,
+    /*special parents,kids*/            0,0,
+  },
+  {
     /*tag*/                             eHTMLTag_q,
     /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
     /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,

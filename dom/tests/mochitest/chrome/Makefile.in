@@ -68,5 +68,12 @@ _TEST_FILES = \
 		test_sandbox_image.xul \
 		$(NULL)
 
+ifeq (WINNT,$(OS_ARCH))
+_TEST_FILES += \
+		test_sizemode_attribute.xul \
+		sizemode_attribute.xul \
+		$(NULL)
+endif
+
 libs:: $(_TEST_FILES)
 	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

@@ -2462,6 +2462,34 @@ TraceMonitor::outOfMemory() const
            traceAlloc->outOfMemory();
 }
 
+void
+TraceMonitor::getCodeAllocStats(size_t &total, size_t &frag_size, size_t &free_size) const
+{
+    if (codeAlloc) {
+        codeAlloc->getStats(total, frag_size, free_size);
+    } else {
+        total = 0;
+        frag_size = 0;
+        free_size = 0;
+    }
+}
+
+size_t
+TraceMonitor::getVMAllocatorsMainSize() const
+{
+    return dataAlloc->getBytesAllocated() +
+           traceAlloc->getBytesAllocated() +
+           tempAlloc->getBytesAllocated();
+}
+
+size_t
+TraceMonitor::getVMAllocatorsReserveSize() const
+{
+    return dataAlloc->mReserveSize +
+           traceAlloc->mReserveSize +
+           tempAlloc->mReserveSize;
+}
+
 /*
  * This function destroys the recorder after a successful recording, possibly
  * starting a suspended outer recorder.
@@ -3131,8 +3159,7 @@ public:
         if (p == fp->addressOfArgs()) {
             if (frameobj) {
                 JS_ASSERT_IF(fp->hasArgsObj(), frameobj == &fp->argsObj());
-                fp->setArgsObj(*frameobj);
-                JS_ASSERT(frameobj->isArguments());
+                fp->setArgsObj(*frameobj->asArguments());
                 if (frameobj->isNormalArguments())
                     frameobj->setPrivate(fp);
                 else
@@ -12665,7 +12692,9 @@ TraceRecorder::getPropertyById(LIns* obj_ins, Value* outp)
     JSAtom* atom;
     jsbytecode* pc = cx->regs().pc;
     const JSCodeSpec& cs = js_CodeSpec[*pc];
-    if (JOF_TYPE(cs.format) == JOF_ATOM) {
+    if (*pc == JSOP_LENGTH) {
+        atom = cx->runtime->atomState.lengthAtom;
+    } else if (JOF_TYPE(cs.format) == JOF_ATOM) {
         atom = atoms[GET_INDEX(pc)];
     } else {
         JS_ASSERT(JOF_TYPE(cs.format) == JOF_SLOTATOM);
@@ -12847,7 +12876,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::guardNotHole(LIns *argsobj_ins, LIns *idx_ins)
 {
     // vp = &argsobj->slots[JSSLOT_ARGS_DATA].slots[idx]
-    LIns* argsData_ins = w.getObjPrivatizedSlot(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
+    LIns* argsData_ins = w.getObjPrivatizedSlot(argsobj_ins, ArgumentsObject::DATA_SLOT);
     LIns* slotOffset_ins = w.addp(w.nameImmw(offsetof(ArgumentsData, slots)),
                                   w.ui2p(w.muliN(idx_ins, sizeof(Value))));
     LIns* vp_ins = w.addp(argsData_ins, slotOffset_ins);
@@ -12900,17 +12929,18 @@ TraceRecorder::record_JSOP_GETELEM()
     }
 
     if (obj->isArguments()) {
+        ArgumentsObject *argsobj = obj->asArguments();
+
         // Don't even try to record if out of range or reading a deleted arg
         int32 int_idx = idx.toInt32();
-        if (int_idx < 0 || int_idx >= (int32)obj->getArgsInitialLength())
+        if (int_idx < 0 || int_idx >= (int32)argsobj->initialLength())
             RETURN_STOP_A("cannot trace arguments with out of range index");
-        if (obj->getArgsElement(int_idx).isMagic(JS_ARGS_HOLE))
+        if (argsobj->element(int_idx).isMagic(JS_ARGS_HOLE))
             RETURN_STOP_A("reading deleted args element");
 
         // Only trace reading arguments out of active, tracked frame
         unsigned depth;
-        StackFrame *afp = guardArguments(obj, obj_ins, &depth);
-        if (afp) {
+        if (StackFrame *afp = guardArguments(obj, obj_ins, &depth)) {
             Value* vp = &afp->canonicalActualArg(int_idx);
             if (idx_ins->isImmD()) {
                 JS_ASSERT(int_idx == (int32)idx_ins->immD());
@@ -13840,7 +13870,7 @@ TraceRecorder::record_JSOP_FUNAPPLY()
             StackFrame *afp = guardArguments(aobj, aobj_ins, &depth);
             if (!afp)
                 RETURN_STOP_A("can't reach arguments object's frame");
-            if (aobj->isArgsLengthOverridden())
+            if (aobj->asArguments()->hasOverriddenLength())
                 RETURN_STOP_A("can't trace arguments with overridden length");
             guardArgsLengthNotAssigned(aobj_ins);
             length = afp->numActualArgs();
@@ -15641,13 +15671,25 @@ TraceRecorder::record_JSOP_ARGSUB()
     RETURN_STOP_A("can't trace JSOP_ARGSUB hard case");
 }
 
+namespace tjit {
+
+nj::LIns *
+Writer::getArgsLength(nj::LIns *args) const
+{
+    uint32 offset = JSObject::getFixedSlotOffset(ArgumentsObject::INITIAL_LENGTH_SLOT) + sPayloadOffset;
+    return name(lir->insLoad(nj::LIR_ldi, args, offset, ACCSET_SLOTS),
+                "argsLength");
+}
+
+} // namespace tjit
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
     // The following implements JSObject::isArgsLengthOverridden on trace.
     // ARGS_LENGTH_OVERRIDDEN_BIT is set if length was overridden.
     LIns *len_ins = w.getArgsLength(argsobj_ins);
-    LIns *ovr_ins = w.andi(len_ins, w.nameImmi(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
+    LIns *ovr_ins = w.andi(len_ins, w.nameImmi(ArgumentsObject::LENGTH_OVERRIDDEN_BIT));
     guard(true, w.eqi0(ovr_ins), MISMATCH_EXIT);
     return len_ins;
 }
@@ -15666,7 +15708,7 @@ TraceRecorder::record_JSOP_ARGCNT()
     // We also have to check that arguments.length has not been mutated
     // at record time, because if so we will generate incorrect constant
     // LIR, which will assert in tryToDemote().
-    if (fp->hasArgsObj() && fp->argsObj().isArgsLengthOverridden())
+    if (fp->hasArgsObj() && fp->argsObj().hasOverriddenLength())
         RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
     LIns *a_ins = getFrameObjPtr(fp->addressOfArgs());
     if (callDepth == 0) {
@@ -16298,13 +16340,13 @@ TraceRecorder::record_JSOP_LENGTH()
 
         // We must both check at record time and guard at run time that
         // arguments.length has not been reassigned, redefined or deleted.
-        if (obj->isArgsLengthOverridden())
+        if (obj->asArguments()->hasOverriddenLength())
             RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
         LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
 
-        // slot_ins is the value from the slot; right-shift to get the length
-        // (see JSObject::getArgsInitialLength in jsfun.cpp).
-        LIns* v_ins = w.i2d(w.rshiN(slot_ins, JSObject::ARGS_PACKED_BITS_COUNT));
+        // slot_ins is the value from the slot; right-shift to get the length;
+        // see ArgumentsObject.h.
+        LIns* v_ins = w.i2d(w.rshiN(slot_ins, ArgumentsObject::PACKED_BITS_COUNT));
         set(&l, v_ins);
         return ARECORD_CONTINUE;
     }
@@ -17047,8 +17089,7 @@ LoopProfile::profileOperation(JSContext* cx, JSOp op)
             increment(OP_ARRAY_READ);
     }
 
-    if (op == JSOP_GETPROP || op == JSOP_CALLPROP)
-    {
+    if (op == JSOP_GETPROP || op == JSOP_CALLPROP) {
         /* Try to see if it's a scripted getter, which is faster in the tracer. */
         Value v = cx->regs().sp[-1];
 

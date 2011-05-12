@@ -40,6 +40,7 @@
 #include "nsBoundingMetrics.h"
 #include "nsRenderingContext.h"
 #include "nsDeviceContext.h"
+#include "nsStyleConsts.h"
 #include "gfxTextRunCache.h"
 
 namespace {
@@ -79,6 +80,10 @@ public:
     virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
                                       PRPackedBool* aBreakBefore) {
         NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
+    }
+    virtual PRInt8 GetHyphensOption() {
+        NS_ERROR("This shouldn't be called because we never call BreakAndMeasureText");
+        return NS_STYLE_HYPHENS_NONE;
     }
     virtual gfxFloat GetHyphenWidth() {
         NS_ERROR("This shouldn't be called because we never enable hyphens");
