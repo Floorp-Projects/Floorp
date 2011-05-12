@@ -63,10 +63,6 @@ CPPSRCS		= \
 		nsAppShellFactory.cpp \
 		$(NULL)
 
-ifeq (,$(filter-out WINCE WINNT,$(OS_ARCH)))
-EXTRA_DSO_LIBS	= gkgfx
-endif
-
 EXTRA_DSO_LDOPTS = \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
