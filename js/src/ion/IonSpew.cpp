@@ -118,13 +118,31 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
 
     fprintf(fp, "    xhandlers\n");
     fprintf(fp, "    flags\n");
+
     fprintf(fp, "    begin_states\n");
+
     fprintf(fp, "      begin_locals\n");
-    fprintf(fp, "        size 0\n");
+    fprintf(fp, "        size %d\n", block->numEntrySlots());
     fprintf(fp, "        method \"None\"\n");
+    for (uint32 i = 0; i < block->numEntrySlots(); i++) {
+        MInstruction *ins = block->getEntrySlot(i);
+        fprintf(fp, "        ");
+        fprintf(fp, "%d ", i);
+        ins->printName(fp);
+        fprintf(fp, "\n");
+    }
     fprintf(fp, "      end_locals\n");
+
     fprintf(fp, "    end_states\n");
+
     fprintf(fp, "    begin_HIR\n");
+    for (uint32 i = 0; i < block->numInstructions(); i++) {
+        MInstruction *ins = block->getInstruction(i);
+        fprintf(fp, "      ");
+        fprintf(fp, "0 %d ", ins->useCount());
+        ins->printName(fp);
+        fprintf(fp, " <|@\n");
+    }
     fprintf(fp, "    end_HIR\n");
 
     fprintf(fp, "  end_block\n");

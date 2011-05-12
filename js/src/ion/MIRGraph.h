@@ -94,7 +94,6 @@ class MBasicBlock : public TempObject
   private:
     MBasicBlock(MIRGenerator *gen, jsbytecode *pc);
     bool init();
-    bool initLoopHeader();
     bool inherit(MBasicBlock *pred);
     void assertUsesAreNotWithin(MOperand *use);
 
@@ -111,6 +110,9 @@ class MBasicBlock : public TempObject
     // as needed.
     bool setVariable(uint32 slot);
 
+    // This function retrieves the internal instruction associated with a
+    // slot, and should not be used for normal stack operations. It is an
+    // internal helper that is also used to enhance spew.
     MInstruction *getSlot(uint32 index);
 
   public:
@@ -118,6 +120,11 @@ class MBasicBlock : public TempObject
     // its slots and stack depth are initialized from |pred|.
     static MBasicBlock *New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
     static MBasicBlock *NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
+
+    // Copies the stack state to the header. This should only be called if the
+    // block was created with no predecessor, and should be called once the
+    // stack state is initialized.
+    bool initHeader();
 
     void setId(uint32 id) {
         id_ = id;
@@ -179,6 +186,19 @@ class MBasicBlock : public TempObject
     MControlInstruction *lastIns() const {
         return lastIns_;
     }
+    size_t numEntrySlots() const {
+        return headerSlots_;
+    }
+    MInstruction *getEntrySlot(size_t i) const {
+        JS_ASSERT(i < numEntrySlots());
+        return header_[i].ins;
+    }
+    size_t numInstructions() const {
+        return instructions_.length();
+    }
+    MInstruction * getInstruction(size_t i) const {
+        return instructions_[i];
+    }
 
   private:
     MIRGenerator *gen;
@@ -191,9 +211,11 @@ class MBasicBlock : public TempObject
     jsbytecode *pc_;
     uint32 id_;
 
-    // Only set for loop headers. Contains the definitions imported at the
-    // initial loop entry.
+    // Stack state at the entry point to the basic block. This is required to
+    // compute phi nodes at the back edge to a loop header. It is placed on all
+    // blocks, anyway, to assist in debugging.
     StackSlot *header_;
+    uint32 headerSlots_;
 };
 
 } // namespace ion
