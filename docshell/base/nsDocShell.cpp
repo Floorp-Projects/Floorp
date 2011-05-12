@@ -6475,6 +6475,10 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     // from inside this pagehide.
     mLoadingURI = nsnull;
     
+    // Stop any in-progress loading, so that we don't accidentally trigger any
+    // PageShow notifications from Embed() interrupting our loading below.
+    Stop();
+
     // Notify the current document that it is about to be unloaded!!
     //
     // It is important to fire the unload() notification *before* any state
