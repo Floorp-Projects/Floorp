@@ -1753,6 +1753,12 @@ GetCurrentWorkingDirectory(nsAString& workingDirectory)
     return true;
 }
 
+static JSPrincipals *
+FindObjectPrincipals(JSContext *cx, JSObject *obj)
+{
+    return gJSPrincipals;
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1888,6 +1894,14 @@ main(int argc, char **argv, char **envp)
                 fprintf(gErrFile, "+++ Failed to get ScriptSecurityManager service, running without principals");
             }
         }
+
+        static JSSecurityCallbacks securityCallbacks = {
+            nsnull,
+            nsnull,
+            FindObjectPrincipals,
+            nsnull
+        };
+        JS_SetRuntimeSecurityCallbacks(rt, &securityCallbacks);
 
 #ifdef TEST_TranslateThis
         nsCOMPtr<nsIXPCFunctionThisTranslator>
