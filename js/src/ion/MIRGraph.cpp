@@ -68,8 +68,10 @@ MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
     if (!block || !block->init())
         return NULL;
 
-    if (pred && !block->inherit(pred))
-        return NULL;
+    if (pred) {
+        if (!block->inherit(pred) || !block->initHeader())
+            return NULL;
+    }
 
     return block;
 }
@@ -77,10 +79,7 @@ MBasicBlock::New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 MBasicBlock *
 MBasicBlock::NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc)
 {
-    MBasicBlock *block = MBasicBlock::New(gen, pred, entryPc);
-    if (!block || !block->initLoopHeader())
-        return NULL;
-    return block;
+    return MBasicBlock::New(gen, pred, entryPc);
 }
 
 MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
@@ -91,7 +90,8 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     stackPosition_(gen->firstStackSlot()),
     lastIns_(NULL),
     pc_(pc),
-    header_(NULL)
+    header_(NULL),
+    headerSlots_(gen->firstStackSlot())
 {
 }
 
@@ -105,13 +105,15 @@ MBasicBlock::init()
 }
 
 bool
-MBasicBlock::initLoopHeader()
+MBasicBlock::initHeader()
 {
+    JS_ASSERT(!header_);
+
     // Copy the initial definitions so we can place phi nodes at the back edge.
-    header_ = gen->allocate<StackSlot>(stackPosition_);
+    header_ = gen->allocate<StackSlot>(headerSlots_);
     if (!header_)
         return false;
-    for (uint32 i = 0; i < stackPosition_; i++)
+    for (uint32 i = 0; i < headerSlots_; i++)
         header_[i] = slots_[i];
     return true;
 }
@@ -120,6 +122,7 @@ bool
 MBasicBlock::inherit(MBasicBlock *pred)
 {
     stackPosition_ = pred->stackPosition_;
+    headerSlots_ = stackPosition_;
 
     for (uint32 i = 0; i < stackPosition_; i++)
         slots_[i] = pred->slots_[i];
