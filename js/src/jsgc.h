@@ -72,7 +72,7 @@ js_TraceXML(JSTracer *trc, JSXML* thing);
 
 namespace js {
 
-struct GCHelperThread;
+class GCHelperThread;
 struct Shape;
 
 namespace gc {
