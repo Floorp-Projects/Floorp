@@ -363,9 +363,6 @@ class Compiler : public BaseCompiler
     bool addTraceHints;
     bool oomInVector;       // True if we have OOM'd appending to a vector. 
     enum { NoApplyTricks, LazyArgsObj } applyTricks;
-#ifdef DEBUG
-    int *pcProfile;
-#endif
 
     Compiler *thisFromCtor() { return this; }
 
