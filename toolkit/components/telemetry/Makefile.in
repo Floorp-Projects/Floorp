@@ -1,4 +1,5 @@
-# ***** BEGIN LICENSE BLOCK ***** 
+#
+# ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
@@ -11,16 +12,15 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is the Mozilla Browser code.
+# The Original Code is mozilla.org code.
 #
 # The Initial Developer of the Original Code is
-# Netscape Communications Corporation.
-# Portions created by the Initial Developer are Copyright (C) 2003
+# The Mozilla Foundation.
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
-#  Benjamin Smedberg <benjamin@smedbergs.us>
+#  Taras Glek <tglek@mozilla.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -36,96 +36,22 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH     = ../..
+DEPTH = ../../..
 topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH     = @srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
-include $(topsrcdir)/config/config.mk
+include $(DEPTH)/config/autoconf.mk
 
-# These component dirs are built for all apps (including suite)
+MODULE = telemetry
 
-ifdef MOZ_ENABLE_XREMOTE
-PARALLEL_DIRS += remote
-endif
-
-PARALLEL_DIRS += \
-  aboutmemory \
-  apppicker \
-  commandlines \
-  console \
-  contentprefs \
-  cookie \
-  exthelper \
-  filepicker \
-  find \
-  microformats \
-  parentalcontrols \
-  passwordmgr \
-  perf \
-  places \
-  prompts \
-  startup \
-  statusfilter \
-  typeaheadfind \
-  urlformatter \
-  viewconfig \
-  viewsource \
-  webapps \
-  telemetry \
+EXTRA_COMPONENTS = \
+  TelemetryPing.manifest \
+  TelemetryPing.js \
   $(NULL)
 
-ifdef BUILD_CTYPES
-PARALLEL_DIRS += \
-  ctypes \
-  $(NULL)
+ifdef ENABLE_TESTS
+DIRS += tests
 endif
-
-ifneq (,$(filter cocoa, $(MOZ_WIDGET_TOOLKIT)))
-TOOL_DIRS += alerts
-else
-PARALLEL_DIRS += alerts
-endif
-
-ifdef MOZ_FEEDS
-PARALLEL_DIRS += feeds
-endif
-
-ifdef MOZ_HELP_VIEWER
-PARALLEL_DIRS += help
-endif
-
-ifdef NS_PRINTING
-PARALLEL_DIRS += printing
-endif
-
-ifdef MOZ_XUL
-PARALLEL_DIRS += \
-  autocomplete \
-  satchel \
-  $(NULL)
-endif
-
-ifdef MOZ_TOOLKIT_SEARCH
-PARALLEL_DIRS += search
-endif
-
-ifdef MOZ_RDF
-PARALLEL_DIRS += \
-  downloads \
-  intl \
-  $(NULL)
-endif
-
-ifdef MOZ_URL_CLASSIFIER
-PARALLEL_DIRS += url-classifier
-endif
-
-DIRS += \
-  build \
-  $(NULL)
-
-EXTRA_PP_COMPONENTS = nsDefaultCLH.js
-EXTRA_COMPONENTS = nsDefaultCLH.manifest
 
 include $(topsrcdir)/config/rules.mk
