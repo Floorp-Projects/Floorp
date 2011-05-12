@@ -4291,7 +4291,7 @@ types::TypeObject::trace(JSTracer *trc)
  */
 void
 TypeSet::CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
-                              HashSet<JSScript*> *pcondensed, TypeSet *types)
+                              ScriptSet *pcondensed, TypeSet *types)
 {
     /*
      * This function is called from GC, and cannot malloc any data that could
@@ -4396,7 +4396,7 @@ TypeSet::CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
         }
 
         if (pcondensed) {
-            HashSet<JSScript*>::AddPtr p = pcondensed->lookupForAdd(script);
+            ScriptSet::AddPtr p = pcondensed->lookupForAdd(script);
             if (!p) {
                 if (pcondensed->add(p, script))
                     types->addCondensed(cx, script);
@@ -4430,7 +4430,7 @@ PruneInstanceObjects(TypeObject *object)
 static void
 CondenseTypeObjectList(JSContext *cx, TypeCompartment *compartment, TypeObject *objects)
 {
-    HashSet<JSScript *> condensed(cx), *pcondensed = &condensed;
+    TypeSet::ScriptSet condensed(cx), *pcondensed = &condensed;
     if (!condensed.init()) {
         compartment->setPendingNukeTypes(cx);
         pcondensed = NULL;
@@ -4584,7 +4584,7 @@ JSScript::condenseTypes(JSContext *cx)
     CondenseTypeObjectList(cx, &compartment->types, typeObjects);
 
     if (varTypes) {
-        js::HashSet<JSScript *> condensed(cx), *pcondensed = &condensed;
+        TypeSet::ScriptSet condensed(cx), *pcondensed = &condensed;
         if (!condensed.init()) {
             compartment->types.setPendingNukeTypes(cx);
             pcondensed = NULL;
