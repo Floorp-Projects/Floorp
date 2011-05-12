@@ -4104,11 +4104,15 @@ BEGIN_CASE(JSOP_LENGTH)
                     rval = NumberValue(length);
                     break;
                 }
-                if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
-                    uint32 length = obj->getArgsInitialLength();
-                    JS_ASSERT(length < INT32_MAX);
-                    rval = Int32Value(int32_t(length));
-                    break;
+
+                if (obj->isArguments()) {
+                    ArgumentsObject *argsobj = obj->asArguments();
+                    if (!argsobj->hasOverriddenLength()) {
+                        uint32 length = argsobj->initialLength();
+                        JS_ASSERT(length < INT32_MAX);
+                        rval = Int32Value(int32_t(length));
+                        break;
+                    }
                 }
             }
         }
@@ -4456,11 +4460,12 @@ BEGIN_CASE(JSOP_GETELEM)
             }
         } else if (obj->isArguments()) {
             uint32 arg = uint32(i);
+            ArgumentsObject *argsobj = obj->asArguments();
 
-            if (arg < obj->getArgsInitialLength()) {
-                copyFrom = obj->addressOfArgsElement(arg);
+            if (arg < argsobj->initialLength()) {
+                copyFrom = argsobj->addressOfElement(arg);
                 if (!copyFrom->isMagic(JS_ARGS_HOLE)) {
-                    if (StackFrame *afp = (StackFrame *) obj->getPrivate())
+                    if (StackFrame *afp = reinterpret_cast<StackFrame *>(argsobj->getPrivate()))
                         copyFrom = &afp->canonicalActualArg(arg);
                     goto end_getelem;
                 }

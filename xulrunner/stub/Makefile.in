@@ -73,7 +73,7 @@ LIBS            += \
 		$(NULL)
 endif
 
-ifneq (,$(filter WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 RCINCLUDE = xulrunner-stub.rc
 ifndef GNU_CC
 RCFLAGS += -DMOZ_XULRUNNER -I$(srcdir)
@@ -94,11 +94,7 @@ endif
 include $(topsrcdir)/config/config.mk
 
 ifdef _MSC_VER
-ifdef WINCE
-WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
-else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
-endif
 endif
 
 LIBS += $(JEMALLOC_LIBS)

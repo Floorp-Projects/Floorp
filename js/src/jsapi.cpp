@@ -2653,15 +2653,11 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
       case JSGC_STACKPOOL_LIFESPAN:
         rt->gcEmptyArenaPoolLifespan = value;
         break;
-      case JSGC_MODE:
+      default:
+        JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
         JS_ASSERT(rt->gcMode == JSGC_MODE_GLOBAL ||
                   rt->gcMode == JSGC_MODE_COMPARTMENT);
-        break;
-      default:
-        JS_ASSERT(key == JSGC_TRIGGER_FACTOR);
-        JS_ASSERT(value >= 100);
-        rt->setGCTriggerFactor(value);
         return;
     }
 }
@@ -2676,8 +2672,6 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return rt->gcMaxMallocBytes;
       case JSGC_STACKPOOL_LIFESPAN:
         return rt->gcEmptyArenaPoolLifespan;
-      case JSGC_TRIGGER_FACTOR:
-        return rt->gcTriggerFactor;
       case JSGC_BYTES:
         return rt->gcBytes;
       case JSGC_MODE:

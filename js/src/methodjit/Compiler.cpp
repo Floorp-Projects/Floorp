@@ -800,25 +800,25 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
     JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %u, Slow code (stubcc) size = %u.\n", masm.size(), stubcc.size());
 
-    size_t totalSize = masm.size() +
-                       stubcc.size() +
-                       (masm.numDoubles() * sizeof(double)) +
-                       (stubcc.masm.numDoubles() * sizeof(double)) +
-                       jumpTableOffsets.length() * sizeof(void *);
+    size_t codeSize = masm.size() +
+                      stubcc.size() +
+                      (masm.numDoubles() * sizeof(double)) +
+                      (stubcc.masm.numDoubles() * sizeof(double)) +
+                      jumpTableOffsets.length() * sizeof(void *);
 
     JSC::ExecutablePool *execPool;
     uint8 *result =
-        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(totalSize, &execPool);
+        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(codeSize, &execPool);
     if (!result) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
     JS_ASSERT(execPool);
-    JSC::ExecutableAllocator::makeWritable(result, totalSize);
+    JSC::ExecutableAllocator::makeWritable(result, codeSize);
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
     
-    JSC::LinkBuffer fullCode(result, totalSize);
+    JSC::LinkBuffer fullCode(result, codeSize);
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 
     size_t nNmapLive = loopEntries.length();
@@ -832,25 +832,25 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     }
 
     /* Please keep in sync with JITScript::scriptDataSize! */
-    size_t totalBytes = sizeof(JITScript) +
-                        sizeof(NativeMapEntry) * nNmapLive +
-                        sizeof(InlineFrame) * inlineFrames.length() +
-                        sizeof(CallSite) * callSites.length() +
+    size_t dataSize = sizeof(JITScript) +
+                      sizeof(NativeMapEntry) * nNmapLive +
+                      sizeof(InlineFrame) * inlineFrames.length() +
+                      sizeof(CallSite) * callSites.length() +
 #if defined JS_MONOIC
-                        sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
-                        sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
-                        sizeof(ic::CallICInfo) * callICs.length() +
-                        sizeof(ic::EqualityICInfo) * equalityICs.length() +
-                        sizeof(ic::TraceICInfo) * traceICs.length() +
+                      sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
+                      sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
+                      sizeof(ic::CallICInfo) * callICs.length() +
+                      sizeof(ic::EqualityICInfo) * equalityICs.length() +
+                      sizeof(ic::TraceICInfo) * traceICs.length() +
 #endif
 #if defined JS_POLYIC
-                        sizeof(ic::PICInfo) * pics.length() +
-                        sizeof(ic::GetElementIC) * getElemICs.length() +
-                        sizeof(ic::SetElementIC) * setElemICs.length() +
+                       sizeof(ic::PICInfo) * pics.length() +
+                       sizeof(ic::GetElementIC) * getElemICs.length() +
+                       sizeof(ic::SetElementIC) * setElemICs.length() +
 #endif
                         0;
 
-    uint8 *cursor = (uint8 *)cx->calloc_(totalBytes);
+    uint8 *cursor = (uint8 *)cx->calloc_(dataSize);
     if (!cursor) {
         execPool->release();
         js_ReportOutOfMemory(cx);
@@ -1256,7 +1256,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     }
 #endif
 
-    JS_ASSERT(size_t(cursor - (uint8*)jit) == totalBytes);
+    JS_ASSERT(size_t(cursor - (uint8*)jit) == dataSize);
 
     /* Link fast and slow paths together. */
     stubcc.fixCrossJumps(result, masm.size(), masm.size() + stubcc.size());
@@ -1291,7 +1291,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     *jitp = jit;
 
     /* We tolerate a race in the stats. */
-    cx->runtime->mjitMemoryUsed += totalSize + totalBytes;
+    cx->runtime->mjitDataSize += dataSize;
 
     return Compile_Okay;
 }
@@ -4114,7 +4114,9 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     }
 
     /* If the incoming type will never PIC, take slow path. */
-    if (top->isNotType(JSVAL_TYPE_OBJECT)) {
+    if (top->isTypeKnown() && top->getKnownType() != JSVAL_TYPE_OBJECT) {
+        JS_ASSERT_IF(atom == cx->runtime->atomState.lengthAtom,
+                     top->getKnownType() != JSVAL_TYPE_STRING);
         jsop_getprop_slow(atom, usePropCache);
         return true;
     }

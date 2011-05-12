@@ -1019,7 +1019,6 @@ pref("converter.html2txt.structs",          true); // Output structured phrases 
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 
 pref("intl.accept_languages",               "chrome://global/locale/intl.properties");
-pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
 pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.menuitems.insertseparatorbeforeaccesskeys","chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.static",     "chrome://global/locale/intl.properties");
@@ -1048,6 +1047,11 @@ pref("font.language.group",                 "chrome://global/locale/intl.propert
 pref("intl.uidirection.ar", "rtl");
 pref("intl.uidirection.he", "rtl");
 pref("intl.uidirection.fa", "rtl");
+
+// use en-US hyphenation by default for content tagged with plain lang="en"
+pref("intl.hyphenation-alias.en", "en-us");
+// and for other subtags of en-*, if no specific patterns are available
+pref("intl.hyphenation-alias.en-*", "en-us");
 
 pref("font.mathfont-family", "STIXNonUnicode, STIXSizeOneSym, STIXSize1, STIXGeneral, Standard Symbols L, DejaVu Sans, Cambria Math");
 

@@ -473,11 +473,12 @@ stubs::GetElem(VMFrame &f)
             }
         } else if (obj->isArguments()) {
             uint32 arg = uint32(i);
+            ArgumentsObject *argsobj = obj->asArguments();
 
-            if (arg < obj->getArgsInitialLength()) {
-                copyFrom = obj->addressOfArgsElement(arg);
+            if (arg < argsobj->initialLength()) {
+                copyFrom = argsobj->addressOfElement(arg);
                 if (!copyFrom->isMagic()) {
-                    if (StackFrame *afp = (StackFrame *) obj->getPrivate())
+                    if (StackFrame *afp = (StackFrame *) argsobj->getPrivate())
                         copyFrom = &afp->canonicalActualArg(arg);
                     goto end_getelem;
                 }
@@ -1976,42 +1977,19 @@ stubs::DecGlobalName(VMFrame &f, JSAtom *atom)
 template void JS_FASTCALL stubs::DecGlobalName<true>(VMFrame &f, JSAtom *atom);
 template void JS_FASTCALL stubs::DecGlobalName<false>(VMFrame &f, JSAtom *atom);
 
-void JS_FASTCALL
-stubs::GetProp(VMFrame &f)
+static bool JS_FASTCALL
+InlineGetProp(VMFrame &f)
 {
     JSContext *cx = f.cx;
     FrameRegs &regs = f.regs;
 
     Value *vp = &f.regs.sp[-1];
+    JSObject *obj = ValueToObject(f.cx, vp);
+    if (!obj)
+        return false;
 
     Value rval;
     do {
-        if (JSOp(*f.regs.pc) == JSOP_LENGTH) {
-            /* Optimize length accesses on strings, arrays, and arguments. */
-            if (vp->isString()) {
-                rval = Int32Value(vp->toString()->length());
-                break;
-            }
-            if (vp->isObject()) {
-                JSObject *obj = &vp->toObject();
-                if (obj->isArray()) {
-                    jsuint length = obj->getArrayLength();
-                    rval = NumberValue(length);
-                    break;
-                }
-                if (obj->isArguments() && !obj->isArgsLengthOverridden()) {
-                    uint32 length = obj->getArgsInitialLength();
-                    JS_ASSERT(length < INT32_MAX);
-                    rval = Int32Value(int32_t(length));
-                    break;
-                }
-            }
-        }
-
-        JSObject *obj = ValueToObject(f.cx, vp);
-        if (!obj)
-            THROW();
-
         /*
          * We do not impose the method read barrier if in an imacro,
          * assuming any property gets it does (e.g., for 'toString'
@@ -2034,7 +2012,7 @@ stubs::GetProp(VMFrame &f)
                 const Shape *shape = entry->vword.toShape();
                 NATIVE_GET(cx, obj, obj2, shape,
                         f.fp()->hasImacropc() ? JSGET_NO_METHOD_BARRIER : JSGET_METHOD_BARRIER,
-                        &rval, THROW());
+                        &rval, return false);
             }
             break;
         }
@@ -2047,7 +2025,7 @@ stubs::GetProp(VMFrame &f)
                     : JSGET_CACHE_RESULT | JSGET_METHOD_BARRIER,
                     &rval)
                 : !obj->getProperty(cx, id, &rval)) {
-            THROW();
+            return false;
         }
     } while(0);
 
@@ -2055,6 +2033,14 @@ stubs::GetProp(VMFrame &f)
         f.script()->typeMonitorUndefined(cx, f.pc());
 
     regs.sp[-1] = rval;
+    return true;
+}
+
+void JS_FASTCALL
+stubs::GetProp(VMFrame &f)
+{
+    if (!InlineGetProp(f))
+        THROW();
 }
 
 void JS_FASTCALL
@@ -2166,6 +2152,40 @@ stubs::CallProp(VMFrame &f, JSAtom *origAtom)
 #endif
     if (rval.isUndefined())
         f.script()->typeMonitorUndefined(cx, f.pc());
+}
+
+void JS_FASTCALL
+stubs::Length(VMFrame &f)
+{
+    FrameRegs &regs = f.regs;
+    Value *vp = &regs.sp[-1];
+
+    if (vp->isString()) {
+        vp->setInt32(vp->toString()->length());
+        return;
+    }
+
+    if (vp->isObject()) {
+        JSObject *obj = &vp->toObject();
+        if (obj->isArray()) {
+            jsuint length = obj->getArrayLength();
+            regs.sp[-1].setNumber(length);
+            return;
+        }
+
+        if (obj->isArguments()) {
+            ArgumentsObject *argsobj = obj->asArguments();
+            if (!argsobj->hasOverriddenLength()) {
+                uint32 length = argsobj->initialLength();
+                JS_ASSERT(length < INT32_MAX);
+                regs.sp[-1].setInt32(int32_t(length));
+                return;
+            }
+        }
+    }
+
+    if (!InlineGetProp(f))
+        THROW();
 }
 
 void JS_FASTCALL

@@ -1557,7 +1557,7 @@ richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-
 
 %ifndef WINSTRIPE_AERO
 @media all and (-moz-windows-default-theme) {
-  #main-window[sizemode=normal] #TabsToolbar:not([inFullscreen]) {
+  #main-window[sizemode=normal] #TabsToolbar {
     padding-left: 2px;
     padding-right: 2px;
   }

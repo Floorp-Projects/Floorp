@@ -35,7 +35,7 @@ function onTabViewShown(win) {
   let groupItem = new contentWindow.GroupItem([],
       { bounds: box, title: "test1" });
   is(contentWindow.GroupItems.groupItems.length, 2, "we now have two groups");
-  contentWindow.GroupItems.setActiveGroupItem(groupItem);
+  contentWindow.UI.setActive(groupItem);
 
   // create a tab
   let xulTabs = [];

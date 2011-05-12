@@ -53,10 +53,6 @@
 
  ******/
 
-#ifdef WINCE
-#undef small
-#endif
-
 EDITOR_ATOM(a, "a")
 EDITOR_ATOM(abbr, "abbr")
 EDITOR_ATOM(acronym, "acronym")
@@ -161,6 +157,7 @@ EDITOR_ATOM(ol, "ol")
 EDITOR_ATOM(output, "output")
 EDITOR_ATOM(p, "p")
 EDITOR_ATOM(pre, "pre")
+EDITOR_ATOM(progress, "progress")
 EDITOR_ATOM(q, "q")
 EDITOR_ATOM(samp, "samp")
 EDITOR_ATOM(script, "script")

@@ -310,12 +310,6 @@ class nsScanner {
         return mFirstNonWhitespacePosition;
       }
 
-      void SetParser(nsParser *aParser)
-      {
-        mParser = aParser;
-      }
-
-
       /**
        * Override replacement character used by nsIUnicodeDecoder.
        * Default behavior is that it uses nsIUnicodeDecoder's mapping.
@@ -352,7 +346,6 @@ class nsScanner {
       PRInt32         mCharsetSource;
       nsCString       mCharset;
       nsCOMPtr<nsIUnicodeDecoder> mUnicodeDecoder;
-      nsParser        *mParser;
 
   private:
       nsScanner &operator =(const nsScanner &); // Not implemented.

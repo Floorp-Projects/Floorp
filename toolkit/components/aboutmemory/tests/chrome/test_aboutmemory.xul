@@ -1,0 +1,267 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="about:memory"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml"></body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  const Cc = Components.classes;
+  const Ci = Components.interfaces;
+  var mgr = Cc["@mozilla.org/memory-reporter-manager;1"].
+            getService(Ci.nsIMemoryReporterManager);
+
+  // Remove all the real reporters;  save them to restore at the end.
+  var e = mgr.enumerateReporters(); 
+  var realReporters = [];
+  while (e.hasMoreElements()) {
+    var mr = e.getNext().QueryInterface(Ci.nsIMemoryReporter);
+    mgr.unregisterReporter(mr);
+    realReporters.push(mr);
+  }
+
+  // Setup various fake-but-deterministic reporters.
+  const KB = 1024;
+  const MB = KB * KB;
+  fakeReporters = [
+    { path: "mapped",               memoryUsed: 1000 * MB },
+    { path: "mapped/heap/used",     memoryUsed:  500 * MB },
+    { path: "mapped/heap/unused",   memoryUsed:  100 * MB },
+    { path: "mapped/a",             memoryUsed:  222 * MB },
+    { path: "heap-used/a",          memoryUsed:   99 * MB },
+    { path: "heap-used/b/a",        memoryUsed:   80 * MB },
+    { path: "heap-used/b/b",        memoryUsed:   75 * MB },
+    { path: "heap-used/b/c/a",      memoryUsed:   44 * MB },
+    { path: "heap-used/b/c/b",      memoryUsed:   33 * MB }, // aggregated
+    { path: "heap-used/c",          memoryUsed:  123 * MB },
+    { path: "heap-used/d",          memoryUsed:  499 * KB }, // aggregated
+    { path: "heap-used/e",          memoryUsed:  100 * KB }, // aggregated
+    { path: "heap-used/f/g/h/i",    memoryUsed:   20 * MB },
+    { path: "other1",               memoryUsed:  111 * MB },
+    { path: "other2",               memoryUsed:  222 * MB },
+
+    { path: "2nd:mapped",           memoryUsed: 1000 * MB },
+    { path: "2nd:mapped/heap/used", memoryUsed:  500 * MB },
+    { path: "2nd:mapped/a/b/c",     memoryUsed:  499 * MB },
+    { path: "2nd:heap-used/a",      memoryUsed:  400 * MB },
+    { path: "2nd:other1",           memoryUsed:  777 * MB },
+
+    // -1 means "don't know";  this should be handled gracefully for
+    // "mapped" and "mapped/heap/used".
+    { path: "3rd:mapped",           memoryUsed: -1        },
+    { path: "3rd:mapped/heap/used", memoryUsed: -1        },
+    { path: "3rd:mapped/a/b",       memoryUsed:  333 * MB },
+    { path: "3rd:heap-used/a/b",    memoryUsed:  444 * MB },
+    { path: "3rd:other1",           memoryUsed:  555 * MB }
+  ];
+  for (var i = 0; i < fakeReporters.length; i++) {
+    mgr.registerReporter(fakeReporters[i]);
+  }
+  ]]>
+  </script>
+
+  <iframe id="amFrame"  src="about:memory"></iframe>
+  <iframe id="amvFrame" src="about:memory?verbose"></iframe>
+
+  <script type="application/javascript">
+  <![CDATA[
+  var amExpectedText =
+"\
+Main Process\n\
+\n\
+Mapped Memory\n\
+1,000.00 MB (100.0%) -- mapped\n\
+├────600.00 MB (60.00%) -- heap\n\
+│    ├──500.00 MB (50.00%) -- used\n\
+│    └──100.00 MB (10.00%) -- unused\n\
+├────222.00 MB (22.20%) -- a\n\
+└────178.00 MB (17.80%) -- other\n\
+\n\
+Used Heap Memory\n\
+500.00 MB (100.0%) -- heap-used\n\
+├──232.00 MB (46.40%) -- b\n\
+│  ├───80.00 MB (16.00%) -- a\n\
+│  ├───77.00 MB (15.40%) -- c\n\
+│  │   ├──44.00 MB (08.80%) -- a\n\
+│  │   └──33.00 MB (06.60%) -- b\n\
+│  └───75.00 MB (15.00%) -- b\n\
+├──123.00 MB (24.60%) -- c\n\
+├───99.00 MB (19.80%) -- a\n\
+├───25.42 MB (05.08%) -- other\n\
+├───20.00 MB (04.00%) -- f\n\
+│   └──20.00 MB (04.00%) -- g\n\
+│      └──20.00 MB (04.00%) -- h\n\
+│         └──20.00 MB (04.00%) -- i\n\
+└────0.58 MB (00.12%) -- (2 omitted)\n\
+\n\
+Other Measurements\n\
+111.00 MB -- other1\n\
+222.00 MB -- other2\n\
+\n\
+2nd Process\n\
+\n\
+Mapped Memory\n\
+1,000.00 MB (100.0%) -- mapped\n\
+├────500.00 MB (50.00%) -- heap\n\
+│    └──500.00 MB (50.00%) -- used\n\
+├────499.00 MB (49.90%) -- a\n\
+│    └──499.00 MB (49.90%) -- b\n\
+│       └──499.00 MB (49.90%) -- c\n\
+└──────1.00 MB (00.10%) -- other\n\
+\n\
+Used Heap Memory\n\
+500.00 MB (100.0%) -- heap-used\n\
+├──400.00 MB (80.00%) -- a\n\
+└──100.00 MB (20.00%) -- other\n\
+\n\
+Other Measurements\n\
+777.00 MB -- other1\n\
+\n\
+3rd Process\n\
+\n\
+Mapped Memory\n\
+??? MB -- mapped\n\
+├──333.00 MB -- a\n\
+│  └──333.00 MB -- b\n\
+└──0.00 MB -- heap\n\
+   └───??? MB -- used\n\
+\n\
+Used Heap Memory\n\
+??? MB -- heap-used\n\
+└──444.00 MB -- a\n\
+   └──444.00 MB -- b\n\
+\n\
+Other Measurements\n\
+555.00 MB -- other1\n\
+\n\
+";
+
+  var amvExpectedText =
+"\
+Main Process\n\
+\n\
+Mapped Memory\n\
+1,048,576,000 B (100.0%) -- mapped\n\
+├────629,145,600 B (60.00%) -- heap\n\
+│    ├──524,288,000 B (50.00%) -- used\n\
+│    └──104,857,600 B (10.00%) -- unused\n\
+├────232,783,872 B (22.20%) -- a\n\
+└────186,646,528 B (17.80%) -- other\n\
+\n\
+Used Heap Memory\n\
+524,288,000 B (100.0%) -- heap-used\n\
+├──243,269,632 B (46.40%) -- b\n\
+│  ├───83,886,080 B (16.00%) -- a\n\
+│  ├───80,740,352 B (15.40%) -- c\n\
+│  │   ├──46,137,344 B (08.80%) -- a\n\
+│  │   └──34,603,008 B (06.60%) -- b\n\
+│  └───78,643,200 B (15.00%) -- b\n\
+├──128,974,848 B (24.60%) -- c\n\
+├──103,809,024 B (19.80%) -- a\n\
+├───26,649,600 B (05.08%) -- other\n\
+├───20,971,520 B (04.00%) -- f\n\
+│   └──20,971,520 B (04.00%) -- g\n\
+│      └──20,971,520 B (04.00%) -- h\n\
+│         └──20,971,520 B (04.00%) -- i\n\
+├──────510,976 B (00.10%) -- d\n\
+└──────102,400 B (00.02%) -- e\n\
+\n\
+Other Measurements\n\
+116,391,936 B -- other1\n\
+232,783,872 B -- other2\n\
+\n\
+2nd Process\n\
+\n\
+Mapped Memory\n\
+1,048,576,000 B (100.0%) -- mapped\n\
+├────524,288,000 B (50.00%) -- heap\n\
+│    └──524,288,000 B (50.00%) -- used\n\
+├────523,239,424 B (49.90%) -- a\n\
+│    └──523,239,424 B (49.90%) -- b\n\
+│       └──523,239,424 B (49.90%) -- c\n\
+└──────1,048,576 B (00.10%) -- other\n\
+\n\
+Used Heap Memory\n\
+524,288,000 B (100.0%) -- heap-used\n\
+├──419,430,400 B (80.00%) -- a\n\
+└──104,857,600 B (20.00%) -- other\n\
+\n\
+Other Measurements\n\
+814,743,552 B -- other1\n\
+\n\
+3rd Process\n\
+\n\
+Mapped Memory\n\
+??? B -- mapped\n\
+├──349,175,808 B -- a\n\
+│  └──349,175,808 B -- b\n\
+└────0 B -- heap\n\
+     └──??? B -- used\n\
+\n\
+Used Heap Memory\n\
+??? B -- heap-used\n\
+└──465,567,744 B -- a\n\
+   └──465,567,744 B -- b\n\
+\n\
+Other Measurements\n\
+581,959,680 B -- other1\n\
+\n\
+"
+
+  function finish()
+  {
+    // Unregister fake reporters, re-register the real reporters, just in
+    // case subsequent tests rely on them.
+    for (var i = 0; i < fakeReporters.length; i++) {
+      mgr.unregisterReporter(fakeReporters[i]);
+    }
+    for (var i = 0; i < realReporters.length; i++) {
+      mgr.registerReporter(realReporters[i]);
+    }
+    SimpleTest.finish();
+  }
+
+  // Cut+paste the entire page and check that the cut text matches what we
+  // expect.  This tests the output in general and also that the cutting and
+  // pasting works as expected.
+  function test(aFrame, aExpectedText, aNext) {
+    document.querySelector("#" + aFrame).focus();
+    SimpleTest.waitForClipboard(aExpectedText,
+      function() {
+        synthesizeKey("A", {accelKey: true});
+        synthesizeKey("C", {accelKey: true});
+      },
+      aNext,
+      function() {
+        ok(false, "pasted text doesn't match for " + aFrame);
+        finish();
+      }
+    );
+  }
+
+  addLoadEvent(function() {
+    test(
+      "amFrame",
+      amExpectedText,
+      function() {
+        test(
+          "amvFrame",
+          amvExpectedText,
+          function() {
+            finish()
+          }
+        )
+      }
+    );
+  });
+  SimpleTest.waitForExplicitFinish();
+  ]]>
+  </script>
+</window>

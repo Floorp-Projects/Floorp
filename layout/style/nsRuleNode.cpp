@@ -3353,6 +3353,11 @@ nsRuleNode::ComputeTextData(void* aStartStruct,
               SETDSC_ENUMERATED, parentText->mWordWrap,
               NS_STYLE_WORDWRAP_NORMAL, 0, 0, 0, 0);
 
+  // hyphens: enum, inherit, initial
+  SetDiscrete(*aRuleData->ValueForHyphens(), text->mHyphens, canStoreInRuleTree,
+              SETDSC_ENUMERATED, parentText->mHyphens,
+              NS_STYLE_HYPHENS_MANUAL, 0, 0, 0, 0);
+
   COMPUTE_END_INHERITED(Text, text)
 }
 

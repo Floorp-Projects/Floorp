@@ -46,6 +46,7 @@
 #include "txOutputFormat.h"
 #include "txRtfHandler.h"
 #include "txXPathTreeWalker.h"
+#include "nsPrintfCString.h"
 
 #ifndef TX_EXE
 #include "nsComponentManagerUtils.h"
@@ -225,6 +226,7 @@ static const char kEXSLTCommonNS[] = "http://exslt.org/common";
 static const char kEXSLTSetsNS[] = "http://exslt.org/sets";
 static const char kEXSLTStringsNS[] = "http://exslt.org/strings";
 static const char kEXSLTMathNS[] = "http://exslt.org/math";
+static const char kEXSLTDatesAndTimesNS[] = "http://exslt.org/dates-and-times";
 
 // The order of this table must be the same as the
 // txEXSLTFunctionCall::eType enum
@@ -245,12 +247,9 @@ static txEXSLTFunctionDescriptor descriptTable[] =
     { 1, 1, Expr::NUMBER_RESULT,  &txXSLTAtoms::min, 0, kEXSLTMathNS }, // MIN
     { 1, 1, Expr::NODESET_RESULT, &txXSLTAtoms::highest, 0, kEXSLTMathNS }, // HIGHEST
     { 1, 1, Expr::NODESET_RESULT, &txXSLTAtoms::lowest, 0, kEXSLTMathNS }, // LOWEST
+    { 0, 0, Expr::STRING_RESULT,  &txXSLTAtoms::dateTime, 0, kEXSLTDatesAndTimesNS }, // DATE_TIME
 
 };
-
-#ifdef WINCE // WINCE defines this.
-#undef DIFFERENCE
-#endif
 
 class txEXSLTFunctionCall : public FunctionCall
 {
@@ -273,7 +272,8 @@ public:
         MAX,
         MIN,
         HIGHEST,
-        LOWEST
+        LOWEST,
+        DATE_TIME
     };
     
     txEXSLTFunctionCall(eType aType)
@@ -688,6 +688,36 @@ txEXSLTFunctionCall::evaluate(txIEvalContext *aContext,
             }
 
             NS_ADDREF(*aResult = resultSet);
+
+            return NS_OK;
+        }
+        case DATE_TIME:
+        {
+            // http://exslt.org/date/functions/date-time/
+            // format: YYYY-MM-DDTTHH:MM:SS.sss+00:00
+            char formatstr[] = "%04hd-%02ld-%02ldT%02ld:%02ld:%02ld.%03ld%c%02ld:%02ld";
+            const size_t max = sizeof("YYYY-MM-DDTHH:MM:SS.sss+00:00");
+            
+            PRExplodedTime prtime;
+            PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &prtime);
+            
+            PRInt32 offset = (prtime.tm_params.tp_gmt_offset +
+              prtime.tm_params.tp_dst_offset) / 60;
+              
+            PRBool isneg = offset < 0;
+            if (isneg) offset = -offset;
+            
+            StringResult* strRes;
+            rv = aContext->recycler()->getStringResult(&strRes);
+            NS_ENSURE_SUCCESS(rv, rv);
+            
+            CopyASCIItoUTF16(nsPrintfCString(max, formatstr,
+              prtime.tm_year, prtime.tm_month + 1, prtime.tm_mday,
+              prtime.tm_hour, prtime.tm_min, prtime.tm_sec,
+              prtime.tm_usec / 10000,
+              isneg ? '-' : '+', offset / 60, offset % 60), strRes->mValue);
+              
+            *aResult = strRes;
 
             return NS_OK;
         }

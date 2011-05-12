@@ -15,6 +15,7 @@ def split_path_into_dirs(path):
         path, tail = os.path.split(path)
         if not tail:
             break
+        dirs.append(path)
     return dirs
 
 class XULInfo:
