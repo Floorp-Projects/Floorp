@@ -119,7 +119,7 @@ __try {
 
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = static_cast<IAccessible*>(this);
-  else if (IID_IEnumVARIANT == iid && !gIsEnumVariantSupportDisabled) {
+  else if (IID_IEnumVARIANT == iid) {
     long numChildren;
     get_accChildCount(&numChildren);
     if (numChildren > 0)  // Don't support this interface for leaf elements
