@@ -310,7 +310,6 @@ gtk/gtkprintjob.h
 gtk/gtkprintunixdialog.h
 HIToolbox/HIToolbox.h
 hlink.h
-htiface.h
 ia64/sys/inline.h
 Icons.h
 iconv.h

@@ -25,7 +25,7 @@
       </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
-    <install size="2">http://example.com/browser/mobile/chrome/addons/browser_install1_1.xpi</install>
+    <install size="2">http://example.com/browser/mobile/chrome/tests/addons/browser_install1_1.xpi</install>
   </addon>
 
   <addon>
@@ -53,6 +53,6 @@
       </application>
     </compatible_applications>
     <compatible_os>ALL</compatible_os>
-    <install size="2">http://example.com/browser/mobile/chrome/addons/browser_install1_2.xpi</install>
+    <install size="2">http://example.com/browser/mobile/chrome/tests/addons/browser_install1_2.xpi</install>
   </addon>
 </searchresults>

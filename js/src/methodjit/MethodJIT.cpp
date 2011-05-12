@@ -1067,6 +1067,9 @@ mjit::JITScript::~JITScript()
 #endif
 
 #if defined JS_MONOIC
+    if (argsCheckPool)
+        argsCheckPool->release();
+
     for (JSC::ExecutablePool **pExecPool = execPools.begin();
          pExecPool != execPools.end();
          ++pExecPool)
@@ -1128,7 +1131,7 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal)
     void **parity = normal ? &script->jitArityCheckNormal : &script->jitArityCheckCtor;
 
     if (*pjit) {
-        cx->runtime->mjitMemoryUsed -= (*pjit)->scriptDataSize() + (*pjit)->mainCodeSize();
+        cx->runtime->mjitDataSize -= (*pjit)->scriptDataSize();
         (*pjit)->~JITScript();
         cx->free_(*pjit);
         *pjit = NULL;

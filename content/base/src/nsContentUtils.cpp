@@ -166,6 +166,7 @@ static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #include "nsIOfflineCacheUpdate.h"
 #include "nsCPrefetchService.h"
 #include "nsIChromeRegistry.h"
+#include "nsEventDispatcher.h"
 #include "nsIMIMEHeaderParam.h"
 #include "nsIDOMXULCommandEvent.h"
 #include "nsIDOMDragEvent.h"
@@ -253,6 +254,9 @@ nsIBidiKeyboard *nsContentUtils::sBidiKeyboard = nsnull;
 #endif
 PRUint32 nsContentUtils::sScriptBlockerCount = 0;
 PRUint32 nsContentUtils::sRemovableScriptBlockerCount = 0;
+#ifdef DEBUG
+PRUint32 nsContentUtils::sDOMNodeRemovedSuppressCount = 0;
+#endif
 nsCOMArray<nsIRunnable>* nsContentUtils::sBlockedScriptRunners = nsnull;
 PRUint32 nsContentUtils::sRunnersCountAtFirstBlocker = 0;
 PRUint32 nsContentUtils::sScriptBlockerCountWhereRunnersPrevented = 0;
@@ -1391,8 +1395,8 @@ nsContentUtils::InProlog(nsINode *aNode)
   return !root || doc->IndexOf(aNode) < doc->IndexOf(root);
 }
 
-static JSContext *
-GetContextFromDocument(nsIDocument *aDocument)
+JSContext *
+nsContentUtils::GetContextFromDocument(nsIDocument *aDocument)
 {
   nsIScriptGlobalObject *sgo = aDocument->GetScopeObject();
   if (!sgo) {
@@ -3649,12 +3653,6 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
     return PR_FALSE;
   }
 
-  NS_ASSERTION((aNode->IsNodeOfType(nsINode::eCONTENT) &&
-                static_cast<nsIContent*>(aNode)->
-                  IsInNativeAnonymousSubtree()) ||
-               sScriptBlockerCount == sRemovableScriptBlockerCount,
-               "Want to fire mutation events, but it's not safe");
-
   // global object will be null for documents that don't have windows.
   nsPIDOMWindow* window = doc->GetInnerWindow();
   // This relies on nsEventListenerManager::AddEventListener, which sets
@@ -3711,6 +3709,63 @@ nsContentUtils::HasMutationListeners(nsINode* aNode,
   }
 
   return PR_FALSE;
+}
+
+/* static */
+PRBool
+nsContentUtils::HasMutationListeners(nsIDocument* aDocument,
+                                     PRUint32 aType)
+{
+  nsPIDOMWindow* window = aDocument ?
+    aDocument->GetInnerWindow() : nsnull;
+
+  // This relies on nsEventListenerManager::AddEventListener, which sets
+  // all mutation bits when there is a listener for DOMSubtreeModified event.
+  return !window || window->HasMutationListeners(aType);
+}
+
+void
+nsContentUtils::MaybeFireNodeRemoved(nsINode* aChild, nsINode* aParent,
+                                     nsIDocument* aOwnerDoc)
+{
+  NS_PRECONDITION(aChild, "Missing child");
+  NS_PRECONDITION(aChild->GetNodeParent() == aParent, "Wrong parent");
+  NS_PRECONDITION(aChild->GetOwnerDoc() == aOwnerDoc, "Wrong owner-doc");
+
+  // This checks that IsSafeToRunScript is true since we don't want to fire
+  // events when that is false. We can't rely on nsEventDispatcher to assert
+  // this in this situation since most of the time there are no mutation
+  // event listeners, in which case we won't even attempt to dispatch events.
+  // However this also allows for two exceptions. First off, we don't assert
+  // if the mutation happens to native anonymous content since we never fire
+  // mutation events on such content anyway.
+  // Second, we don't assert if sDOMNodeRemovedSuppressCount is true since
+  // that is a know case when we'd normally fire a mutation event, but can't
+  // make that safe and so we suppress it at this time. Ideally this should
+  // go away eventually.
+  NS_ASSERTION(aChild->IsNodeOfType(nsINode::eCONTENT) &&
+               static_cast<nsIContent*>(aChild)->
+                 IsInNativeAnonymousSubtree() ||
+               IsSafeToRunScript() ||
+               sDOMNodeRemovedSuppressCount,
+               "Want to fire DOMNodeRemoved event, but it's not safe");
+
+  // Having an explicit check here since it's an easy mistake to fall into,
+  // and there might be existing code with problems. We'd rather be safe
+  // than fire DOMNodeRemoved in all corner cases. We also rely on it for
+  // nsAutoScriptBlockerSuppressNodeRemoved.
+  if (!IsSafeToRunScript()) {
+    return;
+  }
+
+  if (HasMutationListeners(aChild,
+        NS_EVENT_BITS_MUTATION_NODEREMOVED, aParent)) {
+    nsMutationEvent mutation(PR_TRUE, NS_MUTATION_NODEREMOVED);
+    mutation.mRelatedNode = do_QueryInterface(aParent);
+
+    mozAutoSubtreeModified subtree(aOwnerDoc, aParent);
+    nsEventDispatcher::Dispatch(aChild, nsnull, &mutation);
+  }
 }
 
 /* static */
@@ -3933,7 +3988,7 @@ nsContentUtils::CreateContextualFragment(nsINode* aContextNode,
     nsString& tagName = *tagStack.AppendElement();
     NS_ENSURE_TRUE(&tagName, NS_ERROR_OUT_OF_MEMORY);
 
-    content->NodeInfo()->GetQualifiedName(tagName);
+    tagName = content->NodeInfo()->QualifiedName();
 
     // see if we need to add xmlns declarations
     PRUint32 count = content->GetAttrCount();
@@ -4084,6 +4139,37 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
                                    const nsAString& aValue,
                                    PRBool aTryReuse)
 {
+  // Fire DOMNodeRemoved mutation events before we do anything else.
+  nsCOMPtr<nsIContent> owningContent;
+
+  // Batch possible DOMSubtreeModified events.
+  mozAutoSubtreeModified subtree(nsnull, nsnull);
+
+  // Scope firing mutation events so that we don't carry any state that
+  // might be stale
+  {
+    // We're relying on mozAutoSubtreeModified to keep a strong reference if
+    // needed.
+    nsIDocument* doc = aContent->GetOwnerDoc();
+
+    // Optimize the common case of there being no observers
+    if (HasMutationListeners(doc, NS_EVENT_BITS_MUTATION_NODEREMOVED)) {
+      subtree.UpdateTarget(doc, nsnull);
+      owningContent = aContent;
+      nsCOMPtr<nsINode> child;
+      bool skipFirst = aTryReuse;
+      for (child = aContent->GetFirstChild();
+           child && child->GetNodeParent() == aContent;
+           child = child->GetNextSibling()) {
+        if (skipFirst && child->IsNodeOfType(nsINode::eTEXT)) {
+          skipFirst = false;
+          continue;
+        }
+        nsContentUtils::MaybeFireNodeRemoved(child, aContent, doc);
+      }
+    }
+  }
+
   // Might as well stick a batch around this since we're performing several
   // mutations.
   mozAutoDocUpdate updateBatch(aContent->GetCurrentDoc(),
@@ -4107,7 +4193,7 @@ nsContentUtils::SetNodeTextContent(nsIContent* aContent,
         aContent->RemoveChildAt(removeIndex, PR_TRUE);
       }
     }
-    
+
     if (removeIndex == 1) {
       return NS_OK;
     }
@@ -6014,89 +6100,6 @@ nsContentUtils::CreateStructuredClone(JSContext* cx,
   *rval = output;
   return NS_OK;
 }
-
-// static
-nsresult
-nsContentUtils::ReparentClonedObjectToScope(JSContext* cx,
-                                            JSObject* obj,
-                                            JSObject* scope)
-{
-  JSAutoRequest ar(cx);
-
-  scope = JS_GetGlobalForObject(cx, scope);
-
-  nsAutoTArray<ReparentObjectData, 20> objectData;
-  objectData.AppendElement(ReparentObjectData(cx, obj));
-
-  while (!objectData.IsEmpty()) {
-    ReparentObjectData& data = objectData[objectData.Length() - 1];
-
-    if (!data.ids) {
-      NS_ASSERTION(!data.index, "Shouldn't have index here");
-
-      // Typed arrays are special and don't need to be enumerated.
-      if (js_IsTypedArray(data.obj)) {
-        if (!js_ReparentTypedArrayToScope(cx, data.obj, scope)) {
-          return NS_ERROR_FAILURE;
-        }
-
-        // No need to enumerate anything here.
-        objectData.RemoveElementAt(objectData.Length() - 1);
-        continue;
-      }
-
-      JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(JS_GET_CLASS(cx, data.obj));
-      if (!key) {
-        // We should never be reparenting an object that doesn't have a standard
-        // proto key.
-        return NS_ERROR_FAILURE;
-      }
-
-      // Fix the prototype and parent first.
-      JSObject* proto;
-      if (!js_GetClassPrototype(cx, scope, key, &proto) ||
-          !JS_SetPrototype(cx, data.obj, proto) ||
-          !JS_SetParent(cx, data.obj, scope)) {
-        return NS_ERROR_FAILURE;
-      }
-
-      // Primitive arrays don't need to be enumerated either but the proto and
-      // parent needed to be fixed above. Now we can just move on.
-      if (js_IsDensePrimitiveArray(data.obj)) {
-        objectData.RemoveElementAt(objectData.Length() - 1);
-        continue;
-      }
-
-      // And now enumerate the object's properties.
-      if (!(data.ids = JS_Enumerate(cx, data.obj))) {
-        return NS_ERROR_FAILURE;
-      }
-    }
-
-    // If we've gone through all the object's properties then we're done with
-    // this frame.
-    if (data.index == data.ids->length) {
-      objectData.RemoveElementAt(objectData.Length() - 1);
-      continue;
-    }
-
-    // Get the id and increment!
-    jsid id = data.ids->vector[data.index++];
-
-    jsval prop;
-    if (!JS_GetPropertyById(cx, data.obj, id, &prop)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // Push a new frame if this property is an object.
-    if (!JSVAL_IS_PRIMITIVE(prop)) {
-      objectData.AppendElement(ReparentObjectData(cx, JSVAL_TO_OBJECT(prop)));
-    }
-  }
-
-  return NS_OK;
-}
-
 struct ClassMatchingInfo {
   nsAttrValue::AtomArray mClasses;
   nsCaseTreatment mCaseTreatment;

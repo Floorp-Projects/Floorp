@@ -219,6 +219,7 @@ exports.RemoteExperimentLoader.prototype = {
     this._studyResults = [];
     this._legacyStudies = [];
     this._experimentFileNames = [];
+    this._loadErrors = [];
   },
 
   getLocalizedStudyInfo: function(studiesIndex) {
@@ -504,12 +505,20 @@ exports.RemoteExperimentLoader.prototype = {
      * the module name and value = the module object. */
     this._logger.trace("GetExperiments called.");
     let remoteExperiments = {};
+    this._loadErrors = [];
     for each (filename in this._experimentFileNames) {
       this._logger.debug("GetExperiments is loading " + filename);
       try {
         remoteExperiments[filename] = this._loader.require(filename);
         this._logger.info("Loaded " + filename + " OK.");
       } catch(e) {
+      /* Turn the load-time errors into strings and store them, so we can display
+       * them on a debug page or include them with a data upload!  (Don't store
+       * exception objects directly as that causes garbage collector problems-
+       * aka bug 646122) */
+      let errStr = e.name + " on line " + e.lineNumber + " of file " +
+        e.fileName + ": " + e.message;
+        this._loadErrors.push(errStr);
         this._logger.warn("Error loading " + filename);
         this._logger.warn(e);
       }
@@ -523,6 +532,10 @@ exports.RemoteExperimentLoader.prototype = {
 
   getLegacyStudies: function() {
     return this._legacyStudies;
+  },
+
+  getLoadErrors: function() {
+    return this._loadErrors;
   }
 };
 

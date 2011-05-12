@@ -125,7 +125,7 @@ public:
   {
     if (mOptSurface)
       return mOptSurface;
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
     if (mWinSurface)
       return mWinSurface;
 #elif defined(XP_MACOSX)
@@ -165,7 +165,7 @@ private: // methods
 private: // data
   nsRefPtr<gfxImageSurface> mImageSurface;
   nsRefPtr<gfxASurface> mOptSurface;
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
   nsRefPtr<gfxWindowsSurface> mWinSurface;
 #elif defined(XP_MACOSX)
   nsRefPtr<gfxQuartzImageSurface> mQuartzSurface;

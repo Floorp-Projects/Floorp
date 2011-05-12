@@ -204,7 +204,7 @@ load 409513.html
 load 410967.html
 load 411870-1.html
 load 412651-1.html
-asserts(6) load 413587-1.svg # Bug 563481?
+load 413587-1.svg
 load 414058-1.html
 load 414175-1.xul
 load 420031-1.html

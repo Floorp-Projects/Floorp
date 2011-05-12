@@ -42,6 +42,21 @@
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsContentUtils.h"
+#include "nsEventDispatcher.h"
+#include "nsGUIEvent.h"
+
+nsPLDOMEvent::nsPLDOMEvent(nsINode *aEventNode, nsEvent &aEvent)
+  : mEventNode(aEventNode), mDispatchChromeOnly(PR_FALSE)
+{
+  PRBool trusted = NS_IS_TRUSTED_EVENT(&aEvent);
+  nsEventDispatcher::CreateEvent(nsnull, &aEvent, EmptyString(),
+                                 getter_AddRefs(mEvent));
+  NS_ASSERTION(mEvent, "Should never fail to create an event");
+  nsCOMPtr<nsIPrivateDOMEvent> priv = do_QueryInterface(mEvent);
+  NS_ASSERTION(priv, "Should also not fail to QI to nsIDOMEventPrivate");
+  priv->DuplicatePrivateData();
+  priv->SetTrusted(trusted);
+}
 
 NS_IMETHODIMP nsPLDOMEvent::Run()
 {
@@ -75,9 +90,9 @@ nsresult nsPLDOMEvent::PostDOMEvent()
   return NS_DispatchToCurrentThread(this);
 }
 
-nsresult nsPLDOMEvent::RunDOMEventWhenSafe()
+void nsPLDOMEvent::RunDOMEventWhenSafe()
 {
-  return nsContentUtils::AddScriptRunner(this) ? NS_OK : NS_ERROR_FAILURE;
+  nsContentUtils::AddScriptRunner(this);
 }
 
 nsLoadBlockingPLDOMEvent::~nsLoadBlockingPLDOMEvent()

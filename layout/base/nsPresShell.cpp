@@ -1646,14 +1646,15 @@ NS_NewPresShell(nsIPresShell** aInstancePtrResult)
 nsTHashtable<PresShell::PresShellPtrKey> *nsIPresShell::sLiveShells = 0;
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutPresShell,
-                             "layout/all",
-                             "Memory in use by layout PresShell, PresContext, and other related areas.",
+                             "heap-used/layout/all",
+                             "Memory used by layout PresShell, PresContext, "
+                             "and other related areas.",
                              PresShell::SizeOfLayoutMemoryReporter,
                              nsnull)
 
 NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
-                             "layout/bidi",
-                             "Memory in use by layout Bidi processor.",
+                             "heap-used/layout/bidi",
+                             "Memory used by layout Bidi processor.",
                              PresShell::SizeOfBidiMemoryReporter,
                              nsnull)
 

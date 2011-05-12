@@ -43,7 +43,7 @@
 <!ENTITY setup.newSyncKeyPage.description.label "To ensure your total privacy, all of your data is encrypted prior to being uploaded. The Sync Key which is necessary to decrypt your data is not uploaded.">
 <!ENTITY syncKeyEntry.label        "Your Sync Key">
 <!ENTITY syncKeyEntry.accesskey    "K">
-<!ENTITY syncKeyGenerate.label     "Generate">
+<!ENTITY syncGenerateNewKey.label  "Generate a new key">
 <!ENTITY syncKeyBackup.description "Your Sync Key is required to access &syncBrand.fullName.label; on other machines. Please create a backup copy. We cannot help you recover your Sync Key.">
 
 <!ENTITY button.syncKeyBackup.print.label     "Print…">

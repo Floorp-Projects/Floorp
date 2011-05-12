@@ -100,7 +100,7 @@
           <spacer flex="1"/>
           <label id="generatePassphraseButton"
                  hidden="true"
-                 value="&syncKeyGenerate.label;"
+                 value="&syncGenerateNewKey.label;"
                  class="text-link inline-link"
                  onclick="event.stopPropagation();
                           Change.doGeneratePassphrase();"/>

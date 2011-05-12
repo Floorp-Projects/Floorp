@@ -409,6 +409,7 @@ public:
       : mOutOfMemory(false)
       , mSize(0)
       , mReserve(reserve)
+      , mReserveSize(reserveSize)
       , mReserveCurr(uintptr_t(reserve))
       , mReserveLimit(uintptr_t(reserve + reserveSize))
       , mRt(rt)
@@ -470,6 +471,7 @@ public:
 
     /* See nanojit::Allocator::allocChunk() for details on these. */
     char* mReserve;
+    size_t mReserveSize;
     uintptr_t mReserveCurr;
     uintptr_t mReserveLimit;
 

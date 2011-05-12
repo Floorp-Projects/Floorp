@@ -2,7 +2,7 @@
  * Make sure history is being recorded when we visit websites.
  */
 
-var testURL_01 = "http://mochi.test:8888/browser/mobile/chrome/browser_blank_01.html";
+var testURL_01 = baseURI + "browser_blank_01.html";
 
 // A queue to order the tests and a handle for each test
 var gTests = [];

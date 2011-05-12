@@ -1237,7 +1237,7 @@ LoginManagerPrompter.prototype = {
                 // disabled, and if so use the opener window. But if the window
                 // has been used to visit other pages (ie, has a history),
                 // assume it'll stick around and *don't* use the opener.
-                if (chromeDoc.getAttribute("chromehidden") &&
+                if (chromeDoc.hasAttribute("chromehidden") &&
                     webnav.sessionHistory.count == 1) {
                     this.log("Using opener window for notification bar.");
                     notifyWin = notifyWin.opener;

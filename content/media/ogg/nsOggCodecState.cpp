@@ -54,6 +54,7 @@ extern PRLogModuleInfo* gBuiltinDecoderLog;
 nsOggCodecState*
 nsOggCodecState::Create(ogg_page* aPage)
 {
+  NS_ASSERTION(ogg_page_bos(aPage), "Only call on BOS page!");
   nsAutoPtr<nsOggCodecState> codecState;
   if (aPage->body_len > 6 && memcmp(aPage->body+1, "theora", 6) == 0) {
     codecState = new nsTheoraState(aPage);
@@ -62,16 +63,16 @@ nsOggCodecState::Create(ogg_page* aPage)
   } else if (aPage->body_len > 8 && memcmp(aPage->body, "fishead\0", 8) == 0) {
     codecState = new nsSkeletonState(aPage);
   } else {
-    codecState = new nsOggCodecState(aPage);
+    codecState = new nsOggCodecState(aPage, PR_FALSE);
   }
   return codecState->nsOggCodecState::Init() ? codecState.forget() : nsnull;
 }
 
-nsOggCodecState::nsOggCodecState(ogg_page* aBosPage) :
+nsOggCodecState::nsOggCodecState(ogg_page* aBosPage, PRBool aActive) :
   mPacketCount(0),
   mSerial(ogg_page_serialno(aBosPage)),
-  mActive(PR_FALSE),
-  mDoneReadingHeaders(PR_FALSE)
+  mActive(aActive),
+  mDoneReadingHeaders(!aActive)
 {
   MOZ_COUNT_CTOR(nsOggCodecState);
   memset(&mState, 0, sizeof(ogg_stream_state));
@@ -79,10 +80,11 @@ nsOggCodecState::nsOggCodecState(ogg_page* aBosPage) :
 
 nsOggCodecState::~nsOggCodecState() {
   MOZ_COUNT_DTOR(nsOggCodecState);
+  Reset();
 #ifdef DEBUG
   int ret =
 #endif
-    ogg_stream_clear(&mState);
+  ogg_stream_clear(&mState);
   NS_ASSERTION(ret == 0, "ogg_stream_clear failed");
 }
 
@@ -90,8 +92,17 @@ nsresult nsOggCodecState::Reset() {
   if (ogg_stream_reset(&mState) != 0) {
     return NS_ERROR_FAILURE;
   }
-  mBuffer.Erase();
+  mPackets.Erase();
+  ClearUnstamped();
   return NS_OK;
+}
+
+void nsOggCodecState::ClearUnstamped()
+{
+  for (PRUint32 i = 0; i < mUnstamped.Length(); ++i) {
+    nsOggCodecState::ReleasePacket(mUnstamped[i]);
+  }
+  mUnstamped.Clear();
 }
 
 PRBool nsOggCodecState::Init() {
@@ -99,31 +110,111 @@ PRBool nsOggCodecState::Init() {
   return ret == 0;
 }
 
-void nsPageQueue::Append(ogg_page* aPage) {
-  ogg_page* p = new ogg_page();
-  p->header_len = aPage->header_len;
-  p->body_len = aPage->body_len;
-  p->header = new unsigned char[p->header_len + p->body_len];
-  p->body = p->header + p->header_len;
-  memcpy(p->header, aPage->header, p->header_len);
-  memcpy(p->body, aPage->body, p->body_len);
-  nsDeque::Push(p);
+void nsVorbisState::RecordVorbisPacketSamples(ogg_packet* aPacket,
+                                              long aSamples)
+{
+#ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
+  mVorbisPacketSamples[aPacket] = aSamples;
+#endif
 }
 
-PRBool nsOggCodecState::PageInFromBuffer() {
-  if (mBuffer.IsEmpty())
-    return PR_FALSE;
-  ogg_page *p = mBuffer.PeekFront();
-  int ret = ogg_stream_pagein(&mState, p);
-  NS_ENSURE_TRUE(ret == 0, PR_FALSE);
-  mBuffer.PopFront();
-  delete [] p->header;
-  delete p;
-  return PR_TRUE;
+void nsVorbisState::ValidateVorbisPacketSamples(ogg_packet* aPacket,
+                                                long aSamples)
+{
+#ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
+  NS_ASSERTION(mVorbisPacketSamples[aPacket] == aSamples,
+    "Decoded samples for Vorbis packet don't match expected!");
+  mVorbisPacketSamples.erase(aPacket);
+#endif
+}
+
+void nsVorbisState::AssertHasRecordedPacketSamples(ogg_packet* aPacket)
+{
+#ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
+  NS_ASSERTION(mVorbisPacketSamples.count(aPacket) == 1,
+    "Must have recorded packet samples");
+#endif
+}
+
+static ogg_packet* Clone(ogg_packet* aPacket) {
+  ogg_packet* p = new ogg_packet();
+  memcpy(p, aPacket, sizeof(ogg_packet));
+  p->packet = new unsigned char[p->bytes];
+  memcpy(p->packet, aPacket->packet, p->bytes);
+  return p;
+}
+
+void nsOggCodecState::ReleasePacket(ogg_packet* aPacket) {
+  if (aPacket)
+    delete [] aPacket->packet;
+  delete aPacket;
+}
+
+void nsPacketQueue::Append(ogg_packet* aPacket) {
+  nsDeque::Push(aPacket);
+}
+
+ogg_packet* nsOggCodecState::PacketOut() {
+  if (mPackets.IsEmpty()) {
+    return nsnull;
+  }
+  return mPackets.PopFront();
+}
+
+nsresult nsOggCodecState::PageIn(ogg_page* aPage) {
+  if (!mActive)
+    return NS_OK;
+  NS_ASSERTION(ogg_page_serialno(aPage) == mSerial, "Page must be for this stream!");
+  if (ogg_stream_pagein(&mState, aPage) == -1)
+    return NS_ERROR_FAILURE;
+  int r;
+  do {
+    ogg_packet packet;
+    r = ogg_stream_packetout(&mState, &packet);
+    if (r == 1) {
+      mPackets.Append(Clone(&packet));
+    }
+  } while (r != 0);
+  if (ogg_stream_check(&mState)) {
+    NS_WARNING("Unrecoverable error in ogg_stream_packetout");
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+PRBool
+nsOggCodecState::PacketOutUntilGranulepos()
+{
+  int r;
+  PRBool foundGp = PR_FALSE;
+  // Extract packets from the sync state until either no more packets
+  // come out, or we get a data packet with non -1 granulepos.
+  do {
+    ogg_packet packet;
+    r = ogg_stream_packetout(&mState, &packet);
+    if (r == 1) {
+      ogg_packet* clone = Clone(&packet);
+      if (IsHeader(&packet)) {
+        // Header packets go straight into the packet queue.
+        mPackets.Append(clone);
+      } else {
+        // We buffer data packets until we encounter a granulepos. We'll
+        // then use the granulepos to figure out the granulepos of the
+        // preceeding packets.
+        mUnstamped.AppendElement(clone);
+        foundGp = packet.granulepos != -1;
+      }
+    }
+  } while (r != 0 && !foundGp);
+  if (ogg_stream_check(&mState)) {
+    NS_WARNING("Unrecoverable error in ogg_stream_packetout");
+    return NS_ERROR_FAILURE;
+  }
+  return foundGp;
 }
 
 nsTheoraState::nsTheoraState(ogg_page* aBosPage) :
-  nsOggCodecState(aBosPage),
+  nsOggCodecState(aBosPage, PR_TRUE),
   mSetup(0),
   mCtx(0),
   mPixelAspectRatio(0)
@@ -211,6 +302,11 @@ nsTheoraState::Time(PRInt64 granulepos) {
   return nsTheoraState::Time(&mInfo, granulepos);
 }
 
+PRBool
+nsTheoraState::IsHeader(ogg_packet* aPacket) {
+  return th_packet_isheader(aPacket);
+}
+
 # define TH_VERSION_CHECK(_info,_maj,_min,_sub) \
  ((_info)->version_major>(_maj)||(_info)->version_major==(_maj)&& \
  ((_info)->version_minor>(_min)||(_info)->version_minor==(_min)&& \
@@ -272,6 +368,127 @@ nsTheoraState::MaxKeyframeOffset()
   return frameDuration * keyframeDiff;
 }
 
+nsresult
+nsTheoraState::PageIn(ogg_page* aPage)
+{
+  if (!mActive)
+    return NS_OK;
+  NS_ASSERTION(static_cast<PRUint32>(ogg_page_serialno(aPage)) == mSerial,
+               "Page must be for this stream!");
+  if (ogg_stream_pagein(&mState, aPage) == -1)
+    return NS_ERROR_FAILURE;
+  PRBool foundGp = PacketOutUntilGranulepos();
+  if (foundGp && mDoneReadingHeaders) {
+    // We've found a packet with a granulepos, and we've loaded our metadata
+    // and initialized our decoder. Determine granulepos of buffered packets.
+    ReconstructTheoraGranulepos();
+    for (PRUint32 i = 0; i < mUnstamped.Length(); ++i) {
+      ogg_packet* packet = mUnstamped[i];
+#ifdef DEBUG
+      NS_ASSERTION(!IsHeader(packet), "Don't try to recover header packet gp");
+      NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
+#endif
+      mPackets.Append(packet);
+    }
+    mUnstamped.Clear();
+  }
+  return NS_OK;
+}
+
+// Returns 1 if the Theora info struct is decoding a media of Theora
+// verion (maj,min,sub) or later, otherwise returns 0.
+int
+TheoraVersion(th_info* info,
+              unsigned char maj,
+              unsigned char min,
+              unsigned char sub)
+{
+  ogg_uint32_t ver = (maj << 16) + (min << 8) + sub;
+  ogg_uint32_t th_ver = (info->version_major << 16) +
+                        (info->version_minor << 8) +
+                        info->version_subminor;
+  return (th_ver >= ver) ? 1 : 0;
+}
+
+void nsTheoraState::ReconstructTheoraGranulepos()
+{
+  if (mUnstamped.Length() == 0) {
+    return;
+  }
+  ogg_int64_t lastGranulepos = mUnstamped[mUnstamped.Length() - 1]->granulepos;
+  NS_ASSERTION(lastGranulepos != -1, "Must know last granulepos");
+
+  // Reconstruct the granulepos (and thus timestamps) of the decoded
+  // frames. Granulepos are stored as ((keyframe<<shift)+offset). We
+  // know the granulepos of the last frame in the list, so we can infer
+  // the granulepos of the intermediate frames using their frame numbers.
+  ogg_int64_t shift = mInfo.keyframe_granule_shift;
+  ogg_int64_t version_3_2_1 = TheoraVersion(&mInfo,3,2,1);
+  ogg_int64_t lastFrame = th_granule_frame(mCtx,
+                                           lastGranulepos) + version_3_2_1;
+  ogg_int64_t firstFrame = lastFrame - mUnstamped.Length() + 1;
+
+  // Until we encounter a keyframe, we'll assume that the "keyframe"
+  // segment of the granulepos is the first frame, or if that causes
+  // the "offset" segment to overflow, we assume the required
+  // keyframe is maximumally offset. Until we encounter a keyframe
+  // the granulepos will probably be wrong, but we can't decode the
+  // frame anyway (since we don't have its keyframe) so it doesn't really
+  // matter.
+  ogg_int64_t keyframe = lastGranulepos >> shift;
+
+  // The lastFrame, firstFrame, keyframe variables, as well as the frame
+  // variable in the loop below, store the frame number for Theora
+  // version >= 3.2.1 streams, and store the frame index for Theora
+  // version < 3.2.1 streams.
+  for (PRUint32 i = 0; i < mUnstamped.Length() - 1; ++i) {
+    ogg_int64_t frame = firstFrame + i;
+    ogg_int64_t granulepos;
+    ogg_packet* packet = mUnstamped[i];
+    PRBool isKeyframe = th_packet_iskeyframe(packet) == 1;
+
+    if (isKeyframe) {
+      granulepos = frame << shift;
+      keyframe = frame;
+    } else if (frame >= keyframe &&
+                frame - keyframe < ((ogg_int64_t)1 << shift))
+    {
+      // (frame - keyframe) won't overflow the "offset" segment of the
+      // granulepos, so it's safe to calculate the granulepos.
+      granulepos = (keyframe << shift) + (frame - keyframe);
+    } else {
+      // (frame - keyframeno) will overflow the "offset" segment of the
+      // granulepos, so we take "keyframe" to be the max possible offset
+      // frame instead.
+      ogg_int64_t k = NS_MAX(frame - (((ogg_int64_t)1 << shift) - 1), version_3_2_1);
+      granulepos = (k << shift) + (frame - k);
+    }
+    // Theora 3.2.1+ granulepos store frame number [1..N], so granulepos
+    // should be > 0.
+    // Theora 3.2.0 granulepos store the frame index [0..(N-1)], so
+    // granulepos should be >= 0. 
+    NS_ASSERTION(granulepos >= version_3_2_1,
+                  "Invalid granulepos for Theora version");
+
+    // Check that the frame's granule number is one more than the
+    // previous frame's.
+    NS_ASSERTION(i == 0 ||
+                 th_granule_frame(mCtx, granulepos) ==
+                 th_granule_frame(mCtx, mUnstamped[i-1]->granulepos) + 1,
+                 "Granulepos calculation is incorrect!");
+
+    packet->granulepos = granulepos;
+  }
+
+  // Check that the second to last frame's granule number is one less than
+  // the last frame's (the known granule number). If not our granulepos
+  // recovery missed a beat.
+  NS_ASSERTION(mUnstamped.Length() < 2 ||
+    th_granule_frame(mCtx, mUnstamped[mUnstamped.Length()-2]->granulepos) + 1 ==
+    th_granule_frame(mCtx, lastGranulepos),
+    "Granulepos recovery should catch up with packet->granulepos!");
+}
+
 nsresult nsVorbisState::Reset()
 {
   nsresult res = NS_OK;
@@ -281,11 +498,17 @@ nsresult nsVorbisState::Reset()
   if (NS_FAILED(nsOggCodecState::Reset())) {
     return NS_ERROR_FAILURE;
   }
+
+  mGranulepos = 0;
+  mPrevVorbisBlockSize = 0;
+
   return res;
 }
 
 nsVorbisState::nsVorbisState(ogg_page* aBosPage) :
-  nsOggCodecState(aBosPage)
+  nsOggCodecState(aBosPage, PR_TRUE),
+  mPrevVorbisBlockSize(0),
+  mGranulepos(0)
 {
   MOZ_COUNT_CTOR(nsVorbisState);
   vorbis_info_init(&mInfo);
@@ -296,6 +519,7 @@ nsVorbisState::nsVorbisState(ogg_page* aBosPage) :
 
 nsVorbisState::~nsVorbisState() {
   MOZ_COUNT_DTOR(nsVorbisState);
+  Reset();
   vorbis_block_clear(&mBlock);
   vorbis_dsp_clear(&mDsp);
   vorbis_info_clear(&mInfo);
@@ -327,12 +551,13 @@ PRBool nsVorbisState::DecodeHeader(ogg_packet* aPacket) {
 
   if (ret < 0 || mPacketCount > 3) {
     // We've received an error, or the first three packets weren't valid
-    // header packets, assume bad input, and don't activate the bitstream.
+    // header packets, assume bad input, and deactivate the bitstream.
     mDoneReadingHeaders = PR_TRUE;
+    mActive = PR_FALSE;
   } else if (ret == 0 && isSetupHeader && mPacketCount == 3) {
-    // Successfully read the three header packets, activate the bitstream.
+    // Successfully read the three header packets.
+    // The bitstream remains active.
     mDoneReadingHeaders = PR_TRUE;
-    mActive = PR_TRUE;
   }
   return mDoneReadingHeaders;
 }
@@ -377,8 +602,151 @@ PRInt64 nsVorbisState::Time(vorbis_info* aInfo, PRInt64 aGranulepos)
   return t / aInfo->rate;
 }
 
+PRBool
+nsVorbisState::IsHeader(ogg_packet* aPacket)
+{
+  // The first byte in each Vorbis header packet is either 0x01, 0x03, or 0x05,
+  // i.e. the first bit is odd. Audio data packets have their first bit as 0x0.
+  // Any packet with its first bit set cannot be a data packet, it's a
+  // (possibly invalid) header packet.
+  // See: http://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-610004.2.1
+  return aPacket->bytes > 0 ? (aPacket->packet[0] & 0x1) : PR_FALSE;
+}
+
+nsresult
+nsVorbisState::PageIn(ogg_page* aPage)
+{
+  if (!mActive)
+    return NS_OK;
+  NS_ASSERTION(static_cast<PRUint32>(ogg_page_serialno(aPage)) == mSerial,
+               "Page must be for this stream!");
+  if (ogg_stream_pagein(&mState, aPage) == -1)
+    return NS_ERROR_FAILURE;
+  PRBool foundGp = PacketOutUntilGranulepos();
+  if (foundGp && mDoneReadingHeaders) {
+    // We've found a packet with a granulepos, and we've loaded our metadata
+    // and initialized our decoder. Determine granulepos of buffered packets.
+    ReconstructVorbisGranulepos();
+    for (PRUint32 i = 0; i < mUnstamped.Length(); ++i) {
+      ogg_packet* packet = mUnstamped[i];
+      AssertHasRecordedPacketSamples(packet);
+      NS_ASSERTION(!IsHeader(packet), "Don't try to recover header packet gp");
+      NS_ASSERTION(packet->granulepos != -1, "Packet must have gp by now");
+      mPackets.Append(packet);
+    }
+    mUnstamped.Clear();
+  }
+  return NS_OK;
+}
+
+nsresult nsVorbisState::ReconstructVorbisGranulepos()
+{
+  // The number of samples in a Vorbis packet is:
+  // window_blocksize(previous_packet)/4+window_blocksize(current_packet)/4
+  // See: http://xiph.org/vorbis/doc/Vorbis_I_spec.html#x1-230001.3.2
+  // So we maintain mPrevVorbisBlockSize, the block size of the last packet
+  // encountered. We also maintain mGranulepos, which is the granulepos of
+  // the last encountered packet. This enables us to give granulepos to
+  // packets when the last packet in mUnstamped doesn't have a granulepos
+  // (for example if the stream was truncated).
+  //
+  // We validate our prediction of the number of samples decoded when
+  // VALIDATE_VORBIS_SAMPLE_CALCULATION is defined by recording the predicted
+  // number of samples, and verifing we extract that many when decoding
+  // each packet.
+
+  NS_ASSERTION(mUnstamped.Length() > 0, "Length must be > 0");
+  ogg_packet* last = mUnstamped[mUnstamped.Length()-1];
+  NS_ASSERTION(last->e_o_s || last->granulepos >= 0,
+    "Must know last granulepos!");
+  if (mUnstamped.Length() == 1) {
+    ogg_packet* packet = mUnstamped[0];
+    long blockSize = vorbis_packet_blocksize(&mInfo, packet);
+    if (blockSize < 0) {
+      // On failure vorbis_packet_blocksize returns < 0. If we've got
+      // a bad packet, we just assume that decode will have to skip this
+      // packet, i.e. assume 0 samples are decodable from this packet.
+      blockSize = 0;
+      mPrevVorbisBlockSize = 0;
+    }
+    long samples = mPrevVorbisBlockSize / 4 + blockSize / 4;
+    mPrevVorbisBlockSize = blockSize;
+    if (packet->granulepos == -1) {
+      packet->granulepos = mGranulepos + samples;
+    }
+    mGranulepos = packet->granulepos;
+    RecordVorbisPacketSamples(packet, samples);
+    return NS_OK;
+  }
+
+  PRBool unknownGranulepos = last->granulepos == -1;
+  int totalSamples = 0;
+  for (PRInt32 i = mUnstamped.Length() - 1; i > 0; i--) {
+    ogg_packet* packet = mUnstamped[i];
+    ogg_packet* prev = mUnstamped[i-1];
+    ogg_int64_t granulepos = packet->granulepos;
+    NS_ASSERTION(granulepos != -1, "Must know granulepos!");
+    long prevBlockSize = vorbis_packet_blocksize(&mInfo, prev);
+    long blockSize = vorbis_packet_blocksize(&mInfo, packet);
+
+    if (blockSize < 0 || prevBlockSize < 0) {
+      // On failure vorbis_packet_blocksize returns < 0. If we've got
+      // a bad packet, we just assume that decode will have to skip this
+      // packet, i.e. assume 0 samples are decodable from this packet.
+      blockSize = 0;
+      prevBlockSize = 0;
+    }
+
+    long samples = prevBlockSize / 4 + blockSize / 4;
+    totalSamples += samples;
+    prev->granulepos = granulepos - samples;
+    RecordVorbisPacketSamples(packet, samples);
+  }
+
+  if (unknownGranulepos) {
+    for (PRUint32 i = 0; i < mUnstamped.Length(); i++) {
+      ogg_packet* packet = mUnstamped[i];
+      packet->granulepos += mGranulepos + totalSamples + 1;
+    }
+  }
+
+  ogg_packet* first = mUnstamped[0];
+  long blockSize = vorbis_packet_blocksize(&mInfo, first);
+  if (blockSize < 0) {
+    mPrevVorbisBlockSize = 0;
+    blockSize = 0;
+  }
+
+  long samples = (mPrevVorbisBlockSize == 0) ? 0 :
+                  mPrevVorbisBlockSize / 4 + blockSize / 4;
+  PRInt64 start = first->granulepos - samples;
+  RecordVorbisPacketSamples(first, samples);
+
+  if (last->e_o_s && start < mGranulepos) {
+    // We've calculated that there are more samples in this page than its
+    // granulepos claims, and it's the last page in the stream. This is legal,
+    // and we will need to prune the trailing samples when we come to decode it.
+    // We must correct the timestamps so that they follow the last Vorbis page's
+    // samples.
+    PRInt64 pruned = mGranulepos - start;
+    for (PRUint32 i = 0; i < mUnstamped.Length() - 1; i++) {
+      mUnstamped[i]->granulepos += pruned;
+    }
+#ifdef VALIDATE_VORBIS_SAMPLE_CALCULATION
+    mVorbisPacketSamples[last] -= pruned;
+#endif
+  }
+
+  mPrevVorbisBlockSize = vorbis_packet_blocksize(&mInfo, last);
+  mPrevVorbisBlockSize = NS_MAX(static_cast<long>(0), mPrevVorbisBlockSize);
+  mGranulepos = last->granulepos;
+
+  return NS_OK;
+}
+
+
 nsSkeletonState::nsSkeletonState(ogg_page* aBosPage)
-  : nsOggCodecState(aBosPage),
+  : nsOggCodecState(aBosPage, PR_TRUE),
     mVersion(0),
     mPresentationTime(0),
     mLength(0)

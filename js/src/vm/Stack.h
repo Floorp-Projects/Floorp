@@ -65,6 +65,8 @@ namespace mjit {
 }
 namespace detail { struct OOMCheck; }
 
+class ArgumentsObject;
+
 #ifdef JS_METHODJIT
 typedef js::mjit::CallSite JSInlinedSite;
 #else
@@ -271,8 +273,8 @@ class StackFrame
         JSFunction      *fun;           /*   function frame, pre GetScopeChain */
     } exec;
     union {                             /* describes the arguments of a function */
-        uintN           nactual;        /*   pre GetArgumentsObject */
-        JSObject        *obj;           /*   post GetArgumentsObject */
+        uintN           nactual;        /*   before js_GetArgsObject */
+        ArgumentsObject *obj;           /*   after js_GetArgsObject */
         JSScript        *script;        /* eval has no args, but needs a script */
     } args;
     mutable JSObject    *scopeChain_;   /* current scope chain */
@@ -585,17 +587,17 @@ class StackFrame
         return !!(flags_ & HAS_ARGS_OBJ);
     }
 
-    JSObject &argsObj() const {
+    ArgumentsObject &argsObj() const {
         JS_ASSERT(hasArgsObj());
         JS_ASSERT(!isEvalFrame());
         return *args.obj;
     }
 
-    JSObject *maybeArgsObj() const {
+    ArgumentsObject *maybeArgsObj() const {
         return hasArgsObj() ? &argsObj() : NULL;
     }
 
-    inline void setArgsObj(JSObject &obj);
+    inline void setArgsObj(ArgumentsObject &obj);
 
     /*
      * This value
