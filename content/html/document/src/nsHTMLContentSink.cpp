@@ -198,6 +198,7 @@ public:
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
   virtual PRBool IsScriptExecuting();
+  virtual void ScrollToRef() { ScrollToRefImpl(); }
 
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);

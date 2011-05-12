@@ -260,10 +260,10 @@ public:
   // element and calls the above method.
   void ProcessOfflineManifest(nsIContent *aElement);
 
+  void ScrollToRefImpl();
+
 protected:
-  // Tries to scroll to the URI's named anchor. Once we've successfully
-  // done that, further calls to this method will be ignored.
-  void ScrollToRef();
+  void SetScrollToRef();
 
   // Start layout.  If aIgnorePendingSheets is true, this will happen even if
   // we still have stylesheet loads pending.  Otherwise, we'll wait until the
@@ -318,6 +318,8 @@ protected:
 
   nsCOMArray<nsIScriptElement> mScriptElements;
 
+  nsCString mScrollToRef; // ScrollTo #ref
+
   // back off timer notification after count
   PRInt32 mBackoffCount;
 
@@ -345,7 +347,10 @@ protected:
   PRUint8 mIsDocumentObserver : 1;
   // True if this is a fragment parser
   PRUint8 mFragmentMode : 1;
-  
+
+  PRUint8 mScrolledToRefAlready : 1;
+  PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
+
   //
   // -- Can interrupt parsing members --
   //
