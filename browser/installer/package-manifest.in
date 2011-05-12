@@ -384,6 +384,8 @@
 @BINPATH@/components/SyncComponents.manifest
 @BINPATH@/components/Weave.js
 #endif
+@BINPATH@/components/TelemetryPing.js
+@BINPATH@/components/TelemetryPing.manifest
 
 ; Modules
 @BINPATH@/modules/*
