@@ -2452,7 +2452,7 @@ mjit::Compiler::generateMethod()
             INLINE_STUBCALL(stubs::DefLocalFun_FC, REJOIN_DEFLOCALFUN);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot, JSVAL_TYPE_OBJECT, true);
+            frame.storeLocal(slot, true, true);
             frame.pop();
           }
           END_CASE(JSOP_DEFLOCALFUN_FC)
@@ -2550,7 +2550,7 @@ mjit::Compiler::generateMethod()
             INLINE_STUBCALL(stubs::DefLocalFun, REJOIN_DEFLOCALFUN);
             frame.takeReg(Registers::ReturnReg);
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
-            frame.storeLocal(slot, JSVAL_TYPE_OBJECT, true);
+            frame.storeLocal(slot, true, true);
             frame.pop();
           }
           END_CASE(JSOP_DEFLOCALFUN)
@@ -3464,7 +3464,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
         }
         types::TypeSet *types = frame.extra(frame.peek(-((int)argc + 1))).types;
         types::TypeSet::Clone(cx, types, &callIC.argTypes[0]);
-        for (unsigned i = 0; i < argc; i++) {
+        for (int i = 0; i < (int)argc; i++) {
             types::TypeSet *types = frame.extra(frame.peek(-((int)argc - i))).types;
             types::TypeSet::Clone(cx, types, &callIC.argTypes[i + 1]);
         }

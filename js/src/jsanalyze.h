@@ -621,15 +621,17 @@ class SSAValue
 
   public:
     enum Kind {
-        EMPTY = 0, /* Empty entry in a phi node. */
-        PUSHED,    /* Value pushed by some bytecode. */
-        VAR,       /* Initial or written value to some argument or local. */
-        PHI        /* Selector for one of several values. */
+        EMPTY  = 0, /* Invalid entry. */
+        PUSHED = 1, /* Value pushed by some bytecode. */
+        VAR    = 2, /* Initial or written value to some argument or local. */
+        PHI    = 3  /* Selector for one of several values. */
     };
 
     Kind kind() const {
         JS_ASSERT(u.pushed.kind == u.var.kind && u.pushed.kind == u.phi.kind);
-        return u.pushed.kind;
+
+        /* Use a bitmask because MSVC wants to use -1 for PHI nodes. */
+        return (Kind) (u.pushed.kind & 0x3);
     }
 
     bool equals(const SSAValue &o) const {

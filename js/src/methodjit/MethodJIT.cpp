@@ -768,10 +768,10 @@ extern "C" {
             push esi;
             call js_InternalInterpret;
             add esp, 0x10;
-            mov [esp + 0x1C], ebp;  /* Load frame */
-            mov [ebp + 0x18], esi;  /* Load rval payload */
-            mov [ebp + 0x1C], edi;  /* Load rval type */
-            mov [esp + 0xC], ecx;   /* Load scratch -> argc */
+            mov ebp, [esp + 0x1C];  /* Load frame */
+            mov esi, [ebp + 0x18];  /* Load rval payload */
+            mov edi, [ebp + 0x1C];  /* Load rval type */
+            mov ecx, [esp + 0xC];   /* Load scratch -> argc */
             test eax, eax;
             je interpoline_exit;
             jmp eax;
@@ -790,8 +790,8 @@ extern "C" {
 
     __declspec(naked) void JaegerInterpolineScripted() {
         __asm {
-            mov [ebp + 0x10], ebp;  /* Load prev */
-            mov ebp, [esp + 0x1C];  /* fp -> regs.fp */
+            mov ebp, [ebp + 0x10];  /* Load prev */
+            mov [esp + 0x1C], ebp;  /* fp -> regs.fp */
             jmp JaegerInterpoline;
         }
     }
