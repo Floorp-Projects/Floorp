@@ -434,10 +434,9 @@ struct Registers {
 
     AnyRegisterID peekReg(uint32 mask) {
         JS_ASSERT(!empty(mask));
-        int ireg;
+        unsigned ireg;
         JS_FLOOR_LOG2(ireg, freeMask & mask);
-        RegisterID reg = (RegisterID)ireg;
-        return reg;
+        return AnyRegisterID::fromRaw(ireg);
     }
 
     AnyRegisterID peekReg() {
