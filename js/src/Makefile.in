@@ -362,7 +362,14 @@ CPPSRCS += 	MethodJIT.cpp \
 		Retcon.cpp \
 		TrampolineCompiler.cpp \
 		$(NULL)
-#		PICStubCompiler.cpp \
+
+# Ion
+VPATH +=	$(srcdir)/ion
+
+CPPSRCS +=	MIR.cpp \
+		BytecodeAnalyzer.cpp \
+		IonSpew.cpp \
+		$(NULL)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))
 ifeq (x86_64, $(TARGET_CPU))
