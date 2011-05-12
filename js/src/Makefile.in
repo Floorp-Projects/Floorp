@@ -369,6 +369,7 @@ VPATH +=	$(srcdir)/ion
 CPPSRCS +=	MIR.cpp \
 		BytecodeAnalyzer.cpp \
 		IonSpew.cpp \
+		MIRGraph.cpp \
 		$(NULL)
 
 ifeq (86, $(findstring 86,$(TARGET_CPU)))

@@ -91,7 +91,8 @@ class BytecodeAnalyzer : public MIRGenerator
     };
 
   public:
-    BytecodeAnalyzer(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp);
+    BytecodeAnalyzer(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
+                     MIRGraph &graph);
 
   public:
     bool analyze();
@@ -111,7 +112,6 @@ class BytecodeAnalyzer : public MIRGenerator
     ControlStatus processDoWhileEnd(CFGState &state);
     ControlStatus processReturn(JSOp op);
 
-    bool addBlock(MBasicBlock *block);
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newBlock(jsbytecode *pc) {
@@ -141,139 +141,6 @@ class BytecodeAnalyzer : public MIRGenerator
     MBasicBlock *current;
     Vector<CFGState, 8, TempAllocPolicy> cfgStack_;
 };
-
-class MBasicBlock : public TempObject
-{
-    static const uint32 NotACopy = uint32(-1);
-
-    struct StackSlot {
-        MInstruction *ins;
-        uint32 copyOf;
-        union {
-            uint32 firstCopy; // copyOf == NotACopy: first copy in the linked list
-            uint32 nextCopy;  // copyOf != NotACopy: next copy in the linked list
-        };
-
-        void set(MInstruction *ins) {
-            this->ins = ins;
-            copyOf = NotACopy;
-            firstCopy = NotACopy;
-        }
-        bool isCopy() const {
-            return copyOf != NotACopy;
-        }
-        bool isCopied() const {
-            if (isCopy())
-                return false;
-            return firstCopy != NotACopy;
-        }
-    };
-
-  private:
-    MBasicBlock(MIRGenerator *gen, jsbytecode *pc);
-    bool init();
-    bool initLoopHeader();
-    bool inherit(MBasicBlock *pred);
-    void assertUsesAreNotWithin(MOperand *use);
-
-    // Sets a slot, taking care to rewrite copies.
-    void setSlot(uint32 slot, MInstruction *ins);
-
-    // Pushes a copy of a slot.
-    void pushCopy(uint32 slot);
-
-    // Pushes a copy of a local variable or argument.
-    void pushVariable(uint32 slot);
-
-    // Sets a variable slot to the top of the stack, correctly creating copies
-    // as needed.
-    bool setVariable(uint32 slot);
-
-    MInstruction *getSlot(uint32 index);
-
-  public:
-    // Creates a new basic block for a MIR generator. If |pred| is not NULL,
-    // its slots and stack depth are initialized from |pred|.
-    static MBasicBlock *New(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
-    static MBasicBlock *NewLoopHeader(MIRGenerator *gen, MBasicBlock *pred, jsbytecode *entryPc);
-
-    void setId(uint32 id) {
-        id_ = id;
-    }
-
-    // Gets the instruction associated with various slot types.
-    MInstruction *peek(int32 depth);
-
-    // Initializes a slot value; must not be called for normal stack
-    // operations, as it will not create new SSA names for copies.
-    void initSlot(uint32 index, MInstruction *ins);
-
-    // Sets the instruction associated with various slot types. The
-    // instruction must lie at the top of the stack.
-    bool setLocal(uint32 local);
-    bool setArg(uint32 arg);
-
-    // Tracks an instruction as being pushed onto the operand stack.
-    void push(MInstruction *ins);
-    void pushArg(uint32 arg);
-    void pushLocal(uint32 local);
-
-    // Returns the top of the stack, then decrements the virtual stack pointer.
-    MInstruction *pop();
-
-    // Adds an instruction to this block's instruction list. |ins| may be NULL
-    // to simplify OOM checking.
-    bool add(MInstruction *ins);
-
-    // Marks the last instruction of the block; no further instructions
-    // can be added.
-    bool end(MControlInstruction *ins);
-
-    // Adds a phi instruction.
-    bool addPhi(MPhi *phi);
-
-    // Adds a predecessor. Every predecessor must have the same exit stack
-    // depth as the entry state to this block. Adding a predecessor
-    // automatically creates phi nodes and rewrites uses as needed.
-    bool addPredecessor(MBasicBlock *pred);
-
-    // Adds a back edge. This places phi nodes and rewrites instructions within
-    // the current loop as necessary. It also updates the stack state in the
-    // successor block.
-    bool addBackedge(MBasicBlock *block, MBasicBlock *successor);
-
-    jsbytecode *pc() const {
-        return pc_;
-    }
-    uint32 id() const {
-        return id_;
-    }
-    uint32 numPredecessors() const {
-        return predecessors_.length();
-    }
-    MBasicBlock *getPredecessor(uint32 i) const {
-        return predecessors_[i];
-    }
-    MControlInstruction *lastIns() const {
-        return lastIns_;
-    }
-
-  private:
-    MIRGenerator *gen;
-    Vector<MInstruction *, 4, TempAllocPolicy> instructions_;
-    Vector<MBasicBlock *, 1, TempAllocPolicy> predecessors_;
-    Vector<MPhi *, 2, TempAllocPolicy> phis_;
-    StackSlot *slots_;
-    uint32 stackPosition_;
-    MControlInstruction *lastIns_;
-    jsbytecode *pc_;
-    uint32 id_;
-
-    // Only set for loop headers. Contains the definitions imported at the
-    // initial loop entry.
-    StackSlot *header_;
-};
-
 
 } // namespace ion
 } // namespace js
