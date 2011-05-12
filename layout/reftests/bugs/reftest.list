@@ -331,7 +331,7 @@ fails-if(Android) == 302379.html 302379-ref.html
 == 309914-1.xul 309914-1-ref.xul
 == 311366-unknown-inline-1.html 311366-unknown-inline-1-ref.html
 == 311366-unknown-block-1.html 311366-unknown-block-1-ref.html
-fails-if(!prefs.getBoolPref("html5.parser.enable")) == 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
+== 311366-unknown-block-3.html 311366-unknown-block-3-ref.html
 == 311366-unknown-block-2.html 311366-unknown-block-2-ref.html
 == 311366-unknown-inline-2.html 311366-unknown-inline-2-ref.html
 == 311822-1.html 311822-1-ref-a.html
