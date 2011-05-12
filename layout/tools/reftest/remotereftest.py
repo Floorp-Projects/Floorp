@@ -188,6 +188,7 @@ class ReftestServer:
         self.webServer = options.remoteWebServer
         self.httpPort = options.httpPort
         self.scriptDir = scriptDir
+        self.pidFile = options.pidFile
         self.shutdownURL = "http://%(server)s:%(port)s/server/shutdown" % { "server" : self.webServer, "port" : self.httpPort }
 
     def start(self):
@@ -213,6 +214,11 @@ class ReftestServer:
             print "Error starting server."
             sys.exit(2)
         self._automation.log.info("INFO | remotereftests.py | Server pid: %d", pid)
+
+        if (self.pidFile != ""):
+            f = open(self.pidFile + ".xpcshell.pid", 'w')
+            f.write("%s" % pid)
+            f.close()
 
     def ensureReady(self, timeout):
         assert timeout >= 0
@@ -364,6 +370,7 @@ user_pref("capability.principal.codebase.p2.id", "http://%s:%s");
         if (self.pidFile != ""):
             try:
                 os.remove(self.pidFile)
+                os.remove(self.pidFile + ".xpcshell.pid")
             except:
                 print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % self.pidFile
 

@@ -196,6 +196,7 @@ class MochiRemote(Mochitest):
         if (options.pidFile != ""):
             try:
                 os.remove(options.pidFile)
+                os.remove(options.pidFile + ".xpcshell.pid")
             except:
                 print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % options.pidFile
 
@@ -251,7 +252,12 @@ class MochiRemote(Mochitest):
         self.server = MochitestServer(localAutomation, options)
         self.server.start()
 
+        if (options.pidFile != ""):
+            f = open(options.pidFile + ".xpcshell.pid", 'w')
+            f.write("%s" % self.server._process.pid)
+            f.close()
         self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
+
         options.xrePath = remoteXrePath
         options.utilityPath = remoteUtilityPath
         options.profilePath = remoteProfilePath
