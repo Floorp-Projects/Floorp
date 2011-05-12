@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<div id="d1" style="width:100px; height:100px; background:lime;"></div>
+<div id="d2" style="width:100px; height:100px; background:cyan; opacity:0.8;">Hello Kitty</div>
+<script>
+var d1 = document.getElementById("d1");
+var d2 = document.getElementById("d2");
+document.body.offsetTop;
+d1.style.height = "150px";
+d2.style.opacity = "0.6";
+function doTest() {
+  d1.style.height = "200px";
+  d2.style.opacity = 0.4;
+  document.documentElement.removeAttribute("class");
+}
+window.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>
