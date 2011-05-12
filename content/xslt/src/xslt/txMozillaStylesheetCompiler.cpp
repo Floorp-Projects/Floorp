@@ -119,6 +119,7 @@ public:
     virtual void FlushPendingNotifications(mozFlushType aType) { }
     NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
     virtual nsISupports *GetTarget() { return nsnull; }
+    virtual void ScrollToRef() { }
 
 private:
     nsRefPtr<txStylesheetCompiler> mCompiler;

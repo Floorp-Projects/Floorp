@@ -56,10 +56,9 @@
 
 class nsIParser;
 
-// 57b395ad-4276-408c-9f98-7044b5025c3d
 #define NS_ICONTENT_SINK_IID \
-{ 0x57b395ad, 0x4276, 0x408c, \
-  { 0x9f, 0x98, 0x70, 0x44, 0xb5, 0x02, 0x5c, 0x3d } }
+{ 0x46983927, 0x7ff5, 0x42cc, \
+  { 0x9f, 0x57, 0xf2, 0xd6, 0xa8, 0x42, 0x52, 0x18 } }
 
 class nsIContentSink : public nsISupports {
 public:
@@ -154,7 +153,13 @@ public:
   {
     return PR_FALSE;
   }
-  
+
+  /**
+   * Tries to scroll to the URI's named anchor. Once we've successfully
+   * done that, further calls to this method will be ignored.
+   */
+  virtual void ScrollToRef() = 0;
+
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIContentSink, NS_ICONTENT_SINK_IID)

@@ -112,6 +112,7 @@ public:
   virtual void FlushPendingNotifications(mozFlushType aType) { }
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset) { return NS_OK; }
   virtual nsISupports *GetTarget() { return mTargetDocument; }
+  virtual void ScrollToRef() { }
 
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);

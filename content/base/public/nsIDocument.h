@@ -124,8 +124,8 @@ class Element;
 
 
 #define NS_IDOCUMENT_IID      \
-{ 0x26ef6218, 0xcd5e, 0x4953,  \
- { 0xbb, 0x57, 0xb8, 0x50, 0x29, 0xa1, 0xae, 0x40 } }
+{ 0x0d4ea2a0, 0x9b68, 0x4ecd, \
+ { 0xa2, 0xd6, 0xae, 0xde, 0xe2, 0x27, 0x8d, 0x48 } }
 
 // Flag for AddStyleSheet().
 #define NS_STYLESHEET_FROM_CATALOG                (1 << 0)
@@ -1458,10 +1458,7 @@ public:
   virtual void RegisterFileDataUri(const nsACString& aUri) = 0;
   virtual void UnregisterFileDataUri(const nsACString& aUri) = 0;
 
-  virtual void SetScrollToRef(nsIURI *aDocumentURI) = 0;
   virtual void ScrollToRef() = 0;
-  virtual void ResetScrolledToRefAlready() = 0;
-  virtual void SetChangeScrollPosWhenScrollingToRef(PRBool aValue) = 0;
 
   /**
    * This method is similar to GetElementById() from nsIDOMDocument but it
