@@ -910,12 +910,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 
     if ((jscr = script->jitNormal)) {
         cx->runtime->mjitDataSize -= jscr->scriptDataSize();
-#ifdef DEBUG
-        if (jscr->pcProfile) {
-            cx->free_(jscr->pcProfile);
-            jscr->pcProfile = NULL;
-        }
-#endif
 
         jscr->~JITScript();
         cx->free_(jscr);
@@ -925,12 +919,6 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script)
 
     if ((jscr = script->jitCtor)) {
         cx->runtime->mjitDataSize -= jscr->scriptDataSize();
-#ifdef DEBUG
-        if (jscr->pcProfile) {
-            cx->free_(jscr->pcProfile);
-            jscr->pcProfile = NULL;
-        }
-#endif
 
         jscr->~JITScript();
         cx->free_(jscr);
@@ -1028,39 +1016,3 @@ JITScript::nativeToPC(void *returnAddress) const
     return ic.pc;
 }
 
-static void
-DumpProfile(JSContext *cx, JSScript *script, JITScript* jit, bool isCtor)
-{
-    JS_ASSERT(!cx->runtime->gcRunning);
-
-#if defined(DEBUG) && defined(JS_METHODJIT_SPEW)
-    if (IsJaegerSpewChannelActive(JSpew_PCProf) && jit->pcProfile) {
-        // Display hit counts for every JS code line
-        AutoArenaAllocator(&cx->tempPool);
-        Sprinter sprinter;
-        INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
-        js_Disassemble(cx, script, true, &sprinter, jit->pcProfile);
-        fprintf(stdout, "--- PC PROFILE %s:%d%s ---\n", script->filename, script->lineno,
-                isCtor ? " (constructor)" : "");
-        fprintf(stdout, "%s\n", sprinter.base);
-        fprintf(stdout, "--- END PC PROFILE %s:%d%s ---\n", script->filename, script->lineno,
-                isCtor ? " (constructor)" : "");
-    }
-#endif
-}
-
-void
-mjit::DumpAllProfiles(JSContext *cx)
-{
-#ifdef JS_METHODJIT_SPEW
-    for (JSScript *script = (JSScript *) JS_LIST_HEAD(&cx->compartment->scripts);
-         script != (JSScript *) &cx->compartment->scripts;
-         script = (JSScript *) JS_NEXT_LINK((JSCList *)script))
-    {
-        if (script->jitCtor)
-            DumpProfile(cx, script, script->jitCtor, true);
-        if (script->jitNormal)
-            DumpProfile(cx, script, script->jitNormal, false);
-    }
-#endif
-}

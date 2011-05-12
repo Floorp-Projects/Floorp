@@ -79,7 +79,6 @@ js::JMCheckLogging()
             "  scripts       ???\n"
             "  profile       ???\n"
 #ifdef DEBUG
-            "  pcprofile     Runtime hit counts of every JS opcode executed\n"
             "  jsops         JS opcodes\n"
 #endif
             "  insns         JS opcodes and generated insns\n"
@@ -100,8 +99,6 @@ js::JMCheckLogging()
     if (strstr(env, "profile"))
         LoggingBits |= (1 << uint32(JSpew_Prof));
 #ifdef DEBUG
-    if (strstr(env, "pcprofile"))
-        LoggingBits |= (1 << uint32(JSpew_PCProf));
     if (strstr(env, "jsops"))
         LoggingBits |= (1 << uint32(JSpew_JSOps));
 #endif

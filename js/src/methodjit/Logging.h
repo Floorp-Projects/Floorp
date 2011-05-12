@@ -51,7 +51,6 @@ namespace js {
 #define JSPEW_CHAN_MAP(_)   \
     _(Abort)                \
     _(Scripts)              \
-    _(PCProf)               \
     _(Prof)                 \
     _(JSOps)                \
     _(Insns)                \
