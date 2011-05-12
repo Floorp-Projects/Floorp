@@ -46,7 +46,6 @@
 #include "prclist.h"
 #include "npapi.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsIPlugin.h"
 #include "nsIPluginTag.h"
 #include "nsPluginsDir.h"
 #include "nsPluginDirServiceProvider.h"
@@ -177,6 +176,8 @@ public:
 
   // Does not accept NULL and should never fail.
   nsPluginTag* TagForPlugin(nsNPAPIPlugin* aPlugin);
+
+  nsresult GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin);
 
 private:
   nsresult

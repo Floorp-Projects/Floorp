@@ -38,7 +38,6 @@
 #ifndef nsNPAPIPlugin_h_
 #define nsNPAPIPlugin_h_
 
-#include "nsIPlugin.h"
 #include "prlink.h"
 #include "npfunctions.h"
 #include "nsPluginHost.h"
@@ -72,7 +71,7 @@ typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_PLUGININIT) (const NPNetscapeFuncs* 
 typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_PLUGINUNIXINIT) (const NPNetscapeFuncs* pCallbacks, NPPluginFuncs* fCallbacks);
 typedef NS_NPAPIPLUGIN_CALLBACK(NPError, NP_PLUGINSHUTDOWN) ();
 
-class nsNPAPIPlugin : public nsIPlugin
+class nsNPAPIPlugin : public nsISupports
 {
 private:
   typedef mozilla::PluginLibrary PluginLibrary;
@@ -82,7 +81,6 @@ public:
   virtual ~nsNPAPIPlugin();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIPLUGIN
 
   // Constructs and initializes an nsNPAPIPlugin object. A NULL file path
   // will prevent this from calling NP_Initialize.
@@ -104,6 +102,9 @@ public:
                      const nsAString& browserDumpID);
   
   static PRBool RunPluginOOP(const nsPluginTag *aPluginTag);
+
+  nsresult CreatePluginInstance(nsIPluginInstance **aResult);
+  nsresult Shutdown();
 
 protected:
   NPPluginFuncs mPluginFuncs;

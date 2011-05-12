@@ -480,6 +480,7 @@ _TEST_FILES2 = \
 		test_bug638112.html \
 		bug638112-response.txt \
 		bug638112.sjs \
+		test_bug656283.html \
 		$(NULL)
 
 # This test fails on the Mac for some reason

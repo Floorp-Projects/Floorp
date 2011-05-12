@@ -55,7 +55,6 @@
   "@mozilla.org/plugin/host;1"
 %}
 
-interface nsIPlugin;
 interface nsIURI;
 interface nsIDOMPlugin;
 interface nsIChannel;
@@ -64,7 +63,7 @@ interface nsIPluginStreamListener;
 [ptr] native PRLibraryPtr(PRLibrary);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(0BB66261-4114-4D73-8DFC-C3CA997E6817)]
+[scriptable, uuid(FB2E7827-1E7D-4DCC-93A8-94098A4B588D)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -81,8 +80,6 @@ interface nsIPluginHost : nsISupports
    * also be reloaded
    */
   void reloadPlugins(in boolean reloadPages);
-
-  [noscript] nsIPlugin getPlugin(in string aMimeType);
 
   /**
    * Instantiate an embedded plugin for an existing channel. The caller is

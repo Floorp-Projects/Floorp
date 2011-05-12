@@ -843,8 +843,6 @@ public:
 
   virtual nsresult SetResolution(float aXResolution, float aYResolution);
 
- virtual void SynthesizeMouseMove(PRBool aFromScroll);
-
   //nsIViewObserver interface
 
   NS_IMETHOD Paint(nsIView* aViewToPaint,
@@ -1382,6 +1380,41 @@ private:
   PRPackedBool mAsyncResizeTimerIsActive;
   PRPackedBool mInResize;
 
+  virtual void SynthesizeMouseMove(PRBool aFromScroll);
+
+  // Check if aEvent is a mouse event and record the mouse location for later
+  // synth mouse moves.
+  void RecordMouseLocation(nsGUIEvent* aEvent);
+  // This is used for synthetic mouse events that are sent when what is under
+  // the mouse pointer may have changed without the mouse moving (eg scrolling,
+  // change to the document contents).
+  // It is set only on a presshell for a root document, this value represents
+  // the last observed location of the mouse relative to that root document. It
+  // is set to (NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) if the mouse isn't
+  // over our window or there is no last observed mouse location for some
+  // reason.
+  nsPoint mMouseLocation;
+  class nsSynthMouseMoveEvent : public nsRunnable {
+  public:
+    nsSynthMouseMoveEvent(PresShell* aPresShell, PRBool aFromScroll)
+      : mPresShell(aPresShell), mFromScroll(aFromScroll) {
+      NS_ASSERTION(mPresShell, "null parameter");
+    }
+    void Revoke() { mPresShell = nsnull; }
+    NS_IMETHOD Run() {
+      if (mPresShell)
+        mPresShell->ProcessSynthMouseMoveEvent(mFromScroll);
+      return NS_OK;
+    }
+  private:
+    PresShell* mPresShell;
+    PRBool mFromScroll;
+  };
+  nsRevocableEventPtr<nsSynthMouseMoveEvent> mSynthMouseMoveEvent;
+  void ProcessSynthMouseMoveEvent(PRBool aFromScroll);
+
+  PresShell* GetRootPresShell();
+
 private:
 #ifdef DEBUG
   // Ensure that every allocation from the PresArena is eventually freed.
@@ -1659,6 +1692,7 @@ NS_MEMORY_REPORTER_IMPLEMENT(LayoutBidi,
                              nsnull)
 
 PresShell::PresShell()
+  : mMouseLocation(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE)
 {
   mSelection = nsnull;
 #ifdef MOZ_REFLOW_PERF
@@ -1954,6 +1988,8 @@ PresShell::Destroy()
     mReflowContinueTimer->Cancel();
     mReflowContinueTimer = nsnull;
   }
+
+  mSynthMouseMoveEvent.Revoke();
 
   if (mCaret) {
     mCaret->Terminate();
@@ -5955,8 +5991,179 @@ void PresShell::SetRenderingState(const RenderingState& aState)
 
 void PresShell::SynthesizeMouseMove(PRBool aFromScroll)
 {
-  if (mViewManager && !mPaintingSuppressed && mIsActive) {
-    mViewManager->SynthesizeMouseMove(aFromScroll);
+  if (mPaintingSuppressed || !mIsActive || !mPresContext) {
+    return;
+  }
+
+  if (!mPresContext->IsRoot()) {
+    nsIPresShell* rootPresShell = GetRootPresShell();
+    if (rootPresShell) {
+      rootPresShell->SynthesizeMouseMove(aFromScroll);
+    }
+    return;
+  }
+
+  if (mMouseLocation == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE))
+    return;
+
+  if (!mSynthMouseMoveEvent.IsPending()) {
+    nsRefPtr<nsSynthMouseMoveEvent> ev =
+        new nsSynthMouseMoveEvent(this, aFromScroll);
+
+    if (NS_FAILED(NS_DispatchToCurrentThread(ev))) {
+      NS_WARNING("failed to dispatch nsSynthMouseMoveEvent");
+      return;
+    }
+
+    mSynthMouseMoveEvent = ev;
+  }
+}
+
+/**
+ * Find the first floating view with a widget in a postorder traversal of the
+ * view tree that contains the point. Thus more deeply nested floating views
+ * are preferred over their ancestors, and floating views earlier in the
+ * view hierarchy (i.e., added later) are preferred over their siblings.
+ * This is adequate for finding the "topmost" floating view under a point,
+ * given that floating views don't supporting having a specific z-index.
+ * 
+ * We cannot exit early when aPt is outside the view bounds, because floating
+ * views aren't necessarily included in their parent's bounds, so this could
+ * traverse the entire view hierarchy --- use carefully.
+ */
+static nsIView* FindFloatingViewContaining(nsIView* aView, nsPoint aPt)
+{
+  if (aView->GetVisibility() == nsViewVisibility_kHide)
+    // No need to look into descendants.
+    return nsnull;
+
+  nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
+  if (frame && !frame->PresContext()->PresShell()->IsActive()) {
+    return nsnull;
+  }
+
+  for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    nsIView* r = FindFloatingViewContaining(v, v->ConvertFromParentCoords(aPt));
+    if (r)
+      return r;
+  }
+
+  if (aView->GetFloating() && aView->HasWidget() &&
+      aView->GetDimensions().Contains(aPt))
+    return aView;
+    
+  return nsnull;
+}
+
+/*
+ * This finds the first view containing the given point in a postorder
+ * traversal of the view tree that contains the point, assuming that the
+ * point is not in a floating view.  It assumes that only floating views
+ * extend outside the bounds of their parents.
+ *
+ * This methods should only be called if FindFloatingViewContaining
+ * returns null.
+ */
+static nsIView* FindViewContaining(nsIView* aView, nsPoint aPt)
+{
+  if (!aView->GetDimensions().Contains(aPt) ||
+      aView->GetVisibility() == nsViewVisibility_kHide) {
+    return nsnull;
+  }
+
+  nsIFrame* frame = static_cast<nsIFrame*>(aView->GetClientData());
+  if (frame && !frame->PresContext()->PresShell()->IsActive()) {
+    return nsnull;
+  }
+
+  for (nsIView* v = aView->GetFirstChild(); v; v = v->GetNextSibling()) {
+    nsIView* r = FindViewContaining(v, v->ConvertFromParentCoords(aPt));
+    if (r)
+      return r;
+  }
+
+  return aView;
+}
+
+void
+PresShell::ProcessSynthMouseMoveEvent(PRBool aFromScroll)
+{
+  // allow new event to be posted while handling this one only if the
+  // source of the event is a scroll (to prevent infinite reflow loops)
+  if (aFromScroll) {
+    mSynthMouseMoveEvent.Forget();
+  }
+
+  nsIView* rootView = mViewManager ? mViewManager->GetRootView() : nsnull;
+  if (mMouseLocation == nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE) ||
+      !rootView || !rootView->HasWidget() || !mPresContext) {
+    mSynthMouseMoveEvent.Forget();
+    return;
+  }
+
+  NS_ASSERTION(mPresContext->IsRoot(), "Only a root pres shell should be here");
+
+  // Hold a ref to ourselves so DispatchEvent won't destroy us (since
+  // we need to access members after we call DispatchEvent).
+  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+  
+#ifdef DEBUG_MOUSE_LOCATION
+  printf("[ps=%p]synthesizing mouse move to (%d,%d)\n",
+         this, mMouseLocation.x, mMouseLocation.y);
+#endif
+
+  PRInt32 APD = mPresContext->AppUnitsPerDevPixel();
+
+  // We need a widget to put in the event we are going to dispatch so we look
+  // for a view that has a widget and the mouse location is over. We first look
+  // for floating views, if there isn't one we use the root view. |view| holds
+  // that view.
+  nsIView* view = nsnull;
+
+  // The appunits per devpixel ratio of |view|.
+  PRInt32 viewAPD;
+
+  // refPoint will be mMouseLocation relative to the widget of |view|, the
+  // widget we will put in the event we dispatch, in viewAPD appunits
+  nsPoint refpoint(0, 0);
+
+  // We always dispatch the event to the pres shell that contains the view that
+  // the mouse is over. pointVM is the VM of that pres shell.
+  nsIViewManager *pointVM = nsnull;
+
+  // This could be a bit slow (traverses entire view hierarchy)
+  // but it's OK to do it once per synthetic mouse event
+  view = FindFloatingViewContaining(rootView, mMouseLocation);
+  if (!view) {
+    view = rootView;
+    nsIView *pointView = FindViewContaining(rootView, mMouseLocation);
+    // pointView can be null in situations related to mouse capture
+    pointVM = (pointView ? pointView : view)->GetViewManager();
+    refpoint = mMouseLocation + rootView->ViewToWidgetOffset();
+    viewAPD = APD;
+  } else {
+    pointVM = view->GetViewManager();
+    nsIFrame* frame = static_cast<nsIFrame*>(view->GetClientData());
+    NS_ASSERTION(frame, "floating views can't be anonymous");
+    viewAPD = frame->PresContext()->AppUnitsPerDevPixel();
+    refpoint = mMouseLocation.ConvertAppUnits(APD, viewAPD);
+    refpoint -= view->GetOffsetTo(rootView);
+    refpoint += view->ViewToWidgetOffset();
+  }
+  NS_ASSERTION(view->GetWidget(), "view should have a widget here");
+  nsMouseEvent event(PR_TRUE, NS_MOUSE_MOVE, view->GetWidget(),
+                     nsMouseEvent::eSynthesized);
+  event.refPoint = refpoint.ToNearestPixels(viewAPD);
+  event.time = PR_IntervalNow();
+  // XXX set event.isShift, event.isControl, event.isAlt, event.isMeta ?
+
+  nsCOMPtr<nsIViewObserver> observer = pointVM->GetViewObserver();
+  if (observer) {
+    observer->DispatchSynthMouseMove(&event, !aFromScroll);
+  }
+
+  if (!aFromScroll) {
+    mSynthMouseMoveEvent.Forget();
   }
 }
 
@@ -6249,6 +6456,59 @@ PresShell::GetFocusedDOMWindowInOurWindow()
   return focusedWindow;
 }
 
+void
+PresShell::RecordMouseLocation(nsGUIEvent* aEvent)
+{
+  if (!mPresContext)
+    return;
+
+  if (!mPresContext->IsRoot()) {
+    PresShell* rootPresShell = GetRootPresShell();
+    if (rootPresShell) {
+      rootPresShell->RecordMouseLocation(aEvent);
+    }
+    return;
+  }
+
+  if ((aEvent->message == NS_MOUSE_MOVE &&
+       static_cast<nsMouseEvent*>(aEvent)->reason == nsMouseEvent::eReal) ||
+      aEvent->message == NS_MOUSE_ENTER ||
+      aEvent->message == NS_MOUSE_BUTTON_DOWN ||
+      aEvent->message == NS_MOUSE_BUTTON_UP) {
+    nsIFrame* rootFrame = GetRootFrame();
+    if (!rootFrame) {
+      nsIView* rootView = mViewManager->GetRootView();
+      mMouseLocation = nsLayoutUtils::TranslateWidgetToView(mPresContext,
+        aEvent->widget, aEvent->refPoint, rootView);
+    } else {
+      mMouseLocation =
+        nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, rootFrame);
+    }
+#ifdef DEBUG_MOUSE_LOCATION
+    if (aEvent->message == NS_MOUSE_ENTER)
+      printf("[ps=%p]got mouse enter for %p\n",
+             this, aEvent->widget);
+    printf("[ps=%p]setting mouse location to (%d,%d)\n",
+           this, mMouseLocation.x, mMouseLocation.y);
+#endif
+    if (aEvent->message == NS_MOUSE_ENTER)
+      SynthesizeMouseMove(PR_FALSE);
+  } else if (aEvent->message == NS_MOUSE_EXIT) {
+    // Although we only care about the mouse moving into an area for which this
+    // pres shell doesn't receive mouse move events, we don't check which widget
+    // the mouse exit was for since this seems to vary by platform.  Hopefully
+    // this won't matter at all since we'll get the mouse move or enter after
+    // the mouse exit when the mouse moves from one of our widgets into another.
+    mMouseLocation = nsPoint(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
+#ifdef DEBUG_MOUSE_LOCATION
+    printf("[ps=%p]got mouse exit for %p\n",
+           this, aEvent->widget);
+    printf("[ps=%p]clearing mouse location\n",
+           this);
+#endif
+  }
+}
+
 NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
@@ -6262,6 +6522,8 @@ PresShell::HandleEvent(nsIView         *aView,
        !(aEvent->flags & NS_EVENT_FLAG_SYNTHETIC_TEST_EVENT))) {
     return NS_OK;
   }
+
+  RecordMouseLocation(aEvent);
 
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT) {
@@ -9264,4 +9526,16 @@ PresShell::UpdateImageLockingState()
 {
   // We're locked if we're both thawed and active.
   return mDocument->SetImageLockingState(!mFrozen && mIsActive);
+}
+
+PresShell*
+PresShell::GetRootPresShell()
+{
+  if (mPresContext) {
+    nsPresContext* rootPresContext = mPresContext->GetRootPresContext();
+    if (rootPresContext) {
+      return static_cast<PresShell*>(rootPresContext->PresShell());
+    }
+  }
+  return nsnull;
 }

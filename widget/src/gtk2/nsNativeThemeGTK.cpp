@@ -1037,23 +1037,6 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
       *aIsOverridable = PR_FALSE;
     }
     break;
-    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
-    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
-    {
-      MozGtkScrollbarMetrics metrics;
-      moz_gtk_get_scrollbar_metrics(&metrics);
-
-      if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL) {
-        aResult->width = metrics.slider_width;
-        aResult->height = metrics.min_slider_size;
-      } else {
-        aResult->height = metrics.slider_width;
-        aResult->width = metrics.min_slider_size;
-      }
-
-      *aIsOverridable = PR_FALSE;
-    }
-    break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
       {

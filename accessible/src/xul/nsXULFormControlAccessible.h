@@ -47,6 +47,11 @@
 #include "nsHyperTextAccessibleWrap.h"
 
 /**
+ * Used for XUL progressmeter element.
+ */
+typedef ProgressMeterAccessible<100> XULProgressMeterAccessible;
+
+/**
  * Used for XUL button.
  *
  * @note  Don't inherit from nsFormControlAccessible - it doesn't allow children
@@ -136,22 +141,6 @@ public:
   // nsAccessible
   virtual PRUint32 NativeRole();
   virtual nsresult GetNameInternal(nsAString& aName);
-};
-
-/**
- * Used for XUL progressmeter element.
- */
-class nsXULProgressMeterAccessible : public nsFormControlAccessible
-{
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIACCESSIBLEVALUE
-
-public:
-  nsXULProgressMeterAccessible(nsIContent *aContent, nsIWeakReference *aShell);
-  NS_IMETHOD GetValue(nsAString &aValue);
-
-  // nsAccessible
-  virtual PRUint32 NativeRole();
 };
 
 /**

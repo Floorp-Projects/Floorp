@@ -4874,11 +4874,6 @@ CSSParserImpl::SetValueToURL(nsCSSValue& aValue, const nsString& aURL)
     return PR_FALSE;
   }
 
-  // Translate url into an absolute url if the url is relative to the
-  // style sheet.
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), aURL, nsnull, mBaseURI);
-
   nsRefPtr<nsStringBuffer> buffer(nsCSSValue::BufferFromString(aURL));
   if (NS_UNLIKELY(!buffer)) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
@@ -4887,7 +4882,7 @@ CSSParserImpl::SetValueToURL(nsCSSValue& aValue, const nsString& aURL)
 
   // Note: urlVal retains its own reference to |buffer|.
   nsCSSValue::URL *urlVal =
-    new nsCSSValue::URL(uri, buffer, mSheetURI, mSheetPrincipal);
+    new nsCSSValue::URL(buffer, mBaseURI, mSheetURI, mSheetPrincipal);
 
   if (NS_UNLIKELY(!urlVal)) {
     mScanner.SetLowLevelError(NS_ERROR_OUT_OF_MEMORY);
