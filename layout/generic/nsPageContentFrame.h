@@ -56,7 +56,6 @@ public:
                      const nsHTMLReflowState& aMaxSize,
                      nsReflowStatus&      aStatus);
 
-  virtual bool IsContainingBlock() const;
   virtual bool IsFrameOfType(PRUint32 aFlags) const
   {
     return ViewportFrame::IsFrameOfType(aFlags &

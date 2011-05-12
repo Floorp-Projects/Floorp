@@ -1787,7 +1787,6 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
   // XXX we REALLY need a "are you an inline-block sort of thing?" here!!!
   if ((aFlags & DISPLAY_CHILD_INLINE) &&
       (disp->mDisplay != NS_STYLE_DISPLAY_INLINE ||
-       aChild->IsContainingBlock() ||
        (aChild->IsFrameOfType(eReplaced)))) {
     // child is a non-inline frame in an inline context, i.e.,
     // it acts like inline-block or inline-table. Therefore it is a
@@ -4905,16 +4904,43 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
   return PR_FALSE;
 }
 
-/* virtual */ bool nsFrame::IsContainingBlock() const
+bool
+nsIFrame::IsBlockWrapper() const
 {
-  const nsStyleDisplay* display = GetStyleDisplay();
+  nsIAtom *pseudoType = GetStyleContext()->GetPseudo();
+  return (pseudoType == nsCSSAnonBoxes::mozAnonymousBlock ||
+          pseudoType == nsCSSAnonBoxes::mozAnonymousPositionedBlock ||
+          pseudoType == nsCSSAnonBoxes::cellContent);
+}
 
-  // Absolute positioning causes |display->mDisplay| to be set to block,
-  // if needed.
-  return display->mDisplay == NS_STYLE_DISPLAY_BLOCK || 
-         display->mDisplay == NS_STYLE_DISPLAY_INLINE_BLOCK || 
-         display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
-         display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL;
+static nsIFrame*
+GetNearestBlockContainer(nsIFrame* frame)
+{
+  // The block wrappers we use to wrap blocks inside inlines aren't
+  // described in the CSS spec.  We need to make them not be containing
+  // blocks.
+  // Since the parent of such a block is either a normal block or
+  // another such pseudo, this shouldn't cause anything bad to happen.
+  // Also the anonymous blocks inside table cells are not containing blocks.
+  while (frame->IsFrameOfType(nsIFrame::eLineParticipant) ||
+         frame->IsBlockWrapper()) {
+    frame = frame->GetParent();
+    NS_ASSERTION(frame, "How come we got to the root frame without seeing a containing block?");
+  }
+  return frame;
+}
+
+nsIFrame*
+nsIFrame::GetContainingBlock() const
+{
+  // MathML frames might have absolute positioning style, but they would
+  // still be in-flow.  So we have to check to make sure that the frame
+  // is really out-of-flow too.
+  if (GetStyleDisplay()->IsAbsolutelyPositioned() &&
+      (GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
+    return GetParent(); // the parent is always the containing block
+  }
+  return GetNearestBlockContainer(GetParent());
 }
 
 #ifdef NS_DEBUG

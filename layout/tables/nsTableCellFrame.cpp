@@ -1043,12 +1043,6 @@ nsTableCellFrame::GetType() const
   return nsGkAtoms::tableCellFrame;
 }
 
-/* virtual */ bool
-nsTableCellFrame::IsContainingBlock() const
-{
-  return PR_TRUE;
-}
-
 #ifdef DEBUG
 NS_IMETHODIMP
 nsTableCellFrame::GetFrameName(nsAString& aResult) const

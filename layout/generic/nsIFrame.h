@@ -1982,9 +1982,17 @@ public:
   }
 
   /**
-   * Is this frame a containing block for non-positioned elements?
+   * Returns true if the frame is a block wrapper.
    */
-  virtual bool IsContainingBlock() const = 0;
+  bool IsBlockWrapper() const;
+
+  /**
+   * Get this frame's CSS containing block.
+   *
+   * The algorithm is defined in
+   * http://www.w3.org/TR/CSS2/visudet.html#containing-block-details.
+   */
+  nsIFrame* GetContainingBlock() const;
 
   /**
    * Is this frame a containing block for floating elements?

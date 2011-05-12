@@ -199,12 +199,6 @@ nsTableOuterFrame::CreateAccessible()
 }
 #endif
 
-/* virtual */ bool
-nsTableOuterFrame::IsContainingBlock() const
-{
-  return PR_FALSE;
-}
-
 void
 nsTableOuterFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
