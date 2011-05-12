@@ -22,10 +22,10 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <script type="application/javascript"
-          src="common.js"></script>
+          src="../common.js"></script>
 
   <script type="application/javascript"
-          src="chrome://mochikit/content/chrome-harness.js"/>
+	  src="chrome://mochikit/content/chrome-harness.js"></script>
 
   <script type="application/javascript">
     function doTest()
@@ -39,7 +39,7 @@
       }
 
       var rootDir = getRootDirectory(window.location.href);
-      var href = rootDir.path + "foo";
+      var href = getRootDirectory(window.location.href) + "foo";
 
       // roles that can't live as nsHTMLLinkAccessibles
       testValue("aria_menuitem_link", "");
@@ -68,6 +68,11 @@
      title="Do not expose a11y info specific to hyperlinks when role is overridden using ARIA">
     Mozilla Bug 494807
   </a><br />
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+  <pre id="test">
+  </pre>
 
   <a id="aria_menuitem_link" role="menuitem" href="foo">menuitem</a>
   <a id="aria_button_link" role="button" href="foo">button</a>
@@ -77,7 +82,7 @@
   <a id="aria_application_link" role="application" href="foo">app</a>
   <a id="aria_main_link" role="main" href="foo">main</a>
   <a id="aria_navigation_link" role="navigation" href="foo">nav</a>
-  
+
   <!-- strange edge case: please don't do this in the wild -->
   <a id="aria_link_link" role="link" href="foo">link</a>
 

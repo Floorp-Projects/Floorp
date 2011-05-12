@@ -144,6 +144,7 @@ ACCESSIBILITY_ATOM(optgroup, "optgroup")
 ACCESSIBILITY_ATOM(option, "option")
 ACCESSIBILITY_ATOM(output, "output")
 ACCESSIBILITY_ATOM(panel, "panel") // XUL
+ACCESSIBILITY_ATOM(progress, "progress")
 ACCESSIBILITY_ATOM(q, "q")
 ACCESSIBILITY_ATOM(select, "select")
 ACCESSIBILITY_ATOM(select1, "select1") // XForms
