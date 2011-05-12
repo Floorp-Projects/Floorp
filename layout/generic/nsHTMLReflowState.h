@@ -406,13 +406,6 @@ public:
     GetContainingBlockContentWidth(const nsHTMLReflowState* aReflowState);
 
   /**
-   * Find the containing block of aFrame.  This may return null if
-   * there isn't one (but that should really only happen for root
-   * frames).
-   */
-  static nsIFrame* GetContainingBlockFor(const nsIFrame* aFrame);
-
-  /**
    * Calculate the used line-height property. The return value will be >= 0.
    */
   nscoord CalcLineHeight() const;

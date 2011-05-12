@@ -149,8 +149,6 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  virtual bool IsContainingBlock() const;
-
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif

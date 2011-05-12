@@ -359,12 +359,6 @@ nsTableFrame::SetInitialChildList(ChildListID     aListID,
   return NS_OK;
 }
 
-/* virtual */ bool
-nsTableFrame::IsContainingBlock() const
-{
-  return PR_TRUE;
-}
-
 void nsTableFrame::AttributeChangedFor(nsIFrame*       aFrame,
                                        nsIContent*     aContent,
                                        nsIAtom*        aAttribute)
