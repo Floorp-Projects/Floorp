@@ -187,9 +187,7 @@ class nsHtml5TreeOpExecutor : public nsContentSink,
      * Returns the document.
      */
     virtual nsISupports *GetTarget();
-
-    virtual void ScrollToRef() { ScrollToRefImpl(); }
-
+  
     // nsContentSink methods
     virtual void UpdateChildCounts();
     virtual nsresult FlushTags();
