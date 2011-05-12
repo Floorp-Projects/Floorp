@@ -2143,6 +2143,7 @@ GCHelperThread::doSweep()
     for (ArenaHeader **i = finalizeVector.begin(); i != finalizeVector.end(); ++i)
         ArenaList::backgroundFinalize(cx, *i);
     finalizeVector.resize(0);
+    ExpireGCChunks(cx->runtime);
     cx = NULL;
 
     if (freeCursor) {
@@ -2416,11 +2417,14 @@ MarkAndSweep(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind GCTIM
         js_SweepScriptFilenames(rt);
     }
 
+#ifndef JS_THREADSAFE
     /*
      * Destroy arenas after we finished the sweeping so finalizers can safely
      * use IsAboutToBeFinalized().
+     * This is done on the GCHelperThread if JS_THREADSAFE is defined.
      */
     ExpireGCChunks(rt);
+#endif
     TIMESTAMP(sweepDestroyEnd);
 
     if (rt->gcCallback)
