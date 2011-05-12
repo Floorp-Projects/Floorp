@@ -78,7 +78,6 @@ public:
     virtual void FlushPendingNotifications(mozFlushType aType) { }
     NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
     virtual nsISupports *GetTarget();
-    virtual void ScrollToRef() { }
 
     /**
      * Initialize the content sink, giving it an nsIDocument object

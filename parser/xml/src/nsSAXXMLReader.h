@@ -53,8 +53,8 @@
 #define NS_SAXXMLREADER_CONTRACTID "@mozilla.org/saxparser/xmlreader;1"
 #define NS_SAXXMLREADER_CLASSNAME "SAX XML Reader"
 #define NS_SAXXMLREADER_CID  \
-{ 0x1ab57b84, 0xb4dd, 0x4a03, \
-{ 0x8f, 0xa9, 0x80, 0xd9, 0x24, 0x62, 0xf9, 0x49 } }
+{ 0xab1da296, 0x6125, 0x40ba, \
+{ 0x96, 0xd0, 0x47, 0xa8, 0x28, 0x2a, 0xe3, 0xdb} }
 
 class nsSAXXMLReader : public nsISAXXMLReader,
                        public nsIExtendedExpatSink,
@@ -103,10 +103,6 @@ public:
   virtual nsISupports *GetTarget()
   {
     return nsnull;
-  }
-
-  virtual void ScrollToRef()
-  {
   }
 
 private:
