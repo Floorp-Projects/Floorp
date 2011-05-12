@@ -1548,7 +1548,7 @@ void nsBuiltinDecoderStateMachine::AdvanceFrame()
 
 void nsBuiltinDecoderStateMachine::Wait(PRInt64 aUsecs) {
   mDecoder->GetReentrantMonitor().AssertCurrentThreadIn();
-  TimeStamp end = TimeStamp::Now() + UsecsToDuration(aUsecs);
+  TimeStamp end = TimeStamp::Now() + UsecsToDuration(PR_MAX(USECS_PER_MS, aUsecs));
   TimeStamp now;
   while ((now = TimeStamp::Now()) < end &&
          mState != DECODER_STATE_SHUTDOWN &&
