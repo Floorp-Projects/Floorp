@@ -1560,6 +1560,10 @@ mjit::Compiler::jsop_stricteq(JSOp op)
         masm.lshiftPtr(Imm32(1), treg);
 #ifndef JS_CPU_X64
         static const int ShiftedCanonicalNaNType = 0x7FF80000 << 1;
+#ifdef JS_CPU_SPARC
+        /* On Sparc the result 0/0 is 0x7FFFFFFF not 0x7FF80000 */
+        masm.and32(Imm32(ShiftedCanonicalNaNType), treg);
+#endif
         masm.setPtr(oppositeCond, treg, Imm32(ShiftedCanonicalNaNType), result);
 #else
         static const void *ShiftedCanonicalNaNType = (void *)(0x7FF8000000000000 << 1);
