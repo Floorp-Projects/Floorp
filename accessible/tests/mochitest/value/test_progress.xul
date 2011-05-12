@@ -12,18 +12,18 @@
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
-          src="common.js" />
+          src="../common.js" />
   <script type="application/javascript"
-          src="value.js" />
+          src="../value.js" />
 
   <script type="application/javascript">
   <![CDATA[
     function doTest()
     {
       // progressmeter
-      testValue("pm1", "50%", .5, 0, 1, 0);
+      testValue("pm1", "50%", 50, 0, 100, 0);
       testValue("pm2", "50%", 500, 0, 1000, 0);
-      testValue("pm3", "0%", 0, 0, 1, 0);
+      testValue("pm3", "0%", 0, 0, 100, 0);
 
       // scale
       testValue("sc1", "500", 500, 0, 1000, 10);

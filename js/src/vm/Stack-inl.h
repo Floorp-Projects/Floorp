@@ -431,7 +431,7 @@ StackFrame::initEvalFrame(JSContext *cx, JSScript *script, StackFrame *prev, uin
 }
 
 inline void
-StackFrame::initGlobalFrame(JSScript *script, JSObject &chain, uint32 flagsArg)
+StackFrame::initGlobalFrame(JSScript *script, JSObject &chain, StackFrame *prev, uint32 flagsArg)
 {
     JS_ASSERT((flagsArg & ~(EVAL | DEBUGGER)) == 0);
 
@@ -445,7 +445,7 @@ StackFrame::initGlobalFrame(JSScript *script, JSObject &chain, uint32 flagsArg)
     exec.script = script;
     args.script = (JSScript *)0xbad;
     scopeChain_ = &chain;
-    prev_ = NULL;
+    prev_ = prev;
     JS_ASSERT(!hasImacropc());
     JS_ASSERT(!hasHookData());
     JS_ASSERT(annotation() == NULL);

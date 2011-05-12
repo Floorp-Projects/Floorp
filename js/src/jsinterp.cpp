@@ -857,9 +857,9 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
     JS_ASSERT(script->nfixed >= SHARP_NSLOTS);
 
     Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
-    if (prev && prev->script()->hasSharps) {
+    if (!fp->isGlobalFrame() && prev->script()->hasSharps) {
         JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
-        int base = (prev->isFunctionFrame() && !prev->isEvalOrDebuggerFrame())
+        int base = (prev->isFunctionFrame() && !prev->isDirectEvalOrDebuggerFrame())
                    ? prev->fun()->script()->bindings.sharpSlotBase(cx)
                    : prev->numFixed() - SHARP_NSLOTS;
         if (base < 0)
@@ -875,8 +875,8 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
 #endif
 
 bool
-Execute(JSContext *cx, JSObject &chain, JSScript *script,
-        StackFrame *prev, uintN flags, Value *result)
+Execute(JSContext *cx, JSObject &chain, JSScript *script, StackFrame *prev, uintN flags,
+        Value *result)
 {
     JS_ASSERT_IF(prev, !prev->isDummyFrame());
     JS_ASSERT_IF(prev, prev->compartment() == cx->compartment);
@@ -927,7 +927,7 @@ Execute(JSContext *cx, JSObject &chain, JSScript *script,
             return false;
         }
 
-        frame.fp()->initGlobalFrame(script, *innerizedChain, flags);
+        frame.fp()->initGlobalFrame(script, *innerizedChain, cx->maybefp(), flags);
 
         /* If scope chain is an inner window, outerize for 'this'. */
         JSObject *thisp = chain.thisObject(cx);

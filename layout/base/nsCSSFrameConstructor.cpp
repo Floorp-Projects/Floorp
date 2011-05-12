@@ -2346,7 +2346,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
       return NS_ERROR_FAILURE;
 
     nsRefPtr<nsXBLBinding> binding;
-    rv = xblService->LoadBindings(aDocElement, display->mBinding->mURI,
+    rv = xblService->LoadBindings(aDocElement, display->mBinding->GetURI(),
                                   display->mBinding->mOriginPrincipal,
                                   PR_FALSE, getter_AddRefs(binding),
                                   &resolveStyle);
@@ -5093,7 +5093,7 @@ nsCSSFrameConstructor::AddFrameConstructionItemsInternal(nsFrameConstructorState
     if (!newPendingBinding) {
       return;
     }
-    nsresult rv = xblService->LoadBindings(aContent, display->mBinding->mURI,
+    nsresult rv = xblService->LoadBindings(aContent, display->mBinding->GetURI(),
                                            display->mBinding->mOriginPrincipal,
                                            PR_FALSE,
                                            getter_AddRefs(newPendingBinding->mBinding),
