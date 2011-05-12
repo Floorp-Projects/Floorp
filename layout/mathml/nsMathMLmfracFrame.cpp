@@ -78,27 +78,6 @@ nsMathMLmfracFrame::~nsMathMLmfracFrame()
 {
 }
 
-PRBool
-nsMathMLmfracFrame::IsBevelled()
-{
-  nsAutoString value;
-  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::bevelled_,
-               value);
-  return value.EqualsLiteral("true");
-}
-
-NS_IMETHODIMP
-nsMathMLmfracFrame::Init(nsIContent*      aContent,
-                         nsIFrame*        aParent,
-                         nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
-
-  mIsBevelled = IsBevelled();
-
-  return rv;
-}
-
 eMathMLFrameType
 nsMathMLmfracFrame::GetMathMLFrameType()
 {
@@ -285,6 +264,11 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
 
   mLineThickness = CalcLineThickness(presContext, mStyleContext, value,
                                      onePixel, defaultRuleThickness);
+
+  // bevelled attribute
+  GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::bevelled_,
+               value);
+  mIsBevelled = value.EqualsLiteral("true");
 
   if (!mIsBevelled) {
     mLineRect.height = mLineThickness;
@@ -540,18 +524,6 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
   }
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMathMLmfracFrame::AttributeChanged(PRInt32         aNameSpaceID,
-                                     nsIAtom*        aAttribute,
-                                     PRInt32         aModType)
-{
-  if (nsGkAtoms::bevelled_ == aAttribute) {
-    mIsBevelled = IsBevelled();
-  }
-  return nsMathMLContainerFrame::
-         AttributeChanged(aNameSpaceID, aAttribute, aModType);
 }
 
 NS_IMETHODIMP
