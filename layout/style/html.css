@@ -361,7 +361,7 @@ table[rules][rules="none"] > td,
 table[rules][rules="none"] > th
 {
   border-width: thin;
-  border-style: hidden;
+  border-style: none;
 }
 
 table[rules][rules="all"] > tr > td,
