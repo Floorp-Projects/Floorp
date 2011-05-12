@@ -6381,27 +6381,20 @@ nsDocument::CreateEventGroup(nsIDOMEventGroup **aInstancePtrResult)
   return NS_OK;
 }
 
-already_AddRefed<nsIContentSink>
-nsDocument::GetContentSink()
-{
-  nsCOMPtr<nsIContentSink> sink;
-  if (mParser) {
-    sink = mParser->GetContentSink();
-  } else {
-    sink = do_QueryReferent(mWeakSink);
-    if (!sink) {
-      mWeakSink = nsnull;
-    }
-  }
-  return sink.forget();
-}
-
 void
 nsDocument::FlushPendingNotifications(mozFlushType aType)
 {
   if ((!IsHTML() || aType > Flush_ContentAndNotify) &&
       (mParser || mWeakSink)) {
-    nsCOMPtr<nsIContentSink> sink = GetContentSink();
+    nsCOMPtr<nsIContentSink> sink;
+    if (mParser) {
+      sink = mParser->GetContentSink();
+    } else {
+      sink = do_QueryReferent(mWeakSink);
+      if (!sink) {
+        mWeakSink = nsnull;
+      }
+    }
     // Determine if it is safe to flush the sink notifications
     // by determining if it safe to flush all the presshells.
     if (sink && (aType == Flush_Content || IsSafeToFlush())) {
@@ -7951,12 +7944,97 @@ nsDocument::UnregisterFileDataUri(const nsACString& aUri)
 }
 
 void
+nsDocument::SetScrollToRef(nsIURI *aDocumentURI)
+{
+  if (!aDocumentURI) {
+    return;
+  }
+
+  nsCAutoString ref;
+
+  // Since all URI's that pass through here aren't URL's we can't
+  // rely on the nsIURI implementation for providing a way for
+  // finding the 'ref' part of the URI, we'll haveto revert to
+  // string routines for finding the data past '#'
+
+  aDocumentURI->GetSpec(ref);
+
+  nsReadingIterator<char> start, end;
+
+  ref.BeginReading(start);
+  ref.EndReading(end);
+
+  if (FindCharInReadable('#', start, end)) {
+    ++start; // Skip over the '#'
+
+    mScrollToRef = Substring(start, end);
+  }
+}
+
+void
 nsDocument::ScrollToRef()
 {
-  nsCOMPtr<nsIContentSink> sink = GetContentSink();
-  if (sink) {
-    sink->ScrollToRef();
+  if (mScrolledToRefAlready) {
+    return;
   }
+
+  if (mScrollToRef.IsEmpty()) {
+    return;
+  }
+
+  char* tmpstr = ToNewCString(mScrollToRef);
+  if (!tmpstr) {
+    return;
+  }
+
+  nsUnescape(tmpstr);
+  nsCAutoString unescapedRef;
+  unescapedRef.Assign(tmpstr);
+  nsMemory::Free(tmpstr);
+
+  nsresult rv = NS_ERROR_FAILURE;
+  // We assume that the bytes are in UTF-8, as it says in the spec:
+  // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
+  NS_ConvertUTF8toUTF16 ref(unescapedRef);
+
+  nsCOMPtr<nsIPresShell> shell = GetShell();
+  if (shell) {
+    // Check an empty string which might be caused by the UTF-8 conversion
+    if (!ref.IsEmpty()) {
+      // Note that GoToAnchor will handle flushing layout as needed.
+      rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
+    } else {
+      rv = NS_ERROR_FAILURE;
+    }
+
+    // If UTF-8 URI failed then try to assume the string as a
+    // document's charset.
+
+    if (NS_FAILED(rv)) {
+      const nsACString &docCharset = GetDocumentCharacterSet();
+
+      rv = nsContentUtils::ConvertStringFromCharset(docCharset, unescapedRef, ref);
+
+      if (NS_SUCCEEDED(rv) && !ref.IsEmpty()) {
+        rv = shell->GoToAnchor(ref, mChangeScrollPosWhenScrollingToRef);
+      }
+    }
+    if (NS_SUCCEEDED(rv)) {
+      mScrolledToRefAlready = PR_TRUE;
+    }
+  }
+}
+
+void
+nsDocument::ResetScrolledToRefAlready()
+{
+  mScrolledToRefAlready = PR_FALSE;
+}
+
+void
+nsDocument::SetChangeScrollPosWhenScrollingToRef(PRBool aValue)
+{
+  mChangeScrollPosWhenScrollingToRef = aValue;
 }
 
 void

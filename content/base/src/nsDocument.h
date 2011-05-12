@@ -958,7 +958,10 @@ public:
   // Only BlockOnload should call this!
   void AsyncBlockOnload();
 
+  virtual void SetScrollToRef(nsIURI *aDocumentURI);
   virtual void ScrollToRef();
+  virtual void ResetScrolledToRefAlready();
+  virtual void SetChangeScrollPosWhenScrollingToRef(PRBool aValue);
 
   already_AddRefed<nsContentList>
   GetElementsByTagName(const nsAString& aTagName) {
@@ -1197,8 +1200,6 @@ private:
   // Reschedule any notifications we need to handle mozRequestAnimationFrame
   void RescheduleAnimationFrameNotifications();
 
-  already_AddRefed<nsIContentSink> GetContentSink();
-
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
@@ -1243,6 +1244,10 @@ private:
   nsCOMArray<imgIRequest> mPreloadingImages;
 
   nsCOMPtr<nsIDOMDOMImplementation> mDOMImplementation;
+
+  nsCString mScrollToRef;
+  PRUint8 mScrolledToRefAlready : 1;
+  PRUint8 mChangeScrollPosWhenScrollingToRef : 1;
 
   // Tracking for images in the document.
   nsDataHashtable< nsPtrHashKey<imgIRequest>, PRUint32> mImageTracker;

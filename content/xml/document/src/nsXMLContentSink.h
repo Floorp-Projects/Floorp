@@ -102,7 +102,6 @@ public:
   NS_IMETHOD SetDocumentCharset(nsACString& aCharset);
   virtual nsISupports *GetTarget();
   virtual PRBool IsScriptExecuting();
-  virtual void ScrollToRef() { ScrollToRefImpl(); }
 
   // nsITransformObserver
   NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument);
