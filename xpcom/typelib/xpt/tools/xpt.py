@@ -1229,6 +1229,7 @@ class Typelib(object):
                     checkType(m.result.type, replaced_from, replaced_to)
                     for p in m.params:
                         checkType(p.type, replaced_from, replaced_to)
+        self._sanityCheck()
         #TODO: do we care about annotations? probably not
 
     def dump(self, out):
