@@ -164,16 +164,16 @@ skip script regress-418730.js # obsolete test
 script regress-420612.js
 script regress-420869-01.js
 skip script regress-421621.js # obsolete test
-require-or(debugMode,skip) script regress-422137.js
+skip script regress-422137.js
 script regress-422592.js
 script regress-424683-01.js
 script regress-426711.js
 script regress-427196-01.js
 script regress-427196-02.js
 script regress-427196-03.js
-require-or(debugMode,skip) script regress-429264.js
+skip script regress-429264.js
 script regress-429739.js
-require-or(debugMode,skip) script regress-431428.js
+skip script regress-431428.js
 skip script regress-432075.js # obsolete test
 script regress-434837-01.js
 fails script regress-435345-01.js
