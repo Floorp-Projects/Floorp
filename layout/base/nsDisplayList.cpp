@@ -828,8 +828,32 @@ PRBool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
   return PR_TRUE;
 }
 
-void nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
-                                nsRenderingContext* aCtx) {
+// Note that even if the rectangle we draw and snap is smaller than aRect,
+// it's OK to call this to get a bounding rect for what we'll draw, because
+// snapping a rectangle which is contained in R always gives you a
+// rectangle which is contained in the snapped R.
+static nsRect
+SnapBounds(PRBool aSnappingEnabled, nsPresContext* aPresContext,
+           const nsRect& aRect) {
+  nsRect r = aRect;
+  if (aSnappingEnabled) {
+    nscoord appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
+    r = r.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
+  }
+  return r;
+}
+
+nsRect
+nsDisplaySolidColor::GetBounds(nsDisplayListBuilder* aBuilder)
+{
+  nsPresContext* presContext = mFrame->PresContext();
+  return SnapBounds(mSnappingEnabled, presContext, mBounds);
+}
+
+void
+nsDisplaySolidColor::Paint(nsDisplayListBuilder* aBuilder,
+                           nsRenderingContext* aCtx)
+{
   aCtx->SetColor(mColor);
   aCtx->FillRect(mVisibleRect);
 }
@@ -1023,21 +1047,6 @@ nsDisplayBackground::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   nsStyleContext* bgSC;
   return mIsThemed ||
     nsCSSRendering::FindBackground(mFrame->PresContext(), mFrame, &bgSC);
-}
-
-// Note that even if the rectangle we draw and snap is smaller than aRect,
-// it's OK to call this to get a bounding rect for what we'll draw, because
-// snapping a rectangle which is contained in R always gives you a
-// rectangle which is contained in the snapped R.
-static nsRect
-SnapBounds(PRBool aSnappingEnabled, nsPresContext* aPresContext,
-           const nsRect& aRect) {
-  nsRect r = aRect;
-  if (aSnappingEnabled) {
-    nscoord appUnitsPerDevPixel = aPresContext->AppUnitsPerDevPixel();
-    r = r.ToNearestPixels(appUnitsPerDevPixel).ToAppUnits(appUnitsPerDevPixel);
-  }
-  return r;
 }
 
 nsRegion
