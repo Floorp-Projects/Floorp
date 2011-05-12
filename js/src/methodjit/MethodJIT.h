@@ -181,7 +181,11 @@ struct VMFrame
     StackFrame *fp() { return regs.fp(); }
     mjit::JITScript *jit() { return fp()->jit(); }
 
+#if defined(JS_CPU_SPARC)
+    static const size_t offsetOfFp = 31 * sizeof(void *) + FrameRegs::offsetOfFp;
+#else
     static const size_t offsetOfFp = 5 * sizeof(void *) + FrameRegs::offsetOfFp;
+#endif
     static void staticAssert() {
         JS_STATIC_ASSERT(offsetOfFp == offsetof(VMFrame, regs) + FrameRegs::offsetOfFp);
     }
