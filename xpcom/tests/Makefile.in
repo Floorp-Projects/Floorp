@@ -49,7 +49,7 @@ ifndef MOZ_ENABLE_LIBXUL
 MOZILLA_INTERNAL_API = 1
 endif
 
-DIRS		= external component
+DIRS		= external component bug656331_component
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= windows
