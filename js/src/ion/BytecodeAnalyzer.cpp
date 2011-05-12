@@ -129,6 +129,8 @@ BytecodeAnalyzer::analyze()
             return false;
         current->initSlot(localSlot(i), undef);
     }
+    if (!current->initHeader())
+        return false;
 
     if (!traverseBytecode())
         return false;

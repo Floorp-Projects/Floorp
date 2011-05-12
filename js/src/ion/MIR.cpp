@@ -55,6 +55,29 @@ MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script,
     nslots_ = script->nslots + (fun ? fun->nargs + 2 : 0);
 }
 
+static void
+PrintOpcodeName(FILE *fp, MInstruction::Opcode op)
+{
+    static const char *names[] =
+    {
+#define NAME(x) #x,
+        MIR_OPCODE_LIST(NAME)
+#undef NAME
+    };
+    const char *name = names[op];
+    size_t len = strlen(name);
+    for (size_t i = 0; i < len; i++)
+        fprintf(fp, "%c", tolower(name[i]));
+}
+
+void
+MInstruction::printName(FILE *fp)
+{
+    PrintOpcodeName(fp, op());
+    fprintf(fp, "%u", id());
+    fprintf(fp, ":v");
+}
+
 void
 MInstruction::unlinkUse(MOperand *prev, MOperand *use)
 {
@@ -66,6 +89,18 @@ MInstruction::unlinkUse(MOperand *prev, MOperand *use)
         JS_ASSERT(prev->next() == use);
         prev->next_ = use->next();
     }
+}
+
+size_t
+MInstruction::useCount() const
+{
+    MOperand *use = uses();
+    size_t count = 0;
+    while (use) {
+        count++;
+        use = use->next();
+    }
+    return count;
 }
 
 void
