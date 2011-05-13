@@ -375,8 +375,18 @@ JS_END_EXTERN_C
         JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3))\
     }\
 \
+    template <class T, class P1, class P2, class P3>\
+    QUALIFIERS T *new_(P1 &p1, const P2 &p2, const P3 &p3) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3))\
+    }\
+\
     template <class T, class P1, class P2, class P3, class P4>\
     QUALIFIERS T *new_(P1 p1, P2 p2, P3 p3, P4 p4) {\
+        JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4))\
+    }\
+\
+    template <class T, class P1, class P2, class P3, class P4>\
+    QUALIFIERS T *new_(const P1 &p1, const P2 &p2, P3 &p3, const P4 &p4) {\
         JS_NEW_BODY(ALLOCATOR, T, (p1, p2, p3, p4))\
     }\
 \
