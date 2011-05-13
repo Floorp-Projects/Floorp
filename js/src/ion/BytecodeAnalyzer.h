@@ -85,6 +85,11 @@ class BytecodeAnalyzer : public MIRGenerator
             struct {
                 MBasicBlock *entry;     // Common entry point.
 
+                // If an unlabelled |continue| appears, this will be non-NULL,
+                // and all loop repeats will forward to here, including the
+                // final jump.
+                MBasicBlock *repeat;
+
                 union {
                     struct {
                         jsbytecode *bodyStart;  // Start of loop body.
@@ -94,6 +99,17 @@ class BytecodeAnalyzer : public MIRGenerator
                 };
             } loop;
         };
+
+        inline bool isLoop() const {
+            switch (state) {
+              case DO_WHILE_LOOP:
+              case WHILE_LOOP_COND:
+              case WHILE_LOOP_BODY:
+                return true;
+              default:
+                return false;
+            }
+        }
 
         static CFGState If(jsbytecode *join, MBasicBlock *ifFalse);
         static CFGState IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse);
@@ -115,6 +131,7 @@ class BytecodeAnalyzer : public MIRGenerator
     bool inspectOpcode(JSOp op);
     uint32 readIndex(jsbytecode *pc);
 
+    CFGState &findInnermostLoop();
     ControlStatus processControlEnd();
     ControlStatus processCfgStack();
     ControlStatus processCfgEntry(CFGState &state);
@@ -125,6 +142,7 @@ class BytecodeAnalyzer : public MIRGenerator
     ControlStatus processWhileCondEnd(CFGState &state);
     ControlStatus processWhileBodyEnd(CFGState &state);
     ControlStatus processReturn(JSOp op);
+    ControlStatus simpleContinue(JSOp op, jssrcnote *sn);
 
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc);
