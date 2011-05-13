@@ -254,6 +254,8 @@ public:
   // of the above defined methods to select the document's application
   // cache, let it be associated with the document and eventually
   // schedule the cache update process.
+  // This method MUST be called with the empty string as the argument
+  // when there is no manifest attribute!
   void ProcessOfflineManifest(const nsAString& aManifestSpec);
 
   // Extracts the manifest attribute from the element if it is the root 

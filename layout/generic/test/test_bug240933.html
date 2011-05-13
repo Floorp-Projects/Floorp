@@ -36,6 +36,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=240933
 
         t = document.getElementById("ta");
         t.focus();
+        t.selectionStart = t.selectionEnd = t.value.length;
         var val = t.value;
         synthesizeKey("VK_ENTER", {});
         is(t.value, val + "\n", "Pressing enter right after focusing the textarea should work");

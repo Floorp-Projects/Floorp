@@ -49,6 +49,11 @@
 != mathbackground-2.xml mathbackground-2-ref.xml
 != mathbackground-3.xml mathbackground-3-ref.xml
 == mathbackground-4.xml mathbackground-4-ref.xml
+== mstyle-1.xhtml mstyle-1-ref.xhtml
+== mstyle-2.xhtml mstyle-2-ref.xhtml
+== mstyle-3.xhtml mstyle-3-ref.xhtml
+== mstyle-4.xhtml mstyle-4-ref.xhtml
+fails == mstyle-5.xhtml mstyle-5-ref.xhtml # See bug 569125#c29
 == scale-stretchy-1.xhtml scale-stretchy-1-ref.xhtml
 != scale-stretchy-2.xhtml scale-stretchy-2-ref.xhtml
 == scale-stretchy-3.xhtml scale-stretchy-3-ref.xhtml

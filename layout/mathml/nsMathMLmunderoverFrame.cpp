@@ -193,14 +193,15 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
   else
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
 
-  static nsIContent::AttrValuesArray strings[] =
-    {&nsGkAtoms::_true, &nsGkAtoms::_false, nsnull};
-
   // if we have an accentunder attribute, it overrides what the underscript said
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::accentunder_,
-                                    strings, eCaseMatters)) {
-    case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER; break;
-    case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER; break;
+  nsAutoString value;
+  if (GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::accentunder_,
+                   value)) {
+    if (value.EqualsLiteral("true")) {
+      mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTUNDER;
+    } else if (value.EqualsLiteral("false")) {
+      mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTUNDER;
+    }
   }
 
   // The default value of accent is false, unless the overscript is embellished
@@ -212,10 +213,13 @@ nsMathMLmunderoverFrame::TransmitAutomaticData()
     mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
 
   // if we have an accent attribute, it overrides what the overscript said
-  switch (mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::accent_,
-                                    strings, eCaseMatters)) {
-    case 0: mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER; break;
-    case 1: mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER; break;
+  if (GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::accent_,
+                   value)) {
+    if (value.EqualsLiteral("true")) {
+      mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENTOVER;
+    } else if (value.EqualsLiteral("false")) {
+      mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENTOVER;
+    }
   }
 
   // disable the stretch-all flag if we are going to act like a superscript
