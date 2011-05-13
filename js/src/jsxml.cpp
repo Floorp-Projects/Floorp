@@ -1736,11 +1736,9 @@ ParseXMLSource(JSContext *cx, JSString *src)
 
     LeaveTrace(cx);
     xml = NULL;
-    FrameRegsIter i(cx);
-    for (; !i.done() && !i.pc(); ++i)
-        JS_ASSERT(!i.fp()->isScriptFrame());
     filename = NULL;
     lineno = 1;
+    FrameRegsIter i(cx);
     if (!i.done()) {
         op = (JSOp) *i.pc();
         if (op == JSOP_TOXML || op == JSOP_TOXMLLIST) {

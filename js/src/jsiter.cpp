@@ -1181,7 +1181,7 @@ js_NewGenerator(JSContext *cx)
     gen->floating = genfp;
 
     /* Copy from the stack to the generator's floating frame. */
-    gen->regs.rebaseFromTo(stackRegs, genfp);
+    gen->regs.rebaseFromTo(stackRegs, *genfp);
     genfp->stealFrameAndSlots(genvp, stackfp, stackvp, stackRegs.sp);
     genfp->initFloatingGenerator();
 
