@@ -3212,7 +3212,7 @@ static void type_StringSplit(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsit
     if (!site->returnTypes)
         return;
 
-    if (!site->compileAndGo()) {
+    if (!site->hasGlobal()) {
         site->returnTypes->addType(cx, TYPE_UNKNOWN);
         return;
     }

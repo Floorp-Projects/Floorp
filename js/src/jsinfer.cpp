@@ -830,8 +830,7 @@ PropertyAccess(JSContext *cx, JSScript *script, const jsbytecode *pc, TypeObject
 void
 TypeConstraintProp::newType(JSContext *cx, TypeSet *source, jstype type)
 {
-    if (type == TYPE_UNKNOWN ||
-        (!TypeIsObject(type) && !script->compileAndGo)) {
+    if (type == TYPE_UNKNOWN || (!TypeIsObject(type) && !script->global)) {
         /*
          * Access on an unknown object. Reads produce an unknown result, writes
          * need to be monitored. Note: this isn't a problem for handling overflows
@@ -874,7 +873,7 @@ TypeConstraintNewObject::newType(JSContext *cx, TypeSet *source, jstype type)
          * native constructors with immutable non-primitive prototypes.
          * Disregard primitives here.
          */
-    } else if (!fun->script->compileAndGo) {
+    } else if (!fun->script->global) {
         target->addType(cx, TYPE_UNKNOWN);
     } else {
         TypeObject *object = fun->script->getTypeNewObject(cx, JSProto_Object);
@@ -1084,7 +1083,7 @@ TypeConstraintTransformThis::newType(JSContext *cx, TypeSet *source, jstype type
      * Note: if |this| is null or undefined, the pushed value is the outer window. We
      * can't use script->getGlobalType() here because it refers to the inner window.
      */
-    if (!script->compileAndGo || type == TYPE_NULL || type == TYPE_UNDEFINED) {
+    if (!script->global || type == TYPE_NULL || type == TYPE_UNDEFINED) {
         target->addType(cx, TYPE_UNKNOWN);
         return;
     }
@@ -2768,7 +2767,7 @@ CheckNextTest(jsbytecode *pc)
 static inline TypeObject *
 GetInitializerType(JSContext *cx, JSScript *script, jsbytecode *pc)
 {
-    if (!script->compileAndGo)
+    if (!script->global)
         return NULL;
 
     JSOp op = JSOp(*pc);
@@ -2966,7 +2965,7 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_REGEXP:
-        if (script->compileAndGo) {
+        if (script->global) {
             TypeObject *object = script->getTypeNewObject(cx, JSProto_RegExp);
             if (!object)
                 return false;
@@ -3288,7 +3287,7 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         }
 
         if (res) {
-            if (script->compileAndGo)
+            if (script->global)
                 res->addType(cx, (jstype) obj->getType());
             else
                 res->addType(cx, TYPE_UNKNOWN);
@@ -3328,7 +3327,7 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       case JSOP_NEWARRAY:
       case JSOP_NEWOBJECT: {
         TypeObject *initializer = GetInitializerType(cx, script, pc);
-        if (script->compileAndGo) {
+        if (script->global) {
             if (!initializer)
                 return false;
             pushed[0].addType(cx, (jstype) initializer);
@@ -3347,7 +3346,6 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         jsbytecode *initpc = script->code + objv.pushedOffset();
         TypeObject *initializer = GetInitializerType(cx, script, initpc);
 
-        JS_ASSERT((initializer != NULL) == script->compileAndGo);
         if (initializer) {
             pushed[0].addType(cx, (jstype) initializer);
             if (!initializer->unknownProperties()) {
@@ -3389,7 +3387,6 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         jsbytecode *initpc = script->code + objv.pushedOffset();
         TypeObject *initializer = GetInitializerType(cx, script, initpc);
 
-        JS_ASSERT((initializer != NULL) == script->compileAndGo);
         if (initializer) {
             pushed[0].addType(cx, (jstype) initializer);
             if (!initializer->unknownProperties()) {
@@ -3510,7 +3507,7 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_GENERATOR:
         if (script->fun) {
-            if (script->compileAndGo) {
+            if (script->global) {
                 TypeObject *object = script->getTypeNewObject(cx, JSProto_Generator);
                 if (!object)
                     return false;
@@ -3571,7 +3568,7 @@ analyze::ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
 
       case JSOP_CALLEE:
-        if (script->compileAndGo)
+        if (script->global)
             pushed[0].addType(cx, (jstype) script->fun->getType());
         else
             pushed[0].addType(cx, TYPE_UNKNOWN);
@@ -3588,6 +3585,17 @@ void
 analyze::ScriptAnalysis::analyzeTypes(JSContext *cx)
 {
     JS_ASSERT(!ranInference() && !failed());
+
+    /*
+     * Refuse to analyze the types in a script which is compileAndGo but is
+     * running against a global with a cleared scope. Per GlobalObject::clear,
+     * we won't be running anymore compileAndGo code against the global
+     * (moreover, after clearing our analysis results will be wrong for the
+     * script and trying to reanalyze here can cause reentrance problems if we
+     * try to reinitialize standard classes that were cleared).
+     */
+    if (script->global && script->global->isCleared())
+        return;
 
     if (!ranSSA()) {
         analyzeSSA(cx);
@@ -3675,7 +3683,7 @@ analyze::ScriptAnalysis::analyzeTypesNew(JSContext *cx)
 
     if (script->fun->getType()->unknownProperties() ||
         script->fun->isFunctionPrototype() ||
-        !script->compileAndGo) {
+        !script->global) {
         script->thisTypes()->addType(cx, TYPE_UNKNOWN);
         return;
     }

@@ -522,7 +522,7 @@ struct JSScript {
     JSFunction *fun;
 
     /* Global object for this script, if compileAndGo. */
-    JSObject *global;
+    js::GlobalObject *global;
 
     /* Lazily constructed types of rval/this/args/vars/upvars for this script. */
     js::types::TypeSet *varTypes;

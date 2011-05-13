@@ -1326,11 +1326,10 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
     /* Set global for compileAndGo scripts. */
     if (script->compileAndGo) {
         GlobalScope *globalScope = cg->compiler()->globalScope;
-        script->global = globalScope->globalObj;
-        if (!script->global) {
-            JS_ASSERT(cx->globalObject);
-            script->global = cx->globalObject;
-        }
+        if (globalScope->globalObj && globalScope->globalObj->isGlobal())
+            script->global = globalScope->globalObj->asGlobal();
+        else if (cx->globalObject->isGlobal())
+            script->global = cx->globalObject->asGlobal();
     }
 
     if (cg->globalUses.length()) {
