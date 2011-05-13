@@ -1182,20 +1182,7 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
      * will be lost.
      */
     if (length > 2 && chars[0] == '(' && chars[length - 1] == ')') {
-#if USE_OLD_AND_BUSTED_JSON_PARSER
-        Value tmp;
-        JSONParser *jp = js_BeginJSONParse(cx, &tmp, /* suppressErrors = */true);
-        if (jp != NULL) {
-            /* Run JSON-parser on string inside ( and ). */
-            bool ok = js_ConsumeJSONText(cx, jp, chars + 1, length - 2);
-            ok &= js_FinishJSONParse(cx, jp, NullValue());
-            if (ok) {
-                call.rval() = tmp;
-                return true;
-            }
-#else
-        JSONSourceParser parser(cx, chars + 1, length - 2, JSONSourceParser::StrictJSON,
-                                JSONSourceParser::NoError);
+        JSONParser parser(cx, chars + 1, length - 2, JSONParser::StrictJSON, JSONParser::NoError);
         Value tmp;
         if (!parser.parse(&tmp))
             return false;
@@ -1203,7 +1190,6 @@ EvalKernel(JSContext *cx, const CallArgs &call, EvalType evalType, StackFrame *c
             call.rval() = tmp;
             return true;
         }
-#endif
     }
 
     /*
