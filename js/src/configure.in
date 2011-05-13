@@ -974,11 +974,6 @@ AC_SUBST(NSINSTALL_BIN)
 
 MOZ_PATH_PROG(DOXYGEN, doxygen, :)
 MOZ_PATH_PROG(AUTOCONF, autoconf, :)
-MOZ_PATH_PROG(UNZIP, unzip, :)
-MOZ_PATH_PROGS(ZIP, zip)
-if test -z "$ZIP" -o "$ZIP" = ":"; then
-    AC_MSG_ERROR([zip not found in \$PATH])
-fi
 MOZ_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
 MOZ_PATH_PROG(XARGS, xargs)
 if test -z "$XARGS" -o "$XARGS" = ":"; then
@@ -2199,8 +2194,6 @@ ia64*-hpux*)
         STRIP='echo not_strip'
         PKG_SKIP_STRIP=1
         XARGS=xargs
-        ZIP=zip
-        UNZIP=unzip
         DOXYGEN=:
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
         ASM_SUFFIX=asm
