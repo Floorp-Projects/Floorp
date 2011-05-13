@@ -161,7 +161,6 @@ typedef struct JSXDRState        JSXDRState;
 typedef struct JSExceptionState  JSExceptionState;
 typedef struct JSLocaleCallbacks JSLocaleCallbacks;
 typedef struct JSSecurityCallbacks JSSecurityCallbacks;
-typedef struct JSONParser        JSONParser;
 typedef struct JSCompartment     JSCompartment;
 typedef struct JSCrossCompartmentCall JSCrossCompartmentCall;
 typedef struct JSStructuredCloneWriter JSStructuredCloneWriter;
