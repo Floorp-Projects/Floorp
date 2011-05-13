@@ -387,9 +387,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // happens after we've built the list so that AddCanvasBackgroundColorItem
       // can monkey with the contents if necessary.
       PRUint32 flags = nsIPresShell::FORCE_DRAW;
-      if (presContext->IsRootContentDocument()) {
-        flags |= nsIPresShell::ROOT_CONTENT_DOC_BG;
-      }
       rv = presShell->AddCanvasBackgroundColorItem(
              *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
              bounds, NS_RGBA(0,0,0,0), flags);
