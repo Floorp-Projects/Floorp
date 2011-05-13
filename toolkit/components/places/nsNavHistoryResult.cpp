@@ -1259,9 +1259,6 @@ PRInt32 nsNavHistoryContainerResultNode::SortComparison_AnnotationLess(
 {
   nsCAutoString annoName(static_cast<char*>(closure));
   NS_ENSURE_TRUE(!annoName.IsEmpty(), 0);
-  
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, 0);
 
   PRBool a_itemAnno = PR_FALSE;
   PRBool b_itemAnno = PR_FALSE;
@@ -3273,13 +3270,6 @@ nsNavHistoryQueryResultNode::OnBeforeItemRemoved(PRInt64 aItemId,
                                                  const nsACString& aGUID,
                                                  const nsACString& aParentGUID)
 {
-  if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
-      (mLiveUpdate == QUERYUPDATE_SIMPLE ||  mLiveUpdate == QUERYUPDATE_TIME)) {
-    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-    nsresult rv = bookmarks->GetBookmarkURI(aItemId, getter_AddRefs(mRemovingURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
   return NS_OK;
 }
 
@@ -3293,6 +3283,7 @@ nsNavHistoryQueryResultNode::OnItemRemoved(PRInt64 aItemId,
                                            const nsACString& aGUID,
                                            const nsACString& aParentGUID)
 {
+  mRemovingURI = aURI;
   if (aItemType == nsINavBookmarksService::TYPE_BOOKMARK &&
       mLiveUpdate != QUERYUPDATE_SIMPLE && mLiveUpdate != QUERYUPDATE_TIME) {
     nsresult rv = Refresh();
@@ -4036,9 +4027,6 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
 
   RESTART_AND_RETURN_IF_ASYNC_PENDING();
 
-  nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
-
   nsresult rv;
 
   // Check for query URIs, which are bookmarks, but treated as containers
@@ -4075,6 +4063,8 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
   }
   else if (aItemType == nsINavBookmarksService::TYPE_FOLDER ||
            aItemType == nsINavBookmarksService::TYPE_DYNAMIC_CONTAINER) {
+    nsNavBookmarks* bookmarks = nsNavBookmarks::GetBookmarksService();
+    NS_ENSURE_TRUE(bookmarks, NS_ERROR_OUT_OF_MEMORY);
     rv = bookmarks->ResultNodeForContainer(aItemId, mOptions, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -4083,6 +4073,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     NS_ENSURE_TRUE(node, NS_ERROR_OUT_OF_MEMORY);
     node->mItemId = aItemId;
   }
+
   node->mBookmarkIndex = aIndex;
 
   if (aItemType == nsINavBookmarksService::TYPE_SEPARATOR ||
@@ -4090,6 +4081,7 @@ nsNavHistoryFolderResultNode::OnItemAdded(PRInt64 aItemId,
     // insert at natural bookmarks position
     return InsertChildAt(node, aIndex);
   }
+
   // insert at sorted position
   return InsertSortedChild(node, PR_FALSE);
 }
@@ -4977,15 +4969,7 @@ nsNavHistoryResult::OnItemChanged(PRInt64 aItemId,
   // opened, meaning we cannot optimize this code path for changes done to
   // folder-nodes.
 
-  nsNavBookmarks* bookmarkService = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarkService, NS_ERROR_OUT_OF_MEMORY);
-
-  // Find the changed items under the folders list
-  PRInt64 folderId;
-  nsresult rv = bookmarkService->GetFolderIdForItem(aItemId, &folderId);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  FolderObserverList* list = BookmarkFolderObserversForId(folderId, PR_FALSE);
+  FolderObserverList* list = BookmarkFolderObserversForId(aParentId, PR_FALSE);
   if (!list)
     return NS_OK;
 
@@ -5026,15 +5010,7 @@ nsNavHistoryResult::OnItemVisited(PRInt64 aItemId,
                                   const nsACString& aGUID,
                                   const nsACString& aParentGUID)
 {
-  nsresult rv;
-  nsNavBookmarks* bookmarkService = nsNavBookmarks::GetBookmarksService();
-  NS_ENSURE_TRUE(bookmarkService, NS_ERROR_OUT_OF_MEMORY);
-
-  // find the folder to notify about this item
-  PRInt64 folderId;
-  rv = bookmarkService->GetFolderIdForItem(aItemId, &folderId);
-  NS_ENSURE_SUCCESS(rv, rv);
-  ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(folderId,
+  ENUMERATE_BOOKMARK_FOLDER_OBSERVERS(aParentId,
       OnItemVisited(aItemId, aVisitId, aVisitTime, aTransitionType, aURI,
                     aParentId, aGUID, aParentGUID));
   ENUMERATE_ALL_BOOKMARKS_OBSERVERS(
