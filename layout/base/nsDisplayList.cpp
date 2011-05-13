@@ -156,6 +156,15 @@ static PRBool ForceVisiblityForFixedItem(nsDisplayListBuilder* aBuilder,
          IsFixedItem(aItem, aBuilder, aIsFixedBackground);
 }
 
+void nsDisplayListBuilder::SetDisplayPort(const nsRect& aDisplayPort)
+{
+    static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
+    if (fixedPositionLayersEnabled) {
+      mHasDisplayPort = PR_TRUE;
+      mDisplayPort = aDisplayPort;
+    }
+}
+
 void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
                                                         nsIFrame* aFrame,
                                                         const nsRect& aDirtyRect)
