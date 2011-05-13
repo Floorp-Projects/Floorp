@@ -530,8 +530,12 @@ struct JSScript {
     /* Any type objects associated with this script, including initializer objects. */
     js::types::TypeObject *typeObjects;
 
-    /* Any possibly unexpected values pushed by opcodes in this script. */
-    js::types::TypeResult *typeResults;
+    /* Persistent information about stack types in this script. */
+    js::types::TypeIntermediate *intermediateTypes;
+    void addIntermediateType(js::types::TypeIntermediate *type) {
+        type->next = intermediateTypes;
+        intermediateTypes = type;
+    }
 
     /* Bytecode analysis and type inference results for this script. Destroyed on GC. */
   private:

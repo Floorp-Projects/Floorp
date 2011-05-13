@@ -1251,6 +1251,17 @@ JSObject::clear(JSContext *cx)
 }
 
 void
+JSObject::rollbackProperties(uint32 slotSpan)
+{
+    /* Remove properties from this object until it has a matching slot span. */
+    JS_ASSERT(!hasSlotsArray() && slotSpan <= this->slotSpan());
+    while (this->slotSpan() != slotSpan) {
+        JS_ASSERT(lastProp->hasSlot() && getSlot(lastProp->slot).isUndefined());
+        removeLastProperty();
+    }
+}
+
+void
 JSObject::generateOwnShape(JSContext *cx)
 {
 #ifdef JS_TRACER

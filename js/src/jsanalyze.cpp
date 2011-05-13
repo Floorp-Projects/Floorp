@@ -415,6 +415,7 @@ ScriptAnalysis::analyzeBytecode(JSContext *cx)
              * remember the offset where the variable became unconditionally
              * defined, rather than continue to maintain it in define arrays.
              */
+            code->unconditional = true;
             for (unsigned i = 0; i < defineCount; i++) {
                 uint32 local = defineArray[i];
                 JS_ASSERT_IF(definedLocals[local] != LOCAL_CONDITIONALLY_DEFINED &&

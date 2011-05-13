@@ -113,6 +113,12 @@ class Bytecode
     /* Whether this instruction can be branched to from a switch statement. Implies jumpTarget. */
     bool switchTarget : 1;
 
+    /*
+     * Whether this instruction must always execute, unless the script throws
+     * an exception which it does not later catch.
+     */
+    bool unconditional : 1;
+
     /* Whether this instruction has been analyzed to get its output defines and stack. */
     bool analyzed : 1;
 
