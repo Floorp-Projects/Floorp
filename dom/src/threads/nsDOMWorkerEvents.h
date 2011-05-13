@@ -160,6 +160,8 @@ public:
                             const nsAString& aFilenameArg,
                             PRUint32 aLinenoArg);
 
+  NS_IMETHOD GetDefaultPrevented(PRBool* aRetVal);
+
   virtual PRBool PreventDefaultCalled();
 
 private:
