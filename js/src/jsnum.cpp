@@ -84,6 +84,7 @@
 #include "jsobjinlines.h"
 #include "jsstrinlines.h"
 
+#include "vm/NumberObject-inl.h"
 #include "vm/String-inl.h"
 
 using namespace js;
@@ -1111,7 +1112,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     JSObject *numberProto = global->createBlankPrototype(cx, &NumberClass);
     if (!numberProto)
         return NULL;
-    numberProto->setPrimitiveThis(Int32Value(0));
+    numberProto->asNumber()->setPrimitiveValue(0);
 
     JSFunction *ctor = global->createConstructor(cx, Number, &NumberClass,
                                                  CLASS_ATOM(cx, Number), 1);
