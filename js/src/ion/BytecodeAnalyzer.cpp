@@ -136,6 +136,7 @@ BytecodeAnalyzer::CFGState::DoWhile(jsbytecode *ifne, MBasicBlock *entry)
     state.state = DO_WHILE_LOOP;
     state.stopAt = ifne;
     state.loop.entry = entry;
+    state.loop.repeat = NULL;
     return state;
 }
 
@@ -146,6 +147,7 @@ BytecodeAnalyzer::CFGState::While(jsbytecode *ifne, jsbytecode *bodyStart, jsbyt
     state.state = WHILE_LOOP_COND;
     state.stopAt = ifne;
     state.loop.entry = entry;
+    state.loop.repeat = NULL;
     state.loop.w.bodyStart = bodyStart;
     state.loop.w.bodyEnd = bodyEnd;
     state.loop.w.successor = NULL;
@@ -292,6 +294,8 @@ BytecodeAnalyzer::snoopControlFlow(JSOp op)
             return ControlStatus_Error;
 
           case SRC_CONTINUE:
+            return simpleContinue(op, sn);
+
           case SRC_CONT2LABEL:
             JS_NOT_REACHED("continue NYI");
             return ControlStatus_Error;
@@ -616,11 +620,27 @@ BytecodeAnalyzer::ControlStatus
 BytecodeAnalyzer::processWhileBodyEnd(CFGState &state)
 {
     if (current) {
-        // Create an edge from this block to the loop header.
-        MGoto *ins = MGoto::New(this, state.loop.entry);
+        // Create an edge from this block to the loop header. In the presence
+        // of a continue block, we target that instead.
+        MBasicBlock *target = state.loop.repeat
+                              ? state.loop.repeat
+                              : state.loop.entry;
+        MGoto *ins = MGoto::New(this, target);
         if (!current->end(ins))
             return ControlStatus_Error;
+    }
 
+    if (state.loop.repeat) {
+        MGoto *ins = MGoto::New(this, state.loop.entry);
+        if (!state.loop.repeat->end(ins))
+            return ControlStatus_Error;
+
+        // If there was a previous block, it is now finished, and the repeat
+        // block becomes the backedge below.
+        current = state.loop.repeat;
+    }
+
+    if (current) {
         // Place phis in the loop header, propagating their assignment to the
         // successor block.
         if (!state.loop.entry->addBackedge(current, state.loop.w.successor))
@@ -632,14 +652,50 @@ BytecodeAnalyzer::processWhileBodyEnd(CFGState &state)
     return ControlStatus_Joined;
 }
 
-bool
-BytecodeAnalyzer::pushConstant(const Value &v)
+BytecodeAnalyzer::CFGState &
+BytecodeAnalyzer::findInnermostLoop()
 {
-    MConstant *ins = MConstant::New(this, v);
-    if (!current->add(ins))
-        return false;
-    current->push(ins);
-    return true;
+    for (size_t i = cfgStack_.length() - 1; i < cfgStack_.length(); i--) {
+        if (cfgStack_[i].isLoop())
+            return cfgStack_[i];
+    }
+    JS_NOT_REACHED("continue without a loop!");
+    return cfgStack_.back();
+}
+
+BytecodeAnalyzer::ControlStatus
+BytecodeAnalyzer::simpleContinue(JSOp op, jssrcnote *sn)
+{
+    JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
+
+    CFGState &state = findInnermostLoop();
+
+    // The target of the loop should be the loop entry.
+    JS_ASSERT(pc + GetJumpOffset(pc) == state.loop.entry->pc());
+
+    MBasicBlock *repeat = state.loop.repeat;
+    if (!repeat) {
+        // The |pc| here is technically not correct, as the block is shared
+        // between all |continue| points. However, it should be okay for the VM
+        // to resume at any |continue| since it's just a GOTO.
+        repeat = newBlock(current, pc);
+    }
+
+    MGoto *ins = MGoto::New(this, repeat);
+    if (!current->end(ins))
+        return ControlStatus_Error;
+
+    if (state.loop.repeat) {
+        // If the basic block wasn't just created, we need to add the current block
+        // as a predecessor (creating the new block does this automatically).
+        if (!state.loop.repeat->addPredecessor(current))
+            return ControlStatus_Error;
+    } else {
+        state.loop.repeat = repeat;
+    }
+
+    current = NULL;
+    return processControlEnd();
 }
 
 bool
@@ -874,6 +930,16 @@ BytecodeAnalyzer::processReturn(JSOp op)
     // Make sure no one tries to use this block now.
     current = NULL;
     return processControlEnd();
+}
+
+bool
+BytecodeAnalyzer::pushConstant(const Value &v)
+{
+    MConstant *ins = MConstant::New(this, v);
+    if (!current->add(ins))
+        return false;
+    current->push(ins);
+    return true;
 }
 
 bool
