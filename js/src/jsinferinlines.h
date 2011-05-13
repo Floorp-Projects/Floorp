@@ -43,6 +43,7 @@
 #include "jscompartment.h"
 #include "jsinfer.h"
 #include "jsprf.h"
+#include "vm/GlobalObject.h"
 
 #ifndef jsinferinlines_h___
 #define jsinferinlines_h___
@@ -542,7 +543,7 @@ JSScript::slotTypes(unsigned slot)
 inline JSObject *
 JSScript::getGlobal()
 {
-    JS_ASSERT(compileAndGo && global);
+    JS_ASSERT(global && !global->isCleared());
     return global;
 }
 
@@ -564,7 +565,7 @@ JSScript::getTypeNewObject(JSContext *cx, JSProtoKey key)
 inline js::types::TypeObject *
 JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 {
-    if (!cx->typeInferenceEnabled() || !compileAndGo)
+    if (!cx->typeInferenceEnabled() || !global)
         return cx->getTypeNewObject(isArray ? JSProto_Array : JSProto_Object);
 
     uint32 offset = pc - code;
@@ -1197,9 +1198,9 @@ TypeCallsite::getInitObject(JSContext *cx, bool isArray)
 }
 
 inline bool
-TypeCallsite::compileAndGo()
+TypeCallsite::hasGlobal()
 {
-    return script->compileAndGo;
+    return script->global;
 }
 
 /////////////////////////////////////////////////////////////////////
