@@ -503,7 +503,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             analyze::Bytecode *opinfo = analysis->maybeCode(i);
             if (opinfo && opinfo->safePoint) {
                 Label L = jumpMap[i];
-                JS_ASSERT(L.isValid());
+                JS_ASSERT(L.isSet());
                 jitNmap[ix].bcOff = i;
                 jitNmap[ix].ncode = (uint8 *)(result + masm.distanceOf(L));
                 ix++;
@@ -625,7 +625,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     cursor += sizeof(ic::EqualityICInfo) * jit->nEqualityICs;
     for (size_t i = 0; i < jit->nEqualityICs; i++) {
         uint32 offs = uint32(equalityICs[i].jumpTarget - script->code);
-        JS_ASSERT(jumpMap[offs].isValid());
+        JS_ASSERT(jumpMap[offs].isSet());
         jitEqualityICs[i].target = fullCode.locationOf(jumpMap[offs]);
         jitEqualityICs[i].stubEntry = stubCode.locationOf(equalityICs[i].stubEntry);
         jitEqualityICs[i].stubCall = stubCode.locationOf(equalityICs[i].stubCall);
@@ -650,7 +650,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
             continue;
 
         uint32 offs = uint32(traceICs[i].jumpTarget - script->code);
-        JS_ASSERT(jumpMap[offs].isValid());
+        JS_ASSERT(jumpMap[offs].isSet());
         jitTraceICs[i].traceHint = fullCode.locationOf(traceICs[i].traceHint);
         jitTraceICs[i].jumpTarget = fullCode.locationOf(jumpMap[offs]);
         jitTraceICs[i].stubEntry = stubCode.locationOf(traceICs[i].stubEntry);
@@ -800,7 +800,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 
     for (size_t i = 0; i < jumpTableOffsets.length(); i++) {
         uint32 offset = jumpTableOffsets[i];
-        JS_ASSERT(jumpMap[offset].isValid());
+        JS_ASSERT(jumpMap[offset].isSet());
         jumpVec[i] = (void *)(result + masm.distanceOf(jumpMap[offset]));
     }
 
@@ -2089,7 +2089,7 @@ JSC::MacroAssembler::Label
 mjit::Compiler::labelOf(jsbytecode *pc)
 {
     uint32 offs = uint32(pc - script->code);
-    JS_ASSERT(jumpMap[offs].isValid());
+    JS_ASSERT(jumpMap[offs].isSet());
     return jumpMap[offs];
 }
 
