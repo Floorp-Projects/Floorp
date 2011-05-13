@@ -700,6 +700,17 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
         FrameNeedsReflow(rootFrame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
     }
   }
+  else if (aAttribute == nsGkAtoms::marginwidth ||
+           aAttribute == nsGkAtoms::marginheight) {
+
+    // Retrieve the attributes
+    nsIntSize margins = GetMarginAttributes();
+
+    // Notify the frameloader
+    nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
+    if (frameloader)
+      frameloader->MarginsChanged(margins.width, margins.height);
+  }
   else if (aAttribute == nsGkAtoms::type) {
     if (!mFrameLoader) 
       return NS_OK;
