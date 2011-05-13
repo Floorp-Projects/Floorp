@@ -325,17 +325,6 @@ static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 // General purpose user32.dll hook object
 static WindowsDllInterceptor sUser32Intercept;
 
-// A glass window's opaque rectangle must be at least this height
-// before we use glass margins. Shorter opaque rectangles lead to
-// stupid-looking visual effects because Windows (foolishly) makes the
-// window edge rendering dependent on the opaque rect height.
-static const int MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS = 50;
-
-// Maximum number of pixels for the left and right horizontal glass margins.
-// If the margins are bigger than this, we won't use margins at all because
-// Windows' glaze effect will start to look stupid.
-static const int MAX_HORIZONTAL_GLASS_MARGIN = 5;
-
 // 2 pixel offset for eTransparencyBorderlessGlass which equals
 // the size of the default window border Windows paints.
 static const PRInt32 kGlassMarginAdjustment = 2;
@@ -2516,7 +2505,6 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
   // to support a full sheet of glass. Comments in MSDN indicate
   // all values must be set to -1 to get a full sheet of glass.
   MARGINS margins = { -1, -1, -1, -1 };
-  bool visiblePlugin = false;
   if (!aOpaqueRegion.IsEmpty()) {
     nsIntRect pluginBounds;
     for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
@@ -2527,14 +2515,6 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
         nsIntRect childBounds;
         child->GetBounds(childBounds);
         pluginBounds.UnionRect(pluginBounds, childBounds);
-        // Detect if any region of a plugin is visible.
-        nsTArray<nsIntRect> currentRects;
-        child->GetWindowClipRegion(&currentRects);
-        nsIntRegion currentClipRegion = RegionFromArray(currentRects);
-        nsIntRect bounds = currentClipRegion.GetBounds();
-        if (!bounds.IsEmpty()) {
-          visiblePlugin = true;
-        }
       }
     }
 
@@ -2543,25 +2523,17 @@ void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
 
     // Find the largest rectangle and use that to calculate the inset. Our top
     // priority is to include the bounds of all plugins.
-    // Also don't let MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS override content
-    // that contains a visible plugin since glass over plugins looks bad.
     nsIntRect largest = aOpaqueRegion.GetLargestRectangle(pluginBounds);
-    if (visiblePlugin || 
-        (largest.x <= MAX_HORIZONTAL_GLASS_MARGIN &&
-         clientBounds.width - largest.XMost() <= MAX_HORIZONTAL_GLASS_MARGIN &&
-         largest.height >= MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS)) {
-      margins.cxLeftWidth = largest.x;
-      margins.cxRightWidth = clientBounds.width - largest.XMost();
-      margins.cyBottomHeight = clientBounds.height - largest.YMost();
-
-      if (mCustomNonClient) {
-        // The minimum glass height must be the caption buttons height,
-        // otherwise the buttons are drawn incorrectly.
-        largest.y = PR_MAX(largest.y,
-                           nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
-      }
-      margins.cyTopHeight = largest.y;
+    margins.cxLeftWidth = largest.x;
+    margins.cxRightWidth = clientBounds.width - largest.XMost();
+    margins.cyBottomHeight = clientBounds.height - largest.YMost();
+    if (mCustomNonClient) {
+      // The minimum glass height must be the caption buttons height,
+      // otherwise the buttons are drawn incorrectly.
+      largest.y = PR_MAX(largest.y,
+                         nsUXThemeData::sCommandButtons[CMDBUTTONIDX_BUTTONBOX].cy);
     }
+    margins.cyTopHeight = largest.y;
   }
 
   // Only update glass area if there are changes
