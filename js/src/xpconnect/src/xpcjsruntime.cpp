@@ -593,21 +593,6 @@ XPCJSRuntime::AddXPConnectRoots(JSContext* cx,
     GetCompartmentMap().EnumerateRead(SuspectCompartment, &closure);
 }
 
-void
-XPCJSRuntime::ClearWeakRoots()
-{
-    JSContext *iter = nsnull, *acx;
-
-    while((acx = JS_ContextIterator(GetJSRuntime(), &iter)))
-    {
-        if(XPCPerThreadData::IsMainThread(acx) &&
-           !nsXPConnect::GetXPConnect()->GetOutstandingRequests(acx))
-        {
-            JS_ClearNewbornRoots(acx);
-        }
-    }
-}
-
 template<class T> static void
 DoDeferredRelease(nsTArray<T> &array)
 {
