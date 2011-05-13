@@ -9649,9 +9649,9 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
     // It's important that this function not run arbitrary scripts after step 1
     // and before completing step 5.  For example, if a script called
     // history.back() before we completed step 5, bfcache might destroy an
-    // active content viewer.  Since EvictContentViewers at the end of step 5
-    // might run script, we can't just put a script blocker around the critical
-    // section.
+    // active content viewer.  Since EvictOutOfRangeContentViewers at the end of
+    // step 5 might run script, we can't just put a script blocker around the
+    // critical section.
     //
     // Note that we completely ignore the aTitle parameter.
 
@@ -9879,7 +9879,7 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         PRInt32 curIndex = -1;
         rv = rootSH->GetIndex(&curIndex);
         if (NS_SUCCEEDED(rv) && curIndex > -1) {
-            internalSH->EvictContentViewers(curIndex - 1, curIndex);
+            internalSH->EvictOutOfRangeContentViewers(curIndex);
         }
     }
 
