@@ -61,9 +61,10 @@ class Debug {
     JSObject *uncaughtExceptionHook;  // Strong reference.
     bool enabled;
 
-    // True if hooksObject had a debuggerHandler property when the hooks
+    // True if hooksObject had a property of the respective name when the hooks
     // property was set.
-    bool hasDebuggerHandler;
+    bool hasDebuggerHandler;  // hooks.debuggerHandler
+    bool hasThrowHandler;     // hooks.throw
 
     typedef HashMap<StackFrame *, JSObject *, DefaultHasher<StackFrame *>, SystemAllocPolicy>
         FrameMap;
@@ -94,9 +95,17 @@ class Debug {
 
     static void slowPathLeaveStackFrame(JSContext *cx);
 
-    inline bool observesDebuggerStatement() const;
-    static JSTrapStatus dispatchDebuggerStatement(JSContext *cx, Value *vp);
+    typedef bool (Debug::*DebugObservesMethod)() const;
+    typedef JSTrapStatus (Debug::*DebugHandleMethod)(JSContext *, Value *) const;
+    static JSTrapStatus dispatchHook(JSContext *cx, js::Value *vp,
+                                     DebugObservesMethod observesEvent,
+                                     DebugHandleMethod handleEvent);
+
+    bool observesDebuggerStatement() const;
     JSTrapStatus handleDebuggerStatement(JSContext *cx, Value *vp);
+
+    bool observesThrow() const;
+    JSTrapStatus handleThrow(JSContext *cx, Value *vp);
 
   public:
     Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment);
@@ -131,6 +140,7 @@ class Debug {
 
     static inline void leaveStackFrame(JSContext *cx);
     static inline JSTrapStatus onDebuggerStatement(JSContext *cx, js::Value *vp);
+    static inline JSTrapStatus onThrow(JSContext *cx, js::Value *vp);
 
     /**************************************** Functions for use by jsdbg.cpp. */
 
@@ -207,18 +217,24 @@ Debug::leaveStackFrame(JSContext *cx)
         slowPathLeaveStackFrame(cx);
 }
 
-bool
-Debug::observesDebuggerStatement() const
-{
-    return enabled && hasDebuggerHandler;
-}
-
 JSTrapStatus
 Debug::onDebuggerStatement(JSContext *cx, js::Value *vp)
 {
     return cx->compartment->getDebuggers().empty()
            ? JSTRAP_CONTINUE
-           : dispatchDebuggerStatement(cx, vp);
+           : dispatchHook(cx, vp,
+                          DebugObservesMethod(&Debug::observesDebuggerStatement),
+                          DebugHandleMethod(&Debug::handleDebuggerStatement));
+}
+
+JSTrapStatus
+Debug::onThrow(JSContext *cx, js::Value *vp)
+{
+    return cx->compartment->getDebuggers().empty()
+           ? JSTRAP_CONTINUE
+           : dispatchHook(cx, vp,
+                          DebugObservesMethod(&Debug::observesThrow),
+                          DebugHandleMethod(&Debug::handleThrow));
 }
 
 }

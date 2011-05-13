@@ -137,7 +137,8 @@ enum {
 
 Debug::Debug(JSObject *dbg, JSObject *hooks, JSCompartment *compartment)
   : object(dbg), debuggeeCompartment(compartment), hooksObject(hooks),
-    uncaughtExceptionHook(NULL), enabled(true), hasDebuggerHandler(false)
+    uncaughtExceptionHook(NULL), enabled(true), hasDebuggerHandler(false),
+    hasThrowHandler(false)
 {
 }
 
@@ -383,6 +384,12 @@ CallMethodIfPresent(JSContext *cx, JSObject *obj, const char *name, int argc, Va
             ExternalInvoke(cx, ObjectValue(*obj), fval, argc, argv, rval));
 }
 
+bool
+Debug::observesDebuggerStatement() const
+{
+    return enabled && hasDebuggerHandler;
+}
+
 JSTrapStatus
 Debug::handleDebuggerStatement(JSContext *cx, Value *vp)
 {
@@ -403,8 +410,41 @@ Debug::handleDebuggerStatement(JSContext *cx, Value *vp)
     return parseResumptionValue(ac, ok, rv, vp);
 }
 
+bool
+Debug::observesThrow() const
+{
+    return enabled && hasThrowHandler;
+}
+
 JSTrapStatus
-Debug::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
+Debug::handleThrow(JSContext *cx, Value *vp)
+{
+    // Grab cx->fp() and the exception value before preparing to call the hook.
+    StackFrame *fp = cx->fp();
+    Value exc = cx->getPendingException();
+
+    cx->clearPendingException();
+    JS_ASSERT(hasThrowHandler);
+    AutoCompartment ac(cx, hooksObject);
+    if (!ac.enter())
+        return JSTRAP_ERROR;
+
+    Value argv[2];
+    argv[1] = exc;
+    if (!getScriptFrame(cx, fp, &argv[0]) || !wrapDebuggeeValue(cx, &argv[1]))
+        return JSTRAP_ERROR;
+
+    Value rv;
+    bool ok = CallMethodIfPresent(cx, hooksObject, "throw", 2, argv, &rv);
+    JSTrapStatus st = parseResumptionValue(ac, ok, rv, vp);
+    if (st == JSTRAP_CONTINUE)
+        cx->setPendingException(argv[1]);
+    return st;
+}
+
+JSTrapStatus
+Debug::dispatchHook(JSContext *cx, js::Value *vp, DebugObservesMethod observesEvent,
+                    DebugHandleMethod handleEvent)
 {
     // Determine which debuggers will receive this event, and in what order.
     // Make a copy of the list, since the original is mutable and we will be
@@ -416,7 +456,7 @@ Debug::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
     const JSCompartment::DebugVector &debuggers = compartment->getDebuggers();
     for (Debug **p = debuggers.begin(); p != debuggers.end(); p++) {
         Debug *dbg = *p;
-        if (dbg->observesDebuggerStatement()) {
+        if ((dbg->*observesEvent)()) {
             if (!triggered.append(ObjectValue(*dbg->toJSObject())))
                 return JSTRAP_ERROR;
         }
@@ -426,8 +466,8 @@ Debug::dispatchDebuggerStatement(JSContext *cx, js::Value *vp)
     // should still be delivered.
     for (Value *p = triggered.begin(); p != triggered.end(); p++) {
         Debug *dbg = Debug::fromJSObject(&p->toObject());
-        if (dbg->observesCompartment(compartment) && dbg->observesDebuggerStatement()) {
-            JSTrapStatus st = dbg->handleDebuggerStatement(cx, vp);
+        if (dbg->observesCompartment(compartment) && (dbg->*observesEvent)()) {
+            JSTrapStatus st = (dbg->*handleEvent)(cx, vp);
             if (st != JSTRAP_CONTINUE)
                 return st;
         }
@@ -592,12 +632,18 @@ Debug::setHooks(JSContext *cx, uintN argc, Value *vp)
         return ReportObjectRequired(cx);
     JSObject *hooksobj = &vp[2].toObject();
 
+    bool hasDebuggerHandler, hasThrow;
     JSBool found;
     if (!JS_HasProperty(cx, hooksobj, "debuggerHandler", &found))
         return false;
-    dbg->hasDebuggerHandler = !!found;
+    hasDebuggerHandler = !!found;
+    if (!JS_HasProperty(cx, hooksobj, "throw", &found))
+        return false;
+    hasThrow = !!found;
 
     dbg->hooksObject = hooksobj;
+    dbg->hasDebuggerHandler = hasDebuggerHandler;
+    dbg->hasThrowHandler = hasThrow;
     vp->setUndefined();
     return true;
 }
