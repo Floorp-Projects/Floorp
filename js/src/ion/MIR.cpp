@@ -184,6 +184,8 @@ MTest::New(MIRGenerator *gen, MInstruction *ins, MBasicBlock *ifTrue, MBasicBloc
 MGoto *
 MGoto::New(MIRGenerator *gen, MBasicBlock *target)
 {
+    if (!target)
+        return NULL;
     return new (gen->temp()) MGoto(target);
 }
 
