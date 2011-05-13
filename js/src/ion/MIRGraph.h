@@ -50,6 +50,7 @@ namespace ion {
 class MIRGraph
 {
     Vector<MBasicBlock *, 8, TempAllocPolicy> blocks_;
+    uint32 idGen_;
 
   public:
     MIRGraph(JSContext *cx);
@@ -61,6 +62,10 @@ class MIRGraph
     }
     MBasicBlock *getBlock(size_t i) const {
         return blocks_[i];
+    }
+    uint32 allocInstructionId() {
+        idGen_ += 2;
+        return idGen_;
     }
 };
 
@@ -191,7 +196,7 @@ class MBasicBlock : public TempObject
     }
     MInstruction *getEntrySlot(size_t i) const {
         JS_ASSERT(i < numEntrySlots());
-        return header_[i].ins;
+        return header_[i];
     }
     size_t numInstructions() const {
         return instructions_.length();
@@ -214,7 +219,7 @@ class MBasicBlock : public TempObject
     // Stack state at the entry point to the basic block. This is required to
     // compute phi nodes at the back edge to a loop header. It is placed on all
     // blocks, anyway, to assist in debugging.
-    StackSlot *header_;
+    MInstruction **header_;
     uint32 headerSlots_;
 };
 
