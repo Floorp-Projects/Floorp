@@ -1,4 +1,7 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * vim: set ts=8 sw=4 et tw=99 ft=cpp:
+ *
+ * ***** BEGIN LICENSE BLOCK *****
  * Copyright (C) 2009 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -21,17 +24,17 @@
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
- */
+ *
+ * ***** END LICENSE BLOCK ***** */
 
-#ifndef RegexParser_h
-#define RegexParser_h
+#ifndef YarrParser_h
+#define YarrParser_h
 
-#include <limits.h>
-#include <wtf/ASCIICType.h>
-#include "yarr/jswtfbridge.h"
-#include "yarr/yarr/RegexCommon.h"
+#include "Yarr.h"
 
 namespace JSC { namespace Yarr {
+
+#define REGEXP_ERROR_PREFIX "Invalid regular expression: "
 
 enum BuiltInCharacterClassID {
     DigitClassID,
@@ -45,7 +48,7 @@ template<class Delegate>
 class Parser {
 private:
     template<class FriendDelegate>
-    friend int parse(FriendDelegate& delegate, const UString& pattern, unsigned backReferenceLimit);
+    friend ErrorCode parse(FriendDelegate& delegate, const UString& pattern, unsigned backReferenceLimit);
 
     /*
      * CharacterClassParserDelegate:
@@ -61,10 +64,8 @@ private:
         CharacterClassParserDelegate(Delegate& delegate, ErrorCode& err)
             : m_delegate(delegate)
             , m_err(err)
-            , m_state(empty)
-#if __GNUC__ >= 4 && __GNUC_MINOR__ >= 5 /* quell GCC overwarning */
-            , m_character(0xFFFF)
-#endif
+            , m_state(Empty)
+            , m_character(0)
         {
         }
 
@@ -79,54 +80,60 @@ private:
         }
 
         /*
-         * atomPatternCharacterUnescaped():
+         * atomPatternCharacter():
          *
-         * This method is called directly from parseCharacterClass(), to report a new
-         * pattern character token.  This method differs from atomPatternCharacter(),
-         * which will be called from parseEscape(), since a hypen provided via this
-         * method may be indicating a character range, but a hyphen parsed by
-         * parseEscape() cannot be interpreted as doing so.
+         * This method is called either from parseCharacterClass() (for an unescaped
+         * character in a character class), or from parseEscape(). In the former case
+         * the value true will be passed for the argument 'hyphenIsRange', and in this
+         * mode we will allow a hypen to be treated as indicating a range (i.e. /[a-z]/
+         * is different to /[a\-z]/).
          */
-        void atomPatternCharacterUnescaped(UChar ch)
+        void atomPatternCharacter(UChar ch, bool hyphenIsRange = false)
         {
             switch (m_state) {
-            case empty:
-                m_character = ch;
-                m_state = cachedCharacter;
-                break;
+            case AfterCharacterClass:
+                // Following a builtin character class we need look out for a hyphen.
+                // We're looking for invalid ranges, such as /[\d-x]/ or /[\d-\d]/.
+                // If we see a hyphen following a charater class then unlike usual
+                // we'll report it to the delegate immediately, and put ourself into
+                // a poisoned state. Any following calls to add another character or
+                // character class will result in an error. (A hypen following a
+                // character-class is itself valid, but only  at the end of a regex).
+                if (hyphenIsRange && ch == '-') {
+                    m_delegate.atomCharacterClassAtom('-');
+                    m_state = AfterCharacterClassHyphen;
+                    return;
+                }
+                // Otherwise just fall through - cached character so treat this as Empty.
 
-            case cachedCharacter:
-                if (ch == '-')
-                    m_state = cachedCharacterHyphen;
+            case Empty:
+                m_character = ch;
+                m_state = CachedCharacter;
+                return;
+
+            case CachedCharacter:
+                if (hyphenIsRange && ch == '-')
+                    m_state = CachedCharacterHyphen;
                 else {
                     m_delegate.atomCharacterClassAtom(m_character);
                     m_character = ch;
                 }
-                break;
+                return;
 
-            case cachedCharacterHyphen:
-                if (ch >= m_character)
-                    m_delegate.atomCharacterClassRange(m_character, ch);
-                else
+            case CachedCharacterHyphen:
+                if (ch < m_character) {
                     m_err = CharacterClassOutOfOrder;
-                m_state = empty;
+                    return;
+                }
+                m_delegate.atomCharacterClassRange(m_character, ch);
+                m_state = Empty;
+                return;
+
+            case AfterCharacterClassHyphen:
+                m_delegate.atomCharacterClassAtom(ch);
+                m_state = Empty;
+                return;
             }
-        }
-
-        /*
-         * atomPatternCharacter():
-         *
-         * Adds a pattern character, called by parseEscape(), as such will not
-         * interpret a hyphen as indicating a character range.
-         */
-        void atomPatternCharacter(UChar ch)
-        {
-            // Flush if a character is already pending to prevent the
-            // hyphen from begin interpreted as indicating a range.
-            if((ch == '-') && (m_state == cachedCharacter))
-                flush();
-
-            atomPatternCharacterUnescaped(ch);
         }
 
         /*
@@ -136,17 +143,28 @@ private:
          */
         void atomBuiltInCharacterClass(BuiltInCharacterClassID classID, bool invert)
         {
-            if (m_state == cachedCharacterHyphen) {
-                // If the RHS of a range does not contain exacly one character then a SyntaxError
-                // must be thrown. SpiderMonkey only errors out in the [c-\s] case as an extension.
-                // (This assumes none of the built in character classes contain a single
-                // character.)
-                m_err = CharacterClassRangeSingleChar;
-                m_state = empty;
+            switch (m_state) {
+            case CachedCharacter:
+                // Flush the currently cached character, then fall through.
+                m_delegate.atomCharacterClassAtom(m_character);
+
+            case Empty:
+            case AfterCharacterClass:
+                m_state = AfterCharacterClass;
+                m_delegate.atomCharacterClassBuiltIn(classID, invert);
+                return;
+
+            case CachedCharacterHyphen:
+                // Error! We have a range that looks like [x-\d]. We require
+                // the end of the range to be a single character.
+                m_err = CharacterClassInvalidRange;
+                return;
+
+            case AfterCharacterClassHyphen:
+                m_delegate.atomCharacterClassBuiltIn(classID, invert);
+                m_state = Empty;
                 return;
             }
-            flush();
-            m_delegate.atomCharacterClassBuiltIn(classID, invert);
         }
 
         /*
@@ -156,31 +174,29 @@ private:
          */
         void end()
         {
-            flush();
+            if (m_state == CachedCharacter)
+                m_delegate.atomCharacterClassAtom(m_character);
+            else if (m_state == CachedCharacterHyphen) {
+                m_delegate.atomCharacterClassAtom(m_character);
+                m_delegate.atomCharacterClassAtom('-');
+            }
             m_delegate.atomCharacterClassEnd();
         }
 
         // parseEscape() should never call these delegate methods when
         // invoked with inCharacterClass set.
-        void assertionWordBoundary(bool) { JS_NOT_REACHED("parseEscape() should never call this"); }
-        void atomBackReference(unsigned) { JS_NOT_REACHED("parseEscape() should never call this"); }
+        void assertionWordBoundary(bool) { ASSERT_NOT_REACHED(); }
+        void atomBackReference(unsigned) { ASSERT_NOT_REACHED(); }
 
     private:
-        void flush()
-        {
-            if (m_state != empty) // either cachedCharacter or cachedCharacterHyphen
-                m_delegate.atomCharacterClassAtom(m_character);
-            if (m_state == cachedCharacterHyphen)
-                m_delegate.atomCharacterClassAtom('-');
-            m_state = empty;
-        }
-    
         Delegate& m_delegate;
         ErrorCode& m_err;
         enum CharacterClassConstructionState {
-            empty,
-            cachedCharacter,
-            cachedCharacterHyphen
+            Empty,
+            CachedCharacter,
+            CachedCharacterHyphen,
+            AfterCharacterClass,
+            AfterCharacterClassHyphen
         } m_state;
         UChar m_character;
     };
@@ -189,7 +205,7 @@ private:
         : m_delegate(delegate)
         , m_backReferenceLimit(backReferenceLimit)
         , m_err(NoError)
-        , m_data(const_cast<UString &>(pattern).chars())
+        , m_data(pattern.chars())
         , m_size(pattern.length())
         , m_index(0)
         , m_parenthesesNestingDepth(0)
@@ -219,8 +235,8 @@ private:
     template<bool inCharacterClass, class EscapeDelegate>
     bool parseEscape(EscapeDelegate& delegate)
     {
-        JS_ASSERT(!m_err);
-        JS_ASSERT(peek() == '\\');
+        ASSERT(!m_err);
+        ASSERT(peek() == '\\');
         consume();
 
         if (atEndOfPattern()) {
@@ -292,7 +308,7 @@ private:
 
                 unsigned backReference;
                 if (!consumeNumber(backReference))
-                    return false;
+                    break;
                 if (backReference <= m_backReferenceLimit) {
                     delegate.atomBackReference(backReference);
                     break;
@@ -402,14 +418,14 @@ private:
     /*
      * parseCharacterClass():
      *
-     * Helper for parseTokens(); calls directly and indirectly (via parseCharacterClassEscape)
+     * Helper for parseTokens(); calls dirctly and indirectly (via parseCharacterClassEscape)
      * to an instance of CharacterClassParserDelegate, to describe the character class to the
      * delegate.
      */
     void parseCharacterClass()
     {
-        JS_ASSERT(!m_err);
-        JS_ASSERT(peek() == '[');
+        ASSERT(!m_err);
+        ASSERT(peek() == '[');
         consume();
 
         CharacterClassParserDelegate characterClassConstructor(m_delegate, m_err);
@@ -428,7 +444,7 @@ private:
                 break;
 
             default:
-                characterClassConstructor.atomPatternCharacterUnescaped(consume());
+                characterClassConstructor.atomPatternCharacter(consume(), true);
             }
 
             if (m_err)
@@ -445,8 +461,8 @@ private:
      */
     void parseParenthesesBegin()
     {
-        JS_ASSERT(!m_err);
-        JS_ASSERT(peek() == '(');
+        ASSERT(!m_err);
+        ASSERT(peek() == '(');
         consume();
 
         if (tryConsume('?')) {
@@ -484,8 +500,8 @@ private:
      */
     void parseParenthesesEnd()
     {
-        JS_ASSERT(!m_err);
-        JS_ASSERT(peek() == ')');
+        ASSERT(!m_err);
+        ASSERT(peek() == ')');
         consume();
 
         if (m_parenthesesNestingDepth > 0)
@@ -503,8 +519,8 @@ private:
      */
     void parseQuantifier(bool lastTokenWasAnAtom, unsigned min, unsigned max)
     {
-        JS_ASSERT(!m_err);
-        JS_ASSERT(min <= max);
+        ASSERT(!m_err);
+        ASSERT(min <= max);
 
         if (lastTokenWasAnAtom)
             m_delegate.quantifyAtom(min, max, !tryConsume('?'));
@@ -572,13 +588,13 @@ private:
 
             case '*':
                 consume();
-                parseQuantifier(lastTokenWasAnAtom, 0, UINT_MAX);
+                parseQuantifier(lastTokenWasAnAtom, 0, quantifyInfinite);
                 lastTokenWasAnAtom = false;
                 break;
 
             case '+':
                 consume();
-                parseQuantifier(lastTokenWasAnAtom, 1, UINT_MAX);
+                parseQuantifier(lastTokenWasAnAtom, 1, quantifyInfinite);
                 lastTokenWasAnAtom = false;
                 break;
 
@@ -603,7 +619,7 @@ private:
                             if (!consumeNumber(max))
                                 break;
                         } else {
-                            max = UINT_MAX;
+                            max = quantifyInfinite;
                         }
                     }
 
@@ -636,26 +652,18 @@ private:
     /*
      * parse():
      *
-     * This method calls regexBegin(), calls parseTokens() to parse over the input
-     * patterns, calls regexEnd() or regexError() as appropriate, and converts any
+     * This method calls parseTokens() to parse over the input and converts any
      * error code to a const char* for a result.
      */
-    int parse()
+    ErrorCode parse()
     {
-        m_delegate.regexBegin();
-
         if (m_size > MAX_PATTERN_SIZE)
             m_err = PatternTooLarge;
         else
             parseTokens();
-        JS_ASSERT(atEndOfPattern() || m_err);
+        ASSERT(atEndOfPattern() || m_err);
 
-        if (m_err)
-            m_delegate.regexError();
-        else
-            m_delegate.regexEnd();
-
-        return static_cast<int>(m_err);
+        return m_err;
     }
 
 
@@ -675,13 +683,13 @@ private:
 
     bool atEndOfPattern()
     {
-        JS_ASSERT(m_index <= m_size);
+        ASSERT(m_index <= m_size);
         return m_index == m_size;
     }
 
     int peek()
     {
-        JS_ASSERT(m_index < m_size);
+        ASSERT(m_index < m_size);
         return m_data[m_index];
     }
 
@@ -692,19 +700,19 @@ private:
 
     unsigned peekDigit()
     {
-        JS_ASSERT(peekIsDigit());
+        ASSERT(peekIsDigit());
         return peek() - '0';
     }
 
     int consume()
     {
-        JS_ASSERT(m_index < m_size);
+        ASSERT(m_index < m_size);
         return m_data[m_index++];
     }
 
     unsigned consumeDigit()
     {
-        JS_ASSERT(peekIsDigit());
+        ASSERT(peekIsDigit());
         return consume() - '0';
     }
 
@@ -725,7 +733,7 @@ private:
 
     unsigned consumeOctal()
     {
-        JS_ASSERT(WTF::isASCIIOctalDigit(peek()));
+        ASSERT(WTF::isASCIIOctalDigit(peek()));
 
         unsigned n = consumeDigit();
         while (n < 32 && !atEndOfPattern() && WTF::isASCIIOctalDigit(peek()))
@@ -798,14 +806,6 @@ private:
  *
  *    void disjunction();
  *
- *    void regexBegin();
- *    void regexEnd();
- *    void regexError();
- *
- * Before any call recording tokens are made, regexBegin() will be called on the
- * delegate once.  Once parsing is complete either regexEnd() or regexError() will
- * be called, as appropriate.
- *
  * The regular expression is described by a sequence of assertion*() and atom*()
  * callbacks to the delegate, describing the terms in the regular expression.
  * Following an atom a quantifyAtom() call may occur to indicate that the previous
@@ -836,11 +836,11 @@ private:
  */
 
 template<class Delegate>
-int parse(Delegate& delegate, const UString& pattern, unsigned backReferenceLimit = UINT_MAX)
+ErrorCode parse(Delegate& delegate, const UString& pattern, unsigned backReferenceLimit = quantifyInfinite)
 {
     return Parser<Delegate>(delegate, pattern, backReferenceLimit).parse();
 }
 
 } } // namespace JSC::Yarr
 
-#endif // RegexParser_h
+#endif // YarrParser_h
