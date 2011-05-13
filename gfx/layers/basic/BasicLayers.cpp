@@ -2005,7 +2005,14 @@ private:
 void
 BasicShadowableImageLayer::Paint(gfxContext* aContext)
 {
+  if (!mContainer) {
+    return;
+  }
+
   nsRefPtr<Image> image = mContainer->GetCurrentImage();
+  if (!image) {
+    return;
+  }
 
   if (image->GetFormat() == Image::PLANAR_YCBCR && BasicManager()->IsCompositingCheap()) {
     PlanarYCbCrImage *YCbCrImage = static_cast<PlanarYCbCrImage*>(image.get());
