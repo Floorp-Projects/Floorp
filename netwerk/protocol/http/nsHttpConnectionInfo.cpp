@@ -38,6 +38,7 @@
 
 #include "nsHttpConnectionInfo.h"
 #include "nsPrintfCString.h"
+#include "nsIProtocolProxyService.h"
 
 void
 nsHttpConnectionInfo::SetOriginServer(const nsACString &host, PRInt32 port)
@@ -98,4 +99,20 @@ nsHttpConnectionInfo::Clone() const
     clone->SetAnonymous(mHashKey.CharAt(2) == 'A');
     
     return clone;
+}
+
+PRBool
+nsHttpConnectionInfo::ShouldForceConnectMethod()
+{
+    if (!mProxyInfo)
+        return PR_FALSE;
+    
+    PRUint32 resolveFlags;
+    nsresult rv;
+    
+    rv = mProxyInfo->GetResolveFlags(&resolveFlags);
+    if (NS_FAILED(rv))
+        return PR_FALSE;
+
+    return resolveFlags & nsIProtocolProxyService::RESOLVE_ALWAYS_TUNNEL;
 }
