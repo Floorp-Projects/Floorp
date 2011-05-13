@@ -22,27 +22,42 @@ function test() {
   }
 
   // Load a normal http URL
-  loadURL("http://example.com/", 0, function () {
-    let pagePrincipal = browser.contentPrincipal;
+  function testURL(url, func) {
+    loadURL("http://example.com/", 0, function () {
+      let pagePrincipal = browser.contentPrincipal;
+      ok(pagePrincipal, "got principal for http:// page");
 
-    // Now load a data URI normally
-    loadURL("data:text/html,<body>inherit", 0, function () {
-      let dataPrincipal = browser.contentPrincipal;
-      ok(dataPrincipal.equals(pagePrincipal), "data URI should inherit principal");
+      // Now load the URL normally
+      loadURL(url, 0, function () {
+        ok(browser.contentPrincipal.equals(pagePrincipal), url + " should inherit principal");
 
-      // Load a normal http URL
-      loadURL("http://example.com/", 0, function () {
-        let innerPagePrincipal = browser.contentPrincipal;
-
-        // Now load a data URI and disallow inheriting the principal
+        // Now load the URL and disallow inheriting the principal
         let webNav = Components.interfaces.nsIWebNavigation;
-        loadURL("data:text/html,<body>noinherit", webNav.LOAD_FLAGS_DISALLOW_INHERIT_OWNER, function () {
-          let innerDataPrincipal = browser.contentPrincipal;
-          ok(!innerDataPrincipal.equals(innerPagePrincipal), "data URI should not inherit principal");
-
-          finish();
+        loadURL(url, webNav.LOAD_FLAGS_DISALLOW_INHERIT_OWNER, function () {
+          let newPrincipal = browser.contentPrincipal;
+          ok(newPrincipal, "got inner principal");
+          ok(!newPrincipal.equals(pagePrincipal),
+             url + " should not inherit principal when loaded with DISALLOW_INHERIT_OWNER");
+  
+          func();
         });
       });
     });
-  });
+  }
+
+  let urls = [
+    "data:text/html,<body>hi",
+    "javascript:1;"
+  ];
+
+  function nextTest() {
+    let url = urls.shift();
+    if (url)
+      testURL(url, nextTest);
+    else
+      finish();
+  }
+  
+  nextTest();
 }
+
