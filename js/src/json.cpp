@@ -777,8 +777,8 @@ js_Stringify(JSContext *cx, Value *vp, JSObject *replacer, Value space, StringBu
 
     /* Step 10. */
     jsid emptyId = ATOM_TO_JSID(cx->runtime->atomState.emptyAtom);
-    if (!js_DefineNativeProperty(cx, wrapper, emptyId, *vp, PropertyStub, StrictPropertyStub,
-                                 JSPROP_ENUMERATE, 0, 0, NULL))
+    if (!DefineNativeProperty(cx, wrapper, emptyId, *vp, PropertyStub, StrictPropertyStub,
+                              JSPROP_ENUMERATE, 0, 0))
     {
         return false;
     }
@@ -808,50 +808,80 @@ static JSBool HandleDataNumber(JSContext *cx, JSONParser *jp);
 static JSBool HandleDataKeyword(JSContext *cx, JSONParser *jp);
 static JSBool PopState(JSContext *cx, JSONParser *jp);
 
+/* ES5 15.12.2 Walk. */
 static bool
-Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
+Walk(JSContext *cx, JSObject *holder, jsid name, const Value &reviver, Value *vp)
 {
     JS_CHECK_RECURSION(cx, return false);
 
-    if (!holder->getProperty(cx, id, vp))
+    /* Step 1. */
+    Value val;
+    if (!holder->getProperty(cx, name, &val))
         return false;
 
-    JSObject *obj;
+    /* Step 2. */
+    if (val.isObject()) {
+        JSObject *obj = &val.toObject();
 
-    if (vp->isObject() && !(obj = &vp->toObject())->isCallable()) {
-        AutoValueRooter propValue(cx);
+        if (obj->isArray()) {
+            /* Step 2a(ii). */
+            jsuint length = obj->getArrayLength();
 
-        if(obj->isArray()) {
-            jsuint length = 0;
-            if (!js_GetLengthProperty(cx, obj, &length))
-                return false;
-
+            /* Step 2a(i), 2a(iii-iv). */
             for (jsuint i = 0; i < length; i++) {
-                jsid index;
-                if (!IndexToId(cx, i, &index))
+                jsid id;
+                if (!IndexToId(cx, i, &id))
                     return false;
 
-                if (!Walk(cx, index, obj, reviver, propValue.addr()))
+                /* Step 2a(iii)(1). */
+                Value newElement;
+                if (!Walk(cx, obj, id, reviver, &newElement))
                     return false;
 
-                if (!obj->defineProperty(cx, index, propValue.value(), NULL, NULL, JSPROP_ENUMERATE))
-                    return false;
+                /*
+                 * Arrays which begin empty and whose properties are always
+                 * incrementally appended are always dense, no matter their
+                 * length, under current dense/slow array heuristics.
+                 * Also, deleting a property from a dense array which is not
+                 * currently being enumerated never makes it slow.  This array
+                 * is never exposed until the reviver sees it below, so it must
+                 * be dense and isn't currently being enumerated.  Therefore
+                 * property definition and deletion will always succeed,
+                 * and we need not check for failure.
+                 */
+                if (newElement.isUndefined()) {
+                    /* Step 2a(iii)(2). */
+                    JS_ALWAYS_TRUE(array_deleteProperty(cx, obj, id, &newElement, false));
+                } else {
+                    /* Step 2a(iii)(3). */
+                    JS_ALWAYS_TRUE(array_defineProperty(cx, obj, id, &newElement, PropertyStub,
+                                                        StrictPropertyStub, JSPROP_ENUMERATE));
+                }
             }
         } else {
-            AutoIdVector props(cx);
-            if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &props))
+            /* Step 2b(i). */
+            AutoIdVector keys(cx);
+            if (!GetPropertyNames(cx, obj, JSITER_OWNONLY, &keys))
                 return false;
 
-            for (size_t i = 0, len = props.length(); i < len; i++) {
-                jsid idName = props[i];
-                if (!Walk(cx, idName, obj, reviver, propValue.addr()))
+            /* Step 2b(ii). */
+            for (size_t i = 0, len = keys.length(); i < len; i++) {
+                /* Step 2b(ii)(1). */
+                Value newElement;
+                jsid id = keys[i];
+                if (!Walk(cx, obj, id, reviver, &newElement))
                     return false;
-                if (propValue.value().isUndefined()) {
-                    if (!js_DeleteProperty(cx, obj, idName, propValue.addr(), false))
+
+                if (newElement.isUndefined()) {
+                    /* Step 2b(ii)(2). */
+                    if (!js_DeleteProperty(cx, obj, id, &newElement, false))
                         return false;
                 } else {
-                    if (!obj->defineProperty(cx, idName, propValue.value(), NULL, NULL,
-                                             JSPROP_ENUMERATE)) {
+                    /* Step 2b(ii)(3). */
+                    JS_ASSERT(obj->isNative());
+                    if (!DefineNativeProperty(cx, obj, id, newElement, PropertyStub,
+                                              StrictPropertyStub, JSPROP_ENUMERATE, 0, 0))
+                    {
                         return false;
                     }
                 }
@@ -859,20 +889,24 @@ Walk(JSContext *cx, jsid id, JSObject *holder, const Value &reviver, Value *vp)
         }
     }
 
-    // return reviver.call(holder, key, value);
-    const Value &value = *vp;
-    JSString *key = js_ValueToString(cx, IdToValue(id));
+    /* Step 3. */
+    JSString *key = IdToString(cx, name);
     if (!key)
         return false;
 
-    Value vec[2] = { StringValue(key), value };
-    Value reviverResult;
-    if (!JS_CallFunctionValue(cx, holder, Jsvalify(reviver),
-                              2, Jsvalify(vec), Jsvalify(&reviverResult))) {
+    LeaveTrace(cx);
+    InvokeArgsGuard args;
+    if (!cx->stack.pushInvokeArgs(cx, 2, &args))
         return false;
-    }
 
-    *vp = reviverResult;
+    args.calleev() = reviver;
+    args.thisv() = ObjectValue(*holder);
+    args[0] = StringValue(key);
+    args[1] = val;
+
+    if (!Invoke(cx, args))
+        return false;
+    *vp = args.rval();
     return true;
 }
 
@@ -898,7 +932,7 @@ Revive(JSContext *cx, const Value &reviver, Value *vp)
         return false;
     }
 
-    return Walk(cx, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom), obj, reviver, vp);
+    return Walk(cx, obj, ATOM_TO_JSID(cx->runtime->atomState.emptyAtom), reviver, vp);
 }
 
 JSONParser *
