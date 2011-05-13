@@ -1540,7 +1540,8 @@ JSContext::wrapPendingException()
 JSGenerator *
 JSContext::generatorFor(StackFrame *fp) const
 {
-    JS_ASSERT(stack.contains(fp) && fp->isGeneratorFrame());
+    JS_ASSERT(stack.containsSlow(fp));
+    JS_ASSERT(fp->isGeneratorFrame());
     JS_ASSERT(!fp->isFloatingGenerator());
     JS_ASSERT(!genStack.empty());
 

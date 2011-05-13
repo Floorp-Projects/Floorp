@@ -671,7 +671,7 @@ Invoke(JSContext *cx, const CallArgs &argsRef, MaybeConstruct construct)
 
     /* Get pointer to new frame/slots, prepare arguments. */
     InvokeFrameGuard ifg;
-    if (!cx->stack.pushInvokeFrame(cx, args, construct, callee, fun, script, &ifg))
+    if (!cx->stack.pushInvokeFrame(cx, args, construct, &ifg))
         return false;
 
     /* Now that the new frame is rooted, maybe create a call object. */
@@ -731,7 +731,7 @@ InvokeSessionGuard::start(JSContext *cx, const Value &calleev, const Value &this
             break;
 
         /* Push the stack frame once for the session. */
-        if (!stack.pushInvokeFrame(cx, args_, NO_CONSTRUCT, callee, fun, script_, &ifg_))
+        if (!stack.pushInvokeFrame(cx, args_, NO_CONSTRUCT, &ifg_))
             return false;
 
         StackFrame *fp = ifg_.fp();
@@ -858,7 +858,7 @@ InitSharpSlots(JSContext *cx, StackFrame *fp)
     Value *sharps = &fp->slots()[script->nfixed - SHARP_NSLOTS];
     if (!fp->isGlobalFrame() && prev->script()->hasSharps) {
         JS_ASSERT(prev->numFixed() >= SHARP_NSLOTS);
-        int base = (prev->isFunctionFrame() && !prev->isDirectEvalOrDebuggerFrame())
+        int base = prev->isNonEvalFunctionFrame()
                    ? prev->fun()->script()->bindings.sharpSlotBase(cx)
                    : prev->numFixed() - SHARP_NSLOTS;
         if (base < 0)
@@ -1408,7 +1408,7 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
     const uintN targetLevel = closureLevel - cookie.level();
     JS_ASSERT(targetLevel < UpvarCookie::UPVAR_LEVEL_LIMIT);
 
-    StackFrame *fp = cx->stack.findFrameAtLevel(targetLevel);
+    StackFrame *fp = FindUpvarFrame(cx, targetLevel);
     uintN slot = cookie.slot();
     const Value *vp;
 
@@ -1426,6 +1426,19 @@ js::GetUpvar(JSContext *cx, uintN closureLevel, UpvarCookie cookie)
     }
 
     return vp[slot];
+}
+
+extern StackFrame *
+js::FindUpvarFrame(JSContext *cx, uintN targetLevel)
+{
+    StackFrame *fp = cx->fp();
+    while (true) {
+        JS_ASSERT(fp && fp->isScriptFrame());
+        if (fp->script()->staticLevel == targetLevel)
+            break;
+        fp = fp->prev();
+    }
+    return fp;
 }
 
 #ifdef DEBUG
@@ -2810,7 +2823,7 @@ BEGIN_CASE(JSOP_STOP)
 #ifdef JS_METHODJIT
   jit_return:
 #endif
-        cx->stack.popInlineFrame();
+        cx->stack.popInlineFrame(regs);
 
         /* Sync interpreter locals. */
         script = regs.fp()->script();

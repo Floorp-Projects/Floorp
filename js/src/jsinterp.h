@@ -152,8 +152,24 @@ ComputeThis(JSContext *cx, StackFrame *fp);
  * and the range [args.getvp() + 2, args.getvp() + 2 + args.getArgc()) should
  * be initialized actual arguments.
  */
-extern JS_REQUIRES_STACK bool
+extern bool
 Invoke(JSContext *cx, const CallArgs &args, MaybeConstruct construct = NO_CONSTRUCT);
+
+/*
+ * For calls to natives, the InvokeArgsGuard object provides a record of the
+ * call for the debugger's callstack. For this to work, the InvokeArgsGuard
+ * record needs to know when the call is actually active (because the
+ * InvokeArgsGuard can be pushed long before and popped long after the actual
+ * call, during which time many stack-observing things can happen).
+ */
+inline bool
+Invoke(JSContext *cx, InvokeArgsGuard &args, MaybeConstruct construct = NO_CONSTRUCT)
+{
+    args.setActive();
+    bool ok = Invoke(cx, ImplicitCast<CallArgs>(args), construct);
+    args.setInactive();
+    return ok;
+}
 
 /*
  * Natives like sort/forEach/replace call Invoke repeatedly with the same
@@ -274,8 +290,12 @@ ValueToId(JSContext *cx, const Value &v, jsid *idp);
  *                          closure level.
  * @return  The value of the upvar.
  */
-extern const js::Value &
-GetUpvar(JSContext *cx, uintN level, js::UpvarCookie cookie);
+extern const Value &
+GetUpvar(JSContext *cx, uintN level, UpvarCookie cookie);
+
+/* Search the call stack for the nearest frame with static level targetLevel. */
+extern StackFrame *
+FindUpvarFrame(JSContext *cx, uintN targetLevel);
 
 } /* namespace js */
 

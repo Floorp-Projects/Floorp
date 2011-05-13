@@ -1186,10 +1186,11 @@ struct JSContext
      * default version.
      */
     void maybeMigrateVersionOverride() {
-        if (JS_LIKELY(!isVersionOverridden() && stack.empty()))
-            return;
-        defaultVersion = versionOverride;
-        clearVersionOverride();
+        JS_ASSERT(stack.empty());
+        if (JS_UNLIKELY(isVersionOverridden())) {
+            defaultVersion = versionOverride;
+            clearVersionOverride();
+        }
     }
 
     /*

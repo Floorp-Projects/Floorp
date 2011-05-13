@@ -217,6 +217,11 @@ struct JSFunction : public JSObject_Slots2
         return isInterpreted() ? NULL : u.n.native;
     }
 
+    js::Native native() const {
+        JS_ASSERT(isNative());
+        return u.n.native;
+    }
+
     JSScript *script() const {
         JS_ASSERT(isInterpreted());
         return u.i.script;
@@ -298,6 +303,19 @@ IsFunctionObject(const js::Value &v, JSFunction **fun)
     if (b)
         *fun = funobj->getFunctionPrivate();
     return b;
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v)
+{
+    JSFunction *fun;
+    return IsFunctionObject(v, &fun) && fun->isNative();
+}
+
+static JS_ALWAYS_INLINE bool
+IsNativeFunction(const js::Value &v, JSFunction **fun)
+{
+    return IsFunctionObject(v, fun) && (*fun)->isNative();
 }
 
 extern JS_ALWAYS_INLINE bool
