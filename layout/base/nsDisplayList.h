@@ -470,6 +470,18 @@ public:
     return CurrentPresShellState()->mPresShell->GetPresContext();
   }
 
+  /**
+   * Accumulates the bounds of box frames that have moz-appearance
+   * -moz-win-exclude-glass style. Used in setting glass margins on
+   * Windows.
+   */  
+  void AddExcludedGlassRegion(nsRect &bounds) {
+    mExcludedGlassRegion.Or(mExcludedGlassRegion, bounds);
+  }
+  const nsRegion& GetExcludedGlassRegion() {
+    return mExcludedGlassRegion;
+  }
+
 private:
   void MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame, nsIFrame* aFrame,
                                     const nsRect& aDirtyRect);
@@ -496,6 +508,7 @@ private:
   nsAutoTArray<ThemeGeometry,2>  mThemeGeometries;
   nsDisplayTableItem*            mCurrentTableItem;
   const nsRegion*                mFinalTransparentRegion;
+  nsRegion                       mExcludedGlassRegion;
   Mode                           mMode;
   PRPackedBool                   mBuildCaret;
   PRPackedBool                   mIgnoreSuppression;
