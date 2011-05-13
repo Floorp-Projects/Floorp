@@ -3844,9 +3844,28 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
 
         nextOffset += GetBytecodeLength(pc);
 
+        Bytecode *code = analysis->maybeCode(pc);
+        if (!code)
+            continue;
+
+        /*
+         * End analysis after the first return statement from the script,
+         * returning success if the return is unconditional.
+         */
+        if (op == JSOP_RETURN || op == JSOP_STOP || op == JSOP_RETRVAL) {
+            if (offset < lastThisPopped) {
+                *pbaseobj = NULL;
+                return false;
+            }
+            return code->unconditional;
+        }
+
         /* 'this' can escape through a call to eval. */
-        if (op == JSOP_EVAL)
+        if (op == JSOP_EVAL) {
+            if (offset < lastThisPopped)
+                *pbaseobj = NULL;
             return false;
+        }
 
         /*
          * We are only interested in places where 'this' is popped. The new
@@ -3864,14 +3883,17 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
             return false;
         }
 
-        /* Only handle 'this' values popped in unconditional code. */
-
         /* Maintain ordering property on how 'this' is used, as described above. */
         if (offset < lastThisPopped) {
             *pbaseobj = NULL;
             return false;
         }
         lastThisPopped = uses->offset;
+
+        /* Only handle 'this' values popped in unconditional code. */
+        Bytecode *poppedCode = analysis->maybeCode(uses->offset);
+        if (!poppedCode || !poppedCode->unconditional)
+            return false;
 
         pc = script->code + uses->offset;
         op = JSOp(*pc);
@@ -4006,6 +4028,8 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
         }
     }
 
+    /* Should have hit a STOP or similar. */
+    JS_NOT_REACHED("bad");
     return true;
 }
 
