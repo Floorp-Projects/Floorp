@@ -44,6 +44,7 @@ function append(str) {
 
   var edit = document.getElementById("edit");
   edit.focus();
+  edit.selectionStart = edit.selectionEnd = edit.value.length;
   var editor = getEditor();
 
   for (var i = 0; i < str.length; ++i) {

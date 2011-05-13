@@ -220,6 +220,17 @@
         ]]></body>
       </method>
 
+      <method name="_clearFormatting">
+        <body><![CDATA[
+          if (!this._formattingEnabled)
+            return;
+
+          let controller = this.editor.selectionController;
+          let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
+          selection.removeAllRanges();
+        ]]></body>
+      </method>
+
       <method name="handleRevert">
         <body><![CDATA[
           var isScrolling = this.popupOpen;
@@ -645,6 +656,7 @@
 
       <handler event="blur"><![CDATA[
         this._clearNoActions();
+        this.formatValue();
       ]]></handler>
 
       <handler event="draggesture" phase="capturing"><![CDATA[
@@ -679,6 +691,7 @@
 
       <handler event="focus" phase="capturing"><![CDATA[
         this._hideURLTooltip();
+        this._clearFormatting();
       ]]></handler>
 
       <handler event="dragover" phase="capturing" action="this.onDragOver(event, this);"/>

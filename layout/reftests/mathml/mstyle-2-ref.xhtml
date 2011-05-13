@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type"
+  content="application/xhtml+xml; charset=us-ascii" />
+  <title>Test mstyle</title>
+  <style type="text/css">
+    table { width: 100%;  border-collapse: collapse; }
+    td { border: solid black 1px; }
+  </style>
+</head>
+
+<body>
+
+<table>
+  <tbody>
+    <tr>
+      <td>mpadded: width</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <!-- attribute width on mstyle does not apply to mpadded -->
+          <mstyle>
+            <mtext>_</mtext>
+            <mpadded/> <!-- width="1em" -->
+            <mtext>_</mtext>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mpadded: lspace</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <!-- attribute lspace on mstyle does not apply to mpadded -->
+          <mstyle>
+            <mtext>_</mtext>
+            <mpadded/> <!-- lspace="1em" -->
+            <mtext>_</mtext>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mpadded: height</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <!-- attribute height on mstyle does not apply to mpadded -->
+          <mstyle>
+            <msup>
+              <mrow>
+                <mtext>_</mtext>
+                <mpadded/> <!-- height="1em" -->
+                <mtext>_</mtext>
+              </mrow>
+              <mtext>_</mtext>
+            </msup>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mpadded: depth</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <!-- attribute depth on mstyle does not apply to mpadded -->
+          <mstyle>
+            <msub>
+              <mrow>
+                <mtext>_</mtext>
+                <mpadded/> <!-- depth="1em" -->
+                <mtext>_</mtext>
+              </mrow>
+              <mtext>_</mtext>
+            </msub>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mspace: width</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle>
+            <mtext>_</mtext>
+            <mspace width="1em"/>
+            <mtext>_</mtext>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mspace: height</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle>
+            <msup>
+              <mrow>
+                <mtext>_</mtext>
+                <mspace height="1em"/>
+                <mtext>_</mtext>
+              </mrow>
+              <mtext>_</mtext>
+            </msup>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mspace: depth</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle>
+            <msub>
+              <mrow>
+                <mtext>_</mtext>
+                <mspace depth="1em"/>
+                <mtext>_</mtext>
+              </mrow>
+              <mtext>_</mtext>
+            </msub>
+          </mstyle>
+        </math></td>
+    </tr>
+    <!-- maction actiontype cannot be set on mstyle -->
+    <tr>
+      <td>maction: selection</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle>
+            <maction actiontype="toggle" selection="2">
+              <mn>1</mn>
+              <mn>2</mn>
+            </maction>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mtable: align</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <!-- attribute align on mstyle does not apply to mtable -->
+          <mstyle>
+            <mrow>
+              <mtext>_</mtext>
+              <mtable> <!-- align="baseline" -->
+                <mtr>
+                  <mtd>
+                    <mtext>&#x2015;</mtext>
+                  </mtd>
+                </mtr>
+                <mtr>
+                  <mtd>
+                    <mtext>&#x2015;</mtext>
+                  </mtd>
+                </mtr>
+              </mtable>
+              <mtext>_</mtext>
+            </mrow>
+          </mstyle>
+        </math></td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

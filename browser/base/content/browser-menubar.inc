@@ -536,7 +536,7 @@
               <menuseparator id="devToolsSeparator"/>
               <menu id="webDeveloperMenu"
                     label="&webDeveloperMenu.label;"
-                    accesskey="webDeveloperMenu.accesskey;">
+                    accesskey="&webDeveloperMenu.accesskey;">
                 <menupopup id="menuWebDeveloperPopup">
                   <menuitem id="webConsole"
                             label="&webConsoleCmd.label;"

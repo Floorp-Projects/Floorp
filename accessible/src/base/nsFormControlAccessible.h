@@ -51,9 +51,9 @@ class ProgressMeterAccessible: public nsFormControlAccessible
 {
 public:
   ProgressMeterAccessible(nsIContent* aContent, nsIWeakReference* aShell) :
-  nsFormControlAccessible(aContent, aShell)
-{
-}
+    nsFormControlAccessible(aContent, aShell)
+  {
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEVALUE

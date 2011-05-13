@@ -1,8 +1,15 @@
 <!DOCTYPE HTML><html><head>
   <script type="text/javascript" src="/MochiKit/packed.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript">
+    function loaded() {
+      var t = document.querySelector("textarea");
+      t.focus();
+      t.selectionStart = t.selectionEnd = 4;
+    }
+  </script>
 </head>
-<body onload="document.querySelector('textarea').focus()">
+<body onload="loaded()">
   <textarea style="height: 200px; display: block;"
     >foo
 </textarea>

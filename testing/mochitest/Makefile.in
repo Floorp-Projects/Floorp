@@ -79,6 +79,8 @@ _SERV_FILES = 	\
 		runtestsremote.py \
 		runtestsvmware.py \
 		$(topsrcdir)/build/mobile/devicemanager.py \
+		$(topsrcdir)/build/mobile/devicemanagerADB.py \
+		$(topsrcdir)/build/mobile/devicemanagerSUT.py \
 		$(topsrcdir)/build/automationutils.py \
 		$(topsrcdir)/build/poster.zip \
 		$(topsrcdir)/build/mobile/remoteautomation.py \

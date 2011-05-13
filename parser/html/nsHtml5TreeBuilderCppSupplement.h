@@ -148,6 +148,8 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
           nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_MANIFEST);
           if (url) {
             mSpeculativeLoadQueue.AppendElement()->InitManifest(*url);
+          } else {
+            mSpeculativeLoadQueue.AppendElement()->InitManifest(EmptyString());
           }
         } else if (nsHtml5Atoms::base == aName) {
           nsString* url =
@@ -205,10 +207,12 @@ nsHtml5TreeBuilder::createElement(PRInt32 aNamespace, nsIAtom* aName, nsHtml5Htm
       }
     } else if (aNamespace == kNameSpaceID_XHTML && nsHtml5Atoms::html == aName) {
       nsString* url = aAttributes->getValue(nsHtml5AttributeName::ATTR_MANIFEST);
+      nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
+      NS_ASSERTION(treeOp, "Tree op allocation failed.");
       if (url) {
-        nsHtml5TreeOperation* treeOp = mOpQueue.AppendElement();
-        NS_ASSERTION(treeOp, "Tree op allocation failed.");
         treeOp->Init(eTreeOpProcessOfflineManifest, *url);
+      } else {
+        treeOp->Init(eTreeOpProcessOfflineManifest, EmptyString());
       }
     }
   }

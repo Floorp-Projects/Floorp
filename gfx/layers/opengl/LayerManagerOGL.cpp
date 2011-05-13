@@ -1088,7 +1088,8 @@ LayerManagerOGL::CreateFBOWithTexture(const nsIntRect& aRect, InitMode aInit,
   *aTexture = tex;
 }
 
-void LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
+void 
+LayerOGL::ApplyFilter(gfxPattern::GraphicsFilter aFilter)
 {
   if (aFilter == gfxPattern::FILTER_NEAREST) {
     gl()->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER, LOCAL_GL_NEAREST);
