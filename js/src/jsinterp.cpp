@@ -591,9 +591,6 @@ RunScript(JSContext *cx, JSScript *script, StackFrame *fp)
         }
     }
 
-    if (ion::Go(cx, script, fp))
-        return true;
-
 #ifdef JS_METHODJIT
     mjit::CompileStatus status;
     status = mjit::CanMethodJIT(cx, script, fp, mjit::CompileRequest_Interpreter);
