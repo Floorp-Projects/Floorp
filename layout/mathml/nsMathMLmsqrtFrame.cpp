@@ -85,6 +85,16 @@ nsMathMLmsqrtFrame::Init(nsIContent*      aContent,
 }
 
 NS_IMETHODIMP
+nsMathMLmsqrtFrame::InheritAutomaticData(nsIFrame* aParent)
+{
+  nsMathMLContainerFrame::InheritAutomaticData(aParent);
+
+  mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMathMLmsqrtFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                      nsIAtom*        aAttribute,
                                      PRInt32         aModType)

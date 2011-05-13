@@ -1,0 +1,3 @@
+component {55d6a5fa-130e-4ee6-a158-0133af3b86ba} TelemetryPing.js
+contract @mozilla.org/base/telemetry-ping;1 {55d6a5fa-130e-4ee6-a158-0133af3b86ba}
+category profile-after-change TelemetryPing @mozilla.org/base/telemetry-ping;1

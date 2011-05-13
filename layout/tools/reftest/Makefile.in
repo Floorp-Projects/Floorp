@@ -81,6 +81,8 @@ _HARNESS_FILES = \
   $(srcdir)/remotereftest.py \
   automation.py \
   $(topsrcdir)/build/mobile/devicemanager.py \
+  $(topsrcdir)/build/mobile/devicemanagerADB.py \
+  $(topsrcdir)/build/mobile/devicemanagerSUT.py \
   $(topsrcdir)/build/automationutils.py \
   $(topsrcdir)/build/poster.zip \
   $(topsrcdir)/build/mobile/remoteautomation.py \

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="us-ascii"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="content-type"
+  content="application/xhtml+xml; charset=us-ascii" />
+  <title>Test mstyle</title>
+  <style type="text/css">
+    table { width: 100%;  border-collapse: collapse; }
+    td { border: solid black 1px; }
+  </style>
+</head>
+
+<body>
+
+<table>
+  <tbody>
+    <tr>
+      <td>mfenced: open, close, separators </td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle open="[" close="]" separators=";">
+            <mfenced>
+              <mn>1</mn>
+              <mn>2</mn>
+            </mfenced>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>menclose: notation</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle notation="box">
+            <menclose>
+              <mtext>menclose</mtext>
+            </menclose>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mfrac: bevelled, linethickness</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle bevelled="true" linethickness="thick">
+            <mfrac>
+              <mi>a</mi>
+              <mi>b</mi>
+            </mfrac>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mfrac: numalign</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle numalign="right">
+            <mfrac>
+              <mn>1</mn>
+              <mn>234</mn>
+            </mfrac>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mfrac: denomalign</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle denomalign="right">
+            <mfrac>
+              <mn>123</mn>
+              <mn>4</mn>
+            </mfrac>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>mmultiscripts: subscriptshift, superscriptshift </td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle subscriptshift="1em" superscriptshift="1em">
+            <mmultiscripts>
+              <mi>a</mi>
+              <mi>b</mi>
+              <mi>c</mi>
+              <mprescripts/>
+              <mi>e</mi>
+              <mi>f</mi>
+            </mmultiscripts>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>msubsup: subscriptshift, superscriptshift</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle subscriptshift="1em" superscriptshift="1em">
+            <msubsup>
+              <mi>a</mi>
+              <mi>b</mi>
+              <mi>c</mi>
+            </msubsup>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>msub: subscriptshift</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle subscriptshift="1em">
+            <msub>
+              <mi>a</mi>
+              <mi>b</mi>
+            </msub>
+          </mstyle>
+        </math></td>
+    </tr>
+    <tr>
+      <td>msup: superscriptshift</td>
+      <td><math xmlns="http://www.w3.org/1998/Math/MathML">
+          <mstyle superscriptshift="1em">
+            <msup>
+              <mi>a</mi>
+              <mi>b</mi>
+            </msup>
+          </mstyle>
+        </math></td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

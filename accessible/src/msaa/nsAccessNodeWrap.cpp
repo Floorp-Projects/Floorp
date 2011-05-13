@@ -67,7 +67,6 @@ LPFNLRESULTFROMOBJECT nsAccessNodeWrap::gmLresultFromObject = NULL;
 LPFNNOTIFYWINEVENT nsAccessNodeWrap::gmNotifyWinEvent = nsnull;
 LPFNGETGUITHREADINFO nsAccessNodeWrap::gmGetGUIThreadInfo = nsnull;
 
-PRBool nsAccessNodeWrap::gIsEnumVariantSupportDisabled = 0;
 // Used to determine whether an IAccessible2 compatible screen reader is loaded.
 PRBool nsAccessNodeWrap::gIsIA2Disabled = PR_FALSE;
 
@@ -597,11 +596,6 @@ __try {
  
 void nsAccessNodeWrap::InitAccessibility()
 {
-  nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefBranch) {
-    prefBranch->GetBoolPref("accessibility.disableenumvariant", &gIsEnumVariantSupportDisabled);
-  }
-
   if (!gmUserLib) {
     gmUserLib =::LoadLibraryW(L"USER32.DLL");
   }

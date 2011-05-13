@@ -295,8 +295,11 @@ public:
   /**
    * Call this if using display port for scrolling.
    */
-  void SetHasDisplayPort() { mHasDisplayPort = PR_TRUE; }
-  PRBool GetHasDisplayPort() { return mHasDisplayPort; }
+  void SetDisplayPort(const nsRect& aDisplayPort) {
+    mHasDisplayPort = PR_TRUE;
+    mDisplayPort = aDisplayPort;
+  }
+  const nsRect* GetDisplayPort() { return mHasDisplayPort ? &mDisplayPort : nsnull; }
 
   /**
    * Call this if ReferenceFrame() is a viewport frame with fixed-position
@@ -510,6 +513,7 @@ private:
   PRPackedBool                   mIsPaintingToWindow;
   PRPackedBool                   mSnappingEnabled;
   PRPackedBool                   mHasDisplayPort;
+  nsRect                         mDisplayPort;
   PRPackedBool                   mHasFixedItems;
 };
 

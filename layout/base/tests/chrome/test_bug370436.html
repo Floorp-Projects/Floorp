@@ -40,6 +40,7 @@ function startTest()
 {
 	ta = document.getElementById('blah');
 	ta.focus();
+	ta.selectionStart = ta.selectionEnd = ta.value.length;
 
 	/* Put cursor at start and middle of "sheep" */
 	synthesizeKey("VK_UP", {})

@@ -786,13 +786,20 @@ nsLayoutUtils::GetActiveScrolledRootFor(nsIFrame* aFrame,
 
 nsIFrame*
 nsLayoutUtils::GetActiveScrolledRootFor(nsDisplayItem* aItem,
-                                        nsDisplayListBuilder* aBuilder)
+                                        nsDisplayListBuilder* aBuilder,
+                                        PRBool* aShouldFixToViewport)
 {
   nsIFrame* f = aItem->GetUnderlyingFrame();
+  if (aShouldFixToViewport) {
+    *aShouldFixToViewport = PR_FALSE;
+  }
   if (!f) {
     return nsnull;
   }
   if (aItem->ShouldFixToViewport(aBuilder)) {
+    if (aShouldFixToViewport) {
+      *aShouldFixToViewport = PR_TRUE;
+    }
     // Make its active scrolled root be the active scrolled root of
     // the enclosing viewport, since it shouldn't be scrolled by scrolled
     // frames in its document. InvalidateFixedBackgroundFramesFromList in
@@ -1087,24 +1094,21 @@ nsLayoutUtils::MatrixTransformPoint(const nsPoint &aPoint,
                  NSFloatPixelsToAppUnits(float(image.y), aFactor));
 }
 
-/**
- * Returns the CTM at the specified frame.
- *
- * @param aFrame The frame at which we should calculate the CTM.
- * @return The CTM at the specified frame.
- */
-static gfxMatrix GetCTMAt(nsIFrame *aFrame)
+gfxMatrix nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame,
+                                                nsIFrame* aStopAtAncestor)
 {
   gfxMatrix ctm;
 
   /* Starting at the specified frame, we'll use the GetTransformMatrix
    * function of the frame, which gives us a matrix from this frame up
-   * to some other ancestor frame.  Once this function returns null,
-   * we've hit the top of the frame tree and can stop.  We get the CTM
-   * by simply accumulating all of these matrices together.
+   * to some other ancestor frame. If aStopAtAncestor frame is not reached, 
+   * we stop at root. We get the CTM by simply accumulating all of these
+   * matrices together.
    */
-  while (aFrame)
+  while (aFrame && aFrame != aStopAtAncestor) {
     ctm *= aFrame->GetTransformMatrix(&aFrame);
+  }
+  NS_ASSERTION(aFrame == aStopAtAncestor, "How did we manage to miss the ancestor?");
   return ctm;
 }
 
@@ -1117,7 +1121,7 @@ nsLayoutUtils::InvertTransformsToRoot(nsIFrame *aFrame,
   /* To invert everything to the root, we'll get the CTM, invert it, and use it to transform
    * the point.
    */
-  gfxMatrix ctm = GetCTMAt(aFrame);
+  gfxMatrix ctm = GetTransformToAncestor(aFrame);
 
   /* If the ctm is singular, hand back (0, 0) as a sentinel. */
   if (ctm.IsSingular())
@@ -1447,7 +1451,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   nsDisplayListBuilder builder(aFrame, nsDisplayListBuilder::PAINTING,
 		                       !(aFlags & PAINT_HIDE_CARET));
   if (usingDisplayPort) {
-    builder.SetHasDisplayPort();
+    builder.SetDisplayPort(displayport);
   }
 
   nsDisplayList list;

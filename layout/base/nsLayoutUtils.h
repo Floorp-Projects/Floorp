@@ -330,7 +330,8 @@ public:
                                             nsIFrame* aStopAtAncestor);
 
   static nsIFrame* GetActiveScrolledRootFor(nsDisplayItem* aItem,
-                                            nsDisplayListBuilder* aBuilder);
+                                            nsDisplayListBuilder* aBuilder,
+                                            PRBool* aShouldFixToViewport = nsnull);
 
   static PRBool ScrolledByViewportScrolling(nsIFrame* aActiveScrolledRoot,
                                             nsDisplayListBuilder* aBuilder);
@@ -507,6 +508,18 @@ public:
                                    nsTArray<nsIFrame*> &aOutFrames,
                                    PRBool aShouldIgnoreSuppression = PR_FALSE,
                                    PRBool aIgnoreRootScrollFrame = PR_FALSE);
+
+  /**
+   * Returns the CTM at the specified frame. This matrix can be used to map
+   * coordinates from aFrame's to aStopAtAncestor's coordinate system.
+   *
+   * @param aFrame The frame at which we should calculate the CTM.
+   * @param aStopAtAncestor is an ancestor frame to stop at. If it's nsnull,
+   * matrix accumulating stops at root.
+   * @return The CTM at the specified frame.
+   */
+  static gfxMatrix GetTransformToAncestor(nsIFrame *aFrame,
+                                          nsIFrame* aStopAtAncestor = nsnull);
 
   /**
    * Given a point in the global coordinate space, returns that point expressed

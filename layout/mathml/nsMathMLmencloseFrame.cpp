@@ -170,9 +170,14 @@ nsresult nsMathMLmencloseFrame::AddNotation(const nsAString& aNotation)
  */
 void nsMathMLmencloseFrame::InitNotations()
 {
+  mNotationsToDraw = 0;
+  mLongDivCharIndex = mRadicalCharIndex = -1;
+  mMathMLChar.Clear();
+
   nsAutoString value;
 
-  if (mContent->GetAttr(kNameSpaceID_None, nsGkAtoms::notation_, value)) {
+  if (GetAttribute(mContent, mPresentationData.mstyle, nsGkAtoms::notation_,
+                   value)) {
     // parse the notation attribute
     nsWhitespaceTokenizer tokenizer(value);
 
@@ -187,25 +192,14 @@ void nsMathMLmencloseFrame::InitNotations()
 }
 
 NS_IMETHODIMP
-nsMathMLmencloseFrame::Init(nsIContent*      aContent,
-                            nsIFrame*        aParent,
-                            nsIFrame*        aPrevInFlow)
-{
-  nsresult rv = nsMathMLContainerFrame::Init(aContent, aParent, aPrevInFlow);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  InitNotations();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsMathMLmencloseFrame::InheritAutomaticData(nsIFrame* aParent)
 {
   // let the base class get the default from our parent
   nsMathMLContainerFrame::InheritAutomaticData(aParent);
 
   mPresentationData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_VERTICALLY;
+
+  InitNotations();
 
   return NS_OK;
 }
@@ -702,10 +696,6 @@ nsMathMLmencloseFrame::AttributeChanged(PRInt32         aNameSpaceID,
                                         PRInt32         aModType)
 {
   if (aAttribute == nsGkAtoms::notation_) {
-    mNotationsToDraw = 0;
-    mLongDivCharIndex = mRadicalCharIndex = -1;
-    mMathMLChar.Clear();
-    
     InitNotations();
   }
 
