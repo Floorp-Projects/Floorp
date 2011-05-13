@@ -251,11 +251,17 @@ BytecodeAnalyzer::traverseBytecode()
         //       instruction.
         //   (3) A RETURN, STOP, BREAK, or CONTINUE may require processing the
         //       CFG stack to terminate open branches.
-        ControlStatus status = snoopControlFlow(JSOp(*pc));
-        if (status == ControlStatus_Error)
-            return false;
-        if (!current)
-            return true;
+        //
+        // Similar to above, snooping control flow could land us at another
+        // control flow point, so we iterate until it's time to inspect a real
+        // opcode.
+        ControlStatus status;
+        while ((status = snoopControlFlow(JSOp(*pc))) != ControlStatus_None) {
+            if (status == ControlStatus_Error)
+                return false;
+            if (!current)
+                return true;
+        }
 
         JSOp op = JSOp(*pc);
         if (!inspectOpcode(op))
@@ -395,6 +401,8 @@ BytecodeAnalyzer::inspectOpcode(JSOp op)
         return true;
 
       default:
+        fprintf(stdout, "%d\n", op);
+        JS_NOT_REACHED("what");
         return false;
     }
 }
