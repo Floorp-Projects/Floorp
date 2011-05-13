@@ -182,7 +182,7 @@ BytecodeAnalyzer::analyze()
     // Initialize local variables.
     for (uint32 i = 0; i < nlocals(); i++) {
         MConstant *undef = MConstant::New(this, UndefinedValue());
-        if (!undef)
+        if (!current->add(undef))
             return false;
         current->initSlot(localSlot(i), undef);
     }
@@ -229,7 +229,9 @@ BytecodeAnalyzer::traverseBytecode()
         JS_ASSERT(pc < script->code + script->length);
 
         // Check if we've hit an expected join point or edge in the bytecode.
-        if (!cfgStack_.empty() && cfgStack_.back().stopAt == pc) {
+        // Leaving one control structure could place us at the edge of another,
+        // thus |while| instead of |if| so we don't skip any opcodes.
+        while (!cfgStack_.empty() && cfgStack_.back().stopAt == pc) {
             ControlStatus status = processCfgStack();
             if (status == ControlStatus_Error)
                 return false;
@@ -598,7 +600,6 @@ BytecodeAnalyzer::processWhileCondEnd(CFGState &state)
     state.stopAt = state.loop.w.bodyEnd;
     state.loop.w.successor = successor;
     pc = state.loop.w.bodyStart;
-
     current = body;
     return ControlStatus_Jumped;
 }
@@ -895,7 +896,7 @@ MBasicBlock *
 BytecodeAnalyzer::newBlock(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::New(this, predecessor, pc);
-    if (!graph.addBlock(block))
+    if (!graph().addBlock(block))
         return NULL;
     return block;
 }
@@ -904,7 +905,7 @@ MBasicBlock *
 BytecodeAnalyzer::newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc)
 {
     MBasicBlock *block = MBasicBlock::NewLoopHeader(this, predecessor, pc);
-    if (!graph.addBlock(block))
+    if (!graph().addBlock(block))
         return NULL;
     return block;
 }

@@ -48,7 +48,8 @@ using namespace js;
 using namespace js::ion;
 
 MIRGraph::MIRGraph(JSContext *cx)
-  : blocks_(TempAllocPolicy(cx))
+  : blocks_(TempAllocPolicy(cx)),
+    idGen_(0)
 {
 }
 
@@ -110,11 +111,11 @@ MBasicBlock::initHeader()
     JS_ASSERT(!header_);
 
     // Copy the initial definitions so we can place phi nodes at the back edge.
-    header_ = gen->allocate<StackSlot>(headerSlots_);
+    header_ = gen->allocate<MInstruction *>(headerSlots_);
     if (!header_)
         return false;
     for (uint32 i = 0; i < headerSlots_; i++)
-        header_[i] = slots_[i];
+        header_[i] = slots_[i].ins;
     return true;
 }
 
@@ -335,6 +336,7 @@ MBasicBlock::add(MInstruction *ins)
     if (!ins)
         return false;
     ins->setBlock(this);
+    ins->setId(gen->graph().allocInstructionId());
     return instructions_.append(ins);
 }
 
@@ -353,6 +355,7 @@ MBasicBlock::addPhi(MPhi *phi)
     if (!phi || !phis_.append(phi))
         return false;
     phi->setBlock(this);
+    phi->setId(gen->graph().allocInstructionId());
     return true;
 }
 
@@ -390,6 +393,7 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
 #endif
 
                 setSlot(i, phi);
+                header_[i] = phi;
             }
 
             if (!phi->addInput(gen, other))
@@ -425,7 +429,7 @@ MBasicBlock::addBackedge(MBasicBlock *pred, MBasicBlock *successor)
     // give every assignment its own unique SSA name. See
     // MBasicBlock::setVariable for more information.
     for (uint32 i = 0; i < stackPosition_; i++) {
-        MInstruction *entryDef = header_[i].ins;
+        MInstruction *entryDef = header_[i];
         MInstruction *exitDef = pred->slots_[i].ins;
 
         // If the entry definition and exit definition do not differ, then
@@ -475,6 +479,7 @@ MBasicBlock::addBackedge(MBasicBlock *pred, MBasicBlock *successor)
         if (!phi->addInput(gen, entryDef) || !phi->addInput(gen, exitDef))
             return false;
         successor->setSlot(i, phi);
+        successor->header_[i] = phi;
     }
 
     return predecessors_.append(pred);
