@@ -2943,15 +2943,13 @@ JS_IsRunning(JSContext *cx);
  * must be balanced and all nested calls to JS_SaveFrameChain must have had
  * matching JS_RestoreFrameChain calls.
  *
- * JS_SaveFrameChain deals with cx not having any code running on it. A null
- * return does not signify an error, and JS_RestoreFrameChain handles a null
- * frame pointer argument safely.
+ * JS_SaveFrameChain deals with cx not having any code running on it.
  */
-extern JS_PUBLIC_API(JSStackFrame *)
+extern JS_PUBLIC_API(JSBool)
 JS_SaveFrameChain(JSContext *cx);
 
 extern JS_PUBLIC_API(void)
-JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp);
+JS_RestoreFrameChain(JSContext *cx);
 
 /************************************************************************/
 

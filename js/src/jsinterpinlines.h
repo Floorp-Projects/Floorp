@@ -89,7 +89,7 @@ class InvokeSessionGuard
     ~InvokeSessionGuard() {}
 
     bool start(JSContext *cx, const Value &callee, const Value &thisv, uintN argc);
-    bool invoke(JSContext *cx) const;
+    bool invoke(JSContext *cx);
 
     bool started() const {
         return args_.pushed();
@@ -113,7 +113,7 @@ class InvokeSessionGuard
 };
 
 inline bool
-InvokeSessionGuard::invoke(JSContext *cx) const
+InvokeSessionGuard::invoke(JSContext *cx)
 {
     /* N.B. Must be kept in sync with Invoke */
 
@@ -139,6 +139,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
     JSBool ok;
     {
         AutoPreserveEnumerators preserve(cx);
+        args_.setActive();  /* From js::Invoke(InvokeArgsGuard) overload. */
         Probes::enterJSFun(cx, fp->fun(), script_);
 #ifdef JS_METHODJIT
         ok = mjit::EnterMethodJIT(cx, fp, code, stackLimit_);
@@ -148,6 +149,7 @@ InvokeSessionGuard::invoke(JSContext *cx) const
         ok = Interpret(cx, cx->fp());
 #endif
         Probes::exitJSFun(cx, fp->fun(), script_);
+        args_.setInactive();
     }
 
     /* Don't clobber callee with rval; rval gets read from fp->rval. */

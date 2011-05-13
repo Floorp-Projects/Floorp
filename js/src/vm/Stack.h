@@ -60,6 +60,10 @@ class ExecuteFrameGuard;
 class DummyFrameGuard;
 class GeneratorFrameGuard;
 
+class CallIter;
+class FrameRegsIter;
+class AllFramesIter;
+
 class ArgumentsObject;
 
 namespace mjit { struct JITScript; }
@@ -74,20 +78,18 @@ namespace mjit { struct JITScript; }
  *
  * The per-thread stack is subdivided into contiguous segments of memory which
  * have a memory layout invariant that allows fixed offsets to be used for stack
- * access (by the JIT) as well as fast call/return. This memory layout is
- * encapsulated by a set of types that describe different regions of memory:
- * StackSegment, StackFrame, FrameRegs and CallArgs. To avoid calling into C++,
- * the JIT compiler generates code that simulates C++ stack operations.
+ * access (by jit code) as well as fast call/return. This memory layout is
+ * encapsulated by a set of types that describe different regions of memory.
+ * This encapsulation has holes: to avoid calling into C++ from generated code,
+ * JIT compilers generate code that simulates analogous operations in C++.
  *
- * The memory layout of a segment looks like:
+ * A sample memory layout of a segment looks like:
  *
- *                            current regs
- *     .------------------------------------------------------.
- *     |                  current frame                       |
- *     |   .-------------------------------------.            V
- *     |   |    initial frame                    |        FrameRegs
- *     |   |   .------------.                    |            |
- *     |   |   |            V                    V            V
+ *                          regs
+ *       .---------------------------------------------.
+ *       |                                             V
+ *       |                                   fp .--FrameRegs--. sp
+ *       |                                      V             V
  * |StackSegment| slots |StackFrame| slots |StackFrame| slots |
  *                        |      ^           |
  *           ? <----------'      `-----------'
@@ -95,16 +97,16 @@ namespace mjit { struct JITScript; }
  *
  * A segment starts with a fixed-size header (js::StackSegment) which logically
  * describes the segment, links it to the rest of the stack, and points to the
- * first and last frames in the segment.
+ * end of the stack.
  *
  * Each script activation (global or function code) is given a fixed-size header
  * (js::StackFrame) which is associated with the values (called "slots") before
  * and after it. The frame contains bookkeeping information about the activation
  * and links to the previous frame.
  *
- * The slots preceeding a (function) StackFrame in memory are the arguments of
- * the call. The slots after a StackFrame in memory are its locals followed
- * by its expression stack. There is no clean line between the arguments of a
+ * The slots preceding a (function) StackFrame in memory are the arguments of
+ * the call. The slots after a StackFrame in memory are its locals followed by
+ * its expression stack. There is no clean line between the arguments of a
  * frame and the expression stack of the previous frame since the top slots of
  * the expression become the arguments of a call. There are also layout
  * invariants concerning the arguments and StackFrame; see "Arguments" comment
@@ -119,24 +121,45 @@ namespace mjit { struct JITScript; }
  * dependence on FrameRegs outside the interpreter.
  *
  * A call to a native (C++) function does not push a frame. Instead, an array
- * of values (possibly from the top of a calling frame's expression stack) is
- * passed to the native. The layout of this array is abstracted by js::CallArgs.
- * Note that, between any two StackFrames there may be any number of native
- * calls, so the meaning of 'prev' is not 'directly called by'.
+ * of values is passed to the native. The layout of this array is abstracted by
+ * js::CallArgs. With respect to the StackSegment layout above, the args to a
+ * native call are inserted anywhere there can be slots. A sample memory layout
+ * looks like:
+ *
+ *                          regs
+ *       .----------------------------------------.
+ *       |                                        V
+ *       |                              fp .--FrameRegs--. sp
+ *       |                                 V             V
+ * |StackSegment| native call | slots |StackFrame| slots | native call |
+ *       |     vp <--argc--> end                        vp <--argc--> end
+ *       |         CallArgs <------------------------------ CallArgs
+ *       |                               prev                  ^
+ *       `-----------------------------------------------------'
+ *                                  calls
+ *
+ * Here there are two native calls on the stack. The start of each native arg
+ * range is recorded by a CallArgs element which is prev-linked like stack
+ * frames. Note that, in full generality, native and scripted calls can
+ * interleave arbitrarily. Thus, the end of a segment is the maximum of its
+ * current frame and its current native call. Similarly, the top of the entire
+ * thread stack is the end of its current segment.
+ *
+ * Note that, between any two StackFrames there may be any number
+ * of native calls, so the meaning of 'prev' is not 'directly called by'.
  *
  * An additional feature (perhaps not for much longer: bug 650361) is that
  * multiple independent "contexts" can interleave (LIFO) on a single contiguous
- * stack. "Independent" here means that neither context sees the other's frames.
- * Concretely, an embedding may enter the JS engine on cx1 and then, from a
- * native called by the JS engine, reenter the VM on cx2. Changing from cx1 to
- * cx2 causes cx1's segment to be "suspended" and a new segment started to be
- * started for cx2. These two segments are linked from the perspective of
+ * stack. "Independent" here means that neither context sees the other's
+ * frames. Concretely, an embedding may enter the JS engine on cx1 and then,
+ * from a native called by the JS engine, reenter the VM on cx2. Changing from
+ * cx1 to cx2 causes a new segment to be started for cx2's stack on top of
+ * cx1's current segment. These two segments are linked from the perspective of
  * StackSpace, since they are adjacent on the thread's stack, but not from the
- * perspective of cx1 and cx2. Thus, each segment has two prev-links:
- * previousInMemory and previousInContext. A context's apparent stack is
- * encapsulated and managed by the js::ContextStack object stored in JSContext.
- * ContextStack is the primary interface to the rest of the engine for pushing
- * and popping args (for js::Invoke calls) and frames.
+ * perspective of cx1 and cx2. Thus, each segment has two links: prevInMemory
+ * and prevInContext. Each independent stack is encapsulated and managed by
+ * the js::ContextStack object stored in JSContext. ContextStack is the primary
+ * interface to the rest of the engine for pushing and popping the stack.
  */
 
 /*****************************************************************************/
@@ -195,6 +218,7 @@ CallReceiverFromVp(Value *vp)
 
 class CallArgs : public CallReceiver
 {
+  protected:
     uintN argc_;
   public:
     friend CallArgs CallArgsFromVp(uintN, Value *);
@@ -226,6 +250,42 @@ JS_ALWAYS_INLINE CallArgs
 CallArgsFromSp(uintN argc, Value *sp)
 {
     return CallArgsFromArgv(argc, sp - argc);
+}
+
+/*****************************************************************************/
+
+class CallArgsList : public CallArgs
+{
+    friend class StackSegment;
+    CallArgsList *prev_;
+    bool active_;
+  public:
+    friend CallArgsList CallArgsListFromVp(uintN, Value *, CallArgsList *);
+    friend CallArgsList CallArgsListFromArgv(uintN, Value *, CallArgsList *);
+    CallArgsList *prev() const { return prev_; }
+    bool active() const { return active_; }
+    void setActive() { active_ = true; }
+    void setInactive() { active_ = false; }
+};
+
+JS_ALWAYS_INLINE CallArgsList
+CallArgsListFromArgv(uintN argc, Value *argv, CallArgsList *prev)
+{
+    CallArgsList args;
+#ifdef DEBUG
+    args.usedRval_ = false;
+#endif
+    args.argv_ = argv;
+    args.argc_ = argc;
+    args.prev_ = prev;
+    args.active_ = false;
+    return args;
+}
+
+JS_ALWAYS_INLINE CallArgsList
+CallArgsListFromVp(uintN argc, Value *vp, CallArgsList *prev)
+{
+    return CallArgsListFromArgv(argc, vp + 2, prev);
 }
 
 /*****************************************************************************/
@@ -332,8 +392,8 @@ class StackFrame
     void initJitFrameLatePrologue();
 
     /* Used for eval. */
-    void initExecuteFrame(JSScript *script, StackFrame *prev, const Value &thisv,
-                          JSObject &scopeChain, ExecuteType type);
+    void initExecuteFrame(JSScript *script, StackFrame *prev, FrameRegs *regs,
+                          const Value &thisv, JSObject &scopeChain, ExecuteType type);
 
     /* Used when activating generators. */
     void stealFrameAndSlots(Value *vp, StackFrame *otherfp, Value *othervp, Value *othersp);
@@ -385,6 +445,10 @@ class StackFrame
     bool isEvalFrame() const {
         JS_ASSERT_IF(flags_ & EVAL, isScriptFrame());
         return flags_ & EVAL;
+    }
+
+    bool isEvalInFunction() const {
+        return (flags_ & (EVAL | FUNCTION)) == (EVAL | FUNCTION);
     }
 
     bool isNonEvalFunctionFrame() const {
@@ -462,7 +526,7 @@ class StackFrame
      *   Where I stop and I turn and I go right back
      *   Till I get to the bottom and I see you again...
      */
-    jsbytecode *pcQuadratic(JSContext *cx);
+    jsbytecode *pcQuadratic(JSContext *cx) const;
 
     jsbytecode *prevpc() {
         if (flags_ & HAS_PREVPC)
@@ -926,10 +990,6 @@ class StackFrame
         return !!(flags_ & DEBUGGER);
     }
 
-    bool isDirectEvalOrDebuggerFrame() const {
-        return (flags_ & (EVAL | DEBUGGER)) && !(flags_ & GLOBAL);
-    }
-
     bool hasOverriddenArgs() const {
         return !!(flags_ & OVERRIDE_ARGS);
     }
@@ -1076,10 +1136,11 @@ class FrameRegs
     }
 
     /* For generator: */
-    void rebaseFromTo(const FrameRegs &from, StackFrame *to) {
-        fp_ = to;
-        sp = to->slots() + (from.sp - from.fp_->slots());
+    void rebaseFromTo(const FrameRegs &from, StackFrame &to) {
+        fp_ = &to;
+        sp = to.slots() + (from.sp - from.fp_->slots());
         pc = from.pc;
+        JS_ASSERT(fp_);
     }
 
     /* For ContextStack: */
@@ -1087,39 +1148,139 @@ class FrameRegs
         pc = fp_->prevpc();
         sp = newsp;
         fp_ = fp_->prev();
+        JS_ASSERT(fp_);
     }
 
     /* For FixupArity: */
     void popPartialFrame(Value *newsp) {
         sp = newsp;
         fp_ = fp_->prev();
+        JS_ASSERT(fp_);
     }
 
     /* For stubs::CompileFunction, ContextStack: */
-    void prepareToRun(StackFrame *fp, JSScript *script) {
+    void prepareToRun(StackFrame &fp, JSScript *script) {
         pc = script->code;
-        sp = fp->slots() + script->nfixed;
-        fp_ = fp;
+        sp = fp.slots() + script->nfixed;
+        fp_ = &fp;
+        JS_ASSERT(fp_);
     }
 
     /* For pushDummyFrame: */
-    void initDummyFrame(StackFrame *fp) {
+    void initDummyFrame(StackFrame &fp) {
         pc = NULL;
-        sp = fp->slots();
-        fp_ = fp;
+        sp = fp.slots();
+        fp_ = &fp;
+        JS_ASSERT(fp_);
     }
 };
 
 /*****************************************************************************/
 
-struct StackOverride
+class StackSegment
 {
-    Value         *top;
-#ifdef DEBUG
-    StackSegment  *seg;
-    StackFrame    *frame;
-#endif
+    /* Previous segment within same context stack. */
+    StackSegment *const prevInContext_;
+
+    /* Previous segment sequentially in memory. */
+    StackSegment *const prevInMemory_;
+
+    /* Execution registers for most recent script in this segment (or null). */
+    FrameRegs *regs_;
+
+    /* Call args for most recent native call in this segment (or null). */
+    CallArgsList *calls_;
+
+  public:
+    StackSegment(StackSegment *prevInContext,
+                 StackSegment *prevInMemory,
+                 FrameRegs *regs,
+                 CallArgsList *calls)
+      : prevInContext_(prevInContext),
+        prevInMemory_(prevInMemory),
+        regs_(regs),
+        calls_(calls)
+    {}
+
+    /* A segment is followed in memory by the arguments of the first call. */
+
+    Value *slotsBegin() const {
+        return (Value *)(this + 1);
+    }
+
+    /* Accessors. */
+
+    FrameRegs &regs() const {
+        JS_ASSERT(regs_);
+        return *regs_;
+    }
+
+    FrameRegs *maybeRegs() const {
+        return regs_;
+    }
+
+    StackFrame *fp() const {
+        return regs_->fp();
+    }
+
+    StackFrame *maybefp() const {
+        return regs_ ? regs_->fp() : NULL;
+    }
+
+    CallArgsList &calls() const {
+        JS_ASSERT(calls_);
+        return *calls_;
+    }
+
+    CallArgsList *maybeCalls() const {
+        return calls_;
+    }
+
+    Value *callArgv() const {
+        return calls_->argv();
+    }
+
+    Value *maybeCallArgv() const {
+        return calls_ ? calls_->argv() : NULL;
+    }
+
+    StackSegment *prevInContext() const {
+        return prevInContext_;
+    }
+
+    StackSegment *prevInMemory() const {
+        return prevInMemory_;
+    }
+
+    void repointRegs(FrameRegs *regs) {
+        JS_ASSERT_IF(regs, regs->fp());
+        regs_ = regs;
+    }
+
+    bool isEmpty() const {
+        return !calls_ && !regs_;
+    }
+
+    bool contains(const StackFrame *fp) const;
+    bool contains(const FrameRegs *regs) const;
+    bool contains(const CallArgsList *call) const;
+
+    StackFrame *computeNextFrame(const StackFrame *fp) const;
+
+    Value *end() const;
+
+    FrameRegs *pushRegs(FrameRegs &regs);
+    void popRegs(FrameRegs *regs);
+    void pushCall(CallArgsList &callList);
+    void popCall();
+
+    /* For jit access: */
+
+    static const size_t offsetOfRegs() { return offsetof(StackSegment, regs_); }
 };
+
+static const size_t VALUES_PER_STACK_SEGMENT = sizeof(StackSegment) / sizeof(Value);
+JS_STATIC_ASSERT(sizeof(StackSegment) % sizeof(Value) == 0);
 
 /*****************************************************************************/
 
@@ -1129,7 +1290,6 @@ class StackSpace
     mutable Value *commitEnd_;
     Value         *end_;
     StackSegment  *seg_;
-    StackOverride override_;
 
     static const size_t CAPACITY_VALS  = 512 * 1024;
     static const size_t CAPACITY_BYTES = CAPACITY_VALS * sizeof(Value);
@@ -1144,13 +1304,12 @@ class StackSpace
     JS_FRIEND_API(bool) bumpCommit(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
 #endif
 
+    friend class AllFramesIter;
     friend class ContextStack;
+    friend class StackFrame;
     friend class OOMCheck;
     inline bool ensureSpace(JSContext *maybecx, Value *from, ptrdiff_t nvals) const;
-    void pushSegment(StackSegment &seg);
-    void popSegment();
-    inline void pushOverride(Value *top, StackOverride *prev);
-    inline void popOverride(const StackOverride &prev);
+    StackSegment &findContainingSegment(const StackFrame *target) const;
 
   public:
     StackSpace();
@@ -1158,14 +1317,8 @@ class StackSpace
     ~StackSpace();
 
     /* See stack layout comment above. */
-    StackSegment *currentSegment() const { return seg_; }
-    Value *firstUnused() const;
-
-    /* Optimization of firstUnused when currentSegment() is known active. */
-    inline Value *activeFirstUnused() const;
-
-    /* Get the segment containing the target frame. */
-    StackSegment &containingSegment(const StackFrame *target) const;
+    Value *firstUnused() const { return seg_ ? seg_->end() : base_; }
+    Value *endOfSpace() const { return end_; }
 
 #ifdef JS_TRACER
     /*
@@ -1235,70 +1388,59 @@ class LimitCheck
 
 class ContextStack
 {
-    FrameRegs *regs_;
     StackSegment *seg_;
     StackSpace *space_;
     JSContext *cx_;
 
     /*
-     * This is the collecting-point for code that wants to know when there is
-     * no JS active. Note that "no JS active" does not mean the stack is empty
-     * because of JS_(Save|Restore)FrameChain. If code really wants to know
-     * when the stack is empty, test |cx->stack.empty()|.
+     * Return whether this ContextStack is at the top of the contiguous stack.
+     * This is a precondition for extending the current segment by pushing
+     * stack frames or overrides etc.
+     *
+     * NB: Just because a stack is onTop() doesn't mean there is necessarily
+     * a frame pushed on the stack. For this, use hasfp().
      */
-    void notifyIfNoCodeRunning();
-
-    /*
-     * Return whether this ContextStack is running code at the top of the
-     * contiguous stack. This is a precondition for extending the current
-     * segment by pushing stack frames or overrides etc.
-     */
-    inline bool isCurrentAndActive() const;
+    bool onTop() const;
 
 #ifdef DEBUG
-    void assertSegmentsInSync() const;
     void assertSpaceInSync() const;
 #else
-    void assertSegmentsInSync() const {}
     void assertSpaceInSync() const {}
 #endif
 
-    friend class FrameGuard;
-    StackFrame *getSegmentAndFrame(JSContext *cx, uintN vplen, uintN nslots,
-                                   FrameGuard *frameGuard) const;
-    void pushSegmentAndFrame(FrameGuard *frameGuard);
-    void pushSegmentAndFrameImpl(FrameRegs &regs, StackSegment &seg);
-    void popSegmentAndFrame();
-    void popSegmentAndFrameImpl();
+    /* Implementation details of push* public interface. */
+    StackSegment *pushSegment(JSContext *cx);
+    enum MaybeExtend { CAN_EXTEND = true, CANT_EXTEND = false };
+    Value *ensureOnTop(JSContext *cx, uintN nvars, MaybeExtend extend, bool *pushedSeg);
 
-    friend class GeneratorFrameGuard;
-    void popGeneratorFrame(GeneratorFrameGuard *gfg);
-
+    /* Check = { OOMCheck, LimitCheck } */
     template <class Check>
-    inline StackFrame *getCallFrame(JSContext *cx, const CallArgs &args,
-                                    JSFunction *fun, JSScript *script,
-                                    StackFrame::Flags *pflags,
-                                    Check check) const;
+    inline StackFrame *
+    getCallFrame(JSContext *cx, const CallArgs &args, JSFunction *fun, JSScript *script,
+                 StackFrame::Flags *pflags, Check check) const;
 
+    /* Make pop* functions private since only called by guard classes. */
+    void popSegment();
     friend class InvokeArgsGuard;
-    bool pushInvokeArgsSlow(JSContext *cx, uintN argc, InvokeArgsGuard *argsGuard);
-    void popInvokeArgsSlow(const InvokeArgsGuard &argsGuard);
-    inline void popInvokeArgs(const InvokeArgsGuard &argsGuard);
+    void popInvokeArgs(const InvokeArgsGuard &iag);
+    friend class FrameGuard;
+    void popFrame(const FrameGuard &fg);
+    friend class GeneratorFrameGuard;
+    void popGeneratorFrame(const GeneratorFrameGuard &gfg);
 
-    friend class InvokeFrameGuard;
-    void pushInvokeFrameSlow(InvokeFrameGuard *frameGuard);
-    void popInvokeFrameSlow(const InvokeFrameGuard &frameGuard);
-    inline void popInvokeFrame(const InvokeFrameGuard &frameGuard);
+    friend class StackIter;
 
   public:
     ContextStack(JSContext *cx);
     ~ContextStack();
 
+    /*** Stack accessors ***/
+
     /*
      * A context's stack is "empty" if there are no scripts or natives
      * executing. Note that JS_SaveFrameChain does factor into this definition.
      */
-    bool empty() const           { JS_ASSERT_IF(regs_, seg_); return !seg_; }
+    bool empty() const                { return !seg_; }
 
     /*
      * Return whether there has been at least one frame pushed since the most
@@ -1306,54 +1448,26 @@ class ContextStack
      * and dummy frames are frames that do not represent script execution hence
      * this query has little semantic meaning past "you can call fp()".
      */
-    bool hasfp() const           { JS_ASSERT_IF(regs_, regs_->fp()); return !!regs_; }
+    bool hasfp() const                { return seg_ && seg_->maybeRegs(); }
 
-    /* Current regs of the current segment (see VM stack layout comment). */
-    FrameRegs &regs() const      { JS_ASSERT(regs_); return *regs_; }
+    /*
+     * Return the most recent script activation's registers with the same
+     * caveat as hasfp regarding JS_SaveFrameChain.
+     */
+    FrameRegs *maybeRegs() const      { return seg_ ? seg_->maybeRegs() : NULL; }
+    StackFrame *maybefp() const       { return seg_ ? seg_->maybefp() : NULL; }
 
-    /* Convenience helpers. */
-    FrameRegs *maybeRegs() const { return regs_; }
-    StackFrame *fp() const       { return regs_->fp(); }
-    StackFrame *maybefp() const  { return regs_ ? regs_->fp() : NULL; }
+    /* Faster alternatives to maybe* functions. */
+    FrameRegs &regs() const           { JS_ASSERT(hasfp()); return seg_->regs(); }
+    StackFrame *fp() const            { JS_ASSERT(hasfp()); return seg_->fp(); }
 
     /* The StackSpace currently hosting this ContextStack. */
     StackSpace &space() const    { assertSpaceInSync(); return *space_; }
 
-    /*
-     * To avoid indirection, ContextSpace caches a pointers to the StackSpace.
-     * This must be kept coherent with cx->thread->data.space by calling
-     * 'threadReset' whenver cx->thread changes.
-     */
-    void threadReset();
-
-    /*
-     * As an optimization, the interpreter/mjit can operate on a local
-     * FrameRegs instance repoint the ContextStack to this local instance.
-     */
-    void repointRegs(FrameRegs *regs) {
-        JS_ASSERT_IF(regs, regs->fp());
-        regs_ = regs;
-    }
-
-    /* Return the current segment, which may or may not be active. */
-    StackSegment *currentSegment() const {
-        assertSegmentsInSync();
-        return seg_;
-    }
-
-    /* Search the call stack for the nearest frame with static level targetLevel. */
-    inline StackFrame *findFrameAtLevel(uintN targetLevel) const;
-
-#ifdef DEBUG
     /* Return whether the given frame is in this context's stack. */
-    bool contains(const StackFrame *fp) const;
-#endif
+    bool containsSlow(const StackFrame *target) const;
 
-    /* Mark the top segment as suspended, without pushing a new one. */
-    void saveActiveSegment();
-
-    /* Undoes calls to suspendActiveSegment. */
-    void restoreSegment();
+    /*** Stack manipulation ***/
 
     /*
      * pushInvokeArgs allocates |argc + 2| rooted values that will be passed as
@@ -1364,16 +1478,20 @@ class ContextStack
     bool pushInvokeArgs(JSContext *cx, uintN argc, InvokeArgsGuard *ag);
 
     /* Called by Invoke for a scripted function call. */
-    bool pushInvokeFrame(JSContext *cx, const CallArgs &args, MaybeConstruct,
-                         JSObject &callee, JSFunction *fun, JSScript *script,
-                         InvokeFrameGuard *ifg);
+    bool pushInvokeFrame(JSContext *cx, const CallArgs &args,
+                         MaybeConstruct construct, InvokeFrameGuard *ifg);
 
     /* Called by Execute for execution of eval or global code. */
     bool pushExecuteFrame(JSContext *cx, JSScript *script, const Value &thisv,
                           JSObject &scopeChain, ExecuteType type,
                           StackFrame *evalInFrame, ExecuteFrameGuard *efg);
 
-    /* Called by SendToGenerator to resume a yielded generator. */
+    /*
+     * Called by SendToGenerator to resume a yielded generator. In addition to
+     * pushing a frame onto the VM stack, this function copies over the
+     * floating frame stored in 'gen'. When 'gfg' is destroyed, the destructor
+     * will copy the frame back to the floating frame.
+     */
     bool pushGeneratorFrame(JSContext *cx, JSGenerator *gen, GeneratorFrameGuard *gfg);
 
     /* Pushes a "dummy" frame; should be removed one day. */
@@ -1388,7 +1506,10 @@ class ContextStack
     bool pushInlineFrame(JSContext *cx, FrameRegs &regs, const CallArgs &args,
                          JSObject &callee, JSFunction *fun, JSScript *script,
                          MaybeConstruct construct, Check check);
-    void popInlineFrame();
+    void popInlineFrame(FrameRegs &regs);
+
+    /* Pop a partially-pushed frame after hitting the limit before throwing. */
+    void popFrameAfterOverflow();
 
     /*
      * Called by the methodjit for an arity mismatch. Arity mismatch can be
@@ -1402,53 +1523,64 @@ class ContextStack
                               JSFunction *fun, JSScript *script, void *ncode,
                               MaybeConstruct construct, LimitCheck check);
 
-    /* For jit use: */
-    static size_t offsetOfRegs() { return offsetof(ContextStack, regs_); }
+    bool saveFrameChain();
+    void restoreFrameChain();
+
+    /*
+     * As an optimization, the interpreter/mjit can operate on a local
+     * FrameRegs instance repoint the ContextStack to this local instance.
+     */
+    void repointRegs(FrameRegs *regs) { JS_ASSERT(hasfp()); seg_->repointRegs(regs); }
+
+    /*** For JSContext: ***/
+
+    /*
+     * To avoid indirection, ContextSpace caches a pointer to the StackSpace.
+     * This must be kept coherent with cx->thread->data.space by calling
+     * 'threadReset' whenver cx->thread changes.
+     */
+    void threadReset();
+
+    /*** For jit compiler: ***/
+
+    static size_t offsetOfSeg() { return offsetof(ContextStack, seg_); }
 };
 
 /*****************************************************************************/
 
-class InvokeArgsGuard : public CallArgs
+class InvokeArgsGuard : public CallArgsList
 {
     friend class ContextStack;
-    ContextStack     *stack_;  /* null implies nothing pushed */
-    StackSegment     *seg_;    /* null implies no segment pushed */
-    StackOverride    prevOverride_;
+    ContextStack *stack_;
+    bool pushedSeg_;
+    void setPushed(ContextStack &stack) { JS_ASSERT(!pushed()); stack_ = &stack; }
   public:
-    InvokeArgsGuard() : stack_(NULL), seg_(NULL) {}
-    ~InvokeArgsGuard();
-    bool pushed() const { return stack_ != NULL; }
+    InvokeArgsGuard() : CallArgsList(), stack_(NULL), pushedSeg_(false) {}
+    ~InvokeArgsGuard() { if (pushed()) stack_->popInvokeArgs(*this); }
+    bool pushed() const { return !!stack_; }
+    void pop() { stack_->popInvokeArgs(*this); stack_ = NULL; }
 };
 
-class InvokeFrameGuard
-
-{
-    friend class ContextStack;
-    ContextStack *stack_;  /* null implies nothing pushed */
-    FrameRegs regs_;
-    FrameRegs *prevRegs_;
-  public:
-    InvokeFrameGuard() : stack_(NULL) {}
-    ~InvokeFrameGuard();
-    bool pushed() const { return stack_ != NULL; }
-    void pop();
-    StackFrame *fp() const { return regs_.fp(); }
-};
-
-/* Reusable base; not for direct use. */
 class FrameGuard
 {
   protected:
     friend class ContextStack;
-    ContextStack *stack_;  /* null implies nothing pushed */
-    StackSegment *seg_;
+    ContextStack *stack_;
+    bool pushedSeg_;
     FrameRegs regs_;
+    FrameRegs *prevRegs_;
+    void setPushed(ContextStack &stack) { stack_ = &stack; }
   public:
-    FrameGuard() : stack_(NULL) {}
-    ~FrameGuard();
-    bool pushed() const { return stack_ != NULL; }
+    FrameGuard() : stack_(NULL), pushedSeg_(false) {}
+    ~FrameGuard() { if (pushed()) stack_->popFrame(*this); }
+    bool pushed() const { return !!stack_; }
+    void pop() { stack_->popFrame(*this); stack_ = NULL; }
+
     StackFrame *fp() const { return regs_.fp(); }
 };
+
+class InvokeFrameGuard : public FrameGuard
+{};
 
 class ExecuteFrameGuard : public FrameGuard
 {};
@@ -1462,59 +1594,114 @@ class GeneratorFrameGuard : public FrameGuard
     JSGenerator *gen_;
     Value *stackvp_;
   public:
-    ~GeneratorFrameGuard();
+    ~GeneratorFrameGuard() { if (pushed()) stack_->popGeneratorFrame(*this); }
 };
 
 /*****************************************************************************/
 
 /*
- * While |cx->fp|'s pc/sp are available in |cx->regs|, to compute the saved
- * value of pc/sp for any other frame, it is necessary to know about that
- * frame's next-frame. This iterator maintains this information when walking
- * a chain of stack frames starting at |cx->fp|.
+ * Iterate through the callstack of the given context. Each element of said
+ * callstack can either be the execution of a script (scripted function call,
+ * global code, eval code, debugger code) or the invocation of a (C++) native.
+ * Example usage:
  *
- * Usage:
- *   for (FrameRegsIter i(cx); !i.done(); ++i)
- *     ... i.fp() ... i.sp() ... i.pc()
+ *   for (Stackiter i(cx); !i.done(); ++i) {
+ *     if (i.isScript()) {
+ *       ... i.fp() ... i.sp() ... i.pc()
+ *     } else {
+ *       JS_ASSERT(i.isNativeCall());
+ *       ... i.args();
+ *     }
+ *
+ * The SavedOption parameter additionally lets the iterator continue through
+ * breaks in the callstack (from JS_SaveFrameChain). The default is to stop.
  */
-class FrameRegsIter
+class StackIter
 {
+    friend class ContextStack;
     JSContext    *cx_;
-    StackSegment *seg_;
+  public:
+    enum SavedOption { STOP_AT_SAVED, GO_THROUGH_SAVED };
+  private:
+    SavedOption  savedOption_;
+
+    enum State { DONE, SCRIPTED, NATIVE, IMPLICIT_NATIVE };
+    State        state_;
+
     StackFrame   *fp_;
+    CallArgsList *calls_;
+
+    StackSegment *seg_;
     Value        *sp_;
     jsbytecode   *pc_;
+    CallArgs     args_;
 
-    void initSlow();
-    void incSlow(StackFrame *oldfp);
+    void poisonRegs();
+    void popFrame();
+    void popCall();
+    void settleOnNewSegment();
+    void settleOnNewState();
+    void startOnSegment(StackSegment *seg);
 
   public:
-    FrameRegsIter(JSContext *cx);
+    StackIter(JSContext *cx, SavedOption = STOP_AT_SAVED);
 
-    bool done() const { return fp_ == NULL; }
-    FrameRegsIter &operator++();
-    bool operator==(const FrameRegsIter &rhs) const;
-    bool operator!=(const FrameRegsIter &rhs) const { return !(*this == rhs); }
+    bool done() const { return state_ == DONE; }
+    StackIter &operator++();
 
-    StackFrame *fp() const { return fp_; }
-    Value *sp() const { return sp_; }
-    jsbytecode *pc() const { return pc_; }
+    bool operator==(const StackIter &rhs) const;
+    bool operator!=(const StackIter &rhs) const { return !(*this == rhs); }
+
+    bool isScript() const { JS_ASSERT(!done()); return state_ == SCRIPTED; }
+    StackFrame *fp() const { JS_ASSERT(!done() && isScript()); return fp_; }
+    Value      *sp() const { JS_ASSERT(!done() && isScript()); return sp_; }
+    jsbytecode *pc() const { JS_ASSERT(!done() && isScript()); return pc_; }
+
+    bool isNativeCall() const { JS_ASSERT(!done()); return state_ != SCRIPTED; }
+    CallArgs nativeArgs() const { JS_ASSERT(!done() && isNativeCall()); return args_; }
 };
 
+/* A filtering of the StackIter to only stop at scripts. */
+class FrameRegsIter
+{
+    StackIter iter_;
+
+    void settle() {
+        while (!iter_.done() && !iter_.isScript())
+            ++iter_;
+    }
+
+  public:
+    FrameRegsIter(JSContext *cx) : iter_(cx) { settle(); }
+
+    bool done() const { return iter_.done(); }
+    FrameRegsIter &operator++() { ++iter_; settle(); return *this; }
+
+    bool operator==(const FrameRegsIter &rhs) const { return iter_ == rhs.iter_; }
+    bool operator!=(const FrameRegsIter &rhs) const { return iter_ != rhs.iter_; }
+
+    StackFrame *fp() const { return iter_.fp(); }
+    Value      *sp() const { return iter_.sp(); }
+    jsbytecode *pc() const { return iter_.pc(); }
+};
+
+/*****************************************************************************/
+
 /*
- * Utility class for iteration over all active stack frames.
+ * Blindly iterate over all frames in the current thread's stack. These frames
+ * can be from different contexts and compartments, so beware.
  */
 class AllFramesIter
 {
-public:
-    AllFramesIter(JSContext *cx);
+  public:
+    AllFramesIter(StackSpace &space);
 
     bool done() const { return fp_ == NULL; }
     AllFramesIter& operator++();
 
     StackFrame *fp() const { return fp_; }
 
-private:
+  private:
     StackSegment *seg_;
     StackFrame *fp_;
 };

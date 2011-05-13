@@ -170,9 +170,9 @@ CompartmentHasLiveScripts(JSCompartment *comp)
         if (JS_GetContextThread(icx) != currentThreadId)
             continue;
 #endif
-        for (AllFramesIter i(icx); !i.done(); ++i) {
-            JSScript *script = i.fp()->maybeScript();
-            if (script && script->compartment == comp)
+        for (FrameRegsIter i(icx); !i.done(); ++i) {
+            JSScript *script = i.fp()->script();
+            if (script->compartment == comp)
                 return JS_TRUE;
         }
     }
@@ -1491,7 +1491,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameScopeChain(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    JS_ASSERT(cx->stack.contains(fp));
+    JS_ASSERT(cx->stack.containsSlow(fp));
 
     js::AutoCompartment ac(cx, &fp->scopeChain());
     if (!ac.enter())
@@ -1506,7 +1506,7 @@ JS_PUBLIC_API(JSObject *)
 JS_GetFrameCallObject(JSContext *cx, JSStackFrame *fpArg)
 {
     StackFrame *fp = Valueify(fpArg);
-    JS_ASSERT(cx->stack.contains(fp));
+    JS_ASSERT(cx->stack.containsSlow(fp));
 
     if (!fp->isFunctionFrame())
         return NULL;

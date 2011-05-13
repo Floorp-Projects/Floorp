@@ -5201,26 +5201,20 @@ JS_IsRunning(JSContext *cx)
     return fp != NULL;
 }
 
-JS_PUBLIC_API(JSStackFrame *)
+JS_PUBLIC_API(JSBool)
 JS_SaveFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    StackFrame *fp = js_GetTopStackFrame(cx);
-    if (!fp)
-        return NULL;
-    cx->stack.saveActiveSegment();
-    return Jsvalify(fp);
+    LeaveTrace(cx);
+    return cx->stack.saveFrameChain();
 }
 
 JS_PUBLIC_API(void)
-JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
+JS_RestoreFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT_NOT_ON_TRACE(cx);
-    JS_ASSERT(!cx->hasfp());
-    if (!fp)
-        return;
-    cx->stack.restoreSegment();
+    cx->stack.restoreFrameChain();
 }
 
 /************************************************************************/

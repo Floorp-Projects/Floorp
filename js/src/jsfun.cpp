@@ -247,7 +247,7 @@ js_GetArgsObject(JSContext *cx, StackFrame *fp)
      */
     JS_ASSERT_IF(fp->fun()->isHeavyweight(), fp->hasCallObj());
 
-    while (fp->isDirectEvalOrDebuggerFrame())
+    while (fp->isEvalInFunction())
         fp = fp->prev();
 
     /* Create an arguments object for fp only if it lacks one. */
@@ -1588,12 +1588,9 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     JSFunction *fun = obj->getFunctionPrivate();
 
     /* Find fun's top-most activation record. */
-    StackFrame *fp;
-    for (fp = js_GetTopStackFrame(cx);
-         fp && (fp->maybeFun() != fun || fp->isDirectEvalOrDebuggerFrame());
-         fp = fp->prev()) {
-        continue;
-    }
+    StackFrame *fp = js_GetTopStackFrame(cx);
+    while (fp && (fp->maybeFun() != fun || fp->isEvalInFunction()))
+        fp = fp->prev();
 
     switch (slot) {
       case FUN_ARGUMENTS:
@@ -3016,9 +3013,6 @@ js_ReportIsNotFunction(JSContext *cx, const Value *vp, uintN flags)
     ptrdiff_t spindex = 0;
 
     FrameRegsIter i(cx);
-    while (!i.done() && !i.pc())
-        ++i;
-
     if (!i.done()) {
         uintN depth = js_ReconstructStackDepth(cx, i.fp()->script(), i.pc());
         Value *simsp = i.fp()->base() + depth;

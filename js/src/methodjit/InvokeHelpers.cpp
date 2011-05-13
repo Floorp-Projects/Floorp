@@ -178,7 +178,7 @@ InlineReturn(VMFrame &f)
 {
     JS_ASSERT(f.fp() != f.entryfp);
     JS_ASSERT(!js_IsActiveWithOrBlock(f.cx, &f.fp()->scopeChain(), 0));
-    f.cx->stack.popInlineFrame();
+    f.cx->stack.popInlineFrame(f.regs);
 }
 
 void JS_FASTCALL
@@ -196,16 +196,6 @@ stubs::SlowNew(VMFrame &f, uint32 argc)
 }
 
 /*
- * This function must only be called after the early prologue, since it depends
- * on fp->exec.fun.
- */
-static inline void
-RemovePartialFrame(JSContext *cx, StackFrame *fp)
-{
-    cx->stack.popInlineFrame();
-}
-
-/*
  * HitStackQuota is called after the early prologue pushing the new frame would
  * overflow f.stackLimit.
  */
@@ -218,8 +208,7 @@ stubs::HitStackQuota(VMFrame &f)
     if (f.cx->stack.space().tryBumpLimit(NULL, f.regs.sp, nvals, &f.stackLimit))
         return;
 
-    /* Remove the current partially-constructed frame before throwing. */
-    RemovePartialFrame(f.cx, f.fp());
+    f.cx->stack.popFrameAfterOverflow();
     js_ReportOverRecursed(f.cx);
     THROW();
 }
@@ -285,10 +274,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     JSFunction *fun = callee.getFunctionPrivate();
     JSScript *script = fun->script();
 
-    /*
-     * FixupArity/RemovePartialFrame expect to be called after the early
-     * prologue.
-     */
+    /* FixupArity expect to be called after the early prologue. */
     fp->initJitFrameEarlyPrologue(fun, nactual);
 
     if (nactual != fp->numFormalArgs()) {
@@ -301,7 +287,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
     fp->initJitFrameLatePrologue();
 
     /* These would have been initialized by the prologue. */
-    f.regs.prepareToRun(fp, script);
+    f.regs.prepareToRun(*fp, script);
 
     if (fun->isHeavyweight() && !js::CreateFunCallObject(cx, fp))
         THROWV(NULL);
