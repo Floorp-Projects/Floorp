@@ -168,6 +168,9 @@ class MIRGenerator
     uint32 stackSlot(uint32 i) const {
         return firstStackSlot() + i;
     }
+    MIRGraph &graph() {
+        return graph_;
+    }
 
     template <typename T>
     T * allocate(size_t count = 1)
@@ -184,7 +187,7 @@ class MIRGenerator
     TempAllocator &temp_;
     JSFunction *fun_;
     uint32 nslots_;
-    MIRGraph &graph;
+    MIRGraph &graph_;
 };
 
 // Represents a use of a definition.
@@ -276,6 +279,9 @@ class MInstruction : public TempObject
 
     uint32 id() const {
         return id_;
+    }
+    void setId(uint32 id) {
+        id_ = id;
     }
     Representation::Kind representation() const {
         return representation_;

@@ -50,7 +50,7 @@ MIRGenerator::MIRGenerator(JSContext *cx, TempAllocator &temp, JSScript *script,
     pc(NULL),
     temp_(temp),
     fun_(fun),
-    graph(graph)
+    graph_(graph)
 {
     nslots_ = script->nslots + (fun ? fun->nargs + 2 : 0);
 }
