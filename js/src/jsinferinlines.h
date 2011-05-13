@@ -1146,6 +1146,14 @@ TypeSet::getObject(unsigned i)
     return objectSet[i];
 }
 
+inline TypeObject *
+TypeSet::getSingleObject()
+{
+    if (!baseFlags() && objectCount == 1)
+        return getObject(0);
+    return NULL;
+}
+
 inline TypeSet *
 TypeSet::make(JSContext *cx, const char *name)
 {
@@ -1261,8 +1269,7 @@ TypeObject::name()
 inline TypeObject::TypeObject(jsid name, JSObject *proto)
     : proto(proto), emptyShapes(NULL),
       flags(0), isFunction(false), marked(false),
-      newScript(NULL), newScriptFinalizeKind(0), newScriptShape(NULL),
-      initializerObject(false), initializerArray(false), initializerOffset(0),
+      newScript(NULL), initializerObject(false), initializerArray(false), initializerOffset(0),
       contribution(0), propertySet(NULL), propertyCount(0),
       instanceList(NULL), instanceNext(NULL), next(NULL),
       singleton(NULL)

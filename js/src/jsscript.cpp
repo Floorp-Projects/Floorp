@@ -1508,10 +1508,10 @@ DestroyScript(JSContext *cx, JSScript *script)
         obj = next;
     }
 
-    types::TypeResult *result = script->typeResults;
+    types::TypeIntermediate *result = script->intermediateTypes;
     while (result) {
-        types::TypeResult *next = result->next;
-        cx->free_(result);
+        types::TypeIntermediate *next = result->next;
+        cx->delete_(result);
         result = next;
     }
 

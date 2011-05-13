@@ -778,7 +778,7 @@ JSObject::getNewType(JSContext *cx, JSScript *script)
     if (isDenseArray() && !makeDenseArraySlow(cx))
         return NULL;
     if (newType) {
-        if (newType->newScript != script && newType->newScript)
+        if (newType->newScript && newType->newScript->script != script)
             newType->clearNewScript(cx);
     } else {
         makeNewType(cx, script);

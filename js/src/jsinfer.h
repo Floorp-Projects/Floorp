@@ -1,4 +1,4 @@
-/* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
+//* -*- Mode: c++; c-basic-offset: 4; tab-width: 40; indent-tabs-mode: nil -*- */
 /* vim: set ts=40 sw=4 et tw=99: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -109,25 +109,28 @@ inline jstype GetValueType(JSContext *cx, const Value &val);
  * Type inference memory management overview.
  *
  * Inference constructs a global web of constraints relating the contents of
- * type sets particular to various scripts and type objects within a compartment.
- * There are two issues at hand to manage inference memory: collecting
- * the constraints, and collecting type sets (on TypeObject destruction).
+ * type sets particular to various scripts and type objects within a
+ * compartment. There are two issues at hand to manage inference memory:
+ * collecting the constraints, and collecting type sets on TypeObject
+ * destruction.
  *
- * The constraints and types generated during analysis of a script depend entirely on
- * that script's input type sets --- the types of its arguments, upvar locals,
- * callee return values, object properties, and dynamic types (overflows, undefined
- * reads, etc.). On a GC, we collect the analysis information for all scripts
- * which have been analyzed, destroying the type constraints and intermediate
- * type sets associated with stack values, and add new condensed constraints to
- * the script's inputs which will trigger reanalysis and recompilation should
- * that input change in the future.
+ * The constraints and types generated during analysis of a script depend
+ * entirely on that script's input type sets --- the types of its arguments,
+ * upvar locals, callee return values, object properties, and dynamic types
+ * (overflows, undefined reads, etc.). On a GC, we collect the analysis
+ * information for all scripts which have been analyzed, destroying the type
+ * constraints and intermediate type sets associated with stack values, and add
+ * condensed constraints to the script's inputs which will trigger reanalysis
+ * and recompilation should that input change in the future.
  *
  * TypeObjects are collected when either the script they are associated with is
  * destroyed or their prototype JSObject is destroyed.
  *
- * If a GC happens while we are in the middle of analysis or working with a TypeScript
- * or TypeObject, we do not destroy/condense analysis information or collect any
- * TypeObjects or JSScripts. This is controlled with AutoEnterTypeInference.
+ * If a GC happens while we are in the middle of or working with analysis
+ * information (both type information and transient information stored in
+ * ScriptAnalysis), we do not destroy/condense analysis information or collect
+ * TypeObjects or JSScripts. This is controlled with AutoEnterAnalysis and/or
+ * AutoEnterTypeInference.
  */
 
 /*
@@ -331,6 +334,9 @@ class TypeSet
     inline unsigned getObjectCount();
     inline TypeObject *getObject(unsigned i);
 
+    /* If this type set definitely represents only a particular type object, get that object. */
+    inline TypeObject *getSingleObject();
+
     void setIntermediate() { JS_ASSERT(!typeFlags); typeFlags = TYPE_FLAG_INTERMEDIATE_SET; }
     void setOwnProperty(bool configurable) {
         typeFlags |= TYPE_FLAG_OWN_PROPERTY;
@@ -359,7 +365,6 @@ class TypeSet
     void addMonitorRead(JSContext *cx, JSScript *script, TypeSet *target);
 
     void addBaseSubset(JSContext *cx, TypeObject *object, TypeSet *target);
-    void addBaseClearDefinite(JSContext *cx, TypeObject *object);
     void addCondensed(JSContext *cx, JSScript *script);
 
     /*
@@ -436,6 +441,35 @@ struct ClonedTypeSet
     unsigned objectCount;
 };
 
+/*
+ * Handler which persists information about the intermediate types in a script
+ * (those appearing on stack values, which are destroyed on GC). These are
+ * attached to the JSScript and persist until it is destroyed; every time the
+ * types in the script are analyzed these are replayed to reconstruct
+ * the intermediate info they store.
+ *
+ * This is mostly for dynamic type results like integer overflows or holes read
+ * out of objects, but also allows specialized type constraints on intermediate
+ * values to be regenerated after GC.
+ */
+class TypeIntermediate
+{
+  public:
+    /* Next intermediate information for the script. */
+    TypeIntermediate *next;
+
+    TypeIntermediate() : next(NULL) {}
+
+    /* Replay this type information on a script whose types have just been analyzed. */
+    virtual void replay(JSContext *cx, JSScript *script) = 0;
+
+    /* Sweep this intermediate info, returning false to unlink and destroy this. */
+    virtual bool sweep(JSContext *cx, JSCompartment *compartment) = 0;
+
+    /* Whether this subsumes a dynamic type pushed by the bytecode at offset. */
+    virtual bool hasDynamicResult(uint32 offset, jstype type) { return false; }
+};
+
 /* Type information about a property. */
 struct Property
 {
@@ -451,6 +485,43 @@ struct Property
 
     static uint32 keyBits(jsid id) { return (uint32) JSID_BITS(id); }
     static jsid getKey(Property *p) { return p->id; }
+};
+
+/*
+ * Information attached to a TypeObject if it is always constructed using 'new'
+ * on a particular script.
+ */
+struct TypeNewScript
+{
+    JSScript *script;
+
+    /* Finalize kind to use for newly constructed objects. */
+    /* gc::FinalizeKind */ unsigned finalizeKind;
+
+    /* Shape to use for newly constructed objects. */
+    const Shape *shape;
+
+    /*
+     * Order in which properties become initialized. We need this in case a
+     * scripted setter is added to one of the object's prototypes while it is in
+     * the middle of being initialized, so we can walk the stack and fixup any
+     * objects which look for in-progress objects which were prematurely set
+     * with their final shape. Initialization can traverse stack frames,
+     * in which case FRAME_PUSH/FRAME_POP are used.
+     */
+    struct Initializer {
+        enum Kind {
+            SETPROP,
+            FRAME_PUSH,
+            FRAME_POP,
+            DONE
+        } kind;
+        uint32 offset;
+        Initializer(Kind kind, uint32 offset)
+          : kind(kind), offset(offset)
+        {}
+    };
+    Initializer *initializerList;
 };
 
 /* Type information about an object accessed by a script. */
@@ -478,12 +549,10 @@ struct TypeObject
 
     /*
      * If non-NULL, objects of this type have always been constructed using
-     * 'new' on the specified script. Moreover the given finalize kind and
-     * initial shape should also be used for the object.
+     * 'new' on the specified script, which adds some number of properties to
+     * the object in a definite order before the object escapes.
      */
-    JSScript *newScript;
-    /* gc::FinalizeKind */ unsigned newScriptFinalizeKind;
-    const Shape *newScriptShape;
+    TypeNewScript *newScript;
 
     /*
      * Whether this is an Object or Array keyed to an offset in the script containing
@@ -573,7 +642,7 @@ struct TypeObject
     /* Helpers */
 
     bool addProperty(JSContext *cx, jsid id, Property **pprop);
-    bool addDefiniteProperties(JSContext *cx, JSObject *obj, bool clearUnknown);
+    bool addDefiniteProperties(JSContext *cx, JSObject *obj);
     void addPrototype(JSContext *cx, TypeObject *proto);
     void setFlags(JSContext *cx, TypeObjectFlags flags);
     void markUnknown(JSContext *cx);
@@ -644,26 +713,6 @@ struct TypeCallsite
     inline TypeObject* getInitObject(JSContext *cx, bool isArray);
 
     inline bool hasGlobal();
-};
-
-/*
- * Type information about a dynamic value pushed by a script's opcode.
- * These are associated with each JSScript and persist after the
- * TypeScript is destroyed by GCs.
- */
-struct TypeResult
-{
-    /*
-     * Offset pushing the value. TypeResults are only generated for
-     * the first stack slot actually pushed by a bytecode.
-     */
-    uint32 offset;
-
-    /* Type which was pushed. */
-    jstype type;
-
-    /* Next dynamic result for the script. */
-    TypeResult *next;
 };
 
 struct ArrayTableKey;

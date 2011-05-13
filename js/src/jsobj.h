@@ -689,6 +689,8 @@ struct JSObject : js::gc::Cell {
 
     inline bool containsSlot(uint32 slot) const;
 
+    void rollbackProperties(uint32 slotSpan);
+
     js::Value& getSlotRef(uintN slot) {
         JS_ASSERT(slot < capacity);
         size_t fixed = numFixedSlots();
