@@ -139,7 +139,7 @@
                 oncommand="gBrowser.replaceTabWithWindow(TabContextMenu.contextTab);"/>
       <menuseparator/>
       <menuitem id="context_reloadAllTabs" label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
-                tbattr="tabbrowser-multiple"
+                tbattr="tabbrowser-multiple-visible"
                 oncommand="gBrowser.reloadAllTabs();"/>
       <menuitem id="context_bookmarkAllTabs"
                 label="&bookmarkAllTabs.label;"
