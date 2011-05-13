@@ -6636,23 +6636,28 @@ END_CASE(JSOP_ARRAYPUSH)
         atoms = script->atomMap.vector;
 
         /* Call debugger throw hook if set. */
-        handler = cx->debugHooks->throwHook;
-        if (handler) {
+        if (cx->debugHooks->throwHook || !cx->compartment->getDebuggers().empty()) {
             Value rval;
-            switch (handler(cx, script, regs.pc, Jsvalify(&rval),
-                            cx->debugHooks->throwHookData)) {
-              case JSTRAP_ERROR:
+            JSTrapStatus st = Debug::onThrow(cx, &rval);
+            if (st == JSTRAP_CONTINUE) {
+                handler = cx->debugHooks->throwHook;
+                if (handler)
+                    st = handler(cx, script, regs.pc, Jsvalify(&rval), cx->debugHooks->throwHookData);
+            }
+
+            switch (st) {
+            case JSTRAP_ERROR:
                 cx->clearPendingException();
                 goto error;
-              case JSTRAP_RETURN:
+            case JSTRAP_RETURN:
                 cx->clearPendingException();
                 regs.fp()->setReturnValue(rval);
                 interpReturnOK = JS_TRUE;
                 goto forced_return;
-              case JSTRAP_THROW:
+            case JSTRAP_THROW:
                 cx->setPendingException(rval);
-              case JSTRAP_CONTINUE:
-              default:;
+            case JSTRAP_CONTINUE:
+            default:;
             }
             CHECK_INTERRUPT_HANDLER();
         }
