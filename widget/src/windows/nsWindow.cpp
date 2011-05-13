@@ -2506,27 +2506,18 @@ RegionFromArray(const nsTArray<nsIntRect>& aRects)
   return region;
 }
 
-void nsWindow::UpdateTransparentRegion(const nsIntRegion &aTransparentRegion)
+void nsWindow::UpdateOpaqueRegion(const nsIntRegion &aOpaqueRegion)
 {
 #if MOZ_WINSDK_TARGETVER >= MOZ_NTDDI_LONGHORN
   if (!HasGlass() || GetParent())
     return;
-
-  nsIntRect clientBounds;
-  GetClientBounds(clientBounds);
-
-  // calculate the known fully opaque region by subtracting the transparent
-  // areas from client bounds. We'll use this to calculate our new glass
-  // bounds.
-  nsIntRegion opaqueRegion;
-  opaqueRegion.Sub(clientBounds, aTransparentRegion);
 
   // If there is no opaque region or hidechrome=true, set margins
   // to support a full sheet of glass. Comments in MSDN indicate
   // all values must be set to -1 to get a full sheet of glass.
   MARGINS margins = { -1, -1, -1, -1 };
   bool visiblePlugin = false;
-  if (!opaqueRegion.IsEmpty()) {
+  if (!aOpaqueRegion.IsEmpty()) {
     nsIntRect pluginBounds;
     for (nsIWidget* child = GetFirstChild(); child; child = child->GetNextSibling()) {
       nsWindowType type;
@@ -2547,11 +2538,14 @@ void nsWindow::UpdateTransparentRegion(const nsIntRegion &aTransparentRegion)
       }
     }
 
+    nsIntRect clientBounds;
+    GetClientBounds(clientBounds);
+
     // Find the largest rectangle and use that to calculate the inset. Our top
     // priority is to include the bounds of all plugins.
     // Also don't let MIN_OPAQUE_RECT_HEIGHT_FOR_GLASS_MARGINS override content
     // that contains a visible plugin since glass over plugins looks bad.
-    nsIntRect largest = opaqueRegion.GetLargestRectangle(pluginBounds);
+    nsIntRect largest = aOpaqueRegion.GetLargestRectangle(pluginBounds);
     if (visiblePlugin || 
         (largest.x <= MAX_HORIZONTAL_GLASS_MARGIN &&
          clientBounds.width - largest.XMost() <= MAX_HORIZONTAL_GLASS_MARGIN &&
