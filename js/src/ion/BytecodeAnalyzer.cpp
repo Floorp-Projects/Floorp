@@ -95,6 +95,63 @@ GetNextPc(jsbytecode *pc)
     return pc + js_CodeSpec[JSOp(*pc)].length;
 }
 
+uint32
+BytecodeAnalyzer::readIndex(jsbytecode *pc)
+{
+    return (atoms - script->atomMap.vector) + GET_INDEX(pc);
+}
+
+BytecodeAnalyzer::CFGState
+BytecodeAnalyzer::CFGState::If(jsbytecode *join, MBasicBlock *ifFalse)
+{
+    CFGState state;
+    state.state = IF_TRUE;
+    state.stopAt = join;
+    state.branch.ifFalse = ifFalse;
+    return state;
+}
+
+BytecodeAnalyzer::CFGState
+BytecodeAnalyzer::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse) 
+{
+    CFGState state;
+    // If the end of the false path is the same as the start of the
+    // false path, then the "else" block is empty and we can devolve
+    // this to the IF_TRUE case. We handle this here because there is
+    // still an extra GOTO on the true path and we want stopAt to point
+    // there, whereas the IF_TRUE case does not have the GOTO.
+    state.state = (falseEnd == ifFalse->pc())
+                  ? IF_TRUE_EMPTY_ELSE
+                  : IF_ELSE_TRUE;
+    state.stopAt = trueEnd;
+    state.branch.falseEnd = falseEnd;
+    state.branch.ifFalse = ifFalse;
+    return state;
+}
+
+BytecodeAnalyzer::CFGState
+BytecodeAnalyzer::CFGState::DoWhile(jsbytecode *ifne, MBasicBlock *entry)
+{
+    CFGState state;
+    state.state = DO_WHILE_LOOP;
+    state.stopAt = ifne;
+    state.loop.entry = entry;
+    return state;
+}
+
+BytecodeAnalyzer::CFGState
+BytecodeAnalyzer::CFGState::While(jsbytecode *ifne, jsbytecode *bodyStart, jsbytecode *bodyEnd, MBasicBlock *entry)
+{
+    CFGState state;
+    state.state = WHILE_LOOP_COND;
+    state.stopAt = ifne;
+    state.loop.entry = entry;
+    state.loop.w.bodyStart = bodyStart;
+    state.loop.w.bodyEnd = bodyEnd;
+    state.loop.w.successor = NULL;
+    return state;
+}
+
 bool
 BytecodeAnalyzer::analyze()
 {
@@ -270,43 +327,76 @@ BytecodeAnalyzer::snoopControlFlow(JSOp op)
     return ControlStatus_None;
 }
 
-BytecodeAnalyzer::CFGState
-BytecodeAnalyzer::CFGState::If(jsbytecode *join, MBasicBlock *ifFalse)
+bool
+BytecodeAnalyzer::inspectOpcode(JSOp op)
 {
-    CFGState state;
-    state.state = IF_TRUE;
-    state.stopAt = join;
-    state.branch.ifFalse = ifFalse;
-    return state;
+    switch (op) {
+      case JSOP_NOP:
+        return maybeLoop(op, js_GetSrcNote(script, pc));
+
+      case JSOP_PUSH:
+        return pushConstant(UndefinedValue());
+
+      case JSOP_IFEQ:
+        return jsop_ifeq(JSOP_IFEQ);
+
+      case JSOP_BITAND:
+        return jsop_binary(op);
+
+      case JSOP_DOUBLE:
+        return pushConstant(script->getConst(readIndex(pc)));
+
+      case JSOP_STRING:
+        return pushConstant(StringValue(atoms[GET_INDEX(pc)]));
+
+      case JSOP_ZERO:
+        return pushConstant(Int32Value(0));
+
+      case JSOP_ONE:
+        return pushConstant(Int32Value(1));
+
+      case JSOP_NULL:
+        return pushConstant(NullValue());
+
+      case JSOP_FALSE:
+        return pushConstant(BooleanValue(false));
+
+      case JSOP_TRUE:
+        return pushConstant(BooleanValue(true));
+
+      case JSOP_POP:
+        current->pop();
+        return maybeLoop(op, js_GetSrcNote(script, pc));
+
+      case JSOP_GETARG:
+        current->pushArg(GET_SLOTNO(pc));
+        return true;
+
+      case JSOP_GETLOCAL:
+        current->pushLocal(GET_SLOTNO(pc));
+        return true;
+
+      case JSOP_SETLOCAL:
+        return current->setLocal(GET_SLOTNO(pc));
+
+      case JSOP_IFEQX:
+        return jsop_ifeq(JSOP_IFEQX);
+
+      case JSOP_NULLBLOCKCHAIN:
+        return true;
+
+      case JSOP_INT8:
+        return pushConstant(Int32Value(GET_INT8(pc)));
+
+      case JSOP_TRACE:
+        assertValidTraceOp(op);
+        return true;
+
+      default:
+        return false;
+    }
 }
 
-BytecodeAnalyzer::CFGState
-BytecodeAnalyzer::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse) 
-{
-    CFGState state;
-    // If the end of the false path is the same as the start of the
-    // false path, then the "else" block is empty and we can devolve
-    // this to the IF_TRUE case. We handle this here because there is
-    // still an extra GOTO on the true path and we want stopAt to point
-    // there, whereas the IF_TRUE case does not have the GOTO.
-    state.state = (falseEnd == ifFalse->pc())
-                  ? IF_TRUE_EMPTY_ELSE
-                  : IF_ELSE_TRUE;
-    state.stopAt = trueEnd;
-    state.branch.falseEnd = falseEnd;
-    state.branch.ifFalse = ifFalse;
-    return state;
-}
-
-BytecodeAnalyzer::CFGState
-BytecodeAnalyzer::CFGState::DoWhile(jsbytecode *ifne, MBasicBlock *entry)
-{
-    CFGState state;
-    state.state = DO_WHILE_LOOP;
-    state.stopAt = ifne;
-    state.loop.entry = entry;
-    return state;
-}
 
 // Given that the current control flow structure has ended forcefully,
 // via a return, break, or continue (rather than joining), propagate the
@@ -378,6 +468,12 @@ BytecodeAnalyzer::processCfgEntry(CFGState &state)
 
       case CFGState::DO_WHILE_LOOP:
         return processDoWhileEnd(state);
+
+      case CFGState::WHILE_LOOP_COND:
+        return processWhileCondEnd(state);
+
+      case CFGState::WHILE_LOOP_BODY:
+        return processWhileBodyEnd(state);
 
       default:
         JS_NOT_REACHED("unknown cfgstate");
@@ -466,7 +562,7 @@ BytecodeAnalyzer::processDoWhileEnd(CFGState &state)
     MInstruction *ins = current->pop();
 
     // Create the successor block.
-    MBasicBlock *successor = newBlock(current, pc);
+    MBasicBlock *successor = newBlock(current, GetNextPc(pc));
     MTest *test = MTest::New(this, ins, state.loop.entry, successor);
     if (!current->end(test))
         return ControlStatus_Error;
@@ -483,80 +579,48 @@ BytecodeAnalyzer::processDoWhileEnd(CFGState &state)
     return ControlStatus_Joined;
 }
 
-uint32
-BytecodeAnalyzer::readIndex(jsbytecode *pc)
+BytecodeAnalyzer::ControlStatus
+BytecodeAnalyzer::processWhileCondEnd(CFGState &state)
 {
-    return (atoms - script->atomMap.vector) + GET_INDEX(pc);
+    JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
+
+    // Balance the stack past the IFNE.
+    MInstruction *ins = current->pop();
+
+    // Create the body and successor blocks.
+    MBasicBlock *body = newBlock(current, state.loop.w.bodyStart);
+    MBasicBlock *successor = newBlock(current, GetNextPc(pc));
+    MTest *test = MTest::New(this, ins, body, successor);
+    if (!current->end(test))
+        return ControlStatus_Error;
+
+    state.state = CFGState::WHILE_LOOP_BODY;
+    state.stopAt = state.loop.w.bodyEnd;
+    state.loop.w.successor = successor;
+    pc = state.loop.w.bodyStart;
+
+    current = body;
+    return ControlStatus_Jumped;
 }
 
-bool
-BytecodeAnalyzer::inspectOpcode(JSOp op)
+BytecodeAnalyzer::ControlStatus
+BytecodeAnalyzer::processWhileBodyEnd(CFGState &state)
 {
-    switch (op) {
-      case JSOP_NOP:
-        return maybeLoop(op, js_GetSrcNote(script, pc));
+    if (current) {
+        // Create an edge from this block to the loop header.
+        MGoto *ins = MGoto::New(this, state.loop.entry);
+        if (!current->end(ins))
+            return ControlStatus_Error;
 
-      case JSOP_PUSH:
-        return pushConstant(UndefinedValue());
-
-      case JSOP_IFEQ:
-        return jsop_ifeq(JSOP_IFEQ);
-
-      case JSOP_BITAND:
-        return jsop_binary(op);
-
-      case JSOP_DOUBLE:
-        return pushConstant(script->getConst(readIndex(pc)));
-
-      case JSOP_STRING:
-        return pushConstant(StringValue(atoms[GET_INDEX(pc)]));
-
-      case JSOP_ZERO:
-        return pushConstant(Int32Value(0));
-
-      case JSOP_ONE:
-        return pushConstant(Int32Value(1));
-
-      case JSOP_NULL:
-        return pushConstant(NullValue());
-
-      case JSOP_FALSE:
-        return pushConstant(BooleanValue(false));
-
-      case JSOP_TRUE:
-        return pushConstant(BooleanValue(true));
-
-      case JSOP_POP:
-        current->pop();
-        return maybeLoop(op, js_GetSrcNote(script, pc));
-
-      case JSOP_GETARG:
-        current->pushArg(GET_SLOTNO(pc));
-        return true;
-
-      case JSOP_GETLOCAL:
-        current->pushLocal(GET_SLOTNO(pc));
-        return true;
-
-      case JSOP_SETLOCAL:
-        return current->setLocal(GET_SLOTNO(pc));
-
-      case JSOP_IFEQX:
-        return jsop_ifeq(JSOP_IFEQX);
-
-      case JSOP_NULLBLOCKCHAIN:
-        return true;
-
-      case JSOP_INT8:
-        return pushConstant(Int32Value(GET_INT8(pc)));
-
-      case JSOP_TRACE:
-        assertValidTraceOp(op);
-        return true;
-
-      default:
-        return false;
+        // Place phis in the loop header, propagating their assignment to the
+        // successor block.
+        if (!state.loop.entry->addBackedge(current, state.loop.w.successor))
+            return ControlStatus_Error;
     }
+
+    current = state.loop.w.successor;
+    pc = current->pc();
+    return ControlStatus_Joined;
 }
 
 bool
@@ -649,8 +713,6 @@ BytecodeAnalyzer::doWhileLoop(JSOp op, jssrcnote *sn)
     //    ...
     //    IFNE ->     ; goes to TRACE
     MBasicBlock *header = newLoopHeader(current, pc);
-    if (!header)
-        return false;
     MGoto *ins = MGoto::New(this, header);
     if (!current->end(ins))
         return false;
@@ -659,6 +721,41 @@ BytecodeAnalyzer::doWhileLoop(JSOp op, jssrcnote *sn)
     if (!cfgStack_.append(CFGState::DoWhile(ifne, header)))
         return false;
 
+    return true;
+}
+
+bool
+BytecodeAnalyzer::whileLoop(JSOp op, jssrcnote *sn)
+{
+    // while (cond) { } loops have the following structure:
+    //    GOTO cond   ; SRC_WHILE (offset to IFNE)
+    //    TRACE       ; SRC_WHILE (offset to IFNE)
+    //    ...
+    //  cond:
+    //    ...
+    //    IFNE        ; goes to TRACE
+    int ifneOffset = js_GetSrcNoteOffset(sn, 0);
+    jsbytecode *ifne = pc + ifneOffset;
+    JS_ASSERT(ifne > pc);
+
+    // Verify that the IFNE goes back to a trace op.
+    JS_ASSERT(JSOp(*GetNextPc(pc)) == JSOP_TRACE);
+    JS_ASSERT(GetNextPc(pc) == ifne + GetJumpOffset(ifne));
+
+    MBasicBlock *header = newLoopHeader(current, pc);
+    MGoto *ins = MGoto::New(this, header);
+    if (!current->end(ins))
+        return false;
+
+    // Skip past the JSOP_TRACE for the body start.
+    jsbytecode *bodyStart = GetNextPc(GetNextPc(pc));
+    jsbytecode *bodyEnd = pc + GetJumpOffset(pc);
+    if (!cfgStack_.append(CFGState::While(ifne, bodyStart, bodyEnd, header)))
+        return false;
+
+    // Parse the condition first.
+    pc = bodyEnd;
+    current = header;
     return true;
 }
 
