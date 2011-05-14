@@ -525,10 +525,40 @@ stubs::PutActivationObjects(VMFrame &f)
     f.fp()->putActivationObjects();
 }
 
+static void
+RemoveOrphanedNative(JSContext *cx, StackFrame *fp)
+{
+    /*
+     * Remove fp from the list of frames holding a reference on the orphaned
+     * native pools. If all the references have been removed, release all the
+     * pools. We don't release pools piecemeal as a pool can be referenced by
+     * multiple frames.
+     */
+    JaegerCompartment *jc = cx->compartment->jaegerCompartment;
+    if (jc->orphanedNativeFrames.empty())
+        return;
+    for (unsigned i = 0; i < jc->orphanedNativeFrames.length(); i++) {
+        if (fp == jc->orphanedNativeFrames[i]) {
+            jc->orphanedNativeFrames[i] = jc->orphanedNativeFrames.back();
+            jc->orphanedNativeFrames.popBack();
+            break;
+        }
+    }
+    if (jc->orphanedNativeFrames.empty()) {
+        for (unsigned i = 0; i < jc->orphanedNativePools.length(); i++)
+            jc->orphanedNativePools[i]->release();
+        jc->orphanedNativePools.clear();
+    }
+}
+
 extern "C" void *
 js_InternalThrow(VMFrame &f)
 {
     JSContext *cx = f.cx;
+
+    // The current frame may have an associated orphaned native, if the native
+    // or SplatApplyArgs threw an exception.
+    RemoveOrphanedNative(cx, f.fp());
 
     // It's possible that from within RunTracer(), Interpret() returned with
     // an error and finished the frame (i.e., called ScriptEpilogue), but has
@@ -1376,13 +1406,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
          * return register pair, as for a scripted call. We need to release the
          * reference on the compartment's orphaned native pools first, though.
          */
-        JaegerCompartment *jc = cx->compartment->jaegerCompartment;
-        JS_ASSERT(jc->orphanedNativeCount);
-        if (--jc->orphanedNativeCount == 0) {
-            for (unsigned i = 0; i < jc->orphanedNativePools.length(); i++)
-                jc->orphanedNativePools[i]->release();
-            jc->orphanedNativePools.clear();
-        }
+        RemoveOrphanedNative(cx, fp);
         if (rejoin == REJOIN_NATIVE_LOWERED) {
             /*
              * Lowered natives return like other native calls, but store their

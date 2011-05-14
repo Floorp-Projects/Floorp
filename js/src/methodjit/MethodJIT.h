@@ -396,7 +396,7 @@ class JaegerCompartment {
      * destroyed and we are waiting for the pool to finish use and jump
      * into the interpoline.
      */
-    size_t orphanedNativeCount;
+    Vector<StackFrame *, 8, SystemAllocPolicy> orphanedNativeFrames;
     Vector<JSC::ExecutablePool *, 8, SystemAllocPolicy> orphanedNativePools;
 };
 
