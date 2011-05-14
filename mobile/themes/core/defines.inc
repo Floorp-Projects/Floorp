@@ -173,7 +173,7 @@
 %define appmenu_button_height 99px
 
 %define tablet_panel_controls  270px
-%define tablet_panel_minwidth  801px
+%define tablet_panel_minwidth  1024px
 %endif
 
 %ifdef MOZ_PLATFORM_MAEMO
