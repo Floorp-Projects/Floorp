@@ -2543,6 +2543,10 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
         atoms = COMMON_ATOMS_START(&rt->atomState);
 #endif
 
+    /* Any script we interpret needs to have its type sets filled in. */
+    if (cx->typeInferenceEnabled() && !script->ensureTypeArray(cx))
+        goto error;
+
     /* Don't call the script prologue if executing between Method and Trace JIT. */
     if (interpMode == JSINTERP_NORMAL) {
         StackFrame *fp = regs.fp();
@@ -4673,6 +4677,7 @@ BEGIN_CASE(JSOP_FUNCALL)
                 goto error;
             }
 
+            /* This will construct the type sets for the callee, if necessary. */
             cx->typeMonitorCall(CallArgsFromVp(argc, vp), flags & StackFrame::CONSTRUCTING);
 
             bool newType = (flags & StackFrame::CONSTRUCTING) &&
