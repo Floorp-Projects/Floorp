@@ -339,8 +339,7 @@ public:
                      nsRenderingContext* aCtx);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion,
-                                   PRBool& aContainsRootContentDocBG);
+                                   const nsRect& aAllowVisibleRegionExpansion);
 
   NS_DISPLAY_DECL_NAME("Plugin", TYPE_PLUGIN)
 

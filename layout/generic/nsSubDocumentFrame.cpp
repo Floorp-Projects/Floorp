@@ -387,9 +387,6 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // happens after we've built the list so that AddCanvasBackgroundColorItem
       // can monkey with the contents if necessary.
       PRUint32 flags = nsIPresShell::FORCE_DRAW;
-      if (presContext->IsRootContentDocument()) {
-        flags |= nsIPresShell::ROOT_CONTENT_DOC_BG;
-      }
       rv = presShell->AddCanvasBackgroundColorItem(
              *aBuilder, childItems, subdocRootFrame ? subdocRootFrame : this,
              bounds, NS_RGBA(0,0,0,0), flags);
@@ -702,6 +699,17 @@ nsSubDocumentFrame::AttributeChanged(PRInt32 aNameSpaceID,
       rootFrame->PresContext()->PresShell()->
         FrameNeedsReflow(rootFrame, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
     }
+  }
+  else if (aAttribute == nsGkAtoms::marginwidth ||
+           aAttribute == nsGkAtoms::marginheight) {
+
+    // Retrieve the attributes
+    nsIntSize margins = GetMarginAttributes();
+
+    // Notify the frameloader
+    nsRefPtr<nsFrameLoader> frameloader = FrameLoader();
+    if (frameloader)
+      frameloader->MarginsChanged(margins.width, margins.height);
   }
   else if (aAttribute == nsGkAtoms::type) {
     if (!mFrameLoader) 

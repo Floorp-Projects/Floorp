@@ -159,6 +159,11 @@ class MochitestOptions(optparse.OptionParser):
                     help = "run chrome Mochitests")
     defaults["chrome"] = False
 
+    self.add_option("--ipcplugins",
+                    action = "store_true", dest = "ipcplugins",
+                    help = "run ipcplugins Mochitests")
+    defaults["ipcplugins"] = False
+
     self.add_option("--test-path",
                     action = "store", type = "string", dest = "testPath",
                     help = "start in the given directory's tests")
@@ -433,6 +438,8 @@ class Mochitest(object):
         self.urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
     elif options.browserChrome:
       testURL = "about:blank"
+    elif options.ipcplugins:
+      testURL = testHost + self.TEST_PATH + "modules/plugin/test"
     return testURL
 
   def startWebSocketServer(self, options, debuggerInfo):

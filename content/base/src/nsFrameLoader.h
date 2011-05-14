@@ -208,6 +208,11 @@ public:
               nsSubDocumentFrame* frame);
 
   /**
+   * Called when the margin properties of the containing frame are changed.
+   */
+  void MarginsChanged(PRUint32 aMarginWidth, PRUint32 aMarginHeight);
+
+  /**
    * Called from the layout frame associated with this frame loader, when
    * the frame is being torn down; this notifies us that out widget and view
    * are going away and we should unhook from them.

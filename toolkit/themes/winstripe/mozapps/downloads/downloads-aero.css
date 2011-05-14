@@ -7,6 +7,8 @@
   }
 
   #downloadView {
+    /* Clamp glass bounds to the rich list so our glass haze stays constant. */
+    -moz-appearance: -moz-win-exclude-glass;
     border: none;
   }
 

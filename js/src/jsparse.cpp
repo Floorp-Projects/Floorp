@@ -1199,15 +1199,11 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
             rval.setUndefined();
         }
 
-        JSProperty *prop;
-
-        if (!js_DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
-                                     JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, &prop)) {
+        const Shape *shape =
+            DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0);
+        if (!shape)
             return false;
-        }
-
-        JS_ASSERT(prop);
-        const Shape *shape = (const Shape *)prop;
         def.knownSlot = shape->slot;
     }
 
@@ -4381,11 +4377,11 @@ CheckDestructuring(JSContext *cx, BindData *data, JSParseNode *left, JSTreeConte
     if (data &&
         data->binder == BindLet &&
         OBJ_BLOCK_COUNT(cx, tc->blockChain()) == 0 &&
-        !js_DefineNativeProperty(cx, tc->blockChain(),
-                                 ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
-                                 UndefinedValue(), NULL, NULL,
-                                 JSPROP_ENUMERATE | JSPROP_PERMANENT,
-                                 Shape::HAS_SHORTID, 0, NULL)) {
+        !DefineNativeProperty(cx, tc->blockChain(),
+                              ATOM_TO_JSID(cx->runtime->atomState.emptyAtom),
+                              UndefinedValue(), NULL, NULL,
+                              JSPROP_ENUMERATE | JSPROP_PERMANENT,
+                              Shape::HAS_SHORTID, 0)) {
         return false;
     }
 

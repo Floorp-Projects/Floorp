@@ -7029,8 +7029,11 @@ DirectoryInstallLocation.prototype = {
 
       if (entry.isFile() && !directLoad) {
         newEntry = this._readDirectoryFromFile(entry);
-        if (!newEntry)
+        if (!newEntry) {
+          LOG("Deleting stale pointer file " + entry.path);
+          entry.remove(true);
           continue;
+        }
 
         entry = newEntry;
         this._linkedAddons.push(id);

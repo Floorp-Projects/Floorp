@@ -71,7 +71,7 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsDOMEventTargetWrapperCache.h"
-#include "xpcpublic.h"
+#include "xpcprivate.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"
@@ -10201,12 +10201,11 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JSAutoRequest ar(cx);
 
-  JSString *str =
-    ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(val.get()),
-                          val.Length());
-  NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
-
-  *vp = STRING_TO_JSVAL(str);
+  nsStringBuffer* sharedBuffer = nsnull;
+  *vp = XPCStringConvert::ReadableToJSVal(cx, val, &sharedBuffer);
+  if (sharedBuffer) {
+    val.ForgetSharedBuffer();
+  }
 
   return NS_SUCCESS_I_DID_SOMETHING;
 }

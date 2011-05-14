@@ -523,18 +523,18 @@ CallResultEscapes(jsbytecode *pc);
 #endif
 
 #ifdef DEBUG
-#ifdef __cplusplus
 /*
  * Disassemblers, for debugging only.
  */
 #include <stdio.h>
+#ifdef __cplusplus
 extern JS_FRIEND_API(JSBool)
-js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, js::Sprinter *sp);
+js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, js::Sprinter *sp, int *counts = NULL);
 
 extern JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc, uintN loc,
-                JSBool lines, js::Sprinter *sp);
-#endif /* __cplusplus */
+                JSBool lines, js::Sprinter *sp, int *counts = NULL);
+#endif
 #endif /* DEBUG */
 
 /*

@@ -15,6 +15,6 @@ script regress-352789.js
 script regress-355101.js
 script regress-355474-01.js
 skip script regress-373678.js # obsolete test
-skip script regress-429249.js
+require-or(debugMode,skip) script regress-429249.js
 script regress-461233.js
 script regress-463360.js

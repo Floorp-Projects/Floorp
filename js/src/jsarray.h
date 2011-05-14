@@ -199,6 +199,13 @@ js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
 namespace js {
 
+extern JSBool
+array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+
+extern JSBool
+array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
+
 /*
  * This function assumes 'length' is effectively the result of calling
  * js_GetLengthProperty on aobj.

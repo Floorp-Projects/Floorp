@@ -1345,8 +1345,7 @@ public:
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder);
   virtual PRBool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion,
-                                   PRBool& aContainsRootContentDocBG);
+                                   const nsRect& aAllowVisibleRegionExpansion);
 
   NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
 
@@ -1379,12 +1378,10 @@ nsDisplayPluginReadback::GetBounds(nsDisplayListBuilder* aBuilder)
 PRBool
 nsDisplayPluginReadback::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                            nsRegion* aVisibleRegion,
-                                           const nsRect& aAllowVisibleRegionExpansion,
-                                           PRBool& aContainsRootContentDocBG)
+                                           const nsRect& aAllowVisibleRegionExpansion)
 {
   if (!nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
-                                        aAllowVisibleRegionExpansion,
-                                        aContainsRootContentDocBG))
+                                        aAllowVisibleRegionExpansion))
     return PR_FALSE;
 
   nsRect expand;
@@ -1413,13 +1410,11 @@ nsDisplayPlugin::Paint(nsDisplayListBuilder* aBuilder,
 PRBool
 nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                    nsRegion* aVisibleRegion,
-                                   const nsRect& aAllowVisibleRegionExpansion,
-                                   PRBool& aContainsRootContentDocBG)
+                                   const nsRect& aAllowVisibleRegionExpansion)
 {
   mVisibleRegion.And(*aVisibleRegion, GetBounds(aBuilder));  
   return nsDisplayItem::ComputeVisibility(aBuilder, aVisibleRegion,
-                                          aAllowVisibleRegionExpansion,
-                                          aContainsRootContentDocBG);
+                                          aAllowVisibleRegionExpansion);
 }
 
 nsRegion

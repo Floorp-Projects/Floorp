@@ -5863,8 +5863,7 @@ nsresult PresShell::AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
   }
 
   return aList.AppendNewToBottom(
-      new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor,
-        !!(aFlags & nsIPresShell::ROOT_CONTENT_DOC_BG)));
+      new (&aBuilder) nsDisplaySolidColor(&aBuilder, aFrame, aBounds, bgcolor));
 }
 
 static PRBool IsTransparentContainerElement(nsPresContext* aPresContext)
