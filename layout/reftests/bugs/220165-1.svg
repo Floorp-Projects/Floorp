@@ -4,7 +4,8 @@
      xmlns:html="http://www.w3.org/1999/xhtml" height="500" 
      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
      onload="document.documentElement.getBoundingClientRect();
-	     document.getElementById('x').textContent = 'New text'">
+	     document.getElementById('x').textContent = 'New text'"
+     shape-rendering="crispEdges">
 
   <foreignObject x="200" y="180" width="100" height="50" >
     <html:button id="x">Old long long long text</html:button>
