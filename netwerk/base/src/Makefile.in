@@ -91,6 +91,7 @@ CPPSRCS		= \
 		nsSerializationHelper.cpp \
 		nsDNSPrefetch.cpp \
 		RedirectChannelRegistrar.cpp \
+		nsPreloadedStream.cpp \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
