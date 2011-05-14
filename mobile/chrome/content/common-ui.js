@@ -646,7 +646,6 @@ var FormHelperUI = {
 
   init: function formHelperInit() {
     this._container = document.getElementById("content-navigator");
-    this._suggestionsContainer = document.getElementById("form-helper-suggestions-container");
     this._cmdPrevious = document.getElementById(this.commands.previous);
     this._cmdNext = document.getElementById(this.commands.next);
 
@@ -673,13 +672,9 @@ var FormHelperUI = {
     window.addEventListener("keyup", this, true);
     window.addEventListener("keypress", this, true);
 
-    // Listen some events to show/hide the autocomplete box
+    // Listen some events to show/hide arrows
     Elements.browsers.addEventListener("PanBegin", this, false);
     Elements.browsers.addEventListener("PanFinished", this, false);
-    window.addEventListener("AnimatedZoomBegin", this, false);
-    window.addEventListener("AnimatedZoomEnd", this, false);
-    window.addEventListener("MozBeforeResize", this, true);
-    window.addEventListener("resize", this, false);
   },
 
   _currentBrowser: null,
@@ -697,7 +692,6 @@ var FormHelperUI = {
     else
       this._container.removeAttribute("disabled");
 
-    this._hasSuggestions = false;
     this._open = true;
 
     let lastElement = this._currentElement || null;
@@ -715,7 +709,6 @@ var FormHelperUI = {
 
     this._updateContainerForSelect(lastElement, this._currentElement);
     this._zoom(Rect.fromRect(aElement.rect), Rect.fromRect(aElement.caretRect));
-    this._updateSuggestionsFor(this._currentElement);
 
     // Prevent the view to scroll automatically while typing
     this._currentBrowser.scrollSync = false;
@@ -733,7 +726,6 @@ var FormHelperUI = {
     this._currentCaretRect = null;
 
     this._updateContainerForSelect(this._currentElement, null);
-    this._resetSuggestions();
 
     this._currentBrowser.messageManager.sendAsyncMessage("FormAssist:Closed", { });
     this._open = false;
@@ -758,28 +750,11 @@ var FormHelperUI = {
         // manual dblClick and navigation between the fields by clicking the
         // buttons
         this._container.style.visibility = "hidden";
-
-      case "AnimatedZoomBegin":
-        // Changing the hidden attribute here create bugs with the scrollbox
-        // arrows because the binding will miss some underflow events
-        if (this._hasSuggestions) {
-          // Because the suggestions container could be big in terms of width
-          // (but never bigger than the screen) it's position needs to be
-          // resetted to the left to ensure it does not push the content to
-          // the right and misplaced sidebars as a result
-          this._suggestionsContainer.left = 0;
-          this._suggestionsContainer.style.visibility = "hidden";
-        }
         break;
+
 
       case "PanFinished":
         this._container.style.visibility = "visible";
-
-      case "AnimatedZoomEnd":
-        if (this._hasSuggestions) {
-          this._suggestionsContainer.style.visibility = "visible";
-          this._ensureSuggestionsVisible();
-        }
         break;
 
       case "URLChanged":
@@ -812,16 +787,6 @@ var FormHelperUI = {
           SelectHelperUI.sizeToContent();
           self._zoom(self._currentElementRect, self._currentCaretRect);
         }, 0, this);
-        break;
-
-      case "MozBeforeResize":
-        if (this._hasSuggestions)
-          this._suggestionsContainer.left = 0;
-        break;
-
-      case "resize":
-        if (this._hasSuggestions)
-          this._ensureSuggestionsVisible();
         break;
     }
   },
@@ -903,6 +868,7 @@ var FormHelperUI = {
       this._currentElement = null;
       this._container.hide(this);
 
+      ContentPopupHelper.popup = null;
       this._container.removeAttribute("disabled");
 
       // Since the style is overrided when a popup is shown, it needs to be
@@ -915,35 +881,25 @@ var FormHelperUI = {
     this._container.dispatchEvent(evt);
   },
 
-  _hasSuggestions: false,
   _updateSuggestionsFor: function _formHelperUpdateAutocompleteFor(aElement) {
     let suggestions = this._getAutocompleteSuggestions(aElement);
     if (!suggestions.length) {
-      this._resetSuggestions();
+      ContentPopupHelper.popup = null;
       return;
     }
-    // Keeps the suggestions element hidden while is it not positionned to the
-    // correct place
-    let suggestionsContainer = this._suggestionsContainer;
-    suggestionsContainer.style.visibility = "hidden";
-    suggestionsContainer.hidden = false;
-    suggestionsContainer.left = 0;
 
     // the scrollX/scrollY position can change because of the animated zoom so
     // delay the suggestions positioning
     if (AnimatedZoom.isZooming()) {
       let self = this;
-      window.addEventListener("AnimatedZoomEnd", function() {
-        window.removeEventListener("AnimatedZoomEnd", arguments.callee, true);
-          // Ensure the current element has not changed during this interval
-          if (self._currentElement != aElement)
-            return;
-
-          self._updateSuggestionsFor(aElement);
-      }, true);
+      this._waitForZoom(function() {
+        self._updateSuggestionsFor(aElement);
+      });
       return;
     }
 
+    // Declare which box is going to be the inside container of the content popup helper
+    let suggestionsContainer = document.getElementById("form-helper-suggestions-container");
     let container = suggestionsContainer.firstChild;
     while (container.hasChildNodes())
       container.removeChild(container.lastChild);
@@ -959,8 +915,8 @@ var FormHelperUI = {
     }
     container.appendChild(fragment);
 
-    this._hasSuggestions = true;
-    this._ensureSuggestionsVisible();
+    ContentPopupHelper.popup = suggestionsContainer;
+    ContentPopupHelper.anchorTo(this._currentElementRect);
   },
 
   /** Retrieve the autocomplete list from the autocomplete service for an element */
@@ -991,114 +947,6 @@ var FormHelperUI = {
       suggestions.push(options[i]);
 
     return suggestions;
-  },
-
-  _resetSuggestions: function _formHelperResetAutocomplete() {
-    this._suggestionsContainer.hidden = true;
-    this._hasSuggestions = false;
-  },
-
-  /**
-   * This method positionned the list of suggestions on the screen using
-   * a 'virtual' element as referrer that match the real content element
-   * This method called element.getBoundingClientRect() many times and can be
-   * expensive, do not called it too many times.
-   */
-  _ensureSuggestionsVisible: function _formHelperEnsureSuggestionsVisible() {
-    let container = this._suggestionsContainer;
-
-    // Calculate the maximum size of the arrowpanel by allowing it to live only
-    // on the visible browser area
-    let [leftVis, rightVis, leftW, rightW] = Browser.computeSidebarVisibility();
-    let leftOffset = leftVis * leftW;
-    let rightOffset = rightVis * rightW;
-    let visibleAreaWidth = window.innerWidth - leftOffset - rightOffset;
-    container.firstChild.style.maxWidth = (visibleAreaWidth * 0.75) + "px";
-
-    let browser = getBrowser();
-    let rect = this._currentElementRect.clone().scale(browser.scale, browser.scale);
-    let scroll = browser.getRootView().getPosition();
-
-    // The sidebars scroll needs to be taken into account, otherwise the arrows
-    // can be misplaced if the sidebars are open
-    let topOffset = (BrowserUI.toolbarH - Browser.getScrollboxPosition(Browser.pageScrollboxScroller).y);
-
-    // Notifications take height _before_ the browser if there any
-    let notification = Browser.getNotificationBox().currentNotification;
-    if (notification)
-      topOffset += notification.getBoundingClientRect().height;
-
-    let virtualContentRect = {
-      width: rect.width,
-      height: rect.height,
-      left: Math.ceil(rect.left - scroll.x + leftOffset - rightOffset),
-      right: Math.floor(rect.left + rect.width - scroll.x + leftOffset - rightOffset),
-      top: Math.ceil(rect.top - scroll.y + topOffset),
-      bottom: Math.floor(rect.top + rect.height - scroll.y + topOffset)
-    };
-
-    // Translate the virtual rect inside the bounds of the viewable area if it
-    // overflow
-    if (virtualContentRect.left + virtualContentRect.width > visibleAreaWidth) {
-      let offsetX = visibleAreaWidth - (virtualContentRect.left + virtualContentRect.width);
-      virtualContentRect.width += offsetX;
-      virtualContentRect.right -= offsetX;
-    }
-
-    if (virtualContentRect.left < leftOffset) {
-      let offsetX = (virtualContentRect.right - virtualContentRect.width);
-      virtualContentRect.width += offsetX;
-      virtualContentRect.left -= offsetX;
-    }
-
-    // If the suggestions are out of view there is no need to display it
-    let browserRect = Rect.fromRect(browser.getBoundingClientRect());
-    if (BrowserUI.isToolbarLocked()) {
-      // If the toolbar is locked, it can appear over the field in such a way
-      // that the field is hidden
-      let toolbarH = BrowserUI.toolbarH;
-      browserRect = new Rect(leftOffset - rightOffset, Math.max(0, browserRect.top - toolbarH) + toolbarH,
-                             browserRect.width + leftOffset - rightOffset, browserRect.height - toolbarH);
-    }
-
-    if (browserRect.intersect(Rect.fromRect(virtualContentRect)).isEmpty()) {
-      container.style.visibility = "hidden";
-      return;
-    }
-
-    // Adding rect.height to the top moves the arrowbox below the virtual field
-    let left = rect.left - scroll.x + leftOffset - rightOffset;
-    let top = rect.top - scroll.y + topOffset + (rect.height);
-
-    // Ensure parts of the arrowbox are not outside the window
-    let arrowboxRect = Rect.fromRect(container.getBoundingClientRect());
-    if (left + arrowboxRect.width > window.innerWidth)
-      left -= (left + arrowboxRect.width - window.innerWidth);
-    else if (left < leftOffset)
-      left += (leftOffset - left);
-    container.left = left;
-
-    // Do not position the suggestions over the navigation buttons
-    let buttonsHeight = this._container.getBoundingClientRect().height;
-    if (top + arrowboxRect.height >= window.innerHeight - buttonsHeight)
-      top -= (rect.height + arrowboxRect.height);
-    container.top = top;
-
-    // Create a virtual element to point to
-    let virtualContentElement = {
-      getBoundingClientRect: function() {
-        return virtualContentRect;
-      }
-    };
-    container.anchorTo(virtualContentElement);
-    container.style.visibility = "visible";
-  },
-
-  /** Update the form helper container to reflect new element user is editing. */
-  _updateContainer: function _formHelperUpdateContainer(aLastElement, aCurrentElement) {
-    this._updateContainerForSelect(aLastElement, aCurrentElement);
-
-    this._container.contentHasChanged();
   },
 
   /** Helper for _updateContainer that handles the case where the new element is a select. */
@@ -1146,16 +994,10 @@ var FormHelperUI = {
     // the scrollX/scrollY position can change because of the animated zoom so
     // delay the caret adjustment
     if (AnimatedZoom.isZooming()) {
-      let currentElement = this._currentElement;
       let self = this;
-      window.addEventListener("AnimatedZoomEnd", function() {
-        window.removeEventListener("AnimatedZoomEnd", arguments.callee, true);
-          // Ensure the current element has not changed during this interval
-          if (self._currentElement != currentElement)
-            return;
-
-          self._ensureCaretVisible(aCaretRect);
-      }, true);
+      this._waitForZoom(function() {
+        self._ensureCaretVisible(aCaretRect);
+      });
       return;
     }
 
@@ -1198,6 +1040,19 @@ var FormHelperUI = {
     getBrowser().scale = restore.scale;
     Browser.contentScrollboxScroller.scrollTo(restore.contentScrollOffset.x, restore.contentScrollOffset.y);
     Browser.pageScrollboxScroller.scrollTo(restore.pageScrollOffset.x, restore.pageScrollOffset.y);
+  },
+
+  _waitForZoom: function _formHelperWaitForZoom(aCallback) {
+    let currentElement = this._currentElement;
+    let self = this;
+    window.addEventListener("AnimatedZoomEnd", function() {
+      window.removeEventListener("AnimatedZoomEnd", arguments.callee, true);
+      // Ensure the current element has not changed during this interval
+      if (self._currentElement != currentElement)
+        return;
+
+      aCallback();
+    }, true);
   },
 
   _getZoomLevelForRect: function _getZoomLevelForRect(aRect) {
