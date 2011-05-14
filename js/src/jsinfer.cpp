@@ -1706,6 +1706,9 @@ TypeCompartment::dynamicCall(JSContext *cx, JSObject *callee,
     unsigned nargs = callee->getFunctionPrivate()->nargs;
     JSScript *script = callee->getFunctionPrivate()->script();
 
+    if (!script->ensureTypeArray(cx))
+        return;
+
     if (constructing) {
         script->typeSetNewCalled(cx);
     } else {
