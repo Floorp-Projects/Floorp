@@ -59,12 +59,12 @@ namespace net {
 //-----------------------------------------------------------------------------
 
 HttpChannelChild::HttpChannelChild()
-  : ChannelEventQueue<HttpChannelChild>(this)
+  : HttpAsyncAborter<HttpChannelChild>(this)
+  , ChannelEventQueue<HttpChannelChild>(this)
   , mIsFromCache(PR_FALSE)
   , mCacheEntryAvailable(PR_FALSE)
   , mCacheExpirationTime(nsICache::NO_EXPIRATION_TIME)
   , mSendResumeAt(false)
-  , mSuspendCount(0)
   , mIPCOpen(false)
   , mKeptAlive(false)
 {
@@ -573,53 +573,53 @@ HttpChannelChild::OnStatus(const nsresult& status)
   }
 }
 
-class CancelEvent : public ChannelEvent
+class FailedAsyncOpenEvent : public ChannelEvent
 {
  public:
-  CancelEvent(HttpChannelChild* child, const nsresult& status)
+  FailedAsyncOpenEvent(HttpChannelChild* child, const nsresult& status)
   : mChild(child)
   , mStatus(status) {}
 
-  void Run() { mChild->OnCancel(mStatus); }
+  void Run() { mChild->FailedAsyncOpen(mStatus); }
  private:
   HttpChannelChild* mChild;
   nsresult mStatus;
 };
 
 bool
-HttpChannelChild::RecvCancelEarly(const nsresult& status)
+HttpChannelChild::RecvFailedAsyncOpen(const nsresult& status)
 {
   if (ShouldEnqueue()) {
-    EnqueueEvent(new CancelEvent(this, status));
+    EnqueueEvent(new FailedAsyncOpenEvent(this, status));
   } else {
-    OnCancel(status);
+    FailedAsyncOpen(status);
   }
   return true;
 }
 
+// We need to have an implementation of this function just so that we can keep
+// all references to mCallOnResume of type HttpChannelChild:  it's not OK in C++
+// to set a member function ptr to a base class function.
 void
-HttpChannelChild::OnCancel(const nsresult& status)
+HttpChannelChild::HandleAsyncAbort()
 {
-  LOG(("HttpChannelChild::OnCancel [this=%p status=%x]\n", this, status));
+  HttpAsyncAborter<HttpChannelChild>::HandleAsyncAbort();
+}
 
-  if (mCanceled)
-    return;
+void
+HttpChannelChild::FailedAsyncOpen(const nsresult& status)
+{
+  LOG(("HttpChannelChild::FailedAsyncOpen [this=%p status=%x]\n", this, status));
 
-  mCanceled = true;
   mStatus = status;
+  mIsPending = PR_FALSE;
+  // We're already being called from IPDL, therefore already "async"
+  HandleAsyncAbort();
+}
 
-  mIsPending = false;
-  if (mLoadGroup)
-    mLoadGroup->RemoveRequest(this, nsnull, mStatus);
-
-  if (mListener) {
-    mListener->OnStartRequest(this, mListenerContext);
-    mListener->OnStopRequest(this, mListenerContext, mStatus);
-  }
-
-  mListener = NULL;
-  mListenerContext = NULL;
-
+void
+HttpChannelChild::DoNotifyListenerCleanup()
+{
   if (mIPCOpen)
     PHttpChannelChild::Send__delete__(this);
 }
@@ -873,7 +873,10 @@ HttpChannelChild::OnRedirectVerifyCallback(nsresult result)
   if (NS_SUCCEEDED(result))
     gHttpHandler->OnModifyRequest(newHttpChannel);
 
-  return SendRedirect2Verify(result, *headerTuples);
+  if (mIPCOpen)
+    SendRedirect2Verify(result, *headerTuples);
+
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
@@ -903,23 +906,37 @@ HttpChannelChild::Suspend()
   return NS_OK;
 }
 
+void
+HttpChannelChild::CompleteResume()
+{
+  if (mCallOnResume) {
+    (this->*mCallOnResume)();
+    mCallOnResume = 0;
+  }
+
+  FlushEventQueue();
+}
+
 NS_IMETHODIMP
 HttpChannelChild::Resume()
 {
   NS_ENSURE_TRUE(mIPCOpen, NS_ERROR_NOT_AVAILABLE);
   NS_ENSURE_TRUE(mSuspendCount > 0, NS_ERROR_UNEXPECTED);
+
+  nsresult rv = NS_OK;
+
   SendResume();
   mSuspendCount--;
   if (!mSuspendCount) {
     // If we were suspended outside of an event handler (bug 595972) we'll
     // consider ourselves unqueued. This is a legal state of affairs but
     // FlushEventQueue() can't easily ensure this fact, so we'll do some
-    // fudging to set the invariants correctly.    
+    // fudging to set the invariants correctly.
     if (mQueuePhase == PHASE_UNQUEUED)
       mQueuePhase = PHASE_FINISHED_QUEUEING;
-    FlushEventQueue();
+    rv = AsyncCall(&HttpChannelChild::CompleteResume);
   }
-  return NS_OK;
+  return rv;
 }
 
 //-----------------------------------------------------------------------------
@@ -982,10 +999,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     // We may have been canceled already, either by on-modify-request
     // listeners or by load group observers; in that case, don't create IPDL
     // connection. See nsHttpChannel::AsyncOpen().
-
-    // Clear mCanceled here, or we will bail out at top of OnCancel().
-    mCanceled = false;
-    OnCancel(mStatus);
+    AsyncAbort(mStatus);
     return NS_OK;
   }
 
