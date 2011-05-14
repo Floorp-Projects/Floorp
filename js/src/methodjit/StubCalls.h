@@ -105,8 +105,8 @@ struct UncachedCallResult {
  * These functions either execute the function, return a native code
  * pointer that can be used to call the function, or throw.
  */
-void UncachedCallHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes, UncachedCallResult *ucr);
-void UncachedNewHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes, UncachedCallResult *ucr);
+void UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
+void UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr);
 
 void JS_FASTCALL CreateThis(VMFrame &f, JSObject *proto);
 void JS_FASTCALL Throw(VMFrame &f);
@@ -134,7 +134,6 @@ void JS_FASTCALL GetPropNoCache(VMFrame &f, JSAtom *atom);
 void JS_FASTCALL GetElem(VMFrame &f);
 void JS_FASTCALL CallElem(VMFrame &f);
 template<JSBool strict> void JS_FASTCALL SetElem(VMFrame &f);
-void JS_FASTCALL Length(VMFrame &f);
 void JS_FASTCALL CallName(VMFrame &f);
 void JS_FASTCALL PushImplicitThisForGlobal(VMFrame &f);
 void JS_FASTCALL GetUpvar(VMFrame &f, uint32 index);

@@ -3940,8 +3940,8 @@ do_incop:
 
     /*
      * Add undefined to the object itself when read out during an incop.
-     * typeMonitorUndefined does not capture the value being pushed here
-     * during compound operations in the method JIT.
+     * typeMonitor does not capture the value being pushed here during compound
+     * operations in the method JIT.
      */
     if (regs.sp[-1].isUndefined())
         cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNDEFINED);
@@ -4160,8 +4160,7 @@ BEGIN_CASE(JSOP_LENGTH)
         }
     } while (0);
 
-    if (rval.isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc);
+    script->typeMonitor(cx, regs.pc, rval);
 
     regs.sp[-1] = rval;
     assertSameCompartment(cx, regs.sp[-1]);
@@ -4256,8 +4255,7 @@ BEGIN_CASE(JSOP_CALLPROP)
             goto error;
     }
 #endif
-    if (rval.isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc);
+    script->typeMonitor(cx, regs.pc, rval);
 }
 END_CASE(JSOP_CALLPROP)
 
@@ -4438,6 +4436,7 @@ BEGIN_CASE(JSOP_GETELEM)
                 goto error;
             regs.sp--;
             regs.sp[-1].setString(str);
+            script->typeMonitor(cx, regs.pc, regs.sp[-1]);
             len = JSOP_GETELEM_LENGTH;
             DO_NEXT_OP(len);
         }
@@ -4497,8 +4496,7 @@ BEGIN_CASE(JSOP_GETELEM)
     regs.sp--;
     regs.sp[-1] = *copyFrom;
     assertSameCompartment(cx, regs.sp[-1]);
-    if (copyFrom->isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc);
+    script->typeMonitor(cx, regs.pc, regs.sp[-1]);
 }
 END_CASE(JSOP_GETELEM)
 
@@ -4531,8 +4529,9 @@ BEGIN_CASE(JSOP_CALLELEM)
         regs.sp[-1] = thisv;
     }
 
-    if (regs.sp[-2].isUndefined() || !JSID_IS_INT(id))
+    if (!JSID_IS_INT(id))
         script->typeMonitorUnknown(cx, regs.pc);
+    script->typeMonitor(cx, regs.pc, regs.sp[-2]);
 }
 END_CASE(JSOP_CALLELEM)
 
@@ -4805,8 +4804,7 @@ BEGIN_CASE(JSOP_CALLNAME)
             PUSH_COPY(rval);
         }
 
-        if (op == JSOP_NAME || op == JSOP_CALLNAME)
-            script->typeMonitorResult(cx, regs.pc, regs.sp[-1]);
+        script->typeMonitor(cx, regs.pc, regs.sp[-1]);
 
         JS_ASSERT(obj->isGlobal() || IsCacheableNonGlobalScope(obj));
         if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
@@ -4825,7 +4823,7 @@ BEGIN_CASE(JSOP_CALLNAME)
         JSOp op2 = js_GetOpcode(cx, script, regs.pc + JSOP_NAME_LENGTH);
         if (op2 == JSOP_TYPEOF) {
             PUSH_UNDEFINED();
-            script->typeMonitorUndefined(cx, regs.pc);
+            script->typeMonitor(cx, regs.pc, regs.sp[-1]);
             len = JSOP_NAME_LENGTH;
             DO_NEXT_OP(len);
         }
@@ -4846,10 +4844,7 @@ BEGIN_CASE(JSOP_CALLNAME)
     }
 
     PUSH_COPY(rval);
-    if (op == JSOP_NAME || op == JSOP_CALLNAME)
-        script->typeMonitorResult(cx, regs.pc, rval);
-    else if (rval.isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc);
+    script->typeMonitor(cx, regs.pc, rval);
 
     /* obj must be on the scope chain, thus not a function. */
     if (op == JSOP_CALLNAME || op == JSOP_CALLGNAME)
@@ -5280,8 +5275,7 @@ BEGIN_CASE(JSOP_CALLGLOBAL)
     JSObject *obj = regs.fp()->scopeChain().getGlobal();
     JS_ASSERT(obj->containsSlot(slot));
     PUSH_COPY(obj->getSlot(slot));
-    if (regs.sp[-1].isUndefined())
-        script->typeMonitorUndefined(cx, regs.pc);
+    script->typeMonitor(cx, regs.pc, regs.sp[-1]);
     if (op == JSOP_CALLGLOBAL)
         PUSH_UNDEFINED();
 }

@@ -131,6 +131,12 @@ class Bytecode
     /* Method JIT safe point. */
     bool safePoint : 1;
 
+    /*
+     * Side effects of this bytecode were not determined by type inference.
+     * Either a property set with unknown lvalue, or call with unknown callee.
+     */
+    bool monitoredTypes : 1;
+
     /* Stack depth before this opcode. */
     uint32 stackDepth;
 
@@ -180,12 +186,11 @@ class Bytecode
 
     /* --------- Type inference --------- */
 
-    /*
-     * Types for all values pushed by this bytecode. Low bit is set for
-     * bytecodes which are monitored (side effects were not determined
-     * statically).
-     */
+    /* Types for all values pushed by this bytecode. */
     types::TypeSet *pushedTypes;
+
+    /* Any type barriers in place at this bytecode. */
+    types::TypeBarrier *typeBarriers;
 
     /* --------- Helpers --------- */
 
@@ -957,18 +962,16 @@ class ScriptAnalysis
         return pushedTypes(pc - script->code, which);
     }
 
+    types::TypeBarrier *typeBarriers(uint32 offset) {
+        if (getCode(offset).typeBarriers)
+            pruneTypeBarriers(offset);
+        return getCode(offset).typeBarriers;
+    }
+    types::TypeBarrier *typeBarriers(const jsbytecode *pc) {
+        return typeBarriers(pc - script->code);
+    }
+
     inline void addPushedType(JSContext *cx, uint32 offset, uint32 which, types::jstype type);
-
-    bool monitoredTypes(uint32 offset) {
-        JS_ASSERT(offset < script->length);
-        return 0x1 & (size_t) getCode(offset).pushedTypes;
-    }
-
-    void setMonitoredTypes(uint32 offset) {
-        JS_ASSERT(offset < script->length);
-        types::TypeSet *&array = getCode(offset).pushedTypes;
-        array = (types::TypeSet *) (0x1 | (size_t) array);
-    }
 
     types::TypeSet *getValueTypes(const SSAValue &v) {
         switch (v.kind()) {
@@ -1127,6 +1130,7 @@ class ScriptAnalysis
     /* Type inference helpers */
     bool analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferenceState &state);
     inline void setForTypes(JSContext *cx, jsbytecode *pc, types::TypeSet *types);
+    void pruneTypeBarriers(uint32 offset);
 };
 
 /* Protect analysis structures from GC while they are being used. */

@@ -729,8 +729,14 @@ class CallCompiler : public BaseCompiler
         /* Very fast path. */
         Repatcher repatch(from);
 
+        /*
+         * Use the arguments check entry if this is a monitored call, we might
+         * not have accounted for all possible argument types.
+         */
+        void *entry = ic.typeMonitored ? jit->argsCheckEntry : jit->fastEntry;
+
         if (!repatch.canRelink(ic.funGuard.jumpAtOffset(ic.hotJumpOffset),
-                               JSC::CodeLocationLabel(jit->fastEntry))) {
+                               JSC::CodeLocationLabel(entry))) {
             return false;
         }
 
@@ -739,7 +745,7 @@ class CallCompiler : public BaseCompiler
 
         repatch.repatch(ic.funGuard, obj);
         repatch.relink(ic.funGuard.jumpAtOffset(ic.hotJumpOffset),
-                       JSC::CodeLocationLabel(jit->fastEntry));
+                       JSC::CodeLocationLabel(entry));
 
         JaegerSpew(JSpew_PICs, "patched CALL path %p (obj: %p)\n",
                    ic.funGuard.executableAddress(), ic.fastGuardedObject);
@@ -1023,9 +1029,9 @@ class CallCompiler : public BaseCompiler
 
         stubs::UncachedCallResult ucr;
         if (callingNew)
-            stubs::UncachedNewHelper(f, ic.frameSize.staticArgc(), ic.argTypes, &ucr);
+            stubs::UncachedNewHelper(f, ic.frameSize.staticArgc(), &ucr);
         else
-            stubs::UncachedCallHelper(f, ic.frameSize.getArgc(f), ic.argTypes, &ucr);
+            stubs::UncachedCallHelper(f, ic.frameSize.getArgc(f), &ucr);
 
         // Watch out in case the IC was invalidated by a recompilation on the calling
         // script. This can happen either if the callee is executed or if it compiles
@@ -1479,11 +1485,6 @@ JITScript::sweepCallICs(JSContext *cx, bool purgeAll)
     ic::CallICInfo *callICs_ = callICs();
     for (uint32 i = 0; i < nCallICs; i++) {
         ic::CallICInfo &ic = callICs_[i];
-
-        if (ic.argTypes) {
-            for (unsigned i = 0; i < ic.frameSize.staticArgc() + 1; i++)
-                types::SweepClonedTypes(&ic.argTypes[i]);
-        }
 
         /*
          * If the object is unreachable, we're guaranteed not to be currently

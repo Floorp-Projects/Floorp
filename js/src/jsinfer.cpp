@@ -1816,8 +1816,6 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
              */
             uint32 slot = GetBytecodeSlot(script, pc);
             if (slot < TotalSlots(script)) {
-                if (!script->ensureVarTypes(cx))
-                    return;
                 TypeSet *types = script->slotTypes(slot);
                 types->addType(cx, type);
             }
@@ -2015,7 +2013,7 @@ TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Valu
 void
 TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset)
 {
-    if (script->analysis(cx)->monitoredTypes(offset))
+    if (script->analysis(cx)->getCode(offset).monitoredTypes)
         return;
 
     /*
@@ -2073,7 +2071,7 @@ TypeCompartment::monitorBytecode(JSContext *cx, JSScript *script, uint32 offset)
 
     InferSpew(ISpewOps, "addMonitorNeeded: #%u:%05u", script->id(), offset);
 
-    script->analysis(cx)->setMonitoredTypes(offset);
+    script->analysis(cx)->getCode(offset).monitoredTypes = true;
 
     /* :FIXME: Also mark scripts this was inlined into as needing recompilation? */
     if (script->hasJITCode())
@@ -3064,9 +3062,11 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         if (id == ATOM_TO_JSID(cx->runtime->atomState.InfinityAtom))
             cx->addTypePropertyId(script->getGlobalType(), id, TYPE_DOUBLE);
 
+        TypeSet *seen = script->bytecodeTypes(pc);
+        seen->addSubset(cx, script, &pushed[0]);
+
         /* Handle as a property access. */
-        PropertyAccess(cx, script, pc, script->getGlobalType(),
-                       false, &pushed[0], id);
+        PropertyAccess(cx, script, pc, script->getGlobalType(), false, seen, id);
 
         if (op == JSOP_CALLGLOBAL || op == JSOP_CALLGNAME)
             pushed[1].addType(cx, TYPE_UNKNOWN);
@@ -3097,11 +3097,17 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
       }
 
       case JSOP_NAME:
-      case JSOP_CALLNAME:
-        /* The first value pushed by NAME/CALLNAME must always be reported to inference. */
+      case JSOP_CALLNAME: {
+        /*
+         * The first value pushed by NAME/CALLNAME must always be added to the
+         * bytecode types, we don't model these opcodes with inference.
+         */
+        TypeSet *seen = script->bytecodeTypes(pc);
+        seen->addSubset(cx, script, &pushed[0]);
         if (op == JSOP_CALLNAME)
             pushed[1].addType(cx, TYPE_UNKNOWN);
         break;
+      }
 
       case JSOP_BINDGNAME:
       case JSOP_BINDNAME:
@@ -3128,9 +3134,11 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         cx->compartment->types.monitorBytecode(cx, script, offset);
         break;
 
-      case JSOP_GETXPROP:
-        pushed[0].addType(cx, TYPE_UNKNOWN);
+      case JSOP_GETXPROP: {
+        TypeSet *seen = script->bytecodeTypes(pc);
+        seen->addSubset(cx, script, &pushed[0]);
         break;
+      }
 
       case JSOP_GETFCSLOT:
       case JSOP_CALLFCSLOT: {
@@ -3231,14 +3239,11 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
 
       case JSOP_LENGTH:
       case JSOP_GETPROP:
-      case JSOP_CALLPROP:
-      case JSOP_INCPROP:
-      case JSOP_DECPROP:
-      case JSOP_PROPINC:
-      case JSOP_PROPDEC: {
+      case JSOP_CALLPROP: {
         jsid id = GetAtomId(cx, script, pc, 0);
-        poppedTypes(pc, 0)->addGetProperty(cx, script, pc, &pushed[0], id);
-
+        TypeSet *seen = script->bytecodeTypes(pc);
+        poppedTypes(pc, 0)->addGetProperty(cx, script, pc, seen, id);
+        seen->addSubset(cx, script, &pushed[0]);
         if (op == JSOP_CALLPROP)
             poppedTypes(pc, 0)->addFilterPrimitives(cx, script, &pushed[1], true);
         if (CheckNextTest(pc))
@@ -3246,22 +3251,37 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         break;
       }
 
-      case JSOP_GETELEM:
-      case JSOP_CALLELEM:
-      case JSOP_INCELEM:
-      case JSOP_DECELEM:
-      case JSOP_ELEMINC:
-      case JSOP_ELEMDEC:
-        /*
-         * We only consider ELEM accesses on integers here. Any element access
-         * which is accessing a non-integer property must be monitored.
-         */
-        poppedTypes(pc, 1)->addGetProperty(cx, script, pc, &pushed[0], JSID_VOID);
+      case JSOP_INCPROP:
+      case JSOP_DECPROP:
+      case JSOP_PROPINC:
+      case JSOP_PROPDEC: {
+        jsid id = GetAtomId(cx, script, pc, 0);
+        poppedTypes(pc, 0)->addGetProperty(cx, script, pc, &pushed[0], id);
+        break;
+      }
 
+      /*
+       * We only consider ELEM accesses on integers below. Any element access
+       * which is accessing a non-integer property must be monitored.
+       */
+
+      case JSOP_GETELEM:
+      case JSOP_CALLELEM: {
+        TypeSet *seen = script->bytecodeTypes(pc);
+        poppedTypes(pc, 1)->addGetProperty(cx, script, pc, seen, JSID_VOID);
+        seen->addSubset(cx, script, &pushed[0]);
         if (op == JSOP_CALLELEM)
             poppedTypes(pc, 1)->addFilterPrimitives(cx, script, &pushed[1], true);
         if (CheckNextTest(pc))
             pushed[0].addType(cx, TYPE_UNDEFINED);
+        break;
+      }
+
+      case JSOP_INCELEM:
+      case JSOP_DECELEM:
+      case JSOP_ELEMINC:
+      case JSOP_ELEMDEC:
+        poppedTypes(pc, 1)->addGetProperty(cx, script, pc, &pushed[0], JSID_VOID);
         break;
 
       case JSOP_SETELEM:
@@ -3638,7 +3658,7 @@ ScriptAnalysis::analyzeTypes(JSContext *cx)
             return;
     }
 
-    if (!script->ensureVarTypes(cx)) {
+    if (!script->ensureTypeArray(cx)) {
         setOOM(cx);
         return;
     }
@@ -3727,6 +3747,21 @@ ScriptAnalysis::analyzeTypesNew(JSContext *cx)
     if (!prototypeTypes)
         return;
     prototypeTypes->addNewObject(cx, script, funType, script->thisTypes());
+}
+
+void
+ScriptAnalysis::pruneTypeBarriers(uint32 offset)
+{
+    TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
+    while (*pbarrier) {
+        TypeBarrier *barrier = *pbarrier;
+        if (barrier->target->hasType(barrier->type)) {
+            /* Barrier is now obsolete, it can be removed. */
+            *pbarrier = barrier->next;
+        } else {
+            pbarrier = &barrier->next;
+        }
+    }
 }
 
 /*
@@ -4127,6 +4162,13 @@ ScriptAnalysis::printTypes(JSContext *cx)
 
         PrintBytecode(cx, script, script->code + offset);
 
+        if (js_CodeSpec[script->code[offset]].format & JOF_TYPESET) {
+            TypeSet *types = script->bytecodeTypes(script->code + offset);
+            printf("  typeset %u:", types - script->typeArray);
+            types->print(cx);
+            printf("\n");
+        }
+
         unsigned defCount = GetDefCount(script, offset);
         for (unsigned i = 0; i < defCount; i++) {
             printf("  type %d:", i);
@@ -4134,8 +4176,11 @@ ScriptAnalysis::printTypes(JSContext *cx)
             printf("\n");
         }
 
-        if (monitoredTypes(offset))
+        if (getCode(offset).monitoredTypes)
             printf("  monitored\n");
+
+        if (getCode(offset).typeBarriers != NULL)
+            printf("  barriers\n");
     }
 
     printf("\n");
@@ -4255,23 +4300,25 @@ IgnorePushed(const jsbytecode *pc, unsigned index)
 }
 
 bool
-JSScript::makeVarTypes(JSContext *cx)
+JSScript::makeTypeArray(JSContext *cx)
 {
-    JS_ASSERT(!varTypes);
+    JS_ASSERT(!typeArray);
 
     AutoEnterTypeInference enter(cx);
 
-    unsigned nargs = fun ? fun->nargs : 0;
-    unsigned count = 2 + nargs + nfixed + bindings.countUpvars();
-    varTypes = (TypeSet *) cx->calloc_(sizeof(TypeSet) * count);
-    if (!varTypes) {
+    unsigned count = nTypeSets + TotalSlots(this) + bindings.countUpvars();
+    typeArray = (TypeSet *) cx->calloc_(sizeof(TypeSet) * count);
+    if (!typeArray) {
         compartment->types.setPendingNukeTypes(cx);
         return false;
     }
 
 #ifdef DEBUG
+    for (unsigned i = 0; i < nTypeSets; i++)
+        InferSpew(ISpewOps, "typeSet: T%p bytecode%u #%u", &typeArray[i], i, id());
     InferSpew(ISpewOps, "typeSet: T%p return #%u", returnTypes(), id());
     InferSpew(ISpewOps, "typeSet: T%p this #%u", thisTypes(), id());
+    unsigned nargs = fun ? fun->nargs : 0;
     for (unsigned i = 0; i < nargs; i++)
         InferSpew(ISpewOps, "typeSet: T%p arg%u #%u", argTypes(i), i, id());
     for (unsigned i = 0; i < nfixed; i++)
@@ -4784,25 +4831,25 @@ JSScript::condenseTypes(JSContext *cx)
 {
     CondenseTypeObjectList(cx, &compartment->types, typeObjects);
 
-    if (varTypes) {
+    if (typeArray) {
         TypeSet::ScriptSet condensed(cx), *pcondensed = &condensed;
         if (!condensed.init()) {
             compartment->types.setPendingNukeTypes(cx);
             pcondensed = NULL;
         }
 
-        unsigned num = 2 + nfixed + (fun ? fun->nargs : 0) + bindings.countUpvars();
+        unsigned num = nTypeSets + TotalSlots(this) + bindings.countUpvars();
 
         if (isCachedEval ||
             (u.object && IsAboutToBeFinalized(cx, u.object)) ||
             (fun && IsAboutToBeFinalized(cx, fun))) {
             for (unsigned i = 0; i < num; i++)
-                varTypes[i].destroy(cx);
-            cx->free_(varTypes);
-            varTypes = NULL;
+                typeArray[i].destroy(cx);
+            cx->free_(typeArray);
+            typeArray = NULL;
         } else {
             for (unsigned i = 0; i < num; i++)
-                TypeSet::CondenseSweepTypeSet(cx, &compartment->types, pcondensed, &varTypes[i]);
+                TypeSet::CondenseSweepTypeSet(cx, &compartment->types, pcondensed, &typeArray[i]);
         }
     }
 
