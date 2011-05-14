@@ -75,7 +75,6 @@ using namespace mozilla::net;
 //-----------------------------------------------------------------------------
 
 class nsHttpChannel : public HttpBaseChannel
-                    , public HttpAsyncAborter<nsHttpChannel>
                     , public nsIStreamListener
                     , public nsICachingChannel
                     , public nsICacheListener
@@ -144,6 +143,7 @@ public:
     NS_IMETHOD ResumeAt(PRUint64 startPos, const nsACString& entityID);
 
 public: /* internal necko use only */ 
+    typedef void (nsHttpChannel:: *nsAsyncCallback)(void);
 
     void InternalSetUploadStream(nsIInputStream *uploadStream) 
       { mUploadStream = uploadStream; }
@@ -162,8 +162,18 @@ public: /* internal necko use only */
 private:
     typedef nsresult (nsHttpChannel::*nsContinueRedirectionFunc)(nsresult result);
 
+    // AsyncCall may be used to call a member function asynchronously.
+    // retval isn't refcounted and is set only when event was successfully
+    // posted, the event is returned for the purpose of cancelling when needed
+    nsresult AsyncCall(nsAsyncCallback funcPtr,
+                       nsRunnableMethod<nsHttpChannel> **retval = nsnull);
+
     PRBool   RequestIsConditional();
     nsresult Connect(PRBool firstTime = PR_TRUE);
+    nsresult AsyncAbort(nsresult status);
+    // Send OnStartRequest/OnStopRequest to our listener, if any.
+    void     HandleAsyncNotifyListener();
+    void     DoNotifyListener();
     nsresult SetupTransaction();
     nsresult CallOnStartRequest();
     nsresult ProcessResponse();
@@ -179,7 +189,6 @@ private:
     nsresult ProcessFallback(PRBool *waitingForRedirectCallback);
     nsresult ContinueProcessFallback(nsresult);
     PRBool   ResponseWouldVary();
-    void     HandleAsyncAbort();
 
     nsresult ContinueOnStartRequest1(nsresult);
     nsresult ContinueOnStartRequest2(nsresult);
@@ -291,8 +300,17 @@ private:
     // auth specific data
     nsCOMPtr<nsIHttpChannelAuthProvider> mAuthProvider;
 
+    // Function pointer that can be set to indicate that we got suspended while
+    // waiting on an AsyncCall.  When we get resumed we should AsyncCall this
+    // function.
+    nsAsyncCallback                   mPendingAsyncCallOnResume;
+
     // Proxy info to replace with
     nsCOMPtr<nsIProxyInfo>            mTargetProxyInfo;
+
+    // Suspend counter.  This is used if someone tries to suspend/resume us
+    // before we have either a cache pump or a transaction pump.
+    PRUint32                          mSuspendCount;
 
     // If the channel is associated with a cache, and the URI matched
     // a fallback namespace, this will hold the key for the fallback
@@ -300,7 +318,6 @@ private:
     nsCString                         mFallbackKey;
 
     friend class AutoRedirectVetoNotifier;
-    friend class HttpAsyncAborter<nsHttpChannel>;
     nsCOMPtr<nsIURI>                  mRedirectURI;
     nsCOMPtr<nsIChannel>              mRedirectChannel;
     PRUint32                          mRedirectType;
@@ -337,9 +354,6 @@ private:
     nsresult WaitForRedirectCallback();
     void PushRedirectAsyncFunc(nsContinueRedirectionFunc func);
     void PopRedirectAsyncFunc(nsContinueRedirectionFunc func);
-
-protected:
-    virtual void DoNotifyListenerCleanup();
 };
 
 #endif // nsHttpChannel_h__
