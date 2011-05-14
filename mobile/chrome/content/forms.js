@@ -256,6 +256,14 @@ FormAssistant.prototype = {
       }
 
       case "FormAssist:AutoComplete": {
+        try {
+          currentElement = currentElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+          let imeEditor = currentElement.editor.QueryInterface(Ci.nsIEditorIMESupport);
+          if (imeEditor.composing)
+            imeEditor.forceCompositionEnd();
+        }
+        catch(e) {}
+
         currentElement.value = json.value;
 
         let event = currentElement.ownerDocument.createEvent("Events");
