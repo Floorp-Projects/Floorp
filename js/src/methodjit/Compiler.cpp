@@ -4608,7 +4608,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
     *testObject = false;
 
     types::TypeSet *types = frame.extra(top).types;
-    if (!types)
+    if (!types || types->unknown())
         return false;
 
     JSObject *singleton = types->getSingleton(cx);
@@ -4642,6 +4642,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
             if (object->proto) {
                 if (!testSingletonProperty(object->proto, id))
                     return false;
+                types->addFreeze(cx);
 
                 /* If we don't know this is an object, we will need a test. */
                 *testObject = (type != JSVAL_TYPE_OBJECT) && !top->isTypeKnown();
