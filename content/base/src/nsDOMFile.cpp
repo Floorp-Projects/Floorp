@@ -666,8 +666,7 @@ nsDOMFile::Initialize(nsISupports* aOwner,
     }
 
     nsCOMPtr<nsILocalFile> localFile;
-    nsresult rv = NS_NewLocalFile(xpcomStr,
-                                  PR_FALSE, getter_AddRefs(localFile));
+    rv = NS_NewLocalFile(xpcomStr, PR_FALSE, getter_AddRefs(localFile));
     NS_ENSURE_SUCCESS(rv, rv);
 
     file = do_QueryInterface(localFile);
