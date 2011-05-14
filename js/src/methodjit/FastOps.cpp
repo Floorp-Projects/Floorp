@@ -936,7 +936,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot)
 
         // Before: N+1
         // After:  N+1
-        frame.storeLocal(slot, analysis->popGuaranteed(PC), true);
+        frame.storeLocal(slot, analysis->popGuaranteed(PC));
     } else {
         // Before:
         // After: V
@@ -961,7 +961,7 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot)
 
         // Before: N N+1
         // After:  N N+1
-        frame.storeLocal(slot, true, true);
+        frame.storeLocal(slot, true);
 
         // Before: N N+1
         // After:  N
