@@ -88,8 +88,10 @@ class Debug {
     static JSBool setEnabled(JSContext *cx, uintN argc, Value *vp);
     static JSBool getUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
     static JSBool setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp);
+    static JSBool getYoungestFrame(JSContext *cx, uintN argc, Value *vp);
     static JSBool construct(JSContext *cx, uintN argc, Value *vp);
     static JSPropertySpec properties[];
+    static JSFunctionSpec methods[];
 
     inline bool hasAnyLiveHooks() const;
 
@@ -100,6 +102,9 @@ class Debug {
     static JSTrapStatus dispatchHook(JSContext *cx, js::Value *vp,
                                      DebugObservesMethod observesEvent,
                                      DebugHandleMethod handleEvent);
+
+    inline bool observesScope(JSObject *obj) const;
+    inline bool observesFrame(StackFrame *fp) const;
 
     bool observesDebuggerStatement() const;
     JSTrapStatus handleDebuggerStatement(JSContext *cx, Value *vp);
@@ -187,6 +192,18 @@ bool
 Debug::hasAnyLiveHooks() const
 {
     return observesDebuggerStatement();
+}
+
+bool
+Debug::observesScope(JSObject *obj) const
+{
+    return observesCompartment(obj->compartment());
+}
+
+bool
+Debug::observesFrame(StackFrame *fp) const
+{
+    return observesScope(&fp->scopeChain());
 }
 
 bool

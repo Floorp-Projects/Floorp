@@ -691,6 +691,20 @@ Debug::setUncaughtExceptionHook(JSContext *cx, uintN argc, Value *vp)
 }
 
 JSBool
+Debug::getYoungestFrame(JSContext *cx, uintN argc, Value *vp)
+{
+    THISOBJ(cx, vp, Debug, "getYoungestFrame", thisobj, dbg);
+    StackFrame *fp = cx->fp();
+    while (fp && !dbg->observesFrame(fp))
+        fp = fp->prev();
+    if (!fp) {
+        vp->setNull();
+        return true;
+    }
+    return dbg->getScriptFrame(cx, fp, vp);
+}
+
+JSBool
 Debug::construct(JSContext *cx, uintN argc, Value *vp)
 {
     REQUIRE_ARGC("Debug", 1);
@@ -753,6 +767,11 @@ JSPropertySpec Debug::properties[] = {
     JS_PSGS("uncaughtExceptionHook", Debug::getUncaughtExceptionHook,
             Debug::setUncaughtExceptionHook, 0),
     JS_PS_END
+};
+
+JSFunctionSpec Debug::methods[] = {
+    JS_FN("getYoungestFrame", Debug::getYoungestFrame, 0, 0),
+    JS_FS_END
 };
 
 // === Debug.Frame
@@ -1102,7 +1121,7 @@ JS_DefineDebugObject(JSContext *cx, JSObject *obj)
 
     JSObject *debugCtor;
     JSObject *debugProto = js_InitClass(cx, obj, objProto, &Debug::jsclass, Debug::construct, 1,
-                                        Debug::properties, NULL, NULL, NULL, &debugCtor);
+                                        Debug::properties, Debug::methods, NULL, NULL, &debugCtor);
     if (!debugProto || !debugProto->ensureClassReservedSlots(cx))
         return false;
 
