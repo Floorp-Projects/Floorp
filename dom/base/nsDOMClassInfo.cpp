@@ -1687,6 +1687,8 @@ jsid nsDOMClassInfo::sOntouchmove_id     = JSID_VOID;
 jsid nsDOMClassInfo::sOntouchenter_id    = JSID_VOID;
 jsid nsDOMClassInfo::sOntouchleave_id    = JSID_VOID;
 jsid nsDOMClassInfo::sOntouchcancel_id   = JSID_VOID;
+jsid nsDOMClassInfo::sOnbeforeprint_id   = JSID_VOID;
+jsid nsDOMClassInfo::sOnafterprint_id    = JSID_VOID;
 
 static const JSClass *sObjectClass = nsnull;
 
@@ -2023,6 +2025,8 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
   SET_JSID_TO_STRING(sOntouchenter_id,    cx, "ontouchenter");
   SET_JSID_TO_STRING(sOntouchleave_id,    cx, "ontouchleave");
   SET_JSID_TO_STRING(sOntouchcancel_id,   cx, "ontouchcancel");
+  SET_JSID_TO_STRING(sOnbeforeprint_id,   cx, "onbeforeprint");
+  SET_JSID_TO_STRING(sOnafterprint_id,   cx, "onafterprint");
   
   return NS_OK;
 }
@@ -5145,6 +5149,8 @@ nsDOMClassInfo::ShutDown()
   sOntouchenter_id    = JSID_VOID;
   sOntouchleave_id    = JSID_VOID;
   sOntouchcancel_id   = JSID_VOID;
+  sOnbeforeprint_id   = JSID_VOID;
+  sOnafterprint_id    = JSID_VOID;
 
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecMan);
@@ -7618,11 +7624,13 @@ nsEventReceiverSH::ReallyIsEventName(jsid id, jschar aFirstChar)
   switch (aFirstChar) {
   case 'a' :
     return (id == sOnabort_id ||
-            id == sOnafterscriptexecute_id);
+            id == sOnafterscriptexecute_id ||
+            id == sOnafterprint_id);
   case 'b' :
     return (id == sOnbeforeunload_id ||
             id == sOnbeforescriptexecute_id ||
-            id == sOnblur_id);
+            id == sOnblur_id ||
+            id == sOnbeforeprint_id);
   case 'c' :
     return (id == sOnchange_id       ||
             id == sOnclick_id        ||

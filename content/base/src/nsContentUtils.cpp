@@ -695,8 +695,10 @@ nsContentUtils::InitializeEventTable() {
     ,
     { nsGkAtoms::onanimationstart,              NS_ANIMATION_START, EventNameType_None, NS_ANIMATION_EVENT },
     { nsGkAtoms::onanimationend,                NS_ANIMATION_END, EventNameType_None, NS_ANIMATION_EVENT },
-    { nsGkAtoms::onanimationiteration,          NS_ANIMATION_ITERATION, EventNameType_None, NS_ANIMATION_EVENT }
+    { nsGkAtoms::onanimationiteration,          NS_ANIMATION_ITERATION, EventNameType_None, NS_ANIMATION_EVENT },
 #endif
+    { nsGkAtoms::onbeforeprint,                 NS_BEFOREPRINT, EventNameType_HTMLXUL, NS_EVENT },
+    { nsGkAtoms::onafterprint,                  NS_AFTERPRINT, EventNameType_HTMLXUL, NS_EVENT }
   };
 
   sAtomEventTable = new nsDataHashtable<nsISupportsHashKey, EventNameMapping>;
