@@ -517,9 +517,13 @@ class nsHashKey;
 #define NS_MOZTOUCH_UP               (NS_MOZTOUCH_EVENT_START+2)
 
 // script notification events
-#define NS_NOTIFYSCRIPT_START    4500
-#define NS_BEFORE_SCRIPT_EXECUTE (NS_NOTIFYSCRIPT_START)
-#define NS_AFTER_SCRIPT_EXECUTE  (NS_NOTIFYSCRIPT_START+1)
+#define NS_NOTIFYSCRIPT_START        4500
+#define NS_BEFORE_SCRIPT_EXECUTE     (NS_NOTIFYSCRIPT_START)
+#define NS_AFTER_SCRIPT_EXECUTE      (NS_NOTIFYSCRIPT_START+1)
+
+#define NS_PRINT_EVENT_START         4600
+#define NS_BEFOREPRINT               (NS_PRINT_EVENT_START)
+#define NS_AFTERPRINT                (NS_PRINT_EVENT_START + 1)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
