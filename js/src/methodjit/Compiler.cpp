@@ -2200,7 +2200,7 @@ mjit::Compiler::generateMethod()
              */
             if (cx->typeInferenceEnabled()) {
                 uint32 slot = ArgSlot(GET_SLOTNO(PC));
-                if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
+                if (analysis->trackSlot(slot) && a->varTypes[slot].type == JSVAL_TYPE_DOUBLE)
                     frame.ensureDouble(frame.getArg(GET_SLOTNO(PC)));
             }
 
@@ -2228,7 +2228,7 @@ mjit::Compiler::generateMethod()
 
             if (cx->typeInferenceEnabled()) {
                 uint32 slot = LocalSlot(script, GET_SLOTNO(PC));
-                if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
+                if (analysis->trackSlot(slot) && a->varTypes[slot].type == JSVAL_TYPE_DOUBLE)
                     frame.ensureDouble(frame.getLocal(GET_SLOTNO(PC)));
             }
 
