@@ -614,7 +614,7 @@ class FrameState
     void loadThisForReturn(RegisterID typeReg, RegisterID dataReg, RegisterID tempReg);
 
     /* Stores the top stack slot back to a local or slot. */
-    void storeLocal(uint32 n, bool popGuaranteed = false, bool fixedType = false);
+    void storeLocal(uint32 n, bool popGuaranteed = false);
     void storeArg(uint32 n, bool popGuaranteed = false);
     void storeTop(FrameEntry *target);
 
@@ -950,6 +950,9 @@ class FrameState
     inline void syncType(FrameEntry *fe);
     inline void syncData(FrameEntry *fe);
 
+    /* For a frame entry whose value is dead, mark as synced. */
+    inline void fakeSync(FrameEntry *fe);
+
     inline FrameEntry *getCallee();
     inline FrameEntry *getThis();
     inline FrameEntry *getOrTrack(uint32 index);
@@ -999,7 +1002,7 @@ class FrameState
         return regstate_[reg.reg_];
     }
 
-    AnyRegisterID bestEvictReg(uint32 mask, bool includePinned) const;
+    AnyRegisterID bestEvictReg(uint32 mask, bool includePinned);
 
     inline analyze::Lifetime * variableLive(FrameEntry *fe, jsbytecode *pc) const;
     inline bool binaryEntryLive(FrameEntry *fe) const;
