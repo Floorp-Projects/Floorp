@@ -1573,21 +1573,21 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_FORARG)
           {
-            updateVarType();
             uint32 arg = GET_SLOTNO(PC);
             iterNext();
             frame.storeArg(arg, true);
             frame.pop();
+            updateVarType();
           }
           END_CASE(JSOP_FORARG)
 
           BEGIN_CASE(JSOP_FORLOCAL)
           {
-            updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             iterNext();
             frame.storeLocal(slot, true);
             frame.pop();
+            updateVarType();
           }
           END_CASE(JSOP_FORLOCAL)
 
@@ -2191,21 +2191,10 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETARG)
           {
-            updateVarType();
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             frame.storeArg(GET_SLOTNO(PC), pop);
-
-            /*
-             * Types of variables inferred as doubles need to be maintained as
-             * doubles. We might forget the type of the variable by the next
-             * call to fixDoubleTypes.
-             */
-            if (cx->typeInferenceEnabled()) {
-                uint32 slot = ArgSlot(GET_SLOTNO(PC));
-                if (analysis->trackSlot(slot) && a->varTypes[slot].type == JSVAL_TYPE_DOUBLE)
-                    frame.ensureDouble(frame.getArg(GET_SLOTNO(PC)));
-            }
+            updateVarType();
 
             if (pop) {
                 frame.pop();
@@ -2224,16 +2213,10 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETLOCAL)
           {
-            updateVarType();
             jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             frame.storeLocal(GET_SLOTNO(PC), pop);
-
-            if (cx->typeInferenceEnabled()) {
-                uint32 slot = LocalSlot(script, GET_SLOTNO(PC));
-                if (analysis->trackSlot(slot) && a->varTypes[slot].type == JSVAL_TYPE_DOUBLE)
-                    frame.ensureDouble(frame.getLocal(GET_SLOTNO(PC)));
-            }
+            updateVarType();
 
             if (pop) {
                 frame.pop();
@@ -2245,10 +2228,10 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETLOCALPOP)
           {
-            updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             frame.storeLocal(slot, true);
             frame.pop();
+            updateVarType();
           }
           END_CASE(JSOP_SETLOCALPOP)
 
@@ -2454,7 +2437,6 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_DEFLOCALFUN_FC)
           {
-            updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
             prepareStubCall(Uses(frame.frameSlots()));
@@ -2464,6 +2446,7 @@ mjit::Compiler::generateMethod()
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
             frame.storeLocal(slot, true);
             frame.pop();
+            updateVarType();
           }
           END_CASE(JSOP_DEFLOCALFUN_FC)
 
@@ -2552,7 +2535,6 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_DEFLOCALFUN)
           {
-            updateVarType();
             uint32 slot = GET_SLOTNO(PC);
             JSFunction *fun = script->getFunction(fullAtomIndex(&PC[SLOTNO_LEN]));
             prepareStubCall(Uses(0));
@@ -2562,6 +2544,7 @@ mjit::Compiler::generateMethod()
             frame.pushTypedPayload(JSVAL_TYPE_OBJECT, Registers::ReturnReg);
             frame.storeLocal(slot, true);
             frame.pop();
+            updateVarType();
           }
           END_CASE(JSOP_DEFLOCALFUN)
 
@@ -6856,6 +6839,14 @@ mjit::Compiler::updateVarType()
         VarType &vt = a->varTypes[slot];
         vt.types = types;
         vt.type = types->getKnownTypeTag(cx);
+
+        /*
+         * Variables whose type has been inferred as a double need to be
+         * maintained by the frame as a double. We might forget the exact
+         * representation used by the next call to fixDoubleTypes, fix it now.
+         */
+        if (vt.type == JSVAL_TYPE_DOUBLE)
+            frame.ensureDouble(frame.getSlotEntry(slot));
     }
 }
 
