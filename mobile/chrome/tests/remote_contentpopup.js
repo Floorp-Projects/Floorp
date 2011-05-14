@@ -16,10 +16,3 @@ AsyncTests.add("TestRemoteAutocomplete:Check", function(aMessage, aJson) {
   return element.value;
 });
 
-AsyncTests.add("TestRemoteAutocomplete:Reset", function(aMessage, aJson) {
-  gFocusManager.focusedElement = null;
-  let element = content.document.getElementById(aJson.id);
-  element.value = "";
-  return true;
-});
-

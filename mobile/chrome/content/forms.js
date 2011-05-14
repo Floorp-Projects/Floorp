@@ -578,7 +578,7 @@ FormAssistant.prototype = {
   },
 
   _isVisibleElement: function formHelperIsVisibleElement(aElement) {
-    let style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, null);
+    let style = aElement ? aElement.ownerDocument.defaultView.getComputedStyle(aElement, null) : null;
     if (!style)
       return false;
 
