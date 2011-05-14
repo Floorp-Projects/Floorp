@@ -874,6 +874,19 @@ FrameState::syncData(FrameEntry *fe)
 }
 
 inline void
+FrameState::fakeSync(FrameEntry *fe)
+{
+    /*
+     * If a frame entry's value will no longer be used, we can mark it as being
+     * synced without actually performing the sync: the value is not observed.
+     */
+    if (!fe->data.synced())
+        fe->data.sync();
+    if (!fe->type.synced())
+        fe->type.sync();
+}
+
+inline void
 FrameState::forgetType(FrameEntry *fe)
 {
     /*
