@@ -374,6 +374,16 @@
                         showFrame();
                         return repl();
                     });
+            },
+            throw: function (frame, exc) {
+                return saveExcursion(function () {
+                        topFrame = focusedFrame = frame;
+                        print("Unwinding due to exception. (Type 'c' to continue unwinding.)");
+                        showFrame();
+                        print("Exception value is:");
+                        showDebuggeeValue(exc);
+                        return repl();
+                    });
             }
         };
         repl();
