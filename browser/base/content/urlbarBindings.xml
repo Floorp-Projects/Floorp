@@ -183,7 +183,7 @@
       <field name="_formattingEnabled">true</field>
       <method name="formatValue">
         <body><![CDATA[
-          if (!this._formattingEnabled)
+          if (!this._formattingEnabled || this.focused)
             return;
 
           let controller = this.editor.selectionController;
