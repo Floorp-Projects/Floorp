@@ -129,7 +129,9 @@ Recompiler::patchNative(JSContext *cx, JITScript *jit, StackFrame *fp, jsbytecod
      * with the old script, and patch up the jump at the end to go to the interpoline.
      */
     fp->setRejoin(StubRejoin(rejoin));
-    cx->compartment->jaegerCompartment->orphanedNativeCount++;
+
+    /* :XXX: We might crash later if this fails. */
+    cx->compartment->jaegerCompartment->orphanedNativeFrames.append(fp);
 
     unsigned i;
     ic::CallICInfo *callICs = jit->callICs();

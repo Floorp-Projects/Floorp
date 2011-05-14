@@ -814,7 +814,7 @@ JS_STATIC_ASSERT(JSVAL_PAYLOAD_MASK == 0x00007FFFFFFFFFFFLL);
 #endif                   /* _WIN64 */
 
 JaegerCompartment::JaegerCompartment()
-    : orphanedNativeCount(0), orphanedNativePools(SystemAllocPolicy())
+    : orphanedNativeFrames(SystemAllocPolicy()), orphanedNativePools(SystemAllocPolicy())
 {}
 
 bool
