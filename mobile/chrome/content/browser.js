@@ -920,7 +920,7 @@ var Browser = {
     function visibility(aSidebarRect, aVisibleRect) {
       let width = aSidebarRect.width;
       aSidebarRect.restrictTo(aVisibleRect);
-      return aSidebarRect.width / width;
+      return (aSidebarRect.width ? aSidebarRect.width / width : 0);
     }
 
     if (!dx) dx = 0;
