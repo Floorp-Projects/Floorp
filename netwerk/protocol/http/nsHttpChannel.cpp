@@ -110,14 +110,13 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
 //-----------------------------------------------------------------------------
 
 nsHttpChannel::nsHttpChannel()
-    : mLogicalOffset(0)
+    : HttpAsyncAborter<nsHttpChannel>(this)
+    , mLogicalOffset(0)
     , mCacheAccess(0)
     , mPostID(0)
     , mRequestTime(0)
     , mOnCacheEntryAvailableCallback(nsnull)
     , mAsyncCacheOpen(PR_FALSE)
-    , mPendingAsyncCallOnResume(nsnull)
-    , mSuspendCount(0)
     , mCachedContentIsValid(PR_FALSE)
     , mCachedContentIsPartial(PR_FALSE)
     , mTransactionReplaced(PR_FALSE)
@@ -170,22 +169,6 @@ nsHttpChannel::Init(nsIURI *uri,
 //-----------------------------------------------------------------------------
 // nsHttpChannel <private>
 //-----------------------------------------------------------------------------
-
-nsresult
-nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr,
-                         nsRunnableMethod<nsHttpChannel> **retval)
-{
-    nsresult rv;
-
-    nsRefPtr<nsRunnableMethod<nsHttpChannel> > event =
-        NS_NewRunnableMethod(this, funcPtr);
-    rv = NS_DispatchToCurrentThread(event);
-    if (NS_SUCCEEDED(rv) && retval) {
-        *retval = event;
-    }
-
-    return rv;
-}
 
 nsresult
 nsHttpChannel::Connect(PRBool firstTime)
@@ -331,60 +314,9 @@ nsHttpChannel::Connect(PRBool firstTime)
     return NS_OK;
 }
 
-// called when Connect fails
-nsresult
-nsHttpChannel::AsyncAbort(nsresult status)
-{
-    LOG(("nsHttpChannel::AsyncAbort [this=%p status=%x]\n", this, status));
-
-    mStatus = status;
-    mIsPending = PR_FALSE;
-
-    nsresult rv = AsyncCall(&nsHttpChannel::HandleAsyncNotifyListener);
-    // And if that fails?  Callers ignore our return value anyway....
-    
-    // finally remove ourselves from the load group.
-    if (mLoadGroup)
-        mLoadGroup->RemoveRequest(this, nsnull, status);
-
-    return rv;
-}
-
 void
-nsHttpChannel::HandleAsyncNotifyListener()
+nsHttpChannel::DoNotifyListenerCleanup()
 {
-    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
-    
-    if (mSuspendCount) {
-        LOG(("Waiting until resume to do async notification [this=%p]\n",
-             this));
-        mPendingAsyncCallOnResume = &nsHttpChannel::HandleAsyncNotifyListener;
-        return;
-    }
-
-    DoNotifyListener();
-}
-
-void
-nsHttpChannel::DoNotifyListener()
-{
-    // Make sure mIsPending is set to PR_FALSE. At this moment we are done from
-    // the point of view of our consumer and we have to report our self
-    // as not-pending.
-    if (mListener) {
-        mListener->OnStartRequest(this, mListenerContext);
-        mIsPending = PR_FALSE;
-        mListener->OnStopRequest(this, mListenerContext, mStatus);
-        mListener = 0;
-        mListenerContext = 0;
-    }
-    else {
-        mIsPending = PR_FALSE;
-    }
-    // We have to make sure to drop the reference to the callbacks too
-    mCallbacks = nsnull;
-    mProgressSink = nsnull;
-
     // We don't need this info anymore
     CleanRedirectCacheChainIfNecessary();
 }
@@ -392,11 +324,11 @@ nsHttpChannel::DoNotifyListener()
 void
 nsHttpChannel::HandleAsyncRedirect()
 {
-    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
+    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
     
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async redirect [this=%p]\n", this));
-        mPendingAsyncCallOnResume = &nsHttpChannel::HandleAsyncRedirect;
+        mCallOnResume = &nsHttpChannel::HandleAsyncRedirect;
         return;
     }
 
@@ -450,12 +382,12 @@ nsHttpChannel::ContinueHandleAsyncRedirect(nsresult rv)
 void
 nsHttpChannel::HandleAsyncNotModified()
 {
-    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
+    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
     
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async not-modified [this=%p]\n",
              this));
-        mPendingAsyncCallOnResume = &nsHttpChannel::HandleAsyncNotModified;
+        mCallOnResume = &nsHttpChannel::HandleAsyncNotModified;
         return;
     }
     
@@ -474,11 +406,11 @@ nsHttpChannel::HandleAsyncNotModified()
 void
 nsHttpChannel::HandleAsyncFallback()
 {
-    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
+    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
 
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async fallback [this=%p]\n", this));
-        mPendingAsyncCallOnResume = &nsHttpChannel::HandleAsyncFallback;
+        mCallOnResume = &nsHttpChannel::HandleAsyncFallback;
         return;
     }
 
@@ -1295,13 +1227,12 @@ nsHttpChannel::ProxyFailover()
 void
 nsHttpChannel::HandleAsyncReplaceWithProxy()
 {
-    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
+    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
 
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async proxy replacement [this=%p]\n",
              this));
-        mPendingAsyncCallOnResume =
-            &nsHttpChannel::HandleAsyncReplaceWithProxy;
+        mCallOnResume = &nsHttpChannel::HandleAsyncReplaceWithProxy;
         return;
     }
 
@@ -1329,7 +1260,7 @@ nsHttpChannel::ContinueHandleAsyncReplaceWithProxy(nsresult status)
         mLoadGroup->RemoveRequest(this, nsnull, mStatus);
     }
     else if (NS_FAILED(status)) {
-       AsyncAbort(status);
+        AsyncAbort(status);
     }
 
     // Return NS_OK here, even it seems to be breaking the async function stack
@@ -1344,11 +1275,11 @@ nsHttpChannel::ContinueHandleAsyncReplaceWithProxy(nsresult status)
 void
 nsHttpChannel::HandleAsyncRedirectChannelToHttps()
 {
-    NS_PRECONDITION(!mPendingAsyncCallOnResume, "How did that happen?");
+    NS_PRECONDITION(!mCallOnResume, "How did that happen?");
 
     if (mSuspendCount) {
         LOG(("Waiting until resume to do async redirect to https [this=%p]\n", this));
-        mPendingAsyncCallOnResume = &nsHttpChannel::HandleAsyncRedirectChannelToHttps;
+        mCallOnResume = &nsHttpChannel::HandleAsyncRedirectChannelToHttps;
         return;
     }
 
@@ -1643,6 +1574,16 @@ nsHttpChannel::ResponseWouldVary()
     }
     return PR_FALSE;
 }
+
+// We need to have an implementation of this function just so that we can keep
+// all references to mCallOnResume of type nsHttpChannel:  it's not OK in C++
+// to set a member function ptr to  a base class function.
+void
+nsHttpChannel::HandleAsyncAbort()
+{
+    HttpAsyncAborter<nsHttpChannel>::HandleAsyncAbort();
+}
+
 
 nsresult
 nsHttpChannel::Hash(const char *buf, nsACString &hash)
@@ -3591,9 +3532,9 @@ nsHttpChannel::Resume()
     
     LOG(("nsHttpChannel::Resume [this=%p]\n", this));
         
-    if (--mSuspendCount == 0 && mPendingAsyncCallOnResume) {
-        nsresult rv = AsyncCall(mPendingAsyncCallOnResume);
-        mPendingAsyncCallOnResume = nsnull;
+    if (--mSuspendCount == 0 && mCallOnResume) {
+        nsresult rv = AsyncCall(mCallOnResume);
+        mCallOnResume = nsnull;
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
