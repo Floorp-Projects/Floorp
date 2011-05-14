@@ -470,6 +470,28 @@ class TypeIntermediate
     virtual bool hasDynamicResult(uint32 offset, jstype type) { return false; }
 };
 
+/*
+ * Barrier introduced at some bytecode. These are added when, during inference,
+ * we block a type from being propagated as would normally be done for a subset
+ * constraint. The propagation is technically possible, but we suspect it will
+ * not happen dynamically and this type needs to be watched for. These are only
+ * added at reads of properties and at scripted call sites.
+ */
+struct TypeBarrier
+{
+    /* Next barrier on the same bytecode. */
+    TypeBarrier *next;
+
+    /* Target type set into which propagation was blocked. */
+    TypeSet *target;
+
+    /*
+     * Type which was not added to the target. If target ends up containing the
+     * type somehow, this barrier can be removed.
+     */
+    jstype type;
+};
+
 /* Type information about a property. */
 struct Property
 {

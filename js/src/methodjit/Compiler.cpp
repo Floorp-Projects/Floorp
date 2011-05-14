@@ -262,6 +262,10 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
         if (JSOp(*pc) != JSOP_CALL)
             continue;
 
+        /* Not inlining at monitored call sites or those with type barriers. */
+        if (code->monitoredTypes || analysis->typeBarriers(pc) != NULL)
+            continue;
+
         uint32 argc = GET_ARGC(pc);
         types::TypeSet *calleeTypes = analysis->poppedTypes(pc, argc + 1);
 
@@ -561,9 +565,8 @@ mjit::Compiler::prepareInferenceTypes(JSScript *script, ActiveFrame *a)
      * join points the in memory type tag is always in sync with the known type
      * tag of the variable's SSA value at that join point. In particular, SSA
      * values inferred as (int|double) must in fact be doubles, stored either
-     * in floating point registers or in memory. (There is an exception for
-     * locals with a dead value at the current point, whose type may or may not
-     * be synced).
+     * in floating point registers or in memory. There is an exception for
+     * locals whose value is currently dead, whose type might not be synced.
      *
      * To ensure this, we need to know the SSA values for each variable at each
      * join point, which the SSA analysis does not store explicitly. These can
@@ -680,6 +683,8 @@ mjit::Compiler::generatePrologue()
             stubcc.masm.move(Registers::ReturnReg, JSFrameReg);
             argMatch.linkTo(stubcc.masm.label(), &stubcc.masm);
 
+            argsCheckLabel = stubcc.masm.label();
+
             /* Type check the arguments as well. */
             if (cx->typeInferenceEnabled()) {
 #ifdef JS_MONOIC
@@ -757,18 +762,23 @@ mjit::Compiler::generatePrologue()
     if (debugMode() || Probes::callTrackingActive(cx))
         INLINE_STUBCALL(stubs::ScriptDebugPrologue, REJOIN_RESUME);
 
-    if (cx->typeInferenceEnabled()) {
-        /* Convert integer arguments which were inferred as (int|double) to doubles. */
-        for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
-            uint32 slot = ArgSlot(i);
-            if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
-                frame.ensureDouble(frame.getArg(i));
-        }
-    }
+    if (cx->typeInferenceEnabled())
+        ensureDoubleArguments();
 
     recompileCheckHelper();
 
     return Compile_Okay;
+}
+
+void
+mjit::Compiler::ensureDoubleArguments()
+{
+    /* Convert integer arguments which were inferred as (int|double) to doubles. */
+    for (uint32 i = 0; script->fun && i < script->fun->nargs; i++) {
+        uint32 slot = ArgSlot(i);
+        if (a->varTypes[slot].type == JSVAL_TYPE_DOUBLE && analysis->trackSlot(slot))
+            frame.ensureDouble(frame.getArg(i));
+    }
 }
 
 CompileStatus
@@ -868,6 +878,7 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     jit->singleStepMode = script->singleStepMode;
     if (script->fun) {
         jit->arityCheckEntry = stubCode.locationOf(arityLabel).executableAddress();
+        jit->argsCheckEntry = stubCode.locationOf(argsCheckLabel).executableAddress();
         jit->fastEntry = fullCode.locationOf(invokeLabel).executableAddress();
     }
 
@@ -1030,7 +1041,6 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         jitCallICs[i].funJump = fullCode.locationOf(callICs[i].funJump);
         jitCallICs[i].slowPathStart = stubCode.locationOf(callICs[i].slowPathStart);
         jitCallICs[i].typeMonitored = callICs[i].typeMonitored;
-        jitCallICs[i].argTypes = callICs[i].argTypes;
 
         /* Compute the hot call offset. */
         uint32 offset = fullCode.locationOf(callICs[i].hotJump) -
@@ -1773,7 +1783,7 @@ mjit::Compiler::generateMethod()
                 /* Watch for overflow in constant propagation. */
                 types::TypeSet *pushed = pushedTypeSet(0);
                 if (!v.isInt32() && pushed && !pushed->hasType(types::TYPE_DOUBLE)) {
-                    script->typeMonitorResult(cx, PC, types::TYPE_DOUBLE);
+                    script->typeMonitorOverflow(cx, PC);
                     return Compile_Retry;
                 }
 
@@ -1982,8 +1992,7 @@ mjit::Compiler::generateMethod()
             bool callingNew = (op == JSOP_NEW);
 
             bool done = false;
-            bool inlined = false;
-            if (op == JSOP_CALL) {
+            if (op == JSOP_CALL && !monitored(PC)) {
                 CompileStatus status = inlineNativeFunction(GET_ARGC(PC), callingNew);
                 if (status == Compile_Okay)
                     done = true;
@@ -1992,10 +2001,8 @@ mjit::Compiler::generateMethod()
             }
             if (!done && inlining()) {
                 CompileStatus status = inlineScriptedFunction(GET_ARGC(PC), callingNew);
-                if (status == Compile_Okay) {
+                if (status == Compile_Okay)
                     done = true;
-                    inlined = true;
-                }
                 else if (status != Compile_InlineAbort)
                     return status;
             }
@@ -3452,24 +3459,6 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
 
     callFrameSize = callIC.frameSize;
 
-    callIC.argTypes = NULL;
-    callIC.typeMonitored = monitored(PC);
-    if (callIC.typeMonitored && callIC.frameSize.isStatic()) {
-        unsigned argc = callIC.frameSize.staticArgc();
-        callIC.argTypes = (types::ClonedTypeSet *)
-            cx->calloc_((1 + argc) * sizeof(types::ClonedTypeSet));
-        if (!callIC.argTypes) {
-            js_ReportOutOfMemory(cx);
-            return false;
-        }
-        types::TypeSet *types = frame.extra(frame.peek(-((int)argc + 1))).types;
-        types::TypeSet::Clone(cx, types, &callIC.argTypes[0]);
-        for (int i = 0; i < (int)argc; i++) {
-            types::TypeSet *types = frame.extra(frame.peek(-((int)argc - i))).types;
-            types::TypeSet::Clone(cx, types, &callIC.argTypes[i + 1]);
-        }
-    }
-
     /* Test the type if necessary. Failing this always takes a really slow path. */
     MaybeJump notObjectJump;
     if (icCalleeType.isSet())
@@ -3769,6 +3758,8 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
     if (inlineCallees.empty())
         return Compile_InlineAbort;
 
+    JS_ASSERT(!monitored(PC));
+
     /*
      * Remove all dead entries from the frame's tracker. We will not recognize
      * them as dead after pushing the new frame.
@@ -3849,6 +3840,12 @@ mjit::Compiler::inlineScriptedFunction(uint32 argc, bool callingNew)
             a->returnSet = true;
             a->returnRegister = returnRegister;
         }
+
+        /*
+         * Update the argument frame entries in place if the callee has had an
+         * argument inferred as double but we are passing an int.
+         */
+        ensureDoubleArguments();
 
         status = generateMethod();
         if (status != Compile_Okay) {
@@ -6887,7 +6884,9 @@ mjit::Compiler::pushedTypeSet(uint32 pushed)
 bool
 mjit::Compiler::monitored(jsbytecode *pc)
 {
-    return cx->typeInferenceEnabled() && analysis->monitoredTypes(pc - script->code);
+    if (!cx->typeInferenceEnabled())
+        return false;
+    return analysis->getCode(pc).monitoredTypes || analysis->typeBarriers(pc) != NULL;
 }
 
 void

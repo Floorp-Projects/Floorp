@@ -642,7 +642,7 @@ class SetPropCompiler : public PICStubCompiler
                 RecompilationMonitor monitor(cx);
                 JSScript *script = obj->getCallObjCalleeFunction()->script();
                 uint16 slot = uint16(shape->shortid);
-                if (!script->ensureVarTypes(cx))
+                if (!script->ensureTypeArray(cx))
                     return error();
                 if (shape->setterOp() == SetCallArg)
                     script->typeSetArgument(cx, slot, pic.rhsTypes);
@@ -1539,7 +1539,7 @@ class ScopeNameCompiler : public PICStubCompiler
             JS_ASSERT(shape->getterOp() == GetCallArg || shape->getterOp() == GetCallVar);
             JSScript *newscript = getprop.obj->getCallObjCalleeFunction()->script();
             uint16 slot = uint16(getprop.shape->shortid);
-            if (!newscript->ensureVarTypes(cx))
+            if (!newscript->ensureTypeArray(cx))
                 return false;
             if (shape->getterOp() == GetCallArg)
                 types = newscript->argTypes(slot);
@@ -1548,7 +1548,7 @@ class ScopeNameCompiler : public PICStubCompiler
         } else {
             JS_ASSERT(!getprop.obj->getParent());
             if (getprop.obj->getType()->unknownProperties()) {
-                f.script()->typeMonitorResult(cx, f.pc(), types::TYPE_UNKNOWN);
+                f.script()->typeMonitorUnknown(cx, f.pc());
                 return true;
             }
             types = getprop.obj->getType()->getProperty(cx, shape->propid, false);
@@ -1691,12 +1691,6 @@ class BindNameCompiler : public PICStubCompiler
 };
 
 static void JS_FASTCALL
-DisabledLengthIC(VMFrame &f, ic::PICInfo *pic)
-{
-    stubs::Length(f);
-}
-
-static void JS_FASTCALL
 DisabledGetPropIC(VMFrame &f, ic::PICInfo *pic)
 {
     stubs::GetProp(f);
@@ -1716,7 +1710,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
     JSAtom *atom = pic->atom;
     if (atom == f.cx->runtime->atomState.lengthAtom) {
         if (f.regs.sp[-1].isString()) {
-            GetPropCompiler cc(f, script, NULL, *pic, NULL, DisabledLengthIC);
+            GetPropCompiler cc(f, script, NULL, *pic, NULL, DisabledGetPropIC);
             LookupStatus status = cc.generateStringLengthStub();
             if (status == Lookup_Error)
                 THROW();
@@ -1728,7 +1722,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
             if (obj->isArray() ||
                 (obj->isArguments() && !obj->asArguments()->hasOverriddenLength()) ||
                 obj->isString()) {
-                GetPropCompiler cc(f, script, obj, *pic, NULL, DisabledLengthIC);
+                GetPropCompiler cc(f, script, obj, *pic, NULL, DisabledGetPropIC);
                 if (obj->isArray()) {
                     LookupStatus status = cc.generateArrayLengthStub();
                     if (status == Lookup_Error)
@@ -1787,8 +1781,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
      * :FIXME: looking under the usePropCache abstraction, which is only unset for
      * reads of the prototype.
      */
-    if (v.isUndefined() && usePropCache)
-        f.script()->typeMonitorUndefined(f.cx, f.pc());
+    if (usePropCache)
+        f.script()->typeMonitor(f.cx, f.pc(), v);
 
     f.regs.sp[-1] = v;
 }
@@ -1955,8 +1949,7 @@ ic::CallProp(VMFrame &f, ic::PICInfo *pic)
     }
 #endif
 
-    if (regs.sp[-2].isUndefined())
-        f.script()->typeMonitorUndefined(cx, f.pc());
+    f.script()->typeMonitor(cx, f.pc(), regs.sp[-2]);
 
     if (monitor.recompiled())
         return;
@@ -2008,8 +2001,7 @@ ic::XName(VMFrame &f, ic::PICInfo *pic)
         THROW();
     f.regs.sp[-1] = rval;
 
-    if (rval.isUndefined())
-        f.script()->typeMonitorUndefined(f.cx, f.pc());
+    f.script()->typeMonitor(f.cx, f.pc(), rval);
 }
 
 void JS_FASTCALL
@@ -2030,7 +2022,7 @@ ic::Name(VMFrame &f, ic::PICInfo *pic)
 
     if (status == Lookup_Cacheable && !cc.updateTypes())
         THROW();
-    f.script()->typeMonitorResult(f.cx, f.pc(), rval);
+    f.script()->typeMonitor(f.cx, f.pc(), rval);
 }
 
 static void JS_FASTCALL
@@ -2510,8 +2502,7 @@ ic::CallElement(VMFrame &f, ic::GetElementIC *ic)
     }
     if (!JSID_IS_INT(id))
         f.script()->typeMonitorUnknown(cx, f.pc());
-    if (f.regs.sp[-2].isUndefined())
-        f.script()->typeMonitorUndefined(cx, f.pc());
+    f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
 }
 
 void JS_FASTCALL
@@ -2563,8 +2554,7 @@ ic::GetElement(VMFrame &f, ic::GetElementIC *ic)
         THROW();
     if (!JSID_IS_INT(id))
         f.script()->typeMonitorUnknown(cx, f.pc());
-    if (f.regs.sp[-2].isUndefined())
-        f.script()->typeMonitorUndefined(cx, f.pc());
+    f.script()->typeMonitor(cx, f.pc(), f.regs.sp[-2]);
 }
 
 #define APPLY_STRICTNESS(f, s)                          \

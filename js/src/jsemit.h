@@ -636,6 +636,7 @@ struct JSCodeGenerator : public JSTreeContext
     SlotVector      closedVars;
 
     uint16          traceIndex;     /* index for the next JSOP_TRACE instruction */
+    uint16          typesetIndex;   /* index for the next instruction with a type set */
 
     /*
      * Initialize cg to allocate bytecode space from codePool, source note
