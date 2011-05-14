@@ -103,6 +103,13 @@ interface nsIProtocolProxyService : nsISupports
         (1 << 3) | RESOLVE_IGNORE_URI_SCHEME;
 
     /**
+     * When the proxy configuration is manual this flag may be passed to the
+     * resolve and asyncResolve methods to that all methods will be tunneled via
+     * CONNECT through the http proxy.
+     */
+    const unsigned long RESOLVE_ALWAYS_TUNNEL = (1 << 4);
+
+    /**
      * This method returns a nsIProxyInfo instance that identifies a proxy to
      * be used for loading the given URI.  Otherwise, this method returns null
      * indicating that a direct connection should be used.

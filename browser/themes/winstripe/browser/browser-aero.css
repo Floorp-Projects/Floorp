@@ -88,6 +88,10 @@
     background: transparent;
   }
 
+  #appcontent {
+    -moz-appearance: -moz-win-exclude-glass;
+  }
+
   #main-window[chromemargin^="0,"][sizemode=normal] #navigator-toolbox {
     margin-top: -7px;
   }

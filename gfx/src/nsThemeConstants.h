@@ -251,3 +251,7 @@
 #define NS_THEME_WINDOW_BUTTON_RESTORE                     239
 #define NS_THEME_WINDOW_BUTTON_BOX                         240
 #define NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED               241
+
+// moz-apperance style used in setting proper glass margins
+#define NS_THEME_WIN_EXCLUDE_GLASS                         242
+

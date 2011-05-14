@@ -1107,7 +1107,6 @@ JSObject::removeProperty(JSContext *cx, jsid id)
         JS_ATOMIC_INCREMENT(&cx->runtime->propertyRemovals);
     }
 
-
     /* If shape is not the last property added, switch to dictionary mode. */
     if (shape != lastProp && !inDictionaryMode()) {
         if (!toDictionaryMode(cx))
@@ -1168,16 +1167,19 @@ JSObject::removeProperty(JSContext *cx, jsid id)
                 JS_ASSERT_IF(hadSlot, shape->slot + 1 <= shape->slotSpan);
 
                 /*
-                 * Maintain slot freelist consistency. The only constraint we
-                 * have is that slot numbers on the freelist are less than 
-                 * lastProp->slotSpan. Thus, if the freelist is non-empty,
-                 * then lastProp->slotSpan may not decrease.
-                 */ 
+                 * Maintain slot freelist consistency. Slot numbers on the
+                 * freelist are less than lastProp->slotSpan; so if the
+                 * freelist is non-empty, then lastProp->slotSpan may not
+                 * decrease.
+                 */
                 if (table->freelist != SHAPE_INVALID_SLOT) {
                     lastProp->slotSpan = shape->slotSpan;
-                    
-                    /* Add the slot to the freelist if it wasn't added in freeSlot. */
-                    if (hadSlot && !addedToFreelist) {
+
+                    /*
+                     * Add the slot to the freelist if it wasn't added in
+                     * freeSlot and it is not a reserved slot.
+                     */
+                    if (hadSlot && !addedToFreelist && JSSLOT_FREE(clasp) <= shape->slot) {
                         getSlotRef(shape->slot).setPrivateUint32(table->freelist);
                         table->freelist = shape->slot;
                     }

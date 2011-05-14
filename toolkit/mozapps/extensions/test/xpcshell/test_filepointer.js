@@ -325,6 +325,33 @@ function run_test_8() {
 
       restartManager();
 
+      run_test_9();
+    });
+  });
+}
+
+// Removing the add-on the pointer file points at should uninstall the add-on
+function run_test_9() {
+  var dest = writeInstallRDFForExtension(addon1, sourceDir);
+  writePointer(addon1.id);
+
+  restartManager();
+
+  AddonManager.getAddonByID(addon1.id, function(a1) {
+    do_check_neq(a1, null);
+    do_check_eq(a1.version, "1.0");
+
+    dest.remove(true);
+
+    restartManager();
+
+    AddonManager.getAddonByID(addon1.id, function(a1) {
+      do_check_eq(a1, null);
+
+      let pointer = profileDir.clone();
+      pointer.append(addon1.id);
+      do_check_false(pointer.exists());
+
       end_test();
     });
   });

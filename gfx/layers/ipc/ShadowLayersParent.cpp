@@ -290,7 +290,10 @@ ShadowLayersParent::RecvUpdate(const InfallibleTArray<Edit>& cset,
       layer->SetClipRect(common.useClipRect() ? &common.clipRect() : NULL);
       layer->SetTransform(common.transform());
       layer->SetTileSourceRect(common.useTileSourceRect() ? &common.tileSourceRect() : NULL);
-      layer->SetIsFixedPosition(common.isFixedPosition());
+      static bool fixedPositionLayersEnabled = getenv("MOZ_ENABLE_FIXED_POSITION_LAYERS") != 0;
+      if (fixedPositionLayersEnabled) {
+        layer->SetIsFixedPosition(common.isFixedPosition());
+      }
 
       typedef SpecificLayerAttributes Specific;
       const SpecificLayerAttributes& specific = attrs.specific();

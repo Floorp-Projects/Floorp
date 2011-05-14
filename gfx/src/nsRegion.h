@@ -186,6 +186,7 @@ public:
   nsRegion ConvertAppUnitsRoundIn (PRInt32 aFromAPP, PRInt32 aToAPP) const;
   nsRegion& ScaleRoundOut(float aXScale, float aYScale);
   nsIntRegion ToOutsidePixels (nscoord aAppUnitsPerPixel) const;
+  nsIntRegion ToNearestPixels (nscoord aAppUnitsPerPixel) const;
   nsRegion& ExtendForScaling (float aXMult, float aYMult);
 
   /**
@@ -262,6 +263,7 @@ private:
   void MoveInto (nsRegion& aDestRegion, const RgnRect* aStartRect);
   void MoveInto (nsRegion& aDestRegion)
   {    MoveInto (aDestRegion, mRectListHead.next);  }
+  nsIntRegion ToPixels(nscoord aAppUnitsPerPixel, bool aOutsidePixels) const;
 };
 
 
