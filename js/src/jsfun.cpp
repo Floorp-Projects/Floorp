@@ -428,6 +428,7 @@ WrapEscapingClosure(JSContext *cx, StackFrame *fp, JSFunction *fun)
                                             : 0,
                                             script->nClosedArgs,
                                             script->nClosedVars,
+                                            script->nTypeSets,
                                             script->getVersion());
     if (!wscript)
         return NULL;
@@ -2768,7 +2769,7 @@ js_InitFunctionClass(JSContext *cx, JSObject *obj)
         return NULL;
     fun->flags |= JSFUN_PROTOTYPE;
 
-    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
+    JSScript *script = JSScript::NewScript(cx, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, JSVERSION_DEFAULT);
     if (!script)
         return NULL;
     script->noScriptRval = true;

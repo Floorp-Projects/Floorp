@@ -496,6 +496,7 @@ struct JITScript {
     void            *invokeEntry;       /* invoke address */
     void            *fastEntry;         /* cached entry, fastest */
     void            *arityCheckEntry;   /* arity check address */
+    void            *argsCheckEntry;    /* arguments check address */
 
     /*
      * This struct has several variable-length sections that are allocated on

@@ -164,7 +164,6 @@ class Compiler : public BaseCompiler
         RegisterID   funPtrReg;
         FrameSize    frameSize;
         bool         typeMonitored;
-        types::ClonedTypeSet *argTypes;
     };
 
   private:
@@ -455,6 +454,7 @@ class Compiler : public BaseCompiler
     StubCompiler stubcc;
     Label invokeLabel;
     Label arityLabel;
+    Label argsCheckLabel;
 #ifdef JS_MONOIC
     Label argsCheckStub;
     Label argsCheckFallthrough;
@@ -530,6 +530,7 @@ class Compiler : public BaseCompiler
 
     /* Analysis helpers. */
     CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);
+    void ensureDoubleArguments();
     void fixDoubleTypes(jsbytecode *target);
     void restoreAnalysisTypes();
     void watchGlobalReallocation();

@@ -281,7 +281,7 @@ JSContext::markTypeCallerUnexpected(js::types::jstype type)
         return;
     }
 
-    script->typeMonitorResult(this, pc, type);
+    compartment->types.dynamicPush(this, script, pc - script->code, type);
 }
 
 inline void
@@ -485,25 +485,40 @@ JSContext::fixObjectType(JSObject *obj)
 /////////////////////////////////////////////////////////////////////
 
 inline bool
-JSScript::ensureVarTypes(JSContext *cx)
+JSScript::ensureTypeArray(JSContext *cx)
 {
-    if (varTypes)
+    if (typeArray)
         return true;
-    return makeVarTypes(cx);
+    return makeTypeArray(cx);
+}
+
+inline js::types::TypeSet *
+JSScript::bytecodeTypes(const jsbytecode *pc)
+{
+    JS_ASSERT(typeArray);
+
+    JSOp op = JSOp(*pc);
+    JS_ASSERT(js_CodeSpec[op].format & JOF_TYPESET);
+
+    /* All bytecodes with type sets are JOF_ATOM, except JSOP_{GET,CALL}ELEM */
+    uint16 index = (op == JSOP_GETELEM || op == JSOP_CALLELEM) ? GET_UINT16(pc) : GET_UINT16(pc + 2);
+    JS_ASSERT(index < nTypeSets);
+
+    return &typeArray[index];
 }
 
 inline js::types::TypeSet *
 JSScript::returnTypes()
 {
-    JS_ASSERT(varTypes);
-    return &varTypes[js::analyze::CalleeSlot()];
+    JS_ASSERT(typeArray);
+    return &typeArray[nTypeSets + js::analyze::CalleeSlot()];
 }
 
 inline js::types::TypeSet *
 JSScript::thisTypes()
 {
-    JS_ASSERT(varTypes);
-    return &varTypes[js::analyze::ThisSlot()];
+    JS_ASSERT(typeArray);
+    return &typeArray[nTypeSets + js::analyze::ThisSlot()];
 }
 
 /*
@@ -515,29 +530,29 @@ JSScript::thisTypes()
 inline js::types::TypeSet *
 JSScript::argTypes(unsigned i)
 {
-    JS_ASSERT(varTypes && fun && i < fun->nargs);
-    return &varTypes[js::analyze::ArgSlot(i)];
+    JS_ASSERT(typeArray && fun && i < fun->nargs);
+    return &typeArray[nTypeSets + js::analyze::ArgSlot(i)];
 }
 
 inline js::types::TypeSet *
 JSScript::localTypes(unsigned i)
 {
-    JS_ASSERT(varTypes && i < nfixed);
-    return &varTypes[js::analyze::LocalSlot(this, i)];
+    JS_ASSERT(typeArray && i < nfixed);
+    return &typeArray[nTypeSets + js::analyze::LocalSlot(this, i)];
 }
 
 inline js::types::TypeSet *
 JSScript::upvarTypes(unsigned i)
 {
-    JS_ASSERT(varTypes && i < bindings.countUpvars());
-    return &varTypes[js::analyze::LocalSlot(this, nfixed) + i];
+    JS_ASSERT(typeArray && i < bindings.countUpvars());
+    return &typeArray[nTypeSets + js::analyze::TotalSlots(this) + i];
 }
 
 inline js::types::TypeSet *
 JSScript::slotTypes(unsigned slot)
 {
-    JS_ASSERT(varTypes && slot < js::analyze::TotalSlots(this));
-    return &varTypes[slot];
+    JS_ASSERT(typeArray && slot < js::analyze::TotalSlots(this));
+    return &typeArray[nTypeSets + slot];
 }
 
 inline JSObject *
@@ -590,49 +605,50 @@ JSScript::getTypeInitObject(JSContext *cx, const jsbytecode *pc, bool isArray)
 }
 
 inline void
-JSScript::typeMonitorResult(JSContext *cx, const jsbytecode *pc,
-                            js::types::jstype type)
+JSScript::typeMonitor(JSContext *cx, const jsbytecode *pc, const js::Value &rval)
 {
-    if (cx->typeInferenceEnabled())
-        cx->compartment->types.dynamicPush(cx, this, pc - code, type);
-}
+    if (cx->typeInferenceEnabled() && (js_CodeSpec[*pc].format & JOF_TYPESET)) {
+        /* Allow the non-TYPESET scenario to simplify stubs invonked by INC* ops. Yuck. */
 
-inline void
-JSScript::typeMonitorResult(JSContext *cx, const jsbytecode *pc, const js::Value &rval)
-{
-    if (cx->typeInferenceEnabled())
-        typeMonitorResult(cx, pc, js::types::GetValueType(cx, rval));
+        js::types::jstype type = js::types::GetValueType(cx, rval);
+        js::types::TypeSet *types = bytecodeTypes(pc);
+        if (types->hasType(type))
+            return;
+
+        js::types::AutoEnterTypeInference enter(cx);
+
+        js::types::InferSpew(js::types::ISpewOps, "bytecodeType: #%u:%05u: %s",
+                             id(), pc - code, js::types::TypeString(type));
+        types->addType(cx, type);
+    }
 }
 
 inline void
 JSScript::typeMonitorOverflow(JSContext *cx, const jsbytecode *pc)
 {
-    typeMonitorResult(cx, pc, js::types::TYPE_DOUBLE);
-}
-
-inline void
-JSScript::typeMonitorUndefined(JSContext *cx, const jsbytecode *pc)
-{
-    typeMonitorResult(cx, pc, js::types::TYPE_UNDEFINED);
+    if (cx->typeInferenceEnabled())
+        cx->compartment->types.dynamicPush(cx, this, pc - code, js::types::TYPE_DOUBLE);
 }
 
 inline void
 JSScript::typeMonitorString(JSContext *cx, const jsbytecode *pc)
 {
-    typeMonitorResult(cx, pc, js::types::TYPE_STRING);
+    if (cx->typeInferenceEnabled())
+        cx->compartment->types.dynamicPush(cx, this, pc - code, js::types::TYPE_STRING);
 }
 
 inline void
 JSScript::typeMonitorUnknown(JSContext *cx, const jsbytecode *pc)
 {
-    typeMonitorResult(cx, pc, js::types::TYPE_UNKNOWN);
+    if (cx->typeInferenceEnabled())
+        cx->compartment->types.dynamicPush(cx, this, pc - code, js::types::TYPE_UNKNOWN);
 }
 
 inline void
 JSScript::typeSetThis(JSContext *cx, js::types::jstype type)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    if (!ensureVarTypes(cx))
+    if (!ensureTypeArray(cx))
         return;
 
     /* Analyze the script regardless if -a was used. */
@@ -666,7 +682,7 @@ inline void
 JSScript::typeSetThis(JSContext *cx, js::types::ClonedTypeSet *set)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    if (!ensureVarTypes(cx))
+    if (!ensureTypeArray(cx))
         return;
     js::types::AutoEnterTypeInference enter(cx);
 
@@ -701,7 +717,7 @@ JSScript::typeSetNewCalled(JSContext *cx)
 inline void
 JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::jstype type)
 {
-    if (!cx->typeInferenceEnabled() || !ensureVarTypes(cx))
+    if (!cx->typeInferenceEnabled() || !ensureTypeArray(cx))
         return;
     if (!localTypes(local)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
@@ -725,7 +741,7 @@ inline void
 JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *set)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    if (!ensureVarTypes(cx))
+    if (!ensureTypeArray(cx))
         return;
     js::types::AutoEnterTypeInference enter(cx);
 
@@ -736,7 +752,7 @@ JSScript::typeSetLocal(JSContext *cx, unsigned local, js::types::ClonedTypeSet *
 inline void
 JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::jstype type)
 {
-    if (!cx->typeInferenceEnabled() || !ensureVarTypes(cx))
+    if (!cx->typeInferenceEnabled() || !ensureTypeArray(cx))
         return;
     if (!argTypes(arg)->hasType(type)) {
         js::types::AutoEnterTypeInference enter(cx);
@@ -760,7 +776,7 @@ inline void
 JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet *set)
 {
     JS_ASSERT(cx->typeInferenceEnabled());
-    if (!ensureVarTypes(cx))
+    if (!ensureTypeArray(cx))
         return;
     js::types::AutoEnterTypeInference enter(cx);
 
@@ -771,7 +787,7 @@ JSScript::typeSetArgument(JSContext *cx, unsigned arg, js::types::ClonedTypeSet 
 inline void
 JSScript::typeSetUpvar(JSContext *cx, unsigned upvar, const js::Value &value)
 {
-    if (!cx->typeInferenceEnabled() || !ensureVarTypes(cx))
+    if (!cx->typeInferenceEnabled() || !ensureTypeArray(cx))
         return;
     js::types::jstype type = js::types::GetValueType(cx, value);
     if (!upvarTypes(upvar)->hasType(type)) {

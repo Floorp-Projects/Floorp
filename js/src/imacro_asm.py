@@ -356,6 +356,8 @@ def assemble(filename, outfile):
                             operand = ""
                             if op.imm1 is not None:
                                 operand = ", " + immediate(op)
+                            if 'JOF_TYPESET' in op.info.flags:
+                                operand = operand + ", 0, 0"
                             write("/*%2d*/  %s%s,\n" % (op.offset, op.info.jsop, operand))
 
                         imacro.maxdepth = imacro.initdepth

@@ -359,8 +359,7 @@ stubs::CompileFunction(VMFrame &f, uint32 nactual)
 }
 
 static inline bool
-UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint32 argc,
-                   types::ClonedTypeSet *argTypes)
+UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint32 argc)
 {
     JSContext *cx = f.cx;
     Value *vp = f.regs.sp - (argc + 2);
@@ -371,24 +370,8 @@ UncachedInlineCall(VMFrame &f, uint32 flags, void **pret, bool *unjittable, uint
     bool newType = (flags & StackFrame::CONSTRUCTING) && cx->typeInferenceEnabled() &&
         types::UseNewType(cx, f.script(), f.pc());
 
-    if (argTypes && argc == newfun->nargs) {
-        /*
-         * Use the space of all possible types being passed at this callsite if there
-         * is a match between argc and nargs, so that the fastEntry can be subsequently
-         * used without further type checking. If there is an argument count mismatch,
-         * the callee's args will end up getting marked as unknown.
-         */
-        types::AutoEnterTypeInference enter(cx);
-        if (flags & StackFrame::CONSTRUCTING)
-            newscript->typeSetNewCalled(cx);
-        else
-            newscript->typeSetThis(cx, &argTypes[0]);
-        for (unsigned i = 0; i < argc; i++)
-            newscript->typeSetArgument(cx, i, &argTypes[1 + i]);
-    } else {
-        CallArgs args = CallArgsFromVp(argc, vp);
-        cx->typeMonitorCall(args, flags & StackFrame::CONSTRUCTING);
-    }
+    CallArgs args = CallArgsFromVp(argc, vp);
+    cx->typeMonitorCall(args, flags & StackFrame::CONSTRUCTING);
 
     /* Get pointer to new frame/slots, prepare arguments. */
     StackFrame *newfp = cx->stack.getInlineFrameWithinLimit(cx, f.regs.sp, argc,
@@ -457,13 +440,12 @@ void * JS_FASTCALL
 stubs::UncachedNew(VMFrame &f, uint32 argc)
 {
     UncachedCallResult ucr;
-    UncachedNewHelper(f, argc, NULL, &ucr);
+    UncachedNewHelper(f, argc, &ucr);
     return ucr.codeAddr;
 }
 
 void
-stubs::UncachedNewHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes,
-                         UncachedCallResult *ucr)
+stubs::UncachedNewHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 {
     ucr->init();
     JSContext *cx = f.cx;
@@ -471,7 +453,7 @@ stubs::UncachedNewHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes
     /* Try to do a fast inline call before the general Invoke path. */
     if (IsFunctionObject(*vp, &ucr->fun) && ucr->fun->isInterpretedConstructor()) {
         ucr->callee = &vp->toObject();
-        if (!UncachedInlineCall(f, StackFrame::CONSTRUCTING, &ucr->codeAddr, &ucr->unjittable, argc, argTypes))
+        if (!UncachedInlineCall(f, StackFrame::CONSTRUCTING, &ucr->codeAddr, &ucr->unjittable, argc))
             THROW();
     } else {
         if (!InvokeConstructor(cx, InvokeArgsAlreadyOnTheStack(argc, vp)))
@@ -483,7 +465,7 @@ void * JS_FASTCALL
 stubs::UncachedCall(VMFrame &f, uint32 argc)
 {
     UncachedCallResult ucr;
-    UncachedCallHelper(f, argc, NULL, &ucr);
+    UncachedCallHelper(f, argc, &ucr);
     return ucr.codeAddr;
 }
 
@@ -506,8 +488,7 @@ stubs::Eval(VMFrame &f, uint32 argc)
 }
 
 void
-stubs::UncachedCallHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argTypes,
-                          UncachedCallResult *ucr)
+stubs::UncachedCallHelper(VMFrame &f, uint32 argc, UncachedCallResult *ucr)
 {
     ucr->init();
 
@@ -519,7 +500,7 @@ stubs::UncachedCallHelper(VMFrame &f, uint32 argc, types::ClonedTypeSet *argType
         ucr->fun = GET_FUNCTION_PRIVATE(cx, ucr->callee);
 
         if (ucr->fun->isInterpreted()) {
-            if (!UncachedInlineCall(f, 0, &ucr->codeAddr, &ucr->unjittable, argc, argTypes))
+            if (!UncachedInlineCall(f, 0, &ucr->codeAddr, &ucr->unjittable, argc))
                 THROW();
             return;
         }
@@ -1521,6 +1502,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
           case JSOP_GETGNAME:
           case JSOP_GETGLOBAL:
           case JSOP_GETPROP:
+          case JSOP_GETXPROP:
           case JSOP_LENGTH:
             /* Non-fused opcode, state is already correct for the next op. */
             f.regs.pc = nextpc;

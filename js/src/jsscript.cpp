@@ -321,6 +321,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
     uint32 natoms, nsrcnotes, ntrynotes, nobjects, nregexps, nconsts, i;
     uint32 prologLength, version, encodedClosedCount;
     uint16 nClosedArgs = 0, nClosedVars = 0;
+    uint32 nTypeSets = 0;
     JSPrincipals *principals;
     uint32 encodeable;
     jssrcnote *sn;
@@ -494,6 +495,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         nClosedVars = script->nClosedVars;
         encodedClosedCount = (nClosedArgs << 16) | nClosedVars;
 
+        nTypeSets = script->nTypeSets;
+
         if (script->noScriptRval)
             scriptBits |= (1 << NoScriptRval);
         if (script->savedCallerFun)
@@ -533,6 +536,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         return JS_FALSE;
     if (!JS_XDRUint32(xdr, &encodedClosedCount))
         return JS_FALSE;
+    if (!JS_XDRUint32(xdr, &nTypeSets))
+        return JS_FALSE;
     if (!JS_XDRUint32(xdr, &scriptBits))
         return JS_FALSE;
 
@@ -547,7 +552,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp)
         JS_ASSERT((version_ & VersionFlags::FULL_MASK) == uintN(version_));
         script = JSScript::NewScript(cx, length, nsrcnotes, natoms, nobjects, nupvars,
                                      nregexps, ntrynotes, nconsts, 0, nClosedArgs,
-                                     nClosedVars, version_);
+                                     nClosedVars, nTypeSets, version_);
         if (!script)
             return JS_FALSE;
 
@@ -1042,7 +1047,7 @@ JSScript *
 JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natoms,
                     uint32 nobjects, uint32 nupvars, uint32 nregexps,
                     uint32 ntrynotes, uint32 nconsts, uint32 nglobals,
-                    uint16 nClosedArgs, uint16 nClosedVars, JSVersion version)
+                    uint16 nClosedArgs, uint16 nClosedVars, uint32 nTypeSets, JSVersion version)
 {
     size_t size, vectorSize;
     JSScript *script;
@@ -1189,6 +1194,8 @@ JSScript::NewScript(JSContext *cx, uint32 length, uint32 nsrcnotes, uint32 natom
         cursor += totalClosed * sizeof(uint32);
     }
 
+    script->nTypeSets = nTypeSets;
+
     /*
      * NB: We allocate the vector of uint32 upvar cookies after all vectors of
      * pointers, to avoid misalignment on 64-bit platforms. See bug 514645.
@@ -1257,7 +1264,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
                        cg->atomList.count, cg->objectList.length,
                        cg->upvarList.count, cg->regexpList.length,
                        cg->ntrynotes, cg->constList.length(),
-                       cg->globalUses.length(), nClosedArgs, nClosedVars, cg->version());
+                       cg->globalUses.length(), nClosedArgs, nClosedVars,
+                       cg->typesetIndex, cg->version());
     if (!script)
         return NULL;
 
@@ -1515,7 +1523,7 @@ DestroyScript(JSContext *cx, JSScript *script)
         result = next;
     }
 
-    cx->free_(script->varTypes);
+    cx->free_(script->typeArray);
 
 #if defined(JS_METHODJIT)
     mjit::ReleaseScriptCode(cx, script, true);
