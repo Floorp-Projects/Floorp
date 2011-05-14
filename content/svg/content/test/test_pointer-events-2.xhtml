@@ -25,13 +25,13 @@ function run()
   var fo = document.getElementById('fo');
 
   var elementFromPoint = document.elementFromPoint(originX + 55, originY + 55);
-  is(circle, elementFromPoint, 'Over circle stroke with pointer-events="all"');
+  is(elementFromPoint, circle, 'Over circle stroke with pointer-events="all"');
 
   elementFromPoint = document.elementFromPoint(originX + 205, originY + 55);
-  is(circle, elementFromPoint, 'Over foreignObject, outside clip path');
+  is(elementFromPoint, circle, 'Over foreignObject, outside clip path');
 
   elementFromPoint = document.elementFromPoint(originX + 225, originY + 75);
-  is(fo, elementFromPoint, 'Over foreignObject, inside clip path');
+  is(elementFromPoint, fo, 'Over foreignObject, inside clip path');
 
   SimpleTest.finish();
 }
