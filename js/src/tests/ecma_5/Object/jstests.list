@@ -44,3 +44,4 @@ skip-if(!xulRuntime.shell) script freeze-global-eval-const.js # uses evalcx
 script preventExtensions-idempotent.js
 script isPrototypeOf.js
 script propertyIsEnumerable.js
+script toLocaleString.js

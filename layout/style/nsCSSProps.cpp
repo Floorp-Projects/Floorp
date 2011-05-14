@@ -579,6 +579,7 @@ const PRInt32 nsCSSProps::kAppearanceKTable[] = {
   eCSSKeyword__moz_window_button_restore,     NS_THEME_WINDOW_BUTTON_RESTORE,
   eCSSKeyword__moz_window_button_box,         NS_THEME_WINDOW_BUTTON_BOX,
   eCSSKeyword__moz_window_button_box_maximized, NS_THEME_WINDOW_BUTTON_BOX_MAXIMIZED,
+  eCSSKeyword__moz_win_exclude_glass,         NS_THEME_WIN_EXCLUDE_GLASS,
   eCSSKeyword_UNKNOWN,-1
 };
 

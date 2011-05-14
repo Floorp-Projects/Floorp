@@ -1982,8 +1982,12 @@ PluginInstanceChild::AnswerSetPluginFocus()
     PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s", FULLFUNCTION));
 
 #if defined(OS_WIN)
-    // Parent is letting us know something set focus to the plugin.
-    if (::GetFocus() == mPluginWindowHWND)
+    // Parent is letting us know the dom set focus to the plugin. Note,
+    // focus can change during transit in certain edge cases, for example
+    // when a button click brings up a full screen window. Since we send
+    // this in response to a WM_SETFOCUS event on our parent, the parent
+    // should have focus when we receive this. If not, ignore the call.
+    if (::GetFocus() == mPluginWindowHWND || ::GetFocus() != mPluginParentHWND)
         return true;
     ::SetFocus(mPluginWindowHWND);
     return true;

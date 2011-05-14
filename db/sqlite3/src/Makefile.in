@@ -135,6 +135,11 @@ DEFINES += -DOS2_HIGH_MEMORY
 endif
 endif
 
+ifeq ($(OS_TARGET),Android)
+# default to user readable only to fit Android security model
+DEFINES += -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 # next line allows use of MOZ_OBJDIR in .mozconfig with older gcc on BeOS, maybe others

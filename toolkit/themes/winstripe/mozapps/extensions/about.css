@@ -15,6 +15,10 @@
     -moz-appearance: -moz-win-glass;
     background: transparent;
   }
+
+  #clientBox {
+    -moz-appearance: -moz-win-exclude-glass;
+  }
 }
 
 

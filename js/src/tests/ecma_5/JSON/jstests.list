@@ -6,6 +6,7 @@ script parse-arguments.js
 script parse-crockford-01.js
 script parse-primitives.js
 script parse-reviver.js
+script parse-reviver-array-delete.js
 script parse-syntax-errors-01.js
 script parse-syntax-errors-02.js
 script stringify.js

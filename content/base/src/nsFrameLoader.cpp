@@ -862,6 +862,31 @@ nsFrameLoader::Show(PRInt32 marginWidth, PRInt32 marginHeight,
   return PR_TRUE;
 }
 
+void
+nsFrameLoader::MarginsChanged(PRUint32 aMarginWidth,
+                              PRUint32 aMarginHeight)
+{
+  // We assume that the margins are always zero for remote frames.
+  if (mRemoteFrame)
+    return;
+
+  // If there's no docshell, we're probably not up and running yet.
+  // nsFrameLoader::Show() will take care of setting the right
+  // margins.
+  if (!mDocShell)
+    return;
+
+  // Set the margins
+  mDocShell->SetMarginWidth(aMarginWidth);
+  mDocShell->SetMarginHeight(aMarginHeight);
+
+  // Trigger a restyle if there's a prescontext
+  nsRefPtr<nsPresContext> presContext;
+  mDocShell->GetPresContext(getter_AddRefs(presContext));
+  if (presContext)
+    presContext->RebuildAllStyleData(nsChangeHint(0));
+}
+
 bool
 nsFrameLoader::ShowRemoteFrame(const nsIntSize& size)
 {

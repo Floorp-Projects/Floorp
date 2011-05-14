@@ -42,7 +42,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const PERMS_FILE      = 0644;
+const PERMS_FILE      = 0600;
 const PERMS_DIRECTORY = 0755;
 
 const MODE_RDONLY   = 0x01;

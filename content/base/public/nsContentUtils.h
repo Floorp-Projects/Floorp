@@ -1699,16 +1699,6 @@ public:
   static nsresult CreateStructuredClone(JSContext* cx, jsval val, jsval* rval);
 
   /**
-   * Reparents the given object and all subobjects to the given scope. Also
-   * fixes all the prototypes. Assumes obj is properly rooted, that obj has no
-   * getter functions that can cause side effects, and that the only types of
-   * objects nested within obj are the types that are cloneable via the
-   * CreateStructuredClone function above.
-   */
-  static nsresult ReparentClonedObjectToScope(JSContext* cx, JSObject* obj,
-                                              JSObject* scope);
-
-  /**
    * Strip all \n, \r and nulls from the given string
    * @param aString the string to remove newlines from [in/out]
    */
