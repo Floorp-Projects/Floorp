@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=656954
 
 var e = document.createEvent("Event");
 is(e.defaultPrevented, false,
-   "After creating event defaultPrevented should be true");
+   "After creating event defaultPrevented should be false");
 e.initEvent("foo", true, true);
 var el = document.createElement("div");
 el.addEventListener("foo", 
