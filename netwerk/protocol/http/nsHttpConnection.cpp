@@ -52,6 +52,7 @@
 #include "nsNetCID.h"
 #include "nsProxyRelease.h"
 #include "prmem.h"
+#include "nsPreloadedStream.h"
 
 #ifdef DEBUG
 // defined by the socket transport service while active
@@ -59,6 +60,8 @@ extern PRThread *gSocketThread;
 #endif
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+
+using namespace mozilla::net;
 
 //-----------------------------------------------------------------------------
 // nsHttpConnection <public>
@@ -445,6 +448,26 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
         }
     }
 
+    const char *upgradeReq = requestHead->PeekHeader(nsHttp::Upgrade);
+    if (upgradeReq) {
+        LOG(("HTTP Upgrade in play - disable keepalive\n"));
+        DontReuse();
+    }
+
+    if (responseHead->Status() == 101) {
+        const char *upgradeResp = responseHead->PeekHeader(nsHttp::Upgrade);
+        if (!upgradeReq || !upgradeResp ||
+            !nsHttp::FindToken(upgradeResp, upgradeReq,
+                               HTTP_HEADER_VALUE_SEPS)) {
+            LOG(("HTTP 101 Upgrade header mismatch req = %s, resp = %s\n",
+                 upgradeReq, upgradeResp));
+            Close(NS_ERROR_ABORT);
+        }
+        else {
+            LOG(("HTTP Upgrade Response to %s\n", upgradeResp));
+        }
+    }
+
     return NS_OK;
 }
 
@@ -469,6 +492,32 @@ nsHttpConnection::SetIsReusedAfter(PRUint32 afterMilliseconds)
     mConsiderReusedAfterInterval = PR_MillisecondsToInterval(afterMilliseconds);
 }
 
+nsresult
+nsHttpConnection::TakeTransport(nsISocketTransport  **aTransport,
+                                nsIAsyncInputStream **aInputStream,
+                                nsIAsyncOutputStream **aOutputStream)
+{
+    if (mTransaction && !mTransaction->IsDone())
+        return NS_ERROR_IN_PROGRESS;
+    if (!(mSocketTransport && mSocketIn && mSocketOut))
+        return NS_ERROR_NOT_INITIALIZED;
+
+    if (mInputOverflow)
+        mSocketIn = mInputOverflow.forget();
+
+    NS_IF_ADDREF(*aTransport = mSocketTransport);
+    NS_IF_ADDREF(*aInputStream = mSocketIn);
+    NS_IF_ADDREF(*aOutputStream = mSocketOut);
+
+    mSocketTransport->SetSecurityCallbacks(nsnull);
+    mSocketTransport->SetEventSink(nsnull, nsnull);
+    mSocketTransport = nsnull;
+    mSocketIn = nsnull;
+    mSocketOut = nsnull;
+    
+    return NS_OK;
+}
+
 void
 nsHttpConnection::GetSecurityInfo(nsISupports **secinfo)
 {
@@ -478,6 +527,20 @@ nsHttpConnection::GetSecurityInfo(nsISupports **secinfo)
         if (NS_FAILED(mSocketTransport->GetSecurityInfo(secinfo)))
             *secinfo = nsnull;
     }
+}
+
+nsresult
+nsHttpConnection::PushBack(const char *data, PRUint32 length)
+{
+    LOG(("nsHttpConnection::PushBack [this=%p, length=%d]\n", this, length));
+
+    if (mInputOverflow) {
+        NS_ERROR("nsHttpConnection::PushBack only one buffer supported");
+        return NS_ERROR_UNEXPECTED;
+    }
+    
+    mInputOverflow = new nsPreloadedStream(mSocketIn, data, length);
+    return NS_OK;
 }
 
 nsresult

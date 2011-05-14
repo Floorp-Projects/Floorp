@@ -665,6 +665,16 @@ nsHttpChannel::SetupTransaction()
 
     mConnectionInfo->SetAnonymous((mLoadFlags & LOAD_ANONYMOUS) != 0);
 
+    if (mUpgradeProtocolCallback) {
+        mRequestHead.SetHeader(nsHttp::Upgrade, mUpgradeProtocol, PR_FALSE);
+        mRequestHead.SetHeader(nsHttp::Connection,
+                               nsDependentCString(nsHttp::Upgrade.get()),
+                               PR_TRUE);
+        mCaps |=  NS_HTTP_STICKY_CONNECTION;
+        mCaps &= ~NS_HTTP_ALLOW_PIPELINING;
+        mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
+    }
+
     nsCOMPtr<nsIAsyncInputStream> responseStream;
     rv = mTransaction->Init(mCaps, mConnectionInfo, &mRequestHead,
                             mUploadStream, mUploadStreamHasHeaders,
@@ -4005,17 +4015,15 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
 
         //
         // grab reference to connection in case we need to retry an
-        // authentication request over it.  this applies to connection based
-        // authentication schemes only.  for request based schemes, conn is not
-        // needed, so it may be null.
-        // 
+        // authentication request over it or use it for an upgrade
+        // to another protocol.
+        //
         // this code relies on the code in nsHttpTransaction::Close, which
         // tests for NS_HTTP_STICKY_CONNECTION to determine whether or not to
         // keep the connection around after the transaction is finished.
         //
-        nsRefPtr<nsAHttpConnection> conn;
+        nsRefPtr<nsAHttpConnection> conn = mTransaction->Connection();
         if (authRetry && (mCaps & NS_HTTP_STICKY_CONNECTION)) {
-            conn = mTransaction->Connection();
             // This is so far a workaround to fix leak when reusing unpersistent
             // connection for authentication retry. See bug 459620 comment 4
             // for details.
@@ -4047,6 +4055,22 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
         // if this transaction has been replaced, then bail.
         if (mTransactionReplaced)
             return NS_OK;
+        
+        if (mUpgradeProtocolCallback && conn &&
+            mResponseHead && mResponseHead->Status() == 101) {
+            nsCOMPtr<nsISocketTransport>    socketTransport;
+            nsCOMPtr<nsIAsyncInputStream>   socketIn;
+            nsCOMPtr<nsIAsyncOutputStream>  socketOut;
+
+            nsresult rv;
+            rv = conn->TakeTransport(getter_AddRefs(socketTransport),
+                                     getter_AddRefs(socketIn),
+                                     getter_AddRefs(socketOut));
+            if (NS_SUCCEEDED(rv))
+                mUpgradeProtocolCallback->OnTransportAvailable(socketTransport,
+                                                               socketIn,
+                                                               socketOut);
+        }
     }
 
     mIsPending = PR_FALSE;

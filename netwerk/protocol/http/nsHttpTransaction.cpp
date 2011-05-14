@@ -136,6 +136,7 @@ nsHttpTransaction::nsHttpTransaction()
     , mHasRequestBody(PR_FALSE)
     , mSSLConnectFailed(PR_FALSE)
     , mHttpResponseMatched(PR_FALSE)
+    , mPreserveStream(PR_FALSE)
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
 }
@@ -806,7 +807,8 @@ nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
     if (mLineBuf.First() == '\n') {
         mLineBuf.Truncate();
         // discard this response if it is a 100 continue or other 1xx status.
-        if (mResponseHead->Status() / 100 == 1) {
+        PRUint16 status = mResponseHead->Status();
+        if ((status != 101) && (status / 100 == 1)) {
             LOG(("ignoring 1xx response\n"));
             mHaveStatusLine = PR_FALSE;
             mHttpResponseMatched = PR_FALSE;
@@ -977,6 +979,8 @@ nsHttpTransaction::HandleContentStart()
 
         // check if this is a no-content response
         switch (mResponseHead->Status()) {
+        case 101:
+            mPreserveStream = PR_TRUE;    // fall through to other no content
         case 204:
         case 205:
         case 304:
@@ -1053,7 +1057,7 @@ nsHttpTransaction::HandleContent(char *buf,
         // headers. So, unless the connection is persistent, we must make
         // allowances for a possibly invalid Content-Length header. Thus, if
         // NOT persistent, we simply accept everything in |buf|.
-        if (mConnection->IsPersistent()) {
+        if (mConnection->IsPersistent() || mPreserveStream) {
             PRInt64 remaining = mContentLength - mContentRead;
             PRInt64 count64 = count;
             *contentRead = PR_MIN(count64, remaining);
