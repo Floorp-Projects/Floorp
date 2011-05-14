@@ -157,11 +157,11 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
   if (NS_FAILED(rv))
-    return SendFailedAsyncOpen(rv);
+    return SendCancelEarly(rv);
 
   rv = NS_NewChannel(getter_AddRefs(mChannel), uri, ios, nsnull, nsnull, loadFlags);
   if (NS_FAILED(rv))
-    return SendFailedAsyncOpen(rv);
+    return SendCancelEarly(rv);
 
   nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
 
@@ -239,7 +239,7 @@ HttpChannelParent::RecvAsyncOpen(const IPC::URI&            aURI,
 
   rv = httpChan->AsyncOpen(channelListener, nsnull);
   if (NS_FAILED(rv))
-    return SendFailedAsyncOpen(rv);
+    return SendCancelEarly(rv);
 
   return true;
 }
@@ -259,10 +259,8 @@ HttpChannelParent::RecvConnectChannel(const PRUint32& channelId)
 bool 
 HttpChannelParent::RecvSetPriority(const PRUint16& priority)
 {
-  if (mChannel) {
-    nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
-    httpChan->SetPriority(priority);
-  }
+  nsHttpChannel *httpChan = static_cast<nsHttpChannel *>(mChannel.get());
+  httpChan->SetPriority(priority);
 
   nsCOMPtr<nsISupportsPriority> priorityRedirectChannel =
       do_QueryInterface(mRedirectChannel);
@@ -275,18 +273,14 @@ HttpChannelParent::RecvSetPriority(const PRUint16& priority)
 bool
 HttpChannelParent::RecvSuspend()
 {
-  if (mChannel) {
-    mChannel->Suspend();
-  }
+  mChannel->Suspend();
   return true;
 }
 
 bool
 HttpChannelParent::RecvResume()
 {
-  if (mChannel) {
-    mChannel->Resume();
-  }
+  mChannel->Resume();
   return true;
 }
 

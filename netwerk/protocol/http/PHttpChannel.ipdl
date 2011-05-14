@@ -154,7 +154,7 @@ child:
 
   // Used to cancel child channel if we hit errors during creating and
   // AsyncOpen of nsHttpChannel on the parent.
-  FailedAsyncOpen(nsresult status);
+  CancelEarly(nsresult status);
 
   // Called to initiate content channel redirect, starts talking to sinks
   // on the content process and reports result via Redirect2Verify above

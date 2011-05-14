@@ -60,7 +60,6 @@
 #include "nsIApplicationCache.h"
 #include "nsIResumableChannel.h"
 #include "mozilla/net/NeckoCommon.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 namespace net {
@@ -205,14 +204,7 @@ public:
     const PRNetAddr& GetSelfAddr() { return mSelfAddr; }
     const PRNetAddr& GetPeerAddr() { return mPeerAddr; }
 
-public: /* Necko internal use only... */
-
 protected:
-
-  // Handle notifying listener, removing from loadgroup if request failed.
-  void     DoNotifyListener();
-  virtual void DoNotifyListenerCleanup() = 0;
-
   nsresult ApplyContentConversions();
 
   void AddCookiesToRequest();
@@ -277,93 +269,8 @@ protected:
   PRUint32                          mLoadedFromApplicationCache : 1;
   PRUint32                          mChannelIsForDownload       : 1;
 
-  // Current suspension depth for this channel object
-  PRUint32                          mSuspendCount;
-
   nsTArray<nsCString>              *mRedirectedCachekeys;
 };
-
-
-// Share some code while working around C++'s absurd inability to handle casting
-// of member functions between base/derived types.
-// - We want to store member function pointer to call at resume time, but one
-//   such function--HandleAsyncAbort--we want to share between the
-//   nsHttpChannel/HttpChannelChild.  Can't define it in base class, because
-//   then we'd have to cast member function ptr between base/derived class
-//   types.  Sigh...
-template <class T>
-class HttpAsyncAborter
-{
-public:
-  HttpAsyncAborter(T *derived) : mThis(derived), mCallOnResume(0) {}
-
-  // Aborts channel: calls OnStart/Stop with provided status, removes channel
-  // from loadGroup.
-  nsresult AsyncAbort(nsresult status);
-
-  // Does most the actual work.
-  void HandleAsyncAbort();
-
-  // AsyncCall calls a member function asynchronously (via an event).
-  // retval isn't refcounted and is set only when event was successfully
-  // posted, the event is returned for the purpose of cancelling when needed
-  nsresult AsyncCall(void (T::*funcPtr)(),
-                     nsRunnableMethod<T> **retval = nsnull);
-private:
-  T *mThis;
-
-protected:
-  // Function to be called at resume time
-  void (T::* mCallOnResume)(void);
-};
-
-template <class T>
-nsresult HttpAsyncAborter<T>::AsyncAbort(nsresult status)
-{
-  LOG(("HttpAsyncAborter::AsyncAbort [this=%p status=%x]\n", mThis, status));
-
-  mThis->mStatus = status;
-  mThis->mIsPending = PR_FALSE;
-
-  // if this fails?  Callers ignore our return value anyway....
-  return AsyncCall(&T::HandleAsyncAbort);
-}
-
-// Each subclass needs to define its own version of this (which just calls this
-// base version), else we wind up casting base/derived member function ptrs
-template <class T>
-inline void HttpAsyncAborter<T>::HandleAsyncAbort()
-{
-  NS_PRECONDITION(!mCallOnResume, "How did that happen?");
-
-  if (mThis->mSuspendCount) {
-    LOG(("Waiting until resume to do async notification [this=%p]\n",
-         mThis));
-    mCallOnResume = &T::HandleAsyncAbort;
-    return;
-  }
-
-  mThis->DoNotifyListener();
-
-  // finally remove ourselves from the load group.
-  if (mThis->mLoadGroup)
-    mThis->mLoadGroup->RemoveRequest(mThis, nsnull, mThis->mStatus);
-}
-
-template <class T>
-nsresult HttpAsyncAborter<T>::AsyncCall(void (T::*funcPtr)(),
-                                   nsRunnableMethod<T> **retval)
-{
-  nsresult rv;
-
-  nsRefPtr<nsRunnableMethod<T> > event = NS_NewRunnableMethod(mThis, funcPtr);
-  rv = NS_DispatchToCurrentThread(event);
-  if (NS_SUCCEEDED(rv) && retval) {
-    *retval = event;
-  }
-
-  return rv;
-}
 
 
 } // namespace net
