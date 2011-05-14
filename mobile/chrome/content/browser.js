@@ -2331,7 +2331,7 @@ var XPInstallObserver = {
             buttons = [];
           }
           else {
-            messageString = strings.formatStringFromName("xpinstallDisabledMessage", [brandShortName, host], 2);
+            messageString = strings.formatStringFromName("xpinstallDisabledMessage2", [brandShortName, host], 2);
             buttons = [{
               label: strings.GetStringFromName("xpinstallDisabledButton"),
               accessKey: null,
