@@ -324,17 +324,18 @@ nsDOMFile::MozSlice(PRInt64 aStart, PRInt64 aEnd,
   return NS_OK;
 }
 
+const PRUint32 sFileStreamFlags =
+  nsIFileInputStream::CLOSE_ON_EOF |
+  nsIFileInputStream::REOPEN_ON_REWIND |
+  nsIFileInputStream::DEFER_OPEN;
+
 NS_IMETHODIMP
 nsDOMFile::GetInternalStream(nsIInputStream **aStream)
 {
   return mIsFullFile ?
-    NS_NewLocalFileInputStream(aStream, mFile, -1, -1,
-                               nsIFileInputStream::CLOSE_ON_EOF |
-                               nsIFileInputStream::REOPEN_ON_REWIND) :
+    NS_NewLocalFileInputStream(aStream, mFile, -1, -1, sFileStreamFlags) :
     NS_NewPartialLocalFileInputStream(aStream, mFile, mStart, mLength,
-                                      -1, -1,
-                                      nsIFileInputStream::CLOSE_ON_EOF |
-                                      nsIFileInputStream::REOPEN_ON_REWIND);
+                                      -1, -1, sFileStreamFlags);
 }
 
 NS_IMETHODIMP
