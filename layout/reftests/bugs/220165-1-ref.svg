@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
 
 <svg xmlns="http://www.w3.org/2000/svg" 
-     xmlns:html="http://www.w3.org/1999/xhtml" height="500" 
-     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+     xmlns:html="http://www.w3.org/1999/xhtml" height="500"
+     xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+     shape-rendering="crispEdges">
 
   <foreignObject x="200" y="180" width="100" height="50" >
     <html:button id="x">New text</html:button>
