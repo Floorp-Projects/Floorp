@@ -22,7 +22,7 @@ function run()
   var originX = div.offsetLeft;
   var originY = div.offsetTop;
   var circle = document.getElementById('circle');
-  var fo = document.getElementById('fo');
+  var path = document.getElementById('path');
 
   var elementFromPoint = document.elementFromPoint(originX + 55, originY + 55);
   is(elementFromPoint, circle, 'Over circle stroke with pointer-events="all"');
@@ -31,7 +31,8 @@ function run()
   is(elementFromPoint, circle, 'Over foreignObject, outside clip path');
 
   elementFromPoint = document.elementFromPoint(originX + 225, originY + 75);
-  is(elementFromPoint, fo, 'Over foreignObject, inside clip path');
+  // XXX disabled. See See https://bugzilla.mozilla.org/show_bug.cgi?id=580983#c116
+  //is(elementFromPoint, path, 'Over foreignObject, inside clip path');
 
   SimpleTest.finish();
 }
@@ -54,7 +55,7 @@ function run()
     <circle id="circle" cx="50%" cy="50%" r="1" stroke-width="1000" fill="black" pointer-events="all"/>
     <foreignObject id="fo" x="200" y="50" width="50" height="50" clip-path="url(#clip)">
       <svg>
-        <path d="M0,0 H50 V50 H0 Z" fill="green"/>
+        <path id="path" d="M0,0 H50 V50 H0 Z" fill="green"/>
       </svg>
     </foreignObject>
   </svg>
