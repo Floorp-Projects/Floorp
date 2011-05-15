@@ -277,6 +277,7 @@ class NunboxAssembler : public JSC::MacroAssembler
 
     /* Overloaded for store with value remat info. */
     DataLabel32 storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+        JS_ASSERT(!vr.isFPRegister());
         if (vr.isConstant()) {
             return storeValueWithAddressOffsetPatch(vr.value(), address);
         } else if (vr.isTypeKnown()) {
@@ -320,6 +321,10 @@ class NunboxAssembler : public JSC::MacroAssembler
     Label storeValue(const ValueRemat &vr, T address) {
         if (vr.isConstant()) {
             return storeValue(vr.value(), address);
+        } else if (vr.isFPRegister()) {
+            Label l = label();
+            storeDouble(vr.fpReg(), address);
+            return l;
         } else {
             if (vr.isTypeKnown())
                 storeTypeTag(ImmType(vr.knownType()), address);

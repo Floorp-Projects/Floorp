@@ -491,10 +491,11 @@ class FrameState
     RegisterID copyInt32ConstantIntoReg(Assembler &masm, FrameEntry *fe);
 
     /*
-     * Gets registers for the components of fe where needed,
-     * pins them and stores into vr.
+     * Gets registers for the components of fe where needed, pins them and
+     * stores into vr. If breakDouble is set, vr is guaranteed not to be a
+     * floating point register.
      */
-    void pinEntry(FrameEntry *fe, ValueRemat &vr);
+    void pinEntry(FrameEntry *fe, ValueRemat &vr, bool breakDouble = true);
 
     /* Unpins registers from a call to pinEntry. */
     void unpinEntry(const ValueRemat &vr);
