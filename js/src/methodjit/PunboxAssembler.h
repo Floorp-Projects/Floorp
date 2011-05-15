@@ -189,6 +189,7 @@ class PunboxAssembler : public JSC::MacroAssembler
 
     /* Overloaded for store with value remat info. */
     DataLabel32 storeValueWithAddressOffsetPatch(const ValueRemat &vr, Address address) {
+        JS_ASSERT(!vr.isFPRegister());
         if (vr.isConstant()) {
             return storeValueWithAddressOffsetPatch(vr.value(), address);
         } else if (vr.isTypeKnown()) {
@@ -260,6 +261,8 @@ class PunboxAssembler : public JSC::MacroAssembler
     void storeValue(const ValueRemat &vr, T address) {
         if (vr.isConstant())
             storeValue(vr.value(), address);
+        else if (vr.isFPRegister())
+            storeDouble(vr.fpReg(), address);
         else if (vr.isTypeKnown())
             storeValueFromComponents(ImmType(vr.knownType()), vr.dataReg(), address);
         else
