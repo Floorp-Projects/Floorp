@@ -71,6 +71,13 @@ nsProxyInfo::GetFlags(PRUint32 *result)
 }
 
 NS_IMETHODIMP
+nsProxyInfo::GetResolveFlags(PRUint32 *result)
+{
+  *result = mResolveFlags;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsProxyInfo::GetFailoverTimeout(PRUint32 *result)
 {
   *result = mTimeout;

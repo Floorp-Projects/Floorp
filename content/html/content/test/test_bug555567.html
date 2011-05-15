@@ -26,23 +26,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=555567
 
 /** Test for Bug 555567 **/
 
-// This test works only with html5 parser.
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-            .getService(Components.interfaces.nsIPrefBranch);
+var a = document.getElementById('a');
+var b = document.getElementById('b');
+var c = document.getElementById('c');
 
-if (prefs.getBoolPref("html5.parser.enable")) {
-  var a = document.getElementById('a');
-  var b = document.getElementById('b');
-  var c = document.getElementById('c');
-
-  isnot(a.form, null,
-    "First legend element should have a not null form IDL attribute");
-  is(b.form, null,
-    "Second legend element should have a null form IDL attribute");
-  is(c.form, null,
-    "Third legend element should have a null form IDL attribute");
-}
+isnot(a.form, null,
+  "First legend element should have a not null form IDL attribute");
+is(b.form, null,
+  "Second legend element should have a null form IDL attribute");
+is(c.form, null,
+  "Third legend element should have a null form IDL attribute");
 
 </script>
 </pre>

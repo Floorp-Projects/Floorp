@@ -52,7 +52,7 @@
 interface nsIDOMNode;
 
 
-[scriptable, uuid(19187542-1f4d-46e1-9b2d-d5de02dace85)]
+[scriptable, uuid(00d3454c-e125-4cce-bfec-adfbf0975e05)]
 interface nsIMarkupDocumentViewer : nsISupports
 {
 
@@ -143,19 +143,12 @@ interface nsIMarkupDocumentViewer : nsISupports
   attribute octet bidiSupport;
 
   /**
-   * bidiCharacterSet: whether to force the user's character set
-   *                   1 - use the document character set
-   *                   2 - use the character set chosen by the user
-   */
-  attribute octet bidiCharacterSet;  
-  
-  /**
    * Use this attribute to access all the Bidi options in one operation
    */
   attribute PRUint32 bidiOptions;
 };
 
-[scriptable, uuid(cadfcad1-5570-4dac-b5a2-cd1ea751fe29)]
+[scriptable, uuid(83b28afd-75a7-4d13-9265-625e36861f04)]
 interface nsIMarkupDocumentViewer_MOZILLA_2_0_BRANCH : nsIMarkupDocumentViewer
 {
 	/** The minimum font size  */

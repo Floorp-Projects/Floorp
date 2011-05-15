@@ -538,9 +538,9 @@ JSONSourceParser::parse(Value *vp)
              *     js_CheckForStringIndex.
              */
             jsid propid = ATOM_TO_JSID(&valueStack.popCopy().toString()->asAtom());
-            if (!js_DefineNativeProperty(cx, &valueStack.back().toObject(), propid, v,
-                                         PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE,
-                                         0, 0, NULL))
+            if (!DefineNativeProperty(cx, &valueStack.back().toObject(), propid, v,
+                                      PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE,
+                                      0, 0))
             {
                 return false;
             }

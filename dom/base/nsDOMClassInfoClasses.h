@@ -523,3 +523,4 @@ DOMCI_CLASS(MozCSSKeyframesRule)
 #endif
 
 DOMCI_CLASS(MediaQueryList)
+DOMCI_CLASS(CustomEvent)

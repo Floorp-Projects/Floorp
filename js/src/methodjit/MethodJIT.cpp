@@ -876,7 +876,7 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     JSBool ok;
     {
         AssertCompartmentUnchanged pcc(cx);
-        JSAutoResolveFlags rf(cx, JSRESOLVE_INFER);
+        JSAutoResolveFlags rf(cx, RESOLVE_INFER);
         ok = JaegerTrampoline(cx, fp, code, stackLimit);
     }
 
@@ -1132,6 +1132,12 @@ mjit::ReleaseScriptCode(JSContext *cx, JSScript *script, bool normal)
 
     if (*pjit) {
         cx->runtime->mjitDataSize -= (*pjit)->scriptDataSize();
+#ifdef DEBUG
+        if ((*pjit)->pcProfile) {
+            cx->free_((*pjit)->pcProfile);
+            (*pjit)->pcProfile = NULL;
+        }
+#endif
         (*pjit)->~JITScript();
         cx->free_(*pjit);
         *pjit = NULL;
@@ -1239,8 +1245,48 @@ JITScript::nativeToPC(void *returnAddress, CallSite **pinline) const
     return script->code + ic.call->pcOffset;
 }
 
+#ifdef JS_METHODJIT_SPEW
+static void
+DumpProfile(JSContext *cx, JSScript *script, JITScript* jit, bool isCtor)
+{
+    JS_ASSERT(!cx->runtime->gcRunning);
+
+#ifdef DEBUG
+    if (IsJaegerSpewChannelActive(JSpew_PCProf) && jit->pcProfile) {
+        // Display hit counts for every JS code line
+        AutoArenaAllocator(&cx->tempPool);
+        Sprinter sprinter;
+        INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
+        js_Disassemble(cx, script, true, &sprinter, jit->pcProfile);
+        fprintf(stdout, "--- PC PROFILE %s:%d%s ---\n", script->filename, script->lineno,
+                isCtor ? " (constructor)" : "");
+        fprintf(stdout, "%s\n", sprinter.base);
+        fprintf(stdout, "--- END PC PROFILE %s:%d%s ---\n", script->filename, script->lineno,
+                isCtor ? " (constructor)" : "");
+    }
+#endif
+}
+#endif
+
+void
+mjit::DumpAllProfiles(JSContext *cx)
+{
+#ifdef JS_METHODJIT_SPEW
+    for (JSScript *script = (JSScript *) JS_LIST_HEAD(&cx->compartment->scripts);
+         script != (JSScript *) &cx->compartment->scripts;
+         script = (JSScript *) JS_NEXT_LINK((JSCList *)script))
+    {
+        if (script->jitCtor)
+            DumpProfile(cx, script, script->jitCtor, true);
+        if (script->jitNormal)
+            DumpProfile(cx, script, script->jitNormal, false);
+    }
+#endif
+}
+
 jsbytecode *
 mjit::NativeToPC(JITScript *jit, void *ncode)
+
 {
     CallSite *inline_;
     jsbytecode *pc = jit->nativeToPC(ncode, &inline_);

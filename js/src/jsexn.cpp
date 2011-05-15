@@ -1049,18 +1049,14 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
         /* Add properties to the prototype. */
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
-        if (!js_DefineNativePropertyWithType(cx, proto, nameId, StringValue(atom),
-                                             PropertyStub, StrictPropertyStub,
-                                             0, 0, 0, NULL) ||
-            !js_DefineNativePropertyWithType(cx, proto, messageId, empty,
-                                             PropertyStub, StrictPropertyStub,
-                                             0, 0, 0, NULL) ||
-            !js_DefineNativePropertyWithType(cx, proto, fileNameId, empty,
-                                             PropertyStub, StrictPropertyStub,
-                                             JSPROP_ENUMERATE, 0, 0, NULL) ||
-            !js_DefineNativePropertyWithType(cx, proto, lineNumberId, Valueify(JSVAL_ZERO),
-                                             PropertyStub, StrictPropertyStub,
-                                             JSPROP_ENUMERATE, 0, 0, NULL)) {
+        if (!DefineNativePropertyWithType(cx, proto, nameId, StringValue(atom),
+                                          PropertyStub, StrictPropertyStub, 0, 0, 0) ||
+            !DefineNativePropertyWithType(cx, proto, messageId, empty,
+                                          PropertyStub, StrictPropertyStub, 0, 0, 0) ||
+            !DefineNativePropertyWithType(cx, proto, fileNameId, empty,
+                                          PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0) ||
+            !DefineNativePropertyWithType(cx, proto, lineNumberId, Valueify(JSVAL_ZERO),
+                                          PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0)) {
             return NULL;
         }
     }

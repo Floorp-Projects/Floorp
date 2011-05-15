@@ -101,7 +101,6 @@ NS_DEFINE_NAMED_CID(NS_COLLATION_CID);
 NS_DEFINE_NAMED_CID(NS_DATETIMEFORMAT_CID);
 #endif
 #ifdef USE_MAC_LOCALE
-NS_DEFINE_NAMED_CID(NS_MACLOCALE_CID);
 NS_DEFINE_NAMED_CID(NS_COLLATION_CID);
 NS_DEFINE_NAMED_CID(NS_DATETIMEFORMAT_CID);
 #endif
@@ -138,7 +137,6 @@ static const mozilla::Module::CIDEntry kIntlCIDs[] = {
     { &kNS_DATETIMEFORMAT_CID, false, NULL, nsDateTimeFormatUnixConstructor },
 #endif
 #ifdef USE_MAC_LOCALE
-    { &kNS_MACLOCALE_CID, false, NULL, nsMacLocaleConstructor },
     { &kNS_COLLATION_CID, false, NULL, nsCollationMacUCConstructor },
     { &kNS_DATETIMEFORMAT_CID, false, NULL, nsDateTimeFormatMacConstructor },
 #endif
@@ -177,7 +175,6 @@ static const mozilla::Module::ContractIDEntry kIntlContracts[] = {
     { NS_DATETIMEFORMAT_CONTRACTID, &kNS_DATETIMEFORMAT_CID },
 #endif
 #ifdef USE_MAC_LOCALE
-    { NS_MACLOCALE_CONTRACTID, &kNS_MACLOCALE_CID },
     { NS_COLLATION_CONTRACTID, &kNS_COLLATION_CID },
     { NS_DATETIMEFORMAT_CONTRACTID, &kNS_DATETIMEFORMAT_CID },
 #endif

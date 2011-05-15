@@ -2967,7 +2967,7 @@ SandboxDump(JSContext *cx, uintN argc, jsval *vp)
     if (!cstr)
         return JS_FALSE;
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MACOSX)
     // Be nice and convert all \r to \n.
     char *c = cstr, *cEnd = cstr + strlen(cstr);
     while (c < cEnd) {

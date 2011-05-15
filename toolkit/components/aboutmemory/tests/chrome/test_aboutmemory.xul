@@ -44,6 +44,9 @@
     { path: "heap-used/d",          memoryUsed:  499 * KB }, // aggregated
     { path: "heap-used/e",          memoryUsed:  100 * KB }, // aggregated
     { path: "heap-used/f/g/h/i",    memoryUsed:   20 * MB },
+    { path: "heap-used/g",          memoryUsed:   15 * MB }, // internal
+    { path: "heap-used/g/a",        memoryUsed:    6 * MB },
+    { path: "heap-used/g/b",        memoryUsed:    5 * MB },
     { path: "other1",               memoryUsed:  111 * MB },
     { path: "other2",               memoryUsed:  222 * MB },
 
@@ -67,8 +70,8 @@
   ]]>
   </script>
 
-  <iframe id="amFrame"  src="about:memory"></iframe>
-  <iframe id="amvFrame" src="about:memory?verbose"></iframe>
+  <iframe id="amFrame"  height="300" src="about:memory"></iframe>
+  <iframe id="amvFrame" height="300" src="about:memory?verbose"></iframe>
 
   <script type="application/javascript">
   <![CDATA[
@@ -94,11 +97,15 @@ Used Heap Memory\n\
 │  └───75.00 MB (15.00%) -- b\n\
 ├──123.00 MB (24.60%) -- c\n\
 ├───99.00 MB (19.80%) -- a\n\
-├───25.42 MB (05.08%) -- other\n\
 ├───20.00 MB (04.00%) -- f\n\
 │   └──20.00 MB (04.00%) -- g\n\
 │      └──20.00 MB (04.00%) -- h\n\
 │         └──20.00 MB (04.00%) -- i\n\
+├───15.00 MB (03.00%) -- g\n\
+│   ├───6.00 MB (01.20%) -- a\n\
+│   ├───5.00 MB (01.00%) -- b\n\
+│   └───4.00 MB (00.80%) -- other\n\
+├───10.42 MB (02.08%) -- other\n\
 └────0.58 MB (00.12%) -- (2 omitted)\n\
 \n\
 Other Measurements\n\
@@ -165,11 +172,15 @@ Used Heap Memory\n\
 │  └───78,643,200 B (15.00%) -- b\n\
 ├──128,974,848 B (24.60%) -- c\n\
 ├──103,809,024 B (19.80%) -- a\n\
-├───26,649,600 B (05.08%) -- other\n\
 ├───20,971,520 B (04.00%) -- f\n\
 │   └──20,971,520 B (04.00%) -- g\n\
 │      └──20,971,520 B (04.00%) -- h\n\
 │         └──20,971,520 B (04.00%) -- i\n\
+├───15,728,640 B (03.00%) -- g\n\
+│   ├───6,291,456 B (01.20%) -- a\n\
+│   ├───5,242,880 B (01.00%) -- b\n\
+│   └───4,194,304 B (00.80%) -- other\n\
+├───10,920,960 B (02.08%) -- other\n\
 ├──────510,976 B (00.10%) -- d\n\
 └──────102,400 B (00.02%) -- e\n\
 \n\

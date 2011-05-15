@@ -60,10 +60,6 @@ nsBaseEditorCommand::nsBaseEditorCommand()
 
 NS_IMPL_ISUPPORTS1(nsBaseEditorCommand, nsIControllerCommand)
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
 
 NS_IMETHODIMP
 nsUndoCommand::IsCommandEnabled(const char * aCommandName, 
@@ -790,9 +786,6 @@ nsSelectionMoveCommands::GetCommandStateParams(const char *aCommandName,
   return aParams->SetBooleanValue(STATE_ENABLED,canUndo);
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 NS_IMETHODIMP
 nsInsertPlaintextCommand::IsCommandEnabled(const char * aCommandName,
@@ -849,10 +842,6 @@ nsInsertPlaintextCommand::GetCommandStateParams(const char *aCommandName,
   return aParams->SetBooleanValue(STATE_ENABLED, outCmdEnabled);
 }
 
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 NS_IMETHODIMP
 nsPasteQuotationCommand::IsCommandEnabled(const char * aCommandName,
