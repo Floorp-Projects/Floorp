@@ -146,7 +146,16 @@ public:
   {
     nsCOMPtr<mozIStorageRow> row;
     while (NS_SUCCEEDED(aResultSet->GetNextRow(getter_AddRefs(row))) && row) {
-      nsresult rv = row->GetInt64(0, &mData.itemId);
+      // Skip tags, for the use-cases of this async getter they are useless.
+      PRInt64 grandParentId, tagsFolderId;
+      nsresult rv = row->GetInt64(1, &grandParentId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = mBookmarksSvc->GetTagsFolder(&tagsFolderId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (grandParentId == tagsFolderId) {
+        continue;
+      }
+      rv = row->GetInt64(0, &mData.itemId);
       NS_ENSURE_SUCCESS(rv, rv);
       if (mCallback) {
         ((*mBookmarksSvc).*mCallback)(mData);
@@ -302,8 +311,9 @@ nsNavBookmarks::GetStatement(const nsCOMPtr<mozIStorageStatement>& aStmt)
   // importing, syncing or due to extensions.
   // Note: not using a JOIN is cheaper in this case.
   RETURN_IF_STMT(mDBFindURIBookmarks, NS_LITERAL_CSTRING(
-    "SELECT b.id "
+    "SELECT b.id, t.parent "
     "FROM moz_bookmarks b "
+    "JOIN moz_bookmarks t on t.id = b.parent "
     "WHERE b.fk = (SELECT id FROM moz_places WHERE url = :page_url) "
     "ORDER BY b.lastModified DESC, b.id DESC "));
 
@@ -940,7 +950,7 @@ nsNavBookmarks::InsertBookmark(PRInt64 aFolder,
   if (grandParentId == mTagsRoot) {
     // query for all bookmarks for that URI, notify for each
     nsTArray<PRInt64> bookmarks;
-    rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
+    rv = GetBookmarkIdsForURITArray(aURI, bookmarks, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (bookmarks.Length()) {
@@ -1073,7 +1083,7 @@ nsNavBookmarks::RemoveItem(PRInt64 aItemId)
     rv = NS_NewURI(getter_AddRefs(uri), spec);
     NS_ENSURE_SUCCESS(rv, rv);
     nsTArray<PRInt64> bookmarks;
-    rv = GetBookmarkIdsForURITArray(uri, bookmarks);
+    rv = GetBookmarkIdsForURITArray(uri, bookmarks, true);
     NS_ENSURE_SUCCESS(rv, rv);
 
     for (PRUint32 i = 0; i < bookmarks.Length(); i++) {
@@ -1659,7 +1669,7 @@ nsNavBookmarks::RemoveFolderChildren(PRInt64 aFolderId)
         NS_ENSURE_SUCCESS(rv, rv);
 
         nsTArray<PRInt64> bookmarks;
-        rv = GetBookmarkIdsForURITArray(uri, bookmarks);
+        rv = GetBookmarkIdsForURITArray(uri, bookmarks, true);
         NS_ENSURE_SUCCESS(rv, rv);
 
         if (bookmarks.Length()) {
@@ -2549,7 +2559,8 @@ nsNavBookmarks::GetFolderIdForItem(PRInt64 aItemId, PRInt64* aFolderId)
 
 nsresult
 nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI* aURI,
-                                           nsTArray<PRInt64>& aResult)
+                                           nsTArray<PRInt64>& aResult,
+                                           bool aSkipTags)
 {
   NS_ENSURE_ARG(aURI);
 
@@ -2559,6 +2570,15 @@ nsNavBookmarks::GetBookmarkIdsForURITArray(nsIURI* aURI,
 
   PRBool more;
   while (NS_SUCCEEDED((rv = stmt->ExecuteStep(&more))) && more) {
+    if (aSkipTags) {
+      // Skip tags, for the use-cases of this async getter they are useless.
+      PRInt64 grandParentId;
+      nsresult rv = stmt->GetInt64(1, &grandParentId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (grandParentId == mTagsRoot) {
+        continue;
+      }
+    }
     PRInt64 bookmarkId;
     rv = stmt->GetInt64(kFindBookmarksIndex_ID, &bookmarkId);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -2583,7 +2603,8 @@ nsNavBookmarks::GetBookmarkIdsForURI(nsIURI* aURI, PRUint32* aCount,
   nsTArray<PRInt64> bookmarks;
 
   // Get the information from the DB as a TArray
-  nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks);
+  // TODO (bug 653816): make this API skip tags by default.
+  nsresult rv = GetBookmarkIdsForURITArray(aURI, bookmarks, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Copy the results into a new array for output
@@ -2989,17 +3010,14 @@ nsNavBookmarks::OnBeforeDeleteURI(nsIURI* aURI)
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteURI(nsIURI* aURI)
 {
-  // If the page is bookmarked, notify observers for each associated bookmark.
-  ItemChangeData changeData;
-  changeData.uri = aURI;
-  changeData.property = NS_LITERAL_CSTRING("cleartime");
-  changeData.isAnnotation = PR_FALSE;
-  changeData.lastModified = 0;
-  changeData.itemType = TYPE_BOOKMARK;
-
-  nsRefPtr< AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData> > notifier =
-    new AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>(this, &nsNavBookmarks::NotifyItemChanged, changeData);
-  notifier->Init();
+#ifdef DEBUG
+  nsNavHistory* history = nsNavHistory::GetHistoryService();
+  PRInt64 placeId;
+  NS_ABORT_IF_FALSE(
+    history && NS_SUCCEEDED(history->GetUrlIdFor(aURI, &placeId, PR_FALSE)) && !placeId,
+    "OnDeleteURI was notified for a page that still exists?"
+  );
+#endif
   return NS_OK;
 }
 
@@ -3070,7 +3088,20 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI, PRUint32 aWhat,
 NS_IMETHODIMP
 nsNavBookmarks::OnDeleteVisits(nsIURI* aURI, PRTime aVisitTime)
 {
-  // pages that are bookmarks shouldn't expire, so we don't need to handle it
+  // Notify "cleartime" only if all visits to the page have been removed.
+  if (!aVisitTime) {
+    // If the page is bookmarked, notify observers for each associated bookmark.
+    ItemChangeData changeData;
+    changeData.uri = aURI;
+    changeData.property = NS_LITERAL_CSTRING("cleartime");
+    changeData.isAnnotation = PR_FALSE;
+    changeData.lastModified = 0;
+    changeData.itemType = TYPE_BOOKMARK;
+
+    nsRefPtr< AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData> > notifier =
+      new AsyncGetBookmarksForURI<ItemChangeMethod, ItemChangeData>(this, &nsNavBookmarks::NotifyItemChanged, changeData);
+    notifier->Init();
+  }
   return NS_OK;
 }
 

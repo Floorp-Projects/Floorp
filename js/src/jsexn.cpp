@@ -64,9 +64,9 @@
 #include "jsstaticcheck.h"
 #include "jswrapper.h"
 
-#include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
+
+#include "vm/Stack-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -267,7 +267,7 @@ InitExnPrivate(JSContext *cx, JSObject *exnObject, JSString *message,
     JSErrorReporter older;
     JSExceptionState *state;
     jsid callerid;
-    JSStackFrame *fp, *fpstop;
+    StackFrame *fp, *fpstop;
     size_t stackDepth, valueCount, size;
     JSBool overflow;
     JSExnPrivate *priv;
@@ -693,7 +693,7 @@ static JSBool
 Exception(JSContext *cx, uintN argc, Value *vp)
 {
     JSString *message, *filename;
-    JSStackFrame *fp;
+    StackFrame *fp;
 
     /*
      * ECMA ed. 3, 15.11.1 requires Error, etc., to construct even when
@@ -1043,18 +1043,14 @@ js_InitExceptionClasses(JSContext *cx, JSObject *obj)
 
         /* Add properties to the prototype. */
         JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
-        if (!js_DefineNativeProperty(cx, proto, nameId, StringValue(atom),
-                                     PropertyStub, StrictPropertyStub,
-                                     0, 0, 0, NULL) ||
-            !js_DefineNativeProperty(cx, proto, messageId, empty,
-                                     PropertyStub, StrictPropertyStub,
-                                     0, 0, 0, NULL) ||
-            !js_DefineNativeProperty(cx, proto, fileNameId, empty,
-                                     PropertyStub, StrictPropertyStub,
-                                     JSPROP_ENUMERATE, 0, 0, NULL) ||
-            !js_DefineNativeProperty(cx, proto, lineNumberId, Valueify(JSVAL_ZERO),
-                                     PropertyStub, StrictPropertyStub,
-                                     JSPROP_ENUMERATE, 0, 0, NULL)) {
+        if (!DefineNativeProperty(cx, proto, nameId, StringValue(atom),
+                                  PropertyStub, StrictPropertyStub, 0, 0, 0) ||
+            !DefineNativeProperty(cx, proto, messageId, empty,
+                                  PropertyStub, StrictPropertyStub, 0, 0, 0) ||
+            !DefineNativeProperty(cx, proto, fileNameId, empty,
+                                  PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0) ||
+            !DefineNativeProperty(cx, proto, lineNumberId, Valueify(JSVAL_ZERO),
+                                  PropertyStub, StrictPropertyStub, JSPROP_ENUMERATE, 0, 0)) {
             return NULL;
         }
     }

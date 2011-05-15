@@ -55,13 +55,12 @@
 #include <ctype.h>
 
 #if defined(XP_WIN)
-#  include "nsIWin32Locale.h"
+#  include "nsWin32Locale.h"
 #elif defined(XP_OS2)
 #  include "unidef.h"
 #  include "nsIOS2Locale.h"
 #elif defined(XP_MACOSX)
 #  include <Carbon/Carbon.h>
-#  include "nsIMacLocale.h"
 #elif defined(XP_UNIX)
 #  include <locale.h>
 #  include <stdlib.h>
@@ -138,34 +137,24 @@ nsLocaleService::nsLocaleService(void)
     : mSystemLocale(0), mApplicationLocale(0)
 {
 #ifdef XP_WIN
-    nsCOMPtr<nsIWin32Locale> win32Converter = do_GetService(NS_WIN32LOCALE_CONTRACTID);
-
-    NS_ASSERTION(win32Converter, "nsLocaleService: can't get win32 converter\n");
-
     nsAutoString        xpLocale;
-    if (win32Converter) {
-        
-        nsresult result;
-        //
-        // get the system LCID
-        //
-        LCID win_lcid = GetSystemDefaultLCID();
-        if (win_lcid==0) { return;}
-            result = win32Converter->GetXPLocale(win_lcid, xpLocale);
-        if (NS_FAILED(result)) { return;}
-            result = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
-        if (NS_FAILED(result)) { return;}
+    //
+    // get the system LCID
+    //
+    LCID win_lcid = GetSystemDefaultLCID();
+    NS_ENSURE_TRUE(win_lcid, );
+    nsWin32Locale::GetXPLocale(win_lcid, xpLocale);
+    nsresult rv = NewLocale(xpLocale, getter_AddRefs(mSystemLocale));
+    NS_ENSURE_SUCCESS(rv, );
 
-        //
-        // get the application LCID
-        //
-        win_lcid = GetUserDefaultLCID();
-        if (win_lcid==0) { return;}
-            result = win32Converter->GetXPLocale(win_lcid, xpLocale);
-        if (NS_FAILED(result)) { return;}
-            result = NewLocale(xpLocale, getter_AddRefs(mApplicationLocale));
-        if (NS_FAILED(result)) { return;}
-    }
+    //
+    // get the application LCID
+    //
+    win_lcid = GetUserDefaultLCID();
+    NS_ENSURE_TRUE(win_lcid, );
+    nsWin32Locale::GetXPLocale(win_lcid, xpLocale);
+    rv = NewLocale(xpLocale, getter_AddRefs(mApplicationLocale));
+    NS_ENSURE_SUCCESS(rv, );
 #endif
 #if defined(XP_UNIX) && !defined(XP_MACOSX)
     nsCOMPtr<nsIPosixLocale> posixConverter = do_GetService(NS_POSIXLOCALE_CONTRACTID);

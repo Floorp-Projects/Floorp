@@ -109,7 +109,7 @@ public:
   }
 
   bool AddHook(const char *pname,
-         void *hookDest,
+         intptr_t hookDest,
          void **origFunc)
   {
     if (!mModule)
@@ -142,7 +142,7 @@ protected:
   int mCurHooks;
 
   byteptr_t CreateTrampoline(void *origFunction,
-           void *dest)
+           intptr_t dest)
   {
     byteptr_t tramp = FindTrampolineSpace();
     if (!tramp)
@@ -185,12 +185,12 @@ protected:
       }
     }
 #elif defined(_M_X64)
-    int pJmp32 = 0;
+    int pJmp32 = -1;
 
     while (nBytes < 13) {
 
       // if found JMP 32bit offset, next bytes must be NOP 
-      if (pJmp32) {
+      if (pJmp32 >= 0) {
         if (origBytes[nBytes++] != 0x90)
           return 0;
 
@@ -311,7 +311,7 @@ protected:
     *((intptr_t*)(tramp+nBytes+1)) = (intptr_t)trampDest - (intptr_t)(tramp+nBytes+5); // target displacement
 #elif defined(_M_X64)
     // If JMP32 opcode found, we don't insert to trampoline jump 
-    if (pJmp32) {
+    if (pJmp32 >= 0) {
       // convert JMP 32bit offset to JMP 64bit direct
       byteptr_t directJmpAddr = origBytes + pJmp32 + 5 + (*((LONG*)(origBytes+pJmp32+1)));
       // mov r11, address
@@ -346,13 +346,13 @@ protected:
 #if defined(_M_IX86)
     // now modify the original bytes
     origBytes[0] = 0xE9; // jmp
-    *((intptr_t*)(origBytes+1)) = (intptr_t)dest - (intptr_t)(origBytes+5); // target displacement
+    *((intptr_t*)(origBytes+1)) = dest - (intptr_t)(origBytes+5); // target displacement
 #elif defined(_M_X64)
     // mov r11, address
     origBytes[0] = 0x49;
     origBytes[1] = 0xbb;
 
-    *((intptr_t*)(origBytes+2)) = (intptr_t)dest;
+    *((intptr_t*)(origBytes+2)) = dest;
 
     // jmp r11
     origBytes[10] = 0x41;

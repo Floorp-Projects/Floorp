@@ -295,6 +295,11 @@ NS_IMETHODIMP mozOSXSpell::Suggest(const PRUnichar *aWord, PRUnichar ***aSuggest
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
+NS_IMETHODIMP mozOSXSpell::LoadDictionariesFromDir(nsIFile* aFile)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #pragma mark -
 
 //

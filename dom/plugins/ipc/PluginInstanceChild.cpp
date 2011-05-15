@@ -169,20 +169,6 @@ PluginInstanceChild::PluginInstanceChild(const NPPluginFuncs* aPluginIface)
 #if defined(OS_WIN)
     InitPopupMenuHook();
 #endif // OS_WIN
-#ifdef MOZ_X11
-    // Maemo flash can render plugin with any provided rectangle and not require this quirk.
-#ifndef MOZ_PLATFORM_MAEMO
-    const char *description = NULL;
-    mPluginIface->getvalue(GetNPP(), NPPVpluginDescriptionString,
-                           &description);
-    if (description) {
-        NS_NAMED_LITERAL_CSTRING(flash10Head, "Shockwave Flash 10.");
-        if (StringBeginsWith(nsDependentCString(description), flash10Head)) {
-          PluginModuleChild::current()->AddQuirk(PluginModuleChild::QUIRK_FLASH_EXPOSE_COORD_TRANSLATION);
-        }
-    }
-#endif
-#endif
 }
 
 PluginInstanceChild::~PluginInstanceChild()
@@ -1444,14 +1430,14 @@ PluginInstanceChild::HookSetWindowLongPtr()
 
     sUser32Intercept.Init("user32.dll");
 #ifdef _WIN64
-    sUser32Intercept.AddHook("SetWindowLongPtrA", SetWindowLongPtrAHook,
+    sUser32Intercept.AddHook("SetWindowLongPtrA", reinterpret_cast<intptr_t>(SetWindowLongPtrAHook),
                              (void**) &sUser32SetWindowLongAHookStub);
-    sUser32Intercept.AddHook("SetWindowLongPtrW", SetWindowLongPtrWHook,
+    sUser32Intercept.AddHook("SetWindowLongPtrW", reinterpret_cast<intptr_t>(SetWindowLongPtrWHook),
                              (void**) &sUser32SetWindowLongWHookStub);
 #else
-    sUser32Intercept.AddHook("SetWindowLongA", SetWindowLongAHook,
+    sUser32Intercept.AddHook("SetWindowLongA", reinterpret_cast<intptr_t>(SetWindowLongAHook),
                              (void**) &sUser32SetWindowLongAHookStub);
-    sUser32Intercept.AddHook("SetWindowLongW", SetWindowLongWHook,
+    sUser32Intercept.AddHook("SetWindowLongW", reinterpret_cast<intptr_t>(SetWindowLongWHook),
                              (void**) &sUser32SetWindowLongWHookStub);
 #endif
 }
@@ -1531,7 +1517,7 @@ PluginInstanceChild::InitPopupMenuHook()
     // lifetime. Additional instances are needed if other modules need
     // to be hooked.
     sUser32Intercept.Init("user32.dll");
-    sUser32Intercept.AddHook("TrackPopupMenu", TrackPopupHookProc,
+    sUser32Intercept.AddHook("TrackPopupMenu", reinterpret_cast<intptr_t>(TrackPopupHookProc),
                              (void**) &sUser32TrackPopupMenuStub);
 }
 
@@ -1996,8 +1982,12 @@ PluginInstanceChild::AnswerSetPluginFocus()
     PR_LOG(gPluginLog, PR_LOG_DEBUG, ("%s", FULLFUNCTION));
 
 #if defined(OS_WIN)
-    // Parent is letting us know something set focus to the plugin.
-    if (::GetFocus() == mPluginWindowHWND)
+    // Parent is letting us know the dom set focus to the plugin. Note,
+    // focus can change during transit in certain edge cases, for example
+    // when a button click brings up a full screen window. Since we send
+    // this in response to a WM_SETFOCUS event on our parent, the parent
+    // should have focus when we receive this. If not, ignore the call.
+    if (::GetFocus() == mPluginWindowHWND || ::GetFocus() != mPluginParentHWND)
         return true;
     ::SetFocus(mPluginWindowHWND);
     return true;

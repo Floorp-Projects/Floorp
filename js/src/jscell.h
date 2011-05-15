@@ -46,10 +46,16 @@ namespace js {
 namespace gc {
 
 template <typename T> struct Arena;
-struct ArenaBitmap;
+struct ArenaHeader;
 struct MarkingDelay;
 struct Chunk;
 struct FreeCell;
+
+/*
+ * Live objects are marked black. How many other additional colors are available
+ * depends on the size of the GCThing.
+ */
+static const uint32 BLACK = 0;
 
 /*
  * A GC cell is the base class for GC Things like JSObject, JSShortString,
@@ -64,13 +70,12 @@ struct Cell {
     static const size_t CellSize = size_t(1) << CellShift;
     static const size_t CellMask = CellSize - 1;
 
-    inline Arena<Cell> *arena() const;
+    inline uintptr_t address() const;
+    inline ArenaHeader *arenaHeader() const;
     inline Chunk *chunk() const;
-    inline ArenaBitmap *bitmap() const;
-    JS_ALWAYS_INLINE size_t cellIndex() const;
 
-    JS_ALWAYS_INLINE bool isMarked(uint32 color) const;
-    JS_ALWAYS_INLINE bool markIfUnmarked(uint32 color) const;
+    JS_ALWAYS_INLINE bool isMarked(uint32 color = BLACK) const;
+    JS_ALWAYS_INLINE bool markIfUnmarked(uint32 color = BLACK) const;
     JS_ALWAYS_INLINE void unmark(uint32 color) const;
 
     inline JSCompartment *compartment() const;
@@ -82,9 +87,12 @@ struct Cell {
     JS_ALWAYS_INLINE const js::gc::FreeCell *asFreeCell() const {
         return reinterpret_cast<const FreeCell *>(this);
     }
+
+#ifdef DEBUG
+    inline bool isAligned() const;
+#endif
 };
 
-/* FreeCell has always size 8 */
 struct FreeCell : Cell {
     union {
         FreeCell *link;
@@ -92,7 +100,7 @@ struct FreeCell : Cell {
     };
 };
 
-JS_STATIC_ASSERT(sizeof(FreeCell) == 8);
+JS_STATIC_ASSERT(sizeof(FreeCell) == Cell::CellSize);
 
 } /* namespace gc */
 } /* namespace js */

@@ -2456,6 +2456,11 @@
           this.mTabListeners[0] = tabListener;
           this.mTabFilters[0] = filter;
           this.init();
+
+          this.style.backgroundColor =
+            Services.prefs.getBoolPref("browser.display.use_system_colors") ?
+              "-moz-default-background-color" :
+              Services.prefs.getCharPref("browser.display.background_color");
         ]]>
       </constructor>
 
@@ -3137,11 +3142,14 @@
       <method name="_handleNewTab">
         <parameter name="tab"/>
         <body><![CDATA[
-          if (tab.parentNode != this || tab._fullyOpen)
+          if (tab.parentNode != this)
             return;
-          tab._fullyOpen = true;
 
           this.adjustTabstrip();
+
+          if (tab._fullyOpen)
+            return;
+          tab._fullyOpen = true;
 
           if (tab.getAttribute("selected") == "true") {
             this._fillTrailingGap();

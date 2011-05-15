@@ -122,8 +122,11 @@ nsSVGPathElement::GetPointAtLength(float distance, nsIDOMSVGPoint **_retval)
     return NS_ERROR_FAILURE;
 
   float totalLength = flat->GetLength();
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::pathLength)) {
+  if (mPathLength.IsExplicitlySet()) {
     float pathLength = mPathLength.GetAnimValue();
+    if (pathLength <= 0) {
+      return NS_ERROR_FAILURE;
+    }
     distance *= totalLength / pathLength;
   }
   distance = NS_MAX(0.f,         distance);
@@ -400,11 +403,8 @@ nsSVGPathElement::GetFlattenedPath(const gfxMatrix &aMatrix)
 PRBool
 nsSVGPathElement::AttributeDefinesGeometry(const nsIAtom *aName)
 {
-  if (aName == nsGkAtoms::d ||
-      aName == nsGkAtoms::pathLength)
-    return PR_TRUE;
-
-  return PR_FALSE;
+  return aName == nsGkAtoms::d ||
+         aName == nsGkAtoms::pathLength;
 }
 
 PRBool
@@ -425,3 +425,18 @@ nsSVGPathElement::ConstructPath(gfxContext *aCtx)
   mD.GetAnimValue().ConstructPath(aCtx);
 }
 
+gfxFloat
+nsSVGPathElement::GetScale()
+{
+  if (mPathLength.IsExplicitlySet()) {
+
+    nsRefPtr<gfxFlattenedPath> flat =
+      GetFlattenedPath(PrependLocalTransformTo(gfxMatrix()));
+    float pathLength = mPathLength.GetAnimValue();
+
+    if (flat && pathLength != 0) {
+      return flat->GetLength() / pathLength;
+    }
+  }
+  return 1.0;
+}

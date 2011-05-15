@@ -79,6 +79,7 @@ function FormAssistant() {
   addEventListener("focus", this, true);
   addEventListener("pageshow", this, false);
   addEventListener("pagehide", this, false);
+  addEventListener("submit", this, false);
 
   this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
 };
@@ -255,6 +256,14 @@ FormAssistant.prototype = {
       }
 
       case "FormAssist:AutoComplete": {
+        try {
+          currentElement = currentElement.QueryInterface(Ci.nsIDOMNSEditableElement);
+          let imeEditor = currentElement.editor.QueryInterface(Ci.nsIEditorIMESupport);
+          if (imeEditor.composing)
+            imeEditor.forceCompositionEnd();
+        }
+        catch(e) {}
+
         currentElement.value = json.value;
 
         let event = currentElement.ownerDocument.createEvent("Events");
@@ -295,6 +304,11 @@ FormAssistant.prototype = {
 
     let currentElement = this.currentElement;
     switch (aEvent.type) {
+      case "submit":
+        // submit is a final action and the form assistant should be closed
+        this.close();
+        break;
+
       case "pagehide":
       case "pageshow":
         // When reacting to a page show/hide, if the focus is different this
@@ -572,7 +586,7 @@ FormAssistant.prototype = {
   },
 
   _isVisibleElement: function formHelperIsVisibleElement(aElement) {
-    let style = aElement.ownerDocument.defaultView.getComputedStyle(aElement, null);
+    let style = aElement ? aElement.ownerDocument.defaultView.getComputedStyle(aElement, null) : null;
     if (!style)
       return false;
 

@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <title>Testcase for bug </title>
+<link rel="stylesheet" type="text/css" href="" />
+<!--
+        #foo {
+            /* This doesn't get evaluated */
+            color: red;
+        }
+        #ie {
+            border: 5px solid red;
+        }
+        #ie {
+            display: block;
+        }
+        #moz {
+            color: blue;
+            /* display: none; */
+        }
+-->
+
+</head>
+<body>
+
+<p id="foo">foo</p>
+<p id="ie">ie</p>
+<p id="moz">moz</p>
+
+</body>
+</html>

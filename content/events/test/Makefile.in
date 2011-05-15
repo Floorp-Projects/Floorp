@@ -72,6 +72,7 @@ _TEST_FILES = \
 		test_bug409604.html \
 		test_bug412567.html \
 		test_bug426082.html \
+		test_bug427537.html \
 		test_bug443985.html \
 		test_bug447736.html \
 		test_bug450876.html \
@@ -81,7 +82,6 @@ _TEST_FILES = \
 		bug457672.html \
 		test_draggableprop.html \
 		test_bug489671.html \
-		test_bug493251.html \
 		test_bug502818.html \
 		test_bug508479.html \
 		test_bug508906.html \
@@ -97,17 +97,27 @@ _TEST_FILES = \
 		test_bug593959.html \
 		test_bug591815.html \
 		test_bug605242.html \
+		test_bug613634.html \
 		test_bug607464.html \
 		test_bug624127.html \
+		test_bug650493.html \
 		test_bug641477.html \
 		test_bug648573.html \
 		test_bug615597.html \
+		test_bug656954.html \
 		$(NULL)
 
 #bug 585630
 ifneq (mobile,$(MOZ_BUILD_APP))
 _TEST_FILES += \
 		test_dragstart.html \
+		$(NULL)
+endif
+
+# bug 565245
+ifneq (Linux,$(OS_ARCH))
+_TEST_FILES += \
+		test_bug493251.html \
 		$(NULL)
 endif
 

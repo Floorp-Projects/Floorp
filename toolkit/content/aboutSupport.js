@@ -166,6 +166,64 @@ function populateGraphicsSection() {
     return elem;
   }
 
+  function pushInfoRow(table, name, value)
+  {
+    if(value) {
+      table.push(createParentElement("tr", [
+        createHeader(bundle.GetStringFromName(name)),
+        createElement("td", value),
+      ]));
+    }
+  }
+
+  function errorMessageForFeature(feature) {
+    var errorMessage;
+    var status;
+    try {
+      status = gfxInfo.getFeatureStatus(feature);
+    } catch(e) {}
+    switch (status) {
+      case gfxInfo.FEATURE_BLOCKED_DEVICE:
+      case gfxInfo.FEATURE_DISCOURAGED:
+        errorMessage = bundle.GetStringFromName("blockedGfxCard");
+        break;
+      case gfxInfo.FEATURE_BLOCKED_OS_VERSION:
+        errorMessage = bundle.GetStringFromName("blockedOSVersion");
+        break;
+      case gfxInfo.FEATURE_BLOCKED_DRIVER_VERSION:
+        var suggestedDriverVersion;
+        try {
+          suggestedDriverVersion = gfxInfo.getFeatureSuggestedDriverVersion(feature);
+        } catch(e) {}
+        if (suggestedDriverVersion)
+          errorMessage = bundle.formatStringFromName("tryNewerDriver", [suggestedDriverVersion], 1);
+        else
+          errorMessage = bundle.GetStringFromName("blockedDriver");
+        break;
+    }
+    return errorMessage;
+  }
+
+  function pushFeatureInfoRow(table, name, feature, isEnabled, message) {
+    message = message || isEnabled;
+    if (!isEnabled) {
+      var errorMessage = errorMessageForFeature(feature);
+      if (errorMessage)
+        message = errorMessage;
+    }
+    table.push(createParentElement("tr", [
+      createHeader(bundle.GetStringFromName(name)),
+      createElement("td", message),
+    ]));
+  }
+
+  function hexValueToString(value)
+  {
+    return value
+           ? String('0000' + value.toString(16)).slice(-4)
+           : null;
+  }
+
   let bundle = Services.strings.createBundle("chrome://global/locale/aboutSupport.properties");
   let graphics_tbody = document.getElementById("graphics-tbody");
 
@@ -177,95 +235,63 @@ function populateGraphicsSection() {
 
   if (gfxInfo) {
     let trGraphics = [];
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterDescription")),
-      createElement("td", gfxInfo.adapterDescription),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterVendorID")),
-      // pad with zeros. (printf would be nicer)
-      createElement("td", String('0000'+gfxInfo.adapterVendorID.toString(16)).slice(-4)),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterDeviceID")),
-      // pad with zeros. (printf would be nicer)
-      createElement("td", String('0000'+gfxInfo.adapterDeviceID.toString(16)).slice(-4)),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterRAM")),
-      createElement("td", gfxInfo.adapterRAM),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("adapterDrivers")),
-      createElement("td", gfxInfo.adapterDriver),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("driverVersion")),
-      createElement("td", gfxInfo.adapterDriverVersion),
-    ]));
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("driverDate")),
-      createElement("td", gfxInfo.adapterDriverDate),
-    ]));
+    pushInfoRow(trGraphics, "adapterDescription", gfxInfo.adapterDescription);
+    pushInfoRow(trGraphics, "adapterVendorID", hexValueToString(gfxInfo.adapterVendorID));
+    pushInfoRow(trGraphics, "adapterDeviceID", hexValueToString(gfxInfo.adapterDeviceID));
+    pushInfoRow(trGraphics, "adapterRAM", gfxInfo.adapterRAM);
+    pushInfoRow(trGraphics, "adapterDrivers", gfxInfo.adapterDriver);
+    pushInfoRow(trGraphics, "driverVersion", gfxInfo.adapterDriverVersion);
+    pushInfoRow(trGraphics, "driverDate", gfxInfo.adapterDriverDate);
 
-    var d2dEnabled = false;
-    try {
-      d2dEnabled = gfxInfo.D2DEnabled;
-    } catch(e) {}
-    var d2dMessage = d2dEnabled;
-    if (!d2dEnabled) {
-      var d2dStatus = -1; // different from any status value defined in the IDL
+#ifdef XP_WIN
+    var version = Cc["@mozilla.org/system-info;1"]
+                  .getService(Ci.nsIPropertyBag2)
+                  .getProperty("version");
+    var isWindowsVistaOrHigher = (parseFloat(version) >= 6.0);
+    if (isWindowsVistaOrHigher) {
+      var d2dEnabled = "false";
       try {
-        d2dStatus = gfxInfo.getFeatureStatus(gfxInfo.FEATURE_DIRECT2D);
-      } catch(e) {
-        window.dump(e + '\n');
-      }  
-      if (d2dStatus == gfxInfo.FEATURE_BLOCKED_DEVICE ||
-          d2dStatus == gfxInfo.FEATURE_DISCOURAGED)
-      {
-        d2dMessage = bundle.GetStringFromName("blockedGraphicsCard");
-      }
-      else if (d2dStatus == gfxInfo.FEATURE_BLOCKED_DRIVER_VERSION)
-      {
-        var d2dSuggestedDriverVersion = null;
-        try {
-          d2dSuggestedDriverVersion = gfxInfo.getFeatureSuggestedDriverVersion(gfxInfo.FEATURE_DIRECT2D);
-        } catch(e) {
-          window.dump(e + '\n');
-        }
-        if (d2dSuggestedDriverVersion) {
-          d2dMessage = bundle.GetStringFromName("tryNewerDriverVersion").replace("%1", d2dSuggestedDriverVersion);
-        }
-      }
-    }
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("direct2DEnabled")),
-      createElement("td", d2dMessage),
-    ]));
+        d2dEnabled = gfxInfo.D2DEnabled;
+      } catch(e) {}
+      pushFeatureInfoRow(trGraphics, "direct2DEnabled", gfxInfo.FEATURE_DIRECT2D, d2dEnabled);
 
-    var dwEnabled = false;
-    var dwriteEnabledStr = dwEnabled.toString();
-    var dwriteVersion;
-    try {
-      dwEnabled = gfxInfo.DWriteEnabled;
-      dwriteVersion = gfxInfo.DWriteVersion;
-      dwriteEnabledStr = dwEnabled.toString() + " (" + dwriteVersion + ")";
-    } catch(e) {}
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("directWriteEnabled")),
-      createElement("td", dwriteEnabledStr),
-    ]));
+      var dwEnabled = "false";
+      try {
+        dwEnabled = gfxInfo.DWriteEnabled + " (" + gfxInfo.DWriteVersion + ")";
+      } catch(e) {}
+      pushInfoRow(trGraphics, "directWriteEnabled", dwEnabled);  
+
+      var cleartypeParams = "";
+      try {
+        cleartypeParams = gfxInfo.cleartypeParameters;
+      } catch(e) {
+        cleartypeParams = bundle.GetStringFromName("clearTypeParametersNotFound");
+      }
+      pushInfoRow(trGraphics, "clearTypeParameters", cleartypeParams);  
+    }
+
+#endif
 
     var webglrenderer;
+    var webglenabled;
     try {
       webglrenderer = gfxInfo.getWebGLParameter("full-renderer");
+      webglenabled = true;
     } catch (e) {
-      webglrenderer = "(WebGL unavailable)";
+      webglrenderer = false;
+      webglenabled = false;
     }
-    trGraphics.push(createParentElement("tr", [
-      createHeader(bundle.GetStringFromName("webglRenderer")),
-      createElement("td", webglrenderer)
-    ]));
+#ifdef XP_WIN
+    // If ANGLE is not available but OpenGL is, we want to report on the OpenGL feature, because that's what's going to get used.
+    // In all other cases we want to report on the ANGLE feature.
+    var webglfeature = gfxInfo.FEATURE_WEBGL_ANGLE;
+    if (gfxInfo.getFeatureStatus(gfxInfo.FEATURE_WEBGL_ANGLE)  != gfxInfo.FEATURE_NO_INFO &&
+        gfxInfo.getFeatureStatus(gfxInfo.FEATURE_WEBGL_OPENGL) == gfxInfo.FEATURE_NO_INFO)
+      webglfeature = gfxInfo.FEATURE_WEBGL_OPENGL;
+#else
+    var webglfeature = gfxInfo.FEATURE_WEBGL_OPENGL;
+#endif
+    pushFeatureInfoRow(trGraphics, "webglRenderer", webglfeature, webglenabled, webglrenderer);
 
     appendChildren(graphics_tbody, trGraphics);
    
@@ -296,8 +322,18 @@ function populateGraphicsSection() {
   }
 
   let msg = acceleratedWindows + "/" + totalWindows;
-  if (acceleratedWindows)
+  if (acceleratedWindows) {
     msg += " " + mgrType;
+  } else {
+#ifdef XP_WIN
+    var feature = gfxInfo.FEATURE_DIRECT3D_9_LAYERS;
+#else
+    var feature = gfxInfo.FEATURE_OPENGL_LAYERS;
+#endif
+    var errMsg = errorMessageForFeature(feature);
+    if (errMsg)
+      msg += ". " + errMsg;
+  }
 
   appendChildren(graphics_tbody, [
     createParentElement("tr", [

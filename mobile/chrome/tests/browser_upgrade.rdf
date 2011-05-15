@@ -14,7 +14,7 @@
                 <em:id>toolkit@mozilla.org</em:id>
                 <em:minVersion>0</em:minVersion>
                 <em:maxVersion>*</em:maxVersion>
-                <em:updateLink>http://example.com/browser/mobile/chrome/addons/browser_install1_3.xpi</em:updateLink>
+                <em:updateLink>http://example.com/browser/mobile/chrome/tests/addons/browser_install1_3.xpi</em:updateLink>
               </Description>
             </em:targetApplication>
           </Description>

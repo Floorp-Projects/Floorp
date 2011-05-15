@@ -332,7 +332,14 @@ function parseRDFManifest(aId, aType, aUpdateKey, aRequest) {
 
   let updates = ds.GetTarget(extensionRes, EM_R("updates"), true);
 
-  if (!updates || !(updates instanceof Ci.nsIRDFResource))
+  // A missing updates property doesn't count as a failure, just as no avialable
+  // update information
+  if (!updates) {
+    WARN("Update manifest for " + aId + " did not contain an updates property");
+    return [];
+  }
+
+  if (!(updates instanceof Ci.nsIRDFResource))
     throw new Error("Missing updates property for " + extensionRes.Value);
 
   let cu = Cc["@mozilla.org/rdf/container-utils;1"].
@@ -526,7 +533,7 @@ UpdateParser.prototype = {
     this.timer = null;
 
     if (!Components.isSuccessCode(this.request.status)) {
-      WARN("Request failed: " + request.status);
+      WARN("Request failed: " + this.request.status);
     }
     else if (this.request.channel instanceof Ci.nsIHttpChannel) {
       try {

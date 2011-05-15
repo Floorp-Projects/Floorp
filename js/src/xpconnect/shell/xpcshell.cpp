@@ -1753,6 +1753,12 @@ GetCurrentWorkingDirectory(nsAString& workingDirectory)
     return true;
 }
 
+static JSPrincipals *
+FindObjectPrincipals(JSContext *cx, JSObject *obj)
+{
+    return gJSPrincipals;
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1888,6 +1894,11 @@ main(int argc, char **argv, char **envp)
                 fprintf(gErrFile, "+++ Failed to get ScriptSecurityManager service, running without principals");
             }
         }
+
+        JSSecurityCallbacks *cb = JS_GetRuntimeSecurityCallbacks(rt);
+        NS_ASSERTION(cb, "We are assuming that nsScriptSecurityManager::Init() has been run");
+        NS_ASSERTION(!cb->findObjectPrincipals, "Your pigeon is in my hole!");
+        cb->findObjectPrincipals = FindObjectPrincipals;
 
 #ifdef TEST_TranslateThis
         nsCOMPtr<nsIXPCFunctionThisTranslator>

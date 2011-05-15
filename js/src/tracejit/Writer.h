@@ -41,7 +41,6 @@
 #define tracejit_Writer_h___
 
 #include "jsiter.h"
-#include "jsobj.h"
 #include "jsstr.h"
 #include "jstypedarray.h"
 #include "nanojit.h"
@@ -106,8 +105,8 @@ enum LC_TMBits {
  * - ACCSET_EOS:           The globals area.
  * - ACCSET_ALLOC:         All memory blocks allocated with LIR_allocp (in
  *                         other words, this region is the AR space).
- * - ACCSET_FRAMEREGS:     All JSFrameRegs structs.
- * - ACCSET_STACKFRAME:    All JSStackFrame objects.
+ * - ACCSET_FRAMEREGS:     All FrameRegs structs.
+ * - ACCSET_STACKFRAME:    All StackFrame objects.
  * - ACCSET_RUNTIME:       The JSRuntime object.
  * - ACCSET_OBJ_CLASP:     The 'clasp'    field of all JSObjects.
  * - ACCSET_OBJ_FLAGS:     The 'flags'    field of all JSObjects.
@@ -427,6 +426,10 @@ class Writer
     #define ldpConstContextField(fieldname) \
         name(w.ldpContextFieldHelper(cx_ins, offsetof(JSContext, fieldname), LOAD_CONST), \
              #fieldname)
+    nj::LIns *ldpContextRegs(nj::LIns *cx) const {
+        int32 offset = offsetof(JSContext, stack) + ContextStack::offsetOfRegs();
+        return name(ldpContextFieldHelper(cx, offset, nj::LOAD_NORMAL),"regs");
+    }
 
     nj::LIns *stContextField(nj::LIns *value, nj::LIns *cx, int32 offset) const {
         return lir->insStore(value, cx, offset, ACCSET_CX);
@@ -457,11 +460,11 @@ class Writer
     }
 
     nj::LIns *ldpFrameFp(nj::LIns *regs) const {
-        return lir->insLoad(nj::LIR_ldp, regs, offsetof(JSFrameRegs, fp), ACCSET_FRAMEREGS);
+        return lir->insLoad(nj::LIR_ldp, regs, FrameRegs::offsetOfFp, ACCSET_FRAMEREGS);
     }
 
     nj::LIns *ldpStackFrameScopeChain(nj::LIns *frame) const {
-        return lir->insLoad(nj::LIR_ldp, frame, JSStackFrame::offsetOfScopeChain(),
+        return lir->insLoad(nj::LIR_ldp, frame, StackFrame::offsetOfScopeChain(),
                             ACCSET_STACKFRAME);
     }
 
@@ -1213,13 +1216,7 @@ class Writer
                     "strChar");
     }
 
-    nj::LIns *getArgsLength(nj::LIns *args) const {
-        uint32 slot = JSObject::JSSLOT_ARGS_LENGTH;
-        nj::LIns *vaddr_ins = ldpObjSlots(args);
-        return name(lir->insLoad(nj::LIR_ldi, vaddr_ins, slot * sizeof(Value) + sPayloadOffset,
-                                 ACCSET_SLOTS),
-                    "argsLength");
-    }
+    inline nj::LIns *getArgsLength(nj::LIns *args) const;
 };
 
 }   /* namespace tjit */

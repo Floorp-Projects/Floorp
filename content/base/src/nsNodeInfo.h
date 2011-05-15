@@ -59,39 +59,27 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(nsNodeInfo)
 
   // nsINodeInfo
-  virtual void GetQualifiedName(nsAString &aQualifiedName) const;
-  virtual void GetLocalName(nsAString& aLocalName) const;
   virtual nsresult GetNamespaceURI(nsAString& aNameSpaceURI) const;
-  virtual PRBool Equals(const nsAString& aName) const;
-  virtual PRBool Equals(const nsAString& aName,
-                        const nsAString& aPrefix) const;
-  virtual PRBool Equals(const nsAString& aName, PRInt32 aNamespaceID) const;
-  virtual PRBool Equals(const nsAString& aName, const nsAString& aPrefix,
-                        PRInt32 aNamespaceID) const;
   virtual PRBool NamespaceEquals(const nsAString& aNamespaceURI) const;
-  virtual PRBool
-    QualifiedNameEqualsInternal(const nsAString& aQualifiedName) const;
 
   // nsNodeInfo
   // Create objects with Create
 public:
-  static nsNodeInfo *Create();
+  /*
+   * aName and aOwnerManager may not be null.
+   */
+  static nsNodeInfo *Create(nsIAtom *aName, nsIAtom *aPrefix,
+                            PRInt32 aNamespaceID,
+                            nsNodeInfoManager *aOwnerManager);
 private:
-  nsNodeInfo();
+  nsNodeInfo(); // Unimplemented
+  nsNodeInfo(const nsNodeInfo& aOther); // Unimplemented
+  nsNodeInfo(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
+             nsNodeInfoManager *aOwnerManager);
 protected:
   virtual ~nsNodeInfo();
 
 public:
-  /*
-   * Note! Init() must be called exactly once on every nsNodeInfo before
-   * the object is used, if Init() returns an error code the nsNodeInfo
-   * should not be used.
-   *
-   * aName and aOwnerManager may not be null.
-   */
-  nsresult Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
-                nsNodeInfoManager *aOwnerManager);
-
   /**
    * Call before shutdown to clear the cache and free memory for this class.
    */

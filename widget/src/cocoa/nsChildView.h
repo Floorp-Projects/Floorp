@@ -52,7 +52,7 @@
 #include "nsIPluginInstanceOwner.h"
 #include "nsIPluginWidget.h"
 #include "nsWeakPtr.h"
-#include "nsCocoaTextInputHandler.h"
+#include "TextInputHandler.h"
 #include "nsCocoaUtils.h"
 
 #include "nsIAppShell.h"
@@ -133,6 +133,15 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   // the link back to it must be weak.
   nsChildView* mGeckoChild;
 
+  // Text input handler for mGeckoChild and us.  Note that this is a weak
+  // reference.  Ideally, this should be a strong reference but a ChildView
+  // object can live longer than the mGeckoChild that owns it.  And if
+  // mTextInputHandler were a strong reference, this would make it difficult
+  // for Gecko's leak detector to detect leaked TextInputHandler objects.
+  // This is initialized by [mozView installTextInputHandler:aHandler] and
+  // cleared by [mozView uninstallTextInputHandler].
+  mozilla::widget::TextInputHandler* mTextInputHandler;  // [WEAK]
+
   BOOL mIsPluginView;
   NPEventModel mPluginEventModel;
   NPDrawingModel mPluginDrawingModel;
@@ -151,9 +160,6 @@ extern "C" long TSMProcessRawKeyEvent(EventRef carbonEvent);
   // Valid when mKeyPressSent is true.
   PRBool mKeyPressHandled;
 
-  // needed for NSTextInput implementation
-  NSRange mMarkedRange;
-  
   // when mouseDown: is called, we store its event here (strong)
   NSEvent* mLastMouseDownEvent;
 
@@ -421,7 +427,6 @@ public:
   static PRUint32 GetCurrentInputEventCount();
   static void UpdateCurrentInputEventCount();
 
-  nsCocoaTextInputHandler* TextInputHandler() { return &mTextInputHandler; }
   NSView<mozView>* GetEditorView();
 
   PRBool IsPluginView() { return (mWindowType == eWindowType_plugin); }
@@ -453,7 +458,7 @@ protected:
 protected:
 
   NSView<mozView>*      mView;      // my parallel cocoa view (ChildView or NativeScrollbarView), [STRONG]
-  nsCocoaTextInputHandler mTextInputHandler;
+  nsRefPtr<mozilla::widget::TextInputHandler> mTextInputHandler;
   IMEContext            mIMEContext;
 
   NSView<mozView>*      mParentView;

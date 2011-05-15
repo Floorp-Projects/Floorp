@@ -193,7 +193,7 @@ let UI = {
                 (self._lastClickPositions.x + self.DBLCLICK_OFFSET) >= e.clientX &&
                 (self._lastClickPositions.y - self.DBLCLICK_OFFSET) <= e.clientY &&
                 (self._lastClickPositions.y + self.DBLCLICK_OFFSET) >= e.clientY) {
-              GroupItems.setActiveGroupItem(null);
+              self.setActive(null);
               TabItems.creatingNewOrphanTab = true;
 
               let newTab =
@@ -205,7 +205,7 @@ let UI = {
                          TabItems.tabWidth, TabItems.tabHeight);
               newTab._tabViewTabItem.setBounds(box, true);
               newTab._tabViewTabItem.pushAway(true);
-              UI.setActiveTab(newTab._tabViewTabItem);
+              self.setActive(newTab._tabViewTabItem);
 
               TabItems.creatingNewOrphanTab = false;
               newTab._tabViewTabItem.zoomIn(true);
@@ -349,7 +349,7 @@ let UI = {
         item.parent.remove(item);
       groupItem.add(item, {immediately: true});
     });
-    GroupItems.setActiveGroupItem(groupItem);
+    this.setActive(groupItem);
   },
 
   // ----------
@@ -381,7 +381,7 @@ let UI = {
   },
 
   // ----------
-  // Function: setActiveTab
+  // Function: _setActiveTab
   // Sets the currently active tab. The idea of a focused tab is useful
   // for keyboard navigation and returning to the last zoomed-in tab.
   // Hitting return/esc brings you to the focused tab, and using the
@@ -389,7 +389,7 @@ let UI = {
   //
   // Parameters:
   //  - Takes a <TabItem>
-  setActiveTab: function UI_setActiveTab(tabItem) {
+  _setActiveTab: function UI__setActiveTab(tabItem) {
     if (tabItem == this._activeTab)
       return;
 
@@ -403,7 +403,7 @@ let UI = {
       let self = this;
       this._activeTab.addSubscriber(this, "close", function(closedTabItem) {
         if (self._activeTab == closedTabItem)
-          self.setActiveTab(null);
+          self._setActiveTab(null);
       });
 
       this._activeTab.makeActive();
@@ -415,6 +415,44 @@ let UI = {
   // Returns the currently active orphan tab as a <TabItem>
   getActiveOrphanTab: function UI_getActiveOrphanTab() {
     return (this._activeTab && !this._activeTab.parent) ? this._activeTab : null;
+  },
+
+  // ----------
+  // Function: setActive
+  // Sets the active tab item or group item
+  // Parameters:
+  //
+  // options
+  //  dontSetActiveTabInGroup bool for not setting active tab in group
+  //  onlyRemoveActiveGroup bool for removing active group
+  //  onlyRemoveActiveTab bool for removing active tab
+  setActive: function UI_setActive(item, options) {
+    if (item) {
+      if (item.isATabItem) {
+        if (item.parent)
+          GroupItems.setActiveGroupItem(item.parent);
+        else
+          GroupItems.setActiveGroupItem(null);
+        this._setActiveTab(item);
+      } else {
+        GroupItems.setActiveGroupItem(item);
+        if (!options || !options.dontSetActiveTabInGroup) {
+          let activeTab = item.getActiveTab()
+          if (activeTab)
+            this._setActiveTab(activeTab);
+        }
+      }
+    } else {
+      if (options) {
+        if (options.onlyRemoveActiveGroup)
+          GroupItems.setActiveGroupItem(null);
+        else if (options.onlyRemoveActiveTab)
+          this._setActiveTab(null);
+      } else {
+        GroupItems.setActiveGroupItem(null);
+        this._setActiveTab(null);
+      }
+    }
   },
 
   // ----------
@@ -495,10 +533,7 @@ let UI = {
         if (!currentTab._tabViewTabItem) // if the tab's been destroyed
           item = null;
 
-        self.setActiveTab(item);
-
-        if (activeGroupItem && item.parent)
-          activeGroupItem.setTopChild(item);
+        self.setActive(item);
 
         self._resize(true);
         dispatchEvent(event);
@@ -509,7 +544,7 @@ let UI = {
         TabItems.resumePainting();
       });
     } else {
-      self.setActiveTab(null);
+      self.setActive(null, { onlyRemoveActiveTab: true });
       dispatchEvent(event);
 
       // Flush pending updates
@@ -874,10 +909,10 @@ let UI = {
       // already in the tab bar.
       if (!GroupItems.getActiveGroupItem() && !UI.getActiveOrphanTab()) {
         for (let a = 0; a < gBrowser.tabs.length; a++) {
-          let theTab = gBrowser.tabs[a]; 
+          let theTab = gBrowser.tabs[a];
           if (!theTab.pinned) {
-            let tabItem = theTab._tabViewTabItem; 
-            GroupItems.setActiveGroupItem(tabItem.parent);
+            let tabItem = theTab._tabViewTabItem;
+            this.setActive(tabItem.parent);
             break;
           }
         }
@@ -1086,7 +1121,7 @@ let UI = {
         if (nextTab) {
           if (nextTab.isStacked && !nextTab.parent.expanded)
             nextTab = nextTab.parent.getChild(0);
-          self.setActiveTab(nextTab);
+          self.setActive(nextTab);
         }
       } else {
         switch(event.keyCode) {
@@ -1124,7 +1159,7 @@ let UI = {
                   else
                     newIndex = (currentIndex + 1);
                 }
-                self.setActiveTab(tabItems[newIndex]);
+                self.setActive(tabItems[newIndex]);
               }
             }
             break;
@@ -1159,7 +1194,7 @@ let UI = {
     const minMinSize = 15;
 
     let lastActiveGroupItem = GroupItems.getActiveGroupItem();
-    GroupItems.setActiveGroupItem(null);
+    this.setActive(null, { onlyRemoveActiveGroup: true });
 
     var startPos = { x: e.clientX, y: e.clientY };
     var phantom = iQ("<div>")
@@ -1228,6 +1263,7 @@ let UI = {
       e.preventDefault();
     }
 
+    let self = this;
     function collapse() {
       let center = phantom.bounds().center();
       phantom.animate({
@@ -1241,7 +1277,7 @@ let UI = {
           phantom.remove();
         }
       });
-      GroupItems.setActiveGroupItem(lastActiveGroupItem);
+      self.setActive(lastActiveGroupItem);
     }
 
     function finalize(e) {
@@ -1263,7 +1299,7 @@ let UI = {
         }
 
         var groupItem = new GroupItem(insideTabs,{bounds:bounds});
-        GroupItems.setActiveGroupItem(groupItem);
+        self.setActive(groupItem);
         phantom.remove();
         dragOutInfo = null;
         gTabView.firstUseExperienced = true;
@@ -1373,7 +1409,6 @@ let UI = {
   // These computations may be done using cached values. The cache can be
   // cleared with UI.clearShouldResizeItems().
   shouldResizeItems: function UI_shouldResizeItems() {
-
     let newPageBounds = Items.getPageBounds();
     
     // If we don't have cached cached values...
@@ -1526,6 +1561,30 @@ let UI = {
     this._save();
     GroupItems.saveAll();
     TabItems.saveAll();
+  },
+
+  // ----------
+  // Function: shouldLoadFavIcon
+  // Takes a xul:browser and checks whether we should display a favicon for it.
+  shouldLoadFavIcon: function UI_shouldLoadFavIcon(browser) {
+    return !(browser.contentDocument instanceof window.ImageDocument) &&
+            (browser.currentURI.schemeIs("about") ||
+             gBrowser.shouldLoadFavIcon(browser.contentDocument.documentURIObject));
+  },
+
+  // ----------
+  // Function: getFavIconUrlForTab
+  // Gets fav icon url for the given xul:tab.
+  getFavIconUrlForTab: function UI_getFavIconUrlForTab(tab) {
+    let url;
+
+    // use the tab image if it doesn't start with http e.g. data:image/png, chrome://
+    if (tab.image && !(/^https?:/.test(tab.image)))
+      url = tab.image;
+    else
+      url = gFavIconService.getFaviconImageForPage(tab.linkedBrowser.currentURI).spec;
+
+    return url;
   }
 };
 

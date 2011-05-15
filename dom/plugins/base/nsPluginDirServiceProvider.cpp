@@ -89,12 +89,7 @@ GetFileVersion(LPCWSTR szFile, verBlock *vbVersion)
   ClearVersion(vbVersion);
   if (FileExists(szFile)) {
     bRv    = TRUE;
-#ifdef WINCE
-    // WinCe takes a non const file path string, while desktop take a const
-    LPWSTR lpFilepath = const_cast<LPWSTR>(szFile);
-#else
     LPCWSTR lpFilepath = szFile;
-#endif
     dwLen  = GetFileVersionInfoSizeW(lpFilepath, &dwHandle);
     lpData = (LPVOID)malloc(dwLen);
     uLen   = 0;

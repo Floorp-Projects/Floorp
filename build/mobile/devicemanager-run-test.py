@@ -35,9 +35,9 @@
 # ***** END LICENSE BLOCK *****
 
 import devicemanager
+import devicemanagerUtils
 import sys
 import os
-
 
 def main():
     ip_addr = os.environ.get("DEVICE_IP")
@@ -56,7 +56,7 @@ def main():
         print "Error: please define the environment variable REMOTE_GRE_PATH before running this test"
         sys.exit(1)
 
-    dm = devicemanager.DeviceManager(ip_addr, int(port))
+    dm = devicemanagerUtils.getDeviceManager(ip_addr, int(port))
     if len(sys.argv) < 2:
         print "usage python devicemanager-run-test.py <test program> [args1 [arg2..]]"
         sys.exit(1)

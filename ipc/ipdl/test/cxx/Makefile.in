@@ -75,6 +75,7 @@ IPDLTESTS = \
   TestRaceDeferral \
   TestRacyReentry  \
   TestRacyRPCReplies  \
+  TestRacyUndefer \
   TestSanity  \
   TestSelfManageRoot \
   TestShmem \

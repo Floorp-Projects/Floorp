@@ -353,20 +353,20 @@ public:
   {
     nsCString path;
 
-    path.AppendLiteral("storage/");
+    path.AppendLiteral("heap-used/storage/sqlite/");
     path.Append(mDBConn.getFilename());
 
     if (mType == LookAside_Used) {
-      path.AppendLiteral("/LookAside_Used");
+      path.AppendLiteral("/lookaside-used");
     }
     else if (mType == Cache_Used) {
-      path.AppendLiteral("/Cache_Used");
+      path.AppendLiteral("/cache-used");
     }
     else if (mType == Schema_Used) {
-      path.AppendLiteral("/Schema_Used");
+      path.AppendLiteral("/schema-used");
     }
     else if (mType == Stmt_Used) {
-      path.AppendLiteral("/Stmt_Used");
+      path.AppendLiteral("/stmt-used");
     }
 
     *memoryPath = ::ToNewCString(path);
@@ -376,16 +376,16 @@ public:
   NS_IMETHOD GetDescription(char **desc)
   {
     if (mType == LookAside_Used) {
-      *desc = ::strdup("Number of lookaside memory slots currently checked out");
+      *desc = ::strdup("Number of lookaside memory slots currently checked out.");
     }
     else if (mType == Cache_Used) {
-      *desc = ::strdup("Approximate number of bytes of heap memory used by all pager caches");
+      *desc = ::strdup("Memory (approximate) used by all pager caches.");
     }
     else if (mType == Schema_Used) {
-      *desc = ::strdup("Approximate number of bytes of heap memory used to store the schema for all databases associated with the connection");
+      *desc = ::strdup("Memory (approximate) used to store the schema for all databases associated with the connection");
     }
     else if (mType == Stmt_Used) {
-      *desc = ::strdup("Approximate number of bytes of heap and lookaside memory used by all prepared statements");
+      *desc = ::strdup("Memory (approximate) used by all prepared statements");
     }
     return NS_OK;
   }
@@ -576,9 +576,12 @@ Connection::initialize(nsIFile *aDatabaseFile,
   }
 
   nsRefPtr<nsIMemoryReporter> reporter;
+#if 0
+  // FIXME: Bug 649867 explains why this is disabled.
   reporter =
     new StorageMemoryReporter(*this, StorageMemoryReporter::LookAside_Used);
   mMemoryReporters.AppendElement(reporter);
+#endif
 
   reporter =
     new StorageMemoryReporter(*this, StorageMemoryReporter::Cache_Used);
@@ -588,7 +591,8 @@ Connection::initialize(nsIFile *aDatabaseFile,
     new StorageMemoryReporter(*this, StorageMemoryReporter::Schema_Used);
   mMemoryReporters.AppendElement(reporter);
 
-  reporter = new StorageMemoryReporter(*this, StorageMemoryReporter::Stmt_Used);
+  reporter =
+    new StorageMemoryReporter(*this, StorageMemoryReporter::Stmt_Used);
   mMemoryReporters.AppendElement(reporter);
 
   for (PRUint32 i = 0; i < mMemoryReporters.Length(); i++) {

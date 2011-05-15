@@ -42,7 +42,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-const PERMS_FILE      = 0644;
+const PERMS_FILE      = 0600;
 const PERMS_DIRECTORY = 0755;
 
 const MODE_RDONLY   = 0x01;
@@ -323,7 +323,8 @@ AutoCompleteCache.prototype = {
         for (let i = 0; i < this.searchEngines.length; i++) {
           let engine = this.searchEngines[i];
           let url = engine.getSubmission(aResult.searchString).uri.spec;
-          aResult.appendMatch(url, engine.name, engine.iconURI.spec, "search");
+          let iconURI = engine.iconURI;
+          aResult.appendMatch(url, engine.name, iconURI ? iconURI.spec : "", "search");
         }
         aResult.setSearchResult(Ci.nsIAutoCompleteResult.RESULT_SUCCESS);
       }

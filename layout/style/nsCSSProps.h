@@ -113,11 +113,8 @@ PR_STATIC_ASSERT((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // should enforce that the value of this property must be 0 or larger.
 #define CSS_PROPERTY_VALUE_NONNEGATIVE            (1<<13)
 // The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
-// should enforce that the value of this property must be greater than 0.
-#define CSS_PROPERTY_VALUE_POSITIVE_NONZERO       (2<<13)
-// The parser (in particular, CSSParserImpl::ParseSingleValueProperty)
 // should enforce that the value of this property must be 1 or larger.
-#define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (3<<13)
+#define CSS_PROPERTY_VALUE_AT_LEAST_ONE           (2<<13)
 
 // NOTE: next free bit is (1<<15)
 
@@ -425,6 +422,7 @@ public:
   static const PRInt32 kWidthKTable[]; // also min-width, max-width
   static const PRInt32 kWindowShadowKTable[];
   static const PRInt32 kWordwrapKTable[];
+  static const PRInt32 kHyphensKTable[];
 };
 
 #endif /* nsCSSProps_h___ */

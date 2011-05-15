@@ -553,7 +553,9 @@ nsHttpChannel::SetupTransaction()
     // does not count here). also, figure out what version we should be speaking.
     nsCAutoString buf, path;
     nsCString* requestURI;
-    if (mConnectionInfo->UsingSSL() || !mConnectionInfo->UsingHttpProxy()) {
+    if (mConnectionInfo->UsingSSL() ||
+        mConnectionInfo->ShouldForceConnectMethod() ||
+        !mConnectionInfo->UsingHttpProxy()) {
         rv = mURI->GetPath(path);
         if (NS_FAILED(rv)) return rv;
         // path may contain UTF-8 characters, so ensure that they're escaped.
@@ -1554,7 +1556,11 @@ nsHttpChannel::ResolveProxy()
     if (NS_FAILED(rv))
         return rv;
 
-    return pps->AsyncResolve(mURI, 0, this, getter_AddRefs(mProxyRequest));
+    PRUint32 resolveFlags = 0;
+    if (mConnectionInfo->ProxyInfo())
+        mConnectionInfo->ProxyInfo()->GetResolveFlags(&resolveFlags);
+
+    return pps->AsyncResolve(mURI, resolveFlags, this, getter_AddRefs(mProxyRequest));
 }
 
 PRBool
@@ -3714,66 +3720,6 @@ nsHttpChannel::SetupFallbackChannel(const char *aFallbackKey)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsHttpChannel::GetRemoteAddress(nsACString & _result)
-{
-    if (mPeerAddr.raw.family == PR_AF_UNSPEC)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    _result.SetCapacity(64);
-    PR_NetAddrToString(&mPeerAddr, _result.BeginWriting(), 64);
-    _result.SetLength(strlen(_result.BeginReading()));
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetRemotePort(PRInt32 * _result)
-{
-    NS_ENSURE_ARG_POINTER(_result);
-
-    if (mPeerAddr.raw.family == PR_AF_INET) {
-        *_result = (PRInt32)PR_ntohs(mPeerAddr.inet.port);
-    }
-    else if (mPeerAddr.raw.family == PR_AF_INET6) {
-        *_result = (PRInt32)PR_ntohs(mPeerAddr.ipv6.port);
-    }
-    else
-        return NS_ERROR_NOT_AVAILABLE;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetLocalAddress(nsACString & _result)
-{
-    if (mSelfAddr.raw.family == PR_AF_UNSPEC)
-        return NS_ERROR_NOT_AVAILABLE;
-
-    _result.SetCapacity(64);
-    PR_NetAddrToString(&mSelfAddr, _result.BeginWriting(), 64);
-    _result.SetLength(strlen(_result.BeginReading()));
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHttpChannel::GetLocalPort(PRInt32 * _result)
-{
-    NS_ENSURE_ARG_POINTER(_result);
-
-    if (mSelfAddr.raw.family == PR_AF_INET) {
-        *_result = (PRInt32)PR_ntohs(mSelfAddr.inet.port);
-    }
-    else if (mSelfAddr.raw.family == PR_AF_INET6) {
-        *_result = (PRInt32)PR_ntohs(mSelfAddr.ipv6.port);
-    }
-    else
-        return NS_ERROR_NOT_AVAILABLE;
-
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
@@ -3844,7 +3790,8 @@ NS_IMETHODIMP
 nsHttpChannel::GetProxyMethodIsConnect(PRBool *aProxyMethodIsConnect)
 {
     *aProxyMethodIsConnect =
-        (mConnectionInfo->UsingHttpProxy() && mConnectionInfo->UsingSSL());
+        (mConnectionInfo->UsingHttpProxy() && mConnectionInfo->UsingSSL()) ||
+        mConnectionInfo->ShouldForceConnectMethod();
     return NS_OK;
 }
 

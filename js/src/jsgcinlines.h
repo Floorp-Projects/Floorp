@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -114,7 +114,7 @@ GetGCThingTraceKind(const void *thing)
     if (JSAtom::isStatic(thing))
         return JSTRACE_STRING;
     const Cell *cell = reinterpret_cast<const Cell *>(thing);
-    return GetFinalizableTraceKind(cell->arena()->header()->thingKind);
+    return GetFinalizableTraceKind(cell->arenaHeader()->getThingKind());
 }
 
 /* Capacity for slotsToThingKind */
@@ -181,17 +181,11 @@ NewFinalizableGCThing(JSContext *cx, unsigned thingKind)
                  (thingKind == js::gc::FINALIZE_STRING) ||
                  (thingKind == js::gc::FINALIZE_SHORT_STRING));
 #endif
+    JS_ASSERT(!cx->runtime->gcRunning);
 
-    METER(cx->compartment->compartmentStats[thingKind].alloc++);
-    do {
-        js::gc::FreeCell *cell = cx->compartment->freeLists.getNext(thingKind);
-        if (cell) {
-            CheckGCFreeListLink(cell);
-            return (T *)cell;
-        }
-        if (!RefillFinalizableFreeList(cx, thingKind))
-            return NULL;
-    } while (true);
+    METER(cx->compartment->arenas[thingKind].stats.alloc++);
+    js::gc::Cell *cell = cx->compartment->freeLists.getNext(thingKind);
+    return static_cast<T *>(cell ? cell : js::gc::RefillFinalizableFreeList(cx, thingKind));
 }
 
 #undef METER

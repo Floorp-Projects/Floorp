@@ -5,7 +5,7 @@
       android:installLocation="auto"
       android:versionCode="@ANDROID_VERSION_CODE@"
       android:versionName="@MOZ_APP_VERSION@"
-      android:sharedUserId="@ANDROID_PACKAGE_NAME@.sharedID">
+      android:sharedUserId="@MOZ_ANDROID_SHARED_ID@">
     <uses-sdk android:minSdkVersion="5"
               android:targetSdkVersion="5"/>
 
@@ -22,13 +22,6 @@
     <application android:label="@MOZ_APP_DISPLAYNAME@"
 		 android:icon="@drawable/icon"
 		 android:debuggable="true">
-
-        <!-- for network link status -->
-        <receiver android:name="org.mozilla.gecko.GeckoConnectivityReceiver">
-            <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
-            </intent-filter>
-        </receiver>
 
         <activity android:name="App"
                   android:label="@MOZ_APP_DISPLAYNAME@"
@@ -55,6 +48,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="file" />
                 <data android:scheme="http" />
                 <data android:scheme="https" />
                 <data android:mimeType="text/html"/>

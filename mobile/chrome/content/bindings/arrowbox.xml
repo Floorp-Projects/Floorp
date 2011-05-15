@@ -128,7 +128,7 @@
                 } else {
                   arrowbox.style.marginLeft = ((anchorRect.left - popupRect.left) + (anchorRect.width / 2) - HALF_ARROW_WIDTH) + "px";
                   if (vertPos == 1) {
-                    container.dir = "ltr"; 
+                    container.dir = "normal"; 
                     anchorClass = "top";
                   } else if (vertPos == -1) {
                     container.dir = "reverse"; 
@@ -143,7 +143,7 @@
                   container.dir = "ltr"; 
                   anchorClass = "left";
                 } else if (horizPos == -1) {
-                  container.dir = "reverse";
+                  container.dir = "rtl";
                   anchorClass = "right";
                 }
               } else {
