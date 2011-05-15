@@ -211,7 +211,6 @@ private:
     PRPackedBool                    mHasRequestBody;
     PRPackedBool                    mSSLConnectFailed;
     PRPackedBool                    mHttpResponseMatched;
-    PRPackedBool                    mPreserveStream;
 
     // mClosed           := transaction has been explicitly closed
     // mTransactionDone  := transaction ran to completion or was interrupted

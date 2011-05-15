@@ -1239,18 +1239,6 @@ HttpBaseChannel::GetRemotePort(PRInt32* port)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HttpBaseChannel::HTTPUpgrade(const nsACString &aProtocolName,
-                             nsIHttpUpgradeListener *aListener)
-{
-    NS_ENSURE_ARG(!aProtocolName.IsEmpty());
-    NS_ENSURE_ARG_POINTER(aListener);
-    
-    mUpgradeProtocol = aProtocolName;
-    mUpgradeProtocolCallback = aListener;
-    return NS_OK;
-}
-
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsISupportsPriority
 //-----------------------------------------------------------------------------
