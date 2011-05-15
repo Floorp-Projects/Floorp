@@ -116,6 +116,8 @@
 
 #include "mozilla/FunctionTimer.h"
 
+using namespace mozilla;
+
 const size_t gStackSize = 8192;
 
 #ifdef PR_LOGGING
@@ -1884,8 +1886,8 @@ nsJSContext::CallEventHandler(nsISupports* aTarget, void *aScope, void *aHandler
       return NS_ERROR_FAILURE;
     }
 
-    js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
-    js::LazilyConstructed<js::AutoArrayRooter> tvr;
+    Maybe<nsAutoPoolRelease> poolRelease;
+    Maybe<js::AutoArrayRooter> tvr;
 
     // Use |target| as the scope for wrapping the arguments, since aScope is
     // the safe scope in many cases, which isn't very useful.  Wrapping aTarget
@@ -2373,8 +2375,8 @@ nsJSContext::SetProperty(void *aTarget, const char *aPropName, nsISupports *aArg
 
   JSAutoRequest ar(mContext);
 
-  js::LazilyConstructed<nsAutoPoolRelease> poolRelease;
-  js::LazilyConstructed<js::AutoArrayRooter> tvr;
+  Maybe<nsAutoPoolRelease> poolRelease;
+  Maybe<js::AutoArrayRooter> tvr;
 
   nsresult rv;
   rv = ConvertSupportsTojsvals(aArgs, GetNativeGlobal(), &argc,
@@ -2414,8 +2416,8 @@ nsJSContext::ConvertSupportsTojsvals(nsISupports *aArgs,
                                      void *aScope,
                                      PRUint32 *aArgc,
                                      jsval **aArgv,
-                                     js::LazilyConstructed<nsAutoPoolRelease> &aPoolRelease,
-                                     js::LazilyConstructed<js::AutoArrayRooter> &aRooter)
+                                     Maybe<nsAutoPoolRelease> &aPoolRelease,
+                                     Maybe<js::AutoArrayRooter> &aRooter)
 {
   nsresult rv = NS_OK;
 
@@ -3645,14 +3647,6 @@ SetMemoryMaxPrefChangedCallback(const char* aPrefName, void* aClosure)
 }
 
 static int
-SetMemoryGCFrequencyPrefChangedCallback(const char* aPrefName, void* aClosure)
-{
-  PRInt32 triggerFactor = nsContentUtils::GetIntPref(aPrefName, 300);
-  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_TRIGGER_FACTOR, triggerFactor);
-  return 0;
-}
-
-static int
 SetMemoryGCModePrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   PRBool enableCompartmentGC = nsContentUtils::GetBoolPref(aPrefName);
@@ -3793,12 +3787,6 @@ nsJSRuntime::Init()
                                        nsnull);
   SetMemoryMaxPrefChangedCallback("javascript.options.mem.max",
                                   nsnull);
-
-  nsContentUtils::RegisterPrefCallback("javascript.options.mem.gc_frequency",
-                                       SetMemoryGCFrequencyPrefChangedCallback,
-                                       nsnull);
-  SetMemoryGCFrequencyPrefChangedCallback("javascript.options.mem.gc_frequency",
-                                          nsnull);
 
   nsContentUtils::RegisterPrefCallback("javascript.options.mem.gc_per_compartment",
                                        SetMemoryGCModePrefChangedCallback,

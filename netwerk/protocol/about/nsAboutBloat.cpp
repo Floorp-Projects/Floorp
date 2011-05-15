@@ -53,11 +53,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
 
-#ifdef XP_MAC
-extern "C" void GC_gcollect(void);
-#else
 static void GC_gcollect() {}
-#endif
 
 NS_IMPL_ISUPPORTS1(nsAboutBloat, nsIAboutModule)
 

@@ -48,11 +48,7 @@ else
 ifeq ($(OS_ARCH),WINNT)
 DIRS = win32
 else
-ifeq ($(OS_ARCH),WINCE)
-DIRS = win32
-else
 DIRS = unix
-endif
 endif
 endif
 

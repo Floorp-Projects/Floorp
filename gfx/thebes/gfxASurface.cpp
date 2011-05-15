@@ -501,15 +501,13 @@ gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
 }
 
 void
-gfxASurface::MovePixels(const nsIntRect& aSourceRect,
-                        const nsIntPoint& aDestTopLeft)
+gfxASurface::FastMovePixels(const nsIntRect& aSourceRect,
+                            const nsIntPoint& aDestTopLeft)
 {
+    // Used when the backend can internally handle self copies.
     gfxIntSize size = GetSize();
     nsIntRect dest(aDestTopLeft, aSourceRect.Size());
-    // Assume that our cairo backend already knows how to properly
-    // self-copy.  gfxASurface subtypes whose backend can't self-copy
-    // need their own implementations, or their backends need to be
-    // fixed.
+    
     nsRefPtr<gfxContext> ctx = new gfxContext(this);
     ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
     nsIntPoint srcOrigin = dest.TopLeft() - aSourceRect.TopLeft();
@@ -518,33 +516,57 @@ gfxASurface::MovePixels(const nsIntRect& aSourceRect,
     ctx->Fill();
 }
 
+void
+gfxASurface::MovePixels(const nsIntRect& aSourceRect,
+                        const nsIntPoint& aDestTopLeft)
+{
+    // Assume the backend can't handle self copying well and allocate
+    // a temporary surface instead.
+    nsRefPtr<gfxASurface> tmp = 
+      CreateSimilarSurface(GetContentType(), 
+                           gfxIntSize(aSourceRect.width, aSourceRect.height));
+    nsRefPtr<gfxContext> ctx = new gfxContext(tmp);
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx->SetSource(this, gfxPoint(-aSourceRect.x, -aSourceRect.y));
+    ctx->Paint();
+
+    ctx = new gfxContext(this);
+    ctx->SetOperator(gfxContext::OPERATOR_SOURCE);
+    ctx->SetSource(tmp, gfxPoint(aDestTopLeft.x, aDestTopLeft.y));
+    ctx->Rectangle(gfxRect(aDestTopLeft.x, 
+                           aDestTopLeft.y, 
+                           aSourceRect.width, 
+                           aSourceRect.height));
+    ctx->Fill();
+}
+
 /** Memory reporting **/
 
 static const char *sSurfaceNamesForSurfaceType[] = {
-    "gfx/surface/image",
-    "gfx/surface/pdf",
-    "gfx/surface/ps",
-    "gfx/surface/xlib",
-    "gfx/surface/xcb",
-    "gfx/surface/glitz",
-    "gfx/surface/quartz",
-    "gfx/surface/win32",
-    "gfx/surface/beos",
-    "gfx/surface/directfb",
-    "gfx/surface/svg",
-    "gfx/surface/os2",
-    "gfx/surface/win32printing",
-    "gfx/surface/quartzimage",
-    "gfx/surface/script",
-    "gfx/surface/qpainter",
-    "gfx/surface/recording",
-    "gfx/surface/vg",
-    "gfx/surface/gl",
-    "gfx/surface/drm",
-    "gfx/surface/tee",
-    "gfx/surface/xml",
-    "gfx/surface/skia",
-    "gfx/surface/d2d"
+    "heap-used/gfx/surface/image",
+    "heap-used/gfx/surface/pdf",
+    "heap-used/gfx/surface/ps",
+    "heap-used/gfx/surface/xlib",
+    "heap-used/gfx/surface/xcb",
+    "heap-used/gfx/surface/glitz",
+    "heap-used/gfx/surface/quartz",
+    "heap-used/gfx/surface/win32",
+    "heap-used/gfx/surface/beos",
+    "heap-used/gfx/surface/directfb",
+    "heap-used/gfx/surface/svg",
+    "heap-used/gfx/surface/os2",
+    "heap-used/gfx/surface/win32printing",
+    "heap-used/gfx/surface/quartzimage",
+    "heap-used/gfx/surface/script",
+    "heap-used/gfx/surface/qpainter",
+    "heap-used/gfx/surface/recording",
+    "heap-used/gfx/surface/vg",
+    "heap-used/gfx/surface/gl",
+    "heap-used/gfx/surface/drm",
+    "heap-used/gfx/surface/tee",
+    "heap-used/gfx/surface/xml",
+    "heap-used/gfx/surface/skia",
+    "heap-used/gfx/surface/d2d"
 };
 
 PR_STATIC_ASSERT(NS_ARRAY_LENGTH(sSurfaceNamesForSurfaceType) == gfxASurface::SurfaceTypeMax);
@@ -558,7 +580,7 @@ SurfaceMemoryReporterPathForType(gfxASurface::gfxSurfaceType aType)
 {
     if (aType < 0 ||
         aType >= gfxASurface::SurfaceTypeMax)
-        return "gfx/surface/unknown";
+        return "heap-used/gfx/surface/unknown";
 
     return sSurfaceNamesForSurfaceType[aType];
 }

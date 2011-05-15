@@ -254,7 +254,8 @@ class nsHTMLMediaElement::MediaLoadListener : public nsIStreamListener,
 
 public:
   MediaLoadListener(nsHTMLMediaElement* aElement)
-    : mElement(aElement)
+    : mElement(aElement),
+      mLoadID(aElement->GetCurrentLoadID())
   {
     NS_ABORT_IF_FALSE(mElement, "Must pass an element to call back");
   }
@@ -262,6 +263,7 @@ public:
 private:
   nsRefPtr<nsHTMLMediaElement> mElement;
   nsCOMPtr<nsIStreamListener> mNextListener;
+  PRUint32 mLoadID;
 };
 
 NS_IMPL_ISUPPORTS5(nsHTMLMediaElement::MediaLoadListener, nsIRequestObserver,
@@ -287,6 +289,13 @@ NS_IMETHODIMP nsHTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* 
   // InitializeDecoderForChannel. So make sure mElement is cleared here.
   nsRefPtr<nsHTMLMediaElement> element;
   element.swap(mElement);
+
+  if (mLoadID != element->GetCurrentLoadID()) {
+    // The channel has been cancelled before we had a chance to create
+    // a decoder. Abort, don't dispatch an "error" event, as the new load
+    // may not be in an error state.
+    return NS_BINDING_ABORTED;
+  }
 
   // Don't continue to load if the request failed or has been canceled.
   nsresult rv;
@@ -1946,7 +1955,9 @@ void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate)
 
 void nsHTMLMediaElement::FirstFrameLoaded(PRBool aResourceFullyLoaded)
 {
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+  ChangeReadyState(aResourceFullyLoaded ?
+    nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA :
+    nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
   ChangeDelayLoadStatus(PR_FALSE);
 
   NS_ASSERTION(!mSuspendedAfterFirstFrame, "Should not have already suspended");
@@ -1965,7 +1976,9 @@ void nsHTMLMediaElement::ResourceLoaded()
   mBegun = PR_FALSE;
   mNetworkState = nsIDOMHTMLMediaElement::NETWORK_IDLE;
   AddRemoveSelfReference();
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+  if (mReadyState >= nsIDOMHTMLMediaElement::HAVE_METADATA) {
+    ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA);
+  }
   // Ensure a progress event is dispatched at the end of download.
   DispatchAsyncEvent(NS_LITERAL_STRING("progress"));
   // The download has stopped.
@@ -2221,6 +2234,9 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
     return nsnull;
 
   mImageContainer = manager->CreateImageContainer();
+  if (manager->IsCompositingCheap()) {
+    mImageContainer->SetDelayedConversion(PR_TRUE);
+  }
   return mImageContainer;
 }
 

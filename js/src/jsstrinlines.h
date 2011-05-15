@@ -332,7 +332,6 @@ JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
         return NULL;
     str->init(chars, length);
 
-    cx->runtime->stringMemoryUsed += length * 2;
 #ifdef DEBUG
     JSRuntime *rt = cx->runtime;
     JS_RUNTIME_METER(rt, liveStrings);
@@ -530,7 +529,6 @@ inline void
 JSFlatString::finalize(JSRuntime *rt)
 {
     JS_ASSERT(!isShort());
-    rt->stringMemoryUsed -= length() * 2;
 
     /*
      * This check depends on the fact that 'chars' is only initialized to the
@@ -551,10 +549,10 @@ inline void
 JSAtom::finalize(JSRuntime *rt)
 {
     JS_ASSERT(isAtom());
-    if (arena()->header()->thingKind == js::gc::FINALIZE_STRING)
+    if (arenaHeader()->getThingKind() == js::gc::FINALIZE_STRING)
         asFlat().finalize(rt);
     else
-        JS_ASSERT(arena()->header()->thingKind == js::gc::FINALIZE_SHORT_STRING);
+        JS_ASSERT(arenaHeader()->getThingKind() == js::gc::FINALIZE_SHORT_STRING);
 }
 
 inline void

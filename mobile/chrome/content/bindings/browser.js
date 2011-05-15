@@ -2,7 +2,7 @@
 let Cc = Components.classes;
 let Ci = Components.interfaces;
 
-dump("!! remote browser loaded\n")
+dump("!! remote browser loaded\n");
 
 let WebProgressListener = {
   _lastLocation: null,

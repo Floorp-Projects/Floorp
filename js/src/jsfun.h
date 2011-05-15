@@ -247,56 +247,9 @@ struct JSFunction : public JSObject_Slots2
     JS_FN(name, fastcall, nargs, flags)
 #endif
 
-/*
- * NB: the Arguments classes are uninitialized internal classes that masquerade
- * (according to Object.prototype.toString.call(arguments)) as "Arguments",
- * while having Object.getPrototypeOf(arguments) === Object.prototype.
- *
- * WARNING (to alert embedders reading this private .h file): arguments objects
- * are *not* thread-safe and should not be used concurrently -- they should be
- * used by only one thread at a time, preferably by only one thread over their
- * lifetime (a JS worker that migrates from one OS thread to another but shares
- * nothing is ok).
- *
- * Yes, this is an incompatible change, which prefigures the impending move to
- * single-threaded objects and GC heaps.
- */
-extern js::Class js_ArgumentsClass;
-
-namespace js {
-
-extern Class StrictArgumentsClass;
-
-struct ArgumentsData {
-    js::Value   callee;
-    js::Value   slots[1];
-};
-
-}
-
-inline bool
-JSObject::isNormalArguments() const
-{
-    return getClass() == &js_ArgumentsClass;
-}
-
-inline bool
-JSObject::isStrictArguments() const
-{
-    return getClass() == &js::StrictArgumentsClass;
-}
-
-inline bool
-JSObject::isArguments() const
-{
-    return isNormalArguments() || isStrictArguments();
-}
-
-#define JS_ARGUMENTS_OBJECT_ON_TRACE ((void *)0xa126)
-
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
 extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
-extern js::Class js_DeclEnvClass;
+extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;
 
 inline bool
 JSObject::isCall() const
@@ -489,7 +442,7 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, js::Native native,
  * fact that JSINVOKE_CONSTRUCT (aka JSFRAME_CONSTRUCTING) is 1, and test that
  * with #if/#error in jsfun.c.
  */
-#define JSV2F_CONSTRUCT         JSINVOKE_CONSTRUCT
+#define JSV2F_CONSTRUCT         ((uintN)js::INVOKE_CONSTRUCTOR)
 #define JSV2F_SEARCH_STACK      0x10000
 
 extern JSFunction *
@@ -508,19 +461,19 @@ extern JSObject * JS_FASTCALL
 js_CreateCallObjectOnTrace(JSContext *cx, JSFunction *fun, JSObject *callee, JSObject *scopeChain);
 
 extern void
-js_PutCallObject(JSContext *cx, JSStackFrame *fp);
+js_PutCallObject(js::StackFrame *fp);
 
 extern JSBool JS_FASTCALL
-js_PutCallObjectOnTrace(JSContext *cx, JSObject *scopeChain, uint32 nargs,
-                        js::Value *argv, uint32 nvars, js::Value *slots);
+js_PutCallObjectOnTrace(JSObject *scopeChain, uint32 nargs, js::Value *argv,
+                        uint32 nvars, js::Value *slots);
 
 namespace js {
 
 JSObject *
-CreateFunCallObject(JSContext *cx, JSStackFrame *fp);
+CreateFunCallObject(JSContext *cx, StackFrame *fp);
 
 JSObject *
-CreateEvalCallObject(JSContext *cx, JSStackFrame *fp);
+CreateEvalCallObject(JSContext *cx, StackFrame *fp);
 
 extern JSBool
 GetCallArg(JSContext *cx, JSObject *obj, jsid id, js::Value *vp);
@@ -550,10 +503,10 @@ SetCallUpvar(JSContext *cx, JSObject *obj, jsid id, JSBool strict, js::Value *vp
 } // namespace js
 
 extern JSBool
-js_GetArgsValue(JSContext *cx, JSStackFrame *fp, js::Value *vp);
+js_GetArgsValue(JSContext *cx, js::StackFrame *fp, js::Value *vp);
 
 extern JSBool
-js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, js::Value *vp);
+js_GetArgsProperty(JSContext *cx, js::StackFrame *fp, jsid id, js::Value *vp);
 
 /*
  * Get the arguments object for the given frame.  If the frame is strict mode
@@ -566,10 +519,10 @@ js_GetArgsProperty(JSContext *cx, JSStackFrame *fp, jsid id, js::Value *vp);
  *     function.
  */
 extern JSObject *
-js_GetArgsObject(JSContext *cx, JSStackFrame *fp);
+js_GetArgsObject(JSContext *cx, js::StackFrame *fp);
 
 extern void
-js_PutArgsObject(JSContext *cx, JSStackFrame *fp);
+js_PutArgsObject(js::StackFrame *fp);
 
 inline bool
 js_IsNamedLambda(JSFunction *fun) { return (fun->flags & JSFUN_LAMBDA) && fun->atom; }

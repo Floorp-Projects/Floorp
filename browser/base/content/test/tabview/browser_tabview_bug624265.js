@@ -123,7 +123,7 @@ function test() {
     let cw = getContentWindow();
     let box = new cw.Rect(20, 20, 250, 200);
     let groupItem = new cw.GroupItem([], {bounds: box, immediately: true});
-    cw.GroupItems.setActiveGroupItem(groupItem);
+    cw.UI.setActive(groupItem);
 
     gBrowser.selectedTab = gBrowser.loadOneTab('http://mochi.test:8888/#3', {inBackground: true});
     gBrowser.loadOneTab('http://mochi.test:8888/#4', {inBackground: true});

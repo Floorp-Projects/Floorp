@@ -406,8 +406,7 @@ ParseIntStringHelper(JSContext *cx, const jschar *ws, const jschar *end, int may
 static jsdouble
 ParseIntDoubleHelper(jsdouble d)
 {
-    if (!JSDOUBLE_IS_FINITE(d))
-        return js_NaN;
+    JS_ASSERT(-1e21 < d && d < 1e21);
     if (d > 0)
         return floor(d);
     if (d < 0)
@@ -430,7 +429,17 @@ num_parseInt(JSContext *cx, uintN argc, Value *vp)
             *vp = vp[2];
             return true;
         }
-        if (vp[2].isDouble()) {
+        /*
+         * Step 1 is |inputString = ToString(string)|. When string >= 
+         * 1e21, ToString(string) is in the form "NeM". 'e' marks the end of
+         * the word, which would mean the result of parseInt(string) should be |N|.
+         *
+         * To preserve this behaviour, we can't use the fast-path when string >
+         * 1e21, or else the result would be |NeM|.
+         */
+        if (vp[2].isDouble() &&
+            vp[2].toDouble() > -1.0e21 &&
+            vp[2].toDouble() < 1.0e21) {
             vp->setDouble(ParseIntDoubleHelper(vp[2].toDouble()));
             return true;
         }
@@ -495,9 +504,21 @@ ParseInt(JSContext* cx, JSString* str)
 }
 
 static jsdouble FASTCALL
-ParseIntDouble(jsdouble d)
+ParseIntDouble(JSContext* cx, jsdouble d)
 {
-    return ParseIntDoubleHelper(d);
+    /* Fast path - see comment in numParseInt. */
+    if (-1.0e21 < d && d < 1.0e21)
+        return ParseIntDoubleHelper(d);
+
+    /* Slow path - convert to a string and parse normally. */
+    JSString *inputString = js_NumberToString(cx, d);
+    if (!inputString) {
+        TraceMonitor *tm = JS_TRACE_MONITOR_ON_TRACE(cx);
+        SetBuiltinError(tm);
+        return js_NaN;
+    }
+
+    return ParseInt(cx, inputString);
 }
 #endif
 
@@ -512,7 +533,7 @@ const char js_parseInt_str[]   = "parseInt";
 
 JS_DEFINE_TRCINFO_2(num_parseInt,
     (2, (static, DOUBLE_FAIL, ParseInt, CONTEXT, STRING,1, nanojit::ACCSET_NONE)),
-    (1, (static, DOUBLE, ParseIntDouble, DOUBLE,        1, nanojit::ACCSET_NONE)))
+    (2, (static, DOUBLE_FAIL, ParseIntDouble, CONTEXT, DOUBLE,1, nanojit::ACCSET_NONE)))
 
 JS_DEFINE_TRCINFO_1(num_parseFloat,
     (2, (static, DOUBLE_FAIL, ParseFloat, CONTEXT, STRING,   1, nanojit::ACCSET_NONE)))
@@ -700,19 +721,18 @@ num_toString(JSContext *cx, uintN argc, Value *vp)
     if (!GetPrimitiveThis(cx, vp, &d))
         return false;
 
-    int32_t base = 10;
+    int32 base = 10;
     if (argc != 0 && !vp[2].isUndefined()) {
-        if (!ValueToECMAInt32(cx, vp[2], &base))
-            return JS_FALSE;
+        jsdouble d2;
+        if (!ToInteger(cx, vp[2], &d2))
+            return false;
 
-        if (base < 2 || base > 36) {
-            ToCStringBuf cbuf;
-            char *numStr = IntToCString(&cbuf, base);   /* convert the base itself to a string */
-            JS_ASSERT(numStr);
-            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
-                                 numStr);
-            return JS_FALSE;
+        if (d2 < 2 || d2 > 36) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX);
+            return false;
         }
+
+        base = int32(d2);
     }
     JSString *str = js_NumberToStringWithBase(cx, d, base);
     if (!str) {
@@ -874,9 +894,8 @@ num_to(JSContext *cx, JSDToStrMode zeroArgMode, JSDToStrMode oneArgMode,
         precision = 0.0;
         oneArgMode = zeroArgMode;
     } else {
-        if (!ValueToNumber(cx, vp[2], &precision))
-            return JS_FALSE;
-        precision = js_DoubleToInteger(precision);
+        if (!ToInteger(cx, vp[2], &precision))
+            return false;
         if (precision < precisionMin || precision > precisionMax) {
             ToCStringBuf cbuf;
             numStr = IntToCString(&cbuf, jsint(precision));

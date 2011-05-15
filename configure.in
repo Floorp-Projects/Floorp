@@ -2958,7 +2958,44 @@ else
     AC_MSG_RESULT(no)
 fi
 
+dnl ========================================================
+dnl C++ rtti
+dnl Should be smarter and check that the compiler does indeed have rtti
+dnl ========================================================
+
+MOZ_ARG_ENABLE_BOOL(cpp-rtti,
+[  --enable-cpp-rtti       Enable C++ RTTI ],
+[ _MOZ_USE_RTTI=1 ],
+[ _MOZ_USE_RTTI= ])
+
+if test "$_MOZ_USE_RTTI"; then
+   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_ON
+else
+   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_OFF
+fi
+
+AC_SUBST(_MOZ_RTTI_FLAGS_ON)
+
+dnl Check whether we can use gcc's c++0x mode
 AC_LANG_CPLUSPLUS
+
+if test "$GNU_CXX"; then
+    _SAVE_CXXFLAGS=$CXXFLAGS
+    CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+
+    if test -z "$_MOZ_USE_RTTI"; then
+        CXXFLAGS="$CXXFLAGS $_MOZ_RTTI_FLAGS"
+        AC_CACHE_CHECK(for gcc c++0x headers bug without rtti,
+            ac_cv_cxx0x_headers_bug,
+            [AC_TRY_COMPILE([#include <memory>], [],
+                            ac_cv_cxx0x_headers_bug="no",
+                            ac_cv_cxx0x_headers_bug="yes")])
+        CXXFLAGS="$_SAVE_CXXFLAGS"
+        if test "$ac_cv_cxx0x_headers_bug" = "no"; then
+            CXXFLAGS="$CXXFLAGS -std=gnu++0x"
+        fi
+    fi
+fi
 
 dnl Check for usable char16_t (2 bytes, unsigned)
 dnl (we might not need the unsignedness check anymore)
@@ -2975,6 +3012,8 @@ AC_CACHE_CHECK(for usable char16_t (2 bytes, unsigned),
 if test "$ac_cv_have_usable_char16_t" = "yes"; then
     AC_DEFINE(HAVE_CPP_CHAR16_T)
     HAVE_CPP_CHAR16_T=1
+elif test "$GNU_CXX"; then
+    CXXFLAGS="$_SAVE_CXXFLAGS"
 fi
 
 dnl Check for usable wchar_t (2 bytes, unsigned)
@@ -3175,7 +3214,7 @@ dnl Checks for header files.
 dnl ========================================================
 AC_HEADER_DIRENT
 case "$target_os" in
-freebsd*)
+freebsd*|openbsd*)
 # for stuff like -lXshm
     CPPFLAGS="${CPPFLAGS} ${X_CFLAGS}"
     ;;
@@ -3341,11 +3380,6 @@ else
     dnl ========================================================
     AC_CHECK_LIB(Xext, XShmCreateImage, _HAVE_XSHM_XEXT=1,,
         $XLIBS $XEXT_LIBS)
-    MOZ_CHECK_HEADER(X11/extensions/XShm.h)
-    if test "$ac_cv_header_X11_extensions_XShm_h" = "yes" &&
-        test -n "$_HAVE_XSHM_XEXT"; then
-        AC_DEFINE(HAVE_XSHM)
-    fi
 
     dnl ========================================================
     dnl = Check for Xss
@@ -4442,7 +4476,7 @@ MOZ_ARG_WITH_BOOL(system-nspr,
     _USE_SYSTEM_NSPR=1 )
 
 if test -n "$_USE_SYSTEM_NSPR"; then
-    AM_PATH_NSPR(4.8.7, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
+    AM_PATH_NSPR(4.8.8, [MOZ_NATIVE_NSPR=1], [AC_MSG_ERROR([your don't have NSPR installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSPR"; then
@@ -4516,7 +4550,7 @@ MOZ_ARG_WITH_BOOL(system-nss,
     _USE_SYSTEM_NSS=1 )
 
 if test -n "$_USE_SYSTEM_NSS"; then
-    AM_PATH_NSS(3.12.9, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
+    AM_PATH_NSS(3.12.10, [MOZ_NATIVE_NSS=1], [AC_MSG_ERROR([you don't have NSS installed or your version is too old])])
 fi
 
 if test -n "$MOZ_NATIVE_NSS"; then
@@ -4593,6 +4627,11 @@ if test "$SYSTEM_JPEG" = 1; then
                      #endif ],
                    SYSTEM_JPEG=1,
                    [SYSTEM_JPEG= JPEG_CFLAGS= JPEG_LIBS=]) 
+fi
+
+MOZ_LIBJPEG_TURBO=
+if test -z "$SYSTEM_JPEG"; then
+    MOZ_LIBJPEG_TURBO=1
 fi 
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
@@ -4785,7 +4824,6 @@ VPX_AS_CONVERSION=
 VPX_ASM_SUFFIX=
 VPX_X86_ASM=
 VPX_ARM_ASM=
-MOZ_LIBJPEG_TURBO=1
 LIBJPEG_TURBO_AS=
 LIBJPEG_TURBO_ASFLAGS=
 LIBJPEG_TURBO_X86_ASM=
@@ -7796,7 +7834,7 @@ AC_MSG_RESULT([$result])
 
 if test $result = "yes"; then
   PROFILE_GEN_LDFLAGS="-fprofile-generate"
-  PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch -freorder-blocks-and-partition"
+  PROFILE_USE_CFLAGS="-fprofile-use -fprofile-correction -Wcoverage-mismatch"
   PROFILE_USE_LDFLAGS="-fprofile-use"
 fi
 
@@ -7923,24 +7961,6 @@ if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
 fi
 fi # SKIP_COMPILER_CHECKS
-
-dnl ========================================================
-dnl C++ rtti
-dnl Should be smarter and check that the compiler does indeed have rtti
-dnl ========================================================
-
-MOZ_ARG_ENABLE_BOOL(cpp-rtti,
-[  --enable-cpp-rtti       Enable C++ RTTI ],
-[ _MOZ_USE_RTTI=1 ],
-[ _MOZ_USE_RTTI= ])
-
-if test "$_MOZ_USE_RTTI"; then
-   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_ON
-else
-   _MOZ_RTTI_FLAGS=$_MOZ_RTTI_FLAGS_OFF
-fi
-
-AC_SUBST(_MOZ_RTTI_FLAGS_ON)
 
 dnl ========================================================
 dnl C++ exceptions (g++/VC/irix6/Sun only - for now)
@@ -8118,7 +8138,7 @@ fi
 AC_SUBST(JS_SHARED_LIBRARY)
 
 if test -n "$MOZ_STATIC_BUILD_UNSUPPORTED" -a -n "$BUILD_STATIC_LIBS"; then
-  AC_MSG_ERROR([--enable-static is not supported for building $MOZ_APP_NAME.])
+  AC_MSG_ERROR([--enable-static is not supported for building $MOZ_BUILD_APP.])
 fi
 
 if test -n "$MOZ_ENABLE_LIBXUL" -a -n "$BUILD_STATIC_LIBS"; then
@@ -8821,8 +8841,33 @@ AC_SUBST(MOZ_POST_DSO_LIB_COMMAND)
 AC_SUBST(MOZ_POST_PROGRAM_COMMAND)
 AC_SUBST(MOZ_TIMELINE)
 
+# The following variables are available to branding and application
+# configuration ($BRANDING/configure.sh and $APPLICATION/confvars.sh):
+# - MOZ_APP_VENDOR: Used for application.ini's "Vendor" field, which also
+# impacts profile location and user-visible fields.
+# - MOZ_APP_BASENAME: Typically stays consistent for multiple branded
+# versions of a given application (e.g. Aurora and Firefox both use
+# "Firefox"), but may vary for full rebrandings (e.g. Iceweasel). Used
+# for application.ini's "Name" field, which controls profile location in
+# the absence of a "Profile" field (see below), and various system
+# integration hooks (Unix remoting, Windows MessageWindow name, etc.)
+# - MOZ_APP_DISPLAYNAME: Used in user-visible fields (DLL properties,
+# Mac Bundle name, Updater, Installer), it is typically used for nightly
+# builds (e.g. Aurora for Firefox).
+# - MOZ_APP_NAME: Used for e.g. the binary program file name. If not set,
+# defaults to a lowercase form of MOZ_APP_BASENAME.
+# - MOZ_APP_PROFILE: When set, used for application.ini's
+# "Profile" field, which controls profile location.
+
+if test -z "$MOZ_APP_NAME"; then
+   MOZ_APP_NAME=`echo $MOZ_APP_BASENAME | tr A-Z a-z`
+fi
+
 AC_SUBST(MOZ_APP_NAME)
 AC_SUBST(MOZ_APP_DISPLAYNAME)
+AC_SUBST(MOZ_APP_BASENAME)
+AC_SUBST(MOZ_APP_VENDOR)
+AC_SUBST(MOZ_APP_PROFILE)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_NAME, "$MOZ_APP_UA_NAME")
 AC_SUBST(MOZ_APP_UA_NAME)
 AC_DEFINE_UNQUOTED(MOZ_APP_UA_VERSION, "$MOZ_APP_VERSION")
@@ -9025,6 +9070,7 @@ if test "$MOZ_X11"; then
         #include <stdlib.h>
         #include <X11/Xlib.h>
         #include <X11/Intrinsic.h>
+        #include <X11/extensions/XShm.h>
     ],
     [
         Display *dpy = 0;

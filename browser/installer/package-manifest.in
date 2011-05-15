@@ -36,6 +36,7 @@
 @BINPATH@/update.locale
 @BINPATH@/updater.ini
 @BINPATH@/dictionaries/*
+@BINPATH@/hyphenation/*
 #ifdef XP_WIN32
 @BINPATH@/uninstall/helper.exe
 #endif
@@ -383,6 +384,8 @@
 @BINPATH@/components/SyncComponents.manifest
 @BINPATH@/components/Weave.js
 #endif
+@BINPATH@/components/TelemetryPing.js
+@BINPATH@/components/TelemetryPing.manifest
 
 ; Modules
 @BINPATH@/modules/*

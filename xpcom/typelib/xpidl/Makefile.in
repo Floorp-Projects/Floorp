@@ -64,10 +64,6 @@ ifdef CROSS_COMPILE
 HOST_PROGRAM	= host_xpidl$(HOST_BIN_SUFFIX)
 HOST_CSRCS	= $(XPIDL_CSRCS)
 
-ifdef WINCE
-HOST_LDFLAGS += -ladvapi32.lib
-endif
-
 ifdef LIBIDL_LIBS
 BUILD_TARGET = 1
 endif
@@ -122,7 +118,7 @@ endif
 
 # Compile directly against the static lib, so we can use xpidl during the build
 # without the shared library path being set.
-ifneq (,$(filter WINNT WINCE OS2,$(OS_ARCH)))
+ifneq (,$(filter WINNT OS2,$(OS_ARCH)))
 DEFINES		+= -DEXPORT_XPT_API
 ifndef GNU_CC
 LDFLAGS += \
@@ -148,24 +144,12 @@ EXTRA_DEPS	= $(wildcard $(DIST)/lib/$(LIB_PREFIX)xpt.*)
 
 ifdef CROSS_COMPILE
 
-
 HOST_CFLAGS	+= $(HOST_LIBIDL_CFLAGS)
 HOST_LIBS	= $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.$(LIB_SUFFIX) $(HOST_LIBIDL_LIBS)
 HOST_EXTRA_DEPS	= $(wildcard $(DIST)/host/lib/$(LIB_PREFIX)hostxpt.*)
 
 ifdef HOST_NSPR_MDCPUCFG
 HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
-endif
-
-ifdef WINCE
-# Compile directly against the static lib, so we can use the tools
-# during the build without the shared library path being set.
-HOST_CFLAGS +=  -DEXPORT_XPT_API
-# Force MOZ_NO_DEBUG_RTL=1
-# HOST_CFLAGS	+= /MD
-LDFLAGS += -NODEFAULTLIB:MSVCRT
-HOST_LIBS += Advapi32.lib
-HOST_CFLAGS +=-D_X86_
 endif
 
 endif

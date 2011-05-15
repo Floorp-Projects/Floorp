@@ -233,6 +233,7 @@ DIST_FILES = \
   components \
   defaults \
   modules \
+  hyphenation \
   res \
   lib \
   lib.id \
@@ -378,7 +379,7 @@ OMNIJAR_FILES	= \
 
 NON_OMNIJAR_FILES += \
   chrome/icons/\* \
-  defaults/pref/channel-prefs.js \
+  $(PREF_DIR)/channel-prefs.js \
   res/cursors/\* \
   res/MainMenu.nib/\* \
   $(NULL)
@@ -555,7 +556,12 @@ ifdef MOZ_OPTIONAL_PKG_LIST
 	  "$(call core_abspath,$(DEPTH)/installer-stage/optional)", \
 	  "$(MOZ_PKG_MANIFEST)", "$(PKGCP_OS)", 1, 0, 1 \
 	  $(foreach pkg,$(MOZ_OPTIONAL_PKG_LIST),$(PKG_ARG)) )
-	@cd $(DEPTH)/installer-stage/optional/extensions; find -maxdepth 1 -mindepth 1 -exec rm -r ../../core/extensions/{} \;
+	if test -d $(DEPTH)/installer-stage/optional/extensions ; then \
+		cd $(DEPTH)/installer-stage/optional/extensions; find -maxdepth 1 -mindepth 1 -exec rm -r ../../core/extensions/{} \; ; \
+	fi
+	if test -d $(DEPTH)/installer-stage/optional/distribution/extensions/ ; then \
+		cd $(DEPTH)/installer-stage/optional/distribution/extensions/; find -maxdepth 1 -mindepth 1 -exec rm -r ../../../core/distribution/extensions/{} \; ; \
+	fi
 endif
 
 elfhack:

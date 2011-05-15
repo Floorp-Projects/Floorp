@@ -118,13 +118,14 @@
 // objects alive during the unlinking.
 // 
 
-#if !defined(__MINGW32__) && !defined(WINCE)
+#if !defined(__MINGW32__)
 #ifdef WIN32
 #include <crtdbg.h>
 #include <errno.h>
 #endif
 #endif
 
+#include "base/basictypes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCycleCollectorUtils.h"
 #include "nsIProgrammingLanguage.h"
@@ -151,7 +152,8 @@
 #include "nsIXPConnect.h"
 #include "nsIJSRuntimeService.h"
 #include "xpcpublic.h"
-
+#include "base/histogram.h"
+#include "base/logging.h"
 #include <stdio.h>
 #include <string.h>
 #ifdef WIN32
@@ -981,7 +983,7 @@ struct nsCycleCollector
     PRBool mFollowupCollection;
     PRUint32 mCollectedObjects;
     PRBool mFirstCollection;
-    PRTime mCollectionStart;
+    TimeStamp mCollectionStart;
 
     nsCycleCollectionLanguageRuntime *mRuntimes[nsIProgrammingLanguage::MAX+1];
     nsCycleCollectionXPCOMRuntime mXPCOMRuntime;
@@ -1675,10 +1677,9 @@ GCGraphBuilder::NoteScriptChild(PRUint32 langID, void *child)
     }
 
     // skip over non-grey JS children
-    if (langID == nsIProgrammingLanguage::JAVASCRIPT) {
-        JSObject *obj = static_cast<JSObject*>(child);
-        if (!xpc_IsGrayGCThing(obj) && !WantAllTraces())
-            return;
+    if (langID == nsIProgrammingLanguage::JAVASCRIPT &&
+        !xpc_GCThingIsGrayCCThing(child) && !WantAllTraces()) {
+        return;
     }
 
     nsCycleCollectionParticipant *cp = mRuntimes[langID]->ToParticipant(child);
@@ -2478,8 +2479,8 @@ nsCycleCollector::PrepareForCollection(nsTPtrArray<PtrInfo> *aWhiteNodes)
 
 #ifdef COLLECT_TIME_DEBUG
     printf("cc: nsCycleCollector::PrepareForCollection()\n");
-    mCollectionStart = PR_Now();
 #endif
+    mCollectionStart = TimeStamp::Now();
 
     mCollectionInProgress = PR_TRUE;
 
@@ -2509,10 +2510,13 @@ nsCycleCollector::CleanupAfterCollection()
     _heapmin();
 #endif
 
+    PRUint32 interval((TimeStamp::Now() - mCollectionStart).ToMilliseconds());
 #ifdef COLLECT_TIME_DEBUG
-    printf("cc: CleanupAfterCollection(), total time %lldms\n",
-           (PR_Now() - mCollectionStart) / PR_USEC_PER_MSEC);
+    printf("cc: CleanupAfterCollection(), total time %ums\n", interval);
 #endif
+    UMA_HISTOGRAM_TIMES("nsCycleCollector::Collect (ms)",
+                        base::TimeDelta::FromMilliseconds(interval));
+
 #ifdef DEBUG_CC
     ExplainLiveExpectedGarbage();
 #endif
@@ -2771,6 +2775,13 @@ nsCycleCollector::Shutdown()
     // Here we want to run a final collection and then permanently
     // disable the collector because the program is shutting down.
 
+#ifdef DEBUG_CC
+    if (sCollector->mParams.mDrawGraphs) {
+        nsCOMPtr<nsICycleCollectorListener> listener =
+            new nsCycleCollectorLogger();
+        Collect(SHUTDOWN_COLLECTIONS(mParams), listener);
+    } else
+#endif
     Collect(SHUTDOWN_COLLECTIONS(mParams), nsnull);
 
 #ifdef DEBUG_CC

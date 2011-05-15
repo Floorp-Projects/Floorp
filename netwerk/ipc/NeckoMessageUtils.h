@@ -47,6 +47,8 @@
 #include "nsComponentManagerUtils.h"
 #include "nsNetUtil.h"
 #include "nsStringStream.h"
+#include "prio.h"
+#include "mozilla/Util.h" // for DebugOnly
 
 namespace IPC {
 
@@ -105,10 +107,7 @@ struct ParamTraits<URI>
     nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aParam.mURI);
     char cidStr[NSID_LENGTH];
     nsCID cid;
-#ifdef DEBUG
-    nsresult rv =
-#endif
-    classInfo->GetClassIDNoAlloc(&cid);
+    mozilla::DebugOnly<nsresult> rv = classInfo->GetClassIDNoAlloc(&cid);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "All IPDL URIs must report a valid class ID");
     
     cid.ToProvidedString(cidStr);
@@ -215,7 +214,8 @@ struct ParamTraits<InputStream>
 
       aParam.mStream->Available(&bytes);
       if (bytes > 0) {
-        nsresult rv = NS_ReadInputStreamToString(aParam.mStream, streamString, bytes);
+        mozilla::DebugOnly<nsresult> rv =
+          NS_ReadInputStreamToString(aParam.mStream, streamString, bytes);
         NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "Can't read input stream into a string!");
       }
 
@@ -226,7 +226,7 @@ struct ParamTraits<InputStream>
     nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aParam.mStream);
     char cidStr[NSID_LENGTH];
     nsCID cid;
-    nsresult rv = classInfo->GetClassIDNoAlloc(&cid);
+    mozilla::DebugOnly<nsresult> rv = classInfo->GetClassIDNoAlloc(&cid);
     NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "All IPDL streams must report a valid class ID");
 
     cid.ToProvidedString(cidStr);
@@ -322,6 +322,64 @@ struct ParamTraits<Permission>
   static void Log(const Permission& aParam, std::wstring* aLog)
   {
     aLog->append(StringPrintf(L"[%s]", aParam.host.get()));
+  }
+};
+
+template<>
+struct ParamTraits<PRNetAddr>
+{
+  static void Write(Message* aMsg, const PRNetAddr &aParam)
+  {
+    WriteParam(aMsg, aParam.raw.family);
+    if (aParam.raw.family == PR_AF_UNSPEC) {
+      aMsg->WriteBytes(aParam.raw.data, sizeof(aParam.raw.data));
+    } else if (aParam.raw.family == PR_AF_INET) {
+      WriteParam(aMsg, aParam.inet.port);
+      WriteParam(aMsg, aParam.inet.ip);
+    } else if (aParam.raw.family == PR_AF_INET6) {
+      WriteParam(aMsg, aParam.ipv6.port);
+      WriteParam(aMsg, aParam.ipv6.flowinfo);
+      WriteParam(aMsg, aParam.ipv6.ip.pr_s6_addr64[0]);
+      WriteParam(aMsg, aParam.ipv6.ip.pr_s6_addr64[1]);
+      WriteParam(aMsg, aParam.ipv6.scope_id);
+#if defined(XP_UNIX) || defined(XP_OS2)
+    } else if (aParam.raw.family == PR_AF_LOCAL) {
+      aMsg->WriteBytes(aParam.local.path, sizeof(aParam.local.path));
+#endif
+    }
+
+    /* If we get here without hitting any of the cases above, there's not much
+     * we can do but let the deserializer fail when it gets this message */
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, PRNetAddr* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->raw.family))
+      return false;
+
+    if (aResult->raw.family == PR_AF_UNSPEC) {
+      return aMsg->ReadBytes(aIter,
+                             reinterpret_cast<const char**>(&aResult->raw.data),
+                             sizeof(aResult->raw.data));
+    } else if (aResult->raw.family == PR_AF_INET) {
+      return ReadParam(aMsg, aIter, &aResult->inet.port) &&
+             ReadParam(aMsg, aIter, &aResult->inet.ip);
+    } else if (aResult->raw.family == PR_AF_INET6) {
+      return ReadParam(aMsg, aIter, &aResult->ipv6.port) &&
+             ReadParam(aMsg, aIter, &aResult->ipv6.flowinfo) &&
+             ReadParam(aMsg, aIter, &aResult->ipv6.ip.pr_s6_addr64[0]) &&
+             ReadParam(aMsg, aIter, &aResult->ipv6.ip.pr_s6_addr64[1]) &&
+             ReadParam(aMsg, aIter, &aResult->ipv6.scope_id);
+#if defined(XP_UNIX) || defined(XP_OS2)
+    } else if (aResult->raw.family == PR_AF_LOCAL) {
+      return aMsg->ReadBytes(aIter,
+                             reinterpret_cast<const char**>(&aResult->local.path),
+                             sizeof(aResult->local.path));
+#endif
+    }
+
+    /* We've been tricked by some socket family we don't know about! */
+    return false;
   }
 };
 

@@ -90,15 +90,14 @@
 #include "jstypedarray.h"
 
 #include "jsatominlines.h"
-#include "jscntxtinlines.h"
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
-#include "jscntxtinlines.h"
 #include "jsregexpinlines.h"
 #include "jsscriptinlines.h"
 #include "jsstrinlines.h"
 #include "assembler/wtf/Platform.h"
+
+#include "vm/Stack-inl.h"
 
 #if ENABLE_YARR_JIT
 #include "assembler/jit/ExecutableAllocator.h"
@@ -671,6 +670,10 @@ JSRuntime::init(uint32 maxbytes)
     propTreeDumpFilename = getenv("JS_PROPTREE_DUMPFILE");
 #endif
 
+#ifdef JS_TRACER
+    InitJIT();
+#endif
+
     if (!js_InitGC(this, maxbytes))
         return false;
 
@@ -725,6 +728,10 @@ JSRuntime::~JSRuntime()
 "JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
                 cxcount, (cxcount == 1) ? "" : "s");
     }
+#endif
+
+#ifdef JS_TRACER
+    FinishJIT();
 #endif
 
     js_FinishThreads(this);
@@ -845,7 +852,7 @@ JS_SetRuntimePrivate(JSRuntime *rt, void *data)
 static void
 StartRequest(JSContext *cx)
 {
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
 
     if (t->data.requestDepth) {
@@ -855,7 +862,7 @@ StartRequest(JSContext *cx)
         AutoLockGC lock(rt);
 
         /* Wait until the GC is finished. */
-        if (rt->gcThread != cx->thread) {
+        if (rt->gcThread != cx->thread()) {
             while (rt->gcThread)
                 JS_AWAIT_GC_DONE(rt);
         }
@@ -879,7 +886,7 @@ StartRequest(JSContext *cx)
 static void
 StopRequest(JSContext *cx)
 {
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
     JS_ASSERT(t->data.requestDepth != 0);
     if (t->data.requestDepth != 1) {
@@ -947,7 +954,7 @@ JS_PUBLIC_API(jsrefcount)
 JS_SuspendRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
 
     jsrefcount saveDepth = t->data.requestDepth;
@@ -967,7 +974,7 @@ JS_PUBLIC_API(void)
 JS_ResumeRequest(JSContext *cx, jsrefcount saveDepth)
 {
 #ifdef JS_THREADSAFE
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));
     if (saveDepth == 0)
         return;
@@ -984,7 +991,7 @@ JS_PUBLIC_API(JSBool)
 JS_IsInRequest(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
     return JS_THREAD_DATA(cx)->requestDepth != 0;
 #else
     return false;
@@ -1519,7 +1526,7 @@ JS_SetGlobalObject(JSContext *cx, JSObject *obj)
     CHECK_REQUEST(cx);
 
     cx->globalObject = obj;
-    if (!cx->hasfp())
+    if (!cx->running())
         cx->resetCompartment();
 }
 
@@ -1775,8 +1782,7 @@ JS_ResolveStandardClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
         if (stdnm->clasp->flags & JSCLASS_IS_ANONYMOUS)
             return JS_TRUE;
 
-        JSProtoKey key = JSCLASS_CACHED_PROTO_KEY(stdnm->clasp);
-        if (obj->getReservedSlot(key).isObject())
+        if (IsStandardClassResolved(obj, stdnm->clasp))
             return JS_TRUE;
 
         if (!stdnm->init(cx, obj))
@@ -1797,7 +1803,10 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
     assertSameCompartment(cx, obj);
     rt = cx->runtime;
 
-    /* Check whether we need to bind 'undefined' and define it if so. */
+    /*
+     * Check whether we need to bind 'undefined' and define it if so.
+     * Since ES5 15.1.1.3 undefined can't be deleted.
+     */
     atom = rt->atomState.typeAtoms[JSTYPE_VOID];
     if (!obj->nativeContains(ATOM_TO_JSID(atom)) &&
         !obj->defineProperty(cx, ATOM_TO_JSID(atom), UndefinedValue(),
@@ -1806,12 +1815,12 @@ JS_EnumerateStandardClasses(JSContext *cx, JSObject *obj)
         return JS_FALSE;
     }
 
-    /* Initialize any classes that have not been resolved yet. */
+    /* Initialize any classes that have not been initialized yet. */
     for (i = 0; standard_class_atoms[i].init; i++) {
-        atom = OFFSET_TO_ATOM(rt, standard_class_atoms[i].atomOffset);
-        if (!obj->nativeContains(ATOM_TO_JSID(atom)) &&
-            !standard_class_atoms[i].init(cx, obj)) {
-            return JS_FALSE;
+        if (!js::IsStandardClassResolved(obj, standard_class_atoms[i].clasp) &&
+            !standard_class_atoms[i].init(cx, obj))
+        {
+                return JS_FALSE;
         }
     }
 
@@ -2642,15 +2651,11 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
       case JSGC_STACKPOOL_LIFESPAN:
         rt->gcEmptyArenaPoolLifespan = value;
         break;
-      case JSGC_MODE:
+      default:
+        JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
         JS_ASSERT(rt->gcMode == JSGC_MODE_GLOBAL ||
                   rt->gcMode == JSGC_MODE_COMPARTMENT);
-        break;
-      default:
-        JS_ASSERT(key == JSGC_TRIGGER_FACTOR);
-        JS_ASSERT(value >= 100);
-        rt->setGCTriggerFactor(value);
         return;
     }
 }
@@ -2665,8 +2670,6 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return rt->gcMaxMallocBytes;
       case JSGC_STACKPOOL_LIFESPAN:
         return rt->gcEmptyArenaPoolLifespan;
-      case JSGC_TRIGGER_FACTOR:
-        return rt->gcTriggerFactor;
       case JSGC_BYTES:
         return rt->gcBytes;
       case JSGC_MODE:
@@ -2762,7 +2765,7 @@ JS_PUBLIC_API(void)
 JS_SetNativeStackQuota(JSContext *cx, size_t stackSize)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(cx->thread);
+    JS_ASSERT(cx->thread());
 #endif
 
 #if JS_STACK_GROWTH_DIRECTION > 0
@@ -3254,7 +3257,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id, uintN flag
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     ok = obj->isNative()
-         ? js_LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop) >= 0
+         ? LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop)
          : obj->lookupProperty(cx, id, objp, &prop);
     return ok && LookupResult(cx, obj, *objp, id, prop, Valueify(vp));
 }
@@ -3357,8 +3360,8 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, const Value &value,
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
     if (flags != 0 && obj->isNative()) {
-        return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,
-                                         attrs, flags, tinyid, NULL);
+        return !!DefineNativeProperty(cx, obj, id, value, getter, setter,
+                                      attrs, flags, tinyid);
     }
     return obj->defineProperty(cx, id, value, getter, setter, attrs);
 }
@@ -4033,11 +4036,11 @@ JS_NextProperty(JSContext *cx, JSObject *iterobj, jsid *idp)
             shape = shape->previous();
 
         if (!shape->previous()) {
-            JS_ASSERT(JSID_IS_EMPTY(shape->id));
+            JS_ASSERT(JSID_IS_EMPTY(shape->propid));
             *idp = JSID_VOID;
         } else {
             iterobj->setPrivate(const_cast<Shape *>(shape->previous()));
-            *idp = shape->id;
+            *idp = shape->propid;
         }
     } else {
         /* Non-native case: use the ida enumerated when iterobj was created. */
@@ -4210,7 +4213,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, parent);  // XXX no funobj for now
     if (!parent) {
-        if (cx->hasfp())
+        if (cx->running())
             parent = GetScopeChain(cx, cx->fp());
         if (!parent)
             parent = cx->globalObject;
@@ -4263,7 +4266,7 @@ JS_CloneFunctionObject(JSContext *cx, JSObject *funobj, JSObject *parent)
             obj = obj->getParent();
         }
 
-        if (!obj->getProperty(cx, r.front().id, clone->getFlatClosureUpvars() + i))
+        if (!obj->getProperty(cx, r.front().propid, clone->getFlatClosureUpvars() + i))
             return NULL;
     }
 
@@ -5107,7 +5110,7 @@ JS_New(JSContext *cx, JSObject *ctor, uintN argc, jsval *argv)
     // of object to create, create it, and clamp the return value to an object,
     // among other details. js_InvokeConstructor does the hard work.
     InvokeArgsGuard args;
-    if (!cx->stack().pushInvokeArgs(cx, argc, &args))
+    if (!cx->stack.pushInvokeArgs(cx, argc, &args))
         return NULL;
 
     args.calleev().setObject(*ctor);
@@ -5141,7 +5144,7 @@ JS_PUBLIC_API(JSOperationCallback)
 JS_SetOperationCallback(JSContext *cx, JSOperationCallback callback)
 {
 #ifdef JS_THREADSAFE
-    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
+    JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
 #endif
     JSOperationCallback old = cx->operationCallback;
     cx->operationCallback = callback;
@@ -5183,9 +5186,9 @@ JS_IsRunning(JSContext *cx)
     VOUCH_DOES_NOT_REQUIRE_STACK();
 
 #ifdef JS_TRACER
-    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->hasfp());
+    JS_ASSERT_IF(JS_ON_TRACE(cx) && JS_TRACE_MONITOR_ON_TRACE(cx)->tracecx == cx, cx->running());
 #endif
-    JSStackFrame *fp = cx->maybefp();
+    StackFrame *fp = cx->maybefp();
     while (fp && fp->isDummyFrame())
         fp = fp->prev();
     return fp != NULL;
@@ -5195,11 +5198,11 @@ JS_PUBLIC_API(JSStackFrame *)
 JS_SaveFrameChain(JSContext *cx)
 {
     CHECK_REQUEST(cx);
-    JSStackFrame *fp = js_GetTopStackFrame(cx);
+    StackFrame *fp = js_GetTopStackFrame(cx);
     if (!fp)
         return NULL;
-    cx->saveActiveSegment();
-    return fp;
+    cx->stack.saveActiveSegment();
+    return Jsvalify(fp);
 }
 
 JS_PUBLIC_API(void)
@@ -5207,10 +5210,10 @@ JS_RestoreFrameChain(JSContext *cx, JSStackFrame *fp)
 {
     CHECK_REQUEST(cx);
     JS_ASSERT_NOT_ON_TRACE(cx);
-    JS_ASSERT(!cx->hasfp());
+    JS_ASSERT(!cx->running());
     if (!fp)
         return;
-    cx->restoreSegment();
+    cx->stack.restoreSegment();
 }
 
 /************************************************************************/
@@ -5580,7 +5583,6 @@ JS_WriteStructuredClone(JSContext *cx, jsval v, uint64 **bufp, size_t *nbytesp,
 
 JS_PUBLIC_API(JSBool)
 JS_StructuredClone(JSContext *cx, jsval v, jsval *vp,
-                   ReadStructuredCloneOp optionalReadOp,
                    const JSStructuredCloneCallbacks *optionalCallbacks,
                    void *closure)
 {
@@ -6031,9 +6033,9 @@ JS_SetContextThread(JSContext *cx)
 {
 #ifdef JS_THREADSAFE
     JS_ASSERT(!cx->outstandingRequests);
-    if (cx->thread) {
-        JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread));
-        return reinterpret_cast<jsword>(cx->thread->id);
+    if (cx->thread()) {
+        JS_ASSERT(CURRENT_THREAD_IS_ME(cx->thread()));
+        return reinterpret_cast<jsword>(cx->thread()->id);
     }
 
     if (!js_InitContextThread(cx)) {
@@ -6057,7 +6059,7 @@ JS_ClearContextThread(JSContext *cx)
      * is a harmless no-op.
      */
     JS_ASSERT(cx->outstandingRequests == 0);
-    JSThread *t = cx->thread;
+    JSThread *t = cx->thread();
     if (!t)
         return 0;
     JS_ASSERT(CURRENT_THREAD_IS_ME(t));

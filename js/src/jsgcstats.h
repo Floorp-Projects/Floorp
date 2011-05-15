@@ -63,7 +63,6 @@ namespace gc {
  */
 enum ConservativeGCTest {
     CGCT_VALID,
-    CGCT_VALIDWITHOFFSET, /* points within an object */
     CGCT_LOWBITSET, /* excluded because one of the low bits was set */
     CGCT_NOTARENA,  /* not within arena range in a chunk */
     CGCT_NOTCHUNK,  /* not within a valid chunk */
@@ -75,7 +74,9 @@ enum ConservativeGCTest {
 
 struct ConservativeGCStats {
     uint32  counter[gc::CGCT_END];  /* ConservativeGCTest classification
-                                   counters */
+                                       counters */
+    uint32  unaligned;              /* number of valid but not aligned on
+                                       thing start pointers */ 
 
     void add(const ConservativeGCStats &another) {
         for (size_t i = 0; i != JS_ARRAY_LENGTH(counter); ++i)
@@ -114,7 +115,6 @@ struct JSGCStats {
     uint32  maxunmarked;/* maximum number of things with children to mark
                            later */
 #endif
-    uint32  poke;           /* number of potentially useful GC calls */
     uint32  afree;          /* thing arenas freed so far */
     uint32  nallarenas;     /* number of all allocated arenas */
     uint32  maxnallarenas;  /* maximum number of all allocated arenas */
@@ -125,13 +125,11 @@ struct JSGCStats {
 };
 
 extern void
-UpdateCompartmentStats(JSCompartment *comp, unsigned thingKind, uint32 nlivearenas,
-                       uint32 nkilledArenas, uint32 nthings);
-#endif /* JS_GCMETER */
+UpdateCompartmentGCStats(JSCompartment *comp, unsigned thingKind);
 
-#if defined JS_DUMP_CONSERVATIVE_GC_ROOTS
-void *GetAlignedThing(void *thing, int thingKind);
-#endif
+extern void
+UpdateAllCompartmentGCStats(JSCompartment *comp);
+#endif /* JS_GCMETER */
 
 } //gc
 

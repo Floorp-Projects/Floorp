@@ -171,6 +171,7 @@ MAKEFILES_intl="
   intl/locale/src/os2/Makefile
   intl/locale/src/windows/Makefile
   intl/locale/tests/Makefile
+  intl/locales/Makefile
   intl/lwbrk/Makefile
   intl/lwbrk/idl/Makefile
   intl/lwbrk/src/Makefile

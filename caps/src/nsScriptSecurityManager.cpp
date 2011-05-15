@@ -2634,6 +2634,11 @@ nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
         if (NS_FAILED(rv)) return rv;
         if (*result)
             return NS_OK;
+
+        // Capabilities do not extend to calls into C/C++ and then back into
+        // the JS engine via JS_EvaluateScript or similar APIs.
+        if (JS_IsGlobalFrame(cx, fp))
+            break;
     } while ((fp = JS_FrameIterator(cx, &fp)) != nsnull);
 
     if (!previousPrincipal)

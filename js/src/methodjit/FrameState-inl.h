@@ -733,13 +733,13 @@ FrameState::addressOf(const FrameEntry *fe) const
 {
     int32 frameOffset = 0;
     if (fe >= locals)
-        frameOffset = JSStackFrame::offsetOfFixed(uint32(fe - locals));
+        frameOffset = StackFrame::offsetOfFixed(uint32(fe - locals));
     else if (fe >= args)
-        frameOffset = JSStackFrame::offsetOfFormalArg(fun, uint32(fe - args));
+        frameOffset = StackFrame::offsetOfFormalArg(fun, uint32(fe - args));
     else if (fe == this_)
-        frameOffset = JSStackFrame::offsetOfThis(fun);
+        frameOffset = StackFrame::offsetOfThis(fun);
     else if (fe == callee_)
-        frameOffset = JSStackFrame::offsetOfCallee(fun);
+        frameOffset = StackFrame::offsetOfCallee(fun);
     JS_ASSERT(frameOffset);
     return Address(JSFrameReg, frameOffset);
 }

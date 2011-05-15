@@ -38,13 +38,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=562932
 
 /** Test for Bug 562932 **/
 
-// Check if we are using the html5 parser
-// because some tests will fail otherwise.
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var gHtml5Parser = Components.classes["@mozilla.org/preferences-service;1"]
-                   .getService(Components.interfaces.nsIPrefBranch)
-                   .getBoolPref("html5.parser.enable");
-
 function checkControl(aLabelId, aElementId, aMsg)
 {
   var element = null;
@@ -64,16 +57,12 @@ checkControl('l2', 'i2', "label control should be the first form element");
 checkControl('l3', null, "label control should be null when there is no child");
 checkControl('l4a', null, "label control should be null when there is no \
              labelable form element child");
-if (gHtml5Parser) {
-  checkControl('l4b', 'i3', "label control should be the first labelable element \
-               in tree order");
-}
+checkControl('l4b', 'i3', "label control should be the first labelable element \
+             in tree order");
 checkControl('l4c', 'i3', "label control should be the first labelable element \
              in tree order");
-if (gHtml5Parser) {
-  checkControl('l4d', 'i3b', "label control should be the first labelable element \
-               in tree order");
-}
+checkControl('l4d', 'i3b', "label control should be the first labelable element \
+             in tree order");
 checkControl('l4e', 'i3b', "label control should be the first labelable element \
              in tree order");
 checkControl('l5', 'i1', "label control should be the id in @for");

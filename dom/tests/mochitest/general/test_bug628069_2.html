@@ -27,6 +27,7 @@ document.addEventListener("hashChange", function(e) {
   gotHashChange = 1;
   is(e.oldURL, "oldURL");
   is(e.newURL, "newURL");
+  is(e.isTrusted, false, "Hashchange event shouldn't be trusted.");
 }, true);
 
 let hc = document.createEvent("HashChangeEvent");
