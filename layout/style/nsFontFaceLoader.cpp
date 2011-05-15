@@ -478,7 +478,7 @@ nsUserFontSet::InsertRule(nsCSSFontFaceRule *aRule, PRUint8 aSheetType,
                           nsTArray<FontFaceRuleRecord>& aOldRules,
                           PRBool& aFontSetModified)
 {
-  NS_ABORT_IF_FALSE(aRule->GetType() == nsICSSRule::FONT_FACE_RULE,
+  NS_ABORT_IF_FALSE(aRule->GetType() == mozilla::css::Rule::FONT_FACE_RULE,
                     "InsertRule passed a non-fontface CSS rule");
 
   // set up family name

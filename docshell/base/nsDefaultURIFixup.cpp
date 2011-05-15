@@ -817,16 +817,6 @@ const char * nsDefaultURIFixup::GetFileSystemCharset()
 const char * nsDefaultURIFixup::GetCharsetForUrlBar()
 {
   const char *charset = GetFileSystemCharset();
-#ifdef XP_MAC
-  // check for "x-mac-" prefix
-  if ((strlen(charset) >= 6) && charset[0] == 'x' && charset[2] == 'm')
-  {
-    if (!strcmp("x-mac-roman", charset))
-      return "ISO-8859-1";
-    // we can do more x-mac-xxxx mapping here
-    // or somewhere in intl code like nsIPlatformCharset.
-  }
-#endif
   return charset;
 }
 

@@ -4,7 +4,9 @@
 
 </textarea>
 <script>
-  document.getElementById("t").focus();
+  var t = document.getElementById("t");
+  t.selectionStart = t.selectionEnd = t.value.length;
+  t.focus();
 </script>
 </body>
 </html>

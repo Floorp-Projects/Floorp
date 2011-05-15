@@ -44,6 +44,8 @@
 #include "jsbuiltins.h"
 #include "jscompartment.h"
 
+#include "jsgcinlines.h"
+
 using namespace js;
 using namespace js::gc;
 
@@ -72,35 +74,28 @@ ConservativeGCStats::dump(FILE *fp)
     fprintf(fp, "        excluded, wrong tag: %lu\n", ULSTAT(counter[CGCT_WRONGTAG]));
     fprintf(fp, "         excluded, not live: %lu\n", ULSTAT(counter[CGCT_NOTLIVE]));
     fprintf(fp, "            valid GC things: %lu\n", ULSTAT(counter[CGCT_VALID]));
-    fprintf(fp, "      valid but not aligned: %lu\n", ULSTAT(counter[CGCT_VALIDWITHOFFSET]));
+    fprintf(fp, "      valid but not aligned: %lu\n", ULSTAT(unaligned));
 #undef ULSTAT
 }
 #endif
 
 #ifdef JS_GCMETER
 void
-UpdateCompartmentStats(JSCompartment *comp, unsigned thingKind, uint32 nlivearenas,
-                       uint32 nkilledArenas, uint32 nthings)
+UpdateCompartmentGCStats(JSCompartment *comp, unsigned thingKind)
 {
-    size_t narenas = 0;
-    JSGCArenaStats *compSt = &comp->compartmentStats[thingKind];
+    JSGCArenaStats *compSt = &comp->arenas[thingKind].stats;
     JSGCArenaStats *globSt = &comp->rt->globalArenaStats[thingKind];
-    narenas = nlivearenas + nkilledArenas;
-    JS_ASSERT(narenas >= compSt->livearenas);
+    JS_ASSERT(compSt->narenas >= compSt->livearenas);
+    compSt->newarenas     = compSt->narenas - compSt->livearenas;
+    if (compSt->maxarenas < compSt->narenas)
+        compSt->maxarenas = compSt->narenas;
+    compSt->totalarenas  += compSt->narenas;
 
-    compSt->newarenas     = narenas - compSt->livearenas;
-    compSt->narenas       = narenas;
-    compSt->livearenas    = nlivearenas;
-    if (compSt->maxarenas < narenas)
-        compSt->maxarenas = narenas;
-    compSt->totalarenas  += narenas;
-
-    compSt->nthings       = nthings;
-    if (compSt->maxthings < nthings)
-        compSt->maxthings = nthings;
-    compSt->totalthings  += nthings;
+    if (compSt->maxthings < compSt->nthings)
+        compSt->maxthings = compSt->nthings;
+    compSt->totalthings  += compSt->nthings;
     globSt->newarenas    += compSt->newarenas;
-    globSt->narenas      += narenas;
+    globSt->narenas      += compSt->narenas;
     globSt->livearenas   += compSt->livearenas;
     globSt->totalarenas  += compSt->totalarenas;
     globSt->nthings      += compSt->nthings;
@@ -109,6 +104,23 @@ UpdateCompartmentStats(JSCompartment *comp, unsigned thingKind, uint32 nlivearen
         globSt->maxarenas = compSt->maxarenas;
     if (globSt->maxthings < compSt->maxthings)
         globSt->maxthings = compSt->maxthings;
+}
+
+void
+UpdateAllCompartmentGCStats(JSCompartment *comp)
+{
+    /*
+     * The stats for the list arenas scheduled for the background finalization
+     * are updated after that finishes.
+     */
+    JS_ASSERT(comp->rt->gcRunning);
+    for (unsigned i = 0; i != JS_ARRAY_LENGTH(comp->arenas); ++i) {
+#ifdef JS_THREADSAFE
+        if (comp->arenas[i].willBeFinalizedLater())
+            continue;
+#endif
+        UpdateCompartmentGCStats(comp, i);
+    }
 }
 
 static const char *const GC_ARENA_NAMES[] = {
@@ -142,49 +154,6 @@ GetSizeAndThings(size_t &thingSize, size_t &thingsPerArena)
     thingSize = sizeof(T);
     thingsPerArena = Arena<T>::ThingsPerArena;
 }
-
-#if defined JS_DUMP_CONSERVATIVE_GC_ROOTS
-void *
-GetAlignedThing(void *thing, int thingKind)
-{
-    Cell *cell = (Cell *)thing;
-    switch (thingKind) {
-        case FINALIZE_OBJECT0:
-        case FINALIZE_OBJECT0_BACKGROUND:
-            return (void *)GetArena<JSObject>(cell)->getAlignedThing(thing);
-        case FINALIZE_OBJECT2:
-        case FINALIZE_OBJECT2_BACKGROUND:
-            return (void *)GetArena<JSObject_Slots2>(cell)->getAlignedThing(thing);
-        case FINALIZE_OBJECT4:
-        case FINALIZE_OBJECT4_BACKGROUND:
-            return (void *)GetArena<JSObject_Slots4>(cell)->getAlignedThing(thing);
-        case FINALIZE_OBJECT8:
-        case FINALIZE_OBJECT8_BACKGROUND:
-            return (void *)GetArena<JSObject_Slots8>(cell)->getAlignedThing(thing);
-        case FINALIZE_OBJECT12:
-        case FINALIZE_OBJECT12_BACKGROUND:
-            return (void *)GetArena<JSObject_Slots12>(cell)->getAlignedThing(thing);
-        case FINALIZE_OBJECT16:
-        case FINALIZE_OBJECT16_BACKGROUND:
-            return (void *)GetArena<JSObject_Slots16>(cell)->getAlignedThing(thing);
-        case FINALIZE_STRING:
-            return (void *)GetArena<JSString>(cell)->getAlignedThing(thing);
-        case FINALIZE_EXTERNAL_STRING:
-            return (void *)GetArena<JSExternalString>(cell)->getAlignedThing(thing);
-        case FINALIZE_SHORT_STRING:
-            return (void *)GetArena<JSShortString>(cell)->getAlignedThing(thing);
-        case FINALIZE_FUNCTION:
-            return (void *)GetArena<JSFunction>(cell)->getAlignedThing(thing);
-#if JS_HAS_XML_SUPPORT
-        case FINALIZE_XML:
-            return (void *)GetArena<JSXML>(cell)->getAlignedThing(thing);
-#endif
-        default:
-            JS_NOT_REACHED("wrong kind");
-            return NULL;
-    }
-}
-#endif
 
 void GetSizeAndThingsPerArena(int thingKind, size_t &thingSize, size_t &thingsPerArena)
 {
@@ -303,7 +272,8 @@ DumpCompartmentStats(JSCompartment *comp, FILE *fp)
     else
         fprintf(fp, "\n**** Compartment Allocation Statistics: %p ****\n\n", (void *) comp);
 
-    DumpArenaStats(&comp->compartmentStats[0], fp);
+    for (unsigned i = 0; i != FINALIZE_LIMIT; ++i)
+        DumpArenaStats(&comp->arenas[i].stats, fp);
 }
 
 #endif
@@ -329,7 +299,6 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 #ifdef DEBUG
         fprintf(fp, "      max trace later count: %lu\n", ULSTAT(maxunmarked));
 #endif
-        fprintf(fp, "potentially useful GC calls: %lu\n", ULSTAT(poke));
         fprintf(fp, "  thing arenas freed so far: %lu\n\n", ULSTAT(afree));
     }
 
@@ -366,16 +335,16 @@ GCMarker::dumpConservativeRoots()
 
     conservativeStats.dump(fp);
 
-    for (ConservativeRoot *i = conservativeRoots.begin();
-         i != conservativeRoots.end();
-         ++i) {
-        fprintf(fp, "  %p: ", i->thing);
-        switch (GetFinalizableTraceKind(i->thingKind)) {
+    for (void **thingp = conservativeRoots.begin(); thingp != conservativeRoots.end(); ++thingp) {
+        void *thing = thingp;
+        fprintf(fp, "  %p: ", thing);
+        
+        switch (GetGCThingTraceKind(thing)) {
           default:
             JS_NOT_REACHED("Unknown trace kind");
 
           case JSTRACE_OBJECT: {
-            JSObject *obj = (JSObject *) i->thing;
+            JSObject *obj = (JSObject *) thing;
             fprintf(fp, "object %s", obj->getClass()->name);
             break;
           }
@@ -384,7 +353,7 @@ GCMarker::dumpConservativeRoots()
             break;
           }
           case JSTRACE_STRING: {
-            JSString *str = (JSString *) i->thing;
+            JSString *str = (JSString *) thing;
             if (str->isLinear()) {
                 char buf[50];
                 PutEscapedString(buf, sizeof buf, &str->asLinear(), '"');
@@ -396,7 +365,7 @@ GCMarker::dumpConservativeRoots()
           }
 # if JS_HAS_XML_SUPPORT
           case JSTRACE_XML: {
-            JSXML *xml = (JSXML *) i->thing;
+            JSXML *xml = (JSXML *) thing;
             fprintf(fp, "xml %u", (unsigned)xml->xml_class);
             break;
           }
@@ -446,21 +415,23 @@ GCTimer::finish(bool lastGC) {
             if (!gcFile) {
                 gcFile = fopen("gcTimer.dat", "a");
 
-                fprintf(gcFile, "     AppTime,  Total,   Mark,  Sweep, FinObj,");
-                fprintf(gcFile, " FinStr, SwShapes, Destroy, +Chunks, -Chunks\n");
+                fprintf(gcFile, "     AppTime,  Total,   Wait,   Mark,  Sweep, FinObj,");
+                fprintf(gcFile, " FinStr, SwShapes, Destroy,    End, +Chu, -Chu\n");
             }
             JS_ASSERT(gcFile);
-            /*               App   , Tot  , Mar  , Swe  , FiO  , FiS  , SwS  , Des */
-            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, ",
+            /*               App   , Tot  , Wai  , Mar  , Swe  , FiO  , FiS  , SwS  , Des   , End */
+            fprintf(gcFile, "%12.0f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %6.1f, %8.1f,  %6.1f, %6.1f, ",
                     TIMEDIFF(getFirstEnter(), enter),
                     TIMEDIFF(enter, end),
+                    TIMEDIFF(enter, startMark),
                     TIMEDIFF(startMark, startSweep),
                     TIMEDIFF(startSweep, sweepDestroyEnd),
                     TIMEDIFF(startSweep, sweepObjectEnd),
                     TIMEDIFF(sweepObjectEnd, sweepStringEnd),
                     TIMEDIFF(sweepStringEnd, sweepShapeEnd),
-                    TIMEDIFF(sweepShapeEnd, sweepDestroyEnd));
-            fprintf(gcFile, "%7d, %7d\n", newChunkCount, destroyChunkCount);
+                    TIMEDIFF(sweepShapeEnd, sweepDestroyEnd),
+                    TIMEDIFF(sweepDestroyEnd, end));
+            fprintf(gcFile, "%4d, %4d\n", newChunkCount, destroyChunkCount);
             fflush(gcFile);
 
             if (lastGC) {

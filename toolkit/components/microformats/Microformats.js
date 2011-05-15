@@ -353,11 +353,11 @@ var Microformats = {
       
       
       if (((((propnode.localName.toLowerCase() == "abbr") || (propnode.localName.toLowerCase() == "html:abbr")) && !propnode.namespaceURI) || 
-         ((propnode.localName.toLowerCase() == "abbr") && (propnode.namespaceURI == "http://www.w3.org/1999/xhtml"))) && (propnode.getAttribute("title"))) {
+         ((propnode.localName.toLowerCase() == "abbr") && (propnode.namespaceURI == "http://www.w3.org/1999/xhtml"))) && (propnode.hasAttribute("title"))) {
         return propnode.getAttribute("title");
-      } else if ((propnode.nodeName.toLowerCase() == "img") && (propnode.getAttribute("alt"))) {
+      } else if ((propnode.nodeName.toLowerCase() == "img") && (propnode.hasAttribute("alt"))) {
         return propnode.getAttribute("alt");
-      } else if ((propnode.nodeName.toLowerCase() == "area") && (propnode.getAttribute("alt"))) {
+      } else if ((propnode.nodeName.toLowerCase() == "area") && (propnode.hasAttribute("alt"))) {
         return propnode.getAttribute("alt");
       } else if ((propnode.nodeName.toLowerCase() == "textarea") ||
                  (propnode.nodeName.toLowerCase() == "select") ||
@@ -647,7 +647,7 @@ var Microformats = {
       }
       if (in_node.ownerDocument) {
         if (Microformats[microformat].attributeName) {
-          if (!(in_node.getAttribute(Microformats[microformat].attributeName))) {
+          if (!(in_node.hasAttribute(Microformats[microformat].attributeName))) {
             throw("Node is not a microformat (" + microformat + ")");
           }
         } else {
@@ -850,7 +850,7 @@ var Microformats = {
      */
     preProcessMicroformat: function preProcessMicroformat(in_mfnode) {
       var mfnode;
-      if ((in_mfnode.nodeName.toLowerCase() == "td") && (in_mfnode.getAttribute("headers"))) {
+      if ((in_mfnode.nodeName.toLowerCase() == "td") && (in_mfnode.hasAttribute("headers"))) {
         mfnode = in_mfnode.cloneNode(true);
         mfnode.origNode = in_mfnode;
         var headers = in_mfnode.getAttribute("headers").split(" ");

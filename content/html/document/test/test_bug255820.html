@@ -69,11 +69,6 @@ function f3Continue() {
 }
 
 function runTest() {
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-    .getService(Components.interfaces.nsIPrefBranch);
-  var html5enabled = prefs.getBoolPref("html5.parser.enable");
-
   var doc = $("f1").contentDocument;
   is(doc.characterSet, "UTF-8",
      "Unexpected initial character set for first frame");
@@ -100,17 +95,10 @@ function runTest() {
   doc.close();
   is(doc.characterSet, "UTF-8",
      "Unexpected character set for second frame after write");
-  if (html5enabled) {
-    $("f2").
-      setAttribute("onload",
-        "charsetTestFinished('f2', this.contentDocument, 'UTF-8');" +
-        "f2Continue()");
-  } else {
-    $("f2").
-      setAttribute("onload",
-        "charsetTestFinished('f2', this.contentDocument, 'us-ascii');" +
-        "f2Continue()");
-  }
+  $("f2").
+    setAttribute("onload",
+      "charsetTestFinished('f2', this.contentDocument, 'UTF-8');" +
+      "f2Continue()");
 
   doc = $("f3").contentDocument;
   is(doc.characterSet, "UTF-8",

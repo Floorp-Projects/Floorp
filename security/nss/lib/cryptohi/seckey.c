@@ -460,7 +460,7 @@ done:
  *    - If the cert does not have PQG parameters, obtain them from the issuer.
  *    - A valid cert chain cannot have a DSA or Fortezza cert without
  *      pqg parameters that has a parent that is not a DSA or Fortezza cert.
- *    - pqg paramters are stored in two different formats: the standard
+ *    - pqg parameters are stored in two different formats: the standard
  *      DER encoded format and the fortezza-only wrapped format.  The params
  *      should be copied from issuer to subject cert without modifying the
  *      formats.  The public key extraction code will deal with the different
@@ -1000,6 +1000,15 @@ seckey_GetKeyType (SECOidTag tag) {
       case SEC_OID_ANSIX962_EC_PUBLIC_KEY:
 	keyType = ecKey;
 	break;
+      /* accommodate applications that hand us a signature type when they 
+	* should be handing us a cipher type */
+      case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
+      case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
+      case SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION:
+      case SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION:
+      case SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION:
+	keyType = rsaKey;
+	break;
       default:
 	keyType = nullKey;
     }
@@ -1187,7 +1196,7 @@ CERT_ExtractPublicKey(CERTCertificate *cert)
 
 /*
  * Get the public key for the fortezza KMID. NOTE this requires the
- * PQG paramters to be set. We probably should have a fortezza call that 
+ * PQG parameters to be set. We probably should have a fortezza call that 
  * just extracts the kmid for us directly so this function can work
  * without having the whole cert chain
  */
@@ -2225,7 +2234,7 @@ SECKEY_DestroyPrivateKeyInfo(SECKEYPrivateKeyInfo *pvk,
 	    SECITEM_ZfreeItem(&pvk->version, PR_FALSE);
 	    SECITEM_ZfreeItem(&pvk->privateKey, PR_FALSE);
 	    SECOID_DestroyAlgorithmID(&pvk->algorithm, PR_FALSE);
-	    PORT_Memset((char *)pvk, 0, sizeof(pvk));
+	    PORT_Memset((char *)pvk, 0, sizeof(*pvk));
 	    if(freeit == PR_TRUE) {
 		PORT_Free(pvk);
 	    }
@@ -2255,7 +2264,7 @@ SECKEY_DestroyEncryptedPrivateKeyInfo(SECKEYEncryptedPrivateKeyInfo *epki,
 	} else {
 	    SECITEM_ZfreeItem(&epki->encryptedData, PR_FALSE);
 	    SECOID_DestroyAlgorithmID(&epki->algorithm, PR_FALSE);
-	    PORT_Memset((char *)epki, 0, sizeof(epki));
+	    PORT_Memset((char *)epki, 0, sizeof(*epki));
 	    if(freeit == PR_TRUE) {
 		PORT_Free(epki);
 	    }
@@ -2325,19 +2334,24 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
     SECKEYPublicKey *pubk = NULL;
     SECStatus rv = SECFailure;
     SECItem newDerKey;
+    PRArenaPool *arena = NULL;
 
     if (!derKey) {
         return NULL;
     } 
 
-    pubk = PORT_ZNew(SECKEYPublicKey);
-    if(pubk == NULL) {
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
         goto finish;
     }
-    pubk->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
-    if (NULL == pubk->arena) {
+
+    pubk = PORT_ArenaZNew(arena, SECKEYPublicKey);
+    if (pubk == NULL) {
         goto finish;
     }
+    pubk->arena = arena;
+
     rv = SECITEM_CopyItem(pubk->arena, &newDerKey, derKey);
     if (SECSuccess != rv) {
         goto finish;
@@ -2368,11 +2382,10 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
     }
 
 finish:
-    if( rv != SECSuccess && pubk != NULL) {
-        if (pubk->arena) {
-            PORT_FreeArena(pubk->arena, PR_TRUE);
+    if (rv != SECSuccess) {
+        if (arena != NULL) {
+            PORT_FreeArena(arena, PR_TRUE);
         }
-        PORT_Free(pubk);
         pubk = NULL;
     }
     return pubk;

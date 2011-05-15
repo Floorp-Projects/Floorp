@@ -79,6 +79,7 @@ SHARED_LIBRARY_LIBS = \
 			../strres/src/$(LIB_PREFIX)strres_s.$(LIB_SUFFIX) \
 			../locale/src/$(LIB_PREFIX)nslocale_s.$(LIB_SUFFIX) \
 			../locale/src/$(LOCALE_DIR)/$(LIB_PREFIX)platlocale_s.$(LIB_SUFFIX) \
+			../hyphenation/src/$(HYPHENATION_DIR)/$(LIB_PREFIX)hyphenation_s.$(LIB_SUFFIX) \
 			$(NULL)
 
 EXTRA_DSO_LDOPTS = \
@@ -101,7 +102,5 @@ EXTRA_DSO_LDOPTS += \
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-ifndef WINCE
 OS_LIBS += $(call EXPAND_LIBNAME,usp10)
-endif
 endif

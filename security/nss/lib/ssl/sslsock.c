@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.67.2.1 2010/07/31 04:33:52 wtc%google.com Exp $ */
+/* $Id: sslsock.c,v 1.67.2.2 2011/03/16 19:04:02 alexei.volkov.bugs%sun.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -1271,8 +1271,8 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
 {
     sslSocket * sm = NULL, *ss = NULL;
     int i;
-    sslServerCerts * mc = sm->serverCerts;
-    sslServerCerts * sc = ss->serverCerts;
+    sslServerCerts * mc = NULL;
+    sslServerCerts * sc = NULL;
 
     if (model == NULL) {
         PR_SetError(SEC_ERROR_INVALID_ARGS, 0);
@@ -1301,7 +1301,9 @@ SSL_ReconfigFD(PRFileDesc *model, PRFileDesc *fd)
     /* This int should be SSLKEAType, but CC on Irix complains,
      * during the for loop.
      */
-    for (i=kt_null; i < kt_kea_size; i++, mc++, sc++) {
+    for (i=kt_null; i < kt_kea_size; i++) {
+        mc = &(sm->serverCerts[i]);
+        sc = &(ss->serverCerts[i]);
         if (mc->serverCert && mc->serverCertChain) {
             if (sc->serverCert) {
                 CERT_DestroyCertificate(sc->serverCert);

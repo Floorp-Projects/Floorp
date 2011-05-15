@@ -72,7 +72,6 @@
 #include "jsstaticcheck.h"
 #include "jsvector.h"
 
-#include "jsinterpinlines.h"
 #include "jsobjinlines.h"
 #include "jsscriptinlines.h"
 #include "jscntxtinlines.h"
@@ -271,12 +270,28 @@ public:
 
 #ifdef DEBUG
 
-/* If pc != NULL, includes a prefix indicating whether the PC is at the current line. */
+/*
+ * If pc != NULL, include a prefix indicating whether the PC is at the current line.
+ * If counts != NULL, include a counter of the number of times each op was executed.
+ */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc, Sprinter *sp)
+js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc, int* counts, Sprinter *sp)
 {
     jsbytecode *next, *end;
     uintN len;
+
+    if (counts)
+        SprintCString(sp, "count    x ");
+    SprintCString(sp, "off   ");
+    if (lines)
+        SprintCString(sp, "line");
+    SprintCString(sp, "  op\n");
+    if (counts)
+        SprintCString(sp, "--------   ");
+    SprintCString(sp, "----- ");
+    if (lines)
+        SprintCString(sp, "----");
+    SprintCString(sp, "  --\n");
 
     next = script->code;
     end = next + script->length;
@@ -291,7 +306,7 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
         }
         len = js_Disassemble1(cx, script, next,
                               next - script->code,
-                              lines, sp);
+                              lines, sp, counts);
         if (!len)
             return JS_FALSE;
         next += len;
@@ -300,18 +315,18 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
 }
 
 JS_FRIEND_API(JSBool)
-js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, Sprinter *sp)
+js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, Sprinter *sp, int* counts)
 {
-    return js_DisassembleAtPC(cx, script, lines, NULL, sp);
+    return js_DisassembleAtPC(cx, script, lines, NULL, counts, sp);
 }
 
 JS_FRIEND_API(JSBool)
-js_DumpPC(JSContext *cx)
+js_DumpPC(JSContext *cx, int* counts = NULL)
 {
     void *mark = JS_ARENA_MARK(&cx->tempPool);
     Sprinter sprinter;
     INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
-    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs->pc, &sprinter);
+    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs().pc, counts, &sprinter);
     fprintf(stdout, "%s", sprinter.base);
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
@@ -345,7 +360,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             while (!r.empty()) {
                 const Shape &shape = r.front();
                 JSAutoByteString bytes;
-                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.id), &bytes))
+                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.propid), &bytes))
                     return false;
 
                 r.popFront();
@@ -384,7 +399,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
 JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
-                uintN loc, JSBool lines, Sprinter *sp)
+                uintN loc, JSBool lines, Sprinter *sp, int* counts)
 {
     JSOp op;
     const JSCodeSpec *cs;
@@ -410,6 +425,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     cs = &js_CodeSpec[op];
     len = (ptrdiff_t) cs->length;
     Sprint(sp, "%05u:", loc);
+    if (counts)
+        Sprint(sp, "% 8d x ", counts[loc]);
     if (lines)
         Sprint(sp, "%4u", JS_PCToLineNumber(cx, script, pc));
     Sprint(sp, "  %s", js_CodeName[op]);
@@ -1395,9 +1412,9 @@ GetLocal(SprintStack *ss, jsint i)
                     const Shape &shape = r.front();
 
                     if (shape.shortid == slot) {
-                        LOCAL_ASSERT(JSID_IS_ATOM(shape.id));
+                        LOCAL_ASSERT(JSID_IS_ATOM(shape.propid));
 
-                        JSAtom *atom = JSID_TO_ATOM(shape.id);
+                        JSAtom *atom = JSID_TO_ATOM(shape.propid);
                         const char *rval = QuoteString(&ss->sprinter, atom, 0);
                         if (!rval)
                             return NULL;
@@ -2053,7 +2070,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
         token = CodeToken[op];
 
         if (pc + oplen == jp->dvgfence) {
-            JSStackFrame *fp;
+            StackFrame *fp;
             uint32 format, mode, type;
 
             /*
@@ -2715,7 +2732,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     if (!shape.hasShortID())
                         continue;
                     LOCAL_ASSERT_OUT(shape.shortid < argc);
-                    atomv[shape.shortid] = JSID_TO_ATOM(shape.id);
+                    atomv[shape.shortid] = JSID_TO_ATOM(shape.propid);
                 }
                 ok = JS_TRUE;
                 for (i = 0; i < argc; i++) {
@@ -2915,7 +2932,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                      * object that's not a constructor, causing us to be
                      * called with an intervening frame on the stack.
                      */
-                    JSStackFrame *fp = js_GetTopStackFrame(cx);
+                    StackFrame *fp = js_GetTopStackFrame(cx);
                     if (fp) {
                         while (!fp->isEvalFrame())
                             fp = fp->prev();
@@ -5088,7 +5105,7 @@ char *
 js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
                            JSString *fallback)
 {
-    JSStackFrame *fp;
+    StackFrame *fp;
     JSScript *script;
     jsbytecode *pc;
 
@@ -5100,12 +5117,12 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
 
     LeaveTrace(cx);
     
-    if (!cx->regs || !cx->regs->fp || !cx->regs->fp->isScriptFrame())
+    if (!cx->running() || !cx->fp()->isScriptFrame())
         goto do_fallback;
 
-    fp = cx->regs->fp;
+    fp = cx->fp();
     script = fp->script();
-    pc = fp->hasImacropc() ? fp->imacropc() : cx->regs->pc;
+    pc = fp->hasImacropc() ? fp->imacropc() : cx->regs().pc;
     JS_ASSERT(script->code <= pc && pc < script->code + script->length);
 
     if (pc < script->main)
@@ -5139,7 +5156,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
              * it that caused exception, see bug 328664.
              */
             Value *stackBase = fp->base();
-            Value *sp = cx->regs->sp;
+            Value *sp = cx->regs().sp;
             do {
                 if (sp == stackBase) {
                     pcdepth = -1;
@@ -5167,11 +5184,10 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
     }
 
     {
-        jsbytecode* basepc = cx->regs->pc;
+        jsbytecode* basepc = cx->regs().pc;
         jsbytecode* savedImacropc = fp->maybeImacropc();
         if (savedImacropc) {
-            JS_ASSERT(cx->hasfp());
-            cx->regs->pc = savedImacropc;
+            cx->regs().pc = savedImacropc;
             fp->clearImacropc();
         }
 
@@ -5186,8 +5202,7 @@ js_DecompileValueGenerator(JSContext *cx, intN spindex, jsval v_in,
             name = DecompileExpression(cx, script, fp->maybeFun(), pc);
 
         if (savedImacropc) {
-            JS_ASSERT(cx->hasfp());
-            cx->regs->pc = basepc;
+            cx->regs().pc = basepc;
             fp->setImacropc(savedImacropc);
         }
 
@@ -5467,7 +5482,7 @@ ReconstructImacroPCStack(JSContext *cx, JSScript *script,
      * Begin with a recursive call back to ReconstructPCStack to pick up
      * the state-of-the-world at the *start* of the imacro.
      */
-    JSStackFrame *fp = js_GetScriptedCaller(cx, NULL);
+    StackFrame *fp = js_GetScriptedCaller(cx, NULL);
     JS_ASSERT(fp->hasImacropc());
     intN pcdepth = ReconstructPCStack(cx, script, fp->imacropc(), pcstack);
     if (pcdepth < 0)

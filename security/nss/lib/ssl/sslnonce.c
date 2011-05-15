@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslnonce.c,v 1.25 2008/03/10 00:01:28 wtc%google.com Exp $ */
+/* $Id: sslnonce.c,v 1.25.54.1 2011/03/24 16:30:57 alexei.volkov.bugs%sun.com Exp $ */
 
 #include "cert.h"
 #include "pk11pub.h"
@@ -221,6 +221,9 @@ ssl_DestroySID(sslSessionID *sid)
     }
     if (sid->u.ssl3.sessionTicket.ticket.data) {
 	SECITEM_FreeItem(&sid->u.ssl3.sessionTicket.ticket, PR_FALSE);
+    }
+    if (sid->u.ssl3.srvName.data) {
+	SECITEM_FreeItem(&sid->u.ssl3.srvName, PR_FALSE);
     }
     
     PORT_ZFree(sid, sizeof(sslSessionID));

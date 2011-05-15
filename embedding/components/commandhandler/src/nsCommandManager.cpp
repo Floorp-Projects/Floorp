@@ -275,10 +275,6 @@ nsCommandManager::DoCommand(const char *aCommandName,
   return rv;
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
 nsresult
 nsCommandManager::IsCallerChrome(PRBool *is_caller_chrome)
 {

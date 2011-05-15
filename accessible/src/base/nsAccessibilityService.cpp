@@ -65,7 +65,7 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIHTMLDocument.h"
-#include "nsIImageFrame.h"
+#include "nsImageFrame.h"
 #include "nsILink.h"
 #include "nsIObserverService.h"
 #include "nsIPluginInstance.h"
@@ -1266,7 +1266,7 @@ nsAccessibilityService::GetAreaAccessible(nsIFrame* aImageFrame,
                                           nsAccessible** aImageAccessible)
 {
   // Check if frame is an image frame, and content is <area>.
-  nsIImageFrame *imageFrame = do_QueryFrame(aImageFrame);
+  nsImageFrame *imageFrame = do_QueryFrame(aImageFrame);
   if (!imageFrame)
     return nsnull;
 
@@ -1432,7 +1432,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULProgressMeter:
-      accessible = new nsXULProgressMeterAccessible(aContent, aWeakShell);
+      accessible = new XULProgressMeterAccessible(aContent, aWeakShell);
       break;
 
     case nsIAccessibleProvider::XULStatusBar:
@@ -1687,6 +1687,13 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
 
   if (tag == nsAccessibilityAtoms::output) {
     nsAccessible* accessible = new nsHTMLOutputAccessible(aContent, aWeakShell);
+    NS_IF_ADDREF(accessible);
+    return accessible;
+  }
+
+  if (tag == nsAccessibilityAtoms::progress) {
+    nsAccessible* accessible =
+      new HTMLProgressMeterAccessible(aContent, aWeakShell);
     NS_IF_ADDREF(accessible);
     return accessible;
   }

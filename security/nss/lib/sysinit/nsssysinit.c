@@ -221,16 +221,16 @@ getFIPSMode(void)
  * 2 for the key slot, and
  * 3 for the crypto operations slot fips
  */
-#define ORDER_FLAGS "trustOrder=75 cipherOrder=100"
+#define CIPHER_ORDER_FLAGS "cipherOrder=100"
 #define SLOT_FLAGS \
 	"[slotFlags=RSA,RC4,RC2,DES,DH,SHA1,MD5,MD2,SSL,TLS,AES,RANDOM" \
 	" askpw=any timeout=30 ]"
  
 static const char *nssDefaultFlags =
-	ORDER_FLAGS " slotParams={0x00000001=" SLOT_FLAGS " }  ";
+	CIPHER_ORDER_FLAGS " slotParams={0x00000001=" SLOT_FLAGS " }  ";
 
 static const char *nssDefaultFIPSFlags =
-	ORDER_FLAGS " slotParams={0x00000003=" SLOT_FLAGS " }  ";
+	CIPHER_ORDER_FLAGS " slotParams={0x00000003=" SLOT_FLAGS " }  ";
 
 /*
  * This function builds the list of databases and modules to load, and sets
@@ -270,7 +270,7 @@ get_list(char *filename, char *stripped_parameters)
 	    "library= "
 	    "module=\"NSS User database\" "
 	    "parameters=\"configdir='sql:%s' %s tokenDescription='NSS user database'\" "
-        "NSS=\"%sflags=internal%s\"",
+        "NSS=\"trustOrder=75 %sflags=internal%s\"",
         userdb, stripped_parameters, nssflags,
         isFIPS ? ",FIPS" : "");
 
@@ -284,30 +284,6 @@ get_list(char *filename, char *stripped_parameters)
 		userdb, stripped_parameters);
 	}
 
-#if 0
-	/* This doesn't actually work. If we register
-		both this and the sysdb (in either order)
-		then only one of them actually shows up */
-
-    /* Using a NULL filename as a Boolean flag to
-     * prevent registering both an application-defined
-     * db and the system db. rhbz #546211.
-     */
-    PORT_Assert(filename);
-    if (sysdb && PL_CompareStrings(filename, sysdb))
-	    filename = NULL;
-    else if (userdb && PL_CompareStrings(filename, userdb))
-	    filename = NULL;
-
-    if (filename && !userIsRoot()) {
-	    module_list[next++] = PR_smprintf(
-	      "library= "
-	      "module=\"NSS database\" "
-	      "parameters=\"configdir='sql:%s' tokenDescription='NSS database sql:%s'\" "
-	      "NSS=\"%sflags=internal\"",filename, filename, nssflags);
-    }
-#endif
-
     /* now the system database (always read only unless it's root) */
     if (sysdb) {
 	    const char *readonly = userCanModifySystemDB() ? "" : "flags=readonly";
@@ -315,7 +291,7 @@ get_list(char *filename, char *stripped_parameters)
 	      "library= "
 	      "module=\"NSS system database\" "
 	      "parameters=\"configdir='sql:%s' tokenDescription='NSS system database' %s\" "
-	      "NSS=\"%sflags=internal,critical\"",sysdb, readonly, nssflags);
+	      "NSS=\"trustOrder=80 %sflags=internal,critical\"",sysdb, readonly, nssflags);
     }
 
     /* that was the last module */
@@ -372,9 +348,9 @@ overlapstrcpy(char *target, char *src)
 
 /* determine what options the user was trying to open this database with */
 /* filename is the directory pointed to by configdir= */
-/* stripped is the rest of the paramters with configdir= stripped out */
+/* stripped is the rest of the parameters with configdir= stripped out */
 static SECStatus
-parse_paramters(char *parameters, char **filename, char **stripped)
+parse_parameters(char *parameters, char **filename, char **stripped)
 {
     char *sourcePrev;
     char *sourceCurr;
@@ -423,7 +399,7 @@ NSS_ReturnModuleSpecData(unsigned long function, char *parameters, void *args)
     char **retString = NULL;
     SECStatus rv;
 
-    rv = parse_paramters(parameters, &filename, &stripped);
+    rv = parse_parameters(parameters, &filename, &stripped);
     if (rv != SECSuccess) {
 	/* use defaults */
 	filename = getSystemDB();

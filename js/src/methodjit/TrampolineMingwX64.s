@@ -44,7 +44,7 @@
 .text
 .intel_syntax noprefix
 
-# JSBool JaegerTrampoline(JSContext *cx, JSStackFrame *fp, void *code,
+# JSBool JaegerTrampoline(JSContext *cx, StackFrame *fp, void *code,
 #                         Value *stackLimit, void *safePoint)#
 .globl JaegerTrampoline
 .def JaegerTrampoline

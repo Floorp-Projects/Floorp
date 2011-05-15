@@ -126,6 +126,7 @@ class nsHashKey;
 #define NS_GESTURENOTIFY_EVENT            40
 #define NS_UISTATECHANGE_EVENT            41
 #define NS_MOZTOUCH_EVENT                 42
+#define NS_PLUGIN_EVENT                   43
 
 // These flags are sort of a mess. They're sort of shared between event
 // listener flags and event flags, but only some of them. You've been
@@ -458,10 +459,10 @@ class nsHashKey;
 #define NS_SIMPLE_GESTURE_TAP            (NS_SIMPLE_GESTURE_EVENT_START+7)
 #define NS_SIMPLE_GESTURE_PRESSTAP       (NS_SIMPLE_GESTURE_EVENT_START+8)
 
-// These are used to send events to plugins.
-#define NS_PLUGIN_EVENT_START   3600
-#define NS_PLUGIN_EVENT                 (NS_PLUGIN_EVENT_START)
-#define NS_NON_RETARGETED_PLUGIN_EVENT  (NS_PLUGIN_EVENT_START+1)
+// These are used to send native events to plugins.
+#define NS_PLUGIN_EVENT_START            3600
+#define NS_PLUGIN_INPUT_EVENT            (NS_PLUGIN_EVENT_START)
+#define NS_PLUGIN_FOCUS_EVENT            (NS_PLUGIN_EVENT_START+1)
 
 // Events to manipulate selection (nsSelectionEvent)
 #define NS_SELECTION_EVENT_START        3700
@@ -516,9 +517,13 @@ class nsHashKey;
 #define NS_MOZTOUCH_UP               (NS_MOZTOUCH_EVENT_START+2)
 
 // script notification events
-#define NS_NOTIFYSCRIPT_START    4500
-#define NS_BEFORE_SCRIPT_EXECUTE (NS_NOTIFYSCRIPT_START)
-#define NS_AFTER_SCRIPT_EXECUTE  (NS_NOTIFYSCRIPT_START+1)
+#define NS_NOTIFYSCRIPT_START        4500
+#define NS_BEFORE_SCRIPT_EXECUTE     (NS_NOTIFYSCRIPT_START)
+#define NS_AFTER_SCRIPT_EXECUTE      (NS_NOTIFYSCRIPT_START+1)
+
+#define NS_PRINT_EVENT_START         4600
+#define NS_BEFOREPRINT               (NS_PRINT_EVENT_START)
+#define NS_AFTERPRINT                (NS_PRINT_EVENT_START + 1)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -1528,6 +1533,25 @@ public:
 };
 
 /**
+ * Native event pluginEvent for plugins.
+ */
+
+class nsPluginEvent : public nsGUIEvent
+{
+public:
+  nsPluginEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
+    : nsGUIEvent(isTrusted, msg, w, NS_PLUGIN_EVENT),
+      retargetToFocusedDocument(PR_FALSE)
+  {
+  }
+
+  // If TRUE, this event needs to be retargeted to focused document.
+  // Otherwise, never retargeted.
+  // Defaults to false.
+  PRBool retargetToFocusedDocument;
+};
+
+/**
  * Event status for D&D Event
  */
 enum nsDragDropEventStatus {  
@@ -1613,10 +1637,16 @@ enum nsDragDropEventStatus {
        ((evnt)->eventStructType == NS_CONTENT_COMMAND_EVENT)
 
 #define NS_IS_PLUGIN_EVENT(evnt) \
-       (((evnt)->message == NS_PLUGIN_EVENT))
+       (((evnt)->message == NS_PLUGIN_INPUT_EVENT) || \
+        ((evnt)->message == NS_PLUGIN_FOCUS_EVENT))
+
+#define NS_IS_RETARGETED_PLUGIN_EVENT(evnt) \
+       (NS_IS_PLUGIN_EVENT(evnt) && \
+        (static_cast<nsPluginEvent*>(evnt)->retargetToFocusedDocument))
 
 #define NS_IS_NON_RETARGETED_PLUGIN_EVENT(evnt) \
-       (((evnt)->message == NS_NON_RETARGETED_PLUGIN_EVENT))
+       (NS_IS_PLUGIN_EVENT(evnt) && \
+        !(static_cast<nsPluginEvent*>(evnt)->retargetToFocusedDocument))
 
 #define NS_IS_TRUSTED_EVENT(event) \
   (((event)->flags & NS_EVENT_FLAG_TRUSTED) != 0)
@@ -1806,7 +1836,7 @@ inline PRBool NS_IsEventUsingCoordinates(nsEvent* aEvent)
 {
   return !NS_IS_KEY_EVENT(aEvent) && !NS_IS_IME_RELATED_EVENT(aEvent) &&
          !NS_IS_CONTEXT_MENU_KEY(aEvent) && !NS_IS_ACTIVATION_EVENT(aEvent) &&
-         !NS_IS_PLUGIN_EVENT(aEvent) && !NS_IS_NON_RETARGETED_PLUGIN_EVENT(aEvent) &&
+         !NS_IS_PLUGIN_EVENT(aEvent) &&
          !NS_IS_CONTENT_COMMAND_EVENT(aEvent) &&
          aEvent->eventStructType != NS_ACCESSIBLE_EVENT;
 }
@@ -1827,7 +1857,8 @@ inline PRBool NS_IsEventTargetedAtFocusedWindow(nsEvent* aEvent)
 {
   return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
          NS_IS_CONTEXT_MENU_KEY(aEvent) ||
-         NS_IS_CONTENT_COMMAND_EVENT(aEvent) || NS_IS_PLUGIN_EVENT(aEvent);
+         NS_IS_CONTENT_COMMAND_EVENT(aEvent) ||
+         NS_IS_RETARGETED_PLUGIN_EVENT(aEvent);
 }
 
 /**
@@ -1844,7 +1875,8 @@ inline PRBool NS_IsEventTargetedAtFocusedWindow(nsEvent* aEvent)
 inline PRBool NS_IsEventTargetedAtFocusedContent(nsEvent* aEvent)
 {
   return NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_RELATED_EVENT(aEvent) ||
-         NS_IS_CONTEXT_MENU_KEY(aEvent) || NS_IS_PLUGIN_EVENT(aEvent);
+         NS_IS_CONTEXT_MENU_KEY(aEvent) ||
+         NS_IS_RETARGETED_PLUGIN_EVENT(aEvent);
 }
 
 #endif // nsGUIEvent_h__

@@ -75,12 +75,12 @@
 
       <prefpane id="finished-studies-pane" class="tp-tab-panel">
         <richlistbox id="finished-studies-listbox" class="tp-study-list"
-          disabled="true" />
+          disabled="true"/>
       </prefpane>
 
       <prefpane id="study-results-pane" class="tp-tab-panel">
         <richlistbox id="study-results-listbox" class="tp-study-list"
-          disabled="true" />
+          disabled="true"/>
       </prefpane>
 
       <prefpane id="settings-pane" class="tp-tab-panel">

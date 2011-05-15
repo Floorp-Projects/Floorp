@@ -295,11 +295,6 @@ public:
     hb_blob_t *ShareFontTableAndGetBlob(PRUint32 aTag,
                                         FallibleTArray<PRUint8>* aTable);
 
-    // Preload a font table into the cache (used to store layout tables for
-    // harfbuzz, when they will be stripped from the actual sfnt being
-    // passed to platform font APIs for rasterization)
-    void PreloadFontTable(PRUint32 aTag, FallibleTArray<PRUint8>& aTable);
-
     nsString         mName;
 
     PRPackedBool     mItalic      : 1;
@@ -1029,6 +1024,8 @@ public:
         return -1;
     }
 
+    gfxFloat SynthesizeSpaceWidth(PRUint32 aCh);
+
     // Font metrics
     struct Metrics {
         gfxFloat xHeight;
@@ -1410,7 +1407,13 @@ public:
     }
     PRBool CanBreakLineBefore(PRUint32 aPos) {
         NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
-        return mCharacterGlyphs[aPos].CanBreakBefore();
+        return mCharacterGlyphs[aPos].CanBreakBefore() ==
+            CompressedGlyph::FLAG_BREAK_TYPE_NORMAL;
+    }
+    PRBool CanHyphenateBefore(PRUint32 aPos) {
+        NS_ASSERTION(0 <= aPos && aPos < mCharacterCount, "aPos out of range");
+        return mCharacterGlyphs[aPos].CanBreakBefore() ==
+            CompressedGlyph::FLAG_BREAK_TYPE_HYPHEN;
     }
 
     PRUint32 GetLength() { return mCharacterCount; }
@@ -1434,7 +1437,7 @@ public:
      * breaks are the same as the old
      */
     virtual PRBool SetPotentialLineBreaks(PRUint32 aStart, PRUint32 aLength,
-                                          PRPackedBool *aBreakBefore,
+                                          PRUint8 *aBreakBefore,
                                           gfxContext *aRefContext);
 
     /**
@@ -1453,6 +1456,11 @@ public:
         // not at cluster boundaries will be ignored.
         virtual void GetHyphenationBreaks(PRUint32 aStart, PRUint32 aLength,
                                           PRPackedBool *aBreakBefore) = 0;
+
+        // Returns the provider's hyphenation setting, so callers can decide
+        // whether it is necessary to call GetHyphenationBreaks.
+        // Result is an NS_STYLE_HYPHENS_* value.
+        virtual PRInt8 GetHyphensOption() = 0;
 
         // Returns the extra width that will be consumed by a hyphen. This should
         // be constant for a given textrun.
@@ -1725,14 +1733,22 @@ public:
             // Indicates that a cluster and ligature group starts at this
             // character; this character has a single glyph with a reasonable
             // advance and zero offsets. A "reasonable" advance
-            // is one that fits in the available bits (currently 14) (specified
+            // is one that fits in the available bits (currently 13) (specified
             // in appunits).
             FLAG_IS_SIMPLE_GLYPH  = 0x80000000U,
-            // Indicates that a linebreak is allowed before this character
-            FLAG_CAN_BREAK_BEFORE = 0x40000000U,
+
+            // Indicates whether a linebreak is allowed before this character;
+            // this is a two-bit field that holds a FLAG_BREAK_TYPE_xxx value
+            // indicating the kind of linebreak (if any) allowed here.
+            FLAGS_CAN_BREAK_BEFORE = 0x60000000U,
+
+            FLAGS_CAN_BREAK_SHIFT = 29,
+            FLAG_BREAK_TYPE_NONE   = 0,
+            FLAG_BREAK_TYPE_NORMAL = 1,
+            FLAG_BREAK_TYPE_HYPHEN = 2,
 
             // The advance is stored in appunits
-            ADVANCE_MASK  = 0x3FFF0000U,
+            ADVANCE_MASK  = 0x1FFF0000U,
             ADVANCE_SHIFT = 16,
 
             GLYPH_MASK = 0x0000FFFFU,
@@ -1786,13 +1802,15 @@ public:
                     (FLAG_NOT_LIGATURE_GROUP_START | FLAG_NOT_MISSING);
         }
 
-        PRBool CanBreakBefore() const { return (mValue & FLAG_CAN_BREAK_BEFORE) != 0; }
-        // Returns FLAG_CAN_BREAK_BEFORE if the setting changed, 0 otherwise
-        PRUint32 SetCanBreakBefore(PRBool aCanBreakBefore) {
-            NS_ASSERTION(aCanBreakBefore == PR_FALSE || aCanBreakBefore == PR_TRUE,
+        PRUint8 CanBreakBefore() const {
+            return (mValue & FLAGS_CAN_BREAK_BEFORE) >> FLAGS_CAN_BREAK_SHIFT;
+        }
+        // Returns FLAGS_CAN_BREAK_BEFORE if the setting changed, 0 otherwise
+        PRUint32 SetCanBreakBefore(PRUint8 aCanBreakBefore) {
+            NS_ASSERTION(aCanBreakBefore <= 2,
                          "Bogus break-before value!");
-            PRUint32 breakMask = aCanBreakBefore*FLAG_CAN_BREAK_BEFORE;
-            PRUint32 toggle = breakMask ^ (mValue & FLAG_CAN_BREAK_BEFORE);
+            PRUint32 breakMask = (PRUint32(aCanBreakBefore) << FLAGS_CAN_BREAK_SHIFT);
+            PRUint32 toggle = breakMask ^ (mValue & FLAGS_CAN_BREAK_BEFORE);
             mValue ^= toggle;
             return toggle;
         }
@@ -1800,13 +1818,15 @@ public:
         CompressedGlyph& SetSimpleGlyph(PRUint32 aAdvanceAppUnits, PRUint32 aGlyph) {
             NS_ASSERTION(IsSimpleAdvance(aAdvanceAppUnits), "Advance overflow");
             NS_ASSERTION(IsSimpleGlyphID(aGlyph), "Glyph overflow");
-            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_IS_SIMPLE_GLYPH |
+            mValue = (mValue & FLAGS_CAN_BREAK_BEFORE) |
+                FLAG_IS_SIMPLE_GLYPH |
                 (aAdvanceAppUnits << ADVANCE_SHIFT) | aGlyph;
             return *this;
         }
         CompressedGlyph& SetComplex(PRBool aClusterStart, PRBool aLigatureStart,
                 PRUint32 aGlyphCount) {
-            mValue = (mValue & FLAG_CAN_BREAK_BEFORE) | FLAG_NOT_MISSING |
+            mValue = (mValue & FLAGS_CAN_BREAK_BEFORE) |
+                FLAG_NOT_MISSING |
                 (aClusterStart ? 0 : FLAG_NOT_CLUSTER_START) |
                 (aLigatureStart ? 0 : FLAG_NOT_LIGATURE_GROUP_START) |
                 (aGlyphCount << GLYPH_COUNT_SHIFT);
@@ -1817,7 +1837,7 @@ public:
          * the cluster-start flag (see bugs 618870 and 619286).
          */
         CompressedGlyph& SetMissing(PRUint32 aGlyphCount) {
-            mValue = (mValue & (FLAG_CAN_BREAK_BEFORE | FLAG_NOT_CLUSTER_START)) |
+            mValue = (mValue & (FLAGS_CAN_BREAK_BEFORE | FLAG_NOT_CLUSTER_START)) |
                 (aGlyphCount << GLYPH_COUNT_SHIFT);
             return *this;
         }
