@@ -55,7 +55,6 @@
 #include "nsIDOMDocumentXBL.h"
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMNSDocumentStyle.h"
-#include "nsIDOMDocumentRange.h"
 #include "nsIDOMDocumentTraversal.h"
 #include "nsStubDocumentObserver.h"
 #include "nsIDOM3EventTarget.h"
@@ -498,7 +497,6 @@ class nsDocument : public nsIDocument,
                    public nsIDOMDocumentEvent,
                    public nsIDOM3DocumentEvent,
                    public nsIDOMNSDocumentStyle,
-                   public nsIDOMDocumentRange,
                    public nsIDOMDocumentTraversal,
                    public nsIDOMDocumentXBL,
                    public nsSupportsWeakReference,
@@ -813,9 +811,6 @@ public:
 
   // nsIDOMNSDocumentStyle
   NS_DECL_NSIDOMNSDOCUMENTSTYLE
-
-  // nsIDOMDocumentRange
-  NS_DECL_NSIDOMDOCUMENTRANGE
 
   // nsIDOMDocumentTraversal
   NS_DECL_NSIDOMDOCUMENTTRAVERSAL
