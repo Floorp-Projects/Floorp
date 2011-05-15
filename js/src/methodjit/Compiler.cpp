@@ -96,7 +96,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     isConstructing(isConstructing),
     ssa(cx, outerScript),
     globalObj(outerScript->global),
-    globalSlots((globalObj && globalObj->isGlobal()) ? globalObj->getRawSlots() : NULL),
+    globalSlots(globalObj ? globalObj->getRawSlots() : NULL),
     frame(cx, *thisFromCtor(), masm, stubcc),
     a(NULL), outer(NULL), script(NULL), PC(NULL), loop(NULL),
     inlineFrames(CompilerAllocPolicy(cx, *thisFromCtor())),
@@ -139,7 +139,7 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
         addTraceHints = false;
 
     /* Once a script starts getting really hot we will inline calls in it. */
-    if (!debugMode() && cx->typeInferenceEnabled() &&
+    if (!debugMode() && cx->typeInferenceEnabled() && globalObj &&
         (outerScript->useCount() >= USES_BEFORE_INLINING ||
          cx->hasRunOption(JSOPTION_METHODJIT_ALWAYS))) {
         inlining_ = true;
@@ -231,7 +231,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
     /* Maximum number of calls we will inline at the same site. */
     static const uint32 INLINE_SITE_LIMIT = 5;
 
-    JS_ASSERT(inlining());
+    JS_ASSERT(inlining() && globalObj);
 
     /* Not inlining yet from 'new' scripts. */
     if (isConstructing)
@@ -241,7 +241,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
     ScriptAnalysis *analysis = script->analysis(cx);
 
     /* Don't inline from functions which could have a non-global scope object. */
-    if (!script->compileAndGo ||
+    if (script->global != globalObj ||
         (script->fun && script->fun->getParent() != globalObj) ||
         (script->fun && script->fun->isHeavyweight()) ||
         script->isActiveEval) {
@@ -314,7 +314,7 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
              * allows us to inline calls between non-inner functions. Also
              * check for consistent strictness between the functions.
              */
-            if (!script->compileAndGo ||
+            if (!globalObj ||
                 fun->getParent() != globalObj ||
                 outerScript->strictModeCode != script->strictModeCode) {
                 okay = false;
@@ -3133,8 +3133,10 @@ mjit::Compiler::interruptCheckHelper()
 void
 mjit::Compiler::recompileCheckHelper()
 {
-    if (inlining() || debugMode() || !analysis->hasFunctionCalls() || !cx->typeInferenceEnabled())
+    if (inlining() || debugMode() || !globalObj ||
+        !analysis->hasFunctionCalls() || !cx->typeInferenceEnabled()) {
         return;
+    }
 
     size_t *addr = script->addressOfUseCount();
     masm.add32(Imm32(1), AbsoluteAddress(addr));
@@ -3638,7 +3640,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
 CompileStatus
 mjit::Compiler::callArrayBuiltin(uint32 argc, bool callingNew)
 {
-    if (!script->compileAndGo)
+    if (!globalObj)
         return Compile_InlineAbort;
 
     if (applyTricks == LazyArgsObj)
@@ -4405,7 +4407,7 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
 bool
 mjit::Compiler::jsop_callprop_str(JSAtom *atom)
 {
-    if (!script->compileAndGo) {
+    if (!globalObj) {
         jsop_callprop_slow(atom);
         return true; 
     }
@@ -4603,7 +4605,7 @@ mjit::Compiler::testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testO
     if (singleton)
         return testSingletonProperty(singleton, id);
 
-    if (!script->compileAndGo)
+    if (!globalObj)
         return false;
 
     JSProtoKey key;
@@ -5606,7 +5608,7 @@ mjit::Compiler::jsop_getgname_slow(uint32 index)
 void
 mjit::Compiler::jsop_bindgname()
 {
-    if (script->compileAndGo && globalObj) {
+    if (globalObj) {
         frame.push(ObjectValue(*globalObj));
         return;
     }
@@ -5751,7 +5753,7 @@ mjit::Compiler::jsop_callgname_epilogue()
     /*
      * This slow path does the same thing as the interpreter.
      */
-    if (!script->compileAndGo) {
+    if (!globalObj) {
         prepareStubCall(Uses(1));
         INLINE_STUBCALL(stubs::PushImplicitThisForGlobal, REJOIN_NONE);
         frame.pushSynced(JSVAL_TYPE_UNKNOWN);
@@ -6110,7 +6112,7 @@ mjit::Compiler::jsop_newinit()
 
     /* Don't bake in types for non-compileAndGo scripts. */
     types::TypeObject *type = NULL;
-    if (script->compileAndGo) {
+    if (globalObj) {
         type = script->getTypeInitObject(cx, PC, isArray);
         if (!type)
             return false;
@@ -6909,7 +6911,7 @@ mjit::Compiler::pushedSingleton(unsigned pushed)
 bool
 mjit::Compiler::arrayPrototypeHasIndexedProperty()
 {
-    if (!cx->typeInferenceEnabled() || !outerScript->compileAndGo)
+    if (!cx->typeInferenceEnabled() || !globalObj)
         return true;
 
     JSObject *proto;

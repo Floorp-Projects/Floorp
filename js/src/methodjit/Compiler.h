@@ -374,8 +374,8 @@ class Compiler : public BaseCompiler
     /* SSA information for the outer script and all frames we will be inlining. */
     analyze::CrossScriptSSA ssa;
 
-    JSObject *globalObj;
-    Value *globalSlots;
+    GlobalObject *globalObj;
+    Value *globalSlots;  /* Original slots pointer. */
 
     Assembler masm;
     FrameState frame;

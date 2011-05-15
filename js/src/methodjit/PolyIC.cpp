@@ -924,8 +924,8 @@ class GetPropCompiler : public PICStubCompiler
         JS_ASSERT(pic.hasTypeCheck());
         JS_ASSERT(pic.kind == ic::PICInfo::CALL);
 
-        if (!f.fp()->script()->compileAndGo)
-            return disable("String.prototype without compile-and-go");
+        if (!f.fp()->script()->global)
+            return disable("String.prototype without compile-and-go global");
 
         GetPropertyHelper<GetPropCompiler> getprop(cx, obj, atom, *this, f);
         LookupStatus status = getprop.lookupAndTest();
