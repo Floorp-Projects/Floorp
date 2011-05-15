@@ -2330,14 +2330,18 @@ FrameState::forgetKnownDouble(FrameEntry *fe)
 }
 
 void
-FrameState::pinEntry(FrameEntry *fe, ValueRemat &vr)
+FrameState::pinEntry(FrameEntry *fe, ValueRemat &vr, bool breakDouble)
 {
+    if (breakDouble && !fe->isConstant() && fe->isType(JSVAL_TYPE_DOUBLE))
+        forgetKnownDouble(fe);
+
     if (fe->isConstant()) {
         vr = ValueRemat::FromConstant(fe->getValue());
+    } else if (fe->isType(JSVAL_TYPE_DOUBLE)) {
+        FPRegisterID fpreg = tempFPRegForData(fe);
+        pinReg(fpreg);
+        vr = ValueRemat::FromFPRegister(fpreg);
     } else {
-        if (fe->isType(JSVAL_TYPE_DOUBLE))
-            forgetKnownDouble(fe);
-
         // Pin the type register so it can't spill.
         MaybeRegisterID maybePinnedType = maybePinType(fe);
 
@@ -2364,7 +2368,9 @@ FrameState::pinEntry(FrameEntry *fe, ValueRemat &vr)
 void
 FrameState::unpinEntry(const ValueRemat &vr)
 {
-    if (!vr.isConstant()) {
+    if (vr.isFPRegister()) {
+        unpinReg(vr.fpReg());
+    } else if (!vr.isConstant()) {
         if (!vr.isTypeKnown())
             unpinReg(vr.typeReg());
         unpinReg(vr.dataReg());
@@ -2378,7 +2384,7 @@ FrameState::ensureValueSynced(Assembler &masm, FrameEntry *fe, const ValueRemat 
     if (!vr.isDataSynced || !vr.isTypeSynced)
         masm.storeValue(vr, addressOf(fe));
 #elif defined JS_NUNBOX32
-    if (vr.isConstant()) {
+    if (vr.isConstant() || vr.isFPRegister()) {
         if (!vr.isDataSynced || !vr.isTypeSynced)
             masm.storeValue(vr.value(), addressOf(fe));
     } else {

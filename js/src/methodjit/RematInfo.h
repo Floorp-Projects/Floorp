@@ -114,6 +114,7 @@ struct StateRemat {
 /* Lightweight version of FrameEntry. */
 struct ValueRemat {
     typedef JSC::MacroAssembler::RegisterID RegisterID;
+    typedef JSC::MacroAssembler::FPRegisterID FPRegisterID;
     union {
         struct {
             union {
@@ -124,20 +125,31 @@ struct ValueRemat {
             bool    isTypeKnown_ : 1;
         } s;
         jsval v_;
+        FPRegisterID fpreg_;
     } u;
     bool isConstant_    : 1;
+    bool isFPRegister_  : 1;
     bool isDataSynced   : 1;
     bool isTypeSynced   : 1;
 
     static ValueRemat FromConstant(const Value &v) {
         ValueRemat vr;
         vr.isConstant_ = true;
+        vr.isFPRegister_ = false;
         vr.u.v_ = Jsvalify(v);
+        return vr;
+    }
+    static ValueRemat FromFPRegister(FPRegisterID fpreg) {
+        ValueRemat vr;
+        vr.isConstant_ = false;
+        vr.isFPRegister_ = true;
+        vr.u.fpreg_ = fpreg;
         return vr;
     }
     static ValueRemat FromKnownType(JSValueType type, RegisterID dataReg) {
         ValueRemat vr;
         vr.isConstant_ = false;
+        vr.isFPRegister_ = false;
         vr.u.s.type.knownType_ = type;
         vr.u.s.isTypeKnown_ = true;
         vr.u.s.dataRemat_ = StateRemat::FromRegister(dataReg).toInt32();
@@ -149,6 +161,7 @@ struct ValueRemat {
     static ValueRemat FromRegisters(RegisterID typeReg, RegisterID dataReg) {
         ValueRemat vr;
         vr.isConstant_ = false;
+        vr.isFPRegister_ = false;
         vr.u.s.isTypeKnown_ = false;
         vr.u.s.type.typeRemat_ = StateRemat::FromRegister(typeReg).toInt32();
         vr.u.s.dataRemat_ = StateRemat::FromRegister(dataReg).toInt32();
@@ -159,8 +172,12 @@ struct ValueRemat {
         return vr;
     }
 
+    FPRegisterID fpReg() const {
+        JS_ASSERT(isFPRegister());
+        return u.fpreg_;
+    }
     RegisterID dataReg() const {
-        JS_ASSERT(!isConstant());
+        JS_ASSERT(!isConstant() && !isFPRegister());
         return dataRemat().reg();
     }
     RegisterID typeReg() const {
@@ -169,7 +186,8 @@ struct ValueRemat {
     }
 
     bool isConstant() const { return isConstant_; }
-    bool isTypeKnown() const { return isConstant() || u.s.isTypeKnown_; }
+    bool isFPRegister() const { return isFPRegister_; }
+    bool isTypeKnown() const { return isConstant() || isFPRegister() || u.s.isTypeKnown_; }
 
     StateRemat dataRemat() const {
         JS_ASSERT(!isConstant());
@@ -191,6 +209,8 @@ struct ValueRemat {
                 return JSVAL_TYPE_DOUBLE;
             return v.extractNonDoubleType();
         }
+        if (isFPRegister())
+            return JSVAL_TYPE_DOUBLE;
         return u.s.type.knownType_;
     }
     bool isType(JSValueType type_) const {
