@@ -107,9 +107,6 @@ static char namedanchorText[] = "namedanchor";
 
 nsIRangeUtils* nsHTMLEditor::sRangeHelper;
 
-// some prototypes for rules creation shortcuts
-nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
-
 #define IsLinkTag(s) (s.EqualsIgnoreCase(hrefText))
 #define IsNamedAnchorTag(s) (s.EqualsIgnoreCase(anchorTxt) || s.EqualsIgnoreCase(namedanchorText))
 
