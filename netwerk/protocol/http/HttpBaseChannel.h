@@ -166,8 +166,6 @@ public:
           mRedirectedCachekeys = nsnull;
       }
   }
-  NS_IMETHOD HTTPUpgrade(const nsACString & aProtocolName,
-                         nsIHttpUpgradeListener *aListener); 
 
   // nsISupportsPriority
   NS_IMETHOD GetPriority(PRInt32 *value);
@@ -247,10 +245,6 @@ protected:
 
   PRNetAddr                         mSelfAddr;
   PRNetAddr                         mPeerAddr;
-
-  // HTTP Upgrade Data
-  nsCString                        mUpgradeProtocol;
-  nsCOMPtr<nsIHttpUpgradeListener> mUpgradeProtocolCallback;
 
   // Resumable channel specific data
   nsCString                         mEntityID;

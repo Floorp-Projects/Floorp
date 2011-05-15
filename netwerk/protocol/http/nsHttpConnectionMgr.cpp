@@ -1189,15 +1189,6 @@ nsHttpConnectionMgr::nsConnectionHandle::GetConnectionInfo(nsHttpConnectionInfo 
     mConn->GetConnectionInfo(result);
 }
 
-nsresult
-nsHttpConnectionMgr::
-nsConnectionHandle::TakeTransport(nsISocketTransport  **aTransport,
-                                  nsIAsyncInputStream **aInputStream,
-                                  nsIAsyncOutputStream **aOutputStream)
-{
-    return mConn->TakeTransport(aTransport, aInputStream, aOutputStream);
-}
-
 void
 nsHttpConnectionMgr::nsConnectionHandle::GetSecurityInfo(nsISupports **result)
 {
