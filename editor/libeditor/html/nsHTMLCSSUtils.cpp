@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Original Author: Daniel Glazman <glazman@netscape.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -296,29 +297,21 @@ const nsHTMLCSSUtils::CSSEquivTable hrAlignEquivTable[] = {
   { nsHTMLCSSUtils::eCSSEditableProperty_NONE, 0 }
 };
 
-nsHTMLCSSUtils::nsHTMLCSSUtils()
-: mIsCSSPrefChecked(PR_FALSE)
+nsHTMLCSSUtils::nsHTMLCSSUtils(nsHTMLEditor* aEditor)
+  : mHTMLEditor(aEditor)
+  , mIsCSSPrefChecked(PR_FALSE)
 {
+  // let's retrieve the value of the "CSS editing" pref
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIPrefBranch> prefBranch =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
+  if (NS_SUCCEEDED(result) && prefBranch) {
+    prefBranch->GetBoolPref("editor.use_css", &mIsCSSPrefChecked);
+  }
 }
 
 nsHTMLCSSUtils::~nsHTMLCSSUtils()
 {
-}
-
-nsresult
-nsHTMLCSSUtils::Init(nsHTMLEditor *aEditor)
-{
-  nsresult result = NS_OK;
-  mHTMLEditor = static_cast<nsHTMLEditor*>(aEditor);
-
-  // let's retrieve the value of the "CSS editing" pref
-  nsCOMPtr<nsIPrefBranch> prefBranch =
-    do_GetService(NS_PREFSERVICE_CONTRACTID, &result);
-  if (NS_SUCCEEDED(result) && prefBranch) {
-    result = prefBranch->GetBoolPref("editor.use_css", &mIsCSSPrefChecked);
-    NS_ENSURE_SUCCESS(result, result);
-  }
-  return result;
 }
 
 // Answers true if we have some CSS equivalence for the HTML style defined
@@ -615,19 +608,6 @@ nsHTMLCSSUtils::GetDefaultViewCSS(nsIDOMNode *aNode, nsIDOMWindow **aViewCSS)
   NS_ENSURE_SUCCESS(res, res);
   window.forget(aViewCSS);
   return NS_OK;
-}
-
-nsresult
-NS_NewHTMLCSSUtils(nsHTMLCSSUtils** aInstancePtrResult)
-{
-  nsHTMLCSSUtils * rules = new nsHTMLCSSUtils();
-  if (rules) {
-    *aInstancePtrResult = rules;
-    return NS_OK;
-  }
-
-  *aInstancePtrResult = nsnull;
-  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 // remove the CSS style "aProperty : aPropertyValue" and possibly remove the whole node
