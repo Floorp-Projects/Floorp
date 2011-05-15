@@ -1255,6 +1255,11 @@ nsNativeThemeWin::DrawWidgetBackground(nsRenderingContext* aContext,
     dr.y -= 1.0;
     dr.width += 1.0;
     dr.height += 2.0;
+
+    if (IsFrameRTL(aFrame)) {
+      tr.x -= 1.0;
+      dr.x -= 1.0;
+    }
   }
 
   nsRefPtr<gfxContext> ctx = aContext->ThebesContext();
@@ -1439,7 +1444,8 @@ RENDER_AGAIN:
   }
   // The following widgets need to be RTL-aware
   else if (aWidgetType == NS_THEME_MENUARROW ||
-           aWidgetType == NS_THEME_RESIZER)
+           aWidgetType == NS_THEME_RESIZER ||
+           aWidgetType == NS_THEME_DROPDOWN_BUTTON)
   {
     DrawThemeBGRTLAware(theme, hdc, part, state,
                         &widgetRect, &clipRect, IsFrameRTL(aFrame));
