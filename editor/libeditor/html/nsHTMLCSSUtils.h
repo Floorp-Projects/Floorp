@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Original Author: Daniel Glazman <glazman@netscape.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -62,7 +63,7 @@ typedef void (*nsProcessValueFunc)(const nsAString * aInputString, nsAString & a
 class nsHTMLCSSUtils
 {
 public:
-  nsHTMLCSSUtils();
+  explicit nsHTMLCSSUtils(nsHTMLEditor* aEditor);
   ~nsHTMLCSSUtils();
 
   enum nsCSSEditableProperty {
@@ -98,9 +99,6 @@ public:
     PRBool gettable;
     PRBool caseSensitiveValue;
   };
-
-public:
-  nsresult    Init(nsHTMLEditor * aEditor);
 
   /** answers true if the given combination element_name/attribute_name
     * has a CSS equivalence in this implementation
@@ -401,10 +399,7 @@ private:
 private:
   nsHTMLEditor            *mHTMLEditor;
   PRBool                  mIsCSSPrefChecked; 
-
 };
-
-nsresult NS_NewHTMLCSSUtils(nsHTMLCSSUtils** aInstancePtrResult);
 
 #define NS_EDITOR_INDENT_INCREMENT_IN        0.4134f
 #define NS_EDITOR_INDENT_INCREMENT_CM        1.05f
