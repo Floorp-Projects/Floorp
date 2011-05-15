@@ -52,7 +52,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(d12f0ecf-434a-4b5c-81ad-354e3b9037b9)]
+[scriptable, uuid(d93d3452-f937-42c2-89e1-4cc91cc778e5)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -115,4 +115,11 @@ interface nsIDOMDocument : nsIDOMNode
    * @see http://www.whatwg.org/html/#dom-document-defaultview
    */
   readonly attribute nsIDOMWindow    defaultView;
+
+  /**
+   * Create a range
+   *
+   * @see http://html5.org/specs/dom-range.html#dom-document-createrange
+   */
+  nsIDOMRange              createRange();
 };
