@@ -57,6 +57,7 @@ DIRS	= \
   text \
   tree \
   treeupdate \
+  value \
   $(null)
 
 include $(DEPTH)/config/autoconf.mk
@@ -109,8 +110,6 @@ _TEST_FILES =\
 		test_text_caret.html \
 		test_textboxes.html \
 		test_textboxes.xul \
-		test_value.html \
-		test_value.xul \
 		testTextboxes.js \
 		text.js \
 		treeview.css \

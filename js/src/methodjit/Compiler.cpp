@@ -131,6 +131,9 @@ mjit::Compiler::Compiler(JSContext *cx, JSScript *outerScript, bool isConstructi
     hasGlobalReallocation(false),
     oomInVector(false),
     applyTricks(NoApplyTricks)
+#if defined DEBUG
+    ,pcProfile(NULL)
+#endif
 {
     JS_ASSERT(!outerScript->isUncachedEval);
 
@@ -497,6 +500,15 @@ mjit::Compiler::performCompilation(JITScript **jitp)
                    outerScript->filename, outerScript->lineno);
     }
 
+#if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
+    if (IsJaegerSpewChannelActive(JSpew_PCProf)) {
+        pcProfile = (int *)cx->malloc_(sizeof(int) * script->length);
+        if (!pcProfile)
+            return Compile_Error;
+        memset(pcProfile, 0, script->length * sizeof(int));
+    }
+#endif
+    
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
     prof.start();
@@ -520,6 +532,12 @@ mjit::Compiler::performCompilation(JITScript **jitp)
         CHECK_STATUS(generateEpilogue());
         CHECK_STATUS(finishThisUp(jitp));
     }
+
+#if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
+    /* Transfer ownership to JITScript */
+    (*jitp)->pcProfile = pcProfile;
+    pcProfile = NULL;
+#endif
 
 #ifdef JS_METHODJIT_SPEW
     prof.stop();
@@ -555,6 +573,10 @@ mjit::Compiler::~Compiler()
         cx->delete_(outer);
     for (unsigned i = 0; i < inlineFrames.length(); i++)
         cx->delete_(inlineFrames[i]);
+#ifdef DEBUG
+    if (pcProfile)
+        cx->free_(pcProfile);
+#endif
 }
 
 CompileStatus
@@ -1469,6 +1491,24 @@ mjit::Compiler::generateMethod()
         }
         frame.assertValidRegisterState();
         a->jumpMap[uint32(PC - script->code)] = masm.label();
+
+#if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
+        if (IsJaegerSpewChannelActive(JSpew_PCProf)) {
+            RegisterID r1 = frame.allocReg();
+            RegisterID r2 = frame.allocReg();
+
+            if (IsJaegerSpewChannelActive(JSpew_PCProf)) {
+                masm.move(ImmPtr(pcProfile), r1);
+                Address pcCounter(r1, sizeof(int) * (PC - script->code));
+                masm.load32(pcCounter, r2);
+                masm.add32(Imm32(1), r2);
+                masm.store32(r2, pcCounter);
+            }
+
+            frame.freeReg(r1);
+            frame.freeReg(r2);
+        }
+#endif
 
         SPEW_OPCODE();
         JS_ASSERT(frame.stackDepth() == opinfo->stackDepth);

@@ -15,8 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369814
 
 <p>
 
-<iframe id="testFrame"></iframe>
-
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
@@ -25,9 +23,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=369814
 SimpleTest.waitForExplicitFinish();
 
 // Because child scripts won't be able to run to tell us they're done,
-// we need to just wait for them.  Wait this amount of time before checking
-// the results.
-const gLoadTimeout = 3000;
+// we need to just wait for them.  Wait this many event loop spins before
+// checking the results.
+const gLoadEventLoopCount = 100;
 
 var Ci = Components.interfaces;
 
@@ -36,7 +34,7 @@ var gTargetWindow;
 var gNumPokes;
 var gPrefValue;
 
-var gTestFrame = document.getElementById('testFrame');
+var gTestFrame;
 
 /**
  * Called by documents loaded from jar files to indicate that they can access
@@ -70,10 +68,20 @@ function closeTestTarget()
 
 function loadErrorTest(test)
 {
-  gTestFrame.src = test['url'];
-
-  // Give the frame a chance to fail at loading
-  setTimeout(function() {
+  // Give the frame a chance to fail at loading.
+  // How do detect failure to load?  Error pages don't fire load
+  // events.  But we can load another page before the error page and
+  // then use its unload handler to know when the error page is just
+  // about loaded; at that point a single trip through the event loop
+  // should do the trick.
+  loadEvent(gTestFrame, function() {
+      gTestFrame.src = test['url'];
+    });
+  gTestFrame.unloading = function() {
+    gTestFrame.unloading = null;
+    // Go out to the event loop once so that unload processing finishes and
+    // the new document is set up.
+    setTimeout(function() {
       // XXX: There doesn't seem to be a reliable check for "got an error,"
       // but reaching in to an error document will throw an exception
       var errorPage;
@@ -86,7 +94,10 @@ function loadErrorTest(test)
       ok(errorPage, gCurrentTest["name"] + ": should block a suspicious JAR load.");
 
       finishTest();
-    }, gLoadTimeout);
+    }, 0);
+  }
+  var unloadDetector = "data:text/html,<script>window.onunload = function() { frameElement.unloading(); }</" + "script>";
+  gTestFrame.src = unloadDetector;
 }
 
 function iframeTest(test) {
@@ -96,15 +107,24 @@ function iframeTest(test) {
     });
 }
 
+
+function hitEventLoop(func, times) {
+  if (times > 0) {
+    SimpleTest.executeSoon(function() { hitEventLoop(func, times-1); });
+  } else {
+    SimpleTest.executeSoon(func);
+  }
+}
+
 function refreshTest(test) {
   gTestFrame.src = test['url'];
   loadEvent(gTestFrame, function() {
       // Wait for the frame to try and refresh
       // XXX: a "blocked redirect" signal would be needed to get rid of
       // this timeout.
-      setTimeout(function() {
+      hitEventLoop(function() {
           finishTest();
-        }, gLoadTimeout);
+        }, gLoadEventLoopCount);
     });
 }
 
@@ -116,10 +136,10 @@ function anchorTest(test) {
         sendMouseEvent({type:'click'}, 'notarget', gTestFrame.contentWindow);
 
         // Give the clicks a chance to load
-        setTimeout(function() {
+        hitEventLoop(function() {
             closeTestTarget();
             finishTest();
-          }, gLoadTimeout);
+          }, gLoadEventLoopCount);
         });
     });
 }
@@ -176,6 +196,14 @@ function runNextTest()
     gNumPokes = 0;
 
     prefs.setBoolPref("network.jar.open-unsafe-types", gCurrentTest['pref']);
+
+    // Create a new frame each time, so our restictions on loads in a
+    // jar:-loaded iframe don't interfere with the test.
+    if (gTestFrame) {
+      document.body.removeChild(gTestFrame);
+    }
+    gTestFrame = document.createElement("iframe");
+    document.body.insertBefore(gTestFrame, $("test"));
 
     gCurrentTest['func'](gCurrentTest);
   } else {

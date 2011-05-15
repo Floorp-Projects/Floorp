@@ -80,10 +80,6 @@
  * the mouse. Then do all the queued requests in on shot.
  */
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
 // the longest amount of time that can go by before the use
 // notices it as a delay.
 #define USER_TIME_THRESHOLD 150000

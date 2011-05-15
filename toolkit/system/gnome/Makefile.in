@@ -65,6 +65,7 @@ endif
 ifdef MOZ_ENABLE_GIO
 CPPSRCS += \
 	nsGIOService.cpp \
+	nsGSettingsService.cpp \
 	$(NULL)
 endif
 

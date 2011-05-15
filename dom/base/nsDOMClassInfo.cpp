@@ -71,7 +71,7 @@
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
 #include "nsDOMEventTargetWrapperCache.h"
-#include "xpcpublic.h"
+#include "xpcprivate.h"
 
 // General helper includes
 #include "nsGlobalWindow.h"
@@ -511,6 +511,7 @@
 #include "nsIDOMMediaQueryList.h"
 
 #include "nsDOMTouchEvent.h"
+#include "nsIDOMCustomEvent.h"
 
 using namespace mozilla::dom;
 
@@ -1516,6 +1517,8 @@ static nsDOMClassInfoData sClassInfoData[] = {
 
   NS_DEFINE_CLASSINFO_DATA(MediaQueryList, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(CustomEvent, nsDOMGenericSH,
+                           DOM_DEFAULT_SCRIPTABLE_FLAGS)
 };
 
 // Objects that should be constructable through |new Name();|
@@ -1564,7 +1567,6 @@ PRBool nsDOMClassInfo::sDisableDocumentAllSupport = PR_FALSE;
 PRBool nsDOMClassInfo::sDisableGlobalScopePollutionSupport = PR_FALSE;
 
 
-jsid nsDOMClassInfo::sTop_id             = JSID_VOID;
 jsid nsDOMClassInfo::sParent_id          = JSID_VOID;
 jsid nsDOMClassInfo::sScrollbars_id      = JSID_VOID;
 jsid nsDOMClassInfo::sLocation_id        = JSID_VOID;
@@ -1899,7 +1901,6 @@ nsDOMClassInfo::DefineStaticJSVals(JSContext *cx)
 
   JSAutoRequest ar(cx);
 
-  SET_JSID_TO_STRING(sTop_id,             cx, "top");
   SET_JSID_TO_STRING(sParent_id,          cx, "parent");
   SET_JSID_TO_STRING(sScrollbars_id,      cx, "scrollbars");
   SET_JSID_TO_STRING(sLocation_id,        cx, "location");
@@ -4339,6 +4340,11 @@ nsDOMClassInfo::Init()
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMMediaQueryList)
   DOM_CLASSINFO_MAP_END
 
+  DOM_CLASSINFO_MAP_BEGIN(CustomEvent, nsIDOMCustomEvent)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMCustomEvent)
+    DOM_CLASSINFO_EVENT_MAP_ENTRIES
+  DOM_CLASSINFO_MAP_END
+
 #ifdef NS_DEBUG
   {
     PRUint32 i = NS_ARRAY_LENGTH(sClassInfoData);
@@ -5022,7 +5028,6 @@ nsDOMClassInfo::ShutDown()
     }
   }
 
-  sTop_id             = JSID_VOID;
   sParent_id          = JSID_VOID;
   sScrollbars_id      = JSID_VOID;
   sLocation_id        = JSID_VOID;
@@ -8014,7 +8019,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
     return NS_OK;
   }
 
-  nsCOMPtr<nsIURI> uri = bindingURL->mURI;
+  nsCOMPtr<nsIURI> uri = bindingURL->GetURI();
   nsCOMPtr<nsIPrincipal> principal = bindingURL->mOriginPrincipal;
 
   // We have a binding that must be installed.
@@ -10192,12 +10197,11 @@ nsStringArraySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   JSAutoRequest ar(cx);
 
-  JSString *str =
-    ::JS_NewUCStringCopyN(cx, reinterpret_cast<const jschar *>(val.get()),
-                          val.Length());
-  NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
-
-  *vp = STRING_TO_JSVAL(str);
+  nsStringBuffer* sharedBuffer = nsnull;
+  *vp = XPCStringConvert::ReadableToJSVal(cx, val, &sharedBuffer);
+  if (sharedBuffer) {
+    val.ForgetSharedBuffer();
+  }
 
   return NS_SUCCESS_I_DID_SOMETHING;
 }

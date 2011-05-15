@@ -2368,8 +2368,8 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
 
         /* Construct the new shape. */
         for (unsigned i = 0; i < obj->slotSpan(); i++) {
-            if (!js_DefineNativeProperty(cx, xobj, ids[i], UndefinedValue(), NULL, NULL,
-                                         JSPROP_ENUMERATE, 0, 0, NULL, 0)) {
+            if (!DefineNativeProperty(cx, xobj, ids[i], UndefinedValue(), NULL, NULL,
+                                      JSPROP_ENUMERATE, 0, 0, 0)) {
                 cx->compartment->types.setPendingNukeTypes(cx);
                 return;
             }
@@ -3946,8 +3946,8 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
                 return false;
 
             unsigned slotSpan = obj->slotSpan();
-            if (!js_DefineNativeProperty(cx, obj, id, UndefinedValue(), NULL, NULL,
-                                         JSPROP_ENUMERATE, 0, 0, NULL, 0)) {
+            if (!DefineNativeProperty(cx, obj, id, UndefinedValue(), NULL, NULL,
+                                      JSPROP_ENUMERATE, 0, 0, 0)) {
                 cx->compartment->types.setPendingNukeTypes(cx);
                 *pbaseobj = NULL;
                 return false;

@@ -52,6 +52,7 @@ _CHROME_TEST_FILES = \
 	test_bug549192.xul \
 	test_bug549491.xul \
 	test_editBookmarkOverlay_tags_liveUpdate.xul \
+	test_bug631374_tags_selector_scroll.xul \
 	$(NULL)
 
 libs:: $(_CHROME_TEST_FILES)

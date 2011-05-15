@@ -48,7 +48,7 @@ from runtests import Mochitest
 from runtests import MochitestOptions
 from runtests import MochitestServer
 
-import devicemanager
+import devicemanager, devicemanagerADB, devicemanagerSUT
 
 class RemoteOptions(MochitestOptions):
 
@@ -65,6 +65,11 @@ class RemoteOptions(MochitestOptions):
                     type = "string", dest = "deviceIP",
                     help = "ip address of remote device to test")
         defaults["deviceIP"] = None
+
+        self.add_option("--dm_trans", action="store",
+                    type = "string", dest = "dm_trans",
+                    help = "the transport to use to communicate with device: [adb|sut]; default=sut")
+        defaults["dm_trans"] = "sut"
 
         self.add_option("--devicePort", action="store",
                     type = "string", dest = "devicePort",
@@ -196,6 +201,7 @@ class MochiRemote(Mochitest):
         if (options.pidFile != ""):
             try:
                 os.remove(options.pidFile)
+                os.remove(options.pidFile + ".xpcshell.pid")
             except:
                 print "Warning: cleaning up pidfile '%s' was unsuccessful from the test harness" % options.pidFile
 
@@ -251,7 +257,12 @@ class MochiRemote(Mochitest):
         self.server = MochitestServer(localAutomation, options)
         self.server.start()
 
+        if (options.pidFile != ""):
+            f = open(options.pidFile + ".xpcshell.pid", 'w')
+            f.write("%s" % self.server._process.pid)
+            f.close()
         self.server.ensureReady(self.SERVER_STARTUP_TIMEOUT)
+
         options.xrePath = remoteXrePath
         options.utilityPath = remoteUtilityPath
         options.profilePath = remoteProfilePath
@@ -296,12 +307,17 @@ class MochiRemote(Mochitest):
 
 def main():
     scriptdir = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
-    dm_none = devicemanager.DeviceManager(None, None)
+    dm_none = devicemanagerADB.DeviceManagerADB()
     auto = RemoteAutomation(dm_none, "fennec")
     parser = RemoteOptions(auto, scriptdir)
     options, args = parser.parse_args()
-
-    dm = devicemanager.DeviceManager(options.deviceIP, options.devicePort)
+    if (options.dm_trans == "adb"):
+        if (options.deviceIP):
+            dm = devicemanagerADB.DeviceManagerADB(options.deviceIP, options.devicePort)
+        else:
+            dm = dm_auto
+    else:
+         dm = devicemanagerSUT.DeviceManagerSUT(options.deviceIP, options.devicePort)
     auto.setDeviceManager(dm)
     options = parser.verifyRemoteOptions(options, auto)
     if (options == None):

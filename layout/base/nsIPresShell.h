@@ -138,9 +138,9 @@ typedef struct CapturingContentInfo {
   nsIContent* mContent;
 } CapturingContentInfo;
 
-#define NS_IPRESSHELL_IID     \
- { 0x3a8030b5, 0x8d2c, 0x4cb3, \
-    { 0xb5, 0xae, 0xb2, 0x43, 0xa9, 0x28, 0x02, 0x82 } }
+#define NS_IPRESSHELL_IID    \
+{ 0x67eab923, 0x5c15, 0x4c13,\
+  { 0xb5, 0xcc, 0xb2, 0x75, 0xb3, 0x5a, 0xa5, 0x38 } }
 
 // Constants for ScrollContentIntoView() function
 #define NS_PRESSHELL_SCROLL_TOP      0
@@ -993,12 +993,10 @@ public:
    * aBounds. Checks first if this needs to be done by checking if aFrame is a
    * canvas frame (if the FORCE_DRAW flag is passed then this check is skipped).
    * aBackstopColor is composed behind the background color of the canvas, it is
-   * transparent by default. The ROOT_CONTENT_DOC_BG flag indicates that this is
-   * the background for the root content document.
+   * transparent by default.
    */
   enum {
-    FORCE_DRAW = 0x01,
-    ROOT_CONTENT_DOC_BG = 0x02
+    FORCE_DRAW = 0x01
   };
   virtual nsresult AddCanvasBackgroundColorItem(nsDisplayListBuilder& aBuilder,
                                                 nsDisplayList& aList,
