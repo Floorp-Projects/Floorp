@@ -109,7 +109,6 @@ nsIRangeUtils* nsHTMLEditor::sRangeHelper;
 
 // some prototypes for rules creation shortcuts
 nsresult NS_NewTextEditRules(nsIEditRules** aInstancePtrResult);
-nsresult NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult);
 
 #define IsLinkTag(s) (s.EqualsIgnoreCase(hrefText))
 #define IsNamedAnchorTag(s) (s.EqualsIgnoreCase(anchorTxt) || s.EqualsIgnoreCase(namedanchorText))
@@ -533,12 +532,8 @@ NS_IMETHODIMP
 nsHTMLEditor::InitRules()
 {
   // instantiate the rules for the html editor
-  nsresult res = NS_NewHTMLEditRules(getter_AddRefs(mRules));
-  NS_ENSURE_SUCCESS(res, res);
-  NS_ENSURE_TRUE(mRules, NS_ERROR_UNEXPECTED);
-  res = mRules->Init(static_cast<nsPlaintextEditor*>(this));
-  
-  return res;
+  mRules = new nsHTMLEditRules();
+  return mRules->Init(static_cast<nsPlaintextEditor*>(this));
 }
 
 NS_IMETHODIMP
