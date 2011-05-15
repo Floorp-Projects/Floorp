@@ -217,7 +217,6 @@ function getRange(aSourceNode, aFragment) {
 function getParsedDocument(aPath) {
   var doc = do_parse_document(aPath, "application/xml");
   do_check_true(doc.documentElement.localName != "parsererror");
-  do_check_true(doc instanceof C_i.nsIDOMDocumentTraversal);
   do_check_true(doc instanceof C_i.nsIDOMXPathEvaluator);
   do_check_true(doc instanceof C_i.nsIDOMDocument);
 

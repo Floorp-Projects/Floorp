@@ -22,6 +22,8 @@
  * Contributor(s):
  *   Vidur Apparao <vidur@netscape.com> (original author)
  *   Johnny Stenback <jst@netscape.com>
+ *   Jonas Sicking <sicking@bigfoot.com>
+ *   Ms2ger <ms2ger@gmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -39,6 +41,10 @@
 
 #include "nsIDOMNode.idl"
 
+interface nsIDOMNodeIterator;
+interface nsIDOMNodeFilter;
+interface nsIDOMTreeWalker;
+
 /**
  * The nsIDOMDocument interface represents the entire HTML or XML document.
  * Conceptually, it is the root of the document tree, and provides the 
@@ -52,7 +58,7 @@
  * http://dvcs.w3.org/hg/domcore/raw-file/tip/Overview.html
  */
 
-[scriptable, uuid(d93d3452-f937-42c2-89e1-4cc91cc778e5)]
+[scriptable, uuid(e286fcde-873d-4902-874b-49255737ee7d)]
 interface nsIDOMDocument : nsIDOMNode
 {
   readonly attribute nsIDOMDocumentType         doctype;
@@ -122,4 +128,15 @@ interface nsIDOMDocument : nsIDOMNode
    * @see http://html5.org/specs/dom-range.html#dom-document-createrange
    */
   nsIDOMRange              createRange();
+
+  nsIDOMNodeIterator createNodeIterator(in nsIDOMNode root,
+                                        in unsigned long whatToShow,
+                                        in nsIDOMNodeFilter filter,
+                                        in boolean entityReferenceExpansion)
+                                        raises(DOMException);
+  nsIDOMTreeWalker   createTreeWalker(in nsIDOMNode root,
+                                      in unsigned long whatToShow,
+                                      in nsIDOMNodeFilter filter,
+                                      in boolean entityReferenceExpansion)
+                                        raises(DOMException);
 };
