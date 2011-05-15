@@ -182,8 +182,10 @@ function onListClick(aEvent) {
 #endif
     if ((aEvent.button == 1 || aEvent.button == 0 && aEvent.detail == 2 || accelKey) &&
         col.value.id == "title" &&
-        !treeView.isContainer(row.value))
+        !treeView.isContainer(row.value)) {
       restoreSingleTab(row.value, aEvent.shiftKey);
+      aEvent.stopPropagation();
+    }
     else if (col.value.id == "restore")
       toggleRowChecked(row.value);
   }

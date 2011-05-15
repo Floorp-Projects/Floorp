@@ -202,8 +202,14 @@ struct VMFrame
     inline JSScript *script();
     inline jsbytecode *pc();
 
+#if defined(JS_CPU_SPARC)
+    static const size_t offsetOfFp = 30 * sizeof(void *) + FrameRegs::offsetOfFp;
+    static const size_t offsetOfInlined = 30 * sizeof(void *) + FrameRegs::offsetOfInlined;
+#else
     static const size_t offsetOfFp = 4 * sizeof(void *) + FrameRegs::offsetOfFp;
     static const size_t offsetOfInlined = 4 * sizeof(void *) + FrameRegs::offsetOfInlined;
+#endif
+
     static void staticAssert() {
         JS_STATIC_ASSERT(offsetOfFp == offsetof(VMFrame, regs) + FrameRegs::offsetOfFp);
         JS_STATIC_ASSERT(offsetOfInlined == offsetof(VMFrame, regs) + FrameRegs::offsetOfInlined);
@@ -577,6 +583,11 @@ struct JITScript {
 
     void trace(JSTracer *trc);
 
+#ifdef DEBUG
+    /* length script->length array of execution counters for every JSOp in the compiled script */
+    int             *pcProfile;
+#endif
+
   private:
     /* Helpers used to navigate the variable-length sections. */
     char *commonSectionLimit() const;
@@ -659,6 +670,9 @@ ResetTraceHint(JSScript *script, jsbytecode *pc, uint16_t index, bool full);
 
 uintN
 GetCallTargetCount(JSScript *script, jsbytecode *pc);
+
+void
+DumpAllProfiles(JSContext *cx);
 
 inline void * bsearch_nmap(NativeMapEntry *nmap, size_t nPairs, size_t bcOff)
 {

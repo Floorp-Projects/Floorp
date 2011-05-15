@@ -1955,7 +1955,9 @@ void nsHTMLMediaElement::MetadataLoaded(PRUint32 aChannels, PRUint32 aRate)
 
 void nsHTMLMediaElement::FirstFrameLoaded(PRBool aResourceFullyLoaded)
 {
-  ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
+  ChangeReadyState(aResourceFullyLoaded ?
+    nsIDOMHTMLMediaElement::HAVE_ENOUGH_DATA :
+    nsIDOMHTMLMediaElement::HAVE_CURRENT_DATA);
   ChangeDelayLoadStatus(PR_FALSE);
 
   NS_ASSERTION(!mSuspendedAfterFirstFrame, "Should not have already suspended");
@@ -2232,6 +2234,9 @@ ImageContainer* nsHTMLMediaElement::GetImageContainer()
     return nsnull;
 
   mImageContainer = manager->CreateImageContainer();
+  if (manager->IsCompositingCheap()) {
+    mImageContainer->SetDelayedConversion(PR_TRUE);
+  }
   return mImageContainer;
 }
 

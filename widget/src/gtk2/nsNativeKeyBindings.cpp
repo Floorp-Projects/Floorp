@@ -234,7 +234,7 @@ nsNativeKeyBindings::Init(NativeKeyBindingsType  aType)
                                      gtk_micro_version >= 2)))) {
       // select_all only exists in gtk >= 2.2.2.  Prior to that,
       // ctrl+a is bound to (move to beginning, select to end).
-      g_signal_connect(G_OBJECT(mNativeTarget), "select_all",
+      g_signal_connect(mNativeTarget, "select_all",
                        G_CALLBACK(select_all_cb), this);
     }
     break;
@@ -242,15 +242,15 @@ nsNativeKeyBindings::Init(NativeKeyBindingsType  aType)
 
   g_object_ref_sink(mNativeTarget);
 
-  g_signal_connect(G_OBJECT(mNativeTarget), "copy_clipboard",
+  g_signal_connect(mNativeTarget, "copy_clipboard",
                    G_CALLBACK(copy_clipboard_cb), this);
-  g_signal_connect(G_OBJECT(mNativeTarget), "cut_clipboard",
+  g_signal_connect(mNativeTarget, "cut_clipboard",
                    G_CALLBACK(cut_clipboard_cb), this);
-  g_signal_connect(G_OBJECT(mNativeTarget), "delete_from_cursor",
+  g_signal_connect(mNativeTarget, "delete_from_cursor",
                    G_CALLBACK(delete_from_cursor_cb), this);
-  g_signal_connect(G_OBJECT(mNativeTarget), "move_cursor",
+  g_signal_connect(mNativeTarget, "move_cursor",
                    G_CALLBACK(move_cursor_cb), this);
-  g_signal_connect(G_OBJECT(mNativeTarget), "paste_clipboard",
+  g_signal_connect(mNativeTarget, "paste_clipboard",
                    G_CALLBACK(paste_clipboard_cb), this);
 }
 

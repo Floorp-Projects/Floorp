@@ -138,8 +138,6 @@ function nextTest(testframe) {
       testframe.src = dataURL;
     }
   } catch (err if err instanceof StopIteration) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    prefService.setBoolPref("html5.parser.enable", origPref);
     SimpleTest.finish();
   }
 }
@@ -163,11 +161,5 @@ function loadNextTestFile() {
   }
 }
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                  .getService(Components.interfaces.nsIPrefBranch)
-                  .QueryInterface(Components.interfaces.nsIPrefService);
-var origPref = prefService.getBoolPref("html5.parser.enable");
-prefService.setBoolPref("html5.parser.enable", true);
 addLoadEvent(loadNextTestFile);
 SimpleTest.waitForExplicitFinish();

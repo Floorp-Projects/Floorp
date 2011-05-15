@@ -49,8 +49,8 @@ class nsDeviceContext;
 class nsIViewObserver;
 
 #define NS_IVIEWMANAGER_IID \
-{ 0xa47cdaf9, 0x50fd, 0x40d8, \
-  { 0x92, 0xe5, 0x93, 0x4f, 0xfb, 0x01, 0xdd, 0x98 } }
+{ 0x144ef328, 0xbece, 0x43d6, \
+  { 0xac, 0xac, 0x1a, 0x90, 0x4b, 0x5c, 0xc1, 0x11 } }
 
 class nsIViewManager : public nsISupports
 {
@@ -260,16 +260,13 @@ public:
   /**
    * Set the view observer associated with this manager
    * @param aObserver - new observer
-   * @result error status
    */
-  NS_IMETHOD SetViewObserver(nsIViewObserver *aObserver) = 0;
+  virtual void SetViewObserver(nsIViewObserver *aObserver) = 0;
 
   /**
    * Get the view observer associated with this manager
-   * @param aObserver - out parameter for observer
-   * @result error status
    */
-  NS_IMETHOD GetViewObserver(nsIViewObserver *&aObserver) = 0;
+  virtual nsIViewObserver* GetViewObserver() = 0;
 
   /**
    * Get the device context associated with this manager
@@ -381,13 +378,6 @@ public:
    * @param aTime Last user event time in microseconds
    */
   NS_IMETHOD GetLastUserEventTime(PRUint32& aTime)=0;
-
-  /**
-   * Dispatch a mouse move event based on the most recent mouse
-   * position.  This is used when the contents of the page moved
-   * (aFromScroll is false) or scrolled (aFromScroll is true).
-   */
-  NS_IMETHOD SynthesizeMouseMove(PRBool aFromScroll)=0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIViewManager, NS_IVIEWMANAGER_IID)
