@@ -6100,8 +6100,13 @@ mjit::Compiler::jsop_newinit()
         count = GET_UINT24(PC);
         break;
       case JSOP_NEWOBJECT:
+        /*
+         * Scripts with NEWOBJECT must be compileAndGo, but treat these like
+         * NEWINIT if the script's associated global is not known (or is not
+         * actually a global object). This should only happen in chrome code.
+         */
         isArray = false;
-        baseobj = script->getObject(fullAtomIndex(PC));
+        baseobj = globalObj ? script->getObject(fullAtomIndex(PC)) : NULL;
         break;
       default:
         JS_NOT_REACHED("Bad op");
