@@ -1318,7 +1318,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
                script->filename, script->lineno, OpcodeNames[op]);
 #endif
 
-    InterpMode interpMode = JSINTERP_SAFEPOINT;
+    InterpMode interpMode = JSINTERP_REJOIN;
 
     if ((cs->format & (JOF_INC | JOF_DEC)) && rejoin != REJOIN_FALLTHROUGH && rejoin != REJOIN_RESUME) {
         switch (op) {
@@ -1391,7 +1391,7 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
       case REJOIN_TRAP:
         /* Watch out for the case where the TRAP removed itself. */
-        interpMode = untrap.trap ? JSINTERP_SKIP_TRAP : JSINTERP_SAFEPOINT;
+        interpMode = untrap.trap ? JSINTERP_SKIP_TRAP : JSINTERP_REJOIN;
         break;
 
       case REJOIN_FALLTHROUGH:
@@ -1626,6 +1626,9 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
 
     if (!Interpret(cx, NULL, 0, interpMode))
         return js_InternalThrow(f);
+
+    /* The interpreter should have finished its entry frame. */
+    JS_ASSERT(f.regs.fp() == fp);
 
     /* Force construction of the frame's return value, if it was not set. */
     fp->returnValue();
