@@ -535,9 +535,10 @@ class Compiler : public BaseCompiler
     CompileStatus prepareInferenceTypes(JSScript *script, ActiveFrame *a);
     void ensureDoubleArguments();
     void fixDoubleTypes(jsbytecode *target);
-    void restoreAnalysisTypes();
     void watchGlobalReallocation();
     void updateVarType();
+    void updateJoinVarTypes();
+    void restoreVarType();
     JSValueType knownPushedType(uint32 pushed);
     bool mayPushUndefined(uint32 pushed);
     types::TypeSet *pushedTypeSet(uint32 which);
