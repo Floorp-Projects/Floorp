@@ -2347,7 +2347,7 @@ var XPInstallObserver = {
         }
         else {
           notificationName = "xpinstall";
-          messageString = strings.formatStringFromName("xpinstallPromptWarning", [brandShortName, host], 2);
+          messageString = strings.formatStringFromName("xpinstallPromptWarning2", [brandShortName, host], 2);
 
           buttons = [{
             label: strings.GetStringFromName("xpinstallPromptAllowButton"),
