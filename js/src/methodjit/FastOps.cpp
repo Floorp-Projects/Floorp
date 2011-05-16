@@ -912,6 +912,8 @@ mjit::Compiler::jsop_andor(JSOp op, jsbytecode *target)
 bool
 mjit::Compiler::jsop_localinc(JSOp op, uint32 slot)
 {
+    restoreVarType();
+
     types::TypeSet *types = pushedTypeSet(0);
     JSValueType type = types ? types->getKnownTypeTag(cx) : JSVAL_TYPE_UNKNOWN;
 
@@ -973,6 +975,8 @@ mjit::Compiler::jsop_localinc(JSOp op, uint32 slot)
 bool
 mjit::Compiler::jsop_arginc(JSOp op, uint32 slot)
 {
+    restoreVarType();
+
     types::TypeSet *types = pushedTypeSet(0);
     JSValueType type = types ? types->getKnownTypeTag(cx) : JSVAL_TYPE_UNKNOWN;
 

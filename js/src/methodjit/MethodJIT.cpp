@@ -873,6 +873,8 @@ mjit::EnterMethodJIT(JSContext *cx, StackFrame *fp, void *code, Value *stackLimi
     JS_ASSERT(cx->fp() == fp);
     FrameRegs &oldRegs = cx->regs();
 
+    fp->scopeChain();
+
     JSBool ok;
     {
         AssertCompartmentUnchanged pcc(cx);
