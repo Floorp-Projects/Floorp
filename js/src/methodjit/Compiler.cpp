@@ -455,8 +455,6 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
         CompileStatus status = prepareInferenceTypes(script, newa);
         if (status != Compile_Okay)
             return status;
-    } else {
-        newa->varTypes = NULL;
     }
 
     this->script = script;
@@ -559,9 +557,9 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
 mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
     : parent(NULL), parentPC(NULL), script(NULL), jumpMap(NULL),
-      inlineIndex(uint32(-1)), needReturnValue(false), syncReturnValue(false),
-      returnValueDouble(false), returnSet(false), returnEntry(NULL),
-      returnJumps(NULL), exitState(NULL)
+      inlineIndex(uint32(-1)), varTypes(NULL), needReturnValue(false),
+      syncReturnValue(false), returnValueDouble(false), returnSet(false),
+      returnEntry(NULL), returnJumps(NULL), exitState(NULL)
 {}
 
 mjit::Compiler::ActiveFrame::~ActiveFrame()
