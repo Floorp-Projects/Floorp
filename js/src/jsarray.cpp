@@ -2373,7 +2373,7 @@ array_pop_dense(JSContext *cx, JSObject* obj, Value *vp)
 
     if (cx->typeInferenceEnabled() && obj->getDenseArrayInitializedLength() > index)
         obj->setDenseArrayInitializedLength(index);
-    obj->setDenseArrayLength(index);
+    obj->setArrayLength(cx, index);
     return JS_TRUE;
 }
 
