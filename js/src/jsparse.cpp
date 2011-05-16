@@ -1186,9 +1186,16 @@ Compiler::defineGlobals(JSContext *cx, GlobalScope &globalScope, JSScript *scrip
             rval.setUndefined();
         }
 
+        /*
+         * Don't update the type information when defining the property for the
+         * global object, per the consistency rules for type properties. If the
+         * property is only undefined before it is ever written, we can check
+         * the global directly during compilation and avoid having to emit type
+         * checks every time it is accessed in the script.
+         */
         const Shape *shape =
             DefineNativeProperty(cx, globalObj, id, rval, PropertyStub, StrictPropertyStub,
-                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0);
+                                 JSPROP_ENUMERATE | JSPROP_PERMANENT, 0, 0, DNP_SKIP_TYPE);
         if (!shape)
             return false;
         def.knownSlot = shape->slot;

@@ -132,7 +132,6 @@ GlobalObject::create(JSContext *cx, Class *clasp)
     globalObj->setSlot(REGEXP_STATICS, ObjectValue(*res));
     globalObj->setFlags(0);
 
-    cx->addTypeProperty(type, js_undefined_str, UndefinedValue());
     return globalObj;
 }
 

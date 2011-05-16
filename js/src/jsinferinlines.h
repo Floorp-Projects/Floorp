@@ -39,6 +39,7 @@
 
 /* Inline members for javascript type inference. */
 
+#include "jsarray.h"
 #include "jsanalyze.h"
 #include "jscompartment.h"
 #include "jsinfer.h"
@@ -447,13 +448,6 @@ JSContext::markTypeObjectUnknownProperties(js::types::TypeObject *obj)
 }
 
 inline void
-JSContext::typeMonitorAssign(JSObject *obj, jsid id, const js::Value &rval)
-{
-    if (typeInferenceEnabled())
-        compartment->types.dynamicAssign(this, obj, id, rval);
-}
-
-inline void
 JSContext::typeMonitorCall(const js::CallArgs &args, bool constructing)
 {
     if (!typeInferenceEnabled())
@@ -642,6 +636,24 @@ JSScript::typeMonitorUnknown(JSContext *cx, const jsbytecode *pc)
 {
     if (cx->typeInferenceEnabled())
         cx->compartment->types.dynamicPush(cx, this, pc - code, js::types::TYPE_UNKNOWN);
+}
+
+inline void
+JSScript::typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
+                            JSObject *obj, jsid id, const js::Value &rval)
+{
+    if (cx->typeInferenceEnabled()) {
+        /*
+         * Mark as unknown any object which has had dynamic assignments to
+         * non-integer properties at SETELEM opcodes. This avoids making large
+         * numbers of type properties for hashmap-style objects. :FIXME: this
+         * is too aggressive for things like prototype library initialization.
+         */
+        uint32 i;
+        if (js_IdIsIndex(id, &i))
+            return;
+        cx->markTypeObjectUnknownProperties(obj->getType());
+    }
 }
 
 inline void

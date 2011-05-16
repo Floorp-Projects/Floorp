@@ -1471,7 +1471,7 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
                            JS_PropertyStub, JS_StrictPropertyStub, 0)) {
         return NULL;
     }
-    if (!JS_DefineFunctionsWithPrefix(cx, module, static_methods, "Proxy"))
+    if (!JS_DefineFunctions(cx, module, static_methods))
         return NULL;
 
     MarkStandardClassInitializedNoProto(obj, &js_ProxyClass);

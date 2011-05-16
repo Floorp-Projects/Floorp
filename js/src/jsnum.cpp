@@ -1109,7 +1109,7 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
         return NULL;
     proto->setPrimitiveThis(Int32Value(0));
 
-    if (!JS_DefineFunctionsWithPrefix(cx, obj, number_functions, js_Number_str))
+    if (!JS_DefineFunctions(cx, obj, number_functions))
         return NULL;
 
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))

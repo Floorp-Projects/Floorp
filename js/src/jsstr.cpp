@@ -2806,7 +2806,7 @@ str_split(JSContext *cx, uintN argc, Value *vp)
     TypeObject *type = cx->getTypeCallerInitObject(true);
     if (!type)
         return false;
-    cx->addTypeProperty(type, NULL, types::TYPE_STRING);
+    cx->addTypePropertyId(type, JSID_VOID, types::TYPE_STRING);
 
     /* Step 5: Use the second argument as the split limit, if given. */
     uint32 limit;
@@ -3608,8 +3608,8 @@ js_InitStringClass(JSContext *cx, JSObject *global)
         return NULL;
 
     /* Add properties and methods to the prototype and the constructor. */
-    if (!JS_DefineFunctionsWithPrefix(cx, proto, string_methods, js_String_str) ||
-        !JS_DefineFunctionsWithPrefix(cx, ctor, string_static_methods, js_String_str))
+    if (!JS_DefineFunctions(cx, proto, string_methods) ||
+        !JS_DefineFunctions(cx, ctor, string_static_methods))
     {
         return NULL;
     }

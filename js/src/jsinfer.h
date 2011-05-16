@@ -599,9 +599,29 @@ struct TypeObject
     static const uint32 CONTRIBUTION_LIMIT = 20000;
 
     /*
-     * Properties of this object. This may contain JSID_VOID, representing the types
-     * of all integer indexes of the object, and/or JSID_EMPTY, representing the types
-     * of new objects that can be created with different instances of this type.
+     * Properties of this object. This may contain JSID_VOID, representing the
+     * types of all integer indexes of the object, or JSID_EMPTY, representing
+     * the types of new objects that can be created with different instances of
+     * this type. Correspondence between the properties of a TypeObject and the
+     * properties of script-visible JSObjects (not Call, Block, etc.) which
+     * have that type is as follows:
+     *
+     * - If the type has unknownProperties(), the possible properties and value
+     *   types for associated JSObjects are unknown.
+     *
+     * - Otherwise, for any JSObject obj with TypeObject type, and any jsid id,
+     *   after obj->getProperty(id) the property in type for id must reflect
+     *   the result of the getProperty. The result is additionally allowed to
+     *   be undefined for ids which are not in obj or its prototypes, and for
+     *   properties of global objects defined with 'var' but not yet written.
+     *
+     * - Additionally, if id is a normal owned native property within obj, then
+     *   after the setProperty or defineProperty which wrote its value, the
+     *   property in type for id must reflect that type.
+     *
+     * We establish these by using write barriers on calls to setProperty and
+     * defineProperty which are on native properties, and read barriers on
+     * getProperty that go through a class hook or special PropertyOp.
      */
     Property **propertySet;
     unsigned propertyCount;
@@ -850,7 +870,6 @@ struct TypeCompartment
      * stemming from the change and recompile any affected scripts.
      */
     void dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jstype type);
-    void dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval);
     void dynamicCall(JSContext *cx, JSObject *callee, const CallArgs &args, bool constructing);
 
     void nukeTypes(JSContext *cx);

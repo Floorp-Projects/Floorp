@@ -3157,7 +3157,6 @@ BEGIN_CASE(JSOP_FORGNAME)
         JS_ASSERT(regs.sp[-1].isObject());
         if (!IteratorNext(cx, &regs.sp[-1].toObject(), tvr.addr()))
             goto error;
-        cx->typeMonitorAssign(obj, id, tvr.value());
         if (!obj->setProperty(cx, id, tvr.addr(), script->strictModeCode))
             goto error;
     }
@@ -3177,7 +3176,6 @@ BEGIN_CASE(JSOP_FORPROP)
         JS_ASSERT(regs.sp[-2].isObject());
         if (!IteratorNext(cx, &regs.sp[-2].toObject(), tvr.addr()))
             goto error;
-        cx->typeMonitorAssign(obj, id, tvr.value());
         if (!obj->setProperty(cx, id, tvr.addr(), script->strictModeCode))
             goto error;
     }
@@ -3259,6 +3257,7 @@ END_CASE(JSOP_PICK)
             !(obj)->brandedOrHasMethodBarrier()) {                            \
             /* Fast path for, e.g., plain Object instance properties. */      \
             (obj)->nativeSetSlot((shape)->slot, *vp);                         \
+            cx->addTypePropertyId(obj->getType(), shape->propid, *vp);        \
         } else {                                                              \
             if (!js_NativeSet(cx, obj, shape, false, strict, vp))             \
                 goto error;                                                   \
@@ -3304,7 +3303,6 @@ BEGIN_CASE(JSOP_SETCONST)
     JSObject &obj = cx->stack.currentVarObj();
     const Value &ref = regs.sp[-1];
 
-    cx->typeMonitorAssign(&obj, ATOM_TO_JSID(atom), ref);
     if (!obj.defineProperty(cx, ATOM_TO_JSID(atom), ref,
                             PropertyStub, StrictPropertyStub,
                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
@@ -3321,7 +3319,6 @@ BEGIN_CASE(JSOP_ENUMCONSTELEM)
     FETCH_OBJECT(cx, -2, obj);
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
-    cx->typeMonitorAssign(obj, id, ref);
     if (!obj->defineProperty(cx, id, ref,
                              PropertyStub, StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {
@@ -3951,8 +3948,8 @@ do_incop:
 
     /*
      * Add undefined to the object itself when read out during an incop.
-     * typeMonitor does not capture the value being pushed here during compound
-     * operations in the method JIT.
+     * The getProperty can produce undefined without being accounted for by
+     * type information, and typeMonitor will not be update the object itself.
      */
     if (regs.sp[-1].isUndefined())
         cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNDEFINED);
@@ -3992,7 +3989,6 @@ do_incop:
         if (!js_DoIncDec(cx, cs, &regs.sp[-2], &regs.sp[-1]))
             goto error;
 
-        cx->typeMonitorAssign(obj, id, regs.sp[-1]);
         script->typeMonitorOverflow(cx, regs.pc);
 
         {
@@ -4290,7 +4286,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
     JS_ASSERT_IF(op == JSOP_SETGNAME, obj == regs.fp()->scopeChain().getGlobal());
 
     jsid id = ATOM_TO_JSID(atoms[GET_INDEX(regs.pc)]);
-    cx->typeMonitorAssign(obj, id, rval);
 
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
@@ -4554,7 +4549,7 @@ BEGIN_CASE(JSOP_SETHOLE)
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
     Value rval;
-    cx->typeMonitorAssign(obj, id, regs.sp[-1]);
+    script->typeMonitorAssign(cx, regs.pc, obj, id, regs.sp[-1]);
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
             jsuint length = obj->getDenseArrayInitializedLength();
@@ -4563,11 +4558,11 @@ BEGIN_CASE(JSOP_SETHOLE)
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
-                    if ((jsuint)i >= obj->getArrayLength() && !obj->setArrayLength(cx, i + 1))
-                        goto error;
+                    if ((jsuint)i >= obj->getArrayLength())
+                        obj->setArrayLength(cx, i + 1);
                     *regs.pc = JSOP_SETHOLE;
                 }
-                obj->setDenseArrayElement(i, regs.sp[-1]);
+                obj->setDenseArrayElementWithType(cx, i, regs.sp[-1]);
                 goto end_setelem;
             } else {
                 *regs.pc = JSOP_SETHOLE;
@@ -4589,7 +4584,6 @@ BEGIN_CASE(JSOP_ENUMELEM)
     jsid id;
     FETCH_ELEMENT_ID(obj, -1, id);
     Value rval = regs.sp[-3];
-    cx->typeMonitorAssign(obj, id, rval);
     if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
     regs.sp -= 3;
@@ -5417,7 +5411,6 @@ BEGIN_CASE(JSOP_DEFFUN)
         goto error;
 
     Value rval = ObjectValue(*obj);
-    cx->typeMonitorAssign(parent, id, rval);
 
     do {
         /* Steps 5d, 5f. */
@@ -5484,7 +5477,6 @@ BEGIN_CASE(JSOP_DEFFUN_DBGFC)
     jsid id = ATOM_TO_JSID(fun->atom);
     if (!CheckRedeclaration(cx, &parent, id, attrs))
         goto error;
-    cx->typeMonitorAssign(&parent, id, rval);
 
     if ((attrs == JSPROP_ENUMERATE)
         ? !parent.setProperty(cx, id, &rval, script->strictModeCode)
@@ -5821,7 +5813,6 @@ BEGIN_CASE(JSOP_SETTER)
     if (!CheckRedeclaration(cx, obj, id, attrs))
         goto error;
 
-    cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
     if (!obj->defineProperty(cx, id, UndefinedValue(), getter, setter, attrs))
         goto error;
 
@@ -5951,8 +5942,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
             JS_ASSERT(slot == shape->slot);
         }
 
-        cx->typeMonitorAssign(obj, shape->propid, rval);
-
         /* A new object, or one we just extended in a recent initprop op. */
         JS_ASSERT(!obj->lastProperty() ||
                   obj->shape() == obj->lastProperty()->shapeid);
@@ -5964,6 +5953,7 @@ BEGIN_CASE(JSOP_INITMETHOD)
          * contain a method of a branded shape.
          */
         TRACE_1(AddProperty, obj);
+        cx->addTypePropertyId(obj->getType(), shape->propid, rval);
         obj->nativeSetSlot(slot, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
@@ -5972,8 +5962,6 @@ BEGIN_CASE(JSOP_INITMETHOD)
         JSAtom *atom;
         LOAD_ATOM(0, atom);
         jsid id = ATOM_TO_JSID(atom);
-
-        cx->typeMonitorAssign(obj, id, rval);
 
         uintN defineHow = (op == JSOP_INITMETHOD)
                           ? DNP_CACHE_RESULT | DNP_SET_METHOD
@@ -6020,7 +6008,6 @@ BEGIN_CASE(JSOP_INITELEM)
             goto error;
         }
     } else {
-        cx->typeMonitorAssign(obj, id, rref);
         if (!obj->defineProperty(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             goto error;
     }
@@ -6380,7 +6367,6 @@ BEGIN_CASE(JSOP_SETXMLNAME)
     Value rval = regs.sp[-1];
     jsid id;
     FETCH_ELEMENT_ID(obj, -2, id);
-    cx->typeMonitorAssign(obj, id, rval);
     if (!obj->setProperty(cx, id, &rval, script->strictModeCode))
         goto error;
     rval = regs.sp[-1];
@@ -6669,7 +6655,6 @@ BEGIN_CASE(JSOP_ARRAYPUSH)
     JS_ASSERT(script->nfixed <= slot);
     JS_ASSERT(slot < script->nslots);
     JSObject *obj = &regs.fp()->slots()[slot].toObject();
-    cx->typeMonitorAssign(obj, JSID_VOID, regs.sp[-1]);
     if (!js_ArrayCompPush(cx, obj, regs.sp[-1]))
         goto error;
     regs.sp--;

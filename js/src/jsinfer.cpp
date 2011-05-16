@@ -1781,7 +1781,7 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
      * of the type of the thing being inc/dec'ed, nor will adding TYPE_DOUBLE to
      * the pushed value affect that type. We only handle inc/dec operations
      * that do not have an object lvalue; INCNAME/INCPROP/INCELEM and friends
-     * should call typeMonitorAssign to update the property type.
+     * should call addTypeProperty to reflect the property change.
      */
     jsbytecode *pc = script->code + offset;
     JSOp op = JSOp(*pc);
@@ -1974,43 +1974,6 @@ TypeCompartment::addPendingRecompile(JSContext *cx, JSScript *script)
         cx->compartment->types.setPendingNukeTypes(cx);
         return;
     }
-}
-
-void
-TypeCompartment::dynamicAssign(JSContext *cx, JSObject *obj, jsid id, const Value &rval)
-{
-    if (obj->isWith())
-        obj = js_UnwrapWithObject(cx, obj);
-
-    jstype rvtype = GetValueType(cx, rval);
-    TypeObject *object = obj->getType();
-
-    if (object->unknownProperties())
-        return;
-
-    id = MakeTypeId(cx, id);
-
-    /*
-     * Mark as unknown any object which has had dynamic assignments to __proto__,
-     * and any object which has had dynamic assignments to string properties through SETELEM.
-     * The latter avoids making large numbers of type properties for hashmap-style objects.
-     * :FIXME: this is too aggressive for things like prototype library initialization.
-     */
-    JSOp op = JSOp(*cx->regs().pc);
-    if (id == id___proto__(cx) || (op == JSOP_SETELEM && !JSID_IS_VOID(id))) {
-        cx->markTypeObjectUnknownProperties(object);
-        return;
-    }
-
-    AutoEnterTypeInference enter(cx);
-
-    TypeSet *assignTypes = object->getProperty(cx, id, true);
-    if (!assignTypes || assignTypes->hasType(rvtype))
-        return;
-
-    InferSpew(ISpewOps, "externalType: monitorAssign %s %s: %s",
-              object->name(), TypeIdString(id), TypeString(rvtype));
-    assignTypes->addType(cx, rvtype);
 }
 
 void

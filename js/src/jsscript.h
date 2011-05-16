@@ -597,6 +597,10 @@ struct JSScript {
     /* Monitor a JOF_TYPESET bytecode pushing any value into its pushed type set. */
     inline void typeMonitor(JSContext *cx, const jsbytecode *pc, const js::Value &val);
 
+    /* Monitor an assignment at a SETELEM on a non-integer identifier. */
+    inline void typeMonitorAssign(JSContext *cx, const jsbytecode *pc,
+                                  JSObject *obj, jsid id, const js::Value &val);
+
     /* Add a type for a variable in this script. */
     inline void typeSetThis(JSContext *cx, js::types::jstype type);
     inline void typeSetThis(JSContext *cx, const js::Value &value);

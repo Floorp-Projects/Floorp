@@ -1650,9 +1650,6 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
 
-    cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
-    cx->markTypePropertyConfigured(obj->getType(), id);
-
     call.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, StrictPropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
@@ -1687,9 +1684,6 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
-
-    cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
-    cx->markTypePropertyConfigured(obj->getType(), id);
 
     call.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
@@ -2464,8 +2458,7 @@ DefinePropertyOnArray(JSContext *cx, JSObject *obj, const jsid &id, const PropDe
 
         if (index >= oldLen) {
             JS_ASSERT(index != UINT32_MAX);
-            if (!obj->setArrayLength(cx, index + 1))
-                return JS_FALSE;
+            obj->setArrayLength(cx, index + 1);
         }
 
         *rval = true;
@@ -2479,14 +2472,6 @@ static JSBool
 DefineProperty(JSContext *cx, JSObject *obj, const jsid &id, const PropDesc &desc, bool throwError,
                bool *rval)
 {
-    cx->addTypePropertyId(obj->getType(), id, desc.value);
-    if (!desc.get.isUndefined() || !desc.set.isUndefined()) {
-        cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
-        cx->markTypePropertyConfigured(obj->getType(), id);
-    } else if (!desc.configurable() || !desc.enumerable() || !desc.writable()) {
-        cx->markTypePropertyConfigured(obj->getType(), id);
-    }
-
     if (obj->isArray())
         return DefinePropertyOnArray(cx, obj, id, desc, throwError, rval);
 
@@ -3961,8 +3946,6 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
 {
     jsid id = ATOM_TO_JSID(atom);
 
-    cx->addTypePropertyId(obj->getType(), id, v);
-
     if (key != JSProto_Null) {
         /*
          * Initializing an actual standard class on a global object. If the
@@ -3982,6 +3965,7 @@ DefineStandardSlot(JSContext *cx, JSObject *obj, JSProtoKey key, JSAtom *atom,
                 return false;
             if (!obj->addProperty(cx, id, PropertyStub, StrictPropertyStub, slot, attrs, 0, 0))
                 return false;
+            cx->addTypePropertyId(obj->getType(), id, v);
 
             named = true;
             return true;
@@ -4157,9 +4141,9 @@ DefineConstructorAndPrototype(JSContext *cx, JSObject *obj, JSProtoKey key, JSAt
 
     /* Add properties and methods to the prototype and the constructor. */
     if ((ps && !JS_DefineProperties(cx, proto, ps)) ||
-        (fs && !JS_DefineFunctionsWithPrefix(cx, proto, fs, clasp->name)) ||
+        (fs && !JS_DefineFunctions(cx, proto, fs)) ||
         (static_ps && !JS_DefineProperties(cx, ctor, static_ps)) ||
-        (static_fs && !JS_DefineFunctionsWithPrefix(cx, ctor, static_fs, clasp->name))) {
+        (static_fs && !JS_DefineFunctions(cx, ctor, static_fs))) {
         goto bad;
     }
 
@@ -5015,10 +4999,9 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
                      PropertyOp getter, StrictPropertyOp setter, uintN attrs,
                      uintN flags, intN shortid, uintN defineHow /* = 0 */)
 {
-    JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_DONT_PURGE | DNP_SET_METHOD)) == 0);
+    JS_ASSERT((defineHow & ~(DNP_CACHE_RESULT | DNP_DONT_PURGE |
+                             DNP_SET_METHOD | DNP_SKIP_TYPE)) == 0);
     LeaveTraceIfGlobalObject(cx, obj);
-
-    JS_ASSERT(TypeHasProperty(cx, obj->getType(), id, value));
 
     /* Convert string indices to integers if appropriate. */
     id = js_CheckForStringIndex(id);
@@ -5032,6 +5015,10 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
     if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
         JSObject *pobj;
         JSProperty *prop;
+
+        /* Type information for getter/setter properties is unknown. */
+        cx->addTypePropertyId(obj->getType(), id, TYPE_UNKNOWN);
+        cx->markTypePropertyConfigured(obj->getType(), id);
 
         /*
          * If we are defining a getter whose setter was already defined, or
@@ -5082,6 +5069,16 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
             getter = clasp->getProperty;
         if (!setter && !(attrs & JSPROP_SETTER))
             setter = clasp->setProperty;
+    }
+
+    if (getter == PropertyStub && !(defineHow & DNP_SKIP_TYPE)) {
+        /*
+         * Type information for normal native properties should reflect the
+         * initial value of the property.
+         */
+        cx->addTypePropertyId(obj->getType(), id, value);
+        if (attrs & JSPROP_READONLY)
+            cx->markTypePropertyConfigured(obj->getType(), id);
     }
 
     /* Get obj's own scope if it has one, or create a new one for obj. */
@@ -5582,6 +5579,7 @@ js_NativeGetInline(JSContext *cx, JSObject *receiver, JSObject *obj, JSObject *p
         pobj->nativeSetSlot(slot, *vp);
     }
 
+    /* Record values produced by shapes without a default getter. */
     cx->addTypePropertyId(obj->getType(), shape->propid, *vp);
 
     return true;
@@ -5599,7 +5597,7 @@ js_NativeSet(JSContext *cx, JSObject *obj, const Shape *shape, bool added, bool 
 {
     LeaveTraceIfGlobalObject(cx, obj);
 
-    JS_ASSERT(TypeHasProperty(cx, obj->getType(), shape->propid, *vp));
+    cx->addTypePropertyId(obj->getType(), shape->propid, *vp);
 
     uint32 slot;
     int32 sample;
@@ -6556,9 +6554,6 @@ js_GetClassPrototype(JSContext *cx, JSObject *scopeobj, JSProtoKey protoKey,
 JSBool
 js_SetClassPrototype(JSContext *cx, JSObject *ctor, JSObject *proto, uintN attrs)
 {
-    cx->addTypePropertyId(ctor->getType(), ATOM_TO_JSID(cx->runtime->atomState.classPrototypeAtom),
-                          ObjectOrNullValue(proto));
-
     /*
      * Use the given attributes for the prototype property of the constructor,
      * as user-defined constructors have a DontDelete prototype (which may be

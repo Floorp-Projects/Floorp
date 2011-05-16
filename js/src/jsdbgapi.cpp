@@ -769,6 +769,9 @@ FindWatchPoint(JSRuntime *rt, JSObject *obj, jsid id)
 JSBool
 js_watch_set(JSContext *cx, JSObject *obj, jsid id, JSBool strict, Value *vp)
 {
+    /* Capture possible effects of the calls to nativeSetSlot below. */
+    cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNKNOWN);
+
     assertSameCompartment(cx, obj);
     JSRuntime *rt = cx->runtime;
     DBG_LOCK(rt);
@@ -986,8 +989,6 @@ UpdateWatchpointShape(JSContext *cx, JSWatchPoint *wp, const Shape *newShape)
      * return a new shape, or mutate this one.
      */
     StrictPropertyOp originalSetter = newShape->setter();
-
-    cx->addTypePropertyId(wp->object->getType(), newShape->propid, types::TYPE_UNKNOWN);
 
     /*
      * Drop the watching setter into the object, in place of newShape. Note that a single

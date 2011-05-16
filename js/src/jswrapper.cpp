@@ -142,11 +142,6 @@ bool
 JSWrapper::defineProperty(JSContext *cx, JSObject *wrapper, jsid id,
                           PropertyDescriptor *desc)
 {
-    if (desc->attrs & (JSPROP_GETTER | JSPROP_SETTER))
-        cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, types::TYPE_UNKNOWN);
-    else
-        cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, desc->value);
-
     SET(JS_DefinePropertyById(cx, wrappedObject(wrapper), id, Jsvalify(desc->value),
                               Jsvalify(desc->getter), Jsvalify(desc->setter), desc->attrs));
 }
@@ -227,8 +222,6 @@ bool
 JSWrapper::set(JSContext *cx, JSObject *wrapper, JSObject *receiver, jsid id, bool strict,
                Value *vp)
 {
-    cx->addTypePropertyId(wrappedObject(wrapper)->getType(), id, *vp);
-
     // FIXME (bug 596351): Need deal with strict mode.
     SET(wrappedObject(wrapper)->setProperty(cx, id, vp, false));
 }
