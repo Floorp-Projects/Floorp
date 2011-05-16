@@ -869,9 +869,10 @@ static JSBool
 DebugFrame_getOlder(JSContext *cx, uintN argc, Value *vp)
 {
     THIS_FRAME(cx, vp, "get this", thisobj, thisfp);
+    Debug *dbg = Debug::fromChildJSObject(thisobj);
     for (StackFrame *fp = thisfp->prev(); fp; fp = fp->prev()) {
-        if (!fp->isDummyFrame())
-            return Debug::fromChildJSObject(thisobj)->getScriptFrame(cx, fp, vp);
+        if (!fp->isDummyFrame() && dbg->observesFrame(fp))
+            return dbg->getScriptFrame(cx, fp, vp);
     }
     vp->setNull();
     return true;
