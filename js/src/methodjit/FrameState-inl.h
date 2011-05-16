@@ -918,6 +918,9 @@ FrameState::learnType(FrameEntry *fe, JSValueType type, bool unsync)
     JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
     JS_ASSERT(type != JSVAL_TYPE_UNKNOWN);
 
+    if (fe->isCopy())
+        fe = fe->copyOf();
+
     if (type == JSVAL_TYPE_DOUBLE)
         JS_ASSERT(!fe->data.inRegister());
     else

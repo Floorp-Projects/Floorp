@@ -797,9 +797,6 @@ mjit::Compiler::generatePrologue()
 
     recompileCheckHelper();
 
-    /* Update the initial types of arguments and locals with a use-before-def. */
-    restoreAnalysisTypes();
-
     return Compile_Okay;
 }
 
@@ -1489,7 +1486,7 @@ mjit::Compiler::generateMethod()
 
             if (!frame.discardForJoin(analysis->getAllocation(PC), opinfo->stackDepth))
                 return Compile_Error;
-            restoreAnalysisTypes();
+            updateJoinVarTypes();
             fallthrough = true;
 
             if (!cx->typeInferenceEnabled()) {
@@ -2217,6 +2214,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_GETARG)
           {
+            restoreVarType();
             uint32 arg = GET_SLOTNO(PC);
             frame.pushArg(arg);
           }
@@ -2224,6 +2222,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_CALLARG)
           {
+            restoreVarType();
             uint32 arg = GET_SLOTNO(PC);
             if (JSObject *singleton = pushedSingleton(0))
                 frame.push(ObjectValue(*singleton));
@@ -2239,7 +2238,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETARG)
           {
-            jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
+            jsbytecode *next = &PC[JSOP_SETARG_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             frame.storeArg(GET_SLOTNO(PC), pop);
             updateVarType();
@@ -2254,6 +2253,13 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_GETLOCAL)
           {
+            /*
+             * Update the var type unless we are about to pop the variable.
+             * Sync is not guaranteed for types of dead locals, and GETLOCAL
+             * followed by POP is not regarded as a use of the variable.
+             */
+            if (PC[JSOP_GETLOCAL_LENGTH] != JSOP_POP)
+                restoreVarType();
             uint32 slot = GET_SLOTNO(PC);
             frame.pushLocal(slot);
           }
@@ -2360,7 +2366,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETPROP)
           {
-            jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
+            jsbytecode *next = &PC[JSOP_SETPROP_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true, pop))
                 return Compile_Error;
@@ -2370,7 +2376,7 @@ mjit::Compiler::generateMethod()
           BEGIN_CASE(JSOP_SETNAME)
           BEGIN_CASE(JSOP_SETMETHOD)
           {
-            jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
+            jsbytecode *next = &PC[JSOP_SETNAME_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             if (!jsop_setprop(script->getAtom(fullAtomIndex(PC)), true, pop))
                 return Compile_Error;
@@ -2613,7 +2619,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_SETGNAME)
           {
-            jsbytecode *next = &PC[JSOP_SETLOCAL_LENGTH];
+            jsbytecode *next = &PC[JSOP_SETGNAME_LENGTH];
             bool pop = JSOp(*next) == JSOP_POP && !analysis->jumpTarget(next);
             jsop_setgname(script->getAtom(fullAtomIndex(PC)), true, pop);
           }
@@ -2672,6 +2678,7 @@ mjit::Compiler::generateMethod()
 
           BEGIN_CASE(JSOP_CALLLOCAL)
           {
+            restoreVarType();
             uint32 slot = GET_SLOTNO(PC);
             if (JSObject *singleton = pushedSingleton(0))
                 frame.push(ObjectValue(*singleton));
@@ -6805,42 +6812,6 @@ mjit::Compiler::fixDoubleTypes(jsbytecode *target)
 }
 
 void
-mjit::Compiler::restoreAnalysisTypes()
-{
-    if (!cx->typeInferenceEnabled())
-        return;
-
-    /* Update variable types for all new values at this bytecode. */
-    const SlotValue *newv = analysis->newValues(PC);
-    if (newv) {
-        while (newv->slot) {
-            if (newv->slot < TotalSlots(script)) {
-                VarType &vt = a->varTypes[newv->slot];
-                vt.types = analysis->getValueTypes(newv->value);
-                vt.type = vt.types->getKnownTypeTag(cx);
-            }
-            newv++;
-        }
-    }
-
-    /*
-     * Restore known types of locals/args. Skip this for dead entries: the type
-     * may not be synced, and the slot will not be used anyways.
-     */
-    for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
-        JSValueType type = a->varTypes[slot].type;
-        if (type != JSVAL_TYPE_UNKNOWN &&
-            (type != JSVAL_TYPE_DOUBLE || analysis->trackSlot(slot)) &&
-            (!analysis->trackSlot(slot) || analysis->liveness(slot).live(PC - script->code))) {
-            FrameEntry *fe = frame.getSlotEntry(slot);
-            JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(type));
-            if (!fe->isTypeKnown())
-                frame.learnType(fe, type, false);
-        }
-    }
-}
-
-void
 mjit::Compiler::watchGlobalReallocation()
 {
     JS_ASSERT(cx->typeInferenceEnabled());
@@ -6902,6 +6873,49 @@ mjit::Compiler::updateVarType()
          */
         if (vt.type == JSVAL_TYPE_DOUBLE)
             frame.ensureDouble(frame.getSlotEntry(slot));
+    }
+}
+
+void
+mjit::Compiler::updateJoinVarTypes()
+{
+    if (!cx->typeInferenceEnabled())
+        return;
+
+    /* Update variable types for all new values at this bytecode. */
+    const SlotValue *newv = analysis->newValues(PC);
+    if (newv) {
+        while (newv->slot) {
+            if (newv->slot < TotalSlots(script)) {
+                VarType &vt = a->varTypes[newv->slot];
+                vt.types = analysis->getValueTypes(newv->value);
+                vt.type = vt.types->getKnownTypeTag(cx);
+            }
+            newv++;
+        }
+    }
+}
+
+void
+mjit::Compiler::restoreVarType()
+{
+    uint32 slot = GetBytecodeSlot(script, PC);
+
+    if (slot >= analyze::TotalSlots(script))
+        return;
+
+    /*
+     * Restore the known type of a live local or argument. We ensure that types
+     * of tracked variables match their inferred type (as tracked in varTypes),
+     * but may have forgotten it due to a branch or syncAndForgetEverything.
+     */
+    JSValueType type = a->varTypes[slot].type;
+    if (type != JSVAL_TYPE_UNKNOWN &&
+        (type != JSVAL_TYPE_DOUBLE || analysis->trackSlot(slot))) {
+        FrameEntry *fe = frame.getSlotEntry(slot);
+        JS_ASSERT_IF(fe->isTypeKnown(), fe->isType(type));
+        if (!fe->isTypeKnown())
+            frame.learnType(fe, type, false);
     }
 }
 
