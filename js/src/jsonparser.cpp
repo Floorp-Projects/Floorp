@@ -382,7 +382,7 @@ JSONParser::advanceAfterObjectOpen()
 }
 
 static inline void
-AssertPastValue(const jschar *current)
+AssertPastValue(const RangeCheckedPointer<const jschar> current)
 {
     /*
      * We're past an arbitrary JSON value, so the previous character is
