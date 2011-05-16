@@ -4066,8 +4066,7 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
         }
     }
 
-    /* Should have hit a STOP or similar. */
-    JS_NOT_REACHED("bad");
+    /* Will have hit a STOP or similar, unless the script always throws. */
     return true;
 }
 
