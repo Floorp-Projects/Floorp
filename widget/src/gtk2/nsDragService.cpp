@@ -135,9 +135,9 @@ nsDragService::nsDragService()
     gtk_widget_realize(mHiddenWidget);
     // hook up our internal signals so that we can get some feedback
     // from our drag source
-    g_signal_connect(GTK_OBJECT(mHiddenWidget), "drag_data_get",
+    g_signal_connect(mHiddenWidget, "drag_data_get",
                      G_CALLBACK(invisibleSourceDragDataGet), this);
-    g_signal_connect(GTK_OBJECT(mHiddenWidget), "drag_end",
+    g_signal_connect(mHiddenWidget, "drag_end",
                      G_CALLBACK(invisibleSourceDragEnd), this);
     // drag-failed is available from GTK+ version 2.12
     guint dragFailedID = g_signal_lookup("drag-failed",
