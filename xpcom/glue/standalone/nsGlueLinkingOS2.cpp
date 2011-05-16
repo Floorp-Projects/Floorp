@@ -68,7 +68,7 @@ AppendDependentLib(HMODULE libHandle)
 }
 
 static void
-ReadDependentCB(const char *aDependentLib)
+ReadDependentCB(const char *aDependentLib, PRBool do_preload)
 {
     CHAR pszError[_MAX_PATH];
     ULONG ulrc = NO_ERROR;
