@@ -146,6 +146,13 @@ public:
     static NS_METHOD ReadFromStream(nsIInputStream *, void *, const char *,
                                     PRUint32, PRUint32, PRUint32 *);
 
+    // When a persistent connection is in the connection manager idle 
+    // connection pool, the nsHttpConnection still reads errors and hangups
+    // on the socket so that it can be proactively released if the server
+    // initiates a termination. Only call on socket thread.
+    void BeginIdleMonitoring();
+    void EndIdleMonitoring();
+
 private:
     // called to cause the underlying socket to start speaking SSL
     nsresult ProxyStartSSL();
@@ -196,6 +203,7 @@ private:
     PRPackedBool                    mIsActivated;
     PRPackedBool                    mCompletedProxyConnect;
     PRPackedBool                    mLastTransactionExpectedNoContent;
+    PRPackedBool                    mIdleMonitoring;
 };
 
 #endif // nsHttpConnection_h__
