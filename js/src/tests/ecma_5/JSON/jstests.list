@@ -2,9 +2,11 @@ url-prefix ../../jsreftest.html?test=ecma_5/JSON/
 script cyclic-stringify.js
 script small-codepoints.js
 script parse.js
+script parse-arguments.js
 script parse-crockford-01.js
 script parse-primitives.js
 script parse-reviver.js
+script parse-reviver-array-delete.js
 script parse-syntax-errors-01.js
 script parse-syntax-errors-02.js
 script stringify.js
@@ -15,6 +17,7 @@ script stringify-dropping-elements.js
 script stringify-gap.js
 script stringify-ignore-noncallable-toJSON.js
 script stringify-missing-arguments.js
+script stringify-nonarray-noncallable-replacer.js
 script stringify-primitives.js
 script stringify-replacer.js
 script stringify-replacer-array-duplicated-element.js

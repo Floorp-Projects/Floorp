@@ -287,9 +287,10 @@ protected:
   // Waits on the decoder ReentrantMonitor for aUsecs microseconds. If the decoder
   // monitor is awoken by a Notify() call, we'll continue waiting, unless
   // we've moved into shutdown state. This enables us to ensure that we
-  // wait for a specified time, and that the myriad of Notify()s we do an
-  // the decoder monitor don't cause the audio thread to be starved. The
-  // decoder monitor must be locked.
+  // wait for a specified time, and that the myriad of Notify()s we do on
+  // the decoder monitor don't cause the audio thread to be starved. aUsecs
+  // values of less than 1 millisecond are rounded up to 1 millisecond
+  // (see bug 651023). The decoder monitor must be held.
   void Wait(PRInt64 aUsecs);
 
   // Dispatches an asynchronous event to update the media element's ready state.

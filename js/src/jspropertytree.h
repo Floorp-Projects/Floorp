@@ -118,8 +118,8 @@ class PropertyTree
     js::Shape *getChild(JSContext *cx, js::Shape *parent, const js::Shape &child);
 
     void dumpShapeStats();
-    static void dumpShapes(JSContext *cx);
 #ifdef DEBUG
+    static void dumpShapes(JSContext *cx);
     static void meter(JSBasicStats *bs, js::Shape *node);
 #endif
 };

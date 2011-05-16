@@ -329,6 +329,20 @@ function compareArrayToResult(aArray, aRoot) {
 
   // check expected number of results against actual
   var expectedResultCount = aArray.filter(function(aEl) { return aEl.isInQuery; }).length;
+  if (expectedResultCount != aRoot.childCount) {
+    // Debugging code for failures.
+    dump_table("moz_places");
+    dump_table("moz_historyvisits");
+    LOG("Found children:");
+    for (let i = 0; i < aRoot.childCount; i++) {
+      LOG(aRoot.getChild(i).uri);
+    }
+    LOG("Expected:");
+    for (let i = 0; i < aArray.length; i++) {
+      if (aArray[i].isInQuery)
+        LOG(aArray[i].uri);
+    }
+  }
   do_check_eq(expectedResultCount, aRoot.childCount);
 
   var inQueryIndex = 0;

@@ -52,7 +52,7 @@ FORCE_SHARED_LIB = 1
 VISIBILITY_FLAGS =
 LIB_IS_C_ONLY    = 1
 
-ifeq (,$(filter-out WINNT WINCE,$(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
 ifndef GNU_CC
 DEFFILE = $(CURDIR)/sqlite-processed.def
 RCFILE  = sqlite.rc
@@ -133,6 +133,11 @@ ifeq ($(OS_ARCH),OS2)
 ifdef MOZ_OS2_HIGH_MEMORY
 DEFINES += -DOS2_HIGH_MEMORY
 endif
+endif
+
+ifeq ($(OS_TARGET),Android)
+# default to user readable only to fit Android security model
+DEFINES += -DSQLITE_DEFAULT_FILE_PERMISSIONS=0600
 endif
 
 include $(topsrcdir)/config/rules.mk

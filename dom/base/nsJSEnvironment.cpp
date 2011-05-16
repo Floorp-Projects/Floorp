@@ -3647,14 +3647,6 @@ SetMemoryMaxPrefChangedCallback(const char* aPrefName, void* aClosure)
 }
 
 static int
-SetMemoryGCFrequencyPrefChangedCallback(const char* aPrefName, void* aClosure)
-{
-  PRInt32 triggerFactor = nsContentUtils::GetIntPref(aPrefName, 300);
-  JS_SetGCParameter(nsJSRuntime::sRuntime, JSGC_TRIGGER_FACTOR, triggerFactor);
-  return 0;
-}
-
-static int
 SetMemoryGCModePrefChangedCallback(const char* aPrefName, void* aClosure)
 {
   PRBool enableCompartmentGC = nsContentUtils::GetBoolPref(aPrefName);
@@ -3795,12 +3787,6 @@ nsJSRuntime::Init()
                                        nsnull);
   SetMemoryMaxPrefChangedCallback("javascript.options.mem.max",
                                   nsnull);
-
-  nsContentUtils::RegisterPrefCallback("javascript.options.mem.gc_frequency",
-                                       SetMemoryGCFrequencyPrefChangedCallback,
-                                       nsnull);
-  SetMemoryGCFrequencyPrefChangedCallback("javascript.options.mem.gc_frequency",
-                                          nsnull);
 
   nsContentUtils::RegisterPrefCallback("javascript.options.mem.gc_per_compartment",
                                        SetMemoryGCModePrefChangedCallback,

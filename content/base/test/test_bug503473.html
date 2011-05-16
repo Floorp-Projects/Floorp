@@ -17,21 +17,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=503473
 
 /** Test for Bug 503473 **/
 
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-          .getService(Components.interfaces.nsIPrefBranch);
-var gOriginalHtml5Pref = prefs.getBoolPref("html5.parser.enable");
-prefs.setBoolPref("html5.parser.enable", true);
-
 SimpleTest.waitForExplicitFinish();
 
 function done() {
   var iframe = document.getElementById("iframe");
   var divs = iframe.contentWindow.document.getElementsByTagName("div").length;
   is(divs, 0, "Div wasn't blown away.")
-
-  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-  prefs.setBoolPref("html5.parser.enable", gOriginalHtml5Pref);
 
   SimpleTest.finish();
 }

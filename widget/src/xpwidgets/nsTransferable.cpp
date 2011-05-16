@@ -246,11 +246,6 @@ DataStruct::ReadCache(nsISupports** aData, PRUint32* aDataLen)
 }
 
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
-
 //-------------------------------------------------------------------------
 //
 // Transferable constructor

@@ -3826,39 +3826,24 @@ XRE_InitCommandLine(int aArgc, char* aArgv[])
   delete[] canonArgs;
 #endif
 
-  const char *path = nsnull;
-  ArgResult ar = CheckArg("greomni", PR_FALSE, &path);
+#ifdef MOZ_OMNIJAR
+  const char *omnijarPath = nsnull;
+  ArgResult ar = CheckArg("omnijar", PR_FALSE, &omnijarPath);
   if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR, "Error: argument -greomni requires a path argument\n");
+    PR_fprintf(PR_STDERR, "Error: argument -omnijar requires an omnijar path\n");
     return NS_ERROR_FAILURE;
   }
 
-  if (!path)
+  if (!omnijarPath)
     return rv;
 
-  nsCOMPtr<nsILocalFile> greOmni;
-  rv = XRE_GetFileFromPath(path, getter_AddRefs(greOmni));
-  if (NS_FAILED(rv)) {
-    PR_fprintf(PR_STDERR, "Error: argument -greomni requires a valid path\n");
-    return rv;
-  }
+  nsCOMPtr<nsILocalFile> omnijar;
+  rv = NS_NewNativeLocalFile(nsDependentCString(omnijarPath), PR_TRUE,
+                             getter_AddRefs(omnijar));
+  if (NS_SUCCEEDED(rv))
+    mozilla::SetOmnijar(omnijar);
+#endif
 
-  ar = CheckArg("appomni", PR_FALSE, &path);
-  if (ar == ARG_BAD) {
-    PR_fprintf(PR_STDERR, "Error: argument -appomni requires a path argument\n");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsILocalFile> appOmni;
-  if (path) {
-      rv = XRE_GetFileFromPath(path, getter_AddRefs(appOmni));
-      if (NS_FAILED(rv)) {
-        PR_fprintf(PR_STDERR, "Error: argument -appomni requires a valid path\n");
-        return rv;
-      }
-  }
-
-  mozilla::Omnijar::Init(greOmni, appOmni);
   return rv;
 }
 

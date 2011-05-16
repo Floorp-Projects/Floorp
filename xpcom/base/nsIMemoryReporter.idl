@@ -51,28 +51,26 @@ interface nsIMemoryReporter : nsISupports
    *
    * - Paths starting with "mapped" represent non-overlapping regions of mapped
    *   memory.  Each one can be viewed as representing a path in a tree from
-   *   the root node ("mapped") to a leaf node.  The one exception is the
-   *   special "mapped" path which represents the root of that tree.  So, for
-   *   example, "mapped/heap/used", "mapped/heap/unused",
-   *   "mapped/js/mjit-code", mapped/js/tjit-code", plus the special "mapped"
-   *   path, define this tree:
+   *   the root node ("mapped") to a node lower in the tree;  this lower node
+   *   may be a non-leaf or a leaf node.  So, for example, "mapped",
+   *   "mapped/heap/used", "mapped/heap/unused", "mapped/js/mjit-code",
+   *   and "mapped/js/tjit-code" define this tree:
    *
-   *     mapped
+   *     mapped [*]
    *     |--heap
-   *     |  |--used
-   *     |  \--unused
+   *     |  |--used [*]
+   *     |  \--unused [*]
    *     \--js
-   *        |--mjit-code
-   *        \--tjit-code
+   *        |--mjit-code [*]
+   *        \--tjit-code [*]
    *
-   *   "mapped/heap" would not be a valid path in this example because "heap"
-   *   is not a leaf node.
+   *   Nodes marked with a [*] have a reporter.
    *
    * - Paths starting with "heap-used" represent non-overlapping regions of
-   *   used heap memory.  The "mapped" rules above apply equally here.  The
-   *   exceptional path for this tree is "mapped/heap/used" (and so this tree
-   *   is a sub-tree of the "mapped" tree).  When shown in about:memory, this
-   *   tree's root node is given the synonym "heap-used".
+   *   used heap memory.  The "mapped" rules above apply equally here.  These
+   *   paths are actually sub-paths of "mapped/heap/used", but that reporter
+   *   is duplicated under the name "heap-used" to make the processing for
+   *   about:memory simpler.
    *
    * - All other paths represent cross-cuttings memory regions, ie. ones that
    *   may overlap arbitrarily with regions in the "mapped" and "heap-used"

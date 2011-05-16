@@ -208,6 +208,16 @@ NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
     return res;
 }
 
+#elif defined(__arm__) && defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_4)
+
+JS_STATIC_ASSERT(sizeof(jsword) == sizeof(int));
+
+static JS_ALWAYS_INLINE int
+NativeCompareAndSwap(volatile jsword *w, jsword ov, jsword nv)
+{
+  return __sync_bool_compare_and_swap(w, ov, nv);
+}
+
 #elif defined(USE_ARM_KUSER)
 
 /* See https://bugzilla.mozilla.org/show_bug.cgi?id=429387 for a
