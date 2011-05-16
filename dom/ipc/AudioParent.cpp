@@ -108,6 +108,49 @@ class AudioStreamShutdownEvent : public nsRunnable
     nsRefPtr<nsAudioStream> mOwner;
 };
 
+
+class AudioMinWriteSampleDone : public nsRunnable
+{
+ public:
+  AudioMinWriteSampleDone(AudioParent* owner, PRInt32 minSamples)
+  {
+    mOwner = owner;
+    mMinSamples = minSamples;
+  }
+
+  NS_IMETHOD Run()
+  {
+    mOwner->SendMinWriteSampleDone(mMinSamples);
+    return NS_OK;
+  }
+
+ private:
+    nsRefPtr<AudioParent> mOwner;
+    PRInt32 mMinSamples;
+};
+
+class AudioMinWriteSampleEvent : public nsRunnable
+{
+ public:
+  AudioMinWriteSampleEvent(AudioParent* parent, nsAudioStream* owner)
+  {
+    mParent = parent;
+    mOwner = owner;
+  }
+
+  NS_IMETHOD Run()
+  {
+    PRInt32 minSamples = mOwner->GetMinWriteSamples();
+    nsCOMPtr<nsIRunnable> event = new AudioMinWriteSampleDone(mParent, minSamples);
+    NS_DispatchToMainThread(event);
+    return NS_OK;
+  }
+
+ private:
+    nsRefPtr<nsAudioStream> mOwner;
+    nsRefPtr<AudioParent> mParent;
+};
+
 class AudioDrainDoneEvent : public nsRunnable
 {
  public:
@@ -187,6 +230,17 @@ AudioParent::RecvSetVolume(const float& aVolume)
 }
 
 bool
+AudioParent::RecvMinWriteSample()
+{
+  if (!mStream)
+    return false;
+  nsCOMPtr<nsIRunnable> event = new AudioMinWriteSampleEvent(this, mStream);
+  nsCOMPtr<nsIThread> thread = mStream->GetThread();
+  thread->Dispatch(event, nsIEventTarget::DISPATCH_NORMAL);
+  return true;
+}
+
+bool
 AudioParent::RecvDrain()
 {
   if (!mStream)
@@ -224,6 +278,14 @@ AudioParent::RecvShutdown()
 {
   Shutdown();
   unused << PAudioParent::Send__delete__(this);
+  return true;
+}
+
+bool
+AudioParent::SendMinWriteSampleDone(PRInt32 minSamples)
+{
+  if (mIPCOpen)
+    return PAudioParent::SendMinWriteSampleDone(minSamples);
   return true;
 }
 
