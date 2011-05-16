@@ -242,6 +242,23 @@ public:
     mUseIntermediateSurface = GetEffectiveOpacity() != 1.0 && HasMultipleChildren();
   }
 
+  /**
+   * Returns true when:
+   * a) no (non-hidden) childrens' visible areas overlap in
+   * (aInRect intersected with this layer's visible region).
+   * b) the (non-hidden) childrens' visible areas cover
+   * (aInRect intersected with this layer's visible region).
+   * c) this layer and all (non-hidden) children have transforms that are translations
+   * by integers.
+   * aInRect is in the root coordinate system.
+   * Child layers with opacity do not contribute to the covered area in check b).
+   * This method can be conservative; it's OK to return false under any
+   * circumstances.
+   */
+  PRBool ChildrenPartitionVisibleRegion(const nsIntRect& aInRect);
+
+  void ForceIntermediateSurface() { mUseIntermediateSurface = PR_TRUE; }
+
 protected:
   BasicLayerManager* BasicManager()
   {
@@ -256,6 +273,43 @@ BasicContainerLayer::~BasicContainerLayer()
   }
 
   MOZ_COUNT_DTOR(BasicContainerLayer);
+}
+
+PRBool
+BasicContainerLayer::ChildrenPartitionVisibleRegion(const nsIntRect& aInRect)
+{
+  gfxMatrix transform;
+  if (!GetEffectiveTransform().Is2D(&transform) ||
+      transform.HasNonIntegerTranslation())
+    return PR_FALSE;
+
+  nsIntPoint offset(PRInt32(transform.x0), PRInt32(transform.y0));
+  nsIntRect rect = aInRect.Intersect(GetEffectiveVisibleRegion().GetBounds() + offset);
+  nsIntRegion covered;
+
+  for (Layer* l = mFirstChild; l; l = l->GetNextSibling()) {
+    if (ToData(l)->IsHidden())
+      continue;
+
+    gfxMatrix childTransform;
+    if (!l->GetEffectiveTransform().Is2D(&childTransform) ||
+        childTransform.HasNonIntegerTranslation() ||
+        l->GetEffectiveOpacity() != 1.0)
+      return PR_FALSE;
+    nsIntRegion childRegion = l->GetEffectiveVisibleRegion();
+    childRegion.MoveBy(PRInt32(childTransform.x0), PRInt32(childTransform.y0));
+    childRegion.And(childRegion, rect);
+    if (l->GetClipRect()) {
+      childRegion.And(childRegion, *l->GetClipRect() + offset);
+    }
+    nsIntRegion intersection;
+    intersection.And(covered, childRegion);
+    if (!intersection.IsEmpty())
+      return PR_FALSE;
+    covered.Or(covered, childRegion);
+  }
+
+  return covered.Contains(rect);
 }
 
 template<class Container>
@@ -1300,6 +1354,7 @@ TransformIntRect(nsIntRect& aRect, const gfxMatrix& aMatrix,
  * all layers to the same coordinate system (the "root coordinate system").
  * It can't be used as is by accelerated layers because of intermediate surfaces.
  * This must set the hidden flag to true or false on *all* layers in the subtree.
+ * It also sets the operator for all layers to "OVER".
  * @param aClipRect the cliprect, in the root coordinate system. We assume
  * that any layer drawing is clipped to this rect. It is therefore not
  * allowed to add to the opaque region outside that rect.
@@ -1347,8 +1402,9 @@ MarkLayersHidden(Layer* aLayer, const nsIntRect& aClipRect,
   }
 
   BasicImplData* data = ToData(aLayer);
-  Layer* child = aLayer->GetLastChild();
-  if (!child) {
+  data->SetOperator(gfxContext::OPERATOR_OVER);
+
+  if (!aLayer->AsContainerLayer()) {
     gfxMatrix transform;
     if (!aLayer->GetEffectiveTransform().Is2D(&transform)) {
       data->SetHidden(PR_FALSE);
@@ -1375,6 +1431,7 @@ MarkLayersHidden(Layer* aLayer, const nsIntRect& aClipRect,
       }
     }
   } else {
+    Layer* child = aLayer->GetLastChild();
     PRBool allHidden = PR_TRUE;
     for (; child; child = child->GetPrevSibling()) {
       MarkLayersHidden(child, newClipRect, aDirtyRect, aOpaqueRegion, newFlags);
@@ -1383,6 +1440,64 @@ MarkLayersHidden(Layer* aLayer, const nsIntRect& aClipRect,
       }
     }
     data->SetHidden(allHidden);
+  }
+}
+
+/**
+ * This function assumes that GetEffectiveTransform transforms
+ * all layers to the same coordinate system (the "root coordinate system").
+ * MarkLayersHidden must be called before calling this.
+ * @param aVisibleRect the rectangle of aLayer that is visible (i.e. not
+ * clipped and in the dirty rect), in the root coordinate system.
+ */
+static void
+ApplyDoubleBuffering(Layer* aLayer, const nsIntRect& aVisibleRect)
+{
+  BasicImplData* data = ToData(aLayer);
+  if (data->IsHidden())
+    return;
+
+  nsIntRect newVisibleRect(aVisibleRect);
+
+  {
+    const nsIntRect* clipRect = aLayer->GetEffectiveClipRect();
+    if (clipRect) {
+      nsIntRect cr = *clipRect;
+      // clipRect is in the container's coordinate system. Get it into the
+      // global coordinate system.
+      if (aLayer->GetParent()) {
+        gfxMatrix tr;
+        if (aLayer->GetParent()->GetEffectiveTransform().Is2D(&tr)) {
+          NS_ASSERTION(!tr.HasNonIntegerTranslation(),
+                       "Parent can only have an integer translation");
+          cr += nsIntPoint(PRInt32(tr.x0), PRInt32(tr.y0));
+        } else {
+          NS_ERROR("Parent can only have an integer translation");
+        }
+      }
+      newVisibleRect.IntersectRect(newVisibleRect, cr);
+    }
+  }
+
+  BasicContainerLayer* container =
+    static_cast<BasicContainerLayer*>(aLayer->AsContainerLayer());
+  // Layers that act as their own backbuffers should be drawn to the destination
+  // using OPERATOR_SOURCE to ensure that alpha values in a transparent window
+  // are cleared. This can also be faster than OPERATOR_OVER.
+  if (!container) {
+    data->SetOperator(gfxContext::OPERATOR_SOURCE);
+  } else {
+    if (container->UseIntermediateSurface() ||
+        !container->ChildrenPartitionVisibleRegion(newVisibleRect)) {
+      // We need to double-buffer this container.
+      data->SetOperator(gfxContext::OPERATOR_SOURCE);
+      container->ForceIntermediateSurface();
+    } else {
+      for (Layer* child = aLayer->GetFirstChild(); child;
+           child = child->GetNextSibling()) {
+        ApplyDoubleBuffering(child, newVisibleRect);
+      }
+    }
   }
 }
 
@@ -1424,7 +1539,7 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       clipRect = ToOutsideIntRect(mTarget->GetClipExtents());
     }
 
-    // Need to do this before we call MarkLayersHidden,
+    // Need to do this before we call ApplyDoubleBuffering,
     // which depends on correct effective transforms
     mSnapEffectiveTransforms =
       !(mTarget->GetFlags() & gfxContext::FLAG_DISABLE_SNAPPING);
@@ -1435,44 +1550,16 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
     if (IsRetained()) {
       nsIntRegion region;
       MarkLayersHidden(mRoot, clipRect, clipRect, region, ALLOW_OPAQUE);
-    }
-
-    nsRefPtr<gfxContext> finalTarget = mTarget;
-    gfxPoint cachedSurfaceOffset;
-    nsIntRegion rootRegion;
-    PRBool useDoubleBuffering = mUsingDefaultTarget &&
-      mDoubleBuffering != BUFFER_NONE &&
-      MayHaveOverlappingOrTransparentLayers(mRoot, clipRect, &rootRegion);
-
-    if (useDoubleBuffering) {
-      nsRefPtr<gfxASurface> targetSurface = mTarget->CurrentSurface();
-      mTarget = PushGroupWithCachedSurface(mTarget, targetSurface->GetContentType(),
-                                           &cachedSurfaceOffset);
-      // Recompute effective transforms since the gfxContext matrix has changed
-      mRoot->ComputeEffectiveTransforms(gfx3DMatrix::From2D(mTarget->CurrentMatrix()));
+      if (mUsingDefaultTarget && mDoubleBuffering != BUFFER_NONE) {
+        ApplyDoubleBuffering(mRoot, deviceSpaceClipExtents);
+      }
     }
 
     PaintLayer(mRoot, aCallback, aCallbackData, nsnull);
 
-    // If we're doing manual double-buffering, we need to avoid drawing
-    // the results of an incomplete transaction to the destination surface.
-    // If the transaction is incomplete and we're not double-buffering then
-    // either the system is double-buffering our window (in which case the
-    // followup EndTransaction will be drawn over the top of our incomplete
-    // transaction before the system updates the window), or we have no
-    // overlapping or transparent layers in the update region, in which case
-    // our partial transaction drawing will look fine.
-    if (useDoubleBuffering && !mTransactionIncomplete) {
-      finalTarget->SetOperator(gfxContext::OPERATOR_SOURCE);
-      PopGroupWithCachedSurface(finalTarget, cachedSurfaceOffset);
-    }
-
     if (!mTransactionIncomplete) {
       // Clear out target if we have a complete transaction.
       mTarget = nsnull;
-    } else {
-      // If we don't have a complete transaction set back to the old mTarget.
-      mTarget = finalTarget;
     }
   }
 
@@ -1611,11 +1698,22 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
 
   if (needsGroup) {
     mTarget->PopGroupToSource();
-    if (needsClipToVisibleRegion) {
-      gfxUtils::ClipToRegion(mTarget, aLayer->GetEffectiveVisibleRegion());
+    // If we're doing our own double-buffering, we need to avoid drawing
+    // the results of an incomplete transaction to the destination surface ---
+    // that could cause flicker. Double-buffering is implemented using a
+    // temporary surface for one or more container layers, so we need to stop
+    // those temporary surfaces from being composited to mTarget.
+    // ApplyDoubleBuffering guarantees that this container layer can't
+    // intersect any other leaf layers, so if the transaction is not yet marked
+    // incomplete, the contents of this container layer are the final contents
+    // for the window.
+    if (!mTransactionIncomplete) {
+      if (needsClipToVisibleRegion) {
+        gfxUtils::ClipToRegion(mTarget, aLayer->GetEffectiveVisibleRegion());
+      }
+      AutoSetOperator setOperator(mTarget, container->GetOperator());
+      mTarget->Paint(aLayer->GetEffectiveOpacity());
     }
-    AutoSetOperator setOperator(mTarget, container->GetOperator());
-    mTarget->Paint(aLayer->GetEffectiveOpacity());
   }
 
   if (pushedTargetOpaqueRect) {
