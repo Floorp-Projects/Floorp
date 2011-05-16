@@ -270,12 +270,28 @@ public:
 
 #ifdef DEBUG
 
-/* If pc != NULL, includes a prefix indicating whether the PC is at the current line. */
+/*
+ * If pc != NULL, include a prefix indicating whether the PC is at the current line.
+ * If counts != NULL, include a counter of the number of times each op was executed.
+ */
 JS_FRIEND_API(JSBool)
-js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc, Sprinter *sp)
+js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc, int* counts, Sprinter *sp)
 {
     jsbytecode *next, *end;
     uintN len;
+
+    if (counts)
+        SprintCString(sp, "count    x ");
+    SprintCString(sp, "off   ");
+    if (lines)
+        SprintCString(sp, "line");
+    SprintCString(sp, "  op\n");
+    if (counts)
+        SprintCString(sp, "--------   ");
+    SprintCString(sp, "----- ");
+    if (lines)
+        SprintCString(sp, "----");
+    SprintCString(sp, "  --\n");
 
     next = script->code;
     end = next + script->length;
@@ -290,7 +306,7 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
         }
         len = js_Disassemble1(cx, script, next,
                               next - script->code,
-                              lines, sp);
+                              lines, sp, counts);
         if (!len)
             return JS_FALSE;
         next += len;
@@ -299,18 +315,18 @@ js_DisassembleAtPC(JSContext *cx, JSScript *script, JSBool lines, jsbytecode *pc
 }
 
 JS_FRIEND_API(JSBool)
-js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, Sprinter *sp)
+js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, Sprinter *sp, int* counts)
 {
-    return js_DisassembleAtPC(cx, script, lines, NULL, sp);
+    return js_DisassembleAtPC(cx, script, lines, NULL, counts, sp);
 }
 
 JS_FRIEND_API(JSBool)
-js_DumpPC(JSContext *cx)
+js_DumpPC(JSContext *cx, int* counts = NULL)
 {
     void *mark = JS_ARENA_MARK(&cx->tempPool);
     Sprinter sprinter;
     INIT_SPRINTER(cx, &sprinter, &cx->tempPool, 0);
-    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs().pc, &sprinter);
+    JSBool ok = js_DisassembleAtPC(cx, cx->fp()->script(), true, cx->regs().pc, counts, &sprinter);
     fprintf(stdout, "%s", sprinter.base);
     JS_ARENA_RELEASE(&cx->tempPool, mark);
     return ok;
@@ -344,7 +360,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
             while (!r.empty()) {
                 const Shape &shape = r.front();
                 JSAutoByteString bytes;
-                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.id), &bytes))
+                if (!js_AtomToPrintableString(cx, JSID_TO_ATOM(shape.propid), &bytes))
                     return false;
 
                 r.popFront();
@@ -383,7 +399,7 @@ ToDisassemblySource(JSContext *cx, jsval v, JSAutoByteString *bytes)
 
 JS_FRIEND_API(uintN)
 js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
-                uintN loc, JSBool lines, Sprinter *sp)
+                uintN loc, JSBool lines, Sprinter *sp, int* counts)
 {
     JSOp op;
     const JSCodeSpec *cs;
@@ -409,6 +425,8 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
     cs = &js_CodeSpec[op];
     len = (ptrdiff_t) cs->length;
     Sprint(sp, "%05u:", loc);
+    if (counts)
+        Sprint(sp, "% 8d x ", counts[loc]);
     if (lines)
         Sprint(sp, "%4u", JS_PCToLineNumber(cx, script, pc));
     Sprint(sp, "  %s", js_CodeName[op]);
@@ -1394,9 +1412,9 @@ GetLocal(SprintStack *ss, jsint i)
                     const Shape &shape = r.front();
 
                     if (shape.shortid == slot) {
-                        LOCAL_ASSERT(JSID_IS_ATOM(shape.id));
+                        LOCAL_ASSERT(JSID_IS_ATOM(shape.propid));
 
-                        JSAtom *atom = JSID_TO_ATOM(shape.id);
+                        JSAtom *atom = JSID_TO_ATOM(shape.propid);
                         const char *rval = QuoteString(&ss->sprinter, atom, 0);
                         if (!rval)
                             return NULL;
@@ -2714,7 +2732,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb, JSOp nextop)
                     if (!shape.hasShortID())
                         continue;
                     LOCAL_ASSERT_OUT(shape.shortid < argc);
-                    atomv[shape.shortid] = JSID_TO_ATOM(shape.id);
+                    atomv[shape.shortid] = JSID_TO_ATOM(shape.propid);
                 }
                 ok = JS_TRUE;
                 for (i = 0; i < argc; i++) {

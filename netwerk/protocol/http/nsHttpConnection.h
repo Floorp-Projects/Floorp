@@ -151,7 +151,7 @@ private:
     nsresult OnSocketWritable();
     nsresult OnSocketReadable();
 
-    nsresult SetupSSLProxyConnect();
+    nsresult SetupProxyConnect();
 
     PRBool   IsAlive();
     PRBool   SupportsPipelining(nsHttpResponseHead *);
@@ -164,7 +164,7 @@ private:
     nsresult                        mSocketInCondition;
     nsresult                        mSocketOutCondition;
 
-    nsCOMPtr<nsIInputStream>        mSSLProxyConnectStream;
+    nsCOMPtr<nsIInputStream>        mProxyConnectStream;
     nsCOMPtr<nsIInputStream>        mRequestStream;
 
     // mTransaction only points to the HTTP Transaction callbacks if the
@@ -188,7 +188,7 @@ private:
     PRPackedBool                    mKeepAliveMask;
     PRPackedBool                    mSupportsPipelining;
     PRPackedBool                    mIsReused;
-    PRPackedBool                    mCompletedSSLConnect;
+    PRPackedBool                    mCompletedProxyConnect;
     PRPackedBool                    mLastTransactionExpectedNoContent;
 };
 

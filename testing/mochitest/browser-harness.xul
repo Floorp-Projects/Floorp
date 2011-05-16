@@ -87,6 +87,11 @@
     p {
       margin: 0.1em;
     }
+
+    a {
+      color: blue;
+      text-decoration: underline;
+    }
   ]]></style>
   <script type="application/javascript;version=1.7"><![CDATA[
     if (Cc === undefined) {
@@ -168,6 +173,8 @@
       return eval(config);
     }
 
+    var gErrorCount = 0;
+
     function browserTest(aTestFile) {
       this.path = aTestFile;
       this.dumper = gDumper;
@@ -205,8 +212,12 @@
         var path = _entityEncode(this.path);
         var html = this.results.map(function (t) {
           var classname = t.info ? "info" : "result " + (t.pass ? "passed" : "failed");
-          return "<p class=\"" + classname + "\">" + t.result + " | " + path +
-                 " | " + _entityEncode(t.msg) + "</p>";
+          var text = t.result + " | " + path + " | " + _entityEncode(t.msg);
+          if (!t.info && !t.pass) {
+            return '<p class="' + classname + '" id=\"ERROR' + (gErrorCount++) + '">' +
+                   text + " <a href=\"javascript:scrollTo('ERROR" + gErrorCount + "')\">NEXT ERROR</a></p>";
+          }
+          return '<p class="' + classname + '">' + text + "</p>";
         }).join("\n");
         if (this.duration) {
           html += "<p class=\"info\">TEST-END | " + path + " | finished in " +
@@ -283,7 +294,10 @@
       log += failCount != 0 ? "failure" :
                passCount == 0 ? "todo" : "success";
       log += "\">\n<p>Passed: " + passCount + "</p>\n" +
-             "<p>Failed: " + failCount + "</p>\n" +
+             "<p>Failed: " + failCount;
+      if (failCount > 0)
+        log += " <a href=\"javascript:scrollTo('ERROR0')\">NEXT ERROR</a>";
+      log += "</p>\n" +
              "<p>Todo: " + todoCount + "</p>\n</div>\n<div id=\"log\">\n";
 
       return log + aTests.map(function (f) {
@@ -303,6 +317,16 @@
       // UI
       document.getElementById("results").innerHTML = getHTMLLogFromTests(aTests);
       setStatus("Done.");
+    }
+
+    function scrollTo(id) {
+      var line = document.getElementById(id);
+      if (!line)
+        return;
+
+      var boxObject = document.getElementById("results").parentNode.boxObject;
+      boxObject.QueryInterface(Components.interfaces.nsIScrollBoxObject);
+      boxObject.scrollToElement(line);
     }
   ]]></script>
   <button id="runTestsButton" oncommand="runTests();" label="Run All Tests"/>

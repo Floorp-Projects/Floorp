@@ -48,7 +48,7 @@
   <script type="application/javascript" src="chrome://feedback/content/overlay.js"/>
 
   <box id="panel-controls">
-    <toolbarbutton id="tool-feedback" class="panel-row-button" autocheck="true" type="radio" group="1" linkedpanel="feedback-container" insertafter="tool-addons"/>
+    <toolbarbutton id="tool-feedback" class="panel-row-button" autocheck="true" type="radio" label="&feedbackHeader2.label;" group="1" linkedpanel="feedback-container" insertafter="tool-addons"/>
   </box>
 
   <deck id="panel-items">

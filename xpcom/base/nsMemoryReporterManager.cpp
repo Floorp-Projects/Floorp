@@ -149,8 +149,11 @@ static PRInt64 GetResident(void *)
 // byte count returned is always -1.
 NS_MEMORY_REPORTER_IMPLEMENT(Mapped,
     "mapped",
-    "Memory mapped by the process. Note that 'resident' is a better measure "
-    "of memory resources used by the process. "
+    "Memory mapped by the process, including the heap, code and data segments, "
+    "thread stacks, and memory explicitly mapped by the process via "
+    "mmap, VirtualAlloc and similar operations. "
+    "Note that 'resident' is a better measure of memory resources used by the "
+    "process. "
     "On Windows (XP SP2 or later only) this is the private usage and does not "
     "include memory shared with other processes. "
     "On Mac and Linux this is the vsize figure as reported by 'top' or 'ps' "

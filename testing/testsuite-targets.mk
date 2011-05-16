@@ -169,7 +169,7 @@ xpcshell-tests:
 	  --no-logfiles \
           $(SYMBOLS_PATH) \
 	  $(TEST_PATH_ARG) $(EXTRA_TEST_ARGS) \
-	  $(DIST)/bin/xpcshell
+	  $(LIBXUL_DIST)/bin/xpcshell
 
 # install and run the mozmill tests
 $(DEPTH)/_tests/mozmill:

@@ -72,7 +72,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXMLDocument.h"
-#include "nsIDOMDocumentTraversal.h"
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMComment.h"
@@ -215,12 +214,7 @@ struct CleanupData
 // volume / server dependent but it is difficult to obtain
 // that information. Instead this constant is a reasonable value that
 // modern systems should able to cope with.
-
-#ifdef XP_MAC
-const PRUint32 kDefaultMaxFilenameLength = 31;
-#else
 const PRUint32 kDefaultMaxFilenameLength = 64;
-#endif
 
 // Default flags for persistence
 const PRUint32 kDefaultPersistFlags = 
@@ -1649,10 +1643,8 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         mDocList.AppendElement(docData);
 
         // Walk the DOM gathering a list of externally referenced URIs in the uri map
-        nsCOMPtr<nsIDOMDocumentTraversal> trav = do_QueryInterface(docData->mDocument, &rv);
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
         nsCOMPtr<nsIDOMTreeWalker> walker;
-        rv = trav->CreateTreeWalker(docAsNode, 
+        rv = aDocument->CreateTreeWalker(docAsNode, 
             nsIDOMNodeFilter::SHOW_ELEMENT |
                 nsIDOMNodeFilter::SHOW_DOCUMENT |
                 nsIDOMNodeFilter::SHOW_PROCESSING_INSTRUCTION,

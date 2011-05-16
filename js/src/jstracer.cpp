@@ -3158,8 +3158,7 @@ public:
         if (p == fp->addressOfArgs()) {
             if (frameobj) {
                 JS_ASSERT_IF(fp->hasArgsObj(), frameobj == &fp->argsObj());
-                fp->setArgsObj(*frameobj);
-                JS_ASSERT(frameobj->isArguments());
+                fp->setArgsObj(*frameobj->asArguments());
                 if (frameobj->isNormalArguments())
                     frameobj->setPrivate(fp);
                 else
@@ -7571,24 +7570,157 @@ SetMaxCodeCacheBytes(JSContext* cx, uint32 bytes)
     JS_THREAD_DATA(cx)->maxCodeCacheBytes = bytes;
 }
 
+TraceMonitor::TraceMonitor()
+  : tracecx(NULL),
+    tracerState(NULL),
+    bailExit(NULL),
+    iterationCounter(0),
+    storage(NULL),
+    dataAlloc(NULL),
+    traceAlloc(NULL),
+    tempAlloc(NULL),
+    codeAlloc(NULL),
+    assembler(NULL),
+    frameCache(NULL),
+    flushEpoch(0),
+    oracle(NULL),
+    recorder(NULL),
+    profile(NULL),
+    recordAttempts(NULL),
+    loopProfiles(NULL),
+    maxCodeCacheBytes(0),
+    needFlush(false),
+    cachedTempTypeMap(NULL)
+#ifdef DEBUG
+    , branches(NULL),
+    lastFragID(0),
+    profAlloc(NULL),
+    profTab(NULL)
+#endif
+{
+    PodZero(&globalStates);
+    PodZero(&vmfragments);
+}
+
+#ifdef DEBUG
+void
+TraceMonitor::logFragProfile()
+{
+    // Recover profiling data from expiring Fragments, and display
+    // final results.
+    if (LogController.lcbits & LC_FragProfile) {
+
+        for (Seq<Fragment*>* f = branches; f; f = f->tail)
+            FragProfiling_FragFinalizer(f->head, this);
+
+        for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; i++) {
+            for (TreeFragment *f = vmfragments[i]; f; f = f->next) {
+                JS_ASSERT(f->root == f);
+                for (TreeFragment *p = f; p; p = p->peer)
+                    FragProfiling_FragFinalizer(p, this);
+            }
+        }
+
+        if (profTab)
+            FragProfiling_showResults(this);
+
+    }
+}
+#endif
+
+TraceMonitor::~TraceMonitor ()
+{
+
+#ifdef DEBUG
+    logFragProfile();
+
+    Foreground::delete_(profAlloc); /* Also frees profTab. */
+    profAlloc = NULL;
+#endif
+
+    Foreground::delete_(recordAttempts);
+    Foreground::delete_(loopProfiles);
+    Foreground::delete_(oracle);
+
+    PodArrayZero(vmfragments);
+
+    Foreground::delete_(frameCache);
+    frameCache = NULL;
+
+    Foreground::delete_(codeAlloc);
+    codeAlloc = NULL;
+
+    Foreground::delete_(dataAlloc);
+    dataAlloc = NULL;
+
+    Foreground::delete_(traceAlloc);
+    traceAlloc = NULL;
+
+    Foreground::delete_(tempAlloc);
+    tempAlloc = NULL;
+
+    Foreground::delete_(storage);
+    storage = NULL;
+
+    Foreground::delete_(cachedTempTypeMap);
+    cachedTempTypeMap = NULL;
+}
+
 bool
-InitJIT(TraceMonitor *tm, JSRuntime* rt)
+TraceMonitor::init(JSRuntime* rt)
+{
+#define CHECK_NEW(lhs, type, args) \
+    do { lhs = rt->new_<type> args; if (!lhs) return false; } while (0)
+#define CHECK_MALLOC(lhs, conversion, size) \
+    do { lhs = (conversion)(rt->malloc_(size)); if (!lhs) return false; } while (0)
+#define CHECK_ALLOC(lhs, rhs) \
+    do { lhs = (rhs); if (!lhs) return false; } while (0)
+
+#if defined JS_JIT_SPEW
+    /* no reserve needed in debug builds */
+    CHECK_NEW(profAlloc, VMAllocator, (rt, (char*)NULL, 0));
+    CHECK_ALLOC(profTab, new (*profAlloc) FragStatsMap(*profAlloc));
+#endif /* defined JS_JIT_SPEW */
+    CHECK_NEW(oracle, Oracle, ());
+
+    CHECK_NEW(recordAttempts, RecordAttemptMap, ());
+    if (!recordAttempts->init(PC_HASH_COUNT))
+        return false;
+
+    CHECK_NEW(loopProfiles, LoopProfileMap, ());
+    if (!loopProfiles->init(PC_HASH_COUNT))
+        return false;
+
+    char *dataReserve, *traceReserve, *tempReserve;
+    CHECK_MALLOC(dataReserve, char*, DataReserveSize);
+    CHECK_MALLOC(traceReserve, char*, TraceReserveSize);
+    CHECK_MALLOC(tempReserve, char*, TempReserveSize);
+    CHECK_NEW(dataAlloc, VMAllocator, (rt, dataReserve, DataReserveSize));
+    CHECK_NEW(traceAlloc, VMAllocator, (rt, traceReserve, TraceReserveSize));
+    CHECK_NEW(tempAlloc, VMAllocator, (rt, tempReserve, TempReserveSize));
+    CHECK_NEW(codeAlloc, CodeAlloc, ());
+    CHECK_NEW(frameCache, FrameInfoCache, (dataAlloc));
+    CHECK_NEW(storage, TraceNativeStorage, ());
+    CHECK_NEW(cachedTempTypeMap, TypeMap, ((Allocator*)NULL, oracle));
+    verbose_only( branches = NULL; )
+
+    if (!tracedScripts.init())
+        return false;
+
+    flush();
+
+    return true;
+}
+
+void
+InitJIT()
 {
 #if defined JS_JIT_SPEW
-    tm->profAlloc = NULL;
     /* Set up debug logging. */
     if (!did_we_set_up_debug_logging) {
         InitJITLogController();
         did_we_set_up_debug_logging = true;
     }
-    /* Set up fragprofiling, if required. */
-    if (LogController.lcbits & LC_FragProfile) {
-        tm->profAlloc = rt->new_<VMAllocator>(rt, (char*)NULL, 0); /* no reserve needed in debug builds */
-        if (!tm->profAlloc)
-            goto error;
-        tm->profTab = new (*tm->profAlloc) FragStatsMap(*tm->profAlloc);
-    }
-    tm->lastFragID = 0;
 #else
     PodZero(&LogController);
 #endif
@@ -7618,38 +7750,6 @@ InitJIT(TraceMonitor *tm, JSRuntime* rt)
         did_we_check_processor_features = true;
     }
 
-    #define CHECK_NEW(lhs, type, args) \
-        do { lhs = rt->new_<type> args; if (!lhs) goto error; } while (0)
-    #define CHECK_MALLOC(lhs, conversion, size) \
-        do { lhs = (conversion)(rt->malloc_(size)); if (!lhs) goto error; } while (0)
-
-    CHECK_NEW(tm->oracle, Oracle, ());
-
-    tm->profile = NULL;
-    
-    CHECK_NEW(tm->recordAttempts, RecordAttemptMap, ());
-    if (!tm->recordAttempts->init(PC_HASH_COUNT))
-        goto error;
-
-    CHECK_NEW(tm->loopProfiles, LoopProfileMap, ());
-    if (!tm->loopProfiles->init(PC_HASH_COUNT))
-        goto error;
-
-    tm->flushEpoch = 0;
-    
-    char *dataReserve, *traceReserve, *tempReserve;
-    CHECK_MALLOC(dataReserve, char*, DataReserveSize);
-    CHECK_MALLOC(traceReserve, char*, TraceReserveSize);
-    CHECK_MALLOC(tempReserve, char*, TempReserveSize);
-    CHECK_NEW(tm->dataAlloc, VMAllocator, (rt, dataReserve, DataReserveSize));
-    CHECK_NEW(tm->traceAlloc, VMAllocator, (rt, traceReserve, TraceReserveSize));
-    CHECK_NEW(tm->tempAlloc, VMAllocator, (rt, tempReserve, TempReserveSize));
-    CHECK_NEW(tm->codeAlloc, CodeAlloc, ());
-    CHECK_NEW(tm->frameCache, FrameInfoCache, (tm->dataAlloc));
-    CHECK_NEW(tm->storage, TraceNativeStorage, ());
-    CHECK_NEW(tm->cachedTempTypeMap, TypeMap, ((Allocator*)NULL, tm->oracle));
-    tm->flush();
-    verbose_only( tm->branches = NULL; )
 
 #if !defined XP_WIN
     debug_only(PodZero(&jitstats));
@@ -7682,26 +7782,11 @@ InitJIT(TraceMonitor *tm, JSRuntime* rt)
 #endif
 #endif
 
-    if (!tm->tracedScripts.init())
-        goto error;
-    return true;
-
-error:
-    /* On error, don't rely on the compartment destructor being called. */
-    FinishJIT(tm);
-    return false;
 }
 
-/*
- * NB: FinishJIT needs to work even when InitJIT fails. Each pointer must be
- * checked before it's dereferenced, as it may not have been allocated.
- */
 void
-FinishJIT(TraceMonitor *tm)
+FinishJIT()
 {
-    JS_ASSERT(!tm->recorder);
-    JS_ASSERT(!tm->profile);
-
 #ifdef JS_JIT_SPEW
     if (jitstats.recorderStarted) {
         char sep = ':';
@@ -7730,58 +7815,6 @@ FinishJIT(TraceMonitor *tm)
     }
 #endif
 
-    Foreground::delete_(tm->recordAttempts);
-    Foreground::delete_(tm->loopProfiles);
-    Foreground::delete_(tm->oracle);
-
-#ifdef DEBUG
-    // Recover profiling data from expiring Fragments, and display
-    // final results.
-    if (LogController.lcbits & LC_FragProfile) {
-
-        for (Seq<Fragment*>* f = tm->branches; f; f = f->tail)
-            FragProfiling_FragFinalizer(f->head, tm);
-
-        for (size_t i = 0; i < FRAGMENT_TABLE_SIZE; ++i) {
-            for (TreeFragment *f = tm->vmfragments[i]; f; f = f->next) {
-                JS_ASSERT(f->root == f);
-                for (TreeFragment *p = f; p; p = p->peer)
-                    FragProfiling_FragFinalizer(p, tm);
-            }
-        }
-
-        if (tm->profTab)
-            FragProfiling_showResults(tm);
-        Foreground::delete_(tm->profAlloc);
-
-    } else {
-        NanoAssert(!tm->profTab);
-        NanoAssert(!tm->profAlloc);
-    }
-#endif
-
-    PodArrayZero(tm->vmfragments);
-
-    Foreground::delete_(tm->frameCache);
-    tm->frameCache = NULL;
-
-    Foreground::delete_(tm->codeAlloc);
-    tm->codeAlloc = NULL;
-
-    Foreground::delete_(tm->dataAlloc);
-    tm->dataAlloc = NULL;
-
-    Foreground::delete_(tm->traceAlloc);
-    tm->traceAlloc = NULL;
-
-    Foreground::delete_(tm->tempAlloc);
-    tm->tempAlloc = NULL;
-
-    Foreground::delete_(tm->storage);
-    tm->storage = NULL;
-
-    Foreground::delete_(tm->cachedTempTypeMap);
-    tm->cachedTempTypeMap = NULL;
 }
 
 JS_REQUIRES_STACK void
@@ -8146,7 +8179,7 @@ TraceRecorder::callProp(JSObject* obj, JSProperty* prop, jsid id, Value*& vp,
         // should. See bug 514046, for which this code is future-proof. Remove
         // this comment when that bug is fixed (so, FIXME: 514046).
         DebugOnly<JSBool> rv =
-            js_GetPropertyHelper(cx, obj, shape->id,
+            js_GetPropertyHelper(cx, obj, shape->propid,
                                  (op == JSOP_CALLNAME)
                                  ? JSGET_NO_METHOD_BARRIER
                                  : JSGET_METHOD_BARRIER,
@@ -9487,22 +9520,17 @@ TraceRecorder::test_property_cache(JSObject* obj, LIns* obj_ins, JSObject*& obj2
                 RETURN_STOP_A("cannot cache name");
         } else {
             TraceMonitor &localtm = *traceMonitor;
-            int protoIndex = js_LookupPropertyWithFlags(cx, aobj, id,
-                                                        cx->resolveFlags,
-                                                        &obj2, &prop);
+            if (!LookupPropertyWithFlags(cx, aobj, id, cx->resolveFlags, &obj2, &prop))
+                RETURN_ERROR_A("error in LookupPropertyWithFlags");
 
-            if (protoIndex < 0)
-                RETURN_ERROR_A("error in js_LookupPropertyWithFlags");
-
-            /* js_LookupPropertyWithFlags can reenter the interpreter and kill |this|. */
+            /* LookupPropertyWithFlags can reenter the interpreter and kill |this|. */
             if (!localtm.recorder)
                 return ARECORD_ABORTED;
 
             if (prop) {
                 if (!obj2->isNative())
                     RETURN_STOP_A("property found on non-native object");
-                entry = JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, protoIndex, obj2,
-                                                   (Shape*) prop);
+                entry = JS_PROPERTY_CACHE(cx).fill(cx, aobj, 0, obj2, (Shape*) prop);
                 JS_ASSERT(entry);
                 if (entry == JS_NO_PROP_CACHE_FILL)
                     entry = NULL;
@@ -12686,7 +12714,7 @@ GetPropertyWithNativeGetter(JSContext* cx, JSObject* obj, Shape* shape, Value* v
 #ifdef DEBUG
     JSProperty* prop;
     JSObject* pobj;
-    JS_ASSERT(obj->lookupProperty(cx, shape->id, &pobj, &prop));
+    JS_ASSERT(obj->lookupProperty(cx, shape->propid, &pobj, &prop));
     JS_ASSERT(prop == (JSProperty*) shape);
 #endif
 
@@ -12847,7 +12875,7 @@ JS_REQUIRES_STACK void
 TraceRecorder::guardNotHole(LIns *argsobj_ins, LIns *idx_ins)
 {
     // vp = &argsobj->slots[JSSLOT_ARGS_DATA].slots[idx]
-    LIns* argsData_ins = w.getObjPrivatizedSlot(argsobj_ins, JSObject::JSSLOT_ARGS_DATA);
+    LIns* argsData_ins = w.getObjPrivatizedSlot(argsobj_ins, ArgumentsObject::DATA_SLOT);
     LIns* slotOffset_ins = w.addp(w.nameImmw(offsetof(ArgumentsData, slots)),
                                   w.ui2p(w.muliN(idx_ins, sizeof(Value))));
     LIns* vp_ins = w.addp(argsData_ins, slotOffset_ins);
@@ -12900,17 +12928,18 @@ TraceRecorder::record_JSOP_GETELEM()
     }
 
     if (obj->isArguments()) {
+        ArgumentsObject *argsobj = obj->asArguments();
+
         // Don't even try to record if out of range or reading a deleted arg
         int32 int_idx = idx.toInt32();
-        if (int_idx < 0 || int_idx >= (int32)obj->getArgsInitialLength())
+        if (int_idx < 0 || int_idx >= (int32)argsobj->initialLength())
             RETURN_STOP_A("cannot trace arguments with out of range index");
-        if (obj->getArgsElement(int_idx).isMagic(JS_ARGS_HOLE))
+        if (argsobj->element(int_idx).isMagic(JS_ARGS_HOLE))
             RETURN_STOP_A("reading deleted args element");
 
         // Only trace reading arguments out of active, tracked frame
         unsigned depth;
-        StackFrame *afp = guardArguments(obj, obj_ins, &depth);
-        if (afp) {
+        if (StackFrame *afp = guardArguments(obj, obj_ins, &depth)) {
             Value* vp = &afp->canonicalActualArg(int_idx);
             if (idx_ins->isImmD()) {
                 JS_ASSERT(int_idx == (int32)idx_ins->immD());
@@ -13829,7 +13858,7 @@ TraceRecorder::record_JSOP_FUNAPPLY()
             StackFrame *afp = guardArguments(aobj, aobj_ins, &depth);
             if (!afp)
                 RETURN_STOP_A("can't reach arguments object's frame");
-            if (aobj->isArgsLengthOverridden())
+            if (aobj->asArguments()->hasOverriddenLength())
                 RETURN_STOP_A("can't trace arguments with overridden length");
             guardArgsLengthNotAssigned(aobj_ins);
             length = afp->numActualArgs();
@@ -15092,7 +15121,7 @@ TraceRecorder::record_JSOP_BINDNAME()
 #ifdef DEBUG
             // NB: fp2 can't be a generator frame, because !fp->hasFunction.
             while (obj->getPrivate() != fp2) {
-                JS_ASSERT(fp2->isEvalOrDebuggerFrame());
+                JS_ASSERT(fp2->isDirectEvalOrDebuggerFrame());
                 fp2 = fp2->prev();
                 if (!fp2)
                     JS_NOT_REACHED("bad stack frame");
@@ -15637,13 +15666,27 @@ TraceRecorder::record_JSOP_ARGSUB()
     RETURN_STOP_A("can't trace JSOP_ARGSUB hard case");
 }
 
+namespace tjit {
+
+nj::LIns *
+Writer::getArgsLength(nj::LIns *args) const
+{
+    uint32 slot = js::ArgumentsObject::INITIAL_LENGTH_SLOT;
+    nj::LIns *vaddr_ins = ldpObjSlots(args);
+    return name(lir->insLoad(nj::LIR_ldi, vaddr_ins, slot * sizeof(Value) + sPayloadOffset,
+                             ACCSET_SLOTS),
+                "argsLength");
+}
+
+} // namespace tjit
+
 JS_REQUIRES_STACK LIns*
 TraceRecorder::guardArgsLengthNotAssigned(LIns* argsobj_ins)
 {
     // The following implements JSObject::isArgsLengthOverridden on trace.
     // ARGS_LENGTH_OVERRIDDEN_BIT is set if length was overridden.
     LIns *len_ins = w.getArgsLength(argsobj_ins);
-    LIns *ovr_ins = w.andi(len_ins, w.nameImmi(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
+    LIns *ovr_ins = w.andi(len_ins, w.nameImmi(ArgumentsObject::LENGTH_OVERRIDDEN_BIT));
     guard(true, w.eqi0(ovr_ins), MISMATCH_EXIT);
     return len_ins;
 }
@@ -15662,7 +15705,7 @@ TraceRecorder::record_JSOP_ARGCNT()
     // We also have to check that arguments.length has not been mutated
     // at record time, because if so we will generate incorrect constant
     // LIR, which will assert in tryToDemote().
-    if (fp->hasArgsObj() && fp->argsObj().isArgsLengthOverridden())
+    if (fp->hasArgsObj() && fp->argsObj().hasOverriddenLength())
         RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
     LIns *a_ins = getFrameObjPtr(fp->addressOfArgs());
     if (callDepth == 0) {
@@ -16325,13 +16368,13 @@ TraceRecorder::record_JSOP_LENGTH()
 
         // We must both check at record time and guard at run time that
         // arguments.length has not been reassigned, redefined or deleted.
-        if (obj->isArgsLengthOverridden())
+        if (obj->asArguments()->hasOverriddenLength())
             RETURN_STOP_A("can't trace JSOP_ARGCNT if arguments.length has been modified");
         LIns* slot_ins = guardArgsLengthNotAssigned(obj_ins);
 
-        // slot_ins is the value from the slot; right-shift to get the length
-        // (see JSObject::getArgsInitialLength in jsfun.cpp).
-        LIns* v_ins = w.i2d(w.rshiN(slot_ins, JSObject::ARGS_PACKED_BITS_COUNT));
+        // slot_ins is the value from the slot; right-shift to get the length;
+        // see ArgumentsObject.h.
+        LIns* v_ins = w.i2d(w.rshiN(slot_ins, ArgumentsObject::PACKED_BITS_COUNT));
         set(&l, v_ins);
         return ARECORD_CONTINUE;
     }

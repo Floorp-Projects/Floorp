@@ -547,7 +547,7 @@ function ReadManifest(aURL, inherited_status)
     }
     var streamBuf = getStreamContent(inputStream);
     inputStream.close();
-    var lines = streamBuf.split(/(\n|\r|\r\n)/);
+    var lines = streamBuf.split(/\n|\r|\r\n/);
 
     // Build the sandbox for fails-if(), etc., condition evaluation.
     var sandbox = BuildConditionSandbox(aURL);
@@ -581,7 +581,7 @@ function ReadManifest(aURL, inherited_status)
         var needs_focus = false;
         var slow = false;
         
-        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|silentfail)/)) {
+        while (items[0].match(/^(fails|needs-focus|random|skip|asserts|slow|require-or|silentfail)/)) {
             var item = items.shift();
             var stat;
             var cond;
@@ -612,6 +612,30 @@ function ReadManifest(aURL, inherited_status)
             } else if (item == "slow") {
                 cond = false;
                 slow = true;
+            } else if ((m = item.match(/^require-or\((.*?)\)$/))) {
+                var args = m[1].split(/,/);
+                if (args.length != 2) {
+                    throw "Error 7 in manifest file " + aURL.spec + " line " + lineNo + ": wrong number of args to require-or";
+                }
+                var [precondition_str, fallback_action] = args;
+                var preconditions = precondition_str.split(/&&/);
+                cond = false;
+                for each (var precondition in preconditions) {
+                    if (precondition === "debugMode") {
+                        // Currently unimplemented. Requires asynchronous
+                        // JSD call + getting an event while no JS is running
+                        stat = fallback_action;
+                        cond = true;
+                        break;
+                    } else if (precondition === "true") {
+                        // For testing
+                    } else {
+                        // Unknown precondition. Assume it is unimplemented.
+                        stat = fallback_action;
+                        cond = true;
+                        break;
+                    }
+                }
             } else if ((m = item.match(/^slow-if\((.*?)\)$/))) {
                 cond = false;
                 if (Components.utils.evalInSandbox("(" + m[1] + ")", sandbox))
