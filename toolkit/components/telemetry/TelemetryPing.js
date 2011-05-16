@@ -234,7 +234,8 @@ TelemetryPing.prototype = {
     let timerCallback = function() {
       let idleService = Cc["@mozilla.org/widget/idleservice;1"].
                         getService(Ci.nsIIdleService);
-      idleService.addIdleObserver(self, TELEMETRY_INTERVAL); 
+      idleService.addIdleObserver(self, TELEMETRY_INTERVAL);
+      Services.obs.addObserver(self, "idle-daily", null);
       self.gatherMemory();
     }
     this._timer.initWithCallback(timerCallback, TELEMETRY_DELAY, Ci.nsITimer.TYPE_ONE_SHOT);
