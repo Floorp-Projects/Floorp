@@ -583,15 +583,16 @@ SetAntialiasingFlags(Layer* aLayer, gfxContext* aTarget)
         aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height))));
 }
 
-static PRBool
-PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const nsIntRegion& aRegion)
+already_AddRefed<gfxContext>
+BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer,
+                                     const nsIntRegion& aRegion,
+                                     PRBool* aNeedsClipToVisibleRegion)
 {
   // If we need to call PushGroup, we should clip to the smallest possible
   // area first to minimize the size of the temporary surface.
   PRBool didCompleteClip = ClipToContain(aContext, aRegion.GetBounds());
 
-  gfxASurface::gfxContentType contentType = gfxASurface::CONTENT_COLOR_ALPHA;
-  PRBool needsClipToVisibleRegion = PR_FALSE;
+  nsRefPtr<gfxContext> result;
   if (aLayer->CanUseOpaqueSurface() &&
       ((didCompleteClip && aRegion.GetNumRects() == 1) ||
        !aContext->CurrentMatrix().HasNonIntegerTranslation())) {
@@ -599,11 +600,14 @@ PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const nsIntRegion& aRegio
     // group. We need to make sure that only pixels inside the layer's visible
     // region are copied back to the destination. Remember if we've already
     // clipped precisely to the visible region.
-    needsClipToVisibleRegion = !didCompleteClip || aRegion.GetNumRects() > 1;
-    contentType = gfxASurface::CONTENT_COLOR;
+    *aNeedsClipToVisibleRegion = !didCompleteClip || aRegion.GetNumRects() > 1;
+    result = PushGroupWithCachedSurface(aContext, gfxASurface::CONTENT_COLOR);
+  } else {
+    *aNeedsClipToVisibleRegion = PR_FALSE;
+    result = aContext;
+    aContext->PushGroupAndCopyBackground(gfxASurface::CONTENT_COLOR_ALPHA);
   }
-  aContext->PushGroupAndCopyBackground(contentType);
-  return needsClipToVisibleRegion;
+  return result.forget();
 }
 
 void
@@ -648,14 +652,21 @@ BasicThebesLayer::PaintThebes(gfxContext* aContext,
       PRBool needsClipToVisibleRegion = PR_FALSE;
       PRBool needsGroup =
           opacity != 1.0 || GetOperator() != gfxContext::OPERATOR_OVER;
+      nsRefPtr<gfxContext> groupContext;
       if (needsGroup) {
-        needsClipToVisibleRegion = PushGroupForLayer(aContext, this, toDraw) ||
-                GetOperator() != gfxContext::OPERATOR_OVER;
+        groupContext =
+          BasicManager()->PushGroupForLayer(aContext, this, toDraw,
+                                            &needsClipToVisibleRegion);
+        if (GetOperator() != gfxContext::OPERATOR_OVER) {
+          needsClipToVisibleRegion = PR_TRUE;
+        }
+      } else {
+        groupContext = aContext;
       }
-      SetAntialiasingFlags(this, aContext);
-      aCallback(this, aContext, toDraw, nsIntRegion(), aCallbackData);
+      SetAntialiasingFlags(this, groupContext);
+      aCallback(this, groupContext, toDraw, nsIntRegion(), aCallbackData);
       if (needsGroup) {
-        aContext->PopGroupToSource();
+        BasicManager()->PopGroupToSourceWithCachedSurface(aContext, groupContext);
         if (needsClipToVisibleRegion) {
           gfxUtils::ClipToRegion(aContext, toDraw);
         }
@@ -1244,6 +1255,7 @@ BasicLayerManager::BasicLayerManager(nsIWidget* aWidget) :
   , mYResolution(1.0)
   , mWidget(aWidget)
   , mDoubleBuffering(BUFFER_NONE), mUsingDefaultTarget(PR_FALSE)
+  , mCachedSurfaceInUse(PR_FALSE)
   , mTransactionIncomplete(false)
 {
   MOZ_COUNT_CTOR(BasicLayerManager);
@@ -1290,9 +1302,15 @@ BasicLayerManager::BeginTransaction()
 
 already_AddRefed<gfxContext>
 BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
-                                              gfxASurface::gfxContentType aContent,
-                                              gfxPoint *aSavedOffset)
+                                              gfxASurface::gfxContentType aContent)
 {
+  if (mCachedSurfaceInUse) {
+    aTarget->PushGroup(aContent);
+    nsRefPtr<gfxContext> result = aTarget;
+    return result.forget();
+  }
+  mCachedSurfaceInUse = PR_TRUE;
+
   gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
   aTarget->IdentityMatrix();
 
@@ -1300,29 +1318,26 @@ BasicLayerManager::PushGroupWithCachedSurface(gfxContext *aTarget,
   gfxRect clip = aTarget->GetClipExtents();
   clip.RoundOut();
 
-  nsRefPtr<gfxContext> ctx =
-    mCachedSurface.Get(aContent,
-                       gfxIntSize(clip.Width(), clip.Height()),
-                       currentSurf);
+  nsRefPtr<gfxContext> ctx = mCachedSurface.Get(aContent, clip, currentSurf);
   /* Align our buffer for the original surface */
-  ctx->Translate(-clip.TopLeft());
-  *aSavedOffset = clip.TopLeft();
-  ctx->Multiply(saveMatrix.Matrix());
+  ctx->SetMatrix(saveMatrix.Matrix());
   return ctx.forget();
 }
 
 void
-BasicLayerManager::PopGroupWithCachedSurface(gfxContext *aTarget,
-                                             const gfxPoint& aSavedOffset)
+BasicLayerManager::PopGroupToSourceWithCachedSurface(gfxContext *aTarget, gfxContext *aPushed)
 {
-  if (!mTarget)
+  if (!aTarget)
     return;
-
-  gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
-  aTarget->IdentityMatrix();
-
-  aTarget->SetSource(mTarget->OriginalSurface(), aSavedOffset);
-  aTarget->Paint();
+  nsRefPtr<gfxASurface> current = aPushed->CurrentSurface();
+  if (mCachedSurface.IsSurface(current)) {
+    gfxContextMatrixAutoSaveRestore saveMatrix(aTarget);
+    aTarget->IdentityMatrix();
+    aTarget->SetSource(current);
+    mCachedSurfaceInUse = PR_FALSE;
+  } else {
+    aTarget->PopGroupToSource();
+  }
 }
 
 void
@@ -1551,11 +1566,11 @@ BasicLayerManager::EndTransactionInternal(DrawThebesLayerCallback aCallback,
       nsIntRegion region;
       MarkLayersHidden(mRoot, clipRect, clipRect, region, ALLOW_OPAQUE);
       if (mUsingDefaultTarget && mDoubleBuffering != BUFFER_NONE) {
-        ApplyDoubleBuffering(mRoot, deviceSpaceClipExtents);
+        ApplyDoubleBuffering(mRoot, clipRect);
       }
     }
 
-    PaintLayer(mRoot, aCallback, aCallbackData, nsnull);
+    PaintLayer(mTarget, mRoot, aCallback, aCallbackData, nsnull);
 
     if (!mTransactionIncomplete) {
       // Clear out target if we have a complete transaction.
@@ -1608,7 +1623,8 @@ BasicLayerManager::SetRoot(Layer* aLayer)
 }
 
 void
-BasicLayerManager::PaintLayer(Layer* aLayer,
+BasicLayerManager::PaintLayer(gfxContext* aTarget,
+                              Layer* aLayer,
                               DrawThebesLayerCallback aCallback,
                               void* aCallbackData,
                               ReadbackProcessor* aReadback)
@@ -1628,15 +1644,15 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
 
   gfxMatrix savedMatrix;
   if (needsSaveRestore) {
-    mTarget->Save();
+    aTarget->Save();
 
     if (clipRect) {
-      mTarget->NewPath();
-      mTarget->Rectangle(gfxRect(clipRect->x, clipRect->y, clipRect->width, clipRect->height), PR_TRUE);
-      mTarget->Clip();
+      aTarget->NewPath();
+      aTarget->Rectangle(gfxRect(clipRect->x, clipRect->y, clipRect->width, clipRect->height), PR_TRUE);
+      aTarget->Clip();
     }
   } else {
-    savedMatrix = mTarget->CurrentMatrix();
+    savedMatrix = aTarget->CurrentMatrix();
   }
 
   gfxMatrix transform;
@@ -1645,11 +1661,11 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
   NS_ASSERTION(effectiveTransform.Is2D(),
                "Only 2D transforms supported currently");
   effectiveTransform.Is2D(&transform);
-  mTarget->SetMatrix(transform);
+  aTarget->SetMatrix(transform);
 
   PRBool pushedTargetOpaqueRect = PR_FALSE;
   const nsIntRegion& visibleRegion = aLayer->GetEffectiveVisibleRegion();
-  nsRefPtr<gfxASurface> currentSurface = mTarget->CurrentSurface();
+  nsRefPtr<gfxASurface> currentSurface = aTarget->CurrentSurface();
   const gfxRect& targetOpaqueRect = currentSurface->GetOpaqueRect();
 
   // Try to annotate currentSurface with a region of pixels that have been
@@ -1659,14 +1675,17 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
       !transform.HasNonAxisAlignedTransform()) {
     const nsIntRect& bounds = visibleRegion.GetBounds();
     currentSurface->SetOpaqueRect(
-        mTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
+        aTarget->UserToDevice(gfxRect(bounds.x, bounds.y, bounds.width, bounds.height)));
     pushedTargetOpaqueRect = PR_TRUE;
   }
 
   PRBool needsClipToVisibleRegion = PR_FALSE;
+  nsRefPtr<gfxContext> groupTarget;
   if (needsGroup) {
-    needsClipToVisibleRegion =
-        PushGroupForLayer(mTarget, aLayer, aLayer->GetEffectiveVisibleRegion());
+    groupTarget = PushGroupForLayer(aTarget, aLayer, aLayer->GetEffectiveVisibleRegion(),
+                                    &needsClipToVisibleRegion);
+  } else {
+    groupTarget = aTarget;
   }
 
   /* Only paint ourself, or our children - This optimization relies on this! */
@@ -1678,9 +1697,9 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
                    (void*)aLayer, data->IsHidden()));
 #endif
     if (aLayer->AsThebesLayer()) {
-      data->PaintThebes(mTarget, aCallback, aCallbackData, aReadback);
+      data->PaintThebes(groupTarget, aCallback, aCallbackData, aReadback);
     } else {
-      data->Paint(mTarget);
+      data->Paint(groupTarget);
     }
   } else {
     ReadbackProcessor readback;
@@ -1690,29 +1709,29 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
     }
 
     for (; child; child = child->GetNextSibling()) {
-      PaintLayer(child, aCallback, aCallbackData, &readback);
+      PaintLayer(groupTarget, child, aCallback, aCallbackData, &readback);
       if (mTransactionIncomplete)
         break;
     }
   }
 
   if (needsGroup) {
-    mTarget->PopGroupToSource();
+    PopGroupToSourceWithCachedSurface(aTarget, groupTarget);
     // If we're doing our own double-buffering, we need to avoid drawing
     // the results of an incomplete transaction to the destination surface ---
     // that could cause flicker. Double-buffering is implemented using a
     // temporary surface for one or more container layers, so we need to stop
-    // those temporary surfaces from being composited to mTarget.
+    // those temporary surfaces from being composited to aTarget.
     // ApplyDoubleBuffering guarantees that this container layer can't
     // intersect any other leaf layers, so if the transaction is not yet marked
     // incomplete, the contents of this container layer are the final contents
     // for the window.
     if (!mTransactionIncomplete) {
       if (needsClipToVisibleRegion) {
-        gfxUtils::ClipToRegion(mTarget, aLayer->GetEffectiveVisibleRegion());
+        gfxUtils::ClipToRegion(aTarget, aLayer->GetEffectiveVisibleRegion());
       }
-      AutoSetOperator setOperator(mTarget, container->GetOperator());
-      mTarget->Paint(aLayer->GetEffectiveOpacity());
+      AutoSetOperator setOperator(aTarget, container->GetOperator());
+      aTarget->Paint(aLayer->GetEffectiveOpacity());
     }
   }
 
@@ -1721,9 +1740,9 @@ BasicLayerManager::PaintLayer(Layer* aLayer,
   }
 
   if (needsSaveRestore) {
-    mTarget->Restore();
+    aTarget->Restore();
   } else {
-    mTarget->SetMatrix(savedMatrix);
+    aTarget->SetMatrix(savedMatrix);
   }
 }
 
