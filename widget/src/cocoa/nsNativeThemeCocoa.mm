@@ -1137,40 +1137,82 @@ nsNativeThemeCocoa::DrawFrame(CGContextRef cgContext, HIThemeFrameKind inKind,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-static const CellRenderSettings progressSettings[2] = {
-  // Determined settings.
+static const CellRenderSettings progressSettings[2][2] = {
+  // Vertical progress bar.
   {
+    // Determined settings.
     {
-      NSZeroSize, // mini
-      NSMakeSize(0, 10), // small
-      NSMakeSize(0, 16)  // regular
+      {
+        NSZeroSize, // mini
+        NSMakeSize(10, 0), // small
+        NSMakeSize(16, 0)  // regular
+      },
+      {
+        NSZeroSize, NSZeroSize, NSZeroSize
+      },
+      {
+        { // Leopard
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {1, 1, 1, 1}      // regular
+        }
+      }
     },
+    // There is no horizontal margin in regular undetermined size.
     {
-      NSZeroSize, NSZeroSize, NSZeroSize
-    },
-    {
-      { // Leopard
-        {0, 0, 0, 0},     // mini
-        {1, 1, 1, 1},     // small
-        {1, 1, 1, 1}      // regular
+      {
+        NSZeroSize, // mini
+        NSMakeSize(10, 0), // small
+        NSMakeSize(16, 0)  // regular
+      },
+      {
+        NSZeroSize, NSZeroSize, NSZeroSize
+      },
+      {
+        { // Leopard
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {1, 0, 1, 0}      // regular
+        }
       }
     }
   },
-  // There is no horizontal margin in regular undetermined size.
+  // Horizontal progress bar.
   {
+    // Determined settings.
     {
-      NSZeroSize, // mini
-      NSMakeSize(0, 10), // small
-      NSMakeSize(0, 16)  // regular
+      {
+        NSZeroSize, // mini
+        NSMakeSize(0, 10), // small
+        NSMakeSize(0, 16)  // regular
+      },
+      {
+        NSZeroSize, NSZeroSize, NSZeroSize
+      },
+      {
+        { // Leopard
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {1, 1, 1, 1}      // regular
+        }
+      }
     },
+    // There is no horizontal margin in regular undetermined size.
     {
-      NSZeroSize, NSZeroSize, NSZeroSize
-    },
-    {
-      { // Leopard
-        {0, 0, 0, 0},     // mini
-        {1, 1, 1, 1},     // small
-        {0, 1, 0, 1}      // regular
+      {
+        NSZeroSize, // mini
+        NSMakeSize(0, 10), // small
+        NSMakeSize(0, 16)  // regular
+      },
+      {
+        NSZeroSize, NSZeroSize, NSZeroSize
+      },
+      {
+        { // Leopard
+          {0, 0, 0, 0},     // mini
+          {1, 1, 1, 1},     // small
+          {0, 1, 0, 1}      // regular
+        }
       }
     }
   }
@@ -1194,7 +1236,7 @@ nsNativeThemeCocoa::DrawProgress(CGContextRef cgContext, const HIRect& inBoxRect
                                                       : NSClearControlTint)];
 
   DrawCellWithSnapping(cell, cgContext, inBoxRect,
-                       progressSettings[inIsIndeterminate],
+                       progressSettings[inIsHorizontal][inIsIndeterminate],
                        VerticalAlignFactor(aFrame), mCellDrawView,
                        IsFrameRTL(aFrame));
 
@@ -1895,8 +1937,8 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         NS_WARNING("Unable to animate progressbar!");
       }
       DrawProgress(cgContext, macRect, IsIndeterminateProgress(aFrame, eventState),
-                   PR_TRUE, GetProgressValue(aFrame),
-                   GetProgressMaxValue(aFrame), aFrame);
+                   aFrame->GetStyleDisplay()->mOrient != NS_STYLE_ORIENT_VERTICAL,
+		   GetProgressValue(aFrame), GetProgressMaxValue(aFrame), aFrame);
       break;
 
     case NS_THEME_PROGRESSBAR_VERTICAL:
