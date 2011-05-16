@@ -169,7 +169,7 @@ const uint8 PM_PATTRS =
     JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED;
 
 #define GETTER(name)                            \
-    { #name, 0, PM_PATTRS, pm_get_##name, 0, JS_TypeHandlerFloat }
+    { #name, 0, PM_PATTRS, pm_get_##name, 0 }
 
 static JSPropertySpec pm_props[] = {
     GETTER(cpu_cycles),

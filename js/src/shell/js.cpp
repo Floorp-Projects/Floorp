@@ -3271,9 +3271,14 @@ ResolveClass(JSContext *cx, JSObject *obj, jsid id, JSBool *resolved)
 static JSBool
 split_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags, JSObject **objp)
 {
-    ComplexObject *cpx;
-
+    /*
+     * This can resolve properties which are not on the original object's
+     * prototype chain, breaking assumptions type inference makes about the
+     * possible properties on an object.
+     */
     cx->addTypePropertyId(obj->getType(), id, types::TYPE_UNKNOWN);
+
+    ComplexObject *cpx;
 
     if (JSID_IS_ATOM(id) && JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), "isInner")) {
         *objp = obj;
@@ -5078,7 +5083,7 @@ split_setup(JSContext *cx, JSBool evalcx)
         return NULL;
 
     if (!evalcx) {
-        if (!JS_DefineFunctionsWithPrefix(cx, inner, shell_functions, "Shell") ||
+        if (!JS_DefineFunctions(cx, inner, shell_functions) ||
             !JS_DefineProfilingFunctions(cx, inner)) {
             return NULL;
         }
@@ -5851,7 +5856,7 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
 #endif
         if (!JS::RegisterPerfMeasurement(cx, glob))
             return NULL;
-        if (!JS_DefineFunctionsWithPrefix(cx, glob, shell_functions, "Shell") ||
+        if (!JS_DefineFunctions(cx, glob, shell_functions) ||
             !JS_DefineProfilingFunctions(cx, glob)) {
             return NULL;
         }
@@ -5861,7 +5866,7 @@ NewGlobalObject(JSContext *cx, CompartmentKind compartment)
             return NULL;
         if (!JS_DefineProperties(cx, it, its_props))
             return NULL;
-        if (!JS_DefineFunctionsWithPrefix(cx, it, its_methods, "Shell"))
+        if (!JS_DefineFunctions(cx, it, its_methods))
             return NULL;
 
         if (!JS_DefineProperty(cx, glob, "custom", JSVAL_VOID, its_getter,

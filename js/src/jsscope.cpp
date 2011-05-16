@@ -995,6 +995,10 @@ JSObject::changeProperty(JSContext *cx, const Shape *shape, uintN attrs, uintN m
     /* Don't allow method properties to be changed to have a getter. */
     JS_ASSERT_IF(getter != shape->rawGetter, !shape->isMethod());
 
+    cx->markTypePropertyConfigured(getType(), shape->propid);
+    if (attrs & (JSPROP_GETTER | JSPROP_SETTER))
+        cx->addTypePropertyId(getType(), shape->propid, types::TYPE_UNKNOWN);
+
     if (getter == PropertyStub)
         getter = NULL;
     if (setter == StrictPropertyStub)

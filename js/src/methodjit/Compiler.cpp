@@ -6899,6 +6899,9 @@ mjit::Compiler::updateJoinVarTypes()
 void
 mjit::Compiler::restoreVarType()
 {
+    if (!cx->typeInferenceEnabled())
+        return;
+
     uint32 slot = GetBytecodeSlot(script, PC);
 
     if (slot >= analyze::TotalSlots(script))

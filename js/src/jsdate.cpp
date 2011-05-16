@@ -2660,7 +2660,6 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     jsid toGMTStringId = ATOM_TO_JSID(cx->runtime->atomState.toGMTStringAtom);
     if (!js_GetProperty(cx, proto, toUTCStringId, toUTCStringFun.addr()))
         return NULL;
-    cx->addTypePropertyId(proto->getType(), toGMTStringId, toUTCStringFun.value());
     if (!js_DefineProperty(cx, proto, toGMTStringId, toUTCStringFun.addr(),
                            PropertyStub, StrictPropertyStub, 0)) {
         return NULL;

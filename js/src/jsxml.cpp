@@ -255,8 +255,8 @@ JS_FRIEND_DATA(Class) js_NamespaceClass = {
     (JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_SHARED)
 
 static JSPropertySpec namespace_props[] = {
-    {js_prefix_str, 0, NAMESPACE_ATTRS, NamePrefix_getter, 0, JS_TypeHandlerString},
-    {js_uri_str,    0, NAMESPACE_ATTRS, NameURI_getter,    0, JS_TypeHandlerString},
+    {js_prefix_str, 0, NAMESPACE_ATTRS, NamePrefix_getter, 0},
+    {js_uri_str,    0, NAMESPACE_ATTRS, NameURI_getter,    0},
     {0,0,0,0,0}
 };
 
@@ -1123,11 +1123,11 @@ static const char js_prettyIndent_str[]     = "prettyIndent";
 #define XSF_PRETTY_PRINTING                JS_BIT(3)
 
 static JSPropertySpec xml_static_props[] = {
-    {js_ignoreComments_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerBool},
-    {js_ignoreProcessingInstructions_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerBool},
-    {js_ignoreWhitespace_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerBool},
-    {js_prettyPrinting_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerBool},
-    {js_prettyIndent_str, 0, JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerInt},
+    {js_ignoreComments_str, 0, JSPROP_PERMANENT, NULL, NULL},
+    {js_ignoreProcessingInstructions_str, 0, JSPROP_PERMANENT, NULL, NULL},
+    {js_ignoreWhitespace_str, 0, JSPROP_PERMANENT, NULL, NULL},
+    {js_prettyPrinting_str, 0, JSPROP_PERMANENT, NULL, NULL},
+    {js_prettyIndent_str, 0, JSPROP_PERMANENT, NULL, NULL},
     {0,0,0,0,0}
 };
 
@@ -6842,7 +6842,6 @@ CopyXMLSettings(JSContext *cx, JSObject *from, JSObject *to)
             if (!JSVAL_IS_BOOLEAN(v))
                 continue;
         }
-        JS_AddTypeProperty(cx, to, name, v);
         if (!JS_SetProperty(cx, to, name, &v))
             return false;
     }
@@ -7156,7 +7155,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 
     /* Define the isXMLName function. */
     if (!JS_DefineFunctionWithType(cx, obj, js_isXMLName_str, xml_isXMLName, 1, 0,
-                                   JS_TypeHandlerBool, js_isXMLName_str))
+                                   JS_TypeHandlerBool))
         return NULL;
 
     /* Define the XML class constructor and prototype. */
@@ -7205,7 +7204,7 @@ js_InitXMLClass(JSContext *cx, JSObject *obj)
 
     /* Define the XMLList function and give it the same prototype as XML. */
     fun = JS_DefineFunctionWithType(cx, obj, js_XMLList_str, XMLList, 1, JSFUN_CONSTRUCTOR,
-                                    JS_TypeHandlerDynamic, js_XMLList_str);
+                                    JS_TypeHandlerDynamic);
     if (!fun)
         return NULL;
     if (!js_SetClassPrototype(cx, FUN_OBJECT(fun), proto,
@@ -7296,8 +7295,6 @@ js_GetDefaultXMLNamespace(JSContext *cx, jsval *vp)
         obj = tmp;
     }
 
-    cx->addTypePropertyId(obj->getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN);
-
     ns = js_ConstructObject(cx, &js_NamespaceClass, NULL, obj, 0, NULL);
     if (!ns)
         return JS_FALSE;
@@ -7322,7 +7319,6 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
 
     JSObject &varobj = cx->stack.currentVarObj();
 
-    cx->addTypePropertyId(varobj.getType(), JS_DEFAULT_XML_NAMESPACE_ID, types::TYPE_UNKNOWN);
     if (!varobj.defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, ObjectValue(*ns),
                                PropertyStub, StrictPropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;

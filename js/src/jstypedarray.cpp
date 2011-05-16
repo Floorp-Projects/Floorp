@@ -1442,8 +1442,7 @@ Class ArrayBuffer::jsclass = {
 JSPropertySpec ArrayBuffer::jsprops[] = {
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(ArrayBuffer::prop_getByteLength), JS_StrictPropertyStub,
-      JS_TypeHandlerInt },
+      Jsvalify(ArrayBuffer::prop_getByteLength), JS_StrictPropertyStub },
     {0,0,0,0,0}
 };
 
@@ -1454,20 +1453,16 @@ JSPropertySpec ArrayBuffer::jsprops[] = {
 JSPropertySpec TypedArray::jsprops[] = {
     { js_length_str,
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getLength), JS_StrictPropertyStub,
-      JS_TypeHandlerInt },
+      Jsvalify(TypedArray::prop_getLength), JS_StrictPropertyStub },
     { "byteLength",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteLength), JS_StrictPropertyStub,
-      JS_TypeHandlerInt },
+      Jsvalify(TypedArray::prop_getByteLength), JS_StrictPropertyStub },
     { "byteOffset",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getByteOffset), JS_StrictPropertyStub,
-      JS_TypeHandlerInt },
+      Jsvalify(TypedArray::prop_getByteOffset), JS_StrictPropertyStub },
     { "buffer",
       -1, JSPROP_SHARED | JSPROP_PERMANENT | JSPROP_READONLY,
-      Jsvalify(TypedArray::prop_getBuffer), JS_StrictPropertyStub,
-      NULL },
+      Jsvalify(TypedArray::prop_getBuffer), JS_StrictPropertyStub },
     {0,0,0,0,0}
 };
 
@@ -1542,11 +1537,9 @@ do {                                                                           \
                          NULL, NULL);                                          \
     if (!proto)                                                                \
         return NULL;                                                           \
-    cx->addTypeProperty(proto->getType(), NULL, types::TYPE_INT32);            \
+    cx->addTypePropertyId(proto->getType(), JSID_VOID, types::TYPE_INT32);     \
     if (_typedArray::ArrayElementTypeMayBeDouble())                            \
-        cx->addTypeProperty(proto->getType(), NULL, types::TYPE_DOUBLE);       \
-    cx->addTypeProperty(proto->getType(), "buffer",                            \
-                        (types::jstype) bufferType);                           \
+        cx->addTypePropertyId(proto->getType(), JSID_VOID, types::TYPE_DOUBLE); \
     JSObject *ctor = JS_GetConstructor(cx, proto);                             \
     if (!ctor ||                                                               \
         !JS_DefineProperty(cx, ctor, "BYTES_PER_ELEMENT",                      \
@@ -1613,10 +1606,6 @@ js_InitTypedArrayClasses(JSContext *cx, JSObject *obj)
                          ArrayBuffer::class_constructor, 1, JS_TypeHandlerNew,
                          ArrayBuffer::jsprops, NULL, NULL, NULL);
     if (!proto)
-        return NULL;
-
-    TypeObject *bufferType = proto->getNewType(cx);
-    if (!bufferType)
         return NULL;
 
     INIT_TYPED_ARRAY_CLASS(Int8Array,TYPE_INT8);
