@@ -23,38 +23,28 @@ g.eval("(" + function () {
 var log;
 
 function k() {
-    try {
-        throw new Error("oops");  // hook call 1
-    } finally {
-        log += 'k-finally, ';
-    } // hook call 2
+    throw new Error("oops");  // hook call 1
 }
 
 function j() {
-    k();  // hook call 3
+    k();  // hook call 2
     log += 'j-unreached, ';
 }
 
 function h() {
-    try {
-        j();  // hook call 4
-        log += 'h-unreached, ';
-    } catch (exc) {
-        log += 'h-catch, ';
-        throw exc; // hook call 5
-    }
+    j();  // hook call 3
+    log += 'h-unreached, ';
 }
 
 function f() {
     try {
-        h(); // hook call 6
+        h(); // hook call 4
     } catch (exc) {
-        log += 'f-catch, ';
+        log += 'f-catch';
     }
-    log += 'f-after, ';
 }
 
 log = '';
 f();
 g.dbg.enabled = false;
-assertEq(log, '!kjhf, k-finally, !kjhf, !jhf, !hf, h-catch, !hf, !f, f-catch, f-after, ');
+assertEq(log, '!kjhf, !jhf, !hf, !f, f-catch');
