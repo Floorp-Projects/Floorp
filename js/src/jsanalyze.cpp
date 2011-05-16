@@ -49,7 +49,7 @@ void
 JSScript::makeAnalysis(JSContext *cx)
 {
     JS_ASSERT(!analysis_);
-    analysis_ = cx->new_<js::analyze::ScriptAnalysis>(this);
+    analysis_ = js::ArenaNew<js::analyze::ScriptAnalysis>(cx->compartment->pool, this);
 }
 
 namespace js {
@@ -1190,6 +1190,12 @@ ScriptAnalysis::analyzeSSA(JSContext *cx)
         setOOM(cx);
         return;
     }
+    struct FreeSSAValues {
+        JSContext *cx;
+        SSAValue *values;
+        FreeSSAValues(JSContext *cx, SSAValue *values) : cx(cx), values(values) {}
+        ~FreeSSAValues() { cx->free_(values); }
+    } free(cx, values);
 
     SSAValue *stack = values + numSlots;
     uint32 stackDepth = 0;

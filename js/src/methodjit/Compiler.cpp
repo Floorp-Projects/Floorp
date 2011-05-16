@@ -565,6 +565,8 @@ mjit::Compiler::ActiveFrame::ActiveFrame(JSContext *cx)
 mjit::Compiler::ActiveFrame::~ActiveFrame()
 {
     js::Foreground::free_(jumpMap);
+    if (varTypes)
+        js::Foreground::free_(varTypes);
 }
 
 mjit::Compiler::~Compiler()
@@ -573,6 +575,12 @@ mjit::Compiler::~Compiler()
         cx->delete_(outer);
     for (unsigned i = 0; i < inlineFrames.length(); i++)
         cx->delete_(inlineFrames[i]);
+    while (loop) {
+        LoopState *nloop = loop->outer;
+        cx->delete_(loop);
+        loop = nloop;
+    }
+
 #ifdef DEBUG
     if (pcProfile)
         cx->free_(pcProfile);
