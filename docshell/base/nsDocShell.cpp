@@ -9696,6 +9696,18 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         document->SetDocumentURI(newURI);
 
         AddURIVisit(newURI, oldURI, oldURI, 0);
+
+        // AddURIVisit doesn't set the title for the new URI in global history,
+        // so do that here.
+        if (mUseGlobalHistory) {
+            nsCOMPtr<IHistory> history = services::GetHistoryService();
+            if (history) {
+                history->SetURITitle(newURI, mTitle);
+            }
+            else if (mGlobalHistory) {
+                mGlobalHistory->SetPageTitle(newURI, mTitle);
+            }
+        }
     }
     else {
         FireDummyOnLocationChange();
