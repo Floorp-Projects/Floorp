@@ -8488,13 +8488,18 @@ var TabContextMenu = {
   updateContextMenu: function updateContextMenu(aPopupMenu) {
     this.contextTab = document.popupNode.localName == "tab" ?
                       document.popupNode : gBrowser.selectedTab;
-    let disabled = gBrowser.visibleTabs.length == 1;
+    let disabled = gBrowser.tabs.length == 1;
 
     // Enable the "Close Tab" menuitem when the window doesn't close with the last tab.
     document.getElementById("context_closeTab").disabled =
       disabled && gBrowser.tabContainer._closeWindowWithLastTab;
 
     var menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple");
+    for (var i = 0; i < menuItems.length; i++)
+      menuItems[i].disabled = disabled;
+
+    disabled = gBrowser.visibleTabs.length == 1;
+    menuItems = aPopupMenu.getElementsByAttribute("tbattr", "tabbrowser-multiple-visible");
     for (var i = 0; i < menuItems.length; i++)
       menuItems[i].disabled = disabled;
 

@@ -171,19 +171,6 @@ class nsEditableTextFunctor : public nsBoolDomIterFunctor
 
 
 /********************************************************
- *  routine for making new rules instance
- ********************************************************/
-
-nsresult
-NS_NewHTMLEditRules(nsIEditRules** aInstancePtrResult)
-{
-  nsHTMLEditRules * rules = new nsHTMLEditRules();
-  if (rules)
-    return rules->QueryInterface(NS_GET_IID(nsIEditRules), (void**) aInstancePtrResult);
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-/********************************************************
  *  Constructor/Destructor 
  ********************************************************/
 

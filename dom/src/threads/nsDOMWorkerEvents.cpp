@@ -106,6 +106,13 @@ nsDOMWorkerPrivateEvent::PreventDefault()
 }
 
 NS_IMETHODIMP
+nsDOMWorkerPrivateEvent::GetDefaultPrevented(PRBool* aRetVal)
+{
+  *aRetVal = mPreventDefaultCalled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWorkerPrivateEvent::InitEvent(const nsAString& aEventType,
                                    PRBool aCanBubble,
                                    PRBool aCancelable)
@@ -239,6 +246,13 @@ NS_IMETHODIMP
 nsDOMWorkerEvent::PreventDefault()
 {
   mPreventDefaultCalled = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWorkerEvent::GetDefaultPrevented(PRBool* aRetVal)
+{
+  *aRetVal = mPreventDefaultCalled;
   return NS_OK;
 }
 
