@@ -440,16 +440,21 @@ function UpdateParser(aId, aType, aUpdateKey, aUrl, aObserver) {
   }
 
   LOG("Requesting " + aUrl);
-  this.request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                 createInstance(Ci.nsIXMLHttpRequest);
-  this.request.open("GET", aUrl, true);
-  this.request.channel.notificationCallbacks = new BadCertHandler(!requireBuiltIn);
-  this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
-  this.request.overrideMimeType("text/xml");
-  var self = this;
-  this.request.onload = function(event) { self.onLoad() };
-  this.request.onerror = function(event) { self.onError() };
-  this.request.send(null);
+  try {
+    this.request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
+                   createInstance(Ci.nsIXMLHttpRequest);
+    this.request.open("GET", aUrl, true);
+    this.request.channel.notificationCallbacks = new BadCertHandler(!requireBuiltIn);
+    this.request.channel.loadFlags |= Ci.nsIRequest.LOAD_BYPASS_CACHE;
+    this.request.overrideMimeType("text/xml");
+    var self = this;
+    this.request.onload = function(event) { self.onLoad() };
+    this.request.onerror = function(event) { self.onError() };
+    this.request.send(null);
+  }
+  catch (e) {
+    ERROR("Failed to request update manifest", e);
+  }
 }
 
 UpdateParser.prototype = {
