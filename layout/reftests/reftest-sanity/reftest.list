@@ -91,4 +91,13 @@ fails-if(!browserIsRemote) == test-displayport.html test-displayport-ref.html # 
 skip-if(!browserIsRemote) != test-displayport-2.html test-displayport-ref.html # bug 593168
 
 # IPC Position-fixed frames/layers test
-== test-pos-fixed.html test-pos-fixed-ref.html
+# Fixed layers are temporarily disabled (bug 656167).
+#== test-pos-fixed.html test-pos-fixed-ref.html
+
+# reftest syntax: require-or
+require-or(unrecognizedCondition,skip) script scripttest-fail.html
+require-or(true&&unrecognizedCondition,skip) script scripttest-fail.html
+require-or(unrecognizedCondition&&true,skip) script scripttest-fail.html
+require-or(unrecognizedCondition,fails) script scripttest-fail.html
+require-or(true,fails) script scripttest-pass.html
+require-or(true&&true,fails) script scripttest-pass.html

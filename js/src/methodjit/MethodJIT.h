@@ -181,7 +181,11 @@ struct VMFrame
     StackFrame *fp() { return regs.fp(); }
     mjit::JITScript *jit() { return fp()->jit(); }
 
+#if defined(JS_CPU_SPARC)
+    static const size_t offsetOfFp = 31 * sizeof(void *) + FrameRegs::offsetOfFp;
+#else
     static const size_t offsetOfFp = 5 * sizeof(void *) + FrameRegs::offsetOfFp;
+#endif
     static void staticAssert() {
         JS_STATIC_ASSERT(offsetOfFp == offsetof(VMFrame, regs) + FrameRegs::offsetOfFp);
     }
@@ -414,7 +418,10 @@ struct JITScript {
     void purgePICs();
 
     size_t scriptDataSize();
-
+#ifdef DEBUG
+    /* length script->length array of execution counters for every JSOp in the compiled script */
+    int             *pcProfile;
+#endif
     jsbytecode *nativeToPC(void *returnAddress) const;
 
   private:
@@ -485,6 +492,9 @@ ResetTraceHint(JSScript *script, jsbytecode *pc, uint16_t index, bool full);
 
 uintN
 GetCallTargetCount(JSScript *script, jsbytecode *pc);
+
+void
+DumpAllProfiles(JSContext *cx);
 
 inline void * bsearch_nmap(NativeMapEntry *nmap, size_t nPairs, size_t bcOff)
 {

@@ -770,12 +770,12 @@ class GetPropCompiler : public PICStubCompiler
         Jump notArgs = masm.testObjClass(Assembler::NotEqual, pic.objReg, obj->getClass());
 
         masm.loadPtr(Address(pic.objReg, offsetof(JSObject, slots)), pic.objReg);
-        masm.load32(Address(pic.objReg, JSObject::JSSLOT_ARGS_LENGTH * sizeof(Value)),
+        masm.load32(Address(pic.objReg, ArgumentsObject::INITIAL_LENGTH_SLOT * sizeof(Value)),
                     pic.objReg);
         masm.move(pic.objReg, pic.shapeReg);
         Jump overridden = masm.branchTest32(Assembler::NonZero, pic.shapeReg,
-                                            Imm32(JSObject::ARGS_LENGTH_OVERRIDDEN_BIT));
-        masm.rshift32(Imm32(JSObject::ARGS_PACKED_BITS_COUNT), pic.objReg);
+                                            Imm32(ArgumentsObject::LENGTH_OVERRIDDEN_BIT));
+        masm.rshift32(Imm32(ArgumentsObject::PACKED_BITS_COUNT), pic.objReg);
         
         masm.move(ImmType(JSVAL_TYPE_INT32), pic.shapeReg);
         Jump done = masm.jump();
@@ -1648,7 +1648,8 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
             return;
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
-            if (obj->isArray() || (obj->isArguments() && !obj->isArgsLengthOverridden()) ||
+            if (obj->isArray() ||
+                (obj->isArguments() && !obj->asArguments()->hasOverriddenLength()) ||
                 obj->isString()) {
                 GetPropCompiler cc(f, script, obj, *pic, NULL, DisabledLengthIC);
                 if (obj->isArray()) {
@@ -1660,7 +1661,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                     LookupStatus status = cc.generateArgsLengthStub();
                     if (status == Lookup_Error)
                         THROW();
-                    f.regs.sp[-1].setInt32(int32_t(obj->getArgsInitialLength()));
+                    f.regs.sp[-1].setInt32(int32_t(obj->asArguments()->initialLength()));
                 } else if (obj->isString()) {
                     LookupStatus status = cc.generateStringObjLengthStub();
                     if (status == Lookup_Error)

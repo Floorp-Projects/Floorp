@@ -2651,15 +2651,11 @@ JS_SetGCParameter(JSRuntime *rt, JSGCParamKey key, uint32 value)
       case JSGC_STACKPOOL_LIFESPAN:
         rt->gcEmptyArenaPoolLifespan = value;
         break;
-      case JSGC_MODE:
+      default:
+        JS_ASSERT(key == JSGC_MODE);
         rt->gcMode = JSGCMode(value);
         JS_ASSERT(rt->gcMode == JSGC_MODE_GLOBAL ||
                   rt->gcMode == JSGC_MODE_COMPARTMENT);
-        break;
-      default:
-        JS_ASSERT(key == JSGC_TRIGGER_FACTOR);
-        JS_ASSERT(value >= 100);
-        rt->setGCTriggerFactor(value);
         return;
     }
 }
@@ -2674,8 +2670,6 @@ JS_GetGCParameter(JSRuntime *rt, JSGCParamKey key)
         return rt->gcMaxMallocBytes;
       case JSGC_STACKPOOL_LIFESPAN:
         return rt->gcEmptyArenaPoolLifespan;
-      case JSGC_TRIGGER_FACTOR:
-        return rt->gcTriggerFactor;
       case JSGC_BYTES:
         return rt->gcBytes;
       case JSGC_MODE:
@@ -3263,7 +3257,7 @@ JS_LookupPropertyWithFlagsById(JSContext *cx, JSObject *obj, jsid id, uintN flag
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     ok = obj->isNative()
-         ? js_LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop) >= 0
+         ? LookupPropertyWithFlags(cx, obj, id, flags, objp, &prop)
          : obj->lookupProperty(cx, id, objp, &prop);
     return ok && LookupResult(cx, obj, *objp, id, prop, Valueify(vp));
 }
@@ -3366,8 +3360,8 @@ DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, const Value &value,
 
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_DECLARING);
     if (flags != 0 && obj->isNative()) {
-        return !!js_DefineNativeProperty(cx, obj, id, value, getter, setter,
-                                         attrs, flags, tinyid, NULL);
+        return !!DefineNativeProperty(cx, obj, id, value, getter, setter,
+                                      attrs, flags, tinyid);
     }
     return obj->defineProperty(cx, id, value, getter, setter, attrs);
 }

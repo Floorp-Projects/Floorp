@@ -1636,16 +1636,17 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
 
   list.PaintRoot(&builder, aRenderingContext, flags);
 
-  // Update the widget's transparent region information. This sets
+  // Update the widget's opaque region information. This sets
   // glass boundaries on Windows.
   if ((aFlags & PAINT_WIDGET_LAYERS) &&
       !willFlushRetainedLayers &&
       !(aFlags & PAINT_DOCUMENT_RELATIVE)) {
     nsIWidget *widget = aFrame->GetNearestWidget();
     if (widget) {
-      PRInt32 pixelRatio = presContext->AppUnitsPerDevPixel();
-      nsIntRegion visibleWindowRegion(visibleRegion.ToOutsidePixels(pixelRatio));
-      widget->UpdateTransparentRegion(visibleWindowRegion);
+      nsRegion excludedRegion = builder.GetExcludedGlassRegion();
+      excludedRegion.Sub(excludedRegion, visibleRegion);
+      nsIntRegion windowRegion(excludedRegion.ToNearestPixels(presContext->AppUnitsPerDevPixel()));
+      widget->UpdateOpaqueRegion(windowRegion);
     }
   }
 

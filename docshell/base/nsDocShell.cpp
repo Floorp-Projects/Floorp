@@ -6475,6 +6475,10 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     // from inside this pagehide.
     mLoadingURI = nsnull;
     
+    // Stop any in-progress loading, so that we don't accidentally trigger any
+    // PageShow notifications from Embed() interrupting our loading below.
+    Stop();
+
     // Notify the current document that it is about to be unloaded!!
     //
     // It is important to fire the unload() notification *before* any state
@@ -9692,6 +9696,18 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         document->SetDocumentURI(newURI);
 
         AddURIVisit(newURI, oldURI, oldURI, 0);
+
+        // AddURIVisit doesn't set the title for the new URI in global history,
+        // so do that here.
+        if (mUseGlobalHistory) {
+            nsCOMPtr<IHistory> history = services::GetHistoryService();
+            if (history) {
+                history->SetURITitle(newURI, mTitle);
+            }
+            else if (mGlobalHistory) {
+                mGlobalHistory->SetPageTitle(newURI, mTitle);
+            }
+        }
     }
     else {
         FireDummyOnLocationChange();

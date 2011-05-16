@@ -247,53 +247,6 @@ struct JSFunction : public JSObject_Slots2
     JS_FN(name, fastcall, nargs, flags)
 #endif
 
-/*
- * NB: the Arguments classes are uninitialized internal classes that masquerade
- * (according to Object.prototype.toString.call(arguments)) as "Arguments",
- * while having Object.getPrototypeOf(arguments) === Object.prototype.
- *
- * WARNING (to alert embedders reading this private .h file): arguments objects
- * are *not* thread-safe and should not be used concurrently -- they should be
- * used by only one thread at a time, preferably by only one thread over their
- * lifetime (a JS worker that migrates from one OS thread to another but shares
- * nothing is ok).
- *
- * Yes, this is an incompatible change, which prefigures the impending move to
- * single-threaded objects and GC heaps.
- */
-extern js::Class js_ArgumentsClass;
-
-namespace js {
-
-extern Class StrictArgumentsClass;
-
-struct ArgumentsData {
-    js::Value   callee;
-    js::Value   slots[1];
-};
-
-}
-
-inline bool
-JSObject::isNormalArguments() const
-{
-    return getClass() == &js_ArgumentsClass;
-}
-
-inline bool
-JSObject::isStrictArguments() const
-{
-    return getClass() == &js::StrictArgumentsClass;
-}
-
-inline bool
-JSObject::isArguments() const
-{
-    return isNormalArguments() || isStrictArguments();
-}
-
-#define JS_ARGUMENTS_OBJECT_ON_TRACE ((void *)0xa126)
-
 extern JS_PUBLIC_DATA(js::Class) js_CallClass;
 extern JS_PUBLIC_DATA(js::Class) js_FunctionClass;
 extern JS_FRIEND_DATA(js::Class) js_DeclEnvClass;

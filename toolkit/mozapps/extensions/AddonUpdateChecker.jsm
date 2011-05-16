@@ -533,7 +533,7 @@ UpdateParser.prototype = {
     this.timer = null;
 
     if (!Components.isSuccessCode(this.request.status)) {
-      WARN("Request failed: " + request.status);
+      WARN("Request failed: " + this.request.status);
     }
     else if (this.request.channel instanceof Ci.nsIHttpChannel) {
       try {
