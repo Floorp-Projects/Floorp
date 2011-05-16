@@ -801,6 +801,7 @@ $(error SHARED_LIBRARY_LIBS must contain .$(LIB_SUFFIX) files only)
 endif
 
 # Create dependencies on static (and shared EXTRA_DSO_LIBS) libraries
+ifeq (,$(filter clean clobber clobber_all distclean realclean,$(MAKECMDGOALS)))
 ifneq (,$(strip $(filter %.$(LIB_SUFFIX),$(LIBS) $(EXTRA_DSO_LDOPTS)) $(SHARED_LIBRARY_LIBS) $(EXTRA_DSO_LIBS)))
 $(MDDEPDIR)/libs: Makefile.in
 	@$(EXPAND_LIBS_DEPS) LIBS_DEPS = $(filter %.$(LIB_SUFFIX),$(LIBS)) , \
@@ -814,6 +815,7 @@ endif
 $(MDDEPDIR)/libs: $(filter %.$(LIBS_DESC_SUFFIX),$(LIBS_DEPS) $(SHARED_LIBRARY_LIBS_DEPS) $(DSO_LDOPTS_DEPS))
 
 EXTRA_DEPS += $(MDDEPDIR)/libs
+endif
 endif
 
 HOST_LIBS_DEPS = $(filter %.$(LIB_SUFFIX),$(HOST_LIBS))
