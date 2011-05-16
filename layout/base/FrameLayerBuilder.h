@@ -297,6 +297,17 @@ public:
   static PRBool HasRetainedLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey);
 
   /**
+   * Save aMatrix as the transform that was in aLayer when we last painted.
+   */
+  void SaveLastPaintTransform(ThebesLayer* aLayer, const gfx3DMatrix& aMatrix);
+  /**
+   * Get the transform that was in aLayer when we last painted. It's either
+   * the transform saved by SaveLastPaintTransform, or else the transform
+   * that's currently in the layer.
+   */
+  const gfx3DMatrix& GetLastPaintTransform(ThebesLayer* aLayer);
+
+  /**
    * Clip represents the intersection of an optional rectangle with a
    * list of rounded rectangles.
    */
@@ -438,7 +449,9 @@ protected:
    */
   class ThebesLayerItemsEntry : public nsPtrHashKey<ThebesLayer> {
   public:
-    ThebesLayerItemsEntry(const ThebesLayer *key) : nsPtrHashKey<ThebesLayer>(key) {}
+    ThebesLayerItemsEntry(const ThebesLayer *key) :
+        nsPtrHashKey<ThebesLayer>(key), mContainerLayerFrame(nsnull),
+        mHasExplicitLastPaintTransform(PR_FALSE) {}
     ThebesLayerItemsEntry(const ThebesLayerItemsEntry &toCopy) :
       nsPtrHashKey<ThebesLayer>(toCopy.mKey), mItems(toCopy.mItems)
     {
@@ -447,6 +460,10 @@ protected:
 
     nsTArray<ClippedDisplayItem> mItems;
     nsIFrame* mContainerLayerFrame;
+    // The transform set on this ThebesLayer before we started updating the
+    // layer tree.
+    gfx3DMatrix mLastPaintTransform;
+    PRPackedBool mHasExplicitLastPaintTransform;
 
     enum { ALLOW_MEMMOVE = PR_TRUE };
   };
