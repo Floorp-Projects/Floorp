@@ -641,10 +641,6 @@ nsEditingSession::GetEditorForWindow(nsIDOMWindow *aWindow,
   return editorDocShell->GetEditor(outEditor);
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
 /*---------------------------------------------------------------------------
 
   OnStateChange
@@ -892,11 +888,6 @@ nsEditingSession::OnSecurityChange(nsIWebProgress *aWebProgress,
     NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
-
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 
 /*---------------------------------------------------------------------------
@@ -1148,11 +1139,6 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
   return NS_OK;
 #endif
 }
-
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 /*---------------------------------------------------------------------------
 

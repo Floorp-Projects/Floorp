@@ -107,6 +107,7 @@ typedef struct _WSA_COMPATIBILITY_MODE {
 static HMODULE libWinsock2 = NULL;
 static WSAIOCTLPROC wsaioctlProc = NULL;
 static PRBool socketSetCompatMode = PR_FALSE;
+static PRBool socketFixInet6RcvBuf = PR_FALSE;
 
 void _PR_MD_InitSockets(void)
 {
@@ -129,6 +130,11 @@ void _PR_MD_InitSockets(void)
                 socketSetCompatMode = PR_TRUE;
             }
         }
+    }
+    else if (osvi.dwMajorVersion == 5 && osvi.dwMinorVersion == 1)
+    {
+        /* if Windows XP (32-bit) */
+        socketFixInet6RcvBuf = PR_TRUE;
     }
 }
 
@@ -187,6 +193,27 @@ _PR_MD_SOCKET(int af, int type, int flags)
             ** If the call to WSAIoctl() fails with WSAEOPNOTSUPP,
             ** don't close the socket.
             */ 
+        }
+    }
+
+    if (af == AF_INET6 && socketFixInet6RcvBuf)
+    {
+        int bufsize;
+        int len = sizeof(bufsize);
+        int rv;
+
+        /* Windows XP 32-bit returns an error on getpeername() for AF_INET6
+         * sockets if the receive buffer size is greater than 65535 before
+         * the connection is initiated. The default receive buffer size may
+         * be 128000 so fix it here to always be <= 65535. See bug 513659
+         * and IBM DB2 support technote "Receive/Send IPv6 Socket Size
+         * Problem in Windows XP SP2 & SP3".
+         */
+        rv = getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&bufsize, &len);
+        if (rv == 0 && bufsize > 65535)
+        {
+            bufsize = 65535;
+            setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char*)&bufsize, len);
         }
     }
 

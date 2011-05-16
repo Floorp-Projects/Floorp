@@ -1176,7 +1176,7 @@ loser:
 }
 
 CERTCertificateList *
-CERT_DupCertList(CERTCertificateList * oldList)
+CERT_DupCertList(const CERTCertificateList * oldList)
 {
     CERTCertificateList *newList = NULL;
     PRArenaPool         *arena   = NULL;

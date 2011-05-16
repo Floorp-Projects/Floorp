@@ -20,7 +20,7 @@ function onTabViewWindowLoaded(win) {
       immediately: true,
       bounds: {left: 20, top: 20, width: 400, height: 400}
     });
-    contentWindow.GroupItems.setActiveGroupItem(group);
+    contentWindow.UI.setActive(group);
     win.gBrowser.loadOneTab('about:blank', {inBackground: true});
   
     is(group.getChildren().length, 1, "The group has one child now.");

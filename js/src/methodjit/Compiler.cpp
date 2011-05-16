@@ -120,6 +120,9 @@ mjit::Compiler::Compiler(JSContext *cx, StackFrame *fp)
 #endif
     oomInVector(false),
     applyTricks(NoApplyTricks)
+#if defined DEBUG
+    ,pcProfile(NULL)
+#endif
 {
 }
 
@@ -197,6 +200,15 @@ mjit::Compiler::performCompilation(JITScript **jitp)
         jumpMap[i] = Label();
 #endif
 
+#if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
+    if (IsJaegerSpewChannelActive(JSpew_PCProf)) {
+        pcProfile = (int *)cx->malloc_(sizeof(int) * script->length);
+        if (!pcProfile)
+            return Compile_Error;
+        memset(pcProfile, 0, script->length * sizeof(int));
+    }
+#endif
+    
 #ifdef JS_METHODJIT_SPEW
     Profiler prof;
     prof.start();
@@ -219,6 +231,12 @@ mjit::Compiler::performCompilation(JITScript **jitp)
     CHECK_STATUS(generateEpilogue());
     CHECK_STATUS(finishThisUp(jitp));
 
+#if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
+    /* Transfer ownership to JITScript */
+    (*jitp)->pcProfile = pcProfile;
+    pcProfile = NULL;
+#endif
+
 #ifdef JS_METHODJIT_SPEW
     prof.stop();
     JaegerSpew(JSpew_Prof, "compilation took %d us\n", prof.time_us());
@@ -234,6 +252,10 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
 mjit::Compiler::~Compiler()
 {
+#ifdef DEBUG
+    if (pcProfile)
+        cx->free_(pcProfile);
+#endif
     cx->free_(jumpMap);
     cx->free_(savedTraps);
 }
@@ -404,24 +426,24 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
 #endif
     JaegerSpew(JSpew_Insns, "## Fast code (masm) size = %u, Slow code (stubcc) size = %u.\n", masm.size(), stubcc.size());
 
-    size_t totalSize = masm.size() +
-                       stubcc.size() +
-                       doubleList.length() * sizeof(double) +
-                       jumpTableOffsets.length() * sizeof(void *);
+    size_t codeSize = masm.size() +
+                      stubcc.size() +
+                      doubleList.length() * sizeof(double) +
+                      jumpTableOffsets.length() * sizeof(void *);
 
     JSC::ExecutablePool *execPool;
     uint8 *result =
-        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(totalSize, &execPool);
+        (uint8 *)script->compartment->jaegerCompartment->execAlloc()->alloc(codeSize, &execPool);
     if (!result) {
         js_ReportOutOfMemory(cx);
         return Compile_Error;
     }
     JS_ASSERT(execPool);
-    JSC::ExecutableAllocator::makeWritable(result, totalSize);
+    JSC::ExecutableAllocator::makeWritable(result, codeSize);
     masm.executableCopy(result);
     stubcc.masm.executableCopy(result + masm.size());
     
-    JSC::LinkBuffer fullCode(result, totalSize);
+    JSC::LinkBuffer fullCode(result, codeSize);
     JSC::LinkBuffer stubCode(result + masm.size(), stubcc.size());
 
     size_t nNmapLive = 0;
@@ -432,23 +454,23 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
     }
 
     /* Please keep in sync with JITScript::scriptDataSize! */
-    size_t totalBytes = sizeof(JITScript) +
-                        sizeof(NativeMapEntry) * nNmapLive +
+    size_t dataSize = sizeof(JITScript) +
+                      sizeof(NativeMapEntry) * nNmapLive +
 #if defined JS_MONOIC
-                        sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
-                        sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
-                        sizeof(ic::CallICInfo) * callICs.length() +
-                        sizeof(ic::EqualityICInfo) * equalityICs.length() +
-                        sizeof(ic::TraceICInfo) * traceICs.length() +
+                      sizeof(ic::GetGlobalNameIC) * getGlobalNames.length() +
+                      sizeof(ic::SetGlobalNameIC) * setGlobalNames.length() +
+                      sizeof(ic::CallICInfo) * callICs.length() +
+                      sizeof(ic::EqualityICInfo) * equalityICs.length() +
+                      sizeof(ic::TraceICInfo) * traceICs.length() +
 #endif
 #if defined JS_POLYIC
-                        sizeof(ic::PICInfo) * pics.length() +
-                        sizeof(ic::GetElementIC) * getElemICs.length() +
-                        sizeof(ic::SetElementIC) * setElemICs.length() +
+                       sizeof(ic::PICInfo) * pics.length() +
+                       sizeof(ic::GetElementIC) * getElemICs.length() +
+                       sizeof(ic::SetElementIC) * setElemICs.length() +
 #endif
-                        sizeof(CallSite) * callSites.length();
+                       sizeof(CallSite) * callSites.length();
 
-    uint8 *cursor = (uint8 *)cx->calloc_(totalBytes);
+    uint8 *cursor = (uint8 *)cx->calloc_(dataSize);
     if (!cursor) {
         execPool->release();
         js_ReportOutOfMemory(cx);
@@ -808,12 +830,12 @@ mjit::Compiler::finishThisUp(JITScript **jitp)
         to.initialize(codeOffset, from.pc - script->code, from.id);
     }
 
-    JS_ASSERT(size_t(cursor - (uint8*)jit) == totalBytes);
+    JS_ASSERT(size_t(cursor - (uint8*)jit) == dataSize);
 
     *jitp = jit;
 
     /* We tolerate a race in the stats. */
-    cx->runtime->mjitMemoryUsed += totalSize + totalBytes;
+    cx->runtime->mjitDataSize += dataSize;
 
     return Compile_Okay;
 }
@@ -879,6 +901,24 @@ mjit::Compiler::generateMethod()
         JSOp op = JSOp(*PC);
         int trap = stubs::JSTRAP_NONE;
         if (op == JSOP_TRAP) {
+
+#if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
+        if (IsJaegerSpewChannelActive(JSpew_PCProf)) {
+            RegisterID r1 = frame.allocReg();
+            RegisterID r2 = frame.allocReg();
+
+            if (IsJaegerSpewChannelActive(JSpew_PCProf)) {
+                masm.move(ImmPtr(pcProfile), r1);
+                Address pcCounter(r1, sizeof(int) * (PC - script->code));
+                masm.load32(pcCounter, r2);
+                masm.add32(Imm32(1), r2);
+                masm.store32(r2, pcCounter);
+            }
+
+            frame.freeReg(r1);
+            frame.freeReg(r2);
+        }
+#endif
             if (!trapper.untrap(PC))
                 return Compile_Error;
             op = JSOp(*PC);

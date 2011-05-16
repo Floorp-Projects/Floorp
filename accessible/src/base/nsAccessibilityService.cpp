@@ -1432,7 +1432,7 @@ nsAccessibilityService::CreateAccessibleByType(nsIContent* aContent,
       break;
 
     case nsIAccessibleProvider::XULProgressMeter:
-      accessible = new nsXULProgressMeterAccessible(aContent, aWeakShell);
+      accessible = new XULProgressMeterAccessible(aContent, aWeakShell);
       break;
 
     case nsIAccessibleProvider::XULStatusBar:
@@ -1687,6 +1687,13 @@ nsAccessibilityService::CreateHTMLAccessibleByMarkup(nsIFrame* aFrame,
 
   if (tag == nsAccessibilityAtoms::output) {
     nsAccessible* accessible = new nsHTMLOutputAccessible(aContent, aWeakShell);
+    NS_IF_ADDREF(accessible);
+    return accessible;
+  }
+
+  if (tag == nsAccessibilityAtoms::progress) {
+    nsAccessible* accessible =
+      new HTMLProgressMeterAccessible(aContent, aWeakShell);
     NS_IF_ADDREF(accessible);
     return accessible;
   }

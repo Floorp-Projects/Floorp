@@ -197,10 +197,14 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length);
 extern JSBool
 js_HasLengthProperty(JSContext *cx, JSObject *obj, jsuint *lengthp);
 
-extern JSBool JS_FASTCALL
-js_IndexToId(JSContext *cx, jsuint index, jsid *idp);
-
 namespace js {
+
+extern JSBool
+array_defineProperty(JSContext *cx, JSObject *obj, jsid id, const Value *value,
+                     PropertyOp getter, StrictPropertyOp setter, uintN attrs);
+
+extern JSBool
+array_deleteProperty(JSContext *cx, JSObject *obj, jsid id, Value *rval, JSBool strict);
 
 /*
  * This function assumes 'length' is effectively the result of calling

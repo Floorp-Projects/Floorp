@@ -21,14 +21,7 @@ function closeFirstWin(win) {
   win.BrowserTryToCloseWindow();
   ok(win.closed, "window closed");
 
-
-  // The second check will be platform dependent. After bug 592833, Win/Linux
-  // will restore all tabs from the last close window while OSX will just
-  // reopen pinned tabs.
-  let expectedURIs = URIS_PINNED.concat(URIS_NORMAL_B);
-  if (!navigator.platform.match(/Mac/))
-    expectedURIs = expectedURIs.concat(URIS_NORMAL_A);
-  openWinWithCb(checkSecondWin, URIS_NORMAL_B, expectedURIs);
+  openWinWithCb(checkSecondWin, URIS_NORMAL_B, URIS_PINNED.concat(URIS_NORMAL_B));
 }
 
 function checkSecondWin(win) {

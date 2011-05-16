@@ -37,7 +37,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#if defined(__OpenBSD__) || defined(__NetBSD__)
+#include <soundcard.h>
+#else
 #include <sys/soundcard.h>
+#endif
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -49,7 +53,7 @@
 // for versions newer than 3.6.1
 #define OSS_VERSION(x, y, z) (x << 16 | y << 8 | z)
 // support only versions newer than 3.6.1
-#define SUPP_OSS_VERSION OSS_VERSION(3,6,1)
+#define SUPP_OSS_VERSION OSS_VERSION(3,0,1)
 
 #if (SOUND_VERSION < SUPP_OSS_VERSION)
 #error Unsupported OSS Version

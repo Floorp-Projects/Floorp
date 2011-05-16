@@ -48,16 +48,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE          = npmozax
 LIBRARY_NAME    = npmozax
 
-ifdef WINCE
-MOZ_FLASH_ACTIVEX_PATCH = 1
-endif
-
-ifdef MOZ_FLASH_ACTIVEX_PATCH
-RESFILE         = MozActiveX-flash.res
-else
 RESFILE         = MozActiveX.res
-endif
-
 DEFFILE         = npmozax.def
 GRE_MODULE	= 1
 
@@ -132,21 +123,6 @@ ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 LOCAL_INCLUDES += -I$(XPIDL_GEN_DIR)
 endif
 
-ifdef WINCE
-OS_LIBS += \
-	coredll.lib \
-	ole32.lib \
-	oleaut32.lib \
-	uuid.lib \
-	ceshell.lib \
-	corelibc.lib \
-	atls.lib \
-	atlce400.lib \
-	urlmon.lib \
-	libcmt.lib \
-	comsuppw.lib \
-	$(NULL)
-else
 OS_LIBS += \
     comdlg32.lib                   \
     ole32.lib                      \
@@ -154,7 +130,6 @@ OS_LIBS += \
     uuid.lib                       \
     shell32.lib                    \
     $(NULL)
-endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 DEFINES += -DMOZ_ACTIVEX_PLUGIN_LIVECONNECT -DXPCOM_GLUE
@@ -166,10 +141,6 @@ endif
 
 ifdef XPC_IDISPATCH_SUPPORT
 DEFINES += -DXPC_IDISPATCH_SUPPORT
-endif
-
-ifdef MOZ_FLASH_ACTIVEX_PATCH
-DEFINES += -DMOZ_FLASH_ACTIVEX_PATCH
 endif
 
 EXTRA_DSO_LDOPTS = \

@@ -66,7 +66,6 @@ InterfaceType()        - construct a new object representing a type that
 """
 
 from __future__ import with_statement
-import mmap
 import os, sys
 import struct
 
@@ -1051,7 +1050,7 @@ class Typelib(object):
         """
         with open(filename, "r+b") as f:
             st = os.fstat(f.fileno())
-            map = mmap.mmap(f.fileno(), st.st_size)
+            map = f.read(st.st_size)
             data = Typelib._header.unpack(map[:Typelib._header.size])
             if data[0] != XPT_MAGIC:
                 raise FileFormatError, "Bad magic: %s" % data[0]
@@ -1090,7 +1089,6 @@ class Typelib(object):
                 xpt.interfaces.append(iface)
             for iface in xpt.interfaces:
                 iface.read_descriptor(xpt, map, data_pool_offset)
-            map.close()
         return xpt
     
     def __repr__(self):

@@ -134,7 +134,9 @@ protected:
                           const PRBool& cacheEntryAvailable,
                           const PRUint32& cacheExpirationTime,
                           const nsCString& cachedCharset,
-                          const nsCString& securityInfoSerialization);
+                          const nsCString& securityInfoSerialization,
+                          const PRNetAddr& selfAddr,
+                          const PRNetAddr& peerAddr);
   bool RecvOnTransportAndData(const nsresult& status,
                               const PRUint64& progress,
                               const PRUint64& progressMax,
@@ -182,7 +184,9 @@ private:
                       const PRBool& cacheEntryAvailable,
                       const PRUint32& cacheExpirationTime,
                       const nsCString& cachedCharset,
-                      const nsCString& securityInfoSerialization);
+                      const nsCString& securityInfoSerialization,
+                      const PRNetAddr& selfAddr,
+                      const PRNetAddr& peerAddr);
   void OnTransportAndData(const nsresult& status,
                           const PRUint64 progress,
                           const PRUint64& progressMax,

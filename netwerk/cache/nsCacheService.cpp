@@ -83,10 +83,6 @@ using namespace mozilla;
 /******************************************************************************
  * nsCacheProfilePrefObserver
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark nsCacheProfilePrefObserver
-#endif
-
 #define DISK_CACHE_ENABLE_PREF      "browser.cache.disk.enable"
 #define DISK_CACHE_DIR_PREF         "browser.cache.disk.parent_directory"
 #define DISK_CACHE_SMART_SIZE_FIRST_RUN_PREF\
@@ -969,11 +965,6 @@ private:
 /******************************************************************************
  * nsCacheService
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark nsCacheService
-#endif
-
 nsCacheService *   nsCacheService::gService = nsnull;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsCacheService, nsICacheService)
@@ -2123,10 +2114,6 @@ nsCacheService::SetMemoryCache()
 /******************************************************************************
  * static methods for nsCacheEntryDescriptor
  *****************************************************************************/
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
 void
 nsCacheService::CloseDescriptor(nsCacheEntryDescriptor * descriptor)
 {
@@ -2247,10 +2234,6 @@ nsCacheService::ValidateEntry(nsCacheEntry * entry)
 
     return rv;
 }
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 
 void
