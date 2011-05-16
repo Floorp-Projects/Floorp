@@ -2333,8 +2333,10 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
 #define RESET_USE_METHODJIT()                                                 \
     JS_BEGIN_MACRO                                                            \
         useMethodJIT = cx->methodJitEnabled &&                                \
-            interpMode == JSINTERP_NORMAL &&                                  \
-            script->getJITStatus(regs.fp()->isConstructing()) != JITScript_Invalid; \
+            script->getJITStatus(regs.fp()->isConstructing()) != JITScript_Invalid && \
+           (interpMode == JSINTERP_NORMAL ||                                  \
+            interpMode == JSINTERP_REJOIN ||                                  \
+            interpMode == JSINTERP_SKIP_TRAP);                                \
     JS_END_MACRO
 
 #define MONITOR_BRANCH_METHODJIT()                                            \
@@ -2558,6 +2560,10 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
         if (!ScriptPrologueOrGeneratorResume(cx, fp, newType))
             goto error;
     }
+
+    /* The REJOIN mode acts like the normal mode, except the prologue is skipped. */
+    if (interpMode == JSINTERP_REJOIN)
+        interpMode = JSINTERP_NORMAL;
 
     JS_ASSERT_IF(interpMode == JSINTERP_SKIP_TRAP, JSOp(*regs.pc) == JSOP_TRAP);
 
@@ -5115,7 +5121,7 @@ END_VARLEN_CASE
 BEGIN_CASE(JSOP_TRAP)
 {
     if (interpMode == JSINTERP_SKIP_TRAP) {
-        interpMode = JSINTERP_SAFEPOINT;
+        interpMode = JSINTERP_NORMAL;
         op = JS_GetTrapOpcode(cx, script, regs.pc);
         DO_OP();
     }
