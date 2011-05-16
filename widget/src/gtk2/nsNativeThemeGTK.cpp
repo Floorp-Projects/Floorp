@@ -1037,6 +1037,25 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsRenderingContext* aContext,
       *aIsOverridable = PR_FALSE;
     }
     break;
+    case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+    case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    {
+      /* While we enforce a minimum size for the thumb, this is ignored
+       * for the some scrollbars if buttons are hidden (bug 513006) because
+       * the thumb isn't a direct child of the scrollbar, unlike the buttons
+       * or track. So add a minimum size to the track as well to prevent a
+       * 0-width scrollbar. */
+      MozGtkScrollbarMetrics metrics;
+      moz_gtk_get_scrollbar_metrics(&metrics);
+
+      if (aWidgetType == NS_THEME_SCROLLBAR_TRACK_VERTICAL)
+        aResult->width = metrics.slider_width;
+      else
+        aResult->height = metrics.slider_width;
+
+      *aIsOverridable = PR_FALSE;
+    }
+    break;
     case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
     case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
       {
