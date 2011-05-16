@@ -49,7 +49,6 @@ colorpicker[type="button"] {
   -moz-appearance: button;
   width: 38px;
   height: 24px;
-  padding: 3px;
 }
 
 .colorpicker-button-colorbox {
@@ -69,7 +68,7 @@ colorpicker[type="button"] {
 }
 
 .colorpickertile[selected="true"] {
-  border: 2px outset #C0C0C0;
+  border: 2px outset #C0C0C0;+
 }
 
 .colorpickertile[hover="true"] {
