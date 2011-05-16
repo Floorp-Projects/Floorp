@@ -163,6 +163,7 @@ def run_cmd_avoid_stdio(cmdline, env):
 
 def run_test(test, lib_dir):
     env = os.environ.copy()
+    env['TZ'] = 'US/Pacific'
     if test.tmflags:
         env['TMFLAGS'] = test.tmflags
     cmd = get_test_cmd(test.path, test.jitflags, lib_dir)
