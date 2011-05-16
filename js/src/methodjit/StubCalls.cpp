@@ -128,8 +128,6 @@ stubs::SetName(VMFrame &f, JSAtom *origAtom)
     if (!obj)
         THROW();
 
-    cx->typeMonitorAssign(obj, ATOM_TO_JSID(origAtom), rval);
-
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);
 
@@ -284,8 +282,6 @@ stubs::SetPropNoCache(VMFrame &f, JSAtom *atom)
          THROW();
     Value rval = f.regs.sp[-1];
 
-    f.cx->typeMonitorAssign(obj, ATOM_TO_JSID(atom), rval);
-
     if (!obj->setProperty(f.cx, ATOM_TO_JSID(atom), &f.regs.sp[-1], strict))
         THROW();
     f.regs.sp[-2] = rval;
@@ -306,8 +302,6 @@ stubs::SetGlobalNameNoCache(VMFrame &f, JSAtom *atom)
     if (!obj)
         THROW();
     jsid id = ATOM_TO_JSID(atom);
-
-    cx->typeMonitorAssign(obj, id, rval);
 
     if (!obj->setProperty(cx, id, &rval, strict))
         THROW();
@@ -575,7 +569,7 @@ stubs::SetElem(VMFrame &f)
     if (!FetchElementId(f, obj, idval, id, &regs.sp[-2]))
         THROW();
 
-    cx->typeMonitorAssign(obj, id, rval);
+    f.script()->typeMonitorAssign(cx, f.pc(), obj, id, rval);
 
     do {
         if (obj->isDenseArray() && JSID_IS_INT(id)) {
@@ -585,8 +579,8 @@ stubs::SetElem(VMFrame &f)
                 if (obj->getDenseArrayElement(i).isMagic(JS_ARRAY_HOLE)) {
                     if (js_PrototypeHasIndexedProperties(cx, obj))
                         break;
-                    if ((jsuint)i >= obj->getArrayLength() && !obj->setArrayLength(cx, i + 1))
-                        THROW();
+                    if ((jsuint)i >= obj->getArrayLength())
+                        obj->setArrayLength(cx, i + 1);
                     /*
                      * Note: this stub is used for ENUMELEM, so watch out
                      * before overwriting the op.
@@ -594,7 +588,7 @@ stubs::SetElem(VMFrame &f)
                     if (JSOp(*f.pc()) == JSOP_SETELEM)
                         *f.pc() = JSOP_SETHOLE;
                 }
-                obj->setDenseArrayElement(i, rval);
+                obj->setDenseArrayElementWithType(cx, i, rval);
                 goto end_setelem;
             } else {
                 if (JSOp(*f.pc()) == JSOP_SETELEM)
@@ -794,8 +788,6 @@ stubs::DefFun(VMFrame &f, JSFunction *fun)
         THROW();
 
     Value rval = ObjectValue(*obj);
-
-    cx->typeMonitorAssign(parent, id, rval);
 
     do {
         /* Steps 5d, 5f. */
@@ -1383,7 +1375,7 @@ stubs::NewInitArray(VMFrame &f, uint32 count)
     if (type)
         obj->setType(type);
 
-    JS_ALWAYS_TRUE(obj->setArrayLength(f.cx, count));
+    obj->setArrayLength(f.cx, count);
     return obj;
 }
 
@@ -1444,7 +1436,6 @@ stubs::InitElem(VMFrame &f, uint32 last)
         if (last && !js_SetLengthProperty(cx, obj, (jsuint) (JSID_TO_INT(id) + 1)))
             THROW();
     } else {
-        cx->typeMonitorAssign(obj, id, rref);
         if (!obj->defineProperty(cx, id, rref, NULL, NULL, JSPROP_ENUMERATE))
             THROW();
     }
@@ -1677,7 +1668,6 @@ ObjIncOp(VMFrame &f, JSObject *obj, jsid id)
 
         v.setNumber(d);
         f.script()->typeMonitorOverflow(cx, f.pc());
-        cx->typeMonitorAssign(obj, id, v);
 
         {
             JSAutoResolveFlags rf(cx, setPropFlags);
@@ -2166,8 +2156,6 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
     JSObject *obj = &regs.sp[-2].toObject();
     JS_ASSERT(obj->isNative());
 
-    cx->typeMonitorAssign(obj, ATOM_TO_JSID(atom), rval);
-
     /*
      * Probe the property cache.
      *
@@ -2208,6 +2196,7 @@ InitPropOrMethod(VMFrame &f, JSAtom *atom, JSOp op)
          * property, not updating an existing slot's value that might
          * contain a method of a branded shape.
          */
+        cx->addTypePropertyId(obj->getType(), ATOM_TO_JSID(atom), rval);
         obj->nativeSetSlot(slot, rval);
     } else {
         PCMETER(JS_PROPERTY_CACHE(cx).inipcmisses++);
@@ -2719,7 +2708,6 @@ stubs::SetConst(VMFrame &f, JSAtom *atom)
     JSObject *obj = &cx->stack.currentVarObj();
     const Value &ref = f.regs.sp[-1];
 
-    cx->typeMonitorAssign(obj, ATOM_TO_JSID(atom), ref);
     if (!obj->defineProperty(cx, ATOM_TO_JSID(atom), ref,
                              PropertyStub, StrictPropertyStub,
                              JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {

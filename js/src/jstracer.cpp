@@ -483,10 +483,10 @@ jitstats_getOnTrace(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 }
 
 static JSPropertySpec jitstats_props[] = {
-#define JITSTAT(x) { #x, STAT ## x ## ID, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT, NULL, NULL, JS_TypeHandlerInt },
+#define JITSTAT(x) { #x, STAT ## x ## ID, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT },
 #include "jitstats.tbl"
 #undef JITSTAT
-    { "onTrace", 0, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT, jitstats_getOnTrace, NULL, JS_TypeHandlerBool },
+    { "onTrace", 0, JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT, jitstats_getOnTrace, NULL },
     { 0 }
 };
 

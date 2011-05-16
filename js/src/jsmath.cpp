@@ -930,7 +930,7 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    if (!JS_DefineFunctionsWithPrefix(cx, Math, math_static_methods, js_Math_str))
+    if (!JS_DefineFunctions(cx, Math, math_static_methods))
         return NULL;
     if (!JS_DefineConstDoubles(cx, Math, math_constants))
         return NULL;

@@ -402,23 +402,22 @@ const uint8 REGEXP_STATIC_PROP_ATTRS    = JSPROP_PERMANENT | JSPROP_SHARED | JSP
 const uint8 RO_REGEXP_STATIC_PROP_ATTRS = REGEXP_STATIC_PROP_ATTRS | JSPROP_READONLY;
 
 static JSPropertySpec regexp_static_props[] = {
-    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter,
-                                                     static_input_setter, JS_TypeHandlerString},
+    {"input",        0, REGEXP_STATIC_PROP_ATTRS,    static_input_getter, static_input_setter},
     {"multiline",    0, REGEXP_STATIC_PROP_ATTRS,    static_multiline_getter,
-                                                     static_multiline_setter, JS_TypeHandlerBool},
-    {"lastMatch",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastMatch_getter,    NULL, JS_TypeHandlerString},
-    {"lastParen",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastParen_getter,    NULL, JS_TypeHandlerString},
-    {"leftContext",  0, RO_REGEXP_STATIC_PROP_ATTRS, static_leftContext_getter,  NULL, JS_TypeHandlerString},
-    {"rightContext", 0, RO_REGEXP_STATIC_PROP_ATTRS, static_rightContext_getter, NULL, JS_TypeHandlerString},
-    {"$1",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren1_getter,       NULL, JS_TypeHandlerString},
-    {"$2",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren2_getter,       NULL, JS_TypeHandlerString},
-    {"$3",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren3_getter,       NULL, JS_TypeHandlerString},
-    {"$4",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren4_getter,       NULL, JS_TypeHandlerString},
-    {"$5",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren5_getter,       NULL, JS_TypeHandlerString},
-    {"$6",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren6_getter,       NULL, JS_TypeHandlerString},
-    {"$7",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren7_getter,       NULL, JS_TypeHandlerString},
-    {"$8",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren8_getter,       NULL, JS_TypeHandlerString},
-    {"$9",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren9_getter,       NULL, JS_TypeHandlerString},
+                                                     static_multiline_setter},
+    {"lastMatch",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastMatch_getter,    NULL},
+    {"lastParen",    0, RO_REGEXP_STATIC_PROP_ATTRS, static_lastParen_getter,    NULL},
+    {"leftContext",  0, RO_REGEXP_STATIC_PROP_ATTRS, static_leftContext_getter,  NULL},
+    {"rightContext", 0, RO_REGEXP_STATIC_PROP_ATTRS, static_rightContext_getter, NULL},
+    {"$1",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren1_getter,       NULL},
+    {"$2",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren2_getter,       NULL},
+    {"$3",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren3_getter,       NULL},
+    {"$4",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren4_getter,       NULL},
+    {"$5",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren5_getter,       NULL},
+    {"$6",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren6_getter,       NULL},
+    {"$7",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren7_getter,       NULL},
+    {"$8",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren8_getter,       NULL},
+    {"$9",           0, RO_REGEXP_STATIC_PROP_ATTRS, static_paren9_getter,       NULL},
     {0,0,0,0,0}
 };
 
@@ -893,7 +892,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
      * Now add the standard methods to RegExp.prototype, and pre-brand for
      * better shape-guarding code.
      */
-    if (!JS_DefineFunctionsWithPrefix(cx, proto, regexp_methods, "RegExp"))
+    if (!JS_DefineFunctions(cx, proto, regexp_methods))
         return NULL;
     if (!cx->typeInferenceEnabled())
         proto->brand(cx);
@@ -939,6 +938,7 @@ js_InitRegExpClass(JSContext *cx, JSObject *global)
     if (!type->getEmptyShape(cx, &js_RegExpClass, FINALIZE_OBJECT0))
         return NULL;
 
+    /* Capture properties added individually to each RegExp object. */
     cx->addTypeProperty(protoType, "source", TYPE_STRING);
     cx->addTypeProperty(protoType, "global", TYPE_BOOLEAN);
     cx->addTypeProperty(protoType, "ignoreCase", TYPE_BOOLEAN);

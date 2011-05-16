@@ -844,7 +844,7 @@ struct JSObject : js::gc::Cell {
      */
 
     inline uint32 getArrayLength() const;
-    inline bool setArrayLength(JSContext *cx, uint32 length);
+    inline void setArrayLength(JSContext *cx, uint32 length);
 
     inline uint32 getDenseArrayCapacity();
     inline uint32 getDenseArrayInitializedLength();
@@ -854,6 +854,7 @@ struct JSObject : js::gc::Cell {
     inline const js::Value &getDenseArrayElement(uintN idx);
     inline js::Value* addressOfDenseArrayElement(uintN idx);
     inline void setDenseArrayElement(uintN idx, const js::Value &val);
+    inline void setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value &val);
     inline void shrinkDenseArrayElements(JSContext *cx, uintN cap);
     inline bool denseArrayHasInlineSlots() const;
     inline void backfillDenseArrayHoles();
@@ -1217,25 +1218,14 @@ struct JSObject : js::gc::Cell {
                           js::PropertyOp getter = js::PropertyStub,
                           js::StrictPropertyOp setter = js::StrictPropertyStub,
                           uintN attrs = JSPROP_ENUMERATE) {
-        JS_ASSERT_IF(getter == js::PropertyStub && setter == js::StrictPropertyStub,
-                     js::types::TypeHasProperty(cx, getType(), id, value));
         js::DefinePropOp op = getOps()->defineProperty;
         return (op ? op : js_DefineProperty)(cx, this, id, &value, getter, setter, attrs);
     }
 
-    JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp) {
-        js::PropertyIdOp op = getOps()->getProperty;
-        JSBool res = (op ? op : (js::PropertyIdOp)js_GetProperty)(cx, this, receiver, id, vp);
-        JS_ASSERT_IF(res, js::types::TypeHasProperty(cx, getType(), id, *vp));
-        return res;
-    }
-
-    JSBool getProperty(JSContext *cx, jsid id, js::Value *vp) {
-        return getProperty(cx, this, id, vp);
-    }
+    inline JSBool getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp);
+    inline JSBool getProperty(JSContext *cx, jsid id, js::Value *vp);
 
     JSBool setProperty(JSContext *cx, jsid id, js::Value *vp, JSBool strict) {
-        JS_ASSERT(js::types::TypeHasProperty(cx, getType(), id, *vp));
         js::StrictPropertyIdOp op = getOps()->setProperty;
         return (op ? op : js_SetProperty)(cx, this, id, vp, strict);
     }
@@ -1670,6 +1660,7 @@ const uintN DNP_SET_METHOD   = 4;   /* DefineNativeProperty,js_SetPropertyHelper
 const uintN DNP_UNQUALIFIED  = 8;   /* Unqualified property set.  Only used in
                                        the defineHow argument of
                                        js_SetPropertyHelper. */
+const uintN DNP_SKIP_TYPE = 0x10;   /* Don't update type information */
 
 /*
  * Return successfully added or changed shape or NULL on error.
@@ -1678,16 +1669,6 @@ extern const Shape *
 DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const js::Value &value,
                      PropertyOp getter, StrictPropertyOp setter, uintN attrs,
                      uintN flags, intN shortid, uintN defineHow = 0);
-
-static inline const Shape *
-DefineNativePropertyWithType(JSContext *cx, JSObject *obj, jsid id, const js::Value &value,
-                             js::PropertyOp getter, js::StrictPropertyOp setter, uintN attrs,
-                             uintN flags, intN shortid, uintN defineHow = 0)
-{
-    JS_AddTypePropertyById(cx, obj, id, Jsvalify(value));
-    return DefineNativeProperty(cx, obj, id, value, getter, setter,
-                                attrs, flags, shortid, defineHow);
-}
 
 /*
  * Specialized subroutine that allows caller to preset JSRESOLVE_* flags.

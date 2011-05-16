@@ -1842,7 +1842,6 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
     if (JSID_IS_ATOM(id, cx->runtime->atomState.lengthAtom)) {
         JS_ASSERT(!IsInternalFunctionObject(obj));
-        cx->addTypePropertyId(obj->getType(), id, types::TYPE_INT32);
         if (!DefineNativeProperty(cx, obj, id, Int32Value(fun->nargs),
                                   PropertyStub, StrictPropertyStub,
                                   JSPROP_PERMANENT | JSPROP_READONLY, 0, 0)) {
@@ -3094,7 +3093,6 @@ js_DefineFunction(JSContext *cx, JSObject *obj, jsid id, Native native,
     if (!wasDelegate && obj->isDelegate())
         obj->clearDelegate();
 
-    cx->addTypePropertyId(obj->getType(), id, ObjectValue(*fun));
     if (!obj->defineProperty(cx, id, ObjectValue(*fun), gop, sop, attrs & ~JSFUN_FLAGS_MASK))
         return NULL;
 

@@ -134,6 +134,28 @@ JSObject::setAttributes(JSContext *cx, jsid id, uintN *attrsp)
 }
 
 inline JSBool
+JSObject::getProperty(JSContext *cx, JSObject *receiver, jsid id, js::Value *vp)
+{
+    js::PropertyIdOp op = getOps()->getProperty;
+    if (op) {
+        if (!op(cx, this, receiver, id, vp))
+            return false;
+        cx->addTypePropertyId(getType(), id, *vp);
+    } else {
+        if (!js_GetProperty(cx, this, receiver, id, vp))
+            return false;
+        JS_ASSERT(js::types::TypeHasProperty(cx, getType(), id, *vp));
+    }
+    return true;
+}
+
+inline JSBool
+JSObject::getProperty(JSContext *cx, jsid id, js::Value *vp)
+{
+    return getProperty(cx, this, id, vp);
+}
+
+inline JSBool
 JSObject::deleteProperty(JSContext *cx, jsid id, js::Value *rval, JSBool strict)
 {
     cx->addTypePropertyId(getType(), id, js::types::TYPE_UNDEFINED);
@@ -423,7 +445,7 @@ JSObject::getArrayLength() const
     return (uint32)(size_t) getPrivate();
 }
 
-inline bool
+inline void
 JSObject::setArrayLength(JSContext *cx, uint32 length)
 {
     JS_ASSERT(isArray());
@@ -441,7 +463,6 @@ JSObject::setArrayLength(JSContext *cx, uint32 length)
     }
 
     setPrivate((void*) length);
-    return true;
 }
 
 inline void
@@ -486,6 +507,13 @@ JSObject::setDenseArrayElement(uintN idx, const js::Value &val)
 {
     JS_ASSERT(isDenseArray() && idx < getDenseArrayInitializedLength());
     slots[idx] = val;
+}
+
+inline void
+JSObject::setDenseArrayElementWithType(JSContext *cx, uintN idx, const js::Value &val)
+{
+    cx->addTypePropertyId(getType(), JSID_VOID, val);
+    setDenseArrayElement(idx, val);
 }
 
 inline void

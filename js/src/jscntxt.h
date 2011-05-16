@@ -1385,9 +1385,6 @@ struct JSContext
      */
     inline void typeMonitorCall(const js::CallArgs &args, bool constructing);
 
-    /* Monitor an assignment made to a property by a script. */
-    inline void typeMonitorAssign(JSObject *obj, jsid id, const js::Value &value);
-
     /* Add a possible value for the named property of obj. */
     inline void addTypeProperty(js::types::TypeObject *obj, const char *name, js::types::jstype type);
     inline void addTypeProperty(js::types::TypeObject *obj, const char *name, const js::Value &value);

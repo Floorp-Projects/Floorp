@@ -3316,7 +3316,7 @@ js_InitReflectClass(JSContext *cx, JSObject *obj)
         return NULL;
     }
 
-    if (!JS_DefineFunctionsWithPrefix(cx, Reflect, static_methods, "Reflect"))
+    if (!JS_DefineFunctions(cx, Reflect, static_methods))
         return NULL;
 
     MarkStandardClassInitializedNoProto(obj, &js_ReflectClass);

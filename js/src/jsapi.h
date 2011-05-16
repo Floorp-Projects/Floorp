@@ -2094,9 +2094,6 @@ struct JSPropertySpec {
     uint8                 flags;
     JSPropertyOp          getter;
     JSStrictPropertyOp    setter;
-
-    /* For properties with primitive types, handler below specifying that type. */
-    JSTypeHandler         handler;
 };
 
 struct JSFunctionSpec {
@@ -2274,14 +2271,6 @@ JS_DefinePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value,
 
 extern JS_PUBLIC_API(JSBool)
 JS_DefineOwnProperty(JSContext *cx, JSObject *obj, jsid id, jsval descriptor, JSBool *bp);
-
-/* Add properties to the type information for obj. */
-
-extern JS_PUBLIC_API(void)
-JS_AddTypeProperty(JSContext *cx, JSObject *obj, const char *name, jsval value);
-
-extern JS_PUBLIC_API(void)
-JS_AddTypePropertyById(JSContext *cx, JSObject *obj, jsid id, jsval value);
 
 /*
  * Determine the attributes (JSPROP_* flags) of a property on a given object.
@@ -2693,35 +2682,27 @@ extern JS_PUBLIC_API(JSBool)
 JS_ObjectIsCallable(JSContext *cx, JSObject *obj);
 
 extern JS_PUBLIC_API(JSBool)
-JS_DefineFunctionsWithPrefix(JSContext *cx, JSObject *obj, JSFunctionSpec *fs,
-                             const char *namePrefix);
-
-static JS_ALWAYS_INLINE JSBool
-JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
-{
-    return JS_DefineFunctionsWithPrefix(cx, obj, fs, "Unknown");
-}
+JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs);
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineFunctionWithType(JSContext *cx, JSObject *obj,
                           const char *name, JSNative call,
                           uintN nargs, uintN attrs,
-                          JSTypeHandler handler, const char *fullName);
+                          JSTypeHandler handler);
 
 static JS_ALWAYS_INLINE JSFunction*
 JS_DefineFunction(JSContext *cx, JSObject *obj,
                   const char *name, JSNative call,
                   uintN nargs, uintN attrs)
 {
-    return JS_DefineFunctionWithType(cx, obj, name, call, nargs, attrs,
-                                     NULL, NULL);
+    return JS_DefineFunctionWithType(cx, obj, name, call, nargs, attrs, NULL);
 }
 
 extern JS_PUBLIC_API(JSFunction *)
 JS_DefineUCFunctionWithType(JSContext *cx, JSObject *obj,
                             const jschar *name, size_t namelen, JSNative call,
                             uintN nargs, uintN attrs,
-                            JSTypeHandler handler, const char *fullName);
+                            JSTypeHandler handler);
 
 static JS_ALWAYS_INLINE JSFunction*
 JS_DefineUCFunction(JSContext *cx, JSObject *obj,
@@ -2729,7 +2710,7 @@ JS_DefineUCFunction(JSContext *cx, JSObject *obj,
                     uintN nargs, uintN attrs)
 {
     return JS_DefineUCFunctionWithType(cx, obj, name, namelen, call,
-                                       nargs, attrs, NULL, NULL);
+                                       nargs, attrs, NULL);
 }
 
 extern JS_PUBLIC_API(JSFunction *)

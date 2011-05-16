@@ -1566,7 +1566,7 @@ js_InitJSONClass(JSContext *cx, JSObject *obj)
                            JS_PropertyStub, JS_StrictPropertyStub, 0))
         return NULL;
 
-    if (!JS_DefineFunctionsWithPrefix(cx, JSON, json_static_methods, js_JSON_str))
+    if (!JS_DefineFunctions(cx, JSON, json_static_methods))
         return NULL;
 
     MarkStandardClassInitializedNoProto(obj, &js_JSONClass);

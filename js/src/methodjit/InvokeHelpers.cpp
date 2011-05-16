@@ -1247,8 +1247,6 @@ FinishObjIncOp(VMFrame &f, RejoinState rejoin, Value objv, Value ov, Value nv, V
             f.script()->typeMonitorOverflow(cx, f.pc());
     }
 
-    cx->typeMonitorAssign(obj, id, nv);
-
     uint32 setPropFlags = (cs->format & JOF_NAME)
                           ? JSRESOLVE_ASSIGNING
                           : JSRESOLVE_ASSIGNING | JSRESOLVE_QUALIFIED;
