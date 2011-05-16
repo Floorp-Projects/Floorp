@@ -455,6 +455,8 @@ mjit::Compiler::pushActiveFrame(JSScript *script, uint32 argc)
         CompileStatus status = prepareInferenceTypes(script, newa);
         if (status != Compile_Okay)
             return status;
+    } else {
+        newa->varTypes = NULL;
     }
 
     this->script = script;
