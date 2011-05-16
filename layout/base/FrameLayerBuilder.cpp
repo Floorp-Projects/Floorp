@@ -715,16 +715,17 @@ FrameLayerBuilder::GetOldLayerFor(nsIFrame* aFrame, PRUint32 aDisplayItemKey)
 
 /**
  * Invalidate aRegion in aLayer. aLayer is in the coordinate system
- * *after* aLayer's transform has been applied, so we need to
+ * *after* aTransform has been applied, so we need to
  * apply the inverse of that transform before calling InvalidateRegion.
  * Currently we assume that the transform is just an integer translation,
  * since that's all we need for scrolling.
  */
 static void
-InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsIntRegion& aRegion)
+InvalidatePostTransformRegion(ThebesLayer* aLayer, const nsIntRegion& aRegion,
+                              const gfx3DMatrix& aTransform)
 {
   gfxMatrix transform;
-  if (aLayer->GetTransform().Is2D(&transform)) {
+  if (aTransform.Is2D(&transform)) {
     NS_ASSERTION(!transform.HasNonIntegerTranslation(),
                  "Matrix not just an integer translation?");
     // Convert the region from the coordinates of the container layer
@@ -807,7 +808,8 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
       nsIntRect invalidate = layer->GetValidRegion().GetBounds();
       layer->InvalidateRegion(invalidate);
     } else {
-      InvalidatePostTransformRegion(layer, mInvalidThebesContent);
+      InvalidatePostTransformRegion(layer, mInvalidThebesContent,
+                                    layer->GetTransform());
     }
     // We do not need to Invalidate these areas in the widget because we
     // assume the caller of InvalidateThebesLayerContents has ensured
@@ -821,6 +823,8 @@ ContainerState::CreateOrRecycleThebesLayer(nsIFrame* aActiveScrolledRoot)
     layer->SetUserData(&gThebesDisplayItemLayerUserData,
         new ThebesDisplayItemLayerUserData());
   }
+
+  mBuilder->LayerBuilder()->SaveLastPaintTransform(layer, layer->GetTransform());
 
   // Set up transform so that 0,0 in the Thebes layer corresponds to the
   // (pixel-snapped) top-left of the aActiveScrolledRoot.
@@ -1419,12 +1423,13 @@ ContainerState::InvalidateForLayerChange(nsDisplayItem* aItem, Layer* aNewLayer)
 
     ThebesLayer* t = oldLayer->AsThebesLayer();
     if (t) {
-      InvalidatePostTransformRegion(t, r);
+      InvalidatePostTransformRegion(t, r,
+              mBuilder->LayerBuilder()->GetLastPaintTransform(t));
     }
     if (aNewLayer) {
       ThebesLayer* newLayer = aNewLayer->AsThebesLayer();
       if (newLayer) {
-        InvalidatePostTransformRegion(newLayer, r);
+        InvalidatePostTransformRegion(newLayer, r, newLayer->GetTransform());
       }
     }
 
@@ -1476,6 +1481,26 @@ FrameLayerBuilder::AddLayerDisplayItem(Layer* aLayer,
   DisplayItemDataEntry* entry = mNewDisplayItemData.PutEntry(f);
   if (entry) {
     entry->mData.AppendElement(DisplayItemData(aLayer, aItem->GetPerFrameKey()));
+  }
+}
+
+const gfx3DMatrix&
+FrameLayerBuilder::GetLastPaintTransform(ThebesLayer* aLayer)
+{
+  ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
+  if (entry && entry->mHasExplicitLastPaintTransform)
+    return entry->mLastPaintTransform;
+  return aLayer->GetTransform();
+}
+
+void
+FrameLayerBuilder::SaveLastPaintTransform(ThebesLayer* aLayer,
+                                          const gfx3DMatrix& aMatrix)
+{
+  ThebesLayerItemsEntry* entry = mThebesLayerItems.PutEntry(aLayer);
+  if (entry) {
+    entry->mLastPaintTransform = aMatrix;
+    entry->mHasExplicitLastPaintTransform = PR_TRUE;
   }
 }
 
