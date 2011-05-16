@@ -104,11 +104,6 @@ public:
   virtual nsStyleContext*
   GetAdditionalStyleContext(PRInt32 aIndex) const;
 
-  NS_IMETHOD
-  Init(nsIContent* aContent,
-       nsIFrame*   aParent,
-       nsIFrame*   aPrevInFlow);
-
   NS_IMETHOD BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                               const nsRect&           aDirtyRect,
                               const nsDisplayListSet& aLists);

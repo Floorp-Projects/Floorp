@@ -1097,7 +1097,7 @@ toolbar[mode="full"] .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   margin: 1px 3px;
   padding: 2px;
   background-clip: padding-box;
-  border: 1px solid ThreeDDarkShadow;
+  border: 1px solid ThreeDShadow;
   border-radius: 3.5px;
 }
 

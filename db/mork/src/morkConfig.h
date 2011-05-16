@@ -50,8 +50,6 @@
 
 // { %%%%% begin platform defs peculiar to Mork %%%%%
 
-//#define XP_MAC 1
-
 #ifdef XP_MACOSX
 #define MORK_MAC 1
 #endif

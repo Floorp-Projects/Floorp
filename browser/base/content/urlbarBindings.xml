@@ -183,7 +183,7 @@
       <field name="_formattingEnabled">true</field>
       <method name="formatValue">
         <body><![CDATA[
-          if (!this._formattingEnabled)
+          if (!this._formattingEnabled || this.focused)
             return;
 
           let controller = this.editor.selectionController;
@@ -217,6 +217,17 @@
             range.setEnd(textNode, value.length);
             selection.addRange(range);
           }
+        ]]></body>
+      </method>
+
+      <method name="_clearFormatting">
+        <body><![CDATA[
+          if (!this._formattingEnabled)
+            return;
+
+          let controller = this.editor.selectionController;
+          let selection = controller.getSelection(controller.SELECTION_URLSECONDARY);
+          selection.removeAllRanges();
         ]]></body>
       </method>
 
@@ -439,6 +450,7 @@
             aEvent.preventDefault();
             this.value = url;
             SetPageProxyState("invalid");
+            this.focus();
             try {
               urlSecurityCheck(this.value,
                                gBrowser.contentPrincipal,
@@ -644,6 +656,7 @@
 
       <handler event="blur"><![CDATA[
         this._clearNoActions();
+        this.formatValue();
       ]]></handler>
 
       <handler event="draggesture" phase="capturing"><![CDATA[
@@ -678,6 +691,7 @@
 
       <handler event="focus" phase="capturing"><![CDATA[
         this._hideURLTooltip();
+        this._clearFormatting();
       ]]></handler>
 
       <handler event="dragover" phase="capturing" action="this.onDragOver(event, this);"/>

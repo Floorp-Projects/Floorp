@@ -1150,7 +1150,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-a appdir] [-r manifest]... [-PsSwWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-g gredir] [-r manifest]... [-PsSwWxCij] [-v version] [-f scriptfile] [-e script] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -1753,6 +1753,12 @@ GetCurrentWorkingDirectory(nsAString& workingDirectory)
     return true;
 }
 
+static JSPrincipals *
+FindObjectPrincipals(JSContext *cx, JSObject *obj)
+{
+    return gJSPrincipals;
+}
+
 int
 main(int argc, char **argv, char **envp)
 {
@@ -1798,23 +1804,6 @@ main(int argc, char **argv, char **envp)
 
         if (!dirprovider.SetGREDir(argv[2])) {
             printf("SetGREDir failed.\n");
-            return 1;
-        }
-        argc -= 2;
-        argv += 2;
-    }
-
-    if (argc > 1 && !strcmp(argv[1], "-a")) {
-        if (argc < 3)
-            return usage();
-
-        nsCOMPtr<nsILocalFile> dir;
-        rv = XRE_GetFileFromPath(argv[2], getter_AddRefs(dir));
-        if (NS_SUCCEEDED(rv)) {
-            appDir = do_QueryInterface(dir, &rv);
-        }
-        if (NS_FAILED(rv)) {
-            printf("Couldn't use given appdir.\n");
             return 1;
         }
         argc -= 2;
@@ -1905,6 +1894,11 @@ main(int argc, char **argv, char **envp)
                 fprintf(gErrFile, "+++ Failed to get ScriptSecurityManager service, running without principals");
             }
         }
+
+        JSSecurityCallbacks *cb = JS_GetRuntimeSecurityCallbacks(rt);
+        NS_ASSERTION(cb, "We are assuming that nsScriptSecurityManager::Init() has been run");
+        NS_ASSERTION(!cb->findObjectPrincipals, "Your pigeon is in my hole!");
+        cb->findObjectPrincipals = FindObjectPrincipals;
 
 #ifdef TEST_TranslateThis
         nsCOMPtr<nsIXPCFunctionThisTranslator>

@@ -29,7 +29,8 @@
 <div style="margin: 0; padding: 0; font-size: 24px;">Here is a text frame.</div>
 <textarea style="margin: 0;" id="textarea" cols="20" rows="4"></textarea><br/>
 <iframe id="iframe" width="300" height="150"
-        src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe>
+        src="data:text/html,&lt;textarea id='textarea' cols='20' rows='4'&gt;&lt;/textarea&gt;"></iframe><br/>
+<input id="input" type="text"/><br/>
 </p>
 <div id="content" style="display: none">
   
@@ -72,6 +73,7 @@ var textarea = document.getElementById("textarea");
 var panel = document.getElementById("panel");
 var textbox = document.getElementById("textbox");
 var iframe = document.getElementById("iframe");
+var input = document.getElementById("input");
 var textareaInFrame;
 
 const nsIDOMWindowUtils = Components.interfaces.nsIDOMWindowUtils;
@@ -1421,6 +1423,295 @@ function runPanelTest()
   panel.openPopupAtScreen(window.screenX + window.outerWidth, 0, false);
 }
 
+function runMaxLengthTest()
+{
+  input.maxLength = 1;
+  input.value = "";
+  input.focus();
+
+  var kDesc ="runMaxLengthTest";
+
+  // start composition
+  synthesizeComposition(true);
+
+  // input first character
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u3089", kDesc, "#1-1") ||
+      !checkSelection(1, "", kDesc, "#1-1")) {
+    return;
+  }
+
+  // input second character
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC",
+        "clauses":
+        [
+          { "length": 2, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC", kDesc, "#1-2") ||
+      !checkSelection(2, "", kDesc, "#1-2")) {
+    return;
+  }
+
+  // input third character
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 3, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081", kDesc, "#1-3") ||
+      !checkSelection(3, "", kDesc, "#1-3")) {
+    return;
+  }
+
+  // input fourth character
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093",
+        "clauses":
+        [
+          { "length": 4, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093", kDesc, "#1-4") ||
+      !checkSelection(4, "", kDesc, "#1-4")) {
+    return;
+  }
+
+
+  // backspace
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081",
+        "clauses":
+        [
+          { "length": 3, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 3, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081", kDesc, "#1-5") ||
+      !checkSelection(3, "", kDesc, "#1-5")) {
+    return;
+  }
+
+  // re-input
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093",
+        "clauses":
+        [
+          { "length": 4, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093", kDesc, "#1-6") ||
+      !checkSelection(4, "", kDesc, "#1-6")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093\u3055",
+        "clauses":
+        [
+          { "length": 5, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 5, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093\u3055", kDesc, "#1-7") ||
+      !checkSelection(5, "", kDesc, "#1-7")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044",
+        "clauses":
+        [
+          { "length": 6, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 6, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093\u3055\u3044", kDesc, "#1-8") ||
+      !checkSelection(6, "", kDesc, "#1-8")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053",
+        "clauses":
+        [
+          { "length": 7, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 7, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093\u3055\u3044\u3053",
+                    kDesc, "#1-8") ||
+      !checkSelection(7, "", kDesc, "#1-8")) {
+    return;
+  }
+
+  synthesizeText(
+    { "composition":
+      { "string": "\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046",
+        "clauses":
+        [
+          { "length": 8, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 8, "length": 0 }
+    });
+
+  if (!checkContent("\u3089\u30FC\u3081\u3093\u3055\u3044\u3053\u3046",
+                    kDesc, "#1-9") ||
+      !checkSelection(8, "", kDesc, "#1-9")) {
+    return;
+  }
+
+  // convert
+  synthesizeText(
+    { "composition":
+      { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
+        "clauses":
+        [
+          { "length": 4,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_SELECTEDCONVERTEDTEXT },
+          { "length": 2,
+            "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_CONVERTEDTEXT }
+        ]
+      },
+      "caret": { "start": 4, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8", kDesc, "#1-10") ||
+      !checkSelection(6, "", kDesc, "#1-10")) {
+    return;
+  }
+
+  // commit the composition string
+  synthesizeText(
+    { "composition":
+      { "string": "\u30E9\u30FC\u30E1\u30F3\u6700\u9AD8",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 8, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9", kDesc, "#1-11") ||
+      !checkSelection(1, "", kDesc, "#1-11")) {
+    return;
+  }
+
+  synthesizeComposition(false);
+
+  // restart composition
+  synthesizeComposition(true);
+
+  // input characters
+  synthesizeText(
+    { "composition":
+      { "string": "\u3057",
+        "clauses":
+        [
+          { "length": 1, "attr": nsIDOMWindowUtils.COMPOSITION_ATTR_RAWINPUT }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9\u3057", kDesc, "#2-1") ||
+      !checkSelection(1 + 1, "", kDesc, "#2-1")) {
+    return;
+  }
+
+  // commit the composition string
+  synthesizeText(
+    { "composition":
+      { "string": "\u3058",
+        "clauses":
+        [
+          { "length": 0, "attr": 0 }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContent("\u30E9", kDesc, "#2-2") ||
+      !checkSelection(1 + 0, "", kDesc, "#2-2")) {
+    return;
+  }
+
+  synthesizeComposition(false);
+
+  // Undo
+  synthesizeKey("Z", {accelKey: true});
+
+  // XXX this is unexpected behavior, see bug 258291
+  if (!checkContent("\u30E9", kDesc, "#3-1") ||
+      !checkSelection(1 + 0, "", kDesc, "#3-1")) {
+    return;
+  }
+
+  // Undo
+  synthesizeKey("Z", {accelKey: true});
+  if (!checkContent("", kDesc, "#3-2") ||
+      !checkSelection(0, "", kDesc, "#3-2")) {
+    return;
+  }
+
+  // Redo
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+  if (!checkContent("\u30E9", kDesc, "#3-3") ||
+      !checkSelection(1, "", kDesc, "#3-3")) {
+    return;
+  }
+
+  // Redo
+  synthesizeKey("Z", {accelKey: true, shiftKey: true});
+  if (!checkContent("\u30E9", kDesc, "#3-4") ||
+      !checkSelection(1 + 0, "", kDesc, "#3-4")) {
+    return;
+  }
+}
+
 function runTest()
 {
   runUndoRedoTest();
@@ -1429,6 +1720,7 @@ function runTest()
   runCharAtPointAtOutsideTest();
   runFrameTest();
   runPanelTest();
+  runMaxLengthTest();
 }
 
 ]]>

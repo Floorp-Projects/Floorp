@@ -332,7 +332,6 @@ JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
         return NULL;
     str->init(chars, length);
 
-    cx->runtime->stringMemoryUsed += length * 2;
 #ifdef DEBUG
     JSRuntime *rt = cx->runtime;
     JS_RUNTIME_METER(rt, liveStrings);
@@ -530,7 +529,6 @@ inline void
 JSFlatString::finalize(JSRuntime *rt)
 {
     JS_ASSERT(!isShort());
-    rt->stringMemoryUsed -= length() * 2;
 
     /*
      * This check depends on the fact that 'chars' is only initialized to the

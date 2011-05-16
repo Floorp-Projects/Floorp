@@ -47,7 +47,7 @@ interface nsIDOMNode;
  * tabs contained in them.
  */
 
-[scriptable, uuid(a0a52a85-4032-41d7-b183-9d21009e0a65)]
+[scriptable, uuid(766a09c1-d21b-4bf8-9fe3-8b34b716251a)]
 interface nsISessionStore : nsISupports
 {
   /**
@@ -109,7 +109,8 @@ interface nsISessionStore : nsISupports
   boolean shouldRestore();
 
   /**
-   *  Restores the previous browser session using a fast, lightweight strategy
+   * Restores the previous browser session using a fast, lightweight strategy
+   * @param aBringToFront should a restored tab be brought to the foreground?
    */
-  void restoreLastSession();
+  void restoreLastSession(in boolean aBringToFront);
 };

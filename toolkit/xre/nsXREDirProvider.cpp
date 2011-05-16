@@ -301,6 +301,9 @@ nsXREDirProvider::GetFile(const char* aProperty, PRBool* aPersistent,
     if (NS_SUCCEEDED(rv))
       file = lf;
   }
+  else if (!strcmp(aProperty, "resource:app")) {
+    rv = GetAppDir()->Clone(getter_AddRefs(file));
+  }
 
   else if (!strcmp(aProperty, NS_APP_PROFILE_DIR_STARTUP) && mProfileDir) {
     return mProfileDir->Clone(aFile);

@@ -79,6 +79,8 @@ _SERV_FILES = 	\
 		runtestsremote.py \
 		runtestsvmware.py \
 		$(topsrcdir)/build/mobile/devicemanager.py \
+		$(topsrcdir)/build/mobile/devicemanagerADB.py \
+		$(topsrcdir)/build/mobile/devicemanagerSUT.py \
 		$(topsrcdir)/build/automationutils.py \
 		$(topsrcdir)/build/poster.zip \
 		$(topsrcdir)/build/mobile/remoteautomation.py \
@@ -99,7 +101,7 @@ _SERV_FILES = 	\
 		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		mozprefs.js \
-		pywebsocket_ignore_sigint.py \
+		pywebsocket_wrapper.py \
 		$(NULL)	
 
 _PYWEBSOCKET_FILES = \

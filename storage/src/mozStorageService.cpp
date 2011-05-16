@@ -133,39 +133,15 @@ namespace storage {
 //// Memory Reporting
 
 static PRInt64
-GetStorageSQLitePageCacheMemoryUsed(void *)
+GetStorageSQLiteMemoryUsed(void *)
 {
-  int current, high;
-  int rc = ::sqlite3_status(SQLITE_STATUS_PAGECACHE_OVERFLOW, &current, &high,
-                            0);
-  return rc == SQLITE_OK ? current : 0;
+  return ::sqlite3_memory_used();
 }
 
-static PRInt64
-GetStorageSQLiteOtherMemoryUsed(void *)
-{
-  int pageCacheCurrent, pageCacheHigh;
-  int rc = ::sqlite3_status(SQLITE_STATUS_PAGECACHE_OVERFLOW, &pageCacheCurrent,
-                            &pageCacheHigh, 0);
-  return rc == SQLITE_OK ? ::sqlite3_memory_used() - pageCacheCurrent : 0;
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLitePageCacheMemoryUsed,
-                             "heap-used/storage/sqlite/pagecache",
-                             "Memory used by SQLite for the page cache. "
-                             "This overlaps with the per-connection cache-used "
-                             "figure, thus over-counting some bytes.  Bug "
-                             "653630 has the details.",
-                             GetStorageSQLitePageCacheMemoryUsed,
-                             nsnull)
-
-NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteOtherMemoryUsed,
-                             "heap-used/storage/sqlite/other",
-                             "Memory used by SQLite for other various reasons."
-                             "This overlaps with the per-connection stmt-used "
-                             "and schema-used figures, thus over-counting some "
-                             "bytes.  Bug 653630 has the details.",
-                             GetStorageSQLiteOtherMemoryUsed,
+NS_MEMORY_REPORTER_IMPLEMENT(StorageSQLiteMemoryUsed,
+                             "heap-used/storage/sqlite",
+                             "Memory used by SQLite.",
+                             GetStorageSQLiteMemoryUsed,
                              nsnull)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -214,10 +190,9 @@ public:
       (void)pref->GetIntPref(PREF_TS_SYNCHRONOUS, &synchronous);
     ::PR_ATOMIC_SET(mSynchronousPrefValPtr, synchronous);
 
-    // Register our SQLite memory reporters.  Registration can only happen on
+    // Register our SQLite memory reporter.  Registration can only happen on
     // the main thread (otherwise you'll get cryptic crashes).
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLitePageCacheMemoryUsed));
-    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLiteOtherMemoryUsed));
+    NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(StorageSQLiteMemoryUsed));
 
     return NS_OK;
   }

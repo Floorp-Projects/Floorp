@@ -49,7 +49,6 @@
 #include "nsIComponentManager.h"
 #include "nsNPAPIPlugin.h"
 #include "nsNPAPIPluginStreamListener.h"
-#include "nsIPlugin.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIPluginStreamListener.h"
 #include "nsIHTTPHeaderListener.h"
@@ -1323,12 +1322,12 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
   NS_ASSERTION(pluginTag, "Must have plugin tag here!");
 
-  nsCOMPtr<nsIPlugin> plugin;
+  nsRefPtr<nsNPAPIPlugin> plugin;
   GetPlugin(mimetype, getter_AddRefs(plugin));
 
   nsCOMPtr<nsIPluginInstance> instance;
   if (plugin) {
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
     static BOOL firstJavaPlugin = FALSE;
     BOOL restoreOrigDir = FALSE;
     WCHAR origDir[_MAX_PATH];
@@ -1349,7 +1348,7 @@ nsPluginHost::TrySetUpPluginInstance(const char *aMimeType,
 
     rv = plugin->CreatePluginInstance(getter_AddRefs(instance));
 
-#if defined(XP_WIN) && !defined(WINCE)
+#if defined(XP_WIN)
     if (!firstJavaPlugin && restoreOrigDir) {
       BOOL bCheck = SetCurrentDirectoryW(origDir);
       NS_ASSERTION(bCheck, "Error restoring directory");
@@ -1726,7 +1725,7 @@ nsresult nsPluginHost::EnsurePluginLoaded(nsPluginTag* plugin)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginHost::GetPlugin(const char *aMimeType, nsIPlugin** aPlugin)
+nsresult nsPluginHost::GetPlugin(const char *aMimeType, nsNPAPIPlugin** aPlugin)
 {
   nsresult rv = NS_ERROR_FAILURE;
   *aPlugin = NULL;

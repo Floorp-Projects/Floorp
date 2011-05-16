@@ -290,6 +290,15 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   return NS_OK;
 }
 
+static
+void UpdatePanelFileTypes(NSOpenPanel* aPanel, NSArray* aFilters)
+{
+  // If we show all file types, also "expose" bundles' contents.
+  [aPanel setTreatsFilePackagesAsDirectories:!aFilters];
+
+  [aPanel setAllowedFileTypes:aFilters];
+}
+
 @implementation NSPopUpButtonObserver
 - (void) setPopUpButton:(NSPopUpButton*)aPopUpButton
 {
@@ -315,8 +324,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   }
 
   mFilePicker->SetFilterIndex(selectedItem);
-  NSArray* filters = mFilePicker->GetFilterList();
-  [mOpenPanel setAllowedFileTypes:filters];
+  UpdatePanelFileTypes(mOpenPanel, mFilePicker->GetFilterList());
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN();
 }
@@ -333,10 +341,6 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
 
   SetShowHiddenFileState(thePanel);
 
-  // Get filters
-  // filters may be null, if we should allow all file types.
-  NSArray *filters = GetFilterList();
-
   // Set the options for how the get file dialog will appear
   SetDialogTitle(inTitle, thePanel);
   [thePanel setAllowsMultipleSelection:inAllowMultiple];
@@ -345,9 +349,9 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   [thePanel setCanChooseFiles:YES];
   [thePanel setResolvesAliases:YES];        //this is default - probably doesn't need to be set
   
-  // if we show all file types, also "expose" bundles' contents.
-  if (!filters)
-    [thePanel setTreatsFilePackagesAsDirectories:NO];       
+  // Get filters
+  // filters may be null, if we should allow all file types.
+  NSArray *filters = GetFilterList();
 
   // set up default directory
   NSString *theDir = PanelDefaultDirectory();
@@ -363,7 +367,7 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
   // are not available on 10.5 and without using them it happens to be buggy.
   int result;
   nsCocoaUtils::PrepareForNativeAppModalDialog();
-  if (nsToolkit::OnSnowLeopardOrLater()) {
+  if (mFilters.Length() > 1 && nsToolkit::OnSnowLeopardOrLater()) {
     // [NSURL initWithString:] (below) throws an exception if URLString is nil.
     if (!theDir) {
       theDir = @"";
@@ -384,12 +388,16 @@ nsFilePicker::GetLocalFiles(const nsString& inTitle, PRBool inAllowMultiple, nsC
       name:NSMenuWillSendActionNotification object:nil];
 
     [thePanel setDirectoryURL:[[NSURL alloc] initWithString:theDir]];
-    [thePanel setAllowedFileTypes:filters];
+    UpdatePanelFileTypes(thePanel, filters);
     result = [thePanel runModal];
 
     [[NSNotificationCenter defaultCenter] removeObserver:observer];
     [observer release];
   } else {
+    // If we show all file types, also "expose" bundles' contents.
+    if (!filters) {
+      [thePanel setTreatsFilePackagesAsDirectories:YES];
+    }
     result = [thePanel runModalForDirectory:theDir file:nil types:filters];
   }
   nsCocoaUtils::CleanUpAfterNativeAppModalDialog();

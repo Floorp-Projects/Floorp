@@ -386,9 +386,17 @@ private:
    * TArray version of getBookmarksIdForURI for ease of use in C++ code.
    * Pass in a reference to a TArray; it will get filled with the
    * resulting list of bookmark IDs.
+   *
+   * @param aURI
+   *        URI to get bookmarks for.
+   * @param aResult
+   *        Array of bookmark ids.
+   * @param aSkipTags
+   *        If true ids of tags-as-bookmarks entries will be excluded.
    */
   nsresult GetBookmarkIdsForURITArray(nsIURI* aURI,
-                                      nsTArray<PRInt64>& aResult);
+                                      nsTArray<PRInt64>& aResult,
+                                      bool aSkipTags);
 
   PRInt64 RecursiveFindRedirectedBookmark(PRInt64 aPlaceId);
 

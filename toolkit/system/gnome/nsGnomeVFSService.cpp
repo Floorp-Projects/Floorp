@@ -107,17 +107,11 @@ nsGnomeVFSMimeApp::Launch(const nsACString &aUri)
   if (! uri)
     return NS_ERROR_FAILURE;
 
-  GList *uris = g_list_append(NULL, uri);
+  GList uris = { 0 };
+  uris.data = uri;
 
-  if (! uris) {
-    g_free(uri);
-    return NS_ERROR_FAILURE;
-  }
-
-  GnomeVFSResult result = gnome_vfs_mime_application_launch(mApp, uris);
-
+  GnomeVFSResult result = gnome_vfs_mime_application_launch(mApp, &uris);
   g_free(uri);
-  g_list_free(uris);
 
   if (result != GNOME_VFS_OK)
     return NS_ERROR_FAILURE;
@@ -258,7 +252,6 @@ nsGnomeVFSService::ShowURIForInput(const nsACString &aUri)
   if (gnome_vfs_url_show_with_env(spec, NULL) == GNOME_VFS_OK)
     rv = NS_OK;
 
-  if (spec)
-    g_free(spec);
+  g_free(spec);
   return rv;
 }

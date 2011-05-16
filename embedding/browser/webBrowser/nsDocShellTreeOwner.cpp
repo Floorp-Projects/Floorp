@@ -1027,11 +1027,6 @@ nsDocShellTreeOwner::GetOwnerRequestor()
 }
 
 
-#ifdef XP_MAC
-#pragma mark -
-#endif
-
-
 ///////////////////////////////////////////////////////////////////////////////
 // DefaultTooltipTextProvider
 
@@ -1649,12 +1644,6 @@ ChromeTooltipListener::sAutoHideCallback(nsITimer *aTimer, void* aListener)
   // NOTE: |aTimer| and |self->mAutoHideTimer| are invalid after calling ClosePopup();
   
 } // sAutoHideCallback
-
-
-
-#ifdef XP_MAC
-#pragma mark -
-#endif
 
 
 NS_IMPL_ADDREF(ChromeContextMenuListener)
