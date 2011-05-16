@@ -209,6 +209,21 @@ int main(int argc, char* argv[])
 
   strcpy(++lastSlash, XPCOM_DLL);
 
+#ifdef XP_WIN
+  // GetProcessIoCounters().ReadOperationCount seems to have little to
+  // do with actual read operations. It reports 0 or 1 at this stage
+  // in the program. Luckily 1 coincides with when prefetch is
+  // enabled. If Windows prefetch didn't happen we can do our own
+  // faster dll preloading.
+  IO_COUNTERS ioCounters;
+  if (GetProcessIoCounters(GetCurrentProcess(), &ioCounters)
+      && !ioCounters.ReadOperationCount)
+#endif
+  {
+      XPCOMGlueEnablePreload();
+  }
+
+
   rv = XPCOMGlueStartup(exePath);
   if (NS_FAILED(rv)) {
     Output("Couldn't load XPCOM.\n");
