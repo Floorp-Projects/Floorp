@@ -1422,8 +1422,13 @@ nsNavBookmarks::GetDescendantChildren(PRInt64 aFolderId,
   PRUint32 childCount = aFolderChildrenArray.Length();
   for (PRUint32 i = startIndex; i < childCount; ++i) {
     if (aFolderChildrenArray[i].type == TYPE_FOLDER) {
+      // nsTarray assumes that all children can be memmove()d, thus we can't
+      // just pass aFolderChildrenArray[i].guid to a method that will change
+      // the array itself.  Otherwise, since it's passed by reference, after a
+      // memmove() it could point to garbage and cause intermittent crashes.
+      nsCString guid = aFolderChildrenArray[i].guid;
       GetDescendantChildren(aFolderChildrenArray[i].id,
-                            aFolderChildrenArray[i].guid,
+                            guid,
                             aFolderId,
                             aFolderChildrenArray);
     }
