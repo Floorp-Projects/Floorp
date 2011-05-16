@@ -109,7 +109,7 @@ MakeTypeId(JSContext *cx, jsid id)
             cp++;
             while (JS7_ISDEC(*cp))
                 cp++;
-            if (unsigned(cp - str->chars()) == str->length())
+            if (*cp == 0)
                 return JSID_VOID;
         }
         return id;
