@@ -25,7 +25,7 @@ function onTabViewWindowLoaded() {
   let groupItemOne = new contentWindow.GroupItem([],
       { bounds: box, title: "test1" });
   is(contentWindow.GroupItems.groupItems.length, 2, "we now have two groups");
-  contentWindow.GroupItems.setActiveGroupItem(groupItemOne);
+  contentWindow.UI.setActive(groupItemOne);
 
   // create a tab
   let xulTab = gBrowser.loadOneTab("about:blank");

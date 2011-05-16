@@ -309,8 +309,9 @@ extern void SECU_PrintPrivKeyUsagePeriodExtension(FILE *out, SECItem *value,
 extern void SECU_PrintExtensions(FILE *out, CERTCertExtension **extensions,
 				 char *msg, int level);
 
-extern void SECU_PrintName(FILE *out, CERTName *name, char *msg, int level);
-extern void SECU_PrintRDN(FILE *out, CERTRDN *rdn, char *msg, int level);
+extern void SECU_PrintName(FILE *out, CERTName *name, const char *msg,
+                           int level);
+extern void SECU_PrintRDN(FILE *out, CERTRDN *rdn, const char *msg, int level);
 
 #ifdef SECU_GetPassword
 /* Convert a High public Key to a Low public Key */

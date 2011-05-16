@@ -1,4 +1,4 @@
-/* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
@@ -55,10 +55,11 @@ var _cleanupFunctions = [];
 var _pendingTimers = [];
 
 function _dump(str) {
+  let start = /^TEST-/.test(str) ? "\n" : "";
   if (typeof _XPCSHELL_PROCESS == "undefined") {
-    dump(str);
+    dump(start + str);
   } else {
-    dump(_XPCSHELL_PROCESS + ": " + str);
+    dump(start + _XPCSHELL_PROCESS + ": " + str);
   }
 }
 
@@ -416,7 +417,7 @@ function do_execute_soon(callback) {
         // possible that this will mask an NS_ERROR_ABORT that happens after a
         // do_check failure though.
         if (!_quit || e != Components.results.NS_ERROR_ABORT) {
-          dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e);
+          _dump("TEST-UNEXPECTED-FAIL | (xpcshell/head.js) | " + e);
           if (e.stack) {
             dump(" - See following stack:\n");
             _dump_exception_stack(e.stack);
@@ -440,7 +441,7 @@ function do_throw(text, stack) {
 
   _passed = false;
   _dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | " + text +
-         " - See following stack:\n");
+        " - See following stack:\n");
   var frame = Components.stack;
   while (frame != null) {
     _dump(frame + "\n");
@@ -457,7 +458,7 @@ function do_throw_todo(text, stack) {
 
   _passed = false;
   _dump("TEST-UNEXPECTED-PASS | " + stack.filename + " | " + text +
-         " - See following stack:\n");
+        " - See following stack:\n");
   var frame = Components.stack;
   while (frame != null) {
     _dump(frame + "\n");
@@ -473,9 +474,9 @@ function do_report_unexpected_exception(ex, text) {
   text = text ? text + " - " : "";
 
   _passed = false;
-  dump("TEST-UNEXPECTED-FAIL | " + caller_stack.filename + " | " + text +
-         "Unexpected exception " + ex + ", see following stack:\n" + ex.stack +
-         "\n");
+  _dump("TEST-UNEXPECTED-FAIL | " + caller_stack.filename + " | " + text +
+        "Unexpected exception " + ex + ", see following stack:\n" + ex.stack +
+        "\n");
 
   _do_quit();
   throw Components.results.NS_ERROR_ABORT;
@@ -485,9 +486,9 @@ function do_note_exception(ex, text) {
   var caller_stack = Components.stack.caller;
   text = text ? text + " - " : "";
 
-  dump("TEST-INFO | " + caller_stack.filename + " | " + text +
-         "Swallowed exception " + ex + ", see following stack:\n" + ex.stack +
-         "\n");
+  _dump("TEST-INFO | " + caller_stack.filename + " | " + text +
+        "Swallowed exception " + ex + ", see following stack:\n" + ex.stack +
+        "\n");
 }
 
 function _do_check_neq(left, right, stack, todo) {
@@ -630,8 +631,8 @@ function do_get_file(path, allowNonexistent) {
       _passed = false;
       var stack = Components.stack.caller;
       _dump("TEST-UNEXPECTED-FAIL | " + stack.filename + " | [" +
-             stack.name + " : " + stack.lineNumber + "] " + lf.path +
-             " does not exist\n");
+            stack.name + " : " + stack.lineNumber + "] " + lf.path +
+            " does not exist\n");
     }
 
     return lf;

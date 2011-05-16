@@ -322,8 +322,8 @@ Debug::newCompletionValue(AutoCompartment &ac, bool ok, Value val, Value *vp)
     JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!obj ||
         !wrapDebuggeeValue(cx, &val) ||
-        !js_DefineNativeProperty(cx, obj, key, val, PropertyStub, StrictPropertyStub,
-                                 JSPROP_ENUMERATE, 0, 0, NULL))
+        !DefineNativeProperty(cx, obj, key, val, PropertyStub, StrictPropertyStub,
+                              JSPROP_ENUMERATE, 0, 0))
     {
         return false;
     }
@@ -353,7 +353,7 @@ Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value
         !(obj = &rv.toObject())->isObject() ||
         !(shape = obj->lastProperty())->previous() ||
         shape->previous()->previous() ||
-        (shape->id != returnId && shape->id != throwId) ||
+        (shape->propid != returnId && shape->propid != throwId) ||
         !shape->isDataDescriptor())
     {
         JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_DEBUG_BAD_RESUMPTION);
@@ -368,7 +368,7 @@ Debug::parseResumptionValue(AutoCompartment &ac, bool ok, const Value &rv, Value
         vp->setUndefined();
         return JSTRAP_ERROR;
     }
-    return shape->id == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
+    return shape->propid == returnId ? JSTRAP_RETURN : JSTRAP_THROW;
 }
 
 bool

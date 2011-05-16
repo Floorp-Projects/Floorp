@@ -221,9 +221,9 @@ EnumerateNativeProperties(JSContext *cx, JSObject *obj, JSObject *pobj, uintN fl
     for (Shape::Range r = pobj->lastProperty()->all(); !r.empty(); r.popFront()) {
         const Shape &shape = r.front();
 
-        if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.id) &&
+        if (!JSID_IS_DEFAULT_XML_NAMESPACE(shape.propid) &&
             !shape.isAlias() &&
-            !Enumerate(cx, obj, pobj, shape.id, shape.enumerable(),
+            !Enumerate(cx, obj, pobj, shape.propid, shape.enumerable(),
                        shape.isSharedPermanent(), flags, ht, props))
         {
             return false;

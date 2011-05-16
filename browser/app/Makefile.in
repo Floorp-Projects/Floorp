@@ -77,6 +77,13 @@ ifdef SOURCE_REPO
 DEFINES += -DMOZ_SOURCE_REPO="$(SOURCE_REPO)"
 endif
 
+DEFINES += -DMOZ_APP_BASENAME="$(MOZ_APP_BASENAME)" \
+           -DMOZ_APP_VENDOR="$(MOZ_APP_VENDOR)"
+
+ifdef MOZ_APP_PROFILE
+DEFINES += -DMOZ_APP_PROFILE="$(MOZ_APP_PROFILE)"
+endif
+
 LIBS += $(JEMALLOC_LIBS)
 
 ifdef LIBXUL_SDK
@@ -178,7 +185,8 @@ endif
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,comctl32 comdlg32 uuid shell32 ole32 oleaut32 version winspool)
-OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32)
+OS_LIBS += $(call EXPAND_LIBNAME,usp10 msimg32 delayimp)
+LDFLAGS += -delayload:xul.dll -delayload:xpcom.dll -delayload:plc4.dll -delayload:nspr4.dll -delayload:mozalloc.dll
 endif
 
 ifeq ($(OS_ARCH),WINNT)

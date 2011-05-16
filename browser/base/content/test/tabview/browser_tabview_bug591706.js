@@ -31,7 +31,7 @@ function onTabViewWindowLoaded() {
   let box = new contentWindow.Rect(10, 10, 300, 300);
   let group = new contentWindow.GroupItem([], { bounds: box });
   ok(group.isEmpty(), "This group is empty");
-  contentWindow.GroupItems.setActiveGroupItem(group);
+  contentWindow.UI.setActive(group);
   
   // Create a second tab in this new group
   let secondTab = gBrowser.loadOneTab("about:blank#2", {inBackground: true});

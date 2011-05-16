@@ -222,15 +222,6 @@ JS_FRIEND_API(JSObject *)
 js_CreateTypedArrayWithBuffer(JSContext *cx, jsint atype, JSObject *bufArg,
                               jsint byteoffset, jsint length);
 
-/*
- * Reparent a typed array to a new scope. This should only be used to reparent
- * a typed array that does not share its underlying ArrayBuffer with another
- * typed array to avoid having a parent mismatch with the other typed array and
- * its ArrayBuffer.
- */
-JS_FRIEND_API(JSBool)
-js_ReparentTypedArrayToScope(JSContext *cx, JSObject *obj, JSObject *scope);
-
 extern int32 JS_FASTCALL
 js_TypedArray_uint8_clamp_double(const double x);
 

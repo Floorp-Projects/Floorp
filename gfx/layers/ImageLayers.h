@@ -163,6 +163,12 @@ public:
   virtual void SetCurrentImage(Image* aImage) = 0;
 
   /**
+   * Ask any PlanarYCbCr images created by this container to delay
+   * YUV -> RGB conversion until draw time. See PlanarYCbCrImage::SetDelayedConversion.
+   */
+  virtual void SetDelayedConversion(PRBool aDelayed) {}
+
+  /**
    * Get the current Image.
    * This has to add a reference since otherwise there are race conditions
    * where the current image is destroyed before the caller can add
@@ -414,6 +420,18 @@ public:
    * does YCbCr conversion here anyway.
    */
   virtual void SetData(const Data& aData) = 0;
+
+  /**
+   * Ask this Image to not convert YUV to RGB during SetData, and make
+   * the original data available through GetData. This is optional,
+   * and not all PlanarYCbCrImages will support it.
+   */
+  virtual void SetDelayedConversion(PRBool aDelayed) { }
+
+  /**
+   * Grab the original YUV data. This is optional.
+   */
+  virtual const Data* GetData() { return nsnull; }
 
 protected:
   PlanarYCbCrImage(void* aImplData) : Image(aImplData, PLANAR_YCBCR) {}

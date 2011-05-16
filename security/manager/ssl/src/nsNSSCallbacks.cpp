@@ -75,6 +75,7 @@
 #include "ocsp.h"
 #include "nssb64.h"
 #include "secerr.h"
+#include "sslerr.h"
 
 using namespace mozilla;
 
@@ -958,6 +959,60 @@ void PR_CALLBACK HandshakeCallback(PRFileDesc* fd, void* client_data) {
   PR_Free(signer);
 }
 
+SECStatus
+PSM_SSL_PKIX_AuthCertificate(PRFileDesc *fd, CERTCertificate *peerCert, PRBool checksig, PRBool isServer)
+{
+    SECStatus          rv;
+    SECCertUsage       certUsage;
+    SECCertificateUsage certificateusage;
+    void *             pinarg;
+    char *             hostname;
+    
+    pinarg = SSL_RevealPinArg(fd);
+    hostname = SSL_RevealURL(fd);
+    
+    /* this may seem backwards, but isn't. */
+    certUsage = isServer ? certUsageSSLClient : certUsageSSLServer;
+    certificateusage = isServer ? certificateUsageSSLClient : certificateUsageSSLServer;
+
+    if (!nsNSSComponent::globalConstFlagUsePKIXVerification) {
+        rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), peerCert, checksig, certUsage,
+                                pinarg);
+    }
+    else {
+        nsresult nsrv;
+        nsCOMPtr<nsINSSComponent> inss = do_GetService(kNSSComponentCID, &nsrv);
+        if (!inss)
+          return SECFailure;
+        nsRefPtr<nsCERTValInParamWrapper> survivingParams;
+        if (NS_FAILED(inss->GetDefaultCERTValInParam(survivingParams)))
+          return SECFailure;
+
+        CERTValOutParam cvout[1];
+        cvout[0].type = cert_po_end;
+
+        rv = CERT_PKIXVerifyCert(peerCert, certificateusage,
+                                survivingParams->GetRawPointerForNSS(),
+                                cvout, pinarg);
+    }
+
+    if ( rv == SECSuccess && !isServer ) {
+        /* cert is OK.  This is the client side of an SSL connection.
+        * Now check the name field in the cert against the desired hostname.
+        * NB: This is our only defense against Man-In-The-Middle (MITM) attacks!
+        */
+        if (hostname && hostname[0])
+            rv = CERT_VerifyCertName(peerCert, hostname);
+        else
+            rv = SECFailure;
+        if (rv != SECSuccess)
+            PORT_SetError(SSL_ERROR_BAD_CERT_DOMAIN);
+    }
+        
+    PORT_Free(hostname);
+    return rv;
+}
+
 struct nsSerialBinaryBlacklistEntry
 {
   unsigned int len;
@@ -1025,8 +1080,7 @@ SECStatus PR_CALLBACK AuthCertificateCallback(void* client_data, PRFileDesc* fd,
     }
   }
   
-  // first the default action
-  SECStatus rv = SSL_AuthCertificate(CERT_GetDefaultCertDB(), fd, checksig, isServer);
+  SECStatus rv = PSM_SSL_PKIX_AuthCertificate(fd, serverCert, checksig, isServer);
 
   // We want to remember the CA certs in the temp db, so that the application can find the
   // complete chain at any time it might need it.

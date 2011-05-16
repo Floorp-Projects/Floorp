@@ -72,7 +72,6 @@
 #ifdef USE_MAC_LOCALE
 #include "nsCollationMacUC.h"
 #include "nsDateTimeFormatMac.h"
-#include "nsMacLocale.h"
 #endif
 
 #ifdef USE_UNIX_LOCALE
@@ -117,7 +116,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatUnix)
 #endif  
 
 #ifdef USE_MAC_LOCALE
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacLocale)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsCollationMacUC)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDateTimeFormatMac)
 #endif  

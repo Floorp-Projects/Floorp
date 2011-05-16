@@ -42,3 +42,4 @@ script regress-636697.js
 script is-generator.js
 script weakmap.js
 script regress-650753.js
+script regress-645160.js

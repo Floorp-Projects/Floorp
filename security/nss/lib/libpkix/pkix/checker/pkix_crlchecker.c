@@ -400,6 +400,9 @@ pkix_CrlChecker_CheckExternal(
         PKIX_ERROR_FATAL(PKIX_CRLCHECKERNOLOCALCERTSTOREFOUND);
     }
     PKIX_CHECK(
+        PKIX_PL_Cert_VerifyKeyUsage(issuer, PKIX_CRL_SIGN, plContext),
+        PKIX_CERTCHECKKEYUSAGEFAILED);
+    PKIX_CHECK(
         PKIX_PL_Cert_GetCrlDp(cert, &dpList, plContext),
         PKIX_CERTGETCRLDPFAILED);
     if (!(methodFlags & PKIX_REV_M_REQUIRE_INFO_ON_MISSING_SOURCE) &&

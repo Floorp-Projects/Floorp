@@ -44,9 +44,37 @@ interface nsISimpleEnumerator;
 interface nsIMemoryReporter : nsISupports
 {
   /*
-   * The path that this memory usage should be reported under.
+   * The path that this memory usage should be reported under.  Paths can
+   * begin with a process name plus a colon, eg "Content:", but this is not
+   * necessary for the main process.  After the process name, paths are
+   * '/'-delimited, eg. "a/b/c".  There are three categories of paths.
    *
-   * Normally "/"-delimited for organization.
+   * - Paths starting with "mapped" represent non-overlapping regions of mapped
+   *   memory.  Each one can be viewed as representing a path in a tree from
+   *   the root node ("mapped") to a node lower in the tree;  this lower node
+   *   may be a non-leaf or a leaf node.  So, for example, "mapped",
+   *   "mapped/heap/used", "mapped/heap/unused", "mapped/js/mjit-code",
+   *   and "mapped/js/tjit-code" define this tree:
+   *
+   *     mapped [*]
+   *     |--heap
+   *     |  |--used [*]
+   *     |  \--unused [*]
+   *     \--js
+   *        |--mjit-code [*]
+   *        \--tjit-code [*]
+   *
+   *   Nodes marked with a [*] have a reporter.
+   *
+   * - Paths starting with "heap-used" represent non-overlapping regions of
+   *   used heap memory.  The "mapped" rules above apply equally here.  These
+   *   paths are actually sub-paths of "mapped/heap/used", but that reporter
+   *   is duplicated under the name "heap-used" to make the processing for
+   *   about:memory simpler.
+   *
+   * - All other paths represent cross-cuttings memory regions, ie. ones that
+   *   may overlap arbitrarily with regions in the "mapped" and "heap-used"
+   *   trees.
    */
   readonly attribute string path;
 

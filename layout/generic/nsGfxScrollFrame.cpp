@@ -106,7 +106,7 @@ nsHTMLScrollFrame::nsHTMLScrollFrame(nsIPresShell* aShell, nsStyleContext* aCont
 }
 
 nsresult
-nsHTMLScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
+nsHTMLScrollFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   return mInner.CreateAnonymousContent(aElements);
 }
@@ -1024,7 +1024,7 @@ nsMargin nsGfxScrollFrameInner::GetDesiredScrollbarSizes(nsBoxLayoutState* aStat
 }
 
 nsresult
-nsXULScrollFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
+nsXULScrollFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   return mInner.CreateAnonymousContent(aElements);
 }
@@ -2386,7 +2386,8 @@ nsGfxScrollFrameInner::ReloadChildFrames()
 }
   
 nsresult
-nsGfxScrollFrameInner::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
+nsGfxScrollFrameInner::CreateAnonymousContent(
+  nsTArray<nsIAnonymousContentCreator::ContentInfo>& aElements)
 {
   nsPresContext* presContext = mOuter->PresContext();
   nsIFrame* parent = mOuter->GetParent();

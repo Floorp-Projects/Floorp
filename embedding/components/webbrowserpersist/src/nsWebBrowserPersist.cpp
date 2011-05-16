@@ -215,12 +215,7 @@ struct CleanupData
 // volume / server dependent but it is difficult to obtain
 // that information. Instead this constant is a reasonable value that
 // modern systems should able to cope with.
-
-#ifdef XP_MAC
-const PRUint32 kDefaultMaxFilenameLength = 31;
-#else
 const PRUint32 kDefaultMaxFilenameLength = 64;
-#endif
 
 // Default flags for persistence
 const PRUint32 kDefaultPersistFlags = 
@@ -242,9 +237,9 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
     mSerializingOutput(PR_FALSE),
     mPersistFlags(kDefaultPersistFlags),
     mPersistResult(NS_OK),
-    mWrapColumn(72),
     mTotalCurrentProgress(0),
     mTotalMaxProgress(0),
+    mWrapColumn(72),
     mEncodingFlags(0)
 {
 }

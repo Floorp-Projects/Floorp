@@ -87,6 +87,7 @@ _TEST_FILES = \
 		bug529119-window.html \
 		test_bug540462.html \
 		file_bug540462.html \
+		test_bug551225.html \
 		test_bug580069.html \
 		file_bug580069_1.html \
 		file_bug580069_2.sjs \

@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: ssl.h,v 1.38.2.1 2010/07/31 04:33:52 wtc%google.com Exp $ */
+/* $Id: ssl.h,v 1.38.2.4 2011/04/08 05:44:32 wtc%google.com Exp $ */
 
 #ifndef __ssl_h_
 #define __ssl_h_
@@ -371,6 +371,15 @@ SSL_IMPORT SECStatus SSL_BadCertHook(PRFileDesc *fd, SSLBadCertHandler f,
 SSL_IMPORT SECStatus SSL_ConfigSecureServer(
 				PRFileDesc *fd, CERTCertificate *cert,
 				SECKEYPrivateKey *key, SSLKEAType kea);
+
+/*
+** Allows SSL socket configuration with caller-supplied certificate chain.
+** If certChainOpt is NULL, tries to find one.
+*/
+SSL_IMPORT SECStatus
+SSL_ConfigSecureServerWithCertChain(PRFileDesc *fd, CERTCertificate *cert,
+                                    const CERTCertificateList *certChainOpt,
+                                    SECKEYPrivateKey *key, SSLKEAType kea);
 
 /*
 ** Configure a secure server's session-id cache. Define the maximum number

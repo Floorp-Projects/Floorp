@@ -180,6 +180,13 @@ div.setAttribute("style", "color: url(/*); color: green");
 is(div.style.color, 'green',
    "URL tokenized correctly outside properties taking URLs");
 
+div.style.listStyleImage = 'url("foo\\\nbar1")';
+is(div.style.listStyleImage, 'url("foobar1")',
+   "escaped newline allowed in string form of URL");
+div.style.listStyleImage = 'url(foo\\\nbar2)';
+is(div.style.listStyleImage, 'url("foobar1")',
+   "escaped newline NOT allowed in NON-string form of URL");
+
 </script>
 </pre>
 </body>

@@ -26,11 +26,7 @@
       SimpleTest.finish();
     } else {
 
-    // Run the test in a separate window so we get a clean browser window.
-    window.open("data:text/html,<html style='overflow:scroll'><script>opener.doTest(window);</script>",
-                "", "scrollbars=yes,toolbar,menubar,width=500,height=500");
-
-    function doTest(win) {
+    function doTest(evt) {
       var initialCount = win.mozPaintCount;
 
       function nextStep() {
@@ -54,6 +50,12 @@
 
       SimpleTest.executeSoon(nextStep);
     }
+
+    // Run the test in a separate window so we get a clean browser window.
+    var win = window.open("data:text/html,<html style='overflow:scroll'>",
+                "", "scrollbars=yes,toolbar,menubar,width=500,height=500");
+    win.addEventListener('load', doTest, false);
+
     }
   ]]>
   </script>

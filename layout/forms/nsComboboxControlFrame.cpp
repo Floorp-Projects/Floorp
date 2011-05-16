@@ -991,7 +991,7 @@ nsComboboxControlFrame::GetContentInsertionFrame() {
 }
 
 nsresult
-nsComboboxControlFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
+nsComboboxControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   // The frames used to display the combo box and the button used to popup the dropdown list
   // are created through anonymous content. The dropdown list is not created through anonymous

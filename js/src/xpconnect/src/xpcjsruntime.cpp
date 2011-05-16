@@ -1278,44 +1278,128 @@ protected:
 
 static XPConnectGCChunkAllocator gXPCJSChunkAllocator;
 
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSRuntimeGCChunks,
-                             "js/gc-heap",
-                             "Main JS GC heap",
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSGCHeap,
+                             "heap-used/js/gc-heap",
+                             "Memory used by the garbage-collected JavaScript "
+                             "heap.",
                              XPConnectGCChunkAllocator::GetGCChunkBytesInUse,
                              &gXPCJSChunkAllocator)
 
-/* FIXME: use API provided by bug 623271 */
-#include "jscntxt.h"
-
 static PRInt64
-GetJSMethodJitCodeMemoryInUse(void *data)
+GetPerCompartmentSize(PRInt64 (*f)(JSCompartment *c))
 {
     JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    js::AutoLockGC lock(rt);
+    PRInt64 n = 0;
+    for (JSCompartment **c = rt->compartments.begin(); c != rt->compartments.end(); ++c)
+        n += f(*c);
+    return n;
+}
+
 #ifdef JS_METHODJIT
-    return rt->mjitMemoryUsed;
-#else
-    return 0;
-#endif
-}
-
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSMethodJitCode,
-                             "js/mjit-code",
-                             "Memory in use by method-JIT for compiled code",
-                             GetJSMethodJitCodeMemoryInUse,
-                             NULL)
 
 static PRInt64
-GetJSStringMemoryInUse(void *data)
+GetCompartmentMjitCodeSize(JSCompartment *c)
 {
-    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
-    return rt->stringMemoryUsed;
+    return c->getMjitCodeSize();
 }
 
-NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSStringMemory,
-                             "js/string-data",
-                             "Memory in use for string data",
-                             GetJSStringMemoryInUse,
+static PRInt64
+GetJSMjitCode(void *data)
+{
+    return GetPerCompartmentSize(GetCompartmentMjitCodeSize);
+}
+
+static PRInt64
+GetJSMJitData(void *data)
+{
+    JSRuntime *rt = nsXPConnect::GetRuntimeInstance()->GetJSRuntime();
+    return rt->mjitDataSize;
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSMjitCode,
+                             "mapped/js/mjit-code",
+                             "Memory mapped by the method JIT to hold "
+                             "generated code.",
+                             GetJSMjitCode,
                              NULL)
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSMjitData,
+                             "heap-used/js/mjit-data",
+                             "Memory allocated by the method JIT for the "
+                             "following data: JITScripts, native maps, and "
+                             "inline cache structs.",
+                             GetJSMJitData,
+                             NULL)
+#endif  // JS_METHODJIT
+
+#ifdef JS_TRACER
+
+static PRInt64
+GetCompartmentTjitCode(JSCompartment *c)
+{
+    js::TraceMonitor &tm = c->traceMonitor;
+    if (tm.codeAlloc) {
+        size_t total, frag_size, free_size;
+        tm.getCodeAllocStats(total, frag_size, free_size);
+        return total;
+    }
+    return 0;
+}
+
+static PRInt64
+GetCompartmentTjitDataAllocatorsMain(JSCompartment *c)
+{
+    js::TraceMonitor &tm = c->traceMonitor;
+    return tm.dataAlloc ? tm.getVMAllocatorsMainSize() : 0;
+}
+
+static PRInt64
+GetCompartmentTjitDataAllocatorsReserve(JSCompartment *c)
+{
+    js::TraceMonitor &tm = c->traceMonitor;
+    return tm.dataAlloc ? tm.getVMAllocatorsReserveSize() : 0;
+}
+
+static PRInt64
+GetJSTjitCode(void *data)
+{
+    return GetPerCompartmentSize(GetCompartmentTjitCode);
+}
+
+static PRInt64
+GetJSTjitDataAllocatorsMain(void *data)
+{
+    return GetPerCompartmentSize(GetCompartmentTjitDataAllocatorsMain);
+}
+
+static PRInt64
+GetJSTjitDataAllocatorsReserve(void *data)
+{
+    return GetPerCompartmentSize(GetCompartmentTjitDataAllocatorsReserve);
+}
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSTjitCode,
+                             "mapped/js/tjit-code",
+                             "Memory mapped by the trace JIT to hold "
+                             "generated code.",
+                             GetJSTjitCode,
+                             NULL)
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSTjitDataAllocatorsMain,
+                             "heap-used/js/tjit-data/allocators/main",
+                             "Memory allocated by the trace JIT's "
+                             "VMAllocators.",
+                             GetJSTjitDataAllocatorsMain,
+                             NULL)
+
+NS_MEMORY_REPORTER_IMPLEMENT(XPConnectJSTjitDataAllocatorsReserve,
+                             "heap-used/js/tjit-data/allocators/reserve",
+                             "Memory allocated by the trace JIT and held in "
+                             "reserve for VMAllocators in case of OOM.",
+                             GetJSTjitDataAllocatorsReserve,
+                             NULL)
+#endif  // JS_TRACER
 
 XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
  : mXPConnect(aXPConnect),
@@ -1382,9 +1466,16 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
 
         mJSRuntime->setCustomGCChunkAllocator(&gXPCJSChunkAllocator);
 
-        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSRuntimeGCChunks));
-        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSStringMemory));
-        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMethodJitCode));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSGCHeap));
+#ifdef JS_METHODJIT
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitCode));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSMjitData));
+#endif
+#ifdef JS_TRACER
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSTjitCode));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSTjitDataAllocatorsMain));
+        NS_RegisterMemoryReporter(new NS_MEMORY_REPORTER_NAME(XPConnectJSTjitDataAllocatorsReserve));
+#endif
     }
 
     if(!JS_DHashTableInit(&mJSHolders, JS_DHashGetStubOps(), nsnull,
