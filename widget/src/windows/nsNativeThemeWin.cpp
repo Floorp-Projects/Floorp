@@ -349,14 +349,6 @@ static CaptionButtonPadding buttonData[3] = {
  * These values are found by experimenting and comparing against native widgets
  * used by the system. They are very unlikely exact but try to not be too wrong.
  */
-// PP_CHUNK is overflowing on the bottom for no appearant reasons.
-// This is a fix around this issue.
-static const PRInt32 kProgressDeterminedXPOverflow = 11;
-// Same thing but for PP_FILL.
-static const PRInt32 kProgressDeterminedVistaOverflow = 4;
-// Same thing but for indeterminate progress bar.
-// The value is the same for PP_CHUNK and PP_MOVEOVERLAY in that case.
-static const PRInt32 kProgressIndeterminateOverflow = 2;
 // The width of the overlay used to animate the progress bar (Vista and later).
 static const PRInt32 kProgressVistaOverlayWidth = 120;
 // The width of the overlay used to for indeterminate progress bars on XP.
@@ -1326,14 +1318,6 @@ RENDER_AGAIN:
   }
   else if (aWidgetType == NS_THEME_WINDOW_BUTTON_CLOSE) {
     OffsetBackgroundRect(widgetRect, CAPTIONBUTTON_CLOSE);
-  } else if (aWidgetType == NS_THEME_PROGRESSBAR_CHUNK) {
-    nsIFrame* stateFrame = aFrame->GetParent();
-    nsEventStates eventStates = GetContentState(stateFrame, aWidgetType);
-    widgetRect.bottom -= IsIndeterminateProgress(stateFrame, eventStates)
-                           ? kProgressIndeterminateOverflow
-                           : nsUXThemeData::sIsVistaOrLater
-                             ? kProgressDeterminedVistaOverflow
-                             : kProgressDeterminedXPOverflow;
   }
 
   // widgetRect is the bounding box for a widget, yet the scale track is only
