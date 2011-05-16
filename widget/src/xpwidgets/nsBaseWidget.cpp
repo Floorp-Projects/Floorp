@@ -115,6 +115,7 @@ nsBaseWidget::nsBaseWidget()
 , mZIndex(0)
 , mSizeMode(nsSizeMode_Normal)
 , mPopupLevel(ePopupLevelTop)
+, mDrawFPS(PR_FALSE)
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -823,6 +824,8 @@ nsBaseWidget::GetShouldAccelerate()
     prefs->GetBoolPref("layers.acceleration.force-enabled",
                        &forceAcceleration);
 
+    prefs->GetBoolPref("layers.acceleration.draw-fps",
+                       &mDrawFPS);
   }
 
   const char *acceleratedEnv = PR_GetEnv("MOZ_ACCELERATED");
@@ -876,6 +879,7 @@ LayerManager* nsBaseWidget::GetLayerManager(LayerManagerPersistence,
        * deal with it though!
        */
       if (layerManager->Initialize()) {
+        layerManager->SetRenderFPS(mDrawFPS);
         mLayerManager = layerManager;
       }
     }

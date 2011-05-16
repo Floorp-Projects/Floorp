@@ -43,6 +43,11 @@
 #include "nsHyperTextAccessibleWrap.h"
 
 /**
+ * Accessible for HTML progress element.
+ */
+typedef ProgressMeterAccessible<1> HTMLProgressMeterAccessible;
+
+/**
  * Accessible for HTML input@type="checkbox".
  */
 class nsHTMLCheckboxAccessible : public nsFormControlAccessible

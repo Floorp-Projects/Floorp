@@ -40,11 +40,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* build on macs with low memory */
-#if defined(XP_MAC) && defined(MOZ_MAC_LOWMEM)
-#pragma optimization_level 1
-#endif
-
 #include "nsHTMLEditRules.h"
 
 #include "nsEditor.h"
@@ -242,7 +237,7 @@ nsHTMLEditRules::~nsHTMLEditRules()
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLEditRules, nsTextEditRules)
 NS_IMPL_RELEASE_INHERITED(nsHTMLEditRules, nsTextEditRules)
-NS_IMPL_QUERY_INTERFACE_INHERITED2(nsHTMLEditRules, nsTextEditRules, nsIHTMLEditRules, nsIEditActionListener)
+NS_IMPL_QUERY_INTERFACE_INHERITED1(nsHTMLEditRules, nsTextEditRules, nsIEditActionListener)
 
 
 /********************************************************
@@ -727,11 +722,7 @@ nsHTMLEditRules::DidDoAction(nsISelection *aSelection,
   return nsTextEditRules::DidDoAction(aSelection, aInfo, aResult);
 }
   
-/********************************************************
- *  nsIHTMLEditRules methods
- ********************************************************/
-
-NS_IMETHODIMP 
+nsresult
 nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *aDL)
 {
   NS_ENSURE_TRUE(aMixed && aOL && aUL && aDL, NS_ERROR_NULL_POINTER);
@@ -782,7 +773,7 @@ nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *
   return res;
 }
 
-NS_IMETHODIMP 
+nsresult 
 nsHTMLEditRules::GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBool *aDD)
 {
   NS_ENSURE_TRUE(aMixed && aLI && aDT && aDD, NS_ERROR_NULL_POINTER);
@@ -835,7 +826,7 @@ nsHTMLEditRules::GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBo
   return res;
 }
 
-NS_IMETHODIMP 
+nsresult 
 nsHTMLEditRules::GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign)
 {
   // for now, just return first alignment.  we'll lie about
@@ -1005,7 +996,7 @@ nsIAtom* MarginPropertyAtomForIndent(nsHTMLCSSUtils* aHTMLCSSUtils, nsIDOMNode* 
     nsEditProperty::cssMarginRight : nsEditProperty::cssMarginLeft;
 }
 
-NS_IMETHODIMP 
+nsresult 
 nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
 {
   NS_ENSURE_TRUE(aCanIndent && aCanOutdent, NS_ERROR_FAILURE);
@@ -1108,7 +1099,7 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
 }
 
 
-NS_IMETHODIMP 
+nsresult 
 nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
 {
   // This routine is *heavily* tied to our ui choices in the paragraph
@@ -8405,12 +8396,6 @@ nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
   return res;
 }
 
-#ifdef XP_MAC
-#pragma mark -
-#pragma mark  nsIEditActionListener methods 
-#pragma mark -
-#endif
-
 NS_IMETHODIMP 
 nsHTMLEditRules::WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, PRInt32 aPosition)
 {
@@ -8796,7 +8781,7 @@ nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode, PRBool aStarts)
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsHTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsIDOMNode *aNode)
 {
   nsresult res = MakeSureElemStartsOrEndsOnCR(aNode, PR_FALSE);
@@ -9207,7 +9192,7 @@ nsHTMLEditRules::DocumentModifiedWorker()
   }
 
   // DeleteNode below may cause a flush, which could destroy the editor
-  nsAutoRemovableScriptBlocker scriptBlocker;
+  nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
   nsCOMPtr<nsIHTMLEditor> kungFuDeathGrip(mHTMLEditor);
   nsCOMPtr<nsISelection> selection;

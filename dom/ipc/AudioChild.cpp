@@ -48,7 +48,7 @@ NS_IMPL_THREADSAFE_RELEASE(AudioChild);
 AudioChild::AudioChild()
   : mLastSampleOffset(-1),
     mLastSampleOffsetTime(0),
-    mAudioReentrantMonitor("AutoChild.mReentrantMonitor"),
+    mAudioReentrantMonitor("AudioChild.mReentrantMonitor"),
     mIPCOpen(PR_TRUE),
     mDrained(PR_FALSE)
 {

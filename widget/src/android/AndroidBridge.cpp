@@ -140,6 +140,7 @@ AndroidBridge::Init(JNIEnv *jEnv,
     jIsNetworkLinkKnown = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "isNetworkLinkKnown", "()Z");
     jSetSelectedLocale = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "setSelectedLocale", "(Ljava/lang/String;)V");
     jScanMedia = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "scanMedia", "(Ljava/lang/String;Ljava/lang/String;)V");
+    jGetSystemColors = (jmethodID) jEnv->GetStaticMethodID(jGeckoAppShellClass, "getSystemColors", "()[I");
 
     jEGLContextClass = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGLContext"));
     jEGL10Class = (jclass) jEnv->NewGlobalRef(jEnv->FindClass("javax/microedition/khronos/egl/EGL10"));
@@ -678,6 +679,42 @@ AndroidBridge::SetSelectedLocale(const nsAString& aLocale)
     ALOG_BRIDGE("AndroidBridge::SetSelectedLocale");
     jstring jLocale = GetJNIForThread()->NewString(PromiseFlatString(aLocale).get(), aLocale.Length());
     GetJNIForThread()->CallStaticVoidMethod(mGeckoAppShellClass, jSetSelectedLocale, jLocale);
+}
+
+void
+AndroidBridge::GetSystemColors(AndroidSystemColors *aColors)
+{
+    ALOG_BRIDGE("AndroidBridge::GetSystemColors");
+
+    NS_ASSERTION(aColors != nsnull, "AndroidBridge::GetSystemColors: aColors is null!");
+    if (!aColors)
+        return;
+
+    AutoLocalJNIFrame jniFrame;
+
+    jobject obj = mJNIEnv->CallStaticObjectMethod(mGeckoAppShellClass, jGetSystemColors);
+    jintArray arr = static_cast<jintArray>(obj);
+    if (!arr)
+        return;
+
+    jsize len = mJNIEnv->GetArrayLength(arr);
+    jint *elements = mJNIEnv->GetIntArrayElements(arr, 0);
+
+    PRUint32 colorsCount = sizeof(AndroidSystemColors) / sizeof(nscolor);
+    if (len < colorsCount)
+        colorsCount = len;
+
+    // Convert Android colors to nscolor by switching R and B in the ARGB 32 bit value
+    nscolor *colors = (nscolor*)aColors;
+
+    for (PRUint32 i = 0; i < colorsCount; i++) {
+        PRUint32 androidColor = static_cast<PRUint32>(elements[i]);
+        PRUint8 r = (androidColor & 0x00ff0000) >> 16;
+        PRUint8 b = (androidColor & 0x000000ff);
+        colors[i] = androidColor & 0xff00ff00 | b << 16 | r;
+    }
+
+    mJNIEnv->ReleaseIntArrayElements(arr, elements, 0);
 }
 
 void

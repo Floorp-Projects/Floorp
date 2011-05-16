@@ -187,6 +187,11 @@
                     type="checkbox"
                     command="Tools:Inspect"
                     key="key_inspect"/>
+          <menuitem id="appmenu_scratchpad"
+                    hidden="true"
+                    label="&scratchpad.label;"
+                    key="key_scratchpad"
+                    command="Tools:Scratchpad"/>
           <menuitem id="appmenu_pageSource"
                     label="&viewPageSourceCmd.label;"
                     command="View:PageSource"

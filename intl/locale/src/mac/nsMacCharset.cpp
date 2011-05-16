@@ -38,18 +38,12 @@
 #include <Carbon/Carbon.h>
 #include "nsIPlatformCharset.h"
 #include "pratom.h"
-#include "nsUConvPropertySearch.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-#include "nsIMacLocale.h"
 #include "nsLocaleCID.h"
 #include "nsReadableUtils.h"
 #include "nsPlatformCharset.h"
 #include "nsEncoderDecoderUtils.h"
-
-static const char* kMacCharsets[][3] = {
-#include "maccharset.properties.h"
-};
 
 NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 
@@ -60,90 +54,18 @@ nsPlatformCharset::~nsPlatformCharset()
 {
 }
 
-nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString& outCharset)
-{
-  switch (region) {
-    case verUS:
-    case verFrance:
-    case verGermany:
-      outCharset.AssignLiteral("x-mac-roman");
-      return NS_OK;
-    case verJapan:
-      outCharset.AssignLiteral("Shift_JIS");
-      return NS_OK;
-  }
-
-  // try mapping from region then from script
-  nsCAutoString key("region.");
-  key.AppendInt(region, 10);
-
-  nsresult rv = nsUConvPropertySearch::SearchPropertyValue(kMacCharsets,
-      NS_ARRAY_LENGTH(kMacCharsets), key, outCharset);
-  if (NS_FAILED(rv)) {
-    key.AssignLiteral("script.");
-    key.AppendInt(script, 10);
-    rv = nsUConvPropertySearch::SearchPropertyValue(kMacCharsets,
-        NS_ARRAY_LENGTH(kMacCharsets), key, outCharset);
-    // not found in the .property file, assign x-mac-roman
-    if (NS_FAILED(rv)) {
-      outCharset.AssignLiteral("x-mac-roman");
-    }
-  }
-  
-  return NS_OK;
-}
-
 NS_IMETHODIMP 
 nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult)
 {
-  nsresult rv;
-  if (mCharset.IsEmpty()) {
-    rv = MapToCharset(
-           (short)(0x0000FFFF & ::GetScriptManagerVariable(smSysScript)),
-           (short)(0x0000FFFF & ::GetScriptManagerVariable(smRegionCode)),
-           mCharset);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  switch (selector) {
-#ifdef XP_MACOSX  
-    case kPlatformCharsetSel_FileName:
-      oResult.AssignLiteral("UTF-8");
-      break;
-#endif
-    case  kPlatformCharsetSel_KeyboardInput:
-      rv = MapToCharset(
-             (short) (0x0000FFFF & ::GetScriptManagerVariable(smKeyScript)),
-             kTextRegionDontCare, oResult);
-      NS_ENSURE_SUCCESS(rv, rv);
-      break;
-    default:
-      oResult = mCharset;
-      break;
-  }
-
-   return NS_OK;
+  oResult.AssignLiteral("UTF-8");
+  return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString &oResult)
 {
-  nsresult rv;
-  nsCOMPtr<nsIMacLocale> pMacLocale;
-  pMacLocale = do_GetService(NS_MACLOCALE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    short script, language, region;
-    rv = pMacLocale->GetPlatformLocale(localeName, &script, &language, &region);
-    if (NS_SUCCEEDED(rv)) {
-      if (NS_SUCCEEDED(MapToCharset(script, region, oResult))) {
-        return NS_OK;
-      }
-    }
-  }
-
-  // fallback 
-  oResult.AssignLiteral("x-mac-roman");
-  return NS_SUCCESS_USING_FALLBACK_LOCALE;
+  oResult.AssignLiteral("UTF-8");
+  return NS_OK;
 }
 
 NS_IMETHODIMP 

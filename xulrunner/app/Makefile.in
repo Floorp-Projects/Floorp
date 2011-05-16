@@ -54,7 +54,7 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/,xulrunner.js)
 
 DEFINES += -DAB_CD=$(AB_CD)
 
-ifneq (,$(filter OS2 WINCE WINNT,$(OS_ARCH)))
+ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 PROGRAM = xulrunner$(BIN_SUFFIX)
 else
 PROGRAM = xulrunner-bin$(BIN_SUFFIX)
@@ -116,11 +116,7 @@ include $(topsrcdir)/config/config.mk
 ifdef _MSC_VER
 # Always enter a Windows program through wmain, whether or not we're
 # a console application.
-ifdef WINCE
-WIN32_EXE_LDFLAGS += -ENTRY:mainWCRTStartup
-else
 WIN32_EXE_LDFLAGS += -ENTRY:wmainCRTStartup
-endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
@@ -175,7 +171,7 @@ endif
 endif
 endif
 
-ifneq (,$(filter-out OS2 WINCE WINNT,$(OS_ARCH)))
+ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 ifeq (unix, $(MOZ_FS_LAYOUT))
 
 xulrunner:: $(topsrcdir)/build/unix/mozilla.in $(GLOBAL_DEPS)

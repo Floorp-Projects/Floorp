@@ -71,7 +71,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<nsIContent*>& aElements);
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements);
   virtual void AppendAnonymousContentTo(nsBaseContentList& aElements,
                                         PRUint32 aFilter);
 
@@ -110,7 +110,7 @@ nsDocElementBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 nsresult
-nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<nsIContent*>& aElements)
+nsDocElementBoxFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 {
   nsIDocument* doc = mContent->GetDocument();
   if (!doc) {

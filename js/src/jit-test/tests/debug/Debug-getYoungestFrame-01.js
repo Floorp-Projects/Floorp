@@ -7,6 +7,7 @@ var g = newGlobal('new-compartment');
 var dbg = new Debug(g);
 assertEq(dbg.getYoungestFrame(), null);
 
+var global = this;
 var frame;
 function f() {
     frame = dbg.getYoungestFrame();

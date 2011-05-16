@@ -1299,6 +1299,16 @@ nsBoxFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     GetContent()->HasAttr(kNameSpaceID_None, nsGkAtoms::layer) &&
     GetContent()->IsXUL();
 
+  // Check for frames that are marked as a part of the region used
+  // in calculating glass margins on Windows.
+  if (GetContent()->IsXUL()) {
+      const nsStyleDisplay* styles = mStyleContext->GetStyleDisplay();
+      if (styles && styles->mAppearance == NS_THEME_WIN_EXCLUDE_GLASS) {
+        nsRect rect = mRect + aBuilder->ToReferenceFrame(this);
+        aBuilder->AddExcludedGlassRegion(rect);
+      }
+  }
+
   nsDisplayListCollection tempLists;
   const nsDisplayListSet& destination = forceLayer ? tempLists : aLists;
 

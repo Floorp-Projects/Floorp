@@ -80,7 +80,7 @@ function onTabViewWindowLoaded() {
 
     let currentTabs = contentWindow.TabItems.getItems();
     ok(currentTabs[0], "A tab item exists to make active");
-    contentWindow.UI.setActiveTab(currentTabs[0]);
+    contentWindow.UI.setActive(currentTabs[0]);
     
     window.addEventListener("tabviewhidden", finishTest, false);
     TabView.toggle();

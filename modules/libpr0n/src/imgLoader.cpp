@@ -160,21 +160,21 @@ public:
   NS_IMETHOD GetPath(char **memoryPath)
   {
     if (mType == ChromeUsedRaw) {
-      *memoryPath = strdup("images/chrome/used/raw");
+      *memoryPath = strdup("heap-used/images/chrome/used/raw");
     } else if (mType == ChromeUsedUncompressed) {
-      *memoryPath = strdup("images/chrome/used/uncompressed");
+      *memoryPath = strdup("heap-used/images/chrome/used/uncompressed");
     } else if (mType == ChromeUnusedRaw) {
-      *memoryPath = strdup("images/chrome/unused/raw");
+      *memoryPath = strdup("heap-used/images/chrome/unused/raw");
     } else if (mType == ChromeUnusedUncompressed) {
-      *memoryPath = strdup("images/chrome/unused/uncompressed");
+      *memoryPath = strdup("heap-used/images/chrome/unused/uncompressed");
     } else if (mType == ContentUsedRaw) {
-      *memoryPath = strdup("images/content/used/raw");
+      *memoryPath = strdup("heap-used/images/content/used/raw");
     } else if (mType == ContentUsedUncompressed) {
-      *memoryPath = strdup("images/content/used/uncompressed");
+      *memoryPath = strdup("heap-used/images/content/used/uncompressed");
     } else if (mType == ContentUnusedRaw) {
-      *memoryPath = strdup("images/content/unused/raw");
+      *memoryPath = strdup("heap-used/images/content/unused/raw");
     } else if (mType == ContentUnusedUncompressed) {
-      *memoryPath = strdup("images/content/unused/uncompressed");
+      *memoryPath = strdup("heap-used/images/content/unused/uncompressed");
     }
     return NS_OK;
   }
@@ -182,21 +182,21 @@ public:
   NS_IMETHOD GetDescription(char **desc)
   {
     if (mType == ChromeUsedRaw) {
-      *desc = strdup("Memory used by in-use chrome images, compressed data");
+      *desc = strdup("Memory used by in-use chrome images (compressed data).");
     } else if (mType == ChromeUsedUncompressed) {
-      *desc = strdup("Memory used by in-use chrome images, uncompressed data");
+      *desc = strdup("Memory used by in-use chrome images (uncompressed data).");
     } else if (mType == ChromeUnusedRaw) {
-      *desc = strdup("Memory used by not in-use chrome images, compressed data");
+      *desc = strdup("Memory used by not in-use chrome images (compressed data).");
     } else if (mType == ChromeUnusedUncompressed) {
-      *desc = strdup("Memory used by not in-use chrome images, uncompressed data");
+      *desc = strdup("Memory used by not in-use chrome images (uncompressed data).");
     } else if (mType == ContentUsedRaw) {
-      *desc = strdup("Memory used by in-use content images, compressed data");
+      *desc = strdup("Memory used by in-use content images (compressed data).");
     } else if (mType == ContentUsedUncompressed) {
-      *desc = strdup("Memory used by in-use content images, uncompressed data");
+      *desc = strdup("Memory used by in-use content images (uncompressed data).");
     } else if (mType == ContentUnusedRaw) {
-      *desc = strdup("Memory used by not in-use content images, compressed data");
+      *desc = strdup("Memory used by not in-use content images (compressed data).");
     } else if (mType == ContentUnusedUncompressed) {
-      *desc = strdup("Memory used by not in-use content images, uncompressed data");
+      *desc = strdup("Memory used by not in-use content images (uncompressed data).");
     }
     return NS_OK;
   }

@@ -341,9 +341,9 @@ IsValidGUID(const nsCString& aGUID)
 
   for (nsCString::size_type i = 0; i < len; i++ ) {
     char c = aGUID[i];
-    if (c >= 'a' && c <= 'z' || // a-z
-        c >= 'A' && c <= 'Z' || // A-Z
-        c >= '0' && c <= '9' || // 0-9
+    if ((c >= 'a' && c <= 'z') || // a-z
+        (c >= 'A' && c <= 'Z') || // A-Z
+        (c >= '0' && c <= '9') || // 0-9
         c == '-' || c == '_') { // - or _
       continue;
     }

@@ -114,40 +114,24 @@ class BlobImpl;
 static void *
 DataSourceAllocTable(void *pool, PRSize size)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     return PR_MALLOC(size);
 }
 
 static void
 DataSourceFreeTable(void *pool, void *item)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     PR_Free(item);
 }
 
 static PLHashEntry *
 DataSourceAllocEntry(void *pool, const void *key)
 {
-#if defined(XP_MAC)
-#pragma unused (pool,key)
-#endif
-
     return PR_NEW(PLHashEntry);
 }
 
 static void
 DataSourceFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
 {
-#if defined(XP_MAC)
-#pragma unused (pool)
-#endif
-
     if (flag == HT_FREE_ENTRY) {
         PL_strfree((char*) he->key);
         PR_Free(he);

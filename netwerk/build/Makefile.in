@@ -72,11 +72,6 @@ ifeq ($(OS_ARCH),WINNT)
         ../system/win32/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
 endif
 
-ifeq ($(OS_ARCH),WINCE)
-    SHARED_LIBRARY_LIBS += \
-        ../system/wince/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
-endif
-
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
     SHARED_LIBRARY_LIBS += \
         ../system/mac/$(LIB_PREFIX)neckosystem_s.$(LIB_SUFFIX)
@@ -112,10 +107,6 @@ LOCAL_INCLUDES = \
 
 ifeq ($(OS_ARCH),WINNT)
     LOCAL_INCLUDES += -I$(srcdir)/../system/win32
-endif
-
-ifeq ($(OS_ARCH),WINCE)
-    LOCAL_INCLUDES += -I$(srcdir)/../system/wince
 endif
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
@@ -190,10 +181,6 @@ include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,ole32 shell32)
-endif
-
-ifeq ($(OS_ARCH),WINCE)
-OS_LIBS += $(call EXPAND_LIBNAME,cellcore ws2)
 endif
 
 DEFINES += -DIMPL_NS_NET

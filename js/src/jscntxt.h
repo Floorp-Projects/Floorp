@@ -420,7 +420,6 @@ struct JSRuntime {
     uint32              gcEmptyArenaPoolLifespan;
     uint32              gcNumber;
     js::GCMarker        *gcMarkingTracer;
-    uint32              gcTriggerFactor;
     int64               gcJitReleaseTime;
     JSGCMode            gcMode;
     volatile bool       gcIsNeeded;
@@ -702,16 +701,15 @@ struct JSRuntime {
     JSPreWrapCallback    preWrapObjectCallback;
 
 #ifdef JS_METHODJIT
-    uint32               mjitMemoryUsed;
+    /* This measures the size of JITScripts, native maps and IC structs. */
+    size_t               mjitDataSize;
 #endif
-    uint32               stringMemoryUsed;
 
     JSRuntime();
     ~JSRuntime();
 
     bool init(uint32 maxbytes);
 
-    void setGCTriggerFactor(uint32 factor);
     void setGCLastBytes(size_t lastBytes);
     void reduceGCTriggerBytes(uint32 amount);
 

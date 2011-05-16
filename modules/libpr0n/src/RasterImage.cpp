@@ -924,6 +924,11 @@ RasterImage::SetSize(PRInt32 aWidth, PRInt32 aHeight)
     else
       NS_WARNING("Multipart channel sent an image of a different size");
 
+    // Make the decoder aware of the error so that it doesn't try to call
+    // FinishInternal during ShutdownDecoder.
+    if (mDecoder)
+      mDecoder->PostResizeError();
+
     DoError();
     return NS_ERROR_UNEXPECTED;
   }
@@ -1239,6 +1244,7 @@ RasterImage::AddSourceData(const char *aBuffer, PRUint32 aCount)
     // We're not storing source data, so this data is probably coming straight
     // from the network. In this case, we want to display data as soon as we
     // get it, so we want to flush invalidations after every write.
+    nsRefPtr<Decoder> kungFuDeathGrip = mDecoder;
     mInDecoder = PR_TRUE;
     mDecoder->FlushInvalidations();
     mInDecoder = PR_FALSE;
@@ -2208,14 +2214,16 @@ RasterImage::ShutdownDecoder(eShutdownIntent aIntent)
   bool wasSizeDecode = mDecoder->IsSizeDecode();
 
   // Finalize the decoder
+  // null out mDecoder, _then_ check for errors on the close (otherwise the
+  // error routine might re-invoke ShutdownDecoder)
+  nsRefPtr<Decoder> decoder = mDecoder;
+  mDecoder = nsnull;
+
   mInDecoder = PR_TRUE;
-  mDecoder->Finish();
+  decoder->Finish();
   mInDecoder = PR_FALSE;
 
-  // null out the decoder, _then_ check for errors on the close (otherwise the
-  // error routine might re-invoke ShutdownDecoder)
-  nsresult decoderStatus = mDecoder->GetDecoderError();
-  mDecoder = nsnull;
+  nsresult decoderStatus = decoder->GetDecoderError();
   if (NS_FAILED(decoderStatus)) {
     DoError();
     return decoderStatus;
@@ -2260,6 +2268,7 @@ RasterImage::WriteToDecoder(const char *aBuffer, PRUint32 aCount)
   }
 
   // Write
+  nsRefPtr<Decoder> kungFuDeathGrip = mDecoder;
   mInDecoder = PR_TRUE;
   mDecoder->Write(aBuffer, aCount);
   mInDecoder = PR_FALSE;
@@ -2271,6 +2280,9 @@ RasterImage::WriteToDecoder(const char *aBuffer, PRUint32 aCount)
     curframe->UnlockImageData();
   }
 
+  if (!mDecoder)
+    return NS_ERROR_FAILURE;
+    
   CONTAINER_ENSURE_SUCCESS(mDecoder->GetDecoderError());
 
   // Keep track of the total number of bytes written over the lifetime of the
@@ -2418,18 +2430,19 @@ RasterImage::SyncDecode()
   // image as possible. We've send the decoder all of our data, so now's a good
   // time  to flush any invalidations (in case we don't have all the data and what
   // we got left us mid-frame).
+  nsRefPtr<Decoder> kungFuDeathGrip = mDecoder;
   mInDecoder = PR_TRUE;
   mDecoder->FlushInvalidations();
   mInDecoder = PR_FALSE;
 
   // If we finished the decode, shutdown the decoder
-  if (IsDecodeFinished()) {
+  if (mDecoder && IsDecodeFinished()) {
     rv = ShutdownDecoder(eShutdownIntent_Done);
     CONTAINER_ENSURE_SUCCESS(rv);
   }
 
-  // All good!
-  return NS_OK;
+  // All good if no errors!
+  return mError ? NS_ERROR_FAILURE : NS_OK;
 }
 
 //******************************************************************************
@@ -2660,6 +2673,8 @@ imgDecodeWorker::Run()
   if (!image->mDecoder)
     return NS_OK;
 
+  nsRefPtr<Decoder> decoderKungFuDeathGrip = image->mDecoder;
+
   // Size decodes are cheap and we more or less want them to be
   // synchronous. Write all the data in that case, otherwise write a
   // chunk
@@ -2700,7 +2715,7 @@ imgDecodeWorker::Run()
   }
 
   // If the decode finished, shutdown the decoder
-  if (image->IsDecodeFinished()) {
+  if (image->mDecoder && image->IsDecodeFinished()) {
     rv = image->ShutdownDecoder(RasterImage::eShutdownIntent_Done);
     if (NS_FAILED(rv)) {
       image->DoError();
