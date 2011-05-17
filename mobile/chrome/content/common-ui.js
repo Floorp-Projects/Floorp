@@ -675,6 +675,12 @@ var FormHelperUI = {
     // Listen some events to show/hide arrows
     Elements.browsers.addEventListener("PanBegin", this, false);
     Elements.browsers.addEventListener("PanFinished", this, false);
+
+    // Dynamically enabled/disabled the form helper if needed depending on
+    // the size of the screen
+    let mode = Services.prefs.getIntPref("formhelper.mode");
+    let state = (mode == 2) ? !Util.isTablet() : !!mode;
+    Services.prefs.setBoolPref("formhelper.enabled", state);
   },
 
   _currentBrowser: null,
@@ -792,22 +798,34 @@ var FormHelperUI = {
   },
 
   receiveMessage: function formHelperReceiveMessage(aMessage) {
-    if (!this._open && aMessage.name != "FormAssist:Show" && aMessage.name != "FormAssist:Hide")
+    let allowedMessages = ["FormAssist:Show", "FormAssist:Hide", "FormAssist:AutoComplete"];
+    if (!this._open && allowedMessages.indexOf(aMessage.name) == -1)
       return;
 
     let json = aMessage.json;
     switch (aMessage.name) {
       case "FormAssist:Show":
         // if the user has manually disabled the Form Assistant UI we still
-        // want to show a UI for <select /> element but not managed by
-        // FormHelperUI
-        this.enabled ? this.show(json.current, json.hasPrevious, json.hasNext)
-                     : SelectHelperUI.show(json.current.choices, json.current.title);
+        // want to show a UI for <select /> element and still want to show
+        // autocomplete suggestions but not managed by FormHelperUI
+        if (this.enabled) {
+          this.show(json.current, json.hasPrevious, json.hasNext)
+        } else if (json.current.choices) {
+          SelectHelperUI.show(json.current.choices, json.current.title);
+        } else {
+          this._currentElementRect = Rect.fromRect(json.current.rect);
+          this._currentBrowser = getBrowser();
+          this._updateSuggestionsFor(json.current);
+        }
         break;
 
       case "FormAssist:Hide":
-        this.enabled ? this.hide()
-                     : SelectHelperUI.hide();
+        if (this.enabled) {
+          this.hide();
+        } else {
+          SelectHelperUI.hide();
+          ContentPopupHelper.popup = null;
+        }
         break;
 
       case "FormAssist:Resize":
