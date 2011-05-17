@@ -4479,13 +4479,17 @@ JSTerm.prototype = {
   init: function JST_init()
   {
     this.createSandbox();
+
     this.inputNode = this.mixins.inputNode;
-    let eventHandlerKeyDown = this.keyDown();
-    this.inputNode.addEventListener('keypress', eventHandlerKeyDown, false);
-    let eventHandlerInput = this.inputEventHandler();
-    this.inputNode.addEventListener('input', eventHandlerInput, false);
     this.outputNode = this.mixins.outputNode;
     this.completeNode = this.mixins.completeNode;
+
+    this.inputNode.addEventListener("keypress",
+      this.keyPress.bind(this), false);
+    this.inputNode.addEventListener("input",
+      this.inputEventHandler.bind(this), false);
+    this.inputNode.addEventListener("keyup",
+      this.inputEventHandler.bind(this), false);
   },
 
   get codeInputString()
@@ -4907,121 +4911,105 @@ JSTerm.prototype = {
     this.resizeInput();
   },
 
-  inputEventHandler: function JSTF_inputEventHandler()
+  /**
+   * The inputNode "input" and "keyup" event handler.
+   *
+   * @param nsIDOMEvent aEvent
+   */
+  inputEventHandler: function JSTF_inputEventHandler(aEvent)
   {
-    var self = this;
-    function handleInputEvent(aEvent) {
-      self.resizeInput();
+    if (this.lastInputValue != this.inputNode.value) {
+      this.resizeInput();
+      this.complete(this.COMPLETE_HINT_ONLY);
+      this.lastInputValue = this.inputNode.value;
     }
-    return handleInputEvent;
   },
 
-  keyDown: function JSTF_keyDown(aEvent)
+  /**
+   * The inputNode "keypress" event handler.
+   *
+   * @param nsIDOMEvent aEvent
+   */
+  keyPress: function JSTF_keyPress(aEvent)
   {
-    var self = this;
-    function handleKeyDown(aEvent) {
-      // ctrl-a
-      var setTimeout = aEvent.target.ownerDocument.defaultView.setTimeout;
-      var target = aEvent.target;
-      var tmp;
-
-      if (aEvent.ctrlKey) {
-        switch (aEvent.charCode) {
-          case 97:
-            // control-a
-            tmp = self.codeInputString;
-            setTimeout(function() {
-              self.setInputValue(tmp);
-              self.inputNode.setSelectionRange(0, 0);
-            }, 0);
-            break;
-          case 101:
-            // control-e
-            tmp = self.codeInputString;
-            self.setInputValue("");
-            setTimeout(function(){
-              self.setInputValue(tmp);
-            }, 0);
-            break;
-          default:
-            return;
-        }
-        return;
+    if (aEvent.ctrlKey) {
+      switch (aEvent.charCode) {
+        case 97:
+          // control-a
+          this.inputNode.setSelectionRange(0, 0);
+          aEvent.preventDefault();
+          break;
+        case 101:
+          // control-e
+          this.inputNode.setSelectionRange(this.inputNode.value.length,
+                                           this.inputNode.value.length);
+          aEvent.preventDefault();
+          break;
+        default:
+          break;
       }
-      else if (aEvent.shiftKey &&
-          aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN) {
-        // shift return
-        // TODO: expand the inputNode height by one line
-        return;
-      }
-      else {
-        switch(aEvent.keyCode) {
-          case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
-            self.execute();
-            aEvent.preventDefault();
-            break;
-
-          case Ci.nsIDOMKeyEvent.DOM_VK_UP:
-            // history previous
-            if (self.canCaretGoPrevious()) {
-              let updated = self.historyPeruse(HISTORY_BACK);
-              if (updated && aEvent.cancelable) {
-                aEvent.preventDefault();
-              }
-            }
-            break;
-
-          case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
-            // history next
-            if (self.canCaretGoNext()) {
-              let updated = self.historyPeruse(HISTORY_FORWARD);
-              if (updated && aEvent.cancelable) {
-                aEvent.preventDefault();
-              }
-            }
-            break;
-
-          case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT:
-            // accept proposed completion
-            self.acceptProposedCompletion();
-            break;
-
-          case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
-            // If there are more than one possible completion, pressing tab
-            // means taking the next completion, shift_tab means taking
-            // the previous completion.
-            var completionResult;
-            if (aEvent.shiftKey) {
-              completionResult = self.complete(self.COMPLETE_BACKWARD);
-            }
-            else {
-              completionResult = self.complete(self.COMPLETE_FORWARD);
-            }
-            if (completionResult) {
-              if (aEvent.cancelable) {
-                aEvent.preventDefault();
-              }
-              aEvent.target.focus();
-            }
-            break;
-
-          default:
-            // Store the current inputNode value. If the value is the same
-            // after keyDown event was handled (after 0ms) then the user
-            // moved the cursor. If the value changed, then call the complete
-            // function to show completion on new value.
-            var value = self.inputNode.value;
-            setTimeout(function() {
-              if (self.inputNode.value !== value) {
-                self.complete(self.COMPLETE_HINT_ONLY);
-              }
-            }, 0);
-            break;
-        }
-        return;
-      }
+      return;
     }
-    return handleKeyDown;
+    else if (aEvent.shiftKey &&
+        aEvent.keyCode == Ci.nsIDOMKeyEvent.DOM_VK_RETURN) {
+      // shift return
+      // TODO: expand the inputNode height by one line
+      return;
+    }
+
+    switch(aEvent.keyCode) {
+      case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
+        this.execute();
+        aEvent.preventDefault();
+        break;
+
+      case Ci.nsIDOMKeyEvent.DOM_VK_UP:
+        // history previous
+        if (this.canCaretGoPrevious()) {
+          let updated = this.historyPeruse(HISTORY_BACK);
+          if (updated && aEvent.cancelable) {
+            aEvent.preventDefault();
+          }
+        }
+        break;
+
+      case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
+        // history next
+        if (this.canCaretGoNext()) {
+          let updated = this.historyPeruse(HISTORY_FORWARD);
+          if (updated && aEvent.cancelable) {
+            aEvent.preventDefault();
+          }
+        }
+        break;
+
+      case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT:
+        // accept proposed completion
+        this.acceptProposedCompletion();
+        break;
+
+      case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
+        // If there are more than one possible completion, pressing tab
+        // means taking the next completion, shift_tab means taking
+        // the previous completion.
+        var completionResult;
+        if (aEvent.shiftKey) {
+          completionResult = this.complete(this.COMPLETE_BACKWARD);
+        }
+        else {
+          completionResult = this.complete(this.COMPLETE_FORWARD);
+        }
+        if (completionResult) {
+          if (aEvent.cancelable) {
+            aEvent.preventDefault();
+          }
+          aEvent.target.focus();
+        }
+        break;
+
+      default:
+        break;
+    }
   },
 
   /**
@@ -5159,6 +5147,7 @@ JSTerm.prototype = {
     let inputValue = inputNode.value;
     // If the inputNode has no value, then don't try to complete on it.
     if (!inputValue) {
+      this.lastCompletion = null;
       this.updateCompleteNode("");
       return false;
     }
