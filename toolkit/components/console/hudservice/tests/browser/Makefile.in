@@ -137,6 +137,7 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_632275_getters_document_width.js \
 	browser_webconsole_bug_646025_console_file_location.js \
 	browser_webconsole_position_ui.js \
+	browser_webconsole_bug_642615_autocomplete.js \
 	head.js \
 	$(NULL)
 
