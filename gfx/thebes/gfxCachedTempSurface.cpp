@@ -98,12 +98,12 @@ gfxCachedTempSurface::~gfxCachedTempSurface()
 
 already_AddRefed<gfxContext>
 gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
-                          const gfxRect& aRect,
+                          const gfxIntSize& aSize,
                           gfxASurface* aSimilarTo)
 {
   if (mSurface) {
     /* Verify the current buffer is valid for this purpose */
-    if (mSize.width < aRect.width || mSize.height < aRect.height
+    if (mSize.width < aSize.width || mSize.height < aSize.height
         || mSurface->GetContentType() != aContentType) {
       mSurface = nsnull;
     } else {
@@ -114,8 +114,8 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
 
   PRBool cleared = PR_FALSE;
   if (!mSurface) {
-    mSize = gfxIntSize(PRInt32(NS_ceil(aRect.width)), PRInt32(NS_ceil(aRect.height)));
-    mSurface = aSimilarTo->CreateSimilarSurface(aContentType, mSize);
+    mSize = aSize;
+    mSurface = aSimilarTo->CreateSimilarSurface(aContentType, aSize);
     if (!mSurface)
       return nsnull;
 
@@ -124,10 +124,9 @@ gfxCachedTempSurface::Get(gfxASurface::gfxContentType aContentType,
     mType = aSimilarTo->GetType();
 #endif
   }
-  mSurface->SetDeviceOffset(-aRect.TopLeft());
 
   nsRefPtr<gfxContext> ctx = new gfxContext(mSurface);
-  ctx->Rectangle(aRect);
+  ctx->Rectangle(gfxRect(0, 0, aSize.width, aSize.height));
   ctx->Clip();
   if (!cleared && aContentType != gfxASurface::CONTENT_COLOR) {
     ctx->SetOperator(gfxContext::OPERATOR_CLEAR);
