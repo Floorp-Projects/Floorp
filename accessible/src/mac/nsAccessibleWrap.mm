@@ -88,7 +88,7 @@ nsAccessibleWrap::GetNativeInterface (void **aOutInterface)
 
 // overridden in subclasses to create the right kind of object. by default we create a generic
 // 'mozAccessible' node.
-objc_class*
+Class
 nsAccessibleWrap::GetNativeType () 
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
