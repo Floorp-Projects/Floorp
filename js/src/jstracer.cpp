@@ -12470,11 +12470,11 @@ RootedStringToId(JSContext* cx, JSString** namep, jsid* idp)
 {
     JSString* name = *namep;
     if (name->isAtom()) {
-        *idp = INTERNED_STRING_TO_JSID(name);
+        *idp = ATOM_TO_JSID(&name->asAtom());
         return true;
     }
 
-    JSAtom* atom = js_AtomizeString(cx, name, 0);
+    JSAtom* atom = js_AtomizeString(cx, name);
     if (!atom)
         return false;
     *namep = atom; /* write back to GC root */

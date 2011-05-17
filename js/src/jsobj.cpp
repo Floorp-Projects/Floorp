@@ -3995,7 +3995,7 @@ js_InitClass(JSContext *cx, JSObject *obj, JSObject *protoProto,
              JSPropertySpec *ps, JSFunctionSpec *fs,
              JSPropertySpec *static_ps, JSFunctionSpec *static_fs)
 {
-    JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+    JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name));
     if (!atom)
         return NULL;
 
@@ -4282,7 +4282,7 @@ js_FindClassObject(JSContext *cx, JSObject *start, JSProtoKey protoKey,
         }
         id = ATOM_TO_JSID(cx->runtime->atomState.classAtoms[protoKey]);
     } else {
-        JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+        JSAtom *atom = js_Atomize(cx, clasp->name, strlen(clasp->name));
         if (!atom)
             return false;
         id = ATOM_TO_JSID(atom);
@@ -6323,7 +6323,7 @@ js_XDRObject(JSXDRState *xdr, JSObject **objp)
             if (protoKey != JSProto_Null) {
                 classDef |= (protoKey << 1);
             } else {
-                atom = js_Atomize(cx, clasp->name, strlen(clasp->name), 0);
+                atom = js_Atomize(cx, clasp->name, strlen(clasp->name));
                 if (!atom)
                     return JS_FALSE;
             }
