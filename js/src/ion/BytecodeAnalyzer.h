@@ -57,6 +57,14 @@ class BytecodeAnalyzer : public MIRGenerator
         ControlStatus_None          // No control flow.
     };
 
+    struct LoopInfo {
+        uint32 cfgEntry;
+
+        LoopInfo(uint32 cfgEntry)
+          : cfgEntry(cfgEntry)
+        { }
+    };
+
     // To avoid recursion, the bytecode analyzer uses a stack where each entry
     // is a small state machine. As we encounter branches or jumps in the
     // bytecode, we push information about the edges on the stack so that the
@@ -83,20 +91,24 @@ class BytecodeAnalyzer : public MIRGenerator
                 MBasicBlock *ifTrue;    // Set when the end of the true path is reached.
             } branch;
             struct {
-                MBasicBlock *entry;     // Common entry point.
+                // Common entry point.
+                MBasicBlock *entry;
 
-                // If an unlabelled |continue| appears, this will be non-NULL,
-                // and all loop repeats will forward to here, including the
-                // final jump.
+                // Position of where the loop body starts and ends.
+                jsbytecode *bodyStart;
+                jsbytecode *bodyEnd;
+
+                // pc immediately after the loop exits.
+                jsbytecode *exitpc;
+
+                // Common continue point. Created lazily, so it may be NULL.
                 MBasicBlock *repeat;
 
-                union {
-                    struct {
-                        jsbytecode *bodyStart;  // Start of loop body.
-                        jsbytecode *bodyEnd;    // End of loop body.
-                        MBasicBlock *successor; // Successor block.
-                    } w;
-                };
+                // Common break point. Created lazily, so it may be NULL.
+                MBasicBlock *exit;
+
+                // Common exit point. Created lazily, so it may be NULL.
+                MBasicBlock *successor;
             } loop;
         };
 
@@ -113,9 +125,6 @@ class BytecodeAnalyzer : public MIRGenerator
 
         static CFGState If(jsbytecode *join, MBasicBlock *ifFalse);
         static CFGState IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MBasicBlock *ifFalse);
-        static CFGState DoWhile(jsbytecode *ifne, MBasicBlock *entry);
-        static CFGState While(jsbytecode *ifne, jsbytecode *bodyStart, jsbytecode *bodyEnd,
-                              MBasicBlock *entry);
     };
 
   public:
@@ -131,6 +140,7 @@ class BytecodeAnalyzer : public MIRGenerator
     bool inspectOpcode(JSOp op);
     uint32 readIndex(jsbytecode *pc);
 
+    void popCfgStack();
     CFGState &findInnermostLoop();
     ControlStatus processControlEnd();
     ControlStatus processCfgStack();
@@ -143,6 +153,9 @@ class BytecodeAnalyzer : public MIRGenerator
     ControlStatus processWhileBodyEnd(CFGState &state);
     ControlStatus processReturn(JSOp op);
     ControlStatus simpleContinue(JSOp op, jssrcnote *sn);
+    ControlStatus simpleBreak(JSOp op, jssrcnote *sn);
+    bool pushLoop(CFGState::State state, jsbytecode *stopAt, MBasicBlock *entry,
+                  jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc);
 
     MBasicBlock *newBlock(MBasicBlock *predecessor, jsbytecode *pc);
     MBasicBlock *newLoopHeader(MBasicBlock *predecessor, jsbytecode *pc);
@@ -170,6 +183,7 @@ class BytecodeAnalyzer : public MIRGenerator
     JSAtom **atoms;
     MBasicBlock *current;
     Vector<CFGState, 8, TempAllocPolicy> cfgStack_;
+    Vector<LoopInfo, 4, TempAllocPolicy> loops_;
 };
 
 } // namespace ion

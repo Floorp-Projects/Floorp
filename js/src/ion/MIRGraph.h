@@ -120,6 +120,8 @@ class MBasicBlock : public TempObject
     // internal helper that is also used to enhance spew.
     MInstruction *getSlot(uint32 index);
 
+    void inheritPhi(MPhi *phi);
+
   public:
     // Creates a new basic block for a MIR generator. If |pred| is not NULL,
     // its slots and stack depth are initialized from |pred|.
@@ -171,10 +173,14 @@ class MBasicBlock : public TempObject
     // automatically creates phi nodes and rewrites uses as needed.
     bool addPredecessor(MBasicBlock *pred);
 
-    // Adds a back edge. This places phi nodes and rewrites instructions within
-    // the current loop as necessary. It also updates the stack state in the
-    // successor block.
-    bool addBackedge(MBasicBlock *block, MBasicBlock *successor);
+    // Sets a back edge. This places phi nodes and rewrites instructions within
+    // the current loop as necessary, and builds the successor block's initial
+    // state at the same time. There may be only one backedge per block.
+    bool setBackedge(MBasicBlock *block);
+
+    // Propagates phi assignments from a loop header to an immediate successor
+    // of the loop structure.
+    void inheritPhis(MBasicBlock *loopHeader);
 
     jsbytecode *pc() const {
         return pc_;
@@ -201,8 +207,14 @@ class MBasicBlock : public TempObject
     size_t numInstructions() const {
         return instructions_.length();
     }
-    MInstruction * getInstruction(size_t i) const {
+    MInstruction *getInstruction(size_t i) const {
         return instructions_[i];
+    }
+    size_t numPhis() const {
+        return phis_.length();
+    }
+    MPhi *getPhi(size_t i) const {
+        return phis_[i];
     }
 
   private:
