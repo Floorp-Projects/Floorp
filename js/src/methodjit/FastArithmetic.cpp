@@ -1423,20 +1423,28 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
     bool allocateLeft, allocateRight;
 
     MaybeJump lhsNotNumber = loadDouble(lhs, &fpLeft, &allocateLeft);
+    if (lhsNotNumber.isSet()) {
+        if (target)
+            stubcc.linkExitForBranch(lhsNotNumber.get());
+        else
+            stubcc.linkExit(lhsNotNumber.get(), Uses(2));
+    }
     if (!allocateLeft)
         frame.pinReg(fpLeft);
 
     MaybeJump rhsNotNumber = loadDouble(rhs, &fpRight, &allocateRight);
+    if (rhsNotNumber.isSet()) {
+        if (target)
+            stubcc.linkExitForBranch(rhsNotNumber.get());
+        else
+            stubcc.linkExit(rhsNotNumber.get(), Uses(2));
+    }
     if (!allocateLeft)
         frame.unpinReg(fpLeft);
 
     Assembler::DoubleCondition dblCond = DoubleCondForOp(op, fused);
 
     if (target) {
-        if (lhsNotNumber.isSet())
-            stubcc.linkExitForBranch(lhsNotNumber.get());
-        if (rhsNotNumber.isSet())
-            stubcc.linkExitForBranch(rhsNotNumber.get());
         stubcc.leave();
         OOL_STUBCALL(stub, REJOIN_BRANCH);
 
@@ -1463,10 +1471,6 @@ mjit::Compiler::jsop_relational_double(JSOp op, BoolStub stub, jsbytecode *targe
         if (!jumpAndTrace(j, target, &sj))
             return false;
     } else {
-        if (lhsNotNumber.isSet())
-            stubcc.linkExit(lhsNotNumber.get(), Uses(2));
-        if (rhsNotNumber.isSet())
-            stubcc.linkExit(rhsNotNumber.get(), Uses(2));
         stubcc.leave();
         OOL_STUBCALL(stub, REJOIN_FALLTHROUGH);
 
