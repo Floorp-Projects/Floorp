@@ -23,6 +23,10 @@
 <!ENTITY warning.updatesecurity.enable.label       "Enable">
 <!ENTITY warning.updatesecurity.enable.tooltip     "Enable add-on update security checking">
 
+<!-- global informations -->
+<!ENTITY info.plugincheck.label                 "Check to see if your plugins are up to date">
+<!ENTITY info.plugincheck.tooltip               "Check to see if your plugins are up to date">
+
 <!-- categories / views -->
 <!ENTITY view.search.label                    "Search">
 <!ENTITY view.discover.label                  "Get Add-ons">
