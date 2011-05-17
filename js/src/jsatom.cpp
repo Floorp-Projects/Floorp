@@ -528,7 +528,7 @@ js_AtomizeString(JSContext *cx, JSString *str, InternBehavior ib)
         AtomSet::Ptr p = atoms.lookup(AtomHasher::Lookup(&atom));
         JS_ASSERT(p); /* Non-static atom must exist in atom state set. */
         JS_ASSERT(p->toAtom() == &atom);
-        JS_ASSERT(ib == Intern);
+        JS_ASSERT(ib == InternAtom);
         MakeInterned(lock, *p, ib);
         return &atom;
     }
@@ -620,7 +620,7 @@ js_DumpAtoms(JSContext *cx, FILE *fp)
         AtomStateEntry entry = r.front();
         fprintf(fp, "%3u ", number++);
         JSAtom *key = entry.toAtom();
-        FileEscapeString(fp, key, '"');
+        FileEscapedString(fp, key, '"');
         if (entry.isInterned())
             fputs(" interned", fp);
         putc('\n', fp);
