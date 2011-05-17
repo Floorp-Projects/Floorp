@@ -189,7 +189,7 @@ langpack-%: XPI_NAME=locale-$*
 langpack-%: libs-%
 	@echo "Making langpack $(LANGPACK_FILE)"
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
-	$(PERL) $(MOZILLA_DIR)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) -I$(TK_DEFINES) -I$(APP_DEFINES) $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
+	$(PYTHON) $(MOZILLA_DIR)/config/Preprocessor.py $(DEFINES) $(ACDEFINES) -I$(TK_DEFINES) -I$(APP_DEFINES) $(srcdir)/generic/install.rdf > $(FINAL_TARGET)/install.rdf
 	cd $(DIST)/xpi-stage/locale-$(AB_CD) && \
 	  $(ZIP) -r9D $(LANGPACK_FILE) install.rdf chrome chrome.manifest -x chrome/$(AB_CD).manifest
 

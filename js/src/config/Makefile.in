@@ -93,7 +93,7 @@ endif
 ifdef WRAP_SYSTEM_INCLUDES
 export::
 	if test ! -d system_wrappers_js; then mkdir system_wrappers_js; fi
-	$(PERL) $(srcdir)/preprocessor.pl $(DEFINES) $(ACDEFINES) \
+	$(PYTHON) $(srcdir)/Preprocessor.py $(DEFINES) $(ACDEFINES) \
 		-DBUILD_STATIC_LIBS=$(BUILD_STATIC_LIBS) \
 		$(srcdir)/system-headers | $(PERL) $(srcdir)/make-system-wrappers.pl system_wrappers_js
 	$(INSTALL) system_wrappers_js $(DIST)

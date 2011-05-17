@@ -48,6 +48,7 @@
 
 #define MAC_OS_X_VERSION_10_5_HEX 0x00001050
 #define MAC_OS_X_VERSION_10_6_HEX 0x00001060
+#define MAC_OS_X_VERSION_10_7_HEX 0x00001070
 
 class nsToolkit : public nsIToolkit
 {
@@ -60,6 +61,7 @@ public:
 
   static PRInt32     OSXVersion();
   static PRBool      OnSnowLeopardOrLater();
+  static PRBool      OnLionOrLater();
 
   static void        PostSleepWakeNotification(const char* aNotification);
 

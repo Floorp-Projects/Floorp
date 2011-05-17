@@ -161,7 +161,6 @@
 @BINPATH@/components/dom_stylesheets.xpt
 @BINPATH@/components/dom_threads.xpt
 @BINPATH@/components/dom_traversal.xpt
-@BINPATH@/components/dom_views.xpt
 @BINPATH@/components/dom_xbl.xpt
 @BINPATH@/components/dom_xpath.xpt
 @BINPATH@/components/dom_xul.xpt
@@ -226,9 +225,6 @@
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
 @BINPATH@/components/sessionstore.xpt
-#ifdef MOZ_SERVICES_SYNC
-@BINPATH@/components/services-crypto.xpt
-#endif
 @BINPATH@/components/services-crypto-component.xpt
 @BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
@@ -247,7 +243,6 @@
 @BINPATH@/components/urlformatter.xpt
 @BINPATH@/components/webBrowser_core.xpt
 @BINPATH@/components/webbrowserpersist.xpt
-@BINPATH@/components/webshell_idls.xpt
 @BINPATH@/components/widget.xpt
 #ifdef XP_MACOSX
 @BINPATH@/components/widget_cocoa.xpt
@@ -283,7 +278,6 @@
 @BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsSetDefaultBrowser.manifest
 @BINPATH@/components/nsSetDefaultBrowser.js
-@BINPATH@/components/nsMicrosummaryService.js
 @BINPATH@/components/BrowserPlaces.manifest
 @BINPATH@/components/nsPrivateBrowsingService.manifest
 @BINPATH@/components/nsPrivateBrowsingService.js
