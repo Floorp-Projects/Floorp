@@ -91,7 +91,7 @@ test$(DLL_SUFFIX): test.$(OBJ_SUFFIX) elfhack $(CSRCS:.c=.$(OBJ_SUFFIX))
 	[ $$(objdump -R $@.bak | wc -l) -gt $$(objdump -R $@ | wc -l) ]
 
 dummy: dummy.$(OBJ_SUFFIX) test$(DLL_SUFFIX)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 libs:: dummy
 	# Will either crash or return exit code 1 if elfhack is broken
