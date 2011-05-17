@@ -472,6 +472,13 @@ nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
                                            eCaseMatters);
 }
 
+PRBool
+nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame)
+{
+  return aFrame &&
+         aFrame->GetStyleDisplay()->mOrient == NS_STYLE_ORIENT_VERTICAL;
+}
+
 // menupopup:
 PRBool
 nsNativeTheme::IsSubmenu(nsIFrame* aFrame, PRBool* aLeftOfParent)
