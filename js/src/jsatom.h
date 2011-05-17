@@ -304,7 +304,7 @@ struct AtomStateEntry {
     /* In static form to avoid accidentally mutating a copy of a hash set value. */
     static void makeInterned(AtomStateEntry *self, InternBehavior ib) {
         JS_STATIC_ASSERT(DoNotInternAtom == 0 && InternAtom == 1);
-        JS_ASSERT(ib <= Intern);
+        JS_ASSERT(ib <= InternAtom);
         self->bits |= uintptr_t(ib);
     }
 
