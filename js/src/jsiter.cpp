@@ -402,7 +402,6 @@ GetCustomIterator(JSContext *cx, JSObject *obj, uintN flags, Value *vp)
                              -1, ObjectValue(*obj), NULL, bytes.ptr());
         return false;
     }
-
     return true;
 }
 

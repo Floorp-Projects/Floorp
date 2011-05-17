@@ -120,13 +120,9 @@ GetGCThingTraceKind(const void *thing)
 /* Capacity for slotsToThingKind */
 const size_t SLOTS_TO_THING_KIND_LIMIT = 17;
 
-/*
- * Get the best kind to use when making an object with the given slot count.
- * fallback is the kind to use if the number of slots exceeds the maximum
- * number of fixed slots for an object.
- */
+/* Get the best kind to use when making an object with the given slot count. */
 static inline FinalizeKind
-GetGCObjectKind(size_t numSlots, FinalizeKind fallback = FINALIZE_OBJECT0)
+GetGCObjectKind(size_t numSlots)
 {
     extern FinalizeKind slotsToThingKind[];
 
@@ -252,5 +248,6 @@ js_NewGCXML(JSContext *cx)
     return NewFinalizableGCThing<JSXML>(cx, js::gc::FINALIZE_XML);
 }
 #endif
+
 
 #endif /* jsgcinlines_h___ */

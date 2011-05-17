@@ -2627,14 +2627,13 @@ JS_GetSecurityCallbacks(JSContext *cx);
 extern JS_PUBLIC_API(JSFunction *)
 JS_NewFunctionWithType(JSContext *cx, JSNative call, uintN nargs, uintN flags,
                        JSObject *parent, const char *name,
-                       JSTypeHandler handler, const char *fullName);
+                       JSTypeHandler handler);
 
 static JS_ALWAYS_INLINE JSFunction*
 JS_NewFunction(JSContext *cx, JSNative call, uintN nargs, uintN flags,
                JSObject *parent, const char *name)
 {
-    return JS_NewFunctionWithType(cx, call, nargs, flags, parent, name,
-                                  NULL, NULL);
+    return JS_NewFunctionWithType(cx, call, nargs, flags, parent, name, NULL);
 }
 
 /*

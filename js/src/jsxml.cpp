@@ -223,7 +223,7 @@ namespace_equality(JSContext *cx, JSObject *obj, const Value *v, JSBool *bp)
 }
 
 JS_FRIEND_DATA(Class) js_NamespaceClass = {
-    js_Namespace_str,
+    "Namespace",
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::NAMESPACE_CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Namespace),
@@ -336,7 +336,7 @@ qname_equality(JSContext *cx, JSObject *qn, const Value *v, JSBool *bp)
 }
 
 JS_FRIEND_DATA(Class) js_QNameClass = {
-    js_QName_str,
+    "QName",
     JSCLASS_CONSTRUCT_PROTOTYPE |
     JSCLASS_HAS_RESERVED_SLOTS(JSObject::QNAME_CLASS_RESERVED_SLOTS) |
     JSCLASS_HAS_CACHED_PROTO(JSProto_QName),
@@ -7318,7 +7318,6 @@ js_SetDefaultXMLNamespace(JSContext *cx, const Value &v)
         return JS_FALSE;
 
     JSObject &varobj = cx->stack.currentVarObj();
-
     if (!varobj.defineProperty(cx, JS_DEFAULT_XML_NAMESPACE_ID, ObjectValue(*ns),
                                PropertyStub, StrictPropertyStub, JSPROP_PERMANENT)) {
         return JS_FALSE;

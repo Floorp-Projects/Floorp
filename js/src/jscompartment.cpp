@@ -333,6 +333,9 @@ JSCompartment::wrap(JSContext *cx, Value *vp)
 
     vp->setObject(*wrapper);
 
+    if (wrapper->getProto() != proto && !SetProto(cx, wrapper, proto, false))
+        return false;
+
     if (!crossCompartmentWrappers.put(wrapper->getProxyPrivate(), *vp))
         return false;
 
@@ -415,7 +418,6 @@ JSCompartment::wrap(JSContext *cx, AutoIdVector &props)
 }
 
 #if defined JS_METHODJIT && defined JS_MONOIC
-
 /*
  * Check if the pool containing the code for jit should be destroyed, per the
  * heuristics in JSCompartment::sweep.
@@ -445,33 +447,10 @@ static inline void
 ScriptTryDestroyCode(JSContext *cx, JSScript *script, bool normal,
                      uint32 releaseInterval, uint32 &counter)
 {
-    /*
-     * Check if the JIT code for script should be destroyed. When JIT code has
-     * inlined frames, destroy the outer script if any of the inner scripts
-     * will need to be destroyed, preserving the invariant that we always have
-     * JIT code for any inlined frame which may need to be expanded.
-     */
-
     mjit::JITScript *jit = normal ? script->jitNormal : script->jitCtor;
-
-    if (!jit)
-        return;
-
-    if (ScriptPoolDestroyed(cx, jit, releaseInterval, counter)) {
+    if (jit && ScriptPoolDestroyed(cx, jit, releaseInterval, counter))
         mjit::ReleaseScriptCode(cx, script, normal);
-        return;
-    }
-
-    for (unsigned i = 0; i < jit->nInlineFrames; i++) {
-        JSScript *inner = jit->inlineFrames()[i].fun->script();
-        if (!inner->jitNormal ||  /* Found inner first in the walk. */
-            ScriptPoolDestroyed(cx, inner->jitNormal, releaseInterval, counter)) {
-            mjit::ReleaseScriptCode(cx, script, true);
-            return;
-        }
-    }
 }
-
 #endif // JS_METHODJIT && JS_MONOIC
 
 /*
@@ -570,7 +549,6 @@ JSCompartment::sweep(JSContext *cx, uint32 releaseInterval)
 
     for (JSCList *cursor = scripts.next; cursor != &scripts; cursor = cursor->next) {
         JSScript *script = reinterpret_cast<JSScript *>(cursor);
-
         if (script->hasJITCode()) {
             mjit::ic::SweepCallICs(cx, script, discardScripts);
             if (discardScripts) {

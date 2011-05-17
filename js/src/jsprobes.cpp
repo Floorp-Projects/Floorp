@@ -43,7 +43,6 @@
 #include "jsobj.h"
 #include "jsscript.h"
 #include "jsstr.h"
-#include "jsobjinlines.h"
 
 #ifdef __APPLE__
 #include "sharkctl.h"
