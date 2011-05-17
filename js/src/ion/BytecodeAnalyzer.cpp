@@ -72,7 +72,8 @@ ion::Go(JSContext *cx, JSScript *script, StackFrame *fp)
 BytecodeAnalyzer::BytecodeAnalyzer(JSContext *cx, JSScript *script, JSFunction *fun, TempAllocator &temp,
                                    MIRGraph &graph)
   : MIRGenerator(cx, temp, script, fun, graph),
-    cfgStack_(TempAllocPolicy(cx))
+    cfgStack_(TempAllocPolicy(cx)),
+    loops_(TempAllocPolicy(cx))
 {
     pc = script->code;
     atoms = script->atomMap.vector;
@@ -129,29 +130,33 @@ BytecodeAnalyzer::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MB
     return state;
 }
 
-BytecodeAnalyzer::CFGState
-BytecodeAnalyzer::CFGState::DoWhile(jsbytecode *ifne, MBasicBlock *entry)
+void
+BytecodeAnalyzer::popCfgStack()
 {
-    CFGState state;
-    state.state = DO_WHILE_LOOP;
-    state.stopAt = ifne;
-    state.loop.entry = entry;
-    state.loop.repeat = NULL;
-    return state;
+    if (cfgStack_.back().isLoop())
+        loops_.popBack();
+    cfgStack_.popBack();
 }
 
-BytecodeAnalyzer::CFGState
-BytecodeAnalyzer::CFGState::While(jsbytecode *ifne, jsbytecode *bodyStart, jsbytecode *bodyEnd, MBasicBlock *entry)
+bool
+BytecodeAnalyzer::pushLoop(CFGState::State initial, jsbytecode *stopAt, MBasicBlock *entry,
+                           jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc)
 {
+    LoopInfo loop(cfgStack_.length());
+    if (!loops_.append(loop))
+        return false;
+
     CFGState state;
-    state.state = WHILE_LOOP_COND;
-    state.stopAt = ifne;
+    state.state = initial;
+    state.stopAt = stopAt;
+    state.loop.bodyStart = bodyStart;
+    state.loop.bodyEnd = bodyEnd;
+    state.loop.exitpc = exitpc;
     state.loop.entry = entry;
     state.loop.repeat = NULL;
-    state.loop.w.bodyStart = bodyStart;
-    state.loop.w.bodyEnd = bodyEnd;
-    state.loop.w.successor = NULL;
-    return state;
+    state.loop.exit = NULL;
+    state.loop.successor = NULL;
+    return cfgStack_.append(state);
 }
 
 bool
@@ -289,6 +294,8 @@ BytecodeAnalyzer::snoopControlFlow(JSOp op)
         jssrcnote *sn = js_GetSrcNote(script, pc);
         switch (sn ? SN_TYPE(sn) : SRC_NULL) {
           case SRC_BREAK:
+            return simpleBreak(op, sn);
+
           case SRC_BREAK2LABEL:
             JS_NOT_REACHED("break NYI");
             return ControlStatus_Error;
@@ -453,7 +460,7 @@ BytecodeAnalyzer::processCfgStack()
     // If this terminated a CFG structure, act like processControlEnd() and
     // keep propagating upward.
     while (status == ControlStatus_Ended) {
-        cfgStack_.popBack();
+        popCfgStack();
         if (cfgStack_.empty())
             return status;
         status = processCfgEntry(cfgStack_.back());
@@ -461,7 +468,7 @@ BytecodeAnalyzer::processCfgStack()
 
     // If some join took place, the current structure is finished.
     if (status == ControlStatus_Joined)
-        cfgStack_.popBack();
+        popCfgStack();
 
     return status;
 }
@@ -575,15 +582,14 @@ BytecodeAnalyzer::processDoWhileEnd(CFGState &state)
     // First, balance the stack past the IFNE.
     MInstruction *ins = current->pop();
 
-    // Create the successor block.
-    MBasicBlock *successor = newBlock(current, GetNextPc(pc));
+    MBasicBlock *successor = newBlock(current, state.loop.exitpc);
     MTest *test = MTest::New(this, ins, state.loop.entry, successor);
     if (!current->end(test))
         return ControlStatus_Error;
 
     // Place phis at the loop header, now that the last instruction has
     // registered its operands, which might need rewriting.
-    if (!state.loop.entry->addBackedge(current, successor))
+    if (!state.loop.entry->setBackedge(current))
         return ControlStatus_Error;
 
     JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
@@ -602,16 +608,15 @@ BytecodeAnalyzer::processWhileCondEnd(CFGState &state)
     MInstruction *ins = current->pop();
 
     // Create the body and successor blocks.
-    MBasicBlock *body = newBlock(current, state.loop.w.bodyStart);
-    MBasicBlock *successor = newBlock(current, GetNextPc(pc));
-    MTest *test = MTest::New(this, ins, body, successor);
+    MBasicBlock *body = newBlock(current, state.loop.bodyStart);
+    state.loop.successor = newBlock(current, state.loop.exitpc);
+    MTest *test = MTest::New(this, ins, body, state.loop.successor);
     if (!current->end(test))
         return ControlStatus_Error;
 
     state.state = CFGState::WHILE_LOOP_BODY;
-    state.stopAt = state.loop.w.bodyEnd;
-    state.loop.w.successor = successor;
-    pc = state.loop.w.bodyStart;
+    state.stopAt = state.loop.bodyEnd;
+    pc = state.loop.bodyStart;
     current = body;
     return ControlStatus_Jumped;
 }
@@ -640,14 +645,27 @@ BytecodeAnalyzer::processWhileBodyEnd(CFGState &state)
         current = state.loop.repeat;
     }
 
+    // Place phis in the loop header, propagating their assignment to the
+    // successor block. If there is no |current|, then the successor is still
+    // reachable via the original test branch, and thus its state is coherent.
     if (current) {
-        // Place phis in the loop header, propagating their assignment to the
-        // successor block.
-        if (!state.loop.entry->addBackedge(current, state.loop.w.successor))
+        if (!state.loop.entry->setBackedge(current))
+            return ControlStatus_Error;
+        state.loop.successor->inheritPhis(state.loop.entry);
+    }
+
+    // If this loop has a break block, jump to the successor.
+    if (state.loop.exit) {
+        state.loop.exit->inheritPhis(state.loop.entry);
+
+        MGoto *ins = MGoto::New(this, state.loop.successor);
+        if (!state.loop.exit->end(ins))
+            return ControlStatus_Error;
+        if (!state.loop.successor->addPredecessor(state.loop.exit))
             return ControlStatus_Error;
     }
 
-    current = state.loop.w.successor;
+    current = state.loop.successor;
     pc = current->pc();
     return ControlStatus_Joined;
 }
@@ -664,6 +682,36 @@ BytecodeAnalyzer::findInnermostLoop()
 }
 
 BytecodeAnalyzer::ControlStatus
+BytecodeAnalyzer::simpleBreak(JSOp op, jssrcnote *sn)
+{
+    JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
+
+    CFGState &state = findInnermostLoop();
+
+    // The target of the loop should be the loop exit.
+    JS_ASSERT(pc + GetJumpOffset(pc) == state.loop.exitpc);
+
+    // The pc is technically wrong here, after it gets shared by the next
+    // break, but it's okay for the VM to resume anyway since it's just
+    // a JSOP_GOTO.
+    if (!state.loop.exit)
+        state.loop.exit = newBlock(pc);
+
+    // Jump to the exit block, rather than the successor, to make placing phis
+    // easier.
+    MGoto *ins = MGoto::New(this, state.loop.exit);
+    if (!current->end(ins))
+        return ControlStatus_Error;
+
+    if (!state.loop.exit->addPredecessor(current))
+        return ControlStatus_Error;
+
+    current = NULL;
+    pc += js_CodeSpec[op].length;
+    return processControlEnd();
+}
+
+BytecodeAnalyzer::ControlStatus
 BytecodeAnalyzer::simpleContinue(JSOp op, jssrcnote *sn)
 {
     JS_ASSERT(op == JSOP_GOTO || op == JSOP_GOTOX);
@@ -673,28 +721,21 @@ BytecodeAnalyzer::simpleContinue(JSOp op, jssrcnote *sn)
     // The target of the loop should be the loop entry.
     JS_ASSERT(pc + GetJumpOffset(pc) == state.loop.entry->pc());
 
-    MBasicBlock *repeat = state.loop.repeat;
-    if (!repeat) {
-        // The |pc| here is technically not correct, as the block is shared
-        // between all |continue| points. However, it should be okay for the VM
-        // to resume at any |continue| since it's just a GOTO.
-        repeat = newBlock(current, pc);
-    }
+    if (!state.loop.repeat)
+        state.loop.repeat = newBlock(pc);
 
-    MGoto *ins = MGoto::New(this, repeat);
+    // Jump directly to the repeat block. We don't jump directly to the header,
+    // because this would create multiple backedges, and it's easier to deal
+    // with multiple forward edges than backward ones.
+    MGoto *ins = MGoto::New(this, state.loop.repeat);
     if (!current->end(ins))
         return ControlStatus_Error;
 
-    if (state.loop.repeat) {
-        // If the basic block wasn't just created, we need to add the current block
-        // as a predecessor (creating the new block does this automatically).
-        if (!state.loop.repeat->addPredecessor(current))
-            return ControlStatus_Error;
-    } else {
-        state.loop.repeat = repeat;
-    }
+    if (!state.loop.repeat->addPredecessor(current))
+        return ControlStatus_Error;
 
     current = NULL;
+    pc += js_CodeSpec[op].length;
     return processControlEnd();
 }
 
@@ -783,7 +824,9 @@ BytecodeAnalyzer::doWhileLoop(JSOp op, jssrcnote *sn)
         return false;
 
     current = header;
-    if (!cfgStack_.append(CFGState::DoWhile(ifne, header)))
+    jsbytecode *bodyStart = GetNextPc(GetNextPc(pc));
+    jsbytecode *exitpc = GetNextPc(ifne);
+    if (!pushLoop(CFGState::DO_WHILE_LOOP, ifne, header, bodyStart, ifne, exitpc))
         return false;
 
     return true;
@@ -815,7 +858,8 @@ BytecodeAnalyzer::whileLoop(JSOp op, jssrcnote *sn)
     // Skip past the JSOP_TRACE for the body start.
     jsbytecode *bodyStart = GetNextPc(GetNextPc(pc));
     jsbytecode *bodyEnd = pc + GetJumpOffset(pc);
-    if (!cfgStack_.append(CFGState::While(ifne, bodyStart, bodyEnd, header)))
+    jsbytecode *exitpc = GetNextPc(ifne);
+    if (!pushLoop(CFGState::WHILE_LOOP_COND, ifne, header, bodyStart, bodyEnd, exitpc))
         return false;
 
     // Parse the condition first.
