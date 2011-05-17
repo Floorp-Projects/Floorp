@@ -1389,7 +1389,7 @@ static inline JSAtom **
 FrameAtomBase(JSContext *cx, js::StackFrame *fp)
 {
     return fp->hasImacropc()
-           ? cx->runtime->atomState.commonAtomsStart()
+           ? COMMON_ATOMS_START(&cx->runtime->atomState)
            : fp->script()->atomMap.vector;
 }
 
@@ -1875,7 +1875,7 @@ class AutoLockAtomsCompartment {
 
   public:
     AutoLockAtomsCompartment(JSContext *cx
-                             JS_GUARD_OBJECT_NOTIFIER_PARAM)
+                               JS_GUARD_OBJECT_NOTIFIER_PARAM)
       : cx(cx)
     {
         JS_GUARD_OBJECT_NOTIFIER_INIT;

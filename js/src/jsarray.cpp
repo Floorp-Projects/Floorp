@@ -278,7 +278,7 @@ BigIndexToId(JSContext *cx, JSObject *obj, jsuint index, JSBool createAtom,
             return JS_TRUE;
         }
     } else {
-        atom = js_AtomizeChars(cx, start, JS_ARRAY_END(buf) - start);
+        atom = js_AtomizeChars(cx, start, JS_ARRAY_END(buf) - start, 0);
         if (!atom)
             return JS_FALSE;
     }

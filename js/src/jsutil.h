@@ -87,8 +87,6 @@ JS_Assert(const char *s, const char *file, JSIntn ln);
 # define JS_THREADSAFE_ASSERT(expr) ((void) 0)
 # endif
 
-#define JS_FREE_PATTERN 0xDA
-
 #else
 
 #define JS_ASSERT(expr)         ((void) 0)

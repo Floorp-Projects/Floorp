@@ -610,7 +610,6 @@ struct Shape : public js::gc::Cell
 
     void finalize(JSContext *cx);
     void removeChild(js::Shape *child);
-    void removeChildSlowly(js::Shape *child);
 };
 
 struct EmptyShape : public js::Shape

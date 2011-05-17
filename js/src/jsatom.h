@@ -54,6 +54,10 @@
 #include "jslock.h"
 #include "jsvalue.h"
 
+#define ATOM_PINNED     0x1       /* atom is pinned against GC */
+#define ATOM_INTERNED   0x2       /* pinned variant for JS_Intern* API */
+#define ATOM_NOCOPY     0x4       /* don't copy atom string bytes */
+
 /* Engine-internal extensions of jsid */
 
 static JS_ALWAYS_INLINE jsid
@@ -274,76 +278,42 @@ struct JSAtomMap {
 
 namespace js {
 
-enum InternBehavior
+#define ATOM_ENTRY_FLAG_MASK            ((size_t)(ATOM_PINNED | ATOM_INTERNED))
+
+JS_STATIC_ASSERT(ATOM_ENTRY_FLAG_MASK < JS_GCTHING_ALIGN);
+
+typedef uintptr_t AtomEntryType;
+
+static JS_ALWAYS_INLINE JSAtom *
+AtomEntryToKey(AtomEntryType entry)
 {
-    DoNotInternAtom = 0,
-    InternAtom = 1
-};
-
-/*
- * Atom pointer with low bit stolen to indicate whether the atom is interned.
- * Interned atoms are ignored by the GC, and thus live for the lifetime of the
- * runtime.
- */
-struct AtomStateEntry {
-    uintptr_t bits;
-
-    static const uintptr_t INTERNED_FLAG = 0x1;
-
-    AtomStateEntry() : bits(0) {}
-    AtomStateEntry(const AtomStateEntry &other) : bits(other.bits) {}
-
-    AtomStateEntry(JSFixedString *futureAtom, bool intern)
-      : bits(uintptr_t(futureAtom) | intern)
-    {}
-
-    bool isInterned() const {
-        return bits & INTERNED_FLAG;
-    }
-
-    /* In static form to avoid accidentally mutating a copy of a hash set value. */
-    static void makeInterned(AtomStateEntry *self, InternBehavior ib) {
-        JS_STATIC_ASSERT(DoNotInternAtom == 0 && InternAtom == 1);
-        JS_ASSERT(ib <= InternAtom);
-        self->bits |= uintptr_t(ib);
-    }
-
-    JS_ALWAYS_INLINE
-    JSAtom *toAtom() const {
-        JS_ASSERT(bits != 0); /* No NULL values should exist in the atom state. */
-        JS_ASSERT(((JSString *) (bits & ~INTERNED_FLAG))->isAtom());
-        return (JSAtom *) (bits & ~INTERNED_FLAG);
-    }
-};
+    JS_ASSERT(entry != 0);
+    return (JSAtom *)(entry & ~ATOM_ENTRY_FLAG_MASK);
+}
 
 struct AtomHasher
 {
     struct Lookup
     {
-        const jschar    *chars;
-        size_t          length;
-        const JSAtom    *atom; /* Optional. */
-
-        Lookup(const jschar *chars, size_t length) : chars(chars), length(length), atom(NULL) {}
-        Lookup(const JSAtom *atom) : chars(atom->chars()), length(atom->length()), atom(atom) {}
+        const jschar *chars;
+        size_t length;
+        Lookup(const jschar *chars, size_t length) : chars(chars), length(length) {}
     };
 
     static HashNumber hash(const Lookup &l) {
         return HashChars(l.chars, l.length);
     }
 
-    static bool match(AtomStateEntry entry, const Lookup &lookup) {
-        JSAtom *key = entry.toAtom();
-
-        if (lookup.atom)
-            return lookup.atom == key;
+    static bool match(AtomEntryType entry, const Lookup &lookup) {
+        JS_ASSERT(entry);
+        JSAtom *key = AtomEntryToKey(entry);
         if (key->length() != lookup.length)
             return false;
         return PodEqual(key->chars(), lookup.chars, lookup.length);
     }
 };
 
-typedef HashSet<AtomStateEntry, AtomHasher, SystemAllocPolicy> AtomSet;
+typedef HashSet<AtomEntryType, AtomHasher, SystemAllocPolicy> AtomSet;
 
 }  /* namespace js */
 
@@ -493,43 +463,29 @@ struct JSAtomState
         JSAtom          *unwatchAtom;
         JSAtom          *watchAtom;
     } lazy;
-
-    static const size_t commonAtomsOffset;
-    static const size_t lazyAtomsOffset;
-
-    void clearLazyAtoms() {
-        memset(&lazy, 0, sizeof(lazy));
-    }
-
-    void junkAtoms() {
-#ifdef DEBUG
-        memset(commonAtomsStart(), JS_FREE_PATTERN, sizeof(*this) - commonAtomsOffset);
-#endif
-    }
-
-    JSAtom **commonAtomsStart() {
-        return &emptyAtom;
-    }
-
-    void checkStaticInvariants();
 };
-
-extern bool
-AtomIsInterned(JSContext *cx, JSAtom *atom);
 
 #define ATOM(name) cx->runtime->atomState.name##Atom
 
+#define ATOM_OFFSET_START       offsetof(JSAtomState, emptyAtom)
+#define LAZY_ATOM_OFFSET_START  offsetof(JSAtomState, lazy)
+#define ATOM_OFFSET_LIMIT       (sizeof(JSAtomState))
+
+#define COMMON_ATOMS_START(state)                                             \
+    ((JSAtom **)((uint8 *)(state) + ATOM_OFFSET_START))
 #define COMMON_ATOM_INDEX(name)                                               \
-    ((offsetof(JSAtomState, name##Atom) - JSAtomState::commonAtomsOffset)     \
+    ((offsetof(JSAtomState, name##Atom) - ATOM_OFFSET_START)                  \
      / sizeof(JSAtom*))
 #define COMMON_TYPE_ATOM_INDEX(type)                                          \
-    ((offsetof(JSAtomState, typeAtoms[type]) - JSAtomState::commonAtomsOffset)\
+    ((offsetof(JSAtomState, typeAtoms[type]) - ATOM_OFFSET_START)             \
      / sizeof(JSAtom*))
 
 #define ATOM_OFFSET(name)       offsetof(JSAtomState, name##Atom)
 #define OFFSET_TO_ATOM(rt,off)  (*(JSAtom **)((char*)&(rt)->atomState + (off)))
-#define CLASS_ATOM_OFFSET(name) offsetof(JSAtomState, classAtoms[JSProto_##name])
-#define CLASS_ATOM(cx,name)     ((cx)->runtime->atomState.classAtoms[JSProto_##name])
+#define CLASS_ATOM_OFFSET(name) offsetof(JSAtomState,classAtoms[JSProto_##name])
+
+#define CLASS_ATOM(cx,name) \
+    ((cx)->runtime->atomState.classAtoms[JSProto_##name])
 
 extern const char *const js_common_atom_names[];
 extern const size_t      js_common_atom_count;
@@ -632,7 +588,7 @@ js_TraceAtomState(JSTracer *trc);
 extern void
 js_SweepAtomState(JSContext *cx);
 
-extern bool
+extern JSBool
 js_InitCommonAtoms(JSContext *cx);
 
 extern void
@@ -643,15 +599,13 @@ js_FinishCommonAtoms(JSContext *cx);
  * memory.
  */
 extern JSAtom *
-js_AtomizeString(JSContext *cx, JSString *str, js::InternBehavior ib = js::DoNotInternAtom);
+js_AtomizeString(JSContext *cx, JSString *str, uintN flags);
 
 extern JSAtom *
-js_Atomize(JSContext *cx, const char *bytes, size_t length,
-           js::InternBehavior ib = js::DoNotInternAtom, bool useCESU8 = false);
+js_Atomize(JSContext *cx, const char *bytes, size_t length, uintN flags, bool useCESU8 = false);
 
 extern JSAtom *
-js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length,
-                js::InternBehavior ib = js::DoNotInternAtom);
+js_AtomizeChars(JSContext *cx, const jschar *chars, size_t length, uintN flags);
 
 /*
  * Return an existing atom for the given char array or null if the char

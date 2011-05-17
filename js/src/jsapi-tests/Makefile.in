@@ -63,7 +63,6 @@ CPPSRCS = \
   testGCChunkAlloc.cpp \
   testGetPropertyDefault.cpp \
   testIntString.cpp \
-  testIntern.cpp \
   testLookup.cpp \
   testLooselyEqual.cpp \
   testNewObject.cpp \
