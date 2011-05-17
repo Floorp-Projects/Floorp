@@ -132,6 +132,16 @@ else
 SDK_LIBRARY = $(SHARED_LIBRARY)
 endif
 
+# See bug 653662 - some builders are hitting an internal size limit
+# on incremental builds. Disable this for debug builds for now. We may
+# be able to revisit this after our builders are upgraded to something
+# later than Visual Studio 2005.
+ifeq ($(OS_ARCH),WINNT)
+ifdef MOZ_DEBUG
+EXTRA_DSO_LDOPTS += -INCREMENTAL:NO
+endif
+endif
+
 EXTRA_DSO_LDOPTS += $(LIBS_DIR) $(EXTRA_DSO_LIBS)
 
 ifndef MOZ_ENABLE_LIBXUL
