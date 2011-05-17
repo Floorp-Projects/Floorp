@@ -103,8 +103,8 @@ function test_bookmark_update() {
     store.applyIncoming(record);
 
     _("Verify that the values have been cleared.");
-    do_check_eq(Svc.Annos.getItemAnnotation(bmk1_id, "bookmarkProperties/description"), "");
-    do_check_eq(Svc.Bookmark.getItemTitle(bmk1_id), "");
+    do_check_throws(function () Svc.Annos.getItemAnnotation(bmk1_id, "bookmarkProperties/description"), Cr.NS_ERROR_NOT_AVAILABLE);
+    do_check_eq(Svc.Bookmark.getItemTitle(bmk1_id), null);
     do_check_eq(Svc.Bookmark.getKeywordForBookmark(bmk1_id), null);
   } finally {
     _("Clean up.");
