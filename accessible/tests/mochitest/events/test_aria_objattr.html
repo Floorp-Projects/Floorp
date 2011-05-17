@@ -1,7 +1,7 @@
 <html>
 
 <head>
-  <title>Accessible ARIA hidden attribute</title>
+  <title>Accessible ARIA object attribute changes</title>
 
   <link rel="stylesheet" type="text/css"
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
@@ -43,13 +43,37 @@
       }
     }
 
+    function updateSort(aID, aSort)
+    {
+      this.node = getNode(aID);
+      this.accessible = getAccessible(this.node);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_OBJECT_ATTRIBUTE_CHANGED, this.accessible),
+      ];
+
+      this.invoke = function updateSort_invoke()
+      {
+        this.node.setAttribute("aria-sort", aSort);
+      }
+
+      this.getID = function updateSort_getID()
+      {
+        return "aria-sort for " + aID + " " + aSort;
+      }
+    }
+
+    // Debug stuff.
+    // gA11yEventDumpID = "eventdump";
+    // gA11yEventDumpToConsole = true;
+    
     function doTests()
     {
-      //gA11yEventDumpID = "eventdump"; // debug stuff
-
       gQueue = new eventQueue();
 
       gQueue.push(new hideNode("hideable", "true"));
+
+      gQueue.push(new updateSort("sortable", "ascending"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -67,6 +91,12 @@
     Mozilla Bug 581096
   </a>
 
+  <a target="_blank"
+     href="https://bugzilla.mozilla.org/show_bug.cgi?id=640707"
+     title="Add event support for aria-sort">
+    Mozilla Bug 640707
+  </a>
+
   <p id="display"></p>
   <div id="content" style="display: none"></div>
   <pre id="test">
@@ -75,5 +105,6 @@
 
   <div id="hideable"><div>Hi</div><div>there</div></div>
 
+  <div id="sortable" role="columnheader" aria-sort"none">aria-sort</div>
 </body>
 </html>
