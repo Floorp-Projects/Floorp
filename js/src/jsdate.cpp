@@ -2658,9 +2658,8 @@ js_InitDateClass(JSContext *cx, JSObject *obj)
     AutoValueRooter toUTCStringFun(cx);
     jsid toUTCStringId = ATOM_TO_JSID(cx->runtime->atomState.toUTCStringAtom);
     jsid toGMTStringId = ATOM_TO_JSID(cx->runtime->atomState.toGMTStringAtom);
-    if (!js_GetProperty(cx, proto, toUTCStringId, toUTCStringFun.addr()))
-        return NULL;
-    if (!js_DefineProperty(cx, proto, toGMTStringId, toUTCStringFun.addr(),
+    if (!js_GetProperty(cx, proto, toUTCStringId, toUTCStringFun.addr()) ||
+        !js_DefineProperty(cx, proto, toGMTStringId, toUTCStringFun.addr(),
                            PropertyStub, StrictPropertyStub, 0)) {
         return NULL;
     }

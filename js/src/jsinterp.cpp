@@ -1900,8 +1900,6 @@ namespace reprmeter {
 #define POP_COPY_TO(v)           v = *--regs.sp
 #define POP_RETURN_VALUE()       regs.fp()->setReturnValue(*--regs.sp)
 
-/* Definitions for performing runtime checks required by type inference. */
-
 #define POP_BOOLEAN(cx, vp, b)                                                \
     JS_BEGIN_MACRO                                                            \
         vp = &regs.sp[-1];                                                    \
@@ -2630,6 +2628,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
       advance_pc:
         regs.pc += len;
         op = (JSOp) *regs.pc;
+
       do_op:
         CHECK_RECORDER();
         LOG_OPCODE(op);
@@ -3302,7 +3301,6 @@ BEGIN_CASE(JSOP_SETCONST)
     LOAD_ATOM(0, atom);
     JSObject &obj = cx->stack.currentVarObj();
     const Value &ref = regs.sp[-1];
-
     if (!obj.defineProperty(cx, ATOM_TO_JSID(atom), ref,
                             PropertyStub, StrictPropertyStub,
                             JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY)) {

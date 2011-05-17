@@ -56,7 +56,6 @@
 
 using namespace js;
 using namespace js::gc;
-using namespace js::types;
 
 namespace js {
 
@@ -1098,8 +1097,6 @@ JS_FRIEND_API(Class) OuterWindowProxyClass = {
     }
 };
 
-static const char proxy_type_str[] = "Proxy:new";
-
 JSBool
 proxy_Call(JSContext *cx, uintN argc, Value *vp)
 {
@@ -1463,7 +1460,7 @@ js_InitProxyClass(JSContext *cx, JSObject *obj)
     if (!module)
         return NULL;
 
-    TypeObject *type = cx->newTypeObject(js_ProxyClass.name, module->getProto());
+    types::TypeObject *type = cx->newTypeObject(js_ProxyClass.name, module->getProto());
     if (!type || !module->setTypeAndUniqueShape(cx, type))
         return NULL;
 

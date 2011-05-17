@@ -130,8 +130,6 @@ ArrayBuffer::class_finalize(JSContext *cx, JSObject *obj)
     }
 }
 
-static const char arraybuffer_type_str[] = "ArrayBuffer:new";
-
 /*
  * new ArrayBuffer(byteLength)
  */

@@ -3465,10 +3465,8 @@ DefineUCProperty(JSContext *cx, JSObject *obj, const jschar *name, size_t namele
                  uintN flags, intN tinyid)
 {
     JSAtom *atom = js_AtomizeChars(cx, name, AUTO_NAMELEN(name, namelen), 0);
-    if (!atom)
-        return false;
-    return DefinePropertyById(cx, obj, ATOM_TO_JSID(atom), value, getter, setter, attrs,
-                              flags, tinyid);
+    return atom && DefinePropertyById(cx, obj, ATOM_TO_JSID(atom), value, getter, setter, attrs,
+                                      flags, tinyid);
 }
 
 JS_PUBLIC_API(JSBool)
@@ -3857,7 +3855,6 @@ JS_SetPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     CHECK_REQUEST(cx);
     assertSameCompartment(cx, obj, id);
     JSAutoResolveFlags rf(cx, JSRESOLVE_QUALIFIED | JSRESOLVE_ASSIGNING);
-
     return obj->setProperty(cx, id, Valueify(vp), false);
 }
 
@@ -4128,14 +4125,6 @@ JS_NewArrayObject(JSContext *cx, jsint length, jsval *vector)
     CHECK_REQUEST(cx);
     /* NB: jsuint cast does ToUint32. */
     assertSameCompartment(cx, JSValueArray(vector, vector ? (jsuint)length : 0));
-
-#ifdef DEBUG
-    if (vector) {
-        for (int i = 0; i < length; i++)
-            JS_ASSERT(!Valueify(vector[i]).isMagic(JS_ARRAY_HOLE));
-    }
-#endif
-
     return NewDenseCopiedArray(cx, (jsuint)length, Valueify(vector));
 }
 
@@ -4234,7 +4223,7 @@ JS_GetSecurityCallbacks(JSContext *cx)
 JS_PUBLIC_API(JSFunction *)
 JS_NewFunctionWithType(JSContext *cx, JSNative native, uintN nargs, uintN flags,
                        JSObject *parent, const char *name,
-                       JSTypeHandler handler, const char *fullName)
+                       JSTypeHandler handler)
 {
     JS_THREADSAFE_ASSERT(cx->compartment != cx->runtime->atomsCompartment);
     JSAtom *atom;
@@ -4249,13 +4238,7 @@ JS_NewFunctionWithType(JSContext *cx, JSNative native, uintN nargs, uintN flags,
         if (!atom)
             return NULL;
     }
-    if (!handler) {
-        handler = JS_TypeHandlerDynamic;
-        if (!fullName)
-            fullName = "Unknown";
-    }
-    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, atom,
-                          handler, fullName);
+    return js_NewFunction(cx, NULL, Valueify(native), nargs, flags, parent, atom, handler, name);
 }
 
 JS_PUBLIC_API(JSFunction *)
@@ -4556,10 +4539,8 @@ JS_DefineFunctions(JSContext *cx, JSObject *obj, JSFunctionSpec *fs)
             if (!fun)
                 return JS_FALSE;
 
-            if (cx->typeInferenceEnabled()) {
-                /* Mark the type handler for this function as generic. */
+            if (cx->typeInferenceEnabled())
                 fun->getType()->asFunction()->isGeneric = true;
-            }
 
             /*
              * As jsapi.h notes, fs must point to storage that lives as long
@@ -5151,9 +5132,9 @@ EvaluateUCScriptForPrincipalsCommon(JSContext *cx, JSObject *obj,
     JS_ASSERT(script->getVersion() == compileVersion);
     bool ok = Execute(cx, *obj, script, NULL, 0, Valueify(rval));
     LAST_FRAME_CHECKS(cx, ok);
-
     js_DestroyScript(cx, script);
     return ok;
+
 }
 
 JS_PUBLIC_API(JSBool)

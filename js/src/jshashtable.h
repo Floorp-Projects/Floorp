@@ -46,12 +46,6 @@
 #include "jsalloc.h"
 #include "jstl.h"
 
-/* Gross special case for Gecko, which defines malloc/calloc/free. */
-#ifdef mozilla_mozalloc_macro_wrappers_h
-#  define JSHASHTABLE_UNDEFD_MOZALLOC_WRAPPERS
-#  include "mozilla/mozalloc_undef_macro_wrappers.h"
-#endif
-
 namespace js {
 
 /* Integral types for all hash functions. */
@@ -1222,9 +1216,5 @@ class HashSet
 };
 
 }  /* namespace js */
-
-#ifdef JSHASHTABLE_UNDEFD_MOZALLOC_WRAPPERS
-#  include "mozilla/mozalloc_macro_wrappers.h"
-#endif
 
 #endif

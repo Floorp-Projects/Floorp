@@ -924,6 +924,7 @@ JSONParseError(JSONParser *jp, JSContext *cx)
 static bool
 Revive(JSContext *cx, const Value &reviver, Value *vp)
 {
+
     JSObject *obj = NewBuiltinClassInstance(cx, &js_ObjectClass);
     if (!obj)
         return false;
