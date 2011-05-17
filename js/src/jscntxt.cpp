@@ -820,8 +820,10 @@ js_ReportOutOfMemory(JSContext *cx)
         }
     }
 
-    if (onError)
+    if (onError) {
+        AutoScopedAssign<bool> ss(&cx->runtime->inOOMReport, true);
         onError(cx, msg, &report);
+    }
 }
 
 void
