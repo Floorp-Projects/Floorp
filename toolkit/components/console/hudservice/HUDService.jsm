@@ -86,6 +86,17 @@ XPCOMUtils.defineLazyGetter(this, "PropertyPanel", function () {
   return obj.PropertyPanel;
 });
 
+XPCOMUtils.defineLazyGetter(this, "AutocompletePopup", function () {
+  var obj = {};
+  try {
+    Cu.import("resource://gre/modules/AutocompletePopup.jsm", obj);
+  }
+  catch (err) {
+    Cu.reportError(err);
+  }
+  return obj.AutocompletePopup;
+});
+
 XPCOMUtils.defineLazyGetter(this, "namesAndValuesOf", function () {
   var obj = {};
   Cu.import("resource:///modules/PropertyPanel.jsm", obj);
@@ -524,8 +535,10 @@ ResponseListener.prototype =
 function createElement(aDocument, aTag, aAttributes)
 {
   let node = aDocument.createElement(aTag);
-  for (var attr in aAttributes) {
-    node.setAttribute(attr, aAttributes[attr]);
+  if (aAttributes) {
+    for (let attr in aAttributes) {
+      node.setAttribute(attr, aAttributes[attr]);
+    }
   }
   return node;
 }
@@ -1763,6 +1776,8 @@ HUD_SERVICE.prototype =
     ownerDoc = outputNode.ownerDocument;
     ownerDoc.getElementById(id).parentNode.removeChild(outputNode);
 
+    this.hudReferences[id].jsterm.autocompletePopup.destroy();
+
     this.hudReferences[id].consoleWindowUnregisterOnHide = false;
 
     // remove the HeadsUpDisplay object from memory
@@ -1791,6 +1806,12 @@ HUD_SERVICE.prototype =
     Services.obs.notifyObservers(id, "web-console-destroyed", null);
 
     if (Object.keys(this.hudReferences).length == 0) {
+      let autocompletePopup = outputNode.ownerDocument.
+                              getElementById("webConsole_autocompletePopup");
+      if (autocompletePopup) {
+        autocompletePopup.parentNode.removeChild(autocompletePopup);
+      }
+
       this.suspend();
     }
   },
@@ -4158,24 +4179,23 @@ function JSPropertyProvider(aScope, aInputValue)
   let properties = completionPart.split('.');
   let matchProp;
   if (properties.length > 1) {
-      matchProp = properties[properties.length - 1].trimLeft();
-      properties.pop();
-      for each (var prop in properties) {
-        prop = prop.trim();
+    matchProp = properties.pop().trimLeft();
+    for (let i = 0; i < properties.length; i++) {
+      let prop = properties[i].trim();
 
-        // If obj is undefined or null, then there is no change to run
-        // completion on it. Exit here.
-        if (typeof obj === "undefined" || obj === null) {
-          return null;
-        }
-
-        // Check if prop is a getter function on obj. Functions can change other
-        // stuff so we can't execute them to get the next object. Stop here.
-        if (obj.__lookupGetter__(prop)) {
-          return null;
-        }
-        obj = obj[prop];
+      // If obj is undefined or null, then there is no change to run completion
+      // on it. Exit here.
+      if (typeof obj === "undefined" || obj === null) {
+        return null;
       }
+
+      // Check if prop is a getter function on obj. Functions can change other
+      // stuff so we can't execute them to get the next object. Stop here.
+      if (obj.__lookupGetter__(prop)) {
+        return null;
+      }
+      obj = obj[prop];
+    }
   }
   else {
     matchProp = properties[0].trimLeft();
@@ -4193,17 +4213,15 @@ function JSPropertyProvider(aScope, aInputValue)
   }
 
   let matches = [];
-  for (var prop in obj) {
-    matches.push(prop);
+  for (let prop in obj) {
+    if (prop.indexOf(matchProp) == 0) {
+      matches.push(prop);
+    }
   }
-
-  matches = matches.filter(function(item) {
-    return item.indexOf(matchProp) == 0;
-  }).sort();
 
   return {
     matchProp: matchProp,
-    matches: matches
+    matches: matches.sort(),
   };
 }
 
@@ -4465,6 +4483,9 @@ function JSTerm(aContext, aParentNode, aMixin, aConsole)
   this.historyIndex = 0;
   this.historyPlaceHolder = 0;  // this.history.length;
   this.log = LogFactory("*** JSTerm:");
+  this.autocompletePopup = new AutocompletePopup(aParentNode.ownerDocument);
+  this.autocompletePopup.onSelect = this.onAutocompleteSelect.bind(this);
+  this.autocompletePopup.onClick = this.acceptProposedCompletion.bind(this);
   this.init();
 }
 
@@ -4603,6 +4624,7 @@ JSTerm.prototype = {
     this.historyIndex++;
     this.historyPlaceHolder = this.history.length;
     this.setInputValue("");
+    this.clearCompletion();
   },
 
   /**
@@ -4957,53 +4979,56 @@ JSTerm.prototype = {
       return;
     }
 
+    let inputUpdated = false;
+
     switch(aEvent.keyCode) {
+      case Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE:
+        if (this.autocompletePopup.isOpen) {
+          this.clearCompletion();
+          aEvent.preventDefault();
+        }
+        break;
+
       case Ci.nsIDOMKeyEvent.DOM_VK_RETURN:
-        this.execute();
+        if (this.autocompletePopup.isOpen) {
+          this.acceptProposedCompletion();
+        }
+        else {
+          this.execute();
+        }
         aEvent.preventDefault();
         break;
 
       case Ci.nsIDOMKeyEvent.DOM_VK_UP:
-        // history previous
-        if (this.canCaretGoPrevious()) {
-          let updated = this.historyPeruse(HISTORY_BACK);
-          if (updated && aEvent.cancelable) {
-            aEvent.preventDefault();
-          }
+        if (this.autocompletePopup.isOpen) {
+          inputUpdated = this.complete(this.COMPLETE_BACKWARD);
+        }
+        else if (this.canCaretGoPrevious()) {
+          inputUpdated = this.historyPeruse(HISTORY_BACK);
+        }
+        if (inputUpdated) {
+          aEvent.preventDefault();
         }
         break;
 
       case Ci.nsIDOMKeyEvent.DOM_VK_DOWN:
-        // history next
-        if (this.canCaretGoNext()) {
-          let updated = this.historyPeruse(HISTORY_FORWARD);
-          if (updated && aEvent.cancelable) {
-            aEvent.preventDefault();
-          }
+        if (this.autocompletePopup.isOpen) {
+          inputUpdated = this.complete(this.COMPLETE_FORWARD);
         }
-        break;
-
-      case Ci.nsIDOMKeyEvent.DOM_VK_RIGHT:
-        // accept proposed completion
-        this.acceptProposedCompletion();
+        else if (this.canCaretGoNext()) {
+          inputUpdated = this.historyPeruse(HISTORY_FORWARD);
+        }
+        if (inputUpdated) {
+          aEvent.preventDefault();
+        }
         break;
 
       case Ci.nsIDOMKeyEvent.DOM_VK_TAB:
-        // If there are more than one possible completion, pressing tab
-        // means taking the next completion, shift_tab means taking
-        // the previous completion.
-        var completionResult;
-        if (aEvent.shiftKey) {
-          completionResult = this.complete(this.COMPLETE_BACKWARD);
-        }
-        else {
-          completionResult = this.complete(this.COMPLETE_FORWARD);
-        }
-        if (completionResult) {
-          if (aEvent.cancelable) {
-            aEvent.preventDefault();
-          }
-          aEvent.target.focus();
+        // Generate a completion and accept the first proposed value.
+        if (this.complete(this.COMPLETE_HINT_ONLY) &&
+            this.lastCompletion &&
+            this.acceptProposedCompletion()) {
+          aEvent.preventDefault();
         }
         break;
 
@@ -5147,96 +5172,127 @@ JSTerm.prototype = {
     let inputValue = inputNode.value;
     // If the inputNode has no value, then don't try to complete on it.
     if (!inputValue) {
-      this.lastCompletion = null;
-      this.updateCompleteNode("");
+      this.clearCompletion();
       return false;
     }
 
     // Only complete if the selection is empty and at the end of the input.
     if (inputNode.selectionStart == inputNode.selectionEnd &&
         inputNode.selectionEnd != inputValue.length) {
-      // TODO: shouldnt we do this in the other 'bail' cases?
-      this.lastCompletion = null;
-      this.updateCompleteNode("");
+      this.clearCompletion();
       return false;
     }
 
-    let matches;
-    let matchIndexToUse;
-    let matchOffset;
+    let popup = this.autocompletePopup;
 
-    // If there is a saved completion from last time and the used value for
-    // completion stayed the same, then use the stored completion.
-    if (this.lastCompletion && inputValue == this.lastCompletion.value) {
-      matches = this.lastCompletion.matches;
-      matchOffset = this.lastCompletion.matchOffset;
-      if (type === this.COMPLETE_BACKWARD) {
-        this.lastCompletion.index --;
-      }
-      else if (type === this.COMPLETE_FORWARD) {
-        this.lastCompletion.index ++;
-      }
-      matchIndexToUse = this.lastCompletion.index;
-    }
-    else {
-      // Look up possible completion values.
-      let completion = this.propertyProvider(this.sandbox.window, inputValue);
-      if (!completion) {
-        this.updateCompleteNode("");
+    if (!this.lastCompletion || this.lastCompletion.value != inputValue) {
+      let properties = this.propertyProvider(this.sandbox.window, inputValue);
+      if (!properties || !properties.matches.length) {
+        this.clearCompletion();
         return false;
       }
-      matches = completion.matches;
-      matchIndexToUse = 0;
-      matchOffset = completion.matchProp.length;
-      // Store this match;
-      this.lastCompletion = {
-        index: 0,
-        value: inputValue,
-        matches: matches,
-        matchOffset: matchOffset
-      };
-    }
 
-    if (type != this.COMPLETE_HINT_ONLY && matches.length == 1) {
-      this.acceptProposedCompletion();
-      return true;
-    }
-    else if (matches.length != 0) {
-      // Ensure that the matchIndexToUse is always a valid array index.
-      if (matchIndexToUse < 0) {
-        matchIndexToUse = matches.length + (matchIndexToUse % matches.length);
-        if (matchIndexToUse == matches.length) {
-          matchIndexToUse = 0;
+      let items = properties.matches.map(function(aMatch) {
+        return {label: aMatch};
+      });
+      popup.setItems(items);
+      this.lastCompletion = {value: inputValue,
+                             matchProp: properties.matchProp};
+
+      if (items.length > 1 && !popup.isOpen) {
+        popup.openPopup(this.inputNode);
+      }
+      else if (items.length < 2 && popup.isOpen) {
+        popup.hidePopup();
+      }
+
+      if (items.length > 0) {
+        popup.selectedIndex = 0;
+        if (items.length == 1) {
+          // onSelect is not fired when the popup is not open.
+          this.onAutocompleteSelect();
         }
       }
-      else {
-        matchIndexToUse = matchIndexToUse % matches.length;
-      }
+    }
 
-      let completionStr = matches[matchIndexToUse].substring(matchOffset);
-      this.updateCompleteNode(completionStr);
-      return completionStr ? true : false;
+    let accepted = false;
+
+    if (type != this.COMPLETE_HINT_ONLY && popup.itemCount == 1) {
+      this.acceptProposedCompletion();
+      accepted = true;
+    }
+    else if (type == this.COMPLETE_BACKWARD) {
+      this.autocompletePopup.selectPreviousItem();
+    }
+    else if (type == this.COMPLETE_FORWARD) {
+      this.autocompletePopup.selectNextItem();
+    }
+
+    return accepted || popup.itemCount > 0;
+  },
+
+  onAutocompleteSelect: function JSTF_onAutocompleteSelect()
+  {
+    let currentItem = this.autocompletePopup.selectedItem;
+    if (currentItem && this.lastCompletion) {
+      let suffix = currentItem.label.substring(this.lastCompletion.
+                                               matchProp.length);
+      this.updateCompleteNode(suffix);
     }
     else {
       this.updateCompleteNode("");
     }
-
-    return false;
   },
 
+  /**
+   * Clear the current completion information and close the autocomplete popup,
+   * if needed.
+   */
+  clearCompletion: function JSTF_clearCompletion()
+  {
+    this.autocompletePopup.clearItems();
+    this.lastCompletion = null;
+    this.updateCompleteNode("");
+    if (this.autocompletePopup.isOpen) {
+      this.autocompletePopup.hidePopup();
+    }
+  },
+
+  /**
+   * Accept the proposed input completion.
+   *
+   * @return boolean
+   *         True if there was a selected completion item and the input value
+   *         was updated, false otherwise.
+   */
   acceptProposedCompletion: function JSTF_acceptProposedCompletion()
   {
-    this.setInputValue(this.inputNode.value + this.completionValue);
-    this.updateCompleteNode("");
+    let updated = false;
+
+    let currentItem = this.autocompletePopup.selectedItem;
+    if (currentItem && this.lastCompletion) {
+      let suffix = currentItem.label.substring(this.lastCompletion.
+                                               matchProp.length);
+      this.setInputValue(this.inputNode.value + suffix);
+      updated = true;
+    }
+
+    this.clearCompletion();
+
+    return updated;
   },
 
-  updateCompleteNode: function JSTF_updateCompleteNode(suffix)
+  /**
+   * Update the node that displays the currently selected autocomplete proposal.
+   *
+   * @param string aSuffix
+   *        The proposed suffix for the inputNode value.
+   */
+  updateCompleteNode: function JSTF_updateCompleteNode(aSuffix)
   {
-    this.completionValue = suffix;
-
     // completion prefix = input, with non-control chars replaced by spaces
-    let prefix = this.inputNode.value.replace(/[\S]/g, " ");
-    this.completeNode.value = prefix + this.completionValue;
+    let prefix = aSuffix ? this.inputNode.value.replace(/[\S]/g, " ") : "";
+    this.completeNode.value = prefix + aSuffix;
   },
 };
 
