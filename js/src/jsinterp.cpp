@@ -2259,7 +2259,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
 #define LOAD_ATOM(PCOFF, atom)                                                \
     JS_BEGIN_MACRO                                                            \
         JS_ASSERT(regs.fp()->hasImacropc()                                    \
-                  ? atoms == rt->atomState.commonAtomsStart() &&              \
+                  ? atoms == COMMON_ATOMS_START(&rt->atomState) &&            \
                     GET_INDEX(regs.pc + PCOFF) < js_common_atom_count         \
                   : (size_t)(atoms - script->atomMap.vector) <                \
                     (size_t)(script->atomMap.length -                         \
@@ -2508,7 +2508,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
     }
 
     if (regs.fp()->hasImacropc())
-        atoms = rt->atomState.commonAtomsStart();
+        atoms = COMMON_ATOMS_START(&rt->atomState);
 #endif
 
     /* Don't call the script prologue if executing between Method and Trace JIT. */
@@ -2674,7 +2674,7 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
                 break;
               case ARECORD_IMACRO:
               case ARECORD_IMACRO_ABORTED:
-                atoms = rt->atomState.commonAtomsStart();
+                atoms = COMMON_ATOMS_START(&rt->atomState);
                 op = JSOp(*regs.pc);
                 CLEAR_LEAVE_ON_TRACE_POINT();
                 if (status == ARECORD_IMACRO)

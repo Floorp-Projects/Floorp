@@ -3427,7 +3427,7 @@ nsresult nsScriptSecurityManager::Init()
     
     ::JS_BeginRequest(cx);
     if (sEnabledID == JSID_VOID)
-        sEnabledID = INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "enabled"));
+        sEnabledID = INTERNED_STRING_TO_JSID(::JS_InternString(cx, "enabled"));
     ::JS_EndRequest(cx);
 
     InitPrefs();

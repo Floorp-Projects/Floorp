@@ -658,7 +658,7 @@ js_XDRAtom(JSXDRState *xdr, JSAtom **atomp)
             if (!buf)
                 return false;
 
-            JSAtom *atom = js_Atomize(xdr->cx, buf, len, DoNotInternAtom, true);
+            JSAtom *atom = js_Atomize(xdr->cx, buf, len, 0, true);
             if (!atom)
                 return false;
 

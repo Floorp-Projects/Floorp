@@ -908,7 +908,7 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
     if (sAddListenerID == JSID_VOID) {
       JSAutoRequest ar(cx);
       sAddListenerID =
-        INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "addEventListener"));
+        INTERNED_STRING_TO_JSID(::JS_InternString(cx, "addEventListener"));
     }
 
     if (aContext->GetScriptTypeID() == nsIProgrammingLanguage::JAVASCRIPT) {

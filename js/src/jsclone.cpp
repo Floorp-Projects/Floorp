@@ -822,7 +822,7 @@ JSStructuredCloneReader::readId(jsid *idp)
         JSString *str = readString(data);
         if (!str)
             return false;
-        JSAtom *atom = js_AtomizeString(context(), str);
+        JSAtom *atom = js_AtomizeString(context(), str, 0);
         if (!atom)
             return false;
         *idp = ATOM_TO_JSID(atom);
