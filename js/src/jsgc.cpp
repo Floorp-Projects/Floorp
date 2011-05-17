@@ -2683,6 +2683,10 @@ js_GC(JSContext *cx, JSCompartment *comp, JSGCInvocationKind gckind)
 {
     JSRuntime *rt = cx->runtime;
 
+    /* Don't GC while reporting an OOM. */
+    if (rt->inOOMReport)
+        return;
+
     /*
      * Don't collect garbage if the runtime isn't up, and cx is not the last
      * context in the runtime.  The last context must force a GC, and nothing
