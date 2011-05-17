@@ -5066,7 +5066,8 @@ DefineNativeProperty(JSContext *cx, JSObject *obj, jsid id, const Value &value,
             setter = clasp->setProperty;
     }
 
-    if (getter == PropertyStub && !(defineHow & DNP_SKIP_TYPE)) {
+    if (((defineHow & DNP_SET_METHOD) || getter == PropertyStub) &&
+        !(defineHow & DNP_SKIP_TYPE)) {
         /*
          * Type information for normal native properties should reflect the
          * initial value of the property.
