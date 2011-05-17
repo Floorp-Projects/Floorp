@@ -67,7 +67,7 @@ extern Class regexp_statics_class;
 static inline JSObject *
 regexp_statics_construct(JSContext *cx, GlobalObject *parent)
 {
-    JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, parent, NULL);
+    JSObject *obj = NewObject<WithProto::Given>(cx, &regexp_statics_class, NULL, parent);
     if (!obj)
         return NULL;
     RegExpStatics *res = cx->new_<RegExpStatics>();

@@ -1864,7 +1864,6 @@ BuildFlatMatchArray(JSContext *cx, JSString *textstr, const FlatMatch &fm, Value
     JSObject *obj = NewSlowEmptyArray(cx);
     if (!obj)
         return false;
-
     vp->setObject(*obj);
 
     return obj->defineProperty(cx, INT_TO_JSID(0), StringValue(fm.pattern())) &&

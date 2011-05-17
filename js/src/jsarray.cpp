@@ -605,7 +605,6 @@ js_SetLengthProperty(JSContext *cx, JSObject *obj, jsdouble length)
 
     v.setNumber(length);
     id = ATOM_TO_JSID(cx->runtime->atomState.lengthAtom);
-
     /* We don't support read-only array length yet. */
     return obj->setProperty(cx, id, &v, false);
 }
@@ -2529,11 +2528,6 @@ array_splice(JSContext *cx, uintN argc, Value *vp)
     /* Get the type of the result object. */
     TypeObject *type;
     if (obj->isArray()) {
-        /*
-         * :FIXME: This is getting a type whose prototype is that of the
-         * argument, even if it is the Array.prototype on a different
-         * global than the current frame.
-         */
         type = obj->getType();
     } else {
         /*
@@ -2839,7 +2833,6 @@ array_slice(JSContext *cx, uintN argc, Value *vp)
     /* Get the type object for the returned array. */
     TypeObject *type;
     if (obj->isArray()) {
-        /* :FIXME: Same issue as array_splice. */
         type = obj->getType();
     } else {
         /*

@@ -1649,7 +1649,6 @@ js_obj_defineGetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
-
     call.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), getter, StrictPropertyStub,
                                JSPROP_ENUMERATE | JSPROP_GETTER | JSPROP_SHARED);
@@ -1684,7 +1683,6 @@ js_obj_defineSetter(JSContext *cx, uintN argc, Value *vp)
     uintN attrs;
     if (!CheckAccess(cx, obj, id, JSACC_WATCH, &junk, &attrs))
         return JS_FALSE;
-
     call.rval().setUndefined();
     return obj->defineProperty(cx, id, UndefinedValue(), PropertyStub, setter,
                                JSPROP_ENUMERATE | JSPROP_SETTER | JSPROP_SHARED);
@@ -2519,10 +2517,7 @@ obj_defineProperty(JSContext* cx, uintN argc, Value* vp)
 
     /* 15.2.3.6 step 4 */
     JSBool junk;
-    if (!js_DefineOwnProperty(cx, obj, nameidr.id(), descval, &junk))
-        return JS_FALSE;
-
-    return JS_TRUE;
+    return js_DefineOwnProperty(cx, obj, nameidr.id(), descval, &junk);
 }
 
 static bool
@@ -3373,7 +3368,7 @@ js_CloneBlockObject(JSContext *cx, JSObject *proto, StackFrame *fp)
     JS_ASSERT(proto->isStaticBlock());
 
     size_t count = OBJ_BLOCK_COUNT(cx, proto);
-    gc::FinalizeKind kind = gc::GetGCObjectKind(count + 1, gc::FINALIZE_OBJECT2);
+    gc::FinalizeKind kind = gc::GetGCObjectKind(count + 1);
 
     js::types::TypeObject *type = proto->getNewType(cx);
     if (!type)

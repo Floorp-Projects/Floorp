@@ -984,7 +984,7 @@ NewCallObject(JSContext *cx, JSScript *script, JSObject &scopeChain, JSObject *c
     Bindings &bindings = script->bindings;
     size_t argsVars = bindings.countArgsAndVars();
     size_t slots = JSObject::CALL_RESERVED_SLOTS + argsVars;
-    gc::FinalizeKind kind = gc::GetGCObjectKind(slots, gc::FINALIZE_OBJECT2);
+    gc::FinalizeKind kind = gc::GetGCObjectKind(slots);
 
     JSObject *callobj = js_NewGCObject(cx, kind);
     if (!callobj)
@@ -1634,8 +1634,6 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
     }
 #endif
 
-    JSAtom *atom = NULL;
-
     switch (slot) {
       case FUN_ARGUMENTS:
         /* Warn if strict about f.arguments or equivalent unqualified uses. */
@@ -1652,23 +1650,16 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
         } else {
             vp->setNull();
         }
-        atom = cx->runtime->atomState.argumentsAtom;
         break;
 
       case FUN_LENGTH:
-        vp->setInt32(fun->nargs);
-        atom = cx->runtime->atomState.lengthAtom;
-        break;
-
       case FUN_ARITY:
         vp->setInt32(fun->nargs);
-        atom = cx->runtime->atomState.arityAtom;
         break;
 
       case FUN_NAME:
         vp->setString(fun->atom ? fun->atom
                                 : cx->runtime->emptyString);
-        atom = cx->runtime->atomState.nameAtom;
         break;
 
       case FUN_CALLER:
@@ -1691,7 +1682,6 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsid id, Value *vp)
                 }
             }
         }
-        atom = cx->runtime->atomState.callerAtom;
         break;
 
       default:
@@ -1835,7 +1825,6 @@ fun_resolve(JSContext *cx, JSObject *obj, jsid id, uintN flags,
 
         if (!ResolveInterpretedFunctionPrototype(cx, obj))
             return false;
-
         *objp = obj;
         return true;
     }
@@ -2467,26 +2456,13 @@ fun_bind(JSContext *cx, uintN argc, Value *vp)
     return true;
 }
 
-static void
-type_HandlerMonitored(JSContext *cx, JSTypeFunction *jsfun, JSTypeCallsite *jssite)
-{
-    /*
-     * Mark all calls to Function.prototype.call and Function.prototype.apply
-     * as monitored, so the compiler knows to keep track of all passed arguments.
-     */
-    TypeCallsite *site = Valueify(jssite);
-    cx->compartment->types.monitorBytecode(cx, site->script, site->pc - site->script->code);
-    if (site->returnTypes)
-        site->returnTypes->addType(cx, TYPE_UNKNOWN);
-}
-
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
     JS_FN_TYPE(js_toSource_str,   fun_toSource,   0,0, JS_TypeHandlerString),
 #endif
     JS_FN_TYPE(js_toString_str,   fun_toString,   0,0, JS_TypeHandlerString),
-    JS_FN_TYPE(js_apply_str,      js_fun_apply,   2,0, type_HandlerMonitored),
-    JS_FN_TYPE(js_call_str,       js_fun_call,    1,0, type_HandlerMonitored),
+    JS_FN_TYPE(js_apply_str,      js_fun_apply,   2,0, JS_TypeHandlerDynamic),
+    JS_FN_TYPE(js_call_str,       js_fun_call,    1,0, JS_TypeHandlerDynamic),
     JS_FN_TYPE("bind",            fun_bind,       1,0, JS_TypeHandlerDynamic),
 #if JS_HAS_GENERATORS
     JS_FN_TYPE("isGenerator",     fun_isGenerator,0,0, JS_TypeHandlerBool),

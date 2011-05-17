@@ -1129,7 +1129,6 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
                            JSPROP_PERMANENT | JSPROP_READONLY)) {
         return NULL;
     }
-
     return proto;
 }
 
