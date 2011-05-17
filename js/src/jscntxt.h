@@ -705,6 +705,13 @@ struct JSRuntime {
     size_t               mjitDataSize;
 #endif
 
+    /*
+     * To ensure that cx->malloc does not cause a GC, we set this flag during
+     * OOM reporting (in js_ReportOutOfMemory). If a GC is requested while
+     * reporting the OOM, we ignore it.
+     */
+    bool                 inOOMReport;
+
     JSRuntime();
     ~JSRuntime();
 
@@ -715,7 +722,7 @@ struct JSRuntime {
 
     /*
      * Call the system malloc while checking for GC memory pressure and
-     * reporting OOM error when cx is not null.
+     * reporting OOM error when cx is not null. We will not GC from here.
      */
     void* malloc_(size_t bytes, JSContext *cx = NULL) {
         updateMallocCounter(bytes);
@@ -725,7 +732,7 @@ struct JSRuntime {
 
     /*
      * Call the system calloc while checking for GC memory pressure and
-     * reporting OOM error when cx is not null.
+     * reporting OOM error when cx is not null. We will not GC from here.
      */
     void* calloc_(size_t bytes, JSContext *cx = NULL) {
         updateMallocCounter(bytes);
