@@ -262,7 +262,7 @@ Bindings::sharpSlotBase(JSContext *cx)
 {
     JS_ASSERT(lastBinding);
 #if JS_HAS_SHARP_VARS
-    if (JSAtom *name = js_Atomize(cx, "#array", 6, 0)) {
+    if (JSAtom *name = js_Atomize(cx, "#array", 6)) {
         uintN index = uintN(-1);
         DebugOnly<BindingKind> kind = lookup(cx, name, &index);
         JS_ASSERT(kind == VARIABLE);
