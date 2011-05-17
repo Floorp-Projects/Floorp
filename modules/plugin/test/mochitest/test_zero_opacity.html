@@ -17,12 +17,6 @@
   var p = document.getElementById('theplugin');
 
   function startTest() {
-    if (!p.hasWidget()) {
-      todo(false, "This test is only relevant for windowed plugins");
-      SimpleTest.finish();
-      return;
-    }
-
     // Wait for the plugin to have painted once.
     var interval = setInterval(function() {
       if (!p.getPaintCount())
@@ -35,6 +29,10 @@
   }
 
   function doTest() {
+    if (!p.hasWidget()) {
+      todo(false, "This test is only relevant for windowed plugins");
+      return;
+    }
     is(p.getClipRegionRectCount(), 1, "getClipRegionRectCount should be a single rect");
     is(p.getClipRegionRectEdge(0,2) - p.getClipRegionRectEdge(0,0), 100, "width of clip region rect");
     is(p.getClipRegionRectEdge(0,3) - p.getClipRegionRectEdge(0,1), 50, "height of clip region rect");
