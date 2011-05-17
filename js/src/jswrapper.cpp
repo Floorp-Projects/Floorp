@@ -261,9 +261,9 @@ JSWrapper::construct(JSContext *cx, JSObject *wrapper, uintN argc, Value *argv, 
 bool
 JSWrapper::hasInstance(JSContext *cx, JSObject *wrapper, const Value *vp, bool *bp)
 {
-    *bp = true; // default result if we refuse to perform this action
+    *bp = false; // default result if we refuse to perform this action
     const jsid id = JSID_VOID;
-    JSBool b;
+    JSBool b = JS_FALSE;
     GET(JS_HasInstance(cx, wrappedObject(wrapper), Jsvalify(*vp), &b) && Cond(b, bp));
 }
 
