@@ -261,3 +261,33 @@ function unhideGroupItem(groupItem, callback) {
   });
   groupItem._unhide();
 }
+
+// ----------
+function whenWindowLoaded(win, callback) {
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad, false);
+    executeSoon(callback);
+  }, false);
+}
+
+// ----------
+function whenWindowStateReady(win, callback) {
+  win.addEventListener("SSWindowStateReady", function onReady() {
+    win.removeEventListener("SSWindowStateReady", onReady, false);
+    executeSoon(callback);
+  }, false);
+}
+
+// ----------
+function newWindowWithState(state, callback) {
+  let opts = "chrome,all,dialog=no,height=800,width=800";
+  let win = window.openDialog(getBrowserURL(), "_blank", opts);
+
+  whenWindowLoaded(win, function () {
+    ss.setWindowState(win, JSON.stringify(state), true);
+  });
+
+  whenWindowStateReady(win, function () {
+    afterAllTabsLoaded(function () callback(win), win);
+  });
+}
