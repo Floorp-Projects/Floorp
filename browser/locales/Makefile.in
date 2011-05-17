@@ -116,12 +116,12 @@ $(DIST)/branding:
 
 libs::
 	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
-	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
 	    $(LOCALE_SRCDIR)/existing-profile-defaults.js > $(FINAL_TARGET)/defaults/existing-profile-defaults.js; \
 	fi
 install::
 	@if test -f "$(LOCALE_SRCDIR)/existing-profile-defaults.js"; then \
-	  $(PERL) $(topsrcdir)/config/preprocessor.pl $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
+	  $(PYTHON) $(topsrcdir)/config/Preprocessor.py $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(XULPPFLAGS) \
 	    $(LOCALE_SRCDIR)/existing-profile-defaults.js > $(DESTDIR)$(mozappdir)/defaults/existing-profile-defaults.js; \
 	fi
 

@@ -247,10 +247,9 @@ var bookmarksObserver = {
     var index = null;
     [node, index] = getNodeForTreeItem(aItemId, gLibrary.PlacesOrganizer._places);
     // Left pane should not be updated for normal bookmarks or separators.
-    var type = PlacesUtils.bookmarks.getItemType(aItemId);
-    switch (type) {
+    switch (aItemType) {
       case PlacesUtils.bookmarks.TYPE_BOOKMARK:
-        var uriString = PlacesUtils.bookmarks.getBookmarkURI(aItemId).spec;
+        var uriString = aURI.spec;
         var isQuery = uriString.substr(0, 6) == "place:";
         if (isQuery) {
           isnot(node, null, "Found new Places node in left pane");
@@ -276,13 +275,12 @@ var bookmarksObserver = {
 
   onItemMoved: function(aItemId,
                         aOldFolderId, aOldIndex,
-                        aNewFolderId, aNewIndex) {
+                        aNewFolderId, aNewIndex, aItemType) {
     var node = null;
     var index = null;
     [node, index] = getNodeForTreeItem(aItemId, gLibrary.PlacesOrganizer._places);
     // Left pane should not be updated for normal bookmarks or separators.
-    var type = PlacesUtils.bookmarks.getItemType(aItemId);
-    switch (type) {
+    switch (aItemType) {
       case PlacesUtils.bookmarks.TYPE_BOOKMARK:
         var uriString = PlacesUtils.bookmarks.getBookmarkURI(aItemId).spec;
         var isQuery = uriString.substr(0, 6) == "place:";

@@ -180,6 +180,8 @@ typedef enum {
   MOZ_GTK_PROGRESS_CHUNK,
   /* Paints a progress chunk of an indeterminated GtkProgressBar. */
   MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE,
+  /* Paints a progress chunk of a vertical indeterminated GtkProgressBar. */
+  MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE,
   /* Paints a tab of a GtkNotebook. flags is a GtkTabFlags, defined above. */
   MOZ_GTK_TAB,
   /* Paints the background and border of a GtkNotebook. */

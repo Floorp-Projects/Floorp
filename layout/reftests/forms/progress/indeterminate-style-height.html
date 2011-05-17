@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <link rel='stylesheet' type='text/css' href='style.css'>
+  <style>
+    progress {
+      -moz-orient: vertical;
+      height: 12em;
+      width: 2em;
+    }
+    body > progress:nth-child(1)::-moz-progress-bar { height: 20px; }
+    body > progress:nth-child(2)::-moz-progress-bar { height: 0px; }
+    body > progress:nth-child(3)::-moz-progress-bar { height: 50%; }
+    body > progress:nth-child(4)::-moz-progress-bar { height: 1em; }
+    /* last one is for the default value: width=100%. */
+  </style>
+  <body>
+    <!-- Those will be used to change padding/margin on ::-moz-progress-bar -->
+    <progress></progress>
+    <progress></progress>
+    <progress></progress>
+    <progress></progress>
+    <progress></progress>
+  </body>
+</html>

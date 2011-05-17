@@ -405,7 +405,6 @@ class Mochitest(object):
   # Path to the test script on the server
   TEST_PATH = "/tests/"
   CHROME_PATH = "/redirect.html";
-  A11Y_PATH = "/redirect-a11y.html"
   urlOpts = []
   runSSLTunnel = True
   vmwareHelper = None
@@ -434,14 +433,8 @@ class Mochitest(object):
     """ Build the url path to the specific test harness and test file or directory """
     testHost = "http://mochi.test:8888"
     testURL = testHost + self.TEST_PATH + options.testPath
-    if options.chrome:
-      testURL = testHost + self.CHROME_PATH
-      if options.testPath:
-        self.urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
-    elif options.a11y:
-      testURL = testHost + self.A11Y_PATH
-      if options.testPath:
-        self.urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
+    if options.chrome or options.a11y:
+       testURL = testHost + self.CHROME_PATH
     elif options.browserChrome:
       testURL = "about:blank"
     elif options.ipcplugins:
@@ -554,7 +547,7 @@ class Mochitest(object):
     # allow relative paths for logFile
     if options.logFile:
       options.logFile = self.getLogFilePath(options.logFile)
-    if options.browserChrome:
+    if options.browserChrome or options.chrome or options.a11y:
       self.makeTestConfig(options)
     else:
       if options.autorun:
@@ -679,23 +672,54 @@ class Mochitest(object):
 
   def makeTestConfig(self, options):
     "Creates a test configuration file for customizing test execution."
-    def boolString(b):
-      if b:
-        return "true"
-      return "false"
+    def jsonString(val):
+      if isinstance(val, bool):
+        if val:
+          return "true"
+        return "false"
+      elif val is None:
+        return '""'
+      elif isinstance(val, basestring):
+        return '"%s"' % (val.replace('\\', '\\\\'))
+      elif isinstance(val, int):
+        return '%s' % (val)
+      elif isinstance(val, list):
+        content = '['
+        first = True
+        for item in val:
+          if first:
+            first = False
+          else:
+            content += ", "
+          content += jsonString(item)
+        content += ']'
+        return content
+      else:
+        print "unknown type: %s: %s" % (opt, val)
+        sys.exit(1)
 
-    logFile = options.logFile.replace("\\", "\\\\")
-    testPath = options.testPath.replace("\\", "\\\\")
-    content = """\
-({
-  autoRun: %(autorun)s,
-  closeWhenDone: %(closeWhenDone)s,
-  logPath: "%(logPath)s",
-  testPath: "%(testPath)s"
-})""" % {"autorun": boolString(options.autorun),
-         "closeWhenDone": boolString(options.closeWhenDone),
-         "logPath": logFile,
-         "testPath": testPath}
+    options.logFile = options.logFile.replace("\\", "\\\\")
+    options.testPath = options.testPath.replace("\\", "\\\\")
+    testRoot = 'chrome'
+    if (options.browserChrome):
+      testRoot = 'browser'
+    elif (options.a11y):
+      testRoot = 'a11y'
+ 
+    #TODO: when we upgrade to python 2.6, just use json.dumps(options.__dict__)
+    content = "{"
+    content += '"testRoot": "%s", ' % (testRoot) 
+    first = True
+    for opt in options.__dict__.keys():
+      val = options.__dict__[opt]
+      if first:
+        first = False
+      else:
+        content += ", "
+
+      content += '"' + opt + '": '
+      content += jsonString(val)
+    content += "}"
 
     with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
       config.write(content)
@@ -742,12 +766,12 @@ toolbar#nav-bar {
 
     # Support Firefox (browser) and SeaMonkey (navigator).
     chrome = ""
-    if options.browserChrome:
+    if options.browserChrome or options.chrome or options.a11y:
       chrome += """
 overlay chrome://browser/content/browser.xul chrome://mochikit/content/browser-test-overlay.xul
 overlay chrome://navigator/content/navigator.xul chrome://mochikit/content/browser-test-overlay.xul
 """
-    elif (options.chrome == False) and (options.a11y == False):
+    else:
       #only do the ipc-overlay.xul for mochitest-plain.  
       #Currently there are focus issues in chrome tests and issues with new windows and dialogs when using ipc
       chrome += """
