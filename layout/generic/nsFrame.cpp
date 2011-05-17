@@ -1466,8 +1466,8 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   nsRect absPosClip;
   const nsStyleDisplay* disp = GetStyleDisplay();
   // We can stop right away if this is a zero-opacity stacking context and
-  // we're painting.
-  if (disp->mOpacity == 0.0 && aBuilder->IsForPainting())
+  // we're not checking for event handling.
+  if (disp->mOpacity == 0.0 && !aBuilder->IsForEventDelivery())
     return NS_OK;
 
   PRBool applyAbsPosClipping =
