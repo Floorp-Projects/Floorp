@@ -52,6 +52,8 @@ function setUp() {
   Service.passphrase = "aabcdeabcdeabcdeabcdeabcde";
   Service.clusterURL = "http://localhost:8080/";
   new FakeCryptoService();
+  Engines.unregister("catapult");
+  Engines.register(CatapultEngine);
 }
 
 function generateAndUploadKeys() {
@@ -64,8 +66,8 @@ function generateAndUploadKeys() {
 
 add_test(function test_backoff500() {
   _("Test: HTTP 500 sets backoff status.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
 
   let engine = Engines.get("catapult");
   engine.enabled = true;
@@ -89,8 +91,8 @@ add_test(function test_backoff500() {
 
 add_test(function test_backoff503() {
   _("Test: HTTP 503 with Retry-After header leads to backoff notification and sets backoff status.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
 
   const BACKOFF = 42;
   let engine = Engines.get("catapult");
@@ -122,8 +124,8 @@ add_test(function test_backoff503() {
 
 add_test(function test_overQuota() {
   _("Test: HTTP 400 with body error code 14 means over quota.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
 
   let engine = Engines.get("catapult");
   engine.enabled = true;
@@ -192,8 +194,8 @@ add_test(function test_service_offline() {
 
 add_test(function test_service_reset_ignorableErrorCount() {
   _("Test: Successful sync resets the ignorable error count.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
   Service._ignorableErrorCount = 10;
 
   // Disable the engine so that sync completes.
@@ -219,8 +221,8 @@ add_test(function test_service_reset_ignorableErrorCount() {
 
 add_test(function test_engine_networkError() {
   _("Test: Network related exceptions from engine.sync() lead to the right status code.");
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
   Service._ignorableErrorCount = 0;
 
   let engine = Engines.get("catapult");
@@ -248,8 +250,8 @@ add_test(function test_engine_networkError() {
 // Slightly misplaced test as it doesn't actually test checkServerError,
 // but the observer for "weave:engine:sync:apply-failed".
 add_test(function test_engine_applyFailed() {
-  let server = sync_httpd_setup();
   setUp();
+  let server = sync_httpd_setup();
 
   let engine = Engines.get("catapult");
   engine.enabled = true;
@@ -274,10 +276,36 @@ add_test(function test_engine_applyFailed() {
   server.stop(run_next_test);
 });
 
+
+add_test(function test_resource_timeout() {
+  setUp();
+  let server = sync_httpd_setup();
+
+  let engine = Engines.get("catapult");
+  engine.enabled = true;
+  // Resource throws this when it encounters a timeout.
+  engine.exception = Components.Exception("Aborting due to channel inactivity.",
+                                          Cr.NS_ERROR_NET_TIMEOUT);
+
+  try {
+    do_check_eq(Status.sync, SYNC_SUCCEEDED);
+
+    do_check_true(generateAndUploadKeys());
+
+    Service.login();
+    Service.sync();
+
+    do_check_eq(Status.sync, LOGIN_FAILED_NETWORK_ERROR);
+  } finally {
+    Status.resetSync();
+    Service.startOver();
+  }
+  server.stop(run_next_test);
+});
+
 function run_test() {
   if (DISABLE_TESTS_BUG_604565)
     return;
 
-  Engines.register(CatapultEngine);
   run_next_test();
 }
