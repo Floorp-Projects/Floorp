@@ -87,7 +87,7 @@ JSONSourceParser::readString()
             size_t length = current - start;
             current++;
             JSFlatString *str = (ST == JSONSourceParser::PropertyName)
-                                ? js_AtomizeChars(cx, start, length, 0)
+                                ? js_AtomizeChars(cx, start, length)
                                 : js_NewStringCopyN(cx, start, length);
             if (!str)
                 return token(OOM);

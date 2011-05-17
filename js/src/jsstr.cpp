@@ -2068,7 +2068,7 @@ FindReplaceLength(JSContext *cx, RegExpStatics *res, ReplaceData &rdata, size_t 
         if (str->isAtom()) {
             atom = &str->asAtom();
         } else {
-            atom = js_AtomizeString(cx, str, 0);
+            atom = js_AtomizeString(cx, str);
             if (!atom)
                 return false;
         }
@@ -3721,7 +3721,7 @@ StringBuffer::finishAtom()
     if (length == 0)
         return cx->runtime->atomState.emptyAtom;
 
-    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length, 0);
+    JSAtom *atom = js_AtomizeChars(cx, cb.begin(), length);
     cb.clear();
     return atom;
 }

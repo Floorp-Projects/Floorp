@@ -344,7 +344,7 @@ JSFixedString::new_(JSContext *cx, const jschar *chars, size_t length)
 }
 
 JS_ALWAYS_INLINE JSAtom *
-JSFixedString::morphInternedStringIntoAtom()
+JSFixedString::morphAtomizedStringIntoAtom()
 {
     JS_ASSERT((d.lengthAndFlags & FLAGS_MASK) == JS_BIT(2));
     JS_STATIC_ASSERT(NON_STATIC_ATOM == JS_BIT(3));
