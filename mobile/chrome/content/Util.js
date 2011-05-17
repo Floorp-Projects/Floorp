@@ -161,6 +161,13 @@ let Util = {
     return (!appInfo || appInfo.getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT);
   },
 
+  isTablet: function isTablet() {
+    // See the tablet_panel_minwidth from mobile/themes/core/defines.inc
+    let tablet_panel_minwidth = 124;
+    let dpmm = Util.getWindowUtils(window).displayDPI / 25.4;
+    return (window.innerWidth / dpmm <= tablet_panel_minwidth);
+  },
+
   isPortrait: function isPortrait() {
 #ifdef MOZ_PLATFORM_MAEMO
     return (screen.width <= screen.height);

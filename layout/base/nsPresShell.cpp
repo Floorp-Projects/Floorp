@@ -1850,12 +1850,9 @@ PresShell::Init(nsIDocument* aDocument,
   // Important: this has to happen after the selection has been set up
 #ifdef SHOW_CARET
   // make the caret
-  nsresult  err = NS_NewCaret(getter_AddRefs(mCaret));
-  if (NS_SUCCEEDED(err))
-  {
-    mCaret->Init(this);
-    mOriginalCaret = mCaret;
-  }
+  mCaret = new nsCaret();
+  mCaret->Init(this);
+  mOriginalCaret = mCaret;
 
   //SetCaretEnabled(PR_TRUE);       // make it show in browser windows
 #endif  
@@ -6725,10 +6722,15 @@ PresShell::HandleEvent(nsIView         *aView,
       }
     }
 
+    PRBool isWindowLevelMouseExit = (aEvent->message == NS_MOUSE_EXIT) &&
+      (static_cast<nsMouseEvent*>(aEvent)->exit == nsMouseEvent::eTopLevel);
+
     // Get the frame at the event point. However, don't do this if we're
     // capturing and retargeting the event because the captured frame will
-    // be used instead below.
-    if (!captureRetarget) {
+    // be used instead below. Also keep using the root frame if we're dealing
+    // with a window-level mouse exit event since we want to start sending
+    // mouse out events at the root EventStateManager.
+    if (!captureRetarget && !isWindowLevelMouseExit) {
       nsPoint eventPoint
           = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, frame);
       {

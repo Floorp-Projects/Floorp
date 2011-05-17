@@ -45,10 +45,13 @@ file.append("test");
 file.append("chrome");
 file.append("fileconstructor_file.png");
 
-var domfile = new File(file.path);
-ok(domfile instanceof File, "File() should return a File");
-is(domfile.type, "image/png", "File should be a PNG");
-is(domfile.size, 95, "File has size 95 (and more importantly we can read it)");
+doTest(new File(file.path));
+doTest(new File(file));
+function doTest(domfile) {
+  ok(domfile instanceof File, "File() should return a File");
+  is(domfile.type, "image/png", "File should be a PNG");
+  is(domfile.size, 95, "File has size 95 (and more importantly we can read it)");
+}
 
 try {
   var boomfile = new File();

@@ -90,6 +90,10 @@
 #define SPI_GETWHEELSCROLLCHARS           0x006C
 #endif
 
+#ifndef SPI_SETWHEELSCROLLCHARS
+#define SPI_SETWHEELSCROLLCHARS           0x006D
+#endif
+
 #ifndef MAPVK_VSC_TO_VK
 #define MAPVK_VK_TO_VSC                   0
 #define MAPVK_VSC_TO_VK                   1

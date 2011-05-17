@@ -1389,6 +1389,11 @@ nsDocShell::LoadURI(nsIURI * aURI,
         }
     }
 
+    if (aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_OWNER) {
+        inheritOwner = PR_FALSE;
+        owner = do_CreateInstance("@mozilla.org/nullprincipal;1");
+    }
+
     PRUint32 flags = 0;
 
     if (inheritOwner)
@@ -9696,6 +9701,18 @@ nsDocShell::AddState(nsIVariant *aData, const nsAString& aTitle,
         document->SetDocumentURI(newURI);
 
         AddURIVisit(newURI, oldURI, oldURI, 0);
+
+        // AddURIVisit doesn't set the title for the new URI in global history,
+        // so do that here.
+        if (mUseGlobalHistory) {
+            nsCOMPtr<IHistory> history = services::GetHistoryService();
+            if (history) {
+                history->SetURITitle(newURI, mTitle);
+            }
+            else if (mGlobalHistory) {
+                mGlobalHistory->SetPageTitle(newURI, mTitle);
+            }
+        }
     }
     else {
         FireDummyOnLocationChange();

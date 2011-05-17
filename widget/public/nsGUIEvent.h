@@ -415,6 +415,12 @@ class nsHashKey;
 // Query if the DOM element under nsEvent::refPoint belongs to our widget
 // or not.
 #define NS_QUERY_DOM_WIDGET_HITTEST     (NS_QUERY_CONTENT_EVENT_START + 9)
+// Query for some information about mouse wheel event's target
+// XXX This is used only for supporting high resolution mouse scroll on Windows
+//     and it's going to be reimplemented with another approach.  At that time,
+//     this even is going to be removed. Therefore,  DON'T use this event for
+//     other purpose.
+#define NS_QUERY_SCROLL_TARGET_INFO     (NS_QUERY_CONTENT_EVENT_START + 99)
 
 // Video events
 #ifdef MOZ_MEDIA
@@ -517,9 +523,13 @@ class nsHashKey;
 #define NS_MOZTOUCH_UP               (NS_MOZTOUCH_EVENT_START+2)
 
 // script notification events
-#define NS_NOTIFYSCRIPT_START    4500
-#define NS_BEFORE_SCRIPT_EXECUTE (NS_NOTIFYSCRIPT_START)
-#define NS_AFTER_SCRIPT_EXECUTE  (NS_NOTIFYSCRIPT_START+1)
+#define NS_NOTIFYSCRIPT_START        4500
+#define NS_BEFORE_SCRIPT_EXECUTE     (NS_NOTIFYSCRIPT_START)
+#define NS_AFTER_SCRIPT_EXECUTE      (NS_NOTIFYSCRIPT_START+1)
+
+#define NS_PRINT_EVENT_START         4600
+#define NS_BEFOREPRINT               (NS_PRINT_EVENT_START)
+#define NS_AFTERPRINT                (NS_PRINT_EVENT_START + 1)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -1184,9 +1194,11 @@ public:
                             // as needed.
     kNoDefer =      1 << 5, // For scrollable views, indicates scroll should not
                             // occur asynchronously.
-    kIsMomentum =   1 << 6  // Marks scroll events that aren't controlled by the
+    kIsMomentum =   1 << 6, // Marks scroll events that aren't controlled by the
                             // user but fire automatically as the result of a
                             // "momentum" scroll.
+    kAllowSmoothScroll = 1 << 7 // Allow smooth scroll for the pixel scroll
+                                // event.
   };
 
   nsMouseScrollEvent(PRBool isTrusted, PRUint32 msg, nsIWidget *w)
@@ -1281,6 +1293,13 @@ public:
     refPoint = aPoint;
   }
 
+  void InitForQueryScrollTargetInfo(nsMouseScrollEvent* aEvent)
+  {
+    NS_ASSERTION(message == NS_QUERY_SCROLL_TARGET_INFO,
+                 "wrong initializer is called");
+    mInput.mMouseScrollEvent = aEvent;
+  }
+
   PRUint32 GetSelectionStart(void) const
   {
     NS_ASSERTION(message == NS_QUERY_SELECTED_TEXT,
@@ -1300,6 +1319,8 @@ public:
   struct {
     PRUint32 mOffset;
     PRUint32 mLength;
+    // used by NS_QUERY_SCROLL_TARGET_INFO
+    nsMouseScrollEvent* mMouseScrollEvent;
   } mInput;
   struct {
     void* mContentsRoot;
@@ -1313,6 +1334,10 @@ public:
     PRPackedBool mWidgetIsHit; // true if DOM element under mouse belongs to widget
     // used by NS_QUERY_SELECTION_AS_TRANSFERABLE
     nsCOMPtr<nsITransferable> mTransferable;
+    // used by NS_QUERY_SCROLL_TARGET_INFO
+    PRInt32 mLineHeight;
+    PRInt32 mPageWidth;
+    PRInt32 mPageHeight;
   } mReply;
 
   enum {
@@ -1616,15 +1641,7 @@ enum nsDragDropEventStatus {
         ((evnt)->message == NS_PLUGIN_FOCUS))
 
 #define NS_IS_QUERY_CONTENT_EVENT(evnt) \
-       (((evnt)->message == NS_QUERY_SELECTED_TEXT) || \
-        ((evnt)->message == NS_QUERY_TEXT_CONTENT) || \
-        ((evnt)->message == NS_QUERY_CARET_RECT) || \
-        ((evnt)->message == NS_QUERY_TEXT_RECT) || \
-        ((evnt)->message == NS_QUERY_EDITOR_RECT) || \
-        ((evnt)->message == NS_QUERY_CONTENT_STATE) || \
-        ((evnt)->message == NS_QUERY_SELECTION_AS_TRANSFERABLE) || \
-        ((evnt)->message == NS_QUERY_CHARACTER_AT_POINT) || \
-        ((evnt)->message == NS_QUERY_DOM_WIDGET_HITTEST))
+       ((evnt)->eventStructType == NS_QUERY_CONTENT_EVENT)
 
 #define NS_IS_SELECTION_EVENT(evnt) \
        (((evnt)->message == NS_SELECTION_SET))
@@ -1666,7 +1683,8 @@ enum nsDragDropEventStatus {
 // cases, you should use NS_IS_IME_RELATED_EVENT instead.
 #define NS_IS_IME_RELATED_EVENT(evnt) \
   (NS_IS_IME_EVENT(evnt) || \
-   NS_IS_QUERY_CONTENT_EVENT(evnt) || \
+   (NS_IS_QUERY_CONTENT_EVENT(evnt) && \
+    evnt->message != NS_QUERY_SCROLL_TARGET_INFO) || \
    NS_IS_SELECTION_EVENT(evnt))
 
 /*

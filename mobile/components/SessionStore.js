@@ -634,7 +634,7 @@ SessionStore.prototype = {
     return this._shouldRestore;
   },
 
-  restoreLastSession: function ss_restoreLastSession() {
+  restoreLastSession: function ss_restoreLastSession(aBringToFront) {
     // The previous session data has already been renamed to the backup file
     let dirService = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
     let session = dirService.get("ProfD", Ci.nsILocalFile);
@@ -690,7 +690,7 @@ SessionStore.prototype = {
           // We must have selected tabs as soon as possible, so we let all tabs be selected
           // until we get the real selected tab. Then we stop selecting tabs. The end result
           // is that the right tab is selected, but we also don't get a bunch of errors
-          let bringToFront = (i + 1 <= selected);
+          let bringToFront = (i + 1 <= selected) && aBringToFront;
           let tab = window.Browser.addTab(tabData.entries[0].url, bringToFront, null, params);
     
           // Recreate the thumbnail if we are delay loading the tab

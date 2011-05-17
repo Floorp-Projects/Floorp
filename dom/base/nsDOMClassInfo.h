@@ -365,6 +365,8 @@ public:
   static jsid sOntouchenter_id;
   static jsid sOntouchleave_id;
   static jsid sOntouchcancel_id;
+  static jsid sOnbeforeprint_id;
+  static jsid sOnafterprint_id;
 
 protected:
   static JSPropertyOp sXPCNativeWrapperGetPropertyOp;
