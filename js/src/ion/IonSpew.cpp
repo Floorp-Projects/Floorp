@@ -93,6 +93,23 @@ C1Spewer::spew(FILE *fp, const char *pass)
     fprintf(fp, "end_cfg\n");
 }
 
+static void
+DumpInstruction(FILE *fp, MInstruction *ins)
+{
+    fprintf(fp, "      ");
+    fprintf(fp, "0 %d ", ins->useCount());
+    ins->printName(fp);
+    fprintf(fp, " ");
+    ins->printName(fp);
+    fprintf(fp, " ");
+    for (size_t j = 0; j < ins->numOperands(); j++) {
+        ins->getOperand(j)->printName(fp);
+        if (j != ins->numOperands() - 1)
+            fprintf(fp, ", ");
+    }
+    fprintf(fp, " <|@\n");
+}
+
 void
 C1Spewer::spew(FILE *fp, MBasicBlock *block)
 {
@@ -136,13 +153,10 @@ C1Spewer::spew(FILE *fp, MBasicBlock *block)
     fprintf(fp, "    end_states\n");
 
     fprintf(fp, "    begin_HIR\n");
-    for (uint32 i = 0; i < block->numInstructions(); i++) {
-        MInstruction *ins = block->getInstruction(i);
-        fprintf(fp, "      ");
-        fprintf(fp, "0 %d ", ins->useCount());
-        ins->printName(fp);
-        fprintf(fp, " <|@\n");
-    }
+    for (size_t i = 0; i < block->numPhis(); i++)
+        DumpInstruction(fp, block->getPhi(i));
+    for (size_t i = 0; i < block->numInstructions(); i++)
+        DumpInstruction(fp, block->getInstruction(i));
     fprintf(fp, "    end_HIR\n");
 
     fprintf(fp, "  end_block\n");

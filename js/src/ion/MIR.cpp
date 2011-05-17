@@ -190,9 +190,9 @@ MGoto::New(MIRGenerator *gen, MBasicBlock *target)
 }
 
 MPhi *
-MPhi::New(MIRGenerator *gen)
+MPhi::New(MIRGenerator *gen, uint32 slot)
 {
-    return new (gen->temp()) MPhi(gen->cx);
+    return new (gen->temp()) MPhi(gen->cx, slot);
 }
 
 bool

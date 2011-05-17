@@ -88,6 +88,7 @@ MBasicBlock::MBasicBlock(MIRGenerator *gen, jsbytecode *pc)
     instructions_(TempAllocPolicy(gen->cx)),
     predecessors_(TempAllocPolicy(gen->cx)),
     phis_(TempAllocPolicy(gen->cx)),
+    slots_(NULL),
     stackPosition_(gen->firstStackSlot()),
     lastIns_(NULL),
     pc_(pc),
@@ -201,7 +202,7 @@ MBasicBlock::setSlot(uint32 slot, MInstruction *ins)
 // 
 // We assume that the only way such copies can be created is via simple
 // assignment, like (x = y), which will be reflected in the bytecode via
-// a GET[LOCAL,ARG] that propagates into a SET[LOCAL,ARG]. Normal calls
+// a GET[LOCAL,ARG] that inherits into a SET[LOCAL,ARG]. Normal calls
 // to push() will be compiler-created temporaries. So to minimize creation of
 // new SSA names, we lazily create them when applying a setVariable() whose
 // stack top was pushed by a pushVariable(). That also means we do not create
@@ -359,9 +360,26 @@ MBasicBlock::addPhi(MPhi *phi)
     return true;
 }
 
+void
+MBasicBlock::inheritPhi(MPhi *phi)
+{
+    setSlot(phi->slot(), phi);
+    header_[phi->slot()] = phi;
+}
+
+void
+MBasicBlock::inheritPhis(MBasicBlock *loopHeader)
+{
+    for (size_t i = 0; i < loopHeader->numPhis(); i++)
+        inheritPhi(loopHeader->getPhi(i));
+}
+
 bool
 MBasicBlock::addPredecessor(MBasicBlock *pred)
 {
+    if (!header_)
+        return inherit(pred) && initHeader();
+
     // Predecessors must be finished, and at the correct stack depth.
     JS_ASSERT(pred->lastIns_);
     JS_ASSERT(pred->stackPosition_ == stackPosition_);
@@ -373,15 +391,15 @@ MBasicBlock::addPredecessor(MBasicBlock *pred)
         if (mine != other) {
             MPhi *phi;
 
-            // If our tracked value for this slot is the same as our initial
-            // predecessor's entry for that slot, then we have not yet created
-            // a phi node. Otherwise, we definitely have.
-            if (predecessors_[0]->getSlot(i) != mine) {
-                // We already created a phi node.
+            // If the current instruction is a phi, and it was created in this
+            // basic block, then we have already placed this phi and should
+            // instead append to its operands.
+            if (mine->isPhi() && mine->block() == this) {
+                JS_ASSERT(predecessors_.length());
                 phi = mine->toPhi();
             } else {
                 // Otherwise, create a new phi node.
-                phi = MPhi::New(gen);
+                phi = MPhi::New(gen, i);
                 if (!addPhi(phi) || !phi->addInput(gen, mine))
                     return false;
 
@@ -414,12 +432,13 @@ MBasicBlock::assertUsesAreNotWithin(MOperand *use)
 }
 
 bool
-MBasicBlock::addBackedge(MBasicBlock *pred, MBasicBlock *successor)
+MBasicBlock::setBackedge(MBasicBlock *pred)
 {
     // Predecessors must be finished, and at the correct stack depth.
     JS_ASSERT(lastIns_);
     JS_ASSERT(pred->lastIns_);
     JS_ASSERT(pred->stackPosition_ == stackPosition_);
+    JS_ASSERT(headerSlots_ == stackPosition_);
 
     // Place minimal phi nodes by comparing the set of defintions at loop entry
     // with the loop exit. For each mismatching slot, we create a phi node, and
@@ -439,7 +458,7 @@ MBasicBlock::addBackedge(MBasicBlock *pred, MBasicBlock *successor)
 
         // Create a new phi. Do not add inputs yet, as we don't want to
         // accidentally rewrite the phi's operands.
-        MPhi *phi = MPhi::New(gen);
+        MPhi *phi = MPhi::New(gen, i);
         if (!addPhi(phi))
             return false;
 
@@ -478,8 +497,8 @@ MBasicBlock::addBackedge(MBasicBlock *pred, MBasicBlock *successor)
 
         if (!phi->addInput(gen, entryDef) || !phi->addInput(gen, exitDef))
             return false;
-        successor->setSlot(i, phi);
-        successor->header_[i] = phi;
+
+        setSlot(i, phi);
     }
 
     return predecessors_.append(pred);
