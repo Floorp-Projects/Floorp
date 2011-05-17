@@ -1389,6 +1389,11 @@ nsDocShell::LoadURI(nsIURI * aURI,
         }
     }
 
+    if (aLoadFlags & LOAD_FLAGS_DISALLOW_INHERIT_OWNER) {
+        inheritOwner = PR_FALSE;
+        owner = do_CreateInstance("@mozilla.org/nullprincipal;1");
+    }
+
     PRUint32 flags = 0;
 
     if (inheritOwner)

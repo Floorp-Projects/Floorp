@@ -679,6 +679,7 @@ progress {
   float: none ! important;
   position: static ! important;
   overflow: visible ! important;
+  -moz-box-sizing: border-box ! important;
 
   -moz-appearance: progresschunk;
   height: 100%;

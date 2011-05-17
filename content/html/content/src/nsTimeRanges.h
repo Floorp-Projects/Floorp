@@ -36,6 +36,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifndef nsTimeRanges_h__
+#define nsTimeRanges_h__
+
 #include "nsIDOMTimeRanges.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
@@ -64,3 +67,5 @@ private:
 
   nsAutoTArray<TimeRange,4> mRanges;
 };
+
+#endif // nsTimeRanges_h__

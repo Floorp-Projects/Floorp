@@ -179,10 +179,12 @@ FormAssistant.prototype = {
       return false;
     }
 
-    // If form assistant is disabled but the element is a type of choice list
-    // we still want to show the simple select list
+    // There is some case where we still want some data to be send to the
+    // parent process even if form assistant is disabled:
+    //  - the element is a choice list
+    //  - the element has autocomplete suggestions
     this._enabled = Services.prefs.getBoolPref("formhelper.enabled");
-    if (!this._enabled && !this._isSelectElement(aElement))
+    if (!this._enabled && !this._isSelectElement(aElement) && !this._isAutocomplete(aElement))
       return this.close();
 
     if (this._enabled) {
@@ -210,7 +212,7 @@ FormAssistant.prototype = {
 
   receiveMessage: function receiveMessage(aMessage) {
     let currentElement = this.currentElement;
-    if ((!this._enabled && !getWrapperForElement(currentElement)) || !currentElement)
+    if ((!this._enabled && !this._isAutocomplete(currentElement) && !getWrapperForElement(currentElement)) || !currentElement)
       return;
 
     let json = aMessage.json;
@@ -729,8 +731,8 @@ FormAssistant.prototype = {
         maxLength: element.maxLength,
         type: (element.getAttribute("type") || "").toLowerCase(),
         choices: choices,
-        isAutocomplete: this._isAutocomplete(this.currentElement),
-        list: this._getListSuggestions(this.currentElement),
+        isAutocomplete: this._isAutocomplete(element),
+        list: this._getListSuggestions(element),
         rect: this._getRect(),
         caretRect: this._getCaretRect()
       },
