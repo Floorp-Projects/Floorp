@@ -3322,7 +3322,7 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
     if (aPaste) {
       if (nsHTMLDocument::sPasteInternal_id == JSID_VOID) {
         nsHTMLDocument::sPasteInternal_id =
-          INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "paste"));
+          INTERNED_STRING_TO_JSID(::JS_InternString(cx, "paste"));
       }
       rv = secMan->CheckPropertyAccess(cx, nsnull, classNameStr.get(),
                                        nsHTMLDocument::sPasteInternal_id,
@@ -3330,7 +3330,7 @@ nsHTMLDocument::DoClipboardSecurityCheck(PRBool aPaste)
     } else {
       if (nsHTMLDocument::sCutCopyInternal_id == JSID_VOID) {
         nsHTMLDocument::sCutCopyInternal_id =
-          INTERNED_STRING_TO_JSID(cx, ::JS_InternString(cx, "cutcopy"));
+          INTERNED_STRING_TO_JSID(::JS_InternString(cx, "cutcopy"));
       }
       rv = secMan->CheckPropertyAccess(cx, nsnull, classNameStr.get(),
                                        nsHTMLDocument::sCutCopyInternal_id,

@@ -333,22 +333,16 @@ JSID_IS_ZERO(jsid id)
 }
 
 JS_PUBLIC_API(JSBool)
-JS_StringHasBeenInterned(JSContext *cx, JSString *str);
+JS_StringHasBeenInterned(JSString *str);
 
-/*
- * Only JSStrings that have been interned via the JSAPI can be turned into
- * jsids by API clients.
- *
- * N.B. if a jsid is backed by a string which has not been interned, that
- * string must be appropriately rooted to avoid being collected by the GC.
- */
+/* A jsid may only hold an interned JSString. */
 static JS_ALWAYS_INLINE jsid
-INTERNED_STRING_TO_JSID(JSContext *cx, JSString *str)
+INTERNED_STRING_TO_JSID(JSString *str)
 {
     jsid id;
     JS_ASSERT(str);
+    JS_ASSERT(JS_StringHasBeenInterned(str));
     JS_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-    JS_ASSERT(JS_StringHasBeenInterned(cx, str));
     JSID_BITS(id) = (size_t)str;
     return id;
 }

@@ -51,7 +51,7 @@ js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
         if (!str)
             return false;
         JS::Anchor<JSString *> anchor(str);
-        *atomp = js_AtomizeString(cx, str);
+        *atomp = js_AtomizeString(cx, str, 0);
         return !!*atomp;
     }
 
@@ -61,7 +61,7 @@ js_ValueToAtom(JSContext *cx, const js::Value &v, JSAtom **atomp)
         return true;
     }
 
-    *atomp = js_AtomizeString(cx, str);
+    *atomp = js_AtomizeString(cx, str, 0);
     return !!*atomp;
 }
 
@@ -144,7 +144,7 @@ IndexToId(JSContext *cx, uint32 index, jsid *idp)
     if (!str)
         return false;
 
-    JSAtom *atom = js_AtomizeString(cx, str);
+    JSAtom *atom = js_AtomizeString(cx, str, 0);
     if (!atom)
         return false;
     *idp = ATOM_TO_JSID(atom);
