@@ -200,6 +200,7 @@ _BROWSER_FILES = \
                  browser_scratchpad_ui.js \
                  browser_scratchpad_bug_646070_chrome_context_pref.js \
                  browser_overflowScroll.js \
+                 browser_locationBarExternalLoad.js \
                  browser_pageInfo.js \
                  browser_page_style_menu.js \
                  browser_pinnedTabs.js \

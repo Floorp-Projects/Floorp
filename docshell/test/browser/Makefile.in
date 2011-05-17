@@ -52,6 +52,7 @@ _BROWSER_TEST_FILES =	\
 		browser_bug388121-2.js \
 		browser_bug441169.js \
 		browser_bug503832.js \
+		browser_loadDisallowInherit.js \
 		file_bug503832.html \
 		browser_bug554155.js \
 		$(NULL)

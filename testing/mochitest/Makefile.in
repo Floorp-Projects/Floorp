@@ -101,7 +101,7 @@ _SERV_FILES = 	\
 		$(topsrcdir)/build/pgo/server-locations.txt \
 		$(topsrcdir)/netwerk/test/httpserver/httpd.js \
 		mozprefs.js \
-		pywebsocket_ignore_sigint.py \
+		pywebsocket_wrapper.py \
 		$(NULL)	
 
 _PYWEBSOCKET_FILES = \

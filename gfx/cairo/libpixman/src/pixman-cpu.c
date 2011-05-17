@@ -244,7 +244,7 @@ pixman_have_arm_neon (void)
 
 #endif /* USE_ARM_NEON */
 
-#elif defined (__linux__) /* linux ELF */
+#elif defined (__linux__) || defined(ANDROID) /* linux ELF */
 
 #include <stdlib.h>
 #include <unistd.h>

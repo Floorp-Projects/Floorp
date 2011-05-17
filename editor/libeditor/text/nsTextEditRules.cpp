@@ -80,16 +80,6 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
   };
 
 
-nsresult
-NS_NewTextEditRules(nsIEditRules** aInstancePtrResult)
-{
-  nsTextEditRules * rules = new nsTextEditRules();
-  if (rules)
-    return rules->QueryInterface(NS_GET_IID(nsIEditRules), (void**) aInstancePtrResult);
-  return NS_ERROR_OUT_OF_MEMORY;
-}
-
-
 /********************************************************
  *  Constructor/Destructor 
  ********************************************************/
