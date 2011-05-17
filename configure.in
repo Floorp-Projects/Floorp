@@ -220,7 +220,7 @@ AC_SUBST(COMPILE_ENVIRONMENT)
 MOZ_ARG_WITH_STRING(l10n-base,
 [  --with-l10n-base=DIR    path to l10n repositories],
     L10NBASEDIR=$withval)
-if test ! -z "$L10NBASEDIR"; then
+if test -n "$L10NBASEDIR"; then
     if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
         AC_MSG_ERROR([--with-l10n-base must specify a path])
     elif test -d "$L10NBASEDIR"; then
@@ -4378,8 +4378,7 @@ if test "$ac_cv_i18n_lc_messages" = yes; then
 fi
 
 AC_HAVE_FUNCS(localeconv)
-
-fi # SKIP_COMPILER_CHECKS
+fi # ! SKIP_COMPILER_CHECKS
 
 TARGET_XPCOM_ABI=
 if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
@@ -7812,19 +7811,10 @@ else
 fi
 
 dnl ========================================================
-dnl Profile guided optimization
+dnl Profile guided optimization (gcc checks)
 dnl ========================================================
 dnl Test for profiling options
 dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
-
-dnl Provide a switch to disable PGO even when called via profiledbuild.
-MOZ_ARG_DISABLE_BOOL(profile-guided-optimization,
-[  --disable-profile-guided-optimization
-                          Don't build with PGO even if called via make profiledbuild],
-MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=1,
-MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
-
-AC_SUBST(MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE)
 
 _SAVE_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
@@ -7963,7 +7953,7 @@ CXXFLAGS="$_SAVE_CXXFLAGS"
 if test "$ac_nscap_nonconst_opeq_bug" = "yes" ; then
     AC_DEFINE(NSCAP_DONT_PROVIDE_NONCONST_OPEQ)
 fi
-fi # SKIP_COMPILER_CHECKS
+fi # ! SKIP_COMPILER_CHECKS
 
 dnl ========================================================
 dnl C++ exceptions (g++/VC/irix6/Sun only - for now)
@@ -9085,7 +9075,7 @@ if test "$MOZ_X11"; then
     [ AC_MSG_ERROR([Could not compile basic X program.]) ])
     CFLAGS="$_SAVE_CFLAGS"
 
-    if test ! -z "$MISSING_X"; then
+    if test -n "$MISSING_X"; then
         AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
     fi
 

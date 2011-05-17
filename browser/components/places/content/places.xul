@@ -187,12 +187,12 @@
 
   <toolbox id="placesToolbox">
     <toolbar class="chromeclass-toolbar" id="placesToolbar" align="center">
-      <toolbarbutton id="back-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+      <toolbarbutton id="back-button"
                      command="OrganizerCommand:Back"
                      tooltiptext="&backButton.tooltip;"
                      disabled="true"/>
 
-      <toolbarbutton id="forward-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+      <toolbarbutton id="forward-button"
                      command="OrganizerCommand:Forward"
                      tooltiptext="&forwardButton.tooltip;"
                      disabled="true"/>

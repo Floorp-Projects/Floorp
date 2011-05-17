@@ -4276,8 +4276,7 @@ if test "$ac_cv_i18n_lc_messages" = yes; then
 fi
 
 AC_HAVE_FUNCS(localeconv)
-
-fi # SKIP_COMPILER_CHECKS
+fi # ! SKIP_COMPILER_CHECKS
 
 TARGET_XPCOM_ABI=
 if test -n "${CPU_ARCH}" -a -n "${TARGET_COMPILER_ABI}"; then
@@ -5075,19 +5074,10 @@ else
 fi
 
 dnl ========================================================
-dnl Profile guided optimization
+dnl Profile guided optimization (gcc checks)
 dnl ========================================================
 dnl Test for profiling options
 dnl Under gcc 3.4+, use -fprofile-generate/-fprofile-use
-
-dnl Provide a switch to disable PGO even when called via profiledbuild.
-MOZ_ARG_DISABLE_BOOL(profile-guided-optimization,
-[  --disable-profile-guided-optimization
-                          Don't build with PGO even if called via make profiledbuild],
-MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=1,
-MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE=)
-
-AC_SUBST(MOZ_PROFILE_GUIDED_OPTIMIZE_DISABLE)
 
 _SAVE_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -fprofile-generate -fprofile-correction"
@@ -5239,8 +5229,7 @@ AC_CACHE_CHECK(for tm_zone tm_gmtoff in struct tm,
 if test "$ac_cv_struct_tm_zone_tm_gmtoff" = "yes" ; then
     AC_DEFINE(HAVE_TM_ZONE_TM_GMTOFF)
 fi
-
-fi # SKIP_COMPILER_CHECKS
+fi # ! SKIP_COMPILER_CHECKS
 
 dnl ========================================================
 dnl C++ rtti
@@ -5691,7 +5680,7 @@ if test "$MOZ_X11"; then
     [ AC_MSG_ERROR([Could not compile basic X program.]) ])
     CFLAGS="$_SAVE_CFLAGS"
 
-    if test ! -z "$MISSING_X"; then
+    if test -n "$MISSING_X"; then
         AC_MSG_ERROR([ Could not find the following X libraries: $MISSING_X ]);
     fi
 
