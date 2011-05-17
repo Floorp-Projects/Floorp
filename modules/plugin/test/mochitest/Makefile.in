@@ -99,7 +99,6 @@ _MOCHITEST_FILES = \
   307-xo-redirect.sjs \
   test_redirect_handling.html \
   test_clear_site_data.html \
-  test_zero_opacity.html \
   $(NULL)
 
 #  test_plugin_scroll_painting.html \ bug 596491
