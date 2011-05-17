@@ -649,7 +649,7 @@ StackDepth(JSScript *script)
         if ((pc_) < (script_)->code ||                                        \
             (script_)->code + (script_)->length <= (pc_)) {                   \
             JS_ASSERT((size_t)(index) < js_common_atom_count);                \
-            (atom) = COMMON_ATOMS_START(&cx->runtime->atomState)[index];      \
+            (atom) = cx->runtime->atomState.commonAtomsStart()[index];        \
         } else {                                                              \
             (atom) = script_->getAtom(index);                                 \
         }                                                                     \
