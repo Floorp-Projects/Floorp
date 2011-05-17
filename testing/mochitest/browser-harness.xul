@@ -104,13 +104,13 @@
     var gDumper = {
       get fileLogger() {
         let logger = null;
-        if (gConfig.logPath) {
+        if (gConfig.logFile) {
           try {
-            MozillaFileLogger.init(gConfig.logPath);
+            MozillaFileLogger.init(gConfig.logFile);
             logger = MozillaFileLogger;
           } catch (ex) {
             dump("TEST-UNEXPECTED-FAIL | (browser-harness.xul) | " +
-                 "Error trying to log to " + gConfig.logPath + ": " + ex + "\n");
+                 "Error trying to log to " + gConfig.logFile + ": " + ex + "\n");
           }
         }
         delete this.fileLogger;
@@ -140,37 +140,8 @@
         document.getElementById("runTestsButton").label =
           "Run " + gConfig.testPath + " tests";
 
-      if (gConfig.autoRun)
+      if (gConfig.autorun)
         setTimeout(runTests, 0);
-    }
-
-    function readConfig() {
-      var fileLocator = Cc["@mozilla.org/file/directory_service;1"].
-                        getService(Ci.nsIProperties);
-      var configFile = fileLocator.get("ProfD", Ci.nsIFile);
-      configFile.append("testConfig.js");
-
-      if (!configFile.exists())
-        return;
-
-      var fileInStream = Cc["@mozilla.org/network/file-input-stream;1"].
-                         createInstance(Ci.nsIFileInputStream);
-      var sstream = Cc["@mozilla.org/scriptableinputstream;1"].
-                    createInstance(Ci.nsIScriptableInputStream);
-      fileInStream.init(configFile, -1, 0, 0);
-      sstream.init(fileInStream);
-
-      var config = "";
-      var str = sstream.read(4096);
-      while (str.length > 0) {
-        config += str;
-        str = sstream.read(4096);
-      }
-
-      sstream.close();
-      fileInStream.close();
-
-      return eval(config);
     }
 
     var gErrorCount = 0;
@@ -229,31 +200,14 @@
 
     // Returns an array of browserTest objects for all the selected tests
     function listTests() {
-      var baseURL = 'chrome://mochitests/content';
-      var testsURI = Components.classes["@mozilla.org/file/directory_service;1"]
-                          .getService(Components.interfaces.nsIProperties)
-                          .get("ProfD", Components.interfaces.nsILocalFile);
-      testsURI.append("tests.manifest");
-      var ioSvc = Components.classes["@mozilla.org/network/io-service;1"].
-                  getService(Components.interfaces.nsIIOService);
-      var manifestFile = ioSvc.newFileURI(testsURI)
-                      .QueryInterface(Components.interfaces.nsIFileURL).file;
-
-      Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar).
-        autoRegister(manifestFile);
+      [links, singleTestPath] = getTestList();
 
       // load server.js in so we can share template functions
       var scriptLoader = Cc["@mozilla.org/moz/jssubscript-loader;1"].
-                         getService(Ci.mozIJSSubScriptLoader);
+                           getService(Ci.mozIJSSubScriptLoader);
       var srvScope = {};
-      scriptLoader.loadSubScript('chrome://mochikit/content/server.js', srvScope);
-
-      var jar = getJar(baseURL);
-      if (jar != null) {
-        var [links, singleTestPath] = getMochitestJarListing(baseURL, gConfig.testPath, "browser");
-      } else {
-        var [links, singleTestPath] = getFileListing(baseURL, gConfig.testPath, "browser", srvScope);
-      }
+      scriptLoader.loadSubScript('chrome://mochikit/content/server.js',
+                                 srvScope);
 
       var fileNames = [];
       var fileNameRegexp = /browser_.+\.js$/;
