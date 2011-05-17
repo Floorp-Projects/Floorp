@@ -2581,10 +2581,7 @@ nsWebBrowserPersist::EnumCleanupOutputMap(nsHashKey *aKey, void *aData, void* cl
         channel->Cancel(NS_BINDING_ABORTED);
     }
     OutputData *data = (OutputData *) aData;
-    if (data)
-    {
-        delete data;
-    }
+    delete data;
     return PR_TRUE;
 }
 
@@ -2593,10 +2590,7 @@ PRBool
 nsWebBrowserPersist::EnumCleanupURIMap(nsHashKey *aKey, void *aData, void* closure)
 {
     URIData *data = (URIData *) aData;
-    if (data)
-    {
-        delete data; // Delete data associated with key
-    }
+    delete data; // Delete data associated with key
     return PR_TRUE;
 }
 
@@ -2612,10 +2606,7 @@ nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* c
         channel->Cancel(NS_BINDING_ABORTED);
     }
     UploadData *data = (UploadData *) aData;
-    if (data)
-    {
-        delete data; // Delete data associated with key
-    }
+    delete data; // Delete data associated with key
     return PR_TRUE;
 }
 
