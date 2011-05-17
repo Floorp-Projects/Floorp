@@ -138,6 +138,8 @@ _BROWSER_TEST_FILES = \
 	browser_webconsole_bug_646025_console_file_location.js \
 	browser_webconsole_position_ui.js \
 	browser_webconsole_bug_642615_autocomplete.js \
+	browser_webconsole_bug_585991_autocomplete_popup.js \
+	browser_webconsole_bug_585991_autocomplete_keys.js \
 	head.js \
 	$(NULL)
 
