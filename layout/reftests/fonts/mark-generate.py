@@ -89,7 +89,9 @@ for codepoint in range(ord("A"), ord("A") + 1):
     
             f.generate("mark" + mark + charname + "-" + uposname +
                        "underline.ttf")
-    
+
+# font with a ligature involving a space
+
 f = fontforge.font()
 n = "MarkAB-spaceliga"
 f.fontname = n
@@ -113,3 +115,30 @@ g.importOutlines("mark2-glyph.svg")
 g.width = 1800
 
 f.generate("markAB-spaceliga.otf")
+
+# font with a known line-height (which is greater than winascent + windescent).
+
+f = fontforge.font()
+lineheight = 1500
+n = "MarkA-lineheight" + str(lineheight)
+f.fontname = n
+f.familyname = n
+f.fullname = n
+f.copyright = "Copyright (c) 2008-2011 Mozilla Corporation"
+
+g = f.createChar(ord(" "), "space")
+g.width = 1000
+g = f.createChar(ord("A"), "A")
+g.importOutlines("mark-glyph.svg")
+g.width = 1500
+
+f.os2_typoascent_add = False
+f.os2_typoascent = 800
+f.os2_typodescent_add = False
+f.os2_typodescent = -200
+f.os2_use_typo_metrics = True
+f.os2_typolinegap = lineheight - (f.os2_typoascent - f.os2_typodescent)
+# glyph height is 800 (hhea ascender - descender)
+f.hhea_linegap = lineheight - 800
+
+f.generate("markA-lineheight" + str(lineheight) + ".ttf")
