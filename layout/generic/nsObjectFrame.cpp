@@ -4393,9 +4393,7 @@ void nsPluginInstanceOwner::RenderCoreAnimation(CGContextRef aCGContext,
   if (!mIOSurface || 
       (mIOSurface->GetWidth() != (size_t)aWidth || 
        mIOSurface->GetHeight() != (size_t)aHeight)) {
-    if (mIOSurface) {
-      delete mIOSurface;
-    }
+    delete mIOSurface;
 
     // If the renderer is backed by an IOSurface, resize it as required.
     mIOSurface = nsIOSurface::CreateIOSurface(aWidth, aHeight);
@@ -5765,8 +5763,7 @@ nsPluginInstanceOwner::Destroy()
 #endif
 #ifdef XP_MACOSX
   RemoveFromCARefreshTimer(this);
-  if (mIOSurface)
-    delete mIOSurface;
+  delete mIOSurface;
   if (mColorProfile)
     ::CGColorSpaceRelease(mColorProfile);  
 #endif

@@ -95,7 +95,7 @@ nsSharedPageData::nsSharedPageData() :
 nsSharedPageData::~nsSharedPageData()
 {
   nsMemory::Free(mDateTimeStr);
-  if (mHeadFootFont) delete mHeadFootFont;
+  delete mHeadFootFont;
   nsMemory::Free(mPageNumFormat);
   nsMemory::Free(mPageNumAndTotalsFormat);
   if (mDocTitle) nsMemory::Free(mDocTitle);
@@ -134,7 +134,7 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame(nsStyleContext* aContext) :
 
 nsSimplePageSequenceFrame::~nsSimplePageSequenceFrame()
 {
-  if (mPageData) delete mPageData;
+  delete mPageData;
 }
 
 NS_QUERYFRAME_HEAD(nsSimplePageSequenceFrame)

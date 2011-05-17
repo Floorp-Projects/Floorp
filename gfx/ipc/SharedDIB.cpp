@@ -75,8 +75,7 @@ SharedDIB::IsValid()
 nsresult
 SharedDIB::Close()
 {
-  if (mShMem)
-    delete mShMem;
+  delete mShMem;
 
   mShMem = nsnull;
 
