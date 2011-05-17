@@ -79,9 +79,6 @@ public:
    */
   NS_HIDDEN_(nsresult) AddPrefix(nsIAtom *aPrefix, nsString &aURI);
 
-  /* Remove a prefix from the map. */
-  NS_HIDDEN_(void) RemovePrefix(nsIAtom *aPrefix);
-
   /*
    * Returns the namespace ID for the given prefix, if it is in the map.
    * If |aPrefix| is null and is not in the map, then a null namespace

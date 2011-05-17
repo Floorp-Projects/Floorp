@@ -344,7 +344,6 @@ public:
   nsresult FlushTags();
 
   PRBool   IsCurrentContainer(nsHTMLTag mType);
-  PRBool   IsAncestorContainer(nsHTMLTag mType);
 
   void DidAddContent(nsIContent* aContent);
   void UpdateChildCounts();
@@ -659,21 +658,6 @@ SinkContext::IsCurrentContainer(nsHTMLTag aTag)
 {
   if (aTag == mStack[mStackPos - 1].mType) {
     return PR_TRUE;
-  }
-
-  return PR_FALSE;
-}
-
-PRBool
-SinkContext::IsAncestorContainer(nsHTMLTag aTag)
-{
-  PRInt32 stackPos = mStackPos - 1;
-
-  while (stackPos >= 0) {
-    if (aTag == mStack[stackPos].mType) {
-      return PR_TRUE;
-    }
-    stackPos--;
   }
 
   return PR_FALSE;
