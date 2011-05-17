@@ -1,3 +1,4 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -128,6 +129,7 @@ leaky::leaky()
 
   quiet = TRUE;
   showAddress = FALSE;
+  showThreads = FALSE;
   stackDepth = 100000;
 
   mappedLogFile = -1;
@@ -149,7 +151,8 @@ leaky::~leaky()
 
 void leaky::usageError()
 {
-  fprintf(stderr, "Usage: %s prog log\n", (char*) applicationName);
+  fprintf(stderr, "Usage: %s [-v][-t] [-e exclude] [-i include] [-s stackdepth] prog log\n", (char*) applicationName);
+  fprintf(stderr, "\t-v: verbose\n\t-t: split threads\n");
   exit(-1);
 }
 
@@ -165,14 +168,15 @@ void leaky::initialize(int argc, char** argv)
 
   int arg;
   int errflg = 0;
-  while ((arg = getopt(argc, argv, "adEe:gh:i:r:Rs:tqx")) != -1) {
+  while ((arg = getopt(argc, argv, "adEe:gh:i:r:Rs:tqvx")) != -1) {
     switch (arg) {
       case '?':
+      default:
 	errflg++;
 	break;
       case 'a':
 	break;
-      case 'A':
+      case 'A': // not implemented
 	showAddress = TRUE;
 	break;
       case 'd':
@@ -184,7 +188,7 @@ void leaky::initialize(int argc, char** argv)
 	break;
       case 'g':
 	break;
-      case 'r':
+      case 'r': // not implemented
 	roots.add(optarg);
 	if (!includes.IsEmpty()) {
 	  errflg++;
@@ -207,7 +211,12 @@ void leaky::initialize(int argc, char** argv)
       case 'x':
 	break;
       case 'q':
-	quiet = TRUE;
+        break;
+      case 'v':
+        quiet = !quiet;
+        break;
+      case 't':
+        showThreads = TRUE;
 	break;
     }
   }
@@ -265,6 +274,10 @@ void leaky::LoadMap()
 
 void leaky::open()
 {
+  int threadArray[100]; // should auto-expand
+  int last_thread = -1;
+  int numThreads=0;
+
   LoadMap();
 
   setupSymbols(progFile);
@@ -279,7 +292,61 @@ void leaky::open()
   firstLogEntry = (malloc_log_entry*) mapFile(mappedLogFile, PROT_READ, &size);
   lastLogEntry = (malloc_log_entry*)((char*)firstLogEntry + size);
 
-  analyze();
+  fprintf(stdout,"<html><head><title>Jprof Profile Report</title></head><body>\n");
+  fprintf(stdout,"<h1><center>Jprof Profile Report</center></h1>\n");
+
+  if (showThreads)
+  {
+    // Find all the threads captured
+
+    // pthread/linux docs say the signal can be delivered to any thread in
+    // the process.  In practice, it appears in Linux that it's always
+    // delivered to the thread that called setitimer(), and each thread can
+    // have a separate itimer.  There's a support library for gprof that
+    // overlays pthread_create() to set timers in any threads you spawn.
+
+    // This loop walks through all the call stacks we recorded
+    for (malloc_log_entry* lep=firstLogEntry;
+         lep < lastLogEntry;
+         lep = reinterpret_cast<malloc_log_entry*>(&lep->pcs[lep->numpcs])) {
+      if (lep->thread != last_thread)
+      {
+        int i;
+        for (i=0; i<numThreads; i++)
+        {
+          if (lep->thread == threadArray[i])
+            break;
+        }
+        if (i == numThreads &&
+            i < (int) (sizeof(threadArray)/sizeof(threadArray[0])))
+        {
+          threadArray[i] = lep->thread;
+          numThreads++;
+          fprintf(stderr,"new thread %d\n",lep->thread);
+        }
+      }
+    }
+    fprintf(stderr,"Num threads %d\n",numThreads);
+
+    fprintf(stdout,"<hr>Threads:<p><pre>\n");
+    for (int i=0; i<numThreads; i++)
+    {
+      fprintf(stdout,"   <a href=\"thread_%d\">%d</a><p>\n",
+              threadArray[i],threadArray[i]);
+    }
+    fprintf(stdout,"</pre><hr>");
+
+    for (int i=0; i<numThreads; i++)
+    {
+      analyze(threadArray[i]);
+    }
+  }
+  else
+  {
+    analyze(0);
+  }
+
+  fprintf(stdout,"</pre></body></html>\n");
 
   exit(0);
 }
@@ -428,14 +495,19 @@ void leaky::dumpEntryToLog(malloc_log_entry* lep)
   displayStackTrace(stdout, lep);
 }
 
-void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
+void leaky::generateReportHTML(FILE *fp, int *countArray, int count, int thread)
 {
-  fprintf(fp,"<html><head><title>Jprof Profile Report</title></head><body>\n");
-  fprintf(fp,"<h1><center>Jprof Profile Report</center></h1>\n");
   fprintf(fp,"<center>");
-  fprintf(fp,"<A href=#flat>flat</A><b> | </b><A href=#hier>hierarchical</A>");
+  if (showThreads)
+  {
+    fprintf(fp,"<hr><A NAME=thread_%d><b>Thread: %d</b></A><p>",
+            thread,thread);
+  }
+  fprintf(fp,"<A href=#flat_%d>flat</A><b> | </b><A href=#hier_%d>hierarchical</A>",
+          thread,thread);
   fprintf(fp,"</center><P><P><P>\n");
 
+  int totalTimerHits = count;
   int *rankingTable = new int[usefulSymbols];
 
   for(int cnt=usefulSymbols; --cnt>=0; rankingTable[cnt]=cnt);
@@ -464,23 +536,29 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
   // this loop.  Later we can get callers and callees into it like gprof
   // does
   fprintf(fp,
-  "<h2><A NAME=hier></A><center><a href=\"http://lxr.mozilla.org/mozilla/source/tools/jprof/README.html#hier\">Hierarchical Profile</a></center></h2><hr>\n");
+	  "<h2><A NAME=hier_%d></A><center><a href=\"http://lxr.mozilla.org/mozilla/source/tools/jprof/README.html#hier\">Hierarchical Profile</a></center></h2><hr>\n",
+          thread);
   fprintf(fp, "<pre>\n");
-  fprintf(fp, "%5s %5s    %4s %s\n",
-  "index", "Count", "Hits", "Function Name");
+  fprintf(fp, "%6s %6s         %4s      %s\n",
+          "index", "Count", "Hits", "Function Name");
 
   for(i=0; i<usefulSymbols && countArray[rankingTable[i]]>0; i++) {
     Symbol *sp=&externalSymbols[rankingTable[i]];
     
-    sp->cntP.printReport(fp, this);
+    sp->cntP.printReport(fp, this, rankingTable[i], totalTimerHits);
 
     char *symname = htmlify(sp->name);
-    fprintf(fp, "%6d %3d <a name=%d>%8d</a> <b>%s</b>\n", rankingTable[i],
-            sp->timerHit, rankingTable[i], countArray[rankingTable[i]],
+    fprintf(fp, "%6d %6d (%3.1f%%)%s <a name=%d>%8d (%3.1f%%)</a>%s <b>%s</b>\n", 
+            rankingTable[i],
+            sp->timerHit, (sp->timerHit*1000/totalTimerHits)/10.0,
+            (sp->timerHit*1000/totalTimerHits)/10.0 >= 10.0 ? "" : " ",
+            rankingTable[i], countArray[rankingTable[i]],
+            (countArray[rankingTable[i]]*1000/totalTimerHits)/10.0,
+            (countArray[rankingTable[i]]*1000/totalTimerHits)/10.0 >= 10.0 ? "" : " ",
             symname);
     delete [] symname;
 
-    sp->cntC.printReport(fp, this);
+    sp->cntC.printReport(fp, this, rankingTable[i], totalTimerHits);
 
     fprintf(fp, "<hr>\n");
   }
@@ -508,14 +586,21 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
   // I wanted the total before walking the list, if this
   // double-pass over externalSymbols gets slow we can
   // do single-pass and print this out after the loop finishes.
-  int totalTimerHits = 0;
+  totalTimerHits = 0;
   for(i=0;
     i<usefulSymbols && externalSymbols[rankingTable[i]].timerHit>0; i++) {
     Symbol *sp=&externalSymbols[rankingTable[i]];
     totalTimerHits += sp->timerHit;
   }
+  if (totalTimerHits == 0)
+    totalTimerHits = 1;
 
-  fprintf(fp,"<h2><A NAME=flat></A><center><a href=\"http://lxr.mozilla.org/mozilla/source/tools/jprof/README.html#flat\">Flat Profile</a></center></h2><br>\n");
+  if (totalTimerHits != count)
+    fprintf(stderr,"Hit count mismatch: count=%d; totalTimerHits=%d",
+            count,totalTimerHits);
+
+  fprintf(fp,"<h2><A NAME=flat_%d></A><center><a href=\"http://lxr.mozilla.org/mozilla/source/tools/jprof/README.html#flat\">Flat Profile</a></center></h2><br>\n",
+          thread);
   fprintf(fp, "<pre>\n");
 
   fprintf(fp, "Total hit count: %d\n", totalTimerHits);
@@ -532,11 +617,9 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
             ((float)sp->timerHit/(float)totalTimerHits)*100.0, symname);
     delete [] symname;
   }
-
-  fprintf(fp,"</pre></body></html>\n");
 }
 
-void leaky::analyze()
+void leaky::analyze(int thread)
 {
   int *countArray = new int[usefulSymbols];
   int *flagArray  = new int[usefulSymbols];
@@ -558,8 +641,11 @@ void leaky::analyze()
     lep < lastLogEntry;
     lep = reinterpret_cast<malloc_log_entry*>(&lep->pcs[lep->numpcs])) {
 
-    if (excluded(lep) || !included(lep))
+    if ((thread != 0 && lep->thread != thread) ||
+        excluded(lep) || !included(lep))
+    {
       continue;
+    }
 
     ++stacks; // How many stack frames did we collect
 
@@ -568,7 +654,7 @@ void leaky::analyze()
     u_int n = (lep->numpcs < stackDepth) ? lep->numpcs : stackDepth;
     char** pcp = &lep->pcs[n-1];
     int idx=-1, parrentIdx=-1;  // Init idx incase n==0
-    for(int i=n-1; i>=0; --i, --pcp, parrentIdx=idx) {
+    for (int i=n-1; i>=0; --i, --pcp) {
       idx = findSymbolIndex(reinterpret_cast<u_long>(*pcp));
 
       if(idx>=0) {
@@ -593,6 +679,9 @@ void leaky::analyze()
 	  externalSymbols[parrentIdx].regChild(idx);
 	  externalSymbols[idx].regParrent(parrentIdx);
 	}
+        // inside if() so an unknown in the middle of a stack won't break
+        // the link!
+        parrentIdx=idx;
       }
     }
 
@@ -602,12 +691,12 @@ void leaky::analyze()
     }
   }
 
-  generateReportHTML(stdout, countArray, stacks);
+  generateReportHTML(stdout, countArray, stacks, thread);
 }
 
-void FunctionCount::printReport(FILE *fp, leaky *lk)
+void FunctionCount::printReport(FILE *fp, leaky *lk, int parent, int total)
 {
-    const char *fmt = "             <A href=\"#%d\">%6d %s</A>\n";
+    const char *fmt = "                      <A href=\"#%d\">%8d (%3.1f%%)%s %s</A>%s\n";
 
     int nmax, tmax=((~0U)>>1);
     
@@ -618,7 +707,11 @@ void FunctionCount::printReport(FILE *fp, leaky *lk)
 	    if(cnt==tmax) {
 		int idx = getIndex(j);
 		char *symname = htmlify(lk->indexToName(idx));
-		fprintf(fp, fmt, idx, getCount(j), symname);
+                fprintf(fp, fmt, idx, getCount(j),
+                        getCount(j)*100.0/total,
+                        getCount(j)*100.0/total >= 10.0 ? "" : " ",
+                        symname,
+                        parent == idx ? " (self)" : "");
 		delete [] symname;
 	    } else if(cnt<tmax && cnt>nmax) {
 	        nmax=cnt;
