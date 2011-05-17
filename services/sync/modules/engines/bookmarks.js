@@ -57,6 +57,7 @@ const MOBILE_ANNO          = "MobileBookmarks";
 const EXCLUDEBACKUP_ANNO   = "places/excludeFromBackup";
 const SMART_BOOKMARKS_ANNO = "Places/SmartBookmark";
 const PARENT_ANNO          = "sync/parent";
+const ORGANIZERQUERY_ANNO  = "PlacesOrganizer/OrganizerQuery";
 const ANNOS_TO_TRACK = [DESCRIPTION_ANNO, SIDEBAR_ANNO,
                         FEEDURI_ANNO, SITEURI_ANNO];
 
@@ -184,9 +185,11 @@ let kSpecialIds = {
 
   // Create the special mobile folder to store mobile bookmarks.
   createMobileRoot: function createMobileRoot() {
-    let root = Svc.Bookmark.placesRoot;
+    let root = PlacesUtils.placesRootId;
     let mRoot = Svc.Bookmark.createFolder(root, "mobile", -1);
     Svc.Annos.setItemAnnotation(mRoot, MOBILEROOT_ANNO, 1, 0,
+                                Svc.Annos.EXPIRE_NEVER);
+    Svc.Annos.setItemAnnotation(mRoot, EXCLUDEBACKUP_ANNO, 1, 0,
                                 Svc.Annos.EXPIRE_NEVER);
     return mRoot;
   },
@@ -223,11 +226,11 @@ let kSpecialIds = {
     return null;
   },
 
-  get menu()    Svc.Bookmark.bookmarksMenuFolder,
-  get places()  Svc.Bookmark.placesRoot,
-  get tags()    Svc.Bookmark.tagsFolder,
-  get toolbar() Svc.Bookmark.toolbarFolder,
-  get unfiled() Svc.Bookmark.unfiledBookmarksFolder,
+  get menu()    PlacesUtils.bookmarksMenuFolderId,
+  get places()  PlacesUtils.placesRootId,
+  get tags()    PlacesUtils.tagsFolderId,
+  get toolbar() PlacesUtils.toolbarFolderId,
+  get unfiled() PlacesUtils.unfiledBookmarksFolderId,
   get mobile()  this.findMobileRoot(true),
 };
 
@@ -492,7 +495,7 @@ BookmarksStore.prototype = {
     this._ts.tagURI(dummyURI, [tag]);
 
     // Look for the id of the tag, which might just have been added.
-    let tags = this._getNode(this._bms.tagsFolder);
+    let tags = this._getNode(PlacesUtils.tagsFolderId);
     if (!(tags instanceof Ci.nsINavHistoryQueryResultNode)) {
       this._log.debug("tags isn't an nsINavHistoryQueryResultNode; aborting.");
       return;
@@ -626,7 +629,7 @@ BookmarksStore.prototype = {
 
     switch (type) {
       case bms.TYPE_FOLDER:
-        if (this._ls.isLivemark(itemId))
+        if (PlacesUtils.itemIsLivemark(itemId))
           return "livemark";
         return "folder";
 
@@ -708,7 +711,7 @@ BookmarksStore.prototype = {
         this._log.debug("No feed URI: skipping livemark record " + record.id);
         return;
       }
-      if (this._ls.isLivemark(record._parent)) {
+      if (PlacesUtils.itemIsLivemark(record._parent)) {
         this._log.debug("Invalid parent: skipping livemark record " + record.id);
         return;
       }
@@ -751,7 +754,6 @@ BookmarksStore.prototype = {
     switch (type) {
     case this._bms.TYPE_BOOKMARK:
       this._log.debug("  -> removing bookmark " + guid);
-      this._ts.untagURI(this._bms.getBookmarkURI(itemId), null);
       this._bms.removeItem(itemId);
       break;
     case this._bms.TYPE_FOLDER:
@@ -815,7 +817,6 @@ BookmarksStore.prototype = {
     for (let [key, val] in Iterator(record.cleartext)) {
       switch (key) {
       case "title":
-        val = val || "";
         this._bms.setItemTitle(itemId, val);
         break;
       case "bmkUri":
@@ -830,9 +831,12 @@ BookmarksStore.prototype = {
         this._bms.setKeywordForBookmark(itemId, val);
         break;
       case "description":
-        val = val || "";
-        Svc.Annos.setItemAnnotation(itemId, DESCRIPTION_ANNO, val, 0,
-                                    Svc.Annos.EXPIRE_NEVER);
+        if (val) {
+          Svc.Annos.setItemAnnotation(itemId, DESCRIPTION_ANNO, val, 0,
+                                      Svc.Annos.EXPIRE_NEVER);
+        } else {
+          Svc.Annos.removeItemAnnotation(itemId, DESCRIPTION_ANNO);
+        }
         break;
       case "loadInSidebar":
         if (val) {
@@ -998,7 +1002,7 @@ BookmarksStore.prototype = {
       break;
 
     case this._bms.TYPE_FOLDER:
-      if (this._ls.isLivemark(placeId)) {
+      if (PlacesUtils.itemIsLivemark(placeId)) {
         record = new Livemark(collection, id);
 
         let siteURI = this._ls.getSiteURI(placeId);
@@ -1170,7 +1174,7 @@ BookmarksStore.prototype = {
     }
     
     if (node.type == node.RESULT_TYPE_FOLDER &&
-        !this._ls.isLivemark(node.itemId)) {
+        !PlacesUtils.itemIsLivemark(node.itemId)) {
       node.QueryInterface(Ci.nsINavHistoryQueryResultNode);
       node.containerOpen = true;
       try {
@@ -1304,24 +1308,14 @@ BookmarksTracker.prototype = {
     Ci.nsISupportsWeakReference
   ]),
 
-  _idForGUID: function _idForGUID(item_id) {
-    // Isn't indirection fun...
-    return Engines.get("bookmarks")._store.idForGUID(item_id);
-  },
-
-  _GUIDForId: function _GUIDForId(item_id) {
-    // Isn't indirection fun...
-    return Engines.get("bookmarks")._store.GUIDForId(item_id);
-  },
-
   /**
-   * Add a bookmark (places) id to be uploaded and bump up the sync score
+   * Add a bookmark guid to be uploaded and bump up the sync score
    *
-   * @param itemId
-   *        Places internal id of the bookmark to upload
+   * @param itemGuid
+   *        Guid of the bookmark to upload
    */
-  _addId: function BMT__addId(itemId) {
-    if (this.addChangedID(this._GUIDForId(itemId)))
+  _addGuid: function BMT__addGuid(itemGuid) {
+    if (this.addChangedID(itemGuid))
       this._upScore();
   },
 
@@ -1339,7 +1333,7 @@ BookmarksTracker.prototype = {
    * @param folder (optional)
    *        Folder of the item being changed
    */
-  _ignore: function BMT__ignore(itemId, folder) {
+  _ignore: function BMT__ignore(itemId, folder, guid) {
     // Ignore unconditionally if the engine tells us to.
     if (this.ignoreAll)
       return true;
@@ -1359,7 +1353,7 @@ BookmarksTracker.prototype = {
     }
 
     // Ignore livemark children.
-    if (this._ls.isLivemark(folder))
+    if (PlacesUtils.itemIsLivemark(folder))
       return true;
 
     // Ignore changes to tags (folders under the tags folder).
@@ -1373,36 +1367,39 @@ BookmarksTracker.prototype = {
 
     // Make sure to remove items that have the exclude annotation.
     if (Svc.Annos.itemHasAnnotation(itemId, EXCLUDEBACKUP_ANNO)) {
-      this.removeChangedID(this._GUIDForId(itemId));
+      this.removeChangedID(guid);
       return true;
     }
 
     return false;
   },
 
-  onItemAdded: function BMT_onEndUpdateBatch(itemId, folder, index) {
-    if (this._ignore(itemId, folder))
+  onItemAdded: function BMT_onItemAdded(itemId, folder, index,
+                                        itemType, uri, title, dateAdded,
+                                        guid, parentGuid) {
+    if (this._ignore(itemId, folder, guid))
       return;
 
     this._log.trace("onItemAdded: " + itemId);
-    this._addId(itemId);
-    this._addId(folder);
+    this._addGuid(guid);
+    this._addGuid(parentGuid);
   },
 
-  onBeforeItemRemoved: function BMT_onBeforeItemRemoved(itemId) {
-    if (this._ignore(itemId))
+  onItemRemoved: function BMT_onItemRemoved(itemId, parentId, index, type, uri,
+                                            guid, parentGuid) {
+    if (this._ignore(itemId, parentId, guid))
       return;
 
     this._log.trace("onBeforeItemRemoved: " + itemId);
-    this._addId(itemId);
-    let folder = Svc.Bookmark.getFolderIdForItem(itemId);
-    this._addId(folder);
+    this._addGuid(guid);
+    this._addGuid(parentGuid);
   },
 
   _ensureMobileQuery: function _ensureMobileQuery() {
-    let anno = "PlacesOrganizer/OrganizerQuery";
-    let find = function(val) Svc.Annos.getItemsWithAnnotation(anno, {}).filter(
-      function(id) Svc.Annos.getItemAnnotation(id, anno) == val);
+    let find = function (val)
+      Svc.Annos.getItemsWithAnnotation(ORGANIZERQUERY_ANNO, {}).filter(
+        function (id) Svc.Annos.getItemAnnotation(id, ORGANIZERQUERY_ANNO) == val
+      );
 
     // Don't continue if the Library isn't ready
     let all = find(ALLBOOKMARKS_ANNO);
@@ -1424,7 +1421,7 @@ BookmarksTracker.prototype = {
     // Add the mobile bookmarks query if it doesn't exist
     else if (mobile.length == 0) {
       let query = Svc.Bookmark.insertBookmark(all[0], queryURI, -1, title);
-      Svc.Annos.setItemAnnotation(query, anno, MOBILE_ANNO, 0,
+      Svc.Annos.setItemAnnotation(query, ORGANIZERQUERY_ANNO, MOBILE_ANNO, 0,
                                   Svc.Annos.EXPIRE_NEVER);
       Svc.Annos.setItemAnnotation(query, EXCLUDEBACKUP_ANNO, 1, 0,
                                   Svc.Annos.EXPIRE_NEVER);
@@ -1440,7 +1437,9 @@ BookmarksTracker.prototype = {
   // possible -- this handler gets called *every time* a bookmark changes, for
   // *each change*. That's particularly bad when a bunch of livemarks are
   // updated.
-  onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value) {
+  onItemChanged: function BMT_onItemChanged(itemId, property, isAnno, value,
+                                            lastModified, itemType, parentId,
+                                            guid, parentGuid) {
     // Quicker checks first.
     if (this.ignoreAll)
       return;
@@ -1453,32 +1452,34 @@ BookmarksTracker.prototype = {
     if (property == "favicon")
       return;
 
-    if (this._ignore(itemId))
+    if (this._ignore(itemId, parentId, guid))
       return;
 
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
                     (value ? (" = \"" + value + "\"") : ""));
-    this._addId(itemId);
+    this._addGuid(guid);
   },
 
-  onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex, newParent, newIndex) {
-    if (this._ignore(itemId))
+  onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex,
+                                        newParent, newIndex, itemType,
+                                        guid, oldParentGuid, newParentGuid) {
+    if (this._ignore(itemId, newParent, guid))
       return;
 
     this._log.trace("onItemMoved: " + itemId);
     this._addId(oldParent);
     if (oldParent != newParent) {
-      this._addId(itemId);
-      this._addId(newParent);
+      this._addGuid(guid);
+      this._addGuid(newParentGuid);
     }
 
     // Remove any position annotations now that the user moved the item
     Svc.Annos.removeItemAnnotation(itemId, PARENT_ANNO);
   },
 
-  onBeginUpdateBatch: function BMT_onBeginUpdateBatch() {},
-  onEndUpdateBatch: function BMT_onEndUpdateBatch() {},
-  onItemRemoved: function BMT_onItemRemoved(itemId, folder, index) {},
-  onItemVisited: function BMT_onItemVisited(itemId, aVisitID, time) {}
+  onBeginUpdateBatch: function () {},
+  onEndUpdateBatch: function () {},
+  onBeforeItemRemoved: function () {},
+  onItemVisited: function () {}
 };
