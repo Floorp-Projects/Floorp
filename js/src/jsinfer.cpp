@@ -4191,7 +4191,7 @@ ScriptAnalysis::printTypes(JSContext *cx)
 
         if (js_CodeSpec[script->code[offset]].format & JOF_TYPESET) {
             TypeSet *types = script->bytecodeTypes(script->code + offset);
-            printf("  typeset %u:", types - script->typeArray);
+            printf("  typeset %d:", (int) (types - script->typeArray));
             types->print(cx);
             printf("\n");
         }

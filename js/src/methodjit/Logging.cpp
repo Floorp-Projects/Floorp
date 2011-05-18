@@ -90,8 +90,7 @@ js::JMCheckLogging()
             "  regalloc      Register allocation behavior\n"
             "  inlin         Call inlining behavior\n"
             "  recompile     Dynamic recompilations\n"
-            "  full          everything\n"
-            "  notrace       disable trace hints\n"
+            "  full          everything not affecting codegen\n"
             "\n"
         );
         exit(0);
@@ -126,7 +125,7 @@ js::JMCheckLogging()
     if (strstr(env, "inlin"))
         LoggingBits |= (1 << uint32(JSpew_Inlining));
     if (strstr(env, "full"))
-        LoggingBits |= 0xFFFFFFFF;
+        LoggingBits |= 0xFFFFFFFF ^ (1 << JSpew_PCProf);
 }
 
 bool
