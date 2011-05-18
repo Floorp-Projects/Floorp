@@ -7156,7 +7156,7 @@ mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg, bool testUnd
     return state;
 #endif
 
-    types::TypeSet *types = pushedTypeSet(0);
+    types::TypeSet *types = script->bytecodeTypes(PC);
     types->addFreeze(cx);
 
     /* Cannot have type barriers when the result of the operation is already unknown. */
