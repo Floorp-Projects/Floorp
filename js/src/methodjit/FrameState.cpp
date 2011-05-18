@@ -110,10 +110,8 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc)
         JS_ASSERT(reinterpret_cast<uint8 *>(this->entries) + totalBytes == cursor);
 
 #if defined JS_NUNBOX32
-        if (!reifier.init(cx, *this, nentries)) {
-            cx->free_(this->entries);
+        if (!reifier.init(cx, *this, nentries))
             return false;
-        }
 #endif
 
         this->temporaries = this->temporariesTop = this->entries + nentries - TEMPORARY_LIMIT;
@@ -123,6 +121,9 @@ FrameState::pushActiveFrame(JSScript *script, uint32 argc)
     JS_ASSERT_IF(a, argc == script->fun->nargs);
 
     ActiveFrame *newa = cx->new_<ActiveFrame>();
+    if (!newa)
+        return false;
+
     newa->parent = a;
     newa->depth = a ? (totalDepth() + VALUES_PER_STACK_FRAME) : 0;
 
