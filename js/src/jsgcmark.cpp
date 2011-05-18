@@ -45,6 +45,35 @@
 #include "jsobjinlines.h"
 #include "jsscopeinlines.h"
 
+/*
+ * There are two mostly separate mark paths. The first is a fast path used
+ * internally in the GC. The second is a slow path used for root marking and
+ * for API consumers like the cycle collector.
+ *
+ * The fast path uses explicit stacks. The basic marking process during a GC is
+ * that all roots are pushed on to a mark stack, and then each item on the
+ * stack is scanned (possibly pushing more stuff) until the stack is empty.
+ *
+ * PushMarkStack pushes a GC thing onto the mark stack. In some cases (shapes
+ * or strings) it eagerly marks the object rather than pushing it. Popping is
+ * done by the drainMarkStack method. For each thing it pops, drainMarkStack
+ * calls ScanObject (or a related function).
+ *
+ * Most of the marking code outside jsgcmark uses functions like MarkObject,
+ * MarkString, etc. These functions check if an object is in the compartment
+ * currently being GCed. If it is, they call PushMarkStack. Roots are pushed
+ * this way as well as pointers traversed inside trace hooks (for things like
+ * js_IteratorClass). It it always valid to call a MarkX function instead of
+ * PushMarkStack, although it may be slower.
+ *
+ * The MarkX functions also handle non-GC object traversal. In this case, they
+ * call a callback for each object visited. This is a recursive process; the
+ * mark stacks are not involved. These callbacks may ask for the outgoing
+ * pointers to be visited. Eventually, this leads to the MarkChildren functions
+ * being called. These functions duplicate much of the functionality of
+ * ScanObject, but they don't push onto an explicit stack.
+ */
+
 using namespace js;
 using namespace js::gc;
 
