@@ -3372,7 +3372,6 @@ nsCanvasRenderingContext2D::DrawImage(nsIDOMElement *imgElt, float a1,
 
     pattern = new gfxPattern(imgsurf);
     pattern->SetMatrix(matrix);
-    pattern->SetExtend(gfxPattern::EXTEND_PAD);
 
     if (CurrentState().imageSmoothingEnabled)
         pattern->SetFilter(gfxPattern::FILTER_GOOD);
