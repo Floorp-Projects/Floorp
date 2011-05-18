@@ -81,7 +81,6 @@ DIRS += \
   locales \
   plugins/base \
   plugins/ipc \
-  plugins/test \
   indexedDB \
   system \
   ipc \
