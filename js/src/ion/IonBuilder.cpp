@@ -639,21 +639,17 @@ IonBuilder::finalizeLoop(CFGState &state, MInstruction *last)
 IonBuilder::ControlStatus
 IonBuilder::processDoWhileEnd(CFGState &state)
 {
-    if (current || state.loop.breaks) {
-        state.loop.successor = newBlock(current, state.loop.exitpc);
-        if (!state.loop.successor)
-            return ControlStatus_Error;
-    }
-
     if (!processDeferredContinues(state))
         return ControlStatus_Error;
-    if (!finalizeLoop(state, current->pop()))
+    if (!finalizeLoop(state, NULL))
         return ControlStatus_Error;
 
-    JS_ASSERT(JSOp(*pc) == JSOP_IFNE || JSOp(*pc) == JSOP_IFNEX);
-    pc += js_CodeSpec[JSOp(*pc)].length;
     current = state.loop.successor;
-    return current ? ControlStatus_Joined : ControlStatus_Ended;
+    if (!current)
+        return ControlStatus_Ended;
+
+    pc = current->pc();
+    return ControlStatus_Joined;
 }
 
 IonBuilder::ControlStatus
