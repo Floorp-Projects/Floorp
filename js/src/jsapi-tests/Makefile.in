@@ -49,6 +49,7 @@ PROGRAM         = jsapi-tests$(BIN_SUFFIX)
 CPPSRCS = \
   tests.cpp \
   selfTest.cpp \
+  testArgumentsObject.cpp \
   testBug604087.cpp \
   testClassGetter.cpp \
   testCloneScript.cpp \
