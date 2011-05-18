@@ -1314,8 +1314,9 @@ BookmarksTracker.prototype = {
    * @param itemGuid
    *        Guid of the bookmark to upload
    */
-  _addGuid: function BMT__addGuid(itemGuid) {
-    if (this.addChangedID(itemGuid))
+  _add: function BMT__add(itemId, guid) {
+    guid = kSpecialIds.specialGUIDForId(itemId) || guid;
+    if (this.addChangedID(guid))
       this._upScore();
   },
 
@@ -1381,8 +1382,8 @@ BookmarksTracker.prototype = {
       return;
 
     this._log.trace("onItemAdded: " + itemId);
-    this._addGuid(guid);
-    this._addGuid(parentGuid);
+    this._add(itemId, guid);
+    this._add(folder, parentGuid);
   },
 
   onItemRemoved: function BMT_onItemRemoved(itemId, parentId, index, type, uri,
@@ -1391,8 +1392,8 @@ BookmarksTracker.prototype = {
       return;
 
     this._log.trace("onBeforeItemRemoved: " + itemId);
-    this._addGuid(guid);
-    this._addGuid(parentGuid);
+    this._add(itemId, guid);
+    this._add(parentId, parentGuid);
   },
 
   _ensureMobileQuery: function _ensureMobileQuery() {
@@ -1458,7 +1459,7 @@ BookmarksTracker.prototype = {
     this._log.trace("onItemChanged: " + itemId +
                     (", " + property + (isAnno? " (anno)" : "")) +
                     (value ? (" = \"" + value + "\"") : ""));
-    this._addGuid(guid);
+    this._add(itemId, guid);
   },
 
   onItemMoved: function BMT_onItemMoved(itemId, oldParent, oldIndex,
@@ -1468,10 +1469,10 @@ BookmarksTracker.prototype = {
       return;
 
     this._log.trace("onItemMoved: " + itemId);
-    this._addId(oldParent);
+    this._add(oldParent, oldParentGuid);
     if (oldParent != newParent) {
-      this._addGuid(guid);
-      this._addGuid(newParentGuid);
+      this._add(itemId, guid);
+      this._add(newParent, newParentGuid);
     }
 
     // Remove any position annotations now that the user moved the item
