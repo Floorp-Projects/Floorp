@@ -99,6 +99,7 @@ class MBasicBlock : public TempObject
   private:
     MBasicBlock(MIRGenerator *gen, jsbytecode *pc);
     bool init();
+    void copySlots(MBasicBlock *from);
     bool inherit(MBasicBlock *pred);
     void assertUsesAreNotWithin(MOperand *use);
 
@@ -119,8 +120,6 @@ class MBasicBlock : public TempObject
     // slot, and should not be used for normal stack operations. It is an
     // internal helper that is also used to enhance spew.
     MInstruction *getSlot(uint32 index);
-
-    void inheritPhi(MPhi *phi);
 
   public:
     // Creates a new basic block for a MIR generator. If |pred| is not NULL,
@@ -174,13 +173,9 @@ class MBasicBlock : public TempObject
     bool addPredecessor(MBasicBlock *pred);
 
     // Sets a back edge. This places phi nodes and rewrites instructions within
-    // the current loop as necessary, and builds the successor block's initial
+    // the current loop as necessary, and corrects the successor block's initial
     // state at the same time. There may be only one backedge per block.
-    bool setBackedge(MBasicBlock *block);
-
-    // Propagates phi assignments from a loop header to an immediate successor
-    // of the loop structure.
-    void inheritPhis(MBasicBlock *loopHeader);
+    bool setBackedge(MBasicBlock *block, MBasicBlock *successor);
 
     jsbytecode *pc() const {
         return pc_;

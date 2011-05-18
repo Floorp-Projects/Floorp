@@ -87,7 +87,10 @@ class BytecodeAnalyzer : public MIRGenerator
             IF_ELSE_FALSE,      // if() { } else { X }
             DO_WHILE_LOOP,      // do (x) while (x)
             WHILE_LOOP_COND,    // while (x) { }
-            WHILE_LOOP_BODY     // while () { x }
+            WHILE_LOOP_BODY,    // while () { x }
+            FOR_LOOP_COND,      // for (; x;) { }
+            FOR_LOOP_BODY,      // for (; ;) { x }
+            FOR_LOOP_UPDATE     // for (; ; x) { }
         };
 
         State state;            // Current state of this control structure.
@@ -117,6 +120,11 @@ class BytecodeAnalyzer : public MIRGenerator
                 // Deferred break and continue targets.
                 DeferredEdge *breaks;
                 DeferredEdge *continues;
+
+                // For-loops only.
+                jsbytecode *condpc;
+                jsbytecode *updatepc;
+                jsbytecode *updateEnd;
             } loop;
         };
 
@@ -149,6 +157,7 @@ class BytecodeAnalyzer : public MIRGenerator
     uint32 readIndex(jsbytecode *pc);
 
     void popCfgStack();
+    bool processDeferredContinues(CFGState &state);
     ControlStatus processControlEnd();
     ControlStatus processCfgStack();
     ControlStatus processCfgEntry(CFGState &state);
@@ -158,9 +167,13 @@ class BytecodeAnalyzer : public MIRGenerator
     ControlStatus processDoWhileEnd(CFGState &state);
     ControlStatus processWhileCondEnd(CFGState &state);
     ControlStatus processWhileBodyEnd(CFGState &state);
+    ControlStatus processForCondEnd(CFGState &state);
+    ControlStatus processForBodyEnd(CFGState &state);
+    ControlStatus processForUpdateEnd(CFGState &state);
     ControlStatus processReturn(JSOp op);
     ControlStatus processContinue(JSOp op, jssrcnote *sn);
     ControlStatus processBreak(JSOp op, jssrcnote *sn);
+    ControlStatus maybeLoop(JSOp op, jssrcnote *sn);
     bool pushLoop(CFGState::State state, jsbytecode *stopAt, MBasicBlock *entry,
                   jsbytecode *bodyStart, jsbytecode *bodyEnd, jsbytecode *exitpc);
 
@@ -172,17 +185,14 @@ class BytecodeAnalyzer : public MIRGenerator
     bool finalizeLoop(CFGState &state, MInstruction *last);
 
     void assertValidTraceOp(JSOp op);
-    bool maybeLoop(JSOp op, jssrcnote *sn);
     bool jsop_ifeq(JSOp op);
 
-    bool forLoop(JSOp op, jssrcnote *sn) {
-        return false;
-    }
     bool forInLoop(JSOp op, jssrcnote *sn) {
         return false;
     }
-    bool whileLoop(JSOp op, jssrcnote *sn);
-    bool doWhileLoop(JSOp op, jssrcnote *sn);
+    ControlStatus forLoop(JSOp op, jssrcnote *sn);
+    ControlStatus whileLoop(JSOp op, jssrcnote *sn);
+    ControlStatus doWhileLoop(JSOp op, jssrcnote *sn);
 
     bool pushConstant(const Value &v);
     bool jsop_binary(JSOp op);
