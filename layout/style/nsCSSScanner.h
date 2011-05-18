@@ -47,12 +47,8 @@
 #include "mozilla/css/Loader.h"
 #include "nsCSSStyleSheet.h"
 
-class nsIUnicharInputStream;
-
 // XXX turn this off for minimo builds
 #define CSS_REPORT_PARSE_ERRORS
-
-#define CSS_BUFFER_SIZE 256
 
 // for #ifdef CSS_REPORT_PARSE_ERRORS
 #include "nsXPIDLString.h"
@@ -141,9 +137,7 @@ class nsCSSScanner {
   // Init the scanner.
   // |aLineNumber == 1| is the beginning of a file, use |aLineNumber == 0|
   // when the line number is unknown.
-  // Either aInput or (aBuffer and aCount) must be set.
-  void Init(nsIUnicharInputStream* aInput, 
-            const PRUnichar *aBuffer, PRUint32 aCount,
+  void Init(const nsAString& aBuffer,
             nsIURI* aURI, PRUint32 aLineNumber,
             nsCSSStyleSheet* aSheet, mozilla::css::Loader* aLoader);
   void Close();
@@ -208,7 +202,6 @@ class nsCSSScanner {
   void SetLowLevelError(nsresult aErrorCode);
   
 protected:
-  bool EnsureData();
   PRInt32 Read();
   PRInt32 Peek();
   bool LookAhead(PRUnichar aChar);
@@ -225,10 +218,6 @@ protected:
   bool SkipCComment();
 
   bool GatherIdent(PRInt32 aChar, nsString& aIdent);
-
-  // Only used when input is a stream
-  nsCOMPtr<nsIUnicharInputStream> mInputStream;
-  PRUnichar mBuffer[CSS_BUFFER_SIZE];
 
   const PRUnichar *mReadPointer;
   PRUint32 mOffset;

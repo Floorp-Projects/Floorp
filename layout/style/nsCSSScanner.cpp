@@ -44,9 +44,6 @@
 /* tokenization of CSS style sheets */
 
 #include "nsCSSScanner.h"
-#include "nsIFactory.h"
-#include "nsIInputStream.h"
-#include "nsIUnicharInputStream.h"
 #include "nsString.h"
 #include "nsCRT.h"
 
@@ -282,8 +279,7 @@ nsCSSToken::AppendToString(nsString& aBuffer)
 }
 
 nsCSSScanner::nsCSSScanner()
-  : mInputStream(nsnull)
-  , mReadPointer(nsnull)
+  : mReadPointer(nsnull)
   , mLowLevelError(NS_OK)
   , mSVGMode(false)
 #ifdef CSS_REPORT_PARSE_ERRORS
@@ -369,28 +365,14 @@ nsCSSScanner::ReleaseGlobals()
 }
 
 void
-nsCSSScanner::Init(nsIUnicharInputStream* aInput, 
-                   const PRUnichar * aBuffer, PRUint32 aCount, 
+nsCSSScanner::Init(const nsAString& aBuffer,
                    nsIURI* aURI, PRUint32 aLineNumber,
                    nsCSSStyleSheet* aSheet, mozilla::css::Loader* aLoader)
 {
-  NS_PRECONDITION(!mInputStream, "Should not have an existing input stream!");
   NS_PRECONDITION(!mReadPointer, "Should not have an existing input buffer!");
 
-  // Read from stream via my own buffer
-  if (aInput) {
-    NS_PRECONDITION(!aBuffer, "Shouldn't have both input and buffer!");
-    NS_PRECONDITION(aCount == 0, "Shouldn't have count with a stream");
-    mInputStream = aInput;
-    mReadPointer = mBuffer;
-    mCount = 0;
-  } else {
-    NS_PRECONDITION(aBuffer, "Either aInput or aBuffer must be set");
-    // Read directly from the provided buffer
-    mInputStream = nsnull;
-    mReadPointer = aBuffer;
-    mCount = aCount;
-  }
+  mReadPointer = aBuffer.BeginReading();
+  mCount = aBuffer.Length();
 
 #ifdef CSS_REPORT_PARSE_ERRORS
   // If aURI is the same as mURI, no need to reget mFileName -- it
@@ -618,7 +600,6 @@ nsCSSScanner::ReportUnexpectedTokenParams(nsCSSToken& tok,
 void
 nsCSSScanner::Close()
 {
-  mInputStream = nsnull;
   mReadPointer = nsnull;
 
   // Clean things up so we don't hold on to memory if our parser gets recycled.
@@ -642,27 +623,6 @@ nsCSSScanner::Close()
 #define TAB_STOP_WIDTH 8
 #endif
 
-bool
-nsCSSScanner::EnsureData()
-{
-  if (mOffset < mCount)
-    return true;
-
-  if (!mInputStream)
-    return false;
-
-  mOffset = 0;
-  nsresult rv = mInputStream->Read(mBuffer, CSS_BUFFER_SIZE, &mCount);
-
-  if (NS_FAILED(rv)) {
-    mCount = 0;
-    SetLowLevelError(rv);
-    return false;
-  }
-
-  return mCount > 0;
-}
-
 // Returns -1 on error or eof
 PRInt32
 nsCSSScanner::Read()
@@ -671,14 +631,14 @@ nsCSSScanner::Read()
   if (0 < mPushbackCount) {
     rv = PRInt32(mPushback[--mPushbackCount]);
   } else {
-    if (mOffset == mCount && !EnsureData()) {
+    if (mOffset == mCount) {
       return -1;
     }
     rv = PRInt32(mReadPointer[mOffset++]);
     // There are four types of newlines in CSS: "\r", "\n", "\r\n", and "\f".
     // To simplify dealing with newlines, they are all normalized to "\n" here
     if (rv == '\r') {
-      if (EnsureData() && mReadPointer[mOffset] == '\n') {
+      if (mOffset < mCount && mReadPointer[mOffset] == '\n') {
         mOffset++;
       }
       rv = '\n';
@@ -1115,7 +1075,7 @@ nsCSSScanner::GatherIdent(PRInt32 aChar, nsString& aIdent)
   }
   for (;;) {
     // If nothing in pushback, first try to get as much as possible in one go
-    if (!mPushbackCount && EnsureData()) {
+    if (!mPushbackCount && mOffset < mCount) {
       // See how much we can consume and append in one go
       PRUint32 n = mOffset;
       // Count number of Ident characters that can be processed
@@ -1375,7 +1335,7 @@ nsCSSScanner::ParseString(PRInt32 aStop, nsCSSToken& aToken)
   aToken.mSymbol = PRUnichar(aStop); // remember how it's quoted
   for (;;) {
     // If nothing in pushback, first try to get as much as possible in one go
-    if (!mPushbackCount && EnsureData()) {
+    if (!mPushbackCount && mOffset < mCount) {
       // See how much we can consume and append in one go
       PRUint32 n = mOffset;
       // Count number of characters that can be processed
