@@ -803,6 +803,8 @@ js_ReportOutOfMemory(JSContext *cx)
         return;
 #endif
 
+    cx->runtime->hadOutOfMemory = true;
+
     JSErrorReport report;
     JSErrorReporter onError = cx->errorReporter;
 

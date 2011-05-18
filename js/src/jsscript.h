@@ -582,7 +582,7 @@ struct JSScript {
     /* Get the default 'new' object for a given standard class, per the script's global. */
     inline js::types::TypeObject *getTypeNewObject(JSContext *cx, JSProtoKey key);
 
-    void condenseTypes(JSContext *cx);
+    bool condenseTypes(JSContext *cx);
     void sweepAnalysis(JSContext *cx);
 
     /* Get a type object for an allocation site in this script. */
