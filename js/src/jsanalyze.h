@@ -375,8 +375,7 @@ struct UntrapOpcode
 
     ~UntrapOpcode()
     {
-        if (trap)
-            *pc = JSOP_TRAP;
+        retrap();
     }
 };
 
@@ -964,12 +963,16 @@ class ScriptAnalysis
 
     types::TypeBarrier *typeBarriers(uint32 offset) {
         if (getCode(offset).typeBarriers)
-            pruneTypeBarriers(offset);
+            pruneTypeBarriers(NULL, offset);
         return getCode(offset).typeBarriers;
     }
     types::TypeBarrier *typeBarriers(const jsbytecode *pc) {
         return typeBarriers(pc - script->code);
     }
+    void addTypeBarrier(JSContext *cx, const jsbytecode *pc,
+                        types::TypeSet *target, types::jstype type);
+
+    void pruneTypeBarriers(JSContext *removecx, uint32 offset);
 
     inline void addPushedType(JSContext *cx, uint32 offset, uint32 which, types::jstype type);
 
@@ -1130,7 +1133,6 @@ class ScriptAnalysis
     /* Type inference helpers */
     bool analyzeTypesBytecode(JSContext *cx, unsigned offset, TypeInferenceState &state);
     inline void setForTypes(JSContext *cx, jsbytecode *pc, types::TypeSet *types);
-    void pruneTypeBarriers(uint32 offset);
 };
 
 /* Protect analysis structures from GC while they are being used. */
@@ -1138,16 +1140,25 @@ struct AutoEnterAnalysis
 {
     JSContext *cx;
     bool oldActiveAnalysis;
+    bool left;
 
     AutoEnterAnalysis(JSContext *cx)
-        : cx(cx), oldActiveAnalysis(cx->compartment->activeAnalysis)
+        : cx(cx), oldActiveAnalysis(cx->compartment->activeAnalysis), left(false)
     {
         cx->compartment->activeAnalysis = true;
     }
 
+    void leave()
+    {
+        if (!left) {
+            left = true;
+            cx->compartment->activeAnalysis = oldActiveAnalysis;
+        }
+    }
+
     ~AutoEnterAnalysis()
     {
-        cx->compartment->activeAnalysis = oldActiveAnalysis;
+        leave();
     }
 };
 

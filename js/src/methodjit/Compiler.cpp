@@ -280,11 +280,12 @@ mjit::Compiler::scanInlineCalls(uint32 index, uint32 depth)
 
         /*
          * Compute the maximum height we can grow the stack for inlined frames.
-         * We always reserve space for loop temporaries and for an extra stack
-         * frame pushed when making a call from the deepest inlined frame.
+         * We always reserve space for loop temporaries, for an extra stack
+         * frame pushed when making a call from the deepest inlined frame, and
+         * for the temporary slot used by type barriers.
          */
         uint32 stackLimit = outerScript->nslots + StackSpace::STACK_EXTRA
-            - VALUES_PER_STACK_FRAME - FrameState::TEMPORARY_LIMIT;
+            - VALUES_PER_STACK_FRAME - FrameState::TEMPORARY_LIMIT - 1;
 
         /* Compute the depth of any frames inlined at this site. */
         uint32 nextDepth = depth + VALUES_PER_STACK_FRAME + script->nfixed + code->stackDepth;
@@ -502,10 +503,10 @@ mjit::Compiler::performCompilation(JITScript **jitp)
 
 #if defined(JS_METHODJIT_SPEW) && defined(DEBUG)
     if (IsJaegerSpewChannelActive(JSpew_PCProf)) {
-        pcProfile = (int *)cx->malloc_(sizeof(int) * script->length);
+        pcProfile = (int *)cx->malloc_(sizeof(int) * outerScript->length);
         if (!pcProfile)
             return Compile_Error;
-        memset(pcProfile, 0, script->length * sizeof(int));
+        memset(pcProfile, 0, outerScript->length * sizeof(int));
     }
 #endif
     
@@ -1449,17 +1450,6 @@ mjit::Compiler::generateMethod()
             }
         }
         fixedDoubleEntries.clear();
-
-#ifdef DEBUG
-        if (fallthrough && cx->typeInferenceEnabled()) {
-            for (uint32 slot = ArgSlot(0); slot < TotalSlots(script); slot++) {
-                if (a->varTypes[slot].type == JSVAL_TYPE_INT32) {
-                    FrameEntry *fe = frame.getSlotEntry(slot);
-                    JS_ASSERT(!fe->isType(JSVAL_TYPE_DOUBLE));
-                }
-            }
-        }
-#endif
 
         if (opinfo->jumpTarget || trap) {
             if (fallthrough) {
@@ -2833,7 +2823,7 @@ mjit::Compiler::jsop_getglobal(uint32 index)
     uint32 slot = script->getGlobalSlot(index);
 
     JSObject *singleton = pushedSingleton(0);
-    if (singleton && !globalObj->getSlot(slot).isUndefined()) {
+    if (singleton && !hasTypeBarriers(PC) && !globalObj->getSlot(slot).isUndefined()) {
         frame.push(ObjectValue(*singleton));
         return;
     }
@@ -2845,29 +2835,24 @@ mjit::Compiler::jsop_getglobal(uint32 index)
             watchGlobalReallocation();
             RegisterID reg = frame.allocReg();
             masm.move(ImmPtr(value), reg);
-            frame.push(Address(reg), knownPushedType(0), true);
+
+            BarrierState barrier = pushAddressMaybeBarrier(Address(reg), knownPushedType(0), true);
+            finishBarrier(barrier, REJOIN_GETTER, 0);
             return;
         }
     }
 
+    /*
+     * Always add a barrier to check for undefined if the global is currently
+     * undefined and won't be immediately popped.
+     */
+    bool testUndefined = globalObj->getSlot(slot).isUndefined() && !analysis->popGuaranteed(PC);
+
     RegisterID reg = frame.allocReg();
     Address address = masm.objSlotRef(globalObj, reg, slot);
-    frame.push(address, knownPushedType(0));
-    frame.freeReg(reg);
-
-    /*
-     * If the global is currently undefined, it might still be undefined at the point
-     * of this access, which type inference will not account for. Insert a check.
-     */
-    if (cx->typeInferenceEnabled() &&
-        globalObj->getSlot(slot).isUndefined() &&
-        (JSOp(*PC) == JSOP_CALLGLOBAL || PC[JSOP_GETGLOBAL_LENGTH] != JSOP_POP)) {
-        Jump jump = masm.testUndefined(Assembler::Equal, address);
-        stubcc.linkExit(jump, Uses(0));
-        stubcc.leave();
-        OOL_STUBCALL(stubs::UndefinedHelper, REJOIN_GETTER);
-        stubcc.rejoin(Changes(1));
-    }
+    BarrierState barrier = pushAddressMaybeBarrier(address, knownPushedType(0), true,
+                                                   testUndefined);
+    finishBarrier(barrier, REJOIN_GETTER, 0);
 }
 
 void
@@ -3502,7 +3487,7 @@ mjit::Compiler::inlineCallHelper(uint32 callImmArgc, bool callingNew, FrameSize 
 
     callFrameSize = callIC.frameSize;
 
-    callIC.typeMonitored = monitored(PC);
+    callIC.typeMonitored = monitored(PC) || hasTypeBarriers(PC);
 
     /* Test the type if necessary. Failing this always takes a really slow path. */
     MaybeJump notObjectJump;
@@ -4132,13 +4117,15 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
      */
     RejoinState rejoin = REJOIN_GETTER;
     if (!usePropCache) {
-        JS_ASSERT(top->isType(JSVAL_TYPE_OBJECT) && atom == cx->runtime->atomState.classPrototypeAtom);
+        JS_ASSERT(top->isType(JSVAL_TYPE_OBJECT) &&
+                  atom == cx->runtime->atomState.classPrototypeAtom);
         rejoin = REJOIN_THIS_PROTOTYPE;
     }
 
     /* Handle length accesses on known strings without using a PIC. */
     if (atom == cx->runtime->atomState.lengthAtom &&
-        top->isTypeKnown() && top->getKnownType() == JSVAL_TYPE_STRING) {
+        top->isType(JSVAL_TYPE_STRING) &&
+        !hasTypeBarriers(PC)) {
         if (top->isConstant()) {
             JSString *str = top->getValue().toString();
             Value v;
@@ -4156,16 +4143,14 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     }
 
     /* If the incoming type will never PIC, take slow path. */
-    if (top->isTypeKnown() && top->getKnownType() != JSVAL_TYPE_OBJECT) {
-        JS_ASSERT_IF(atom == cx->runtime->atomState.lengthAtom,
-                     top->getKnownType() != JSVAL_TYPE_STRING);
+    if (top->isNotType(JSVAL_TYPE_OBJECT)) {
         jsop_getprop_slow(atom, usePropCache);
         return true;
     }
 
     frame.forgetMismatchedObject(top);
 
-    if (JSOp(*PC) == JSOP_LENGTH && cx->typeInferenceEnabled()) {
+    if (JSOp(*PC) == JSOP_LENGTH && cx->typeInferenceEnabled() && !hasTypeBarriers(PC)) {
         /*
          * Check if this is an array we can make a loop invariant entry for.
          * This will fail for objects which are not definitely dense arrays.
@@ -4205,7 +4190,7 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
     }
 
     /* Check if this is a property access we can make a loop invariant entry for. */
-    if (loop && loop->generatingInvariants()) {
+    if (loop && loop->generatingInvariants() && !hasTypeBarriers(PC)) {
         CrossSSAValue topv(a->inlineIndex, analysis->poppedValue(PC, 0));
         FrameEntry *fe = loop->invariantProperty(topv, ATOM_TO_JSID(atom));
         if (fe) {
@@ -4243,9 +4228,13 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
             }
             RegisterID reg = frame.tempRegForData(top);
             frame.pop();
-            frame.push(Address(reg, JSObject::getFixedSlotOffset(slot)), knownType);
+
+            Address address(reg, JSObject::getFixedSlotOffset(slot));
+            BarrierState barrier = pushAddressMaybeBarrier(address, knownType, false);
             if (!isObject)
                 stubcc.rejoin(Changes(1));
+            finishBarrier(barrier, rejoin, 0);
+
             return true;
         }
     }
@@ -4341,9 +4330,12 @@ mjit::Compiler::jsop_getprop(JSAtom *atom, JSValueType knownType,
 
     pic.objReg = objReg;
     frame.pushRegs(shapeReg, objReg, knownType);
+    BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg);
 
     stubcc.rejoin(Changes(1));
     pics.append(pic);
+
+    finishBarrier(barrier, rejoin, 0);
     return true;
 }
 
@@ -4422,11 +4414,6 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     pic.slowPathCall = OOL_STUBCALL(ic::CallProp, REJOIN_FALLTHROUGH);
     CHECK_OOL_SPACE();
 
-    /* Adjust the frame. None of this will generate code. */
-    frame.pop();
-    frame.pushRegs(shapeReg, objReg, knownPushedType(0));
-    pushSyncedEntry(1);
-
     /* Load the base slot address. */
     Label dslotsLoadLabel = masm.loadPtrWithPatchToLEA(Address(objReg, offsetof(JSObject, slots)),
                                                                objReg);
@@ -4454,8 +4441,17 @@ mjit::Compiler::jsop_callprop_generic(JSAtom *atom)
     labels.setInlineShapeJump(masm, pic.shapeGuard, inlineShapeJump);
 #endif
 
+    /* Adjust the frame. */
+    frame.pop();
+    frame.pushRegs(shapeReg, objReg, knownPushedType(0));
+    BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg);
+
+    pushSyncedEntry(1);
+
     stubcc.rejoin(Changes(2));
     pics.append(pic);
+
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, 1);
     return true;
 }
 
@@ -4573,16 +4569,14 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
 
     /*
      * 1) Dup the |this| object.
-     * 2) Push the property value onto the stack.
-     * 3) Move the value below the dup'd |this|, uncopying it. This could
-     * generate code, thus the fastPathRejoin label being prior. This is safe
-     * as a stack transition, because JSOP_CALLPROP has JOF_TMPSLOT. It is
-     * also safe for correctness, because if we know the LHS is an object, it
-     * is the resulting vp[1].
+     * 2) Store the property value below the |this| value.
+     * This is safe as a stack transition, because JSOP_CALLPROP has
+     * JOF_TMPSLOT. It is also safe for correctness, because if we know the LHS
+     * is an object, it is the resulting vp[1].
      */
     frame.dup();
-    frame.pushRegs(shapeReg, objReg, knownPushedType(0));
-    frame.shift(-2);
+    frame.storeRegs(-2, shapeReg, objReg, knownPushedType(0));
+    BarrierState barrier = testBarrier(shapeReg, objReg);
 
     /* 
      * Assert correctness of hardcoded offsets.
@@ -4603,6 +4597,7 @@ mjit::Compiler::jsop_callprop_obj(JSAtom *atom)
     stubcc.rejoin(Changes(2));
     pics.append(pic);
 
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, 1);
     return true;
 }
 
@@ -4714,7 +4709,7 @@ mjit::Compiler::jsop_callprop(JSAtom *atom)
 
     bool testObject;
     JSObject *singleton = pushedSingleton(0);
-    if (singleton && singleton->isFunction() &&
+    if (singleton && singleton->isFunction() && !hasTypeBarriers(PC) &&
         testSingletonPropertyTypes(top, ATOM_TO_JSID(atom), &testObject)) {
         if (testObject) {
             Jump notObject = frame.testObject(Assembler::NotEqual, top);
@@ -4949,12 +4944,6 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
     ScopeNameLabels &labels = pic.scopeNameLabels();
     labels.setInlineJump(masm, pic.fastPathStart, inlineJump);
 
-    MaybeJump undefinedGuard;
-    if (cx->typeInferenceEnabled()) {
-        /* Always test for undefined. */
-        undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
-    }
-
     /*
      * We can't optimize away the PIC for the NAME access itself, but if we've
      * only seen a single value pushed by this access, mark it as such and
@@ -4968,17 +4957,13 @@ mjit::Compiler::jsop_name(JSAtom *atom, JSValueType type)
     } else {
         frame.pushRegs(pic.shapeReg, pic.objReg, type);
     }
+    BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg, /* testUndefined = */ true);
 
     stubcc.rejoin(Changes(1));
 
-    if (cx->typeInferenceEnabled()) {
-        stubcc.linkExit(undefinedGuard.get(), Uses(0));
-        stubcc.leave();
-        OOL_STUBCALL(stubs::UndefinedHelper, REJOIN_GETTER);
-        stubcc.rejoin(Changes(1));
-    }
-
     pics.append(pic);
+
+    finishBarrier(barrier, REJOIN_GETTER, 0);
 }
 
 bool
@@ -5030,22 +5015,13 @@ mjit::Compiler::jsop_xname(JSAtom *atom)
     frame.pop();
     frame.pushRegs(pic.shapeReg, pic.objReg, knownPushedType(0));
 
-    MaybeJump undefinedGuard;
-    if (cx->typeInferenceEnabled()) {
-        /* Always test for undefined. */
-        undefinedGuard = masm.testUndefined(Assembler::Equal, pic.shapeReg);
-    }
+    BarrierState barrier = testBarrier(pic.shapeReg, pic.objReg, /* testUndefined = */ true);
 
     stubcc.rejoin(Changes(1));
 
-    if (cx->typeInferenceEnabled()) {
-        stubcc.linkExit(undefinedGuard.get(), Uses(0));
-        stubcc.leave();
-        OOL_STUBCALL(stubs::UndefinedHelper, REJOIN_GETTER);
-        stubcc.rejoin(Changes(1));
-    }
-
     pics.append(pic);
+
+    finishBarrier(barrier, REJOIN_FALLTHROUGH, 0);
     return true;
 }
 
@@ -5695,19 +5671,26 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
     /* Optimize singletons like Math for JSOP_CALLPROP. */
     JSObject *obj = pushedSingleton(0);
-    if (obj && testSingletonProperty(globalObj, ATOM_TO_JSID(atom))) {
+    if (obj && !hasTypeBarriers(PC) && testSingletonProperty(globalObj, ATOM_TO_JSID(atom))) {
         frame.push(ObjectValue(*obj));
         return;
     }
 
-    /*
-     * Get the type of the global. Don't look at the pushed type, as this may
-     * be part of an INCGNAME op.
-     */
+    /* Get the type of the global. */
     JSValueType type = JSVAL_TYPE_UNKNOWN;
     if (cx->typeInferenceEnabled() && globalObj->isGlobal() &&
         !globalObj->getType()->unknownProperties()) {
-        types::TypeSet *types = globalObj->getType()->getProperty(cx, ATOM_TO_JSID(atom), false);
+        /*
+         * Get the type tag for the global either straight off it (in case this
+         * is an INCGNAME op, and the pushed type set is wrong) or from the
+         * pushed type set (if this is a GETGNAME op, and the property may have
+         * a type barrier on it).
+         */
+        types::TypeSet *types;
+        if (JSOp(*PC) == JSOP_GETGNAME || JSOp(*PC) == JSOP_CALLGNAME)
+            types = pushedTypeSet(0);
+        else
+            types = globalObj->getType()->getProperty(cx, ATOM_TO_JSID(atom), false);
         if (!types)
             return;
         type = types->getKnownTypeTag(cx);
@@ -5719,7 +5702,9 @@ mjit::Compiler::jsop_getgname(uint32 index)
                 watchGlobalReallocation();
                 RegisterID reg = frame.allocReg();
                 masm.move(ImmPtr(value), reg);
-                frame.push(Address(reg), type, true);
+
+                BarrierState barrier = pushAddressMaybeBarrier(Address(reg), type, true);
+                finishBarrier(barrier, REJOIN_GETTER, 0);
                 return;
             }
         }
@@ -5783,19 +5768,23 @@ mjit::Compiler::jsop_getgname(uint32 index)
 
     frame.pushRegs(treg, dreg, type);
 
+    /*
+     * Note: no undefined check is needed for GNAME opcodes. These were not
+     * declared with 'var', so cannot be undefined without triggering an error
+     * or having been a pre-existing global whose value is undefined (which
+     * type inference will know about).
+     */
+    BarrierState barrier = testBarrier(treg, dreg);
+
     stubcc.rejoin(Changes(1));
 
     getGlobalNames.append(ic);
+    finishBarrier(barrier, REJOIN_GETTER, 0);
 
 #else
     jsop_getgname_slow(index);
 #endif
 
-    /*
-     * Note: no undefined check is needed for GNAME opcodes. These were not declared with
-     * 'var', so cannot be undefined without triggering an error or having been a pre-existing
-     * global whose value is undefined (which type inference will know about).
-     */
 }
 
 /*
@@ -6959,7 +6948,21 @@ mjit::Compiler::monitored(jsbytecode *pc)
 {
     if (!cx->typeInferenceEnabled())
         return false;
-    return analysis->getCode(pc).monitoredTypes || analysis->typeBarriers(pc) != NULL;
+    return analysis->getCode(pc).monitoredTypes;
+}
+
+bool
+mjit::Compiler::hasTypeBarriers(jsbytecode *pc)
+{
+    if (!cx->typeInferenceEnabled())
+        return false;
+
+#if 0
+    /* Stress test. */
+    return types::CanHaveReadBarrier(pc);
+#endif
+
+    return analysis->typeBarriers(pc) != NULL;
 }
 
 void
@@ -6997,4 +7000,198 @@ mjit::Compiler::arrayPrototypeHasIndexedProperty()
         return true;
     types::TypeSet *arrayTypes = proto->getType()->getProperty(cx, JSID_VOID, false);
     return !arrayTypes || arrayTypes->knownNonEmpty(cx);
+}
+
+/*
+ * Barriers overview.
+ *
+ * After a property fetch finishes, we may need to do type checks on it to make
+ * sure it matches the pushed type set for this bytecode. This can be either
+ * because there is a type barrier at the bytecode, or because we cannot rule
+ * out an undefined result. For such accesses, we push a register pair, and
+ * then use those registers to check the fetched type matches the inferred
+ * types for the pushed set. The flow here is tricky:
+ *
+ * frame.pushRegs(type, data, knownType);
+ * --- Depending on knownType, the frame's representation for the pushed entry
+ *     may not be a register pair anymore. knownType is based on the observed
+ *     types that have been pushed here and may not actually match type/data.
+ *     pushRegs must not clobber either register, for the test below.
+ *
+ * testBarrier(type, data)
+ * --- Use the type/data regs and generate a single jump taken if the barrier
+ *     has been violated.
+ *
+ * --- Rearrange stack, rejoin from stub paths. No code must be emitted into
+ *     the inline path between testBarrier and finishBarrier. Since a stub path
+ *     may be in progress we can't call finishBarrier before stubcc.rejoin,
+ *     and since typeReg/dataReg may not be intact after the stub call rejoin
+ *     (if knownType != JSVAL_TYPE_UNKNOWN) we can't testBarrier after calling
+ *     stubcc.rejoin.
+ *
+ * finishBarrier()
+ * --- Link the barrier jump to a new stub code path which updates the pushed
+ *     types (possibly triggering recompilation). The frame has changed since
+ *     pushRegs to reflect the final state of the op, which is OK as no inline
+ *     code has been emitted since the barrier jump.
+ */
+
+mjit::Compiler::BarrierState
+mjit::Compiler::pushAddressMaybeBarrier(Address address, JSValueType type, bool reuseBase,
+                                        bool testUndefined)
+{
+    if (!hasTypeBarriers(PC) && !testUndefined) {
+        frame.push(address, type, reuseBase);
+        return BarrierState();
+    }
+
+    RegisterID typeReg, dataReg;
+    frame.loadIntoRegisters(address, reuseBase, &typeReg, &dataReg);
+
+    frame.pushRegs(typeReg, dataReg, type);
+    return testBarrier(typeReg, dataReg, testUndefined);
+}
+
+MaybeJump
+mjit::Compiler::trySingleTypeTest(types::TypeSet *types, RegisterID typeReg)
+{
+    /*
+     * If a type set we have a barrier on is monomorphic, generate a single
+     * jump taken if a type register has a match. This doesn't handle type sets
+     * containing objects, as these require two jumps regardless (test for
+     * object, then test the type of the object).
+     */
+    MaybeJump res;
+
+    switch (types->getKnownTypeTag(cx)) {
+      case JSVAL_TYPE_INT32:
+        res.setJump(masm.testInt32(Assembler::NotEqual, typeReg));
+        return res;
+
+      case JSVAL_TYPE_DOUBLE:
+        res.setJump(masm.testNumber(Assembler::NotEqual, typeReg));
+        return res;
+
+      case JSVAL_TYPE_BOOLEAN:
+        res.setJump(masm.testBoolean(Assembler::NotEqual, typeReg));
+        return res;
+
+      case JSVAL_TYPE_STRING:
+        res.setJump(masm.testString(Assembler::NotEqual, typeReg));
+        return res;
+
+      default:
+        return res;
+    }
+}
+
+JSC::MacroAssembler::Jump
+mjit::Compiler::addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterID dataReg)
+{
+    /*
+     * :TODO: It would be good to merge this with GenerateTypeCheck, but the
+     * two methods have a different format for the tested value (in registers
+     * vs. in memory).
+     */
+
+    Vector<Jump> matches(CompilerAllocPolicy(cx, *this));
+
+    if (types->hasType(types::TYPE_INT32))
+        matches.append(masm.testInt32(Assembler::Equal, typeReg));
+
+    if (types->hasType(types::TYPE_DOUBLE))
+        matches.append(masm.testDouble(Assembler::Equal, typeReg));
+
+    if (types->hasType(types::TYPE_UNDEFINED))
+        matches.append(masm.testUndefined(Assembler::Equal, typeReg));
+
+    if (types->hasType(types::TYPE_BOOLEAN))
+        matches.append(masm.testBoolean(Assembler::Equal, typeReg));
+
+    if (types->hasType(types::TYPE_STRING))
+        matches.append(masm.testString(Assembler::Equal, typeReg));
+
+    if (types->hasType(types::TYPE_NULL))
+        matches.append(masm.testNull(Assembler::Equal, typeReg));
+
+    unsigned count = types->getObjectCount();
+    if (count != 0) {
+        Jump notObject = masm.testObject(Assembler::NotEqual, typeReg);
+
+        Address typeAddress(dataReg, offsetof(JSObject, type));
+
+        for (unsigned i = 0; i < count; i++) {
+            types::TypeObject *object = types->getObject(i);
+            if (object)
+                matches.append(masm.branchPtr(Assembler::Equal, typeAddress, ImmPtr(object)));
+        }
+
+        notObject.linkTo(masm.label(), &masm);
+    }
+
+    Jump mismatch = masm.jump();
+
+    for (unsigned i = 0; i < matches.length(); i++)
+        matches[i].linkTo(masm.label(), &masm);
+
+    return mismatch;
+}
+
+mjit::Compiler::BarrierState
+mjit::Compiler::testBarrier(RegisterID typeReg, RegisterID dataReg, bool testUndefined)
+{
+    BarrierState state;
+    state.typeReg = typeReg;
+    state.dataReg = dataReg;
+
+    if (!hasTypeBarriers(PC)) {
+        if (testUndefined)
+            state.jump.setJump(masm.testUndefined(Assembler::Equal, typeReg));
+        return state;
+    }
+
+#if 0
+    /* Stress test. */
+    state.jump.setJump(masm.testInt32(Assembler::NotEqual, typeReg));
+    return state;
+#endif
+
+    types::TypeSet *types = pushedTypeSet(0);
+    types->addFreeze(cx);
+
+    /* Cannot have type barriers when the result of the operation is already unknown. */
+    JS_ASSERT(!types->unknown());
+
+    state.jump = trySingleTypeTest(types, typeReg);
+    if (!state.jump.isSet())
+        state.jump.setJump(addTypeTest(types, typeReg, dataReg));
+
+    return state;
+}
+
+void
+mjit::Compiler::finishBarrier(const BarrierState &barrier, RejoinState rejoin, uint32 which)
+{
+    if (!barrier.jump.isSet())
+        return;
+
+    stubcc.linkExitDirect(barrier.jump.get(), stubcc.masm.label());
+
+    /*
+     * Before syncing, store the entry to sp[0]. (scanInlineCalls accounted for
+     * this when making sure there is enough froom for all frames). The known
+     * type in the frame may be wrong leading to an incorrect sync, and this
+     * sync may also clobber typeReg and/or dataReg.
+     */
+    frame.pushSynced(JSVAL_TYPE_UNKNOWN);
+    stubcc.masm.storeValueFromComponents(barrier.typeReg, barrier.dataReg,
+                                         frame.addressOf(frame.peek(-1)));
+    frame.pop();
+
+    stubcc.syncExit(Uses(0));
+    stubcc.leave();
+
+    stubcc.masm.move(ImmPtr((void *) which), Registers::ArgReg1);
+    OOL_STUBCALL(stubs::TypeBarrierHelper, rejoin);
+    stubcc.rejoin(Changes(0));
 }

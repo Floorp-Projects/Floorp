@@ -110,26 +110,37 @@ inline jstype GetValueType(JSContext *cx, const Value &val);
  *
  * Inference constructs a global web of constraints relating the contents of
  * type sets particular to various scripts and type objects within a
- * compartment. There are two issues at hand to manage inference memory:
- * collecting the constraints, and collecting type sets on TypeObject
- * destruction.
+ * compartment. Type constraints and type sets can be either persistent or
+ * transient.
  *
- * The constraints and types generated during analysis of a script depend
- * entirely on that script's input type sets --- the types of its arguments,
- * upvar locals, callee return values, object properties, and dynamic types
- * (overflows, undefined reads, etc.). On a GC, we collect the analysis
- * information for all scripts which have been analyzed, destroying the type
- * constraints and intermediate type sets associated with stack values, and add
- * condensed constraints to the script's inputs which will trigger reanalysis
- * and recompilation should that input change in the future.
+ * Persistent constraints and type sets are associated with some script or type
+ * object, are allocated with malloc and have the same lifetime as that script
+ * or type object. Persistent type sets are those in a script's typeArray ---
+ * its local names, 'this' value, return value, and observed types for property
+ * accesses --- and those in a type object's propertySet --- the possible
+ * properties and associated types for the object. Persistent constraints
+ * describe delegation between properties along prototype chains, and condense
+ * the behavior of transient constraints (see below).
  *
- * TypeObjects are collected when either the script they are associated with is
- * destroyed or their prototype JSObject is destroyed.
+ * Transient constraints and type sets are allocated from compartment->pool,
+ * and are destroyed on every GC (with one exception, see below). Transient
+ * type sets describe the types of stack values pushed within a script.
+ * Transient constraints are the meat of the inference algorithm, and model
+ * the effects of a script on the type sets of its stack values, its variables
+ * the variables of scripts it calls and the properties of type objects it
+ * accesses.
+ *
+ * The transient constraints and types generated during analysis of a script
+ * depend entirely on that script's inputs --- the persistent type sets which
+ * constraints were placed on during analysis. On a GC, we collect transient
+ * values for all scripts in the compartment, and add special 'condensed'
+ * constraints to each of the script's inputs. Should any of these input type
+ * sets change again, the script will be reanalyzed and recompiled.
  *
  * If a GC happens while we are in the middle of or working with analysis
- * information (both type information and transient information stored in
+ * information (both type information and other transient information stored in
  * ScriptAnalysis), we do not destroy/condense analysis information or collect
- * TypeObjects or JSScripts. This is controlled with AutoEnterAnalysis and/or
+ * TypeObjects or JSScripts. This is controlled with AutoEnterAnalysis and
  * AutoEnterTypeInference.
  */
 
@@ -337,6 +348,7 @@ class TypeSet
     /* If this type set definitely represents only a particular type object, get that object. */
     inline TypeObject *getSingleObject();
 
+    bool intermediate() { return typeFlags & TYPE_FLAG_INTERMEDIATE_SET; }
     void setIntermediate() { JS_ASSERT(!typeFlags); typeFlags = TYPE_FLAG_INTERMEDIATE_SET; }
     void setOwnProperty(bool configurable) {
         typeFlags |= TYPE_FLAG_OWN_PROPERTY;
@@ -362,7 +374,7 @@ class TypeSet
     void addTransformThis(JSContext *cx, JSScript *script, TypeSet *target);
     void addFilterPrimitives(JSContext *cx, JSScript *script,
                              TypeSet *target, bool onlyNullVoid);
-    void addMonitorRead(JSContext *cx, JSScript *script, TypeSet *target);
+    void addSubsetBarrier(JSContext *cx, JSScript *script, const jsbytecode *pc, TypeSet *target);
 
     void addBaseSubset(JSContext *cx, TypeObject *object, TypeSet *target);
     void addCondensed(JSContext *cx, JSScript *script);

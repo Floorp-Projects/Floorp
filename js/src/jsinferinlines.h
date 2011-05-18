@@ -204,6 +204,29 @@ struct AutoEnterCompilation
 bool
 UseNewType(JSContext *cx, JSScript *script, jsbytecode *pc);
 
+/* Whether type barriers can be placed at pc for a property read. */
+static inline bool
+CanHaveReadBarrier(const jsbytecode *pc)
+{
+    switch (JSOp(*pc)) {
+      case JSOP_LENGTH:
+      case JSOP_GETPROP:
+      case JSOP_CALLPROP:
+      case JSOP_GETXPROP:
+      case JSOP_GETELEM:
+      case JSOP_CALLELEM:
+      case JSOP_NAME:
+      case JSOP_CALLNAME:
+      case JSOP_GETGNAME:
+      case JSOP_CALLGNAME:
+      case JSOP_GETGLOBAL:
+      case JSOP_CALLGLOBAL:
+        return true;
+      default:
+        return false;
+    }
+}
+
 } } /* namespace js::types */
 
 /////////////////////////////////////////////////////////////////////
@@ -1046,7 +1069,7 @@ struct TypeObjectKey {
 inline void
 TypeSet::destroy(JSContext *cx)
 {
-    JS_ASSERT(!(typeFlags & TYPE_FLAG_INTERMEDIATE_SET));
+    JS_ASSERT(!intermediate());
     if (objectCount >= 2)
         Foreground::free_(objectSet);
     while (constraintList) {
@@ -1077,7 +1100,7 @@ inline void
 TypeSet::markUnknown(JSContext *cx)
 {
     typeFlags = TYPE_FLAG_UNKNOWN | (typeFlags & ~baseFlags());
-    if (objectCount >= 2 && !(typeFlags & TYPE_FLAG_INTERMEDIATE_SET))
+    if (objectCount >= 2 && !intermediate())
         cx->free_(objectSet);
     objectCount = 0;
     objectSet = NULL;
@@ -1107,8 +1130,7 @@ TypeSet::addType(JSContext *cx, jstype type)
     } else {
         TypeObject *object = (TypeObject*) type;
         TypeObject **pentry = HashSetInsert<TypeObject *,TypeObject,TypeObjectKey>
-                                  (cx, objectSet, objectCount, object,
-                                   typeFlags & TYPE_FLAG_INTERMEDIATE_SET);
+                                  (cx, objectSet, objectCount, object, intermediate());
         if (!pentry || *pentry)
             return;
         *pentry = object;

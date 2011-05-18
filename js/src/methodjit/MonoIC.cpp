@@ -1289,13 +1289,12 @@ GenerateTypeCheck(JSContext *cx, Assembler &masm, Address address,
 
     Vector<Jump> matches(cx);
 
-    if (types->hasType(types::TYPE_INT32)) {
-        if (!matches.append(masm.testInt32(Assembler::Equal, address)))
-            return false;
-    }
-
     if (types->hasType(types::TYPE_DOUBLE)) {
-        if (!matches.append(masm.testDouble(Assembler::Equal, address)))
+        /* Type sets containing double also contain int. */
+        if (!matches.append(masm.testNumber(Assembler::Equal, address)))
+            return false;
+    } else if (types->hasType(types::TYPE_INT32)) {
+        if (!matches.append(masm.testInt32(Assembler::Equal, address)))
             return false;
     }
 

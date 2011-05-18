@@ -310,8 +310,7 @@ TypeSet::add(JSContext *cx, TypeConstraint *constraint, bool callExisting)
     JS_ASSERT_IF(!constraint->condensed() && !constraint->persistentObject(),
                  constraint->script->compartment == cx->compartment);
     JS_ASSERT_IF(!constraint->condensed(), cx->compartment->activeInference);
-    JS_ASSERT_IF(typeFlags & TYPE_FLAG_INTERMEDIATE_SET,
-                 !constraint->persistentObject() && !constraint->condensed());
+    JS_ASSERT_IF(intermediate(), !constraint->persistentObject() && !constraint->condensed());
 
     if (!constraint) {
         /* OOM failure while constructing the constraint. */
@@ -663,29 +662,92 @@ TypeSet::addFilterPrimitives(JSContext *cx, JSScript *script, TypeSet *target, b
 }
 
 /*
- * Subset constraint for property reads which monitors accesses on properties
- * with scripted getters and polymorphic types.
+ * Cheesy limit on the number of objects we will tolerate in an observed type
+ * set before refusing to add new type barriers for objects.
+ * :FIXME: this heuristic sucks, and doesn't handle calls.
  */
-class TypeConstraintMonitorRead : public TypeConstraint
+static const uint32 BARRIER_OBJECT_LIMIT = 10;
+
+void
+ScriptAnalysis::pruneTypeBarriers(JSContext *removecx, uint32 offset)
+{
+    TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
+    while (*pbarrier) {
+        TypeBarrier *barrier = *pbarrier;
+        if (barrier->target->hasType(barrier->type)) {
+            /* Barrier is now obsolete, it can be removed. */
+            *pbarrier = barrier->next;
+        } else if (removecx && TypeIsObject(barrier->type) &&
+                   barrier->target->getObjectCount() >= BARRIER_OBJECT_LIMIT) {
+            /* Force removal of the barrier. */
+            barrier->target->addType(removecx, barrier->type);
+            *pbarrier = barrier->next;
+        } else {
+            pbarrier = &barrier->next;
+        }
+    }
+}
+
+void
+ScriptAnalysis::addTypeBarrier(JSContext *cx, const jsbytecode *pc, TypeSet *target, jstype type)
+{
+    Bytecode &code = getCode(pc);
+
+    if (TypeIsObject(type) && target->getObjectCount() >= BARRIER_OBJECT_LIMIT) {
+        /* Ignore this barrier, just add the type to the target. */
+        target->addType(cx, type);
+        return;
+    }
+
+    if (!code.typeBarriers) {
+        /*
+         * Adding type barriers at a bytecode which did not have them before
+         * will trigger recompilation. If there were already type barriers,
+         * however, do not trigger recompilation (the script will be recompiled
+         * if any of the barriers is ever violated).
+         */
+        cx->compartment->types.addPendingRecompile(cx, script);
+    }
+
+    TypeBarrier *barrier = ArenaNew<TypeBarrier>(cx->compartment->pool);
+    barrier->target = target;
+    barrier->type = type;
+
+    barrier->next = code.typeBarriers;
+    code.typeBarriers = barrier;
+}
+
+/*
+ * Subset constraint for property reads and argument passing which can add type
+ * barriers on the read instead of passing types along.
+ */
+class TypeConstraintSubsetBarrier : public TypeConstraint
 {
 public:
+    const jsbytecode *pc;
     TypeSet *target;
 
-    TypeConstraintMonitorRead(JSScript *script, TypeSet *target)
-        : TypeConstraint("monitorRead", script), target(target)
-    {}
+    TypeConstraintSubsetBarrier(JSScript *script, const jsbytecode *pc, TypeSet *target)
+        : TypeConstraint("subsetBarrier", script), pc(pc), target(target)
+    {
+        JS_ASSERT(!target->intermediate());
+    }
 
     void newType(JSContext *cx, TypeSet *source, jstype type)
     {
-        /* :XXX: Not doing any handling for polymorphism yet. */
+        if (!target->hasType(type)) {
+            script->analysis(cx)->addTypeBarrier(cx, pc, target, type);
+            return;
+        }
+
         target->addType(cx, type);
     }
 };
 
 void
-TypeSet::addMonitorRead(JSContext *cx, JSScript *script, TypeSet *target)
+TypeSet::addSubsetBarrier(JSContext *cx, JSScript *script, const jsbytecode *pc, TypeSet *target)
 {
-    add(cx, ArenaNew<TypeConstraintMonitorRead>(cx->compartment->pool, script, target));
+    add(cx, ArenaNew<TypeConstraintSubsetBarrier>(cx->compartment->pool, script, pc, target));
 }
 
 /*
@@ -804,8 +866,10 @@ PropertyAccess(JSContext *cx, JSScript *script, const jsbytecode *pc, TypeObject
             return;
         if (assign)
             target->addSubset(cx, script, types);
+        else if (CanHaveReadBarrier(pc))
+            types->addSubsetBarrier(cx, script, pc, target);
         else
-            types->addMonitorRead(cx, script, target);
+            types->addSubset(cx, script, target);
     } else {
         TypeSet *readTypes = object->getProperty(cx, id, false);
         TypeSet *writeTypes = object->getProperty(cx, id, true);
@@ -853,7 +917,7 @@ TypeConstraintNewObject::newType(JSContext *cx, TypeSet *source, jstype type)
             TypeSet *newTypes = object->getProperty(cx, JSID_EMPTY, false);
             if (!newTypes)
                 return;
-            newTypes->addMonitorRead(cx, script, target);
+            newTypes->addSubset(cx, script, target);
         }
     } else if (!fun->script) {
         /*
@@ -963,7 +1027,7 @@ TypeConstraintCall::newType(JSContext *cx, TypeSet *source, jstype type)
     for (unsigned i = 0; i < callsite->argumentCount && i < nargs; i++) {
         TypeSet *argTypes = callsite->argumentTypes[i];
         TypeSet *types = callee->argTypes(i);
-        argTypes->addSubset(cx, script, types);
+        argTypes->addSubsetBarrier(cx, script, pc, types);
     }
 
     /* Add void type for any formals in the callee not supplied at the call site. */
@@ -1775,6 +1839,20 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
     JS_ASSERT(cx->typeInferenceEnabled());
     AutoEnterTypeInference enter(cx);
 
+    jsbytecode *pc = script->code + offset;
+    UntrapOpcode untrap(cx, script, pc);
+
+    /* Directly update associated type sets for applicable bytecodes. */
+    if (CanHaveReadBarrier(pc)) {
+        TypeSet *types = script->bytecodeTypes(pc);
+        if (!types->hasType(type)) {
+            InferSpew(ISpewOps, "externalType: monitorResult #%u:%05u: %s",
+                      script->id(), offset, TypeString(type));
+            types->addType(cx, type);
+        }
+        return;
+    }
+
     /*
      * For inc/dec ops, we need to go back and reanalyze the affected opcode
      * taking the overflow into account. We won't see an explicit adjustment
@@ -1783,7 +1861,6 @@ TypeCompartment::dynamicPush(JSContext *cx, JSScript *script, uint32 offset, jst
      * that do not have an object lvalue; INCNAME/INCPROP/INCELEM and friends
      * should call addTypeProperty to reflect the property change.
      */
-    jsbytecode *pc = script->code + offset;
     JSOp op = JSOp(*pc);
     const JSCodeSpec *cs = &js_CodeSpec[op];
     if (cs->format & (JOF_INC | JOF_DEC)) {
@@ -2332,7 +2409,7 @@ TypeCompartment::fixObjectType(JSContext *cx, JSObject *obj)
         /* Construct the new shape. */
         for (unsigned i = 0; i < obj->slotSpan(); i++) {
             if (!DefineNativeProperty(cx, xobj, ids[i], UndefinedValue(), NULL, NULL,
-                                      JSPROP_ENUMERATE, 0, 0, 0)) {
+                                      JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE)) {
                 cx->compartment->types.setPendingNukeTypes(cx);
                 return;
             }
@@ -2645,7 +2722,7 @@ TypeObject::clearNewScript(JSContext *cx)
                         break;
                     }
                 } else {
-                    JS_ASSERT(init->kind == init->kind != TypeNewScript::Initializer::DONE);
+                    JS_ASSERT(init->kind == TypeNewScript::Initializer::DONE);
                     JS_ASSERT(numProperties == obj->slotSpan());
                     break;
                 }
@@ -3016,20 +3093,20 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
         else
             id = GetAtomId(cx, script, pc, 0);
 
+        TypeSet *seen = script->bytecodeTypes(pc);
+        seen->addSubset(cx, script, &pushed[0]);
+
         /*
          * Normally we rely on lazy standard class initialization to fill in
          * the types of global properties the script can access. In a few cases
          * the method JIT will bypass this, and we need to add the types direclty.
          */
         if (id == ATOM_TO_JSID(cx->runtime->atomState.typeAtoms[JSTYPE_VOID]))
-            cx->addTypePropertyId(script->getGlobalType(), id, TYPE_UNDEFINED);
+            seen->addType(cx, TYPE_UNDEFINED);
         if (id == ATOM_TO_JSID(cx->runtime->atomState.NaNAtom))
-            cx->addTypePropertyId(script->getGlobalType(), id, TYPE_DOUBLE);
+            seen->addType(cx, TYPE_DOUBLE);
         if (id == ATOM_TO_JSID(cx->runtime->atomState.InfinityAtom))
-            cx->addTypePropertyId(script->getGlobalType(), id, TYPE_DOUBLE);
-
-        TypeSet *seen = script->bytecodeTypes(pc);
-        seen->addSubset(cx, script, &pushed[0]);
+            seen->addType(cx, TYPE_DOUBLE);
 
         /* Handle as a property access. */
         PropertyAccess(cx, script, pc, script->getGlobalType(), false, seen, id);
@@ -3045,7 +3122,7 @@ ScriptAnalysis::analyzeTypesBytecode(JSContext *cx, unsigned offset,
          * introduces new bindings.
          */
         if (cx->compartment->debugMode)
-            pushed[0].addType(cx, TYPE_UNKNOWN);
+            seen->addType(cx, TYPE_UNKNOWN);
         break;
       }
 
@@ -3715,21 +3792,6 @@ ScriptAnalysis::analyzeTypesNew(JSContext *cx)
     prototypeTypes->addNewObject(cx, script, funType, script->thisTypes());
 }
 
-void
-ScriptAnalysis::pruneTypeBarriers(uint32 offset)
-{
-    TypeBarrier **pbarrier = &getCode(offset).typeBarriers;
-    while (*pbarrier) {
-        TypeBarrier *barrier = *pbarrier;
-        if (barrier->target->hasType(barrier->type)) {
-            /* Barrier is now obsolete, it can be removed. */
-            *pbarrier = barrier->next;
-        } else {
-            pbarrier = &barrier->next;
-        }
-    }
-}
-
 /*
  * Persistent constraint clearing out newScript and definite properties from
  * an object should a property on another object get a setter.
@@ -3910,7 +3972,7 @@ AnalyzeNewScriptProperties(JSContext *cx, TypeObject *type, JSScript *script, JS
 
             unsigned slotSpan = obj->slotSpan();
             if (!DefineNativeProperty(cx, obj, id, UndefinedValue(), NULL, NULL,
-                                      JSPROP_ENUMERATE, 0, 0, 0)) {
+                                      JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE)) {
                 cx->compartment->types.setPendingNukeTypes(cx);
                 *pbaseobj = NULL;
                 return false;
@@ -4144,8 +4206,15 @@ ScriptAnalysis::printTypes(JSContext *cx)
         if (getCode(offset).monitoredTypes)
             printf("  monitored\n");
 
-        if (getCode(offset).typeBarriers != NULL)
-            printf("  barriers\n");
+        TypeBarrier *barrier = getCode(offset).typeBarriers;
+        if (barrier != NULL) {
+            printf("  barrier:");
+            while (barrier) {
+                printf(" %s", TypeString(barrier->type));
+                barrier = barrier->next;
+            }
+            printf("\n");
+        }
     }
 
     printf("\n");
@@ -4513,7 +4582,7 @@ TypeSet::CondenseSweepTypeSet(JSContext *cx, TypeCompartment *compartment,
      * Both of these use off-the-books malloc rather than cx->malloc, and thus
      * do not contribute towards the runtime's overall malloc bytes.
      */
-    JS_ASSERT(!(types->typeFlags & TYPE_FLAG_INTERMEDIATE_SET));
+    JS_ASSERT(!types->intermediate());
 
     if (types->objectCount >= 2) {
         bool removed = false;

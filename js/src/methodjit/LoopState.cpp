@@ -1173,10 +1173,10 @@ LoopState::restoreInvariants(jsbytecode *pc, Assembler &masm,
                                                      Imm32(constant), T1);
                     jumps->append(overflow);
                 }
-                Jump j = masm.branch32(Assembler::BelowOrEqual, T0, T1);
+                Jump j = masm.branch32(Assembler::LessThanOrEqual, T0, T1);
                 jumps->append(j);
             } else {
-                Jump j = masm.branch32(Assembler::BelowOrEqual, T0,
+                Jump j = masm.branch32(Assembler::LessThanOrEqual, T0,
                                        Imm32(constant));
                 jumps->append(j);
             }
