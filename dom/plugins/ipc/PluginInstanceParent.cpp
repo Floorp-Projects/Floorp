@@ -1741,7 +1741,7 @@ PluginInstanceParent::AnswerPluginFocusChange(const bool& gotFocus)
     // focus. We forward the event down to widget so the dom/focus manager can
     // be updated.
 #if defined(OS_WIN)
-    AutoRestore<bool> ar(mInAnswerFocusChange)
+    AutoRestore<bool> ar(mInAnswerFocusChange);
     mInAnswerFocusChange = true;
     ::SendMessage(mPluginHWND, gOOPPPluginFocusEvent, gotFocus ? 1 : 0, 0);
     return true;
