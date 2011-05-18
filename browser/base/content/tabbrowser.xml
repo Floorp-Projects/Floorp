@@ -1537,8 +1537,10 @@
             }
 
             this._removingTabs.push(aTab);
-
-            this.tabContainer.updateVisibility();
+            if (newTab)
+              this.addTab("about:blank", {skipAnimation: true});
+            else
+              this.tabContainer.updateVisibility();
 
             // We're committed to closing the tab now.
             // Dispatch a notification.
@@ -1594,8 +1596,6 @@
 
             // update the UI early for responsiveness
             aTab.collapsed = true;
-            if (aNewTab)
-              this.addTab("about:blank", {skipAnimation: true});
             this.tabContainer._fillTrailingGap();
             this._blurTab(aTab);
 
