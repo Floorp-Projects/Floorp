@@ -199,9 +199,8 @@ js::GetBlockChainFast(JSContext *cx, StackFrame *fp, JSOp op, size_t oplen)
 
     pc += oplen;
     op = JSOp(*pc);
-    JS_ASSERT(js_GetOpcode(cx, fp->script(), pc) == op);
 
-    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE noise. */
+    /* The fast paths assume no JSOP_RESETBASE/INDEXBASE or JSOP_TRAP noise. */
     if (op == JSOP_NULLBLOCKCHAIN)
         return NULL;
     if (op == JSOP_BLOCKCHAIN)
