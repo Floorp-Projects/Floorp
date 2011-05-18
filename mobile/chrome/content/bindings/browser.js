@@ -337,6 +337,10 @@ let ContentScroll =  {
         if (!element)
           break;
 
+        let binding = element.ownerDocument.getBindingParent(element);
+        if (binding instanceof Ci.nsIDOMHTMLInputElement && binding.mozIsTextField(false))
+          break;
+
         // Set the scroll offset for this element if specified
         if (json.scrollX >= 0 && json.scrollY >= 0) {
           this.setScrollOffsetForElement(element, json.scrollX, json.scrollY)
