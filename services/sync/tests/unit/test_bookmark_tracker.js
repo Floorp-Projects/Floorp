@@ -8,192 +8,6 @@ let engine = Engines.get("bookmarks");
 let store  = engine._store;
 store.wipe();
 
-function test_copying_places() {
-
-  // Gecko <2.0
-  if (store._haveGUIDColumn) {
-    _("We have a GUID column; not testing anno GUID fixing.");
-    return;
-  }
-
-  //
-  // Copied and simplified from PlacesUIUtils, to which we don't have easy
-  // access.
-  //
-  let ptm;
-
-  try {
-    ptm = Components.classes["@mozilla.org/browser/placesTransactionsService;1"]
-                      .getService(Ci.nsIPlacesTransactionsService);
-  } catch (ex) {
-    _("Can't test transactions -- not running with a browser context.");
-    return;
-  }
-
-  function getBookmarkItemCopyTransaction(aData, aContainer, aIndex,
-                                          aExcludeAnnotations) {
-    var itemURL = PlacesUtils._uri(aData.uri);
-    var itemTitle = aData.title;
-    var keyword = aData.keyword || null;
-    var annos = aData.annos || [];
-    // always exclude GUID when copying any item
-    var excludeAnnos = [PlacesUtils.GUID_ANNO];
-    if (aExcludeAnnotations)
-      excludeAnnos = excludeAnnos.concat(aExcludeAnnotations);
-    annos = annos.filter(function(aValue, aIndex, aArray) {
-      return excludeAnnos.indexOf(aValue.name) == -1;
-    });
-    var childTxns = [];
-    if (aData.dateAdded)
-      childTxns.push(ptm.editItemDateAdded(null, aData.dateAdded));
-    if (aData.lastModified)
-      childTxns.push(ptm.editItemLastModified(null, aData.lastModified));
-    if (aData.tags) {
-      var tags = aData.tags.split(", ");
-      var storedTags = PlacesUtils.tagging.getTagsForURI(itemURL, {});
-      tags = tags.filter(function (aTag) {
-        return (storedTags.indexOf(aTag) == -1);
-      }, this);
-      if (tags.length)
-        childTxns.push(ptm.tagURI(itemURL, tags));
-    }
-
-    return ptm.createItem(itemURL, aContainer, aIndex, itemTitle, keyword,
-                          annos, childTxns);
-  }
-
-  function getFolderCopyTransaction(aData, aContainer, aIndex) {
-    function getChildItemsTransactions(aChildren) {
-      var childItemsTransactions = [];
-      var cc = aChildren.length;
-      var index = aIndex;
-      for (var i = 0; i < cc; ++i) {
-        var txn = null;
-        var node = aChildren[i];
-
-        // Make sure that items are given the correct index, this will be
-        // passed by the transaction manager to the backend for the insertion.
-        // Insertion behaves differently if index == DEFAULT_INDEX (append)
-        if (aIndex != PlacesUtils.bookmarks.DEFAULT_INDEX)
-          index = i;
-
-        if (node.type == PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER)
-          txn = getFolderCopyTransaction(node, aContainer, index);
-        else // (node.type == PlacesUtils.TYPE_X_MOZ_PLACE)
-          txn = getBookmarkItemCopyTransaction(node, -1, index);
-
-        if (txn)
-          childItemsTransactions.push(txn);
-      }
-      return childItemsTransactions;
-    }
-
-    // tag folders use tag transactions
-    if (aContainer == PlacesUtils.tagsFolderId) {
-      var txns = [];
-      if (aData.children) {
-        aData.children.forEach(function(aChild) {
-          txns.push(ptm.tagURI(PlacesUtils._uri(aChild.uri), [aData.title]));
-        }, this);
-      }
-      return ptm.aggregateTransactions("addTags", txns);
-    }
-    else {
-      var childItems = getChildItemsTransactions(aData.children);
-      if (aData.dateAdded)
-        childItems.push(ptm.editItemDateAdded(null, aData.dateAdded));
-      if (aData.lastModified)
-        childItems.push(ptm.editItemLastModified(null, aData.lastModified));
-
-      var annos = aData.annos || [];
-      annos = annos.filter(function(aAnno) {
-        // always exclude GUID when copying any item
-        return aAnno.name != PlacesUtils.GUID_ANNO;
-      });
-      return ptm.createFolder(aData.title, aContainer, aIndex, annos, childItems);
-    }
-  }
-
-  //
-  // End simplified PlacesUIUtils code.
-  //
-
-  let tracker = engine._tracker;
-  tracker.clearChangedIDs();
-
-  try {
-    _("Test copying using Places transactions.");
-    Svc.Obs.notify("weave:engine:start-tracking");
-
-    _("Set up source and destination folders.");
-    let f1 = Svc.Bookmark.createFolder(PlacesUtils.toolbarFolderId, "Folder One",
-                                       Svc.Bookmark.DEFAULT_INDEX);
-    let f2 = Svc.Bookmark.createFolder(PlacesUtils.toolbarFolderId, "Folder Two",
-                                       Svc.Bookmark.DEFAULT_INDEX);
-
-    let b1 = Svc.Bookmark.insertBookmark(f1,
-                                         Utils.makeURI("http://example.com/"),
-                                         Svc.Bookmark.DEFAULT_INDEX,
-                                         "Example!");
-
-    _("F1: " + f1 + "; F2: " + f2 + "; B1: " + b1);
-
-    _("Fetch GUIDs so our anno exists.");
-    let f1GUID = store.GUIDForId(f1);
-    let f2GUID = store.GUIDForId(f2);
-    let b1GUID = store.GUIDForId(b1);
-    do_check_true(!!f1GUID);
-    do_check_true(!!f2GUID);
-    do_check_true(!!b1GUID);
-
-    _("Make sure the destination folder is empty.");
-    let root = PlacesUtils.getFolderContents(f2, false, true).root;
-    do_check_eq(root.childCount, 0);
-    root.containerOpen = false;
-
-    let f1Node = PlacesUtils.getFolderContents(f1, false, false).root;
-    _("Node to copy: " + f1Node.itemId);
-
-    let serialized = PlacesUtils.wrapNode(f1Node, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER);
-    _("Serialized to " + serialized);
-    f1Node.containerOpen = false;
-
-    let raw = PlacesUtils.unwrapNodes(serialized, PlacesUtils.TYPE_X_MOZ_PLACE_CONTAINER).shift();
-    let transaction = getFolderCopyTransaction(raw, f2, Svc.Bookmark.DEFAULT_INDEX, true);
-
-    _("Run the copy transaction.");
-    ptm.doTransaction(transaction);
-
-    _("Verify that items have been copied.");
-    let f2Node = PlacesUtils.getFolderContents(f2, false, true).root;
-    do_check_eq(f2Node.childCount, 1);
-
-    _("Verify that the copied folder has different GUIDs.");
-    let c0 = f2Node.getChild(0);
-    do_check_eq(c0.title, "Folder One");
-    do_check_neq(c0.itemId, f1);
-    do_check_neq(store.GUIDForId(c0.itemId), f1GUID);
-
-    _("Verify that this copied folder contains a copied bookmark with different GUIDs.");
-    c0 = c0.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-    c0.containerOpen = true;
-
-    do_check_eq(c0.childCount, 1);
-    let b0 = c0.getChild(0);
-
-    do_check_eq(b0.title, "Example!");
-    do_check_eq(b0.uri, "http://example.com/");
-    do_check_neq(b0.itemId, b1);
-    do_check_neq(store.GUIDForId(b0.itemId), b1GUID);
-
-    c0.containerOpen = false;
-    f2Node.containerOpen = false;
-  } finally {
-    tracker.clearChangedIDs();
-    Svc.Obs.notify("weave:engine:stop-tracking");
-  }
-}
-
 function test_tracking() {
   _("Verify we've got an empty tracker to work with.");
   let tracker = engine._tracker;
@@ -280,6 +94,53 @@ function test_onItemChanged() {
   }
 }
 
+function test_onItemMoved() {
+  _("Verify we've got an empty tracker to work with.");
+  let tracker = engine._tracker;
+  do_check_eq([id for (id in tracker.changedIDs)].length, 0);
+
+  try {
+    let fx_id = Svc.Bookmark.insertBookmark(
+      Svc.Bookmark.bookmarksMenuFolder,
+      Utils.makeURI("http://getfirefox.com"),
+      Svc.Bookmark.DEFAULT_INDEX,
+      "Get Firefox!");
+    let fx_guid = engine._store.GUIDForId(fx_id);
+    let tb_id = Svc.Bookmark.insertBookmark(
+      Svc.Bookmark.bookmarksMenuFolder,
+      Utils.makeURI("http://getthunderbird.com"),
+      Svc.Bookmark.DEFAULT_INDEX,
+      "Get Thunderbird!");
+    let tb_guid = engine._store.GUIDForId(tb_id);
+
+    Svc.Obs.notify("weave:engine:start-tracking");
+
+    // Moving within the folder will just track the folder.
+    Svc.Bookmark.moveItem(tb_id, Svc.Bookmark.bookmarksMenuFolder, 0);
+    do_check_true(tracker.changedIDs['menu'] > 0);
+    do_check_eq(tracker.changedIDs['toolbar'], undefined);
+    do_check_eq(tracker.changedIDs[fx_guid], undefined);
+    do_check_eq(tracker.changedIDs[tb_guid], undefined);
+    tracker.clearChangedIDs();
+
+    // Moving a bookmark to a different folder will track the old
+    // folder, the new folder and the bookmark.
+    Svc.Bookmark.moveItem(tb_id, Svc.Bookmark.toolbarFolder,
+                          Svc.Bookmark.DEFAULT_INDEX);
+    do_check_true(tracker.changedIDs['menu'] > 0);
+    do_check_true(tracker.changedIDs['toolbar'] > 0);
+    do_check_eq(tracker.changedIDs[fx_guid], undefined);
+    do_check_true(tracker.changedIDs[tb_guid] > 0);
+
+  } finally {
+    _("Clean up.");
+    store.wipe();
+    tracker.clearChangedIDs();
+    Svc.Obs.notify("weave:engine:stop-tracking");
+  }
+
+}
+
 function run_test() {
   initTestLogging("Trace");
 
@@ -287,8 +148,8 @@ function run_test() {
   Log4Moz.repository.getLogger("Store.Bookmarks").level = Log4Moz.Level.Trace;
   Log4Moz.repository.getLogger("Tracker.Bookmarks").level = Log4Moz.Level.Trace;
 
-  test_onItemChanged();
-  test_copying_places();
   test_tracking();
+  test_onItemChanged();
+  test_onItemMoved();
 }
 
