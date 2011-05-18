@@ -40,7 +40,7 @@
 #include "nsGkAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIObjectFrame.h"
-#include "nsIPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
@@ -352,9 +352,8 @@ nsPluginDocument::Print()
   nsIObjectFrame* objectFrame =
     do_QueryFrame(mPluginContent->GetPrimaryFrame());
   if (objectFrame) {
-    nsCOMPtr<nsIPluginInstance> pi;
-    objectFrame->GetPluginInstance(*getter_AddRefs(pi));
-
+    nsCOMPtr<nsNPAPIPluginInstance> pi;
+    objectFrame->GetPluginInstance(getter_AddRefs(pi));
     if (pi) {
       NPPrint npprint;
       npprint.mode = NP_FULL;

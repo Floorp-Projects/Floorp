@@ -42,8 +42,9 @@
 #define _nsPluginNativeWindow_h_
 
 #include "nscore.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIPluginInstance.h"
+#include "nsNPAPIPluginInstance.h"
 #include "npapi.h"
 #include "nsIWidget.h"
 #include "nsTraceRefcnt.h"
@@ -73,11 +74,11 @@ public:
    */
 
 public:
-  nsresult GetPluginInstance(nsCOMPtr<nsIPluginInstance> &aPluginInstance) { 
+  nsresult GetPluginInstance(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance) { 
     aPluginInstance = mPluginInstance;
     return NS_OK;
   }
-  nsresult SetPluginInstance(nsIPluginInstance *aPluginInstance) { 
+  nsresult SetPluginInstance(nsNPAPIPluginInstance *aPluginInstance) { 
     if (mPluginInstance != aPluginInstance)
       mPluginInstance = aPluginInstance;
     return NS_OK;
@@ -93,7 +94,7 @@ public:
   }
 
 public:
-  virtual nsresult CallSetWindow(nsCOMPtr<nsIPluginInstance> &aPluginInstance) {
+  virtual nsresult CallSetWindow(nsRefPtr<nsNPAPIPluginInstance> &aPluginInstance) {
     // null aPluginInstance means that we want to call SetWindow(null)
     if (aPluginInstance)
       aPluginInstance->SetWindow(this);
@@ -114,8 +115,8 @@ public:
 #endif
 
 protected:
-  nsCOMPtr<nsIPluginInstance> mPluginInstance;
-  nsCOMPtr<nsIWidget>         mWidget;
+  nsRefPtr<nsNPAPIPluginInstance> mPluginInstance;
+  nsCOMPtr<nsIWidget> mWidget;
 };
 
 nsresult PLUG_NewPluginNativeWindow(nsPluginNativeWindow ** aPluginNativeWindow);

@@ -63,7 +63,7 @@ interface nsIPluginStreamListener;
 [ptr] native PRLibraryPtr(PRLibrary);
 [ptr] native nsPluginNativeWindowPtr(nsPluginNativeWindow);
 
-[scriptable, uuid(FB2E7827-1E7D-4DCC-93A8-94098A4B588D)]
+[scriptable, uuid(17523504-EC17-4B6A-B803-2B465D26DB44)]
 interface nsIPluginHost : nsISupports
 {
   [noscript] void init();
@@ -105,10 +105,6 @@ interface nsIPluginHost : nsISupports
 
   void getPluginTags([optional] out unsigned long aPluginCount,
     [retval, array, size_is(aPluginCount)] out nsIPluginTag aResults);
-
-  [noscript] void stopPluginInstance(in nsIPluginInstance aInstance);
-
-  [noscript] void handleBadPlugin(in PRLibraryPtr aLibrary, in nsIPluginInstance instance);
   
   /**
    * Fetches a URL.
@@ -251,22 +247,6 @@ interface nsIPluginHost : nsISupports
    * be non-null, if not, it will be null.
    */
   [noscript] void instantiateDummyJavaPlugin(in nsIPluginInstanceOwner aOwner);
-
-  /**
-   * Get the plugin name for the plugin instance.
-   * @param aInstance the plugin instance object
-   * @param aPluginName returns a pointer to a shared readonly string value,
-   *        it's only valid for the lifetime of the plugin instance - you must
-   *        copy the string value if you need it longer than that.
-   */
-  [noscript] void getPluginName(in nsIPluginInstance aInstance, [shared] out string aPluginName);
-
-  /**
-   * Get the plugin tag associated with a given plugin instance.
-   * @param aInstance the plugin instance object
-   * @return plugin tag object
-   */
-  [noscript] nsIPluginTag getPluginTagForInstance(in nsIPluginInstance aInstance);
   
   [noscript, notxpcom] void addIdleTimeTarget(in nsIPluginInstanceOwner objectFrame, in boolean isVisible);
   [noscript, notxpcom] void removeIdleTimeTarget(in nsIPluginInstanceOwner objectFrame);

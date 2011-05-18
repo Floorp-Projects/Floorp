@@ -103,7 +103,7 @@ public:
   
   static PRBool RunPluginOOP(const nsPluginTag *aPluginTag);
 
-  nsresult CreatePluginInstance(nsIPluginInstance **aResult);
+  nsresult CreatePluginInstance(nsNPAPIPluginInstance **aResult);
   nsresult Shutdown();
 
 protected:
