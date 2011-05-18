@@ -113,14 +113,13 @@ private:
 class DeferredUpdateMessage : public DeferredMessage
 {
 public:
-  DeferredUpdateMessage(HWND aHWnd)
-    : hWnd(aHWnd)
-  { }
+  DeferredUpdateMessage(HWND aHWnd);
 
   virtual void Run();
 
 private:
-  HWND hWnd;
+  HWND mWnd;
+  RECT mUpdateRect;
 };
 
 // This class duplicates a string that may exist in the lParam member of the
