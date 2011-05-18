@@ -996,19 +996,30 @@ DeferredRedrawMessage::Run()
   NS_ASSERTION(ret, "RedrawWindow failed!");
 }
 
+DeferredUpdateMessage::DeferredUpdateMessage(HWND aHWnd)
+{
+  mWnd = aHWnd;
+  if (!GetUpdateRect(mWnd, &mUpdateRect, FALSE)) {
+    memset(&mUpdateRect, 0, sizeof(RECT));
+    return;
+  }
+  ValidateRect(mWnd, &mUpdateRect);
+}
+
 void
 DeferredUpdateMessage::Run()
 {
-  AssertWindowIsNotNeutered(hWnd);
-  if (!IsWindow(hWnd)) {
+  AssertWindowIsNotNeutered(mWnd);
+  if (!IsWindow(mWnd)) {
     NS_ERROR("Invalid window!");
     return;
   }
 
+  InvalidateRect(mWnd, &mUpdateRect, FALSE);
 #ifdef DEBUG
   BOOL ret =
 #endif
-  UpdateWindow(hWnd);
+  UpdateWindow(mWnd);
   NS_ASSERTION(ret, "UpdateWindow failed!");
 }
 
