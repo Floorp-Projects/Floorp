@@ -224,7 +224,9 @@ public:
   /**
    * Record aItem as a display item that is rendered by aLayer.
    */
-  void AddLayerDisplayItem(Layer* aLayer, nsDisplayItem* aItem);
+  void AddLayerDisplayItem(Layer* aLayer,
+                           nsDisplayItem* aItem,
+                           LayerState aLayerState);
 
   /**
    * Record aItem as a display item that is rendered by the ThebesLayer
@@ -382,11 +384,12 @@ protected:
    */
   class DisplayItemData {
   public:
-    DisplayItemData(Layer* aLayer, PRUint32 aKey)
-      : mLayer(aLayer), mDisplayItemKey(aKey) {}
+    DisplayItemData(Layer* aLayer, PRUint32 aKey, LayerState aLayerState)
+      : mLayer(aLayer), mDisplayItemKey(aKey), mLayerState(aLayerState) {}
 
     nsRefPtr<Layer> mLayer;
     PRUint32        mDisplayItemKey;
+    LayerState    mLayerState;
   };
 
   static void InternalDestroyDisplayItemData(nsIFrame* aFrame,
@@ -416,7 +419,7 @@ protected:
       NS_ERROR("Should never be called, since we ALLOW_MEMMOVE");
     }
 
-    PRBool HasContainerLayer();
+    PRBool HasNonEmptyContainerLayer();
 
     nsTArray<DisplayItemData> mData;
 
