@@ -1372,7 +1372,6 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
         else
             JS_ASSERT(script->bindings.countUpvars() == 0);
 #endif
-        fun->u.i.script = script;
 
 #ifdef CHECK_SCRIPT_OWNER
         script->owner = NULL;
@@ -1387,6 +1386,8 @@ JSScript::NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg)
             cg->parent->asCodeGenerator()->checkSingletonContext()) {
             fun->getType()->singleton = fun;
         }
+
+        fun->u.i.script = script;
     }
 
     /* Tell the debugger about this compiled script. */

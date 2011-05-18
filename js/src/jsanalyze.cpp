@@ -1740,7 +1740,7 @@ ScriptAnalysis::removeBranchTarget(Vector<uint32> &branchTargets, uint32 offset)
             return;
         }
     }
-    JS_NOT_REACHED("Missing target");
+    JS_ASSERT(OOM());
 }
 
 void
