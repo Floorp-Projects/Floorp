@@ -543,11 +543,26 @@ class Compiler : public BaseCompiler
     bool mayPushUndefined(uint32 pushed);
     types::TypeSet *pushedTypeSet(uint32 which);
     bool monitored(jsbytecode *pc);
+    bool hasTypeBarriers(jsbytecode *pc);
     bool testSingletonProperty(JSObject *obj, jsid id);
     bool testSingletonPropertyTypes(FrameEntry *top, jsid id, bool *testObject);
     CompileStatus addInlineFrame(JSScript *script, uint32 depth, uint32 parent, jsbytecode *parentpc);
     CompileStatus scanInlineCalls(uint32 index, uint32 depth);
     CompileStatus checkAnalysis(JSScript *script);
+
+    struct BarrierState {
+        MaybeJump jump;
+        RegisterID typeReg;
+        RegisterID dataReg;
+    };
+
+    MaybeJump trySingleTypeTest(types::TypeSet *types, RegisterID typeReg);
+    Jump addTypeTest(types::TypeSet *types, RegisterID typeReg, RegisterID dataReg);
+    BarrierState pushAddressMaybeBarrier(Address address, JSValueType type, bool reuseBase,
+                                         bool testUndefined = false);
+    BarrierState testBarrier(RegisterID typeReg, RegisterID dataReg,
+                             bool testUndefined = false);
+    void finishBarrier(const BarrierState &barrier, RejoinState rejoin, uint32 which);
 
     /* Non-emitting helpers. */
     void pushSyncedEntry(uint32 pushed);

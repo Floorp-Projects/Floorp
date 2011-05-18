@@ -1316,6 +1316,8 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
                script->filename, script->lineno, OpcodeNames[op]);
 #endif
 
+    uint32 nextDepth = uint32(-1);
+
     InterpMode interpMode = JSINTERP_REJOIN;
 
     if ((cs->format & (JOF_INC | JOF_DEC)) && rejoin != REJOIN_FALLTHROUGH && rejoin != REJOIN_RESUME) {
@@ -1506,6 +1508,10 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         break;
 
       case REJOIN_CALL_SPLAT: {
+        /* Leave analysis early and do the Invoke which SplatApplyArgs prepared. */
+        nextDepth = analysis->getCode(nextpc).stackDepth;
+        untrap.retrap();
+        enter.leave();
         f.regs.sp = nextsp + 2 + f.u.call.dynamicArgc;
         if (!Invoke(cx, InvokeArgsAlreadyOnTheStack(f.u.call.dynamicArgc, nextsp)))
             return js_InternalThrow(f);
@@ -1617,10 +1623,15 @@ js_InternalInterpret(void *returnData, void *returnType, void *returnReg, js::VM
         JS_NOT_REACHED("Missing rejoin");
     }
 
-    f.regs.sp = fp->base() + analysis->getCode(f.regs.pc).stackDepth;
+    if (nextDepth == uint32(-1))
+        nextDepth = analysis->getCode(f.regs.pc).stackDepth;
+    f.regs.sp = fp->base() + nextDepth;
 
     /* Reinsert any trap before resuming in the interpreter. */
     untrap.retrap();
+
+    /* Release lock on analysis data before resuming. */
+    enter.leave();
 
     if (!Interpret(cx, NULL, 0, interpMode))
         return js_InternalThrow(f);

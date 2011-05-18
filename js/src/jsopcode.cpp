@@ -453,10 +453,16 @@ js_Disassemble1(JSContext *cx, JSScript *script, jsbytecode *pc,
                 v = STRING_TO_JSVAL(atom);
             }
         } else {
-            if (type == JOF_OBJECT)
+            if (type == JOF_OBJECT) {
+                /* Don't call obj.toSource if analysis/inference is active. */
+                if (cx->compartment->activeAnalysis) {
+                    Sprint(sp, " object");
+                    break;
+                }
                 obj = script->getObject(index);
-            else
+            } else {
                 obj = script->getRegExp(index);
+            }
             v = OBJECT_TO_JSVAL(obj);
         }
         {

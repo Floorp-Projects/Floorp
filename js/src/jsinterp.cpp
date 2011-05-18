@@ -621,6 +621,8 @@ Invoke(JSContext *cx, const CallArgs &argsRef, ConstructOption option)
     CallArgs args = argsRef;
     JS_ASSERT(args.argc() <= JS_ARGS_LENGTH_MAX);
 
+    JS_ASSERT(!cx->compartment->activeAnalysis);
+
     if (args.calleev().isPrimitive()) {
         js_ReportIsNotFunction(cx, &args.calleev(), ToReportFlags(option));
         return false;
@@ -2183,6 +2185,8 @@ Interpret(JSContext *cx, StackFrame *entryFrame, uintN inlineCallCount, InterpMo
     TraceVisStateObj tvso(cx, S_INTERP);
 #endif
     JSAutoResolveFlags rf(cx, RESOLVE_INFER);
+
+    JS_ASSERT(!cx->compartment->activeAnalysis);
 
 # ifdef DEBUG
     /*
@@ -4282,8 +4286,6 @@ BEGIN_CASE(JSOP_SETMETHOD)
     VALUE_TO_OBJECT(cx, &lref, obj);
 
     JS_ASSERT_IF(op == JSOP_SETGNAME, obj == regs.fp()->scopeChain().getGlobal());
-
-    jsid id = ATOM_TO_JSID(atoms[GET_INDEX(regs.pc)]);
 
     do {
         PropertyCache *cache = &JS_PROPERTY_CACHE(cx);

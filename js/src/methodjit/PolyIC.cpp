@@ -1716,6 +1716,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                 THROW();
             JSString *str = f.regs.sp[-1].toString();
             f.regs.sp[-1].setInt32(str->length());
+            f.script()->typeMonitor(f.cx, f.pc(), f.regs.sp[-1]);
             return;
         } else if (!f.regs.sp[-1].isPrimitive()) {
             JSObject *obj = &f.regs.sp[-1].toObject();
@@ -1740,6 +1741,7 @@ ic::GetProp(VMFrame &f, ic::PICInfo *pic)
                     JSString *str = obj->getPrimitiveThis().toString();
                     f.regs.sp[-1].setInt32(str->length());
                 }
+                f.script()->typeMonitor(f.cx, f.pc(), f.regs.sp[-1]);
                 return;
             }
         }

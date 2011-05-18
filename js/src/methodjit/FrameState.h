@@ -272,9 +272,14 @@ class FrameState
     inline void push(const Value &v);
 
     /*
-     * Loads a value from memory and pushes it.
+     * Loads a value from memory and pushes it. If reuseBase is set, the
+     * Compiler owns the register and it should be reused if possible.
      */
     inline void push(Address address, JSValueType knownType, bool reuseBase = false);
+
+    /* Loads a value from memory into a register pair, returning the register. */
+    inline void loadIntoRegisters(Address address, bool reuseBase,
+                                  RegisterID *ptypeReg, RegisterID *pdataReg);
 
     /*
      * Pushes a known type and allocated payload onto the operation stack.
@@ -282,10 +287,13 @@ class FrameState
     inline void pushTypedPayload(JSValueType type, RegisterID payload);
 
     /*
-     * Pushes a type register and data register pair, converting to the specified
-     * known type if necessary.  If the type is JSVAL_TYPE_DOUBLE, the registers
-     * are converted into a floating point register, which is returned.
+     * Clobbers a stack entry with a type register and data register pair,
+     * converting to the specified known type if necessary.  If the type is
+     * JSVAL_TYPE_DOUBLE, the registers are converted into a floating point
+     * register, which is returned.
      */
+    inline FPRegisterID storeRegs(int32 depth, RegisterID type, RegisterID data,
+                                  JSValueType knownType);
     inline FPRegisterID pushRegs(RegisterID type, RegisterID data, JSValueType knownType);
 
     /*
@@ -1003,7 +1011,8 @@ class FrameState
         return regstate_[reg.reg_];
     }
 
-    AnyRegisterID bestEvictReg(uint32 mask, bool includePinned);
+    AnyRegisterID bestEvictReg(uint32 mask, bool includePinned) const;
+    void evictDeadEntries(bool includePinned);
 
     inline analyze::Lifetime * variableLive(FrameEntry *fe, jsbytecode *pc) const;
     inline bool binaryEntryLive(FrameEntry *fe) const;

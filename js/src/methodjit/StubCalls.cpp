@@ -2743,10 +2743,26 @@ template void JS_FASTCALL stubs::DelElem<true>(VMFrame &f);
 template void JS_FASTCALL stubs::DelElem<false>(VMFrame &f);
 
 void JS_FASTCALL
-stubs::UndefinedHelper(VMFrame &f)
+stubs::TypeBarrierHelper(VMFrame &f, uint32 which)
 {
-    f.regs.sp[-1].setUndefined();
-    f.script()->typeMonitor(f.cx, f.pc(), f.regs.sp[-1]);
+    JS_ASSERT(which == 0 || which == 1);
+
+    /* The actual pushed value is at sp[0], fix up the stack. See finishBarrier. */
+    Value &result = f.regs.sp[-1 - which];
+    result = f.regs.sp[0];
+
+    /*
+     * Prune type barriers at this bytecode if we have added many objects to
+     * the target already. This isn't needed if inference results for the
+     * script have been destroyed, as we will reanalyze and prune type barriers
+     * as they are regenerated.
+     */
+    if (f.script()->hasAnalysis() && f.script()->analysis(f.cx)->ranInference()) {
+        AutoEnterTypeInference enter(f.cx);
+        f.script()->analysis(f.cx)->pruneTypeBarriers(f.cx, f.pc() - f.script()->code);
+    }
+
+    f.script()->typeMonitor(f.cx, f.pc(), result);
 }
 
 void JS_FASTCALL

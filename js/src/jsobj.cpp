@@ -2924,7 +2924,7 @@ js::NewReshapedObject(JSContext *cx, TypeObject *type, JSObject *parent,
     /* Construct the new shape. */
     for (unsigned i = 0; i < ids.length(); i++) {
         if (!DefineNativeProperty(cx, res, ids[i], js::UndefinedValue(), NULL, NULL,
-                                  JSPROP_ENUMERATE, 0, 0, 0)) {
+                                  JSPROP_ENUMERATE, 0, 0, DNP_SKIP_TYPE)) {
             return NULL;
         }
     }
