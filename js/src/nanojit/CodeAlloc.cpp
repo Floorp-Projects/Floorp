@@ -252,18 +252,10 @@ namespace nanojit
         }
     }
 
-#if defined NANOJIT_ARM && defined UNDER_CE
-    // Use a single flush for the whole CodeList, when we have no
-    // finer-granularity flush support, as on WinCE.
-    void CodeAlloc::flushICache(CodeList* &/*blocks*/) {
-        FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
-    }
-#else
     void CodeAlloc::flushICache(CodeList* &blocks) {
         for (CodeList *b = blocks; b != 0; b = b->next)
             flushICache(b->start(), b->size());
     }
-#endif
 
 #if defined(AVMPLUS_UNIX) && defined(NANOJIT_ARM)
 #include <asm/unistd.h>
@@ -300,14 +292,6 @@ extern  "C" void sync_instruction_memory(caddr_t v, u_int len);
         (void)start;
         (void)len;
         VALGRIND_DISCARD_TRANSLATIONS(start, len);
-    }
-
-#elif defined NANOJIT_ARM && defined UNDER_CE
-    // On arm/winmo, just flush the whole icache. The
-    // WinCE docs indicate that this function actually ignores its
-    // 2nd and 3rd arguments, and wants them to be NULL.
-    void CodeAlloc::flushICache(void *, size_t) {
-        FlushInstructionCache(GetCurrentProcess(), NULL, NULL);
     }
 
 #elif defined NANOJIT_ARM && defined DARWIN
